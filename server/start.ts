@@ -3,6 +3,7 @@ import MetisServer, { IMetisServerOptions } from 'metis/server'
 import routerMap_info from 'metis/server/api/v1/info'
 import routerMap_logins from 'metis/server/api/v1/logins'
 import routerMap_missions from 'metis/server/api/v1/missions'
+import routerMap_objectId from 'metis/server/api/v1/object-id'
 import routerMap_sessions from 'metis/server/api/v1/sessions'
 import routerMap_targetEnvironments from 'metis/server/api/v1/target-environments'
 import routerMap_users from 'metis/server/api/v1/users'
@@ -53,6 +54,7 @@ server.addRouter(
 )
 server.addRouter(new MetisRouter('/api/v1/logins/', routerMap_logins))
 server.addRouter(new MetisRouter('/connect', routerMap_connect))
+server.addRouter(new MetisRouter('/api/v1/object-id/', routerMap_objectId))
 
 // Start server.
 server.serve()

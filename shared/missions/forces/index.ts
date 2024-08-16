@@ -1,7 +1,6 @@
 import { AnyObject } from 'metis/toolbox/objects'
 import { v4 as generateHash } from 'uuid'
 import { TCommonMission, TCommonMissionTypes, TMission } from '..'
-import { uuidTypeValidator } from '../../../shared/toolbox/validators'
 import context from '../../context'
 import StringToolbox from '../../toolbox/strings'
 import {
@@ -94,7 +93,7 @@ export abstract class MissionForce<
 
     // Set properties.
     this.mission = mission
-    this._id = data._id?.toString() ?? MissionForce.DEFAULT_PROPERTIES._id
+    this._id = data._id ?? MissionForce.DEFAULT_PROPERTIES._id
     this.name = data.name ?? MissionForce.DEFAULT_PROPERTIES.name
     this.color = data.color ?? MissionForce.DEFAULT_PROPERTIES.color
     this.nodes = []
@@ -114,25 +113,13 @@ export abstract class MissionForce<
 
   // Implemented
   public toJson(options: TForceJsonOptions = {}): TCommonMissionForceJson {
-    let {
-      revealedOnly = false,
-      includeSessionData: includeSessionData = false,
-    } = options
+    let { revealedOnly = false, includeSessionData = false } = options
 
     let json: TCommonMissionForceJson = {
+      _id: this._id,
       name: this.name,
       color: this.color,
       nodes: this.exportNodes({ revealedOnly, includeSessionData }),
-    }
-
-    // Include _id if it's an ObjectId.
-    // * Note: IDs in the database are
-    // * stored as mongoose ObjectIds.
-    // * If the ID is a UUID, then the
-    // * mission won't save.
-    let isObjectId: boolean = !uuidTypeValidator(this._id)
-    if (isObjectId) {
-      json._id = this._id
     }
 
     return json
@@ -145,10 +132,7 @@ export abstract class MissionForce<
    */
   protected exportNodes(options: TExportNodesOptions = {}): TMissionNodeJson[] {
     // Gather details.
-    const {
-      revealedOnly = false,
-      includeSessionData: includeSessionData = false,
-    } = options
+    const { revealedOnly = false, includeSessionData = false } = options
     let nodes: TNode<T>[] = this.nodes
     let nodeData: TMissionNodeJson[] = []
 
@@ -367,7 +351,7 @@ export interface TCommonMissionForceJson {
   /**
    * The ID of the force.
    */
-  _id?: string
+  _id: string
   /**
    * The name of the force.
    */

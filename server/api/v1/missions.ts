@@ -9,6 +9,7 @@ import InfoModel from 'metis/server/database/models/info'
 import MissionModel from 'metis/server/database/models/missions'
 import { TMetisRouterMap } from 'metis/server/http/router'
 import { databaseLogger } from 'metis/server/logging'
+import mongoose from 'mongoose'
 import path from 'path'
 import { v4 as generateHash } from 'uuid'
 import { RequestBodyFilters, defineRequests } from '../../middleware/requests'
@@ -17,6 +18,7 @@ import { auth } from '../../middleware/users'
 import MissionNode from '../../missions/nodes'
 
 type MulterFile = Express.Multer.File
+let ObjectId = mongoose.Types.ObjectId
 
 export const routerMap: TMetisRouterMap = (
   router: expressWs.Router,
@@ -30,6 +32,7 @@ export const routerMap: TMetisRouterMap = (
    */
   const createMission = (request: Request, response: Response) => {
     let {
+      _id,
       name,
       introMessage,
       versionNumber,
@@ -39,6 +42,7 @@ export const routerMap: TMetisRouterMap = (
     } = request.body as TCommonMissionJson
 
     let mission = new MissionModel({
+      _id,
       name,
       introMessage,
       versionNumber,
@@ -619,6 +623,9 @@ export const routerMap: TMetisRouterMap = (
           // schema is set to strict and this field
           // is not in the schema.
           delete contents_JSON.schemaBuildNumber
+          // Assign a new ID to the mission to
+          // make sure it is unique.
+          contents_JSON._id = new ObjectId().toString()
 
           let mission = new MissionModel(contents_JSON)
 
@@ -899,6 +906,9 @@ export const routerMap: TMetisRouterMap = (
         return response.sendStatus(404)
       } else {
         let modelInput: Partial<TCommonMissionJson> = {
+          // Assigns a new ID to the mission to
+          // make sure it is unique.
+          _id: new ObjectId().toString(),
           name: copyName,
           introMessage: mission.introMessage,
           versionNumber: mission.versionNumber,
@@ -906,6 +916,7 @@ export const routerMap: TMetisRouterMap = (
           nodeStructure: mission.nodeStructure,
           forces: mission.forces,
         }
+
         let copy = new MissionModel(modelInput)
 
         copy.save((error: Error) => {
@@ -955,6 +966,7 @@ export const routerMap: TMetisRouterMap = (
     auth({ permissions: ['missions_write'] }),
     defineRequests({
       body: {
+        _id: RequestBodyFilters.OBJECTID,
         name: RequestBodyFilters.STRING,
         introMessage: RequestBodyFilters.STRING,
         versionNumber: RequestBodyFilters.NUMBER,

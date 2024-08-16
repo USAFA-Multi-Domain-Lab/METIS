@@ -3,7 +3,6 @@ import { TCommonMission, TCommonMissionTypes, TMission } from '..'
 import { Vector2D } from '../../../shared/toolbox/space'
 import ArrayToolbox from '../../toolbox/arrays'
 import MapToolbox from '../../toolbox/maps'
-import { uuidTypeValidator } from '../../toolbox/validators'
 import {
   TCommonMissionAction,
   TCommonMissionActionJson,
@@ -375,6 +374,7 @@ export default abstract class MissionNode<
 
     // Construct base JSON.
     let json: TMissionNodeJson = {
+      _id: this._id,
       structureKey: this.structureKey,
       name: this.name,
       color: this.color,
@@ -386,16 +386,6 @@ export default abstract class MissionNode<
       actions: MapToolbox.mapToArray(this.actions, (action: TAction) =>
         action.toJson(),
       ),
-    }
-
-    // Include _id if it's an ObjectId.
-    // * Note: IDs in the database are
-    // * stored as mongoose ObjectIds.
-    // * If the ID is a UUID, then the
-    // * mission won't save.
-    let isObjectId: boolean = !uuidTypeValidator(this._id) ? true : false
-    if (isObjectId) {
-      json._id = this._id
     }
 
     // Include session data if includeSessionData
@@ -677,7 +667,7 @@ export interface TCommonMissionNodeJson {
   /**
    * The ID for the node.
    */
-  _id?: string
+  _id: string
   /**
    * The key used in the nodeStructure object to represent a node's position and relationships to other
    * nodes.

@@ -55,8 +55,8 @@ export default abstract class User implements TCommonUser {
 
   /**
    * Converts the User object to JSON.
-   * @param {TUserOptions} options Options for converting the user to JSON.
-   * @returns {TCommonUserJson} A JSON representation of the user.
+   * @param options Options for converting the user to JSON.
+   * @returns A JSON representation of the user.
    */
   public toJson(options: TUserOptions = {}): TCommonUserJson {
     // Construct JSON object to send to server.
@@ -143,6 +143,7 @@ export default abstract class User implements TCommonUser {
   /**
    * Validates the username of a user.
    * @param username The username to validate.
+   * @returns Whether the username is valid.
    */
   public static isValidUsername = (
     username: TCommonUserJson['username'],
@@ -151,6 +152,34 @@ export default abstract class User implements TCommonUser {
     let isValidUsername: boolean = userExpression.test(username)
 
     return isValidUsername
+  }
+
+  /**
+   * Validates the user's password.
+   * @param password The password to validate.
+   * @returns Whether the password is valid.
+   */
+  public static isValidPassword = (
+    password: NonNullable<TCommonUserJson['password']>,
+  ): boolean => {
+    let passwordExpression: RegExp = /^([^\s]{8,50})$/
+    let isValidPassword: boolean = passwordExpression.test(password)
+
+    return isValidPassword
+  }
+
+  /**
+   * Validates the name of a user.
+   * @param name The name to validate.
+   * @returns Whether the name is valid.
+   */
+  public static isValidName = (
+    name: TCommonUserJson['firstName'] | TCommonUserJson['lastName'],
+  ): boolean => {
+    let nameExpression: RegExp = /^([a-zA-Z']{1,25})$/
+    let isValidName: boolean = nameExpression.test(name)
+
+    return isValidName
   }
 }
 
@@ -199,7 +228,7 @@ export interface TCommonUser {
   password?: string
   /**
    * Converts the User object to JSON.
-   * @returns {TCommonUserJson} A JSON representation of the user.
+   * @returns A JSON representation of the user.
    */
   toJson: (options?: TUserOptions) => TCommonUserJson
 }

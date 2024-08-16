@@ -1,6 +1,5 @@
 import { v4 as generateHash } from 'uuid'
 import { TCommonMission, TCommonMissionTypes, TMission } from '..'
-import { uuidTypeValidator } from '../../toolbox/validators'
 import {
   TCommonEffect,
   TCommonEffectJson,
@@ -181,6 +180,7 @@ export default abstract class MissionAction<
   // Implemented
   public toJson(): TCommonMissionActionJson {
     let json: TCommonMissionActionJson = {
+      _id: this._id,
       name: this.name,
       description: this.description,
       processTime: this.processTime,
@@ -189,16 +189,6 @@ export default abstract class MissionAction<
       postExecutionSuccessText: this.postExecutionSuccessText,
       postExecutionFailureText: this.postExecutionFailureText,
       effects: this.effects.map((effect) => effect.toJson()),
-    }
-
-    // Include _id if it's an ObjectId.
-    // * Note: IDs in the database are
-    // * stored as mongoose ObjectIds.
-    // * If the ID is a UUID, then the
-    // * mission won't save.
-    let isObjectId: boolean = !uuidTypeValidator(this._id) ? true : false
-    if (isObjectId) {
-      json._id = this._id
     }
 
     return json
@@ -386,7 +376,7 @@ export interface TCommonMissionActionJson {
   /**
    * The ID of the action.
    */
-  _id?: string
+  _id: string
   /**
    * The name of the action.
    */

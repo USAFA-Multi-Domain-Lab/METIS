@@ -7,7 +7,6 @@ import Target, {
   TTarget,
 } from '../../target-environments/targets'
 import { AnyObject } from '../../toolbox/objects'
-import { uuidTypeValidator } from '../../toolbox/validators'
 import { TAction, TCommonMissionAction } from '../actions'
 import { TCommonMissionForce, TForce } from '../forces'
 import { TCommonMissionNode, TNode } from '../nodes'
@@ -159,21 +158,12 @@ export default abstract class Effect<
   public toJson(): TCommonEffectJson {
     // Construct JSON object to send to the server.
     let json: TCommonEffectJson = {
+      _id: this._id,
       name: this.name,
       description: this.description,
       targetEnvironmentVersion: this.targetEnvironmentVersion,
       targetId: this.target ? this.target._id : this.targetId,
       args: this.args,
-    }
-
-    // Include _id if it's an ObjectId.
-    // * Note: IDs in the database are
-    // * stored as mongoose ObjectIds.
-    // * If the ID is a UUID, then the
-    // * mission won't save.
-    let isObjectId: boolean = !uuidTypeValidator(this._id) ? true : false
-    if (isObjectId) {
-      json._id = this._id
     }
 
     return json
@@ -292,7 +282,7 @@ export interface TCommonEffectJson {
   /**
    * The ID of the effect.
    */
-  _id?: string
+  _id: string
   /**
    * The name of the effect.
    */

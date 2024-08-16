@@ -3,11 +3,10 @@ import { TCommonTarget } from 'metis/target-environments/targets'
 import { v4 as generateHash } from 'uuid'
 import context from '../context'
 import { AnyObject } from '../toolbox/objects'
-import { uuidTypeValidator } from '../toolbox/validators'
-import { TCommonMissionAction } from './actions'
+import { TAction, TCommonMissionAction } from './actions'
 import IActionExecution from './actions/executions'
 import IActionOutcome from './actions/outcomes'
-import { TCommonEffect } from './effects'
+import { TCommonEffect, TEffect } from './effects'
 import {
   MissionForce,
   TCommonMissionForce,
@@ -27,7 +26,25 @@ export default abstract class Mission<
 {
   // Implemented
   public get nodes(): TNode<T>[] {
-    return this.forces.map((force) => force.nodes).flat()
+    return this.forces.flatMap((force) => force.nodes)
+  }
+
+  // Implemented
+  public get actions(): Map<string, TAction<T>> {
+    let actions = new Map<string, TAction<T>>()
+
+    for (let node of this.nodes) {
+      for (let action of node.actions.values()) {
+        actions.set(action._id, action)
+      }
+    }
+
+    return actions
+  }
+
+  // Implemented
+  public get effects(): TEffect<T>[] {
+    return Array.from(this.actions.values()).flatMap((action) => action.effects)
   }
 
   // Implemented
@@ -65,7 +82,7 @@ export default abstract class Mission<
     data: Partial<TCommonMissionJson> = Mission.DEFAULT_PROPERTIES,
     options: TMissionOptions = {},
   ) {
-    this._id = data._id?.toString() ?? Mission.DEFAULT_PROPERTIES._id
+    this._id = data._id ?? Mission.DEFAULT_PROPERTIES._id
     this.name = data.name ?? Mission.DEFAULT_PROPERTIES.name
     this.introMessage =
       data.introMessage ?? Mission.DEFAULT_PROPERTIES.introMessage
@@ -98,6 +115,7 @@ export default abstract class Mission<
   ): TCommonMissionJson {
     // Predefine limited JSON.
     let json: TCommonMissionJson = {
+      _id: this._id,
       name: this.name,
       introMessage: this.introMessage,
       versionNumber: this.versionNumber,
@@ -135,16 +153,6 @@ export default abstract class Mission<
           force.toJson({ includeSessionData: true }),
         )
         break
-    }
-
-    // Include _id if it's an ObjectId.
-    // * Note: IDs in the database are
-    // * stored as mongoose ObjectIds.
-    // * If the ID is a UUID, then the
-    // * mission won't save.
-    let isObjectId: boolean = !uuidTypeValidator(this._id) ? true : false
-    if (isObjectId) {
-      json._id = this._id
     }
 
     return json
@@ -273,7 +281,7 @@ export default abstract class Mission<
     nodeStructure: AnyObject,
     rootPrototype: TPrototype,
   ) => {
-    let children: Array<TPrototype> = []
+    let children: TPrototype[] = []
     let childrenKeyValuePairs: Array<[string, AnyObject]> = Object.keys(
       nodeStructure,
     ).map((key: string) => [key, nodeStructure[key]])
@@ -306,8 +314,8 @@ export default abstract class Mission<
   ): AnyObject {
     /**
      * The recursive algorithm used to determine the structure.
-     * @param {TCommonMissionNode} cursor The current prototype being processed.
-     * @param {AnyObject} cursorStructure The structure of the current prototype being processed.
+     * @param cursor The current prototype being processed.
+     * @param cursorStructure The structure of the current prototype being processed.
      */
     const operation = (
       cursor: TCommonMissionPrototype = root,
@@ -391,6 +399,14 @@ export interface TCommonMission {
    */
   get nodes(): TCommonMissionNode[]
   /**
+   * All actions that exist in the mission.
+   */
+  get actions(): Map<string, TCommonMissionAction>
+  /**
+   * All effects that exist in the mission.
+   */
+  get effects(): TCommonEffect[]
+  /**
    * The ID of the mission.
    */
   _id: string
@@ -466,7 +482,7 @@ export interface TCommonMissionJson {
   /**
    * The ID of the mission.
    */
-  _id?: string
+  _id: string
   /**
    * The name of the mission.
    */

@@ -73,8 +73,7 @@ export default class ClientUser extends User {
    * meet the correct criteria.
    */
   public get hasValidFirstName(): boolean {
-    let nameRegex: RegExp = new RegExp(/^([a-zA-Z']{1,25})$/)
-    return nameRegex.test(this.firstName)
+    return User.isValidName(this.firstName)
   }
 
   /**
@@ -82,8 +81,7 @@ export default class ClientUser extends User {
    * meet the correct criteria.
    */
   public get hasValidLastName(): boolean {
-    let nameRegex: RegExp = new RegExp(/^([a-zA-Z']{1,25})$/)
-    return nameRegex.test(this.lastName)
+    return User.isValidName(this.lastName)
   }
 
   /**
@@ -91,15 +89,13 @@ export default class ClientUser extends User {
    * the correct criteria.
    */
   public get hasValidPassword1(): boolean {
-    let passwordRegex: RegExp = new RegExp(/^([^\s]{8,50})$/)
-
     // if the password is required, then
     // it must meet the criteria. Otherwise,
     // true is returned because the password
     // is not required. This also allows the
     // user to be able to save when editing
     // another existing user.
-    return this.password1 ? passwordRegex.test(this.password1) : true
+    return this.password1 ? User.isValidPassword(this.password1) : true
   }
 
   /**
@@ -107,15 +103,13 @@ export default class ClientUser extends User {
    * the correct criteria.
    */
   public get hasValidPassword2(): boolean {
-    let passwordRegex: RegExp = new RegExp(/^([^\s]{8,50})$/)
-
     // if the password is required, then
     // it must meet the criteria. Otherwise,
     // true is returned because the password
     // is not required. This also allows the
     // user to be able to save when editing
     // another existing user.
-    return this.password2 ? passwordRegex.test(this.password2) : true
+    return this.password2 ? User.isValidPassword(this.password2) : true
   }
 
   /**

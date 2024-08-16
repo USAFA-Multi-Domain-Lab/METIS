@@ -16,6 +16,7 @@ import { TCommonUserJson } from 'metis/users'
 import UserAccess, { TUserAccessId } from 'metis/users/accesses'
 import mongoose from 'mongoose'
 import { testLogger } from '../logging'
+import ServerUser from '../users'
 
 // global fields
 let missionId: string
@@ -1828,8 +1829,6 @@ describe('User API Routes', function () {
 // used to validate data that is trying to be sent
 // to the database to be stored.
 describe('User Schema Validation', function () {
-  // Regex for a bcrypt hashed password
-  let hashedPasswordExpression: RegExp = /^\$2[ayb]\$.{56}$/
   let hashedPassword: string = ''
 
   it('Creating a user with all the correct properties should save the user to the database', async function () {
@@ -1853,7 +1852,7 @@ describe('User Schema Validation', function () {
       expect(savedUser.firstName).to.equal(newCorrectUser.user.firstName)
       expect(savedUser.lastName).to.equal(newCorrectUser.user.lastName)
       hashedPassword = savedUser.password
-      let isHashedPassword: boolean = hashedPasswordExpression.test(
+      let isHashedPassword: boolean = ServerUser.isValidHashedPassword(
         savedUser.password,
       )
       expect(isHashedPassword).to.equal(true)
@@ -1875,7 +1874,7 @@ describe('User Schema Validation', function () {
       expect(retrievedUser.accessId).to.equal(newCorrectUser.user.accessId)
       expect(retrievedUser.firstName).to.equal(newCorrectUser.user.firstName)
       expect(retrievedUser.lastName).to.equal(newCorrectUser.user.lastName)
-      let isHashedPassword: boolean = hashedPasswordExpression.test(
+      let isHashedPassword: boolean = ServerUser.isValidHashedPassword(
         retrievedUser.password,
       )
       expect(isHashedPassword).to.equal(true)
@@ -1918,7 +1917,7 @@ describe('User Schema Validation', function () {
       expect(retrievedUser.accessId).to.equal(newCorrectUser.user.accessId)
       expect(retrievedUser.firstName).to.equal('updatedFirstName')
       expect(retrievedUser.lastName).to.equal('updatedLastName')
-      let isHashedPassword: boolean = hashedPasswordExpression.test(
+      let isHashedPassword: boolean = ServerUser.isValidHashedPassword(
         retrievedUser.password,
       )
       expect(isHashedPassword).to.equal(true)

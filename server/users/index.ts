@@ -6,12 +6,17 @@ import User, { TCommonUserJson, TUserOptions } from 'metis/users'
  */
 export default class ServerUser extends User {
   /**
-   * @param {TCommonUserJson} data The user data from which to create the user. Any ommitted values will be set to the default properties defined in User.DEFAULT_PROPERTIES.
-   * @param {TServerUserOptions} options Options for creating the user.
+   * Validates a hashed password.
+   * @param password The password to validate.
+   * @returns Whether the password is valid.
    */
-  public constructor(data: TCommonUserJson, options: TServerUserOptions = {}) {
-    // Initialize base properties.
-    super(data, options)
+  public static isValidHashedPassword = (
+    password: NonNullable<TCommonUserJson['password']>,
+  ): boolean => {
+    let passwordExpression: RegExp = /^\$2[ayb]\$.{56}$/
+    let isValidPassword: boolean = passwordExpression.test(password)
+
+    return isValidPassword
   }
 }
 

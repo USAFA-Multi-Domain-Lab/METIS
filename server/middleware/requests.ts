@@ -280,8 +280,7 @@ export class RequestBodyFilters {
    * @throws An error message or null
    */
   public static PASSWORD(bodyKey: string, bodyValue: any) {
-    let passwordRegex: RegExp = /^([^\s]{8,50})$/
-    let passwordIsValid: boolean = passwordRegex.test(bodyValue)
+    let passwordIsValid: boolean = User.isValidPassword(bodyValue)
 
     if (typeof bodyValue !== 'string' || !passwordIsValid) {
       throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
@@ -295,8 +294,7 @@ export class RequestBodyFilters {
    * @throws An error message or null
    */
   public static NAME(bodyKey: string, bodyValue: any) {
-    let nameRegex: RegExp = /^([a-zA-Z']{1,25})$/
-    let nameIsValid: boolean = nameRegex.test(bodyValue)
+    let nameIsValid: boolean = User.isValidName(bodyValue)
 
     if (typeof bodyValue !== 'string' || !nameIsValid) {
       throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))

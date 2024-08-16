@@ -15,6 +15,7 @@ import { HEX_COLOR_REGEX } from 'metis/toolbox/strings'
 import mongoose, { Schema } from 'mongoose'
 
 let ObjectId = mongoose.Types.ObjectId
+type ObjectId = mongoose.Types.ObjectId
 
 const NODE_DATA_MIN_LENGTH = 1
 const ACTIONS_MIN_LENGTH = 1
@@ -41,10 +42,15 @@ const isNonNegativeInteger = (value: number): boolean => {
  * @param next The next function to call.
  */
 const validate_missions = (mission: any, next: any): void => {
+  // Get the parent structure.
   let parentStructure: TCommonMissionJson['nodeStructure'] =
     mission.nodeStructure
+  // Array to store the structure keys.
   let correspondingNodeStructureKeys: TMissionNodeJson['structureKey'][] = []
+  // Object to store results.
   let results: { error?: Error } = {}
+  // Object to store existing _id's.
+  let existingIds: AnyObject = {}
 
   // This will ensure the node structure
   // is valid.
@@ -81,36 +87,44 @@ const validate_missions = (mission: any, next: any): void => {
     return {}
   }
 
-  let existingIds: AnyObject = {}
+  // Algorithm to check for duplicate _id's.
+  const _idCheckerAlgorithm = (cursor = mission) => {
+    // If the cursor has a _doc property and its an object...
+    if (cursor._doc !== undefined && cursor._doc instanceof Object) {
+      // ...then set the cursor to the _doc property.
+      cursor = cursor._doc
+    }
+    // If the cursor is an object...
+    if (cursor instanceof Object) {
+      // ...and it has an _id property and the _id already exists...
+      if (cursor._id && cursor._id in existingIds) {
+        // ...then set the error and return.
+        results.error = new Error(
+          `Error in mission:\nDuplicate _id used (${cursor._id}).`,
+        )
+        results.error.name = MetisDatabase.ERROR_BAD_DATA
+        return
+      }
+      // Otherwise, add the _id to the existingIds object.
+      else {
+        existingIds[cursor._id] = true
+      }
+      // Check the object's values for duplicate _id's.
+      for (let value of Object.values(cursor)) {
+        _idCheckerAlgorithm(value)
+      }
+    }
+    // Otherwise, if the cursor is an array...
+    else if (cursor instanceof Array) {
+      // ...then check each value in the array for duplicate _id's.
+      for (let value of cursor) {
+        _idCheckerAlgorithm(value)
+      }
+    }
+  }
 
-  // todo: Implement this.
-
-  // const _idCheckerAlgorithm = (cursor = mission) => {
-  //   if (cursor instanceof Object) {
-  //     if (cursor._id && cursor._id in existingIds) {
-  //       results.error = new Error(
-  //         `Error in mission:\nDuplicate _id used (${cursor._id}).`,
-  //       )
-  //       results.error.name = MetisDatabase.ERROR_BAD_DATA
-  //       return
-  //     } else {
-  //       existingIds[cursor._id] = true
-  //     }
-  //     for (let value of Object.values(cursor)) {
-  //       _idCheckerAlgorithm(value)
-  //     }
-  //   }
-  // }
-  // _idCheckerAlgorithm()
-
-  // todo: Implement this.
-  //   let input = '777666777666'
-  //   let objectId = new ObjectId('777666777666')
-  //   let output = objectId.toString()
-  //
-  //   if (input !== ouput) {
-  //     throw new Error('ObjectId is not working')
-  // }
+  // Check for duplicate _id's.
+  _idCheckerAlgorithm()
 
   // Check for error.
   if (results.error) {
@@ -126,6 +140,27 @@ const validate_missions = (mission: any, next: any): void => {
   }
 
   return next()
+}
+
+/**
+ * Validates an ID by checking if it is a valid ObjectId.
+ * @param id The ID to validate.
+ * @returns Whether the ID is valid.
+ */
+const validate_id = (id: string): boolean => {
+  // Check if the ID is a valid hex string.
+  let isValidHexString: boolean = mongoose.isObjectIdOrHexString(id)
+  // Convert the ID to an ObjectId.
+  let objectId: ObjectId = new ObjectId(id)
+  // Check if the ObjectId is valid.
+  let isValidObjectId: boolean = mongoose.isValidObjectId(objectId)
+  // Make sure the ID is the same as the ObjectId.
+  let isSameId: boolean = id === objectId.toString()
+  // Check if the ID is valid.
+  let isValidId: boolean = isValidHexString && isValidObjectId && isSameId
+
+  // Return whether the ID is valid.
+  return isValidId
 }
 
 /**
@@ -432,6 +467,7 @@ const sanitize_mission_forces_nodes_actions_effects_args = (
  */
 export const MissionSchema: Schema = new Schema(
   {
+    _id: { type: String, required: true, validate: validate_id },
     name: { type: String, required: true },
     introMessage: { type: SanitizedHTML, required: true },
     versionNumber: { type: Number, required: true },
@@ -449,6 +485,7 @@ export const MissionSchema: Schema = new Schema(
     forces: {
       type: [
         {
+          _id: { type: String, required: true, validate: validate_id },
           name: { type: String, required: true },
           color: {
             type: String,
@@ -458,7 +495,7 @@ export const MissionSchema: Schema = new Schema(
           nodes: {
             type: [
               {
-                _id: { type: String, unique: true },
+                _id: { type: String, required: true, validate: validate_id },
                 structureKey: { type: String, required: true },
                 name: { type: String, required: true },
                 color: {
@@ -482,6 +519,11 @@ export const MissionSchema: Schema = new Schema(
                 actions: {
                   type: [
                     {
+                      _id: {
+                        type: String,
+                        required: true,
+                        validate: validate_id,
+                      },
                       name: { type: String, required: true },
                       description: { type: SanitizedHTML, required: true },
                       processTime: {
@@ -513,6 +555,11 @@ export const MissionSchema: Schema = new Schema(
                       effects: {
                         type: [
                           {
+                            _id: {
+                              type: String,
+                              required: true,
+                              validate: validate_id,
+                            },
                             name: { type: String, required: true },
                             description: {
                               type: SanitizedHTML,

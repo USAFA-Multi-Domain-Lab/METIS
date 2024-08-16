@@ -61,10 +61,7 @@ const validate_users_expressPermissionIds = (
 const validate_users_name = (
   name: TCommonUserJson['firstName'] | TCommonUserJson['lastName'],
 ): boolean => {
-  let nameExpression: RegExp = /^([a-zA-Z']{1,25})$/
-  let isValidName: boolean = nameExpression.test(name)
-
-  return isValidName
+  return User.isValidName(name)
 }
 
 /**
@@ -74,13 +71,7 @@ const validate_users_name = (
 const validator_users_password = (
   password: NonNullable<TCommonUserJson['password']>,
 ): boolean => {
-  // This is an expression to validate a hashed password.
-  // This is not for validating the password that the user
-  // submits.
-  let passwordExpression: RegExp = /^\$2[ayb]\$.{56}$/
-  let isValidPassword: boolean = passwordExpression.test(password)
-
-  return isValidPassword
+  return ServerUser.isValidHashedPassword(password)
 }
 
 /* -- SCHEMA -- */
