@@ -135,7 +135,7 @@ export default abstract class Effect<
     let { populateTargets = false } = options
 
     this.action = action
-    this._id = data._id?.toString() ?? Effect.DEFAULT_PROPERTIES._id
+    this._id = data._id ?? Effect.DEFAULT_PROPERTIES._id
     this.name = data.name ?? Effect.DEFAULT_PROPERTIES.name
     this.description = data.description ?? Effect.DEFAULT_PROPERTIES.description
     this.targetEnvironmentVersion =

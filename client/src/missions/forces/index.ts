@@ -1,5 +1,4 @@
 import { TLine_P } from 'src/components/content/session/mission-map/objects/Line'
-import ObjectId from 'src/object-id'
 import ClientMission, { TClientMissionTypes, TMissionNavigable } from '..'
 import {
   MissionForce,
@@ -346,36 +345,6 @@ export default class ClientMissionForce
     // Set the relationship lines in the mission to
     // those determined by the algorithm.
     this.relationshipLines = relationshipLines
-  }
-
-  /**
-   * Exports the force as a JSON object.
-   * @resolves The JSON object representing the force.
-   * @rejects If there was an error exporting the force.
-   */
-  public async initExport(): Promise<TCommonMissionForceJson> {
-    return new Promise<TCommonMissionForceJson>(async (resolve, reject) => {
-      try {
-        // Generate a new object ID for the force.
-        this._id = await ObjectId.$fetch()
-        // Create the JSON object.
-        let json: TCommonMissionForceJson = {
-          _id: this._id,
-          name: this.name,
-          color: this.color,
-          nodes: await Promise.all(
-            this.nodes.map(async (node) => await node.initExport()),
-          ),
-        }
-        // Resolve with the JSON object.
-        resolve(json)
-      } catch (error: any) {
-        // Log the error.
-        console.error('Failed to export force.')
-        console.error(error)
-        reject(error)
-      }
-    })
   }
 }
 

@@ -41,7 +41,7 @@ export default abstract class User implements TCommonUser {
     data: Partial<TCommonUserJson> = User.DEFAULT_PROPERTIES,
     options: TUserOptions = {},
   ) {
-    this._id = data._id?.toString() ?? User.DEFAULT_PROPERTIES._id
+    this._id = data._id ?? User.DEFAULT_PROPERTIES._id
     this.username = data.username ?? User.DEFAULT_PROPERTIES.username
     this.access = UserAccess.get(data.accessId ?? UserAccess.DEFAULT_ID)
     this.firstName = data.firstName ?? User.DEFAULT_PROPERTIES.firstName

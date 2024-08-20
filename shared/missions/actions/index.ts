@@ -140,7 +140,7 @@ export default abstract class MissionAction<
     let { populateTargets = false } = options
 
     this.node = node
-    this._id = data._id?.toString() ?? MissionAction.DEFAULT_PROPERTIES._id
+    this._id = data._id ?? MissionAction.DEFAULT_PROPERTIES._id
     this.name = data.name ?? MissionAction.DEFAULT_PROPERTIES.name
     this.description =
       data.description ?? MissionAction.DEFAULT_PROPERTIES.description

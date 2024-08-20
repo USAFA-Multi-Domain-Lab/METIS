@@ -113,9 +113,10 @@ export default abstract class Mission<
   public toJson(
     options: TMissionJsonOptions = { exportType: 'standard' },
   ): TCommonMissionJson {
+    let { includeId = false } = options
+
     // Predefine limited JSON.
     let json: TCommonMissionJson = {
-      _id: this._id,
       name: this.name,
       introMessage: this.introMessage,
       versionNumber: this.versionNumber,
@@ -124,6 +125,9 @@ export default abstract class Mission<
       nodeStructure: {},
       forces: [],
     }
+
+    // Include the ID if the option is set.
+    if (includeId) json._id = this._id
 
     // Handle the export based on the export type
     // passed in the options.
@@ -482,7 +486,7 @@ export interface TCommonMissionJson {
   /**
    * The ID of the mission.
    */
-  _id: string
+  _id?: string
   /**
    * The name of the mission.
    */
@@ -530,9 +534,20 @@ export type TMissionOptions = {
 }
 
 /**
+ * Base options for Mission.toJson.
+ */
+export type TMissionJsonBaseOptions = {
+  /**
+   * Whether or not to include the ID in the JSON.
+   * @default false
+   */
+  includeId?: boolean
+}
+
+/**
  * Options for Mission.toJson with `exportType` set to 'standard'.
  */
-export type TMissionJsonStandardOptions = {
+export type TMissionJsonStandardOptions = TMissionJsonBaseOptions & {
   /**
    * Standard export of the mission.
    */
@@ -542,7 +557,7 @@ export type TMissionJsonStandardOptions = {
 /**
  * Options for Mission.toJson with `exportType` set to 'session-limited'.
  */
-export type TMissionJsonSessionLimitedOptions = {
+export type TMissionJsonSessionLimitedOptions = TMissionJsonBaseOptions & {
   /**
    * An export of a mission to be used in a session.
    * This export will not include force or prototype
@@ -554,7 +569,7 @@ export type TMissionJsonSessionLimitedOptions = {
 /**
  * Options for Mission.toJson with `exportType` set to 'session-participant'.
  */
-export type TMissionJsonSessionParticipantOptions = {
+export type TMissionJsonSessionParticipantOptions = TMissionJsonBaseOptions & {
   /**
    * An export of a mission to be used in a session.
    * This export will only include the data available
@@ -571,7 +586,7 @@ export type TMissionJsonSessionParticipantOptions = {
 /**
  * Options for Mission.toJson with `exportType` set to 'session-observer'.
  */
-export type TMissionJsonSessionObserverOptions = {
+export type TMissionJsonSessionObserverOptions = TMissionJsonBaseOptions & {
   /**
    * An export of a mission to be used in a session.
    * This export will include all data.

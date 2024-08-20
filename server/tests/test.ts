@@ -128,7 +128,6 @@ const updateMissionWithNoNodeStructure: Omit<
   TCommonMissionJson,
   'nodeStructure'
 > = {
-  _id: '',
   name: 'Update No Node Structure (To Delete)',
   introMessage: 'This is a new mission.',
   versionNumber: 1,
@@ -162,7 +161,6 @@ const updateMissionWithNoNodeStructure: Omit<
   ],
 }
 const updateMissionWithNoNodeData: Omit<TCommonMissionJson, 'nodeData'> = {
-  _id: '',
   name: 'No Node Data Mission (To Delete)',
   introMessage: 'This is a new mission.',
   versionNumber: 1,
@@ -173,7 +171,6 @@ const updateMissionWithNoNodeData: Omit<TCommonMissionJson, 'nodeData'> = {
   },
 }
 const correctUpdateTestMission: TCommonMissionJson = {
-  _id: '',
   name: 'Updated Test Mission (To Delete)',
   introMessage: 'This is a new mission.',
   versionNumber: 1,

@@ -1,7 +1,6 @@
 import axios, { AxiosResponse } from 'axios'
 import { TLine_P } from 'src/components/content/session/mission-map/objects/Line'
 import { TPrototypeSlot_P } from 'src/components/content/session/mission-map/objects/PrototypeSlot'
-import ObjectId from 'src/object-id'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
 import { TEventListenerTarget } from 'src/toolbox/hooks'
@@ -1006,115 +1005,6 @@ export default class ClientMission
   }
 
   /**
-   * Checks all of the objects nested within the mission
-   * to determine if those objects already exist on the
-   * server. If they don't, then new Object IDs are generated
-   * for them.
-   * @param mission The mission retrieved from the server.
-   * @resolves After all objects have been checked and updated.
-   * @rejects If an error occurs during the process.
-   */
-  private async generateIdsForNestedObjects(
-    mission: ClientMission,
-  ): Promise<void> {
-    return new Promise<void>(async (resolve, reject) => {
-      try {
-        // Check the mission's forces.
-        for (let force of this.forces) {
-          // Check if the force already exists on the server.
-          let existingForce: ClientMissionForce | undefined =
-            mission.forces.find((f) => f._id === force._id)
-
-          // If the force doesn't exist on the server...
-          if (!existingForce) {
-            // Generate a new Object ID for the force.
-            force._id = await ObjectId.$fetch()
-          }
-
-          // Check the force's nodes.
-          for (let node of force.nodes) {
-            // Check if the node already exists on the server.
-            let existingNode: ClientMissionNode | undefined =
-              mission.nodes.find((n) => n._id === node._id)
-
-            // If the node doesn't exist on the server...
-            if (!existingNode) {
-              // Generate a new Object ID for the node.
-              node._id = await ObjectId.$fetch()
-            }
-
-            // Check the node's actions.
-            for (let action of node.actions.values()) {
-              // Check if the action already exists on the server.
-              let existingAction: ClientMissionAction | undefined =
-                mission.actions.get(action._id)
-
-              // If the action doesn't exist on the server...
-              if (!existingAction) {
-                // Generate a new Object ID for the action.
-                action._id = await ObjectId.$fetch()
-              }
-
-              // Check the action's effects.
-              for (let effect of action.effects) {
-                // Check if the effect already exists on the server.
-                let existingEffect: ClientEffect | undefined =
-                  mission.effects.find((e) => e._id === effect._id)
-
-                // If the effect doesn't exist on the server...
-                if (!existingEffect) {
-                  // Generate a new Object ID for the effect.
-                  effect._id = await ObjectId.$fetch()
-                }
-              }
-            }
-          }
-        }
-
-        resolve()
-      } catch (error: any) {
-        console.error('Failed to save mission.')
-        console.error(error)
-        reject(error)
-      }
-    })
-  }
-
-  /**
-   * Exports the mission to a JSON object.
-   * @resolves The JSON object representing the mission.
-   * @rejects If an error occurs during the export.
-   */
-  public async initExport(): Promise<TCommonMissionJson> {
-    return new Promise<TCommonMissionJson>(async (resolve, reject) => {
-      try {
-        // Generate a new Object ID for the mission.
-        this._id = await ObjectId.$fetch()
-        // Create the JSON object.
-        let json: TCommonMissionJson = {
-          _id: this._id,
-          name: this.name,
-          introMessage: this.introMessage,
-          versionNumber: this.versionNumber,
-          initialResources: this.initialResources,
-          seed: this.seed,
-          nodeStructure: ClientMission.determineNodeStructure(this.root),
-          forces: await Promise.all(
-            this.forces.map(async (force) => await force.initExport()),
-          ),
-        }
-        // Return the JSON.
-        resolve(json)
-      } catch (error: any) {
-        // Log the error.
-        console.error('Failed to export mission.')
-        console.error(error)
-        reject(error)
-      }
-    })
-  }
-
-  /**
    * Commit any changes made and save them to the server. Calls
    * @note Chooses between post and put based on the state of the `existsOnServer`
    * property. This can be set as an option in the constructor.
@@ -1129,7 +1019,7 @@ export default class ClientMission
           let { data } = await axios.post<
             any,
             AxiosResponse<Required<TCommonMissionJson>>
-          >(ClientMission.API_ENDPOINT, await this.initExport())
+          >(ClientMission.API_ENDPOINT, this.toJson())
           // Update the temporary client-generated
           // seed with the server-generated seed.
           this.seed = data.seed
@@ -1138,12 +1028,14 @@ export default class ClientMission
         }
         // Update the mission if it does exist.
         else {
-          // Fetch the mission from the server.
-          let mission = await ClientMission.$fetchOne(this._id)
-          // Generate IDs for nested objects.
-          await this.generateIdsForNestedObjects(mission)
           // Update the mission with the current mission.
-          await axios.put(ClientMission.API_ENDPOINT, this.toJson())
+          await axios.put(
+            ClientMission.API_ENDPOINT,
+            this.toJson({
+              exportType: 'standard',
+              includeId: true,
+            }),
+          )
         }
         resolve()
       } catch (error) {

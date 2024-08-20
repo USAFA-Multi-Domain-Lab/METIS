@@ -202,6 +202,11 @@ const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
                 if (error.message.includes('validation failed')) {
                   return response.sendStatus(400)
                 }
+                // If this error was a duplicate key error,
+                // then it is a conflict.
+                else if (error.message.includes('duplicate key error')) {
+                  return response.sendStatus(409)
+                }
                 // Else it's a server error.
                 else {
                   return response.sendStatus(500)

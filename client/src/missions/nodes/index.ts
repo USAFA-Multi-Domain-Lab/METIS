@@ -1,7 +1,6 @@
 import axios from 'axios'
 import memoizeOne from 'memoize-one'
 import { TNodeButton } from 'src/components/content/session/mission-map/objects/MissionNode'
-import ObjectId from 'src/object-id'
 import { TEventListenerTarget } from 'src/toolbox/hooks'
 import ClientMission, { TClientMissionTypes, TMissionNavigable } from '..'
 import { TRequestMethod } from '../../../../shared/connect/data'
@@ -14,7 +13,6 @@ import MissionNode, {
   TMissionNodeJson,
   TMissionNodeOptions,
 } from '../../../../shared/missions/nodes'
-import MapToolbox from '../../../../shared/toolbox/maps'
 import ClientMissionAction, { TClientMissionActionOptions } from '../actions'
 import ClientActionExecution from '../actions/executions'
 import ClientActionOutcome from '../actions/outcomes'
@@ -220,6 +218,11 @@ export default class ClientMissionNode
     return [this.mission, this.force, this]
   }
 
+  /**
+   * @param force The force of which the node is a part.
+   * @param data The node data from which to create the node. Any ommitted values will be set to the default properties defined in MissionNode.DEFAULT_PROPERTIES.
+   * @param options The options for creating the node.
+   */
   public constructor(
     force: ClientMissionForce,
     data: Partial<TMissionNodeJson> = MissionNode.DEFAULT_PROPERTIES,
@@ -599,45 +602,6 @@ export default class ClientMissionNode
 
     // Return the child nodes.
     return children
-  }
-
-  /**
-   * Exports the node as a JSON object.
-   * @resolves The JSON object representing the node.
-   * @rejects If there was an error exporting the node.
-   */
-  public async initExport(): Promise<TMissionNodeJson> {
-    return new Promise<TMissionNodeJson>(async (resolve, reject) => {
-      try {
-        // Generate a new object ID for the node.
-        this._id = await ObjectId.$fetch()
-        // Create the JSON object.
-        let json: TMissionNodeJson = {
-          _id: this._id,
-          structureKey: this.structureKey,
-          name: this.name,
-          color: this.color,
-          description: this.description,
-          preExecutionText: this.preExecutionText,
-          depthPadding: this.depthPadding,
-          executable: this.executable,
-          device: this.device,
-          actions: await Promise.all(
-            MapToolbox.mapToArray(
-              this.actions,
-              async (action: ClientMissionAction) => await action.initExport(),
-            ),
-          ),
-        }
-        // Resolve the JSON object.
-        resolve(json)
-      } catch (error: any) {
-        // Log the error.
-        console.error('Failed to export the node.')
-        console.error(error)
-        reject(error)
-      }
-    })
   }
 
   /* -- static -- */

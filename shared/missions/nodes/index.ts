@@ -289,7 +289,7 @@ export default abstract class MissionNode<
 
     // Set properties from data.
     this.force = force
-    this._id = data._id?.toString() ?? MissionNode.DEFAULT_PROPERTIES._id
+    this._id = data._id ?? MissionNode.DEFAULT_PROPERTIES._id
     this.structureKey =
       data.structureKey ?? MissionNode.DEFAULT_PROPERTIES.structureKey
     this.name = data.name ?? MissionNode.DEFAULT_PROPERTIES.name
@@ -343,8 +343,8 @@ export default abstract class MissionNode<
   /**
    * Imports the execution data into a execution object of the
    * type passed in IActionExecution.
-   * @param {IActionExecutionJSON[]} data The outcome data to parse.
-   * @returns {IActionExecution[]} The parsed outcome data.
+   * @param data The outcome data to parse.
+   * @returns The parsed outcome data.
    */
   protected abstract importExecutions(
     data: TActionExecutionJson,
@@ -353,8 +353,8 @@ export default abstract class MissionNode<
   /**
    * Imports the outcome data into the outcome objects of the
    * type passed in IActionOutcome.
-   * @param {TActionOutcomeJson[]} data The outcome data to parse.
-   * @returns {IActionOutcome[]} The parsed outcome data.
+   * @param data The outcome data to parse.
+   * @returns The parsed outcome data.
    */
   protected abstract importOutcomes(data: TActionOutcomeJson[]): TOutcome<T>[]
 

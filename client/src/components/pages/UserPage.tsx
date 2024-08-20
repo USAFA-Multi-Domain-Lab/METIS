@@ -215,12 +215,16 @@ export default function UserPage({ userId }: IUserPage): JSX.Element | null {
       ) {
         try {
           beginLoading('Updating user...')
-          await ClientUser.$update(user)
-          setUser(await ClientUser.$fetchOne(user._id))
+          setUser(await ClientUser.$update(user))
           notify('User successfully saved.')
           finishLoading()
         } catch (error: any) {
-          notify('User failed to save.')
+          if (error instanceof AxiosError && error.response?.status === 409) {
+            notify('This user already exists. Try using a different username.')
+            setUsernameAlreadyExists(true)
+          } else {
+            notify('User failed to save.', { errorMessage: true })
+          }
           finishLoading()
           setAreUnsavedChanges(true)
         }

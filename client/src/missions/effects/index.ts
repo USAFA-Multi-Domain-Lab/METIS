@@ -1,11 +1,7 @@
-import ObjectId from 'src/object-id'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
 import { TClientMissionTypes, TMissionNavigable } from '..'
-import Effect, {
-  TCommonEffectJson,
-  TEffectOptions,
-} from '../../../../shared/missions/effects'
+import Effect, { TEffectOptions } from '../../../../shared/missions/effects'
 import { TTargetArg } from '../../../../shared/target-environments/args'
 import ForceArg from '../../../../shared/target-environments/args/force-arg'
 import NodeArg from '../../../../shared/target-environments/args/node-arg'
@@ -310,36 +306,6 @@ export class ClientEffect
         `Effect: { name: "${this.name}", _id: "${this._id}" }`
       throw new Error(message)
     }
-  }
-
-  /**
-   * Exports the effect as a JSON object.
-   * @resolves The JSON object representing the effect.
-   * @rejects If there was an error exporting the effect.
-   */
-  public async initExport(): Promise<TCommonEffectJson> {
-    return new Promise<TCommonEffectJson>(async (resolve, reject) => {
-      try {
-        // Generate a new object ID for the effect.
-        this._id = await ObjectId.$fetch()
-        // Create the JSON object.
-        let json: TCommonEffectJson = {
-          _id: this._id,
-          name: this.name,
-          description: this.description,
-          targetEnvironmentVersion: this.targetEnvironmentVersion,
-          targetId: this.target ? this.target._id : this.targetId,
-          args: this.args,
-        }
-        // Resolve the JSON object.
-        resolve(json)
-      } catch (error: any) {
-        // Log the error.
-        console.error('Failed to export the effect.')
-        console.error(error)
-        reject(error)
-      }
-    })
   }
 }
 

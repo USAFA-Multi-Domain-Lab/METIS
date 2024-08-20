@@ -1,16 +1,90 @@
 import bcryptjs from 'bcryptjs'
 import { Request } from 'express'
 import ServerUser from 'metis/server/users'
+import { AnyObject } from 'metis/toolbox/objects'
 import User, { TCommonUserJson } from 'metis/users'
 import UserAccess, { TUserAccess } from 'metis/users/accesses'
 import UserPermission, { TUserPermission } from 'metis/users/permissions'
 import mongoose, { Schema } from 'mongoose'
+import MetisDatabase from '..'
 import { StatusError } from '../../http'
 import { databaseLogger } from '../../logging'
 import Access from '../schema-types/user-access'
 import Permission from '../schema-types/user-permission'
 
+let ObjectId = mongoose.Types.ObjectId
+
 /* -- SCHEMA VALIDATORS -- */
+
+/**
+ * Validates the user data.
+ * @param user The user data to validate.
+ * @param next The next function to call.
+ */
+const validate_users = (user: any, next: any): void => {
+  // Object to store results.
+  let results: { error?: Error } = {}
+  // Object to store existing _id's.
+  let existingIds: AnyObject = {}
+
+  // Algorithm to check for duplicate _id's.
+  const _idCheckerAlgorithm = (cursor = user) => {
+    // If the cursor has a _doc property and its an object...
+    if (cursor._doc !== undefined && cursor._doc instanceof Object) {
+      // ...then set the cursor to the _doc property.
+      cursor = cursor._doc
+    }
+    // If the cursor is an object, but not an ObjectId...
+    if (cursor instanceof Object && !(cursor instanceof ObjectId)) {
+      // ...and it has an _id property and the _id already exists...
+      if (cursor._id && cursor._id in existingIds) {
+        // ...then set the error and return.
+        results.error = new Error(
+          `Error in user:\nDuplicate _id used (${cursor._id}).`,
+        )
+        results.error.name = MetisDatabase.ERROR_BAD_DATA
+        return
+      }
+      // Or, if the cursor is a User and the _id isn't a valid ObjectId...
+      else if (
+        cursor instanceof User &&
+        !mongoose.isValidObjectId(cursor._id)
+      ) {
+        // ...then set the error and return.
+        results.error = new Error(
+          `Error in user:\nInvalid _id used (${cursor._id}).`,
+        )
+        results.error.name = MetisDatabase.ERROR_BAD_DATA
+        return
+      }
+      // Otherwise, add the _id to the existingIds object.
+      else {
+        existingIds[cursor._id] = true
+      }
+      // Check the object's values for duplicate _id's.
+      for (let value of Object.values(cursor)) {
+        _idCheckerAlgorithm(value)
+      }
+    }
+    // Otherwise, if the cursor is an array...
+    else if (cursor instanceof Array) {
+      // ...then check each value in the array for duplicate _id's.
+      for (let value of cursor) {
+        _idCheckerAlgorithm(value)
+      }
+    }
+  }
+
+  // Check for duplicate _id's.
+  _idCheckerAlgorithm()
+
+  // Check for error.
+  if (results.error) {
+    return next(results.error)
+  }
+
+  return next()
+}
 
 /**
  * Validates the username of a user.
@@ -181,6 +255,18 @@ UserSchema.statics.authenticate = (
     },
   )
 }
+
+// Called before a save is made
+// to the database.
+UserSchema.pre('save', function (next) {
+  validate_users(this, next)
+})
+
+// Called before an update is made
+// to the database.
+UserSchema.pre('update', function (next) {
+  validate_users(this, next)
+})
 
 /* -- SCHEMA PLUGINS -- */
 
