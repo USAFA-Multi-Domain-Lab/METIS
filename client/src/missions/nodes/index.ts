@@ -466,8 +466,10 @@ export default class ClientMissionNode
     // Remove execution.
     this._execution = null
 
-    // If the outcome is successful...
-    if (successful) {
+    // If the outcome is successful and the node is openable...
+    if (successful && this.openable) {
+      // Set the node to open.
+      this.opened = true
       // Update last opened node cache.
       this.mission.lastOpenedNode = this
       // Reveal child nodes, if any.
@@ -476,6 +478,8 @@ export default class ClientMissionNode
       }
       // Handle structure change.
       this.mission.handleStructureChange()
+      // Emit event.
+      this.emitEvent('open')
     }
 
     // Handle node event.
@@ -571,7 +575,7 @@ export default class ClientMissionNode
     let mission = this.mission
 
     // Generate children.
-    let children: Array<ClientMissionNode> = data.map((datum) => {
+    let children: ClientMissionNode[] = data.map((datum) => {
       // Get child prototype.
       let childPrototypeId = datum.structureKey
       let childPrototype = this.prototype.children.find(

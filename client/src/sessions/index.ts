@@ -747,8 +747,6 @@ export default class SessionClient extends Session<
     // Get the action's node.
     let node: ClientMissionNode = action.node
 
-    // Generate an outcome object.
-
     // Handle outcome on the node.
     node.loadOutcome(outcome, { revealedChildNodes })
 

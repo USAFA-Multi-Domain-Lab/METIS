@@ -115,6 +115,15 @@ export default class ServerEffect extends Effect<TServerMissionTypes> {
             ? areDependenciesMet.push(true)
             : areDependenciesMet.push(false)
         }
+        // If the dependency argument is found and the dependency
+        // is blacklisted, then push true to the dependencies met
+        // array.
+        else if (
+          dependencyArg &&
+          Dependency.blacklistedDependencies.includes(dependency.name)
+        ) {
+          areDependenciesMet.push(true)
+        }
         // Otherwise, the dependency argument doesn't exist.
         else {
           areDependenciesMet.push(false)

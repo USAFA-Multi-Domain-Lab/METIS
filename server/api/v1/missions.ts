@@ -9,6 +9,7 @@ import InfoModel from 'metis/server/database/models/info'
 import MissionModel from 'metis/server/database/models/missions'
 import { TMetisRouterMap } from 'metis/server/http/router'
 import { databaseLogger } from 'metis/server/logging'
+import mongoose from 'mongoose'
 import path from 'path'
 import { v4 as generateHash } from 'uuid'
 import { RequestBodyFilters, defineRequests } from '../../middleware/requests'
@@ -493,6 +494,63 @@ export const routerMap: TMetisRouterMap = (
                   // set it to an empty string.
                   if (effect.description === '<p><br></p>') {
                     effect.description = ''
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        // -- BUILD 26 --
+        // This migration script is responsible
+        // for converting any objects nested within
+        // a mission that have an "_id" property that
+        // is an ObjectId to a UUID.
+        if (schemaBuildNumber < 26) {
+          let mission = missionData
+
+          // Loop through forces.
+          for (let force of mission.forces) {
+            // If the force has an ObjectId as the _id,
+            // generate a UUID and set it as the _id.
+            if (
+              mongoose.isValidObjectId(force._id) ||
+              mongoose.isObjectIdOrHexString(force._id)
+            ) {
+              force._id = generateHash()
+            }
+
+            // Loop through nodes.
+            for (let node of force.nodes) {
+              // If the node has an ObjectId as the _id,
+              // generate a UUID and set it as the _id.
+              if (
+                mongoose.isValidObjectId(node._id) ||
+                mongoose.isObjectIdOrHexString(node._id)
+              ) {
+                node._id = generateHash()
+              }
+
+              // Loop through actions.
+              for (let action of node.actions) {
+                // If the action has an ObjectId as the _id,
+                // generate a UUID and set it as the _id.
+                if (
+                  mongoose.isValidObjectId(action._id) ||
+                  mongoose.isObjectIdOrHexString(action._id)
+                ) {
+                  action._id = generateHash()
+                }
+
+                // Loop through effects.
+                for (let effect of action.effects) {
+                  // If the effect has an ObjectId as the _id,
+                  // generate a UUID and set it as the _id.
+                  if (
+                    mongoose.isValidObjectId(effect._id) ||
+                    mongoose.isObjectIdOrHexString(effect._id)
+                  ) {
+                    effect._id = generateHash()
                   }
                 }
               }

@@ -57,8 +57,8 @@ export default class ServerMissionNode extends MissionNode<TServerMissionTypes> 
 
   // Implemented
   protected importOutcomes(
-    data: Array<TActionOutcomeJson>,
-  ): Array<ServerRealizedOutcome> {
+    data: TActionOutcomeJson[],
+  ): ServerRealizedOutcome[] {
     // Map JSON to an Array of outcome objects.
     return data.map((datum: TActionOutcomeJson) => {
       // Get action for ID passed.
@@ -149,6 +149,11 @@ export default class ServerMissionNode extends MissionNode<TServerMissionTypes> 
 
     // Remove execution.
     this._execution = null
+
+    // Set the node to opened if it is openable.
+    if (this.openable) {
+      this.opened = true
+    }
 
     // Return outcome.
     return outcome

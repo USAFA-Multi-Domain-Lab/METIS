@@ -37,11 +37,6 @@ export default abstract class MissionNode<
   public force: TForce<T>
 
   // Implemented
-  public get mission(): TMission<T> {
-    return this.force.mission
-  }
-
-  // Implemented
   public _id: TCommonMissionNode['_id']
 
   // Inherited
@@ -66,6 +61,14 @@ export default abstract class MissionNode<
   public device: TCommonMissionNode['device']
 
   // Implemented
+  public actions: Map<string, TAction>
+
+  // Implemented
+  public get mission(): TMission<T> {
+    return this.force.mission
+  }
+
+  // Implemented
   public get executionState(): TCommonMissionNode['executionState'] {
     let execution: IActionExecution | null = this.execution
     let outcomes: IActionOutcome[] = this.outcomes
@@ -85,7 +88,7 @@ export default abstract class MissionNode<
     return (
       this.executable &&
       this.actions.size > 0 &&
-      (this.executionState === 'unexecuted' || this.executionState === 'failed')
+      this.executionState !== 'executing'
     )
   }
 
@@ -101,7 +104,6 @@ export default abstract class MissionNode<
 
   /**
    * Whether or not this node was manually opened.
-   * @note Only applicable to non-executable nodes.
    */
   protected opened: boolean
 
@@ -128,9 +130,6 @@ export default abstract class MissionNode<
   public set depthPadding(value: number) {
     this._depthPadding = value
   }
-
-  // Implemented
-  public actions: Map<string, TAction>
 
   /**
    * The current execution in process on the node by an action.
@@ -257,12 +256,12 @@ export default abstract class MissionNode<
 
   // Implemented
   public get isOpen(): TCommonMissionNode['isOpen'] {
-    return this.opened || this.executionState === 'successful'
+    return this.opened
   }
 
   // Implemented
   public get openable(): TCommonMissionNode['openable'] {
-    return !this.executable && !this.isOpen
+    return !this.opened
   }
 
   // Implemented
@@ -483,10 +482,6 @@ export default abstract class MissionNode<
  */
 export interface TCommonMissionNode {
   /**
-   * The mission of which the node is a part.
-   */
-  mission: TCommonMission
-  /**
    * The force the node belongs to.
    */
   force: TCommonMissionForce
@@ -528,31 +523,35 @@ export interface TCommonMissionNode {
    */
   device: boolean
   /**
+   * The actions that can be performed on the node.
+   * @note Mapped by action ID.
+   */
+  actions: Map<string, TCommonMissionAction>
+  /**
+   * The mission of which the node is a part.
+   */
+  get mission(): TCommonMission
+  /**
    * The execution state of the node.
    */
-  executionState: TNodeExecutionState
+  get executionState(): TNodeExecutionState
   /**
    * Whether or not this node is ready to be executed upon by an action.
    */
-  readyToExecute: boolean
+  get readyToExecute(): boolean
   /**
    * Whether an action is currently being executed on the node.
    */
-  executing: boolean
+  get executing(): boolean
   /**
    * Whether an action has been executed on the node.
    */
-  executed: boolean
+  get executed(): boolean
   /**
    * The amount of visual padding to apply to the left of the node in the tree.
    */
   get depthPadding(): number
   set depthPadding(value: number)
-  /**
-   * The actions that can be performed on the node.
-   * @note Mapped by action ID.
-   */
-  actions: Map<string, TCommonMissionAction>
   /**
    * The current execution in process on the node by an action.
    */
@@ -572,40 +571,43 @@ export interface TCommonMissionNode {
   /**
    * Whether or not this nodes has child nodes.
    */
-  hasChildren: boolean
+  get hasChildren(): boolean
   /**
    * Whether or not this node has siblings.
    */
-  hasSiblings: boolean
+  get hasSiblings(): boolean
   /**
    * The siblings of this node.
    */
-  siblings: TCommonMissionNode[]
+  get siblings(): TCommonMissionNode[]
   /**
    * The children of the parent of this node (Essentially siblings plus self).
    */
-  childrenOfParent: TCommonMissionNode[]
+  get childrenOfParent(): TCommonMissionNode[]
   /**
    * The sibling, if any, ordered before this node in the structure.
    */
-  previousSibling: TCommonMissionNode | null
+  get previousSibling(): TCommonMissionNode | null
   /**
    * The sibling, if any, ordered after this node in the structure.
    */
-  followingSibling: TCommonMissionNode | null
+  get followingSibling(): TCommonMissionNode | null
   /**
-   * Whether or not this node is open. True if a non-executable node has been opened, or if
-   * an executable node has been successfully executed.
+   * Whether or not this node is open.
    */
   get isOpen(): boolean
   /**
-   * Whether or not this node is can be opened using the "open" function.
+   * Whether or not this node can be opened.
    */
-  openable: boolean
+  get openable(): boolean
   /**
    * Whether or not this node has been (or at least is expected to be) revealed to the player.
    */
-  revealed: boolean
+  get revealed(): boolean
+  /**
+   * Whether or not this node is blocked.
+   */
+  get blocked(): boolean
   /**
    * Converts the node to JSON.
    * @param options Options for exporting the node to JSON.

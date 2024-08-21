@@ -276,7 +276,7 @@ export class ClientEffect
             this.args[argId] !== undefined
           ) {
             this._invalidMessage =
-              `This effect has an argument "${argId}" that doesn't belong.` +
+              `This effect has an argument "${argId}" that doesn't belong. ` +
               `Please delete this effect and create a new one.`
             return true
           }

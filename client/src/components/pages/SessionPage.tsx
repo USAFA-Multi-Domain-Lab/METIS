@@ -103,7 +103,7 @@ export default function SessionPage({
 
     // Logic that opens the next level of nodes
     // (displays the selected node's child nodes)
-    if (node.openable) {
+    if (node.openable && !node.executable) {
       session.openNode(node._id, {
         onError: (message) => handleError({ message, notifyMethod: 'bubble' }),
       })
