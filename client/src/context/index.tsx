@@ -41,7 +41,6 @@ const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
   tooltipDescription: '',
   notifications: [],
   promptData: null,
-  missionNodeColors: [],
 }
 
 /**
@@ -152,7 +151,6 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
   const [tooltipDescription, setTooltipDescription] = context.tooltipDescription
   const [notifications, setNotifications] = context.notifications
   const [promptData, setPromptData] = context.promptData
-  const [missionNodeColors, setMissionNodeColors] = context.missionNodeColors
 
   /* -- PRIVATE STATE -- */
 
@@ -606,7 +604,6 @@ export type TGlobalContextValues = {
    * Current prompt to display to the user.
    */
   promptData: TWithKey<TPrompt_P<any, any>> | null
-  missionNodeColors: string[]
 }
 
 /**

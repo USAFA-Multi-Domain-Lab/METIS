@@ -264,13 +264,13 @@ export abstract class MissionForce<
     {
       _id: StringToolbox.generateRandomId(),
       name: 'White Cell',
-      color: '#ffffff',
+      color: '#bbbbbb',
       nodes: [],
     },
     {
       _id: StringToolbox.generateRandomId(),
       name: 'Non-State Actors',
-      color: '#ce9563',
+      color: '#f49c58',
       nodes: [],
     },
     {

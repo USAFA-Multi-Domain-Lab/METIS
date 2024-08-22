@@ -15,7 +15,6 @@ import { v4 as generateHash } from 'uuid'
 import { RequestBodyFilters, defineRequests } from '../../middleware/requests'
 import uploads from '../../middleware/uploads'
 import { auth } from '../../middleware/users'
-import MissionNode from '../../missions/nodes'
 
 type MulterFile = Express.Multer.File
 
@@ -842,15 +841,6 @@ export const routerMap: TMetisRouterMap = (
   const getEnvironment = (request: Request, response: Response) =>
     response.send(process.env)
 
-  /**
-   * This will return all the available
-   * color options that can be used to
-   * style a mission-node.
-   * @returns The color options in JSON format.
-   */
-  const getColorOptions = (request: Request, response: Response) =>
-    response.json(MissionNode.COLOR_OPTIONS)
-
   /* ---------------------------- UPDATE ---------------------------- */
 
   /**
@@ -1035,9 +1025,6 @@ export const routerMap: TMetisRouterMap = (
 
   // -- GET /api/v1/missions/environment/
   router.get('/environment/', getEnvironment)
-
-  // -- GET /api/v1/missions/colors/
-  router.get('/colors/', getColorOptions)
 
   // -- GET | /api/v1/missions/ --
   router.get('/', auth({ permissions: ['missions_read'] }), getMissions)

@@ -1,8 +1,7 @@
-import axios from 'axios'
 import memoizeOne from 'memoize-one'
 import { TNodeButton } from 'src/components/content/session/mission-map/objects/MissionNode'
 import { TEventListenerTarget } from 'src/toolbox/hooks'
-import ClientMission, { TClientMissionTypes, TMissionNavigable } from '..'
+import { TClientMissionTypes, TMissionNavigable } from '..'
 import { TRequestMethod } from '../../../../shared/connect/data'
 import { TCommonMissionActionJson } from '../../../../shared/missions/actions'
 import { TActionExecutionJson } from '../../../../shared/missions/actions/executions'
@@ -670,26 +669,6 @@ export default class ClientMissionNode
       ClientMissionNode.FONT_SIZE) *
       ClientMissionNode.FONT_RATIO,
   )
-
-  /**
-   * Fetches available colors for nodes.
-   * @resolves The available colors options for nodes.
-   * @rejects The error that occurred while fetching the colors.
-   */
-  public static $fetchColors(): Promise<string[]> {
-    return new Promise<string[]>(async (resolve, reject) => {
-      try {
-        let { data: colors } = await axios.get<string[]>(
-          `${ClientMission.API_ENDPOINT}/colors/`,
-        )
-        resolve(colors)
-      } catch (error) {
-        console.error('Failed to retrieve the color options.')
-        console.error(error)
-        reject(error)
-      }
-    })
-  }
 }
 
 /* ------------------------------ CLIENT NODE TYPES ------------------------------ */
