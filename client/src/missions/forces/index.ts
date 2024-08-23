@@ -31,14 +31,40 @@ export default class ClientMissionForce
     return [this.mission, this]
   }
 
+  /**
+   * The message to display when the force is invalid.
+   */
+  private _invalidMessage: string
+  /**
+   * The message to display when the force is invalid.
+   */
+  public get invalidMessage(): string {
+    return this._invalidMessage
+  }
+
+  /**
+   * @param mission The mission to which the force belongs.
+   * @param data The force data from which to create the force. Any ommitted
+   * values will be set to the default properties defined in
+   * MissionForce.DEFAULT_PROPERTIES.
+   * @param options The options for creating the force.
+   */
   public constructor(
     mission: ClientMission,
     data: Partial<TCommonMissionForceJson> = MissionForce.DEFAULT_PROPERTIES,
     options: TClientMissionForceOptions = {},
   ) {
     super(mission, data, options)
-
     this.relationshipLines = []
+    this._invalidMessage = ''
+  }
+
+  /**
+   * Evaluates if the force is defective or not.
+   * @returns boolean indicating if the force is defective or not.
+   */
+  public isDefective(): boolean {
+    return false
   }
 
   // Implemented

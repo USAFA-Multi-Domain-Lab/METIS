@@ -76,33 +76,19 @@ export default function MissionEntry({
     /**
      * The buttons for the object list.
      */
-    const buttons = compute(() => {
+    const buttons: TValidPanelButton[] = compute(() => {
       // Create a default list of buttons.
       let buttons: TValidPanelButton[] = []
       // Create a list of mini actions that are available.
-      let availableMiniActions: SingleTypeObject<TValidPanelButton> = {}
-
-      // If the object is an effect, then create mini actions for it.
-      if (object instanceof ClientEffect) {
-        // If the action is available then add the edit and remove buttons.
-        availableMiniActions = {
-          warning: {
-            icon: 'warning-transparent',
-            key: 'warning',
-            onClick: () => {},
-            cursor: 'help',
-            tooltipDescription: object.invalidMessage,
-          },
-          remove: {
-            icon: 'remove',
-            key: 'remove',
-            onClick: async () => {
-              await handleDeleteEffectRequest(object)
-              remount()
-            },
-            tooltipDescription: 'Delete effect.',
-          },
-        }
+      let availableMiniActions: SingleTypeObject<TValidPanelButton> = {
+        warning: {
+          icon: 'warning-transparent',
+          key: 'warning',
+          onClick: () => {},
+          cursor: 'help',
+          tooltipDescription:
+            'If this conflict is not resolved, this mission can still be used to launch a session, but the session may not function as expected.',
+        },
       }
 
       // Add the buttons to the list.
@@ -114,14 +100,14 @@ export default function MissionEntry({
 
     return (
       <div className='Row' key={`object-row-${object._id}`}>
+        <ButtonSvgPanel buttons={buttons} size={'small'} />
         <div
           className='RowContent Select'
           onClick={() => mission.select(object)}
         >
-          {object.name}
+          {object.invalidMessage}
           <Tooltip description='Click to resolve.' />
         </div>
-        <ButtonSvgPanel buttons={buttons} size={'small'} />
       </div>
     )
   }
@@ -169,7 +155,7 @@ export default function MissionEntry({
               <List<TMissionDefectiveObject>
                 items={defectiveObjects}
                 renderItemDisplay={(object) => renderObjectListItem(object)}
-                headingText={'Warnings'}
+                headingText={'Unresolved Conflicts'}
                 sortByMethods={[ESortByMethod.Name]}
                 nameProperty={'name'}
                 alwaysUseBlanks={false}

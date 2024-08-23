@@ -107,7 +107,7 @@ const validate_missions = (mission: any, next: any): void => {
       // Or, if the cursor is a Mission and the _id isn't a valid ObjectId...
       else if (
         cursor instanceof Mission &&
-        !mongoose.isValidObjectId(cursor._id)
+        !mongoose.isObjectIdOrHexString(cursor._id)
       ) {
         // ...then set the error and return.
         results.error = new Error(

@@ -1,12 +1,16 @@
 import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
 import { TClientMissionTypes, TMissionNavigable } from '..'
-import Effect, { TEffectOptions } from '../../../../shared/missions/effects'
+import Effect, {
+  TCommonEffectJson,
+  TEffectOptions,
+} from '../../../../shared/missions/effects'
 import { TTargetArg } from '../../../../shared/target-environments/args'
 import ForceArg from '../../../../shared/target-environments/args/force-arg'
 import NodeArg from '../../../../shared/target-environments/args/node-arg'
 import Dependency from '../../../../shared/target-environments/dependencies'
 import { AnyObject } from '../../../../shared/toolbox/objects'
+import ClientMissionAction from '../actions'
 
 /**
  * Class representing an effect on the client-side that can be
@@ -19,6 +23,31 @@ export class ClientEffect
   // Implemented
   public get path(): TMissionNavigable[] {
     return [this.mission, this.force, this.node, this.action, this]
+  }
+
+  /**
+   * The message to display when the effect is invalid.
+   */
+  private _invalidMessage: string
+  /**
+   * The message to display when the effect is invalid.
+   */
+  public get invalidMessage(): string {
+    return this._invalidMessage
+  }
+
+  /**
+   * @param action The action to which the effect belongs.
+   * @param data The data for the effect.
+   * @param options The options for the effect.
+   */
+  public constructor(
+    action: ClientMissionAction,
+    data: Partial<TCommonEffectJson> = ClientEffect.DEFAULT_PROPERTIES,
+    options: TClientEffectOptions = {},
+  ) {
+    super(action, data, options)
+    this._invalidMessage = ''
   }
 
   /**
@@ -133,8 +162,8 @@ export class ClientEffect
     // *** within that environment cannot be found either.
     if (!this.targetEnvironment || !this.target) {
       this._invalidMessage =
-        'This effect has a target or a target environment that could not be found. ' +
-        'Please delete this effect and create a new one.'
+        `The effect, "${this.name}," has a target or a target environment that couldn't be found. ` +
+        `Please contact an administrator on how to resolve this conflict, or delete the effect and create a new one.`
       return true
     }
 
@@ -148,16 +177,16 @@ export class ClientEffect
     // If the effect's target environment cannot be found, then the effect is defective.
     if (!currentTargetEnv) {
       this._invalidMessage =
-        `This effect's target environment "${this.targetEnvironment.name}" could not be found. ` +
-        `Please delete this effect and create a new one.`
+        `The effect, "${this.name}," has a target environment, "${this.targetEnvironment.name}," that couldn't be found. ` +
+        `Please contact an administrator on how to resolve this conflict, or delete the effect and create a new one.`
       return true
     }
     // If the effect's target environment version doesn't match the current version, then the effect is defective.
     if (this.targetEnvironmentVersion !== currentTargetEnv.version) {
       this._invalidMessage =
-        `This effect's target environment "${this.targetEnvironment.name}" has a different version. ` +
-        `Incompatible versions could cause an effect to fail to be applied to its target during a session. ` +
-        `Please contact an administrator on how to resolve this issue.`
+        `The effect, "${this.name}," has a target environment, "${this.targetEnvironment.name}," with an incompatible version. ` +
+        `Incompatible versions can cause an effect to fail to be applied to its target during a session. ` +
+        `Please contact an administrator on how to resolve this conflict, or delete the effect and create a new one.`
       return true
     }
 
@@ -168,8 +197,8 @@ export class ClientEffect
     // If the effect's target cannot be found, then the effect is defective.
     if (!currentTarget) {
       this._invalidMessage =
-        `This effect's target "${this.target.name}" could not be found. ` +
-        `Please delete this effect and create a new one.`
+        `The effect, "${this.name}," has a target, "${this.target.name}," that couldn't be found. ` +
+        `Please delete the effect and create a new one.`
       return true
     }
     // Otherwise, check the effect's arguments against the target's arguments.
@@ -181,8 +210,8 @@ export class ClientEffect
         // If the argument cannot be found, then the effect is defective.
         if (!arg) {
           this._invalidMessage =
-            `This effect's argument "${argId}" could not be found within the target "${this.target.name}". ` +
-            `Please delete this effect and create a new one.`
+            `The effect, "${this.name}," has an argument, "${argId}," that couldn't be found within the target, "${this.target.name}." ` +
+            `Please delete the effect and create a new one.`
           return true
         }
         // Otherwise, check the argument's value.
@@ -198,8 +227,8 @@ export class ClientEffect
             this.allDependenciesMet(arg.dependencies)
           ) {
             this._invalidMessage =
-              `The argument "${arg.name}" within the effect "${this.name}" is required but has no value. ` +
-              `Please enter a value or delete this effect and create a new one.`
+              `The argument, "${arg.name}," within the effect, "${this.name}," is required, yet has no value. ` +
+              `Please enter a value, or delete the effect and create a new one.`
             return true
           }
           // Check if the argument is a boolean and has a value.
@@ -209,8 +238,8 @@ export class ClientEffect
             this.allDependenciesMet(arg.dependencies)
           ) {
             this._invalidMessage =
-              `The argument "${arg.name}" within the effect "${this.name}" has no value. ` +
-              `Please update the value by clicking the toggle switch or delete this effect and create a new one.`
+              `The argument, "${arg.name}," within the effect, "${this.name}," is required, yet has no value. ` +
+              `Please update the value by clicking the toggle switch, or delete the effect and create a new one.`
             return true
           }
           // Check if the argument is a dropdown and the selected option is valid.
@@ -219,8 +248,8 @@ export class ClientEffect
             !arg.options.find((option) => option._id === this.args[argId])
           ) {
             this._invalidMessage =
-              `The field labeled "${arg.name}" has an invalid option selected. ` +
-              `Please select a valid option or delete this effect and create a new one.`
+              `The effect, "${this.name}," has an invalid option selected. ` +
+              `Please select a valid option, or delete the effect and create a new one.`
             return true
           }
           // todo: implement pattern validation and determine how to display the pattern to the user
@@ -241,8 +270,8 @@ export class ClientEffect
             !this.mission.getForce(this.args[argId][ForceArg.FORCE_ID_KEY])
           ) {
             this._invalidMessage =
-              `The field labeled "${arg.name}" has a force selected that could not be found in the current mission. ` +
-              `Please select a valid force or delete this effect and create a new one.`
+              `The effect, "${this.name}," has an invalid force selected. ` +
+              `Please select a valid force, or delete the effect and create a new one.`
             return true
           }
           // Check if the argument is a node and the node exists.
@@ -257,15 +286,15 @@ export class ClientEffect
             // If the force cannot be found, then the effect is defective.
             if (!force) {
               this._invalidMessage =
-                `The field labeled "Force" has a force selected that could not be found in the current mission. ` +
-                `Please select a valid force or delete this effect and create a new one.`
+                `The effect, "${this.name}," has an invalid force selected. ` +
+                `Please select a valid force, or delete the effect and create a new one.`
               return true
             }
             // If the node cannot be found, then the effect is defective.
             if (!node) {
               this._invalidMessage =
-                `The field labeled "${arg.name}" has a node selected that could not be found in the current mission. ` +
-                `Please select a valid node or delete this effect and create a new one.`
+                `The effect, "${this.name}," has an invalid node selected. ` +
+                `Please select a valid node, or delete the effect and create a new one.`
               return true
             }
           }
@@ -276,8 +305,8 @@ export class ClientEffect
             this.args[argId] !== undefined
           ) {
             this._invalidMessage =
-              `This effect has an argument "${argId}" that doesn't belong. ` +
-              `Please delete this effect and create a new one.`
+              `The effect, "${this.name}," has an argument, "${argId}," that doesn't belong. ` +
+              `Please delete the effect and create a new one.`
             return true
           }
         }

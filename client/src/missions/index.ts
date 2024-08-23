@@ -312,11 +312,26 @@ export default class ClientMission
     // Initialize invalid objects.
     this._defectiveObjects = []
 
-    for (let node of this.nodes) {
-      for (let action of node.actions.values()) {
-        // Validate the effects.
-        for (let effect of action.effects) {
-          if (effect.isDefective()) this._defectiveObjects.push(effect)
+    // Loop through forces.
+    for (let force of this.forces) {
+      // Validate the force.
+      if (force.isDefective()) this._defectiveObjects.push(force)
+
+      // Loop through nodes.
+      for (let node of force.nodes) {
+        // Validate the node.
+        if (node.isDefective()) this._defectiveObjects.push(node)
+
+        // Loop through actions.
+        for (let action of node.actions.values()) {
+          // Validate the action.
+          if (action.isDefective()) this._defectiveObjects.push(action)
+
+          // Loop through effects.
+          for (let effect of action.effects) {
+            // Validate the effect.
+            if (effect.isDefective()) this._defectiveObjects.push(effect)
+          }
         }
       }
     }

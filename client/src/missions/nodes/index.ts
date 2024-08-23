@@ -219,6 +219,17 @@ export default class ClientMissionNode
   }
 
   /**
+   * The message to display when the node is invalid.
+   */
+  private _invalidMessage: string
+  /**
+   * The message to display when the node is invalid.
+   */
+  public get invalidMessage(): string {
+    return this._invalidMessage
+  }
+
+  /**
    * @param force The force of which the node is a part.
    * @param data The node data from which to create the node. Any ommitted values will be set to the default properties defined in MissionNode.DEFAULT_PROPERTIES.
    * @param options The options for creating the node.
@@ -230,6 +241,15 @@ export default class ClientMissionNode
   ) {
     super(force, data, options)
     this._buttons = []
+    this._invalidMessage = ''
+  }
+
+  /**
+   * Evaluates if the node is defective or not.
+   * @returns boolean indicating if the node is defective or not.
+   */
+  public isDefective(): boolean {
+    return false
   }
 
   // Implemented

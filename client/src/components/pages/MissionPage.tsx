@@ -12,7 +12,11 @@ import ClientMissionPrototype, {
 import PrototypeCreation from 'src/missions/transformations/creations'
 import PrototypeTranslation from 'src/missions/transformations/translations'
 import { compute } from 'src/toolbox'
-import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
+import {
+  useEventListener,
+  useMountHandler,
+  useRequireLogin,
+} from 'src/toolbox/hooks'
 import { DefaultLayout, TPage_P } from '.'
 import Mission from '../../../../shared/missions'
 import { TWithKey } from '../../../../shared/toolbox/objects'
@@ -71,6 +75,14 @@ export default function MissionPage({
     useState<boolean>(false)
   const [isNewEffect, setIsNewEffect] = useState<boolean>(false)
 
+  /* -- LOGIN-SPECIFIC LOGIC -- */
+
+  // Require login for page.
+  const [login] = useRequireLogin()
+
+  // Grab the user currently logged in.
+  let { user: currentUser } = login
+
   /* -- COMPUTED -- */
 
   /**
@@ -105,6 +117,14 @@ export default function MissionPage({
 
   // componentDidMount
   const [mountHandled] = useMountHandler(async (done) => {
+    // Make sure the user has access to the page.
+    if (!currentUser.isAuthorized('missions_write')) {
+      handleError(
+        'You do not have access to this page. Please contact an administrator.',
+      )
+      return done()
+    }
+
     // Handle the editing of an existing mission.
     if (missionId !== null) {
       try {

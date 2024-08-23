@@ -112,17 +112,6 @@ export default abstract class Effect<
   }
 
   /**
-   * The message to display when the effect is invalid.
-   */
-  protected _invalidMessage: string
-  /**
-   * The message to display when the effect is invalid.
-   */
-  public get invalidMessage(): string {
-    return this._invalidMessage
-  }
-
-  /**
    * @param action The action to which the effect belongs.
    * @param data The data to use to create the Effect.
    * @param options The options for creating the Effect.
@@ -143,8 +132,6 @@ export default abstract class Effect<
       Effect.DEFAULT_PROPERTIES.targetEnvironmentVersion
     this._target = data.targetId ?? Effect.DEFAULT_PROPERTIES.targetId
     this.args = data.args ?? Effect.DEFAULT_PROPERTIES.args
-
-    this._invalidMessage = ''
 
     if (populateTargets) this.populateTargetData(this.targetId)
   }
@@ -229,10 +216,6 @@ export interface TCommonEffect {
    * The environment in which the target exists.
    */
   get targetEnvironment(): TCommonTargetEnv | null
-  /**
-   * The message to display when the effect is invalid.
-   */
-  get invalidMessage(): string
   /**
    * The corresponding action for the effect.
    */

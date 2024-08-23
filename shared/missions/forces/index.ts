@@ -78,6 +78,7 @@ export abstract class MissionForce<
   }
 
   /**
+   * @param mission The mission to which the force belongs.
    * @param data The force data from which to create the force. Any ommitted
    * values will be set to the default properties defined in
    * MissionForce.DEFAULT_PROPERTIES.
