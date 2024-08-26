@@ -134,21 +134,44 @@ const validate_missions = (mission: any, next: any): void => {
     }
   }
 
+  // This will ensure the mission has between
+  // one and eight forces and that each prototype
+  // in the mission has a corresponding node within
+  // each force.
+  const validateMissionForces = () => {
+    if (mission.forces.length < 1) {
+      results.error = new Error(
+        `Error in mission:\nMission must have at least one force.`,
+      )
+      results.error.name = MetisDatabase.ERROR_BAD_DATA
+      return
+    }
+    if (mission.forces.length > 8) {
+      results.error = new Error(
+        `Error in mission:\nMission can have no more than eight forces.`,
+      )
+      results.error.name = MetisDatabase.ERROR_BAD_DATA
+      return
+    }
+  }
+
   // Check for duplicate _id's.
   _idCheckerAlgorithm()
 
   // Check for error.
-  if (results.error) {
-    return next(results.error)
-  }
+  if (results.error) return next(results.error)
 
   // Validate node structure.
   results = validateNodeStructure()
 
   // Check for error.
-  if (results.error) {
-    return next(results.error)
-  }
+  if (results.error) return next(results.error)
+
+  // Validate the mission forces.
+  validateMissionForces()
+
+  // Check for error.
+  if (results.error) return next(results.error)
 
   return next()
 }

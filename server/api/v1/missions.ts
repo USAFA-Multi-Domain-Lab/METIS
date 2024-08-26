@@ -45,7 +45,10 @@ export const routerMap: TMetisRouterMap = (
         databaseLogger.error('Failed to create mission:')
         databaseLogger.error(error)
 
-        if (error.name === MetisDatabase.ERROR_BAD_DATA) {
+        if (
+          error.name === MetisDatabase.ERROR_BAD_DATA ||
+          error.message.includes('validation failed')
+        ) {
           return response.sendStatus(400)
         } else {
           return response.sendStatus(500)
@@ -879,7 +882,10 @@ export const routerMap: TMetisRouterMap = (
 
             // If this error was a validation error,
             // then it is a bad request.
-            if (error.message.includes('validation failed')) {
+            if (
+              error.name === MetisDatabase.ERROR_BAD_DATA ||
+              error.message.includes('validation failed')
+            ) {
               return response.sendStatus(400)
             }
             // Else it's a server error.
