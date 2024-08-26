@@ -45,7 +45,7 @@ const validate_missions = (mission: any, next: any): void => {
   let parentStructure: TCommonMissionJson['nodeStructure'] =
     mission.nodeStructure
   // Array to store the structure keys.
-  let correspondingNodeStructureKeys: TMissionNodeJson['structureKey'][] = []
+  let prototypeIds: TMissionNodeJson['structureKey'][] = []
   // Object to store results.
   let results: { error?: Error } = {}
   // Object to store existing _id's.
@@ -66,14 +66,14 @@ const validate_missions = (mission: any, next: any): void => {
     }
 
     for (let [key, value] of Object.entries(nodeStructure)) {
-      if (correspondingNodeStructureKeys.includes(key)) {
+      if (prototypeIds.includes(key)) {
         let error: Error = new Error(
           `Error in nodeStructure:\nDuplicate structureKey used (${key}).`,
         )
         error.name = MetisDatabase.ERROR_BAD_DATA
         return { error }
       } else {
-        correspondingNodeStructureKeys.push(key)
+        prototypeIds.push(key)
       }
 
       let results: { error?: Error } = validateNodeStructure(value, key)
@@ -139,6 +139,8 @@ const validate_missions = (mission: any, next: any): void => {
   // in the mission has a corresponding node within
   // each force.
   const validateMissionForces = () => {
+    // Ensure correct number of forces exist
+    // the mission.
     if (mission.forces.length < 1) {
       results.error = new Error(
         `Error in mission:\nMission must have at least one force.`,
@@ -152,6 +154,39 @@ const validate_missions = (mission: any, next: any): void => {
       )
       results.error.name = MetisDatabase.ERROR_BAD_DATA
       return
+    }
+
+    // Loop through each force.
+    for (let force of mission.forces) {
+      // Create a copy of the prototypeIds.
+      let withoutNode = [...prototypeIds]
+
+      // Loop through nodes.
+      for (let node of force.nodes) {
+        // Get the structure key.
+        let structureKey = node.structureKey
+
+        // Ensure the structure key exists.
+        if (!prototypeIds.includes(structureKey)) {
+          results.error = new Error(
+            `Error in mission:\nStructure key "${structureKey}" for "${node.name}" in "${force.name}" does not exist in the mission's nodeStructure.`,
+          )
+          results.error.name = MetisDatabase.ERROR_BAD_DATA
+          return
+        }
+
+        // Remove the structure key from the copy.
+        withoutNode = withoutNode.filter((key) => key !== structureKey)
+      }
+
+      // Ensure all nodes are present.
+      if (withoutNode.length > 0) {
+        results.error = new Error(
+          `Error in mission:\nStructure key "${withoutNode[0]}" is missing from "${force.name}".`,
+        )
+        results.error.name = MetisDatabase.ERROR_BAD_DATA
+        return
+      }
     }
   }
 
