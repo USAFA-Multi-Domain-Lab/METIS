@@ -403,7 +403,7 @@ export default abstract class MissionNode<
       )
 
       // Construct session-specific JSON.
-      let sessionJson: IMissionNodeSessionJson = {
+      let sessionJson: TMissionNodeSessionJson = {
         opened: this.opened,
         executionState: this.executionState,
         execution: executionJson,
@@ -719,7 +719,7 @@ export type TNode<T extends TCommonMissionTypes> = T['node']
 /**
  * Session-specific JSON data for a MissionNode object.
  */
-export interface IMissionNodeSessionJson {
+export interface TMissionNodeSessionJson {
   opened: boolean
   executionState: TNodeExecutionState
   execution: TActionExecutionJson | null
@@ -729,11 +729,11 @@ export interface IMissionNodeSessionJson {
 
 /**
  * Plain JSON representation of a MissionNode object.
- * Type built from TCommonMissionNodeJson and IMissionNodeSessionJSON,
- * with all properties from IMissionNodeSessionJSON being partial.
+ * Type built from TCommonMissionNodeJson and TMissionNodeSessionJSON,
+ * with all properties from TMissionNodeSessionJSON being partial.
  */
 export type TMissionNodeJson = TCommonMissionNodeJson &
-  Partial<IMissionNodeSessionJson>
+  Partial<TMissionNodeSessionJson>
 
 /**
  * Options for MissionNode.toJSON method.

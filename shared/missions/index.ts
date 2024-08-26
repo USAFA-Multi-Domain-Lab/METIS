@@ -60,9 +60,6 @@ export default abstract class Mission<
   public versionNumber: number
 
   // Implemented
-  public initialResources: number
-
-  // Implemented
   public prototypes: TPrototype<T>[]
 
   // Implemented
@@ -88,8 +85,6 @@ export default abstract class Mission<
       data.introMessage ?? Mission.DEFAULT_PROPERTIES.introMessage
     this.versionNumber =
       data.versionNumber ?? Mission.DEFAULT_PROPERTIES.versionNumber
-    this.initialResources =
-      data.initialResources ?? Mission.DEFAULT_PROPERTIES.initialResources
     this.seed = data.seed ?? Mission.DEFAULT_PROPERTIES.seed
     this.prototypes = []
     this.forces = []
@@ -120,7 +115,6 @@ export default abstract class Mission<
       name: this.name,
       introMessage: this.introMessage,
       versionNumber: this.versionNumber,
-      initialResources: this.initialResources,
       seed: this.seed,
       nodeStructure: {},
       forces: [],
@@ -350,7 +344,6 @@ export default abstract class Mission<
       name: 'New Mission',
       introMessage: '<p>Welcome to your new mission!</p>',
       versionNumber: 1,
-      initialResources: 100,
       seed: generateHash(),
       nodeStructure: {},
       forces: [MissionForce.DEFAULT_FORCES[0]],
@@ -512,10 +505,6 @@ export interface TCommonMission {
    */
   versionNumber: number
   /**
-   * The amount of resources available to the student at the start of the mission.
-   */
-  initialResources: number
-  /**
    * The seed for the mission. Pre-determines outcomes.
    */
   seed: string
@@ -584,10 +573,6 @@ export interface TCommonMissionJson {
    * The version number of the mission.
    */
   versionNumber: number
-  /**
-   * The amount of resources available to the student at the start of the mission.
-   */
-  initialResources: number
   /**
    * The seed for the mission. Pre-determines outcomes.
    */

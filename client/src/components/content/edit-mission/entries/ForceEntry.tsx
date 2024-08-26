@@ -6,6 +6,7 @@ import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
 import Prompt from '../../communication/Prompt'
 import { DetailColorSelector } from '../../form/DetailColorSelector'
+import { DetailNumber } from '../../form/DetailNumber'
 import { DetailString } from '../../form/DetailString'
 import { ButtonText, TButtonText } from '../../user-controls/ButtonText'
 import './index.scss'
@@ -25,6 +26,9 @@ export default function ForceEntry({
   /* -- STATE -- */
   const [name, setName] = useState<string>(force.name)
   const [color, setColor] = useState<string>(force.color)
+  const [initialResources, setInitialResources] = useState<number>(
+    force.initialResources,
+  )
 
   /* -- COMPUTED -- */
 
@@ -76,10 +80,11 @@ export default function ForceEntry({
     // Update the force properties.
     force.name = name
     force.color = color
+    force.initialResources = initialResources
 
     // Allow the user to save the changes.
     handleChange()
-  }, [name, color])
+  }, [name, color, initialResources])
 
   // This displays changes in the mission path
   // and the tab bar.
@@ -138,6 +143,14 @@ export default function ForceEntry({
             setState={setColor}
             buttons={colorButtons}
             key={`${force._id}_color`}
+          />
+          <DetailNumber
+            fieldType='required'
+            label='Initial Resources'
+            stateValue={initialResources}
+            setState={setInitialResources}
+            integersOnly={true}
+            key={`${force._id}_initialResources`}
           />
           <div className='ButtonContainer'>
             <ButtonText

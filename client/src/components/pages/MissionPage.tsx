@@ -61,6 +61,7 @@ export default function MissionPage({
   /* -- STATE -- */
 
   const [mission, setMission] = useState<ClientMission>(new ClientMission())
+  const selectedForceState = useState<ClientMissionForce | null>(null)
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(
     missionId === null ? true : false,
   )
@@ -674,6 +675,7 @@ export default function MissionPage({
                   onPrototypeSelect={onPrototypeSelect}
                   onNodeSelect={onNodeSelect}
                   overlayContent={modalJsx}
+                  selectedForce={selectedForceState}
                 />
               ),
             }}

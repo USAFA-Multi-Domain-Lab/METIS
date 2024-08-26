@@ -387,7 +387,7 @@ function Option({ session, action, select }: TOption_P) {
 
     // Disable the option if there are not enough resources
     // to execute the particular action.
-    if (resourceCost > session.resources) {
+    if (resourceCost > action.force.resourcesRemaining) {
       classList.push('Disabled')
     }
 

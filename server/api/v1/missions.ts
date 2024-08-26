@@ -29,20 +29,13 @@ export const routerMap: TMetisRouterMap = (
    * @returns The new mission.
    */
   const createMission = (request: Request, response: Response) => {
-    let {
-      name,
-      introMessage,
-      versionNumber,
-      initialResources,
-      nodeStructure,
-      forces,
-    } = request.body as TCommonMissionJson
+    let { name, introMessage, versionNumber, nodeStructure, forces } =
+      request.body as TCommonMissionJson
 
     let mission = new MissionModel({
       name,
       introMessage,
       versionNumber,
-      initialResources,
       nodeStructure,
       forces,
     })
@@ -950,7 +943,6 @@ export const routerMap: TMetisRouterMap = (
           name: copyName,
           introMessage: mission.introMessage,
           versionNumber: mission.versionNumber,
-          initialResources: mission.initialResources,
           nodeStructure: mission.nodeStructure,
           forces: mission.forces,
         }
@@ -1007,7 +999,6 @@ export const routerMap: TMetisRouterMap = (
         name: RequestBodyFilters.STRING,
         introMessage: RequestBodyFilters.STRING,
         versionNumber: RequestBodyFilters.NUMBER,
-        initialResources: RequestBodyFilters.NUMBER,
         nodeStructure: RequestBodyFilters.OBJECT,
         forces: RequestBodyFilters.ARRAY,
       },

@@ -33,16 +33,6 @@ export default class SessionServer extends Session<
   }
 
   /**
-   * The resources available to the participants.
-   */
-  protected _resources: number
-
-  // Implemented
-  public get resources(): number {
-    return this._resources
-  }
-
-  /**
    * Whether the session has been destroyed.
    */
   private _destroyed: boolean
@@ -69,9 +59,6 @@ export default class SessionServer extends Session<
   ) {
     super(_id, name, config, mission, participants, [], supervisors)
     this._state = 'unstarted'
-    this._resources = config.infiniteResources
-      ? Infinity
-      : mission.initialResources
     this._destroyed = false
     this.register()
     this.environmentContextProvider = new EnvironmentContextProvider(this)
@@ -179,7 +166,6 @@ export default class SessionServer extends Session<
         client.user.toJson(),
       ),
       config: this.config,
-      resources: this.resources === Infinity ? 'infinite' : this.resources,
     }
 
     return json
@@ -783,7 +769,7 @@ export default class SessionServer extends Session<
     // If the participant does not have enough
     // resources to execute the action, then
     // emit an error.
-    if (this.resources < action.resourceCost) {
+    if (action.force.resourcesRemaining < action.resourceCost) {
       return participant.emitError(
         new ServerEmittedError(
           ServerEmittedError.CODE_ACTION_INSUFFICIENT_RESOURCES,
@@ -801,15 +787,13 @@ export default class SessionServer extends Session<
         environmentContextProvider: this.environmentContextProvider,
         effectsEnabled: this.config.effectsEnabled,
         onInit: (execution: ServerActionExecution) => {
-          // Deduct action cost from resource pool.
-          this._resources -= action!.resourceCost
-
           // Construct payload for action execution
           // initiated event.
           let initiationPayload: TServerEvents['action-execution-initiated'] = {
             method: 'action-execution-initiated',
             data: {
               execution: execution.toJson(),
+              resourcesRemaining: action!.force.resourcesRemaining,
             },
             request: {
               event,

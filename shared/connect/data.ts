@@ -399,6 +399,11 @@ export type TResponseEvents = {
        * The action that was executed.
        */
       execution: NonNullable<TActionExecutionJson>
+      /**
+       * The resource remaining for the force after the
+       * action's execution cost was deducted.
+       */
+      resourcesRemaining: number
     },
     TClientEvents['request-execute-action']
   >

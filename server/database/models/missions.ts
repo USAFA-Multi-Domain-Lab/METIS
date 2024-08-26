@@ -157,8 +157,8 @@ const validate_missions = (mission: any, next: any): void => {
  * Validates the initial resources for a mission.
  * @param initialResources The initial resources to validate.
  */
-const validate_missions_initialResources = (
-  initialResources: TCommonMissionJson['initialResources'],
+const validate_missions_forces_initialResources = (
+  initialResources: TCommonMissionForceJson['initialResources'],
 ): boolean => {
   let nonNegativeInteger: boolean = isNonNegativeInteger(initialResources)
 
@@ -461,11 +461,6 @@ export const MissionSchema: Schema = new Schema(
     introMessage: { type: SanitizedHTML, required: true },
     versionNumber: { type: Number, required: true },
     seed: { type: ObjectId, required: true, auto: true },
-    initialResources: {
-      type: Number,
-      required: true,
-      validate: validate_missions_initialResources,
-    },
     deleted: { type: Boolean, required: true, default: false },
     nodeStructure: {
       type: {},
@@ -480,6 +475,11 @@ export const MissionSchema: Schema = new Schema(
             type: String,
             required: true,
             validate: validate_force_color,
+          },
+          initialResources: {
+            type: Number,
+            required: true,
+            validate: validate_missions_forces_initialResources,
           },
           nodes: {
             type: [

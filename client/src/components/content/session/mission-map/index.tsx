@@ -126,6 +126,7 @@ export default function MissionMap({
   overlayContent,
   customButtons = [],
   showMasterTab = true,
+  selectedForce: [selectedForce, selectForce],
   onTabAdd = null,
   onPrototypeSelect,
   onNodeSelect,
@@ -165,12 +166,6 @@ export default function MissionMap({
   const [structureChangeKey, setStructureChangeKey] = useState<string>(
     mission.structureChangeKey,
   )
-
-  /**
-   * The currently selected force.
-   * @note If null, the master tab is selected.
-   */
-  const [selectedForce, setForce] = useState<ClientMissionForce | null>(null)
 
   /**
    * The selected tab in the HUD.
@@ -263,7 +258,7 @@ export default function MissionMap({
       })
 
       // Set force.
-      setForce(force)
+      selectForce(force)
     },
     [selectedForce],
   )
@@ -748,6 +743,11 @@ export type TMissionMap = {
    * @default true
    */
   showMasterTab?: boolean
+  /**
+   * The React state for tracking the currently selected force.
+   * @note If undefined, the state will be created internally.
+   */
+  selectedForce: TReactState<ClientMissionForce | null>
   /**
    * Handles when a tab is added.
    * @param tab The tab that was added.

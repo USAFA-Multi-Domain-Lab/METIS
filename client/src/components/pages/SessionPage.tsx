@@ -1,7 +1,8 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { IConsoleOutput } from 'src/components/content/session/ConsoleOutput'
 import { useGlobalContext, useNavigationMiddleware } from 'src/context'
 import ClientMission from 'src/missions'
+import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
 import SessionClient from 'src/sessions'
 import { compute } from 'src/toolbox'
@@ -55,7 +56,8 @@ export default function SessionPage({
   const [nodeToExecute, setNodeToExecute] = useState<ClientMissionNode | null>(
     null,
   )
-  const [resources, setResources] = useState<number>(session.resources)
+  const [selectedForce, selectForce] = useState<ClientMissionForce | null>(null)
+  const [resourcesRemaining, setResourcesRemaining] = useState<number>(0)
   const [login] = useRequireLogin()
   const [rightPanelTab, setRightPanelTab] =
     useState<TSessionRightPanelTab>('output')
@@ -112,7 +114,7 @@ export default function SessionPage({
     else if (node.readyToExecute) {
       // If there are no more resources left
       // to spend, notify the user.
-      if (session.resources === 0) {
+      if (node.force.resourcesRemaining === 0) {
         notify(`You have no more resources left to spend.`)
       }
       // If there is not enough resources to
@@ -120,7 +122,7 @@ export default function SessionPage({
       else if (
         !MapToolbox.mapToArray(
           node.actions,
-          (action) => action.resourceCost <= session.resources,
+          (action) => action.resourceCost <= node.force.resourcesRemaining,
         ).includes(true)
       ) {
         notify('Insufficient resources available to execute action.')
@@ -190,6 +192,13 @@ export default function SessionPage({
   /* -- COMPUTED -- */
 
   /**
+   * The initial resources for the selected force.
+   */
+  const initialResources = compute(() => {
+    return selectedForce?.initialResources ?? 0
+  })
+
+  /**
    * Props for navigation.
    */
   const navigation = compute(() => {
@@ -237,10 +246,13 @@ export default function SessionPage({
     // Define default list.
     let resourcesClassList: string[] = ['Resources']
 
+    // If there is no force selected, hide
+    // the resources.
+    if (!selectedForce) resourcesClassList.push('Hidden')
     // If resources are not infinite, and the mission
     // has no resources left, add the red alert
     // class to the resources.
-    if (!session.config.infiniteResources && session.resources <= 0) {
+    if (!session.config.infiniteResources && resourcesRemaining <= 0) {
       resourcesClassList.push('RedAlert')
     }
 
@@ -320,10 +332,20 @@ export default function SessionPage({
     }
   })
 
-  // Update the resources when an action is executed.
-  useEventListener(server, 'action-execution-initiated', () => {
-    setResources(session.resources)
-  })
+  // Update the resources remaining when an action is executed.
+  useEventListener(
+    server,
+    'action-execution-initiated',
+    () => {
+      setResourcesRemaining(selectedForce?.resourcesRemaining ?? 0)
+    },
+    [selectedForce],
+  )
+  // Update the resources remaining state whenever the
+  // force changes.
+  useEffect(() => {
+    setResourcesRemaining(selectedForce?.resourcesRemaining ?? 0)
+  }, [selectedForce])
 
   /* -- PRE-RENDER PROCESSING -- */
 
@@ -349,7 +371,7 @@ export default function SessionPage({
             <span className='Count Infinite'>ထ</span>
           ) : (
             <span className='Count Finite'>
-              {resources} / {mission.initialResources}
+              {resourcesRemaining} / {initialResources}
             </span>
           )}
         </div>
@@ -398,6 +420,7 @@ export default function SessionPage({
                 customButtons={customButtons}
                 showMasterTab={false}
                 onNodeSelect={onNodeSelect}
+                selectedForce={[selectedForce, selectForce]}
               />
             ),
           }}

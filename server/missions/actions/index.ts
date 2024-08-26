@@ -90,6 +90,9 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
       let potentialOutcome: ServerPotentialOutcome =
         ServerPotentialOutcome.generateOutcome(this, this.rng)
 
+      // Deduct resources from force.
+      this.force.resourcesRemaining -= this.resourceCost
+
       // Set timeout for when the execution
       // is completed.
       setTimeout(() => {
