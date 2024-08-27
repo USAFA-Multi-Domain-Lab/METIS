@@ -213,11 +213,11 @@ export default class ClientMission
   /**
    * The list of defective objects found the mission.
    */
-  private _defectiveObjects: TMissionDefectiveObject[]
+  private _defectiveObjects: TMissionComponent[]
   /**
    * The list of defective objects found the mission.
    */
-  public get defectiveObjects(): TMissionDefectiveObject[] {
+  public get defectiveObjects(): TMissionComponent[] {
     return this._defectiveObjects
   }
 
@@ -256,6 +256,9 @@ export default class ClientMission
 
     // Evaluate nested objects.
     this.evaluateObjects()
+  }
+  get invalidMessage(): string {
+    throw new Error('Method not implemented.')
   }
 
   // Implemented
@@ -1309,11 +1312,6 @@ export interface TClientMissionTypes extends TCommonMissionTypes {
   targetEnv: ClientTargetEnvironment
   target: ClientTarget
   effect: ClientEffect
-  defectiveObject:
-    | ClientMissionForce
-    | ClientMissionNode
-    | ClientMissionAction
-    | ClientEffect
 }
 
 /**
@@ -1406,9 +1404,23 @@ export interface TMissionNavigable {
 }
 
 /**
- * Represents the types of defective objects found within the mission.
+ * Represents an object that is a component of a mission.
+ * @note Implement this to make a class compatible.
  */
-export type TMissionDefectiveObject = TClientMissionTypes['defectiveObject']
+export interface TMissionComponent extends TMissionNavigable {
+  /**
+   * The object's ID.
+   */
+  _id: string
+  /**
+   * Whether the object is defective.
+   */
+  isDefective(): boolean
+  /**
+   * The message to display when the object is defective.
+   */
+  get defectiveMessage(): string
+}
 
 /**
  * Keyword arguments needed to evaluate objects found within the mission.

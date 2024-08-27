@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { ErrorBoundary } from 'react-error-boundary'
 import ServerConnection from 'src/connect/servers'
 import { useGlobalContext } from 'src/context'
 import ClientMissionNode from 'src/missions/nodes'
@@ -221,6 +222,7 @@ function App(props: {}): JSX.Element | null {
   useEffect(() => {
     async function effect(): Promise<void> {
       if (login === null) {
+        navigateTo('AuthPage', {})
         setMissionNodeColors([])
       } else {
         try {
@@ -274,7 +276,12 @@ function App(props: {}): JSX.Element | null {
       <ErrorPage {...pageProps} />
       <LoadingPage {...pageProps} />
       <ConnectionStatus />
-      <CurrentPage {...pageProps} />
+      <ErrorBoundary
+        FallbackComponent={ErrorPage}
+        onError={(error: Error) => console.error(error)}
+      >
+        <CurrentPage {...pageProps} />
+      </ErrorBoundary>
     </div>
   )
 }

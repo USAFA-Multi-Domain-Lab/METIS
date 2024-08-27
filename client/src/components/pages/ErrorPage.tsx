@@ -17,7 +17,9 @@ export default function ErrorPage({}: IErrorPage): JSX.Element | null {
   /* -- COMPONENT VARIABLES -- */
 
   // Extract error from globalContext.
-  let error: TAppError = globalContext.error[0] ?? { message: 'Unknown error.' }
+  let error: TAppError = globalContext.error[0] ?? {
+    message: 'Unknown error. Please try again or contact an administrator.',
+  }
   // Resolve button props from solutions passed in error object.
   let solutions = error.solutions ?? []
 

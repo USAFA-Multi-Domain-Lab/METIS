@@ -102,7 +102,7 @@ export default class ServerEffect extends Effect<TServerMissionTypes> {
         // is not blacklisted, then check if the dependency is met.
         if (
           dependencyArg &&
-          !Dependency.blacklistedDependencies.includes(dependency.name)
+          !Dependency.blacklisted.includes(dependency.name)
         ) {
           // Check if the dependency is met.
           let dependencyMet: boolean = dependency.condition(
@@ -120,7 +120,7 @@ export default class ServerEffect extends Effect<TServerMissionTypes> {
         // array.
         else if (
           dependencyArg &&
-          Dependency.blacklistedDependencies.includes(dependency.name)
+          Dependency.blacklisted.includes(dependency.name)
         ) {
           areDependenciesMet.push(true)
         }

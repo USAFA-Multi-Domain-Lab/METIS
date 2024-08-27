@@ -449,6 +449,11 @@ export default abstract class MissionNode<
   public abstract modifyResourceCost(resourceCostOperand: number): void
 
   /**
+   * The maximum length allowed for a node's name.
+   */
+  public static readonly MAX_NAME_LENGTH: number = 175
+
+  /**
    * The default properties for a MissionNode object.
    */
   public static get DEFAULT_PROPERTIES(): Required<TMissionNodeJson> {

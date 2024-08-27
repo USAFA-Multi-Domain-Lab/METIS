@@ -157,6 +157,11 @@ export default abstract class Effect<
   }
 
   /**
+   * The maximum length allowed for an effect's name.
+   */
+  public static readonly MAX_NAME_LENGTH: number = 175
+
+  /**
    * Default properties set when creating a new Effect object.
    */
   public static get DEFAULT_PROPERTIES(): Required<TCommonEffectJson> {

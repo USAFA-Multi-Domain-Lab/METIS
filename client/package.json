@@ -24,6 +24,7 @@
     "react-app-rewired": "^2.2.1",
     "react-beforeunload": "^2.6.0",
     "react-dom": "^18.2.0",
+    "react-error-boundary": "^4.0.13",
     "react-quill": "^2.0.0",
     "react-scripts": "5.0.1",
     "sass": "^1.63.6",

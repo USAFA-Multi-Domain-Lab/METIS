@@ -252,6 +252,11 @@ export default abstract class Mission<
   }
 
   /**
+   * The maximum length allowed for a mission's name.
+   */
+  public static readonly MAX_NAME_LENGTH: number = 175
+
+  /**
    * The maximum number of forces allowed in a mission.
    */
   public static readonly MAX_FORCE_COUNT: number = 8

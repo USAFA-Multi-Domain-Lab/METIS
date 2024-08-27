@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { ClientEffect } from 'src/missions/effects'
 import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
+import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
 import { ReactSetter } from 'src/toolbox/types'
 import ForceArg from '../../../../../../shared/target-environments/args/force-arg'
@@ -178,8 +179,25 @@ export default function ArgNode({
     TRequiredHandleInvalidOption<ClientMissionNode>
   >({
     method: 'warning',
-    message: 'This node no longer exists in the force selected above.',
+    message:
+      `"${
+        effectArgs[arg._id][nodeName]
+      }" is no longer available in the force selected above.` +
+      `This is likely due to the node being deleted. Please select a valid node, or delete this effect.`,
   })
+
+  /* -- COMPUTED -- */
+
+  /**
+   * The warning message to display when the force is no longer available in the mission.
+   */
+  const forceWarningMessage: string = compute(
+    () =>
+      `"${
+        effectArgs[arg._id][forceName]
+      }" is no longer available in the mission. ` +
+      `This is likely due to the force being deleted. Please select a valid force, or delete this effect.`,
+  )
 
   /* -- EFFECTS -- */
 
@@ -388,7 +406,7 @@ export default function ArgNode({
           renderDisplayName={(option) => option.name}
           handleInvalidOption={{
             method: 'warning',
-            message: 'This force no longer exists in the mission.',
+            message: forceWarningMessage,
           }}
           key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}_force_required`}
         />
@@ -420,7 +438,7 @@ export default function ArgNode({
           renderDisplayName={(option) => option.name}
           handleInvalidOption={{
             method: 'warning',
-            message: 'This force no longer exists in the mission.',
+            message: forceWarningMessage,
           }}
           key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}_force_optional`}
         />

@@ -1,4 +1,4 @@
-import { TClientMissionTypes, TMissionNavigable } from '..'
+import { TClientMissionTypes, TMissionComponent, TMissionNavigable } from '..'
 import MissionAction, {
   TCommonMissionActionJson,
   TMissionActionOptions,
@@ -12,21 +12,21 @@ import ClientMissionNode from '../nodes'
  */
 export default class ClientMissionAction
   extends MissionAction<TClientMissionTypes>
-  implements TMissionNavigable
+  implements TMissionComponent
 {
   // Implemented
   public get path(): TMissionNavigable[] {
     return [this.mission, this.force, this.node, this]
   }
   /**
-   * The message to display when the action is invalid.
+   * The message to display when the action is defective.
    */
-  private _invalidMessage: string
+  private _defectiveMessage: string
   /**
-   * The message to display when the action is invalid.
+   * The message to display when the action is defective.
    */
-  public get invalidMessage(): string {
-    return this._invalidMessage
+  public get defectiveMessage(): string {
+    return this._defectiveMessage
   }
 
   /**
@@ -40,7 +40,7 @@ export default class ClientMissionAction
     options: TClientMissionActionOptions = {},
   ) {
     super(node, data, options)
-    this._invalidMessage = ''
+    this._defectiveMessage = ''
   }
   /**
    * Evaluates if the action is defective or not.

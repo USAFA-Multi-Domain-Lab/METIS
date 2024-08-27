@@ -240,6 +240,11 @@ export default abstract class MissionAction<
   public static readonly RESOURCE_COST_MIN: number = 0
 
   /**
+   * The maximum length allowed for an action's name.
+   */
+  public static readonly MAX_NAME_LENGTH: number = 175
+
+  /**
    * Default properties set when creating a new MissionAction object.
    */
   public static get DEFAULT_PROPERTIES(): Required<TCommonMissionActionJson> {

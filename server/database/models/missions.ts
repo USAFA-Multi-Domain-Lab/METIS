@@ -4,7 +4,11 @@ import { TCommonMissionForceJson } from 'metis/missions/forces'
 import { TCommonMissionNodeJson, TMissionNodeJson } from 'metis/missions/nodes'
 import MetisDatabase from 'metis/server/database'
 import SanitizedHTML from 'metis/server/database/schema-types/html'
+import ServerMission from 'metis/server/missions'
+import ServerMissionAction from 'metis/server/missions/actions'
 import ServerEffect from 'metis/server/missions/effects'
+import ServerMissionForce from 'metis/server/missions/forces'
+import ServerMissionNode from 'metis/server/missions/nodes'
 import ServerTargetEnvironment from 'metis/server/target-environments'
 import ServerTarget from 'metis/server/target-environments/targets'
 import { TTargetArg } from 'metis/target-environments/args'
@@ -457,7 +461,11 @@ const sanitize_mission_forces_nodes_actions_effects_args = (
  */
 export const MissionSchema: Schema = new Schema(
   {
-    name: { type: String, required: true },
+    name: {
+      type: String,
+      required: true,
+      maxLength: ServerMission.MAX_NAME_LENGTH,
+    },
     introMessage: { type: SanitizedHTML, required: true },
     versionNumber: { type: Number, required: true },
     seed: { type: ObjectId, required: true, auto: true },
@@ -475,7 +483,11 @@ export const MissionSchema: Schema = new Schema(
       type: [
         {
           _id: { type: String, required: true },
-          name: { type: String, required: true },
+          name: {
+            type: String,
+            required: true,
+            maxLength: ServerMissionForce.MAX_NAME_LENGTH,
+          },
           color: {
             type: String,
             required: true,
@@ -486,7 +498,11 @@ export const MissionSchema: Schema = new Schema(
               {
                 _id: { type: String, required: true },
                 structureKey: { type: String, required: true },
-                name: { type: String, required: true },
+                name: {
+                  type: String,
+                  required: true,
+                  maxLength: ServerMissionNode.MAX_NAME_LENGTH,
+                },
                 color: {
                   type: String,
                   required: true,
@@ -509,7 +525,11 @@ export const MissionSchema: Schema = new Schema(
                   type: [
                     {
                       _id: { type: String, required: true },
-                      name: { type: String, required: true },
+                      name: {
+                        type: String,
+                        required: true,
+                        maxLength: ServerMissionAction.MAX_NAME_LENGTH,
+                      },
                       description: { type: SanitizedHTML, required: true },
                       processTime: {
                         type: Number,
@@ -541,7 +561,11 @@ export const MissionSchema: Schema = new Schema(
                         type: [
                           {
                             _id: { type: String, required: true },
-                            name: { type: String, required: true },
+                            name: {
+                              type: String,
+                              required: true,
+                              maxLength: ServerEffect.MAX_NAME_LENGTH,
+                            },
                             description: {
                               type: SanitizedHTML,
                               required: true,

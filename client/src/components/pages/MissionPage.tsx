@@ -28,11 +28,7 @@ import MissionEntry from '../content/edit-mission/entries/MissionEntry'
 import NodeEntry from '../content/edit-mission/entries/NodeEntry'
 import NodeStructuring from '../content/edit-mission/entries/NodeStructuring'
 import PrototypeEntry from '../content/edit-mission/entries/PrototypeEntry'
-import {
-  HomeLink,
-  LogoutLink,
-  TNavigation,
-} from '../content/general-layout/Navigation'
+import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
 import {
   EPanelSizingMode,
   PanelSizeRelationship,
@@ -86,11 +82,48 @@ export default function MissionPage({
   /* -- COMPUTED -- */
 
   /**
+   * Logout link for navigation.
+   */
+  const logoutLink = compute(() => ({
+    text: 'Logout',
+    onClick: async () => {
+      // If there are unsaved changes, prompt the user.
+      if (areUnsavedChanges) {
+        const { choice } = await prompt(
+          'You have unsaved changes. What do you want to do with them?',
+          ['Cancel', 'Save', 'Discard'],
+        )
+
+        try {
+          // Abort if cancelled.
+          if (choice === 'Cancel') {
+            return
+          }
+          // Save if requested.
+          else if (choice === 'Save') {
+            beginLoading('Saving...')
+            await save()
+            await globalContext.actions.logout()
+          }
+        } catch (error) {
+          return handleError({
+            message: 'Failed to save mission.',
+            notifyMethod: 'bubble',
+          })
+        }
+      } else {
+        await globalContext.actions.logout()
+      }
+    },
+    key: 'logout',
+  }))
+
+  /**
    * Props for navigation.
    */
   const navigation = compute(
     (): TNavigation => ({
-      links: [HomeLink(globalContext), LogoutLink(globalContext)],
+      links: [HomeLink(globalContext), logoutLink],
       boxShadow: 'alt-6',
     }),
   )
@@ -619,7 +652,6 @@ export default function MissionPage({
       return (
         <MissionEntry
           mission={selection}
-          handleDeleteEffectRequest={handleDeleteEffectRequest}
           handleChange={handleChange}
           key={selection._id}
         />

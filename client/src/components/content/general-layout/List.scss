@@ -503,11 +503,11 @@
         background: none;
         border: none;
         padding: 0;
-        margin: 10px;
+        margin: 0;
         border-radius: unset;
         min-height: unset;
         font-size: 0.78em;
-        width: calc(100% - 20px);
+        width: 100%;
         max-width: unset;
       }
 
@@ -522,15 +522,19 @@
       grid-template-columns: 1fr auto;
       width: 100%;
 
+      &.Select:hover {
+        cursor: pointer;
+        background-color: $node-blue;
+      }
+
       .RowContent {
+        padding: 10px 0 10px 10px;
         overflow: hidden;
         text-overflow: ellipsis;
 
-        &.Select {
+        &.Select:hover {
           cursor: pointer;
-          &:hover {
-            color: $terminal;
-          }
+          color: $terminal;
         }
       }
     }

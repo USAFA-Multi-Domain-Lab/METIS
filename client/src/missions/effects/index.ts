@@ -1,6 +1,6 @@
 import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
-import { TClientMissionTypes, TMissionNavigable } from '..'
+import { TClientMissionTypes, TMissionComponent, TMissionNavigable } from '..'
 import Effect, {
   TCommonEffectJson,
   TEffectOptions,
@@ -18,7 +18,7 @@ import ClientMissionAction from '../actions'
  */
 export class ClientEffect
   extends Effect<TClientMissionTypes>
-  implements TMissionNavigable
+  implements TMissionComponent
 {
   // Implemented
   public get path(): TMissionNavigable[] {
@@ -26,14 +26,14 @@ export class ClientEffect
   }
 
   /**
-   * The message to display when the effect is invalid.
+   * The message to display when the effect is defective.
    */
-  private _invalidMessage: string
+  private _defectiveMessage: string
   /**
-   * The message to display when the effect is invalid.
+   * The message to display when the effect is defective.
    */
-  public get invalidMessage(): string {
-    return this._invalidMessage
+  public get defectiveMessage(): string {
+    return this._defectiveMessage
   }
 
   /**
@@ -47,7 +47,7 @@ export class ClientEffect
     options: TClientEffectOptions = {},
   ) {
     super(action, data, options)
-    this._invalidMessage = ''
+    this._defectiveMessage = ''
   }
 
   /**
@@ -161,8 +161,8 @@ export class ClientEffect
     // *** Also, if a target-environment cannot be found, then obviously the target
     // *** within that environment cannot be found either.
     if (!this.targetEnvironment || !this.target) {
-      this._invalidMessage =
-        `The effect, "${this.name}," has a target or a target environment that couldn't be found. ` +
+      this._defectiveMessage =
+        `The effect, "${this.name}", has a target or a target environment that couldn't be found. ` +
         `Please contact an administrator on how to resolve this conflict, or delete the effect and create a new one.`
       return true
     }
@@ -176,15 +176,15 @@ export class ClientEffect
     )
     // If the effect's target environment cannot be found, then the effect is defective.
     if (!currentTargetEnv) {
-      this._invalidMessage =
-        `The effect, "${this.name}," has a target environment, "${this.targetEnvironment.name}," that couldn't be found. ` +
+      this._defectiveMessage =
+        `The effect, "${this.name}", has a target environment, "${this.targetEnvironment.name}", that couldn't be found. ` +
         `Please contact an administrator on how to resolve this conflict, or delete the effect and create a new one.`
       return true
     }
     // If the effect's target environment version doesn't match the current version, then the effect is defective.
     if (this.targetEnvironmentVersion !== currentTargetEnv.version) {
-      this._invalidMessage =
-        `The effect, "${this.name}," has a target environment, "${this.targetEnvironment.name}," with an incompatible version. ` +
+      this._defectiveMessage =
+        `The effect, "${this.name}", has a target environment, "${this.targetEnvironment.name}", with an incompatible version. ` +
         `Incompatible versions can cause an effect to fail to be applied to its target during a session. ` +
         `Please contact an administrator on how to resolve this conflict, or delete the effect and create a new one.`
       return true
@@ -196,8 +196,8 @@ export class ClientEffect
     )
     // If the effect's target cannot be found, then the effect is defective.
     if (!currentTarget) {
-      this._invalidMessage =
-        `The effect, "${this.name}," has a target, "${this.target.name}," that couldn't be found. ` +
+      this._defectiveMessage =
+        `The effect, "${this.name}", has a target, "${this.target.name}", that couldn't be found. ` +
         `Please delete the effect and create a new one.`
       return true
     }
@@ -209,8 +209,8 @@ export class ClientEffect
         let arg = currentTarget.args.find((arg) => arg._id === argId)
         // If the argument cannot be found, then the effect is defective.
         if (!arg) {
-          this._invalidMessage =
-            `The effect, "${this.name}," has an argument, "${argId}," that couldn't be found within the target, "${this.target.name}." ` +
+          this._defectiveMessage =
+            `The effect, "${this.name}", has an argument, "${argId}", that couldn't be found within the target, "${this.target.name}." ` +
             `Please delete the effect and create a new one.`
           return true
         }
@@ -226,8 +226,8 @@ export class ClientEffect
             this.args[argId] === undefined &&
             this.allDependenciesMet(arg.dependencies)
           ) {
-            this._invalidMessage =
-              `The argument, "${arg.name}," within the effect, "${this.name}," is required, yet has no value. ` +
+            this._defectiveMessage =
+              `The argument, "${arg.name}", within the effect, "${this.name}", is required, yet has no value. ` +
               `Please enter a value, or delete the effect and create a new one.`
             return true
           }
@@ -237,8 +237,8 @@ export class ClientEffect
             this.args[argId] === undefined &&
             this.allDependenciesMet(arg.dependencies)
           ) {
-            this._invalidMessage =
-              `The argument, "${arg.name}," within the effect, "${this.name}," is required, yet has no value. ` +
+            this._defectiveMessage =
+              `The argument, "${arg.name}", within the effect, "${this.name}", is required, yet has no value. ` +
               `Please update the value by clicking the toggle switch, or delete the effect and create a new one.`
             return true
           }
@@ -247,8 +247,8 @@ export class ClientEffect
             arg.type === 'dropdown' &&
             !arg.options.find((option) => option._id === this.args[argId])
           ) {
-            this._invalidMessage =
-              `The effect, "${this.name}," has an invalid option selected. ` +
+            this._defectiveMessage =
+              `The effect, "${this.name}", has an invalid option selected. ` +
               `Please select a valid option, or delete the effect and create a new one.`
             return true
           }
@@ -269,9 +269,11 @@ export class ClientEffect
             arg.type === 'force' &&
             !this.mission.getForce(this.args[argId][ForceArg.FORCE_ID_KEY])
           ) {
-            this._invalidMessage =
-              `The effect, "${this.name}," has an invalid force selected. ` +
-              `Please select a valid force, or delete the effect and create a new one.`
+            this._defectiveMessage = `The effect, "${
+              this.name
+            }", targets a force, "${
+              this.args[argId][ForceArg.FORCE_NAME_KEY]
+            }", which cannot be found.`
             return true
           }
           // Check if the argument is a node and the node exists.
@@ -285,16 +287,20 @@ export class ClientEffect
             )
             // If the force cannot be found, then the effect is defective.
             if (!force) {
-              this._invalidMessage =
-                `The effect, "${this.name}," has an invalid force selected. ` +
-                `Please select a valid force, or delete the effect and create a new one.`
+              this._defectiveMessage = `The effect, "${
+                this.name
+              }", targets a force, "${
+                this.args[argId][ForceArg.FORCE_NAME_KEY]
+              }", which cannot be found.`
               return true
             }
             // If the node cannot be found, then the effect is defective.
             if (!node) {
-              this._invalidMessage =
-                `The effect, "${this.name}," has an invalid node selected. ` +
-                `Please select a valid node, or delete the effect and create a new one.`
+              this._defectiveMessage = `The effect, "${
+                this.name
+              }", targets a node "${
+                this.args[argId][NodeArg.NODE_NAME_KEY]
+              }", which cannot be found.`
               return true
             }
           }
@@ -304,8 +310,8 @@ export class ClientEffect
             !this.allDependenciesMet(arg.dependencies) &&
             this.args[argId] !== undefined
           ) {
-            this._invalidMessage =
-              `The effect, "${this.name}," has an argument, "${argId}," that doesn't belong. ` +
+            this._defectiveMessage =
+              `The effect, "${this.name}", has an argument, "${arg.name}", that doesn't belong. ` +
               `Please delete the effect and create a new one.`
             return true
           }

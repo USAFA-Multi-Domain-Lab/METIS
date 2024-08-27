@@ -1,5 +1,9 @@
 import { TLine_P } from 'src/components/content/session/mission-map/objects/Line'
-import ClientMission, { TClientMissionTypes, TMissionNavigable } from '..'
+import ClientMission, {
+  TClientMissionTypes,
+  TMissionComponent,
+  TMissionNavigable,
+} from '..'
 import {
   MissionForce,
   TCommonMissionForceJson,
@@ -19,7 +23,7 @@ import ClientMissionNode from '../nodes'
  */
 export default class ClientMissionForce
   extends MissionForce<TClientMissionTypes>
-  implements TMissionNavigable
+  implements TMissionComponent
 {
   /**
    * The lines used to connect nodes on the mission map.
@@ -32,14 +36,14 @@ export default class ClientMissionForce
   }
 
   /**
-   * The message to display when the force is invalid.
+   * The message to display when the force is defective.
    */
-  private _invalidMessage: string
+  private _defectiveMessage: string
   /**
-   * The message to display when the force is invalid.
+   * The message to display when the force is defective.
    */
-  public get invalidMessage(): string {
-    return this._invalidMessage
+  public get defectiveMessage(): string {
+    return this._defectiveMessage
   }
 
   /**
@@ -56,7 +60,7 @@ export default class ClientMissionForce
   ) {
     super(mission, data, options)
     this.relationshipLines = []
-    this._invalidMessage = ''
+    this._defectiveMessage = ''
   }
 
   /**

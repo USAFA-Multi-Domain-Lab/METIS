@@ -95,6 +95,7 @@ export default function ForceEntry({
             stateValue={name}
             setState={setName}
             defaultValue={ClientMissionForce.DEFAULT_PROPERTIES.name}
+            maxLength={ClientMissionForce.MAX_NAME_LENGTH}
             key={`${force._id}_name`}
           />
 

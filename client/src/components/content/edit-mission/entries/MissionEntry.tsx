@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useGlobalContext } from 'src/context'
-import ClientMission, { TMissionDefectiveObject } from 'src/missions'
-import { ClientEffect } from 'src/missions/effects'
+import ClientMission, { TMissionComponent } from 'src/missions'
 import { compute } from 'src/toolbox'
 import { useMountHandler, usePostInitEffect } from 'src/toolbox/hooks'
 import { SingleTypeObject } from '../../../../../../shared/toolbox/objects'
@@ -21,7 +20,6 @@ import EntryNavigation from './navigation/EntryNavigation'
  */
 export default function MissionEntry({
   mission,
-  handleDeleteEffectRequest,
   handleChange,
 }: TMissionEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
@@ -34,14 +32,14 @@ export default function MissionEntry({
   const [initialResources, setInitialResources] = useState<number>(
     mission.initialResources,
   )
-  const [defectiveObjects, setDefectiveObjects] = useState<
-    TMissionDefectiveObject[]
-  >(mission.defectiveObjects)
+  const [defectiveObjects, setDefectiveObjects] = useState<TMissionComponent[]>(
+    mission.defectiveObjects,
+  )
 
   /* -- EFFECTS -- */
 
   // componentDidMount
-  const [mountHandled, remount] = useMountHandler((done) => {
+  const [mountHandled] = useMountHandler((done) => {
     mission.evaluateObjects()
     setDefectiveObjects(mission.defectiveObjects)
     done()
@@ -70,7 +68,7 @@ export default function MissionEntry({
   /**
    * Renders JSX for the effect list item.
    */
-  const renderObjectListItem = (object: TMissionDefectiveObject) => {
+  const renderObjectListItem = (object: TMissionComponent) => {
     /* -- COMPUTED -- */
 
     /**
@@ -105,7 +103,7 @@ export default function MissionEntry({
           className='RowContent Select'
           onClick={() => mission.select(object)}
         >
-          {object.invalidMessage}
+          {object.defectiveMessage}
           <Tooltip description='Click to resolve.' />
         </div>
       </div>
@@ -131,6 +129,7 @@ export default function MissionEntry({
               stateValue={name}
               setState={setName}
               defaultValue={ClientMission.DEFAULT_PROPERTIES.name}
+              maxLength={ClientMission.MAX_NAME_LENGTH}
               key={`${mission._id}_name`}
             />
             <DetailLargeString
@@ -152,7 +151,7 @@ export default function MissionEntry({
               key={`${mission._id}_initialResources`}
             />
             {defectiveObjects.length > 0 ? (
-              <List<TMissionDefectiveObject>
+              <List<TMissionComponent>
                 items={defectiveObjects}
                 renderItemDisplay={(object) => renderObjectListItem(object)}
                 headingText={'Unresolved Conflicts'}
@@ -189,13 +188,6 @@ type TMissionEntry_P = {
    * The mission to be edited.
    */
   mission: ClientMission
-  /**
-   * Handles the request to delete an effect.
-   */
-  handleDeleteEffectRequest: (
-    effect: ClientEffect,
-    navigateBack?: boolean,
-  ) => Promise<void>
   /**
    * A function that will be used to notify the parent
    * component that this component has changed.

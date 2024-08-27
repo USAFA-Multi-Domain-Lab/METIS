@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
-import ClientMission, { TMissionDefectiveObject } from 'src/missions'
+import ClientMission, { TMissionComponent } from 'src/missions'
 import SessionClient from 'src/sessions'
 import { compute } from 'src/toolbox'
 import { useMountHandler, useRequireLogin } from 'src/toolbox/hooks'
@@ -98,7 +98,7 @@ export default function LaunchPage({
   /**
    * Renders JSX for the effect list item.
    */
-  const renderObjectListItem = (object: TMissionDefectiveObject) => {
+  const renderObjectListItem = (object: TMissionComponent) => {
     /* -- COMPUTED -- */
 
     /**
@@ -129,7 +129,7 @@ export default function LaunchPage({
     return (
       <div className='Row' key={`object-row-${object._id}`}>
         <ButtonSvgPanel buttons={buttons} size={'small'} />
-        <div className='RowContent'>{object.invalidMessage}</div>
+        <div className='RowContent'>{object.defectiveMessage}</div>
       </div>
     )
   }

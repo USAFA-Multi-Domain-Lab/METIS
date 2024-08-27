@@ -187,7 +187,7 @@ export default function ActionEntry({
     })
 
     return (
-      <div className='Row' key={`effect-row-${effect._id}`}>
+      <div className='Row Select' key={`effect-row-${effect._id}`}>
         <div
           className={rowContentClassName}
           onClick={() => mission.select(effect)}
@@ -220,6 +220,7 @@ export default function ActionEntry({
               stateValue={name}
               setState={setName}
               defaultValue={ClientMissionAction.DEFAULT_PROPERTIES.name}
+              maxLength={ClientMissionAction.MAX_NAME_LENGTH}
               placeholder='Enter name...'
               key={`${action._id}_name`}
             />

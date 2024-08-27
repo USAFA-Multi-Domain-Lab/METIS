@@ -251,7 +251,7 @@ export default function NodeEntry({
       })
 
       return (
-        <div className='Row' key={`action-row-${action._id}`}>
+        <div className='Row Select' key={`action-row-${action._id}`}>
           <div
             className='RowContent Select'
             onClick={() => mission.select(action)}
@@ -284,6 +284,7 @@ export default function NodeEntry({
             stateValue={name}
             setState={setName}
             defaultValue={ClientMissionNode.DEFAULT_PROPERTIES.name}
+            maxLength={ClientMissionNode.MAX_NAME_LENGTH}
             key={`${node._id}_name`}
           />
           <DetailColorSelector

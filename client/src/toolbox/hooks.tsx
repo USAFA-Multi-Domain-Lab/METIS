@@ -89,7 +89,7 @@ export function useRequireLogin(): [NonNullable<TLogin<ClientUser>>] {
   const [login] = globalContext.login
   // todo: implement react app error handling
   // const login = null
-  const { navigateTo } = globalContext.actions
+  const { navigateTo, handleError } = globalContext.actions
 
   useEffect(() => {
     if (login === null) {
@@ -98,6 +98,7 @@ export function useRequireLogin(): [NonNullable<TLogin<ClientUser>>] {
   }, [login === null])
 
   if (login === null) {
+    handleError('You must be logged in to access this page.')
     throw new LoginRequiredError()
   }
 
@@ -107,8 +108,8 @@ export function useRequireLogin(): [NonNullable<TLogin<ClientUser>>] {
 
 /**
  * Takes in a components props and an object defining default props. If any property of default props is undefined for the corresponding value in props, the default value will be assigned in props.
- * @param {TProps} props The props to assign default values to.
- * @param {TProps} defaultProps The default values to assign to props.
+ * @param props The props to assign default values to.
+ * @param defaultProps The default values to assign to props.
  * @example
  * ```
  * // This component will have a default
@@ -143,9 +144,9 @@ export function useDefaultProps<
 
 /**
  * Creates a funciton component that will render a given component for each set of props passed in a list.
- * @param {React.FunctionComponent<TProps>} Component A function component to render.
- * @param {Array<TProps>} propsList A list of prop objects, each of which will be passed to the component to render.
- * @param {TPropKeys | ((props: TProps) => string)} keyFrom There are two options for this parameter: One, you can choose a property of the props to use as a key by passing the property name for that prop. Two, you can pass a function that can be used to generate a key for each component rendered. This function will provide the props for each component as an argument.
+ * @param Component A function component to render.
+ * @param propsList A list of prop objects, each of which will be passed to the component to render.
+ * @param keyFrom There are two options for this parameter: One, you can choose a property of the props to use as a key by passing the property name for that prop. Two, you can pass a function that can be used to generate a key for each component rendered. This function will provide the props for each component as an argument.
  * @returns
  */
 export function useListComponent<

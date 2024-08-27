@@ -2,7 +2,11 @@ import axios from 'axios'
 import memoizeOne from 'memoize-one'
 import { TNodeButton } from 'src/components/content/session/mission-map/objects/MissionNode'
 import { TEventListenerTarget } from 'src/toolbox/hooks'
-import ClientMission, { TClientMissionTypes, TMissionNavigable } from '..'
+import ClientMission, {
+  TClientMissionTypes,
+  TMissionComponent,
+  TMissionNavigable,
+} from '..'
 import { TRequestMethod } from '../../../../shared/connect/data'
 import { TCommonMissionActionJson } from '../../../../shared/missions/actions'
 import { TActionExecutionJson } from '../../../../shared/missions/actions/executions'
@@ -24,7 +28,7 @@ import ClientMissionPrototype from './prototypes'
  */
 export default class ClientMissionNode
   extends MissionNode<TClientMissionTypes>
-  implements TEventListenerTarget<TNodeEventMethod>, TMissionNavigable
+  implements TEventListenerTarget<TNodeEventMethod>, TMissionComponent
 {
   // Overridden
   public get depthPadding(): number {
@@ -219,14 +223,14 @@ export default class ClientMissionNode
   }
 
   /**
-   * The message to display when the node is invalid.
+   * The message to display when the node is defective.
    */
-  private _invalidMessage: string
+  private _defectiveMessage: string
   /**
-   * The message to display when the node is invalid.
+   * The message to display when the node is defective.
    */
-  public get invalidMessage(): string {
-    return this._invalidMessage
+  public get defectiveMessage(): string {
+    return this._defectiveMessage
   }
 
   /**
@@ -241,7 +245,7 @@ export default class ClientMissionNode
   ) {
     super(force, data, options)
     this._buttons = []
-    this._invalidMessage = ''
+    this._defectiveMessage = ''
   }
 
   /**

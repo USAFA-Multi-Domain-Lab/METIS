@@ -217,6 +217,11 @@ export abstract class MissionForce<
   }
 
   /**
+   * The maximum length allowed for a force's name.
+   */
+  public static readonly MAX_NAME_LENGTH: number = 175
+
+  /**
    * The default properties for the root node of a Force.
    */
   public static readonly ROOT_NODE_PROPERTIES: TMissionNodeJson = {
