@@ -40,10 +40,20 @@ export default function MissionEntry({
 
   // componentDidMount
   const [mountHandled] = useMountHandler((done) => {
-    mission.evaluateObjects()
+    // Evaluate the objects to determine if they are defective.
+    // Stop if there are 500 defective objects or more.
+    mission.evaluateObjects(500)
     setDefectiveObjects(mission.defectiveObjects)
     done()
   })
+
+  // Finish evaluating the objects, if necessary.
+  useEffect(() => {
+    if (mountHandled && defectiveObjects.length === 500) {
+      mission.evaluateObjects()
+      setDefectiveObjects(mission.defectiveObjects)
+    }
+  }, [mountHandled])
 
   // Sync the component state with the mission introduction message
   // and initial resources.
@@ -111,71 +121,69 @@ export default function MissionEntry({
   }
 
   /* -- RENDER -- */
-  if (mountHandled) {
-    return (
-      <div className='Entry MissionEntry SidePanel'>
-        <div className='BorderBox'>
-          {/* -- TOP OF BOX -- */}
-          <div className='BoxTop'>
-            <EntryNavigation object={mission} />
-          </div>
+  return (
+    <div className='Entry MissionEntry SidePanel'>
+      <div className='BorderBox'>
+        {/* -- TOP OF BOX -- */}
+        <div className='BoxTop'>
+          <EntryNavigation object={mission} />
+        </div>
 
-          {/* -- MAIN CONTENT -- */}
-          <div className='SidePanelSection MainDetails'>
-            <DetailString
-              fieldType='required'
-              handleOnBlur='repopulateValue'
-              label='Name'
-              stateValue={name}
-              setState={setName}
-              defaultValue={ClientMission.DEFAULT_PROPERTIES.name}
-              maxLength={ClientMission.MAX_NAME_LENGTH}
-              key={`${mission._id}_name`}
+        {/* -- MAIN CONTENT -- */}
+        <div className='SidePanelSection MainDetails'>
+          <DetailString
+            fieldType='required'
+            handleOnBlur='repopulateValue'
+            label='Name'
+            stateValue={name}
+            setState={setName}
+            defaultValue={ClientMission.DEFAULT_PROPERTIES.name}
+            maxLength={ClientMission.MAX_NAME_LENGTH}
+            key={`${mission._id}_name`}
+          />
+          <DetailLargeString
+            fieldType='required'
+            handleOnBlur='repopulateValue'
+            label='Introduction Message'
+            stateValue={introMessage}
+            setState={setIntroMessage}
+            defaultValue={ClientMission.DEFAULT_PROPERTIES.introMessage}
+            elementBoundary='.SidePanelSection'
+            key={`${mission._id}_introMessage`}
+          />
+          <DetailNumber
+            fieldType='required'
+            label='Initial Resources'
+            stateValue={initialResources}
+            setState={setInitialResources}
+            integersOnly={true}
+            key={`${mission._id}_initialResources`}
+          />
+          {defectiveObjects.length > 0 ? (
+            <List<TMissionComponent>
+              items={defectiveObjects}
+              renderItemDisplay={(object) => renderObjectListItem(object)}
+              headingText={'Unresolved Conflicts'}
+              sortByMethods={[ESortByMethod.Name]}
+              nameProperty={'name'}
+              alwaysUseBlanks={false}
+              searchableProperties={['name']}
+              noItemsDisplay={null}
+              ajaxStatus={defectiveObjects.length > 0 ? 'Loaded' : 'Loading'}
+              applyItemStyling={() => {
+                return {}
+              }}
+              listStyling={{
+                borderBottom: '2px solid #ffffff',
+              }}
+              itemsPerPage={null}
+              listSpecificItemClassName='AltDesign2'
             />
-            <DetailLargeString
-              fieldType='required'
-              handleOnBlur='repopulateValue'
-              label='Introduction Message'
-              stateValue={introMessage}
-              setState={setIntroMessage}
-              defaultValue={ClientMission.DEFAULT_PROPERTIES.introMessage}
-              elementBoundary='.SidePanelSection'
-              key={`${mission._id}_introMessage`}
-            />
-            <DetailNumber
-              fieldType='required'
-              label='Initial Resources'
-              stateValue={initialResources}
-              setState={setInitialResources}
-              integersOnly={true}
-              key={`${mission._id}_initialResources`}
-            />
-            {defectiveObjects.length > 0 ? (
-              <List<TMissionComponent>
-                items={defectiveObjects}
-                renderItemDisplay={(object) => renderObjectListItem(object)}
-                headingText={'Unresolved Conflicts'}
-                sortByMethods={[ESortByMethod.Name]}
-                nameProperty={'name'}
-                alwaysUseBlanks={false}
-                searchableProperties={['name']}
-                noItemsDisplay={null}
-                ajaxStatus={'Loaded'}
-                applyItemStyling={() => {
-                  return {}
-                }}
-                listStyling={{ borderBottom: '2px solid #ffffff' }}
-                itemsPerPage={null}
-                listSpecificItemClassName='AltDesign2'
-              />
-            ) : null}
-          </div>
+          ) : null}
         </div>
       </div>
-    )
-  } else {
-    return null
-  }
+    </div>
+  )
 }
 
 /* ---------------------------- TYPES FOR MISSION ENTRY ---------------------------- */

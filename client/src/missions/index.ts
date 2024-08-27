@@ -310,8 +310,9 @@ export default class ClientMission
 
   /**
    * Evaluates objects found within the mission to determine if they are defective.
+   * @param maxAmount The maximum amount of defective objects to evaluate.
    */
-  public evaluateObjects(): void {
+  public evaluateObjects(maxAmount?: number): void {
     // Initialize invalid objects.
     this._defectiveObjects = []
 
@@ -319,21 +320,33 @@ export default class ClientMission
     for (let force of this.forces) {
       // Validate the force.
       if (force.isDefective()) this._defectiveObjects.push(force)
+      // Break if the max amount of defective objects
+      // has been reached.
+      if (maxAmount && this._defectiveObjects.length >= maxAmount) break
 
       // Loop through nodes.
       for (let node of force.nodes) {
         // Validate the node.
         if (node.isDefective()) this._defectiveObjects.push(node)
+        // Break if the max amount of defective objects
+        // has been reached.
+        if (maxAmount && this._defectiveObjects.length >= maxAmount) break
 
         // Loop through actions.
         for (let action of node.actions.values()) {
           // Validate the action.
           if (action.isDefective()) this._defectiveObjects.push(action)
+          // Break if the max amount of defective objects
+          // has been reached.
+          if (maxAmount && this._defectiveObjects.length >= maxAmount) break
 
           // Loop through effects.
           for (let effect of action.effects) {
             // Validate the effect.
             if (effect.isDefective()) this._defectiveObjects.push(effect)
+            // Break if the max amount of defective objects
+            // has been reached.
+            if (maxAmount && this._defectiveObjects.length >= maxAmount) break
           }
         }
       }

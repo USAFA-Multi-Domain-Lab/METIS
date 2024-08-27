@@ -473,7 +473,6 @@
       grid-template-columns: auto;
       border-bottom: 2px solid $color-main;
       padding-bottom: 8px;
-      margin-bottom: 11px;
 
       .previous-page,
       .next-page {
@@ -499,6 +498,8 @@
     }
 
     .items {
+      padding: 11px 0;
+
       .item {
         background: none;
         border: none;
@@ -509,6 +510,11 @@
         font-size: 0.78em;
         width: 100%;
         max-width: unset;
+
+        &.item-status {
+          background: none;
+          color: $color-main;
+        }
       }
 
       .page-number {
