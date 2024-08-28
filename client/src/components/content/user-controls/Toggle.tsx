@@ -1,5 +1,4 @@
 import { compute } from 'src/toolbox'
-import { ReactSetter } from 'src/toolbox/types'
 import './Toggle.scss'
 
 /**

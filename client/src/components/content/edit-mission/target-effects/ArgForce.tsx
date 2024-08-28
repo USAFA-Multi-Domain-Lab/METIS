@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { ClientEffect } from 'src/missions/effects'
 import ClientMissionForce from 'src/missions/forces'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import { ReactSetter } from 'src/toolbox/types'
 import ForceArg, {
   TForceArg,
 } from '../../../../../../shared/target-environments/args/force-arg'

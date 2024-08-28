@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ClientEffect } from 'src/missions/effects'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import { ReactSetter } from 'src/toolbox/types'
 import { TNumberArg } from '../../../../../../shared/target-environments/args/number-arg'
 import { DetailNumber } from '../../form/DetailNumber'
 

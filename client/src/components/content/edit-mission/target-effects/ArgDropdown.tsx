@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { ClientEffect } from 'src/missions/effects'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import { ReactSetter } from 'src/toolbox/types'
 import {
   TDropdownArg,
   TDropdownArgOption,

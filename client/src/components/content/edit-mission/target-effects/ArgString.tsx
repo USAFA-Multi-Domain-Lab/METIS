@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ClientEffect } from 'src/missions/effects'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import { ReactSetter } from 'src/toolbox/types'
 import { TStringArg } from '../../../../../../shared/target-environments/args/string-arg'
 import { DetailString } from '../../form/DetailString'
 

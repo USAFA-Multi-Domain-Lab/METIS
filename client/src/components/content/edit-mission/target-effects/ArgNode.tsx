@@ -3,7 +3,6 @@ import { ClientEffect } from 'src/missions/effects'
 import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import { ReactSetter } from 'src/toolbox/types'
 import ForceArg from '../../../../../../shared/target-environments/args/force-arg'
 import NodeArg, {
   TNodeArg,

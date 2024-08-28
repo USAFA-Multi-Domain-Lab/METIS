@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ClientEffect } from 'src/missions/effects'
 import { compute } from 'src/toolbox'
-import { ReactSetter } from 'src/toolbox/types'
 import { TTargetArg } from '../../../../../../shared/target-environments/args'
 import './Arg.scss'
 import ArgBoolean from './ArgBoolean'

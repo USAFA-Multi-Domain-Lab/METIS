@@ -1,5 +1,3 @@
-import { ReactSetter } from 'src/toolbox/types'
-
 /* ---------------------------- TYPES FOR FORMS ---------------------------- */
 
 /**

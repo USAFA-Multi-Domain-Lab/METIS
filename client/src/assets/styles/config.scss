@@ -86,11 +86,12 @@ $border-color-main: #00d7ff;
 // z-index
 
 // z-index | mission map
-$z-map-pan-ctrl-inactive: 1;
-$z-map-scene: 2;
-$z-map-hud: 3;
-$z-map-pan-ctrl-active: 4;
-$z-map-overlay: 5;
+$z-map-tab-bar-controls: 1;
+$z-map-pan-ctrl-inactive: 2;
+$z-map-scene: 3;
+$z-map-hud: 4;
+$z-map-pan-ctrl-active: 5;
+$z-map-overlay: 6;
 
 $z-index-navigation: 50;
 $z-index-file-drop-box: 60;
