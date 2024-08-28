@@ -50,7 +50,7 @@ export interface TDetailRequired_P<Type> extends TDetailBase_P {
    * React setter function used to update the value stored
    * in a component's state.
    */
-  setState: ReactSetter<NonNullable<Type>>
+  setState: TReactSetter<NonNullable<Type>>
 }
 
 /**
@@ -72,7 +72,7 @@ export interface TDetailOptional_P<Type> extends TDetailBase_P {
    * React setter function used to update the value stored
    * in a component's state.
    */
-  setState: ReactSetter<Type>
+  setState: TReactSetter<Type>
 }
 
 /**

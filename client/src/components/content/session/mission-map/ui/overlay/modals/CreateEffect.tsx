@@ -180,7 +180,7 @@ export type TCreateEffect_P = {
   /**
    * Function that updates the isNewEffect state.
    */
-  setIsNewEffect: ReactSetter<boolean>
+  setIsNewEffect: TReactSetter<boolean>
   /**
    * Handles when a change is made that would require saving.
    */

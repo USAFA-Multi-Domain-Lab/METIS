@@ -12,17 +12,17 @@ declare global {
   /**
    * The setter `useState` returns.
    */
-  export type ReactSetter<T> = React.Dispatch<React.SetStateAction<T>>
+  export type TReactSetter<T> = React.Dispatch<React.SetStateAction<T>>
 
   /**
    * Used by `GenericType` type to infer the type of the generic argument.
    */
-  type TypeWithGeneric<T> = T[]
+  type TWithGeneric<T> = T[]
 
   /**
    * Infers the type of the first generic argument.
    */
-  export type GenericType<Type> = Type extends TypeWithGeneric<infer X>
+  export type TGenericType<Type> = Type extends TWithGeneric<infer X>
     ? X
     : never
 }

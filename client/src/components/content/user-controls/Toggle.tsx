@@ -75,7 +75,7 @@ type TToggle_P = {
    * React setter function used to update the value stored
    * in a component's state.
    */
-  setState: ReactSetter<boolean>
+  setState: TReactSetter<boolean>
   /**
    * The lock state of the toggle.
    * @default 'unlocked'

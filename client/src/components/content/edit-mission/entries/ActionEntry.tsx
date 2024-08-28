@@ -341,7 +341,7 @@ export type TActionEntry_P = {
   /**
    * Function that updates the isNewEffect state.
    */
-  setIsNewEffect: ReactSetter<boolean>
+  setIsNewEffect: TReactSetter<boolean>
   /**
    * Handles the request to delete an action.
    */

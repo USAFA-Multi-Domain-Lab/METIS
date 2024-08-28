@@ -388,7 +388,7 @@ export type TCreateUserEntry_P = {
   /**
    * A function that will update the array of fields with empty strings.
    */
-  setUserEmptyStringArray: ReactSetter<string[]>
+  setUserEmptyStringArray: TReactSetter<string[]>
   /**
    * A function that will be called when a change has been made.
    */
