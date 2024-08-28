@@ -4,6 +4,7 @@
 .TabBar {
   $controls-width: 5em;
 
+  overflow: hidden;
   border-bottom: 2px solid rgba(#fff, 0.1);
   display: grid;
   grid-template-columns: calc(100% - $controls-width) auto;
@@ -38,8 +39,10 @@
     align-items: center;
     position: relative;
     z-index: $z-map-tab-bar-controls;
+    margin-bottom: -2px;
     width: $controls-width;
     border-left: 2px solid rgba($color-main, 0.1);
+    border-bottom: 2px solid rgba($color-main, 0.1);
     background: $background-map-imitation;
     font-weight: bold;
 
