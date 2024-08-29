@@ -680,10 +680,7 @@ export default function MissionMap({
         tabs={tabs}
         tabIndex={tabIndex}
         buttons={buttons}
-        setTabIndex={(index) => {
-          console.log(index)
-          setTabIndex(index)
-        }}
+        setTabIndex={setTabIndex}
         onTabAdd={onTabAdd}
       />
       {overlayJsx}

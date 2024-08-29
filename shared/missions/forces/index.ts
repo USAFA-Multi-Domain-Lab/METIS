@@ -1,5 +1,5 @@
 import { AnyObject } from 'metis/toolbox/objects'
-import { TCommonMission, TCommonMissionTypes, TMission } from '..'
+import Mission, { TCommonMission, TCommonMissionTypes, TMission } from '..'
 import context from '../../context'
 import StringToolbox from '../../toolbox/strings'
 import {
@@ -252,48 +252,50 @@ export abstract class MissionForce<
   /**
    * Default forces for a mission.
    */
-  public static readonly DEFAULT_FORCES: TCommonMissionForceJson[] = [
-    {
-      ...MissionForce.DEFAULT_PROPERTIES,
-      name: 'Friendly Force',
-      color: '#52b1ff',
-    },
-    {
-      ...MissionForce.DEFAULT_PROPERTIES,
-      name: 'Enemy Force',
-      color: '#f1696f',
-    },
-    {
-      ...MissionForce.DEFAULT_PROPERTIES,
-      name: 'Guerrilla Force',
-      color: '#f7d154',
-    },
-    {
-      ...MissionForce.DEFAULT_PROPERTIES,
-      name: 'Local National Force',
-      color: '#7ed321',
-    },
-    {
-      ...MissionForce.DEFAULT_PROPERTIES,
-      name: 'White Cell',
-      color: '#bbbbbb',
-    },
-    {
-      ...MissionForce.DEFAULT_PROPERTIES,
-      name: 'Non-State Actors',
-      color: '#f49c58',
-    },
-    {
-      ...MissionForce.DEFAULT_PROPERTIES,
-      name: 'Coalition Force',
-      color: '#b36ae2',
-    },
-    {
-      ...MissionForce.DEFAULT_PROPERTIES,
-      name: 'Civilian Industry',
-      color: '#ff66cc',
-    },
-  ]
+  public static get DEFAULT_FORCES(): TCommonMissionForceJson[] {
+    return [
+      {
+        ...MissionForce.DEFAULT_PROPERTIES,
+        name: 'Friendly Force',
+        color: Mission.BLUE,
+      },
+      {
+        ...MissionForce.DEFAULT_PROPERTIES,
+        name: 'Enemy Force',
+        color: Mission.RED,
+      },
+      {
+        ...MissionForce.DEFAULT_PROPERTIES,
+        name: 'Guerrilla Force',
+        color: Mission.YELLOW,
+      },
+      {
+        ...MissionForce.DEFAULT_PROPERTIES,
+        name: 'Local National Force',
+        color: Mission.GREEN,
+      },
+      {
+        ...MissionForce.DEFAULT_PROPERTIES,
+        name: 'White Cell',
+        color: Mission.WHITE,
+      },
+      {
+        ...MissionForce.DEFAULT_PROPERTIES,
+        name: 'Non-State Actors',
+        color: Mission.BROWN,
+      },
+      {
+        ...MissionForce.DEFAULT_PROPERTIES,
+        name: 'Coalition Force',
+        color: Mission.PURPLE,
+      },
+      {
+        ...MissionForce.DEFAULT_PROPERTIES,
+        name: 'Civilian Industry',
+        color: Mission.MAGENTA,
+      },
+    ]
+  }
 }
 
 /* -- TYPES -- */

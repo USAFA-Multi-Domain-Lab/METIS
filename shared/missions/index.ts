@@ -252,18 +252,63 @@ export default abstract class Mission<
   public static readonly MAX_FORCE_COUNT: number = 8
 
   /**
+   * The color white.
+   */
+  public static readonly WHITE: string = '#ffffff'
+
+  /**
+   * The color red.
+   */
+  public static readonly RED: string = '#fd6b72'
+
+  /**
+   * The color orange.
+   */
+  public static readonly ORANGE: string = '#ff9c50'
+
+  /**
+   * The color brown.
+   */
+  public static readonly BROWN: string = '#b79769'
+
+  /**
+   * The color yellow.
+   */
+  public static readonly YELLOW: string = '#ffdb67'
+
+  /**
+   * The color green.
+   */
+  public static readonly GREEN: string = '#7ed321'
+
+  /**
+   * The color blue.
+   */
+  public static readonly BLUE: string = '#52b1ff'
+
+  /**
+   * The color purple.
+   */
+  public static readonly PURPLE: string = '#bc6fec'
+
+  /**
+   * The color magenta.
+   */
+  public static readonly MAGENTA: string = '#ff6dce'
+
+  /**
    * Options when setting the color of nodes.
    */
   public static readonly COLOR_OPTIONS: string[] = [
-    '#ffffff', // white
-    '#fd6b72', // red
-    '#ff9c50', // orange
-    '#b79769', // brown
-    '#ffdb67', // yellow
-    '#7ed321', // green
-    '#52b1ff', // blue
-    '#bc6fec', // purple
-    '#ff6dce', // magenta
+    Mission.WHITE,
+    Mission.RED,
+    Mission.ORANGE,
+    Mission.BROWN,
+    Mission.YELLOW,
+    Mission.GREEN,
+    Mission.BLUE,
+    Mission.PURPLE,
+    Mission.MAGENTA,
     //     // lightest
     //     '#ffffff', // grayscale
     //     '#b3e0ff', // blue
