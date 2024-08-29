@@ -237,6 +237,7 @@ export default abstract class Mission<
   public getForce(
     forceId: TForce<T>['_id'] | undefined,
   ): TForce<T> | undefined {
+    let color = '#000000'
     return forceId ? Mission.getForce(this, forceId) : undefined
   }
 
@@ -254,46 +255,54 @@ export default abstract class Mission<
    * Options when setting the color of nodes.
    */
   public static readonly COLOR_OPTIONS: string[] = [
-    // lightest
-    '#ffffff', // grayscale
-    '#b3e0ff', // blue
-    '#dcacad', // red
-    '#ecdead', // yellow
-    '#c9f7c6', // green
-    '#dec0aa', // orange
-    '#bdaaca', // purple
-    '#f8bae3', // magenta
-
-    // lighter
-    '#e1e1e1', // grayscale
-    '#9cd2ff', // blue
-    '#e69a9d', // red
-    '#f0db98', // yellow
-    '#b4e391', // green
-    '#e1b28e', // orange
-    '#b797cb', // purple
-    '#fd9edd', // magenta
-
-    // darker
-    '#cfcfcf', // grayscale
-    '#77c2ff', // blue
-    '#ea8388', // red
-    '#f0d57c', // yellow
-    '#9edc7c', // green
-    '#eeac7a', // orange
-    '#b887d7', // purple
-    '#fc84d4', // magenta
-
-    // darkest
-    '#bbbbbb', // grayscale
-    '#52b1ff', // blue
-    '#f1696f', // red
-    '#f7d154', // yellow
+    '#ffffff', // white
+    '#fd6b72', // red
+    '#ff9c50', // orange
+    '#b79769', // brown
+    '#ffdb67', // yellow
     '#7ed321', // green
-    '#f49c58', // orange
-    '#b36ae2', // purple
-    '#ff66cc', // magenta
-
+    '#52b1ff', // blue
+    '#bc6fec', // purple
+    '#ff6dce', // magenta
+    //     // lightest
+    //     '#ffffff', // grayscale
+    //     '#b3e0ff', // blue
+    //     '#dcacad', // red
+    //     '#ecdead', // yellow
+    //     '#c9f7c6', // green
+    //     '#dec0aa', // orange
+    //     '#bdaaca', // purple
+    //     '#f8bae3', // magenta
+    //
+    //     // lighter
+    //     '#e1e1e1', // grayscale
+    //     '#9cd2ff', // blue
+    //     '#e69a9d', // red
+    //     '#f0db98', // yellow
+    //     '#b4e391', // green
+    //     '#e1b28e', // orange
+    //     '#b797cb', // purple
+    //     '#fd9edd', // magenta
+    //
+    //     // darker
+    //     '#cfcfcf', // grayscale
+    //     '#77c2ff', // blue
+    //     '#ea8388', // red
+    //     '#f0d57c', // yellow
+    //     '#9edc7c', // green
+    //     '#eeac7a', // orange
+    //     '#b887d7', // purple
+    //     '#fc84d4', // magenta
+    //
+    //     '#bbbbbb', // grayscale
+    //     '#52b1ff', // blue
+    //     '#f1696f', // red
+    //     '#f7d154', // yellow
+    //     '#7ed321', // green
+    //     '#f49c58', // orange
+    //     '#b36ae2', // purple
+    //     '#ff66cc', // magenta
+    //
     //     '#ffffff',
     //     '#A4A4A4',
     //     '#848484',
