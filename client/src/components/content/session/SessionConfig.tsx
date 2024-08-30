@@ -51,7 +51,8 @@ export default function SessionConfig({
         stateValue={accessibility}
         setState={setAccessibility}
         isExpanded={false}
-        renderDisplayName={(value) => {
+        getKey={(value) => value}
+        render={(value) => {
           switch (value) {
             case 'public':
               return 'Public'

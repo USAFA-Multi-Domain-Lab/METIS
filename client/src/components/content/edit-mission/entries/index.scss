@@ -3,6 +3,20 @@
     .BorderBox {
       .SidePanelSection {
         margin: 20px 6.5% 40px;
+
+        .DetailDropdown {
+          &.BorderStyle {
+            .Option {
+              // margin: 0.5em 0;
+              overflow: hidden;
+              .BorderExample {
+                padding: 0 0 0.75em;
+                border-bottom: 2px dotted white;
+                text-transform: capitalize;
+              }
+            }
+          }
+        }
       }
     }
   }

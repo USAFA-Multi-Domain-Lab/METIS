@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import { compute } from 'src/toolbox'
 import { TDetailBase_P, TDetailOptional_P, TDetailRequired_P } from '.'
 import Tooltip from '../communication/Tooltip'
@@ -20,7 +20,8 @@ export function DetailDropdown<TOption>({
   setState,
   handleInvalidOption,
   isExpanded,
-  renderDisplayName,
+  render,
+  getKey,
   // Optional Properties
   uniqueClassName = undefined,
   uniqueLabelClassName = undefined,
@@ -128,11 +129,11 @@ export function DetailDropdown<TOption>({
   /**
    * The value displayed.
    */
-  const valueDisplayed: string = compute(() => {
+  const valueDisplayed: ReactNode = compute(() => {
     // If the current value is not null
     // or undefined then display it.
     if (stateValue !== null && stateValue !== undefined) {
-      return renderDisplayName(stateValue)
+      return render(stateValue)
     }
     // If the current value is null and a default
     // value is not passed, then display a message
@@ -252,17 +253,17 @@ export function DetailDropdown<TOption>({
             <div className='Indicator'>v</div>
           </div>
           <div className={allOptionsClassName}>
-            {options.map((option: NonNullable<TOption>, index: number) => {
+            {options.map((option: NonNullable<TOption>) => {
               return (
                 <div
                   className={'Option'}
-                  key={`option_${renderDisplayName(option)}_${index}`}
+                  key={getKey(option)}
                   onClick={() => {
                     setState(option)
                     setExpanded(isExpanded)
                   }}
                 >
-                  {renderDisplayName(option)}
+                  {render(option)}
                 </div>
               )
             })}
@@ -292,7 +293,13 @@ type TDetailDropdownBase_P<TOption> = TDetailBase_P & {
   /**
    * The function to render the display name for the option.
    */
-  renderDisplayName: (option: NonNullable<TOption>) => string
+  render: (option: NonNullable<TOption>) => ReactNode
+  /**
+   * Gets the key for the given option.
+   * @param option The option for which to get the key.
+   * @returns The key for the given option.
+   */
+  getKey: (option: NonNullable<TOption>) => string
   /**
    * The unique class name for the detail.
    */

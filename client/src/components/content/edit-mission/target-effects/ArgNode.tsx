@@ -384,7 +384,8 @@ export default function ArgNode({
           setState={setForceValue}
           isExpanded={false}
           tooltipDescription={arg.tooltipDescription}
-          renderDisplayName={(option) => option.name}
+          getKey={({ _id }) => _id}
+          render={(option) => option.name}
           handleInvalidOption={{
             method: 'warning',
             message: 'This force no longer exists in the mission.',
@@ -399,7 +400,8 @@ export default function ArgNode({
           setState={setNodeValue}
           isExpanded={false}
           tooltipDescription={arg.tooltipDescription}
-          renderDisplayName={(option) => option.name}
+          getKey={({ _id }) => _id}
+          render={(option) => option.name}
           handleInvalidOption={handleInvalidNodeOption}
           key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}_node_required`}
         />
@@ -416,7 +418,8 @@ export default function ArgNode({
           setState={setOptionalForceValue}
           isExpanded={false}
           tooltipDescription={arg.tooltipDescription}
-          renderDisplayName={(option) => option.name}
+          render={(option) => option.name}
+          getKey={({ _id }) => _id}
           handleInvalidOption={{
             method: 'warning',
             message: 'This force no longer exists in the mission.',
@@ -431,7 +434,8 @@ export default function ArgNode({
           setState={setOptionalNodeValue}
           isExpanded={false}
           tooltipDescription={arg.tooltipDescription}
-          renderDisplayName={(option) => option.name}
+          render={(option) => option.name}
+          getKey={({ _id }) => _id}
           handleInvalidOption={handleInvalidNodeOption}
           key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}_node_optional`}
         />

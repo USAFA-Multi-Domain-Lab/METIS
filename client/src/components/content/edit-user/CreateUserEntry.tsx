@@ -308,7 +308,8 @@ export default function CreateUserEntry({
         stateValue={access}
         setState={setAccess}
         isExpanded={false}
-        renderDisplayName={(access: UserAccess) => access.name}
+        render={(access: UserAccess) => access.name}
+        getKey={({ _id }) => _id}
         handleInvalidOption={{
           method: 'setToDefault',
           defaultValue: UserAccess.AVAILABLE_ACCESSES.default,

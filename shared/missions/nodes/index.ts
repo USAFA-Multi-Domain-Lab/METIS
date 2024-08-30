@@ -49,6 +49,9 @@ export default abstract class MissionNode<
   public color: TCommonMissionNode['color']
 
   // Implemented
+  public borderStyle: TCommonMissionNode['borderStyle']
+
+  // Implemented
   public description: TCommonMissionNode['description']
 
   // Implemented
@@ -293,6 +296,8 @@ export default abstract class MissionNode<
       data.structureKey ?? MissionNode.DEFAULT_PROPERTIES.structureKey
     this.name = data.name ?? MissionNode.DEFAULT_PROPERTIES.name
     this.color = data.color ?? MissionNode.DEFAULT_PROPERTIES.color
+    // todo: add borderStyle to data
+    this.borderStyle = 'solid'
     this.description =
       data.description ?? MissionNode.DEFAULT_PROPERTIES.description
     this.preExecutionText =
@@ -470,6 +475,12 @@ export default abstract class MissionNode<
       outcomes: [],
     }
   }
+
+  /**
+   * Options when setting the color of nodes.
+   */
+  public static readonly BORDER_STYLE_OPTIONS: TCommonMissionNode['borderStyle'][] =
+    ['dotted', 'dashed', 'solid']
 }
 
 /* ------------------------------ NODE TYPES ------------------------------ */
@@ -506,6 +517,10 @@ export interface TCommonMissionNode {
    * The color for the node used as a border in the mission map.
    */
   color: string
+  /**
+   * The style of the border for the node.
+   */
+  borderStyle: 'dotted' | 'dashed' | 'solid'
   /**
    * The description for the node.
    */

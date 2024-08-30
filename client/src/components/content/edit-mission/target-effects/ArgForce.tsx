@@ -194,7 +194,8 @@ export default function ArgForce({
         setState={setRequiredValue}
         isExpanded={false}
         tooltipDescription={arg.tooltipDescription}
-        renderDisplayName={(option) => option.name}
+        getKey={({ _id }) => _id}
+        render={(option) => option.name}
         handleInvalidOption={{
           method: 'warning',
           message: 'This force no longer exists in the mission.',
@@ -212,7 +213,8 @@ export default function ArgForce({
         setState={setOptionalValue}
         isExpanded={false}
         tooltipDescription={arg.tooltipDescription}
-        renderDisplayName={(option) => option.name}
+        getKey={({ _id }) => _id}
+        render={(option) => option.name}
         handleInvalidOption={{
           method: 'warning',
           message: 'This force no longer exists in the mission.',

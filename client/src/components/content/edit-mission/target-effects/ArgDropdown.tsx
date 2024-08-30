@@ -165,7 +165,8 @@ export default function ArgDropdown({
         setState={setRequiredValue}
         isExpanded={false}
         tooltipDescription={arg.tooltipDescription}
-        renderDisplayName={(option) => option.name}
+        getKey={({ _id }) => _id}
+        render={({ name }) => name}
         handleInvalidOption={{
           method: 'setToDefault',
           defaultValue: arg.default,
@@ -183,7 +184,8 @@ export default function ArgDropdown({
         setState={setOptionalValue}
         isExpanded={false}
         tooltipDescription={arg.tooltipDescription}
-        renderDisplayName={(option) => option.name}
+        getKey={({ _id }) => _id}
+        render={({ name }) => name}
         handleInvalidOption={{
           method: 'setToDefault',
           defaultValue: null,

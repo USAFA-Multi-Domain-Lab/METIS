@@ -131,9 +131,8 @@ export default function CreateEffect({
           stateValue={targetEnv}
           setState={setTargetEnv}
           isExpanded={false}
-          renderDisplayName={(targetEnv: ClientTargetEnvironment) =>
-            targetEnv.name
-          }
+          getKey={({ _id }) => _id}
+          render={(targetEnv: ClientTargetEnvironment) => targetEnv.name}
           handleInvalidOption={{
             method: 'setToDefault',
             defaultValue: new ClientTargetEnvironment(),
@@ -146,7 +145,8 @@ export default function CreateEffect({
           stateValue={target}
           setState={setTarget}
           isExpanded={false}
-          renderDisplayName={(target: ClientTarget) => target.name}
+          getKey={({ _id }) => _id}
+          render={(target: ClientTarget) => target.name}
           uniqueClassName={targetClassName}
           handleInvalidOption={{
             method: 'setToDefault',
