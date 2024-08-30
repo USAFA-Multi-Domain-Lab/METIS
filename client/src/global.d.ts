@@ -15,6 +15,11 @@ declare global {
   export type TReactSetter<T> = React.Dispatch<React.SetStateAction<T>>
 
   /**
+   * The argument passed to a react setter.
+   */
+  export type TReactSetterArg<T> = React.SetStateAction<T>
+
+  /**
    * Used by `GenericType` type to infer the type of the generic argument.
    */
   type TWithGeneric<T> = T[]

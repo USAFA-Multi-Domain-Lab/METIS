@@ -240,6 +240,26 @@ export function useInlineStyling(
 }
 
 /**
+ * Adds a preprocessing step before a setter is called.
+ * @param state The state to add the preprocessor to. Result of `useState` call.
+ * @param preprocess The preprocessing function to call before the actual setter is called.
+ * @returns The processed state, including the current value and setter, as normally
+ * returned by `useState`.
+ */
+export function withPreprocessor<T>(
+  state: TReactState<T>,
+  preprocess: (newValue: TReactSetterArg<T>) => TReactSetterArg<T>,
+): TReactState<T> {
+  const [value, setValue] = state
+  return [
+    value,
+    (newValue: TReactSetterArg<T>) => {
+      setValue(preprocess(newValue))
+    },
+  ]
+}
+
+/**
  * Interface for making a class compatible with the `useEventListener`
  * hook.
  */

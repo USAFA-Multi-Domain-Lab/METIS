@@ -200,7 +200,6 @@ export default class ClientMissionNode
 
     // Handle structure change.
     if (structureChange) {
-      console.log(structureChange)
       this.mission.handleStructureChange()
     }
   }

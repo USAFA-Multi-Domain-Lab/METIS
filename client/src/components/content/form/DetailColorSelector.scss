@@ -30,7 +30,7 @@
 
     .AllColors {
       display: grid;
-      grid-template-columns: repeat(8, 12.5%);
+      grid-template-columns: repeat(9, 1fr);
       max-width: 16rem;
       margin: 20px 0 0;
 

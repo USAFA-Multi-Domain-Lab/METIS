@@ -4,7 +4,7 @@ import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
 import ClientMissionPrototype from 'src/missions/nodes/prototypes'
 import { compute } from 'src/toolbox'
-import { useEventListener } from 'src/toolbox/hooks'
+import { useEventListener, withPreprocessor } from 'src/toolbox/hooks'
 import { v4 as generateHash } from 'uuid'
 import { TWithKey } from '../../../../../../shared/toolbox/objects'
 import { Vector1D, Vector2D } from '../../../../../../shared/toolbox/space'
@@ -170,7 +170,15 @@ export default function MissionMap({
   /**
    * The selected tab in the HUD.
    */
-  const [tabIndex, setTabIndex] = useState<number>(0)
+  const [tabIndex, setTabIndex] = withPreprocessor(
+    useState<number>(0),
+    (newValue): TReactSetterArg<number> => {
+      // If the same tab is selected twice, reselect
+      // the given force.
+      if (tabIndex === newValue) mission.select(selectedForce ?? mission)
+      return newValue
+    },
+  )
 
   /**
    * Force the component to re-render.
@@ -262,6 +270,7 @@ export default function MissionMap({
     },
     [selectedForce],
   )
+
   /**
    * Updates the mission selection when the tab index changes.
    */
