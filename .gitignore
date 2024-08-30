@@ -37,3 +37,6 @@ environment-test.json
 
 # backup
 /server/database/backups
+
+# file store
+/server/files/store

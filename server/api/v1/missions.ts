@@ -20,6 +20,7 @@ type MulterFile = Express.Multer.File
 
 export const routerMap: TMetisRouterMap = (
   router: expressWs.Router,
+  server: MetisServer,
   done: () => void,
 ) => {
   /* ---------------------------- CREATE ---------------------------- */

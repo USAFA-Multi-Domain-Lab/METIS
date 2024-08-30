@@ -1,5 +1,6 @@
 import express from 'express'
 import expressWs from 'express-ws'
+import MetisServer from '../index'
 
 /**
  * A router for a Metis server.
@@ -39,8 +40,8 @@ export default class MetisRouter {
   }
 
   /**
-   * @param {MetisServer} server The METIS server instance.
-   * @param {string} path The path for the router to control.
+   * @param server The METIS server instance.
+   * @param path The path for the router to control.
    *
    */
   public constructor(path: string, map: TMetisRouterMap) {
@@ -52,5 +53,6 @@ export default class MetisRouter {
 
 export type TMetisRouterMap = (
   router: expressWs.Router,
+  server: MetisServer,
   done: () => void,
 ) => void

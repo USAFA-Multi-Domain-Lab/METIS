@@ -11,6 +11,7 @@ import { TCommonTargetEnvJson } from 'metis/target-environments'
 import mongoose from 'mongoose'
 import path from 'path'
 import { sys } from 'typescript'
+import MetisFileStore from './files'
 import ServerTargetEnvironment from './target-environments'
 const cookieParser = require('cookie-parser')
 const cors = require('cors')
@@ -65,6 +66,11 @@ export interface IMetisServerOptions {
    * The maximum number of websocket messages allowed per second.
    */
   wsRateLimit?: number
+  /**
+   * The location of the file store.
+   * @default "./files/store"
+   */
+  fileStoreDir?: string
 }
 
 /**
@@ -76,100 +82,115 @@ export default class MetisServer {
    */
   private _expressApp: Express
   /**
-   * The database instance.
-   */
-  private _database: MetisDatabase
-  /**
-   * The port on which to run the server.
-   */
-  private _port: number
-  /**
-   * The name of the MongoDB database to use.
-   */
-  private _mongoDB: string
-  /**
-   * The host of the MongoDB database to use.
-   */
-  private _mongoHost: string
-  /**
-   * The port of the MongoDB database to use.
-   */
-  private _mongoPort: number
-  /**
-   * The username of the MongoDB database to use.
-   */
-  private _mongoUsername: string | undefined
-  /**
-   * The password of the MongoDB database to use.
-   */
-  private _mongoPassword: string | undefined
-  /**
-   * The maximum number of http requests allowed per second.
-   */
-  private _httpRateLimit: number
-  /**
-   * The maximum number of websocket messages allowed per second.
-   */
-  private _wsRateLimit: number
-  /**
-   * The routers for the server.
-   */
-  private routers: MetisRouter[] = []
-
-  /**
    * The express app instance.
    */
   public get expressApp(): Express {
     return this._expressApp
   }
+
+  /**
+   * The database instance.
+   */
+  private _database: MetisDatabase
   /**
    * The database instance.
    */
   public get database(): MetisDatabase {
     return this._database
   }
+
+  /**
+   * The file store instance.
+   */
+  private _fileStore: MetisFileStore
+  /**
+   * The file store instance.
+   */
+  public get fileStore(): MetisFileStore {
+    return this._fileStore
+  }
+
+  /**
+   * The port on which to run the server.
+   */
+  private _port: number
   /**
    * The port on which to run the server.
    */
   public get port(): number {
     return this._port
   }
+
+  /**
+   * The name of the MongoDB database to use.
+   */
+  private _mongoDB: string
   /**
    * The name of the MongoDB database to use.
    */
   public get mongoDB(): string {
     return this._mongoDB
   }
+
+  /**
+   * The host of the MongoDB database to use.
+   */
+  private _mongoHost: string
   /**
    * The host of the MongoDB database to use.
    */
   public get mongoHost(): string {
     return this._mongoHost
   }
+
+  /**
+   * The port of the MongoDB database to use.
+   */
+  private _mongoPort: number
   /**
    * The port of the MongoDB database to use.
    */
   public get mongoPort(): number {
     return this._mongoPort
   }
+
+  /**
+   * The username of the MongoDB database to use.
+   */
+  private _mongoUsername: string | undefined
   /**
    * The username of the MongoDB database to use.
    */
   public get mongoUsername(): string | undefined {
     return this._mongoUsername
   }
+
+  /**
+   * The password of the MongoDB database to use.
+   */
+  private _mongoPassword: string | undefined
   /**
    * The password of the MongoDB database to use.
    */
   public get mongoPassword(): string | undefined {
     return this._mongoPassword
   }
+
+  /**
+   * The maximum number of http requests allowed per second.
+   */
+  private _httpRateLimit: number
   /**
    * The maximum number of http requests allowed per second.
    */
   public get httpRateLimit(): number {
     return this._httpRateLimit
   }
+
+  /**
+   * The maximum number of websocket messages allowed per second.
+   */
+  private _wsRateLimit: number
   /**
    * The maximum number of websocket messages allowed per second.
    */
@@ -178,19 +199,37 @@ export default class MetisServer {
   }
 
   /**
+   * The location of the file store.
+   */
+  private _fileStoreDir: string
+  /**
+   * The location of the file store.
+   */
+  public get fileStoreDir(): string {
+    return this._fileStoreDir
+  }
+
+  /**
+   * The routers for the server.
+   */
+  private routers: MetisRouter[] = []
+
+  /**
    * @param options Options for creating the METIS server.
    */
   public constructor(options: IMetisServerOptions = {}) {
     this._expressApp = express()
-    this._database = new MetisDatabase(this)
     this._port = options.port ?? defaults.PORT
     this._mongoDB = options.mongoDB ?? defaults.MONGO_DB
     this._mongoHost = options.mongoHost ?? defaults.MONGO_HOST
     this._mongoPort = options.mongoPort ?? defaults.MONGO_PORT
     this._mongoUsername = options.mongoUsername
     this._mongoPassword = options.mongoPassword
-    this._httpRateLimit = options.httpRateLimit ?? 25
-    this._wsRateLimit = options.wsRateLimit ?? 25
+    this._httpRateLimit = options.httpRateLimit ?? defaults.HTTP_RATE_LIMIT
+    this._wsRateLimit = options.wsRateLimit ?? defaults.WS_RATE_LIMIT
+    this._fileStoreDir = options.fileStoreDir ?? defaults.FILE_STORE_DIR
+    this._database = new MetisDatabase(this)
+    this._fileStore = new MetisFileStore(this, { directory: this.fileStoreDir })
   }
 
   /**
@@ -226,7 +265,7 @@ export default class MetisServer {
   private initialize(): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
       let mongooseConnection: mongoose.Connection | null
-      let { expressApp, database } = this
+      let { expressApp, database, fileStore } = this
 
       // Web socket setup.
       expressWs(expressApp)
@@ -236,6 +275,9 @@ export default class MetisServer {
 
       // Database setup.
       await database.connect()
+
+      // File store setup.
+      await fileStore.initialize()
 
       // Grab mongoose connection.
       mongooseConnection = database.mongooseConnection
@@ -352,7 +394,7 @@ export default class MetisServer {
       this.expressApp.use(router.path, router.expressRouter)
 
     for (let router of this.routers)
-      router.map(router.expressRouter, () => register(router))
+      router.map(router.expressRouter, this, () => register(router))
   }
 
   /**

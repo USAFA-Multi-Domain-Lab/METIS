@@ -1,12 +1,14 @@
+import expressWs from 'express-ws'
+import MetisServer from 'metis/server'
+import { TMetisRouterMap } from 'metis/server/http/router'
 import {
   RequestBodyFilters,
   defineRequests,
 } from 'metis/server/middleware/requests'
-import { TMetisRouterMap } from 'metis/server/http/router'
-import expressWs from 'express-ws'
 
 export const routerMap: TMetisRouterMap = (
   router: expressWs.Router,
+  server: MetisServer,
   done: () => void,
 ) => {
   // POST route to test the body validation

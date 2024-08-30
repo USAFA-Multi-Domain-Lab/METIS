@@ -5,11 +5,12 @@ import ClientConnection from 'metis/server/connect/clients'
 import { TMetisRouterMap } from 'metis/server/http/router'
 import ServerLogin from 'metis/server/logins'
 import { WebSocket } from 'ws'
-import { server } from '..'
+import MetisServer from '../index'
 import SessionServer from '../sessions'
 
 const routerMap: TMetisRouterMap = (
   router: expressWs.Router,
+  server: MetisServer,
   done: () => void,
 ) => {
   /* ---------------------------- CONSTANTS --------------------------------- */

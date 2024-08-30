@@ -1,5 +1,6 @@
 import fs from 'fs'
 import MetisServer, { IMetisServerOptions } from 'metis/server'
+import routerMap_files from 'metis/server/api/v1/files'
 import routerMap_info from 'metis/server/api/v1/info'
 import routerMap_logins from 'metis/server/api/v1/logins'
 import routerMap_missions from 'metis/server/api/v1/missions'
@@ -8,7 +9,6 @@ import routerMap_targetEnvironments from 'metis/server/api/v1/target-environment
 import routerMap_users from 'metis/server/api/v1/users'
 import routerMap_connect from 'metis/server/connect'
 import MetisRouter from 'metis/server/http/router'
-import routerMap_tests from 'metis/server/tests/api/v1/routes-test'
 
 let { ENVIRONMENT_FILE_PATH: environmentFilePath } = MetisServer
 let serverOptions: IMetisServerOptions = {}
@@ -47,7 +47,7 @@ server.addRouter(new MetisRouter('/api/v1/info/', routerMap_info))
 server.addRouter(new MetisRouter('/api/v1/users/', routerMap_users))
 server.addRouter(new MetisRouter('/api/v1/missions/', routerMap_missions))
 server.addRouter(new MetisRouter('/api/v1/sessions/', routerMap_sessions))
-server.addRouter(new MetisRouter('/api/v1/test/', routerMap_tests))
+server.addRouter(new MetisRouter('/api/v1/files/', routerMap_files))
 server.addRouter(
   new MetisRouter('/api/v1/target-environments/', routerMap_targetEnvironments),
 )

@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express-serve-static-core'
 import expressWs from 'express-ws'
+import MetisServer from 'metis/server'
 import UserModel from 'metis/server/database/models/users'
 import { StatusError } from 'metis/server/http'
 import { TMetisRouterMap } from 'metis/server/http/router'
@@ -10,7 +11,11 @@ import defineRequests, {
 import SessionServer from 'metis/server/sessions'
 import ServerUser from 'metis/server/users'
 
-const routerMap: TMetisRouterMap = (router: expressWs.Router, done) => {
+const routerMap: TMetisRouterMap = (
+  router: expressWs.Router,
+  server: MetisServer,
+  done,
+) => {
   /* ---------------------------- CREATE ---------------------------- */
   /**
    * This will log the user in.

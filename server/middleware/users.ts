@@ -7,8 +7,8 @@ import SessionServer from '../sessions'
 
 /**
  * Middleware used to enforce authorization for a given route.
- * @param authentication The level of authentication required to access the route.
- * @param permissions The permissions required to access the route.
+ * @param authentication The level of authentication required to access the route, default is 'login'.
+ * @param permissions The permissions required to access the route, default is an empty array.
  */
 export const auth =
   ({ authentication = 'login', permissions = [] }: TAuthOptions) =>

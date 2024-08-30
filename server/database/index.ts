@@ -22,16 +22,16 @@ export default class MetisDatabase {
    */
   private _mongooseConnection: mongoose.Connection | null
   /**
-   * The Metis server instance.
-   */
-  private _server: MetisServer
-
-  /**
    * The Mongoose database connection.
    */
   public get mongooseConnection(): mongoose.Connection | null {
     return this._mongooseConnection
   }
+
+  /**
+   * The Metis server instance.
+   */
+  private _server: MetisServer
   /**
    * The Metis server instance.
    */

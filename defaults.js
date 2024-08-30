@@ -5,10 +5,16 @@ const PORT = 8080
 const MONGO_DB = 'metis'
 const MONGO_HOST = 'localhost'
 const MONGO_PORT = 27017
+const HTTP_RATE_LIMIT = 25
+const WS_RATE_LIMIT = 25
+const FILE_STORE_DIR = './files/store'
 
 module.exports = {
   PORT,
   MONGO_DB,
   MONGO_HOST,
   MONGO_PORT,
+  HTTP_RATE_LIMIT,
+  WS_RATE_LIMIT,
+  FILE_STORE_DIR,
 }

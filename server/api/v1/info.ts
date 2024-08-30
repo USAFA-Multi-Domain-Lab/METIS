@@ -1,11 +1,13 @@
 import { Request, Response } from 'express-serve-static-core'
 import expressWs from 'express-ws'
 import fs from 'fs'
+import MetisServer from 'metis/server'
 import { TMetisRouterMap } from 'metis/server/http/router'
 import path from 'path'
 
 const routerMap: TMetisRouterMap = (
   router: expressWs.Router,
+  server: MetisServer,
   done: () => void,
 ) => {
   /* ---------------------------- READ ------------------------------ */
