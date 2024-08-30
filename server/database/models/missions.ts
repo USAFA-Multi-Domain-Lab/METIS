@@ -49,7 +49,7 @@ const validate_missions = (mission: any, next: any): void => {
   let parentStructure: TCommonMissionJson['nodeStructure'] =
     mission.nodeStructure
   // Array to store the structure keys.
-  let correspondingNodeStructureKeys: TMissionNodeJson['structureKey'][] = []
+  let prototypeIds: TMissionNodeJson['structureKey'][] = []
   // Object to store results.
   let results: { error?: Error } = {}
   // Object to store existing _id's.
@@ -70,14 +70,14 @@ const validate_missions = (mission: any, next: any): void => {
     }
 
     for (let [key, value] of Object.entries(nodeStructure)) {
-      if (correspondingNodeStructureKeys.includes(key)) {
+      if (prototypeIds.includes(key)) {
         let error: Error = new Error(
           `Error in nodeStructure:\nDuplicate structureKey used (${key}).`,
         )
         error.name = MetisDatabase.ERROR_BAD_DATA
         return { error }
       } else {
-        correspondingNodeStructureKeys.push(key)
+        prototypeIds.push(key)
       }
 
       let results: { error?: Error } = validateNodeStructure(value, key)
@@ -138,21 +138,79 @@ const validate_missions = (mission: any, next: any): void => {
     }
   }
 
+  // This will ensure the mission has between
+  // one and eight forces and that each prototype
+  // in the mission has a corresponding node within
+  // each force.
+  const validateMissionForces = () => {
+    // Ensure correct number of forces exist
+    // the mission.
+    if (mission.forces.length < 1) {
+      results.error = new Error(
+        `Error in mission:\nMission must have at least one force.`,
+      )
+      results.error.name = MetisDatabase.ERROR_BAD_DATA
+      return
+    }
+    if (mission.forces.length > 8) {
+      results.error = new Error(
+        `Error in mission:\nMission can have no more than eight forces.`,
+      )
+      results.error.name = MetisDatabase.ERROR_BAD_DATA
+      return
+    }
+
+    // Loop through each force.
+    for (let force of mission.forces) {
+      // Create a copy of the prototypeIds.
+      let withoutNode = [...prototypeIds]
+
+      // Loop through nodes.
+      for (let node of force.nodes) {
+        // Get the structure key.
+        let structureKey = node.structureKey
+
+        // Ensure the structure key exists.
+        if (!prototypeIds.includes(structureKey)) {
+          results.error = new Error(
+            `Error in mission:\nStructure key "${structureKey}" for "${node.name}" in "${force.name}" does not exist in the mission's nodeStructure.`,
+          )
+          results.error.name = MetisDatabase.ERROR_BAD_DATA
+          return
+        }
+
+        // Remove the structure key from the copy.
+        withoutNode = withoutNode.filter((key) => key !== structureKey)
+      }
+
+      // Ensure all nodes are present.
+      if (withoutNode.length > 0) {
+        results.error = new Error(
+          `Error in mission:\nStructure key "${withoutNode[0]}" is missing from "${force.name}".`,
+        )
+        results.error.name = MetisDatabase.ERROR_BAD_DATA
+        return
+      }
+    }
+  }
+
   // Check for duplicate _id's.
   _idCheckerAlgorithm()
 
   // Check for error.
-  if (results.error) {
-    return next(results.error)
-  }
+  if (results.error) return next(results.error)
 
   // Validate node structure.
   results = validateNodeStructure()
 
   // Check for error.
-  if (results.error) {
-    return next(results.error)
-  }
+  if (results.error) return next(results.error)
+
+  // Validate the mission forces.
+  validateMissionForces()
+
+  // Check for error.
+  if (results.error) return next(results.error)
 
   return next()
 }
@@ -161,8 +219,8 @@ const validate_missions = (mission: any, next: any): void => {
  * Validates the initial resources for a mission.
  * @param initialResources The initial resources to validate.
  */
-const validate_missions_initialResources = (
-  initialResources: TCommonMissionJson['initialResources'],
+const validate_missions_forces_initialResources = (
+  initialResources: TCommonMissionForceJson['initialResources'],
 ): boolean => {
   let nonNegativeInteger: boolean = isNonNegativeInteger(initialResources)
 
@@ -469,11 +527,6 @@ export const MissionSchema: Schema = new Schema(
     introMessage: { type: SanitizedHTML, required: true },
     versionNumber: { type: Number, required: true },
     seed: { type: ObjectId, required: true, auto: true },
-    initialResources: {
-      type: Number,
-      required: true,
-      validate: validate_missions_initialResources,
-    },
     deleted: { type: Boolean, required: true, default: false },
     nodeStructure: {
       type: {},
@@ -492,6 +545,11 @@ export const MissionSchema: Schema = new Schema(
             type: String,
             required: true,
             validate: validate_force_color,
+          },
+          initialResources: {
+            type: Number,
+            required: true,
+            validate: validate_missions_forces_initialResources,
           },
           nodes: {
             type: [

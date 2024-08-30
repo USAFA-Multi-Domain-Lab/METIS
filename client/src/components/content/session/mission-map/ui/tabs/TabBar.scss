@@ -2,19 +2,55 @@
 @import '../../mixins.scss';
 
 .TabBar {
-  user-select: none;
-  display: flex;
-  padding: 0em 0.4em 0;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  box-sizing: border-box;
+  $controls-width: 5em;
+
   border-bottom: 2px solid rgba(#fff, 0.1);
+  display: grid;
+  grid-template-columns: calc(100% - $controls-width) auto;
   width: 100%;
   background: $background-map-imitation;
 
-  .ButtonSvg.add {
-    margin: 0;
-    transform: scale(0.6) translateY(0.175em);
-    // transform-origin: center left;
+  &,
+  > * {
+    box-sizing: border-box;
+  }
+
+  .TabSpace {
+    user-select: none;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    position: relative;
+
+    .ButtonSvg.add {
+      margin: 0;
+      transform: scale(0.6) translateY(0.175em);
+      // transform-origin: center left;
+    }
+  }
+
+  .Controls {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    z-index: $z-map-tab-bar-controls;
+    width: $controls-width;
+    border-left: 2px solid rgba($color-main, 0.1);
+    background: $background-map-imitation;
+    font-weight: bold;
+
+    .Control {
+      user-select: none;
+      cursor: pointer;
+      padding: 0 0.625em;
+
+      &:hover {
+        color: $color-accent;
+      }
+    }
   }
 }

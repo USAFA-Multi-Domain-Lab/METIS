@@ -60,9 +60,6 @@ export default abstract class Mission<
   public versionNumber: number
 
   // Implemented
-  public initialResources: number
-
-  // Implemented
   public prototypes: TPrototype<T>[]
 
   // Implemented
@@ -88,8 +85,6 @@ export default abstract class Mission<
       data.introMessage ?? Mission.DEFAULT_PROPERTIES.introMessage
     this.versionNumber =
       data.versionNumber ?? Mission.DEFAULT_PROPERTIES.versionNumber
-    this.initialResources =
-      data.initialResources ?? Mission.DEFAULT_PROPERTIES.initialResources
     this.seed = data.seed ?? Mission.DEFAULT_PROPERTIES.seed
     this.prototypes = []
     this.forces = []
@@ -120,7 +115,6 @@ export default abstract class Mission<
       name: this.name,
       introMessage: this.introMessage,
       versionNumber: this.versionNumber,
-      initialResources: this.initialResources,
       seed: this.seed,
       nodeStructure: {},
       forces: [],
@@ -262,6 +256,91 @@ export default abstract class Mission<
   public static readonly MAX_FORCE_COUNT: number = 8
 
   /**
+   * Options when setting the color of nodes.
+   */
+  public static readonly COLOR_OPTIONS: string[] = [
+    // lightest
+    '#ffffff', // grayscale
+    '#b3e0ff', // blue
+    '#dcacad', // red
+    '#ecdead', // yellow
+    '#c9f7c6', // green
+    '#dec0aa', // orange
+    '#bdaaca', // purple
+    '#f8bae3', // magenta
+
+    // lighter
+    '#e1e1e1', // grayscale
+    '#9cd2ff', // blue
+    '#e69a9d', // red
+    '#f0db98', // yellow
+    '#b4e391', // green
+    '#e1b28e', // orange
+    '#b797cb', // purple
+    '#fd9edd', // magenta
+
+    // darker
+    '#cfcfcf', // grayscale
+    '#77c2ff', // blue
+    '#ea8388', // red
+    '#f0d57c', // yellow
+    '#9edc7c', // green
+    '#eeac7a', // orange
+    '#b887d7', // purple
+    '#fc84d4', // magenta
+
+    // darkest
+    '#bbbbbb', // grayscale
+    '#52b1ff', // blue
+    '#f1696f', // red
+    '#f7d154', // yellow
+    '#7ed321', // green
+    '#f49c58', // orange
+    '#b36ae2', // purple
+    '#ff66cc', // magenta
+
+    //     '#ffffff',
+    //     '#A4A4A4',
+    //     '#848484',
+    //     '#6E6E6E',
+    //
+    //     '#9ae293',
+    //     '#65eb59',
+    //     '#45cf45',
+    //     '#33b533',
+    //
+    //     '#97cbf5',
+    //     '#52b1ff',
+    //     '#34a1fb',
+    //     '#2f89d3',
+    //
+    //     '#dea3ff',
+    //     '#b839ff',
+    //     '#ae66d6',
+    //     '#9242be',
+    //
+    //     '#f59a9e',
+    //     '#f1696f',
+    //     '#f9484f',
+    //     '#d6353b',
+    //
+    //     '#f597ce',
+    //     '#eb5fb2',
+    //     '#fa39ac',
+    //     '#cd328e',
+    //
+    //     '#f5c18a',
+    //     '#f5b066',
+    //     '#ffab50',
+    //     '#c78032',
+    //
+    //     '#f5e677',
+    //     '#f6e351',
+    //     '#f7e346',
+    //     '#d0bf3b',
+  ]
+
+  /**
    * The default properties for a Mission object.
    */
   public static get DEFAULT_PROPERTIES(): Required<TCommonMissionJson> {
@@ -270,7 +349,6 @@ export default abstract class Mission<
       name: 'New Mission',
       introMessage: '<p>Welcome to your new mission!</p>',
       versionNumber: 1,
-      initialResources: 100,
       seed: generateHash(),
       nodeStructure: {},
       forces: [MissionForce.DEFAULT_FORCES[0]],
@@ -432,10 +510,6 @@ export interface TCommonMission {
    */
   versionNumber: number
   /**
-   * The amount of resources available to the student at the start of the mission.
-   */
-  initialResources: number
-  /**
    * The seed for the mission. Pre-determines outcomes.
    */
   seed: string
@@ -504,10 +578,6 @@ export interface TCommonMissionJson {
    * The version number of the mission.
    */
   versionNumber: number
-  /**
-   * The amount of resources available to the student at the start of the mission.
-   */
-  initialResources: number
   /**
    * The seed for the mission. Pre-determines outcomes.
    */

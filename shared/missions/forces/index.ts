@@ -1,5 +1,4 @@
 import { AnyObject } from 'metis/toolbox/objects'
-import { v4 as generateHash } from 'uuid'
 import { TCommonMission, TCommonMissionTypes, TMission } from '..'
 import context from '../../context'
 import StringToolbox from '../../toolbox/strings'
@@ -38,6 +37,12 @@ export abstract class MissionForce<
    * The color of the force.
    */
   public color: string
+
+  // Implemented
+  public initialResources: number
+
+  // Implementd
+  public resourcesRemaining: number
 
   /**
    * The nodes in the force.
@@ -86,7 +91,7 @@ export abstract class MissionForce<
    */
   public constructor(
     mission: TMission<T>,
-    data: Partial<TCommonMissionForceJson> = MissionForce.DEFAULT_PROPERTIES,
+    data: Partial<TMissionForceJson> = MissionForce.DEFAULT_PROPERTIES,
     options: TMissionForceOptions = {},
   ) {
     // Parse options.
@@ -97,6 +102,9 @@ export abstract class MissionForce<
     this._id = data._id ?? MissionForce.DEFAULT_PROPERTIES._id
     this.name = data.name ?? MissionForce.DEFAULT_PROPERTIES.name
     this.color = data.color ?? MissionForce.DEFAULT_PROPERTIES.color
+    this.initialResources =
+      data.initialResources ?? MissionForce.DEFAULT_PROPERTIES.initialResources
+    this.resourcesRemaining = data.resourcesRemaining ?? this.initialResources
     this.nodes = []
     this.root = this.createNode(MissionForce.ROOT_NODE_PROPERTIES)
 
@@ -113,14 +121,21 @@ export abstract class MissionForce<
   }
 
   // Implemented
-  public toJson(options: TForceJsonOptions = {}): TCommonMissionForceJson {
+  public toJson(options: TForceJsonOptions = {}): TMissionForceJson {
     let { revealedOnly = false, includeSessionData = false } = options
 
-    let json: TCommonMissionForceJson = {
+    let json: TMissionForceJson = {
       _id: this._id,
       name: this.name,
       color: this.color,
+      initialResources: this.initialResources,
       nodes: this.exportNodes({ revealedOnly, includeSessionData }),
+    }
+
+    // Include session data if includeSessionData
+    // flag was set.
+    if (includeSessionData) {
+      json.resourcesRemaining = this.resourcesRemaining
     }
 
     return json
@@ -209,9 +224,10 @@ export abstract class MissionForce<
    */
   public static get DEFAULT_PROPERTIES(): Required<TCommonMissionForceJson> {
     return {
-      _id: generateHash(),
+      _id: StringToolbox.generateRandomId(),
       name: 'New Force',
       color: '#ffffff',
+      initialResources: 100,
       nodes: [],
     }
   }
@@ -244,52 +260,44 @@ export abstract class MissionForce<
    */
   public static readonly DEFAULT_FORCES: TCommonMissionForceJson[] = [
     {
-      _id: StringToolbox.generateRandomId(),
+      ...MissionForce.DEFAULT_PROPERTIES,
       name: 'Friendly Force',
       color: '#52b1ff',
-      nodes: [],
     },
     {
-      _id: StringToolbox.generateRandomId(),
+      ...MissionForce.DEFAULT_PROPERTIES,
       name: 'Enemy Force',
       color: '#f1696f',
-      nodes: [],
     },
     {
-      _id: StringToolbox.generateRandomId(),
+      ...MissionForce.DEFAULT_PROPERTIES,
       name: 'Guerrilla Force',
       color: '#f7d154',
-      nodes: [],
     },
     {
-      _id: StringToolbox.generateRandomId(),
+      ...MissionForce.DEFAULT_PROPERTIES,
       name: 'Local National Force',
       color: '#7ed321',
-      nodes: [],
     },
     {
-      _id: StringToolbox.generateRandomId(),
+      ...MissionForce.DEFAULT_PROPERTIES,
       name: 'White Cell',
-      color: '#ffffff',
-      nodes: [],
+      color: '#bbbbbb',
     },
     {
-      _id: StringToolbox.generateRandomId(),
+      ...MissionForce.DEFAULT_PROPERTIES,
       name: 'Non-State Actors',
-      color: '#ce9563',
-      nodes: [],
+      color: '#f49c58',
     },
     {
-      _id: StringToolbox.generateRandomId(),
+      ...MissionForce.DEFAULT_PROPERTIES,
       name: 'Coalition Force',
       color: '#b36ae2',
-      nodes: [],
     },
     {
-      _id: StringToolbox.generateRandomId(),
+      ...MissionForce.DEFAULT_PROPERTIES,
       name: 'Civilian Industry',
       color: '#ff66cc',
-      nodes: [],
     },
   ]
 }
@@ -320,6 +328,11 @@ export interface TCommonMissionForce {
    */
   color: string
   /**
+   * The amount of resources available to the force at
+   * the start of the session.
+   */
+  initialResources: number
+  /**
    * The nodes in the force.
    */
   nodes: TCommonMissionNode[]
@@ -327,6 +340,11 @@ export interface TCommonMissionForce {
    * The root node of the force.
    */
   root: TCommonMissionNode
+  /**
+   * The current amount of resources available to the force.
+   * @note Only relevant when in a session.
+   */
+  resourcesRemaining: number
   /**
    * The revealed structure found in the force, based on the nodes
    * that have been opened.
@@ -351,7 +369,7 @@ export interface TCommonMissionForce {
 }
 
 /**
- * Plain JSON representation of a MissionNode object.
+ * Session-agnostic JSON representation of a MissionNode object.
  */
 export interface TCommonMissionForceJson {
   /**
@@ -367,10 +385,32 @@ export interface TCommonMissionForceJson {
    */
   color: string
   /**
+   * The amount of resources available to the student at the start of the mission.
+   */
+  initialResources: number
+  /**
    * The nodes in the force.
    */
   nodes: TCommonMissionNodeJson[]
 }
+
+/**
+ * Session-specific JSON data for a MissionForce object.
+ */
+export interface TMissionForceSessionJson {
+  /**
+   * The resources remaining for the force.
+   */
+  resourcesRemaining: number
+}
+
+/**
+ * Plain JSON representation of a MissionForce object.
+ * Type built from TCommonMissionForceJson and TMissionForceSessionJSON,
+ * with all properties from TMissionNodeSessionJSON being partial.
+ */
+export type TMissionForceJson = TCommonMissionForceJson &
+  Partial<TMissionForceSessionJson>
 
 /**
  * Options for creating a MissionForce object.

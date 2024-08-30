@@ -105,11 +105,6 @@ export default abstract class Session<
   }
 
   /**
-   * The resources available to the participants.
-   */
-  public abstract get resources(): number
-
-  /**
    * A map of actionIDs to actions compiled from those found in the mission being executed.
    */
   protected actions: Map<string, TMissionAction> = new Map<
@@ -123,7 +118,10 @@ export default abstract class Session<
    * @returns Whether the action is ready to be executed in the session.
    */
   public readyToExecute(action: TMissionAction): boolean {
-    return action.node.readyToExecute && action.resourceCost <= this.resources
+    return (
+      action.node.readyToExecute &&
+      action.resourceCost <= action.force.resourcesRemaining
+    )
   }
 
   /**
@@ -284,10 +282,6 @@ export type TSessionJson = {
    * The supervisors joined in the session.
    */
   supervisors: TCommonUserJson[]
-  /**
-   * The resources available to the participants.
-   */
-  resources: number | 'infinite'
 }
 
 /**

@@ -3,7 +3,6 @@ import { ClientEffect } from 'src/missions/effects'
 import ClientMissionForce from 'src/missions/forces'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import { ReactSetter } from 'src/toolbox/types'
 import ForceArg, {
   TForceArg,
 } from '../../../../../../shared/target-environments/args/force-arg'
@@ -264,5 +263,5 @@ type TForceArgEntry_P = {
    * Function that updates the value of the effect's arguments
    * stored in the state.
    */
-  setEffectArgs: ReactSetter<ClientEffect['args']>
+  setEffectArgs: TReactSetter<ClientEffect['args']>
 }

@@ -10,7 +10,6 @@ export let demoMissionData: TCommonMissionJson = {
   introMessage: '<p>Welcome to the METIS &gt; ASCOT 7 DEMO</p>',
   versionNumber: 1,
   seed: '6499bf5b8214651c898d125f',
-  initialResources: 100,
   nodeStructure: {
     '882d6985-a05c-4f36-b66b-92de27d34552': {
       '405b84dc-a653-47ed-8d88-aef3177a99b2': {},
@@ -58,6 +57,7 @@ export let demoMissionData: TCommonMissionJson = {
       _id: ServerMissionForce.DEFAULT_PROPERTIES._id,
       name: 'Friendly Force',
       color: '#34a1fb',
+      initialResources: 100,
       nodes: [
         {
           _id: ServerMissionNode.DEFAULT_PROPERTIES._id,

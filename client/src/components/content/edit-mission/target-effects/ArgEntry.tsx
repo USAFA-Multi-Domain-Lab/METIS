@@ -1,6 +1,5 @@
 import { ClientEffect } from 'src/missions/effects'
 import { compute } from 'src/toolbox'
-import { ReactSetter } from 'src/toolbox/types'
 import { TTargetArg } from '../../../../../../shared/target-environments/args'
 import './ArgEntry.scss'
 import ArgGrouping from './ArgGrouping'
@@ -104,5 +103,5 @@ type TArgEntry_P = {
    * Function that updates the value of the effect's arguments
    * stored in the state.
    */
-  setEffectArgs: ReactSetter<ClientEffect['args']>
+  setEffectArgs: TReactSetter<ClientEffect['args']>
 }

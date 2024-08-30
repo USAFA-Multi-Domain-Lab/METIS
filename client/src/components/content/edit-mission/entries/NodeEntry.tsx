@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useGlobalContext } from 'src/context'
+import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
@@ -32,7 +33,6 @@ export default function NodeEntry({
 }: TNodeEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const globalContext = useGlobalContext()
-  const [colorOptions] = globalContext.missionNodeColors
   const { notify, forceUpdate } = globalContext.actions
 
   /* -- STATE -- */
@@ -289,8 +289,8 @@ export default function NodeEntry({
           />
           <DetailColorSelector
             fieldType='required'
-            label='Border Color'
-            colors={colorOptions}
+            label='Color'
+            colors={ClientMission.COLOR_OPTIONS}
             isExpanded={false}
             stateValue={color}
             setState={setColor}

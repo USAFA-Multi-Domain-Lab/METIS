@@ -33,16 +33,6 @@ export default class SessionClient extends Session<
   protected server: ServerConnection
 
   /**
-   * The resources available to the participants.
-   */
-  protected _resources: number
-
-  // inherited
-  public get resources(): number {
-    return this._resources
-  }
-
-  /**
    * The client's role in the session.
    */
   protected _role: TSessionRole
@@ -76,7 +66,6 @@ export default class SessionClient extends Session<
     this.server = server
     this._role = role
     this._state = state
-    this._resources = data.resources === 'infinite' ? Infinity : data.resources
 
     this.addListeners()
   }
@@ -180,7 +169,6 @@ export default class SessionClient extends Session<
       banList: this.banList,
       supervisors: this.supervisors.map((user) => user.toJson()),
       config: this.config,
-      resources: this.resources === Infinity ? 'infinite' : this.resources,
     }
   }
 
@@ -698,7 +686,7 @@ export default class SessionClient extends Session<
     event: TServerEvents['action-execution-initiated'],
   ): void => {
     // Extract data.
-    let { execution: executionData } = event.data
+    let { execution: executionData, resourcesRemaining } = event.data
     let { actionId } = executionData
 
     // Find the action and node, given the action ID.
@@ -719,8 +707,9 @@ export default class SessionClient extends Session<
     // Handle execution on the node.
     node.loadExecution(executionData)
 
-    // Deduct resources from pool.
-    this._resources -= action.resourceCost
+    // Update the resources remaining for
+    // the force.
+    action.force.resourcesRemaining = resourcesRemaining
   }
 
   /**

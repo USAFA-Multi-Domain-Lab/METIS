@@ -15,7 +15,6 @@ import { v4 as generateHash } from 'uuid'
 import { RequestBodyFilters, defineRequests } from '../../middleware/requests'
 import uploads from '../../middleware/uploads'
 import { auth } from '../../middleware/users'
-import MissionNode from '../../missions/nodes'
 
 type MulterFile = Express.Multer.File
 
@@ -30,20 +29,13 @@ export const routerMap: TMetisRouterMap = (
    * @returns The new mission.
    */
   const createMission = (request: Request, response: Response) => {
-    let {
-      name,
-      introMessage,
-      versionNumber,
-      initialResources,
-      nodeStructure,
-      forces,
-    } = request.body as TCommonMissionJson
+    let { name, introMessage, versionNumber, nodeStructure, forces } =
+      request.body as TCommonMissionJson
 
     let mission = new MissionModel({
       name,
       introMessage,
       versionNumber,
-      initialResources,
       nodeStructure,
       forces,
     })
@@ -53,7 +45,10 @@ export const routerMap: TMetisRouterMap = (
         databaseLogger.error('Failed to create mission:')
         databaseLogger.error(error)
 
-        if (error.name === MetisDatabase.ERROR_BAD_DATA) {
+        if (
+          error.name === MetisDatabase.ERROR_BAD_DATA ||
+          error.message.includes('validation failed')
+        ) {
           return response.sendStatus(400)
         } else {
           return response.sendStatus(500)
@@ -830,15 +825,6 @@ export const routerMap: TMetisRouterMap = (
   const getEnvironment = (request: Request, response: Response) =>
     response.send(process.env)
 
-  /**
-   * This will return all the available
-   * color options that can be used to
-   * style a mission-node.
-   * @returns The color options in JSON format.
-   */
-  const getColorOptions = (request: Request, response: Response) =>
-    response.json(MissionNode.COLOR_OPTIONS)
-
   /* ---------------------------- UPDATE ---------------------------- */
 
   /**
@@ -884,7 +870,10 @@ export const routerMap: TMetisRouterMap = (
 
             // If this error was a validation error,
             // then it is a bad request.
-            if (error.message.includes('validation failed')) {
+            if (
+              error.name === MetisDatabase.ERROR_BAD_DATA ||
+              error.message.includes('validation failed')
+            ) {
               return response.sendStatus(400)
             }
             // Else it's a server error.
@@ -948,7 +937,6 @@ export const routerMap: TMetisRouterMap = (
           name: copyName,
           introMessage: mission.introMessage,
           versionNumber: mission.versionNumber,
-          initialResources: mission.initialResources,
           nodeStructure: mission.nodeStructure,
           forces: mission.forces,
         }
@@ -1005,7 +993,6 @@ export const routerMap: TMetisRouterMap = (
         name: RequestBodyFilters.STRING,
         introMessage: RequestBodyFilters.STRING,
         versionNumber: RequestBodyFilters.NUMBER,
-        initialResources: RequestBodyFilters.NUMBER,
         nodeStructure: RequestBodyFilters.OBJECT,
         forces: RequestBodyFilters.ARRAY,
       },
@@ -1023,9 +1010,6 @@ export const routerMap: TMetisRouterMap = (
 
   // -- GET /api/v1/missions/environment/
   router.get('/environment/', getEnvironment)
-
-  // -- GET /api/v1/missions/colors/
-  router.get('/colors/', getColorOptions)
 
   // -- GET | /api/v1/missions/ --
   router.get('/', auth({ permissions: ['missions_read'] }), getMissions)

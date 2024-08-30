@@ -10,8 +10,7 @@ export default function Tab({
   color,
   selected,
   onClick = () => {},
-}: // selected = false,
-TTab_P): JSX.Element | null {
+}: TTab_P): JSX.Element | null {
   /* -- STATE -- */
 
   /* -- COMPUTED -- */

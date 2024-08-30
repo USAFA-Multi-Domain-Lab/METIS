@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useGlobalContext } from 'src/context'
+import ClientMission from 'src/missions'
 import ClientMissionForce from 'src/missions/forces'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
 import Prompt from '../../communication/Prompt'
+import { DetailColorSelector } from '../../form/DetailColorSelector'
+import { DetailNumber } from '../../form/DetailNumber'
 import { DetailString } from '../../form/DetailString'
-import { ButtonText } from '../../user-controls/ButtonText'
+import { ButtonText, TButtonText } from '../../user-controls/ButtonText'
 import './index.scss'
 import EntryNavigation from './navigation/EntryNavigation'
 
@@ -22,6 +25,10 @@ export default function ForceEntry({
 
   /* -- STATE -- */
   const [name, setName] = useState<string>(force.name)
+  const [color, setColor] = useState<string>(force.color)
+  const [initialResources, setInitialResources] = useState<number>(
+    force.initialResources,
+  )
 
   /* -- COMPUTED -- */
 
@@ -39,19 +46,49 @@ export default function ForceEntry({
     return classList.join(' ')
   })
 
+  /**
+   * The list of buttons for the node's border color.
+   */
+  const colorButtons: TButtonText[] = compute(() => {
+    // Create a default list of buttons.
+    let buttons: TButtonText[] = []
+
+    // Create a button that will fill all nodes
+    // in the force with the selected color.
+    let fillButton: TButtonText = {
+      text: 'Apply to Nodes',
+      onClick: async () => {
+        force.nodes.forEach((node) => {
+          node.color = color
+        })
+        handleChange()
+      },
+      tooltipDescription: `Applies the selected color to all nodes in the force.`,
+    }
+
+    // Add the fill button to the list of buttons.
+    buttons.push(fillButton)
+
+    // Return the buttons.
+    return buttons
+  })
+
   /* -- EFFECTS -- */
 
   // Sync the component state with the force name.
   usePostInitEffect(() => {
-    // Update the force name.
+    // Update the force properties.
     force.name = name
+    force.color = color
+    force.initialResources = initialResources
+
     // Allow the user to save the changes.
     handleChange()
-  }, [name])
+  }, [name, color, initialResources])
 
-  // This displays the change in the mission path found at
-  // the top of the side panel.
-  useEffect(() => forceUpdate(), [name])
+  // This displays changes in the mission path
+  // and the tab bar.
+  useEffect(() => forceUpdate(), [name, color])
 
   /* -- FUNCTIONS -- */
 
@@ -98,7 +135,24 @@ export default function ForceEntry({
             maxLength={ClientMissionForce.MAX_NAME_LENGTH}
             key={`${force._id}_name`}
           />
-
+          <DetailColorSelector
+            fieldType='required'
+            label='Color'
+            colors={ClientMission.COLOR_OPTIONS}
+            isExpanded={false}
+            stateValue={color}
+            setState={setColor}
+            buttons={colorButtons}
+            key={`${force._id}_color`}
+          />
+          <DetailNumber
+            fieldType='required'
+            label='Initial Resources'
+            stateValue={initialResources}
+            setState={setInitialResources}
+            integersOnly={true}
+            key={`${force._id}_initialResources`}
+          />
           <div className='ButtonContainer'>
             <ButtonText
               text='Delete force'

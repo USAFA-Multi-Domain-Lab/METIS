@@ -5,7 +5,6 @@ import { ClientEffect } from 'src/missions/effects'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import { ReactSetter } from 'src/toolbox/types'
 import { SingleTypeObject } from '../../../../../../shared/toolbox/objects'
 import Tooltip from '../../communication/Tooltip'
 import { DetailLargeString } from '../../form/DetailLargeString'
@@ -355,7 +354,7 @@ export type TActionEntry_P = {
   /**
    * Function that updates the isNewEffect state.
    */
-  setIsNewEffect: ReactSetter<boolean>
+  setIsNewEffect: TReactSetter<boolean>
   /**
    * Handles the request to delete an action.
    */

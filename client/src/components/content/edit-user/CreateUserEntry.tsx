@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import { ReactSetter } from 'src/toolbox/types'
 import ClientUser from 'src/users'
 import { TLogin } from '../../../../../shared/logins'
 import UserAccess from '../../../../../shared/users/accesses'
@@ -389,7 +388,7 @@ export type TCreateUserEntry_P = {
   /**
    * A function that will update the array of fields with empty strings.
    */
-  setUserEmptyStringArray: ReactSetter<string[]>
+  setUserEmptyStringArray: TReactSetter<string[]>
   /**
    * A function that will be called when a change has been made.
    */

@@ -2,7 +2,6 @@ import { useEffect, useRef } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import ServerConnection from 'src/connect/servers'
 import { useGlobalContext } from 'src/context'
-import ClientMissionNode from 'src/missions/nodes'
 import SessionClient from 'src/sessions'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientUser from 'src/users'
@@ -59,7 +58,6 @@ function App(props: {}): JSX.Element | null {
   const [tooltips] = globalContext.tooltips
   const [tooltipDescription, setTooltipDescription] =
     globalContext.tooltipDescription
-  const [_, setMissionNodeColors] = globalContext.missionNodeColors
   const [loading] = globalContext.loading
   const [loadingMinTimeReached] = globalContext.loadingMinTimeReached
   const [pageSwitchMinTimeReached] = globalContext.pageSwitchMinTimeReached
@@ -221,12 +219,8 @@ function App(props: {}): JSX.Element | null {
   // This is called to handle logins.
   useEffect(() => {
     async function effect(): Promise<void> {
-      if (login === null) {
-        navigateTo('AuthPage', {})
-        setMissionNodeColors([])
-      } else {
+      if (login !== null) {
         try {
-          setMissionNodeColors(await ClientMissionNode.$fetchColors())
           // Load target environments.
           await ClientTargetEnvironment.$loadAll(login.user)
         } catch {

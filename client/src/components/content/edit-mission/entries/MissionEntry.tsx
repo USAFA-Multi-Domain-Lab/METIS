@@ -6,7 +6,6 @@ import { useMountHandler, usePostInitEffect } from 'src/toolbox/hooks'
 import { SingleTypeObject } from '../../../../../../shared/toolbox/objects'
 import Tooltip from '../../communication/Tooltip'
 import { DetailLargeString } from '../../form/DetailLargeString'
-import { DetailNumber } from '../../form/DetailNumber'
 import { DetailString } from '../../form/DetailString'
 import List, { ESortByMethod } from '../../general-layout/List'
 import ButtonSvgPanel, {
@@ -29,9 +28,6 @@ export default function MissionEntry({
   /* -- STATE -- */
   const [name, setName] = useState<string>(mission.name)
   const [introMessage, setIntroMessage] = useState<string>(mission.introMessage)
-  const [initialResources, setInitialResources] = useState<number>(
-    mission.initialResources,
-  )
   const [defectiveObjects, setDefectiveObjects] = useState<TMissionComponent[]>(
     mission.defectiveObjects,
   )
@@ -62,12 +58,10 @@ export default function MissionEntry({
     mission.name = name
     // Update the introduction message.
     mission.introMessage = introMessage
-    // Update the initial resources.
-    mission.initialResources = initialResources
 
     // Allow the user to save the changes.
     handleChange()
-  }, [name, introMessage, initialResources])
+  }, [name, introMessage])
 
   // This displays the change of the mission's name found at
   // the bottom left of the mission map.
@@ -150,14 +144,6 @@ export default function MissionEntry({
             defaultValue={ClientMission.DEFAULT_PROPERTIES.introMessage}
             elementBoundary='.SidePanelSection'
             key={`${mission._id}_introMessage`}
-          />
-          <DetailNumber
-            fieldType='required'
-            label='Initial Resources'
-            stateValue={initialResources}
-            setState={setInitialResources}
-            integersOnly={true}
-            key={`${mission._id}_initialResources`}
           />
           {defectiveObjects.length > 0 ? (
             <List<TMissionComponent>

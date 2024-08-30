@@ -9,7 +9,6 @@ import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import { ReactSetter } from 'src/toolbox/types'
 import './CreateEffect.scss'
 
 /**
@@ -181,7 +180,7 @@ export type TCreateEffect_P = {
   /**
    * Function that updates the isNewEffect state.
    */
-  setIsNewEffect: ReactSetter<boolean>
+  setIsNewEffect: TReactSetter<boolean>
   /**
    * Handles when a change is made that would require saving.
    */

@@ -5,7 +5,6 @@
   display: grid;
   opacity: 1;
   grid-template-columns: 1fr auto;
-  overflow: hidden;
   margin-bottom: -2px;
   border-right: 2px solid rgba(#fff, 0.1);
   border-bottom: 2px solid transparent;
@@ -21,6 +20,7 @@
 
     .Text {
       font-weight: bold;
+      width: fit-content;
     }
   }
 

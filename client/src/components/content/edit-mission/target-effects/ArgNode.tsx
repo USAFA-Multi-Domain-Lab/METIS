@@ -4,7 +4,6 @@ import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import { ReactSetter } from 'src/toolbox/types'
 import ForceArg from '../../../../../../shared/target-environments/args/force-arg'
 import NodeArg, {
   TNodeArg,
@@ -485,5 +484,5 @@ type TNodeArgEntry_P = {
    * Function that updates the value of the effect's arguments
    * stored in the state.
    */
-  setEffectArgs: ReactSetter<ClientEffect['args']>
+  setEffectArgs: TReactSetter<ClientEffect['args']>
 }

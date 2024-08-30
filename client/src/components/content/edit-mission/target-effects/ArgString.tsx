@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ClientEffect } from 'src/missions/effects'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import { ReactSetter } from 'src/toolbox/types'
 import { TStringArg } from '../../../../../../shared/target-environments/args/string-arg'
 import { DetailString } from '../../form/DetailString'
 
@@ -114,5 +113,5 @@ type TStringArg_P = {
    * Function that updates the value of the effect's arguments
    * stored in the state.
    */
-  setEffectArgs: ReactSetter<ClientEffect['args']>
+  setEffectArgs: TReactSetter<ClientEffect['args']>
 }

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ClientEffect } from 'src/missions/effects'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import { ReactSetter } from 'src/toolbox/types'
 import { TBooleanArg } from '../../../../../../shared/target-environments/args/boolean-arg'
 import { DetailToggle } from '../../form/DetailToggle'
 
@@ -106,5 +105,5 @@ type TBooleanArg_P = {
    * Function that updates the value of the effect's arguments
    * stored in the state.
    */
-  setEffectArgs: ReactSetter<ClientEffect['args']>
+  setEffectArgs: TReactSetter<ClientEffect['args']>
 }
