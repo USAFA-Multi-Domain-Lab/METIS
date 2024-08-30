@@ -296,8 +296,8 @@ export default abstract class MissionNode<
       data.structureKey ?? MissionNode.DEFAULT_PROPERTIES.structureKey
     this.name = data.name ?? MissionNode.DEFAULT_PROPERTIES.name
     this.color = data.color ?? MissionNode.DEFAULT_PROPERTIES.color
-    // todo: add borderStyle to data
-    this.borderStyle = 'solid'
+    this.borderStyle =
+      data.borderStyle ?? MissionNode.DEFAULT_PROPERTIES.borderStyle
     this.description =
       data.description ?? MissionNode.DEFAULT_PROPERTIES.description
     this.preExecutionText =
@@ -382,6 +382,7 @@ export default abstract class MissionNode<
       structureKey: this.structureKey,
       name: this.name,
       color: this.color,
+      borderStyle: this.borderStyle,
       description: this.description,
       preExecutionText: this.preExecutionText,
       depthPadding: this.depthPadding,
@@ -462,6 +463,7 @@ export default abstract class MissionNode<
       structureKey: generateHash(),
       name: 'Unnamed Node',
       color: '#ffffff',
+      borderStyle: 'solid',
       description: '',
       preExecutionText: '',
       depthPadding: 0,
@@ -698,6 +700,10 @@ export interface TCommonMissionNodeJson {
    * The color for the node used as a border in the mission map.
    */
   color: string
+  /**
+   * The style of the border for the node.
+   */
+  borderStyle: 'dotted' | 'dashed' | 'solid'
   /**
    * The description for the node.
    */

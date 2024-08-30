@@ -63,6 +63,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'Select Target Region',
           color: '#65eb59',
           description: '<p>Select Combatant Command</p>',
+          borderStyle: 'solid',
           preExecutionText:
             '<p>SYS MESSAGE: Select the unified combatant commands in which to conduct operations.</p>',
           depthPadding: 0,
@@ -91,6 +92,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'CENTCOM',
           color: '#52b1ff',
           description: '<p>U.S. Central Command</p>',
+          borderStyle: 'solid',
           preExecutionText:
             '<p>*** CONNECTION ESTABLISHED *** SYS MESSAGE: Welcome to the unified combatant commands cyberspace effects services interface system.</p>',
           depthPadding: 0,
@@ -104,6 +106,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'AFRICOM',
           color: '#52b1ff',
           description: '<p>U.S. Africa Command</p>',
+          borderStyle: 'solid',
           preExecutionText:
             '<p>*** CONNECTION ESTABLISHED *** SYS MESSAGE: Welcome to the unified combatant commands cyberspace effects services interface system.</p>',
           depthPadding: 0,
@@ -117,6 +120,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'EUCOM',
           color: '#52b1ff',
           description: '<p>U.S. European Command</p>',
+          borderStyle: 'solid',
           preExecutionText:
             '<p>*** CONNECTION ESTABLISHED *** SYS MESSAGE: Welcome to the unified combatant commands cyberspace effects services interface system.</p>',
           depthPadding: 0,
@@ -130,6 +134,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'NORTHCOM',
           color: '#52b1ff',
           description: '<p>U.S. Northern Command</p>',
+          borderStyle: 'solid',
           preExecutionText:
             '<p>*** CONNECTION ESTABLISHED *** SYS MESSAGE: Welcome to the unified combatant commands cyberspace effects services interface system.</p>',
           depthPadding: 0,
@@ -143,6 +148,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'INDOPACOM',
           color: '#52b1ff',
           description: '<p>U.S. Indo-Pacific Command</p>',
+          borderStyle: 'solid',
           preExecutionText:
             "<p>*** CONNECTION ESTABLISHED *** SYS MESSAGE: Welcome to the unified combatant command's cyberspace effects services interface system. MISSION: U.S. Indo-Pacific Command will implement a combat credible deterrence strategy capable of denying our adversaries sustained air and sea dominance by focusing on posturing the Joint Force to win before fighting, while being ready to fight and win, if required.</p>",
           depthPadding: 0,
@@ -156,6 +162,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'SOUTHCOM',
           color: '#52b1ff',
           description: '<p>U.S. Southern Command</p>',
+          borderStyle: 'solid',
           preExecutionText:
             '<p>*** CONNECTION ESTABLISHED *** SYS MESSAGE: Welcome to the unified combatant commands cyberspace effects services interface system.</p>',
           depthPadding: 0,
@@ -169,6 +176,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'SPACECOM',
           color: '#52b1ff',
           description: '<p>U.S. Space Command</p>',
+          borderStyle: 'solid',
           preExecutionText:
             '<p>*** CONNECTION ESTABLISHED *** SYS MESSAGE: Welcome to the unified combatant commands cyberspace effects services interface system.</p>',
           depthPadding: 0,
@@ -182,6 +190,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'Select Domain',
           color: '#eb5fb2',
           description: '<p>Select Domain of Operations</p>',
+          borderStyle: 'solid',
           preExecutionText: '<p>SYS MESSAGE: Select domain of operations.</p>',
           depthPadding: 0,
           executable: false,
@@ -194,6 +203,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'Space',
           color: '#cd328e',
           description: '<p>Target Space Domain</p>',
+          borderStyle: 'solid',
           preExecutionText: '<p>SYS MESSAGE: Select target region.</p>',
           depthPadding: 0,
           executable: false,
@@ -206,6 +216,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'Cyberspace',
           color: '#cd328e',
           description: '<p>Target Cyberspace Domain</p>',
+          borderStyle: 'solid',
           preExecutionText:
             '<p>SYS MESSAGE: Selected domain assets currently available for cyberspace effects targets has been compiled.</p>',
           depthPadding: 0,
@@ -219,6 +230,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'Air',
           color: '#cd328e',
           description: '<p>Target Air Domain</p>',
+          borderStyle: 'solid',
           preExecutionText:
             '<p>SYS MESSAGE: Selected domain assets currently available for cyberspace effects targets has been compiled.</p>',
           depthPadding: 0,
@@ -232,6 +244,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'Land',
           color: '#cd328e',
           description: '<p>Target Land Domain</p>',
+          borderStyle: 'solid',
           preExecutionText:
             '<p>SYS MESSAGE: Selected domain assets currently available for cyberspace effects targets has been compiled.</p>',
           depthPadding: 0,
@@ -245,6 +258,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'Sea',
           color: '#cd328e',
           description: '<p>Target Sea Domain</p>',
+          borderStyle: 'solid',
           preExecutionText:
             '<p>SYS MESSAGE: Selected domain assets currently available for cyberspace effects targets has been compiled.</p>',
           depthPadding: 0,
@@ -258,6 +272,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'Sub-Surface',
           color: '#cd328e',
           description: '<p>Target Sub-Surface Domain</p>',
+          borderStyle: 'solid',
           preExecutionText:
             '<p>SYS MESSAGE: Selected domain assets currently available for cyberspace effects targets has been compiled.</p>',
           depthPadding: 0,
@@ -271,6 +286,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'China',
           color: '#f5e677',
           description: '<p>Select Target Region</p>',
+          borderStyle: 'solid',
           preExecutionText:
             '<p>*** WARNING: ACCESS AND OPERATIONS CONDUCTED BEYOND THIS POINT REQUIRES COMBATANT COMMAND LEAVE AUTHORIZATION. ***</p>',
           depthPadding: 0,
@@ -297,6 +313,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'North Korea',
           color: '#f5e677',
           description: '<p>Select Target Region</p>',
+          borderStyle: 'solid',
           preExecutionText:
             '<p>*** WARNING: Access beyond this point requires combatant command leave authorization. ***</p>',
           depthPadding: 0,
@@ -323,6 +340,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'Nanning Station [南宁站] ',
           color: '#d0bf3b',
           description: '<p>Select Ground Control Station</p>',
+          borderStyle: 'solid',
           preExecutionText: '',
           depthPadding: 0,
           executable: true,
@@ -349,6 +367,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'Lingshui Station [陵水测控站]',
           color: '#d0bf3b',
           description: '<p>Select Ground Control Station</p>',
+          borderStyle: 'solid',
           preExecutionText: '',
           depthPadding: 0,
           executable: true,
@@ -375,6 +394,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'Menghai Station [勐海测控站]',
           color: '#d0bf3b',
           description: '<p>Select Ground Control Station</p>',
+          borderStyle: 'solid',
           preExecutionText: '',
           depthPadding: 0,
           executable: true,
@@ -401,6 +421,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'Minxi Station [闽西测控站]',
           color: '#d0bf3b',
           description: '<p>Select Ground Control Station</p>',
+          borderStyle: 'solid',
           preExecutionText: '',
           depthPadding: 0,
           executable: true,
@@ -427,6 +448,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'Changchun Station [长春测控站] ',
           color: '#d0bf3b',
           description: '<p>Select Ground Control Station</p>',
+          borderStyle: 'solid',
           preExecutionText:
             '<p>Now connected to Changchun Station monitor/command systems.</p>',
           depthPadding: 0,
@@ -454,6 +476,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'Qingdao Station [青岛测控站]',
           color: '#d0bf3b',
           description: '<p>Select Ground Control Station</p>',
+          borderStyle: 'solid',
           preExecutionText: '',
           depthPadding: 0,
           executable: true,
@@ -480,6 +503,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'YAOGAN-23 (SAR)',
           color: '#52b1ff',
           description: '<p>JB-7-4</p>',
+          borderStyle: 'solid',
           preExecutionText:
             '<p>Satellite: YAOGAN-23 (SAR) Two Line Element Set (TLE): 1 40305U 14071A 23186.44045114 .00010456 00000-0 35544-3 0 9998 2 40305 97.6540 150.2916 0001821 103.7780 256.3663 15.30655096478928</p>',
           depthPadding: 0,
@@ -507,6 +531,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'YAOGAN-35 (ELINT)',
           color: '#52b1ff',
           description: '<p>Unknown</p>',
+          borderStyle: 'solid',
           preExecutionText:
             '<p>Satellite: YAOGAN-35 (ELINT) - Two Line Element Set (TLE): 1 53522U 22100A 23185.93674371 .00000372 00000-0 15955-4 0 9992 2 53522 35.0016 357.2127 0015138 230.2255 129.7127 15.25075460 48723</p>',
           depthPadding: 0,
@@ -534,6 +559,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'YAOGAN-36 (Data)',
           color: '#52b1ff',
           description: '<p>Unknown</p>',
+          borderStyle: 'solid',
           preExecutionText:
             '<p>YAOGAN-36 (Data) - Two Line Element Set (TLE): 1 54372U 22160A 23186.55133669 .00108949 00000-0 42295-2 0 9995 2 54372 34.9942 281.0301 0008014 20.3153 357.7082 15.24733845 33602</p>',
           depthPadding: 0,
@@ -561,6 +587,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'Chengdu GJ-2 (UAV)',
           color: '#b839ff',
           description: '<p>Wing Loong 2 (UAV, China)</p>',
+          borderStyle: 'solid',
           preExecutionText:
             '<p>Last Reported Data: Chengdu GJ-2 (Remotely Piloted Aircraft) - Current SPEED: 320 km/h - Current ALTITUDE: 28k MSL - Current LOCATION: 43° 30.1647′ N, 141° 05.6799′ E</p>',
           depthPadding: 0,
@@ -588,6 +615,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'Flight Controls',
           color: '#b839ff',
           description: '<p>Access air vehicle flight controls.</p>',
+          borderStyle: 'solid',
           preExecutionText: '',
           depthPadding: 0,
           executable: true,
@@ -627,6 +655,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'Access Controls',
           color: '#b839ff',
           description: '<p>Access air vehicle system lock-out.</p>',
+          borderStyle: 'solid',
           preExecutionText: '',
           depthPadding: 0,
           executable: true,
@@ -666,6 +695,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: 'Emergency Controls',
           color: '#b839ff',
           description: '<p>Execute Emergency Loss-of-Link.</p>',
+          borderStyle: 'solid',
           preExecutionText: '<p>UAV will execute loss-of-link protocol.</p>',
           depthPadding: 0,
           executable: true,
@@ -692,6 +722,7 @@ export let demoMissionData: TCommonMissionJson = {
           name: '*** WARNING ***',
           color: '#f9484f',
           description: '<p>*** CONFIRM ACTION ***</p>',
+          borderStyle: 'solid',
           preExecutionText: '<p>*** CONFIRM ACTION ***</p>',
           depthPadding: 0,
           executable: true,

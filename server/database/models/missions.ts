@@ -1,7 +1,10 @@
 import Mission, { TCommonMissionJson } from 'metis/missions'
 import { TCommonMissionActionJson } from 'metis/missions/actions'
 import { TCommonMissionForceJson } from 'metis/missions/forces'
-import { TCommonMissionNodeJson, TMissionNodeJson } from 'metis/missions/nodes'
+import MissionNode, {
+  TCommonMissionNodeJson,
+  TMissionNodeJson,
+} from 'metis/missions/nodes'
 import MetisDatabase from 'metis/server/database'
 import SanitizedHTML from 'metis/server/database/schema-types/html'
 import ServerEffect from 'metis/server/missions/effects'
@@ -264,6 +267,18 @@ const validate_missions_forces_nodes_color = (
   let isValidColor: boolean = HEX_COLOR_REGEX.test(color)
 
   return isValidColor
+}
+
+/**
+ * Validates the border style for a mission-node.
+ */
+const validate_missions_forces_nodes_borderStyle = (
+  borderStyle: TCommonMissionNodeJson['borderStyle'],
+): boolean => {
+  let validBorderStyle: boolean =
+    MissionNode.BORDER_STYLE_OPTIONS.includes(borderStyle)
+
+  return validBorderStyle
 }
 
 /**
@@ -549,6 +564,12 @@ export const MissionSchema: Schema = new Schema(
                   type: String,
                   required: true,
                   validate: validate_missions_forces_nodes_color,
+                },
+                borderStyle: {
+                  type: String,
+                  required: true,
+                  default: 'solid',
+                  validate: validate_missions_forces_nodes_borderStyle,
                 },
                 description: { type: SanitizedHTML, required: true },
                 preExecutionText: {
