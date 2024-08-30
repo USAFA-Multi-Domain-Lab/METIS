@@ -3,6 +3,7 @@ import { TMissionNodeJson, TMissionNodeOptions } from 'metis/missions/nodes'
 import { TTargetEnvContextForce } from 'metis/server/target-environments/context-provider'
 import { TServerMissionTypes } from '..'
 import ServerMissionNode from '../nodes'
+import { TServerOutputMessage } from './output-message'
 
 /**
  * Class for managing mission prototypes on the client.
@@ -44,6 +45,11 @@ export default class ServerMissionForce extends MissionForce<TServerMissionTypes
       name: this.name,
       nodes: this.nodes.map((node) => node.toTargetEnvContext()),
     }
+  }
+
+  // Implemented
+  public sendOutputMessage(outputMessage: TServerOutputMessage): void {
+    this._outputMessages.push(outputMessage)
   }
 }
 

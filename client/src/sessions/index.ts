@@ -140,6 +140,7 @@ export default class SessionClient extends Session<
       'internal-effect-enacted',
       this.onInternalEffectEnacted,
     )
+    this.server.addEventListener('send-output', this.onSendOutput)
   }
 
   /**
@@ -155,6 +156,7 @@ export default class SessionClient extends Session<
       'action-execution-initiated',
       'action-execution-completed',
       'internal-effect-enacted',
+      'send-output',
     ])
   }
 
@@ -648,6 +650,28 @@ export default class SessionClient extends Session<
           `Error: Incorrect data sent to internal effect handler. Data: ${data}`,
         )
     }
+  }
+
+  /**
+   * Handles when an output message has been sent.
+   * @param event The event emitted by the server.
+   */
+  private onSendOutput = (event: TServerEvents['send-output']): void => {
+    // Extract data.
+    let { forceId, output } = event.data
+
+    // Find the force, given the ID.
+    let force: ClientMissionForce | undefined = this.mission.getForce(forceId)
+
+    // Handle force not found.
+    if (force === undefined) {
+      throw new Error(
+        `Event "send-output" was triggered, but the force with the given forceId ("${forceId}") could not be found.`,
+      )
+    }
+
+    // Send output message to force.
+    force.sendOutputMessage(output)
   }
 
   /**

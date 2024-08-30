@@ -14,6 +14,7 @@ import {
   TForce,
   TMissionForceOptions,
 } from './forces'
+import { TCommonOutputMessage } from './forces/output-message'
 import { TCommonMissionNode, TNode } from './nodes'
 import { TCommonMissionPrototype, TPrototype } from './nodes/prototypes'
 
@@ -518,6 +519,7 @@ export default abstract class Mission<
 export type TCommonMissionTypes = {
   mission: TCommonMission
   force: TCommonMissionForce
+  outputMessage: TCommonOutputMessage
   prototype: TCommonMissionPrototype
   node: TCommonMissionNode
   action: TCommonMissionAction

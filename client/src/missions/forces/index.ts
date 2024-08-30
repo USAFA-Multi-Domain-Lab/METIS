@@ -1,4 +1,5 @@
 import { TLine_P } from 'src/components/content/session/mission-map/objects/Line'
+import { TEventListenerTarget } from 'src/toolbox/hooks'
 import ClientMission, {
   TClientMissionTypes,
   TMissionComponent,
@@ -17,13 +18,14 @@ import { Counter } from '../../../../shared/toolbox/numbers'
 import { TWithKey } from '../../../../shared/toolbox/objects'
 import { Vector2D } from '../../../../shared/toolbox/space'
 import ClientMissionNode from '../nodes'
+import { TClientOutputMessage } from './output-message'
 
 /**
  * Class for managing mission prototypes on the client.
  */
 export default class ClientMissionForce
   extends MissionForce<TClientMissionTypes>
-  implements TMissionComponent
+  implements TEventListenerTarget<TForceEventMethod>, TMissionComponent
 {
   /**
    * The lines used to connect nodes on the mission map.
@@ -45,6 +47,10 @@ export default class ClientMissionForce
   public get defectiveMessage(): string {
     return this._defectiveMessage
   }
+  /**
+   * Listeners for force events.
+   */
+  private listeners: Array<[TForceEventMethod, () => void]> = []
 
   /**
    * @param mission The mission to which the force belongs.
@@ -376,6 +382,42 @@ export default class ClientMissionForce
     // those determined by the algorithm.
     this.relationshipLines = relationshipLines
   }
+
+  /**
+   * Calls the callbacks of listeners for the given force event.
+   * @param method The event method emitted.
+   */
+  private emitEvent(method: TForceEventMethod): void {
+    // Call any matching listener callbacks
+    // or any activity listener callbacks.
+    for (let [listenerMethod, listenerCallback] of this.listeners) {
+      if (listenerMethod === method || listenerMethod === 'activity') {
+        listenerCallback()
+      }
+    }
+  }
+
+  // Implemented
+  public addEventListener(
+    event: TForceEventMethod,
+    callback: () => void,
+  ): ClientMissionForce {
+    this.listeners.push([event, callback])
+    return this
+  }
+
+  // Implemented
+  public removeEventListener(callback: () => void): ClientMissionForce {
+    // Filter out listener.
+    this.listeners = this.listeners.filter(([, h]) => h !== callback)
+    return this
+  }
+
+  // Implemented
+  public sendOutputMessage(outputMessage: TClientOutputMessage): void {
+    this._outputMessages.push(outputMessage)
+    this.emitEvent('output-message')
+  }
 }
 
 /* ------------------------------ CLIENT FORCE TYPES ------------------------------ */
@@ -384,3 +426,12 @@ export default class ClientMissionForce
  * Options for creating a ClientMissionForce object.
  */
 export type TClientMissionForceOptions = TMissionForceOptions & {}
+
+/**
+ * An event that occurs on a force, which can be listened for.
+ * @option 'activity'
+ * Triggered when any other event occurs.
+ * @option 'output-message'
+ * Triggered when an output message is sent.
+ */
+export type TForceEventMethod = 'activity' | 'output-message'

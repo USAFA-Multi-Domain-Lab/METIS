@@ -516,7 +516,7 @@ export interface TCommonMissionNode {
    */
   description: string
   /**
-   * The text outputted to the console when the node is clicked on.
+   * The text that is sent to the output panel when the node is clicked on.
    */
   preExecutionText: string
   /**
@@ -693,7 +693,7 @@ export interface TCommonMissionNodeJson {
    */
   description: string
   /**
-   * The text outputted to the console when the node is clicked on.
+   * The text that is sent to the output panel when the node is clicked on.
    */
   preExecutionText: string
   /**

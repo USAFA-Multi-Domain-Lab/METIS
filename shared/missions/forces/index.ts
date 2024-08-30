@@ -9,6 +9,7 @@ import {
   TMissionNodeOptions,
   TNode,
 } from '../nodes'
+import { TCommonOutputMessage, TOutputMessage } from './output-message'
 
 /* -- CLASSES -- */
 
@@ -83,6 +84,15 @@ export abstract class MissionForce<
   }
 
   /**
+   * The output messages for the force.
+   */
+  protected _outputMessages: TOutputMessage<T>[]
+  // Implemented
+  public get outputMessages(): TOutputMessage<T>[] {
+    return this._outputMessages
+  }
+
+  /**
    * @param mission The mission to which the force belongs.
    * @param data The force data from which to create the force. Any ommitted
    * values will be set to the default properties defined in
@@ -106,6 +116,7 @@ export abstract class MissionForce<
       data.initialResources ?? MissionForce.DEFAULT_PROPERTIES.initialResources
     this.resourcesRemaining = data.resourcesRemaining ?? this.initialResources
     this.nodes = []
+    this._outputMessages = data.outputMessages ?? []
     this.root = this.createNode(MissionForce.ROOT_NODE_PROPERTIES)
 
     // Import nodes into the force.
@@ -136,6 +147,7 @@ export abstract class MissionForce<
     // flag was set.
     if (includeSessionData) {
       json.resourcesRemaining = this.resourcesRemaining
+      json.outputMessages = this.outputMessages
     }
 
     return json
@@ -177,6 +189,9 @@ export abstract class MissionForce<
     data: Partial<TMissionNodeJson>,
     options?: TMissionNodeOptions,
   ): TNode<T>
+
+  // Implemented
+  public abstract sendOutputMessage(outputMessage: TCommonOutputMessage): void
 
   // Implemented
   public getNode(nodeId: string): TNode<T> | undefined {
@@ -353,6 +368,10 @@ export interface TCommonMissionForce {
    */
   get revealedStructure(): AnyObject
   /**
+   * The output messages for the force.
+   */
+  outputMessages: TCommonOutputMessage[]
+  /**
    * Converts the force to JSON.
    * @param options The options for converting the force to JSON.
    * @returns the JSON for the force.
@@ -368,6 +387,11 @@ export interface TCommonMissionForce {
   getNodeFromPrototype(
     prototypeId: string | undefined,
   ): TCommonMissionNode | undefined
+  /**
+   * Sends a message to the output panel.
+   * @param outputMessage The message to send.
+   */
+  sendOutputMessage(outputMessage: TCommonOutputMessage): void
 }
 
 /**
@@ -404,6 +428,10 @@ export interface TMissionForceSessionJson {
    * The resources remaining for the force.
    */
   resourcesRemaining: number
+  /**
+   * The output messages for the force.
+   */
+  outputMessages: TCommonOutputMessage[]
 }
 
 /**

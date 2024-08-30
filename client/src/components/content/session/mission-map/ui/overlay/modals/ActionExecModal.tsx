@@ -352,7 +352,7 @@ const ActionPropertyDisplay = ({ action }: TActionPropertyDisplay_P) => {
       </li>
       <li className='Property Description'>
         <span className='Label'>Description:</span>{' '}
-        <RichTextOutputBox Element={action.description} />
+        <RichTextOutputBox text={action.description} />
       </li>
     </ul>
   )

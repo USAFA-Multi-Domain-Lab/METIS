@@ -1,6 +1,7 @@
 import { TActionExecutionJson } from 'metis/missions/actions/executions'
 import { TActionOutcomeJson } from 'metis/missions/actions/outcomes'
 import { TCommonMissionForceJson } from 'metis/missions/forces'
+import { TCommonOutputMessage } from 'metis/missions/forces/output-message'
 import { TSessionConfig, TSessionJson, TSessionRole } from 'metis/sessions'
 import { AnyObject } from 'metis/toolbox/objects'
 import { TCommonUserJson } from 'metis/users'
@@ -343,6 +344,22 @@ export type TGenericServerEvents = {
        * The ID of the session that was destroyed.
        */
       sessionId: string
+    }
+  >
+  /**
+   * Occurs when a message is sent to the output panel.
+   */
+  'send-output': TConnectEvent<
+    'send-output',
+    {
+      /**
+       * The ID of the force where the output panel belongs.
+       */
+      forceId: string
+      /**
+       * The message to send to the force's output panel.
+       */
+      output: TCommonOutputMessage
     }
   >
   /**

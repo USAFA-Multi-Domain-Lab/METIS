@@ -1,41 +1,33 @@
-import { Component } from 'react'
+import ReactQuill from 'react-quill'
 import './RichTextOutputBox.scss'
 
 /**
- * The properties for the RichTextOutputBox component.
- * @interface IRichTextOutputBox
- * @property {string} Element The HTML element (wrapped in a string) to be displayed.
+ * Displays rich text.
  */
-export interface IRichTextOutputBox {
+export default function RichTextOutputBox({
+  text,
+}: TRichTextOutputBox_P): JSX.Element {
+  return (
+    <ReactQuill
+      value={text}
+      readOnly={true}
+      className='RichTextOutputBox'
+      theme='bubble'
+      modules={{
+        toolbar: false,
+      }}
+    />
+  )
+}
+
+/* ---------------------------- TYPES FOR RICH TEXT OUTPUT BOX ---------------------------- */
+
+/**
+ * Prop type for`RichTextOutputBox`.
+ */
+type TRichTextOutputBox_P = {
   /**
    * The HTML element (wrapped in a string) to be displayed.
    */
-  Element: string
-}
-
-/**
- * The state for the RichTextOutputBox component.
- * @interface IRichTextOutputBox_S
- */
-export interface IRichTextOutputBox_S {}
-
-/**
- * This component is responsible for displaying
- * rich text in the application.
- * @extends {Component<IRichTextOutputBox, IRichTextOutputBox_S>}
- */
-export default class RichTextOutputBox extends Component<
-  IRichTextOutputBox,
-  IRichTextOutputBox_S
-> {
-  render(): JSX.Element {
-    let Element: string = this.props.Element
-
-    return (
-      <div
-        className='RichTextOutputBox'
-        dangerouslySetInnerHTML={{ __html: Element }}
-      ></div>
-    )
-  }
+  text: string
 }

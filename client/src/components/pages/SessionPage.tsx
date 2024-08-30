@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { IConsoleOutput } from 'src/components/content/session/ConsoleOutput'
 import { useGlobalContext, useNavigationMiddleware } from 'src/context'
 import ClientMission from 'src/missions'
 import ClientMissionForce from 'src/missions/forces'
@@ -64,6 +63,7 @@ export default function SessionPage({
 
   /* -- VARIABLES -- */
 
+  // The mission for the session.
   let mission: ClientMission = session.mission
   // Dynamic (default) sizing of the output panel.
   let panel2DefaultSize: number = 400
@@ -73,16 +73,8 @@ export default function SessionPage({
   /* -- FUNCTIONS -- */
 
   /**
-   * Outputs to the in-browser console.
-   * @param {IConsoleOutput} output The output.
-   */
-  const outputToConsole = (output: IConsoleOutput): void => {
-    // mission.outputToConsole(output)
-  }
-
-  /**
    * Handles the selection of a node in the mission map by the user.
-   * @param {ClientMissionNode} node The node that was selected.
+   * @param node The node that was selected.
    */
   const onNodeSelect = async (node: ClientMissionNode): Promise<void> => {
     // If the role is 'supervisor', abort
@@ -98,9 +90,13 @@ export default function SessionPage({
     }
 
     // Logic to send the pre-execution text to the output panel.
-    if (node.preExecutionText !== '' && node.preExecutionText !== null) {
-      let output: IConsoleOutput = OutputPanel.renderPreExecutionOutput(node)
-      outputToConsole(output)
+    if (node.preExecutionText !== '') {
+      // todo: fix this
+      // let output: TConsoleOutput_P = OutputPanel.renderPreExecutionOutput(
+      //   node,
+      //   login.user.username,
+      // )
+      // force?.outputToConsole(output)
     }
 
     // Logic that opens the next level of nodes
@@ -284,9 +280,12 @@ export default function SessionPage({
       buttons.push({
         key: 'output',
         icon: 'shell',
-        tooltipDescription: 'Open output panel.',
+        tooltipDescription: selectedForce
+          ? 'Open output panel.'
+          : 'Cannot open the output panel at this time. Please contact your system administrator.',
+        disabled: selectedForce === undefined ? 'partial' : 'none',
         onClick: () => {
-          setRightPanelTab('output')
+          if (selectedForce) setRightPanelTab('output')
         },
       })
     }
@@ -299,6 +298,7 @@ export default function SessionPage({
 
   // Verify navigation on mount and on session state change.
   useMountHandler((done) => {
+    if (selectedForce === undefined) setRightPanelTab('users')
     finishLoading()
     verifyNavigation.current()
     done()
@@ -431,7 +431,9 @@ export default function SessionPage({
             render: () => {
               switch (rightPanelTab) {
                 case 'output':
-                  return <OutputPanel mission={mission} />
+                  return selectedForce ? (
+                    <OutputPanel force={selectedForce} />
+                  ) : null
                 case 'users':
                   return <UsersPanel session={session} key={'users-panel'} />
                 default:

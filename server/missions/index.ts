@@ -1,8 +1,13 @@
-import Mission, { TCommonMissionTypes } from 'metis/missions'
+import Mission, {
+  TCommonMissionJson,
+  TCommonMissionTypes,
+  TMissionOptions,
+} from 'metis/missions'
 import { TCommonMissionForceJson } from 'metis/missions/forces'
 import { TMissionPrototypeOptions } from 'metis/missions/nodes/prototypes'
 import StringToolbox from 'metis/toolbox/strings'
 import seedrandom, { PRNG } from 'seedrandom'
+import ClientConnection from '../connect/clients'
 import ServerTargetEnvironment from '../target-environments'
 import { TTargetEnvContextMission } from '../target-environments/context-provider'
 import ServerTarget from '../target-environments/targets'
@@ -11,6 +16,7 @@ import ServerActionExecution from './actions/executions'
 import { ServerRealizedOutcome } from './actions/outcomes'
 import ServerEffect from './effects'
 import ServerMissionForce, { TServerMissionForceOptions } from './forces'
+import { TServerOutputMessage } from './forces/output-message'
 import ServerMissionNode from './nodes'
 import ServerMissionPrototype from './nodes/prototypes'
 
@@ -33,6 +39,18 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
       this._rng = seedrandom(`${this.seed}`)
     }
     return this._rng
+  }
+
+  /**
+   * @param data The mission data from which to create the mission. Any ommitted values will be set to the default properties defined in Mission.DEFAULT_PROPERTIES.
+   * @param options The options for creating the mission.
+   */
+  public constructor(
+    data: Partial<TCommonMissionJson> = ServerMission.DEFAULT_PROPERTIES,
+    options: TServerMissionOptions = {},
+  ) {
+    // Initialize base properties.
+    super(data, options)
   }
 
   // Implemented
@@ -100,7 +118,39 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
       nodes: this.nodes.map((node) => node.toTargetEnvContext()),
     }
   }
+
+  /**
+   * Sends the introduction message to the output panel.
+   * @param user The user that will receive the message.
+   * @param forceId The ID of the force that the user is a part of.
+   */
+  public sendIntroductionMessage(
+    user: ClientConnection,
+    forceId: ServerMissionForce['_id'],
+  ): void {
+    // Send the intro message to the participant.
+    this.forces.forEach((force) => {
+      force.sendOutputMessage({
+        _id: 'intro-message',
+        introMessage: this.introMessage,
+        time: Date.now(),
+      })
+    })
+
+    // Emit the intro message to the user.
+    user.emit('send-output', {
+      data: {
+        forceId,
+        output: {
+          _id: 'intro-message',
+          introMessage: this.introMessage,
+          time: Date.now(),
+        },
+      },
+    })
+  }
 }
+/* ------------------------------ SERVER MISSION TYPES ------------------------------ */
 
 /**
  * Server types for Mission objects.
@@ -110,6 +160,7 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
 export interface TServerMissionTypes extends TCommonMissionTypes {
   mission: ServerMission
   force: ServerMissionForce
+  outputMessage: TServerOutputMessage
   prototype: ServerMissionPrototype
   node: ServerMissionNode
   action: ServerMissionAction
@@ -119,3 +170,8 @@ export interface TServerMissionTypes extends TCommonMissionTypes {
   target: ServerTarget
   effect: ServerEffect
 }
+
+/**
+ * Options for the creation of a `ServerMission` object.
+ */
+type TServerMissionOptions = TMissionOptions & {}

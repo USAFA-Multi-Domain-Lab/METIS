@@ -2,20 +2,40 @@
 
 .OutputPanel {
   .BorderBox {
-    width: 100%;
     height: 100%;
     border: 2px solid $color-main;
     overflow: auto;
     box-sizing: border-box;
-  }
 
-  .Broken {
-    margin: 0;
-    padding: 15px 15px 0;
-  }
+    .Text {
+      display: flex;
+      flex-flow: row wrap;
+      padding: 30px 20px;
+      font-size: 0.75em;
+      line-height: 1rem;
 
-  .TextArea {
-    padding: 15px;
-    margin: 0;
+      // .SelectedActionPropertyList {
+      //   padding: 15px 0 0 15px;
+
+      //   .SelectedActionProperty {
+      //     list-style: none;
+      //     text-decoration: none;
+      //     margin: -3px auto;
+      //   }
+      // }
+
+      .LineCursor {
+        color: $terminal;
+        margin-right: 5px;
+      }
+
+      .Succeeded * {
+        color: $terminal-success;
+      }
+
+      .Failed * {
+        color: $terminal-fail;
+      }
+    }
   }
 }

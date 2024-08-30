@@ -54,8 +54,8 @@ export default class SessionServer extends Session<
     name: string,
     config: Partial<TSessionConfig>,
     mission: ServerMission,
-    participants: Array<ClientConnection>,
-    supervisors: Array<ClientConnection>,
+    participants: ClientConnection[],
+    supervisors: ClientConnection[],
   ) {
     super(_id, name, config, mission, participants, [], supervisors)
     this._state = 'unstarted'
@@ -395,6 +395,9 @@ export default class SessionServer extends Session<
       participant.emit('session-started', {
         data: { nodeStructure, forces },
       })
+
+      // Send the introduction message to the participant.
+      this.mission.sendIntroductionMessage(participant, forceId)
     }
 
     // Get supervisor export.
@@ -410,6 +413,11 @@ export default class SessionServer extends Session<
           nodeStructure: supervisorExport.nodeStructure,
           forces: supervisorExport.forces,
         },
+      })
+
+      // Send the introduction message to all forces for the supervisor.
+      supervisorExport.forces.forEach((force) => {
+        this.mission.sendIntroductionMessage(supervisor, force._id)
       })
     }
   }

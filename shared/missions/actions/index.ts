@@ -318,11 +318,11 @@ export interface TCommonMissionAction {
    */
   resourceCost: number
   /**
-   * Text printed to the console after the action is executed successfully.
+   * Text sent to the output panel after the action is executed successfully.
    */
   postExecutionSuccessText: string
   /**
-   * Text printed to the console after the action is executed unsuccessfully.
+   * Text sent to the output panel after the action is executed unsuccessfully.
    */
   postExecutionFailureText: string
   /**
@@ -403,11 +403,11 @@ export interface TCommonMissionActionJson {
    */
   resourceCost: number
   /**
-   * Text printed to the console after the action is executed successfully.
+   * Text sent to the output panel after the action is executed successfully.
    */
   postExecutionSuccessText: string
   /**
-   * Text printed to the console after the action is executed unsuccessfully.
+   * Text sent to the output panel after the action is executed unsuccessfully.
    */
   postExecutionFailureText: string
   /**

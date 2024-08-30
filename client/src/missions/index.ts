@@ -25,6 +25,7 @@ import ClientActionExecution from './actions/executions'
 import ClientActionOutcome from './actions/outcomes'
 import { ClientEffect } from './effects'
 import ClientMissionForce, { TClientMissionForceOptions } from './forces'
+import { TClientOutputMessage } from './forces/output-message'
 import ClientMissionNode from './nodes'
 import ClientMissionPrototype, { TPrototypeRelation } from './nodes/prototypes'
 import MissionTransformation from './transformations'
@@ -221,8 +222,12 @@ export default class ClientMission
     return this._defectiveObjects
   }
 
+  /**
+   * @param data The mission data from which to create the mission. Any ommitted values will be set to the default properties defined in Mission.DEFAULT_PROPERTIES.
+   * @param options The options for creating the mission.
+   */
   public constructor(
-    data: Partial<TCommonMissionJson> = {},
+    data: Partial<TCommonMissionJson> = ClientMission.DEFAULT_PROPERTIES,
     options: TClientMissionOptions = {},
   ) {
     // Initialize base properties.
@@ -1317,6 +1322,7 @@ export default class ClientMission
 export interface TClientMissionTypes extends TCommonMissionTypes {
   mission: ClientMission
   force: ClientMissionForce
+  outputMessage: TClientOutputMessage
   prototype: ClientMissionPrototype
   node: ClientMissionNode
   action: ClientMissionAction

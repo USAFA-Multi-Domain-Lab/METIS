@@ -130,7 +130,7 @@ export default function MissionPage({
   )
 
   /**
-   * Default size of the output panel.
+   * Default size of the side panel.
    */
   const panel2DefaultSize: number = compute(() => {
     let panel2DefaultSize: number = 330 /*px*/
@@ -138,7 +138,7 @@ export default function MissionPage({
 
     // If the aspect ratio is greater than or equal to 16:9,
     // and the window width is greater than or equal to 1850px,
-    // then the default size of the output panel will be 40%
+    // then the default size of the side panel will be 40%
     // of the width of the window.
     if (currentAspectRatio >= 16 / 9 && window.innerWidth >= 1850) {
       panel2DefaultSize = window.innerWidth * 0.4

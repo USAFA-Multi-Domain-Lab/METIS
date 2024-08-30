@@ -470,9 +470,16 @@ export default function HomePage(): JSX.Element | null {
         // Update login information to include
         // the new session ID.
         login.sessionId = session._id
-        // Go to the session page with the new
-        // session client.
-        navigateTo('SessionPage', { session })
+        // If the session has started, go to the
+        // session page with the new session client.
+        if (session.state === 'started') {
+          navigateTo('SessionPage', { session })
+        }
+        // Or, if the session has not started, go to
+        // the lobby page with the new session client.
+        else if (session.state === 'unstarted') {
+          navigateTo('LobbyPage', { session })
+        }
       } catch (error: any) {
         handleError({
           message: error.message,
