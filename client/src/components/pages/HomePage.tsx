@@ -424,7 +424,7 @@ export default function HomePage(): JSX.Element | null {
           currentUser.isAuthorized('sessions_join') ||
           currentUser.isAuthorized('sessions_join_observer')
         ) {
-          roleChoices.push('supervisor')
+          roleChoices.push('observer')
         }
 
         // Add option to cancel.

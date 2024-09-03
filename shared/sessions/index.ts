@@ -76,21 +76,21 @@ export default abstract class Session<
   }
 
   /**
-   * The users who are supervisors of the session that is in progress.
+   * The users who are observers of the session that is in progress.
    */
-  protected _supervisors: TUser[]
+  protected _observers: TUser[]
   /**
-   * The users who are supervisors of the session that is in progress.
+   * The users who are observers of the session that is in progress.
    */
-  public get supervisors(): TUser[] {
-    return [...this._supervisors]
+  public get observers(): TUser[] {
+    return [...this._observers]
   }
 
   /**
-   * All users, including participants and supervisors.
+   * All users, including participants and observers.
    */
   public get users(): TUser[] {
-    return [...this._participants, ...this._supervisors]
+    return [...this._participants, ...this._observers]
   }
 
   /**
@@ -134,7 +134,7 @@ export default abstract class Session<
     mission: TMission,
     participants: TUser[],
     banList: string[],
-    supervisors: TUser[],
+    observers: TUser[],
   ) {
     this._id = _id
     this.name = name
@@ -147,7 +147,7 @@ export default abstract class Session<
     this._participants = participants
     this.assignments = new Map<string, string>()
     this._banList = banList
-    this._supervisors = supervisors
+    this._observers = observers
     this.mapActions()
   }
 
@@ -157,7 +157,7 @@ export default abstract class Session<
   protected abstract mapActions(): void
 
   /**
-   * Checks if the given user is currently in the session (Whether as a participant or as a supervisor).
+   * Checks if the given user is currently in the session (Whether as a participant or as a observer).
    * @param user The user to check.
    * @returns Whether the given user is joined into the session.
    */
@@ -171,11 +171,11 @@ export default abstract class Session<
   public abstract isParticipant(user: TUser): boolean
 
   /**
-   * Checks if the given user is currently a supervisor in the session.
+   * Checks if the given user is currently a observer in the session.
    * @param user The user to check.
-   * @returns Whether the given user is a supervisor in the session.
+   * @returns Whether the given user is a observer in the session.
    */
-  public abstract isSupervisor(user: TUser): boolean
+  public abstract isObserver(user: TUser): boolean
 
   /**
    * Gets the assigned force of the given user in the session.
@@ -279,9 +279,9 @@ export type TSessionJson = {
    */
   banList: string[]
   /**
-   * The supervisors joined in the session.
+   * The observers joined in the session.
    */
-  supervisors: TCommonUserJson[]
+  observers: TCommonUserJson[]
 }
 
 /**
@@ -310,13 +310,13 @@ export type TSessionBasicJson = {
   participantIds: string[]
   /**
    * The IDs of the participants banned from the session.
-   * @note Empty if the user does not have supervisor permissions.
+   * @note Empty if the user does not have observer permissions.
    */
   banList: string[]
   /**
-   * The IDs of the supervisors of the session.
+   * The IDs of the observers of the session.
    */
-  supervisorIds: string[]
+  observerIds: string[]
 }
 
 /**
@@ -327,4 +327,4 @@ export type TSessionState = 'unstarted' | 'started' | 'ended'
 /**
  * The role of a user in a session.
  */
-export type TSessionRole = 'participant' | 'supervisor' | 'not-joined'
+export type TSessionRole = 'participant' | 'observer' | 'not-joined'

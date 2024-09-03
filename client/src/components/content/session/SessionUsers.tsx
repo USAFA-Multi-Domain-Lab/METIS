@@ -26,9 +26,7 @@ export default function SessionUsers({
   const [participants, setParticipants] = useState<ClientUser[]>(
     session.participants,
   )
-  const [supervisors, setSupervisors] = useState<ClientUser[]>(
-    session.supervisors,
-  )
+  const [observers, setObservers] = useState<ClientUser[]>(session.observers)
 
   /* -- FUNCTIONS -- */
 
@@ -98,11 +96,11 @@ export default function SessionUsers({
 
   /* -- HOOKS -- */
 
-  // Update participant and supervisors lists on session
+  // Update participant and observer lists on session
   // state change.
   useEventListener(server, 'session-users-updated', () => {
     setParticipants(session.participants)
-    setSupervisors(session.supervisors)
+    setObservers(session.observers)
   })
 
   /* -- RENDER -- */
@@ -169,20 +167,20 @@ export default function SessionUsers({
   })
 
   /**
-   * Computed JSX for the list of supervisors.
+   * Computed JSX for the list of observers.
    */
-  const supervisorJsx = compute(() => {
-    // If there are supervisors, render them.
-    if (supervisors.length > 0) {
-      return supervisors.map((user): JSX.Element | null => (
+  const observerJsx = compute(() => {
+    // If there are observers, render them.
+    if (observers.length > 0) {
+      return observers.map((user): JSX.Element | null => (
         <div key={user.username} className='User'>
           <div className='Name'>{user.username}</div>
         </div>
       ))
     }
-    // Else, render a notice that there are no supervisors.
+    // Else, render a notice that there are no observers.
     else {
-      return <div className='User NoUsers'>No supervisors joined.</div>
+      return <div className='User NoUsers'>No observers joined.</div>
     }
   })
 
@@ -192,9 +190,9 @@ export default function SessionUsers({
         <div className='Subtitle'>Participants:</div>
         <div className='Users'>{participantsJsx}</div>
       </div>
-      <div className='Supervisors'>
-        <div className='Subtitle'>Supervisors:</div>
-        <div className='Users'>{supervisorJsx}</div>
+      <div className='Observers'>
+        <div className='Subtitle'>Observers:</div>
+        <div className='Users'>{observerJsx}</div>
       </div>
     </div>
   )

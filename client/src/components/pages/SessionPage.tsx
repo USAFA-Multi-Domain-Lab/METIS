@@ -85,9 +85,9 @@ export default function SessionPage({
    * @param {ClientMissionNode} node The node that was selected.
    */
   const onNodeSelect = async (node: ClientMissionNode): Promise<void> => {
-    // If the role is 'supervisor', abort
+    // If the role is 'observer', abort
     // selection handling.
-    if (session.role === 'supervisor') {
+    if (session.role === 'observer') {
       return
     }
 

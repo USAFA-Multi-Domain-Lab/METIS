@@ -133,7 +133,7 @@ export default function LobbyPage({
   })
 
   // Verify navigation and update participant and
-  // supervisors lists on session state change.
+  // observers lists on session state change.
   useEventListener(
     server,
     ['session-started', 'session-ended', 'session-destroyed'],

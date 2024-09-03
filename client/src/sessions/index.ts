@@ -56,13 +56,13 @@ export default class SessionClient extends Session<
     let participants: ClientUser[] = data.participants.map(
       (userData) => new ClientUser(userData),
     )
-    let supervisors: ClientUser[] = data.supervisors.map(
+    let observers: ClientUser[] = data.observers.map(
       (userData) => new ClientUser(userData),
     )
     let banList: string[] = data.banList
     let config: TSessionConfig = data.config
 
-    super(_id, name, config, mission, participants, banList, supervisors)
+    super(_id, name, config, mission, participants, banList, observers)
     this.server = server
     this._role = role
     this._state = state
@@ -104,8 +104,8 @@ export default class SessionClient extends Session<
   }
 
   // Implemented
-  public isSupervisor(user: ClientUser): boolean {
-    for (let x of this.supervisors) {
+  public isObserver(user: ClientUser): boolean {
+    for (let x of this.observers) {
       if (x._id === user._id) {
         return true
       }
@@ -167,7 +167,7 @@ export default class SessionClient extends Session<
       mission: this.mission.toJson({ exportType: 'session-limited' }),
       participants: this.participants.map((user) => user.toJson()),
       banList: this.banList,
-      supervisors: this.supervisors.map((user) => user.toJson()),
+      observers: this.observers.map((user) => user.toJson()),
       config: this.config,
     }
   }
@@ -181,7 +181,7 @@ export default class SessionClient extends Session<
       config: this.config,
       participantIds: this.participants.map(({ _id: userId }) => userId),
       banList: this.banList,
-      supervisorIds: this.supervisors.map(({ _id: userId }) => userId),
+      observerIds: this.observers.map(({ _id: userId }) => userId),
     }
   }
 
@@ -528,11 +528,11 @@ export default class SessionClient extends Session<
   private onUsersUpdated = (
     event: TGenericServerEvents['session-users-updated'],
   ): void => {
-    let { participants, supervisors } = event.data
+    let { participants, observers } = event.data
     this._participants = participants.map(
       (userData) => new ClientUser(userData),
     )
-    this._supervisors = supervisors.map((userData) => new ClientUser(userData))
+    this._observers = observers.map((userData) => new ClientUser(userData))
   }
 
   /**

@@ -55,9 +55,9 @@ export default class SessionServer extends Session<
     config: Partial<TSessionConfig>,
     mission: ServerMission,
     participants: Array<ClientConnection>,
-    supervisors: Array<ClientConnection>,
+    observers: Array<ClientConnection>,
   ) {
-    super(_id, name, config, mission, participants, [], supervisors)
+    super(_id, name, config, mission, participants, [], observers)
     this._state = 'unstarted'
     this._destroyed = false
     this.register()
@@ -85,8 +85,8 @@ export default class SessionServer extends Session<
   }
 
   // Implemented
-  public isSupervisor(user: ClientConnection): boolean {
-    for (let x of this.supervisors) {
+  public isObserver(user: ClientConnection): boolean {
+    for (let x of this.observers) {
       if (x.userId === user.userId) {
         return true
       }
@@ -112,7 +112,7 @@ export default class SessionServer extends Session<
       ...this.participants.filter(
         (participant) => this.assignments.get(participant.userId) === forceId,
       ),
-      ...this.supervisors,
+      ...this.observers,
     ]
   }
 
@@ -140,7 +140,7 @@ export default class SessionServer extends Session<
       // If the requester is an observer, then
       // update the mission options to include
       // data pertinent to the observer.
-      else if (this.isSupervisor(requester)) {
+      else if (this.isObserver(requester)) {
         missionOptions = {
           exportType: 'session-observer',
         }
@@ -162,7 +162,7 @@ export default class SessionServer extends Session<
         client.user.toJson(),
       ),
       banList,
-      supervisors: this.supervisors.map((client: ClientConnection) =>
+      observers: this.observers.map((client: ClientConnection) =>
         client.user.toJson(),
       ),
       config: this.config,
@@ -193,7 +193,7 @@ export default class SessionServer extends Session<
       config: this.config,
       participantIds: this.participants.map(({ userId: userId }) => userId),
       banList,
-      supervisorIds: this.supervisors.map(({ userId: userId }) => userId),
+      observerIds: this.observers.map(({ userId: userId }) => userId),
     }
   }
 
@@ -201,8 +201,8 @@ export default class SessionServer extends Session<
    * Gets the role of the given user in the session.
    */
   public getRole(user: ClientConnection): TSessionRole {
-    if (this.isSupervisor(user)) {
-      return 'supervisor'
+    if (this.isObserver(user)) {
+      return 'observer'
     } else if (this.isParticipant(user)) {
       return 'participant'
     } else {
@@ -261,7 +261,7 @@ export default class SessionServer extends Session<
   /**
    * Has the given user join the session.
    * @param client The user joining the session.
-   * @param method The method of joining (Whether as a participant or as a supervisor).
+   * @param method The method of joining (Whether as a participant or as a observer).
    * @throws The server emitted error code of any error that occurs.
    * @note Establishes listeners to handle events emitted by the user's web socket connection.
    */
@@ -283,14 +283,14 @@ export default class SessionServer extends Session<
         // Add session-specific listeners.
         this.addListeners(client)
         break
-      case 'supervisor':
+      case 'observer':
         // Throw error if the client is unauthorized to
-        // join as a supervisor.
+        // join as a observer.
         if (!client.user.isAuthorized('sessions_join_observer')) {
           throw ServerEmittedError.CODE_SESSION_UNAUTHORIZED_JOIN
         }
-        // Add the users to the supervisor list.
-        this._supervisors.push(client)
+        // Add the users to the observer list.
+        this._observers.push(client)
         break
       default:
         throw ServerEmittedError.CODE_SESSION_UNAUTHORIZED_JOIN
@@ -304,7 +304,7 @@ export default class SessionServer extends Session<
     this.emitToUsers('session-users-updated', {
       data: {
         participants: this.participants.map((client) => client.user.toJson()),
-        supervisors: this.supervisors.map((client) => client.user.toJson()),
+        observers: this.observers.map((client) => client.user.toJson()),
       },
     })
   }
@@ -397,18 +397,18 @@ export default class SessionServer extends Session<
       })
     }
 
-    // Get supervisor export.
-    let supervisorExport = this.mission.toJson({
+    // Get observer export.
+    let observerExport = this.mission.toJson({
       exportType: 'session-observer',
     })
 
-    // Emit an event to all supervisors that the session has
+    // Emit an event to all observers that the session has
     // started.
-    for (let supervisor of this.supervisors) {
-      supervisor.emit('session-started', {
+    for (let observer of this.observers) {
+      observer.emit('session-started', {
         data: {
-          nodeStructure: supervisorExport.nodeStructure,
-          forces: supervisorExport.forces,
+          nodeStructure: observerExport.nodeStructure,
+          forces: observerExport.forces,
         },
       })
     }
@@ -427,19 +427,19 @@ export default class SessionServer extends Session<
   }
 
   /**
-   * Has the given user (participant or supervisor) quit the session.
+   * Has the given user (participant or observer) quit the session.
    * @param quitterID The ID of the user quiting the session.
    * @note Removes any session listeners for the user.
    */
   public quit(quitterID: string): void {
-    // Find the supervisor in the list, if present.
-    this._supervisors.forEach((supervisor: ClientConnection, index: number) => {
-      if (supervisor.userId === quitterID) {
-        // Remove the supervisor from the list.
-        this._supervisors.splice(index, 1)
+    // Find the observer in the list, if present.
+    this._observers.forEach((observer: ClientConnection, index: number) => {
+      if (observer.userId === quitterID) {
+        // Remove the observer from the list.
+        this._observers.splice(index, 1)
 
-        // Handle quitting the session for the supervisor.
-        supervisor.login.handleQuit()
+        // Handle quitting the session for the observer.
+        observer.login.handleQuit()
       }
     })
 
@@ -464,7 +464,7 @@ export default class SessionServer extends Session<
     this.emitToUsers('session-users-updated', {
       data: {
         participants: this.participants.map((client) => client.user.toJson()),
-        supervisors: this.supervisors.map((client) => client.user.toJson()),
+        observers: this.observers.map((client) => client.user.toJson()),
       },
     })
   }
@@ -487,8 +487,8 @@ export default class SessionServer extends Session<
 
     // Clear the participants list.
     this._participants = []
-    // Clear the supervisors list.
-    this._supervisors = []
+    // Clear the observers list.
+    this._observers = []
   }
 
   /**
@@ -501,7 +501,7 @@ export default class SessionServer extends Session<
     this._participants.forEach(
       (participant: ClientConnection, index: number) => {
         if (participant.userId === participantId) {
-          // If the participant has supervisor permissions,
+          // If the participant has observer permissions,
           // then throw 403 forbidden error.
           if (participant.user.isAuthorized('sessions_join_observer')) {
             throw 403
@@ -528,7 +528,7 @@ export default class SessionServer extends Session<
     this.emitToUsers('session-users-updated', {
       data: {
         participants: this.participants.map((client) => client.user.toJson()),
-        supervisors: this.supervisors.map((client) => client.user.toJson()),
+        observers: this.observers.map((client) => client.user.toJson()),
       },
     })
   }
@@ -543,7 +543,7 @@ export default class SessionServer extends Session<
     this._participants.forEach(
       (participant: ClientConnection, index: number) => {
         if (participant.userId === participantId) {
-          // If the participant is has supervisor permissions,
+          // If the participant is has observer permissions,
           // then throw 403 forbidden error.
           if (participant.user.isAuthorized('sessions_join_observer')) {
             throw 403
@@ -573,7 +573,7 @@ export default class SessionServer extends Session<
     this.emitToUsers('session-users-updated', {
       data: {
         participants: this.participants.map((client) => client.user.toJson()),
-        supervisors: this.supervisors.map((client) => client.user.toJson()),
+        observers: this.observers.map((client) => client.user.toJson()),
       },
     })
   }
@@ -622,7 +622,7 @@ export default class SessionServer extends Session<
   }
 
   /**
-   * Emits an event to all the users joined in the session (participants and supervisors).
+   * Emits an event to all the users joined in the session (participants and observers).
    */
   public emitToUsers<
     TMethod extends TServerMethod,

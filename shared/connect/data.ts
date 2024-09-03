@@ -296,9 +296,9 @@ export type TGenericServerEvents = {
        */
       participants: TCommonUserJson[]
       /**
-       * The updated list of supervisors in the session.
+       * The updated list of observers in the session.
        */
-      supervisors: TCommonUserJson[]
+      observers: TCommonUserJson[]
     }
   >
   /**
