@@ -13,6 +13,17 @@ const routerMap: TMetisRouterMap = (
   /* ---------------------------- READ ------------------------------ */
 
   /**
+   * This will retrieve the info.
+   * @returns The info in JSON format.
+   */
+  const getInfo = (request: Request, response: Response) =>
+    response.json({
+      name: MetisServer.PROJECT_NAME,
+      description: MetisServer.PROJECT_DESCRIPTION,
+      version: MetisServer.PROJECT_VERSION,
+    })
+
+  /**
    * This will retrieve the changelog.
    * @returns The changelog in JSON format.
    */
@@ -34,8 +45,10 @@ const routerMap: TMetisRouterMap = (
 
   /* ---------------------------- ROUTES ---------------------------- */
 
-  // -- GET | /api/v1/info/changelog/ --
+  // Map routes to functions.
+  router.get('/', getInfo)
   router.get('/changelog/', getChangelog)
+
   done()
 }
 

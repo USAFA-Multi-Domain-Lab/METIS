@@ -8,6 +8,7 @@ import {
 import { TButtonText } from 'src/components/content/user-controls/ButtonText'
 import { PAGE_REGISTRY, TPage_P } from 'src/components/pages'
 import ServerConnection from 'src/connect/servers'
+import MetisInfo from 'src/info'
 import ClientLogin from 'src/logins'
 import Notification from 'src/notifications'
 import ClientUser from 'src/users'
@@ -26,6 +27,11 @@ import StringToolbox from '../../../shared/toolbox/strings'
  * The default values of the global context state.
  */
 const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
+  info: new MetisInfo({
+    name: '',
+    description: '',
+    version: '',
+  }),
   forcedUpdateCounter: 0,
   server: null,
   login: null,
@@ -133,6 +139,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
 
   // ! IMPORTANT - Context actions cannot be extracted yet because they are not defined until further below.
 
+  const [info, setInfo] = context.info
   const [forcedUpdateCounter, setForcedUpdateCounter] =
     context.forcedUpdateCounter
   const [server, setServer] = context.server
@@ -586,6 +593,7 @@ export default class GlobalContext {
  * The values available in the global context.
  */
 export type TGlobalContextValues = {
+  info: MetisInfo
   forcedUpdateCounter: number
   server: ServerConnection | null
   login: TLogin<ClientUser>

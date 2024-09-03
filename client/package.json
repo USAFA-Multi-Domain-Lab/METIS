@@ -1,6 +1,5 @@
 {
   "name": "metis-client",
-  "version": "2.0.0",
   "private": true,
   "dependencies": {
     "@preact/signals-react": "^1.3.6",

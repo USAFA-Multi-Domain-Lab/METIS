@@ -5,13 +5,6 @@ import Tooltip from '../communication/Tooltip'
 import { TButtonText } from '../user-controls/ButtonText'
 import './Footer.scss'
 
-/* -- constants -- */
-
-/**
- * The version of METIS.
- */
-const APP_VERSION = 'v2.0.0'
-
 /* -- components -- */
 
 /**
@@ -22,6 +15,7 @@ export default function Footer({}: TFooter): JSX.Element | null {
   const globalContext = useGlobalContext()
   const { navigateTo } = globalContext.actions
   const [login] = globalContext.login
+  const [info] = globalContext.info
 
   /* -- computed -- */
 
@@ -69,7 +63,7 @@ export default function Footer({}: TFooter): JSX.Element | null {
   return (
     <div className='Footer' draggable={false}>
       <div className={versionClass} onClick={viewChangelog} draggable={false}>
-        {APP_VERSION}
+        {info.versionFormatted}
         <Tooltip description={'View changelog.'} />
       </div>
       <a

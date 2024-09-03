@@ -1,3 +1,4 @@
 {
+  "ext": "js,json,ts",
   "ignore": ["/database/backups/**"]
 }

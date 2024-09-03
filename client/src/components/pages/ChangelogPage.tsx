@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
-import Info from 'src/info'
+import MetisInfo from 'src/info'
 import { compute } from 'src/toolbox'
 import { useMountHandler } from 'src/toolbox/hooks'
 import { DefaultLayout, TPage_P } from '.'
@@ -38,7 +38,7 @@ export default function IChangelogPage({}: IChangelogPage): JSX.Element | null {
 
     // Fetch changelog.
     try {
-      setChangelog(await Info.$fetchChangelog())
+      setChangelog(await MetisInfo.$fetchChangelog())
     } catch (error) {
       handleError('Failed to retrieve changelog.')
     }

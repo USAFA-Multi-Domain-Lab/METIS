@@ -16,62 +16,7 @@ import ServerTargetEnvironment from './target-environments'
 const cookieParser = require('cookie-parser')
 const cors = require('cors')
 const defaults = require('../defaults')
-
-declare module 'express-session' {
-  export interface SessionData {
-    userId: string
-  }
-}
-
-/**
- * Options for creating the METIS server.
- */
-export interface IMetisServerOptions {
-  /**
-   * The port on which to run the server.
-   * @default 8080
-   */
-  port?: number
-  /**
-   * The name of the MongoDB database to use.
-   * @default "metis"
-   */
-  mongoDB?: string
-  /**
-   * The host of the MongoDB database to use.
-   * @default "localhost"
-   */
-  mongoHost?: string
-  /**
-   * The port of the MongoDB database to use.
-   * @default 27017
-   */
-  mongoPort?: number
-  /**
-   * The username of the MongoDB database to use. Defaults to undefined.
-   * @default undefined
-   */
-  mongoUsername?: string
-  /**
-   * The password of the MongoDB database to use.
-   * @default undefined
-   */
-  mongoPassword?: string
-  /**
-   * The maximum number of http requests allowed per second.
-   * @default undefined
-   */
-  httpRateLimit?: number
-  /**
-   * The maximum number of websocket messages allowed per second.
-   */
-  wsRateLimit?: number
-  /**
-   * The location of the file store.
-   * @default "./files/store"
-   */
-  fileStoreDir?: string
-}
+const packageJson = require('../package.json')
 
 /**
  * Manages an Express web server for METIS.
@@ -398,6 +343,18 @@ export default class MetisServer {
   }
 
   /**
+   * The name of the METIS project.
+   */
+  public static readonly PROJECT_NAME: string = packageJson.name
+  /**
+   * The description of the METIS project.
+   */
+  public static readonly PROJECT_DESCRIPTION: string = packageJson.description
+  /**
+   * The current version of METIS.
+   */
+  public static readonly PROJECT_VERSION: string = packageJson.version
+  /**
    * The current build number for the database.
    */
   public static readonly SCHEMA_BUILD_NUMBER: number = 27
@@ -409,4 +366,62 @@ export default class MetisServer {
    * The path to the environment file.
    */
   public static readonly ENVIRONMENT_FILE_PATH: string = './environment.json'
+}
+
+/* -- TYPES -- */
+
+declare module 'express-session' {
+  export interface SessionData {
+    userId: string
+  }
+}
+
+/**
+ * Options for creating the METIS server.
+ */
+export interface IMetisServerOptions {
+  /**
+   * The port on which to run the server.
+   * @default 8080
+   */
+  port?: number
+  /**
+   * The name of the MongoDB database to use.
+   * @default "metis"
+   */
+  mongoDB?: string
+  /**
+   * The host of the MongoDB database to use.
+   * @default "localhost"
+   */
+  mongoHost?: string
+  /**
+   * The port of the MongoDB database to use.
+   * @default 27017
+   */
+  mongoPort?: number
+  /**
+   * The username of the MongoDB database to use. Defaults to undefined.
+   * @default undefined
+   */
+  mongoUsername?: string
+  /**
+   * The password of the MongoDB database to use.
+   * @default undefined
+   */
+  mongoPassword?: string
+  /**
+   * The maximum number of http requests allowed per second.
+   * @default undefined
+   */
+  httpRateLimit?: number
+  /**
+   * The maximum number of websocket messages allowed per second.
+   */
+  wsRateLimit?: number
+  /**
+   * The location of the file store.
+   * @default "./files/store"
+   */
+  fileStoreDir?: string
 }

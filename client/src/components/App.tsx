@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import ServerConnection from 'src/connect/servers'
 import { useGlobalContext } from 'src/context'
+import MetisInfo from 'src/info'
 import SessionClient from 'src/sessions'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientUser from 'src/users'
@@ -52,6 +53,7 @@ function App(props: {}): JSX.Element | null {
 
   const globalContext = useGlobalContext()
 
+  const [_, setInfo] = globalContext.info
   const [login] = globalContext.login
   const [appMountHandled, setAppMountHandled] = globalContext.appMountHandled
   const [tooltips] = globalContext.tooltips
@@ -151,6 +153,11 @@ function App(props: {}): JSX.Element | null {
           tooltip_elm.style.transition = 'opacity 0ms'
           setTooltipDescription('')
         }
+
+        // Load app info.
+        beginLoading('Loading application information...')
+        let info = await MetisInfo.$fetch()
+        setInfo(info)
 
         // Load login info.
         beginLoading('Loading login information...')
