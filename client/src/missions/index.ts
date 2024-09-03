@@ -340,6 +340,9 @@ export default class ClientMission
     this.importStructure(structure)
     // Import forces.
     this.importForces(forces)
+
+    // Handle structure change.
+    this.handleStructureChange()
   }
 
   // Implemented

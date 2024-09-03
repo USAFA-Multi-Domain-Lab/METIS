@@ -151,6 +151,13 @@ export default abstract class Mission<
           force.toJson({ includeSessionData: true }),
         )
         break
+      case 'session-manager':
+        // Include all data.
+        json.nodeStructure = Mission.determineNodeStructure(this.root)
+        json.forces = this.forces.map((force) =>
+          force.toJson({ includeSessionData: true }),
+        )
+        break
     }
 
     return json
@@ -719,6 +726,17 @@ export type TMissionJsonSessionObserverOptions = TMissionJsonBaseOptions & {
 }
 
 /**
+ * Options for Mission.toJson with `exportType` set to 'session-manager'.
+ */
+export type TMissionJsonSessionManagerOptions = TMissionJsonBaseOptions & {
+  /**
+   * An export of a mission to be used in a session.
+   * This export will include all data.
+   */
+  exportType: 'session-manager'
+}
+
+/**
  * Options for Mission.toJSON.
  */
 export type TMissionJsonOptions =
@@ -726,6 +744,7 @@ export type TMissionJsonOptions =
   | TMissionJsonSessionLimitedOptions
   | TMissionJsonSessionParticipantOptions
   | TMissionJsonSessionObserverOptions
+  | TMissionJsonSessionManagerOptions
 
 /**
  * Options for Mission.mapRelationships.

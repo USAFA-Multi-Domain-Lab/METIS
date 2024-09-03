@@ -299,6 +299,10 @@ export type TGenericServerEvents = {
        * The updated list of observers in the session.
        */
       observers: TCommonUserJson[]
+      /**
+       * The updated list of managers in the session.
+       */
+      managers: TCommonUserJson[]
     }
   >
   /**

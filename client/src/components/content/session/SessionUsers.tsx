@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { ReactNode, useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientSession from 'src/sessions'
 import { compute } from 'src/toolbox'
@@ -27,6 +27,7 @@ export default function SessionUsers({
     session.participants,
   )
   const [observers, setObservers] = useState<ClientUser[]>(session.observers)
+  const [managers, setManagers] = useState<ClientUser[]>(session.managers)
 
   /* -- FUNCTIONS -- */
 
@@ -96,11 +97,12 @@ export default function SessionUsers({
 
   /* -- HOOKS -- */
 
-  // Update participant and observer lists on session
-  // state change.
+  // Update participant, observer, and manager
+  // lists on session state change.
   useEventListener(server, 'session-users-updated', () => {
     setParticipants(session.participants)
     setObservers(session.observers)
+    setManagers(session.managers)
   })
 
   /* -- RENDER -- */
@@ -184,6 +186,26 @@ export default function SessionUsers({
     }
   })
 
+  /**
+   * Computed JSX for the list of managers.
+   */
+  const managersJsx = compute(() => {
+    // If there are managers, render them.
+    if (managers.length > 0) {
+      return managers.map(
+        (user): ReactNode => (
+          <div key={user.username} className='User'>
+            <div className='Name'>{user.username}</div>
+          </div>
+        ),
+      )
+    }
+    // Else, render a notice that there are no managers.
+    else {
+      return <div className='User NoUsers'>No managers joined.</div>
+    }
+  })
+
   return (
     <div className='SessionUsers'>
       <div className='Participants'>
@@ -193,6 +215,10 @@ export default function SessionUsers({
       <div className='Observers'>
         <div className='Subtitle'>Observers:</div>
         <div className='Users'>{observerJsx}</div>
+      </div>
+      <div className='Managers'>
+        <div className='Subtitle'>Managers:</div>
+        <div className='Users'>{managersJsx}</div>
       </div>
     </div>
   )

@@ -56,8 +56,9 @@ export default class SessionServer extends Session<
     mission: ServerMission,
     participants: Array<ClientConnection>,
     observers: Array<ClientConnection>,
+    managers: Array<ClientConnection>,
   ) {
-    super(_id, name, config, mission, participants, [], observers)
+    super(_id, name, config, mission, participants, [], observers, managers)
     this._state = 'unstarted'
     this._destroyed = false
     this.register()
@@ -87,6 +88,16 @@ export default class SessionServer extends Session<
   // Implemented
   public isObserver(user: ClientConnection): boolean {
     for (let x of this.observers) {
+      if (x.userId === user.userId) {
+        return true
+      }
+    }
+    return false
+  }
+
+  // Implemented
+  public isManager(user: ClientConnection): boolean {
+    for (let x of this.managers) {
       if (x.userId === user.userId) {
         return true
       }
@@ -145,6 +156,14 @@ export default class SessionServer extends Session<
           exportType: 'session-observer',
         }
       }
+      // If the requester is a manager, then
+      // update the mission options to include
+      // data pertinent to the manager.
+      else if (this.isManager(requester)) {
+        missionOptions = {
+          exportType: 'session-manager',
+        }
+      }
       // If the requester is authorized to write
       // to sessions, include the ban list.
       if (requester?.user.isAuthorized('sessions_write')) {
@@ -163,6 +182,9 @@ export default class SessionServer extends Session<
       ),
       banList,
       observers: this.observers.map((client: ClientConnection) =>
+        client.user.toJson(),
+      ),
+      managers: this.managers.map((client: ClientConnection) =>
         client.user.toJson(),
       ),
       config: this.config,
@@ -194,6 +216,7 @@ export default class SessionServer extends Session<
       participantIds: this.participants.map(({ userId: userId }) => userId),
       banList,
       observerIds: this.observers.map(({ userId: userId }) => userId),
+      managerIds: this.managers.map(({ userId: userId }) => userId),
     }
   }
 
@@ -203,6 +226,8 @@ export default class SessionServer extends Session<
   public getRole(user: ClientConnection): TSessionRole {
     if (this.isObserver(user)) {
       return 'observer'
+    } else if (this.isManager(user)) {
+      return 'manager'
     } else if (this.isParticipant(user)) {
       return 'participant'
     } else {
@@ -261,7 +286,7 @@ export default class SessionServer extends Session<
   /**
    * Has the given user join the session.
    * @param client The user joining the session.
-   * @param method The method of joining (Whether as a participant or as a observer).
+   * @param method The method of joining (Whether as a participant, a manager, or as an observer).
    * @throws The server emitted error code of any error that occurs.
    * @note Establishes listeners to handle events emitted by the user's web socket connection.
    */
@@ -292,6 +317,15 @@ export default class SessionServer extends Session<
         // Add the users to the observer list.
         this._observers.push(client)
         break
+      case 'manager':
+        // Throw error if the client is unauthorized to
+        // join as a manager.
+        if (!client.user.isAuthorized('sessions_join_manager')) {
+          throw ServerEmittedError.CODE_SESSION_UNAUTHORIZED_JOIN
+        }
+        // Add the users to the manager list.
+        this._managers.push(client)
+        break
       default:
         throw ServerEmittedError.CODE_SESSION_UNAUTHORIZED_JOIN
     }
@@ -305,6 +339,7 @@ export default class SessionServer extends Session<
       data: {
         participants: this.participants.map((client) => client.user.toJson()),
         observers: this.observers.map((client) => client.user.toJson()),
+        managers: this.managers.map((client) => client.user.toJson()),
       },
     })
   }
@@ -412,6 +447,22 @@ export default class SessionServer extends Session<
         },
       })
     }
+
+    // Get manager export.
+    let managerExport = this.mission.toJson({
+      exportType: 'session-manager',
+    })
+
+    // Emit an event to all managers that the session has
+    // started.
+    for (let manager of this.managers) {
+      manager.emit('session-started', {
+        data: {
+          nodeStructure: managerExport.nodeStructure,
+          forces: managerExport.forces,
+        },
+      })
+    }
   }
 
   /**
@@ -459,12 +510,24 @@ export default class SessionServer extends Session<
       },
     )
 
+    // Find the manager in the list, if present.
+    this._managers.forEach((manager: ClientConnection, index: number) => {
+      if (manager.userId === quitterID) {
+        // Remove the manager from the list.
+        this._managers.splice(index, 1)
+
+        // Handle quitting the session for the manager.
+        manager.login.handleQuit()
+      }
+    })
+
     // Emit an event to all users that the user list
     // has changed.
     this.emitToUsers('session-users-updated', {
       data: {
         participants: this.participants.map((client) => client.user.toJson()),
         observers: this.observers.map((client) => client.user.toJson()),
+        managers: this.managers.map((client) => client.user.toJson()),
       },
     })
   }
@@ -485,10 +548,10 @@ export default class SessionServer extends Session<
       this.removeListeners(participant)
     })
 
-    // Clear the participants list.
+    // Clear user lists.
     this._participants = []
-    // Clear the observers list.
     this._observers = []
+    this._managers = []
   }
 
   /**
@@ -529,6 +592,7 @@ export default class SessionServer extends Session<
       data: {
         participants: this.participants.map((client) => client.user.toJson()),
         observers: this.observers.map((client) => client.user.toJson()),
+        managers: this.managers.map((client) => client.user.toJson()),
       },
     })
   }
@@ -574,6 +638,7 @@ export default class SessionServer extends Session<
       data: {
         participants: this.participants.map((client) => client.user.toJson()),
         observers: this.observers.map((client) => client.user.toJson()),
+        managers: this.managers.map((client) => client.user.toJson()),
       },
     })
   }
@@ -1019,6 +1084,7 @@ export default class SessionServer extends Session<
       mission.name,
       config,
       mission,
+      [],
       [],
       [],
     )

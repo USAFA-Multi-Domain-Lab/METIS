@@ -59,10 +59,22 @@ export default class SessionClient extends Session<
     let observers: ClientUser[] = data.observers.map(
       (userData) => new ClientUser(userData),
     )
+    let managers: ClientUser[] = data.managers.map(
+      (userData) => new ClientUser(userData),
+    )
     let banList: string[] = data.banList
     let config: TSessionConfig = data.config
 
-    super(_id, name, config, mission, participants, banList, observers)
+    super(
+      _id,
+      name,
+      config,
+      mission,
+      participants,
+      banList,
+      observers,
+      managers,
+    )
     this.server = server
     this._role = role
     this._state = state
@@ -106,6 +118,16 @@ export default class SessionClient extends Session<
   // Implemented
   public isObserver(user: ClientUser): boolean {
     for (let x of this.observers) {
+      if (x._id === user._id) {
+        return true
+      }
+    }
+    return false
+  }
+
+  // Implemented
+  public isManager(user: ClientUser): boolean {
+    for (let x of this.managers) {
       if (x._id === user._id) {
         return true
       }
@@ -168,6 +190,7 @@ export default class SessionClient extends Session<
       participants: this.participants.map((user) => user.toJson()),
       banList: this.banList,
       observers: this.observers.map((user) => user.toJson()),
+      managers: this.managers.map((user) => user.toJson()),
       config: this.config,
     }
   }
@@ -182,6 +205,7 @@ export default class SessionClient extends Session<
       participantIds: this.participants.map(({ _id: userId }) => userId),
       banList: this.banList,
       observerIds: this.observers.map(({ _id: userId }) => userId),
+      managerIds: this.managers.map(({ _id: userId }) => userId),
     }
   }
 
@@ -528,11 +552,12 @@ export default class SessionClient extends Session<
   private onUsersUpdated = (
     event: TGenericServerEvents['session-users-updated'],
   ): void => {
-    let { participants, observers } = event.data
+    let { participants, observers, managers } = event.data
     this._participants = participants.map(
       (userData) => new ClientUser(userData),
     )
     this._observers = observers.map((userData) => new ClientUser(userData))
+    this._managers = managers.map((userData) => new ClientUser(userData))
   }
 
   /**
@@ -760,7 +785,9 @@ export default class SessionClient extends Session<
         try {
           // Call API to fetch all sessions.
           let sessions: TSessionBasicJson[] = (
-            await axios.get<TSessionBasicJson[]>(Session.API_ENDPOINT)
+            await axios.get<TSessionBasicJson[]>(Session.API_ENDPOINT, {
+              params: { timeStamp: Date.now().toString() },
+            })
           ).data
           return resolve(sessions)
         } catch (error) {

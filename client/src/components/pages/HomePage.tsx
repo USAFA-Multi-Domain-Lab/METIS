@@ -426,6 +426,14 @@ export default function HomePage(): JSX.Element | null {
         ) {
           roleChoices.push('observer')
         }
+        // If the current user can join as a manager,
+        // add the option to the prompt.
+        if (
+          currentUser.isAuthorized('sessions_join') ||
+          currentUser.isAuthorized('sessions_join_manager')
+        ) {
+          roleChoices.push('manager')
+        }
 
         // Add option to cancel.
         roleChoices.push('Cancel')

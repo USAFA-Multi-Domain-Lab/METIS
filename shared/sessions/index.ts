@@ -87,10 +87,21 @@ export default abstract class Session<
   }
 
   /**
+   * The users who are managers of the session that is in progress.
+   */
+  protected _managers: TUser[]
+  /**
+   * The users who are managers of the session that is in progress.
+   */
+  public get managers(): TUser[] {
+    return [...this._managers]
+  }
+
+  /**
    * All users, including participants and observers.
    */
   public get users(): TUser[] {
-    return [...this._participants, ...this._observers]
+    return [...this._participants, ...this._observers, ...this._managers]
   }
 
   /**
@@ -135,6 +146,7 @@ export default abstract class Session<
     participants: TUser[],
     banList: string[],
     observers: TUser[],
+    managers: TUser[],
   ) {
     this._id = _id
     this.name = name
@@ -148,6 +160,7 @@ export default abstract class Session<
     this.assignments = new Map<string, string>()
     this._banList = banList
     this._observers = observers
+    this._managers = managers
     this.mapActions()
   }
 
@@ -157,7 +170,7 @@ export default abstract class Session<
   protected abstract mapActions(): void
 
   /**
-   * Checks if the given user is currently in the session (Whether as a participant or as a observer).
+   * Checks if the given user is currently in the session (Whether as a participant, manager, or observer).
    * @param user The user to check.
    * @returns Whether the given user is joined into the session.
    */
@@ -176,6 +189,13 @@ export default abstract class Session<
    * @returns Whether the given user is a observer in the session.
    */
   public abstract isObserver(user: TUser): boolean
+
+  /**
+   * Checks if the given user is currently a manager in the session.
+   * @param user The user to check.
+   * @returns Whether the given user is a manager in the session.
+   */
+  public abstract isManager(user: TUser): boolean
 
   /**
    * Gets the assigned force of the given user in the session.
@@ -282,6 +302,10 @@ export type TSessionJson = {
    * The observers joined in the session.
    */
   observers: TCommonUserJson[]
+  /**
+   * The managers joined in the session.
+   */
+  managers: TCommonUserJson[]
 }
 
 /**
@@ -317,6 +341,10 @@ export type TSessionBasicJson = {
    * The IDs of the observers of the session.
    */
   observerIds: string[]
+  /**
+   * The IDs of the managers of the session.
+   */
+  managerIds: string[]
 }
 
 /**
@@ -327,4 +355,4 @@ export type TSessionState = 'unstarted' | 'started' | 'ended'
 /**
  * The role of a user in a session.
  */
-export type TSessionRole = 'participant' | 'observer' | 'not-joined'
+export type TSessionRole = 'participant' | 'observer' | 'manager' | 'not-joined'
