@@ -530,6 +530,24 @@ export default function HomePage(): JSX.Element | null {
     }
   }
 
+  /**
+   * Callback for when a mission is successfully copied.
+   * @param mission The new mission created.
+   */
+  const onMissionCopy = (mission: ClientMission) => {
+    // Update mission state.
+    setMissions([...missions, mission])
+  }
+
+  /**
+   * Callback for when a mission is successfully deleted.
+   * @param mission The mission that was deleted.
+   */
+  const onMissionDeletion = (mission: ClientMission) => {
+    // Remove mission from state.
+    setMissions(missions.filter(({ _id }) => _id !== mission._id))
+  }
+
   // This will switch to the user form
   // page with the selected user.
   const selectUser = (user: ClientUser) => {
@@ -551,6 +569,10 @@ export default function HomePage(): JSX.Element | null {
   }
 
   /* -- RENDER -- */
+
+  // If the page has not yet mounted, there
+  // is nothing to render yet.
+  if (!mountHandled) return null
 
   /**
    * The file drop box for uploading mission files.
@@ -693,8 +715,8 @@ export default function HomePage(): JSX.Element | null {
                       </div>
                       <MissionModificationPanel
                         mission={mission}
-                        onSuccessfulCopy={loadMissions}
-                        onSuccessfulDeletion={loadMissions}
+                        onSuccessfulCopy={onMissionCopy}
+                        onSuccessfulDeletion={onMissionDeletion}
                       />
                     </div>
                   </>
@@ -807,24 +829,20 @@ export default function HomePage(): JSX.Element | null {
   })
 
   // Render root element.
-  if (mountHandled) {
-    return (
-      <div
-        className='HomePage Page'
-        ref={page}
-        onDragOver={handleFileDragOver}
-        onDragLeave={handleFileDragLeave}
-        onDrop={handleFileDrop}
-      >
-        {fileDropBoxJsx}
-        <DefaultLayout navigation={navigation}>
-          {sessionsJsx}
-          {missionsJsx}
-          {usersJsx}
-        </DefaultLayout>
-      </div>
-    )
-  } else {
-    return null
-  }
+  return (
+    <div
+      className='HomePage Page'
+      ref={page}
+      onDragOver={handleFileDragOver}
+      onDragLeave={handleFileDragLeave}
+      onDrop={handleFileDrop}
+    >
+      {fileDropBoxJsx}
+      <DefaultLayout navigation={navigation}>
+        {sessionsJsx}
+        {missionsJsx}
+        {usersJsx}
+      </DefaultLayout>
+    </div>
+  )
 }

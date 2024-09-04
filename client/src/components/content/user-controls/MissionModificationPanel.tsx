@@ -47,7 +47,7 @@ export default function MissionModificationPanel({
         await ClientMission.$delete(mission._id)
         finishLoading()
         notify(`Successfully deleted "${mission.name}".`)
-        onSuccessfulDeletion()
+        onSuccessfulDeletion(mission)
       } catch (error) {
         finishLoading()
         notify(`Failed to delete "${mission.name}".`)
@@ -61,7 +61,10 @@ export default function MissionModificationPanel({
     let { choice, text } = await prompt(
       'Enter the name of the new mission:',
       ['Cancel', 'Submit'],
-      { textField: { boundChoices: ['Submit'], label: 'Name' } },
+      {
+        textField: { boundChoices: ['Submit'], label: 'Name' },
+        defaultChoice: 'Submit',
+      },
     )
 
     // If the user confirms the copy, proceed.
@@ -186,5 +189,5 @@ export type TMissionModificationPanel = {
   /**
    * Callback for a successful deletion event.
    */
-  onSuccessfulDeletion: () => void
+  onSuccessfulDeletion: (deletedMission: ClientMission) => void
 }

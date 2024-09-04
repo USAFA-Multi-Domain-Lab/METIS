@@ -33,22 +33,24 @@ export default class Prompt<
     event.preventDefault()
 
     // Gather details.
-    const { choice } = this.state
-    const { resolve } = this.props
+    let { choice } = this.state
+    const { resolve, defaultChoice } = this.props
+    console.log(choice, defaultChoice)
+    // If the choice is not set and there is
+    // a default choice, set the default choice.
+    if (!choice && defaultChoice) choice = defaultChoice
+    // If the choice is still not set, return.
+    if (!choice) return
 
     // Resolve the choice with the text.
     this.setState({ resolving: true }, () => {
-      // If the choice is not set, throw an error.
-      if (!choice) {
-        throw new Error('Form submitted, but choice is null.')
-      }
       // Check if text field input ref is available.
       if (!this.textFieldInput.current) {
         throw new Error('Text field cannot be found in the DOM.')
       }
 
       // Resolve.
-      resolve({ choice, text: this.textFieldInput.current.value })
+      resolve({ choice: choice!, text: this.textFieldInput.current.value })
     })
   }
 
@@ -242,6 +244,7 @@ export default class Prompt<
   public static defaultProps() {
     return {
       capitalizeChoices: false,
+      defaultChoice: null,
     }
   }
 
@@ -329,6 +332,12 @@ export type TPrompt_P<TChoice extends string, TList extends object = {}> = {
    * ```
    */
   list?: TPromptList<TList>
+  /**
+   * Default choice made when enter is pressed.
+   * @default null
+   * @note If `null`, prompt will not resolve on enter.
+   */
+  defaultChoice?: TChoice | null
   /**
    * Resolves the choice made by the user.
    * @param result The data given to the caller to resolve the choice made by the user.

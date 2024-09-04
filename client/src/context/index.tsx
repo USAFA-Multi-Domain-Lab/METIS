@@ -458,7 +458,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
       choices: TChoice[],
       options: TPromptOptions<TChoice, TList> = {},
     ): Promise<TPromptResult<TChoice, TList>> => {
-      const { textField, capitalizeChoices, list } = options
+      const { textField, capitalizeChoices, list, defaultChoice } = options
 
       // Return a promise that will be resolved once the
       // user makes a choice.
@@ -471,6 +471,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
           textField,
           capitalizeChoices,
           list,
+          defaultChoice,
           key: generateHash(),
         }
 

@@ -1,5 +1,6 @@
 /* -- imports -- */
 
+import lodash from 'lodash'
 import React from 'react'
 import { TAjaxStatus } from '../../../../../shared/toolbox/ajax'
 import Tooltip from '../communication/Tooltip'
@@ -264,7 +265,7 @@ export default class List<TList extends object> extends React.Component<
   }
 
   componentDidUpdate(previousProps: IList_P<TList>): void {
-    if (previousProps.items !== this.props.items) {
+    if (!lodash.isEqual(previousProps.items, this.props.items)) {
       this.filter()
     }
   }
