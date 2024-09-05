@@ -130,7 +130,6 @@ export default function MissionNode({
     let backgroundColor: string | undefined = undefined
     let transition: string | undefined = undefined
     let borderColor: string = node.color
-    let borderStyle: string = node.borderStyle
 
     // If the camera is zoomed out too far,
     // make the background color the node's color.
@@ -168,7 +167,6 @@ export default function MissionNode({
       height: `${height}em`,
       padding: `${verticalPadding}em 0`,
       borderColor: borderColor,
-      borderStyle: borderStyle,
       transition: transition,
       backgroundColor,
     }

@@ -239,7 +239,6 @@ export abstract class MissionForce<
     structureKey: 'ROOT',
     name: 'ROOT',
     color: '#000000',
-    borderStyle: 'solid',
     description:
       'Invisible node that is the root of all other nodes in the force.',
     preExecutionText: 'N/A',

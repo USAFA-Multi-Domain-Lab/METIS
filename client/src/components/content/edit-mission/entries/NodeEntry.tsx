@@ -8,7 +8,6 @@ import { usePostInitEffect } from 'src/toolbox/hooks'
 import { SingleTypeObject } from '../../../../../../shared/toolbox/objects'
 import Tooltip from '../../communication/Tooltip'
 import { DetailColorSelector } from '../../form/DetailColorSelector'
-import { DetailDropdown } from '../../form/DetailDropdown'
 import { DetailLargeString } from '../../form/DetailLargeString'
 import { DetailNumber } from '../../form/DetailNumber'
 import { DetailString } from '../../form/DetailString'
@@ -39,9 +38,6 @@ export default function NodeEntry({
   /* -- STATE -- */
   const [name, setName] = useState<string>(node.name)
   const [color, setColor] = useState<string>(node.color)
-  const [borderStyle, setBorderStyle] = useState<
-    ClientMissionNode['borderStyle']
-  >(node.borderStyle)
   const [description, setDescription] = useState<string>(node.description)
   const [preExecutionText, setPreExecutionText] = useState<string>(
     node.preExecutionText,
@@ -135,7 +131,6 @@ export default function NodeEntry({
   usePostInitEffect(() => {
     node.name = name
     node.color = color
-    node.borderStyle = borderStyle
     node.description = description
     node.preExecutionText = preExecutionText
     node.depthPadding = depthPadding
@@ -159,7 +154,6 @@ export default function NodeEntry({
   }, [
     name,
     color,
-    borderStyle,
     description,
     preExecutionText,
     depthPadding,
@@ -274,23 +268,6 @@ export default function NodeEntry({
     }
   }
 
-  /**
-   * Renders the border style option.
-   */
-  const renderBorderStyle = (option: ClientMissionNode['borderStyle']) => {
-    return (
-      <div
-        className='BorderExample'
-        style={{
-          borderBottomStyle: option,
-          borderBottomColor: node.color,
-        }}
-      >
-        {option}
-      </div>
-    )
-  }
-
   /* -- RENDER -- */
 
   return (
@@ -321,25 +298,6 @@ export default function NodeEntry({
             setState={setColor}
             buttons={colorButtons}
             key={`${node._id}_color`}
-          />
-          <DetailDropdown<ClientMissionNode['borderStyle']>
-            fieldType='required'
-            label='Border Style'
-            stateValue={borderStyle}
-            isExpanded={false}
-            setState={setBorderStyle}
-            options={ClientMissionNode.BORDER_STYLE_OPTIONS}
-            getKey={(option) => option}
-            render={renderBorderStyle}
-            // Color included in the key, so that the
-            // dropdown will change the border color when
-            // the color changes.
-            key={`${node._id}_borderStyle_${color}`}
-            uniqueClassName='BorderStyle'
-            handleInvalidOption={{
-              method: 'setToDefault',
-              defaultValue: 'solid',
-            }}
           />
           <DetailLargeString
             fieldType='optional'
