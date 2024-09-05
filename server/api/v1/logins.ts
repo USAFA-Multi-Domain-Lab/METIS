@@ -124,10 +124,7 @@ const routerMap: TMetisRouterMap = (
 
   /* ---------------------------- ROUTES ---------------------------- */
 
-  // -- GET | /api/v1/logins/ --
   router.get('/', getLogin)
-
-  // -- POST | /api/v1/logins/ --
   router.post(
     '/',
     defineRequests({
@@ -138,8 +135,6 @@ const routerMap: TMetisRouterMap = (
     }),
     login,
   )
-
-  // -- DELETE | /api/v1/logouts/ --
   router.delete('/', logout)
 
   done()

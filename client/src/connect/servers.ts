@@ -639,8 +639,18 @@ export default class ServerConnection
   /**
    * The end point for establishing a web socket connection.
    */
-  public static readonly SOCKET_URL =
-    typeof window !== 'undefined' ? `ws://${window.location.host}/connect` : '/'
+  public static get SOCKET_URL() {
+    let inBrowser: boolean = typeof window !== 'undefined'
+    let useSecure: boolean = window?.location.protocol === 'https:'
+
+    if (!inBrowser) {
+      return '/'
+    } else if (useSecure) {
+      return `wss://${window.location.host}/connect`
+    } else {
+      return `ws://${window.location.host}/connect`
+    }
+  }
 
   /**
    * The amount of time to wait before attempting to reconnect to the server.

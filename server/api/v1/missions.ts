@@ -956,7 +956,7 @@ export const routerMap: TMetisRouterMap = (
 
         let copy = new MissionModel(modelInput)
 
-        copy.save((error: Error) => {
+        copy.save((error: Error, result: any) => {
           if (error) {
             databaseLogger.error(
               `Failed to copy mission with the original ID "${originalId}":`,
@@ -964,10 +964,17 @@ export const routerMap: TMetisRouterMap = (
             databaseLogger.error(error)
             return response.sendStatus(500)
           } else {
+            console.log(result)
             databaseLogger.info(
               `Copied mission with the original ID "${originalId}".`,
             )
-            return response.json({ copy })
+            return response.json({
+              _id: result._id,
+              name: result.name,
+              introMessage: result.introMessage,
+              versionNumber: result.versionNumber,
+              seed: result.seed,
+            })
           }
         })
       }
@@ -997,7 +1004,6 @@ export const routerMap: TMetisRouterMap = (
 
   /* ---------------------------- ROUTES ---------------------------- */
 
-  // -- POST | /api/v1/missions/ --
   router.post(
     '/',
     auth({ permissions: ['missions_write'] }),
@@ -1012,38 +1018,26 @@ export const routerMap: TMetisRouterMap = (
     }),
     createMission,
   )
-
-  // -- POST | /api/v1/missions/import/ --
   router.post(
     '/import/',
     auth({ permissions: ['missions_write'] }),
     uploads.array('files', 12),
     importMission,
   )
-
-  // -- GET /api/v1/missions/environment/
   router.get('/environment/', getEnvironment)
-
-  // -- GET | /api/v1/missions/ --
   router.get('/', auth({ permissions: ['missions_read'] }), getMissions)
-
-  // -- GET | /api/v1/missions/:_id/ --
   router.get(
     '/:_id/',
     auth({ permissions: ['missions_read'] }),
     defineRequests({ params: { _id: 'objectId' } }),
     getMission,
   )
-
-  // -- GET /api/v1/missions/:_id/export/ --
   router.get(
     '/:_id/export/*', // The "*" is to ensure the downloaded file includes the mission's name and the .metis extension.
     auth({ permissions: ['missions_read', 'missions_write'] }),
     defineRequests({ params: { _id: 'objectId' } }),
     exportMission,
   )
-
-  // -- PUT | /api/v1/missions/ --
   router.put(
     '/',
     auth({ permissions: ['missions_write'] }),
@@ -1066,8 +1060,6 @@ export const routerMap: TMetisRouterMap = (
     ),
     updateMission,
   )
-
-  // -- PUT | /api/v1/missions/copy/ --
   router.put(
     '/copy/',
     auth({ permissions: ['missions_write'] }),
@@ -1079,8 +1071,6 @@ export const routerMap: TMetisRouterMap = (
     }),
     copyMission,
   )
-
-  // -- DELETE | /api/v1/missions/:_id/ --
   router.delete(
     '/:_id/',
     auth({ permissions: ['missions_write'] }),

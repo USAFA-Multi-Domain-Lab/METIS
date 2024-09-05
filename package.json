@@ -3,7 +3,17 @@
   "description": "METIS uses an ambiguous node-topography and hierarchy structure to build a framework relayed effects from across all war-fighting domains. Designed to be adaptable to a wide verity of use cases, from cyberspace targeting to global logistical operations. As a secondary function, and equally as flexible is the open software design that uses API to perform as a relay hub and/or effects-emitter to link multiple simulation programs and other applications.",
   "version": "2.0.0",
   "private": true,
-  "scripts": {},
+  "scripts": {
+    "client-install": "cd ./client && npm install",
+    "server-install": "cd ./server && npm install",
+    "shared-install": "cd ./shared && npm install",
+    "integration-install": "cd ./integration/library && npm install",
+    "react": "cd ./client && npm start",
+    "dev": "cd ./server && npm run dev",
+    "prod": "cd ./server && npm start",
+    "install": "npm run client-install && npm run server-install && npm run shared-install && npm run integration-install",
+    "build": "cd ./client && npm run build"
+  },
   "prettier": {
     "tabWidth": 2,
     "singleQuote": true,
