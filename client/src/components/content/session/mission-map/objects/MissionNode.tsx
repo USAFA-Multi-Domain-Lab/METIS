@@ -69,6 +69,12 @@ export default function MissionNode({
     node.pendingExecInit,
   )
   /**
+   * Whether the node's output has been sent.
+   */
+  const [pendingOutputSent, setPendingOutputSent] = useState<boolean>(
+    node.pendingOutputSent,
+  )
+  /**
    * The initial progress shown on the progress bar,
    * helping account for latency.
    */
@@ -98,8 +104,10 @@ export default function MissionNode({
     setPendingOpen(node.pendingOpen)
     setPendingExecInit(node.pendingExecInit)
     setExecutionState(node.executionState)
+    setPendingOutputSent(node.pendingOutputSent)
     setButtons(node.buttons)
-    setInitialProgress(calculateInitialProgress(node))
+    if (node.executionState !== 'executing')
+      setInitialProgress(calculateInitialProgress(node))
     setBlocked((prev) => {
       setPrevBlocked(prev)
       return node.blocked
@@ -261,6 +269,11 @@ export default function MissionNode({
     // is pending execution initiation.
     if (pendingExecInit) {
       classList.push('PendingExecInit')
+    }
+    // Add pending output sent class if the node's output
+    // has been sent.
+    if (pendingOutputSent) {
+      classList.push('PendingOutputSent')
     }
     // Add the blocked class if the node is blocked.
     if (blocked) {

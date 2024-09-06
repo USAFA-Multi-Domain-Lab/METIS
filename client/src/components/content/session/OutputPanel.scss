@@ -6,27 +6,15 @@
     border: 2px solid $color-main;
     overflow: auto;
     box-sizing: border-box;
+    padding: 15px 20px 30px;
 
     .Text {
-      display: flex;
-      flex-flow: row wrap;
-      padding: 30px 20px;
+      padding: 15px 0 0;
       font-size: 0.75em;
       line-height: 1rem;
 
-      // .SelectedActionPropertyList {
-      //   padding: 15px 0 0 15px;
-
-      //   .SelectedActionProperty {
-      //     list-style: none;
-      //     text-decoration: none;
-      //     margin: -3px auto;
-      //   }
-      // }
-
       .LineCursor {
         color: $terminal;
-        margin-right: 5px;
       }
 
       .Succeeded * {

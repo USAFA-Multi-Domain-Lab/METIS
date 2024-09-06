@@ -7,7 +7,6 @@ import { TCommonMissionForceJson } from 'metis/missions/forces'
 import { TMissionPrototypeOptions } from 'metis/missions/nodes/prototypes'
 import StringToolbox from 'metis/toolbox/strings'
 import seedrandom, { PRNG } from 'seedrandom'
-import ClientConnection from '../connect/clients'
 import ServerTargetEnvironment from '../target-environments'
 import { TTargetEnvContextMission } from '../target-environments/context-provider'
 import ServerTarget from '../target-environments/targets'
@@ -16,7 +15,7 @@ import ServerActionExecution from './actions/executions'
 import { ServerRealizedOutcome } from './actions/outcomes'
 import ServerEffect from './effects'
 import ServerMissionForce, { TServerMissionForceOptions } from './forces'
-import { TServerOutputMessage } from './forces/output-message'
+import { TServerOutput } from './forces/output'
 import ServerMissionNode from './nodes'
 import ServerMissionPrototype from './nodes/prototypes'
 
@@ -118,37 +117,6 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
       nodes: this.nodes.map((node) => node.toTargetEnvContext()),
     }
   }
-
-  /**
-   * Sends the introduction message to the output panel.
-   * @param user The user that will receive the message.
-   * @param forceId The ID of the force that the user is a part of.
-   */
-  public sendIntroductionMessage(
-    user: ClientConnection,
-    forceId: ServerMissionForce['_id'],
-  ): void {
-    // Send the intro message to the participant.
-    this.forces.forEach((force) => {
-      force.sendOutputMessage({
-        _id: 'intro-message',
-        introMessage: this.introMessage,
-        time: Date.now(),
-      })
-    })
-
-    // Emit the intro message to the user.
-    user.emit('send-output', {
-      data: {
-        forceId,
-        output: {
-          _id: 'intro-message',
-          introMessage: this.introMessage,
-          time: Date.now(),
-        },
-      },
-    })
-  }
 }
 /* ------------------------------ SERVER MISSION TYPES ------------------------------ */
 
@@ -160,7 +128,7 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
 export interface TServerMissionTypes extends TCommonMissionTypes {
   mission: ServerMission
   force: ServerMissionForce
-  outputMessage: TServerOutputMessage
+  output: TServerOutput
   prototype: ServerMissionPrototype
   node: ServerMissionNode
   action: ServerMissionAction

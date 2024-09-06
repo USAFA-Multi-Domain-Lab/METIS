@@ -35,7 +35,7 @@ export default class EnvironmentContextProvider
     return {
       effect: effect.toTargetEnvContext(),
       mission: this.mission.toTargetEnvContext(),
-      sendOutputMessage: this.sendOutputMessage,
+      sendOutput: this.sendOutput,
       blockNode: this.blockNode,
       unblockNode: this.unblockNode,
       modifySuccessChance: this.modifySuccessChance,
@@ -81,9 +81,11 @@ export default class EnvironmentContextProvider
   /**
    * Sends the message to the output panel within a session.
    * @param forceId The ID of the force with the output panel to send the message to.
-   * @param message The message to output.
+   * @param message The output's message.
    */
-  private sendOutputMessage = (forceId: string, message: string) => {}
+  private sendOutput = (forceId: string, message: string) => {
+    this.session.sendOutput(forceId, message)
+  }
 
   /**
    * Blocks the node from being interacted with.
@@ -193,9 +195,9 @@ export type TTargetEnvContext = {
   /**
    * Sends the message to the output panel within a session.
    * @param forceId The ID of the force with the output panel to send the message to.
-   * @param message The message to output.
+   * @param message The output's message.
    */
-  sendOutputMessage: (forceId: string, message: string) => void
+  sendOutput: (forceId: string, message: string) => void
   /**
    * Blocks the node from being interacted with.
    * @param nodeId The ID of the node to block.

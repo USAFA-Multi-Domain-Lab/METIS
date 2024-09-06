@@ -9,7 +9,7 @@ import {
   TMissionNodeOptions,
   TNode,
 } from '../nodes'
-import { TCommonOutputMessage, TOutputMessage } from './output-message'
+import { TCommonOutput, TOutput } from './output'
 
 /* -- CLASSES -- */
 
@@ -84,12 +84,12 @@ export abstract class MissionForce<
   }
 
   /**
-   * The output messages for the force.
+   * The outputs for the force's output panel.
    */
-  protected _outputMessages: TOutputMessage<T>[]
+  protected _outputs: TOutput<T>[]
   // Implemented
-  public get outputMessages(): TOutputMessage<T>[] {
-    return this._outputMessages
+  public get outputs(): TOutput<T>[] {
+    return this._outputs
   }
 
   /**
@@ -105,7 +105,11 @@ export abstract class MissionForce<
     options: TMissionForceOptions = {},
   ) {
     // Parse options.
-    const { openAll = false, populateTargets = false } = options
+    const {
+      openAll = false,
+      populateTargets = false,
+      sendIntroMessage = false,
+    } = options
 
     // Set properties.
     this.mission = mission
@@ -116,7 +120,7 @@ export abstract class MissionForce<
       data.initialResources ?? MissionForce.DEFAULT_PROPERTIES.initialResources
     this.resourcesRemaining = data.resourcesRemaining ?? this.initialResources
     this.nodes = []
-    this._outputMessages = data.outputMessages ?? []
+    this._outputs = data.outputs ?? []
     this.root = this.createNode(MissionForce.ROOT_NODE_PROPERTIES)
 
     // Import nodes into the force.
@@ -128,6 +132,17 @@ export abstract class MissionForce<
     // If root node is not open, open it.
     if (!this.root.isOpen) {
       this.root.open()
+    }
+
+    // Send the intro message if the flag is set.
+    if (sendIntroMessage) {
+      this.sendOutput({
+        _id: StringToolbox.generateRandomId(),
+        forceId: this._id,
+        time: Date.now(),
+        type: 'intro-message',
+        introMessage: this.mission.introMessage,
+      })
     }
   }
 
@@ -147,7 +162,7 @@ export abstract class MissionForce<
     // flag was set.
     if (includeSessionData) {
       json.resourcesRemaining = this.resourcesRemaining
-      json.outputMessages = this.outputMessages
+      json.outputs = this.outputs
     }
 
     return json
@@ -191,7 +206,7 @@ export abstract class MissionForce<
   ): TNode<T>
 
   // Implemented
-  public abstract sendOutputMessage(outputMessage: TCommonOutputMessage): void
+  public abstract sendOutput(output: TCommonOutput): void
 
   // Implemented
   public getNode(nodeId: string): TNode<T> | undefined {
@@ -368,9 +383,9 @@ export interface TCommonMissionForce {
    */
   get revealedStructure(): AnyObject
   /**
-   * The output messages for the force.
+   * The outputs for the force's output panel.
    */
-  outputMessages: TCommonOutputMessage[]
+  get outputs(): TCommonOutput[]
   /**
    * Converts the force to JSON.
    * @param options The options for converting the force to JSON.
@@ -389,9 +404,9 @@ export interface TCommonMissionForce {
   ): TCommonMissionNode | undefined
   /**
    * Sends a message to the output panel.
-   * @param outputMessage The message to send.
+   * @param output The output to send.
    */
-  sendOutputMessage(outputMessage: TCommonOutputMessage): void
+  sendOutput(output: TCommonOutput): void
 }
 
 /**
@@ -429,9 +444,9 @@ export interface TMissionForceSessionJson {
    */
   resourcesRemaining: number
   /**
-   * The output messages for the force.
+   * The outputs for a force's output panel.
    */
-  outputMessages: TCommonOutputMessage[]
+  outputs: TCommonOutput[]
 }
 
 /**
@@ -456,6 +471,10 @@ export type TMissionForceOptions = {
    * @default false
    */
   populateTargets?: boolean
+  /**
+   * Whether to send the intro message to the output panel.
+   */
+  sendIntroMessage?: boolean
 }
 
 /**

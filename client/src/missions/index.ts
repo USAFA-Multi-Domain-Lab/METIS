@@ -25,7 +25,7 @@ import ClientActionExecution from './actions/executions'
 import ClientActionOutcome from './actions/outcomes'
 import { ClientEffect } from './effects'
 import ClientMissionForce, { TClientMissionForceOptions } from './forces'
-import { TClientOutputMessage } from './forces/output-message'
+import { TClientOutput } from './forces/output'
 import ClientMissionNode from './nodes'
 import ClientMissionPrototype, { TPrototypeRelation } from './nodes/prototypes'
 import MissionTransformation from './transformations'
@@ -1322,7 +1322,7 @@ export default class ClientMission
 export interface TClientMissionTypes extends TCommonMissionTypes {
   mission: ClientMission
   force: ClientMissionForce
-  outputMessage: TClientOutputMessage
+  output: TClientOutput
   prototype: ClientMissionPrototype
   node: ClientMissionNode
   action: ClientMissionAction

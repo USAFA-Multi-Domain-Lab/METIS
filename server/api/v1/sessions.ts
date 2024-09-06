@@ -50,6 +50,7 @@ const routerMap = (router: expressWs.Router, done: () => void) => {
           // Create mission.
           let mission: ServerMission = new ServerMission(missionData, {
             populateTargets: sessionConfig.effectsEnabled,
+            sendIntroMessage: true,
           })
           // Launch the session.
           let session: SessionServer = SessionServer.launch(

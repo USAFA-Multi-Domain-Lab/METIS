@@ -141,6 +141,7 @@ export default class SessionClient extends Session<
       this.onInternalEffectEnacted,
     )
     this.server.addEventListener('send-output', this.onSendOutput)
+    this.server.addEventListener('output-sent', this.onOutputSent)
   }
 
   /**
@@ -157,6 +158,7 @@ export default class SessionClient extends Session<
       'action-execution-completed',
       'internal-effect-enacted',
       'send-output',
+      'output-sent',
     ])
   }
 
@@ -287,6 +289,57 @@ export default class SessionClient extends Session<
 
     // Handle request within node.
     action.node.handleRequestMade('request-execute-action')
+  }
+
+  /**
+   * Sends the node's pre-execution message to the output panel.
+   * @param nodeId The ID of the node with the pre-execution message.
+   * @param options The options for sending the pre-execution message.
+   */
+  public sendPreExecutionMessage(
+    nodeId: ClientMissionNode['_id'],
+    options: TNodeFuncOptions = {},
+  ) {
+    // Gather details.
+    let server: ServerConnection = this.server
+    let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
+    let { onError = () => {} } = options
+
+    // If the role is not "participant", callback
+    // an error.
+    if (this.role !== 'participant') {
+      return onError('Only participants can send pre-execution messages.')
+    }
+
+    // Callback error if the node is not in
+    // the mission associated with this
+    // session.
+    if (node === undefined) {
+      return onError('Node was not found in the mission.')
+    }
+
+    // Emit a request to send the pre-execution message.
+    server.request(
+      'request-send-output',
+      {
+        key: 'pre-execution',
+        nodeId,
+      },
+      `Sending pre-execution message for "${node.name}".`,
+      {
+        // Handle error emitted by server concerning the
+        // request.
+        onResponse: (event) => {
+          if (event.method === 'error') {
+            onError(event.message)
+            node!.handleRequestFailed('request-send-output')
+          }
+        },
+      },
+    )
+
+    // Handle request within node.
+    node.handleRequestMade('request-send-output')
   }
 
   /**
@@ -653,25 +706,52 @@ export default class SessionClient extends Session<
   }
 
   /**
-   * Handles when an output message has been sent.
+   * Handles when an output has been sent.
    * @param event The event emitted by the server.
    */
   private onSendOutput = (event: TServerEvents['send-output']): void => {
     // Extract data.
-    let { forceId, output } = event.data
+    let { output } = event.data
 
     // Find the force, given the ID.
-    let force: ClientMissionForce | undefined = this.mission.getForce(forceId)
+    let force: ClientMissionForce | undefined = this.mission.getForce(
+      output.forceId,
+    )
 
     // Handle force not found.
     if (force === undefined) {
       throw new Error(
-        `Event "send-output" was triggered, but the force with the given forceId ("${forceId}") could not be found.`,
+        `Event "send-output" was triggered, but the force with the given forceId ("${output.forceId}") could not be found.`,
       )
     }
 
-    // Send output message to force.
-    force.sendOutputMessage(output)
+    // Send the output to the force.
+    force.sendOutput(output)
+  }
+
+  /**
+   * Handles when an output has been sent.
+   * @param event The event emitted by the server.
+   */
+  private onOutputSent = (event: TServerEvents['output-sent']): void => {
+    // Extract data.
+    let { key, nodeId } = event.data
+
+    switch (key) {
+      case 'pre-execution':
+        // Find the node, given the ID.
+        let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
+
+        // Handle node not found.
+        if (node === undefined) {
+          throw new Error(
+            `Event "output-sent" was triggered, but the node with the given nodeId ("${nodeId}") could not be found.`,
+          )
+        }
+
+        // Handle output sent.
+        node.handleOutputSent()
+    }
   }
 
   /**

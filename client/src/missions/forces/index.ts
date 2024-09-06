@@ -18,7 +18,7 @@ import { Counter } from '../../../../shared/toolbox/numbers'
 import { TWithKey } from '../../../../shared/toolbox/objects'
 import { Vector2D } from '../../../../shared/toolbox/space'
 import ClientMissionNode from '../nodes'
-import { TClientOutputMessage } from './output-message'
+import { TClientOutput } from './output'
 
 /**
  * Class for managing mission prototypes on the client.
@@ -414,9 +414,49 @@ export default class ClientMissionForce
   }
 
   // Implemented
-  public sendOutputMessage(outputMessage: TClientOutputMessage): void {
-    this._outputMessages.push(outputMessage)
-    this.emitEvent('output-message')
+  public sendOutput(output: TClientOutput): void {
+    switch (output.type) {
+      case 'intro-message':
+        if (!!output.introMessage) {
+          this._outputs.push(output)
+          this.emitEvent('output')
+        }
+        break
+      case 'pre-execution':
+        if (!!output.preExecutionMessage) {
+          this._outputs.push(output)
+          this.emitEvent('output')
+        }
+        break
+      case 'execution-started':
+        if (
+          !!output.processTime &&
+          !!output.resourceCost &&
+          !!output.successChance
+        ) {
+          this._outputs.push(output)
+          this.emitEvent('output')
+        }
+        break
+      case 'execution-succeeded':
+        if (!!output.postExecutionSuccessMessage) {
+          this._outputs.push(output)
+          this.emitEvent('output')
+        }
+        break
+      case 'execution-failed':
+        if (!!output.postExecutionFailureMessage) {
+          this._outputs.push(output)
+          this.emitEvent('output')
+        }
+        break
+      case 'custom':
+        if (!!output.message) {
+          this._outputs.push(output)
+          this.emitEvent('output')
+        }
+        break
+    }
   }
 }
 
@@ -431,7 +471,7 @@ export type TClientMissionForceOptions = TMissionForceOptions & {}
  * An event that occurs on a force, which can be listened for.
  * @option 'activity'
  * Triggered when any other event occurs.
- * @option 'output-message'
- * Triggered when an output message is sent.
+ * @option 'output'
+ * Triggered when an output is sent.
  */
-export type TForceEventMethod = 'activity' | 'output-message'
+export type TForceEventMethod = 'activity' | 'output'

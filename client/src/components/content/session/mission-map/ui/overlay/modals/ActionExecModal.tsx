@@ -21,7 +21,6 @@ export default function ActionExecModal({
   close,
 }: TActionExecModal_P) {
   /* -- GLOBAL CONTEXT -- */
-
   const globalContext = useGlobalContext()
   const { handleError } = globalContext.actions
 
@@ -34,8 +33,8 @@ export default function ActionExecModal({
 
   /* -- STATE -- */
 
-  // Whether the drop-down is expanded.
-  const [dropDownExpanded, setDropDownExpanded] = useState<boolean>(false)
+  // Whether the dropdown is expanded.
+  const [dropdownExpanded, setDropdownExpanded] = useState<boolean>(false)
   // The action selected by the user from the
   // drop down.
   const [selectedAction, selectAction] = useState<ClientMissionAction | null>(
@@ -52,11 +51,86 @@ export default function ActionExecModal({
   )
   // Whether the node is blocked.
   const [blocked, setBlocked] = useState<boolean>(node.blocked)
+  // Whether the output has been sent.
+  const [pendingOutputSent, setPendingOutputSent] = useState<boolean>(
+    node.pendingOutputSent,
+  )
 
-  /* -- HOOKS -- */
-  useEventListener(node, 'activity', () => {
-    setBlocked(node.blocked)
+  /* -- COMPUTED -- */
+
+  /**
+   * The class name for the root element.
+   */
+  const rootClassName: string = compute(() => {
+    // Initialize the class list.
+    let classList: string[] = ['ActionExecModal', 'MapModal']
+
+    // Add the selected class if an action is selected.
+    if (selectedAction) {
+      classList.push('ActionSelected')
+    }
+    // Add the unselected class if no action is selected.
+    else {
+      classList.push('ActionUnselected')
+    }
+
+    // Return the class list as a string.
+    return classList.join(' ')
   })
+
+  /**
+   * The class name for the drop down.
+   */
+  const dropdownClassName: string = compute(() => {
+    // Initialize the class list.
+    let classList: string[] = ['Dropdown']
+
+    // Disable the drop down if there are less than two actions.
+    if (node.actions.size < 2) {
+      classList.push('Disabled')
+    }
+
+    // Add the expanded class if the drop down is expanded.
+    if (dropdownExpanded) {
+      classList.push('Expanded')
+    }
+    // Add the collapsed class if the drop down is collapsed.
+    else {
+      classList.push('Collapsed')
+    }
+
+    // Return the class list as a string.
+    return classList.join(' ')
+  })
+
+  /**
+   * The text to display for the selected action.
+   */
+  const selectionText: string = compute(() => {
+    // If an action is selected, return its name.
+    if (selectedAction) {
+      return selectedAction.name
+    }
+    // Otherwise, return the default text.
+    else {
+      return 'Choose an action'
+    }
+  })
+
+  /**
+   * Determines whether the action is ready for execution.
+   */
+  const executionReady: boolean = compute(
+    () =>
+      !!selectedAction && !dropdownExpanded && !blocked && !pendingOutputSent,
+  )
+
+  /**
+   * Determines whether the buttons should be displayed.
+   */
+  const displayButtons: boolean = compute(
+    () => !!selectedAction && !dropdownExpanded,
+  )
 
   /* -- EFFECTS -- */
 
@@ -69,6 +143,12 @@ export default function ActionExecModal({
     }
 
     done()
+  })
+
+  // Listen for changes in the node's activity.
+  useEventListener(node, 'activity', () => {
+    setBlocked(node.blocked)
+    setPendingOutputSent(node.pendingOutputSent)
   })
 
   useEffect(() => {
@@ -96,7 +176,7 @@ export default function ActionExecModal({
    * Handles a request to close the prompt window.
    */
   const onCloseClick = () => {
-    setDropDownExpanded(false)
+    setDropdownExpanded(false)
     close()
   }
 
@@ -105,7 +185,7 @@ export default function ActionExecModal({
    */
   const revealOptions = () => {
     // Toggle drop down.
-    setDropDownExpanded(!dropDownExpanded)
+    setDropdownExpanded(!dropdownExpanded)
     // Reset scroll position of the drop-down options.
     if (optionsRef.current) optionsRef.current.scrollTop = 0
   }
@@ -114,88 +194,64 @@ export default function ActionExecModal({
    * Executes the selected action.
    */
   const execute = () => {
-    if (selectedAction && !node.blocked) {
-      session.executeAction(selectedAction._id, {
+    if (executionReady) {
+      session.executeAction(selectedAction!._id, {
         onError: (message) => handleError({ message, notifyMethod: 'bubble' }),
       })
       close()
     }
   }
 
-  /* -- RENDER -- */
+  /* -- PRE-RENDER PROCESSING -- */
 
-  let executionReady: boolean = !!selectedAction && !dropDownExpanded
-  let rootClasses: string[] = ['ActionExecModal', 'MapModal']
-  let dropDownClasses: string[] = ['DropDown']
-  let selectionText: string = 'Choose an action'
-
-  // Determine dynamic classes.
-
-  // Add class for when an action is selected,
-  // and make the selection text the name of the
-  // selected action.
-  if (selectedAction) {
-    rootClasses.push('ActionSelected')
-    selectionText = selectedAction.name
-  }
-  // Add class for when an action is not selected.
-  else {
-    rootClasses.push('ActionUnselected')
-  }
-  // Disable drop down if there is less than two actions.
-  if (node.actions.size < 2) {
-    dropDownClasses.push('Disabled')
-  }
-  // Add class for when the drop down is expanded.
-  if (dropDownExpanded) {
-    dropDownClasses.push('Expanded')
-  }
-  // Add class for when the drop down is collapsed.
-  else {
-    dropDownClasses.push('Collapsed')
-  }
-
-  // Render the JSX for the options in the drop
-  // down.
-  const optionJsx = MapToolbox.mapToArray(
-    node.actions,
-    (action: ClientMissionAction) => {
+  /**
+   * The JSX for the options in the drop down.
+   */
+  const optionJsx: JSX.Element[] | null = compute(() =>
+    MapToolbox.mapToArray(node.actions, (action: ClientMissionAction) => {
       return (
         <Option
           key={action._id}
-          session={session}
           action={action}
           select={() => {
             selectAction(action)
-            setDropDownExpanded(false)
+            setDropdownExpanded(false)
           }}
         />
       )
-    },
+    }),
   )
 
-  // Render the JSX for the action property display.
-  const actionPropertyDisplayJsx = executionReady ? (
-    <ActionPropertyDisplay action={selectedAction!} />
-  ) : null
+  /**
+   * The JSX for the action property display.
+   */
+  const actionPropertyDisplayJsx: JSX.Element | null = compute(() =>
+    executionReady ? <ActionPropertyDisplay action={selectedAction!} /> : null,
+  )
 
-  // Render the JSX for the buttons.
-  const buttonsJsx = executionReady ? (
-    <div className='Buttons'>
-      <ButtonText
-        text='EXECUTE ACTION'
-        disabled={blocked ? 'full' : 'none'}
-        onClick={execute}
-      />
-    </div>
-  ) : null
+  /**
+   * The JSX for the buttons.
+   */
+  const buttonsJsx: JSX.Element | null = compute(() =>
+    displayButtons ? (
+      <div className='Buttons'>
+        <ButtonText
+          text='EXECUTE ACTION'
+          disabled={executionReady ? 'none' : 'full'}
+          onClick={execute}
+        />
+      </div>
+    ) : null,
+  )
+
+  /* -- RENDER -- */
 
   // Render root JSX.
   return (
-    <div className={rootClasses.join(' ')}>
+    <div className={rootClassName}>
       <div className='Heading'>
         <div className='NodeName'>{node.name}</div>
-        <div className='DropDownLabel'>{`Available actions:`}</div>
+        <div className='DropdownLabel'>Available actions:</div>
       </div>
       <div className='Close'>
         <div className='CloseButton' onClick={onCloseClick}>
@@ -203,7 +259,7 @@ export default function ActionExecModal({
           <Tooltip description='Close window.' />
         </div>
       </div>
-      <div className={dropDownClasses.join(' ')}>
+      <div className={dropdownClassName}>
         <div className='Selection' onClick={revealOptions}>
           <div className='Text'>{selectionText}</div>
           <div className='Arrow'>^</div>
@@ -361,7 +417,7 @@ const ActionPropertyDisplay = ({ action }: TActionPropertyDisplay_P) => {
 /**
  * An option in the drop down of actions to choose from.
  */
-function Option({ session, action, select }: TOption_P) {
+function Option({ action, select }: TOption_P) {
   /* -- STATE -- */
   const [successChance, setSuccessChance] = useState<number>(
     action.successChance,
@@ -431,13 +487,9 @@ export type TActionExecModal_P = {
 }
 
 /**
- * Props for `DropDownOption` component.
+ * Props for `Option` component.
  */
 export type TOption_P = {
-  /**
-   * The session client of which the node is a part.
-   */
-  session: SessionClient
   /**
    * The action serving as an option in the drop down.
    */
@@ -452,5 +504,8 @@ export type TOption_P = {
  * Props for `ActionPropertyDisplay` component.
  */
 type TActionPropertyDisplay_P = {
+  /**
+   * The action whose properties to display.
+   */
   action: ClientMissionAction
 }

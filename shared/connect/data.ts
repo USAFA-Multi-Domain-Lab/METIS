@@ -1,7 +1,7 @@
 import { TActionExecutionJson } from 'metis/missions/actions/executions'
 import { TActionOutcomeJson } from 'metis/missions/actions/outcomes'
 import { TCommonMissionForceJson } from 'metis/missions/forces'
-import { TCommonOutputMessage } from 'metis/missions/forces/output-message'
+import { TCommonOutput } from 'metis/missions/forces/output'
 import { TSessionConfig, TSessionJson, TSessionRole } from 'metis/sessions'
 import { AnyObject } from 'metis/toolbox/objects'
 import { TCommonUserJson } from 'metis/users'
@@ -208,6 +208,28 @@ type TInternalEffectData = [
 type TInternalEffectDatum = TInternalEffectData[number]
 
 /**
+ * The data necessary to send a message to the output panel.
+ */
+type TOutputData = [
+  {
+    /**
+     * Used to identify the data structure.
+     * @option `"pre-execution":` The data needed to send a node's pre-execution message to the output panel.
+     */
+    key: 'pre-execution'
+    /**
+     * The ID of the node with the pre-execution message to send.
+     */
+    nodeId: string
+  },
+]
+
+/**
+ * The data needed to send a message to the output panel.
+ */
+type TOutputDatum = TOutputData[number]
+
+/**
  * General WS events emitted by the server, or caused due to a change in the connection with the server.
  */
 export type TGenericServerEvents = {
@@ -353,13 +375,9 @@ export type TGenericServerEvents = {
     'send-output',
     {
       /**
-       * The ID of the force where the output panel belongs.
-       */
-      forceId: string
-      /**
        * The message to send to the force's output panel.
        */
-      output: TCommonOutputMessage
+      output: TCommonOutput
     }
   >
   /**
@@ -440,6 +458,14 @@ export type TResponseEvents = {
       revealedChildNodes?: TCommonMissionNodeJson[]
     },
     TClientEvents['request-execute-action']
+  >
+  /**
+   * Occurs when the client has successfully sent a message to the output panel.
+   */
+  'output-sent': TResponseEvent<
+    'output-sent',
+    TOutputDatum,
+    TClientEvents['request-send-output']
   >
   /**
    * Occurs to send the requested, currently-joined session to the client.
@@ -539,6 +565,10 @@ export type TRequestEvents = {
       actionId: string
     }
   >
+  /**
+   * Occurs when the client requests to send a pre-execution message to the output panel.
+   */
+  'request-send-output': TRequestEvent<'request-send-output', TOutputDatum>
   /**
    * Occurs when the client requests to fetch the currently joined session.
    */

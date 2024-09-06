@@ -1,12 +1,12 @@
 import { TServerMissionTypes } from '..'
 import {
-  TCommonOutputMessage,
+  TCommonOutput,
   TExecutionFailed,
   TExecutionStarted,
   TExecutionSucceeded,
   TIntro,
   TPreExecution,
-} from '../../../shared/missions/forces/output-message'
+} from '../../../shared/missions/forces/output'
 import ServerUser from '../../users'
 
 /**
@@ -44,9 +44,11 @@ export type TServerExecutionFailed = TExecutionFailed<
 >
 
 /**
- * Represents an output message used on the server.
+ * The properties needed to display a custom message in the output panel.
  */
-export type TServerOutputMessage = TCommonOutputMessage<
-  TServerMissionTypes,
-  ServerUser
->
+export type TServerCustom = TCommonOutput<TServerMissionTypes, ServerUser>
+
+/**
+ * Represents an output for a force's output panel that's used on the server.
+ */
+export type TServerOutput = TCommonOutput<TServerMissionTypes, ServerUser>

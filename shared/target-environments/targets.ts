@@ -248,7 +248,7 @@ export default abstract class Target<
       let { forceMetaData, message } = context.effect.args
 
       // Output the message to the force.
-      context.sendOutputMessage(forceMetaData.forceId, message)
+      context.sendOutput(forceMetaData.forceId, message)
     },
     args: [
       {

@@ -17,7 +17,7 @@
           text-overflow: ellipsis;
         }
 
-        .DropDownLabel {
+        .DropdownLabel {
           margin: 1em 0 0;
           font-size: 0.8em;
         }
@@ -35,7 +35,7 @@
         margin: 0 15px 25px 20px;
       }
 
-      .DropDown {
+      .Dropdown {
         min-width: 19em;
         user-select: none;
 
@@ -70,6 +70,10 @@
 
           &:hover {
             background-color: $background-alt2;
+          }
+
+          .Text {
+            margin-right: 15px;
           }
 
           .Arrow {
@@ -142,19 +146,6 @@
           .Label {
             color: $terminal;
             text-decoration: underline;
-          }
-
-          .RichTextOutputBox * {
-            color: $terminal;
-          }
-
-          .RichTextOutputBox {
-            display: inline;
-            line-height: 20px;
-
-            p:first-child {
-              display: inline;
-            }
           }
         }
 

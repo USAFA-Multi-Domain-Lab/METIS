@@ -89,14 +89,13 @@ export default function SessionPage({
       return
     }
 
-    // Logic to send the pre-execution text to the output panel.
-    if (node.preExecutionText !== '') {
-      // todo: fix this
-      // let output: TConsoleOutput_P = OutputPanel.renderPreExecutionOutput(
-      //   node,
-      //   login.user.username,
-      // )
-      // force?.outputToConsole(output)
+    // If the user is a participant, request to send
+    // the node's pre-execution message to the output
+    // panel.
+    if (session.role === 'participant') {
+      session.sendPreExecutionMessage(node._id, {
+        onError: (message) => handleError({ message, notifyMethod: 'bubble' }),
+      })
     }
 
     // Logic that opens the next level of nodes
@@ -341,6 +340,7 @@ export default function SessionPage({
     },
     [selectedForce],
   )
+
   // Update the resources remaining state whenever the
   // force changes.
   useEffect(() => {

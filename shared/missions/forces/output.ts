@@ -1,18 +1,23 @@
 import { TCommonUser } from 'metis/users'
+import { TForce } from '.'
 import { TCommonMissionTypes, TMission } from '..'
 import { TAction } from '../actions'
 import { TNode } from '../nodes'
 
 /**
- * The base properties for an output message.
+ * The base properties for an output.
  */
-type TBaseOutputMessage<TUser extends TCommonUser = TCommonUser> = {
+type TBaseOutput<T extends TCommonMissionTypes = TCommonMissionTypes> = {
   /**
-   * The username of the user who is the source of the message.
+   * The output's ID.
    */
-  username: TUser['username']
+  _id: string
   /**
-   * The time the message was sent.
+   * The ID of the force where the output panel belongs.
+   */
+  forceId: TForce<T>['_id']
+  /**
+   * The time the output was sent.
    */
   time: number
 }
@@ -20,20 +25,21 @@ type TBaseOutputMessage<TUser extends TCommonUser = TCommonUser> = {
 /**
  * The properties needed to display the intro message for a mission in the output panel.
  */
-export type TIntro<T extends TCommonMissionTypes = TCommonMissionTypes> = {
-  /**
-   * The ID for the output panel.
-   */
-  _id: 'intro-message'
-  /**
-   * The mission's intro message.
-   */
-  introMessage: TMission<T>['introMessage']
-  /**
-   * The time the message was sent.
-   */
-  time: number
-}
+export type TIntro<T extends TCommonMissionTypes = TCommonMissionTypes> =
+  TBaseOutput<T> & {
+    /**
+     * The type of output.
+     */
+    type: 'intro-message'
+    /**
+     * The mission's intro message.
+     */
+    introMessage: TMission<T>['introMessage']
+    /**
+     * The time the message was sent.
+     */
+    time: number
+  }
 
 /**
  * The properties needed to display a message in the output panel for a node that has not had any actions executed on it yet.
@@ -41,11 +47,15 @@ export type TIntro<T extends TCommonMissionTypes = TCommonMissionTypes> = {
 export type TPreExecution<
   TMission extends TCommonMissionTypes = TCommonMissionTypes,
   TUser extends TCommonUser = TCommonUser,
-> = TBaseOutputMessage<TUser> & {
+> = TBaseOutput<TMission> & {
   /**
-   * The ID for the output panel.
+   * The type of output.
    */
-  _id: 'pre-execution'
+  type: 'pre-execution'
+  /**
+   * The username of the user who is the source of the output.
+   */
+  username: TUser['username']
   /**
    * The name of the node.
    */
@@ -62,11 +72,19 @@ export type TPreExecution<
 export type TExecutionStarted<
   TMission extends TCommonMissionTypes = TCommonMissionTypes,
   TUser extends TCommonUser = TCommonUser,
-> = TBaseOutputMessage<TUser> & {
+> = TBaseOutput<TMission> & {
   /**
-   * The ID for the output panel.
+   * The type of output.
    */
-  _id: 'execution-started'
+  type: 'execution-started'
+  /**
+   * The username of the user who is the source of the message.
+   */
+  username: TUser['username']
+  /**
+   * The ID of the node that the action is being executed on.
+   */
+  nodeId: TNode<TMission>['_id']
   /**
    * The name of the node that the action is being executed on.
    */
@@ -95,11 +113,15 @@ export type TExecutionStarted<
 export type TExecutionSucceeded<
   TMission extends TCommonMissionTypes = TCommonMissionTypes,
   TUser extends TCommonUser = TCommonUser,
-> = TBaseOutputMessage<TUser> & {
+> = TBaseOutput<TMission> & {
   /**
-   * The ID for the output panel.
+   * The type of output.
    */
-  _id: 'execution-succeeded'
+  type: 'execution-succeeded'
+  /**
+   * The username of the user who is the source of the message.
+   */
+  username: TUser['username']
   /**
    * The name of the node that the action is being executed on.
    */
@@ -116,11 +138,15 @@ export type TExecutionSucceeded<
 export type TExecutionFailed<
   TMission extends TCommonMissionTypes = TCommonMissionTypes,
   TUser extends TCommonUser = TCommonUser,
-> = TBaseOutputMessage<TUser> & {
+> = TBaseOutput<TMission> & {
   /**
-   * The ID for the output panel.
+   * The type of output.
    */
-  _id: 'execution-failed'
+  type: 'execution-failed'
+  /**
+   * The username of the user who is the source of the message.
+   */
+  username: TUser['username']
   /**
    * The name of the node that the action is being executed on.
    */
@@ -132,9 +158,30 @@ export type TExecutionFailed<
 }
 
 /**
- * Represents an output message.
+ * The properties needed to display a custom message in the output panel.
  */
-export type TCommonOutputMessage<
+export type TCustom<
+  TMission extends TCommonMissionTypes = TCommonMissionTypes,
+  TUser extends TCommonUser = TCommonUser,
+> = TBaseOutput<TMission> & {
+  /**
+   * The type of output.
+   */
+  type: 'custom'
+  /**
+   * The username of the user who is the source of the message.
+   */
+  username: TUser['username']
+  /**
+   * The message to display in the output panel.
+   */
+  message: string
+}
+
+/**
+ * Represents an output for a force's output panel.
+ */
+export type TCommonOutput<
   TMission extends TCommonMissionTypes = TCommonMissionTypes,
   TUser extends TCommonUser = TCommonUser,
 > =
@@ -143,10 +190,11 @@ export type TCommonOutputMessage<
   | TExecutionStarted<TMission, TUser>
   | TExecutionSucceeded<TMission, TUser>
   | TExecutionFailed<TMission, TUser>
+  | TCustom<TMission, TUser>
 
 /**
- * Extracts the output message type from the mission types.
+ * Extracts the output type from the mission types.
  * @param T The mission types.
- * @returns The output message type.
+ * @returns The output's type.
  */
-export type TOutputMessage<T extends TCommonMissionTypes> = T['outputMessage']
+export type TOutput<T extends TCommonMissionTypes> = T['output']

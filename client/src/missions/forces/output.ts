@@ -1,12 +1,12 @@
 import { TClientMissionTypes } from '..'
 import {
-  TCommonOutputMessage,
+  TCommonOutput,
   TExecutionFailed,
   TExecutionStarted,
   TExecutionSucceeded,
   TIntro,
   TPreExecution,
-} from '../../../../shared/missions/forces/output-message'
+} from '../../../../shared/missions/forces/output'
 import ClientUser from '../../users'
 
 /**
@@ -44,9 +44,6 @@ export type TClientExecutionFailed = TExecutionFailed<
 >
 
 /**
- * Represents an output message used on the client.
+ * Represents an output for a force's output panel that's used on the client.
  */
-export type TClientOutputMessage = TCommonOutputMessage<
-  TClientMissionTypes,
-  ClientUser
->
+export type TClientOutput = TCommonOutput<TClientMissionTypes, ClientUser>
