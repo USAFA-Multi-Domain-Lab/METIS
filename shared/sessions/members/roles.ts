@@ -1,3 +1,4 @@
+import { TSessionAuthParam } from '.'
 import MemberPermission from './permissions'
 
 /* -- CONSTANTS -- */
@@ -19,7 +20,7 @@ const AVAILABLE_ROLES_RAW = [
     description:
       'Member of a session that cannot do anything, but has a complete view of all forces and can observe the session play out.',
     permissions: [
-      MemberPermission.AVAILABLE_PERMISSIONS.viewForeignForces,
+      MemberPermission.AVAILABLE_PERMISSIONS.completeVisibility,
     ] as MemberPermission[],
   } as const,
   {
@@ -32,7 +33,7 @@ const AVAILABLE_ROLES_RAW = [
       MemberPermission.AVAILABLE_PERMISSIONS.configureSessions,
       MemberPermission.AVAILABLE_PERMISSIONS.manageSessionMembers,
       MemberPermission.AVAILABLE_PERMISSIONS.startEndSessions,
-      MemberPermission.AVAILABLE_PERMISSIONS.viewForeignForces,
+      MemberPermission.AVAILABLE_PERMISSIONS.completeVisibility,
     ] as MemberPermission[],
   } as const,
 ] as const
@@ -58,6 +59,44 @@ export default class MemberRole implements TGenericMemberRole {
     this.name = name
     this.description = description
     this.permissions = permissions
+  }
+
+  /**
+   * Checks to see if the role is authorized to perform an action
+   * by comparing the role's permissions to the permissions
+   * required to perform the action.
+   * @param requiredPermissions The permission(s) required to perform the action.
+   * @returns Whether the role is authorized to perform the action.
+   * @note Both `MemberPermission` objects and their IDs are accepted as valid
+   * arguments for `requiredPermissions`. Optionally an array can be passed to
+   * check for multiple permissions.
+   * @example // Check if the role has the 'manipulateNodes' permission:
+   * role.isAuthorized(MemberPermission.AVAILABLE_PERMISSIONS.manipulateNodes)
+   * @example // Check if the role has the 'completeVisibility' and 'configureSessions' permissions:
+   * role.isAuthorized(['completeVisibility', 'configureSessions'])
+   */
+  public isAuthorized = (requiredPermissions: TSessionAuthParam): boolean => {
+    let simplifiedReqPermissions: MemberPermission[] = []
+
+    // Convert the required permissions to an array of permission.
+    if (Array.isArray(requiredPermissions)) {
+      simplifiedReqPermissions = requiredPermissions.map((permission) =>
+        permission instanceof MemberPermission
+          ? permission
+          : MemberPermission.AVAILABLE_PERMISSIONS[permission],
+      )
+    } else {
+      simplifiedReqPermissions = [
+        requiredPermissions instanceof MemberPermission
+          ? requiredPermissions
+          : MemberPermission.AVAILABLE_PERMISSIONS[requiredPermissions],
+      ]
+    }
+
+    // Determine if the role has the required permissions.
+    return simplifiedReqPermissions.every((permission) =>
+      this.permissions.includes(permission),
+    )
   }
 
   /**

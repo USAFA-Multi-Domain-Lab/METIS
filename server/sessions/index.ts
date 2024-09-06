@@ -1,7 +1,6 @@
 import { TClientEvents, TServerEvents, TServerMethod } from 'metis/connect/data'
 import { ServerEmittedError } from 'metis/connect/errors'
-import { TCommonMissionJson, TMissionJsonOptions } from 'metis/missions'
-import ClientConnection from 'metis/server/connect/clients'
+import { TMissionJsonOptions } from 'metis/missions'
 import ServerMission from 'metis/server/missions'
 import ServerMissionAction from 'metis/server/missions/actions'
 import ServerMissionNode from 'metis/server/missions/nodes'
@@ -9,19 +8,21 @@ import Session, {
   TSessionBasicJson,
   TSessionConfig,
   TSessionJson,
-  TSessionRole,
 } from 'metis/sessions'
-import { SingleTypeObject } from 'metis/toolbox/objects'
+import MemberRole, { TMemberRoleId } from 'metis/sessions/members/roles'
+import { TCommonUser } from 'metis/users'
 import { v4 as generateHash } from 'uuid'
+import ClientConnection from '../connect/clients'
 import ServerActionExecution from '../missions/actions/executions'
 import ServerMissionForce from '../missions/forces'
 import EnvironmentContextProvider from '../target-environments/context-provider'
+import ServerSessionMember from './members'
 
 /**
  * Server instance for sessions. Handles server-side logic for a session with participating clients. Communicates with clients to conduct the session.
  */
 export default class SessionServer extends Session<
-  ClientConnection,
+  ServerSessionMember,
   ServerMission,
   ServerMissionForce,
   ServerMissionNode,
@@ -54,11 +55,10 @@ export default class SessionServer extends Session<
     name: string,
     config: Partial<TSessionConfig>,
     mission: ServerMission,
-    participants: Array<ClientConnection>,
-    observers: Array<ClientConnection>,
-    managers: Array<ClientConnection>,
+    members: ServerSessionMember[],
+    banList: string[],
   ) {
-    super(_id, name, config, mission, participants, [], observers, managers)
+    super(_id, name, config, mission, members, banList)
     this._state = 'unstarted'
     this._destroyed = false
     this.register()
@@ -66,50 +66,10 @@ export default class SessionServer extends Session<
   }
 
   // Implemented
-  public isJoined(user: ClientConnection): boolean {
-    for (let x of this.users) {
-      if (x.userId === user.userId) {
-        return true
-      }
-    }
-    return false
-  }
-
-  // Implemented
-  public isParticipant(user: ClientConnection): boolean {
-    for (let x of this.users) {
-      if (x.userId === user.userId) {
-        return true
-      }
-    }
-    return false
-  }
-
-  // Implemented
-  public isObserver(user: ClientConnection): boolean {
-    for (let x of this.observers) {
-      if (x.userId === user.userId) {
-        return true
-      }
-    }
-    return false
-  }
-
-  // Implemented
-  public isManager(user: ClientConnection): boolean {
-    for (let x of this.managers) {
-      if (x.userId === user.userId) {
-        return true
-      }
-    }
-    return false
-  }
-
-  // Implemented
   public getAssignedForce(
-    user: ClientConnection,
+    member: ServerSessionMember,
   ): ServerMissionForce | undefined {
-    let forceId: string | undefined = this.assignments.get(user.userId)
+    let forceId: string | undefined = this.assignments.get(member._id)
     return this.mission.getForce(forceId)
   }
 
@@ -118,10 +78,11 @@ export default class SessionServer extends Session<
    * @param forceId The ID of the force.
    * @returns The users.
    */
-  public getUsersForForce(forceId: string): ClientConnection[] {
+  public getMembersForForce(forceId: string): ServerSessionMember[] {
+    // todo: Update this code to work with new member-permission system.
     return [
       ...this.participants.filter(
-        (participant) => this.assignments.get(participant.userId) === forceId,
+        (participant) => this.assignments.get(participant._id) === forceId,
       ),
       ...this.observers,
     ]
@@ -137,7 +98,7 @@ export default class SessionServer extends Session<
     // Handler a requester being passed.
     if (requester) {
       // Gather details.
-      let forceId: string | undefined = this.assignments.get(requester.userId)
+      let forceId: string | undefined = this.assignments.get(requester._id)
 
       // If the requester is a participant, then
       // update the mission options to include
@@ -151,7 +112,7 @@ export default class SessionServer extends Session<
       // If the requester is an observer, then
       // update the mission options to include
       // data pertinent to the observer.
-      else if (this.isObserver(requester)) {
+      else if (requester.isObserver) {
         missionOptions = {
           exportType: 'session-observer',
         }
@@ -159,16 +120,14 @@ export default class SessionServer extends Session<
       // If the requester is a manager, then
       // update the mission options to include
       // data pertinent to the manager.
-      else if (this.isManager(requester)) {
+      else if (requester.isManager) {
         missionOptions = {
           exportType: 'session-manager',
         }
       }
-      // If the requester is authorized to write
-      // to sessions, include the ban list.
-      if (requester?.user.isAuthorized('sessions_write')) {
-        banList = this.banList
-      }
+      // If the requester is authorized to manager
+      // users, then include the ban list.
+      if (requester.isAuthorized('manageSessionMembers')) banList = this.banList
     }
 
     // Construct JSON.
@@ -177,16 +136,8 @@ export default class SessionServer extends Session<
       state: this.state,
       name: this.name,
       mission: this.mission.toJson(missionOptions),
-      participants: this.participants.map((client: ClientConnection) =>
-        client.user.toJson(),
-      ),
+      members: this._members.map((member) => member.toJson()),
       banList,
-      observers: this.observers.map((client: ClientConnection) =>
-        client.user.toJson(),
-      ),
-      managers: this.managers.map((client: ClientConnection) =>
-        client.user.toJson(),
-      ),
       config: this.config,
     }
 
@@ -223,16 +174,8 @@ export default class SessionServer extends Session<
   /**
    * Gets the role of the given user in the session.
    */
-  public getRole(user: ClientConnection): TSessionRole {
-    if (this.isObserver(user)) {
-      return 'observer'
-    } else if (this.isManager(user)) {
-      return 'manager'
-    } else if (this.isParticipant(user)) {
-      return 'participant'
-    } else {
-      return 'not-joined'
-    }
+  public getRole(userId: TCommonUser['_id']): MemberRole | undefined {
+    return this.getMember(userId)?.role
   }
 
   // Implemented
@@ -270,78 +213,73 @@ export default class SessionServer extends Session<
     this.unregister()
     // Mark as destroyed.
     this._destroyed = true
-
-    // Grab all users.
-    let users: ClientConnection[] = this.users
-
-    // Clear all users.
-    this.clearUsers()
-
+    // Grab all members.
+    let members: ServerSessionMember[] = this.members
+    // Clear all members.
+    this.clearMembers()
     // Emit an event to all users that the session has been destroyed.
-    for (let user of users) {
-      user.emit('session-destroyed', { data: { sessionId: this._id } })
+    for (let { connection } of members) {
+      connection.emit('session-destroyed', { data: { sessionId: this._id } })
     }
   }
 
   /**
-   * Has the given user join the session.
+   * Has the given client connection join as a member of the session.
    * @param client The user joining the session.
    * @param method The method of joining (Whether as a participant, a manager, or as an observer).
+   * @returns The new `ServerSessionMember` object that was created.
    * @throws The server emitted error code of any error that occurs.
    * @note Establishes listeners to handle events emitted by the user's web socket connection.
    */
-  public join(client: ClientConnection, method: TSessionRole): void {
+  public join(
+    client: ClientConnection,
+    roleId: TMemberRoleId,
+  ): ServerSessionMember {
     // Throw error if the user is in the ban list.
     if (this._banList.includes(client.userId)) {
       throw ServerEmittedError.CODE_SESSION_BANNED
     }
     // Throw error if the user is already in the session.
-    if (this.isJoined(client)) {
+    if (this.isJoined(client.userId)) {
       throw ServerEmittedError.CODE_ALREADY_IN_SESSION
     }
-    // Add the user to the session given
-    // the method of joining.
-    switch (method) {
+
+    // If the client does not have the required permissions
+    // to join the session with the given role, then throw
+    // an error.
+    switch (roleId) {
       case 'participant':
-        // Add the users to the participant list.
-        this._participants.push(client)
-        // Add session-specific listeners.
-        this.addListeners(client)
+        if (!client.user.isAuthorized('sessions_join_participant'))
+          throw ServerEmittedError.CODE_SESSION_UNAUTHORIZED_JOIN
         break
       case 'observer':
-        // Throw error if the client is unauthorized to
-        // join as a observer.
-        if (!client.user.isAuthorized('sessions_join_observer')) {
+        if (!client.user.isAuthorized('sessions_join_observer'))
           throw ServerEmittedError.CODE_SESSION_UNAUTHORIZED_JOIN
-        }
-        // Add the users to the observer list.
-        this._observers.push(client)
         break
       case 'manager':
-        // Throw error if the client is unauthorized to
-        // join as a manager.
-        if (!client.user.isAuthorized('sessions_join_manager')) {
+        if (!client.user.isAuthorized('sessions_join_manager'))
           throw ServerEmittedError.CODE_SESSION_UNAUTHORIZED_JOIN
-        }
-        // Add the users to the manager list.
-        this._managers.push(client)
         break
       default:
         throw ServerEmittedError.CODE_SESSION_UNAUTHORIZED_JOIN
     }
+
+    // Create a new session member.
+    let member = ServerSessionMember.create(client, roleId)
 
     // Handle joining the session for the client.
     client.login.handleJoin(this._id)
 
     // Emit an event to all users that the user list
     // has changed.
-    this.emitToUsers('session-users-updated', {
+    this.emitToAll('session-users-updated', {
       data: {
-        participants: this.participants.map((client) => client.user.toJson()),
-        observers: this.observers.map((client) => client.user.toJson()),
-        managers: this.managers.map((client) => client.user.toJson()),
+        members: this.members.map((member) => member.toJson()),
       },
     })
+
+    // Return the new member.
+    return member
   }
 
   /**
@@ -352,7 +290,7 @@ export default class SessionServer extends Session<
     Object.assign(this._config, config)
 
     // Emit an event to all users that the session state has changed.
-    this.emitToUsers('session-config-updated', {
+    this.emitToAll('session-config-updated', {
       data: {
         config: this.config,
       },
@@ -360,109 +298,102 @@ export default class SessionServer extends Session<
   }
 
   /**
-   * Handles a new connection by an existing participant.
-   * @param newConnection The new connection for a participant of the session.
-   * @returns True if connection was replaced, false if the participant wasn't found.
+   * Handles a new connection by an existing member.
+   * @param newConnection The new connection for a member of the session.
+   * @returns True if connection was replaced, false if the member wasn't found.
    */
   public handleConnectionChange(newConnection: ClientConnection): boolean {
-    this._participants.forEach(
-      (participant: ClientConnection, index: number) => {
-        if (participant.userId === newConnection.userId) {
-          // Update index in participants with the new
-          // connection.
-          this._participants[index] = newConnection
-
-          // Add session-specific listeners to the new
-          // connection.
-          this.addListeners(newConnection)
-
-          // Return true.
-          return true
-        }
-      },
+    // Find the member.
+    let member = this._members.find(
+      ({ userId }) => userId === newConnection.userId,
     )
-
-    // Return false if the participant wasn't found.
-    return false
+    // If the member is found, update the connection.
+    if (member) {
+      member.connection = newConnection
+      this.addListeners(member)
+    }
+    // Return whether the member was found.
+    return !!member
   }
 
   /**
    * Starts the session.
    */
   public start(): void {
-    // Mark the session as started.
-    this._state = 'started'
-
-    // If the session is in the 'started' state,
-    // then auto-assign participants to forces.
-    if (this.state === 'started') {
-      this.autoAssign()
-    }
-
-    // Cache used to not export the same force twice
-    // for a participant.
-    const participantForceCache: SingleTypeObject<TCommonMissionJson> = {}
-
-    // Emit an event to all participants that the session has
-    // started.
-    for (let participant of this.participants) {
-      // Find the force ID for the participant.
-      let forceId = this.assignments.get(participant.userId)
-
-      // Skip if the participant is not assigned to a force.
-      if (forceId === undefined) {
-        continue
-      }
-
-      // If the force has not been cached, then cache it.
-      if (!participantForceCache[forceId]) {
-        participantForceCache[forceId] = this.mission.toJson({
-          exportType: 'session-participant',
-          forceId,
-        })
-      }
-
-      // Get relevant data from the mission for the
-      // participant.
-      let { nodeStructure, forces } = participantForceCache[forceId]
-
-      // Emit the event to the participant.
-      participant.emit('session-started', {
-        data: { nodeStructure, forces },
-      })
-    }
-
-    // Get observer export.
-    let observerExport = this.mission.toJson({
-      exportType: 'session-observer',
-    })
-
-    // Emit an event to all observers that the session has
-    // started.
-    for (let observer of this.observers) {
-      observer.emit('session-started', {
-        data: {
-          nodeStructure: observerExport.nodeStructure,
-          forces: observerExport.forces,
-        },
-      })
-    }
-
-    // Get manager export.
-    let managerExport = this.mission.toJson({
-      exportType: 'session-manager',
-    })
-
-    // Emit an event to all managers that the session has
-    // started.
-    for (let manager of this.managers) {
-      manager.emit('session-started', {
-        data: {
-          nodeStructure: managerExport.nodeStructure,
-          forces: managerExport.forces,
-        },
-      })
-    }
+    // todo: Update this code to work with new member-permission system.
+    //     // Mark the session as started.
+    //     this._state = 'started'
+    //
+    //     // If the session is in the 'started' state,
+    //     // then auto-assign participants to forces.
+    //     if (this.state === 'started') {
+    //       this.autoAssign()
+    //     }
+    //
+    //     // Cache used to not export the same force twice
+    //     // for a participant.
+    //     const participantForceCache: SingleTypeObject<TCommonMissionJson> = {}
+    //
+    //     // Emit an event to all participants that the session has
+    //     // started.
+    //     for (let participant of this.participants) {
+    //       // Find the force ID for the participant.
+    //       let forceId = this.assignments.get(participant.userId)
+    //
+    //       // Skip if the participant is not assigned to a force.
+    //       if (forceId === undefined) {
+    //         continue
+    //       }
+    //
+    //       // If the force has not been cached, then cache it.
+    //       if (!participantForceCache[forceId]) {
+    //         participantForceCache[forceId] = this.mission.toJson({
+    //           exportType: 'session-participant',
+    //           forceId,
+    //         })
+    //       }
+    //
+    //       // Get relevant data from the mission for the
+    //       // participant.
+    //       let { nodeStructure, forces } = participantForceCache[forceId]
+    //
+    //       // Emit the event to the participant.
+    //       participant.emit('session-started', {
+    //         data: { nodeStructure, forces },
+    //       })
+    //     }
+    //
+    //     // Get observer export.
+    //     let observerExport = this.mission.toJson({
+    //       exportType: 'session-observer',
+    //     })
+    //
+    //     // Emit an event to all observers that the session has
+    //     // started.
+    //     for (let observer of this.observers) {
+    //       observer.emit('session-started', {
+    //         data: {
+    //           nodeStructure: observerExport.nodeStructure,
+    //           forces: observerExport.forces,
+    //         },
+    //       })
+    //     }
+    //
+    //     // Get manager export.
+    //     let managerExport = this.mission.toJson({
+    //       exportType: 'session-manager',
+    //     })
+    //
+    //     // Emit an event to all managers that the session has
+    //     // started.
+    //     for (let manager of this.managers) {
+    //       manager.emit('session-started', {
+    //         data: {
+    //           nodeStructure: managerExport.nodeStructure,
+    //           forces: managerExport.forces,
+    //         },
+    //       })
+    //     }
   }
 
   /**
@@ -472,86 +403,48 @@ export default class SessionServer extends Session<
     // Mark the session as ended.
     this._state = 'ended'
     // Emit an event to all users that the session has ended.
-    this.emitToUsers('session-ended', { data: {} })
+    this.emitToAll('session-ended', { data: {} })
     // Clear all users.
-    this.clearUsers()
+    this.clearMembers()
   }
 
   /**
    * Has the given user (participant or observer) quit the session.
-   * @param quitterID The ID of the user quiting the session.
+   * @param userId The ID of the user quiting the session.
    * @note Removes any session listeners for the user.
    */
-  public quit(quitterID: string): void {
-    // Find the observer in the list, if present.
-    this._observers.forEach((observer: ClientConnection, index: number) => {
-      if (observer.userId === quitterID) {
-        // Remove the observer from the list.
-        this._observers.splice(index, 1)
-
-        // Handle quitting the session for the observer.
-        observer.login.handleQuit()
-      }
-    })
-
-    // Find the participant in the list, if present.
-    this._participants.forEach(
-      (participant: ClientConnection, index: number) => {
-        if (participant.userId === quitterID) {
-          // Remove the participant from the list.
-          this._participants.splice(index, 1)
-
-          // Remove session-specific listeners.
-          this.removeListeners(participant)
-
-          // Handle quitting the session for the participant.
-          participant.login.handleQuit()
-        }
-      },
-    )
-
-    // Find the manager in the list, if present.
-    this._managers.forEach((manager: ClientConnection, index: number) => {
-      if (manager.userId === quitterID) {
-        // Remove the manager from the list.
-        this._managers.splice(index, 1)
-
-        // Handle quitting the session for the manager.
-        manager.login.handleQuit()
+  public quit(userId: string): void {
+    // Find the member that quit, if present.
+    this._members.forEach((member: ServerSessionMember, index: number) => {
+      if (member.userId === userId) {
+        // Remove the member from the list.
+        this._members.splice(index, 1)
+        // Remove session-specific listeners.
+        this.removeListeners(member)
+        // Handle quitting the session for the member.
+        member.connection.login.handleQuit()
       }
     })
 
     // Emit an event to all users that the user list
     // has changed.
-    this.emitToUsers('session-users-updated', {
+    this.emitToAll('session-users-updated', {
       data: {
-        participants: this.participants.map((client) => client.user.toJson()),
-        observers: this.observers.map((client) => client.user.toJson()),
-        managers: this.managers.map((client) => client.user.toJson()),
+        members: this.members.map((member) => member.toJson()),
       },
     })
   }
 
   /**
-   * Deletes all users from the session.
+   * Deletes all members from the session.
    */
-  public clearUsers(): void {
-    // Remove all participants from the session by
-    // forcing each participant to quit.
-    this.participants.forEach((participant: ClientConnection) => {
-      participant.login.handleQuit()
-    })
-
-    // Remove session-specific listeners from
-    // each participant.
-    this.participants.forEach((participant: ClientConnection) => {
-      this.removeListeners(participant)
-    })
-
-    // Clear user lists.
-    this._participants = []
-    this._observers = []
-    this._managers = []
+  public clearMembers(): void {
+    // Remove all members from the session by
+    // forcing each member to quit.
+    this.members.forEach(({ connection }) => connection.login.handleQuit())
+    this.members.forEach((member) => this.removeListeners(member))
+    // Clear member list.
+    this._members = []
   }
 
   /**
@@ -560,39 +453,38 @@ export default class SessionServer extends Session<
    * @throws The correct HTTP status code for any errors that occur.
    */
   public kick(participantId: string): void {
+    // todo: Update this code to work with new member-permission system.
     // Find the participant in the list, if present.
-    this._participants.forEach(
-      (participant: ClientConnection, index: number) => {
-        if (participant.userId === participantId) {
-          // If the participant has observer permissions,
-          // then throw 403 forbidden error.
-          if (participant.user.isAuthorized('sessions_join_observer')) {
-            throw 403
-          }
-
-          // Remove the participant from the list.
-          this._participants.splice(index, 1)
-
-          // Remove session-specific listeners.
-          this.removeListeners(participant)
-
-          // Handle quitting the session for the participant.
-          participant.login.handleQuit()
-
-          // Emit an event to the participant
-          // that they have been kicked.
-          participant.emit('kicked', { data: { sessionId: this._id } })
-        }
-      },
-    )
+    //     this._participants.forEach(
+    //       (participant: ServerSessionMember, index: number) => {
+    //         if (participant.userId === participantId) {
+    //           // If the participant has observer permissions,
+    //           // then throw 403 forbidden error.
+    //           if (participant.user.isAuthorized('sessions_join_observer')) {
+    //             throw 403
+    //           }
+    //
+    //           // Remove the participant from the list.
+    //           this._participants.splice(index, 1)
+    //
+    //           // Remove session-specific listeners.
+    //           this.removeListeners(participant)
+    //
+    //           // Handle quitting the session for the participant.
+    //           participant.login.handleQuit()
+    //
+    //           // Emit an event to the participant
+    //           // that they have been kicked.
+    //           participant.emit('kicked', { data: { sessionId: this._id } })
+    //         }
+    //       },
+    //     )
 
     // Emit an event to all users that the user list
     // has changed.
-    this.emitToUsers('session-users-updated', {
+    this.emitToAll('session-users-updated', {
       data: {
-        participants: this.participants.map((client) => client.user.toJson()),
-        observers: this.observers.map((client) => client.user.toJson()),
-        managers: this.managers.map((client) => client.user.toJson()),
+        members: this.members.map((member) => member.toJson()),
       },
     })
   }
@@ -603,42 +495,41 @@ export default class SessionServer extends Session<
    * @throws The correct HTTP status code for any errors that occur.
    */
   public ban(participantId: string): void {
-    // Find the participant in the list, if present.
-    this._participants.forEach(
-      (participant: ClientConnection, index: number) => {
-        if (participant.userId === participantId) {
-          // If the participant is has observer permissions,
-          // then throw 403 forbidden error.
-          if (participant.user.isAuthorized('sessions_join_observer')) {
-            throw 403
-          }
-
-          // Remove the participant from the list.
-          this._participants.splice(index, 1)
-
-          // Remove session-specific listeners.
-          this.removeListeners(participant)
-
-          // Handle quitting the session for the participant.
-          participant.login.handleQuit()
-
-          // Emit an event to the participant
-          // that they have been kicked.
-          participant.emit('banned', { data: { sessionId: this._id } })
-        }
-      },
-    )
+    // todo: Update this code to work with new member-permission system.
+    //     // Find the participant in the list, if present.
+    //     this._participants.forEach(
+    //       (participant: ServerSessionMember, index: number) => {
+    //         if (participant.userId === participantId) {
+    //           // If the participant is has observer permissions,
+    //           // then throw 403 forbidden error.
+    //           if (participant.user.isAuthorized('sessions_join_observer')) {
+    //             throw 403
+    //           }
+    //
+    //           // Remove the participant from the list.
+    //           this._participants.splice(index, 1)
+    //
+    //           // Remove session-specific listeners.
+    //           this.removeListeners(participant)
+    //
+    //           // Handle quitting the session for the participant.
+    //           participant.login.handleQuit()
+    //
+    //           // Emit an event to the participant
+    //           // that they have been kicked.
+    //           participant.emit('banned', { data: { sessionId: this._id } })
+    //         }
+    //       },
+    //     )
 
     // Add the participant to the ban list.
     this._banList.push(participantId)
 
     // Emit an event to all users that the user list
     // has changed.
-    this.emitToUsers('session-users-updated', {
+    this.emitToAll('session-users-updated', {
       data: {
-        participants: this.participants.map((client) => client.user.toJson()),
-        observers: this.observers.map((client) => client.user.toJson()),
-        managers: this.managers.map((client) => client.user.toJson()),
+        members: this.members.map((member) => member.toJson()),
       },
     })
   }
@@ -651,64 +542,69 @@ export default class SessionServer extends Session<
     // Initialize force index.
     let forceIndex: number = 0
 
-    // Loop through each participant.
-    this._participants.forEach((participant: ClientConnection) => {
-      // Assign the participant to the force.
-      this.assignments.set(
-        participant.userId,
-        this.mission.forces[forceIndex]._id,
-      )
-
-      // Increment the force index.
-      forceIndex = (forceIndex + 1) % this.mission.forces.length
-    })
+    // todo: Update this code to work with new member-permission system.
+    //
+    //     // Loop through each participant.
+    //     this._participants.forEach((participant: ServerSessionMember) => {
+    //       // Assign the participant to the force.
+    //       this.assignments.set(
+    //         participant.userId,
+    //         this.mission.forces[forceIndex]._id,
+    //       )
+    //
+    //       // Increment the force index.
+    //       forceIndex = (forceIndex + 1) % this.mission.forces.length
+    //     })
   }
 
   /**
-   * Creates session-specific listeners for the given particpant.
+   * Creates session-specific listeners for the given member.
    */
-  private addListeners(participant: ClientConnection): void {
-    participant.addEventListener('request-open-node', (data) =>
-      this.onRequestOpenNode(participant, data),
+  private addListeners(member: ServerSessionMember): void {
+    let { connection } = member
+
+    connection.addEventListener('request-open-node', (data) =>
+      this.onRequestOpenNode(member, data),
     )
-    participant.addEventListener('request-execute-action', (data) =>
-      this.onRequestExecuteAction(participant, data),
+    connection.addEventListener('request-execute-action', (data) =>
+      this.onRequestExecuteAction(member, data),
     )
   }
 
   /**
    * Removes session-specific listeners for the given participant.
    */
-  private removeListeners(participant: ClientConnection): void {
-    participant.clearEventListeners([
+  private removeListeners(member: ServerSessionMember): void {
+    member.connection.clearEventListeners([
       'request-open-node',
       'request-execute-action',
     ])
   }
 
   /**
-   * Emits an event to all the users joined in the session (participants and observers).
+   * Emits an event to all the members joined in the session.
+   * @param method The method of the event to emit.
+   * @param payload The payload of the event to emit.
    */
-  public emitToUsers<
+  public emitToAll<
     TMethod extends TServerMethod,
     TPayload extends Omit<TServerEvents[TMethod], 'method'>,
   >(method: TMethod, payload: TPayload): void {
-    for (let user of this.users) {
-      user.emit(method, payload)
-    }
+    for (let { connection } of this._members) connection.emit(method, payload)
   }
 
   /**
-   * Called when a participant requests to open a node.
-   * @param participant The participant requesting to open a node.
-   * @param event The event emitted by the participant.
+   * Called when a member requests to open a node.
+   * @param member The member requesting to open a node.
+   * @param event The event emitted by the member.
    */
   public onRequestOpenNode = (
-    participant: ClientConnection,
+    member: ServerSessionMember,
     event: TClientEvents['request-open-node'],
   ): void => {
     // Organize data.
     let mission: ServerMission = this.mission
+    let { connection } = member
     let { nodeId } = event.data
 
     // Find the node, given the ID.
@@ -717,11 +613,11 @@ export default class SessionServer extends Session<
     // If the session is not in the 'started' state,
     // then emit an error.
     if (this.state !== 'started') {
-      return participant.emitError(
+      return connection.emitError(
         new ServerEmittedError(
           ServerEmittedError.CODE_SESSION_PROGRESS_LOCKED,
           {
-            request: participant.buildResponseReqData(event),
+            request: connection.buildResponseReqData(event),
           },
         ),
       )
@@ -729,18 +625,18 @@ export default class SessionServer extends Session<
     // If the node is undefined, then emit
     // an error.
     if (node === undefined) {
-      return participant.emitError(
+      return connection.emitError(
         new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_FOUND, {
-          request: participant.buildResponseReqData(event),
+          request: connection.buildResponseReqData(event),
         }),
       )
     }
     // If the node is executable, then emit
     // an error.
     if (!node.openable) {
-      return participant.emitError(
+      return connection.emitError(
         new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_OPENABLE, {
-          request: participant.buildResponseReqData(event),
+          request: connection.buildResponseReqData(event),
         }),
       )
     }
@@ -758,18 +654,18 @@ export default class SessionServer extends Session<
             node.toJson({ includeSessionData: true }),
           ),
         },
-        request: { event, requesterId: participant.userId, fulfilled: true },
+        request: { event, requesterId: member.userId, fulfilled: true },
       }
 
       // Emit open event.
-      for (let user of this.getUsersForForce(node.force._id)) {
-        user.emit('node-opened', payload)
+      for (let { connection } of this.getMembersForForce(node.force._id)) {
+        connection.emit('node-opened', payload)
       }
     } catch (error) {
       // Emit an error if the node could not be opened.
-      participant.emitError(
+      connection.emitError(
         new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR, {
-          request: participant.buildResponseReqData(event),
+          request: connection.buildResponseReqData(event),
           message: 'Failed to open node.',
         }),
       )
@@ -777,29 +673,28 @@ export default class SessionServer extends Session<
   }
 
   /**
-   * Called when a participant requests to execute an action on a node.
-   * @param participant The participant requesting to execute an action.
-   * @param event The event emitted by the participant.
+   * Called when a member requests to execute an action on a node.
+   * @param member The member requesting to execute an action.
+   * @param event The event emitted by the member.
    * @resolves When the action has been executed or a client error is found.
    */
   public onRequestExecuteAction = async (
-    participant: ClientConnection,
+    member: ServerSessionMember,
     event: TClientEvents['request-execute-action'],
   ): Promise<void> => {
-    // Extract request data.
+    // Gather data.
+    let { connection } = member
     let { actionId } = event.data
-
-    // Find the action given the ID.
     let action: ServerMissionAction | undefined = this.actions.get(actionId)
 
     // If the session is not in the 'started' state,
     // then emit an error.
     if (this.state !== 'started') {
-      return participant.emitError(
+      return connection.emitError(
         new ServerEmittedError(
           ServerEmittedError.CODE_SESSION_PROGRESS_LOCKED,
           {
-            request: participant.buildResponseReqData(event),
+            request: connection.buildResponseReqData(event),
           },
         ),
       )
@@ -807,27 +702,27 @@ export default class SessionServer extends Session<
     // If the action is undefined, then emit
     // an error.
     if (action === undefined) {
-      return participant.emitError(
+      return connection.emitError(
         new ServerEmittedError(ServerEmittedError.CODE_ACTION_NOT_FOUND, {
-          request: participant.buildResponseReqData(event),
+          request: connection.buildResponseReqData(event),
         }),
       )
     }
     // If the action is not executable, then
     // emit an error.
     if (!action.node.executable) {
-      return participant.emitError(
+      return connection.emitError(
         new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_EXECUTABLE, {
-          request: participant.buildResponseReqData(event),
+          request: connection.buildResponseReqData(event),
         }),
       )
     }
     // If the node is not revealed, then
     // emit an error.
     if (!action.node.revealed) {
-      return participant.emitError(
+      return connection.emitError(
         new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_REVEALED, {
-          request: participant.buildResponseReqData(event),
+          request: connection.buildResponseReqData(event),
         }),
       )
     }
@@ -835,11 +730,11 @@ export default class SessionServer extends Session<
     // resources to execute the action, then
     // emit an error.
     if (action.force.resourcesRemaining < action.resourceCost) {
-      return participant.emitError(
+      return connection.emitError(
         new ServerEmittedError(
           ServerEmittedError.CODE_ACTION_INSUFFICIENT_RESOURCES,
           {
-            request: participant.buildResponseReqData(event),
+            request: connection.buildResponseReqData(event),
           },
         ),
       )
@@ -848,7 +743,6 @@ export default class SessionServer extends Session<
     try {
       // Execute the action, awaiting result.
       let outcome = await action.execute({
-        participant: participant,
         environmentContextProvider: this.environmentContextProvider,
         effectsEnabled: this.config.effectsEnabled,
         onInit: (execution: ServerActionExecution) => {
@@ -862,15 +756,17 @@ export default class SessionServer extends Session<
             },
             request: {
               event,
-              requesterId: participant.userId,
+              requesterId: member.userId,
               fulfilled: false,
             },
           }
 
           // Emit action execution initiated event
-          // to each user.
-          for (let user of this.getUsersForForce(action!.force._id)) {
-            user.emit('action-execution-initiated', initiationPayload)
+          // to each member.
+          for (let { connection } of this.getMembersForForce(
+            action!.force._id,
+          )) {
+            connection.emit('action-execution-initiated', initiationPayload)
           }
         },
       })
@@ -884,7 +780,7 @@ export default class SessionServer extends Session<
         },
         request: {
           event,
-          requesterId: participant.userId,
+          requesterId: member.userId,
           fulfilled: true,
         },
       }
@@ -898,15 +794,15 @@ export default class SessionServer extends Session<
       }
 
       // Emit the action execution completed
-      // event to each participant.
-      for (let user of this.getUsersForForce(action.force._id)) {
-        user.emit('action-execution-completed', completionPayload)
+      // event to each member for the force.
+      for (let { connection } of this.getMembersForForce(action.force._id)) {
+        connection.emit('action-execution-completed', completionPayload)
       }
     } catch (error) {
       // Emit an error if the action could not be executed.
-      participant.emitError(
+      connection.emitError(
         new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR, {
-          request: participant.buildResponseReqData(event),
+          request: connection.buildResponseReqData(event),
           message: 'Failed to execute action.',
         }),
       )
@@ -937,10 +833,11 @@ export default class SessionServer extends Session<
 
     // Block or unblock the node.
     node.updateBlockStatus(blocked)
-    // Emit an event to all users in the force
+
+    // Emit an event to all members in the force
     // that an internal effect has been enacted.
-    for (let user of this.getUsersForForce(forceId)) {
-      user.emit('internal-effect-enacted', {
+    for (let { connection } of this.getMembersForForce(forceId)) {
+      connection.emit('internal-effect-enacted', {
         data: {
           key: 'node-update-block',
           nodeId,
@@ -974,10 +871,10 @@ export default class SessionServer extends Session<
 
     // Modify the success chance for all of its actions.
     node.modifySuccessChance(successChanceOperand)
-    // Emit an event to all users in the force
+    // Emit an event to all members in the force
     // that an internal effect has been enacted.
-    for (let user of this.getUsersForForce(forceId)) {
-      user.emit('internal-effect-enacted', {
+    for (let { connection } of this.getMembersForForce(forceId)) {
+      connection.emit('internal-effect-enacted', {
         data: {
           key: 'node-action-success-chance',
           nodeId,
@@ -1013,8 +910,8 @@ export default class SessionServer extends Session<
     node.modifyProcessTime(processTimeOperand)
     // Emit an event to all users in the force
     // that an internal effect has been enacted.
-    for (let user of this.getUsersForForce(forceId)) {
-      user.emit('internal-effect-enacted', {
+    for (let { connection } of this.getMembersForForce(forceId)) {
+      connection.emit('internal-effect-enacted', {
         data: {
           key: 'node-action-process-time',
           nodeId,
@@ -1048,10 +945,10 @@ export default class SessionServer extends Session<
 
     // Modify the resource cost for all of its actions.
     node.modifyResourceCost(resourceCostOperand)
-    // Emit an event to all users in the force
+    // Emit an event to all members in the force
     // that an internal effect has been enacted.
-    for (let user of this.getUsersForForce(forceId)) {
-      user.emit('internal-effect-enacted', {
+    for (let { connection } of this.getMembersForForce(forceId)) {
+      connection.emit('internal-effect-enacted', {
         data: {
           key: 'node-action-resource-cost',
           nodeId,
@@ -1084,7 +981,6 @@ export default class SessionServer extends Session<
       mission.name,
       config,
       mission,
-      [],
       [],
       [],
     )
@@ -1133,5 +1029,5 @@ export type TSessionServerJsonOptions = {
    * @default undefined
    * @note If defined, then only the data accessible by the user will be included.
    */
-  requester?: ClientConnection
+  requester?: ServerSessionMember
 }

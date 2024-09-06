@@ -12,7 +12,8 @@ import {
 } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import { DefaultLayout } from '.'
-import { TSessionBasicJson, TSessionRole } from '../../../../shared/sessions'
+import { TSessionBasicJson } from '../../../../shared/sessions'
+import { TMemberRoleId } from '../../../../shared/sessions/members/roles'
 import Prompt, { TChoicesWithCancel } from '../content/communication/Prompt'
 import Tooltip from '../content/communication/Tooltip'
 import { DetailString } from '../content/form/DetailString'
@@ -403,12 +404,12 @@ export default function HomePage(): JSX.Element | null {
   const onSessionSelection = async (sessionId: string) => {
     if (server !== null) {
       try {
-        let role: TSessionRole = 'participant'
+        let roleId: TMemberRoleId = 'participant'
 
         // Choices for the user to select what
         // role they would like to join the session
         // as.
-        let roleChoices: TChoicesWithCancel<TSessionRole>[] = []
+        let roleChoices: TChoicesWithCancel<TMemberRoleId>[] = []
 
         // If the current user can join as a participant,
         // add the option to the prompt.
@@ -441,11 +442,11 @@ export default function HomePage(): JSX.Element | null {
         // If the user only has one option, plus cancelling,
         // automatically select that option.
         if (roleChoices.length === 2 && roleChoices[0] !== 'Cancel') {
-          role = roleChoices[0]
+          roleId = roleChoices[0]
         }
         // Else, prompt the user how they would like to join.
         else {
-          let { choice } = await prompt<TChoicesWithCancel<TSessionRole>>(
+          let { choice } = await prompt<TChoicesWithCancel<TMemberRoleId>>(
             'How would you like to join the session?',
             roleChoices,
             { capitalizeChoices: true },
@@ -455,14 +456,14 @@ export default function HomePage(): JSX.Element | null {
             return
           }
           // Set the role as the choice made.
-          role = choice
+          roleId = choice
         }
 
         // Notify user of session join.
         beginLoading('Joining session...')
         // Join session from new session ID, awaiting
         // the promised session client.
-        let session = await server.$joinSession(sessionId, role)
+        let session = await server.$joinSession(sessionId, roleId)
 
         // If the session is not found, notify
         // the user and return.

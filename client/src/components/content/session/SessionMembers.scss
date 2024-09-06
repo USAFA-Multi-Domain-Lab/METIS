@@ -1,4 +1,4 @@
-.SessionUsers {
+.SessionMembers {
   .Subtitle {
     margin: 0 0 1em;
     width: 100%;
@@ -13,16 +13,16 @@
   }
 
   .Participants {
-    .Users {
-      .User {
+    .Members {
+      .Member {
         display: grid;
         grid-template-columns: 1fr auto;
       }
     }
   }
 
-  .Users {
-    .User {
+  .Members {
+    .Member {
       margin: 0.75em 0;
       height: 2em;
 
@@ -33,7 +33,7 @@
         }
       }
 
-      &.NoUsers {
+      &.NoMembers {
         font-style: italic;
         opacity: 0.5;
       }

@@ -14,7 +14,7 @@ import {
   TServerMethod,
 } from '../../../shared/connect/data'
 import { ServerEmittedError } from '../../../shared/connect/errors'
-import { TSessionRole } from '../../../shared/sessions'
+import { TMemberRoleId } from '../../../shared/sessions/members/roles'
 import { SingleTypeObject } from '../../../shared/toolbox/objects'
 
 /**
@@ -374,7 +374,11 @@ export default class ServerConnection
             switch (event.method) {
               case 'current-session':
                 resolve(
-                  new SessionClient(event.data.session, this, event.data.role),
+                  new SessionClient(
+                    event.data.session,
+                    this,
+                    event.data.roleId,
+                  ),
                 )
                 break
               case 'error':
@@ -397,18 +401,18 @@ export default class ServerConnection
   /**
    * Joins a session with the given session ID.
    * @param sessionId The ID of the session to join.
-   * @param role The role to join the session as.
+   * @param roleId The role to join the session as.
    * @resolves The new session client for the session, `null` if not found.
    * @rejects If there is an error joining the session.
    */
   public $joinSession(
     sessionId: string,
-    role: TSessionRole,
+    roleId: TMemberRoleId,
   ): Promise<SessionClient | null> {
     return new Promise((resolve, reject) => {
       this.request(
         'request-join-session',
-        { sessionId, role },
+        { sessionId, roleId },
         'Joining session.',
         {
           onResponse: (event) => {

@@ -1,273 +1,162 @@
-import { v4 as generateHash } from 'uuid'
-import MemberRole, { TGenericMemberRole } from './accesses'
-import UserPermission, {
-  TUserPermission,
-  TUserPermissionId,
-} from './permissions'
+import User, { TCommonUser, TCommonUserJson } from 'metis/users'
+import MemberPermission from './permissions'
+import MemberRole, { TMemberRoleId } from './roles'
+
+/* -- CLASSES -- */
 
 /**
  * Represents a user using METIS.
  */
-export default abstract class User implements TCommonUser {
-  // Inherited
-  public _id: TCommonUser['_id']
+export default abstract class SessionMember<TUser extends User>
+  implements TCommonSessionMember
+{
+  // Implemented
+  public _id: string
 
-  // Inherited
-  public username: TCommonUser['username']
+  // Implemented
+  public user: TUser
 
-  // Inherited
-  public access: TCommonUser['access']
+  // Implemented
+  public get userId(): TUser['_id'] {
+    return this.user._id
+  }
 
-  // Inherited
-  public expressPermissions: TCommonUser['expressPermissions']
+  // Implemented
+  public role: MemberRole
 
-  // Inherited
-  public firstName: TCommonUser['firstName']
+  // Implemented
+  public get roleId(): TMemberRoleId {
+    return this.role._id
+  }
 
-  // Inherited
-  public lastName: TCommonUser['lastName']
+  // Implemented
+  public get isParticipant(): boolean {
+    return this.role._id === 'participant'
+  }
 
-  // Inherited
-  public needsPasswordReset: TCommonUser['needsPasswordReset']
+  // Implemented
+  public get isObserver(): boolean {
+    return this.role._id === 'observer'
+  }
 
-  // Inherited
-  public password?: TCommonUser['password']
-
-  /**
-   * @param data The user data from which to create the user. Any ommitted values will be set to the default properties defined in User.DEFAULT_PROPERTIES.
-   * @param options Options for creating the user.
-   */
-  public constructor(
-    data: Partial<TCommonUserJson> = User.DEFAULT_PROPERTIES,
-    options: TUserOptions = {},
-  ) {
-    this._id = data._id ?? User.DEFAULT_PROPERTIES._id
-    this.username = data.username ?? User.DEFAULT_PROPERTIES.username
-    this.access = MemberRole.get(data.accessId ?? MemberRole.DEFAULT_ID)
-    this.firstName = data.firstName ?? User.DEFAULT_PROPERTIES.firstName
-    this.lastName = data.lastName ?? User.DEFAULT_PROPERTIES.lastName
-    this.needsPasswordReset =
-      data.needsPasswordReset ?? User.DEFAULT_PROPERTIES.needsPasswordReset
-    this.expressPermissions = UserPermission.get(
-      data.expressPermissionIds ?? User.DEFAULT_PROPERTIES.expressPermissionIds,
-    )
+  // Implemented
+  public get isManager(): boolean {
+    return this.role._id === 'manager'
   }
 
   /**
-   * Converts the User object to JSON.
-   * @param options Options for converting the user to JSON.
-   * @returns A JSON representation of the user.
+   * Creates a new SessionMember object.
+   * @param _id The unique ID of the session member.
+   * @param user The user that is a member of the session.
+   * @param role The role of the user in the session.
    */
-  public toJson(options: TUserOptions = {}): TCommonUserJson {
-    // Construct JSON object to send to server.
-    let json: TCommonUserJson = {
-      _id: this._id,
-      username: this.username,
-      firstName: this.firstName,
-      lastName: this.lastName,
-      accessId: this.access._id,
-      needsPasswordReset: this.needsPasswordReset,
-      expressPermissionIds: this.expressPermissions.map(
-        (permission: UserPermission) => permission._id,
-      ),
-      password: this.password,
-    }
-
-    return json
+  protected constructor(_id: string, user: TUser, role: MemberRole) {
+    this._id = _id
+    this.user = user
+    this.role = role
   }
 
-  /**
-   * Checks to see if a user is authorized to perform an action
-   * by comparing the user's permissions to the permissions
-   * required to perform the action.
-   * @param requiredPermissions The permission(s) required to perform the action.
-   * @returns Whether the user is authorized to perform the action.
-   * @note A single permission ID can be passed in as a string, or multiple permission IDs can be passed in as an array of strings.
-   * @example // Check if the user has the 'createUser' permission:
-   * user.isAuthorized('createUser')
-   * @example // Check if the user has the 'createUser' and 'deleteUser' permissions:
-   * user.isAuthorized(['createUser', 'deleteUser'])
-   */
-  public isAuthorized = (
-    requiredPermissions: TUserPermissionId | TUserPermissionId[],
-  ): boolean => {
-    // The user currently logged in.
-    let currentUser = this
-    // What the current user is allowed
-    // to do based on their access.
-    let { permissions: accessPermissions } = this.access
-    // What the current user is allowed
-    // to do based on their specific
-    // permissions.
-    let { expressPermissions } = currentUser
-
-    // If the user currently logged in
-    // has the revoked access, they are
-    // not authorized to perform any
-    // actions.
-    if (currentUser.access._id === 'revokedAccess') {
-      return false
-    } else {
-      // Check if the user has the required
-      // permissions based on their access.
-      let accessHasRequiredPermissions: boolean = UserPermission.hasPermissions(
-        accessPermissions,
-        requiredPermissions,
-      )
-      // Check to see if the user has been
-      // given specific permissions that
-      // override their access permissions.
-      let userHasSpecificPermissions: boolean = UserPermission.hasPermissions(
-        expressPermissions,
-        requiredPermissions,
-      )
-      return accessHasRequiredPermissions || userHasSpecificPermissions
-    }
-  }
-
-  /**
-   * Default properties set when creating a new User object.
-   */
-  public static get DEFAULT_PROPERTIES(): TCommonUserJson {
+  // Implemented
+  public toJson(): TSessionMemberJson {
     return {
-      _id: generateHash(),
-      username: '',
-      firstName: '',
-      lastName: '',
-      accessId: MemberRole.DEFAULT_ID,
-      needsPasswordReset: false,
-      expressPermissionIds: [],
+      _id: this._id,
+      user: this.user.toJson(),
+      roleId: this.role._id,
     }
   }
 
-  /**
-   * Validates the username of a user.
-   * @param username The username to validate.
-   * @returns Whether the username is valid.
-   */
-  public static isValidUsername = (
-    username: TCommonUserJson['username'],
-  ): boolean => {
-    let userExpression: RegExp = /^([a-zA-Z0-9-_.]{5,25})$/
-    let isValidUsername: boolean = userExpression.test(username)
-
-    return isValidUsername
-  }
-
-  /**
-   * Validates the user's password.
-   * @param password The password to validate.
-   * @returns Whether the password is valid.
-   */
-  public static isValidPassword = (
-    password: NonNullable<TCommonUserJson['password']>,
-  ): boolean => {
-    let passwordExpression: RegExp = /^([^\s]{8,50})$/
-    let isValidPassword: boolean = passwordExpression.test(password)
-
-    return isValidPassword
-  }
-
-  /**
-   * Validates the name of a user.
-   * @param name The name to validate.
-   * @returns Whether the name is valid.
-   */
-  public static isValidName = (
-    name: TCommonUserJson['firstName'] | TCommonUserJson['lastName'],
-  ): boolean => {
-    let nameExpression: RegExp = /^([a-zA-Z']{1,25})$/
-    let isValidName: boolean = nameExpression.test(name)
-
-    return isValidName
-  }
+  // Implemented
+  public isAuthorized = (requiredPermissions: TSessionAuthParam): boolean =>
+    this.role.isAuthorized(requiredPermissions)
 }
 
-/* ------------------------------ USER TYPES ------------------------------ */
+/* -- TYPES -- */
 
 /**
- * Options for creating new User objects.
+ * Interface for the abstract `SessionMember` class.
+ * @note Any public, non-static properties and functions of the `SessionMember`
+ * class must first be defined here for them to be accessible to other
+ * mission-related classes.
  */
-export type TUserOptions = {}
-
-/**
- * Type used for the abstract User class.
- */
-export interface TCommonUser {
+export interface TCommonSessionMember {
   /**
-   * The user's ID.
+   * The unique ID of the session member.
    */
   _id: string
   /**
-   * The user's username.
+   * The user that is a member of the session.
    */
-  username: string
+  user: TCommonUser
   /**
-   * The user's access.
+   * The ID of the user that is a member of the session.
    */
-  access: MemberRole
+  get userId(): TCommonUser['_id']
   /**
-   * The user's permissions.
+   * The role of the member in the session.
    */
-  expressPermissions: UserPermission[]
+  role: MemberRole
   /**
-   * The user's first name.
+   * The ID of the member's role in the session.
    */
-  firstName: string
+  get roleId(): TMemberRoleId
   /**
-   * The user's last name.
+   * Whether the member is a participant in the session.
    */
-  lastName: string
+  get isParticipant(): boolean
   /**
-   * Whether the user needs to reset their password.
+   * Whether the member is an observer in the session.
    */
-  needsPasswordReset: boolean
+  get isObserver(): boolean
   /**
-   * The user's password.
+   * Whether the member is a manager in the session.
    */
-  password?: string
+  get isManager(): boolean
   /**
-   * Converts the User object to JSON.
-   * @returns A JSON representation of the user.
+   * Converts the SessionMember object to JSON.
+   * @returns A JSON representation of the session member.
    */
-  toJson: (options?: TUserOptions) => TCommonUserJson
+  toJson(): TSessionMemberJson
+  /**
+   * Checks to see if a member is authorized to perform an action
+   * by comparing the member's permissions to the permissions
+   * required to perform the action.
+   * @param requiredPermissions The permission(s) required to perform the action.
+   * @returns Whether the member is authorized to perform the action.
+   * @note Both `MemberPermission` objects and their IDs are accepted as valid
+   * arguments for `requiredPermissions`. Optionally an array can be passed to
+   * check for multiple permissions.
+   * @example // Check if the member has the 'manipulateNodes' permission:
+   * member.isAuthorized(MemberPermission.AVAILABLE_PERMISSIONS.manipulateNodes)
+   * @example // Check if the member has the 'completeVisibility' and 'configureSessions' permissions:
+   * member.isAuthorized(['completeVisibility', 'configureSessions'])
+   */
+  isAuthorized(requiredPermissions: TSessionAuthParam): boolean
 }
 
 /**
  * The JSON representation of a User object.
  */
-export interface TCommonUserJson {
+export interface TSessionMemberJson {
   /**
-   * The user's ID.
+   * The session member's ID.
    */
   _id: string
   /**
-   * The user's username.
+   * The user that is a member of the session.
    */
-  username: string
+  user: TCommonUserJson
   /**
-   * The user's access ID.
+   * The ID of the member's role in the session.
    */
-  accessId: TGenericMemberRole['_id']
-  /**
-   * Specific express permission IDs assigned
-   * to the user.
-   */
-  expressPermissionIds: TUserPermission['_id'][]
-  /**
-   * The user's first name.
-   */
-  firstName: string
-  /**
-   * The user's last name.
-   */
-  lastName: string
-  /**
-   * Whether the user needs to reset their password.
-   */
-  needsPasswordReset: boolean
-  /**
-   * The user's password.
-   */
-  password?: string
+  roleId: TMemberRoleId
 }
+
+/**
+ * Valid parameters for `SessionMember.isAuthorized` and
+ * `MemberRole.isAuthorized`.
+ */
+export type TSessionAuthParam =
+  | MemberPermission
+  | MemberPermission['_id']
+  | MemberPermission[]
+  | MemberPermission['_id'][]

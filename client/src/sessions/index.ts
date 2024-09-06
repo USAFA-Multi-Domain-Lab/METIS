@@ -16,12 +16,13 @@ import Session, {
   TSessionRole,
   TSessionState,
 } from '../../../shared/sessions'
+import ClientSessionMember from './members'
 
 /**
  * Client instance for sessions. Handles client-side logic for sessions. Communicates with server to conduct a session.
  */
 export default class SessionClient extends Session<
-  ClientUser,
+  ClientSessionMember,
   ClientMission,
   ClientMissionForce,
   ClientMissionNode,
@@ -53,28 +54,14 @@ export default class SessionClient extends Session<
     let state: TSessionState = data.state
     let name: string = data.name
     let mission: ClientMission = new ClientMission(data.mission)
-    let participants: ClientUser[] = data.participants.map(
-      (userData) => new ClientUser(userData),
-    )
-    let observers: ClientUser[] = data.observers.map(
-      (userData) => new ClientUser(userData),
-    )
-    let managers: ClientUser[] = data.managers.map(
-      (userData) => new ClientUser(userData),
+    let members = data.members.map(
+      ({ _id, user: userData, roleId }) =>
+        new ClientSessionMember(_id, new ClientUser(userData), roleId),
     )
     let banList: string[] = data.banList
     let config: TSessionConfig = data.config
 
-    super(
-      _id,
-      name,
-      config,
-      mission,
-      participants,
-      banList,
-      observers,
-      managers,
-    )
+    super(_id, name, config, mission, members, banList)
     this.server = server
     this._role = role
     this._state = state
@@ -96,48 +83,10 @@ export default class SessionClient extends Session<
   }
 
   // Implemented
-  public isJoined(user: ClientUser): boolean {
-    for (let x of this.users) {
-      if (x._id === user._id) {
-        return true
-      }
-    }
-    return false
-  }
-
-  // Implemented
-  public isParticipant(user: ClientUser): boolean {
-    for (let x of this.users) {
-      if (x._id === user._id) {
-        return true
-      }
-    }
-    return false
-  }
-
-  // Implemented
-  public isObserver(user: ClientUser): boolean {
-    for (let x of this.observers) {
-      if (x._id === user._id) {
-        return true
-      }
-    }
-    return false
-  }
-
-  // Implemented
-  public isManager(user: ClientUser): boolean {
-    for (let x of this.managers) {
-      if (x._id === user._id) {
-        return true
-      }
-    }
-    return false
-  }
-
-  // Implemented
-  public getAssignedForce(user: ClientUser): ClientMissionForce | undefined {
-    let forceId: string | undefined = this.assignments.get(user._id)
+  public getAssignedForce(
+    member: ClientSessionMember,
+  ): ClientMissionForce | undefined {
+    let forceId: string | undefined = this.assignments.get(member._id)
     return this.mission.getForce(forceId)
   }
 
@@ -187,10 +136,8 @@ export default class SessionClient extends Session<
       state: this.state,
       name: this.name,
       mission: this.mission.toJson({ exportType: 'session-limited' }),
-      participants: this.participants.map((user) => user.toJson()),
+      members: this.members.map((member) => member.toJson()),
       banList: this.banList,
-      observers: this.observers.map((user) => user.toJson()),
-      managers: this.managers.map((user) => user.toJson()),
       config: this.config,
     }
   }
@@ -552,12 +499,11 @@ export default class SessionClient extends Session<
   private onUsersUpdated = (
     event: TGenericServerEvents['session-users-updated'],
   ): void => {
-    let { participants, observers, managers } = event.data
-    this._participants = participants.map(
-      (userData) => new ClientUser(userData),
+    let { members } = event.data
+    this._members = members.map(
+      ({ _id, user: userData, roleId }) =>
+        new ClientSessionMember(_id, new ClientUser(userData), roleId),
     )
-    this._observers = observers.map((userData) => new ClientUser(userData))
-    this._managers = managers.map((userData) => new ClientUser(userData))
   }
 
   /**

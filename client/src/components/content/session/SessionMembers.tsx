@@ -1,19 +1,19 @@
 import { ReactNode, useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientSession from 'src/sessions'
+import ClientSessionMember from 'src/sessions/members'
 import { compute } from 'src/toolbox'
 import { useEventListener, useRequireLogin } from 'src/toolbox/hooks'
-import ClientUser from 'src/users'
 import Prompt from '../communication/Prompt'
 import ButtonSvgPanel, {
   TValidPanelButton,
 } from '../user-controls/ButtonSvgPanel'
-import './SessionUsers.scss'
+import './SessionMembers.scss'
 
 /**
  * A component displaying the users in the session.
  */
-export default function SessionUsers({
+export default function SessionMembers({
   session,
 }: TSessionUsers_P): JSX.Element | null {
   /* -- STATE -- */
@@ -23,11 +23,15 @@ export default function SessionUsers({
     globalContext.actions
   const [login] = useRequireLogin()
   const [server] = globalContext.server
-  const [participants, setParticipants] = useState<ClientUser[]>(
+  const [participants, setParticipants] = useState<ClientSessionMember[]>(
     session.participants,
   )
-  const [observers, setObservers] = useState<ClientUser[]>(session.observers)
-  const [managers, setManagers] = useState<ClientUser[]>(session.managers)
+  const [observers, setObservers] = useState<ClientSessionMember[]>(
+    session.observers,
+  )
+  const [managers, setManagers] = useState<ClientSessionMember[]>(
+    session.managers,
+  )
 
   /* -- FUNCTIONS -- */
 
@@ -113,49 +117,50 @@ export default function SessionUsers({
   const participantsJsx = compute(() => {
     // If there are participants, render them.
     if (participants.length > 0) {
-      return participants.map((user): JSX.Element | null => {
+      return participants.map(({ user }): JSX.Element | null => {
         /* -- computed -- */
 
+        // todo: Update this to use the new permissions system.
         /**
          * Buttons for SVG panel.
          */
         const buttons = compute((): TValidPanelButton[] => {
-          // If the logged in user is authorized to join
-          // sessions as a manager or observer, and the user
-          // in question is not authorized to join sessions
-          // as a manager or observer, then  return the
-          // kick and ban buttons.
-          if (
-            (login.user.isAuthorized('sessions_join_manager') ||
-              login.user.isAuthorized('sessions_join_observer')) &&
-            (!user.isAuthorized('sessions_join_manager') ||
-              !user.isAuthorized('sessions_join_observer'))
-          ) {
-            return [
-              {
-                icon: 'kick',
-                key: 'kick',
-                onClick: () => onClickKick(user.username),
-                tooltipDescription:
-                  'Kick participant from the session (Can still choose to rejoin).',
-              },
-              {
-                icon: 'ban',
-                key: 'ban',
-                onClick: () => onClickBan(user.username),
-                tooltipDescription:
-                  'Ban participant from the session (Cannot rejoin).',
-              },
-            ]
-          } else {
-            return []
-          }
+          // // If the logged in user is authorized to join
+          // // sessions as a manager or observer, and the user
+          // // in question is not authorized to join sessions
+          // // as a manager or observer, then  return the
+          // // kick and ban buttons.
+          // if (
+          //   (login.user.isAuthorized('sessions_join_manager') ||
+          //     login.user.isAuthorized('sessions_join_observer')) &&
+          //   (!user.isAuthorized('sessions_join_manager') ||
+          //     !user.isAuthorized('sessions_join_observer'))
+          // ) {
+          //   return [
+          //     {
+          //       icon: 'kick',
+          //       key: 'kick',
+          //       onClick: () => onClickKick(user.username),
+          //       tooltipDescription:
+          //         'Kick participant from the session (Can still choose to rejoin).',
+          //     },
+          //     {
+          //       icon: 'ban',
+          //       key: 'ban',
+          //       onClick: () => onClickBan(user.username),
+          //       tooltipDescription:
+          //         'Ban participant from the session (Cannot rejoin).',
+          //     },
+          //   ]
+          // } else {
+          return []
+          // }
         })
 
         /* -- render -- */
 
         return (
-          <div key={user.username} className='User'>
+          <div key={user.username} className='Member'>
             <div className='Name'>{user.username}</div>
             <ButtonSvgPanel buttons={buttons} size={'small'} />
           </div>
@@ -164,7 +169,7 @@ export default function SessionUsers({
     }
     // Else, render a notice that there are no participants.
     else {
-      return <div className='User NoUsers'>No participants joined.</div>
+      return <div className='Member NoMembers'>No participants joined.</div>
     }
   })
 
@@ -174,15 +179,15 @@ export default function SessionUsers({
   const observerJsx = compute(() => {
     // If there are observers, render them.
     if (observers.length > 0) {
-      return observers.map((user): JSX.Element | null => (
-        <div key={user.username} className='User'>
+      return observers.map(({ user }): JSX.Element | null => (
+        <div key={user.username} className='Member'>
           <div className='Name'>{user.username}</div>
         </div>
       ))
     }
     // Else, render a notice that there are no observers.
     else {
-      return <div className='User NoUsers'>No observers joined.</div>
+      return <div className='Member NoMembers'>No observers joined.</div>
     }
   })
 
@@ -193,8 +198,8 @@ export default function SessionUsers({
     // If there are managers, render them.
     if (managers.length > 0) {
       return managers.map(
-        (user): ReactNode => (
-          <div key={user.username} className='User'>
+        ({ user }): ReactNode => (
+          <div key={user.username} className='Member'>
             <div className='Name'>{user.username}</div>
           </div>
         ),
@@ -202,23 +207,23 @@ export default function SessionUsers({
     }
     // Else, render a notice that there are no managers.
     else {
-      return <div className='User NoUsers'>No managers joined.</div>
+      return <div className='Member NoMembers'>No managers joined.</div>
     }
   })
 
   return (
-    <div className='SessionUsers'>
+    <div className='SessionMembers'>
       <div className='Participants'>
         <div className='Subtitle'>Participants:</div>
-        <div className='Users'>{participantsJsx}</div>
+        <div className='Members'>{participantsJsx}</div>
       </div>
       <div className='Observers'>
         <div className='Subtitle'>Observers:</div>
-        <div className='Users'>{observerJsx}</div>
+        <div className='Members'>{observerJsx}</div>
       </div>
       <div className='Managers'>
         <div className='Subtitle'>Managers:</div>
-        <div className='Users'>{managersJsx}</div>
+        <div className='Members'>{managersJsx}</div>
       </div>
     </div>
   )

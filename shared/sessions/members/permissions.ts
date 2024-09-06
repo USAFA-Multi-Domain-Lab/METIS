@@ -30,9 +30,9 @@ const AVAILABLE_PERMISSIONS_RAW = [
     description: 'The member can start and end the session.',
   } as const,
   {
-    _id: 'viewForeignForces',
-    name: 'View Foreign Forces',
-    description: 'The member can view forces to which they are not assigned.',
+    _id: 'completeVisibility',
+    name: 'Complete Visibility',
+    description: 'The member can view all forces and all nodes in the mission.',
   } as const,
   {
     _id: 'superActionExecution',

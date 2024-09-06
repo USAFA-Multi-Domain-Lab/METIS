@@ -2,13 +2,14 @@ import { TCommonMission, TCommonMissionJson } from 'metis/missions'
 import { TCommonMissionForce } from 'metis/missions/forces'
 import { TCommonMissionAction } from '../missions/actions'
 import { TCommonMissionNode } from '../missions/nodes'
-import { TCommonUser, TCommonUserJson } from '../users'
+import { TCommonUser } from '../users'
+import { TCommonSessionMember, TSessionMemberJson } from './members'
 
 /**
  * Base class for sessions. Represents a session of a mission being executed by users.
  */
 export default abstract class Session<
-  TUser extends { _id: TCommonUser['_id'] } | { userId: TCommonUser['_id'] },
+  TSessionMember extends TCommonSessionMember,
   TMission extends TCommonMission,
   TForce extends TCommonMissionForce,
   TMissionNode extends TCommonMissionNode,
@@ -48,21 +49,36 @@ export default abstract class Session<
   }
 
   /**
-   * The participants of the session executing the mission.
+   * The members who have joined the session.
    */
-  protected _participants: TUser[]
+  protected _members: TSessionMember[]
   /**
-   * The participants of the session executing the mission.
+   * The members who have joined the session.
    */
-  public get participants(): TUser[] {
-    return [...this._participants]
+  public get members(): TSessionMember[] {
+    return [...this._members]
   }
 
   /**
-   * Assignments of participants to forces in the mission.
-   * @note The key is the participant ID, and the value is the force ID.
+   * The session members with the 'participant' role.
    */
-  protected assignments: Map<string, string>
+  public get participants(): TSessionMember[] {
+    return this._members.filter(({ role }) => role._id === 'participant')
+  }
+
+  /**
+   * The session members with the 'observer' role.
+   */
+  public get observers(): TSessionMember[] {
+    return this._members.filter(({ role }) => role._id === 'observer')
+  }
+
+  /**
+   * The session members with the 'manager' role.
+   */
+  public get managers(): TSessionMember[] {
+    return this._members.filter(({ role }) => role._id === 'manager')
+  }
 
   /**
    * IDs of participants who have been banned from the session.
@@ -76,33 +92,10 @@ export default abstract class Session<
   }
 
   /**
-   * The users who are observers of the session that is in progress.
+   * Assignments of member to forces in the mission.
+   * @note The key is the member ID, and the value is the force ID.
    */
-  protected _observers: TUser[]
-  /**
-   * The users who are observers of the session that is in progress.
-   */
-  public get observers(): TUser[] {
-    return [...this._observers]
-  }
-
-  /**
-   * The users who are managers of the session that is in progress.
-   */
-  protected _managers: TUser[]
-  /**
-   * The users who are managers of the session that is in progress.
-   */
-  public get managers(): TUser[] {
-    return [...this._managers]
-  }
-
-  /**
-   * All users, including participants and observers.
-   */
-  public get users(): TUser[] {
-    return [...this._participants, ...this._observers, ...this._managers]
-  }
+  protected assignments: Map<string, string>
 
   /**
    * The state of the session (unstarted, started, ended).
@@ -143,10 +136,8 @@ export default abstract class Session<
     name: string,
     config: Partial<TSessionConfig>,
     mission: TMission,
-    participants: TUser[],
+    members: TSessionMember[],
     banList: string[],
-    observers: TUser[],
-    managers: TUser[],
   ) {
     this._id = _id
     this.name = name
@@ -156,11 +147,9 @@ export default abstract class Session<
     }
     this.mission = mission
     this._state = 'unstarted'
-    this._participants = participants
+    this._members = members
     this.assignments = new Map<string, string>()
     this._banList = banList
-    this._observers = observers
-    this._managers = managers
     this.mapActions()
   }
 
@@ -171,36 +160,25 @@ export default abstract class Session<
 
   /**
    * Checks if the given user is currently in the session (Whether as a participant, manager, or observer).
-   * @param user The user to check.
+   * @param userId The ID of the user to check.
    * @returns Whether the given user is joined into the session.
    */
-  public abstract isJoined(user: TUser): boolean
+  public isJoined(userId: TCommonUser['_id']): boolean {
+    for (let { userId: x } of this.members) if (x === userId) return true
+    return false
+  }
 
   /**
-   * Checks if the given user is currently a participant in the session.
-   * @param user The user to check.
-   * @returns Whether the given user is a participant of the session.
+   * Gets the member with the given user ID.
    */
-  public abstract isParticipant(user: TUser): boolean
+  public getMember(userId: TCommonUser['_id']): TSessionMember | undefined {
+    return this.members.find((member) => member.userId === userId)
+  }
 
   /**
-   * Checks if the given user is currently a observer in the session.
-   * @param user The user to check.
-   * @returns Whether the given user is a observer in the session.
+   * Gets the assigned force of the given member of the session.
    */
-  public abstract isObserver(user: TUser): boolean
-
-  /**
-   * Checks if the given user is currently a manager in the session.
-   * @param user The user to check.
-   * @returns Whether the given user is a manager in the session.
-   */
-  public abstract isManager(user: TUser): boolean
-
-  /**
-   * Gets the assigned force of the given user in the session.
-   */
-  public abstract getAssignedForce(user: TUser): TForce | undefined
+  public abstract getAssignedForce(member: TSessionMember): TForce | undefined
 
   /**
    * Converts the Session object to JSON.
@@ -287,25 +265,17 @@ export type TSessionJson = {
    */
   config: TSessionConfig
   /**
-   * The mission being executed by the participants.
+   * The mission that is being executed in the session.
    */
   mission: TCommonMissionJson
   /**
-   * The participants of the session executing the mission.
+   * The members of the session in the mission.
    */
-  participants: TCommonUserJson[]
+  members: TSessionMemberJson[]
   /**
    * The IDs of participants who have been banned from the session.
    */
   banList: string[]
-  /**
-   * The observers joined in the session.
-   */
-  observers: TCommonUserJson[]
-  /**
-   * The managers joined in the session.
-   */
-  managers: TCommonUserJson[]
 }
 
 /**

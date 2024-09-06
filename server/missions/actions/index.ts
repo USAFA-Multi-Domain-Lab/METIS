@@ -6,7 +6,6 @@ import IActionExecution, {
   TActionExecutionJson,
 } from 'metis/missions/actions/executions'
 import { TCommonEffectJson } from 'metis/missions/effects'
-import ClientConnection from 'metis/server/connect/clients'
 import { plcApiLogger } from 'metis/server/logging'
 import EnvironmentContextProvider, {
   TTargetEnvContextAction,
@@ -63,7 +62,6 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
     options: TExecuteOptions<ServerActionExecution>,
   ): Promise<ServerRealizedOutcome> {
     let {
-      participant,
       environmentContextProvider,
       effectsEnabled = false,
       onInit = () => {},
@@ -163,10 +161,6 @@ export type TServerMissionActionOptions = TMissionActionOptions & {}
  * Options for TExecuteOptions.
  */
 export type TExecuteOptions<TActionExecution extends IActionExecution> = {
-  /**
-   * The participant executing the action.
-   */
-  participant: ClientConnection
   /**
    * The context provider for the target environment.
    */

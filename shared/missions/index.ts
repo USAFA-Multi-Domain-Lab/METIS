@@ -106,9 +106,9 @@ export default abstract class Mission<
 
   // Implemented
   public toJson(
-    options: TMissionJsonOptions = { exportType: 'standard' },
+    options: TMissionJsonOptions = { exportType: 'standard', includeId: false },
   ): TCommonMissionJson {
-    let { includeId = false } = options
+    let { includeId } = options
 
     // Predefine limited JSON.
     let json: TCommonMissionJson = {

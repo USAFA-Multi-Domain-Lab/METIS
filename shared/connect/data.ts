@@ -2,8 +2,9 @@ import { TActionExecutionJson } from 'metis/missions/actions/executions'
 import { TActionOutcomeJson } from 'metis/missions/actions/outcomes'
 import { TCommonMissionForceJson } from 'metis/missions/forces'
 import { TSessionConfig, TSessionJson, TSessionRole } from 'metis/sessions'
+import { TSessionMemberJson } from 'metis/sessions/members'
+import { TMemberRoleId } from 'metis/sessions/members/roles'
 import { AnyObject } from 'metis/toolbox/objects'
-import { TCommonUserJson } from 'metis/users'
 import { TCommonMissionNodeJson } from '../missions/nodes'
 
 /**
@@ -292,17 +293,9 @@ export type TGenericServerEvents = {
     'session-users-updated',
     {
       /**
-       * The updated list of participants in the session.
+       * The updated list of members in the session.
        */
-      participants: TCommonUserJson[]
-      /**
-       * The updated list of observers in the session.
-       */
-      observers: TCommonUserJson[]
-      /**
-       * The updated list of managers in the session.
-       */
-      managers: TCommonUserJson[]
+      members: TSessionMemberJson[]
     }
   >
   /**
@@ -440,9 +433,9 @@ export type TResponseEvents = {
        */
       session: TSessionJson | null
       /**
-       * The role of the client in the session.
+       * The ID of the role of the client in the session.
        */
-      role: TSessionRole
+      roleId: TMemberRoleId | null
     },
     TClientEvents['request-current-session']
   >
@@ -543,7 +536,7 @@ export type TRequestEvents = {
       /**
        * The role the client wants to join as.
        */
-      role: TSessionRole
+      roleId: TMemberRoleId
     }
   >
   /**

@@ -1,5 +1,5 @@
 import SessionClient from 'src/sessions'
-import SessionUsers from './SessionUsers'
+import SessionMembers from './SessionMembers'
 import './UsersPanel.scss'
 
 /**
@@ -13,7 +13,7 @@ export default function UsersPanel({
   return (
     <div className='UsersPanel'>
       <div className='BorderBox'>
-        <SessionUsers session={session} />
+        <SessionMembers session={session} />
       </div>
     </div>
   )
