@@ -36,13 +36,13 @@ export default function SessionMembers({
   /* -- FUNCTIONS -- */
 
   /**
-   * Callback for button click to kick a participant.
-   * @param userId The user ID of the participant to kick.
+   * Callback for button click to kick a member.
+   * @param memberId The member ID of the member to kick.
    */
-  const onClickKick = async (userId: string): Promise<void> => {
-    // Confirm the user wants to start the session.
+  const onClickKick = async (memberId: string): Promise<void> => {
+    // Confirm the user wants to perform the operation.
     let { choice } = await prompt(
-      `Are you sure you want to kick "${userId}"?`,
+      `Are you sure you want to kick "${memberId}"?`,
       Prompt.ConfirmationChoices,
     )
 
@@ -53,12 +53,12 @@ export default function SessionMembers({
 
     try {
       // Begin loading.
-      beginLoading(`Kicking "${userId}"...`)
-      // Kick the participant.
-      await session.$kick(userId)
+      beginLoading(`Kicking "${memberId}"...`)
+      // Kick the member.
+      await session.$kick(memberId)
     } catch (error) {
       handleError({
-        message: `Failed to kick "${userId}".`,
+        message: `Failed to kick "${memberId}".`,
         notifyMethod: 'bubble',
       })
     }
@@ -68,13 +68,13 @@ export default function SessionMembers({
   }
 
   /**
-   * Callback for button click to ban a participant.
-   * @param userId The user ID of the participant to ban.
+   * Callback for button click to ban a member.
+   * @param memberId The member ID of the member to ban.
    */
-  const onClickBan = async (userId: string): Promise<void> => {
-    // Confirm the user wants to start the session.
+  const onClickBan = async (memberId: string): Promise<void> => {
+    // Confirm the user wants to perform the operation.
     let { choice } = await prompt(
-      `Are you sure you want to ban "${userId}"?`,
+      `Are you sure you want to ban "${memberId}"?`,
       Prompt.ConfirmationChoices,
     )
 
@@ -85,12 +85,12 @@ export default function SessionMembers({
 
     try {
       // Begin loading.
-      beginLoading(`Banning "${userId}"...`)
-      // Ban the participant.
-      await session.$ban(userId)
+      beginLoading(`Banning "${memberId}"...`)
+      // Ban the member.
+      await session.$ban(memberId)
     } catch (error) {
       handleError({
-        message: `Failed to ban "${userId}".`,
+        message: `Failed to ban "${memberId}".`,
         notifyMethod: 'bubble',
       })
     }

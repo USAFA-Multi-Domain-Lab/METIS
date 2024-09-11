@@ -1,6 +1,6 @@
 import { TClientEvents, TServerEvents, TServerMethod } from 'metis/connect/data'
 import { ServerEmittedError } from 'metis/connect/errors'
-import { TMissionJsonOptions } from 'metis/missions'
+import { TCommonMissionJson, TMissionJsonOptions } from 'metis/missions'
 import ServerMission from 'metis/server/missions'
 import ServerMissionAction from 'metis/server/missions/actions'
 import ServerMissionNode from 'metis/server/missions/nodes'
@@ -10,6 +10,7 @@ import Session, {
   TSessionJson,
 } from 'metis/sessions'
 import MemberRole, { TMemberRoleId } from 'metis/sessions/members/roles'
+import { SingleTypeObject } from 'metis/toolbox/objects'
 import { TCommonUser } from 'metis/users'
 import { v4 as generateHash } from 'uuid'
 import ClientConnection from '../connect/clients'
@@ -79,12 +80,14 @@ export default class SessionServer extends Session<
    * @returns The users.
    */
   public getMembersForForce(forceId: string): ServerSessionMember[] {
-    // todo: Update this code to work with new member-permission system.
+    // Get all members that either have complete visibility
+    // or are assigned to the force with the given ID.
     return [
-      ...this.participants.filter(
-        (participant) => this.assignments.get(participant._id) === forceId,
+      ...this.members.filter(
+        (member) =>
+          member.isAuthorized('completeVisibility') ||
+          this.assignments.get(member._id) === forceId,
       ),
-      ...this.observers,
     ]
   }
 
@@ -175,7 +178,7 @@ export default class SessionServer extends Session<
    * Gets the role of the given user in the session.
    */
   public getRole(userId: TCommonUser['_id']): MemberRole | undefined {
-    return this.getMember(userId)?.role
+    return this.getMemberByUserId(userId)?.role
   }
 
   // Implemented
@@ -266,6 +269,10 @@ export default class SessionServer extends Session<
 
     // Create a new session member.
     let member = ServerSessionMember.create(client, roleId)
+    // Add event listeners for the member.
+    this.addListeners(member)
+    // Push the member to the list of members.
+    this._members.push(member)
 
     // Handle joining the session for the client.
     client.login.handleJoin(this._id)
@@ -283,21 +290,6 @@ export default class SessionServer extends Session<
   }
 
   /**
-   * Updates the configuration of the session.
-   * @param config Updated configuration options to assign to the session config.
-   */
-  public updateConfig(config: Partial<TSessionConfig>): void {
-    Object.assign(this._config, config)
-
-    // Emit an event to all users that the session state has changed.
-    this.emitToAll('session-config-updated', {
-      data: {
-        config: this.config,
-      },
-    })
-  }
-
-  /**
    * Handles a new connection by an existing member.
    * @param newConnection The new connection for a member of the session.
    * @returns True if connection was replaced, false if the member wasn't found.
@@ -309,103 +301,12 @@ export default class SessionServer extends Session<
     )
     // If the member is found, update the connection.
     if (member) {
+      this.removeListeners(member)
       member.connection = newConnection
       this.addListeners(member)
     }
     // Return whether the member was found.
     return !!member
-  }
-
-  /**
-   * Starts the session.
-   */
-  public start(): void {
-    // todo: Update this code to work with new member-permission system.
-    //     // Mark the session as started.
-    //     this._state = 'started'
-    //
-    //     // If the session is in the 'started' state,
-    //     // then auto-assign participants to forces.
-    //     if (this.state === 'started') {
-    //       this.autoAssign()
-    //     }
-    //
-    //     // Cache used to not export the same force twice
-    //     // for a participant.
-    //     const participantForceCache: SingleTypeObject<TCommonMissionJson> = {}
-    //
-    //     // Emit an event to all participants that the session has
-    //     // started.
-    //     for (let participant of this.participants) {
-    //       // Find the force ID for the participant.
-    //       let forceId = this.assignments.get(participant.userId)
-    //
-    //       // Skip if the participant is not assigned to a force.
-    //       if (forceId === undefined) {
-    //         continue
-    //       }
-    //
-    //       // If the force has not been cached, then cache it.
-    //       if (!participantForceCache[forceId]) {
-    //         participantForceCache[forceId] = this.mission.toJson({
-    //           exportType: 'session-participant',
-    //           forceId,
-    //         })
-    //       }
-    //
-    //       // Get relevant data from the mission for the
-    //       // participant.
-    //       let { nodeStructure, forces } = participantForceCache[forceId]
-    //
-    //       // Emit the event to the participant.
-    //       participant.emit('session-started', {
-    //         data: { nodeStructure, forces },
-    //       })
-    //     }
-    //
-    //     // Get observer export.
-    //     let observerExport = this.mission.toJson({
-    //       exportType: 'session-observer',
-    //     })
-    //
-    //     // Emit an event to all observers that the session has
-    //     // started.
-    //     for (let observer of this.observers) {
-    //       observer.emit('session-started', {
-    //         data: {
-    //           nodeStructure: observerExport.nodeStructure,
-    //           forces: observerExport.forces,
-    //         },
-    //       })
-    //     }
-    //
-    //     // Get manager export.
-    //     let managerExport = this.mission.toJson({
-    //       exportType: 'session-manager',
-    //     })
-    //
-    //     // Emit an event to all managers that the session has
-    //     // started.
-    //     for (let manager of this.managers) {
-    //       manager.emit('session-started', {
-    //         data: {
-    //           nodeStructure: managerExport.nodeStructure,
-    //           forces: managerExport.forces,
-    //         },
-    //       })
-    //     }
-  }
-
-  /**
-   * Ends the session.
-   */
-  public end(): void {
-    // Mark the session as ended.
-    this._state = 'ended'
-    // Emit an event to all users that the session has ended.
-    this.emitToAll('session-ended', { data: {} })
-    // Clear all users.
-    this.clearMembers()
   }
 
   /**
@@ -448,93 +349,6 @@ export default class SessionServer extends Session<
   }
 
   /**
-   * Kicks the given user from the session.
-   * @param participantId The ID of the participant to kick from the session.
-   * @throws The correct HTTP status code for any errors that occur.
-   */
-  public kick(participantId: string): void {
-    // todo: Update this code to work with new member-permission system.
-    // Find the participant in the list, if present.
-    //     this._participants.forEach(
-    //       (participant: ServerSessionMember, index: number) => {
-    //         if (participant.userId === participantId) {
-    //           // If the participant has observer permissions,
-    //           // then throw 403 forbidden error.
-    //           if (participant.user.isAuthorized('sessions_join_observer')) {
-    //             throw 403
-    //           }
-    //
-    //           // Remove the participant from the list.
-    //           this._participants.splice(index, 1)
-    //
-    //           // Remove session-specific listeners.
-    //           this.removeListeners(participant)
-    //
-    //           // Handle quitting the session for the participant.
-    //           participant.login.handleQuit()
-    //
-    //           // Emit an event to the participant
-    //           // that they have been kicked.
-    //           participant.emit('kicked', { data: { sessionId: this._id } })
-    //         }
-    //       },
-    //     )
-
-    // Emit an event to all users that the user list
-    // has changed.
-    this.emitToAll('session-users-updated', {
-      data: {
-        members: this.members.map((member) => member.toJson()),
-      },
-    })
-  }
-
-  /**
-   * Bans the given user from the session.
-   * @param participantId The ID of the participant to ban from the session.
-   * @throws The correct HTTP status code for any errors that occur.
-   */
-  public ban(participantId: string): void {
-    // todo: Update this code to work with new member-permission system.
-    //     // Find the participant in the list, if present.
-    //     this._participants.forEach(
-    //       (participant: ServerSessionMember, index: number) => {
-    //         if (participant.userId === participantId) {
-    //           // If the participant is has observer permissions,
-    //           // then throw 403 forbidden error.
-    //           if (participant.user.isAuthorized('sessions_join_observer')) {
-    //             throw 403
-    //           }
-    //
-    //           // Remove the participant from the list.
-    //           this._participants.splice(index, 1)
-    //
-    //           // Remove session-specific listeners.
-    //           this.removeListeners(participant)
-    //
-    //           // Handle quitting the session for the participant.
-    //           participant.login.handleQuit()
-    //
-    //           // Emit an event to the participant
-    //           // that they have been kicked.
-    //           participant.emit('banned', { data: { sessionId: this._id } })
-    //         }
-    //       },
-    //     )
-
-    // Add the participant to the ban list.
-    this._banList.push(participantId)
-
-    // Emit an event to all users that the user list
-    // has changed.
-    this.emitToAll('session-users-updated', {
-      data: {
-        members: this.members.map((member) => member.toJson()),
-      },
-    })
-  }
-
-  /**
    * Auto-assigns participants to forces using a
    * round-robin algorithm.
    */
@@ -542,19 +356,17 @@ export default class SessionServer extends Session<
     // Initialize force index.
     let forceIndex: number = 0
 
-    // todo: Update this code to work with new member-permission system.
-    //
-    //     // Loop through each participant.
-    //     this._participants.forEach((participant: ServerSessionMember) => {
-    //       // Assign the participant to the force.
-    //       this.assignments.set(
-    //         participant.userId,
-    //         this.mission.forces[forceIndex]._id,
-    //       )
-    //
-    //       // Increment the force index.
-    //       forceIndex = (forceIndex + 1) % this.mission.forces.length
-    //     })
+    this._members.forEach((member) => {
+      // If the member has 'forceAssignable' permission,
+      // then assign the member to the force.
+      if (member.isAuthorized('forceAssignable')) {
+        // Assign the member to the force.
+        this.assignments.set(member._id, this.mission.forces[forceIndex]._id)
+
+        // Increment the force index.
+        forceIndex = (forceIndex + 1) % this.mission.forces.length
+      }
+    })
   }
 
   /**
@@ -563,6 +375,21 @@ export default class SessionServer extends Session<
   private addListeners(member: ServerSessionMember): void {
     let { connection } = member
 
+    connection.addEventListener('request-start-session', (data) =>
+      this.onRequestStart(member, data),
+    )
+    connection.addEventListener('request-end-session', (data) =>
+      this.onRequestEnd(member, data),
+    )
+    connection.addEventListener('request-config-update', (data) =>
+      this.onRequestConfigUpdate(member, data),
+    )
+    connection.addEventListener('request-kick', (data) =>
+      this.onRequestKick(member, data),
+    )
+    connection.addEventListener('request-ban', (data) =>
+      this.onRequestBan(member, data),
+    )
     connection.addEventListener('request-open-node', (data) =>
       this.onRequestOpenNode(member, data),
     )
@@ -576,6 +403,9 @@ export default class SessionServer extends Session<
    */
   private removeListeners(member: ServerSessionMember): void {
     member.connection.clearEventListeners([
+      'request-start-session',
+      'request-end-session',
+      'request-config-update',
       'request-open-node',
       'request-execute-action',
     ])
@@ -590,7 +420,356 @@ export default class SessionServer extends Session<
     TMethod extends TServerMethod,
     TPayload extends Omit<TServerEvents[TMethod], 'method'>,
   >(method: TMethod, payload: TPayload): void {
-    for (let { connection } of this._members) connection.emit(method, payload)
+    for (let member of this._members) member.emit(method, payload)
+  }
+
+  /**
+   * Called when a member requests to start the session.
+   * @param member The member requesting to start the session.
+   * @param event The event emitted by the member.
+   */
+  public onRequestStart = (
+    member: ServerSessionMember,
+    event: TClientEvents['request-start-session'],
+  ): void => {
+    // Build request for response data.
+    let request = member.connection.buildResponseReqData(event)
+
+    // If the member does not have the correct permissions
+    // to start the session, then emit an error.
+    if (!member.isAuthorized('startEndSessions')) {
+      return member.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
+          { request },
+        ),
+      )
+    }
+    // If the session has already previously started,
+    // then emit an error.
+    if (this._state !== 'unstarted') {
+      return member.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
+          { request },
+        ),
+      )
+    }
+
+    // Mark the session as started.
+    this._state = 'started'
+    // Then auto-assign participants to forces.
+    this.autoAssign()
+
+    // todo: Update the export logic here to use
+    // todo: permissions instead of role-based logic.
+    // Cache used to not export the same force twice
+    // for a participant.
+    const participantForceCache: SingleTypeObject<TCommonMissionJson> = {}
+
+    // Emit an event to all participants that the session has
+    // started.
+    for (let participant of this.participants) {
+      // Find the force ID for the participant.
+      let forceId = this.assignments.get(participant._id)
+
+      // Skip if the participant is not assigned to a force.
+      if (forceId === undefined) {
+        continue
+      }
+
+      // If the force has not been cached, then cache it.
+      if (!participantForceCache[forceId]) {
+        participantForceCache[forceId] = this.mission.toJson({
+          exportType: 'session-participant',
+          forceId,
+        })
+      }
+
+      // Get relevant data from the mission for the
+      // participant.
+      let { nodeStructure, forces } = participantForceCache[forceId]
+
+      // Emit the event to the participant.
+      participant.emit('session-started', {
+        data: { nodeStructure, forces },
+        request,
+      })
+    }
+
+    // Get observer export.
+    let observerExport = this.mission.toJson({
+      exportType: 'session-observer',
+    })
+
+    // Emit an event to all observers that the session has
+    // started.
+    for (let observer of this.observers) {
+      observer.emit('session-started', {
+        data: {
+          nodeStructure: observerExport.nodeStructure,
+          forces: observerExport.forces,
+        },
+        request,
+      })
+    }
+
+    // Get manager export.
+    let managerExport = this.mission.toJson({
+      exportType: 'session-manager',
+    })
+
+    // Emit an event to all managers that the session has
+    // started.
+    for (let manager of this.managers) {
+      manager.emit('session-started', {
+        data: {
+          nodeStructure: managerExport.nodeStructure,
+          forces: managerExport.forces,
+        },
+        request,
+      })
+    }
+  }
+
+  /**
+   * Called when a member requests to end the session.
+   * @param member The member requesting to end the session.
+   * @param event The event emitted by the member.
+   */
+  public onRequestEnd = (
+    member: ServerSessionMember,
+    event: TClientEvents['request-end-session'],
+  ): void => {
+    // Build request for response data.
+    let request = member.connection.buildResponseReqData(event)
+
+    // If the member does not have the correct permissions
+    // to start the session, then emit an error.
+    if (!member.isAuthorized('startEndSessions')) {
+      return member.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
+          { request },
+        ),
+      )
+    }
+    // If the session is not in the 'started' state,
+    // then emit an error.
+    if (this._state !== 'started') {
+      return member.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
+          { request },
+        ),
+      )
+    }
+
+    // Mark the session as ended.
+    this._state = 'ended'
+    // Emit an event to all users that the session has ended.
+    this.emitToAll('session-ended', { data: {}, request })
+
+    // Perform clean up.
+    this.clearMembers()
+    this.destroy()
+  }
+
+  /**
+   * Called when a member requests to update the configuration
+   * for the session.
+   * @param member The member requesting to update the configuration.
+   * @param event The event emitted by the member.
+   */
+  public onRequestConfigUpdate = (
+    member: ServerSessionMember,
+    event: TClientEvents['request-config-update'],
+  ): void => {
+    // Build request for response data.
+    let request = member.connection.buildResponseReqData(event)
+
+    // If the member does not have the correct permissions
+    // to start the session, then emit an error.
+    if (!member.isAuthorized('configureSessions')) {
+      return member.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
+          { request },
+        ),
+      )
+    }
+    // If the session is not in the 'unstarted' state,
+    // then emit an error.
+    if (this._state !== 'unstarted') {
+      return member.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
+          { request },
+        ),
+      )
+    }
+
+    // Assign the new configuration to the session.
+    Object.assign(this._config, event.data.config)
+
+    // Emit an event to all users that the session configuration
+    // has been updated.
+    this.emitToAll('session-config-updated', {
+      data: { config: this.config },
+      request,
+    })
+  }
+
+  /**
+   * Called when a member requests to kick another member from the session.
+   * @param member The member requesting to kick another member.
+   * @param event The event emitted by the member.
+   */
+  public onRequestKick = (
+    member: ServerSessionMember,
+    event: TClientEvents['request-kick'],
+  ): void => {
+    // Build request for response data.
+    let request = member.connection.buildResponseReqData(event)
+    // Parse data from event.
+    const { memberId: targetMemberId } = event.data
+    // Get the target member to kick.
+    const targetMember = this.getMemberByUserId(targetMemberId)
+
+    // If the member requesting does not have the
+    // correct permissions to kick participants,
+    // then emit an error.
+    if (!member.isAuthorized('manageSessionMembers')) {
+      return member.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
+          { request },
+        ),
+      )
+    }
+    // If the target member is not found, then emit
+    // an error.
+    if (!targetMember) {
+      return member.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_MEMBER_NOT_FOUND, {
+          request,
+        }),
+      )
+    }
+    // If the target member has the `manageSessionMembers`
+    // permission, then they cannot be kicked.
+    if (targetMember.isAuthorized('manageSessionMembers')) {
+      return member.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
+          {
+            request,
+          },
+        ),
+      )
+    }
+
+    // Remove the member from the list.
+    this._members = this._members.filter(
+      (member) => member._id !== targetMember._id,
+    )
+    // Remove session-specific listeners.
+    this.removeListeners(targetMember)
+    // Handle quitting the session for the member.
+    targetMember.connection.login.handleQuit()
+
+    // Emit an event to the target member and to the
+    // requester that the target member has been kicked.
+    let payload = {
+      data: { sessionId: this._id, memberId: targetMemberId },
+      request,
+    }
+    member.emit('kicked', payload)
+    targetMember.emit('kicked', payload)
+    // Emit an event to all users that the user list
+    // has changed.
+    this.emitToAll('session-users-updated', {
+      data: {
+        members: this.members.map((member) => member.toJson()),
+      },
+    })
+  }
+
+  /**
+   * Called when a member requests to ban another member from the session.
+   * @param member The member requesting to ban another member.
+   * @param event The event emitted by the member.
+   */
+  public onRequestBan = (
+    member: ServerSessionMember,
+    event: TClientEvents['request-ban'],
+  ): void => {
+    // Build request for response data.
+    let request = member.connection.buildResponseReqData(event)
+    // Parse data from event.
+    const { memberId: targetMemberId } = event.data
+    // Get the target member to ban.
+    const targetMember = this.getMemberByUserId(targetMemberId)
+
+    // If the member requesting does not have the
+    // correct permissions to ban participants,
+    // then emit an error.
+    if (!member.isAuthorized('manageSessionMembers')) {
+      return member.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
+          { request },
+        ),
+      )
+    }
+    // If the target member is not found, then emit
+    // an error.
+    if (!targetMember) {
+      return member.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_MEMBER_NOT_FOUND, {
+          request,
+        }),
+      )
+    }
+    // If the target member has the `manageSessionMembers`
+    // permission, then they cannot be banned.
+    if (targetMember.isAuthorized('manageSessionMembers')) {
+      return member.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
+          {
+            request,
+          },
+        ),
+      )
+    }
+
+    // Add the member to the ban list.
+    this._banList.push(targetMember._id)
+    // Remove the member from the list.
+    this._members = this._members.filter(
+      (member) => member._id !== targetMember._id,
+    )
+    // Remove session-specific listeners.
+    this.removeListeners(member)
+    // Handle quitting the session for the member.
+    member.connection.login.handleQuit()
+
+    // Emit an event to the target member and to the
+    // requester that the target member has been banned.
+    let payload = {
+      data: { sessionId: this._id, memberId: targetMemberId },
+      request,
+    }
+    member.emit('banned', payload)
+    targetMember.emit('banned', payload)
+    // Emit an event to all users that the user list
+    // has changed.
+    this.emitToAll('session-users-updated', {
+      data: {
+        members: this.members.map((member) => member.toJson()),
+      },
+    })
   }
 
   /**
@@ -607,6 +786,19 @@ export default class SessionServer extends Session<
     let { connection } = member
     let { nodeId } = event.data
 
+    // If the member doesn't have the permission
+    // to manipulate nodes, then emit an error.
+    if (!member.isAuthorized('manipulateNodes')) {
+      return connection.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
+          {
+            request: connection.buildResponseReqData(event),
+          },
+        ),
+      )
+    }
+
     // Find the node, given the ID.
     let node: ServerMissionNode | undefined = mission.getNode(nodeId)
 
@@ -615,7 +807,7 @@ export default class SessionServer extends Session<
     if (this.state !== 'started') {
       return connection.emitError(
         new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_PROGRESS_LOCKED,
+          ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
           {
             request: connection.buildResponseReqData(event),
           },
@@ -686,15 +878,29 @@ export default class SessionServer extends Session<
     let { connection } = member
     let { actionId } = event.data
     let action: ServerMissionAction | undefined = this.actions.get(actionId)
+    let request = connection.buildResponseReqData(event)
+
+    // If the member doesn't have the permission
+    // to manipulate nodes, then emit an error.
+    if (!member.isAuthorized('manipulateNodes')) {
+      return connection.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
+          {
+            request,
+          },
+        ),
+      )
+    }
 
     // If the session is not in the 'started' state,
     // then emit an error.
     if (this.state !== 'started') {
       return connection.emitError(
         new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_PROGRESS_LOCKED,
+          ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
           {
-            request: connection.buildResponseReqData(event),
+            request,
           },
         ),
       )
@@ -704,7 +910,7 @@ export default class SessionServer extends Session<
     if (action === undefined) {
       return connection.emitError(
         new ServerEmittedError(ServerEmittedError.CODE_ACTION_NOT_FOUND, {
-          request: connection.buildResponseReqData(event),
+          request,
         }),
       )
     }
@@ -713,7 +919,7 @@ export default class SessionServer extends Session<
     if (!action.node.executable) {
       return connection.emitError(
         new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_EXECUTABLE, {
-          request: connection.buildResponseReqData(event),
+          request,
         }),
       )
     }
@@ -722,7 +928,7 @@ export default class SessionServer extends Session<
     if (!action.node.revealed) {
       return connection.emitError(
         new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_REVEALED, {
-          request: connection.buildResponseReqData(event),
+          request,
         }),
       )
     }
@@ -734,7 +940,7 @@ export default class SessionServer extends Session<
         new ServerEmittedError(
           ServerEmittedError.CODE_ACTION_INSUFFICIENT_RESOURCES,
           {
-            request: connection.buildResponseReqData(event),
+            request,
           },
         ),
       )
@@ -778,11 +984,7 @@ export default class SessionServer extends Session<
         data: {
           outcome: outcome.toJson(),
         },
-        request: {
-          event,
-          requesterId: member.userId,
-          fulfilled: true,
-        },
+        request,
       }
 
       // Add child nodes if the action was

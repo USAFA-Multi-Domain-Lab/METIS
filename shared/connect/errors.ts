@@ -110,10 +110,16 @@ export class ServerEmittedError extends WSEmittedError {
    */
   public static readonly CODE_SESSION_BANNED: number = 20003
   /**
-   * Code for a client requesting to perform a task that cannot be performed
-   * before the session has started or after the session has ended.
+   * Code for a client requesting to perform an operation that cannot be performed
+   * given the current state of the session.
+   * @expample A client attempting to open a node before the session has started.
    */
-  public static readonly CODE_SESSION_PROGRESS_LOCKED: number = 20004
+  public static readonly CODE_SESSION_CONFLICTING_STATE: number = 20004
+  /**
+   * Code for a client requesting to perform an operation that they do
+   * not have permission to perform.
+   */
+  public static readonly CODE_SESSION_UNAUTHORIZED_OPERATION: number = 20005
   /**
    * Code for a client requesting to open a node that cannot be found.
    */
@@ -143,6 +149,11 @@ export class ServerEmittedError extends WSEmittedError {
    */
   public static readonly CODE_EFFECT_FAILED: number = 20300
   /**
+   * Code for a client requesting to perform an operation on a member
+   * that cannot be found.
+   */
+  public static readonly CODE_MEMBER_NOT_FOUND: number = 20400
+  /**
    * Code for a client request failing due to a server-side general error.
    */
   public static readonly CODE_SERVER_ERROR: number = 30000
@@ -159,8 +170,8 @@ export class ServerEmittedError extends WSEmittedError {
       'You are not authorized to join this session.',
     [ServerEmittedError.CODE_SESSION_BANNED]:
       'You are banned from this session.',
-    [ServerEmittedError.CODE_SESSION_PROGRESS_LOCKED]:
-      'Session progress is locked before session start and after session end.',
+    [ServerEmittedError.CODE_SESSION_CONFLICTING_STATE]:
+      'The current state of the session conflicts with the requested operation.',
     [ServerEmittedError.CODE_NODE_NOT_FOUND]: 'Node not found.',
     [ServerEmittedError.CODE_NODE_NOT_OPENABLE]: 'Node not openable.',
     [ServerEmittedError.CODE_NODE_NOT_EXECUTABLE]: 'Node not executable.',

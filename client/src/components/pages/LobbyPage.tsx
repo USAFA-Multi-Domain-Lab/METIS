@@ -186,7 +186,7 @@ export default function LobbyPage({
             <div className='Value'>{session.name}</div>
           </div>
         </div>
-        <div className='UsersSection Section'>
+        <div className='MembersSection Section'>
           <SessionMembers session={session} />
         </div>
         <div className={buttonSectionClass}>

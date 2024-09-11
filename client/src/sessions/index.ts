@@ -7,6 +7,7 @@ import ClientMissionNode from 'src/missions/nodes'
 import ClientUser from 'src/users'
 import {
   TGenericServerEvents,
+  TResponseEvents,
   TServerEvents,
 } from '../../../shared/connect/data'
 import Session, {
@@ -160,11 +161,16 @@ export default class SessionClient extends Session<
    * Opens a node.
    * @param nodeId The ID of the node to be opened.
    */
-  public openNode(nodeId: string, options: TOpenNodeOptions = {}): void {
+  public openNode(nodeId: string, options: TSessionRequestOptions = {}): void {
     // Gather details.
     let server: ServerConnection = this.server
     let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
-    let { onError = () => {} } = options
+
+    // Callback for errors.
+    const onError = (message: string) => {
+      console.error(message)
+      if (options.onError) options.onError(message)
+    }
 
     // If the role is not "participant", callback
     // an error.
@@ -212,11 +218,16 @@ export default class SessionClient extends Session<
    */
   public executeAction(
     actionId: string,
-    options: TExecuteActionOptions = {},
+    options: TSessionRequestOptions = {},
   ): void {
     let server: ServerConnection = this.server
     let action: ClientMissionAction | undefined = this.actions.get(actionId)
-    let { onError = () => {} } = options
+
+    // Callback for errors.
+    const onError = (message: string) => {
+      console.error(message)
+      if (options.onError) options.onError(message)
+    }
 
     // If the role is not "participant", callback
     // an error.
@@ -263,34 +274,117 @@ export default class SessionClient extends Session<
    * @returns A promise that resolves when the session is quitted.
    */
   public async $quit(): Promise<void> {
-    return new Promise<void>(
-      async (
-        resolve: () => void,
-        reject: (error: any) => void,
-      ): Promise<void> => {
-        this.server.request('request-quit-session', {}, 'Quitting session.', {
-          onResponse: (event) => {
-            switch (event.method) {
-              case 'session-quit':
-                this.removeListeners()
-                this.server.clearUnfulfilledRequests()
-                resolve()
-                break
-              case 'error':
-                reject(new Error(event.message))
-                break
-              default:
-                let error: Error = new Error(
-                  `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
-                )
-                console.log(error)
-                console.log(event)
-                reject(error)
-            }
-          },
-        })
-      },
-    )
+    return new Promise<void>((resolve, reject) => {
+      this.server.request('request-quit-session', {}, 'Quitting session.', {
+        onResponse: (event) => {
+          switch (event.method) {
+            case 'session-quit':
+              this.removeListeners()
+              this.server.clearUnfulfilledRequests()
+              resolve()
+              break
+            case 'error':
+              reject(new Error(event.message))
+              break
+            default:
+              let error: Error = new Error(
+                `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
+              )
+              console.log(error)
+              console.log(event)
+              reject(error)
+          }
+        },
+      })
+    })
+  }
+
+  /**
+   * Starts the session.
+   * @resolves When the session has started.
+   * @rejects If the session failed to start, or if the session has already
+   * started or ended.
+   */
+  public async $start(): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      // Callback for errors.
+      const onError = (message: string) => {
+        let error: Error = new Error(message)
+        console.error(message)
+        console.error(error)
+        reject(error)
+      }
+
+      // If the session has already started, throw an error.
+      if (this.state === 'started') {
+        return onError('Session has already started.')
+      }
+      // If the session has already ended, throw an error.
+      if (this.state === 'ended') {
+        return onError('Session has already ended.')
+      }
+
+      // Emit a request to start the session.
+      this.server.request('request-start-session', {}, 'Starting session.', {
+        onResponse: (event) => {
+          switch (event.method) {
+            case 'session-started':
+              this._state = 'started'
+              return resolve()
+            case 'error':
+              return onError(event.message)
+            default:
+              return onError(
+                `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
+              )
+          }
+        },
+      })
+    })
+  }
+
+  /**
+   * Ends the session.
+   * @resolves When the session has ended.
+   * @rejects If the session failed to end, or if the session has already
+   * ended or has not yet started.
+   */
+  public async $end(): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      // Callback for errors.
+      const onError = (message: string) => {
+        let error: Error = new Error(message)
+        console.error(message)
+        console.error(error)
+        reject(error)
+      }
+
+      // If the session is unstarted, throw an error.
+      if (this.state === 'unstarted') {
+        return onError('Session has not yet started.')
+      }
+      // If the session has already ended, throw an error.
+      if (this.state === 'ended') {
+        return onError('Session has already ended.')
+      }
+
+      // Emit a request to end the session.
+      this.server.request('request-end-session', {}, 'Ending session.', {
+        onResponse: (event) => {
+          switch (event.method) {
+            case 'session-ended':
+              this._state = 'ended'
+              return resolve()
+            case 'error':
+              return onError(event.message)
+            default:
+              return onError(
+                `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
+              )
+          }
+        },
+      })
+    })
   }
 
   /**
@@ -303,166 +397,150 @@ export default class SessionClient extends Session<
   public async $updateConfig(
     configUpdates: Partial<TSessionConfig>,
   ): Promise<void> {
-    return new Promise<void>(
-      async (
-        resolve: () => void,
-        reject: (error: any) => void,
-      ): Promise<void> => {
-        try {
-          // If the session has already started, throw an error.
-          if (this.state === 'started') {
-            throw new Error('Session has already started.')
-          }
-          // If the session has already ended, throw an error.
-          if (this.state === 'ended') {
-            throw new Error('Session has already ended.')
-          }
-          // Call API to update config.
-          await axios.put(`${Session.API_ENDPOINT}/${this._id}/config/`, {
-            ...configUpdates,
-          })
-          // Update the session config.
-          Object.assign(this._config, configUpdates)
-          // Resolve promise.
-          return resolve()
-        } catch (error) {
-          console.error('Failed to update session config.')
-          console.error(error)
-          return reject(error)
-        }
-      },
-    )
+    return new Promise<void>((resolve, reject) => {
+      // Callback for errors.
+      const onError = (message: string) => {
+        let error: Error = new Error(message)
+        console.error(message)
+        console.error(error)
+        reject(error)
+      }
+
+      // If the session has already started, throw an error.
+      if (this.state === 'started') {
+        return onError('Session has already started.')
+      }
+      // If the session has already ended, throw an error.
+      if (this.state === 'ended') {
+        return onError('Session has already ended.')
+      }
+
+      // Emit a request to end the session.
+      this.server.request(
+        'request-config-update',
+        { config: configUpdates },
+        'Updating config.',
+        {
+          onResponse: (event) => {
+            switch (event.method) {
+              case 'session-config-updated':
+                // Update the session config.
+                Object.assign(this._config, configUpdates)
+                return resolve()
+              case 'error':
+                return onError(event.message)
+              default:
+                return onError(
+                  `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
+                )
+            }
+          },
+        },
+      )
+    })
   }
 
   /**
-   * Starts the session.
-   * @resolves When the session has started.
-   * @rejects If the session failed to start, or if the session has already
-   * started or ended.
+   * Kicks a member from the session.
+   * @param memberId The ID of the member to be kicked.
+   * @resolves When the member has been kicked.
+   * @rejects If the member failed to be kicked.
    */
-  public async $start(): Promise<void> {
-    return new Promise<void>(
-      async (
-        resolve: () => void,
-        reject: (error: any) => void,
-      ): Promise<void> => {
-        try {
-          // If the session has already started, throw an error.
-          if (this.state === 'started') {
-            throw new Error('Session has already started.')
-          }
-          // If the session has already ended, throw an error.
-          if (this.state === 'ended') {
-            throw new Error('Session has already ended.')
-          }
-          // Call API to start session.
-          await axios.put(`${Session.API_ENDPOINT}/${this._id}/start/`)
-          // Update the session state.
-          this._state = 'started'
-          // Resolve promise.
-          return resolve()
-        } catch (error) {
-          console.error('Failed to start the session.')
-          console.error(error)
-          return reject(error)
-        }
-      },
-    )
+  public async $kick(memberId: string): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      // Callback for errors.
+      const onError = (message: string) => {
+        let error: Error = new Error(message)
+        console.error(message)
+        console.error(error)
+        reject(error)
+      }
+
+      // Get the member.
+      let member = this.getMember(memberId)
+
+      // If the member is not found,
+      // callback an error.
+      if (member === undefined) {
+        return onError('Member not found.')
+      }
+
+      // Emit a request to kick the user.
+      this.server.request(
+        'request-kick',
+        { memberId },
+        `Kicking "${member.user.username}".`,
+        {
+          onResponse: (event) => {
+            switch (event.method) {
+              case 'kicked':
+                return resolve()
+              case 'error':
+                return onError(event.message)
+              default:
+                return onError(
+                  `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
+                )
+            }
+          },
+        },
+      )
+    })
   }
 
   /**
-   * Ends the session.
-   * @resolves When the session has ended.
-   * @rejects If the session failed to end, or if the session has already
-   * ended or has not yet started.
+   * Bans a member from the session.
+   * @param memberId The ID of the member to be banned.
+   * @resolves When the member has been banned.
+   * @rejects If the member failed to be banned.
    */
-  public async $end(): Promise<void> {
-    return new Promise<void>(
-      async (
-        resolve: () => void,
-        reject: (error: any) => void,
-      ): Promise<void> => {
-        try {
-          // If the session is unstarted, throw an error.
-          if (this.state === 'unstarted') {
-            throw new Error('Session has not yet started.')
-          }
-          // If the session has already ended, throw an error.
-          if (this.state === 'ended') {
-            throw new Error('Session has already ended.')
-          }
-          // Call API to end session.
-          await axios.put(`${Session.API_ENDPOINT}/${this._id}/end/`)
-          // Update the session state.
-          this._state = 'ended'
-          // Resolve promise.
-          return resolve()
-        } catch (error) {
-          console.error('Failed to end the session.')
-          console.error(error)
-          return reject(error)
-        }
-      },
-    )
-  }
+  public async $ban(memberId: string): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      // Callback for errors.
+      const onError = (message: string) => {
+        let error: Error = new Error(message)
+        console.error(message)
+        console.error(error)
+        reject(error)
+      }
 
-  /**
-   * Kicks a participant from the session.
-   * @param userId The ID of the user to be kicked.
-   * @resolves When the user has been kicked.
-   * @rejects If the user failed to be kicked.
-   */
-  public async $kick(userId: string): Promise<void> {
-    return new Promise<void>(
-      async (
-        resolve: () => void,
-        reject: (error: any) => void,
-      ): Promise<void> => {
-        try {
-          // Call API to kick user.
-          await axios.put(`${Session.API_ENDPOINT}/${this._id}/kick/${userId}`)
-          // Resolve promise.
-          return resolve()
-        } catch (error) {
-          console.error('Failed to kick user.')
-          console.error(error)
-          return reject(error)
-        }
-      },
-    )
-  }
+      // Get the member.
+      let member = this.getMember(memberId)
 
-  /**
-   * Bans a participant from the session.
-   * @param userId The ID of the user to be banned.
-   * @resolves When the user has been banned.
-   * @rejects If the user failed to be banned.
-   */
-  public async $ban(userId: string): Promise<void> {
-    return new Promise<void>(
-      async (
-        resolve: () => void,
-        reject: (error: any) => void,
-      ): Promise<void> => {
-        try {
-          // Call API to ban user.
-          await axios.put(`${Session.API_ENDPOINT}/${this._id}/ban/${userId}`)
-          // Resolve promise.
-          return resolve()
-        } catch (error) {
-          console.error('Failed to ban user.')
-          console.error(error)
-          return reject(error)
-        }
-      },
-    )
+      // If the member is not found,
+      // callback an error.
+      if (member === undefined) {
+        return onError('Member not found.')
+      }
+
+      // Emit a request to ban the user.
+      this.server.request(
+        'request-ban',
+        { memberId },
+        `Banning "${member.user.username}".`,
+        {
+          onResponse: (event) => {
+            switch (event.method) {
+              case 'banned':
+                return resolve()
+              case 'error':
+                return onError(event.message)
+              default:
+                return onError(
+                  `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
+                )
+            }
+          },
+        },
+      )
+    })
   }
 
   /**
    * Handles when the session is started.
    * @param event The event emitted by the server.
    */
-  private onStart = (event: TGenericServerEvents['session-started']): void => {
+  private onStart = (event: TResponseEvents['session-started']): void => {
     // Gather details.
     let { nodeStructure, forces } = event.data
     // Mark the session as started.
@@ -486,7 +564,7 @@ export default class SessionClient extends Session<
    * @param event The event emitted by the server.
    */
   private onConfigUpdate = (
-    event: TGenericServerEvents['session-config-updated'],
+    event: TServerEvents['session-config-updated'],
   ): void => {
     this._config = event.data.config
   }
@@ -810,23 +888,13 @@ export default class SessionClient extends Session<
 }
 
 /**
- * Options for node functions that perform actions on
+ * Options for methods that make requests to
  * the server via WS.
  */
-type TNodeFuncOptions = {
+type TSessionRequestOptions = {
   /**
    * Callback for errors.
    * @param message The error message.
    */
   onError?: (message: string) => void
 }
-
-/**
- * Options for `openNode` method.
- */
-export interface TOpenNodeOptions extends TNodeFuncOptions {}
-
-/**
- * Options for `executeAction` method.
- */
-export interface TExecuteActionOptions extends TNodeFuncOptions {}

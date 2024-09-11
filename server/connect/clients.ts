@@ -204,7 +204,7 @@ export default class ClientConnection {
       // If there is a session, update the data object.
       if (session) {
         data.session = session.toJson({
-          requester: session.getMember(this.userId),
+          requester: session.getMemberByUserId(this.userId),
         })
         data.roleId = session.getRole(this.userId)?._id ?? null
       }

@@ -10,14 +10,8 @@ export default class ServerLogin {
    * The ID of the user currently logged in.
    * This is used to retrieve the Login object from the registry.
    */
-  private _userId: ServerUser['username']
-
-  /**
-   * The ID of the user currently logged in.
-   * This is used to retrieve the Login object from the registry.
-   */
-  public get userId(): ServerUser['username'] {
-    return this._userId
+  public get userId(): ServerUser['_id'] {
+    return this.user._id
   }
 
   /**
@@ -99,7 +93,6 @@ export default class ServerLogin {
    * @param user The user to log in.
    */
   public constructor(user: ServerUser) {
-    this._userId = user.username
     this._user = user
     this._client = null
     this._sessionId = null
@@ -111,7 +104,7 @@ export default class ServerLogin {
     }
 
     // Store the login in the registry.
-    ServerLogin.registry.set(this.userId, this)
+    ServerLogin.registry.set(this.userId.toString(), this)
   }
 
   /**
@@ -160,7 +153,7 @@ export default class ServerLogin {
    * @returns the login information associated with the given user ID.
    */
   public static get(
-    userId: ServerUser['username'] | undefined,
+    userId: ServerUser['_id'] | undefined,
   ): ServerLogin | undefined {
     if (userId === undefined) {
       return undefined
@@ -172,7 +165,7 @@ export default class ServerLogin {
   /**
    * Destroys the login information associated with the given user ID.
    */
-  public static destroy(userId: ServerUser['username'] | undefined): void {
+  public static destroy(userId: ServerUser['_id'] | undefined): void {
     let login: ServerLogin | undefined = ServerLogin.get(userId)
     if (login !== undefined) {
       login.destroy()

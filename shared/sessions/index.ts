@@ -169,9 +169,22 @@ export default abstract class Session<
   }
 
   /**
-   * Gets the member with the given user ID.
+   * Gets the member with the given member ID.
+   * @param _id The ID of the member to get.
+   * @returns The member with the given ID, or undefined if not found.
    */
-  public getMember(userId: TCommonUser['_id']): TSessionMember | undefined {
+  public getMember(_id: TSessionMember['_id']): TSessionMember | undefined {
+    return this.members.find((member) => member._id === _id)
+  }
+
+  /**
+   * Gets the member with the given user ID.
+   * @param userId The ID of the user to get the member for.
+   * @returns The member with the given user ID, or undefined if not found.
+   */
+  public getMemberByUserId(
+    userId: TCommonUser['_id'],
+  ): TSessionMember | undefined {
     return this.members.find((member) => member.userId === userId)
   }
 

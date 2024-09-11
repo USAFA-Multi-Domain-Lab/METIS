@@ -1,3 +1,5 @@
+import { TServerEvents, TServerMethod } from 'metis/connect/data'
+import { ServerEmittedError } from 'metis/connect/errors'
 import SessionMember from 'metis/sessions/members'
 import MemberRole, { TMemberRoleId } from 'metis/sessions/members/roles'
 import StringToolbox from 'metis/toolbox/strings'
@@ -25,6 +27,27 @@ export default class ServerSessionMember extends SessionMember<ServerUser> {
   ) {
     super(_id, connection.user, role)
     this.connection = connection
+  }
+
+  /**
+   * Emits an event to the member's WS client.
+   * @param method The method to emit.
+   * @param payload The payload to emit.
+   */
+  public emit<
+    TMethod extends TServerMethod,
+    TPayload extends Omit<TServerEvents[TMethod], 'method'>,
+  >(method: TMethod, payload: TPayload): void {
+    this.connection.emit(method, payload)
+  }
+
+  /**
+   * Emits an error via the connection to
+   * with the member's WS client.
+   * @param error The error to emit to the client.
+   */
+  public emitError(error: ServerEmittedError): void {
+    this.connection.emitError(error)
   }
 
   /**

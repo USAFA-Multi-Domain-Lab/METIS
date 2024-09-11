@@ -255,38 +255,6 @@ export type TGenericServerEvents = {
     }
   >
   /**
-   * Occurs when the session starts while the client is joined.
-   */
-  'session-started': TConnectEvent<
-    'session-started',
-    {
-      /**
-       * The node structure available to the client.
-       */
-      nodeStructure: AnyObject
-      /**
-       * The force(s) the client has access to.
-       */
-      forces: TCommonMissionForceJson[]
-    }
-  >
-  /**
-   * Occurs when the session ends while the client is joined.
-   */
-  'session-ended': TConnectEvent<'session-ended'>
-  /**
-   * Occurs when configuration of the session is updated.
-   */
-  'session-config-updated': TConnectEvent<
-    'session-config-updated',
-    {
-      /**
-       * The updated configuration of the session.
-       */
-      config: TSessionConfig
-    }
-  >
-  /**
    * Occurs when a user joins or quits the session.
    */
   'session-users-updated': TConnectEvent<
@@ -304,31 +272,6 @@ export type TGenericServerEvents = {
   'internal-effect-enacted': TConnectEvent<
     'internal-effect-enacted',
     TInternalEffectDatum
-  >
-
-  /**
-   * Occurs for a participant who has been kicked from the session.
-   */
-  'kicked': TConnectEvent<
-    'kicked',
-    {
-      /**
-       * The ID of the session from which the participant was kicked.
-       */
-      sessionId: string
-    }
-  >
-  /**
-   * Occurs for a participant who has been banned from the session.
-   */
-  'banned': TConnectEvent<
-    'banned',
-    {
-      /**
-       * The ID of the session from which the participant was banned.
-       */
-      sessionId: string
-    }
   >
   /**
    * Occurs when the session has been destroyed while the participant was in it.
@@ -369,6 +312,78 @@ export type TGenericServerEvents = {
  * WS events emitted by the server as a response to a request made by the client.
  */
 export type TResponseEvents = {
+  /**
+   * Occurs when the session starts while the client is joined.
+   */
+  'session-started': TResponseEvent<
+    'session-started',
+    {
+      /**
+       * The node structure available to the client.
+       */
+      nodeStructure: AnyObject
+      /**
+       * The force(s) the client has access to.
+       */
+      forces: TCommonMissionForceJson[]
+    },
+    TClientEvents['request-start-session']
+  >
+  /**
+   * Occurs when the session ends while the client is joined.
+   */
+  'session-ended': TResponseEvent<
+    'session-ended',
+    {},
+    TClientEvents['request-end-session']
+  >
+  /**
+   * Occurs when configuration of the session is updated.
+   */
+  'session-config-updated': TResponseEvent<
+    'session-config-updated',
+    {
+      /**
+       * The updated configuration of the session.
+       */
+      config: TSessionConfig
+    },
+    TClientEvents['request-config-update']
+  >
+  /**
+   * Occurs for a member who has been kicked from the session.
+   */
+  'kicked': TResponseEvent<
+    'kicked',
+    {
+      /**
+       * The ID of the session from which the member was kicked.
+       */
+      sessionId: string
+      /**
+       * The ID of the member who was kicked.
+       */
+      memberId: string
+    },
+    TClientEvents['request-kick']
+  >
+  /**
+   * Occurs for a member who has been banned from the session.
+   */
+  'banned': TResponseEvent<
+    'banned',
+    {
+      /**
+       * The ID of the session from which the member was banned.
+       */
+      sessionId: string
+      /**
+       * The ID of the member who was banned.
+       */
+      memberId: string
+    },
+    TClientEvents['request-ban']
+  >
   /**
    * Occurs when a node has been opened on the server.
    */
@@ -503,6 +518,53 @@ export type TGenericClientEvents = {
  * WS events emitted by the client as a request to the server, expecting a response or responses of some kind.
  */
 export type TRequestEvents = {
+  /**
+   * Occurs when the client requests to start the joined
+   * session.
+   */
+  'request-start-session': TRequestEvent<'request-start-session'>
+  /**
+   * Occurs when the client requests to end the joined
+   * session.
+   */
+  'request-end-session': TRequestEvent<'request-end-session'>
+  /**
+   * Occurs when the client requests to update the configuration
+   * of the joined session.
+   */
+  'request-config-update': TRequestEvent<
+    'request-config-update',
+    {
+      /**
+       * The updated configuration of the session.
+       */
+      config: Partial<TSessionConfig>
+    }
+  >
+  /**
+   * Occurs when the client requests to kick a member from the session.
+   */
+  'request-kick': TRequestEvent<
+    'request-kick',
+    {
+      /**
+       * The ID of the member to kick.
+       */
+      memberId: string
+    }
+  >
+  /**
+   * Occurs when the client requests to ban a member from the session.
+   */
+  'request-ban': TRequestEvent<
+    'request-ban',
+    {
+      /**
+       * The ID of the member to ban.
+       */
+      memberId: string
+    }
+  >
   /**
    * Occurs when the client requests to open a node.
    */
