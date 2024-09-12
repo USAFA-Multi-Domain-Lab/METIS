@@ -10,7 +10,7 @@ import {
 import { DefaultLayout } from '.'
 import Prompt from '../content/communication/Prompt'
 import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
-import SessionMembers from '../content/session/SessionMembers'
+import SessionMembers from '../content/session/members/SessionMembers'
 import { ButtonText } from '../content/user-controls/ButtonText'
 import './LobbyPage.scss'
 
@@ -192,7 +192,7 @@ export default function LobbyPage({
         <div className={buttonSectionClass}>
           <ButtonText text={'Start Session'} onClick={onClickStartSession} />
           <ButtonText
-            text={'Session Configuration'}
+            text={'Configure Session'}
             onClick={onClickSessionConfig}
           />
         </div>

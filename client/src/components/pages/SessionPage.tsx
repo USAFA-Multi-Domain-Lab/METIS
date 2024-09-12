@@ -23,7 +23,7 @@ import {
 } from '../content/general-layout/ResizablePanels'
 import OutputPanel from '../content/session/OutputPanel'
 import StatusBar from '../content/session/StatusBar'
-import UsersPanel from '../content/session/UsersPanel'
+import SessionMembersPanel from '../content/session/members/SessionMembersPanel'
 import MissionMap from '../content/session/mission-map'
 import ActionExecModal from '../content/session/mission-map/ui/overlay/modals/ActionExecModal'
 import { TValidPanelButton } from '../content/user-controls/ButtonSvgPanel'
@@ -433,7 +433,12 @@ export default function SessionPage({
                 case 'output':
                   return <OutputPanel mission={mission} />
                 case 'users':
-                  return <UsersPanel session={session} key={'users-panel'} />
+                  return (
+                    <SessionMembersPanel
+                      session={session}
+                      key={'users-panel'}
+                    />
+                  )
                 default:
                   return null
               }

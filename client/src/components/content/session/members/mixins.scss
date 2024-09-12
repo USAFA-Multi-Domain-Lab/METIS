@@ -1,0 +1,9 @@
+@mixin member-row-like {
+  display: grid;
+  grid-template-columns: 1fr 7em 14.5em 5em;
+  column-gap: 1.5em;
+  margin: 0.75em 0;
+  min-height: 2em;
+  border-bottom: 1px solid rgba($color-main, 0.25);
+  padding: 0.25em 0;
+}

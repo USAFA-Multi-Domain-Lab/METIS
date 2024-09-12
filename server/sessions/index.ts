@@ -390,6 +390,9 @@ export default class SessionServer extends Session<
     connection.addEventListener('request-ban', (data) =>
       this.onRequestBan(member, data),
     )
+    connection.addEventListener('request-assign-force', (data) =>
+      this.onRequestAssignForce(member, data),
+    )
     connection.addEventListener('request-open-node', (data) =>
       this.onRequestOpenNode(member, data),
     )
@@ -406,6 +409,9 @@ export default class SessionServer extends Session<
       'request-start-session',
       'request-end-session',
       'request-config-update',
+      'request-kick',
+      'request-ban',
+      'request-assign-force',
       'request-open-node',
       'request-execute-action',
     ])
@@ -769,6 +775,66 @@ export default class SessionServer extends Session<
       data: {
         members: this.members.map((member) => member.toJson()),
       },
+    })
+  }
+
+  /**
+   *  Called when a member requests to assign another member to a force.
+   * @param member The member requesting to assign another member to a force.
+   * @param event The event emitted by the member.
+   */
+  public onRequestAssignForce = (
+    member: ServerSessionMember,
+    event: TClientEvents['request-assign-force'],
+  ): void => {
+    // Build request for response data.
+    let request = member.connection.buildResponseReqData(event)
+    // Parse data from event.
+    const { memberId: targetMemberId, forceId } = event.data
+    // Get the target member to assign.
+    const targetMember = this.getMember(targetMemberId)
+
+    // If the member requesting does not have the
+    // correct permissions to assign forces,
+    // then emit an error.
+    if (!member.isAuthorized('manageSessionMembers')) {
+      return member.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
+          { request },
+        ),
+      )
+    }
+    // If the target member is not found, then emit
+    // an error.
+    if (!targetMember) {
+      return member.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_MEMBER_NOT_FOUND, {
+          request,
+        }),
+      )
+    }
+    // If the target member does not have the permission
+    // to be assigned to a force, then emit an error.
+    if (!targetMember.isAuthorized('forceAssignable')) {
+      return member.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
+          {
+            request,
+          },
+        ),
+      )
+    }
+
+    // Assign the target member to the force.
+    targetMember.forceId = forceId
+
+    // Emit an event to all users that an assignment has
+    // been made.
+    this.emitToAll('force-assigned', {
+      data: { sessionId: this._id, memberId: targetMemberId, forceId },
+      request,
     })
   }
 

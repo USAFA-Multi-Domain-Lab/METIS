@@ -1,0 +1,23 @@
+@import 'src/assets/styles/config.scss';
+@import './mixins.scss';
+
+.SessionMembers {
+  min-width: fit-content;
+
+  .RowTitles {
+    @include member-row-like;
+
+    padding: 0.25em 0 1.25em;
+
+    .CellTitle {
+      // font-style: italic;
+      font-weight: bold;
+    }
+  }
+
+  .Rows {
+    .RowSeparator {
+      height: 0.125em;
+    }
+  }
+}

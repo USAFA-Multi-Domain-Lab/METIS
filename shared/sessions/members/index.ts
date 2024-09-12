@@ -1,3 +1,4 @@
+import { TCommonMissionForce } from 'metis/missions/forces'
 import User, { TCommonUser, TCommonUserJson } from 'metis/users'
 import MemberPermission from './permissions'
 import MemberRole, { TMemberRoleId } from './roles'
@@ -22,12 +23,20 @@ export default abstract class SessionMember<TUser extends User>
   }
 
   // Implemented
+  public get username(): TUser['username'] {
+    return this.user.username
+  }
+
+  // Implemented
   public role: MemberRole
 
   // Implemented
   public get roleId(): TMemberRoleId {
     return this.role._id
   }
+
+  // Implemented
+  public forceId: TCommonMissionForce['_id'] | null
 
   // Implemented
   public get isParticipant(): boolean {
@@ -50,10 +59,16 @@ export default abstract class SessionMember<TUser extends User>
    * @param user The user that is a member of the session.
    * @param role The role of the user in the session.
    */
-  protected constructor(_id: string, user: TUser, role: MemberRole) {
+  protected constructor(
+    _id: string,
+    user: TUser,
+    role: MemberRole,
+    forceId: TCommonMissionForce['_id'] | null,
+  ) {
     this._id = _id
     this.user = user
     this.role = role
+    this.forceId = forceId
   }
 
   // Implemented
@@ -62,6 +77,7 @@ export default abstract class SessionMember<TUser extends User>
       _id: this._id,
       user: this.user.toJson(),
       roleId: this.role._id,
+      forceId: this.forceId,
     }
   }
 
@@ -92,6 +108,10 @@ export interface TCommonSessionMember {
    */
   get userId(): TCommonUser['_id']
   /**
+   * The username of the user that is a member of the session.
+   */
+  get username(): TCommonUser['username']
+  /**
    * The role of the member in the session.
    */
   role: MemberRole
@@ -99,6 +119,11 @@ export interface TCommonSessionMember {
    * The ID of the member's role in the session.
    */
   get roleId(): TMemberRoleId
+  /**
+   * The ID of the force to which the member is assigned.
+   * @note If `null`, the member is not assigned to a force.
+   */
+  forceId: TCommonMissionForce['_id'] | null
   /**
    * Whether the member is a participant in the session.
    */
@@ -149,6 +174,11 @@ export interface TSessionMemberJson {
    * The ID of the member's role in the session.
    */
   roleId: TMemberRoleId
+  /**
+   * The ID of the force to which the member is assigned.
+   * @note If `null`, the member is not assigned to a force.
+   */
+  forceId: TCommonMissionForce['_id'] | null
 }
 
 /**

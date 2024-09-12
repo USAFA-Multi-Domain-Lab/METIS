@@ -359,42 +359,33 @@ export default class ServerConnection
   }
 
   /**
-   * Joins a session with the given session ID.
+   * Fetches the currently joined session.
    * @resolves The new session client for the session.
    * @rejects If there is an error joining the session.
    */
-  public $fetchCurrentSession(sessionId: string): Promise<SessionClient> {
+  public $fetchCurrentSession(): Promise<SessionClient> {
     return new Promise((resolve, reject) => {
-      this.request(
-        'request-current-session',
-        { sessionId },
-        'Fetching current session.',
-        {
-          onResponse: (event) => {
-            switch (event.method) {
-              case 'current-session':
-                resolve(
-                  new SessionClient(
-                    event.data.session,
-                    this,
-                    event.data.roleId,
-                  ),
-                )
-                break
-              case 'error':
-                reject(new Error(event.message))
-                break
-              default:
-                let error: Error = new Error(
-                  `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
-                )
-                console.log(error)
-                console.log(event)
-                reject(error)
-            }
-          },
+      this.request('request-current-session', {}, 'Fetching current session.', {
+        onResponse: (event) => {
+          switch (event.method) {
+            case 'current-session':
+              resolve(
+                new SessionClient(event.data.session, this, event.data.roleId),
+              )
+              break
+            case 'error':
+              reject(new Error(event.message))
+              break
+            default:
+              let error: Error = new Error(
+                `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
+              )
+              console.log(error)
+              console.log(event)
+              reject(error)
+          }
         },
-      )
+      })
     })
   }
 

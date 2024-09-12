@@ -5,13 +5,15 @@
   box-shadow: $box-shadow-main, $box-shadow-main;
 
   .Content {
+    $content-padding: 3em;
+
     display: flex;
     box-sizing: border-box;
     flex-direction: column;
-    align-items: center;
+    align-items: left;
     width: 100%;
     min-height: 100%;
-    padding: 4em 2em;
+    padding: $content-padding;
 
     .Title {
       margin: 0 0 1em;
@@ -22,9 +24,16 @@
     .Section {
       margin: 0 0 1.75em;
 
+      &.MembersSection {
+        max-width: calc(100vw - 2 * #{$content-padding});
+        overflow: auto;
+      }
+
       &.ButtonSection {
         display: flex;
         column-gap: 1em;
+        justify-content: center;
+        margin: 3em 0 0;
 
         .ButtonText {
           margin: 0;
@@ -35,7 +44,7 @@
     .Title,
     .Section {
       width: 100%;
-      max-width: 25rem;
+      // max-width: 25rem;
     }
 
     .StaticDetail {

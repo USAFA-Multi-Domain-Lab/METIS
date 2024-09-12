@@ -29,6 +29,7 @@ export function DetailDropdown<TOption>({
   uniqueStateValueClassName = undefined,
   disabled = false,
   tooltipDescription = '',
+  emptyText = 'Select an option',
 }: TDetailDropdown_P<TOption>): JSX.Element | null {
   /* -- STATE -- */
   const [expanded, setExpanded] = useState<boolean>(false)
@@ -139,7 +140,7 @@ export function DetailDropdown<TOption>({
     // value is not passed, then display a message
     // that indicates an option should be selected.
     else {
-      return 'Select an option'
+      return emptyText
     }
   })
   /**
@@ -312,6 +313,10 @@ type TDetailDropdownBase_P<TOption> = TDetailBase_P & {
    * @note This is disabled for Dropdown details.
    */
   errorMessage?: undefined
+  /**
+   * The text to display when the value is not set.
+   */
+  emptyText?: string
 }
 
 /**

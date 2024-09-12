@@ -25,7 +25,7 @@ export default class ServerSessionMember extends SessionMember<ServerUser> {
     connection: ClientConnection,
     role: MemberRole,
   ) {
-    super(_id, connection.user, role)
+    super(_id, connection.user, role, null)
     this.connection = connection
   }
 

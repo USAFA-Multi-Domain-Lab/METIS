@@ -385,6 +385,24 @@ export type TResponseEvents = {
     TClientEvents['request-ban']
   >
   /**
+   * Occurs when a force assignment change has been made.
+   */
+  'force-assigned': TResponseEvent<
+    'force-assigned',
+    {
+      /**
+       * The ID of the member who was assigned to the force.
+       */
+      memberId: string
+      /**
+       * The ID of the force to which the member was assigned.
+       * @note If `null`, the member is now unassigned from any force.
+       */
+      forceId: string | null
+    },
+    TClientEvents['request-assign-force']
+  >
+  /**
    * Occurs when a node has been opened on the server.
    */
   'node-opened': TResponseEvent<
@@ -563,6 +581,23 @@ export type TRequestEvents = {
        * The ID of the member to ban.
        */
       memberId: string
+    }
+  >
+  /**
+   * Occurs when the client requests to assign a force to a member.
+   */
+  'request-assign-force': TRequestEvent<
+    'request-assign-force',
+    {
+      /**
+       * The ID of the member to assign the force to.
+       */
+      memberId: string
+      /**
+       * The ID of the force to assign to the member.
+       * @note If `null`, the member will be unassigned from any force.
+       */
+      forceId: string | null
     }
   >
   /**

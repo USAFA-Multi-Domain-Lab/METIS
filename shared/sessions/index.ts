@@ -58,6 +58,21 @@ export default abstract class Session<
   public get members(): TSessionMember[] {
     return [...this._members]
   }
+  /**
+   * The members sorted by their role in the session.
+   * @note Sort order: Participants, Managers, Observers.
+   */
+  public get membersSorted(): TSessionMember[] {
+    let membersRaw = [...this._members]
+    let weights = {
+      participant: 0,
+      manager: 1,
+      observer: 2,
+    }
+    return membersRaw.sort((a, b) => {
+      return weights[a.role._id] - weights[b.role._id]
+    })
+  }
 
   /**
    * The session members with the 'participant' role.

@@ -56,8 +56,8 @@ export default class SessionClient extends Session<
     let name: string = data.name
     let mission: ClientMission = new ClientMission(data.mission)
     let members = data.members.map(
-      ({ _id, user: userData, roleId }) =>
-        new ClientSessionMember(_id, new ClientUser(userData), roleId),
+      ({ _id, user: userData, roleId, forceId }) =>
+        new ClientSessionMember(_id, new ClientUser(userData), roleId, forceId),
     )
     let banList: string[] = data.banList
     let config: TSessionConfig = data.config
@@ -99,6 +99,7 @@ export default class SessionClient extends Session<
     this.server.addEventListener('session-ended', this.onEnd)
     this.server.addEventListener('session-config-updated', this.onConfigUpdate)
     this.server.addEventListener('session-users-updated', this.onUsersUpdated)
+    this.server.addEventListener('force-assigned', this.onForceAssigned)
     this.server.addEventListener('node-opened', this.onNodeOpened)
     this.server.addEventListener(
       'action-execution-initiated',
@@ -537,6 +538,58 @@ export default class SessionClient extends Session<
   }
 
   /**
+   * Assigns a force to a member.
+   * @param memberId The ID of the member to be assigned.
+   * @param forceId The ID of the force to be assigned, `null` if unassigning.
+   * @resolves When the force has been assigned.
+   * @rejects If the force failed to be assigned.
+   */
+  public async $assignForce(
+    memberId: string,
+    forceId: string | null,
+  ): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      // Callback for errors.
+      const onError = (message: string) => {
+        let error: Error = new Error(message)
+        console.error(message)
+        console.error(error)
+        reject(error)
+      }
+
+      // Get the member.
+      let member = this.getMember(memberId)
+
+      // If the member is not found,
+      // callback an error.
+      if (member === undefined) {
+        return onError('Member not found.')
+      }
+
+      // Emit a request to assign the force.
+      this.server.request(
+        'request-assign-force',
+        { memberId, forceId },
+        `Assigning force to "${member.user.username}".`,
+        {
+          onResponse: (event) => {
+            switch (event.method) {
+              case 'force-assigned':
+                return resolve()
+              case 'error':
+                return onError(event.message)
+              default:
+                return onError(
+                  `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
+                )
+            }
+          },
+        },
+      )
+    })
+  }
+
+  /**
    * Handles when the session is started.
    * @param event The event emitted by the server.
    */
@@ -579,9 +632,24 @@ export default class SessionClient extends Session<
   ): void => {
     let { members } = event.data
     this._members = members.map(
-      ({ _id, user: userData, roleId }) =>
-        new ClientSessionMember(_id, new ClientUser(userData), roleId),
+      ({ _id, user: userData, roleId, forceId }) =>
+        new ClientSessionMember(_id, new ClientUser(userData), roleId, forceId),
     )
+  }
+
+  /**
+   * Handles when a force is assigned to a member.
+   * @param event The event emitted by the server.
+   */
+  private onForceAssigned = (event: TServerEvents['force-assigned']): void => {
+    let { memberId, forceId } = event.data
+    let member = this.getMember(memberId)
+    if (member === undefined) {
+      return console.warn(
+        `Event "force-assigned" was triggered, but the member with the given memberId ("${memberId}") could not be found.`,
+      )
+    }
+    member.forceId = forceId
   }
 
   /**

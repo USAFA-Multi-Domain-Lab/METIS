@@ -185,9 +185,7 @@ function App(props: {}): JSX.Element | null {
           // Or, if the logged in user is in a session,
           // then switch to the session page.
           else if (login.sessionId !== null) {
-            let session: SessionClient = await server.$fetchCurrentSession(
-              login.sessionId,
-            )
+            let session: SessionClient = await server.$fetchCurrentSession()
             // Navigate based on the session state.
             switch (session.state) {
               case 'unstarted':
