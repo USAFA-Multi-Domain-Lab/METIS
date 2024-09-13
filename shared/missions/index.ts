@@ -123,6 +123,9 @@ export default abstract class Mission<
     // Include the ID if the option is set.
     if (includeId) json._id = this._id
 
+    // todo: Update the export logic to be
+    // todo: Permissions-based instead of
+    // todo: role based.
     // Handle the export based on the export type
     // passed in the options.
     switch (options.exportType) {
@@ -242,10 +245,10 @@ export default abstract class Mission<
 
   // Implemented
   public getForce(
-    forceId: TForce<T>['_id'] | undefined,
+    forceId: TForce<T>['_id'] | null | undefined,
   ): TForce<T> | undefined {
     let color = '#000000'
-    return forceId ? Mission.getForce(this, forceId) : undefined
+    return Mission.getForce(this, forceId)
   }
 
   // Implemented
@@ -487,7 +490,7 @@ export default abstract class Mission<
    */
   public static getForce<TMission extends TCommonMissionJson | TCommonMission>(
     mission: TMission,
-    forceId: string,
+    forceId: string | null | undefined,
   ): TMission['forces'][0] | undefined {
     return mission.forces.find((force) => force._id === forceId)
   }

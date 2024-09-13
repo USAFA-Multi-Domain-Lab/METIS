@@ -1,8 +1,7 @@
 import axios from 'axios'
 import ServerConnection from 'src/connect/servers'
-import ClientMission from 'src/missions'
+import ClientMission, { TClientMissionTypes } from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
-import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
 import ClientUser from 'src/users'
 import {
@@ -10,7 +9,9 @@ import {
   TResponseEvents,
   TServerEvents,
 } from '../../../shared/connect/data'
+import { TCommonMissionTypes } from '../../../shared/missions'
 import Session, {
+  TCommonSessionTypes,
   TSessionBasicJson,
   TSessionConfig,
   TSessionJson,
@@ -22,13 +23,7 @@ import ClientSessionMember from './members'
 /**
  * Client instance for sessions. Handles client-side logic for sessions. Communicates with server to conduct a session.
  */
-export default class SessionClient extends Session<
-  ClientSessionMember,
-  ClientMission,
-  ClientMissionForce,
-  ClientMissionNode,
-  ClientMissionAction
-> {
+export default class SessionClient extends Session<TClientSessionTypes> {
   /**
    * The server connection used to communicate with the server.
    */
@@ -57,12 +52,19 @@ export default class SessionClient extends Session<
     let mission: ClientMission = new ClientMission(data.mission)
     let members = data.members.map(
       ({ _id, user: userData, roleId, forceId }) =>
-        new ClientSessionMember(_id, new ClientUser(userData), roleId, forceId),
+        new ClientSessionMember(
+          _id,
+          new ClientUser(userData),
+          roleId,
+          forceId,
+          this,
+        ),
     )
     let banList: string[] = data.banList
     let config: TSessionConfig = data.config
 
-    super(_id, name, config, mission, members, banList)
+    // todo: Include an actual owner ID here.
+    super(_id, name, 'test', config, mission, members, banList)
     this.server = server
     this._role = role
     this._state = state
@@ -81,14 +83,6 @@ export default class SessionClient extends Session<
         node.actions.forEach((action) => this.actions.set(action._id, action)),
       ),
     )
-  }
-
-  // Implemented
-  public getAssignedForce(
-    member: ClientSessionMember,
-  ): ClientMissionForce | undefined {
-    let forceId: string | undefined = this.assignments.get(member._id)
-    return this.mission.getForce(forceId)
   }
 
   /**
@@ -633,7 +627,13 @@ export default class SessionClient extends Session<
     let { members } = event.data
     this._members = members.map(
       ({ _id, user: userData, roleId, forceId }) =>
-        new ClientSessionMember(_id, new ClientUser(userData), roleId, forceId),
+        new ClientSessionMember(
+          _id,
+          new ClientUser(userData),
+          roleId,
+          forceId,
+          this,
+        ),
     )
   }
 
@@ -954,6 +954,27 @@ export default class SessionClient extends Session<
     )
   }
 }
+
+/* -- TYPES -- */
+
+/**
+ * Client-specific types for Session objects.
+ * @note Used to construct `TClientSessionTypes`.
+ */
+interface TClientSessionSpecificTypes
+  extends Omit<TCommonSessionTypes, keyof TCommonMissionTypes> {
+  session: SessionClient
+  member: ClientSessionMember
+  user: ClientUser
+}
+
+/**
+ * Client types for Session objects.
+ * @note Used as a generic argument for all client,
+ * session-related classes.
+ */
+export type TClientSessionTypes = TClientSessionSpecificTypes &
+  TClientMissionTypes
 
 /**
  * Options for methods that make requests to

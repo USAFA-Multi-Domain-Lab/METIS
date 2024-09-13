@@ -1,10 +1,15 @@
 import { TClientEvents, TServerEvents, TServerMethod } from 'metis/connect/data'
 import { ServerEmittedError } from 'metis/connect/errors'
-import { TCommonMissionJson, TMissionJsonOptions } from 'metis/missions'
-import ServerMission from 'metis/server/missions'
+import {
+  TCommonMissionJson,
+  TCommonMissionTypes,
+  TMissionJsonOptions,
+} from 'metis/missions'
+import ServerMission, { TServerMissionTypes } from 'metis/server/missions'
 import ServerMissionAction from 'metis/server/missions/actions'
 import ServerMissionNode from 'metis/server/missions/nodes'
 import Session, {
+  TCommonSessionTypes,
   TSessionBasicJson,
   TSessionConfig,
   TSessionJson,
@@ -17,18 +22,13 @@ import ClientConnection from '../connect/clients'
 import ServerActionExecution from '../missions/actions/executions'
 import ServerMissionForce from '../missions/forces'
 import EnvironmentContextProvider from '../target-environments/context-provider'
+import ServerUser from '../users'
 import ServerSessionMember from './members'
 
 /**
  * Server instance for sessions. Handles server-side logic for a session with participating clients. Communicates with clients to conduct the session.
  */
-export default class SessionServer extends Session<
-  ServerSessionMember,
-  ServerMission,
-  ServerMissionForce,
-  ServerMissionNode,
-  ServerMissionAction
-> {
+export default class SessionServer extends Session<TServerSessionTypes> {
   // Overridden.
   public get state() {
     return this._state
@@ -59,19 +59,12 @@ export default class SessionServer extends Session<
     members: ServerSessionMember[],
     banList: string[],
   ) {
-    super(_id, name, config, mission, members, banList)
+    // todo: Update owner ID passed.
+    super(_id, name, 'test', config, mission, members, banList)
     this._state = 'unstarted'
     this._destroyed = false
     this.register()
     this.environmentContextProvider = new EnvironmentContextProvider(this)
-  }
-
-  // Implemented
-  public getAssignedForce(
-    member: ServerSessionMember,
-  ): ServerMissionForce | undefined {
-    let forceId: string | undefined = this.assignments.get(member._id)
-    return this.mission.getForce(forceId)
   }
 
   /**
@@ -80,13 +73,14 @@ export default class SessionServer extends Session<
    * @returns The users.
    */
   public getMembersForForce(forceId: string): ServerSessionMember[] {
+    let x: TServerSessionTypes['member']
     // Get all members that either have complete visibility
     // or are assigned to the force with the given ID.
     return [
       ...this.members.filter(
         (member) =>
           member.isAuthorized('completeVisibility') ||
-          this.assignments.get(member._id) === forceId,
+          member.forceId === forceId,
       ),
     ]
   }
@@ -101,12 +95,12 @@ export default class SessionServer extends Session<
     // Handler a requester being passed.
     if (requester) {
       // Gather details.
-      let forceId: string | undefined = this.assignments.get(requester._id)
+      let { forceId } = requester
 
       // If the requester is a participant, then
       // update the mission options to include
       // data pertinent to the participant.
-      if (forceId !== undefined) {
+      if (forceId) {
         missionOptions = {
           exportType: 'session-participant',
           forceId,
@@ -268,7 +262,7 @@ export default class SessionServer extends Session<
     }
 
     // Create a new session member.
-    let member = ServerSessionMember.create(client, roleId)
+    let member = ServerSessionMember.create(client, roleId, this)
     // Add event listeners for the member.
     this.addListeners(member)
     // Push the member to the list of members.
@@ -346,27 +340,6 @@ export default class SessionServer extends Session<
     this.members.forEach((member) => this.removeListeners(member))
     // Clear member list.
     this._members = []
-  }
-
-  /**
-   * Auto-assigns participants to forces using a
-   * round-robin algorithm.
-   */
-  private autoAssign(): void {
-    // Initialize force index.
-    let forceIndex: number = 0
-
-    this._members.forEach((member) => {
-      // If the member has 'forceAssignable' permission,
-      // then assign the member to the force.
-      if (member.isAuthorized('forceAssignable')) {
-        // Assign the member to the force.
-        this.assignments.set(member._id, this.mission.forces[forceIndex]._id)
-
-        // Increment the force index.
-        forceIndex = (forceIndex + 1) % this.mission.forces.length
-      }
-    })
   }
 
   /**
@@ -464,8 +437,6 @@ export default class SessionServer extends Session<
 
     // Mark the session as started.
     this._state = 'started'
-    // Then auto-assign participants to forces.
-    this.autoAssign()
 
     // todo: Update the export logic here to use
     // todo: permissions instead of role-based logic.
@@ -477,10 +448,10 @@ export default class SessionServer extends Session<
     // started.
     for (let participant of this.participants) {
       // Find the force ID for the participant.
-      let forceId = this.assignments.get(participant._id)
+      let forceId = participant.forceId
 
       // Skip if the participant is not assigned to a force.
-      if (forceId === undefined) {
+      if (forceId === null) {
         continue
       }
 
@@ -1287,6 +1258,27 @@ export default class SessionServer extends Session<
     }
   }
 }
+
+/* -- TYPES -- */
+
+/**
+ * Server-specific types for Session objects.
+ * @note Used to construct `TServerSessionTypes`.
+ */
+interface TServerSessionSpecificTypes
+  extends Omit<TCommonSessionTypes, keyof TCommonMissionTypes> {
+  session: SessionServer
+  member: ServerSessionMember
+  user: ServerUser
+}
+
+/**
+ * Server types for Session objects.
+ * @note Used as a generic argument for all server,
+ * session-related classes.
+ */
+export type TServerSessionTypes = TServerSessionSpecificTypes &
+  TServerMissionTypes
 
 /**
  * Options for converting a session to JSON.

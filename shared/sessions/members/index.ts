@@ -1,5 +1,6 @@
-import { TCommonMissionForce } from 'metis/missions/forces'
-import User, { TCommonUser, TCommonUserJson } from 'metis/users'
+import { TCommonMissionForce, TForce } from 'metis/missions/forces'
+import { TCommonUser, TCommonUserJson, TSessionUser } from 'metis/users'
+import { TCommonSession, TCommonSessionTypes, TSession } from '..'
 import MemberPermission from './permissions'
 import MemberRole, { TMemberRoleId } from './roles'
 
@@ -8,22 +9,23 @@ import MemberRole, { TMemberRoleId } from './roles'
 /**
  * Represents a user using METIS.
  */
-export default abstract class SessionMember<TUser extends User>
-  implements TCommonSessionMember
+export default abstract class SessionMember<
+  T extends TCommonSessionTypes = TCommonSessionTypes,
+> implements TCommonSessionMember
 {
   // Implemented
   public _id: string
 
   // Implemented
-  public user: TUser
+  public user: TSessionUser<T>
 
   // Implemented
-  public get userId(): TUser['_id'] {
+  public get userId(): TSessionUser<T>['_id'] {
     return this.user._id
   }
 
   // Implemented
-  public get username(): TUser['username'] {
+  public get username(): TSessionUser<T>['username'] {
     return this.user.username
   }
 
@@ -37,6 +39,15 @@ export default abstract class SessionMember<TUser extends User>
 
   // Implemented
   public forceId: TCommonMissionForce['_id'] | null
+
+  // Implemented
+  public get force(): TForce<T> {
+    // todo: implement this.
+    throw new Error('Method not implemented.')
+  }
+
+  // Implemented
+  public session: TSession<T>
 
   // Implemented
   public get isParticipant(): boolean {
@@ -61,14 +72,16 @@ export default abstract class SessionMember<TUser extends User>
    */
   protected constructor(
     _id: string,
-    user: TUser,
+    user: TSessionUser<T>,
     role: MemberRole,
     forceId: TCommonMissionForce['_id'] | null,
+    session: TSession<T>,
   ) {
     this._id = _id
     this.user = user
     this.role = role
     this.forceId = forceId
+    this.session = session
   }
 
   // Implemented
@@ -87,6 +100,13 @@ export default abstract class SessionMember<TUser extends User>
 }
 
 /* -- TYPES -- */
+
+/**
+ * Extracts the session member type from the session types.
+ * @param T The session types.
+ * @returns The session member type.
+ */
+export type TMember<T extends TCommonSessionTypes> = T['member']
 
 /**
  * Interface for the abstract `SessionMember` class.
@@ -124,6 +144,10 @@ export interface TCommonSessionMember {
    * @note If `null`, the member is not assigned to a force.
    */
   forceId: TCommonMissionForce['_id'] | null
+  /**
+   * The session to which the member belongs.
+   */
+  session: TCommonSession
   /**
    * Whether the member is a participant in the session.
    */
