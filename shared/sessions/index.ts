@@ -117,7 +117,7 @@ export default abstract class Session<T extends TCommonSessionTypes>
     ownerId: string,
     config: Partial<TSessionConfig>,
     mission: TMission<T>,
-    members: TMember<T>[],
+    memberData: TSessionMemberJson[],
     banList: string[],
   ) {
     this._id = _id
@@ -129,10 +129,17 @@ export default abstract class Session<T extends TCommonSessionTypes>
     }
     this.mission = mission
     this._state = 'unstarted'
-    this._members = members
+    this._members = this.parseMemberData(memberData)
     this._banList = banList
     this.mapActions()
   }
+
+  /**
+   * Parses member JSON data into `MemberSession` objects.
+   * @param data The JSON data of the members.
+   * @returns The parsed members.
+   */
+  protected abstract parseMemberData(data: TSessionMemberJson[]): TMember<T>[]
 
   /**
    * Loops through all the nodes in the mission, and each action in a node, and maps the actionId to the action in the field "actions".
@@ -230,6 +237,10 @@ export type TSessionJson = {
    */
   name: string
   /**
+   * The ID of the owner of the session.
+   */
+  ownerId: TCommonUser['_id']
+  /**
    * The configuration for the session.
    */
   config: TSessionConfig
@@ -263,6 +274,10 @@ export type TSessionBasicJson = {
    * The name of the session.
    */
   name: string
+  /**
+   * The ID of the owner of the session.
+   */
+  ownerId: TCommonUser['_id']
   /**
    * The configuration for the session.
    */
@@ -354,7 +369,7 @@ export type TCommonSession = {
    */
   get managers(): TCommonSessionMember[]
   /**
-   * IDs of members who have been banned from the session.
+   * IDs of users who have been banned from the session.
    */
   get banList(): string[]
   /**

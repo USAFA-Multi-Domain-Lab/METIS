@@ -15,9 +15,11 @@ import Session, {
   TSessionBasicJson,
   TSessionConfig,
   TSessionJson,
-  TSessionRole,
-  TSessionState,
 } from '../../../shared/sessions'
+import { TSessionMemberJson } from '../../../shared/sessions/members'
+import MemberRole, {
+  TMemberRoleId,
+} from '../../../shared/sessions/members/roles'
 import ClientSessionMember from './members'
 
 /**
@@ -30,27 +32,65 @@ export default class SessionClient extends Session<TClientSessionTypes> {
   protected server: ServerConnection
 
   /**
-   * The client's role in the session.
+   * The session member for this client connection.
    */
-  protected _role: TSessionRole
+  public readonly member: ClientSessionMember
+
   /**
-   * The client's role in the session.
+   * The role of the member associated with this client connection.
    */
-  public get role(): TSessionRole {
-    return this._role
+  public get role(): MemberRole {
+    return this.member.role
+  }
+
+  /**
+   * The role ID of the member associated with this client connection.
+   */
+  public get roleId(): TMemberRoleId {
+    return this.member.roleId
   }
 
   // todo: Between the time the client joins and this object is constructed, there is possibility that changes have been made in the session. This should be handled.
   public constructor(
     data: TSessionJson,
     server: ServerConnection,
-    role: TSessionRole,
+    memberId: string,
   ) {
-    let _id: string = data._id
-    let state: TSessionState = data.state
-    let name: string = data.name
+    // Gather details.
     let mission: ClientMission = new ClientMission(data.mission)
-    let members = data.members.map(
+    let {
+      _id,
+      state,
+      name,
+      ownerId,
+      members: memberData,
+      banList,
+      config,
+    } = data
+
+    // Call super constructor with base data.
+    super(_id, name, ownerId, config, mission, memberData, banList)
+
+    // Find the member associated with this client connection.
+    let member = this.members.find((member) => member._id === memberId)
+
+    // Throw an error if the member could not
+    // be found in the members JSON passed.
+    if (!member) throw new Error('Member not found in session.')
+
+    // Set the rest of the data.
+    this.server = server
+    this.member = member
+    this._state = state
+
+    // Add listeners to detect events that are
+    // emitted to the client.
+    this.addListeners()
+  }
+
+  // Implemented
+  protected parseMemberData(data: TSessionMemberJson[]): ClientSessionMember[] {
+    return data.map(
       ({ _id, user: userData, roleId, forceId }) =>
         new ClientSessionMember(
           _id,
@@ -60,16 +100,6 @@ export default class SessionClient extends Session<TClientSessionTypes> {
           this,
         ),
     )
-    let banList: string[] = data.banList
-    let config: TSessionConfig = data.config
-
-    // todo: Include an actual owner ID here.
-    super(_id, name, 'test', config, mission, members, banList)
-    this.server = server
-    this._role = role
-    this._state = state
-
-    this.addListeners()
   }
 
   // Implemented
@@ -131,6 +161,7 @@ export default class SessionClient extends Session<TClientSessionTypes> {
       _id: this._id,
       state: this.state,
       name: this.name,
+      ownerId: this.ownerId,
       mission: this.mission.toJson({ exportType: 'session-limited' }),
       members: this.members.map((member) => member.toJson()),
       banList: this.banList,
@@ -144,6 +175,7 @@ export default class SessionClient extends Session<TClientSessionTypes> {
       _id: this._id,
       missionId: this.missionId,
       name: this.name,
+      ownerId: this.ownerId,
       config: this.config,
       participantIds: this.participants.map(({ _id: userId }) => userId),
       banList: this.banList,
@@ -167,10 +199,10 @@ export default class SessionClient extends Session<TClientSessionTypes> {
       if (options.onError) options.onError(message)
     }
 
-    // If the role is not "participant", callback
-    // an error.
-    if (this.role !== 'participant') {
-      return onError('Only participants can open nodes.')
+    // If the member is not authorized to open nodes,
+    // callback an error.
+    if (!this.member.isAuthorized('manipulateNodes')) {
+      return onError('You do not have the correct permissions to open nodes.')
     }
     // Callback error if the node is not in
     // the mission associated with this
@@ -224,10 +256,12 @@ export default class SessionClient extends Session<TClientSessionTypes> {
       if (options.onError) options.onError(message)
     }
 
-    // If the role is not "participant", callback
-    // an error.
-    if (this.role !== 'participant') {
-      return onError('Only participants can execute actions.')
+    // If the member is not authorized to execute actions,
+    // callback an error.
+    if (this.member.isAuthorized('manipulateNodes')) {
+      return onError(
+        'You do not have the correct permissions to execute actions.',
+      )
     }
     // Callback error if the action is not in
     // the mission associated with this

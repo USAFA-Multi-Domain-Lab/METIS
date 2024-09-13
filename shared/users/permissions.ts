@@ -179,11 +179,6 @@ export default class UserPermission implements TUserPermission {
       'Write Sessions',
       'Allows the user currently logged in to create, update, and delete sessions in the database.',
     ),
-    sessions_join: new UserPermission(
-      'sessions_join',
-      'Join Sessions',
-      'Allows the user currently logged in to join sessions.',
-    ),
     sessions_join_participant: new UserPermission(
       'sessions_join_participant',
       'Join Sessions (Participant)',
@@ -193,6 +188,11 @@ export default class UserPermission implements TUserPermission {
       'sessions_join_manager',
       'Join Sessions (Manager)',
       'Allows the user currently logged in to join sessions as a manager.',
+    ),
+    sessions_join_manager_native: new UserPermission(
+      'sessions_join_manager_native',
+      'Join Sessions (Manager of Native Sessions)',
+      'Allows the user currently logged in to join sessions as a manager that they own.',
     ),
     sessions_join_observer: new UserPermission(
       'sessions_join_observer',
@@ -231,9 +231,9 @@ const userPermissionNames = [
   'Write Student Users',
   'Read Sessions',
   'Write Sessions',
-  'Join Sessions',
   'Join Sessions (Participant)',
   'Join Sessions (Manager)',
+  'Join Sessions (Manager of Native Sessions)',
   'Join Sessions (Observer)',
 ] as const
 export type TPermissionName = (typeof userPermissionNames)[number]
@@ -247,9 +247,9 @@ const userPermissionIds = [
   'users_write_students',
   'sessions_read',
   'sessions_write',
-  'sessions_join',
   'sessions_join_participant',
   'sessions_join_manager',
+  'sessions_join_manager_native',
   'sessions_join_observer',
 ] as const
 export type TUserPermissionId = (typeof userPermissionIds)[number]

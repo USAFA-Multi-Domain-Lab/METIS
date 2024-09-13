@@ -34,6 +34,8 @@ const routerMap = (
       infiniteResources: request.body.infiniteResources,
       effectsEnabled: request.body.effectsEnabled,
     }
+    let ownerId: string = response.locals.user._id
+
     // Query for mission.
     MissionModel.findOne({ _id: missionId })
       .lean()
@@ -60,6 +62,7 @@ const routerMap = (
           let session: SessionServer = SessionServer.launch(
             mission,
             sessionConfig,
+            ownerId,
           )
           // Return the ID of the newly launched session
           // as JSON.

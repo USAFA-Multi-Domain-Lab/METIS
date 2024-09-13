@@ -87,7 +87,7 @@ export default function SessionPage({
   const onNodeSelect = async (node: ClientMissionNode): Promise<void> => {
     // If the role is 'observer', abort
     // selection handling.
-    if (session.role === 'observer') {
+    if (session.roleId === 'observer') {
       return
     }
 
@@ -233,7 +233,7 @@ export default function SessionPage({
     let classList: string[] = ['SessionPage', 'Page']
 
     // Add the role to the class list.
-    classList.push(session.role)
+    classList.push(session.roleId)
 
     // Return the class list as a joined string.
     return classList.join(' ')

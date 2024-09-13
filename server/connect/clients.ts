@@ -198,15 +198,17 @@ export default class ClientConnection {
       // Create default data object.
       let data: TServerEvents['current-session']['data'] = {
         session: null,
-        roleId: null,
+        memberId: null,
       }
+      let requester = session?.getMemberByUserId(this.userId)
 
-      // If there is a session, update the data object.
-      if (session) {
+      // If there is a session and a member, update the
+      // data object.
+      if (session && requester) {
         data.session = session.toJson({
-          requester: session.getMemberByUserId(this.userId),
+          requester,
         })
-        data.roleId = session.getRole(this.userId)?._id ?? null
+        data.memberId = requester._id
       }
 
       // Emit the current session in response to the client.
@@ -236,12 +238,12 @@ export default class ClientConnection {
 
       try {
         // Join the session.
-        let member = session.join(this, event.data.roleId)
+        let member = session.join(this)
         // Return the session as JSON.
         this.emit('session-joined', {
           data: {
             session: session.toJson({ requester: member }),
-            role: event.data.roleId,
+            memberId: member._id,
           },
           request: this.buildResponseReqData(event),
         })

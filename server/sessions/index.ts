@@ -14,6 +14,7 @@ import Session, {
   TSessionConfig,
   TSessionJson,
 } from 'metis/sessions'
+import { TSessionMemberJson } from 'metis/sessions/members'
 import MemberRole, { TMemberRoleId } from 'metis/sessions/members/roles'
 import { SingleTypeObject } from 'metis/toolbox/objects'
 import { TCommonUser } from 'metis/users'
@@ -54,17 +55,22 @@ export default class SessionServer extends Session<TServerSessionTypes> {
   public constructor(
     _id: string,
     name: string,
+    ownerId: string,
     config: Partial<TSessionConfig>,
     mission: ServerMission,
-    members: ServerSessionMember[],
-    banList: string[],
   ) {
-    // todo: Update owner ID passed.
-    super(_id, name, 'test', config, mission, members, banList)
+    super(_id, name, ownerId, config, mission, [], [])
     this._state = 'unstarted'
     this._destroyed = false
     this.register()
     this.environmentContextProvider = new EnvironmentContextProvider(this)
+  }
+
+  // Implemented
+  protected parseMemberData(data: TSessionMemberJson[]): ServerSessionMember[] {
+    // Returns empty array, since the data
+    // should never need to be parsed.
+    return []
   }
 
   /**
@@ -132,6 +138,7 @@ export default class SessionServer extends Session<TServerSessionTypes> {
       _id: this._id,
       state: this.state,
       name: this.name,
+      ownerId: this.ownerId,
       mission: this.mission.toJson(missionOptions),
       members: this._members.map((member) => member.toJson()),
       banList,
@@ -160,6 +167,7 @@ export default class SessionServer extends Session<TServerSessionTypes> {
       _id: this._id,
       missionId: this.missionId,
       name: this.name,
+      ownerId: this.ownerId,
       config: this.config,
       participantIds: this.participants.map(({ userId: userId }) => userId),
       banList,
@@ -223,15 +231,15 @@ export default class SessionServer extends Session<TServerSessionTypes> {
   /**
    * Has the given client connection join as a member of the session.
    * @param client The user joining the session.
-   * @param method The method of joining (Whether as a participant, a manager, or as an observer).
    * @returns The new `ServerSessionMember` object that was created.
    * @throws The server emitted error code of any error that occurs.
    * @note Establishes listeners to handle events emitted by the user's web socket connection.
    */
-  public join(
-    client: ClientConnection,
-    roleId: TMemberRoleId,
-  ): ServerSessionMember {
+  public join(client: ClientConnection): ServerSessionMember {
+    let userId = client.userId
+    let access = client.user.access
+    let roleId: TMemberRoleId
+
     // Throw error if the user is in the ban list.
     if (this._banList.includes(client.userId)) {
       throw ServerEmittedError.CODE_SESSION_BANNED
@@ -241,24 +249,34 @@ export default class SessionServer extends Session<TServerSessionTypes> {
       throw ServerEmittedError.CODE_ALREADY_IN_SESSION
     }
 
-    // If the client does not have the required permissions
-    // to join the session with the given role, then throw
-    // an error.
-    switch (roleId) {
-      case 'participant':
-        if (!client.user.isAuthorized('sessions_join_participant'))
-          throw ServerEmittedError.CODE_SESSION_UNAUTHORIZED_JOIN
-        break
-      case 'observer':
-        if (!client.user.isAuthorized('sessions_join_observer'))
-          throw ServerEmittedError.CODE_SESSION_UNAUTHORIZED_JOIN
-        break
-      case 'manager':
-        if (!client.user.isAuthorized('sessions_join_manager'))
-          throw ServerEmittedError.CODE_SESSION_UNAUTHORIZED_JOIN
-        break
-      default:
-        throw ServerEmittedError.CODE_SESSION_UNAUTHORIZED_JOIN
+    // If the user is authorized to join as a manager,
+    // then join as a manager.
+    if (client.user.isAuthorized('sessions_join_manager')) {
+      roleId = 'manager'
+    }
+    // If the user is authorized to join as a manager
+    // of native forces, and the client is the owner of
+    // this session, then join as a manager.
+    else if (
+      client.user.isAuthorized('sessions_join_manager_native') &&
+      this.ownerId === userId
+    ) {
+      roleId = 'manager'
+    }
+    // If the user is authorized to join as an observer,
+    // then join as an observer.
+    else if (client.user.isAuthorized('sessions_join_observer')) {
+      roleId = 'observer'
+    }
+    // If the user is authorized to join as a participant,
+    // then join as a participant.
+    else if (client.user.isAuthorized('sessions_join_participant')) {
+      roleId = 'participant'
+    }
+    // If the user is not authorized to join the session,
+    // then throw an error.
+    else {
+      throw ServerEmittedError.CODE_SESSION_UNAUTHORIZED_JOIN
     }
 
     // Create a new session member.
@@ -721,8 +739,8 @@ export default class SessionServer extends Session<TServerSessionTypes> {
       )
     }
 
-    // Add the member to the ban list.
-    this._banList.push(targetMember._id)
+    // Add the user to the ban list.
+    this._banList.push(targetMember.userId)
     // Remove the member from the list.
     this._members = this._members.filter(
       (member) => member._id !== targetMember._id,
@@ -1214,14 +1232,14 @@ export default class SessionServer extends Session<TServerSessionTypes> {
   public static launch(
     mission: ServerMission,
     config: Partial<TSessionConfig> = {},
+    ownerId: string,
   ): SessionServer {
     return new SessionServer(
       generateHash().substring(0, 12),
       mission.name,
+      ownerId,
       config,
       mission,
-      [],
-      [],
     )
   }
 

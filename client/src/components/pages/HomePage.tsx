@@ -13,8 +13,7 @@ import {
 import ClientUser from 'src/users'
 import { DefaultLayout } from '.'
 import { TSessionBasicJson } from '../../../../shared/sessions'
-import { TMemberRoleId } from '../../../../shared/sessions/members/roles'
-import Prompt, { TChoicesWithCancel } from '../content/communication/Prompt'
+import Prompt from '../content/communication/Prompt'
 import Tooltip from '../content/communication/Tooltip'
 import { DetailString } from '../content/form/DetailString'
 import List, { ESortByMethod } from '../content/general-layout/List'
@@ -404,66 +403,11 @@ export default function HomePage(): JSX.Element | null {
   const onSessionSelection = async (sessionId: string) => {
     if (server !== null) {
       try {
-        let roleId: TMemberRoleId = 'participant'
-
-        // Choices for the user to select what
-        // role they would like to join the session
-        // as.
-        let roleChoices: TChoicesWithCancel<TMemberRoleId>[] = []
-
-        // If the current user can join as a participant,
-        // add the option to the prompt.
-        if (
-          currentUser.isAuthorized('sessions_join') ||
-          currentUser.isAuthorized('sessions_join_participant')
-        ) {
-          roleChoices.push('participant')
-        }
-        // If the current user can join as an observer,
-        // add the option to the prompt.
-        if (
-          currentUser.isAuthorized('sessions_join') ||
-          currentUser.isAuthorized('sessions_join_observer')
-        ) {
-          roleChoices.push('observer')
-        }
-        // If the current user can join as a manager,
-        // add the option to the prompt.
-        if (
-          currentUser.isAuthorized('sessions_join') ||
-          currentUser.isAuthorized('sessions_join_manager')
-        ) {
-          roleChoices.push('manager')
-        }
-
-        // Add option to cancel.
-        roleChoices.push('Cancel')
-
-        // If the user only has one option, plus cancelling,
-        // automatically select that option.
-        if (roleChoices.length === 2 && roleChoices[0] !== 'Cancel') {
-          roleId = roleChoices[0]
-        }
-        // Else, prompt the user how they would like to join.
-        else {
-          let { choice } = await prompt<TChoicesWithCancel<TMemberRoleId>>(
-            'How would you like to join the session?',
-            roleChoices,
-            { capitalizeChoices: true },
-          )
-          // If cancelled, abort.
-          if (choice === 'Cancel') {
-            return
-          }
-          // Set the role as the choice made.
-          roleId = choice
-        }
-
         // Notify user of session join.
         beginLoading('Joining session...')
         // Join session from new session ID, awaiting
         // the promised session client.
-        let session = await server.$joinSession(sessionId, roleId)
+        let session = await server.$joinSession(sessionId)
 
         // If the session is not found, notify
         // the user and return.

@@ -59,7 +59,8 @@ export default class UserAccess implements TUserAccess {
       'instructor',
       'This access level is an instructor which has restricted access to the entire application.',
       [
-        UserPermission.AVAILABLE_PERMISSIONS.sessions_join,
+        UserPermission.AVAILABLE_PERMISSIONS.sessions_join_manager_native,
+        UserPermission.AVAILABLE_PERMISSIONS.sessions_join_observer,
         UserPermission.AVAILABLE_PERMISSIONS.sessions_read,
         UserPermission.AVAILABLE_PERMISSIONS.sessions_write,
         UserPermission.AVAILABLE_PERMISSIONS.missions_read,
@@ -72,7 +73,7 @@ export default class UserAccess implements TUserAccess {
       'admin',
       'This access level is an administrator which has full access to the entire application.',
       [
-        UserPermission.AVAILABLE_PERMISSIONS.sessions_join,
+        UserPermission.AVAILABLE_PERMISSIONS.sessions_join_manager,
         UserPermission.AVAILABLE_PERMISSIONS.sessions_read,
         UserPermission.AVAILABLE_PERMISSIONS.sessions_write,
         UserPermission.AVAILABLE_PERMISSIONS.missions_read,

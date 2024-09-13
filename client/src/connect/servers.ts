@@ -14,7 +14,6 @@ import {
   TServerMethod,
 } from '../../../shared/connect/data'
 import { ServerEmittedError } from '../../../shared/connect/errors'
-import { TMemberRoleId } from '../../../shared/sessions/members/roles'
 import { SingleTypeObject } from '../../../shared/toolbox/objects'
 
 /**
@@ -370,7 +369,11 @@ export default class ServerConnection
           switch (event.method) {
             case 'current-session':
               resolve(
-                new SessionClient(event.data.session, this, event.data.roleId),
+                new SessionClient(
+                  event.data.session,
+                  this,
+                  event.data.memberId,
+                ),
               )
               break
             case 'error':
@@ -392,48 +395,43 @@ export default class ServerConnection
   /**
    * Joins a session with the given session ID.
    * @param sessionId The ID of the session to join.
-   * @param roleId The role to join the session as.
    * @resolves The new session client for the session, `null` if not found.
    * @rejects If there is an error joining the session.
    */
-  public $joinSession(
-    sessionId: string,
-    roleId: TMemberRoleId,
-  ): Promise<SessionClient | null> {
+  public $joinSession(sessionId: string): Promise<SessionClient | null> {
     return new Promise((resolve, reject) => {
-      this.request(
-        'request-join-session',
-        { sessionId, roleId },
-        'Joining session.',
-        {
-          onResponse: (event) => {
-            switch (event.method) {
-              case 'session-joined':
-                resolve(
-                  new SessionClient(event.data.session, this, event.data.role),
-                )
-                break
-              case 'error':
-                // Resolve null if not found.
-                if (event.code === ServerEmittedError.CODE_SESSION_NOT_FOUND) {
-                  resolve(null)
-                }
-                // Otherwise, reject with error.
-                else {
-                  reject(new Error(event.message))
-                }
-                break
-              default:
-                let error: Error = new Error(
-                  `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
-                )
-                console.log(error)
-                console.log(event)
-                reject(error)
-            }
-          },
+      this.request('request-join-session', { sessionId }, 'Joining session.', {
+        onResponse: (event) => {
+          switch (event.method) {
+            case 'session-joined':
+              resolve(
+                new SessionClient(
+                  event.data.session,
+                  this,
+                  event.data.memberId,
+                ),
+              )
+              break
+            case 'error':
+              // Resolve null if not found.
+              if (event.code === ServerEmittedError.CODE_SESSION_NOT_FOUND) {
+                resolve(null)
+              }
+              // Otherwise, reject with error.
+              else {
+                reject(new Error(event.message))
+              }
+              break
+            default:
+              let error: Error = new Error(
+                `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
+              )
+              console.log(error)
+              console.log(event)
+              reject(error)
+          }
         },
-      )
+      })
     })
   }
 

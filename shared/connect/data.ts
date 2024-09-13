@@ -1,9 +1,11 @@
 import { TActionExecutionJson } from 'metis/missions/actions/executions'
 import { TActionOutcomeJson } from 'metis/missions/actions/outcomes'
 import { TCommonMissionForceJson } from 'metis/missions/forces'
-import { TSessionConfig, TSessionJson, TSessionRole } from 'metis/sessions'
-import { TSessionMemberJson } from 'metis/sessions/members'
-import { TMemberRoleId } from 'metis/sessions/members/roles'
+import { TSessionConfig, TSessionJson } from 'metis/sessions'
+import {
+  TCommonSessionMember,
+  TSessionMemberJson,
+} from 'metis/sessions/members'
 import { AnyObject } from 'metis/toolbox/objects'
 import { TCommonMissionNodeJson } from '../missions/nodes'
 
@@ -466,9 +468,9 @@ export type TResponseEvents = {
        */
       session: TSessionJson | null
       /**
-       * The ID of the role of the client in the session.
+       * The ID of the member associated with the session.
        */
-      roleId: TMemberRoleId | null
+      memberId: TCommonSessionMember['_id'] | null
     },
     TClientEvents['request-current-session']
   >
@@ -483,9 +485,9 @@ export type TResponseEvents = {
        */
       session: TSessionJson
       /**
-       * The role of the client in the session.
+       * The ID of the member in the session.
        */
-      role: TSessionRole
+      memberId: TCommonSessionMember['_id']
     },
     TClientEvents['request-join-session']
   >
@@ -630,10 +632,6 @@ export type TRequestEvents = {
        * The ID of the session to join.
        */
       sessionId: string
-      /**
-       * The role the client wants to join as.
-       */
-      roleId: TMemberRoleId
     }
   >
   /**
