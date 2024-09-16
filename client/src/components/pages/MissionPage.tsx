@@ -111,7 +111,7 @@ export default function MissionPage({
       try {
         beginLoading('Loading mission...')
         let mission = await ClientMission.$fetchOne(missionId, {
-          openAll: true,
+          nonRevealedDisplayMode: 'show',
           populateTargets: true,
         })
         setMission(mission)

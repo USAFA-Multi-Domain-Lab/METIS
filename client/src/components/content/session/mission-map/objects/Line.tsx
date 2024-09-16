@@ -9,6 +9,7 @@ export default function Line({
   direction,
   start,
   length,
+  blurred = false,
 }: TLine_P): JSX.Element | null {
   /* -- computed -- */
 
@@ -56,6 +57,9 @@ export default function Line({
     style.left = `${x}em`
     style.top = `${y}em`
 
+    // If the line should be blurred, add the blur style.
+    if (blurred) style.filter = 'brightness(0.4)'
+
     // Return the style.
     return style
   }, [
@@ -89,6 +93,11 @@ export type TLine_P = {
    * The length of the line.
    */
   length: number
+  /**
+   * Whether the line should be blurred.
+   * @default false
+   */
+  blurred?: boolean
 }
 
 /**

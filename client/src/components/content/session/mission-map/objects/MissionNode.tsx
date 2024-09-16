@@ -232,6 +232,7 @@ export default function MissionNode({
    */
   const rootClassName: string = compute(() => {
     let classList = ['MissionNode']
+    let mission = node.mission
 
     // Add the selectable class if the node has
     // a selection handler.
@@ -266,6 +267,19 @@ export default function MissionNode({
     if (blocked) {
       classList.push('Blocked')
     }
+    // Add the "Hidden" class if the node is not
+    // revealed and if the non-revealed display
+    // mode is set to 'hide'.
+    if (mission.nonRevealedDisplayMode === 'hide' && !node.revealed) {
+      classList.push('Hidden')
+    }
+    // Add the "Blurred" class if the node is not
+    // revealed and if the non-revealed display
+    // mode is set to 'blur'.
+    if (mission.nonRevealedDisplayMode === 'blur' && !node.revealed) {
+      classList.push('Blurred')
+    }
+
     // Add the execution state class.
     classList.push(StringToolbox.capitalize(executionState))
 

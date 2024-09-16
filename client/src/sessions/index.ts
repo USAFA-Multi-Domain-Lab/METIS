@@ -55,7 +55,9 @@ export default class SessionClient extends Session<TClientMissionTypes> {
     memberId: string,
   ) {
     // Gather details.
-    let mission: ClientMission = new ClientMission(data.mission)
+    let mission: ClientMission = new ClientMission(data.mission, {
+      nonRevealedDisplayMode: 'blur',
+    })
     let {
       _id,
       state,
@@ -256,7 +258,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
 
     // If the member is not authorized to execute actions,
     // callback an error.
-    if (this.member.isAuthorized('manipulateNodes')) {
+    if (!this.member.isAuthorized('manipulateNodes')) {
       return onError(
         'You do not have the correct permissions to execute actions.',
       )

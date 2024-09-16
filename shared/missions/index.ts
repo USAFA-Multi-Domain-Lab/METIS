@@ -94,7 +94,7 @@ export default abstract class Mission<
     this.root = this.initializeRoot()
 
     // Parse options.
-    let { openAll = false, populateTargets = false } = options
+    let { populateTargets = false } = options
 
     // Import node structure into the mission.
     this.importStructure(
@@ -322,84 +322,6 @@ export default abstract class Mission<
     Mission.BLUE,
     Mission.PURPLE,
     Mission.MAGENTA,
-    //     // lightest
-    //     '#ffffff', // grayscale
-    //     '#b3e0ff', // blue
-    //     '#dcacad', // red
-    //     '#ecdead', // yellow
-    //     '#c9f7c6', // green
-    //     '#dec0aa', // orange
-    //     '#bdaaca', // purple
-    //     '#f8bae3', // magenta
-    //
-    //     // lighter
-    //     '#e1e1e1', // grayscale
-    //     '#9cd2ff', // blue
-    //     '#e69a9d', // red
-    //     '#f0db98', // yellow
-    //     '#b4e391', // green
-    //     '#e1b28e', // orange
-    //     '#b797cb', // purple
-    //     '#fd9edd', // magenta
-    //
-    //     // darker
-    //     '#cfcfcf', // grayscale
-    //     '#77c2ff', // blue
-    //     '#ea8388', // red
-    //     '#f0d57c', // yellow
-    //     '#9edc7c', // green
-    //     '#eeac7a', // orange
-    //     '#b887d7', // purple
-    //     '#fc84d4', // magenta
-    //
-    //     '#bbbbbb', // grayscale
-    //     '#52b1ff', // blue
-    //     '#f1696f', // red
-    //     '#f7d154', // yellow
-    //     '#7ed321', // green
-    //     '#f49c58', // orange
-    //     '#b36ae2', // purple
-    //     '#ff66cc', // magenta
-    //
-    //     '#ffffff',
-    //     '#A4A4A4',
-    //     '#848484',
-    //     '#6E6E6E',
-    //
-    //     '#9ae293',
-    //     '#65eb59',
-    //     '#45cf45',
-    //     '#33b533',
-    //
-    //     '#97cbf5',
-    //     '#52b1ff',
-    //     '#34a1fb',
-    //     '#2f89d3',
-    //
-    //     '#dea3ff',
-    //     '#b839ff',
-    //     '#ae66d6',
-    //     '#9242be',
-    //
-    //     '#f59a9e',
-    //     '#f1696f',
-    //     '#f9484f',
-    //     '#d6353b',
-    //
-    //     '#f597ce',
-    //     '#eb5fb2',
-    //     '#fa39ac',
-    //     '#cd328e',
-    //
-    //     '#f5c18a',
-    //     '#f5b066',
-    //     '#ffab50',
-    //     '#c78032',
-    //
-    //     '#f5e677',
-    //     '#f6e351',
-    //     '#f7e346',
-    //     '#d0bf3b',
   ]
 
   /**
@@ -661,11 +583,6 @@ export interface TCommonMissionJson {
  * Options for creating a Mission object.
  */
 export type TMissionOptions = {
-  /**
-   * Whether or not to force open all nodes.
-   * @default false
-   */
-  openAll?: boolean
   /**
    * Whether to populate the targets.
    * @default false

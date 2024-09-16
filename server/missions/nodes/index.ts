@@ -81,7 +81,7 @@ export default class ServerMissionNode extends MissionNode<TServerMissionTypes> 
     return new Promise<void>(
       (resolve: () => void, reject: (error: Error) => void) => {
         if (this.openable) {
-          this.opened = true
+          this._opened = true
           resolve()
         } else {
           reject(new Error('Node is not openable.'))
@@ -152,7 +152,7 @@ export default class ServerMissionNode extends MissionNode<TServerMissionTypes> 
 
     // Set the node to opened if it is openable.
     if (this.openable) {
-      this.opened = true
+      this._opened = true
     }
 
     // Return outcome.
@@ -166,7 +166,7 @@ export default class ServerMissionNode extends MissionNode<TServerMissionTypes> 
 
     // If the node is open and has children,
     // update the block status for children.
-    if (this.isOpen && this.hasChildren) {
+    if (this.opened && this.hasChildren) {
       this.updateBlockStatusForChildren(blocked)
     }
   }
@@ -180,7 +180,7 @@ export default class ServerMissionNode extends MissionNode<TServerMissionTypes> 
     node.children.forEach((child) => {
       child.updateBlockStatus(blocked)
 
-      if (child.isOpen && child.hasChildren) {
+      if (child.opened && child.hasChildren) {
         child.updateBlockStatusForChildren(blocked, child)
       }
     })

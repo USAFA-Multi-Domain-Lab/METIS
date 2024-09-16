@@ -54,6 +54,11 @@ export default class ClientMission
   }
 
   /**
+   * Opts to have all nodes in the mission opened by default.
+   */
+  public readonly nonRevealedDisplayMode: TNonRevealedDisplayMode
+
+  /**
    * The depth of the missions node structure.
    */
   protected _depth: number
@@ -232,7 +237,7 @@ export default class ClientMission
     super(data, options)
 
     // Parse client-specific options.
-    let { existsOnServer = false } = options
+    let { existsOnServer = false, nonRevealedDisplayMode = 'hide' } = options
 
     // Initialize client-specific properties.
     this._existsOnServer = existsOnServer
@@ -244,6 +249,7 @@ export default class ClientMission
     this.relationshipLines = []
     this.lastOpenedNode = null
     this._defectiveObjects = []
+    this.nonRevealedDisplayMode = nonRevealedDisplayMode
 
     // If there is no existing prototypes,
     // create one.
@@ -1319,7 +1325,21 @@ export type TClientMissionOptions = TMissionOptions & {
    * @default false
    */
   existsOnServer?: boolean
+  /**
+   * If a node is available to the client, but has not technically
+   * been revealed to the client, this option can be set to determine
+   * how the node is displayed on the mission map.
+   * @default 'hide'
+   */
+  nonRevealedDisplayMode?: TNonRevealedDisplayMode
 }
+
+/**
+ * If a node is available to the client, but has not technically
+ * been revealed to the client, this option can be set to determine
+ * how the node is displayed on the mission map.
+ */
+export type TNonRevealedDisplayMode = 'hide' | 'blur' | 'show'
 
 /**
  * Options for the creation of a ClientMission object when the mission is known to exist on the server.

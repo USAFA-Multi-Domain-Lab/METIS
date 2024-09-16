@@ -65,7 +65,7 @@ export abstract class MissionForce<
       cursor: TNode<T> = this.root,
       cursorStructure: AnyObject = {},
     ): AnyObject => {
-      if (cursor.isOpen) {
+      if (cursor.opened) {
         for (let child of cursor.children) {
           if (child.hasChildren) {
             cursorStructure[child.structureKey] = algorithm(child)
@@ -114,7 +114,7 @@ export abstract class MissionForce<
     })
 
     // If root node is not open, open it.
-    if (!this.root.isOpen) {
+    if (!this.root.opened) {
       this.root.open()
     }
   }

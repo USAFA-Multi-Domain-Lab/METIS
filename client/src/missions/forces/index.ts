@@ -190,10 +190,17 @@ export default class ClientMissionForce
     // relationship lines between nodes.
     const baseAlgorithm = (parent: ClientMissionNode = this.root) => {
       // Get details.
+      const { nonRevealedDisplayMode } = this.mission
       let children: ClientMissionNode[] = parent.children
       let firstChild: ClientMissionNode | null = parent.firstChildNode
       let lastChild: ClientMissionNode | null = parent.lastChildNode
       let childCount: number = children.length
+      let blurred: boolean = nonRevealedDisplayMode === 'blur' && !parent.opened
+
+      // If the parent is not opened, and the non-revealed
+      // display mode is set to hide, then prevent the algorithm
+      // from drawing lines any deeper in the structure by returning.
+      if (nonRevealedDisplayMode === 'hide' && !parent.opened) return
 
       // If the parent is not the invisible root node
       // in the mission and the parent has children,
@@ -220,6 +227,7 @@ export default class ClientMissionForce
           // between the edge of the parent node and
           // the edge of the column.
           length: columnEdgeDistance,
+          blurred,
         })
 
         // ! line-draw-end
@@ -280,6 +288,7 @@ export default class ClientMissionForce
             direction: 'vertical',
             start: downMidStart,
             length: downMidLength,
+            blurred,
           })
         }
 
@@ -325,6 +334,7 @@ export default class ClientMissionForce
             direction: 'horizontal',
             start: midToChildStart,
             length: midToChildLength,
+            blurred,
           })
 
           // ! line-draw-end

@@ -32,6 +32,12 @@ export default function LobbyPage({
   /* -- computed -- */
 
   /**
+   * The member that is currently logged in
+   * on this client.
+   */
+  const currentMember = compute(() => session.getMemberByUserId(login.user._id))
+
+  /**
    * Props for navigation.
    */
   const navigation = compute(
@@ -40,24 +46,6 @@ export default function LobbyPage({
       boxShadow: 'alt-3',
     }),
   )
-
-  /**
-   * Class name for the button section.
-   */
-  const buttonSectionClass = compute(() => {
-    let classNames: string[] = ['ButtonSection', 'Section']
-
-    // Hide the button section if the user is
-    // not authorized.
-    if (
-      !login.user.isAuthorized('sessions_join_manager') ||
-      !login.user.isAuthorized('sessions_join_observer')
-    ) {
-      classNames.push('Hidden')
-    }
-
-    return classNames.join(' ')
-  })
 
   /* -- functions -- */
 
@@ -172,6 +160,42 @@ export default function LobbyPage({
 
   /* -- render -- */
 
+  /**
+   * JSX for the button section.
+   */
+  const buttonSectionJsx = compute<JSX.Element>(() => {
+    // Gather details.
+    let buttonsJsx: JSX.Element[] = []
+
+    // If the current member can start and end sessions,
+    // add the start session button.
+    if (currentMember?.isAuthorized('startEndSessions')) {
+      buttonsJsx.push(
+        <ButtonText
+          key={'start-button'}
+          text={'Start Session'}
+          onClick={onClickStartSession}
+        />,
+      )
+    }
+
+    // If the current member can configure sessions,
+    // add the configure session button.
+    if (currentMember?.isAuthorized('configureSessions')) {
+      buttonsJsx.push(
+        <ButtonText
+          key={'configure-button'}
+          text={'Configure Session'}
+          onClick={onClickSessionConfig}
+        />,
+      )
+    }
+
+    // Return the JSX.
+    return <div className='ButtonSection Section'>{buttonsJsx}</div>
+  })
+
+  // Render root component.
   return (
     <div className='LobbyPage Page'>
       <DefaultLayout navigation={navigation}>
@@ -189,13 +213,7 @@ export default function LobbyPage({
         <div className='MembersSection Section'>
           <SessionMembers session={session} />
         </div>
-        <div className={buttonSectionClass}>
-          <ButtonText text={'Start Session'} onClick={onClickStartSession} />
-          <ButtonText
-            text={'Configure Session'}
-            onClick={onClickSessionConfig}
-          />
-        </div>
+        {buttonSectionJsx}
       </DefaultLayout>
     </div>
   )

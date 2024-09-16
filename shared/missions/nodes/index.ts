@@ -105,7 +105,12 @@ export default abstract class MissionNode<
   /**
    * Whether or not this node was manually opened.
    */
-  protected opened: boolean
+  protected _opened: boolean
+
+  // Implemented
+  public get opened(): TCommonMissionNode['opened'] {
+    return this._opened
+  }
 
   /**
    * Whether or not this node is blocked.
@@ -255,18 +260,13 @@ export default abstract class MissionNode<
   }
 
   // Implemented
-  public get isOpen(): TCommonMissionNode['isOpen'] {
-    return this.opened
-  }
-
-  // Implemented
   public get openable(): TCommonMissionNode['openable'] {
     return !this.opened
   }
 
   // Implemented
   public get revealed(): TCommonMissionNode['revealed'] {
-    return this.parent === null || this.parent.isOpen
+    return this.parent === null || this.parent.opened
   }
 
   /**
@@ -306,7 +306,7 @@ export default abstract class MissionNode<
       data.actions ?? MissionNode.DEFAULT_PROPERTIES.actions,
       { populateTargets },
     )
-    this.opened = data.opened ?? MissionNode.DEFAULT_PROPERTIES.opened
+    this._opened = data.opened ?? MissionNode.DEFAULT_PROPERTIES.opened
     this._blocked = data.blocked ?? MissionNode.DEFAULT_PROPERTIES.blocked
     this._execution = this.importExecutions(
       data.execution !== undefined
@@ -595,7 +595,7 @@ export interface TCommonMissionNode {
   /**
    * Whether or not this node is open.
    */
-  get isOpen(): boolean
+  get opened(): boolean
   /**
    * Whether or not this node can be opened.
    */

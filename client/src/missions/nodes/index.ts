@@ -334,7 +334,7 @@ export default class ClientMissionNode
       // If the node is openable...
       if (this.openable) {
         // Set the node to open.
-        this.opened = true
+        this._opened = true
         // Update last opened node cache.
         this.mission.lastOpenedNode = this
         // Reveal child nodes, if any.
@@ -467,7 +467,7 @@ export default class ClientMissionNode
     // If the outcome is successful and the node is openable...
     if (successful && this.openable) {
       // Set the node to open.
-      this.opened = true
+      this._opened = true
       // Update last opened node cache.
       this.mission.lastOpenedNode = this
       // Reveal child nodes, if any.
@@ -494,7 +494,7 @@ export default class ClientMissionNode
 
     // If the node is open and has children,
     // update the block status for children.
-    if (this.isOpen && this.hasChildren) {
+    if (this.opened && this.hasChildren) {
       this.updateBlockStatusForChildren(blocked)
     }
 
@@ -511,7 +511,7 @@ export default class ClientMissionNode
     node.children.forEach((child) => {
       child.updateBlockStatus(blocked)
 
-      if (child.isOpen && child.hasChildren) {
+      if (child.opened && child.hasChildren) {
         child.updateBlockStatusForChildren(blocked, child)
       }
     })

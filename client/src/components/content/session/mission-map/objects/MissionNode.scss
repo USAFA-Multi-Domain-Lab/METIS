@@ -132,6 +132,11 @@
       animation: blocked 1s ease-in-out forwards;
     }
 
+    &.Blurred {
+      pointer-events: none;
+      opacity: 0.4;
+    }
+
     // Add a transition out of the pending
     // open state.
     &:not(.PendingOpen):not(.PendingExecInit):not(.Executing) {
