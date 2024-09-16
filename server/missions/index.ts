@@ -3,9 +3,12 @@ import { TCommonMissionForceJson } from 'metis/missions/forces'
 import { TMissionPrototypeOptions } from 'metis/missions/nodes/prototypes'
 import StringToolbox from 'metis/toolbox/strings'
 import seedrandom, { PRNG } from 'seedrandom'
+import SessionServer from '../sessions'
+import ServerSessionMember from '../sessions/members'
 import ServerTargetEnvironment from '../target-environments'
 import { TTargetEnvContextMission } from '../target-environments/context-provider'
 import ServerTarget from '../target-environments/targets'
+import ServerUser from '../users'
 import ServerMissionAction from './actions'
 import ServerActionExecution from './actions/executions'
 import { ServerRealizedOutcome } from './actions/outcomes'
@@ -108,6 +111,9 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
  * mission-related classes.
  */
 export interface TServerMissionTypes extends TCommonMissionTypes {
+  session: SessionServer
+  member: ServerSessionMember
+  user: ServerUser
   mission: ServerMission
   force: ServerMissionForce
   prototype: ServerMissionPrototype

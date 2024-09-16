@@ -1,5 +1,8 @@
+import { TCommonSession } from 'metis/sessions'
+import { TCommonSessionMember } from 'metis/sessions/members'
 import { TCommonTargetEnv } from 'metis/target-environments'
 import { TCommonTarget } from 'metis/target-environments/targets'
+import { TCommonUser } from 'metis/users'
 import { v4 as generateHash } from 'uuid'
 import context from '../context'
 import { AnyObject } from '../toolbox/objects'
@@ -521,6 +524,9 @@ export default abstract class Mission<
  * mission-related classes.
  */
 export type TCommonMissionTypes = {
+  session: TCommonSession
+  member: TCommonSessionMember
+  user: TCommonUser
   mission: TCommonMission
   force: TCommonMissionForce
   prototype: TCommonMissionPrototype

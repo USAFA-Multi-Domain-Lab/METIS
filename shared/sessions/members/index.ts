@@ -1,6 +1,7 @@
+import { TCommonMissionTypes } from 'metis/missions'
 import { TCommonMissionForce, TForce } from 'metis/missions/forces'
 import { TCommonUser, TCommonUserJson, TSessionUser } from 'metis/users'
-import { TCommonSession, TCommonSessionTypes, TSession } from '..'
+import { TCommonSession, TSession } from '..'
 import MemberPermission from './permissions'
 import MemberRole, { TMemberRoleId } from './roles'
 
@@ -10,7 +11,7 @@ import MemberRole, { TMemberRoleId } from './roles'
  * Represents a user using METIS.
  */
 export default abstract class SessionMember<
-  T extends TCommonSessionTypes = TCommonSessionTypes,
+  T extends TCommonMissionTypes = TCommonMissionTypes,
 > implements TCommonSessionMember
 {
   // Implemented
@@ -106,7 +107,7 @@ export default abstract class SessionMember<
  * @param T The session types.
  * @returns The session member type.
  */
-export type TMember<T extends TCommonSessionTypes> = T['member']
+export type TMember<T extends TCommonMissionTypes> = T['member']
 
 /**
  * Interface for the abstract `SessionMember` class.

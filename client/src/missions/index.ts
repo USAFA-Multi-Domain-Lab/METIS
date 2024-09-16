@@ -1,9 +1,12 @@
 import axios, { AxiosResponse } from 'axios'
 import { TLine_P } from 'src/components/content/session/mission-map/objects/Line'
 import { TPrototypeSlot_P } from 'src/components/content/session/mission-map/objects/PrototypeSlot'
+import SessionClient from 'src/sessions'
+import ClientSessionMember from 'src/sessions/members'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
 import { TEventListenerTarget } from 'src/toolbox/hooks'
+import ClientUser from 'src/users'
 import { v4 as generateHash } from 'uuid'
 import Mission, {
   TCommonMissionJson,
@@ -1287,6 +1290,9 @@ export default class ClientMission
  * mission-related classes.
  */
 export interface TClientMissionTypes extends TCommonMissionTypes {
+  session: SessionClient
+  member: ClientSessionMember
+  user: ClientUser
   mission: ClientMission
   force: ClientMissionForce
   prototype: ClientMissionPrototype

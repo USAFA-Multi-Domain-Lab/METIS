@@ -1,15 +1,10 @@
 import { TClientEvents, TServerEvents, TServerMethod } from 'metis/connect/data'
 import { ServerEmittedError } from 'metis/connect/errors'
-import {
-  TCommonMissionJson,
-  TCommonMissionTypes,
-  TMissionJsonOptions,
-} from 'metis/missions'
+import { TCommonMissionJson, TMissionJsonOptions } from 'metis/missions'
 import ServerMission, { TServerMissionTypes } from 'metis/server/missions'
 import ServerMissionAction from 'metis/server/missions/actions'
 import ServerMissionNode from 'metis/server/missions/nodes'
 import Session, {
-  TCommonSessionTypes,
   TSessionBasicJson,
   TSessionConfig,
   TSessionJson,
@@ -23,13 +18,12 @@ import ClientConnection from '../connect/clients'
 import ServerActionExecution from '../missions/actions/executions'
 import ServerMissionForce from '../missions/forces'
 import EnvironmentContextProvider from '../target-environments/context-provider'
-import ServerUser from '../users'
 import ServerSessionMember from './members'
 
 /**
  * Server instance for sessions. Handles server-side logic for a session with participating clients. Communicates with clients to conduct the session.
  */
-export default class SessionServer extends Session<TServerSessionTypes> {
+export default class SessionServer extends Session<TServerMissionTypes> {
   // Overridden.
   public get state() {
     return this._state
@@ -79,7 +73,7 @@ export default class SessionServer extends Session<TServerSessionTypes> {
    * @returns The users.
    */
   public getMembersForForce(forceId: string): ServerSessionMember[] {
-    let x: TServerSessionTypes['member']
+    let x: TServerMissionTypes['member']
     // Get all members that either have complete visibility
     // or are assigned to the force with the given ID.
     return [
@@ -1278,25 +1272,6 @@ export default class SessionServer extends Session<TServerSessionTypes> {
 }
 
 /* -- TYPES -- */
-
-/**
- * Server-specific types for Session objects.
- * @note Used to construct `TServerSessionTypes`.
- */
-interface TServerSessionSpecificTypes
-  extends Omit<TCommonSessionTypes, keyof TCommonMissionTypes> {
-  session: SessionServer
-  member: ServerSessionMember
-  user: ServerUser
-}
-
-/**
- * Server types for Session objects.
- * @note Used as a generic argument for all server,
- * session-related classes.
- */
-export type TServerSessionTypes = TServerSessionSpecificTypes &
-  TServerMissionTypes
 
 /**
  * Options for converting a session to JSON.

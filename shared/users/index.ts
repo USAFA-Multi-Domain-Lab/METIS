@@ -1,4 +1,4 @@
-import { TCommonSessionTypes } from 'metis/sessions'
+import { TCommonMissionTypes } from 'metis/missions'
 import { v4 as generateHash } from 'uuid'
 import UserAccess, { TUserAccess } from './accesses'
 import UserPermission, {
@@ -191,7 +191,7 @@ export default abstract class User implements TCommonUser {
  * @param T The session types.
  * @returns The session user type.
  */
-export type TSessionUser<T extends TCommonSessionTypes> = T['user']
+export type TSessionUser<T extends TCommonMissionTypes> = T['user']
 
 /**
  * Options for creating new User objects.

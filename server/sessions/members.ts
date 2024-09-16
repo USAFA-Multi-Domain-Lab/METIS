@@ -3,13 +3,14 @@ import { ServerEmittedError } from 'metis/connect/errors'
 import SessionMember from 'metis/sessions/members'
 import MemberRole, { TMemberRoleId } from 'metis/sessions/members/roles'
 import StringToolbox from 'metis/toolbox/strings'
-import SessionServer, { TServerSessionTypes } from '.'
+import SessionServer from '.'
 import ClientConnection from '../connect/clients'
+import { TServerMissionTypes } from '../missions'
 
 /**
  * Server-side representation of a session member.
  */
-export default class ServerSessionMember extends SessionMember<TServerSessionTypes> {
+export default class ServerSessionMember extends SessionMember<TServerMissionTypes> {
   /**
    * The WS connection to the client where the given user is logged in.
    */

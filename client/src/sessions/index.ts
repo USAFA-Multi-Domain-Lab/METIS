@@ -9,9 +9,7 @@ import {
   TResponseEvents,
   TServerEvents,
 } from '../../../shared/connect/data'
-import { TCommonMissionTypes } from '../../../shared/missions'
 import Session, {
-  TCommonSessionTypes,
   TSessionBasicJson,
   TSessionConfig,
   TSessionJson,
@@ -25,7 +23,7 @@ import ClientSessionMember from './members'
 /**
  * Client instance for sessions. Handles client-side logic for sessions. Communicates with server to conduct a session.
  */
-export default class SessionClient extends Session<TClientSessionTypes> {
+export default class SessionClient extends Session<TClientMissionTypes> {
   /**
    * The server connection used to communicate with the server.
    */
@@ -990,25 +988,6 @@ export default class SessionClient extends Session<TClientSessionTypes> {
 }
 
 /* -- TYPES -- */
-
-/**
- * Client-specific types for Session objects.
- * @note Used to construct `TClientSessionTypes`.
- */
-interface TClientSessionSpecificTypes
-  extends Omit<TCommonSessionTypes, keyof TCommonMissionTypes> {
-  session: SessionClient
-  member: ClientSessionMember
-  user: ClientUser
-}
-
-/**
- * Client types for Session objects.
- * @note Used as a generic argument for all client,
- * session-related classes.
- */
-export type TClientSessionTypes = TClientSessionSpecificTypes &
-  TClientMissionTypes
 
 /**
  * Options for methods that make requests to

@@ -11,7 +11,7 @@ import { TCommonSessionMember, TMember, TSessionMemberJson } from './members'
 /**
  * Base class for sessions. Represents a session of a mission being executed by users.
  */
-export default abstract class Session<T extends TCommonSessionTypes>
+export default abstract class Session<T extends TCommonMissionTypes>
   implements TCommonSession
 {
   // Implemented
@@ -302,23 +302,11 @@ export type TSessionBasicJson = {
 }
 
 /**
- * Common types for Session objects.
- * @note Used as a generic argument for all base,
- * session-related classes.
- */
-export interface TCommonSessionTypes extends TCommonMissionTypes {
-  mission: TCommonMission
-  session: TCommonSession
-  member: TCommonSessionMember
-  user: TCommonUser
-}
-
-/**
  * Extracts the session type from the session types.
  * @param T The session types.
  * @returns The session type.
  */
-export type TSession<T extends TCommonSessionTypes> = T['session']
+export type TSession<T extends TCommonMissionTypes> = T['session']
 
 /**
  * Interface of the abstract `Session` class.
