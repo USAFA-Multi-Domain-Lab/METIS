@@ -9,7 +9,7 @@ export type TIntro = TBaseOutput & {
   /**
    * The type of output.
    */
-  type: 'intro-message'
+  type: 'intro'
   /**
    * The force's name.
    */
@@ -27,7 +27,7 @@ export type TIntroJson = TBaseOutputJson & {
   /**
    * The type of output.
    */
-  type: 'intro-message'
+  type: 'intro'
   /**
    * The force's name.
    */

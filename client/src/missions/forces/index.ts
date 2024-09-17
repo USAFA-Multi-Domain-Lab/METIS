@@ -486,7 +486,7 @@ export default class ClientMissionForce
   private parseOutputs(outputs: TCommonOutputJson[]): ClientOutput[] {
     return outputs.map((outputJson: TCommonOutputJson) => {
       switch (outputJson.type) {
-        case 'intro-message':
+        case 'intro':
           return new ClientIntroOutput(outputJson)
         case 'pre-execution':
           return new ClientPreExecutionOutput(outputJson)

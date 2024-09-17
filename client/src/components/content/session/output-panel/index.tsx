@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import ClientMissionForce from 'src/missions/forces'
 import { useEventListener } from 'src/toolbox/hooks'
+import Custom from './Custom'
 import ExecutionDone from './ExecutionDone'
 import ExecutionStarted from './ExecutionStarted'
 import './index.scss'
@@ -29,39 +30,46 @@ export default function OutputPanel({ force }: TOutputPanel_P): JSX.Element {
       <div className='BorderBox'>
         {outputs.map((output) => {
           switch (output.type) {
-            case 'intro-message':
+            case 'intro':
               return (
                 <Intro
                   output={output}
-                  key={`message-${output._id}_type-${output.type}_time-${output.time}`}
+                  key={`output-${output._id}_type-${output.type}_time-${output.time}`}
                 />
               )
             case 'pre-execution':
               return (
                 <PreExecution
                   output={output}
-                  key={`message-${output._id}_type-${output.type}_time-${output.time}`}
+                  key={`output-${output._id}_type-${output.type}_time-${output.time}`}
                 />
               )
             case 'execution-started':
               return (
                 <ExecutionStarted
                   output={output}
-                  key={`message-${output._id}_type-${output.type}_time-${output.time}`}
+                  key={`output-${output._id}_type-${output.type}_time-${output.time}`}
                 />
               )
             case 'execution-succeeded':
               return (
                 <ExecutionDone
                   output={output}
-                  key={`message-${output._id}_type-${output.type}_time-${output.time}`}
+                  key={`output-${output._id}_type-${output.type}_time-${output.time}`}
                 />
               )
             case 'execution-failed':
               return (
                 <ExecutionDone
                   output={output}
-                  key={`message-${output._id}_type-${output.type}_time-${output.time}`}
+                  key={`output-${output._id}_type-${output.type}_time-${output.time}`}
+                />
+              )
+            case 'custom':
+              return (
+                <Custom
+                  output={output}
+                  key={`output-${output._id}_type-${output.type}_time-${output.time}`}
                 />
               )
             default:

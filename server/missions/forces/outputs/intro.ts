@@ -30,7 +30,7 @@ export default class ServerIntroOutput implements TIntro {
   public constructor(mission: ServerMission, force: ServerMissionForce) {
     this._id = generateHash()
     this.forceId = force._id
-    this.type = 'intro-message'
+    this.type = 'intro'
     this.forceName = force.name
     this.message = mission.introMessage
     this.time = Date.now()

@@ -16,9 +16,7 @@ import { v4 as generateHash } from 'uuid'
 import ServerActionExecution from '../missions/actions/executions'
 import ServerMissionForce from '../missions/forces'
 import { ServerOutput } from '../missions/forces/outputs'
-import ServerExecutionFailedOutput from '../missions/forces/outputs/execution-failed'
 import ServerExecutionStartedOutput from '../missions/forces/outputs/execution-started'
-import ServerExecutionSucceededOutput from '../missions/forces/outputs/execution-succeeded'
 import ServerPreExecutionOutput from '../missions/forces/outputs/pre-execution'
 import EnvironmentContextProvider from '../target-environments/context-provider'
 
@@ -795,6 +793,7 @@ export default class SessionServer extends Session<
         participant: participant,
         environmentContextProvider: this.environmentContextProvider,
         effectsEnabled: this.config.effectsEnabled,
+        sendOutput: this.sendOutput,
         onInit: (execution: ServerActionExecution) => {
           // Construct payload for action execution
           // initiated event.
@@ -843,21 +842,9 @@ export default class SessionServer extends Session<
 
       // If the action was successful, then...
       if (outcome.successful) {
-        // Send the output to the force.
-        this.sendOutput(
-          new ServerExecutionSucceededOutput(action!, participant.user),
-        )
-
         // Add child nodes to the completion payload.
         completionPayload.data.revealedChildNodes = action.node.children.map(
           (node) => node.toJson({ includeSessionData: true }),
-        )
-      }
-      // Otherwise, if the action failed, then...
-      else {
-        // Send the output to the force.
-        this.sendOutput(
-          new ServerExecutionFailedOutput(action!, participant.user),
         )
       }
 
@@ -1146,7 +1133,7 @@ export default class SessionServer extends Session<
     force.storeOutput(output)
 
     // Send the output to all users in the force.
-    for (let user of this.getUsersForForce(output.forceId)) {
+    for (let user of this.getUsersForForce(forceId)) {
       user.emit('send-output', {
         data: {
           outputData: output.toJson(),

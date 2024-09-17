@@ -14,6 +14,9 @@ import EnvironmentContextProvider, {
 import seedrandom, { PRNG } from 'seedrandom'
 import { TServerMissionTypes } from '..'
 import ServerEffect, { TServerEffectOptions } from '../effects'
+import { ServerOutput } from '../forces/outputs'
+import ServerExecutionFailedOutput from '../forces/outputs/execution-failed'
+import ServerExecutionSucceededOutput from '../forces/outputs/execution-succeeded'
 import ServerMissionNode from '../nodes'
 import ServerActionExecution from './executions'
 import { ServerPotentialOutcome, ServerRealizedOutcome } from './outcomes'
@@ -66,6 +69,7 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
       participant,
       environmentContextProvider,
       effectsEnabled = false,
+      sendOutput,
       onInit = () => {},
     } = options
 
@@ -102,32 +106,42 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
         // Resolve with the determined outcome.
         resolve(realizedOutcome)
 
-        // If the outcome is successful and the effects
-        // are enabled...
-        if (realizedOutcome.successful && effectsEnabled) {
-          // ...iterate through the effects and apply them.
-          this.effects.forEach(async (effect: ServerEffect) => {
-            try {
-              // Apply the effect to the target.
-              await environmentContextProvider.applyEffect(
-                effect,
-                participant.user.username,
-              )
+        // If the outcome is successful...
+        if (realizedOutcome.successful) {
+          // Send the output to the force.
+          sendOutput(new ServerExecutionSucceededOutput(this, participant.user))
 
-              // todo: implement internal effects feedback
-              // participant.emit('effect-successful', {
-              //   message: 'The effect was successfully applied to its target.',
-              // })
-            } catch (error: any) {
-              // Log the error.
-              plcApiLogger.error(error)
+          // If the effects are enabled...
+          if (effectsEnabled) {
+            // ...iterate through the effects and apply them.
+            this.effects.forEach(async (effect: ServerEffect) => {
+              try {
+                // Apply the effect to the target.
+                await environmentContextProvider.applyEffect(
+                  effect,
+                  participant.user.username,
+                )
 
-              // todo: implement internal effects feedback
-              // participant.emitError(
-              //   new ServerEmittedError(ServerEmittedError.CODE_EFFECT_FAILED),
-              // )
-            }
-          })
+                // todo: implement internal effects feedback
+                // participant.emit('effect-successful', {
+                //   message: 'The effect was successfully applied to its target.',
+                // })
+              } catch (error: any) {
+                // Log the error.
+                plcApiLogger.error(error)
+
+                // todo: implement internal effects feedback
+                // participant.emitError(
+                //   new ServerEmittedError(ServerEmittedError.CODE_EFFECT_FAILED),
+                // )
+              }
+            })
+          }
+        }
+        // Otherwise, if the action failed, then...
+        else {
+          // Send the output to the force.
+          sendOutput(new ServerExecutionFailedOutput(this, participant.user))
         }
       }, end - Date.now())
 
@@ -179,6 +193,11 @@ export type TExecuteOptions<TActionExecution extends IActionExecution> = {
    * @default false
    */
   effectsEnabled: boolean
+  /**
+   * Sends an output to the force's output panel.
+   * @param output The output to send to the force.
+   */
+  sendOutput: (output: ServerOutput) => void
   /**
    * Callback for when the action execution process is initated. Passes a timestamp of when the process is expected to conclude and the promise to be resolved.
    */
