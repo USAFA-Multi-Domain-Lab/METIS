@@ -1,4 +1,4 @@
-import IActionExecution, {
+import TActionExecution, {
   TActionExecutionJson,
 } from 'metis/missions/actions/executions'
 import ServerMissionAction from '.'
@@ -9,7 +9,7 @@ import ServerMissionNode from '../nodes'
  * The execution of an action on the server.
  */
 export default class ServerActionExecution
-  implements IActionExecution<TServerMissionTypes>
+  implements TActionExecution<TServerMissionTypes>
 {
   // Implemented
   public readonly action: ServerMissionAction
@@ -31,9 +31,23 @@ export default class ServerActionExecution
   public readonly end: number
 
   /**
-   * @param {ServerMissionAction} action The action being executed.
-   * @param {number} start The time at which the action started executing.
-   * @param {number} end The time at which the action finishes executing.
+   * The time remaining for the action to complete.
+   */
+  get timeRemaining(): number {
+    let executionTimeEnd: number = this.end
+    let now: number = Date.now()
+
+    if (executionTimeEnd < now) {
+      return 0
+    } else {
+      return executionTimeEnd - now
+    }
+  }
+
+  /**
+   * @param action The action being executed.
+   * @param start The time at which the action started executing.
+   * @param end The time at which the action finishes executing.
    */
   public constructor(action: ServerMissionAction, start: number, end: number) {
     this.action = action

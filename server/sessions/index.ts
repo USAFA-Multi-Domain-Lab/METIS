@@ -15,7 +15,11 @@ import { SingleTypeObject } from 'metis/toolbox/objects'
 import { v4 as generateHash } from 'uuid'
 import ServerActionExecution from '../missions/actions/executions'
 import ServerMissionForce from '../missions/forces'
-import { TServerOutput } from '../missions/forces/output'
+import { ServerOutput } from '../missions/forces/outputs'
+import ServerExecutionFailedOutput from '../missions/forces/outputs/execution-failed'
+import ServerExecutionStartedOutput from '../missions/forces/outputs/execution-started'
+import ServerExecutionSucceededOutput from '../missions/forces/outputs/execution-succeeded'
+import ServerPreExecutionOutput from '../missions/forces/outputs/pre-execution'
 import EnvironmentContextProvider from '../target-environments/context-provider'
 
 /**
@@ -611,7 +615,7 @@ export default class SessionServer extends Session<
       this.onRequestExecuteAction(participant, data),
     )
     participant.addEventListener('request-send-output', (data) =>
-      this.onRequestSendPreExecutionMessage(participant, data),
+      this.onRequestSendOutput(participant, data),
     )
   }
 
@@ -807,32 +811,19 @@ export default class SessionServer extends Session<
             },
           }
 
-          // Construct an output for an action execution initiation.
-          let initiationOutput: TServerOutput = {
-            _id: generateHash(),
-            forceId: action!.force._id,
-            type: 'execution-started',
-            username: participant.user.username,
-            nodeId: action!.node._id,
-            nodeName: action!.node.name,
-            actionName: action!.name,
-            successChance: action!.successChance,
-            processTime: action!.processTime,
-            resourceCost: action!.resourceCost,
-            time: Date.now(),
-          }
-          // Send the output to the force.
-          action!.force.sendOutput(initiationOutput)
+          // Emit action execution initiated event to each user.
           for (let user of this.getUsersForForce(action!.force._id)) {
-            // Send the output to all users in the force.
-            user.emit('send-output', {
-              data: {
-                output: initiationOutput,
-              },
-            })
-            // Emit action execution initiated event to each user.
             user.emit('action-execution-initiated', initiationPayload)
           }
+
+          // Send the output to the force.
+          this.sendOutput(
+            new ServerExecutionStartedOutput(
+              action!,
+              participant.user,
+              execution,
+            ),
+          )
         },
       })
 
@@ -852,26 +843,10 @@ export default class SessionServer extends Session<
 
       // If the action was successful, then...
       if (outcome.successful) {
-        // Create an output for action that was successfully executed.
-        let successfulOutput: TServerOutput = {
-          _id: generateHash(),
-          forceId: action.force._id,
-          type: 'execution-succeeded',
-          username: participant.user.username,
-          nodeName: action.node.name,
-          postExecutionSuccessMessage: action.postExecutionSuccessText,
-          time: Date.now(),
-        }
         // Send the output to the force.
-        action.force.sendOutput(successfulOutput)
-        // Send the output to all users in the force.
-        for (let user of this.getUsersForForce(action.force._id)) {
-          user.emit('send-output', {
-            data: {
-              output: successfulOutput,
-            },
-          })
-        }
+        this.sendOutput(
+          new ServerExecutionSucceededOutput(action!, participant.user),
+        )
 
         // Add child nodes to the completion payload.
         completionPayload.data.revealedChildNodes = action.node.children.map(
@@ -880,26 +855,10 @@ export default class SessionServer extends Session<
       }
       // Otherwise, if the action failed, then...
       else {
-        // Create a failed output.
-        let failedOutput: TServerOutput = {
-          _id: generateHash(),
-          forceId: action.force._id,
-          type: 'execution-failed',
-          username: participant.user.username,
-          nodeName: action.node.name,
-          postExecutionFailureMessage: action.postExecutionFailureText,
-          time: Date.now(),
-        }
         // Send the output to the force.
-        action.force.sendOutput(failedOutput)
-        // Emit the output to all users in the force.
-        for (let user of this.getUsersForForce(action.force._id)) {
-          user.emit('send-output', {
-            data: {
-              output: failedOutput,
-            },
-          })
-        }
+        this.sendOutput(
+          new ServerExecutionFailedOutput(action!, participant.user),
+        )
       }
 
       // Emit the action execution completed
@@ -919,19 +878,16 @@ export default class SessionServer extends Session<
   }
 
   /**
-   * Called when a participant requests to send a pre-execution message.
-   * @param participant The participant requesting to send a pre-execution message.
+   * Called when a participant requests to send an output.
+   * @param participant The participant requesting to send an output.
    * @param event The event emitted by the participant.
    */
-  public onRequestSendPreExecutionMessage = (
+  public onRequestSendOutput = (
     participant: ClientConnection,
     event: TClientEvents['request-send-output'],
   ): void => {
     // Extract request data.
-    let { nodeId } = event.data
-
-    // Find the node given the ID.
-    let node: ServerMissionNode | undefined = this.mission.getNode(nodeId)
+    let { key } = event.data
 
     // If the session is not in the 'started' state,
     // then emit an error.
@@ -946,89 +902,77 @@ export default class SessionServer extends Session<
       )
     }
 
-    // If the node is undefined, then emit
-    // an error.
-    if (node === undefined) {
-      return participant.emitError(
-        new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_FOUND, {
-          request: participant.buildResponseReqData(event),
-        }),
-      )
-    }
+    switch (key) {
+      case 'pre-execution':
+        // Extract the node ID from the event data.
+        let { nodeId } = event.data
 
-    // If the node is not revealed, then
-    // emit an error.
-    if (!node.revealed) {
-      return participant.emitError(
-        new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_REVEALED, {
-          request: participant.buildResponseReqData(event),
-        }),
-      )
-    }
+        // Find the node given the ID.
+        let node: ServerMissionNode | undefined = this.mission.getNode(nodeId)
 
-    try {
-      if (node.preExecutionText === '') {
-        // Emit an event to the participant that the
-        // pre-execution message was sent.
-        participant.emit('output-sent', {
-          data: {
-            key: 'pre-execution',
-            nodeId,
-          },
-          request: { event, requesterId: participant.userId, fulfilled: true },
-        })
-        return
-      }
+        // If the node is undefined, then emit
+        // an error.
+        if (node === undefined) {
+          return participant.emitError(
+            new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_FOUND, {
+              request: participant.buildResponseReqData(event),
+            }),
+          )
+        }
 
-      // Construct an output for the pre-execution message.
-      let output: TServerOutput = {
-        _id: generateHash(),
-        forceId: node.force._id,
-        type: 'pre-execution',
-        username: participant.user.username,
-        nodeName: node.name,
-        preExecutionMessage: node.preExecutionText,
-        time: Date.now(),
-      }
+        // If the node is not revealed, then
+        // emit an error.
+        if (!node.revealed) {
+          return participant.emitError(
+            new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_REVEALED, {
+              request: participant.buildResponseReqData(event),
+            }),
+          )
+        }
 
-      // Grab the force assigned to the participant.
-      let force = this.mission.getForce(node.force._id)
+        try {
+          if (node.preExecutionText === '') {
+            // Emit an event to the participant that the
+            // pre-execution message was sent.
+            participant.emit('output-sent', {
+              data: {
+                key: 'pre-execution',
+                nodeId,
+              },
+              request: {
+                event,
+                requesterId: participant.userId,
+                fulfilled: true,
+              },
+            })
+            return
+          }
 
-      if (force === undefined) {
-        throw new Error(
-          `Could not send pre-execution message for node with ID "${nodeId}" because the force assigned to the participant was not found.`,
-        )
-      }
+          // Send the output to the force.
+          this.sendOutput(new ServerPreExecutionOutput(node, participant.user))
 
-      // Send the output to the force.
-      force.sendOutput(output)
-
-      // Send the output to all users in the force.
-      for (let user of this.getUsersForForce(node.force._id)) {
-        user.emit('send-output', {
-          data: {
-            output,
-          },
-        })
-      }
-
-      // Emit an event to the participant that the
-      // pre-execution message was sent.
-      participant.emit('output-sent', {
-        data: {
-          key: 'pre-execution',
-          nodeId,
-        },
-        request: { event, requesterId: participant.userId, fulfilled: true },
-      })
-    } catch (error: any) {
-      // Emit an error if the pre-execution message could not be sent.
-      participant.emitError(
-        new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR, {
-          request: participant.buildResponseReqData(event),
-          message: 'Failed to send pre-execution message.',
-        }),
-      )
+          // Emit an event to the participant that the
+          // pre-execution message was sent.
+          participant.emit('output-sent', {
+            data: {
+              key: 'pre-execution',
+              nodeId,
+            },
+            request: {
+              event,
+              requesterId: participant.userId,
+              fulfilled: true,
+            },
+          })
+        } catch (error: any) {
+          // Emit an error if the pre-execution message could not be sent.
+          participant.emitError(
+            new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR, {
+              request: participant.buildResponseReqData(event),
+              message: 'Failed to send pre-execution message.',
+            }),
+          )
+        }
     }
   }
 
@@ -1181,27 +1125,34 @@ export default class SessionServer extends Session<
   }
 
   /**
-   * Sends a custom output to all users in the force.
-   * @param forceId The ID of the force to send the output to.
-   * @param message The output's message to send.
+   * Sends an output to the force's output panel.
+   * @param output The output to send to the force.
    */
-  public sendOutput = (forceId: ServerMissionForce['_id'], message: string) => {
-    // let output: TServerOutput = {
-    //   _id: generateHash(),
-    //   type: 'custom',
-    //   forceId,
-    //   message,
-    //   username:
-    //   time: Date.now(),
-    // }
-    // // Send the output to all users in the force.
-    // for (let user of this.getUsersForForce(forceId)) {
-    //   user.emit('send-output', {
-    //     data: {
-    //       output,
-    //     },
-    //   })
-    // }
+  public sendOutput = (output: ServerOutput) => {
+    // Extract data.
+    let { type, forceId } = output
+
+    // Find the force given the ID.
+    let force = this.mission.getForce(forceId)
+
+    // If the force is undefined, throw an error.
+    if (!force) {
+      throw new Error(
+        `Could not send output with type "${type}" to the force with ID "${forceId}" because the force was not found.`,
+      )
+    }
+
+    // Store the output in the force.
+    force.storeOutput(output)
+
+    // Send the output to all users in the force.
+    for (let user of this.getUsersForForce(output.forceId)) {
+      user.emit('send-output', {
+        data: {
+          outputData: output.toJson(),
+        },
+      })
+    }
   }
 
   /**

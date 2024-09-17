@@ -37,7 +37,7 @@ export class ClientTargetEnvironment extends TargetEnvironment<TClientMissionTyp
   }
 
   // Implemented
-  public parseTargets(data: TCommonTargetJson[]): ClientTarget[] {
+  protected parseTargets(data: TCommonTargetJson[]): ClientTarget[] {
     return data.map((datum: TCommonTargetJson) => {
       return new ClientTarget(this, datum)
     })

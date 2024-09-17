@@ -20,11 +20,11 @@ import {
   PanelSizeRelationship,
   ResizablePanel,
 } from '../content/general-layout/ResizablePanels'
-import OutputPanel from '../content/session/OutputPanel'
-import StatusBar from '../content/session/StatusBar'
-import UsersPanel from '../content/session/UsersPanel'
 import MissionMap from '../content/session/mission-map'
 import ActionExecModal from '../content/session/mission-map/ui/overlay/modals/ActionExecModal'
+import OutputPanel from '../content/session/output-panel'
+import StatusBar from '../content/session/StatusBar'
+import UsersPanel from '../content/session/UsersPanel'
 import { TValidPanelButton } from '../content/user-controls/ButtonSvgPanel'
 import { TButtonText } from '../content/user-controls/ButtonText'
 import './SessionPage.scss'

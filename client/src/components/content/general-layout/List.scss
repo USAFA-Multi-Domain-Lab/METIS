@@ -418,7 +418,7 @@
           &.Select:hover {
             cursor: pointer;
             background-color: $node-blue;
-            color: $terminal;
+            color: $color-alt1;
           }
 
           .Text {
@@ -429,7 +429,7 @@
 
             &.Select:hover {
               cursor: pointer;
-              color: $terminal;
+              color: $color-alt1;
             }
           }
         }
@@ -540,7 +540,7 @@
 
         &.Select:hover {
           cursor: pointer;
-          color: $terminal;
+          color: $color-alt1;
         }
       }
     }
@@ -562,10 +562,10 @@
 }
 
 .List.pending-deletion {
-  background-color: $terminal-fail;
+  background-color: $session-red;
 
   .list-header {
-    background-color: $terminal-fail;
+    background-color: $session-red;
   }
 
   .item:not(.item-markdown) {
@@ -585,7 +585,7 @@
   }
   .previous-page,
   .next-page {
-    border-color: $terminal-fail;
+    border-color: $session-red;
   }
 
   .ButtonSvg.cancel-pending-action {

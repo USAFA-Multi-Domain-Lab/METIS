@@ -8,7 +8,7 @@ import {
   TCommonMissionActionJson,
   TMissionActionOptions,
 } from '../actions'
-import IActionExecution, {
+import TActionExecution, {
   TActionExecutionJson,
   default as TCommonMissionExecution,
   TExecution,
@@ -70,7 +70,7 @@ export default abstract class MissionNode<
 
   // Implemented
   public get executionState(): TCommonMissionNode['executionState'] {
-    let execution: IActionExecution | null = this.execution
+    let execution: TActionExecution | null = this.execution
     let outcomes: IActionOutcome[] = this.outcomes
 
     // Check for 'unexecuted' state.
@@ -428,7 +428,7 @@ export default abstract class MissionNode<
   // Implemented
   public abstract loadExecution(
     data: NonNullable<TActionExecutionJson>,
-  ): IActionExecution
+  ): TActionExecution
 
   // Implemented
   public abstract loadOutcome(

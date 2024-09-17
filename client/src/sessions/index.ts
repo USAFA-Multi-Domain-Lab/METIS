@@ -711,22 +711,21 @@ export default class SessionClient extends Session<
    */
   private onSendOutput = (event: TServerEvents['send-output']): void => {
     // Extract data.
-    let { output } = event.data
+    let { outputData } = event.data
+    let { type, forceId } = outputData
 
-    // Find the force, given the ID.
-    let force: ClientMissionForce | undefined = this.mission.getForce(
-      output.forceId,
-    )
+    // Find the force given the ID.
+    let force = this.mission.getForce(forceId)
 
-    // Handle force not found.
-    if (force === undefined) {
+    // If the force is undefined, throw an error.
+    if (!force) {
       throw new Error(
-        `Event "send-output" was triggered, but the force with the given forceId ("${output.forceId}") could not be found.`,
+        `Could not send output with type "${type}" to the force with ID "${forceId}" because the force was not found.`,
       )
     }
 
-    // Send the output to the force.
-    force.sendOutput(output)
+    // Store the output in the force.
+    force.storeOutput(outputData)
   }
 
   /**
@@ -735,10 +734,13 @@ export default class SessionClient extends Session<
    */
   private onOutputSent = (event: TServerEvents['output-sent']): void => {
     // Extract data.
-    let { key, nodeId } = event.data
+    let { key } = event.data
 
     switch (key) {
       case 'pre-execution':
+        // Extract data.
+        let { nodeId } = event.data
+
         // Find the node, given the ID.
         let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
 

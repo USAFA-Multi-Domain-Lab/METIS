@@ -97,13 +97,18 @@ export default function ArgForce({
   /**
    * The warning message to display when the force is no longer available in the mission.
    */
-  const warningMessage: string = compute(
-    () =>
-      `"${
-        effectArgs[arg._id][forceName]
-      }" is no longer available in the mission. ` +
-      `This is likely due to the force being deleted. Please select a valid force, or delete this effect.`,
-  )
+  const warningMessage: string = compute(() => {
+    if (effectArgs[arg._id]) {
+      return (
+        `"${
+          effectArgs[arg._id][forceName]
+        }" is no longer available in the mission. ` +
+        `This is likely due to the force being deleted. Please select a valid force, or delete this effect.`
+      )
+    } else {
+      return ''
+    }
+  })
 
   /* -- EFFECTS -- */
 

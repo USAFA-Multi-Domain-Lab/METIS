@@ -14,7 +14,7 @@ import {
   TForce,
   TMissionForceOptions,
 } from './forces'
-import { TCommonOutput } from './forces/output'
+import { TCommonOutput } from './forces/outputs'
 import { TCommonMissionNode, TNode } from './nodes'
 import { TCommonMissionPrototype, TPrototype } from './nodes/prototypes'
 
@@ -91,23 +91,10 @@ export default abstract class Mission<
     this.forces = []
     this.root = this.initializeRoot()
 
-    // Parse options.
-    let {
-      openAll = false,
-      populateTargets = false,
-      sendIntroMessage = false,
-    } = options
-
     // Import node structure into the mission.
     this.importStructure(
       data.nodeStructure ?? Mission.DEFAULT_PROPERTIES.nodeStructure,
     )
-
-    // Parse force data.
-    this.importForces(data.forces ?? Mission.DEFAULT_PROPERTIES.forces, {
-      populateTargets,
-      sendIntroMessage,
-    })
   }
 
   // Implemented
@@ -667,10 +654,6 @@ export type TMissionOptions = {
    * @default false
    */
   populateTargets?: boolean
-  /**
-   * Whether to send the intro message to the output panel.
-   */
-  sendIntroMessage?: boolean
 }
 
 /**

@@ -24,6 +24,7 @@ $box-shadow-alt5: inset 100vw 0 0 0 rgba(39, 39, 54, 0.8);
 $box-shadow-alt6: inset 100vw 0 0 0 rgba(39, 39, 54, 0.9);
 $box-shadow-alt7: inset 100vw 0 0 0 rgba(39, 39, 54, 1);
 $background-color-negative: #dfdfff;
+$color-alt1: #3bfce8;
 $color-accent: #5fc9be;
 $color-accent-light: #b6fff8;
 $color-accent-dark: #0c8b7e;
@@ -41,17 +42,13 @@ $color-correct-alt2: #1d3935;
 // Map properties.
 $map-grid-color: rgba(#fff, 0.15);
 
-// MDL application color scheme
-// Terminal color schemes
-$terminal: #3bfce8;
-$terminal-green: #65eb59;
-$terminal-yellow: #f7e346;
-$terminal-blue: #34a1fb;
-$terminal-pink: #fa39ac;
-$terminal-khaki: #fdd496;
-$terminal-purple: #dea3ff;
-$terminal-red: #f9484f;
-$terminal-orange: #ffab50;
+$color-alt1-green: #65eb59;
+$color-alt1-yellow: #f7e346;
+$color-alt1-pink: #fa39ac;
+$color-alt1-khaki: #fdd496;
+$color-alt1-purple: #dea3ff;
+$color-alt1-red: #f9484f;
+$color-alt1-orange: #ffab50;
 
 // Node color schemes
 $node-green: #64a95e;
@@ -63,9 +60,12 @@ $node-purple: #745d82;
 $node-red: #8a2e32;
 $node-orange: #bc842d;
 
-// Indicates if the node succeeded or failed
-$terminal-fail: #ff000a;
-$terminal-success: #65eb59;
+// Mission-form specific colors
+$form-blue: #34a1fb;
+
+// Session-specific colors
+$session-red: #f9484f;
+$session-green: #65eb59;
 $node-fail: $background-alt3;
 $node-success: #223e20;
 

@@ -109,7 +109,10 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
           this.effects.forEach(async (effect: ServerEffect) => {
             try {
               // Apply the effect to the target.
-              await environmentContextProvider.applyEffect(effect)
+              await environmentContextProvider.applyEffect(
+                effect,
+                participant.user.username,
+              )
 
               // todo: implement internal effects feedback
               // participant.emit('effect-successful', {

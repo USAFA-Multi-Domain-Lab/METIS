@@ -7,9 +7,10 @@ import ClientMission, {
 } from '..'
 import {
   MissionForce,
-  TCommonMissionForceJson,
+  TMissionForceJson,
   TMissionForceOptions,
 } from '../../../../shared/missions/forces'
+import { TCommonOutputJson } from '../../../../shared/missions/forces/outputs'
 import {
   TMissionNodeJson,
   TMissionNodeOptions,
@@ -17,8 +18,15 @@ import {
 import { Counter } from '../../../../shared/toolbox/numbers'
 import { TWithKey } from '../../../../shared/toolbox/objects'
 import { Vector2D } from '../../../../shared/toolbox/space'
+import ClientMissionAction from '../actions'
 import ClientMissionNode from '../nodes'
-import { TClientOutput } from './output'
+import { ClientOutput } from './outputs'
+import ClientCustomOutput from './outputs/custom'
+import ClientExecutionFailedOutput from './outputs/execution-failed'
+import ClientExecutionStartedOutput from './outputs/execution-started'
+import ClientExecutionSucceededOutput from './outputs/execution-succeeded'
+import ClientIntroOutput from './outputs/intro'
+import ClientPreExecutionOutput from './outputs/pre-execution'
 
 /**
  * Class for managing mission prototypes on the client.
@@ -53,6 +61,21 @@ export default class ClientMissionForce
   private listeners: Array<[TForceEventMethod, () => void]> = []
 
   /**
+   * All actions that exist in the force.
+   */
+  public get actions(): Map<string, ClientMissionAction> {
+    let actions = new Map<string, ClientMissionAction>()
+
+    for (let node of this.nodes) {
+      for (let action of node.actions.values()) {
+        actions.set(action._id, action)
+      }
+    }
+
+    return actions
+  }
+
+  /**
    * @param mission The mission to which the force belongs.
    * @param data The force data from which to create the force. Any ommitted
    * values will be set to the default properties defined in
@@ -61,12 +84,15 @@ export default class ClientMissionForce
    */
   public constructor(
     mission: ClientMission,
-    data: Partial<TCommonMissionForceJson> = MissionForce.DEFAULT_PROPERTIES,
+    data: Partial<TMissionForceJson> = MissionForce.DEFAULT_PROPERTIES,
     options: TClientMissionForceOptions = {},
   ) {
     super(mission, data, options)
     this.relationshipLines = []
     this._defectiveMessage = ''
+
+    // If output data is provided, parse it.
+    if (data.outputs) this._outputs = this.parseOutputs(data.outputs)
   }
 
   /**
@@ -414,49 +440,66 @@ export default class ClientMissionForce
   }
 
   // Implemented
-  public sendOutput(output: TClientOutput): void {
-    switch (output.type) {
-      case 'intro-message':
-        if (!!output.introMessage) {
-          this._outputs.push(output)
-          this.emitEvent('output')
-        }
-        break
+  public storeOutput(outputJson: TCommonOutputJson): void {
+    switch (outputJson.type) {
       case 'pre-execution':
-        if (!!output.preExecutionMessage) {
-          this._outputs.push(output)
+        if (!!outputJson.message) {
+          this._outputs.push(new ClientPreExecutionOutput(outputJson))
           this.emitEvent('output')
         }
         break
       case 'execution-started':
         if (
-          !!output.processTime &&
-          !!output.resourceCost &&
-          !!output.successChance
+          !!outputJson.processTime &&
+          !!outputJson.resourceCost &&
+          !!outputJson.successChance
         ) {
-          this._outputs.push(output)
+          this._outputs.push(new ClientExecutionStartedOutput(this, outputJson))
           this.emitEvent('output')
         }
         break
       case 'execution-succeeded':
-        if (!!output.postExecutionSuccessMessage) {
-          this._outputs.push(output)
+        if (!!outputJson.message) {
+          this._outputs.push(new ClientExecutionSucceededOutput(outputJson))
           this.emitEvent('output')
         }
         break
       case 'execution-failed':
-        if (!!output.postExecutionFailureMessage) {
-          this._outputs.push(output)
+        if (!!outputJson.message) {
+          this._outputs.push(new ClientExecutionFailedOutput(outputJson))
           this.emitEvent('output')
         }
         break
       case 'custom':
-        if (!!output.message) {
-          this._outputs.push(output)
+        if (!!outputJson.message) {
+          this._outputs.push(new ClientCustomOutput(outputJson))
           this.emitEvent('output')
         }
         break
     }
+  }
+
+  /**
+   * Parses the output data into output objects.
+   * @param outputs The output data to parse.
+   */
+  private parseOutputs(outputs: TCommonOutputJson[]): ClientOutput[] {
+    return outputs.map((outputJson: TCommonOutputJson) => {
+      switch (outputJson.type) {
+        case 'intro-message':
+          return new ClientIntroOutput(outputJson)
+        case 'pre-execution':
+          return new ClientPreExecutionOutput(outputJson)
+        case 'execution-started':
+          return new ClientExecutionStartedOutput(this, outputJson)
+        case 'execution-succeeded':
+          return new ClientExecutionSucceededOutput(outputJson)
+        case 'execution-failed':
+          return new ClientExecutionFailedOutput(outputJson)
+        case 'custom':
+          return new ClientCustomOutput(outputJson)
+      }
+    })
   }
 }
 

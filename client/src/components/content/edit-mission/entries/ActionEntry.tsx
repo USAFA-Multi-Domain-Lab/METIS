@@ -118,17 +118,6 @@ export default function ActionEntry({
   /* -- FUNCTIONS -- */
 
   /**
-   * Handles the request to edit an effect.
-   */
-  const handleEditEffectRequest = (effect: ClientEffect) => {
-    // If the effect has a target and a target environment,
-    // then select the effect.
-    if (effect.target && effect.targetEnvironment) {
-      mission.select(effect)
-    }
-  }
-
-  /**
    * Renders JSX for the effect list item.
    */
   const renderEffectListItem = (effect: ClientEffect) => {

@@ -9,7 +9,7 @@ import {
   TMissionNodeOptions,
   TNode,
 } from '../nodes'
-import { TCommonOutput, TOutput } from './output'
+import { TCommonOutput, TCommonOutputJson, TOutput } from './outputs'
 
 /* -- CLASSES -- */
 
@@ -105,11 +105,7 @@ export abstract class MissionForce<
     options: TMissionForceOptions = {},
   ) {
     // Parse options.
-    const {
-      openAll = false,
-      populateTargets = false,
-      sendIntroMessage = false,
-    } = options
+    const { openAll = false, populateTargets = false } = options
 
     // Set properties.
     this.mission = mission
@@ -120,7 +116,7 @@ export abstract class MissionForce<
       data.initialResources ?? MissionForce.DEFAULT_PROPERTIES.initialResources
     this.resourcesRemaining = data.resourcesRemaining ?? this.initialResources
     this.nodes = []
-    this._outputs = data.outputs ?? []
+    this._outputs = []
     this.root = this.createNode(MissionForce.ROOT_NODE_PROPERTIES)
 
     // Import nodes into the force.
@@ -132,17 +128,6 @@ export abstract class MissionForce<
     // If root node is not open, open it.
     if (!this.root.isOpen) {
       this.root.open()
-    }
-
-    // Send the intro message if the flag is set.
-    if (sendIntroMessage) {
-      this.sendOutput({
-        _id: StringToolbox.generateRandomId(),
-        forceId: this._id,
-        time: Date.now(),
-        type: 'intro-message',
-        introMessage: this.mission.introMessage,
-      })
     }
   }
 
@@ -162,7 +147,7 @@ export abstract class MissionForce<
     // flag was set.
     if (includeSessionData) {
       json.resourcesRemaining = this.resourcesRemaining
-      json.outputs = this.outputs
+      json.outputs = this.outputs.map((output) => output.toJson())
     }
 
     return json
@@ -206,7 +191,7 @@ export abstract class MissionForce<
   ): TNode<T>
 
   // Implemented
-  public abstract sendOutput(output: TCommonOutput): void
+  public abstract storeOutput(output: TCommonOutput): void
 
   // Implemented
   public getNode(nodeId: string): TNode<T> | undefined {
@@ -403,10 +388,10 @@ export interface TCommonMissionForce {
     prototypeId: string | undefined,
   ): TCommonMissionNode | undefined
   /**
-   * Sends a message to the output panel.
-   * @param output The output to send.
+   * Stores an output in the force which is then displayed in the force's output panel.
+   * @param output The output to store.
    */
-  sendOutput(output: TCommonOutput): void
+  storeOutput(output: TCommonOutput): void
 }
 
 /**
@@ -446,7 +431,7 @@ export interface TMissionForceSessionJson {
   /**
    * The outputs for a force's output panel.
    */
-  outputs: TCommonOutput[]
+  outputs: TCommonOutputJson[]
 }
 
 /**
@@ -471,10 +456,6 @@ export type TMissionForceOptions = {
    * @default false
    */
   populateTargets?: boolean
-  /**
-   * Whether to send the intro message to the output panel.
-   */
-  sendIntroMessage?: boolean
 }
 
 /**

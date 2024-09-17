@@ -25,7 +25,7 @@ import ClientActionExecution from './actions/executions'
 import ClientActionOutcome from './actions/outcomes'
 import { ClientEffect } from './effects'
 import ClientMissionForce, { TClientMissionForceOptions } from './forces'
-import { TClientOutput } from './forces/output'
+import { ClientOutput } from './forces/outputs'
 import ClientMissionNode from './nodes'
 import ClientMissionPrototype, { TPrototypeRelation } from './nodes/prototypes'
 import MissionTransformation from './transformations'
@@ -234,7 +234,12 @@ export default class ClientMission
     super(data, options)
 
     // Parse client-specific options.
-    let { existsOnServer = false } = options
+    let { existsOnServer = false, populateTargets = false } = options
+
+    // Parse force data.
+    this.importForces(data.forces ?? ClientMission.DEFAULT_PROPERTIES.forces, {
+      populateTargets,
+    })
 
     // Initialize client-specific properties.
     this._existsOnServer = existsOnServer
@@ -261,9 +266,6 @@ export default class ClientMission
 
     // Evaluate nested objects.
     this.evaluateObjects()
-  }
-  get invalidMessage(): string {
-    throw new Error('Method not implemented.')
   }
 
   // Implemented
@@ -1322,7 +1324,7 @@ export default class ClientMission
 export interface TClientMissionTypes extends TCommonMissionTypes {
   mission: ClientMission
   force: ClientMissionForce
-  output: TClientOutput
+  output: ClientOutput
   prototype: ClientMissionPrototype
   node: ClientMissionNode
   action: ClientMissionAction

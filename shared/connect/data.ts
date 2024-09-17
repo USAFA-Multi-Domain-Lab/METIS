@@ -1,7 +1,7 @@
 import { TActionExecutionJson } from 'metis/missions/actions/executions'
 import { TActionOutcomeJson } from 'metis/missions/actions/outcomes'
 import { TCommonMissionForceJson } from 'metis/missions/forces'
-import { TCommonOutput } from 'metis/missions/forces/output'
+import { TCommonOutputJson } from 'metis/missions/forces/outputs'
 import { TSessionConfig, TSessionJson, TSessionRole } from 'metis/sessions'
 import { AnyObject } from 'metis/toolbox/objects'
 import { TCommonUserJson } from 'metis/users'
@@ -377,7 +377,7 @@ export type TGenericServerEvents = {
       /**
        * The message to send to the force's output panel.
        */
-      output: TCommonOutput
+      outputData: TCommonOutputJson
     }
   >
   /**

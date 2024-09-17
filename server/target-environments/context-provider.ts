@@ -3,6 +3,8 @@ import SessionServer from 'metis/server/sessions'
 import { AnyObject } from 'metis/toolbox/objects'
 import { plcApiLogger } from '../logging'
 import ServerMission from '../missions'
+import ServerCustomOutput from '../missions/forces/outputs/custom'
+import ServerUser from '../users'
 
 /**
  * The context provider for the target environment.
@@ -29,12 +31,17 @@ export default class EnvironmentContextProvider
   /**
    * Creates a new context used for applying an effect to its target.
    * @param effect The effect that is applied to its target.
+   * @param username The username of the user applying the effect.
    * @returns The context for the target environment.
    */
-  private buildContext(effect: ServerEffect): TTargetEnvContext {
+  private buildContext(
+    effect: ServerEffect,
+    username: ServerUser['username'],
+  ): TTargetEnvContext {
     return {
       effect: effect.toTargetEnvContext(),
       mission: this.mission.toTargetEnvContext(),
+      username,
       sendOutput: this.sendOutput,
       blockNode: this.blockNode,
       unblockNode: this.unblockNode,
@@ -45,7 +52,10 @@ export default class EnvironmentContextProvider
   }
 
   // Implemented
-  public async applyEffect(effect: ServerEffect): Promise<void> {
+  public async applyEffect(
+    effect: ServerEffect,
+    username: ServerUser['username'],
+  ): Promise<void> {
     // If the effect doesn't have a target environment,
     // log an error.
     if (effect.targetEnvironment === null) {
@@ -62,7 +72,7 @@ export default class EnvironmentContextProvider
     }
 
     // Create a new context for the target environment.
-    const context = this.buildContext(effect)
+    const context = this.buildContext(effect, username)
 
     // Apply the effect to the target.
     try {
@@ -82,9 +92,10 @@ export default class EnvironmentContextProvider
    * Sends the message to the output panel within a session.
    * @param forceId The ID of the force with the output panel to send the message to.
    * @param message The output's message.
+   * @param username The username of the user sending the output.
    */
-  private sendOutput = (forceId: string, message: string) => {
-    this.session.sendOutput(forceId, message)
+  private sendOutput = (forceId: string, message: string, username: string) => {
+    this.session.sendOutput(new ServerCustomOutput(forceId, username, message))
   }
 
   /**
@@ -176,8 +187,12 @@ type TCommonEnvContextProvider = {
   /**
    * Applies the effect to its target.
    * @param effect The effect to apply to the target.
+   * @param username The username of the user applying the effect.
    */
-  applyEffect: (effect: ServerEffect) => Promise<void>
+  applyEffect: (
+    effect: ServerEffect,
+    username: ServerUser['username'],
+  ) => Promise<void>
 }
 
 /**
@@ -193,11 +208,16 @@ export type TTargetEnvContext = {
    */
   readonly mission: TTargetEnvContextMission
   /**
+   * The username of the user applying the effect.
+   */
+  readonly username: ServerUser['username']
+  /**
    * Sends the message to the output panel within a session.
    * @param forceId The ID of the force with the output panel to send the message to.
    * @param message The output's message.
+   * @param username The username of the user sending the output.
    */
-  sendOutput: (forceId: string, message: string) => void
+  sendOutput: (forceId: string, message: string, username: string) => void
   /**
    * Blocks the node from being interacted with.
    * @param nodeId The ID of the node to block.

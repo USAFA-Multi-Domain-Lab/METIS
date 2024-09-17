@@ -1,14 +1,40 @@
-import { MissionForce, TMissionForceOptions } from 'metis/missions/forces'
+import {
+  MissionForce,
+  TMissionForceJson,
+  TMissionForceOptions,
+} from 'metis/missions/forces'
 import { TMissionNodeJson, TMissionNodeOptions } from 'metis/missions/nodes'
 import { TTargetEnvContextForce } from 'metis/server/target-environments/context-provider'
-import { TServerMissionTypes } from '..'
+import ServerMission, { TServerMissionTypes } from '..'
 import ServerMissionNode from '../nodes'
-import { TServerOutput } from './output'
+import { ServerOutput } from './outputs'
+import ServerIntroOutput from './outputs/intro'
 
 /**
  * Class for managing mission prototypes on the client.
  */
 export default class ServerMissionForce extends MissionForce<TServerMissionTypes> {
+  /**
+   * @param mission The mission to which the force belongs.
+   * @param data The force data from which to create the force. Any ommitted
+   * values will be set to the default properties defined in
+   * MissionForce.DEFAULT_PROPERTIES.
+   * @param options The options for creating the force.
+   */
+  public constructor(
+    mission: ServerMission,
+    data: Partial<TMissionForceJson> = MissionForce.DEFAULT_PROPERTIES,
+    options: TServerMissionForceOptions = {},
+  ) {
+    super(mission, data, options)
+
+    // Parse options.
+    let { sendIntroMessage = false } = options
+
+    // Send the intro message if the flag is set.
+    if (sendIntroMessage) this.sendIntroMessage()
+  }
+
   // Implemented
   public createNode(
     data: Partial<TMissionNodeJson>,
@@ -48,8 +74,15 @@ export default class ServerMissionForce extends MissionForce<TServerMissionTypes
   }
 
   // Implemented
-  public sendOutput(output: TServerOutput): void {
+  public storeOutput(output: ServerOutput): void {
     this._outputs.push(output)
+  }
+
+  /**
+   * Sends the intro message to the force's output panel.
+   */
+  private sendIntroMessage(): void {
+    this.storeOutput(new ServerIntroOutput(this.mission, this))
   }
 }
 
@@ -58,4 +91,9 @@ export default class ServerMissionForce extends MissionForce<TServerMissionTypes
 /**
  * Options for creating a ServerMissionForce object.
  */
-export type TServerMissionForceOptions = TMissionForceOptions & {}
+export type TServerMissionForceOptions = TMissionForceOptions & {
+  /**
+   * Whether to send the intro message to the output panel.
+   */
+  sendIntroMessage?: boolean
+}

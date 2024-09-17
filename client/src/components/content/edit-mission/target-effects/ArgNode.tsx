@@ -176,13 +176,21 @@ export default function ArgNode({
    */
   const [handleInvalidNodeOption, setHandleInvalidNodeOption] = useState<
     TRequiredHandleInvalidOption<ClientMissionNode>
-  >({
-    method: 'warning',
-    message:
-      `"${
-        effectArgs[arg._id][nodeName]
-      }" is no longer available in the force selected above.` +
-      `This is likely due to the node being deleted. Please select a valid node, or delete this effect.`,
+  >(() => {
+    if (effectArgs[arg._id]) {
+      return {
+        method: 'warning',
+        message:
+          `"${
+            effectArgs[arg._id][nodeName]
+          }" is no longer available in the force selected above.` +
+          `This is likely due to the node being deleted. Please select a valid node, or delete this effect.`,
+      }
+    } else {
+      return {
+        method: 'warning',
+      }
+    }
   })
 
   /* -- COMPUTED -- */
