@@ -1,3 +1,4 @@
+import ClientMissionForce from 'src/missions/forces'
 import ClientIntroOutput from 'src/missions/forces/outputs/intro'
 import { compute } from 'src/toolbox'
 import RichTextOutputBox from '../../communication/RichTextOutputBox'
@@ -6,7 +7,8 @@ import RichTextOutputBox from '../../communication/RichTextOutputBox'
  * Renders the intro message for the force.
  */
 export default function Intro({
-  output: { time, forceName, message },
+  output: { time, message },
+  forceName,
 }: TIntro_P): JSX.Element {
   /* -- COMPUTED -- */
 
@@ -41,4 +43,8 @@ type TIntro_P = {
    * The output for the force's output panel.
    */
   output: ClientIntroOutput
+  /**
+   * The name of the force where the output panel is located.
+   */
+  forceName: ClientMissionForce['name']
 }

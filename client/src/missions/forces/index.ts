@@ -445,7 +445,6 @@ export default class ClientMissionForce
       case 'pre-execution':
         if (!!outputJson.message) {
           this._outputs.push(new ClientPreExecutionOutput(outputJson))
-          this.emitEvent('output')
         }
         break
       case 'execution-started':
@@ -455,28 +454,29 @@ export default class ClientMissionForce
           !!outputJson.successChance
         ) {
           this._outputs.push(new ClientExecutionStartedOutput(this, outputJson))
-          this.emitEvent('output')
         }
         break
       case 'execution-succeeded':
         if (!!outputJson.message) {
           this._outputs.push(new ClientExecutionSucceededOutput(outputJson))
-          this.emitEvent('output')
         }
         break
       case 'execution-failed':
         if (!!outputJson.message) {
           this._outputs.push(new ClientExecutionFailedOutput(outputJson))
-          this.emitEvent('output')
         }
         break
       case 'custom':
         if (!!outputJson.message) {
           this._outputs.push(new ClientCustomOutput(outputJson))
-          this.emitEvent('output')
         }
         break
     }
+
+    // Sort the outputs by time.
+    this._outputs.sort((a, b) => a.time - b.time)
+    // Emit an output event.
+    this.emitEvent('output')
   }
 
   /**

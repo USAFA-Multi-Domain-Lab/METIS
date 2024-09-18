@@ -17,8 +17,6 @@ export default class ServerIntroOutput implements TIntro {
   // Implemented
   public readonly type: TIntro['type']
   // Implemented
-  public readonly forceName: TIntro['forceName']
-  // Implemented
   public readonly message: TIntro['message']
   // Implemented
   public readonly time: TIntro['time']
@@ -31,7 +29,6 @@ export default class ServerIntroOutput implements TIntro {
     this._id = generateHash()
     this.forceId = force._id
     this.type = 'intro'
-    this.forceName = force.name
     this.message = mission.introMessage
     this.time = Date.now()
   }
@@ -42,7 +39,6 @@ export default class ServerIntroOutput implements TIntro {
       _id: this._id,
       forceId: this.forceId,
       type: this.type,
-      forceName: this.forceName,
       message: this.message,
       time: this.time,
     }

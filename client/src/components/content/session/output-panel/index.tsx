@@ -34,6 +34,7 @@ export default function OutputPanel({ force }: TOutputPanel_P): JSX.Element {
               return (
                 <Intro
                   output={output}
+                  forceName={force.name}
                   key={`output-${output._id}_type-${output.type}_time-${output.time}`}
                 />
               )

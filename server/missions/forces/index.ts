@@ -75,7 +75,10 @@ export default class ServerMissionForce extends MissionForce<TServerMissionTypes
 
   // Implemented
   public storeOutput(output: ServerOutput): void {
+    // Add the output to the force's output list.
     this._outputs.push(output)
+    // Sort the outputs by time.
+    this._outputs.sort((a, b) => a.time - b.time)
   }
 
   /**

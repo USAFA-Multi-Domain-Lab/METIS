@@ -1,5 +1,4 @@
 import { TBaseOutput, TBaseOutputJson } from '.'
-import { TCommonMissionForce } from '..'
 import { TCommonMission, TCommonMissionJson } from '../..'
 
 /**
@@ -10,10 +9,6 @@ export type TIntro = TBaseOutput & {
    * The type of output.
    */
   type: 'intro'
-  /**
-   * The force's name.
-   */
-  forceName: TCommonMissionForce['name']
   /**
    * The mission's intro message.
    */
@@ -28,10 +23,6 @@ export type TIntroJson = TBaseOutputJson & {
    * The type of output.
    */
   type: 'intro'
-  /**
-   * The force's name.
-   */
-  forceName: TCommonMissionForce['name']
   /**
    * The mission's intro message.
    */

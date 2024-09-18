@@ -20,31 +20,20 @@ export default function PreExecution({
     }).format(time),
   )
 
-  /**
-   * The class name for the text.
-   */
-  const textClassName: string = compute(() => {
-    // Class list for the text.
-    let classList: string[] = ['Text']
-
-    // Hide the message if it is empty.
-    if (message === '') {
-      classList.push('Hidden')
-    }
-
-    // Return the class list as a string.
-    return classList.join(' ')
-  })
-
   /* -- RENDER -- */
-  return (
-    <div className={textClassName}>
-      <span className='LineCursor'>
-        [{timeStamp}] {username}@{nodeName.replaceAll(' ', '-')}:{' '}
-      </span>
-      <RichTextOutputBox text={message} />
-    </div>
-  )
+
+  if (!!message) {
+    return (
+      <div className='Text'>
+        <span className='LineCursor'>
+          [{timeStamp}] {username}@{nodeName.replaceAll(' ', '-')}:{' '}
+        </span>
+        <RichTextOutputBox text={message} />
+      </div>
+    )
+  } else {
+    return null
+  }
 }
 
 /* ---------------------------- TYPES FOR PRE-EXECUTION ---------------------------- */
