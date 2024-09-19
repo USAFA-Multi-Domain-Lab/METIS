@@ -301,7 +301,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
 
     // Emit an event to all users that the user list
     // has changed.
-    this.emitToAll('session-users-updated', {
+    this.emitToAll('session-members-updated', {
       data: {
         members: this.members.map((member) => member.toJson()),
       },
@@ -351,7 +351,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
 
     // Emit an event to all users that the user list
     // has changed.
-    this.emitToAll('session-users-updated', {
+    this.emitToAll('session-members-updated', {
       data: {
         members: this.members.map((member) => member.toJson()),
       },
@@ -491,7 +491,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
 
     // Emit an event to all users that the user list
     // has changed.
-    this.emitToAll('session-users-updated', {
+    this.emitToAll('session-members-updated', {
       data: {
         members: this.members.map((member) => member.toJson()),
       },
@@ -724,7 +724,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     targetMember.emit('kicked', payload)
     // Emit an event to all users that the user list
     // has changed.
-    this.emitToAll('session-users-updated', {
+    this.emitToAll('session-members-updated', {
       data: {
         members: this.members.map((member) => member.toJson()),
       },
@@ -801,7 +801,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     targetMember.emit('banned', payload)
     // Emit an event to all users that the user list
     // has changed.
-    this.emitToAll('session-users-updated', {
+    this.emitToAll('session-members-updated', {
       data: {
         members: this.members.map((member) => member.toJson()),
       },
@@ -862,11 +862,18 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     if (forceId === null) delete this.assignments[targetMember.userId]
     else this.assignments[targetMember.userId] = forceId
 
-    // Emit an event to all users that an assignment has
+    // Emit a response that the assignment has
     // been made.
-    this.emitToAll('force-assigned', {
+    member.emit('force-assigned', {
       data: { sessionId: this._id, memberId: targetMemberId, forceId },
       request,
+    })
+
+    // Emit to all members that the user list has changed.
+    this.emitToAll('session-members-updated', {
+      data: {
+        members: this.members.map((member) => member.toJson()),
+      },
     })
   }
 

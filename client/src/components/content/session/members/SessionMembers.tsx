@@ -95,7 +95,7 @@ export default function SessionMembers({
 
   // Update participant, observer, and manager
   // lists on session state change.
-  useEventListener(server, 'session-users-updated', () => {
+  useEventListener(server, 'session-members-updated', () => {
     setMembers(session.membersSorted)
   })
 

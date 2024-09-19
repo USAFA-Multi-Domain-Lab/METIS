@@ -267,8 +267,8 @@ export type TGenericServerEvents = {
   /**
    * Occurs when a user joins or quits the session.
    */
-  'session-users-updated': TConnectEvent<
-    'session-users-updated',
+  'session-members-updated': TConnectEvent<
+    'session-members-updated',
     {
       /**
        * The updated list of members in the session.

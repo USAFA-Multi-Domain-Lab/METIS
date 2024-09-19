@@ -123,7 +123,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
     this.server.addEventListener('session-started', this.onStart)
     this.server.addEventListener('session-ended', this.onEnd)
     this.server.addEventListener('session-config-updated', this.onConfigUpdate)
-    this.server.addEventListener('session-users-updated', this.onUsersUpdated)
+    this.server.addEventListener('session-members-updated', this.onUsersUpdated)
     this.server.addEventListener('force-assigned', this.onForceAssigned)
     this.server.addEventListener('node-opened', this.onNodeOpened)
     this.server.addEventListener(
@@ -148,7 +148,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
       'session-started',
       'session-ended',
       'session-config-updated',
-      'session-users-updated',
+      'session-members-updated',
       'node-opened',
       'action-execution-initiated',
       'action-execution-completed',
@@ -661,7 +661,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
    * @param event The event emitted by the server.
    */
   private onUsersUpdated = (
-    event: TGenericServerEvents['session-users-updated'],
+    event: TGenericServerEvents['session-members-updated'],
   ): void => {
     let { members } = event.data
     this._members = members.map(

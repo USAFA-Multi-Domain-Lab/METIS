@@ -1,14 +1,10 @@
-import { ReactNode, useState } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientMissionForce from 'src/missions/forces'
 import SessionClient from 'src/sessions'
 import ClientSessionMember from 'src/sessions/members'
 import { compute } from 'src/toolbox'
-import {
-  useEventListener,
-  usePostInitEffect,
-  useRequireLogin,
-} from 'src/toolbox/hooks'
+import { usePostInitEffect } from 'src/toolbox/hooks'
 import { DetailDropdown } from '../../form/DetailDropdown'
 import ButtonSvgPanel, {
   TValidPanelButton,
@@ -27,10 +23,9 @@ export default function SessionMemberRow({
   const [server] = globalContext.server
   const { handleError } = globalContext.actions
   const [assignedForce, setAssignedForce] = useState<ClientMissionForce | null>(
-    session.mission.getForce(member.forceId ?? undefined) ?? null,
+    member.force,
   )
   const [forceLock, setForceLock] = useState<boolean>(false)
-  const [login] = useRequireLogin()
 
   /* -- COMPUTED -- */
 
@@ -45,7 +40,7 @@ export default function SessionMemberRow({
    * The member that is currently logged in
    * on this client.
    */
-  const currentMember = compute(() => session.getMemberByUserId(login.user._id))
+  const currentMember = session.member
 
   /**
    * Buttons for SVG panel.
@@ -83,16 +78,59 @@ export default function SessionMemberRow({
     // }
   })
 
-  /* -- effects -- */
+  /**
+   * Whether the target member can be assigned a force.
+   */
+  const targetIsAssignable: boolean = member.isAuthorized('forceAssignable')
+  /**
+   * Whether the current member can manage session members.
+   */
+  const currentManagesMembers: boolean = currentMember.isAuthorized(
+    'manageSessionMembers',
+  )
+  /**
+   * Whether the session has not yet started.
+   */
+  const sessionUnstarted: boolean = session.state === 'unstarted'
+  /**
+   * Whether the target member has complete visibility.
+   */
+  const targetCompleteVisibility: boolean =
+    member.isAuthorized('completeVisibility')
+
+  /**
+   * Whether the target member can manipulate nodes.
+   */
+  const targetManipulatesNodes: boolean = member.isAuthorized('manipulateNodes')
+
+  /**
+   * Whether the current member has complete visibility.
+   */
+  const currentCompleteVisibility: boolean =
+    currentMember.isAuthorized('completeVisibility')
+
+  /**
+   * Whether the dropdown to assign a force to the member should
+   * be shown.
+   */
+  const showDropdown: boolean = compute<boolean>(
+    () =>
+      targetIsAssignable &&
+      currentManagesMembers &&
+      sessionUnstarted &&
+      !targetCompleteVisibility &&
+      currentCompleteVisibility,
+  )
+
+  /* -- HOOKS -- */
 
   usePostInitEffect(() => {
     // If the current member can't manage session members,
     // return.
-    if (!currentMember?.isAuthorized('manageSessionMembers')) return
+    if (!currentMember.isAuthorized('manageSessionMembers')) return
 
     // Gather details.
-    let prevForce =
-      session.mission.getForce(member.forceId ?? undefined) ?? null
+    let prevForce = member.force
     let prevForceId = member.forceId
 
     // Request to assign the force if the state changes.
@@ -113,34 +151,50 @@ export default function SessionMemberRow({
     }
   }, [assignedForce])
 
-  useEventListener(server, 'force-assigned', () => {
-    // If the force changed, update the state.
-    if (assignedForceId !== member.forceId) {
-      setAssignedForce(
-        session.mission.getForce(member.forceId ?? undefined) ?? null,
-      )
-    }
-  })
+  // Check if force is updated on a member
+  // list update.
+  useEffect(() => {
+    // If the assigned force is not the same as the
+    // force assigned to the member, update the assigned
+    // force.
+    if (assignedForceId !== member.forceId) setAssignedForce(member.force)
+  }, [member])
 
-  /* -- render -- */
+  /* -- RENDER -- */
+
+  /**
+   * The JSX for the text to display when the
+   * dropdown is not shown.
+   */
+  const forceTextJsx = compute<JSX.Element>(() => {
+    let style: React.CSSProperties = { color: 'gray', fontStyle: 'italic' }
+    let text: string = ''
+
+    if (targetCompleteVisibility) {
+      text = targetManipulatesNodes ? 'Complete control' : 'Complete visibility'
+    } else if (!currentCompleteVisibility) {
+      text = member.forceId ? 'Assigned' : 'Not assigned'
+    } else if (assignedForce) {
+      delete style.fontStyle
+      style.color = assignedForce.color
+      text = assignedForce.name
+    } else {
+      text = 'Not assigned'
+    }
+
+    return <span style={style}>{text}</span>
+  })
 
   /**
    * JSX for the force cell.
    */
   const forceCell = compute<JSX.Element>(() => {
     let innerJsx: ReactNode = null
-    let sessionUnstarted: boolean = session.state === 'unstarted'
-    let isAssignable: boolean = member.isAuthorized('forceAssignable')
-    let managesMembers: boolean =
-      currentMember?.isAuthorized('manageSessionMembers') ?? false
-    let completeVisibility: boolean = member.isAuthorized('completeVisibility')
-    let manipulatesNodes: boolean = member.isAuthorized('manipulateNodes')
 
-    // todo: Account for if the session is started.
     // If the current member can manage session members
     // and the target member can be assigned a force, render
     // the dropdown.
-    if (managesMembers && isAssignable) {
+    if (showDropdown) {
       innerJsx = (
         <DetailDropdown<ClientMissionForce | null>
           label='Force'
@@ -162,52 +216,9 @@ export default function SessionMemberRow({
         />
       )
     }
-    // If the current member can't manage session members,
-    // but the target member can be assigned a force, and a
-    // force is assigned and available, render the force name.
-    else if (!managesMembers && isAssignable && assignedForce) {
-      innerJsx = (
-        <span style={{ color: assignedForce.color }}>{assignedForce.name}</span>
-      )
-    }
-    // If the current member can't manage session members,
-    // the target member can be assigned a force, and the force
-    // is assigned, render 'Assigned'.
-    else if (!managesMembers && isAssignable && member.forceId) {
-      innerJsx = (
-        <span style={{ color: 'gray', fontStyle: 'italic' }}>Assigned</span>
-      )
-    }
-    // If the current member can't manage session members,
-    // the target member can be assigned a force, and the force
-    // is not assigned, render 'Not assigned'.
-    else if (!managesMembers && isAssignable && !assignedForceId) {
-      innerJsx = (
-        <span style={{ color: 'gray', fontStyle: 'italic' }}>Not assigned</span>
-      )
-    }
-    // Else, if the target member has complete visibility,
-    // and node manipulation permissions, render 'Complete control'.
-    else if (completeVisibility && manipulatesNodes) {
-      innerJsx = (
-        <span style={{ color: 'gray', fontStyle: 'italic' }}>
-          Complete control
-        </span>
-      )
-    }
-    // Else, if the target member has complete visibility
-    // and no node manipulation permissions, render
-    // 'Complete visibility'.
-    else if (completeVisibility && !manipulatesNodes) {
-      innerJsx = (
-        <span style={{ color: 'gray', fontStyle: 'italic' }}>
-          Complete visibility
-        </span>
-      )
-    }
-    // Else, render 'N/A'.
+    // Else, render the text JSX.
     else {
-      innerJsx = <span style={{ color: 'gray', fontStyle: 'italic' }}>N/A</span>
+      innerJsx = forceTextJsx
     }
 
     // Render the cell.
