@@ -129,12 +129,14 @@ export default function SessionMemberRow({
    */
   const forceCell = compute<JSX.Element>(() => {
     let innerJsx: ReactNode = null
+    let sessionUnstarted: boolean = session.state === 'unstarted'
     let isAssignable: boolean = member.isAuthorized('forceAssignable')
     let managesMembers: boolean =
       currentMember?.isAuthorized('manageSessionMembers') ?? false
     let completeVisibility: boolean = member.isAuthorized('completeVisibility')
     let manipulatesNodes: boolean = member.isAuthorized('manipulateNodes')
 
+    // todo: Account for if the session is started.
     // If the current member can manage session members
     // and the target member can be assigned a force, render
     // the dropdown.

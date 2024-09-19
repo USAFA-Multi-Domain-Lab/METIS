@@ -16,7 +16,7 @@ import {
   tooltipsOffsetY,
 } from './content/communication/Tooltip'
 import Markdown, { MarkdownTheme } from './content/general-layout/Markdown'
-import { TButtonText } from './content/user-controls/ButtonText'
+import { TButtonText_P } from './content/user-controls/ButtonText'
 import { PAGE_REGISTRY } from './pages'
 import ErrorPage from './pages/ErrorPage'
 import LoadingPage from './pages/LoadingPage'
@@ -32,7 +32,7 @@ export type TAppError = {
    */
   message: string
   notifyMethod?: TAppErrorNotifyMethod // Default is page.
-  solutions?: TButtonText[] // Only used when handled with error page.
+  solutions?: TButtonText_P[] // Only used when handled with error page.
 } & (
   | {
       notifyMethod?: 'bubble'
@@ -40,7 +40,7 @@ export type TAppError = {
     }
   | {
       notifyMethod?: 'page'
-      solutions?: TButtonText[]
+      solutions?: TButtonText_P[]
     }
 )
 

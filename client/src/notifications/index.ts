@@ -1,10 +1,10 @@
 import { v4 as generateHash } from 'uuid'
-import { TButtonText } from '../components/content/user-controls/ButtonText'
+import { TButtonText_P } from '../components/content/user-controls/ButtonText'
 
 export interface INotificationOptions {
   duration?: number | null
   errorMessage?: boolean
-  buttons?: Array<TButtonText>
+  buttons?: Array<TButtonText_P>
   startExpirationTimer?: boolean
 }
 
@@ -17,7 +17,7 @@ export default class Notification {
   _message: string
   _handleDismissalOrExpiration: (dismissed: boolean, expired: boolean) => void
   _duration: number | null /* ms */
-  _buttons: Array<TButtonText>
+  _buttons: Array<TButtonText_P>
   _dismissed: boolean
   _expired: boolean
   _expirationTimerStarted: boolean
@@ -35,7 +35,7 @@ export default class Notification {
     return this._duration
   }
 
-  get buttons(): Array<TButtonText> {
+  get buttons(): Array<TButtonText_P> {
     return this._buttons
   }
 

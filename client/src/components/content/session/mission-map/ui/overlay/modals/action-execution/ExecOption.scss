@@ -1,0 +1,21 @@
+@import 'src/assets/styles/config.scss';
+
+.ExecOption {
+  padding: 0.5em 0.9em;
+  color: $color-accent-light;
+  list-style-type: none;
+  text-decoration: none;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+  &.Disabled {
+    pointer-events: none;
+    user-select: none;
+  }
+
+  &:hover {
+    box-shadow: none;
+    background-color: $background-alt2;
+  }
+}

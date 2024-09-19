@@ -7,6 +7,10 @@
     border: 2px solid $color-main;
     width: 100%;
     height: 100%;
-    padding: 2em;
+    padding: 2em 0;
+
+    .SessionMembers {
+      padding: 0 2em;
+    }
   }
 }

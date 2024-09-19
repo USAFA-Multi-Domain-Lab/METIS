@@ -10,7 +10,7 @@ import Session, {
   TSessionJson,
 } from 'metis/sessions'
 import { TSessionMemberJson } from 'metis/sessions/members'
-import MemberRole, { TMemberRoleId } from 'metis/sessions/members/roles'
+import MemberRole from 'metis/sessions/members/roles'
 import { SingleTypeObject } from 'metis/toolbox/objects'
 import { TCommonUser } from 'metis/users'
 import { v4 as generateHash } from 'uuid'
@@ -46,6 +46,14 @@ export default class SessionServer extends Session<TServerMissionTypes> {
    */
   public environmentContextProvider: EnvironmentContextProvider
 
+  /**
+   * Assignments of users to forces (userID to forceID).
+   * @note Assignments are also stored in the `SessionMember` class,
+   * but this will help with rejoining, since a new `SessionMember`
+   * object is created each time a user joins.
+   */
+  private assignments: SingleTypeObject<string>
+
   public constructor(
     _id: string,
     name: string,
@@ -58,6 +66,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     this._destroyed = false
     this.register()
     this.environmentContextProvider = new EnvironmentContextProvider(this)
+    this.assignments = {}
   }
 
   // Implemented
@@ -216,6 +225,8 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     let members: ServerSessionMember[] = this.members
     // Clear all members.
     this.clearMembers()
+    // Clear assignments.
+    this.assignments = {}
     // Emit an event to all users that the session has been destroyed.
     for (let { connection } of members) {
       connection.emit('session-destroyed', { data: { sessionId: this._id } })
@@ -231,8 +242,9 @@ export default class SessionServer extends Session<TServerMissionTypes> {
    */
   public join(client: ClientConnection): ServerSessionMember {
     let userId = client.userId
-    let access = client.user.access
-    let roleId: TMemberRoleId
+    let role: MemberRole
+    let forceId: string | null = this.assignments[userId] ?? null
+    let isUnstarted = this._state === 'unstarted'
 
     // Throw error if the user is in the ban list.
     if (this._banList.includes(client.userId)) {
@@ -246,7 +258,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     // If the user is authorized to join as a manager,
     // then join as a manager.
     if (client.user.isAuthorized('sessions_join_manager')) {
-      roleId = 'manager'
+      role = MemberRole.AVAILABLE_ROLES.manager
     }
     // If the user is authorized to join as a manager
     // of native forces, and the client is the owner of
@@ -255,17 +267,17 @@ export default class SessionServer extends Session<TServerMissionTypes> {
       client.user.isAuthorized('sessions_join_manager_native') &&
       this.ownerId === userId
     ) {
-      roleId = 'manager'
+      role = MemberRole.AVAILABLE_ROLES.manager
     }
     // If the user is authorized to join as an observer,
     // then join as an observer.
     else if (client.user.isAuthorized('sessions_join_observer')) {
-      roleId = 'observer'
+      role = MemberRole.AVAILABLE_ROLES.observer
     }
     // If the user is authorized to join as a participant,
     // then join as a participant.
     else if (client.user.isAuthorized('sessions_join_participant')) {
-      roleId = 'participant'
+      role = MemberRole.AVAILABLE_ROLES.participant
     }
     // If the user is not authorized to join the session,
     // then throw an error.
@@ -273,8 +285,18 @@ export default class SessionServer extends Session<TServerMissionTypes> {
       throw ServerEmittedError.CODE_SESSION_UNAUTHORIZED_JOIN
     }
 
+    // Gather more details.
+    let hasCompleteVisibility = role.isAuthorized('completeVisibility')
+    let isAssigned = forceId !== null
+
+    // If the session is already started, ensure that
+    // the member has visibility to at least one force.
+    if (!isUnstarted && !hasCompleteVisibility && !isAssigned) {
+      throw ServerEmittedError.CODE_SESSION_LATE_JOIN
+    }
+
     // Create a new session member.
-    let member = ServerSessionMember.create(client, roleId, this)
+    let member = ServerSessionMember.create(client, role, this, forceId)
     // Add event listeners for the member.
     this.addListeners(member)
     // Push the member to the list of members.
@@ -449,6 +471,14 @@ export default class SessionServer extends Session<TServerMissionTypes> {
 
     // Mark the session as started.
     this._state = 'started'
+
+    // Loop through all participants and kick any
+    // that have no force-visibility.
+    for (let member of this.members) {
+      if (!member.isAssigned && !member.isAuthorized('completeVisibility')) {
+        // todo: Kick the user.
+      }
+    }
 
     // todo: Update the export logic here to use
     // todo: permissions instead of role-based logic.
@@ -812,6 +842,8 @@ export default class SessionServer extends Session<TServerMissionTypes> {
 
     // Assign the target member to the force.
     targetMember.forceId = forceId
+    if (forceId === null) delete this.assignments[targetMember.userId]
+    else this.assignments[targetMember.userId] = forceId
 
     // Emit an event to all users that an assignment has
     // been made.
@@ -925,9 +957,14 @@ export default class SessionServer extends Session<TServerMissionTypes> {
   ): Promise<void> => {
     // Gather data.
     let { connection } = member
-    let { actionId } = event.data
+    let { actionId, cheats = {} } = event.data
+    let { zeroCost } = cheats
     let action: ServerMissionAction | undefined = this.actions.get(actionId)
     let request = connection.buildResponseReqData(event)
+
+    // Clear the cheats if the member is not authorized
+    // to use them.
+    if (!member.isAuthorized('cheats')) cheats = {}
 
     // If the member doesn't have the permission
     // to manipulate nodes, then emit an error.
@@ -984,7 +1021,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     // If the participant does not have enough
     // resources to execute the action, then
     // emit an error.
-    if (action.force.resourcesRemaining < action.resourceCost) {
+    if (action.force.resourcesRemaining < action.resourceCost && !zeroCost) {
       return connection.emitError(
         new ServerEmittedError(
           ServerEmittedError.CODE_ACTION_INSUFFICIENT_RESOURCES,
@@ -1000,6 +1037,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
       let outcome = await action.execute({
         environmentContextProvider: this.environmentContextProvider,
         effectsEnabled: this.config.effectsEnabled,
+        cheats,
         onInit: (execution: ServerActionExecution) => {
           // Construct payload for action execution
           // initiated event.

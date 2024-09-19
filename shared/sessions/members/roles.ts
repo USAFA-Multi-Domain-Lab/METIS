@@ -34,6 +34,7 @@ const AVAILABLE_ROLES_RAW = [
       MemberPermission.AVAILABLE_PERMISSIONS.manageSessionMembers,
       MemberPermission.AVAILABLE_PERMISSIONS.startEndSessions,
       MemberPermission.AVAILABLE_PERMISSIONS.completeVisibility,
+      MemberPermission.AVAILABLE_PERMISSIONS.cheats,
     ] as MemberPermission[],
   } as const,
 ] as const

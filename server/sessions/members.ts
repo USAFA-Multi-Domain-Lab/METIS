@@ -25,9 +25,10 @@ export default class ServerSessionMember extends SessionMember<TServerMissionTyp
     _id: string,
     connection: ClientConnection,
     role: MemberRole,
+    forceId: string | null,
     session: SessionServer,
   ) {
-    super(_id, connection.user, role, null, session)
+    super(_id, connection.user, role, forceId, session)
     this.connection = connection
   }
 
@@ -62,6 +63,7 @@ export default class ServerSessionMember extends SessionMember<TServerMissionTyp
     connection: ClientConnection,
     role: MemberRole | TMemberRoleId,
     session: SessionServer,
+    forceId: string | null,
   ): ServerSessionMember {
     // If the role passed is a role ID,
     // get the `MemberRole` object.
@@ -71,6 +73,7 @@ export default class ServerSessionMember extends SessionMember<TServerMissionTyp
       StringToolbox.generateRandomId(),
       connection,
       role,
+      forceId,
       session,
     )
   }

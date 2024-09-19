@@ -1,7 +1,7 @@
 import { TGlobalContext } from 'src/context'
 import { compute } from 'src/toolbox'
 import { TWithKey } from '../../../../../shared/toolbox/objects'
-import { ButtonText, TButtonText } from '../user-controls/ButtonText'
+import { ButtonText, TButtonText_P } from '../user-controls/ButtonText'
 import Branding from './Branding'
 import './Navigation.scss'
 
@@ -48,8 +48,8 @@ export default function Navigation({
  */
 export const HomeLink = (
   context: TGlobalContext,
-  options: Partial<TWithKey<TButtonText>> = {},
-): TWithKey<TButtonText> => {
+  options: Partial<TWithKey<TButtonText_P>> = {},
+): TWithKey<TButtonText_P> => {
   return {
     text: 'Home',
     onClick: () => context.actions.navigateTo('HomePage', {}),
@@ -66,8 +66,8 @@ export const HomeLink = (
  */
 export const LogoutLink = (
   context: TGlobalContext,
-  options: Partial<TWithKey<TButtonText>> = {},
-): TWithKey<TButtonText> => {
+  options: Partial<TWithKey<TButtonText_P>> = {},
+): TWithKey<TButtonText_P> => {
   return {
     text: 'Logout',
     onClick: context.actions.logout,
@@ -86,7 +86,7 @@ export type TNavigation = {
    * The links to include in the navigation.
    * @default []
    */
-  links?: TWithKey<TButtonText>[]
+  links?: TWithKey<TButtonText_P>[]
   /**
    * Whether the logo will link to the home page.
    * @default true

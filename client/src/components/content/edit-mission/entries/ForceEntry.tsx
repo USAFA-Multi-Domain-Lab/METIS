@@ -8,7 +8,7 @@ import Prompt from '../../communication/Prompt'
 import { DetailColorSelector } from '../../form/DetailColorSelector'
 import { DetailNumber } from '../../form/DetailNumber'
 import { DetailString } from '../../form/DetailString'
-import { ButtonText, TButtonText } from '../../user-controls/ButtonText'
+import { ButtonText, TButtonText_P } from '../../user-controls/ButtonText'
 import './index.scss'
 import EntryNavigation from './navigation/EntryNavigation'
 
@@ -49,13 +49,13 @@ export default function ForceEntry({
   /**
    * The list of buttons for the node's border color.
    */
-  const colorButtons: TButtonText[] = compute(() => {
+  const colorButtons: TButtonText_P[] = compute(() => {
     // Create a default list of buttons.
-    let buttons: TButtonText[] = []
+    let buttons: TButtonText_P[] = []
 
     // Create a button that will fill all nodes
     // in the force with the selected color.
-    let fillButton: TButtonText = {
+    let fillButton: TButtonText_P = {
       text: 'Apply to Nodes',
       onClick: async () => {
         force.nodes.forEach((node) => {

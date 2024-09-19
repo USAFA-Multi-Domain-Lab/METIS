@@ -16,7 +16,7 @@ import List, { ESortByMethod } from '../../general-layout/List'
 import ButtonSvgPanel, {
   TValidPanelButton,
 } from '../../user-controls/ButtonSvgPanel'
-import { ButtonText, TButtonText } from '../../user-controls/ButtonText'
+import { ButtonText, TButtonText_P } from '../../user-controls/ButtonText'
 import { TToggleLockState } from '../../user-controls/Toggle'
 import './index.scss'
 import EntryNavigation from './navigation/EntryNavigation'
@@ -106,13 +106,13 @@ export default function NodeEntry({
   /**
    * The list of buttons for the node's border color.
    */
-  const colorButtons: TButtonText[] = compute(() => {
+  const colorButtons: TButtonText_P[] = compute(() => {
     // Create a default list of buttons.
-    let buttons: TButtonText[] = []
+    let buttons: TButtonText_P[] = []
 
     // Create a button that will fill all of the descendants
     // of the current node with the selected color.
-    let fillButton: TButtonText = {
+    let fillButton: TButtonText_P = {
       text: 'Fill',
       onClick: () => setApplyColorFill(true),
       tooltipDescription: `Applies the selected color to all of the node's descendants.`,

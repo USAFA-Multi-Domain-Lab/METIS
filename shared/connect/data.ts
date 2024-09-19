@@ -1,4 +1,7 @@
-import { TActionExecutionJson } from 'metis/missions/actions/executions'
+import {
+  TActionExecutionJson,
+  TExecutionCheats,
+} from 'metis/missions/actions/executions'
 import { TActionOutcomeJson } from 'metis/missions/actions/outcomes'
 import { TCommonMissionForceJson } from 'metis/missions/forces'
 import { TSessionConfig, TSessionJson } from 'metis/sessions'
@@ -616,6 +619,14 @@ export type TRequestEvents = {
        * The ID of the action to execute.
        */
       actionId: string
+      /**
+       * Cheats to apply when executing the action.
+       * @note Any cheats ommitted will be treated
+       * as `false`, or disabled.
+       * @note Only relevant to members authorized to perform
+       * cheats.
+       */
+      cheats?: Partial<TExecutionCheats>
     }
   >
   /**

@@ -429,9 +429,11 @@ export default function HomePage(): JSX.Element | null {
       } catch (error: any) {
         handleError({
           message: error.message,
-          notifyMethod: 'page',
+          notifyMethod: 'bubble',
         })
       }
+
+      finishLoading()
     } else {
       handleError({
         message: 'No server connection. Contact system administrator',

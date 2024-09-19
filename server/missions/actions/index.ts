@@ -4,6 +4,7 @@ import MissionAction, {
 } from 'metis/missions/actions'
 import IActionExecution, {
   TActionExecutionJson,
+  TExecutionCheats,
 } from 'metis/missions/actions/executions'
 import { TCommonEffectJson } from 'metis/missions/effects'
 import { plcApiLogger } from 'metis/server/logging'
@@ -64,14 +65,25 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
     let {
       environmentContextProvider,
       effectsEnabled = false,
+      cheats = {},
       onInit = () => {},
     } = options
+
+    let {
+      zeroCost = false,
+      instantaneous = false,
+      guaranteedSuccess = false,
+    } = cheats
 
     return new Promise<ServerRealizedOutcome>((resolve) => {
       // Determine the start and end time of
       // the execution process.
       let start: number = Date.now()
-      let end: number = start + this.processTime
+      let end: number = start
+
+      // If the "Instantaneous Execution" cheat is not enabled,
+      // add the process time to the end time.
+      if (!instantaneous) end += this.processTime
 
       // Create execution data.
       let executionData: NonNullable<TActionExecutionJson> = {
@@ -84,12 +96,25 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
       // Load execution.
       let execution = this.node.loadExecution(executionData)
 
-      // Grab next outcome for the action.
-      let potentialOutcome: ServerPotentialOutcome =
-        ServerPotentialOutcome.generateOutcome(this, this.rng)
+      // Generate next outcome for the action.
+      let potentialOutcome: ServerPotentialOutcome
+      // If the "Guaranteed Success" cheat is enabled,
+      // generate a guaranteed successful outcome.
+      if (guaranteedSuccess) {
+        potentialOutcome =
+          ServerPotentialOutcome.generateGuaranteedSuccess(this)
+      }
+      // Else, generate a potential outcome based on the action's success chance.
+      else {
+        potentialOutcome = ServerPotentialOutcome.generateOutcome(
+          this,
+          this.rng,
+        )
+      }
 
-      // Deduct resources from force.
-      this.force.resourcesRemaining -= this.resourceCost
+      // If the "Zero Resource Cost" cheat is not enabled,
+      // deduct the resource cost from the force's resources.
+      if (!zeroCost) this.force.resourcesRemaining -= this.resourceCost
 
       // Set timeout for when the execution
       // is completed.
@@ -170,6 +195,12 @@ export type TExecuteOptions<TActionExecution extends IActionExecution> = {
    * @default false
    */
   effectsEnabled: boolean
+  /**
+   * Cheats to apply when executing the action.
+   * @note Any cheats ommitted will be treated
+   * as `false`, or disabled.
+   */
+  cheats?: Partial<TExecutionCheats>
   /**
    * Callback for when the action execution process is initated. Passes a timestamp of when the process is expected to conclude and the promise to be resolved.
    */

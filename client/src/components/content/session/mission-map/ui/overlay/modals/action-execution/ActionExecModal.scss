@@ -15,6 +15,7 @@
           overflow: hidden;
           white-space: nowrap;
           text-overflow: ellipsis;
+          font-size: 1.2em;
         }
 
         .DropDownLabel {
@@ -90,85 +91,6 @@
 
           &::-webkit-scrollbar {
             width: 15px;
-          }
-
-          .Option {
-            padding: 0.5em 0.9em;
-            color: $color-accent-light;
-            list-style-type: none;
-            text-decoration: none;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-
-            &.Disabled {
-              pointer-events: none;
-              user-select: none;
-            }
-
-            &:hover {
-              box-shadow: none;
-              background-color: $background-alt2;
-            }
-          }
-        }
-      }
-
-      .ActionPropertyDisplay {
-        border: 2px solid $border-color-main;
-        border-radius: 10px;
-        font-size: 14px;
-        margin: 0;
-        padding: 15px;
-        padding-left: 30px;
-
-        .Property {
-          margin: 10px 0;
-          padding: 0 5px;
-          color: $terminal;
-
-          .Updated {
-            color: $color-main;
-            transform: scale(1.1);
-            transition: color 250ms ease-in-out, transform 250ms ease-in-out;
-          }
-
-          :not(.Updated) {
-            color: $terminal;
-            transform: scale(1);
-            transition: color 250ms ease-in-out, transform 250ms ease-in-out;
-          }
-
-          .Label {
-            color: $terminal;
-            text-decoration: underline;
-          }
-
-          .RichTextOutputBox * {
-            color: $terminal;
-          }
-
-          .RichTextOutputBox {
-            display: inline;
-            line-height: 20px;
-
-            p:first-child {
-              display: inline;
-            }
-          }
-        }
-
-        @media only screen and (max-width: 655px) {
-          & {
-            padding-left: 5px;
-
-            .Property {
-              margin: 5px 0 0 5px;
-              padding: 0;
-              white-space: nowrap;
-              overflow: hidden;
-              text-overflow: ellipsis;
-            }
           }
         }
       }

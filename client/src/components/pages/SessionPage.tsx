@@ -25,9 +25,9 @@ import OutputPanel from '../content/session/OutputPanel'
 import StatusBar from '../content/session/StatusBar'
 import SessionMembersPanel from '../content/session/members/SessionMembersPanel'
 import MissionMap from '../content/session/mission-map'
-import ActionExecModal from '../content/session/mission-map/ui/overlay/modals/ActionExecModal'
+import ActionExecModal from '../content/session/mission-map/ui/overlay/modals/action-execution/ActionExecModal'
 import { TValidPanelButton } from '../content/user-controls/ButtonSvgPanel'
-import { TButtonText } from '../content/user-controls/ButtonText'
+import { TButtonText_P } from '../content/user-controls/ButtonText'
 import './SessionPage.scss'
 
 /**
@@ -202,7 +202,7 @@ export default function SessionPage({
    * Props for navigation.
    */
   const navigation = compute(() => {
-    let links: TWithKey<TButtonText>[] = []
+    let links: TWithKey<TButtonText_P>[] = []
 
     // Push end session button, if user is authorized.
     if (

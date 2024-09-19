@@ -2,7 +2,7 @@ import { useGlobalContext } from 'src/context'
 import { compute } from 'src/toolbox'
 import { TWithKey } from '../../../../../shared/toolbox/objects'
 import Tooltip from '../communication/Tooltip'
-import { TButtonText } from '../user-controls/ButtonText'
+import { TButtonText_P } from '../user-controls/ButtonText'
 import './Footer.scss'
 
 /* -- components -- */
@@ -87,7 +87,7 @@ export type TFooter = {
    * The links to include in the navigation.
    * @default []
    */
-  links?: TWithKey<TButtonText>[]
+  links?: TWithKey<TButtonText_P>[]
   /**
    * Whether the logo will link to the home page.
    * @default true

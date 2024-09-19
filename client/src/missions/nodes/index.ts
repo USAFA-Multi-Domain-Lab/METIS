@@ -560,13 +560,15 @@ export default class ClientMissionNode
   /**
    * Populates the children of the node, if not already populated.
    * @param data The child node data with which to populate the node.
+   * @returns The populated child nodes.
+   * @note If the nodes are already populated, this method will not
+   * create new nodes from the data passed. They will simply return
+   * the current children.
    */
   protected populateChildNodes(data: TMissionNodeJson[]): ClientMissionNode[] {
     // If children are already set,
-    // throw an error.
-    if (this.children.length > 0) {
-      throw new Error('Children are already populated.')
-    }
+    // return them.
+    if (this.children.length > 0) return this.children
 
     // Gather details.
     let prototype = this.prototype

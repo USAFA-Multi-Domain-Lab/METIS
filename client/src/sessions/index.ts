@@ -9,6 +9,7 @@ import {
   TResponseEvents,
   TServerEvents,
 } from '../../../shared/connect/data'
+import { TExecutionCheats } from '../../../shared/missions/actions/executions'
 import Session, {
   TSessionBasicJson,
   TSessionConfig,
@@ -245,10 +246,13 @@ export default class SessionClient extends Session<TClientMissionTypes> {
    */
   public executeAction(
     actionId: string,
-    options: TSessionRequestOptions = {},
+    options: TExecuteActionOptions = {},
   ): void {
     let server: ServerConnection = this.server
     let action: ClientMissionAction | undefined = this.actions.get(actionId)
+    const { cheats } = options
+
+    console.log(options)
 
     // Callback for errors.
     const onError = (message: string) => {
@@ -280,6 +284,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
       'request-execute-action',
       {
         actionId,
+        cheats,
       },
       `Executing "${action.name}" on "${action.node.name}".`,
       {
@@ -1001,4 +1006,17 @@ type TSessionRequestOptions = {
    * @param message The error message.
    */
   onError?: (message: string) => void
+}
+
+/**
+ * Options for `executeAction` method.
+ */
+interface TExecuteActionOptions extends TSessionRequestOptions {
+  /**
+   * The cheats to be applied when executing the action.
+   * @note If the member is not authorized to use cheats, this
+   * will be ignored.
+   * @note Any ommitted cheats will be considered `false`.
+   */
+  cheats?: Partial<TExecutionCheats>
 }

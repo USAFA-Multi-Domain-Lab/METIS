@@ -4,46 +4,11 @@ import { useDefaultProps } from 'src/toolbox/hooks'
 import Tooltip from '../communication/Tooltip'
 import './ButtonText.scss'
 
-/* -- interfaces -- */
-
-// Interface for props for ButtonText component.
-export interface TButtonText {
-  /**
-   * The text for the button.
-   */
-  text: string
-  /**
-   * Handles the click event for the button.
-   * @param event The click event.
-   */
-  onClick: (event: React.MouseEvent) => void
-  /**
-   * The description for the tooltip. If null, no tooltip is displayed.
-   * @default null
-   */
-  tooltipDescription?: string | null
-  /**
-   * Unique class name to apply to the component.
-   * @default ''
-   */
-  uniqueClassName?: string
-  /**
-   * The style for the button
-   * @default {}
-   */
-  style?: React.CSSProperties
-  /**
-   * The disabled state of the button.
-   * @default 'none'
-   */
-  disabled?: 'partial' | 'full' | 'none'
-}
-
-/* -- classes -- */
+/* -- COMPONENT -- */
 
 // A button with normal text
 // that performs a given action.
-export function ButtonText(props: TButtonText): JSX.Element | null {
+export function ButtonText(props: TButtonText_P): JSX.Element | null {
   // Extract props. Assign default props to
   // props passed as needed.
   let {
@@ -91,4 +56,41 @@ export function ButtonText(props: TButtonText): JSX.Element | null {
       {tooltipDescription ? <Tooltip description={tooltipDescription} /> : null}
     </div>
   )
+}
+
+/* -- TYPES -- */
+
+/**
+ * Props for `ButtonText`.
+ */
+export interface TButtonText_P {
+  /**
+   * The text for the button.
+   */
+  text: string
+  /**
+   * Handles the click event for the button.
+   * @param event The click event.
+   */
+  onClick: (event: React.MouseEvent) => void
+  /**
+   * The description for the tooltip. If null, no tooltip is displayed.
+   * @default null
+   */
+  tooltipDescription?: string | null
+  /**
+   * Unique class name to apply to the component.
+   * @default ''
+   */
+  uniqueClassName?: string
+  /**
+   * The style for the button
+   * @default {}
+   */
+  style?: React.CSSProperties
+  /**
+   * The disabled state of the button.
+   * @default 'none'
+   */
+  disabled?: 'partial' | 'full' | 'none'
 }

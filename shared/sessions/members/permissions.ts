@@ -35,8 +35,8 @@ const AVAILABLE_PERMISSIONS_RAW = [
     description: 'The member can view all forces and all nodes in the mission.',
   } as const,
   {
-    _id: 'superActionExecution',
-    name: 'Super Action Execution',
+    _id: 'cheats',
+    name: 'Cheats',
     description:
       'The member can execute actions on nodes with the option of bypassing resource cost, process time, failure chance, etc.',
   },

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { compute } from 'src/toolbox'
 import { TDetail_P } from '.'
 import Tooltip from '../communication/Tooltip'
-import { ButtonText, TButtonText } from '../user-controls/ButtonText'
+import { ButtonText, TButtonText_P } from '../user-controls/ButtonText'
 import './DetailColorSelector.scss'
 
 /**
@@ -155,7 +155,7 @@ export function DetailColorSelector({
             ></span>
           </div>
           <div className='Buttons'>
-            {buttons.map((button: TButtonText, index: number) => (
+            {buttons.map((button: TButtonText_P, index: number) => (
               <ButtonText key={`button_${button.text}_${index}`} {...button} />
             ))}
           </div>
@@ -179,7 +179,7 @@ type TDetailColorSelector_P = TDetail_P<string> & {
    * Buttons to render at the bottom of the detail.
    * @default []
    */
-  buttons?: TButtonText[]
+  buttons?: TButtonText_P[]
   /**
    * The boolean that determines if the detail is expanded.
    * @default false

@@ -65,6 +65,11 @@ export default abstract class SessionMember<
     return this.role._id === 'manager'
   }
 
+  // Implemented
+  public get isAssigned(): boolean {
+    return this.forceId !== null
+  }
+
   /**
    * Creates a new SessionMember object.
    * @param _id The unique ID of the session member.
@@ -161,6 +166,10 @@ export interface TCommonSessionMember {
    * Whether the member is a manager in the session.
    */
   get isManager(): boolean
+  /**
+   * Whether the member has been assigned to a force.
+   */
+  get isAssigned(): boolean
   /**
    * Converts the SessionMember object to JSON.
    * @returns A JSON representation of the session member.

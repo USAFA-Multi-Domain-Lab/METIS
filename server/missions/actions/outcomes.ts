@@ -79,6 +79,17 @@ export class ServerPotentialOutcome
   ): ServerPotentialOutcome {
     return new ServerPotentialOutcome(action, rng.double())
   }
+
+  /**
+   * Generate a guranteed successful outcome for an action.
+   * @param action The action producing an outcome.
+   * @returns The predetermined outcome of the action.
+   */
+  public static generateGuaranteedSuccess(
+    action: ServerMissionAction,
+  ): ServerPotentialOutcome {
+    return new ServerPotentialOutcome(action, 2)
+  }
 }
 
 /**

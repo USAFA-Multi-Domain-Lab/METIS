@@ -5,7 +5,7 @@ import {
   TPromptResult,
   TPrompt_P,
 } from 'src/components/content/communication/Prompt'
-import { TButtonText } from 'src/components/content/user-controls/ButtonText'
+import { TButtonText_P } from 'src/components/content/user-controls/ButtonText'
 import { PAGE_REGISTRY, TPage_P } from 'src/components/pages'
 import ServerConnection from 'src/connect/servers'
 import MetisInfo from 'src/info'
@@ -15,6 +15,7 @@ import ClientUser from 'src/users'
 import { v4 as generateHash } from 'uuid'
 import { ServerEmittedError } from '../../../shared/connect/errors'
 import { TLogin } from '../../../shared/logins'
+import { TExecutionCheats } from '../../../shared/missions/actions/executions'
 import ObjectToolbox, {
   AnyObject,
   TWithKey,
@@ -47,6 +48,11 @@ const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
   tooltipDescription: '',
   notifications: [],
   promptData: null,
+  cheats: {
+    zeroCost: true,
+    instantaneous: false,
+    guaranteedSuccess: true,
+  },
 }
 
 /**
@@ -613,6 +619,12 @@ export type TGlobalContextValues = {
    * Current prompt to display to the user.
    */
   promptData: TWithKey<TPrompt_P<any, any>> | null
+  /**
+   * Global settings for cheats when executing actions.
+   * This will ensure that when the user executes an action,
+   * the cheats will be the same as the last action executed.
+   */
+  cheats: TExecutionCheats
 }
 
 /**
@@ -764,7 +776,7 @@ export type TPromptOptions<
  */
 export type TNotifyOptions = {
   duration?: number | null
-  buttons?: TButtonText[]
+  buttons?: TButtonText_P[]
   errorMessage?: boolean
 }
 
