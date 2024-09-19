@@ -354,6 +354,9 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
                 }
               }, 3000)
             },
+            'dismissed': () => {
+              handleError('You have been dismissed from the session.')
+            },
             'kicked': () => {
               handleError('You have been kicked from the session.')
             },

@@ -472,13 +472,36 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     // Mark the session as started.
     this._state = 'started'
 
-    // Loop through all participants and kick any
-    // that have no force-visibility.
+    // Loop through all members and find any
+    // that have no force availability, and
+    // mark them for dismissal.
+    let toDismiss: ServerSessionMember[] = []
     for (let member of this.members) {
       if (!member.isAssigned && !member.isAuthorized('completeVisibility')) {
-        // todo: Kick the user.
+        toDismiss.push(member)
       }
     }
+
+    // Dismiss members found.
+    for (let member of toDismiss) {
+      // Remove the member from the list.
+      this._members = this._members.filter(({ _id }) => _id !== member._id)
+      // Remove session-specific listeners.
+      this.removeListeners(member)
+      // Handle quitting the session for the member.
+      member.connection.login.handleQuit()
+      // Emit an event to the member that they have
+      // been dismissed.
+      member.emit('dismissed', { data: {} })
+    }
+
+    // Emit an event to all users that the user list
+    // has changed.
+    this.emitToAll('session-users-updated', {
+      data: {
+        members: this.members.map((member) => member.toJson()),
+      },
+    })
 
     // todo: Update the export logic here to use
     // todo: permissions instead of role-based logic.

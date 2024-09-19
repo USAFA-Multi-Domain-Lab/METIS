@@ -260,6 +260,11 @@ export type TGenericServerEvents = {
     }
   >
   /**
+   * Occurs for a member who was dismissed from the session,
+   * due to not being assigned to a force when the session starts.
+   */
+  'dismissed': TConnectEvent<'dismissed', {}>
+  /**
    * Occurs when a user joins or quits the session.
    */
   'session-users-updated': TConnectEvent<
