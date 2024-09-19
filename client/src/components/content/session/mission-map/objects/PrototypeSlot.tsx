@@ -17,6 +17,7 @@ export default function PrototypeSlot({
   relative,
   relation,
   position,
+  tooltipDescription = 'Create a prototype here.',
   onClick = () => {},
 }: TPrototypeSlot_P): JSX.Element | null {
   /* -- computed -- */
@@ -67,7 +68,7 @@ export default function PrototypeSlot({
     >
       <div className='Icon'></div>
       {/* todo: add tooltip */}
-      <Tooltip description='Create a prototype here.' />
+      <Tooltip description={tooltipDescription} />
     </div>
   )
 }
@@ -88,6 +89,11 @@ export type TPrototypeSlot_P = {
    * The position of the slot on the map.
    */
   position: Vector2D
+  /**
+   * The description for the tooltip for the slot.
+   * @default 'Create a prototype here.'
+   */
+  tooltipDescription?: string
   /**
    * Callback for when the slot is clicked.
    * @default () => {}

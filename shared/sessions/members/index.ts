@@ -42,9 +42,9 @@ export default abstract class SessionMember<
   public forceId: TCommonMissionForce['_id'] | null
 
   // Implemented
-  public get force(): TForce<T> {
-    // todo: implement this.
-    throw new Error('Method not implemented.')
+  public get force(): TForce<T> | null {
+    if (this.forceId === null) return null
+    return this.session.mission.getForce(this.forceId) ?? null
   }
 
   // Implemented
@@ -150,6 +150,11 @@ export interface TCommonSessionMember {
    * @note If `null`, the member is not assigned to a force.
    */
   forceId: TCommonMissionForce['_id'] | null
+  /**
+   * The force to which the member is assigned.
+   * @note If `null`, the member is not assigned to a force.
+   */
+  get force(): TCommonMissionForce | null
   /**
    * The session to which the member belongs.
    */

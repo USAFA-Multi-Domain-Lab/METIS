@@ -126,9 +126,6 @@ export default abstract class Mission<
     // Include the ID if the option is set.
     if (includeId) json._id = this._id
 
-    // todo: Update the export logic to be
-    // todo: Permissions-based instead of
-    // todo: role based.
     // Handle the export based on the export type
     // passed in the options.
     switch (options.exportType) {
@@ -136,7 +133,7 @@ export default abstract class Mission<
         json.nodeStructure = Mission.determineNodeStructure(this.root)
         json.forces = this.forces.map((force) => force.toJson())
         break
-      case 'session-participant':
+      case 'session-force-specific':
         // Get the force to include in the export.
         let force = this.forces.find((force) => force._id === options.forceId)
 
@@ -150,14 +147,7 @@ export default abstract class Mission<
         }
         // todo: Log a warning if the force is not found.
         break
-      case 'session-observer':
-        // Include all data.
-        json.nodeStructure = Mission.determineNodeStructure(this.root)
-        json.forces = this.forces.map((force) =>
-          force.toJson({ includeSessionData: true }),
-        )
-        break
-      case 'session-manager':
+      case 'session-complete':
         // Include all data.
         json.nodeStructure = Mission.determineNodeStructure(this.root)
         json.forces = this.forces.map((force) =>
@@ -624,42 +614,32 @@ export type TMissionJsonSessionLimitedOptions = TMissionJsonBaseOptions & {
 }
 
 /**
- * Options for Mission.toJson with `exportType` set to 'session-participant'.
+ * Options for Mission.toJson with `exportType` set to 'session-force-specific'.
  */
-export type TMissionJsonSessionParticipantOptions = TMissionJsonBaseOptions & {
-  /**
-   * An export of a mission to be used in a session.
-   * This export will only include the data available
-   * to a participant participating in the force with
-   * the ID passed.
-   */
-  exportType: 'session-participant'
-  /**
-   * The ID of the force to include in the export.
-   */
-  forceId: TCommonMissionForce['_id']
-}
+export type TMissionJsonSessionForceSpecificOptions =
+  TMissionJsonBaseOptions & {
+    /**
+     * An export of a mission to be used in a session.
+     * This export will only include the data available
+     * to a participant participating in the force with
+     * the ID passed.
+     */
+    exportType: 'session-force-specific'
+    /**
+     * The ID of the force to include in the export.
+     */
+    forceId: TCommonMissionForce['_id']
+  }
 
 /**
- * Options for Mission.toJson with `exportType` set to 'session-observer'.
+ * Options for Mission.toJson with `exportType` set to 'session-complete'.
  */
-export type TMissionJsonSessionObserverOptions = TMissionJsonBaseOptions & {
+export type TMissionJsonSessionCompleteOptions = TMissionJsonBaseOptions & {
   /**
    * An export of a mission to be used in a session.
    * This export will include all data.
    */
-  exportType: 'session-observer'
-}
-
-/**
- * Options for Mission.toJson with `exportType` set to 'session-manager'.
- */
-export type TMissionJsonSessionManagerOptions = TMissionJsonBaseOptions & {
-  /**
-   * An export of a mission to be used in a session.
-   * This export will include all data.
-   */
-  exportType: 'session-manager'
+  exportType: 'session-complete'
 }
 
 /**
@@ -668,9 +648,8 @@ export type TMissionJsonSessionManagerOptions = TMissionJsonBaseOptions & {
 export type TMissionJsonOptions =
   | TMissionJsonStandardOptions
   | TMissionJsonSessionLimitedOptions
-  | TMissionJsonSessionParticipantOptions
-  | TMissionJsonSessionObserverOptions
-  | TMissionJsonSessionManagerOptions
+  | TMissionJsonSessionForceSpecificOptions
+  | TMissionJsonSessionCompleteOptions
 
 /**
  * Options for Mission.mapRelationships.

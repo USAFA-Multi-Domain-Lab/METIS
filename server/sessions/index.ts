@@ -106,31 +106,25 @@ export default class SessionServer extends Session<TServerMissionTypes> {
       // Gather details.
       let { forceId } = requester
 
-      // If the requester is a participant, then
-      // update the mission options to include
-      // data pertinent to the participant.
+      // If the requester is assigned to a force,
+      // then update the mission options to include
+      // data pertinent to the force.
       if (forceId) {
         missionOptions = {
-          exportType: 'session-participant',
+          exportType: 'session-force-specific',
           forceId,
         }
       }
-      // If the requester is an observer, then
-      // update the mission options to include
-      // data pertinent to the observer.
-      else if (requester.isObserver) {
+
+      // If the requester has complete visibility,
+      // then update the mission options to include
+      // all data.
+      if (requester.isAuthorized('completeVisibility')) {
         missionOptions = {
-          exportType: 'session-observer',
+          exportType: 'session-complete',
         }
       }
-      // If the requester is a manager, then
-      // update the mission options to include
-      // data pertinent to the manager.
-      else if (requester.isManager) {
-        missionOptions = {
-          exportType: 'session-manager',
-        }
-      }
+
       // If the requester is authorized to manager
       // users, then include the ban list.
       if (requester.isAuthorized('manageSessionMembers')) banList = this.banList
@@ -523,7 +517,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
       // If the force has not been cached, then cache it.
       if (!participantForceCache[forceId]) {
         participantForceCache[forceId] = this.mission.toJson({
-          exportType: 'session-participant',
+          exportType: 'session-force-specific',
           forceId,
         })
       }
@@ -541,7 +535,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
 
     // Get observer export.
     let observerExport = this.mission.toJson({
-      exportType: 'session-observer',
+      exportType: 'session-complete',
     })
 
     // Emit an event to all observers that the session has
@@ -558,7 +552,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
 
     // Get manager export.
     let managerExport = this.mission.toJson({
-      exportType: 'session-manager',
+      exportType: 'session-complete',
     })
 
     // Emit an event to all managers that the session has
