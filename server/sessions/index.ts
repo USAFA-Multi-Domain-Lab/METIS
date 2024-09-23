@@ -670,7 +670,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     // Parse data from event.
     const { memberId: targetMemberId } = event.data
     // Get the target member to kick.
-    const targetMember = this.getMemberByUserId(targetMemberId)
+    const targetMember = this.getMember(targetMemberId)
 
     // If the member requesting does not have the
     // correct permissions to kick participants,
@@ -717,7 +717,11 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     // Emit an event to the target member and to the
     // requester that the target member has been kicked.
     let payload = {
-      data: { sessionId: this._id, memberId: targetMemberId },
+      data: {
+        sessionId: this._id,
+        memberId: targetMemberId,
+        userId: targetMember.userId,
+      },
       request,
     }
     member.emit('kicked', payload)
@@ -745,7 +749,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     // Parse data from event.
     const { memberId: targetMemberId } = event.data
     // Get the target member to ban.
-    const targetMember = this.getMemberByUserId(targetMemberId)
+    const targetMember = this.getMember(targetMemberId)
 
     // If the member requesting does not have the
     // correct permissions to ban participants,
@@ -787,14 +791,18 @@ export default class SessionServer extends Session<TServerMissionTypes> {
       (member) => member._id !== targetMember._id,
     )
     // Remove session-specific listeners.
-    this.removeListeners(member)
+    this.removeListeners(targetMember)
     // Handle quitting the session for the member.
-    member.connection.login.handleQuit()
+    targetMember.connection.login.handleQuit()
 
     // Emit an event to the target member and to the
     // requester that the target member has been banned.
     let payload = {
-      data: { sessionId: this._id, memberId: targetMemberId },
+      data: {
+        sessionId: this._id,
+        memberId: targetMemberId,
+        userId: targetMember.userId,
+      },
       request,
     }
     member.emit('banned', payload)

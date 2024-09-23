@@ -4,7 +4,6 @@ import ClientSession from 'src/sessions'
 import ClientSessionMember from 'src/sessions/members'
 import { compute } from 'src/toolbox'
 import { useEventListener, useRequireLogin } from 'src/toolbox/hooks'
-import Prompt from '../../communication/Prompt'
 import SessionMemberRow from './SessionMemberRow'
 import './SessionMembers.scss'
 
@@ -24,72 +23,6 @@ export default function SessionMembers({
   const [members, setMembers] = useState<ClientSessionMember[]>(
     session.membersSorted,
   )
-
-  /* -- FUNCTIONS -- */
-
-  /**
-   * Callback for button click to kick a member.
-   * @param memberId The member ID of the member to kick.
-   */
-  const onClickKick = async (memberId: string): Promise<void> => {
-    // Confirm the user wants to perform the operation.
-    let { choice } = await prompt(
-      `Are you sure you want to kick "${memberId}"?`,
-      Prompt.ConfirmationChoices,
-    )
-
-    // If the user cancels, return.
-    if (choice === 'Cancel') {
-      return
-    }
-
-    try {
-      // Begin loading.
-      beginLoading(`Kicking "${memberId}"...`)
-      // Kick the member.
-      await session.$kick(memberId)
-    } catch (error) {
-      handleError({
-        message: `Failed to kick "${memberId}".`,
-        notifyMethod: 'bubble',
-      })
-    }
-
-    // Finish loading.
-    finishLoading()
-  }
-
-  /**
-   * Callback for button click to ban a member.
-   * @param memberId The member ID of the member to ban.
-   */
-  const onClickBan = async (memberId: string): Promise<void> => {
-    // Confirm the user wants to perform the operation.
-    let { choice } = await prompt(
-      `Are you sure you want to ban "${memberId}"?`,
-      Prompt.ConfirmationChoices,
-    )
-
-    // If the user cancels, return.
-    if (choice === 'Cancel') {
-      return
-    }
-
-    try {
-      // Begin loading.
-      beginLoading(`Banning "${memberId}"...`)
-      // Ban the member.
-      await session.$ban(memberId)
-    } catch (error) {
-      handleError({
-        message: `Failed to ban "${memberId}".`,
-        notifyMethod: 'bubble',
-      })
-    }
-
-    // Finish loading.
-    finishLoading()
-  }
 
   /* -- HOOKS -- */
 

@@ -5,14 +5,13 @@ import SessionClient from 'src/sessions'
 import ClientSessionMember from 'src/sessions/members'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
+import Prompt from '../../communication/Prompt'
 import { DetailDropdown } from '../../form/DetailDropdown'
 import ButtonSvgPanel, {
   TValidPanelButton,
 } from '../../user-controls/ButtonSvgPanel'
 import './SessionMemberRow.scss'
 
-// todo: Force management code is very messy.
-// todo: This should be cleaned up in the future.
 export default function SessionMemberRow({
   member,
   session,
@@ -20,8 +19,8 @@ export default function SessionMemberRow({
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
-  const [server] = globalContext.server
-  const { handleError } = globalContext.actions
+  const { handleError, prompt, beginLoading, finishLoading } =
+    globalContext.actions
   const [assignedForce, setAssignedForce] = useState<ClientMissionForce | null>(
     member.force,
   )
@@ -46,36 +45,21 @@ export default function SessionMemberRow({
    * Buttons for SVG panel.
    */
   const buttons = compute((): TValidPanelButton[] => {
-    // If the current member can manage session members
-    // and given participant cannot, return kick and ban
-    // buttons.
-    // todo: Uncomment and fix this.
-    // if (
-    //   currentMember?.isAuthorized('manageSessionMembers') &&
-    //   !participant.isAuthorized('manageSessionMembers')
-    // ) {
     return [
       {
         icon: 'kick',
         key: 'kick',
-        // todo: Uncomment and fix this.
-        //   onClick: () => onClickKick(participant.username),
-        onClick: () => console.log('kick'),
+        onClick: () => onClickKick(),
         tooltipDescription:
           'Kick member from the session (Can still choose to rejoin).',
       },
       {
         icon: 'ban',
         key: 'ban',
-        // todo: Uncomment and fix this.
-        //   onClick: () => onClickBan(participant.username),
-        onClick: () => console.log('ban'),
+        onClick: () => onClickBan(),
         tooltipDescription: 'Ban member from the session (Cannot rejoin).',
       },
     ]
-    // } else {
-    //   return []
-    // }
   })
 
   /**
@@ -121,6 +105,70 @@ export default function SessionMemberRow({
       !targetCompleteVisibility &&
       currentCompleteVisibility,
   )
+
+  /* -- FUNCTIONS -- */
+
+  /**
+   * Callback for button click to kick a member.
+   */
+  const onClickKick = async (): Promise<void> => {
+    // Confirm the user wants to perform the operation.
+    let { choice } = await prompt(
+      `Are you sure you want to kick "${member.username}"?`,
+      Prompt.ConfirmationChoices,
+    )
+
+    // If the user cancels, return.
+    if (choice === 'Cancel') {
+      return
+    }
+
+    try {
+      // Begin loading.
+      beginLoading(`Kicking "${member.username}"...`)
+      // Kick the member.
+      await session.$kick(member._id)
+    } catch (error) {
+      handleError({
+        message: `Failed to kick "${member.username}".`,
+        notifyMethod: 'bubble',
+      })
+    }
+
+    // Finish loading.
+    finishLoading()
+  }
+
+  /**
+   * Callback for button click to ban a member.
+   */
+  const onClickBan = async (): Promise<void> => {
+    // Confirm the user wants to perform the operation.
+    let { choice } = await prompt(
+      `Are you sure you want to ban "${member.username}"?`,
+      Prompt.ConfirmationChoices,
+    )
+
+    // If the user cancels, return.
+    if (choice === 'Cancel') {
+      return
+    }
+
+    try {
+      // Begin loading.
+      beginLoading(`Banning "${member.username}"...`)
+      // Ban the member.
+      await session.$ban(member._id)
+    } catch (error) {
+      handleError({
+        message: `Failed to ban "${member.username}".`,
+        notifyMethod: 'bubble',
+      })
+    }
+
+    // Finish loading.
+    finishLoading()
+  }
 
   /* -- HOOKS -- */
 

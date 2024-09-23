@@ -374,6 +374,10 @@ export type TResponseEvents = {
        * The ID of the member who was kicked.
        */
       memberId: string
+      /**
+       * The ID of the user who was kicked.
+       */
+      userId: string
     },
     TClientEvents['request-kick']
   >
@@ -391,6 +395,10 @@ export type TResponseEvents = {
        * The ID of the member who was banned.
        */
       memberId: string
+      /**
+       * The ID of the user who was kicked.
+       */
+      userId: string
     },
     TClientEvents['request-ban']
   >

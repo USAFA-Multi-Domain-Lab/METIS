@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useState } from 'react'
+import React, { ReactNode, useEffect, useRef, useState } from 'react'
 import { TAppError, TAppErrorNotifyMethod } from 'src/components/App'
 import { message as connectionStatusMessage } from 'src/components/content/communication/ConnectionStatus'
 import {
@@ -13,6 +13,7 @@ import ClientLogin from 'src/logins'
 import Notification from 'src/notifications'
 import ClientUser from 'src/users'
 import { v4 as generateHash } from 'uuid'
+import { TResponseEvents } from '../../../shared/connect/data'
 import { ServerEmittedError } from '../../../shared/connect/errors'
 import { TLogin } from '../../../shared/logins'
 import { TExecutionCheats } from '../../../shared/missions/actions/executions'
@@ -172,6 +173,18 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
   >([])
   const [initialConnectionFailed, setInitialConnectionFailed] =
     useState<boolean>(false)
+  /**
+   * Handles a member being kicked from a session.
+   */
+  const onMemberKicked = useRef<(event: TResponseEvents['kicked']) => void>(
+    () => {},
+  )
+  /**
+   * Handles a member being banned from a session.
+   */
+  const onMemberBanned = useRef<(event: TResponseEvents['banned']) => void>(
+    () => {},
+  )
 
   /* -- LOCAL FUNCTIONS -- */
 
@@ -186,6 +199,28 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
     }
     setPostLoadNotifications([])
   }
+
+  /* -- HOOKS -- */
+
+  // This effect updates the on member kicked and on member banned
+  // callbacks to update when the login changes.
+  useEffect(() => {
+    onMemberKicked.current = (event: TResponseEvents['kicked']) => {
+      const { handleError } = context.actions
+
+      if (login?.user._id === event.data.userId) {
+        handleError('You have been kicked from the session.')
+      }
+    }
+
+    onMemberBanned.current = (event: TResponseEvents['banned']) => {
+      const { handleError } = context.actions
+
+      if (login?.user._id === event.data.userId) {
+        handleError('You have been banned from the session.')
+      }
+    }
+  }, [login])
 
   /* -- CONTEXT ACTION DEFINITION -- */
 
@@ -357,12 +392,8 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
             'dismissed': () => {
               handleError('You have been dismissed from the session.')
             },
-            'kicked': () => {
-              handleError('You have been kicked from the session.')
-            },
-            'banned': () => {
-              handleError('You have been banned from the session.')
-            },
+            'kicked': (event) => onMemberKicked.current(event),
+            'banned': (event) => onMemberBanned.current(event),
             'session-destroyed': () => {
               handleError('The session you were in has been deleted.')
             },
