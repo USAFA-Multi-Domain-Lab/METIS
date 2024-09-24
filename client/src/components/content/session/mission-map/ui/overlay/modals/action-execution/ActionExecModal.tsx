@@ -54,12 +54,17 @@ export default function ActionExecModal({
   const globalContext = useGlobalContext()
   const [cheats, setCheats] = globalContext.cheats
   const [showCheats, setShowCheats] = useState<boolean>(false)
+  // Whether the output has been sent.
+  const [pendingOutputSent, setPendingOutputSent] = useState<boolean>(
+    node.pendingOutputSent,
+  )
   const { handleError } = globalContext.actions
 
   /* -- HOOKS -- */
 
-  useEventListener(node, 'activity', () => {
+  useEventListener(node, ['update-block', 'output-sent'], () => {
     setBlocked(node.blocked)
+    setPendingOutputSent(node.pendingOutputSent)
   })
 
   /* -- COMPUTED -- */
@@ -68,7 +73,9 @@ export default function ActionExecModal({
    * Whether the modal is ready for execution.
    */
   const ready = compute<boolean>(() => {
-    return !!selectedAction && !dropDownExpanded
+    return (
+      !!selectedAction && !dropDownExpanded && !blocked && !pendingOutputSent
+    )
   })
 
   /**
@@ -85,7 +92,10 @@ export default function ActionExecModal({
         onClick: () => setShowCheats(false),
         key: 'back',
       })
-    } else {
+    }
+    // If there is no selected action or the
+    // drop down is expanded, return an empty array.
+    else if (selectedAction && !dropDownExpanded) {
       buttons.push({
         text: 'EXECUTE ACTION',
         disabled: blocked ? 'full' : 'none',
@@ -133,7 +143,7 @@ export default function ActionExecModal({
    * Drop down class name for the component.
    */
   const dropDownClass = compute<string>(() => {
-    let classes: string[] = ['DropDown']
+    let classes: string[] = ['Dropdown']
 
     // Disable drop down if there is less than two actions.
     if (node.actions.size < 2) classes.push('Disabled')
@@ -201,8 +211,8 @@ export default function ActionExecModal({
    * Executes the selected action.
    */
   const execute = () => {
-    if (selectedAction && !node.blocked) {
-      session.executeAction(selectedAction._id, {
+    if (ready) {
+      session.executeAction(selectedAction!._id, {
         // This will be ignored if the member
         // does not have authorization to use cheats.
         cheats,

@@ -314,17 +314,17 @@ export default class SessionClient extends Session<TClientMissionTypes> {
    */
   public sendPreExecutionMessage(
     nodeId: ClientMissionNode['_id'],
-    options: TNodeFuncOptions = {},
+    options: TSessionRequestOptions = {},
   ) {
     // Gather details.
     let server: ServerConnection = this.server
     let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
     let { onError = () => {} } = options
 
-    // If the role is not "participant", callback
-    // an error.
-    if (this.role !== 'participant') {
-      return onError('Only participants can send pre-execution messages.')
+    // If the member does not have the correct permissions,
+    // callback an error.
+    if (!this.member.isAuthorized('manipulateNodes')) {
+      return onError('You are not authorized to send pre-execution messages.')
     }
 
     // Callback error if the node is not in

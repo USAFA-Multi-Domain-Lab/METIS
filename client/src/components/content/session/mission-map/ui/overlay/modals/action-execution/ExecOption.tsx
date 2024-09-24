@@ -11,7 +11,7 @@ import './ExecOption.scss'
 /**
  * An option in the drop down of actions to choose from.
  */
-export default function ExecOption({ action, select }: TOption_P) {
+export default function ExecOption({ action, select }: TExecOption_P) {
   /* -- STATE -- */
   const [successChance, setSuccessChance] = useState<number>(
     action.successChance,
@@ -20,7 +20,8 @@ export default function ExecOption({ action, select }: TOption_P) {
   const [processTime, setProcessTime] = useState<number>(action.processTime)
 
   /* -- HOOKS -- */
-  useEventListener(action.node, 'activity', () => {
+
+  useEventListener(action.node, 'modify-actions', () => {
     setSuccessChance(action.successChance)
     setResourceCost(action.resourceCost)
     setProcessTime(action.processTime)
@@ -64,9 +65,9 @@ export default function ExecOption({ action, select }: TOption_P) {
 /* -- TYPES -- */
 
 /**
- * Props for `DropDownOption` component.
+ * Props for `ExecOption` component.
  */
-export type TOption_P = {
+export type TExecOption_P = {
   /**
    * The action serving as an option in the drop down.
    */
