@@ -7,10 +7,7 @@ import IActionExecution, {
   TExecutionCheats,
 } from 'metis/missions/actions/executions'
 import { TCommonEffectJson } from 'metis/missions/effects'
-import { plcApiLogger } from 'metis/server/logging'
-import EnvironmentContextProvider, {
-  TTargetEnvContextAction,
-} from 'metis/server/target-environments/context-provider'
+import { TTargetEnvContextAction } from 'metis/server/target-environments/context-provider'
 import seedrandom, { PRNG } from 'seedrandom'
 import { TServerMissionTypes } from '..'
 import ServerEffect, { TServerEffectOptions } from '../effects'
@@ -62,12 +59,7 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
   public execute(
     options: TExecuteOptions<ServerActionExecution>,
   ): Promise<ServerRealizedOutcome> {
-    let {
-      environmentContextProvider,
-      effectsEnabled = false,
-      cheats = {},
-      onInit = () => {},
-    } = options
+    let { cheats = {}, onInit = () => {} } = options
 
     let {
       zeroCost = false,
@@ -124,31 +116,6 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
 
         // Resolve with the determined outcome.
         resolve(realizedOutcome)
-
-        // If the outcome is successful and the effects
-        // are enabled...
-        if (realizedOutcome.successful && effectsEnabled) {
-          // ...iterate through the effects and apply them.
-          this.effects.forEach(async (effect: ServerEffect) => {
-            try {
-              // Apply the effect to the target.
-              await environmentContextProvider.applyEffect(effect)
-
-              // todo: implement internal effects feedback
-              // participant.emit('effect-successful', {
-              //   message: 'The effect was successfully applied to its target.',
-              // })
-            } catch (error: any) {
-              // Log the error.
-              plcApiLogger.error(error)
-
-              // todo: implement internal effects feedback
-              // participant.emitError(
-              //   new ServerEmittedError(ServerEmittedError.CODE_EFFECT_FAILED),
-              // )
-            }
-          })
-        }
       }, end - Date.now())
 
       // Call onInit now that the timeout
@@ -186,15 +153,6 @@ export type TServerMissionActionOptions = TMissionActionOptions & {}
  * Options for TExecuteOptions.
  */
 export type TExecuteOptions<TActionExecution extends IActionExecution> = {
-  /**
-   * The context provider for the target environment.
-   */
-  environmentContextProvider: EnvironmentContextProvider
-  /**
-   * Whether to enable the effects of the action, upon successful execution.
-   * @default false
-   */
-  effectsEnabled: boolean
   /**
    * Cheats to apply when executing the action.
    * @note Any cheats ommitted will be treated

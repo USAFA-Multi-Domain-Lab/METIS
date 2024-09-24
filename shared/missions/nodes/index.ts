@@ -8,7 +8,7 @@ import {
   TCommonMissionActionJson,
   TMissionActionOptions,
 } from '../actions'
-import IActionExecution, {
+import TActionExecution, {
   TActionExecutionJson,
   default as TCommonMissionExecution,
   TExecution,
@@ -70,7 +70,7 @@ export default abstract class MissionNode<
 
   // Implemented
   public get executionState(): TCommonMissionNode['executionState'] {
-    let execution: IActionExecution | null = this.execution
+    let execution: TActionExecution | null = this.execution
     let outcomes: IActionOutcome[] = this.outcomes
 
     // Check for 'unexecuted' state.
@@ -428,7 +428,7 @@ export default abstract class MissionNode<
   // Implemented
   public abstract loadExecution(
     data: NonNullable<TActionExecutionJson>,
-  ): IActionExecution
+  ): TActionExecution
 
   // Implemented
   public abstract loadOutcome(
@@ -447,6 +447,11 @@ export default abstract class MissionNode<
 
   // Implemented
   public abstract modifyResourceCost(resourceCostOperand: number): void
+
+  /**
+   * The maximum length allowed for a node's name.
+   */
+  public static readonly MAX_NAME_LENGTH: number = 175
 
   /**
    * The default properties for a MissionNode object.
@@ -511,7 +516,7 @@ export interface TCommonMissionNode {
    */
   description: string
   /**
-   * The text outputted to the console when the node is clicked on.
+   * The text that is sent to the output panel when the node is clicked on.
    */
   preExecutionText: string
   /**
@@ -688,7 +693,7 @@ export interface TCommonMissionNodeJson {
    */
   description: string
   /**
-   * The text outputted to the console when the node is clicked on.
+   * The text that is sent to the output panel when the node is clicked on.
    */
   preExecutionText: string
   /**

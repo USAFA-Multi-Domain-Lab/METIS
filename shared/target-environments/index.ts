@@ -42,8 +42,12 @@ export default abstract class TargetEnvironment<
     )
   }
 
-  // Implemented
-  public abstract parseTargets(data: TCommonTargetJson[]): TTarget<T>[]
+  /**
+   * Parses the target data into Target Objects.
+   * @param data The target data to parse.
+   * @returns An array of Target Objects.
+   */
+  protected abstract parseTargets(data: TCommonTargetJson[]): TTarget<T>[]
 
   /**
    * Converts the TargetEnvironment Object to JSON.
@@ -124,12 +128,6 @@ export interface TCommonTargetEnv {
    * Converts the TargetEnvironment Object to JSON.
    */
   toJson: (options?: TTargetEnvJsonOptions) => TCommonTargetEnvJson
-  /**
-   * Parses the target data into Target Objects.
-   * @param data The target data to parse.
-   * @returns An array of Target Objects.
-   */
-  parseTargets: (data: TCommonTargetJson[]) => TCommonTarget[]
 }
 
 /**

@@ -69,6 +69,7 @@ export default function EffectEntry({
             stateValue={name}
             setState={setName}
             defaultValue={ClientEffect.DEFAULT_PROPERTIES.name}
+            maxLength={ClientEffect.MAX_NAME_LENGTH}
             placeholder='Enter name...'
           />
           <DetailLargeString

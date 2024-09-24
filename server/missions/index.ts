@@ -1,4 +1,8 @@
-import Mission, { TCommonMissionTypes } from 'metis/missions'
+import Mission, {
+  TCommonMissionJson,
+  TCommonMissionTypes,
+  TMissionOptions,
+} from 'metis/missions'
 import { TCommonMissionForceJson } from 'metis/missions/forces'
 import { TMissionPrototypeOptions } from 'metis/missions/nodes/prototypes'
 import StringToolbox from 'metis/toolbox/strings'
@@ -14,6 +18,7 @@ import ServerActionExecution from './actions/executions'
 import { ServerRealizedOutcome } from './actions/outcomes'
 import ServerEffect from './effects'
 import ServerMissionForce, { TServerMissionForceOptions } from './forces'
+import { ServerOutput } from './forces/outputs'
 import ServerMissionNode from './nodes'
 import ServerMissionPrototype from './nodes/prototypes'
 
@@ -36,6 +41,27 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
       this._rng = seedrandom(`${this.seed}`)
     }
     return this._rng
+  }
+
+  /**
+   * @param data The mission data from which to create the mission. Any ommitted values will be set to the default properties defined in Mission.DEFAULT_PROPERTIES.
+   * @param options The options for creating the mission.
+   */
+  public constructor(
+    data: Partial<TCommonMissionJson> = ServerMission.DEFAULT_PROPERTIES,
+    options: TServerMissionOptions = {},
+  ) {
+    // Initialize base properties.
+    super(data, options)
+
+    // Parse options.
+    let { populateTargets = false, sendIntroMessage = false } = options
+
+    // Parse force data.
+    this.importForces(data.forces ?? ServerMission.DEFAULT_PROPERTIES.forces, {
+      populateTargets,
+      sendIntroMessage,
+    })
   }
 
   // Implemented
@@ -104,6 +130,7 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
     }
   }
 }
+/* ------------------------------ SERVER MISSION TYPES ------------------------------ */
 
 /**
  * Server types for Mission objects.
@@ -116,6 +143,7 @@ export interface TServerMissionTypes extends TCommonMissionTypes {
   user: ServerUser
   mission: ServerMission
   force: ServerMissionForce
+  output: ServerOutput
   prototype: ServerMissionPrototype
   node: ServerMissionNode
   action: ServerMissionAction
@@ -124,4 +152,14 @@ export interface TServerMissionTypes extends TCommonMissionTypes {
   targetEnv: ServerTargetEnvironment
   target: ServerTarget
   effect: ServerEffect
+}
+
+/**
+ * Options for the creation of a `ServerMission` object.
+ */
+type TServerMissionOptions = TMissionOptions & {
+  /**
+   * Whether to send the intro message to the output panel.
+   */
+  sendIntroMessage?: boolean
 }

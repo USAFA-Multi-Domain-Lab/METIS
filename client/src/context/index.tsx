@@ -536,9 +536,9 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
 
       try {
         await ClientLogin.$logOut()
+        navigateTo('AuthPage', {})
         setLogin(null)
         finishLoading()
-        navigateTo('AuthPage', {})
       } catch (error: any) {
         finishLoading()
         handleError('Failed to logout.')
@@ -549,8 +549,8 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
 
 /**
  * The provider to be used in the root component of METIS.
- * @param { children: ReactNode } props Props containing the children to wrap in the provider.
- * @returns {JSX.Element} The JSX of the provider wrapping the children passed.
+ * @param props Props containing the children to wrap in the provider.
+ * @returns The JSX of the provider wrapping the children passed.
  */
 function GlobalContextProvider(props: { children: ReactNode }): JSX.Element {
   // Extract props.
@@ -579,7 +579,7 @@ function GlobalContextProvider(props: { children: ReactNode }): JSX.Element {
 
 /**
  * Used as a hook in function components as a consumer of the global context.
- * @returns {TGlobalContext} The value of the global context.
+ * @returns The value of the global context.
  */
 export function useGlobalContext(): TGlobalContext {
   return React.useContext<TGlobalContext>(globalReactContext)
@@ -613,8 +613,8 @@ export function useNavigationMiddleware(
 export default class GlobalContext {
   /**
    * The provider to be used in the root component of METIS.
-   * @param { children: ReactNode } props Props containing the children to wrap in the provider.
-   * @returns {JSX.Element} The JSX of the provider wrapping the children passed.
+   * @param props Props containing the children to wrap in the provider.
+   * @returns The JSX of the provider wrapping the children passed.
    */
   public static Provider = GlobalContextProvider
   /**
@@ -623,7 +623,7 @@ export default class GlobalContext {
   public static Consumer = globalReactContext.Consumer
   /**
    * Used as a hook in function components as a consumer of the global context.
-   * @returns {TGlobalContext} The value of the global context.
+   * @returns The value of the global context.
    */
   public static useGlobalContext = useGlobalContext
 }
@@ -740,16 +740,16 @@ export type TGlobalContextActions = {
   ) => Promise<TPromptResult<TChoice, TList>>
   /**
    * This will notify the user with a notification bubble.
-   * @param {string} message The message to display in the notification bubble.
-   * @param {TNotifyOptions | undefined} options The options to use for the notification.
-   * @returns {Notification} The emitted notification.
+   * @param message The message to display in the notification bubble.
+   * @param options The options to use for the notification.
+   * @returns The emitted notification.
    */
   notify: (message: string, options?: TNotifyOptions) => Notification
   /**
    * This will logout the user that is currently logged in, closing the connection
    * with the server as well. Afterwards, the user will be navigated to the auth page.
    */
-  logout: () => void
+  logout: () => Promise<void>
 }
 
 /**

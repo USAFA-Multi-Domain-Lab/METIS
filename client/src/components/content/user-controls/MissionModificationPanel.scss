@@ -14,9 +14,9 @@
     background-color: transparent;
 
     &.Activated {
-      border-color: $terminal;
+      border-color: $color-alt1;
       .Switch {
-        background-color: $terminal;
+        background-color: $color-alt1;
       }
     }
 
@@ -25,9 +25,9 @@
     }
 
     &.Activated:hover {
-      border-color: $terminal;
+      border-color: $color-alt1;
       .Switch {
-        background-color: $terminal;
+        background-color: $color-alt1;
       }
     }
     &.Locked {

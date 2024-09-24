@@ -1,27 +1,15 @@
 @import 'src/assets/styles/config.scss';
 
 .RichTextOutputBox {
-  p:first-child {
-    word-wrap: break-word;
-    white-space: pre-line;
-    margin-top: 5px;
-  }
+  display: inline;
 
-  p,
-  a {
-    margin: 0;
-  }
+  .tiptap {
+    display: inline;
 
-  a {
-    color: $terminal-blue;
-  }
-
-  ul {
-    list-style-type: disc;
-  }
-
-  ul,
-  ol {
-    padding-left: 15px;
+    :not(ul, ol, li) {
+      display: inline;
+      margin: 0;
+      padding: 0;
+    }
   }
 }

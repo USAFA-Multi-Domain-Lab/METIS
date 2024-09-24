@@ -17,6 +17,7 @@ import {
   TForce,
   TMissionForceOptions,
 } from './forces'
+import { TCommonOutput } from './forces/outputs'
 import { TCommonMissionNode, TNode } from './nodes'
 import { TCommonMissionPrototype, TPrototype } from './nodes/prototypes'
 
@@ -93,18 +94,10 @@ export default abstract class Mission<
     this.forces = []
     this.root = this.initializeRoot()
 
-    // Parse options.
-    let { populateTargets = false } = options
-
     // Import node structure into the mission.
     this.importStructure(
       data.nodeStructure ?? Mission.DEFAULT_PROPERTIES.nodeStructure,
     )
-
-    // Parse force data.
-    this.importForces(data.forces ?? Mission.DEFAULT_PROPERTIES.forces, {
-      populateTargets,
-    })
   }
 
   // Implemented
@@ -248,6 +241,11 @@ export default abstract class Mission<
   public getNode(nodeId: TNode<T>['_id']): TNode<T> | undefined {
     return nodeId ? Mission.getNode(this, nodeId) : undefined
   }
+
+  /**
+   * The maximum length allowed for a mission's name.
+   */
+  public static readonly MAX_NAME_LENGTH: number = 175
 
   /**
    * The maximum number of forces allowed in a mission.
@@ -441,6 +439,7 @@ export type TCommonMissionTypes = {
   user: TCommonUser
   mission: TCommonMission
   force: TCommonMissionForce
+  output: TCommonOutput
   prototype: TCommonMissionPrototype
   node: TCommonMissionNode
   action: TCommonMissionAction

@@ -37,7 +37,7 @@ export class ClientTargetEnvironment extends TargetEnvironment<TClientMissionTyp
   }
 
   // Implemented
-  public parseTargets(data: TCommonTargetJson[]): ClientTarget[] {
+  protected parseTargets(data: TCommonTargetJson[]): ClientTarget[] {
     return data.map((datum: TCommonTargetJson) => {
       return new ClientTarget(this, datum)
     })
@@ -59,7 +59,7 @@ export class ClientTargetEnvironment extends TargetEnvironment<TClientMissionTyp
       try {
         // Add the target environments to the registry if the user is authorized.
         if (
-          user.isAuthorized('missions_read') &&
+          user.isAuthorized('environments_read') &&
           ClientTargetEnvironment.registry.length === 0
         ) {
           // Fetch the target environments from the API.
@@ -77,8 +77,11 @@ export class ClientTargetEnvironment extends TargetEnvironment<TClientMissionTyp
           // Resolve the promise.
           resolve()
         }
-        // Otherwise, clear the registry.
-        else {
+        // Otherwise, clear the registry if the user is not authorized.
+        else if (
+          !user.isAuthorized('environments_read') &&
+          ClientTargetEnvironment.registry.length > 0
+        ) {
           ClientTargetEnvironment.registry = []
           // Resolve the promise.
           resolve()

@@ -1,10 +1,16 @@
 import { TLine_P } from 'src/components/content/session/mission-map/objects/Line'
-import ClientMission, { TClientMissionTypes, TMissionNavigable } from '..'
+import { TEventListenerTarget } from 'src/toolbox/hooks'
+import ClientMission, {
+  TClientMissionTypes,
+  TMissionComponent,
+  TMissionNavigable,
+} from '..'
 import {
   MissionForce,
-  TCommonMissionForceJson,
+  TMissionForceJson,
   TMissionForceOptions,
 } from '../../../../shared/missions/forces'
+import { TCommonOutputJson } from '../../../../shared/missions/forces/outputs'
 import {
   TMissionNodeJson,
   TMissionNodeOptions,
@@ -12,14 +18,22 @@ import {
 import { Counter } from '../../../../shared/toolbox/numbers'
 import { TWithKey } from '../../../../shared/toolbox/objects'
 import { Vector2D } from '../../../../shared/toolbox/space'
+import ClientMissionAction from '../actions'
 import ClientMissionNode from '../nodes'
+import { ClientOutput } from './outputs'
+import ClientCustomOutput from './outputs/custom'
+import ClientExecutionFailedOutput from './outputs/execution-failed'
+import ClientExecutionStartedOutput from './outputs/execution-started'
+import ClientExecutionSucceededOutput from './outputs/execution-succeeded'
+import ClientIntroOutput from './outputs/intro'
+import ClientPreExecutionOutput from './outputs/pre-execution'
 
 /**
  * Class for managing mission prototypes on the client.
  */
 export default class ClientMissionForce
   extends MissionForce<TClientMissionTypes>
-  implements TMissionNavigable
+  implements TEventListenerTarget<TForceEventMethod>, TMissionComponent
 {
   /**
    * The lines used to connect nodes on the mission map.
@@ -31,14 +45,62 @@ export default class ClientMissionForce
     return [this.mission, this]
   }
 
+  /**
+   * The message to display when the force is defective.
+   */
+  private _defectiveMessage: string
+  /**
+   * The message to display when the force is defective.
+   */
+  public get defectiveMessage(): string {
+    return this._defectiveMessage
+  }
+  /**
+   * Listeners for force events.
+   */
+  private listeners: Array<[TForceEventMethod, () => void]> = []
+
+  /**
+   * All actions that exist in the force.
+   */
+  public get actions(): Map<string, ClientMissionAction> {
+    let actions = new Map<string, ClientMissionAction>()
+
+    for (let node of this.nodes) {
+      for (let action of node.actions.values()) {
+        actions.set(action._id, action)
+      }
+    }
+
+    return actions
+  }
+
+  /**
+   * @param mission The mission to which the force belongs.
+   * @param data The force data from which to create the force. Any ommitted
+   * values will be set to the default properties defined in
+   * MissionForce.DEFAULT_PROPERTIES.
+   * @param options The options for creating the force.
+   */
   public constructor(
     mission: ClientMission,
-    data: Partial<TCommonMissionForceJson> = MissionForce.DEFAULT_PROPERTIES,
+    data: Partial<TMissionForceJson> = MissionForce.DEFAULT_PROPERTIES,
     options: TClientMissionForceOptions = {},
   ) {
     super(mission, data, options)
-
     this.relationshipLines = []
+    this._defectiveMessage = ''
+
+    // If output data is provided, parse it.
+    if (data.outputs) this._outputs = this.parseOutputs(data.outputs)
+  }
+
+  /**
+   * Evaluates if the force is defective or not.
+   * @returns boolean indicating if the force is defective or not.
+   */
+  public isDefective(): boolean {
+    return false
   }
 
   // Implemented
@@ -356,6 +418,99 @@ export default class ClientMissionForce
     // those determined by the algorithm.
     this.relationshipLines = relationshipLines
   }
+
+  /**
+   * Calls the callbacks of listeners for the given force event.
+   * @param method The event method emitted.
+   */
+  private emitEvent(method: TForceEventMethod): void {
+    // Call any matching listener callbacks
+    // or any activity listener callbacks.
+    for (let [listenerMethod, listenerCallback] of this.listeners) {
+      if (listenerMethod === method || listenerMethod === 'activity') {
+        listenerCallback()
+      }
+    }
+  }
+
+  // Implemented
+  public addEventListener(
+    event: TForceEventMethod,
+    callback: () => void,
+  ): ClientMissionForce {
+    this.listeners.push([event, callback])
+    return this
+  }
+
+  // Implemented
+  public removeEventListener(callback: () => void): ClientMissionForce {
+    // Filter out listener.
+    this.listeners = this.listeners.filter(([, h]) => h !== callback)
+    return this
+  }
+
+  // Implemented
+  public storeOutput(outputJson: TCommonOutputJson): void {
+    switch (outputJson.type) {
+      case 'pre-execution':
+        if (!!outputJson.message) {
+          this._outputs.push(new ClientPreExecutionOutput(outputJson))
+        }
+        break
+      case 'execution-started':
+        if (
+          !!outputJson.processTime &&
+          !!outputJson.resourceCost &&
+          !!outputJson.successChance
+        ) {
+          this._outputs.push(new ClientExecutionStartedOutput(this, outputJson))
+        }
+        break
+      case 'execution-succeeded':
+        if (!!outputJson.message) {
+          this._outputs.push(new ClientExecutionSucceededOutput(outputJson))
+        }
+        break
+      case 'execution-failed':
+        if (!!outputJson.message) {
+          this._outputs.push(new ClientExecutionFailedOutput(outputJson))
+        }
+        break
+      case 'custom':
+        if (!!outputJson.message) {
+          this._outputs.push(new ClientCustomOutput(outputJson))
+        }
+        break
+    }
+
+    // Sort the outputs by time.
+    this._outputs.sort((a, b) => a.time - b.time)
+    // Emit an output event.
+    this.emitEvent('output')
+  }
+
+  /**
+   * Parses the output data into output objects.
+   * @param outputs The output data to parse.
+   */
+  private parseOutputs(outputs: TCommonOutputJson[]): ClientOutput[] {
+    return outputs.map((outputJson: TCommonOutputJson) => {
+      switch (outputJson.type) {
+        case 'intro':
+          return new ClientIntroOutput(outputJson)
+        case 'pre-execution':
+          return new ClientPreExecutionOutput(outputJson)
+        case 'execution-started':
+          return new ClientExecutionStartedOutput(this, outputJson)
+        case 'execution-succeeded':
+          return new ClientExecutionSucceededOutput(outputJson)
+        case 'execution-failed':
+          return new ClientExecutionFailedOutput(outputJson)
+        case 'custom':
+          return new ClientCustomOutput(outputJson)
+      }
+    })
+  }
 }
 
 /* ------------------------------ CLIENT FORCE TYPES ------------------------------ */
@@ -364,3 +519,12 @@ export default class ClientMissionForce
  * Options for creating a ClientMissionForce object.
  */
 export type TClientMissionForceOptions = TMissionForceOptions & {}
+
+/**
+ * An event that occurs on a force, which can be listened for.
+ * @option 'activity'
+ * Triggered when any other event occurs.
+ * @option 'output'
+ * Triggered when an output is sent.
+ */
+export type TForceEventMethod = 'activity' | 'output'

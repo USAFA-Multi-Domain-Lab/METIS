@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useGlobalContext } from 'src/context'
-import ClientMission, { TMissionDefectiveObject } from 'src/missions'
-import { ClientEffect } from 'src/missions/effects'
+import ClientMission, { TMissionComponent } from 'src/missions'
 import { compute } from 'src/toolbox'
 import { useMountHandler, usePostInitEffect } from 'src/toolbox/hooks'
 import { SingleTypeObject } from '../../../../../../shared/toolbox/objects'
@@ -20,7 +19,6 @@ import EntryNavigation from './navigation/EntryNavigation'
  */
 export default function MissionEntry({
   mission,
-  handleDeleteEffectRequest,
   handleChange,
 }: TMissionEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
@@ -30,18 +28,28 @@ export default function MissionEntry({
   /* -- STATE -- */
   const [name, setName] = useState<string>(mission.name)
   const [introMessage, setIntroMessage] = useState<string>(mission.introMessage)
-  const [defectiveObjects, setDefectiveObjects] = useState<
-    TMissionDefectiveObject[]
-  >(mission.defectiveObjects)
+  const [defectiveObjects, setDefectiveObjects] = useState<TMissionComponent[]>(
+    mission.defectiveObjects,
+  )
 
   /* -- EFFECTS -- */
 
   // componentDidMount
-  const [mountHandled, remount] = useMountHandler((done) => {
-    mission.evaluateObjects()
+  const [mountHandled] = useMountHandler((done) => {
+    // Evaluate the objects to determine if they are defective.
+    // Stop if there are 500 defective objects or more.
+    mission.evaluateObjects(500)
     setDefectiveObjects(mission.defectiveObjects)
     done()
   })
+
+  // Finish evaluating the objects, if necessary.
+  useEffect(() => {
+    if (mountHandled && defectiveObjects.length === 500) {
+      mission.evaluateObjects()
+      setDefectiveObjects(mission.defectiveObjects)
+    }
+  }, [mountHandled])
 
   // Sync the component state with the mission introduction message
   // and initial resources.
@@ -64,39 +72,25 @@ export default function MissionEntry({
   /**
    * Renders JSX for the effect list item.
    */
-  const renderObjectListItem = (object: TMissionDefectiveObject) => {
+  const renderObjectListItem = (object: TMissionComponent) => {
     /* -- COMPUTED -- */
 
     /**
      * The buttons for the object list.
      */
-    const buttons = compute(() => {
+    const buttons: TValidPanelButton[] = compute(() => {
       // Create a default list of buttons.
       let buttons: TValidPanelButton[] = []
       // Create a list of mini actions that are available.
-      let availableMiniActions: SingleTypeObject<TValidPanelButton> = {}
-
-      // If the object is an effect, then create mini actions for it.
-      if (object instanceof ClientEffect) {
-        // If the action is available then add the edit and remove buttons.
-        availableMiniActions = {
-          warning: {
-            icon: 'warning-transparent',
-            key: 'warning',
-            onClick: () => {},
-            cursor: 'help',
-            tooltipDescription: object.invalidMessage,
-          },
-          remove: {
-            icon: 'remove',
-            key: 'remove',
-            onClick: async () => {
-              await handleDeleteEffectRequest(object)
-              remount()
-            },
-            tooltipDescription: 'Delete effect.',
-          },
-        }
+      let availableMiniActions: SingleTypeObject<TValidPanelButton> = {
+        warning: {
+          icon: 'warning-transparent',
+          key: 'warning',
+          onClick: () => {},
+          cursor: 'help',
+          tooltipDescription:
+            'If this conflict is not resolved, this mission can still be used to launch a session, but the session may not function as expected.',
+        },
       }
 
       // Add the buttons to the list.
@@ -108,75 +102,74 @@ export default function MissionEntry({
 
     return (
       <div className='Row' key={`object-row-${object._id}`}>
+        <ButtonSvgPanel buttons={buttons} size={'small'} />
         <div
           className='RowContent Select'
           onClick={() => mission.select(object)}
         >
-          {object.name}
+          {object.defectiveMessage}
           <Tooltip description='Click to resolve.' />
         </div>
-        <ButtonSvgPanel buttons={buttons} size={'small'} />
       </div>
     )
   }
 
   /* -- RENDER -- */
-  if (mountHandled) {
-    return (
-      <div className='Entry MissionEntry SidePanel'>
-        <div className='BorderBox'>
-          {/* -- TOP OF BOX -- */}
-          <div className='BoxTop'>
-            <EntryNavigation object={mission} />
-          </div>
+  return (
+    <div className='Entry MissionEntry SidePanel'>
+      <div className='BorderBox'>
+        {/* -- TOP OF BOX -- */}
+        <div className='BoxTop'>
+          <EntryNavigation object={mission} />
+        </div>
 
-          {/* -- MAIN CONTENT -- */}
-          <div className='SidePanelSection MainDetails'>
-            <DetailString
-              fieldType='required'
-              handleOnBlur='repopulateValue'
-              label='Name'
-              stateValue={name}
-              setState={setName}
-              defaultValue={ClientMission.DEFAULT_PROPERTIES.name}
-              key={`${mission._id}_name`}
+        {/* -- MAIN CONTENT -- */}
+        <div className='SidePanelSection MainDetails'>
+          <DetailString
+            fieldType='required'
+            handleOnBlur='repopulateValue'
+            label='Name'
+            stateValue={name}
+            setState={setName}
+            defaultValue={ClientMission.DEFAULT_PROPERTIES.name}
+            maxLength={ClientMission.MAX_NAME_LENGTH}
+            key={`${mission._id}_name`}
+          />
+          <DetailLargeString
+            fieldType='required'
+            handleOnBlur='repopulateValue'
+            label='Introduction Message'
+            stateValue={introMessage}
+            setState={setIntroMessage}
+            defaultValue={ClientMission.DEFAULT_PROPERTIES.introMessage}
+            elementBoundary='.SidePanelSection'
+            key={`${mission._id}_introMessage`}
+          />
+          {defectiveObjects.length > 0 ? (
+            <List<TMissionComponent>
+              items={defectiveObjects}
+              renderItemDisplay={(object) => renderObjectListItem(object)}
+              headingText={'Unresolved Conflicts'}
+              sortByMethods={[ESortByMethod.Name]}
+              nameProperty={'name'}
+              alwaysUseBlanks={false}
+              searchableProperties={['name']}
+              noItemsDisplay={null}
+              ajaxStatus={defectiveObjects.length > 0 ? 'Loaded' : 'Loading'}
+              applyItemStyling={() => {
+                return {}
+              }}
+              listStyling={{
+                borderBottom: '2px solid #ffffff',
+              }}
+              itemsPerPage={null}
+              listSpecificItemClassName='AltDesign2'
             />
-            <DetailLargeString
-              fieldType='required'
-              handleOnBlur='repopulateValue'
-              label='Introduction Message'
-              stateValue={introMessage}
-              setState={setIntroMessage}
-              defaultValue={ClientMission.DEFAULT_PROPERTIES.introMessage}
-              elementBoundary='.SidePanelSection'
-              key={`${mission._id}_introMessage`}
-            />
-            {defectiveObjects.length > 0 ? (
-              <List<TMissionDefectiveObject>
-                items={defectiveObjects}
-                renderItemDisplay={(object) => renderObjectListItem(object)}
-                headingText={'Warnings'}
-                sortByMethods={[ESortByMethod.Name]}
-                nameProperty={'name'}
-                alwaysUseBlanks={false}
-                searchableProperties={['name']}
-                noItemsDisplay={null}
-                ajaxStatus={'Loaded'}
-                applyItemStyling={() => {
-                  return {}
-                }}
-                listStyling={{ borderBottom: '2px solid #ffffff' }}
-                itemsPerPage={null}
-                listSpecificItemClassName='AltDesign2'
-              />
-            ) : null}
-          </div>
+          ) : null}
         </div>
       </div>
-    )
-  } else {
-    return null
-  }
+    </div>
+  )
 }
 
 /* ---------------------------- TYPES FOR MISSION ENTRY ---------------------------- */
@@ -189,13 +182,6 @@ type TMissionEntry_P = {
    * The mission to be edited.
    */
   mission: ClientMission
-  /**
-   * Handles the request to delete an effect.
-   */
-  handleDeleteEffectRequest: (
-    effect: ClientEffect,
-    navigateBack?: boolean,
-  ) => Promise<void>
   /**
    * A function that will be used to notify the parent
    * component that this component has changed.

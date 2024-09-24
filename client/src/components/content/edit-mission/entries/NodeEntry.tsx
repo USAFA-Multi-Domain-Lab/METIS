@@ -234,12 +234,6 @@ export default function NodeEntry({
 
         // If the action is available then add the edit and remove buttons.
         let availableMiniActions: SingleTypeObject<TValidPanelButton> = {
-          edit: {
-            icon: 'edit',
-            key: 'edit',
-            onClick: () => mission.select(action),
-            tooltipDescription: 'Edit action.',
-          },
           remove: {
             icon: 'remove',
             key: 'remove',
@@ -250,17 +244,20 @@ export default function NodeEntry({
         }
 
         // Add the buttons to the list.
-        buttons.push(availableMiniActions.edit)
-        buttons.push(availableMiniActions.remove)
+        buttons = Object.values(availableMiniActions)
 
         // Return the buttons.
         return buttons
       })
 
       return (
-        <div className='Row' key={`action-row-${action._id}`}>
-          <div className='RowContent'>
-            {action.name} <Tooltip description={action.description ?? ''} />
+        <div className='Row Select' key={`action-row-${action._id}`}>
+          <div
+            className='RowContent Select'
+            onClick={() => mission.select(action)}
+          >
+            {action.name}
+            <Tooltip description='Edit action.' />
           </div>
           <ButtonSvgPanel buttons={actionButtons} size={'small'} />
         </div>
@@ -287,6 +284,7 @@ export default function NodeEntry({
             stateValue={name}
             setState={setName}
             defaultValue={ClientMissionNode.DEFAULT_PROPERTIES.name}
+            maxLength={ClientMissionNode.MAX_NAME_LENGTH}
             key={`${node._id}_name`}
           />
           <DetailColorSelector

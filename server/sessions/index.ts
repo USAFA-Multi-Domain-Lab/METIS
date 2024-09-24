@@ -15,8 +15,14 @@ import { SingleTypeObject } from 'metis/toolbox/objects'
 import { TCommonUser } from 'metis/users'
 import { v4 as generateHash } from 'uuid'
 import ClientConnection from '../connect/clients'
+import { plcApiLogger } from '../logging'
 import ServerActionExecution from '../missions/actions/executions'
 import ServerMissionForce from '../missions/forces'
+import { ServerOutput } from '../missions/forces/outputs'
+import ServerExecutionFailedOutput from '../missions/forces/outputs/execution-failed'
+import ServerExecutionStartedOutput from '../missions/forces/outputs/execution-started'
+import ServerExecutionSucceededOutput from '../missions/forces/outputs/execution-succeeded'
+import ServerPreExecutionOutput from '../missions/forces/outputs/pre-execution'
 import EnvironmentContextProvider from '../target-environments/context-provider'
 import ServerSessionMember from './members'
 
@@ -399,6 +405,9 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     )
     connection.addEventListener('request-execute-action', (data) =>
       this.onRequestExecuteAction(member, data),
+    )
+    connection.addEventListener('request-send-output', (data) =>
+      this.onRequestSendOutput(member, data),
     )
   }
 
@@ -988,6 +997,8 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     event: TClientEvents['request-execute-action'],
   ): Promise<void> => {
     // Gather data.
+    const { effectsEnabled } = this.config
+    let { environmentContextProvider } = this
     let { connection } = member
     let { actionId, cheats = {} } = event.data
     let { zeroCost } = cheats
@@ -1067,8 +1078,6 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     try {
       // Execute the action, awaiting result.
       let outcome = await action.execute({
-        environmentContextProvider: this.environmentContextProvider,
-        effectsEnabled: this.config.effectsEnabled,
         cheats,
         onInit: (execution: ServerActionExecution) => {
           // Construct payload for action execution
@@ -1088,11 +1097,14 @@ export default class SessionServer extends Session<TServerMissionTypes> {
 
           // Emit action execution initiated event
           // to each member.
-          for (let { connection } of this.getMembersForForce(
-            action!.force._id,
-          )) {
-            connection.emit('action-execution-initiated', initiationPayload)
+          for (let member of this.getMembersForForce(action!.force._id)) {
+            member.emit('action-execution-initiated', initiationPayload)
           }
+
+          // Send the output to the force.
+          this.sendOutput(
+            new ServerExecutionStartedOutput(action!, member.user, execution),
+          )
         },
       })
 
@@ -1106,12 +1118,47 @@ export default class SessionServer extends Session<TServerMissionTypes> {
         request,
       }
 
-      // Add child nodes if the action was
-      // successful.
+      // If the action was successful, then...
       if (outcome.successful) {
+        // Add child nodes to the completion payload.
         completionPayload.data.revealedChildNodes = action.node.children.map(
           (node) => node.toJson({ includeSessionData: true }),
         )
+
+        // Send the output to the force.
+        this.sendOutput(new ServerExecutionSucceededOutput(action, member.user))
+
+        // If the effects are enabled...
+        if (effectsEnabled) {
+          // ...iterate through the effects and apply them.
+          action.effects.forEach(async (effect) => {
+            try {
+              // Apply the effect to the target.
+              await environmentContextProvider.applyEffect(
+                effect,
+                member.username,
+              )
+
+              // todo: implement internal effects feedback
+              // participant.emit('effect-successful', {
+              //   message: 'The effect was successfully applied to its target.',
+              // })
+            } catch (error: any) {
+              // Log the error.
+              plcApiLogger.error(error)
+
+              // todo: implement internal effects feedback
+              // participant.emitError(
+              //   new ServerEmittedError(ServerEmittedError.CODE_EFFECT_FAILED),
+              // )
+            }
+          })
+        }
+      }
+      // Otherwise, if the action failed, then...
+      else {
+        // Send the output to the force.
+        this.sendOutput(new ServerExecutionFailedOutput(action, member.user))
       }
 
       // Emit the action execution completed
@@ -1127,6 +1174,106 @@ export default class SessionServer extends Session<TServerMissionTypes> {
           message: 'Failed to execute action.',
         }),
       )
+    }
+  }
+
+  /**
+   * Called when a member requests to send an output.
+   * @param member The member requesting to send an output.
+   * @param event The event emitted by the member.
+   */
+  public onRequestSendOutput = (
+    member: ServerSessionMember,
+    event: TClientEvents['request-send-output'],
+  ): void => {
+    // Gather details.
+    let { key } = event.data
+    let request = member.connection.buildResponseReqData(event)
+
+    // If the session is not in the 'started' state,
+    // then emit an error.
+    if (this.state !== 'started') {
+      return member.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
+          {
+            request,
+          },
+        ),
+      )
+    }
+
+    switch (key) {
+      case 'pre-execution':
+        // Extract the node ID from the event data.
+        let { nodeId } = event.data
+
+        // Find the node given the ID.
+        let node: ServerMissionNode | undefined = this.mission.getNode(nodeId)
+
+        // If the node is undefined, then emit
+        // an error.
+        if (node === undefined) {
+          return member.emitError(
+            new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_FOUND, {
+              request,
+            }),
+          )
+        }
+
+        // If the node is not revealed, then
+        // emit an error.
+        if (!node.revealed) {
+          return member.emitError(
+            new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_REVEALED, {
+              request,
+            }),
+          )
+        }
+
+        try {
+          if (node.preExecutionText === '') {
+            // Emit an event to the participant that the
+            // pre-execution message was sent.
+            member.emit('output-sent', {
+              data: {
+                key: 'pre-execution',
+                nodeId,
+              },
+              request: {
+                event,
+                requesterId: member.userId,
+                fulfilled: true,
+              },
+            })
+            return
+          }
+
+          // Send the output to the force.
+          this.sendOutput(new ServerPreExecutionOutput(node, member.user))
+
+          // Emit an event to the participant that the
+          // pre-execution message was sent.
+          member.emit('output-sent', {
+            data: {
+              key: 'pre-execution',
+              nodeId,
+            },
+            request: {
+              event,
+              requesterId: member.userId,
+              fulfilled: true,
+            },
+          })
+        } catch (error: any) {
+          // Emit an error if the pre-execution message could not be sent.
+          member.emitError(
+            new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR, {
+              request,
+              message: 'Failed to send pre-execution message.',
+            }),
+          )
+        }
     }
   }
 
@@ -1274,6 +1421,37 @@ export default class SessionServer extends Session<TServerMissionTypes> {
           key: 'node-action-resource-cost',
           nodeId,
           resourceCostOperand,
+        },
+      })
+    }
+  }
+
+  /**
+   * Sends an output to the force's output panel.
+   * @param output The output to send to the force.
+   */
+  public sendOutput = (output: ServerOutput) => {
+    // Extract data.
+    let { type, forceId } = output
+
+    // Find the force given the ID.
+    let force = this.mission.getForce(forceId)
+
+    // If the force is undefined, throw an error.
+    if (!force) {
+      throw new Error(
+        `Could not send output with type "${type}" to the force with ID "${forceId}" because the force was not found.`,
+      )
+    }
+
+    // Store the output in the force.
+    force.storeOutput(output)
+
+    // Send the output to all users in the force.
+    for (let user of this.getMembersForForce(forceId)) {
+      user.emit('send-output', {
+        data: {
+          outputData: output.toJson(),
         },
       })
     }

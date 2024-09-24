@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { IConsoleOutput } from 'src/components/content/session/ConsoleOutput'
 import { useGlobalContext, useNavigationMiddleware } from 'src/context'
 import ClientMission from 'src/missions'
 import ClientMissionForce from 'src/missions/forces'
@@ -21,11 +20,11 @@ import {
   PanelSizeRelationship,
   ResizablePanel,
 } from '../content/general-layout/ResizablePanels'
-import OutputPanel from '../content/session/OutputPanel'
-import StatusBar from '../content/session/StatusBar'
 import SessionMembersPanel from '../content/session/members/SessionMembersPanel'
 import MissionMap from '../content/session/mission-map'
 import ActionExecModal from '../content/session/mission-map/ui/overlay/modals/action-execution/ActionExecModal'
+import OutputPanel from '../content/session/output-panel'
+import StatusBar from '../content/session/StatusBar'
 import { TValidPanelButton } from '../content/user-controls/ButtonSvgPanel'
 import { TButtonText_P } from '../content/user-controls/ButtonText'
 import './SessionPage.scss'
@@ -64,6 +63,7 @@ export default function SessionPage({
 
   /* -- VARIABLES -- */
 
+  // The mission for the session.
   let mission: ClientMission = session.mission
   // Dynamic (default) sizing of the output panel.
   let panel2DefaultSize: number = 400
@@ -73,16 +73,8 @@ export default function SessionPage({
   /* -- FUNCTIONS -- */
 
   /**
-   * Outputs to the in-browser console.
-   * @param {IConsoleOutput} output The output.
-   */
-  const outputToConsole = (output: IConsoleOutput): void => {
-    // mission.outputToConsole(output)
-  }
-
-  /**
    * Handles the selection of a node in the mission map by the user.
-   * @param {ClientMissionNode} node The node that was selected.
+   * @param node The node that was selected.
    */
   const onNodeSelect = async (node: ClientMissionNode): Promise<void> => {
     // If the role is 'observer', abort
@@ -97,11 +89,12 @@ export default function SessionPage({
       return
     }
 
-    // Logic to send the pre-execution text to the output panel.
-    if (node.preExecutionText !== '' && node.preExecutionText !== null) {
-      let output: IConsoleOutput = OutputPanel.renderPreExecutionOutput(node)
-      outputToConsole(output)
-    }
+    // If the user is a participant, request to send
+    // the node's pre-execution message to the output
+    // panel.
+    session.sendPreExecutionMessage(node._id, {
+      onError: (message) => handleError({ message, notifyMethod: 'bubble' }),
+    })
 
     // Logic that opens the next level of nodes
     // (displays the selected node's child nodes)
@@ -284,9 +277,12 @@ export default function SessionPage({
       buttons.push({
         key: 'output',
         icon: 'shell',
-        tooltipDescription: 'Open output panel.',
+        tooltipDescription: selectedForce
+          ? 'Open output panel.'
+          : 'Cannot open the output panel at this time. Please contact your system administrator.',
+        disabled: selectedForce === undefined ? 'partial' : 'none',
         onClick: () => {
-          setRightPanelTab('output')
+          if (selectedForce) setRightPanelTab('output')
         },
       })
     }
@@ -299,6 +295,7 @@ export default function SessionPage({
 
   // Verify navigation on mount and on session state change.
   useMountHandler((done) => {
+    if (selectedForce === undefined) setRightPanelTab('users')
     finishLoading()
     verifyNavigation.current()
     done()
@@ -341,6 +338,7 @@ export default function SessionPage({
     },
     [selectedForce],
   )
+
   // Update the resources remaining state whenever the
   // force changes.
   useEffect(() => {
@@ -431,7 +429,9 @@ export default function SessionPage({
             render: () => {
               switch (rightPanelTab) {
                 case 'output':
-                  return <OutputPanel mission={mission} />
+                  return selectedForce ? (
+                    <OutputPanel force={selectedForce} />
+                  ) : null
                 case 'users':
                   return (
                     <SessionMembersPanel

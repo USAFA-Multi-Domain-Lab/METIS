@@ -24,6 +24,7 @@ export function DetailString({
   inputType = 'text',
   placeholder = 'Enter text here...',
   tooltipDescription = '',
+  maxLength = undefined,
 }: TDetailString_P): JSX.Element {
   /* -- STATE -- */
   const [leftField, setLeftField] = useState<boolean>(false)
@@ -238,6 +239,7 @@ export function DetailString({
           type={currentInputType}
           value={stateValue}
           placeholder={placeholderDisplayed}
+          maxLength={maxLength}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
             let target: HTMLInputElement = event.target as HTMLInputElement
             let value: string = target.value
@@ -277,6 +279,11 @@ export function DetailString({
           value={displayPasswordText}
           disabled={inputType !== 'password'}
         />
+        {maxLength ? (
+          <div className='CharacterCount'>
+            {stateValue.length}/{maxLength}
+          </div>
+        ) : null}
       </div>
       <div className={fieldErrorClassName}>{errorMessage}</div>
     </div>
@@ -299,4 +306,8 @@ type TDetailString_P = TDetailWithInput_P<string> & {
    * @default 'text'
    */
   inputType?: TInput
+  /**
+   * The maximum number of characters that can be entered.
+   */
+  maxLength?: number
 }

@@ -60,6 +60,8 @@
     }
 
     &.Executing {
+      // pointer-events: none;
+
       .ProgressBar {
         // If the node is executing, show the
         // progress bar.
@@ -76,7 +78,8 @@
     }
 
     &.PendingOpen,
-    &.PendingExecInit {
+    &.PendingExecInit,
+    &.PendingOutputSent {
       pointer-events: none;
       opacity: 0.35;
     }

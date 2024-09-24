@@ -9,6 +9,7 @@ import {
   TMissionNodeOptions,
   TNode,
 } from '../nodes'
+import { TCommonOutput, TCommonOutputJson, TOutput } from './outputs'
 
 /* -- CLASSES -- */
 
@@ -83,6 +84,16 @@ export abstract class MissionForce<
   }
 
   /**
+   * The outputs for the force's output panel.
+   */
+  protected _outputs: TOutput<T>[]
+  // Implemented
+  public get outputs(): TOutput<T>[] {
+    return this._outputs
+  }
+
+  /**
+   * @param mission The mission to which the force belongs.
    * @param data The force data from which to create the force. Any ommitted
    * values will be set to the default properties defined in
    * MissionForce.DEFAULT_PROPERTIES.
@@ -105,6 +116,7 @@ export abstract class MissionForce<
       data.initialResources ?? MissionForce.DEFAULT_PROPERTIES.initialResources
     this.resourcesRemaining = data.resourcesRemaining ?? this.initialResources
     this.nodes = []
+    this._outputs = []
     this.root = this.createNode(MissionForce.ROOT_NODE_PROPERTIES)
 
     // Import nodes into the force.
@@ -135,6 +147,7 @@ export abstract class MissionForce<
     // flag was set.
     if (includeSessionData) {
       json.resourcesRemaining = this.resourcesRemaining
+      json.outputs = this.outputs.map((output) => output.toJson())
     }
 
     return json
@@ -176,6 +189,9 @@ export abstract class MissionForce<
     data: Partial<TMissionNodeJson>,
     options?: TMissionNodeOptions,
   ): TNode<T>
+
+  // Implemented
+  public abstract storeOutput(output: TCommonOutput): void
 
   // Implemented
   public getNode(nodeId: string): TNode<T> | undefined {
@@ -230,6 +246,11 @@ export abstract class MissionForce<
       nodes: [],
     }
   }
+
+  /**
+   * The maximum length allowed for a force's name.
+   */
+  public static readonly MAX_NAME_LENGTH: number = 175
 
   /**
    * The default properties for the root node of a Force.
@@ -347,6 +368,10 @@ export interface TCommonMissionForce {
    */
   get revealedStructure(): AnyObject
   /**
+   * The outputs for the force's output panel.
+   */
+  get outputs(): TCommonOutput[]
+  /**
    * Converts the force to JSON.
    * @param options The options for converting the force to JSON.
    * @returns the JSON for the force.
@@ -362,6 +387,11 @@ export interface TCommonMissionForce {
   getNodeFromPrototype(
     prototypeId: string | undefined,
   ): TCommonMissionNode | undefined
+  /**
+   * Stores an output in the force which is then displayed in the force's output panel.
+   * @param output The output to store.
+   */
+  storeOutput(output: TCommonOutput): void
 }
 
 /**
@@ -398,6 +428,10 @@ export interface TMissionForceSessionJson {
    * The resources remaining for the force.
    */
   resourcesRemaining: number
+  /**
+   * The outputs for a force's output panel.
+   */
+  outputs: TCommonOutputJson[]
 }
 
 /**

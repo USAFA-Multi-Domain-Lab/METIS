@@ -29,7 +29,7 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TServerMi
   }
 
   // Implemented
-  public parseTargets(data: TCommonTargetJson[]): ServerTarget[] {
+  protected parseTargets(data: TCommonTargetJson[]): ServerTarget[] {
     return data.map((datum: TCommonTargetJson) => {
       return new ServerTarget(this, datum)
     })

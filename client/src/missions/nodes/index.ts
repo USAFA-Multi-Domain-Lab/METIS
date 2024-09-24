@@ -1,7 +1,7 @@
 import memoizeOne from 'memoize-one'
 import { TNodeButton } from 'src/components/content/session/mission-map/objects/MissionNode'
 import { TEventListenerTarget } from 'src/toolbox/hooks'
-import { TClientMissionTypes, TMissionNavigable } from '..'
+import { TClientMissionTypes, TMissionComponent, TMissionNavigable } from '..'
 import { TRequestMethod } from '../../../../shared/connect/data'
 import { TCommonMissionActionJson } from '../../../../shared/missions/actions'
 import { TActionExecutionJson } from '../../../../shared/missions/actions/executions'
@@ -23,7 +23,7 @@ import ClientMissionPrototype from './prototypes'
  */
 export default class ClientMissionNode
   extends MissionNode<TClientMissionTypes>
-  implements TEventListenerTarget<TNodeEventMethod>, TMissionNavigable
+  implements TEventListenerTarget<TNodeEventMethod>, TMissionComponent
 {
   // Overridden
   public get depthPadding(): number {
@@ -75,6 +75,21 @@ export default class ClientMissionNode
   }
 
   /**
+   * Whether the node is pending an "output-sent" event from the server.
+   * @note This is used when the client requests to send a message to the
+   * output panel, but the server has not yet responded.
+   */
+  private _pendingOutputSent: boolean = false
+  /**
+   * Whether the node is pending an "output-sent" event from the server.
+   * @note This is used when the client requests to send a message to the
+   * output panel, but the server has not yet responded.
+   */
+  public get pendingOutputSent(): boolean {
+    return this._pendingOutputSent
+  }
+
+  /**
    * Memoized function for computing the value of `nameLineCount`.
    * @param name The name for which to compute the line count.
    * @returns The number of lines needed to display the name.
@@ -86,7 +101,7 @@ export default class ClientMissionNode
     name = name.replace(/ {2,}/g, ' ')
 
     // Split the name into words.
-    let words: Array<string> = name.split(' ')
+    let words: string[] = name.split(' ')
 
     // Define various other variables.
     let lineCount: number = 1
@@ -217,6 +232,28 @@ export default class ClientMissionNode
   }
 
   /**
+   * The message to display when the node is defective.
+   */
+  private _defectiveMessage: string
+  /**
+   * The message to display when the node is defective.
+   */
+  public get defectiveMessage(): string {
+    return this._defectiveMessage
+  }
+
+  /**
+   * The execution time remaining for the node.
+   */
+  public get execTimeRemaining(): string {
+    if (this.execution) {
+      return this.execution.formatTimeRemaining(true)
+    } else {
+      return '00:00:00'
+    }
+  }
+
+  /**
    * @param force The force of which the node is a part.
    * @param data The node data from which to create the node. Any ommitted values will be set to the default properties defined in MissionNode.DEFAULT_PROPERTIES.
    * @param options The options for creating the node.
@@ -228,6 +265,15 @@ export default class ClientMissionNode
   ) {
     super(force, data, options)
     this._buttons = []
+    this._defectiveMessage = ''
+  }
+
+  /**
+   * Evaluates if the node is defective or not.
+   * @returns boolean indicating if the node is defective or not.
+   */
+  public isDefective(): boolean {
+    return false
   }
 
   // Implemented
@@ -371,6 +417,9 @@ export default class ClientMissionNode
       case 'request-execute-action':
         this._pendingExecInit = true
         break
+      case 'request-send-output':
+        this._pendingOutputSent = true
+        break
     }
 
     // Emit 'request-made' event.
@@ -389,6 +438,9 @@ export default class ClientMissionNode
         break
       case 'request-execute-action':
         this._pendingExecInit = false
+        break
+      case 'request-send-output':
+        this._pendingOutputSent = false
         break
     }
 
@@ -485,6 +537,17 @@ export default class ClientMissionNode
 
     // Return outcome.
     return outcome
+  }
+
+  /**
+   * Handles node-specific outputs that have been sent to the output panel via the server.
+   */
+  public handleOutputSent(): void {
+    // Set pending output sent to false.
+    this._pendingOutputSent = false
+
+    // Emit event.
+    this.emitEvent('output-sent')
   }
 
   // Implemented
@@ -683,7 +746,7 @@ export interface INodeClientOpenOptions extends INodeOpenOptions {
    * @note Fails if the node already has children.
    * @default undefined
    */
-  revealedChildNodes?: Array<TMissionNodeJson>
+  revealedChildNodes?: TMissionNodeJson[]
 }
 
 /**
@@ -695,7 +758,7 @@ export interface IClientLoadOutcomeOptions extends ILoadOutcomeOptions {
    * @note Unused if the node already has children or if the outcome was a failure.
    * @default undefined
    */
-  revealedChildNodes?: Array<TMissionNodeJson>
+  revealedChildNodes?: TMissionNodeJson[]
 }
 
 /**
@@ -710,6 +773,7 @@ export interface IClientLoadOutcomeOptions extends ILoadOutcomeOptions {
  * Triggered when the following occurs:
  * - A node is requested to be opened by the client and is awaiting a response from the server.
  * - An action is requested to be executed by the client and is awaiting a response from the server.
+ * - A message is requested to be sent to the output panel by the client and is awaiting a response from the server.
  * @option 'request-failed'
  * Triggered when the following occurs:
  * - A node is requested to be opened by the client and the server fails to open the node.
@@ -722,6 +786,13 @@ export interface IClientLoadOutcomeOptions extends ILoadOutcomeOptions {
  * Triggered when the following occurs:
  * - The node is blocked.
  * - The node is unblocked.
+ * @option 'modify-actions'
+ * Triggered when the following occurs:
+ * - The success chance of the node's actions are modified.
+ * - The process time of the node's actions are modified.
+ * - The resource cost of the node's actions are modified.
+ * @option 'output-sent'
+ * - Triggered when a message has been sent to the output panel.
  */
 export type TNodeEventMethod =
   | 'activity'
@@ -732,3 +803,4 @@ export type TNodeEventMethod =
   | 'set-buttons'
   | 'update-block'
   | 'modify-actions'
+  | 'output-sent'

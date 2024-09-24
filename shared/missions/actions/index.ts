@@ -240,6 +240,11 @@ export default abstract class MissionAction<
   public static readonly RESOURCE_COST_MIN: number = 0
 
   /**
+   * The maximum length allowed for an action's name.
+   */
+  public static readonly MAX_NAME_LENGTH: number = 175
+
+  /**
    * Default properties set when creating a new MissionAction object.
    */
   public static get DEFAULT_PROPERTIES(): Required<TCommonMissionActionJson> {
@@ -313,11 +318,11 @@ export interface TCommonMissionAction {
    */
   resourceCost: number
   /**
-   * Text printed to the console after the action is executed successfully.
+   * Text sent to the output panel after the action is executed successfully.
    */
   postExecutionSuccessText: string
   /**
-   * Text printed to the console after the action is executed unsuccessfully.
+   * Text sent to the output panel after the action is executed unsuccessfully.
    */
   postExecutionFailureText: string
   /**
@@ -398,11 +403,11 @@ export interface TCommonMissionActionJson {
    */
   resourceCost: number
   /**
-   * Text printed to the console after the action is executed successfully.
+   * Text sent to the output panel after the action is executed successfully.
    */
   postExecutionSuccessText: string
   /**
-   * Text printed to the console after the action is executed unsuccessfully.
+   * Text sent to the output panel after the action is executed unsuccessfully.
    */
   postExecutionFailureText: string
   /**

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { ErrorBoundary } from 'react-error-boundary'
 import ServerConnection from 'src/connect/servers'
 import { useGlobalContext } from 'src/context'
 import MetisInfo from 'src/info'
@@ -274,7 +275,12 @@ function App(props: {}): JSX.Element | null {
       <ErrorPage {...pageProps} />
       <LoadingPage {...pageProps} />
       <ConnectionStatus />
-      <CurrentPage {...pageProps} />
+      <ErrorBoundary
+        FallbackComponent={ErrorPage}
+        onError={(error: Error) => console.error(error)}
+      >
+        <CurrentPage {...pageProps} />
+      </ErrorBoundary>
     </div>
   )
 }

@@ -18,7 +18,7 @@
           font-size: 1.2em;
         }
 
-        .DropDownLabel {
+        .DropdownLabel {
           margin: 1em 0 0;
           font-size: 0.8em;
         }
@@ -31,12 +31,14 @@
 
       .NoActions {
         display: none;
-        color: $terminal-red;
+        color: $session-red;
         margin: 0;
         margin: 0 15px 25px 20px;
       }
 
-      .DropDown {
+      .Dropdown {
+        $scrollbar-width: 1em;
+
         min-width: 19em;
         user-select: none;
 
@@ -73,6 +75,10 @@
             background-color: $background-alt2;
           }
 
+          .Text {
+            margin-right: $scrollbar-width;
+          }
+
           .Arrow {
             color: $color-accent-light;
             font-size: 2em;
@@ -90,7 +96,7 @@
           overflow-y: auto;
 
           &::-webkit-scrollbar {
-            width: 15px;
+            width: $scrollbar-width;
           }
         }
       }

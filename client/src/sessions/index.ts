@@ -138,6 +138,8 @@ export default class SessionClient extends Session<TClientMissionTypes> {
       'internal-effect-enacted',
       this.onInternalEffectEnacted,
     )
+    this.server.addEventListener('send-output', this.onSendOutput)
+    this.server.addEventListener('output-sent', this.onOutputSent)
   }
 
   /**
@@ -153,6 +155,8 @@ export default class SessionClient extends Session<TClientMissionTypes> {
       'action-execution-initiated',
       'action-execution-completed',
       'internal-effect-enacted',
+      'send-output',
+      'output-sent',
     ])
   }
 
@@ -301,6 +305,57 @@ export default class SessionClient extends Session<TClientMissionTypes> {
 
     // Handle request within node.
     action.node.handleRequestMade('request-execute-action')
+  }
+
+  /**
+   * Sends the node's pre-execution message to the output panel.
+   * @param nodeId The ID of the node with the pre-execution message.
+   * @param options The options for sending the pre-execution message.
+   */
+  public sendPreExecutionMessage(
+    nodeId: ClientMissionNode['_id'],
+    options: TNodeFuncOptions = {},
+  ) {
+    // Gather details.
+    let server: ServerConnection = this.server
+    let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
+    let { onError = () => {} } = options
+
+    // If the role is not "participant", callback
+    // an error.
+    if (this.role !== 'participant') {
+      return onError('Only participants can send pre-execution messages.')
+    }
+
+    // Callback error if the node is not in
+    // the mission associated with this
+    // session.
+    if (node === undefined) {
+      return onError('Node was not found in the mission.')
+    }
+
+    // Emit a request to send the pre-execution message.
+    server.request(
+      'request-send-output',
+      {
+        key: 'pre-execution',
+        nodeId,
+      },
+      `Sending pre-execution message for "${node.name}".`,
+      {
+        // Handle error emitted by server concerning the
+        // request.
+        onResponse: (event) => {
+          if (event.method === 'error') {
+            onError(event.message)
+            node!.handleRequestFailed('request-send-output')
+          }
+        },
+      },
+    )
+
+    // Handle request within node.
+    node.handleRequestMade('request-send-output')
   }
 
   /**
@@ -803,6 +858,57 @@ export default class SessionClient extends Session<TClientMissionTypes> {
         throw new Error(
           `Error: Incorrect data sent to internal effect handler. Data: ${data}`,
         )
+    }
+  }
+
+  /**
+   * Handles when an output has been sent.
+   * @param event The event emitted by the server.
+   */
+  private onSendOutput = (event: TServerEvents['send-output']): void => {
+    // Extract data.
+    let { outputData } = event.data
+    let { type, forceId } = outputData
+
+    // Find the force given the ID.
+    let force = this.mission.getForce(forceId)
+
+    // If the force is undefined, throw an error.
+    if (!force) {
+      throw new Error(
+        `Could not send output with type "${type}" to the force with ID "${forceId}" because the force was not found.`,
+      )
+    }
+
+    // Store the output in the force.
+    force.storeOutput(outputData)
+  }
+
+  /**
+   * Handles when an output has been sent.
+   * @param event The event emitted by the server.
+   */
+  private onOutputSent = (event: TServerEvents['output-sent']): void => {
+    // Extract data.
+    let { key } = event.data
+
+    switch (key) {
+      case 'pre-execution':
+        // Extract data.
+        let { nodeId } = event.data
+
+        // Find the node, given the ID.
+        let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
+
+        // Handle node not found.
+        if (node === undefined) {
+          throw new Error(
+            `Event "output-sent" was triggered, but the node with the given nodeId ("${nodeId}") could not be found.`,
+          )
+        }
+
+        // Handle output sent.
+        node.handleOutputSent()
     }
   }
 

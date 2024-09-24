@@ -48,7 +48,7 @@ const validate_users = (user: any, next: any): void => {
       // Or, if the cursor is a User and the _id isn't a valid ObjectId...
       else if (
         cursor instanceof User &&
-        !mongoose.isValidObjectId(cursor._id)
+        !mongoose.isObjectIdOrHexString(cursor._id)
       ) {
         // ...then set the error and return.
         results.error = new Error(

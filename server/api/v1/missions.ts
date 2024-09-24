@@ -509,10 +509,7 @@ export const routerMap: TMetisRouterMap = (
           for (let force of mission.forces) {
             // If the force has an ObjectId as the _id,
             // generate a UUID and set it as the _id.
-            if (
-              mongoose.isValidObjectId(force._id) ||
-              mongoose.isObjectIdOrHexString(force._id)
-            ) {
+            if (mongoose.isObjectIdOrHexString(force._id)) {
               force._id = generateHash()
             }
 
@@ -520,10 +517,7 @@ export const routerMap: TMetisRouterMap = (
             for (let node of force.nodes) {
               // If the node has an ObjectId as the _id,
               // generate a UUID and set it as the _id.
-              if (
-                mongoose.isValidObjectId(node._id) ||
-                mongoose.isObjectIdOrHexString(node._id)
-              ) {
+              if (mongoose.isObjectIdOrHexString(node._id)) {
                 node._id = generateHash()
               }
 
@@ -531,10 +525,7 @@ export const routerMap: TMetisRouterMap = (
               for (let action of node.actions) {
                 // If the action has an ObjectId as the _id,
                 // generate a UUID and set it as the _id.
-                if (
-                  mongoose.isValidObjectId(action._id) ||
-                  mongoose.isObjectIdOrHexString(action._id)
-                ) {
+                if (mongoose.isObjectIdOrHexString(action._id)) {
                   action._id = generateHash()
                 }
 
@@ -542,10 +533,7 @@ export const routerMap: TMetisRouterMap = (
                 for (let effect of action.effects) {
                   // If the effect has an ObjectId as the _id,
                   // generate a UUID and set it as the _id.
-                  if (
-                    mongoose.isValidObjectId(effect._id) ||
-                    mongoose.isObjectIdOrHexString(effect._id)
-                  ) {
+                  if (mongoose.isObjectIdOrHexString(effect._id)) {
                     effect._id = generateHash()
                   }
                 }

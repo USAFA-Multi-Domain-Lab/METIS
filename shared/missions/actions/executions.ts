@@ -11,6 +11,10 @@ export default interface IActionExecution<
   T extends TCommonMissionTypes = TCommonMissionTypes,
 > {
   /**
+   * The time remaining for the action to complete.
+   */
+  get timeRemaining(): number
+  /**
    * The action executed.
    */
   action: TAction<T>

@@ -1,7 +1,9 @@
 // -- initial --
 
 import { TCommonMissionJson } from 'metis/missions'
-import ServerMission from '../missions'
+import ServerMissionAction from '../missions/actions'
+import ServerMissionForce from '../missions/forces'
+import ServerMissionNode from '../missions/nodes'
 
 export let demoMissionData: TCommonMissionJson = {
   name: 'METIS > ASCOT 7 DEMO',
@@ -52,13 +54,13 @@ export let demoMissionData: TCommonMissionJson = {
   },
   forces: [
     {
-      _id: ServerMission.DEFAULT_PROPERTIES._id,
+      _id: ServerMissionForce.DEFAULT_PROPERTIES._id,
       name: 'Friendly Force',
       color: '#34a1fb',
       initialResources: 100,
       nodes: [
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: '882d6985-a05c-4f36-b66b-92de27d34552',
           name: 'Select Target Region',
           color: '#65eb59',
@@ -71,7 +73,7 @@ export let demoMissionData: TCommonMissionJson = {
           device: false,
           actions: [
             {
-              _id: ServerMission.DEFAULT_PROPERTIES._id,
+              _id: ServerMissionAction.DEFAULT_PROPERTIES._id,
               name: 'New Action',
               description: '<p>Enter your description here.</p>',
               processTime: 5000,
@@ -87,7 +89,7 @@ export let demoMissionData: TCommonMissionJson = {
           ],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: '405b84dc-a653-47ed-8d88-aef3177a99b2',
           name: 'CENTCOM',
           color: '#52b1ff',
@@ -101,7 +103,7 @@ export let demoMissionData: TCommonMissionJson = {
           actions: [],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: '315605d0-3210-4644-8903-d254151769e2',
           name: 'AFRICOM',
           color: '#52b1ff',
@@ -115,7 +117,7 @@ export let demoMissionData: TCommonMissionJson = {
           actions: [],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: '51f256b3-614c-4f9a-80f3-3d020a758cd7',
           name: 'EUCOM',
           color: '#52b1ff',
@@ -129,7 +131,7 @@ export let demoMissionData: TCommonMissionJson = {
           actions: [],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: '2d69024c-9cc4-40bd-ab84-1d7761abe810',
           name: 'NORTHCOM',
           color: '#52b1ff',
@@ -143,7 +145,7 @@ export let demoMissionData: TCommonMissionJson = {
           actions: [],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: 'd4bf672b-1490-4246-92c5-69e31d2714b5',
           name: 'INDOPACOM',
           color: '#52b1ff',
@@ -157,7 +159,7 @@ export let demoMissionData: TCommonMissionJson = {
           actions: [],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: 'afa6923d-875f-4dbe-b724-3c908deb853b',
           name: 'SOUTHCOM',
           color: '#52b1ff',
@@ -171,7 +173,7 @@ export let demoMissionData: TCommonMissionJson = {
           actions: [],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: '339e1633-34cc-488f-abee-61ec1f21f0dd',
           name: 'SPACECOM',
           color: '#52b1ff',
@@ -185,7 +187,7 @@ export let demoMissionData: TCommonMissionJson = {
           actions: [],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: '6185ea46-de8b-4308-aec3-e257313563af',
           name: 'Select Domain',
           color: '#eb5fb2',
@@ -198,7 +200,7 @@ export let demoMissionData: TCommonMissionJson = {
           actions: [],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: 'e25eb328-d98a-4215-a1a2-e854137e9209',
           name: 'Space',
           color: '#cd328e',
@@ -211,7 +213,7 @@ export let demoMissionData: TCommonMissionJson = {
           actions: [],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: 'cb7c666e-4ac3-4c6c-8dcd-c8c4d383ce65',
           name: 'Cyberspace',
           color: '#cd328e',
@@ -225,7 +227,7 @@ export let demoMissionData: TCommonMissionJson = {
           actions: [],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: 'e1ef9397-f480-4f06-8c0b-afcf1ace7f69',
           name: 'Air',
           color: '#cd328e',
@@ -239,7 +241,7 @@ export let demoMissionData: TCommonMissionJson = {
           actions: [],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: '096fa5e6-d25a-4b86-a618-a8ab854d9b12',
           name: 'Land',
           color: '#cd328e',
@@ -253,7 +255,7 @@ export let demoMissionData: TCommonMissionJson = {
           actions: [],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: '36ed93ea-a7ef-445e-b1a2-d068681ebca4',
           name: 'Sea',
           color: '#cd328e',
@@ -267,7 +269,7 @@ export let demoMissionData: TCommonMissionJson = {
           actions: [],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: '05b4b9e6-2f46-4ce0-adf4-d1d846c650da',
           name: 'Sub-Surface',
           color: '#cd328e',
@@ -281,7 +283,7 @@ export let demoMissionData: TCommonMissionJson = {
           actions: [],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: '152811b3-e125-4cae-b4e4-06a5842b403c',
           name: 'China',
           color: '#f5e677',
@@ -294,7 +296,7 @@ export let demoMissionData: TCommonMissionJson = {
           device: false,
           actions: [
             {
-              _id: ServerMission.DEFAULT_PROPERTIES._id,
+              _id: ServerMissionAction.DEFAULT_PROPERTIES._id,
               name: 'CONFIRM AUTHORIZATION',
               description: '<p>ACCESS WARNING</p>',
               processTime: 10000,
@@ -308,7 +310,7 @@ export let demoMissionData: TCommonMissionJson = {
           ],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: '1c97200f-69d6-4546-b99e-6cd0a11ae0a4',
           name: 'North Korea',
           color: '#f5e677',
@@ -321,7 +323,7 @@ export let demoMissionData: TCommonMissionJson = {
           device: false,
           actions: [
             {
-              _id: ServerMission.DEFAULT_PROPERTIES._id,
+              _id: ServerMissionAction.DEFAULT_PROPERTIES._id,
               name: 'CONFIRM AUTHORIZATION',
               description: '<p>ACCESS WARNING</p>',
               processTime: 5000,
@@ -335,7 +337,7 @@ export let demoMissionData: TCommonMissionJson = {
           ],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: 'b6220969-160d-4339-8a96-b5c632422ffa',
           name: 'Nanning Station [南宁站] ',
           color: '#d0bf3b',
@@ -347,7 +349,7 @@ export let demoMissionData: TCommonMissionJson = {
           device: false,
           actions: [
             {
-              _id: ServerMission.DEFAULT_PROPERTIES._id,
+              _id: ServerMissionAction.DEFAULT_PROPERTIES._id,
               name: 'Run Brute Force Entry Script',
               description: '<p>Gain access to this system.</p>',
               processTime: 10000,
@@ -362,7 +364,7 @@ export let demoMissionData: TCommonMissionJson = {
           ],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: '0d0ad493-346c-4096-80e3-f8bc7b21f535',
           name: 'Lingshui Station [陵水测控站]',
           color: '#d0bf3b',
@@ -374,7 +376,7 @@ export let demoMissionData: TCommonMissionJson = {
           device: false,
           actions: [
             {
-              _id: ServerMission.DEFAULT_PROPERTIES._id,
+              _id: ServerMissionAction.DEFAULT_PROPERTIES._id,
               name: 'Run Brute Force Entry Script',
               description: '<p>Gain access to this system.</p>',
               processTime: 10000,
@@ -389,7 +391,7 @@ export let demoMissionData: TCommonMissionJson = {
           ],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: 'a8bbd3c1-b050-40cc-932a-5b642e9e5d37',
           name: 'Menghai Station [勐海测控站]',
           color: '#d0bf3b',
@@ -401,7 +403,7 @@ export let demoMissionData: TCommonMissionJson = {
           device: false,
           actions: [
             {
-              _id: ServerMission.DEFAULT_PROPERTIES._id,
+              _id: ServerMissionAction.DEFAULT_PROPERTIES._id,
               name: 'Run Brute Force Entry Script',
               description: '<p>Gain access to this system.</p>',
               processTime: 10000,
@@ -416,7 +418,7 @@ export let demoMissionData: TCommonMissionJson = {
           ],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: '71eb8dd1-1104-481b-baf0-a4850c58ebc7',
           name: 'Minxi Station [闽西测控站]',
           color: '#d0bf3b',
@@ -428,7 +430,7 @@ export let demoMissionData: TCommonMissionJson = {
           device: false,
           actions: [
             {
-              _id: ServerMission.DEFAULT_PROPERTIES._id,
+              _id: ServerMissionAction.DEFAULT_PROPERTIES._id,
               name: 'Run Brute Force Entry Script',
               description: '<p>Gain access to this system.</p>',
               processTime: 10000,
@@ -443,7 +445,7 @@ export let demoMissionData: TCommonMissionJson = {
           ],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: '7344d4d7-2a9b-4b99-ad2a-4dd353a3bd49',
           name: 'Changchun Station [长春测控站] ',
           color: '#d0bf3b',
@@ -456,7 +458,7 @@ export let demoMissionData: TCommonMissionJson = {
           device: false,
           actions: [
             {
-              _id: ServerMission.DEFAULT_PROPERTIES._id,
+              _id: ServerMissionAction.DEFAULT_PROPERTIES._id,
               name: 'Run Access Script',
               description: '<p>Gain access to this system.</p>',
               processTime: 10000,
@@ -471,7 +473,7 @@ export let demoMissionData: TCommonMissionJson = {
           ],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: 'c3b45b64-160d-4fca-a0bf-10fc8740ea21',
           name: 'Qingdao Station [青岛测控站]',
           color: '#d0bf3b',
@@ -483,7 +485,7 @@ export let demoMissionData: TCommonMissionJson = {
           device: false,
           actions: [
             {
-              _id: ServerMission.DEFAULT_PROPERTIES._id,
+              _id: ServerMissionAction.DEFAULT_PROPERTIES._id,
               name: 'Run Brute Force Entry Script',
               description: '<p>Gain access to this system.</p>',
               processTime: 10000,
@@ -498,7 +500,7 @@ export let demoMissionData: TCommonMissionJson = {
           ],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: 'c3a94935-578b-42a1-9fc1-7878fe24fb6d',
           name: 'YAOGAN-23 (SAR)',
           color: '#52b1ff',
@@ -511,7 +513,7 @@ export let demoMissionData: TCommonMissionJson = {
           device: false,
           actions: [
             {
-              _id: ServerMission.DEFAULT_PROPERTIES._id,
+              _id: ServerMissionAction.DEFAULT_PROPERTIES._id,
               name: 'New Action',
               description: '<p>Enter your description here.</p>',
               processTime: 5000,
@@ -526,7 +528,7 @@ export let demoMissionData: TCommonMissionJson = {
           ],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: 'ae6b07fb-9f36-4eeb-9dbd-e579e8eb7f5d',
           name: 'YAOGAN-35 (ELINT)',
           color: '#52b1ff',
@@ -539,7 +541,7 @@ export let demoMissionData: TCommonMissionJson = {
           device: false,
           actions: [
             {
-              _id: ServerMission.DEFAULT_PROPERTIES._id,
+              _id: ServerMissionAction.DEFAULT_PROPERTIES._id,
               name: 'New Action',
               description: '<p>Enter your description here.</p>',
               processTime: 5000,
@@ -554,7 +556,7 @@ export let demoMissionData: TCommonMissionJson = {
           ],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: '60acf5d1-3467-462c-816c-bcb2e5c2b8e0',
           name: 'YAOGAN-36 (Data)',
           color: '#52b1ff',
@@ -567,7 +569,7 @@ export let demoMissionData: TCommonMissionJson = {
           device: false,
           actions: [
             {
-              _id: ServerMission.DEFAULT_PROPERTIES._id,
+              _id: ServerMissionAction.DEFAULT_PROPERTIES._id,
               name: 'Exploit Data',
               description: '<p>Pull asset connection data.</p>',
               processTime: 10000,
@@ -582,7 +584,7 @@ export let demoMissionData: TCommonMissionJson = {
           ],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: '26f3833d-45cf-4860-ac97-edd8ef877d3c',
           name: 'Chengdu GJ-2 (UAV)',
           color: '#b839ff',
@@ -595,7 +597,7 @@ export let demoMissionData: TCommonMissionJson = {
           device: false,
           actions: [
             {
-              _id: ServerMission.DEFAULT_PROPERTIES._id,
+              _id: ServerMissionAction.DEFAULT_PROPERTIES._id,
               name: 'Access Control Systems',
               description: '<p>Access UAV On-board Systems.</p>',
               processTime: 10000,
@@ -610,7 +612,7 @@ export let demoMissionData: TCommonMissionJson = {
           ],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: '3bca4ca3-4a5b-4518-bc7a-0f2c8d9b1999',
           name: 'Flight Controls',
           color: '#b839ff',
@@ -622,7 +624,7 @@ export let demoMissionData: TCommonMissionJson = {
           device: true,
           actions: [
             {
-              _id: ServerMission.DEFAULT_PROPERTIES._id,
+              _id: ServerMissionAction.DEFAULT_PROPERTIES._id,
               name: 'Update Flight Command',
               description: '<p>Update Speed Control</p>',
               processTime: 10000,
@@ -635,7 +637,7 @@ export let demoMissionData: TCommonMissionJson = {
               effects: [],
             },
             {
-              _id: ServerMission.DEFAULT_PROPERTIES._id,
+              _id: ServerMissionAction.DEFAULT_PROPERTIES._id,
               name: 'New Action',
               description: '<p>Enter your description here.</p>',
               processTime: 5000,
@@ -650,7 +652,7 @@ export let demoMissionData: TCommonMissionJson = {
           ],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: 'a6a31b1c-7be6-4a71-81c1-1ffa88ed3711',
           name: 'Access Controls',
           color: '#b839ff',
@@ -662,7 +664,7 @@ export let demoMissionData: TCommonMissionJson = {
           device: true,
           actions: [
             {
-              _id: ServerMission.DEFAULT_PROPERTIES._id,
+              _id: ServerMissionAction.DEFAULT_PROPERTIES._id,
               name: 'Lock System Controls',
               description: '<p>Lock UAV Access Controls</p>',
               processTime: 10000,
@@ -675,7 +677,7 @@ export let demoMissionData: TCommonMissionJson = {
               effects: [],
             },
             {
-              _id: ServerMission.DEFAULT_PROPERTIES._id,
+              _id: ServerMissionAction.DEFAULT_PROPERTIES._id,
               name: 'New Action',
               description: '<p>Enter your description here.</p>',
               processTime: 5000,
@@ -690,7 +692,7 @@ export let demoMissionData: TCommonMissionJson = {
           ],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: 'e398028a-1f87-4d58-bf69-b949ef176cf6',
           name: 'Emergency Controls',
           color: '#b839ff',
@@ -702,7 +704,7 @@ export let demoMissionData: TCommonMissionJson = {
           device: false,
           actions: [
             {
-              _id: ServerMission.DEFAULT_PROPERTIES._id,
+              _id: ServerMissionAction.DEFAULT_PROPERTIES._id,
               name: 'Force Loss-of-Link',
               description: '<p>UAV will execute loss-of-link protocol.</p>',
               processTime: 10000,
@@ -717,7 +719,7 @@ export let demoMissionData: TCommonMissionJson = {
           ],
         },
         {
-          _id: ServerMission.DEFAULT_PROPERTIES._id,
+          _id: ServerMissionNode.DEFAULT_PROPERTIES._id,
           structureKey: 'd04326e3-491b-479a-9f22-d4f49703f8de',
           name: '*** WARNING ***',
           color: '#f9484f',
@@ -729,7 +731,7 @@ export let demoMissionData: TCommonMissionJson = {
           device: true,
           actions: [
             {
-              _id: ServerMission.DEFAULT_PROPERTIES._id,
+              _id: ServerMissionAction.DEFAULT_PROPERTIES._id,
               name: 'Send Self-destruction Command',
               description: '<p>Enter your description here.</p>',
               processTime: 10000,

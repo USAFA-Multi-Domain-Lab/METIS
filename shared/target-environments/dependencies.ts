@@ -308,10 +308,7 @@ export default class Dependency implements TCommonDependency {
   /**
    * Dependencies that are blacklisted from being used on the server.
    */
-  public static readonly blacklistedDependencies: Dependency['name'][] = [
-    'FORCE',
-    'NODE',
-  ]
+  public static readonly blacklisted: Dependency['name'][] = ['FORCE', 'NODE']
 }
 
 /* ------------------------------ DEPENDENCY TYPES ------------------------------ */

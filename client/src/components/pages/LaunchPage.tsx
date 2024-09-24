@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
-import ClientMission, { TMissionDefectiveObject } from 'src/missions'
-import { ClientEffect } from 'src/missions/effects'
+import ClientMission, { TMissionComponent } from 'src/missions'
 import SessionClient from 'src/sessions'
 import { compute } from 'src/toolbox'
-import { useMountHandler } from 'src/toolbox/hooks'
+import { useMountHandler, useRequireLogin } from 'src/toolbox/hooks'
 import { DefaultLayout } from '.'
 
 import Session from '../../../../shared/sessions'
@@ -42,9 +41,25 @@ export default function LaunchPage({
   )
   const [sessionConfig] = useState(Session.DEFAULT_CONFIG)
 
+  /* -- LOGIN-SPECIFIC LOGIC -- */
+
+  // Require login for page.
+  const [login] = useRequireLogin()
+
+  // Grab the user currently logged in.
+  let { user: currentUser } = login
+
   /* -- EFFECTS -- */
 
   const [mountHandled] = useMountHandler(async (done) => {
+    // Make sure the user has access to the page.
+    if (!currentUser.isAuthorized('sessions_write')) {
+      handleError(
+        'You do not have access to this page. Please contact an administrator.',
+      )
+      return done()
+    }
+
     // Handle the editing of an existing mission.
     if (missionId !== null) {
       try {
@@ -83,30 +98,25 @@ export default function LaunchPage({
   /**
    * Renders JSX for the effect list item.
    */
-  const renderObjectListItem = (object: TMissionDefectiveObject) => {
+  const renderObjectListItem = (object: TMissionComponent) => {
     /* -- COMPUTED -- */
 
     /**
      * The buttons for the object list.
      */
-    const buttons = compute(() => {
+    const buttons: TValidPanelButton[] = compute(() => {
       // Create a default list of buttons.
       let buttons: TValidPanelButton[] = []
       // Create a list of mini actions that are available.
-      let availableMiniActions: SingleTypeObject<TValidPanelButton> = {}
-
-      // If the object is an effect, then create mini actions for it.
-      if (object instanceof ClientEffect) {
-        // If the action is available then add the edit and remove buttons.
-        availableMiniActions = {
-          warning: {
-            icon: 'warning-transparent',
-            key: 'warning',
-            onClick: () => {},
-            cursor: 'help',
-            tooltipDescription: object.invalidMessage,
-          },
-        }
+      let availableMiniActions: SingleTypeObject<TValidPanelButton> = {
+        warning: {
+          icon: 'warning-transparent',
+          key: 'warning',
+          onClick: () => {},
+          cursor: 'help',
+          tooltipDescription:
+            'If this conflict is not resolved, this mission can still be used to launch a session, but the session may not function as expected.',
+        },
       }
 
       // Add the buttons to the list.
@@ -118,8 +128,8 @@ export default function LaunchPage({
 
     return (
       <div className='Row' key={`object-row-${object._id}`}>
-        <div className='RowContent'>{object.name}</div>
         <ButtonSvgPanel buttons={buttons} size={'small'} />
+        <div className='RowContent'>{object.defectiveMessage}</div>
       </div>
     )
   }
@@ -140,21 +150,28 @@ export default function LaunchPage({
           let message =
             `**Warning:** The mission for this session is defective due to unresolved conflicts. If you proceed, the session may not function as expected.\n` +
             `**What would you like to do?**`
+          // Create a list of choices for the user.
+          let choices: string[] = []
+
+          // Generate choices based on the user's permissions.
+          if (currentUser.isAuthorized(['missions_write', 'sessions_write'])) {
+            choices = ['Edit Mission', 'Launch Anyway', 'Cancel']
+          } else if (currentUser.isAuthorized('sessions_write')) {
+            choices = ['Launch Anyway', 'Cancel']
+          } else {
+            choices = ['Cancel']
+          }
 
           // Prompt the user for a choice.
-          let { choice } = await prompt(
-            message,
-            ['Edit Mission', 'Launch Anyway', 'Cancel'],
-            {
-              list: {
-                items: mission.defectiveObjects,
-                headingText: 'Unresolved Conflicts',
-                sortByMethods: [ESortByMethod.Name],
-                searchableProperties: ['name'],
-                renderObjectListItem: renderObjectListItem,
-              },
+          let { choice } = await prompt(message, choices, {
+            list: {
+              items: mission.defectiveObjects,
+              headingText: 'Unresolved Conflicts',
+              sortByMethods: [ESortByMethod.Name],
+              searchableProperties: ['name'],
+              renderObjectListItem: renderObjectListItem,
             },
-          )
+          })
           // If the user cancels then cancel the launch.
           if (choice === 'Cancel') return
           // If the user chooses to edit the mission then navigate to the mission page.

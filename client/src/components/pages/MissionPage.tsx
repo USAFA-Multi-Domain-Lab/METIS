@@ -12,7 +12,11 @@ import ClientMissionPrototype, {
 import PrototypeCreation from 'src/missions/transformations/creations'
 import PrototypeTranslation from 'src/missions/transformations/translations'
 import { compute } from 'src/toolbox'
-import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
+import {
+  useEventListener,
+  useMountHandler,
+  useRequireLogin,
+} from 'src/toolbox/hooks'
 import { DefaultLayout, TPage_P } from '.'
 import Mission from '../../../../shared/missions'
 import { TWithKey } from '../../../../shared/toolbox/objects'
@@ -24,11 +28,7 @@ import MissionEntry from '../content/edit-mission/entries/MissionEntry'
 import NodeEntry from '../content/edit-mission/entries/NodeEntry'
 import NodeStructuring from '../content/edit-mission/entries/NodeStructuring'
 import PrototypeEntry from '../content/edit-mission/entries/PrototypeEntry'
-import {
-  HomeLink,
-  LogoutLink,
-  TNavigation,
-} from '../content/general-layout/Navigation'
+import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
 import {
   EPanelSizingMode,
   PanelSizeRelationship,
@@ -72,20 +72,65 @@ export default function MissionPage({
     useState<boolean>(false)
   const [isNewEffect, setIsNewEffect] = useState<boolean>(false)
 
+  /* -- LOGIN-SPECIFIC LOGIC -- */
+
+  // Require login for page.
+  const [login] = useRequireLogin()
+
+  // Grab the user currently logged in.
+  let { user: currentUser } = login
+
   /* -- COMPUTED -- */
+
+  /**
+   * Logout link for navigation.
+   */
+  const logoutLink = compute(() => ({
+    text: 'Logout',
+    onClick: async () => {
+      // If there are unsaved changes, prompt the user.
+      if (areUnsavedChanges) {
+        const { choice } = await prompt(
+          'You have unsaved changes. What do you want to do with them?',
+          ['Cancel', 'Save', 'Discard'],
+        )
+
+        try {
+          // Abort if cancelled.
+          if (choice === 'Cancel') {
+            return
+          }
+          // Save if requested.
+          else if (choice === 'Save') {
+            beginLoading('Saving...')
+            await save()
+            await globalContext.actions.logout()
+          }
+        } catch (error) {
+          return handleError({
+            message: 'Failed to save mission.',
+            notifyMethod: 'bubble',
+          })
+        }
+      } else {
+        await globalContext.actions.logout()
+      }
+    },
+    key: 'logout',
+  }))
 
   /**
    * Props for navigation.
    */
   const navigation = compute(
     (): TNavigation => ({
-      links: [HomeLink(globalContext), LogoutLink(globalContext)],
+      links: [HomeLink(globalContext), logoutLink],
       boxShadow: 'alt-6',
     }),
   )
 
   /**
-   * Default size of the output panel.
+   * Default size of the side panel.
    */
   const panel2DefaultSize: number = compute(() => {
     let panel2DefaultSize: number = 330 /*px*/
@@ -93,7 +138,7 @@ export default function MissionPage({
 
     // If the aspect ratio is greater than or equal to 16:9,
     // and the window width is greater than or equal to 1850px,
-    // then the default size of the output panel will be 40%
+    // then the default size of the side panel will be 40%
     // of the width of the window.
     if (currentAspectRatio >= 16 / 9 && window.innerWidth >= 1850) {
       panel2DefaultSize = window.innerWidth * 0.4
@@ -106,6 +151,14 @@ export default function MissionPage({
 
   // componentDidMount
   const [mountHandled] = useMountHandler(async (done) => {
+    // Make sure the user has access to the page.
+    if (!currentUser.isAuthorized('missions_write')) {
+      handleError(
+        'You do not have access to this page. Please contact an administrator.',
+      )
+      return done()
+    }
+
     // Handle the editing of an existing mission.
     if (missionId !== null) {
       try {
@@ -600,7 +653,6 @@ export default function MissionPage({
       return (
         <MissionEntry
           mission={selection}
-          handleDeleteEffectRequest={handleDeleteEffectRequest}
           handleChange={handleChange}
           key={selection._id}
         />

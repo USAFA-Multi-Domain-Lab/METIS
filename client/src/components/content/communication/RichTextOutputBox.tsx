@@ -1,41 +1,70 @@
-import { Component } from 'react'
+import Link from '@tiptap/extension-link'
+import Underline from '@tiptap/extension-underline'
+import { EditorContent, useEditor } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
 import './RichTextOutputBox.scss'
+/**
+ * Displays rich text.
+ */
+export default function RichTextOutputBox({
+  text,
+  options,
+}: TRichTextOutputBox_P): JSX.Element {
+  const { deps, listItemClassName, ref } = options ?? {}
+
+  // Create the tiptap editor.
+  const editor = useEditor(
+    {
+      extensions: [
+        StarterKit.configure({
+          listItem: {
+            HTMLAttributes: {
+              class: listItemClassName,
+            },
+          },
+        }),
+        Underline,
+        Link.configure({
+          defaultProtocol: 'https',
+        }),
+      ],
+      content: text,
+      editable: false,
+    },
+    [deps],
+  )
+
+  /* -- RENDER -- */
+  return (
+    <EditorContent editor={editor} ref={ref} className='RichTextOutputBox' />
+  )
+}
+
+/* ---------------------------- TYPES FOR RICH TEXT OUTPUT BOX ---------------------------- */
 
 /**
- * The properties for the RichTextOutputBox component.
- * @interface IRichTextOutputBox
- * @property {string} Element The HTML element (wrapped in a string) to be displayed.
+ * Prop type for`RichTextOutputBox`.
  */
-export interface IRichTextOutputBox {
+type TRichTextOutputBox_P = {
   /**
    * The HTML element (wrapped in a string) to be displayed.
    */
-  Element: string
-}
-
-/**
- * The state for the RichTextOutputBox component.
- * @interface IRichTextOutputBox_S
- */
-export interface IRichTextOutputBox_S {}
-
-/**
- * This component is responsible for displaying
- * rich text in the application.
- * @extends {Component<IRichTextOutputBox, IRichTextOutputBox_S>}
- */
-export default class RichTextOutputBox extends Component<
-  IRichTextOutputBox,
-  IRichTextOutputBox_S
-> {
-  render(): JSX.Element {
-    let Element: string = this.props.Element
-
-    return (
-      <div
-        className='RichTextOutputBox'
-        dangerouslySetInnerHTML={{ __html: Element }}
-      ></div>
-    )
+  text: string
+  /**
+   * Options for the component.
+   */
+  options?: {
+    /**
+     * The class name to be applied to the list item.
+     */
+    listItemClassName?: string
+    /**
+     * The dependencies for the component.
+     */
+    deps?: any[]
+    /**
+     * The reference to the HTML element.
+     */
+    ref?: React.RefObject<HTMLDivElement>
   }
 }

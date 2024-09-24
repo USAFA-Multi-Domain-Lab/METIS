@@ -118,17 +118,6 @@ export default function ActionEntry({
   /* -- FUNCTIONS -- */
 
   /**
-   * Handles the request to edit an effect.
-   */
-  const handleEditEffectRequest = (effect: ClientEffect) => {
-    // If the effect has a target and a target environment,
-    // then select the effect.
-    if (effect.target && effect.targetEnvironment) {
-      mission.select(effect)
-    }
-  }
-
-  /**
    * Renders JSX for the effect list item.
    */
   const renderEffectListItem = (effect: ClientEffect) => {
@@ -145,22 +134,31 @@ export default function ActionEntry({
     })
 
     /**
+     * The class name for the effect row content.
+     */
+    const rowContentClassName: string = compute(() => {
+      // Create a default list of class names.
+      let classList: string[] = ['RowContent', 'Select']
+
+      // If the effect doesn't have a target or target environment,
+      // then partially disable the effect.
+      if (!effect.targetEnvironment || !effect.target) {
+        classList.push('PartiallyDisabled')
+      }
+
+      // Combine the class names into a single string.
+      return classList.join(' ')
+    })
+
+    /**
      * The buttons for the effect list.
      */
-    const buttons = compute(() => {
+    const buttons: TValidPanelButton[] = compute(() => {
       // Create a default list of buttons.
       let buttons: TValidPanelButton[] = []
 
       // If the action is available then add the edit and remove buttons.
       let availableMiniActions: SingleTypeObject<TValidPanelButton> = {
-        edit: {
-          icon: 'edit',
-          key: 'edit',
-          onClick: () => handleEditEffectRequest(effect),
-          tooltipDescription: editTooltipDescription,
-          disabled:
-            !effect.target || !effect.targetEnvironment ? 'partial' : 'none',
-        },
         remove: {
           icon: 'remove',
           key: 'remove',
@@ -177,10 +175,13 @@ export default function ActionEntry({
     })
 
     return (
-      <div className='Row' key={`effect-row-${effect._id}`}>
-        <div className='RowContent'>
+      <div className='Row Select' key={`effect-row-${effect._id}`}>
+        <div
+          className={rowContentClassName}
+          onClick={() => mission.select(effect)}
+        >
           {effect.name}
-          <Tooltip description={effect.description} />
+          <Tooltip description={editTooltipDescription} />
         </div>
         <ButtonSvgPanel buttons={buttons} size={'small'} />
       </div>
@@ -207,6 +208,7 @@ export default function ActionEntry({
               stateValue={name}
               setState={setName}
               defaultValue={ClientMissionAction.DEFAULT_PROPERTIES.name}
+              maxLength={ClientMissionAction.MAX_NAME_LENGTH}
               placeholder='Enter name...'
               key={`${action._id}_name`}
             />

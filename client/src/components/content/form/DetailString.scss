@@ -8,6 +8,12 @@
     &.Password {
       grid-template-columns: auto 55px;
     }
+
+    .CharacterCount {
+      margin-top: 5px;
+      font-size: 0.7rem;
+      color: $color-pointer-mark;
+    }
   }
 
   .TogglePasswordButton {

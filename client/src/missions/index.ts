@@ -28,6 +28,7 @@ import ClientActionExecution from './actions/executions'
 import ClientActionOutcome from './actions/outcomes'
 import { ClientEffect } from './effects'
 import ClientMissionForce, { TClientMissionForceOptions } from './forces'
+import { ClientOutput } from './forces/outputs'
 import ClientMissionNode from './nodes'
 import ClientMissionPrototype, { TPrototypeRelation } from './nodes/prototypes'
 import MissionTransformation from './transformations'
@@ -221,23 +222,36 @@ export default class ClientMission
   /**
    * The list of defective objects found the mission.
    */
-  private _defectiveObjects: TMissionDefectiveObject[]
+  private _defectiveObjects: TMissionComponent[]
   /**
    * The list of defective objects found the mission.
    */
-  public get defectiveObjects(): TMissionDefectiveObject[] {
+  public get defectiveObjects(): TMissionComponent[] {
     return this._defectiveObjects
   }
 
+  /**
+   * @param data The mission data from which to create the mission. Any ommitted values will be set to the default properties defined in Mission.DEFAULT_PROPERTIES.
+   * @param options The options for creating the mission.
+   */
   public constructor(
-    data: Partial<TCommonMissionJson> = {},
+    data: Partial<TCommonMissionJson> = ClientMission.DEFAULT_PROPERTIES,
     options: TClientMissionOptions = {},
   ) {
     // Initialize base properties.
     super(data, options)
 
     // Parse client-specific options.
-    let { existsOnServer = false, nonRevealedDisplayMode = 'hide' } = options
+    let {
+      existsOnServer = false,
+      populateTargets = false,
+      nonRevealedDisplayMode = 'hide',
+    } = options
+
+    // Parse force data.
+    this.importForces(data.forces ?? ClientMission.DEFAULT_PROPERTIES.forces, {
+      populateTargets,
+    })
 
     // Initialize client-specific properties.
     this._existsOnServer = existsOnServer
@@ -316,16 +330,44 @@ export default class ClientMission
 
   /**
    * Evaluates objects found within the mission to determine if they are defective.
+   * @param maxAmount The maximum amount of defective objects to evaluate.
    */
-  public evaluateObjects(): void {
+  public evaluateObjects(maxAmount?: number): void {
     // Initialize invalid objects.
     this._defectiveObjects = []
 
-    for (let node of this.nodes) {
-      for (let action of node.actions.values()) {
-        // Validate the effects.
-        for (let effect of action.effects) {
-          if (effect.isDefective()) this._defectiveObjects.push(effect)
+    // Loop through forces.
+    for (let force of this.forces) {
+      // Validate the force.
+      if (force.isDefective()) this._defectiveObjects.push(force)
+      // Break if the max amount of defective objects
+      // has been reached.
+      if (maxAmount && this._defectiveObjects.length >= maxAmount) break
+
+      // Loop through nodes.
+      for (let node of force.nodes) {
+        // Validate the node.
+        if (node.isDefective()) this._defectiveObjects.push(node)
+        // Break if the max amount of defective objects
+        // has been reached.
+        if (maxAmount && this._defectiveObjects.length >= maxAmount) break
+
+        // Loop through actions.
+        for (let action of node.actions.values()) {
+          // Validate the action.
+          if (action.isDefective()) this._defectiveObjects.push(action)
+          // Break if the max amount of defective objects
+          // has been reached.
+          if (maxAmount && this._defectiveObjects.length >= maxAmount) break
+
+          // Loop through effects.
+          for (let effect of action.effects) {
+            // Validate the effect.
+            if (effect.isDefective()) this._defectiveObjects.push(effect)
+            // Break if the max amount of defective objects
+            // has been reached.
+            if (maxAmount && this._defectiveObjects.length >= maxAmount) break
+          }
         }
       }
     }
@@ -1301,6 +1343,7 @@ export interface TClientMissionTypes extends TCommonMissionTypes {
   user: ClientUser
   mission: ClientMission
   force: ClientMissionForce
+  output: ClientOutput
   prototype: ClientMissionPrototype
   node: ClientMissionNode
   action: ClientMissionAction
@@ -1309,11 +1352,6 @@ export interface TClientMissionTypes extends TCommonMissionTypes {
   targetEnv: ClientTargetEnvironment
   target: ClientTarget
   effect: ClientEffect
-  defectiveObject:
-    | ClientMissionForce
-    | ClientMissionNode
-    | ClientMissionAction
-    | ClientEffect
 }
 
 /**
@@ -1420,9 +1458,23 @@ export interface TMissionNavigable {
 }
 
 /**
- * Represents the types of defective objects found within the mission.
+ * Represents an object that is a component of a mission.
+ * @note Implement this to make a class compatible.
  */
-export type TMissionDefectiveObject = TClientMissionTypes['defectiveObject']
+export interface TMissionComponent extends TMissionNavigable {
+  /**
+   * The object's ID.
+   */
+  _id: string
+  /**
+   * Whether the object is defective.
+   */
+  isDefective(): boolean
+  /**
+   * The message to display when the object is defective.
+   */
+  get defectiveMessage(): string
+}
 
 /**
  * Keyword arguments needed to evaluate objects found within the mission.

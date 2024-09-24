@@ -4,6 +4,7 @@ import {
 } from 'metis/missions/actions/executions'
 import { TActionOutcomeJson } from 'metis/missions/actions/outcomes'
 import { TCommonMissionForceJson } from 'metis/missions/forces'
+import { TCommonOutputJson } from 'metis/missions/forces/outputs'
 import { TSessionConfig, TSessionJson } from 'metis/sessions'
 import {
   TCommonSessionMember,
@@ -213,6 +214,28 @@ type TInternalEffectData = [
 type TInternalEffectDatum = TInternalEffectData[number]
 
 /**
+ * The data necessary to send a message to the output panel.
+ */
+type TOutputData = [
+  {
+    /**
+     * Used to identify the data structure.
+     * @option `"pre-execution":` The data needed to send a node's pre-execution message to the output panel.
+     */
+    key: 'pre-execution'
+    /**
+     * The ID of the node with the pre-execution message to send.
+     */
+    nodeId: string
+  },
+]
+
+/**
+ * The data needed to send a message to the output panel.
+ */
+type TOutputDatum = TOutputData[number]
+
+/**
  * General WS events emitted by the server, or caused due to a change in the connection with the server.
  */
 export type TGenericServerEvents = {
@@ -293,6 +316,18 @@ export type TGenericServerEvents = {
        * The ID of the session that was destroyed.
        */
       sessionId: string
+    }
+  >
+  /**
+   * Occurs when a message is sent to the output panel.
+   */
+  'send-output': TConnectEvent<
+    'send-output',
+    {
+      /**
+       * The message to send to the force's output panel.
+       */
+      outputData: TCommonOutputJson
     }
   >
   /**
@@ -473,6 +508,14 @@ export type TResponseEvents = {
     TClientEvents['request-execute-action']
   >
   /**
+   * Occurs when the client has successfully sent a message to the output panel.
+   */
+  'output-sent': TResponseEvent<
+    'output-sent',
+    TOutputDatum,
+    TClientEvents['request-send-output']
+  >
+  /**
    * Occurs to send the requested, currently-joined session to the client.
    */
   'current-session': TResponseEvent<
@@ -642,6 +685,10 @@ export type TRequestEvents = {
       cheats?: Partial<TExecutionCheats>
     }
   >
+  /**
+   * Occurs when the client requests to send a pre-execution message to the output panel.
+   */
+  'request-send-output': TRequestEvent<'request-send-output', TOutputDatum>
   /**
    * Occurs when the client requests to fetch the currently joined session.
    */

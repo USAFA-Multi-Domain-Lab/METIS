@@ -177,7 +177,7 @@ export default abstract class User implements TCommonUser {
   public static isValidName = (
     name: TCommonUserJson['firstName'] | TCommonUserJson['lastName'],
   ): boolean => {
-    let nameExpression: RegExp = /^([a-zA-Z']{1,25})$/
+    let nameExpression: RegExp = /^([a-zA-Z']{1,50})$/
     let isValidName: boolean = nameExpression.test(name)
 
     return isValidName
