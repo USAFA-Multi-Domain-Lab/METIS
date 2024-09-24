@@ -997,8 +997,8 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     event: TClientEvents['request-execute-action'],
   ): Promise<void> => {
     // Gather data.
-    const { effectsEnabled } = this.config
-    let { environmentContextProvider } = this
+    let { environmentContextProvider, config } = this
+    const { effectsEnabled, infiniteResources } = config
     let { connection } = member
     let { actionId, cheats = {} } = event.data
     let { zeroCost } = cheats
@@ -1064,7 +1064,11 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     // If the participant does not have enough
     // resources to execute the action, then
     // emit an error.
-    if (action.force.resourcesRemaining < action.resourceCost && !zeroCost) {
+    if (
+      action.force.resourcesRemaining < action.resourceCost &&
+      !zeroCost &&
+      !infiniteResources
+    ) {
       return connection.emitError(
         new ServerEmittedError(
           ServerEmittedError.CODE_ACTION_INSUFFICIENT_RESOURCES,
@@ -1078,6 +1082,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     try {
       // Execute the action, awaiting result.
       let outcome = await action.execute({
+        sessionConfig: config,
         cheats,
         onInit: (execution: ServerActionExecution) => {
           // Construct payload for action execution
