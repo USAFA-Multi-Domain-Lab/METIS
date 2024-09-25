@@ -44,6 +44,10 @@ const routerMap: TMetisRouterMap = (
     // If no login information is found,
     // close the connection.
     if (login === undefined) {
+      ClientConnection.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_NOT_LOGGED_IN),
+        socket,
+      )
       return socket.close()
     }
 
@@ -147,6 +151,9 @@ const routerMap: TMetisRouterMap = (
         }
       }
     })
+
+    // Emit an open event to the client.
+    connection.emit('authenticated', { data: {} })
   }
 
   /* ---------------------------- ROUTES --------------------------------- */

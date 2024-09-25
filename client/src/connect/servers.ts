@@ -161,7 +161,6 @@ export default class ServerConnection
    */
   private prepareSocket(): void {
     // Add event listeners.
-    this.socket.addEventListener('open', this.onOpen)
     this.socket.addEventListener('close', this.onClose)
     this.socket.addEventListener('message', this.onMessage)
     this.socket.addEventListener('error', this.onSocketError)
@@ -170,7 +169,10 @@ export default class ServerConnection
   /**
    * Attempts to reconnect after a connection loss.
    */
-  public reconnect(): void {
+  private reconnect(): void {
+    // If the connection shouldn't be open, return.
+    if (!this.shouldBeConnected) return
+
     // Create new socket connection.
     this.socket = this.createSocket({ disconnectExisting: true })
 
@@ -269,6 +271,35 @@ export default class ServerConnection
    * Adds default listeners for the server connection.
    */
   protected addDefaultListeners(): void {
+    this.addEventListener('authenticated', () => {
+      // Gather details.
+      let wasOpenedBefore: boolean = this._lastOpened !== null
+
+      // Update `lastOpened` and status.
+      this._lastOpened = Date.now()
+      this._status = 'open'
+
+      // Determine method.
+      let determinedMethod: TServerMethod = wasOpenedBefore
+        ? 'reconnection-success'
+        : 'connection-success'
+
+      // Loop through listeners.
+      for (let [method, listener] of this.listeners) {
+        // Call any with the method 'open'.
+        if (method === determinedMethod) {
+          listener({ method })
+        }
+        // Call any handlers that match the 'connection-change'
+        // method.
+        if (method === 'connection-change') {
+          listener({
+            method: 'connection-change',
+            status: this.status,
+          })
+        }
+      }
+    })
     this.addEventListener('connection-success', () => {
       // Log event.
       console.log('Server connection opened.')
@@ -303,6 +334,11 @@ export default class ServerConnection
       setTimeout(() => this.reconnect(), ServerConnection.RECONNECT_COOLDOWN)
     })
     this.addEventListener('error', ({ code, message }) => {
+      if (code === ServerEmittedError.CODE_NOT_LOGGED_IN) {
+        console.log(this.shouldBeConnected, this._status)
+        this.shouldBeConnected = false
+        this._status = 'closed'
+      }
       console.error(`Server Connection Error (${code}):\n${message}`)
     })
   }
@@ -446,43 +482,6 @@ export default class ServerConnection
         listener({ method: 'activity' })
       }
     }
-  }
-
-  /**
-   * Handler for when the web socket connection is opened. Calls all "open" listeners stored in "listeners".
-   * @param {Event} event The open event.
-   */
-  private onOpen = (event: Event): void => {
-    // Gather details.
-    let wasOpenedBefore: boolean = this._lastOpened !== null
-
-    // Update `lastOpened` and status.
-    this._lastOpened = Date.now()
-    this._status = 'open'
-
-    // Determine method.
-    let determinedMethod: TServerMethod = wasOpenedBefore
-      ? 'reconnection-success'
-      : 'connection-success'
-
-    // Loop through listeners.
-    for (let [method, listener] of this.listeners) {
-      // Call any with the method 'open'.
-      if (method === determinedMethod) {
-        listener({ method })
-      }
-      // Call any handlers that match the 'connection-change'
-      // method.
-      if (method === 'connection-change') {
-        listener({
-          method: 'connection-change',
-          status: this.status,
-        })
-      }
-    }
-
-    // Handle activity.
-    this.onActivity()
   }
 
   /**

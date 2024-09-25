@@ -94,6 +94,11 @@ export class ServerEmittedError extends WSEmittedError {
    */
   public static readonly CODE_MESSAGE_RATE_LIMIT: number = 10003
   /**
+   * Code for a client attempting to connect to the server without being
+   * logged in to METIS.
+   */
+  public static readonly CODE_NOT_LOGGED_IN: number = 10004
+  /**
    * Code for a client requesting to join a session that cannot be found.
    */
   public static readonly CODE_SESSION_NOT_FOUND: number = 20000
@@ -170,6 +175,10 @@ export class ServerEmittedError extends WSEmittedError {
     [ServerEmittedError.CODE_INVALID_DATA]: 'Data sent was invalid.',
     [ServerEmittedError.CODE_DUPLICATE_CLIENT]:
       'You are already connected via another tab.',
+    [ServerEmittedError.CODE_MESSAGE_RATE_LIMIT]:
+      'Message rate limit exceeded. Please try again later.',
+    [ServerEmittedError.CODE_NOT_LOGGED_IN]:
+      'You must be logged in to METIS to connect.',
     [ServerEmittedError.CODE_SESSION_NOT_FOUND]: 'Session not found.',
     [ServerEmittedError.CODE_ALREADY_IN_SESSION]:
       'You are already in this session.',

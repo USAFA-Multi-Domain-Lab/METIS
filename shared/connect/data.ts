@@ -247,6 +247,10 @@ export type TGenericServerEvents = {
    */
   'activity': TConnectEvent<'activity'>
   /**
+   * Occurs when the client connection is authenticated.
+   */
+  'authenticated': TConnectEvent<'authenticated'>
+  /**
    * Occurs when the client is successful in its initial connection to the server.
    */
   'connection-success': TConnectEvent<'connection-success'>

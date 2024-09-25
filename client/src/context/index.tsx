@@ -13,7 +13,7 @@ import ClientLogin from 'src/logins'
 import Notification from 'src/notifications'
 import ClientUser from 'src/users'
 import { v4 as generateHash } from 'uuid'
-import { TResponseEvents } from '../../../shared/connect/data'
+import { TResponseEvents, TServerEvents } from '../../../shared/connect/data'
 import { ServerEmittedError } from '../../../shared/connect/errors'
 import { TLogin } from '../../../shared/logins'
 import { TExecutionCheats } from '../../../shared/missions/actions/executions'
@@ -185,6 +185,12 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
   const onMemberBanned = useRef<(event: TResponseEvents['banned']) => void>(
     () => {},
   )
+  /**
+   * Handles an error emitted by the server.
+   */
+  const onServerError = useRef<(event: TServerEvents['error']) => void>(
+    () => {},
+  )
 
   /* -- LOCAL FUNCTIONS -- */
 
@@ -202,8 +208,8 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
 
   /* -- HOOKS -- */
 
-  // This effect updates the on member kicked and on member banned
-  // callbacks to update when the login changes.
+  // This effect updates varioius event listener functions,
+  // giving them access to the current context.
   useEffect(() => {
     onMemberKicked.current = (event: TResponseEvents['kicked']) => {
       const { handleError } = context.actions
@@ -218,6 +224,30 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
 
       if (login?.user._id === event.data.userId) {
         handleError('You have been banned from the session.')
+      }
+    }
+
+    onServerError.current = ({ code, message }) => {
+      const { handleError } = context.actions
+
+      switch (code) {
+        case ServerEmittedError.CODE_NOT_LOGGED_IN:
+          if (login !== null) {
+            setLogin(null)
+            context.actions.navigateTo('AuthPage', {})
+            handleError({
+              message:
+                'You are no longer logged in. This is most likely due to the server restarting.',
+              notifyMethod: 'bubble',
+            })
+          }
+          break
+        case ServerEmittedError.CODE_DUPLICATE_CLIENT:
+          handleError(message)
+          break
+        case ServerEmittedError.CODE_MESSAGE_RATE_LIMIT:
+          handleError(message)
+          break
       }
     }
   }, [login])
@@ -397,38 +427,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
             'session-destroyed': () => {
               handleError('The session you were in has been deleted.')
             },
-            'error': ({ code, message }) => {
-              if (code === ServerEmittedError.CODE_DUPLICATE_CLIENT) {
-                handleError({
-                  message,
-                  // solutions: [
-                  //   {
-                  //     text: 'Force Connect',
-                  //     onClick: () => {
-                  //       this.confirm(
-                  //         'Force connecting will disconnect the current connection to the server. Any unsaved changes may be lost. Do you wish to proceed?',
-                  //         async (concludeAction) => {
-                  //           let server: ServerConnection =
-                  //             await this.connectToServer({
-                  //               disconnectExisting: true,
-                  //             })
-                  //           concludeAction()
-                  //           resolve(server)
-                  //         },
-                  //         {
-                  //           buttonConfirmText: 'Proceed',
-                  //           pendingMessageUponConfirm: 'Force connecting...',
-                  //         },
-                  //       )
-                  //     },
-                  //     componentKey: 'force-connect',
-                  //   },
-                  // ],
-                })
-              } else if (code === ServerEmittedError.CODE_MESSAGE_RATE_LIMIT) {
-                handleError({ message })
-              }
-            },
+            'error': (event) => onServerError.current(event),
           },
           disconnectExisting: options.disconnectExisting ?? false,
         })

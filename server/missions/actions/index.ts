@@ -112,8 +112,6 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
         this.force.resourcesRemaining -= this.resourceCost
       }
 
-      console.log('Resource remaining:\t', this.force.resourcesRemaining)
-
       // Set timeout for when the execution
       // is completed.
       setTimeout(() => {
