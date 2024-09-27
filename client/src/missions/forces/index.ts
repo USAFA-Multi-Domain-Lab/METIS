@@ -20,13 +20,7 @@ import { TWithKey } from '../../../../shared/toolbox/objects'
 import { Vector2D } from '../../../../shared/toolbox/space'
 import ClientMissionAction from '../actions'
 import ClientMissionNode from '../nodes'
-import { ClientOutput } from './outputs'
-import ClientCustomOutput from './outputs/custom'
-import ClientExecutionFailedOutput from './outputs/execution-failed'
-import ClientExecutionStartedOutput from './outputs/execution-started'
-import ClientExecutionSucceededOutput from './outputs/execution-succeeded'
-import ClientIntroOutput from './outputs/intro'
-import ClientPreExecutionOutput from './outputs/pre-execution'
+import ClientOutput from './outputs'
 
 /**
  * Class for managing mission prototypes on the client.
@@ -451,40 +445,11 @@ export default class ClientMissionForce
 
   // Implemented
   public storeOutput(outputJson: TCommonOutputJson): void {
-    switch (outputJson.type) {
-      case 'pre-execution':
-        if (!!outputJson.message) {
-          this._outputs.push(new ClientPreExecutionOutput(outputJson))
-        }
-        break
-      case 'execution-started':
-        if (
-          !!outputJson.processTime &&
-          !!outputJson.resourceCost &&
-          !!outputJson.successChance
-        ) {
-          this._outputs.push(new ClientExecutionStartedOutput(this, outputJson))
-        }
-        break
-      case 'execution-succeeded':
-        if (!!outputJson.message) {
-          this._outputs.push(new ClientExecutionSucceededOutput(outputJson))
-        }
-        break
-      case 'execution-failed':
-        if (!!outputJson.message) {
-          this._outputs.push(new ClientExecutionFailedOutput(outputJson))
-        }
-        break
-      case 'custom':
-        if (!!outputJson.message) {
-          this._outputs.push(new ClientCustomOutput(outputJson))
-        }
-        break
-    }
+    // Create a new output object and insert it into the outputs array.
+    let newOutput = new ClientOutput(this, outputJson)
+    let index = this.findInsertionIndex(newOutput)
+    this._outputs.splice(index, 0, newOutput)
 
-    // Sort the outputs by time.
-    this._outputs.sort((a, b) => a.time - b.time)
     // Emit an output event.
     this.emitEvent('output')
   }
@@ -494,22 +459,15 @@ export default class ClientMissionForce
    * @param outputs The output data to parse.
    */
   private parseOutputs(outputs: TCommonOutputJson[]): ClientOutput[] {
-    return outputs.map((outputJson: TCommonOutputJson) => {
-      switch (outputJson.type) {
-        case 'intro':
-          return new ClientIntroOutput(outputJson)
-        case 'pre-execution':
-          return new ClientPreExecutionOutput(outputJson)
-        case 'execution-started':
-          return new ClientExecutionStartedOutput(this, outputJson)
-        case 'execution-succeeded':
-          return new ClientExecutionSucceededOutput(outputJson)
-        case 'execution-failed':
-          return new ClientExecutionFailedOutput(outputJson)
-        case 'custom':
-          return new ClientCustomOutput(outputJson)
-      }
-    })
+    return outputs.map((outputJson) => new ClientOutput(this, outputJson))
+  }
+
+  /**
+   * Filter the outputs based on the conditions of the output and the current user.
+   * @returns The filtered outputs.
+   */
+  protected filterOutputs(): ClientOutput[] {
+    return this.outputs
   }
 }
 

@@ -1,17 +1,18 @@
 import { useState } from 'react'
 import ClientMissionForce from 'src/missions/forces'
+import ClientMissionNode from 'src/missions/nodes'
 import { useEventListener } from 'src/toolbox/hooks'
-import Custom from './Custom'
-import ExecutionDone from './ExecutionDone'
 import ExecutionStarted from './ExecutionStarted'
 import './index.scss'
-import Intro from './Intro'
-import PreExecution from './PreExecution'
+import Output from './Output'
 
 /**
  * A panel for displaying messages in the session.
  */
-export default function OutputPanel({ force }: TOutputPanel_P): JSX.Element {
+export default function OutputPanel({
+  force,
+  selectNode,
+}: TOutputPanel_P): JSX.Element {
   /* -- STATE -- */
   const [outputs, setOutputs] = useState<ClientMissionForce['outputs']>(
     force.outputs,
@@ -29,52 +30,25 @@ export default function OutputPanel({ force }: TOutputPanel_P): JSX.Element {
     <div className='OutputPanel'>
       <div className='BorderBox'>
         {outputs.map((output) => {
-          switch (output.type) {
-            case 'intro':
-              return (
-                <Intro
-                  output={output}
-                  forceName={force.name}
-                  key={`output-${output._id}_type-${output.type}_time-${output.time}`}
-                />
-              )
-            case 'pre-execution':
-              return (
-                <PreExecution
-                  output={output}
-                  key={`output-${output._id}_type-${output.type}_time-${output.time}`}
-                />
-              )
+          switch (output.key) {
             case 'execution-started':
               return (
                 <ExecutionStarted
+                  force={force}
                   output={output}
-                  key={`output-${output._id}_type-${output.type}_time-${output.time}`}
-                />
-              )
-            case 'execution-succeeded':
-              return (
-                <ExecutionDone
-                  output={output}
-                  key={`output-${output._id}_type-${output.type}_time-${output.time}`}
-                />
-              )
-            case 'execution-failed':
-              return (
-                <ExecutionDone
-                  output={output}
-                  key={`output-${output._id}_type-${output.type}_time-${output.time}`}
-                />
-              )
-            case 'custom':
-              return (
-                <Custom
-                  output={output}
-                  key={`output-${output._id}_type-${output.type}_time-${output.time}`}
+                  selectNode={selectNode}
+                  key={`output-${output._id}_time-${output.time}`}
                 />
               )
             default:
-              return null
+              return (
+                <Output
+                  force={force}
+                  output={output}
+                  selectNode={selectNode}
+                  key={`output-${output._id}_time-${output.time}`}
+                />
+              )
           }
         })}
       </div>
@@ -92,4 +66,9 @@ type TOutputPanel_P = {
    * The force to render the message(s) for.
    */
   force: ClientMissionForce
+  /**
+   * Selects a node.
+   * @param node The node to select.
+   */
+  selectNode: (node: ClientMissionNode | null) => void
 }

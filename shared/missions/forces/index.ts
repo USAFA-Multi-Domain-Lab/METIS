@@ -1,4 +1,5 @@
 import { AnyObject } from 'metis/toolbox/objects'
+import { TCommonUser } from 'metis/users'
 import Mission, { TCommonMission, TCommonMissionTypes, TMission } from '..'
 import context from '../../context'
 import StringToolbox from '../../toolbox/strings'
@@ -133,7 +134,11 @@ export abstract class MissionForce<
 
   // Implemented
   public toJson(options: TForceJsonOptions = {}): TMissionForceJson {
-    let { revealedOnly = false, includeSessionData = false } = options
+    let {
+      revealedOnly = false,
+      includeSessionData = false,
+      userId = undefined,
+    } = options
 
     let json: TMissionForceJson = {
       _id: this._id,
@@ -147,7 +152,8 @@ export abstract class MissionForce<
     // flag was set.
     if (includeSessionData) {
       json.resourcesRemaining = this.resourcesRemaining
-      json.outputs = this.outputs.map((output) => output.toJson())
+      let filteredOutputs = this.filterOutputs(userId)
+      json.outputs = filteredOutputs.map((output) => output.toJson())
     }
 
     return json
@@ -189,6 +195,13 @@ export abstract class MissionForce<
     data: Partial<TMissionNodeJson>,
     options?: TMissionNodeOptions,
   ): TNode<T>
+
+  /**
+   * Filter the outputs based on the conditions of the output and the current user.
+   * @param userId The ID of the user for which to filter the outputs.
+   * @returns The filtered outputs.
+   */
+  protected abstract filterOutputs(userId?: TCommonUser['_id']): TOutput<T>[]
 
   // Implemented
   public abstract storeOutput(output: TCommonOutput): void
@@ -232,6 +245,40 @@ export abstract class MissionForce<
       }
       throw error
     }
+  }
+
+  /**
+   * Finds the index where the output should be inserted based on the time.
+   * @param newOutput The new output to insert.
+   * @returns The index where the output should be inserted.
+   */
+  protected findInsertionIndex(newOutput: TOutput<T>): number {
+    // The low and high bounds for the binary search.
+    let low: number = 0
+    let high: number = this._outputs.length
+
+    // While the low bound is less than the high bound,
+    // find the middle index and compare the time of the
+    // current output to the new output.
+    while (low < high) {
+      // Find the middle index.
+      let mid: number = Math.floor((low + high) / 2)
+      // Get the current output.
+      let currentOutput = this._outputs[mid]
+
+      // Compare the time of the current output to the new output.
+      if (currentOutput.time < newOutput.time) {
+        // If the time of the current output is less than the new output,
+        // set the low bound to the middle index plus one.
+        low = mid + 1
+      } else {
+        // Otherwise, set the high bound to the middle index.
+        high = mid
+      }
+    }
+
+    // Return the low bound.
+    return low
   }
 
   /**
@@ -472,6 +519,11 @@ export type TForceJsonOptions = {
    * @default false
    */
   includeSessionData?: boolean
+  /**
+   * The ID of the user for which to include session data.
+   * @default undefined
+   */
+  userId?: TCommonUser['_id']
 }
 
 /**

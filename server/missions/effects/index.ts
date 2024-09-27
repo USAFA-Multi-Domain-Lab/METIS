@@ -65,6 +65,7 @@ export default class ServerEffect extends Effect<TServerMissionTypes> {
     return {
       _id: this._id,
       name: this.name,
+      forceName: this.force.name,
       args: this.argsToTargetEnvContext(this.args),
     }
   }

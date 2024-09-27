@@ -1,4 +1,5 @@
 import User, { TCommonUserJson, TUserOptions } from 'metis/users'
+import { TTargetEnvContextUser } from '../target-environments/context-provider'
 
 /**
  * Class for managing users on the server.
@@ -17,6 +18,18 @@ export default class ServerUser extends User {
     let isValidPassword: boolean = passwordExpression.test(password)
 
     return isValidPassword
+  }
+
+  /**
+   * Extracts the necessary properties from the user to be used as a reference
+   * in a target environment.
+   * @returns The user's necessary properties.
+   */
+  public toTargetEnvContext(): TTargetEnvContextUser {
+    return {
+      _id: this._id,
+      username: this.username,
+    }
   }
 }
 

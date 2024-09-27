@@ -5,10 +5,10 @@ import {
 } from 'metis/missions/forces'
 import { TMissionNodeJson, TMissionNodeOptions } from 'metis/missions/nodes'
 import { TTargetEnvContextForce } from 'metis/server/target-environments/context-provider'
+import ServerUser from 'metis/server/users'
 import ServerMission, { TServerMissionTypes } from '..'
 import ServerMissionNode from '../nodes'
-import { ServerOutput } from './outputs'
-import ServerIntroOutput from './outputs/intro'
+import ServerOutput from './outputs'
 
 /**
  * Class for managing mission prototypes on the client.
@@ -27,12 +27,6 @@ export default class ServerMissionForce extends MissionForce<TServerMissionTypes
     options: TServerMissionForceOptions = {},
   ) {
     super(mission, data, options)
-
-    // Parse options.
-    let { sendIntroMessage = false } = options
-
-    // Send the intro message if the flag is set.
-    if (sendIntroMessage) this.sendIntroMessage()
   }
 
   // Implemented
@@ -75,17 +69,34 @@ export default class ServerMissionForce extends MissionForce<TServerMissionTypes
 
   // Implemented
   public storeOutput(output: ServerOutput): void {
-    // Add the output to the force's output list.
-    this._outputs.push(output)
-    // Sort the outputs by time.
-    this._outputs.sort((a, b) => a.time - b.time)
+    let index = this.findInsertionIndex(output)
+    this._outputs.splice(index, 0, output)
   }
 
   /**
    * Sends the intro message to the force's output panel.
    */
-  private sendIntroMessage(): void {
-    this.storeOutput(new ServerIntroOutput(this.mission, this))
+  public sendIntroMessage(): void {
+    // Send the intro message if it exists and isn't an empty string.
+    if (!!this.mission.introMessage) {
+      this.storeOutput(
+        new ServerOutput({
+          key: 'intro',
+          forceId: this._id,
+          prefix: `${this.name.replaceAll(' ', '-')}:`,
+          message: this.mission.introMessage,
+        }),
+      )
+    }
+  }
+
+  // Implemented
+  protected filterOutputs(userId?: ServerUser['_id']): ServerOutput[] {
+    return this.outputs.filter(
+      (output) =>
+        output.broadcastType === 'force' ||
+        (output.broadcastType === 'user' && output.userId === userId),
+    )
   }
 }
 
@@ -94,9 +105,4 @@ export default class ServerMissionForce extends MissionForce<TServerMissionTypes
 /**
  * Options for creating a ServerMissionForce object.
  */
-export type TServerMissionForceOptions = TMissionForceOptions & {
-  /**
-   * Whether to send the intro message to the output panel.
-   */
-  sendIntroMessage?: boolean
-}
+export type TServerMissionForceOptions = TMissionForceOptions & {}

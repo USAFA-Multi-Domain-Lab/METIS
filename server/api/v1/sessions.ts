@@ -35,6 +35,7 @@ const routerMap = (
       effectsEnabled: request.body.effectsEnabled,
     }
     let ownerId: string = response.locals.user._id
+    let ownerUsername: string = response.locals.user.username
 
     // Query for mission.
     MissionModel.findOne({ _id: missionId })
@@ -57,7 +58,6 @@ const routerMap = (
           // Create mission.
           let mission: ServerMission = new ServerMission(missionData, {
             populateTargets: sessionConfig.effectsEnabled,
-            sendIntroMessage: true,
           })
           // Launch the session.
           let session: SessionServer = SessionServer.launch(

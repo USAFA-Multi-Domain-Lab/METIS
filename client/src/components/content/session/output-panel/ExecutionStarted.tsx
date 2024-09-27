@@ -1,24 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
-import ClientExecutionStartedOutput from 'src/missions/forces/outputs/execution-started'
+import ClientMissionAction from 'src/missions/actions'
+import ClientMissionForce from 'src/missions/forces'
+import ClientOutput from 'src/missions/forces/outputs'
+import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { useMountHandler } from 'src/toolbox/hooks'
 import RichTextOutputBox from '../../communication/RichTextOutputBox'
+import Tooltip from '../../communication/Tooltip'
 
 /**
  * Renders the message for when an action is started.
  */
 export default function ExecutionStarted({
-  output: {
-    _id: outputId,
-    time,
-    username,
-    nodeName,
-    actionName,
-    processTime,
-    successChance,
-    resourceCost,
-    execution,
-  },
+  force,
+  output: { _id: outputId, nodeId, actionId, timeStamp, prefix, execution },
+  selectNode,
 }: TExecutionStarted_P): JSX.Element | null {
   /* -- REFS -- */
   const outputRef = useRef<HTMLDivElement>(null)
@@ -27,18 +23,14 @@ export default function ExecutionStarted({
   const [timeRemaining, setTimeRemaining] = useState<string>(
     execution?.formatTimeRemaining(true) ?? '00:00:00',
   )
+  const [node] = useState<ClientMissionNode | null>(
+    force.getNode(nodeId) ?? null,
+  )
+  const [action] = useState<ClientMissionAction | null>(
+    node?.actions.get(actionId) ?? null,
+  )
 
   /* -- COMPUTED -- */
-
-  /**
-   * The time stamp for the message.
-   */
-  const timeStamp: string = compute(() =>
-    new Intl.DateTimeFormat('en-GB', {
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(time),
-  )
 
   /**
    * The label used for the time remaining list item.
@@ -54,16 +46,34 @@ export default function ExecutionStarted({
   /**
    * The message to display for the execution.
    */
-  const message: string = compute(
-    () =>
-      `<p>Started executing ${nodeName}.</p>` +
-      `<ul>` +
-      `<li><u>Action Selected:</u> ${actionName}</li>` +
-      `<li><u>Time to Execute:</u> ${processTime / 1000} second(s)</li>` +
-      `<li><u>Probability of Success:</u> ${successChance * 100}%</li>` +
-      `<li><u>Resource Cost:</u> ${resourceCost} resource(s)</li>` +
-      `<li><u>${timeRemainingLabel}</u> ${timeRemaining}</li>` +
-      `</ul>`,
+  const message: string = compute(() =>
+    node && action
+      ? `<p>Started executing on ${node.name}.</p>` +
+        `<ul>` +
+        `<li><u>Action Selected:</u> ${action.name}</li>` +
+        `<li><u>Time to Execute:</u> ${
+          action.processTime / 1000
+        } second(s)</li>` +
+        `<li><u>Probability of Success:</u> ${
+          action.successChance * 100
+        }%</li>` +
+        `<li><u>Resource Cost:</u> ${action.resourceCost} resource(s)</li>` +
+        `<li><u>${timeRemainingLabel}</u> ${timeRemaining}</li>` +
+        `</ul>`
+      : '',
+  )
+
+  /**
+   * The JSX used to locate the node.
+   */
+  const locateNodeJsx: JSX.Element | null = compute(() =>
+    node ? (
+      <div className='Location' onClick={() => selectNode(node)}>
+        <Tooltip
+          description={`Generated as a result of interacting with the node called "${node.name}."`}
+        />
+      </div>
+    ) : null,
   )
 
   /* -- EFFECTS -- */
@@ -113,20 +123,24 @@ export default function ExecutionStarted({
 
   /* -- RENDER -- */
 
-  return (
-    <div className='Text' ref={outputRef}>
-      <span className='LineCursor'>
-        [{timeStamp}] {username}@{nodeName.replaceAll(' ', '-')}:{' '}
-      </span>
-      <RichTextOutputBox
-        text={message}
-        options={{
-          // This will add the class name to all list items used with this message.
-          listItemClassName,
-        }}
-      />
-    </div>
-  )
+  if (node && action && !!message) {
+    return (
+      <div className='Text' ref={outputRef}>
+        <span className='LineCursor'>
+          {locateNodeJsx} [{timeStamp}] {prefix}{' '}
+        </span>
+        <RichTextOutputBox
+          text={message}
+          options={{
+            // This will add the class name to all list items used with this message.
+            listItemClassName,
+          }}
+        />
+      </div>
+    )
+  } else {
+    return null
+  }
 }
 
 /* ---------------------------- TYPES FOR EXECUTION STARTED ---------------------------- */
@@ -136,7 +150,16 @@ export default function ExecutionStarted({
  */
 type TExecutionStarted_P = {
   /**
+   * The force where the output panel belongs.
+   */
+  force: ClientMissionForce
+  /**
    * The output for the force's output panel.
    */
-  output: ClientExecutionStartedOutput
+  output: ClientOutput
+  /**
+   * Selects a node.
+   * @param node The node to select.
+   */
+  selectNode: (node: ClientMissionNode | null) => void
 }

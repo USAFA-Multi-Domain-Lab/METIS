@@ -245,10 +245,12 @@ export default abstract class Target<
     name: 'Output Panel',
     description: '',
     script: async (context) => {
-      let { forceMetaData, message } = context.effect.args
+      // Extract the effect and its arguments from the context.
+      let { effect, user } = context
+      let { forceMetaData, message } = effect.args
 
       // Output the message to the force.
-      context.sendOutput(forceMetaData.forceId, message, context.username)
+      context.sendOutput(forceMetaData.forceId, message, effect, user)
     },
     args: [
       {

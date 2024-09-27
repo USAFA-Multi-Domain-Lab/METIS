@@ -28,7 +28,7 @@ import ClientActionExecution from './actions/executions'
 import ClientActionOutcome from './actions/outcomes'
 import { ClientEffect } from './effects'
 import ClientMissionForce, { TClientMissionForceOptions } from './forces'
-import { ClientOutput } from './forces/outputs'
+import ClientOutput from './forces/outputs'
 import ClientMissionNode from './nodes'
 import ClientMissionPrototype, { TPrototypeRelation } from './nodes/prototypes'
 import MissionTransformation from './transformations'
@@ -242,16 +242,7 @@ export default class ClientMission
     super(data, options)
 
     // Parse client-specific options.
-    let {
-      existsOnServer = false,
-      populateTargets = false,
-      nonRevealedDisplayMode = 'hide',
-    } = options
-
-    // Parse force data.
-    this.importForces(data.forces ?? ClientMission.DEFAULT_PROPERTIES.forces, {
-      populateTargets,
-    })
+    let { existsOnServer = false, nonRevealedDisplayMode = 'hide' } = options
 
     // Initialize client-specific properties.
     this._existsOnServer = existsOnServer

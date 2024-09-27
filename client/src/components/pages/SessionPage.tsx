@@ -430,7 +430,17 @@ export default function SessionPage({
               switch (rightPanelTab) {
                 case 'output':
                   return selectedForce ? (
-                    <OutputPanel force={selectedForce} />
+                    <OutputPanel
+                      force={selectedForce}
+                      selectNode={(node: ClientMissionNode | null) => {
+                        if (node === null) {
+                          notify(
+                            'This node cannot be accessed from the current force.',
+                          )
+                        }
+                        setNodeToExecute(node)
+                      }}
+                    />
                   ) : null
                 case 'users':
                   return (

@@ -94,17 +94,25 @@ export default abstract class Mission<
     this.forces = []
     this.root = this.initializeRoot()
 
+    // Parse options.
+    let { populateTargets = false } = options
+
     // Import node structure into the mission.
     this.importStructure(
       data.nodeStructure ?? Mission.DEFAULT_PROPERTIES.nodeStructure,
     )
+
+    // Parse force data.
+    this.importForces(data.forces ?? Mission.DEFAULT_PROPERTIES.forces, {
+      populateTargets,
+    })
   }
 
   // Implemented
   public toJson(
-    options: TMissionJsonOptions = { exportType: 'standard', includeId: false },
+    options: TMissionJsonOptions = { exportType: 'standard' },
   ): TCommonMissionJson {
-    let { includeId } = options
+    let { includeId = false } = options
 
     // Predefine limited JSON.
     let json: TCommonMissionJson = {
@@ -133,7 +141,11 @@ export default abstract class Mission<
         // If the force is found, include it in the export.
         if (force) {
           json.forces = [
-            force.toJson({ revealedOnly: true, includeSessionData: true }),
+            force.toJson({
+              revealedOnly: true,
+              includeSessionData: true,
+              userId: options.userId,
+            }),
           ]
           // Set the structure to revealed structure of the force.
           json.nodeStructure = force.revealedStructure
@@ -144,7 +156,10 @@ export default abstract class Mission<
         // Include all data.
         json.nodeStructure = Mission.determineNodeStructure(this.root)
         json.forces = this.forces.map((force) =>
-          force.toJson({ includeSessionData: true }),
+          force.toJson({
+            includeSessionData: true,
+            userId: options.userId,
+          }),
         )
         break
     }
@@ -628,6 +643,10 @@ export type TMissionJsonSessionForceSpecificOptions =
      * The ID of the force to include in the export.
      */
     forceId: TCommonMissionForce['_id']
+    /**
+     * The user's ID to include in the export.
+     */
+    userId: TCommonUser['_id']
   }
 
 /**
@@ -639,6 +658,10 @@ export type TMissionJsonSessionCompleteOptions = TMissionJsonBaseOptions & {
    * This export will include all data.
    */
   exportType: 'session-complete'
+  /**
+   * The user's ID to include in the export.
+   */
+  userId: TCommonUser['_id']
 }
 
 /**

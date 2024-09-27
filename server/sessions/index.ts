@@ -1,6 +1,7 @@
 import { TClientEvents, TServerEvents, TServerMethod } from 'metis/connect/data'
 import { ServerEmittedError } from 'metis/connect/errors'
 import { TCommonMissionJson, TMissionJsonOptions } from 'metis/missions'
+import { TCommonOutputJson } from 'metis/missions/forces/outputs'
 import ServerMission, { TServerMissionTypes } from 'metis/server/missions'
 import ServerMissionAction from 'metis/server/missions/actions'
 import ServerMissionNode from 'metis/server/missions/nodes'
@@ -18,12 +19,9 @@ import ClientConnection from '../connect/clients'
 import { plcApiLogger } from '../logging'
 import ServerActionExecution from '../missions/actions/executions'
 import ServerMissionForce from '../missions/forces'
-import { ServerOutput } from '../missions/forces/outputs'
-import ServerExecutionFailedOutput from '../missions/forces/outputs/execution-failed'
-import ServerExecutionStartedOutput from '../missions/forces/outputs/execution-started'
-import ServerExecutionSucceededOutput from '../missions/forces/outputs/execution-succeeded'
-import ServerPreExecutionOutput from '../missions/forces/outputs/pre-execution'
+import ServerOutput from '../missions/forces/outputs'
 import EnvironmentContextProvider from '../target-environments/context-provider'
+import ServerUser from '../users'
 import ServerSessionMember from './members'
 
 /**
@@ -119,6 +117,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
         missionOptions = {
           exportType: 'session-force-specific',
           forceId,
+          userId: requester.userId,
         }
       }
 
@@ -128,6 +127,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
       if (requester.isAuthorized('completeVisibility')) {
         missionOptions = {
           exportType: 'session-complete',
+          userId: requester.userId,
         }
       }
 
@@ -528,6 +528,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
         participantForceCache[forceId] = this.mission.toJson({
           exportType: 'session-force-specific',
           forceId,
+          userId: participant.userId,
         })
       }
 
@@ -545,6 +546,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     // Get observer export.
     let observerExport = this.mission.toJson({
       exportType: 'session-complete',
+      userId: member.userId,
     })
 
     // Emit an event to all observers that the session has
@@ -562,6 +564,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     // Get manager export.
     let managerExport = this.mission.toJson({
       exportType: 'session-complete',
+      userId: member.userId,
     })
 
     // Emit an event to all managers that the session has
@@ -1101,10 +1104,22 @@ export default class SessionServer extends Session<TServerMissionTypes> {
             member.emit('action-execution-initiated', initiationPayload)
           }
 
+          // Create a new output JSON object.
+          let outputJson: Partial<TCommonOutputJson> = {
+            key: 'execution-started',
+            forceId: action!.force._id,
+            nodeId: action!.node._id,
+            actionId: action!._id,
+            prefix: `${member.user.username.replaceAll(' ', '-')}:`,
+          }
+          // Create a new output object.
+          let output = new ServerOutput(outputJson, {
+            userId: member.userId,
+            execution: execution,
+            action: action!,
+          })
           // Send the output to the force.
-          this.sendOutput(
-            new ServerExecutionStartedOutput(action!, member.user, execution),
-          )
+          this.sendOutput(output)
         },
       })
 
@@ -1125,8 +1140,20 @@ export default class SessionServer extends Session<TServerMissionTypes> {
           (node) => node.toJson({ includeSessionData: true }),
         )
 
+        // Create a new output JSON object.
+        let outputJson: Partial<TCommonOutputJson> = {
+          key: 'execution-succeeded',
+          forceId: action.force._id,
+          nodeId: action.node._id,
+          prefix: `${member.user.username.replaceAll(' ', '-')}:`,
+          message: action.postExecutionSuccessText,
+        }
+        // Create a new output object.
+        let output = new ServerOutput(outputJson, {
+          userId: member.userId,
+        })
         // Send the output to the force.
-        this.sendOutput(new ServerExecutionSucceededOutput(action, member.user))
+        this.sendOutput(output)
 
         // If the effects are enabled...
         if (effectsEnabled) {
@@ -1134,10 +1161,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
           action.effects.forEach(async (effect) => {
             try {
               // Apply the effect to the target.
-              await environmentContextProvider.applyEffect(
-                effect,
-                member.username,
-              )
+              await environmentContextProvider.applyEffect(effect, member.user)
 
               // todo: implement internal effects feedback
               // participant.emit('effect-successful', {
@@ -1157,8 +1181,20 @@ export default class SessionServer extends Session<TServerMissionTypes> {
       }
       // Otherwise, if the action failed, then...
       else {
+        // Create a new output JSON object.
+        let outputJson: Partial<TCommonOutputJson> = {
+          key: 'execution-failed',
+          forceId: action.force._id,
+          nodeId: action.node._id,
+          prefix: `${member.user.username.replaceAll(' ', '-')}:`,
+          message: action.postExecutionFailureText,
+        }
+        // Create a new output object.
+        let output = new ServerOutput(outputJson, {
+          userId: member.userId,
+        })
         // Send the output to the force.
-        this.sendOutput(new ServerExecutionFailedOutput(action, member.user))
+        this.sendOutput(output)
       }
 
       // Emit the action execution completed
@@ -1249,8 +1285,20 @@ export default class SessionServer extends Session<TServerMissionTypes> {
             return
           }
 
+          // Create a new output JSON object.
+          let outputJson: Partial<TCommonOutputJson> = {
+            key: 'pre-execution',
+            forceId: node.force._id,
+            nodeId: node._id,
+            prefix: `${member.user.username.replaceAll(' ', '-')}:`,
+            message: node.preExecutionText,
+          }
+          // Create a new output object.
+          let output = new ServerOutput(outputJson, {
+            userId: member.userId,
+          })
           // Send the output to the force.
-          this.sendOutput(new ServerPreExecutionOutput(node, member.user))
+          this.sendOutput(output)
 
           // Emit an event to the participant that the
           // pre-execution message was sent.
@@ -1432,7 +1480,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
    */
   public sendOutput = (output: ServerOutput) => {
     // Extract data.
-    let { type, forceId } = output
+    let { key, forceId } = output
 
     // Find the force given the ID.
     let force = this.mission.getForce(forceId)
@@ -1440,16 +1488,44 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     // If the force is undefined, throw an error.
     if (!force) {
       throw new Error(
-        `Could not send output with type "${type}" to the force with ID "${forceId}" because the force was not found.`,
+        `Could not send output with key "${key}" to the force with ID "${forceId}" because the force was not found.`,
       )
     }
 
     // Store the output in the force.
     force.storeOutput(output)
 
-    // Send the output to all users in the force.
-    for (let user of this.getMembersForForce(forceId)) {
-      user.emit('send-output', {
+    // If the broadcast type is "force', then send the output to all members in the force.
+    if (output.broadcastType === 'force') {
+      for (let member of this.getMembersForForce(forceId)) {
+        member.emit('send-output', {
+          data: {
+            outputData: output.toJson(),
+          },
+        })
+      }
+    }
+
+    // If the broadcast type is "user", then send the output to the user.
+    if (output.broadcastType === 'user') {
+      // If the user ID is not provided, then throw an error.
+      if (!output.userId) {
+        throw new Error(
+          `Could not send output with key "${key}" to the user with ID "${output.userId}" because the user ID was not provided.`,
+        )
+      }
+
+      // Find the member with the user ID.
+      let member = this.getMemberByUserId(output.userId)
+      // If the member is not found, then throw an error.
+      if (!member) {
+        throw new Error(
+          `Could not send output with key "${key}" to the user with ID "${output.userId}" because the user was not found in the session.`,
+        )
+      }
+
+      // Send the output to the member.
+      member.emit('send-output', {
         data: {
           outputData: output.toJson(),
         },
@@ -1469,13 +1545,19 @@ export default class SessionServer extends Session<TServerMissionTypes> {
    * Launches a new session with a new session ID.
    * @param mission The mission from which to launch a session.
    * @param config The configuration for the session.
+   * @param ownerId The ID of the user that owns the session.
    * @returns A promise of the session server for the newly launched session.
    */
   public static launch(
     mission: ServerMission,
     config: Partial<TSessionConfig> = {},
-    ownerId: string,
+    ownerId: ServerUser['_id'],
   ): SessionServer {
+    // Generate the intro message output for every force.
+    mission.forces.forEach((force) => {
+      force.sendIntroMessage()
+    })
+
     return new SessionServer(
       generateHash().substring(0, 12),
       mission.name,

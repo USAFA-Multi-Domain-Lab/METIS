@@ -18,7 +18,7 @@ import ServerActionExecution from './actions/executions'
 import { ServerRealizedOutcome } from './actions/outcomes'
 import ServerEffect from './effects'
 import ServerMissionForce, { TServerMissionForceOptions } from './forces'
-import { ServerOutput } from './forces/outputs'
+import ServerOutput from './forces/outputs'
 import ServerMissionNode from './nodes'
 import ServerMissionPrototype from './nodes/prototypes'
 
@@ -53,15 +53,6 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
   ) {
     // Initialize base properties.
     super(data, options)
-
-    // Parse options.
-    let { populateTargets = false, sendIntroMessage = false } = options
-
-    // Parse force data.
-    this.importForces(data.forces ?? ServerMission.DEFAULT_PROPERTIES.forces, {
-      populateTargets,
-      sendIntroMessage,
-    })
   }
 
   // Implemented
@@ -157,9 +148,4 @@ export interface TServerMissionTypes extends TCommonMissionTypes {
 /**
  * Options for the creation of a `ServerMission` object.
  */
-type TServerMissionOptions = TMissionOptions & {
-  /**
-   * Whether to send the intro message to the output panel.
-   */
-  sendIntroMessage?: boolean
-}
+type TServerMissionOptions = TMissionOptions & {}
