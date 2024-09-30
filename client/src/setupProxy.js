@@ -50,7 +50,7 @@ module.exports = function (app) {
   )
   // Websocket proxy middleware.
   app.use(
-    createProxyMiddleware('/connect', {
+    createProxyMiddleware('/socket.io', {
       target: `ws://localhost:${METIS_SERVER_PORT}`,
       changeOrigin: true,
       ws: true,

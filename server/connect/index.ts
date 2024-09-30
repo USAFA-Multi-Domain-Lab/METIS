@@ -1,167 +1,173 @@
-import { Request } from 'express'
-import expressWs from 'express-ws'
+import express from 'express'
 import { ServerEmittedError } from 'metis/connect/errors'
-import ClientConnection from 'metis/server/connect/clients'
-import { TMetisRouterMap } from 'metis/server/http/router'
 import ServerLogin from 'metis/server/logins'
-import { WebSocket } from 'ws'
+import { Socket, Server as SocketIoServer } from 'socket.io'
 import MetisServer from '../index'
 import SessionServer from '../sessions'
+import authMiddleware from './auth'
+import ClientConnection from './clients'
+const createSocketIoServer = require('socket.io')
 
-const routerMap: TMetisRouterMap = (
-  router: expressWs.Router,
-  server: MetisServer,
-  done: () => void,
-) => {
-  /* ---------------------------- CONSTANTS --------------------------------- */
+/* -- CLASSES -- */
 
-  // Track the number of messages per second.
-  const messagesPerSecond: Map<ServerLogin['userId'], number> = new Map()
-  // Track which users have exceeded the message rate limit.
-  const messageRateLimitExceeded: Map<ServerLogin['userId'], boolean> =
-    new Map()
-  // Track the time of the last message.
-  const messageTimestamps: Map<ServerLogin['userId'], number> = new Map()
-  // Track when the user has exceeded the message rate limit.
-  const messageRateLimitExceededTimestamps: Map<ServerLogin['userId'], number> =
-    new Map()
-  // Set the maximum number of messages per second.
-  const maxMessagesPerSecond = server.wsRateLimit
-  // Set the message rate limit cooldown.
-  const messageRateLimitCooldown = 15000 /*ms*/
-
-  /* ---------------------------- CONNECTIONS ---------------------------- */
+export default class MetisWsServer {
+  /**
+   * The Metis server instance.
+   */
+  public readonly metis: MetisServer
 
   /**
-   * Establishes a web socket connection used for user and session
-   * syncing between the server and the client.
-   * @param socket The web socket connection.
-   * @param request The request that initiated the connection.
+   * The socket.io server instance.
    */
-  const establishSocketConnection = (socket: WebSocket, request: Request) => {
-    let login: ServerLogin | undefined = ServerLogin.get(request.session.userId)
+  public readonly socketIo: SocketIoServer
 
-    // If no login information is found,
-    // close the connection.
-    if (login === undefined) {
-      ClientConnection.emitError(
-        new ServerEmittedError(ServerEmittedError.CODE_NOT_LOGGED_IN),
-        socket,
-      )
-      return socket.close()
-    }
+  /**
+   *
+   * @param metis The Metis server instance.
+   */
+  public constructor(metis: MetisServer) {
+    this.metis = metis
+    this.socketIo = createSocketIoServer(metis.httpServer)
+  }
 
-    // Parse disconnectExisting query.
-    let disconnectExisting: boolean =
-      request.query.disconnectExisting === 'true'
+  /**
+   * Initializes the web socket server.
+   */
+  public initialize(): void {
+    // Gather details.
+    const { metis } = this
 
-    // Create a client connection object
-    // with the socket and login.
-    let connection = new ClientConnection(socket, login, {
-      disconnectExisting,
-    })
+    // Add middleware.
+    this.useOnEngine((_, request, response, next) =>
+      metis.sessionMiddleware(request, response, next),
+    )
+    this.use(authMiddleware)
 
-    // If the login information indicates that the user is
-    // currently in a session, find the session and update
-    // the connection for that participant.
-    if (login.sessionId !== null) {
-      // Get the session.
-      let session = SessionServer.get(login.sessionId)
+    // Add event listeners.
+    this.addEventListeners()
+  }
 
-      // If the session exists, update the connection.
-      if (session !== undefined) {
-        session.handleConnectionChange(connection)
-      }
-    }
+  /**
+   * Adds a middleware function to the web socket server.
+   * @note This will get called after the low-level
+   * connection is established, but before the connection
+   * is upgraded to WebSocket.
+   */
+  public use(middleware: TMetisWsMiddleware): void {
+    // Register the middleware in Socket.IO.
+    this.socketIo.use((socket, next) =>
+      middleware(this.metis, socket, (error) => {
+        // Convert server emitted errors to regular errors.
+        if (error instanceof ServerEmittedError) {
+          error = new Error(JSON.stringify(error.toJson()))
+        }
+        next(error)
+      }),
+    )
+  }
 
-    // Set the message rate limit.
-    socket.on('message', () => {
+  /**
+   * Adds a low-level middleware function to the SocketIO
+   * engine.
+   * @note This middleware gets called before the middleware
+   * added with the `use` method.
+   * @note This middleware is called before the handshake
+   * has been made.
+   */
+  public useOnEngine(middleware: TMetisWsEngineMiddleware): void {
+    // Register the middleware in Socket.IO.
+    this.socketIo.engine.use((request: any, response: any, next: any) =>
+      middleware(this.metis, request, response, next),
+    )
+  }
+
+  /**
+   * Routes web socket events to the appropriate handlers.
+   */
+  private addEventListeners(): void {
+    this.socketIo.on('connection', (socket) => {
+      const { 'disconnect-existing': disconnectExisting } =
+        socket.request.headers
+      const { session } = socket.request
+
+      let login: ServerLogin | undefined = ServerLogin.get(session.userId)
+
       // If no login information is found,
-      // close the connection
+      // close the connection.
       if (login === undefined) {
-        return socket.close()
+        ClientConnection.emitError(
+          new ServerEmittedError(ServerEmittedError.CODE_UNAUTHENTICATED),
+          socket,
+        )
+        return socket.disconnect()
       }
 
-      // Track the number of messages per second.
-      let count: number = messagesPerSecond.get(login.userId) ?? 0
-      messagesPerSecond.set(login.userId, count + 1)
-
-      // Check if the user has exceeded the message rate limit.
-      let hasExceededRateLimit: boolean =
-        messageRateLimitExceeded.get(login.userId) ?? false
-      messageRateLimitExceeded.set(login.userId, hasExceededRateLimit)
-
-      // Track the time of the last message.
-      let lastMessageTimestamp: number =
-        messageTimestamps.get(login.userId) ?? 0
-      messageTimestamps.set(login.userId, Date.now())
-
-      // Track the time of the message rate limit exceedance.
-      let messageRateLimitExceededTimestamp: number =
-        messageRateLimitExceededTimestamps.get(login.userId) ?? 0
-      messageRateLimitExceededTimestamps.set(
-        login.userId,
-        messageRateLimitExceededTimestamp,
-      )
-
-      // If the user has not sent a message in the last
-      // second and has not exceeded the message rate limit,
-      // reset the counter.
-      if (Date.now() - lastMessageTimestamp > 1000 && !hasExceededRateLimit) {
-        messagesPerSecond.set(login.userId, 0)
+      // If 'disconnect-existing' is set to true,
+      // and the login already contains a client,
+      // close the existing connection.
+      if (disconnectExisting && login.client) {
+        login.client.disconnect(
+          new ServerEmittedError(ServerEmittedError.CODE_SWITCHED_CLIENT),
+        )
       }
+      // Create a client connection object
+      // with the socket and login.
+      let connection = new ClientConnection(socket, login, {})
 
-      // If the message counter exceeds the max amount,
-      // send an error message and don't reset until the
-      // cooldown period has passed.
-      if (count > maxMessagesPerSecond && !hasExceededRateLimit) {
-        // Set the user as having exceeded the message rate limit.
-        messageRateLimitExceeded.set(login.userId, true)
+      // If the login information indicates that the user is
+      // currently in a session, find the session and update
+      // the connection for that participant.
+      if (login.sessionId !== null) {
+        // Get the session.
+        let session = SessionServer.get(login.sessionId)
 
-        // Track the time of the message rate limit exceedance.
-        messageRateLimitExceededTimestamps.set(login.userId, Date.now())
-
-        // Send an error to the client.
-        let error = JSON.stringify({
-          method: 'error',
-          code: ServerEmittedError.CODE_MESSAGE_RATE_LIMIT,
-          message: 'Message rate limit exceeded. Please try again later.',
-        })
-        socket.send(error)
-      }
-      // Or, if the user has exceeded the message rate limit,
-      // send an error message.
-      else if (hasExceededRateLimit) {
-        // Send an error to the client.
-        let error = JSON.stringify({
-          method: 'error',
-          code: ServerEmittedError.CODE_MESSAGE_RATE_LIMIT,
-          message: 'Message rate limit exceeded. Please try again later.',
-        })
-        socket.send(error)
-
-        // Reset the messages per second counter
-        // and the message rate limit after the cooldown period.
-        if (
-          Date.now() - messageRateLimitExceededTimestamp >
-          messageRateLimitCooldown
-        ) {
-          messagesPerSecond.set(login.userId, 0)
-          messageRateLimitExceeded.set(login.userId, false)
+        // If the session exists, update the connection.
+        if (session !== undefined) {
+          session.handleConnectionChange(connection)
         }
       }
     })
-
-    // Emit an open event to the client.
-    connection.emit('authenticated', { data: {} })
   }
 
-  /* ---------------------------- ROUTES --------------------------------- */
-
-  // -- WEB SOCKET CONNECTION --
-  router.ws('/', establishSocketConnection)
-
-  done()
+  // todo: Move this into a rate limit class.
+  // // Track the number of messages per second.
+  // private messagesPerSecond: Map<ServerLogin['userId'], number> = new Map()
+  // // Track which users have exceeded the message rate limit.
+  // private messageRateLimitExceeded: Map<ServerLogin['userId'], boolean> = new Map()
+  // // Track the time of the last message.
+  // private messageTimestamps: Map<ServerLogin['userId'], number> = new Map()
+  // // Track when the user has exceeded the message rate limit.
+  // private messageRateLimitExceededTimestamps: Map<ServerLogin['userId'], number> =
+  //   new Map()
+  // // Set the message rate limit cooldown.
+  // private messageRateLimitCooldown = 15000 /*ms*/
 }
 
-export default routerMap
+/* -- TYPES -- */
+
+/**
+ * A METIS web socket middleware function.
+ * @note This is called at a low-level, before the
+ * handshake has been made.
+ */
+export type TMetisWsEngineMiddleware = (
+  metis: MetisServer,
+  request: express.Request,
+  response: express.Response,
+  next: express.NextFunction,
+) => void
+
+/**
+ * A METIS web socket middleware function.
+ * @note This is called after the handshake has been
+ * made but before the connection is upgraded to WebSocket.
+ * @param server The METIS server instance.
+ * @param socket The socket.io socket instance.
+ * @param next The callback to call when the middleware is done.
+ * An error can be passed to this function to abort the connection.
+ */
+export type TMetisWsMiddleware = (
+  server: MetisServer,
+  socket: Socket,
+  next: (error?: ServerEmittedError | Error) => void,
+) => void

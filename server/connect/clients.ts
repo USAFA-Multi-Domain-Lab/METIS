@@ -9,6 +9,7 @@ import {
 } from 'metis/connect/data'
 import { ServerEmittedError } from 'metis/connect/errors'
 import ServerLogin from 'metis/server/logins'
+import { Socket } from 'socket.io'
 import { WebSocket } from 'ws'
 import SessionServer from '../sessions'
 import ServerUser from '../users'
@@ -17,17 +18,19 @@ import ServerUser from '../users'
 
 /**
  * METIS web-socket-based, client connection.
- * @throws {Error} If the login passed already has a client.
+ * @throws If the login passed already has a client.
  */
 export default class ClientConnection {
   /**
    * The web socket connection itself.
    */
-  protected socket: WebSocket
+  protected socket: Socket
+
   /**
    * The login information associated with this client.
    */
   protected _login: ServerLogin
+
   /**
    * The login information associated with this client.
    */
@@ -55,39 +58,16 @@ export default class ClientConnection {
   protected listeners: [TClientMethod, TClientHandler<any>][] = []
 
   /**
-   * @param {WebSocket} socket The web socket connection itself.
-   * @param {IClientConnectionOptions} options Options for the server connection.
+   * @param socket The web socket connection itself.
+   * @param login The client login
    */
   public constructor(
-    socket: WebSocket,
+    socket: Socket,
     login: ServerLogin,
-    options: IClientConnectionOptions = {},
+    options: IClientConnectionOptions,
   ) {
     this.socket = socket
     this._login = login
-
-    let { disconnectExisting = false } = options
-
-    // If the login information already contains a client,
-    // handle the conflict.
-    if (login.client !== null) {
-      // If disconnectExisting was opted,
-      // disconnect the existing client.
-      if (disconnectExisting) {
-        login.client.disconnect()
-      }
-      // Otherwise, reject new connection by
-      // emmitting a duplicate client error
-      // and disconnecting.
-      else {
-        this.emitError(
-          new ServerEmittedError(ServerEmittedError.CODE_DUPLICATE_CLIENT),
-        )
-        this.disconnect()
-        throw Error('User is already logged in.')
-      }
-    }
-
     login.client = this
 
     // Add event listeners passed in
@@ -110,26 +90,25 @@ export default class ClientConnection {
    */
   private prepareSocket(): void {
     // Add event listeners to the socket.
-    this.socket.addEventListener('close', this.onClose)
-    this.socket.addEventListener('message', this.onMessage)
+    this.socket.on('disconnect', this.onClose)
+    this.socket.on('message', this.onMessage)
   }
 
   /**
    * Emits an event to the client.
-   * @param {TMethod} method The method of the event to emit.
-   * @param {TPayload} payload The payload of the event to emit.
+   * @param method The method of the event to emit.
+   * @param payload The payload of the event to emit.
    */
   public emit<
     TMethod extends TServerMethod,
     TPayload extends Omit<TServerEvents[TMethod], 'method'>,
   >(method: TMethod, payload: TPayload): void {
-    // Send payload.
-    this.socket.send(JSON.stringify({ method, ...payload }))
+    ClientConnection.emit(method, payload, this.socket)
   }
 
   /**
    * Emits an error to the client.
-   * @param {ServerEmittedError} error The error to emit to the client.
+   * @param error The error to emit to the client.
    */
   public emitError(error: ServerEmittedError): void {
     ClientConnection.emitError(error, this.socket)
@@ -137,9 +116,9 @@ export default class ClientConnection {
 
   /**
    * Adds a listener for a specific client event method.
-   * @param {TClientMethod} method The event method that will be handled. The handler will only be called if the method matches what is sent by the client in a web socket message, except for 'close', and 'error' events, which are called upon their respective web socket events.
-   * @param {TClientHandler<TServerEvent>} handler The handler that will be called upon the event being triggered.
-   * @returns {ClientConnection} The client connection instance, allowing the chaining of class method calls.
+   * @param method The event method that will be handled. The handler will only be called if the method matches what is sent by the client in a web socket message, except for 'close', and 'error' events, which are called upon their respective web socket events.
+   * @param handler The handler that will be called upon the event being triggered.
+   * @returns The client connection instance, allowing the chaining of class method calls.
    */
   public addEventListener<TMethod extends TClientMethod>(
     method: TMethod,
@@ -277,8 +256,9 @@ export default class ClientConnection {
   /**
    * Disconnects from the server, closing the web socket connection.
    */
-  protected disconnect(): void {
-    this.socket.close()
+  public disconnect(reason?: ServerEmittedError): void {
+    if (reason) this.emitError(reason)
+    this.socket.disconnect()
   }
 
   /**
@@ -304,9 +284,9 @@ export default class ClientConnection {
 
   /**
    * Handler for when the web socket connection is closed. Calls all "close" listeners stored in "listeners".
-   * @param {WSCloseEvent} event The close event.
+   * @param event The close event.
    */
-  private onClose = (event: WSCloseEvent): void => {
+  private onClose = (): void => {
     // Pre-create data object, since
     // it will not vary.
     let serverEvent: TServerEvents['connection-closed'] = {
@@ -328,12 +308,12 @@ export default class ClientConnection {
 
   /**
    * Handler for when the web socket connection is opened. Calls all matching listeners stored in "listeners".
-   * @param {WSCloseEvent} event The message event.
+   * @param event The message event data.
    */
-  private onMessage = (event: WSMessageEvent): void => {
+  private onMessage = (data: string): void => {
     // If the data passed is not a string,
     // throw an error.
-    if (typeof event.data !== 'string') {
+    if (typeof data !== 'string') {
       this.emitError(
         new ServerEmittedError(ServerEmittedError.CODE_INVALID_DATA, {
           message: 'The data passed was not a string.',
@@ -343,15 +323,29 @@ export default class ClientConnection {
     }
 
     // Parse the data.
-    let data = JSON.parse(event.data)
+    let event = JSON.parse(data)
 
     // Call any listeners matching the method found in the
     // data.
     for (let [method, listener] of this.listeners) {
-      if (data.method === method) {
-        listener(data)
+      if (event.method === method) {
+        listener(event)
       }
     }
+  }
+
+  /**
+   * Emits an event to the client.
+   * @param socket The socket connection to emit the event to.
+   * @param method The method of the event to emit.
+   * @param payload The payload of the event to emit.
+   */
+  public static emit<
+    TMethod extends TServerMethod,
+    TPayload extends Omit<TServerEvents[TMethod], 'method'>,
+  >(method: TMethod, payload: TPayload, socket: Socket): void {
+    // Send payload.
+    socket.send(JSON.stringify({ method, ...payload }))
   }
 
   /**
@@ -359,7 +353,7 @@ export default class ClientConnection {
    * @param error The error to emit.
    * @param socket The socket connection to emit the error.
    */
-  public static emitError(error: ServerEmittedError, socket: WebSocket): void {
+  public static emitError(error: ServerEmittedError, socket: Socket): void {
     let payload: TServerEvents['error'] = error.toJson()
     socket.send(JSON.stringify(payload))
   }
@@ -378,11 +372,6 @@ export interface IClientConnectionOptions {
   on?: {
     [T in TClientMethod]?: TClientHandler<T>
   }
-  /**
-   * Whether to disconnect existing connections for the given login.
-   * @WIP
-   */
-  disconnectExisting?: boolean
 }
 
 /**

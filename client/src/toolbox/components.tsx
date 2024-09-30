@@ -14,7 +14,7 @@ type IRendererOptions = {
 /**
  * Renders a components based on the options passed. Requirements can be included in the options to restrict when the component renders, rendering it to null if failing.
  * @param {() => JSX.Element} render A function that is called to render the desired component.
- * @param {IRendererOptions} options Options for the render.
+ * @param options Options for the render.
  * @returns {JSX.Element | null} The rendered component.
  */
 export function render(

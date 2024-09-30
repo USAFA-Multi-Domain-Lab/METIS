@@ -48,12 +48,14 @@ export default class ClientLogin {
    * Attempts to log in the user with the given username and password.
    * @param username The username to login with.
    * @param password The user's password to login with.
+   * @param forceful Whether to force logout any other client logged in.
    * @resolves The object containing whether the login was correct and the information of the logged in user.
    * @rejects The error that occurred while logging in.
    */
   public static $logIn(
     username: TCommonUser['username'],
     password: string,
+    forceful: boolean = false,
   ): Promise<{
     login: TLogin<ClientUser>
   }> {
@@ -64,6 +66,7 @@ export default class ClientLogin {
         let response: AxiosResponse = await axios.post<TLoginJson>(
           `${ClientLogin.API_ENDPOINT}/`,
           { username, password },
+          { headers: { forceful } },
         )
 
         // Parse the response data.

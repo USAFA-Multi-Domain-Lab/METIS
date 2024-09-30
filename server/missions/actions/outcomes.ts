@@ -42,7 +42,7 @@ export class ServerPotentialOutcome
 
   /**
    * Creates a realized outcome from the potential outcome.
-   * @returns {ServerRealizedOutcome} The realized outcome.
+   * @returns The realized outcome.
    */
   public realize(): ServerRealizedOutcome {
     return this.node.loadOutcome(this.toJson())
@@ -50,8 +50,8 @@ export class ServerPotentialOutcome
 
   /**
    * @note Uses private constructor. Use the static `generateOutcome` method to generate an outcome.
-   * @param {ServerMissionAction} action The action itself.
-   * @param {number} successStrength The strength of the action in succeeding. This is a number between 0 and 1. If the number is greater than the action's chance of failure, the action is successful.
+   * @param action The action itself.
+   * @param successStrength The strength of the action in succeeding. This is a number between 0 and 1. If the number is greater than the action's chance of failure, the action is successful.
    */
   private constructor(action: ServerMissionAction, successStrength: number) {
     this.action = action
@@ -69,9 +69,9 @@ export class ServerPotentialOutcome
 
   /**
    * Generate an action outcome based on the factors passed.
-   * @param {ServerMissionAction} action The action producing an outcome.
-   * @param {PRNG} rng The random number generator used to determine success.
-   * @returns {IActionOutcome} The predetermined outcome of the action.
+   * @param action The action producing an outcome.
+   * @param rng The random number generator used to determine success.
+   * @returns The predetermined outcome of the action.
    */
   public static generateOutcome(
     action: ServerMissionAction,
@@ -114,8 +114,8 @@ export class ServerRealizedOutcome implements IActionOutcome {
   public readonly successful: boolean
 
   /**
-   * @param {ServerMissionAction} action The action itself.
-   * @param {boolean} successful Whether the action succeeded.
+   * @param action The action itself.
+   * @param successful Whether the action succeeded.
    */
   public constructor(action: ServerMissionAction, successful: boolean) {
     this.action = action

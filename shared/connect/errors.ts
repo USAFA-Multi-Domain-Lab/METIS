@@ -15,8 +15,8 @@ export abstract class WSEmittedError {
 
   /**
    *
-   * @param {number} code The code for this error, which are enumerated as static properties in this class.
-   * @param {string} message The message for this error given to the client, describing the error the occurred in more detail than what is provided by the error code.
+   * @param code The code for this error, which are enumerated as static properties in this class.
+   * @param message The message for this error given to the client, describing the error the occurred in more detail than what is provided by the error code.
    */
   public constructor(code: number, message: string) {
     this.code = code
@@ -66,7 +66,7 @@ export class ServerEmittedError extends WSEmittedError {
 
   /**
    * Converts this error to a JSON payload.
-   * @returns {TServerData<'error'>} The JSON representation of this error.
+   * @returns The JSON representation of this error.
    */
   public toJson(): TServerEvents['error'] {
     return {
@@ -75,6 +75,24 @@ export class ServerEmittedError extends WSEmittedError {
       message: this.message,
       request: this.request,
     }
+  }
+
+  /**
+   * Creates an `Error` object that can be sent to the client
+   * via a middleware `next` function.
+   * @example
+   * const middleware: TMetisWsMiddleware = (metis, socket, next) => {
+   *  if(!this.token) {
+   *    let error = new ServerEmittedError(ServerEmittedError.CODE_UNAUTHENTICATED)
+   *    ClientConnection.emitError(error, socket)
+   *    // Call the next middleware with the error.
+   *    return error.callNext(next)
+   *  } else {
+   *    return next()
+   *  }
+   */
+  public asMiddlewareResult(): Error {
+    return new Error(this.code.toString())
   }
 
   /**
@@ -97,7 +115,13 @@ export class ServerEmittedError extends WSEmittedError {
    * Code for a client attempting to connect to the server without being
    * logged in to METIS.
    */
-  public static readonly CODE_NOT_LOGGED_IN: number = 10004
+  public static readonly CODE_UNAUTHENTICATED: number = 10004
+  /**
+   * Code for when a client is disconnected because another client with
+   * the same login (Such as a different tab in a browser) requested to
+   * switch to the new client.
+   */
+  public static readonly CODE_SWITCHED_CLIENT: number = 10005
   /**
    * Code for a client requesting to join a session that cannot be found.
    */
@@ -177,7 +201,7 @@ export class ServerEmittedError extends WSEmittedError {
       'You are already connected via another tab.',
     [ServerEmittedError.CODE_MESSAGE_RATE_LIMIT]:
       'Message rate limit exceeded. Please try again later.',
-    [ServerEmittedError.CODE_NOT_LOGGED_IN]:
+    [ServerEmittedError.CODE_UNAUTHENTICATED]:
       'You must be logged in to METIS to connect.',
     [ServerEmittedError.CODE_SESSION_NOT_FOUND]: 'Session not found.',
     [ServerEmittedError.CODE_ALREADY_IN_SESSION]:
@@ -206,8 +230,8 @@ export class ServerEmittedError extends WSEmittedError {
 
   /**
    * Converts JSON data to a new ClientError object.
-   * @param {TServerData<'error'>} json The JSON to convert.
-   * @returns {ServerEmittedError} The new ServerEmittedError object.
+   * @param json The JSON to convert.
+   * @returns The new ServerEmittedError object.
    * @throws {Error} If the JSON data is invalid.
    */
   public static fromJson({
@@ -225,7 +249,7 @@ export class ServerEmittedError extends WSEmittedError {
 export class ClientEmittedError extends WSEmittedError {
   /**
    * Converts this error to a JSON payload.
-   * @returns {TClientData<'error'>} The JSON representation of this error.
+   * @returns The JSON representation of this error.
    */
   public toJson(): TClientEvents['error'] {
     return {

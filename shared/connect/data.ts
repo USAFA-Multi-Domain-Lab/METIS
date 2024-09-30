@@ -92,6 +92,11 @@ export type TRequestMethod = keyof TRequestEvents
 export type TClientMethod = keyof TClientEvents
 
 /**
+ * Represents an event that occurs on the client that is sent to the server over a web socket.
+ */
+export type TClientEvent = TClientEvents[TClientMethod]
+
+/**
  * Represents a type of generic event that occurs on the server that is sent to the client over a web socket.
  */
 export type TGenericServerMethod = keyof TGenericServerEvents
@@ -106,6 +111,11 @@ export type TResponseMethod = keyof TResponseEvents
  * Represents a type of event that occurs on the server that is sent to the client over a web socket.
  */
 export type TServerMethod = keyof TServerEvents
+
+/**
+ * Represents an event that occurs on the server that is sent to the client over a web socket.
+ */
+export type TServerEvent = TServerEvents[TServerMethod]
 
 /**
  * The data necessary to enact an internal effect based on their key.

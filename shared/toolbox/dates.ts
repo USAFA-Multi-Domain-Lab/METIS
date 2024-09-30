@@ -1,4 +1,46 @@
+import formatDate from 'dateformat'
+
 // -- classes --
+
+/**
+ * A toolbox for working with dates.
+ */
+export class DateToolbox {
+  /**
+   * Formats a date in a human-readable format.
+   * @param date The date to format. Defaults to the current date.
+   * @param mask The mask to use for formatting the date. Defaults to `'mm:dd:yyyy HH:MM:ss'`.
+   * @param utc Whether to use UTC time. Defaults to false.
+   * @param gmt Whether to use GMT time. Defaults to false.
+   * @returns The formatted date.
+   */
+  public static format(
+    date: Date | string | number = new Date(),
+    mask: string = 'mm:dd:yyyy HH:MM:ss',
+    utc: boolean = false,
+    gmt: boolean = false,
+  ): string {
+    return formatDate(date, mask, utc, gmt)
+  }
+
+  /**
+   * Gets the current date formatted in a standard
+   * METIS format that displays hours, minutes, and
+   * seconds.
+   */
+  public static get nowFormatted(): string {
+    return this.format(new Date(), 'HH:MM:ss')
+  }
+
+  /**
+   * Gets the current date formatted in a standard
+   * METIS format that displays month, day, year, hours,
+   * minutes, and seconds.
+   */
+  public static get nowTodayFormatted(): string {
+    return this.format()
+  }
+}
 
 /**
  * A simple stopwatch class for measuring time elapsed.
@@ -83,6 +125,7 @@ export class Stopwatch {
 }
 
 const defaultExports = {
+  DateToolbox,
   Stopwatch,
 }
 

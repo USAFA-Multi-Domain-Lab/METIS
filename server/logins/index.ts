@@ -1,3 +1,4 @@
+import { ServerEmittedError } from 'metis/connect/errors'
 import { TLoginJson } from 'metis/logins'
 import ClientConnection from 'metis/server/connect/clients'
 import ServerUser from '../users'
@@ -92,15 +93,38 @@ export default class ServerLogin {
   /**
    * @param user The user to log in.
    */
-  public constructor(user: ServerUser) {
+  public constructor(user: ServerUser, options: TServerLoginOptions = {}) {
+    const { forceful = false } = options
+
     this._user = user
     this._client = null
     this._sessionId = null
     this._destroyed = false
 
-    // Throw an error if a user is already logged in.
-    if (ServerLogin.registry.has(this.userId)) {
-      throw new Error('User is already logged in.')
+    // Get any current login registered, conflicting
+    // with the new login.
+    let conflictingLogin: ServerLogin | undefined = ServerLogin.registry.get(
+      this.userId.toString(),
+    )
+
+    // Handle duplicate login.
+    if (conflictingLogin) {
+      // If the login is forceful, force a log out
+      // of the conflicting client.
+      if (forceful) {
+        // If the conflicting login has a client,
+        // emit an error to that client that the
+        // connection is switching.
+        if (conflictingLogin.client) {
+          conflictingLogin.client.emitError(
+            new ServerEmittedError(ServerEmittedError.CODE_SWITCHED_CLIENT),
+          )
+        }
+        // Destroy the login.
+        ServerLogin.destroy(this.userId)
+      } else {
+        throw new Error('User is already logged in.')
+      }
     }
 
     // Store the login in the registry.
@@ -109,7 +133,7 @@ export default class ServerLogin {
 
   /**
    * Converts the login object to JSON to send to the client.
-   * @returns {TLoginJson} The JSON representation of the login object.
+   * @returns The JSON representation of the login object.
    */
   public toJson(): TLoginJson {
     return {
@@ -171,4 +195,18 @@ export default class ServerLogin {
       login.destroy()
     }
   }
+}
+
+/* -- TYPES -- */
+
+/**
+ * Options for `ServerLogin` constructor.
+ */
+export type TServerLoginOptions = {
+  /**
+   * Whether to force logout any other client logged in
+   * with the same user.
+   * @default false
+   */
+  forceful?: boolean
 }
