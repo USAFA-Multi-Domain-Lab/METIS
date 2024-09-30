@@ -11,6 +11,10 @@ const createSocketIoServer = require('socket.io')
 
 /* -- CLASSES -- */
 
+/**
+ * Represents a web socket server managed by a `MetisServer`
+ * instance.
+ */
 export default class MetisWsServer {
   /**
    * The Metis server instance.
@@ -130,19 +134,6 @@ export default class MetisWsServer {
       }
     })
   }
-
-  // todo: Move this into a rate limit class.
-  // // Track the number of messages per second.
-  // private messagesPerSecond: Map<ServerLogin['userId'], number> = new Map()
-  // // Track which users have exceeded the message rate limit.
-  // private messageRateLimitExceeded: Map<ServerLogin['userId'], boolean> = new Map()
-  // // Track the time of the last message.
-  // private messageTimestamps: Map<ServerLogin['userId'], number> = new Map()
-  // // Track when the user has exceeded the message rate limit.
-  // private messageRateLimitExceededTimestamps: Map<ServerLogin['userId'], number> =
-  //   new Map()
-  // // Set the message rate limit cooldown.
-  // private messageRateLimitCooldown = 15000 /*ms*/
 }
 
 /* -- TYPES -- */
