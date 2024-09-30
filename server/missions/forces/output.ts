@@ -1,11 +1,11 @@
 import Output, {
   TCommonOutputJson,
   TOutputOptions,
-} from 'metis/missions/forces/outputs'
+} from 'metis/missions/forces/output'
 import ServerUser from 'metis/server/users'
-import { TServerMissionTypes } from '../..'
-import ServerMissionAction from '../../actions'
-import ServerActionExecution from '../../actions/executions'
+import ServerMissionForce from '.'
+import { TServerMissionTypes } from '..'
+import ServerActionExecution from '../actions/executions'
 
 /**
  * An output that's displayed in a force's output panel on the server.
@@ -21,60 +21,44 @@ export default class ServerOutput extends Output<TServerMissionTypes> {
   public readonly broadcastType: TOutputBroadcast
 
   /**
+   * @param force The force where the output panel belongs.
    * @param data The data for the output.
    * @param options The options for the output.
    */
   public constructor(
+    force: ServerMissionForce,
     data: Partial<TCommonOutputJson> = ServerOutput.DEFAULT_PROPERTIES,
     options: Partial<TServerOutputOptions> = {},
   ) {
-    super(data, options)
+    super(force, data, options)
 
-    let {
-      userId = null,
-      broadcastType = 'force',
-      execution = null,
-      action = null,
-    } = options
+    let { userId = null, broadcastType = 'force', execution = null } = options
 
     this.broadcastType = broadcastType
     this.userId = userId
-
-    // If there is an action and an execution, create a new action execution object.
-    if (execution && action) {
-      this._execution = new ServerActionExecution(
-        action,
-        execution.start,
-        execution.end,
-      )
-    }
+    this._execution = execution
   }
 }
 
 /**
  * Options used for creating a `ServerOutput`.
  */
-type TServerOutputOptions = TOutputOptions & {
+export type TServerOutputOptions = TOutputOptions & {
   /**
    * The ID of the user who triggered the output.
    * @default null
    */
-  userId: ServerUser['_id'] | null
+  userId?: ServerUser['_id'] | null
   /**
    * Determines who the output is broadcasted to.
    * @default 'force'
    */
-  broadcastType: TOutputBroadcast
-  /**
-   * The action that is being executed.
-   * @default null
-   */
-  action: ServerMissionAction | null
+  broadcastType?: TOutputBroadcast
   /**
    * The current execution in process on the node by an action.
    * @default null
    */
-  execution: ServerActionExecution | null
+  execution?: ServerActionExecution | null
 }
 
 /**

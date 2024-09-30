@@ -2,6 +2,7 @@ import axios from 'axios'
 import ServerConnection from 'src/connect/servers'
 import ClientMission, { TClientMissionTypes } from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
+import ClientOutput from 'src/missions/forces/output'
 import ClientMissionNode from 'src/missions/nodes'
 import ClientUser from 'src/users'
 import {
@@ -320,6 +321,10 @@ export default class SessionClient extends Session<TClientMissionTypes> {
     let server: ServerConnection = this.server
     let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
     let { onError = () => {} } = options
+
+    // If the node doesn't have a pre-execution message,
+    // or is currently executing, don't send the message.
+    if (!node?.preExecutionText || node.executing) return
 
     // If the member does not have the correct permissions,
     // callback an error.
@@ -880,8 +885,10 @@ export default class SessionClient extends Session<TClientMissionTypes> {
       )
     }
 
+    // Create the output.
+    let output = new ClientOutput(force, outputData)
     // Store the output in the force.
-    force.storeOutput(outputData)
+    force.storeOutput(output)
   }
 
   /**

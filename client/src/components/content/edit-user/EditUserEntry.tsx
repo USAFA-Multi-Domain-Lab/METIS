@@ -22,11 +22,11 @@ export default function EditUserEntry({
 
   /* -- STATE -- */
   const [handleUsernameError, setHandleUsernameError] =
-    useState<THandleOnBlur>('deliverError')
+    useState<THandleOnBlur>('none')
   const [handleFirstNameError, setHandleFirstNameError] =
-    useState<THandleOnBlur>('deliverError')
+    useState<THandleOnBlur>('none')
   const [handleLastNameError, setHandleLastNameError] =
-    useState<THandleOnBlur>('deliverError')
+    useState<THandleOnBlur>('none')
   const [usernameErrorMessage, setUsernameErrorMessage] = useState<string>()
   const [firstNameErrorMessage, setFirstNameErrorMessage] = useState<string>('')
   const [lastNameErrorMessage, setLastNameErrorMessage] = useState<string>('')

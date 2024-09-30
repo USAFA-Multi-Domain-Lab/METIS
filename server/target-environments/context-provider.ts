@@ -1,10 +1,9 @@
-import { TCommonOutputJson } from 'metis/missions/forces/outputs'
+import { TCommonOutputJson } from 'metis/missions/forces/output'
 import ServerEffect from 'metis/server/missions/effects'
 import SessionServer from 'metis/server/sessions'
 import { AnyObject } from 'metis/toolbox/objects'
 import { plcApiLogger } from '../logging'
 import ServerMission from '../missions'
-import ServerOutput from '../missions/forces/outputs'
 import ServerUser from '../users'
 
 /**
@@ -110,10 +109,8 @@ export default class EnvironmentContextProvider
       prefix: `${effect.forceName.replaceAll(' ', '-')}:`,
       message,
     }
-    // Create a new output object.
-    let output = new ServerOutput(outputJson, { userId })
     // Create a custom output to send to the output panel.
-    this.session.sendOutput(output)
+    this.session.sendOutput(outputJson, { userId })
   }
 
   /**

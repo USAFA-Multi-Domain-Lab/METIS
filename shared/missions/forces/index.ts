@@ -10,7 +10,7 @@ import {
   TMissionNodeOptions,
   TNode,
 } from '../nodes'
-import { TCommonOutput, TCommonOutputJson, TOutput } from './outputs'
+import { TCommonOutput, TCommonOutputJson, TOutput } from './output'
 
 /* -- CLASSES -- */
 

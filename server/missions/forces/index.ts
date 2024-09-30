@@ -3,12 +3,13 @@ import {
   TMissionForceJson,
   TMissionForceOptions,
 } from 'metis/missions/forces'
+import { TCommonOutputJson } from 'metis/missions/forces/output'
 import { TMissionNodeJson, TMissionNodeOptions } from 'metis/missions/nodes'
 import { TTargetEnvContextForce } from 'metis/server/target-environments/context-provider'
 import ServerUser from 'metis/server/users'
 import ServerMission, { TServerMissionTypes } from '..'
 import ServerMissionNode from '../nodes'
-import ServerOutput from './outputs'
+import ServerOutput from './output'
 
 /**
  * Class for managing mission prototypes on the client.
@@ -79,14 +80,17 @@ export default class ServerMissionForce extends MissionForce<TServerMissionTypes
   public sendIntroMessage(): void {
     // Send the intro message if it exists and isn't an empty string.
     if (!!this.mission.introMessage) {
-      this.storeOutput(
-        new ServerOutput({
-          key: 'intro',
-          forceId: this._id,
-          prefix: `${this.name.replaceAll(' ', '-')}:`,
-          message: this.mission.introMessage,
-        }),
-      )
+      // Create the output JSON.
+      let outputJson: Partial<TCommonOutputJson> = {
+        key: 'intro',
+        forceId: this._id,
+        prefix: `${this.name.replaceAll(' ', '-')}:`,
+        message: this.mission.introMessage,
+      }
+      // Create the output.
+      let output = new ServerOutput(this, outputJson)
+      // Store the output.
+      this.storeOutput(output)
     }
   }
 

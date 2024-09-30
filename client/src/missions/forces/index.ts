@@ -10,7 +10,7 @@ import {
   TMissionForceJson,
   TMissionForceOptions,
 } from '../../../../shared/missions/forces'
-import { TCommonOutputJson } from '../../../../shared/missions/forces/outputs'
+import { TCommonOutputJson } from '../../../../shared/missions/forces/output'
 import {
   TMissionNodeJson,
   TMissionNodeOptions,
@@ -20,7 +20,7 @@ import { TWithKey } from '../../../../shared/toolbox/objects'
 import { Vector2D } from '../../../../shared/toolbox/space'
 import ClientMissionAction from '../actions'
 import ClientMissionNode from '../nodes'
-import ClientOutput from './outputs'
+import ClientOutput from './output'
 
 /**
  * Class for managing mission prototypes on the client.
@@ -444,9 +444,7 @@ export default class ClientMissionForce
   }
 
   // Implemented
-  public storeOutput(outputJson: TCommonOutputJson): void {
-    // Create a new output object and insert it into the outputs array.
-    let newOutput = new ClientOutput(this, outputJson)
+  public storeOutput(newOutput: ClientOutput): void {
     let index = this.findInsertionIndex(newOutput)
     this._outputs.splice(index, 0, newOutput)
 

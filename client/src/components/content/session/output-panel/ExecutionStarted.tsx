@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import ClientMissionAction from 'src/missions/actions'
-import ClientMissionForce from 'src/missions/forces'
-import ClientOutput from 'src/missions/forces/outputs'
+import ClientOutput from 'src/missions/forces/output'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { useMountHandler } from 'src/toolbox/hooks'
@@ -12,8 +10,7 @@ import Tooltip from '../../communication/Tooltip'
  * Renders the message for when an action is started.
  */
 export default function ExecutionStarted({
-  force,
-  output: { _id: outputId, nodeId, actionId, timeStamp, prefix, execution },
+  output: { _id: outputId, node, action, timeStamp, prefix, execution },
   selectNode,
 }: TExecutionStarted_P): JSX.Element | null {
   /* -- REFS -- */
@@ -22,12 +19,6 @@ export default function ExecutionStarted({
   /* -- STATE -- */
   const [timeRemaining, setTimeRemaining] = useState<string>(
     execution?.formatTimeRemaining(true) ?? '00:00:00',
-  )
-  const [node] = useState<ClientMissionNode | null>(
-    force.getNode(nodeId) ?? null,
-  )
-  const [action] = useState<ClientMissionAction | null>(
-    node?.actions.get(actionId) ?? null,
   )
 
   /* -- COMPUTED -- */
@@ -149,10 +140,6 @@ export default function ExecutionStarted({
  * Prop type for `ExecutionStarted`.
  */
 type TExecutionStarted_P = {
-  /**
-   * The force where the output panel belongs.
-   */
-  force: ClientMissionForce
   /**
    * The output for the force's output panel.
    */

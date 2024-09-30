@@ -1,6 +1,4 @@
-import { useState } from 'react'
-import ClientMissionForce from 'src/missions/forces'
-import ClientOutput from 'src/missions/forces/outputs'
+import ClientOutput from 'src/missions/forces/output'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import RichTextOutputBox from '../../communication/RichTextOutputBox'
@@ -10,15 +8,9 @@ import Tooltip from '../../communication/Tooltip'
  * Renders the output message.
  */
 export default function Output({
-  force,
-  output: { key, timeStamp, prefix, nodeId, message },
+  output: { key, timeStamp, prefix, node, message },
   selectNode,
 }: TOutput_P): JSX.Element | null {
-  /* -- STATE -- */
-  const [node] = useState<ClientMissionNode | null>(
-    force.getNode(nodeId) ?? null,
-  )
-
   /* -- COMPUTED -- */
 
   /**
@@ -50,7 +42,12 @@ export default function Output({
     node ? (
       <div className='Location' onClick={() => selectNode(node)}>
         <Tooltip
-          description={`Generated as a result of interacting with the node called "${node.name}."`}
+          description={
+            `Generated as a result of interacting with the node called "${node.name}."`
+            // `\n` +
+            // `\t\n` +
+            // `Click to view the node.`
+          }
         />
       </div>
     ) : null,
@@ -78,10 +75,6 @@ export default function Output({
  * Prop type for `Output`.
  */
 type TOutput_P = {
-  /**
-   * The force where the output panel belongs.
-   */
-  force: ClientMissionForce
   /**
    * The output for the force's output panel.
    */

@@ -1,10 +1,10 @@
 import { TClientMissionTypes } from 'src/missions'
 import ClientActionExecution from 'src/missions/actions/executions'
-import ClientMissionForce from '..'
+import ClientMissionForce from '.'
 import Output, {
   TCommonOutputJson,
   TOutputOptions,
-} from '../../../../../shared/missions/forces/outputs'
+} from '../../../../shared/missions/forces/output'
 
 /**
  * An output that's displayed in a force's output panel on the client.
@@ -19,20 +19,15 @@ export default class ClientOutput extends Output<TClientMissionTypes> {
     data: Partial<TCommonOutputJson> = ClientOutput.DEFAULT_PROPERTIES,
     options: Partial<TClientOutputOptions> = {},
   ) {
-    super(data, options)
+    super(force, data, options)
 
     // If there is an execution, create a new action execution object.
-    if (data.execution && this.actionId) {
-      // Get the action that the execution is for.
-      let action = force.actions.get(this.actionId)
-      // If the action exists, create a new action execution object.
-      if (action) {
-        this._execution = new ClientActionExecution(
-          action,
-          data.execution.start,
-          data.execution.end,
-        )
-      }
+    if (data.execution && this.action) {
+      this._execution = new ClientActionExecution(
+        this.action,
+        data.execution.start,
+        data.execution.end,
+      )
     }
   }
 }

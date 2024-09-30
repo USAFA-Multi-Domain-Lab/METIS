@@ -1,7 +1,7 @@
 import { TClientEvents, TServerEvents, TServerMethod } from 'metis/connect/data'
 import { ServerEmittedError } from 'metis/connect/errors'
 import { TCommonMissionJson, TMissionJsonOptions } from 'metis/missions'
-import { TCommonOutputJson } from 'metis/missions/forces/outputs'
+import { TCommonOutputJson } from 'metis/missions/forces/output'
 import ServerMission, { TServerMissionTypes } from 'metis/server/missions'
 import ServerMissionAction from 'metis/server/missions/actions'
 import ServerMissionNode from 'metis/server/missions/nodes'
@@ -19,7 +19,7 @@ import ClientConnection from '../connect/clients'
 import { plcApiLogger } from '../logging'
 import ServerActionExecution from '../missions/actions/executions'
 import ServerMissionForce from '../missions/forces'
-import ServerOutput from '../missions/forces/outputs'
+import ServerOutput, { TServerOutputOptions } from '../missions/forces/output'
 import EnvironmentContextProvider from '../target-environments/context-provider'
 import ServerUser from '../users'
 import ServerSessionMember from './members'
@@ -1112,14 +1112,8 @@ export default class SessionServer extends Session<TServerMissionTypes> {
             actionId: action!._id,
             prefix: `${member.user.username.replaceAll(' ', '-')}:`,
           }
-          // Create a new output object.
-          let output = new ServerOutput(outputJson, {
-            userId: member.userId,
-            execution: execution,
-            action: action!,
-          })
-          // Send the output to the force.
-          this.sendOutput(output)
+          // Send the output JSON to the force.
+          this.sendOutput(outputJson, { userId: member.userId, execution })
         },
       })
 
@@ -1148,12 +1142,8 @@ export default class SessionServer extends Session<TServerMissionTypes> {
           prefix: `${member.user.username.replaceAll(' ', '-')}:`,
           message: action.postExecutionSuccessText,
         }
-        // Create a new output object.
-        let output = new ServerOutput(outputJson, {
-          userId: member.userId,
-        })
         // Send the output to the force.
-        this.sendOutput(output)
+        this.sendOutput(outputJson, { userId: member.userId })
 
         // If the effects are enabled...
         if (effectsEnabled) {
@@ -1189,12 +1179,10 @@ export default class SessionServer extends Session<TServerMissionTypes> {
           prefix: `${member.user.username.replaceAll(' ', '-')}:`,
           message: action.postExecutionFailureText,
         }
-        // Create a new output object.
-        let output = new ServerOutput(outputJson, {
+        // Send the output to the force.
+        this.sendOutput(outputJson, {
           userId: member.userId,
         })
-        // Send the output to the force.
-        this.sendOutput(output)
       }
 
       // Emit the action execution completed
@@ -1293,12 +1281,11 @@ export default class SessionServer extends Session<TServerMissionTypes> {
             prefix: `${member.user.username.replaceAll(' ', '-')}:`,
             message: node.preExecutionText,
           }
-          // Create a new output object.
-          let output = new ServerOutput(outputJson, {
-            userId: member.userId,
-          })
           // Send the output to the force.
-          this.sendOutput(output)
+          this.sendOutput(outputJson, {
+            userId: member.userId,
+            broadcastType: 'user',
+          })
 
           // Emit an event to the participant that the
           // pre-execution message was sent.
@@ -1477,10 +1464,14 @@ export default class SessionServer extends Session<TServerMissionTypes> {
   /**
    * Sends an output to the force's output panel.
    * @param output The output to send to the force.
+   * @param options Options for sending the output.
    */
-  public sendOutput = (output: ServerOutput) => {
+  public sendOutput = (
+    outputJson: Partial<TCommonOutputJson>,
+    options: TServerOutputOptions = {},
+  ) => {
     // Extract data.
-    let { key, forceId } = output
+    let { key, forceId } = outputJson
 
     // Find the force given the ID.
     let force = this.mission.getForce(forceId)
@@ -1492,12 +1483,14 @@ export default class SessionServer extends Session<TServerMissionTypes> {
       )
     }
 
+    // Create a new output object.
+    let output = new ServerOutput(force, outputJson, options)
     // Store the output in the force.
     force.storeOutput(output)
 
     // If the broadcast type is "force', then send the output to all members in the force.
     if (output.broadcastType === 'force') {
-      for (let member of this.getMembersForForce(forceId)) {
+      for (let member of this.getMembersForForce(force._id)) {
         member.emit('send-output', {
           data: {
             outputData: output.toJson(),

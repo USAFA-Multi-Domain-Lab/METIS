@@ -13,8 +13,8 @@ import {
   TCommonMissionNodeJson,
   TNode,
 } from 'metis/missions/nodes'
-import { TCommonMissionForce, TCommonMissionForceJson, TForce } from '..'
-import StringToolbox from '../../../toolbox/strings'
+import { TCommonMissionForce, TCommonMissionForceJson, TForce } from '.'
+import StringToolbox from '../../toolbox/strings'
 
 /**
  * An output that's displayed in a force's output panel.
@@ -28,11 +28,11 @@ export default abstract class Output<
   // Implemented
   public readonly key: TCommonOutput['key']
   // Implemented
-  public readonly forceId: TForce<T>['_id']
+  public readonly force: TForce<T>
   // Implemented
-  public readonly nodeId: TNode<T>['_id'] | null
+  public readonly node: TNode<T> | null
   // Implemented
-  public readonly actionId: TAction<T>['_id'] | null
+  public readonly action: TAction<T> | null
   // Implemented
   public readonly prefix: TCommonOutput['prefix']
   // Implemented
@@ -53,22 +53,38 @@ export default abstract class Output<
   }
 
   /**
+   * @param force The force where the output panel belongs.
    * @param data The output data from which to create the output.
+   * @param options The options for creating the output.
    */
   public constructor(
+    force: TForce<T>,
     data: Partial<TCommonOutputJson> = Output.DEFAULT_PROPERTIES,
     options: TOutputOptions = {},
   ) {
     this._id = data._id ?? Output.DEFAULT_PROPERTIES._id
     this.key = data.key ?? Output.DEFAULT_PROPERTIES.key
-    this.forceId = data.forceId ?? Output.DEFAULT_PROPERTIES.forceId
-    this.nodeId = data.nodeId ?? Output.DEFAULT_PROPERTIES.nodeId
-    this.actionId = data.actionId ?? Output.DEFAULT_PROPERTIES.actionId
     this.prefix = data.prefix ?? Output.DEFAULT_PROPERTIES.prefix
     this.message = data.message ?? Output.DEFAULT_PROPERTIES.message
     this.time = data.time ?? Output.DEFAULT_PROPERTIES.time
     this.timeStamp = data.timeStamp ?? Output.DEFAULT_PROPERTIES.timeStamp
+
+    this.force = force
+    this.node = null
+    this.action = null
+    // This gets set in the constructor of the child classes (ClientOutput and ServerOutput).
     this._execution = null
+
+    // Set the node and action if they exist.
+    if (data.nodeId) {
+      let node = this.force.getNode(data.nodeId)
+      if (node) this.node = node
+
+      if (data.actionId && this.node) {
+        let action = this.node.actions.get(data.actionId)
+        if (action) this.action = action
+      }
+    }
   }
 
   // Implemented
@@ -76,9 +92,9 @@ export default abstract class Output<
     return {
       _id: this._id,
       key: this.key,
-      forceId: this.forceId,
-      nodeId: this.nodeId,
-      actionId: this.actionId,
+      forceId: this.force._id,
+      nodeId: this.node?._id ?? null,
+      actionId: this.action?._id ?? null,
       prefix: this.prefix,
       message: this.message,
       time: this.time,
@@ -147,17 +163,17 @@ export type TCommonOutput = {
    */
   key: TOutputKey
   /**
-   * The ID of the force where the output panel belongs.
+   * The force where the output panel belongs.
    */
-  forceId: TCommonMissionForce['_id']
+  force: TCommonMissionForce
   /**
-   * The ID of the node that the session member interacted with to trigger the output.
+   * The node that the session member interacted with to trigger the output.
    */
-  nodeId: TCommonMissionNode['_id'] | null
+  node: TCommonMissionNode | null
   /**
-   * The ID of the action that's being executed.
+   * The action that's being executed.
    */
-  actionId: TCommonMissionAction['_id'] | null
+  action: TCommonMissionAction | null
   /**
    * The prefix displayed before the output message.
    */

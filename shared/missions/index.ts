@@ -17,7 +17,7 @@ import {
   TForce,
   TMissionForceOptions,
 } from './forces'
-import { TCommonOutput } from './forces/outputs'
+import { TCommonOutput } from './forces/output'
 import { TCommonMissionNode, TNode } from './nodes'
 import { TCommonMissionPrototype, TPrototype } from './nodes/prototypes'
 

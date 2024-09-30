@@ -34,7 +34,6 @@ export default function OutputPanel({
             case 'execution-started':
               return (
                 <ExecutionStarted
-                  force={force}
                   output={output}
                   selectNode={selectNode}
                   key={`output-${output._id}_time-${output.time}`}
@@ -43,7 +42,6 @@ export default function OutputPanel({
             default:
               return (
                 <Output
-                  force={force}
                   output={output}
                   selectNode={selectNode}
                   key={`output-${output._id}_time-${output.time}`}
