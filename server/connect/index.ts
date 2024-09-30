@@ -4,8 +4,9 @@ import ServerLogin from 'metis/server/logins'
 import { Socket, Server as SocketIoServer } from 'socket.io'
 import MetisServer from '../index'
 import SessionServer from '../sessions'
-import authMiddleware from './auth'
 import ClientConnection from './clients'
+import authMiddleware from './middleware/auth'
+import rateLimitMiddleware from './middleware/rate-limit'
 const createSocketIoServer = require('socket.io')
 
 /* -- CLASSES -- */
@@ -42,6 +43,7 @@ export default class MetisWsServer {
       metis.sessionMiddleware(request, response, next),
     )
     this.use(authMiddleware)
+    this.use(rateLimitMiddleware)
 
     // Add event listeners.
     this.addEventListeners()
