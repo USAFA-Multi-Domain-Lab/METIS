@@ -93,7 +93,7 @@ export function useRequireLogin(): [NonNullable<TLogin<ClientUser>>] {
 
   useEffect(() => {
     if (login === null) {
-      navigateTo('AuthPage', {})
+      navigateTo('AuthPage', {}, { bypassMiddleware: true })
     }
   }, [login === null])
 

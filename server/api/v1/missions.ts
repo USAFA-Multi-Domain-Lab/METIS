@@ -1,5 +1,5 @@
+import { Router } from 'express'
 import { Request, Response } from 'express-serve-static-core'
-import expressWs from 'express-ws'
 import fs from 'fs'
 import { TCommonMissionJson } from 'metis/missions'
 import MetisServer from 'metis/server'
@@ -19,7 +19,7 @@ import { auth } from '../../middleware/users'
 type MulterFile = Express.Multer.File
 
 export const routerMap: TMetisRouterMap = (
-  router: expressWs.Router,
+  router: Router,
   server: MetisServer,
   done: () => void,
 ) => {

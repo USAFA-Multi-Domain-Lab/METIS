@@ -10,7 +10,6 @@ import {
 import { ServerEmittedError } from 'metis/connect/errors'
 import ServerLogin from 'metis/server/logins'
 import { Socket } from 'socket.io'
-import { WebSocket } from 'ws'
 import SessionServer from '../sessions'
 import ServerUser from '../users'
 
@@ -373,19 +372,6 @@ export interface IClientConnectionOptions {
     [T in TClientMethod]?: TClientHandler<T>
   }
 }
-
-/**
- * Extracts event type from on the close event listener function.
- */
-type WSCloseEvent = Parameters<
-  NonNullable<typeof WebSocket.prototype.onclose>
->[0]
-/**
- * Extracts event type from on the message event listener function.
- */
-type WSMessageEvent = Parameters<
-  NonNullable<typeof WebSocket.prototype.onmessage>
->[0]
 
 /**
  * Options for `ClientConnection.buildFulfilledReqForRes`.

@@ -1,6 +1,6 @@
 //npm imports
+import { Router } from 'express'
 import { Request, Response } from 'express-serve-static-core'
-import expressWs from 'express-ws'
 import MetisServer from 'metis/server'
 import MetisDatabase from 'metis/server/database'
 import UserModel, { hashPassword } from 'metis/server/database/models/users'
@@ -17,7 +17,7 @@ import {
 import { databaseLogger } from '../../logging'
 
 const routerMap: TMetisRouterMap = (
-  router: expressWs.Router,
+  router: Router,
   server: MetisServer,
   done,
 ) => {

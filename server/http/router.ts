@@ -1,5 +1,4 @@
-import express from 'express'
-import expressWs from 'express-ws'
+import express, { Router } from 'express'
 import MetisServer from '../index'
 
 /**
@@ -9,7 +8,7 @@ export default class MetisRouter {
   /**
    * The Express router.
    */
-  private _expressRouter: expressWs.Router
+  private _expressRouter: Router
   /**
    * The path for the router to control.
    */
@@ -22,7 +21,7 @@ export default class MetisRouter {
   /**
    * The Express router.
    */
-  public get expressRouter(): expressWs.Router {
+  public get expressRouter(): Router {
     return this._expressRouter
   }
   /**
@@ -52,7 +51,7 @@ export default class MetisRouter {
 }
 
 export type TMetisRouterMap = (
-  router: expressWs.Router,
+  router: Router,
   server: MetisServer,
   done: () => void,
 ) => void
