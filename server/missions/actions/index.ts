@@ -8,6 +8,7 @@ import IActionExecution, {
 } from 'metis/missions/actions/executions'
 import { TCommonEffectJson } from 'metis/missions/effects'
 import { TTargetEnvContextAction } from 'metis/server/target-environments/context-provider'
+import { TSessionConfig } from 'metis/sessions'
 import seedrandom, { PRNG } from 'seedrandom'
 import { TServerMissionTypes } from '..'
 import ServerEffect, { TServerEffectOptions } from '../effects'
@@ -59,6 +60,7 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
   public execute(
     options: TExecuteOptions<ServerActionExecution>,
   ): Promise<ServerRealizedOutcome> {
+    let { infiniteResources } = options.sessionConfig
     let { cheats = {}, onInit = () => {} } = options
 
     let {
@@ -106,7 +108,9 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
 
       // If the "Zero Resource Cost" cheat is not enabled,
       // deduct the resource cost from the force's resources.
-      if (!zeroCost) this.force.resourcesRemaining -= this.resourceCost
+      if (!zeroCost && !infiniteResources) {
+        this.force.resourcesRemaining -= this.resourceCost
+      }
 
       // Set timeout for when the execution
       // is completed.
@@ -153,6 +157,10 @@ export type TServerMissionActionOptions = TMissionActionOptions & {}
  * Options for TExecuteOptions.
  */
 export type TExecuteOptions<TActionExecution extends IActionExecution> = {
+  /**
+   * The configuration for the session.
+   */
+  sessionConfig: TSessionConfig
   /**
    * Cheats to apply when executing the action.
    * @note Any cheats ommitted will be treated

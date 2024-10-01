@@ -506,77 +506,70 @@ export default class SessionServer extends Session<TServerMissionTypes> {
       },
     })
 
-    // todo: Update the export logic here to use
-    // todo: permissions instead of role-based logic.
     // Cache used to not export the same force twice
-    // for a participant.
-    const participantForceCache: SingleTypeObject<TCommonMissionJson> = {}
+    // for two members assigned to the same force.
+    const assignmentForceCache: SingleTypeObject<TCommonMissionJson> = {}
+    // Cache complete visibility export.
+    let completeVisibilityCache = this.mission.toJson({
+      exportType: 'session-complete',
+      userId: member.userId,
+    })
 
-    // Emit an event to all participants that the session has
-    // started.
-    for (let participant of this.participants) {
-      // Find the force ID for the participant.
-      let forceId = participant.forceId
+    // Loop through members, and emit a start event to
+    // all of them, including mission data specific to
+    // their permissions.
+    for (let member of this.members) {
+      let hasCompleteVisibility = member.isAuthorized('completeVisibility')
+      let isAssigned = member.isAssigned
 
-      // Skip if the participant is not assigned to a force.
-      if (forceId === null) {
-        continue
-      }
+      // If the member does not have complete visibility
+      // and is assigned to a force, then export force-specific
+      // data.
+      if (!hasCompleteVisibility && isAssigned) {
+        // Get the force ID for the member.
+        let forceId = member.forceId!
 
-      // If the force has not been cached, then cache it.
-      if (!participantForceCache[forceId]) {
-        participantForceCache[forceId] = this.mission.toJson({
-          exportType: 'session-force-specific',
-          forceId,
-          userId: participant.userId,
+        // If the force has not been cached, then cache it.
+        if (!assignmentForceCache[forceId]) {
+          assignmentForceCache[forceId] = this.mission.toJson({
+            exportType: 'session-force-specific',
+            forceId,
+            userId: member.userId,
+          })
+        }
+
+        // Get relevant data from the mission for the member.
+        let { nodeStructure, forces } = assignmentForceCache[forceId]
+
+        // Emit the event to the member.
+        member.emit('session-started', {
+          data: { nodeStructure, forces },
+          request,
         })
       }
-
-      // Get relevant data from the mission for the
-      // participant.
-      let { nodeStructure, forces } = participantForceCache[forceId]
-
-      // Emit the event to the participant.
-      participant.emit('session-started', {
-        data: { nodeStructure, forces },
-        request,
-      })
-    }
-
-    // Get observer export.
-    let observerExport = this.mission.toJson({
-      exportType: 'session-complete',
-      userId: member.userId,
-    })
-
-    // Emit an event to all observers that the session has
-    // started.
-    for (let observer of this.observers) {
-      observer.emit('session-started', {
-        data: {
-          nodeStructure: observerExport.nodeStructure,
-          forces: observerExport.forces,
-        },
-        request,
-      })
-    }
-
-    // Get manager export.
-    let managerExport = this.mission.toJson({
-      exportType: 'session-complete',
-      userId: member.userId,
-    })
-
-    // Emit an event to all managers that the session has
-    // started.
-    for (let manager of this.managers) {
-      manager.emit('session-started', {
-        data: {
-          nodeStructure: managerExport.nodeStructure,
-          forces: managerExport.forces,
-        },
-        request,
-      })
+      // Else if the member has complete visibility, then
+      // provide all data.
+      else if (hasCompleteVisibility) {
+        // Emit the event to the member.
+        member.emit('session-started', {
+          data: {
+            nodeStructure: completeVisibilityCache.nodeStructure,
+            forces: completeVisibilityCache.forces,
+          },
+          request,
+        })
+      }
+      // Else, export nothing.
+      else {
+        // Emit the event to the member.
+        member.emit('session-started', {
+          data: {
+            nodeStructure: {},
+            forces: [],
+          },
+          request,
+        })
+      }
     }
   }
 
@@ -1000,8 +993,8 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     event: TClientEvents['request-execute-action'],
   ): Promise<void> => {
     // Gather data.
-    const { effectsEnabled } = this.config
-    let { environmentContextProvider } = this
+    let { environmentContextProvider, config } = this
+    const { effectsEnabled, infiniteResources } = config
     let { connection } = member
     let { actionId, cheats = {} } = event.data
     let { zeroCost } = cheats
@@ -1067,7 +1060,11 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     // If the participant does not have enough
     // resources to execute the action, then
     // emit an error.
-    if (action.force.resourcesRemaining < action.resourceCost && !zeroCost) {
+    if (
+      action.force.resourcesRemaining < action.resourceCost &&
+      !zeroCost &&
+      !infiniteResources
+    ) {
       return connection.emitError(
         new ServerEmittedError(
           ServerEmittedError.CODE_ACTION_INSUFFICIENT_RESOURCES,
@@ -1081,6 +1078,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     try {
       // Execute the action, awaiting result.
       let outcome = await action.execute({
+        sessionConfig: config,
         cheats,
         onInit: (execution: ServerActionExecution) => {
           // Construct payload for action execution

@@ -16,7 +16,7 @@ export default function AuthPage(): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
 
   const globalContext = useGlobalContext()
-  const { beginLoading, finishLoading, navigateTo, connectToServer } =
+  const { beginLoading, finishLoading, navigateTo, connectToServer, prompt } =
     globalContext.actions
   const [_, setLogin] = globalContext.login
 
@@ -43,6 +43,73 @@ export default function AuthPage(): JSX.Element | null {
   /* -- FUNCTIONS -- */
 
   /**
+   * Attempts to log the user in.
+   * @param forceful Whether to force the login to occur, even if another client is logged in.
+   * @resolves When the user has logged in, or when the error
+   * that prevented the login has been handled.
+   * @recursive
+   */
+  const attemptLogin = async (forceful: boolean = false): Promise<void> => {
+    // Called when an error happens from
+    // login that needs to be displayed
+    // to the user.
+    const handleLoginError = (errorMessage: string): void => {
+      setIsSubmitting(false)
+      setErrorMessage(errorMessage)
+      finishLoading()
+    }
+
+    // Login.
+    try {
+      let { login } = await ClientLogin.$logIn(username, password, forceful)
+
+      // If correct and the login information
+      // was returned, then login was successful.
+      if (login) {
+        setIsSubmitting(false)
+        setLogin(login)
+        connectToServer()
+
+        // If the user needs a password reset,
+        // then navigate to the user reset page.
+        if (login.user.needsPasswordReset) {
+          navigateTo('UserResetPage', {})
+        }
+        // Otherwise, go to the home page.
+        else {
+          navigateTo('HomePage', {})
+        }
+      }
+    } catch (error: any) {
+      // Handles duplicate logins.
+      if (error.response?.status === 409) {
+        let { choice } = await prompt(
+          'Account is already logged in on another device or browser. How do you wish to proceed?',
+          ['Logout and login here', 'Go back'],
+        )
+
+        if (choice === 'Logout and login here') {
+          // Attempt the login again, but forecfully.
+          await attemptLogin(true)
+        } else {
+          setIsSubmitting(false)
+          finishLoading()
+        }
+      }
+      // Handles incorrect username or password.
+      else if (error.response?.status === 401) {
+        handleLoginError('Incorrect username or password.')
+      }
+      // Handles any other error.
+      else {
+        handleLoginError(
+          'Something went wrong on our end. Please try again later.',
+        )
+      }
+    }
+  }
+
+  /**
    * This is called when the form is submitted.
    */
   const handleSubmit = async (event: React.FormEvent): Promise<void> => {
@@ -52,55 +119,7 @@ export default function AuthPage(): JSX.Element | null {
       setIsSubmitting(true)
       beginLoading('Logging in...')
       setErrorMessage(null)
-
-      // Called when an error happens from
-      // login that needs to be displayed
-      // to the user.
-      const handleLoginError = (errorMessage: string): void => {
-        setIsSubmitting(false)
-        setErrorMessage(errorMessage)
-        finishLoading()
-      }
-
-      // Login.
-      try {
-        let { login } = await ClientLogin.$logIn(username, password)
-
-        // If correct and the login information
-        // was returned, then login was successful.
-        if (login) {
-          setIsSubmitting(false)
-          setLogin(login)
-          connectToServer()
-
-          // If the user needs a password reset,
-          // then navigate to the user reset page.
-          if (login.user.needsPasswordReset) {
-            navigateTo('UserResetPage', {})
-          }
-          // Otherwise, go to the home page.
-          else {
-            navigateTo('HomePage', {})
-          }
-        }
-      } catch (error: any) {
-        // Handles duplicate logins.
-        if (error.response?.status === 409) {
-          handleLoginError(
-            'Account is already logged in on another device or browser.',
-          )
-        }
-        // Handles incorrect username or password.
-        else if (error.response?.status === 401) {
-          handleLoginError('Incorrect username or password.')
-        }
-        // Handles any other error.
-        else {
-          handleLoginError(
-            'Something went wrong on our end. Please try again later.',
-          )
-        }
-      }
+      attemptLogin()
     }
   }
 

@@ -40,7 +40,7 @@ export default class MetisDatabase {
   }
 
   /**
-   * @param {MetisServer} server The Metis server instance.
+   * @param server The Metis server instance.
    */
   public constructor(server: MetisServer) {
     this._mongooseConnection = null
@@ -49,7 +49,7 @@ export default class MetisDatabase {
 
   /**
    * Establishes a Mongoose connection.
-   * @returns {Promise<void>} A promise that resolves when the connection is established.
+   * @returns A promise that resolves when the connection is established.
    */
   public async connect(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
@@ -114,7 +114,7 @@ export default class MetisDatabase {
 
   /**
    * Creates a backup of the database.
-   * @returns {Promise<void>} A promise that resolves when the backup is created.
+   * @returns A promise that resolves when the backup is created.
    */
   public async createBackup(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
@@ -153,7 +153,7 @@ export default class MetisDatabase {
 
   /**
    * This will ensure that the database is populated with necessary default data.
-   * @returns {Promise<void>} A promise that resolves once the default data is ensured to exist.
+   * @returns A promise that resolves once the default data is ensured to exist.
    */
   private async ensureDefaultDataExists(): Promise<void> {
     // Call sub-function for each database
@@ -165,7 +165,7 @@ export default class MetisDatabase {
 
   /**
    * This will ensure that the info collection is populated with necessary default data.
-   * @returns {Promise<void>} A promise that resolves once the default data is ensured to exist.
+   * @returns A promise that resolves once the default data is ensured to exist.
    */
   private async ensureDefaultInfoExists(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
@@ -204,7 +204,7 @@ export default class MetisDatabase {
 
   /**
    * This will ensure that the users collection is populated with necessary default data.
-   * @returns {Promise<void>} A promise that resolves once the default data is ensured to exist.
+   * @returns A promise that resolves once the default data is ensured to exist.
    */
   private async ensureDefaultUsersExists(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
@@ -357,7 +357,7 @@ export default class MetisDatabase {
 
   /**
    * This will ensure that the missions collection is populated with necessary default data.
-   * @returns {Promise<void>} A promise that resolves once the default data is ensured to exist.
+   * @returns A promise that resolves once the default data is ensured to exist.
    */
   private async ensureDefaultMissionsExists(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
@@ -393,7 +393,7 @@ export default class MetisDatabase {
    * same as the one stored in the database. If not,
    * the database will be updated until the build
    * number is the same.
-   * @returns {Promise<void>} A promise that resolves once the schema build is correct.
+   * @returns A promise that resolves once the schema build is correct.
    */
   private async ensureCorrectSchemaBuild(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
@@ -436,9 +436,9 @@ export default class MetisDatabase {
 
   /**
    * This will build the schema for the given schema build number.
-   * @param {number} currentBuildNumber The current schema build number.
-   * @param {number} targetBuildNumber The target schema build number.
-   * @returns {Promise<void>} A promise that resolves once the schema is built to the target build number.
+   * @param currentBuildNumber The current schema build number.
+   * @param targetBuildNumber The target schema build number.
+   * @returns A promise that resolves once the schema is built to the target build number.
    */
   private async buildSchema(
     currentBuildNumber: number,
@@ -510,8 +510,8 @@ export default class MetisDatabase {
 
   /**
    * This will generate the file path for the given build number.
-   * @param {number} buildNumber The build number.
-   * @returns {string} The file path for the given build number.
+   * @param buildNumber The build number.
+   * @returns The file path for the given build number.
    */
   private static generateFilePath(buildNumber: number) {
     let buildNumberAsStr: string = `${buildNumber}`

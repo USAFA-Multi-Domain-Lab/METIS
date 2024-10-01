@@ -29,8 +29,8 @@ export default class ClientActionOutcome
   public readonly successful: boolean
 
   /**
-   * @param {ClientMissionAction} action The action itself.
-   * @param {boolean} successful Whether the action succeeded.
+   * @param action The action itself.
+   * @param successful Whether the action succeeded.
    */
   public constructor(action: ClientMissionAction, successful: boolean) {
     this.action = action

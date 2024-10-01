@@ -22,6 +22,8 @@ const routerMap: TMetisRouterMap = (
    * @returns The login information in JSON format.
    */
   const login = (request: Request, response: Response) => {
+    let forceful: boolean = request.headers.forceful === 'true'
+
     UserModel.authenticate(
       request,
       (error: StatusError, correct: boolean, userData: any) => {
@@ -42,7 +44,7 @@ const routerMap: TMetisRouterMap = (
 
             try {
               // Attempt to create a new login object.
-              let login: ServerLogin = new ServerLogin(user)
+              let login: ServerLogin = new ServerLogin(user, { forceful })
 
               // Store the logged in user's ID in the express
               // session.

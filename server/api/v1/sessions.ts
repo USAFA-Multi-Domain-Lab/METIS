@@ -124,10 +124,7 @@ const routerMap = (
 
   /* ---------------------------- ROUTES ---------------------------- */
 
-  // -- GET | /api/v1/sessions/ --
   router.get('/', auth({}), getSessions)
-
-  // -- POST | /api/v1/sessions/launch/ --
   router.post(
     '/launch/',
     auth({ permissions: ['sessions_write', 'missions_read'] }),
@@ -150,8 +147,6 @@ const routerMap = (
     ),
     launchSession,
   )
-
-  // -- DELETE | /api/v1/sessions/:_id/ --
   router.delete(
     '/:_id/',
     auth({ permissions: ['sessions_write'] }),

@@ -1,8 +1,12 @@
+import { io, Socket } from 'socket.io-client'
 import SessionClient from 'src/sessions'
 import { TEventListenerTarget } from 'src/toolbox/hooks'
+import Logging from 'src/toolbox/logging'
 import { v4 as generateHash } from 'uuid'
 import {
   TAnyResponseEvent,
+  TClientEvent,
+  TClientMethod,
   TGenericClientEvents,
   TGenericClientMethod,
   TRequestEvents,
@@ -10,6 +14,7 @@ import {
   TResponseEvents,
   TResponseMethod,
   TServerConnectionStatus,
+  TServerEvent,
   TServerEvents,
   TServerMethod,
 } from '../../../shared/connect/data'
@@ -25,7 +30,7 @@ export default class ServerConnection
   /**
    * The web socket connection itself.
    */
-  public socket: WebSocket
+  public socket: Socket
 
   /**
    * Tracks whether the connection should be open, regardless of if it is.
@@ -52,13 +57,6 @@ export default class ServerConnection
    */
   public get lastClosed(): number | null {
     return this._lastClosed
-  }
-
-  /**
-   * The ready state of the web socket connection.
-   */
-  public get readyState(): number {
-    return this.socket.readyState
   }
 
   /**
@@ -111,7 +109,7 @@ export default class ServerConnection
   }
 
   /**
-   * @param {IServerConnectionOptions} options Options for the server connection.
+   * @param options Options for the server connection.
    */
   public constructor(options: IServerConnectionOptions = {}) {
     // Establish web socket connection given options passed.
@@ -134,20 +132,22 @@ export default class ServerConnection
   /**
    * Creates a web socket connection with the server.
    */
-  private createSocket(
-    options: IServerConnectionOptions,
-    bad: boolean = false,
-  ): WebSocket {
+  private createSocket(options: IServerConnectionOptions): Socket {
+    const { disconnectExisting } = options
     let url: string = ServerConnection.SOCKET_URL
+    let extraHeaders: Record<string, string> = {}
 
-    // Add disconnectExisting query if
-    // requested.
-    if (options.disconnectExisting) {
-      url += '?disconnectExisting=true'
-    }
+    // If disconnectExisting is true, add the header.
+    if (disconnectExisting) extraHeaders['Disconnect-Existing'] = 'true'
 
     // Create a new web socket connection.
-    let socket: WebSocket = new WebSocket(url)
+    let socket: Socket = io(url, {
+      transportOptions: {
+        polling: {
+          extraHeaders,
+        },
+      },
+    })
 
     // Set `shouldBeConnected` to true.
     this.shouldBeConnected = true
@@ -161,21 +161,10 @@ export default class ServerConnection
    */
   private prepareSocket(): void {
     // Add event listeners.
-    this.socket.addEventListener('open', this.onOpen)
-    this.socket.addEventListener('close', this.onClose)
-    this.socket.addEventListener('message', this.onMessage)
-    this.socket.addEventListener('error', this.onSocketError)
-  }
-
-  /**
-   * Attempts to reconnect after a connection loss.
-   */
-  public reconnect(): void {
-    // Create new socket connection.
-    this.socket = this.createSocket({ disconnectExisting: true })
-
-    // Prepare new socket connection.
-    this.prepareSocket()
+    this.socket.on('connect', this.onOpen)
+    this.socket.on('disconnect', this.onClose)
+    this.socket.on('connect_error', this.onSocketError)
+    this.socket.on('message', this.onMessage)
   }
 
   /**
@@ -190,7 +179,7 @@ export default class ServerConnection
     // Send payload.
     this.socket.send(JSON.stringify({ method, data }))
     // Handle activity.
-    this.onActivity()
+    this.onActivity(method)
   }
 
   /**
@@ -231,14 +220,14 @@ export default class ServerConnection
     this.socket.send(JSON.stringify({ method, requestId, data }))
 
     // Handle activity.
-    this.onActivity()
+    this.onActivity(method)
   }
 
   /**
    * Adds a listener for a specific server event method.
-   * @param {TServerMethod} method The event method that will be handled. The handler will only be called if the method matches what is sent by the server in a web socket message, except for 'open', 'close', and 'error' events, which are called upon their respective web socket events.
-   * @param {TServerHandler<TServerEvent>} handler The handler that will be called upon the event being triggered.
-   * @returns {ServerConnection} The server connection instance, allowing the chaining of class method calls.
+   * @param method The event method that will be handled. The handler will only be called if the method matches what is sent by the server in a web socket message, except for 'open', 'close', and 'error' events, which are called upon their respective web socket events.
+   * @param handler The handler that will be called upon the event being triggered.
+   * @returns The server connection instance, allowing the chaining of class method calls.
    */
   public addEventListener<TMethod extends TServerMethod>(
     method: TMethod,
@@ -252,9 +241,9 @@ export default class ServerConnection
 
   /**
    * Adds a listener for a specific server event method.
-   * @param {TServerMethod} method The event method that will be handled. The handler will only be called if the method matches what is sent by the server in a web socket message, except for 'open', 'close', and 'error' events, which are called upon their respective web socket events.
-   * @param {TServerHandler<TServerEvent>} handler The handler that will be called upon the event being triggered.
-   * @returns {ServerConnection} The server connection instance, allowing the chaining of class method calls.
+   * @param method The event method that will be handled. The handler will only be called if the method matches what is sent by the server in a web socket message, except for 'open', 'close', and 'error' events, which are called upon their respective web socket events.
+   * @param handler The handler that will be called upon the event being triggered.
+   * @returns The server connection instance, allowing the chaining of class method calls.
    */
   public removeEventListener(
     handler: TServerHandler<TServerMethod>,
@@ -268,44 +257,7 @@ export default class ServerConnection
   /**
    * Adds default listeners for the server connection.
    */
-  protected addDefaultListeners(): void {
-    this.addEventListener('connection-success', () => {
-      // Log event.
-      console.log('Server connection opened.')
-    })
-    this.addEventListener('reconnection-success', () => {
-      // Log event.
-      console.log('Server connection reopened.')
-    })
-    this.addEventListener('connection-closed', () => {
-      // Log event.
-      console.log('Server connection closed.')
-    })
-    this.addEventListener('connection-loss', () => {
-      // Log event.
-      console.log('Server connection lost.')
-      // Wait duration of `RECONNECT_COOLDOWN` before attempting
-      // to reconnect.
-      setTimeout(() => this.reconnect(), ServerConnection.RECONNECT_COOLDOWN)
-    })
-    this.addEventListener('connection-failure', () => {
-      // Log event.
-      console.log('Server connection failed.')
-      // Wait duration of `RECONNECT_COOLDOWN` before attempting
-      // to reconnect.
-      setTimeout(() => this.reconnect(), ServerConnection.RECONNECT_COOLDOWN)
-    })
-    this.addEventListener('reconnection-failure', () => {
-      // Log event.
-      console.log('Server reconnection failed.')
-      // Wait duration of `RECONNECT_COOLDOWN` before attempting
-      // to reconnect.
-      setTimeout(() => this.reconnect(), ServerConnection.RECONNECT_COOLDOWN)
-    })
-    this.addEventListener('error', ({ code, message }) => {
-      console.error(`Server Connection Error (${code}):\n${message}`)
-    })
-  }
+  protected addDefaultListeners(): void {}
 
   /**
    * Clears event listeners from the connection.
@@ -439,20 +391,37 @@ export default class ServerConnection
    * Handles any activity on the connection by calling
    * any activity listeners.
    */
-  public onActivity(): void {
+  private onActivity(
+    event: TClientMethod | TClientEvent | TServerMethod | TServerEvent,
+  ): void {
+    let method: TClientMethod | TServerMethod =
+      typeof event === 'string' ? event : event.method
+
     // Call any listeners that match with the method 'activity'.
     for (let [method, listener] of this.listeners) {
       if (method === 'activity') {
         listener({ method: 'activity' })
       }
     }
+
+    // Log activity.
+    if (typeof event === 'object' && event.method === 'error') {
+      Logging.error(event.message, Logging.CONTEXT_WS, [
+        method,
+        event.code.toString(),
+      ])
+    } else if (method === 'error') {
+      Logging.error('', Logging.CONTEXT_WS, [method])
+    } else {
+      Logging.info('', Logging.CONTEXT_WS, [method])
+    }
   }
 
   /**
-   * Handler for when the web socket connection is opened. Calls all "open" listeners stored in "listeners".
-   * @param {Event} event The open event.
+   * Handler for when the web socket connection is opened.
+   * Calls all "open" listeners stored in "listeners".
    */
-  private onOpen = (event: Event): void => {
+  private onOpen = (): void => {
     // Gather details.
     let wasOpenedBefore: boolean = this._lastOpened !== null
 
@@ -482,12 +451,14 @@ export default class ServerConnection
     }
 
     // Handle activity.
-    this.onActivity()
+    this.onActivity(determinedMethod)
   }
 
   /**
-   * Handler for when the web socket connection is closed. Calls all "close" and "connection-loss" listeners stored in "listeners".
-   * @param {CloseEvent} event The close event.
+   * Handler for when the web socket connection is closed.
+   * Calls all "close" and "connection-loss" listeners stored
+   * in "listeners".
+   * @param event The close event.
    */
   private onClose = (): void => {
     // Gather information.
@@ -546,16 +517,16 @@ export default class ServerConnection
     }
 
     // Handle activity.
-    this.onActivity()
+    this.onActivity(determinedMethod)
   }
 
   /**
    * Handler for when the web socket connection is opened. Calls all matching listeners stored in "listeners".
-   * @param {MessageEvent} e The message event.
+   * @param e The message event data.
    */
-  private onMessage = (e: MessageEvent): void => {
+  private onMessage = (data: string): void => {
     // Parse the data.
-    let event: any = JSON.parse(e.data)
+    let event: any = JSON.parse(data)
 
     // Handle errors before calling
     // individual listeners.
@@ -564,12 +535,14 @@ export default class ServerConnection
       // object.
       let error: ServerEmittedError = ServerEmittedError.fromJson(event)
 
-      // If the error is a duplicate client
-      // issue, or a message rate limit issue,
-      // mark shouldBeConnected as false.
+      // If the error indicates that the server intends
+      // to close the connection, set `shouldBeConnected`
+      // to false.
       if (
         error.code === ServerEmittedError.CODE_DUPLICATE_CLIENT ||
-        error.code === ServerEmittedError.CODE_MESSAGE_RATE_LIMIT
+        error.code === ServerEmittedError.CODE_MESSAGE_RATE_LIMIT ||
+        error.code === ServerEmittedError.CODE_SWITCHED_CLIENT ||
+        error.code === ServerEmittedError.CODE_UNAUTHENTICATED
       ) {
         this.shouldBeConnected = false
       }
@@ -608,25 +581,35 @@ export default class ServerConnection
     }
 
     // Handle activity.
-    this.onActivity()
+    this.onActivity(event)
   }
 
   /**
-   * Handler for when a socket-specific error occurs. This is different from a server-emitted error, which
-   * is handled in `onMessage`.
+   * Handler for when a socket-specific error occurs. This is different
+   * from a server-emitted error, which is handled in `onMessage`.
    */
-  private onSocketError = (event: Event): void => {
-    let isClosed: boolean =
-      this.socket.readyState === WebSocket.CLOSED ||
-      this.socket.readyState === WebSocket.CLOSING
+  private onSocketError = (error: Error): void => {
+    // Attempt to parse the error message to
+    // a server emitted error.
+    try {
+      // Attempt to parse the error message.
+      let errorData: any = JSON.parse(error.message)
+      ServerEmittedError.fromJson(errorData)
 
-    // If the socket is closed, call the `onClose` handler.
-    if (isClosed) {
-      this.onClose()
+      // If successful, pass the raw string
+      // to the `onMessage` handler.
+      this.onMessage(error.message)
+    } catch (e) {
+      // Else, dynamically generate an event
+      // from the information known.
+      let event: TServerEvents['error'] = {
+        method: 'error',
+        message: error.message,
+        code: ServerEmittedError.CODE_UNKNOWN,
+      }
+      // Handle activity.
+      this.onActivity(event)
     }
-
-    // Handle activity.
-    this.onActivity()
   }
 
   /**
@@ -639,9 +622,9 @@ export default class ServerConnection
     if (!inBrowser) {
       return '/'
     } else if (useSecure) {
-      return `wss://${window.location.host}/connect`
+      return `wss://${window.location.host}`
     } else {
-      return `ws://${window.location.host}/connect`
+      return `ws://${window.location.host}`
     }
   }
 
@@ -685,8 +668,8 @@ export interface IServerConnectionOptions {
     [T in TServerMethod]?: TServerHandler<T>
   }
   /**
-   * Whether to disconnect existing connections in order to establish this connection. Defaults to false.
-   * @WIP
+   * Disconnects the existing connection for the current login.
+   * @default false
    */
   disconnectExisting?: boolean
 }

@@ -7,7 +7,6 @@ import routerMap_missions from 'metis/server/api/v1/missions'
 import routerMap_sessions from 'metis/server/api/v1/sessions'
 import routerMap_targetEnvironments from 'metis/server/api/v1/target-environments'
 import routerMap_users from 'metis/server/api/v1/users'
-import routerMap_connect from 'metis/server/connect'
 import MetisRouter from 'metis/server/http/router'
 
 let { ENVIRONMENT_FILE_PATH: environmentFilePath } = MetisServer
@@ -52,7 +51,6 @@ server.addRouter(
   new MetisRouter('/api/v1/target-environments/', routerMap_targetEnvironments),
 )
 server.addRouter(new MetisRouter('/api/v1/logins/', routerMap_logins))
-server.addRouter(new MetisRouter('/connect', routerMap_connect))
 
 // Start server.
 server.serve()

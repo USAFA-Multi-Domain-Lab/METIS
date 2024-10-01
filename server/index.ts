@@ -1,9 +1,9 @@
 import MongoStore from 'connect-mongo'
-import express, { Express } from 'express'
+import express, { Express, RequestHandler } from 'express'
 import rateLimit from 'express-rate-limit'
-import session from 'express-session'
-import expressWs from 'express-ws'
+import session, { Session, SessionData } from 'express-session'
 import fs from 'fs'
+import http, { Server as HttpServer } from 'http'
 import MetisDatabase from 'metis/server/database'
 import MetisRouter from 'metis/server/http/router'
 import { expressLogger, expressLoggingHandler } from 'metis/server/logging'
@@ -11,12 +11,14 @@ import { TCommonTargetEnvJson } from 'metis/target-environments'
 import mongoose from 'mongoose'
 import path from 'path'
 import { sys } from 'typescript'
+import MetisWsServer from './connect'
 import MetisFileStore from './files'
 import ServerTargetEnvironment from './target-environments'
 const cookieParser = require('cookie-parser')
 const cors = require('cors')
 const defaults = require('../defaults')
 const packageJson = require('../package.json')
+const socketIo = require('socket.io')
 
 /**
  * Manages an Express web server for METIS.
@@ -31,6 +33,28 @@ export default class MetisServer {
    */
   public get expressApp(): Express {
     return this._expressApp
+  }
+
+  /**
+   * The HTTP server instance.
+   */
+  private _httpServer: HttpServer
+  /**
+   * The HTTP server instance.
+   */
+  public get httpServer(): HttpServer {
+    return this._httpServer
+  }
+
+  /**
+   * The Socket IO instance.
+   */
+  private _wsServer: MetisWsServer
+  /**
+   * The Socket IO instance.
+   */
+  public get wsServer(): MetisWsServer {
+    return this._wsServer
   }
 
   /**
@@ -155,6 +179,19 @@ export default class MetisServer {
   }
 
   /**
+   * The session middleware for the server responsible
+   * for enabling and managing sessions.
+   */
+  private _sessionMiddleware: RequestHandler
+  /**
+   * The session middleware for the server responsible
+   * for enabling and managing sessions.
+   */
+  public get sessionMiddleware(): RequestHandler {
+    return this._sessionMiddleware
+  }
+
+  /**
    * The routers for the server.
    */
   private routers: MetisRouter[] = []
@@ -164,6 +201,8 @@ export default class MetisServer {
    */
   public constructor(options: IMetisServerOptions = {}) {
     this._expressApp = express()
+    this._httpServer = http.createServer(this.expressApp)
+    this._wsServer = new MetisWsServer(this)
     this._port = options.port ?? defaults.PORT
     this._mongoDB = options.mongoDB ?? defaults.MONGO_DB
     this._mongoHost = options.mongoHost ?? defaults.MONGO_HOST
@@ -175,27 +214,30 @@ export default class MetisServer {
     this._fileStoreDir = options.fileStoreDir ?? defaults.FILE_STORE_DIR
     this._database = new MetisDatabase(this)
     this._fileStore = new MetisFileStore(this, { directory: this.fileStoreDir })
+    // Temporary session middleware until configured
+    // with the database connection.
+    this._sessionMiddleware = () => {}
   }
 
   /**
-   * Serves the Express server. Resolves when the server is open on the configured port.
+   * Serves the Express server.
+   * @resolves when the server is open on the configured port.
+   * @rejects if the server fails to start.
    */
   public async serve(): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
       try {
-        let expressApp: Express = this.expressApp
+        let httpServer: HttpServer = this.httpServer
+        let port: number = this.port
 
         // Initialize express app.
         await this.initialize()
 
         // Serve express app.
-        const server: any = this.expressApp.listen(
-          expressApp.get('port'),
-          () => {
-            console.log(`Started server on port ${server.address().port}.`)
-            resolve()
-          },
-        )
+        httpServer.listen(port, () => {
+          console.log(`Started server on port ${port}.`)
+          resolve()
+        })
       } catch (error) {
         console.error('START UP FAILED SHUTTING DOWN')
         reject(error)
@@ -210,10 +252,7 @@ export default class MetisServer {
   private initialize(): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
       let mongooseConnection: mongoose.Connection | null
-      let { expressApp, database, fileStore } = this
-
-      // Web socket setup.
-      expressWs(expressApp)
+      let { expressApp, database, fileStore, wsServer } = this
 
       // Logger setup.
       expressApp.use(expressLoggingHandler)
@@ -224,13 +263,22 @@ export default class MetisServer {
       // File store setup.
       await fileStore.initialize()
 
-      // Grab mongoose connection.
+      // Grab and confirm mongoose connection.
       mongooseConnection = database.mongooseConnection
-
       if (mongooseConnection === null) {
         console.error('Failed to connect to database.')
         return sys.exit(1)
       }
+
+      // Configure sessions.
+      this._sessionMiddleware = session({
+        secret: '3c8V3DoMuJxjoife0asdfasdf023asd9isfd',
+        resave: false,
+        saveUninitialized: false,
+        store: MongoStore.create({
+          client: mongooseConnection.getClient(),
+        }),
+      })
 
       // Create the internal (METIS) target environment.
       // Note: This gets added to the registry upon creation.
@@ -261,16 +309,7 @@ export default class MetisServer {
       // activates third-party middleware
       expressApp.use(cors())
       expressApp.use(cookieParser())
-      expressApp.use(
-        session({
-          secret: '3c8V3DoMuJxjoife0asdfasdf023asd9isfd',
-          resave: false,
-          saveUninitialized: false,
-          store: MongoStore.create({
-            client: mongooseConnection.getClient(),
-          }),
-        }),
-      )
+      expressApp.use(this._sessionMiddleware)
       expressApp.use(express.urlencoded({ limit: '10mb', extended: true }))
       expressApp.use(express.json({ limit: '10mb' }))
 
@@ -319,6 +358,9 @@ export default class MetisServer {
         response.locals.error = error
         return response.render('error/v-server-error')
       })
+
+      // Initialize web socket server.
+      wsServer.initialize()
 
       resolve()
     })
@@ -369,6 +411,12 @@ export default class MetisServer {
 }
 
 /* -- TYPES -- */
+
+declare module 'http' {
+  export interface IncomingMessage {
+    session: Session & Partial<SessionData>
+  }
+}
 
 declare module 'express-session' {
   export interface SessionData {

@@ -7,13 +7,13 @@ import {
 } from 'src/components/content/communication/Prompt'
 import { TButtonText_P } from 'src/components/content/user-controls/ButtonText'
 import { PAGE_REGISTRY, TPage_P } from 'src/components/pages'
-import ServerConnection from 'src/connect/servers'
+import ServerConnection, { IServerConnectionOptions } from 'src/connect/servers'
 import MetisInfo from 'src/info'
 import ClientLogin from 'src/logins'
 import Notification from 'src/notifications'
 import ClientUser from 'src/users'
 import { v4 as generateHash } from 'uuid'
-import { TResponseEvents } from '../../../shared/connect/data'
+import { TResponseEvents, TServerEvents } from '../../../shared/connect/data'
 import { ServerEmittedError } from '../../../shared/connect/errors'
 import { TLogin } from '../../../shared/logins'
 import { TExecutionCheats } from '../../../shared/missions/actions/executions'
@@ -185,25 +185,19 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
   const onMemberBanned = useRef<(event: TResponseEvents['banned']) => void>(
     () => {},
   )
-
-  /* -- LOCAL FUNCTIONS -- */
-
   /**
-   * This will handle the completion of
-   * the loading process of the app.
+   * Handles an error emitted by the server.
    */
-  const handleLoadCompletion = (): void => {
-    for (let notification of postLoadNotifications) {
-      notifications.push(notification)
-      notification.startExpirationTimer()
-    }
-    setPostLoadNotifications([])
-  }
+  const onServerError = useRef<(event: TServerEvents['error']) => void>(
+    () => {},
+  )
+  const onPageMinTimeReached = useRef<() => void>(() => {})
+  const onLoadCompletion = useRef<() => void>(() => {})
 
   /* -- HOOKS -- */
 
-  // This effect updates the on member kicked and on member banned
-  // callbacks to update when the login changes.
+  // This effect updates varioius event listener functions,
+  // giving them access to the current context.
   useEffect(() => {
     onMemberKicked.current = (event: TResponseEvents['kicked']) => {
       const { handleError } = context.actions
@@ -220,7 +214,52 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
         handleError('You have been banned from the session.')
       }
     }
+
+    onServerError.current = ({ code, message }) => {
+      const { handleError } = context.actions
+
+      switch (code) {
+        case ServerEmittedError.CODE_UNAUTHENTICATED:
+          if (login !== null) {
+            handleError({
+              message:
+                'You are no longer logged in. This is most likely due to the server restarting.',
+              notifyMethod: 'bubble',
+            })
+            setLogin(null)
+            context.actions.navigateTo('AuthPage', {})
+            connectionStatusMessage.value = null
+          }
+          break
+        case ServerEmittedError.CODE_SWITCHED_CLIENT:
+          handleError({
+            message:
+              'You have been disconnected because you have connected from another location.',
+            notifyMethod: 'page',
+          })
+          break
+        case ServerEmittedError.CODE_MESSAGE_RATE_LIMIT:
+          handleError(message)
+          break
+      }
+    }
   }, [login])
+
+  // This effect updates the page loading functions
+  // giving them access to the current context.
+  useEffect(() => {
+    onPageMinTimeReached.current = () => {
+      setPageSwitchMinTimeReached(true)
+      if (!loading && loadingMinTimeReached) onLoadCompletion.current()
+    }
+    onLoadCompletion.current = () => {
+      for (let notification of postLoadNotifications) {
+        notifications.push(notification)
+        notification.startExpirationTimer()
+      }
+      setPostLoadNotifications([])
+    }
+  }, [loading, loadingMinTimeReached, postLoadNotifications, notifications])
 
   /* -- CONTEXT ACTION DEFINITION -- */
 
@@ -250,13 +289,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
         // completing the page switch. This will
         // make the page transition feel more
         // smooth.
-        setTimeout(() => {
-          setPageSwitchMinTimeReached(true)
-
-          if (loading && loadingMinTimeReached) {
-            handleLoadCompletion()
-          }
-        }, PAGE_SWITCH_MIN_TIME)
+        setTimeout(() => onPageMinTimeReached.current(), PAGE_SWITCH_MIN_TIME)
       }
 
       // Create an array from navigation middleware.
@@ -307,7 +340,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
         setLoadingMinTimeReached(true)
 
         if (!loading && pageSwitchMinTimeReached) {
-          handleLoadCompletion()
+          onLoadCompletion.current()
         }
       }, LOADING_MIN_TIME)
     },
@@ -315,7 +348,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
       setLoading(false)
 
       if (loadingMinTimeReached && pageSwitchMinTimeReached) {
-        handleLoadCompletion()
+        onLoadCompletion.current()
       }
     },
     loadLoginInfo: async (): Promise<TLogin<ClientUser>> => {
@@ -332,15 +365,11 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
         }
       })
     },
-    connectToServer: (
-      options: {
-        disconnectExisting?: boolean
-      } = {},
-    ): Promise<ServerConnection> => {
+    connectToServer: (): Promise<ServerConnection> => {
       const { handleError, beginLoading } = context.actions
 
       return new Promise<ServerConnection>(async (resolve, reject) => {
-        let server: ServerConnection = new ServerConnection({
+        let options: IServerConnectionOptions = {
           on: {
             'connection-success': () => {
               setServer(server)
@@ -397,41 +426,44 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
             'session-destroyed': () => {
               handleError('The session you were in has been deleted.')
             },
-            'error': ({ code, message }) => {
-              if (code === ServerEmittedError.CODE_DUPLICATE_CLIENT) {
+            'error': (event) => {
+              onServerError.current(event)
+
+              if (event.code === ServerEmittedError.CODE_DUPLICATE_CLIENT) {
                 handleError({
-                  message,
-                  // solutions: [
-                  //   {
-                  //     text: 'Force Connect',
-                  //     onClick: () => {
-                  //       this.confirm(
-                  //         'Force connecting will disconnect the current connection to the server. Any unsaved changes may be lost. Do you wish to proceed?',
-                  //         async (concludeAction) => {
-                  //           let server: ServerConnection =
-                  //             await this.connectToServer({
-                  //               disconnectExisting: true,
-                  //             })
-                  //           concludeAction()
-                  //           resolve(server)
-                  //         },
-                  //         {
-                  //           buttonConfirmText: 'Proceed',
-                  //           pendingMessageUponConfirm: 'Force connecting...',
-                  //         },
-                  //       )
-                  //     },
-                  //     componentKey: 'force-connect',
-                  //   },
-                  // ],
+                  message: event.message,
+                  notifyMethod: 'page',
+                  solutions: [
+                    {
+                      text: 'Switch Tabs',
+                      onClick: () => {
+                        // Clear error.
+                        setError(null)
+                        // Begin loading again.
+                        beginLoading('Switching tabs...')
+                        // Mark `disconnectExisting` as true to disconnect the existing connection.
+                        options.disconnectExisting = true
+                        // Pass options back into the `ServerConnection`
+                        // class and try again.
+                        server = new ServerConnection(options)
+                      },
+                    },
+                    {
+                      text: 'Logout',
+                      onClick: async () => {
+                        // Logout the user.
+                        await context.actions.logout()
+                        // Clear error.
+                        setError(null)
+                      },
+                    },
+                  ],
                 })
-              } else if (code === ServerEmittedError.CODE_MESSAGE_RATE_LIMIT) {
-                handleError({ message })
               }
             },
           },
-          disconnectExisting: options.disconnectExisting ?? false,
-        })
+        }
+        let server: ServerConnection = new ServerConnection(options)
       })
     },
     handleError: (error: TAppError | string): void => {
@@ -463,8 +495,6 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
       }
     },
     notify: (message: string, options: TNotifyOptions = {}): Notification => {
-      const { forceUpdate } = context.actions
-
       let onLoadingPage: boolean =
         loading || !loadingMinTimeReached || !pageSwitchMinTimeReached
 
@@ -473,13 +503,13 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
         (dismissed: boolean, expired: boolean) => {
           if (dismissed) {
             notifications.splice(notifications.indexOf(notification), 1)
+            setNotifications([...notifications])
           } else if (expired) {
             setTimeout(() => {
               notifications.splice(notifications.indexOf(notification), 1)
-              forceUpdate()
+              setNotifications([...notifications])
             }, 1000)
           }
-          forceUpdate()
         },
         { ...options, startExpirationTimer: !onLoadingPage },
       )
@@ -490,7 +520,9 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
         postLoadNotifications.push(notification)
       }
 
-      forceUpdate()
+      setNotifications([...notifications])
+      setPostLoadNotifications([...postLoadNotifications])
+
       return notification
     },
     prompt: <TChoice extends string, TList extends object = {}>(
@@ -710,12 +742,9 @@ export type TGlobalContextActions = {
   /**
    * Establish a web socket connection with the server. The new server
    * connection will be stored in the global state variable "server".
-   * @param options Options when connecting to the server.
-   * @returns {Promise<ServerConnection>} The promise of the server connection.
+   * @returns The promise of the server connection.
    */
-  connectToServer: (options?: {
-    disconnectExisting?: boolean
-  }) => Promise<ServerConnection>
+  connectToServer: () => Promise<ServerConnection>
   /**
    * Handles an error passed. How it is handled is dependent on the value of
    * the 'notifyMethod' property. By default, if none is selected, 'page'
