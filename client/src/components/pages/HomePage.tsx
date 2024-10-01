@@ -549,7 +549,7 @@ export default function HomePage(): JSX.Element | null {
       return (
         <div className='ListContainer'>
           <List<TSessionBasicJson>
-            headingText={'Select a session:'}
+            headingText={'Sessions'}
             items={sessions}
             sortByMethods={[ESortByMethod.Name]}
             nameProperty={'name'}
@@ -650,7 +650,7 @@ export default function HomePage(): JSX.Element | null {
       return (
         <div className='ListContainer'>
           <List<ClientMission>
-            headingText={'Select a mission:'}
+            headingText={'Missions'}
             items={missions}
             sortByMethods={[ESortByMethod.Name]}
             nameProperty={'name'}
@@ -737,7 +737,7 @@ export default function HomePage(): JSX.Element | null {
       return (
         <div className='ListContainer'>
           <List<ClientUser>
-            headingText={'Select a user:'}
+            headingText={'Users'}
             items={users}
             sortByMethods={[ESortByMethod.Name]}
             nameProperty={'username'}

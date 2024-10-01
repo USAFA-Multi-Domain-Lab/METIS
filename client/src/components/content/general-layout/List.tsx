@@ -187,7 +187,7 @@ export default class List<TList extends object> extends React.Component<
     listStyling: {},
     applyStyling: () => {},
     subheadingText: null,
-    itemsPerPage: 5,
+    itemsPerPage: 8,
     duelPageMode: false,
     alwaysUseBlanks: false,
     preventMarkdownStyling: false,
@@ -512,7 +512,7 @@ export default class List<TList extends object> extends React.Component<
               this.setState({ hideSearchTooltip: false })
             }}
           />
-          <div className='search-hint'>{filterHint}</div>
+          <input type='text' className='search-hint' value={filterHint} />
           {hideSearchTooltip ? null : <Tooltip description={'Search list.'} />}
         </div>
         {/* {this.renderSortByMethods()} */}
@@ -835,10 +835,6 @@ export default class List<TList extends object> extends React.Component<
     return (
       <div className={listClassName} style={listStyling}>
         <div className='top'>
-          <div className={previousPageClassName} onClick={this.turnBackPage}>
-            {'<'}
-            {isPreviousPage ? <Tooltip description={'Previous page.'} /> : null}
-          </div>
           <div className='list-header'>
             <h2 className='list-heading'>
               {headingText}
@@ -847,22 +843,21 @@ export default class List<TList extends object> extends React.Component<
               ) : null}
             </h2>
           </div>
+          <div className={previousPageClassName} onClick={this.turnBackPage}>
+            <span className='arrow'>{'<'}</span>
+            {isPreviousPage ? <Tooltip description={'Previous page.'} /> : null}
+          </div>
+          <div className='page-number'>{`${page + 1}/${pageCount}`}</div>
           <div className={nextPageClassName} onClick={this.turnPage}>
-            {'>'}
+            <span className='arrow'>{'>'}</span>
             {isNextPage ? <Tooltip description={'Next page.'} /> : null}
           </div>
+          {this.renderFiltering()}
         </div>
-        {this.renderFiltering()}
-        <div className='items items-1'>
-          {this.renderItems(page)}
-          <div className='page-number'>{`${page + 1}/${pageCount}`}</div>
-        </div>
+        <div className='items items-1'>{this.renderItems(page)}</div>
         {duelPageMode ? (
           <div className='items items-2'>
             {this.renderItems(page + 1, false)}
-            {pageCount === page + 1 ? null : (
-              <div className='page-number'>{`${page + 2}/${pageCount}`}</div>
-            )}
           </div>
         ) : null}
         {/* <div className={'actions'}>
