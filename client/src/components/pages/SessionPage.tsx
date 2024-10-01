@@ -198,10 +198,7 @@ export default function SessionPage({
     let links: TWithKey<TButtonText_P>[] = []
 
     // Push end session button, if user is authorized.
-    if (
-      login.user.isAuthorized('sessions_join_manager') ||
-      login.user.isAuthorized('sessions_join_observer')
-    ) {
+    if (session.member.isAuthorized('startEndSessions')) {
       links.push({
         key: 'end-session',
         text: 'End Session',

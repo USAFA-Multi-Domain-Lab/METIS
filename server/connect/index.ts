@@ -17,7 +17,7 @@ const createSocketIoServer = require('socket.io')
  */
 export default class MetisWsServer {
   /**
-   * The Metis server instance.
+   * The METIS server instance.
    */
   public readonly metis: MetisServer
 
@@ -28,7 +28,7 @@ export default class MetisWsServer {
 
   /**
    *
-   * @param metis The Metis server instance.
+   * @param metis The METIS server instance.
    */
   public constructor(metis: MetisServer) {
     this.metis = metis
