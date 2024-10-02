@@ -14,10 +14,22 @@
   grid-template-rows: unset;
   align-items: unset;
   grid-template-rows: auto auto 1fr;
+  background: linear-gradient(
+      to bottom right,
+      transparent 0% 70%,
+      rgba(#fff, 0.1) 100%
+    ),
+    url('/assets/images/landing-page-img.png');
+  background-size: 100% 47.34%, 100% 47.34%;
+  background-position: center;
+  background-repeat: repeat;
+  box-shadow: $box-shadow-alt1;
 
   .Message {
     margin-top: 40px;
     font-size: 17px;
+    max-width: 800px;
+    line-height: 1.8rem;
   }
 
   .Buttons {

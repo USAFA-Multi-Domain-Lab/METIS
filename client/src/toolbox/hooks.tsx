@@ -85,22 +85,12 @@ export function usePostInitEffect(
  * Requires that a user is logged in to interact with the application. If the user is not logged in, the user will be redirected to the login page.
  */
 export function useRequireLogin(): [NonNullable<TLogin<ClientUser>>] {
+  // Get login information from global context.
   const globalContext = useGlobalContext()
   const [login] = globalContext.login
-  // todo: implement react app error handling
-  // const login = null
-  const { navigateTo, handleError } = globalContext.actions
 
-  useEffect(() => {
-    if (login === null) {
-      navigateTo('AuthPage', {})
-    }
-  }, [login === null])
-
-  if (login === null) {
-    handleError('You must be logged in to access this page.')
-    throw new LoginRequiredError()
-  }
+  // Throw error if user is not logged in.
+  if (login === null) throw new LoginRequiredError()
 
   // Return login information.
   return [login]

@@ -1,13 +1,12 @@
 import { useEffect, useRef } from 'react'
-import { ErrorBoundary } from 'react-error-boundary'
 import ServerConnection from 'src/connect/servers'
 import { useGlobalContext } from 'src/context'
 import MetisInfo from 'src/info'
 import SessionClient from 'src/sessions'
 import { ClientTargetEnvironment } from 'src/target-environments'
+import { LoginRequiredError } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import { TLogin } from '../../../shared/logins'
-import Notification from '../notifications'
 import './App.scss'
 import ConnectionStatus from './content/communication/ConnectionStatus'
 import NotificationBubble from './content/communication/NotificationBubble'
@@ -19,8 +18,10 @@ import {
 import Markdown, { MarkdownTheme } from './content/general-layout/Markdown'
 import { TButtonText_P } from './content/user-controls/ButtonText'
 import { PAGE_REGISTRY } from './pages'
+import AuthPage from './pages/AuthPage'
 import ErrorPage from './pages/ErrorPage'
 import LoadingPage from './pages/LoadingPage'
+import ReactErrorBoundary from './ReactErrorBoundary'
 
 export type TAppErrorNotifyMethod = 'bubble' | 'page'
 
@@ -127,6 +128,36 @@ function App(props: {}): JSX.Element | null {
       }
 
       tooltip_elm.style.transform = `translate(${tooltipsDestinationX}px, ${tooltipsDestinationY}px)`
+    }
+  }
+
+  /**
+   * Handles an uncaught error.
+   * @param error The error that was caught.
+   * @param info The information about the error.
+   */
+  const handleUncaughtError = (
+    error: Error | LoginRequiredError,
+    info: React.ErrorInfo,
+  ): void => {
+    // If the error is a login required error, then
+    // navigate to the auth page.
+    if (error instanceof LoginRequiredError) {
+      // Log the error.
+      console.error('ErrorBoundary caught an error -\n', error)
+      // Navigate to the auth page.
+      navigateTo('AuthPage', {}, { bypassMiddleware: true })
+      // Notify the user.
+      handleError({
+        message:
+          'You are no longer logged in. This is most likely due to the server restarting.',
+        notifyMethod: 'bubble',
+      })
+    }
+    // Otherwise, throw the error to be caught by the
+    // app level error boundary.
+    else {
+      throw error
     }
   }
 
@@ -254,34 +285,42 @@ function App(props: {}): JSX.Element | null {
   }
 
   return (
-    <div className={className} key={'App'} ref={app}>
-      <div className='Tooltips' ref={tooltips}>
-        <Markdown
-          markdown={tooltipDescription}
-          theme={MarkdownTheme.ThemeSecondary}
-        />
-      </div>
-      <div className='Notifications'>
-        <div className='Glue'>
-          {notifications.map((notification: Notification) => (
-            <NotificationBubble
-              notification={notification}
-              key={notification.notificationID}
-            />
-          ))}
+    <ReactErrorBoundary
+      FallbackComponent={ErrorPage}
+      onError={(error) =>
+        console.error('ErrorBoundary caught an error -\n', error)
+      }
+    >
+      <div className={className} key={'App'} ref={app}>
+        <div className='Tooltips' ref={tooltips}>
+          <Markdown
+            markdown={tooltipDescription}
+            theme={MarkdownTheme.ThemeSecondary}
+          />
         </div>
+        <div className='Notifications'>
+          <div className='Glue'>
+            {notifications.map((notification) => (
+              <NotificationBubble
+                notification={notification}
+                key={notification.notificationID}
+              />
+            ))}
+          </div>
+        </div>
+        {promptData !== null ? <Prompt {...promptData} /> : null}
+        <ErrorPage {...pageProps} />
+        <LoadingPage {...pageProps} />
+        <ConnectionStatus />
+        <ReactErrorBoundary
+          FallbackComponent={AuthPage}
+          onError={handleUncaughtError}
+          resetKeys={[currentPageKey, error]}
+        >
+          <CurrentPage {...pageProps} />
+        </ReactErrorBoundary>
       </div>
-      {promptData !== null ? <Prompt {...promptData} /> : null}
-      <ErrorPage {...pageProps} />
-      <LoadingPage {...pageProps} />
-      <ConnectionStatus />
-      <ErrorBoundary
-        FallbackComponent={ErrorPage}
-        onError={(error: Error) => console.error(error)}
-      >
-        <CurrentPage {...pageProps} />
-      </ErrorBoundary>
-    </div>
+    </ReactErrorBoundary>
   )
 }
 

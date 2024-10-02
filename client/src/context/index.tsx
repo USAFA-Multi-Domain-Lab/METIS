@@ -221,13 +221,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
       switch (code) {
         case ServerEmittedError.CODE_UNAUTHENTICATED:
           if (login !== null) {
-            handleError({
-              message:
-                'You are no longer logged in. This is most likely due to the server restarting.',
-              notifyMethod: 'bubble',
-            })
             setLogin(null)
-            context.actions.navigateTo('AuthPage', {})
             connectionStatusMessage.value = null
           }
           break

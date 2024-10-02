@@ -14,7 +14,7 @@ export default function ErrorPage({}: IErrorPage): JSX.Element | null {
 
   const globalContext = useGlobalContext()
 
-  /* -- COMPONENT VARIABLES -- */
+  /* -- VARIABLES -- */
 
   // Extract error from globalContext.
   let error: TAppError = globalContext.error[0] ?? {
@@ -23,7 +23,7 @@ export default function ErrorPage({}: IErrorPage): JSX.Element | null {
   // Resolve button props from solutions passed in error object.
   let solutions = error.solutions ?? []
 
-  /* -- HANDLER FUNCTIONS -- */
+  /* -- FUNCTIONS -- */
 
   /**
    * Refreshes the page.

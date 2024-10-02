@@ -1,5 +1,5 @@
+import { Router } from 'express'
 import { NextFunction, Request, Response } from 'express-serve-static-core'
-import expressWs from 'express-ws'
 import MetisServer from 'metis/server'
 import UserModel from 'metis/server/database/models/users'
 import { StatusError } from 'metis/server/http'
@@ -12,7 +12,7 @@ import SessionServer from 'metis/server/sessions'
 import ServerUser from 'metis/server/users'
 
 const routerMap: TMetisRouterMap = (
-  router: expressWs.Router,
+  router: Router,
   server: MetisServer,
   done,
 ) => {

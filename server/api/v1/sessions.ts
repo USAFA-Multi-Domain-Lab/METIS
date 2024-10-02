@@ -1,5 +1,5 @@
+import { Router } from 'express'
 import { Request, Response } from 'express-serve-static-core'
-import expressWs from 'express-ws'
 import { TCommonMissionJson } from 'metis/missions'
 import MetisServer from 'metis/server'
 import MissionModel from 'metis/server/database/models/missions'
@@ -13,11 +13,7 @@ import ServerUser from 'metis/server/users'
 import { TSessionBasicJson, TSessionConfig } from 'metis/sessions'
 import { auth } from '../../middleware/users'
 
-const routerMap = (
-  router: expressWs.Router,
-  server: MetisServer,
-  done: () => void,
-) => {
+const routerMap = (router: Router, server: MetisServer, done: () => void) => {
   /* ---------------------------- CREATE ---------------------------- */
 
   /**

@@ -1,4 +1,4 @@
-import expressWs from 'express-ws'
+import { Router } from 'express'
 import MetisServer from 'metis/server'
 import { TMetisRouterMap } from 'metis/server/http/router'
 import {
@@ -7,7 +7,7 @@ import {
 } from 'metis/server/middleware/requests'
 
 export const routerMap: TMetisRouterMap = (
-  router: expressWs.Router,
+  router: Router,
   server: MetisServer,
   done: () => void,
 ) => {
