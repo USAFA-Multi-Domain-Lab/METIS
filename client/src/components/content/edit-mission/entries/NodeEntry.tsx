@@ -12,7 +12,7 @@ import { DetailLargeString } from '../../form/DetailLargeString'
 import { DetailNumber } from '../../form/DetailNumber'
 import { DetailString } from '../../form/DetailString'
 import { DetailToggle } from '../../form/DetailToggle'
-import List, { ESortByMethod } from '../../general-layout/List'
+import ListOld, { ESortByMethod } from '../../general-layout/ListOld'
 import ButtonSvgPanel, {
   TValidPanelButton,
 } from '../../user-controls/ButtonSvgPanel'
@@ -342,7 +342,7 @@ export default function NodeEntry({
           />
 
           {/* -- ACTIONS -- */}
-          <List<ClientMissionAction>
+          <ListOld<ClientMissionAction>
             items={Array.from(node.actions.values())}
             renderItemDisplay={(action) => renderActionListItemJsx(action)}
             headingText={'Actions'}

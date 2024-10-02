@@ -8,7 +8,7 @@ import { DefaultLayout } from '.'
 
 import Session from '../../../../shared/sessions'
 import { SingleTypeObject } from '../../../../shared/toolbox/objects'
-import { ESortByMethod } from '../content/general-layout/List'
+import { ESortByMethod } from '../content/general-layout/ListOld'
 import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
 import SessionConfig from '../content/session/SessionConfig'
 import ButtonSvgPanel, {

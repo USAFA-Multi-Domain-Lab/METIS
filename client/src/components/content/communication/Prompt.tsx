@@ -1,5 +1,5 @@
 import React from 'react'
-import List, { ESortByMethod } from '../general-layout/List'
+import ListOld, { ESortByMethod } from '../general-layout/ListOld'
 import Markdown, { MarkdownTheme } from '../general-layout/Markdown'
 import { ButtonText } from '../user-controls/ButtonText'
 import './Prompt.scss'
@@ -87,7 +87,7 @@ export default class Prompt<
       } = this.props.list
 
       return (
-        <List<TList>
+        <ListOld<TList>
           items={items}
           renderItemDisplay={(object) => renderObjectListItem(object)}
           headingText={headingText}

@@ -16,7 +16,7 @@ import { TSessionBasicJson } from '../../../../shared/sessions'
 import Prompt from '../content/communication/Prompt'
 import Tooltip from '../content/communication/Tooltip'
 import { DetailString } from '../content/form/DetailString'
-import List, { ESortByMethod } from '../content/general-layout/List'
+import ListOld, { ESortByMethod } from '../content/general-layout/ListOld'
 import { LogoutLink } from '../content/general-layout/Navigation'
 import ButtonSvg from '../content/user-controls/ButtonSvg'
 import ButtonSvgPanel, {
@@ -548,24 +548,39 @@ export default function HomePage(): JSX.Element | null {
     if (currentUser.isAuthorized('sessions_read')) {
       return (
         <div className='ListContainer'>
-          <List<TSessionBasicJson>
+          <ListOld<TSessionBasicJson>
             headingText={'Sessions'}
             items={sessions}
             sortByMethods={[ESortByMethod.Name]}
             nameProperty={'name'}
             alwaysUseBlanks={true}
             renderItemDisplay={(session: TSessionBasicJson) => {
+              const {
+                accessibility = SessionClient.DEFAULT_CONFIG.accessibility,
+              } = session.config
+
               /**
                * Class for accessibility element.
                */
               const accessibilityClass = compute((): string => {
-                const classList = [
-                  'Accessibility',
-                  session.config.accessibility ??
-                    SessionClient.DEFAULT_CONFIG.accessibility,
-                ]
+                const classList = ['Accessibility', accessibility]
                 return classList.join(' ')
               })
+
+              /**
+               * Description for accessibility element.
+               */
+              const accessibilityDescription = compute((): string => {
+                switch (accessibility) {
+                  case 'id-required':
+                    return '### Session ID Required\n*This session is not publicly accessible. One must have the session ID to join.*'
+                  case 'public':
+                    return '### Public\n*This session is publicly accessible to everyone.*'
+                  default:
+                    return ''
+                }
+              })
+
               /**
                * Buttons for selection row.
                */
@@ -590,11 +605,7 @@ export default function HomePage(): JSX.Element | null {
               return (
                 <div className='Row Select Session'>
                   <div className={accessibilityClass}>
-                    <Tooltip
-                      description={
-                        '### Session ID Required\n*This session is not publicly accessible. One must have the session ID to join.*'
-                      }
-                    />
+                    <Tooltip description={accessibilityDescription} />
                   </div>
                   <div
                     className='Text'
@@ -649,7 +660,7 @@ export default function HomePage(): JSX.Element | null {
     if (currentUser.isAuthorized('missions_read')) {
       return (
         <div className='ListContainer'>
-          <List<ClientMission>
+          <ListOld<ClientMission>
             headingText={'Missions'}
             items={missions}
             sortByMethods={[ESortByMethod.Name]}
@@ -736,7 +747,7 @@ export default function HomePage(): JSX.Element | null {
     ) {
       return (
         <div className='ListContainer'>
-          <List<ClientUser>
+          <ListOld<ClientUser>
             headingText={'Users'}
             items={users}
             sortByMethods={[ESortByMethod.Name]}

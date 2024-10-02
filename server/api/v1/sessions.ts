@@ -30,7 +30,7 @@ const routerMap = (router: Router, server: MetisServer, done: () => void) => {
       infiniteResources: request.body.infiniteResources,
       effectsEnabled: request.body.effectsEnabled,
     }
-    let ownerId: string = response.locals.user._id
+    let owner: ServerUser = response.locals.user
 
     // Query for mission.
     MissionModel.findOne({ _id: missionId })
@@ -59,7 +59,7 @@ const routerMap = (router: Router, server: MetisServer, done: () => void) => {
           let session: SessionServer = SessionServer.launch(
             mission,
             sessionConfig,
-            ownerId,
+            owner,
           )
           // Return the ID of the newly launched session
           // as JSON.

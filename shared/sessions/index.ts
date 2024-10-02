@@ -23,6 +23,15 @@ export default abstract class Session<T extends TCommonMissionTypes>
   // Implemented
   public readonly ownerId: TCommonUser['_id']
 
+  // Implemented
+  public readonly ownerUsername: TCommonUser['username']
+
+  // Implemented
+  public readonly ownerFirstName: TCommonUser['firstName']
+
+  // Implemented
+  public readonly ownerLastName: TCommonUser['lastName']
+
   /**
    * Protected cache for `config`.
    */
@@ -115,6 +124,9 @@ export default abstract class Session<T extends TCommonMissionTypes>
     _id: string,
     name: string,
     ownerId: string,
+    ownerUsername: TCommonUser['username'],
+    ownerFirstName: TCommonUser['firstName'],
+    ownerLastName: TCommonUser['firstName'],
     config: Partial<TSessionConfig>,
     mission: TMission<T>,
     memberData: TSessionMemberJson[],
@@ -123,6 +135,9 @@ export default abstract class Session<T extends TCommonMissionTypes>
     this._id = _id
     this.name = name
     this.ownerId = ownerId
+    this.ownerUsername = ownerUsername
+    this.ownerFirstName = ownerFirstName
+    this.ownerLastName = ownerLastName
     this._config = {
       ...Session.DEFAULT_CONFIG,
       ...config,
@@ -241,6 +256,18 @@ export type TSessionJson = {
    */
   ownerId: TCommonUser['_id']
   /**
+   * The username of the owner.
+   */
+  ownerUsername: TCommonUser['username']
+  /**
+   * The first name of the owner.
+   */
+  ownerFirstName: TCommonUser['firstName']
+  /**
+   * The last name of the owner.
+   */
+  ownerLastName: TCommonUser['lastName']
+  /**
    * The configuration for the session.
    */
   config: TSessionConfig
@@ -278,6 +305,18 @@ export type TSessionBasicJson = {
    * The ID of the owner of the session.
    */
   ownerId: TCommonUser['_id']
+  /**
+   * The username of the owner.
+   */
+  ownerUsername: TCommonUser['username']
+  /**
+   * The first name of the owner.
+   */
+  ownerFirstName: TCommonUser['firstName']
+  /**
+   * The last name of the owner.
+   */
+  ownerLastName: TCommonUser['lastName']
   /**
    * The configuration for the session.
    */
@@ -327,6 +366,18 @@ export type TCommonSession = {
    * The user ID of the owner of the session.
    */
   readonly ownerId: TCommonUser['_id']
+  /**
+   * The username of the owner.
+   */
+  readonly ownerUsername: TCommonUser['username']
+  /**
+   * The first name of the owner.
+   */
+  readonly ownerFirstName: TCommonUser['firstName']
+  /**
+   * The last name of the owner.
+   */
+  readonly ownerLastName: TCommonUser['lastName']
   /**
    * The configuration for the session.
    */

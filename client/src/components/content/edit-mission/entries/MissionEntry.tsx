@@ -7,7 +7,7 @@ import { SingleTypeObject } from '../../../../../../shared/toolbox/objects'
 import Tooltip from '../../communication/Tooltip'
 import { DetailLargeString } from '../../form/DetailLargeString'
 import { DetailString } from '../../form/DetailString'
-import List, { ESortByMethod } from '../../general-layout/List'
+import ListOld, { ESortByMethod } from '../../general-layout/ListOld'
 import ButtonSvgPanel, {
   TValidPanelButton,
 } from '../../user-controls/ButtonSvgPanel'
@@ -146,7 +146,7 @@ export default function MissionEntry({
             key={`${mission._id}_introMessage`}
           />
           {defectiveObjects.length > 0 ? (
-            <List<TMissionComponent>
+            <ListOld<TMissionComponent>
               items={defectiveObjects}
               renderItemDisplay={(object) => renderObjectListItem(object)}
               headingText={'Unresolved Conflicts'}

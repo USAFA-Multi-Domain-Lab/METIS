@@ -4,7 +4,7 @@ import lodash from 'lodash'
 import React from 'react'
 import { TAjaxStatus } from '../../../../../shared/toolbox/ajax'
 import Tooltip from '../communication/Tooltip'
-import './List.scss'
+import './ListOld.scss'
 
 /* -- enumerations -- */
 
@@ -160,7 +160,7 @@ export interface IListItemProperty {
   description: string
 }
 
-export default class List<TList extends object> extends React.Component<
+export default class ListOld<TList extends object> extends React.Component<
   IList_P<TList>,
   IList_S<TList>
 > {
@@ -187,7 +187,7 @@ export default class List<TList extends object> extends React.Component<
     listStyling: {},
     applyStyling: () => {},
     subheadingText: null,
-    itemsPerPage: 8,
+    itemsPerPage: 9,
     duelPageMode: false,
     alwaysUseBlanks: false,
     preventMarkdownStyling: false,
@@ -283,7 +283,7 @@ export default class List<TList extends object> extends React.Component<
     let currentPage: number = this.state.page
     let itemsPerPage: number | null = this.props.itemsPerPage
     let duelPageMode: boolean = this.props.duelPageMode
-    let cuttoffItemIndex: number = List.getCuttoffItemIndex(
+    let cuttoffItemIndex: number = ListOld.getCuttoffItemIndex(
       currentPage,
       itemsPerPage,
       items.length,
@@ -588,8 +588,8 @@ export default class List<TList extends object> extends React.Component<
     let noItemsDisplay: string | JSX.Element | null = this.props.noItemsDisplay
     let blanksAreEnabled: boolean = this.blanksAreEnabled
     let preventMarkdownStyling: boolean = this.props.preventMarkdownStyling
-    let firstItemIndex: number = List.getFirstItemIndex(page, itemsPerPage)
-    let cuttoffItemIndex: number = List.getCuttoffItemIndex(
+    let firstItemIndex: number = ListOld.getFirstItemIndex(page, itemsPerPage)
+    let cuttoffItemIndex: number = ListOld.getCuttoffItemIndex(
       page,
       itemsPerPage,
       itemsFiltered.length,
@@ -771,11 +771,11 @@ export default class List<TList extends object> extends React.Component<
     let itemsPerPage: number | null = this.props.itemsPerPage
     let duelPageMode: boolean = this.props.duelPageMode
     let page: number = this.state.page
-    let pageCount: number = List.getTotalPages(
+    let pageCount: number = ListOld.getTotalPages(
       itemsPerPage,
       itemsFiltered.length,
     )
-    let cuttoffItemIndex: number = List.getCuttoffItemIndex(
+    let cuttoffItemIndex: number = ListOld.getCuttoffItemIndex(
       duelPageMode ? page + 1 : page,
       itemsPerPage,
       itemsFiltered.length,

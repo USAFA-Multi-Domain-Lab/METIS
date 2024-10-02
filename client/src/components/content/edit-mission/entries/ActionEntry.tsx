@@ -10,7 +10,7 @@ import Tooltip from '../../communication/Tooltip'
 import { DetailLargeString } from '../../form/DetailLargeString'
 import { DetailNumber } from '../../form/DetailNumber'
 import { DetailString } from '../../form/DetailString'
-import List, { ESortByMethod } from '../../general-layout/List'
+import ListOld, { ESortByMethod } from '../../general-layout/ListOld'
 import ButtonSvgPanel, {
   TValidPanelButton,
 } from '../../user-controls/ButtonSvgPanel'
@@ -282,7 +282,7 @@ export default function ActionEntry({
             />
 
             {/* -- EFFECTS -- */}
-            <List<ClientEffect>
+            <ListOld<ClientEffect>
               items={action.effects}
               renderItemDisplay={(effect) => renderEffectListItem(effect)}
               headingText={'Effects'}

@@ -24,6 +24,7 @@ import ServerExecutionStartedOutput from '../missions/forces/outputs/execution-s
 import ServerExecutionSucceededOutput from '../missions/forces/outputs/execution-succeeded'
 import ServerPreExecutionOutput from '../missions/forces/outputs/pre-execution'
 import EnvironmentContextProvider from '../target-environments/context-provider'
+import ServerUser from '../users'
 import ServerSessionMember from './members'
 
 /**
@@ -63,11 +64,22 @@ export default class SessionServer extends Session<TServerMissionTypes> {
   public constructor(
     _id: string,
     name: string,
-    ownerId: string,
+    owner: ServerUser,
     config: Partial<TSessionConfig>,
     mission: ServerMission,
   ) {
-    super(_id, name, ownerId, config, mission, [], [])
+    super(
+      _id,
+      name,
+      owner._id,
+      owner.username,
+      owner.firstName,
+      owner.lastName,
+      config,
+      mission,
+      [],
+      [],
+    )
     this._state = 'unstarted'
     this._destroyed = false
     this.register()
@@ -142,6 +154,9 @@ export default class SessionServer extends Session<TServerMissionTypes> {
       state: this.state,
       name: this.name,
       ownerId: this.ownerId,
+      ownerUsername: this.ownerUsername,
+      ownerFirstName: this.ownerFirstName,
+      ownerLastName: this.ownerLastName,
       mission: this.mission.toJson(missionOptions),
       members: this._members.map((member) => member.toJson()),
       banList,
@@ -171,6 +186,9 @@ export default class SessionServer extends Session<TServerMissionTypes> {
       missionId: this.missionId,
       name: this.name,
       ownerId: this.ownerId,
+      ownerUsername: this.ownerUsername,
+      ownerFirstName: this.ownerFirstName,
+      ownerLastName: this.ownerLastName,
       config: this.config,
       participantIds: this.participants.map(({ userId: userId }) => userId),
       banList,
@@ -1473,12 +1491,12 @@ export default class SessionServer extends Session<TServerMissionTypes> {
   public static launch(
     mission: ServerMission,
     config: Partial<TSessionConfig> = {},
-    ownerId: string,
+    owner: ServerUser,
   ): SessionServer {
     return new SessionServer(
       generateHash().substring(0, 12),
       mission.name,
-      ownerId,
+      owner,
       config,
       mission,
     )

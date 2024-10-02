@@ -64,13 +64,27 @@ export default class SessionClient extends Session<TClientMissionTypes> {
       state,
       name,
       ownerId,
+      ownerUsername,
+      ownerFirstName,
+      ownerLastName,
       members: memberData,
       banList,
       config,
     } = data
 
     // Call super constructor with base data.
-    super(_id, name, ownerId, config, mission, memberData, banList)
+    super(
+      _id,
+      name,
+      ownerId,
+      ownerUsername,
+      ownerFirstName,
+      ownerLastName,
+      config,
+      mission,
+      memberData,
+      banList,
+    )
 
     // Find the member associated with this client connection.
     let member = this.members.find((member) => member._id === memberId)
@@ -167,6 +181,9 @@ export default class SessionClient extends Session<TClientMissionTypes> {
       state: this.state,
       name: this.name,
       ownerId: this.ownerId,
+      ownerUsername: this.ownerUsername,
+      ownerFirstName: this.ownerFirstName,
+      ownerLastName: this.ownerLastName,
       mission: this.mission.toJson({ exportType: 'session-limited' }),
       members: this.members.map((member) => member.toJson()),
       banList: this.banList,
@@ -181,6 +198,9 @@ export default class SessionClient extends Session<TClientMissionTypes> {
       missionId: this.missionId,
       name: this.name,
       ownerId: this.ownerId,
+      ownerUsername: this.ownerUsername,
+      ownerFirstName: this.ownerFirstName,
+      ownerLastName: this.ownerLastName,
       config: this.config,
       participantIds: this.participants.map(({ _id: userId }) => userId),
       banList: this.banList,
