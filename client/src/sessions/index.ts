@@ -135,10 +135,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
       'action-execution-completed',
       this.onActionExecutionCompleted,
     )
-    this.server.addEventListener(
-      'internal-effect-enacted',
-      this.onInternalEffectEnacted,
-    )
+    this.server.addEventListener('modifier-enacted', this.onModifierEnacted)
     this.server.addEventListener('send-output', this.onSendOutput)
     this.server.addEventListener('output-sent', this.onOutputSent)
   }
@@ -155,7 +152,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
       'node-opened',
       'action-execution-initiated',
       'action-execution-completed',
-      'internal-effect-enacted',
+      'modifier-enacted',
       'send-output',
       'output-sent',
     ])
@@ -833,20 +830,16 @@ export default class SessionClient extends Session<TClientMissionTypes> {
   }
 
   /**
-   * Handles when an internal effect has been enacted.
+   * Handles when a modifier has been enacted.
    * @param event The event emitted by the server.
    */
-  private onInternalEffectEnacted = (
-    event: TServerEvents['internal-effect-enacted'],
+  private onModifierEnacted = (
+    event: TServerEvents['modifier-enacted'],
   ): void => {
     // Extract data.
     let data = event.data
     // Handle the data.
     switch (data.key) {
-      case 'output':
-        let { forceId, message } = data
-        // todo: Implement output handling.
-        break
       case 'node-update-block':
         this.updateNodeBlockStatus(data.nodeId, data.blocked)
         break
@@ -861,7 +854,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
         break
       default:
         throw new Error(
-          `Error: Incorrect data sent to internal effect handler. Data: ${data}`,
+          `Error: Incorrect data sent to modifier handler. Data: ${data}`,
         )
     }
   }

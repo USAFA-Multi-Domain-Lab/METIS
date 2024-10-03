@@ -30,12 +30,11 @@ export const routerMap: TMetisRouterMap = (
    * @returns The new mission.
    */
   const createMission = (request: Request, response: Response) => {
-    let { name, introMessage, versionNumber, nodeStructure, forces } =
+    let { name, versionNumber, nodeStructure, forces } =
       request.body as TCommonMissionJson
 
     let mission = new MissionModel({
       name,
-      introMessage,
       versionNumber,
       nodeStructure,
       forces,
@@ -541,6 +540,46 @@ export const routerMap: TMetisRouterMap = (
             }
           }
         }
+
+        // -- BUILD 27 --
+        // This migration script is responsible
+        // for moving initial resources from the
+        // mission level to the force level.
+        if (schemaBuildNumber < 27) {
+          let mission = missionData
+
+          // Loop through forces.
+          for (let force of mission.forces) {
+            // If the force doesn't have initialResources,
+            // set it to the mission's initialResources.
+            if (!force.initialResources) {
+              force.initialResources = mission.initialResources
+            }
+          }
+
+          // Delete the initialResources property from the mission.
+          delete mission.initialResources
+        }
+
+        // -- BUILD 28 --
+        // This migration script is responsible
+        // for moving the introMessage from the
+        // mission level to the force level.
+        if (schemaBuildNumber < 28) {
+          let mission = missionData
+
+          // Loop through forces.
+          for (let force of mission.forces) {
+            // If the force doesn't have introMessage,
+            // set it to the mission's introMessage.
+            if (!force.introMessage) {
+              force.introMessage = mission.introMessage
+            }
+          }
+
+          // Delete the introMessage property from the mission.
+          delete mission.introMessage
+        }
       }
 
       // This will be called when it is
@@ -936,7 +975,6 @@ export const routerMap: TMetisRouterMap = (
       } else {
         let modelInput: Partial<TCommonMissionJson> = {
           name: copyName,
-          introMessage: mission.introMessage,
           versionNumber: mission.versionNumber,
           nodeStructure: mission.nodeStructure,
           forces: mission.forces,
@@ -959,7 +997,6 @@ export const routerMap: TMetisRouterMap = (
             return response.json({
               _id: result._id,
               name: result.name,
-              introMessage: result.introMessage,
               versionNumber: result.versionNumber,
               seed: result.seed,
             })
@@ -998,7 +1035,6 @@ export const routerMap: TMetisRouterMap = (
     defineRequests({
       body: {
         name: RequestBodyFilters.STRING,
-        introMessage: RequestBodyFilters.STRING,
         versionNumber: RequestBodyFilters.NUMBER,
         nodeStructure: RequestBodyFilters.OBJECT,
         forces: RequestBodyFilters.ARRAY,
@@ -1038,7 +1074,6 @@ export const routerMap: TMetisRouterMap = (
       {
         body: {
           name: RequestBodyFilters.STRING,
-          introMessage: RequestBodyFilters.STRING,
           versionNumber: RequestBodyFilters.NUMBER,
           initialResources: RequestBodyFilters.NUMBER,
           nodeStructure: RequestBodyFilters.OBJECT,

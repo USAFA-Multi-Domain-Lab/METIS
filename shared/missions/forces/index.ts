@@ -30,6 +30,9 @@ export abstract class MissionForce<
    */
   public _id: string
 
+  // Implemented
+  public introMessage: string
+
   /**
    * The name of the force.
    */
@@ -111,6 +114,8 @@ export abstract class MissionForce<
     // Set properties.
     this.mission = mission
     this._id = data._id ?? MissionForce.DEFAULT_PROPERTIES._id
+    this.introMessage =
+      data.introMessage ?? MissionForce.DEFAULT_PROPERTIES.introMessage
     this.name = data.name ?? MissionForce.DEFAULT_PROPERTIES.name
     this.color = data.color ?? MissionForce.DEFAULT_PROPERTIES.color
     this.initialResources =
@@ -142,6 +147,7 @@ export abstract class MissionForce<
 
     let json: TMissionForceJson = {
       _id: this._id,
+      introMessage: this.introMessage,
       name: this.name,
       color: this.color,
       initialResources: this.initialResources,
@@ -287,6 +293,7 @@ export abstract class MissionForce<
   public static get DEFAULT_PROPERTIES(): Required<TCommonMissionForceJson> {
     return {
       _id: StringToolbox.generateRandomId(),
+      introMessage: '<p>Welcome to your force!</p>',
       name: 'New Force',
       color: '#ffffff',
       initialResources: 100,
@@ -384,6 +391,10 @@ export interface TCommonMissionForce {
    */
   _id: string
   /**
+   * The introductory message for the mission, displayed when the mission is first started in a session.
+   */
+  introMessage: string
+  /**
    * The name of the force.
    */
   name: string
@@ -449,6 +460,10 @@ export interface TCommonMissionForceJson {
    * The ID of the force.
    */
   _id: string
+  /**
+   * The introductory message for the mission, displayed when the mission is first started in a session.
+   */
+  introMessage: string
   /**
    * The name of the force.
    */

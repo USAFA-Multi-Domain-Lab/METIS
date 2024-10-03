@@ -5,7 +5,6 @@ import { compute } from 'src/toolbox'
 import { useMountHandler, usePostInitEffect } from 'src/toolbox/hooks'
 import { SingleTypeObject } from '../../../../../../shared/toolbox/objects'
 import Tooltip from '../../communication/Tooltip'
-import { DetailLargeString } from '../../form/DetailLargeString'
 import { DetailString } from '../../form/DetailString'
 import List, { ESortByMethod } from '../../general-layout/List'
 import ButtonSvgPanel, {
@@ -27,7 +26,6 @@ export default function MissionEntry({
 
   /* -- STATE -- */
   const [name, setName] = useState<string>(mission.name)
-  const [introMessage, setIntroMessage] = useState<string>(mission.introMessage)
   const [defectiveObjects, setDefectiveObjects] = useState<TMissionComponent[]>(
     mission.defectiveObjects,
   )
@@ -56,12 +54,10 @@ export default function MissionEntry({
   usePostInitEffect(() => {
     // Update the mission name.
     mission.name = name
-    // Update the introduction message.
-    mission.introMessage = introMessage
 
     // Allow the user to save the changes.
     handleChange()
-  }, [name, introMessage])
+  }, [name])
 
   // This displays the change of the mission's name found at
   // the bottom left of the mission map.
@@ -134,16 +130,6 @@ export default function MissionEntry({
             defaultValue={ClientMission.DEFAULT_PROPERTIES.name}
             maxLength={ClientMission.MAX_NAME_LENGTH}
             key={`${mission._id}_name`}
-          />
-          <DetailLargeString
-            fieldType='required'
-            handleOnBlur='repopulateValue'
-            label='Introduction Message'
-            stateValue={introMessage}
-            setState={setIntroMessage}
-            defaultValue={ClientMission.DEFAULT_PROPERTIES.introMessage}
-            elementBoundary='.SidePanelSection'
-            key={`${mission._id}_introMessage`}
           />
           {defectiveObjects.length > 0 ? (
             <List<TMissionComponent>

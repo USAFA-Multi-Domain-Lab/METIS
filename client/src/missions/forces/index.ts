@@ -78,7 +78,7 @@ export default class ClientMissionForce
    */
   public constructor(
     mission: ClientMission,
-    data: Partial<TMissionForceJson> = MissionForce.DEFAULT_PROPERTIES,
+    data: Partial<TMissionForceJson> = ClientMissionForce.DEFAULT_PROPERTIES,
     options: TClientMissionForceOptions = {},
   ) {
     super(mission, data, options)

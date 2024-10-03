@@ -1151,7 +1151,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
               // Apply the effect to the target.
               await environmentContextProvider.applyEffect(effect, member.user)
 
-              // todo: implement internal effects feedback
+              // todo: implement feedback for modifiers
               // participant.emit('effect-successful', {
               //   message: 'The effect was successfully applied to its target.',
               // })
@@ -1159,7 +1159,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
               // Log the error.
               plcApiLogger.error(error)
 
-              // todo: implement internal effects feedback
+              // todo: implement feedback for modifiers
               // participant.emitError(
               //   new ServerEmittedError(ServerEmittedError.CODE_EFFECT_FAILED),
               // )
@@ -1336,9 +1336,9 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     node.updateBlockStatus(blocked)
 
     // Emit an event to all members in the force
-    // that an internal effect has been enacted.
+    // that a modifier has been enacted.
     for (let { connection } of this.getMembersForForce(forceId)) {
-      connection.emit('internal-effect-enacted', {
+      connection.emit('modifier-enacted', {
         data: {
           key: 'node-update-block',
           nodeId,
@@ -1373,9 +1373,9 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     // Modify the success chance for all of its actions.
     node.modifySuccessChance(successChanceOperand)
     // Emit an event to all members in the force
-    // that an internal effect has been enacted.
+    // that a modifier has been enacted.
     for (let { connection } of this.getMembersForForce(forceId)) {
-      connection.emit('internal-effect-enacted', {
+      connection.emit('modifier-enacted', {
         data: {
           key: 'node-action-success-chance',
           nodeId,
@@ -1410,9 +1410,9 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     // Modify the process time for all of its actions.
     node.modifyProcessTime(processTimeOperand)
     // Emit an event to all users in the force
-    // that an internal effect has been enacted.
+    // that a modifier has been enacted.
     for (let { connection } of this.getMembersForForce(forceId)) {
-      connection.emit('internal-effect-enacted', {
+      connection.emit('modifier-enacted', {
         data: {
           key: 'node-action-process-time',
           nodeId,
@@ -1447,9 +1447,9 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     // Modify the resource cost for all of its actions.
     node.modifyResourceCost(resourceCostOperand)
     // Emit an event to all members in the force
-    // that an internal effect has been enacted.
+    // that a modifier has been enacted.
     for (let { connection } of this.getMembersForForce(forceId)) {
-      connection.emit('internal-effect-enacted', {
+      connection.emit('modifier-enacted', {
         data: {
           key: 'node-action-resource-cost',
           nodeId,

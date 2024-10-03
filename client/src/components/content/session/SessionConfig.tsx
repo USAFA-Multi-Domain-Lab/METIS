@@ -70,12 +70,13 @@ export default function SessionConfig({
           defaultValue: 'public',
         }}
       />
-      <DetailToggle
+      {/* // todo: Decide what to do with auto assign. */}
+      {/* <DetailToggle
         label='Auto-Assign:'
         stateValue={autoAssign}
         setState={setAutoAssign}
         lockState={'locked-activation'}
-      />
+      /> */}
       <DetailToggle
         label='Infinite Resources:'
         stateValue={infiniteResources}

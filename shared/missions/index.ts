@@ -58,9 +58,6 @@ export default abstract class Mission<
   public name: string
 
   // Implemented
-  public introMessage: string
-
-  // Implemented
   public versionNumber: number
 
   // Implemented
@@ -85,8 +82,6 @@ export default abstract class Mission<
   ) {
     this._id = data._id ?? Mission.DEFAULT_PROPERTIES._id
     this.name = data.name ?? Mission.DEFAULT_PROPERTIES.name
-    this.introMessage =
-      data.introMessage ?? Mission.DEFAULT_PROPERTIES.introMessage
     this.versionNumber =
       data.versionNumber ?? Mission.DEFAULT_PROPERTIES.versionNumber
     this.seed = data.seed ?? Mission.DEFAULT_PROPERTIES.seed
@@ -117,7 +112,6 @@ export default abstract class Mission<
     // Predefine limited JSON.
     let json: TCommonMissionJson = {
       name: this.name,
-      introMessage: this.introMessage,
       versionNumber: this.versionNumber,
       seed: this.seed,
       nodeStructure: {},
@@ -334,7 +328,6 @@ export default abstract class Mission<
     return {
       _id: generateHash(),
       name: 'New Mission',
-      introMessage: '<p>Welcome to your new mission!</p>',
       versionNumber: 1,
       seed: generateHash(),
       nodeStructure: {},
@@ -493,10 +486,6 @@ export interface TCommonMission {
    */
   name: string
   /**
-   * The introductory message for the mission, displayed when the mission is first started in a session.
-   */
-  introMessage: string
-  /**
    * The version number of the mission.
    */
   versionNumber: number
@@ -561,10 +550,6 @@ export interface TCommonMissionJson {
    * The name of the mission.
    */
   name: string
-  /**
-   * The introductory message for the mission, displayed when the mission is first started in a session.
-   */
-  introMessage: string
   /**
    * The version number of the mission.
    */

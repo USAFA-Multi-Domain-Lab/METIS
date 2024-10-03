@@ -7,7 +7,6 @@ import ServerMissionNode from '../missions/nodes'
 
 export let demoMissionData: TCommonMissionJson = {
   name: 'METIS > ASCOT 7 DEMO',
-  introMessage: '<p>Welcome to the METIS &gt; ASCOT 7 DEMO</p>',
   versionNumber: 1,
   seed: '6499bf5b8214651c898d125f',
   nodeStructure: {
@@ -55,6 +54,7 @@ export let demoMissionData: TCommonMissionJson = {
   forces: [
     {
       _id: ServerMissionForce.DEFAULT_PROPERTIES._id,
+      introMessage: '<p>Welcome to Friendly Force!</p>',
       name: 'Friendly Force',
       color: '#34a1fb',
       initialResources: 100,

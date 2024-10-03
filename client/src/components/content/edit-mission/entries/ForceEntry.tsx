@@ -6,6 +6,7 @@ import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
 import Prompt from '../../communication/Prompt'
 import { DetailColorSelector } from '../../form/DetailColorSelector'
+import { DetailLargeString } from '../../form/DetailLargeString'
 import { DetailNumber } from '../../form/DetailNumber'
 import { DetailString } from '../../form/DetailString'
 import { ButtonText, TButtonText_P } from '../../user-controls/ButtonText'
@@ -24,6 +25,7 @@ export default function ForceEntry({
   const { forceUpdate, prompt } = useGlobalContext().actions
 
   /* -- STATE -- */
+  const [introMessage, setIntroMessage] = useState<string>(force.introMessage)
   const [name, setName] = useState<string>(force.name)
   const [color, setColor] = useState<string>(force.color)
   const [initialResources, setInitialResources] = useState<number>(
@@ -78,13 +80,14 @@ export default function ForceEntry({
   // Sync the component state with the force name.
   usePostInitEffect(() => {
     // Update the force properties.
+    force.introMessage = introMessage
     force.name = name
     force.color = color
     force.initialResources = initialResources
 
     // Allow the user to save the changes.
     handleChange()
-  }, [name, color, initialResources])
+  }, [introMessage, name, color, initialResources])
 
   // This displays changes in the mission path
   // and the tab bar.
@@ -144,6 +147,16 @@ export default function ForceEntry({
             setState={setColor}
             buttons={colorButtons}
             key={`${force._id}_color`}
+          />
+          <DetailLargeString
+            fieldType='required'
+            handleOnBlur='repopulateValue'
+            label='Introduction Message'
+            stateValue={introMessage}
+            setState={setIntroMessage}
+            defaultValue={ClientMissionForce.DEFAULT_PROPERTIES.introMessage}
+            elementBoundary='.SidePanelSection'
+            key={`${force._id}_introMessage`}
           />
           <DetailNumber
             fieldType='required'

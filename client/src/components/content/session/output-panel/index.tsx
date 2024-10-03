@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
 import { useEventListener } from 'src/toolbox/hooks'
@@ -24,6 +24,9 @@ export default function OutputPanel({
   useEventListener(force, 'output', () => {
     setOutputs([...force.outputs])
   })
+
+  // Update outputs when force changes.
+  useEffect(() => setOutputs(force.outputs), [force.outputs])
 
   /* -- RENDER -- */
   return (

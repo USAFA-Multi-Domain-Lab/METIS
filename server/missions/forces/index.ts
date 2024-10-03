@@ -79,13 +79,13 @@ export default class ServerMissionForce extends MissionForce<TServerMissionTypes
    */
   public sendIntroMessage(): void {
     // Send the intro message if it exists and isn't an empty string.
-    if (!!this.mission.introMessage) {
+    if (!!this.introMessage) {
       // Create the output JSON.
       let outputJson: Partial<TCommonOutputJson> = {
         key: 'intro',
         forceId: this._id,
         prefix: `${this.name.replaceAll(' ', '-')}:`,
-        message: this.mission.introMessage,
+        message: this.introMessage,
       }
       // Create the output.
       let output = new ServerOutput(this, outputJson)

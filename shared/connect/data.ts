@@ -118,9 +118,9 @@ export type TServerMethod = keyof TServerEvents
 export type TServerEvent = TServerEvents[TServerMethod]
 
 /**
- * The data necessary to enact an internal effect based on their key.
+ * The data necessary to apply a modifier to an object in METIS.
  */
-type TInternalEffectData = [
+type TModifierData = [
   {
     /**
      * Used to identify the data structure.
@@ -128,7 +128,6 @@ type TInternalEffectData = [
      * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
      * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
      * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
-     * @option `"output":` The data needed to send a message to the output panel.
      */
     key: 'node-update-block'
     /**
@@ -147,7 +146,6 @@ type TInternalEffectData = [
      * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
      * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
      * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
-     * @option `"output":` The data needed to send a message to the output panel.
      */
     key: 'node-action-success-chance'
     /**
@@ -166,7 +164,6 @@ type TInternalEffectData = [
      * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
      * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
      * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
-     * @option `"output":` The data needed to send a message to the output panel.
      */
     key: 'node-action-process-time'
     /**
@@ -185,7 +182,6 @@ type TInternalEffectData = [
      * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
      * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
      * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
-     * @option `"output":` The data needed to send a message to the output panel.
      */
     key: 'node-action-resource-cost'
     /**
@@ -197,31 +193,12 @@ type TInternalEffectData = [
      */
     resourceCostOperand: number
   },
-  {
-    /**
-     * Used to identify the data structure.
-     * @option `"node-block":` The data needed to block or unblock a node.
-     * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
-     * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
-     * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
-     * @option `"output":` The data needed to send a message to the output panel.
-     */
-    key: 'output'
-    /**
-     * The ID of the force where the output panel belongs.
-     */
-    forceId: string
-    /**
-     * The message to send to the force's output panel.
-     */
-    message: string
-  },
 ]
 
 /**
- * The data needed to apply an internal effect.
+ * The data needed to apply a modifier to an object in METIS.
  */
-type TInternalEffectDatum = TInternalEffectData[number]
+type TModifierDatum = TModifierData[number]
 
 /**
  * The data necessary to send a message to the output panel.
@@ -310,12 +287,9 @@ export type TGenericServerEvents = {
     }
   >
   /**
-   * Occurs when an internal effect is enacted.
+   * Occurs when modifiers are applied to an object in METIS.
    */
-  'internal-effect-enacted': TConnectEvent<
-    'internal-effect-enacted',
-    TInternalEffectDatum
-  >
+  'modifier-enacted': TConnectEvent<'modifier-enacted', TModifierDatum>
   /**
    * Occurs when the session has been destroyed while the participant was in it.
    */

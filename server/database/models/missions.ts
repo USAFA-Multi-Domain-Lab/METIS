@@ -524,7 +524,6 @@ export const MissionSchema: Schema = new Schema(
       required: true,
       maxLength: ServerMission.MAX_NAME_LENGTH,
     },
-    introMessage: { type: SanitizedHTML, required: true },
     versionNumber: { type: Number, required: true },
     seed: { type: ObjectId, required: true, auto: true },
     deleted: { type: Boolean, required: true, default: false },
@@ -536,6 +535,7 @@ export const MissionSchema: Schema = new Schema(
       type: [
         {
           _id: { type: String, required: true },
+          introMessage: { type: SanitizedHTML, required: true },
           name: {
             type: String,
             required: true,
