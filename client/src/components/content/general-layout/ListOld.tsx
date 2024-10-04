@@ -160,6 +160,10 @@ export interface IListItemProperty {
   description: string
 }
 
+/**
+ * Displays a list of items of the given type.
+ * @deprecated Use `List` instead.
+ */
 export default class ListOld<TList extends object> extends React.Component<
   IList_P<TList>,
   IList_S<TList>
@@ -683,7 +687,7 @@ export default class ListOld<TList extends object> extends React.Component<
                 onMouseMove={() => {
                   if (propertyElements.length > 0) {
                     let element: any = document.querySelector(
-                      '.List .item .property:hover',
+                      '.ListOld .item .property:hover',
                     )
                     if (element && !element.matches('.without')) {
                       let hoveredProperty: IListItemProperty =
@@ -786,7 +790,7 @@ export default class ListOld<TList extends object> extends React.Component<
     let pendingDeletion: boolean = this.props.pendingDeletion
     let isPreviousPage: boolean = duelPageMode ? page > 1 : page > 0
     let isNextPage: boolean = cuttoffItemIndex < itemsFiltered.length
-    let listClassName: string = 'List'
+    let listClassName: string = 'ListOld'
     let previousPageClassName: string = 'previous-page'
     let nextPageClassName: string = 'next-page'
 

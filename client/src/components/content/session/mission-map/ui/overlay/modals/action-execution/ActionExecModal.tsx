@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import {
   ButtonText,
   TButtonText_P,
-} from 'src/components/content/user-controls/ButtonText'
+} from 'src/components/content/user-controls/buttons/ButtonText'
 import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
 import ClientMissionNode from 'src/missions/nodes'

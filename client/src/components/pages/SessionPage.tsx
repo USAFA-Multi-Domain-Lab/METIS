@@ -25,8 +25,8 @@ import MissionMap from '../content/session/mission-map'
 import ActionExecModal from '../content/session/mission-map/ui/overlay/modals/action-execution/ActionExecModal'
 import OutputPanel from '../content/session/output-panel'
 import StatusBar from '../content/session/StatusBar'
-import { TValidPanelButton } from '../content/user-controls/ButtonSvgPanel'
-import { TButtonText_P } from '../content/user-controls/ButtonText'
+import { TValidPanelButton } from '../content/user-controls/buttons/ButtonSvgPanel'
+import { TButtonText_P } from '../content/user-controls/buttons/ButtonText'
 import './SessionPage.scss'
 
 /**
@@ -261,7 +261,7 @@ export default function SessionPage({
     if (rightPanelTab === 'output') {
       buttons.push({
         key: 'users',
-        icon: 'user',
+        type: 'user',
         tooltipDescription: 'Open users panel.',
         onClick: () => {
           setRightPanelTab('users')
@@ -273,7 +273,7 @@ export default function SessionPage({
     else if (rightPanelTab === 'users') {
       buttons.push({
         key: 'output',
-        icon: 'shell',
+        type: 'shell',
         tooltipDescription: selectedForce
           ? 'Open output panel.'
           : 'Cannot open the output panel at this time. Please contact your system administrator.',

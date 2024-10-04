@@ -13,7 +13,7 @@ import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
 import SessionConfig from '../content/session/SessionConfig'
 import ButtonSvgPanel, {
   TValidPanelButton,
-} from '../content/user-controls/ButtonSvgPanel'
+} from '../content/user-controls/buttons/ButtonSvgPanel'
 import './LaunchPage.scss'
 
 /**
@@ -110,7 +110,7 @@ export default function LaunchPage({
       // Create a list of mini actions that are available.
       let availableMiniActions: SingleTypeObject<TValidPanelButton> = {
         warning: {
-          icon: 'warning-transparent',
+          type: 'warning-transparent',
           key: 'warning',
           onClick: () => {},
           cursor: 'help',

@@ -13,8 +13,8 @@ import { DetailString } from '../../form/DetailString'
 import ListOld, { ESortByMethod } from '../../general-layout/ListOld'
 import ButtonSvgPanel, {
   TValidPanelButton,
-} from '../../user-controls/ButtonSvgPanel'
-import { ButtonText } from '../../user-controls/ButtonText'
+} from '../../user-controls/buttons/ButtonSvgPanel'
+import { ButtonText } from '../../user-controls/buttons/ButtonText'
 import './index.scss'
 import EntryNavigation from './navigation/EntryNavigation'
 
@@ -160,7 +160,7 @@ export default function ActionEntry({
       // If the action is available then add the edit and remove buttons.
       let availableMiniActions: SingleTypeObject<TValidPanelButton> = {
         remove: {
-          icon: 'remove',
+          type: 'remove',
           key: 'remove',
           onClick: async () => await handleDeleteEffectRequest(effect),
           tooltipDescription: 'Delete effect.',

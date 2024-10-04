@@ -1,7 +1,7 @@
 import React from 'react'
 import ListOld, { ESortByMethod } from '../general-layout/ListOld'
 import Markdown, { MarkdownTheme } from '../general-layout/Markdown'
-import { ButtonText } from '../user-controls/ButtonText'
+import { ButtonText } from '../user-controls/buttons/ButtonText'
 import './Prompt.scss'
 
 /**

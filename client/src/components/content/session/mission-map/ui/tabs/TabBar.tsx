@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import ButtonSvg from 'src/components/content/user-controls/ButtonSvg'
+import ButtonSvg from 'src/components/content/user-controls/buttons/ButtonSvg'
 import { compute } from 'src/toolbox'
 import Tab, { TTab_P } from '.'
 import './TabBar.scss'
@@ -265,7 +265,7 @@ export default function TabBar({
     if (onAdd === null) return null
     return (
       <ButtonSvg
-        icon={'add'}
+        type={'add'}
         size={'small'}
         onClick={() => {
           onAdd()

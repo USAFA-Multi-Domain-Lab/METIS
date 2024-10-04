@@ -1,4 +1,4 @@
-import { TButtonSvg } from 'src/components/content/user-controls/ButtonSvg'
+import { TButtonSvg_P } from 'src/components/content/user-controls/buttons/ButtonSvg'
 import ClientMission from 'src/missions'
 import { TWithKey } from '../../../../../../../shared/toolbox/objects'
 import './Hud.scss'
@@ -53,7 +53,7 @@ export type THud = {
    * The buttons to display on the title bar.
    * @default []
    */
-  buttons?: TWithKey<TButtonSvg>[]
+  buttons?: TWithKey<TButtonSvg_P>[]
   /**
    * The tabs to display on the tab bar.
    * @default []

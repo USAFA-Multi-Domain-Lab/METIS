@@ -1,7 +1,7 @@
 import { TGlobalContext } from 'src/context'
 import { compute } from 'src/toolbox'
 import { TWithKey } from '../../../../../shared/toolbox/objects'
-import { ButtonText, TButtonText_P } from '../user-controls/ButtonText'
+import { ButtonText, TButtonText_P } from '../user-controls/buttons/ButtonText'
 import Branding from './Branding'
 import './Navigation.scss'
 

@@ -1,0 +1,36 @@
+.ListPage {
+  width: 100%;
+
+  .ListItems {
+    box-sizing: border-box;
+    width: 100%;
+
+    // Styles all list items, as well as anything that
+    // could be added as a subsitute for a list item,
+    // such as a blank slot, or a custom message, such
+    // as "No items available."
+    .ListItemLike {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      column-gap: 0.5em;
+      height: 2.1em;
+      padding: 0 1em;
+
+      .ItemName {
+        overflow: hidden;
+        padding: 0.7em 0 0;
+        text-align: left;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 0.8rem;
+      }
+
+      &.NoItems {
+        .ItemName {
+          font-style: italic;
+          opacity: 0.65;
+        }
+      }
+    }
+  }
+}

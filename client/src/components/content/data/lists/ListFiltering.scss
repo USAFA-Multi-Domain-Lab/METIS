@@ -1,0 +1,70 @@
+.ListFiltering {
+  margin: 0;
+  height: 2em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  .SearchBox {
+    display: grid;
+    grid-template-columns: auto 0;
+    width: 100%;
+    height: 100%;
+
+    .SearchIcon {
+      z-index: 5;
+      grid-column: 2 / 3;
+      grid-row: 1 / 2;
+      position: relative;
+      right: 2.5em;
+      margin: 0;
+      width: 2em;
+      height: 100%;
+      background-image: url('/assets/images/icons/search.svg');
+      background-position: center;
+      background-size: 50%;
+      background-repeat: no-repeat;
+      filter: unset;
+    }
+
+    .SearchField,
+    .SearchHint {
+      box-sizing: border-box;
+      grid-column: 1 / 2;
+      grid-row: 1 / 2;
+      margin: 0;
+      border: none;
+      width: 100%;
+      height: 100%;
+      padding: 0.325em 2em;
+      background: none;
+      font-family: 'monospace', sans-serif;
+      font-size: 0.95em;
+      line-height: 1.2em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: white;
+    }
+
+    .SearchHint {
+      pointer-events: none;
+    }
+
+    .SearchField {
+      border-radius: 1em;
+      transition: 200ms background-color;
+      background-color: rgba(#ffffff, 0.1);
+
+      &:focus {
+        outline: none;
+        background-color: rgba(#ffffff, 0.2);
+      }
+    }
+
+    .Tooltip {
+      grid-column: 1 / 3;
+      grid-row: 1 / 2;
+    }
+  }
+}

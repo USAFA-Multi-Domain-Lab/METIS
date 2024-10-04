@@ -37,7 +37,7 @@ import {
 import MissionMap from '../content/session/mission-map'
 import { TPrototypeButton } from '../content/session/mission-map/objects/MissionPrototype'
 import CreateEffect from '../content/session/mission-map/ui/overlay/modals/CreateEffect'
-import { TButtonSvg } from '../content/user-controls/ButtonSvg'
+import { TButtonSvg_P } from '../content/user-controls/buttons/ButtonSvg'
 import './MissionPage.scss'
 
 /**
@@ -254,7 +254,7 @@ export default function MissionPage({
       if (nextNode) {
         nextNode.buttons = [
           {
-            icon: 'cancel',
+            type: 'cancel',
             key: 'node-button-deselect',
             tooltipDescription: 'Deselect this node (Closes panel view also).',
             onClick: () => mission.select(nextNode!.force),
@@ -272,14 +272,14 @@ export default function MissionPage({
         // Define potential buttons.
         const availableButtons = {
           deselect: {
-            icon: 'cancel',
+            type: 'cancel',
             key: 'prototype-button-deselect',
             tooltipDescription:
               'Deselect this prototype (Closes panel view also).',
             onClick: () => mission.deselect(),
           } as TPrototypeButton,
           add: {
-            icon: 'add',
+            type: 'add',
             key: 'prototype-button-add',
             tooltipDescription: 'Create an adjacent prototype on the map.',
             onClick: (_, prototype) => {
@@ -287,7 +287,7 @@ export default function MissionPage({
             },
           } as TPrototypeButton,
           move: {
-            icon: 'reorder',
+            type: 'reorder',
             key: 'prototype-button-move',
             tooltipDescription: 'Move this prototype to another location.',
             onClick: (_, prototype) => {
@@ -295,13 +295,13 @@ export default function MissionPage({
             },
           } as TPrototypeButton,
           transform_cancel: {
-            icon: 'cancel',
+            type: 'cancel',
             key: 'prototype-button-add-cancel',
             tooltipDescription: 'Cancel action.',
             onClick: () => (mission.transformation = null),
           } as TPrototypeButton,
           remove: {
-            icon: 'remove',
+            type: 'remove',
             key: 'prototype-button-remove',
             tooltipDescription: 'Delete this prototype.',
             disabled: mission.prototypes.length < 2 ? 'full' : 'none',
@@ -595,9 +595,9 @@ export default function MissionPage({
   /**
    * Custom buttons for the mission map.
    */
-  const mapCustomButtons: TWithKey<TButtonSvg>[] = [
+  const mapCustomButtons: TWithKey<TButtonSvg_P>[] = [
     {
-      icon: 'reorder',
+      type: 'reorder',
       key: 'reorder',
       onClick: () => {
         mission.deselect()
@@ -607,7 +607,7 @@ export default function MissionPage({
       disabled: nodeStructuringIsActive ? 'full' : 'none',
     },
     {
-      icon: 'save',
+      type: 'save',
       key: 'save',
       onClick: save,
       tooltipDescription: 'Save changes.',

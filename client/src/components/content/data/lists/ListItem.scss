@@ -1,0 +1,23 @@
+@import 'src/assets/styles/config.scss';
+
+.ListItem {
+  .ItemButtons {
+    display: flex;
+    align-items: center;
+  }
+
+  &.Selectable {
+    cursor: pointer;
+
+    &:hover {
+      $hover-color: $color-alt1;
+
+      background-color: $node-blue;
+      color: $hover-color;
+
+      .ItemName {
+        color: $hover-color;
+      }
+    }
+  }
+}

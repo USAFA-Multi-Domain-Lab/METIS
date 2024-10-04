@@ -1,7 +1,7 @@
 @import 'src/assets/styles/config.scss';
 @import 'src/assets/styles/util.scss';
 
-.List {
+.ListOld {
   display: inline-block;
   vertical-align: top;
   box-sizing: border-box;
@@ -611,7 +611,7 @@
   }
 }
 
-.List.pending-edit {
+.ListOld.pending-edit {
   background-color: $background-color-negative;
 
   .item:not(.item-markdown) {
@@ -625,7 +625,7 @@
   }
 }
 
-.List.pending-deletion {
+.ListOld.pending-deletion {
   background-color: $session-red;
 
   .list-header {
@@ -657,8 +657,8 @@
   }
 }
 
-.List.pending-edit,
-.List.pending-deletion {
+.ListOld.pending-edit,
+.ListOld.pending-deletion {
   .search-box {
     opacity: 0;
   }
@@ -698,7 +698,7 @@
   }
 }
 
-.List.clickable {
+.ListOld.clickable {
   .item:not(.no-items):not(.item-blank):not(.item-status) {
     cursor: pointer;
     -webkit-user-select: none;
@@ -720,7 +720,7 @@
   }
 }
 
-.List.grabbable {
+.ListOld.grabbable {
   .item:not(.no-items):not(.item-blank):not(.item-status) {
     cursor: grab;
     -webkit-user-select: none;
@@ -746,7 +746,7 @@
   }
 }
 
-.List.items-have-properties {
+.ListOld.items-have-properties {
   .item {
     min-height: 55px;
 
@@ -758,7 +758,7 @@
   }
 }
 
-.List.duel-page-mode {
+.ListOld.duel-page-mode {
   .items {
     display: inline-block;
     vertical-align: top;

@@ -1,4 +1,5 @@
 import axios, { AxiosResponse } from 'axios'
+import { TListItem } from 'src/components/content/data/lists/ListItem'
 import { TLine_P } from 'src/components/content/session/mission-map/objects/Line'
 import { TPrototypeSlot_P } from 'src/components/content/session/mission-map/objects/PrototypeSlot'
 import SessionClient from 'src/sessions'
@@ -41,7 +42,7 @@ import PrototypeTranslation from './transformations/translations'
  */
 export default class ClientMission
   extends Mission<TClientMissionTypes>
-  implements TEventListenerTarget<TMissionEvent>, TMissionNavigable
+  implements TEventListenerTarget<TMissionEvent>, TMissionNavigable, TListItem
 {
   /**
    * Whether the resource exists on the server.

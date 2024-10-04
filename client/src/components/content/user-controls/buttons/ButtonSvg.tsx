@@ -1,6 +1,6 @@
 import React from 'react'
 import { compute } from 'src/toolbox'
-import Tooltip from '../communication/Tooltip'
+import Tooltip from '../../communication/Tooltip'
 import './ButtonSvg.scss'
 
 /* -- components -- */
@@ -9,7 +9,7 @@ import './ButtonSvg.scss'
  * A button with an SVG icon.
  */
 export default function ButtonSvg({
-  icon,
+  type: icon,
   size = 'regular',
   tooltipDescription = null,
   uniqueClassList = [],
@@ -17,7 +17,7 @@ export default function ButtonSvg({
   cursor = 'pointer',
   onClick,
   onCopy = () => {},
-}: TButtonSvg): JSX.Element | null {
+}: TButtonSvg_P): JSX.Element | null {
   /* -- computed -- */
 
   /**
@@ -49,7 +49,7 @@ export default function ButtonSvg({
     switch (size) {
       case 'regular':
         result = {
-          backgroundImage: `url(${require(`../../../assets/images/icons/${icon}.svg`)}), linear-gradient(to bottom, #1a2a1a 0% 100%)`,
+          backgroundImage: `url(${require(`../../../../assets/images/icons/${icon}.svg`)}), linear-gradient(to bottom, #1a2a1a 0% 100%)`,
           backgroundSize: '0.5em, cover',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
@@ -57,7 +57,7 @@ export default function ButtonSvg({
         break
       case 'small':
         result = {
-          backgroundImage: `url(${require(`../../../assets/images/icons/${icon}.svg`)})`,
+          backgroundImage: `url(${require(`../../../../assets/images/icons/${icon}.svg`)})`,
           backgroundSize: '0.65em',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
@@ -104,11 +104,11 @@ export type TButtonSvgSize = 'small' | 'regular'
 /**
  * Props for `ButtonSVG` component.
  */
-export type TButtonSvg = {
+export type TButtonSvg_P = {
   /**
-   * The icon for the button.
+   * The type of button.
    */
-  icon: TButtonSvgIcon
+  type: TButtonSvgType
   /**
    * The size of the button.
    * @default 'regular'
@@ -148,9 +148,10 @@ export type TButtonSvg = {
 }
 
 /**
- * The type of icon being used for the button.
+ * The type of button being used.
+ * @note Used to determine the icon to display.
  */
-export type TButtonSvgIcon =
+export type TButtonSvgType =
   | 'cancel'
   | 'add'
   | 'edit'
@@ -170,5 +171,6 @@ export type TButtonSvgIcon =
   | 'ban'
   | 'user'
   | 'shell'
+  | 'text-cursor'
   | 'question'
   | 'warning-transparent'

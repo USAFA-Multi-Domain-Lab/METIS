@@ -1,7 +1,7 @@
 import ClientMissionPrototype from 'src/missions/nodes/prototypes'
 import { compute } from 'src/toolbox'
 import { DetailLocked } from '../../form/DetailLocked'
-import { ButtonText } from '../../user-controls/ButtonText'
+import { ButtonText } from '../../user-controls/buttons/ButtonText'
 import './index.scss'
 import EntryNavigation from './navigation/EntryNavigation'
 

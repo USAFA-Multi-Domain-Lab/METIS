@@ -5,7 +5,7 @@ import {
   TPromptResult,
   TPrompt_P,
 } from 'src/components/content/communication/Prompt'
-import { TButtonText_P } from 'src/components/content/user-controls/ButtonText'
+import { TButtonText_P } from 'src/components/content/user-controls/buttons/ButtonText'
 import { PAGE_REGISTRY, TPage_P } from 'src/components/pages'
 import ServerConnection, { IServerConnectionOptions } from 'src/connect/servers'
 import MetisInfo from 'src/info'

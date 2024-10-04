@@ -2,7 +2,7 @@ import { useGlobalContext } from 'src/context'
 import { useListComponent } from 'src/toolbox/hooks'
 import { TPage_P } from '.'
 import { TAppError } from '../App'
-import { ButtonText } from '../content/user-controls/ButtonText'
+import { ButtonText } from '../content/user-controls/buttons/ButtonText'
 import './ErrorPage.scss'
 
 export interface IErrorPage extends TPage_P {}

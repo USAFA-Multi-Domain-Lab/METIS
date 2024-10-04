@@ -1,11 +1,12 @@
 import React from 'react'
 import { compute } from 'src/toolbox'
-import { TWithKey } from '../../../../../shared/toolbox/objects'
-import ButtonSvg, { TButtonSvg, TButtonSvgSize } from './ButtonSvg'
+import { TWithKey } from '../../../../../../shared/toolbox/objects'
+import ButtonSvg, { TButtonSvg_P, TButtonSvgSize } from './ButtonSvg'
 import './ButtonSvgPanel.scss'
 
 /**
  * A panel of SVG buttons.
+ * @deprecated Use `ButtonSvgPanel_v2` instead.
  */
 export default function ButtonSvgPanel({
   buttons,
@@ -39,7 +40,7 @@ export default function ButtonSvgPanel({
 /**
  * A button that can be displayed in a panel.
  */
-export type TValidPanelButton = Omit<TWithKey<TButtonSvg>, 'size'>
+export type TValidPanelButton = Omit<TWithKey<TButtonSvg_P>, 'size'>
 
 /**
  * Props for `ButtonSvgPanel` component.
@@ -48,7 +49,7 @@ export type TButtonSvgPanel = {
   /**
    * The props for the buttons to display.
    */
-  buttons: TWithKey<TButtonSvg>[]
+  buttons: TWithKey<TButtonSvg_P>[]
   /**
    * The size of the buttons.
    * @default 'regular'

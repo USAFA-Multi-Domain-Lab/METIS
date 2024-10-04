@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import Tooltip from 'src/components/content/communication/Tooltip'
 import ButtonSvg, {
-  TButtonSvg,
-} from 'src/components/content/user-controls/ButtonSvg'
+  TButtonSvg_P,
+} from 'src/components/content/user-controls/buttons/ButtonSvg'
 import ClientMissionNode from 'src/missions/nodes'
 import ClientMissionPrototype from 'src/missions/nodes/prototypes'
 import { compute } from 'src/toolbox'
@@ -249,7 +249,7 @@ export type TMissionPrototype_P = {
 /**
  * Button SVG type for prototype-specific buttons.
  */
-export type TPrototypeButton = TWithKey<Omit<TButtonSvg, 'onClick'>> & {
+export type TPrototypeButton = TWithKey<Omit<TButtonSvg_P, 'onClick'>> & {
   // Overridden
   /**
    * Handles when the button is clicked.

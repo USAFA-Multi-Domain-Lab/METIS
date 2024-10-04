@@ -19,6 +19,7 @@ import { TSessionMemberJson } from '../../../shared/sessions/members'
 import MemberRole, {
   TMemberRoleId,
 } from '../../../shared/sessions/members/roles'
+import { SessionBasic } from './basic'
 import ClientSessionMember from './members'
 
 /**
@@ -165,6 +166,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
       'session-ended',
       'session-config-updated',
       'session-members-updated',
+      'force-assigned',
       'node-opened',
       'action-execution-initiated',
       'action-execution-completed',
@@ -1033,20 +1035,20 @@ export default class SessionClient extends Session<TClientMissionTypes> {
    * @resolves To the sessions.
    * @rejects If the sessions failed to be fetched.
    */
-  public static $fetchAll(): Promise<TSessionBasicJson[]> {
-    return new Promise<TSessionBasicJson[]>(
+  public static $fetchAll(): Promise<SessionBasic[]> {
+    return new Promise<SessionBasic[]>(
       async (
         resolve: (sessions: TSessionBasicJson[]) => void,
         reject: (error: any) => void,
       ): Promise<void> => {
         try {
           // Call API to fetch all sessions.
-          let sessions: TSessionBasicJson[] = (
+          let sessionData: TSessionBasicJson[] = (
             await axios.get<TSessionBasicJson[]>(Session.API_ENDPOINT, {
               params: { timeStamp: Date.now().toString() },
             })
           ).data
-          return resolve(sessions)
+          return resolve(sessionData.map((datum) => new SessionBasic(datum)))
         } catch (error) {
           console.error('Failed to fetch sessions.')
           console.error(error)

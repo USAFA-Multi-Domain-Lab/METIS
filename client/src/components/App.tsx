@@ -17,7 +17,7 @@ import {
   tooltipsOffsetY,
 } from './content/communication/Tooltip'
 import Markdown, { MarkdownTheme } from './content/general-layout/Markdown'
-import { TButtonText_P } from './content/user-controls/ButtonText'
+import { TButtonText_P } from './content/user-controls/buttons/ButtonText'
 import { PAGE_REGISTRY } from './pages'
 import ErrorPage from './pages/ErrorPage'
 import LoadingPage from './pages/LoadingPage'

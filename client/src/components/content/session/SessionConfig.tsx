@@ -5,7 +5,7 @@ import {
 } from '../../../../../shared/sessions'
 import { DetailDropdown } from '../form/DetailDropdown'
 import { DetailToggle } from '../form/DetailToggle'
-import { ButtonText } from '../user-controls/ButtonText'
+import { ButtonText } from '../user-controls/buttons/ButtonText'
 import './SessionConfig.scss'
 
 /**

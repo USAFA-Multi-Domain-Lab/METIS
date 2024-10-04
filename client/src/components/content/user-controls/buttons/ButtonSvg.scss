@@ -1,7 +1,7 @@
 @import 'src/assets/styles/config.scss';
 
 .ButtonSvg {
-  $border-radius: 15px;
+  $border-radius: 0.35em;
   display: inline-block;
   -webkit-user-select: none;
   user-select: none;
@@ -22,14 +22,14 @@
     }
 
     &.warning-transparent:hover {
-      background-image: url('../../../assets/images/icons/warning-filled.svg') !important;
+      background-image: url('/assets/images/icons/warning-filled.svg') !important;
       transition: background-image 0.5s;
     }
   }
 
   &.regular {
     margin: 0 0.25em;
-    border: 3px solid $color-main;
+    border: 2px solid $color-main;
     font-size: $button-svg-regular-size;
   }
 

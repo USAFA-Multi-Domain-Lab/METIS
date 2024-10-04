@@ -4,7 +4,7 @@ import { compute } from 'src/toolbox'
 import { useRequireLogin } from 'src/toolbox/hooks'
 import { SingleTypeObject } from '../../../../../shared/toolbox/objects'
 import Prompt from '../communication/Prompt'
-import ButtonSvgPanel, { TValidPanelButton } from './ButtonSvgPanel'
+import ButtonSvgPanel, { TValidPanelButton } from './buttons/ButtonSvgPanel'
 import './MissionModificationPanel.scss'
 
 /**
@@ -95,25 +95,25 @@ export default function MissionModificationPanel({
   const availableButtons: SingleTypeObject<TValidPanelButton> = compute(() => {
     return {
       launch: {
-        icon: 'launch',
+        type: 'launch',
         key: 'launch',
         onClick: onLaunchRequest,
         tooltipDescription: 'Launch session.',
       },
       remove: {
-        icon: 'remove',
+        type: 'remove',
         key: 'remove',
         onClick: onDeleteRequest,
         tooltipDescription: 'Remove mission.',
       },
       copy: {
-        icon: 'copy',
+        type: 'copy',
         key: 'copy',
         onClick: onCopyRequest,
         tooltipDescription: 'Copy mission.',
       },
       download: {
-        icon: 'download',
+        type: 'download',
         key: 'download',
         onClick: () => {
           window.open(

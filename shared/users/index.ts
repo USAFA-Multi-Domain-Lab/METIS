@@ -29,6 +29,11 @@ export default abstract class User implements TCommonUser {
   public lastName: TCommonUser['lastName']
 
   // Inherited
+  public get name(): TCommonUser['name'] {
+    return `${this.lastName}, ${this.firstName}`
+  }
+
+  // Inherited
   public needsPasswordReset: TCommonUser['needsPasswordReset']
 
   // Inherited
@@ -226,6 +231,10 @@ export interface TCommonUser {
    * The user's last name.
    */
   lastName: string
+  /**
+   * The user's full name.
+   */
+  name: string
   /**
    * Whether the user needs to reset their password.
    */

@@ -1,0 +1,31 @@
+.ListPageControls {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  column-gap: 1em;
+
+  .PrevPage,
+  .NextPage {
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 1em;
+    height: 100%;
+    font-size: 1.25em;
+
+    &.Disabled {
+      cursor: default;
+      pointer-events: none;
+      opacity: 0.45;
+    }
+  }
+
+  .PageNumber {
+    opacity: 0.65;
+    background-color: transparent;
+    color: white;
+    line-height: 2em;
+    font-size: 0.85em;
+  }
+}

@@ -8,7 +8,7 @@ import { useEventListener, withPreprocessor } from 'src/toolbox/hooks'
 import { v4 as generateHash } from 'uuid'
 import { TWithKey } from '../../../../../../shared/toolbox/objects'
 import { Vector1D, Vector2D } from '../../../../../../shared/toolbox/space'
-import { TButtonSvg } from '../../user-controls/ButtonSvg'
+import { TButtonSvg_P } from '../../user-controls/buttons/ButtonSvg'
 import Scene from './Scene'
 import './index.scss'
 import Grid from './objects/Grid'
@@ -442,7 +442,7 @@ export default function MissionMap({
   /**
    * The data for the buttons displayed on the HUD.
    */
-  const buttons = compute((): TWithKey<TButtonSvg>[] => {
+  const buttons = compute((): TWithKey<TButtonSvg_P>[] => {
     let zoomInStages: number[] = [...CAMERA_ZOOM_STAGES].reverse()
     let zoomOutStages: number[] = [...CAMERA_ZOOM_STAGES]
 
@@ -452,7 +452,7 @@ export default function MissionMap({
       ...customButtons,
 
       {
-        icon: 'zoom-in',
+        type: 'zoom-in',
         key: 'zoom-in',
         onClick: () => {
           // Loop through the zoom in stages and
@@ -470,7 +470,7 @@ export default function MissionMap({
         cursor: 'zoom-in',
       },
       {
-        icon: 'zoom-out',
+        type: 'zoom-out',
         key: 'zoom-out',
         onClick: () => {
           // Loop through the zoom out stages and
@@ -488,7 +488,7 @@ export default function MissionMap({
         cursor: 'zoom-out',
       },
       {
-        icon: 'question',
+        type: 'question',
         key: 'question',
         onClick: () => {},
         tooltipDescription:
@@ -740,7 +740,7 @@ export type TMissionMap = {
    * the default buttons.
    * @default []
    */
-  customButtons?: TWithKey<TButtonSvg>[]
+  customButtons?: TWithKey<TButtonSvg_P>[]
   /**
    * Content to display in the overlay.
    * @note If undefined, the overlay will not be displayed.

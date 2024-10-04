@@ -4,6 +4,7 @@ import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
 import Notification from 'src/notifications'
 import SessionClient from 'src/sessions'
+import { SessionBasic } from 'src/sessions/basic'
 import { compute } from 'src/toolbox'
 import {
   useMountHandler,
@@ -12,19 +13,11 @@ import {
 } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import { DefaultLayout } from '.'
-import { TSessionBasicJson } from '../../../../shared/sessions'
 import Prompt from '../content/communication/Prompt'
-import Tooltip from '../content/communication/Tooltip'
-import { DetailString } from '../content/form/DetailString'
-import ListOld, { ESortByMethod } from '../content/general-layout/ListOld'
+import MissionList from '../content/data/lists/options/MissionList'
+import SessionList from '../content/data/lists/options/SessionList'
+import UserList from '../content/data/lists/options/UserList'
 import { LogoutLink } from '../content/general-layout/Navigation'
-import ButtonSvg from '../content/user-controls/ButtonSvg'
-import ButtonSvgPanel, {
-  TValidPanelButton,
-} from '../content/user-controls/ButtonSvgPanel'
-import { ButtonText } from '../content/user-controls/ButtonText'
-import MissionModificationPanel from '../content/user-controls/MissionModificationPanel'
-import UserModificationPanel from '../content/user-controls/UserModificationPanel'
 import './HomePage.scss'
 
 /* -- constants -- */
@@ -56,10 +49,9 @@ export default function HomePage(): JSX.Element | null {
 
   /* -- REFS -- */
   const page = useRef<HTMLDivElement>(null)
-  const importMissionTrigger = useRef<HTMLInputElement>(null)
 
   /* -- STATE -- */
-  const [sessions, setSessions] = useState<TSessionBasicJson[]>([])
+  const [sessions, setSessions] = useState<SessionBasic[]>([])
   const [missions, setMissions] = useState<ClientMission[]>([])
   const [users, setUsers] = useState<ClientUser[]>([])
   const [manualJoinSessionId, setManualJoinSessionId] = useState<string>('')
@@ -75,7 +67,7 @@ export default function HomePage(): JSX.Element | null {
   /* -- EFFECTS -- */
 
   // componentDidMount
-  const [mountHandled, remount] = useMountHandler(async (done) => {
+  const [mountHandled] = useMountHandler(async (done) => {
     try {
       if (currentUser.isAuthorized(['sessions_read', 'missions_read'])) {
         await loadSessions()
@@ -361,129 +353,6 @@ export default function HomePage(): JSX.Element | null {
     }
   }
 
-  // This is called when a request is made
-  // to upload a file.
-  const handleMissionImportRequest = (): void => {
-    let importMissionTrigger_elm: HTMLInputElement | null =
-      importMissionTrigger.current
-
-    if (importMissionTrigger_elm) {
-      importMissionTrigger_elm.click()
-    }
-  }
-
-  // This is called when a change is made
-  // to the mission import input element.
-  const handleImportMissionTriggerChange = (): void => {
-    let importMissionTrigger_elm: HTMLInputElement | null =
-      importMissionTrigger.current
-
-    // If files are found, upload
-    // is begun.
-    if (
-      importMissionTrigger_elm &&
-      importMissionTrigger_elm.files !== null &&
-      importMissionTrigger_elm.files.length > 0
-    ) {
-      importMissionFiles(importMissionTrigger_elm.files)
-    }
-  }
-
-  // This will start the process for
-  // creating a new mission.
-  const createMission = (): void => {
-    if (currentUser.isAuthorized('missions_write')) {
-      navigateTo('MissionPage', { missionId: null })
-    }
-  }
-
-  /**
-   * Handler for when a session is selected.
-   */
-  const onSessionSelection = async (sessionId: string) => {
-    if (server !== null) {
-      try {
-        // Notify user of session join.
-        beginLoading('Joining session...')
-        // Join session from new session ID, awaiting
-        // the promised session client.
-        let session = await server.$joinSession(sessionId)
-
-        // If the session is not found, notify
-        // the user and return.
-        if (session === null) {
-          handleError({
-            message: 'Session could not be found.',
-            notifyMethod: 'bubble',
-          })
-          finishLoading()
-          return
-        }
-
-        // Update login information to include
-        // the new session ID.
-        login.sessionId = session._id
-        // If the session has started, go to the
-        // session page with the new session client.
-        if (session.state === 'started') {
-          navigateTo('SessionPage', { session })
-        }
-        // Or, if the session has not started, go to
-        // the lobby page with the new session client.
-        else if (session.state === 'unstarted') {
-          navigateTo('LobbyPage', { session })
-        }
-      } catch (error: any) {
-        handleError({
-          message: error.message,
-          notifyMethod: 'bubble',
-        })
-      }
-
-      finishLoading()
-    } else {
-      handleError({
-        message: 'No server connection. Contact system administrator',
-        notifyMethod: 'bubble',
-      })
-    }
-  }
-
-  /**
-   * Handler for when a session is requested to
-   * be deleted.
-   */
-  const onSessionDelete = async (session: TSessionBasicJson) => {
-    // Confirm deletion.
-    let { choice } = await prompt(
-      'Please confirm the deletion of this session.',
-      Prompt.ConfirmationChoices,
-    )
-
-    // If confirmed, delete session.
-    if (choice === 'Confirm') {
-      try {
-        beginLoading('Deleting session...')
-        await SessionClient.$delete(session._id)
-        finishLoading()
-        notify(`Successfully deleted "${session.name}".`)
-        loadSessions()
-      } catch (error) {
-        finishLoading()
-        notify(`Failed to delete "${session.name}".`)
-      }
-    }
-  }
-
-  /**
-   * Handler for when a mission is selected.
-   */
-  const onMissionSelection = async ({ _id: missionId }: ClientMission) => {
-    if (currentUser.isAuthorized('missions_write')) {
-      navigateTo('MissionPage', { missionId })
-    }
-  }
-
   /**
    * Callback for when a mission is successfully copied.
    * @param mission The new mission created.
@@ -502,22 +371,21 @@ export default function HomePage(): JSX.Element | null {
     setMissions(missions.filter(({ _id }) => _id !== mission._id))
   }
 
+  /**
+   * Callback for when a user is successfully deleted.
+   * @param user The user that was deleted.
+   */
+  const onUserDeletion = (user: ClientUser) => {
+    // Remove user from state.
+    setUsers(users.filter(({ _id }) => _id !== user._id))
+  }
+
   // This will switch to the user form
   // page with the selected user.
   const selectUser = (user: ClientUser) => {
     if (currentUser.isAuthorized('users_write_students')) {
       navigateTo('UserPage', {
         userId: user._id,
-      })
-    }
-  }
-
-  // This will switch to the user form
-  // page with a new user.
-  const createUser = () => {
-    if (currentUser.isAuthorized('users_write_students')) {
-      navigateTo('UserPage', {
-        userId: null,
       })
     }
   }
@@ -543,254 +411,310 @@ export default function HomePage(): JSX.Element | null {
 
   /**
    * The sessions that are displayed on the home page.
+   * @deprecated
    */
   const sessionsJsx = compute(() => {
-    if (currentUser.isAuthorized('sessions_read')) {
-      return (
-        <div className='ListContainer'>
-          <ListOld<TSessionBasicJson>
-            headingText={'Sessions'}
-            items={sessions}
-            sortByMethods={[ESortByMethod.Name]}
-            nameProperty={'name'}
-            alwaysUseBlanks={true}
-            renderItemDisplay={(session: TSessionBasicJson) => {
-              const {
-                accessibility = SessionClient.DEFAULT_CONFIG.accessibility,
-              } = session.config
+    //     if (currentUser.isAuthorized('sessions_read')) {
+    //       return (
+    //         <div className='ListContainer'>
+    //           <ListOld<TSessionBasicJson>
+    //             headingText={'Sessions'}
+    //             items={sessions}
+    //             sortByMethods={[ESortByMethod.Name]}
+    //             nameProperty={'name'}
+    //             alwaysUseBlanks={true}
+    //             renderItemDisplay={(session: TSessionBasicJson) => {
+    //               const {
+    //                 accessibility = SessionClient.DEFAULT_CONFIG.accessibility,
+    //               } = session.config
+    //
+    //               /**
+    //                * Class for accessibility element.
+    //                */
+    //               const accessibilityClass = compute((): string => {
+    //                 const classList = ['Accessibility', accessibility]
+    //                 return classList.join(' ')
+    //               })
+    //
+    //               /**
+    //                * Description for accessibility element.
+    //                */
+    //               const accessibilityDescription = compute((): string => {
+    //                 switch (accessibility) {
+    //                   case 'id-required':
+    //                     return '### Session ID Required\n*This session is not publicly accessible. One must have the session ID to join.*'
+    //                   case 'public':
+    //                     return '### Public\n*This session is publicly accessible to everyone.*'
+    //                   default:
+    //                     return ''
+    //                 }
+    //               })
+    //
+    //               /**
+    //                * Buttons for selection row.
+    //                */
+    //               const buttons = compute((): TValidPanelButton[] => {
+    //                 let buttons: TValidPanelButton[] = []
+    //
+    //                 // If the current user is authorized
+    //                 // to write, add the button for creating
+    //                 // a new session.
+    //                 if (currentUser.isAuthorized('sessions_write')) {
+    //                   buttons.push({
+    //                     type: 'remove',
+    //                     key: 'remove',
+    //                     onClick: () => onSessionTearDown(session),
+    //                     tooltipDescription: 'Remove session.',
+    //                   })
+    //                 }
+    //
+    //                 return buttons
+    //               })
+    //
+    //               return (
+    //                 <div className='Row Select Session'>
+    //                   <div className={accessibilityClass}>
+    //                     <Tooltip description={accessibilityDescription} />
+    //                   </div>
+    //                   <div
+    //                     className='Text'
+    //                     onClick={() => onSessionSelection(session)}
+    //                   >
+    //                     {session.name}
+    //                     <Tooltip description={'Join session.'} />
+    //                   </div>
+    //                   <ButtonSvgPanel buttons={buttons} size={'small'} />
+    //                 </div>
+    //               )
+    //             }}
+    //             searchableProperties={['name']}
+    //             noItemsDisplay={
+    //               <div className='NoContent'>No sessions available...</div>
+    //             }
+    //             ajaxStatus={'Loaded'}
+    //             applyItemStyling={() => {
+    //               return {}
+    //             }}
+    //             listSpecificItemClassName='AltDesign1'
+    //           />
+    //           <div className='ListActions'>
+    //             <div className='ManualJoin'>
+    //               <div className='Label'>Session ID:</div>
+    //               <DetailString
+    //                 fieldType='optional'
+    //                 handleOnBlur='none'
+    //                 label=''
+    //                 stateValue={manualJoinSessionId}
+    //                 setState={setManualJoinSessionId}
+    //                 uniqueLabelClassName={'Hidden'}
+    //               />
+    //               <ButtonText
+    //                 text='Join'
+    //                 // todo: Resolve this.
+    //                 onClick={() => {}}
+    //                 // onClick={() => onSessionSelection(manualJoinSessionId)}
+    //                 disabled={manualJoinSessionId.length === 0 ? 'full' : 'none'}
+    //               />
+    //             </div>
+    //           </div>
+    //         </div>
+    //       )
+    //     } else {
+    //       return null
+    //     }
 
-              /**
-               * Class for accessibility element.
-               */
-              const accessibilityClass = compute((): string => {
-                const classList = ['Accessibility', accessibility]
-                return classList.join(' ')
-              })
-
-              /**
-               * Description for accessibility element.
-               */
-              const accessibilityDescription = compute((): string => {
-                switch (accessibility) {
-                  case 'id-required':
-                    return '### Session ID Required\n*This session is not publicly accessible. One must have the session ID to join.*'
-                  case 'public':
-                    return '### Public\n*This session is publicly accessible to everyone.*'
-                  default:
-                    return ''
-                }
-              })
-
-              /**
-               * Buttons for selection row.
-               */
-              const buttons = compute((): TValidPanelButton[] => {
-                let buttons: TValidPanelButton[] = []
-
-                // If the current user is authorized
-                // to write, add the button for creating
-                // a new session.
-                if (currentUser.isAuthorized('sessions_write')) {
-                  buttons.push({
-                    icon: 'remove',
-                    key: 'remove',
-                    onClick: () => onSessionDelete(session),
-                    tooltipDescription: 'Remove session.',
-                  })
-                }
-
-                return buttons
-              })
-
-              return (
-                <div className='Row Select Session'>
-                  <div className={accessibilityClass}>
-                    <Tooltip description={accessibilityDescription} />
-                  </div>
-                  <div
-                    className='Text'
-                    onClick={() => onSessionSelection(session._id)}
-                  >
-                    {session.name}
-                    <Tooltip description={'Join session.'} />
-                  </div>
-                  <ButtonSvgPanel buttons={buttons} size={'small'} />
-                </div>
-              )
-            }}
-            searchableProperties={['name']}
-            noItemsDisplay={
-              <div className='NoContent'>No sessions available...</div>
-            }
-            ajaxStatus={'Loaded'}
-            applyItemStyling={() => {
-              return {}
-            }}
-            listSpecificItemClassName='AltDesign1'
-          />
-          <div className='ListActions'>
-            <div className='ManualJoin'>
-              <div className='Label'>Session ID:</div>
-              <DetailString
-                fieldType='optional'
-                handleOnBlur='none'
-                label=''
-                stateValue={manualJoinSessionId}
-                setState={setManualJoinSessionId}
-                uniqueLabelClassName={'Hidden'}
-              />
-              <ButtonText
-                text='Join'
-                onClick={() => onSessionSelection(manualJoinSessionId)}
-                disabled={manualJoinSessionId.length === 0 ? 'full' : 'none'}
-              />
-            </div>
-          </div>
-        </div>
-      )
-    } else {
-      return null
-    }
+    return null
   })
 
   /**
    * The missions that are displayed on the home page.
+   * @deprecated
    */
   const missionsJsx = compute(() => {
-    if (currentUser.isAuthorized('missions_read')) {
-      return (
-        <div className='ListContainer'>
-          <ListOld<ClientMission>
-            headingText={'Missions'}
-            items={missions}
-            sortByMethods={[ESortByMethod.Name]}
-            nameProperty={'name'}
-            alwaysUseBlanks={true}
-            renderItemDisplay={(mission: ClientMission) => {
-              if (currentUser.isAuthorized('missions_write')) {
-                return (
-                  <>
-                    <div className='Row Select'>
-                      <div
-                        className='Text Select'
-                        onClick={() => onMissionSelection(mission)}
-                      >
-                        {mission.name}
-                        <Tooltip description='View/edit mission.' />
-                      </div>
-                      <MissionModificationPanel
-                        mission={mission}
-                        onSuccessfulCopy={onMissionCopy}
-                        onSuccessfulDeletion={onMissionDeletion}
-                      />
-                    </div>
-                  </>
-                )
-              } else {
-                return (
-                  <>
-                    <div className='Row'>
-                      <div className='Text'>{mission.name}</div>
-                      <MissionModificationPanel
-                        mission={mission}
-                        onSuccessfulCopy={() => {}}
-                        onSuccessfulDeletion={() => {}}
-                      />
-                    </div>
-                  </>
-                )
-              }
-            }}
-            searchableProperties={['name']}
-            noItemsDisplay={
-              <div className='NoContent'>No missions available...</div>
-            }
-            ajaxStatus={'Loaded'}
-            applyItemStyling={() => {
-              return {}
-            }}
-            listSpecificItemClassName='AltDesign1'
-          />
-          <div className='ListActions'>
-            <ButtonSvg
-              icon={'add'}
-              onClick={createMission}
-              tooltipDescription={'Create new mission'}
-              uniqueClassList={['NewMissionButton']}
-            />
-            <ButtonSvg
-              icon={'upload'}
-              onClick={handleMissionImportRequest}
-              tooltipDescription={
-                'Import a .metis file from your local system.'
-              }
-            />
-            <input
-              className='ImportMissionTrigger'
-              type='file'
-              ref={importMissionTrigger}
-              onChange={handleImportMissionTriggerChange}
-              hidden
-            />
-          </div>
-        </div>
-      )
-    }
+    return null
+    // if (currentUser.isAuthorized('missions_read')) {
+    //   return (
+    //     <div className='ListContainer'>
+    //       <ListOld<ClientMission>
+    //         headingText={'Missions'}
+    //         items={missions}
+    //         sortByMethods={[ESortByMethod.Name]}
+    //         nameProperty={'name'}
+    //         alwaysUseBlanks={true}
+    //         renderItemDisplay={(mission: ClientMission) => {
+    //           if (currentUser.isAuthorized('missions_write')) {
+    //             return (
+    //               <>
+    //                 <div className='Row Select'>
+    //                   <div
+    //                     className='Text Select'
+    //                     onClick={() => onMissionSelection(mission)}
+    //                   >
+    //                     {mission.name}
+    //                     <Tooltip description='View/edit mission.' />
+    //                   </div>
+    //                   <MissionModificationPanel
+    //                     mission={mission}
+    //                     onSuccessfulCopy={onMissionCopy}
+    //                     onSuccessfulDeletion={onMissionDeletion}
+    //                   />
+    //                 </div>
+    //               </>
+    //             )
+    //           } else {
+    //             return (
+    //               <>
+    //                 <div className='Row'>
+    //                   <div className='Text'>{mission.name}</div>
+    //                   <MissionModificationPanel
+    //                     mission={mission}
+    //                     onSuccessfulCopy={() => {}}
+    //                     onSuccessfulDeletion={() => {}}
+    //                   />
+    //                 </div>
+    //               </>
+    //             )
+    //           }
+    //         }}
+    //         searchableProperties={['name']}
+    //         noItemsDisplay={
+    //           <div className='NoContent'>No missions available...</div>
+    //         }
+    //         ajaxStatus={'Loaded'}
+    //         applyItemStyling={() => {
+    //           return {}
+    //         }}
+    //         listSpecificItemClassName='AltDesign1'
+    //       />
+    //       <div className='ListActions'>
+    //         <ButtonSvg
+    //           type={'add'}
+    //           onClick={createMission}
+    //           tooltipDescription={'Create new mission'}
+    //           uniqueClassList={['NewMissionButton']}
+    //         />
+    //         <ButtonSvg
+    //           type={'upload'}
+    //           onClick={handleMissionImportRequest}
+    //           tooltipDescription={
+    //             'Import a .metis file from your local system.'
+    //           }
+    //         />
+    //         <input
+    //           className='ImportMissionTrigger'
+    //           type='file'
+    //           ref={importMissionTrigger}
+    //           onChange={handleImportMissionTriggerChange}
+    //           hidden
+    //         />
+    //       </div>
+    //     </div>
+    //   )
+    // }
   })
 
   /**
    * The users that are displayed on the home page.
+   * @deprecated
    */
   const usersJsx = compute(() => {
+    return null
+    // if (
+    //   currentUser.isAuthorized(['users_read_students', 'users_write_students'])
+    // ) {
+    //   return (
+    //     <div className='ListContainer'>
+    //       <ListOld<ClientUser>
+    //         headingText={'Users'}
+    //         items={users}
+    //         sortByMethods={[ESortByMethod.Name]}
+    //         nameProperty={'username'}
+    //         alwaysUseBlanks={true}
+    //         renderItemDisplay={(user: ClientUser) => {
+    //           return (
+    //             <>
+    //               <div className='Row Select'>
+    //                 <div className='Text' onClick={() => selectUser(user)}>
+    //                   {user.username}
+    //                   <Tooltip description='Select user.' />
+    //                 </div>
+    //                 <UserModificationPanel
+    //                   user={user}
+    //                   onSuccessfulDeletion={remount}
+    //                 />
+    //               </div>
+    //             </>
+    //           )
+    //         }}
+    //         searchableProperties={['username']}
+    //         noItemsDisplay={
+    //           <div className='NoContent'>No users available...</div>
+    //         }
+    //         ajaxStatus={'Loaded'}
+    //         applyItemStyling={() => {
+    //           return {}
+    //         }}
+    //         listSpecificItemClassName='AltDesign1'
+    //       />
+    //       <div className='ListActions'>
+    //         <ButtonSvg
+    //           type={'add'}
+    //           onClick={createUser}
+    //           tooltipDescription={'Create new user'}
+    //         />
+    //       </div>
+    //     </div>
+    //   )
+    // } else {
+    //   return null
+    // }
+  })
+
+  const listsJsx = compute(() => {
+    let results: JSX.Element[] = []
+
+    // If the user is authorized to read sessions,
+    // then display the sessions list.
+    if (currentUser.isAuthorized('sessions_read')) {
+      results.push(
+        <SessionList
+          key={'sessions-list'}
+          sessions={sessions}
+          refresh={loadSessions}
+        />,
+      )
+    }
+
+    // If the user is authorized to read missions,
+    // then display the missions list.
+    if (currentUser.isAuthorized('missions_read')) {
+      results.push(
+        <MissionList
+          key={'missions-list'}
+          missions={missions}
+          onSuccessfulCopy={onMissionCopy}
+          onSuccessfulDeletion={onMissionDeletion}
+          importMissionFiles={importMissionFiles}
+        />,
+      )
+    }
+
+    // If the user is authorized to read and write,
+    // at the very least, students, then display the
+    // users list.
     if (
       currentUser.isAuthorized(['users_read_students', 'users_write_students'])
     ) {
-      return (
-        <div className='ListContainer'>
-          <ListOld<ClientUser>
-            headingText={'Users'}
-            items={users}
-            sortByMethods={[ESortByMethod.Name]}
-            nameProperty={'username'}
-            alwaysUseBlanks={true}
-            renderItemDisplay={(user: ClientUser) => {
-              return (
-                <>
-                  <div className='Row Select'>
-                    <div className='Text' onClick={() => selectUser(user)}>
-                      {user.username}
-                      <Tooltip description='Select user.' />
-                    </div>
-                    <UserModificationPanel
-                      user={user}
-                      onSuccessfulDeletion={remount}
-                    />
-                  </div>
-                </>
-              )
-            }}
-            searchableProperties={['username']}
-            noItemsDisplay={
-              <div className='NoContent'>No users available...</div>
-            }
-            ajaxStatus={'Loaded'}
-            applyItemStyling={() => {
-              return {}
-            }}
-            listSpecificItemClassName='AltDesign1'
-          />
-          <div className='ListActions'>
-            <ButtonSvg
-              icon={'add'}
-              onClick={createUser}
-              tooltipDescription={'Create new user'}
-            />
-          </div>
-        </div>
+      results.push(
+        <UserList
+          key={'users-list'}
+          users={users}
+          onSuccessfulDeletion={onUserDeletion}
+        />,
       )
-    } else {
-      return null
     }
+
+    return results
   })
 
   // Render root element.
@@ -807,6 +731,7 @@ export default function HomePage(): JSX.Element | null {
         {sessionsJsx}
         {missionsJsx}
         {usersJsx}
+        {listsJsx}
       </DefaultLayout>
     </div>
   )

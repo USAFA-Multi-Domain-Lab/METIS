@@ -10,7 +10,7 @@ import { DetailString } from '../../form/DetailString'
 import ListOld, { ESortByMethod } from '../../general-layout/ListOld'
 import ButtonSvgPanel, {
   TValidPanelButton,
-} from '../../user-controls/ButtonSvgPanel'
+} from '../../user-controls/buttons/ButtonSvgPanel'
 import './index.scss'
 import EntryNavigation from './navigation/EntryNavigation'
 
@@ -84,7 +84,7 @@ export default function MissionEntry({
       // Create a list of mini actions that are available.
       let availableMiniActions: SingleTypeObject<TValidPanelButton> = {
         warning: {
-          icon: 'warning-transparent',
+          type: 'warning-transparent',
           key: 'warning',
           onClick: () => {},
           cursor: 'help',

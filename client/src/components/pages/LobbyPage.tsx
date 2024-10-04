@@ -11,7 +11,7 @@ import { DefaultLayout } from '.'
 import Prompt from '../content/communication/Prompt'
 import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
 import SessionMembers from '../content/session/members/SessionMembers'
-import { ButtonText } from '../content/user-controls/ButtonText'
+import { ButtonText } from '../content/user-controls/buttons/ButtonText'
 import './LobbyPage.scss'
 
 /**
