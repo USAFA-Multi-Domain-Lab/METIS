@@ -35,7 +35,6 @@ export default class Prompt<
     // Gather details.
     let { choice } = this.state
     const { resolve, defaultChoice } = this.props
-    console.log(choice, defaultChoice)
     // If the choice is not set and there is
     // a default choice, set the default choice.
     if (!choice && defaultChoice) choice = defaultChoice

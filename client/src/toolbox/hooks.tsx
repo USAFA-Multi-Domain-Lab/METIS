@@ -193,7 +193,7 @@ export function useListComponent<
 export function useEventListener<TEventMethod extends string>(
   target: TEventListenerTarget<TEventMethod> | null,
   methods: TEventMethod | TEventMethod[],
-  callback: () => void,
+  callback: () => any,
   dependencies: React.DependencyList = [],
 ): void {
   /**
@@ -218,7 +218,12 @@ export function useEventListener<TEventMethod extends string>(
     // Return clean up function for
     // removing the listener when done.
     return () => {
-      target?.removeEventListener(listener)
+      // Convert methods to an array, if
+      // not already..
+      methods = Array.isArray(methods) ? methods : [methods]
+
+      // Remove listener from the target.
+      for (let method of methods) target?.removeEventListener(method, listener)
     }
   }, [listener])
 }
@@ -271,18 +276,14 @@ export interface TEventListenerTarget<TEventMethod extends string> {
    * @returns The target with the event listener added.
    *
    */
-  addEventListener: (
-    method: TEventMethod,
-    callback: () => void,
-  ) => TEventListenerTarget<TEventMethod>
+  addEventListener: (method: TEventMethod, callback: () => any) => void
   /**
    * Removes an event listener from the target.
+   * @param method The method of the event to listen for.
    * @param callback The callback of the listener to remove.
    * @returns The target with the event listener remove.
    */
-  removeEventListener: (
-    callback: () => void,
-  ) => TEventListenerTarget<TEventMethod>
+  removeEventListener: (method: TEventMethod, callback: () => any) => void
 }
 
 /**

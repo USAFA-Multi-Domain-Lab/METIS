@@ -278,8 +278,6 @@ export default class SessionClient extends Session<TClientMissionTypes> {
     let action: ClientMissionAction | undefined = this.actions.get(actionId)
     const { cheats } = options
 
-    console.log(options)
-
     // Callback for errors.
     const onError = (message: string) => {
       console.error(message)

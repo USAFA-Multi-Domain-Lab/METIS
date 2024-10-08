@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { compute } from 'src/toolbox'
 import { TButtonSvgType } from '../../user-controls/buttons/ButtonSvg'
 import { TSvgPanelOnClick } from '../../user-controls/buttons/ButtonSvgPanel_v2'
@@ -13,6 +13,7 @@ import {
 } from './ListItem'
 import ListNav from './ListNav'
 import ListPage, { TListPage_P } from './ListPage'
+import ListResizeHandler from './ListResizeHandler'
 
 /**
  * Displays a list of items of the given type.
@@ -20,7 +21,7 @@ import ListPage, { TListPage_P } from './ListPage'
 export default function List<TItem extends TListItem>({
   name,
   items,
-  itemsPerPage = 10,
+  itemsPerPageMin = 10,
   listButtons = [],
   itemButtons = [],
   getItemTooltip = () => '',
@@ -35,6 +36,14 @@ export default function List<TItem extends TListItem>({
   // The current page number to
   // display in the list.
   const [pageNumber, setPageNumber] = useState<number>(0)
+  // The items after filtering is applied.
+  const [filteredItems, setFilteredItems] = useState<TItem[]>(items)
+  // Calculated amount of items per page
+  // in the event that itemsPerPage is
+  // set to 'auto'.
+  const [itemsPerPage, setItemsPerPage] = useState<number>(itemsPerPageMin)
+  // Reference to the root element.
+  const root = useRef<HTMLDivElement>(null)
 
   /* -- COMPUTED -- */
 
@@ -46,10 +55,14 @@ export default function List<TItem extends TListItem>({
   const pages = compute<TListPage_P<TItem>[]>(() => {
     const results: Required<TListPage_P<TItem>>[] = []
 
-    for (let i = 0; i < items.length; i += itemsPerPage) {
+    for (
+      let i = 0;
+      i < filteredItems.length || !results.length;
+      i += itemsPerPage
+    ) {
       results.push({
-        items: items.slice(i, i + itemsPerPage),
-        itemsPerPage,
+        items: filteredItems.slice(i, i + itemsPerPage),
+        itemsPerPage: itemsPerPage,
         itemButtons,
         getItemTooltip,
         getItemButtonTooltip,
@@ -64,7 +77,16 @@ export default function List<TItem extends TListItem>({
   /**
    * The current page of items to display.
    */
-  const currentPage = compute<TListPage_P<TItem>>(() => pages[pageNumber])
+  const currentPageJsx = compute<JSX.Element | null>(() => {
+    // Get the current page's props.
+    let currentPage: TListPage_P<TItem> | undefined = pages[pageNumber]
+
+    // If there is no current page, return null.
+    if (!currentPage) return null
+
+    // Render the current page.
+    return <ListPage key={`page_${pageNumber}`} {...currentPage} />
+  })
 
   /**
    * The current number of pages in the list.
@@ -75,17 +97,24 @@ export default function List<TItem extends TListItem>({
 
   // Render the list.
   return (
-    <div className='List'>
+    <div className={'List'} ref={root}>
       <ListNav
         headingText={name}
         pageNumberState={[pageNumber, setPageNumber]}
         pageCount={pageCount}
+        items={items}
+        filteredItemsState={[filteredItems, setFilteredItems]}
       />
-      <ListPage key={`page_${pageNumber}`} {...currentPage} />
+      {currentPageJsx}
       <ListButtons
         buttons={listButtons}
         getButtonTooltip={getListButtonTooltip}
         onButtonClick={onListButtonClick}
+      />
+      <ListResizeHandler
+        list={root}
+        itemsPerPageState={[itemsPerPage, setItemsPerPage]}
+        pageNumberState={[pageNumber, setPageNumber]}
       />
     </div>
   )
@@ -104,10 +133,12 @@ export type TList_P<TItem extends TListItem> = {
    */
   items: TItem[]
   /**
-   * The number of items to display per page.
+   * The minimum number of items to display per page.
+   * @note More items will be displayed if there is
+   * enough space in the list.
    * @default 10
    */
-  itemsPerPage?: number
+  itemsPerPageMin?: number
   /**
    * The list-specific buttons to display, which when clicked,
    * will perform an action not specific to any item in the list.

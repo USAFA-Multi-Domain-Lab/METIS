@@ -437,16 +437,19 @@ export default class ClientMissionForce
   public addEventListener(
     event: TForceEventMethod,
     callback: () => void,
-  ): ClientMissionForce {
+  ): void {
     this.listeners.push([event, callback])
-    return this
   }
 
   // Implemented
-  public removeEventListener(callback: () => void): ClientMissionForce {
-    // Filter out listener.
-    this.listeners = this.listeners.filter(([, h]) => h !== callback)
-    return this
+  public removeEventListener<TMethod extends TForceEventMethod>(
+    method: TMethod,
+    handler: () => void,
+  ): void {
+    // Filter out the handler.
+    this.listeners = this.listeners.filter(
+      ([m, h]) => m !== method || h !== handler,
+    )
   }
 
   // Implemented

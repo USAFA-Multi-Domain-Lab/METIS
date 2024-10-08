@@ -7,4 +7,13 @@
   background-color: rgba(black, 0.6);
   border: 2px solid white;
   border-radius: 1em;
+
+  &:not(.Resizing) {
+    transition: 0.5s opacity;
+  }
+
+  &.Resizing {
+    transition: 0.2s opacity;
+    opacity: 0.65;
+  }
 }

@@ -7,6 +7,8 @@ export default function ListNav<TItem extends TListItem>({
   headingText,
   pageNumberState,
   pageCount,
+  items,
+  filteredItemsState,
 }: TListNav_P<TItem>): JSX.Element | null {
   // Render the nav.
   return (
@@ -18,7 +20,7 @@ export default function ListNav<TItem extends TListItem>({
         pageNumberState={pageNumberState}
         pageCount={pageCount}
       />
-      <ListFiltering />
+      <ListFiltering items={items} filteredItemsState={filteredItemsState} />
     </div>
   )
 }
@@ -39,4 +41,12 @@ export type TListNav_P<TItem extends TListItem> = {
    * The number of pages in the list.
    */
   pageCount: number
+  /**
+   * The original unfiltered list of items.
+   */
+  items: TItem[]
+  /**
+   * The state for the filtered items.
+   */
+  filteredItemsState: TReactState<TItem[]>
 }

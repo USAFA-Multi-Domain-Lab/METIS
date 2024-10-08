@@ -13,9 +13,6 @@ export default function ListButtons<TItem extends TListItem>({
   getButtonTooltip = () => '',
   onButtonClick = () => {},
 }: TListButtons_P<TItem>): JSX.Element | null {
-  // If no buttons, return null.
-  if (buttons.length === 0) return null
-
   // Render the buttons.
   return (
     <div className='ListButtons'>

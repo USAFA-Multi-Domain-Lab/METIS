@@ -9,7 +9,7 @@ import './ButtonSvg.scss'
  * A button with an SVG icon.
  */
 export default function ButtonSvg({
-  type: icon,
+  type,
   size = 'regular',
   tooltipDescription = null,
   uniqueClassList = [],
@@ -25,7 +25,7 @@ export default function ButtonSvg({
    */
   const rootClass = compute((): string => {
     // Gather details.
-    let classList: string[] = ['ButtonSvg', icon, size, ...uniqueClassList]
+    let classList: string[] = ['ButtonSvg', type, size, ...uniqueClassList]
 
     // Determine if the button is partially or fully disabled.
     if (disabled === 'partial') {
@@ -45,11 +45,14 @@ export default function ButtonSvg({
     // Construct result.
     let result: React.CSSProperties = {}
 
+    // Return as is if the type is '_blank'.
+    if (type === '_blank') return result
+
     // Determine the background details based on size.
     switch (size) {
       case 'regular':
         result = {
-          backgroundImage: `url(${require(`../../../../assets/images/icons/${icon}.svg`)}), linear-gradient(to bottom, #1a2a1a 0% 100%)`,
+          backgroundImage: `url(${require(`../../../../assets/images/icons/${type}.svg`)}), linear-gradient(to bottom, #1a2a1a 0% 100%)`,
           backgroundSize: '0.5em, cover',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
@@ -57,7 +60,7 @@ export default function ButtonSvg({
         break
       case 'small':
         result = {
-          backgroundImage: `url(${require(`../../../../assets/images/icons/${icon}.svg`)})`,
+          backgroundImage: `url(${require(`../../../../assets/images/icons/${type}.svg`)})`,
           backgroundSize: '0.65em',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
@@ -67,7 +70,7 @@ export default function ButtonSvg({
 
     // Offset the background position for 'upload' and
     // 'download' icons to center them.
-    if (icon === 'upload' || icon === 'download') {
+    if (type === 'upload' || type === 'download') {
       result.backgroundPosition = 'center 0.25em, center'
     }
 
@@ -150,27 +153,34 @@ export type TButtonSvg_P = {
 /**
  * The type of button being used.
  * @note Used to determine the icon to display.
+ * ### Special Types
+ * - `'_blank'`: Does not do anything and cannot be seen.
+ * Acts as a filler when the space needs to be
+ * filled up, but no button is required.
  */
 export type TButtonSvgType =
-  | 'cancel'
+  // ! If adding to list, please maintain
+  // ! alphabetical order.
+  | '_blank'
   | 'add'
-  | 'edit'
-  | 'remove'
-  | 'down'
-  | 'reorder'
-  | 'zoom-in'
-  | 'zoom-out'
-  | 'save'
+  | 'ban'
+  | 'cancel'
   | 'copy'
-  | 'upload'
+  | 'down'
   | 'download'
-  | 'search'
+  | 'edit'
+  | 'kick'
   | 'launch'
   | 'lock'
-  | 'kick'
-  | 'ban'
-  | 'user'
+  | 'question'
+  | 'remove'
+  | 'reorder'
+  | 'save'
+  | 'search'
   | 'shell'
   | 'text-cursor'
-  | 'question'
+  | 'upload'
+  | 'user'
   | 'warning-transparent'
+  | 'zoom-in'
+  | 'zoom-out'

@@ -1,0 +1,17 @@
+@import 'src/assets/styles/config.scss';
+
+.List {
+  .ListPage {
+    .ListColumnLabels {
+      border-bottom: 1px solid rgba(white, 0.25);
+
+      .ColumnLabel {
+        font-weight: bold;
+        // font-style: italic;
+        // font-size: 0.9rem;
+        color: white;
+        line-height: normal;
+      }
+    }
+  }
+}

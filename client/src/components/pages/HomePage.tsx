@@ -380,16 +380,6 @@ export default function HomePage(): JSX.Element | null {
     setUsers(users.filter(({ _id }) => _id !== user._id))
   }
 
-  // This will switch to the user form
-  // page with the selected user.
-  const selectUser = (user: ClientUser) => {
-    if (currentUser.isAuthorized('users_write_students')) {
-      navigateTo('UserPage', {
-        userId: user._id,
-      })
-    }
-  }
-
   /* -- RENDER -- */
 
   // If the page has not yet mounted, there
@@ -526,150 +516,6 @@ export default function HomePage(): JSX.Element | null {
     return null
   })
 
-  /**
-   * The missions that are displayed on the home page.
-   * @deprecated
-   */
-  const missionsJsx = compute(() => {
-    return null
-    // if (currentUser.isAuthorized('missions_read')) {
-    //   return (
-    //     <div className='ListContainer'>
-    //       <ListOld<ClientMission>
-    //         headingText={'Missions'}
-    //         items={missions}
-    //         sortByMethods={[ESortByMethod.Name]}
-    //         nameProperty={'name'}
-    //         alwaysUseBlanks={true}
-    //         renderItemDisplay={(mission: ClientMission) => {
-    //           if (currentUser.isAuthorized('missions_write')) {
-    //             return (
-    //               <>
-    //                 <div className='Row Select'>
-    //                   <div
-    //                     className='Text Select'
-    //                     onClick={() => onMissionSelection(mission)}
-    //                   >
-    //                     {mission.name}
-    //                     <Tooltip description='View/edit mission.' />
-    //                   </div>
-    //                   <MissionModificationPanel
-    //                     mission={mission}
-    //                     onSuccessfulCopy={onMissionCopy}
-    //                     onSuccessfulDeletion={onMissionDeletion}
-    //                   />
-    //                 </div>
-    //               </>
-    //             )
-    //           } else {
-    //             return (
-    //               <>
-    //                 <div className='Row'>
-    //                   <div className='Text'>{mission.name}</div>
-    //                   <MissionModificationPanel
-    //                     mission={mission}
-    //                     onSuccessfulCopy={() => {}}
-    //                     onSuccessfulDeletion={() => {}}
-    //                   />
-    //                 </div>
-    //               </>
-    //             )
-    //           }
-    //         }}
-    //         searchableProperties={['name']}
-    //         noItemsDisplay={
-    //           <div className='NoContent'>No missions available...</div>
-    //         }
-    //         ajaxStatus={'Loaded'}
-    //         applyItemStyling={() => {
-    //           return {}
-    //         }}
-    //         listSpecificItemClassName='AltDesign1'
-    //       />
-    //       <div className='ListActions'>
-    //         <ButtonSvg
-    //           type={'add'}
-    //           onClick={createMission}
-    //           tooltipDescription={'Create new mission'}
-    //           uniqueClassList={['NewMissionButton']}
-    //         />
-    //         <ButtonSvg
-    //           type={'upload'}
-    //           onClick={handleMissionImportRequest}
-    //           tooltipDescription={
-    //             'Import a .metis file from your local system.'
-    //           }
-    //         />
-    //         <input
-    //           className='ImportMissionTrigger'
-    //           type='file'
-    //           ref={importMissionTrigger}
-    //           onChange={handleImportMissionTriggerChange}
-    //           hidden
-    //         />
-    //       </div>
-    //     </div>
-    //   )
-    // }
-  })
-
-  /**
-   * The users that are displayed on the home page.
-   * @deprecated
-   */
-  const usersJsx = compute(() => {
-    return null
-    // if (
-    //   currentUser.isAuthorized(['users_read_students', 'users_write_students'])
-    // ) {
-    //   return (
-    //     <div className='ListContainer'>
-    //       <ListOld<ClientUser>
-    //         headingText={'Users'}
-    //         items={users}
-    //         sortByMethods={[ESortByMethod.Name]}
-    //         nameProperty={'username'}
-    //         alwaysUseBlanks={true}
-    //         renderItemDisplay={(user: ClientUser) => {
-    //           return (
-    //             <>
-    //               <div className='Row Select'>
-    //                 <div className='Text' onClick={() => selectUser(user)}>
-    //                   {user.username}
-    //                   <Tooltip description='Select user.' />
-    //                 </div>
-    //                 <UserModificationPanel
-    //                   user={user}
-    //                   onSuccessfulDeletion={remount}
-    //                 />
-    //               </div>
-    //             </>
-    //           )
-    //         }}
-    //         searchableProperties={['username']}
-    //         noItemsDisplay={
-    //           <div className='NoContent'>No users available...</div>
-    //         }
-    //         ajaxStatus={'Loaded'}
-    //         applyItemStyling={() => {
-    //           return {}
-    //         }}
-    //         listSpecificItemClassName='AltDesign1'
-    //       />
-    //       <div className='ListActions'>
-    //         <ButtonSvg
-    //           type={'add'}
-    //           onClick={createUser}
-    //           tooltipDescription={'Create new user'}
-    //         />
-    //       </div>
-    //     </div>
-    //   )
-    // } else {
-    //   return null
-    // }
-  })
-
   const listsJsx = compute(() => {
     let results: JSX.Element[] = []
 
@@ -727,12 +573,7 @@ export default function HomePage(): JSX.Element | null {
       onDrop={handleFileDrop}
     >
       {fileDropBoxJsx}
-      <DefaultLayout navigation={navigation}>
-        {sessionsJsx}
-        {missionsJsx}
-        {usersJsx}
-        {listsJsx}
-      </DefaultLayout>
+      <DefaultLayout navigation={navigation}>{listsJsx}</DefaultLayout>
     </div>
   )
 }

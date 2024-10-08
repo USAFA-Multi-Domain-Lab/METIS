@@ -6,7 +6,7 @@ import { TList_P } from './List'
 import './ListItem.scss'
 
 /**
- * An list item in a `List` component.
+ * A list item in a `List` component.
  */
 export default function ListItem<T extends TListItem>({
   item,
@@ -42,7 +42,7 @@ export default function ListItem<T extends TListItem>({
   return (
     <div className={rootClass}>
       <div
-        className='ItemName'
+        className='ItemName ItemCell'
         onClick={() => {
           if (onSelection) onSelection(item)
         }}
@@ -50,7 +50,7 @@ export default function ListItem<T extends TListItem>({
         {item.name}
         <Tooltip description={itemTooltipDescription} />
       </div>
-      <div className='ItemButtons'>
+      <div className='ItemButtons ItemCell'>
         <ButtonSvgPanel_v2
           buttons={buttons}
           size={'small'}

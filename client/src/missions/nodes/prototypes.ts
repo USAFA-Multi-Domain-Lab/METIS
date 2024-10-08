@@ -133,27 +133,23 @@ export default class ClientMissionPrototype
     }
   }
 
-  /**
-   * Adds a listener for a prototype event.
-   * @param method The method of the event to listen for.
-   * @param callback The callback to call when the event is triggered.
-   */
+  // Implemented
   public addEventListener(
     method: TPrototypeEventMethod,
     callback: () => void,
-  ): ClientMissionPrototype {
+  ): void {
     this.listeners.push([method, callback])
-    return this
   }
 
-  /**
-   * Removes a listener for a prototype event.
-   * @param callback The callback used for the listener.
-   */
-  public removeEventListener(callback: () => void): ClientMissionPrototype {
+  // Implemented
+  public removeEventListener(
+    method: TPrototypeEventMethod,
+    callback: () => void,
+  ): void {
     // Filter out listener.
-    this.listeners = this.listeners.filter(([, h]) => h !== callback)
-    return this
+    this.listeners = this.listeners.filter(
+      ([m, h]) => m !== method || h !== callback,
+    )
   }
 
   /**

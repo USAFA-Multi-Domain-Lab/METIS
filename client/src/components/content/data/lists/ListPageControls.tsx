@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { compute } from 'src/toolbox'
 import Tooltip from '../../communication/Tooltip'
 import './ListPageControls.scss'
@@ -26,7 +27,7 @@ export default function ListPageControls({
   /**
    * The class name for the previous page control.
    */
-  const previousPageClass = compute<string>(() => {
+  const prevPageClass = compute<string>(() => {
     let results = ['PrevPage']
 
     // If there is not a previous page, disable the control.
@@ -52,7 +53,7 @@ export default function ListPageControls({
    */
   const pageNumberText = compute<string>(() => `${pageNumber + 1}/${pageCount}`)
 
-  /* -- HANDLERS -- */
+  /* -- FUNCTIONS -- */
 
   /**
    * Turns the page back.
@@ -68,30 +69,26 @@ export default function ListPageControls({
     if (isNextPage) setPageNumber(pageNumber + 1)
   }
 
+  /* -- EFFECTS -- */
+
+  // Ensure the page number is within bounds.
+  useEffect(() => {
+    // Update the page number to be within bounds.
+    setPageNumber(Math.max(Math.min(pageNumber, pageCount - 1), 0))
+  }, [pageNumber, pageCount])
+
   /* -- RENDER -- */
 
   // Render the page controls.
   return (
     <div className='ListPageControls'>
-      {/* <div className={previousPageClassName} onClick={this.turnBackPage}>
-        <span className='arrow'>{'<'}</span>
-        {isPreviousPage ? <Tooltip description={'Previous page.'} /> : null}
-      </div>
-      <div className='page-number'>{`${page + 1}/${pageCount}`}</div>
-      <div className={nextPageClassName} onClick={this.turnPage}>
-        <span className='arrow'>{'>'}</span>
-        {isNextPage ? <Tooltip description={'Next page.'} /> : null}
-      </div> */}
-      {/* todo: Make this dynamic. */}
-      <div className={previousPageClass} onClick={turnBack}>
+      <div className={prevPageClass} onClick={turnBack}>
         <span className='Arrow'>{'<'}</span>
         <Tooltip description={'Previous page.'} />
       </div>
       <div className='PageNumber'>{pageNumberText}</div>
-      <div className={nextPageClass}>
-        <span className='Arrow' onClick={turnForward}>
-          {'>'}
-        </span>
+      <div className={nextPageClass} onClick={turnForward}>
+        <span className='Arrow'>{'>'}</span>
         <Tooltip description={'Next page.'} />
       </div>
     </div>

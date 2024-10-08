@@ -1,6 +1,7 @@
 import { ReactNode } from 'react'
 import { compute } from 'src/toolbox'
 import { TList_P } from './List'
+import ListColumnLabels from './ListColumnLabels'
 import ListItem, { TListItem } from './ListItem'
 import './ListPage.scss'
 
@@ -41,7 +42,7 @@ export default function ListPage<TItem extends TListItem>({
     else {
       result.push(
         <div className='NoItems ListItemLike' key='no-items'>
-          <div className='ItemName'>None available...</div>
+          <div className='ItemName ItemCell'>None available...</div>
         </div>,
       )
     }
@@ -53,7 +54,7 @@ export default function ListPage<TItem extends TListItem>({
         <div
           key={`blank_${result.length}`}
           className='ItemBlank ListItemLike'
-        />,
+        ></div>,
       )
     }
 
@@ -63,6 +64,7 @@ export default function ListPage<TItem extends TListItem>({
   // Render the page.
   return (
     <div className='ListPage'>
+      <ListColumnLabels itemButtonCount={itemButtons?.length ?? 0} />
       <div className='ListItems'>{itemsJsx}</div>
     </div>
   )
@@ -81,7 +83,7 @@ export type TListPage_P<TItem extends TListItem> = {
   /**
    * The number of items to display per page.
    */
-  itemsPerPage: TList_P<TItem>['itemsPerPage']
+  itemsPerPage: number
   /**
    * The buttons to display for each item.
    */

@@ -37,7 +37,7 @@ export default function UserList({
 
     // If the user has the proper authorization, add
     // the add button.
-    if (login.user.isAuthorized('users_write')) {
+    if (login.user.isAuthorized('users_write_students')) {
       results.push('add')
     }
 
@@ -52,7 +52,7 @@ export default function UserList({
 
     // If the user has the proper authorization, add
     // the launch, copy, remove, and download buttons.
-    if (login.user.isAuthorized('users_write')) {
+    if (login.user.isAuthorized('users_write_students')) {
       results.push('remove')
     }
 

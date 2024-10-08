@@ -451,7 +451,7 @@ export default class ListOld<TList extends object> extends React.Component<
 
       this.setState({ page: 0, itemsFiltered, filterTerm, filterHint })
     } catch (error) {
-      console.log('Failed to filter list.')
+      console.error('Failed to filter list.')
       console.error(error)
     }
   }

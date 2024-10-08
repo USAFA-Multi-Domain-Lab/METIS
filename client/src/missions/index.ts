@@ -542,19 +542,16 @@ export default class ClientMission
   }
 
   // Implemented
-  public addEventListener(
-    method: TMissionEvent,
-    callback: () => void,
-  ): ClientMission {
+  public addEventListener(method: TMissionEvent, callback: () => void) {
     this.listeners.push([method, callback])
-    return this
   }
 
   // Implemented
-  public removeEventListener(callback: () => void): ClientMission {
+  public removeEventListener(method: TMissionEvent, callback: () => void) {
     // Filter out listener.
-    this.listeners = this.listeners.filter(([, h]) => h !== callback)
-    return this
+    this.listeners = this.listeners.filter(
+      ([m, h]) => m !== method || h !== callback,
+    )
   }
 
   /**

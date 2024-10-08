@@ -13,7 +13,7 @@
   height: 0.96em;
 
   &.small {
-    margin: 0 0.2em;
+    margin: 0 0.15em;
     font-size: $button-svg-small-size;
 
     &:not(.warning-transparent):hover {
@@ -44,5 +44,11 @@
 
   &.zoom-out {
     cursor: zoom-out;
+  }
+
+  &._blank {
+    background: none;
+    pointer-events: none;
+    opacity: 0;
   }
 }

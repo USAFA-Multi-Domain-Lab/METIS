@@ -20,6 +20,10 @@ export default function ButtonSvgPanel_v2({
   getTooltip = () => '',
   onButtonClick,
 }: TButtonSvgPanel_v2_P): JSX.Element | null {
+  // If no buttons, add a blank to
+  // maintain the correct height.
+  if (!buttons.length) buttons.push('_blank')
+
   /* -- COMPUTED -- */
 
   /**
@@ -36,9 +40,9 @@ export default function ButtonSvgPanel_v2({
 
   return (
     <div className={rootClass} style={styling}>
-      {buttons.map((type) => (
+      {buttons.map((type, index) => (
         <ButtonSvg
-          key={type}
+          key={type + index} // todo: fix this to not use the index.
           type={type}
           size={size}
           onClick={() => onButtonClick(type)}

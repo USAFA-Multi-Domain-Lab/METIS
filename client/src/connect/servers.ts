@@ -232,26 +232,25 @@ export default class ServerConnection
   public addEventListener<TMethod extends TServerMethod>(
     method: TMethod,
     handler: TServerHandler<TMethod>,
-  ): ServerConnection {
+  ): void {
     // Push the new listener to the array of listeners.
     this.listeners.push([method, handler])
-    // Return this.
-    return this
   }
 
   /**
-   * Adds a listener for a specific server event method.
+   * Removes a listener for a specific server event method.
    * @param method The event method that will be handled. The handler will only be called if the method matches what is sent by the server in a web socket message, except for 'open', 'close', and 'error' events, which are called upon their respective web socket events.
    * @param handler The handler that will be called upon the event being triggered.
    * @returns The server connection instance, allowing the chaining of class method calls.
    */
-  public removeEventListener(
-    handler: TServerHandler<TServerMethod>,
-  ): ServerConnection {
+  public removeEventListener<TMethod extends TServerMethod>(
+    method: TMethod,
+    handler: TServerHandler<TMethod>,
+  ): void {
     // Filter out the handler.
-    this.listeners = this.listeners.filter(([, h]) => h !== handler)
-    // Return this.
-    return this
+    this.listeners = this.listeners.filter(
+      ([m, h]) => m !== method || h !== handler,
+    )
   }
 
   /**

@@ -1,8 +1,10 @@
 import Prompt from 'src/components/content/communication/Prompt'
+import { TButtonSvgType } from 'src/components/content/user-controls/buttons/ButtonSvg'
 import { TSvgPanelOnClick } from 'src/components/content/user-controls/buttons/ButtonSvgPanel_v2'
 import { useGlobalContext } from 'src/context'
 import SessionClient from 'src/sessions'
 import { SessionBasic } from 'src/sessions/basic'
+import { compute } from 'src/toolbox'
 import { useRequireLogin } from 'src/toolbox/hooks'
 import List, { TGetListButtonTooltip } from '../List'
 import {
@@ -30,6 +32,20 @@ export default function SessionList({
     navigateTo,
     prompt,
   } = globalContext.actions
+
+  /* -- COMPUTED -- */
+
+  const itemButtons = compute<TButtonSvgType[]>(() => {
+    let results: TButtonSvgType[] = []
+
+    // If the user has the proper authorization, add
+    // the remove button.
+    if (login.user.isAuthorized('sessions_write')) results.push('remove')
+
+    return results
+  })
+
+  /* -- FUNCTIONS -- */
 
   /**
    * Gets the tooltip description for a session list button.
@@ -177,7 +193,7 @@ export default function SessionList({
       name={'Sessions'}
       items={sessions}
       listButtons={['text-cursor']}
-      itemButtons={['remove']}
+      itemButtons={itemButtons}
       getItemTooltip={() => 'Join session.'}
       getListButtonTooltip={getSessionListButtonTooltip}
       getItemButtonTooltip={getSessionItemButtonTooltip}
