@@ -2,6 +2,7 @@
 # packages
 /node_modules
 /server/node_modules
+/server/tests/node_modules
 /client/node_modules
 /shared/node_modules
 npm-debug.log*

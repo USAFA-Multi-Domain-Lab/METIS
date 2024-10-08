@@ -6,10 +6,11 @@ import { TActionOutcomeJson } from 'metis/missions/actions/outcomes'
 import { TCommonMissionForceJson } from 'metis/missions/forces'
 import { TCommonOutputJson } from 'metis/missions/forces/output'
 import { TSessionConfig, TSessionJson } from 'metis/sessions'
-import {
+import SessionMember, {
   TCommonSessionMember,
   TSessionMemberJson,
 } from 'metis/sessions/members'
+import MemberRole from 'metis/sessions/members/roles'
 import { AnyObject } from 'metis/toolbox/objects'
 import { TCommonMissionNodeJson } from '../missions/nodes'
 
@@ -430,7 +431,7 @@ export type TResponseEvents = {
       /**
        * The ID of the member who was assigned to the force.
        */
-      memberId: string
+      memberId: SessionMember['_id']
       /**
        * The ID of the force to which the member was assigned.
        * @note If `null`, the member is now unassigned from any force.
@@ -438,6 +439,23 @@ export type TResponseEvents = {
       forceId: string | null
     },
     TClientEvents['request-assign-force']
+  >
+  /**
+   * Occurs when a role assignment change has been made.
+   */
+  'role-assigned': TResponseEvent<
+    'role-assigned',
+    {
+      /**
+       * The ID of the member who was assigned the role.
+       */
+      memberId: string
+      /**
+       * The ID of the role assigned to the member.
+       */
+      roleId: MemberRole['_id']
+    },
+    TClientEvents['request-assign-role']
   >
   /**
    * Occurs when a node has been opened on the server.
@@ -643,6 +661,22 @@ export type TRequestEvents = {
        * @note If `null`, the member will be unassigned from any force.
        */
       forceId: string | null
+    }
+  >
+  /**
+   * Occurs when the client requests to assign a different role to a member.
+   */
+  'request-assign-role': TRequestEvent<
+    'request-assign-role',
+    {
+      /**
+       * The ID of the member to assign the role to.
+       */
+      memberId: SessionMember['_id']
+      /**
+       * The ID of the role to assign to the member.
+       */
+      roleId: MemberRole['_id']
     }
   >
   /**

@@ -54,8 +54,9 @@ export default abstract class Session<T extends TCommonMissionTypes>
     let membersRaw = [...this._members]
     let weights = {
       participant: 0,
-      manager: 1,
-      observer: 2,
+      observer_limited: 1,
+      manager: 2,
+      observer: 3,
     }
     return membersRaw.sort((a, b) => {
       return weights[a.role._id] - weights[b.role._id]

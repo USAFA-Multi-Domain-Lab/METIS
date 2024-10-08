@@ -69,7 +69,7 @@ export default abstract class User implements TCommonUser {
       accessId: this.access._id,
       needsPasswordReset: this.needsPasswordReset,
       expressPermissionIds: this.expressPermissions.map(
-        (permission: UserPermission) => permission._id,
+        (permission) => permission._id,
       ),
       password: this.password,
     }

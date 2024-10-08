@@ -8,8 +8,9 @@ import routerMap_sessions from 'metis/server/api/v1/sessions'
 import routerMap_targetEnvironments from 'metis/server/api/v1/target-environments'
 import routerMap_users from 'metis/server/api/v1/users'
 import MetisRouter from 'metis/server/http/router'
+import routerMap_tests from './api/v1/routes-test'
 
-let { ENVIRONMENT_FILE_PATH: environmentFilePath } = MetisServer
+const environmentFilePath = './environment-test.json'
 let serverOptions: IMetisServerOptions = {}
 
 console.log('Reading enviroment.json file...')
@@ -22,30 +23,31 @@ if (fs.existsSync(environmentFilePath)) {
   environmentData = JSON.parse(environmentData)
 
   // Join environment data with server options.
-  serverOptions = { ...serverOptions, ...environmentData }
+  serverOptions = { ...environmentData }
 } else {
   console.error(
     'Environment file not found. Continuing with default options...',
   )
 }
 
-console.log('Starting METIS...')
+console.log('Starting METIS Test Server...')
 
 // Create METIS server.
-export let server: MetisServer = new MetisServer(serverOptions)
+export let testServer: MetisServer = new MetisServer(serverOptions)
 
 // Add routers.
-server.addRouter(new MetisRouter('/api/v1/info/', routerMap_info))
-server.addRouter(new MetisRouter('/api/v1/users/', routerMap_users))
-server.addRouter(new MetisRouter('/api/v1/missions/', routerMap_missions))
-server.addRouter(new MetisRouter('/api/v1/sessions/', routerMap_sessions))
-server.addRouter(new MetisRouter('/api/v1/files/', routerMap_files))
-server.addRouter(
+testServer.addRouter(new MetisRouter('/api/v1/info/', routerMap_info))
+testServer.addRouter(new MetisRouter('/api/v1/users/', routerMap_users))
+testServer.addRouter(new MetisRouter('/api/v1/missions/', routerMap_missions))
+testServer.addRouter(new MetisRouter('/api/v1/sessions/', routerMap_sessions))
+testServer.addRouter(new MetisRouter('/api/v1/files/', routerMap_files))
+testServer.addRouter(
   new MetisRouter('/api/v1/target-environments/', routerMap_targetEnvironments),
 )
-server.addRouter(new MetisRouter('/api/v1/logins/', routerMap_logins))
+testServer.addRouter(new MetisRouter('/api/v1/logins/', routerMap_logins))
+testServer.addRouter(new MetisRouter('/api/v1/tests/', routerMap_tests))
 
 // Start server.
-server.serve()
+testServer.serve()
 
-export default { server }
+export default { testServer }

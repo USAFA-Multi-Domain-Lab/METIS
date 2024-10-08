@@ -15,18 +15,22 @@
     // todo: Create separate dropdown component
     // todo: instead of using DetailDropdown and
     // todo: undoing styling here.
-    .DetailDropdown {
-      margin: 0;
-      padding: 0;
+    .Detail {
+      min-width: none;
 
-      .TitleRow {
-        display: none;
-      }
-
-      .Field {
+      &.DetailDropdown {
         margin: 0;
-        border: none;
         padding: 0;
+
+        .TitleRow {
+          display: none;
+        }
+
+        .Field {
+          margin: 0;
+          border: none;
+          padding: 0;
+        }
       }
     }
   }

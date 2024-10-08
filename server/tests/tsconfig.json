@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "outDir": "./lib",
+    "sourceMap": true,
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "target": "esnext",
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "paths": {
+      "*": ["../node_modules/*"],
+      "metis/server": ["../index.ts"],
+      "metis/server/*": ["../*"],
+      "metis/*": ["../../shared/*"]
+    }
+  },
+  "include": ["../../shared/**/*.ts", "./**/*.ts", "../**/*.ts"]
+}

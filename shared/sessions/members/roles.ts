@@ -12,6 +12,17 @@ const AVAILABLE_ROLES_RAW = [
     permissions: [
       MemberPermission.AVAILABLE_PERMISSIONS.forceAssignable,
       MemberPermission.AVAILABLE_PERMISSIONS.manipulateNodes,
+      MemberPermission.AVAILABLE_PERMISSIONS.roleAssignable,
+    ] as MemberPermission[],
+  } as const,
+  {
+    _id: 'observer_limited',
+    name: 'Limited Observer',
+    description:
+      'Member of a session that cannot do anything, but has a limited view of their assigned force and can observe the session play out.',
+    permissions: [
+      MemberPermission.AVAILABLE_PERMISSIONS.forceAssignable,
+      MemberPermission.AVAILABLE_PERMISSIONS.roleAssignable,
     ] as MemberPermission[],
   } as const,
   {
@@ -111,6 +122,14 @@ export default class MemberRole implements TGenericMemberRole {
     )
     return roles
   })()
+
+  /**
+   * All available assignable member roles in METIS.
+   */
+  public static readonly ASSIGNABLE_ROLES: MemberRole[] = [
+    MemberRole.AVAILABLE_ROLES.participant,
+    MemberRole.AVAILABLE_ROLES.observer_limited,
+  ]
 
   /**
    * All available member role IDs in METIS.

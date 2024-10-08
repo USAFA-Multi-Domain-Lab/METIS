@@ -126,6 +126,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
     this.server.addEventListener('session-config-updated', this.onConfigUpdate)
     this.server.addEventListener('session-members-updated', this.onUsersUpdated)
     this.server.addEventListener('force-assigned', this.onForceAssigned)
+    this.server.addEventListener('role-assigned', this.onRoleAssigned)
     this.server.addEventListener('node-opened', this.onNodeOpened)
     this.server.addEventListener(
       'action-execution-initiated',
@@ -149,6 +150,8 @@ export default class SessionClient extends Session<TClientMissionTypes> {
       'session-ended',
       'session-config-updated',
       'session-members-updated',
+      'force-assigned',
+      'role-assigned',
       'node-opened',
       'action-execution-initiated',
       'action-execution-completed',
@@ -680,6 +683,58 @@ export default class SessionClient extends Session<TClientMissionTypes> {
   }
 
   /**
+   * Assigns a role to a member.
+   * @param memberId The ID of the member to be assigned.
+   * @param roleId The ID of the role to be assigned.
+   * @resolves When the role has been assigned.
+   * @rejects If the role failed to be assigned.
+   */
+  public async $assignRole(
+    memberId: string,
+    roleId: TMemberRoleId,
+  ): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      // Callback for errors.
+      const onError = (message: string) => {
+        let error: Error = new Error(message)
+        console.error(message)
+        console.error(error)
+        reject(error)
+      }
+
+      // Get the member.
+      let member = this.getMember(memberId)
+
+      // If the member is not found,
+      // callback an error.
+      if (member === undefined) {
+        return onError('Member not found.')
+      }
+
+      // Emit a request to assign the role.
+      this.server.request(
+        'request-assign-role',
+        { memberId, roleId },
+        `Assigning role to "${member.user.username}".`,
+        {
+          onResponse: (event) => {
+            switch (event.method) {
+              case 'role-assigned':
+                return resolve()
+              case 'error':
+                return onError(event.message)
+              default:
+                return onError(
+                  `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
+                )
+            }
+          },
+        },
+      )
+    })
+  }
+
+  /**
    * Handles when the session is started.
    * @param event The event emitted by the server.
    */
@@ -746,6 +801,22 @@ export default class SessionClient extends Session<TClientMissionTypes> {
       )
     }
     member.forceId = forceId
+  }
+
+  /**
+   * Handles when a role is assigned to a member.
+   * @param event The event emitted by the server.
+   */
+  private onRoleAssigned = (event: TServerEvents['role-assigned']): void => {
+    let { memberId, roleId } = event.data
+    let member = this.getMember(memberId)
+    let role = MemberRole.get(roleId)
+    if (member === undefined) {
+      return console.warn(
+        `Event "role-assigned" was triggered, but the member with the given memberId ("${memberId}") could not be found.`,
+      )
+    }
+    member.role = role
   }
 
   /**

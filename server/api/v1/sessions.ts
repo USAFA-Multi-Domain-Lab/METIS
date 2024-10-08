@@ -31,7 +31,6 @@ const routerMap = (router: Router, server: MetisServer, done: () => void) => {
       effectsEnabled: request.body.effectsEnabled,
     }
     let ownerId: string = response.locals.user._id
-    let ownerUsername: string = response.locals.user.username
 
     // Query for mission.
     MissionModel.findOne({ _id: missionId })

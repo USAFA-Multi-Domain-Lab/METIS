@@ -1,0 +1,27 @@
+{
+  "name": "metis-server-test",
+  "type": "module",
+  "main": "start.ts",
+  "scripts": {
+    "start": "ts-node -r tsconfig-paths/register start",
+    "test": "mocha",
+    "test-coverage": "nyc mocha"
+  },
+  "author": "Jordan M. Stokes",
+  "license": "ISC",
+  "dependencies": {
+    "@types/mocha": "^10.0.8",
+    "@types/superagent": "^8.1.9",
+    "@types/winston": "^2.4.4",
+    "chai": "^5.1.1",
+    "chai-http": "^5.1.1",
+    "mocha": "^10.7.3",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.2.2",
+    "winston": "^3.10.0"
+  },
+  "devDependencies": {
+    "@types/chai": "^5.0.0",
+    "ts-node": "^10.9.1"
+  }
+}

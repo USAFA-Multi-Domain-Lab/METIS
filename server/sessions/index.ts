@@ -400,6 +400,9 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     connection.addEventListener('request-assign-force', (data) =>
       this.onRequestAssignForce(member, data),
     )
+    connection.addEventListener('request-assign-role', (data) =>
+      this.onRequestAssignRole(member, data),
+    )
     connection.addEventListener('request-open-node', (data) =>
       this.onRequestOpenNode(member, data),
     )
@@ -422,6 +425,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
       'request-kick',
       'request-ban',
       'request-assign-force',
+      'request-assign-role',
       'request-open-node',
       'request-execute-action',
     ])
@@ -879,6 +883,74 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     // been made.
     member.emit('force-assigned', {
       data: { sessionId: this._id, memberId: targetMemberId, forceId },
+      request,
+    })
+
+    // Emit to all members that the user list has changed.
+    this.emitToAll('session-members-updated', {
+      data: {
+        members: this.members.map((member) => member.toJson()),
+      },
+    })
+  }
+
+  /**
+   * Called when a member requests to assign a role to another member.
+   * @param member The member requesting to assign a role to another member.
+   * @param event The event emitted by the member.
+   */
+  public onRequestAssignRole = (
+    member: ServerSessionMember,
+    event: TClientEvents['request-assign-role'],
+  ): void => {
+    // Build request for response data.
+    let request = member.connection.buildResponseReqData(event)
+    // Parse data from event.
+    const { memberId: targetMemberId, roleId } = event.data
+    // Get the target member to assign.
+    const targetMember = this.getMember(targetMemberId)
+
+    // If the member requesting does not have the
+    // correct permissions to assign roles,
+    // then emit an error.
+    if (!member.isAuthorized('manageSessionMembers')) {
+      return member.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
+          { request },
+        ),
+      )
+    }
+    // If the target member is not found, then emit
+    // an error.
+    if (!targetMember) {
+      return member.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_MEMBER_NOT_FOUND, {
+          request,
+        }),
+      )
+    }
+    // If the target member has the `manageSessionMembers`
+    // permission, then they cannot have their role
+    // changed.
+    if (targetMember.isAuthorized('manageSessionMembers')) {
+      return member.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
+          {
+            request,
+          },
+        ),
+      )
+    }
+
+    // Assign the target member to the role.
+    targetMember.role = MemberRole.get(roleId)
+
+    // Emit a response that the assignment has
+    // been made.
+    member.emit('role-assigned', {
+      data: { sessionId: this._id, memberId: targetMemberId, roleId: roleId },
       request,
     })
 

@@ -5,6 +5,7 @@ import SessionClient from 'src/sessions'
 import ClientSessionMember from 'src/sessions/members'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
+import MemberRole from '../../../../../../shared/sessions/members/roles'
 import Prompt from '../../communication/Prompt'
 import { DetailDropdown } from '../../form/DetailDropdown'
 import ButtonSvgPanel, {
@@ -25,6 +26,8 @@ export default function SessionMemberRow({
     member.force,
   )
   const [forceLock, setForceLock] = useState<boolean>(false)
+  const [assignedRole, setAssignedRole] = useState<MemberRole>(member.role)
+  const [roleLock, setRoleLock] = useState<boolean>(false)
 
   /* -- COMPUTED -- */
 
@@ -34,6 +37,11 @@ export default function SessionMemberRow({
   const assignedForceId = compute<string | null>(
     () => assignedForce?._id ?? null,
   )
+
+  /**
+   * The ID of the assigned role.
+   */
+  const assignedRoleId = compute<string>(() => assignedRole._id)
 
   /**
    * The member that is currently logged in
@@ -65,7 +73,12 @@ export default function SessionMemberRow({
   /**
    * Whether the target member can be assigned a force.
    */
-  const targetIsAssignable: boolean = member.isAuthorized('forceAssignable')
+  const targetIsForceAssignable: boolean =
+    member.isAuthorized('forceAssignable')
+  /**
+   * Whether the target member can be assigned a new role.
+   */
+  const targetIsRoleAssignable: boolean = member.isAuthorized('roleAssignable')
   /**
    * Whether the current member can manage session members.
    */
@@ -94,12 +107,29 @@ export default function SessionMemberRow({
     currentMember.isAuthorized('completeVisibility')
 
   /**
+   * Whether the current member has limited visibility.
+   */
+  const currentLimitedVisibility: boolean = member.roleId === 'observer_limited'
+
+  /**
    * Whether the dropdown to assign a force to the member should
    * be shown.
    */
-  const showDropdown: boolean = compute<boolean>(
+  const showForceDropdown: boolean = compute<boolean>(
     () =>
-      targetIsAssignable &&
+      targetIsForceAssignable &&
+      currentManagesMembers &&
+      sessionUnstarted &&
+      !targetCompleteVisibility &&
+      currentCompleteVisibility,
+  )
+  /**
+   * Whether the dropdown to assign a role to the member should
+   * be shown.
+   */
+  const showRoleDropdown: boolean = compute<boolean>(
+    () =>
+      targetIsRoleAssignable &&
       currentManagesMembers &&
       sessionUnstarted &&
       !targetCompleteVisibility &&
@@ -199,6 +229,33 @@ export default function SessionMemberRow({
     }
   }, [assignedForce])
 
+  usePostInitEffect(() => {
+    // If the current member can't manage session members,
+    // return.
+    if (!currentMember.isAuthorized('manageSessionMembers')) return
+
+    // Gather details.
+    let prevRole = member.role
+    let prevRoleId = member.roleId
+
+    // Request to assign the role if the state changes.
+    if (assignedRoleId !== prevRoleId) {
+      // Lock changes to the dropdown.
+      setRoleLock(true)
+      // Assign the role.
+      session
+        .$assignRole(member._id, assignedRole._id)
+        .catch(() => {
+          setAssignedRole(prevRole)
+          handleError({
+            message: 'Failed to assign role.',
+            notifyMethod: 'bubble',
+          })
+        })
+        .finally(() => setRoleLock(false))
+    }
+  }, [assignedRole])
+
   // Check if force is updated on a member
   // list update.
   useEffect(() => {
@@ -220,8 +277,10 @@ export default function SessionMemberRow({
 
     if (targetCompleteVisibility) {
       text = targetManipulatesNodes ? 'Complete control' : 'Complete visibility'
-    } else if (!currentCompleteVisibility) {
+    } else if (!currentCompleteVisibility && !currentLimitedVisibility) {
       text = member.forceId ? 'Assigned' : 'Not assigned'
+    } else if (!currentCompleteVisibility && currentLimitedVisibility) {
+      text = member.forceId ? 'Assigned (view only)' : 'Not assigned'
     } else if (assignedForce) {
       delete style.fontStyle
       style.color = assignedForce.color
@@ -242,7 +301,7 @@ export default function SessionMemberRow({
     // If the current member can manage session members
     // and the target member can be assigned a force, render
     // the dropdown.
-    if (showDropdown) {
+    if (showForceDropdown) {
       innerJsx = (
         <DetailDropdown<ClientMissionForce | null>
           label='Force'
@@ -271,6 +330,44 @@ export default function SessionMemberRow({
 
     // Render the cell.
     return <div className='Cell CellForce'>{innerJsx}</div>
+  })
+
+  /**
+   * JSX for the role cell.
+   */
+  const roleCell = compute<JSX.Element>(() => {
+    let innerJsx: ReactNode = null
+
+    // If the current member can manage session members
+    // and the target member can be assigned a role, render
+    // the dropdown.
+    if (showRoleDropdown) {
+      innerJsx = (
+        <DetailDropdown<ClientSessionMember['role']>
+          label='Role'
+          options={MemberRole.ASSIGNABLE_ROLES}
+          stateValue={assignedRole}
+          setState={setAssignedRole}
+          isExpanded={false}
+          getKey={(value) => value._id}
+          render={(value) => value.name}
+          fieldType='required'
+          handleInvalidOption={{
+            method: 'setToDefault',
+            defaultValue: MemberRole.AVAILABLE_ROLES['participant'],
+          }}
+          emptyText='Assign role'
+          disabled={roleLock}
+        />
+      )
+    }
+    // Else, render the role name.
+    else {
+      innerJsx = <span>{member.role.name}</span>
+    }
+
+    // Render the cell.
+    return <div className='Cell CellRole'>{innerJsx}</div>
   })
 
   /**
@@ -306,7 +403,7 @@ export default function SessionMemberRow({
   return (
     <div key={member.username} className='SessionMemberRow'>
       <div className='Cell CellName'>{member.username}</div>
-      <div className='Cell CellRole'>{member.role.name}</div>
+      {roleCell}
       {forceCell}
       {controlsCell}
     </div>

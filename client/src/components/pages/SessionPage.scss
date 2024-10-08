@@ -135,9 +135,7 @@
     }
   }
 
-  &.observer {
-    .MissionNode {
-      cursor: default;
-    }
+  &.Observer .MissionNode {
+    cursor: default;
   }
 }

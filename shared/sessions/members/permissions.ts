@@ -8,6 +8,12 @@ const AVAILABLE_PERMISSIONS_RAW = [
       "The member can be assigned to forces by a member with 'manageSessionMembers' permission.",
   } as const,
   {
+    _id: 'roleAssignable',
+    name: 'Role Assignable',
+    description:
+      "The member's role can be changed by a member with 'manageSessionMembers' permission.",
+  } as const,
+  {
     _id: 'manipulateNodes',
     name: 'Manipulate Nodes',
     description:

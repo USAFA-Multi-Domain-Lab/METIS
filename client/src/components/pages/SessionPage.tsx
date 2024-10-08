@@ -77,11 +77,9 @@ export default function SessionPage({
    * @param node The node that was selected.
    */
   const onNodeSelect = async (node: ClientMissionNode): Promise<void> => {
-    // If the role is 'observer', abort
-    // selection handling.
-    if (session.roleId === 'observer') {
-      return
-    }
+    // If the member is not authorized to manipulate nodes,
+    // notify the user and return.
+    if (!session.member.isAuthorized('manipulateNodes')) return
 
     // If the node is blocked, notify the user.
     if (node.blocked) {
@@ -222,8 +220,11 @@ export default function SessionPage({
   const rootClass = compute((): string => {
     let classList: string[] = ['SessionPage', 'Page']
 
-    // Add the role to the class list.
-    classList.push(session.roleId)
+    // If the user cannot manipulate nodes, add
+    // the observer class to the root element.
+    if (!session.member.isAuthorized('manipulateNodes')) {
+      classList.push('Observer')
+    }
 
     // Return the class list as a joined string.
     return classList.join(' ')
