@@ -17,7 +17,7 @@
         height: $item-non-padded-height + $first-padding-top +
           $item-cell-padding-vertical;
 
-        .ItemCell {
+        .ItemCellLike {
           padding-top: $first-padding-top;
         }
       }
@@ -35,7 +35,10 @@
     height: $item-non-padded-height + $item-cell-padding-vertical * 2;
     padding: 0 1em;
 
-    .ItemCell {
+    // Styles all list item cells, as well as anuything
+    // could be added as a substitute for a list item cell,
+    // such as a column label.
+    .ItemCellLike {
       overflow: hidden;
       padding: $item-cell-padding-vertical 0;
       text-align: left;
@@ -46,7 +49,14 @@
       color: rgba(white, 0.9);
 
       &:not(:first-child) {
+        padding-left: 1em;
         border-left: 1px solid rgba(white, 0.25);
+      }
+    }
+
+    .ItemButtons {
+      .ButtonSvg {
+        margin: 0 0.025em;
       }
     }
 

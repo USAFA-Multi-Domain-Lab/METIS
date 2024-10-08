@@ -10,10 +10,14 @@ import './ListPage.scss'
  */
 export default function ListPage<TItem extends TListItem>({
   items,
+  columns = [],
   itemsPerPage = 10,
   itemButtons,
+  getColumnLabel = (x) => x.toString(),
+  getCellText = (item, column) => (item[column] as any).toString(),
   getItemTooltip = () => '',
   getItemButtonTooltip = () => '',
+  getColumnWidth = () => '10em',
   onSelection,
   onItemButtonClick,
 }: TListPage_P<TItem>): JSX.Element | null {
@@ -29,9 +33,12 @@ export default function ListPage<TItem extends TListItem>({
         <ListItem
           key={item._id}
           item={item}
+          columns={columns}
           buttons={itemButtons}
+          getCellText={getCellText}
           getItemTooltip={getItemTooltip}
           getItemButtonTooltip={getItemButtonTooltip}
+          getColumnWidth={getColumnWidth}
           onSelection={onSelection}
           onButtonClick={onItemButtonClick}
         />
@@ -42,7 +49,7 @@ export default function ListPage<TItem extends TListItem>({
     else {
       result.push(
         <div className='NoItems ListItemLike' key='no-items'>
-          <div className='ItemName ItemCell'>None available...</div>
+          <div className='ItemName ItemCellLike'>None available...</div>
         </div>,
       )
     }
@@ -64,7 +71,12 @@ export default function ListPage<TItem extends TListItem>({
   // Render the page.
   return (
     <div className='ListPage'>
-      <ListColumnLabels itemButtonCount={itemButtons?.length ?? 0} />
+      <ListColumnLabels<TItem>
+        columns={columns}
+        itemButtonCount={itemButtons?.length ?? 0}
+        getColumnLabel={getColumnLabel}
+        getColumnWidth={getColumnWidth}
+      />
       <div className='ListItems'>{itemsJsx}</div>
     </div>
   )
@@ -81,6 +93,11 @@ export type TListPage_P<TItem extends TListItem> = {
    */
   items: TItem[]
   /**
+   * Additional columns to display for each item.
+   * @default []
+   */
+  columns: TList_P<TItem>['columns']
+  /**
    * The number of items to display per page.
    */
   itemsPerPage: number
@@ -88,6 +105,21 @@ export type TListPage_P<TItem extends TListItem> = {
    * The buttons to display for each item.
    */
   itemButtons: TList_P<TItem>['itemButtons']
+  /**
+   * Gets the column label for the item.
+   * @param column The column for which to get the label.
+   * @returns The column label.
+   * @default (x) => x.toString()
+   */
+  getColumnLabel?: TList_P<TItem>['getColumnLabel']
+  /**
+   * Gets the text for a list item cell.
+   * @param item The item for which to get the text.
+   * @param column The column for which to get the text.
+   * @returns The text to display in the cell.
+   * @default () => (item[column] as any).toString()
+   */
+  getCellText?: TList_P<TItem>['getCellText']
   /**
    * Gets the tooltip description for the item.
    * @param item The item for which to get the tooltip.
@@ -102,6 +134,13 @@ export type TListPage_P<TItem extends TListItem> = {
    * @default () => ''
    */
   getItemButtonTooltip?: TList_P<TItem>['getItemButtonTooltip']
+  /**
+   * Gets the width of the given column.
+   * @param column The column for which to get the width.
+   * @returns The width of the column.
+   * @default () => '10em'
+   */
+  getColumnWidth?: TList_P<TItem>['getColumnWidth']
   /**
    * The callback for when an item is selected.
    */

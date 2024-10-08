@@ -6,6 +6,7 @@ import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
 import { compute } from 'src/toolbox'
 import { useRequireLogin } from 'src/toolbox/hooks'
+import { DateToolbox } from '../../../../../../../shared/toolbox/dates'
 import List, { TGetListButtonTooltip } from '../List'
 import {
   TGetItemButtonTooltip,
@@ -139,6 +140,38 @@ export default function MissionList({
   }
 
   /**
+   * Gets the column label for a mission list.
+   */
+  const getMissionColumnLabel = (column: string): string => {
+    switch (column) {
+      case 'createdAt':
+        return 'Created'
+      case 'lastModifiedAt':
+        return 'Last Modified'
+      case 'lastLaunchedAt':
+        return 'Last Launched'
+      default:
+        return ''
+    }
+  }
+
+  const getMissionCellText = (
+    mission: ClientMission,
+    column: string,
+  ): string => {
+    switch (column) {
+      case 'createdAt':
+        return DateToolbox.format(mission.createdAt, 'yyyy-MM-dd HH:mm')
+      case 'lastModifiedAt':
+        return DateToolbox.format(mission.lastModifiedAt, 'yyyy-MM-dd HH:mm')
+      case 'lastLaunchedAt':
+        return DateToolbox.format(mission.lastLaunchedAt, 'yyyy-MM-dd HH:mm')
+      default:
+        return 'Unknown column'
+    }
+  }
+
+  /**
    * Gets the tooltip description for a mission list button.
    */
   const getMissionListButtonTooltip: TGetListButtonTooltip = (button) => {
@@ -170,6 +203,22 @@ export default function MissionList({
         return 'Export this mission as a .metis file to your local system.'
       default:
         return ''
+    }
+  }
+
+  /**
+   * Gets the width of the given column.
+   * @param column The column for which to get the width.
+   * @returns The width of the column.
+   */
+  const getMissionColumnWidth = (column: keyof ClientMission): string => {
+    switch (column) {
+      case 'createdAt':
+      case 'lastModifiedAt':
+      case 'lastLaunchedAt':
+        return '9em'
+      default:
+        return '10em'
     }
   }
 
@@ -262,11 +311,15 @@ export default function MissionList({
       <List<ClientMission>
         name={'Missions'}
         items={missions}
+        columns={['createdAt', 'lastModifiedAt', 'lastLaunchedAt']}
         listButtons={listButtons}
         itemButtons={itemButtons}
         getItemTooltip={() => 'View/edit mission.'}
+        getColumnLabel={getMissionColumnLabel}
+        getCellText={getMissionCellText}
         getListButtonTooltip={getMissionListButtonTooltip}
         getItemButtonTooltip={getMissionItemButtonTooltip}
+        getColumnWidth={getMissionColumnWidth}
         onSelection={onMissionSelection}
         onListButtonClick={onMissionListButtonClick}
         onItemButtonClick={onMissionItemButtonClick}

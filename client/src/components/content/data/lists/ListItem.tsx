@@ -1,18 +1,22 @@
+import { ReactNode } from 'react'
 import { compute } from 'src/toolbox'
-import Tooltip from '../../communication/Tooltip'
 import { TButtonSvgType } from '../../user-controls/buttons/ButtonSvg'
 import ButtonSvgPanel_v2 from '../../user-controls/buttons/ButtonSvgPanel_v2'
 import { TList_P } from './List'
 import './ListItem.scss'
+import ListItemCell from './ListItemCell'
 
 /**
  * A list item in a `List` component.
  */
 export default function ListItem<T extends TListItem>({
   item,
+  columns = [],
   buttons = [],
+  getCellText = (item, column) => (item[column] as any).toString(),
   getItemTooltip = () => '',
   getItemButtonTooltip = () => '',
+  getColumnWidth = () => '10em',
   onSelection,
   onButtonClick = () => {},
 }: TListItem_P<T>): JSX.Element | null {
@@ -36,21 +40,72 @@ export default function ListItem<T extends TListItem>({
     return classList.join(' ')
   })
 
+  /**
+   * Dynamic styling for the root element.
+   */
+  const rootStyle = compute<React.CSSProperties>(() => {
+    // Initialize the column widths with
+    // the name column width.
+    let columnWidths = ['1fr']
+
+    // Add the width for each column.
+    columns.forEach((column) => columnWidths.push(getColumnWidth(column)))
+
+    // Add width for the buttons column.
+    columnWidths.push('auto')
+
+    // Return the style object.
+    return {
+      gridTemplateColumns: columnWidths.join(' '),
+    }
+  })
+
   /* -- RENDER -- */
+
+  /**
+   * JSX for the individual cells.
+   */
+  const cellsJsx = compute<ReactNode>(() => {
+    // Initialize the onClick callback for the cells.
+    const onClick = () => {
+      if (onSelection) onSelection(item)
+    }
+
+    // Initialize the result with the name cell.
+    let result: ReactNode[] = [
+      <ListItemCell
+        key={'name'}
+        item={item}
+        column={'name'}
+        tooltipDescription={itemTooltipDescription}
+        getCellText={() => item.name}
+        onClick={onClick}
+      />,
+    ]
+
+    // Add a column label for each column
+    // passed in the props.
+    columns.forEach((column) =>
+      result.push(
+        <ListItemCell
+          key={column.toString()}
+          item={item}
+          column={column}
+          tooltipDescription={itemTooltipDescription}
+          getCellText={getCellText}
+          onClick={onClick}
+        />,
+      ),
+    )
+
+    return result
+  })
 
   // Render the list item.
   return (
-    <div className={rootClass}>
-      <div
-        className='ItemName ItemCell'
-        onClick={() => {
-          if (onSelection) onSelection(item)
-        }}
-      >
-        {item.name}
-        <Tooltip description={itemTooltipDescription} />
-      </div>
-      <div className='ItemButtons ItemCell'>
+    <div className={rootClass} style={rootStyle}>
+      {cellsJsx}
+      <div className='ItemButtons ItemCellLike'>
         <ButtonSvgPanel_v2
           buttons={buttons}
           size={'small'}
@@ -71,6 +126,23 @@ export type TListItem_P<T extends TListItem> = {
    */
   item: T
   /**
+   * Additional columns to display for each item.
+   * @default []
+   */
+  columns?: TList_P<T>['columns']
+  /**
+   * The buttons to display for the item.
+   */
+  buttons?: TList_P<T>['itemButtons']
+  /**
+   * Gets the text for a list item cell.
+   * @param item The item for which to get the text.
+   * @param column The column for which to get the text.
+   * @returns The text to display in the cell.
+   * @default () => (item[column] as any).toString()
+   */
+  getCellText?: TList_P<T>['getCellText']
+  /**
    * Gets the tooltip description for the item.
    * @param item The item for which to get the tooltip.
    * @returns The tooltip description.
@@ -82,9 +154,12 @@ export type TListItem_P<T extends TListItem> = {
    */
   getItemButtonTooltip?: TList_P<T>['getItemButtonTooltip']
   /**
-   * The buttons to display for the item.
+   * Gets the width of the given column.
+   * @param column The column for which to get the width.
+   * @returns The width of the column.
+   * @default () => '10em'
    */
-  buttons?: TList_P<T>['itemButtons']
+  getColumnWidth?: TList_P<T>['getColumnWidth']
   /**
    * Callback for when the item is selected.
    */

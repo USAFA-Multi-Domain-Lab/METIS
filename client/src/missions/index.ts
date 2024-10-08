@@ -232,6 +232,36 @@ export default class ClientMission
   }
 
   /**
+   * The date that the mission was created.
+   * @note This is not accurate. This feature still needs
+   * to be implemented on the back-end. This is for interface
+   * design purposes only.
+   */
+  public get createdAt(): Date {
+    return new Date()
+  }
+
+  /**
+   * The date that the mission was last modified.
+   * @note This is not accurate. This feature still needs
+   * to be implemented on the back-end. This is for interface
+   * design purposes only.
+   */
+  public get lastModifiedAt(): Date {
+    return new Date()
+  }
+
+  /**
+   * The date that the mission was last launched.
+   * @note This is not accurate. This feature still needs
+   * to be implemented on the back-end. This is for interface
+   * design purposes only.
+   */
+  public get lastLaunchedAt(): Date {
+    return new Date()
+  }
+
+  /**
    * @param data The mission data from which to create the mission. Any ommitted values will be set to the default properties defined in Mission.DEFAULT_PROPERTIES.
    * @param options The options for creating the mission.
    */

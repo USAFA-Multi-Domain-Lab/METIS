@@ -21,12 +21,16 @@ import ListResizeHandler from './ListResizeHandler'
 export default function List<TItem extends TListItem>({
   name,
   items,
+  columns = [],
   itemsPerPageMin = 10,
   listButtons = [],
   itemButtons = [],
+  getColumnLabel = (x) => x.toString(),
+  getCellText = (item, column) => (item[column] as any).toString(),
   getItemTooltip = () => '',
   getListButtonTooltip = () => '',
   getItemButtonTooltip = () => '',
+  getColumnWidth = () => '10em',
   onSelection = () => {},
   onListButtonClick = () => {},
   onItemButtonClick = () => {},
@@ -62,10 +66,14 @@ export default function List<TItem extends TListItem>({
     ) {
       results.push({
         items: filteredItems.slice(i, i + itemsPerPage),
+        columns,
         itemsPerPage: itemsPerPage,
         itemButtons,
+        getCellText,
+        getColumnLabel,
         getItemTooltip,
         getItemButtonTooltip,
+        getColumnWidth,
         onSelection,
         onItemButtonClick,
       })
@@ -133,6 +141,11 @@ export type TList_P<TItem extends TListItem> = {
    */
   items: TItem[]
   /**
+   * Additional columns to display in the list.
+   * @default []
+   */
+  columns?: TListColumnType<TItem>[]
+  /**
    * The minimum number of items to display per page.
    * @note More items will be displayed if there is
    * enough space in the list.
@@ -159,6 +172,21 @@ export type TList_P<TItem extends TListItem> = {
    */
   getItemTooltip?: TGetItemTooltip<TItem>
   /**
+   * Gets the column label for the given column.
+   * @param column The column for which to get the label.
+   * @returns The column label.
+   * @default (x) => x.toString()
+   */
+  getColumnLabel?: (column: TListColumnType<TItem>) => string
+  /**
+   * Gets the text for a list item cell.
+   * @param item The item for which to get the text.
+   * @param column The column for which to get the text.
+   * @returns The text to display in the cell.
+   * @default () => (item[column] as any).toString()
+   */
+  getCellText?: (item: TItem, column: TListColumnType<TItem>) => string
+  /**
    * Gets the tooltip description for a list button.
    * @param button The button for which to get the tooltip.
    * @returns The tooltip description.
@@ -172,6 +200,13 @@ export type TList_P<TItem extends TListItem> = {
    * @default () => ''
    */
   getItemButtonTooltip?: TGetItemButtonTooltip<TItem>
+  /**
+   * Gets the width of the given column.
+   * @param column The column for which to get the width.
+   * @returns The width of the column.
+   * @default () => '10em'
+   */
+  getColumnWidth?: (column: TListColumnType<TItem>) => string
   /**
    * A callback for when an item in the list is selected.
    * @note If `undefined`, the items will not be selectable.
@@ -196,3 +231,8 @@ export type TList_P<TItem extends TListItem> = {
  * @default () => ''
  */
 export type TGetListButtonTooltip = (button: TButtonSvgType) => string
+
+/**
+ * A column type for the list.
+ */
+export type TListColumnType<TItem> = keyof TItem
