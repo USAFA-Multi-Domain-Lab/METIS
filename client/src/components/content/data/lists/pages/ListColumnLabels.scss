@@ -4,6 +4,13 @@
   .ListPage {
     .ListColumnLabels {
       border-bottom: 1px solid rgba(white, 0.25);
+
+      .ItemButtons {
+        .ButtonSvg {
+          pointer-events: none;
+          opacity: 0;
+        }
+      }
     }
   }
 }

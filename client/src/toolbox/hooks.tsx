@@ -132,8 +132,10 @@ export function useRequireLogin(): [NonNullable<TLogin<ClientUser>>] {
  */
 export function useDefaultProps<
   TProps extends {},
-  TDefaultProps extends Partial<TProps>,
-  TReturnedProps extends Omit<TProps, keyof TDefaultProps> & TDefaultProps,
+  TDefaultProps extends Required<{
+    [K in keyof TProps as undefined extends TProps[K] ? K : never]: TProps[K]
+  }>,
+  TReturnedProps extends Required<TProps> = Required<TProps>,
 >(props: TProps, defaultProps: TDefaultProps): TReturnedProps {
   let returnedProps: any = {
     ...defaultProps,
@@ -265,6 +267,44 @@ export function withPreprocessor<T>(
 }
 
 /**
+ * Hooks that allows a component to use a resize observer
+ * on an element stored in a ref.
+ * @param ref The ref to the element to observe.
+ * @param callback The callback to call when the element resizes.
+ * @param dependencies The dependencies to watch for changes. These
+ * will be passed to a `useCallback` hook to update the callback
+ * when the dependencies change. This will not recreate the observer.
+ */
+export function useResizeObserver(
+  ref: React.RefObject<HTMLElement>,
+  callback: (clientWidth: number, clientHeight: number) => void,
+  dependencies: React.DependencyList = [],
+  options: TResizeObserverOptions = {},
+): void {
+  const callbackRef = useRef(callback)
+
+  useEffect(() => {
+    callbackRef.current = callback
+  }, [ref.current, ...dependencies])
+
+  useEffect(() => {
+    if (ref.current) {
+      const observer = new ResizeObserver(() =>
+        callbackRef.current(
+          ref.current!.clientWidth,
+          ref.current!.clientHeight,
+        ),
+      )
+      observer.observe(ref.current)
+
+      return () => {
+        observer.disconnect()
+      }
+    }
+  }, [ref.current])
+}
+
+/**
  * Interface for making a class compatible with the `useEventListener`
  * hook.
  */
@@ -285,6 +325,11 @@ export interface TEventListenerTarget<TEventMethod extends string> {
    */
   removeEventListener: (method: TEventMethod, callback: () => any) => void
 }
+
+/**
+ * Options for `useResizeObserver` hook.
+ */
+export type TResizeObserverOptions = {}
 
 /**
  * Error that is thrown when the `useRequireLogin` hook is used

@@ -1,26 +1,31 @@
 import ButtonSvgPanel_v2 from '../../user-controls/buttons/ButtonSvgPanel_v2'
-import { TList_P } from './List'
+import { TList_P, useListContext } from './List'
 import './ListButtons.scss'
-import { TListItem } from './ListItem'
+import { TListItem } from './pages/ListItem'
 
 /**
  * Provides buttons to the `List` component
  * so that the user can perform operations
  * on the list.
  */
-export default function ListButtons<TItem extends TListItem>({
-  buttons = [],
-  getButtonTooltip = () => '',
-  onButtonClick = () => {},
-}: TListButtons_P<TItem>): JSX.Element | null {
+export default function ListButtons<
+  TItem extends TListItem,
+>(): JSX.Element | null {
+  /* -- STATE -- */
+
+  const listContext = useListContext<TItem>()
+  const { listButtons, getListButtonTooltip, onListButtonClick } = listContext
+
+  /* -- RENDER -- */
+
   // Render the buttons.
   return (
     <div className='ListButtons'>
       <ButtonSvgPanel_v2
-        buttons={buttons}
+        buttons={listButtons}
         size={'regular'}
-        getTooltip={getButtonTooltip}
-        onButtonClick={onButtonClick}
+        getTooltip={getListButtonTooltip}
+        onButtonClick={onListButtonClick}
       />
     </div>
   )

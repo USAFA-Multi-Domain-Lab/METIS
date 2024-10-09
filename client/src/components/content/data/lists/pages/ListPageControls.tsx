@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { compute } from 'src/toolbox'
-import Tooltip from '../../communication/Tooltip'
+import Tooltip from '../../../communication/Tooltip'
+import { useListContext } from '../List'
 import './ListPageControls.scss'
 
 /**
@@ -8,10 +9,13 @@ import './ListPageControls.scss'
  * so that the user can navigate between pages of
  * content in the list.
  */
-export default function ListPageControls({
-  pageNumberState: [pageNumber, setPageNumber],
-  pageCount,
-}: TListPageControls_P): JSX.Element | null {
+export default function ListPageControls(): JSX.Element | null {
+  /* -- STATE -- */
+
+  const listContext = useListContext()
+  const { pageCount } = listContext
+  const [pageNumber, setPageNumber] = listContext.state.pageNumber
+
   /* -- COMPUTED -- */
 
   /**
@@ -93,20 +97,4 @@ export default function ListPageControls({
       </div>
     </div>
   )
-}
-
-/* -- TYPES -- */
-
-/**
- * Props for `ListPageControls`.
- */
-export type TListPageControls_P = {
-  /**
-   * The state for the current page number.
-   */
-  pageNumberState: [number, TReactSetter<number>]
-  /**
-   * The number of pages in the list.
-   */
-  pageCount: number
 }

@@ -1,5 +1,5 @@
 import { compute } from 'src/toolbox'
-import { TListColumnType } from './List'
+import { TListColumnType } from '../List'
 import './ListColumnLabel.scss'
 import { TListItem } from './ListItem'
 

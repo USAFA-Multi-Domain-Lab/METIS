@@ -1,4 +1,4 @@
-import { TListItem } from 'src/components/content/data/lists/ListItem'
+import { TListItem } from 'src/components/content/data/lists/pages/ListItem'
 import {
   TSessionBasicJson,
   TSessionConfig,

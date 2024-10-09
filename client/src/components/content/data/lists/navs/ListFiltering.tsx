@@ -1,20 +1,20 @@
 import { createRef, ReactNode, useEffect, useState } from 'react'
 import { compute } from 'src/toolbox'
-import Tooltip from '../../communication/Tooltip'
+import Tooltip from '../../../communication/Tooltip'
+import { useListContext } from '../List'
+import { TListItem } from '../pages/ListItem'
 import './ListFiltering.scss'
-import { TListItem } from './ListItem'
 
 /**
  * Provides filtering options for the `List` component,
  * currently only a search bar.
  */
-export default function ListFiltering<TItem extends TListItem>({
-  items,
-  filteredItemsState,
-}: TListFiltering_P<TItem>): JSX.Element | null {
+export default function ListFiltering(): JSX.Element | null {
   /* -- STATE -- */
 
-  const [filteredItems, setFilteredItems] = filteredItemsState
+  const listContext = useListContext()
+  const { items } = listContext
+  const [filteredItems, setFilteredItems] = listContext.state.filteredItems
   const [searchHint, setSearchHint] = useState<string>('')
   const [hideSearchTooltip, showSearchTooltip] = useState<boolean>(false)
   const searchField = createRef<HTMLInputElement>()

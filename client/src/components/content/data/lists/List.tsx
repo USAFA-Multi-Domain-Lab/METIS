@@ -1,51 +1,94 @@
-import { useRef, useState } from 'react'
+import React, { useContext, useRef, useState } from 'react'
 import { compute } from 'src/toolbox'
+import { useDefaultProps } from 'src/toolbox/hooks'
 import { TButtonSvgType } from '../../user-controls/buttons/ButtonSvg'
 import { TSvgPanelOnClick } from '../../user-controls/buttons/ButtonSvgPanel_v2'
 import './List.scss'
 import ListButtons from './ListButtons'
+import ListResizeHandler from './ListResizeHandler'
+import ListNav from './navs/ListNav'
 import {
   TGetItemButtonTooltip,
   TGetItemTooltip,
   TListItem,
   TOnItemButtonClick,
   TOnItemSelection,
-} from './ListItem'
-import ListNav from './ListNav'
-import ListPage, { TListPage_P } from './ListPage'
-import ListResizeHandler from './ListResizeHandler'
+} from './pages/ListItem'
+import ListPage, { TListPage_P } from './pages/ListPage'
+
+/* -- CONSTANTS -- */
+
+/**
+ * The width of the more-details column.
+ */
+export const MORE_COLUMN_WIDTH = '3em'
+
+/* -- CONTEXT -- */
+/**
+/**
+ * Context for the list, which will help distribute
+ * list properties to its children.
+ */
+const ListContext = React.createContext<TListContextData<any> | null>(null)
+
+/**
+ * Hook used by List-related components to access
+ * the list context.
+ */
+export const useListContext = <TItem extends TListItem>() => {
+  const context = useContext(ListContext) as TListContextData<TItem> | null
+  if (!context) {
+    throw new Error('useListContext must be used within a ListProvider')
+  }
+  return context
+}
+
+/* -- COMPONENT -- */
 
 /**
  * Displays a list of items of the given type.
  */
-export default function List<TItem extends TListItem>({
-  name,
-  items,
-  columns = [],
-  itemsPerPageMin = 10,
-  listButtons = [],
-  itemButtons = [],
-  getColumnLabel = (x) => x.toString(),
-  getCellText = (item, column) => (item[column] as any).toString(),
-  getItemTooltip = () => '',
-  getListButtonTooltip = () => '',
-  getItemButtonTooltip = () => '',
-  getColumnWidth = () => '10em',
-  onSelection = () => {},
-  onListButtonClick = () => {},
-  onItemButtonClick = () => {},
-}: TList_P<TItem>): JSX.Element | null {
+export default function List<TItem extends TListItem>(
+  props: TList_P<TItem>,
+): JSX.Element | null {
+  const Provider = ListContext.Provider as React.Provider<
+    TListContextData<TItem>
+  >
+  /* -- PROPS -- */
+
+  // Set default props.
+  const defaultedProps = useDefaultProps(props, {
+    columns: [],
+    itemsPerPageMin: 10,
+    minNameColumnWidth: '16em',
+    listButtons: [],
+    itemButtons: [],
+    getColumnLabel: (x) => x.toString(),
+    getCellText: (item, column) => (item[column] as any).toString(),
+    getItemTooltip: () => '',
+    getListButtonTooltip: () => '',
+    getItemButtonTooltip: () => '',
+    getColumnWidth: () => '10em',
+    onSelection: null,
+    onListButtonClick: () => {},
+    onItemButtonClick: () => {},
+  })
+
+  // Parse props needed by the main list
+  // component.
+  const { items, itemsPerPageMin } = defaultedProps
+
   /* -- STATE -- */
 
-  // The current page number to
-  // display in the list.
-  const [pageNumber, setPageNumber] = useState<number>(0)
-  // The items after filtering is applied.
-  const [filteredItems, setFilteredItems] = useState<TItem[]>(items)
-  // Calculated amount of items per page
-  // in the event that itemsPerPage is
-  // set to 'auto'.
-  const [itemsPerPage, setItemsPerPage] = useState<number>(itemsPerPageMin)
+  const state: TList_S<TItem> = {
+    pageNumber: useState<number>(0),
+    filteredItems: useState<TItem[]>(items),
+    visibleColumns: useState<TListColumnType<TItem>[]>([]),
+    itemsPerPage: useState<number>(itemsPerPageMin),
+  }
+  const [pageNumber] = state.pageNumber
+  const [filteredItems] = state.filteredItems
+  const [itemsPerPage] = state.itemsPerPage
   // Reference to the root element.
   const root = useRef<HTMLDivElement>(null)
 
@@ -64,19 +107,7 @@ export default function List<TItem extends TListItem>({
       i < filteredItems.length || !results.length;
       i += itemsPerPage
     ) {
-      results.push({
-        items: filteredItems.slice(i, i + itemsPerPage),
-        columns,
-        itemsPerPage: itemsPerPage,
-        itemButtons,
-        getCellText,
-        getColumnLabel,
-        getItemTooltip,
-        getItemButtonTooltip,
-        getColumnWidth,
-        onSelection,
-        onItemButtonClick,
-      })
+      results.push({ items: filteredItems.slice(i, i + itemsPerPage) })
     }
 
     return results
@@ -101,30 +132,28 @@ export default function List<TItem extends TListItem>({
    */
   const pageCount = compute<number>(() => pages.length)
 
+  /**
+   * The value to provide to the context.
+   */
+  const contextValue = {
+    list: root,
+    ...defaultedProps,
+    state,
+    pageCount,
+  }
+
   /* -- RENDER -- */
 
   // Render the list.
   return (
-    <div className={'List'} ref={root}>
-      <ListNav
-        headingText={name}
-        pageNumberState={[pageNumber, setPageNumber]}
-        pageCount={pageCount}
-        items={items}
-        filteredItemsState={[filteredItems, setFilteredItems]}
-      />
-      {currentPageJsx}
-      <ListButtons
-        buttons={listButtons}
-        getButtonTooltip={getListButtonTooltip}
-        onButtonClick={onListButtonClick}
-      />
-      <ListResizeHandler
-        list={root}
-        itemsPerPageState={[itemsPerPage, setItemsPerPage]}
-        pageNumberState={[pageNumber, setPageNumber]}
-      />
-    </div>
+    <Provider value={contextValue}>
+      <div className={'List'} ref={root}>
+        <ListNav />
+        {currentPageJsx}
+        <ListButtons />
+        <ListResizeHandler />
+      </div>
+    </Provider>
   )
 }
 
@@ -152,6 +181,11 @@ export type TList_P<TItem extends TListItem> = {
    * @default 10
    */
   itemsPerPageMin?: number
+  /**
+   * The minimum width for the name column.
+   * @default '16em'
+   */
+  minNameColumnWidth?: string
   /**
    * The list-specific buttons to display, which when clicked,
    * will perform an action not specific to any item in the list.
@@ -209,9 +243,10 @@ export type TList_P<TItem extends TListItem> = {
   getColumnWidth?: (column: TListColumnType<TItem>) => string
   /**
    * A callback for when an item in the list is selected.
-   * @note If `undefined`, the items will not be selectable.
+   * @note If `null`, the items will not be selectable.
+   * @default null
    */
-  onSelection?: TOnItemSelection<TItem>
+  onSelection?: TOnItemSelection<TItem> | null
   /**
    * Callback for when a list button is clicked.
    * @default () => {}
@@ -223,6 +258,50 @@ export type TList_P<TItem extends TListItem> = {
    */
   onItemButtonClick?: TOnItemButtonClick<TItem>
 }
+
+/**
+ * The entire state for `List`.
+ */
+export type TList_S<TItem extends TListItem> = {
+  /**
+   * The current page number.
+   */
+  pageNumber: TReactState<number>
+  /**
+   * The items after filtering is applied.
+   */
+  filteredItems: TReactState<TItem[]>
+  /**
+   * The columns that are currently visible based
+   * on the available space in the list.
+   */
+  visibleColumns: TReactState<TListColumnType<TItem>[]>
+  /**
+   * The calculated amount of items per page
+   * based on the space available in the list.
+   */
+  itemsPerPage: TReactState<number>
+}
+
+/**
+ * The list context data provided to all children
+ * of `List`.
+ */
+export type TListContextData<TItem extends TListItem> = {
+  /**
+   * The ref for the root element of the list.
+   */
+  list: React.RefObject<HTMLDivElement>
+} & Required<TList_P<TItem>> & {
+    /**
+     * The current number of pages in the list.
+     */
+    pageCount: number
+    /**
+     * The state for the list.
+     */
+    state: TList_S<TItem>
+  }
 
 /**
  * Gets the tooltip description for a list button.

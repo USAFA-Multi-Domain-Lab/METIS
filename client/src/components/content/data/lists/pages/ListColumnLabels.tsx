@@ -1,7 +1,7 @@
 import { ReactNode } from 'react'
 import { compute } from 'src/toolbox'
-import ButtonSvgPanel_v2 from '../../user-controls/buttons/ButtonSvgPanel_v2'
-import { TList_P } from './List'
+import ButtonSvgPanel_v2 from '../../../user-controls/buttons/ButtonSvgPanel_v2'
+import { useListContext } from '../List'
 import ListColumnLabel from './ListColumnLabel'
 import './ListColumnLabels.scss'
 import { TListItem } from './ListItem'
@@ -9,12 +9,16 @@ import { TListItem } from './ListItem'
 /**
  * Labels for the columns of a `List` component.
  */
-export default function ListColumnLabels<TItem extends TListItem>({
-  itemButtonCount,
-  columns = [],
-  getColumnLabel = (x) => x.toString(),
-  getColumnWidth = () => '10em',
-}: TListColumnLabels<TItem>): JSX.Element | null {
+export default function ListColumnLabels<
+  TItem extends TListItem,
+>(): JSX.Element | null {
+  /* -- STATE -- */
+
+  const listContext = useListContext<TItem>()
+  const [columns] = listContext.state.visibleColumns
+  const { itemButtons, minNameColumnWidth, getColumnWidth, getColumnLabel } =
+    listContext
+
   /* -- COMPUTED -- */
 
   /**
@@ -32,17 +36,10 @@ export default function ListColumnLabels<TItem extends TListItem>({
   const itemButtonClass = compute<string>(() => {
     const classList = ['ItemButtons', 'ColumnLabel', 'ItemCellLike']
 
-    if (itemButtonCount === 0) classList.push('Hidden')
+    if (!itemButtons.length) classList.push('Hidden')
 
     return classList.join(' ')
   })
-
-  /**
-   * The filler item buttons for the item button label.
-   */
-  const itemButtonFillers = compute<Array<'_blank'>>(() =>
-    new Array(itemButtonCount).fill('_blank'),
-  )
 
   /**
    * Dynamic styling for the root element.
@@ -50,7 +47,7 @@ export default function ListColumnLabels<TItem extends TListItem>({
   const rootStyle = compute<React.CSSProperties>(() => {
     // Initialize the column widths with
     // the name column width.
-    let columnWidths = ['1fr']
+    let columnWidths = [`minmax(${minNameColumnWidth}, 1fr)`]
 
     // Add the width for each column.
     columns.forEach((column) => columnWidths.push(getColumnWidth(column)))
@@ -96,40 +93,11 @@ export default function ListColumnLabels<TItem extends TListItem>({
       {cellsJsx}
       <div className={itemButtonClass}>
         <ButtonSvgPanel_v2
-          buttons={itemButtonFillers}
+          buttons={itemButtons}
           size={'small'}
           onButtonClick={() => {}}
         />
       </div>
     </div>
   )
-}
-
-/**
- * Props for `ListColumnLabels`.
- */
-export type TListColumnLabels<TItem extends TListItem> = {
-  /**
-   * Additional columns to display for each item.
-   * @default []
-   */
-  columns?: TList_P<TItem>['columns']
-  /**
-   * The number of item buttons for the list.
-   */
-  itemButtonCount: number
-  /**
-   * Gets the column label for the item.
-   * @param column The column for which to get the label.
-   * @returns The column label.
-   * @default (x) => x.toString()
-   */
-  getColumnLabel?: TList_P<TItem>['getColumnLabel']
-  /**
-   * Gets the width of the given column.
-   * @param column The column for which to get the width.
-   * @returns The width of the column.
-   * @default () => '10em'
-   */
-  getColumnWidth?: TList_P<TItem>['getColumnWidth']
 }

@@ -10,7 +10,7 @@ import {
   TGetItemButtonTooltip,
   TOnItemButtonClick,
   TOnItemSelection,
-} from '../ListItem'
+} from '../pages/ListItem'
 
 /**
  * A component for displaying a list of users.

@@ -1,6 +1,6 @@
 import { compute } from 'src/toolbox'
-import Tooltip from '../../communication/Tooltip'
-import { TList_P, TListColumnType } from './List'
+import Tooltip from '../../../communication/Tooltip'
+import { TListColumnType, useListContext } from '../List'
 import { TListItem } from './ListItem'
 import './ListItemCell.scss'
 
@@ -10,10 +10,13 @@ import './ListItemCell.scss'
 export default function ListItemCell<TItem extends TListItem>({
   item,
   column,
-  tooltipDescription = '',
-  getCellText = (item, column) => (item[column] as any).toString(),
-  onClick = () => {},
+  text,
 }: TListItemCell<TItem>): JSX.Element | null {
+  /* -- STATE -- */
+
+  const listContext = useListContext<TItem>()
+  const { onSelection, getItemTooltip } = listContext
+
   /* -- COMPUTED -- */
 
   /**
@@ -30,9 +33,18 @@ export default function ListItemCell<TItem extends TListItem>({
   })
 
   /**
-   * The text to display in the cell.
+   * The tooltip description for the item.
    */
-  const text = compute<string>(() => getCellText(item, column))
+  const tooltipDescription = getItemTooltip(item)
+
+  /* -- FUNCTIONS -- */
+
+  /**
+   * Handles the click event for the cell.
+   */
+  const onClick = () => {
+    if (onSelection) onSelection(item)
+  }
 
   /* -- RENDER -- */
 
@@ -57,21 +69,7 @@ export type TListItemCell<TItem extends TListItem> = {
    */
   column: TListColumnType<TItem>
   /**
-   * The tooltip description for the item.
-   * @default ''
+   * The text to display in the cell.
    */
-  tooltipDescription?: string
-  /**
-   * Gets the text for a list item cell.
-   * @param item The item for which to get the text.
-   * @param column The column for which to get the text.
-   * @returns The text to display in the cell.
-   * @default () => (item[column] as any).toString()
-   */
-  getCellText?: TList_P<TItem>['getCellText']
-  /**
-   * Callback for when the cell is clicked.
-   * @default () => {}
-   */
-  onClick?: () => void
+  text: string
 }

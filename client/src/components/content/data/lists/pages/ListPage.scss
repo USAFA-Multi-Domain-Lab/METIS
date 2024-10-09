@@ -5,6 +5,8 @@
   $item-cell-padding-vertical: 0.35em;
 
   width: 100%;
+  padding: 1em 0;
+  overflow-x: auto;
 
   .ListItems {
     box-sizing: border-box;
@@ -30,8 +32,11 @@
   // as "No items available."
   .ListItemLike {
     display: grid;
+    box-sizing: border-box;
     grid-template-columns: 1fr auto;
     column-gap: 0.5em;
+    min-width: 100%;
+    width: fit-content;
     height: $item-non-padded-height + $item-cell-padding-vertical * 2;
     padding: 0 1em;
 
@@ -55,6 +60,8 @@
     }
 
     .ItemButtons {
+      width: fit-content;
+
       .ButtonSvg {
         margin: 0 0.025em;
       }

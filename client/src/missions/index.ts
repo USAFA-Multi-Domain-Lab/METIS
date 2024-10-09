@@ -1,5 +1,5 @@
 import axios, { AxiosResponse } from 'axios'
-import { TListItem } from 'src/components/content/data/lists/ListItem'
+import { TListItem } from 'src/components/content/data/lists/pages/ListItem'
 import { TLine_P } from 'src/components/content/session/mission-map/objects/Line'
 import { TPrototypeSlot_P } from 'src/components/content/session/mission-map/objects/PrototypeSlot'
 import SessionClient from 'src/sessions'

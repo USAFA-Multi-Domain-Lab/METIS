@@ -1,37 +1,44 @@
 import { useEffect, useRef, useState } from 'react'
-import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
+import { useResizeObserver } from 'src/toolbox/hooks'
+import { useListContext } from './List'
+import { TListItem } from './pages/ListItem'
 
 /**
  * Handles resizing of the list by recalculating
  * the number of items available per page.
  */
-export default function ListResizeHandler({
-  list,
-  itemsPerPageState: [itemsPerPage, setItemsPerPage],
-  pageNumberState: [pageNumber, setPageNumber],
-  itemsPerPageMin = 10,
-}: TListResizeHandler_P): JSX.Element | null {
+export default function ListResizeHandler<
+  TItem extends TListItem,
+>(): JSX.Element | null {
   /* -- STATE -- */
 
-  // Whether the window is currently being resized.
-  const [windowIsResizing, setWindowIsResizing] = useState<boolean>(false)
-  // Whether an item refresh has been initiated,
-  // which will recalculate the items per page.
-  const [itemRefreshInitiated, setItemRefreshInitiated] =
-    useState<boolean>(false)
-  // The last time a window 'resize' event was
-  // triggered.
-  const lastWindowResizeUpdate = useRef<number>(Date.now())
+  const listContext = useListContext<TItem>()
+  const { list, columns, itemsPerPageMin, minNameColumnWidth, getColumnWidth } =
+    listContext
+  const [_, setItemsPerPage] = listContext.state.itemsPerPage
+  const [__, setVisibleColumns] = listContext.state.visibleColumns
+  const [___, setPageNumber] = listContext.state.pageNumber
+  // Whether the list is currently being resized.
+  const [isResizing, setIsResizing] = useState<boolean>(true)
+  // Whether an refresh has been initiated, which
+  // will recalculate size-dependent states.
+  const [refreshInitiated, setRefreshInitiated] = useState<boolean>(false)
+  // The last time a the list was resized.
+  const lastResizeUpdate = useRef<number>(Date.now())
 
   /* -- FUNCTIONS -- */
 
   /**
-   * Recomputes the number of page items to display if
-   * 'auto' is set for the number of items per page.
+   * Recomputes the number of page items to display
+   * per page based on the available space.
    */
   const calculateItemsPerPage = () => {
-    let page = list.current!.querySelector('.ListPage')!
-    let items = list.current!.querySelector('.ListItems')!
+    let page = list.current!.querySelector('.ListPage')
+    let items = list.current!.querySelector('.ListItems')
+
+    // If the elements were not found, return.
+    if (!page || !items) return
+
     let initHeight = page.clientHeight
     let result = items.children.length - 1
     let blanks = []
@@ -53,80 +60,116 @@ export default function ListResizeHandler({
     setItemsPerPage(result)
   }
 
+  /**
+   * Recomputes the visible columns based on the
+   * available space.
+   */
+  const calculateVisibleColumns = () => {
+    setVisibleColumns(columns)
+    //     let result: TListColumnType<TItem>[] = []
+    //     let page = list.current!.querySelector<HTMLDivElement>('.ListPage')
+    //     let labels =
+    //       list.current!.querySelector<HTMLDivElement>('.ListColumnLabels')
+    //     let itemWidths = [minNameColumnWidth, 'auto']
+    //     let lastLabel = labels?.querySelector<HTMLDivElement>(
+    //       '.ItemCellLike:last-child',
+    //     )
+    //
+    //     // If the elements were not found, return.
+    //     if (!page || !labels || !lastLabel) return
+    //
+    //     // Throw an error if the number of items in the
+    //     // labels is not 2.
+    //     if (labels.childNodes.length !== 2) {
+    //       throw new Error('Invalid number of items in column labels.')
+    //     }
+    //
+    //     let initLastLabelWidth = lastLabel.clientWidth
+    //
+    //     for (let column of columns) {
+    //       let blank = document.createElement('div')
+    //       blank.className = 'ItemCellLike'
+    //       labels.insertBefore(blank, labels.lastChild)
+    //       itemWidths.splice(1, 0, getColumnWidth(column))
+    //       labels.style.gridTemplate = `1fr / ${itemWidths.join(' ')}`
+    //
+    //       // If the last label has decreased in size,
+    //       // break the loop.
+    //       if (lastLabel.clientWidth < initLastLabelWidth) break
+    //
+    //       // Add the column to the visible columns.
+    //       result.push(column)
+    //     }
+    //
+    //     // Remove the blank items.
+    //     while (labels.childNodes.length > 2)
+    //       labels.removeChild(labels.childNodes[1])
+    //
+    //     // Clear the grid template.
+    //     labels.style.gridTemplate = ''
+    //
+    //     // Set the visible columns.
+    //     setVisibleColumns(result)
+  }
+
   /* -- EFFECTS -- */
 
-  // Initiate initial calculation of items per page
-  // on component mount.
-  useMountHandler(() => calculateItemsPerPage())
-
-  // On window resize, set windowIsResizing to true.
-  useEventListener(window, 'resize', () => {
-    // Update the last window resize update.
-    lastWindowResizeUpdate.current = Date.now()
-    // Set the window to resizing, if it is not already.
-    if (!windowIsResizing) setWindowIsResizing(true)
-  })
+  // Detect when the list resizes and update
+  // the state to reflect the change.
+  useResizeObserver(
+    list,
+    () => {
+      // Update the last window resize update.
+      lastResizeUpdate.current = Date.now()
+      // Set the window to resizing, if it is not already.
+      if (!isResizing) {
+        setIsResizing(true)
+      }
+    },
+    [isResizing],
+  )
 
   // On window resize, wait for when the page
   // is no longer resizing.
   useEffect(() => {
     // Add 'Resizing' class to the root element
     // of the list.
-    if (windowIsResizing) list.current!.classList.add('Resizing')
+    if (isResizing) list.current!.classList.add('Resizing')
     // Else, remove the class.
     else list.current!.classList.remove('Resizing')
 
     // If the window is resizing, set an interval
     // to check when the last resize update was
-    // and initiate a recalculation of the items
-    // per page.
-    if (windowIsResizing) {
+    // and initiate a recalculation of size-dependent
+    // states.
+    if (isResizing) {
+      // Clear visible columns until the resize is
+      // complete.
+      setVisibleColumns([])
+
       let interval = setInterval(() => {
-        if (Date.now() - lastWindowResizeUpdate.current >= 500) {
+        if (Date.now() - lastResizeUpdate.current >= 500) {
           clearInterval(interval)
           setPageNumber(0)
           setItemsPerPage(itemsPerPageMin)
-          setWindowIsResizing(false)
-          setItemRefreshInitiated(true)
+          setVisibleColumns([])
+          setIsResizing(false)
+          setRefreshInitiated(true)
         }
       }, 100)
     }
-  }, [windowIsResizing])
+  }, [isResizing])
 
-  // On item refresh initiation, recalculate the
-  // items per page.
+  // On refresh initiation, recalculate the items
+  // per page and visible columns.
   useEffect(() => {
-    if (itemRefreshInitiated) {
+    if (refreshInitiated) {
       calculateItemsPerPage()
-      setItemRefreshInitiated(false)
+      calculateVisibleColumns()
+      setRefreshInitiated(false)
     }
-  }, [itemRefreshInitiated])
+  }, [refreshInitiated])
 
   // This component is not visible.
   return null
-}
-
-/* -- TYPES -- */
-
-/**
- * Props for `ListResizeHandler`.
- */
-export type TListResizeHandler_P = {
-  /**
-   * The ref to the root element of the list.
-   */
-  list: React.RefObject<HTMLDivElement>
-  /**
-   * The React state for the items per page.
-   */
-  itemsPerPageState: TReactState<number>
-  /**
-   * The React state for the current page number.
-   */
-  pageNumberState: TReactState<number>
-  /**
-   * The minimum number of items to display per page.
-   * @default 10
-   */
-  itemsPerPageMin?: number
 }
