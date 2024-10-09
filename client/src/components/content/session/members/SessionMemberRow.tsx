@@ -5,7 +5,9 @@ import SessionClient from 'src/sessions'
 import ClientSessionMember from 'src/sessions/members'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import MemberRole from '../../../../../../shared/sessions/members/roles'
+import MemberRole, {
+  TMemberRoleId,
+} from '../../../../../../shared/sessions/members/roles'
 import Prompt from '../../communication/Prompt'
 import { DetailDropdown } from '../../form/DetailDropdown'
 import ButtonSvgPanel, {
@@ -16,6 +18,7 @@ import './SessionMemberRow.scss'
 export default function SessionMemberRow({
   member,
   session,
+  session: { member: currentMember },
 }: TSessionMember_P): JSX.Element | null {
   /* -- STATE -- */
 
@@ -41,13 +44,7 @@ export default function SessionMemberRow({
   /**
    * The ID of the assigned role.
    */
-  const assignedRoleId = compute<string>(() => assignedRole._id)
-
-  /**
-   * The member that is currently logged in
-   * on this client.
-   */
-  const currentMember = session.member
+  const assignedRoleId: TMemberRoleId = assignedRole._id
 
   /**
    * Buttons for SVG panel.
@@ -244,7 +241,7 @@ export default function SessionMemberRow({
       setRoleLock(true)
       // Assign the role.
       session
-        .$assignRole(member._id, assignedRole._id)
+        .$assignRole(member._id, assignedRoleId)
         .catch(() => {
           setAssignedRole(prevRole)
           handleError({
@@ -256,13 +253,19 @@ export default function SessionMemberRow({
     }
   }, [assignedRole])
 
-  // Check if force is updated on a member
+  // Check if the force, or role, is updated on a member
   // list update.
   useEffect(() => {
     // If the assigned force is not the same as the
     // force assigned to the member, update the assigned
     // force.
     if (assignedForceId !== member.forceId) setAssignedForce(member.force)
+    // If the assigned role is not the same as the
+    // role assigned to the member, update the assigned
+    // role.
+    if (assignedRoleId !== member.roleId) {
+      setAssignedRole(member.role)
+    }
   }, [member])
 
   /* -- RENDER -- */

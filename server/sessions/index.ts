@@ -11,7 +11,7 @@ import Session, {
   TSessionJson,
 } from 'metis/sessions'
 import { TSessionMemberJson } from 'metis/sessions/members'
-import MemberRole from 'metis/sessions/members/roles'
+import MemberRole, { TMemberRoleId } from 'metis/sessions/members/roles'
 import { SingleTypeObject } from 'metis/toolbox/objects'
 import { TCommonUser } from 'metis/users'
 import { v4 as generateHash } from 'uuid'
@@ -56,7 +56,10 @@ export default class SessionServer extends Session<TServerMissionTypes> {
    * but this will help with rejoining, since a new `SessionMember`
    * object is created each time a user joins.
    */
-  private assignments: SingleTypeObject<string>
+  private assignments: SingleTypeObject<{
+    forceId: string
+    roleId: TMemberRoleId
+  }>
 
   public constructor(
     _id: string,
@@ -242,8 +245,9 @@ export default class SessionServer extends Session<TServerMissionTypes> {
    */
   public join(client: ClientConnection): ServerSessionMember {
     let userId = client.userId
-    let role: MemberRole
-    let forceId: string | null = this.assignments[userId] ?? null
+    let assignment = this.assignments[userId] ?? {}
+    let roleId: TMemberRoleId | null
+    let forceId: string | null = assignment.forceId ?? null
     let isUnstarted = this._state === 'unstarted'
 
     // Throw error if the user is in the ban list.
@@ -255,10 +259,15 @@ export default class SessionServer extends Session<TServerMissionTypes> {
       throw ServerEmittedError.CODE_ALREADY_IN_SESSION
     }
 
+    // If the user already has an assigned role, then
+    // join with that role.
+    if (assignment.roleId) {
+      roleId = assignment.roleId
+    }
     // If the user is authorized to join as a manager,
     // then join as a manager.
-    if (client.user.isAuthorized('sessions_join_manager')) {
-      role = MemberRole.AVAILABLE_ROLES.manager
+    else if (client.user.isAuthorized('sessions_join_manager')) {
+      roleId = MemberRole.AVAILABLE_ROLES.manager._id
     }
     // If the user is authorized to join as a manager
     // of native forces, and the client is the owner of
@@ -267,17 +276,17 @@ export default class SessionServer extends Session<TServerMissionTypes> {
       client.user.isAuthorized('sessions_join_manager_native') &&
       this.ownerId === userId
     ) {
-      role = MemberRole.AVAILABLE_ROLES.manager
+      roleId = MemberRole.AVAILABLE_ROLES.manager._id
     }
     // If the user is authorized to join as an observer,
     // then join as an observer.
     else if (client.user.isAuthorized('sessions_join_observer')) {
-      role = MemberRole.AVAILABLE_ROLES.observer
+      roleId = MemberRole.AVAILABLE_ROLES.observer._id
     }
     // If the user is authorized to join as a participant,
     // then join as a participant.
     else if (client.user.isAuthorized('sessions_join_participant')) {
-      role = MemberRole.AVAILABLE_ROLES.participant
+      roleId = MemberRole.AVAILABLE_ROLES.participant._id
     }
     // If the user is not authorized to join the session,
     // then throw an error.
@@ -286,6 +295,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     }
 
     // Gather more details.
+    let role = MemberRole.get(roleId)
     let hasCompleteVisibility = role.isAuthorized('completeVisibility')
     let isAssigned = forceId !== null
 
@@ -876,8 +886,15 @@ export default class SessionServer extends Session<TServerMissionTypes> {
 
     // Assign the target member to the force.
     targetMember.forceId = forceId
-    if (forceId === null) delete this.assignments[targetMember.userId]
-    else this.assignments[targetMember.userId] = forceId
+
+    // Update the target member's force assignment.
+    if (forceId === null) {
+      delete this.assignments[targetMember.userId]
+    } else {
+      let assignment = this.assignments[targetMember.userId] ?? {}
+      assignment.forceId = forceId
+      this.assignments[targetMember.userId] = assignment
+    }
 
     // Emit a response that the assignment has
     // been made.
@@ -946,6 +963,11 @@ export default class SessionServer extends Session<TServerMissionTypes> {
 
     // Assign the target member to the role.
     targetMember.role = MemberRole.get(roleId)
+
+    // Update the target member's role assignment.
+    let assignment = this.assignments[targetMember.userId] ?? {}
+    assignment.roleId = roleId
+    this.assignments[targetMember.userId] = assignment
 
     // Emit a response that the assignment has
     // been made.

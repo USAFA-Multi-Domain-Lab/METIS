@@ -4,7 +4,7 @@ import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
-import { usePostInitEffect } from 'src/toolbox/hooks'
+import { usePostInitEffect, useRequireLogin } from 'src/toolbox/hooks'
 import { SingleTypeObject } from '../../../../../../shared/toolbox/objects'
 import Tooltip from '../../communication/Tooltip'
 import { DetailLargeString } from '../../form/DetailLargeString'
@@ -51,6 +51,7 @@ export default function ActionEntry({
   const [targetEnvironments] = useState<ClientTargetEnvironment[]>(
     ClientTargetEnvironment.getAll(),
   )
+  const [login] = useRequireLogin()
 
   /* -- COMPUTED -- */
 
@@ -128,8 +129,12 @@ export default function ActionEntry({
     const editTooltipDescription: string = compute(() => {
       if (!effect.targetEnvironment || !effect.target) {
         return 'This effect cannot be edited because either the target environment or the target associated with this effect is not available.'
-      } else {
+      } else if (login.user.isAuthorized('missions_write')) {
         return 'Edit effect.'
+      } else if (login.user.isAuthorized('missions_read')) {
+        return 'View effect.'
+      } else {
+        return ''
       }
     })
 
@@ -201,85 +206,89 @@ export default function ActionEntry({
 
           {/* -- MAIN CONTENT -- */}
           <div className='SidePanelSection'>
-            <DetailString
-              fieldType='required'
-              handleOnBlur='repopulateValue'
-              label='Name'
-              stateValue={name}
-              setState={setName}
-              defaultValue={ClientMissionAction.DEFAULT_PROPERTIES.name}
-              maxLength={ClientMissionAction.MAX_NAME_LENGTH}
-              placeholder='Enter name...'
-              key={`${action._id}_name`}
-            />
-            <DetailLargeString
-              fieldType='optional'
-              handleOnBlur='none'
-              label='Description'
-              stateValue={description}
-              setState={setDescription}
-              elementBoundary='.SidePanelSection'
-              placeholder='Enter description...'
-              key={`${action._id}_description`}
-            />
-            <DetailNumber
-              fieldType='required'
-              label='Probability of Success'
-              stateValue={successChance}
-              setState={setSuccessChance}
-              // Convert to percentage.
-              minimum={ClientMissionAction.SUCCESS_CHANCE_MIN * 100}
-              // Convert to percentage.
-              maximum={ClientMissionAction.SUCCESS_CHANCE_MAX * 100}
-              integersOnly={true}
-              unit='%'
-              key={`${action._id}_successChance`}
-            />
-            <DetailNumber
-              fieldType='required'
-              label='Process Time'
-              stateValue={processTime}
-              setState={setProcessTime}
-              // Convert to seconds.
-              minimum={ClientMissionAction.PROCESS_TIME_MIN / 1000}
-              // Convert to seconds.
-              maximum={ClientMissionAction.PROCESS_TIME_MAX / 1000}
-              unit='s'
-              key={`${action._id}_timeCost`}
-            />
-            <DetailNumber
-              fieldType='required'
-              label='Resource Cost'
-              stateValue={resourceCost}
-              setState={setResourceCost}
-              minimum={ClientMissionAction.RESOURCE_COST_MIN}
-              integersOnly={true}
-              key={`${action._id}_resourceCost`}
-            />
-            <DetailLargeString
-              fieldType='required'
-              handleOnBlur='repopulateValue'
-              label='Post-Execution Success Text'
-              stateValue={postExecutionSuccessText}
-              setState={setPostExecutionSuccessText}
-              defaultValue={
-                ClientMissionAction.DEFAULT_PROPERTIES.postExecutionSuccessText
-              }
-              elementBoundary='.SidePanelSection'
-              key={`${action._id}_postExecutionSuccessText`}
-            />
-            <DetailLargeString
-              fieldType='required'
-              handleOnBlur='repopulateValue'
-              label='Post-Execution Failure Text'
-              stateValue={postExecutionFailureText}
-              setState={setPostExecutionFailureText}
-              defaultValue={
-                ClientMissionAction.DEFAULT_PROPERTIES.postExecutionFailureText
-              }
-              elementBoundary='.SidePanelSection'
-              key={`${action._id}_postExecutionFailureText`}
-            />
+            <form className='MainDetails'>
+              <DetailString
+                fieldType='required'
+                handleOnBlur='repopulateValue'
+                label='Name'
+                stateValue={name}
+                setState={setName}
+                defaultValue={ClientMissionAction.DEFAULT_PROPERTIES.name}
+                maxLength={ClientMissionAction.MAX_NAME_LENGTH}
+                placeholder='Enter name...'
+                key={`${action._id}_name`}
+              />
+              <DetailLargeString
+                fieldType='optional'
+                handleOnBlur='none'
+                label='Description'
+                stateValue={description}
+                setState={setDescription}
+                elementBoundary='.SidePanelSection'
+                placeholder='Enter description...'
+                key={`${action._id}_description`}
+              />
+              <DetailNumber
+                fieldType='required'
+                label='Probability of Success'
+                stateValue={successChance}
+                setState={setSuccessChance}
+                // Convert to percentage.
+                minimum={ClientMissionAction.SUCCESS_CHANCE_MIN * 100}
+                // Convert to percentage.
+                maximum={ClientMissionAction.SUCCESS_CHANCE_MAX * 100}
+                integersOnly={true}
+                unit='%'
+                key={`${action._id}_successChance`}
+              />
+              <DetailNumber
+                fieldType='required'
+                label='Process Time'
+                stateValue={processTime}
+                setState={setProcessTime}
+                // Convert to seconds.
+                minimum={ClientMissionAction.PROCESS_TIME_MIN / 1000}
+                // Convert to seconds.
+                maximum={ClientMissionAction.PROCESS_TIME_MAX / 1000}
+                unit='s'
+                key={`${action._id}_timeCost`}
+              />
+              <DetailNumber
+                fieldType='required'
+                label='Resource Cost'
+                stateValue={resourceCost}
+                setState={setResourceCost}
+                minimum={ClientMissionAction.RESOURCE_COST_MIN}
+                integersOnly={true}
+                key={`${action._id}_resourceCost`}
+              />
+              <DetailLargeString
+                fieldType='required'
+                handleOnBlur='repopulateValue'
+                label='Post-Execution Success Text'
+                stateValue={postExecutionSuccessText}
+                setState={setPostExecutionSuccessText}
+                defaultValue={
+                  ClientMissionAction.DEFAULT_PROPERTIES
+                    .postExecutionSuccessText
+                }
+                elementBoundary='.SidePanelSection'
+                key={`${action._id}_postExecutionSuccessText`}
+              />
+              <DetailLargeString
+                fieldType='required'
+                handleOnBlur='repopulateValue'
+                label='Post-Execution Failure Text'
+                stateValue={postExecutionFailureText}
+                setState={setPostExecutionFailureText}
+                defaultValue={
+                  ClientMissionAction.DEFAULT_PROPERTIES
+                    .postExecutionFailureText
+                }
+                elementBoundary='.SidePanelSection'
+                key={`${action._id}_postExecutionFailureText`}
+              />
+            </form>
 
             {/* -- EFFECTS -- */}
             <List<ClientEffect>

@@ -479,7 +479,10 @@ export default function HomePage(): JSX.Element | null {
    * Handler for when a mission is selected.
    */
   const onMissionSelection = async ({ _id: missionId }: ClientMission) => {
-    if (currentUser.isAuthorized('missions_write')) {
+    if (
+      currentUser.isAuthorized('missions_write') ||
+      currentUser.isAuthorized('missions_read')
+    ) {
       navigateTo('MissionPage', { missionId })
     }
   }
@@ -656,7 +659,13 @@ export default function HomePage(): JSX.Element | null {
             nameProperty={'name'}
             alwaysUseBlanks={true}
             renderItemDisplay={(mission: ClientMission) => {
-              if (currentUser.isAuthorized('missions_write')) {
+              if (
+                currentUser.isAuthorized([
+                  'missions_write',
+                  'missions_read',
+                  'sessions_write',
+                ])
+              ) {
                 return (
                   <>
                     <div className='Row Select'>
@@ -675,16 +684,32 @@ export default function HomePage(): JSX.Element | null {
                     </div>
                   </>
                 )
-              } else {
+              } else if (
+                currentUser.isAuthorized(['missions_read', 'sessions_write'])
+              ) {
                 return (
                   <>
-                    <div className='Row'>
-                      <div className='Text'>{mission.name}</div>
+                    <div className='Row Select'>
+                      <div
+                        className='Text Select'
+                        onClick={() => onMissionSelection(mission)}
+                      >
+                        {mission.name}
+                        <Tooltip description='View mission.' />
+                      </div>
                       <MissionModificationPanel
                         mission={mission}
                         onSuccessfulCopy={() => {}}
                         onSuccessfulDeletion={() => {}}
                       />
+                    </div>
+                  </>
+                )
+              } else {
+                return (
+                  <>
+                    <div className='Row'>
+                      <div className='Text'>{mission.name}</div>
                     </div>
                   </>
                 )

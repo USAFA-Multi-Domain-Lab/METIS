@@ -64,6 +64,7 @@ export default function ForceEntry({
           node.color = color
         })
         handleChange()
+        forceUpdate()
       },
       tooltipDescription: `Applies the selected color to all nodes in the force.`,
     }

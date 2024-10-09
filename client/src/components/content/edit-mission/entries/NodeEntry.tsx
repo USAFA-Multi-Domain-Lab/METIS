@@ -4,7 +4,7 @@ import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
-import { usePostInitEffect } from 'src/toolbox/hooks'
+import { usePostInitEffect, useRequireLogin } from 'src/toolbox/hooks'
 import { SingleTypeObject } from '../../../../../../shared/toolbox/objects'
 import Tooltip from '../../communication/Tooltip'
 import { DetailColorSelector } from '../../form/DetailColorSelector'
@@ -46,6 +46,7 @@ export default function NodeEntry({
   const [executable, setExecutable] = useState<boolean>(node.executable)
   const [device, setDevice] = useState<boolean>(node.device)
   const [applyColorFill, setApplyColorFill] = useState<boolean>(false)
+  const [login] = useRequireLogin()
 
   /* -- COMPUTED -- */
   /**
@@ -250,6 +251,19 @@ export default function NodeEntry({
         return buttons
       })
 
+      /**
+       * The tooltip description for the action.
+       */
+      const actionTooltipDescription: string = compute(() => {
+        if (login.user.isAuthorized('missions_write')) {
+          return 'Edit action.'
+        } else if (login.user.isAuthorized('missions_read')) {
+          return 'View action.'
+        } else {
+          return ''
+        }
+      })
+
       return (
         <div className='Row Select' key={`action-row-${action._id}`}>
           <div
@@ -257,7 +271,7 @@ export default function NodeEntry({
             onClick={() => mission.select(action)}
           >
             {action.name}
-            <Tooltip description='Edit action.' />
+            <Tooltip description={actionTooltipDescription} />
           </div>
           <ButtonSvgPanel buttons={actionButtons} size={'small'} />
         </div>
@@ -277,69 +291,71 @@ export default function NodeEntry({
 
         {/* -- MAIN CONTENT -- */}
         <div className='SidePanelSection'>
-          <DetailString
-            fieldType='required'
-            handleOnBlur='repopulateValue'
-            label='Name'
-            stateValue={name}
-            setState={setName}
-            defaultValue={ClientMissionNode.DEFAULT_PROPERTIES.name}
-            maxLength={ClientMissionNode.MAX_NAME_LENGTH}
-            key={`${node._id}_name`}
-          />
-          <DetailColorSelector
-            fieldType='required'
-            label='Color'
-            colors={ClientMission.COLOR_OPTIONS}
-            isExpanded={false}
-            stateValue={color}
-            setState={setColor}
-            buttons={colorButtons}
-            key={`${node._id}_color`}
-          />
-          <DetailLargeString
-            fieldType='optional'
-            handleOnBlur='none'
-            label='Description'
-            stateValue={description}
-            setState={setDescription}
-            elementBoundary='.SidePanelSection'
-            placeholder='Enter description...'
-            key={`${node._id}_description`}
-          />
-          <DetailLargeString
-            fieldType='optional'
-            handleOnBlur='none'
-            label='Pre-Execution Text'
-            stateValue={preExecutionText}
-            setState={setPreExecutionText}
-            elementBoundary='.SidePanelSection'
-            placeholder='Enter pre-execution text...'
-            key={`${node._id}_preExecutionText`}
-          />
-          <DetailNumber
-            fieldType='required'
-            label='Depth Padding'
-            stateValue={depthPadding}
-            setState={setDepthPadding}
-            integersOnly={true}
-            key={`${node._id}_depthPadding`}
-          />
-          <DetailToggle
-            fieldType='required'
-            label='Executable'
-            stateValue={executable}
-            setState={setExecutable}
-            key={`${node._id}_executable`}
-          />
-          <DetailToggle
-            fieldType='required'
-            label='Device'
-            stateValue={device}
-            setState={setDevice}
-            lockState={deviceLockState}
-            key={`${node._id}_device`}
-          />
+          <form className='MainDetails'>
+            <DetailString
+              fieldType='required'
+              handleOnBlur='repopulateValue'
+              label='Name'
+              stateValue={name}
+              setState={setName}
+              defaultValue={ClientMissionNode.DEFAULT_PROPERTIES.name}
+              maxLength={ClientMissionNode.MAX_NAME_LENGTH}
+              key={`${node._id}_name`}
+            />
+            <DetailColorSelector
+              fieldType='required'
+              label='Color'
+              colors={ClientMission.COLOR_OPTIONS}
+              isExpanded={false}
+              stateValue={color}
+              setState={setColor}
+              buttons={colorButtons}
+              key={`${node._id}_color`}
+            />
+            <DetailLargeString
+              fieldType='optional'
+              handleOnBlur='none'
+              label='Description'
+              stateValue={description}
+              setState={setDescription}
+              elementBoundary='.SidePanelSection'
+              placeholder='Enter description...'
+              key={`${node._id}_description`}
+            />
+            <DetailLargeString
+              fieldType='optional'
+              handleOnBlur='none'
+              label='Pre-Execution Text'
+              stateValue={preExecutionText}
+              setState={setPreExecutionText}
+              elementBoundary='.SidePanelSection'
+              placeholder='Enter pre-execution text...'
+              key={`${node._id}_preExecutionText`}
+            />
+            <DetailNumber
+              fieldType='required'
+              label='Depth Padding'
+              stateValue={depthPadding}
+              setState={setDepthPadding}
+              integersOnly={true}
+              key={`${node._id}_depthPadding`}
+            />
+            <DetailToggle
+              fieldType='required'
+              label='Executable'
+              stateValue={executable}
+              setState={setExecutable}
+              key={`${node._id}_executable`}
+            />
+            <DetailToggle
+              fieldType='required'
+              label='Device'
+              stateValue={device}
+              setState={setDevice}
+              lockState={deviceLockState}
+              key={`${node._id}_device`}
+            />
+          </form>
 
           {/* -- ACTIONS -- */}
           <List<ClientMissionAction>

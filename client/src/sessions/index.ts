@@ -32,9 +32,24 @@ export default class SessionClient extends Session<TClientMissionTypes> {
   protected server: ServerConnection
 
   /**
+   * The ID of the member associated with this client connection.
+   */
+  public memberId: ClientSessionMember['_id']
+
+  /**
    * The session member for this client connection.
    */
-  public readonly member: ClientSessionMember
+  public get member(): ClientSessionMember {
+    // Find the member associated with this client connection.
+    let member = this.getMember(this.memberId)
+
+    // Throw an error if the member could not
+    // be found in the members JSON passed.
+    if (!member) throw new Error('Member not found in session.')
+
+    // Return the member.
+    return member
+  }
 
   /**
    * The role of the member associated with this client connection.
@@ -73,16 +88,9 @@ export default class SessionClient extends Session<TClientMissionTypes> {
     // Call super constructor with base data.
     super(_id, name, ownerId, config, mission, memberData, banList)
 
-    // Find the member associated with this client connection.
-    let member = this.members.find((member) => member._id === memberId)
-
-    // Throw an error if the member could not
-    // be found in the members JSON passed.
-    if (!member) throw new Error('Member not found in session.')
-
     // Set the rest of the data.
     this.server = server
-    this.member = member
+    this.memberId = memberId
     this._state = state
 
     // Add listeners to detect events that are

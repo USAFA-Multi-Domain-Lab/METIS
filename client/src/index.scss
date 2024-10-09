@@ -81,22 +81,12 @@ code {
 }
 
 .PartiallyDisabled {
-  cursor: not-allowed !important;
-  opacity: 0.35 !important;
-  user-select: none !important;
-  filter: none !important;
-
-  &:hover {
-    opacity: 0.35 !important;
-  }
+  @include partially-disabled();
 }
 
 .Disabled,
 :disabled {
-  cursor: default !important;
-  opacity: 0.35 !important;
-  user-select: none !important;
-  pointer-events: none !important;
+  @include disabled();
 }
 
 .Hidden {

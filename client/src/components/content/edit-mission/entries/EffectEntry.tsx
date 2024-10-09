@@ -61,7 +61,7 @@ export default function EffectEntry({
         </div>
 
         {/* -- MAIN CONTENT -- */}
-        <div className='SidePanelSection'>
+        <div className='SidePanelSection MainDetails'>
           <DetailString
             fieldType='required'
             handleOnBlur='repopulateValue'

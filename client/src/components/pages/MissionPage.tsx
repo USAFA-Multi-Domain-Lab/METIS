@@ -147,12 +147,32 @@ export default function MissionPage({
     return panel2DefaultSize
   })
 
+  /**
+   * The class name for the root element.
+   */
+  const rootClassName: string = compute(() => {
+    // Default class names
+    let classList: string[] = ['MissionPage', 'Page']
+
+    // If disabled is true then add the
+    // disabled class name.
+    if (!currentUser.isAuthorized('missions_write')) {
+      classList.push('ReadOnly')
+    }
+
+    // Return the list of class names as one string.
+    return classList.join(' ')
+  })
+
   /* -- EFFECTS -- */
 
   // componentDidMount
   const [mountHandled] = useMountHandler(async (done) => {
     // Make sure the user has access to the page.
-    if (!currentUser.isAuthorized('missions_write')) {
+    if (
+      !currentUser.isAuthorized('missions_write') &&
+      !currentUser.isAuthorized('missions_read')
+    ) {
       handleError(
         'You do not have access to this page. Please contact an administrator.',
       )
@@ -200,7 +220,7 @@ export default function MissionPage({
   useNavigationMiddleware(
     async (to, next) => {
       // If there are unsaved changes, prompt the user.
-      if (areUnsavedChanges) {
+      if (areUnsavedChanges && currentUser.isAuthorized('missions_write')) {
         const { choice } = await prompt(
           'You have unsaved changes. What do you want to do with them?',
           ['Cancel', 'Save', 'Discard'],
@@ -414,7 +434,11 @@ export default function MissionPage({
   const onTabAdd = compute(() => {
     // If the mission has reached the maximum number
     // of forces, return null, disabling the add button.
-    if (mission.forces.length >= Mission.MAX_FORCE_COUNT) return null
+    if (
+      mission.forces.length >= Mission.MAX_FORCE_COUNT ||
+      !currentUser.isAuthorized('missions_write')
+    )
+      return null
 
     // Return default callback.
     return () => {
@@ -595,8 +619,11 @@ export default function MissionPage({
   /**
    * Custom buttons for the mission map.
    */
-  const mapCustomButtons: TWithKey<TButtonSvg>[] = [
-    {
+  const mapCustomButtons: TWithKey<TButtonSvg>[] = compute(() => {
+    // Define the buttons that will be used.
+    let buttons: TWithKey<TButtonSvg>[] = []
+    // Define the reorder button.
+    let reorderButton: TWithKey<TButtonSvg> = {
       icon: 'reorder',
       key: 'reorder',
       onClick: () => {
@@ -605,15 +632,23 @@ export default function MissionPage({
       },
       tooltipDescription: 'Edit the structure and order of nodes.',
       disabled: nodeStructuringIsActive ? 'full' : 'none',
-    },
-    {
+    }
+    // Define the save button.
+    let saveButton: TWithKey<TButtonSvg> = {
       icon: 'save',
       key: 'save',
       onClick: save,
       tooltipDescription: 'Save changes.',
       disabled: !areUnsavedChanges ? 'full' : 'none',
-    },
-  ]
+    }
+    // Add the buttons to the list if the user is authorized.
+    if (currentUser.isAuthorized('missions_write')) {
+      buttons.push(reorderButton)
+      buttons.push(saveButton)
+    }
+    // Return the buttons.
+    return buttons
+  })
 
   /**
    * Computed JSX for the mission map modal.
@@ -713,7 +748,7 @@ export default function MissionPage({
 
   if (mountHandled) {
     return (
-      <div className={'MissionPage Page'}>
+      <div className={rootClassName}>
         <DefaultLayout navigation={navigation}>
           <PanelSizeRelationship
             panel1={{

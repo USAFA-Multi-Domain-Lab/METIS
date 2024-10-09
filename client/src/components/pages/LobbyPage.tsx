@@ -32,12 +32,6 @@ export default function LobbyPage({
   /* -- computed -- */
 
   /**
-   * The member that is currently logged in
-   * on this client.
-   */
-  const currentMember = compute(() => session.getMemberByUserId(login.user._id))
-
-  /**
    * Props for navigation.
    */
   const navigation = compute(
@@ -169,7 +163,7 @@ export default function LobbyPage({
 
     // If the current member can start and end sessions,
     // add the start session button.
-    if (currentMember?.isAuthorized('startEndSessions')) {
+    if (session.member.isAuthorized('startEndSessions')) {
       buttonsJsx.push(
         <ButtonText
           key={'start-button'}
@@ -181,7 +175,7 @@ export default function LobbyPage({
 
     // If the current member can configure sessions,
     // add the configure session button.
-    if (currentMember?.isAuthorized('configureSessions')) {
+    if (session.member.isAuthorized('configureSessions')) {
       buttonsJsx.push(
         <ButtonText
           key={'configure-button'}

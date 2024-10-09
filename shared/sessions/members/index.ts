@@ -56,6 +56,11 @@ export default abstract class SessionMember<
   }
 
   // Implemented
+  public get isLimitedObserver(): boolean {
+    return this.role._id === 'observer_limited'
+  }
+
+  // Implemented
   public get isObserver(): boolean {
     return this.role._id === 'observer'
   }
@@ -163,6 +168,10 @@ export interface TCommonSessionMember {
    * Whether the member is a participant in the session.
    */
   get isParticipant(): boolean
+  /**
+   * Whether the member is a limited observer in the session.
+   */
+  get isLimitedObserver(): boolean
   /**
    * Whether the member is an observer in the session.
    */
