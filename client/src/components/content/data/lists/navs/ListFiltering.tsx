@@ -14,7 +14,7 @@ export default function ListFiltering(): JSX.Element | null {
 
   const listContext = useListContext()
   const { items } = listContext
-  const [filteredItems, setFilteredItems] = listContext.state.filteredItems
+  const [_, setFilteredItems] = listContext.state.filteredItems
   const [searchHint, setSearchHint] = useState<string>('')
   const [hideSearchTooltip, showSearchTooltip] = useState<boolean>(false)
   const searchField = createRef<HTMLInputElement>()

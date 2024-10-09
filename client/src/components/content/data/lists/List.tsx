@@ -83,7 +83,6 @@ export default function List<TItem extends TListItem>(
   const state: TList_S<TItem> = {
     pageNumber: useState<number>(0),
     filteredItems: useState<TItem[]>(items),
-    visibleColumns: useState<TListColumnType<TItem>[]>([]),
     itemsPerPage: useState<number>(itemsPerPageMin),
   }
   const [pageNumber] = state.pageNumber
@@ -271,11 +270,6 @@ export type TList_S<TItem extends TListItem> = {
    * The items after filtering is applied.
    */
   filteredItems: TReactState<TItem[]>
-  /**
-   * The columns that are currently visible based
-   * on the available space in the list.
-   */
-  visibleColumns: TReactState<TListColumnType<TItem>[]>
   /**
    * The calculated amount of items per page
    * based on the space available in the list.

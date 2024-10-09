@@ -14,9 +14,7 @@ export default function ListPage<TItem extends TListItem>({
   /* -- STATE -- */
 
   const listContext = useListContext<TItem>()
-  const { itemButtons, getColumnWidth, getColumnLabel } = listContext
   const [itemsPerPage] = listContext.state.itemsPerPage
-  const [visibleColumns] = listContext.state.visibleColumns
 
   /* -- RENDER -- */
 

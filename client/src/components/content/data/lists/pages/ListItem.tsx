@@ -16,6 +16,7 @@ export default function ListItem<T extends TListItem>({
 
   const listContext = useListContext<T>()
   const {
+    columns,
     itemButtons,
     minNameColumnWidth,
     getCellText,
@@ -25,7 +26,6 @@ export default function ListItem<T extends TListItem>({
     onSelection,
     onItemButtonClick,
   } = listContext
-  const [columns] = listContext.state.visibleColumns
 
   /* -- COMPUTED -- */
 

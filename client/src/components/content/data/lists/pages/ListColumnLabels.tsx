@@ -15,9 +15,13 @@ export default function ListColumnLabels<
   /* -- STATE -- */
 
   const listContext = useListContext<TItem>()
-  const [columns] = listContext.state.visibleColumns
-  const { itemButtons, minNameColumnWidth, getColumnWidth, getColumnLabel } =
-    listContext
+  const {
+    columns,
+    itemButtons,
+    minNameColumnWidth,
+    getColumnWidth,
+    getColumnLabel,
+  } = listContext
 
   /* -- COMPUTED -- */
 
