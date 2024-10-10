@@ -48,18 +48,20 @@ export default function ListItem<T extends TListItem>({
    * Dynamic styling for the root element.
    */
   const rootStyle = compute<React.CSSProperties>(() => {
-    // Initialize the column widths with
-    // the name column width.
-    let columnWidths = [
-      OPTIONS_COLUMN_WIDTH,
-      `minmax(${minNameColumnWidth}, 1fr)`,
-    ]
+    // Initialize the column widths.
+    let columnWidths = []
+
+    // If there are item buttons, add the options
+    // column width.
+    if (itemButtons.length) {
+      columnWidths.push(OPTIONS_COLUMN_WIDTH)
+    }
+
+    // Add the name column width.
+    columnWidths.push(`minmax(${minNameColumnWidth}, 1fr)`)
 
     // Add the width for each column.
     columns.forEach((column) => columnWidths.push(getColumnWidth(column)))
-
-    // Add width for the buttons column.
-    columnWidths.push('auto')
 
     // Return the style object.
     return {
@@ -73,16 +75,26 @@ export default function ListItem<T extends TListItem>({
    * JSX for the individual cells.
    */
   const cellsJsx = compute<ReactNode>(() => {
-    // Initialize the result with the name cell.
-    let result: ReactNode[] = [
-      <div key={'options'} className='ItemCellLike ItemOptions'></div>,
+    // Initialize the result.
+    let result: ReactNode[] = []
+
+    // If there are item buttons, add the options
+    // cell.
+    if (itemButtons.length) {
+      result.push(
+        <div key={'options'} className='ItemCellLike ItemOptions'></div>,
+      )
+    }
+
+    // Add the name cell.
+    result.push(
       <ListItemCell
         key={'name'}
         item={item}
         column={'name'}
         text={item.name}
       />,
-    ]
+    )
 
     // Add a column label for each column
     // passed in the props.

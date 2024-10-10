@@ -21,7 +21,7 @@ import ListPage, { TListPage_P } from './pages/ListPage'
 /**
  * The width of the options column.
  */
-export const OPTIONS_COLUMN_WIDTH = '1.5em'
+export const OPTIONS_COLUMN_WIDTH = '2em'
 
 /* -- CONTEXT -- */
 /**

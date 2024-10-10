@@ -14,8 +14,13 @@ export default function ListColumnLabels<
   /* -- STATE -- */
 
   const listContext = useListContext<TItem>()
-  const { columns, minNameColumnWidth, getColumnWidth, getColumnLabel } =
-    listContext
+  const {
+    columns,
+    itemButtons,
+    minNameColumnWidth,
+    getColumnWidth,
+    getColumnLabel,
+  } = listContext
 
   /* -- COMPUTED -- */
 
@@ -32,12 +37,17 @@ export default function ListColumnLabels<
    * Dynamic styling for the root element.
    */
   const rootStyle = compute<React.CSSProperties>(() => {
-    // Initialize the column widths with
-    // the name column width.
-    let columnWidths = [
-      OPTIONS_COLUMN_WIDTH,
-      `minmax(${minNameColumnWidth}, 1fr)`,
-    ]
+    // Initialize the column widths.
+    let columnWidths: string[] = []
+
+    // If there are item buttons, add the options
+    // column width.
+    if (itemButtons.length) {
+      columnWidths.push(OPTIONS_COLUMN_WIDTH)
+    }
+
+    // Add the name column width.
+    columnWidths.push(`minmax(${minNameColumnWidth}, 1fr)`)
 
     // Add the width for each column.
     columns.forEach((column) => columnWidths.push(getColumnWidth(column)))
@@ -54,14 +64,22 @@ export default function ListColumnLabels<
    * JSX for the individual cells.
    */
   const cellsJsx = compute<ReactNode>(() => {
-    // Initialize the result with the name column.
-    let result: ReactNode[] = [
-      <div
-        key={'ItemOptionsLabel'}
-        className='ItemCellLike ColumnLabelBlank'
-      ></div>,
-      <ListColumnLabel key={'name'} column={'name'} text={'Name'} />,
-    ]
+    // Initialize the result.
+    let result: ReactNode[] = []
+
+    // If there are item buttons, add the options
+    // cell.
+    if (itemButtons.length) {
+      result.push(
+        <div
+          key={'ItemOptionsLabel'}
+          className='ItemCellLike ColumnLabelBlank'
+        ></div>,
+      )
+    }
+
+    // Add the name cell.
+    result.push(<ListColumnLabel key={'name'} column={'name'} text={'Name'} />)
 
     // Add a column label for each column
     // passed in the props.
