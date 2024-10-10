@@ -19,9 +19,9 @@ import ListPage, { TListPage_P } from './pages/ListPage'
 /* -- CONSTANTS -- */
 
 /**
- * The width of the more-details column.
+ * The width of the options column.
  */
-export const MORE_COLUMN_WIDTH = '3em'
+export const OPTIONS_COLUMN_WIDTH = '1.5em'
 
 /* -- CONTEXT -- */
 /**

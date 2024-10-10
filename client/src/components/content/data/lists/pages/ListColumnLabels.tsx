@@ -1,7 +1,6 @@
 import { ReactNode } from 'react'
 import { compute } from 'src/toolbox'
-import ButtonSvgPanel_v2 from '../../../user-controls/buttons/ButtonSvgPanel_v2'
-import { useListContext } from '../List'
+import { OPTIONS_COLUMN_WIDTH, useListContext } from '../List'
 import ListColumnLabel from './ListColumnLabel'
 import './ListColumnLabels.scss'
 import { TListItem } from './ListItem'
@@ -15,13 +14,8 @@ export default function ListColumnLabels<
   /* -- STATE -- */
 
   const listContext = useListContext<TItem>()
-  const {
-    columns,
-    itemButtons,
-    minNameColumnWidth,
-    getColumnWidth,
-    getColumnLabel,
-  } = listContext
+  const { columns, minNameColumnWidth, getColumnWidth, getColumnLabel } =
+    listContext
 
   /* -- COMPUTED -- */
 
@@ -35,29 +29,18 @@ export default function ListColumnLabels<
   })
 
   /**
-   * Class name for the item button cell.
-   */
-  const itemButtonClass = compute<string>(() => {
-    const classList = ['ItemButtons', 'ColumnLabel', 'ItemCellLike']
-
-    if (!itemButtons.length) classList.push('Hidden')
-
-    return classList.join(' ')
-  })
-
-  /**
    * Dynamic styling for the root element.
    */
   const rootStyle = compute<React.CSSProperties>(() => {
     // Initialize the column widths with
     // the name column width.
-    let columnWidths = [`minmax(${minNameColumnWidth}, 1fr)`]
+    let columnWidths = [
+      OPTIONS_COLUMN_WIDTH,
+      `minmax(${minNameColumnWidth}, 1fr)`,
+    ]
 
     // Add the width for each column.
     columns.forEach((column) => columnWidths.push(getColumnWidth(column)))
-
-    // Add width for the buttons column.
-    columnWidths.push('auto')
 
     // Return the style object.
     return {
@@ -73,6 +56,10 @@ export default function ListColumnLabels<
   const cellsJsx = compute<ReactNode>(() => {
     // Initialize the result with the name column.
     let result: ReactNode[] = [
+      <div
+        key={'ItemOptionsLabel'}
+        className='ItemCellLike ColumnLabelBlank'
+      ></div>,
       <ListColumnLabel key={'name'} column={'name'} text={'Name'} />,
     ]
 
@@ -95,13 +82,6 @@ export default function ListColumnLabels<
   return (
     <div className={rootClass} style={rootStyle}>
       {cellsJsx}
-      <div className={itemButtonClass}>
-        <ButtonSvgPanel_v2
-          buttons={itemButtons}
-          size={'small'}
-          onButtonClick={() => {}}
-        />
-      </div>
     </div>
   )
 }

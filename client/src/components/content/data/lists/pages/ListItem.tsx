@@ -1,8 +1,7 @@
 import { ReactNode } from 'react'
 import { compute } from 'src/toolbox'
 import { TButtonSvgType } from '../../../user-controls/buttons/ButtonSvg'
-import ButtonSvgPanel_v2 from '../../../user-controls/buttons/ButtonSvgPanel_v2'
-import { useListContext } from '../List'
+import { OPTIONS_COLUMN_WIDTH, useListContext } from '../List'
 import './ListItem.scss'
 import ListItemCell from './ListItemCell'
 
@@ -21,10 +20,8 @@ export default function ListItem<T extends TListItem>({
     minNameColumnWidth,
     getCellText,
     getItemTooltip,
-    getItemButtonTooltip,
     getColumnWidth,
     onSelection,
-    onItemButtonClick,
   } = listContext
 
   /* -- COMPUTED -- */
@@ -53,7 +50,10 @@ export default function ListItem<T extends TListItem>({
   const rootStyle = compute<React.CSSProperties>(() => {
     // Initialize the column widths with
     // the name column width.
-    let columnWidths = [`minmax(${minNameColumnWidth}, 1fr)`]
+    let columnWidths = [
+      OPTIONS_COLUMN_WIDTH,
+      `minmax(${minNameColumnWidth}, 1fr)`,
+    ]
 
     // Add the width for each column.
     columns.forEach((column) => columnWidths.push(getColumnWidth(column)))
@@ -75,6 +75,7 @@ export default function ListItem<T extends TListItem>({
   const cellsJsx = compute<ReactNode>(() => {
     // Initialize the result with the name cell.
     let result: ReactNode[] = [
+      <div key={'options'} className='ItemCellLike ItemOptions'></div>,
       <ListItemCell
         key={'name'}
         item={item}
@@ -103,14 +104,6 @@ export default function ListItem<T extends TListItem>({
   return (
     <div className={rootClass} style={rootStyle}>
       {cellsJsx}
-      <div className='ItemButtons ItemCellLike'>
-        <ButtonSvgPanel_v2
-          buttons={itemButtons}
-          size={'small'}
-          onButtonClick={(button) => onItemButtonClick(button, item)}
-          getTooltip={(button) => getItemButtonTooltip(button, item)}
-        />
-      </div>
     </div>
   )
 }

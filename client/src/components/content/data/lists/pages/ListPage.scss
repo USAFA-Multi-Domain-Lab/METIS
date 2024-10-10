@@ -3,6 +3,7 @@
 .ListPage {
   $item-non-padded-height: 1.4em;
   $item-cell-padding-vertical: 0.35em;
+  $item-options-background-y: 0.375em;
 
   width: 100%;
   padding: 1em 0;
@@ -13,6 +14,14 @@
     width: 100%;
 
     .ListItem {
+      .ItemOptions {
+        background-image: url('/assets/images/icons/options.svg');
+        background-size: 1.25em;
+        background-repeat: no-repeat;
+        background-position: center $item-options-background-y +
+          $item-cell-padding-vertical;
+      }
+
       &:first-child {
         $first-padding-top: 1.2em;
 
@@ -21,6 +30,10 @@
 
         .ItemCellLike {
           padding-top: $first-padding-top;
+        }
+
+        .ItemOptions {
+          background-position-y: $item-options-background-y + $first-padding-top;
         }
       }
     }
