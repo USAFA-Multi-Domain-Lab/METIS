@@ -4,10 +4,8 @@
 // see the `.ListItemLike` styling rules in `ListPage.scss`.
 .ListItem {
   .ItemOptions {
-    background-image: url('/assets/images/icons/options.svg');
-    background-size: 1.25em;
-    background-repeat: no-repeat;
-    background-position: center;
+    display: flex;
+    align-items: center;
   }
 
   &.Selectable {

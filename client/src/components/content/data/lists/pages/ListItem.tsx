@@ -1,6 +1,8 @@
 import { ReactNode } from 'react'
 import { compute } from 'src/toolbox'
-import { TButtonSvgType } from '../../../user-controls/buttons/ButtonSvg'
+import ButtonSvg, {
+  TButtonSvgType,
+} from '../../../user-controls/buttons/ButtonSvg'
 import { OPTIONS_COLUMN_WIDTH, useListContext } from '../List'
 import './ListItem.scss'
 import ListItemCell from './ListItemCell'
@@ -51,14 +53,14 @@ export default function ListItem<T extends TListItem>({
     // Initialize the column widths.
     let columnWidths = []
 
+    // Add the name column width.
+    columnWidths.push(`minmax(${minNameColumnWidth}, 1fr)`)
+
     // If there are item buttons, add the options
     // column width.
     if (itemButtons.length) {
       columnWidths.push(OPTIONS_COLUMN_WIDTH)
     }
-
-    // Add the name column width.
-    columnWidths.push(`minmax(${minNameColumnWidth}, 1fr)`)
 
     // Add the width for each column.
     columns.forEach((column) => columnWidths.push(getColumnWidth(column)))
@@ -78,14 +80,6 @@ export default function ListItem<T extends TListItem>({
     // Initialize the result.
     let result: ReactNode[] = []
 
-    // If there are item buttons, add the options
-    // cell.
-    if (itemButtons.length) {
-      result.push(
-        <div key={'options'} className='ItemCellLike ItemOptions'></div>,
-      )
-    }
-
     // Add the name cell.
     result.push(
       <ListItemCell
@@ -95,6 +89,16 @@ export default function ListItem<T extends TListItem>({
         text={item.name}
       />,
     )
+
+    // If there are item buttons, add the options
+    // cell.
+    if (itemButtons.length) {
+      result.push(
+        <div key={'options'} className='ItemCellLike ItemOptions'>
+          <ButtonSvg type='options' size='small' onClick={() => {}} />
+        </div>,
+      )
+    }
 
     // Add a column label for each column
     // passed in the props.

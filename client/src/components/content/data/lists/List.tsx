@@ -21,7 +21,7 @@ import ListPage, { TListPage_P } from './pages/ListPage'
 /**
  * The width of the options column.
  */
-export const OPTIONS_COLUMN_WIDTH = '2em'
+export const OPTIONS_COLUMN_WIDTH = '3.5em'
 
 /* -- CONTEXT -- */
 /**
@@ -60,7 +60,7 @@ export default function List<TItem extends TListItem>(
   const defaultedProps = useDefaultProps(props, {
     columns: [],
     itemsPerPageMin: 10,
-    minNameColumnWidth: '16em',
+    minNameColumnWidth: '14em',
     listButtons: [],
     itemButtons: [],
     getColumnLabel: (x) => x.toString(),

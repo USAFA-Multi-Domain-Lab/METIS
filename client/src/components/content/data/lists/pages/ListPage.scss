@@ -6,7 +6,7 @@
   $item-options-background-y: 0.35em;
 
   width: 100%;
-  padding: 1em 0;
+  padding: 0.5em 0;
   overflow-x: auto;
 
   .ListItems {
@@ -15,33 +15,6 @@
 
     .ListItem {
       border-top: 2px solid rgba(white, 0.075);
-
-      .ItemOptions {
-        background-image: url('/assets/images/icons/options.svg');
-        background-size: 1.25em;
-        background-repeat: no-repeat;
-        background-position: center $item-options-background-y +
-          $item-cell-padding-vertical;
-      }
-
-      &:first-child {
-        border-top: none;
-      }
-
-      &:first-child {
-        //         $first-padding-top: 1.2em;
-        //
-        //         height: $item-non-padded-height + $first-padding-top +
-        //           $item-cell-padding-vertical;
-        //
-        //         .ItemCellLike {
-        //           padding-top: $first-padding-top;
-        //         }
-        //
-        //         .ItemOptions {
-        //           background-position-y: $item-options-background-y + $first-padding-top;
-        //         }
-      }
     }
   }
 

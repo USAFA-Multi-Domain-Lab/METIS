@@ -172,6 +172,7 @@ export type TButtonSvgType =
   | 'kick'
   | 'launch'
   | 'lock'
+  | 'options'
   | 'question'
   | 'remove'
   | 'reorder'
