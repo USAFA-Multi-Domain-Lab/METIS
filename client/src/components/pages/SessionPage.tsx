@@ -262,7 +262,7 @@ export default function SessionPage({
       buttons.push({
         key: 'users',
         type: 'user',
-        tooltipDescription: 'Open users panel.',
+        description: 'Open users panel.',
         onClick: () => {
           setRightPanelTab('users')
         },
@@ -274,7 +274,7 @@ export default function SessionPage({
       buttons.push({
         key: 'output',
         type: 'shell',
-        tooltipDescription: selectedForce
+        description: selectedForce
           ? 'Open output panel.'
           : 'Cannot open the output panel at this time. Please contact your system administrator.',
         disabled: selectedForce === undefined ? 'partial' : 'none',

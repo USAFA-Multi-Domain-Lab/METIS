@@ -46,7 +46,7 @@ export default function ButtonSvgPanel_v2({
           type={type}
           size={size}
           onClick={() => onButtonClick(type)}
-          tooltipDescription={getTooltip(type)}
+          description={getTooltip(type)}
         />
       ))}
     </div>

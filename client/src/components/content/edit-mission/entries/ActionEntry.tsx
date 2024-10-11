@@ -163,7 +163,7 @@ export default function ActionEntry({
           type: 'remove',
           key: 'remove',
           onClick: async () => await handleDeleteEffectRequest(effect),
-          tooltipDescription: 'Delete effect.',
+          description: 'Delete effect.',
         },
       }
 

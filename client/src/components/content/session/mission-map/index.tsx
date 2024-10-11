@@ -465,7 +465,7 @@ export default function MissionMap({
             }
           }
         },
-        tooltipDescription:
+        description:
           'Zoom in. \n*Scrolling on the map will also zoom in and out.*',
         cursor: 'zoom-in',
       },
@@ -483,7 +483,7 @@ export default function MissionMap({
             }
           }
         },
-        tooltipDescription:
+        description:
           'Zoom out. \n*Scrolling on the map will also zoom in and out.*',
         cursor: 'zoom-out',
       },
@@ -491,7 +491,7 @@ export default function MissionMap({
         type: 'question',
         key: 'question',
         onClick: () => {},
-        tooltipDescription:
+        description:
           '##### Mission Map\n' +
           'This map is a layout of the nodes in the mission and their order of progression (left to right). \n' +
           '\t\n' +

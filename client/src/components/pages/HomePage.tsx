@@ -45,6 +45,7 @@ export default function HomePage(): JSX.Element | null {
     handleError,
     notify,
     prompt,
+    showButtonMenu,
   } = globalContext.actions
 
   /* -- REFS -- */

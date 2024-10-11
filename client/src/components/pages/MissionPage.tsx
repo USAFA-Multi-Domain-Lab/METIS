@@ -256,7 +256,7 @@ export default function MissionPage({
           {
             type: 'cancel',
             key: 'node-button-deselect',
-            tooltipDescription: 'Deselect this node (Closes panel view also).',
+            description: 'Deselect this node (Closes panel view also).',
             onClick: () => mission.select(nextNode!.force),
           },
         ]
@@ -274,14 +274,13 @@ export default function MissionPage({
           deselect: {
             type: 'cancel',
             key: 'prototype-button-deselect',
-            tooltipDescription:
-              'Deselect this prototype (Closes panel view also).',
+            description: 'Deselect this prototype (Closes panel view also).',
             onClick: () => mission.deselect(),
           } as TPrototypeButton,
           add: {
             type: 'add',
             key: 'prototype-button-add',
-            tooltipDescription: 'Create an adjacent prototype on the map.',
+            description: 'Create an adjacent prototype on the map.',
             onClick: (_, prototype) => {
               onPrototypeAddRequest(prototype)
             },
@@ -289,7 +288,7 @@ export default function MissionPage({
           move: {
             type: 'reorder',
             key: 'prototype-button-move',
-            tooltipDescription: 'Move this prototype to another location.',
+            description: 'Move this prototype to another location.',
             onClick: (_, prototype) => {
               onPrototypeMoveRequest(prototype)
             },
@@ -297,13 +296,13 @@ export default function MissionPage({
           transform_cancel: {
             type: 'cancel',
             key: 'prototype-button-add-cancel',
-            tooltipDescription: 'Cancel action.',
+            description: 'Cancel action.',
             onClick: () => (mission.transformation = null),
           } as TPrototypeButton,
           remove: {
             type: 'remove',
             key: 'prototype-button-remove',
-            tooltipDescription: 'Delete this prototype.',
+            description: 'Delete this prototype.',
             disabled: mission.prototypes.length < 2 ? 'full' : 'none',
             onClick: (_, prototype) => {
               onPrototypeDeleteRequest(prototype)
@@ -603,14 +602,14 @@ export default function MissionPage({
         mission.deselect()
         activateNodeStructuring(true)
       },
-      tooltipDescription: 'Edit the structure and order of nodes.',
+      description: 'Edit the structure and order of nodes.',
       disabled: nodeStructuringIsActive ? 'full' : 'none',
     },
     {
       type: 'save',
       key: 'save',
       onClick: save,
-      tooltipDescription: 'Save changes.',
+      description: 'Save changes.',
       disabled: !areUnsavedChanges ? 'full' : 'none',
     },
   ]

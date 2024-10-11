@@ -192,18 +192,24 @@ export function useListComponent<
  * @param callback The callback to call when the event is fired.
  * @param dependencies The dependencies to use for the callback.
  */
-export function useEventListener<TEventMethod extends string>(
-  target: TEventListenerTarget<TEventMethod> | null,
+export function useEventListener<
+  TEventMethod extends string,
+  TCallbackArgs extends Array<any>,
+>(
+  target: TEventListenerTarget<TEventMethod, TCallbackArgs> | null,
   methods: TEventMethod | TEventMethod[],
-  callback: () => any,
+  callback: (...args: TCallbackArgs) => any,
   dependencies: React.DependencyList = [],
 ): void {
   /**
    * Cached callback function.
    */
-  const listener = useCallback(() => {
-    callback()
-  }, [target, ...dependencies])
+  const listener = useCallback(
+    (...args: TCallbackArgs) => {
+      callback(...args)
+    },
+    [target, ...dependencies],
+  )
 
   /* -- effect -- */
 
@@ -308,7 +314,10 @@ export function useResizeObserver(
  * Interface for making a class compatible with the `useEventListener`
  * hook.
  */
-export interface TEventListenerTarget<TEventMethod extends string> {
+export interface TEventListenerTarget<
+  TEventMethod extends string,
+  TCallbackArgs extends Array<any> = [],
+> {
   /**
    * Adds an event listener to the target.
    * @param method The method of the event to listen for.
@@ -316,14 +325,20 @@ export interface TEventListenerTarget<TEventMethod extends string> {
    * @returns The target with the event listener added.
    *
    */
-  addEventListener: (method: TEventMethod, callback: () => any) => void
+  addEventListener: (
+    method: TEventMethod,
+    callback: (...args: TCallbackArgs) => any,
+  ) => void
   /**
    * Removes an event listener from the target.
    * @param method The method of the event to listen for.
    * @param callback The callback of the listener to remove.
    * @returns The target with the event listener remove.
    */
-  removeEventListener: (method: TEventMethod, callback: () => any) => void
+  removeEventListener: (
+    method: TEventMethod,
+    callback: (...args: TCallbackArgs) => any,
+  ) => void
 }
 
 /**

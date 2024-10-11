@@ -11,7 +11,8 @@
   &.Selectable {
     cursor: pointer;
 
-    &:hover {
+    &:hover,
+    &.ButtonMenuHighlight {
       $hover-color: $color-alt1;
 
       background-color: $node-blue;

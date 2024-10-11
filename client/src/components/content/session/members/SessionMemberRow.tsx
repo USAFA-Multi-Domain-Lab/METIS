@@ -50,14 +50,14 @@ export default function SessionMemberRow({
         type: 'kick',
         key: 'kick',
         onClick: () => onClickKick(),
-        tooltipDescription:
+        description:
           'Kick member from the session (Can still choose to rejoin).',
       },
       {
         type: 'ban',
         key: 'ban',
         onClick: () => onClickBan(),
-        tooltipDescription: 'Ban member from the session (Cannot rejoin).',
+        description: 'Ban member from the session (Cannot rejoin).',
       },
     ]
   })

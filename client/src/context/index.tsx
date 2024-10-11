@@ -5,6 +5,8 @@ import {
   TPromptResult,
   TPrompt_P,
 } from 'src/components/content/communication/Prompt'
+import { TButtonMenu_P } from 'src/components/content/user-controls/buttons/ButtonMenu'
+import { TButtonSvgType } from 'src/components/content/user-controls/buttons/ButtonSvg'
 import { TButtonText_P } from 'src/components/content/user-controls/buttons/ButtonText'
 import { PAGE_REGISTRY, TPage_P } from 'src/components/pages'
 import ServerConnection, { IServerConnectionOptions } from 'src/connect/servers'
@@ -21,6 +23,7 @@ import ObjectToolbox, {
   AnyObject,
   TWithKey,
 } from '../../../shared/toolbox/objects'
+import { Vector2D } from '../../../shared/toolbox/space'
 import StringToolbox from '../../../shared/toolbox/strings'
 
 /* -- constants -- */
@@ -45,6 +48,7 @@ const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
   loadingMinTimeReached: false,
   pageSwitchMinTimeReached: true,
   error: null,
+  buttonMenu: null,
   tooltips: React.createRef<HTMLDivElement>(),
   tooltipDescription: '',
   notifications: [],
@@ -163,6 +167,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
   const [error, setError] = context.error
   const [tooltips, setTooltips] = context.tooltips
   const [tooltipDescription, setTooltipDescription] = context.tooltipDescription
+  const [buttonMenu, setButtonMenu] = context.buttonMenu
   const [notifications, setNotifications] = context.notifications
   const [promptData, setPromptData] = context.promptData
 
@@ -272,6 +277,10 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
       // for the loading page is properly
       // displayed.
       window.scrollTo(0, 0)
+      // Hide the button menu in case it is
+      // currently displayed.
+      setButtonMenu(null)
+
       // Actually switches the page. Called after any confirmations.
       const realizePageSwitch = (): void => {
         // Display to the user that the
@@ -551,6 +560,65 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
         setPromptData(promptData)
       })
     },
+    showButtonMenu: <TButton extends TButtonSvgType>(
+      buttons: TButton[],
+      onButtonClick: (button: TButton) => void,
+      options: TShowButtonMenuOptions<TButton> = {},
+    ): void => {
+      // Parse options.
+      const {
+        position = new Vector2D(100, 100),
+        positioningTarget,
+        highlightTarget,
+        getDescription,
+      } = options
+      // Prepare the button menu props.
+      const buttonMenuProps: TWithKey<TButtonMenu_P> = {
+        key: StringToolbox.generateRandomId(),
+        buttons,
+        position,
+        highlightTarget,
+        onButtonClick: (button) => {
+          console.log('Button clicked:', button)
+          // Preprocess the button click,
+          // starting by hiing the button menu.
+          setButtonMenu(null)
+
+          // Call the callback passed.
+          onButtonClick(button as TButton)
+        },
+        onCloseRequest: () => {
+          console.log('close')
+          setButtonMenu(null)
+        },
+      }
+
+      // If a target element is provided, then
+      // position the button menu relative to
+      // the target element.
+      if (positioningTarget) {
+        // Get the bounding client rect of the target element.
+        let rect: DOMRect = positioningTarget.getBoundingClientRect()
+
+        // Set the position of the button menu
+        // relative to the target element.
+        buttonMenuProps.position = new Vector2D(rect.right, rect.bottom)
+      }
+
+      // If a description function is provided,
+      // pass a new function with pre-processing
+      // that calls the function provided.
+      if (getDescription) {
+        buttonMenuProps.getDescription = (button) =>
+          getDescription(button as TButton)
+      }
+
+      // Update the state.
+      setButtonMenu(buttonMenuProps)
+    },
+    hideButtonMenu: (): void => {
+      setButtonMenu(null)
+    },
     logout: async () => {
       // Extract context actions.
       const { beginLoading, finishLoading, handleError, navigateTo } =
@@ -678,6 +746,11 @@ export type TGlobalContextValues = {
   loadingMinTimeReached: boolean
   pageSwitchMinTimeReached: boolean
   error: TAppError | null
+  /**
+   * The button menu to display.
+   * @note If null, no button menu will be displayed.
+   */
+  buttonMenu: TWithKey<TButtonMenu_P> | null
   tooltips: React.RefObject<HTMLDivElement>
   tooltipDescription: string
   notifications: Notification[]
@@ -768,6 +841,21 @@ export type TGlobalContextActions = {
     options?: TPromptOptions<TChoice, TList>,
   ) => Promise<TPromptResult<TChoice, TList>>
   /**
+   * Displays a button menu at the specified position.
+   * @param buttons The buttons to display in the menu.
+   * @param onButtonClick The function to call when a button is clicked.
+   * @param options Additional configuration for the button menu.
+   */
+  showButtonMenu: <TButton extends TButtonSvgType>(
+    buttons: TButton[],
+    onButtonClick: (button: TButton) => void,
+    options?: TShowButtonMenuOptions<TButton>,
+  ) => void
+  /**
+   * Hides the button menu if it is currently displayed.
+   */
+  hideButtonMenu: () => void
+  /**
    * This will notify the user with a notification bubble.
    * @param message The message to display in the notification bubble.
    * @param options The options to use for the notification.
@@ -853,3 +941,40 @@ export type TNavigationMiddleware = <TProps extends TPage_P>(
   to: keyof typeof PAGE_REGISTRY,
   next: () => void,
 ) => void
+
+/**
+ * Options for showing a button menu.
+ */
+export type TShowButtonMenuOptions<TButton extends TButtonSvgType> = {
+  /**
+   * The focal position at which to place the button menu.
+   * @note The actual position may be adjusted to ensure the
+   * button menu is fully visible on the screen.
+   * @note If not provided, this will be determined by the
+   * current mouse position.
+   */
+  position?: TButtonMenu_P['position']
+  /**
+   * A target element relative to which the button menu can
+   * be positioned.
+   * @note This will nullify the `position` property, if
+   * provided.
+   */
+  positioningTarget?: HTMLElement
+  /**
+   * A target element to highlight, showing the relationship
+   * between the element and the button menu.
+   * @note Applies 'ButtonMenuHighlight' class to the target element.
+   * Styles should be defined in the CSS.
+   */
+  highlightTarget?: HTMLElement
+  /**
+   * A function to get the description for a button.
+   * @param button The button for which to get the description.
+   * @returns The description for the button, if null, the type
+   * will be used in its plain text form.
+   * @note If this function is not provided, the type will be
+   * used in its plain text form.
+   */
+  getDescription?: (button: TButton) => string | null
+}

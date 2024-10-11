@@ -24,7 +24,7 @@ import ListPage, { TListPage_P } from './pages/ListPage'
 export const OPTIONS_COLUMN_WIDTH = '3.5em'
 
 /* -- CONTEXT -- */
-/**
+
 /**
  * Context for the list, which will help distribute
  * list properties to its children.

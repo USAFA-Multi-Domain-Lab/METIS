@@ -11,7 +11,7 @@ import './ButtonSvg.scss'
 export default function ButtonSvg({
   type,
   size = 'regular',
-  tooltipDescription = null,
+  description: description = null,
   uniqueClassList = [],
   disabled = 'none',
   cursor = 'pointer',
@@ -66,6 +66,14 @@ export default function ButtonSvg({
           backgroundPosition: 'center',
         }
         break
+      case 'wide':
+        result = {
+          backgroundImage: `url(${require(`../../../../assets/images/icons/${type}.svg`)})`,
+          backgroundSize: '0.65em',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: '0% center',
+        }
+        break
     }
 
     // Offset the background position for 'upload' and
@@ -83,7 +91,31 @@ export default function ButtonSvg({
     return result
   })
 
-  /* -- render -- */
+  /* -- RENDER -- */
+
+  /**
+   * The JSX for the description.
+   */
+  const descriptionJsx = compute<JSX.Element | null>(() => {
+    // If there is no description, return null.
+    if (!description) return null
+
+    switch (size) {
+      // Return the description as a tooltip
+      // for 'small' and 'regular' sizes.
+      case 'regular':
+      case 'small':
+        return <Tooltip description={description} />
+      // Return the description as a label
+      // for 'wide' size.
+      case 'wide':
+        return (
+          <div className='ButtonLabel'>
+            <div className='ButtonLabelText'>{description}</div>
+          </div>
+        )
+    }
+  })
 
   return (
     <div
@@ -92,7 +124,7 @@ export default function ButtonSvg({
       onClick={onClick}
       onCopy={onCopy}
     >
-      {tooltipDescription ? <Tooltip description={tooltipDescription} /> : null}
+      {descriptionJsx}
     </div>
   )
 }
@@ -102,7 +134,7 @@ export default function ButtonSvg({
 /**
  * The size of a SVG button.
  */
-export type TButtonSvgSize = 'small' | 'regular'
+export type TButtonSvgSize = 'small' | 'regular' | 'wide'
 
 /**
  * Props for `ButtonSVG` component.
@@ -118,10 +150,13 @@ export type TButtonSvg_P = {
    */
   size?: TButtonSvgSize
   /**
-   * The description for the tooltip. If null, no tooltip is displayed.
+   * The description for the button.
+   * @note In 'small' and 'regular' sizes, this will be
+   * displayed as a tooltip, with 'wide' size, this will
+   * be displayed as beside the icon at all times.
    * @default null
    */
-  tooltipDescription?: string | null
+  description?: string | null
   /**
    * Unique class lists to apply to the component.
    * @default []
@@ -172,6 +207,7 @@ export type TButtonSvgType =
   | 'kick'
   | 'launch'
   | 'lock'
+  | 'open'
   | 'options'
   | 'question'
   | 'remove'

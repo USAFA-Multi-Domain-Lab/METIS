@@ -114,7 +114,7 @@ export default function LaunchPage({
           key: 'warning',
           onClick: () => {},
           cursor: 'help',
-          tooltipDescription:
+          description:
             'If this conflict is not resolved, this mission can still be used to launch a session, but the session may not function as expected.',
         },
       }

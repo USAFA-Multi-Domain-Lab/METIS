@@ -241,7 +241,7 @@ export default function NodeEntry({
             type: 'remove',
             key: 'remove',
             onClick: async () => await handleDeleteActionRequest(action),
-            tooltipDescription: deleteTooltipDescription,
+            description: deleteTooltipDescription,
             disabled: node.actions.size < 2 ? 'partial' : 'none',
           },
         }

@@ -1,4 +1,5 @@
-import { ReactNode } from 'react'
+import { ReactNode, useRef } from 'react'
+import { useGlobalContext } from 'src/context'
 import { compute } from 'src/toolbox'
 import ButtonSvg, {
   TButtonSvgType,
@@ -15,23 +16,22 @@ export default function ListItem<T extends TListItem>({
 }: TListItem_P<T>): JSX.Element | null {
   /* -- STATE -- */
 
+  const globalContext = useGlobalContext()
   const listContext = useListContext<T>()
+  const { showButtonMenu } = globalContext.actions
   const {
     columns,
     itemButtons,
     minNameColumnWidth,
     getCellText,
-    getItemTooltip,
+    getItemButtonTooltip,
     getColumnWidth,
     onSelection,
+    onItemButtonClick,
   } = listContext
+  const root = useRef<HTMLDivElement>(null)
 
   /* -- COMPUTED -- */
-
-  /**
-   * The tooltip description for the item.
-   */
-  const itemTooltipDescription = compute<string>(() => getItemTooltip(item))
 
   /**
    * Root class name for the component.
@@ -71,6 +71,20 @@ export default function ListItem<T extends TListItem>({
     }
   })
 
+  /* -- FUNCTIONS -- */
+
+  /**
+   * Handles the click event for the item
+   * options button.
+   */
+  const onOptionsClick = (event: React.MouseEvent) => {
+    showButtonMenu(itemButtons, (button) => onItemButtonClick(button, item), {
+      positioningTarget: event.target as HTMLDivElement,
+      highlightTarget: root.current ?? undefined,
+      getDescription: (button) => getItemButtonTooltip(button, item),
+    })
+  }
+
   /* -- RENDER -- */
 
   /**
@@ -95,7 +109,12 @@ export default function ListItem<T extends TListItem>({
     if (itemButtons.length) {
       result.push(
         <div key={'options'} className='ItemCellLike ItemOptions'>
-          <ButtonSvg type='options' size='small' onClick={() => {}} />
+          <ButtonSvg
+            type='options'
+            size='small'
+            onClick={onOptionsClick}
+            description={'View option menu'}
+          />
         </div>,
       )
     }
@@ -118,7 +137,7 @@ export default function ListItem<T extends TListItem>({
 
   // Render the list item.
   return (
-    <div className={rootClass} style={rootStyle}>
+    <div className={rootClass} style={rootStyle} ref={root}>
       {cellsJsx}
     </div>
   )

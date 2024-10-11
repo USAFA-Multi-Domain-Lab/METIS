@@ -100,9 +100,12 @@ $z-index-notifications: 75;
 $z-index-error-page: 80;
 $z-index-loading-page: 90;
 $z-index-confirmation: 100;
+$z-index-context-blocker: 200;
+$z-index-context-pop-up: 201;
 $z-index-tooltips: 250;
 
 // navigation height
 $nav-height: 90px;
 $button-svg-small-size: 28px;
 $button-svg-regular-size: 28.8px;
+$button-svg-wide-size: 20px;

@@ -12,6 +12,14 @@
   width: 1em;
   height: 0.96em;
 
+  .ButtonLabel {
+    display: flex;
+    align-items: center;
+    margin-left: 2em;
+    height: 100%;
+    font-size: 0.75rem;
+  }
+
   &.small {
     margin: 0 0.15em;
     font-size: $button-svg-small-size;
@@ -33,6 +41,12 @@
     font-size: $button-svg-regular-size;
   }
 
+  &.wide {
+    width: unset;
+    margin: 0 0.15em;
+    font-size: $button-svg-wide-size;
+  }
+
   &.lock:hover {
     cursor: help;
     filter: none;
@@ -50,5 +64,9 @@
     background: none;
     pointer-events: none;
     opacity: 0;
+  }
+
+  &.download {
+    background-position-y: 0.4em !important;
   }
 }

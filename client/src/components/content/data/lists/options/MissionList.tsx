@@ -62,6 +62,9 @@ export default function MissionList({
   const itemButtons = compute<TButtonSvgType[]>(() => {
     let results: TButtonSvgType[] = []
 
+    // Add the open button.
+    results.push('open')
+
     // If the user has the proper authorization, add
     // the launch button.
     if (login.user.isAuthorized('sessions_write')) {
@@ -71,7 +74,7 @@ export default function MissionList({
     // If the user has the proper authorization, add
     // the edit, remove, copy, and download buttons.
     if (login.user.isAuthorized('missions_write')) {
-      results.push('copy', 'remove', 'download')
+      results.push('download', 'copy', 'remove')
     }
 
     return results
@@ -193,14 +196,16 @@ export default function MissionList({
     item,
   ) => {
     switch (button) {
+      case 'open':
+        return 'Open'
       case 'launch':
-        return 'Launch session.'
+        return 'Launch session'
       case 'copy':
-        return 'Copy mission.'
-      case 'remove':
-        return 'Delete mission.'
+        return 'Duplicate'
       case 'download':
-        return 'Export this mission as a .metis file to your local system.'
+        return 'Export to .metis file'
+      case 'remove':
+        return 'Delete'
       default:
         return ''
     }
@@ -267,6 +272,9 @@ export default function MissionList({
     mission,
   ) => {
     switch (button) {
+      case 'open':
+        onMissionSelection(mission)
+        break
       case 'launch':
         onLaunchRequest(mission)
         break
