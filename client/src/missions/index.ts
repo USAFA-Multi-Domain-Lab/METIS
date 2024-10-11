@@ -70,14 +70,14 @@ export default class ClientMission
   /**
    * The context in which the mission is being used.
    */
-  private _context: TClientMissionContext = 'session'
+  private _context: TClientMissionContext | null = null
   /**
    * The context in which the mission is being used.
    */
-  public get context(): TClientMissionContext {
+  public get context(): TClientMissionContext | null {
     return this._context
   }
-  public set context(value: TClientMissionContext) {
+  public set context(value: TClientMissionContext | null) {
     if (value === 'edit') this._nonRevealedDisplayMode = 'show'
     this._context = value
   }
