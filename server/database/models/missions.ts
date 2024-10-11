@@ -1,7 +1,8 @@
 import Mission, { TCommonMissionJson } from 'metis/missions'
 import { TCommonMissionActionJson } from 'metis/missions/actions'
 import { TCommonMissionForceJson } from 'metis/missions/forces'
-import { TCommonMissionNodeJson, TMissionNodeJson } from 'metis/missions/nodes'
+import { TCommonMissionNodeJson } from 'metis/missions/nodes'
+import { TCommonMissionPrototypeJson } from 'metis/missions/nodes/prototypes'
 import MetisDatabase from 'metis/server/database'
 import SanitizedHTML from 'metis/server/database/schema-types/html'
 import ServerMission from 'metis/server/missions'
@@ -45,11 +46,10 @@ const isNonNegativeInteger = (value: number): boolean => {
  * @param next The next function to call.
  */
 const validate_missions = (mission: any, next: any): void => {
-  // Get the parent structure.
-  let parentStructure: TCommonMissionJson['nodeStructure'] =
-    mission.nodeStructure
+  // Get the initial structure.
+  let initStructure: TCommonMissionJson['structure'] = mission.structure
   // Array to store the structure keys.
-  let prototypeIds: TMissionNodeJson['structureKey'][] = []
+  let structureKeys: TCommonMissionPrototypeJson['structureKey'][] = []
   // Object to store results.
   let results: { error?: Error } = {}
   // Object to store existing _id's.
@@ -58,26 +58,26 @@ const validate_missions = (mission: any, next: any): void => {
   // This will ensure the node structure
   // is valid.
   const validateNodeStructure = (
-    nodeStructure: any = parentStructure,
-    parentKey: string = 'ROOT',
+    currentStructure: any = initStructure,
+    rootKey: string = 'ROOT',
   ): { error?: Error } => {
-    if (!(nodeStructure instanceof Object)) {
+    if (!(currentStructure instanceof Object)) {
       let error: Error = new Error(
-        `Error in nodeStructure:\n"${parentKey}" is set to ${nodeStructure}, which is not an object.`,
+        `Error in the mission's structure:\n"${rootKey}" is set to ${currentStructure}, which is not an object.`,
       )
       error.name = MetisDatabase.ERROR_BAD_DATA
       return { error }
     }
 
-    for (let [key, value] of Object.entries(nodeStructure)) {
-      if (prototypeIds.includes(key)) {
+    for (let [key, value] of Object.entries(currentStructure)) {
+      if (structureKeys.includes(key)) {
         let error: Error = new Error(
-          `Error in nodeStructure:\nDuplicate structureKey used (${key}).`,
+          `Error in the mission's structure:\nDuplicate structureKey used (${key}).`,
         )
         error.name = MetisDatabase.ERROR_BAD_DATA
         return { error }
       } else {
-        prototypeIds.push(key)
+        structureKeys.push(key)
       }
 
       let results: { error?: Error } = validateNodeStructure(value, key)
@@ -161,32 +161,66 @@ const validate_missions = (mission: any, next: any): void => {
     }
 
     // Loop through each force.
-    for (let force of mission.forces) {
-      // Create a copy of the prototypeIds.
-      let withoutNode = [...prototypeIds]
+    for (let force of mission.forces as TCommonMissionForceJson[]) {
+      // Used to ensure each node has a corresponding prototype.
+      let prototypesRetrieved: TCommonMissionPrototypeJson[] = []
 
       // Loop through nodes.
       for (let node of force.nodes) {
-        // Get the structure key.
-        let structureKey = node.structureKey
+        // Get the prototype node's ID.
+        let prototypeId = node.prototypeId
+        // Get the prototype.
+        let prototype = Mission.getPrototype<TCommonMissionJson>(
+          mission,
+          prototypeId,
+        )
 
-        // Ensure the structure key exists.
-        if (!prototypeIds.includes(structureKey)) {
+        // Ensure the prototype ID exists.
+        if (!prototype) {
           results.error = new Error(
-            `Error in mission:\nStructure key "${structureKey}" for "${node.name}" in "${force.name}" does not exist in the mission's nodeStructure.`,
+            `Error in mission:\nPrototype ID "${prototypeId}" for "${node.name}" in "${force.name}" does not exist in the mission's prototypes.`,
           )
           results.error.name = MetisDatabase.ERROR_BAD_DATA
           return
         }
 
-        // Remove the structure key from the copy.
-        withoutNode = withoutNode.filter((key) => key !== structureKey)
+        // Ensure the node has a unique prototype.
+        if (prototypesRetrieved.includes(prototype)) {
+          results.error = new Error(
+            `Error in mission:\nPrototype ID "${prototypeId}" for "${node.name}" in "${force.name}" has already been used for another node.`,
+          )
+          results.error.name = MetisDatabase.ERROR_BAD_DATA
+          return
+        }
+
+        // Ensure the prototype has the correct structure key.
+        if (!structureKeys.includes(prototype.structureKey)) {
+          results.error = new Error(
+            `Error in mission:\nStructure key "${prototype.structureKey}" is missing from "${force.name}".`,
+          )
+          results.error.name = MetisDatabase.ERROR_BAD_DATA
+          return
+        }
+
+        // Add the prototype to the array.
+        prototypesRetrieved.push(prototype)
       }
 
-      // Ensure all nodes are present.
-      if (withoutNode.length > 0) {
+      // Ensure all prototype nodes are present.
+      let isMissingPrototype: boolean =
+        prototypesRetrieved.length !== mission.prototypes.length
+
+      // If a prototype node is missing from the force...
+      if (isMissingPrototype) {
+        // ...then find the missing prototype node.
+        let prototypes = mission.prototypes as TCommonMissionPrototypeJson[]
+        let missingPrototype = prototypes.find(
+          (prototype) => !prototypesRetrieved.includes(prototype),
+        )
+
+        // Send the error.
         results.error = new Error(
-          `Error in mission:\nStructure key "${withoutNode[0]}" is missing from "${force.name}".`,
+          `Error in mission:\nPrototype Node with ID "${missingPrototype?._id}" is missing from "${force.name}".`,
         )
         results.error.name = MetisDatabase.ERROR_BAD_DATA
         return
@@ -213,6 +247,18 @@ const validate_missions = (mission: any, next: any): void => {
   if (results.error) return next(results.error)
 
   return next()
+}
+
+/**
+ * Validates the depth padding for a prototype node.
+ * @param depthPadding The depth padding to validate.
+ */
+const validate_mission_prototypes_depthPadding = (
+  depthPadding: TCommonMissionPrototypeJson['depthPadding'],
+): boolean => {
+  let nonNegativeInteger: boolean = isNonNegativeInteger(depthPadding)
+
+  return nonNegativeInteger
 }
 
 /**
@@ -268,18 +314,6 @@ const validate_missions_forces_nodes_color = (
   let isValidColor: boolean = HEX_COLOR_REGEX.test(color)
 
   return isValidColor
-}
-
-/**
- * Validates the depth padding for a mission-node.
- * @param depthPadding The depth padding to validate.
- */
-const validate_mission_forces_nodes_depthPadding = (
-  depthPadding: TCommonMissionNodeJson['depthPadding'],
-): boolean => {
-  let nonNegativeInteger: boolean = isNonNegativeInteger(depthPadding)
-
-  return nonNegativeInteger
 }
 
 /**
@@ -527,9 +561,22 @@ export const MissionSchema: Schema = new Schema(
     versionNumber: { type: Number, required: true },
     seed: { type: ObjectId, required: true, auto: true },
     deleted: { type: Boolean, required: true, default: false },
-    nodeStructure: {
+    structure: {
       type: {},
       required: true,
+    },
+    prototypes: {
+      type: [
+        {
+          _id: { type: String, required: true },
+          structureKey: { type: String, required: true },
+          depthPadding: {
+            type: Number,
+            required: true,
+            validate: validate_mission_prototypes_depthPadding,
+          },
+        },
+      ],
     },
     forces: {
       type: [
@@ -555,7 +602,7 @@ export const MissionSchema: Schema = new Schema(
             type: [
               {
                 _id: { type: String, required: true },
-                structureKey: { type: String, required: true },
+                prototypeId: { type: String, required: true },
                 name: {
                   type: String,
                   required: true,
@@ -571,11 +618,6 @@ export const MissionSchema: Schema = new Schema(
                   type: SanitizedHTML,
                   required: false,
                   default: '',
-                },
-                depthPadding: {
-                  type: Number,
-                  required: true,
-                  validate: validate_mission_forces_nodes_depthPadding,
                 },
                 executable: { type: Boolean, required: true },
                 device: { type: Boolean, required: true },

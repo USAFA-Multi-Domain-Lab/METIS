@@ -4,6 +4,7 @@ import ClientMission, { TClientMissionTypes } from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
 import ClientOutput from 'src/missions/forces/output'
 import ClientMissionNode from 'src/missions/nodes'
+import ClientMissionPrototype from 'src/missions/nodes/prototypes'
 import ClientUser from 'src/users'
 import {
   TGenericServerEvents,
@@ -748,11 +749,11 @@ export default class SessionClient extends Session<TClientMissionTypes> {
    */
   private onStart = (event: TResponseEvents['session-started']): void => {
     // Gather details.
-    let { nodeStructure, forces } = event.data
+    let { structure, forces, prototypes } = event.data
     // Mark the session as started.
     this._state = 'started'
     // Import start data, revealing forces to user.
-    this.mission.importStartData(nodeStructure, forces)
+    this.mission.importStartData(structure, forces, prototypes)
     // Remap actions.
     this.mapActions()
   }
@@ -997,7 +998,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
    */
   private onNodeOpened = (event: TServerEvents['node-opened']): void => {
     // Extract data.
-    let { nodeId, revealedChildNodes } = event.data
+    let { nodeId, revealedChildNodes, revealedChildPrototypes } = event.data
 
     // Find the node, given the ID.
     let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
@@ -1008,6 +1009,20 @@ export default class SessionClient extends Session<TClientMissionTypes> {
         `Event "node-opened" was triggered, but the node with the given nodeId ("${nodeId}") could not be found.`,
       )
     }
+
+    // Find the prototype, given the ID.
+    let prototype: ClientMissionPrototype | undefined =
+      this.mission.getPrototype(node.prototype._id)
+
+    // Handle prototype not found.
+    if (prototype === undefined) {
+      throw new Error(
+        `Event "node-opened" was triggered, but the prototype with the given prototypeId ("${node.prototype._id}") could not be found.`,
+      )
+    }
+
+    // Update the prototype's revealed child nodes.
+    prototype.populateChildren(revealedChildPrototypes)
 
     // Open node, if there are revealed
     // child nodes.
@@ -1061,7 +1076,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
     event: TServerEvents['action-execution-completed'],
   ): void => {
     // Extract data.
-    let { outcome, revealedChildNodes } = event.data
+    let { outcome, revealedChildNodes, revealedChildPrototypes } = event.data
     let { actionId } = outcome
 
     // Find the action given the action ID.
@@ -1076,6 +1091,23 @@ export default class SessionClient extends Session<TClientMissionTypes> {
 
     // Get the action's node.
     let node: ClientMissionNode = action.node
+
+    // Handle revealed child prototypes.
+    if (revealedChildPrototypes) {
+      // Find the prototype, given the ID.
+      let prototype: ClientMissionPrototype | undefined =
+        this.mission.getPrototype(node.prototype._id)
+
+      // Handle prototype not found.
+      if (prototype === undefined) {
+        throw new Error(
+          `Event "action-execution-completed" was triggered, but the prototype with the given prototypeId ("${node.prototype._id}") could not be found.`,
+        )
+      }
+
+      // Update the prototype's revealed child nodes.
+      prototype.populateChildren(revealedChildPrototypes)
+    }
 
     // Handle outcome on the node.
     node.loadOutcome(outcome, { revealedChildNodes })

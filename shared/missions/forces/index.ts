@@ -10,6 +10,7 @@ import {
   TMissionNodeOptions,
   TNode,
 } from '../nodes'
+import { TCommonMissionPrototype } from '../nodes/prototypes'
 import { TCommonOutput, TCommonOutputJson, TOutput } from './output'
 
 /* -- CLASSES -- */
@@ -73,18 +74,49 @@ export abstract class MissionForce<
       if (cursor.opened) {
         for (let child of cursor.children) {
           if (child.hasChildren) {
-            cursorStructure[child.structureKey] = algorithm(child)
+            cursorStructure[child.prototype.structureKey] = algorithm(child)
           } else {
-            cursorStructure[child.structureKey] = {}
+            cursorStructure[child.prototype.structureKey] = {}
           }
         }
       }
       return cursorStructure
     }
-    let structure = algorithm()
 
     // Return the result of the operation.
     return algorithm()
+  }
+
+  // Implemented
+  public get revealedPrototypes(): TCommonMissionPrototype[] {
+    // The revealed prototypes.
+    let revealedPrototypes: TCommonMissionPrototype[] = []
+
+    /**
+     * Recursively finds prototypes from the node structure.
+     */
+    const findPrototypes = (cursor: AnyObject = this.revealedStructure) => {
+      for (let key of Object.keys(cursor)) {
+        // Get the child structure.
+        let childStructure: AnyObject = cursor[key]
+        // Find the prototype data for the current key.
+        let prototype = this.mission.prototypes.find(
+          ({ structureKey }) => structureKey === key,
+        )
+        // If the prototype was found, add it to the list.
+        if (prototype) {
+          revealedPrototypes.push(prototype)
+        }
+        // Find this prototype's children.
+        findPrototypes(childStructure)
+      }
+    }
+
+    // Find prototypes from the node structure.
+    findPrototypes()
+
+    // Return the revealed prototypes.
+    return revealedPrototypes
   }
 
   /**
@@ -226,8 +258,8 @@ export abstract class MissionForce<
 
   /**
    * This will import raw node data into the mission, creating MissionNode objects from it, and mapping the relationships found in the structure.
-   * @param nodeData The raw node data to import. The originalNodeData property will be updated to this value.
-   * @param nodeStructure The raw node structure to import. The originalNodeStructure property will be updated to this value.
+   * @param data The raw node data to import.
+   * @param options The options for importing the nodes.
    */
   protected importNodes(
     data: TMissionNodeJson[],
@@ -311,13 +343,12 @@ export abstract class MissionForce<
    */
   public static readonly ROOT_NODE_PROPERTIES: TMissionNodeJson = {
     _id: 'ROOT',
-    structureKey: 'ROOT',
+    prototypeId: 'ROOT',
     name: 'ROOT',
     color: '#000000',
     description:
       'Invisible node that is the root of all other nodes in the force.',
     preExecutionText: 'N/A',
-    depthPadding: 0,
     executable: false,
     device: false,
     actions: [],
@@ -425,6 +456,11 @@ export interface TCommonMissionForce {
    * that have been opened.
    */
   get revealedStructure(): AnyObject
+  /**
+   * The revealed prototypes in the force based on the revealed structure and
+   * the nodes that have been opened.
+   */
+  get revealedPrototypes(): TCommonMissionPrototype[]
   /**
    * The outputs for the force's output panel.
    */

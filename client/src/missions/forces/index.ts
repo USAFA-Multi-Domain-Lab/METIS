@@ -118,11 +118,20 @@ export default class ClientMissionForce
         this.nodes.push(
           this.createNode({
             name: prototype._id.substring(0, 8),
-            structureKey: prototype._id,
+            prototypeId: prototype._id,
             color: this.color,
           }),
         )
       }
+    }
+
+    // Remove any nodes that don't have a corresponding prototype.
+    if (this.nodes.length > this.mission.prototypes.length) {
+      this.nodes = this.nodes.filter((node) =>
+        this.mission.prototypes.find(
+          (prototype) => prototype._id === node.prototype._id,
+        ),
+      )
     }
 
     // Reposition nodes and draw the lines between them.
@@ -134,10 +143,10 @@ export default class ClientMissionForce
    * This will position all the nodes with mapX and mapY values
    * that correspond with the current state of the mission.
    * @param parent Recursively used. Don't pass anything.
-   * @param depth Recursively used. Don't pass anything.
    * @param rowCount Recursively used. Don't pass anything.
    * @param extraLines Recursively used. Don't pass anything.
    * @param rowMostLinesFound Recursively used. Don't pass anything.
+   * @param buttonData Recursively used. Don't pass anything.
    * @returns Subcalls of this recursive function will return results used for
    * further position calculations. The final return can be ignored.
    */

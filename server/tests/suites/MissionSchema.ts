@@ -35,9 +35,7 @@ export default function MissionSchema(): Mocha.Suite {
         expect(savedMission.seed).to.equal(testMission.seed)
         // The retrieved mission should have the same
         // nodeStructure as the test mission
-        expect(savedMission.nodeStructure).to.deep.equal(
-          testMission.nodeStructure,
-        )
+        expect(savedMission.nodeStructure).to.deep.equal(testMission.structure)
         // The retrieved mission should have the same
         // forces as the test mission
         expect(savedMission.forces).to.deep.equal(testMission.forces)
@@ -70,7 +68,7 @@ export default function MissionSchema(): Mocha.Suite {
         // The retrieved mission should have the same
         // nodeStructure as the test mission
         expect(retrievedMission.nodeStructure).to.deep.equal(
-          testMission.nodeStructure,
+          testMission.structure,
         )
         // The retrieved mission should have the same
         // forces as the test mission

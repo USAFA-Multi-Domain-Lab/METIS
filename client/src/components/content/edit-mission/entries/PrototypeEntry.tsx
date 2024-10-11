@@ -1,6 +1,9 @@
+import { useState } from 'react'
 import ClientMissionPrototype from 'src/missions/nodes/prototypes'
 import { compute } from 'src/toolbox'
+import { usePostInitEffect } from 'src/toolbox/hooks'
 import { DetailLocked } from '../../form/DetailLocked'
+import { DetailNumber } from '../../form/DetailNumber'
 import { ButtonText } from '../../user-controls/ButtonText'
 import './index.scss'
 import EntryNavigation from './navigation/EntryNavigation'
@@ -10,18 +13,17 @@ import EntryNavigation from './navigation/EntryNavigation'
  */
 export default function PrototypeEntry({
   prototype,
+  prototype: { mission },
   handleChange,
   onAddRequest,
   onDeleteRequest,
 }: TPrototypeEntry): JSX.Element | null {
-  /* -- GLOBAL CONTEXT -- */
-
   /* -- STATE -- */
+  const [depthPadding, setDepthPadding] = useState<number>(
+    prototype.depthPadding,
+  )
 
   /* -- COMPUTED -- */
-
-  const mission = prototype.mission
-
   /**
    * The class name for the delete prototype button.
    */
@@ -38,7 +40,14 @@ export default function PrototypeEntry({
     return classList.join(' ')
   })
 
-  /* -- FUNCTIONS -- */
+  /* -- EFFECTS -- */
+  // Sync the component state with the prototype node.
+  usePostInitEffect(() => {
+    prototype.depthPadding = depthPadding
+
+    // Allow the user to save the changes.
+    handleChange()
+  }, [depthPadding])
 
   /* -- RENDER -- */
 
@@ -56,6 +65,14 @@ export default function PrototypeEntry({
             label='ID'
             stateValue={prototype._id}
             key={`${prototype._id}_name`}
+          />
+          <DetailNumber
+            fieldType='required'
+            label='Depth Padding'
+            stateValue={depthPadding}
+            setState={setDepthPadding}
+            integersOnly={true}
+            key={`${prototype._id}_depthPadding`}
           />
           {/* -- BUTTON(S) -- */}
           <div className='ButtonContainer'>

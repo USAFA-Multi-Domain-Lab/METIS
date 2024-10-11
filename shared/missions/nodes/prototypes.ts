@@ -1,3 +1,4 @@
+import { v4 as generateHash } from 'uuid'
 import { TCommonMission, TCommonMissionTypes, TMission } from '..'
 
 /**
@@ -19,6 +20,22 @@ export default abstract class MissionPrototype<
 
   // Implemented
   public children: TPrototype<T>[]
+
+  // Inherited
+  public structureKey: TCommonMissionPrototype['structureKey']
+
+  /**
+   * Cache for the depth padding of the node.
+   */
+  protected _depthPadding: number
+  // Implemented
+  public get depthPadding(): number {
+    return this._depthPadding
+  }
+  // Implemented
+  public set depthPadding(value: number) {
+    this._depthPadding = value
+  }
 
   // Implemented
   public get firstChild(): TPrototype<T> | null {
@@ -111,22 +128,47 @@ export default abstract class MissionPrototype<
 
   /**
    * @param mission The mission of which the prototype is a part.
-   * @param _id The ID for the prototype, which is referenced within the node structure
-   * of a mission.
+   * @param data The prototype data from which to create the prototype node. Any ommitted values will be set to the default properties defined in MissionPrototype.DEFAULT_PROPERTIES.
    * @param options The options for creating the prototype.
    */
   public constructor(
     mission: TMission<T>,
-    _id: TCommonMissionPrototype['_id'],
+    data: Partial<TCommonMissionPrototypeJson> = MissionPrototype.DEFAULT_PROPERTIES,
     options: TMissionPrototypeOptions<TPrototype<T>> = {},
   ) {
     // Set properties from data.
     this.mission = mission
-    this._id = _id
+    this._id = data._id ?? MissionPrototype.DEFAULT_PROPERTIES._id
+    this.structureKey =
+      data.structureKey ?? MissionPrototype.DEFAULT_PROPERTIES.structureKey
+    this._depthPadding =
+      data.depthPadding ?? MissionPrototype.DEFAULT_PROPERTIES.depthPadding
 
     // Set properties from options.
     this.parent = options.parent ?? null
     this.children = options.children ?? []
+  }
+
+  // Implemented
+  public toJson(
+    options?: TMissionPrototypeJsonOptions,
+  ): TCommonMissionPrototypeJson {
+    return {
+      _id: this._id,
+      depthPadding: this.depthPadding,
+      structureKey: this.structureKey,
+    }
+  }
+
+  /**
+   * The default properties for a `MissionPrototype` object.
+   */
+  public static get DEFAULT_PROPERTIES(): Required<TCommonMissionPrototypeJson> {
+    return {
+      _id: generateHash(),
+      structureKey: generateHash(),
+      depthPadding: 0,
+    }
   }
 }
 
@@ -147,6 +189,16 @@ export interface TCommonMissionPrototype {
    * The ID for the prototype.
    */
   _id: string
+  /**
+   * The amount of visual padding to apply to the left of the node in the tree.
+   */
+  get depthPadding(): number
+  set depthPadding(value: number)
+  /**
+   * The key used in the structure object to represent a node's position and relationships to other
+   * nodes.
+   */
+  structureKey: string
   /**
    * The parent of this prototype in the tree structure.
    */
@@ -179,7 +231,39 @@ export interface TCommonMissionPrototype {
    * The sibling, if any, ordered after this prototype in the structure.
    */
   followingSibling: TCommonMissionPrototype | null
+  /**
+   * Converts the prototype node to JSON.
+   * @param options The options for converting the prototype node to JSON.
+   * @returns the JSON for the prototype node.
+   */
+  toJson: (
+    options?: TMissionPrototypeJsonOptions,
+  ) => TCommonMissionPrototypeJson
 }
+
+/**
+ * Interface of the JSON object for a mission prototype.
+ */
+export type TCommonMissionPrototypeJson = {
+  /**
+   * The ID for the prototype.
+   */
+  _id: string
+  /**
+   * The amount of visual padding to apply to the left of the node in the tree.
+   */
+  depthPadding: number
+  /**
+   * The key used in the structure object to represent a node's position and relationships to other
+   * nodes.
+   */
+  structureKey: string
+}
+
+/**
+ * Options for converting a prototype node to JSON.
+ */
+export type TMissionPrototypeJsonOptions = {}
 
 /**
  * Options for creating a MissionNode object.

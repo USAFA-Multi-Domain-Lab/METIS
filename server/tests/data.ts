@@ -13,7 +13,7 @@ export const createMissionWithNoForceData: Omit<TCommonMissionJson, 'forces'> =
     name: 'No Node Data Mission (To Delete)',
     versionNumber: 1,
     seed: Mission.DEFAULT_PROPERTIES.seed,
-    nodeStructure: {
+    structure: {
       '4767fab5-573e-4df3-b1cd-809240804e92': {},
     },
   }
@@ -22,7 +22,7 @@ export const testMission: TCommonMissionJson = {
   name: 'Test Mission (To Delete)',
   versionNumber: 1,
   seed: Mission.DEFAULT_PROPERTIES.seed,
-  nodeStructure: {
+  structure: {
     '4767fab5-573e-4df3-b1cd-809240804e92': {},
   },
   forces: [
@@ -82,7 +82,7 @@ export const updateMissionWithNoMissionId: TCommonMissionJson = {
   name: 'Updated No Node Data (To Delete)',
   versionNumber: 1,
   seed: Mission.DEFAULT_PROPERTIES.seed,
-  nodeStructure: {
+  structure: {
     '4767fab5-573e-4df3-b1cd-809240804e92': {},
   },
   forces: [
@@ -140,7 +140,7 @@ export const updateMissionWithNoMissionId: TCommonMissionJson = {
 
 export const updateMissionWithNoNodeStructure: Omit<
   TCommonMissionJson,
-  'nodeStructure'
+  'structure'
 > = {
   name: 'Update No Node Structure (To Delete)',
   versionNumber: 1,
@@ -203,7 +203,7 @@ export const updateMissionWithNoForceData: Omit<TCommonMissionJson, 'forces'> =
     name: 'No Node Data Mission (To Delete)',
     versionNumber: 1,
     seed: Mission.DEFAULT_PROPERTIES.seed,
-    nodeStructure: {
+    structure: {
       'e72aa13b-3d99-406a-a435-b0f5f2e31873': {},
     },
   }
@@ -212,7 +212,7 @@ export const correctUpdateTestMission: TCommonMissionJson = {
   name: 'Updated Test Mission (To Delete)',
   versionNumber: 1,
   seed: Mission.DEFAULT_PROPERTIES.seed,
-  nodeStructure: {
+  structure: {
     '4767fab5-573e-4df3-b1cd-809240804e92': {},
   },
   forces: [

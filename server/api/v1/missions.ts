@@ -30,14 +30,15 @@ export const routerMap: TMetisRouterMap = (
    * @returns The new mission.
    */
   const createMission = (request: Request, response: Response) => {
-    let { name, versionNumber, nodeStructure, forces } =
+    let { name, versionNumber, structure, forces, prototypes } =
       request.body as TCommonMissionJson
 
     let mission = new MissionModel({
       name,
       versionNumber,
-      nodeStructure,
+      structure,
       forces,
+      prototypes,
     })
 
     mission.save((error: Error) => {
@@ -580,6 +581,65 @@ export const routerMap: TMetisRouterMap = (
           // Delete the introMessage property from the mission.
           delete mission.introMessage
         }
+
+        // -- BUILD 29 --
+        // This migration script is responsible
+        // for creating an array of prototypes
+        // within a mission and extracting the
+        // "structureKey" and "depthPadding"
+        // properties from the "nodes" array
+        // and setting them on the prototype.
+        // It also renames the "nodeStructure"
+        // property to "structure" and adds a
+        // "prototypeId" property to each node.
+        if (schemaBuildNumber < 29) {
+          let mission = missionData
+
+          // Rename nodeStructure to structure.
+          mission.structure = mission.nodeStructure
+          delete mission.nodeStructure
+
+          // Create prototypes array.
+          mission.prototypes = []
+
+          // Loop through forces.
+          for (let force of mission.forces) {
+            // Loop through nodes.
+            for (let node of force.nodes) {
+              // See if prototype already exists.
+              let prototype = mission.prototypes.find(
+                (prototype: any) =>
+                  prototype.structureKey === node.structureKey,
+              )
+
+              // If the prototype doesn't already exist, create it.
+              if (prototype === undefined) {
+                let prototypeId = generateHash()
+
+                // Create prototype object.
+                let prototype = {
+                  _id: prototypeId,
+                  structureKey: node.structureKey,
+                  depthPadding: node.depthPadding,
+                }
+
+                // Add prototype to mission.
+                mission.prototypes.push(prototype)
+
+                // Set prototypeId on node.
+                node.prototypeId = prototypeId
+              }
+              // Set prototypeId on node.
+              else {
+                node.prototypeId = prototype._id
+              }
+
+              // Delete structureKey and depthPadding from node.
+              delete node.structureKey
+              delete node.depthPadding
+            }
+          }
+        }
       }
 
       // This will be called when it is
@@ -754,7 +814,7 @@ export const routerMap: TMetisRouterMap = (
    * @returns All missions in JSON format.
    */
   const getMissions = (request: Request, response: Response) => {
-    MissionModel.find({}, { nodeStructure: 0, forces: 0 })
+    MissionModel.find({}, { structure: 0, forces: 0, prototypes: 0 })
       .queryForApiResponse('find')
       .exec((error: Error, missions: any) => {
         if (error !== null || missions === null) {
@@ -976,7 +1036,7 @@ export const routerMap: TMetisRouterMap = (
         let modelInput: Partial<TCommonMissionJson> = {
           name: copyName,
           versionNumber: mission.versionNumber,
-          nodeStructure: mission.nodeStructure,
+          structure: mission.structure,
           forces: mission.forces,
         }
 
@@ -1036,8 +1096,9 @@ export const routerMap: TMetisRouterMap = (
       body: {
         name: RequestBodyFilters.STRING,
         versionNumber: RequestBodyFilters.NUMBER,
-        nodeStructure: RequestBodyFilters.OBJECT,
+        structure: RequestBodyFilters.OBJECT,
         forces: RequestBodyFilters.ARRAY,
+        prototypes: RequestBodyFilters.ARRAY,
       },
     }),
     createMission,
@@ -1076,8 +1137,9 @@ export const routerMap: TMetisRouterMap = (
           name: RequestBodyFilters.STRING,
           versionNumber: RequestBodyFilters.NUMBER,
           initialResources: RequestBodyFilters.NUMBER,
-          nodeStructure: RequestBodyFilters.OBJECT,
+          structure: RequestBodyFilters.OBJECT,
           forces: RequestBodyFilters.ARRAY,
+          prototypes: RequestBodyFilters.ARRAY,
         },
       },
     ),

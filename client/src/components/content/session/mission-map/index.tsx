@@ -230,10 +230,21 @@ export default function MissionMap({
       // Get the x position of the right-portion of what's
       // visible in the scene in terms of nodes.
       let sceneNodeX2 = viewNodeX + sceneNodeW
+      // Get the child node closest to the last opened node
+      // along the x-axis.
+      // ** This is necessary because child nodes can have
+      // ** different depths due to the child node's prototype
+      // ** having depth padding that's greater than 0.
+      let closestChildNode = mission.lastOpenedNode.children.reduce(
+        (closest, current) => {
+          let currentDepth = current.prototype.depth
+          let closestDepth = closest.prototype.depth
+          return currentDepth < closestDepth ? current : closest
+        },
+      )
       // Get the span of what's visible in the scene in terms
       // of nodes.
-      let nodeDifference =
-        mission.lastOpenedNode.prototype.depth + 1 - sceneNodeX2
+      let nodeDifference = closestChildNode.prototype.depth + 1 - sceneNodeX2
       // Convert difference to EM units.
       let emDifference = nodeDifference * ClientMissionNode.COLUMN_WIDTH
 

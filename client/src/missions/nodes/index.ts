@@ -25,18 +25,6 @@ export default class ClientMissionNode
   extends MissionNode<TClientMissionTypes>
   implements TEventListenerTarget<TNodeEventMethod>, TMissionComponent
 {
-  // Overridden
-  public get depthPadding(): number {
-    return this._depthPadding
-  }
-  // Overriden
-  public set depthPadding(value: number) {
-    // Set value.
-    this._depthPadding = value
-    // Handle structure change.
-    this.mission.handleStructureChange()
-  }
-
   /**
    * Listeners for node events.
    */
@@ -640,7 +628,7 @@ export default class ClientMissionNode
     // Generate children.
     let children: ClientMissionNode[] = data.map((datum) => {
       // Get child prototype.
-      let childPrototypeId = datum.structureKey
+      let childPrototypeId = datum.prototypeId
       let childPrototype = this.prototype.children.find(
         ({ _id }) => _id === childPrototypeId,
       )
@@ -648,7 +636,9 @@ export default class ClientMissionNode
       // If the child prototype is not found,
       // create that prototype with that ID.
       if (childPrototype === undefined) {
-        childPrototype = new ClientMissionPrototype(mission, childPrototypeId)
+        childPrototype = new ClientMissionPrototype(mission, {
+          _id: childPrototypeId,
+        })
         mission.prototypes.push(childPrototype)
         childPrototype.parent = prototype
         prototype.children.push(childPrototype)

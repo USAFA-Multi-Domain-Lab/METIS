@@ -19,7 +19,12 @@ import {
 } from './forces'
 import { TCommonOutput } from './forces/output'
 import { TCommonMissionNode, TNode } from './nodes'
-import { TCommonMissionPrototype, TPrototype } from './nodes/prototypes'
+import MissionPrototype, {
+  TCommonMissionPrototype,
+  TCommonMissionPrototypeJson,
+  TMissionPrototypeOptions,
+  TPrototype,
+} from './nodes/prototypes'
 
 /**
  * This represents a mission for a student to complete.
@@ -94,7 +99,8 @@ export default abstract class Mission<
 
     // Import node structure into the mission.
     this.importStructure(
-      data.nodeStructure ?? Mission.DEFAULT_PROPERTIES.nodeStructure,
+      data.structure ?? Mission.DEFAULT_PROPERTIES.structure,
+      data.prototypes ?? Mission.DEFAULT_PROPERTIES.prototypes,
     )
 
     // Parse force data.
@@ -114,8 +120,9 @@ export default abstract class Mission<
       name: this.name,
       versionNumber: this.versionNumber,
       seed: this.seed,
-      nodeStructure: {},
+      structure: {},
       forces: [],
+      prototypes: [],
     }
 
     // Include the ID if the option is set.
@@ -125,8 +132,9 @@ export default abstract class Mission<
     // passed in the options.
     switch (options.exportType) {
       case 'standard':
-        json.nodeStructure = Mission.determineNodeStructure(this.root)
+        json.structure = Mission.determineStructure(this.root)
         json.forces = this.forces.map((force) => force.toJson())
+        json.prototypes = this.prototypes.map((prototype) => prototype.toJson())
         break
       case 'session-force-specific':
         // Get the force to include in the export.
@@ -142,19 +150,24 @@ export default abstract class Mission<
             }),
           ]
           // Set the structure to revealed structure of the force.
-          json.nodeStructure = force.revealedStructure
+          json.structure = force.revealedStructure
+          // Set the prototypes to the revealed prototypes of the force.
+          json.prototypes = force.revealedPrototypes.map((prototype) =>
+            prototype.toJson(),
+          )
         }
         // todo: Log a warning if the force is not found.
         break
       case 'session-complete':
         // Include all data.
-        json.nodeStructure = Mission.determineNodeStructure(this.root)
+        json.structure = Mission.determineStructure(this.root)
         json.forces = this.forces.map((force) =>
           force.toJson({
             includeSessionData: true,
             userId: options.userId,
           }),
         )
+        json.prototypes = this.prototypes.map((prototype) => prototype.toJson())
         break
     }
 
@@ -172,35 +185,44 @@ export default abstract class Mission<
    * This will import the node structure into the mission, creating
    * MissionPrototype objects from it, and mapping the relationships
    * found in the structure.
-   * @param nodeStructure The raw node structure to import. The originalNodeStructure property
-   * will be updated to this value.
+   * @param structure The raw node structure to import.
    */
-  protected importStructure(nodeStructure: AnyObject): void {
+  protected importStructure(
+    structure: AnyObject,
+    prototypeData: TCommonMissionPrototypeJson[],
+  ): void {
     try {
       /**
        * Recursively spawns prototypes from the node structure.
        */
-      const spawnPrototypes = (cursor: AnyObject = nodeStructure) => {
+      const spawnPrototypes = (cursor: AnyObject = structure) => {
         for (let key of Object.keys(cursor)) {
+          // Get the child structure.
           let childStructure: AnyObject = cursor[key]
-          this.importPrototype(key)
+          // Find the prototype data for the current key.
+          let prototypeDatum = prototypeData.find(
+            ({ structureKey }) => structureKey === key,
+          )
+          // Create a prototype from the prototype data.
+          this.importPrototype(prototypeDatum)
+          // Spawn this prototype's children.
           spawnPrototypes(childStructure)
         }
       }
 
       // Spawn prototypes from the node structure.
-      spawnPrototypes(nodeStructure)
+      spawnPrototypes()
 
       // Create a prototype map to pass to the mapRelationships function.
       let prototypeMap = new Map<string, TPrototype<T>>()
 
       // Add prototypes to the prototype map.
       for (let prototype of this.prototypes) {
-        prototypeMap.set(prototype._id, prototype)
+        prototypeMap.set(prototype.structureKey, prototype)
       }
 
       // Map relationships between prototypes.
-      Mission.mapRelationships(prototypeMap, nodeStructure, this.root)
+      Mission.mapRelationships(prototypeMap, structure, this.root)
 
       // Convert prototypes map to array.
       this.prototypes = Array.from(prototypeMap.values())
@@ -213,11 +235,16 @@ export default abstract class Mission<
   }
 
   /**
-   * Creates a prototype for the given ID.
-   * @param _id The ID of the prototype to import.
+   * Creates a prototype from the data passed and adds it to the mission's
+   * prototype list.
+   * @param data The prototype data from which to create the prototype.
+   * @param options The options for creating the prototype.
    * @returns The imported prototype.
    */
-  protected abstract importPrototype(_id: TPrototype<T>['_id']): TPrototype<T>
+  protected abstract importPrototype(
+    data?: Partial<TCommonMissionPrototypeJson>,
+    options?: TMissionPrototypeOptions<TPrototype<T>>,
+  ): TPrototype<T>
 
   /**
    * Imports the force data into MissionForce objects and
@@ -232,7 +259,7 @@ export default abstract class Mission<
 
   // Implemented
   public getPrototype(
-    prototypeId: TPrototype<T>['_id'],
+    prototypeId: TPrototype<T>['_id'] | undefined,
   ): TPrototype<T> | undefined {
     if (prototypeId === this.root._id) return this.root
     else return this.prototypes.find(({ _id }) => _id === prototypeId)
@@ -330,28 +357,28 @@ export default abstract class Mission<
       name: 'New Mission',
       versionNumber: 1,
       seed: generateHash(),
-      nodeStructure: {},
+      structure: {},
       forces: [MissionForce.DEFAULT_FORCES[0]],
+      prototypes: [MissionPrototype.DEFAULT_PROPERTIES],
     }
   }
 
   /**
    * Maps relationships between prototypes passed based on the structure passed, recursively.
    * @param prototypes The prototypes to map.
-   * @param nodeStructure The node structure from which to map the relationships.
+   * @param structure The node structure from which to map the relationships.
    * @param rootPrototype The root prototype of the structure. This root prototype should not be defined in the prototype map, nor in the node structure.
    */
   protected static mapRelationships = <
     TPrototype extends TCommonMissionPrototype,
   >(
     prototypes: Map<string, TPrototype>,
-    nodeStructure: AnyObject,
+    structure: AnyObject,
     rootPrototype: TPrototype,
   ) => {
     let children: TPrototype[] = []
-    let childrenKeyValuePairs: Array<[string, AnyObject]> = Object.keys(
-      nodeStructure,
-    ).map((key: string) => [key, nodeStructure[key]])
+    let childrenKeyValuePairs: Array<[string, AnyObject]> =
+      Object.entries(structure)
 
     for (let childrenKeyValuePair of childrenKeyValuePairs) {
       let key: string = childrenKeyValuePair[0]
@@ -373,10 +400,10 @@ export default abstract class Mission<
 
   /**
    * Determines the structure found in the root prototype passed.
-   * @param rootNode The root prototype from which to determine the structure.
+   * @param root The root prototype from which to determine the structure.
    * @returns The raw structure.
    */
-  protected static determineNodeStructure(
+  protected static determineStructure(
     root: TCommonMissionPrototype,
   ): AnyObject {
     /**
@@ -390,9 +417,9 @@ export default abstract class Mission<
     ): AnyObject => {
       for (let child of cursor.children) {
         if (child.hasChildren) {
-          cursorStructure[child._id] = operation(child)
+          cursorStructure[child.structureKey] = operation(child)
         } else {
-          cursorStructure[child._id] = {}
+          cursorStructure[child.structureKey] = {}
         }
       }
 
@@ -431,6 +458,23 @@ export default abstract class Mission<
       if (node) return node
     }
     return undefined
+  }
+
+  /**
+   * Gets a prototype from the mission by its ID.
+   * @param mission The mission to get the prototype from.
+   * @param prototypeId The ID of the prototype to get.
+   * @returns The prototype with the given ID, or undefined if no prototype is found.
+   */
+  public static getPrototype<
+    TMission extends TCommonMissionJson | TCommonMission,
+  >(
+    mission: TMission,
+    prototypeId: string | undefined,
+  ): TMission['prototypes'][0] | undefined {
+    return prototypeId
+      ? mission.prototypes.find(({ _id }) => _id === prototypeId)
+      : undefined
   }
 }
 
@@ -517,7 +561,7 @@ export interface TCommonMission {
    * Gets a prototype from the mission by its ID.
    */
   getPrototype: (
-    prototypeId: TCommonMissionPrototype['_id'],
+    prototypeId: TCommonMissionPrototype['_id'] | undefined,
   ) => TCommonMissionPrototype | undefined
   /**
    * Gets a force from the mission by its ID.
@@ -561,11 +605,15 @@ export interface TCommonMissionJson {
   /**
    * The tree structure used to determine the relationships and positions of the nodes in the mission.
    */
-  nodeStructure: AnyObject
+  structure: AnyObject
   /**
    * The forces in the mission.
    */
   forces: TCommonMissionForceJson[]
+  /**
+   * The prototype nodes for the mission.
+   */
+  prototypes: TCommonMissionPrototypeJson[]
 }
 
 /**

@@ -9,7 +9,6 @@ import { SingleTypeObject } from '../../../../../../shared/toolbox/objects'
 import Tooltip from '../../communication/Tooltip'
 import { DetailColorSelector } from '../../form/DetailColorSelector'
 import { DetailLargeString } from '../../form/DetailLargeString'
-import { DetailNumber } from '../../form/DetailNumber'
 import { DetailString } from '../../form/DetailString'
 import { DetailToggle } from '../../form/DetailToggle'
 import List, { ESortByMethod } from '../../general-layout/List'
@@ -42,7 +41,6 @@ export default function NodeEntry({
   const [preExecutionText, setPreExecutionText] = useState<string>(
     node.preExecutionText,
   )
-  const [depthPadding, setDepthPadding] = useState<number>(node.depthPadding)
   const [executable, setExecutable] = useState<boolean>(node.executable)
   const [device, setDevice] = useState<boolean>(node.device)
   const [applyColorFill, setApplyColorFill] = useState<boolean>(false)
@@ -134,7 +132,6 @@ export default function NodeEntry({
     node.color = color
     node.description = description
     node.preExecutionText = preExecutionText
-    node.depthPadding = depthPadding
     node.executable = executable
     node.device = device
 
@@ -157,7 +154,6 @@ export default function NodeEntry({
     color,
     description,
     preExecutionText,
-    depthPadding,
     executable,
     device,
     applyColorFill,
@@ -331,14 +327,6 @@ export default function NodeEntry({
               elementBoundary='.SidePanelSection'
               placeholder='Enter pre-execution text...'
               key={`${node._id}_preExecutionText`}
-            />
-            <DetailNumber
-              fieldType='required'
-              label='Depth Padding'
-              stateValue={depthPadding}
-              setState={setDepthPadding}
-              integersOnly={true}
-              key={`${node._id}_depthPadding`}
             />
             <DetailToggle
               fieldType='required'

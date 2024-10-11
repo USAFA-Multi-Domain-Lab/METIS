@@ -553,11 +553,11 @@ export default class SessionServer extends Session<TServerMissionTypes> {
         }
 
         // Get relevant data from the mission for the member.
-        let { nodeStructure, forces } = assignmentForceCache[forceId]
+        let { structure, forces, prototypes } = assignmentForceCache[forceId]
 
         // Emit the event to the member.
         member.emit('session-started', {
-          data: { nodeStructure, forces },
+          data: { structure, forces, prototypes },
           request,
         })
       }
@@ -567,8 +567,9 @@ export default class SessionServer extends Session<TServerMissionTypes> {
         // Emit the event to the member.
         member.emit('session-started', {
           data: {
-            nodeStructure: completeVisibilityCache.nodeStructure,
+            structure: completeVisibilityCache.structure,
             forces: completeVisibilityCache.forces,
+            prototypes: completeVisibilityCache.prototypes,
           },
           request,
         })
@@ -578,8 +579,9 @@ export default class SessionServer extends Session<TServerMissionTypes> {
         // Emit the event to the member.
         member.emit('session-started', {
           data: {
-            nodeStructure: {},
+            structure: {},
             forces: [],
+            prototypes: [],
           },
           request,
         })
@@ -1057,6 +1059,9 @@ export default class SessionServer extends Session<TServerMissionTypes> {
           revealedChildNodes: node.children.map((node) =>
             node.toJson({ includeSessionData: true }),
           ),
+          revealedChildPrototypes: node.prototype.children.map((prototype) =>
+            prototype.toJson(),
+          ),
         },
         request: { event, requesterId: member.userId, fulfilled: true },
       }
@@ -1225,6 +1230,10 @@ export default class SessionServer extends Session<TServerMissionTypes> {
         completionPayload.data.revealedChildNodes = action.node.children.map(
           (node) => node.toJson({ includeSessionData: true }),
         )
+
+        // Add child prototypes to the completion payload.
+        completionPayload.data.revealedChildPrototypes =
+          action.node.prototype.children.map((prototype) => prototype.toJson())
 
         // Create a new output JSON object.
         let outputJson: Partial<TCommonOutputJson> = {

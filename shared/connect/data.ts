@@ -5,6 +5,7 @@ import {
 import { TActionOutcomeJson } from 'metis/missions/actions/outcomes'
 import { TCommonMissionForceJson } from 'metis/missions/forces'
 import { TCommonOutputJson } from 'metis/missions/forces/output'
+import { TCommonMissionPrototypeJson } from 'metis/missions/nodes/prototypes'
 import { TSessionConfig, TSessionJson } from 'metis/sessions'
 import SessionMember, {
   TCommonSessionMember,
@@ -351,11 +352,15 @@ export type TResponseEvents = {
       /**
        * The node structure available to the client.
        */
-      nodeStructure: AnyObject
+      structure: AnyObject
       /**
        * The force(s) the client has access to.
        */
       forces: TCommonMissionForceJson[]
+      /**
+       * The prototype data used to create the mission's structure of nodes.
+       */
+      prototypes: TCommonMissionPrototypeJson[]
     },
     TClientEvents['request-start-session']
   >
@@ -471,6 +476,10 @@ export type TResponseEvents = {
        * The nodes that were revealed as a result of opening the node.
        */
       revealedChildNodes: TCommonMissionNodeJson[]
+      /**
+       * The prototypes of the nodes that were revealed as a result of opening the node.
+       */
+      revealedChildPrototypes: TCommonMissionPrototypeJson[]
     },
     TClientEvents['request-open-node']
   >
@@ -506,6 +515,10 @@ export type TResponseEvents = {
        * The nodes that were revealed as a result of executing the action.
        */
       revealedChildNodes?: TCommonMissionNodeJson[]
+      /**
+       * The prototypes of the nodes that were revealed as a result of executing the action.
+       */
+      revealedChildPrototypes?: TCommonMissionPrototypeJson[]
     },
     TClientEvents['request-execute-action']
   >

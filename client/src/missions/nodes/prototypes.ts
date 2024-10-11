@@ -2,7 +2,7 @@ import { TPrototypeButton } from 'src/components/content/session/mission-map/obj
 import { TEventListenerTarget } from 'src/toolbox/hooks'
 import ClientMission, { TClientMissionTypes, TMissionNavigable } from '..'
 import MissionPrototype, {
-  TCommonMissionPrototype,
+  TCommonMissionPrototypeJson,
   TMissionPrototypeOptions,
 } from '../../../../shared/missions/nodes/prototypes'
 import { Vector2D } from '../../../../shared/toolbox/space'
@@ -102,12 +102,29 @@ export default class ClientMissionPrototype
     return !this._expandedInMenu
   }
 
+  // Overridden
+  public get depthPadding(): number {
+    return this._depthPadding
+  }
+  // Overriden
+  public set depthPadding(value: number) {
+    // Set value.
+    this._depthPadding = value
+    // Handle structure change.
+    this.mission.handleStructureChange()
+  }
+
+  /**
+   * @param mission The mission of which the prototype is a part.
+   * @param data The prototype data from which to create the prototype node. Any ommitted values will be set to the default properties defined in MissionPrototype.DEFAULT_PROPERTIES.
+   * @param options The options for creating the prototype.
+   */
   public constructor(
     mission: ClientMission,
-    _id: TCommonMissionPrototype['_id'],
+    data: Partial<TCommonMissionPrototypeJson> = ClientMissionPrototype.DEFAULT_PROPERTIES,
     options: TMissionPrototypeOptions<ClientMissionPrototype> = {},
   ) {
-    super(mission, _id, options)
+    super(mission, data, options)
 
     this.position = new Vector2D(0, 0)
     this.depth = -1
@@ -170,7 +187,7 @@ export default class ClientMissionPrototype
     let root: ClientMissionPrototype = this.mission.root
     let parent: ClientMissionPrototype | null = this.parent
     let newParent: ClientMissionPrototype | null = destination.parent
-    let newChildrenOfParent: Array<ClientMissionPrototype> = []
+    let newChildrenOfParent: ClientMissionPrototype[] = []
 
     // This makes sure that the target
     // isn't being moved inside or beside
@@ -204,7 +221,7 @@ export default class ClientMissionPrototype
     switch (relation) {
       case 'parent-of-target-only':
         this.parent = destination.parent
-        let targetAndTargetSiblings: Array<ClientMissionPrototype> =
+        let targetAndTargetSiblings: ClientMissionPrototype[] =
           destination.childrenOfParent
 
         if (destination.parent !== null) {
@@ -227,7 +244,7 @@ export default class ClientMissionPrototype
         destination.parent = this
         break
       case 'between-target-and-children':
-        let children: Array<ClientMissionPrototype> = destination.children
+        let children: ClientMissionPrototype[] = destination.children
 
         destination.children = [this]
         this.parent = destination
@@ -284,7 +301,7 @@ export default class ClientMissionPrototype
 
     switch (deleteMethod) {
       case 'delete-children':
-        let children: Array<ClientMissionPrototype> = [...this.children]
+        let children: ClientMissionPrototype[] = [...this.children]
 
         for (let child of children) {
           let childOptions: TPrototypeDeleteOptions = {
@@ -301,7 +318,7 @@ export default class ClientMissionPrototype
         break
       case 'shift-children':
         let parentOfThis: ClientMissionPrototype | null = this.parent
-        let childrenofThis: Array<ClientMissionPrototype> = [...this.children]
+        let childrenofThis: ClientMissionPrototype[] = [...this.children]
 
         childrenofThis.forEach((child: ClientMissionPrototype) => {
           if (parentOfThis !== null) {
@@ -343,6 +360,27 @@ export default class ClientMissionPrototype
    */
   public toggleMenuExpansion(): void {
     this._expandedInMenu = !this._expandedInMenu
+  }
+
+  /**
+   * Populates the children of the prototype with the given data.
+   * @param data The data to populate the children with.
+   */
+  public populateChildren(data: TCommonMissionPrototypeJson[]): void {
+    // If children are already set,
+    // return them.
+    if (this.children.length > 0) return
+
+    // Create and add children.
+    data.forEach((datum) => {
+      let child: ClientMissionPrototype = new ClientMissionPrototype(
+        this.mission,
+        datum,
+      )
+      this.mission.prototypes.push(child)
+      child.parent = this
+      this.children.push(child)
+    })
   }
 }
 

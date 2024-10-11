@@ -18,11 +18,13 @@ import {
   TCommonMissionForceJson,
   TMissionForceOptions,
 } from '../../../shared/missions/forces'
-import { TMissionPrototypeOptions } from '../../../shared/missions/nodes/prototypes'
+import {
+  TCommonMissionPrototypeJson,
+  TMissionPrototypeOptions,
+} from '../../../shared/missions/nodes/prototypes'
 import { Counter } from '../../../shared/toolbox/numbers'
 import { AnyObject, TWithKey } from '../../../shared/toolbox/objects'
 import { Vector2D } from '../../../shared/toolbox/space'
-import StringToolbox from '../../../shared/toolbox/strings'
 import ClientMissionAction from './actions'
 import ClientActionExecution from './actions/executions'
 import ClientActionOutcome from './actions/outcomes'
@@ -274,7 +276,7 @@ export default class ClientMission
 
   // Implemented
   protected importPrototype(
-    _id?: string,
+    data: Partial<TCommonMissionPrototypeJson> = ClientMissionPrototype.DEFAULT_PROPERTIES,
     options: TMissionPrototypeOptions<ClientMissionPrototype> = {},
   ): ClientMissionPrototype {
     let rootPrototype: ClientMissionPrototype | null = this.root
@@ -284,13 +286,10 @@ export default class ClientMission
       throw new Error('Cannot import prototype: Mission has no root prototype.')
     }
 
-    // If no id is provided, generate a new id.
-    if (_id === undefined) _id = StringToolbox.generateRandomId()
-
     // Create new prototype.
     let prototype: ClientMissionPrototype = new ClientMissionPrototype(
       this,
-      _id,
+      data,
       options,
     )
 
@@ -373,13 +372,14 @@ export default class ClientMission
   public importStartData(
     structure: AnyObject,
     forces: TCommonMissionForceJson[],
+    prototypes: TCommonMissionPrototypeJson[],
   ): void {
     // Clear forces and prototypes.
     this.prototypes = []
     this.forces = []
 
     // Import structure.
-    this.importStructure(structure)
+    this.importStructure(structure, prototypes)
     // Import forces.
     this.importForces(forces)
 
@@ -389,15 +389,17 @@ export default class ClientMission
 
   // Implemented
   protected initializeRoot(): ClientMissionPrototype {
-    return new ClientMissionPrototype(this, 'ROOT')
+    return new ClientMissionPrototype(this, { _id: 'ROOT' })
   }
 
   /**
    * Creates a new prototype for the mission.
+   * @param data Data passed to the prototype constructor.
    * @param options Options passed to the constructor.
    * @returns The newly created prototype.
    */
   public createPrototype(
+    data: Partial<TCommonMissionPrototypeJson> = ClientMissionPrototype.DEFAULT_PROPERTIES,
     options: TMissionPrototypeOptions<ClientMissionPrototype> = {},
   ): ClientMissionPrototype {
     let rootPrototype: ClientMissionPrototype | null = this.root
@@ -410,7 +412,7 @@ export default class ClientMission
     // Create new prototype.
     let prototype: ClientMissionPrototype = new ClientMissionPrototype(
       this,
-      StringToolbox.generateRandomId(),
+      data,
       options,
     )
 
@@ -636,15 +638,14 @@ export default class ClientMission
       // Position the child node.
       this.positionPrototypes(
         child,
-        // todo: Determine what to do with this.
-        depth + 1, // + child.depthPadding,
+        depth + 1 + child.depthPadding,
         rowCount,
         buttonData,
       )
 
-      // // If the transformDestination is this child,
-      // // the positioning is offset to account for the
-      // // prototype slots that must be rendered.
+      // If the transformDestination is this child,
+      // the positioning is offset to account for the
+      // prototype slots that must be rendered.
       if (transformDestination?._id === child._id) {
         rowCount.increment()
       }

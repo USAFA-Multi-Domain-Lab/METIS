@@ -20,7 +20,10 @@ import {
   TOutcome,
 } from '../actions/outcomes'
 import { TCommonMissionForce, TForce } from '../forces'
-import { TCommonMissionPrototype, TPrototype } from './prototypes'
+import MissionPrototype, {
+  TCommonMissionPrototype,
+  TPrototype,
+} from './prototypes'
 
 /**
  * This represents an individual node in a mission.
@@ -38,9 +41,6 @@ export default abstract class MissionNode<
 
   // Implemented
   public _id: TCommonMissionNode['_id']
-
-  // Inherited
-  public structureKey: TCommonMissionNode['structureKey']
 
   // Implemented
   public name: TCommonMissionNode['name']
@@ -121,19 +121,6 @@ export default abstract class MissionNode<
    */
   public get blocked(): boolean {
     return this._blocked
-  }
-
-  /**
-   * Cache for the depth padding of the node.
-   */
-  protected _depthPadding: number
-  // Implemented
-  public get depthPadding(): number {
-    return this._depthPadding
-  }
-  // Implemented
-  public set depthPadding(value: number) {
-    this._depthPadding = value
   }
 
   /**
@@ -289,8 +276,6 @@ export default abstract class MissionNode<
     // Set properties from data.
     this.force = force
     this._id = data._id ?? MissionNode.DEFAULT_PROPERTIES._id
-    this.structureKey =
-      data.structureKey ?? MissionNode.DEFAULT_PROPERTIES.structureKey
     this.name = data.name ?? MissionNode.DEFAULT_PROPERTIES.name
     this.color = data.color ?? MissionNode.DEFAULT_PROPERTIES.color
     this.description =
@@ -300,8 +285,6 @@ export default abstract class MissionNode<
     this.executable =
       data.executable ?? MissionNode.DEFAULT_PROPERTIES.executable
     this.device = data.device ?? MissionNode.DEFAULT_PROPERTIES.device
-    this._depthPadding =
-      data.depthPadding ?? MissionNode.DEFAULT_PROPERTIES.depthPadding
     this.actions = this.importActions(
       data.actions ?? MissionNode.DEFAULT_PROPERTIES.actions,
       { populateTargets },
@@ -319,7 +302,7 @@ export default abstract class MissionNode<
     this.position = new Vector2D(0, 0)
 
     // Attempt to get prototype from mission.
-    let prototype = this.mission.getPrototype(this.structureKey)
+    let prototype = this.mission.getPrototype(data.prototypeId)
 
     // Throw error if prototype not found.
     if (!prototype) throw new Error('Prototype not found.')
@@ -374,12 +357,11 @@ export default abstract class MissionNode<
     // Construct base JSON.
     let json: TMissionNodeJson = {
       _id: this._id,
-      structureKey: this.structureKey,
+      prototypeId: this.prototype._id,
       name: this.name,
       color: this.color,
       description: this.description,
       preExecutionText: this.preExecutionText,
-      depthPadding: this.depthPadding,
       executable: this.executable,
       device: this.device,
       actions: MapToolbox.mapToArray(this.actions, (action: TAction) =>
@@ -398,7 +380,7 @@ export default abstract class MissionNode<
       }
 
       // Construct outcome JSON.
-      let outcomeJSON: TActionOutcomeJson[] = this.outcomes.map((outcome) =>
+      let outcomeJson: TActionOutcomeJson[] = this.outcomes.map((outcome) =>
         outcome.toJson(),
       )
 
@@ -407,7 +389,7 @@ export default abstract class MissionNode<
         opened: this.opened,
         executionState: this.executionState,
         execution: executionJson,
-        outcomes: outcomeJSON,
+        outcomes: outcomeJson,
         blocked: this.blocked,
       }
 
@@ -454,17 +436,16 @@ export default abstract class MissionNode<
   public static readonly MAX_NAME_LENGTH: number = 175
 
   /**
-   * The default properties for a MissionNode object.
+   * The default properties for a `MissionNode` object.
    */
   public static get DEFAULT_PROPERTIES(): Required<TMissionNodeJson> {
     return {
       _id: generateHash(),
-      structureKey: generateHash(),
+      prototypeId: MissionPrototype.DEFAULT_PROPERTIES._id,
       name: 'Unnamed Node',
       color: '#ffffff',
       description: '',
       preExecutionText: '',
-      depthPadding: 0,
       executable: false,
       device: false,
       actions: [],
@@ -498,11 +479,6 @@ export interface TCommonMissionNode {
    * The ID for the node.
    */
   _id: string
-  /**
-   * The key used in the nodeStructure object to represent a node's position and relationships to other
-   * nodes.
-   */
-  structureKey: string
   /**
    * The name for the node.
    */
@@ -552,11 +528,6 @@ export interface TCommonMissionNode {
    * Whether an action has been executed on the node.
    */
   get executed(): boolean
-  /**
-   * The amount of visual padding to apply to the left of the node in the tree.
-   */
-  get depthPadding(): number
-  set depthPadding(value: number)
   /**
    * The current execution in process on the node by an action.
    */
@@ -676,10 +647,9 @@ export interface TCommonMissionNodeJson {
    */
   _id: string
   /**
-   * The key used in the nodeStructure object to represent a node's position and relationships to other
-   * nodes.
+   * The ID of the prototype node that the node is based on.
    */
-  structureKey: string
+  prototypeId: string
   /**
    * The name for the node.
    */
@@ -704,10 +674,6 @@ export interface TCommonMissionNodeJson {
    * Whether or not this node is a device.
    */
   device: boolean
-  /**
-   * The amount of visual padding to apply to the left of the node in the tree.
-   */
-  depthPadding: number
   /**
    * The actions that can be performed on the node.
    */

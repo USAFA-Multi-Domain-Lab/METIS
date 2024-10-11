@@ -4,8 +4,10 @@ import Mission, {
   TMissionOptions,
 } from 'metis/missions'
 import { TCommonMissionForceJson } from 'metis/missions/forces'
-import { TMissionPrototypeOptions } from 'metis/missions/nodes/prototypes'
-import StringToolbox from 'metis/toolbox/strings'
+import {
+  TCommonMissionPrototypeJson,
+  TMissionPrototypeOptions,
+} from 'metis/missions/nodes/prototypes'
 import seedrandom, { PRNG } from 'seedrandom'
 import SessionServer from '../sessions'
 import ServerSessionMember from '../sessions/members'
@@ -57,12 +59,12 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
 
   // Implemented
   protected initializeRoot(): ServerMissionPrototype {
-    return new ServerMissionPrototype(this, 'ROOT')
+    return new ServerMissionPrototype(this, { _id: 'ROOT' })
   }
 
   // Implemented
   public importPrototype(
-    _id?: string,
+    data: Partial<TCommonMissionPrototypeJson> = ServerMissionPrototype.DEFAULT_PROPERTIES,
     options: TMissionPrototypeOptions<ServerMissionPrototype> = {},
   ): ServerMissionPrototype {
     let root: ServerMissionPrototype | null = this.root
@@ -72,13 +74,10 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
       throw new Error('Cannot spawn prototype: Mission has no root prototype.')
     }
 
-    // If the _id is not provided, generate a random one.
-    if (_id === undefined) _id = StringToolbox.generateRandomId()
-
     // Create new prototype.
     let prototype: ServerMissionPrototype = new ServerMissionPrototype(
       this,
-      _id,
+      data,
       options,
     )
 
