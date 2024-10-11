@@ -59,7 +59,28 @@ export default class ClientMission
   /**
    * Opts to have all nodes in the mission opened by default.
    */
-  public readonly nonRevealedDisplayMode: TNonRevealedDisplayMode
+  private _nonRevealedDisplayMode: TNonRevealedDisplayMode
+  /**
+   * Opts to have all nodes in the mission opened by default.
+   */
+  public get nonRevealedDisplayMode(): TNonRevealedDisplayMode {
+    return this._nonRevealedDisplayMode
+  }
+
+  /**
+   * The context in which the mission is being used.
+   */
+  private _context: TClientMissionContext = 'session'
+  /**
+   * The context in which the mission is being used.
+   */
+  public get context(): TClientMissionContext {
+    return this._context
+  }
+  public set context(value: TClientMissionContext) {
+    if (value === 'edit') this._nonRevealedDisplayMode = 'show'
+    this._context = value
+  }
 
   /**
    * The depth of the missions node structure.
@@ -256,7 +277,7 @@ export default class ClientMission
     this.relationshipLines = []
     this.lastOpenedNode = null
     this._defectiveObjects = []
-    this.nonRevealedDisplayMode = nonRevealedDisplayMode
+    this._nonRevealedDisplayMode = nonRevealedDisplayMode
 
     // If there is no existing prototypes,
     // create one.
@@ -1370,6 +1391,14 @@ export type TClientMissionOptions = TMissionOptions & {
  * how the node is displayed on the mission map.
  */
 export type TNonRevealedDisplayMode = 'hide' | 'blur' | 'show'
+
+/**
+ * A mission on the client-side is currently used either for editing
+ * or for a session.
+ * @note If the context is set to `edit`, all nodes need to be revealed to the client.
+ * This means that the `nonRevealedDisplayMode` option will be set to 'show'.
+ */
+export type TClientMissionContext = 'session' | 'edit'
 
 /**
  * Options for the creation of a ClientMission object when the mission is known to exist on the server.

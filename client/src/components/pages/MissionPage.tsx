@@ -192,6 +192,8 @@ export default function MissionPage({
       } catch {
         handleError('Failed to load mission.')
       }
+    } else {
+      mission.context = 'edit'
     }
 
     // Finish loading.
