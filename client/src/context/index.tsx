@@ -577,6 +577,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
         key: StringToolbox.generateRandomId(),
         buttons,
         position,
+        positioningTarget,
         highlightTarget,
         onButtonClick: (button) => {
           console.log('Button clicked:', button)
@@ -591,18 +592,6 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
           console.log('close')
           setButtonMenu(null)
         },
-      }
-
-      // If a target element is provided, then
-      // position the button menu relative to
-      // the target element.
-      if (positioningTarget) {
-        // Get the bounding client rect of the target element.
-        let rect: DOMRect = positioningTarget.getBoundingClientRect()
-
-        // Set the position of the button menu
-        // relative to the target element.
-        buttonMenuProps.position = new Vector2D(rect.right, rect.bottom)
       }
 
       // If a description function is provided,

@@ -1,4 +1,5 @@
 import { ReactNode, useRef } from 'react'
+import ButtonMenuController from 'src/components/content/user-controls/buttons/ButtonMenuController'
 import { useGlobalContext } from 'src/context'
 import { compute } from 'src/toolbox'
 import ButtonSvg, {
@@ -74,16 +75,29 @@ export default function ListItem<T extends TListItem>({
   /* -- FUNCTIONS -- */
 
   /**
+   * Gets the description for the given button.
+   */
+  const getButtonDescription = (button: TButtonSvgType) =>
+    getItemButtonTooltip(button, item)
+
+  /**
    * Handles the click event for the item
    * options button.
    */
   const onOptionsClick = (event: React.MouseEvent) => {
-    showButtonMenu(itemButtons, (button) => onItemButtonClick(button, item), {
+    showButtonMenu(itemButtons, onButtonClick, {
       positioningTarget: event.target as HTMLDivElement,
       highlightTarget: root.current ?? undefined,
-      getDescription: (button) => getItemButtonTooltip(button, item),
+      getDescription: getButtonDescription,
     })
   }
+
+  /**
+   * Handles the click event for an item
+   * button in the options menu.
+   */
+  const onButtonClick = (button: TButtonSvgType) =>
+    onItemButtonClick(button, item)
 
   /* -- RENDER -- */
 
@@ -139,6 +153,13 @@ export default function ListItem<T extends TListItem>({
   return (
     <div className={rootClass} style={rootStyle} ref={root}>
       {cellsJsx}
+      <ButtonMenuController
+        target={root}
+        buttons={itemButtons}
+        highlightTarget={root.current ?? undefined}
+        getDescription={getButtonDescription}
+        onButtonClick={onButtonClick}
+      />
     </div>
   )
 }

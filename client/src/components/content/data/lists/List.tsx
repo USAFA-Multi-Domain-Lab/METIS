@@ -74,6 +74,22 @@ export default function List<TItem extends TListItem>(
     onItemButtonClick: () => {},
   })
 
+  // Get and modify `getItemTooltip` to include
+  // R-Click prompt.
+  const getItemTooltip = defaultedProps.getItemTooltip
+  defaultedProps.getItemTooltip = (item) => {
+    // Get vanilla tooltip.
+    let description: string = getItemTooltip(item)
+
+    // Add R-Click prompt, if there
+    // are item buttons.
+    if (defaultedProps.itemButtons.length) {
+      description += `\n\t\n\`R-Click\` for more options`
+    }
+
+    return description
+  }
+
   // Parse props needed by the main list
   // component.
   const { items, itemsPerPageMin } = defaultedProps

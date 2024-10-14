@@ -38,6 +38,9 @@ export default function SessionList({
   const itemButtons = compute<TButtonSvgType[]>(() => {
     let results: TButtonSvgType[] = []
 
+    // Add the join button.
+    results.push('open')
+
     // If the user has the proper authorization, add
     // the remove button.
     if (login.user.isAuthorized('sessions_write')) results.push('remove')
@@ -67,8 +70,10 @@ export default function SessionList({
     item,
   ) => {
     switch (button) {
+      case 'open':
+        return 'Join'
       case 'remove':
-        return 'Tear down session.'
+        return 'Tear down'
       default:
         return ''
     }
@@ -178,6 +183,9 @@ export default function SessionList({
     item,
   ) => {
     switch (button) {
+      case 'open':
+        onSessionSelection(item)
+        break
       case 'remove':
         onSessionTearDown(item)
         break
@@ -194,7 +202,7 @@ export default function SessionList({
       items={sessions}
       listButtons={['text-cursor']}
       itemButtons={itemButtons}
-      getItemTooltip={() => 'Join session.'}
+      getItemTooltip={() => 'Join session'}
       getListButtonTooltip={getSessionListButtonTooltip}
       getItemButtonTooltip={getSessionItemButtonTooltip}
       onSelection={onSessionSelection}

@@ -67,10 +67,13 @@
 
     &:has(> .List:only-child) {
       justify-content: center;
+      align-items: center;
       grid-template-columns: 1fr;
+      grid-template-rows: 100%;
+      max-width: 1050px;
     }
 
-    @media (max-width: 1600px) {
+    @media (max-width: 1000px) {
       justify-content: center;
       grid-template-columns: 1fr;
     }

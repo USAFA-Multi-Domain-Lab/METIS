@@ -50,6 +50,9 @@ export default function UserList({
   const itemButtons = compute<TButtonSvgType[]>(() => {
     let results: TButtonSvgType[] = []
 
+    // Add the open button.
+    results.push('open')
+
     // If the user has the proper authorization, add
     // the launch, copy, remove, and download buttons.
     if (login.user.isAuthorized('users_write_students')) {
@@ -106,8 +109,10 @@ export default function UserList({
     item,
   ) => {
     switch (button) {
+      case 'open':
+        return 'Open'
       case 'remove':
-        return 'Delete user.'
+        return 'Delete'
       default:
         return ''
     }
@@ -152,6 +157,9 @@ export default function UserList({
     user,
   ) => {
     switch (button) {
+      case 'open':
+        onUserSelection(user)
+        break
       case 'remove':
         onDeleteRequest(user)
         break
@@ -168,7 +176,7 @@ export default function UserList({
       items={users}
       listButtons={listButtons}
       itemButtons={itemButtons}
-      getItemTooltip={() => 'View/edit user.'}
+      getItemTooltip={() => 'Open user'}
       getListButtonTooltip={getUserListButtonTooltip}
       getItemButtonTooltip={getUserItemButtonTooltip}
       onSelection={onUserSelection}
