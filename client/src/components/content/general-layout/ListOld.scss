@@ -539,7 +539,9 @@
       padding-bottom: 8px;
 
       .previous-page,
-      .next-page {
+      .next-page,
+      .filtering,
+      .page-number {
         @include hide;
       }
 
@@ -553,12 +555,9 @@
           font-weight: normal;
           background: none;
           padding: 0;
+          text-align: unset;
         }
       }
-    }
-
-    .filtering {
-      @include hide;
     }
 
     .items {
@@ -580,10 +579,10 @@
           color: $color-main;
         }
       }
+    }
 
-      .page-number {
-        @include hide;
-      }
+    .page-number {
+      @include hide;
     }
 
     .Row {

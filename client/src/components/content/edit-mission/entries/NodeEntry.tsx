@@ -164,7 +164,10 @@ export default function NodeEntry({
 
   // This displays the change in the mission path found at
   // the top of the side panel.
-  useEffect(() => forceUpdate(), [name])
+  useEffect(
+    () => forceUpdate(),
+    [name, color, executable, device, color, applyColorFill],
+  )
 
   // Auto-generate an action if the node becomes executable.
   usePostInitEffect(() => {

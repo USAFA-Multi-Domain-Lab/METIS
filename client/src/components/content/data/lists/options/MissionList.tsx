@@ -233,7 +233,10 @@ export default function MissionList({
   const onMissionSelection: TOnItemSelection<ClientMission> = async ({
     _id: missionId,
   }) => {
-    if (login.user.isAuthorized('missions_write')) {
+    if (
+      login.user.isAuthorized('missions_write') ||
+      login.user.isAuthorized('missions_read')
+    ) {
       navigateTo('MissionPage', { missionId })
     }
   }

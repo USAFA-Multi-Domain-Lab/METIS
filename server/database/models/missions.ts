@@ -163,7 +163,7 @@ const validate_missions = (mission: any, next: any): void => {
     // Loop through each force.
     for (let force of mission.forces as TCommonMissionForceJson[]) {
       // Used to ensure each node has a corresponding prototype.
-      let prototypesRetrieved: TCommonMissionPrototypeJson[] = []
+      let prototypesRetrieved: TCommonMissionPrototypeJson['_id'][] = []
 
       // Loop through nodes.
       for (let node of force.nodes) {
@@ -185,7 +185,7 @@ const validate_missions = (mission: any, next: any): void => {
         }
 
         // Ensure the node has a unique prototype.
-        if (prototypesRetrieved.includes(prototype)) {
+        if (prototypesRetrieved.includes(prototype._id)) {
           results.error = new Error(
             `Error in mission:\nPrototype ID "${prototypeId}" for "${node.name}" in "${force.name}" has already been used for another node.`,
           )
@@ -203,7 +203,7 @@ const validate_missions = (mission: any, next: any): void => {
         }
 
         // Add the prototype to the array.
-        prototypesRetrieved.push(prototype)
+        prototypesRetrieved.push(prototype._id)
       }
 
       // Ensure all prototype nodes are present.
@@ -215,7 +215,7 @@ const validate_missions = (mission: any, next: any): void => {
         // ...then find the missing prototype node.
         let prototypes = mission.prototypes as TCommonMissionPrototypeJson[]
         let missingPrototype = prototypes.find(
-          (prototype) => !prototypesRetrieved.includes(prototype),
+          (prototype) => !prototypesRetrieved.includes(prototype._id),
         )
 
         // Send the error.

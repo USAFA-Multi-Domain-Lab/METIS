@@ -12,7 +12,7 @@ export default class ServerLogin {
    * This is used to retrieve the Login object from the registry.
    */
   public get userId(): ServerUser['_id'] {
-    return this.user._id.toString()
+    return this.user._id
   }
 
   /**

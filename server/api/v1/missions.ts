@@ -1038,6 +1038,7 @@ export const routerMap: TMetisRouterMap = (
           versionNumber: mission.versionNumber,
           structure: mission.structure,
           forces: mission.forces,
+          prototypes: mission.prototypes,
         }
 
         let copy = new MissionModel(modelInput)

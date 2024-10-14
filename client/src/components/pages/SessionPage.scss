@@ -135,7 +135,10 @@
     }
   }
 
-  &.Observer .MissionNode {
-    cursor: default;
+  &.Observer {
+    .MissionNode {
+      user-select: none;
+      cursor: default;
+    }
   }
 }

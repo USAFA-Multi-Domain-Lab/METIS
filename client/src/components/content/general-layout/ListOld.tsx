@@ -516,7 +516,12 @@ export default class ListOld<TList extends object> extends React.Component<
               this.setState({ hideSearchTooltip: false })
             }}
           />
-          <input type='text' className='search-hint' value={filterHint} />
+          <input
+            type='text'
+            className='search-hint'
+            value={filterHint}
+            readOnly={true}
+          />
           {hideSearchTooltip ? null : <Tooltip description={'Search list.'} />}
         </div>
         {/* {this.renderSortByMethods()} */}

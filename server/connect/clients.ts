@@ -179,6 +179,16 @@ export default class ClientConnection {
       }
       let requester = session?.getMemberByUserId(this.userId)
 
+      // If the requester cannot be found, emit an error.
+      if (requester === undefined) {
+        this.emitError(
+          new ServerEmittedError(ServerEmittedError.CODE_MEMBER_NOT_FOUND, {
+            request: this.buildResponseReqData(event),
+          }),
+        )
+        return
+      }
+
       // If there is a session and a member, update the
       // data object.
       if (session && requester) {
