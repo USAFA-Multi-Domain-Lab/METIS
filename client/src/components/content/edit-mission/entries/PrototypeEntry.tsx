@@ -4,7 +4,7 @@ import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
 import { DetailLocked } from '../../form/DetailLocked'
 import { DetailNumber } from '../../form/DetailNumber'
-import { ButtonText } from '../../user-controls/ButtonText'
+import { ButtonText } from '../../user-controls/buttons/ButtonText'
 import './index.scss'
 import EntryNavigation from './navigation/EntryNavigation'
 

@@ -3,7 +3,7 @@ import { compute } from 'src/toolbox'
 import ClientUser from 'src/users'
 import { SingleTypeObject } from '../../../../../shared/toolbox/objects'
 import Prompt from '../communication/Prompt'
-import ButtonSvgPanel, { TValidPanelButton } from './ButtonSvgPanel'
+import ButtonSvgPanel, { TValidPanelButton } from './buttons/ButtonSvgPanel'
 import './UserModificationPanel.scss'
 
 /**
@@ -60,7 +60,7 @@ export default function UserModificationPanel({
   const availableButtons: SingleTypeObject<TValidPanelButton> = compute(() => {
     return {
       remove: {
-        icon: 'remove',
+        type: 'remove',
         key: 'remove',
         onClick: onDeleteRequest,
         tooltipDescription: 'Remove user.',

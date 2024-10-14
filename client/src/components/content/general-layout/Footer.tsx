@@ -2,7 +2,7 @@ import { useGlobalContext } from 'src/context'
 import { compute } from 'src/toolbox'
 import { TWithKey } from '../../../../../shared/toolbox/objects'
 import Tooltip from '../communication/Tooltip'
-import { TButtonText_P } from '../user-controls/ButtonText'
+import { TButtonText_P } from '../user-controls/buttons/ButtonText'
 import './Footer.scss'
 
 /* -- components -- */

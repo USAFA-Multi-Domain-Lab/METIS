@@ -37,7 +37,7 @@ import {
 import MissionMap from '../content/session/mission-map'
 import { TPrototypeButton } from '../content/session/mission-map/objects/MissionPrototype'
 import CreateEffect from '../content/session/mission-map/ui/overlay/modals/CreateEffect'
-import { TButtonSvg } from '../content/user-controls/ButtonSvg'
+import { TButtonSvg_P } from '../content/user-controls/buttons/ButtonSvg'
 import './MissionPage.scss'
 
 /**
@@ -276,9 +276,9 @@ export default function MissionPage({
       if (nextNode) {
         nextNode.buttons = [
           {
-            icon: 'cancel',
+            type: 'cancel',
             key: 'node-button-deselect',
-            tooltipDescription: 'Deselect this node (Closes panel view also).',
+            description: 'Deselect this node (Closes panel view also).',
             onClick: () => mission.select(nextNode!.force),
           },
         ]
@@ -294,38 +294,37 @@ export default function MissionPage({
         // Define potential buttons.
         const availableButtons = {
           deselect: {
-            icon: 'cancel',
+            type: 'cancel',
             key: 'prototype-button-deselect',
-            tooltipDescription:
-              'Deselect this prototype (Closes panel view also).',
+            description: 'Deselect this prototype (Closes panel view also).',
             onClick: () => mission.deselect(),
           } as TPrototypeButton,
           add: {
-            icon: 'add',
+            type: 'add',
             key: 'prototype-button-add',
-            tooltipDescription: 'Create an adjacent prototype on the map.',
+            description: 'Create an adjacent prototype on the map.',
             onClick: (_, prototype) => {
               onPrototypeAddRequest(prototype)
             },
           } as TPrototypeButton,
           move: {
-            icon: 'reorder',
+            type: 'reorder',
             key: 'prototype-button-move',
-            tooltipDescription: 'Move this prototype to another location.',
+            description: 'Move this prototype to another location.',
             onClick: (_, prototype) => {
               onPrototypeMoveRequest(prototype)
             },
           } as TPrototypeButton,
           transform_cancel: {
-            icon: 'cancel',
+            type: 'cancel',
             key: 'prototype-button-add-cancel',
-            tooltipDescription: 'Cancel action.',
+            description: 'Cancel action.',
             onClick: () => (mission.transformation = null),
           } as TPrototypeButton,
           remove: {
-            icon: 'remove',
+            type: 'remove',
             key: 'prototype-button-remove',
-            tooltipDescription: 'Delete this prototype.',
+            description: 'Delete this prototype.',
             disabled: mission.prototypes.length < 2 ? 'full' : 'none',
             onClick: (_, prototype) => {
               onPrototypeDeleteRequest(prototype)
@@ -621,26 +620,26 @@ export default function MissionPage({
   /**
    * Custom buttons for the mission map.
    */
-  const mapCustomButtons: TWithKey<TButtonSvg>[] = compute(() => {
+  const mapCustomButtons: TWithKey<TButtonSvg_P>[] = compute(() => {
     // Define the buttons that will be used.
-    let buttons: TWithKey<TButtonSvg>[] = []
+    let buttons: TWithKey<TButtonSvg_P>[] = []
     // Define the reorder button.
-    let reorderButton: TWithKey<TButtonSvg> = {
-      icon: 'reorder',
+    let reorderButton: TWithKey<TButtonSvg_P> = {
+      type: 'reorder',
       key: 'reorder',
       onClick: () => {
         mission.deselect()
         activateNodeStructuring(true)
       },
-      tooltipDescription: 'Edit the structure and order of nodes.',
+      description: 'Edit the structure and order of nodes.',
       disabled: nodeStructuringIsActive ? 'full' : 'none',
     }
     // Define the save button.
-    let saveButton: TWithKey<TButtonSvg> = {
-      icon: 'save',
+    let saveButton: TWithKey<TButtonSvg_P> = {
+      type: 'save',
       key: 'save',
       onClick: save,
-      tooltipDescription: 'Save changes.',
+      description: 'Save changes.',
       disabled: !areUnsavedChanges ? 'full' : 'none',
     }
     // Add the buttons to the list if the user is authorized.

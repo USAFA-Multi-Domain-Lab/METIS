@@ -11,11 +11,14 @@ import { DetailColorSelector } from '../../form/DetailColorSelector'
 import { DetailLargeString } from '../../form/DetailLargeString'
 import { DetailString } from '../../form/DetailString'
 import { DetailToggle } from '../../form/DetailToggle'
-import List, { ESortByMethod } from '../../general-layout/List'
+import ListOld, { ESortByMethod } from '../../general-layout/ListOld'
 import ButtonSvgPanel, {
   TValidPanelButton,
-} from '../../user-controls/ButtonSvgPanel'
-import { ButtonText, TButtonText_P } from '../../user-controls/ButtonText'
+} from '../../user-controls/buttons/ButtonSvgPanel'
+import {
+  ButtonText,
+  TButtonText_P,
+} from '../../user-controls/buttons/ButtonText'
 import { TToggleLockState } from '../../user-controls/Toggle'
 import './index.scss'
 import EntryNavigation from './navigation/EntryNavigation'
@@ -232,10 +235,10 @@ export default function NodeEntry({
         // If the action is available then add the edit and remove buttons.
         let availableMiniActions: SingleTypeObject<TValidPanelButton> = {
           remove: {
-            icon: 'remove',
+            type: 'remove',
             key: 'remove',
             onClick: async () => await handleDeleteActionRequest(action),
-            tooltipDescription: deleteTooltipDescription,
+            description: deleteTooltipDescription,
             disabled: node.actions.size < 2 ? 'partial' : 'none',
           },
         }
@@ -346,7 +349,7 @@ export default function NodeEntry({
           </form>
 
           {/* -- ACTIONS -- */}
-          <List<ClientMissionAction>
+          <ListOld<ClientMissionAction>
             items={Array.from(node.actions.values())}
             renderItemDisplay={(action) => renderActionListItemJsx(action)}
             headingText={'Actions'}

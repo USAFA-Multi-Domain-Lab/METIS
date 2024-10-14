@@ -21,6 +21,7 @@ import { TSessionMemberJson } from '../../../shared/sessions/members'
 import MemberRole, {
   TMemberRoleId,
 } from '../../../shared/sessions/members/roles'
+import { SessionBasic } from './basic'
 import ClientSessionMember from './members'
 
 /**
@@ -81,13 +82,27 @@ export default class SessionClient extends Session<TClientMissionTypes> {
       state,
       name,
       ownerId,
+      ownerUsername,
+      ownerFirstName,
+      ownerLastName,
       members: memberData,
       banList,
       config,
     } = data
 
     // Call super constructor with base data.
-    super(_id, name, ownerId, config, mission, memberData, banList)
+    super(
+      _id,
+      name,
+      ownerId,
+      ownerUsername,
+      ownerFirstName,
+      ownerLastName,
+      config,
+      mission,
+      memberData,
+      banList,
+    )
 
     // Set the rest of the data.
     this.server = server
@@ -177,6 +192,9 @@ export default class SessionClient extends Session<TClientMissionTypes> {
       state: this.state,
       name: this.name,
       ownerId: this.ownerId,
+      ownerUsername: this.ownerUsername,
+      ownerFirstName: this.ownerFirstName,
+      ownerLastName: this.ownerLastName,
       mission: this.mission.toJson({ exportType: 'session-limited' }),
       members: this.members.map((member) => member.toJson()),
       banList: this.banList,
@@ -191,6 +209,9 @@ export default class SessionClient extends Session<TClientMissionTypes> {
       missionId: this.missionId,
       name: this.name,
       ownerId: this.ownerId,
+      ownerUsername: this.ownerUsername,
+      ownerFirstName: this.ownerFirstName,
+      ownerLastName: this.ownerLastName,
       config: this.config,
       participantIds: this.participants.map(({ _id: userId }) => userId),
       banList: this.banList,
@@ -265,8 +286,6 @@ export default class SessionClient extends Session<TClientMissionTypes> {
     let server: ServerConnection = this.server
     let action: ClientMissionAction | undefined = this.actions.get(actionId)
     const { cheats } = options
-
-    console.log(options)
 
     // Callback for errors.
     const onError = (message: string) => {
@@ -1124,20 +1143,20 @@ export default class SessionClient extends Session<TClientMissionTypes> {
    * @resolves To the sessions.
    * @rejects If the sessions failed to be fetched.
    */
-  public static $fetchAll(): Promise<TSessionBasicJson[]> {
-    return new Promise<TSessionBasicJson[]>(
+  public static $fetchAll(): Promise<SessionBasic[]> {
+    return new Promise<SessionBasic[]>(
       async (
         resolve: (sessions: TSessionBasicJson[]) => void,
         reject: (error: any) => void,
       ): Promise<void> => {
         try {
           // Call API to fetch all sessions.
-          let sessions: TSessionBasicJson[] = (
+          let sessionData: TSessionBasicJson[] = (
             await axios.get<TSessionBasicJson[]>(Session.API_ENDPOINT, {
               params: { timeStamp: Date.now().toString() },
             })
           ).data
-          return resolve(sessions)
+          return resolve(sessionData.map((datum) => new SessionBasic(datum)))
         } catch (error) {
           console.error('Failed to fetch sessions.')
           console.error(error)

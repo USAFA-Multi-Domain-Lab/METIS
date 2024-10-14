@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="24"
+   height="24"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="text-cursor.svg"
+   inkscape:version="1.3 (0e150ed, 2023-07-21)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#000000"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="29.23798"
+     inkscape:cx="16.263093"
+     inkscape:cy="10.773658"
+     inkscape:window-width="2560"
+     inkscape:window-height="1323"
+     inkscape:window-x="0"
+     inkscape:window-y="475"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g1"
+     showgrid="false" />
+  <g
+     id="Layer_1">
+    <title
+       id="title1">Layer 1</title>
+    <g
+       id="g1"
+       inkscape:label="cursor"
+       transform="translate(-0.02642305,-0.17350822)">
+      <path
+         style="fill:#ffffff;stroke:#ffffff;stroke-width:2.368;stroke-linecap:square;stroke-miterlimit:80.4;stroke-dasharray:none;paint-order:fill markers stroke"
+         d="m 11.985328,1.1563376 0.02934,22.0293454"
+         id="path1" />
+      <path
+         style="fill:#ffffff;stroke:#ffffff;stroke-width:2.25598;stroke-linecap:square;stroke-miterlimit:80.4;stroke-dasharray:none;paint-order:fill markers stroke"
+         d="M 15.845233,1.305515 8.2076136,1.302015"
+         id="path1-8-4" />
+      <path
+         style="fill:#ffffff;stroke:#ffffff;stroke-width:2.25598;stroke-linecap:square;stroke-miterlimit:80.4;stroke-dasharray:none;paint-order:fill markers stroke"
+         d="m 15.845233,23.045001 -7.6376194,-0.0035"
+         id="path1-8-4-2" />
+    </g>
+  </g>
+</svg>

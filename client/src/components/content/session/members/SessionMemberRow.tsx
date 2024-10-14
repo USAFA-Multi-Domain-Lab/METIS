@@ -12,7 +12,7 @@ import Prompt from '../../communication/Prompt'
 import { DetailDropdown } from '../../form/DetailDropdown'
 import ButtonSvgPanel, {
   TValidPanelButton,
-} from '../../user-controls/ButtonSvgPanel'
+} from '../../user-controls/buttons/ButtonSvgPanel'
 import './SessionMemberRow.scss'
 
 export default function SessionMemberRow({
@@ -52,17 +52,17 @@ export default function SessionMemberRow({
   const buttons = compute((): TValidPanelButton[] => {
     return [
       {
-        icon: 'kick',
+        type: 'kick',
         key: 'kick',
         onClick: () => onClickKick(),
-        tooltipDescription:
+        description:
           'Kick member from the session (Can still choose to rejoin).',
       },
       {
-        icon: 'ban',
+        type: 'ban',
         key: 'ban',
         onClick: () => onClickBan(),
-        tooltipDescription: 'Ban member from the session (Cannot rejoin).',
+        description: 'Ban member from the session (Cannot rejoin).',
       },
     ]
   })

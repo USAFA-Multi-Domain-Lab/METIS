@@ -1,7 +1,7 @@
 import React from 'react'
 import { compute } from 'src/toolbox'
 import { useDefaultProps } from 'src/toolbox/hooks'
-import Tooltip from '../communication/Tooltip'
+import Tooltip from '../../communication/Tooltip'
 import './ButtonText.scss'
 
 /* -- COMPONENT -- */

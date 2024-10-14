@@ -1,9 +1,10 @@
-import { useEffect, useRef } from 'react'
+import { ReactNode, useEffect, useRef } from 'react'
 import ServerConnection from 'src/connect/servers'
 import { useGlobalContext } from 'src/context'
 import MetisInfo from 'src/info'
 import SessionClient from 'src/sessions'
 import { ClientTargetEnvironment } from 'src/target-environments'
+import { compute } from 'src/toolbox'
 import { LoginRequiredError } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import { TLogin } from '../../../shared/logins'
@@ -16,7 +17,8 @@ import {
   tooltipsOffsetY,
 } from './content/communication/Tooltip'
 import Markdown, { MarkdownTheme } from './content/general-layout/Markdown'
-import { TButtonText_P } from './content/user-controls/ButtonText'
+import ButtonMenu from './content/user-controls/buttons/ButtonMenu'
+import { TButtonText_P } from './content/user-controls/buttons/ButtonText'
 import { PAGE_REGISTRY } from './pages'
 import AuthPage from './pages/AuthPage'
 import ErrorPage from './pages/ErrorPage'
@@ -61,6 +63,7 @@ function App(props: {}): JSX.Element | null {
   const [tooltips] = globalContext.tooltips
   const [tooltipDescription, setTooltipDescription] =
     globalContext.tooltipDescription
+  const [buttonMenu] = globalContext.buttonMenu
   const [loading] = globalContext.loading
   const [loadingMinTimeReached] = globalContext.loadingMinTimeReached
   const [pageSwitchMinTimeReached] = globalContext.pageSwitchMinTimeReached
@@ -284,6 +287,17 @@ function App(props: {}): JSX.Element | null {
     className += ' Loading'
   }
 
+  /**
+   * The JSX for the button menu.
+   */
+  const buttonMenuJsx = compute<ReactNode>(() => {
+    // Render nothing, if there is no button menu.
+    if (!buttonMenu) return null
+
+    return <ButtonMenu {...buttonMenu} />
+  })
+
+  // Render METIS.
   return (
     <ReactErrorBoundary
       FallbackComponent={ErrorPage}
@@ -292,6 +306,7 @@ function App(props: {}): JSX.Element | null {
       }
     >
       <div className={className} key={'App'} ref={app}>
+        {buttonMenuJsx}
         <div className='Tooltips' ref={tooltips}>
           <Markdown
             markdown={tooltipDescription}

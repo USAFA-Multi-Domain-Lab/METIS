@@ -288,6 +288,16 @@ export class Vector2D {
   }
 
   /**
+   * Gets the sum of two vectors.
+   * @param vectorA The first vector to add.
+   * @param vectorB The second vector to add.
+   * @returns The sum of the two vectors.
+   */
+  public static sum(vectorA: Vector2D, vectorB: Vector2D): Vector2D {
+    return new Vector2D(vectorA.x + vectorB.x, vectorA.y + vectorB.y)
+  }
+
+  /**
    * Gets the difference between two vectors.
    * @param vectorA The vector from which to subtract.
    * @param vectorB The vector with which to subtract.

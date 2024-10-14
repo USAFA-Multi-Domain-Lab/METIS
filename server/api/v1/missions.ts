@@ -1050,7 +1050,6 @@ export const routerMap: TMetisRouterMap = (
             databaseLogger.error(error)
             return response.sendStatus(500)
           } else {
-            console.log(result)
             databaseLogger.info(
               `Copied mission with the original ID "${originalId}".`,
             )

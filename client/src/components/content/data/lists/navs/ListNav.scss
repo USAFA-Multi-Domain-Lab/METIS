@@ -1,0 +1,42 @@
+@import 'src/assets/styles/config.scss';
+
+.ListNav {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  column-gap: 1em;
+  width: 100%;
+  height: 3em;
+  padding: 1em 1em 0;
+
+  .ListHeader,
+  .ListFiltering,
+  .ListPageControls {
+    height: 2em;
+    box-sizing: border-box;
+  }
+
+  .ListHeader {
+    display: flex;
+    align-items: center;
+    overflow-x: hidden;
+    margin: 0;
+    height: 2em;
+    min-width: unset;
+    border-radius: 1em;
+    padding: 0;
+    background-color: transparent;
+
+    .ListHeading {
+      overflow: hidden;
+      margin: 0;
+      padding: 0 0.1em;
+      background-color: transparent;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 1.1em;
+      font-weight: bold;
+    }
+  }
+}

@@ -1,7 +1,7 @@
 import React from 'react'
-import List, { ESortByMethod } from '../general-layout/List'
+import ListOld, { ESortByMethod } from '../general-layout/ListOld'
 import Markdown, { MarkdownTheme } from '../general-layout/Markdown'
-import { ButtonText } from '../user-controls/ButtonText'
+import { ButtonText } from '../user-controls/buttons/ButtonText'
 import './Prompt.scss'
 
 /**
@@ -35,7 +35,6 @@ export default class Prompt<
     // Gather details.
     let { choice } = this.state
     const { resolve, defaultChoice } = this.props
-    console.log(choice, defaultChoice)
     // If the choice is not set and there is
     // a default choice, set the default choice.
     if (!choice && defaultChoice) choice = defaultChoice
@@ -87,7 +86,7 @@ export default class Prompt<
       } = this.props.list
 
       return (
-        <List<TList>
+        <ListOld<TList>
           items={items}
           renderItemDisplay={(object) => renderObjectListItem(object)}
           headingText={headingText}

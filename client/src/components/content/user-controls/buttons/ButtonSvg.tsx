@@ -1,6 +1,6 @@
 import React from 'react'
 import { compute } from 'src/toolbox'
-import Tooltip from '../communication/Tooltip'
+import Tooltip from '../../communication/Tooltip'
 import './ButtonSvg.scss'
 
 /* -- components -- */
@@ -9,15 +9,15 @@ import './ButtonSvg.scss'
  * A button with an SVG icon.
  */
 export default function ButtonSvg({
-  icon,
+  type,
   size = 'regular',
-  tooltipDescription = null,
+  description: description = null,
   uniqueClassList = [],
   disabled = 'none',
   cursor = 'pointer',
   onClick,
   onCopy = () => {},
-}: TButtonSvg): JSX.Element | null {
+}: TButtonSvg_P): JSX.Element | null {
   /* -- computed -- */
 
   /**
@@ -25,7 +25,7 @@ export default function ButtonSvg({
    */
   const rootClass = compute((): string => {
     // Gather details.
-    let classList: string[] = ['ButtonSvg', icon, size, ...uniqueClassList]
+    let classList: string[] = ['ButtonSvg', type, size, ...uniqueClassList]
 
     // Determine if the button is partially or fully disabled.
     if (disabled === 'partial') {
@@ -45,11 +45,14 @@ export default function ButtonSvg({
     // Construct result.
     let result: React.CSSProperties = {}
 
+    // Return as is if the type is '_blank'.
+    if (type === '_blank') return result
+
     // Determine the background details based on size.
     switch (size) {
       case 'regular':
         result = {
-          backgroundImage: `url(${require(`../../../assets/images/icons/${icon}.svg`)}), linear-gradient(to bottom, #1a2a1a 0% 100%)`,
+          backgroundImage: `url(${require(`../../../../assets/images/icons/${type}.svg`)}), linear-gradient(to bottom, #1a2a1a 0% 100%)`,
           backgroundSize: '0.5em, cover',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
@@ -57,17 +60,25 @@ export default function ButtonSvg({
         break
       case 'small':
         result = {
-          backgroundImage: `url(${require(`../../../assets/images/icons/${icon}.svg`)})`,
+          backgroundImage: `url(${require(`../../../../assets/images/icons/${type}.svg`)})`,
           backgroundSize: '0.65em',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
+        }
+        break
+      case 'wide':
+        result = {
+          backgroundImage: `url(${require(`../../../../assets/images/icons/${type}.svg`)})`,
+          backgroundSize: '0.65em',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: '0% center',
         }
         break
     }
 
     // Offset the background position for 'upload' and
     // 'download' icons to center them.
-    if (icon === 'upload' || icon === 'download') {
+    if (type === 'upload' || type === 'download') {
       result.backgroundPosition = 'center 0.25em, center'
     }
 
@@ -80,7 +91,31 @@ export default function ButtonSvg({
     return result
   })
 
-  /* -- render -- */
+  /* -- RENDER -- */
+
+  /**
+   * The JSX for the description.
+   */
+  const descriptionJsx = compute<JSX.Element | null>(() => {
+    // If there is no description, return null.
+    if (!description) return null
+
+    switch (size) {
+      // Return the description as a tooltip
+      // for 'small' and 'regular' sizes.
+      case 'regular':
+      case 'small':
+        return <Tooltip description={description} />
+      // Return the description as a label
+      // for 'wide' size.
+      case 'wide':
+        return (
+          <div className='ButtonLabel'>
+            <div className='ButtonLabelText'>{description}</div>
+          </div>
+        )
+    }
+  })
 
   return (
     <div
@@ -89,7 +124,7 @@ export default function ButtonSvg({
       onClick={onClick}
       onCopy={onCopy}
     >
-      {tooltipDescription ? <Tooltip description={tooltipDescription} /> : null}
+      {descriptionJsx}
     </div>
   )
 }
@@ -99,26 +134,29 @@ export default function ButtonSvg({
 /**
  * The size of a SVG button.
  */
-export type TButtonSvgSize = 'small' | 'regular'
+export type TButtonSvgSize = 'small' | 'regular' | 'wide'
 
 /**
  * Props for `ButtonSVG` component.
  */
-export type TButtonSvg = {
+export type TButtonSvg_P = {
   /**
-   * The icon for the button.
+   * The type of button.
    */
-  icon: TButtonSvgIcon
+  type: TButtonSvgType
   /**
    * The size of the button.
    * @default 'regular'
    */
   size?: TButtonSvgSize
   /**
-   * The description for the tooltip. If null, no tooltip is displayed.
+   * The description for the button.
+   * @note In 'small' and 'regular' sizes, this will be
+   * displayed as a tooltip, with 'wide' size, this will
+   * be displayed as beside the icon at all times.
    * @default null
    */
-  tooltipDescription?: string | null
+  description?: string | null
   /**
    * Unique class lists to apply to the component.
    * @default []
@@ -148,27 +186,38 @@ export type TButtonSvg = {
 }
 
 /**
- * The type of icon being used for the button.
+ * The type of button being used.
+ * @note Used to determine the icon to display.
+ * ### Special Types
+ * - `'_blank'`: Does not do anything and cannot be seen.
+ * Acts as a filler when the space needs to be
+ * filled up, but no button is required.
  */
-export type TButtonSvgIcon =
-  | 'cancel'
+export type TButtonSvgType =
+  // ! If adding to list, please maintain
+  // ! alphabetical order.
+  | '_blank'
   | 'add'
-  | 'edit'
-  | 'remove'
-  | 'down'
-  | 'reorder'
-  | 'zoom-in'
-  | 'zoom-out'
-  | 'save'
+  | 'ban'
+  | 'cancel'
   | 'copy'
-  | 'upload'
+  | 'down'
   | 'download'
-  | 'search'
+  | 'edit'
+  | 'kick'
   | 'launch'
   | 'lock'
-  | 'kick'
-  | 'ban'
-  | 'user'
-  | 'shell'
+  | 'open'
+  | 'options'
   | 'question'
+  | 'remove'
+  | 'reorder'
+  | 'save'
+  | 'search'
+  | 'shell'
+  | 'text-cursor'
+  | 'upload'
+  | 'user'
   | 'warning-transparent'
+  | 'zoom-in'
+  | 'zoom-out'

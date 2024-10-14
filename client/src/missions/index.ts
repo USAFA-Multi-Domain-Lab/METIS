@@ -1,4 +1,5 @@
 import axios, { AxiosResponse } from 'axios'
+import { TListItem } from 'src/components/content/data/lists/pages/ListItem'
 import { TLine_P } from 'src/components/content/session/mission-map/objects/Line'
 import { TPrototypeSlot_P } from 'src/components/content/session/mission-map/objects/PrototypeSlot'
 import SessionClient from 'src/sessions'
@@ -43,7 +44,7 @@ import PrototypeTranslation from './transformations/translations'
  */
 export default class ClientMission
   extends Mission<TClientMissionTypes>
-  implements TEventListenerTarget<TMissionEvent>, TMissionNavigable
+  implements TEventListenerTarget<TMissionEvent>, TMissionNavigable, TListItem
 {
   /**
    * Whether the resource exists on the server.
@@ -251,6 +252,36 @@ export default class ClientMission
    */
   public get defectiveObjects(): TMissionComponent[] {
     return this._defectiveObjects
+  }
+
+  /**
+   * The date that the mission was created.
+   * @note This is not accurate. This feature still needs
+   * to be implemented on the back-end. This is for interface
+   * design purposes only.
+   */
+  public get createdAt(): Date {
+    return new Date()
+  }
+
+  /**
+   * The date that the mission was last modified.
+   * @note This is not accurate. This feature still needs
+   * to be implemented on the back-end. This is for interface
+   * design purposes only.
+   */
+  public get lastModifiedAt(): Date {
+    return new Date()
+  }
+
+  /**
+   * The date that the mission was last launched.
+   * @note This is not accurate. This feature still needs
+   * to be implemented on the back-end. This is for interface
+   * design purposes only.
+   */
+  public get lastLaunchedAt(): Date {
+    return new Date()
   }
 
   /**
@@ -555,19 +586,16 @@ export default class ClientMission
   }
 
   // Implemented
-  public addEventListener(
-    method: TMissionEvent,
-    callback: () => void,
-  ): ClientMission {
+  public addEventListener(method: TMissionEvent, callback: () => void) {
     this.listeners.push([method, callback])
-    return this
   }
 
   // Implemented
-  public removeEventListener(callback: () => void): ClientMission {
+  public removeEventListener(method: TMissionEvent, callback: () => void) {
     // Filter out listener.
-    this.listeners = this.listeners.filter(([, h]) => h !== callback)
-    return this
+    this.listeners = this.listeners.filter(
+      ([m, h]) => m !== method || h !== callback,
+    )
   }
 
   /**

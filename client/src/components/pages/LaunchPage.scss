@@ -1,15 +1,21 @@
 @import '../../assets/styles/config.scss';
 
 .Page.LaunchPage {
+  $width: 100vw;
+  width: $width;
+
   .Content {
     display: flex;
     box-sizing: border-box;
     flex-direction: column;
-    width: 100%;
+    width: $width;
     padding: 0 2em;
 
     .MissionName {
+      overflow: hidden;
+      width: 100%;
       text-align: center;
+      text-overflow: ellipsis;
       font-size: 1.25rem;
       font-weight: bold;
     }

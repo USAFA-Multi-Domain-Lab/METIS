@@ -1,5 +1,5 @@
 import { v4 as generateHash } from 'uuid'
-import { TButtonText_P } from '../components/content/user-controls/ButtonText'
+import { TButtonText_P } from '../components/content/user-controls/buttons/ButtonText'
 
 export interface INotificationOptions {
   duration?: number | null

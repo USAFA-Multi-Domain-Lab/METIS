@@ -1,0 +1,26 @@
+@import 'src/assets/styles/config.scss';
+
+// For more styling rules of the `ListItem` component,
+// see the `.ListItemLike` styling rules in `ListPage.scss`.
+.ListItem {
+  .ItemOptions {
+    display: flex;
+    align-items: center;
+  }
+
+  &.Selectable {
+    cursor: pointer;
+
+    &:hover,
+    &.ButtonMenuHighlight {
+      $hover-color: $color-alt1;
+
+      background-color: $node-blue;
+      color: $hover-color;
+
+      .ItemName {
+        color: $hover-color;
+      }
+    }
+  }
+}

@@ -4,7 +4,7 @@ import lodash from 'lodash'
 import React from 'react'
 import { TAjaxStatus } from '../../../../../shared/toolbox/ajax'
 import Tooltip from '../communication/Tooltip'
-import './List.scss'
+import './ListOld.scss'
 
 /* -- enumerations -- */
 
@@ -160,7 +160,11 @@ export interface IListItemProperty {
   description: string
 }
 
-export default class List<TList extends object> extends React.Component<
+/**
+ * Displays a list of items of the given type.
+ * @deprecated Use `List` instead.
+ */
+export default class ListOld<TList extends object> extends React.Component<
   IList_P<TList>,
   IList_S<TList>
 > {
@@ -187,7 +191,7 @@ export default class List<TList extends object> extends React.Component<
     listStyling: {},
     applyStyling: () => {},
     subheadingText: null,
-    itemsPerPage: 5,
+    itemsPerPage: 9,
     duelPageMode: false,
     alwaysUseBlanks: false,
     preventMarkdownStyling: false,
@@ -283,7 +287,7 @@ export default class List<TList extends object> extends React.Component<
     let currentPage: number = this.state.page
     let itemsPerPage: number | null = this.props.itemsPerPage
     let duelPageMode: boolean = this.props.duelPageMode
-    let cuttoffItemIndex: number = List.getCuttoffItemIndex(
+    let cuttoffItemIndex: number = ListOld.getCuttoffItemIndex(
       currentPage,
       itemsPerPage,
       items.length,
@@ -447,7 +451,7 @@ export default class List<TList extends object> extends React.Component<
 
       this.setState({ page: 0, itemsFiltered, filterTerm, filterHint })
     } catch (error) {
-      console.log('Failed to filter list.')
+      console.error('Failed to filter list.')
       console.error(error)
     }
   }
@@ -512,7 +516,7 @@ export default class List<TList extends object> extends React.Component<
               this.setState({ hideSearchTooltip: false })
             }}
           />
-          <div className='search-hint'>{filterHint}</div>
+          <input type='text' className='search-hint' value={filterHint} />
           {hideSearchTooltip ? null : <Tooltip description={'Search list.'} />}
         </div>
         {/* {this.renderSortByMethods()} */}
@@ -588,8 +592,8 @@ export default class List<TList extends object> extends React.Component<
     let noItemsDisplay: string | JSX.Element | null = this.props.noItemsDisplay
     let blanksAreEnabled: boolean = this.blanksAreEnabled
     let preventMarkdownStyling: boolean = this.props.preventMarkdownStyling
-    let firstItemIndex: number = List.getFirstItemIndex(page, itemsPerPage)
-    let cuttoffItemIndex: number = List.getCuttoffItemIndex(
+    let firstItemIndex: number = ListOld.getFirstItemIndex(page, itemsPerPage)
+    let cuttoffItemIndex: number = ListOld.getCuttoffItemIndex(
       page,
       itemsPerPage,
       itemsFiltered.length,
@@ -683,7 +687,7 @@ export default class List<TList extends object> extends React.Component<
                 onMouseMove={() => {
                   if (propertyElements.length > 0) {
                     let element: any = document.querySelector(
-                      '.List .item .property:hover',
+                      '.ListOld .item .property:hover',
                     )
                     if (element && !element.matches('.without')) {
                       let hoveredProperty: IListItemProperty =
@@ -771,11 +775,11 @@ export default class List<TList extends object> extends React.Component<
     let itemsPerPage: number | null = this.props.itemsPerPage
     let duelPageMode: boolean = this.props.duelPageMode
     let page: number = this.state.page
-    let pageCount: number = List.getTotalPages(
+    let pageCount: number = ListOld.getTotalPages(
       itemsPerPage,
       itemsFiltered.length,
     )
-    let cuttoffItemIndex: number = List.getCuttoffItemIndex(
+    let cuttoffItemIndex: number = ListOld.getCuttoffItemIndex(
       duelPageMode ? page + 1 : page,
       itemsPerPage,
       itemsFiltered.length,
@@ -786,7 +790,7 @@ export default class List<TList extends object> extends React.Component<
     let pendingDeletion: boolean = this.props.pendingDeletion
     let isPreviousPage: boolean = duelPageMode ? page > 1 : page > 0
     let isNextPage: boolean = cuttoffItemIndex < itemsFiltered.length
-    let listClassName: string = 'List'
+    let listClassName: string = 'ListOld'
     let previousPageClassName: string = 'previous-page'
     let nextPageClassName: string = 'next-page'
 
@@ -835,10 +839,6 @@ export default class List<TList extends object> extends React.Component<
     return (
       <div className={listClassName} style={listStyling}>
         <div className='top'>
-          <div className={previousPageClassName} onClick={this.turnBackPage}>
-            {'<'}
-            {isPreviousPage ? <Tooltip description={'Previous page.'} /> : null}
-          </div>
           <div className='list-header'>
             <h2 className='list-heading'>
               {headingText}
@@ -847,22 +847,21 @@ export default class List<TList extends object> extends React.Component<
               ) : null}
             </h2>
           </div>
+          <div className={previousPageClassName} onClick={this.turnBackPage}>
+            <span className='arrow'>{'<'}</span>
+            {isPreviousPage ? <Tooltip description={'Previous page.'} /> : null}
+          </div>
+          <div className='page-number'>{`${page + 1}/${pageCount}`}</div>
           <div className={nextPageClassName} onClick={this.turnPage}>
-            {'>'}
+            <span className='arrow'>{'>'}</span>
             {isNextPage ? <Tooltip description={'Next page.'} /> : null}
           </div>
+          {this.renderFiltering()}
         </div>
-        {this.renderFiltering()}
-        <div className='items items-1'>
-          {this.renderItems(page)}
-          <div className='page-number'>{`${page + 1}/${pageCount}`}</div>
-        </div>
+        <div className='items items-1'>{this.renderItems(page)}</div>
         {duelPageMode ? (
           <div className='items items-2'>
             {this.renderItems(page + 1, false)}
-            {pageCount === page + 1 ? null : (
-              <div className='page-number'>{`${page + 2}/${pageCount}`}</div>
-            )}
           </div>
         ) : null}
         {/* <div className={'actions'}>

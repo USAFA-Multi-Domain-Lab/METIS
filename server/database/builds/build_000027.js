@@ -1,11 +1,6 @@
 // This migration script is responsible
-// for converting any objects nested within
-// a mission that have an "_id" property that
-// is an ObjectId to a UUID.
-
-// Import the necessary modules.
-const mongoose = require('mongoose')
-const generateHash = require('uuid').v4
+// for moving initial resources from the
+// mission level to the force level.
 
 let dbName = 'metis'
 

@@ -1,7 +1,7 @@
 @import 'src/assets/styles/config.scss';
 @import 'src/assets/styles/util.scss';
 
-.List {
+.ListOld {
   display: inline-block;
   vertical-align: top;
   box-sizing: border-box;
@@ -29,8 +29,9 @@
       border-radius: 16px;
       padding: 15px 50px;
       background-color: $background-alt1;
-      font-size: 16px;
       color: $color-main;
+      text-align: center;
+      font-size: 16px;
       letter-spacing: 0.65px;
 
       .subheading {
@@ -327,74 +328,142 @@
     overflow: hidden;
 
     .top {
-      display: grid;
-      justify-content: space-around;
-      align-items: center;
-      grid-template-columns: auto auto auto;
-      width: 100%;
-      padding-top: 20px;
-      height: 55.5px;
+      $top-height: 2em;
 
+      box-sizing: border-box;
+      display: grid;
+      grid-template-columns: auto auto auto auto 1fr;
+      align-items: center;
+      column-gap: 1em;
+      width: 100%;
+      height: $top-height;
+      padding: 1em;
+
+      .list-header,
+      .page-number,
+      .filtering,
       .previous-page,
       .next-page {
-        background-color: black;
-        border: 3px solid white;
-        margin: 0 10px;
+        height: 2em;
+        box-sizing: border-box;
       }
 
       .list-header {
-        background-color: transparent;
-        border-radius: 15px;
+        display: flex;
+        align-items: center;
         overflow-x: hidden;
         margin: 0;
+        height: 2em;
+        min-width: unset;
+        border-radius: 1em;
         padding: 0;
+        background-color: transparent;
 
         .list-heading {
           background-color: transparent;
+          margin: 0;
+          padding: 0 0.1em;
           font-size: 1.1em;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
       }
-    }
 
-    .filtering {
-      height: 28px;
-      margin: 0 20px 10px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-
-      .search-icon {
-        display: none;
+      .previous-page,
+      .next-page {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: unset;
+        margin: 0;
+        width: 1em;
+        height: 100%;
+        padding: 0;
+        background-color: black;
+        font-size: 1.25em;
       }
 
-      .search-field {
-        border-radius: 10px;
-        height: 28px;
-        padding: 5px;
-        color: black;
-        font-family: 'monospace', sans-serif;
-        background-color: #ffffff;
+      .page-number {
+        opacity: 0.65;
+        background-color: transparent;
+        color: white;
+        line-height: $top-height;
+        font-size: 0.85em;
+      }
+
+      .filtering {
+        margin: 0;
+        height: 2em;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
 
-        &:focus {
-          outline: none;
-        }
-      }
+        .search-box {
+          display: grid;
+          grid-template-columns: auto 0;
+          width: 100%;
+          height: 100%;
 
-      .search-hint {
-        font-family: 'monospace', sans-serif;
-        padding: 19.75px 5px 5px;
+          .search-icon {
+            z-index: 5;
+            grid-column: 2 / 3;
+            grid-row: 1 / 2;
+            position: relative;
+            right: 2.5em;
+            margin: 0;
+            width: 2em;
+            height: 100%;
+            background-image: url('/assets/images/icons/search.svg');
+            background-position: center;
+            background-size: 50%;
+            filter: unset;
+          }
+
+          .search-field,
+          .search-hint {
+            box-sizing: border-box;
+            grid-column: 1 / 2;
+            grid-row: 1 / 2;
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            padding: 0.325em 2em;
+            background: none;
+            font-family: 'monospace', sans-serif;
+            font-size: 0.95em;
+            line-height: 1.2em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: white;
+          }
+
+          .search-hint {
+            pointer-events: none;
+          }
+
+          .search-field {
+            border-radius: 1em;
+            background-color: rgba(#ffffff, 0.25);
+
+            &:focus {
+              outline: none;
+              background-color: rgba(#ffffff, 0.325);
+            }
+          }
+
+          .Tooltip {
+            grid-column: 1 / 3;
+            grid-row: 1 / 2;
+          }
+        }
       }
     }
 
     .items {
       width: 100%;
-      height: 275.5px;
+      height: 18em;
 
       .item {
         width: 100%;
@@ -404,6 +473,7 @@
         padding: 0;
         margin: 0;
         max-width: none;
+        min-height: unset;
 
         .Row {
           display: grid;
@@ -412,8 +482,7 @@
           align-items: center;
           flex-flow: row wrap;
           width: 100%;
-          height: 40px;
-          padding: 0 20px;
+          padding: 0 1em;
 
           &.Select:hover {
             cursor: pointer;
@@ -425,7 +494,8 @@
             display: block;
             box-sizing: border-box;
             height: 100%;
-            padding: 10px 0;
+            padding: 0.6em 0 0;
+            font-size: 0.8rem;
 
             &.Select:hover {
               cursor: pointer;
@@ -438,12 +508,6 @@
           padding: 15px 0 0 20px;
           font-size: 0.825em;
         }
-      }
-
-      .page-number {
-        margin-top: 10px;
-        background-color: transparent;
-        color: white;
       }
     }
   }
@@ -547,7 +611,7 @@
   }
 }
 
-.List.pending-edit {
+.ListOld.pending-edit {
   background-color: $background-color-negative;
 
   .item:not(.item-markdown) {
@@ -561,7 +625,7 @@
   }
 }
 
-.List.pending-deletion {
+.ListOld.pending-deletion {
   background-color: $session-red;
 
   .list-header {
@@ -593,8 +657,8 @@
   }
 }
 
-.List.pending-edit,
-.List.pending-deletion {
+.ListOld.pending-edit,
+.ListOld.pending-deletion {
   .search-box {
     opacity: 0;
   }
@@ -634,7 +698,7 @@
   }
 }
 
-.List.clickable {
+.ListOld.clickable {
   .item:not(.no-items):not(.item-blank):not(.item-status) {
     cursor: pointer;
     -webkit-user-select: none;
@@ -656,7 +720,7 @@
   }
 }
 
-.List.grabbable {
+.ListOld.grabbable {
   .item:not(.no-items):not(.item-blank):not(.item-status) {
     cursor: grab;
     -webkit-user-select: none;
@@ -682,7 +746,7 @@
   }
 }
 
-.List.items-have-properties {
+.ListOld.items-have-properties {
   .item {
     min-height: 55px;
 
@@ -694,7 +758,7 @@
   }
 }
 
-.List.duel-page-mode {
+.ListOld.duel-page-mode {
   .items {
     display: inline-block;
     vertical-align: top;

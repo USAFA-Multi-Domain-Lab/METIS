@@ -343,19 +343,19 @@ export default class ClientMissionNode
   }
 
   // Implemented
-  public addEventListener(
-    event: TNodeEventMethod,
-    callback: () => void,
-  ): ClientMissionNode {
+  public addEventListener(event: TNodeEventMethod, callback: () => void): void {
     this.listeners.push([event, callback])
-    return this
   }
 
   // Implemented
-  public removeEventListener(callback: () => void): ClientMissionNode {
+  public removeEventListener(
+    method: TNodeEventMethod,
+    callback: () => void,
+  ): void {
     // Filter out listener.
-    this.listeners = this.listeners.filter(([, h]) => h !== callback)
-    return this
+    this.listeners = this.listeners.filter(
+      ([m, h]) => m !== method || h !== callback,
+    )
   }
 
   // Implemented

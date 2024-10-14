@@ -6,10 +6,10 @@ import { useMountHandler, usePostInitEffect } from 'src/toolbox/hooks'
 import { SingleTypeObject } from '../../../../../../shared/toolbox/objects'
 import Tooltip from '../../communication/Tooltip'
 import { DetailString } from '../../form/DetailString'
-import List, { ESortByMethod } from '../../general-layout/List'
+import ListOld, { ESortByMethod } from '../../general-layout/ListOld'
 import ButtonSvgPanel, {
   TValidPanelButton,
-} from '../../user-controls/ButtonSvgPanel'
+} from '../../user-controls/buttons/ButtonSvgPanel'
 import './index.scss'
 import EntryNavigation from './navigation/EntryNavigation'
 
@@ -80,11 +80,11 @@ export default function MissionEntry({
       // Create a list of mini actions that are available.
       let availableMiniActions: SingleTypeObject<TValidPanelButton> = {
         warning: {
-          icon: 'warning-transparent',
+          type: 'warning-transparent',
           key: 'warning',
           onClick: () => {},
           cursor: 'help',
-          tooltipDescription:
+          description:
             'If this conflict is not resolved, this mission can still be used to launch a session, but the session may not function as expected.',
         },
       }
@@ -132,7 +132,7 @@ export default function MissionEntry({
             key={`${mission._id}_name`}
           />
           {defectiveObjects.length > 0 ? (
-            <List<TMissionComponent>
+            <ListOld<TMissionComponent>
               items={defectiveObjects}
               renderItemDisplay={(object) => renderObjectListItem(object)}
               headingText={'Unresolved Conflicts'}

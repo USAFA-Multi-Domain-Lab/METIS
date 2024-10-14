@@ -9,7 +9,10 @@ import { DetailColorSelector } from '../../form/DetailColorSelector'
 import { DetailLargeString } from '../../form/DetailLargeString'
 import { DetailNumber } from '../../form/DetailNumber'
 import { DetailString } from '../../form/DetailString'
-import { ButtonText, TButtonText_P } from '../../user-controls/ButtonText'
+import {
+  ButtonText,
+  TButtonText_P,
+} from '../../user-controls/buttons/ButtonText'
 import './index.scss'
 import EntryNavigation from './navigation/EntryNavigation'
 

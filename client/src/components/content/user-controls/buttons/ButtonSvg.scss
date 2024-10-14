@@ -1,7 +1,7 @@
 @import 'src/assets/styles/config.scss';
 
 .ButtonSvg {
-  $border-radius: 15px;
+  $border-radius: 0.35em;
   display: inline-block;
   -webkit-user-select: none;
   user-select: none;
@@ -12,8 +12,16 @@
   width: 1em;
   height: 0.96em;
 
+  .ButtonLabel {
+    display: flex;
+    align-items: center;
+    margin-left: 2em;
+    height: 100%;
+    font-size: 0.75rem;
+  }
+
   &.small {
-    margin: 0 0.2em;
+    margin: 0 0.15em;
     font-size: $button-svg-small-size;
 
     &:not(.warning-transparent):hover {
@@ -22,15 +30,21 @@
     }
 
     &.warning-transparent:hover {
-      background-image: url('../../../assets/images/icons/warning-filled.svg') !important;
+      background-image: url('/assets/images/icons/warning-filled.svg') !important;
       transition: background-image 0.5s;
     }
   }
 
   &.regular {
     margin: 0 0.25em;
-    border: 3px solid $color-main;
+    border: 2px solid $color-main;
     font-size: $button-svg-regular-size;
+  }
+
+  &.wide {
+    width: unset;
+    margin: 0 0.15em;
+    font-size: $button-svg-wide-size;
   }
 
   &.lock:hover {
@@ -44,5 +58,15 @@
 
   &.zoom-out {
     cursor: zoom-out;
+  }
+
+  &._blank {
+    background: none;
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  &.download {
+    background-position-y: 0.4em !important;
   }
 }

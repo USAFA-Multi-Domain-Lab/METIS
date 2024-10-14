@@ -56,150 +56,26 @@
   }
 
   .Content {
-    $max-width: 1600px;
-
+    box-sizing: border-box;
     display: grid;
     grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 2em;
     width: 100%;
-    max-width: $max-width;
+    height: 100%;
+    padding: 2em;
 
-    &:has(> .ListContainer:only-child) {
+    &:has(> .List:only-child) {
       justify-content: center;
+      align-items: center;
       grid-template-columns: 1fr;
-      max-width: $max-width / 2;
+      grid-template-rows: 100%;
+      max-width: 1050px;
     }
 
     @media (max-width: 1000px) {
       justify-content: center;
       grid-template-columns: 1fr;
-      max-width: $max-width / 2;
-    }
-
-    .ListContainer {
-      margin: 5px 20px 0;
-
-      .AltDesign1 {
-        width: unset;
-        border-bottom-left-radius: 0;
-        border-bottom-right-radius: 0;
-        margin-bottom: 0;
-
-        .items {
-          .item {
-            .Row {
-              display: grid;
-              grid-template-columns: 1fr auto;
-
-              &.Session {
-                grid-template-columns: 2em 1fr auto;
-              }
-
-              .Accessibility {
-                height: 1.15em;
-                filter: invert(68%) sepia(94%) saturate(70%) hue-rotate(117deg)
-                  brightness(200%) contrast(98%);
-
-                &.id-required {
-                  background: url('/assets/images/icons/hidden.svg');
-                  background-size: contain;
-                  background-position: left center;
-                  background-repeat: no-repeat;
-                }
-
-                &:not(.id-required) {
-                  user-select: none;
-                  pointer-events: none;
-                }
-              }
-
-              .Text {
-                overflow: hidden;
-                white-space: nowrap;
-                text-overflow: ellipsis;
-                padding-right: 10px;
-              }
-            }
-          }
-        }
-      }
-
-      .ListActions {
-        display: flex;
-        place-content: center;
-        flex-flow: row wrap;
-        min-height: 70px;
-        box-sizing: border-box;
-        background-color: black;
-        border: 3px solid white;
-        border-top: none;
-        border-bottom-left-radius: 15px;
-        border-bottom-right-radius: 15px;
-        padding: 10px 0;
-
-        .ButtonSvg {
-          transform: scale(0.8);
-        }
-      }
-    }
-
-    .ManualJoin {
-      display: flex;
-      place-items: center;
-      column-gap: 1em;
-      padding: 0 20px;
-
-      .Label,
-      .ButtonText {
-        width: 8.25rem;
-      }
-
-      .Label {
-        font-size: 0.8rem;
-      }
-
-      .ButtonText {
-        margin: 0;
-      }
-
-      .Detail {
-        display: grid;
-        grid-template-columns: auto auto;
-        margin: 0;
-        min-width: unset;
-
-        .TitleRow {
-          display: none;
-          grid-template-columns: unset;
-          margin: 0;
-        }
-
-        .Field {
-          box-shadow: unset;
-          border-radius: 10px;
-          height: 28px;
-          padding: 5px;
-          color: black;
-          font-family: 'monospace', sans-serif;
-          background-color: #ffffff;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          display: block;
-          opacity: 0.45;
-          box-sizing: border-box;
-          outline: none;
-          transition: 200ms opacity;
-          border: none;
-          margin: 0;
-          width: 100%;
-          text-align: left !important;
-          font-size: 13.5px;
-
-          &:focus {
-            opacity: 0.8;
-          }
-        }
-      }
     }
   }
 }

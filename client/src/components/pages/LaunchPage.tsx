@@ -8,12 +8,12 @@ import { DefaultLayout } from '.'
 
 import Session from '../../../../shared/sessions'
 import { SingleTypeObject } from '../../../../shared/toolbox/objects'
-import { ESortByMethod } from '../content/general-layout/List'
+import { ESortByMethod } from '../content/general-layout/ListOld'
 import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
 import SessionConfig from '../content/session/SessionConfig'
 import ButtonSvgPanel, {
   TValidPanelButton,
-} from '../content/user-controls/ButtonSvgPanel'
+} from '../content/user-controls/buttons/ButtonSvgPanel'
 import './LaunchPage.scss'
 
 /**
@@ -110,11 +110,11 @@ export default function LaunchPage({
       // Create a list of mini actions that are available.
       let availableMiniActions: SingleTypeObject<TValidPanelButton> = {
         warning: {
-          icon: 'warning-transparent',
+          type: 'warning-transparent',
           key: 'warning',
           onClick: () => {},
           cursor: 'help',
-          tooltipDescription:
+          description:
             'If this conflict is not resolved, this mission can still be used to launch a session, but the session may not function as expected.',
         },
       }

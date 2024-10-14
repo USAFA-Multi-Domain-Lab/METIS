@@ -1,5 +1,5 @@
-import { TButtonSvg } from 'src/components/content/user-controls/ButtonSvg'
-import ButtonSvgPanel from 'src/components/content/user-controls/ButtonSvgPanel'
+import { TButtonSvg_P } from 'src/components/content/user-controls/buttons/ButtonSvg'
+import ButtonSvgPanel from 'src/components/content/user-controls/buttons/ButtonSvgPanel'
 import { TWithKey } from '../../../../../../../shared/toolbox/objects'
 import './TitleBar.scss'
 
@@ -39,5 +39,5 @@ export type TTitleBar_P = {
    * The buttons to display.
    * @default []
    */
-  buttons?: TWithKey<TButtonSvg>[]
+  buttons?: TWithKey<TButtonSvg_P>[]
 }

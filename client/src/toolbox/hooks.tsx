@@ -122,8 +122,10 @@ export function useRequireLogin(): [NonNullable<TLogin<ClientUser>>] {
  */
 export function useDefaultProps<
   TProps extends {},
-  TDefaultProps extends Partial<TProps>,
-  TReturnedProps extends Omit<TProps, keyof TDefaultProps> & TDefaultProps,
+  TDefaultProps extends Required<{
+    [K in keyof TProps as undefined extends TProps[K] ? K : never]: TProps[K]
+  }>,
+  TReturnedProps extends Required<TProps> = Required<TProps>,
 >(props: TProps, defaultProps: TDefaultProps): TReturnedProps {
   let returnedProps: any = {
     ...defaultProps,
@@ -180,18 +182,24 @@ export function useListComponent<
  * @param callback The callback to call when the event is fired.
  * @param dependencies The dependencies to use for the callback.
  */
-export function useEventListener<TEventMethod extends string>(
-  target: TEventListenerTarget<TEventMethod> | null,
+export function useEventListener<
+  TEventMethod extends string,
+  TCallbackArgs extends Array<any>,
+>(
+  target: TEventListenerTarget<TEventMethod, TCallbackArgs> | null,
   methods: TEventMethod | TEventMethod[],
-  callback: () => void,
+  callback: (...args: TCallbackArgs) => any,
   dependencies: React.DependencyList = [],
 ): void {
   /**
    * Cached callback function.
    */
-  const listener = useCallback(() => {
-    callback()
-  }, [target, ...dependencies])
+  const listener = useCallback(
+    (...args: TCallbackArgs) => {
+      callback(...args)
+    },
+    [target, ...dependencies],
+  )
 
   /* -- effect -- */
 
@@ -208,7 +216,12 @@ export function useEventListener<TEventMethod extends string>(
     // Return clean up function for
     // removing the listener when done.
     return () => {
-      target?.removeEventListener(listener)
+      // Convert methods to an array, if
+      // not already..
+      methods = Array.isArray(methods) ? methods : [methods]
+
+      // Remove listener from the target.
+      for (let method of methods) target?.removeEventListener(method, listener)
     }
   }, [listener])
 }
@@ -250,10 +263,51 @@ export function withPreprocessor<T>(
 }
 
 /**
+ * Hooks that allows a component to use a resize observer
+ * on an element stored in a ref.
+ * @param ref The ref to the element to observe.
+ * @param callback The callback to call when the element resizes.
+ * @param dependencies The dependencies to watch for changes. These
+ * will be passed to a `useCallback` hook to update the callback
+ * when the dependencies change. This will not recreate the observer.
+ */
+export function useResizeObserver(
+  ref: React.RefObject<HTMLElement>,
+  callback: (clientWidth: number, clientHeight: number) => void,
+  dependencies: React.DependencyList = [],
+  options: TResizeObserverOptions = {},
+): void {
+  const callbackRef = useRef(callback)
+
+  useEffect(() => {
+    callbackRef.current = callback
+  }, [ref.current, ...dependencies])
+
+  useEffect(() => {
+    if (ref.current) {
+      const observer = new ResizeObserver(() =>
+        callbackRef.current(
+          ref.current!.clientWidth,
+          ref.current!.clientHeight,
+        ),
+      )
+      observer.observe(ref.current)
+
+      return () => {
+        observer.disconnect()
+      }
+    }
+  }, [ref.current])
+}
+
+/**
  * Interface for making a class compatible with the `useEventListener`
  * hook.
  */
-export interface TEventListenerTarget<TEventMethod extends string> {
+export interface TEventListenerTarget<
+  TEventMethod extends string,
+  TCallbackArgs extends Array<any> = [],
+> {
   /**
    * Adds an event listener to the target.
    * @param method The method of the event to listen for.
@@ -263,17 +317,24 @@ export interface TEventListenerTarget<TEventMethod extends string> {
    */
   addEventListener: (
     method: TEventMethod,
-    callback: () => void,
-  ) => TEventListenerTarget<TEventMethod>
+    callback: (...args: TCallbackArgs) => any,
+  ) => void
   /**
    * Removes an event listener from the target.
+   * @param method The method of the event to listen for.
    * @param callback The callback of the listener to remove.
    * @returns The target with the event listener remove.
    */
   removeEventListener: (
-    callback: () => void,
-  ) => TEventListenerTarget<TEventMethod>
+    method: TEventMethod,
+    callback: (...args: TCallbackArgs) => any,
+  ) => void
 }
+
+/**
+ * Options for `useResizeObserver` hook.
+ */
+export type TResizeObserverOptions = {}
 
 /**
  * Error that is thrown when the `useRequireLogin` hook is used
