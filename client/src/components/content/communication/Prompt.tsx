@@ -264,6 +264,11 @@ export default class Prompt<
    * Standard choices a simple alert that requires the user only to dismiss it.
    */
   public static AlertChoices: ['OK'] = ['OK']
+
+  /**
+   * Standard for prompting a user to submit information.
+   */
+  public static SubmissionChoices: ['Cancel', 'Submit'] = ['Cancel', 'Submit']
 }
 
 /* -- types -- */

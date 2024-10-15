@@ -35,8 +35,6 @@ import './SessionPage.scss'
 export default function SessionPage({
   session,
 }: TSessionPage_P): JSX.Element | null {
-  console.log(session._id)
-
   /* -- GLOBAL CONTEXT -- */
 
   const globalContext = useGlobalContext()

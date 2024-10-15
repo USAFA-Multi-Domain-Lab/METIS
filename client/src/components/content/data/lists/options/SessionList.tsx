@@ -9,6 +9,7 @@ import { useRequireLogin } from 'src/toolbox/hooks'
 import List, { TGetListButtonTooltip } from '../List'
 import {
   TGetItemButtonTooltip,
+  TListItem,
   TOnItemButtonClick,
   TOnItemSelection,
 } from '../pages/ListItem'
@@ -82,8 +83,10 @@ export default function SessionList({
   /**
    * Handler for when a session is selected.
    */
-  const onSessionSelection: TOnItemSelection<SessionBasic> = async ({
+  const onSessionSelection: TOnItemSelection<TListItem> = async ({
     _id: sessionId,
+  }: {
+    _id: string
   }) => {
     if (server !== null) {
       try {
@@ -163,11 +166,27 @@ export default function SessionList({
    * Callback for when a list-specific button in the
    * session list is clicked.
    */
-  const onSessionListButtonClick: TSvgPanelOnClick = (button) => {
+  const onSessionListButtonClick: TSvgPanelOnClick = async (button) => {
     switch (button) {
       case 'text-cursor':
-        // todo: Implement this.
-        console.log('Manually joining session...')
+        // Prompt user for session ID.
+        const { choice, text } = await prompt(
+          'Please enter the session ID to join:',
+          Prompt.SubmissionChoices,
+          {
+            textField: {
+              boundChoices: ['Submit'],
+              label: 'Session ID',
+              minLength: 8,
+              maxLength: 8,
+            },
+          },
+        )
+
+        // Handle session selection if the user submits.
+        if (choice === 'Submit') {
+          onSessionSelection({ _id: text, name: 'manual-join' })
+        }
         break
       default:
         break

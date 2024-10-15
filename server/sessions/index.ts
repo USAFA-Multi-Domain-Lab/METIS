@@ -1670,7 +1670,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     })
 
     return new SessionServer(
-      generateHash().substring(0, 12),
+      generateHash().substring(0, 8),
       mission.name,
       owner,
       config,
