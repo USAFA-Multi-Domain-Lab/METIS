@@ -109,6 +109,11 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
   const [globalState, setGlobalState] = useState<any>(
     GLOBAL_CONTEXT_VALUES_DEFAULT,
   )
+  /**
+   * This is a reference to the latest context.
+   * @note This is useful for callbacks.
+   */
+  const contextRef = useRef<TGlobalContext>(context)
 
   // Loop through context and define
   // the state for each value except
@@ -171,13 +176,6 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
   const [notifications, setNotifications] = context.notifications
   const [promptData, setPromptData] = context.promptData
 
-  /* -- PRIVATE STATE -- */
-
-  const [postLoadNotifications, setPostLoadNotifications] = useState<
-    Notification[]
-  >([])
-  const [initialConnectionFailed, setInitialConnectionFailed] =
-    useState<boolean>(false)
   /**
    * Handles a member being kicked from a session.
    */
@@ -252,13 +250,10 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
       if (!loading && loadingMinTimeReached) onLoadCompletion.current()
     }
     onLoadCompletion.current = () => {
-      for (let notification of postLoadNotifications) {
-        notifications.push(notification)
+      for (let notification of notifications)
         notification.startExpirationTimer()
-      }
-      setPostLoadNotifications([])
     }
-  }, [loading, loadingMinTimeReached, postLoadNotifications, notifications])
+  }, [loading, loadingMinTimeReached, notifications])
 
   /* -- CONTEXT ACTION DEFINITION -- */
 
@@ -340,6 +335,11 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
       )
       setLoadingMinTimeReached(false)
       setTimeout(() => {
+        // Get the latest context.
+        const [loading] = contextRef.current.loading
+        const [pageSwitchMinTimeReached] =
+          contextRef.current.pageSwitchMinTimeReached
+
         setLoadingMinTimeReached(true)
 
         if (!loading && pageSwitchMinTimeReached) {
@@ -504,27 +504,23 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
       let notification: Notification = new Notification(
         message,
         (dismissed: boolean, expired: boolean) => {
+          // Get the notifications from the latest context.
+          const [notifications] = contextRef.current.notifications
+
           if (dismissed) {
             notifications.splice(notifications.indexOf(notification), 1)
-            setNotifications([...notifications])
           } else if (expired) {
             setTimeout(() => {
               notifications.splice(notifications.indexOf(notification), 1)
               setNotifications([...notifications])
             }, 1000)
           }
+          setNotifications([...notifications])
         },
         { ...options, startExpirationTimer: !onLoadingPage },
       )
 
-      if (!onLoadingPage) {
-        notifications.push(notification)
-      } else {
-        postLoadNotifications.push(notification)
-      }
-
-      setNotifications([...notifications])
-      setPostLoadNotifications([...postLoadNotifications])
+      setNotifications([...notifications, notification])
 
       return notification
     },
@@ -574,7 +570,6 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
         positioningTarget,
         highlightTarget,
         onButtonClick: (button) => {
-          console.log('Button clicked:', button)
           // Preprocess the button click,
           // starting by hiing the button menu.
           setButtonMenu(null)
@@ -583,7 +578,6 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
           onButtonClick(button as TButton)
         },
         onCloseRequest: () => {
-          console.log('close')
           setButtonMenu(null)
         },
       }
@@ -628,6 +622,10 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
       }
     },
   }
+
+  // Update the context reference with the
+  // latest context.
+  contextRef.current = context
 }
 
 /**

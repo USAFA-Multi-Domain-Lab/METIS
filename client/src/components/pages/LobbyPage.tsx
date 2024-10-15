@@ -25,7 +25,7 @@ export default function LobbyPage({
 
   const globalContext = useGlobalContext()
   const [server] = globalContext.server
-  const [login] = useRequireLogin()
+  const [_] = useRequireLogin()
   const { beginLoading, finishLoading, navigateTo, handleError, prompt } =
     globalContext.actions
 
@@ -41,7 +41,23 @@ export default function LobbyPage({
     }),
   )
 
-  /* -- functions -- */
+  /**
+   * The formatted accessibility for the session.
+   */
+  const accessibility = compute<string>(() => {
+    switch (session.config.accessibility) {
+      case 'public':
+        return 'Public'
+      case 'id-required':
+        return 'ID Required'
+      case 'invite-only':
+        return 'Invite Only'
+      default:
+        return 'Unknown'
+    }
+  })
+
+  /* -- FUNCTIONS -- */
 
   /**
    * Redirects to the correct page based on
@@ -105,7 +121,7 @@ export default function LobbyPage({
     navigateTo('SessionConfigPage', { session })
   }
 
-  /* -- effects -- */
+  /* -- EFFECTS -- */
 
   // Verify navigation on mount.
   useMountHandler((done) => {
@@ -152,7 +168,7 @@ export default function LobbyPage({
     }
   })
 
-  /* -- render -- */
+  /* -- RENDER -- */
 
   /**
    * JSX for the button section.
@@ -198,6 +214,10 @@ export default function LobbyPage({
           <div className='SessionId StaticDetail'>
             <div className='Label'>Session ID:</div>
             <div className='Value'>{session._id}</div>
+          </div>
+          <div className='Visibility StaticDetail'>
+            <div className='Label'>Accessibility:</div>
+            <div className='Value'>{accessibility}</div>
           </div>
           <div className='MissionName StaticDetail'>
             <div className='Label'>Mission:</div>
