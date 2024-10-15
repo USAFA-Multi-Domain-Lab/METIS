@@ -3,8 +3,8 @@
   "description": "",
   "main": "start.ts",
   "scripts": {
-    "start": "ts-node -r tsconfig-paths/register start",
-    "dev": "nodemon --exec 'ts-node' -r tsconfig-paths/register start",
+    "start": "./node_modules/.bin/ts-node -r tsconfig-paths/register start",
+    "dev": "./node_modules/.bin/nodemon --exec './node_modules/.bin/ts-node' -r tsconfig-paths/register start",
     "test-start": "cd ./tests && npm run start",
     "test": "cd ./tests && npm run test",
     "test-coverage": "cd ./tests && npm run test-coverage"
@@ -37,6 +37,7 @@
     "isomorphic-dompurify": "^1.9.0",
     "mongoose": "^6.11.2",
     "multer": "^1.4.5-lts.1",
+    "nodemon": "^3.1.7",
     "pug": "^3.0.2",
     "seedrandom": "^3.0.5",
     "socket.io": "^4.8.0",

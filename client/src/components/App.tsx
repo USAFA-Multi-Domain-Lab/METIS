@@ -317,8 +317,8 @@ function App(props: {}): JSX.Element | null {
           <div className='Glue'>
             {notifications.map((notification) => (
               <NotificationBubble
-                notification={notification}
                 key={notification.notificationID}
+                notification={notification}
               />
             ))}
           </div>

@@ -52,6 +52,12 @@ export default class Notification {
   }
 
   // This is whether the notification
+  // expiration timer has been started.
+  get expirationTimerStarted(): boolean {
+    return this._expirationTimerStarted
+  }
+
+  // This is whether the notification
   // was either dismissed by the user,
   // or had expired after the alotted
   // duration.
