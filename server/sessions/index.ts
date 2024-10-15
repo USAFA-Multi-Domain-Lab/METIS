@@ -455,6 +455,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
       'request-assign-role',
       'request-open-node',
       'request-execute-action',
+      'request-send-output',
     ])
   }
 

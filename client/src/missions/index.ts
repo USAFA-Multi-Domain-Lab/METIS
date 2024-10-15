@@ -1477,6 +1477,8 @@ export type TStructureChangeListener = (structureChangeKey: string) => void
  * Triggered when buttons are set within any prototype or node.
  * @option 'set-transformation'
  * Triggered when a transformation is set for the mission.
+ * @option 'autopan'
+ * Triggered when nodes are opened and the mission map needs to auto-pan to them.
  */
 export type TMissionEvent =
   | 'activity'
@@ -1485,6 +1487,7 @@ export type TMissionEvent =
   | 'new-prototype'
   | 'set-buttons'
   | 'set-transformation'
+  | 'autopan'
 
 /**
  * Represents an object that can support navigation within
