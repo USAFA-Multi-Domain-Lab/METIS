@@ -36,6 +36,7 @@ export default function SessionList({
 
   /* -- COMPUTED -- */
 
+  // todo: Implement the ability for instructors to only tear down sessions that they own.
   const itemButtons = compute<TButtonSvgType[]>(() => {
     let results: TButtonSvgType[] = []
 
@@ -44,7 +45,7 @@ export default function SessionList({
 
     // If the user has the proper authorization, add
     // the remove button.
-    if (login.user.isAuthorized('sessions_write')) results.push('remove')
+    if (login.user.isAuthorized('sessions_write_native')) results.push('remove')
 
     return results
   })
@@ -141,6 +142,17 @@ export default function SessionList({
    * be torn down.
    */
   const onSessionTearDown = async (session: SessionBasic) => {
+    // todo: Remove this when the ability for instructors to only tear down sessions that they own is implemented.
+    if (
+      !login.user.isAuthorized('sessions_write') &&
+      session.ownerId !== login.user._id
+    ) {
+      notify(
+        'You do not have permission to tear down this session because you are not the owner.',
+      )
+      return
+    }
+
     // Confirm tear down.
     let { choice } = await prompt(
       'Please confirm the tear down of this session.',

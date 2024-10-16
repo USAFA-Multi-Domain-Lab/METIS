@@ -97,7 +97,7 @@ export default function MissionEntry({
     })
 
     return (
-      <div className='Row' key={`object-row-${object._id}`}>
+      <div className='Row IconFirst' key={`object-row-${object._id}`}>
         <ButtonSvgPanel buttons={buttons} size={'small'} />
         <div
           className='RowContent Select'

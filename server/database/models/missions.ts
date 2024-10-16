@@ -5,13 +5,13 @@ import { TCommonMissionNodeJson } from 'metis/missions/nodes'
 import { TCommonMissionPrototypeJson } from 'metis/missions/nodes/prototypes'
 import MetisDatabase from 'metis/server/database'
 import SanitizedHTML from 'metis/server/database/schema-types/html'
+import { databaseLogger } from 'metis/server/logging'
 import ServerMission from 'metis/server/missions'
 import ServerMissionAction from 'metis/server/missions/actions'
 import ServerEffect from 'metis/server/missions/effects'
 import ServerMissionForce from 'metis/server/missions/forces'
 import ServerMissionNode from 'metis/server/missions/nodes'
 import ServerTargetEnvironment from 'metis/server/target-environments'
-import ServerTarget from 'metis/server/target-environments/targets'
 import { TTargetArg } from 'metis/target-environments/args'
 import ForceArg from 'metis/target-environments/args/force-arg'
 import NodeArg from 'metis/target-environments/args/node-arg'
@@ -41,6 +41,298 @@ const isNonNegativeInteger = (value: number): boolean => {
 /* -- SCHEMA VALIDATORS -- */
 
 /**
+ * Validates all of the effects within the mission.
+ * @param missionJson The mission to validate.
+ */
+const validateMissionEffects = (
+  missionJson: TCommonMissionJson,
+): { error?: Error } => {
+  // Object to store results.
+  let results: { error?: Error } = {}
+
+  try {
+    // Create a new server mission.
+    let mission: ServerMission = new ServerMission(missionJson, {
+      populateTargets: true,
+    })
+
+    // Loop through each force.
+    for (let force of mission.forces) {
+      // Loop through each node.
+      for (let node of force.nodes) {
+        // Loop through each action.
+        for (let action of node.actions.values()) {
+          // Loop through each effect.
+          for (let effect of action.effects) {
+            // Get the target.
+            let target = effect.target
+
+            // Ensure the target exists.
+            if (!target) {
+              throw new Error(
+                `The effect ({ _id: "${effect._id}", name: "${effect.name}" }) does not have a target. ` +
+                  `This is likely because the target doesn't exist within any of the target environments stored in the registry.`,
+              )
+            }
+
+            // Ensure the target environment exists.
+            if (!effect.targetEnvironment) {
+              throw new Error(
+                `The effect ({ _id: "${effect._id}", name: "${effect.name}" }) does not have a target environment. ` +
+                  `This is likely because the target environment doesn't exist in the target-environment registry.`,
+              )
+            }
+
+            // Check to see if the target environment version is current.
+            let targetEnvironment = ServerTargetEnvironment.getJson(
+              effect.targetEnvironment._id,
+            )
+            if (
+              targetEnvironment?.version !== effect.targetEnvironmentVersion
+            ) {
+              let errorMessage = `The effect's ({ _id: "${effect._id}", name: "${effect.name}" }) target environment version is out-of-date. Current version: "${targetEnvironment?.version}".`
+              databaseLogger.error(errorMessage)
+              console.error(errorMessage)
+            }
+
+            // Grab the argument IDs from the effect.
+            let effectArgIds = Object.keys(effect.args)
+            // Loop through the argument IDs.
+            for (let effectArgId of effectArgIds) {
+              // Find the argument.
+              let arg = target.args.find(
+                (arg: TTargetArg) => arg._id === effectArgId,
+              )
+
+              // Ensure the argument exists.
+              if (!arg) {
+                throw new Error(
+                  `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) doesn't exist in the target's ({ _id: "${target._id}", name: "${target.name}" }) arguments.`,
+                )
+              }
+
+              // Get the value.
+              let value = effect.args[effectArgId]
+              // Ensure the value is of the correct type.
+              if (
+                (arg.type === 'string' ||
+                  arg.type === 'large-string' ||
+                  arg.type === 'dropdown') &&
+                typeof value !== 'string'
+              ) {
+                throw new Error(
+                  `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "string."`,
+                )
+              } else if (
+                arg &&
+                arg.type === 'number' &&
+                typeof value !== 'number'
+              ) {
+                throw new Error(
+                  `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "number."`,
+                )
+              } else if (
+                arg &&
+                arg.type === 'boolean' &&
+                typeof value !== 'boolean'
+              ) {
+                throw new Error(
+                  `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "boolean."`,
+                )
+              }
+
+              // If the argument is a dropdown, ensure the value one of the options.
+              // Ensure the argument is a dropdown.
+              if (arg.type === 'dropdown') {
+                // Get the option.
+                let option = arg.options.find((option) => option._id === value)
+                // Ensure the option exists.
+                if (!option) {
+                  throw new Error(
+                    `The argument with ID ("${effectArgId}") has a value ("${value}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) that is not a valid option in the effect's target ({ _id: "${target._id}", name: "${target.name}" }).`,
+                  )
+                }
+              }
+
+              // If the argument is a string, ensure the value matches the pattern.
+              if (arg.type === 'string' && arg.pattern) {
+                let isValid = arg.pattern.test(value)
+                if (isValid === false) {
+                  throw new Error(
+                    `The argument with ID ("${effectArgId}") has a value ("${value}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) that is invalid.`,
+                  )
+                }
+              }
+
+              // Ensure the force argument has the correct type.
+              if (arg.type === 'force') {
+                if (typeof value !== 'object') {
+                  throw new Error(
+                    `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "object."`,
+                  )
+                }
+
+                // Ensure the force argument has the correct keys.
+                if (
+                  !(ForceArg.FORCE_ID_KEY in value) ||
+                  !(ForceArg.FORCE_NAME_KEY in value)
+                ) {
+                  throw new Error(
+                    `The argument with ID ("${effectArgId}") has a value ("${JSON.stringify(
+                      value,
+                    )}") within the effect ({ _id: "${effect._id}", name: "${
+                      effect.name
+                    }" }) that has missing properties that are required.`,
+                  )
+                }
+              }
+
+              // Ensure the node argument has the correct type.
+              if (arg.type === 'node') {
+                if (typeof value !== 'object') {
+                  throw new Error(
+                    `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "object."`,
+                  )
+                }
+
+                // Ensure the node argument has the correct keys.
+                if (
+                  !(ForceArg.FORCE_ID_KEY in value) ||
+                  !(ForceArg.FORCE_NAME_KEY in value) ||
+                  !(NodeArg.NODE_ID_KEY in value) ||
+                  !(NodeArg.NODE_NAME_KEY in value)
+                ) {
+                  throw new Error(
+                    `The argument with ID ("${effectArgId}") has a value ("${JSON.stringify(
+                      value,
+                    )}") within the effect ({ _id: "${effect._id}", name: "${
+                      effect.name
+                    }" }) that has missing properties that are required.`,
+                  )
+                }
+              }
+            }
+
+            // Check to see if there are any missing arguments.
+            let missingArg = effect.checkForMissingArg()
+            // Ensure all of the required arguments are present in the effect.
+            if (missingArg) {
+              throw new Error(
+                `The required argument ({ _id: "${missingArg._id}", name: "${missingArg.name}" }) within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is missing.`,
+              )
+            }
+          }
+        }
+      }
+    }
+
+    // Return the results.
+    return results
+  } catch (error: any) {
+    results.error = new Error(`Error in mission:\n${error.message}`)
+    results.error.name = MetisDatabase.ERROR_BAD_DATA
+    return results
+  }
+}
+
+/**
+ * This will ensure the mission has between one and eight forces and that each prototype
+ * in the mission has a corresponding node within each force.
+ * @param mission The mission to validate.
+ * @returns An error if any of the validation checks fail.
+ */
+const validateMissionForces = (
+  mission: TCommonMissionJson,
+  structureKeys: TCommonMissionPrototypeJson['structureKey'][],
+): { error?: Error } => {
+  // Object to store results.
+  let results: { error?: Error } = {}
+
+  // Ensure correct number of forces exist
+  // the mission.
+  if (mission.forces.length < 1) {
+    results.error = new Error(
+      `Error in mission:\nMission must have at least one force.`,
+    )
+    results.error.name = MetisDatabase.ERROR_BAD_DATA
+    return results
+  }
+  if (mission.forces.length > 8) {
+    results.error = new Error(
+      `Error in mission:\nMission can have no more than eight forces.`,
+    )
+    results.error.name = MetisDatabase.ERROR_BAD_DATA
+    return results
+  }
+
+  // Loop through each force.
+  for (let force of mission.forces) {
+    // Used to ensure each node has a corresponding prototype.
+    let prototypesRetrieved: TCommonMissionPrototypeJson['_id'][] = []
+
+    // Loop through nodes.
+    for (let node of force.nodes) {
+      // Get the prototype node's ID.
+      let prototypeId = node.prototypeId
+      // Get the prototype.
+      let prototype = Mission.getPrototype(mission, prototypeId)
+
+      // Ensure the prototype ID exists.
+      if (!prototype) {
+        results.error = new Error(
+          `Error in mission:\nPrototype ID "${prototypeId}" for "${node.name}" in "${force.name}" does not exist in the mission's prototypes.`,
+        )
+        results.error.name = MetisDatabase.ERROR_BAD_DATA
+        return results
+      }
+
+      // Ensure the node has a unique prototype.
+      if (prototypesRetrieved.includes(prototype._id)) {
+        results.error = new Error(
+          `Error in mission:\nPrototype ID "${prototypeId}" for "${node.name}" in "${force.name}" has already been used for another node.`,
+        )
+        results.error.name = MetisDatabase.ERROR_BAD_DATA
+        return results
+      }
+
+      // Ensure the prototype has the correct structure key.
+      if (!structureKeys.includes(prototype.structureKey)) {
+        results.error = new Error(
+          `Error in mission:\nStructure key "${prototype.structureKey}" is missing from "${force.name}".`,
+        )
+        results.error.name = MetisDatabase.ERROR_BAD_DATA
+        return results
+      }
+
+      // Add the prototype to the array.
+      prototypesRetrieved.push(prototype._id)
+    }
+
+    // Ensure all prototype nodes are present.
+    let isMissingPrototype: boolean =
+      prototypesRetrieved.length !== mission.prototypes.length
+
+    // If a prototype node is missing from the force...
+    if (isMissingPrototype) {
+      // ...then find the missing prototype node.
+      let prototypes = mission.prototypes
+      let missingPrototype = prototypes.find(
+        (prototype) => !prototypesRetrieved.includes(prototype._id),
+      )
+
+      // Send the error.
+      results.error = new Error(
+        `Error in mission:\nPrototype Node with ID "${missingPrototype?._id}" is missing from "${force.name}".`,
+      )
+      results.error.name = MetisDatabase.ERROR_BAD_DATA
+      return results
+    }
+  }
+
+  return results
+}
+
+/**
  * Validates the mission data.
  * @param mission The mission data to validate.
  * @param next The next function to call.
@@ -57,7 +349,7 @@ const validate_missions = (mission: any, next: any): void => {
 
   // This will ensure the node structure
   // is valid.
-  const validateNodeStructure = (
+  const _validateNodeStructure = (
     currentStructure: any = initStructure,
     rootKey: string = 'ROOT',
   ): { error?: Error } => {
@@ -80,7 +372,7 @@ const validate_missions = (mission: any, next: any): void => {
         structureKeys.push(key)
       }
 
-      let results: { error?: Error } = validateNodeStructure(value, key)
+      let results: { error?: Error } = _validateNodeStructure(value, key)
 
       if (results.error) {
         return results
@@ -91,7 +383,7 @@ const validate_missions = (mission: any, next: any): void => {
   }
 
   // Algorithm to check for duplicate _id's.
-  const _idCheckerAlgorithm = (cursor = mission) => {
+  const _idCheckerAlgorithm = (cursor = mission): { error?: Error } => {
     // If the cursor has a _doc property and its an object...
     if (cursor._doc !== undefined && cursor._doc instanceof Object) {
       // ...then set the cursor to the _doc property.
@@ -102,11 +394,11 @@ const validate_missions = (mission: any, next: any): void => {
       // ...and it has an _id property and the _id already exists...
       if (cursor._id && cursor._id in existingIds) {
         // ...then set the error and return.
-        results.error = new Error(
+        let error = new Error(
           `Error in mission:\nDuplicate _id used (${cursor._id}).`,
         )
-        results.error.name = MetisDatabase.ERROR_BAD_DATA
-        return
+        error.name = MetisDatabase.ERROR_BAD_DATA
+        return { error }
       }
       // Or, if the cursor is a Mission and the _id isn't a valid ObjectId...
       else if (
@@ -114,11 +406,11 @@ const validate_missions = (mission: any, next: any): void => {
         !mongoose.isObjectIdOrHexString(cursor._id)
       ) {
         // ...then set the error and return.
-        results.error = new Error(
+        let error = new Error(
           `Error in mission:\nInvalid _id used (${cursor._id}).`,
         )
-        results.error.name = MetisDatabase.ERROR_BAD_DATA
-        return
+        error.name = MetisDatabase.ERROR_BAD_DATA
+        return { error }
       }
       // Otherwise, add the _id to the existingIds object.
       else {
@@ -136,113 +428,28 @@ const validate_missions = (mission: any, next: any): void => {
         _idCheckerAlgorithm(value)
       }
     }
-  }
 
-  // This will ensure the mission has between
-  // one and eight forces and that each prototype
-  // in the mission has a corresponding node within
-  // each force.
-  const validateMissionForces = () => {
-    // Ensure correct number of forces exist
-    // the mission.
-    if (mission.forces.length < 1) {
-      results.error = new Error(
-        `Error in mission:\nMission must have at least one force.`,
-      )
-      results.error.name = MetisDatabase.ERROR_BAD_DATA
-      return
-    }
-    if (mission.forces.length > 8) {
-      results.error = new Error(
-        `Error in mission:\nMission can have no more than eight forces.`,
-      )
-      results.error.name = MetisDatabase.ERROR_BAD_DATA
-      return
-    }
-
-    // Loop through each force.
-    for (let force of mission.forces as TCommonMissionForceJson[]) {
-      // Used to ensure each node has a corresponding prototype.
-      let prototypesRetrieved: TCommonMissionPrototypeJson['_id'][] = []
-
-      // Loop through nodes.
-      for (let node of force.nodes) {
-        // Get the prototype node's ID.
-        let prototypeId = node.prototypeId
-        // Get the prototype.
-        let prototype = Mission.getPrototype<TCommonMissionJson>(
-          mission,
-          prototypeId,
-        )
-
-        // Ensure the prototype ID exists.
-        if (!prototype) {
-          results.error = new Error(
-            `Error in mission:\nPrototype ID "${prototypeId}" for "${node.name}" in "${force.name}" does not exist in the mission's prototypes.`,
-          )
-          results.error.name = MetisDatabase.ERROR_BAD_DATA
-          return
-        }
-
-        // Ensure the node has a unique prototype.
-        if (prototypesRetrieved.includes(prototype._id)) {
-          results.error = new Error(
-            `Error in mission:\nPrototype ID "${prototypeId}" for "${node.name}" in "${force.name}" has already been used for another node.`,
-          )
-          results.error.name = MetisDatabase.ERROR_BAD_DATA
-          return
-        }
-
-        // Ensure the prototype has the correct structure key.
-        if (!structureKeys.includes(prototype.structureKey)) {
-          results.error = new Error(
-            `Error in mission:\nStructure key "${prototype.structureKey}" is missing from "${force.name}".`,
-          )
-          results.error.name = MetisDatabase.ERROR_BAD_DATA
-          return
-        }
-
-        // Add the prototype to the array.
-        prototypesRetrieved.push(prototype._id)
-      }
-
-      // Ensure all prototype nodes are present.
-      let isMissingPrototype: boolean =
-        prototypesRetrieved.length !== mission.prototypes.length
-
-      // If a prototype node is missing from the force...
-      if (isMissingPrototype) {
-        // ...then find the missing prototype node.
-        let prototypes = mission.prototypes as TCommonMissionPrototypeJson[]
-        let missingPrototype = prototypes.find(
-          (prototype) => !prototypesRetrieved.includes(prototype._id),
-        )
-
-        // Send the error.
-        results.error = new Error(
-          `Error in mission:\nPrototype Node with ID "${missingPrototype?._id}" is missing from "${force.name}".`,
-        )
-        results.error.name = MetisDatabase.ERROR_BAD_DATA
-        return
-      }
-    }
+    // Return an empty object.
+    return {}
   }
 
   // Check for duplicate _id's.
-  _idCheckerAlgorithm()
-
+  results = _idCheckerAlgorithm()
   // Check for error.
   if (results.error) return next(results.error)
 
   // Validate node structure.
-  results = validateNodeStructure()
-
+  results = _validateNodeStructure()
   // Check for error.
   if (results.error) return next(results.error)
 
   // Validate the mission forces.
-  validateMissionForces()
+  results = validateMissionForces(mission, structureKeys)
+  // Check for error.
+  if (results.error) return next(results.error)
 
+  // Validate the mission effects.
+  results = validateMissionEffects(mission)
   // Check for error.
   if (results.error) return next(results.error)
 
@@ -354,196 +561,6 @@ const validate_mission_forces_nodes_actions_resourceCost = (
   let nonNegativeInteger: boolean = isNonNegativeInteger(resourceCost)
 
   return nonNegativeInteger
-}
-
-/**
- * Validates the effects for a mission-action.
- * @param effects The effects to validate.
- */
-const validate_mission_forces_nodes_actions_effects = (
-  effects: TCommonMissionActionJson['effects'],
-): void => {
-  // Loop through each effect.
-  effects.forEach((effect) => {
-    // Get the target.
-    let target = ServerTarget.getTarget(effect.targetId)
-
-    // Ensure the target exists.
-    if (!target) {
-      throw new Error(
-        `Error in mission:\nThe effect's ("${effect.name}") target ID ("${effect.targetId}") was not found in any of the target-environments.`,
-      )
-    }
-
-    // Get the target environment.
-    let targetEnvironment = ServerTargetEnvironment.getJson(
-      target.targetEnvironment._id,
-    )
-
-    // Ensure the target environment exists.
-    if (!targetEnvironment) {
-      throw new Error(
-        `Error in mission:\nThe target environment for the target ("${target.name}") was not found in the target-environment registry.`,
-      )
-    }
-
-    // Ensure the target environment version is correct.
-    if (targetEnvironment.version !== effect.targetEnvironmentVersion) {
-      throw new Error(
-        `Error in mission:\nThe target environment version (${effect.targetEnvironmentVersion}) within the effect ("${effect.name}") does not match target environment version (${targetEnvironment.version}) for the target environment (${targetEnvironment.name}).`,
-      )
-    }
-
-    // Grab the argument IDs from the effect.
-    let effectArgIds = Object.keys(effect.args)
-    // Loop through the argument IDs.
-    for (let effectArgId of effectArgIds) {
-      // Find the argument.
-      let arg = target.args.find((arg: TTargetArg) => arg._id === effectArgId)
-
-      // Ensure the argument exists.
-      if (!arg) {
-        throw new Error(
-          `Error in mission:\nThe argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) doesn't exist in the target's ({ _id: "${target._id}", name: "${target.name}" }) arguments.`,
-        )
-      }
-
-      // Get the value.
-      let value = effect.args[effectArgId]
-      // Ensure the value is of the correct type.
-      if (
-        (arg.type === 'string' ||
-          arg.type === 'large-string' ||
-          arg.type === 'dropdown') &&
-        typeof value !== 'string'
-      ) {
-        throw new Error(
-          `Error in mission:\nThe argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "string."`,
-        )
-      } else if (arg && arg.type === 'number' && typeof value !== 'number') {
-        throw new Error(
-          `Error in mission:\nThe argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "number."`,
-        )
-      } else if (arg && arg.type === 'boolean' && typeof value !== 'boolean') {
-        throw new Error(
-          `Error in mission:\nThe argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "boolean."`,
-        )
-      }
-
-      // If the argument is a dropdown, ensure the value one of the options.
-      // Ensure the argument is a dropdown.
-      if (arg.type === 'dropdown') {
-        // Get the option.
-        let option = arg.options.find((option) => option._id === value)
-        // Ensure the option exists.
-        if (!option) {
-          throw new Error(
-            `Error in mission:\nThe argument with ID ("${effectArgId}") has a value ("${value}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) that is not a valid option in the effect's target ({ _id: "${target._id}", name: "${target.name}" }).`,
-          )
-        }
-      }
-
-      // If the argument is a string, ensure the value matches the pattern.
-      if (arg.type === 'string' && arg.pattern) {
-        let isValid = arg.pattern.test(value)
-        if (isValid === false) {
-          throw new Error(
-            `Error in mission:\nThe argument with ID ("${effectArgId}") has a value ("${value}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) that is invalid.`,
-          )
-        }
-      }
-
-      // Ensure the force argument has the correct type.
-      if (arg.type === 'force') {
-        if (typeof value !== 'object') {
-          throw new Error(
-            `Error in mission:\nThe argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "object."`,
-          )
-        }
-
-        // Ensure the force argument has the correct keys.
-        if (
-          !(ForceArg.FORCE_ID_KEY in value) ||
-          !(ForceArg.FORCE_NAME_KEY in value)
-        ) {
-          throw new Error(
-            `Error in mission:\nThe argument with ID ("${effectArgId}") has a value ("${JSON.stringify(
-              value,
-            )}") within the effect ({ _id: "${effect._id}", name: "${
-              effect.name
-            }" }) that has missing properties that are required.`,
-          )
-        }
-      }
-
-      // Ensure the node argument has the correct type.
-      if (arg.type === 'node') {
-        if (typeof value !== 'object') {
-          throw new Error(
-            `Error in mission:\nThe argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "object."`,
-          )
-        }
-
-        // Ensure the node argument has the correct keys.
-        if (
-          !(ForceArg.FORCE_ID_KEY in value) ||
-          !(ForceArg.FORCE_NAME_KEY in value) ||
-          !(NodeArg.NODE_ID_KEY in value) ||
-          !(NodeArg.NODE_NAME_KEY in value)
-        ) {
-          throw new Error(
-            `Error in mission:\nThe argument with ID ("${effectArgId}") has a value ("${JSON.stringify(
-              value,
-            )}") within the effect ({ _id: "${effect._id}", name: "${
-              effect.name
-            }" }) that has missing properties that are required.`,
-          )
-        }
-      }
-    }
-
-    // Check to see if there are any missing arguments.
-    let missingArg = ServerEffect.checkForMissingArg(target, effect.args)
-    // Ensure all of the required arguments are present in the effect.
-    if (missingArg) {
-      throw new Error(
-        `Error in mission:\nThe required argument ({ _id: "${missingArg._id}", name: "${missingArg.name}" }) within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is missing.`,
-      )
-    }
-  })
-}
-
-/**
- * Sanitizes the effects' arguments for a mission-action.
- * @param mission The mission with all the actions and their effects.
- */
-const sanitize_mission_forces_nodes_actions_effects_args = (
-  mission: any,
-): void => {
-  // Loop through each force.
-  mission.forces.forEach((force: any) => {
-    // Loop through each node.
-    force.nodes.forEach((node: any) => {
-      // Loop through each action.
-      node.actions.forEach((action: any) => {
-        // Loop through each effect.
-        action.effects.forEach((effect: any) => {
-          // Get the target.
-          let target = ServerTarget.getTarget(effect.targetId)
-
-          // Ensure the target exists.
-          if (!target) {
-            throw new Error(
-              `Error in mission:\nThe effect's ("${effect.name}") target ID ("${effect.targetId}") was not found in any of the target-environments.`,
-            )
-          }
-
-          // Sanitize the arguments.
-          effect.args = ServerEffect.sanitizeArgs(target, effect.args)
-        })
-      })
-    })
-  })
 }
 
 /* -- SCHEMA -- */
@@ -658,6 +675,7 @@ export const MissionSchema: Schema = new Schema(
                         required: true,
                       },
                       effects: {
+                        // Validation/Sanitization takes places in the pre-save/pre-update hook.
                         type: [
                           {
                             _id: { type: String, required: true },
@@ -685,7 +703,6 @@ export const MissionSchema: Schema = new Schema(
                           },
                         ],
                         required: true,
-                        validate: validate_mission_forces_nodes_actions_effects,
                       },
                     },
                   ],
@@ -712,14 +729,12 @@ export const MissionSchema: Schema = new Schema(
 // Called before a save is made
 // to the database.
 MissionSchema.pre('save', function (next) {
-  sanitize_mission_forces_nodes_actions_effects_args(this)
   validate_missions(this, next)
 })
 
 // Called before an update is made
 // to the database.
 MissionSchema.pre('update', function (next) {
-  sanitize_mission_forces_nodes_actions_effects_args(this)
   validate_missions(this, next)
 })
 

@@ -263,6 +263,10 @@ export default class SessionClient extends Session<TClientMissionTypes> {
         // Handle error emitted by server concerning the
         // request.
         onResponse: (event) => {
+          if (event.method === 'node-opened') {
+            this.mission.emitEvent('autopan')
+          }
+
           if (event.method === 'error') {
             onError(event.message)
             node!.handleRequestFailed('request-open-node')
@@ -381,7 +385,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
         onResponse: (event) => {
           if (event.method === 'error') {
             onError(event.message)
-            node!.handleRequestFailed('request-send-output')
+            node?.handleRequestFailed('request-send-output')
           }
         },
       },

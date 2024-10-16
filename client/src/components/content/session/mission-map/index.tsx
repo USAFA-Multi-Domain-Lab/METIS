@@ -206,10 +206,7 @@ export default function MissionMap({
 
   // Create an event listener to handle when the mission
   // structure changes by forcing a state update.
-  useEventListener(mission, 'structure-change', () => {
-    // Update the structure change key.
-    setStructureChangeKey(mission.structureChangeKey)
-
+  useEventListener(mission, 'autopan', () => {
     // If new nodes were revealed...
     if (
       rootRef.current &&
@@ -257,6 +254,12 @@ export default function MissionMap({
       }
     }
   })
+
+  // Create an event listener to handle when the mission
+  // structure changes by forcing a state update.
+  useEventListener(mission, 'structure-change', () =>
+    setStructureChangeKey(mission.structureChangeKey),
+  )
 
   // Listener for selection events within a mission. This
   // will update the selected force in the state.
