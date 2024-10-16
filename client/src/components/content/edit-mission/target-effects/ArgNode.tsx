@@ -183,7 +183,7 @@ export default function ArgNode({
         message:
           `"${
             effectArgs[arg._id][nodeName]
-          }" is no longer available in the force selected above.` +
+          }" is no longer available in the force selected above. ` +
           `This is likely due to the node being deleted. Please select a valid node, or delete this effect.`,
       }
     } else {

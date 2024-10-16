@@ -184,6 +184,11 @@ export default class UserPermission implements TUserPermission {
       'Write Sessions',
       'Allows the user currently logged in to create, update, and delete sessions in the database.',
     ),
+    sessions_write_native: new UserPermission(
+      'sessions_write_native',
+      'Write Sessions (Native)',
+      'Allows the user currently logged in to create, update, and delete sessions that they own.',
+    ),
     sessions_join_participant: new UserPermission(
       'sessions_join_participant',
       'Join Sessions (Participant)',
@@ -237,6 +242,7 @@ const userPermissionNames = [
   'Write Student Users',
   'Read Sessions',
   'Write Sessions',
+  'Write Sessions (Native)',
   'Join Sessions (Participant)',
   'Join Sessions (Manager)',
   'Join Sessions (Manager of Native Sessions)',
@@ -254,6 +260,7 @@ const userPermissionIds = [
   'users_write_students',
   'sessions_read',
   'sessions_write',
+  'sessions_write_native',
   'sessions_join_participant',
   'sessions_join_manager',
   'sessions_join_manager_native',

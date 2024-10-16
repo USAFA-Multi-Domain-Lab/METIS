@@ -613,7 +613,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
 
       try {
         await ClientLogin.$logOut()
-        navigateTo('AuthPage', {})
+        navigateTo('AuthPage', {}, { bypassMiddleware: true })
         setLogin(null)
         finishLoading()
       } catch (error: any) {

@@ -591,6 +591,10 @@
       grid-template-columns: 1fr auto;
       width: 100%;
 
+      &.IconFirst {
+        grid-template-columns: auto 1fr;
+      }
+
       &.Select:hover {
         cursor: pointer;
         background-color: $node-blue;

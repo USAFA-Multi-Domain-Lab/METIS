@@ -7,11 +7,7 @@ import ClientUser from 'src/users'
 import { DefaultLayout, TPage_P } from '.'
 import CreateUserEntry from '../content/edit-user/CreateUserEntry'
 import EditUserEntry from '../content/edit-user/EditUserEntry'
-import {
-  HomeLink,
-  LogoutLink,
-  TNavigation,
-} from '../content/general-layout/Navigation'
+import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
 import './UserPage.scss'
 
 /**
@@ -27,6 +23,7 @@ export default function UserPage({ userId }: IUserPage): JSX.Element | null {
     notify,
     prompt,
     navigateTo,
+    logout,
   } = globalContext.actions
 
   /* -- COMPONENT STATE -- */
@@ -69,7 +66,10 @@ export default function UserPage({ userId }: IUserPage): JSX.Element | null {
   useNavigationMiddleware(
     async (to, next) => {
       // If there are unsaved changes, prompt the user.
-      if (areUnsavedChanges) {
+      if (
+        areUnsavedChanges &&
+        currentUser.isAuthorized('users_write_students')
+      ) {
         const { choice } = await prompt(
           'You have unsaved changes. What do you want to do with them?',
           ['Cancel', 'Save', 'Discard'],
@@ -117,11 +117,49 @@ export default function UserPage({ userId }: IUserPage): JSX.Element | null {
   /* -- COMPUTED -- */
 
   /**
+   * Logout link for navigation.
+   */
+  const logoutLink = compute(() => ({
+    text: 'Logout',
+    onClick: async () => {
+      // If there are unsaved changes, prompt the user.
+      if (areUnsavedChanges) {
+        const { choice } = await prompt(
+          'You have unsaved changes. What do you want to do with them?',
+          ['Cancel', 'Save', 'Discard'],
+        )
+
+        try {
+          // Abort if cancelled.
+          if (choice === 'Cancel') {
+            return
+          }
+          // Save if requested.
+          else if (choice === 'Save') {
+            beginLoading('Saving...')
+            await save()
+          }
+
+          await logout()
+        } catch (error) {
+          return handleError({
+            message: 'Failed to save mission.',
+            notifyMethod: 'bubble',
+          })
+        }
+      } else {
+        await logout()
+      }
+    },
+    key: 'logout',
+  }))
+
+  /**
    * Props for navigation.
    */
   const navigation: TNavigation = compute(
     (): TNavigation => ({
-      links: [HomeLink(globalContext), LogoutLink(globalContext)],
+      links: [HomeLink(globalContext), logoutLink],
       boxShadow: 'alt-7',
     }),
   )

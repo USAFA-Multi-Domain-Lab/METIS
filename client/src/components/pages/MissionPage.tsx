@@ -56,6 +56,8 @@ export default function MissionPage({
     notify,
     prompt,
     forceUpdate,
+    navigateTo,
+    logout,
   } = globalContext.actions
 
   /* -- STATE -- */
@@ -104,8 +106,9 @@ export default function MissionPage({
           else if (choice === 'Save') {
             beginLoading('Saving...')
             await save()
-            await globalContext.actions.logout()
           }
+
+          await logout()
         } catch (error) {
           return handleError({
             message: 'Failed to save mission.',
@@ -113,7 +116,7 @@ export default function MissionPage({
           })
         }
       } else {
-        await globalContext.actions.logout()
+        await logout()
       }
     },
     key: 'logout',

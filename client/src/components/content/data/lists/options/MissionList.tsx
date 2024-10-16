@@ -67,7 +67,7 @@ export default function MissionList({
 
     // If the user has the proper authorization, add
     // the launch button.
-    if (login.user.isAuthorized('sessions_write')) {
+    if (login.user.isAuthorized('sessions_write_native')) {
       results.push('launch')
     }
 
@@ -197,7 +197,8 @@ export default function MissionList({
   ) => {
     switch (button) {
       case 'open':
-        return 'Open'
+        if (login.user.isAuthorized('missions_write')) return 'Open'
+        else return 'View'
       case 'launch':
         return 'Launch session'
       case 'copy':

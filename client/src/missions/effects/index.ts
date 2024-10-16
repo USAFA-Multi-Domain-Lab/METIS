@@ -5,11 +5,8 @@ import Effect, {
   TCommonEffectJson,
   TEffectOptions,
 } from '../../../../shared/missions/effects'
-import { TTargetArg } from '../../../../shared/target-environments/args'
 import ForceArg from '../../../../shared/target-environments/args/force-arg'
 import NodeArg from '../../../../shared/target-environments/args/node-arg'
-import Dependency from '../../../../shared/target-environments/dependencies'
-import { AnyObject } from '../../../../shared/toolbox/objects'
 import ClientMissionAction from '../actions'
 
 /**
@@ -48,105 +45,6 @@ export class ClientEffect
   ) {
     super(action, data, options)
     this._defectiveMessage = ''
-  }
-
-  /**
-   * Determines if all the dependencies passed are met.
-   * @param dependencies The dependencies to check if all are met.
-   * @param args The arguments to check the dependencies against.
-   * @returns If all the dependencies are met.
-   */
-  public allDependenciesMet = (
-    dependencies: Dependency[] = [],
-    args: ClientEffect['args'] = this.args,
-  ): boolean => {
-    // If the argument has no dependencies, then the argument is always displayed.
-    if (!dependencies || dependencies.length === 0) {
-      return true
-    }
-
-    // Stores the status of all the argument's dependencies.
-    let areDependenciesMet: boolean[] = []
-    // Create a variable to determine if all the dependencies
-    // have been met.
-    let allDependenciesMet: boolean
-
-    // Iterate through the dependencies.
-    dependencies.forEach((dependency) => {
-      // Grab the dependency argument.
-      let dependencyArg: TTargetArg | undefined = this.target?.args.find(
-        (arg: TTargetArg) => arg._id === dependency.dependentId,
-      )
-
-      // If the dependency argument is found then check if
-      // the dependency is met.
-      if (dependencyArg) {
-        // Initialize a variable to determine if the dependency
-        // is met.
-        let dependencyMet: boolean
-
-        // If the dependency is a force dependency then check
-        // if the force exists and if the condition is met.
-        if (dependency.name === 'FORCE') {
-          // Ensure the force argument exists within the effect arguments.
-          let forceInArgs: AnyObject | undefined = args[dependency.dependentId]
-          // Ensure the force ID exists within the force argument.
-          let forceId: string | undefined = forceInArgs
-            ? forceInArgs[ForceArg.FORCE_ID_KEY]
-            : undefined
-          // Get the force from the mission.
-          let force = forceId ? this.mission.getForce(forceId) : undefined
-          // Check if the condition is met.
-          dependencyMet = dependency.condition(force)
-        }
-        // If the dependency is a node dependency then check
-        // if the node exists and if the condition is met.
-        else if (dependency.name === 'NODE') {
-          // Ensure the node argument exists within the effect arguments.
-          let nodeInArgs: AnyObject | undefined = args[dependency.dependentId]
-          // Ensure the force ID exists within the node argument.
-          let forceId: string | undefined = nodeInArgs
-            ? nodeInArgs[ForceArg.FORCE_ID_KEY]
-            : undefined
-          // Ensure the node ID exists within the node argument.
-          let nodeId: string | undefined = nodeInArgs
-            ? nodeInArgs[NodeArg.NODE_ID_KEY]
-            : undefined
-          // Get the force from the mission.
-          let force = forceId ? this.mission.getForce(forceId) : undefined
-          // Get the node from the mission.
-          let node = nodeId ? this.mission.getNode(nodeId) : undefined
-          // Create the value to check if the condition is met.
-          let value = {
-            force: force,
-            node: node,
-          }
-          // Check if the condition is met.
-          dependencyMet = dependency.condition(value)
-        }
-        // Otherwise, check if the condition is met.
-        else {
-          dependencyMet = dependency.condition(args[dependency.dependentId])
-        }
-
-        // If the dependency is met then push true to the
-        // dependencies met array, otherwise push false.
-        dependencyMet
-          ? areDependenciesMet.push(true)
-          : areDependenciesMet.push(false)
-      }
-      // Otherwise, the dependency argument doesn't exist.
-      else {
-        areDependenciesMet.push(false)
-      }
-    })
-
-    // If all the dependencies have been met then set the
-    // variable to true, otherwise set it to false.
-    allDependenciesMet = !areDependenciesMet.includes(false)
-
-    // Return the status of all the dependencies.
-    return allDependenciesMet
   }
 
   /**
