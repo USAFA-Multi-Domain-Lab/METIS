@@ -137,6 +137,7 @@ export default class Prompt<
             maxLength={maxLength}
             pattern={pattern}
             defaultValue={initialValue}
+            autoFocus={true}
           />
           <button
             ref={this.submitButton}

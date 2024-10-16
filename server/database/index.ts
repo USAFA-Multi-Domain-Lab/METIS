@@ -83,10 +83,10 @@ export default class MetisDatabase {
           databaseLogger.info('Connected to database.')
           // Create backup of database before use.
           await this.createBackup()
-          // Ensure that the schema build is correct.
-          await this.ensureCorrectSchemaBuild()
           // Ensure that the default data exists.
           await this.ensureDefaultDataExists()
+          // Ensure that the schema build is correct.
+          await this.ensureCorrectSchemaBuild()
 
           try {
             // Schedule a backup every 24 hours
@@ -122,7 +122,10 @@ export default class MetisDatabase {
       const { mongoHost, mongoPort, mongoDB, mongoUsername, mongoPassword } =
         server
       const now: Date = new Date()
-      const nowFormatted: string = formatDate(now, 'isoDateTime')
+      const nowFormatted: string = formatDate(now, 'isoDateTime').replaceAll(
+        ':',
+        '-',
+      )
       let command: string = `mongodump --host ${mongoHost} --port ${mongoPort} --db ${mongoDB} --out ./database/backups/${nowFormatted}`
 
       if (mongoUsername !== undefined && mongoPassword !== undefined) {

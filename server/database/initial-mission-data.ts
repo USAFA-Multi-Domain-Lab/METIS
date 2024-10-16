@@ -732,16 +732,6 @@ export let demoMissionData: TCommonMissionJson = {
       depthPadding: ServerMissionPrototype.DEFAULT_PROPERTIES.depthPadding,
     },
     {
-      _id: 'f3b3b3b4-1b3b-4b3b-8b3b-63b3b3b3b3b3',
-      structureKey: '6185ea46-de8b-4308-aec3-e257313563af',
-      depthPadding: ServerMissionPrototype.DEFAULT_PROPERTIES.depthPadding,
-    },
-    {
-      _id: '70effa5f-412b-4756-9fcb-b07dd7d9b50e',
-      structureKey: '339e1633-34cc-488f-abee-61ec1f21f0dd',
-      depthPadding: ServerMissionPrototype.DEFAULT_PROPERTIES.depthPadding,
-    },
-    {
       _id: 'fc95ead3-f930-4f37-ac40-6dab33b41698',
       structureKey: '6185ea46-de8b-4308-aec3-e257313563af',
       depthPadding: ServerMissionPrototype.DEFAULT_PROPERTIES.depthPadding,

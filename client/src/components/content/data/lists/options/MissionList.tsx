@@ -322,6 +322,7 @@ export default function MissionList({
       <List<ClientMission>
         name={'Missions'}
         items={missions}
+        // columns={['createdAt', 'lastModifiedAt', 'lastLaunchedAt']}
         listButtons={listButtons}
         itemButtons={itemButtons}
         getItemTooltip={() => 'Open mission'}

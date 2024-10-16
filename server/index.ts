@@ -407,7 +407,7 @@ export default class MetisServer {
   /**
    * The path to the environment file.
    */
-  public static readonly ENVIRONMENT_FILE_PATH: string = './environment.json'
+  public static readonly ENVIRONMENT_FILE_PATH: string = '../environment.json'
 }
 
 /* -- TYPES -- */
