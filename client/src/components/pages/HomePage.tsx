@@ -37,16 +37,8 @@ const SESSIONS_SYNC_RATE: number = 1000
 export default function HomePage(): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const globalContext = useGlobalContext()
-  const [server] = globalContext.server
-  const {
-    beginLoading,
-    finishLoading,
-    navigateTo,
-    handleError,
-    notify,
-    prompt,
-    showButtonMenu,
-  } = globalContext.actions
+  const { beginLoading, finishLoading, handleError, notify, prompt } =
+    globalContext.actions
 
   /* -- REFS -- */
   const page = useRef<HTMLDivElement>(null)
@@ -55,7 +47,6 @@ export default function HomePage(): JSX.Element | null {
   const [sessions, setSessions] = useState<SessionBasic[]>([])
   const [missions, setMissions] = useState<ClientMission[]>([])
   const [users, setUsers] = useState<ClientUser[]>([])
-  const [manualJoinSessionId, setManualJoinSessionId] = useState<string>('')
 
   /* -- LOGIN-SPECIFIC LOGIC -- */
 
@@ -399,123 +390,6 @@ export default function HomePage(): JSX.Element | null {
       <div className='UploadIcon'></div>
     </div>
   ))
-
-  /**
-   * The sessions that are displayed on the home page.
-   * @deprecated
-   */
-  const sessionsJsx = compute(() => {
-    //     if (currentUser.isAuthorized('sessions_read')) {
-    //       return (
-    //         <div className='ListContainer'>
-    //           <ListOld<TSessionBasicJson>
-    //             headingText={'Sessions'}
-    //             items={sessions}
-    //             sortByMethods={[ESortByMethod.Name]}
-    //             nameProperty={'name'}
-    //             alwaysUseBlanks={true}
-    //             renderItemDisplay={(session: TSessionBasicJson) => {
-    //               const {
-    //                 accessibility = SessionClient.DEFAULT_CONFIG.accessibility,
-    //               } = session.config
-    //
-    //               /**
-    //                * Class for accessibility element.
-    //                */
-    //               const accessibilityClass = compute((): string => {
-    //                 const classList = ['Accessibility', accessibility]
-    //                 return classList.join(' ')
-    //               })
-    //
-    //               /**
-    //                * Description for accessibility element.
-    //                */
-    //               const accessibilityDescription = compute((): string => {
-    //                 switch (accessibility) {
-    //                   case 'id-required':
-    //                     return '### Session ID Required\n*This session is not publicly accessible. One must have the session ID to join.*'
-    //                   case 'public':
-    //                     return '### Public\n*This session is publicly accessible to everyone.*'
-    //                   default:
-    //                     return ''
-    //                 }
-    //               })
-    //
-    //               /**
-    //                * Buttons for selection row.
-    //                */
-    //               const buttons = compute((): TValidPanelButton[] => {
-    //                 let buttons: TValidPanelButton[] = []
-    //
-    //                 // If the current user is authorized
-    //                 // to write, add the button for creating
-    //                 // a new session.
-    //                 if (currentUser.isAuthorized('sessions_write')) {
-    //                   buttons.push({
-    //                     type: 'remove',
-    //                     key: 'remove',
-    //                     onClick: () => onSessionTearDown(session),
-    //                     tooltipDescription: 'Remove session.',
-    //                   })
-    //                 }
-    //
-    //                 return buttons
-    //               })
-    //
-    //               return (
-    //                 <div className='Row Select Session'>
-    //                   <div className={accessibilityClass}>
-    //                     <Tooltip description={accessibilityDescription} />
-    //                   </div>
-    //                   <div
-    //                     className='Text'
-    //                     onClick={() => onSessionSelection(session)}
-    //                   >
-    //                     {session.name}
-    //                     <Tooltip description={'Join session.'} />
-    //                   </div>
-    //                   <ButtonSvgPanel buttons={buttons} size={'small'} />
-    //                 </div>
-    //               )
-    //             }}
-    //             searchableProperties={['name']}
-    //             noItemsDisplay={
-    //               <div className='NoContent'>No sessions available...</div>
-    //             }
-    //             ajaxStatus={'Loaded'}
-    //             applyItemStyling={() => {
-    //               return {}
-    //             }}
-    //             listSpecificItemClassName='AltDesign1'
-    //           />
-    //           <div className='ListActions'>
-    //             <div className='ManualJoin'>
-    //               <div className='Label'>Session ID:</div>
-    //               <DetailString
-    //                 fieldType='optional'
-    //                 handleOnBlur='none'
-    //                 label=''
-    //                 stateValue={manualJoinSessionId}
-    //                 setState={setManualJoinSessionId}
-    //                 uniqueLabelClassName={'Hidden'}
-    //               />
-    //               <ButtonText
-    //                 text='Join'
-    //                 // todo: Resolve this.
-    //                 onClick={() => {}}
-    //                 // onClick={() => onSessionSelection(manualJoinSessionId)}
-    //                 disabled={manualJoinSessionId.length === 0 ? 'full' : 'none'}
-    //               />
-    //             </div>
-    //           </div>
-    //         </div>
-    //       )
-    //     } else {
-    //       return null
-    //     }
-
-    return null
-  })
 
   const listsJsx = compute(() => {
     let results: JSX.Element[] = []

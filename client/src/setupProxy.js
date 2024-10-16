@@ -10,10 +10,7 @@ const defaults = require('../../defaults')
 let METIS_SERVER_PORT = defaults.PORT
 
 // Resolve the path to the environment file.
-let environmentFilePath = path.resolve(
-  __dirname,
-  '../../server/environment.json',
-)
+let environmentFilePath = path.resolve(__dirname, '../../environment.json')
 
 // Check if the environment file exists.
 if (fs.existsSync(environmentFilePath)) {
