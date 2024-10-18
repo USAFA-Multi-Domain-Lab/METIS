@@ -1,4 +1,5 @@
 import axios, { AxiosRequestConfig } from 'axios'
+import fs from 'fs'
 import https from 'https'
 import { Api } from '.'
 import { AnyObject } from '../toolbox/objects'
@@ -46,12 +47,45 @@ export class RestApi extends Api {
     return this._rejectUnauthorized
   }
 
-  public constructor({ baseUrl, config, rejectUnauthorized }: ApiOptions = {}) {
+  /**
+   * The path to the environment file.
+   */
+  private environmentFilePath: string = '../environment.json'
+
+  /**
+   * @param envVar The variable to use in the `environment.json` file.
+   */
+  public constructor(envVar: string) {
     super()
 
-    this._baseUrl = baseUrl
-    this._config = config
-    this._rejectUnauthorized = rejectUnauthorized
+    // Initialize options.
+    let options: ApiOptions = {}
+
+    // If the environment file exists, read it.
+    if (fs.existsSync(this.environmentFilePath)) {
+      let environmentData: any = fs.readFileSync(
+        this.environmentFilePath,
+        'utf8',
+      )
+
+      // Parse data to JSON.
+      environmentData = JSON.parse(environmentData)
+
+      if (environmentData[envVar])
+        console.log('Target Environment successfully loaded.')
+
+      // Join environment data with server options.
+      options = { ...environmentData[envVar] }
+    } else {
+      console.error(
+        'Environment file not found. Please make sure the file exists and try again.',
+      )
+    }
+
+    // Set the options.
+    this._baseUrl = options.baseUrl
+    this._config = options.config
+    this._rejectUnauthorized = options.rejectUnauthorized
 
     if (this._rejectUnauthorized !== undefined) {
       // Determines if the server will reject any
