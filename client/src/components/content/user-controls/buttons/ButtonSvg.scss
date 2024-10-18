@@ -66,6 +66,10 @@
     opacity: 0;
   }
 
+  &.upload {
+    background-position-y: 0.4em !important;
+  }
+
   &.download {
     background-position-y: 0.4em !important;
   }

@@ -57,8 +57,8 @@ export default function SessionList({
    */
   const getSessionListButtonTooltip: TGetListButtonTooltip = (button) => {
     switch (button) {
-      case 'text-cursor':
-        return 'Enter a session ID to manually join a session.'
+      case 'lock':
+        return 'Join private'
       default:
         return ''
     }
@@ -180,10 +180,10 @@ export default function SessionList({
    */
   const onSessionListButtonClick: TSvgPanelOnClick = async (button) => {
     switch (button) {
-      case 'text-cursor':
+      case 'lock':
         // Prompt user for session ID.
         const { choice, text } = await prompt(
-          'Please enter the session ID to join:',
+          'Please enter the ID of the session you wish to join:',
           Prompt.SubmissionChoices,
           {
             textField: {
@@ -231,7 +231,7 @@ export default function SessionList({
     <List<SessionBasic>
       name={'Sessions'}
       items={sessions}
-      listButtons={['text-cursor']}
+      listButtons={['lock']}
       itemButtons={itemButtons}
       getItemTooltip={() => 'Join session'}
       getListButtonTooltip={getSessionListButtonTooltip}

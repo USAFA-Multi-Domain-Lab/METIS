@@ -180,9 +180,9 @@ export default function MissionList({
   const getMissionListButtonTooltip: TGetListButtonTooltip = (button) => {
     switch (button) {
       case 'add':
-        return 'Create a new mission.'
+        return 'New mission'
       case 'upload':
-        return 'Import a .metis file from your local system.'
+        return 'Import from .metis file'
       default:
         return ''
     }

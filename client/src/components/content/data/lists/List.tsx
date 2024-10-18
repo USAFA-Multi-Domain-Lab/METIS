@@ -4,7 +4,7 @@ import { useDefaultProps } from 'src/toolbox/hooks'
 import { TButtonSvgType } from '../../user-controls/buttons/ButtonSvg'
 import { TSvgPanelOnClick } from '../../user-controls/buttons/ButtonSvgPanel_v2'
 import './List.scss'
-import ListButtons from './ListButtons'
+import ListButtons from './navs/ListButtons'
 import ListResizeHandler from './ListResizeHandler'
 import ListNav from './navs/ListNav'
 import {
@@ -22,6 +22,12 @@ import ListPage, { TListPage_P } from './pages/ListPage'
  * The width of the options column.
  */
 export const OPTIONS_COLUMN_WIDTH = '3.5em'
+
+/**
+ * The width of the options column if the options
+ * column is the last column.
+ */
+export const OPTIONS_COLUMN_WIDTH_IF_LAST = OPTIONS_COLUMN_WIDTH // '2.76em'
 
 /* -- CONTEXT -- */
 
@@ -165,7 +171,6 @@ export default function List<TItem extends TListItem>(
       <div className={'List'} ref={root}>
         <ListNav />
         {currentPageJsx}
-        <ListButtons />
         <ListResizeHandler />
       </div>
     </Provider>

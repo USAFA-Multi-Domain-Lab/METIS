@@ -1,6 +1,10 @@
 import { ReactNode } from 'react'
 import { compute } from 'src/toolbox'
-import { OPTIONS_COLUMN_WIDTH, useListContext } from '../List'
+import {
+  OPTIONS_COLUMN_WIDTH,
+  OPTIONS_COLUMN_WIDTH_IF_LAST,
+  useListContext,
+} from '../List'
 import ListColumnLabel from './ListColumnLabel'
 import './ListColumnLabels.scss'
 import { TListItem } from './ListItem'
@@ -46,7 +50,9 @@ export default function ListColumnLabels<
     // If there are item buttons, add the options
     // column width.
     if (itemButtons.length) {
-      columnWidths.push(OPTIONS_COLUMN_WIDTH)
+      columnWidths.push(
+        columns.length ? OPTIONS_COLUMN_WIDTH : OPTIONS_COLUMN_WIDTH_IF_LAST,
+      )
     }
 
     // Add the width for each column.

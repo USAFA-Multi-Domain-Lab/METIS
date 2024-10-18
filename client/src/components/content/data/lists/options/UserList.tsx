@@ -95,7 +95,7 @@ export default function UserList({
   const getUserListButtonTooltip: TGetListButtonTooltip = (button) => {
     switch (button) {
       case 'add':
-        return 'Create a new user.'
+        return 'New user'
       default:
         return ''
     }
