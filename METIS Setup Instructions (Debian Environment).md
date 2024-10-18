@@ -125,7 +125,7 @@ db.getCollectionNames()
 []
 ```
 
-### Step #5 - Create Web Server User
+### Step #4 - Create Web Server User
 
 Your database is now secure. However, using an admin user with full access as the authentication method for a web server is bad practice. Therefore, it is highly advised to create a secondary user that can only read and write to the specific database that the web server will use.
 
