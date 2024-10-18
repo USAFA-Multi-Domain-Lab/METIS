@@ -4,9 +4,10 @@
   $item-non-padded-height: 1.4em;
   $item-cell-padding-vertical: 0.35em;
   $item-options-background-y: 0.35em;
+  $last-item-padding-bottom: 1em;
 
   width: 100%;
-  padding: 0.5em 0;
+  padding: 0.5em 0 0em;
   overflow-x: auto;
 
   .ListItems {
@@ -64,6 +65,12 @@
         font-style: italic;
         opacity: 0.65;
       }
+    }
+
+    &:last-child {
+      height: $item-non-padded-height + $item-cell-padding-vertical * 2 +
+        $last-item-padding-bottom;
+      padding-bottom: $last-item-padding-bottom;
     }
   }
 }

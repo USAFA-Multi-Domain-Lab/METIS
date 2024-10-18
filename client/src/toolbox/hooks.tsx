@@ -285,12 +285,15 @@ export function useResizeObserver(
 
   useEffect(() => {
     if (ref.current) {
-      const observer = new ResizeObserver(() =>
-        callbackRef.current(
-          ref.current!.clientWidth,
-          ref.current!.clientHeight,
-        ),
-      )
+      const observer = new ResizeObserver(() => {
+        // Avoid calling the callback, if the
+        // ref is not set.
+        if (!ref.current) return
+
+        // Call the callback with the new
+        // dimensions.
+        callbackRef.current(ref.current!.clientWidth, ref.current!.clientHeight)
+      })
       observer.observe(ref.current)
 
       return () => {

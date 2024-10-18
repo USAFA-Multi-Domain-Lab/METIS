@@ -1,5 +1,7 @@
 # METIS Setup Instructions (Windows Environment With GUI)
 
+Note: These instructions assume the database server and the web server will be running on the same Windows instance.
+
 ## Database
 
 ### Step #1 - Install MongoDB Community Edition
@@ -183,7 +185,7 @@ In this file METIS can be configured differently from it’s default values. All
 
 ```json
 {
-	"port": "<your-port>" // Default: 8080, Optional
+  "port": "<your-port>", // Default: 8080, Optional
   "mongoDB": "<your-db-name>", // Default: "metis", Optional
   "mongoHost": "<your-host>", // Default: "localhost", Optional
   "mongoPort": "<your-port>", // Default: 27017, Optional
@@ -193,7 +195,6 @@ In this file METIS can be configured differently from it’s default values. All
   "httpRateLimit": "<your-rate-limit>", // Default: 25 Optional
   "wsRateLimit": "<your-rate-limit>" // Default 25 Optional
 }
-
 ```
 
 ### Step #4 - Run METIS

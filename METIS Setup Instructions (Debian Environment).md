@@ -1,6 +1,6 @@
 # METIS Setup Instructions (Debian Environment)
 
-Note: These instructions assume the database server and the web server will be running on separate instances of Debain.
+Note: These instructions assume the database server and the web server will be running on separate instances of Debian.
 
 ## Set Up Database Server
 
@@ -113,7 +113,19 @@ You can also authenticate upon connection:
 mongosh --authenticationDatabase admin -u admin -p
 ```
 
-### Step #5 - Create Web Server User
+Now running the same command should return the expected results, instead of throwing the previous error:
+
+```bash
+db.getCollectionNames()
+```
+
+```bash
+# Expected output:
+
+[]
+```
+
+### Step #4 - Create Web Server User
 
 Your database is now secure. However, using an admin user with full access as the authentication method for a web server is bad practice. Therefore, it is highly advised to create a secondary user that can only read and write to the specific database that the web server will use.
 
@@ -136,13 +148,13 @@ Disconnect and attempt to authenticate yourself using this new user:
 mongosh --authenticationDatabase metis -u web-server -p
 ```
 
-After that, everything should be prepared for the web server. The user you created for the web server will be used in the server’s environment file, referenced in the “environment-configuration” section.
+After that, everything should be prepared for the web server. The user you created for the web server will be used in the server’s environment file, referenced in the “Step #5 - Configure Environment” section further below.
 
 ## Set Up Web Server
 
 NodeJS, MongoDB Shell, and MongoDB Command Line Database Tools must be installed in the web server environment for the web server to run properly. Set up a Debian environment with network connectivity to the database server, then continue to the following instructions to install the necessary software.
 
-### Step #1 - Install MongoSH
+### Step #1 - Install NodeJS
 
 If you install NodeJS now via the `apt` command, you will install an outdated version of NodeJS that is not supported by METIS. In order to install the correct version of NodeJS, you can download a _PPA_ (personal package archive) maintained by NodeSource. These PPAs have more versions of Node.js available than the official Ubuntu repositories.
 
@@ -223,7 +235,7 @@ In this file METIS can be configured differently from it’s default values. All
 
 ```json
 {
-	"port": "<your-port>" // Default: 8080, Optional
+  "port": "<your-port>", // Default: 8080, Optional
   "mongoDB": "<your-db-name>", // Default: "metis", Optional
   "mongoHost": "<your-host>", // Default: "localhost", Optional
   "mongoPort": "<your-port>", // Default: 27017, Optional
@@ -250,11 +262,11 @@ Username: admin
 Password: temppass
 ```
 
-### Step #7 - Configure METIS to Auto Start
+### Step #7 (Optional) - Configure METIS to Auto Start
 
 It is recommend to create a start up script to run the web server automatically on start up. View this article [here](https://www.baeldung.com/linux/run-script-on-startup) for potential solutions to accomplish this, `cron` being the recommended solution.
 
-It is also recommended to include the `npm install` and `npm run build-react` commands in the start up script to make updating to new releases easier, only requiring the system to be rebooted. The following script could be used to accomplish this:
+It is also recommended to include the `npm install` and `npm run build` commands in the start up script to make updating to new releases easier, only requiring the system to be rebooted. The following script could be used to accomplish this:
 
 ```bash
 #!/bin/sh
@@ -265,3 +277,29 @@ npm run prod
 ```
 
 Restart your system and confirm METIS starts up. After that you are good to go!
+
+### Step #8 (Optional) - Configure METIS to Run on a Restricted Port
+
+If METIS needs to run on a normally restricted port, such as port 80, `sudo` can be used, but this is a dangerous solution and not recommended. Alternatively, a package called `authbind` can be used to enable METIS to run on the desired port.
+
+To install `authbind`, run the following command:
+
+```bash
+sudo apt install authbind
+```
+
+Once `authbind` is installed, run the following commands to configure `authbind` with the desired port, replacing `80` after `/byport/` for both commands with the port you wish to use:
+
+```bash
+# Configure access to port 80
+sudo touch /etc/authbind/byport/80
+sudo chmod 777 /etc/authbind/byport/80
+```
+
+Now, assuming your `environment.json` is also configured to run using the port, start METIS with `authbind`, and unless any other firewall rules are in place, the server should now be hosted on the configured port. To run METIS with `authbind` simply preface the METIS start command with `authbind --deep` like this:
+
+```bash
+authbind --deep npm run prod
+```
+
+If you have configured METIS to auto start in Step 7, make sure to update your start-up script to use `authbind`.
