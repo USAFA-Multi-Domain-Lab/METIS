@@ -61,11 +61,11 @@ export default function PanController({
     <div
       className={panControllerClassName}
       onMouseMove={onMouseMove}
-      onDragStart={({ preventDefault }) => preventDefault()}
+      onDragStart={(event) => event.preventDefault()}
       onMouseDown={() => setPanningIsActive(true)}
       onMouseUp={() => setPanningIsActive(false)}
       onMouseLeave={() => setPanningIsActive(false)}
-      onContextMenu={({ preventDefault }) => preventDefault()}
+      onContextMenu={(event) => event.preventDefault()}
     ></div>
   )
 }
