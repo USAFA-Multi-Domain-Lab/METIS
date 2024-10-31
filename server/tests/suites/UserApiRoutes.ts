@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { testLogger } from '../../logging'
 import { correctUser, userWithNoPassword } from '../data'
-import { agent, permittedUserAccess } from '../setup.js'
+import { agent, permittedUserAccess } from '../index.test'
 
 /**
  * Tests each of the API routes that are used to access the user data in the database.

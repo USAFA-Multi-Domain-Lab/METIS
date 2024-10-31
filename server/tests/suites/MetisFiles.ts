@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { testLogger } from 'metis/server/logging'
+import { testLogger } from '../../logging'
 import { agent, permittedUserAccess } from '../index.test'
 
 /**

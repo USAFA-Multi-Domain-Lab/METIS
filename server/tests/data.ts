@@ -1,7 +1,9 @@
 import mongoose from 'mongoose'
-import Mission, { TCommonMissionJson } from '../../shared/missions'
+import { TCommonMissionJson } from '../../shared/missions'
 import { TCommonUserJson } from '../../shared/users'
 import UserAccess from '../../shared/users/accesses'
+
+let ObjectId = mongoose.Types.ObjectId
 
 export const userCredentials = {
   username: 'admin',
@@ -12,16 +14,23 @@ export const createMissionWithNoForceData: Omit<TCommonMissionJson, 'forces'> =
   {
     name: 'No Node Data Mission (To Delete)',
     versionNumber: 1,
-    seed: Mission.DEFAULT_PROPERTIES.seed,
+    seed: new ObjectId().toString(),
     structure: {
       '4767fab5-573e-4df3-b1cd-809240804e92': {},
     },
+    prototypes: [
+      {
+        _id: '41aea0c0-65f5-4008-a623-1ce41cb3008f',
+        structureKey: '4767fab5-573e-4df3-b1cd-809240804e92',
+        depthPadding: 0,
+      },
+    ],
   }
 
 export const testMission: TCommonMissionJson = {
   name: 'Test Mission (To Delete)',
   versionNumber: 1,
-  seed: Mission.DEFAULT_PROPERTIES.seed,
+  seed: new ObjectId().toString(),
   structure: {
     '4767fab5-573e-4df3-b1cd-809240804e92': {},
   },
@@ -35,12 +44,11 @@ export const testMission: TCommonMissionJson = {
       nodes: [
         {
           _id: '211e5104-1c9d-487c-92b8-0a296f758d90',
-          structureKey: '4767fab5-573e-4df3-b1cd-809240804e92',
+          prototypeId: '0d709d54-2f5e-44e3-b8ce-91534ce02f6f',
           name: 'Test Node',
           color: '#52b1ff',
           description: '',
           preExecutionText: '',
-          depthPadding: 0,
           executable: true,
           device: false,
           actions: [
@@ -76,12 +84,19 @@ export const testMission: TCommonMissionJson = {
       ],
     },
   ],
+  prototypes: [
+    {
+      _id: '0d709d54-2f5e-44e3-b8ce-91534ce02f6f',
+      structureKey: '4767fab5-573e-4df3-b1cd-809240804e92',
+      depthPadding: 0,
+    },
+  ],
 }
 
 export const updateMissionWithNoMissionId: TCommonMissionJson = {
   name: 'Updated No Node Data (To Delete)',
   versionNumber: 1,
-  seed: Mission.DEFAULT_PROPERTIES.seed,
+  seed: new ObjectId().toString(),
   structure: {
     '4767fab5-573e-4df3-b1cd-809240804e92': {},
   },
@@ -95,12 +110,11 @@ export const updateMissionWithNoMissionId: TCommonMissionJson = {
       nodes: [
         {
           _id: '211e5104-1c9d-487c-92b8-0a296f758d90',
-          structureKey: '4767fab5-573e-4df3-b1cd-809240804e92',
+          prototypeId: '0d709d54-2f5e-44e3-b8ce-91534ce02f6f',
           name: 'Test Node',
           color: '#52b1ff',
           description: '',
           preExecutionText: '',
-          depthPadding: 0,
           executable: true,
           device: false,
           actions: [
@@ -134,6 +148,13 @@ export const updateMissionWithNoMissionId: TCommonMissionJson = {
           ],
         },
       ],
+    },
+  ],
+  prototypes: [
+    {
+      _id: '0d709d54-2f5e-44e3-b8ce-91534ce02f6f',
+      structureKey: '4767fab5-573e-4df3-b1cd-809240804e92',
+      depthPadding: 0,
     },
   ],
 }
@@ -144,7 +165,7 @@ export const updateMissionWithNoNodeStructure: Omit<
 > = {
   name: 'Update No Node Structure (To Delete)',
   versionNumber: 1,
-  seed: Mission.DEFAULT_PROPERTIES.seed,
+  seed: new ObjectId().toString(),
   forces: [
     {
       _id: 'def3d81c-e8fd-470b-afb3-ba0a293bae73',
@@ -155,12 +176,11 @@ export const updateMissionWithNoNodeStructure: Omit<
       nodes: [
         {
           _id: '211e5104-1c9d-487c-92b8-0a296f758d90',
-          structureKey: '4767fab5-573e-4df3-b1cd-809240804e92',
+          prototypeId: '0d709d54-2f5e-44e3-b8ce-91534ce02f6f',
           name: 'Test Node',
           color: '#52b1ff',
           description: '',
           preExecutionText: '',
-          depthPadding: 0,
           executable: true,
           device: false,
           actions: [
@@ -196,22 +216,36 @@ export const updateMissionWithNoNodeStructure: Omit<
       ],
     },
   ],
+  prototypes: [
+    {
+      _id: '0d709d54-2f5e-44e3-b8ce-91534ce02f6f',
+      structureKey: '4767fab5-573e-4df3-b1cd-809240804e92',
+      depthPadding: 0,
+    },
+  ],
 }
 
 export const updateMissionWithNoForceData: Omit<TCommonMissionJson, 'forces'> =
   {
     name: 'No Node Data Mission (To Delete)',
     versionNumber: 1,
-    seed: Mission.DEFAULT_PROPERTIES.seed,
+    seed: new ObjectId().toString(),
     structure: {
       'e72aa13b-3d99-406a-a435-b0f5f2e31873': {},
     },
+    prototypes: [
+      {
+        _id: 'b7cdf371-9dad-4d98-9b93-c83b060c121a',
+        structureKey: 'e72aa13b-3d99-406a-a435-b0f5f2e31873',
+        depthPadding: 0,
+      },
+    ],
   }
 
 export const correctUpdateTestMission: TCommonMissionJson = {
   name: 'Updated Test Mission (To Delete)',
   versionNumber: 1,
-  seed: Mission.DEFAULT_PROPERTIES.seed,
+  seed: new ObjectId().toString(),
   structure: {
     '4767fab5-573e-4df3-b1cd-809240804e92': {},
   },
@@ -225,12 +259,11 @@ export const correctUpdateTestMission: TCommonMissionJson = {
       nodes: [
         {
           _id: '211e5104-1c9d-487c-92b8-0a296f758d90',
-          structureKey: '4767fab5-573e-4df3-b1cd-809240804e92',
+          prototypeId: '0d709d54-2f5e-44e3-b8ce-91534ce02f6f',
           name: 'Test Node',
           color: '#52b1ff',
           description: '',
           preExecutionText: '',
-          depthPadding: 0,
           executable: true,
           device: false,
           actions: [
@@ -264,6 +297,13 @@ export const correctUpdateTestMission: TCommonMissionJson = {
           ],
         },
       ],
+    },
+  ],
+  prototypes: [
+    {
+      _id: '0d709d54-2f5e-44e3-b8ce-91534ce02f6f',
+      structureKey: '4767fab5-573e-4df3-b1cd-809240804e92',
+      depthPadding: 0,
     },
   ],
 }

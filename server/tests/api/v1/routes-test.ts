@@ -1,10 +1,10 @@
 import { Router } from 'express'
-import { TMetisRouterMap } from 'metis/server/http/router'
+import { TMetisRouterMap } from '../../../http/router'
+import MetisServer from '../../../index'
 import {
   RequestBodyFilters,
   defineRequests,
-} from 'metis/server/middleware/requests'
-import MetisServer from '../../../index'
+} from '../../../middleware/requests'
 
 export const routerMap: TMetisRouterMap = (
   router: Router,

@@ -1,7 +1,8 @@
-import { request } from 'chai-http'
+import chai from 'chai'
+import chaiHttp from 'chai-http'
 import UserAccess, { TUserAccessId } from '../../shared/users/accesses'
+import { testServer } from './server'
 import Setup from './setup'
-import { testServer } from './start'
 import MetisFiles from './suites/MetisFiles'
 import MissionApiRoutes from './suites/MissionApiRoutes'
 import MissionSchema from './suites/MissionSchema'
@@ -12,12 +13,14 @@ import UserApiRoutes from './suites/UserApiRoutes'
 import UserSchema from './suites/UserSchema'
 import Teardown from './teardown'
 
+// Use chai-http
+chai.use(chaiHttp)
+
 // Global variables
 export const permittedUserAccess: TUserAccessId =
   UserAccess.AVAILABLE_ACCESSES.admin._id
-export const agent = request.agent(`localhost:${testServer.port}`)
+export let agent = chai.request.agent(`localhost:${testServer.port}`)
 
-// run tests
 Setup()
 MetisFiles()
 MissionApiRoutes()

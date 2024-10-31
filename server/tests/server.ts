@@ -1,13 +1,13 @@
 import fs from 'fs'
-import MetisServer, { IMetisServerOptions } from 'metis/server'
-import routerMap_files from 'metis/server/api/v1/files'
-import routerMap_info from 'metis/server/api/v1/info'
-import routerMap_logins from 'metis/server/api/v1/logins'
-import routerMap_missions from 'metis/server/api/v1/missions'
-import routerMap_sessions from 'metis/server/api/v1/sessions'
-import routerMap_targetEnvironments from 'metis/server/api/v1/target-environments'
-import routerMap_users from 'metis/server/api/v1/users'
-import MetisRouter from 'metis/server/http/router'
+import routerMap_files from '../api/v1/files'
+import routerMap_info from '../api/v1/info'
+import routerMap_logins from '../api/v1/logins'
+import routerMap_missions from '../api/v1/missions'
+import routerMap_sessions from '../api/v1/sessions'
+import routerMap_targetEnvironments from '../api/v1/target-environments'
+import routerMap_users from '../api/v1/users'
+import MetisRouter from '../http/router'
+import MetisServer, { IMetisServerOptions } from '../index'
 import routerMap_tests from './api/v1/routes-test'
 
 const environmentFilePath = './environment-test.json'
@@ -46,8 +46,5 @@ testServer.addRouter(
 )
 testServer.addRouter(new MetisRouter('/api/v1/logins/', routerMap_logins))
 testServer.addRouter(new MetisRouter('/api/v1/tests/', routerMap_tests))
-
-// Start server.
-testServer.serve()
 
 export default { testServer }
