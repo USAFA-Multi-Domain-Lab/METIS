@@ -11,40 +11,23 @@ export class RestApi extends Api {
   /**
    * The base URL where the API can be reached at.
    */
-  private _baseUrl: ApiOptions['baseUrl']
+  private _baseUrl: string
   /**
    * The base URL where the API can be reached at.
    */
-  public get baseURL(): ApiOptions['baseUrl'] {
+  public get baseUrl(): string {
     return this._baseUrl
   }
 
   /**
    * The configuration for the request.
    */
-  private _config: ApiOptions['config']
+  private _config: AxiosRequestConfig<AnyObject>
   /**
    * The configuration for the request.
    */
-  public get config(): ApiOptions['config'] {
+  public get config(): AxiosRequestConfig<AnyObject> {
     return this._config
-  }
-
-  /**
-   * If true the server will reject any connection which is not authorized
-   * with the list of supplied CAs. This option only has an effect if
-   * requestCert is true.
-   * @default true
-   */
-  private _rejectUnauthorized: ApiOptions['rejectUnauthorized']
-  /**
-   * If true the server will reject any connection which is not authorized
-   * with the list of supplied CAs. This option only has an effect if
-   * requestCert is true.
-   * @default true
-   */
-  public get rejectUnauthorized(): ApiOptions['rejectUnauthorized'] {
-    return this._rejectUnauthorized
   }
 
   /**
@@ -71,8 +54,10 @@ export class RestApi extends Api {
       // Parse data to JSON.
       environmentData = JSON.parse(environmentData)
 
-      if (environmentData[envVar])
+      // If the environment variable exists in the file, load it.
+      if (environmentData[envVar]) {
         console.log('Target Environment successfully loaded.')
+      }
 
       // Join environment data with server options.
       options = { ...environmentData[envVar] }
@@ -82,24 +67,112 @@ export class RestApi extends Api {
       )
     }
 
-    // Set the options.
-    this._baseUrl = options.baseUrl
-    this._config = options.config
-    this._rejectUnauthorized = options.rejectUnauthorized
+    // Build the base URL.
+    this._baseUrl = this.buildBaseUrl(options)
 
-    if (this._rejectUnauthorized !== undefined) {
-      // Determines if the server will reject any
-      // connection which is not authorized with
-      // the list of supplied CAs.
+    // Build the request configuration.
+    this._config = this.buildRequestConfig(options)
+  }
+
+  /**
+   * Builds the base URL for the API.
+   * @param options The options to use to build the base URL.
+   * @returns The base URL for the API.
+   */
+  private buildBaseUrl(options: ApiOptions): string {
+    // Initialize the base URL.
+    let baseUrl: string = ''
+    let defaultPort: string = '80'
+
+    // If there's a protocol...
+    if (options.protocol) {
+      // Update the port if the protocol is HTTPS.
+      if (options.protocol === 'https') defaultPort = '443'
+      // Update the base URL.
+      baseUrl = `${options.protocol}://`
+    } else {
+      // Set the default protocol to HTTP.
+      baseUrl = 'http://'
+    }
+
+    // If there's an address...
+    if (options.address) {
+      // Use a regular expression to check if the address contains a port.
+      let portRegex: RegExp = /.*:([0-9]+).*/
+      // If the address contains a port...
+      if (portRegex.test(options.address)) {
+        // Add the entire address.
+        baseUrl += options.address
+      }
+      // Or if the address contains a port...
+      else if (options.port) {
+        // Add the address and the port.
+        baseUrl += `${options.address}:${options.port}`
+      }
+      // Otherwise, add the address and the default port.
+      else {
+        baseUrl += `${options.address}:${defaultPort}`
+      }
+    }
+    // Otherwise, use localhost and the default port.
+    else {
+      baseUrl += `localhost:${defaultPort}`
+    }
+
+    // Return the base URL.
+    return baseUrl
+  }
+
+  /**
+   * Builds the configuration for the request.
+   * @param options The options to use to build the request configuration.
+   * @returns The configuration for the request.
+   */
+  private buildRequestConfig(
+    options: ApiOptions,
+  ): AxiosRequestConfig<AnyObject> {
+    // Initialize the configuration.
+    let config: AxiosRequestConfig<AnyObject> = {}
+
+    // Determines if the server will reject any
+    // connection which is not authorized with
+    // the list of supplied CAs.
+    if (options.rejectUnauthorized !== undefined) {
+      // Create a new https agent.
       const httpsAgent = new https.Agent({
-        rejectUnauthorized: this._rejectUnauthorized,
+        rejectUnauthorized: options.rejectUnauthorized,
       })
+
       // Add the https agent to the configuration.
-      this._config = {
-        ...this._config,
+      config = {
+        ...config,
         httpsAgent: httpsAgent,
       }
     }
+
+    // Basic authentication.
+    if (options.username && options.password) {
+      config = {
+        ...config,
+        auth: {
+          username: options.username,
+          password: options.password,
+        },
+      }
+    }
+
+    // API key authentication.
+    if (options.apiKey) {
+      config = {
+        ...config,
+        headers: {
+          'api-key': options.apiKey,
+        },
+      }
+    }
+
+    // Return the configuration.
+    return config
   }
 
   /**
@@ -189,17 +262,55 @@ export class RestApi extends Api {
  */
 type ApiOptions = {
   /**
-   * The base URL where the API can be reached at.
+   * The protocol to use for the API. This determines the scheme used for
+   * the network requests.
+   * @note 'http' stands for HyperText Transfer Protocol, which is used for
+   * unsecured communication over a network.
+   * @note 'https' stands for HyperText Transfer Protocol Secure, which is
+   * the secure version of HTTP, providing encrypted communication
+   * and secure identification of a network web server.
+   * @default 'http'
    */
-  baseUrl?: string
+  protocol?: 'http' | 'https'
   /**
-   * The configuration for the request.
+   * The address to use for the API. It specifies the location of the server
+   * to which requests will be sent.
+   * @note This can be a domain name (e.g., 'example.com') or an IP address (e.g., '192.168.1.1').
    */
-  config?: AxiosRequestConfig<AnyObject> | undefined
+  address?: string
   /**
-   * If true the server will reject any connection which is not authorized
-   * with the list of supplied CAs. This option only has an effect if
-   * requestCert is true.
+   * The port to use for the API. It specifies the port number on the server
+   * to which requests will be sent.
+   * @note Ports are used to differentiate between multiple network services
+   * running on the same machine.
+   * @default 80
+   */
+  port?: number | string
+  /**
+   * The username for basic authentication.
+   * This is added to the request headers and is used to authenticate the
+   * user making the request in conjunction with the password.
+   * @default undefined
+   */
+  username?: string
+  /**
+   * The password for basic authentication.
+   * This is used in conjunction with the username to authenticate the user making the request.
+   * @default undefined
+   */
+  password?: string
+  /**
+   * The API key to use for authentication.
+   * This is a token that is used to authenticate the user making the request.
+   * @default undefined
+   */
+  apiKey?: string
+  /**
+   * Controls whether TLS client verifies the server's certificate against
+   * trusted Certificate Authorities (CAs).
+   * @note If true, the server will reject any connection which is not authorized
+   * with the trusted Certificate Authorities (CAs).
+   * @note If false, the server will accept any certificate, even if it is invalid.
    * @default true
    */
   rejectUnauthorized?: boolean
