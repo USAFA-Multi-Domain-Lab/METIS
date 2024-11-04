@@ -1,4 +1,5 @@
 import { expect } from 'chai'
+import path from 'path'
 import { testLogger } from '../../logging'
 import { agent, permittedUserAccess } from '../index.test'
 
@@ -9,6 +10,9 @@ export default function MetisFiles(): Mocha.Suite {
   return describe('Export/Import File Tests', function () {
     // A mission's ID that will be used throughout this test suite.
     let missionId: string = ''
+    const __filename = module.filename
+    const __dirname = path.dirname(__filename)
+    const staticPath: string = path.join(__dirname, '../static')
 
     it('The missionId should be set to the ID of the first mission in the database', async function () {
       try {
@@ -79,7 +83,7 @@ export default function MetisFiles(): Mocha.Suite {
       try {
         let response = await agent
           .post('/api/v1/missions/import/')
-          .attach('files', './tests/static/Valid Mission.cesar')
+          .attach('files', `${staticPath}/Valid Mission.cesar`)
         expect(response).to.have.status(200)
         expect(response.body.successfulImportCount).to.equal(1)
         expect(response.body.failedImportCount).to.equal(0)
@@ -94,7 +98,7 @@ export default function MetisFiles(): Mocha.Suite {
       try {
         let response = await agent
           .post('/api/v1/missions/import/')
-          .attach('files', './tests/static/Invalid Mission.cesar')
+          .attach('files', `${staticPath}/Invalid Mission.cesar`)
         expect(response).to.have.status(200)
         expect(response.body.successfulImportCount).to.equal(0)
         expect(response.body.failedImportCount).to.equal(1)
@@ -109,7 +113,7 @@ export default function MetisFiles(): Mocha.Suite {
       try {
         let response = await agent
           .post('/api/v1/missions/import/')
-          .attach('files', './tests/static/Attack Mission.jpeg')
+          .attach('files', `${staticPath}/Attack Mission.jpeg`)
         expect(response).to.have.status(200)
         expect(response.body.successfulImportCount).to.equal(0)
         expect(response.body.failedImportCount).to.equal(1)
@@ -124,7 +128,7 @@ export default function MetisFiles(): Mocha.Suite {
       try {
         let response = await agent
           .post('/api/v1/missions/import/')
-          .attach('files', './tests/static/No schemaBuildNumber Mission.cesar')
+          .attach('files', `${staticPath}/No schemaBuildNumber Mission.cesar`)
         expect(response).to.have.status(200)
         expect(response.body.successfulImportCount).to.equal(0)
         expect(response.body.failedImportCount).to.equal(1)
@@ -139,7 +143,7 @@ export default function MetisFiles(): Mocha.Suite {
       try {
         let response = await agent
           .post('/api/v1/missions/import/')
-          .attach('files', './tests/static/Syntax Error Mission.cesar')
+          .attach('files', `${staticPath}/Syntax Error Mission.cesar`)
         expect(response).to.have.status(200)
         expect(response.body.successfulImportCount).to.equal(0)
         expect(response.body.failedImportCount).to.equal(1)
@@ -154,10 +158,7 @@ export default function MetisFiles(): Mocha.Suite {
       try {
         let response = await agent
           .post('/api/v1/missions/import/')
-          .attach(
-            'files',
-            './tests/static/Extra Invalid Property Mission.cesar',
-          )
+          .attach('files', `${staticPath}/Extra Invalid Property Mission.cesar`)
         expect(response).to.have.status(200)
         expect(response.body.successfulImportCount).to.equal(0)
         expect(response.body.failedImportCount).to.equal(1)
@@ -172,7 +173,7 @@ export default function MetisFiles(): Mocha.Suite {
       try {
         let response = await agent
           .post('/api/v1/missions/import/')
-          .attach('files', './tests/static/Extra Data Mission.cesar')
+          .attach('files', `${staticPath}/Extra Data Mission.cesar`)
         expect(response).to.have.status(200)
         expect(response.body.successfulImportCount).to.equal(0)
         expect(response.body.failedImportCount).to.equal(1)
@@ -183,12 +184,12 @@ export default function MetisFiles(): Mocha.Suite {
       }
     })
 
-    it('Calling the import route on the API with a multiple valid files should have a "successfulImportCount" set to 2, "failedImportCount" set to 0, and an array called "failedImportErrorMessages" with a length of 0', async function () {
+    it('Calling the import route on the API with multiple valid files should have a "successfulImportCount" set to 2, "failedImportCount" set to 0, and an array called "failedImportErrorMessages" with a length of 0', async function () {
       try {
         let response = await agent
           .post('/api/v1/missions/import/')
-          .attach('files', './tests/static/Valid Mission.cesar')
-          .attach('files', './tests/static/Valid Mission(1).cesar')
+          .attach('files', `${staticPath}/Valid Mission.cesar`)
+          .attach('files', `${staticPath}/Valid Mission(1).cesar`)
 
         expect(response).to.have.status(200)
         expect(response.body.successfulImportCount).to.equal(2)
@@ -204,8 +205,8 @@ export default function MetisFiles(): Mocha.Suite {
       try {
         let response = await agent
           .post('/api/v1/missions/import/')
-          .attach('files', './tests/static/Valid Mission.cesar')
-          .attach('files', './tests/static/Invalid Mission.cesar')
+          .attach('files', `${staticPath}/Valid Mission.cesar`)
+          .attach('files', `${staticPath}/Invalid Mission.cesar`)
 
         expect(response).to.have.status(200)
         expect(response.body.successfulImportCount).to.equal(1)
@@ -221,7 +222,7 @@ export default function MetisFiles(): Mocha.Suite {
       try {
         let response = await agent
           .post('/api/v1/missions/import/')
-          .attach('files', './tests/static/bolt-solid.cesar')
+          .attach('files', `${staticPath}/bolt-solid.cesar`)
 
         expect(response).to.have.status(200)
         expect(response.body.successfulImportCount).to.equal(0)
@@ -237,7 +238,7 @@ export default function MetisFiles(): Mocha.Suite {
       try {
         let response = await agent
           .post('/api/v1/missions/import/')
-          .attach('files', './tests/static/Schema Build 4.cesar')
+          .attach('files', `${staticPath}/Schema Build 4.cesar`)
 
         expect(response).to.have.status(200)
         expect(response.body.successfulImportCount).to.equal(1)
@@ -253,7 +254,7 @@ export default function MetisFiles(): Mocha.Suite {
       try {
         let response = await agent
           .post('/api/v1/missions/import/')
-          .attach('files', './tests/static/Schema Build 4.metis')
+          .attach('files', `${staticPath}/Schema Build 4.metis`)
 
         expect(response).to.have.status(200)
         expect(response.body.successfulImportCount).to.equal(0)
@@ -269,7 +270,7 @@ export default function MetisFiles(): Mocha.Suite {
       try {
         let response = await agent
           .post('/api/v1/missions/import/')
-          .attach('files', './tests/static/Schema Build 10.metis')
+          .attach('files', `${staticPath}/Schema Build 10.metis`)
 
         expect(response).to.have.status(200)
         expect(response.body.successfulImportCount).to.equal(1)
@@ -285,7 +286,7 @@ export default function MetisFiles(): Mocha.Suite {
       try {
         let response = await agent
           .post('/api/v1/missions/import/')
-          .attach('files', './tests/static/Schema Build 10.cesar')
+          .attach('files', `${staticPath}/Schema Build 10.cesar`)
 
         expect(response).to.have.status(200)
         expect(response.body.successfulImportCount).to.equal(0)
@@ -301,8 +302,8 @@ export default function MetisFiles(): Mocha.Suite {
       try {
         let response = await agent
           .post('/api/v1/missions/import/')
-          .attach('files', './tests/static/Schema Build 10.metis')
-          .attach('files', './tests/static/Schema Build 4.metis')
+          .attach('files', `${staticPath}/Schema Build 10.metis`)
+          .attach('files', `${staticPath}/Schema Build 4.metis`)
 
         expect(response).to.have.status(200)
         expect(response.body.successfulImportCount).to.equal(1)
@@ -318,10 +319,10 @@ export default function MetisFiles(): Mocha.Suite {
       try {
         let response = await agent
           .post('/api/v1/missions/import/')
-          .attach('files', './tests/static/Schema Build 10.metis')
-          .attach('files', './tests/static/Schema Build 4.metis')
-          .attach('files', './tests/static/bolt-solid.cesar')
-          .attach('files', './tests/static/Attack Mission.jpeg')
+          .attach('files', `${staticPath}/Schema Build 10.metis`)
+          .attach('files', `${staticPath}/Schema Build 4.metis`)
+          .attach('files', `${staticPath}/bolt-solid.cesar`)
+          .attach('files', `${staticPath}/Attack Mission.jpeg`)
 
         expect(response).to.have.status(200)
         expect(response.body.successfulImportCount).to.equal(1)

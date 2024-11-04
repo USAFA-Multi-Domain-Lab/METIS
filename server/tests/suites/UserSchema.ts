@@ -27,7 +27,7 @@ export default function UserSchema(): Mocha.Suite {
         // Saves the user to the database
         let savedUser = await user.save()
 
-        expect(savedUser._id).to.equal(newCorrectUser.user._id)
+        expect(savedUser._id.toString()).to.equal(newCorrectUser.user._id)
         expect(savedUser.username).to.equal(newCorrectUser.user.username)
         expect(savedUser.accessId).to.equal(newCorrectUser.user.accessId)
         expect(savedUser.firstName).to.equal(newCorrectUser.user.firstName)
@@ -50,7 +50,7 @@ export default function UserSchema(): Mocha.Suite {
           _id: newCorrectUser.user._id,
         }).exec()
 
-        expect(retrievedUser._id).to.equal(newCorrectUser.user._id)
+        expect(retrievedUser._id.toString()).to.equal(newCorrectUser.user._id)
         expect(retrievedUser.username).to.equal(newCorrectUser.user.username)
         expect(retrievedUser.accessId).to.equal(newCorrectUser.user.accessId)
         expect(retrievedUser.firstName).to.equal(newCorrectUser.user.firstName)
@@ -93,7 +93,7 @@ export default function UserSchema(): Mocha.Suite {
           _id: newCorrectUser.user._id,
         }).exec()
 
-        expect(retrievedUser._id).to.equal(newCorrectUser.user._id)
+        expect(retrievedUser._id.toString()).to.equal(newCorrectUser.user._id)
         expect(retrievedUser.username).to.equal(newCorrectUser.user.username)
         expect(retrievedUser.accessId).to.equal(newCorrectUser.user.accessId)
         expect(retrievedUser.firstName).to.equal('updatedFirstName')

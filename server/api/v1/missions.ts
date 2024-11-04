@@ -140,6 +140,7 @@ export const routerMap: TMetisRouterMap = (
         if (!schemaBuildNumber) {
           let error: Error = new Error('No schema build number found.')
           handleMissionImportError(file, error)
+          return finalizeResponse()
         }
 
         // -- BUILD 5 --
@@ -501,39 +502,48 @@ export const routerMap: TMetisRouterMap = (
         // This migration script is responsible
         // for converting any objects nested within
         // a mission that have an "_id" property that
-        // is an ObjectId to a UUID.
+        // is an ObjectId to a UUID. Also, if the "_id"
+        // property is missing, a UUID will be generated
+        // and set as the "_id" property.
         if (schemaBuildNumber < 26) {
           let mission = missionData
 
           // Loop through forces.
           for (let force of mission.forces) {
             // If the force has an ObjectId as the _id,
-            // generate a UUID and set it as the _id.
-            if (mongoose.isObjectIdOrHexString(force._id)) {
+            // or if the _id is missing, generate a UUID
+            // and set it as the _id.
+            if (mongoose.isObjectIdOrHexString(force._id) || !force._id) {
               force._id = generateHash()
             }
 
             // Loop through nodes.
             for (let node of force.nodes) {
               // If the node has an ObjectId as the _id,
-              // generate a UUID and set it as the _id.
-              if (mongoose.isObjectIdOrHexString(node._id)) {
+              // or if the _id is missing, generate a UUID
+              // and set it as the _id.
+              if (mongoose.isObjectIdOrHexString(node._id) || !node._id) {
                 node._id = generateHash()
               }
 
               // Loop through actions.
               for (let action of node.actions) {
                 // If the action has an ObjectId as the _id,
-                // generate a UUID and set it as the _id.
-                if (mongoose.isObjectIdOrHexString(action._id)) {
+                // or if the _id is missing, generate a UUID
+                // and set it as the _id.
+                if (mongoose.isObjectIdOrHexString(action._id) || !action._id) {
                   action._id = generateHash()
                 }
 
                 // Loop through effects.
                 for (let effect of action.effects) {
                   // If the effect has an ObjectId as the _id,
-                  // generate a UUID and set it as the _id.
-                  if (mongoose.isObjectIdOrHexString(effect._id)) {
+                  // or if the _id is missing, generate a UUID
+                  // and set it as the _id.
+                  if (
+                    mongoose.isObjectIdOrHexString(effect._id) ||
+                    !effect._id
+                  ) {
                     effect._id = generateHash()
                   }
                 }

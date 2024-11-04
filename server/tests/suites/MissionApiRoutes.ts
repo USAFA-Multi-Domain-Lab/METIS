@@ -6,7 +6,7 @@ import {
   testMission,
   updateMissionWithNoForceData,
   updateMissionWithNoMissionId,
-  updateMissionWithNoNodeStructure,
+  updateMissionWithNoStructure,
 } from '../data'
 import { agent, permittedUserAccess } from '../index.test'
 
@@ -120,7 +120,7 @@ export default function MissionApiRoutes(): Mocha.Suite {
       }
     })
 
-    it('Updating a mission with (a) missing property/properties that is required (_id) in the body of the request should return a bad request (400) response', async function () {
+    it("Updating a mission without the mission's ID in the body of the request should return a bad request (400) response", async function () {
       try {
         let response = await agent
           .put('/api/v1/missions/')
@@ -134,34 +134,39 @@ export default function MissionApiRoutes(): Mocha.Suite {
       }
     })
 
-    it('Updating a mission where the nodeStructure is defined, but the nodeData is undefined in the body of the request should return an internal server error (500) response', async function () {
+    it('Updating a mission where the structure is defined, but the force data is undefined in the body of the request should return a successful (200) response', async function () {
       missionId = createdMissionIdArray[0]
       updateMissionWithNoForceData._id = missionId
 
       try {
+        let getResponse = await agent.get(`/api/v1/missions/${missionId}`)
+        let mission = getResponse.body
+        updateMissionWithNoForceData.structure = mission.structure
+        updateMissionWithNoForceData.prototypes = mission.prototypes
+
         let response = await agent
           .put('/api/v1/missions/')
           .set('Content-Type', 'application/json')
           .send(updateMissionWithNoForceData)
 
-        expect(response).to.have.status(500)
+        expect(response).to.have.status(200)
       } catch (error: any) {
         testLogger.error(error)
         throw error
       }
     })
 
-    it('Updating a mission where the nodeData is defined, but the nodeStructure is undefined in the body of the request should return an internal server error (500) response', async function () {
+    it('Updating a mission where the force data is defined, but the structure is undefined in the body of the request should return a successful (200) response', async function () {
       missionId = createdMissionIdArray[0]
-      updateMissionWithNoNodeStructure._id = missionId
+      updateMissionWithNoStructure._id = missionId
 
       try {
         let response = await agent
           .put('/api/v1/missions/')
           .set('Content-Type', 'application/json')
-          .send(updateMissionWithNoNodeStructure)
+          .send(updateMissionWithNoStructure)
 
-        expect(response).to.have.status(500)
+        expect(response).to.have.status(200)
       } catch (error: any) {
         testLogger.error(error)
         throw error

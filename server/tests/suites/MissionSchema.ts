@@ -23,22 +23,26 @@ export default function MissionSchema(): Mocha.Suite {
 
       try {
         // Save the mission to the database
-        let savedMission = await mission.save()
+        let missionDoc = await mission.save()
+        // Convert the mission document to JSON
+        let savedMissionJson = missionDoc.toJSON()
         // The retrieved mission should have the same
         // name as the test mission
-        expect(savedMission.name).to.equal(testMission.name)
+        expect(savedMissionJson.name).to.equal(testMission.name)
         // The retrieved mission should have the same
         // versionNumber as the test mission
-        expect(savedMission.versionNumber).to.equal(testMission.versionNumber)
+        expect(savedMissionJson.versionNumber).to.equal(
+          testMission.versionNumber,
+        )
         // The retrieved mission's seed property should
         // be the same as the test mission's seed property
-        expect(savedMission.seed).to.equal(testMission.seed)
+        expect(savedMissionJson.seed.toString()).to.equal(testMission.seed)
         // The retrieved mission should have the same
-        // nodeStructure as the test mission
-        expect(savedMission.nodeStructure).to.deep.equal(testMission.structure)
+        // structure as the test mission
+        expect(savedMissionJson.structure).to.deep.equal(testMission.structure)
         // The retrieved mission should have the same
         // forces as the test mission
-        expect(savedMission.forces).to.deep.equal(testMission.forces)
+        expect(savedMissionJson.forces).to.deep.equal(testMission.forces)
       } catch (error: any) {
         // Logs the error
         testLogger.error(error)
@@ -51,28 +55,30 @@ export default function MissionSchema(): Mocha.Suite {
       try {
         // Query for the mission with the "_id"
         // set from the previous test
-        let retrievedMission = await MissionModel.findOne({
+        let missionDoc = await MissionModel.findOne({
           _id: missionId,
         }).exec()
+        // Convert the mission document to JSON
+        let retrievedMissionJson = missionDoc?.toJSON()
         // The retrieved mission should have the same
         // name as the test mission
-        expect(retrievedMission.name).to.equal(testMission.name)
+        expect(retrievedMissionJson.name).to.equal(testMission.name)
         // The retrieved mission should have the same
         // versionNumber as the test mission
-        expect(retrievedMission.versionNumber).to.equal(
+        expect(retrievedMissionJson.versionNumber).to.equal(
           testMission.versionNumber,
         )
         // The retrieved mission's seed property should
         // be the same as the test mission's seed property
-        expect(retrievedMission.seed).to.equal(testMission.seed)
+        expect(retrievedMissionJson.seed.toString()).to.equal(testMission.seed)
         // The retrieved mission should have the same
-        // nodeStructure as the test mission
-        expect(retrievedMission.nodeStructure).to.deep.equal(
+        // structure as the test mission
+        expect(retrievedMissionJson.structure).to.deep.equal(
           testMission.structure,
         )
         // The retrieved mission should have the same
         // forces as the test mission
-        expect(retrievedMission.forces).to.deep.equal(testMission.forces)
+        expect(retrievedMissionJson.forces).to.deep.equal(testMission.forces)
       } catch (error: any) {
         // Logs the error
         testLogger.error(error)

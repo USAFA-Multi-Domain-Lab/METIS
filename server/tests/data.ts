@@ -12,7 +12,7 @@ export const userCredentials = {
 
 export const createMissionWithNoForceData: Omit<TCommonMissionJson, 'forces'> =
   {
-    name: 'No Node Data Mission (To Delete)',
+    name: 'No Force Data Mission (To Delete)',
     versionNumber: 1,
     seed: new ObjectId().toString(),
     structure: {
@@ -94,7 +94,7 @@ export const testMission: TCommonMissionJson = {
 }
 
 export const updateMissionWithNoMissionId: TCommonMissionJson = {
-  name: 'Updated No Node Data (To Delete)',
+  name: 'Updated No Force Data (To Delete)',
   versionNumber: 1,
   seed: new ObjectId().toString(),
   structure: {
@@ -159,11 +159,11 @@ export const updateMissionWithNoMissionId: TCommonMissionJson = {
   ],
 }
 
-export const updateMissionWithNoNodeStructure: Omit<
+export const updateMissionWithNoStructure: Omit<
   TCommonMissionJson,
   'structure'
 > = {
-  name: 'Update No Node Structure (To Delete)',
+  name: 'Update No Structure (To Delete)',
   versionNumber: 1,
   seed: new ObjectId().toString(),
   forces: [
@@ -227,19 +227,11 @@ export const updateMissionWithNoNodeStructure: Omit<
 
 export const updateMissionWithNoForceData: Omit<TCommonMissionJson, 'forces'> =
   {
-    name: 'No Node Data Mission (To Delete)',
+    name: 'No Force Data Mission (To Delete)',
     versionNumber: 1,
     seed: new ObjectId().toString(),
-    structure: {
-      'e72aa13b-3d99-406a-a435-b0f5f2e31873': {},
-    },
-    prototypes: [
-      {
-        _id: 'b7cdf371-9dad-4d98-9b93-c83b060c121a',
-        structureKey: 'e72aa13b-3d99-406a-a435-b0f5f2e31873',
-        depthPadding: 0,
-      },
-    ],
+    structure: {},
+    prototypes: [],
   }
 
 export const correctUpdateTestMission: TCommonMissionJson = {
@@ -308,7 +300,7 @@ export const correctUpdateTestMission: TCommonMissionJson = {
   ],
 }
 
-export const correctUser: { user: TCommonUserJson } = {
+export let correctUser: { user: TCommonUserJson } = {
   user: {
     _id: new mongoose.Types.ObjectId().toHexString(),
     username: 'test23',

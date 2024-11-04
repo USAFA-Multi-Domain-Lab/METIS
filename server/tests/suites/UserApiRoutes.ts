@@ -8,6 +8,8 @@ import { agent, permittedUserAccess } from '../index.test'
  */
 export default function UserApiRoutes(): Mocha.Suite {
   return describe('User API Routes', function () {
+    let createdUserIdArray: string[] = []
+
     it('User should be logged in as an admin to be able to create users via the API', async function () {
       try {
         let response = await agent.get('/api/v1/logins/')
@@ -40,7 +42,12 @@ export default function UserApiRoutes(): Mocha.Suite {
           .set('Content-Type', 'application/json')
           .send(correctUser)
 
+        // Check if the response is successful.
         expect(response).to.have.status(200)
+
+        // Save the user's ID for later use.
+        let user: any = response.body.user
+        correctUser.user._id = user._id
       } catch (error: any) {
         testLogger.error(error)
         throw error
@@ -67,7 +74,7 @@ export default function UserApiRoutes(): Mocha.Suite {
       }
     })
 
-    it('Deleting a mission with all the correct properties in the query of the request should return a successful (200) response', async function () {
+    it('Deleting a user with all the correct properties in the query of the request should return a successful (200) response', async function () {
       try {
         let response = await agent.delete(
           `/api/v1/users/${correctUser.user._id}`,
