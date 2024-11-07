@@ -109,7 +109,7 @@ export default function MissionSchema(): Mocha.Suite {
       }
     })
 
-    it('Creating a mission with a force that has a color that is not a valid hex color code ("ffffff") should result in an internal server error (500) response', async function () {
+    it('Creating a mission with a force that has a color that is not a valid hex color code ("ffffff") should result in a validation error', async function () {
       // Grab the mission data
       const missionData = testMission
       // Set the color of the first force to an invalid hex color code
@@ -131,7 +131,7 @@ export default function MissionSchema(): Mocha.Suite {
       }
     })
 
-    it('Creating a mission with a force that has a color that is not a valid hex color code ("#fffffff") should result in an internal server error (500) response', async function () {
+    it('Creating a mission with a force that has a color that is not a valid hex color code ("#fffffff") should result in a validation error', async function () {
       // Grab the mission data
       const missionData = testMission
       // Set the color of the first force to an invalid hex color code
@@ -153,7 +153,7 @@ export default function MissionSchema(): Mocha.Suite {
       }
     })
 
-    it('Creating a mission with a force that has a color that is not a valid hex color code ("white") should result in an internal server error (500) response', async function () {
+    it('Creating a mission with a force that has a color that is not a valid hex color code ("white") should result in a validation error', async function () {
       // Grab the mission data
       const missionData = testMission
       // Set the color of the first force to an invalid hex color code
@@ -175,7 +175,7 @@ export default function MissionSchema(): Mocha.Suite {
       }
     })
 
-    it('Creating a mission with a force that has a color that is not a valid hex color code ("#white") should result in an internal server error (500) response', async function () {
+    it('Creating a mission with a force that has a color that is not a valid hex color code ("#white") should result in a validation error', async function () {
       // Grab the mission data
       const missionData = testMission
       // Set the color of the first force to an invalid hex color code
@@ -197,7 +197,7 @@ export default function MissionSchema(): Mocha.Suite {
       }
     })
 
-    it('Creating a mission with a force that has a color that is not a valid hex color code ("asfjsdjkf #ffffff sadlkfsld") should result in an internal server error (500) response', async function () {
+    it('Creating a mission with a force that has a color that is not a valid hex color code ("asfjsdjkf #ffffff sadlkfsld") should result in a validation error', async function () {
       // Grab the mission data
       const missionData = testMission
       // Set the color of the first force to an invalid hex color code
@@ -219,7 +219,7 @@ export default function MissionSchema(): Mocha.Suite {
       }
     })
 
-    it('Creating a mission with a force that has a color that is not a valid hex color code ("asfjsdjkf#ffffffsadlkfsld") should result in an internal server error (500) response', async function () {
+    it('Creating a mission with a force that has a color that is not a valid hex color code ("asfjsdjkf#ffffffsadlkfsld") should result in a validation error', async function () {
       // Grab the mission data
       const missionData = testMission
       // Set the color of the first force to an invalid hex color code
@@ -241,7 +241,7 @@ export default function MissionSchema(): Mocha.Suite {
       }
     })
 
-    it('Creating a mission with a force that has a color that is not a valid hex color code ("#6545169") should result in an internal server error (500) response', async function () {
+    it('Creating a mission with a force that has a color that is not a valid hex color code ("#6545169") should result in a validation error', async function () {
       // Grab the mission data
       const missionData = testMission
       // Set the color of the first force to an invalid hex color code
@@ -263,7 +263,7 @@ export default function MissionSchema(): Mocha.Suite {
       }
     })
 
-    it('Creating a mission with a force that has a color that is not a valid hex color code ("#abcdef99") should result in an internal server error (500) response', async function () {
+    it('Creating a mission with a force that has a color that is not a valid hex color code ("#abcdef99") should result in a validation error', async function () {
       // Grab the mission data
       const missionData = testMission
       // Set the color of the first force to an invalid hex color code
@@ -285,7 +285,7 @@ export default function MissionSchema(): Mocha.Suite {
       }
     })
 
-    it('Creating a mission with a force that has a color that is not a valid hex color code ("abcdef") should result in an internal server error (500) response', async function () {
+    it('Creating a mission with a force that has a color that is not a valid hex color code ("abcdef") should result in a validation error', async function () {
       // Grab the mission data
       const missionData = testMission
       // Set the color of the first force to an invalid hex color code
@@ -307,7 +307,7 @@ export default function MissionSchema(): Mocha.Suite {
       }
     })
 
-    it('Creating a mission with a force that has a color that is not a valid hex color code ("fff") should result in an internal server error (500) response', async function () {
+    it('Creating a mission with a force that has a color that is not a valid hex color code ("fff") should result in a validation error', async function () {
       // Grab the mission data
       const missionData = testMission
       // Set the color of the first force to an invalid hex color code
@@ -329,7 +329,7 @@ export default function MissionSchema(): Mocha.Suite {
       }
     })
 
-    it('Creating a mission with a force that has a color that is not a valid hex color code ("#fff") should result in an internal server error (500) response', async function () {
+    it('Creating a mission with a force that has a color that is not a valid hex color code ("#fff") should result in a validation error', async function () {
       // Grab the mission data
       const missionData = testMission
       // Set the color of the first force to an invalid hex color code
@@ -351,7 +351,7 @@ export default function MissionSchema(): Mocha.Suite {
       }
     })
 
-    it('Creating a mission with a force that has a color that is not a valid hex color code ("#*&@^%!") should result in an internal server error (500) response', async function () {
+    it('Creating a mission with a force that has a color that is not a valid hex color code ("#*&@^%!") should result in a validation error', async function () {
       // Grab the mission data
       const missionData = testMission
       // Set the color of the first force to an invalid hex color code
@@ -373,7 +373,7 @@ export default function MissionSchema(): Mocha.Suite {
       }
     })
 
-    it('Creating a mission with a force that has a color that is not a valid hex color code ("#+89496") should result in an internal server error (500) response', async function () {
+    it('Creating a mission with a force that has a color that is not a valid hex color code ("#+89496") should result in a validation error', async function () {
       // Grab the mission data
       const missionData = testMission
       // Set the color of the first force to an invalid hex color code
@@ -395,7 +395,7 @@ export default function MissionSchema(): Mocha.Suite {
       }
     })
 
-    it('Creating a mission with a force that has a color that is not a valid hex color code ("#89a96+") should result in an internal server error (500) response', async function () {
+    it('Creating a mission with a force that has a color that is not a valid hex color code ("#89a96+") should result in a validation error', async function () {
       // Grab the mission data
       const missionData = testMission
       // Set the color of the first force to an invalid hex color code
@@ -417,7 +417,7 @@ export default function MissionSchema(): Mocha.Suite {
       }
     })
 
-    it('Creating a mission with a force that has a color that is not a valid hex color code ("#8996+") should result in an internal server error (500) response', async function () {
+    it('Creating a mission with a force that has a color that is not a valid hex color code ("#8996+") should result in a validation error', async function () {
       // Grab the mission data
       const missionData = testMission
       // Set the color of the first force to an invalid hex color code
@@ -439,7 +439,7 @@ export default function MissionSchema(): Mocha.Suite {
       }
     })
 
-    it('Creating a mission with a force that has a color that is not a valid hex color code ("#896+") should result in an internal server error (500) response', async function () {
+    it('Creating a mission with a force that has a color that is not a valid hex color code ("#896+") should result in a validation error', async function () {
       // Grab the mission data
       const missionData = testMission
       // Set the color of the first force to an invalid hex color code

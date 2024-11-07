@@ -8,8 +8,6 @@ import { agent, permittedUserAccess } from '../index.test'
  */
 export default function UserApiRoutes(): Mocha.Suite {
   return describe('User API Routes', function () {
-    let createdUserIdArray: string[] = []
-
     it('User should be logged in as an admin to be able to create users via the API', async function () {
       try {
         let response = await agent.get('/api/v1/logins/')

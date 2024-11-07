@@ -188,8 +188,12 @@ export class RestApi extends Api {
     data: AnyObject = {},
     config: AxiosRequestConfig<AnyObject> = {},
   ): Promise<void> {
-    let updatedConfig = { ...this.config, ...config }
-    return await axios.post(url, data, updatedConfig)
+    try {
+      let updatedConfig = { ...this.config, ...config }
+      return await axios.post(url, data, updatedConfig)
+    } catch (error: any) {
+      throw error
+    }
   }
 
   /**
@@ -203,8 +207,12 @@ export class RestApi extends Api {
     url: string,
     config: AxiosRequestConfig<AnyObject> = {},
   ): Promise<void> {
-    let updatedConfig = { ...this.config, ...config }
-    return await axios.get(url, updatedConfig)
+    try {
+      let updatedConfig = { ...this.config, ...config }
+      return await axios.get(url, updatedConfig)
+    } catch (error: any) {
+      throw error
+    }
   }
 
   /**
@@ -220,8 +228,12 @@ export class RestApi extends Api {
     data: AnyObject = {},
     config: AxiosRequestConfig<AnyObject> = {},
   ): Promise<void> {
-    let updatedConfig = { ...this.config, ...config }
-    return await axios.put(url, data, updatedConfig)
+    try {
+      let updatedConfig = { ...this.config, ...config }
+      return await axios.put(url, data, updatedConfig)
+    } catch (error: any) {
+      throw error
+    }
   }
 
   /**
@@ -237,8 +249,12 @@ export class RestApi extends Api {
     data: AnyObject = {},
     config: AxiosRequestConfig<AnyObject> = {},
   ): Promise<void> {
-    let updatedConfig = { ...this.config, ...config }
-    return await axios.patch(url, data, updatedConfig)
+    try {
+      let updatedConfig = { ...this.config, ...config }
+      return await axios.patch(url, data, updatedConfig)
+    } catch (error: any) {
+      throw error
+    }
   }
 
   /**
@@ -252,8 +268,12 @@ export class RestApi extends Api {
     url: string,
     config: AxiosRequestConfig<AnyObject> = {},
   ): Promise<void> {
-    let updatedConfig = { ...this.config, ...config }
-    return await axios.delete(url, updatedConfig)
+    try {
+      let updatedConfig = { ...this.config, ...config }
+      return await axios.delete(url, updatedConfig)
+    } catch (error: any) {
+      throw error
+    }
   }
 }
 

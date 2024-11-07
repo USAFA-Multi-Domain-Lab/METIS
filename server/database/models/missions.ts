@@ -349,7 +349,7 @@ const validate_missions = (mission: any, next: any): void => {
 
   // This will ensure the node structure
   // is valid.
-  const _validateNodeStructure = (
+  const _validateStructure = (
     currentStructure: any = initStructure,
     rootKey: string = 'ROOT',
   ): { error?: Error } => {
@@ -372,7 +372,7 @@ const validate_missions = (mission: any, next: any): void => {
         structureKeys.push(key)
       }
 
-      let results: { error?: Error } = _validateNodeStructure(value, key)
+      let results: { error?: Error } = _validateStructure(value, key)
 
       if (results.error) {
         return results
@@ -439,7 +439,7 @@ const validate_missions = (mission: any, next: any): void => {
   if (results.error) return next(results.error)
 
   // Validate node structure.
-  results = _validateNodeStructure()
+  results = _validateStructure()
   // Check for error.
   if (results.error) return next(results.error)
 

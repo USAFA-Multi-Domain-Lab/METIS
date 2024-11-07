@@ -50,7 +50,7 @@ Confirm the tools are now on Path by running the previously mentioned version-ch
 
 ### Step #4 - Set Up Database Authorization
 
-By default, the database server running can be connected to and managed without any authentication requirements. However, it is highly recommended to enable authentication and create a user for the web server to use in order to connect and manage data securely. Otherwise, the data stored can be wiped by anyone with a connection.
+By default, the database server running can be connected to and managed without any authentication requirements. However, it is highly recommended to enable authentication and create a user for the web server to use to connect and manage data securely. Otherwise, the data stored can be wiped by anyone with a connection.
 
 Ensure that MongoDB is running, then connect to it via the following command:
 
@@ -59,7 +59,7 @@ mongosh
 
 ```
 
-Once connected, switch to the already created `admin` database to create a new admin user.
+Once connected, switch to the already-created `admin` database to create a new admin user.
 
 ```bash
 use admin
@@ -112,7 +112,7 @@ MongoServerError: command listCollections requires authentication
 
 ```
 
-To authenticate yourself as an admin, while connected with `mongosh`, switch to the admin database and run the `db.auth` function.
+To authenticate yourself as an admin, while connected with `mongosh`, switch to the admin database, and run the `db.auth` function.
 
 ```bash
 use admin
@@ -170,7 +170,7 @@ npm install
 
 ```
 
-The front-end interface for METIS is a React App hosted by the web server. The React App must be built initially and after any updates (new releases) in order for the front-end interface to be accessible and up-to-date to web users. While in the METIS project directory, run the following command to build the React App:
+The front-end interface for METIS is a React App hosted by the web server. The React App must be built initially and after any updates (new releases) for the front-end interface to be accessible and up-to-date to web users. While in the METIS project directory, run the following command to build the React App:
 
 ```bash
 npm run build
@@ -179,9 +179,9 @@ npm run build
 
 ### Step #3 - Configure Environment
 
-In order for the web server to properly connect to the database, the environment file for the METIS must be configured correctly so that the web server knows how to connect to the database. Go into the METIS directory and create a new file called `environment.json` .
+For the web server to properly connect to the database, the environment file for the METIS must be configured correctly so that the web server knows how to connect to the database. Go into the METIS directory and create a new file called `environment.json` .
 
-In this file METIS can be configured differently from it’s default values. All properties are optional, except the `mongoUsername` and `mongoPassword` , which are required due to the auth restrictions set up. If you have a custom host or port for MongoDB as well, this can also be configured here. All available environment options are outlined below:
+In this file, METIS can be configured differently from its default values. All properties are optional, except the `mongoUsername` and `mongoPassword` , which are required due to the auth restrictions set up. If you have a custom host or port for MongoDB as well, this can also be configured here. All available environment options are outlined below:
 
 ```json
 {
@@ -206,7 +206,7 @@ node_modules/.bin/ts-node -r tsconfig-paths/register start
 
 ```
 
-The should start up and be accessible at the configured port (8080 by default). You can now access the web app in the browser. To login, a temporary user has been created with the following credentials:
+It should start up and be accessible at the configured port (8080 by default). You can now access the web app in the browser. To log in, a temporary user has been created with the following credentials:
 
 ```
 Username: admin

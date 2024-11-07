@@ -1146,7 +1146,6 @@ export const routerMap: TMetisRouterMap = (
         body: {
           name: RequestBodyFilters.STRING,
           versionNumber: RequestBodyFilters.NUMBER,
-          initialResources: RequestBodyFilters.NUMBER,
           structure: RequestBodyFilters.OBJECT,
           forces: RequestBodyFilters.ARRAY,
           prototypes: RequestBodyFilters.ARRAY,
