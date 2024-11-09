@@ -1,9 +1,7 @@
-import mongoose from 'mongoose'
+import StringToolbox from 'metis/toolbox/strings'
 import { TCommonMissionJson } from '../../shared/missions'
 import { TCommonUserJson } from '../../shared/users'
 import UserAccess from '../../shared/users/accesses'
-
-let ObjectId = mongoose.Types.ObjectId
 
 export const userCredentials = {
   username: 'admin',
@@ -14,7 +12,7 @@ export const createMissionWithNoForceData: Omit<TCommonMissionJson, 'forces'> =
   {
     name: 'No Force Data Mission (To Delete)',
     versionNumber: 1,
-    seed: new ObjectId().toString(),
+    seed: StringToolbox.generateRandomId(),
     structure: {
       '4767fab5-573e-4df3-b1cd-809240804e92': {},
     },
@@ -30,7 +28,7 @@ export const createMissionWithNoForceData: Omit<TCommonMissionJson, 'forces'> =
 export const testMission: TCommonMissionJson = {
   name: 'Test Mission (To Delete)',
   versionNumber: 1,
-  seed: new ObjectId().toString(),
+  seed: StringToolbox.generateRandomId(),
   structure: {
     '4767fab5-573e-4df3-b1cd-809240804e92': {},
   },
@@ -96,7 +94,7 @@ export const testMission: TCommonMissionJson = {
 export const updateMissionWithNoMissionId: TCommonMissionJson = {
   name: 'Updated No Force Data (To Delete)',
   versionNumber: 1,
-  seed: new ObjectId().toString(),
+  seed: StringToolbox.generateRandomId(),
   structure: {
     '4767fab5-573e-4df3-b1cd-809240804e92': {},
   },
@@ -165,7 +163,7 @@ export const updateMissionWithNoStructure: Omit<
 > = {
   name: 'Update No Structure (To Delete)',
   versionNumber: 1,
-  seed: new ObjectId().toString(),
+  seed: StringToolbox.generateRandomId(),
   forces: [
     {
       _id: 'def3d81c-e8fd-470b-afb3-ba0a293bae73',
@@ -229,7 +227,7 @@ export const updateMissionWithNoForceData: Omit<TCommonMissionJson, 'forces'> =
   {
     name: 'No Force Data Mission (To Delete)',
     versionNumber: 1,
-    seed: new ObjectId().toString(),
+    seed: StringToolbox.generateRandomId(),
     structure: {},
     prototypes: [],
   }
@@ -237,7 +235,7 @@ export const updateMissionWithNoForceData: Omit<TCommonMissionJson, 'forces'> =
 export const correctUpdateTestMission: TCommonMissionJson = {
   name: 'Updated Test Mission (To Delete)',
   versionNumber: 1,
-  seed: new ObjectId().toString(),
+  seed: StringToolbox.generateRandomId(),
   structure: {
     '4767fab5-573e-4df3-b1cd-809240804e92': {},
   },
@@ -300,40 +298,31 @@ export const correctUpdateTestMission: TCommonMissionJson = {
   ],
 }
 
-export let correctUser: { user: TCommonUserJson } = {
-  user: {
-    _id: new mongoose.Types.ObjectId().toHexString(),
-    username: 'test23',
-    accessId: UserAccess.AVAILABLE_ACCESSES.student._id,
-    expressPermissionIds: [],
-    firstName: 'Test',
-    lastName: 'User',
-    needsPasswordReset: false,
-    password: 'password',
-  },
+export let correctUser: TCommonUserJson = {
+  username: 'test23',
+  accessId: UserAccess.AVAILABLE_ACCESSES.student._id,
+  expressPermissionIds: [],
+  firstName: 'Test',
+  lastName: 'User',
+  needsPasswordReset: false,
+  password: 'password',
 }
 
-export let newCorrectUser: { user: TCommonUserJson } = {
-  user: {
-    _id: new mongoose.Types.ObjectId().toHexString(),
-    username: 'test24',
-    accessId: UserAccess.AVAILABLE_ACCESSES.student._id,
-    expressPermissionIds: [],
-    firstName: 'Test',
-    lastName: 'User',
-    needsPasswordReset: false,
-    password: 'password',
-  },
+export let newCorrectUser: TCommonUserJson = {
+  username: 'test24',
+  accessId: UserAccess.AVAILABLE_ACCESSES.student._id,
+  expressPermissionIds: [],
+  firstName: 'Test',
+  lastName: 'User',
+  needsPasswordReset: false,
+  password: 'password',
 }
 
-export const userWithNoPassword: { user: TCommonUserJson } = {
-  user: {
-    _id: new mongoose.Types.ObjectId().toHexString(),
-    username: 'test23',
-    accessId: UserAccess.AVAILABLE_ACCESSES.student._id,
-    expressPermissionIds: [],
-    firstName: 'Test',
-    lastName: 'User',
-    needsPasswordReset: false,
-  },
+export const userWithNoPassword: TCommonUserJson = {
+  username: 'test23',
+  accessId: UserAccess.AVAILABLE_ACCESSES.student._id,
+  expressPermissionIds: [],
+  firstName: 'Test',
+  lastName: 'User',
+  needsPasswordReset: false,
 }

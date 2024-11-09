@@ -1,6 +1,6 @@
 import { expect } from 'chai'
-import { testLogger } from '../../logging'
-import { agent } from '../index.test'
+import { testLogger } from 'metis/server/logging'
+import { agent } from '../../index.test'
 
 /**
  * Tests for the middleware function used to validate the data sent in the request body of the API routes.
@@ -24,7 +24,6 @@ export default function RequestBody(): Mocha.Suite {
       try {
         let response = await agent
           .post('/api/v1/tests/request-body-filter-check/')
-          .set('Content-Type', 'application/json')
           .send({
             bodyKeys: {
               STRING: STRING,
@@ -57,7 +56,6 @@ export default function RequestBody(): Mocha.Suite {
       try {
         let response = await agent
           .post('/api/v1/tests/request-body-filter-check/')
-          .set('Content-Type', 'application/json')
           .send({
             bodyKeys: {
               STRING: NUMBER,
@@ -90,7 +88,6 @@ export default function RequestBody(): Mocha.Suite {
       try {
         let response = await agent
           .post('/api/v1/tests/request-body-filter-check/')
-          .set('Content-Type', 'application/json')
           .send({
             bodyKeys: {
               STRING: STRING,
@@ -122,7 +119,6 @@ export default function RequestBody(): Mocha.Suite {
       try {
         let response = await agent
           .post('/api/v1/tests/request-body-filter-check/')
-          .set('Content-Type', 'application/json')
           .send({
             bodyKeys: {
               STRING: STRING,
@@ -153,7 +149,6 @@ export default function RequestBody(): Mocha.Suite {
       try {
         let response = await agent
           .post('/api/v1/tests/request-body-filter-check/')
-          .set('Content-Type', 'application/json')
           .send({
             bodyKeys: {
               STRING: STRING,

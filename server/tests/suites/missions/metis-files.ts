@@ -1,7 +1,8 @@
 import { expect } from 'chai'
+import { testLogger } from 'metis/server/logging'
+import ServerUser from 'metis/server/users'
 import path from 'path'
-import { testLogger } from '../../logging'
-import { agent, permittedUserAccess } from '../index.test'
+import { agent } from '../../index.test'
 
 /**
  * Tests for the export/import mission feature.
@@ -12,7 +13,23 @@ export default function MetisFiles(): Mocha.Suite {
     let missionId: string = ''
     const __filename = module.filename
     const __dirname = path.dirname(__filename)
-    const staticPath: string = path.join(__dirname, '../static')
+    const staticPath: string = path.join(__dirname, '../../static')
+
+    it('The user should have the correct permission(s) to use the API route for missions', async function () {
+      try {
+        let response = await agent.get('/api/v1/logins/')
+        let user = new ServerUser(response.body.user)
+        let hasCorrectPermissions: boolean = user.isAuthorized([
+          'missions_write',
+          'missions_read',
+        ])
+
+        expect(hasCorrectPermissions).to.equal(true)
+      } catch (error: any) {
+        testLogger.error(error)
+        throw error
+      }
+    })
 
     it('The missionId should be set to the ID of the first mission in the database', async function () {
       try {
@@ -31,16 +48,6 @@ export default function MetisFiles(): Mocha.Suite {
       try {
         let response = await agent.get('/api/v1/missions/')
         expect(response).to.have.status(200)
-      } catch (error: any) {
-        testLogger.error(error)
-        throw error
-      }
-    })
-
-    it('User should be logged in as an admin to access the import and/or export API', async function () {
-      try {
-        let response = await agent.get('/api/v1/logins/')
-        expect(response.body.user.accessId).to.equal(permittedUserAccess)
       } catch (error: any) {
         testLogger.error(error)
         throw error

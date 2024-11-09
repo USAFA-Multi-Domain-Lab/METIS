@@ -19,11 +19,8 @@ export default function Setup(): void {
         // Creates a session with a user because
         // certain API routes require authentication
         // for access
-        let loginResponse = await agent
-          .post('/api/v1/logins/')
-          .send(userCredentials)
-
-        expect(loginResponse).to.have.status(200)
+        let response = await agent.post('/api/v1/logins/').send(userCredentials)
+        expect(response).to.have.status(200)
       } else {
         throw new Error(
           'Database is not using "metis-test." Please make sure the test database is running.',

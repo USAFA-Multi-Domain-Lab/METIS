@@ -943,7 +943,6 @@ export const routerMap: TMetisRouterMap = (
    */
   const updateMission = (request: Request, response: Response) => {
     let missionUpdates: any = request.body
-
     let _id: string = missionUpdates._id
 
     // Original mission is retrieved.

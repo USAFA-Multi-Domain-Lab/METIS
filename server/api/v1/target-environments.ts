@@ -26,7 +26,7 @@ export const routerMap: TMetisRouterMap = (
   // -- GET | /api/v1/target-environments/ --
   router.get(
     '/',
-    auth({ permissions: ['missions_read'] }),
+    auth({ permissions: ['environments_read'] }),
     getTargetEnvironments,
   )
 

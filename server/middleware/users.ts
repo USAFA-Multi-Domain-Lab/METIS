@@ -79,17 +79,19 @@ export const restrictUserManagement = async (
   }
 
   // Grab the user and user ID from the request.
-  let user: TCommonUserJson = request.body.user
+  let user: TCommonUserJson = request.body
   let userId: TCommonUserJson['_id'] = request.params._id ?? request.query._id
+  // Check if the user is defined.
+  let userIsDefined: boolean = Object.keys(user).length > 0
 
   // If the user and user ID are undefined, return 400.
-  if (user === undefined && userId === undefined) {
+  if (userIsDefined === false && userId === undefined) {
     response.sendStatus(400)
     return
   }
 
   // If the user is defined...
-  if (user !== undefined) {
+  if (userIsDefined) {
     // ...and the user trying to create, or update, another user has the
     // highest level of authorization ("users_write") and the user being
     // created or updated has an access level, call next middleware.

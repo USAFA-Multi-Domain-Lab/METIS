@@ -14,6 +14,7 @@ import {
   restrictPasswordReset,
   restrictUserManagement,
 } from 'metis/server/middleware/users'
+import { TCommonUserJson } from 'metis/users'
 import { databaseLogger } from '../../logging'
 
 const routerMap: TMetisRouterMap = (
@@ -28,17 +29,30 @@ const routerMap: TMetisRouterMap = (
    * @returns The newly created user in JSON format.
    */
   const createNewUser = async (request: Request, response: Response) => {
-    let { body } = request
-    let { user: userData } = body
-    let { username, password } = userData
-
+    // Extract data from the request body.
+    let {
+      username,
+      accessId,
+      expressPermissionIds,
+      firstName,
+      lastName,
+      needsPasswordReset,
+      password,
+    } = request.body as TCommonUserJson
+    // Get the user that is logged in.
     let login: ServerLogin | undefined = ServerLogin.get(request.session.userId)
-
-    if (password !== undefined) {
-      userData.password = await hashPassword(password)
-    }
-
-    let user = new UserModel(userData)
+    // Hash the password.
+    if (!!password) password = await hashPassword(password)
+    // Create the new user model.
+    let user = new UserModel({
+      username,
+      accessId,
+      expressPermissionIds,
+      firstName,
+      lastName,
+      needsPasswordReset,
+      password,
+    })
 
     user.save(async (error: Error) => {
       if (error) {
@@ -76,7 +90,7 @@ const routerMap: TMetisRouterMap = (
                 return response.sendStatus(500)
               } else {
                 // Return the updated user.
-                return response.send({ user: user })
+                return response.send(user)
               }
             })
         } catch (error) {
@@ -155,19 +169,18 @@ const routerMap: TMetisRouterMap = (
    * @returns The updated user in JSON format.
    */
   const updateUser = async (request: Request, response: Response) => {
-    let { body } = request
-    let { user: userUpdates } = body
-    let { _id, password } = userUpdates
+    let userUpdates = request.body
+    let { _id } = userUpdates as TCommonUserJson
 
-    if (password !== undefined) {
-      userUpdates.password = await hashPassword(password)
+    if (!!userUpdates.password) {
+      userUpdates.password = await hashPassword(userUpdates.password)
     }
 
     let login: ServerLogin | undefined = ServerLogin.get(request.session.userId)
 
     try {
       // Original user is retrieved.
-      await UserModel.findOne({ _id: _id })
+      await UserModel.findOne({ _id })
         .queryForFilteredUsers('findOne', login?.user)
         .exec((error: Error, user: any) => {
           // Handles errors.
@@ -226,7 +239,7 @@ const routerMap: TMetisRouterMap = (
                   // queryForUsers function,
                   // and two, to ensure what's returned
                   // is what is in the database.
-                  await UserModel.findOne({ _id: _id })
+                  await UserModel.findOne({ _id })
                     .queryForUsers('findOne')
                     .queryForFilteredUsers('findOne', login?.user)
                     .exec((error: Error, user: any) => {
@@ -242,7 +255,7 @@ const routerMap: TMetisRouterMap = (
                         return response.sendStatus(500)
                       } else {
                         // Return the updated user to the client.
-                        return response.send({ user: user })
+                        return response.send(user)
                       }
                     })
                 } catch (error) {
@@ -388,15 +401,13 @@ const routerMap: TMetisRouterMap = (
     restrictUserManagement,
     defineRequests({
       body: {
-        user: {
-          username: RequestBodyFilters.USERNAME,
-          accessId: RequestBodyFilters.ACCESS,
-          expressPermissionIds: RequestBodyFilters.ARRAY,
-          firstName: RequestBodyFilters.NAME,
-          lastName: RequestBodyFilters.NAME,
-          password: RequestBodyFilters.PASSWORD,
-          needsPasswordReset: RequestBodyFilters.BOOLEAN,
-        },
+        username: RequestBodyFilters.USERNAME,
+        accessId: RequestBodyFilters.ACCESS,
+        expressPermissionIds: RequestBodyFilters.ARRAY,
+        firstName: RequestBodyFilters.NAME,
+        lastName: RequestBodyFilters.NAME,
+        password: RequestBodyFilters.PASSWORD,
+        needsPasswordReset: RequestBodyFilters.BOOLEAN,
       },
     }),
     createNewUser,
@@ -421,22 +432,18 @@ const routerMap: TMetisRouterMap = (
     defineRequests(
       {
         body: {
-          user: {
-            _id: RequestBodyFilters.OBJECTID,
-          },
+          _id: RequestBodyFilters.OBJECTID,
         },
       },
       {
         body: {
-          user: {
-            username: RequestBodyFilters.USERNAME,
-            accessId: RequestBodyFilters.ACCESS,
-            expressPermissionIds: RequestBodyFilters.ARRAY,
-            firstName: RequestBodyFilters.NAME,
-            lastName: RequestBodyFilters.NAME,
-            password: RequestBodyFilters.PASSWORD,
-            needsPasswordReset: RequestBodyFilters.BOOLEAN,
-          },
+          username: RequestBodyFilters.USERNAME,
+          accessId: RequestBodyFilters.ACCESS,
+          expressPermissionIds: RequestBodyFilters.ARRAY,
+          firstName: RequestBodyFilters.NAME,
+          lastName: RequestBodyFilters.NAME,
+          password: RequestBodyFilters.PASSWORD,
+          needsPasswordReset: RequestBodyFilters.BOOLEAN,
         },
       },
     ),

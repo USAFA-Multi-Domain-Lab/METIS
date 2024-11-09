@@ -1,6 +1,6 @@
 import { expect } from 'chai'
-import { testLogger } from '../../logging'
-import { agent } from '../index.test'
+import { testLogger } from 'metis/server/logging'
+import { agent } from '../../index.test'
 
 /**
  * Tests for the middleware function used to validate the data sent in the request params of the API routes.

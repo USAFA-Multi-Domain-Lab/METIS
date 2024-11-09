@@ -1,5 +1,6 @@
 import { expect } from 'chai'
-import { testLogger } from '../../logging'
+import { testLogger } from 'metis/server/logging'
+import ServerUser from 'metis/server/users'
 import {
   correctUpdateTestMission,
   createMissionWithNoForceData,
@@ -7,25 +8,30 @@ import {
   updateMissionWithNoForceData,
   updateMissionWithNoMissionId,
   updateMissionWithNoStructure,
-} from '../data'
-import { agent, permittedUserAccess } from '../index.test'
+} from '../../data'
+import { agent } from '../../index.test'
 
 /**
- * Tests for each mission route on the API.
+ * Tests each of the API route endpoints that are used to access the mission data on the server.
  */
-export default function MissionApiRoutes(): Mocha.Suite {
-  return describe('API Mission Routes', function () {
-    // Stores all the missions that were in
-    // the database before the tests were run
+export default function MissionApiRoute(): Mocha.Suite {
+  return describe('API Mission Route', function () {
+    // Stores all the missions that were in the database before the
+    // tests started.
     let createdMissionIdArray: string[] = []
     // A mission's ID that will be used throughout this test suite.
     let missionId: string = ''
 
-    it('User should be logged in as an admin to be able to post missions to the database via the API', async function () {
+    it('The user should have the correct permission(s) to use the API route for missions', async function () {
       try {
         let response = await agent.get('/api/v1/logins/')
+        let user = new ServerUser(response.body.user)
+        let hasCorrectPermissions: boolean = user.isAuthorized([
+          'missions_write',
+          'missions_read',
+        ])
 
-        expect(response.body.user.accessId).to.equal(permittedUserAccess)
+        expect(hasCorrectPermissions).to.equal(true)
       } catch (error: any) {
         testLogger.error(error)
         throw error
@@ -95,7 +101,6 @@ export default function MissionApiRoutes(): Mocha.Suite {
       try {
         let response = await agent
           .post('/api/v1/missions/')
-          .set('Content-Type', 'application/json')
           .send(createMissionWithNoForceData)
 
         expect(response).to.have.status(400)
@@ -107,10 +112,7 @@ export default function MissionApiRoutes(): Mocha.Suite {
 
     it('Creating a mission with all the correct properties in the body of the request should return a successful (200) response', async function () {
       try {
-        let response = await agent
-          .post('/api/v1/missions/')
-          .set('Content-Type', 'application/json')
-          .send(testMission)
+        let response = await agent.post('/api/v1/missions/').send(testMission)
 
         expect(response).to.have.status(200)
         createdMissionIdArray.push(response.body._id)
@@ -124,7 +126,6 @@ export default function MissionApiRoutes(): Mocha.Suite {
       try {
         let response = await agent
           .put('/api/v1/missions/')
-          .set('Content-Type', 'application/json')
           .send(updateMissionWithNoMissionId)
 
         expect(response).to.have.status(400)
@@ -146,7 +147,6 @@ export default function MissionApiRoutes(): Mocha.Suite {
 
         let response = await agent
           .put('/api/v1/missions/')
-          .set('Content-Type', 'application/json')
           .send(updateMissionWithNoForceData)
 
         expect(response).to.have.status(200)
@@ -163,7 +163,6 @@ export default function MissionApiRoutes(): Mocha.Suite {
       try {
         let response = await agent
           .put('/api/v1/missions/')
-          .set('Content-Type', 'application/json')
           .send(updateMissionWithNoStructure)
 
         expect(response).to.have.status(200)
@@ -180,7 +179,6 @@ export default function MissionApiRoutes(): Mocha.Suite {
       try {
         let response = await agent
           .put('/api/v1/missions/')
-          .set('Content-Type', 'application/json')
           .send(correctUpdateTestMission)
 
         expect(response).to.have.status(200)
@@ -194,7 +192,6 @@ export default function MissionApiRoutes(): Mocha.Suite {
       try {
         let response = await agent
           .put('/api/v1/missions/copy/')
-          .set('Content-Type', 'application/json')
           .send({ copyName: 'Copied Mission' })
 
         expect(response).to.have.status(400)
@@ -210,7 +207,6 @@ export default function MissionApiRoutes(): Mocha.Suite {
       try {
         let response = await agent
           .put('/api/v1/missions/copy/')
-          .set('Content-Type', 'application/json')
           .send({ copyName: 'Copied Mission', originalId: missionId })
 
         expect(response).to.have.status(200)
