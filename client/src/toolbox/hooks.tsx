@@ -82,6 +82,29 @@ export function usePostInitEffect(
 }
 
 /**
+ * Works like `useEffect`, but the callback will not be called
+ * until after the component has rendered.
+ * @param effect Imperative function that can return a cleanup function
+ * @param deps If present, effect will only activate if the values in the list change.
+ */
+export function usePostRenderEffect(
+  effect: React.EffectCallback,
+  deps?: React.DependencyList | undefined,
+): void {
+  // State to force the component to rerender to
+  // trigger the effect.
+  const [forcedUpdate, forceRender] = useState({})
+
+  // Pre-render effect to force rerender.
+  useEffect(() => {
+    forceRender({})
+  }, deps)
+
+  // Post-render effect to call the effect.
+  useEffect(effect, [forcedUpdate])
+}
+
+/**
  * Requires that a user is logged in to interact with the application. If the user is not logged in, the user will be redirected to the login page.
  */
 export function useRequireLogin(): [NonNullable<TLogin<ClientUser>>] {

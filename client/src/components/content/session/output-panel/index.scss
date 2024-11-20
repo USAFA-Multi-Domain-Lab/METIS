@@ -2,42 +2,97 @@
 
 .OutputPanel {
   .BorderBox {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
     height: 100%;
-    border: 2px solid $color-main;
-    overflow: auto;
-    box-sizing: border-box;
-    padding: 15px 20px 30px;
 
-    .Text {
-      padding: 15px 0 0;
-      font-size: 0.75em;
-      line-height: 1rem;
+    .Outputs {
+      // Make the outputs take up the full
+      // height of the parent.
+      grid-column: 1 / 2;
+      grid-row: 1 / 3;
+      border: 2px solid $color-main;
+      overflow: auto;
+      box-sizing: border-box;
+      padding: 15px 20px 30px;
 
-      .LineCursor {
-        color: $color-alt1;
+      .Text {
+        padding: 15px 0 0;
+        font-size: 0.75em;
+        line-height: 1rem;
 
-        .Location {
-          $content-size: 1.5em;
+        .LineCursor {
+          color: $color-alt1;
 
-          display: inline-block;
-          vertical-align: middle;
-          background: url('/assets/images/icons/locate-node.svg');
-          background-size: $content-size;
-          background-repeat: no-repeat;
-          background-position: center;
-          width: $content-size;
-          height: $content-size;
-          // cursor: pointer;
-          cursor: help;
+          .Location {
+            $content-size: 1.5em;
+
+            display: inline-block;
+            vertical-align: middle;
+            background: url('/assets/images/icons/locate-node.svg');
+            background-size: $content-size;
+            background-repeat: no-repeat;
+            background-position: center;
+            width: $content-size;
+            height: $content-size;
+            // cursor: pointer;
+            cursor: help;
+          }
+        }
+
+        .Succeeded * {
+          color: $session-green;
+        }
+
+        .Failed * {
+          color: $session-red;
         }
       }
+    }
 
-      .Succeeded * {
-        color: $session-green;
-      }
+    .OutputNavigation {
+      // Make the navigation buttons take up the bottom
+      // of the parent.
+      grid-column: 1 / 2;
+      grid-row: 2 / 3;
 
-      .Failed * {
-        color: $session-red;
+      display: flex;
+      flex-direction: row-reverse;
+      // Relative position needed in order to display
+      // navigation above the outputs.
+      position: relative;
+      padding: 0.75em;
+
+      .ViewNewOutputs {
+        $icon-dimensions: 1.5em;
+
+        cursor: pointer;
+        user-select: none;
+        display: flex;
+        flex-direction: row;
+        background-color: $color-accent-darker;
+        font-size: 0.9rem;
+        box-shadow: 0 0 4em 1em rgba($color-negative, 0.3);
+        border: 3px solid rgba($color-main, 0.35);
+        border-radius: 0.25em;
+        padding: 0.25em 0.6em;
+
+        .Text {
+          height: $icon-dimensions;
+          color: $color-main;
+          font-weight: bold;
+          line-height: $icon-dimensions;
+        }
+
+        .Icon {
+          width: $icon-dimensions;
+          height: $icon-dimensions;
+          background-image: url('/assets/images/icons/down.svg');
+          background-size: $icon-dimensions;
+          background-repeat: no-repeat;
+          background-position: 0.35em 0.325em;
+        }
       }
     }
   }
