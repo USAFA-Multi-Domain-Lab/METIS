@@ -114,6 +114,11 @@ export class RestApi extends Api {
         baseUrl += `${options.address}:${defaultPort}`
       }
     }
+    // Or if there's a port...
+    else if (options.address === undefined && options.port !== undefined) {
+      // Add the localhost and the port.
+      baseUrl += `localhost:${options.port}`
+    }
     // Otherwise, use localhost and the default port.
     else {
       baseUrl += `localhost:${defaultPort}`
