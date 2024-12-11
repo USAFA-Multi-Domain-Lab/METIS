@@ -135,7 +135,7 @@ export default function MissionModificationPanel({
 
     // If the user has the proper authorization, add
     // the launch button.
-    if (currentUser.isAuthorized('sessions_write')) {
+    if (currentUser.isAuthorized('sessions_write_native')) {
       buttons.push(availableButtons.launch)
     }
 
@@ -159,7 +159,7 @@ export default function MissionModificationPanel({
   // then display the mission modification panel.
   if (
     currentUser.isAuthorized('missions_write') ||
-    currentUser.isAuthorized('sessions_write')
+    currentUser.isAuthorized('sessions_write_native')
   ) {
     return (
       <div className='MissionModificationPanel'>

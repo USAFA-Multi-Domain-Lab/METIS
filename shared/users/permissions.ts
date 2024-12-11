@@ -209,6 +209,11 @@ export default class UserPermission implements TUserPermission {
       'Join Sessions (Observer)',
       'Allows the user currently logged in to join sessions as an observer.',
     ),
+    changelog_read: new UserPermission(
+      'changelog_read',
+      'Read Changelog',
+      'Allows the user currently logged in to retrieve the changelog.',
+    ),
   }
 }
 
@@ -247,6 +252,7 @@ const userPermissionNames = [
   'Join Sessions (Manager)',
   'Join Sessions (Manager of Native Sessions)',
   'Join Sessions (Observer)',
+  'Read Changelog',
 ] as const
 export type TPermissionName = (typeof userPermissionNames)[number]
 
@@ -265,6 +271,7 @@ const userPermissionIds = [
   'sessions_join_manager',
   'sessions_join_manager_native',
   'sessions_join_observer',
+  'changelog_read',
 ] as const
 export type TUserPermissionId = (typeof userPermissionIds)[number]
 export type TUserPermissions = { [key in TUserPermissionId]: UserPermission }

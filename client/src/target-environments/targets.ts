@@ -38,10 +38,4 @@ export default class ClientTarget extends Target<TClientMissionTypes> {
     // Return the target.
     return target
   }
-
-  /**
-   * The API endpoint for Target Objects.
-   */
-  public static readonly API_ENDPOINT: string =
-    'api/v1/target-environments/targets'
 }

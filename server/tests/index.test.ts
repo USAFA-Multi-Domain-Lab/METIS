@@ -1,30 +1,23 @@
-import { request } from 'chai-http'
-import UserAccess, { TUserAccessId } from '../../shared/users/accesses'
+import chai from 'chai'
+import chaiHttp from 'chai-http'
+import { testServer } from './server'
 import Setup from './setup'
-import { testServer } from './start'
-import MetisFiles from './suites/MetisFiles'
-import MissionApiRoutes from './suites/MissionApiRoutes'
-import MissionSchema from './suites/MissionSchema'
-import RequestBody from './suites/RequestBody'
-import RequestParams from './suites/RequestParams'
-import RequestQuery from './suites/RequestQuery'
-import UserApiRoutes from './suites/UserApiRoutes'
-import UserSchema from './suites/UserSchema'
+import Middleware from './suites/middleware'
+import Missions from './suites/missions'
+import TargetEnvironments from './suites/target-environments'
+import Users from './suites/users'
 import Teardown from './teardown'
 
-// Global variables
-export const permittedUserAccess: TUserAccessId =
-  UserAccess.AVAILABLE_ACCESSES.admin._id
-export const agent = request.agent(`localhost:${testServer.port}`)
+// Use chai-http
+chai.use(chaiHttp)
 
-// run tests
+// Global variable(s)
+export let agent = chai.request.agent(`localhost:${testServer.port}`)
+
+// Run the tests
 Setup()
-MetisFiles()
-MissionApiRoutes()
-MissionSchema()
-RequestBody()
-RequestQuery()
-RequestParams()
-UserApiRoutes()
-UserSchema()
+Missions()
+Middleware()
+Users()
+TargetEnvironments()
 Teardown()

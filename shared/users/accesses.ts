@@ -67,6 +67,7 @@ export default class UserAccess implements TUserAccess {
         UserPermission.AVAILABLE_PERMISSIONS.environments_read,
         UserPermission.AVAILABLE_PERMISSIONS.users_read_students,
         UserPermission.AVAILABLE_PERMISSIONS.users_write_students,
+        UserPermission.AVAILABLE_PERMISSIONS.changelog_read,
       ],
     ),
     admin: new UserAccess(
@@ -82,6 +83,7 @@ export default class UserAccess implements TUserAccess {
         UserPermission.AVAILABLE_PERMISSIONS.environments_read,
         UserPermission.AVAILABLE_PERMISSIONS.users_read,
         UserPermission.AVAILABLE_PERMISSIONS.users_write,
+        UserPermission.AVAILABLE_PERMISSIONS.changelog_read,
       ],
     ),
     revokedAccess: new UserAccess(

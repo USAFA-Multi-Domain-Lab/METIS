@@ -27,13 +27,7 @@ export default function Footer({}: TFooter): JSX.Element | null {
     let classList: string[] = ['Version']
 
     // Add 'Navigates' class if user is authorized.
-    if (
-      login?.user.isAuthorized([
-        'missions_write',
-        'sessions_write',
-        'users_write_students',
-      ])
-    ) {
+    if (login?.user.isAuthorized('changelog_read')) {
       classList.push('Navigates')
     }
 
@@ -47,13 +41,7 @@ export default function Footer({}: TFooter): JSX.Element | null {
    * Switches to the changelog page.
    */
   const viewChangelog = (): void => {
-    if (
-      login?.user.isAuthorized([
-        'missions_write',
-        'sessions_write',
-        'users_write_students',
-      ])
-    ) {
+    if (login?.user.isAuthorized('changelog_read')) {
       navigateTo('ChangelogPage', {})
     }
   }

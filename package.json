@@ -13,7 +13,7 @@
     "prod": "cd ./server && npm start",
     "install": "npm run client-install && npm run server-install && npm run shared-install && npm run integration-install",
     "build": "cd ./client && npm run build",
-    "tests": "cd ./server && npm run tests"
+    "test": "cd ./server && npm run test"
   },
   "prettier": {
     "tabWidth": 2,

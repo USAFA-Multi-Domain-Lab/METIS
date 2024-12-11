@@ -6,7 +6,7 @@ Note: These instructions assume the database server and the web server will be r
 
 ### Step #1 - Install MongoDB Community Edition
 
-MongoDB is needed so that METIS can store and manage persistent data.. Set up a Debian environment for the database. Then, to install MongoDB Community Edition, follow the installation guide [here](https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-ubuntu/). Confirm installation was successful with the following command.
+MongoDB is needed so that METIS can store and manage persistent data. Set up a Debian environment for the database. Then, to install MongoDB Community Edition, follow the installation guide [here](https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-ubuntu/). Confirm installation was successful with the following command.
 
 ```bash
 mongod --version
@@ -16,7 +16,7 @@ mongod --version
 
 Next, assuming the database will be connected to via an outside host, we must enable this functionality in the MongoDB config. The config will be located at`/etc/mongod.conf`. Open the config using your preferred text editor, such as `vim` or `nano`. Note, `sudo` may be needed to save this file. Find the section labeled `# network interfaces` and update the section to have `bindIp` set to `0.0.0.0`. This will allow outside hosts to connect to the database server:
 
-```bash
+```python
 # network interfaces
 net:
   port: 27017
@@ -30,13 +30,13 @@ sudo systemctl stop mongod
 sudo systemctl start mongod
 ```
 
-In order to check if MongoDB is running, use this command:
+To check if MongoDB is running, use this command:
 
 ```bash
 sudo systemctl status mongod
 ```
 
-It is recommend to have MongoDB run on start up. This can be done with the following command:
+It is recommended to have MongoDB run on start up. This can be done with the following command:
 
 ```bash
 sudo systemctl enable mongod
@@ -46,7 +46,7 @@ If enabled, reboot and confirm MongoDB starts up with the status command mention
 
 ### Step #3 - Set Up Database Authorization
 
-By default, the database server running can be connected to and managed without any authentication requirements. However, it is highly recommended to enable authentication and create a user for the web server to use in order to connect and manage data securely. Otherwise, the data stored can be wiped by anyone with a connection.
+By default, the database server running can be connected to and managed without any authentication requirements. However, it is highly recommended to enable authentication and create a user for the web server to use to connect and manage data securely. Otherwise, the data stored can be wiped by anyone with a connection.
 
 Ensure that MongoDB is running, then connect to it via the following command:
 
@@ -54,7 +54,7 @@ Ensure that MongoDB is running, then connect to it via the following command:
 mongosh
 ```
 
-Once connected, switch to the already created `admin` database to create a new admin user.
+Once connected, switch to the already-created `admin` database to create a new admin user.
 
 ```bash
 use admin
@@ -62,7 +62,7 @@ use admin
 
 Then, create the new admin user. You can change the name of the user from “admin” to whatever you like. After you hit enter, you will be prompted for a password. You will then use this username and password to connect to the database in the future.
 
-```bash
+```swift
 db.createUser(
   {
     user: "admin",
@@ -100,7 +100,7 @@ This command should result in the following authentication error.
 MongoServerError: command listCollections requires authentication
 ```
 
-To authenticate yourself as an admin, while connected with `mongosh`, switch to the admin database and run the `db.auth` function.
+To authenticate yourself as an admin, while connected with `mongosh`, switch to the admin database, and run the `db.auth` function.
 
 ```bash
 use admin
@@ -131,7 +131,7 @@ Your database is now secure. However, using an admin user with full access as th
 
 To do so, first connect to the database server using `mongosh` authenticating yourself as the admin user. Then switch to a new database called `metis`, which is the database METIS is configured to use by default. Then create a new user with read-write access to `metis`. Note, it is crucial that you create the user while in the `metis` database.
 
-```bash
+```swift
 use metis
 db.createUser(
   {
@@ -156,7 +156,7 @@ NodeJS, MongoDB Shell, and MongoDB Command Line Database Tools must be installed
 
 ### Step #1 - Install NodeJS
 
-If you install NodeJS now via the `apt` command, you will install an outdated version of NodeJS that is not supported by METIS. In order to install the correct version of NodeJS, you can download a _PPA_ (personal package archive) maintained by NodeSource. These PPAs have more versions of Node.js available than the official Ubuntu repositories.
+If you install NodeJS now via the `apt` command, you will install an outdated version of NodeJS that is not supported by METIS. To install the correct version of NodeJS, you can download a _PPA_ (personal package archive) maintained by NodeSource. These PPAs have more versions of Node.js available than the official Ubuntu repositories.
 
 First, install the PPA to get access to its packages. From your home directory, use `curl` to retrieve the installation script for version 20.x of NodeJS:
 
@@ -221,7 +221,7 @@ cd ./metis
 npm install
 ```
 
-The front-end interface for METIS is a React App hosted by the web server. The React App must be built initially and after any updates (new releases) in order for the front-end interface to be accessible and up-to-date to web users. While in the METIS project directory, run the following command to build the React App:
+The front-end interface for METIS is a React App hosted by the web server. The React App must be built initially and after any updates (new releases) for the front-end interface to be accessible and up-to-date to web users. While in the METIS project directory, run the following command to build the React App:
 
 ```bash
 npm run build
@@ -229,9 +229,9 @@ npm run build
 
 ### Step #5 - Configure Environment
 
-In order for the web server to properly connect to the database, the environment file for the METIS must be configured correctly so that the web server knows how to connect to the database. Go into the METIS directory and create a new file called `environment.json` .
+For the web server to properly connect to the database, the environment file for the METIS must be configured correctly so that the web server knows how to connect to the database. Go into the METIS directory and create a new file called `environment.json` .
 
-In this file METIS can be configured differently from it’s default values. All properties are optional, except the `mongoUsername` and `mongoPassword` , which are required due to the auth restrictions set up. If you have a custom host or port for MongoDB as well, this can also be configured here. All available environment options are outlined below:
+In this file, METIS can be configured differently from its default values. All properties are optional, except the `mongoUsername` and `mongoPassword` , which are required due to the auth restrictions set up. If you have a custom host or port for MongoDB as well, this can also be configured here. All available environment options are outlined below:
 
 ```json
 {
@@ -241,7 +241,7 @@ In this file METIS can be configured differently from it’s default values. All
   "mongoPort": "<your-port>", // Default: 27017, Optional
   "mongoUsername": "<your-username>", // Required
   "mongoPassword": "<your-password>", // Required
-  "fileStoreDir": "<your-file-store-dir>", // Default: "./files/store" Optional
+  "fileStoreDir": "<your-file-store-dir>", // Default: "./files/store", Optional
   "httpRateLimit": "<your-rate-limit>", // Default: 25 Optional
   "wsRateLimit": "<your-rate-limit>" // Default 25 Optional
 }
@@ -255,9 +255,9 @@ To run METIS in a production environment, run the following command.
 npm run prod
 ```
 
-The should start up and be accessible at the configured port (8080 by default). You can now access the web app in the browser. To login, a temporary user has been created with the following credentials:
+It should start up and be accessible at the configured port (8080 by default). You can now access the web app in the browser. To log in, a temporary user has been created with the following credentials:
 
-```
+```css
 Username: admin
 Password: temppass
 ```

@@ -79,17 +79,19 @@ export const restrictUserManagement = async (
   }
 
   // Grab the user and user ID from the request.
-  let user: TCommonUserJson = request.body.user
+  let user: TCommonUserJson = request.body
   let userId: TCommonUserJson['_id'] = request.params._id ?? request.query._id
+  // Check if the user is defined.
+  let userIsDefined: boolean = Object.keys(user).length > 0
 
   // If the user and user ID are undefined, return 400.
-  if (user === undefined && userId === undefined) {
+  if (userIsDefined === false && userId === undefined) {
     response.sendStatus(400)
     return
   }
 
   // If the user is defined...
-  if (user !== undefined) {
+  if (userIsDefined) {
     // ...and the user trying to create, or update, another user has the
     // highest level of authorization ("users_write") and the user being
     // created or updated has an access level, call next middleware.
@@ -117,10 +119,10 @@ export const restrictUserManagement = async (
   // If the user ID is defined...
   if (userId !== undefined) {
     // ...find the user.
-    let user = await UserModel.findOne({ _id: userId })
+    let userDoc = await UserModel.findById(userId).exec()
 
     // If the user is not found, return 404.
-    if (!user) {
+    if (!userDoc) {
       response.sendStatus(404)
       return
     }
@@ -128,7 +130,10 @@ export const restrictUserManagement = async (
     // If the user trying to delete another user has the highest level of
     // authorization ("users_write") and the user being deleted has an
     // access level, call next middleware.
-    if (login.user.isAuthorized('users_write') && user.accessId !== undefined) {
+    if (
+      login.user.isAuthorized('users_write') &&
+      userDoc.accessId !== undefined
+    ) {
       // Call next middleware.
       return next()
     }
@@ -137,7 +142,7 @@ export const restrictUserManagement = async (
     // middleware.
     else if (
       login.user.isAuthorized('users_write_students') &&
-      user.accessId === 'student'
+      userDoc.accessId === 'student'
     ) {
       // Call next middleware.
       return next()

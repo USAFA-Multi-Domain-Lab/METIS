@@ -1,12 +1,8 @@
-import ButtonSvgPanel_v2 from '../../../user-controls/buttons/ButtonSvgPanel_v2'
-import { TList_P, useListContext } from '../List'
-import './ListButtons.scss'
-import { TListItem } from '../pages/ListItem'
-import ButtonSvg, {
-  TButtonSvgType,
-} from 'src/components/content/user-controls/buttons/ButtonSvg'
-import ButtonMenuController from 'src/components/content/user-controls/buttons/ButtonMenuController'
+import ButtonSvg from 'src/components/content/user-controls/buttons/ButtonSvg'
 import { useGlobalContext } from 'src/context'
+import { useListContext } from '../List'
+import { TListItem } from '../pages/ListItem'
+import './ListButtons.scss'
 
 /**
  * Provides buttons to the `List` component
@@ -47,6 +43,7 @@ export default function ListButtons<
         size='small'
         onClick={onOptionsClick}
         description={'View option menu'}
+        disabled={listButtons.length === 0 ? 'full' : 'none'}
       />
     </div>
   )

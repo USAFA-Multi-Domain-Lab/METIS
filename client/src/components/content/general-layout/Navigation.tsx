@@ -69,7 +69,7 @@ export const LogoutLink = (
   options: Partial<TWithKey<TButtonText_P>> = {},
 ): TWithKey<TButtonText_P> => {
   return {
-    text: 'Logout',
+    text: 'Log out',
     onClick: context.actions.logout,
     key: 'logout',
     ...options,

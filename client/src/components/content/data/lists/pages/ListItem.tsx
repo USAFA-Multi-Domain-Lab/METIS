@@ -134,6 +134,7 @@ export default function ListItem<T extends TListItem>({
             size='small'
             onClick={onOptionsClick}
             description={'View option menu'}
+            disabled={itemButtons.length === 0 ? 'full' : 'none'}
           />
         </div>,
       )
