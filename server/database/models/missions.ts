@@ -1,10 +1,10 @@
+import DOMPurify from 'isomorphic-dompurify'
 import Mission, { TCommonMissionJson } from 'metis/missions'
 import { TCommonMissionActionJson } from 'metis/missions/actions'
 import { TCommonMissionForceJson } from 'metis/missions/forces'
 import { TCommonMissionNodeJson } from 'metis/missions/nodes'
 import { TCommonMissionPrototypeJson } from 'metis/missions/nodes/prototypes'
 import MetisDatabase from 'metis/server/database'
-import SanitizedHTML from 'metis/server/database/schema-types/html'
 import { databaseLogger } from 'metis/server/logging'
 import ServerMission from 'metis/server/missions'
 import ServerMissionAction from 'metis/server/missions/actions'
@@ -16,14 +16,71 @@ import { TTargetArg } from 'metis/target-environments/args'
 import ForceArg from 'metis/target-environments/args/force-arg'
 import NodeArg from 'metis/target-environments/args/node-arg'
 import { AnyObject } from 'metis/toolbox/objects'
-import { HEX_COLOR_REGEX } from 'metis/toolbox/strings'
-import mongoose, { Schema } from 'mongoose'
+import StringToolbox, { HEX_COLOR_REGEX } from 'metis/toolbox/strings'
+import mongoose, {
+  Document,
+  Error,
+  Model,
+  model,
+  Query,
+  Schema,
+} from 'mongoose'
 
 let ObjectId = mongoose.Types.ObjectId
 
 const NODE_DATA_MIN_LENGTH = 1
 const ACTIONS_MIN_LENGTH = 1
 const PROCESS_TIME_MAX = 3600 /*seconds*/ * 1000
+
+/* -- FUNCTIONS -- */
+
+/**
+ * Transforms the ObjectId to a string.
+ * @param doc The mongoose document which is being converted.
+ * @param ret The plain object representation which has been converted.
+ * @param options The options in use.
+ * @returns
+ */
+const transformObjectIdToString = (
+  doc: TMissionDoc,
+  ret: TCommonMissionJson,
+  options: any,
+) => {
+  if (ret._id) ret._id = ret._id.toString()
+  return ret
+}
+
+/**
+ * Modifies the query to hide deleted missions and remove unneeded properties.
+ * @param query The query to modify.
+ */
+const queryForApiResponse = (
+  query: Query<TMissionSchema, TMissionModel>,
+): void => {
+  // Get projection.
+  let projection = query.projection()
+
+  // Create if does not exist.
+  if (projection === undefined) {
+    projection = {}
+  }
+
+  // Check if the projection is empty.
+  let projectionKeys = Object.keys(projection)
+
+  // If the projection is empty, create a default projection.
+  if (projectionKeys.length === 0) {
+    projection = {
+      deleted: 0,
+      __v: 0,
+    }
+  }
+
+  // Set projection.
+  query.projection(projection)
+  // Hide deleted missions.
+  query.where({ deleted: false })
+}
 
 /* -- SCHEMA VALIDATION HELPERS -- */
 
@@ -42,7 +99,7 @@ const isNonNegativeInteger = (value: number): boolean => {
 
 /**
  * Validates all of the effects within the mission.
- * @param missionJson The mission to validate.
+ * @param missionJson The mission JSON to validate.
  */
 const validateMissionEffects = (
   missionJson: TCommonMissionJson,
@@ -238,11 +295,11 @@ const validateMissionEffects = (
 /**
  * This will ensure the mission has between one and eight forces and that each prototype
  * in the mission has a corresponding node within each force.
- * @param mission The mission to validate.
+ * @param missionJson The mission JSON to validate.
  * @returns An error if any of the validation checks fail.
  */
 const validateMissionForces = (
-  mission: TCommonMissionJson,
+  missionJson: TCommonMissionJson,
   structureKeys: TCommonMissionPrototypeJson['structureKey'][],
 ): { error?: Error } => {
   // Object to store results.
@@ -250,14 +307,14 @@ const validateMissionForces = (
 
   // Ensure correct number of forces exist
   // the mission.
-  if (mission.forces.length < 1) {
+  if (missionJson.forces.length < 1) {
     results.error = new Error(
       `Error in mission:\nMission must have at least one force.`,
     )
     results.error.name = MetisDatabase.ERROR_BAD_DATA
     return results
   }
-  if (mission.forces.length > 8) {
+  if (missionJson.forces.length > 8) {
     results.error = new Error(
       `Error in mission:\nMission can have no more than eight forces.`,
     )
@@ -266,7 +323,7 @@ const validateMissionForces = (
   }
 
   // Loop through each force.
-  for (let force of mission.forces) {
+  for (let force of missionJson.forces) {
     // Used to ensure each node has a corresponding prototype.
     let prototypesRetrieved: TCommonMissionPrototypeJson['_id'][] = []
 
@@ -275,7 +332,7 @@ const validateMissionForces = (
       // Get the prototype node's ID.
       let prototypeId = node.prototypeId
       // Get the prototype.
-      let prototype = Mission.getPrototype(mission, prototypeId)
+      let prototype = Mission.getPrototype(missionJson, prototypeId)
 
       // Ensure the prototype ID exists.
       if (!prototype) {
@@ -310,12 +367,12 @@ const validateMissionForces = (
 
     // Ensure all prototype nodes are present.
     let isMissingPrototype: boolean =
-      prototypesRetrieved.length !== mission.prototypes.length
+      prototypesRetrieved.length !== missionJson.prototypes.length
 
     // If a prototype node is missing from the force...
     if (isMissingPrototype) {
       // ...then find the missing prototype node.
-      let prototypes = mission.prototypes
+      let prototypes = missionJson.prototypes
       let missingPrototype = prototypes.find(
         (prototype) => !prototypesRetrieved.includes(prototype._id),
       )
@@ -333,13 +390,15 @@ const validateMissionForces = (
 }
 
 /**
- * Validates the mission data.
- * @param mission The mission data to validate.
+ * Validates the mission document.
+ * @param missionDoc The mission document to validate.
  * @param next The next function to call.
  */
-const validate_missions = (mission: any, next: any): void => {
+const validate_missions = (missionDoc: TMissionDoc, next: any): void => {
+  // Convert the mission to JSON.
+  let missionJson: TCommonMissionJson = missionDoc.toJSON()
   // Get the initial structure.
-  let initStructure: TCommonMissionJson['structure'] = mission.structure
+  let initStructure: TCommonMissionJson['structure'] = missionJson.structure
   // Array to store the structure keys.
   let structureKeys: TCommonMissionPrototypeJson['structureKey'][] = []
   // Object to store results.
@@ -383,12 +442,7 @@ const validate_missions = (mission: any, next: any): void => {
   }
 
   // Algorithm to check for duplicate _id's.
-  const _idCheckerAlgorithm = (cursor = mission): { error?: Error } => {
-    // If the cursor has a _doc property and its an object...
-    if (cursor._doc !== undefined && cursor._doc instanceof Object) {
-      // ...then set the cursor to the _doc property.
-      cursor = cursor._doc
-    }
+  const _idCheckerAlgorithm = (cursor = missionJson): { error?: Error } => {
     // If the cursor is an object, but not an ObjectId...
     if (cursor instanceof Object && !(cursor instanceof ObjectId)) {
       // ...and it has an _id property and the _id already exists...
@@ -413,7 +467,7 @@ const validate_missions = (mission: any, next: any): void => {
         return { error }
       }
       // Otherwise, add the _id to the existingIds object.
-      else {
+      else if (cursor._id) {
         existingIds[cursor._id] = true
       }
       // Check the object's values for duplicate _id's.
@@ -444,16 +498,14 @@ const validate_missions = (mission: any, next: any): void => {
   if (results.error) return next(results.error)
 
   // Validate the mission forces.
-  results = validateMissionForces(mission, structureKeys)
+  results = validateMissionForces(missionJson, structureKeys)
   // Check for error.
   if (results.error) return next(results.error)
 
   // Validate the mission effects.
-  results = validateMissionEffects(mission)
+  results = validateMissionEffects(missionJson)
   // Check for error.
   if (results.error) return next(results.error)
-
-  return next()
 }
 
 /**
@@ -563,12 +615,38 @@ const validate_mission_forces_nodes_actions_resourceCost = (
   return nonNegativeInteger
 }
 
+/* -- SCHEMA SETTERS -- */
+
+/**
+ * Sanitizes HTML.
+ * @param html The HTML to sanitize.
+ * @returns The sanitized HTML.
+ */
+const sanitizeHtml = (html: string): string => {
+  try {
+    let sanitizedHTML = DOMPurify.sanitize(html, {
+      ALLOWED_TAGS: ['a', 'br', 'p', 'strong', 'em', 'u', 'ul', 'ol', 'li'],
+      ALLOWED_ATTR: ['href', 'rel', 'target'],
+      FORBID_TAGS: ['script', 'style', 'iframe'],
+    })
+
+    return sanitizedHTML
+  } catch (error: any) {
+    databaseLogger.error('Error sanitizing HTML.\n', error)
+    throw new Error('Error sanitizing HTML.')
+  }
+}
+
 /* -- SCHEMA -- */
 
 /**
  * The schema for a mission in the database.
  */
-export const MissionSchema: Schema = new Schema(
+export const MissionSchema: Schema = new Schema<
+  TMissionSchema,
+  TMissionModel,
+  TMissionMethods
+>(
   {
     name: {
       type: String,
@@ -576,7 +654,11 @@ export const MissionSchema: Schema = new Schema(
       maxLength: ServerMission.MAX_NAME_LENGTH,
     },
     versionNumber: { type: Number, required: true },
-    seed: { type: ObjectId, required: true, auto: true },
+    seed: {
+      type: String,
+      required: true,
+      default: StringToolbox.generateRandomId,
+    },
     deleted: { type: Boolean, required: true, default: false },
     structure: {
       type: {},
@@ -594,12 +676,17 @@ export const MissionSchema: Schema = new Schema(
           },
         },
       ],
+      required: true,
     },
     forces: {
       type: [
         {
           _id: { type: String, required: true },
-          introMessage: { type: SanitizedHTML, required: true },
+          introMessage: {
+            type: String,
+            required: true,
+            set: sanitizeHtml,
+          },
           name: {
             type: String,
             required: true,
@@ -630,11 +717,17 @@ export const MissionSchema: Schema = new Schema(
                   required: true,
                   validate: validate_missions_forces_nodes_color,
                 },
-                description: { type: SanitizedHTML, required: true },
-                preExecutionText: {
-                  type: SanitizedHTML,
+                description: {
+                  type: String,
                   required: false,
                   default: '',
+                  set: sanitizeHtml,
+                },
+                preExecutionText: {
+                  type: String,
+                  required: false,
+                  default: '',
+                  set: sanitizeHtml,
                 },
                 executable: { type: Boolean, required: true },
                 device: { type: Boolean, required: true },
@@ -647,7 +740,12 @@ export const MissionSchema: Schema = new Schema(
                         required: true,
                         maxLength: ServerMissionAction.MAX_NAME_LENGTH,
                       },
-                      description: { type: SanitizedHTML, required: true },
+                      description: {
+                        type: String,
+                        required: false,
+                        default: '',
+                        set: sanitizeHtml,
+                      },
                       processTime: {
                         type: Number,
                         required: true,
@@ -667,15 +765,19 @@ export const MissionSchema: Schema = new Schema(
                           validate_mission_forces_nodes_actions_resourceCost,
                       },
                       postExecutionSuccessText: {
-                        type: SanitizedHTML,
-                        required: true,
+                        type: String,
+                        required: false,
+                        default: '',
+                        set: sanitizeHtml,
                       },
                       postExecutionFailureText: {
-                        type: SanitizedHTML,
-                        required: true,
+                        type: String,
+                        required: false,
+                        default: '',
+                        set: sanitizeHtml,
                       },
                       effects: {
-                        // Validation/Sanitization takes places in the pre-save/pre-update hook.
+                        // Effect validation takes places in the pre-save hook.
                         type: [
                           {
                             _id: { type: String, required: true },
@@ -685,8 +787,10 @@ export const MissionSchema: Schema = new Schema(
                               maxLength: ServerEffect.MAX_NAME_LENGTH,
                             },
                             description: {
-                              type: SanitizedHTML,
-                              required: true,
+                              type: String,
+                              required: false,
+                              default: '',
+                              set: sanitizeHtml,
                             },
                             targetEnvironmentVersion: {
                               type: String,
@@ -721,65 +825,112 @@ export const MissionSchema: Schema = new Schema(
   {
     strict: 'throw',
     minimize: false,
+    toJSON: {
+      transform: transformObjectIdToString,
+    },
+    toObject: {
+      transform: transformObjectIdToString,
+    },
   },
 )
 
-/* -- SCHEMA METHODS -- */
+/* -- SCHEMA MIDDLEWARE -- */
 
-// Called before a save is made
-// to the database.
-MissionSchema.pre('save', function (next) {
+// Called before a save is made to the database.
+MissionSchema.pre<TMissionDoc>('save', async function (next) {
   validate_missions(this, next)
+  return next()
 })
 
-// Called before an update is made
-// to the database.
-MissionSchema.pre('update', function (next) {
-  validate_missions(this, next)
+// Called before a find or update is made to the database.
+MissionSchema.pre<Query<TMissionSchema, TMissionModel>>(
+  ['find', 'findOne', 'findOneAndUpdate', 'updateOne'],
+  function (next) {
+    // Modify the query.
+    queryForApiResponse(this)
+    // Call the next middleware.
+    return next()
+  },
+)
+
+// Converts ObjectIds to strings.
+MissionSchema.post<Query<TMissionSchema, TMissionModel>>(
+  ['find', 'findOne', 'updateOne', 'findOneAndUpdate'],
+  function (missionData: TMissionSchema | TMissionSchema[]) {
+    // If the mission is null, then return.
+    if (!missionData) return
+
+    // If the mission data is an array...
+    if (Array.isArray(missionData)) {
+      // Loop through each mission and transform any ObjectIds to a strings.
+      for (let missionDatum of missionData) {
+        // If the mission data is null, then continue.
+        if (!missionDatum) continue
+
+        // Otherwise, transform the ObjectIds to strings.
+        missionDatum._id = missionDatum._id?.toString()
+        missionDatum.seed = missionDatum.seed.toString()
+      }
+    }
+    // Otherwise...
+    else {
+      // If the mission data is null, then return.
+      if (!missionData) return
+
+      // Otherwise, transform the ObjectIds to strings.
+      missionData._id = missionData._id?.toString()
+      missionData.seed = missionData.seed.toString()
+    }
+  },
+)
+
+// Called after a save is made to the database.
+MissionSchema.post<TMissionDoc>('save', function () {
+  // Remove unneeded properties.
+  this.set('__v', undefined)
+  this.set('deleted', undefined)
 })
 
-/* -- SCHEMA PLUGINS -- */
+/* -- SCHEMA TYPES -- */
 
-MissionSchema.plugin((schema) => {
-  // This is responsible for removing
-  // excess properties from the mission
-  // data that should be hidden from the
-  // API and for hiding deleted missions.
-  schema.query.queryForApiResponse = function (
-    findFunctionName: 'find' | 'findOne',
-  ) {
-    // Get projection.
-    let projection = this.projection()
+/**
+ * Represents a mission in the database.
+ */
+type TMissionSchema = TCommonMissionJson & {
+  /**
+   * Determines if the mission is deleted.
+   */
+  deleted: boolean
+}
 
-    // Create if does not exist.
-    if (projection === undefined) {
-      projection = {}
-    }
+/**
+ * Represents the methods available for a `MissionModel`.
+ */
+type TMissionMethods = {}
 
-    // Remove all unneeded properties.
-    if (!('deleted' in projection)) {
-      projection['deleted'] = 0
-    }
-    if (!('__v' in projection)) {
-      projection['__v'] = 0
-    }
+/**
+ * Represents the static methods available for a `MissionModel`.
+ */
+type TMissionStaticMethods = {}
 
-    // Set projection.
-    this.projection(projection)
-    // Hide deleted missions.
-    this.where({ deleted: false })
+/**
+ * Represents a mongoose model for a mission in the database.
+ */
+type TMissionModel = Model<TMissionSchema, {}, TMissionMethods> &
+  TMissionStaticMethods
 
-    // Calls the appropriate find function.
-    switch (findFunctionName) {
-      case 'find':
-        return this.find()
-      case 'findOne':
-        return this.findOne()
-    }
-  }
-})
+/**
+ * Represents a mongoose document for a mission in the database.
+ */
+type TMissionDoc = Document<any, any, TMissionSchema>
 
 /* -- MODEL -- */
 
-const MissionModel: any = mongoose.model('Mission', MissionSchema)
+/**
+ * The mongoose model for a mission in the database.
+ */
+const MissionModel = model<TMissionSchema, TMissionModel>(
+  'Mission',
+  MissionSchema,
+)
 export default MissionModel

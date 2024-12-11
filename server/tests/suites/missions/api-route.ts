@@ -1,6 +1,8 @@
 import { expect } from 'chai'
+import { TCommonMissionJson } from 'metis/missions'
 import { testLogger } from 'metis/server/logging'
 import ServerUser from 'metis/server/users'
+import mongoose from 'mongoose'
 import {
   correctUpdateTestMission,
   createMissionWithNoForceData,
@@ -16,9 +18,6 @@ import { agent } from '../../index.test'
  */
 export default function MissionApiRoute(): Mocha.Suite {
   return describe('API Mission Route', function () {
-    // Stores all the missions that were in the database before the
-    // tests started.
-    let createdMissionIdArray: string[] = []
     // A mission's ID that will be used throughout this test suite.
     let missionId: string = ''
 
@@ -113,9 +112,24 @@ export default function MissionApiRoute(): Mocha.Suite {
     it('Creating a mission with all the correct properties in the body of the request should return a successful (200) response', async function () {
       try {
         let response = await agent.post('/api/v1/missions/').send(testMission)
+        let { _id, name, seed, structure, versionNumber, prototypes, forces } =
+          response.body as TCommonMissionJson
+
+        // Check to see if the _id is valid.
+        let isValidId: boolean =
+          mongoose.isObjectIdOrHexString(_id) && typeof _id === 'string'
 
         expect(response).to.have.status(200)
-        createdMissionIdArray.push(response.body._id)
+        expect(isValidId).to.equal(true)
+        expect(name).to.equal(testMission.name)
+        expect(versionNumber).to.equal(testMission.versionNumber)
+        expect(seed).to.equal(testMission.seed)
+        expect(structure).to.deep.equal(testMission.structure)
+        expect(prototypes).to.deep.equal(testMission.prototypes)
+        expect(forces).to.deep.equal(testMission.forces)
+
+        // Update the missionId to the newly created mission's ID.
+        missionId = response.body._id
       } catch (error: any) {
         testLogger.error(error)
         throw error
@@ -136,20 +150,37 @@ export default function MissionApiRoute(): Mocha.Suite {
     })
 
     it('Updating a mission where the structure is defined, but the force data is undefined in the body of the request should return a successful (200) response', async function () {
-      missionId = createdMissionIdArray[0]
       updateMissionWithNoForceData._id = missionId
 
       try {
-        let getResponse = await agent.get(`/api/v1/missions/${missionId}`)
-        let mission = getResponse.body
-        updateMissionWithNoForceData.structure = mission.structure
-        updateMissionWithNoForceData.prototypes = mission.prototypes
+        // Get the current mission to compare the structure.
+        let { body: currentMission } = await agent.get(
+          `/api/v1/missions/${updateMissionWithNoForceData._id}`,
+        )
 
         let response = await agent
           .put('/api/v1/missions/')
           .send(updateMissionWithNoForceData)
 
+        let { _id, name, seed, structure, versionNumber, prototypes, forces } =
+          response.body as TCommonMissionJson
+
+        // Check to see if the _id is valid.
+        let isValidId: boolean =
+          mongoose.isObjectIdOrHexString(_id) && typeof _id === 'string'
+
         expect(response).to.have.status(200)
+        expect(isValidId).to.equal(true)
+        expect(name).to.equal(updateMissionWithNoForceData.name)
+        expect(versionNumber).to.equal(
+          updateMissionWithNoForceData.versionNumber,
+        )
+        expect(seed).to.equal(updateMissionWithNoForceData.seed)
+        expect(structure).to.deep.equal(updateMissionWithNoForceData.structure)
+        expect(prototypes).to.deep.equal(
+          updateMissionWithNoForceData.prototypes,
+        )
+        expect(forces).to.deep.equal(currentMission.forces)
       } catch (error: any) {
         testLogger.error(error)
         throw error
@@ -157,15 +188,36 @@ export default function MissionApiRoute(): Mocha.Suite {
     })
 
     it('Updating a mission where the force data is defined, but the structure is undefined in the body of the request should return a successful (200) response', async function () {
-      missionId = createdMissionIdArray[0]
       updateMissionWithNoStructure._id = missionId
 
       try {
+        // Get the current mission to compare the structure.
+        let { body: currentMission } = await agent.get(
+          `/api/v1/missions/${updateMissionWithNoStructure._id}`,
+        )
+
         let response = await agent
           .put('/api/v1/missions/')
           .send(updateMissionWithNoStructure)
+        let { _id, name, seed, structure, versionNumber, prototypes, forces } =
+          response.body as TCommonMissionJson
+
+        // Check to see if the _id is valid.
+        let isValidId: boolean =
+          mongoose.isObjectIdOrHexString(_id) && typeof _id === 'string'
 
         expect(response).to.have.status(200)
+        expect(isValidId).to.equal(true)
+        expect(name).to.equal(updateMissionWithNoStructure.name)
+        expect(versionNumber).to.equal(
+          updateMissionWithNoStructure.versionNumber,
+        )
+        expect(seed).to.equal(updateMissionWithNoStructure.seed)
+        expect(structure).to.deep.equal(currentMission.structure)
+        expect(prototypes).to.deep.equal(
+          updateMissionWithNoStructure.prototypes,
+        )
+        expect(forces).to.deep.equal(updateMissionWithNoStructure.forces)
       } catch (error: any) {
         testLogger.error(error)
         throw error
@@ -173,7 +225,34 @@ export default function MissionApiRoute(): Mocha.Suite {
     })
 
     it('Updating a mission with all the correct properties in the body of the request should return a successful (200) response', async function () {
-      missionId = createdMissionIdArray[0]
+      correctUpdateTestMission._id = missionId
+
+      try {
+        let response = await agent
+          .put('/api/v1/missions/')
+          .send(correctUpdateTestMission)
+        let { _id, name, seed, structure, versionNumber, prototypes, forces } =
+          response.body as TCommonMissionJson
+
+        // Check to see if the _id is valid.
+        let isValidId: boolean =
+          mongoose.isObjectIdOrHexString(_id) && typeof _id === 'string'
+
+        expect(response).to.have.status(200)
+        expect(isValidId).to.equal(true)
+        expect(name).to.equal(correctUpdateTestMission.name)
+        expect(versionNumber).to.equal(correctUpdateTestMission.versionNumber)
+        expect(seed).to.equal(correctUpdateTestMission.seed)
+        expect(structure).to.deep.equal(correctUpdateTestMission.structure)
+        expect(prototypes).to.deep.equal(correctUpdateTestMission.prototypes)
+        expect(forces).to.deep.equal(correctUpdateTestMission.forces)
+      } catch (error: any) {
+        testLogger.error(error)
+        throw error
+      }
+    })
+
+    it("Updating a mission with all the correct properties in the body of the request should return a mission with the same '_id' as the one in the body of the request", async function () {
       correctUpdateTestMission._id = missionId
 
       try {
@@ -181,7 +260,7 @@ export default function MissionApiRoute(): Mocha.Suite {
           .put('/api/v1/missions/')
           .send(correctUpdateTestMission)
 
-        expect(response).to.have.status(200)
+        expect(response.body._id).to.equal(correctUpdateTestMission._id)
       } catch (error: any) {
         testLogger.error(error)
         throw error
@@ -202,7 +281,7 @@ export default function MissionApiRoute(): Mocha.Suite {
     })
 
     it('Copying a mission with all the correct properties in the body of the request should return a successful (200) response', async function () {
-      missionId = createdMissionIdArray[0]
+      missionId = missionId
 
       try {
         let response = await agent
@@ -228,11 +307,10 @@ export default function MissionApiRoute(): Mocha.Suite {
     })
 
     it('Deleting a mission with all the correct properties in the params of the request should return a successful (200) response', async function () {
-      missionId = createdMissionIdArray[0]
+      missionId = missionId
 
       try {
         let response = await agent.delete(`/api/v1/missions/${missionId}`)
-
         expect(response).to.have.status(200)
       } catch (error: any) {
         testLogger.error(error)

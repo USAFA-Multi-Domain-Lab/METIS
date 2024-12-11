@@ -53,7 +53,7 @@ export default function LaunchPage({
 
   const [mountHandled] = useMountHandler(async (done) => {
     // Make sure the user has access to the page.
-    if (!currentUser.isAuthorized('sessions_write')) {
+    if (!currentUser.isAuthorized('sessions_write_native')) {
       handleError(
         'You do not have access to this page. Please contact an administrator.',
       )
@@ -154,9 +154,14 @@ export default function LaunchPage({
           let choices: string[] = []
 
           // Generate choices based on the user's permissions.
-          if (currentUser.isAuthorized(['missions_write', 'sessions_write'])) {
+          if (
+            currentUser.isAuthorized([
+              'missions_write',
+              'sessions_write_native',
+            ])
+          ) {
             choices = ['Edit Mission', 'Launch Anyway', 'Cancel']
-          } else if (currentUser.isAuthorized('sessions_write')) {
+          } else if (currentUser.isAuthorized('sessions_write_native')) {
             choices = ['Launch Anyway', 'Cancel']
           } else {
             choices = ['Cancel']

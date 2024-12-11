@@ -119,10 +119,10 @@ export const restrictUserManagement = async (
   // If the user ID is defined...
   if (userId !== undefined) {
     // ...find the user.
-    let user = await UserModel.findOne({ _id: userId })
+    let userDoc = await UserModel.findById(userId).exec()
 
     // If the user is not found, return 404.
-    if (!user) {
+    if (!userDoc) {
       response.sendStatus(404)
       return
     }
@@ -130,7 +130,10 @@ export const restrictUserManagement = async (
     // If the user trying to delete another user has the highest level of
     // authorization ("users_write") and the user being deleted has an
     // access level, call next middleware.
-    if (login.user.isAuthorized('users_write') && user.accessId !== undefined) {
+    if (
+      login.user.isAuthorized('users_write') &&
+      userDoc.accessId !== undefined
+    ) {
       // Call next middleware.
       return next()
     }
@@ -139,7 +142,7 @@ export const restrictUserManagement = async (
     // middleware.
     else if (
       login.user.isAuthorized('users_write_students') &&
-      user.accessId === 'student'
+      userDoc.accessId === 'student'
     ) {
       // Call next middleware.
       return next()

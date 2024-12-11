@@ -452,7 +452,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
                       },
                     },
                     {
-                      text: 'Logout',
+                      text: 'Log out',
                       onClick: async () => {
                         // Logout the user.
                         await context.actions.logout()

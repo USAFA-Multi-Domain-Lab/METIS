@@ -157,7 +157,7 @@ export default function AuthPage(): JSX.Element | null {
           <input
             className='Submit Button'
             type='submit'
-            value='Login'
+            value='Log in'
             disabled={!canSubmit || isSubmitting}
           />
         </form>

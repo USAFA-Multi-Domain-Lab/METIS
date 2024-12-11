@@ -5,35 +5,204 @@ import { AnyObject } from 'metis/toolbox/objects'
 import User, { TCommonUserJson } from 'metis/users'
 import UserAccess, { TUserAccess } from 'metis/users/accesses'
 import UserPermission, { TUserPermission } from 'metis/users/permissions'
-import mongoose, { Schema } from 'mongoose'
+import mongoose, {
+  CallbackWithoutResultAndOptionalError,
+  Document,
+  Error,
+  Model,
+  model,
+  MongooseQueryMiddleware,
+  Query,
+  QueryOptions,
+  Schema,
+} from 'mongoose'
 import MetisDatabase from '..'
 import { StatusError } from '../../http'
 import { databaseLogger } from '../../logging'
-import Access from '../schema-types/user-access'
-import Permission from '../schema-types/user-permission'
 
 let ObjectId = mongoose.Types.ObjectId
+
+/* -- FUNCTIONS -- */
+
+/**
+ * Hashes a password for storage in the database.
+ * @param password The password to hash.
+ * @returns A promise that resolves to the hashed password.
+ */
+export const hashPassword = async (password: string): Promise<string> => {
+  return new Promise<string>(async (resolve, reject): Promise<void> => {
+    try {
+      let hashedPassword: string = await bcryptjs.hash(password, 10)
+      resolve(hashedPassword)
+    } catch (error) {
+      databaseLogger.error('Failed to hash password:')
+      databaseLogger.error(error)
+      reject(error)
+    }
+  })
+}
+
+/**
+ * Transforms the ObjectId to a string.
+ * @param doc The mongoose document which is being converted.
+ * @param ret The plain object representation which has been converted.
+ * @param options The options in use.
+ * @returns
+ */
+const transformObjectIdToString = (
+  doc: TUserDoc,
+  ret: TCommonUserJson,
+  options: any,
+) => {
+  if (ret._id) ret._id = ret._id.toString()
+  return ret
+}
+
+/**
+ * Modifies the query to hide deleted missions and remove unneeded properties.
+ * @param query The query to modify.
+ */
+const queryForApiResponse = (query: Query<TUserSchema, TUserModel>): void => {
+  // Get projection.
+  let projection = query.projection()
+
+  // Create if does not exist.
+  if (projection === undefined) {
+    projection = {}
+  }
+
+  // Check if the projection is empty.
+  let projectionKeys = Object.keys(projection)
+
+  // If the projection is empty, create a default projection.
+  if (projectionKeys.length === 0) {
+    projection = {
+      password: 0,
+      deleted: 0,
+      __v: 0,
+    }
+  }
+
+  // Set projection.
+  query.projection(projection)
+  // Hide deleted users.
+  query.where({ deleted: false })
+}
+
+/**
+ * Modifies the query to filter users based on the current user's permissions.
+ * @param query The query to modify.
+ */
+const queryForFilteredUsers = (query: Query<TUserSchema, TUserModel>): void => {
+  // Get projection.
+  let projection = query.projection()
+  // Extract options.
+  let { currentUser, method } = query.getOptions() as TUserQueryOptions
+
+  // Create if does not exist.
+  if (projection === undefined) {
+    projection = {}
+  }
+
+  // Set projection.
+  query.projection(projection)
+  // Hide deleted users.
+  query.where({ deleted: false })
+
+  // Don't return the user currently
+  // logged in if the find function
+  // is for finding all users.
+  if (method === 'find') {
+    query.where({ _id: { $ne: currentUser?._id } })
+  }
+
+  // If the user can only read students, hide all users
+  // that are not students.
+  if (
+    currentUser?.isAuthorized('users_read_students') &&
+    !currentUser.isAuthorized('users_read')
+  ) {
+    query.where({ accessId: { $eq: 'student' } })
+  }
+}
+
+/* -- SCHEMA STATIC FUNCTIONS -- */
+
+/**
+ * Authenticates a user based on the request.
+ * @param request The request with the user data.
+ * @resolves When the user has been authenticated.
+ * @rejects When the user could not be authenticated.
+ */
+const authenticate = async (request: Request): Promise<TCommonUserJson> => {
+  return new Promise<TCommonUserJson>(async (resolve, reject) => {
+    try {
+      // Extract user data from the request.
+      let { username, password } = request.body
+      // Find the user in the database.
+      let userDoc = await UserModel.findOne(
+        { username },
+        {
+          username: 1,
+          accessId: 1,
+          expressPermissionIds: 1,
+          firstName: 1,
+          lastName: 1,
+          needsPasswordReset: 1,
+          password: 1,
+        },
+      ).exec()
+      // If the user does not exist, throw an error.
+      if (!userDoc) {
+        throw new StatusError('Incorrect username.', 401)
+      }
+
+      // If the user does not have a password, throw an error.
+      if (!userDoc.password) {
+        throw new StatusError(
+          `Failed to authenticate user because the user "{ username: ${username} }" does not have a password.`,
+          500,
+        )
+      }
+
+      // Compare the password to the hashed password.
+      let same: boolean = await bcryptjs.compare(password, userDoc.password)
+      // If the password is incorrect, then return an error.
+      if (!same) throw new StatusError('Incorrect password.', 401)
+
+      // Convert the user document to JSON.
+      let userJson: TCommonUserJson = userDoc.toJSON()
+      // Return the user.
+      resolve(userJson)
+    } catch (error: any) {
+      // Log the error.
+      databaseLogger.error('Failed to authenticate user.\n', error)
+      // If there was an error, return the error.
+      reject(error)
+    }
+  })
+}
 
 /* -- SCHEMA VALIDATORS -- */
 
 /**
  * Validates the user data.
- * @param user The user data to validate.
+ * @param userDoc The user document to validate.
  * @param next The next function to call.
  */
-const validate_users = (user: any, next: any): void => {
+const validate_users = (
+  userDoc: TUserDoc,
+  next: CallbackWithoutResultAndOptionalError,
+): void => {
+  // Convert the user document to JSON.
+  let userJson: TCommonUserJson = userDoc.toJSON()
   // Object to store results.
   let results: { error?: Error } = {}
   // Object to store existing _id's.
   let existingIds: AnyObject = {}
 
   // Algorithm to check for duplicate _id's.
-  const _idCheckerAlgorithm = (cursor = user) => {
-    // If the cursor has a _doc property and its an object...
-    if (cursor._doc !== undefined && cursor._doc instanceof Object) {
-      // ...then set the cursor to the _doc property.
-      cursor = cursor._doc
-    }
+  const _idCheckerAlgorithm = (cursor = userJson) => {
     // If the cursor is an object, but not an ObjectId...
     if (cursor instanceof Object && !(cursor instanceof ObjectId)) {
       // ...and it has an _id property and the _id already exists...
@@ -58,7 +227,7 @@ const validate_users = (user: any, next: any): void => {
         return
       }
       // Otherwise, add the _id to the existingIds object.
-      else {
+      else if (cursor._id) {
         existingIds[cursor._id] = true
       }
       // Check the object's values for duplicate _id's.
@@ -79,11 +248,7 @@ const validate_users = (user: any, next: any): void => {
   _idCheckerAlgorithm()
 
   // Check for error.
-  if (results.error) {
-    return next(results.error)
-  }
-
-  return next()
+  if (results.error) return next(results.error)
 }
 
 /**
@@ -105,27 +270,13 @@ const validate_users_accessId = (accessId: TUserAccess['_id']): boolean => {
 }
 
 /**
- * Validates the express permission IDs of a user.
- * @param expressPermissionIds The express permission IDs to validate.
+ * Validates the express permission ID of a user.
+ * @param expressPermissionId The express permission ID to validate.
  */
-const validate_users_expressPermissionIds = (
-  expressPermissionIds: TUserPermission['_id'][],
+const validate_users_expressPermissionId = (
+  expressPermissionId: TUserPermission['_id'],
 ): boolean => {
-  // Contains whether each permission is valid.
-  let validExpressPermissionIds: TUserPermission['_id'][] = []
-
-  // Loops through each permission and checks if it is valid.
-  expressPermissionIds.forEach((permissionId: TUserPermission['_id']) => {
-    // If it is valid, it is added to the array.
-    if (UserPermission.isValidPermissionId(permissionId)) {
-      validExpressPermissionIds.push(permissionId)
-    }
-  })
-
-  // If the valid express permissions array matches the
-  // express permissions array that was passed, then all
-  // permissions are valid.
-  return validExpressPermissionIds.length === expressPermissionIds.length
+  return UserPermission.isValidPermissionId(expressPermissionId)
 }
 
 /**
@@ -150,7 +301,7 @@ const validator_users_password = (
 
 /* -- SCHEMA -- */
 
-const UserSchema = new Schema(
+const UserSchema = new Schema<TUserSchema, TUserModel, TUserMethods>(
   {
     username: {
       type: String,
@@ -160,14 +311,19 @@ const UserSchema = new Schema(
       validate: validate_users_username,
     },
     accessId: {
-      type: Access,
+      type: String,
       required: true,
       validate: validate_users_accessId,
     },
     expressPermissionIds: {
-      type: [Permission],
+      type: [
+        {
+          type: String,
+          required: true,
+          validate: validate_users_expressPermissionId,
+        },
+      ],
       required: true,
-      validate: validate_users_expressPermissionIds,
     },
     firstName: {
       type: String,
@@ -192,173 +348,133 @@ const UserSchema = new Schema(
   {
     strict: 'throw',
     minimize: false,
+    toJSON: {
+      transform: transformObjectIdToString,
+    },
+    toObject: {
+      transform: transformObjectIdToString,
+    },
+    statics: {
+      authenticate,
+    },
   },
 )
 
-/* -- SCHEMA METHODS -- */
+/* -- SCHEMA MIDDLEWARE -- */
+
+// Called before a save is made to the database.
+UserSchema.pre<TUserDoc>('save', function (next) {
+  validate_users(this, next)
+  return next()
+})
+
+// Called before a find or update is made to the database.
+UserSchema.pre<Query<TUserSchema, TUserModel>>(
+  ['find', 'findOne', 'findOneAndUpdate', 'updateOne'],
+  function (next) {
+    // Modify the query.
+    queryForApiResponse(this)
+    queryForFilteredUsers(this)
+    // Call the next middleware.
+    return next()
+  },
+)
+
+// Converts ObjectIds to strings.
+UserSchema.post<Query<TUserSchema, TUserModel>>(
+  ['find', 'findOne', 'updateOne', 'findOneAndUpdate'],
+  function (userData: TUserSchema | TUserSchema[]) {
+    // If the user is null, then return.
+    if (!userData) return
+
+    // If the user data is an array...
+    if (Array.isArray(userData)) {
+      // Loop through each user and transform any ObjectIds to a strings.
+      for (let userDatum of userData) {
+        // If the user data is null, then continue.
+        if (!userDatum) continue
+
+        // Otherwise, transform the ObjectIds to strings.
+        userDatum._id = userDatum._id?.toString()
+      }
+    }
+    // Otherwise...
+    else {
+      // If the user data is null, then return.
+      if (!userData) return
+
+      // Otherwise, transform the ObjectIds to strings.
+      userData._id = userData._id?.toString()
+    }
+  },
+)
+
+// Called after a save is made to the database.
+UserSchema.post<TUserDoc>('save', function () {
+  // Remove unneeded properties.
+  this.set('__v', undefined)
+  this.set('deleted', undefined)
+  this.set('password', undefined)
+})
+
+/* -- SCHEMA TYPES -- */
 
 /**
- * Hashes a password for storage in the database.
- * @param password The password to hash.
- * @returns A promise that resolves to the hashed password.
+ * Represents a user in the database.
  */
-export const hashPassword = async (password: string): Promise<string> => {
-  return new Promise<string>(async (resolve, reject): Promise<void> => {
-    try {
-      let hashedPassword: string = await bcryptjs.hash(password, 10)
-      resolve(hashedPassword)
-    } catch (error) {
-      databaseLogger.error('Failed to hash password:')
-      databaseLogger.error(error)
-      reject(error)
-    }
-  })
+type TUserSchema = TCommonUserJson & {
+  /**
+   * Determines if the user is deleted.
+   */
+  deleted: boolean
 }
 
-// Authenticates a user based on the request.
-UserSchema.statics.authenticate = (
-  request: Request,
-  callback: (error: StatusError | null, correct: boolean, user: any) => void,
-): void => {
-  // Searches for user based on email provided
-  UserModel.findOne({ username: request.body.username }).exec(
-    (error: Error, user: any) => {
-      if (error) {
-        return callback(new StatusError(error.message), false, null)
-      } else if (!user) {
-        // If the user does not exist, send a 401 error.
-        let error: StatusError = new StatusError('Incorrect username.', 401)
-        return callback(error, false, null)
-      }
+/**
+ * Represents the methods available for a `UserModel`.
+ */
+type TUserMethods = {}
 
-      // If there is no error and user exists, the encrypted password provided is verified
-      bcryptjs.compare(
-        request.body.password,
-        user.password,
-        (error: any, same: boolean) => {
-          // If the password is incorrect send a 401 error.
-          // Send a 500 error for any other errors.
-          if (error || !same) {
-            let error: StatusError = new StatusError(
-              'Failed to authenticate user.',
-              500,
-            )
-            if (!same) {
-              error = new StatusError('Incorrect password.', 401)
-            }
-            callback(error, false, null)
-          } else {
-            return callback(null, same, same ? user : null)
-          }
-        },
-      )
-    },
-  )
+/**
+ * Represents the static methods available for a `UserModel`.
+ */
+type TUserStaticMethods = {
+  /**
+   * Authenticates a user based on the request.
+   * @param request The request with the user data.
+   * @resolves When the user has been authenticated.
+   * @rejects When the user could not be authenticated.
+   */
+  authenticate: (request: Request) => Promise<TCommonUserJson>
 }
 
-// Called before a save is made
-// to the database.
-UserSchema.pre('save', function (next) {
-  validate_users(this, next)
-})
+/**
+ * Represents a mongoose model for a user in the database.
+ */
+type TUserModel = Model<TUserSchema, {}, TUserMethods> & TUserStaticMethods
 
-// Called before an update is made
-// to the database.
-UserSchema.pre('update', function (next) {
-  validate_users(this, next)
-})
+/**
+ * Represents a mongoose document for a user in the database.
+ */
+type TUserDoc = Document<any, any, TUserSchema>
 
-/* -- SCHEMA PLUGINS -- */
-
-UserSchema.plugin((schema) => {
-  // This is responsible for removing
-  // excess properties from the user
-  // data that should be hidden from the
-  // API, hiding deleted users, and filtering
-  // users based on the current user's permissions.
-  schema.query.queryForUsers = function (findFunctionName: 'find' | 'findOne') {
-    // Get projection.
-    let projection = this.projection()
-
-    // Create if does not exist.
-    if (projection === undefined) {
-      projection = {}
-    }
-
-    // Remove all unneeded properties.
-    if (!('deleted' in projection)) {
-      projection['deleted'] = 0
-    }
-    if (!('__v' in projection)) {
-      projection['__v'] = 0
-    }
-    if (!('password' in projection)) {
-      projection['password'] = 0
-    }
-
-    // Set projection.
-    this.projection(projection)
-    // Hide deleted users.
-    this.where({ deleted: false })
-
-    // Calls the appropriate find function.
-    switch (findFunctionName) {
-      case 'find':
-        return this.find()
-      case 'findOne':
-        return this.findOne()
-    }
-  }
-})
-
-UserSchema.plugin((schema) => {
-  // This is responsible for filtering
-  // users based on the current user's
-  // permissions.
-  schema.query.queryForFilteredUsers = function (
-    findFunctionName: 'find' | 'findOne',
-    currentUser?: ServerUser,
-  ) {
-    // Get projection.
-    let projection = this.projection()
-
-    // Create if does not exist.
-    if (projection === undefined) {
-      projection = {}
-    }
-
-    // Set projection.
-    this.projection(projection)
-    // Hide deleted users.
-    this.where({ deleted: false })
-
-    // Don't return the user currently
-    // logged in if the find function
-    // is for finding all users.
-    if (findFunctionName === 'find') {
-      this.where({ _id: { $ne: currentUser?._id } })
-    }
-
-    // If the user can only read students, hide all users
-    // that are not students.
-    if (
-      currentUser?.isAuthorized('users_read_students') &&
-      !currentUser.isAuthorized('users_read')
-    ) {
-      this.where({ accessId: { $eq: 'student' } })
-    }
-
-    // Calls the appropriate find function.
-    switch (findFunctionName) {
-      case 'find':
-        return this.find()
-      case 'findOne':
-        return this.findOne()
-    }
-  }
-})
+/**
+ * The available options within a query for a user model.
+ */
+type TUserQueryOptions = QueryOptions & {
+  /**
+   * The user currently logged in.
+   */
+  currentUser?: ServerUser
+  /**
+   * The middleware query method being used.
+   */
+  method?: MongooseQueryMiddleware
+}
 
 /* -- MODEL -- */
 
-const UserModel: any = mongoose.model('User', UserSchema)
+/**
+ * The mongoose model for a user in the database.
+ */
+const UserModel = model<TUserSchema, TUserModel>('User', UserSchema)
 export default UserModel
