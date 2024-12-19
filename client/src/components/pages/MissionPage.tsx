@@ -381,6 +381,7 @@ export default function MissionPage({
    */
   const handleChange = (): void => {
     setAreUnsavedChanges(true)
+    forceUpdate()
   }
 
   /**

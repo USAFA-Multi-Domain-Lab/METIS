@@ -2,12 +2,15 @@
 @import '../../mixins.scss';
 
 .TabBar {
-  $controls-width: 5em;
+  $fixed-controls-width: 4em;
+  $tab-border-width: 2px;
+  $tab-border: $tab-border-width solid
+    adjust-color($background-map-imitation, $lightness: 7%, $saturation: -10%);
 
   overflow: hidden;
   border-bottom: 2px solid rgba(#fff, 0.1);
   display: grid;
-  grid-template-columns: calc(100% - $controls-width) auto;
+  grid-template-columns: calc(100% - $fixed-controls-width) auto;
   width: 100%;
   background: $background-map-imitation;
 
@@ -17,15 +20,34 @@
   }
 
   .TabSpace {
-    user-select: none;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-    position: relative;
+    display: grid;
+    grid-template-columns: auto 1fr;
+
+    .Tabs {
+      user-select: none;
+      display: flex;
+      overflow: hidden;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      justify-content: flex-start;
+      position: relative;
+
+      .Tab {
+        border-right: $tab-border;
+
+        &:last-child {
+          border-right: none;
+        }
+      }
+    }
 
     .ButtonSvg.add {
       margin: 0 0.125em;
+      min-width: 1em;
+      height: 100%;
+      border-radius: 0;
+      border-left: $tab-border;
+      border-right: 0.5em solid transparent;
       transform: scale(0.7) translateY(0.23em);
       // transform-origin: center left;
     }
@@ -35,25 +57,37 @@
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
-    justify-content: center;
     align-items: center;
     position: relative;
     z-index: $z-map-tab-bar-controls;
     margin-bottom: -2px;
-    width: $controls-width;
-    border-left: 2px solid rgba($color-main, 0.1);
-    border-bottom: 2px solid rgba($color-main, 0.1);
-    background: $background-map-imitation;
+    // border-left: 2px solid rgba($color-main, 0.1);
+
+    &.FixedControls {
+      justify-content: center;
+      width: $fixed-controls-width;
+      padding: 0.1em 0 0;
+      border-bottom: 2px solid rgba($color-main, 0.1);
+      background: $background-map-imitation;
+    }
+
+    &.FloatingControls {
+      border-left: $tab-border;
+      padding-left: 0.5em;
+      right: $tab-border-width;
+    }
+  }
+
+  .Control {
+    user-select: none;
+    cursor: pointer;
+    height: 1em;
+    padding: 0 0.625em;
+    line-height: 0.75em;
     font-weight: bold;
 
-    .Control {
-      user-select: none;
-      cursor: pointer;
-      padding: 0 0.625em;
-
-      &:hover {
-        color: $color-accent;
-      }
+    &:hover {
+      color: $color-accent;
     }
   }
 }

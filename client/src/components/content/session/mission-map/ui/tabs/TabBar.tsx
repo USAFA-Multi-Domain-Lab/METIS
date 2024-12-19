@@ -3,6 +3,19 @@ import ButtonSvg from 'src/components/content/user-controls/buttons/ButtonSvg'
 import { compute } from 'src/toolbox'
 import Tab, { TTab_P } from '.'
 import './TabBar.scss'
+import { useForcedUpdates, usePostRenderEffect } from 'src/toolbox/hooks'
+
+/**
+ * The offset by which to focus tabs when selected.
+ * @note This will bring newly selected tabs closer to the
+ * center the higher this value is.
+ */
+const FOCUS_OFFSET = 50
+
+/**
+ * The transition duration for scrolling.
+ */
+const SCROLL_DURATION = 100
 
 /**
  * A bar with tabs that can be clicked to change the view.
@@ -29,50 +42,71 @@ export default function TabBar({
   /**
    * Ref for the tab space component.
    */
-  const tabSpace = useRef<HTMLDivElement>(null)
+  const tabsElm = useRef<HTMLDivElement>(null)
 
   /**
    * Ref for the controls element.
    */
-  const controls = useRef<HTMLDivElement>(null)
+  const fixedControls = useRef<HTMLDivElement>(null)
 
   /**
-   * The previous controlsX1 value.
+   * The previous tabsX2 value.
    */
-  const prevControlX1 = useRef<number>(0)
+  const prevControlsX1 = useRef<number>(0)
 
   /**
-   * The previous number of tabs.
+   * The previous tabs.
    */
-  const prevTabCount = useRef<number>(tabs.length)
+  const prevTabIds = useRef<string[]>(tabs.map(({ _id }) => _id))
 
-  /* -- EFFECTS -- */
+  /* -- HOOKS -- */
 
-  // Selects new tabs, when they appear.
-  useEffect(() => {
-    if (!autoSelectNewTabs) return
-    // If the number of tabs has increased,
-    // select the last tab.
-    if (tabs.length > prevTabCount.current) {
-      let index = tabs.length - 1
-      setIndex(index)
-    }
-    prevTabCount.current = tabs.length
-  }, [tabs.length])
+  const forceUpdate = useForcedUpdates()
 
   // Scrolls the tab bar when the
   // controlsX1 changes.
   useEffect(() => {
-    let delta = controlsX1 - prevControlX1.current
-    if (delta !== 0 && scroll > 1) scrollBy(-delta)
-    prevControlX1.current = controlsX1
+    let delta = controlsX1 - prevControlsX1.current
+    if (delta !== 0 && scroll > 1) scrollBy(-delta, { smooth: false })
+    prevControlsX1.current = controlsX1
   })
 
-  // Protects against the scroll going
-  // out of bounds.
+  // Select new tabs as they appear.
   useEffect(() => {
-    if (scroll < 0) scrollBy(-scroll)
-  }, [scroll])
+    if (autoSelectNewTabs && tabs.length > prevTabIds.current.length) {
+      // Find the first tab that is not in the previous
+      // tabs list and select it.
+      for (let i = 0; i < tabs.length; i++) {
+        if (!prevTabIds.current.includes(tabs[i]._id)) {
+          setIndex(i)
+          break
+        }
+      }
+    }
+    prevTabIds.current = tabs.map(({ _id }) => _id)
+  }, [tabs.length])
+
+  usePostRenderEffect(() => {
+    // Get elements.
+    let tabsElement = tabsElm.current
+    if (!tabsElement) return
+    let tabElements = [...tabsElement.children]
+    let selectedTab = tabElements[index]
+    if (!selectedTab) return
+
+    // Get bounding box for the selected tab.
+    let rect = selectedTab.getBoundingClientRect()
+
+    // Offset the scroll to ensure the newly selected
+    // tab is centered.
+    // scrollBy(rect.left - rootX1 - (tabsWidth - rect.width) / 2)
+
+    if (rect.left < rootX1 + FOCUS_OFFSET) {
+      scrollBy(rect.left - rootX1 - FOCUS_OFFSET)
+    } else if (rect.right > tabsX2 - FOCUS_OFFSET) {
+      scrollBy(rect.right - tabsX2 + FOCUS_OFFSET)
+    }
+  }, [index])
 
   /* -- COMPUTED -- */
 
@@ -89,69 +123,102 @@ export default function TabBar({
   })
 
   /**
+   * The left edge of the tabs element.
+   */
+  const tabsX1 = compute(() => {
+    return rootX1
+  })
+
+  /**
+   * The right edge of the tabs element.
+   */
+  const tabsX2 = compute(() => {
+    // Get tabs element, and return 0 if it
+    // doesn't exist.
+    let tabsElement = tabsElm.current
+    if (!tabsElement) return 0
+    // Return the tabs element's right edge.
+    return tabsElement.getBoundingClientRect().right
+  })
+
+  /**
+   * The width of the tabs element.
+   */
+  const tabsWidth = compute(() => {
+    return tabsX2 - tabsX1
+  })
+
+  /**
+   * The left edge of the content within
+   * the tabs element.
+   */
+  const contentX1 = compute(() => {
+    // Get root element, and return 0 if it
+    // doesn't exist.
+    let tabsElement = tabsElm.current
+    if (!tabsElement) return 0
+
+    // Get the first tab space element.
+    const firstTab = tabsElement.querySelector('.Tab:first-child')
+    if (!firstTab) return 0
+
+    // Return the first tab space element's left edge.
+    return firstTab.getBoundingClientRect().left
+  })
+
+  /**
+   * The right edge of the content within
+   * the tabs element.
+   */
+  const contentX2 = compute(() => {
+    // Get root element, and return 0 if it
+    // doesn't exist.
+    let tabsElement = tabsElm.current
+    if (!tabsElement) return 0
+
+    // Get the last tab space element.
+    const lastTab = tabsElement.querySelector('.Tab:last-child')
+    if (!lastTab) return 0
+
+    // Return the last tab space element's right edge.
+    return lastTab.getBoundingClientRect().right
+  })
+
+  /**
+   * The width of the content within the tabs element.
+   */
+  const contentWidth = compute(() => {
+    return contentX2 - contentX1
+  })
+
+  /**
    * The left edge of the controls element.
    */
   const controlsX1 = compute(() => {
     // Get controls element, and return 0 if it
     // doesn't exist.
-    let controlsElement = controls.current
+    let controlsElement = fixedControls.current
     if (!controlsElement) return 0
     // Return the controls element's left edge.
     return controlsElement.getBoundingClientRect().left
   })
 
   /**
-   * The left edge of the content within
-   * the tab space.
-   */
-  const contentX1 = compute(() => {
-    // Get root element, and return 0 if it
-    // doesn't exist.
-    let rootElement = root.current
-    if (!rootElement) return 0
-
-    // Get the first tab space element.
-    const firstTabSpaceElement = rootElement.querySelector('.Tab:first-child')
-    if (!firstTabSpaceElement) return 0
-
-    // Return the first tab space element's left edge.
-    return firstTabSpaceElement.getBoundingClientRect().left
-  })
-
-  /**
-   * The right edge of the content within
-   * the tab space.
-   */
-  const contentX2 = compute(() => {
-    // Get root element, and return 0 if it
-    // doesn't exist.
-    let rootElement = root.current
-    if (!rootElement) return 0
-    // Get the last tab space element.
-    const lastTabSpaceElement = rootElement.querySelector('.Tab:last-child')
-    if (!lastTabSpaceElement) return 0
-
-    // Return the last tab space element's right edge.
-    return lastTabSpaceElement.getBoundingClientRect().right
-  })
-
-  /**
    * Gets the next scroll left delta.
    */
   const nextScrollLeftDelta = compute(() => {
-    // Get the tab space element.
-    let tabSpaceElement = tabSpace.current
-    if (!tabSpaceElement) return 0
-    // Get the children of the tab space,
-    // but reversed.
-    let elementsInTabSpace = [...tabSpaceElement.children].reverse()
+    // Get the tabs element.
+    let tabsElement = tabsElm.current
+    if (!tabsElement) return 0
+    // Get the tabs in the tabs element.
+    let tabElements = [...tabsElement.children].reverse()
 
-    // Loop through elements in the tab space
-    // and determine the next scroll left delta.
-    for (let element of elementsInTabSpace) {
+    // Loop through elements and determine the
+    // next scroll left delta.
+    for (let element of tabElements) {
       let rect = element.getBoundingClientRect()
       if (rect.left < rootX1 && Math.abs(rect.left - rootX1) > 1) {
-        return rect.left - rootX1
+        return Math.min(rect.left - rootX1, 0)
       }
     }
     // Return 0 if no scroll is needed.
@@ -162,22 +229,50 @@ export default function TabBar({
    * Gets the next scroll right delta.
    */
   const nextScrollRightDelta = compute(() => {
-    // Get the tab space element.
-    let tabSpaceElement = tabSpace.current
-    if (!tabSpaceElement) return 0
-    // Get the children of the tab space element.
-    let elementsInTabSpace = [...tabSpaceElement.children]
+    let result = 0
+    // Get the tabs element.
+    let tabsElement = tabsElm.current
+    if (!tabsElement) return 0
+    // Get the tabs in the tabs element.
+    let tabElements = [...tabsElement.children]
 
-    // Loop through elements in the tab space
-    // and determine the next scroll right delta.
-    for (let element of elementsInTabSpace) {
+    // Loop through elements and determine the next
+    // scroll right delta.
+    for (let element of tabElements) {
       let rect = element.getBoundingClientRect()
-      if (rect.right > controlsX1 && Math.abs(rect.right - controlsX1) > 1) {
-        return rect.right - controlsX1
+      if (rect.right > tabsX2 && Math.abs(rect.right - tabsX2) > 1) {
+        result = Math.max(rect.right - tabsX2, 0)
+        break
       }
     }
-    // Return 0 if no scroll is needed.
-    return 0
+
+    // Set a timeout to refresh positional data
+    // once the scroll transition is complete.
+    setTimeout(() => {
+      forceUpdate()
+    }, SCROLL_DURATION)
+
+    return result
+  })
+
+  /**
+   * The maximum scroll amount.
+   */
+  const maxScroll = compute(() => {
+    return Math.max(contentWidth - tabsWidth, 0)
+  })
+
+  /**
+   * The computed class for the add button.
+   */
+  const addClass = compute<string>(() => {
+    let classList = ['Add', 'Control']
+
+    // If there is no add callback, then
+    // disable the add button.
+    if (onAdd === null) classList.push('Disabled')
+
+    return classList.join(' ')
   })
 
   /**
@@ -203,7 +298,7 @@ export default function TabBar({
     // If the end of the tabs is visible, then
     // scrolling right is a valid option. If the
     // end is not visible, then disable it.
-    if (controlsX1 - contentX2 > -1) classList.push('Disabled')
+    if (tabsX2 - contentX2 > -1) classList.push('Disabled')
 
     return classList.join(' ')
   })
@@ -214,16 +309,29 @@ export default function TabBar({
    * Scrolls the tab bar by the given amount.
    * @param delta The amount to scroll by.
    */
-  const scrollBy = (delta: number) => {
+  const scrollBy = (delta: number, options: TTabBarScrollOptions = {}) => {
+    // Parse options.
+    const { smooth = true } = options
     // Calculate the new scroll amount.
-    let newScroll = scroll + delta
+    let newScroll = Math.min(Math.max(scroll + delta, 0), maxScroll)
     // Get the tab space element.
-    let tabSpaceElement = tabSpace.current
-    if (!tabSpaceElement) return
+    let tabsElement = tabsElm.current
+    if (!tabsElement) return
     // Apply the scroll amount to the tab space element.
-    tabSpaceElement.style.right = `${newScroll}px`
+    tabsElement.style.marginLeft = `-${newScroll}px`
+    tabsElement.style.transition = smooth
+      ? `margin-left ${SCROLL_DURATION}ms`
+      : ''
     // Update the scroll state.
     setScroll(newScroll)
+  }
+
+  /**
+   * Handles the add button being clicked.
+   */
+  const onClickAdd = () => {
+    // If there is an add callback, call it.
+    if (onAdd) onAdd()
   }
 
   /**
@@ -258,30 +366,20 @@ export default function TabBar({
     />
   ))
 
-  /**
-   * The JSX for the add button.
-   */
-  const addJsx = compute(() => {
-    if (onAdd === null) return null
-    return (
-      <ButtonSvg
-        type={'add'}
-        size={'small'}
-        onClick={() => {
-          onAdd()
-        }}
-      />
-    )
-  })
-
   // Render root JSX.
   return (
     <div className='TabBar' ref={root}>
-      <div className='TabSpace' ref={tabSpace}>
-        {tabJsx}
-        {addJsx}
+      <div className='TabSpace'>
+        <div className='Tabs' ref={tabsElm}>
+          {tabJsx}
+        </div>
+        <div className='Controls FloatingControls'>
+          <div className={addClass} onClick={onClickAdd}>
+            +
+          </div>
+        </div>
       </div>
-      <div className='Controls' ref={controls}>
+      <div className='Controls FixedControls' ref={fixedControls}>
         <div className={leftClass} onClick={onClickLeft}>
           &lt;
         </div>
@@ -329,3 +427,15 @@ export type TTabBar_P = {
  * certain props omitted.
  */
 export type TTabBarTab = Omit<TTab_P, 'selected' | 'onClick'>
+
+/**
+ * Options for `scrollBy` function in the
+ * `TabBar` component.
+ */
+export type TTabBarScrollOptions = {
+  /**
+   * Whether or not to animate the scroll.
+   * @default true
+   */
+  smooth?: boolean
+}

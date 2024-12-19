@@ -82,6 +82,17 @@ export function usePostInitEffect(
 }
 
 /**
+ * Allows for programatic forced updates on a component.
+ * @returns A function that can be called to force the component to update.
+ */
+export function useForcedUpdates(): () => void {
+  const [, forceRender] = useState({})
+  return useCallback(() => {
+    forceRender({})
+  }, [])
+}
+
+/**
  * Works like `useEffect`, but the callback will not be called
  * until after the component has rendered.
  * @param effect Imperative function that can return a cleanup function
