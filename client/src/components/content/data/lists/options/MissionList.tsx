@@ -297,7 +297,7 @@ export default function MissionList({
         break
       case 'download':
         window.open(
-          `/api/v1/missions/${mission._id}/export/${mission.name}.metis`,
+          `/api/v1/missions/${mission._id}/export/${mission.fileName}`,
           '_blank',
         )
         break

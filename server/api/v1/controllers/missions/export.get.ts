@@ -1,6 +1,6 @@
 import { Request, Response } from 'express-serve-static-core'
 import fs from 'fs'
-import { TCommonMissionJson } from 'metis/missions'
+import Mission, { TCommonMissionJson } from 'metis/missions'
 import MetisServer from 'metis/server'
 import InfoModel from 'metis/server/database/models/info'
 import MissionModel from 'metis/server/database/models/missions'
@@ -45,7 +45,7 @@ const exportMission = async (request: Request, response: Response) => {
     // Gather details for temporary file
     // that will be sent in the response.
     let tempSubfolderName: string = generateHash()
-    let tempFileName: string = `${missionJson.name}.metis`
+    let tempFileName: string = Mission.determineFileName(missionJson.name)
     let tempFolderPath: string = path.join(
       MetisServer.APP_DIR,
       '/temp/missions/exports/',
