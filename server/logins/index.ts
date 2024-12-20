@@ -137,7 +137,7 @@ export default class ServerLogin {
    */
   public toJson(): TLoginJson {
     return {
-      user: this.user.toJson(),
+      user: this.user.toJson({ includeId: true }),
       sessionId: this.sessionId,
     }
   }

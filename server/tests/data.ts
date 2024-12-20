@@ -1,5 +1,5 @@
-import mongoose from 'mongoose'
-import Mission, { TCommonMissionJson } from '../../shared/missions'
+import StringToolbox from 'metis/toolbox/strings'
+import { TCommonMissionJson } from '../../shared/missions'
 import { TCommonUserJson } from '../../shared/users'
 import UserAccess from '../../shared/users/accesses'
 
@@ -10,18 +10,25 @@ export const userCredentials = {
 
 export const createMissionWithNoForceData: Omit<TCommonMissionJson, 'forces'> =
   {
-    name: 'No Node Data Mission (To Delete)',
+    name: 'No Force Data Mission (To Delete)',
     versionNumber: 1,
-    seed: Mission.DEFAULT_PROPERTIES.seed,
+    seed: StringToolbox.generateRandomId(),
     structure: {
       '4767fab5-573e-4df3-b1cd-809240804e92': {},
     },
+    prototypes: [
+      {
+        _id: '41aea0c0-65f5-4008-a623-1ce41cb3008f',
+        structureKey: '4767fab5-573e-4df3-b1cd-809240804e92',
+        depthPadding: 0,
+      },
+    ],
   }
 
 export const testMission: TCommonMissionJson = {
   name: 'Test Mission (To Delete)',
   versionNumber: 1,
-  seed: Mission.DEFAULT_PROPERTIES.seed,
+  seed: StringToolbox.generateRandomId(),
   structure: {
     '4767fab5-573e-4df3-b1cd-809240804e92': {},
   },
@@ -35,12 +42,11 @@ export const testMission: TCommonMissionJson = {
       nodes: [
         {
           _id: '211e5104-1c9d-487c-92b8-0a296f758d90',
-          structureKey: '4767fab5-573e-4df3-b1cd-809240804e92',
+          prototypeId: '0d709d54-2f5e-44e3-b8ce-91534ce02f6f',
           name: 'Test Node',
           color: '#52b1ff',
           description: '',
           preExecutionText: '',
-          depthPadding: 0,
           executable: true,
           device: false,
           actions: [
@@ -74,14 +80,21 @@ export const testMission: TCommonMissionJson = {
           ],
         },
       ],
+    },
+  ],
+  prototypes: [
+    {
+      _id: '0d709d54-2f5e-44e3-b8ce-91534ce02f6f',
+      structureKey: '4767fab5-573e-4df3-b1cd-809240804e92',
+      depthPadding: 0,
     },
   ],
 }
 
 export const updateMissionWithNoMissionId: TCommonMissionJson = {
-  name: 'Updated No Node Data (To Delete)',
+  name: 'Updated No Force Data (To Delete)',
   versionNumber: 1,
-  seed: Mission.DEFAULT_PROPERTIES.seed,
+  seed: StringToolbox.generateRandomId(),
   structure: {
     '4767fab5-573e-4df3-b1cd-809240804e92': {},
   },
@@ -95,12 +108,11 @@ export const updateMissionWithNoMissionId: TCommonMissionJson = {
       nodes: [
         {
           _id: '211e5104-1c9d-487c-92b8-0a296f758d90',
-          structureKey: '4767fab5-573e-4df3-b1cd-809240804e92',
+          prototypeId: '0d709d54-2f5e-44e3-b8ce-91534ce02f6f',
           name: 'Test Node',
           color: '#52b1ff',
           description: '',
           preExecutionText: '',
-          depthPadding: 0,
           executable: true,
           device: false,
           actions: [
@@ -136,15 +148,22 @@ export const updateMissionWithNoMissionId: TCommonMissionJson = {
       ],
     },
   ],
+  prototypes: [
+    {
+      _id: '0d709d54-2f5e-44e3-b8ce-91534ce02f6f',
+      structureKey: '4767fab5-573e-4df3-b1cd-809240804e92',
+      depthPadding: 0,
+    },
+  ],
 }
 
-export const updateMissionWithNoNodeStructure: Omit<
+export const updateMissionWithNoStructure: Omit<
   TCommonMissionJson,
   'structure'
 > = {
-  name: 'Update No Node Structure (To Delete)',
+  name: 'Update No Structure (To Delete)',
   versionNumber: 1,
-  seed: Mission.DEFAULT_PROPERTIES.seed,
+  seed: StringToolbox.generateRandomId(),
   forces: [
     {
       _id: 'def3d81c-e8fd-470b-afb3-ba0a293bae73',
@@ -155,12 +174,11 @@ export const updateMissionWithNoNodeStructure: Omit<
       nodes: [
         {
           _id: '211e5104-1c9d-487c-92b8-0a296f758d90',
-          structureKey: '4767fab5-573e-4df3-b1cd-809240804e92',
+          prototypeId: '0d709d54-2f5e-44e3-b8ce-91534ce02f6f',
           name: 'Test Node',
           color: '#52b1ff',
           description: '',
           preExecutionText: '',
-          depthPadding: 0,
           executable: true,
           device: false,
           actions: [
@@ -194,24 +212,30 @@ export const updateMissionWithNoNodeStructure: Omit<
           ],
         },
       ],
+    },
+  ],
+  prototypes: [
+    {
+      _id: '0d709d54-2f5e-44e3-b8ce-91534ce02f6f',
+      structureKey: '4767fab5-573e-4df3-b1cd-809240804e92',
+      depthPadding: 0,
     },
   ],
 }
 
 export const updateMissionWithNoForceData: Omit<TCommonMissionJson, 'forces'> =
   {
-    name: 'No Node Data Mission (To Delete)',
+    name: 'No Force Data Mission (To Delete)',
     versionNumber: 1,
-    seed: Mission.DEFAULT_PROPERTIES.seed,
-    structure: {
-      'e72aa13b-3d99-406a-a435-b0f5f2e31873': {},
-    },
+    seed: StringToolbox.generateRandomId(),
+    structure: {},
+    prototypes: [],
   }
 
 export const correctUpdateTestMission: TCommonMissionJson = {
   name: 'Updated Test Mission (To Delete)',
   versionNumber: 1,
-  seed: Mission.DEFAULT_PROPERTIES.seed,
+  seed: StringToolbox.generateRandomId(),
   structure: {
     '4767fab5-573e-4df3-b1cd-809240804e92': {},
   },
@@ -225,12 +249,11 @@ export const correctUpdateTestMission: TCommonMissionJson = {
       nodes: [
         {
           _id: '211e5104-1c9d-487c-92b8-0a296f758d90',
-          structureKey: '4767fab5-573e-4df3-b1cd-809240804e92',
+          prototypeId: '0d709d54-2f5e-44e3-b8ce-91534ce02f6f',
           name: 'Test Node',
           color: '#52b1ff',
           description: '',
           preExecutionText: '',
-          depthPadding: 0,
           executable: true,
           device: false,
           actions: [
@@ -266,42 +289,40 @@ export const correctUpdateTestMission: TCommonMissionJson = {
       ],
     },
   ],
+  prototypes: [
+    {
+      _id: '0d709d54-2f5e-44e3-b8ce-91534ce02f6f',
+      structureKey: '4767fab5-573e-4df3-b1cd-809240804e92',
+      depthPadding: 0,
+    },
+  ],
 }
 
-export const correctUser: { user: TCommonUserJson } = {
-  user: {
-    _id: new mongoose.Types.ObjectId().toHexString(),
-    username: 'test23',
-    accessId: UserAccess.AVAILABLE_ACCESSES.student._id,
-    expressPermissionIds: [],
-    firstName: 'Test',
-    lastName: 'User',
-    needsPasswordReset: false,
-    password: 'password',
-  },
+export let correctUser: TCommonUserJson = {
+  username: 'test23',
+  accessId: UserAccess.AVAILABLE_ACCESSES.student._id,
+  expressPermissionIds: [],
+  firstName: 'Test',
+  lastName: 'User',
+  needsPasswordReset: false,
+  password: 'password',
 }
 
-export let newCorrectUser: { user: TCommonUserJson } = {
-  user: {
-    _id: new mongoose.Types.ObjectId().toHexString(),
-    username: 'test24',
-    accessId: UserAccess.AVAILABLE_ACCESSES.student._id,
-    expressPermissionIds: [],
-    firstName: 'Test',
-    lastName: 'User',
-    needsPasswordReset: false,
-    password: 'password',
-  },
+export let newCorrectUser: TCommonUserJson = {
+  username: 'test24',
+  accessId: UserAccess.AVAILABLE_ACCESSES.student._id,
+  expressPermissionIds: [],
+  firstName: 'Test',
+  lastName: 'User',
+  needsPasswordReset: false,
+  password: 'password',
 }
 
-export const userWithNoPassword: { user: TCommonUserJson } = {
-  user: {
-    _id: new mongoose.Types.ObjectId().toHexString(),
-    username: 'test23',
-    accessId: UserAccess.AVAILABLE_ACCESSES.student._id,
-    expressPermissionIds: [],
-    firstName: 'Test',
-    lastName: 'User',
-    needsPasswordReset: false,
-  },
+export const userWithNoPassword: TCommonUserJson = {
+  username: 'test23',
+  accessId: UserAccess.AVAILABLE_ACCESSES.student._id,
+  expressPermissionIds: [],
+  firstName: 'Test',
+  lastName: 'User',
+  needsPasswordReset: false,
 }

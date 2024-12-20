@@ -144,7 +144,7 @@ export default function SessionList({
   const onSessionTearDown = async (session: SessionBasic) => {
     // todo: Remove this when the ability for instructors to only tear down sessions that they own is implemented.
     if (
-      !login.user.isAuthorized('sessions_write') &&
+      !login.user.isAuthorized('sessions_write_native') &&
       session.ownerId !== login.user._id
     ) {
       notify(

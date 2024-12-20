@@ -63,6 +63,11 @@ export default abstract class Mission<
   public name: string
 
   // Implemented
+  public get fileName(): string {
+    return Mission.determineFileName(this.name)
+  }
+
+  // Implemented
   public versionNumber: number
 
   // Implemented
@@ -364,6 +369,16 @@ export default abstract class Mission<
   }
 
   /**
+   * Determines the file name to use for the export
+   * of the given name for a mission.
+   * @param name The name of the mission.
+   * @returns The file name to use for the export.
+   */
+  public static determineFileName(name: string): string {
+    return `${name}.metis`.replace(/[^a-zA-Z0-9À-ÖØ-öø-ÿ._-]/g, '-')
+  }
+
+  /**
    * Maps relationships between prototypes passed based on the structure passed, recursively.
    * @param prototypes The prototypes to map.
    * @param structure The node structure from which to map the relationships.
@@ -529,6 +544,10 @@ export interface TCommonMission {
    * The name of the mission.
    */
   name: string
+  /**
+   * The file name to use to store an export for the mission.
+   */
+  get fileName(): string
   /**
    * The version number of the mission.
    */

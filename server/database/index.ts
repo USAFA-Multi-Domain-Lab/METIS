@@ -171,37 +171,30 @@ export default class MetisDatabase {
    * @returns A promise that resolves once the default data is ensured to exist.
    */
   private async ensureDefaultInfoExists(): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      InfoModel.findOne().exec((error: Error, info: any) => {
-        if (error !== null) {
-          databaseLogger.error('Failed to query database for default info:')
-          databaseLogger.error(error)
-          reject(error)
-        } else if (info === null) {
+    return new Promise<void>(async (resolve, reject) => {
+      try {
+        // Query for the info.
+        let info = await InfoModel.findOne().exec()
+        // If no info is found, create the default info.
+        if (info === null) {
           databaseLogger.info('Info not found.')
           databaseLogger.info('Creating info...')
 
-          const infoData = {
+          // Create the default info.
+          let newInfo = await InfoModel.create({
             schemaBuildNumber: MetisServer.SCHEMA_BUILD_NUMBER,
-          }
-
-          // Creates and saves info
-          InfoModel.create(infoData, (error: Error, info: any) => {
-            if (error) {
-              databaseLogger.error(
-                'Failed to create and store server info in the database:',
-              )
-              databaseLogger.error(error)
-              reject(error)
-            } else {
-              databaseLogger.info('Server info created:', info.infoID)
-              resolve()
-            }
           })
-        } else {
-          resolve()
+          databaseLogger.info(`Server info created: { _id: ${newInfo.id} }`)
         }
-      })
+
+        resolve()
+      } catch (error: any) {
+        databaseLogger.error(
+          'Failed to ensure default info exists in the database.\n',
+          error,
+        )
+        reject(error)
+      }
     })
   }
 
@@ -210,151 +203,136 @@ export default class MetisDatabase {
    * @returns A promise that resolves once the default data is ensured to exist.
    */
   private async ensureDefaultUsersExists(): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      let awaitingResolve: number = 3
-
-      function resolveOne() {
-        // Subtract from awaitingResolve.
-        awaitingResolve--
-
-        // If awaitingResolve has reached  0,
-        // resolve the promise.
-        if (awaitingResolve <= 0) {
-          resolve()
-        }
-      }
-
+    return new Promise<void>(async (resolve, reject) => {
       // Check if a student user exists.
-      UserModel.findOne({
-        accessId: studentUserData.accessId,
-      }).exec(async (error: Error, studentUser: any) => {
-        if (error !== null) {
-          databaseLogger.error('Failed to query database for student user:')
-          databaseLogger.error(error)
-          reject(error)
-        } else if (studentUser === null) {
-          databaseLogger.info('Student user not found.')
-          databaseLogger.info('Creating student user...')
+      const verifyStudent = new Promise<void>(async (resolve, reject) => {
+        try {
+          let studentUser = await UserModel.findOne({
+            accessId: studentUserData.accessId,
+          }).exec()
 
-          if (studentUserData.password) {
+          // If no student user is found, create the default student user.
+          if (studentUser === null) {
+            databaseLogger.info('Student user not found.')
+            databaseLogger.info('Creating student user...')
+
             // Hash student user password.
-            studentUserData.password = await hashPassword(
-              studentUserData.password,
+            if (studentUserData.password) {
+              studentUserData.password = await hashPassword(
+                studentUserData.password,
+              )
+            }
+
+            // Create student user.
+            let newStudentUser = await UserModel.create(studentUserData)
+            databaseLogger.info(
+              'Student user created:',
+              newStudentUser.username,
             )
           }
 
-          // Create student user.
-          let newStudentUser = new UserModel(studentUserData)
-          newStudentUser.save((error: Error) => {
-            if (error) {
-              databaseLogger.error(
-                'Failed to create student user in the database:',
-              )
-              databaseLogger.error(error)
-              reject(error)
-            } else {
-              databaseLogger.info(
-                'Student user created:',
-                newStudentUser.username,
-              )
-              resolveOne()
-            }
-          })
-        } else {
-          resolveOne()
+          // Resolve.
+          resolve()
+        } catch (error: any) {
+          databaseLogger.error(
+            'Failed to ensure a student user exists in the database.\n',
+            error,
+          )
+          reject(error)
         }
       })
 
-      // Check if a instructor user exists.
-      UserModel.findOne({
-        accessId: instructorUserData.accessId,
-      }).exec(async (error: Error, instructorUser: any) => {
-        if (error !== null) {
-          databaseLogger.error('Failed to query database for instructor user:')
-          databaseLogger.error(error)
-          reject(error)
-        } else if (instructorUser === null) {
-          databaseLogger.info('Instructor user not found.')
-          databaseLogger.info('Creating instructor user...')
+      // Check if an instructor user exists.
+      const verifyInstructor = new Promise<void>(async (resolve, reject) => {
+        try {
+          let instructorUser = await UserModel.findOne({
+            accessId: instructorUserData.accessId,
+          }).exec()
 
-          if (instructorUserData.password) {
+          // If no instructor user is found, create the default instructor user.
+          if (instructorUser === null) {
+            databaseLogger.info('Instructor user not found.')
+            databaseLogger.info('Creating instructor user...')
+
             // Hash instructor user password.
-            instructorUserData.password = await hashPassword(
-              instructorUserData.password,
+            if (instructorUserData.password) {
+              instructorUserData.password = await hashPassword(
+                instructorUserData.password,
+              )
+            }
+
+            // Create instructor user.
+            let newInstructorUser = await UserModel.create(instructorUserData)
+            databaseLogger.info(
+              'Instructor user created:',
+              newInstructorUser.username,
             )
           }
 
-          // Create instructor user.
-          let newInstructorUser = new UserModel(instructorUserData)
-          newInstructorUser.save((error: Error) => {
-            if (error) {
-              databaseLogger.error(
-                'Failed to create instructor user in the database:',
-              )
-              databaseLogger.error(error)
-              reject(error)
-            } else {
-              databaseLogger.info(
-                'Instructor user created:',
-                newInstructorUser.username,
-              )
-              resolveOne()
-            }
-          })
-        } else {
-          resolveOne()
+          // Resolve.
+          resolve()
+        } catch (error: any) {
+          databaseLogger.error(
+            'Failed to ensure an instructor user exists in the database.\n',
+            error,
+          )
+          reject(error)
         }
       })
 
       // Check if an admin user exists.
-      UserModel.findOne({
-        accessId: adminUserData.accessId,
-      }).exec(async (error: Error, adminUser: any) => {
-        if (error !== null) {
-          databaseLogger.error('Failed to query database for admin user:')
-          databaseLogger.error(error)
-          reject(error)
-        } else if (adminUser === null) {
-          databaseLogger.info('Admin user not found.')
-          databaseLogger.info('Creating admin user...')
+      const verifyAdmin = new Promise<void>(async (resolve, reject) => {
+        try {
+          let adminUser = await UserModel.findOne({
+            accessId: adminUserData.accessId,
+          }).exec()
 
-          if (adminUserData.password) {
+          // If no admin user is found, create the default admin user.
+          if (adminUser === null) {
+            databaseLogger.info('Admin user not found.')
+            databaseLogger.info('Creating admin user...')
+
             // Hash admin user password.
-            adminUserData.password = await hashPassword(adminUserData.password)
+            if (adminUserData.password) {
+              adminUserData.password = await hashPassword(
+                adminUserData.password,
+              )
+            }
+
+            // Create admin user.
+            let newAdminUser = await UserModel.create(adminUserData)
+            databaseLogger.info('Admin user created:', newAdminUser.username)
           }
 
-          // Create admin user.
-          let newAdminUser = new UserModel(adminUserData)
-          newAdminUser.save((error: Error) => {
-            if (error) {
-              databaseLogger.error(
-                'Failed to create admin user in the database:',
-              )
-              databaseLogger.error(error)
-              reject(error)
-            } else {
-              databaseLogger.info('Admin user created:', newAdminUser.username)
-              resolveOne()
-            }
-          })
-        } else {
-          resolveOne()
+          // Resolve.
+          resolve()
+        } catch (error: any) {
+          databaseLogger.error(
+            'Failed to ensure an admin user exists in the database.\n',
+            error,
+          )
+          reject(error)
         }
       })
 
-      // Set a timeout to reject the promise.
-      setTimeout(() => {
-        if (awaitingResolve > 0) {
-          databaseLogger.error(
-            'Failed to create default users: Timed out while waiting for users to be created.',
-          )
-          reject(
-            new Error(
-              'Failed to create default users: Timed out while waiting for users to be created.',
-            ),
-          )
-        }
-      }, 30 * 1000)
+      // Create an array of promises.
+      const promises: Array<Promise<void>> = [
+        verifyStudent,
+        verifyInstructor,
+        verifyAdmin,
+      ]
+
+      // Wait for all promises to resolve.
+      try {
+        await Promise.all(promises)
+        resolve()
+      } catch (error: any) {
+        databaseLogger.error(
+          'Failed to ensure default users exist in the database.\n',
+          error,
+        )
+        reject(error)
+      }
     })
   }
 
@@ -363,30 +341,30 @@ export default class MetisDatabase {
    * @returns A promise that resolves once the default data is ensured to exist.
    */
   private async ensureDefaultMissionsExists(): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      MissionModel.find({}).exec((error: Error, missions: any) => {
-        if (error !== null) {
-          databaseLogger.error('Failed to query database for default missions:')
-          databaseLogger.error(error)
-          reject(error)
-        } else if (missions.length === 0) {
+    return new Promise<void>(async (resolve, reject) => {
+      try {
+        // Query for all missions.
+        let missionDocs = await MissionModel.find().exec()
+        // If no missions are found, create the default mission(s).
+        if (missionDocs.length === 0) {
           databaseLogger.info('No missions were found.')
           databaseLogger.info('Creating default missions...')
 
-          MissionModel.create(demoMissionData, (error: Error, mission: any) => {
-            if (error) {
-              databaseLogger.error(`Failed to create ${demoMissionData.name}.`)
-              databaseLogger.error(error)
-              reject(error)
-            } else {
-              databaseLogger.info(`${mission.name} has been created.`)
-              resolve()
-            }
-          })
-        } else {
-          resolve()
+          // Create the default mission(s).
+          let missionDoc = await MissionModel.create(demoMissionData)
+          databaseLogger.info(
+            `Default mission created: { _id: ${missionDoc._id}, name: ${missionDoc.name} }`,
+          )
         }
-      })
+
+        resolve()
+      } catch (error: any) {
+        databaseLogger.error(
+          'Failed to ensure default missions exist in the database.\n',
+          error,
+        )
+        reject(error)
+      }
     })
   }
 
@@ -399,41 +377,41 @@ export default class MetisDatabase {
    * @returns A promise that resolves once the schema build is correct.
    */
   private async ensureCorrectSchemaBuild(): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      InfoModel.findOne().exec(async (error: Error, info: any) => {
-        if (error !== null) {
-          databaseLogger.error(
-            'Failed to query database for current schema build:',
-          )
-          databaseLogger.error(error)
-          reject(error)
-        } else if (info !== null) {
-          let currentBuildNumber: number = info.schemaBuildNumber
+    return new Promise<void>(async (resolve, reject) => {
+      try {
+        // Query for the info.
+        let info = await InfoModel.findOne().exec()
+        // If no info is found, reject.
+        if (!info) {
+          throw new Error('The info document was not found in the database.')
+        }
+        // Grab the current build number.
+        let currentBuildNumber: number = info.schemaBuildNumber
+        // Grab the target build number.
+        let targetBuildNumber: number = MetisServer.SCHEMA_BUILD_NUMBER
 
-          let targetBuildNumber: number = MetisServer.SCHEMA_BUILD_NUMBER
-
-          if (currentBuildNumber > targetBuildNumber) {
-            databaseLogger.error('Failed to check for schema updates:')
-            databaseLogger.error(
-              'The current schema build number found in the database was newer than ' +
-                'the target build number found in the config.',
-            )
-            reject(error)
-          } else if (currentBuildNumber < targetBuildNumber) {
-            await this.buildSchema(currentBuildNumber, targetBuildNumber)
-            resolve()
-          } else {
-            resolve()
-          }
-        } else {
-          databaseLogger.error(
-            'Failed to check for schema updates. Info data missing.',
-          )
-          reject(
-            new Error('Failed to check for schema updates. Info data missing.'),
+        // If the current build number is newer than the target build number...
+        if (currentBuildNumber > targetBuildNumber) {
+          // Throw an error.
+          throw new Error(
+            'The current schema build number found in the database was newer than the target build number found in the config.',
           )
         }
-      })
+        // Or, if the current build number is older than the target build number...
+        else if (currentBuildNumber < targetBuildNumber) {
+          // Update the schema to the most recent build.
+          await this.buildSchema(currentBuildNumber, targetBuildNumber)
+        }
+
+        // Otherwise, resolve.
+        resolve()
+      } catch (error: any) {
+        databaseLogger.error(
+          'Failed to ensure that the schema build number in the database is correct.\n',
+          error,
+        )
+        reject(error)
+      }
     })
   }
 

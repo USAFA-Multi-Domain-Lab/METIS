@@ -178,7 +178,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
 
     // If the requester is authorized to write
     // to sessions, include the ban list.
-    if (requester?.user.isAuthorized('sessions_write')) {
+    if (requester?.user.isAuthorized('sessions_write_native')) {
       banList = this.banList
     }
 

@@ -80,6 +80,13 @@ export default function MissionList({
     return results
   })
 
+  /**
+   * The tooltip description for the open button.
+   */
+  const tooltipDescription = compute<string>(() =>
+    login.user.isAuthorized('missions_write') ? 'Open mission' : 'View mission',
+  )
+
   /* -- FUNCTIONS -- */
 
   /**
@@ -290,7 +297,7 @@ export default function MissionList({
         break
       case 'download':
         window.open(
-          `/api/v1/missions/${mission._id}/export/${mission.name}.metis`,
+          `/api/v1/missions/${mission._id}/export/${mission.fileName}`,
           '_blank',
         )
         break
@@ -326,7 +333,7 @@ export default function MissionList({
         // columns={['createdAt', 'lastModifiedAt', 'lastLaunchedAt']}
         listButtons={listButtons}
         itemButtons={itemButtons}
-        getItemTooltip={() => 'Open mission'}
+        getItemTooltip={() => tooltipDescription}
         getColumnLabel={getMissionColumnLabel}
         getCellText={getMissionCellText}
         getListButtonTooltip={getMissionListButtonTooltip}

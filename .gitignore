@@ -7,8 +7,8 @@
 /shared/node_modules
 npm-debug.log*
 /coverage
-/.nyc_output
-/.nyc_output/processinfo
+/server/.nyc_output
+/server/.nyc_output/processinfo
 
 # react
 /client/build

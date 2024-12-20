@@ -3,6 +3,7 @@ import { TListItem } from 'src/components/content/data/lists/pages/ListItem'
 import User, {
   TCommonUser,
   TCommonUserJson,
+  TUserJsonOptions,
   TUserOptions,
 } from '../../../shared/users'
 import UserAccess from '../../../shared/users/accesses'
@@ -167,20 +168,22 @@ export default class ClientUser extends User implements TListItem {
    * @param options Options for creating the user.
    */
   public constructor(
-    data: Partial<TCommonUserJson> = User.DEFAULT_PROPERTIES,
+    data: Partial<TCommonUserJson> = ClientUser.DEFAULT_PROPERTIES,
     options: TClientUserOptions = {},
   ) {
     // Initialize base properties.
     super(data, options)
 
+    let { passwordIsRequired = false } = options
+
     // Initialize client-specific properties.
-    this._passwordIsRequired = options.passwordIsRequired ?? false
+    this._passwordIsRequired = passwordIsRequired
   }
 
   // Overridden abstract method
-  public toJson(options: TClientUserOptions = {}): TCommonUserJson {
+  public toJson(options: TClientUserJsonOptions = {}): TCommonUserJson {
     // Extract the passwordIsRequired option.
-    let { passwordIsRequired } = options
+    let { passwordIsRequired = false } = options
 
     // Grab the JSON properties from the base class.
     let json = super.toJson(options)
@@ -272,7 +275,7 @@ export default class ClientUser extends User implements TListItem {
         // Retrieve data from API.
         let { data: userJson } = await axios.post<TCommonUserJson>(
           ClientUser.API_ENDPOINT,
-          { user: clientUser.toJson({ passwordIsRequired: true }) },
+          clientUser.toJson({ passwordIsRequired: true }),
         )
         // Convert JSON to Client User object.
         let createdUser: ClientUser = new ClientUser(userJson)
@@ -298,7 +301,7 @@ export default class ClientUser extends User implements TListItem {
         // Retrieve data from API.
         let { data: userJson } = await axios.put<TCommonUserJson>(
           ClientUser.API_ENDPOINT,
-          { user: clientUser.toJson({ passwordIsRequired: false }) },
+          clientUser.toJson({ passwordIsRequired: false, includeId: true }),
         )
         // Convert JSON to Client User object.
         let updatedUser: ClientUser = new ClientUser(userJson)
@@ -363,7 +366,19 @@ export default class ClientUser extends User implements TListItem {
  */
 export type TClientUserOptions = TUserOptions & {
   /**
-   * Whether the password is required when saving. Defaults to false.
+   * Whether the password is required when saving.
+   * @default false
+   */
+  passwordIsRequired?: boolean
+}
+
+/**
+ * Options for creating a new Client User object.
+ */
+export type TClientUserJsonOptions = TUserJsonOptions & {
+  /**
+   * Whether the password is required when saving.
+   * @default false
    */
   passwordIsRequired?: boolean
 }

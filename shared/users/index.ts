@@ -47,7 +47,7 @@ export default abstract class User implements TCommonUser {
     data: Partial<TCommonUserJson> = User.DEFAULT_PROPERTIES,
     options: TUserOptions = {},
   ) {
-    this._id = data._id?.toString() ?? User.DEFAULT_PROPERTIES._id
+    this._id = data._id ?? User.DEFAULT_PROPERTIES._id
     this.username = data.username ?? User.DEFAULT_PROPERTIES.username
     this.access = UserAccess.get(data.accessId ?? UserAccess.DEFAULT_ID)
     this.firstName = data.firstName ?? User.DEFAULT_PROPERTIES.firstName
@@ -64,10 +64,11 @@ export default abstract class User implements TCommonUser {
    * @param options Options for converting the user to JSON.
    * @returns A JSON representation of the user.
    */
-  public toJson(options: TUserOptions = {}): TCommonUserJson {
+  public toJson(options: TUserJsonOptions = {}): TCommonUserJson {
+    let { includeId = false } = options
+
     // Construct JSON object to send to server.
     let json: TCommonUserJson = {
-      _id: this._id,
       username: this.username,
       firstName: this.firstName,
       lastName: this.lastName,
@@ -78,6 +79,9 @@ export default abstract class User implements TCommonUser {
       ),
       password: this.password,
     }
+
+    // Include the ID in the JSON if specified.
+    if (includeId) json._id = this._id
 
     return json
   }
@@ -134,7 +138,9 @@ export default abstract class User implements TCommonUser {
   /**
    * Default properties set when creating a new User object.
    */
-  public static get DEFAULT_PROPERTIES(): TCommonUserJson {
+  public static get DEFAULT_PROPERTIES(): Required<
+    Omit<TCommonUserJson, 'password'>
+  > {
     return {
       _id: generateHash(),
       username: '',
@@ -204,6 +210,17 @@ export type TSessionUser<T extends TCommonMissionTypes> = T['user']
 export type TUserOptions = {}
 
 /**
+ * Options for converting a User object to JSON.
+ */
+export type TUserJsonOptions = {
+  /**
+   * Whether or not to include the ID in the JSON.
+   * @default false
+   */
+  includeId?: boolean
+}
+
+/**
  * Type used for the abstract User class.
  */
 export interface TCommonUser {
@@ -247,7 +264,7 @@ export interface TCommonUser {
    * Converts the User object to JSON.
    * @returns A JSON representation of the user.
    */
-  toJson: (options?: TUserOptions) => TCommonUserJson
+  toJson: (options?: TUserJsonOptions) => TCommonUserJson
 }
 
 /**
@@ -257,7 +274,7 @@ export interface TCommonUserJson {
   /**
    * The user's ID.
    */
-  _id: string
+  _id?: string
   /**
    * The user's username.
    */

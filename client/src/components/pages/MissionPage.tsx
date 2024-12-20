@@ -88,7 +88,7 @@ export default function MissionPage({
    * Logout link for navigation.
    */
   const logoutLink = compute(() => ({
-    text: 'Logout',
+    text: 'Log out',
     onClick: async () => {
       // If there are unsaved changes, prompt the user.
       if (areUnsavedChanges) {
