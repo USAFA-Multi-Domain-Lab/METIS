@@ -127,6 +127,7 @@ export default function MissionMap({
   customButtons = [],
   showMasterTab = true,
   selectedForce: [selectedForce, selectForce],
+  tabAddEnabled = true,
   onTabAdd = null,
   onPrototypeSelect,
   onNodeSelect,
@@ -694,6 +695,7 @@ export default function MissionMap({
         tabs={tabs}
         tabIndex={tabIndex}
         buttons={buttons}
+        tabAddEnabled={tabAddEnabled}
         setTabIndex={setTabIndex}
         onTabAdd={onTabAdd}
       />
@@ -771,6 +773,14 @@ export type TMissionMap = {
    * @note If undefined, the state will be created internally.
    */
   selectedForce: TReactState<ClientMissionForce | null>
+  /**
+   * Whether the add button in the tab bar
+   * is enabled.
+   * @default true
+   * @note Only relevant if a callback for `onTabAdd`
+   * is provided.
+   */
+  tabAddEnabled?: boolean
   /**
    * Handles when a tab is added.
    * @param tab The tab that was added.

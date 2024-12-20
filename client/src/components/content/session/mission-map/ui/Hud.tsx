@@ -20,6 +20,7 @@ const MASTER_TAB: TTabBarTab = {
 export default function Hud({
   mission,
   buttons = [],
+  tabAddEnabled = true,
   tabs = [],
   tabIndex = 0,
   setTabIndex = () => {},
@@ -34,6 +35,7 @@ export default function Hud({
       <TabBar
         tabs={tabs}
         index={tabIndex}
+        addEnabled={tabAddEnabled}
         setIndex={setTabIndex}
         onAdd={onTabAdd}
       />
@@ -54,6 +56,14 @@ export type THud = {
    * @default []
    */
   buttons?: TWithKey<TButtonSvg_P>[]
+  /**
+   * Whether the add button in the tab bar
+   * is enabled.
+   * @default true
+   * @note Only relevant if a callback for `onTabAdd`
+   * is provided.
+   */
+  tabAddEnabled?: boolean
   /**
    * The tabs to display on the tab bar.
    * @default []

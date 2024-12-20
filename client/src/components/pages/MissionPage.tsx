@@ -151,6 +151,16 @@ export default function MissionPage({
   })
 
   /**
+   * Whether the add button for the tab bar
+   * is enabled (Enables/Disables force creation).
+   */
+  const tabAddEnabled: boolean = compute(
+    () =>
+      mission.forces.length < Mission.MAX_FORCE_COUNT &&
+      currentUser.isAuthorized('missions_write'),
+  )
+
+  /**
    * The class name for the root element.
    */
   const rootClassName: string = compute(() => {
@@ -436,21 +446,10 @@ export default function MissionPage({
    * Callback for when a request to add a new tab
    * (force) is made.
    */
-  const onTabAdd = compute(() => {
-    // If the mission has reached the maximum number
-    // of forces, return null, disabling the add button.
-    if (
-      mission.forces.length >= Mission.MAX_FORCE_COUNT ||
-      !currentUser.isAuthorized('missions_write')
-    )
-      return null
-
-    // Return default callback.
-    return () => {
-      mission.createForce()
-      handleChange()
-    }
-  })
+  const onTabAdd = () => {
+    mission.createForce()
+    handleChange()
+  }
 
   /**
    * Callback for when a prototype is selected.
@@ -763,6 +762,7 @@ export default function MissionPage({
                 <MissionMap
                   mission={mission}
                   customButtons={mapCustomButtons}
+                  tabAddEnabled={tabAddEnabled}
                   onTabAdd={onTabAdd}
                   onPrototypeSelect={onPrototypeSelect}
                   onNodeSelect={onNodeSelect}

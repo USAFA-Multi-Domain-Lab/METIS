@@ -24,6 +24,7 @@ export default function TabBar({
   tabs,
   index,
   autoSelectNewTabs = true,
+  addEnabled = true,
   setIndex,
   onAdd = null,
 }: TTabBar_P): JSX.Element | null {
@@ -268,9 +269,9 @@ export default function TabBar({
   const addClass = compute<string>(() => {
     let classList = ['Add', 'Control']
 
-    // If there is no add callback, then
-    // disable the add button.
-    if (onAdd === null) classList.push('Disabled')
+    // If `addEnabled` is false, then add the
+    // "Disabled" class.
+    if (!addEnabled) classList.push('Disabled')
 
     return classList.join(' ')
   })
@@ -366,6 +367,22 @@ export default function TabBar({
     />
   ))
 
+  /**
+   * JSX for the add button.
+   */
+  const addJsx = compute<JSX.Element | null>(() => {
+    // Return null if no callback for `onAdd`
+    // is provided.
+    if (!onAdd) return null
+
+    // Else, render the add button.
+    return (
+      <div className={addClass} onClick={onClickAdd}>
+        +
+      </div>
+    )
+  })
+
   // Render root JSX.
   return (
     <div className='TabBar' ref={root}>
@@ -373,11 +390,7 @@ export default function TabBar({
         <div className='Tabs' ref={tabsElm}>
           {tabJsx}
         </div>
-        <div className='Controls FloatingControls'>
-          <div className={addClass} onClick={onClickAdd}>
-            +
-          </div>
-        </div>
+        <div className='Controls FloatingControls'>{addJsx}</div>
       </div>
       <div className='Controls FixedControls' ref={fixedControls}>
         <div className={leftClass} onClick={onClickLeft}>
@@ -410,6 +423,13 @@ export type TTabBar_P = {
    * to automatically select new tabs.
    */
   autoSelectNewTabs?: boolean
+  /**
+   * Enables the add button, if present.
+   * @default true
+   * @note A callback for `onAdd` must be provided
+   * for the add button to be present.
+   */
+  addEnabled?: boolean
   /**
    * React setter to set the selected tab.
    */
