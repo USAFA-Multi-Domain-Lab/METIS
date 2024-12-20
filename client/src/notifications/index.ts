@@ -13,7 +13,7 @@ const defaultDuration: number = 5000
 // This represents a notification that
 // can be displayed to the user.
 export default class Notification {
-  _notificationID: string
+  _notificationId: string
   _message: string
   _handleDismissalOrExpiration: (dismissed: boolean, expired: boolean) => void
   _duration: number | null /* ms */
@@ -23,8 +23,8 @@ export default class Notification {
   _expirationTimerStarted: boolean
   _errorMessage: boolean
 
-  get notificationID(): string {
-    return this._notificationID
+  get notificationId(): string {
+    return this._notificationId
   }
 
   get message(): string {
@@ -76,7 +76,7 @@ export default class Notification {
     handleDismissalOrExpiration: (dismissed: boolean, expired: boolean) => void,
     options: INotificationOptions,
   ) {
-    this._notificationID = generateHash()
+    this._notificationId = generateHash()
     this._message = message
     this._handleDismissalOrExpiration = handleDismissalOrExpiration
     this._duration =

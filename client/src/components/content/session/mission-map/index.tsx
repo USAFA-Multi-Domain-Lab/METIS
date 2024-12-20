@@ -125,6 +125,7 @@ export default function MissionMap({
   mission,
   overlayContent,
   customButtons = [],
+  tabs = [],
   showMasterTab = true,
   selectedForce: [selectedForce, selectForce],
   tabAddEnabled = true,
@@ -274,7 +275,7 @@ export default function MissionMap({
       // Ensure selected tab index corresponds with
       // the selection in the mission.
       let forceId = force?._id ?? MASTER_TAB._id
-      tabs.forEach((tab, index) => {
+      tabsComputed.forEach((tab, index) => {
         if (tab._id === forceId && index !== tabIndex) {
           setTabIndex(index)
         }
@@ -424,7 +425,7 @@ export default function MissionMap({
   /**
    * The tabs to display in the tab bar.
    */
-  const tabs = compute(() => {
+  const tabsComputed = compute(() => {
     let results: TTabBarTab[] = []
 
     // If the master tab is marked as shown,
@@ -433,14 +434,10 @@ export default function MissionMap({
       results.push(MASTER_TAB)
     }
 
-    // Add force tabs.
-    mission.forces.forEach((force) => {
-      results.push({
-        _id: force._id,
-        text: force.name,
-        color: force.color,
-      })
-    })
+    // Add custom tabs.
+    if (tabs.length > 0) {
+      results.push(...tabs)
+    }
 
     // Return tabs.
     return results
@@ -450,8 +447,8 @@ export default function MissionMap({
    * The currently selected tab.
    */
   const selectedTab: TTabBarTab = compute(() => {
-    if (tabs.length === 0) return INVALID_TAB
-    else return tabs[tabIndex]
+    if (tabsComputed.length === 0) return INVALID_TAB
+    else return tabsComputed[tabIndex]
   })
 
   /**
@@ -692,7 +689,7 @@ export default function MissionMap({
       </Scene>
       <Hud
         mission={mission}
-        tabs={tabs}
+        tabs={tabsComputed}
         tabIndex={tabIndex}
         buttons={buttons}
         tabAddEnabled={tabAddEnabled}
@@ -757,6 +754,11 @@ export type TMissionMap = {
    * @default []
    */
   customButtons?: TWithKey<TButtonSvg_P>[]
+  /**
+   * The tabs to display on the tab bar.
+   * @default []
+   */
+  tabs?: TTabBarTab[]
   /**
    * Content to display in the overlay.
    * @note If undefined, the overlay will not be displayed.

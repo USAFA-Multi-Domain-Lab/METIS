@@ -23,6 +23,7 @@ import {
 import SessionMembersPanel from '../content/session/members/SessionMembersPanel'
 import MissionMap from '../content/session/mission-map'
 import ActionExecModal from '../content/session/mission-map/ui/overlay/modals/action-execution/ActionExecModal'
+import { TTabBarTab } from '../content/session/mission-map/ui/tabs/TabBar'
 import OutputPanel from '../content/session/output-panel'
 import StatusBar from '../content/session/StatusBar'
 import { TValidPanelButton } from '../content/user-controls/buttons/ButtonSvgPanel'
@@ -287,6 +288,21 @@ export default function SessionPage({
     return buttons
   })
 
+  /**
+   * Tabs for the mission map's tab bar.
+   */
+  const mapTabs: TTabBarTab[] = compute(() => {
+    let tabs: TTabBarTab[] = mission.forces.map((force) => {
+      return {
+        _id: force._id,
+        text: force.name,
+        color: force.color,
+      }
+    })
+
+    return tabs
+  })
+
   /* -- EFFECTS -- */
 
   // Verify navigation on mount and on session state change.
@@ -412,6 +428,7 @@ export default function SessionPage({
                 mission={mission}
                 overlayContent={overlayContentJsx}
                 customButtons={customButtons}
+                tabs={mapTabs}
                 showMasterTab={false}
                 onNodeSelect={onNodeSelect}
                 selectedForce={[selectedForce, selectForce]}

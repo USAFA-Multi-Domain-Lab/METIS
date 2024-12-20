@@ -555,6 +555,9 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
       onButtonClick: (button: TButton) => void,
       options: TShowButtonMenuOptions<TButton> = {},
     ): void => {
+      // If there aren't any buttons, do nothing.
+      if (buttons.length === 0) return
+
       // Parse options.
       const {
         position = new Vector2D(100, 100),
@@ -571,7 +574,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
         highlightTarget,
         onButtonClick: (button) => {
           // Preprocess the button click,
-          // starting by hiing the button menu.
+          // starting by hiding the button menu.
           setButtonMenu(null)
 
           // Call the callback passed.

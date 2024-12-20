@@ -6,15 +6,6 @@ import TitleBar from './TitleBar'
 import TabBar, { TTabBarTab } from './tabs/TabBar'
 
 /**
- * The master tab for the tab bar.
- */
-const MASTER_TAB: TTabBarTab = {
-  _id: 'master',
-  text: 'Master',
-  color: '#ffffff',
-}
-
-/**
  * HUD for the mission map.
  */
 export default function Hud({

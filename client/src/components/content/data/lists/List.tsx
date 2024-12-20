@@ -4,7 +4,6 @@ import { useDefaultProps } from 'src/toolbox/hooks'
 import { TButtonSvgType } from '../../user-controls/buttons/ButtonSvg'
 import { TSvgPanelOnClick } from '../../user-controls/buttons/ButtonSvgPanel_v2'
 import './List.scss'
-import ListButtons from './navs/ListButtons'
 import ListResizeHandler from './ListResizeHandler'
 import ListNav from './navs/ListNav'
 import {

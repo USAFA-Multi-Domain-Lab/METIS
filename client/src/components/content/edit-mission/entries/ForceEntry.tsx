@@ -4,7 +4,7 @@ import ClientMission from 'src/missions'
 import ClientMissionForce from 'src/missions/forces'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import Prompt from '../../communication/Prompt'
+import Mission from '../../../../../../shared/missions'
 import { DetailColorSelector } from '../../form/DetailColorSelector'
 import { DetailLargeString } from '../../form/DetailLargeString'
 import { DetailNumber } from '../../form/DetailNumber'
@@ -22,10 +22,12 @@ import EntryNavigation from './navigation/EntryNavigation'
 export default function ForceEntry({
   force,
   force: { mission },
+  duplicateForce,
+  deleteForce,
   handleChange,
 }: TForceEntry): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
-  const { forceUpdate, prompt } = useGlobalContext().actions
+  const { forceUpdate, prompt, notify } = useGlobalContext().actions
 
   /* -- STATE -- */
   const [introMessage, setIntroMessage] = useState<string>(force.introMessage)
@@ -97,29 +99,6 @@ export default function ForceEntry({
   // and the tab bar.
   useEffect(() => forceUpdate(), [name, color])
 
-  /* -- FUNCTIONS -- */
-
-  /**
-   * Handles the request to delete a force.
-   */
-  const onDelete = async () => {
-    // Prompt the user to confirm the deletion.
-    let { choice } = await prompt(
-      `Please confirm the deletion of this force.`,
-      Prompt.ConfirmationChoices,
-    )
-    // If the user cancels, abort.
-    if (choice === 'Cancel') return
-    // Filter out the force.
-    mission.forces = mission.forces.filter(({ _id }) => _id !== force._id)
-    // Update the mission structure.
-    mission.handleStructureChange()
-    // Navigate back to the mission.
-    mission.selectBack()
-    // Allow the user to save the changes.
-    handleChange()
-  }
-
   /* -- RENDER -- */
 
   return (
@@ -172,8 +151,18 @@ export default function ForceEntry({
           />
           <div className='ButtonContainer'>
             <ButtonText
+              text='Duplicate force'
+              onClick={duplicateForce}
+              tooltipDescription='Duplicate this force.'
+              disabled={
+                mission.forces.length >= Mission.MAX_FORCE_COUNT
+                  ? 'full'
+                  : 'none'
+              }
+            />
+            <ButtonText
               text='Delete force'
-              onClick={onDelete}
+              onClick={deleteForce}
               tooltipDescription='Delete this force.'
               uniqueClassName={deleteClassName}
             />
@@ -191,6 +180,14 @@ export type TForceEntry = {
    * The force to be edited.
    */
   force: ClientMissionForce
+  /**
+   * A function that will be used to duplicate the force.
+   */
+  duplicateForce: () => void
+  /**
+   * A function that will be used to delete the force.
+   */
+  deleteForce: () => void
   /**
    * A function that will be used to notify the parent
    * component that this component has changed.

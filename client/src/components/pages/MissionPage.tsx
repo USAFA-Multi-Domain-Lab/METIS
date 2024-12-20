@@ -37,7 +37,11 @@ import {
 import MissionMap from '../content/session/mission-map'
 import { TPrototypeButton } from '../content/session/mission-map/objects/MissionPrototype'
 import CreateEffect from '../content/session/mission-map/ui/overlay/modals/CreateEffect'
-import { TButtonSvg_P } from '../content/user-controls/buttons/ButtonSvg'
+import { TTabBarTab } from '../content/session/mission-map/ui/tabs/TabBar'
+import {
+  TButtonSvg_P,
+  TButtonSvgType,
+} from '../content/user-controls/buttons/ButtonSvg'
 import './MissionPage.scss'
 
 /**
@@ -56,7 +60,6 @@ export default function MissionPage({
     notify,
     prompt,
     forceUpdate,
-    navigateTo,
     logout,
   } = globalContext.actions
 
@@ -175,6 +178,23 @@ export default function MissionPage({
 
     // Return the list of class names as one string.
     return classList.join(' ')
+  })
+
+  /**
+   * The option buttons for a tab's option menu.
+   * @note A tab can be found in the mission map's tab bar.
+   * @note The tab's option menu is displayed when the tab is right-clicked.
+   */
+  const menuOptions = compute<TButtonSvgType[]>(() => {
+    let results: TButtonSvgType[] = []
+
+    // If the user has the proper authorization, add
+    // the copy button.
+    if (login.user.isAuthorized('missions_write')) {
+      results.push('copy', 'remove')
+    }
+
+    return results
   })
 
   /* -- EFFECTS -- */
@@ -382,6 +402,13 @@ export default function MissionPage({
   useEventListener(mission, 'new-prototype', () => {
     // Mark unsaved changes as true.
     setAreUnsavedChanges(true)
+  })
+
+  // Add event listener to watch for when a mission's
+  // forces are modified.
+  useEventListener(mission, 'forces-modified', () => {
+    // Force update to reflect changes.
+    forceUpdate()
   })
 
   /* -- FUNCTIONS -- */
@@ -618,6 +645,119 @@ export default function MissionPage({
     handleChange()
   }
 
+  /**
+   * Gets the description for an option button found in a tab's option menu.
+   * @param button The button for which to get the tooltip.
+   * @returns The description for the button.
+   * @note A tab can be found in the mission map's tab bar.
+   * @note The tab's option menu is displayed when the tab is right-clicked.
+   */
+  const getOptionDescription = (button: TButtonSvgType) => {
+    switch (button) {
+      case 'copy':
+        return 'Duplicate'
+      case 'remove':
+        return 'Delete'
+      default:
+        return ''
+    }
+  }
+
+  /**
+   * Handles the request to duplicate a force in the mission.
+   * @param forceId The ID of the force to duplicate.
+   */
+  const handleDuplicateForceRequest = async (
+    forceId: ClientMissionForce['_id'],
+  ) => {
+    // Get the force to duplicate.
+    let force = mission.getForce(forceId)
+
+    // If the force is not found, notify the user.
+    if (!force) {
+      notify('Failed to duplicate force.')
+      return
+    }
+
+    // Prompt the user to enter the name of the new force.
+    let { choice, text } = await prompt(
+      'Enter the name of the new force:',
+      ['Cancel', 'Submit'],
+      {
+        textField: { boundChoices: ['Submit'], label: 'Name' },
+        defaultChoice: 'Submit',
+      },
+    )
+
+    // If the user confirms the duplication, proceed.
+    if (choice === 'Submit') {
+      try {
+        // Duplicate the force.
+        mission.duplicateForces({ originalId: force._id, duplicateName: text })
+        // Notify the user that the force was duplicated.
+        notify(`Successfully duplicated "${force.name}".`)
+        // Allow the user to save the changes.
+        handleChange()
+      } catch (error: any) {
+        notify(`Failed to duplicate "${force.name}".`)
+      }
+    }
+  }
+
+  /**
+   * Handles the request to delete a force.
+   * @param forceId The ID of the force to delete.
+   */
+  const handleDeleteForceRequest = async (
+    forceId: ClientMissionForce['_id'],
+  ) => {
+    // Get the force to duplicate.
+    let force = mission.getForce(forceId)
+
+    // If the force is not found, notify the user.
+    if (!force) {
+      notify('Failed to delete the selected force.')
+      return
+    }
+
+    // Prompt the user to confirm the deletion.
+    let { choice } = await prompt(
+      `Please confirm the deletion of this force.`,
+      Prompt.ConfirmationChoices,
+    )
+    // If the user cancels, abort.
+    if (choice === 'Cancel') return
+    // Delete the force.
+    mission.deleteForces(forceId)
+    // If the force is selected, navigate back to the mission.
+    if (mission.selection === force) {
+      mission.selectBack()
+    }
+    // Allow the user to save the changes.
+    handleChange()
+  }
+
+  /**
+   * Handles the request for clicking an option button found in a tab's option menu.
+   * @param button The button that was clicked.
+   * @param force The force that the button was clicked on.
+   * @note A tab can be found in the mission map's tab bar.
+   * @note The tab's option menu is displayed when the tab is right-clicked.
+   */
+  const onOptionClick = (button: TButtonSvgType, tabBarItem: TTabBarTab) => {
+    switch (button) {
+      case 'copy':
+        handleDuplicateForceRequest(tabBarItem._id)
+        break
+      case 'remove':
+        handleDeleteForceRequest(tabBarItem._id)
+        break
+      default:
+        console.warn('Unknown button clicked in mission list.')
+        break
+    }
+  }
+
   /* -- PRE-RENDER PROCESSING -- */
 
   /**
@@ -652,6 +792,25 @@ export default function MissionPage({
     }
     // Return the buttons.
     return buttons
+  })
+
+  /**
+   * Tabs for the mission map's tab bar.
+   */
+  const mapTabs: TTabBarTab[] = compute(() => {
+    let tabs: TTabBarTab[] = mission.forces.map((force) => {
+      return {
+        _id: force._id,
+        text: force.name,
+        color: force.color,
+        description: `Select force` + `\n\t\n\`R-Click\` for more options`,
+        menuOptions,
+        getOptionDescription,
+        onOptionClick,
+      }
+    })
+
+    return tabs
   })
 
   /**
@@ -710,6 +869,12 @@ export default function MissionPage({
       return (
         <ForceEntry
           force={selection}
+          duplicateForce={async () =>
+            await handleDuplicateForceRequest(selection._id)
+          }
+          deleteForce={async () =>
+            await handleDeleteForceRequest(selection._id)
+          }
           handleChange={handleChange}
           key={selection._id}
         />
@@ -762,6 +927,7 @@ export default function MissionPage({
                 <MissionMap
                   mission={mission}
                   customButtons={mapCustomButtons}
+                  tabs={mapTabs}
                   tabAddEnabled={tabAddEnabled}
                   onTabAdd={onTabAdd}
                   onPrototypeSelect={onPrototypeSelect}

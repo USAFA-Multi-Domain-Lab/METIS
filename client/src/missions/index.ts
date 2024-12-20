@@ -528,6 +528,9 @@ export default class ClientMission
     // Add the force to the mission.
     this.forces.push(force)
 
+    // Emit the new force event.
+    this.emitEvent('forces-modified')
+
     // Handle structure change.
     this.handleStructureChange()
 
@@ -1100,6 +1103,63 @@ export default class ClientMission
   }
 
   /**
+   * Duplicates the selected forces in the mission.
+   * @param forcesInfo The information needed to duplicate the forces.
+   */
+  public duplicateForces(
+    forcesInfo: TDuplicateForceInfo | TDuplicateForceInfo[],
+  ): void {
+    // If the forcesInfo is not an array, make it an array.
+    if (!Array.isArray(forcesInfo)) forcesInfo = [forcesInfo]
+
+    // Duplicate the forces.
+    let duplicatedForces = forcesInfo.map(({ originalId, duplicateName }) => {
+      // Find the force to duplicate.
+      let force = this.forces.find((force) => force._id === originalId)
+      // Throw an error if the force is not found.
+      if (!force) throw new Error(`Force with ID ${originalId} not found.`)
+
+      // Convert the force to JSON.
+      let forceJson = force.toJson()
+      // Set the force's ID to the default ID (a random hash).
+      forceJson._id = MissionForce.DEFAULT_PROPERTIES._id
+      // Set the force's name to the duplicate name.
+      forceJson.name = duplicateName
+      // Create a new force object from the JSON.
+      return new ClientMissionForce(this, forceJson, { populateTargets: true })
+    })
+
+    // Add the duplicated forces to the mission.
+    this.forces.push(...duplicatedForces)
+
+    // Emit the new force event.
+    this.emitEvent('forces-modified')
+
+    // Handle structure change.
+    this.handleStructureChange()
+  }
+
+  /**
+   * Deletes the selected forces in the mission.
+   * @param forceIds The IDs of the forces to delete.
+   */
+  public deleteForces(
+    forceIds: ClientMissionForce['_id'] | ClientMissionForce['_id'][],
+  ): void {
+    // If the forces is not an array, make it an array.
+    if (!Array.isArray(forceIds)) forceIds = [forceIds]
+
+    // Remove the forces from the mission.
+    this.forces = this.forces.filter((force) => !forceIds.includes(force._id))
+
+    // Emit the new force event.
+    this.emitEvent('forces-modified')
+
+    // Handle structure change.
+    this.handleStructureChange()
+  }
+
+  /**
    * Commit any changes made and save them to the server. Calls
    * @note Chooses between post and put based on the state of the `existsOnServer`
    * property. This can be set as an option in the constructor.
@@ -1479,6 +1539,8 @@ export type TStructureChangeListener = (structureChangeKey: string) => void
  * Triggered when a transformation is set for the mission.
  * @option 'autopan'
  * Triggered when nodes are opened and the mission map needs to auto-pan to them.
+ * @option 'forces-modified'
+ * Triggered when forces are modified in the mission.
  */
 export type TMissionEvent =
   | 'activity'
@@ -1488,6 +1550,7 @@ export type TMissionEvent =
   | 'set-buttons'
   | 'set-transformation'
   | 'autopan'
+  | 'forces-modified'
 
 /**
  * Represents an object that can support navigation within
@@ -1552,4 +1615,18 @@ type TEffectEvalKwargs<T extends TCommonMissionTypes = TClientMissionTypes> = {
    * The target environments to use for evaluating effects.
    */
   targetEnvironments: T['targetEnv'][]
+}
+
+/**
+ * The information needed to duplicate a force in a mission.
+ */
+type TDuplicateForceInfo = {
+  /**
+   * The ID of the force to duplicate.
+   */
+  originalId: string
+  /**
+   * The name of the duplicated force.
+   */
+  duplicateName: string
 }

@@ -205,7 +205,8 @@ export default function MissionList({
     switch (button) {
       case 'open':
         if (login.user.isAuthorized('missions_write')) return 'Open'
-        else return 'View'
+        else if (login.user.isAuthorized('missions_read')) return 'View'
+        else return ''
       case 'launch':
         return 'Launch session'
       case 'copy':
