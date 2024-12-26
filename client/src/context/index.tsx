@@ -25,6 +25,8 @@ import ObjectToolbox, {
 } from '../../../shared/toolbox/objects'
 import { Vector2D } from '../../../shared/toolbox/space'
 import StringToolbox from '../../../shared/toolbox/strings'
+import { UnionType } from 'typescript'
+import { useInitRenderHandler, useMountHandler } from 'src/toolbox/hooks'
 
 /* -- constants -- */
 
@@ -70,7 +72,7 @@ const CONNECT_MESSAGE_CLEAR_DELAY = 3000
  * The default value of the global context passed in the
  * provider.
  */
-const globalContextDefault: TGlobalContext = ObjectToolbox.map(
+const GLOBAL_CONTEXT_DEFAULT: TGlobalContext = ObjectToolbox.map(
   GLOBAL_CONTEXT_VALUES_DEFAULT,
   (key: string, value: any) => {
     return [value, () => {}]
@@ -81,8 +83,9 @@ const globalContextDefault: TGlobalContext = ObjectToolbox.map(
  * The React context used for the global context. This is obfuscated
  * and managed by the GlobalContext class exposed as the default export.
  */
-const globalReactContext: React.Context<TGlobalContext> =
-  React.createContext(globalContextDefault)
+const globalReactContext: React.Context<TGlobalContext> = React.createContext(
+  GLOBAL_CONTEXT_DEFAULT,
+)
 
 /**
  * Cache of middleware used for navigation events.
@@ -95,172 +98,57 @@ const navigationMiddleware: Map<string, TNavigationMiddleware> = new Map<
 /* -- functions -- */
 
 /**
- * Used as a hook in the GlobalContextProvider component to populate the context with the state before supplying it to consumers.
- * @param context The global context to define, should contain only default values that will be overwritten by what is stored in the state.
+ * Defines the global context actions for the given state
+ * and refs.
+ * @param initialState The initial state of the global context,
+ * where the actions will be defined.
+ * @param refs Ref for the current value of the global context,
+ * setters not included. This is used by the action callbacks
+ * to access the current state of the global context later
+ * when they are used.
  */
-const useGlobalContextDefinition = (context: TGlobalContext) => {
+const initializeActions = (
+  initialState: TGlobalContext,
+  refs: React.MutableRefObject<TGlobalContextValues>,
+) => {
   /* -- CONSTANTS -- */
 
   const LOADING_MIN_TIME = 500
   const PAGE_SWITCH_MIN_TIME = 500
 
-  /* -- CONTEXT STATE DEFINITION -- */
+  /* -- STATE SETTERS -- */
 
-  const [globalState, setGlobalState] = useState<any>(
-    GLOBAL_CONTEXT_VALUES_DEFAULT,
-  )
+  const setForcedUpdateCounter = initialState.forcedUpdateCounter[1]
+  const setServer = initialState.server[1]
+  const setLogin = initialState.login[1]
+  const setCurrentPageKey = initialState.currentPageKey[1]
+  const setCurrentPageProps = initialState.currentPageProps[1]
+  const setLoading = initialState.loading[1]
+  const setLoadingMessage = initialState.loadingMessage[1]
+  const setLoadingMinTimeReached = initialState.loadingMinTimeReached[1]
+  const setPageSwitchMinTimeReached = initialState.pageSwitchMinTimeReached[1]
+  const setError = initialState.error[1]
+  const setButtonMenu = initialState.buttonMenu[1]
+  const setNotifications = initialState.notifications[1]
+  const setPromptData = initialState.promptData[1]
+
+  /* -- CALLBACKS -- */
+
   /**
-   * This is a reference to the latest context.
-   * @note This is useful for callbacks.
+   * Handles when loading has been completed.
    */
-  const contextRef = useRef<TGlobalContext>(context)
+  const onLoadCompletion = () => {
+    const { notifications } = refs.current
 
-  // Loop through context and define
-  // the state for each value except
-  // actions.
-  for (let key in context) {
-    type TValue = [any, React.Dispatch<React.SetStateAction<any>>]
-
-    // Skip actions.
-    if (key === 'actions') {
-      continue
+    for (let notification of notifications) {
+      notification.startExpirationTimer()
     }
-    // Determine default state, call
-    // useState, then store the result
-    // from react in the context.
-    let contextAsAny: any = context
-
-    contextAsAny[key] = [
-      globalState[key],
-      (arg1: any | ((prevState: any) => any)) => {
-        let previousState: any = globalState[key]
-        let updatedState: any
-
-        if (typeof arg1 === 'function') {
-          updatedState = arg1(previousState)
-        } else {
-          updatedState = arg1
-        }
-        setGlobalState((previousGlobalState: any) => {
-          return {
-            ...previousGlobalState,
-            [key]: updatedState,
-          }
-        })
-      },
-    ] as TValue
   }
 
-  /* -- CONTEXT STATE EXTRACTION -- */
+  /* -- ACTION DEFINITION -- */
 
-  // ! IMPORTANT - Context actions cannot be extracted yet because they are not defined until further below.
-
-  const [info, setInfo] = context.info
-  const [forcedUpdateCounter, setForcedUpdateCounter] =
-    context.forcedUpdateCounter
-  const [server, setServer] = context.server
-  const [login, setLogin] = context.login
-  const [currentPageKey, setCurrentPageKey] = context.currentPageKey
-  const [currentPageProps, setCurrentPageProps] = context.currentPageProps
-  const [appMountHandled, setAppMountHandled] = context.appMountHandled
-  const [loading, setLoading] = context.loading
-  const [loadingMessage, setLoadingMessage] = context.loadingMessage
-  const [loadingMinTimeReached, setLoadingMinTimeReached] =
-    context.loadingMinTimeReached
-  const [pageSwitchMinTimeReached, setPageSwitchMinTimeReached] =
-    context.pageSwitchMinTimeReached
-  const [error, setError] = context.error
-  const [tooltips, setTooltips] = context.tooltips
-  const [tooltipDescription, setTooltipDescription] = context.tooltipDescription
-  const [buttonMenu, setButtonMenu] = context.buttonMenu
-  const [notifications, setNotifications] = context.notifications
-  const [promptData, setPromptData] = context.promptData
-
-  /**
-   * Handles a member being kicked from a session.
-   */
-  const onMemberKicked = useRef<(event: TResponseEvents['kicked']) => void>(
-    () => {},
-  )
-  /**
-   * Handles a member being banned from a session.
-   */
-  const onMemberBanned = useRef<(event: TResponseEvents['banned']) => void>(
-    () => {},
-  )
-  /**
-   * Handles an error emitted by the server.
-   */
-  const onServerError = useRef<(event: TServerEvents['error']) => void>(
-    () => {},
-  )
-  const onPageMinTimeReached = useRef<() => void>(() => {})
-  const onLoadCompletion = useRef<() => void>(() => {})
-
-  /* -- HOOKS -- */
-
-  // This effect updates varioius event listener functions,
-  // giving them access to the current context.
-  useEffect(() => {
-    onMemberKicked.current = (event: TResponseEvents['kicked']) => {
-      const { handleError } = context.actions
-
-      if (login?.user._id === event.data.userId) {
-        handleError('You have been kicked from the session.')
-      }
-    }
-
-    onMemberBanned.current = (event: TResponseEvents['banned']) => {
-      const { handleError } = context.actions
-
-      if (login?.user._id === event.data.userId) {
-        handleError('You have been banned from the session.')
-      }
-    }
-
-    onServerError.current = ({ code, message }) => {
-      const { handleError } = context.actions
-
-      switch (code) {
-        case ServerEmittedError.CODE_UNAUTHENTICATED:
-          if (login !== null) {
-            setLogin(null)
-            connectionStatusMessage.value = null
-          }
-          break
-        case ServerEmittedError.CODE_SWITCHED_CLIENT:
-          handleError({
-            message:
-              'You have been disconnected because you have connected from another location.',
-            notifyMethod: 'page',
-          })
-          break
-        case ServerEmittedError.CODE_MESSAGE_RATE_LIMIT:
-          handleError(message)
-          break
-      }
-    }
-  }, [login])
-
-  // This effect updates the page loading functions
-  // giving them access to the current context.
-  useEffect(() => {
-    onPageMinTimeReached.current = () => {
-      setPageSwitchMinTimeReached(true)
-      if (!loading && loadingMinTimeReached) onLoadCompletion.current()
-    }
-    onLoadCompletion.current = () => {
-      for (let notification of notifications)
-        notification.startExpirationTimer()
-    }
-  }, [loading, loadingMinTimeReached, notifications])
-
-  /* -- CONTEXT ACTION DEFINITION -- */
-
-  context.actions = {
-    forceUpdate: () => {
-      setForcedUpdateCounter(forcedUpdateCounter + 1)
-    },
+  initialState.actions = {
+    forceUpdate: () => setForcedUpdateCounter((current) => current + 1),
     navigateTo: (pageKey, props, options = {}) => {
       // Scroll to top so that the content
       // for the loading page is properly
@@ -287,7 +175,15 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
         // completing the page switch. This will
         // make the page transition feel more
         // smooth.
-        setTimeout(() => onPageMinTimeReached.current(), PAGE_SWITCH_MIN_TIME)
+        setTimeout(() => {
+          const { loading, loadingMinTimeReached } = refs.current
+
+          setPageSwitchMinTimeReached(true)
+
+          if (!loading && loadingMinTimeReached) {
+            onLoadCompletion()
+          }
+        }, PAGE_SWITCH_MIN_TIME)
       }
 
       // Create an array from navigation middleware.
@@ -324,38 +220,45 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
         realizePageSwitch()
       }
     },
-    // in the global state, switching the
-    // user to the loading page until the
-    // loading has been ended by the finishLoading
-    // function.
     beginLoading: (loadingMessage?: string) => {
+      // Set loading state to display loading page.
       setLoading(true)
       setLoadingMessage(
-        loadingMessage ?? globalContextDefault.loadingMessage[0],
+        loadingMessage ?? GLOBAL_CONTEXT_DEFAULT.loadingMessage[0],
       )
       setLoadingMinTimeReached(false)
-      setTimeout(() => {
-        // Get the latest context.
-        const [loading] = contextRef.current.loading
-        const [pageSwitchMinTimeReached] =
-          contextRef.current.pageSwitchMinTimeReached
 
+      setTimeout(() => {
+        const { loading, pageSwitchMinTimeReached } = refs.current
+
+        // The minimum time has been reached
+        // for displaying the loading page.
         setLoadingMinTimeReached(true)
 
+        // If the loading page is no longer
+        // loading and the page switch min time
+        // has been reached, then call the
+        // completion handler.
         if (!loading && pageSwitchMinTimeReached) {
-          onLoadCompletion.current()
+          onLoadCompletion()
         }
       }, LOADING_MIN_TIME)
     },
     finishLoading: () => {
+      const { loadingMinTimeReached, pageSwitchMinTimeReached } = refs.current
+
       setLoading(false)
 
+      // If min times have been reached, then
+      // call the completion handler. Else,
+      // wait until the min times have been
+      // reached to call the completion handler.
       if (loadingMinTimeReached && pageSwitchMinTimeReached) {
-        onLoadCompletion.current()
+        onLoadCompletion()
       }
     },
     loadLoginInfo: async (): Promise<TLogin<ClientUser>> => {
-      const { handleError } = context.actions
+      const { handleError } = initialState.actions
 
       return new Promise<TLogin<ClientUser>>(async (resolve, reject) => {
         try {
@@ -369,7 +272,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
       })
     },
     connectToServer: (): Promise<ServerConnection> => {
-      const { handleError, beginLoading } = context.actions
+      const { handleError, beginLoading } = initialState.actions
 
       return new Promise<ServerConnection>(async (resolve, reject) => {
         let options: IServerConnectionOptions = {
@@ -424,44 +327,79 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
             'dismissed': () => {
               handleError('You have been dismissed from the session.')
             },
-            'kicked': (event) => onMemberKicked.current(event),
-            'banned': (event) => onMemberBanned.current(event),
+            'kicked': (event) => {
+              const { handleError } = initialState.actions
+              const { login } = refs.current
+
+              if (login?.user._id === event.data.userId) {
+                handleError('You have been kicked from the session.')
+              }
+            },
+            'banned': (event) => {
+              const { handleError } = initialState.actions
+              const { login } = refs.current
+
+              if (login?.user._id === event.data.userId) {
+                handleError('You have been banned from the session.')
+              }
+            },
             'session-destroyed': () => {
               handleError('The session you were in has been deleted.')
             },
-            'error': (event) => {
-              onServerError.current(event)
+            'error': ({ code, message }) => {
+              const { handleError } = initialState.actions
+              const { login } = refs.current
 
-              if (event.code === ServerEmittedError.CODE_DUPLICATE_CLIENT) {
-                handleError({
-                  message: event.message,
-                  notifyMethod: 'page',
-                  solutions: [
-                    {
-                      text: 'Switch Tabs',
-                      onClick: () => {
-                        // Clear error.
-                        setError(null)
-                        // Begin loading again.
-                        beginLoading('Switching tabs...')
-                        // Mark `disconnectExisting` as true to disconnect the existing connection.
-                        options.disconnectExisting = true
-                        // Pass options back into the `ServerConnection`
-                        // class and try again.
-                        server = new ServerConnection(options)
+              switch (code) {
+                case ServerEmittedError.CODE_UNAUTHENTICATED:
+                  if (login !== null) {
+                    setLogin(null)
+                    connectionStatusMessage.value = null
+                  }
+                  break
+                case ServerEmittedError.CODE_SWITCHED_CLIENT:
+                  handleError({
+                    message:
+                      'You have been disconnected because you have connected from another location.',
+                    notifyMethod: 'page',
+                  })
+                  break
+                case ServerEmittedError.CODE_MESSAGE_RATE_LIMIT:
+                  handleError(message)
+                  break
+                case ServerEmittedError.CODE_DUPLICATE_CLIENT:
+                  handleError({
+                    message: message,
+                    notifyMethod: 'page',
+                    solutions: [
+                      {
+                        text: 'Switch Tabs',
+                        onClick: () => {
+                          // Clear error.
+                          setError(null)
+                          // Begin loading again.
+                          beginLoading('Switching tabs...')
+                          // Mark `disconnectExisting` as true to disconnect the existing connection.
+                          options.disconnectExisting = true
+                          // Pass options back into the `ServerConnection`
+                          // class and try again.
+                          // Note: Server is stored in the state later if
+                          // connection is successful.
+                          server = new ServerConnection(options)
+                        },
                       },
-                    },
-                    {
-                      text: 'Log out',
-                      onClick: async () => {
-                        // Logout the user.
-                        await context.actions.logout()
-                        // Clear error.
-                        setError(null)
+                      {
+                        text: 'Log out',
+                        onClick: async () => {
+                          // Logout the user.
+                          await initialState.actions.logout()
+                          // Clear error.
+                          setError(null)
+                        },
                       },
-                    },
-                  ],
-                })
+                    ],
+                  })
+                  break
               }
             },
           },
@@ -470,7 +408,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
       })
     },
     handleError: (error: TAppError | string): void => {
-      const { notify } = context.actions
+      const { notify } = initialState.actions
 
       // Converts strings passed to TAppError
       // objects.
@@ -498,14 +436,25 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
       }
     },
     notify: (message: string, options: TNotifyOptions = {}): Notification => {
+      // Gather details.
+      const {
+        loading,
+        loadingMinTimeReached,
+        pageSwitchMinTimeReached,
+        notifications,
+      } = refs.current
       let onLoadingPage: boolean =
         loading || !loadingMinTimeReached || !pageSwitchMinTimeReached
 
+      // Create a notification with the message
+      // and provided options. Pass a callback
+      // that will automatically remove the
+      // notification from the state once it
+      // has been dismissed or expired.
       let notification: Notification = new Notification(
         message,
         (dismissed: boolean, expired: boolean) => {
-          // Get the notifications from the latest context.
-          const [notifications] = contextRef.current.notifications
+          const { notifications } = refs.current
 
           if (dismissed) {
             notifications.splice(notifications.indexOf(notification), 1)
@@ -520,6 +469,7 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
         { ...options, startExpirationTimer: !onLoadingPage },
       )
 
+      // Add the new notification to the state.
       setNotifications([...notifications, notification])
 
       return notification
@@ -600,9 +550,10 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
       setButtonMenu(null)
     },
     logout: async () => {
-      // Extract context actions.
+      // Extract context data.
       const { beginLoading, finishLoading, handleError, navigateTo } =
-        context.actions
+        initialState.actions
+      const { server } = refs.current
 
       // Notify the user of logout.
       beginLoading('Signing out...')
@@ -625,10 +576,86 @@ const useGlobalContextDefinition = (context: TGlobalContext) => {
       }
     },
   }
+}
 
-  // Update the context reference with the
-  // latest context.
-  contextRef.current = context
+/**
+ * Used as a hook in the GlobalContextProvider component to populate the context with the state before supplying it to consumers.
+ * @param defaultContext The global context to define, should contain only default values that will be overwritten by what is stored in the state.
+ */
+const useGlobalContextDefinition = (): TGlobalContext => {
+  /* -- CONTEXT STATE DEFINITION -- */
+
+  const refs = useRef<TGlobalContextValues>(GLOBAL_CONTEXT_VALUES_DEFAULT)
+  const [state, setState] = useState<TGlobalContext>(() => {
+    let result: TGlobalContext = { ...GLOBAL_CONTEXT_DEFAULT }
+    let k: keyof TGlobalContext
+
+    // Loop through context and define
+    // the state for each value except
+    // actions.
+    for (k in GLOBAL_CONTEXT_DEFAULT) {
+      // Transfer k to an lower-scoped variable
+      // so that the callback below will reference
+      // the correct key when called.
+      let key = k
+
+      // Define the callback so it can be
+      // referenced internally.
+      let callback = (
+        arg1:
+          | TGlobalContextValue
+          | ((prevState: TGlobalContextValue) => TGlobalContextValue),
+      ) => {
+        // Skip actions.
+        if (key === 'actions') return
+
+        // Define previous and updated values.
+        let previousValue: TGlobalContextValue = refs.current[key]
+        let updatedValue: TGlobalContextValue
+
+        // If the argument is a function, call it
+        // to determine the new value, otherwise
+        // use the argument as the new value.
+        if (typeof arg1 === 'function') {
+          updatedValue = arg1(previousValue)
+        } else {
+          updatedValue = arg1
+        }
+
+        setState((previousState) => {
+          return {
+            ...previousState,
+            [key]: [updatedValue, callback],
+          }
+        })
+      }
+
+      // Skip actions.
+      if (key === 'actions') continue
+
+      // Add the callback to the result.
+      result[key][1] = callback
+    }
+
+    return result
+  })
+
+  // Update the refs with the latest state.
+  let key: keyof TGlobalContext
+  for (key in state) {
+    if (key === 'actions') continue
+    ;(refs.current as any)[key] = state[key][0]
+  }
+
+  /* -- HOOKS -- */
+
+  // Defines the global context actions the
+  // first time useGlobalContextDefinition is
+  // called.
+  useInitRenderHandler(() => initializeActions(state, refs))
+
+  // Return the current state of the context.
+  return state
 }
 
 /**
@@ -640,16 +667,10 @@ function GlobalContextProvider(props: { children: ReactNode }): JSX.Element {
   // Extract props.
   const { children } = props
 
-  // Initialize context with the default
-  // values.
-  let context: TGlobalContext = {
-    ...globalContextDefault,
-  }
-
   // Use the context definition to load
   // the state of the context into the
   // context object.
-  useGlobalContextDefinition(context)
+  const context = useGlobalContextDefinition()
 
   // Return JSX with the context provider
   // wrapping the children dependent on
@@ -748,6 +769,16 @@ export type TGlobalContextValues = {
    * the cheats will be the same as the last action executed.
    */
   cheats: TExecutionCheats
+}
+
+/**
+ * Represents the setters for the global context values
+ * stored in a comprehensive object.
+ */
+export type TGlobalContextSetters = {
+  [key in keyof TGlobalContextValues]: React.Dispatch<
+    React.SetStateAction<TGlobalContextValues[key]>
+  >
 }
 
 /**
@@ -868,6 +899,11 @@ export type TGlobalContext = {
  * Represents any key used in the global context.
  */
 export type TGlobalContextProperty = keyof TGlobalContextValues
+
+/**
+ * Represents any value stored in the global context values.
+ */
+export type TGlobalContextValue = TGlobalContextValues[TGlobalContextProperty]
 
 /**
  * Options available when navigating to a page using the
