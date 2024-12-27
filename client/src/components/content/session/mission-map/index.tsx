@@ -284,7 +284,7 @@ export default function MissionMap({
       // Set force.
       selectForce(force)
     },
-    [selectedForce],
+    [selectedForce, tabs],
   )
 
   /**

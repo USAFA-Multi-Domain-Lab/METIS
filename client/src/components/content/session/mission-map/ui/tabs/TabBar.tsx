@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import ButtonSvg from 'src/components/content/user-controls/buttons/ButtonSvg'
 import { compute } from 'src/toolbox'
+import { useForcedUpdates, usePostRenderEffect } from 'src/toolbox/hooks'
 import Tab, { TTab_P } from '.'
 import './TabBar.scss'
-import { useForcedUpdates, usePostRenderEffect } from 'src/toolbox/hooks'
 
 /**
  * The offset by which to focus tabs when selected.
@@ -72,7 +71,7 @@ export default function TabBar({
     prevControlsX1.current = controlsX1
   })
 
-  // Select new tabs as they appear.
+  // Select different tabs as they appear and disappear.
   useEffect(() => {
     if (autoSelectNewTabs && tabs.length > prevTabIds.current.length) {
       // Find the first tab that is not in the previous
@@ -80,6 +79,36 @@ export default function TabBar({
       for (let i = 0; i < tabs.length; i++) {
         if (!prevTabIds.current.includes(tabs[i]._id)) {
           setIndex(i)
+          break
+        }
+      }
+    }
+    // If the number of tabs has decreased, then
+    // check to see if the the selected tab needs
+    // to be reset.
+    else if (tabs.length < prevTabIds.current.length) {
+      // If the selected tab is no longer in the
+      // list of tabs, then reset the selected tab.
+      for (let i = 0; i < prevTabIds.current.length; i++) {
+        // Reset to the first tab only if the selected tab is no longer
+        // in the list of tabs.
+        if (
+          i === index &&
+          !tabs.map(({ _id }) => _id).includes(prevTabIds.current[i])
+        ) {
+          setIndex(0)
+          break
+        }
+
+        // If the previously selected tab still exists, was the last tab
+        // in the list, and has moved up in the list, then select its new
+        // index.
+        if (
+          index === prevTabIds.current.length - 1 &&
+          i === index &&
+          tabs[tabs.length - 1]._id === prevTabIds.current[i]
+        ) {
+          setIndex(tabs.length - 1)
           break
         }
       }

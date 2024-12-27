@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import { useGlobalContext } from 'src/context'
+import { useState } from 'react'
 import ClientMission from 'src/missions'
 import ClientMissionForce from 'src/missions/forces'
 import { compute } from 'src/toolbox'
@@ -26,9 +25,6 @@ export default function ForceEntry({
   deleteForce,
   handleChange,
 }: TForceEntry): JSX.Element | null {
-  /* -- GLOBAL CONTEXT -- */
-  const { forceUpdate, prompt, notify } = useGlobalContext().actions
-
   /* -- STATE -- */
   const [introMessage, setIntroMessage] = useState<string>(force.introMessage)
   const [name, setName] = useState<string>(force.name)
@@ -69,7 +65,6 @@ export default function ForceEntry({
           node.color = color
         })
         handleChange()
-        forceUpdate()
       },
       tooltipDescription: `Applies the selected color to all nodes in the force.`,
     }
@@ -94,10 +89,6 @@ export default function ForceEntry({
     // Allow the user to save the changes.
     handleChange()
   }, [introMessage, name, color, initialResources])
-
-  // This displays changes in the mission path
-  // and the tab bar.
-  useEffect(() => forceUpdate(), [name, color])
 
   /* -- RENDER -- */
 

@@ -404,13 +404,6 @@ export default function MissionPage({
     setAreUnsavedChanges(true)
   })
 
-  // Add event listener to watch for when a mission's
-  // forces are modified.
-  useEventListener(mission, 'forces-modified', () => {
-    // Force update to reflect changes.
-    forceUpdate()
-  })
-
   /* -- FUNCTIONS -- */
 
   /**
@@ -604,8 +597,6 @@ export default function MissionPage({
       // Remove the action from the node.
       node.actions.delete(action._id)
 
-      // Display the changes.
-      forceUpdate()
       // Allow the user to save the changes.
       handleChange()
     }
@@ -639,8 +630,6 @@ export default function MissionPage({
       (actionEffect: ClientEffect) => actionEffect._id !== effect._id,
     )
 
-    // Display the changes.
-    forceUpdate()
     // Allow the user to save the changes.
     handleChange()
   }
@@ -729,10 +718,6 @@ export default function MissionPage({
     if (choice === 'Cancel') return
     // Delete the force.
     mission.deleteForces(forceId)
-    // If the force is selected, navigate back to the mission.
-    if (mission.selection === force) {
-      mission.selectBack()
-    }
     // Allow the user to save the changes.
     handleChange()
   }
