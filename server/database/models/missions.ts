@@ -19,10 +19,11 @@ import { AnyObject } from 'metis/toolbox/objects'
 import StringToolbox, { HEX_COLOR_REGEX } from 'metis/toolbox/strings'
 import mongoose, {
   Document,
-  Error,
   Model,
   model,
+  ProjectionType,
   Query,
+  QueryOptions,
   Schema,
 } from 'mongoose'
 
@@ -93,6 +94,55 @@ const isNonNegativeInteger = (value: number): boolean => {
   let isNonNegative: boolean = value >= 0
 
   return isInteger && isNonNegative
+}
+
+/* -- SCHEMA STATIC FUNCTIONS -- */
+
+/**
+ * Finds a single document by its `_id` field. Then, if the
+ * document is found, modifies the document with the given
+ * updates using the `save` method.
+ * @param _id The _id of the document to find.
+ * @param projection The projection to use when finding the document.
+ * @param options The options to use when finding the document.
+ * @param updates The updates to apply to the document.
+ * @resolves The modified document.
+ * @rejects An error if the document is not found or is deleted.
+ * @note This method uses the `findById` method internally followed by the `save` method (if the document is found).
+ * @note This method will trigger the `pre('save')` middleware which validates the mission.
+ */
+const findByIdAndModify = (
+  _id: any,
+  projection?: ProjectionType<TMissionSchema> | null,
+  options?: QueryOptions<TMissionSchema> | null,
+  updates?: Partial<TCommonMissionJson> | null,
+): Promise<TMissionDoc | null> => {
+  return new Promise<TMissionDoc | null>(async (resolve, reject) => {
+    try {
+      // Find the mission document.
+      let missionDoc = await MissionModel.findById(
+        _id,
+        projection,
+        options,
+      ).exec()
+
+      // If the mission is not found, then resolve with null.
+      if (!missionDoc) return resolve(missionDoc)
+
+      // Extract the updated properties.
+      let { _id: missionId, ...rest } = updates ?? {}
+      // Update every property besides the _id.
+      Object.assign(missionDoc, { ...rest })
+      // Save the changes.
+      missionDoc = await missionDoc.save()
+
+      // Otherwise, resolve with the mission document.
+      return resolve(missionDoc)
+    } catch (error: any) {
+      // Reject the promise with the error.
+      return reject(error)
+    }
+  })
 }
 
 /* -- SCHEMA VALIDATORS -- */
@@ -296,6 +346,7 @@ const validateMissionEffects = (
  * This will ensure the mission has between one and eight forces and that each prototype
  * in the mission has a corresponding node within each force.
  * @param missionJson The mission JSON to validate.
+ * @param structureKeys The structure keys to validate.
  * @returns An error if any of the validation checks fail.
  */
 const validateMissionForces = (
@@ -374,7 +425,7 @@ const validateMissionForces = (
       // ...then find the missing prototype node.
       let prototypes = missionJson.prototypes
       let missingPrototype = prototypes.find(
-        (prototype) => !prototypesRetrieved.includes(prototype._id),
+        ({ _id }) => !prototypesRetrieved.includes(_id),
       )
 
       // Send the error.
@@ -391,12 +442,13 @@ const validateMissionForces = (
 
 /**
  * Validates the mission document.
- * @param missionDoc The mission document to validate.
+ * @param missionJson The mission JSON to validate.
  * @param next The next function to call.
  */
-const validate_missions = (missionDoc: TMissionDoc, next: any): void => {
-  // Convert the mission to JSON.
-  let missionJson: TCommonMissionJson = missionDoc.toJSON()
+const validate_missions = (
+  missionJson: TCommonMissionJson,
+  next: any,
+): void => {
   // Get the initial structure.
   let initStructure: TCommonMissionJson['structure'] = missionJson.structure
   // Array to store the structure keys.
@@ -412,6 +464,7 @@ const validate_missions = (missionDoc: TMissionDoc, next: any): void => {
     currentStructure: any = initStructure,
     rootKey: string = 'ROOT',
   ): { error?: Error } => {
+    // If the current structure isn't an object...
     if (!(currentStructure instanceof Object)) {
       let error: Error = new Error(
         `Error in the mission's structure:\n"${rootKey}" is set to ${currentStructure}, which is not an object.`,
@@ -420,31 +473,45 @@ const validate_missions = (missionDoc: TMissionDoc, next: any): void => {
       return { error }
     }
 
+    // Loop through the current structure.
     for (let [key, value] of Object.entries(currentStructure)) {
+      // If the key is already in the structureKeys,
+      // then return an error.
       if (structureKeys.includes(key)) {
         let error: Error = new Error(
           `Error in the mission's structure:\nDuplicate structureKey used (${key}).`,
         )
         error.name = MetisDatabase.ERROR_BAD_DATA
         return { error }
-      } else {
+      }
+      // Otherwise, add the key to the structureKeys.
+      else {
         structureKeys.push(key)
       }
 
+      // Go deeper into the structure.
       let results: { error?: Error } = _validateStructure(value, key)
 
+      // Check for any errors.
       if (results.error) {
         return results
       }
     }
 
+    // Return an empty object if no errors are found.
     return {}
   }
 
   // Algorithm to check for duplicate _id's.
-  const _idCheckerAlgorithm = (cursor = missionJson): { error?: Error } => {
-    // If the cursor is an object, but not an ObjectId...
-    if (cursor instanceof Object && !(cursor instanceof ObjectId)) {
+  const _idCheckerAlgorithm = (
+    cursor: AnyObject | AnyObject[] = missionJson,
+  ): { error?: Error } => {
+    // If the cursor is an object, not an array, and not an ObjectId...
+    if (
+      cursor instanceof Object &&
+      !Array.isArray(cursor) &&
+      !(cursor instanceof ObjectId)
+    ) {
       // ...and it has an _id property and the _id already exists...
       if (cursor._id && cursor._id in existingIds) {
         // ...then set the error and return.
@@ -470,16 +537,19 @@ const validate_missions = (missionDoc: TMissionDoc, next: any): void => {
       else if (cursor._id) {
         existingIds[cursor._id] = true
       }
+
       // Check the object's values for duplicate _id's.
       for (let value of Object.values(cursor)) {
-        _idCheckerAlgorithm(value)
+        let results = _idCheckerAlgorithm(value)
+        if (results.error) return results
       }
     }
     // Otherwise, if the cursor is an array...
-    else if (cursor instanceof Array) {
+    else if (Array.isArray(cursor)) {
       // ...then check each value in the array for duplicate _id's.
       for (let value of cursor) {
-        _idCheckerAlgorithm(value)
+        let results = _idCheckerAlgorithm(value)
+        if (results.error) return results
       }
     }
 
@@ -642,7 +712,7 @@ const sanitizeHtml = (html: string): string => {
 /**
  * The schema for a mission in the database.
  */
-export const MissionSchema: Schema = new Schema<
+export const MissionSchema = new Schema<
   TMissionSchema,
   TMissionModel,
   TMissionMethods
@@ -831,14 +901,18 @@ export const MissionSchema: Schema = new Schema<
     toObject: {
       transform: transformObjectIdToString,
     },
+    statics: {
+      findByIdAndModify,
+    },
   },
 )
 
 /* -- SCHEMA MIDDLEWARE -- */
 
 // Called before a save is made to the database.
-MissionSchema.pre<TMissionDoc>('save', async function (next) {
-  validate_missions(this, next)
+MissionSchema.pre<TMissionDoc>('save', function (next) {
+  let mission: TCommonMissionJson = this.toJSON()
+  validate_missions(mission, next)
   return next()
 })
 
@@ -860,26 +934,12 @@ MissionSchema.post<Query<TMissionSchema, TMissionModel>>(
     // If the mission is null, then return.
     if (!missionData) return
 
-    // If the mission data is an array...
-    if (Array.isArray(missionData)) {
-      // Loop through each mission and transform any ObjectIds to a strings.
-      for (let missionDatum of missionData) {
-        // If the mission data is null, then continue.
-        if (!missionDatum) continue
+    // Convert the mission data to an array if it isn't already.
+    missionData = !Array.isArray(missionData) ? [missionData] : missionData
 
-        // Otherwise, transform the ObjectIds to strings.
-        missionDatum._id = missionDatum._id?.toString()
-        missionDatum.seed = missionDatum.seed.toString()
-      }
-    }
-    // Otherwise...
-    else {
-      // If the mission data is null, then return.
-      if (!missionData) return
-
-      // Otherwise, transform the ObjectIds to strings.
-      missionData._id = missionData._id?.toString()
-      missionData.seed = missionData.seed.toString()
+    // Transform the ObjectIds to strings.
+    for (let missionDatum of missionData) {
+      missionDatum._id = missionDatum._id?.toString()
     }
   },
 )
@@ -911,7 +971,27 @@ type TMissionMethods = {}
 /**
  * Represents the static methods available for a `MissionModel`.
  */
-type TMissionStaticMethods = {}
+type TMissionStaticMethods = {
+  /**
+   * Finds a single document by its `_id` field. Then, if the
+   * document is found, modifies the document with the given
+   * updates using the `save` method.
+   * @param _id The _id of the document to find.
+   * @param projection The projection to use when finding the document.
+   * @param options The options to use when finding the document.
+   * @param updates The updates to apply to the document.
+   * @resolves The modified document.
+   * @rejects An error if the document is not found or is deleted.
+   * @note This method uses the `findById` method internally followed by the `save` method (if the document is found).
+   * @note This method will trigger the `pre('save')` middleware which validates the mission.
+   */
+  findByIdAndModify(
+    _id: any,
+    projection?: ProjectionType<TMissionSchema> | null,
+    options?: QueryOptions<TMissionSchema> | null,
+    updates?: Partial<TCommonMissionJson> | null,
+  ): Promise<TMissionDoc | null>
+}
 
 /**
  * Represents a mongoose model for a mission in the database.

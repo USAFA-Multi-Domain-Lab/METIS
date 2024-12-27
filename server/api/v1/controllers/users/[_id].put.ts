@@ -27,12 +27,17 @@ const updateUser = async (request: Request, response: Response) => {
 
   try {
     // Update the user.
-    let userDoc = await UserModel.findByIdAndUpdate(userId, userUpdates, {
-      returnOriginal: false,
-      runValidators: true,
-    })
-      .setOptions({ currentUser, method: 'findOneAndUpdate' })
-      .exec()
+    let userDoc = await UserModel.findByIdAndModify(
+      userId,
+      {},
+      {
+        returnOriginal: false,
+        runValidators: true,
+        currentUser,
+        method: 'findOne',
+      },
+      userUpdates,
+    )
     // If the user was not found, throw an error.
     if (userDoc === null) {
       throw new StatusError(`User with ID "${userId}" not found.`, 404)

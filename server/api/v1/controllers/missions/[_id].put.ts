@@ -18,11 +18,12 @@ const updateMission = async (request: Request, response: Response) => {
 
   try {
     // Update the mission.
-    let missionDoc = await MissionModel.findByIdAndUpdate(
+    let missionDoc = await MissionModel.findByIdAndModify(
       missionId,
-      missionUpdates,
+      {},
       { returnOriginal: false, runValidators: true },
-    ).exec()
+      missionUpdates,
+    )
     // If the mission is not found, throw an error.
     if (missionDoc === null) {
       throw new StatusError(`Mission with ID "${missionId}" not found.`, 404)
