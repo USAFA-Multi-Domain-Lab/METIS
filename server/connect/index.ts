@@ -47,7 +47,7 @@ export default class MetisWsServer {
       metis.sessionMiddleware(request, response, next),
     )
     this.use(authMiddleware)
-    this.use(rateLimitMiddleware)
+    // this.use(rateLimitMiddleware)
 
     // Add event listeners.
     this.addEventListeners()
