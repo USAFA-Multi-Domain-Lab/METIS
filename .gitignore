@@ -35,6 +35,7 @@ environment-test.json
 
 # temp
 /server/temp
+docker-compose.yml
 
 # backup
 /server/database/backups
