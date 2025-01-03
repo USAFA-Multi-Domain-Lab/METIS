@@ -70,6 +70,7 @@
         cursor: pointer;
         user-select: none;
         display: flex;
+        column-gap: 0.5em;
         flex-direction: row;
         background-color: $color-accent-darker;
         font-size: 0.9rem;
@@ -89,9 +90,9 @@
           width: $icon-dimensions;
           height: $icon-dimensions;
           background-image: url('/assets/images/icons/down.svg');
-          background-size: $icon-dimensions;
+          background-size: 70%;
+          background-position: center;
           background-repeat: no-repeat;
-          background-position: 0.35em 0.325em;
         }
       }
     }

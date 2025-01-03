@@ -160,22 +160,32 @@ export default function MissionList({
         return 'Last Modified'
       case 'lastLaunchedAt':
         return 'Last Launched'
+      case 'creatorFullName':
+        return 'Created By'
       default:
-        return ''
+        return 'Unknown column'
     }
   }
 
+  /**
+   * Gets the text for a mission list cell.
+   * @param mission The mission for which to get the text.
+   * @param column The column for which to get the text.
+   * @returns The text to display in the cell.
+   */
   const getMissionCellText = (
     mission: ClientMission,
     column: string,
   ): string => {
     switch (column) {
       case 'createdAt':
-        return DateToolbox.format(mission.createdAt, 'yyyy-MM-dd HH:mm')
+        return DateToolbox.format(mission.createdAt, 'yyyy-mm-dd HH:MM')
       case 'lastModifiedAt':
-        return DateToolbox.format(mission.lastModifiedAt, 'yyyy-MM-dd HH:mm')
+        return DateToolbox.format(mission.lastModifiedAt, 'yyyy-mm-dd HH:MM')
       case 'lastLaunchedAt':
-        return DateToolbox.format(mission.lastLaunchedAt, 'yyyy-MM-dd HH:mm')
+        return DateToolbox.format(mission.lastLaunchedAt, 'yyyy-mm-dd HH:MM')
+      case 'creatorFullName':
+        return mission.creatorFullName
       default:
         return 'Unknown column'
     }
@@ -331,7 +341,12 @@ export default function MissionList({
       <List<ClientMission>
         name={'Missions'}
         items={missions}
-        // columns={['createdAt', 'lastModifiedAt', 'lastLaunchedAt']}
+        columns={[
+          'createdAt',
+          'lastModifiedAt',
+          'lastLaunchedAt',
+          'creatorFullName',
+        ]}
         listButtons={listButtons}
         itemButtons={itemButtons}
         getItemTooltip={() => tooltipDescription}

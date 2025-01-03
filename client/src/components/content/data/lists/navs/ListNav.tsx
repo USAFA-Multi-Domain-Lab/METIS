@@ -1,7 +1,7 @@
 import { useListContext } from '../List'
 import ListPageControls from '../pages/ListPageControls'
 import ListButtons from './ListButtons'
-import ListFiltering from './ListFiltering'
+import ListProcessor from './ListProcessor'
 import './ListNav.scss'
 
 export default function ListNav(): JSX.Element | null {
@@ -20,7 +20,7 @@ export default function ListNav(): JSX.Element | null {
       </div>
       <ListButtons />
       <ListPageControls />
-      <ListFiltering />
+      <ListProcessor />
     </div>
   )
 }

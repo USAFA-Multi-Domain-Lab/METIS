@@ -37,6 +37,7 @@ import ClientMissionPrototype, { TPrototypeRelation } from './nodes/prototypes'
 import MissionTransformation from './transformations'
 import PrototypeCreation from './transformations/creations'
 import PrototypeTranslation from './transformations/translations'
+import User from '../../../shared/users'
 
 /**
  * Class for managing missions on the client.
@@ -262,6 +263,34 @@ export default class ClientMission
    */
   public get createdAt(): Date {
     return new Date()
+  }
+
+  /**
+   * The ID of the user that created the mission.
+   */
+  public get creatorId(): string {
+    return 'admin'
+  }
+
+  /**
+   * The first name of the user that created the mission.
+   */
+  public get creatorFirstName(): string {
+    return 'admin'
+  }
+
+  /**
+   * The last name of the user that created the mission.
+   */
+  public get creatorLastName(): string {
+    return 'user'
+  }
+
+  /**
+   * The full name of the user that created the mission.
+   */
+  public get creatorFullName(): string {
+    return User.getFullName(this.creatorFirstName, this.creatorLastName)
   }
 
   /**

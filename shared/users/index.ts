@@ -193,6 +193,20 @@ export default abstract class User implements TCommonUser {
 
     return isValidName
   }
+
+  /**
+   * Gets the full name for the given first
+   * and last names.
+   * @param firstName The first name.
+   * @param lastName The last name.
+   * @returns The full name.
+   */
+  public static getFullName = (
+    firstName: TCommonUserJson['firstName'],
+    lastName: TCommonUserJson['lastName'],
+  ): string => {
+    return `${lastName}, ${firstName}`
+  }
 }
 
 /* ------------------------------ USER TYPES ------------------------------ */

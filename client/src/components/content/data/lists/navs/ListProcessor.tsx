@@ -2,22 +2,25 @@ import { createRef, ReactNode, useEffect, useState } from 'react'
 import { compute } from 'src/toolbox'
 import Tooltip from '../../../communication/Tooltip'
 import { useListContext } from '../List'
+import './ListProcessor.scss'
 import { TListItem } from '../pages/ListItem'
-import './ListFiltering.scss'
 
 /**
- * Provides filtering options for the `List` component,
- * currently only a search bar.
+ * Processes the items available in a list by applying
+ * any filtering and sorting inputs made by the user.
  */
-export default function ListFiltering(): JSX.Element | null {
+export default function ListProcessor(): JSX.Element | null {
   /* -- STATE -- */
 
   const listContext = useListContext()
   const { items } = listContext
-  const [_, setFilteredItems] = listContext.state.filteredItems
+  const { getCellText } = listContext
+  const [_, setProcessedItems] = listContext.state.processedItems
+  const [sorting] = listContext.state.sorting
   const [searchHint, setSearchHint] = useState<string>('')
   const [hideSearchTooltip, showSearchTooltip] = useState<boolean>(false)
   const searchField = createRef<HTMLInputElement>()
+  const { column: sortingColumn, method: sortingMethod } = sorting
 
   /* -- COMPUTED -- */
 
@@ -36,10 +39,11 @@ export default function ListFiltering(): JSX.Element | null {
   /* -- FUNCTIONS -- */
 
   /**
-   * Filters the list of items based on the search term
-   * in the search field.
+   * Process the list of items based on the search term
+   * in the search field and the current sorting state.
    */
-  const filter = () => {
+  const process = () => {
+    let result: TListItem[] = []
     let searchFieldElm = searchField.current!
     let filterTermRaw = searchFieldElm.value
     let filterTerm = filterTermRaw.trim().toLowerCase()
@@ -47,37 +51,69 @@ export default function ListFiltering(): JSX.Element | null {
 
     // If the search term is empty, show all items.
     if (!filterTerm) {
-      setFilteredItems(items)
+      result = [...items]
     }
     // Else, filter the items based on the search term.
     else {
-      setFilteredItems(
-        items.filter((item) => {
-          // If it doesn't match the condition, return false.
-          if (!item.name.toLowerCase().includes(filterTerm)) return false
+      result = items.filter((item) => {
+        // If it doesn't match the condition, return false.
+        if (!item.name.toLowerCase().includes(filterTerm)) return false
 
-          // Set search hint if the item name starts with
-          // the search team and a hint is not already
-          // found.
-          if (
-            !searchHintFound &&
-            item.name.toLowerCase().startsWith(filterTerm) &&
-            item.name.length > filterTerm.length
-          ) {
-            setSearchHint(
-              filterTermRaw + item.name.substring(filterTermRaw.length),
-            )
-            searchHintFound = true
-          }
+        // Set search hint if the item name starts with
+        // the search team and a hint is not already
+        // found.
+        if (
+          !searchHintFound &&
+          item.name.toLowerCase().startsWith(filterTerm) &&
+          item.name.length > filterTerm.length
+        ) {
+          setSearchHint(
+            filterTermRaw + item.name.substring(filterTermRaw.length),
+          )
+          searchHintFound = true
+        }
 
-          // Return true since the condition was met.
-          return true
-        }),
-      )
+        // Return true since the condition was met.
+        return true
+      })
     }
+
+    // Apply the sorting state to the result using
+    // a Schwartzian transform, starting by creating
+    // a temporary sorting array.
+    const sortingArray =
+      sortingColumn === 'name'
+        ? result.map((item) => ({
+            item,
+            sortKey: item.name,
+          }))
+        : result.map((item) => ({
+            item,
+            sortKey: getCellText(item, sortingColumn),
+          }))
+
+    // Sort the sorting array based on the sorting
+    // method.
+    switch (sortingMethod) {
+      case 'ascending': {
+        sortingArray.sort((a, b) => a.sortKey.localeCompare(b.sortKey))
+        break
+      }
+      case 'descending': {
+        sortingArray.sort((a, b) => b.sortKey.localeCompare(a.sortKey))
+        break
+      }
+    }
+
+    // Convert the sorting array back and store it
+    // in the result.
+    result = sortingArray.map((entry) => entry.item)
 
     // If no search hint was found, clear the hint.
     if (!searchHintFound) setSearchHint('')
+
+    // Update the processed items.
+    setProcessedItems(result)
   }
 
   /**
@@ -97,15 +133,15 @@ export default function ListFiltering(): JSX.Element | null {
     // key was pressed, apply the search hint.
     if (searchHint && key.toLowerCase() === 'tab') {
       target.value = searchHint
-      filter()
+      process()
     }
   }
 
   /* -- EFFECTS -- */
 
-  // This will re-filter the list when the items
-  // change.
-  useEffect(() => filter(), [items, items.length])
+  // This will re-process the list when the items
+  // change or if the sorting state changes.
+  useEffect(() => process(), [items, items.length, sorting])
 
   /* -- RENDER -- */
 
@@ -120,7 +156,7 @@ export default function ListFiltering(): JSX.Element | null {
 
   // Render the list filtering.
   return (
-    <div className='ListFiltering'>
+    <div className='ListProcessor'>
       <div className='SearchBox'>
         <div className='SearchIcon'></div>
         <input
@@ -128,7 +164,7 @@ export default function ListFiltering(): JSX.Element | null {
           className='SearchField'
           spellCheck={false}
           placeholder={''}
-          onChange={filter}
+          onChange={process}
           onKeyDown={onSearchKeyDown}
           ref={searchField}
           onFocus={() => showSearchTooltip(true)}
@@ -144,20 +180,4 @@ export default function ListFiltering(): JSX.Element | null {
       </div>
     </div>
   )
-}
-
-/* -- TYPES -- */
-
-/**
- * Props for `ListFiltering`.
- */
-export type TListFiltering_P<TItem extends TListItem> = {
-  /**
-   * The original unfiltered list of items.
-   */
-  items: TItem[]
-  /**
-   * The state for the filtered items.
-   */
-  filteredItemsState: TReactState<TItem[]>
 }

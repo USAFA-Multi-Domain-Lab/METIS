@@ -3,6 +3,7 @@
 .ListPage {
   $item-non-padded-height: 1.4em;
   $item-cell-padding-vertical: 0.35em;
+  $item-cell-padding-left: 1rem;
   $item-options-background-y: 0.35em;
   $last-item-padding-bottom: 1em;
 
@@ -38,7 +39,8 @@
     // such as a column label.
     .ItemCellLike {
       overflow: hidden;
-      padding: $item-cell-padding-vertical 0;
+      padding: $item-cell-padding-vertical 0 $item-cell-padding-vertical
+        $item-cell-padding-left;
       text-align: left;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -46,9 +48,9 @@
       line-height: 2.1em;
       color: rgba(white, 0.9);
 
-      &:not(:first-child) {
-        padding-left: 1em;
-        // border-left: 1px solid rgba(white, 0.125);
+      &:first-child {
+        position: relative;
+        left: -#{$item-cell-padding-left};
       }
     }
 
