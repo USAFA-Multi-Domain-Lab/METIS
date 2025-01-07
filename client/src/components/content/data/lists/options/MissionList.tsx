@@ -151,8 +151,10 @@ export default function MissionList({
 
   /**
    * Gets the column label for a mission list.
+   * @param column The column for which to get the label.
+   * @returns The label for the column.
    */
-  const getMissionColumnLabel = (column: string): string => {
+  const getMissionColumnLabel = (column: keyof ClientMission): string => {
     switch (column) {
       case 'createdAt':
         return 'Created'
@@ -175,7 +177,7 @@ export default function MissionList({
    */
   const getMissionCellText = (
     mission: ClientMission,
-    column: string,
+    column: keyof ClientMission,
   ): string => {
     switch (column) {
       case 'createdAt':
@@ -349,6 +351,7 @@ export default function MissionList({
         ]}
         listButtons={listButtons}
         itemButtons={itemButtons}
+        initialSorting={{ column: 'lastModifiedAt', method: 'descending' }}
         getItemTooltip={() => tooltipDescription}
         getColumnLabel={getMissionColumnLabel}
         getCellText={getMissionCellText}

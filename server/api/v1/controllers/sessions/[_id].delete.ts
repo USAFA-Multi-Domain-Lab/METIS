@@ -3,6 +3,7 @@ import { StatusError } from 'metis/server/http'
 import { expressLogger } from 'metis/server/logging'
 import SessionServer from 'metis/server/sessions'
 import ApiResponse from '../../library/response'
+import ServerUser from 'metis/server/users'
 /**
  * This will delete a session.
  * @param request The express request.
@@ -13,10 +14,30 @@ const deleteSession = (request: Request, response: Response) => {
   try {
     let _id: string = request.params._id
     let session: SessionServer | undefined = SessionServer.get(_id)
+    let requester: ServerUser = response.locals.user
 
     // If the session could not be found, throw an error.
     if (session === undefined) {
       throw new StatusError(`Session with ID "${_id}" not found.`, 404)
+    }
+
+    // Determine authorization details for the requester
+    // and the session.
+    let ownsSession: boolean = session.ownerId === requester._id
+    let hasNativeWrite: boolean = requester.isAuthorized([
+      'sessions_write_native',
+    ])
+    let hasForeignWrite: boolean = requester.isAuthorized([
+      'sessions_write_foreign',
+    ])
+
+    // Confirm the requester is authorized to write
+    // to the session.
+    if (
+      (ownsSession && !hasNativeWrite) ||
+      (!ownsSession && !hasForeignWrite)
+    ) {
+      return ApiResponse.sendStatus(response, 401)
     }
 
     // Destroy session and return response.
