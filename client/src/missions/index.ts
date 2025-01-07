@@ -256,16 +256,6 @@ export default class ClientMission
   }
 
   /**
-   * The date that the mission was created.
-   * @note This is not accurate. This feature still needs
-   * to be implemented on the back-end. This is for interface
-   * design purposes only.
-   */
-  public get createdAt(): Date {
-    return new Date()
-  }
-
-  /**
    * The ID of the user that created the mission.
    */
   public get creatorId(): string {
@@ -291,26 +281,6 @@ export default class ClientMission
    */
   public get creatorFullName(): string {
     return User.getFullName(this.creatorFirstName, this.creatorLastName)
-  }
-
-  /**
-   * The date that the mission was last modified.
-   * @note This is not accurate. This feature still needs
-   * to be implemented on the back-end. This is for interface
-   * design purposes only.
-   */
-  public get lastModifiedAt(): Date {
-    return new Date()
-  }
-
-  /**
-   * The date that the mission was last launched.
-   * @note This is not accurate. This feature still needs
-   * to be implemented on the back-end. This is for interface
-   * design purposes only.
-   */
-  public get lastLaunchedAt(): Date {
-    return new Date()
   }
 
   /**

@@ -55,6 +55,7 @@ const exportMission = async (request: Request, response: Response) => {
     let tempFileContents = JSON.stringify(
       {
         ...missionJson,
+        launchedAt: undefined,
         _id: undefined,
         deleted: undefined,
         schemaBuildNumber: info.schemaBuildNumber,

@@ -158,9 +158,9 @@ export default function MissionList({
     switch (column) {
       case 'createdAt':
         return 'Created'
-      case 'lastModifiedAt':
+      case 'updatedAt':
         return 'Last Modified'
-      case 'lastLaunchedAt':
+      case 'launchedAt':
         return 'Last Launched'
       case 'creatorFullName':
         return 'Created By'
@@ -181,11 +181,11 @@ export default function MissionList({
   ): string => {
     switch (column) {
       case 'createdAt':
-        return DateToolbox.format(mission.createdAt, 'yyyy-mm-dd HH:MM')
-      case 'lastModifiedAt':
-        return DateToolbox.format(mission.lastModifiedAt, 'yyyy-mm-dd HH:MM')
-      case 'lastLaunchedAt':
-        return DateToolbox.format(mission.lastLaunchedAt, 'yyyy-mm-dd HH:MM')
+      case 'updatedAt':
+      case 'launchedAt':
+        let datetime = mission[column]
+        if (datetime === null) return 'N/A'
+        else return DateToolbox.format(datetime, 'yyyy-mm-dd HH:MM')
       case 'creatorFullName':
         return mission.creatorFullName
       default:
@@ -240,8 +240,8 @@ export default function MissionList({
   const getMissionColumnWidth = (column: keyof ClientMission): string => {
     switch (column) {
       case 'createdAt':
-      case 'lastModifiedAt':
-      case 'lastLaunchedAt':
+      case 'updatedAt':
+      case 'launchedAt':
         return '9em'
       default:
         return '10em'
@@ -343,15 +343,10 @@ export default function MissionList({
       <List<ClientMission>
         name={'Missions'}
         items={missions}
-        columns={[
-          'createdAt',
-          'lastModifiedAt',
-          'lastLaunchedAt',
-          'creatorFullName',
-        ]}
+        columns={['createdAt', 'updatedAt', 'launchedAt', 'creatorFullName']}
         listButtons={listButtons}
         itemButtons={itemButtons}
-        initialSorting={{ column: 'lastModifiedAt', method: 'descending' }}
+        initialSorting={{ column: 'updatedAt', method: 'descending' }}
         getItemTooltip={() => tooltipDescription}
         getColumnLabel={getMissionColumnLabel}
         getCellText={getMissionCellText}

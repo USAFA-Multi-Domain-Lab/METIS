@@ -80,6 +80,15 @@ export default abstract class Mission<
   public seed: string
 
   // Implemented
+  public createdAt: Date | null
+
+  // Implemented
+  public updatedAt: Date | null
+
+  // Implemented
+  public launchedAt: Date | null
+
+  // Implemented
   public root: TPrototype<T>
 
   /**
@@ -95,6 +104,9 @@ export default abstract class Mission<
     this.versionNumber =
       data.versionNumber ?? Mission.DEFAULT_PROPERTIES.versionNumber
     this.seed = data.seed ?? Mission.DEFAULT_PROPERTIES.seed
+    this.createdAt = data.createdAt ?? Mission.DEFAULT_PROPERTIES.createdAt
+    this.updatedAt = data.updatedAt ?? Mission.DEFAULT_PROPERTIES.updatedAt
+    this.launchedAt = data.launchedAt ?? Mission.DEFAULT_PROPERTIES.launchedAt
     this.prototypes = []
     this.forces = []
     this.root = this.initializeRoot()
@@ -125,6 +137,9 @@ export default abstract class Mission<
       name: this.name,
       versionNumber: this.versionNumber,
       seed: this.seed,
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
+      launchedAt: this.launchedAt,
       structure: {},
       forces: [],
       prototypes: [],
@@ -362,6 +377,9 @@ export default abstract class Mission<
       name: 'New Mission',
       versionNumber: 1,
       seed: generateHash(),
+      createdAt: null,
+      updatedAt: null,
+      launchedAt: null,
       structure: {},
       forces: [MissionForce.DEFAULT_FORCES[0]],
       prototypes: [MissionPrototype.DEFAULT_PROPERTIES],
@@ -557,6 +575,18 @@ export interface TCommonMission {
    */
   seed: string
   /**
+   * The date/time the mission was created.
+   */
+  createdAt: Date | null
+  /**
+   * The date/time the mission was last updated.
+   */
+  updatedAt: Date | null
+  /**
+   * The date/time the mission was last launched.
+   */
+  launchedAt: Date | null
+  /**
    * Prototype nodes for the mission, representing the mission's node
    * structure outside of any forces.
    */
@@ -621,6 +651,18 @@ export interface TCommonMissionJson {
    * The seed for the mission. Pre-determines outcomes.
    */
   seed: string
+  /**
+   * The date/time the mission was created.
+   */
+  createdAt: Date | null
+  /**
+   * The date/time the mission was last updated.
+   */
+  updatedAt: Date | null
+  /**
+   * The date/time the mission was last launched.
+   */
+  launchedAt: Date | null
   /**
    * The tree structure used to determine the relationships and positions of the nodes in the mission.
    */

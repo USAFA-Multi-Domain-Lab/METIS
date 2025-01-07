@@ -729,6 +729,7 @@ export const MissionSchema = new Schema<
       required: true,
       default: StringToolbox.generateRandomId,
     },
+    launchedAt: { type: Date, default: null },
     deleted: { type: Boolean, required: true, default: false },
     structure: {
       type: {},
@@ -904,6 +905,7 @@ export const MissionSchema = new Schema<
     statics: {
       findByIdAndModify,
     },
+    timestamps: true,
   },
 )
 
