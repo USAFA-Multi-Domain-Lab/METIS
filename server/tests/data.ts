@@ -228,8 +228,16 @@ export const updateMissionWithNoForceData: Omit<TCommonMissionJson, 'forces'> =
     name: 'No Force Data Mission (To Delete)',
     versionNumber: 1,
     seed: StringToolbox.generateRandomId(),
-    structure: {},
-    prototypes: [],
+    structure: {
+      '4767fab5-573e-4df3-b1cd-809240804e92': {},
+    },
+    prototypes: [
+      {
+        _id: '0d709d54-2f5e-44e3-b8ce-91534ce02f6f',
+        structureKey: '4767fab5-573e-4df3-b1cd-809240804e92',
+        depthPadding: 0,
+      },
+    ],
   }
 
 export const correctUpdateTestMission: TCommonMissionJson = {

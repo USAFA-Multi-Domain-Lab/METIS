@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { useGlobalContext } from 'src/context'
 import ClientMission, { TMissionComponent } from 'src/missions'
 import { compute } from 'src/toolbox'
 import { useMountHandler, usePostInitEffect } from 'src/toolbox/hooks'
@@ -20,10 +19,6 @@ export default function MissionEntry({
   mission,
   handleChange,
 }: TMissionEntry_P): JSX.Element | null {
-  /* -- GLOBAL CONTEXT -- */
-  const globalContext = useGlobalContext()
-  const { forceUpdate } = globalContext.actions
-
   /* -- STATE -- */
   const [name, setName] = useState<string>(mission.name)
   const [defectiveObjects, setDefectiveObjects] = useState<TMissionComponent[]>(
@@ -58,10 +53,6 @@ export default function MissionEntry({
     // Allow the user to save the changes.
     handleChange()
   }, [name])
-
-  // This displays the change of the mission's name found at
-  // the bottom left of the mission map.
-  useEffect(() => forceUpdate(), [name])
 
   /* -- FUNCTIONS -- */
 

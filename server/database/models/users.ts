@@ -8,10 +8,10 @@ import UserPermission, { TUserPermission } from 'metis/users/permissions'
 import mongoose, {
   CallbackWithoutResultAndOptionalError,
   Document,
-  Error,
   Model,
   model,
   MongooseQueryMiddleware,
+  ProjectionType,
   Query,
   QueryOptions,
   Schema,
@@ -59,7 +59,7 @@ const transformObjectIdToString = (
 }
 
 /**
- * Modifies the query to hide deleted missions and remove unneeded properties.
+ * Modifies the query to hide deleted users and remove unneeded properties.
  * @param query The query to modify.
  */
 const queryForApiResponse = (query: Query<TUserSchema, TUserModel>): void => {
@@ -183,36 +183,83 @@ const authenticate = async (request: Request): Promise<TCommonUserJson> => {
   })
 }
 
+/**
+ * Finds a single document by its `_id` field. Then, if the
+ * document is found, modifies the document with the given
+ * updates using the `save` method.
+ * @param _id The _id of the document to find.
+ * @param projection The projection to use when finding the document.
+ * @param options The options to use when finding the document.
+ * @param updates The updates to apply to the document.
+ * @resolves The modified document.
+ * @rejects An error if the document is not found or is deleted.
+ * @note This method uses the `findById` method internally followed by the `save` method (if the document is found).
+ * @note This method will trigger the `pre('save')` middleware which validates the user.
+ */
+const findByIdAndModify = (
+  _id: any,
+  projection?: ProjectionType<TUserSchema> | null,
+  options?: TUserQueryOptions | null,
+  updates?: Partial<TCommonUserJson> | null,
+): Promise<TUserDoc | null> => {
+  return new Promise<TUserDoc | null>(async (resolve, reject) => {
+    try {
+      // Find the user document.
+      let userDoc = await UserModel.findById(_id, projection, options).exec()
+
+      // If the user is not found, then resolve with null.
+      if (!userDoc) return resolve(userDoc)
+
+      // Extract the updated properties.
+      let { _id: userId, ...rest } = updates ?? {}
+      // Update every property besides the _id.
+      Object.assign(userDoc, { ...rest })
+      // Save the changes.
+      userDoc = await userDoc.save()
+
+      // Otherwise, resolve with the user document.
+      return resolve(userDoc)
+    } catch (error: any) {
+      // Reject the promise with the error.
+      return reject(error)
+    }
+  })
+}
+
 /* -- SCHEMA VALIDATORS -- */
 
 /**
  * Validates the user data.
- * @param userDoc The user document to validate.
+ * @param userJson The user data to validate.
  * @param next The next function to call.
  */
 const validate_users = (
-  userDoc: TUserDoc,
+  userJson: Partial<TCommonUserJson>,
   next: CallbackWithoutResultAndOptionalError,
 ): void => {
-  // Convert the user document to JSON.
-  let userJson: TCommonUserJson = userDoc.toJSON()
   // Object to store results.
   let results: { error?: Error } = {}
   // Object to store existing _id's.
   let existingIds: AnyObject = {}
 
   // Algorithm to check for duplicate _id's.
-  const _idCheckerAlgorithm = (cursor = userJson) => {
-    // If the cursor is an object, but not an ObjectId...
-    if (cursor instanceof Object && !(cursor instanceof ObjectId)) {
+  const _idCheckerAlgorithm = (
+    cursor: AnyObject | AnyObject[] = userJson,
+  ): { error?: Error } => {
+    // If the cursor is an object, not an array, and not an ObjectId...
+    if (
+      cursor instanceof Object &&
+      !Array.isArray(cursor) &&
+      !(cursor instanceof ObjectId)
+    ) {
       // ...and it has an _id property and the _id already exists...
       if (cursor._id && cursor._id in existingIds) {
         // ...then set the error and return.
-        results.error = new Error(
+        let error = new Error(
           `Error in user:\nDuplicate _id used (${cursor._id}).`,
         )
-        results.error.name = MetisDatabase.ERROR_BAD_DATA
-        return
+        error.name = MetisDatabase.ERROR_BAD_DATA
+        return { error }
       }
       // Or, if the cursor is a User and the _id isn't a valid ObjectId...
       else if (
@@ -220,33 +267,38 @@ const validate_users = (
         !mongoose.isObjectIdOrHexString(cursor._id)
       ) {
         // ...then set the error and return.
-        results.error = new Error(
+        let error = new Error(
           `Error in user:\nInvalid _id used (${cursor._id}).`,
         )
-        results.error.name = MetisDatabase.ERROR_BAD_DATA
-        return
+        error.name = MetisDatabase.ERROR_BAD_DATA
+        return { error }
       }
       // Otherwise, add the _id to the existingIds object.
       else if (cursor._id) {
         existingIds[cursor._id] = true
       }
+
       // Check the object's values for duplicate _id's.
       for (let value of Object.values(cursor)) {
-        _idCheckerAlgorithm(value)
+        let results = _idCheckerAlgorithm(value)
+        if (results.error) return results
       }
     }
     // Otherwise, if the cursor is an array...
-    else if (cursor instanceof Array) {
+    else if (Array.isArray(cursor)) {
       // ...then check each value in the array for duplicate _id's.
       for (let value of cursor) {
-        _idCheckerAlgorithm(value)
+        let results = _idCheckerAlgorithm(value)
+        if (results.error) return results
       }
     }
+
+    // Return an empty object.
+    return {}
   }
 
   // Check for duplicate _id's.
-  _idCheckerAlgorithm()
-
+  results = _idCheckerAlgorithm()
   // Check for error.
   if (results.error) return next(results.error)
 }
@@ -356,6 +408,7 @@ const UserSchema = new Schema<TUserSchema, TUserModel, TUserMethods>(
     },
     statics: {
       authenticate,
+      findByIdAndModify,
     },
   },
 )
@@ -364,7 +417,8 @@ const UserSchema = new Schema<TUserSchema, TUserModel, TUserMethods>(
 
 // Called before a save is made to the database.
 UserSchema.pre<TUserDoc>('save', function (next) {
-  validate_users(this, next)
+  let user: TCommonUserJson = this.toJSON()
+  validate_users(user, next)
   return next()
 })
 
@@ -387,24 +441,12 @@ UserSchema.post<Query<TUserSchema, TUserModel>>(
     // If the user is null, then return.
     if (!userData) return
 
-    // If the user data is an array...
-    if (Array.isArray(userData)) {
-      // Loop through each user and transform any ObjectIds to a strings.
-      for (let userDatum of userData) {
-        // If the user data is null, then continue.
-        if (!userDatum) continue
+    // Convert the user data to an array if it isn't already.
+    userData = Array.isArray(userData) ? userData : [userData]
 
-        // Otherwise, transform the ObjectIds to strings.
-        userDatum._id = userDatum._id?.toString()
-      }
-    }
-    // Otherwise...
-    else {
-      // If the user data is null, then return.
-      if (!userData) return
-
-      // Otherwise, transform the ObjectIds to strings.
-      userData._id = userData._id?.toString()
+    // Transform the ObjectIds to strings.
+    for (let userDatum of userData) {
+      userDatum._id = userDatum._id?.toString()
     }
   },
 )
@@ -445,6 +487,25 @@ type TUserStaticMethods = {
    * @rejects When the user could not be authenticated.
    */
   authenticate: (request: Request) => Promise<TCommonUserJson>
+  /**
+   * Finds a single document by its `_id` field. Then, if the
+   * document is found, modifies the document with the given
+   * updates using the `save` method.
+   * @param _id The _id of the document to find.
+   * @param projection The projection to use when finding the document.
+   * @param options The options to use when finding the document.
+   * @param updates The updates to apply to the document.
+   * @resolves The modified document.
+   * @rejects An error if the document is not found or is deleted.
+   * @note This method uses the `findById` method internally followed by the `save` method (if the document is found).
+   * @note This method will trigger the `pre('save')` middleware which validates the user.
+   */
+  findByIdAndModify(
+    _id: any,
+    projection?: ProjectionType<TUserSchema> | null,
+    options?: TUserQueryOptions | null,
+    updates?: Partial<TCommonUserJson> | null,
+  ): Promise<TUserDoc | null>
 }
 
 /**
@@ -460,7 +521,7 @@ type TUserDoc = Document<any, any, TUserSchema>
 /**
  * The available options within a query for a user model.
  */
-type TUserQueryOptions = QueryOptions & {
+type TUserQueryOptions = QueryOptions<TUserSchema> & {
   /**
    * The user currently logged in.
    */

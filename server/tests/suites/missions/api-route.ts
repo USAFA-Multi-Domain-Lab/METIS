@@ -19,7 +19,7 @@ import { agent } from '../../index.test'
 export default function MissionApiRoute(): Mocha.Suite {
   return describe('API Mission Route', function () {
     // A mission's ID that will be used throughout this test suite.
-    let missionId: string = ''
+    // let missionId: string = ''
 
     it('The user should have the correct permission(s) to use the API route for missions', async function () {
       try {
@@ -29,7 +29,6 @@ export default function MissionApiRoute(): Mocha.Suite {
           'missions_write',
           'missions_read',
         ])
-
         expect(hasCorrectPermissions).to.equal(true)
       } catch (error: any) {
         testLogger.error(error)
@@ -40,9 +39,6 @@ export default function MissionApiRoute(): Mocha.Suite {
     it('Calling the missions route without any params should return a successful (200) response', async function () {
       try {
         let response = await agent.get(`/api/v1/missions`)
-        // Set the missionId to the first mission in the database.
-        missionId = response.body[0]._id
-
         expect(response).to.have.status(200)
       } catch (error: any) {
         testLogger.error(error)
@@ -55,7 +51,6 @@ export default function MissionApiRoute(): Mocha.Suite {
         let response = await agent.get(`/api/v1/missions`).query({
           wrongQueryProperty: 'alsdkfdskjfsl',
         })
-
         expect(response).to.have.status(200)
       } catch (error: any) {
         testLogger.error(error)
@@ -66,7 +61,6 @@ export default function MissionApiRoute(): Mocha.Suite {
     it('Getting a mission where the "_id" is not of type "objectId" in the query of the request should return a bad request (400) response', async function () {
       try {
         let response = await agent.get(`/api/v1/missions/${2}`)
-
         expect(response).to.have.status(400)
       } catch (error: any) {
         testLogger.error(error)
@@ -76,8 +70,10 @@ export default function MissionApiRoute(): Mocha.Suite {
 
     it('Getting a mission with all the correct properties in the params of the request should result in a successful (200) response', async function () {
       try {
-        let response = await agent.get(`/api/v1/missions/${missionId}`)
-
+        let missions = await agent.get(`/api/v1/missions`)
+        let response = await agent.get(
+          `/api/v1/missions/${missions.body[0]._id}`,
+        )
         expect(response).to.have.status(200)
       } catch (error: any) {
         testLogger.error(error)
@@ -88,7 +84,6 @@ export default function MissionApiRoute(): Mocha.Suite {
     it('Getting the environment should return a successful (200) response', async function () {
       try {
         let response = await agent.get(`/api/v1/missions/environment/`)
-
         expect(response).to.have.status(200)
       } catch (error: any) {
         testLogger.error(error)
@@ -101,7 +96,6 @@ export default function MissionApiRoute(): Mocha.Suite {
         let response = await agent
           .post('/api/v1/missions/')
           .send(createMissionWithNoForceData)
-
         expect(response).to.have.status(400)
       } catch (error: any) {
         testLogger.error(error)
@@ -127,9 +121,6 @@ export default function MissionApiRoute(): Mocha.Suite {
         expect(structure).to.deep.equal(testMission.structure)
         expect(prototypes).to.deep.equal(testMission.prototypes)
         expect(forces).to.deep.equal(testMission.forces)
-
-        // Update the missionId to the newly created mission's ID.
-        missionId = response.body._id
       } catch (error: any) {
         testLogger.error(error)
         throw error
@@ -141,7 +132,6 @@ export default function MissionApiRoute(): Mocha.Suite {
         let response = await agent
           .put('/api/v1/missions/')
           .send(updateMissionWithNoMissionId)
-
         expect(response).to.have.status(400)
       } catch (error: any) {
         testLogger.error(error)
@@ -150,13 +140,13 @@ export default function MissionApiRoute(): Mocha.Suite {
     })
 
     it('Updating a mission where the structure is defined, but the force data is undefined in the body of the request should return a successful (200) response', async function () {
-      updateMissionWithNoForceData._id = missionId
-
       try {
-        // Get the current mission to compare the structure.
-        let { body: currentMission } = await agent.get(
-          `/api/v1/missions/${updateMissionWithNoForceData._id}`,
-        )
+        // Create a mission to update.
+        let { body: currentMission } = await agent
+          .post('/api/v1/missions/')
+          .send(testMission)
+        // Use the current mission's ID to update the mission.
+        updateMissionWithNoForceData._id = currentMission._id
 
         let response = await agent
           .put('/api/v1/missions/')
@@ -188,13 +178,13 @@ export default function MissionApiRoute(): Mocha.Suite {
     })
 
     it('Updating a mission where the force data is defined, but the structure is undefined in the body of the request should return a successful (200) response', async function () {
-      updateMissionWithNoStructure._id = missionId
-
       try {
-        // Get the current mission to compare the structure.
-        let { body: currentMission } = await agent.get(
-          `/api/v1/missions/${updateMissionWithNoStructure._id}`,
-        )
+        // Create a mission to update.
+        let { body: currentMission } = await agent
+          .post('/api/v1/missions/')
+          .send(testMission)
+        // Use the current mission's ID to update the mission.
+        updateMissionWithNoStructure._id = currentMission._id
 
         let response = await agent
           .put('/api/v1/missions/')
@@ -206,6 +196,7 @@ export default function MissionApiRoute(): Mocha.Suite {
         let isValidId: boolean =
           mongoose.isObjectIdOrHexString(_id) && typeof _id === 'string'
 
+        // Check all the properties of the mission.
         expect(response).to.have.status(200)
         expect(isValidId).to.equal(true)
         expect(name).to.equal(updateMissionWithNoStructure.name)
@@ -225,9 +216,14 @@ export default function MissionApiRoute(): Mocha.Suite {
     })
 
     it('Updating a mission with all the correct properties in the body of the request should return a successful (200) response', async function () {
-      correctUpdateTestMission._id = missionId
-
       try {
+        // Create a mission to update.
+        let { body: currentMission } = await agent
+          .post('/api/v1/missions/')
+          .send(testMission)
+        // Use the current mission's ID to update the mission.
+        correctUpdateTestMission._id = currentMission._id
+
         let response = await agent
           .put('/api/v1/missions/')
           .send(correctUpdateTestMission)
@@ -238,6 +234,7 @@ export default function MissionApiRoute(): Mocha.Suite {
         let isValidId: boolean =
           mongoose.isObjectIdOrHexString(_id) && typeof _id === 'string'
 
+        // Check all the properties of the mission.
         expect(response).to.have.status(200)
         expect(isValidId).to.equal(true)
         expect(name).to.equal(correctUpdateTestMission.name)
@@ -253,13 +250,18 @@ export default function MissionApiRoute(): Mocha.Suite {
     })
 
     it("Updating a mission with all the correct properties in the body of the request should return a mission with the same '_id' as the one in the body of the request", async function () {
-      correctUpdateTestMission._id = missionId
-
       try {
+        // Create a mission to update.
+        let { body: currentMission } = await agent
+          .post('/api/v1/missions/')
+          .send(testMission)
+        // Use the current mission's ID to update the mission.
+        correctUpdateTestMission._id = currentMission._id
+        // Update the mission.
         let response = await agent
           .put('/api/v1/missions/')
           .send(correctUpdateTestMission)
-
+        // Check to see if the _id is the same as the one in the body of the request.
         expect(response.body._id).to.equal(correctUpdateTestMission._id)
       } catch (error: any) {
         testLogger.error(error)
@@ -272,7 +274,6 @@ export default function MissionApiRoute(): Mocha.Suite {
         let response = await agent
           .put('/api/v1/missions/copy/')
           .send({ copyName: 'Copied Mission' })
-
         expect(response).to.have.status(400)
       } catch (error: any) {
         testLogger.error(error)
@@ -281,13 +282,16 @@ export default function MissionApiRoute(): Mocha.Suite {
     })
 
     it('Copying a mission with all the correct properties in the body of the request should return a successful (200) response', async function () {
-      missionId = missionId
-
       try {
+        // Create a mission to copy.
+        let { body: currentMission } = await agent
+          .post('/api/v1/missions/')
+          .send(testMission)
+        // Copy the mission.
         let response = await agent
           .put('/api/v1/missions/copy/')
-          .send({ copyName: 'Copied Mission', originalId: missionId })
-
+          .send({ copyName: 'Copied Mission', originalId: currentMission._id })
+        // Check to see if the response is successful.
         expect(response).to.have.status(200)
       } catch (error: any) {
         testLogger.error(error)
@@ -307,10 +311,17 @@ export default function MissionApiRoute(): Mocha.Suite {
     })
 
     it('Deleting a mission with all the correct properties in the params of the request should return a successful (200) response', async function () {
-      missionId = missionId
-
       try {
-        let response = await agent.delete(`/api/v1/missions/${missionId}`)
+        // Create a mission to delete.
+        let { body: currentMission } = await agent
+          .post('/api/v1/missions/')
+          .send(testMission)
+
+        // Delete the mission.
+        let response = await agent.delete(
+          `/api/v1/missions/${currentMission._id}`,
+        )
+        // Check to see if the response is successful.
         expect(response).to.have.status(200)
       } catch (error: any) {
         testLogger.error(error)

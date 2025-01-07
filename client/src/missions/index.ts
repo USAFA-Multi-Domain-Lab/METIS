@@ -557,9 +557,6 @@ export default class ClientMission
     // Add the force to the mission.
     this.forces.push(force)
 
-    // Emit the new force event.
-    this.emitEvent('forces-modified')
-
     // Handle structure change.
     this.handleStructureChange()
 
@@ -1154,15 +1151,23 @@ export default class ClientMission
       forceJson._id = MissionForce.DEFAULT_PROPERTIES._id
       // Set the force's name to the duplicate name.
       forceJson.name = duplicateName
+
+      // Determine what the next available color is.
+      let existingColors = this.forces.map(({ color }) => color)
+      let nextColor = MissionForce.DEFAULT_FORCES.find(
+        ({ color }) => !existingColors.includes(color),
+      )
+
+      // Set the force's color to the next available color.
+      forceJson.color =
+        nextColor?.color || MissionForce.DEFAULT_PROPERTIES.color
+
       // Create a new force object from the JSON.
       return new ClientMissionForce(this, forceJson, { populateTargets: true })
     })
 
     // Add the duplicated forces to the mission.
     this.forces.push(...duplicatedForces)
-
-    // Emit the new force event.
-    this.emitEvent('forces-modified')
 
     // Handle structure change.
     this.handleStructureChange()
@@ -1180,9 +1185,6 @@ export default class ClientMission
 
     // Remove the forces from the mission.
     this.forces = this.forces.filter((force) => !forceIds.includes(force._id))
-
-    // Emit the new force event.
-    this.emitEvent('forces-modified')
 
     // Handle structure change.
     this.handleStructureChange()
@@ -1568,8 +1570,6 @@ export type TStructureChangeListener = (structureChangeKey: string) => void
  * Triggered when a transformation is set for the mission.
  * @option 'autopan'
  * Triggered when nodes are opened and the mission map needs to auto-pan to them.
- * @option 'forces-modified'
- * Triggered when forces are modified in the mission.
  */
 export type TMissionEvent =
   | 'activity'
@@ -1579,7 +1579,6 @@ export type TMissionEvent =
   | 'set-buttons'
   | 'set-transformation'
   | 'autopan'
-  | 'forces-modified'
 
 /**
  * Represents an object that can support navigation within

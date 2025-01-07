@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import { useGlobalContext } from 'src/context'
+import { useState } from 'react'
 import { ClientEffect } from 'src/missions/effects'
 import { usePostInitEffect } from 'src/toolbox/hooks'
 import { DetailLargeString } from '../../form/DetailLargeString'
@@ -19,9 +18,6 @@ export default function EffectEntry({
   handleDeleteEffectRequest,
   handleChange,
 }: TEffectEntry_P): JSX.Element | null {
-  /* -- GLOBAL CONTEXT -- */
-  const { forceUpdate } = useGlobalContext().actions
-
   /* -- STATE -- */
   const [name, setName] = useState<ClientEffect['name']>(effect.name)
   const [description, setDescription] = useState<ClientEffect['description']>(
@@ -45,10 +41,6 @@ export default function EffectEntry({
     // Allow the user to save the changes.
     handleChange()
   }, [name, description, effectArgs])
-
-  // This displays the change in the mission path found at
-  // the top of the side panel.
-  useEffect(() => forceUpdate(), [name])
 
   /* -- RENDER -- */
 

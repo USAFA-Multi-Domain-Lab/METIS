@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import { useGlobalContext } from 'src/context'
+import { useState } from 'react'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
 import { ClientTargetEnvironment } from 'src/target-environments'
@@ -31,9 +30,6 @@ export default function ActionEntry({
   handleDeleteEffectRequest,
   handleChange,
 }: TActionEntry_P): JSX.Element | null {
-  /* -- GLOBAL CONTEXT -- */
-  const { forceUpdate } = useGlobalContext().actions
-
   /* -- STATE -- */
   const [name, setName] = useState<string>(action.name)
   const [description, setDescription] = useState<string>(action.description)
@@ -111,10 +107,6 @@ export default function ActionEntry({
     postExecutionSuccessText,
     postExecutionFailureText,
   ])
-
-  // This displays the change in the mission path found at
-  // the top of the side panel.
-  useEffect(() => forceUpdate(), [name])
 
   /* -- FUNCTIONS -- */
 

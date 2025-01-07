@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
@@ -35,7 +35,7 @@ export default function NodeEntry({
 }: TNodeEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const globalContext = useGlobalContext()
-  const { notify, forceUpdate } = globalContext.actions
+  const { notify } = globalContext.actions
 
   /* -- STATE -- */
   const [name, setName] = useState<string>(node.name)
@@ -161,13 +161,6 @@ export default function NodeEntry({
     device,
     applyColorFill,
   ])
-
-  // This displays the change in the mission path found at
-  // the top of the side panel.
-  useEffect(
-    () => forceUpdate(),
-    [name, color, executable, device, color, applyColorFill],
-  )
 
   // Auto-generate an action if the node becomes executable.
   usePostInitEffect(() => {

@@ -157,6 +157,18 @@ export default function UserApiRoute(): Mocha.Suite {
       }
     })
 
+    it("Updating a user with all the correct properties in the body of the request should return a user with the same '_id' as the one in the body of the request", async function () {
+      correctUser.firstName = 'UpdatedUserWithSameId'
+
+      try {
+        let response = await agent.put('/api/v1/users/').send(correctUser)
+        expect(response.body._id).to.equal(correctUser._id)
+      } catch (error: any) {
+        testLogger.error(error)
+        throw error
+      }
+    })
+
     it(`Logging out the user should return a successful (200) response`, async function () {
       try {
         let response = await agent.delete('/api/v1/logins/')
