@@ -38,6 +38,21 @@ export function useMountHandler(
 }
 
 /**
+ * Creates a handler that will only be called during
+ * the first render and will not be called on subsequent
+ * renders.
+ * @param handler The handler to call on the first render.
+ */
+export function useInitRenderHandler(handler: () => void) {
+  const initRender = useRef(true)
+
+  if (initRender.current) {
+    handler()
+    initRender.current = false
+  }
+}
+
+/**
  * Creates a handler that will be called when the component unmounts.
  * @param handler The handler that is called upon unmount.
  * @returns Whether the component will unmount, changes after handler is called.

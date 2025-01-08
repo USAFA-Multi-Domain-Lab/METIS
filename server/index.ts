@@ -359,6 +359,16 @@ export default class MetisServer {
         return response.render('error/v-server-error')
       })
 
+      // Handle lower level errors.
+      process.on('uncaughtException', (err: any) => {
+        if ('code' in err && err.code === 'ERR_HTTP_HEADERS_SENT') {
+          expressLogger.warn('Suppressed uncaughtException:', err.message)
+        } else {
+          console.error('Unhandled exception:', err)
+          process.exit(1) // Optional: Exit for critical errors
+        }
+      })
+
       // Initialize web socket server.
       wsServer.initialize()
 

@@ -132,8 +132,8 @@ export default function MissionList({
       try {
         beginLoading('Copying mission...')
         let resultingMission = await ClientMission.$copy(mission._id, text)
-        finishLoading()
         notify(`Successfully copied "${mission.name}".`)
+        finishLoading()
         onSuccessfulCopy(resultingMission)
       } catch (error) {
         finishLoading()
