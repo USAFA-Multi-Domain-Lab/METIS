@@ -18,9 +18,6 @@ import { agent } from '../../index.test'
  */
 export default function MissionApiRoute(): Mocha.Suite {
   return describe('API Mission Route', function () {
-    // A mission's ID that will be used throughout this test suite.
-    // let missionId: string = ''
-
     it('The user should have the correct permission(s) to use the API route for missions', async function () {
       try {
         let response = await agent.get('/api/v1/logins/')

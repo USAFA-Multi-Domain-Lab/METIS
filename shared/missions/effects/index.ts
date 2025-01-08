@@ -146,7 +146,7 @@ export default abstract class Effect<
   protected abstract populateTargetData(targetId: string | null): void
 
   // Inherited
-  public toJson(): TCommonEffectJson {
+  public toJson(options: TEffectJsonOptions = {}): TCommonEffectJson {
     // Construct JSON object to send to the server.
     let json: TCommonEffectJson = {
       _id: this._id,

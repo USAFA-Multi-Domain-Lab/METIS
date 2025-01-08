@@ -602,7 +602,7 @@ export interface TCommonMission {
 export type TMission<T extends TCommonMissionTypes> = T['mission']
 
 /**
- * Plain JSON representation of a MissionNode object.
+ * Plain JSON representation of a `Mission` object.
  */
 export interface TCommonMissionJson {
   /**

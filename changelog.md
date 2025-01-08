@@ -1,5 +1,21 @@
 # changelog
 
+# version-2.0.0 | 1-10-2025
+
+- Created a new property within missions called prototype nodes which are used to define the hierarchy structure of all nodes found throughout the forces within a mission
+- Implemented a new property within missions called forces which are used to create multiple different views/experiences of the node hierarchy structure and provide support for multiplayer collaboration during mission execution
+- Created a new system for executing missions called sessions. Sessions use server-side logic via a new WebSocket system to execute missions and provide initial support for multiplayer collaboration with features like assigning members to a force and assigning roles to members
+- Refactored the API (Application Programming Interface) for organizational and security purposes
+- Replaced the asset system with the target-effect system so that METIS (Modular Effects-Based Transmitter for Integrated Simulations) can communicate with other software and affect custom targets stored in those target environments. This will also allow other software to communicate with and modify certain targets within METIS (e.g. nodes within a specific force)
+- Implemented a new user management system so that authorized users can create additional users
+- Created a new permission-based system for METIS users that properly authorizes different users to perform different operations within METIS (a separate, but similar permission system is used for the session system)
+- Created a system to alert authorized users of conflicts found within a mission, prompting them to address the issues and resolve them before launching a session
+- Implemented a new system for displaying messages in the output panel. The new system uses server-side logic via a new WebSocket system and is compatible with the new target-effect system
+- Developed a brand-new, more efficient, modular, and maintainable engine for the mission map
+- Added file-store compatibility. This allows a file store to be maintained on the METIS server with the files being accessible via the API. Currently, there is no write, so all files must manually be placed into the file store
+- Refactored the form fields to be more versatile and powerful when being used throughout METIS
+- Various refactors, improvements, design changes, and bug fixes
+
 # version-1.3.8 | 1-3-2024
 
 - Fixed issue where actions within a mission that had a resource cost of 0 would result in an infinite amount of attempts to execute causing the app to break once that mission was selected

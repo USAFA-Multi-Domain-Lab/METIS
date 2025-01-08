@@ -6,6 +6,7 @@ import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect, useRequireLogin } from 'src/toolbox/hooks'
 import { SingleTypeObject } from '../../../../../../shared/toolbox/objects'
+import Prompt from '../../communication/Prompt'
 import Tooltip from '../../communication/Tooltip'
 import { DetailColorSelector } from '../../form/DetailColorSelector'
 import { DetailLargeString } from '../../form/DetailLargeString'
@@ -35,7 +36,7 @@ export default function NodeEntry({
 }: TNodeEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const globalContext = useGlobalContext()
-  const { notify } = globalContext.actions
+  const { notify, prompt } = globalContext.actions
 
   /* -- STATE -- */
   const [name, setName] = useState<string>(node.name)
@@ -146,8 +147,21 @@ export default function NodeEntry({
     // apply the color fill to the node and all of its
     // descendants.
     if (applyColorFill) {
-      node.applyColorFill()
-      setApplyColorFill(false)
+      // Prompt the user to confirm the action.
+      prompt(
+        `Are you sure you want to apply the color to all of the descending nodes?`,
+        Prompt.ConfirmationChoices,
+      ).then(({ choice }) => {
+        // If the user cancels, abort.
+        if (choice === 'Cancel') {
+          setApplyColorFill(false)
+          return
+        }
+
+        // Apply the color fill to the node and its descendants.
+        node.applyColorFill()
+        setApplyColorFill(false)
+      })
     }
 
     // Allow the user to save the changes.
