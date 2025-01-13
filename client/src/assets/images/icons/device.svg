@@ -7,7 +7,7 @@
    viewBox="0 0 24 24"
    version="1.1"
    id="svg5"
-   inkscape:version="1.2.1 (9c6d41e4, 2022-07-14)"
+   inkscape:version="1.4 (e7c3feb1, 2024-10-09)"
    sodipodi:docname="device.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -26,13 +26,13 @@
      showgrid="false"
      inkscape:zoom="28.695335"
      inkscape:cx="9.9145035"
-     inkscape:cy="14.096368"
-     inkscape:window-width="1669"
-     inkscape:window-height="1003"
+     inkscape:cy="14.113792"
+     inkscape:window-width="1728"
+     inkscape:window-height="989"
      inkscape:window-x="0"
-     inkscape:window-y="25"
-     inkscape:window-maximized="0"
-     inkscape:current-layer="g927" />
+     inkscape:window-y="38"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
   <defs
      id="defs2">
     <inkscape:path-effect
@@ -56,7 +56,8 @@
   <g
      inkscape:label="Capa 1"
      inkscape:groupmode="layer"
-     id="layer1">
+     id="layer1"
+     transform="matrix(0.99228823,0,0,0.99228823,0.09254139,0.09254118)">
     <g
        id="g927"
        transform="translate(-3.2547876,1.4699021)">

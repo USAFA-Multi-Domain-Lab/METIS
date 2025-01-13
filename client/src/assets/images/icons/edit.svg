@@ -1,9 +1,60 @@
-<svg width="800" height="800" xmlns="http://www.w3.org/2000/svg">
- <!-- Created with Method Draw - http://github.com/duopixel/Method-Draw/ -->
-
- <g id="Layer_1">
-  <title>Layer 1</title>
-  <path stroke-width="0" stroke="#000" transform="rotate(-135.1002960205078 76.23790740966788,732.0424804687499) " id="svg_1" d="m-6.87727,819.69918l83.11518,-175.31342l83.11518,175.31342l-166.23036,0z" opacity="undefined" fill="white"/>
-  <rect stroke="#000" transform="rotate(-45.41908645629883 464.84487915039057,339.33941650390625) " id="svg_2" height="167.16475" width="777.30576" y="255.75702" x="76.19202" opacity="undefined" stroke-opacity="null" stroke-dasharray="null" stroke-width="0" fill="white"/>
- </g>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="800"
+   height="800"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="edit.svg"
+   inkscape:version="1.4 (e7c3feb1, 2024-10-09)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#000000"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="0.0325"
+     inkscape:cx="384.61538"
+     inkscape:cy="400"
+     inkscape:window-width="1728"
+     inkscape:window-height="989"
+     inkscape:window-x="0"
+     inkscape:window-y="38"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1" />
+  <!-- Created with Method Draw - http://github.com/duopixel/Method-Draw/ -->
+  <g
+     id="Layer_1">
+    <title
+       id="title1">Layer 1</title>
+    <path
+       stroke-width="0"
+       stroke="#000"
+       transform="rotate(-135.1002960205078 76.23790740966788,732.0424804687499) "
+       id="svg_1"
+       d="m-6.87727,819.69918l83.11518,-175.31342l83.11518,175.31342l-166.23036,0z"
+       opacity="undefined"
+       fill="white" />
+    <rect
+       stroke="#000"
+       transform="rotate(-45.41908645629883 464.84487915039057,339.33941650390625) "
+       id="svg_2"
+       height="167.16475"
+       width="777.30576"
+       y="255.75702"
+       x="76.19202"
+       opacity="undefined"
+       stroke-opacity="null"
+       stroke-dasharray="null"
+       stroke-width="0"
+       fill="white" />
+  </g>
 </svg>

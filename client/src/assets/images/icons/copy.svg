@@ -1,8 +1,58 @@
-<svg width="800" height="800" xmlns="http://www.w3.org/2000/svg">
- <g id="Layer_1">
-  <title>Layer 1</title>
-  <rect stroke-width="100" stroke="#ffffff" rx="100" id="svg_3" height="550" width="450" y="200" x="300" fill="none"/>
-  <rect stroke-width="100" stroke="#ffffff" rx="100" id="svg_4" height="550" width="450" y="50" x="50" fill="none"/>
- </g>
-
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="800"
+   height="800"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="copy.svg"
+   inkscape:version="1.4 (e7c3feb1, 2024-10-09)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#000000"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="0.45829038"
+     inkscape:cx="376.39891"
+     inkscape:cy="353.48767"
+     inkscape:window-width="1728"
+     inkscape:window-height="989"
+     inkscape:window-x="0"
+     inkscape:window-y="38"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1" />
+  <g
+     id="Layer_1">
+    <title
+       id="title1">Layer 1</title>
+    <rect
+       stroke-width="100"
+       stroke="#ffffff"
+       rx="100"
+       id="svg_3"
+       height="550"
+       width="450"
+       y="200"
+       x="300"
+       fill="none" />
+    <rect
+       stroke-width="100"
+       stroke="#ffffff"
+       rx="100"
+       id="svg_4"
+       height="550"
+       width="450"
+       y="50"
+       x="50"
+       fill="none" />
+  </g>
 </svg>
