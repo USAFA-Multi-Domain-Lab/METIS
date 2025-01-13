@@ -5,7 +5,7 @@ import { useGlobalContext } from 'src/context'
 import SessionClient from 'src/sessions'
 import { SessionBasic } from 'src/sessions/basic'
 import { compute } from 'src/toolbox'
-import { useRequireLogin } from 'src/toolbox/hooks'
+import { usePeriodicRerender, useRequireLogin } from 'src/toolbox/hooks'
 import List, { TGetListButtonTooltip } from '../List'
 import {
   TGetItemButtonTooltip,
@@ -35,6 +35,12 @@ export default function SessionList({
     prompt,
   } = globalContext.actions
 
+  /* -- EFFECTS -- */
+
+  // Force rerender the list every second
+  // to keep the runtime column up-to-date.
+  usePeriodicRerender(1000)
+
   /* -- COMPUTED -- */
 
   // todo: Implement the ability for instructors to only tear down sessions that they own.
@@ -60,10 +66,16 @@ export default function SessionList({
    */
   const getSessionColumnLabel = (column: keyof SessionBasic): string => {
     switch (column) {
+      case 'memberCount':
+        return 'Members'
+      case 'accessibility':
+        return 'Accessibility'
       case 'state':
         return 'State'
       case 'ownerFullName':
         return 'Owner'
+      case 'runtimeFormatted':
+        return 'Runtime'
       case 'launchedAt':
         return 'Launched'
       default:
@@ -96,6 +108,16 @@ export default function SessionList({
    */
   const getSessionColumnWidth = (column: keyof SessionBasic): string => {
     switch (column) {
+      case 'memberCount':
+        return '5.5em'
+      case 'accessibility':
+        return '8.5em'
+      case 'state':
+        return '6em'
+      case 'runtimeFormatted':
+        return '7em'
+      case 'launchedAt':
+        return '9em'
       default:
         return '10em'
     }
@@ -269,7 +291,14 @@ export default function SessionList({
     <List<SessionBasic>
       name={'Sessions'}
       items={sessions}
-      columns={['state', 'ownerFullName', 'launchedAt']}
+      columns={[
+        'ownerFullName',
+        'accessibility',
+        'memberCount',
+        'state',
+        'runtimeFormatted',
+        'launchedAt',
+      ]}
       listButtons={['lock']}
       itemButtons={itemButtons}
       initialSorting={{ column: 'launchedAt', method: 'descending' }}

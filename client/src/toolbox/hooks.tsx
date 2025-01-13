@@ -353,6 +353,40 @@ export function useResizeObserver(
 }
 
 /**
+ * Forces a rerender of the component at a specified,
+ * precise interval.
+ * @param interval
+ */
+export function usePeriodicRerender(interval: number) {
+  const [, forceRender] = useState({})
+  const nextRender = useRef<number>(Date.now() + interval)
+  const unmounted = useRef<boolean>(false)
+
+  const getNextInterval = () => nextRender.current - Date.now()
+
+  // Loops as long as the component is mounted,
+  // forcing rerenders at the specified interval.
+  const loop = () => {
+    if (!unmounted.current) {
+      forceRender({})
+      nextRender.current += interval
+      setTimeout(loop, getNextInterval())
+    }
+  }
+
+  // Create an effect that starts the loop
+  // on mount, and stops it on unmount.
+  useEffect(() => {
+    loop()
+    return () => {
+      unmounted.current = true
+    }
+  }, [])
+}
+
+/* -- TYPES -- */
+
+/**
  * Interface for making a class compatible with the `useEventListener`
  * hook.
  */

@@ -251,6 +251,10 @@ export default function MissionNode({
     if (node.selected) {
       classList.push('Selected')
     }
+    // Add the opened class if the node is opened.
+    if (node.opened) {
+      classList.push('Opened')
+    }
     // Add the executable class if the node is
     // executable.
     if (node.executable) {

@@ -3,7 +3,7 @@
   "description": "",
   "main": "start.ts",
   "scripts": {
-    "start": "./node_modules/.bin/ts-node -r tsconfig-paths/register start",
+    "start": "./node_modules/.bin/ts-node -r tsconfig-paths/register start.ts",
     "dev": "./node_modules/.bin/nodemon --exec './node_modules/.bin/ts-node' -r tsconfig-paths/register start",
     "test": "node_modules/.bin/mocha",
     "test-coverage": "node_modules/.bin/nyc node_modules/.bin/mocha"
