@@ -109,9 +109,9 @@ export default function SessionList({
   const getSessionColumnWidth = (column: keyof SessionBasic): string => {
     switch (column) {
       case 'memberCount':
-        return '5.5em'
+        return '6em'
       case 'accessibility':
-        return '8.5em'
+        return '9em'
       case 'state':
         return '6em'
       case 'runtimeFormatted':

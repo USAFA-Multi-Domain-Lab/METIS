@@ -13,6 +13,9 @@ export const createMissionWithNoForceData: Omit<TCommonMissionJson, 'forces'> =
     name: 'No Force Data Mission (To Delete)',
     versionNumber: 1,
     seed: StringToolbox.generateRandomId(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    launchedAt: null,
     structure: {
       '4767fab5-573e-4df3-b1cd-809240804e92': {},
     },
@@ -29,6 +32,9 @@ export const testMission: TCommonMissionJson = {
   name: 'Test Mission (To Delete)',
   versionNumber: 1,
   seed: StringToolbox.generateRandomId(),
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  launchedAt: null,
   structure: {
     '4767fab5-573e-4df3-b1cd-809240804e92': {},
   },
@@ -95,6 +101,9 @@ export const updateMissionWithNoMissionId: TCommonMissionJson = {
   name: 'Updated No Force Data (To Delete)',
   versionNumber: 1,
   seed: StringToolbox.generateRandomId(),
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  launchedAt: null,
   structure: {
     '4767fab5-573e-4df3-b1cd-809240804e92': {},
   },
@@ -164,6 +173,9 @@ export const updateMissionWithNoStructure: Omit<
   name: 'Update No Structure (To Delete)',
   versionNumber: 1,
   seed: StringToolbox.generateRandomId(),
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  launchedAt: null,
   forces: [
     {
       _id: 'def3d81c-e8fd-470b-afb3-ba0a293bae73',
@@ -228,6 +240,9 @@ export const updateMissionWithNoForceData: Omit<TCommonMissionJson, 'forces'> =
     name: 'No Force Data Mission (To Delete)',
     versionNumber: 1,
     seed: StringToolbox.generateRandomId(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    launchedAt: null,
     structure: {
       '4767fab5-573e-4df3-b1cd-809240804e92': {},
     },
@@ -244,6 +259,9 @@ export const correctUpdateTestMission: TCommonMissionJson = {
   name: 'Updated Test Mission (To Delete)',
   versionNumber: 1,
   seed: StringToolbox.generateRandomId(),
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  launchedAt: null,
   structure: {
     '4767fab5-573e-4df3-b1cd-809240804e92': {},
   },
