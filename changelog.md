@@ -1,5 +1,9 @@
 # changelog
 
+# version-2.0.1 | 1-17-2025
+
+- Implemented the ability to give sessions a custom name
+
 # version-2.0.0 | 1-10-2025
 
 - Created a new property within missions called prototype nodes which are used to define the hierarchy structure of all nodes found throughout the forces within a mission
