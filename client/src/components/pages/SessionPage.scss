@@ -44,6 +44,14 @@
       padding-top: 0.65em;
       font-size: 0.8em;
 
+      .Title {
+        padding: 10px 10px 0 0;
+      }
+
+      .Title .SessionName {
+        opacity: 0.7;
+      }
+
       .Resources {
         box-sizing: border-box;
         align-items: center;

@@ -234,6 +234,11 @@ export type TSessionConfig = {
    * @default true
    */
   effectsEnabled: boolean
+  /**
+   * The name of the session.
+   * @note If not provided, the name of the mission will be used.
+   */
+  name?: string
 }
 
 /**

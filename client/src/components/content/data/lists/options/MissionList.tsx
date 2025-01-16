@@ -27,16 +27,9 @@ export default function MissionList({
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
-  const [server] = globalContext.server
   const [login] = useRequireLogin()
-  const {
-    notify,
-    handleError,
-    beginLoading,
-    finishLoading,
-    navigateTo,
-    prompt,
-  } = globalContext.actions
+  const { notify, beginLoading, finishLoading, navigateTo, prompt } =
+    globalContext.actions
   const importMissionTrigger = useRef<HTMLInputElement>(null)
 
   /* -- COMPUTED -- */
@@ -84,7 +77,9 @@ export default function MissionList({
    * The tooltip description for the open button.
    */
   const tooltipDescription = compute<string>(() =>
-    login.user.isAuthorized('missions_write') ? 'Open mission' : 'View mission',
+    login.user.isAuthorized('missions_write')
+      ? 'Open mission'
+      : 'Launch session',
   )
 
   /* -- FUNCTIONS -- */
@@ -147,6 +142,19 @@ export default function MissionList({
    */
   const onLaunchRequest = (mission: ClientMission) => {
     navigateTo('LaunchPage', { missionId: mission._id })
+  }
+
+  /**
+   * Opens the mission for editing or viewing.
+   * @param mission The mission to open.
+   */
+  const onOpenRequest = ({ _id: missionId }: ClientMission): void => {
+    if (
+      login.user.isAuthorized('missions_write') ||
+      login.user.isAuthorized('missions_read')
+    ) {
+      navigateTo('MissionPage', { missionId })
+    }
   }
 
   /**
@@ -242,11 +250,10 @@ export default function MissionList({
   const onMissionSelection: TOnItemSelection<ClientMission> = async ({
     _id: missionId,
   }) => {
-    if (
-      login.user.isAuthorized('missions_write') ||
-      login.user.isAuthorized('missions_read')
-    ) {
+    if (login.user.isAuthorized('missions_write')) {
       navigateTo('MissionPage', { missionId })
+    } else if (login.user.isAuthorized('sessions_write_native')) {
+      navigateTo('LaunchPage', { missionId })
     }
   }
 
@@ -285,7 +292,7 @@ export default function MissionList({
   ) => {
     switch (button) {
       case 'open':
-        onMissionSelection(mission)
+        onOpenRequest(mission)
         break
       case 'launch':
         onLaunchRequest(mission)

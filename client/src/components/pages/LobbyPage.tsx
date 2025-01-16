@@ -20,6 +20,7 @@ import './LobbyPage.scss'
  */
 export default function LobbyPage({
   session,
+  session: { mission },
 }: TLobbyPage_P): JSX.Element | null {
   /* -- state -- */
 
@@ -219,9 +220,13 @@ export default function LobbyPage({
             <div className='Label'>Accessibility:</div>
             <div className='Value'>{accessibility}</div>
           </div>
+          <div className='SessionName StaticDetail'>
+            <div className='Label'>Session:</div>
+            <div className='Value'>{session.name}</div>
+          </div>
           <div className='MissionName StaticDetail'>
             <div className='Label'>Mission:</div>
-            <div className='Value'>{session.name}</div>
+            <div className='Value'>{mission.name}</div>
           </div>
         </div>
         <div className='MembersSection Section'>

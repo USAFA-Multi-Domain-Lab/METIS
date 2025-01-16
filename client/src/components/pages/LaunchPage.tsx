@@ -234,6 +234,7 @@ export default function LaunchPage({
           <div className='MissionName'>{mission.name}</div>
           <SessionConfig
             sessionConfig={sessionConfig}
+            mission={mission}
             saveButtonText={'Launch'}
             onSave={launch}
             onCancel={cancel}

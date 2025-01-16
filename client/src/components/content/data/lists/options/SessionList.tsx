@@ -36,7 +36,7 @@ export default function SessionList({
 
   /* -- COMPUTED -- */
 
-  // todo: Implement the ability for instructors to only tear down sessions that they own.
+  // todo: Implement the ability for instructors to only delete sessions that they own.
   const itemButtons = compute<TButtonSvgType[]>(() => {
     let results: TButtonSvgType[] = []
 
@@ -75,7 +75,7 @@ export default function SessionList({
       case 'open':
         return 'Join'
       case 'remove':
-        return 'Tear down'
+        return 'Delete'
       default:
         return ''
     }
@@ -142,34 +142,34 @@ export default function SessionList({
    * be torn down.
    */
   const onSessionTearDown = async (session: SessionBasic) => {
-    // todo: Remove this when the ability for instructors to only tear down sessions that they own is implemented.
+    // todo: Remove this when the ability for instructors to only delete sessions that they own is implemented.
     if (
       !login.user.isAuthorized('sessions_write_native') &&
       session.ownerId !== login.user._id
     ) {
       notify(
-        'You do not have permission to tear down this session because you are not the owner.',
+        'You do not have permission to delete this session because you are not the owner.',
       )
       return
     }
 
-    // Confirm tear down.
+    // Confirm deletion.
     let { choice } = await prompt(
-      'Please confirm the tear down of this session.',
+      `Are you sure you want to delete the "${session.name}" session?`,
       Prompt.ConfirmationChoices,
     )
 
     // If confirmed, delete session.
     if (choice === 'Confirm') {
       try {
-        beginLoading('Tearing down session...')
+        beginLoading('Deleting session...')
         await SessionClient.$delete(session._id)
         finishLoading()
-        notify(`Successfully tore down "${session.name}".`)
+        notify(`Successfully deleted the "${session.name}" session.`)
         refresh()
       } catch (error) {
         finishLoading()
-        notify(`Failed to tear down "${session.name}".`)
+        notify(`Failed to delete the "${session.name}" session.`)
       }
     }
   }

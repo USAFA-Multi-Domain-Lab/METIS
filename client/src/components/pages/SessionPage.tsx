@@ -375,6 +375,10 @@ export default function SessionPage({
   const topBarJsx = compute((): JSX.Element | null => {
     return (
       <div className='TopBar'>
+        <div className='Title'>
+          Session: <span className='SessionName'>{session.name} </span>
+          <b>&bull;</b>
+        </div>
         <div className={resourcesClass}>
           Resources:{' '}
           {session.config.infiniteResources ? (
