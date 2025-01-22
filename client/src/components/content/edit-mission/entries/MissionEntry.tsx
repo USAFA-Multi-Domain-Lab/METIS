@@ -44,6 +44,11 @@ export default function MissionEntry({
     }
   }, [mountHandled])
 
+  // Update the defective objects when they change elsewhere.
+  useEffect(() => {
+    setDefectiveObjects(mission.defectiveObjects)
+  }, [mission.defectiveObjects.length])
+
   // Sync the component state with the mission introduction message
   // and initial resources.
   usePostInitEffect(() => {
