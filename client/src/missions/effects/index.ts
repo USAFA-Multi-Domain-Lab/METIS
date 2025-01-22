@@ -229,16 +229,9 @@ export class ClientEffect
     // Get the target from the target environment.
     let target = ClientTarget.getTarget(targetId)
 
-    // If the target is found, set it and update the target status to 'Populated'.
-    if (target) {
-      this._target = target
-    } else {
-      // Throw an error.
-      let message: string =
-        `Error loading target data for effect:\n` +
-        `Effect: { name: "${this.name}", _id: "${this._id}" }`
-      throw new Error(message)
-    }
+    // If the target is found, set it and update the
+    // target status to 'Populated'.
+    if (target) this._target = target
   }
 }
 

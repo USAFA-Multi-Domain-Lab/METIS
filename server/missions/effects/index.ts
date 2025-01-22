@@ -28,7 +28,7 @@ export default class ServerEffect extends Effect<TServerMissionTypes> {
       let message: string =
         `Error loading target data for effect:\n` +
         `Effect: { name: "${this.name}", _id: "${this._id}" }`
-      throw new Error(message)
+      console.error(message)
     }
   }
 
