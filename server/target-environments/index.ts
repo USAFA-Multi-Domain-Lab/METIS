@@ -3,7 +3,7 @@ import TargetEnvironment, {
   TCommonTargetEnvJson,
   TTargetEnvOptions,
 } from 'metis/target-environments'
-import { TCommonTargetJson } from 'metis/target-environments/targets'
+import Target, { TCommonTargetJson } from 'metis/target-environments/targets'
 import path from 'path'
 import { TServerMissionTypes } from '../missions'
 import ServerTarget from './targets'
@@ -97,6 +97,7 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TServerMi
     directory: string,
     targetEnvironmentJson: TCommonTargetEnvJson[] = [],
     targetJson: TCommonTargetJson[] = [],
+    targetEnvironmentId: string = '',
   ): TCommonTargetEnvJson[] {
     // The blacklisted files.
     let blackListedFiles: string[] = [
@@ -114,7 +115,7 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TServerMi
       // The regex for index files.
       let indexFileRegex: RegExp = /^(index.ts)$/
       // The regex for target files.
-      let targetFileRegex: RegExp = /^[a-zA-Z0-9_-]+(.ts)$/
+      let targetFileRegex: RegExp = /^(schema.ts)$/
       // Get the files in the directory.
       let directoryFiles: string[] = fs.readdirSync(directory)
 
@@ -142,15 +143,12 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TServerMi
           // Grab the default export from the file.
           let exportDefault: any = require(path.join(directory, file)).default
 
-          // If the default export has an ID, a name, a description,
-          // and a version, then it is a target environment.
-          if (
-            exportDefault &&
-            exportDefault._id &&
-            exportDefault.name &&
-            exportDefault.description &&
-            exportDefault.version
-          ) {
+          // If the default export is a target environment...
+          if (TargetEnvironment.isJson(exportDefault, ['_id'])) {
+            // Update the target environment ID for any targets that are found.
+            targetEnvironmentId = currentDirectory
+            // Set the target environment ID.
+            exportDefault._id = targetEnvironmentId
             // Add the target environment JSON.
             targetEnvironmentJson.push(exportDefault)
           }
@@ -160,17 +158,12 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TServerMi
           // Grab the default export from the file.
           let exportDefault: any = require(path.join(directory, file)).default
 
-          // If the default export has an ID, a target environment ID, a name,
-          // a description, a script, and args, then it is a target.
-          if (
-            exportDefault &&
-            exportDefault._id &&
-            exportDefault.targetEnvId &&
-            exportDefault.name &&
-            exportDefault.description &&
-            exportDefault.script &&
-            exportDefault.args
-          ) {
+          // If the target was created, then add it to the target JSON.
+          if (Target.isJson(exportDefault, ['_id'])) {
+            // Set the target ID to the directory name.
+            exportDefault._id = currentDirectory.replace('@', '')
+            // Set the target environment ID to the directory name.
+            exportDefault.targetEnvId = targetEnvironmentId
             // Add the target JSON.
             targetJson.push(exportDefault)
           }
@@ -182,6 +175,7 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TServerMi
             path.join(directory, file),
             targetEnvironmentJson,
             targetJson,
+            targetEnvironmentId,
           )
         }
       })

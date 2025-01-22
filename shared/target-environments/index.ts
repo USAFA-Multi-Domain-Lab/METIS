@@ -1,4 +1,5 @@
 import { TCommonMissionTypes } from 'metis/missions'
+import { AnyObject } from 'metis/toolbox/objects'
 import Target, { TCommonTarget, TCommonTargetJson, TTarget } from './targets'
 
 /**
@@ -63,6 +64,25 @@ export default abstract class TargetEnvironment<
       version: this.version,
       targets: this.targets.map((target: TCommonTarget) => target.toJson()),
     }
+  }
+
+  /**
+   * Checks if the provided value is a TargetEnvironment JSON object.
+   * @param obj The object to check.
+   * @param excludedProperties The properties to exclude when checking if the value is a Target JSON object.
+   * @returns True if the value is a TargetEnvironment JSON object.
+   */
+  public static isJson(
+    obj: AnyObject,
+    excludedKeys: (keyof TCommonTargetEnvJson)[] = [],
+  ): obj is TCommonTargetEnvJson {
+    // Only grab the keys that are not excluded.
+    const requiredKeys = Object.keys(
+      TargetEnvironment.DEFAULT_PROPERTIES,
+    ).filter((key) => !excludedKeys.includes(key as keyof TCommonTargetEnvJson))
+    // Check if the required keys are present in the object.
+    const keysPassed = Object.keys(obj)
+    return keysPassed.every((key) => requiredKeys.includes(key))
   }
 
   /**
