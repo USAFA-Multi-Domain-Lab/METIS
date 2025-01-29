@@ -6,7 +6,11 @@
     "start": "./node_modules/.bin/ts-node -r tsconfig-paths/register start",
     "dev": "./node_modules/.bin/nodemon --exec './node_modules/.bin/ts-node' -r tsconfig-paths/register start",
     "test": "node_modules/.bin/mocha",
-    "test-coverage": "node_modules/.bin/nyc node_modules/.bin/mocha"
+    "test-coverage": "node_modules/.bin/nyc node_modules/.bin/mocha",
+    "create-users": "./node_modules/.bin/ts-node -r tsconfig-paths/register database/scripts/metis-users/manage-users --create",
+    "restore-users": "./node_modules/.bin/ts-node -r tsconfig-paths/register database/scripts/metis-users/manage-users --restore",
+    "delete-users": "./node_modules/.bin/ts-node -r tsconfig-paths/register database/scripts/metis-users/manage-users --delete",
+    "archive-users": "./node_modules/.bin/ts-node -r tsconfig-paths/register database/scripts/metis-users/manage-users --archive"
   },
   "author": "Jordan M. Stokes",
   "license": "ISC",

@@ -7,7 +7,6 @@ import http, { Server as HttpServer } from 'http'
 import MetisDatabase from 'metis/server/database'
 import MetisRouter from 'metis/server/http/router'
 import { expressLogger, expressLoggingHandler } from 'metis/server/logging'
-import { TCommonTargetEnvJson } from 'metis/target-environments'
 import mongoose from 'mongoose'
 import path from 'path'
 import { sys } from 'typescript'
@@ -283,18 +282,10 @@ export default class MetisServer {
       // Create the internal (METIS) target environment.
       // Note: This gets added to the registry upon creation.
       new ServerTargetEnvironment(ServerTargetEnvironment.INTERNAL_TARGET_ENV)
-
-      // File path to the target environments.
-      let targetEnvDir: string = path.join(
-        __dirname,
-        '../integration/target-env',
-      )
-      // Get the target environment JSON.
-      let targetEnvJson: TCommonTargetEnvJson[] =
-        ServerTargetEnvironment.scan(targetEnvDir)
-      // Add each target environment to the registry
-      // by creating a new target environment object
-      // from the JSON.
+      // Get all other target environments.
+      let targetEnvJson = ServerTargetEnvironment.scan()
+      // Add the target environments to the registry
+      // by creating new target environment objects.
       targetEnvJson.forEach(
         (targetEnv) => new ServerTargetEnvironment(targetEnv),
       )

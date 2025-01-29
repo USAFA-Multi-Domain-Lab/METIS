@@ -6,7 +6,8 @@
       "*": ["node_modules/*"],
       "metis/server": ["index.ts"],
       "metis/server/*": ["*"],
-      "metis/*": ["../shared/*"]
+      "metis/*": ["../shared/*"],
+      "integration/library/*": ["../integration/library/*"]
     }
   }
 }
