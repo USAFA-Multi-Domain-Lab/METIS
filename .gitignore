@@ -42,3 +42,6 @@ docker-compose.yml
 
 # file store
 /server/files/store
+
+# user data for importing
+/server/database/scripts/**/*.csv

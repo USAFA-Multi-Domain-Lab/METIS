@@ -139,7 +139,7 @@ const accessNames = [
 ] as const
 export type TUserAccessName = (typeof accessNames)[number]
 
-const accessIds = [
+export const accessIds = [
   'default',
   'student',
   'instructor',
