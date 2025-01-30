@@ -1,0 +1,47 @@
+services:
+  mongodb:
+    image: mongo:8.0.4
+    ports:
+      - 27017:27017
+    env_file:
+      - ./config/docker.defaults.env
+      - ./config/docker.env
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+      - ./server/database/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    healthcheck:
+      test: mongosh --eval "db.adminCommand('ping')"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  metis:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - ./config/docker.defaults.env
+      - ./config/docker.env
+    ports:
+      - '0.0.0.0:${PORT}:${PORT}' # Bind to all interfaces
+    volumes:
+      - metis_data:/opt/metis/files/store
+      - metis_backups:/opt/metis/database/backups
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+volumes:
+  # MongoDB persistence
+  mongodb_data:
+    driver: local
+  mongodb_config:
+    driver: local
+
+  # NodeJS/METIS application persistence
+  metis_data:
+    driver: local
+  metis_backups:
+    driver: local

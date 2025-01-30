@@ -16,6 +16,7 @@ npm-debug.log*
 # env
 .DS_Store
 *.env
+!*.defaults.env
 .env.local
 .env.development.local
 .env.test.local
@@ -28,6 +29,8 @@ environment-test.json
 !/integration/target-env/tsconfig.json
 /integration/library/node_modules
 
+# deployment
+/deployment/docker/.out
 
 # log
 /server/logs

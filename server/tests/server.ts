@@ -7,11 +7,11 @@ import routerMap_sessions from '../api/v1/routes/sessions'
 import routerMap_targetEnvironments from '../api/v1/routes/target-environments'
 import routerMap_users from '../api/v1/routes/users'
 import MetisRouter from '../http/router'
-import MetisServer, { IMetisServerOptions } from '../index'
+import MetisServer, { TMetisServerOptions } from '../index'
 import routerMap_tests from './api/v1/routes-test'
 
 const environmentFilePath = './environment-test.json'
-let serverOptions: IMetisServerOptions = {}
+let serverOptions: TMetisServerOptions = {}
 
 console.log('Reading enviroment.json file...')
 

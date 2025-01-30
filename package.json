@@ -13,7 +13,10 @@
     "prod": "cd ./server && npm start",
     "install": "npm run client-install && npm run server-install && npm run shared-install && npm run integration-install",
     "build": "cd ./client && npm run build",
-    "test": "cd ./server && npm run test"
+    "test": "cd ./server && npm run test",
+    "docker-up": "docker compose --env-file ./config/docker.defaults.env --env-file ./config/docker.env up --build -d",
+    "docker-down": "docker-compose --env-file ./config/docker.defaults.env --env-file ./config/docker.env down -v",
+    "docker-down-thorough": "docker-compose --env-file ./config/docker.defaults.env --env-file ./config/docker.env down --rmi all -v --remove-orphans"
   },
   "prettier": {
     "tabWidth": 2,
