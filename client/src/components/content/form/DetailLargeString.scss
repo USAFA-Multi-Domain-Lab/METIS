@@ -25,7 +25,9 @@
       padding: 0;
 
       .ql-toolbar {
-        border: 2px solid $color-main;
+        @include detail-field-border();
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
 
         .ql-formats {
           button {
@@ -46,16 +48,19 @@
 
       .ql-container {
         font-family: monospace, sans-serif;
-        border: 2px solid $color-main;
+
+        @include detail-field-border();
         border-top: none;
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
 
         .ql-editor {
           * {
-            color: $color-accent-light;
+            color: $detail-field-text-color;
 
             &::before,
             &::after {
-              color: $color-accent-light;
+              color: $detail-field-text-color;
             }
           }
 

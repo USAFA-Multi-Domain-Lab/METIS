@@ -1,5 +1,7 @@
 // Base colors
-$background-main: #292f36;
+$background-main: #292f36; // Before: 1c2835
+$background-dark: #0d1926;
+
 $color-main: #ffffff;
 $color-faded: rgb(195, 154, 154);
 $color-negative: #000;
@@ -14,7 +16,8 @@ $background-alt8: #0d1a27;
 $background-alt9: #0d1a27e6;
 $background-alt10: RGB(13, 26, 39);
 $background-alt11: #182534;
-$background-map-imitation: #1c2530;
+$background-alt12: #0b1621;
+$background-map-imitation: #0d1926; // Before: 1c2530
 $box-shadow-main: inset 100vw 0 0 0 RGBA(13, 26, 39, 0.4);
 $box-shadow-alt1: inset 100vw 0 0 0 RGBA(13, 26, 39, 0.8);
 $box-shadow-alt2: inset 100vw 0 0 0 RGBA(13, 26, 39, 0.9);
@@ -27,6 +30,7 @@ $background-color-negative: #dfdfff;
 $color-alt1: #3bfce8;
 $color-accent: #5fc9be;
 $color-accent-light: #b6fff8;
+$color-accent-lighter: #d5fffd;
 $color-accent-dark: #0c8b7e;
 $color-accent-darker: #0a6e63;
 $color-pointer-mark: #b5b5b5;

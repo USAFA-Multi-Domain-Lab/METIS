@@ -1,17 +1,27 @@
 @import 'src/assets/styles/config.scss';
 @import '/src/assets/styles/util.scss';
 
-@mixin dimensions() {
+$detail-field-text-color: $color-accent-lighter;
+
+@mixin detail-field-border() {
+  // border: 2px solid rgba(white, 0.2);
+  border: none;
+  border-radius: 0.35em;
+}
+
+@mixin detail-field-styling() {
+  @include detail-field-border();
+
   box-sizing: border-box;
-  margin: 8px 0 0;
-  border-top: 2px solid $color-main;
-  border-bottom: 2px solid $color-main;
+  margin: 0.75em 0 0;
   width: 100%;
-  padding: 11px 10px;
+  padding: 1em 1.2em;
+  background-color: $background-main;
+  color: $detail-field-text-color;
 }
 
 .Detail {
-  margin: 20px 8% 0;
+  margin: 2em 0 0;
   min-width: 225px;
 
   .FieldErrorMessage {
@@ -43,6 +53,8 @@
         align-self: center;
         font-size: 0.82rem;
         margin-right: 8px;
+        color: rgba($color-main, 0.55);
+        font-weight: bold;
 
         // This is the default behavior because
         // a detail field should have a concise
@@ -106,8 +118,7 @@
   }
 
   .Field {
-    @include dimensions();
-    color: $color-accent-light;
+    @include detail-field-styling();
     font-size: 0.92rem;
 
     &.Error {

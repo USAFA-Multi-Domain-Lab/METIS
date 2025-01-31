@@ -10,14 +10,15 @@
     }
 
     .CharacterCount {
-      margin-top: 5px;
+      margin-top: 0.75em;
       font-size: 0.7rem;
       color: $color-pointer-mark;
+      font-style: italic;
     }
   }
 
   .TogglePasswordButton {
-    @include dimensions();
+    @include detail-field-styling();
     display: grid;
     justify-content: flex-end;
     cursor: pointer;

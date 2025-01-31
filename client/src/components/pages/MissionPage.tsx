@@ -131,7 +131,6 @@ export default function MissionPage({
   const navigation = compute(
     (): TNavigation => ({
       links: [HomeLink(globalContext), logoutLink],
-      boxShadow: 'alt-6',
     }),
   )
 
