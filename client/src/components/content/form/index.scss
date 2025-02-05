@@ -1,33 +1,32 @@
 @import 'src/assets/styles/config.scss';
 @import '/src/assets/styles/util.scss';
 
-$detail-field-text-color: $color-accent-lighter;
-
-@mixin detail-field-border() {
-  // border: 2px solid rgba(white, 0.2);
-  border: none;
-  border-radius: 0.35em;
-}
+$detail-field-text-color: $color-accent-light;
+$detail-field-border: none;
+$detail-field-border-radius: 0.35em;
+$detail-field-padding: 1em 1.2em;
+$detail-field-font-size: 0.92rem;
 
 @mixin detail-field-styling() {
-  @include detail-field-border();
-
   box-sizing: border-box;
   margin: 0.75em 0 0;
+  border: $detail-field-border;
+  border-radius: $detail-field-border-radius;
   width: 100%;
-  padding: 1em 1.2em;
-  background-color: $background-main;
+  padding: $detail-field-padding;
+  background-color: $color-secondary;
   color: $detail-field-text-color;
+  font-size: $detail-field-font-size;
 }
 
 .Detail {
-  margin: 2em 0 0;
+  margin: 0 0 2em;
   min-width: 225px;
 
   .FieldErrorMessage {
     font-size: 0.7em;
-    color: $color-error-alt;
-    margin-top: 5px;
+    color: $color-failure-light;
+    margin-top: 1em;
 
     &.hide {
       @include hide();
@@ -53,7 +52,7 @@ $detail-field-text-color: $color-accent-lighter;
         align-self: center;
         font-size: 0.82rem;
         margin-right: 8px;
-        color: rgba($color-main, 0.55);
+        color: $color-text-faded;
         font-weight: bold;
 
         // This is the default behavior because
@@ -64,14 +63,14 @@ $detail-field-text-color: $color-accent-lighter;
         white-space: nowrap;
 
         &.Error {
-          color: $color-error-alt;
+          color: $color-failure-light;
         }
       }
 
       .DetailInfo {
         align-self: flex-start;
-        color: $color-accent-light;
-        border: 1.5px solid $color-accent-light;
+        color: $color-accent;
+        border: 1.5px solid $color-accent;
         opacity: 0.65;
         border-radius: 50%;
         font-size: 0.6em;
@@ -82,9 +81,9 @@ $detail-field-text-color: $color-accent-lighter;
         user-select: none;
 
         &:hover {
-          background-color: $color-accent-light;
-          color: $background-alt1;
-          border-color: $color-accent-light;
+          background-color: $color-accent;
+          color: $color-accent-dark;
+          border-color: $color-accent;
           opacity: 0.9;
         }
       }
@@ -113,7 +112,7 @@ $detail-field-text-color: $color-accent-lighter;
       align-items: center;
       font-size: 0.69em;
       font-style: italic;
-      color: $color-pointer-mark;
+      color: $color-text-faded;
     }
   }
 
@@ -122,12 +121,11 @@ $detail-field-text-color: $color-accent-lighter;
     font-size: 0.92rem;
 
     &.Error {
-      border-top: 2px solid $color-error-alt1;
-      border-bottom: 2px solid $color-error-alt1;
+      border: 2px solid $color-failure;
     }
 
     &::placeholder {
-      color: $color-main;
+      color: $color-primary-light;
     }
   }
 }

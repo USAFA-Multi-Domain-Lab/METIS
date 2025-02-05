@@ -1,4 +1,5 @@
 @import 'src/assets/styles/config.scss';
+@import 'src/assets/styles/util.scss';
 
 .Page.AuthPage {
   grid-template-rows: unset;
@@ -12,7 +13,6 @@
       width: 425px;
       height: 40px;
       padding: 0 0 40px;
-      color: $color-error;
       font-size: 15.5px;
     }
 
@@ -26,21 +26,7 @@
       width: 300px;
 
       .Detail {
-        margin: 0 0 25px;
-        padding-right: 25px;
-
         .Field {
-          border: none;
-          border-bottom: 2px solid $color-accent;
-          padding: 10px 10px 11px;
-          outline: none;
-          font-size: 14px;
-          box-shadow: none;
-          color: $color-main;
-
-          &::placeholder {
-            opacity: 0.775;
-          }
         }
       }
 
@@ -53,35 +39,6 @@
         color: $color-accent;
         font-size: 14px;
       }
-
-      //       .Submit {
-      //         $border: 2px solid $color-accent;
-      //         display: block;
-      //         -webkit-user-select: none;
-      //         user-select: none;
-      //         cursor: pointer;
-      //         margin: 35px 0 0;
-      //         border: $border;
-      //         border-radius: 5px;
-      //         width: -moz-fit-content;
-      //         width: fit-content;
-      //         padding: 8px 15px;
-      //         background-color: transparent;
-      //         font-size: 15.5px;
-      //
-      //         &:hover {
-      //           background-color: $color-accent;
-      //         }
-      //
-      //         &:disabled {
-      //           cursor: default;
-      //           opacity: 0.35;
-      //         }
-      //
-      //         &:disabled:hover {
-      //           background-color: $background-main;
-      //         }
-      //       }
     }
   }
 }

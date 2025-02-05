@@ -35,30 +35,30 @@
     box-sizing: border-box;
     width: 100vw;
     height: 100vh;
-    background-color: rgba($background-alt1, 0.85);
+    background-color: rgba($color-accent-dark, 0.85);
 
     .alert-box {
       display: block;
       box-sizing: border-box;
       transition: 750ms transform;
       margin: 200px auto;
-      border: 2px solid $color-main;
+      border: 2px solid $color-primary-light;
       border-radius: 45px;
       max-width: 600px;
       max-height: 600px;
       padding: 40px 25px 25px;
-      background-color: rgba($background-alt2, 0.75);
+      background-color: rgba($color-secondary, 0.75);
 
       .message {
         overflow-y: auto;
         margin: 0 auto;
-        border: 2px solid $color-main;
+        border: 2px solid $color-primary-light;
         border-radius: 20px;
         max-height: 300px;
         width: -moz-fit-content;
         width: fit-content;
         padding: 10px 30px 25px;
-        background-color: rgba($background-alt1, 1);
+        background-color: rgba($color-accent-dark, 1);
 
         .Markdown p {
           white-space: pre-wrap;
@@ -80,11 +80,11 @@
           display: block;
           box-sizing: border-box;
           margin: 0 auto;
-          border: 2px solid $color-main;
+          border: 2px solid $color-primary-light;
           border-radius: 8px;
           width: 200px;
           padding: 7px 20px 8px;
-          background-color: $background-alt1;
+          background-color: $color-accent-dark;
           outline: none;
         }
       }
@@ -104,7 +104,7 @@
 
   &.pending {
     .alert-box {
-      background-color: rgba($background-alt2, 1);
+      background-color: rgba($color-secondary, 1);
 
       .actions {
         display: none;

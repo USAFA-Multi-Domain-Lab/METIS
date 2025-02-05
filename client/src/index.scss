@@ -13,25 +13,25 @@
 }
 
 * {
-  color: $color-main;
+  color: $color-primary-light;
 }
 
 body {
   overflow-x: hidden;
   min-height: 100vh;
-  background-color: $background-main;
+  background-color: $color-secondary;
   margin: 0;
-  font-family: monospace, sans-serif;
+  font-family: $font-family-primary;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  scrollbar-color: $color-pointer-mark $background-alt9;
+  scrollbar-color: $color-primary-light $color-primary-dark;
 
   ::-webkit-scrollbar {
-    background: $background-alt9;
+    background: $color-primary-dark;
   }
 
   ::-webkit-scrollbar-thumb {
-    background-color: $color-pointer-mark;
+    background-color: $color-primary-light;
     -webkit-border-radius: 8px;
     border-radius: 8px;
     background-clip: content-box;
@@ -40,44 +40,14 @@ body {
   }
 }
 
+input,
+button {
+  font-family: $font-family-primary;
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
-}
-
-.Field {
-  display: block;
-  box-sizing: border-box;
-  margin: 0 0 25px;
-  border: none;
-  border-bottom: 2px solid $color-accent;
-  border-color: $color-accent;
-  width: 275px;
-  padding: 10px 10px 11px;
-  outline: none;
-  background-color: transparent;
-  font-size: 14px;
-
-  &::placeholder {
-    opacity: 0.775;
-  }
-}
-
-.Button {
-  display: inline-block;
-  margin: 20px 10px 20px 0;
-  color: $color-accent-light;
-  background-color: $background-alt2;
-  padding: 5px;
-  border: 2px solid $color-main;
-  border-radius: 4px;
-  height: auto;
-  font-size: 1em;
-
-  &:hover {
-    cursor: pointer;
-    background-color: black;
-  }
 }
 
 .PartiallyDisabled {
@@ -99,20 +69,15 @@ code {
   display: grid;
   justify-content: end;
   padding: 15px 0 20px;
-  background: linear-gradient(
-    $background-alt8 0%,
-    $background-alt8 80%,
-    transparent 100%
-  );
   z-index: 2;
 
   .CloseButton {
     position: relative;
-    border: 2px solid $color-main;
+    border: 2px solid $color-primary-light;
     border-radius: 50%;
     width: 22px;
     height: 21px;
-    background-color: $background-alt1;
+    background-color: $color-accent-dark;
     text-align: center;
 
     &:hover {

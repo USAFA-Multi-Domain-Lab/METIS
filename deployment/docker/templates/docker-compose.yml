@@ -1,8 +1,8 @@
 services:
   mongodb:
     image: mongo:8.0.4
-    ports:
-      - 27017:27017
+    #[DB_PORTS_LINE_1]#
+    #[DB_PORTS_LINE_2]#
     env_file:
       - ./config/docker.defaults.env
       - ./config/docker.env

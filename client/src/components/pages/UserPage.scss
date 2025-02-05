@@ -32,23 +32,12 @@
       place-items: center;
       align-items: center;
       margin: 50px auto;
-      border: 2px solid $color-main;
+      border: 2px solid $color-primary-light;
       border-radius: 10px;
       width: 100%;
       max-width: 800px;
-      padding: 5px 0;
-      box-shadow: $box-shadow-alt5;
-
-      .ButtonContainer {
-        display: grid;
-        justify-content: flex-start;
-        width: 84%;
-        margin: 20px 8% 0;
-
-        .Button {
-          margin: 5px 10px 20px 0;
-        }
-      }
+      padding: 2em 2em;
+      background: $color-primary;
     }
   }
 }

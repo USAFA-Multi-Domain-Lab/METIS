@@ -5,14 +5,14 @@
   $fixed-controls-width: 4em;
   $tab-border-width: 2px;
   $tab-border: $tab-border-width solid
-    adjust-color($background-map-imitation, $lightness: 7%, $saturation: -10%);
+    adjust-color($color-primary, $lightness: 7%, $saturation: -10%);
 
   overflow: hidden;
   border-bottom: 2px solid rgba(#fff, 0.1);
   display: grid;
   grid-template-columns: calc(100% - $fixed-controls-width) auto;
   width: 100%;
-  background: $background-map-imitation;
+  background: $color-primary;
 
   &,
   > * {
@@ -61,14 +61,14 @@
     position: relative;
     z-index: $z-map-tab-bar-controls;
     margin-bottom: -2px;
-    // border-left: 2px solid rgba($color-main, 0.1);
+    // border-left: 2px solid rgba($color-primary-light, 0.1);
 
     &.FixedControls {
       justify-content: center;
       width: $fixed-controls-width;
       padding: 0.1em 0 0;
-      border-bottom: 2px solid rgba($color-main, 0.1);
-      background: $background-map-imitation;
+      border-bottom: 2px solid rgba($color-primary-light, 0.1);
+      background: $color-primary;
     }
 
     &.FloatingControls {

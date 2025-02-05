@@ -1,4 +1,5 @@
 @import 'src/assets/styles/config.scss';
+@import 'src/assets/styles/util.scss';
 
 .Page.ErrorPage {
   position: absolute;
@@ -23,7 +24,8 @@
   background-size: 100% 47.34%, 100% 47.34%;
   background-position: center;
   background-repeat: repeat;
-  box-shadow: $box-shadow-alt1;
+
+  @include background-mask($color-primary-dark, 0.7);
 
   .Message {
     margin-top: 40px;

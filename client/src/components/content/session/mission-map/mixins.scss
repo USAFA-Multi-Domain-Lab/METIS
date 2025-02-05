@@ -27,3 +27,16 @@
 @mixin uncentered-origin {
   transform: unset;
 }
+
+// Applies to all mission-node-like objects,
+// such as MissionNode and MissionPrototype.
+@mixin mission-node-like {
+  // Default color, overridden by the
+  // color of the node iteself in the
+  // mission.
+  border-color: $color-primary-light;
+  border-width: min(2px, 0.04em);
+  border-style: solid;
+  border-radius: 0.11em;
+  overflow: hidden;
+}

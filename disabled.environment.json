@@ -1,5 +1,0 @@
-{
-  "mongoDB": "metis",
-  "mongoUsername": "web-server",
-  "mongoPassword": "serverpass"
-}

@@ -6,11 +6,11 @@
   display: grid;
   grid-template-columns: 1fr auto;
   box-sizing: border-box;
-  border-top: 2px solid rgba($color-main, 0.1);
+  border-top: 2px solid rgba($color-primary-light, 0.1);
   width: 100%;
   padding: 0.25em 0;
   padding-left: 1em;
-  background: $background-map-imitation;
+  background: $color-primary;
   white-space: nowrap;
 
   .Title {
@@ -31,7 +31,7 @@
     white-space: nowrap;
     background: linear-gradient(
       to left,
-      $background-map-imitation 0 calc(100% - 1.5em),
+      $color-primary 0 calc(100% - 1.5em),
       transparent 100%
     );
 

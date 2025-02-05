@@ -10,11 +10,11 @@
     cursor: help;
     display: grid;
     place-content: center;
-    border: 3px solid $color-main;
+    border: 3px solid $color-primary-light;
     border-radius: 50%;
     width: 26px;
     height: 26px;
-    background-color: $background-alt1;
+    background-color: $color-accent-dark;
 
     .question-mark {
       display: block;

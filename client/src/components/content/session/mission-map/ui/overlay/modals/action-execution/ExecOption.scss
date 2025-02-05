@@ -1,13 +1,23 @@
 @import 'src/assets/styles/config.scss';
+@import 'src/assets/styles/util.scss';
 
 .ExecOption {
   padding: 0.5em 0.9em;
-  color: $color-accent-light;
+  color: $color-accent;
   list-style-type: none;
   text-decoration: none;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+
+  // Apply extra padding to the beginning and the
+  // end of the list.
+  &:first-child {
+    padding-top: 1em;
+  }
+  &:last-child {
+    padding-bottom: 1em;
+  }
 
   &.Disabled {
     pointer-events: none;
@@ -15,7 +25,6 @@
   }
 
   &:hover {
-    box-shadow: none;
-    background-color: $background-alt2;
+    @include background-mask;
   }
 }

@@ -9,6 +9,10 @@ import CreateUserEntry from '../content/edit-user/CreateUserEntry'
 import EditUserEntry from '../content/edit-user/EditUserEntry'
 import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
 import './UserPage.scss'
+import {
+  ButtonText,
+  TButtonTextDisabled,
+} from '../content/user-controls/buttons/ButtonText'
 
 /**
  * Renders a page for creating or editing a user.
@@ -191,30 +195,13 @@ export default function UserPage({ userId }: IUserPage): JSX.Element | null {
       )
     }
   })
+
   /**
-   * This is used to gray out the save button if there are
-   * no unsaved changes or if there are empty strings or if
-   * the user does not have permission to save.
+   * Whether the save button is disabled.
    */
-  const grayOutSaveButton: boolean = compute(
-    () => !areUnsavedChanges || isEmptyString || !user.canSave,
+  const saveDisabled: TButtonTextDisabled = compute(() =>
+    !areUnsavedChanges || isEmptyString || !user.canSave ? 'full' : 'none',
   )
-  /**
-   * The class name for the save button.
-   */
-  const saveButtonClassName: string = compute(() => {
-    // Create a default list of class names.
-    let classList: string[] = ['Button']
-
-    // If the save button should be grayed out,
-    // add the 'Disabled' class name.
-    if (grayOutSaveButton) {
-      classList.push('Disabled')
-    }
-
-    // Return the class names as a single string.
-    return classList.join(' ')
-  })
 
   /* -- FUNCTIONS -- */
 
@@ -316,10 +303,13 @@ export default function UserPage({ userId }: IUserPage): JSX.Element | null {
         <DefaultLayout navigation={navigation}>
           <div className='Form'>
             {renderUserEntry()}
-            <div className='ButtonContainer'>
-              <div className={saveButtonClassName} onClick={() => save()}>
-                Save
-              </div>
+
+            <div className='Buttons'>
+              <ButtonText
+                text={'Save'}
+                disabled={saveDisabled}
+                onClick={() => save()}
+              />
             </div>
           </div>
         </DefaultLayout>

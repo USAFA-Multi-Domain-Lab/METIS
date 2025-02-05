@@ -33,17 +33,11 @@
       height: 100%;
       width: auto;
 
-      .ButtonSvgPanel {
-        .glue {
-          box-shadow: $box-shadow-alt6;
-        }
-      }
-
       .ListOld {
         .items {
           .item {
             &.mapped-node {
-              background-color: $background-alt2;
+              background-color: $color-secondary;
             }
           }
         }
@@ -52,20 +46,21 @@
 
     .SidePanel {
       height: 100%;
-      scrollbar-color: $color-pointer-mark $background-alt7;
+      scrollbar-color: $color-primary-light $color-primary-dark;
 
       ::-webkit-scrollbar {
-        background: $background-alt7;
+        background: $color-primary-dark;
       }
 
       .BorderBox {
+        $background: $color-primary;
+
         overflow-y: auto;
         box-sizing: border-box;
-        border: 2px solid $color-main;
+        border: 2px solid $color-primary-light;
         height: 100%;
         padding: 0;
-        background-color: #0d1a28;
-        // background-color: $background-main;
+        background-color: $background;
 
         .BoxTop {
           display: grid;
@@ -78,8 +73,7 @@
           margin: 0 0 -20px;
           height: 80px;
           padding: 5px 15px 10px;
-          box-shadow: $box-shadow-alt3;
-          // background-color: $background-main;
+          background-color: $background;
         }
       }
 
@@ -97,7 +91,7 @@
           margin: 0 0;
 
           &.New {
-            border-bottom: 2px solid $color-main;
+            border-bottom: 2px solid $color-primary-light;
             padding-bottom: 15px;
           }
 

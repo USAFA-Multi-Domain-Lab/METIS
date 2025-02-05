@@ -1,4 +1,5 @@
 @import 'src/assets/styles/config.scss';
+@import 'src/assets/styles/util.scss';
 
 // For more styling rules of the `ListItem` component,
 // see the `.ListItemLike` styling rules in `ListPage.scss`.
@@ -13,9 +14,10 @@
 
     &:hover,
     &.ButtonMenuHighlight {
-      $hover-color: $color-alt1;
+      $hover-color: $color-accent;
 
-      background-color: $node-blue;
+      @include background-mask;
+
       color: $hover-color;
 
       .ItemName {
