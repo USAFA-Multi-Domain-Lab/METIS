@@ -14,7 +14,7 @@ const getChangelog = (request: Request, response: Response) => {
     let __dirname = '../'
 
     // This is the path to the changelog.
-    let changelogPath: string = path.join(__dirname, 'changelog.md')
+    let changelogPath: string = path.join(__dirname, 'docs', 'changelog.md')
 
     // This is the changelog.
     let changelog: string = fs.readFileSync(changelogPath, {

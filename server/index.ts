@@ -441,21 +441,21 @@ export default class MetisServer {
   private static createOptionsFromEnvironment(): TMetisServerOptions {
     switch (process.env.METIS_ENV_TYPE) {
       case 'docker':
-        dotenv.config({ path: '../config/docker.env' })
-        dotenv.config({ path: '../config/docker.defaults.env' })
+        dotenv.config({ path: '../config/docker.defaults.env', override: true })
+        dotenv.config({ path: '../config/docker.env', override: true })
         break
       case 'dev':
-        dotenv.config({ path: '../config/dev.env' })
-        dotenv.config({ path: '../config/dev.defaults.env' })
+        dotenv.config({ path: '../config/dev.defaults.env', override: true })
+        dotenv.config({ path: '../config/dev.env', override: true })
         break
       case 'test':
-        dotenv.config({ path: '../config/test.env' })
-        dotenv.config({ path: '../config/test.defaults.env' })
+        dotenv.config({ path: '../config/test.defaults.env', override: true })
+        dotenv.config({ path: '../config/test.env', override: true })
         break
       case 'prod':
       default:
-        dotenv.config({ path: '../config/prod.env' })
-        dotenv.config({ path: '../config/prod.defaults.env' })
+        dotenv.config({ path: '../config/prod.defaults.env', override: true })
+        dotenv.config({ path: '../config/prod.env', override: true })
         break
     }
 

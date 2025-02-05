@@ -4,9 +4,13 @@ const path = require('path')
 const dotenv = require('dotenv')
 
 // Load environment variables.
-dotenv.config({ path: path.resolve(__dirname, '../../config/dev.env') })
 dotenv.config({
   path: path.resolve(__dirname, '../../config/dev.defaults.env'),
+  override: true,
+})
+dotenv.config({
+  path: path.resolve(__dirname, '../../config/dev.env'),
+  override: true,
 })
 
 // Grab port.

@@ -9,7 +9,7 @@ services:
     volumes:
       - mongodb_data:/data/db
       - mongodb_config:/data/configdb
-      - ./server/database/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ../../../server/database/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     healthcheck:
       test: mongosh --eval "db.adminCommand('ping')"
       interval: 30s
@@ -19,8 +19,8 @@ services:
 
   metis:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../../../
+      dockerfile: ./deployment/docker/.out/Dockerfile
     env_file:
       - ./config/docker.defaults.env
       - ./config/docker.env

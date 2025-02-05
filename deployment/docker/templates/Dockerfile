@@ -14,9 +14,6 @@ RUN curl -L -o /usr/local/bin/jq https://github.com/stedolan/jq/releases/downloa
     chmod +x /usr/local/bin/jq
 
 
-# Load in default environment variables.
-RUN eval $(node defaults.js -e)
-
 # Create app directory
 WORKDIR /opt/metis
 
@@ -29,6 +26,12 @@ RUN mkdir -p ./files/store && \
     mkdir -p ./database/backups && \
     chmod -R 777 ./files/store && \
     chmod -R 777 ./database/backups
+
+# Force MONGO_PORT to 27017, even
+# if it is bound to a different port
+# externally.
+RUN printf "\nMONGO_PORT=27017" >> ./config/docker.env
+
 
 # Install dependencies and build
 RUN npm install && \
