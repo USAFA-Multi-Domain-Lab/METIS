@@ -80,6 +80,9 @@ export default abstract class Mission<
   public seed: string
 
   // Implemented
+  public resourceLabel: string
+
+  // Implemented
   public createdAt: Date | null
 
   // Implemented
@@ -104,6 +107,8 @@ export default abstract class Mission<
     this.versionNumber =
       data.versionNumber ?? Mission.DEFAULT_PROPERTIES.versionNumber
     this.seed = data.seed ?? Mission.DEFAULT_PROPERTIES.seed
+    this.resourceLabel =
+      data.resourceLabel ?? Mission.DEFAULT_PROPERTIES.resourceLabel
     this.createdAt = data.createdAt ?? Mission.DEFAULT_PROPERTIES.createdAt
     this.updatedAt = data.updatedAt ?? Mission.DEFAULT_PROPERTIES.updatedAt
     this.launchedAt = data.launchedAt ?? Mission.DEFAULT_PROPERTIES.launchedAt
@@ -137,6 +142,7 @@ export default abstract class Mission<
       name: this.name,
       versionNumber: this.versionNumber,
       seed: this.seed,
+      resourceLabel: this.resourceLabel,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
       launchedAt: this.launchedAt,
@@ -304,6 +310,12 @@ export default abstract class Mission<
   public static readonly MAX_NAME_LENGTH: number = 175
 
   /**
+   * The maximum length allowed for a mission resource
+   * label.
+   */
+  public static readonly MAX_RESOURCE_LABEL_LENGTH: number = 16
+
+  /**
    * The maximum number of forces allowed in a mission.
    */
   public static readonly MAX_FORCE_COUNT: number = 8
@@ -377,6 +389,7 @@ export default abstract class Mission<
       name: 'New Mission',
       versionNumber: 1,
       seed: generateHash(),
+      resourceLabel: 'Resources',
       createdAt: null,
       updatedAt: null,
       launchedAt: null,
@@ -575,6 +588,10 @@ export interface TCommonMission {
    */
   seed: string
   /**
+   * A label given to resources that defines the currency used in the mission.
+   */
+  resourceLabel: string
+  /**
    * The date/time the mission was created.
    */
   createdAt: Date | null
@@ -651,6 +668,10 @@ export interface TCommonMissionJson {
    * The seed for the mission. Pre-determines outcomes.
    */
   seed: string
+  /**
+   * A label given to resources that defines the currency used in the mission.
+   */
+  resourceLabel: string
   /**
    * The date/time the mission was created.
    */

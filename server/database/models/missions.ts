@@ -729,6 +729,12 @@ export const MissionSchema = new Schema<
       required: true,
       default: StringToolbox.generateRandomId,
     },
+    resourceLabel: {
+      type: String,
+      required: true,
+      default: 'Resources',
+      maxlength: ServerMission.MAX_RESOURCE_LABEL_LENGTH,
+    },
     launchedAt: { type: Date, default: null },
     deleted: { type: Boolean, required: true, default: false },
     structure: {

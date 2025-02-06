@@ -423,7 +423,7 @@ export default class MetisServer {
   /**
    * The current build number for the database.
    */
-  public static readonly SCHEMA_BUILD_NUMBER: number = 31
+  public static readonly SCHEMA_BUILD_NUMBER: number = 32
   /**
    * The root directory for the METIS server.
    */
@@ -458,8 +458,6 @@ export default class MetisServer {
         dotenv.config({ path: '../config/prod.env', override: true })
         break
     }
-
-    console.log(process.env)
 
     const requiredKeys = [
       'PORT',

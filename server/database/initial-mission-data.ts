@@ -10,6 +10,7 @@ export let demoMissionData: TCommonMissionJson = {
   name: 'METIS > ASCOT 7 DEMO',
   versionNumber: 1,
   seed: '6499bf5b8214651c898d125f',
+  resourceLabel: 'Resources',
   createdAt: null,
   updatedAt: null,
   launchedAt: null,
