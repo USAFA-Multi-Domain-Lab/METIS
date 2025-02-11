@@ -118,10 +118,18 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TServerMi
           // Grab the default export from the file.
           let exportDefault: any = require(newPath).default
 
+          // If there is no default export...
+          if (!exportDefault) {
+            // Log an error.
+            console.error(
+              `No default export found in "${newPath}." Skipping...`,
+            )
+          }
+
           // If the default export is a target environment...
           if (exportDefault instanceof TargetEnvSchema) {
             // Set the ID of the target environment.
-            exportDefault._id = path.basename(directory)
+            exportDefault.setId(directory)
             // Add the target environment JSON.
             this.targetEnvRegistry.push(exportDefault)
           }
@@ -132,7 +140,7 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TServerMi
             this.lastTargetEnvScannned
           ) {
             // Set the target ID.
-            exportDefault._id = path.basename(directory)
+            exportDefault.setId(directory)
             // Set the target environment ID.
             exportDefault.targetEnvId = this.lastTargetEnvScannned._id
             // Add the target JSON.

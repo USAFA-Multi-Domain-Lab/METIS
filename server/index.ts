@@ -285,10 +285,17 @@ export default class MetisServer {
       // Get all other target environments.
       let targetEnvJson = ServerTargetEnvironment.scan()
       // Add the target environments to the registry
-      // by creating new target environment objects.
-      targetEnvJson.forEach(
-        (targetEnv) => new ServerTargetEnvironment(targetEnv),
-      )
+      // by creating new target environment objects
+      // and log the successful integration.
+      targetEnvJson.forEach((targetEnv) => {
+        new ServerTargetEnvironment(targetEnv)
+        let { name, targets } = targetEnv
+        if (targets.length > 0) {
+          console.log(`Successfully integrated ${name} with METIS.`)
+        } else {
+          console.warn(`No targets found in ${name}.`)
+        }
+      })
 
       // sets up pug as the view engine
       expressApp.set('view engine', 'pug')
