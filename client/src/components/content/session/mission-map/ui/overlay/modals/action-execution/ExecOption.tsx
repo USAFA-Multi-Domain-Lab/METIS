@@ -46,6 +46,14 @@ export default function ExecOption({ action, select }: TExecOption_P) {
     return classList.join(' ')
   })
 
+  /**
+   * A description which informs the user whether the action
+   * opens a node or not.
+   */
+  const opensNodeDescription = compute(() =>
+    action.opensNode ? '**Opens node.**' : '**Does not open node.**',
+  )
+
   /* -- RENDER -- */
   return (
     <div className={optionClassName} key={action._id} onClick={select}>
@@ -54,7 +62,8 @@ export default function ExecOption({ action, select }: TExecOption_P) {
           `**Time to execute:** ${processTime / 1000} second(s)\n` +
           `**Probability of success:** ${successChance * 100}%\n` +
           `**Resource cost:** ${resourceCost} resource(s)\n` +
-          `**Description:** ${StringToolbox.limit(action.description, 160)}`
+          `**Description:** ${StringToolbox.limit(action.description, 160)}\n` +
+          opensNodeDescription
         }
       />
       {action.name}

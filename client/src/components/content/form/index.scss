@@ -10,6 +10,7 @@ $detail-field-font-size: 0.92rem;
 @mixin detail-field-styling() {
   box-sizing: border-box;
   margin: 0.75em 0 0;
+  outline: none;
   border: $detail-field-border;
   border-radius: $detail-field-border-radius;
   width: 100%;

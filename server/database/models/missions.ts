@@ -841,6 +841,10 @@ export const MissionSchema = new Schema<
                         validate:
                           validate_mission_forces_nodes_actions_resourceCost,
                       },
+                      opensNode: {
+                        type: Boolean,
+                        required: true,
+                      },
                       postExecutionSuccessText: {
                         type: String,
                         required: false,

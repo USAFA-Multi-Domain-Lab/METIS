@@ -1250,14 +1250,18 @@ export default class SessionServer extends Session<TServerMissionTypes> {
 
       // If the action was successful, then...
       if (outcome.successful) {
-        // Add child nodes to the completion payload.
-        completionPayload.data.revealedChildNodes = action.node.children.map(
-          (node) => node.toJson({ includeSessionData: true }),
-        )
-
-        // Add child prototypes to the completion payload.
-        completionPayload.data.revealedChildPrototypes =
-          action.node.prototype.children.map((prototype) => prototype.toJson())
+        // If the node is now open...
+        if (action.node.opened) {
+          // Add child nodes to the completion payload.
+          completionPayload.data.revealedChildNodes = action.node.children.map(
+            (node) => node.toJson({ includeSessionData: true }),
+          )
+          // Add child prototypes to the completion payload.
+          completionPayload.data.revealedChildPrototypes =
+            action.node.prototype.children.map((prototype) =>
+              prototype.toJson(),
+            )
+        }
 
         // Create a new output JSON object.
         let outputJson: Partial<TCommonOutputJson> = {

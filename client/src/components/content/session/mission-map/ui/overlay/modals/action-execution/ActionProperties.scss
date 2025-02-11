@@ -1,64 +1,13 @@
 @import 'src/assets/styles/config.scss';
 
 .ActionProperties {
-  border: 2px solid $color-primary-light;
-  border-radius: 10px;
-  font-size: 14px;
   margin: 0;
-  padding: 15px;
-  padding-left: 30px;
+  border: 2px solid $color-primary-light;
+  border-radius: 0.6em;
+  padding: 1em 2em;
+  font-size: 14px;
 
-  .Property {
-    margin: 10px 0;
-    padding: 0 5px;
-    color: $color-accent-light;
-
-    .Label {
-      color: $color-primary-light;
-      text-decoration: underline;
-    }
-
-    .Value {
-      color: $color-accent-light;
-      transform: scale(1);
-      transition: color 250ms ease-in-out, transform 250ms ease-in-out;
-    }
-
-    &.Updated {
-      .Value {
-        color: $color-primary-light;
-        transform: scale(1.1);
-        transition: color 250ms ease-in-out, transform 250ms ease-in-out;
-      }
-    }
-
-    &.CheatsApplied {
-      .Value {
-        text-decoration: line-through;
-        opacity: 0.5;
-      }
-
-      &::after {
-        content: ' - cheats applied';
-        color: $color-accent-light;
-        font-size: 0.9em;
-        font-style: italic;
-        font-weight: bold;
-      }
-    }
-  }
-
-  @media only screen and (max-width: 655px) {
-    & {
-      padding-left: 5px;
-
-      .Property {
-        margin: 5px 0 0 5px;
-        padding: 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-    }
+  .ActionDescription {
+    margin: 1em 0 2.5em;
   }
 }

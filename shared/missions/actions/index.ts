@@ -1,5 +1,11 @@
 import { v4 as generateHash } from 'uuid'
-import { TCommonMission, TCommonMissionTypes, TMission } from '..'
+import {
+  TCommonMission,
+  TCommonMissionType,
+  TCommonMissionTypes,
+  TCreateMissionJsonType,
+  TMission,
+} from '..'
 import {
   TCommonEffect,
   TCommonEffectJson,
@@ -8,6 +14,7 @@ import {
 } from '../effects'
 import { TCommonMissionForce, TForce } from '../forces'
 import { TCommonMissionNode, TNode } from '../nodes'
+import { SingleTypeObject } from 'metis/toolbox/objects'
 
 /**
  * An action that can be executed on a mission node, causing a certain effect.
@@ -92,6 +99,9 @@ export default abstract class MissionAction<
   }
 
   // Inherited
+  public opensNode: TCommonMissionAction['opensNode']
+
+  // Inherited
   public get failureChance(): TCommonMissionAction['failureChance'] {
     return 1 - this.successChance
   }
@@ -150,6 +160,8 @@ export default abstract class MissionAction<
       data.successChance ?? MissionAction.DEFAULT_PROPERTIES.successChance
     this._resourceCost =
       data.resourceCost ?? MissionAction.DEFAULT_PROPERTIES.resourceCost
+    this.opensNode =
+      data.opensNode ?? MissionAction.DEFAULT_PROPERTIES.opensNode
     this.postExecutionSuccessText =
       data.postExecutionSuccessText ??
       MissionAction.DEFAULT_PROPERTIES.postExecutionSuccessText
@@ -186,6 +198,7 @@ export default abstract class MissionAction<
       processTime: this.processTime,
       successChance: this.successChance,
       resourceCost: this.resourceCost,
+      opensNode: this.opensNode,
       postExecutionSuccessText: this.postExecutionSuccessText,
       postExecutionFailureText: this.postExecutionFailureText,
       effects: this.effects.map((effect) => effect.toJson()),
@@ -255,6 +268,7 @@ export default abstract class MissionAction<
       processTime: 5000,
       successChance: 0.5,
       resourceCost: 1,
+      opensNode: true,
       postExecutionSuccessText:
         '<p>Enter your successful post-execution message here.</p>',
       postExecutionFailureText:
@@ -318,6 +332,13 @@ export interface TCommonMissionAction {
    */
   resourceCost: number
   /**
+   * Whether the successful completion of this action will
+   * result in the node being opened, assuming it has not
+   * been opened already.
+   * @default true
+   */
+  opensNode: boolean
+  /**
    * Text sent to the output panel after the action is executed successfully.
    */
   postExecutionSuccessText: string
@@ -377,41 +398,16 @@ export type TAction<T extends TCommonMissionTypes> = T['action']
 /**
  * Plain JSON representation of a MissionAction object.
  */
-export interface TCommonMissionActionJson {
-  /**
-   * The ID of the action.
-   */
-  _id: string
-  /**
-   * The name of the action.
-   */
-  name: string
-  /**
-   * The description of the action.
-   */
-  description: string
-  /**
-   * The amount of time it takes to execute the action.
-   */
-  processTime: number
-  /**
-   * The chance that the action will succeed.
-   */
-  successChance: number
-  /**
-   * The amount of resources the action will be subtracted from that available to the executor of the action.
-   */
-  resourceCost: number
-  /**
-   * Text sent to the output panel after the action is executed successfully.
-   */
-  postExecutionSuccessText: string
-  /**
-   * Text sent to the output panel after the action is executed unsuccessfully.
-   */
-  postExecutionFailureText: string
-  /**
-   * The effects that can be applied to the targets (JSON).
-   */
-  effects: TCommonEffectJson[]
-}
+export type TCommonMissionActionJson = TCreateMissionJsonType<
+  TCommonMissionAction,
+  | '_id'
+  | 'name'
+  | 'description'
+  | 'processTime'
+  | 'successChance'
+  | 'resourceCost'
+  | 'opensNode'
+  | 'postExecutionSuccessText'
+  | 'postExecutionFailureText',
+  { effects: TCommonEffectJson[] }
+>

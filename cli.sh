@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Define variables
+# Define constants
 CONFIG_FOLDER_NAME="config"
 TEMPLATES_DIR="./deployment/docker/templates/"
 DEPLOYMENT_OUTPUT_DIR="./deployment/docker/.out/"

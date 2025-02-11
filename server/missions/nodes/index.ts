@@ -150,8 +150,9 @@ export default class ServerMissionNode extends MissionNode<TServerMissionTypes> 
     // Remove execution.
     this._execution = null
 
-    // Set the node to opened if it is openable.
-    if (this.openable) {
+    // Set the node to opened if it is openable,
+    // and the action is configured to open the node.
+    if (this.openable && action.opensNode) {
       this._opened = true
     }
 

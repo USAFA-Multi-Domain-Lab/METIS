@@ -549,6 +549,28 @@ export type TCommonMissionTypes = {
 }
 
 /**
+ * One of the types outlined in `TCommonMissionTypes`.
+ */
+export type TCommonMissionType = TCommonMissionTypes[keyof TCommonMissionTypes]
+
+/**
+ * Creates a JSON representation type from a common mission type.
+ * @param T The common mission type (TCommonMission, TCommonMissionNode, etc.).
+ * @param TDirect The keys of T to translate directly to the JSON as the exact same type (string -> string, number -> number).
+ * @param TIndirect The keys of T to translate to the JSON as a different type (string -> string[], number -> string).
+ * @returns The JSON representation type.
+ */
+export type TCreateMissionJsonType<
+  T extends TCommonMissionType,
+  TDirect extends keyof T,
+  TIndirect extends { [k in keyof T]?: any } = {},
+> = {
+  [k in TDirect]: T[k]
+} & {
+  [k in keyof TIndirect]: TIndirect[k]
+}
+
+/**
  * Interface of the abstract `Mission` class.
  * @note Any public, non-static properties and functions of the `Mission`
  * class must first be defined here for them to be accessible to other
