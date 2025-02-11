@@ -140,7 +140,7 @@ export default function ListItem<T extends TListItem>({
       )
     }
 
-    // Add a column label for each column
+    // Add a cell for each column
     // passed in the props.
     columns.forEach((column) =>
       result.push(

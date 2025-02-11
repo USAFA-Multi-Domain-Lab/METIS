@@ -20,12 +20,12 @@
   box-sizing: border-box;
   white-space: nowrap;
   margin: 0 auto 20px;
-  border: 2px solid $color-main;
+  border: 2px solid $color-primary-light;
   border-radius: 16px;
   width: 450px;
   padding: 12px 25px 16px;
-  background-color: rgba($background-alt1, 0.95);
-  color: $color-main;
+  background-color: rgba($color-accent-dark, 0.95);
+  color: $color-primary-light;
   line-height: 1.5em;
   font-size: 15px;
   font-weight: 700;

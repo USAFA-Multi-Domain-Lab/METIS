@@ -104,6 +104,8 @@ export default function SessionPage({
     else if (node.readyToExecute) {
       // If there are no more resources left
       // to spend, notify the user.
+      // todo: Evaluate ths line to see if it conflicts
+      // todo: with new resource modifier features.
       if (node.force.resourcesRemaining === 0) {
         notify(`You have no more resources left to spend.`)
       }
@@ -115,6 +117,8 @@ export default function SessionPage({
           (action) => action.resourceCost <= node.force.resourcesRemaining,
         ).includes(true)
       ) {
+        // todo: Evaluate ths line to see if it conflicts
+        // todo: with new resource modifier features.
         notify('Insufficient resources available to execute action.')
       }
       // Else, select the node.
@@ -182,13 +186,6 @@ export default function SessionPage({
   /* -- COMPUTED -- */
 
   /**
-   * The initial resources for the selected force.
-   */
-  const initialResources = compute(() => {
-    return selectedForce?.initialResources ?? 0
-  })
-
-  /**
    * Props for navigation.
    */
   const navigation = compute(() => {
@@ -248,6 +245,28 @@ export default function SessionPage({
 
     // Return the class list as a joined string.
     return resourcesClassList.join(' ')
+  })
+
+  /**
+   * The class name for the resource count element.
+   */
+  const resourceCountClass = compute(() => {
+    // Define default list.
+    let resourceCountClassList: string[] = ['Count']
+
+    // If resources are infinite, add the infinite
+    // class to the resource count.
+    if (session.config.infiniteResources) {
+      resourceCountClassList.push('Infinite')
+    }
+    // If resources are finite, add the finite
+    // class to the resource count.
+    else {
+      resourceCountClassList.push('Finite')
+    }
+
+    // Return the class list as a joined string.
+    return resourceCountClassList.join(' ')
   })
 
   /**
@@ -373,6 +392,10 @@ export default function SessionPage({
    * JSX for the top bar element.
    */
   const topBarJsx = compute((): JSX.Element | null => {
+    let resourceDisplay: string = session.config.infiniteResources
+      ? 'ထ'
+      : resourcesRemaining.toString()
+
     return (
       <div className='TopBar'>
         <div className='Title'>
@@ -380,14 +403,8 @@ export default function SessionPage({
           <b>&bull;</b>
         </div>
         <div className={resourcesClass}>
-          Resources:{' '}
-          {session.config.infiniteResources ? (
-            <span className='Count Infinite'>ထ</span>
-          ) : (
-            <span className='Count Finite'>
-              {resourcesRemaining} / {initialResources}
-            </span>
-          )}
+          {mission.resourceLabel}:{' '}
+          <span className={resourceCountClass}>{resourceDisplay}</span>
         </div>
         <StatusBar />
       </div>

@@ -1,10 +1,13 @@
-@import '../../../../../assets/styles/config.scss';
+@import 'src/assets/styles/config.scss';
+@import 'src/assets/styles/util.scss';
 @import '../mixins.scss';
 
 .Scene {
   .MissionNode {
     $text-fade-transition: background-color 300ms ease-in-out;
     $pending-transition: opacity 200ms ease-in-out;
+
+    @include mission-node-like;
 
     // Set box-sizing to content-box to
     // help with font size calculations
@@ -19,18 +22,11 @@
     // top center of the node.
     transform: translate(-50%, -0%);
 
-    // Default color, overridden by the
-    // color of the node iteself in the
-    // mission.
-    border-color: $color-main;
-    border-width: min(2px, 0.075em);
-    border-style: solid;
-
     // Add a transition to the background for
     // when the text comes in and out of view.
     transition: $text-fade-transition;
 
-    background-color: $background-main;
+    background-color: $color-secondary;
 
     &.Selectable {
       // Change the cursor to pointer if
@@ -39,7 +35,11 @@
     }
 
     &.Selected {
-      box-shadow: inset 100vw 0 0 0 rgba($color-accent, 0.05);
+      @include background-mask;
+    }
+
+    &.Opened {
+      border-right-style: dashed;
     }
 
     &.Executable {
@@ -70,11 +70,11 @@
     }
 
     &.Successful {
-      background-color: $node-success;
+      background-color: $color-success-dark;
     }
 
     &.Failed {
-      background-color: $node-fail;
+      background-color: $color-failure-dark;
     }
 
     &.PendingOpen,
@@ -93,7 +93,7 @@
       $final-opacity: 0.5;
       // Initialize the linear gradient background
       // image for the blocked state.
-      $init-grad-color: rgba($background-alt5, 0);
+      $init-grad-color: rgba($color-accent-light, 0);
       $init-fill: transparent 0% calc(50% - 1px),
         $init-grad-color calc(50% - 1px) calc(50% + 1px),
         transparent calc(50% + 1px) 100%;
@@ -102,7 +102,7 @@
       $init-background-image: $init-linear-grad1, $init-linear-grad2;
       // Finalize the linear gradient background
       // image for the blocked state.
-      $final-grad-color: rgba($background-alt5, $final-opacity);
+      $final-grad-color: rgba($color-accent-light, $final-opacity);
       $final-fill: transparent 0% calc(50% - 1px),
         $final-grad-color calc(50% - 1px) calc(50% + 1px),
         transparent calc(50% + 1px) 100%;
@@ -174,16 +174,19 @@
       // Hide the progress bar by default.
       display: none;
 
+      $color-1: $color-neutral-dark;
+      $color-2: lighten($color-neutral-dark, 5%);
+
       background-image: linear-gradient(
         -45deg,
-        $loading-1 25%,
-        $loading-2 25%,
-        $loading-2 50%,
-        $loading-1 50%,
-        $loading-1 75%,
-        $loading-2 75%,
-        $loading-2 100%,
-        $loading-1 100%
+        $color-1 25%,
+        $color-2 25%,
+        $color-2 50%,
+        $color-1 50%,
+        $color-1 75%,
+        $color-2 75%,
+        $color-2 100%,
+        $color-1 100%
       );
       background-size: 40px 40px;
     }
@@ -232,13 +235,13 @@
         width: 0.325em;
         height: 0.325em;
         font-size: unset;
-        border: min(1px, 0.075em) solid rgba($color-main, 0.65);
+        border: min(1px, 0.075em) solid rgba($color-primary-light, 0.65);
         border-radius: 0;
-        background-color: rgba($background-alt1, 0.9);
+        background-color: rgba($color-accent-dark, 0.9);
         background-position: 50% 50% !important;
         background-size: 60% !important;
         background-repeat: no-repeat !important;
-        color: $color-main;
+        color: $color-primary-light;
       }
     }
   }

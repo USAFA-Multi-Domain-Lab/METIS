@@ -729,6 +729,13 @@ export const MissionSchema = new Schema<
       required: true,
       default: StringToolbox.generateRandomId,
     },
+    resourceLabel: {
+      type: String,
+      required: true,
+      default: 'Resources',
+      maxlength: ServerMission.MAX_RESOURCE_LABEL_LENGTH,
+    },
+    launchedAt: { type: Date, default: null },
     deleted: { type: Boolean, required: true, default: false },
     structure: {
       type: {},
@@ -834,6 +841,10 @@ export const MissionSchema = new Schema<
                         validate:
                           validate_mission_forces_nodes_actions_resourceCost,
                       },
+                      opensNode: {
+                        type: Boolean,
+                        required: true,
+                      },
                       postExecutionSuccessText: {
                         type: String,
                         required: false,
@@ -904,6 +915,7 @@ export const MissionSchema = new Schema<
     statics: {
       findByIdAndModify,
     },
+    timestamps: true,
   },
 )
 

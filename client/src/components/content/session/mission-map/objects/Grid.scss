@@ -1,6 +1,7 @@
 @import '../../../../../assets/styles/config.scss';
 
 .Grid {
+  $grid-color: rgba($color-primary-light, 0.16);
   $grid-line-width: 0.0015em;
 
   width: 20000px;
@@ -9,9 +10,9 @@
   &.NodeGrid {
     background-image: linear-gradient(
       to right,
-      $map-grid-color 0 $grid-line-width,
+      $grid-color 0 $grid-line-width,
       transparent 2px calc(100% - #{$grid-line-width}),
-      $map-grid-color calc(100% - #{$grid-line-width}) 100%
+      $grid-color calc(100% - #{$grid-line-width}) 100%
     );
     background-position: center;
     background-repeat: repeat;
@@ -21,15 +22,15 @@
     // Draw grid.
     background-image: linear-gradient(
         to right,
-        $map-grid-color 0 $grid-line-width,
+        $grid-color 0 $grid-line-width,
         transparent 2px calc(100% - #{$grid-line-width}),
-        $map-grid-color calc(100% - #{$grid-line-width}) 100%
+        $grid-color calc(100% - #{$grid-line-width}) 100%
       ),
       linear-gradient(
         to bottom,
-        $map-grid-color 0 $grid-line-width,
+        $grid-color 0 $grid-line-width,
         transparent 2px calc(100% - #{$grid-line-width}),
-        $map-grid-color calc(100% - #{$grid-line-width}) 100%
+        $grid-color calc(100% - #{$grid-line-width}) 100%
       );
     background-position: center;
     background-repeat: repeat;

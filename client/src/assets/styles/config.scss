@@ -1,90 +1,32 @@
-// Base colors
-$background-main: #292f36;
-$color-main: #ffffff;
-$color-faded: rgb(195, 154, 154);
-$color-negative: #000;
-$background-alt1: #1a2a1a;
-$background-alt2: #333347;
-$background-alt3: #420002;
-$background-alt4: #231d20;
-$background-alt5: #616060;
-$background-alt6: #d6d0c9;
-$background-alt7: #272736;
-$background-alt8: #0d1a27;
-$background-alt9: #0d1a27e6;
-$background-alt10: RGB(13, 26, 39);
-$background-alt11: #182534;
-$background-map-imitation: #1c2530;
-$box-shadow-main: inset 100vw 0 0 0 RGBA(13, 26, 39, 0.4);
-$box-shadow-alt1: inset 100vw 0 0 0 RGBA(13, 26, 39, 0.8);
-$box-shadow-alt2: inset 100vw 0 0 0 RGBA(13, 26, 39, 0.9);
-$box-shadow-alt3: inset 100vw 0 0 0 RGBA(13, 26, 39, 1);
-$box-shadow-alt4: inset 100vw 0 0 0 rgba(39, 39, 54, 0.25);
-$box-shadow-alt5: inset 100vw 0 0 0 rgba(39, 39, 54, 0.8);
-$box-shadow-alt6: inset 100vw 0 0 0 rgba(39, 39, 54, 0.9);
-$box-shadow-alt7: inset 100vw 0 0 0 rgba(39, 39, 54, 1);
-$background-color-negative: #dfdfff;
-$color-alt1: #3bfce8;
-$color-accent: #5fc9be;
-$color-accent-light: #b6fff8;
-$color-accent-dark: #0c8b7e;
-$color-accent-darker: #0a6e63;
-$color-pointer-mark: #b5b5b5;
-$color-error: $color-main;
-$color-error-faded: $color-main;
-$color-error-alt: #ff84a3;
-$color-error-alt1: #ff4372;
-$color-error-alt2: #b73e6a;
-$color-error-alt3: #642039;
-$color-correct: #6ce5b0;
-$color-correct-alt: #43c0ad;
-$color-correct-alt2: #1d3935;
+/* -- COLORS -- */
 
-// Map properties.
-$map-grid-color: rgba(#fff, 0.15);
+$color-primary: #0c1928;
+$color-primary-dark: darken($color-primary, 4%);
+$color-primary-light: lighten($color-primary, 80%);
 
-$color-alt1-green: #65eb59;
-$color-alt1-yellow: #f7e346;
-$color-alt1-pink: #fa39ac;
-$color-alt1-khaki: #fdd496;
-$color-alt1-purple: #dea3ff;
-$color-alt1-red: #f9484f;
-$color-alt1-orange: #ffab50;
+$color-secondary: #1b2937;
 
-// Node color schemes
-$node-green: #64a95e;
-$node-yellow: #b4a956;
-$node-blue: #537693;
-$node-pink: #ab5e8c;
-$node-brown: #968975;
-$node-purple: #745d82;
-$node-red: #8a2e32;
-$node-orange: #bc842d;
+$color-accent: #3bfce8;
+$color-accent-light: lighten($color-accent, 30%);
+$color-accent-dark: darken($color-accent, 50%);
 
-// Mission-form specific colors
-$form-blue: #34a1fb;
+$color-success: #65eb59;
+$color-success-dark: darken($color-success, 53%);
 
-// Session-specific colors
-$session-red: #f9484f;
-$session-green: #65eb59;
-$node-fail: $background-alt3;
-$node-success: #223e20;
+$color-failure: #ff4359;
+$color-failure-light: lighten($color-failure, 18%);
+$color-failure-dark: darken($color-failure, 49%);
 
-// Used for the linear gradient that is used for the
-// loading (processing) bar
-$loading-1: #6f6405;
-$loading-2: #92881a;
+$color-neutral: #ecff43;
+$color-neutral-dark: darken($color-neutral, 47%);
 
-// Used for when a node is opened
-$node-opened: #9da39a;
+$color-text-faded: rgba($color-primary-light, 0.5);
 
-// Used to color different map modes.
-$background-transformation: rgba($node-blue, 0.2);
+/* -- FONTS -- */
 
-// Distinguishes if a node is executable or not
-$border-color-main: #00d7ff;
+$font-family-primary: monospace, sans-serif;
 
-// z-index
+/* -- POSITIONING -- */
 
 // z-index | mission map
 $z-map-tab-bar-controls: 1;
@@ -104,6 +46,8 @@ $z-index-confirmation: 100;
 $z-index-context-blocker: 200;
 $z-index-context-pop-up: 201;
 $z-index-tooltips: 250;
+
+/* -- SIZING -- */
 
 // navigation height
 $nav-height: 90px;

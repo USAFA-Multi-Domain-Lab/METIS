@@ -15,6 +15,8 @@ import MemberRole from 'metis/sessions/members/roles'
 import { AnyObject } from 'metis/toolbox/objects'
 import { TCommonMissionNodeJson } from '../missions/nodes'
 
+/* -- TYPES -- */
+
 /**
  * Represents the status of a server connection.
  */
@@ -222,7 +224,7 @@ type TOutputData = [
 /**
  * The data needed to send a message to the output panel.
  */
-type TOutputDatum = TOutputData[number]
+export type TOutputDatum = TOutputData[number]
 
 /**
  * General WS events emitted by the server, or caused due to a change in the connection with the server.

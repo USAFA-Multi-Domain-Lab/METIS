@@ -32,19 +32,12 @@
     .MissionMap {
       height: 100%;
       width: auto;
-      box-shadow: $box-shadow-alt4;
-
-      .ButtonSvgPanel {
-        .glue {
-          box-shadow: $box-shadow-alt6;
-        }
-      }
 
       .ListOld {
         .items {
           .item {
             &.mapped-node {
-              background-color: $background-alt2;
+              background-color: $color-secondary;
             }
           }
         }
@@ -53,19 +46,21 @@
 
     .SidePanel {
       height: 100%;
-      scrollbar-color: $color-pointer-mark $background-alt7;
+      scrollbar-color: $color-primary-light $color-primary-dark;
 
       ::-webkit-scrollbar {
-        background: $background-alt7;
+        background: $color-primary-dark;
       }
 
       .BorderBox {
+        $background: $color-primary;
+
         overflow-y: auto;
         box-sizing: border-box;
-        border: 2px solid $color-main;
+        border: 2px solid $color-primary-light;
         height: 100%;
         padding: 0;
-        box-shadow: $box-shadow-alt6;
+        background-color: $background;
 
         .BoxTop {
           display: grid;
@@ -78,19 +73,14 @@
           margin: 0 0 -20px;
           height: 80px;
           padding: 5px 15px 10px;
-          background: linear-gradient(
-            $background-alt7 0%,
-            $background-alt7 80%,
-            transparent 100%
-          );
+          background-color: $background;
         }
       }
 
       .SidePanelSection {
         .ListOld.AltDesign2 {
-          margin: 20px 8% 0;
+          margin: 1.25em 0 0;
           padding: 0;
-          width: 84%;
         }
 
         .ButtonContainer {
@@ -98,15 +88,15 @@
           justify-content: flex-end;
           flex-flow: row wrap;
           min-width: 225px;
-          margin: 0 8%;
+          margin: 0 0;
 
           &.New {
-            border-bottom: 2px solid $color-main;
+            border-bottom: 2px solid $color-primary-light;
             padding-bottom: 15px;
           }
 
           .ButtonText {
-            margin: 20px 0 0;
+            margin: 1.25em 0 0;
           }
         }
 

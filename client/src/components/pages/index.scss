@@ -1,4 +1,5 @@
 @import '../../assets/styles/config.scss';
+@import '../../assets/styles/util.scss';
 
 .Page {
   display: grid;
@@ -6,7 +7,13 @@
   align-items: center;
   grid-template-rows: auto 1fr auto;
   min-height: 100vh;
-  box-shadow: $box-shadow-main;
+
+  &.DarkPage {
+    // Apply an additional background mask to the page,
+    // on top of the existing mask applied to the `App`
+    // component.
+    @include background-mask($color: $color-primary-dark, $opacity: 0.4);
+  }
 
   .Content {
   }

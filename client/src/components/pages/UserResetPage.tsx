@@ -8,6 +8,10 @@ import { DetailLocked } from '../content/form/DetailLocked'
 import { DetailString } from '../content/form/DetailString'
 import { LogoutLink, TNavigation } from '../content/general-layout/Navigation'
 import './UserResetPage.scss'
+import {
+  ButtonText,
+  TButtonTextDisabled,
+} from '../content/user-controls/buttons/ButtonText'
 
 /**
  * This page allows the user to reset their password.
@@ -128,34 +132,20 @@ export default function UserResetPage(): JSX.Element | null {
       boxShadow: 'alt-6',
     }),
   )
+
   /**
    * Boolean to determine if there are any fields with empty strings.
    */
   const isEmptyString: boolean = compute(() => userEmptyStringArray.length > 0)
+
   /**
-   * Boolean to determine if the save button should be grayed out.
+   * Whether the save button is disabled.
    */
-  const grayOutSaveButton: boolean = compute(
-    () => !areUnsavedChanges || isEmptyString || !user.canSave,
+  const saveDisabled: TButtonTextDisabled = compute(() =>
+    !areUnsavedChanges || isEmptyString || !user.canSave ? 'full' : 'none',
   )
-  /**
-   * Class name for the save button.
-   */
-  const saveButtonClassName: string = compute(() => {
-    // Initialize the class list.
-    let classList: string[] = ['Button']
 
-    // If the save button should be grayed out,
-    // add the disabled class.
-    if (grayOutSaveButton) {
-      classList.push('Disabled')
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-
-  /* -- FUNCTIONS -- */
+  /* -- FxUNCTIONS -- */
 
   /**
    * This is called to save any changes made.
@@ -215,10 +205,12 @@ export default function UserResetPage(): JSX.Element | null {
           />
         </div>
 
-        <div className='ButtonContainer'>
-          <div className={saveButtonClassName} onClick={() => save()}>
-            Save
-          </div>
+        <div className='Buttons'>
+          <ButtonText
+            text={'Save'}
+            disabled={saveDisabled}
+            onClick={() => save()}
+          />
         </div>
       </DefaultLayout>
     </div>

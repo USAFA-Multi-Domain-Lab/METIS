@@ -17,10 +17,10 @@
     transform: translate(-50%, -0%);
 
     cursor: pointer;
-    border-color: $color-main;
+    border-color: $color-primary-light;
     border-width: min(2px, 0.075em);
     border-style: solid;
-    background-color: $background-alt11;
+    background-color: $color-accent-dark;
 
     .Icon {
       width: 0.2em;

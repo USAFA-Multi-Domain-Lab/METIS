@@ -1,10 +1,13 @@
-@import '../../../../../assets/styles/config.scss';
+@import 'src/assets/styles/config.scss';
+@import 'src/assets/styles/util.scss';
 @import '../mixins.scss';
 
 .Scene {
   .MissionPrototype {
     $text-fade-transition: background-color 300ms ease-in-out;
     $pending-transition: opacity 200ms ease-in-out;
+
+    @include mission-node-like;
 
     // Set box-sizing to content-box to
     // help with font size calculations
@@ -19,18 +22,11 @@
     // top center of the node.
     transform: translate(-50%, -0%);
 
-    // Default color, overridden by the
-    // color of the node iteself in the
-    // mission.
-    border-color: $color-main;
-    border-width: min(2px, 0.075em);
-    border-style: solid;
-
     // Add a transition to the background for
     // when the text comes in and out of view.
     transition: $text-fade-transition;
 
-    background-color: $background-main;
+    background-color: $color-secondary;
 
     &.Selectable {
       // Change the cursor to pointer if
@@ -39,7 +35,7 @@
     }
 
     &.Selected {
-      box-shadow: inset 100vw 0 0 0 rgba($color-accent, 0.05);
+      @include background-mask;
     }
 
     .Name {
@@ -68,13 +64,13 @@
         width: 0.325em;
         height: 0.325em;
         font-size: unset;
-        border: min(1px, 0.075em) solid rgba($color-main, 0.65);
+        border: min(1px, 0.075em) solid rgba($color-primary-light, 0.65);
         border-radius: 0;
-        background-color: rgba($background-alt1, 0.9);
+        background-color: rgba($color-accent-dark, 0.9);
         background-position: 50% 50% !important;
         background-size: 60% !important;
         background-repeat: no-repeat !important;
-        color: $color-main;
+        color: $color-primary-light;
       }
     }
   }

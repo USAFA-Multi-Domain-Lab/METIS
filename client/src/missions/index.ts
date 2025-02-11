@@ -37,6 +37,7 @@ import ClientMissionPrototype, { TPrototypeRelation } from './nodes/prototypes'
 import MissionTransformation from './transformations'
 import PrototypeCreation from './transformations/creations'
 import PrototypeTranslation from './transformations/translations'
+import User from '../../../shared/users'
 
 /**
  * Class for managing missions on the client.
@@ -255,33 +256,31 @@ export default class ClientMission
   }
 
   /**
-   * The date that the mission was created.
-   * @note This is not accurate. This feature still needs
-   * to be implemented on the back-end. This is for interface
-   * design purposes only.
+   * The ID of the user that created the mission.
    */
-  public get createdAt(): Date {
-    return new Date()
+  public get creatorId(): string {
+    return 'admin'
   }
 
   /**
-   * The date that the mission was last modified.
-   * @note This is not accurate. This feature still needs
-   * to be implemented on the back-end. This is for interface
-   * design purposes only.
+   * The first name of the user that created the mission.
    */
-  public get lastModifiedAt(): Date {
-    return new Date()
+  public get creatorFirstName(): string {
+    return 'admin'
   }
 
   /**
-   * The date that the mission was last launched.
-   * @note This is not accurate. This feature still needs
-   * to be implemented on the back-end. This is for interface
-   * design purposes only.
+   * The last name of the user that created the mission.
    */
-  public get lastLaunchedAt(): Date {
-    return new Date()
+  public get creatorLastName(): string {
+    return 'user'
+  }
+
+  /**
+   * The full name of the user that created the mission.
+   */
+  public get creatorFullName(): string {
+    return User.getFullName(this.creatorFirstName, this.creatorLastName)
   }
 
   /**

@@ -416,6 +416,7 @@ const UserSchema = new Schema<TUserSchema, TUserModel, TUserMethods>(
       authenticate,
       findByIdAndModify,
     },
+    timestamps: true,
   },
 )
 

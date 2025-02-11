@@ -1,4 +1,5 @@
 @import '../../../../assets/styles/config.scss';
+@import '../../../../assets/styles/util.scss';
 
 .MissionMap {
   overflow: hidden;
@@ -8,10 +9,10 @@
   display: flex;
   width: 100%;
   height: 100%;
-  background: rgba($background-main, 0.45);
+  background: rgba($color-primary, 0.7);
 
   &.Transformation {
-    background-color: $background-transformation;
+    @include background-mask($color: $color-primary-dark, $opacity: 1);
   }
 
   &.HasSlots {

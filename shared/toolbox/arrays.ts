@@ -35,3 +35,10 @@ export default class ArrayToolbox {
     return true
   }
 }
+
+/* -- TYPES -- */
+
+/**
+ * An array with at least one index.
+ */
+export type TNonEmptyArray<T> = [T, ...T[]]

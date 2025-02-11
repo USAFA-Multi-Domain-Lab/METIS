@@ -21,6 +21,9 @@ export default function MissionEntry({
 }: TMissionEntry_P): JSX.Element | null {
   /* -- STATE -- */
   const [name, setName] = useState<string>(mission.name)
+  const [resourceLabel, setResourceLabel] = useState<string>(
+    mission.resourceLabel,
+  )
   const [defectiveObjects, setDefectiveObjects] = useState<TMissionComponent[]>(
     mission.defectiveObjects,
   )
@@ -54,10 +57,12 @@ export default function MissionEntry({
   usePostInitEffect(() => {
     // Update the mission name.
     mission.name = name
+    // Update the mission resource label.
+    mission.resourceLabel = resourceLabel
 
     // Allow the user to save the changes.
     handleChange()
-  }, [name])
+  }, [name, resourceLabel])
 
   /* -- FUNCTIONS -- */
 
@@ -126,6 +131,16 @@ export default function MissionEntry({
             defaultValue={ClientMission.DEFAULT_PROPERTIES.name}
             maxLength={ClientMission.MAX_NAME_LENGTH}
             key={`${mission._id}_name`}
+          />
+          <DetailString
+            fieldType='required'
+            handleOnBlur='repopulateValue'
+            label='Resource Label'
+            stateValue={resourceLabel}
+            setState={setResourceLabel}
+            defaultValue={ClientMission.DEFAULT_PROPERTIES.resourceLabel}
+            maxLength={ClientMission.MAX_RESOURCE_LABEL_LENGTH}
+            key={`${mission._id}_resourceLabel`}
           />
           {defectiveObjects.length > 0 ? (
             <ListOld<TMissionComponent>

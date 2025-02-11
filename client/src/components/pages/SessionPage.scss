@@ -64,7 +64,7 @@
         text-overflow: ellipsis;
 
         &.RedAlert {
-          color: $session-red;
+          color: $color-failure;
         }
 
         .Count {
@@ -108,27 +108,13 @@
     .MissionMap {
       width: 100%;
       height: 100%;
-
-      .ButtonSvgPanel {
-        .glue {
-          box-shadow: $box-shadow-alt2;
-
-          .ButtonSvg {
-            &.cancel {
-              padding-left: 0;
-              padding-top: 0.75px;
-              height: 37px;
-            }
-          }
-        }
-      }
     }
 
     .OutputPanel,
     .SessionMembersPanel {
       width: 100%;
       height: 100%;
-      box-shadow: $box-shadow-alt2;
+      background: $color-primary;
     }
 
     .NodeActions {

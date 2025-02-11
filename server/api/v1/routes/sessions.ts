@@ -41,11 +41,8 @@ const routerMap = (router: Router, server: MetisServer, done: () => void) => {
   /* -- UPDATE -- */
 
   /* -- DELETE -- */
-  router.delete(
-    '/:_id/',
-    auth({ permissions: ['sessions_write_native'] }),
-    deleteSession,
-  )
+
+  router.delete('/:_id/', auth({}), deleteSession)
 
   done()
 }

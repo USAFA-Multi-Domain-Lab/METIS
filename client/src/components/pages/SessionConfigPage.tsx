@@ -122,7 +122,7 @@ export default function SessionConfigPage({
   )
 
   return (
-    <div className='SessionConfigPage Page'>
+    <div className='SessionConfigPage Page DarkPage'>
       <DefaultLayout navigation={navigation}>
         <div className='Title'>Session Configuration</div>
         <div className='DetailSection Section'>

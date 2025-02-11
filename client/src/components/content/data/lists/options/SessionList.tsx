@@ -5,7 +5,8 @@ import { useGlobalContext } from 'src/context'
 import SessionClient from 'src/sessions'
 import { SessionBasic } from 'src/sessions/basic'
 import { compute } from 'src/toolbox'
-import { useRequireLogin } from 'src/toolbox/hooks'
+import { usePeriodicRerender, useRequireLogin } from 'src/toolbox/hooks'
+import { DateToolbox } from '../../../../../../../shared/toolbox/dates'
 import List, { TGetListButtonTooltip } from '../List'
 import {
   TGetItemButtonTooltip,
@@ -34,6 +35,12 @@ export default function SessionList({
     prompt,
   } = globalContext.actions
 
+  /* -- EFFECTS -- */
+
+  // Force rerender the list every second
+  // to keep the runtime column up-to-date.
+  usePeriodicRerender(1000)
+
   /* -- COMPUTED -- */
 
   // todo: Implement the ability for instructors to only delete sessions that they own.
@@ -51,6 +58,70 @@ export default function SessionList({
   })
 
   /* -- FUNCTIONS -- */
+
+  /**
+   * Gets the column label for a session list.
+   * @param column The column for which to get the label.
+   * @returns The label for the column.
+   */
+  const getSessionColumnLabel = (column: keyof SessionBasic): string => {
+    switch (column) {
+      case 'memberCount':
+        return 'Members'
+      case 'accessibility':
+        return 'Accessibility'
+      case 'state':
+        return 'State'
+      case 'ownerFullName':
+        return 'Owner'
+      case 'runtimeFormatted':
+        return 'Runtime'
+      case 'launchedAt':
+        return 'Launched'
+      default:
+        return 'Unknown column'
+    }
+  }
+
+  /**
+   * Gets the text for a session list cell.
+   * @param session The session for which to get the text.
+   * @param column The column for which to get the text.
+   * @returns The text to display in the cell.
+   */
+  const getSessionCellText = (
+    session: SessionBasic,
+    column: keyof SessionBasic,
+  ): string => {
+    switch (column) {
+      case 'launchedAt':
+        return DateToolbox.format(session.launchedAt, 'yyyy-mm-dd HH:MM')
+      default:
+        return session[column].toString()
+    }
+  }
+
+  /**
+   * Gets the width of the given column.
+   * @param column The column for which to get the width.
+   * @returns The width of the column.
+   */
+  const getSessionColumnWidth = (column: keyof SessionBasic): string => {
+    switch (column) {
+      case 'memberCount':
+        return '6em'
+      case 'accessibility':
+        return '9em'
+      case 'state':
+        return '6em'
+      case 'runtimeFormatted':
+        return '7em'
+      case 'launchedAt':
+        return '9em'
+      default:
+        return '10em'
+    }
+  }
 
   /**
    * Gets the tooltip description for a session list button.
@@ -142,18 +213,7 @@ export default function SessionList({
    * be torn down.
    */
   const onSessionTearDown = async (session: SessionBasic) => {
-    // todo: Remove this when the ability for instructors to only delete sessions that they own is implemented.
-    if (
-      !login.user.isAuthorized('sessions_write_native') &&
-      session.ownerId !== login.user._id
-    ) {
-      notify(
-        'You do not have permission to delete this session because you are not the owner.',
-      )
-      return
-    }
-
-    // Confirm deletion.
+    // Confirm tear down.
     let { choice } = await prompt(
       `Are you sure you want to delete the "${session.name}" session?`,
       Prompt.ConfirmationChoices,
@@ -231,8 +291,20 @@ export default function SessionList({
     <List<SessionBasic>
       name={'Sessions'}
       items={sessions}
+      columns={[
+        'ownerFullName',
+        'accessibility',
+        'memberCount',
+        'state',
+        'runtimeFormatted',
+        'launchedAt',
+      ]}
       listButtons={['lock']}
       itemButtons={itemButtons}
+      initialSorting={{ column: 'launchedAt', method: 'descending' }}
+      getColumnLabel={getSessionColumnLabel}
+      getCellText={getSessionCellText}
+      getColumnWidth={getSessionColumnWidth}
       getItemTooltip={() => 'Join session'}
       getListButtonTooltip={getSessionListButtonTooltip}
       getItemButtonTooltip={getSessionItemButtonTooltip}

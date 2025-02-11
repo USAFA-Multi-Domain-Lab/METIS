@@ -25,19 +25,21 @@
       padding: 0;
 
       .ql-toolbar {
-        border: 2px solid $color-main;
+        border: $detail-field-border;
+        border-radius: $detail-field-border-radius $detail-field-border-radius 0
+          0;
 
         .ql-formats {
           button {
             &:hover {
-              border: 2px solid $color-accent-light;
+              border: 2px solid $color-accent;
             }
 
             svg {
               line,
               path,
               rect {
-                stroke: $color-main;
+                stroke: $color-primary-light;
               }
             }
           }
@@ -46,21 +48,23 @@
 
       .ql-container {
         font-family: monospace, sans-serif;
-        border: 2px solid $color-main;
+        border: $detail-field-border;
+        border-radius: 0 0 $detail-field-border-radius
+          $detail-field-border-radius;
         border-top: none;
 
         .ql-editor {
           * {
-            color: $color-accent-light;
+            color: $detail-field-text-color;
 
             &::before,
             &::after {
-              color: $color-accent-light;
+              color: $detail-field-text-color;
             }
           }
 
           a {
-            color: $form-blue;
+            color: $color-accent;
           }
 
           ul,
@@ -69,7 +73,7 @@
           }
 
           &.ql-blank::before {
-            color: $color-main;
+            color: $color-primary-light;
             opacity: 0.775;
             font-style: normal;
             font-family: 'monospace', sans-serif;
@@ -78,21 +82,21 @@
         }
 
         .ql-tooltip {
-          color: $color-main;
+          color: $color-primary-light;
           border-radius: 5px;
           box-shadow: none;
-          background-color: $background-alt1;
-          border: 2px solid $color-main;
+          background-color: $color-accent-dark;
+          border: 2px solid $color-primary-light;
 
           * {
-            color: $color-main;
+            color: $color-primary-light;
             font-family: 'monospace', sans-serif;
           }
 
           input {
             border-radius: 5px;
-            background-color: $background-alt1;
-            border: 2px solid $color-main;
+            background-color: $color-accent-dark;
+            border: 2px solid $color-primary-light;
 
             &:focus {
               outline: none;
@@ -100,7 +104,7 @@
           }
 
           .ql-preview {
-            color: $form-blue;
+            color: $color-accent;
             text-decoration: underline;
           }
         }
@@ -108,16 +112,16 @@
 
       &.Error {
         .ql-toolbar {
-          border: 2px solid $color-error-alt;
+          border: 2px solid $color-failure;
         }
 
         .ql-container {
-          border: 2px solid $color-error-alt;
+          border: 2px solid $color-failure;
           border-top: none;
 
           .ql-editor {
             &.ql-blank::before {
-              color: $color-error-alt;
+              color: $color-failure-light;
             }
           }
         }

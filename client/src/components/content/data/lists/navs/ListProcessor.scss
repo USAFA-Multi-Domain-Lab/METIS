@@ -1,4 +1,6 @@
-.ListFiltering {
+@import '../../../../../assets/styles/config.scss';
+
+.ListProcessor {
   margin: 0;
   height: 2em;
   white-space: nowrap;
@@ -44,7 +46,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      color: white;
+      color: $color-primary-light;
     }
 
     .SearchHint {
@@ -55,11 +57,11 @@
     .SearchField {
       border-radius: 1em;
       transition: 200ms background-color;
-      background-color: rgba(#ffffff, 0.1);
+      background-color: $color-secondary;
 
       &:focus {
         outline: none;
-        background-color: rgba(#ffffff, 0.2);
+        background-color: rgba(#ffffff, 0.175);
       }
     }
 

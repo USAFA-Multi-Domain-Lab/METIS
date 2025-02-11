@@ -70,3 +70,8 @@ export type TMetisFileStoreConfig = {
    */
   directory?: string
 }
+
+/**
+ * A file uploaded with Multer.
+ */
+export type TMulterFile = Express.Multer.File

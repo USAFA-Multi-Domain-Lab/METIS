@@ -1,3 +1,4 @@
+import { TNonEmptyArray } from 'metis/toolbox/arrays'
 import { TSessionAuthParam } from '.'
 import MemberPermission from './permissions'
 
@@ -136,7 +137,7 @@ export default class MemberRole implements TGenericMemberRole {
    */
   public static readonly AVAILABLE_ROLE_IDS = AVAILABLE_ROLES_RAW.map(
     ({ _id }) => _id,
-  )
+  ) as TNonEmptyArray<TMemberRoleId>
 
   /**
    * Gets the member role object from the given role ID.

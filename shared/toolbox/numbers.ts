@@ -17,6 +17,11 @@ export class Counter {
   }
 }
 
+/**
+ * A static utility class for working with numbers.
+ */
+export class NumberToolbox {}
+
 export default {
   isInteger,
   Counter,

@@ -75,6 +75,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
       owner.username,
       owner.firstName,
       owner.lastName,
+      new Date(),
       config,
       mission,
       [],
@@ -159,6 +160,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
       ownerUsername: this.ownerUsername,
       ownerFirstName: this.ownerFirstName,
       ownerLastName: this.ownerLastName,
+      launchedAt: this.launchedAt.toISOString(),
       mission: this.mission.toJson(missionOptions),
       members: this._members.map((member) => member.toJson()),
       banList,
@@ -186,11 +188,13 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     return {
       _id: this._id,
       missionId: this.missionId,
+      state: this.state,
       name: this.name,
       ownerId: this.ownerId,
       ownerUsername: this.ownerUsername,
       ownerFirstName: this.ownerFirstName,
       ownerLastName: this.ownerLastName,
+      launchedAt: this.launchedAt.toISOString(),
       config: this.config,
       participantIds: this.participants.map(({ userId: userId }) => userId),
       banList,
@@ -403,6 +407,8 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     this._members = []
   }
 
+  // todo: There should be a strict requirement with this method
+  // todo: for session-specific event listeners to be added.
   /**
    * Creates session-specific listeners for the given member.
    */
@@ -1250,14 +1256,18 @@ export default class SessionServer extends Session<TServerMissionTypes> {
 
       // If the action was successful, then...
       if (outcome.successful) {
-        // Add child nodes to the completion payload.
-        completionPayload.data.revealedChildNodes = action.node.children.map(
-          (node) => node.toJson({ includeSessionData: true }),
-        )
-
-        // Add child prototypes to the completion payload.
-        completionPayload.data.revealedChildPrototypes =
-          action.node.prototype.children.map((prototype) => prototype.toJson())
+        // If the node is now open...
+        if (action.node.opened) {
+          // Add child nodes to the completion payload.
+          completionPayload.data.revealedChildNodes = action.node.children.map(
+            (node) => node.toJson({ includeSessionData: true }),
+          )
+          // Add child prototypes to the completion payload.
+          completionPayload.data.revealedChildPrototypes =
+            action.node.prototype.children.map((prototype) =>
+              prototype.toJson(),
+            )
+        }
 
         // Create a new output JSON object.
         let outputJson: Partial<TCommonOutputJson> = {

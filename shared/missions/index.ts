@@ -80,6 +80,18 @@ export default abstract class Mission<
   public seed: string
 
   // Implemented
+  public resourceLabel: string
+
+  // Implemented
+  public createdAt: Date | null
+
+  // Implemented
+  public updatedAt: Date | null
+
+  // Implemented
+  public launchedAt: Date | null
+
+  // Implemented
   public root: TPrototype<T>
 
   /**
@@ -95,6 +107,11 @@ export default abstract class Mission<
     this.versionNumber =
       data.versionNumber ?? Mission.DEFAULT_PROPERTIES.versionNumber
     this.seed = data.seed ?? Mission.DEFAULT_PROPERTIES.seed
+    this.resourceLabel =
+      data.resourceLabel ?? Mission.DEFAULT_PROPERTIES.resourceLabel
+    this.createdAt = data.createdAt ?? Mission.DEFAULT_PROPERTIES.createdAt
+    this.updatedAt = data.updatedAt ?? Mission.DEFAULT_PROPERTIES.updatedAt
+    this.launchedAt = data.launchedAt ?? Mission.DEFAULT_PROPERTIES.launchedAt
     this.prototypes = []
     this.forces = []
     this.root = this.initializeRoot()
@@ -125,6 +142,10 @@ export default abstract class Mission<
       name: this.name,
       versionNumber: this.versionNumber,
       seed: this.seed,
+      resourceLabel: this.resourceLabel,
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
+      launchedAt: this.launchedAt,
       structure: {},
       forces: [],
       prototypes: [],
@@ -289,6 +310,12 @@ export default abstract class Mission<
   public static readonly MAX_NAME_LENGTH: number = 175
 
   /**
+   * The maximum length allowed for a mission resource
+   * label.
+   */
+  public static readonly MAX_RESOURCE_LABEL_LENGTH: number = 16
+
+  /**
    * The maximum number of forces allowed in a mission.
    */
   public static readonly MAX_FORCE_COUNT: number = 8
@@ -362,6 +389,10 @@ export default abstract class Mission<
       name: 'New Mission',
       versionNumber: 1,
       seed: generateHash(),
+      resourceLabel: 'Resources',
+      createdAt: null,
+      updatedAt: null,
+      launchedAt: null,
       structure: {},
       forces: [MissionForce.DEFAULT_FORCES[0]],
       prototypes: [MissionPrototype.DEFAULT_PROPERTIES],
@@ -518,6 +549,28 @@ export type TCommonMissionTypes = {
 }
 
 /**
+ * One of the types outlined in `TCommonMissionTypes`.
+ */
+export type TCommonMissionType = TCommonMissionTypes[keyof TCommonMissionTypes]
+
+/**
+ * Creates a JSON representation type from a common mission type.
+ * @param T The common mission type (TCommonMission, TCommonMissionNode, etc.).
+ * @param TDirect The keys of T to translate directly to the JSON as the exact same type (string -> string, number -> number).
+ * @param TIndirect The keys of T to translate to the JSON as a different type (string -> string[], number -> string).
+ * @returns The JSON representation type.
+ */
+export type TCreateMissionJsonType<
+  T extends TCommonMissionType,
+  TDirect extends keyof T,
+  TIndirect extends { [k in keyof T]?: any } = {},
+> = {
+  [k in TDirect]: T[k]
+} & {
+  [k in keyof TIndirect]: TIndirect[k]
+}
+
+/**
  * Interface of the abstract `Mission` class.
  * @note Any public, non-static properties and functions of the `Mission`
  * class must first be defined here for them to be accessible to other
@@ -556,6 +609,22 @@ export interface TCommonMission {
    * The seed for the mission. Pre-determines outcomes.
    */
   seed: string
+  /**
+   * A label given to resources that defines the currency used in the mission.
+   */
+  resourceLabel: string
+  /**
+   * The date/time the mission was created.
+   */
+  createdAt: Date | null
+  /**
+   * The date/time the mission was last updated.
+   */
+  updatedAt: Date | null
+  /**
+   * The date/time the mission was last launched.
+   */
+  launchedAt: Date | null
   /**
    * Prototype nodes for the mission, representing the mission's node
    * structure outside of any forces.
@@ -621,6 +690,22 @@ export interface TCommonMissionJson {
    * The seed for the mission. Pre-determines outcomes.
    */
   seed: string
+  /**
+   * A label given to resources that defines the currency used in the mission.
+   */
+  resourceLabel: string
+  /**
+   * The date/time the mission was created.
+   */
+  createdAt: Date | null
+  /**
+   * The date/time the mission was last updated.
+   */
+  updatedAt: Date | null
+  /**
+   * The date/time the mission was last launched.
+   */
+  launchedAt: Date | null
   /**
    * The tree structure used to determine the relationships and positions of the nodes in the mission.
    */

@@ -5,7 +5,7 @@ import {
   TMission,
 } from 'metis/missions'
 import { TAction, TCommonMissionAction } from '../missions/actions'
-import { TCommonUser } from '../users'
+import User, { TCommonUser } from '../users'
 import { TCommonSessionMember, TMember, TSessionMemberJson } from './members'
 
 /**
@@ -31,6 +31,14 @@ export default abstract class Session<T extends TCommonMissionTypes>
 
   // Implemented
   public readonly ownerLastName: TCommonUser['lastName']
+
+  // Implemented
+  public get ownerFullName(): TCommonUser['name'] {
+    return User.getFullName(this.ownerFirstName, this.ownerLastName)
+  }
+
+  // Implemented
+  public readonly launchedAt: Date
 
   /**
    * Protected cache for `config`.
@@ -128,6 +136,7 @@ export default abstract class Session<T extends TCommonMissionTypes>
     ownerUsername: TCommonUser['username'],
     ownerFirstName: TCommonUser['firstName'],
     ownerLastName: TCommonUser['firstName'],
+    launchedAt: Date,
     config: Partial<TSessionConfig>,
     mission: TMission<T>,
     memberData: TSessionMemberJson[],
@@ -139,6 +148,7 @@ export default abstract class Session<T extends TCommonMissionTypes>
     this.ownerUsername = ownerUsername
     this.ownerFirstName = ownerFirstName
     this.ownerLastName = ownerLastName
+    this.launchedAt = launchedAt
     this._config = {
       ...Session.DEFAULT_CONFIG,
       ...config,
@@ -274,6 +284,10 @@ export type TSessionJson = {
    */
   ownerLastName: TCommonUser['lastName']
   /**
+   * The ISO date/time that the session was launched.
+   */
+  launchedAt: string
+  /**
    * The configuration for the session.
    */
   config: TSessionConfig
@@ -304,6 +318,10 @@ export type TSessionBasicJson = {
    */
   missionId: string
   /**
+   * The state of the session (unstarted, started, ended).
+   */
+  state: TSessionState
+  /**
    * The name of the session.
    */
   name: string
@@ -323,6 +341,10 @@ export type TSessionBasicJson = {
    * The last name of the owner.
    */
   ownerLastName: TCommonUser['lastName']
+  /**
+   * The ISO date/time that the session was launched.
+   */
+  launchedAt: string
   /**
    * The configuration for the session.
    */
@@ -384,6 +406,14 @@ export type TCommonSession = {
    * The last name of the owner.
    */
   readonly ownerLastName: TCommonUser['lastName']
+  /**
+   * The full name of the owner.
+   */
+  get ownerFullName(): TCommonUser['name']
+  /**
+   * The date/time that the session was launched.
+   */
+  readonly launchedAt: Date
   /**
    * The configuration for the session.
    */

@@ -1,10 +1,11 @@
 @import 'src/assets/styles/config.scss';
+@import 'src/assets/styles/util.scss';
 
 .MissionMap {
   .Overlay {
     .ActionExecModal {
-      border: 2px solid $color-main;
-      box-shadow: $box-shadow-alt2;
+      border: 2px solid $color-primary-light;
+      @include background-mask($color-primary, 0.9);
 
       .Heading {
         min-width: 16.5em;
@@ -31,7 +32,7 @@
 
       .NoActions {
         display: none;
-        color: $session-red;
+        color: $color-failure;
         margin: 0;
         margin: 0 15px 25px 20px;
       }
@@ -66,21 +67,22 @@
           cursor: pointer;
           display: grid;
           grid-template-columns: 1fr auto;
-          border: 2px solid $color-main;
+          border: 2px solid $color-primary-light;
           padding: 0.7em 0.9em;
-          box-shadow: $box-shadow-alt2;
-          color: $color-accent-light;
+          background: $color-secondary;
+          color: $color-accent;
 
           &:hover {
-            background-color: $background-alt2;
+            @include background-mask;
           }
 
           .Text {
             margin-right: $scrollbar-width;
+            color: $color-accent;
           }
 
           .Arrow {
-            color: $color-accent-light;
+            color: $color-accent;
             font-size: 2em;
             height: 0.5em;
             line-height: 1em;
@@ -89,8 +91,8 @@
 
         .Options {
           cursor: pointer;
-          border: 2px solid $color-main;
-          box-shadow: $box-shadow-alt2;
+          border: 2px solid $color-primary-light;
+          background: $color-primary;
           height: auto;
           max-height: 140px;
           overflow-y: auto;

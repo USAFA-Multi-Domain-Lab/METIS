@@ -504,16 +504,14 @@ export default class ClientMissionNode
     // Remove execution.
     this._execution = null
 
-    // If the outcome is successful and the node is openable...
-    if (successful && this.openable) {
+    // If the child nodes are revealed, open the node.
+    if (revealedChildNodes) {
       // Set the node to open.
       this._opened = true
       // Update last opened node cache.
       this.mission.lastOpenedNode = this
-      // Reveal child nodes, if any.
-      if (revealedChildNodes !== undefined) {
-        this.populateChildNodes(revealedChildNodes)
-      }
+      // Reveal child nodes.
+      this.populateChildNodes(revealedChildNodes)
       // Handle structure change.
       this.mission.handleStructureChange()
       // Emit event.

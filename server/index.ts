@@ -13,11 +13,11 @@ import { sys } from 'typescript'
 import MetisWsServer from './connect'
 import MetisFileStore from './files'
 import ServerTargetEnvironment from './target-environments'
+
+const dotenv = require('dotenv')
 const cookieParser = require('cookie-parser')
 const cors = require('cors')
-const defaults = require('../defaults')
 const packageJson = require('../package.json')
-const socketIo = require('socket.io')
 
 /**
  * Manages an Express web server for METIS.
@@ -198,21 +198,35 @@ export default class MetisServer {
   /**
    * @param options Options for creating the METIS server.
    */
-  public constructor(options: IMetisServerOptions = {}) {
+  public constructor(options: Partial<TMetisServerOptions> = {}) {
+    // Create a completed options object, which
+    // combines the options provided in the environment
+    // with the options provided in the constructor.
+    let completedOptions: TMetisServerOptions = {
+      ...MetisServer.createOptionsFromEnvironment(),
+      ...options,
+    }
+
+    // Create third-party server objects.
     this._expressApp = express()
     this._httpServer = http.createServer(this.expressApp)
     this._wsServer = new MetisWsServer(this)
-    this._port = options.port ?? defaults.PORT
-    this._mongoDB = options.mongoDB ?? defaults.MONGO_DB
-    this._mongoHost = options.mongoHost ?? defaults.MONGO_HOST
-    this._mongoPort = options.mongoPort ?? defaults.MONGO_PORT
-    this._mongoUsername = options.mongoUsername
-    this._mongoPassword = options.mongoPassword
-    this._httpRateLimit = options.httpRateLimit ?? defaults.HTTP_RATE_LIMIT
-    this._wsRateLimit = options.wsRateLimit ?? defaults.WS_RATE_LIMIT
-    this._fileStoreDir = options.fileStoreDir ?? defaults.FILE_STORE_DIR
+
+    // Parse the options and store them in the class.
+    this._port = completedOptions.port
+    this._mongoDB = completedOptions.mongoDB
+    this._mongoHost = completedOptions.mongoHost
+    this._mongoPort = completedOptions.mongoPort
+    this._mongoUsername = completedOptions.mongoUsername
+    this._mongoPassword = completedOptions.mongoPassword
+    this._httpRateLimit = completedOptions.httpRateLimit
+    this._wsRateLimit = completedOptions.wsRateLimit
+    this._fileStoreDir = completedOptions.fileStoreDir
+
+    // Create database and file store objects.
     this._database = new MetisDatabase(this)
     this._fileStore = new MetisFileStore(this, { directory: this.fileStoreDir })
+
     // Temporary session middleware until configured
     // with the database connection.
     this._sessionMiddleware = () => {}
@@ -407,7 +421,7 @@ export default class MetisServer {
   /**
    * The current build number for the database.
    */
-  public static readonly SCHEMA_BUILD_NUMBER: number = 29
+  public static readonly SCHEMA_BUILD_NUMBER: number = 33
   /**
    * The root directory for the METIS server.
    */
@@ -416,6 +430,68 @@ export default class MetisServer {
    * The path to the environment file.
    */
   public static readonly ENVIRONMENT_FILE_PATH: string = '../environment.json'
+
+  /**
+   * Creates METIS options from the environment.
+   * @returns The METIS options created from the environment.
+   * @throws If environment variables are missing are invalid.
+   */
+  private static createOptionsFromEnvironment(): TMetisServerOptions {
+    switch (process.env.METIS_ENV_TYPE) {
+      case 'docker':
+        dotenv.config({ path: '../config/docker.defaults.env', override: true })
+        dotenv.config({ path: '../config/docker.env', override: true })
+        break
+      case 'dev':
+        dotenv.config({ path: '../config/dev.defaults.env', override: true })
+        dotenv.config({ path: '../config/dev.env', override: true })
+        break
+      case 'test':
+        dotenv.config({ path: '../config/test.defaults.env', override: true })
+        dotenv.config({ path: '../config/test.env', override: true })
+        break
+      case 'prod':
+      default:
+        dotenv.config({ path: '../config/prod.defaults.env', override: true })
+        dotenv.config({ path: '../config/prod.env', override: true })
+        break
+    }
+
+    const requiredKeys = [
+      'PORT',
+      'MONGO_DB',
+      'MONGO_HOST',
+      'MONGO_PORT',
+      'HTTP_RATE_LIMIT',
+      'WS_RATE_LIMIT',
+      'FILE_STORE_DIR',
+    ] as const
+
+    requiredKeys.forEach((key) => {
+      if (!process.env[key]) {
+        throw new Error(
+          `Missing required environment variable: "${key}"\nIf \`defaults.env\` was modified, please undo changes. This file should not be modified by non-developers.`,
+        )
+      }
+    })
+
+    try {
+      return {
+        port: parseInt(process.env.PORT!),
+        mongoDB: process.env.MONGO_DB!,
+        mongoHost: process.env.MONGO_HOST!,
+        mongoPort: parseInt(process.env.MONGO_PORT!),
+        mongoUsername: process.env.MONGO_USERNAME,
+        mongoPassword: process.env.MONGO_PASSWORD,
+        httpRateLimit: parseInt(process.env.HTTP_RATE_LIMIT!),
+        wsRateLimit: parseInt(process.env.WS_RATE_LIMIT!),
+        fileStoreDir: process.env.FILE_STORE_DIR!,
+      }
+    } catch (error) {
+      console.error('Failed to load environment variables.')
+      throw error
+    }
+  }
 }
 
 /* -- TYPES -- */
@@ -435,27 +511,27 @@ declare module 'express-session' {
 /**
  * Options for creating the METIS server.
  */
-export interface IMetisServerOptions {
+export interface TMetisServerOptions {
   /**
    * The port on which to run the server.
    * @default 8080
    */
-  port?: number
+  port: number
   /**
    * The name of the MongoDB database to use.
    * @default "metis"
    */
-  mongoDB?: string
+  mongoDB: string
   /**
    * The host of the MongoDB database to use.
    * @default "localhost"
    */
-  mongoHost?: string
+  mongoHost: string
   /**
    * The port of the MongoDB database to use.
    * @default 27017
    */
-  mongoPort?: number
+  mongoPort: number
   /**
    * The username of the MongoDB database to use. Defaults to undefined.
    * @default undefined
@@ -470,14 +546,14 @@ export interface IMetisServerOptions {
    * The maximum number of http requests allowed per second.
    * @default undefined
    */
-  httpRateLimit?: number
+  httpRateLimit: number
   /**
    * The maximum number of websocket messages allowed per second.
    */
-  wsRateLimit?: number
+  wsRateLimit: number
   /**
    * The location of the file store.
    * @default "./files/store"
    */
-  fileStoreDir?: string
+  fileStoreDir: string
 }

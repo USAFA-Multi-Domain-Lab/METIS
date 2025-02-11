@@ -5,9 +5,8 @@
   display: grid;
   align-items: center;
   grid-template-columns: 1fr auto;
-  @include dimensions();
-  margin: 20px 8% 0;
-  width: 84%;
+  @include detail-field-styling;
+  margin: 0 0 2em;
 
   .TitleRow {
     margin: 0;

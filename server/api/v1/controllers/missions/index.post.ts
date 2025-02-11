@@ -11,8 +11,15 @@ import ApiResponse from '../../library/response'
  * @returns The new mission.
  */
 const createMission = async (request: Request, response: Response) => {
-  let { name, versionNumber, structure, forces, prototypes, seed } =
-    request.body as TCommonMissionJson
+  let {
+    name,
+    versionNumber,
+    seed,
+    resourceLabel,
+    structure,
+    forces,
+    prototypes,
+  } = request.body as TCommonMissionJson
 
   try {
     // Create mission.
@@ -20,6 +27,7 @@ const createMission = async (request: Request, response: Response) => {
       name,
       versionNumber,
       seed,
+      resourceLabel,
       structure,
       forces,
       prototypes,

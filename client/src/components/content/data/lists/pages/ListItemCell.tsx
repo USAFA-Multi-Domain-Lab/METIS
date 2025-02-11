@@ -48,7 +48,7 @@ export default function ListItemCell<TItem extends TListItem>({
 
   /* -- RENDER -- */
 
-  // Render the column label.
+  // Render the item cell.
   return (
     <div className={rootClass} onClick={onClick}>
       {text} <Tooltip description={tooltipDescription} />

@@ -42,7 +42,7 @@ export default function ActionExecModal({
     () => {
       // If there is only one action, select it.
       if (node.actions.size === 1) {
-        return node.actions.values().next().value
+        return node.actions.values().next().value!
       }
       // Otherwise, select nothing.
       else {
@@ -178,11 +178,11 @@ export default function ActionExecModal({
     // select it.
     else if (node.actions.size === 1) {
       // Get the action.
-      let action: ClientMissionAction = node.actions.values().next().value
+      let action: ClientMissionAction = node.actions.values().next().value!
 
       // Select the action if not already selected.
       if (selectedAction?._id !== action._id) {
-        selectAction(node.actions.values().next().value)
+        selectAction(node.actions.values().next().value!)
       }
     }
   }, [node.actions.size])

@@ -90,6 +90,54 @@ export default function UserList({
   }
 
   /**
+   * Gets the column label for a user list.
+   * @param column The column for which to get the label.
+   * @returns The label for the column.
+   */
+  const getUserColumnLabel = (column: keyof ClientUser): string => {
+    switch (column) {
+      case 'username':
+        return 'Username'
+      case 'access':
+        return 'Access'
+      default:
+        return 'Unknown column'
+    }
+  }
+
+  /**
+   * Gets the text for a user list cell.
+   * @param user The user for which to get the text.
+   * @param column The column for which to get the text.
+   * @returns The text to display in the cell.
+   */
+  const getUserCellText = (
+    user: ClientUser,
+    column: keyof ClientUser,
+  ): string => {
+    switch (column) {
+      case 'access':
+        return user[column].name
+      default:
+        return user[column]?.toString() ?? 'None'
+    }
+  }
+
+  /**
+   * Gets the width of the given column.
+   * @param column The column for which to get the width.
+   * @returns The width of the column.
+   */
+  const getUserColumnWidth = (column: keyof ClientUser): string => {
+    switch (column) {
+      case 'access':
+        return '6em'
+      default:
+        return '10em'
+    }
+  }
+
+  /**
    * Gets the tooltip description for a user list button.
    */
   const getUserListButtonTooltip: TGetListButtonTooltip = (button) => {
@@ -174,8 +222,12 @@ export default function UserList({
     <List<ClientUser>
       name={'Users'}
       items={users}
+      columns={['username', 'access']}
       listButtons={listButtons}
       itemButtons={itemButtons}
+      getColumnLabel={getUserColumnLabel}
+      getCellText={getUserCellText}
+      getColumnWidth={getUserColumnWidth}
       getItemTooltip={() => 'Open user'}
       getListButtonTooltip={getUserListButtonTooltip}
       getItemButtonTooltip={getUserItemButtonTooltip}

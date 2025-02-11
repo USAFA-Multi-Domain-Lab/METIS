@@ -3,8 +3,8 @@
 .MissionMap {
   .Overlay {
     .CreateEffect {
-      border: 2px solid $color-main;
-      box-shadow: $box-shadow-alt7;
+      border: 2px solid $color-primary-light;
+      background-color: $color-primary;
 
       .Heading {
         min-width: 12.5em;

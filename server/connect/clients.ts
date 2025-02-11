@@ -1,8 +1,11 @@
 import {
+  TClientEvent,
   TClientEvents,
   TClientMethod,
+  TRequestEvent,
   TRequestEvents,
   TRequestMethod,
+  TRequestOfResponse,
   TResponseEvent,
   TServerEvents,
   TServerMethod,
@@ -12,6 +15,7 @@ import ServerLogin from 'metis/server/logins'
 import { Socket } from 'socket.io'
 import SessionServer from '../sessions'
 import ServerUser from '../users'
+import { clientEventSchemas, looseEventSchema } from './middleware/validate'
 
 /* -- classes -- */
 
@@ -316,10 +320,15 @@ export default class ClientConnection {
   }
 
   /**
-   * Handler for when the web socket connection is opened. Calls all matching listeners stored in "listeners".
+   * Handler for when the web socket event is sent by a client.
    * @param event The message event data.
    */
   private onMessage = (data: string): void => {
+    let event: TClientEvent
+    let looseEventData:
+      | ReturnType<(typeof looseEventSchema)['parse']>
+      | undefined
+
     // If the data passed is not a string,
     // throw an error.
     if (typeof data !== 'string') {
@@ -331,8 +340,39 @@ export default class ClientConnection {
       return
     }
 
-    // Parse the data.
-    let event = JSON.parse(data)
+    try {
+      // Parse the data from a string into a
+      // JSON object.
+      let rawEventData = JSON.parse(data)
+      // Ensure the data is formatted correctly
+      // for METIS.
+      looseEventData = looseEventSchema.parse(rawEventData)
+
+      // Get the Zod schema to validate the event
+      // specific to its method.
+      let { method } = looseEventData
+      let zodSchema = clientEventSchemas[method]
+
+      // Validate/sanitize the data.
+      event = zodSchema.parse(looseEventData)
+    } catch (error) {
+      let request: TRequestOfResponse | undefined
+
+      // If the data passed loose-validation and
+      // the data contains a requestId, build the
+      // request data to include in the error event.
+      if (looseEventData && looseEventData.requestId) {
+        request = this.buildResponseReqData(looseEventData as any)
+      }
+
+      this.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_INVALID_DATA, {
+          message: 'The data passed is invalid.',
+          request,
+        }),
+      )
+      return
+    }
 
     // Call any listeners matching the method found in the
     // data.

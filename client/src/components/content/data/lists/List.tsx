@@ -68,6 +68,7 @@ export default function List<TItem extends TListItem>(
     minNameColumnWidth: '14em',
     listButtons: [],
     itemButtons: [],
+    initialSorting: { column: 'name', method: 'ascending' },
     getColumnLabel: (x) => x.toString(),
     getCellText: (item, column) => (item[column] as any).toString(),
     getItemTooltip: () => '',
@@ -103,11 +104,12 @@ export default function List<TItem extends TListItem>(
 
   const state: TList_S<TItem> = {
     pageNumber: useState<number>(0),
-    filteredItems: useState<TItem[]>(items),
+    processedItems: useState<TItem[]>(items),
     itemsPerPage: useState<number>(itemsPerPageMin),
+    sorting: useState<TListSorting<TItem>>(defaultedProps.initialSorting),
   }
   const [pageNumber] = state.pageNumber
-  const [filteredItems] = state.filteredItems
+  const [processedItems] = state.processedItems
   const [itemsPerPage] = state.itemsPerPage
   // Reference to the root element.
   const root = useRef<HTMLDivElement>(null)
@@ -124,10 +126,10 @@ export default function List<TItem extends TListItem>(
 
     for (
       let i = 0;
-      i < filteredItems.length || !results.length;
+      i < processedItems.length || !results.length;
       i += itemsPerPage
     ) {
-      results.push({ items: filteredItems.slice(i, i + itemsPerPage) })
+      results.push({ items: processedItems.slice(i, i + itemsPerPage) })
     }
 
     return results
@@ -218,6 +220,11 @@ export type TList_P<TItem extends TListItem> = {
    */
   itemButtons?: TButtonSvgType[]
   /**
+   * The initial sorting state for the list.
+   * @default { column: 'name', method: 'DESC' }
+   */
+  initialSorting?: TListSorting<TItem>
+  /**
    * Gets the tooltip description for the item.
    * @param item The item for which to get the tooltip.
    * @returns The tooltip description.
@@ -287,14 +294,21 @@ export type TList_S<TItem extends TListItem> = {
    */
   pageNumber: TReactState<number>
   /**
-   * The items after filtering is applied.
+   * The items after processing (filtering/sorting)
+   * is applied.
    */
-  filteredItems: TReactState<TItem[]>
+  processedItems: TReactState<TItem[]>
   /**
    * The calculated amount of items per page
    * based on the space available in the list.
    */
   itemsPerPage: TReactState<number>
+  /**
+   * The current sorting state which defines
+   * how the items in the list should currently
+   * be sorted.
+   */
+  sorting: TReactState<TListSorting<TItem>>
 }
 
 /**
@@ -329,3 +343,24 @@ export type TGetListButtonTooltip = (button: TButtonSvgType) => string
  * A column type for the list.
  */
 export type TListColumnType<TItem> = keyof TItem
+
+/**
+ * Data that defines how items in a list should
+ * be sorted.
+ */
+export type TListSorting<TItem extends TListItem> = {
+  /**
+   * The column by which to sort.
+   */
+  column: TListColumnType<TItem>
+  /**
+   * The method (direction) by which to sort.
+   */
+  method: TListSortMethod
+}
+
+/**
+ * The method (direction) by which to sort items
+ * in a list.
+ */
+export type TListSortMethod = 'ascending' | 'descending'

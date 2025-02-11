@@ -85,6 +85,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
       ownerUsername,
       ownerFirstName,
       ownerLastName,
+      launchedAt,
       members: memberData,
       banList,
       config,
@@ -98,6 +99,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
       ownerUsername,
       ownerFirstName,
       ownerLastName,
+      new Date(launchedAt),
       config,
       mission,
       memberData,
@@ -195,6 +197,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
       ownerUsername: this.ownerUsername,
       ownerFirstName: this.ownerFirstName,
       ownerLastName: this.ownerLastName,
+      launchedAt: this.launchedAt.toISOString(),
       mission: this.mission.toJson({ exportType: 'session-limited' }),
       members: this.members.map((member) => member.toJson()),
       banList: this.banList,
@@ -207,11 +210,13 @@ export default class SessionClient extends Session<TClientMissionTypes> {
     return {
       _id: this._id,
       missionId: this.missionId,
+      state: this.state,
       name: this.name,
       ownerId: this.ownerId,
       ownerUsername: this.ownerUsername,
       ownerFirstName: this.ownerFirstName,
       ownerLastName: this.ownerLastName,
+      launchedAt: this.launchedAt.toISOString(),
       config: this.config,
       participantIds: this.participants.map(({ _id: userId }) => userId),
       banList: this.banList,
@@ -1154,7 +1159,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
   public static $fetchAll(): Promise<SessionBasic[]> {
     return new Promise<SessionBasic[]>(
       async (
-        resolve: (sessions: TSessionBasicJson[]) => void,
+        resolve: (sessions: SessionBasic[]) => void,
         reject: (error: any) => void,
       ): Promise<void> => {
         try {

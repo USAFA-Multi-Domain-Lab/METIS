@@ -1,9 +1,75 @@
-<svg width="799.9999999999999" height="799.9999999999999" xmlns="http://www.w3.org/2000/svg">
-	<!-- Created with Method Draw - http://github.com/duopixel/Method-Draw/ -->
-	<g id="Layer_1">
-		<title>Layer 1</title>
-		<ellipse stroke="#ffffff" stroke-width="99" ry="243.31141" rx="250.19441" id="svg_1" cy="293.31141" cx="300.19441" opacity="undefined" fill="none"/>
-		<line stroke-linecap="null" stroke-linejoin="null" id="svg_2" y2="55.8" x2="-341.5" y1="55.8" x1="-343.5" opacity="undefined" fill-opacity="null" stroke-opacity="null" stroke-dasharray="null" stroke-width="99" stroke="#ffffff" fill="none"/>
-		<path stroke="#ffffff" transform="rotate(44.422664642333984 638.8256225585936,640.3621826171876) " id="svg_4" d="m476.71994,661.44279l324.21136,0l0,0c42.47261,0 76.90338,-9.4381 76.90338,-21.08057c0,-11.64247 -34.43079,-21.08056 -76.90338,-21.08056l-324.21136,0l0,0c-42.47256,0 -76.90338,9.43809 -76.90338,21.08056c0,11.64248 34.43082,21.08057 76.90338,21.08057z" opacity="undefined" fill-opacity="null" stroke-opacity="null" stroke-dasharray="null" stroke-width="50" fill="none"/>
-	</g>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="799.9999999999999"
+   height="799.9999999999999"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="search.svg"
+   inkscape:version="1.4 (e7c3feb1, 2024-10-09)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#000000"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="0.0325"
+     inkscape:cx="384.61538"
+     inkscape:cy="400"
+     inkscape:window-width="1728"
+     inkscape:window-height="989"
+     inkscape:window-x="0"
+     inkscape:window-y="38"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1" />
+  <!-- Created with Method Draw - http://github.com/duopixel/Method-Draw/ -->
+  <g
+     id="Layer_1">
+    <title
+       id="title1">Layer 1</title>
+    <ellipse
+       stroke="#ffffff"
+       stroke-width="99"
+       ry="243.31141"
+       rx="250.19441"
+       id="svg_1"
+       cy="293.31141"
+       cx="300.19441"
+       opacity="undefined"
+       fill="none" />
+    <line
+       stroke-linecap="null"
+       stroke-linejoin="null"
+       id="svg_2"
+       y2="55.8"
+       x2="-341.5"
+       y1="55.8"
+       x1="-343.5"
+       opacity="undefined"
+       fill-opacity="null"
+       stroke-opacity="null"
+       stroke-dasharray="null"
+       stroke-width="99"
+       stroke="#ffffff"
+       fill="none" />
+    <path
+       stroke="#ffffff"
+       transform="rotate(44.422664642333984 638.8256225585936,640.3621826171876) "
+       id="svg_4"
+       d="m476.71994,661.44279l324.21136,0l0,0c42.47261,0 76.90338,-9.4381 76.90338,-21.08057c0,-11.64247 -34.43079,-21.08056 -76.90338,-21.08056l-324.21136,0l0,0c-42.47256,0 -76.90338,9.43809 -76.90338,21.08056c0,11.64248 34.43082,21.08057 76.90338,21.08057z"
+       opacity="undefined"
+       fill-opacity="null"
+       stroke-opacity="null"
+       stroke-dasharray="null"
+       stroke-width="50"
+       fill="none" />
+  </g>
 </svg>

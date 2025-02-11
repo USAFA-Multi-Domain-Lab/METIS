@@ -24,7 +24,7 @@
       }
 
       .Text {
-        color: $color-accent-light;
+        color: $detail-field-text-color;
       }
     }
 
@@ -40,13 +40,18 @@
         aspect-ratio: 1 / 1;
         margin: 3px;
         padding: 0;
-        border: 1px solid $color-main;
+        // border: 1px solid rgba($color-primary-light, 0.5);
 
         &.Selected {
-          width: 65%;
-          height: 62%;
-          margin: 3.5px 3px 3px 3.5px;
-          border: 2px solid black;
+          // transform: scale(0.85);
+
+          &::after {
+            content: '';
+            display: block;
+            position: relative;
+            top: calc(100% + 0.5em);
+            border-bottom: 2px solid $color-primary-light;
+          }
         }
       }
     }
@@ -65,7 +70,7 @@
           display: inline-block;
           vertical-align: bottom;
           box-sizing: border-box;
-          border: 2px solid $color-negative;
+          border: 2px solid $color-primary-dark;
           width: 1.15rem;
           height: 0.91rem;
         }

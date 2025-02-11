@@ -19,11 +19,6 @@
         }
 
         .Close {
-          background: linear-gradient(
-            $background-alt7 0%,
-            $background-alt7 80%,
-            transparent 100%
-          );
           grid-column: 2 / 2;
           padding: 6.25px 0 0;
 
@@ -53,7 +48,7 @@
             height: 35px;
 
             &.DropPending {
-              background-color: $background-main;
+              background-color: $color-secondary;
             }
           }
 
@@ -110,7 +105,7 @@
                 }
 
                 &:hover {
-                  background-color: $background-main;
+                  background-color: $color-secondary;
                 }
               }
             }
@@ -136,14 +131,14 @@
                     to top,
                     transparent 0px,
                     transparent 0.0875rem,
-                    $color-main 0.0875rem,
-                    $color-main 0.175rem
+                    $color-primary-light 0.0875rem,
+                    $color-primary-light 0.175rem
                   );
                 }
               }
 
               &.DropPendingCenter {
-                background-color: $background-main;
+                background-color: $color-secondary;
               }
 
               &.DropPendingBottom {
@@ -154,8 +149,8 @@
                     to bottom,
                     transparent 0px,
                     transparent 0.0875rem,
-                    $color-main 0.0875rem,
-                    $color-main 0.175rem
+                    $color-primary-light 0.0875rem,
+                    $color-primary-light 0.175rem
                   );
                 }
               }

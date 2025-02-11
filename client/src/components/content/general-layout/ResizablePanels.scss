@@ -20,8 +20,8 @@
     background: linear-gradient(
       to right,
       transparent 3px,
-      $color-accent-light 3px,
-      $color-accent-light calc(#{$ResizeBar-width} - 3px),
+      $color-accent 3px,
+      $color-accent calc(#{$ResizeBar-width} - 3px),
       transparent calc(#{$ResizeBar-width} - 3px),
       transparent $ResizeBar-width
     );
@@ -42,14 +42,7 @@
     .ResizeBar {
       cursor: ew-resize;
       opacity: 1;
-      background: linear-gradient(
-        to right,
-        transparent 3px,
-        $color-accent-dark 3px,
-        $color-accent-dark calc(#{$ResizeBar-width} - 3px),
-        transparent calc(#{$ResizeBar-width} - 3px),
-        transparent $ResizeBar-width
-      );
+      filter: brightness(0.6);
     }
   }
 }

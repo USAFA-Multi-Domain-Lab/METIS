@@ -3,7 +3,11 @@ import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
-import { usePostInitEffect, useRequireLogin } from 'src/toolbox/hooks'
+import {
+  useObjectFormSync,
+  usePostInitEffect,
+  useRequireLogin,
+} from 'src/toolbox/hooks'
 import { SingleTypeObject } from '../../../../../../shared/toolbox/objects'
 import Tooltip from '../../communication/Tooltip'
 import { DetailLargeString } from '../../form/DetailLargeString'
@@ -16,6 +20,7 @@ import ButtonSvgPanel, {
 import { ButtonText } from '../../user-controls/buttons/ButtonText'
 import './index.scss'
 import EntryNavigation from './navigation/EntryNavigation'
+import { DetailToggle } from '../../form/DetailToggle'
 
 /**
  * This will render the entry fields for an action
@@ -23,27 +28,41 @@ import EntryNavigation from './navigation/EntryNavigation'
  */
 export default function ActionEntry({
   action,
-  action: { node },
-  action: { mission },
+  action: { node, mission },
   setIsNewEffect,
   handleDeleteActionRequest,
   handleDeleteEffectRequest,
   handleChange,
 }: TActionEntry_P): JSX.Element | null {
   /* -- STATE -- */
-  const [name, setName] = useState<string>(action.name)
-  const [description, setDescription] = useState<string>(action.description)
+
+  const objectFormSyncState = useObjectFormSync(
+    action,
+    [
+      'name',
+      'description',
+      'resourceCost',
+      'opensNode',
+      'postExecutionSuccessText',
+      'postExecutionFailureText',
+    ],
+    { onChange: handleChange },
+  )
+
   const [successChance, setSuccessChance] = useState<number>(
     parseFloat(`${(action.successChance * 100.0).toFixed(2)}`),
   )
   const [processTime, setProcessTime] = useState<number>(
     action.processTime / 1000,
   )
-  const [resourceCost, setResourceCost] = useState<number>(action.resourceCost)
+  const [name, setName] = objectFormSyncState.name
+  const [description, setDescription] = objectFormSyncState.description
+  const [resourceCost, setResourceCost] = objectFormSyncState.resourceCost
+  const [opensNode, setOpensNode] = objectFormSyncState.opensNode
   const [postExecutionSuccessText, setPostExecutionSuccessText] =
-    useState<string>(action.postExecutionSuccessText)
+    objectFormSyncState.postExecutionSuccessText
   const [postExecutionFailureText, setPostExecutionFailureText] =
-    useState<string>(action.postExecutionFailureText)
+    objectFormSyncState.postExecutionFailureText
   const [targetEnvironments] = useState<ClientTargetEnvironment[]>(
     ClientTargetEnvironment.getAll(),
   )
@@ -81,32 +100,13 @@ export default function ActionEntry({
 
   // Sync the component state with the action.
   usePostInitEffect(() => {
-    // Update the action name.
-    action.name = name
-    // Update the description.
-    action.description = description
-    // Update the success chance.
+    // Update the success chance and the process time.
     action.successChance = successChance / 100
-    // Update the process time.
     action.processTime = processTime * 1000
-    // Update the resource cost.
-    action.resourceCost = resourceCost
-    // Update the post-execution success text.
-    action.postExecutionSuccessText = postExecutionSuccessText
-    // Update the post-execution failure text.
-    action.postExecutionFailureText = postExecutionFailureText
 
     // Allow the user to save the changes.
     handleChange()
-  }, [
-    name,
-    description,
-    successChance,
-    processTime,
-    resourceCost,
-    postExecutionSuccessText,
-    postExecutionFailureText,
-  ])
+  }, [successChance, processTime])
 
   /* -- FUNCTIONS -- */
 
@@ -253,6 +253,14 @@ export default function ActionEntry({
                 minimum={ClientMissionAction.RESOURCE_COST_MIN}
                 integersOnly={true}
                 key={`${action._id}_resourceCost`}
+              />
+              <DetailToggle
+                fieldType='required'
+                label='Opens Node'
+                tooltipDescription='If enabled, this action will open the node if successfully executed.'
+                stateValue={opensNode}
+                setState={setOpensNode}
+                key={`${action._id}_opensNode`}
               />
               <DetailLargeString
                 fieldType='required'

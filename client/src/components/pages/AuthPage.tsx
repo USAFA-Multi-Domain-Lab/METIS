@@ -6,6 +6,10 @@ import { TPage_P } from '.'
 import { DetailString } from '../content/form/DetailString'
 import Branding from '../content/general-layout/Branding'
 import './AuthPage.scss'
+import {
+  ButtonText,
+  TButtonTextDisabled,
+} from '../content/user-controls/buttons/ButtonText'
 
 export interface IAuthPage extends TPage_P {}
 
@@ -39,6 +43,13 @@ export default function AuthPage(): JSX.Element | null {
       username !== '' &&
       password !== '',
   )
+
+  /**
+   * The disabled state of the submit button.
+   */
+  const submitDisabled: TButtonTextDisabled = compute(() => {
+    return !canSubmit || isSubmitting ? 'full' : 'none'
+  })
 
   /* -- FUNCTIONS -- */
 
@@ -154,12 +165,14 @@ export default function AuthPage(): JSX.Element | null {
             inputType='password'
             placeholder='Password'
           />
-          <input
-            className='Submit Button'
-            type='submit'
-            value='Log in'
-            disabled={!canSubmit || isSubmitting}
-          />
+          <div className='Buttons'>
+            <ButtonText
+              type='submit'
+              text='Log in'
+              onClick={() => {}}
+              disabled={submitDisabled}
+            />
+          </div>
         </form>
       </div>
     </div>

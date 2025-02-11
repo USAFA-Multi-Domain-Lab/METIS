@@ -159,31 +159,43 @@ export default function MissionList({
 
   /**
    * Gets the column label for a mission list.
+   * @param column The column for which to get the label.
+   * @returns The label for the column.
    */
-  const getMissionColumnLabel = (column: string): string => {
+  const getMissionColumnLabel = (column: keyof ClientMission): string => {
     switch (column) {
       case 'createdAt':
         return 'Created'
-      case 'lastModifiedAt':
+      case 'updatedAt':
         return 'Last Modified'
-      case 'lastLaunchedAt':
+      case 'launchedAt':
         return 'Last Launched'
+      case 'creatorFullName':
+        return 'Created By'
       default:
-        return ''
+        return 'Unknown column'
     }
   }
 
+  /**
+   * Gets the text for a mission list cell.
+   * @param mission The mission for which to get the text.
+   * @param column The column for which to get the text.
+   * @returns The text to display in the cell.
+   */
   const getMissionCellText = (
     mission: ClientMission,
-    column: string,
+    column: keyof ClientMission,
   ): string => {
     switch (column) {
       case 'createdAt':
-        return DateToolbox.format(mission.createdAt, 'yyyy-MM-dd HH:mm')
-      case 'lastModifiedAt':
-        return DateToolbox.format(mission.lastModifiedAt, 'yyyy-MM-dd HH:mm')
-      case 'lastLaunchedAt':
-        return DateToolbox.format(mission.lastLaunchedAt, 'yyyy-MM-dd HH:mm')
+      case 'updatedAt':
+      case 'launchedAt':
+        let datetime = mission[column]
+        if (datetime === null) return 'N/A'
+        else return DateToolbox.format(datetime, 'yyyy-mm-dd HH:MM')
+      case 'creatorFullName':
+        return mission.creatorFullName
       default:
         return 'Unknown column'
     }
@@ -236,8 +248,8 @@ export default function MissionList({
   const getMissionColumnWidth = (column: keyof ClientMission): string => {
     switch (column) {
       case 'createdAt':
-      case 'lastModifiedAt':
-      case 'lastLaunchedAt':
+      case 'updatedAt':
+      case 'launchedAt':
         return '9em'
       default:
         return '10em'
@@ -338,9 +350,10 @@ export default function MissionList({
       <List<ClientMission>
         name={'Missions'}
         items={missions}
-        // columns={['createdAt', 'lastModifiedAt', 'lastLaunchedAt']}
+        columns={['createdAt', 'updatedAt', 'launchedAt', 'creatorFullName']}
         listButtons={listButtons}
         itemButtons={itemButtons}
+        initialSorting={{ column: 'updatedAt', method: 'descending' }}
         getItemTooltip={() => tooltipDescription}
         getColumnLabel={getMissionColumnLabel}
         getCellText={getMissionCellText}

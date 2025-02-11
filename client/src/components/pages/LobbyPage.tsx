@@ -208,7 +208,7 @@ export default function LobbyPage({
 
   // Render root component.
   return (
-    <div className='LobbyPage Page'>
+    <div className='LobbyPage Page DarkPage'>
       <DefaultLayout navigation={navigation}>
         <div className='Title'>Lobby</div>
         <div className='DetailSection Section'>
