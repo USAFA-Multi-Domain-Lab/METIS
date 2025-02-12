@@ -25,7 +25,7 @@ import MissionPrototype, {
   TMissionPrototypeOptions,
   TPrototype,
 } from './nodes/prototypes'
-import { DateToolbox } from 'metis/toolbox/dates'
+import { DateToolbox } from '../toolbox/dates'
 
 /**
  * This represents a mission for a student to complete.
