@@ -116,7 +116,7 @@ export default function MissionEntry({
         </div>
 
         {/* -- MAIN CONTENT -- */}
-        <div className='SidePanelSection MainDetails'>
+        <div className='SidePanelContent'>
           <DetailString
             fieldType='required'
             handleOnBlur='repopulateValue'
@@ -137,6 +137,7 @@ export default function MissionEntry({
             maxLength={ClientMission.MAX_RESOURCE_LABEL_LENGTH}
             key={`${mission._id}_resourceLabel`}
           />
+
           {defectiveObjects.length > 0 ? (
             <ListOld<TMissionComponent>
               items={defectiveObjects}

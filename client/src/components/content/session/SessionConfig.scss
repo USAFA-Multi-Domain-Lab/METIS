@@ -1,6 +1,9 @@
 @import '../../../assets/styles/config.scss';
+@import 'src/components/content/form/index.scss';
 
 .SessionConfig {
+  @include form-container;
+
   display: flex;
   box-sizing: border-box;
   flex-direction: column;
@@ -9,7 +12,7 @@
   max-width: 800px;
   border: 2px solid $color-primary-light;
   border-radius: 10px;
-  padding: 1em 2em;
+  padding: 2em 2em 1em;
   background-color: $color-primary;
 
   .Buttons {

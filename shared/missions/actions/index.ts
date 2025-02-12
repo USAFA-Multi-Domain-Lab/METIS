@@ -23,25 +23,25 @@ export default abstract class MissionAction<
   T extends TCommonMissionTypes = TCommonMissionTypes,
 > implements TCommonMissionAction
 {
-  // Inherited
+  // Implemented
   public node: TNode<T>
 
-  // Inherited
+  // Implemented
   public _id: TCommonMissionAction['_id']
 
-  // Inherited
+  // Implemented
   public name: TCommonMissionAction['name']
 
-  // Inherited
+  // Implemented
   public description: TCommonMissionAction['description']
 
-  // Inherited
+  // Implemented
   public postExecutionSuccessText: TCommonMissionAction['postExecutionSuccessText']
 
-  // Inherited
+  // Implemented
   public postExecutionFailureText: TCommonMissionAction['postExecutionFailureText']
 
-  // Inherited
+  // Implemented
   public effects: TEffect<T>[]
 
   /**
@@ -63,6 +63,9 @@ export default abstract class MissionAction<
     this._processTime = value
   }
 
+  // Implemented
+  public processTimeHidden: boolean
+
   /**
    * The chance that the action will succeed.
    */
@@ -82,6 +85,9 @@ export default abstract class MissionAction<
     this._successChance = value
   }
 
+  // Implemented
+  public successChanceHidden: boolean
+
   /**
    * The amount of resources the action will be subtracted from that available to the executor of the action.
    */
@@ -98,25 +104,28 @@ export default abstract class MissionAction<
     this._resourceCost = value
   }
 
-  // Inherited
+  // Implemented
+  public resourceCostHidden: boolean
+
+  // Implemented
   public opensNode: TCommonMissionAction['opensNode']
 
-  // Inherited
+  // Implemented
   public get failureChance(): TCommonMissionAction['failureChance'] {
     return 1 - this.successChance
   }
 
-  // Inherited
+  // Implemented
   public get executing(): TCommonMissionAction['executing'] {
     return this.node.executionState === 'executing'
   }
 
-  // Inherited
+  // Implemented
   public get mission(): TMission<T> {
     return this.node.mission as TMission<T>
   }
 
-  // Inherited
+  // Implemented
   public get force(): TForce<T> {
     return this.node.force
   }
@@ -156,10 +165,19 @@ export default abstract class MissionAction<
       data.description ?? MissionAction.DEFAULT_PROPERTIES.description
     this._processTime =
       data.processTime ?? MissionAction.DEFAULT_PROPERTIES.processTime
+    this.processTimeHidden =
+      data.processTimeHidden ??
+      MissionAction.DEFAULT_PROPERTIES.processTimeHidden
     this._successChance =
       data.successChance ?? MissionAction.DEFAULT_PROPERTIES.successChance
+    this.successChanceHidden =
+      data.successChanceHidden ??
+      MissionAction.DEFAULT_PROPERTIES.successChanceHidden
     this._resourceCost =
       data.resourceCost ?? MissionAction.DEFAULT_PROPERTIES.resourceCost
+    this.resourceCostHidden =
+      data.resourceCostHidden ??
+      MissionAction.DEFAULT_PROPERTIES.resourceCostHidden
     this.opensNode =
       data.opensNode ?? MissionAction.DEFAULT_PROPERTIES.opensNode
     this.postExecutionSuccessText =
@@ -196,8 +214,11 @@ export default abstract class MissionAction<
       name: this.name,
       description: this.description,
       processTime: this.processTime,
+      processTimeHidden: this.processTimeHidden,
       successChance: this.successChance,
+      successChanceHidden: this.successChanceHidden,
       resourceCost: this.resourceCost,
+      resourceCostHidden: this.resourceCostHidden,
       opensNode: this.opensNode,
       postExecutionSuccessText: this.postExecutionSuccessText,
       postExecutionFailureText: this.postExecutionFailureText,
@@ -266,8 +287,11 @@ export default abstract class MissionAction<
       name: 'New Action',
       description: '',
       processTime: 5000,
+      processTimeHidden: false,
       successChance: 0.5,
+      successChanceHidden: false,
       resourceCost: 1,
+      resourceCostHidden: false,
       opensNode: true,
       postExecutionSuccessText:
         '<p>Enter your successful post-execution message here.</p>',
@@ -324,13 +348,28 @@ export interface TCommonMissionAction {
    */
   processTime: number
   /**
+   * Hides the process time from students.
+   * @default false
+   */
+  processTimeHidden: boolean
+  /**
    * The chance that the action will succeed.
    */
   successChance: number
   /**
+   * Hides the success chance from students.
+   * @default false
+   */
+  successChanceHidden: boolean
+  /**
    * The amount of resources the action will be subtracted from that available to the executor of the action.
    */
   resourceCost: number
+  /**
+   * Hides the resource cost from students.
+   * @default false
+   */
+  resourceCostHidden: boolean
   /**
    * Whether the successful completion of this action will
    * result in the node being opened, assuming it has not
@@ -404,8 +443,11 @@ export type TCommonMissionActionJson = TCreateMissionJsonType<
   | 'name'
   | 'description'
   | 'processTime'
+  | 'processTimeHidden'
   | 'successChance'
+  | 'successChanceHidden'
   | 'resourceCost'
+  | 'resourceCostHidden'
   | 'opensNode'
   | 'postExecutionSuccessText'
   | 'postExecutionFailureText',

@@ -60,7 +60,7 @@ export default function PrototypeEntry({
         </div>
 
         {/* -- MAIN CONTENT -- */}
-        <div className='SidePanelSection MainDetails'>
+        <div className='SidePanelContent'>
           <DetailLocked
             label='ID'
             stateValue={prototype._id}

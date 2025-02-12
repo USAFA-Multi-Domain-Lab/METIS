@@ -40,6 +40,28 @@ export class DateToolbox {
   public static get nowTodayFormatted(): string {
     return this.format()
   }
+
+  /**
+   * Returns an ISO formatted date string using the
+   * `Date.prototype.toISOString` method, returning null
+   * if the date is null.
+   * @param date The date object.
+   * @returns The ISO formatted date string or null if the date is null.
+   */
+  public static toNullableISOString(date: Date | null): string | null {
+    return date === null ? null : date.toISOString()
+  }
+
+  /**
+   * Creates a date from an ISO formatted date string
+   * using the `Date` constructor, returning null if the
+   * date string is null.
+   * @param date The ISO formatted date string.
+   * @returns The date object or null if the date string is null.
+   */
+  public static fromNullableISOString(date: string | null): Date | null {
+    return date === null ? null : new Date(date)
+  }
 }
 
 /**

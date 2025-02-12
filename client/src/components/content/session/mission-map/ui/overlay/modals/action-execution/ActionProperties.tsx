@@ -32,6 +32,39 @@ export default function ActionProperties({
 
   /* -- RENDER -- */
 
+  /**
+   * Callback function for rendering the success chance
+   * for its respective `ActionProperty` instance.
+   */
+  const renderSuccessChance = (value: number) => {
+    // If the success chance is hidden, return '???'.
+    if (action.successChanceHidden) return '???'
+    // Convert the value to a percentage format.
+    return `${value * 100}%`
+  }
+
+  /**
+   * Callback function for rendering the process time
+   * for its respective `ActionProperty` instance.
+   */
+  const renderProcessTime = (value: number) => {
+    // If the process time is hidden, return '???'.
+    if (action.processTimeHidden) return '???'
+    // Convert the value to a seconds format.
+    return `${value / 1000}s`
+  }
+
+  /**
+   * Callback function for rendering the resource cost
+   * for its respective `ActionProperty` instance.
+   */
+  const renderResourceCost = (value: number) => {
+    // If the resource cost is hidden, return '???'.
+    if (action.resourceCostHidden) return '???'
+    // Convert the value to a negative format.
+    return `${-value}`
+  }
+
   // Render the root component.
   return (
     <div className='ActionProperties'>
@@ -43,21 +76,27 @@ export default function ActionProperties({
         actionKey='successChance'
         label='Success Chance'
         cheatsApplied={cheats.guaranteedSuccess}
-        renderValue={(value) => `${value * 100}%`}
+        renderValue={renderSuccessChance}
       />
       <ActionProperty
         action={action}
         actionKey='processTime'
         label='Time'
         cheatsApplied={cheats.instantaneous}
-        renderValue={(value) => `${value / 1000}s`}
+        renderValue={renderProcessTime}
       />
       <ActionProperty
         action={action}
         actionKey='resourceCost'
         label={resourceLabel}
         cheatsApplied={cheats.zeroCost}
-        renderValue={(value) => `${-value}`}
+        renderValue={renderResourceCost}
+      />
+      <ActionProperty
+        action={action}
+        actionKey='opensNode'
+        label='Opens Node'
+        renderValue={(value) => (value ? 'Yes' : 'No')}
       />
     </div>
   )

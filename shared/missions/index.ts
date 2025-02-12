@@ -25,6 +25,7 @@ import MissionPrototype, {
   TMissionPrototypeOptions,
   TPrototype,
 } from './nodes/prototypes'
+import { DateToolbox } from 'metis/toolbox/dates'
 
 /**
  * This represents a mission for a student to complete.
@@ -94,6 +95,11 @@ export default abstract class Mission<
   // Implemented
   public root: TPrototype<T>
 
+  // Implemented
+  public get structure(): AnyObject {
+    return Mission.determineStructure(this.root)
+  }
+
   /**
    * @param data The mission data from which to create the mission. Any ommitted values will be set to the default properties defined in Mission.DEFAULT_PROPERTIES.
    * @param options The options for creating the mission.
@@ -109,9 +115,15 @@ export default abstract class Mission<
     this.seed = data.seed ?? Mission.DEFAULT_PROPERTIES.seed
     this.resourceLabel =
       data.resourceLabel ?? Mission.DEFAULT_PROPERTIES.resourceLabel
-    this.createdAt = data.createdAt ?? Mission.DEFAULT_PROPERTIES.createdAt
-    this.updatedAt = data.updatedAt ?? Mission.DEFAULT_PROPERTIES.updatedAt
-    this.launchedAt = data.launchedAt ?? Mission.DEFAULT_PROPERTIES.launchedAt
+    this.createdAt = DateToolbox.fromNullableISOString(
+      data.createdAt ?? Mission.DEFAULT_PROPERTIES.createdAt,
+    )
+    this.updatedAt = DateToolbox.fromNullableISOString(
+      data.updatedAt ?? Mission.DEFAULT_PROPERTIES.updatedAt,
+    )
+    this.launchedAt = DateToolbox.fromNullableISOString(
+      data.launchedAt ?? Mission.DEFAULT_PROPERTIES.launchedAt,
+    )
     this.prototypes = []
     this.forces = []
     this.root = this.initializeRoot()
@@ -143,9 +155,9 @@ export default abstract class Mission<
       versionNumber: this.versionNumber,
       seed: this.seed,
       resourceLabel: this.resourceLabel,
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
-      launchedAt: this.launchedAt,
+      createdAt: DateToolbox.toNullableISOString(this.createdAt),
+      updatedAt: DateToolbox.toNullableISOString(this.updatedAt),
+      launchedAt: DateToolbox.toNullableISOString(this.launchedAt),
       structure: {},
       forces: [],
       prototypes: [],
@@ -158,7 +170,7 @@ export default abstract class Mission<
     // passed in the options.
     switch (options.exportType) {
       case 'standard':
-        json.structure = Mission.determineStructure(this.root)
+        json.structure = this.structure
         json.forces = this.forces.map((force) => force.toJson())
         json.prototypes = this.prototypes.map((prototype) => prototype.toJson())
         break
@@ -186,7 +198,7 @@ export default abstract class Mission<
         break
       case 'session-complete':
         // Include all data.
-        json.structure = Mission.determineStructure(this.root)
+        json.structure = this.structure
         json.forces = this.forces.map((force) =>
           force.toJson({
             includeSessionData: true,
@@ -640,6 +652,11 @@ export interface TCommonMission {
    */
   root: TCommonMissionPrototype
   /**
+   * The structure of the mission, representing the relationships between
+   * the prototypes in the mission.
+   */
+  structure: AnyObject
+  /**
    * Converts the mission to JSON.
    * @param options The options for converting the mission to JSON.
    * @returns the JSON for the mission.
@@ -671,54 +688,36 @@ export interface TCommonMission {
 export type TMission<T extends TCommonMissionTypes> = T['mission']
 
 /**
- * Plain JSON representation of a MissionNode object.
+ * Plain JSON representation of a `Mission` object.
  */
-export interface TCommonMissionJson {
-  /**
-   * The ID of the mission.
-   */
-  _id?: string
-  /**
-   * The name of the mission.
-   */
-  name: string
-  /**
-   * The version number of the mission.
-   */
-  versionNumber: number
-  /**
-   * The seed for the mission. Pre-determines outcomes.
-   */
-  seed: string
-  /**
-   * A label given to resources that defines the currency used in the mission.
-   */
-  resourceLabel: string
-  /**
-   * The date/time the mission was created.
-   */
-  createdAt: Date | null
-  /**
-   * The date/time the mission was last updated.
-   */
-  updatedAt: Date | null
-  /**
-   * The date/time the mission was last launched.
-   */
-  launchedAt: Date | null
-  /**
-   * The tree structure used to determine the relationships and positions of the nodes in the mission.
-   */
-  structure: AnyObject
-  /**
-   * The forces in the mission.
-   */
-  forces: TCommonMissionForceJson[]
-  /**
-   * The prototype nodes for the mission.
-   */
-  prototypes: TCommonMissionPrototypeJson[]
-}
+export type TCommonMissionJson = TCreateMissionJsonType<
+  TCommonMission,
+  'name' | 'versionNumber' | 'seed' | 'resourceLabel' | 'structure',
+  {
+    _id?: string
+    createdAt: string | null
+    updatedAt: string | null
+    launchedAt: string | null
+    forces: TCommonMissionForceJson[]
+    prototypes: TCommonMissionPrototypeJson[]
+  }
+>
+
+/**
+ * JSON representation of a `Mission` object, which varies
+ * based on the export type passed.
+ * @param TExportType The export type for the mission.
+ */
+export type TMissionJson<TExportType extends TMissionJsonExportType> =
+  TExportType extends 'standard'
+    ? TCommonMissionJson
+    : TExportType extends 'session-limited'
+    ? Omit<TCommonMissionJson, 'forces' | 'prototypes'>
+    : TExportType extends 'session-force-specific'
+    ? Omit<TCommonMissionJson, 'prototypes'>
+    : TExportType extends 'session-complete'
+    ? TCommonMissionJson
+    : never
 
 /**
  * Options for creating a Mission object.
@@ -809,6 +808,11 @@ export type TMissionJsonOptions =
   | TMissionJsonSessionLimitedOptions
   | TMissionJsonSessionForceSpecificOptions
   | TMissionJsonSessionCompleteOptions
+
+/**
+ * Export type settings available for Mission.toJson.
+ */
+export type TMissionJsonExportType = TMissionJsonOptions['exportType']
 
 /**
  * Options for Mission.mapRelationships.

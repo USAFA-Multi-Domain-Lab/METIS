@@ -829,17 +829,29 @@ export const MissionSchema = new Schema<
                         validate:
                           validate_mission_forces_nodes_actions_processTime,
                       },
+                      processTimeHidden: {
+                        type: Boolean,
+                        required: true,
+                      },
                       successChance: {
                         type: Number,
                         required: true,
                         validate:
                           validate_mission_forces_nodes_actions_successChance,
                       },
+                      successChanceHidden: {
+                        type: Boolean,
+                        required: true,
+                      },
                       resourceCost: {
                         type: Number,
                         required: true,
                         validate:
                           validate_mission_forces_nodes_actions_resourceCost,
+                      },
+                      resourceCostHidden: {
+                        type: Boolean,
+                        required: true,
                       },
                       opensNode: {
                         type: Boolean,

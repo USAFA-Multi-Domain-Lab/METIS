@@ -1,8 +1,11 @@
+@import 'src/components/content/form/index.scss';
+
 .Entry {
   &.SidePanel {
     .BorderBox {
-      .SidePanelSection {
-        margin: 20px 6.5% 40px;
+      .SidePanelContent {
+        @include form-container();
+        margin: 1.5em 2em 3.5em;
       }
     }
   }

@@ -21,6 +21,8 @@ import { ButtonText } from '../../user-controls/buttons/ButtonText'
 import './index.scss'
 import EntryNavigation from './navigation/EntryNavigation'
 import { DetailToggle } from '../../form/DetailToggle'
+import DetailGrouping from '../../form/DetailGrouping'
+import Divider from '../../form/Divider'
 
 /**
  * This will render the entry fields for an action
@@ -36,33 +38,39 @@ export default function ActionEntry({
 }: TActionEntry_P): JSX.Element | null {
   /* -- STATE -- */
 
-  const objectFormSyncState = useObjectFormSync(
+  const actionState = useObjectFormSync(
     action,
     [
       'name',
       'description',
+      'successChanceHidden',
+      'processTimeHidden',
       'resourceCost',
+      'resourceCostHidden',
       'opensNode',
       'postExecutionSuccessText',
       'postExecutionFailureText',
     ],
     { onChange: handleChange },
   )
-
+  const [name, setName] = actionState.name
+  const [description, setDescription] = actionState.description
   const [successChance, setSuccessChance] = useState<number>(
     parseFloat(`${(action.successChance * 100.0).toFixed(2)}`),
   )
+  const [successChanceHidden, hideSuccessChance] =
+    actionState.successChanceHidden
   const [processTime, setProcessTime] = useState<number>(
     action.processTime / 1000,
   )
-  const [name, setName] = objectFormSyncState.name
-  const [description, setDescription] = objectFormSyncState.description
-  const [resourceCost, setResourceCost] = objectFormSyncState.resourceCost
-  const [opensNode, setOpensNode] = objectFormSyncState.opensNode
+  const [processTimeHidden, hideProcessTime] = actionState.processTimeHidden
+  const [resourceCost, setResourceCost] = actionState.resourceCost
+  const [resourceCostHidden, hideResourceCost] = actionState.resourceCostHidden
+  const [opensNode, setOpensNode] = actionState.opensNode
   const [postExecutionSuccessText, setPostExecutionSuccessText] =
-    objectFormSyncState.postExecutionSuccessText
+    actionState.postExecutionSuccessText
   const [postExecutionFailureText, setPostExecutionFailureText] =
-    objectFormSyncState.postExecutionFailureText
+    actionState.postExecutionFailureText
   const [targetEnvironments] = useState<ClientTargetEnvironment[]>(
     ClientTargetEnvironment.getAll(),
   )
@@ -187,156 +195,181 @@ export default function ActionEntry({
 
   /* -- RENDER -- */
 
-  if (node.executable) {
-    return (
-      <div className='Entry ActionEntry SidePanel'>
-        <div className='BorderBox'>
-          {/* -- TOP OF BOX -- */}
-          <div className='BoxTop'>
-            <EntryNavigation object={action} />
+  // Render nothing if the action is not executable.
+  if (!node.executable) return null
+
+  return (
+    <div className='Entry ActionEntry SidePanel'>
+      <div className='BorderBox'>
+        {/* -- TOP OF BOX -- */}
+        <div className='BoxTop'>
+          <EntryNavigation object={action} />
+        </div>
+
+        {/* -- MAIN CONTENT -- */}
+        <div className='SidePanelContent'>
+          <DetailString
+            fieldType='required'
+            handleOnBlur='repopulateValue'
+            label='Name'
+            stateValue={name}
+            setState={setName}
+            defaultValue={ClientMissionAction.DEFAULT_PROPERTIES.name}
+            maxLength={ClientMissionAction.MAX_NAME_LENGTH}
+            placeholder='Enter name...'
+            key={`${action._id}_name`}
+          />
+          <DetailLargeString
+            fieldType='optional'
+            handleOnBlur='none'
+            label='Description'
+            stateValue={description}
+            setState={setDescription}
+            elementBoundary='.SidePanelContent'
+            placeholder='Enter description...'
+            key={`${action._id}_description`}
+          />
+          <Divider />
+          <DetailNumber
+            fieldType='required'
+            label='Probability of Success'
+            stateValue={successChance}
+            setState={setSuccessChance}
+            // Convert to percentage.
+            minimum={ClientMissionAction.SUCCESS_CHANCE_MIN * 100}
+            // Convert to percentage.
+            maximum={ClientMissionAction.SUCCESS_CHANCE_MAX * 100}
+            integersOnly={true}
+            unit='%'
+            key={`${action._id}_successChance`}
+          />
+          <DetailToggle
+            fieldType='required'
+            label='Hide'
+            tooltipDescription='If enabled, the success chance will be hidden from the executor.'
+            stateValue={successChanceHidden}
+            setState={hideSuccessChance}
+            key={`${action._id}_successChanceHidden`}
+          />
+          <Divider />
+          <DetailNumber
+            fieldType='required'
+            label='Process Time'
+            stateValue={processTime}
+            setState={setProcessTime}
+            // Convert to seconds.
+            minimum={ClientMissionAction.PROCESS_TIME_MIN / 1000}
+            // Convert to seconds.
+            maximum={ClientMissionAction.PROCESS_TIME_MAX / 1000}
+            unit='s'
+            key={`${action._id}_timeCost`}
+          />
+          <DetailToggle
+            fieldType='required'
+            label='Hide'
+            tooltipDescription='If enabled, the process time will be hidden from the executor.'
+            stateValue={processTimeHidden}
+            setState={hideProcessTime}
+            key={`${action._id}_processTimeHidden`}
+          />
+          <Divider />
+          <DetailNumber
+            fieldType='required'
+            label='Resource Cost'
+            stateValue={resourceCost}
+            setState={setResourceCost}
+            minimum={ClientMissionAction.RESOURCE_COST_MIN}
+            integersOnly={true}
+            key={`${action._id}_resourceCost`}
+          />
+          <DetailToggle
+            fieldType='required'
+            label='Hide'
+            tooltipDescription='If enabled, the resource cost will be hidden from the executor.'
+            stateValue={resourceCostHidden}
+            setState={hideResourceCost}
+            key={`${action._id}_resourceCostHidden`}
+          />
+          <Divider />
+          <DetailLargeString
+            fieldType='required'
+            handleOnBlur='repopulateValue'
+            label='Post-Execution Success Text'
+            stateValue={postExecutionSuccessText}
+            setState={setPostExecutionSuccessText}
+            defaultValue={
+              ClientMissionAction.DEFAULT_PROPERTIES.postExecutionSuccessText
+            }
+            elementBoundary='.SidePanelContent'
+            key={`${action._id}_postExecutionSuccessText`}
+          />
+          <DetailLargeString
+            fieldType='required'
+            handleOnBlur='repopulateValue'
+            label='Post-Execution Failure Text'
+            stateValue={postExecutionFailureText}
+            setState={setPostExecutionFailureText}
+            defaultValue={
+              ClientMissionAction.DEFAULT_PROPERTIES.postExecutionFailureText
+            }
+            elementBoundary='.SidePanelContent'
+            key={`${action._id}_postExecutionFailureText`}
+          />
+          <DetailToggle
+            fieldType='required'
+            label='Opens Node'
+            tooltipDescription='If enabled, this action will open the node if successfully executed.'
+            stateValue={opensNode}
+            setState={setOpensNode}
+            key={`${action._id}_opensNode`}
+          />
+          <Divider />
+
+          {/* -- EFFECTS -- */}
+          <ListOld<ClientEffect>
+            items={action.effects}
+            renderItemDisplay={(effect) => renderEffectListItem(effect)}
+            headingText={'Effects'}
+            sortByMethods={[ESortByMethod.Name]}
+            nameProperty={'name'}
+            alwaysUseBlanks={false}
+            searchableProperties={['name']}
+            noItemsDisplay={
+              <div className='NoContent'>No effects available...</div>
+            }
+            ajaxStatus={'Loaded'}
+            applyItemStyling={() => {
+              return {}
+            }}
+            itemsPerPage={null}
+            listStyling={{ borderBottom: 'unset' }}
+            listSpecificItemClassName='AltDesign2'
+          />
+          <div className='ButtonContainer New'>
+            <ButtonText
+              text='New Effect'
+              onClick={() => setIsNewEffect(true)}
+              tooltipDescription='Create a new effect.'
+              uniqueClassName={newEffectButtonClassName}
+            />
           </div>
 
-          {/* -- MAIN CONTENT -- */}
-          <div className='SidePanelSection'>
-            <form className='MainDetails'>
-              <DetailString
-                fieldType='required'
-                handleOnBlur='repopulateValue'
-                label='Name'
-                stateValue={name}
-                setState={setName}
-                defaultValue={ClientMissionAction.DEFAULT_PROPERTIES.name}
-                maxLength={ClientMissionAction.MAX_NAME_LENGTH}
-                placeholder='Enter name...'
-                key={`${action._id}_name`}
-              />
-              <DetailLargeString
-                fieldType='optional'
-                handleOnBlur='none'
-                label='Description'
-                stateValue={description}
-                setState={setDescription}
-                elementBoundary='.SidePanelSection'
-                placeholder='Enter description...'
-                key={`${action._id}_description`}
-              />
-              <DetailNumber
-                fieldType='required'
-                label='Probability of Success'
-                stateValue={successChance}
-                setState={setSuccessChance}
-                // Convert to percentage.
-                minimum={ClientMissionAction.SUCCESS_CHANCE_MIN * 100}
-                // Convert to percentage.
-                maximum={ClientMissionAction.SUCCESS_CHANCE_MAX * 100}
-                integersOnly={true}
-                unit='%'
-                key={`${action._id}_successChance`}
-              />
-              <DetailNumber
-                fieldType='required'
-                label='Process Time'
-                stateValue={processTime}
-                setState={setProcessTime}
-                // Convert to seconds.
-                minimum={ClientMissionAction.PROCESS_TIME_MIN / 1000}
-                // Convert to seconds.
-                maximum={ClientMissionAction.PROCESS_TIME_MAX / 1000}
-                unit='s'
-                key={`${action._id}_timeCost`}
-              />
-              <DetailNumber
-                fieldType='required'
-                label='Resource Cost'
-                stateValue={resourceCost}
-                setState={setResourceCost}
-                minimum={ClientMissionAction.RESOURCE_COST_MIN}
-                integersOnly={true}
-                key={`${action._id}_resourceCost`}
-              />
-              <DetailToggle
-                fieldType='required'
-                label='Opens Node'
-                tooltipDescription='If enabled, this action will open the node if successfully executed.'
-                stateValue={opensNode}
-                setState={setOpensNode}
-                key={`${action._id}_opensNode`}
-              />
-              <DetailLargeString
-                fieldType='required'
-                handleOnBlur='repopulateValue'
-                label='Post-Execution Success Text'
-                stateValue={postExecutionSuccessText}
-                setState={setPostExecutionSuccessText}
-                defaultValue={
-                  ClientMissionAction.DEFAULT_PROPERTIES
-                    .postExecutionSuccessText
-                }
-                elementBoundary='.SidePanelSection'
-                key={`${action._id}_postExecutionSuccessText`}
-              />
-              <DetailLargeString
-                fieldType='required'
-                handleOnBlur='repopulateValue'
-                label='Post-Execution Failure Text'
-                stateValue={postExecutionFailureText}
-                setState={setPostExecutionFailureText}
-                defaultValue={
-                  ClientMissionAction.DEFAULT_PROPERTIES
-                    .postExecutionFailureText
-                }
-                elementBoundary='.SidePanelSection'
-                key={`${action._id}_postExecutionFailureText`}
-              />
-            </form>
-
-            {/* -- EFFECTS -- */}
-            <ListOld<ClientEffect>
-              items={action.effects}
-              renderItemDisplay={(effect) => renderEffectListItem(effect)}
-              headingText={'Effects'}
-              sortByMethods={[ESortByMethod.Name]}
-              nameProperty={'name'}
-              alwaysUseBlanks={false}
-              searchableProperties={['name']}
-              noItemsDisplay={
-                <div className='NoContent'>No effects available...</div>
+          <Divider />
+          {/* -- BUTTON(S) -- */}
+          <div className='ButtonContainer'>
+            <ButtonText
+              text='Delete Action'
+              onClick={async () =>
+                await handleDeleteActionRequest(action, true)
               }
-              ajaxStatus={'Loaded'}
-              applyItemStyling={() => {
-                return {}
-              }}
-              itemsPerPage={null}
-              listStyling={{ borderBottom: 'unset' }}
-              listSpecificItemClassName='AltDesign2'
+              tooltipDescription={deleteTooltipDescription}
+              disabled={node.actions.size < 2 ? 'partial' : 'none'}
             />
-            <div className='ButtonContainer New'>
-              <ButtonText
-                text='New Effect'
-                onClick={() => setIsNewEffect(true)}
-                tooltipDescription='Create a new effect.'
-                uniqueClassName={newEffectButtonClassName}
-              />
-            </div>
-
-            {/* -- BUTTON(S) -- */}
-            <div className='ButtonContainer'>
-              <ButtonText
-                text='Delete Action'
-                onClick={async () =>
-                  await handleDeleteActionRequest(action, true)
-                }
-                tooltipDescription={deleteTooltipDescription}
-                disabled={node.actions.size < 2 ? 'partial' : 'none'}
-              />
-            </div>
           </div>
         </div>
       </div>
-    )
-  } else {
-    return null
-  }
+    </div>
+  )
 }
 
 /* ---------------------------- TYPES FOR NODE ACTION ENTRY ---------------------------- */

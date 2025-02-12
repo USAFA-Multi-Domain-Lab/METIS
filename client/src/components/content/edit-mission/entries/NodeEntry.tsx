@@ -22,6 +22,7 @@ import {
 import { TToggleLockState } from '../../user-controls/Toggle'
 import './index.scss'
 import EntryNavigation from './navigation/EntryNavigation'
+import Divider from '../../form/Divider'
 
 /**
  * This will render the entry fields for a mission-node
@@ -285,65 +286,63 @@ export default function NodeEntry({
         </div>
 
         {/* -- MAIN CONTENT -- */}
-        <div className='SidePanelSection'>
-          <form className='MainDetails'>
-            <DetailString
-              fieldType='required'
-              handleOnBlur='repopulateValue'
-              label='Name'
-              stateValue={name}
-              setState={setName}
-              defaultValue={ClientMissionNode.DEFAULT_PROPERTIES.name}
-              maxLength={ClientMissionNode.MAX_NAME_LENGTH}
-              key={`${node._id}_name`}
-            />
-            <DetailColorSelector
-              fieldType='required'
-              label='Color'
-              colors={ClientMission.COLOR_OPTIONS}
-              isExpanded={false}
-              stateValue={color}
-              setState={setColor}
-              buttons={colorButtons}
-              key={`${node._id}_color`}
-            />
-            <DetailLargeString
-              fieldType='optional'
-              handleOnBlur='none'
-              label='Description'
-              stateValue={description}
-              setState={setDescription}
-              elementBoundary='.SidePanelSection'
-              placeholder='Enter description...'
-              key={`${node._id}_description`}
-            />
-            <DetailLargeString
-              fieldType='optional'
-              handleOnBlur='none'
-              label='Pre-Execution Text'
-              stateValue={preExecutionText}
-              setState={setPreExecutionText}
-              elementBoundary='.SidePanelSection'
-              placeholder='Enter pre-execution text...'
-              key={`${node._id}_preExecutionText`}
-            />
-            <DetailToggle
-              fieldType='required'
-              label='Executable'
-              stateValue={executable}
-              setState={setExecutable}
-              key={`${node._id}_executable`}
-            />
-            <DetailToggle
-              fieldType='required'
-              label='Device'
-              stateValue={device}
-              setState={setDevice}
-              lockState={deviceLockState}
-              key={`${node._id}_device`}
-            />
-          </form>
-
+        <div className='SidePanelContent'>
+          <DetailString
+            fieldType='required'
+            handleOnBlur='repopulateValue'
+            label='Name'
+            stateValue={name}
+            setState={setName}
+            defaultValue={ClientMissionNode.DEFAULT_PROPERTIES.name}
+            maxLength={ClientMissionNode.MAX_NAME_LENGTH}
+            key={`${node._id}_name`}
+          />
+          <DetailColorSelector
+            fieldType='required'
+            label='Color'
+            colors={ClientMission.COLOR_OPTIONS}
+            isExpanded={false}
+            stateValue={color}
+            setState={setColor}
+            buttons={colorButtons}
+            key={`${node._id}_color`}
+          />
+          <DetailLargeString
+            fieldType='optional'
+            handleOnBlur='none'
+            label='Description'
+            stateValue={description}
+            setState={setDescription}
+            elementBoundary='.SidePanelContent'
+            placeholder='Enter description...'
+            key={`${node._id}_description`}
+          />
+          <DetailLargeString
+            fieldType='optional'
+            handleOnBlur='none'
+            label='Pre-Execution Text'
+            stateValue={preExecutionText}
+            setState={setPreExecutionText}
+            elementBoundary='.SidePanelContent'
+            placeholder='Enter pre-execution text...'
+            key={`${node._id}_preExecutionText`}
+          />
+          <DetailToggle
+            fieldType='required'
+            label='Executable'
+            stateValue={executable}
+            setState={setExecutable}
+            key={`${node._id}_executable`}
+          />
+          <DetailToggle
+            fieldType='required'
+            label='Device'
+            stateValue={device}
+            setState={setDevice}
+            lockState={deviceLockState}
+            key={`${node._id}_device`}
+          />
+          <Divider />
           {/* -- ACTIONS -- */}
           <ListOld<ClientMissionAction>
             items={Array.from(node.actions.values())}
@@ -364,6 +363,7 @@ export default function NodeEntry({
             listStyling={{ borderBottom: 'unset' }}
             listSpecificItemClassName={actionClassName}
           />
+          <Divider />
           <div className={newActionClassName}>
             <ButtonText
               text='New Action'

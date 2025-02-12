@@ -537,7 +537,6 @@
 
     .top {
       grid-template-columns: auto;
-      border-bottom: 2px solid $color-primary-light;
       padding-bottom: 8px;
 
       .previous-page,
@@ -558,6 +557,9 @@
           background: none;
           padding: 0;
           text-align: unset;
+          font-size: 0.82rem;
+          font-weight: bold;
+          color: $color-text-faded;
         }
       }
     }
@@ -575,6 +577,10 @@
         font-size: 0.78em;
         width: 100%;
         max-width: unset;
+
+        .NoContent {
+          color: $color-text-faded;
+        }
 
         &.item-status {
           background: none;

@@ -101,7 +101,7 @@ export default function ForceEntry({
         </div>
 
         {/* -- MAIN CONTENT -- */}
-        <div className='SidePanelSection MainDetails'>
+        <div className='SidePanelContent'>
           <DetailString
             fieldType='required'
             handleOnBlur='repopulateValue'
@@ -129,7 +129,7 @@ export default function ForceEntry({
             stateValue={introMessage}
             setState={setIntroMessage}
             defaultValue={ClientMissionForce.DEFAULT_PROPERTIES.introMessage}
-            elementBoundary='.SidePanelSection'
+            elementBoundary='.SidePanelContent'
             key={`${force._id}_introMessage`}
           />
           <DetailNumber
@@ -140,6 +140,7 @@ export default function ForceEntry({
             integersOnly={true}
             key={`${force._id}_initialResources`}
           />
+
           <div className='ButtonContainer'>
             <ButtonText
               text='Duplicate force'

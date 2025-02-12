@@ -53,7 +53,7 @@ export default function EffectEntry({
         </div>
 
         {/* -- MAIN CONTENT -- */}
-        <div className='SidePanelSection MainDetails'>
+        <div className='SidePanelContent'>
           <DetailString
             fieldType='required'
             handleOnBlur='repopulateValue'
@@ -70,7 +70,7 @@ export default function EffectEntry({
             label='Description'
             stateValue={description}
             setState={setDescription}
-            elementBoundary='.SidePanelSection'
+            elementBoundary='.SidePanelContent'
             placeholder='Enter description...'
           />
           <DetailLocked

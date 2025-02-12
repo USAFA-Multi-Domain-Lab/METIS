@@ -2,11 +2,12 @@
 @import '../form/index.scss';
 
 .Detail.DetailToggle {
-  display: grid;
   align-items: center;
   grid-template-columns: 1fr auto;
+  grid-template-rows: auto;
   @include detail-field-styling;
-  margin: 0 0 2em;
+  background: none;
+  padding: 0;
 
   .TitleRow {
     margin: 0;
@@ -15,7 +16,7 @@
   .Field {
     border: none;
     padding: 0;
-    margin: 0 0 0 15px;
+    background: none;
   }
 
   .FieldErrorMessage {
