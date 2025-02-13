@@ -1,11 +1,11 @@
 import Effect, { TEffectOptions } from 'metis/missions/effects'
-import { TTargetEnvContextEffect } from 'metis/server/target-environments/context-provider'
 import ServerTarget from 'metis/server/target-environments/targets'
 import { TTargetArg } from 'metis/target-environments/args'
 import ForceArg from 'metis/target-environments/args/force-arg'
 import NodeArg from 'metis/target-environments/args/node-arg'
 import { AnyObject } from 'metis/toolbox/objects'
 import { TServerMissionTypes } from '..'
+import { TTargetEnvExposedEffect } from 'metis/server/target-environments/context'
 
 /**
  * Class representing an effect on the server-side that can be
@@ -60,7 +60,7 @@ export default class ServerEffect extends Effect<TServerMissionTypes> {
    * in a target environment.
    * @returns The effect's necessary properties.
    */
-  public toTargetEnvContext(): TTargetEnvContextEffect {
+  public toTargetEnvContext(): TTargetEnvExposedEffect {
     return {
       _id: this._id,
       name: this.name,

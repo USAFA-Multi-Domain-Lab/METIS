@@ -51,7 +51,7 @@ const launchSession = async (request: Request, response: Response) => {
     )
     // Update `launchedAt` for the mission to track
     // the last time the mission was launched.
-    missionDoc.launchedAt = new Date()
+    missionDoc.launchedAt = new Date().toISOString()
     await missionDoc.save()
     // Return the ID of the newly launched session as JSON.
     return ApiResponse.sendJson(response, { sessionId: session._id })
