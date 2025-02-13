@@ -1060,6 +1060,15 @@ export default class ClientMission
     if (selection.mission !== this)
       throw new Error('The given selection is not part of the mission.')
 
+    // If an action is selected when it's node is not
+    // executable, select the mission instead.
+    if (
+      selection instanceof ClientMissionAction &&
+      !selection.node.executable
+    ) {
+      selection = this
+    }
+
     this._selection = selection
 
     this.emitEvent('selection')

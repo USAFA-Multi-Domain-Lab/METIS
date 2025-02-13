@@ -83,7 +83,6 @@ export default function ArgLargeString({
       stateValue={value}
       setState={setValue}
       defaultValue={arg.required ? arg.default : undefined}
-      elementBoundary='.SidePanelSection'
       tooltipDescription={arg.tooltipDescription}
       key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}_${
         arg.required ? 'required' : 'optional'

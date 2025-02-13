@@ -114,7 +114,7 @@ export default function MissionList({
    */
   const onCopyRequest = async (mission: ClientMission) => {
     let { choice, text } = await prompt(
-      'Enter the name of the new mission:',
+      'Enter the name of the new mission',
       ['Cancel', 'Submit'],
       {
         textField: { boundChoices: ['Submit'], label: 'Name' },

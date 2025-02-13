@@ -2,13 +2,10 @@ import { useEffect, useState } from 'react'
 import ClientMission, { TMissionComponent } from 'src/missions'
 import { compute } from 'src/toolbox'
 import { useMountHandler, usePostInitEffect } from 'src/toolbox/hooks'
-import { SingleTypeObject } from '../../../../../../shared/toolbox/objects'
 import Tooltip from '../../communication/Tooltip'
 import { DetailString } from '../../form/DetailString'
 import ListOld, { ESortByMethod } from '../../general-layout/ListOld'
-import ButtonSvgPanel, {
-  TValidPanelButton,
-} from '../../user-controls/buttons/ButtonSvgPanel'
+import ButtonSvg from '../../user-controls/buttons/ButtonSvg'
 import './index.scss'
 import EntryNavigation from './navigation/EntryNavigation'
 
@@ -73,33 +70,21 @@ export default function MissionEntry({
     /* -- COMPUTED -- */
 
     /**
-     * The buttons for the object list.
+     * Tooltip description for the object list item.
      */
-    const buttons: TValidPanelButton[] = compute(() => {
-      // Create a default list of buttons.
-      let buttons: TValidPanelButton[] = []
-      // Create a list of mini actions that are available.
-      let availableMiniActions: SingleTypeObject<TValidPanelButton> = {
-        warning: {
-          type: 'warning-transparent',
-          key: 'warning',
-          onClick: () => {},
-          cursor: 'help',
-          description:
-            'If this conflict is not resolved, this mission can still be used to launch a session, but the session may not function as expected.',
-        },
-      }
-
-      // Add the buttons to the list.
-      buttons = Object.values(availableMiniActions)
-
-      // Return the buttons.
-      return buttons
-    })
+    const description: string = compute(
+      () =>
+        'If this conflict is not resolved, this mission can still be used to launch a session, but the session may not function as expected.',
+    )
 
     return (
       <div className='Row IconFirst' key={`object-row-${object._id}`}>
-        <ButtonSvgPanel buttons={buttons} size={'small'} />
+        <ButtonSvg
+          type='warning-transparent'
+          cursor='help'
+          description={description}
+          onClick={() => {}}
+        />
         <div
           className='RowContent Select'
           onClick={() => mission.select(object)}

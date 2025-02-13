@@ -3,6 +3,7 @@ import Underline from '@tiptap/extension-underline'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import './RichTextOutputBox.scss'
+
 /**
  * Displays rich text.
  */

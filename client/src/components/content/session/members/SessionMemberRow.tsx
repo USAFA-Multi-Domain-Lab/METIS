@@ -10,9 +10,7 @@ import MemberRole, {
 } from '../../../../../../shared/sessions/members/roles'
 import Prompt from '../../communication/Prompt'
 import { DetailDropdown } from '../../form/DetailDropdown'
-import ButtonSvgPanel, {
-  TValidPanelButton,
-} from '../../user-controls/buttons/ButtonSvgPanel'
+import ButtonSvgPanel_v2 from '../../user-controls/buttons/ButtonSvgPanel_v2'
 import './SessionMemberRow.scss'
 
 export default function SessionMemberRow({
@@ -45,27 +43,6 @@ export default function SessionMemberRow({
    * The ID of the assigned role.
    */
   const assignedRoleId: TMemberRoleId = assignedRole._id
-
-  /**
-   * Buttons for SVG panel.
-   */
-  const buttons = compute((): TValidPanelButton[] => {
-    return [
-      {
-        type: 'kick',
-        key: 'kick',
-        onClick: () => onClickKick(),
-        description:
-          'Kick member from the session (Can still choose to rejoin).',
-      },
-      {
-        type: 'ban',
-        key: 'ban',
-        onClick: () => onClickBan(),
-        description: 'Ban member from the session (Cannot rejoin).',
-      },
-    ]
-  })
 
   /**
    * Whether the target member can be assigned a force.
@@ -385,7 +362,31 @@ export default function SessionMemberRow({
       currentMember?.isAuthorized('manageSessionMembers') &&
       !member.isAuthorized('manageSessionMembers')
     ) {
-      buttonPanel = <ButtonSvgPanel buttons={buttons} size={'small'} />
+      buttonPanel = (
+        <ButtonSvgPanel_v2
+          buttons={['kick', 'ban']}
+          onButtonClick={(button) => {
+            switch (button) {
+              case 'kick':
+                onClickKick()
+                break
+              case 'ban':
+                onClickBan()
+                break
+            }
+          }}
+          getTooltip={(button) => {
+            switch (button) {
+              case 'kick':
+                return 'Kick member from the session (Can still choose to rejoin).'
+              case 'ban':
+                return 'Ban member from the session (Cannot rejoin).'
+              default:
+                return ''
+            }
+          }}
+        />
+      )
     }
     // Else, render 'N/A'.
     else {

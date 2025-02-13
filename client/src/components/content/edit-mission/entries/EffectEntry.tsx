@@ -70,7 +70,6 @@ export default function EffectEntry({
             label='Description'
             stateValue={description}
             setState={setDescription}
-            elementBoundary='.SidePanelSection'
             placeholder='Enter description...'
           />
           <DetailLocked

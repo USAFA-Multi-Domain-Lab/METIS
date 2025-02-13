@@ -24,7 +24,7 @@ export default function TabBar({
       <div className='Title'>
         Mission: <span className='MissionName'>{title}</span>
       </div>
-      <ButtonSvgPanel buttons={buttons} size={'small'} />
+      <ButtonSvgPanel buttons={buttons} />
     </div>
   )
 }

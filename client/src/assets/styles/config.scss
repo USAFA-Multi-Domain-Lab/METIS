@@ -8,7 +8,7 @@ $color-secondary: #1b2937;
 
 $color-accent: #3bfce8;
 $color-accent-light: lighten($color-accent, 30%);
-$color-accent-dark: darken($color-accent, 50%);
+$color-accent-dark: darken($color-accent, 54.5%);
 
 $color-success: #65eb59;
 $color-success-dark: darken($color-success, 53%);
@@ -51,6 +51,4 @@ $z-index-tooltips: 250;
 
 // navigation height
 $nav-height: 90px;
-$button-svg-small-size: 24px;
-$button-svg-regular-size: 28.8px;
-$button-svg-wide-size: 20px;
+$button-svg-size: 24px;

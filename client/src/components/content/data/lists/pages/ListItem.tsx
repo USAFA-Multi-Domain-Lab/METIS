@@ -131,7 +131,6 @@ export default function ListItem<T extends TListItem>({
         <div key={'options'} className='ItemCellLike ItemOptions'>
           <ButtonSvg
             type='options'
-            size='small'
             onClick={onOptionsClick}
             description={'View option menu'}
             disabled={itemButtons.length === 0 ? 'full' : 'none'}

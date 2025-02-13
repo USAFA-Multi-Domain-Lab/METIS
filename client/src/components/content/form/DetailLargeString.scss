@@ -15,117 +15,75 @@
     }
   }
 
-  .FieldContainer {
-    // This container is only here because React Quill needs a parent container
-    // for the onBlur event to work properly.
+  .Field {
+    margin-top: 0;
+    padding-top: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
 
-    .Field {
-      border: none;
-      resize: none;
-      padding: 0;
+    .tiptap {
+      &:focus {
+        outline: none;
+      }
 
-      .ql-toolbar {
-        border: $detail-field-border;
-        border-radius: $detail-field-border-radius $detail-field-border-radius 0
-          0;
+      :first-child {
+        margin-top: 0;
+      }
 
-        .ql-formats {
-          button {
-            &:hover {
-              border: 2px solid $color-accent;
-            }
+      p {
+        line-height: 1.65;
 
-            svg {
-              line,
-              path,
-              rect {
-                stroke: $color-primary-light;
-              }
-            }
-          }
+        &.is-editor-empty::before {
+          color: #adb5bd;
+          content: attr(data-placeholder);
+          float: left;
+          height: 0;
+          pointer-events: none;
+          font-size: 0.95em;
         }
       }
 
-      .ql-container {
-        font-family: monospace, sans-serif;
-        border: $detail-field-border;
-        border-radius: 0 0 $detail-field-border-radius
-          $detail-field-border-radius;
-        border-top: none;
-
-        .ql-editor {
-          * {
-            color: $detail-field-text-color;
-
-            &::before,
-            &::after {
-              color: $detail-field-text-color;
-            }
-          }
-
-          a {
-            color: $color-accent;
-          }
-
-          ul,
-          ol {
-            padding: 0;
-          }
-
-          &.ql-blank::before {
-            color: $color-primary-light;
-            opacity: 0.775;
-            font-style: normal;
-            font-family: 'monospace', sans-serif;
-            font-size: 14px;
-          }
-        }
-
-        .ql-tooltip {
-          color: $color-primary-light;
-          border-radius: 5px;
-          box-shadow: none;
-          background-color: $color-accent-dark;
-          border: 2px solid $color-primary-light;
-
-          * {
-            color: $color-primary-light;
-            font-family: 'monospace', sans-serif;
-          }
-
-          input {
-            border-radius: 5px;
-            background-color: $color-accent-dark;
-            border: 2px solid $color-primary-light;
-
-            &:focus {
-              outline: none;
-            }
-          }
-
-          .ql-preview {
-            color: $color-accent;
-            text-decoration: underline;
-          }
-        }
+      @mixin code-styling() {
+        background-color: $color-accent-dark;
+        border-radius: 0.4em;
+        padding: 0.25em 0.33em;
+        border: 1px solid rgba($color-primary-light, 0.65);
       }
 
-      &.Error {
-        .ql-toolbar {
-          border: 2px solid $color-failure;
-        }
+      code {
+        @include code-styling();
+      }
 
-        .ql-container {
-          border: 2px solid $color-failure;
-          border-top: none;
+      pre {
+        @include code-styling();
+        padding: 0.5em 0.75em;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
 
-          .ql-editor {
-            &.ql-blank::before {
-              color: $color-failure-light;
-            }
-          }
+        code {
+          background-color: unset;
+          border-radius: unset;
+          padding: unset;
+          border: unset;
+          border-radius: unset;
         }
       }
+    }
+  }
+
+  .Toolbar {
+    @include detail-field-styling();
+
+    display: flex;
+    align-items: center;
+    flex-flow: row wrap;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    padding: 0.5em 0.9em;
+
+    .ButtonSvgPanel_v2 {
+      margin: 0.5em 0.5em 0.5em 0;
     }
   }
 }

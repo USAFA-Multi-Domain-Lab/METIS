@@ -5,7 +5,6 @@ import ClientMissionAction from 'src/missions/actions'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect, useRequireLogin } from 'src/toolbox/hooks'
-import { SingleTypeObject } from '../../../../../../shared/toolbox/objects'
 import Prompt from '../../communication/Prompt'
 import Tooltip from '../../communication/Tooltip'
 import { DetailColorSelector } from '../../form/DetailColorSelector'
@@ -13,9 +12,8 @@ import { DetailLargeString } from '../../form/DetailLargeString'
 import { DetailString } from '../../form/DetailString'
 import { DetailToggle } from '../../form/DetailToggle'
 import ListOld, { ESortByMethod } from '../../general-layout/ListOld'
-import ButtonSvgPanel, {
-  TValidPanelButton,
-} from '../../user-controls/buttons/ButtonSvgPanel'
+import { TButtonSvgType } from '../../user-controls/buttons/ButtonSvg'
+import ButtonSvgPanel_v2 from '../../user-controls/buttons/ButtonSvgPanel_v2'
 import {
   ButtonText,
   TButtonText_P,
@@ -238,27 +236,7 @@ export default function NodeEntry({
       /**
        * The buttons for the action list.
        */
-      const actionButtons = compute(() => {
-        // Create a default list of buttons.
-        let buttons: TValidPanelButton[] = []
-
-        // If the action is available then add the edit and remove buttons.
-        let availableMiniActions: SingleTypeObject<TValidPanelButton> = {
-          remove: {
-            type: 'remove',
-            key: 'remove',
-            onClick: async () => await handleDeleteActionRequest(action),
-            description: deleteTooltipDescription,
-            disabled: node.actions.size < 2 ? 'partial' : 'none',
-          },
-        }
-
-        // Add the buttons to the list.
-        buttons = Object.values(availableMiniActions)
-
-        // Return the buttons.
-        return buttons
-      })
+      const actionButtons: TButtonSvgType[] = compute(() => ['remove'])
 
       /**
        * The tooltip description for the action.
@@ -282,7 +260,12 @@ export default function NodeEntry({
             {action.name}
             <Tooltip description={actionTooltipDescription} />
           </div>
-          <ButtonSvgPanel buttons={actionButtons} size={'small'} />
+          <ButtonSvgPanel_v2
+            buttons={actionButtons}
+            onButtonClick={async () => await handleDeleteActionRequest(action)}
+            getTooltip={() => deleteTooltipDescription}
+            disableButton={() => (node.actions.size < 2 ? 'partial' : 'none')}
+          />
         </div>
       )
     }
@@ -327,7 +310,6 @@ export default function NodeEntry({
               label='Description'
               stateValue={description}
               setState={setDescription}
-              elementBoundary='.SidePanelSection'
               placeholder='Enter description...'
               key={`${node._id}_description`}
             />
@@ -337,7 +319,6 @@ export default function NodeEntry({
               label='Pre-Execution Text'
               stateValue={preExecutionText}
               setState={setPreExecutionText}
-              elementBoundary='.SidePanelSection'
               placeholder='Enter pre-execution text...'
               key={`${node._id}_preExecutionText`}
             />

@@ -10,8 +10,8 @@ import './ButtonSvg.scss'
  */
 export default function ButtonSvg({
   type,
-  size = 'regular',
-  description: description = null,
+  description = null,
+  label = null,
   uniqueClassList = [],
   disabled = 'none',
   cursor = 'pointer',
@@ -25,7 +25,12 @@ export default function ButtonSvg({
    */
   const rootClass = compute((): string => {
     // Gather details.
-    let classList: string[] = ['ButtonSvg', type, size, ...uniqueClassList]
+    let classList: string[] = [
+      'ButtonSvg',
+      type,
+      !!label ? 'WithLabel' : 'WithoutLabel',
+      ...uniqueClassList,
+    ]
 
     // Determine if the button is partially or fully disabled.
     if (disabled === 'partial') {
@@ -43,38 +48,15 @@ export default function ButtonSvg({
    */
   const rootStyle = compute((): React.CSSProperties => {
     // Construct result.
-    let result: React.CSSProperties = {}
+    let result: React.CSSProperties = {
+      backgroundImage: `url(${require(`../../../../assets/images/icons/${type}.svg`)})`,
+      backgroundSize: '0.65em',
+      backgroundRepeat: 'no-repeat',
+      backgroundPosition: 'center',
+    }
 
     // Return as is if the type is '_blank'.
     if (type === '_blank') return result
-
-    // Determine the background details based on size.
-    switch (size) {
-      case 'regular':
-        result = {
-          backgroundImage: `url(${require(`../../../../assets/images/icons/${type}.svg`)}), linear-gradient(to bottom, #1a2a1a 0% 100%)`,
-          backgroundSize: '0.5em, cover',
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center',
-        }
-        break
-      case 'small':
-        result = {
-          backgroundImage: `url(${require(`../../../../assets/images/icons/${type}.svg`)})`,
-          backgroundSize: '0.65em',
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center',
-        }
-        break
-      case 'wide':
-        result = {
-          backgroundImage: `url(${require(`../../../../assets/images/icons/${type}.svg`)})`,
-          backgroundSize: '0.65em',
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: '0% center',
-        }
-        break
-    }
 
     // Offset the background position for 'upload' and
     // 'download' icons to center them.
@@ -97,23 +79,25 @@ export default function ButtonSvg({
    * The JSX for the description.
    */
   const descriptionJsx = compute<JSX.Element | null>(() => {
-    // If there is no description, return null.
-    if (!description) return null
-
-    switch (size) {
-      // Return the description as a tooltip
-      // for 'small' and 'regular' sizes.
-      case 'regular':
-      case 'small':
-        return <Tooltip description={description} />
-      // Return the description as a label
-      // for 'wide' size.
-      case 'wide':
-        return (
+    if (!label && !!description) {
+      return <Tooltip description={description} />
+    } else if (!!label && !description) {
+      return (
+        <div className='ButtonLabel'>
+          <div className='ButtonLabelText'>{label}</div>
+        </div>
+      )
+    } else if (!!label && !!description) {
+      return (
+        <>
           <div className='ButtonLabel'>
             <div className='ButtonLabelText'>{description}</div>
           </div>
-        )
+          <Tooltip description={description} />
+        </>
+      )
+    } else {
+      return null
     }
   })
 
@@ -132,9 +116,9 @@ export default function ButtonSvg({
 /* -- types -- */
 
 /**
- * The size of a SVG button.
+ * The different ways a button can be disabled.
  */
-export type TButtonSvgSize = 'small' | 'regular' | 'wide'
+export type TButtonSvgDisabled = 'partial' | 'full' | 'none'
 
 /**
  * Props for `ButtonSVG` component.
@@ -145,18 +129,17 @@ export type TButtonSvg_P = {
    */
   type: TButtonSvgType
   /**
-   * The size of the button.
-   * @default 'regular'
-   */
-  size?: TButtonSvgSize
-  /**
    * The description for the button.
-   * @note In 'small' and 'regular' sizes, this will be
-   * displayed as a tooltip, with 'wide' size, this will
-   * be displayed as beside the icon at all times.
    * @default null
    */
   description?: string | null
+  /**
+   * The label for the button.
+   * @note This will be displayed beside the icon at all
+   * times.
+   * @default null
+   */
+  label?: string | null
   /**
    * Unique class lists to apply to the component.
    * @default []
@@ -166,7 +149,7 @@ export type TButtonSvg_P = {
    * The disabled state of the button.
    * @default 'none'
    */
-  disabled?: 'partial' | 'full' | 'none'
+  disabled?: TButtonSvgDisabled
   /**
    * Cursor styling used for the button.
    * @default 'pointer'
@@ -199,23 +182,36 @@ export type TButtonSvgType =
   | '_blank'
   | 'add'
   | 'ban'
+  | 'blockquote'
+  | 'bold'
   | 'cancel'
+  | 'code'
   | 'copy'
+  | 'code-block'
+  | 'divider'
   | 'down'
   | 'download'
   | 'edit'
+  | 'italic'
   | 'kick'
   | 'launch'
+  | 'link'
   | 'lock'
   | 'open'
   | 'options'
+  | 'ordered-list'
   | 'question'
+  | 'redo'
   | 'remove'
   | 'reorder'
   | 'save'
   | 'search'
   | 'shell'
+  | 'strike'
   | 'text-cursor'
+  | 'underline'
+  | 'undo'
+  | 'unordered-list'
   | 'upload'
   | 'user'
   | 'warning-transparent'

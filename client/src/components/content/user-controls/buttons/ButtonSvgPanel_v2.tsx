@@ -1,6 +1,6 @@
 import React from 'react'
 import { compute } from 'src/toolbox'
-import ButtonSvg, { TButtonSvgSize, TButtonSvgType } from './ButtonSvg'
+import ButtonSvg, { TButtonSvgDisabled, TButtonSvgType } from './ButtonSvg'
 import './ButtonSvgPanel_v2.scss'
 
 /**
@@ -14,11 +14,12 @@ import './ButtonSvgPanel_v2.scss'
  */
 export default function ButtonSvgPanel_v2({
   buttons,
-  size = 'regular',
   uniqueClassList = [],
   styling = {},
+  getLabel = () => '',
   getTooltip = () => '',
   onButtonClick,
+  disableButton = () => 'none',
 }: TButtonSvgPanel_v2_P): JSX.Element | null {
   // If no buttons, add a blank to
   // maintain the correct height.
@@ -44,9 +45,10 @@ export default function ButtonSvgPanel_v2({
         <ButtonSvg
           key={type + index} // todo: fix this to not use the index.
           type={type}
-          size={size}
-          onClick={() => onButtonClick(type)}
+          label={getLabel(type)}
           description={getTooltip(type)}
+          onClick={() => onButtonClick(type)}
+          disabled={disableButton(type)}
         />
       ))}
     </div>
@@ -66,11 +68,6 @@ export type TButtonSvgPanel_v2_P = {
    */
   buttons: TButtonSvgType[]
   /**
-   * The size of the buttons.
-   * @default 'regular'
-   */
-  size?: TButtonSvgSize
-  /**
    * Unique classes to add to the panel.
    * @default []
    */
@@ -80,6 +77,13 @@ export type TButtonSvgPanel_v2_P = {
    * @default {}
    */
   styling?: React.CSSProperties
+  /**
+   * Gets the label for the button.
+   * @param button The type of button for which to get the label.
+   * @returns The label for the button.
+   * @default () => ''
+   */
+  getLabel?: TSvgPanelGetLabel
   /**
    * Gets the tooltip description for the button.
    * @param button The type of button for which to get the tooltip.
@@ -92,7 +96,21 @@ export type TButtonSvgPanel_v2_P = {
    * @param button The type of button clicked.
    */
   onButtonClick: TSvgPanelOnClick
+  /**
+   * Callback that determines if a button should be disabled.
+   * @param button The type of button to disable.
+   * @returns The disabled state of the button.
+   * @default () => 'none'
+   */
+  disableButton?: TSvgPanelDisableButton
 }
+
+/**
+ * Gets the label for the button.
+ * @param button The type of button for which to get the label.
+ * @returns The label for the button.
+ */
+export type TSvgPanelGetLabel = (button: TButtonSvgType) => string
 
 /**
  * Gets the tooltip description for the button.
@@ -106,3 +124,12 @@ export type TSvgPanelGetTooltip = (button: TButtonSvgType) => string
  * @param button The type of button clicked.
  */
 export type TSvgPanelOnClick = (button: TButtonSvgType) => void
+
+/**
+ * A callback that determines if a button should be disabled.
+ * @param button The type of button to disable.
+ * @returns The disabled state of the button.
+ */
+export type TSvgPanelDisableButton = (
+  button: TButtonSvgType,
+) => TButtonSvgDisabled

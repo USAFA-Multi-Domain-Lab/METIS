@@ -8,19 +8,17 @@ import {
   usePostInitEffect,
   useRequireLogin,
 } from 'src/toolbox/hooks'
-import { SingleTypeObject } from '../../../../../../shared/toolbox/objects'
 import Tooltip from '../../communication/Tooltip'
 import { DetailLargeString } from '../../form/DetailLargeString'
 import { DetailNumber } from '../../form/DetailNumber'
 import { DetailString } from '../../form/DetailString'
+import { DetailToggle } from '../../form/DetailToggle'
 import ListOld, { ESortByMethod } from '../../general-layout/ListOld'
-import ButtonSvgPanel, {
-  TValidPanelButton,
-} from '../../user-controls/buttons/ButtonSvgPanel'
+import { TButtonSvgType } from '../../user-controls/buttons/ButtonSvg'
+import ButtonSvgPanel_v2 from '../../user-controls/buttons/ButtonSvgPanel_v2'
 import { ButtonText } from '../../user-controls/buttons/ButtonText'
 import './index.scss'
 import EntryNavigation from './navigation/EntryNavigation'
-import { DetailToggle } from '../../form/DetailToggle'
 
 /**
  * This will render the entry fields for an action
@@ -150,26 +148,7 @@ export default function ActionEntry({
     /**
      * The buttons for the effect list.
      */
-    const buttons: TValidPanelButton[] = compute(() => {
-      // Create a default list of buttons.
-      let buttons: TValidPanelButton[] = []
-
-      // If the action is available then add the edit and remove buttons.
-      let availableMiniActions: SingleTypeObject<TValidPanelButton> = {
-        remove: {
-          type: 'remove',
-          key: 'remove',
-          onClick: async () => await handleDeleteEffectRequest(effect),
-          description: 'Delete effect.',
-        },
-      }
-
-      // Add the buttons to the list.
-      buttons = Object.values(availableMiniActions)
-
-      // Return the buttons.
-      return buttons
-    })
+    const buttons: TButtonSvgType[] = compute(() => ['remove'])
 
     return (
       <div className='Row Select' key={`effect-row-${effect._id}`}>
@@ -180,7 +159,11 @@ export default function ActionEntry({
           {effect.name}
           <Tooltip description={editTooltipDescription} />
         </div>
-        <ButtonSvgPanel buttons={buttons} size={'small'} />
+        <ButtonSvgPanel_v2
+          buttons={buttons}
+          onButtonClick={async () => await handleDeleteEffectRequest(effect)}
+          getTooltip={() => 'Delete effect.'}
+        />
       </div>
     )
   }
@@ -216,7 +199,6 @@ export default function ActionEntry({
                 label='Description'
                 stateValue={description}
                 setState={setDescription}
-                elementBoundary='.SidePanelSection'
                 placeholder='Enter description...'
                 key={`${action._id}_description`}
               />
@@ -272,7 +254,6 @@ export default function ActionEntry({
                   ClientMissionAction.DEFAULT_PROPERTIES
                     .postExecutionSuccessText
                 }
-                elementBoundary='.SidePanelSection'
                 key={`${action._id}_postExecutionSuccessText`}
               />
               <DetailLargeString
@@ -285,7 +266,6 @@ export default function ActionEntry({
                   ClientMissionAction.DEFAULT_PROPERTIES
                     .postExecutionFailureText
                 }
-                elementBoundary='.SidePanelSection'
                 key={`${action._id}_postExecutionFailureText`}
               />
             </form>

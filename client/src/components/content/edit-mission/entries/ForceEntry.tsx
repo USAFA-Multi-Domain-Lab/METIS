@@ -92,7 +92,6 @@ export default function ForceEntry({
 
   /* -- EFFECTS -- */
 
-  // Sync the component state with the force name.
   usePostInitEffect(() => {
     // Update the force properties.
     force.introMessage = introMessage
@@ -143,7 +142,6 @@ export default function ForceEntry({
             stateValue={introMessage}
             setState={setIntroMessage}
             defaultValue={ClientMissionForce.DEFAULT_PROPERTIES.introMessage}
-            elementBoundary='.SidePanelSection'
             key={`${force._id}_introMessage`}
           />
           <DetailNumber

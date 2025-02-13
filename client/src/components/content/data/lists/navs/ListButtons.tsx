@@ -40,7 +40,6 @@ export default function ListButtons<
     <div className='ListButtons'>
       <ButtonSvg
         type='options'
-        size='small'
         onClick={onOptionsClick}
         description={'View option menu'}
         disabled={listButtons.length === 0 ? 'full' : 'none'}

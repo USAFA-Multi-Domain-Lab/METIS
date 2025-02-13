@@ -161,8 +161,7 @@ export default function ButtonMenu({
       <ButtonSvg
         key={button}
         type={button}
-        size='wide'
-        description={description}
+        label={description}
         onClick={() => onButtonClick(button)}
       />
     )

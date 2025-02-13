@@ -6,8 +6,11 @@
   .tiptap {
     display: inline;
 
-    :not(ul, ol, li) {
+    :first-child:is(p) {
       display: inline;
+    }
+
+    :not(ul, ol, li) {
       margin: 0;
       padding: 0;
     }

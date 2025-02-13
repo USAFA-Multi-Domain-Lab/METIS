@@ -1,9 +1,16 @@
+import Link from '@tiptap/extension-link'
+import Placeholder from '@tiptap/extension-placeholder'
+import Underline from '@tiptap/extension-underline'
+import { Editor, EditorContent, useEditor } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
 import { useState } from 'react'
-import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
+import { useGlobalContext } from 'src/context'
 import { compute } from 'src/toolbox'
 import { TDetailWithInput_P } from '.'
 import Tooltip from '../communication/Tooltip'
+import { TButtonSvgType } from '../user-controls/buttons/ButtonSvg'
+import ButtonSvgPanel_v2 from '../user-controls/buttons/ButtonSvgPanel_v2'
 import './DetailLargeString.scss'
 
 /**
@@ -24,9 +31,11 @@ export function DetailLargeString({
   uniqueLabelClassName = undefined,
   uniqueFieldClassName = undefined,
   placeholder = 'Enter text here...',
-  elementBoundary = undefined,
   tooltipDescription = '',
 }: TDetailLargeString_P): JSX.Element | null {
+  /* -- GLOBAL CONTEXT -- */
+  const { prompt } = useGlobalContext().actions
+
   /* -- STATE -- */
   const [leftField, setLeftField] = useState<boolean>(false)
 
@@ -155,29 +164,159 @@ export function DetailLargeString({
   const infoClassName: string = compute(() =>
     tooltipDescription ? 'DetailInfo' : 'Hidden',
   )
+  /**
+   * The boolean that determines if the field
+   * should be repopulated with the default value.
+   */
+  const shouldRepopulate: boolean = compute(
+    () =>
+      !displayError &&
+      handleOnBlur === 'repopulateValue' &&
+      fieldType === 'required',
+  )
+  /**
+   * Determines how to group the toolbar buttons.
+   */
+  const toolbarGroupings: Array<TButtonSvgType[]> = [
+    ['undo', 'redo'],
+    ['ordered-list', 'unordered-list'],
+    ['bold', 'italic', 'underline', 'strike'],
+    ['code', 'code-block', 'link'],
+  ]
 
-  /* -- PRE-RENDER PROCESSING -- */
+  /* -- FUNCTIONS -- */
 
   /**
-   * The modules used by the ReactQuill component.
+   * Determines if the html content is empty.
+   * @param value The html content to check.
+   * @returns True if the html content is empty.
    */
-  const reactQuillModules = {
-    toolbar: {
-      container: [
-        [{ list: 'ordered' }, { list: 'bullet' }],
-        ['bold', 'italic', 'underline', 'link'],
-        ['clean'],
-      ],
-    },
-    clipboard: {
-      matchVisual: false,
-    },
+  const checkForEmptyHtmlContent = (value: string): boolean => {
+    const strippedContent = value.replace(/<[^>]*>/g, '') // Remove HTML tags
+    const emptyHtmlContentRegex = /^\s*$/
+    return emptyHtmlContentRegex.test(strippedContent)
   }
 
   /**
-   * The formats used by the ReactQuill component.
+   * Toggles the link extension.
+   * @param editor The editor instance.
    */
-  const reactQuillFormats = ['bold', 'italic', 'underline', 'link', 'list']
+  const toggleLink = async (editor: Editor) => {
+    // Get the previous URL if it exists.
+    const prevUrl = editor.getAttributes('link').href
+    // Prompt the user for a URL.
+    const { choice, text: url } = await prompt('', ['Cancel', 'Submit'], {
+      textField: {
+        boundChoices: ['Submit'],
+        label: 'URL',
+        initialValue: prevUrl,
+      },
+      defaultChoice: 'Submit',
+    })
+    // Set the link.
+    if (choice === 'Submit') {
+      editor
+        .chain()
+        .focus()
+        .extendMarkRange('link')
+        .setLink({ href: url })
+        .run()
+    }
+  }
+
+  /**
+   * Handles the button click event for the toolbar.
+   * @param button The button that was clicked.
+   * @param editor The editor instance.
+   */
+  const handleToolbarButtonClick = (button: TButtonSvgType, editor: Editor) => {
+    switch (button) {
+      case 'undo':
+        editor.chain().focus().undo().run()
+        break
+      case 'redo':
+        editor.chain().focus().redo().run()
+        break
+      case 'ordered-list':
+        editor.chain().focus().toggleOrderedList().run()
+        break
+      case 'unordered-list':
+        editor.chain().focus().toggleBulletList().run()
+        break
+      case 'bold':
+        editor.chain().focus().toggleBold().run()
+        break
+      case 'italic':
+        editor.chain().focus().toggleItalic().run()
+        break
+      case 'underline':
+        editor.chain().focus().toggleUnderline().run()
+        break
+      case 'strike':
+        editor.chain().focus().toggleStrike().run()
+        break
+      case 'code':
+        editor.chain().focus().toggleCode().run()
+        break
+      case 'code-block':
+        editor.chain().focus().toggleCodeBlock().run()
+        break
+      case 'link':
+        toggleLink(editor)
+        break
+    }
+  }
+
+  /* -- HOOKS -- */
+
+  /**
+   * The rich text editor.
+   */
+  const editor = useEditor({
+    content: stateValue,
+    extensions: [
+      StarterKit,
+      Underline,
+      Placeholder.configure({
+        placeholder: placeholder,
+      }),
+      Link.configure({
+        defaultProtocol: 'https',
+        protocols: ['http', 'https'],
+        openOnClick: false,
+      }),
+    ],
+    onUpdate({ editor }) {
+      const value = editor.getHTML()
+      const isEmptyContent = checkForEmptyHtmlContent(value)
+      // Updates the parent component's state value
+      // and ensures that invalid empty values don't
+      // get saved to the database.
+      isEmptyContent ? setState('') : setState(value)
+    },
+    onBlur({ editor }) {
+      const value: string = editor.getHTML()
+      const isEmptyContent = checkForEmptyHtmlContent(value)
+      let { setContent } = editor.commands
+
+      // Indicate that the user has left the field.
+      // @note - This allows errors to be displayed.
+      setLeftField(true)
+
+      if (isEmptyContent && shouldRepopulate) {
+        // Update the parent component's state value
+        // and the editor's value (ensures both values
+        // are in sync without the need for a re-render).
+        if (!!defaultValue) {
+          setState(defaultValue)
+          setContent(defaultValue)
+        } else {
+          setState(placeholder)
+          setContent(placeholder)
+        }
+      }
+    },
+  })
 
   /* -- RENDER -- */
 
@@ -193,52 +332,22 @@ export function DetailLargeString({
         </div>
         <div className={`TitleColumnTwo ${optionalClassName}`}>optional</div>
       </div>
-      <div
-        className='FieldContainer'
-        onBlur={(event: React.FocusEvent) => {
-          let target: HTMLDivElement = event.target as HTMLDivElement
-          let value: string = target.innerHTML
 
-          // Indicate that the user has left the field.
-          // @note - This allows errors to be displayed.
-          setLeftField(true)
+      {editor && (
+        <div className='Toolbar'>
+          {toolbarGroupings.map((grouping, index) => (
+            <ButtonSvgPanel_v2
+              key={index} // todo: fix this to not use the index.
+              buttons={grouping}
+              onButtonClick={(button) =>
+                handleToolbarButtonClick(button, editor)
+              }
+            />
+          ))}
+        </div>
+      )}
+      <EditorContent editor={editor} className={fieldClassName} />
 
-          // If the field is empty or in a default
-          // state and the error message is not displayed
-          // and the default value is defined, but not an
-          // empty string, and the field is required, then
-          // set the input's value to a default value.
-          if (
-            (value === '<p><br></p>' || value === undefined) &&
-            !displayError &&
-            handleOnBlur === 'repopulateValue' &&
-            fieldType === 'required'
-          ) {
-            if (!!defaultValue) {
-              setState(defaultValue)
-            } else {
-              setState(placeholder)
-            }
-          }
-        }}
-      >
-        <ReactQuill
-          bounds={elementBoundary}
-          className={fieldClassName}
-          modules={reactQuillModules}
-          formats={reactQuillFormats}
-          value={stateValue}
-          placeholder={placeholder}
-          theme='snow'
-          onChange={(value: string) => {
-            if (value === '<p><br></p>') {
-              setState('')
-            } else {
-              setState(value)
-            }
-          }}
-        />
-      </div>
       <div className={fieldErrorClassName}>{errorMessage}</div>
     </div>
   )
@@ -249,11 +358,4 @@ export function DetailLargeString({
 /**
  * The properties for the Detail Large String component.
  */
-type TDetailLargeString_P = TDetailWithInput_P<string> & {
-  /**
-   * The class name of the element that the detail is bound to.
-   * @note This is used to keep the tooltip from being cut off by the
-   * element's boundary.
-   */
-  elementBoundary?: string
-}
+type TDetailLargeString_P = TDetailWithInput_P<string>
