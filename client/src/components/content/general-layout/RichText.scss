@@ -1,0 +1,87 @@
+@import 'src/assets/styles/config.scss';
+@import '../form/index.scss';
+
+@mixin code-styling() {
+  background-color: $color-accent-dark;
+  border-radius: 0.4em;
+  padding: 0.25em 0.33em;
+  border: 1px solid rgba($color-primary-light, 0.65);
+}
+
+.RichText {
+  &.ReadOnly {
+    display: inline;
+
+    div {
+      display: inline;
+    }
+
+    .Editor p {
+      margin: 0;
+      padding: 0;
+
+      &:first-of-type {
+        display: inline;
+      }
+    }
+  }
+
+  .Editor {
+    &:focus-visible {
+      outline: none;
+    }
+
+    p {
+      line-height: 1.65;
+
+      &.is-editor-empty::before {
+        color: #adb5bd;
+        content: attr(data-placeholder);
+        float: left;
+        height: 0;
+        pointer-events: none;
+        font-size: 0.95em;
+      }
+    }
+
+    a {
+      color: $color-accent;
+      text-decoration: none;
+      cursor: pointer;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    code {
+      @include code-styling();
+    }
+
+    pre {
+      @include code-styling();
+      padding: 0.5em 0.75em;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+
+      code {
+        background-color: unset;
+        border-radius: unset;
+        padding: unset;
+        border: unset;
+        border-radius: unset;
+      }
+    }
+  }
+
+  .Toolbar {
+    display: flex;
+    align-items: center;
+    flex-flow: row wrap;
+
+    .ButtonSvgPanel_v2 {
+      margin: 0.5em 0.5em 0.5em 0;
+    }
+  }
+}

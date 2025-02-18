@@ -1,16 +1,10 @@
-import Link from '@tiptap/extension-link'
-import Placeholder from '@tiptap/extension-placeholder'
-import Underline from '@tiptap/extension-underline'
-import { Editor, EditorContent, useEditor } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
+import { EditorEvents } from '@tiptap/react'
 import { useState } from 'react'
 import 'react-quill/dist/quill.snow.css'
-import { useGlobalContext } from 'src/context'
 import { compute } from 'src/toolbox'
 import { TDetailWithInput_P } from '.'
 import Tooltip from '../communication/Tooltip'
-import { TButtonSvgType } from '../user-controls/buttons/ButtonSvg'
-import ButtonSvgPanel_v2 from '../user-controls/buttons/ButtonSvgPanel_v2'
+import RichText from '../general-layout/RichText'
 import './DetailLargeString.scss'
 
 /**
@@ -33,9 +27,6 @@ export function DetailLargeString({
   placeholder = 'Enter text here...',
   tooltipDescription = '',
 }: TDetailLargeString_P): JSX.Element | null {
-  /* -- GLOBAL CONTEXT -- */
-  const { prompt } = useGlobalContext().actions
-
   /* -- STATE -- */
   const [leftField, setLeftField] = useState<boolean>(false)
 
@@ -119,7 +110,7 @@ export function DetailLargeString({
    */
   const fieldClassName: string = compute(() => {
     // Default class names
-    let classList: string[] = ['Field', 'FieldLargeString']
+    let classList: string[] = ['Field']
 
     // If the error message is displayed
     // then add the error class name.
@@ -174,15 +165,6 @@ export function DetailLargeString({
       handleOnBlur === 'repopulateValue' &&
       fieldType === 'required',
   )
-  /**
-   * Determines how to group the toolbar buttons.
-   */
-  const toolbarGroupings: Array<TButtonSvgType[]> = [
-    ['undo', 'redo'],
-    ['ordered-list', 'unordered-list'],
-    ['bold', 'italic', 'underline', 'strike'],
-    ['code', 'code-block', 'link'],
-  ]
 
   /* -- FUNCTIONS -- */
 
@@ -198,125 +180,44 @@ export function DetailLargeString({
   }
 
   /**
-   * Toggles the link extension.
+   * Handles the update event for the editor.
    * @param editor The editor instance.
    */
-  const toggleLink = async (editor: Editor) => {
-    // Get the previous URL if it exists.
-    const prevUrl = editor.getAttributes('link').href
-    // Prompt the user for a URL.
-    const { choice, text: url } = await prompt('', ['Cancel', 'Submit'], {
-      textField: {
-        boundChoices: ['Submit'],
-        label: 'URL',
-        initialValue: prevUrl,
-      },
-      defaultChoice: 'Submit',
-    })
-    // Set the link.
-    if (choice === 'Submit') {
-      editor
-        .chain()
-        .focus()
-        .extendMarkRange('link')
-        .setLink({ href: url })
-        .run()
-    }
+  const onUpdate = ({ editor }: EditorEvents['update']) => {
+    const value = editor.getHTML()
+    const isEmptyContent = checkForEmptyHtmlContent(value)
+    // Updates the parent component's state value
+    // and ensures that invalid empty values don't
+    // get saved to the database.
+    isEmptyContent ? setState('') : setState(value)
   }
 
   /**
-   * Handles the button click event for the toolbar.
-   * @param button The button that was clicked.
+   * Handles the blur event for the editor.
    * @param editor The editor instance.
    */
-  const handleToolbarButtonClick = (button: TButtonSvgType, editor: Editor) => {
-    switch (button) {
-      case 'undo':
-        editor.chain().focus().undo().run()
-        break
-      case 'redo':
-        editor.chain().focus().redo().run()
-        break
-      case 'ordered-list':
-        editor.chain().focus().toggleOrderedList().run()
-        break
-      case 'unordered-list':
-        editor.chain().focus().toggleBulletList().run()
-        break
-      case 'bold':
-        editor.chain().focus().toggleBold().run()
-        break
-      case 'italic':
-        editor.chain().focus().toggleItalic().run()
-        break
-      case 'underline':
-        editor.chain().focus().toggleUnderline().run()
-        break
-      case 'strike':
-        editor.chain().focus().toggleStrike().run()
-        break
-      case 'code':
-        editor.chain().focus().toggleCode().run()
-        break
-      case 'code-block':
-        editor.chain().focus().toggleCodeBlock().run()
-        break
-      case 'link':
-        toggleLink(editor)
-        break
-    }
-  }
+  const onBlur = ({ editor }: EditorEvents['blur']) => {
+    const value: string = editor.getHTML()
+    const isEmptyContent = checkForEmptyHtmlContent(value)
+    let { setContent } = editor.commands
 
-  /* -- HOOKS -- */
+    // Indicate that the user has left the field.
+    // @note - This allows errors to be displayed.
+    setLeftField(true)
 
-  /**
-   * The rich text editor.
-   */
-  const editor = useEditor({
-    content: stateValue,
-    extensions: [
-      StarterKit,
-      Underline,
-      Placeholder.configure({
-        placeholder: placeholder,
-      }),
-      Link.configure({
-        defaultProtocol: 'https',
-        protocols: ['http', 'https'],
-        openOnClick: false,
-      }),
-    ],
-    onUpdate({ editor }) {
-      const value = editor.getHTML()
-      const isEmptyContent = checkForEmptyHtmlContent(value)
-      // Updates the parent component's state value
-      // and ensures that invalid empty values don't
-      // get saved to the database.
-      isEmptyContent ? setState('') : setState(value)
-    },
-    onBlur({ editor }) {
-      const value: string = editor.getHTML()
-      const isEmptyContent = checkForEmptyHtmlContent(value)
-      let { setContent } = editor.commands
-
-      // Indicate that the user has left the field.
-      // @note - This allows errors to be displayed.
-      setLeftField(true)
-
-      if (isEmptyContent && shouldRepopulate) {
-        // Update the parent component's state value
-        // and the editor's value (ensures both values
-        // are in sync without the need for a re-render).
-        if (!!defaultValue) {
-          setState(defaultValue)
-          setContent(defaultValue)
-        } else {
-          setState(placeholder)
-          setContent(placeholder)
-        }
+    if (isEmptyContent && shouldRepopulate) {
+      // Update the parent component's state value
+      // and the editor's value (ensures both values
+      // are in sync without the need for a re-render).
+      if (!!defaultValue) {
+        setState(defaultValue)
+        setContent(defaultValue)
+      } else {
+        setState(placeholder)
+        setContent(placeholder)
       }
-    },
-  })
+    }
+  }
 
   /* -- RENDER -- */
 
@@ -332,22 +233,15 @@ export function DetailLargeString({
         </div>
         <div className={`TitleColumnTwo ${optionalClassName}`}>optional</div>
       </div>
-
-      {editor && (
-        <div className='Toolbar'>
-          {toolbarGroupings.map((grouping, index) => (
-            <ButtonSvgPanel_v2
-              key={index} // todo: fix this to not use the index.
-              buttons={grouping}
-              onButtonClick={(button) =>
-                handleToolbarButtonClick(button, editor)
-              }
-            />
-          ))}
-        </div>
-      )}
-      <EditorContent editor={editor} className={fieldClassName} />
-
+      <RichText
+        options={{
+          content: stateValue,
+          className: fieldClassName,
+          placeholder,
+          onUpdate,
+          onBlur,
+        }}
+      />
       <div className={fieldErrorClassName}>{errorMessage}</div>
     </div>
   )

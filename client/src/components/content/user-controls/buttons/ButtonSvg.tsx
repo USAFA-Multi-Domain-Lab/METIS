@@ -185,6 +185,7 @@ export type TButtonSvgType =
   | 'blockquote'
   | 'bold'
   | 'cancel'
+  | 'clear-format'
   | 'code'
   | 'copy'
   | 'code-block'
