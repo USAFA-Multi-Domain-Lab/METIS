@@ -1,5 +1,6 @@
 @import 'src/assets/styles/config.scss';
 @import 'src/assets/styles/util.scss';
+@import 'src/components/content/form/index.scss';
 
 .Page.AuthPage {
   grid-template-rows: unset;
@@ -22,6 +23,7 @@
     }
 
     .Form {
+      @include form-container;
       margin: 0 auto 0;
       width: 300px;
 

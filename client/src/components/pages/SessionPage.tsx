@@ -102,29 +102,7 @@ export default function SessionPage({
     }
     // If the node is ready to execute...
     else if (node.readyToExecute) {
-      // If there are no more resources left
-      // to spend, notify the user.
-      // todo: Evaluate ths line to see if it conflicts
-      // todo: with new resource modifier features.
-      if (node.force.resourcesRemaining === 0) {
-        notify(`You have no more resources left to spend.`)
-      }
-      // If there is not enough resources to
-      // execute an action, notify the user.
-      else if (
-        !MapToolbox.mapToArray(
-          node.actions,
-          (action) => action.resourceCost <= node.force.resourcesRemaining,
-        ).includes(true)
-      ) {
-        // todo: Evaluate ths line to see if it conflicts
-        // todo: with new resource modifier features.
-        notify('Insufficient resources available to execute action.')
-      }
-      // Else, select the node.
-      else {
-        setNodeToExecute(node)
-      }
+      setNodeToExecute(node)
     }
   }
 
@@ -168,6 +146,47 @@ export default function SessionPage({
   }
 
   /**
+   * Callback for the reset session button.
+   */
+  const onClickResetSession = async () => {
+    // If the session is not started, verify navigation.
+    if (session.state !== 'started') {
+      verifyNavigation.current()
+      return
+    }
+
+    // Confirm the user wants to reset the session.
+    let { choice } = await prompt(
+      'Please confirm resetting the session.',
+      Prompt.ConfirmationChoices,
+    )
+
+    // If the user cancels, return.
+    if (choice === 'Cancel') {
+      return
+    }
+
+    try {
+      // Clear verify navigation function to prevent double
+      // redirect.
+      verifyNavigation.current = () => {}
+      // Begin loading.
+      beginLoading('Resetting session...')
+      // Start the session.
+      await session.$reset()
+      // Refresh page.
+      navigateTo('SessionPage', { session }, { bypassMiddleware: true })
+      // Finish loading.
+      finishLoading()
+    } catch (error) {
+      handleError({
+        message: 'Failed to reset session.',
+        notifyMethod: 'bubble',
+      })
+    }
+  }
+
+  /**
    * Redirects to the correct page based on
    * the session state. Stays on the same page
    * if the session is started and not ended.
@@ -183,6 +202,14 @@ export default function SessionPage({
     }
   })
 
+  /**
+   * Syncs the resources remaining state with
+   * the selected force.
+   */
+  const syncResources = () => {
+    setResourcesRemaining(selectedForce?.resourcesRemaining ?? 0)
+  }
+
   /* -- COMPUTED -- */
 
   /**
@@ -191,12 +218,18 @@ export default function SessionPage({
   const navigation = compute(() => {
     let links: TWithKey<TButtonText_P>[] = []
 
-    // Push end session button, if user is authorized.
+    // Push end and reset session buttons, if user
+    // is authorized.
     if (session.member.isAuthorized('startEndSessions')) {
       links.push({
         key: 'end-session',
         text: 'End Session',
         onClick: onClickEndSession,
+      })
+      links.push({
+        key: 'reset-session',
+        text: 'Reset Session',
+        onClick: onClickResetSession,
       })
     }
 
@@ -363,9 +396,9 @@ export default function SessionPage({
   // Update the resources remaining when an action is executed.
   useEventListener(
     server,
-    'action-execution-initiated',
+    ['action-execution-initiated', 'modifier-enacted'],
     () => {
-      setResourcesRemaining(selectedForce?.resourcesRemaining ?? 0)
+      syncResources()
     },
     [selectedForce],
   )
@@ -373,7 +406,7 @@ export default function SessionPage({
   // Update the resources remaining state whenever the
   // force changes.
   useEffect(() => {
-    setResourcesRemaining(selectedForce?.resourcesRemaining ?? 0)
+    syncResources()
   }, [selectedForce])
 
   /* -- PRE-RENDER PROCESSING -- */

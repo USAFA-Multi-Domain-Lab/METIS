@@ -1,5 +1,5 @@
 import { TCommonTargetEnv, TTargetEnv } from '.'
-import { TTargetEnvContext } from '../../server/target-environments/context-provider'
+import { TTargetEnvExposedContext } from '../../server/target-environments/context'
 import { TCommonMissionTypes } from '../../shared/missions'
 import Arg, { TTargetArg, TTargetArgJson } from './args'
 import Dependency from './dependencies'
@@ -80,7 +80,7 @@ export default abstract class Target<
   /**
    * The node target that is available in the METIS target environment.
    */
-  public static readonly nodeTarget: TCommonTargetJson = {
+  public static readonly NODE_TARGET: TCommonTargetJson = {
     targetEnvId: 'metis',
     _id: 'node',
     name: 'Node',
@@ -94,6 +94,7 @@ export default abstract class Target<
         processTime,
         resourceCost,
       } = context.effect.args
+      let { nodeId } = nodeMetadata
 
       // Set the error message.
       const errorMessage =
@@ -112,16 +113,12 @@ export default abstract class Target<
 
       // Update the block status of the node.
       blockNode
-        ? context.blockNode(nodeMetadata.nodeId, nodeMetadata.forceId)
-        : context.unblockNode(nodeMetadata.nodeId, nodeMetadata.forceId)
+        ? context.blockNode({ nodeId })
+        : context.unblockNode({ nodeId })
 
       // If the success chance is a number, then modify the success chance.
       if (successChance && typeof successChance === 'number') {
-        context.modifySuccessChance(
-          nodeMetadata.nodeId,
-          nodeMetadata.forceId,
-          successChance / 100,
-        )
+        context.modifySuccessChance(successChance / 100, { nodeId })
       }
       // Otherwise, throw an error.
       else if (successChance && typeof successChance !== 'number') {
@@ -130,11 +127,7 @@ export default abstract class Target<
 
       // If the process time is a number, then modify the process time.
       if (processTime && typeof processTime === 'number') {
-        context.modifyProcessTime(
-          nodeMetadata.nodeId,
-          nodeMetadata.forceId,
-          processTime * 1000,
-        )
+        context.modifyProcessTime(processTime * 1000, { nodeId })
       }
       // Otherwise, throw an error.
       else if (processTime && typeof processTime !== 'number') {
@@ -143,11 +136,7 @@ export default abstract class Target<
 
       // If the resource cost is a number, then modify the resource cost.
       if (resourceCost && typeof resourceCost === 'number') {
-        context.modifyResourceCost(
-          nodeMetadata.nodeId,
-          nodeMetadata.forceId,
-          resourceCost,
-        )
+        context.modifyResourceCost(resourceCost, { nodeId })
       }
       // Otherwise, throw an error.
       else if (resourceCost && typeof resourceCost !== 'number') {
@@ -239,7 +228,7 @@ export default abstract class Target<
   /**
    * The output target that is available in the METIS target environment.
    */
-  public static readonly outputTarget: TCommonTargetJson = {
+  public static readonly OUTPUT_TARGET: TCommonTargetJson = {
     targetEnvId: 'metis',
     _id: 'output',
     name: 'Output Panel',
@@ -248,9 +237,10 @@ export default abstract class Target<
       // Extract the effect and its arguments from the context.
       let { effect, user } = context
       let { forceMetaData, message } = effect.args
+      let { forceId } = forceMetaData
 
       // Output the message to the force.
-      context.sendOutput(forceMetaData.forceId, message, effect, user)
+      context.sendOutput(message, { forceId })
     },
     args: [
       {
@@ -276,11 +266,49 @@ export default abstract class Target<
   }
 
   /**
+   * A target available in the METIS target environment that enables a user
+   * to manipulate the resource pool.
+   */
+  public static readonly RESOURCE_POOL_TARGET: TCommonTargetJson = {
+    _id: 'resource-pool',
+    targetEnvId: 'metis',
+    name: 'Resource Pool',
+    description: '',
+    script: async (context) => {
+      // Extract the effect and its arguments from the context.
+      let { effect } = context
+      let { modifier, forceMetaData } = effect.args
+      let { forceId } = forceMetaData
+
+      // Modify the resource pool.
+      context.modifyResourcePool(modifier, { forceId })
+    },
+    args: [
+      {
+        type: 'force',
+        _id: 'forceMetaData',
+        name: 'Force',
+        required: true,
+      },
+      {
+        type: 'number',
+        _id: 'modifier',
+        name: 'Modifier',
+        required: true,
+        default: 0,
+        tooltipDescription:
+          'The amount to add or subtract from the resource pool.',
+      },
+    ],
+  }
+
+  /**
    * The internal targets that are available in the METIS target environment.
    */
   public static readonly INTERNAL_TARGETS: TCommonTargetJson[] = [
-    Target.nodeTarget,
-    Target.outputTarget,
+    Target.NODE_TARGET,
+    Target.OUTPUT_TARGET,
+    Target.RESOURCE_POOL_TARGET,
   ]
 }
 
@@ -323,7 +351,7 @@ export interface TCommonTarget {
     /**
      * The context for the target environment.
      */
-    context: TTargetEnvContext,
+    context: TTargetEnvExposedContext,
   ) => Promise<void>
   /**
    * The arguments used to create the effect on the target.
@@ -371,7 +399,7 @@ export interface TCommonTargetJson {
     /**
      * The context for the target environment.
      */
-    context: TTargetEnvContext,
+    context: TTargetEnvExposedContext,
   ) => Promise<void>
   /**
    * The arguments used to create the effect on the target.

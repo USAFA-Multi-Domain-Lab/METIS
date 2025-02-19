@@ -1,5 +1,5 @@
 import User, { TCommonUserJson, TUserOptions } from 'metis/users'
-import { TTargetEnvContextUser } from '../target-environments/context-provider'
+import { TTargetEnvExposedUser } from '../target-environments/context'
 
 /**
  * Class for managing users on the server.
@@ -25,7 +25,7 @@ export default class ServerUser extends User {
    * in a target environment.
    * @returns The user's necessary properties.
    */
-  public toTargetEnvContext(): TTargetEnvContextUser {
+  public toTargetEnvContext(): TTargetEnvExposedUser {
     return {
       _id: this._id,
       username: this.username,

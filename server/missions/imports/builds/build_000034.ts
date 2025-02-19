@@ -1,4 +1,3 @@
-import { TCommonMissionJson } from 'metis/missions'
 import { TMissionImportBuild } from '..'
 
 // -- BUILD 34 --

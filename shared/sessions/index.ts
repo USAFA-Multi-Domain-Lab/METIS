@@ -7,6 +7,8 @@ import {
 import { TAction, TCommonMissionAction } from '../missions/actions'
 import User, { TCommonUser } from '../users'
 import { TCommonSessionMember, TMember, TSessionMemberJson } from './members'
+import { TExecuteOptions } from '../../server/missions/actions'
+import { TExecutionCheats } from 'metis/missions/actions/executions'
 
 /**
  * Base class for sessions. Represents a session of a mission being executed by users.
@@ -49,8 +51,14 @@ export default abstract class Session<T extends TCommonMissionTypes>
     return { ...this._config }
   }
 
+  /**
+   * The mission being executed by the participants.
+   */
+  protected _mission: TMission<T>
   // Implemented
-  public readonly mission: T['mission']
+  public get mission(): T['mission'] {
+    return this._mission
+  }
 
   // Implemented
   public get missionId(): TMission<T>['_id'] {
@@ -119,11 +127,32 @@ export default abstract class Session<T extends TCommonMissionTypes>
   protected actions: Map<string, TAction<T>> = new Map<string, TAction<T>>()
 
   // Implemented
-  public readyToExecute(action: TAction<T>): boolean {
-    return (
-      action.node.readyToExecute &&
-      action.resourceCost <= action.force.resourcesRemaining
-    )
+  public areEnoughResources(
+    action: TAction<T>,
+    cheats: Partial<TExecutionCheats> = {},
+  ): boolean {
+    let enoughResources = action.areEnoughResources
+    let zeroCost = !!cheats.zeroCost
+    let infiniteResources = this.config.infiniteResources
+
+    // The action has enough resources if it has zero cost,
+    // or there are infinite resources, or there are enough
+    // resources remaining.
+    return zeroCost || infiniteResources || enoughResources
+  }
+
+  // Implemented
+  public readyToExecute(
+    action: TAction<T>,
+    cheats: Partial<TExecutionCheats> = {},
+  ): boolean {
+    let nodeReady = action.node.readyToExecute
+    let enoughResources = this.areEnoughResources(action, cheats)
+
+    // The action is ready to execute if the node is ready to execute
+    // and there are enough resources for the action, given the session
+    // and the cheats.
+    return nodeReady && enoughResources
   }
 
   /**
@@ -153,7 +182,7 @@ export default abstract class Session<T extends TCommonMissionTypes>
       ...Session.DEFAULT_CONFIG,
       ...config,
     }
-    this.mission = mission
+    this._mission = mission
     this._state = 'unstarted'
     this._members = this.parseMemberData(memberData)
     this._banList = banList
@@ -447,11 +476,35 @@ export type TCommonSession = {
    */
   get state(): TSessionState
   /**
+   * Checks if the given action has enough resources given the
+   * session and any configured cheats.
+   * @param action The action in question.
+   * @param cheats The cheats to apply to the action. This will determine
+   * whether the action can be executed, even if a typical requirement
+   * is not met.
+   * @returns Whether the action has enough resources to be executed
+   * in the session.
+   * @note This will be true if one of any of the following conditions
+   * are met:
+   * 1. The action has zero cost.
+   * 2. There are infinite resources in the session.
+   * 3. There are enough resources remaining in the session.
+   */
+  /**
    * Determines whether the given action can currently be executed in the session.
    * @param action The action in question.
+   * @param cheats The cheats to apply to the action. This will determine
+   * whether the action can be executed, even if a typical requirement
+   * is not met.
    * @returns Whether the action is ready to be executed in the session.
+   * @note This will be true if the following conditions are met:
+   * 1. The action's node is ready to execute.
+   * 2. The action has enough resources to execute, given the session and cheats.
    */
-  readyToExecute(action: TCommonMissionAction): boolean
+  readyToExecute(
+    action: TCommonMissionAction,
+    cheats: TExecutionCheats,
+  ): boolean
   /**
    * Checks if the given user is currently in the session (Whether as a participant, manager, or observer).
    * @param userId The ID of the user to check.

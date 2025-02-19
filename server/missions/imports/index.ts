@@ -22,6 +22,7 @@ import build_000029 from './builds/build_000029'
 import build_000032 from './builds/build_000032'
 import build_000033 from './builds/build_000033'
 import build_000034 from './builds/build_000034'
+import build_000035 from './builds/build_000035'
 
 /**
  * This class is responsible for executing the import of .metis and .cesar files.
@@ -251,6 +252,7 @@ export default class MissionImport {
     this.processBuild(missionData, 32, /**/ build_000032)
     this.processBuild(missionData, 33, /**/ build_000033)
     this.processBuild(missionData, 34, /**/ build_000034)
+    this.processBuild(missionData, 35, /**/ build_000035)
   }
 
   /**

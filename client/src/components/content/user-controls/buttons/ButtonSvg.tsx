@@ -11,7 +11,7 @@ import './ButtonSvg.scss'
 export default function ButtonSvg({
   type,
   size = 'regular',
-  description: description = null,
+  description = null,
   uniqueClassList = [],
   disabled = 'none',
   cursor = 'pointer',

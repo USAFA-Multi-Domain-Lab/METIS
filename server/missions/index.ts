@@ -12,7 +12,7 @@ import seedrandom, { PRNG } from 'seedrandom'
 import SessionServer from '../sessions'
 import ServerSessionMember from '../sessions/members'
 import ServerTargetEnvironment from '../target-environments'
-import { TTargetEnvContextMission } from '../target-environments/context-provider'
+import { TTargetEnvExposedMission } from '../target-environments/context'
 import ServerTarget from '../target-environments/targets'
 import ServerUser from '../users'
 import ServerMissionAction from './actions'
@@ -111,7 +111,7 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
    * in a target environment.
    * @returns The mission's necessary properties.
    */
-  public toTargetEnvContext(): TTargetEnvContextMission {
+  public toTargetEnvContext(): TTargetEnvExposedMission {
     return {
       _id: this._id,
       name: this.name,

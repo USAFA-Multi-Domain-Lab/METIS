@@ -5,7 +5,7 @@ import {
 } from 'metis/missions/forces'
 import { TCommonOutputJson } from 'metis/missions/forces/output'
 import { TMissionNodeJson, TMissionNodeOptions } from 'metis/missions/nodes'
-import { TTargetEnvContextForce } from 'metis/server/target-environments/context-provider'
+import { TTargetEnvExposedForce } from 'metis/server/target-environments/context'
 import ServerUser from 'metis/server/users'
 import ServerMission, { TServerMissionTypes } from '..'
 import ServerMissionNode from '../nodes'
@@ -60,7 +60,7 @@ export default class ServerMissionForce extends MissionForce<TServerMissionTypes
    * in a target environment.
    * @returns The force's necessary properties.
    */
-  public toTargetEnvContext(): TTargetEnvContextForce {
+  public toTargetEnvContext(): TTargetEnvExposedForce {
     return {
       _id: this._id,
       name: this.name,
@@ -101,6 +101,11 @@ export default class ServerMissionForce extends MissionForce<TServerMissionTypes
         output.broadcastType === 'force' ||
         (output.broadcastType === 'user' && output.userId === userId),
     )
+  }
+
+  // Implemented
+  public modifyResourcePool(operand: number): void {
+    this.resourcesRemaining += operand
   }
 }
 

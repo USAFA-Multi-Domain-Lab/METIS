@@ -245,6 +245,9 @@ export abstract class MissionForce<
   public abstract storeOutput(output: TCommonOutput): void
 
   // Implemented
+  public abstract modifyResourcePool(operand: number): void
+
+  // Implemented
   public getNode(nodeId: string): TNode<T> | undefined {
     if (nodeId === this.root._id) return this.root
     else return this.nodes.find((node) => node._id === nodeId)
@@ -486,6 +489,11 @@ export interface TCommonMissionForce {
    * @param output The output to store.
    */
   storeOutput(output: TCommonOutput): void
+  /**
+   * Modifies the resource pool.
+   * @param operand The amount by which to modify the resource pool.
+   */
+  modifyResourcePool: (operand: number) => void
 }
 
 /**

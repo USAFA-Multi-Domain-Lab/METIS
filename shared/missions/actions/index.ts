@@ -64,7 +64,7 @@ export default abstract class MissionAction<
   }
 
   // Implemented
-  public processTimeHidden: boolean
+  public processTimeHidden: TCommonMissionAction['processTimeHidden']
 
   /**
    * The chance that the action will succeed.
@@ -86,7 +86,7 @@ export default abstract class MissionAction<
   }
 
   // Implemented
-  public successChanceHidden: boolean
+  public successChanceHidden: TCommonMissionAction['successChanceHidden']
 
   /**
    * The amount of resources the action will be subtracted from that available to the executor of the action.
@@ -105,10 +105,13 @@ export default abstract class MissionAction<
   }
 
   // Implemented
-  public resourceCostHidden: boolean
+  public resourceCostHidden: TCommonMissionAction['resourceCostHidden']
 
   // Implemented
   public opensNode: TCommonMissionAction['opensNode']
+
+  // Implemented
+  public opensNodeHidden: TCommonMissionAction['opensNodeHidden']
 
   // Implemented
   public get failureChance(): TCommonMissionAction['failureChance'] {
@@ -146,6 +149,11 @@ export default abstract class MissionAction<
    */
   private resourceCostOperand: number
 
+  // Implemented
+  public get areEnoughResources(): boolean {
+    return this.resourceCost <= Math.max(this.force.resourcesRemaining, 0)
+  }
+
   /**
    * @param node The node on which the action is being executed.
    * @param data The action data from which to create the action. Any ommitted values will be set to the default properties defined in MissionAction.DEFAULT_PROPERTIES.
@@ -180,6 +188,8 @@ export default abstract class MissionAction<
       MissionAction.DEFAULT_PROPERTIES.resourceCostHidden
     this.opensNode =
       data.opensNode ?? MissionAction.DEFAULT_PROPERTIES.opensNode
+    this.opensNodeHidden =
+      data.opensNodeHidden ?? MissionAction.DEFAULT_PROPERTIES.opensNodeHidden
     this.postExecutionSuccessText =
       data.postExecutionSuccessText ??
       MissionAction.DEFAULT_PROPERTIES.postExecutionSuccessText
@@ -220,6 +230,7 @@ export default abstract class MissionAction<
       resourceCost: this.resourceCost,
       resourceCostHidden: this.resourceCostHidden,
       opensNode: this.opensNode,
+      opensNodeHidden: this.opensNodeHidden,
       postExecutionSuccessText: this.postExecutionSuccessText,
       postExecutionFailureText: this.postExecutionFailureText,
       effects: this.effects.map((effect) => effect.toJson()),
@@ -293,6 +304,7 @@ export default abstract class MissionAction<
       resourceCost: 1,
       resourceCostHidden: false,
       opensNode: true,
+      opensNodeHidden: false,
       postExecutionSuccessText:
         '<p>Enter your successful post-execution message here.</p>',
       postExecutionFailureText:
@@ -378,6 +390,11 @@ export interface TCommonMissionAction {
    */
   opensNode: boolean
   /**
+   * Hides the `opensNode` property from students.
+   * @default false
+   */
+  opensNodeHidden: boolean
+  /**
    * Text sent to the output panel after the action is executed successfully.
    */
   postExecutionSuccessText: string
@@ -397,6 +414,14 @@ export interface TCommonMissionAction {
    * Whether or not this action is currently being executed.
    */
   executing: boolean
+  /**
+   * Whether the associated force has enough resources
+   * remaining to perform the action, given the resource
+   * cost.
+   * @note This does not take into account any session
+   * configuration or any cheats that may be applied.
+   */
+  get areEnoughResources(): boolean
   /**
    * The mission of which the action is a part.
    */
@@ -449,6 +474,7 @@ export type TCommonMissionActionJson = TCreateMissionJsonType<
   | 'resourceCost'
   | 'resourceCostHidden'
   | 'opensNode'
+  | 'opensNodeHidden'
   | 'postExecutionSuccessText'
   | 'postExecutionFailureText',
   { effects: TCommonEffectJson[] }

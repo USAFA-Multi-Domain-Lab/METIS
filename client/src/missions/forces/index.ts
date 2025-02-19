@@ -479,6 +479,15 @@ export default class ClientMissionForce
   protected filterOutputs(): ClientOutput[] {
     return this.outputs
   }
+
+  // Implemented
+  public modifyResourcePool(operand: number): void {
+    // Modify the resource pool by the operand.
+    this.resourcesRemaining += operand
+
+    // Emit event.
+    this.emitEvent('modify-forces')
+  }
 }
 
 /* ------------------------------ CLIENT FORCE TYPES ------------------------------ */
@@ -494,5 +503,7 @@ export type TClientMissionForceOptions = TMissionForceOptions & {}
  * Triggered when any other event occurs.
  * @option 'output'
  * Triggered when an output is sent.
+ * @option 'modify-forces'
+ * Triggered when the force was manipulated by an effect.
  */
-export type TForceEventMethod = 'activity' | 'output'
+export type TForceEventMethod = 'activity' | 'output' | 'modify-forces'

@@ -55,7 +55,10 @@ export const clientEventSchemas: TClientEventSchemas = {
     zod.object({}),
   ),
   'request-end-session': zodRequestEvent('request-end-session', zod.object({})),
-
+  'request-reset-session': zodRequestEvent(
+    'request-reset-session',
+    zod.object({}),
+  ),
   'request-config-update': zodRequestEvent(
     'request-config-update',
     zod.object({

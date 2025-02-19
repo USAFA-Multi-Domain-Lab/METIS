@@ -857,6 +857,10 @@ export const MissionSchema = new Schema<
                         type: Boolean,
                         required: true,
                       },
+                      opensNodeHidden: {
+                        type: Boolean,
+                        required: true,
+                      },
                       postExecutionSuccessText: {
                         type: String,
                         required: false,

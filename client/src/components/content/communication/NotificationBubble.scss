@@ -17,6 +17,7 @@
 }
 
 .NotificationBubble {
+  pointer-events: all;
   box-sizing: border-box;
   white-space: nowrap;
   margin: 0 auto 20px;

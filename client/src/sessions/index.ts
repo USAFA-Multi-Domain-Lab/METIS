@@ -149,6 +149,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
   private addListeners(): void {
     this.server.addEventListener('session-started', this.onStart)
     this.server.addEventListener('session-ended', this.onEnd)
+    this.server.addEventListener('session-reset', this.onReset)
     this.server.addEventListener('session-config-updated', this.onConfigUpdate)
     this.server.addEventListener('session-members-updated', this.onUsersUpdated)
     this.server.addEventListener('force-assigned', this.onForceAssigned)
@@ -174,6 +175,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
     this.server.clearEventListeners([
       'session-started',
       'session-ended',
+      'session-reset',
       'session-config-updated',
       'session-members-updated',
       'force-assigned',
@@ -519,6 +521,46 @@ export default class SessionClient extends Session<TClientMissionTypes> {
   }
 
   /**
+   * Resets the session.
+   * @resolves When the session has been reset.
+   * @rejects If the session failed to reset, or if the session
+   * has not yet started.
+   */
+  public async $reset(): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      // Callback for errors.
+      const onError = (message: string) => {
+        let error: Error = new Error(message)
+        console.error(message)
+        console.error(error)
+        reject(error)
+      }
+
+      // If the session has not started, throw an error.
+      if (this.state === 'unstarted') {
+        return onError('Session has not yet started.')
+      }
+
+      // Emit a request to reset the session.
+      this.server.request('request-reset-session', {}, 'Resetting session.', {
+        onResponse: (event) => {
+          switch (event.method) {
+            case 'session-reset':
+              this._state = 'started'
+              return resolve()
+            case 'error':
+              return onError(event.message)
+            default:
+              return onError(
+                `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
+              )
+          }
+        },
+      })
+    })
+  }
+
+  /**
    * Updates the session config.
    * @param configUpdates The updates to the session config.
    * @resolves When the session config has been updated.
@@ -772,10 +814,13 @@ export default class SessionClient extends Session<TClientMissionTypes> {
   }
 
   /**
-   * Handles when the session is started.
+   * Imports data provided to a member when the session
+   * is started or reset.
    * @param event The event emitted by the server.
    */
-  private onStart = (event: TResponseEvents['session-started']): void => {
+  private importStartData(
+    event: TResponseEvents['session-started' | 'session-reset'],
+  ): void {
     // Gather details.
     let { structure, forces, prototypes } = event.data
     // Mark the session as started.
@@ -787,11 +832,27 @@ export default class SessionClient extends Session<TClientMissionTypes> {
   }
 
   /**
+   * Handles when the session is started.
+   * @param event The event emitted by the server.
+   */
+  private onStart = (event: TResponseEvents['session-started']): void => {
+    this.importStartData(event)
+  }
+
+  /**
    * Handles when the session is ended.
    * @param event The event emitted by the server.
    */
   private onEnd = (): void => {
     this._state = 'ended'
+  }
+
+  /**
+   * Handles when the session is reset.
+   * @param event The event emitted by the server.
+   */
+  private onReset = (event: TResponseEvents['session-reset']): void => {
+    this.importStartData(event)
   }
 
   /**
@@ -938,6 +999,24 @@ export default class SessionClient extends Session<TClientMissionTypes> {
   }
 
   /**
+   * Modifies the resource pool of a force.
+   * @param forceId The ID of the force.
+   * @param operand The operand to modify the resource pool by.
+   */
+  private modifyResourcePool = (forceId: string, operand: number): void => {
+    // Find the force, given the ID.
+    let force = this.mission.getForce(forceId)
+    // Handle force not found.
+    if (force === undefined) {
+      throw new Error(
+        `Event "force-resource-pool" was triggered, but the force with the given forceId ("${forceId}") could not be found.`,
+      )
+    }
+    // Modify the resource pool for the force.
+    force.modifyResourcePool(operand)
+  }
+
+  /**
    * Handles when a modifier has been enacted.
    * @param event The event emitted by the server.
    */
@@ -959,6 +1038,9 @@ export default class SessionClient extends Session<TClientMissionTypes> {
         break
       case 'node-action-resource-cost':
         this.modifyResourceCost(data.nodeId, data.resourceCostOperand)
+        break
+      case 'force-resource-pool':
+        this.modifyResourcePool(data.forceId, data.operand)
         break
       default:
         throw new Error(

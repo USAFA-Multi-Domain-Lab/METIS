@@ -233,6 +233,7 @@ export default function ActionExecModal({
       return (
         <ExecOption
           key={action._id}
+          session={session}
           action={action}
           select={() => {
             selectAction(action)

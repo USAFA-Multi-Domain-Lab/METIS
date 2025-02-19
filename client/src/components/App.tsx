@@ -324,15 +324,15 @@ function App(props: {}): JSX.Element | null {
           </div>
         </div>
         {promptData !== null ? <Prompt {...promptData} /> : null}
-        <ErrorPage {...pageProps} />
-        <LoadingPage {...pageProps} />
+        <ErrorPage {...pageProps} key='error-page' />
+        <LoadingPage {...pageProps} key='loading-page' />
         <ConnectionStatus />
         <ReactErrorBoundary
           FallbackComponent={AuthPage}
           onError={handleUncaughtError}
           resetKeys={[currentPageKey, error]}
         >
-          <CurrentPage {...pageProps} />
+          <CurrentPage {...pageProps} key={pageProps.key} />
         </ReactErrorBoundary>
       </div>
     </ReactErrorBoundary>

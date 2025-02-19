@@ -7,7 +7,7 @@ import IActionExecution, {
   TExecutionCheats,
 } from 'metis/missions/actions/executions'
 import { TCommonEffectJson } from 'metis/missions/effects'
-import { TTargetEnvContextAction } from 'metis/server/target-environments/context-provider'
+import { TTargetEnvExposedAction } from 'metis/server/target-environments/context'
 import { TSessionConfig } from 'metis/sessions'
 import seedrandom, { PRNG } from 'seedrandom'
 import { TServerMissionTypes } from '..'
@@ -133,7 +133,7 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
    * in a target environment.
    * @returns The action's necessary properties.
    */
-  public toTargetEnvContext(): TTargetEnvContextAction {
+  public toTargetEnvContext(): TTargetEnvExposedAction {
     return {
       _id: this._id,
       name: this.name,

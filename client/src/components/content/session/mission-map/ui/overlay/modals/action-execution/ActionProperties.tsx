@@ -5,6 +5,14 @@ import { TExecutionCheats } from '../../../../../../../../../../shared/missions/
 import './ActionProperties.scss'
 import ActionProperty from './ActionProperty'
 
+/* -- CONSTANTS -- */
+
+/**
+ * What display to the user as a value for a hidden
+ * property.
+ */
+const HIDDEN_VALUE: string = '???'
+
 /**
  * Displays the properties of the given action.
  */
@@ -37,8 +45,8 @@ export default function ActionProperties({
    * for its respective `ActionProperty` instance.
    */
   const renderSuccessChance = (value: number) => {
-    // If the success chance is hidden, return '???'.
-    if (action.successChanceHidden) return '???'
+    // If the success chance is hidden, return `HIDDEN_VALUE`.
+    if (action.successChanceHidden) return HIDDEN_VALUE
     // Convert the value to a percentage format.
     return `${value * 100}%`
   }
@@ -48,8 +56,8 @@ export default function ActionProperties({
    * for its respective `ActionProperty` instance.
    */
   const renderProcessTime = (value: number) => {
-    // If the process time is hidden, return '???'.
-    if (action.processTimeHidden) return '???'
+    // If the process time is hidden, return `HIDDEN_VALUE`.
+    if (action.processTimeHidden) return HIDDEN_VALUE
     // Convert the value to a seconds format.
     return `${value / 1000}s`
   }
@@ -59,10 +67,22 @@ export default function ActionProperties({
    * for its respective `ActionProperty` instance.
    */
   const renderResourceCost = (value: number) => {
-    // If the resource cost is hidden, return '???'.
-    if (action.resourceCostHidden) return '???'
+    // If the resource cost is hidden, return `HIDDEN_VALUE`.
+    if (action.resourceCostHidden) return HIDDEN_VALUE
     // Convert the value to a negative format.
-    return `${-value}`
+    return `${-value} ${resourceLabel}`
+  }
+
+  /**
+   * Callback function for rendering the opens node
+   * for its respective `ActionProperty` instance.
+   */
+  const renderOpensNode = (value: boolean) => {
+    // If the opens node is hidden, return `HIDDEN_VALUE`.
+    if (action.opensNodeHidden) return HIDDEN_VALUE
+
+    // Return 'Yes' if the value is true, otherwise 'No'.
+    return value ? 'Yes' : 'No'
   }
 
   // Render the root component.
@@ -88,7 +108,7 @@ export default function ActionProperties({
       <ActionProperty
         action={action}
         actionKey='resourceCost'
-        label={resourceLabel}
+        label='Cost'
         cheatsApplied={cheats.zeroCost}
         renderValue={renderResourceCost}
       />
@@ -96,7 +116,7 @@ export default function ActionProperties({
         action={action}
         actionKey='opensNode'
         label='Opens Node'
-        renderValue={(value) => (value ? 'Yes' : 'No')}
+        renderValue={renderOpensNode}
       />
     </div>
   )

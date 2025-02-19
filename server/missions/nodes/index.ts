@@ -2,7 +2,7 @@ import { TCommonMissionActionJson } from 'metis/missions/actions'
 import { TActionExecutionJson } from 'metis/missions/actions/executions'
 import { TActionOutcomeJson } from 'metis/missions/actions/outcomes'
 import MissionNode from 'metis/missions/nodes'
-import { TTargetEnvContextNode } from 'metis/server/target-environments/context-provider'
+import { TTargetEnvExposedNode } from 'metis/server/target-environments/context'
 import { TServerMissionTypes } from '..'
 import ServerMissionAction, { TServerMissionActionOptions } from '../actions'
 import ServerActionExecution from '../actions/executions'
@@ -213,7 +213,7 @@ export default class ServerMissionNode extends MissionNode<TServerMissionTypes> 
    * in a target environment.
    * @returns The node's necessary properties.
    */
-  public toTargetEnvContext(): TTargetEnvContextNode {
+  public toTargetEnvContext(): TTargetEnvExposedNode {
     return {
       _id: this._id,
       name: this.name,

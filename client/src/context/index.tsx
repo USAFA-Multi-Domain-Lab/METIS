@@ -167,7 +167,7 @@ const initializeActions = (
 
         // Set the current page props and path.
         setCurrentPageKey(pageKey)
-        setCurrentPageProps(props)
+        setCurrentPageProps({ ...props, key: generateHash() })
 
         // If the page switch takes less than
         // the minimum time, wait until the

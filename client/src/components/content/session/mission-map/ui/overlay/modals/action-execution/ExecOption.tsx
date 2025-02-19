@@ -5,14 +5,18 @@ import { compute } from 'src/toolbox'
 import { useEventListener } from 'src/toolbox/hooks'
 import StringToolbox from '../../../../../../../../../../shared/toolbox/strings'
 import './ExecOption.scss'
+import SessionClient from 'src/sessions'
+import { useGlobalContext } from 'src/context'
 
 /* -- COMPONENT -- */
 
 /**
  * An option in the drop down of actions to choose from.
  */
-export default function ExecOption({ action, select }: TExecOption_P) {
+export default function ExecOption({ action, session, select }: TExecOption_P) {
   /* -- STATE -- */
+  const globalContext = useGlobalContext()
+  const [cheats] = globalContext.cheats
   const [successChance, setSuccessChance] = useState<number>(
     action.successChance,
   )
@@ -36,9 +40,9 @@ export default function ExecOption({ action, select }: TExecOption_P) {
     // Initialize the class list.
     let classList: string[] = ['ExecOption']
 
-    // Disable the option if there are not enough resources
-    // to execute the particular action.
-    if (resourceCost > action.force.resourcesRemaining) {
+    // Disable the option if the action is
+    // not ready to execute.
+    if (!session.readyToExecute(action, cheats)) {
       classList.push('Disabled')
     }
 
@@ -81,6 +85,10 @@ export type TExecOption_P = {
    * The action serving as an option in the drop down.
    */
   action: ClientMissionAction
+  /**
+   * The session where the action is being executed.
+   */
+  session: SessionClient
   /**
    * Selects the action as the selected option.
    */

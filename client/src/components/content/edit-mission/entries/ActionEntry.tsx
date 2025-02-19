@@ -48,6 +48,7 @@ export default function ActionEntry({
       'resourceCost',
       'resourceCostHidden',
       'opensNode',
+      'opensNodeHidden',
       'postExecutionSuccessText',
       'postExecutionFailureText',
     ],
@@ -67,6 +68,7 @@ export default function ActionEntry({
   const [resourceCost, setResourceCost] = actionState.resourceCost
   const [resourceCostHidden, hideResourceCost] = actionState.resourceCostHidden
   const [opensNode, setOpensNode] = actionState.opensNode
+  const [opensNodeHidden, hideOpensNode] = actionState.opensNodeHidden
   const [postExecutionSuccessText, setPostExecutionSuccessText] =
     actionState.postExecutionSuccessText
   const [postExecutionFailureText, setPostExecutionFailureText] =
@@ -291,6 +293,23 @@ export default function ActionEntry({
             key={`${action._id}_resourceCostHidden`}
           />
           <Divider />
+          <DetailToggle
+            fieldType='required'
+            label='Opens Node'
+            tooltipDescription='If enabled, this action will open the node if successfully executed.'
+            stateValue={opensNode}
+            setState={setOpensNode}
+            key={`${action._id}_opensNode`}
+          />
+          <DetailToggle
+            fieldType='required'
+            label='Hide'
+            tooltipDescription='If enabled, the opens node option will be hidden from the executor.'
+            stateValue={opensNodeHidden}
+            setState={hideOpensNode}
+            key={`${action._id}_opensNodeHidden`}
+          />
+          <Divider />
           <DetailLargeString
             fieldType='required'
             handleOnBlur='repopulateValue'
@@ -314,14 +333,6 @@ export default function ActionEntry({
             }
             elementBoundary='.SidePanelContent'
             key={`${action._id}_postExecutionFailureText`}
-          />
-          <DetailToggle
-            fieldType='required'
-            label='Opens Node'
-            tooltipDescription='If enabled, this action will open the node if successfully executed.'
-            stateValue={opensNode}
-            setState={setOpensNode}
-            key={`${action._id}_opensNode`}
           />
           <Divider />
 

@@ -132,6 +132,7 @@ type TModifierData = [
      * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
      * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
      * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
+     * @option `"force-resource-pool":` The data needed to modify the resource pool of a force.
      */
     key: 'node-update-block'
     /**
@@ -150,6 +151,7 @@ type TModifierData = [
      * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
      * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
      * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
+     * @option `"force-resource-pool":` The data needed to modify the resource pool of a force.
      */
     key: 'node-action-success-chance'
     /**
@@ -168,6 +170,7 @@ type TModifierData = [
      * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
      * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
      * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
+     * @option `"force-resource-pool":` The data needed to modify the resource pool of a force.
      */
     key: 'node-action-process-time'
     /**
@@ -186,6 +189,7 @@ type TModifierData = [
      * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
      * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
      * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
+     * @option `"force-resource-pool":` The data needed to modify the resource pool of a force.
      */
     key: 'node-action-resource-cost'
     /**
@@ -196,6 +200,25 @@ type TModifierData = [
      * The operand used to modify the resource cost for all the node's actions.
      */
     resourceCostOperand: number
+  },
+  {
+    /**
+     * Used to identify the data structure.
+     * @option `"node-block":` The data needed to block or unblock a node.
+     * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
+     * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
+     * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
+     * @option `"force-resource-pool":` The data needed to modify the resource pool of a force.
+     */
+    key: 'force-resource-pool'
+    /**
+     * The ID of the force to modify.
+     */
+    forceId: string
+    /**
+     * The operand used to modify the resource pool of the force.
+     */
+    operand: number
   },
 ]
 
@@ -373,6 +396,27 @@ export type TResponseEvents = {
     'session-ended',
     {},
     TClientEvents['request-end-session']
+  >
+  /**
+   * Occurs when the session has been reset.
+   */
+  'session-reset': TResponseEvent<
+    'session-reset',
+    {
+      /**
+       * The node structure available to the client.
+       */
+      structure: AnyObject
+      /**
+       * The force(s) the client has access to.
+       */
+      forces: TCommonMissionForceJson[]
+      /**
+       * The prototype data used to create the mission's structure of nodes.
+       */
+      prototypes: TCommonMissionPrototypeJson[]
+    },
+    TClientEvents['request-reset-session']
   >
   /**
    * Occurs when configuration of the session is updated.
@@ -624,6 +668,11 @@ export type TRequestEvents = {
    * session.
    */
   'request-end-session': TRequestEvent<'request-end-session'>
+  /**
+   * Occurs when the client requests to reset the joined
+   * session.
+   */
+  'request-reset-session': TRequestEvent<'request-reset-session'>
   /**
    * Occurs when the client requests to update the configuration
    * of the joined session.

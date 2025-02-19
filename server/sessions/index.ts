@@ -1,4 +1,9 @@
-import { TClientEvents, TServerEvents, TServerMethod } from 'metis/connect/data'
+import {
+  TClientEvents,
+  TRequestOfResponse,
+  TServerEvents,
+  TServerMethod,
+} from 'metis/connect/data'
 import { ServerEmittedError } from 'metis/connect/errors'
 import { TCommonMissionJson, TMissionJsonOptions } from 'metis/missions'
 import { TCommonOutputJson } from 'metis/missions/forces/output'
@@ -20,9 +25,10 @@ import { plcApiLogger } from '../logging'
 import ServerActionExecution from '../missions/actions/executions'
 import ServerMissionForce from '../missions/forces'
 import ServerOutput, { TServerOutputOptions } from '../missions/forces/output'
-import EnvironmentContextProvider from '../target-environments/context-provider'
 import ServerUser from '../users'
 import ServerSessionMember from './members'
+import ServerEffect from '../missions/effects'
+import TargetEnvContext from '../target-environments/context'
 
 /**
  * Server instance for sessions. Handles server-side logic for a session with participating clients. Communicates with clients to conduct the session.
@@ -44,11 +50,6 @@ export default class SessionServer extends Session<TServerMissionTypes> {
   public get destroyed(): boolean {
     return this._destroyed
   }
-
-  /**
-   * The context provider for the target environment.
-   */
-  public environmentContextProvider: EnvironmentContextProvider
 
   /**
    * Assignments of users to forces (userID to forceID).
@@ -84,7 +85,6 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     this._state = 'unstarted'
     this._destroyed = false
     this.register()
-    this.environmentContextProvider = new EnvironmentContextProvider(this)
     this.assignments = {}
   }
 
@@ -421,6 +421,9 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     connection.addEventListener('request-end-session', (data) =>
       this.onRequestEnd(member, data),
     )
+    connection.addEventListener('request-reset-session', (data) =>
+      this.onRequestReset(member, data),
+    )
     connection.addEventListener('request-config-update', (data) =>
       this.onRequestConfigUpdate(member, data),
     )
@@ -454,6 +457,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     member.connection.clearEventListeners([
       'request-start-session',
       'request-end-session',
+      'request-reset-session',
       'request-config-update',
       'request-kick',
       'request-ban',
@@ -478,6 +482,92 @@ export default class SessionServer extends Session<TServerMissionTypes> {
   }
 
   /**
+   * Builds and emits the response events to all members of the session
+   * when the session is started or is reset.
+   * @param member The member that emitted the initial request.
+   * @param event The associated request event.
+   * @param responseMethod The method of the event to emit (start or reset).
+   */
+  private emitStartResponses(
+    event: TClientEvents['request-start-session' | 'request-reset-session'],
+    member: ServerSessionMember,
+    responseMethod: 'session-started' | 'session-reset',
+  ): void {
+    // Build request for response data.
+    let request = member.connection.buildResponseReqData(event)
+    // Cache used to not export the same force twice
+    // for two members assigned to the same force.
+    const assignmentForceCache: SingleTypeObject<TCommonMissionJson> = {}
+    // Cache complete visibility export.
+    let completeVisibilityCache = this.mission.toJson({
+      exportType: 'session-complete',
+      userId: member.userId,
+    })
+
+    // Loop through members, and emit a start event to
+    // all of them, including mission data specific to
+    // their permissions.
+    for (let member of this.members) {
+      let hasCompleteVisibility = member.isAuthorized('completeVisibility')
+      let isAssigned = member.isAssigned
+
+      // If the member does not have complete visibility
+      // and is assigned to a force, then export force-specific
+      // data.
+      if (!hasCompleteVisibility && isAssigned) {
+        // Get the force ID for the member.
+        let forceId = member.forceId!
+
+        // If the force has not been cached, then cache it.
+        if (!assignmentForceCache[forceId]) {
+          assignmentForceCache[forceId] = this.mission.toJson({
+            exportType: 'session-force-specific',
+            forceId,
+            userId: member.userId,
+          })
+        }
+
+        // Get relevant data from the mission for the member.
+        let { structure, forces, prototypes } = assignmentForceCache[forceId]
+
+        // Emit the event to the member.
+        member.emit(responseMethod, {
+          method: responseMethod,
+          data: { structure, forces, prototypes },
+          request,
+        })
+      }
+      // Else if the member has complete visibility, then
+      // provide all data.
+      else if (hasCompleteVisibility) {
+        // Emit the event to the member.
+        member.emit(responseMethod, {
+          method: responseMethod,
+          data: {
+            structure: completeVisibilityCache.structure,
+            forces: completeVisibilityCache.forces,
+            prototypes: completeVisibilityCache.prototypes,
+          },
+          request,
+        })
+      }
+      // Else, export nothing.
+      else {
+        // Emit the event to the member.
+        member.emit(responseMethod, {
+          method: responseMethod,
+          data: {
+            structure: {},
+            forces: [],
+            prototypes: [],
+          },
+          request,
+        })
+      }
+    }
+  }
+
+  /**
    * Called when a member requests to start the session.
    * @param member The member requesting to start the session.
    * @param event The event emitted by the member.
@@ -488,7 +578,6 @@ export default class SessionServer extends Session<TServerMissionTypes> {
   ): void => {
     // Build request for response data.
     let request = member.connection.buildResponseReqData(event)
-
     // If the member does not have the correct permissions
     // to start the session, then emit an error.
     if (!member.isAuthorized('startEndSessions')) {
@@ -544,73 +633,8 @@ export default class SessionServer extends Session<TServerMissionTypes> {
       },
     })
 
-    // Cache used to not export the same force twice
-    // for two members assigned to the same force.
-    const assignmentForceCache: SingleTypeObject<TCommonMissionJson> = {}
-    // Cache complete visibility export.
-    let completeVisibilityCache = this.mission.toJson({
-      exportType: 'session-complete',
-      userId: member.userId,
-    })
-
-    // Loop through members, and emit a start event to
-    // all of them, including mission data specific to
-    // their permissions.
-    for (let member of this.members) {
-      let hasCompleteVisibility = member.isAuthorized('completeVisibility')
-      let isAssigned = member.isAssigned
-
-      // If the member does not have complete visibility
-      // and is assigned to a force, then export force-specific
-      // data.
-      if (!hasCompleteVisibility && isAssigned) {
-        // Get the force ID for the member.
-        let forceId = member.forceId!
-
-        // If the force has not been cached, then cache it.
-        if (!assignmentForceCache[forceId]) {
-          assignmentForceCache[forceId] = this.mission.toJson({
-            exportType: 'session-force-specific',
-            forceId,
-            userId: member.userId,
-          })
-        }
-
-        // Get relevant data from the mission for the member.
-        let { structure, forces, prototypes } = assignmentForceCache[forceId]
-
-        // Emit the event to the member.
-        member.emit('session-started', {
-          data: { structure, forces, prototypes },
-          request,
-        })
-      }
-      // Else if the member has complete visibility, then
-      // provide all data.
-      else if (hasCompleteVisibility) {
-        // Emit the event to the member.
-        member.emit('session-started', {
-          data: {
-            structure: completeVisibilityCache.structure,
-            forces: completeVisibilityCache.forces,
-            prototypes: completeVisibilityCache.prototypes,
-          },
-          request,
-        })
-      }
-      // Else, export nothing.
-      else {
-        // Emit the event to the member.
-        member.emit('session-started', {
-          data: {
-            structure: {},
-            forces: [],
-            prototypes: [],
-          },
-          request,
-        })
-      }
-    }
+    // Emit responses to all members.
+    this.emitStartResponses(event, member, 'session-started')
   }
 
   /**
@@ -654,6 +678,53 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     // Perform clean up.
     this.clearMembers()
     this.destroy()
+  }
+
+  /**
+   * Called when a member requests to reset the session.
+   * @param member The member requesting to reset the session.
+   * @param event The event emitted by the member.
+   */
+  public onRequestReset = (
+    member: ServerSessionMember,
+    event: TClientEvents['request-reset-session'],
+  ): void => {
+    // Build request for response data.
+    let request = member.connection.buildResponseReqData(event)
+
+    // If the member does not have the correct permissions
+    // to start the session, then emit an error.
+    if (!member.isAuthorized('startEndSessions')) {
+      return member.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
+          { request },
+        ),
+      )
+    }
+    // If the session has not been started
+    // then emit an error.
+    if (this._state === 'unstarted') {
+      return member.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
+          { request },
+        ),
+      )
+    }
+
+    // Mark the session as unstarted.
+    this._state = 'started'
+    // Recreate the new mission from the JSON of
+    // the current mission.
+    this._mission = new ServerMission(this.mission.toJson(), {
+      populateTargets: this.config.effectsEnabled,
+    })
+    // Remap actions.
+    this.mapActions()
+
+    // Emit responses to all members.
+    this.emitStartResponses(event, member, 'session-reset')
   }
 
   /**
@@ -1116,7 +1187,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     event: TClientEvents['request-execute-action'],
   ): Promise<void> => {
     // Gather data.
-    let { environmentContextProvider, config } = this
+    let { config } = this
     const { effectsEnabled, infiniteResources } = config
     let { connection } = member
     let { actionId, cheats = {} } = event.data
@@ -1183,11 +1254,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     // If the participant does not have enough
     // resources to execute the action, then
     // emit an error.
-    if (
-      action.force.resourcesRemaining < action.resourceCost &&
-      !zeroCost &&
-      !infiniteResources
-    ) {
+    if (!this.areEnoughResources(action, cheats)) {
       return connection.emitError(
         new ServerEmittedError(
           ServerEmittedError.CODE_ACTION_INSUFFICIENT_RESOURCES,
@@ -1280,7 +1347,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
           action.effects.forEach(async (effect) => {
             try {
               // Apply the effect to the target.
-              await environmentContextProvider.applyEffect(effect, member.user)
+              await this.applyEffect(effect, member)
 
               // todo: implement feedback for modifiers
               // participant.emit('effect-successful', {
@@ -1441,153 +1508,174 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     }
   }
 
-  /**
-   * Handles the blocking and unblocking of a node during a session.
-   * @param nodeId The ID of the node to block or unblock.
-   * @param forceId The ID of the force that the node belongs to.
-   * @param blocked Whether or not the node is blocked.
-   */
-  public updateNodeBlockStatus = (
-    nodeId: ServerMissionNode['_id'],
-    forceId: ServerMissionForce['_id'],
-    blocked: boolean,
-  ) => {
-    // Find the node given the ID...
-    let node = this.mission.getNode(nodeId)
-
-    // If the node is undefined, then throw
-    // an error.
-    if (node === undefined) {
+  // Implemented
+  public async applyEffect(
+    effect: ServerEffect,
+    member: ServerSessionMember,
+  ): Promise<void> {
+    // If the effect doesn't have a target environment,
+    // log an error.
+    if (effect.targetEnvironment === null) {
       throw new Error(
-        `Could not update block status for the node with ID "${nodeId}" in force with ID "${forceId}" because the node was not found.`,
+        `The force - "${effect.force.name}" - has a node - "${effect.node.name}" - has an action - "${effect.action.name}" - with an effect - "${effect.name}" - that doesn't have a target environment or the target environment doesn't exist.`,
+      )
+    }
+    // If the effect doesn't have a target,
+    // log an error.
+    if (effect.target === null) {
+      throw new Error(
+        `The force - "${effect.force.name}" - has a node - "${effect.node.name}" - has an action - "${effect.action.name}" - with an effect - "${effect.name}" - that doesn't have a target or the target doesn't exist.`,
       )
     }
 
-    // Block or unblock the node.
-    node.updateBlockStatus(blocked)
+    // Create and expose a new context for the target
+    // environment.
+    let context = new TargetEnvContext(effect, member, this).expose()
 
-    // Emit an event to all members in the force
-    // that a modifier has been enacted.
-    for (let { connection } of this.getMembersForForce(forceId)) {
-      connection.emit('modifier-enacted', {
-        data: {
-          key: 'node-update-block',
-          nodeId,
-          blocked,
-        },
-      })
+    // Apply the effect to the target.
+    try {
+      await effect.target.script(context)
+    } catch (error: any) {
+      // Give additional information about the error.
+      let message =
+        `Failed to apply effect - "${effect.name}" - to target - "${effect.target.name}" - found in the environment - "${effect.targetEnvironment.name}".\n` +
+        `The effect - "${effect.name}" - can be found here:\n` +
+        `force - "${effect.force.name}" - node - "${effect.node.name}" - action - "${effect.action.name}" - effect - "${effect.name}".\n`
+      // Log the error.
+      plcApiLogger.error(message, error)
     }
+  }
+
+  /**
+   * Confirms the force is a part of the mission.
+   * @param force The force to confirm.
+   * @throws If the force does not belong to the mission.
+   */
+  private confirmForceInMission(force: ServerMissionForce): void {
+    if (force.mission._id !== this.mission._id) {
+      throw new Error(
+        `Could not perform the operation on the force with ID "${force._id}" because it does not belong to the mission with ID "${this.mission._id}".`,
+      )
+    }
+  }
+
+  /**
+   * Confirms the node is a part of the mission.
+   * @param node The node to confirm.
+   * @throws If the node does not belong to the mission.
+   */
+  private confirmNodeInMission(node: ServerMissionNode): void {
+    if (node.mission._id !== this.mission._id) {
+      throw new Error(
+        `Could not perform the operation on the node with ID "${node._id}" because it does not belong to the mission with ID "${this.mission._id}".`,
+      )
+    }
+  }
+
+  /**
+   * Emites a 'modifier-enacted' event to all members in the force
+   * that a modifier has been enacted.
+   * @param node The node on which the modifier was enacted.
+   * @param data The payload for the event.
+   */
+  private emitModifierEnacted = (
+    force: ServerMissionForce,
+    data: TServerEvents['modifier-enacted']['data'],
+  ) => {
+    for (let { connection } of this.getMembersForForce(force._id)) {
+      connection.emit('modifier-enacted', { data })
+    }
+  }
+
+  /**
+   * Handles the blocking and unblocking of a node during a session.
+   * @param nodeId The node to block or unblock.
+   * @param blocked Whether to block or unblock the node.
+   */
+  public updateNodeBlockStatus = (
+    node: ServerMissionNode,
+    blocked: boolean,
+  ) => {
+    // Confirm the node exists, update the block status,
+    // then emit an event to the members.
+    this.confirmNodeInMission(node)
+    node.updateBlockStatus(blocked)
+    this.emitModifierEnacted(node.force, {
+      key: 'node-update-block',
+      nodeId: node._id,
+      blocked,
+    })
   }
 
   /**
    * Modifies the success chance of all the node's actions.
-   * @param nodeId The ID of the node with the actions to modify.
-   * @param forceId The ID of the force that the node belongs to.
-   * @param successChanceOperand The operand to modify the success chance by.
+   * @param node The node with the actions to modify.
+   * @param operand The operand to modify the success chance by.
    */
-  public modifySuccessChance = (
-    nodeId: ServerMissionNode['_id'],
-    forceId: ServerMissionForce['_id'],
-    successChanceOperand: number,
-  ) => {
-    // Find the node given the ID...
-    let node = this.mission.getNode(nodeId)
-
-    // If the node is undefined, then emit
-    // an error.
-    if (node === undefined) {
-      throw new Error(
-        `Could not modify the success chance for all actions in the node with ID "${nodeId}" in force with ID "${forceId}" because the node was not found.`,
-      )
-    }
-
-    // Modify the success chance for all of its actions.
-    node.modifySuccessChance(successChanceOperand)
-    // Emit an event to all members in the force
-    // that a modifier has been enacted.
-    for (let { connection } of this.getMembersForForce(forceId)) {
-      connection.emit('modifier-enacted', {
-        data: {
-          key: 'node-action-success-chance',
-          nodeId,
-          successChanceOperand,
-        },
-      })
-    }
+  public modifySuccessChance = (node: ServerMissionNode, operand: number) => {
+    // Confirm the node exists, modify the success chance,
+    // then emit an event to the members.
+    this.confirmNodeInMission(node)
+    node.modifySuccessChance(operand)
+    this.emitModifierEnacted(node.force, {
+      key: 'node-action-success-chance',
+      nodeId: node._id,
+      successChanceOperand: operand,
+    })
   }
 
   /**
    * Modifies the processing time of all the node's actions.
-   * @param nodeId The ID of the node with the actions to modify.
-   * @param forceId The ID of the force that the node belongs to.
-   * @param processTimeOperand The operand to modify the process time by.
+   * @param node The node with the actions to modify.
+   * @param operand The operand to modify the processing time by.
    */
-  public modifyProcessTime = (
-    nodeId: ServerMissionNode['_id'],
-    forceId: ServerMissionForce['_id'],
-    processTimeOperand: number,
-  ) => {
-    // Find the node given the ID...
-    let node = this.mission.getNode(nodeId)
-
-    // If the node is undefined, then emit
-    // an error.
-    if (node === undefined) {
-      throw new Error(
-        `Could not modify the process time for all actions in the node with ID "${nodeId}" in force with ID "${forceId}" because the node was not found.`,
-      )
-    }
-
-    // Modify the process time for all of its actions.
-    node.modifyProcessTime(processTimeOperand)
-    // Emit an event to all users in the force
-    // that a modifier has been enacted.
-    for (let { connection } of this.getMembersForForce(forceId)) {
-      connection.emit('modifier-enacted', {
-        data: {
-          key: 'node-action-process-time',
-          nodeId,
-          processTimeOperand,
-        },
-      })
-    }
+  public modifyProcessTime = (node: ServerMissionNode, operand: number) => {
+    // Confirm the node exists, modify the process time,
+    // then emit an event to the members.
+    this.confirmNodeInMission(node)
+    node.modifyProcessTime(operand)
+    this.emitModifierEnacted(node.force, {
+      key: 'node-action-process-time',
+      nodeId: node._id,
+      processTimeOperand: operand,
+    })
   }
 
   /**
    * Modifies the resource cost of all the node's actions.
-   * @param nodeId The ID of the node with the actions to modify.
-   * @param forceId The ID of the force that the node belongs to.
-   * @param resourceCostOperand The operand to modify the resource cost by.
+   * @param node The node with the actions to modify.
+   * @param operand The operand to modify the resource cost by.
    */
-  public modifyResourceCost = (
-    nodeId: ServerMissionNode['_id'],
-    forceId: ServerMissionForce['_id'],
-    resourceCostOperand: number,
-  ) => {
-    // Find the node given the ID...
-    let node = this.mission.getNode(nodeId)
+  public modifyResourceCost = (node: ServerMissionNode, operand: number) => {
+    // Confirm the node exists, modify the resource cost,
+    // then emit an event to the members.
+    this.confirmNodeInMission(node)
+    node.modifyResourceCost(operand)
+    this.emitModifierEnacted(node.force, {
+      key: 'node-action-resource-cost',
+      nodeId: node._id,
+      resourceCostOperand: operand,
+    })
+  }
 
-    // If the node is undefined, then emit
-    // an error.
-    if (node === undefined) {
-      throw new Error(
-        `Could not modify the resource cost for all actions in the node with ID "${nodeId}" in force with ID "${forceId}" because the node was not found.`,
-      )
-    }
-
-    // Modify the resource cost for all of its actions.
-    node.modifyResourceCost(resourceCostOperand)
-    // Emit an event to all members in the force
-    // that a modifier has been enacted.
-    for (let { connection } of this.getMembersForForce(forceId)) {
-      connection.emit('modifier-enacted', {
-        data: {
-          key: 'node-action-resource-cost',
-          nodeId,
-          resourceCostOperand,
-        },
-      })
-    }
+  /**
+   * Modifies resource pool by applying the given amount
+   * to the resource pool.
+   * @param force The force containing the resource pool.
+   * @param operand The amount by which to modify the resource pool.
+   * @note A negative value will subtract and a positive
+   * value will add to the resource pool.
+   */
+  public modifyResourcePool = (force: ServerMissionForce, operand: number) => {
+    // Confirm the force exists, modify the resource pool,
+    // then emit an event to the members.
+    this.confirmForceInMission(force)
+    force.modifyResourcePool(operand)
+    this.emitModifierEnacted(force, {
+      key: 'force-resource-pool',
+      forceId: force._id,
+      operand,
+    })
   }
 
   /**

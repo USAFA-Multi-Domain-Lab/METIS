@@ -6,6 +6,7 @@ import SessionServer from 'metis/server/sessions'
 import ServerSessionMember from 'metis/server/sessions/members'
 import ServerUser from 'metis/server/users'
 import { AnyObject } from 'metis/toolbox/objects'
+import ServerMissionForce from '../missions/forces'
 
 export default class TargetEnvContext {
   /**
@@ -37,7 +38,7 @@ export default class TargetEnvContext {
   /**
    * The force for the current context.
    */
-  private get force() {
+  private get force(): ServerMissionForce {
     return this.effect.force
   }
 
@@ -282,13 +283,13 @@ export type TCommonTargetEnvContext = {}
  */
 export type TTargetEnvExposedContext = {
   /**
-   * A effect that is applied to its target.
+   * An effect that is applied to its target.
    */
   readonly effect: TTargetEnvExposedEffect
   /**
    * The context of the mission for the target environment.
    */
-  readonly mission: TTargetEnvContextMission
+  readonly mission: TTargetEnvExposedMission
   /**
    * The user who triggered the effect.
    */
@@ -367,7 +368,7 @@ export type TTargetEnvExposedContext = {
 /**
  * The context of the mission for the target environment.
  */
-export type TTargetEnvContextMission = {
+export type TTargetEnvExposedMission = {
   /**
    * The ID for the mission.
    */

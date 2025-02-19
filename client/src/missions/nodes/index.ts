@@ -366,15 +366,14 @@ export default class ClientMissionNode
     // Return a promise to open the node.
     return new Promise<void>((resolve) => {
       // If the node is openable...
-      if (this.openable) {
+      if (this.openable && revealedChildNodes) {
         // Set the node to open.
         this._opened = true
         // Update last opened node cache.
         this.mission.lastOpenedNode = this
         // Reveal child nodes, if any.
-        if (revealedChildNodes !== undefined) {
-          this.populateChildNodes(revealedChildNodes)
-        }
+        this.populateChildNodes(revealedChildNodes)
+
         // Handle structure change.
         this.mission.handleStructureChange()
 
@@ -503,6 +502,8 @@ export default class ClientMissionNode
 
     // Remove execution.
     this._execution = null
+
+    console.log('revealedChildNodes', revealedChildNodes)
 
     // If the child nodes are revealed, open the node.
     if (revealedChildNodes) {

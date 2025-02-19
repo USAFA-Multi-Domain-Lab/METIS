@@ -1,5 +1,4 @@
 import { exec } from 'child_process'
-import formatDate from 'dateformat'
 import MetisServer from 'metis/server'
 import { demoMissionData } from 'metis/server/database/initial-mission-data'
 import InfoModel from 'metis/server/database/models/info'
@@ -12,6 +11,7 @@ import {
   instructorUserData,
   studentUserData,
 } from './initial-user-data'
+import { DateToolbox } from 'metis/toolbox/dates'
 
 /**
  * Represents a connection to the Metis database.
@@ -122,10 +122,10 @@ export default class MetisDatabase {
       const { mongoHost, mongoPort, mongoDB, mongoUsername, mongoPassword } =
         server
       const now: Date = new Date()
-      const nowFormatted: string = formatDate(now, 'isoDateTime').replaceAll(
-        ':',
-        '-',
-      )
+      const nowFormatted: string = DateToolbox.format(
+        now,
+        'isoDateTime',
+      ).replaceAll(':', '-')
       let command: string = `mongodump --host ${mongoHost} --port ${mongoPort} --db ${mongoDB} --out ./database/backups/${nowFormatted}`
 
       if (mongoUsername !== undefined && mongoPassword !== undefined) {

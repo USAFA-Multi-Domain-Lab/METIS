@@ -37,6 +37,7 @@
     position: relative;
     z-index: $z-index-tooltips;
     border: 2.5px solid $color-primary-light;
+    max-width: 34em;
     border-radius: 10px;
     padding: 12px 20px 20px;
     background-color: rgba($color-accent-dark, 0.925);
