@@ -11,7 +11,6 @@ import {
   useRequireLogin,
 } from 'src/toolbox/hooks'
 import { DefaultLayout, TPage_P } from '.'
-import MapToolbox from '../../../../shared/toolbox/maps'
 import { TWithKey } from '../../../../shared/toolbox/objects'
 import Prompt from '../content/communication/Prompt'
 import { HomeLink } from '../content/general-layout/Navigation'
