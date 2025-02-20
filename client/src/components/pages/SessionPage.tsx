@@ -102,16 +102,25 @@ export default function SessionPage({
     }
     // If the node is ready to execute...
     else if (node.readyToExecute) {
+      // If the user is authorized to use cheats,
+      // set the node to execute.
+      if (session.member.isAuthorized('cheats')) {
+        setNodeToExecute(node)
+        return
+      }
+
       // If there are no more resources left
       // to spend, notify the user.
       // todo: Evaluate ths line to see if it conflicts
       // todo: with new resource modifier features.
       if (node.force.resourcesRemaining === 0) {
         notify(`You have no more resources left to spend.`)
+        return
       }
+
       // If there is not enough resources to
       // execute an action, notify the user.
-      else if (
+      if (
         !MapToolbox.mapToArray(
           node.actions,
           (action) => action.resourceCost <= node.force.resourcesRemaining,
@@ -120,11 +129,11 @@ export default function SessionPage({
         // todo: Evaluate ths line to see if it conflicts
         // todo: with new resource modifier features.
         notify('Insufficient resources available to execute action.')
+        return
       }
+
       // Else, select the node.
-      else {
-        setNodeToExecute(node)
-      }
+      setNodeToExecute(node)
     }
   }
 
