@@ -27,16 +27,9 @@ export default function MissionList({
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
-  const [server] = globalContext.server
   const [login] = useRequireLogin()
-  const {
-    notify,
-    handleError,
-    beginLoading,
-    finishLoading,
-    navigateTo,
-    prompt,
-  } = globalContext.actions
+  const { notify, beginLoading, finishLoading, navigateTo, prompt } =
+    globalContext.actions
   const importMissionTrigger = useRef<HTMLInputElement>(null)
 
   /* -- COMPUTED -- */

@@ -4,6 +4,7 @@ import Tooltip from '../../../communication/Tooltip'
 import { useListContext } from '../List'
 import './ListProcessor.scss'
 import { TListItem } from '../pages/ListItem'
+import ClientMission from 'src/missions'
 
 /**
  * Processes the items available in a list by applying

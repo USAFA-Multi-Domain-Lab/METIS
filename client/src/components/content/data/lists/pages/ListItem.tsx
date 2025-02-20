@@ -12,6 +12,8 @@ import {
 } from '../List'
 import './ListItem.scss'
 import ListItemCell from './ListItemCell'
+import StringToolbox from '../../../../../../../shared/toolbox/strings'
+import ClientMission from 'src/missions'
 
 /**
  * A list item in a `List` component.
@@ -102,8 +104,9 @@ export default function ListItem<T extends TListItem>({
    * Handles the click event for an item
    * button in the options menu.
    */
-  const onButtonClick = (button: TButtonSvgType) =>
+  const onButtonClick = (button: TButtonSvgType) => {
     onItemButtonClick(button, item)
+  }
 
   /* -- RENDER -- */
 
