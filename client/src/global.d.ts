@@ -4,10 +4,7 @@ declare global {
   /**
    * What useState returns.
    */
-  export type TReactState<T extends any = any> = [
-    T,
-    React.Dispatch<React.SetStateAction<T>>,
-  ]
+  export type TReactState<T extends any = any> = [T, TReactSetter<T>]
 
   /**
    * The setter `useState` returns.

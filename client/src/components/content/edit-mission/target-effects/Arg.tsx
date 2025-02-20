@@ -50,9 +50,14 @@ export default function Arg({
 
   /* -- RENDER -- */
 
+  // If not all dependencies are met then return null.
+  if (!allDependenciesMet) {
+    return null
+  }
+
   // If the argument type is "dropdown" then render
   // the dropdown.
-  if (arg.type === 'dropdown' && allDependenciesMet) {
+  if (arg.type === 'dropdown') {
     return (
       <div className={`Arg Dropdown`}>
         <ArgDropdown
@@ -68,7 +73,7 @@ export default function Arg({
   }
   // If the argument type is "number" then render
   // the number input.
-  else if (arg.type === 'number' && allDependenciesMet) {
+  else if (arg.type === 'number') {
     return (
       <div className={`Arg Number`}>
         <ArgNumber
@@ -83,7 +88,7 @@ export default function Arg({
   }
   // If the argument type is "string" then render
   // the string input.
-  else if (arg.type === 'string' && allDependenciesMet) {
+  else if (arg.type === 'string') {
     return (
       <div className={`Arg String`}>
         <ArgString
@@ -98,7 +103,7 @@ export default function Arg({
   }
   // If the argument type is "large-string" then render
   // the large-string input.
-  else if (arg.type === 'large-string' && allDependenciesMet) {
+  else if (arg.type === 'large-string') {
     return (
       <div className={`Arg LargeString`}>
         <ArgLargeString
@@ -113,7 +118,7 @@ export default function Arg({
   }
   // If the argument type is "boolean" then render
   // the boolean toggle.
-  else if (arg.type === 'boolean' && allDependenciesMet) {
+  else if (arg.type === 'boolean') {
     return (
       <div className={`Arg Boolean`}>
         <ArgBoolean
@@ -128,7 +133,7 @@ export default function Arg({
   }
   // If the argument type is "force" then render
   // the force dropdown.
-  else if (arg.type === 'force' && allDependenciesMet) {
+  else if (arg.type === 'force') {
     return (
       <div className={`Arg Force`}>
         <ArgForce
@@ -144,7 +149,7 @@ export default function Arg({
   }
   // If the argument type is "node" then render
   // dropdowns for forces and nodes.
-  else if (arg.type === 'node' && allDependenciesMet) {
+  else if (arg.type === 'node') {
     return (
       <div className={`Arg Node`}>
         <ArgNode

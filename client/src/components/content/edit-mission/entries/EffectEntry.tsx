@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ClientEffect } from 'src/missions/effects'
-import { usePostInitEffect } from 'src/toolbox/hooks'
+import { useObjectFormSync, usePostInitEffect } from 'src/toolbox/hooks'
 import { DetailLargeString } from '../../form/DetailLargeString'
 import { DetailLocked } from '../../form/DetailLocked'
 import { DetailString } from '../../form/DetailString'
@@ -8,6 +8,9 @@ import { ButtonText } from '../../user-controls/buttons/ButtonText'
 import ArgEntry from '../target-effects/ArgEntry'
 import './index.scss'
 import EntryNavigation from './navigation/EntryNavigation'
+import { TEffectTrigger } from '../../../../../../shared/missions/effects'
+import { DetailDropdown } from '../../form/DetailDropdown'
+import StringToolbox from '../../../../../../shared/toolbox/strings'
 
 /**
  * Entry fields for an effect.
@@ -16,31 +19,18 @@ export default function EffectEntry({
   effect,
   effect: { target, targetEnvironment: targetEnv },
   handleDeleteEffectRequest,
-  handleChange,
+  onChange,
 }: TEffectEntry_P): JSX.Element | null {
   /* -- STATE -- */
-  const [name, setName] = useState<ClientEffect['name']>(effect.name)
-  const [description, setDescription] = useState<ClientEffect['description']>(
-    effect.description,
+  const effectState = useObjectFormSync(
+    effect,
+    ['name', 'trigger', 'description', 'args'],
+    { onChange },
   )
-  const [effectArgs, setEffectArgs] = useState<ClientEffect['args']>(
-    effect.args,
-  )
-
-  /* -- EFFECTS -- */
-
-  // componentDidUpdate
-  usePostInitEffect(() => {
-    // Update the effect's name.
-    effect.name = name
-    // Update the effect's description.
-    effect.description = description
-    // Update the effect's arguments.
-    effect.args = effectArgs
-
-    // Allow the user to save the changes.
-    handleChange()
-  }, [name, description, effectArgs])
+  const [name, setName] = effectState.name
+  const [trigger, setTrigger] = effectState.trigger
+  const [description, setDescription] = effectState.description
+  const [effectArgs, setEffectArgs] = effectState.args
 
   /* -- RENDER -- */
 
@@ -63,6 +53,20 @@ export default function EffectEntry({
             defaultValue={ClientEffect.DEFAULT_PROPERTIES.name}
             maxLength={ClientEffect.MAX_NAME_LENGTH}
             placeholder='Enter name...'
+          />
+          <DetailDropdown<TEffectTrigger>
+            fieldType='required'
+            label='Trigger'
+            options={ClientEffect.TRIGGERS}
+            stateValue={trigger}
+            setState={setTrigger}
+            isExpanded={false}
+            render={(value: TEffectTrigger) => StringToolbox.capitalize(value)}
+            getKey={(value) => value}
+            handleInvalidOption={{
+              method: 'setToDefault',
+              defaultValue: 'success',
+            }}
           />
           <DetailLargeString
             fieldType='optional'
@@ -122,5 +126,5 @@ export type TEffectEntry_P = {
   /**
    * A function that will be called when a change has been made.
    */
-  handleChange: () => void
+  onChange: () => void
 }

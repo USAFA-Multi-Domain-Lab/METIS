@@ -17,13 +17,13 @@ export default function ArgGrouping({
   /* -- COMPUTED -- */
 
   /**
-   * Boolean to determine if at least one argument
-   * in the grouping is displayed based on the
-   * dependencies of the arguments.
+   * Whether the grouping is currently hidden from view.
+   * @note The grouping is hidden if none of the arguments
+   * in the grouping are ready to be displayed.
    */
-  const oneGroupingIsDisplayed: boolean = compute(() => {
+  const hidden: boolean = compute(() => {
     // Default value.
-    let oneGroupingIsDisplayed: boolean = false
+    let result: boolean = true
 
     // Iterate through the arguments in the grouping.
     for (let arg of grouping) {
@@ -31,13 +31,13 @@ export default function ArgGrouping({
       // then at least one argument in the grouping
       // is displayed.
       if (effect.allDependenciesMet(arg.dependencies, effectArgs)) {
-        oneGroupingIsDisplayed = true
+        result = false
         break
       }
     }
 
     // Return the result.
-    return oneGroupingIsDisplayed
+    return result
   })
 
   /**
@@ -49,7 +49,7 @@ export default function ArgGrouping({
 
     // If no arguments in the grouping are displayed
     // then hide the grouping.
-    if (!oneGroupingIsDisplayed) {
+    if (hidden) {
       classList.push('Hidden')
     }
 

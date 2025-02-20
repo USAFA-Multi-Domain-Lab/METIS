@@ -1,5 +1,10 @@
 import { v4 as generateHash } from 'uuid'
-import { TCommonMission, TCommonMissionTypes, TMission } from '..'
+import {
+  TCommonMission,
+  TCommonMissionTypes,
+  TCreateMissionJsonType,
+  TMission,
+} from '..'
 import { TCommonTargetEnv, TTargetEnv } from '../../target-environments'
 import { TTargetArg } from '../../target-environments/args'
 import ForceArg from '../../target-environments/args/force-arg'
@@ -45,6 +50,9 @@ export default abstract class Effect<
 
   // Implemented
   public name: TCommonEffect['name']
+
+  // Implemented
+  public trigger: TCommonEffect['trigger']
 
   // Implemented
   public description: TCommonEffect['description']
@@ -129,6 +137,7 @@ export default abstract class Effect<
 
     this.action = action
     this._id = data._id ?? Effect.DEFAULT_PROPERTIES._id
+    this.trigger = data.trigger ?? Effect.DEFAULT_PROPERTIES.trigger
     this.name = data.name ?? Effect.DEFAULT_PROPERTIES.name
     this.description = data.description ?? Effect.DEFAULT_PROPERTIES.description
     this.targetEnvironmentVersion =
@@ -150,6 +159,7 @@ export default abstract class Effect<
     // Construct JSON object to send to the server.
     let json: TCommonEffectJson = {
       _id: this._id,
+      trigger: this.trigger,
       name: this.name,
       description: this.description,
       targetEnvironmentVersion: this.targetEnvironmentVersion,
@@ -270,12 +280,28 @@ export default abstract class Effect<
   public static get DEFAULT_PROPERTIES(): Required<TCommonEffectJson> {
     return {
       _id: generateHash(),
+      trigger: 'success',
       name: 'New Effect',
       description: '',
       targetEnvironmentVersion: '0.1',
       targetId: null,
       args: {},
     }
+  }
+
+  /**
+   * Available triggers for an effect.
+   */
+  public static get TRIGGERS(): TEffectTrigger[] {
+    return ['immediate', 'success', 'failure']
+  }
+
+  /**
+   * @param value The value to validate.
+   * @returns Whether the value is a valid effect trigger.
+   */
+  public static isValidTrigger(value: any): boolean {
+    return Effect.TRIGGERS.includes(value)
   }
 }
 
@@ -341,6 +367,10 @@ export interface TCommonEffect {
    */
   name: string
   /**
+   * The event in the action that causes the effect to be carried out.
+   */
+  trigger: TEffectTrigger
+  /**
    * Describes what the effect does.
    */
   description: string
@@ -367,31 +397,20 @@ export interface TCommonEffect {
 export type TEffect<T extends TCommonMissionTypes> = T['effect']
 
 /**
- * The JSON representation of an Effect object.
+ * Valid triggers for an effect.
  */
-export interface TCommonEffectJson {
-  /**
-   * The ID of the effect.
-   */
-  _id: string
-  /**
-   * The name of the effect.
-   */
-  name: string
-  /**
-   * Describes what the effect does.
-   */
-  description: string
-  /**
-   * The current version of the target environment.
-   */
-  targetEnvironmentVersion: string
-  /**
-   * The ID of the target to which the effect will be applied.
-   */
-  targetId: TCommonTargetJson['_id'] | null
-  /**
-   * The arguments used to affect the target.
-   */
-  args: AnyObject
-}
+export type TEffectTrigger = 'immediate' | 'success' | 'failure'
+
+/**
+ * The JSON representation of an `Effect` object.
+ */
+export type TCommonEffectJson = TCreateMissionJsonType<
+  TCommonEffect,
+  | '_id'
+  | 'trigger'
+  | 'name'
+  | 'description'
+  | 'targetEnvironmentVersion'
+  | 'args',
+  { targetId: TCommonTargetJson['_id'] | null }
+>

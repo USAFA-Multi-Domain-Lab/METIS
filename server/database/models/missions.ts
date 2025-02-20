@@ -1,6 +1,7 @@
 import DOMPurify from 'isomorphic-dompurify'
 import Mission, { TCommonMissionJson } from 'metis/missions'
 import { TCommonMissionActionJson } from 'metis/missions/actions'
+import Effect from 'metis/missions/effects'
 import { TCommonMissionForceJson } from 'metis/missions/forces'
 import { TCommonMissionNodeJson } from 'metis/missions/nodes'
 import { TCommonMissionPrototypeJson } from 'metis/missions/nodes/prototypes'
@@ -685,6 +686,16 @@ const validate_mission_forces_nodes_actions_resourceCost = (
   return nonNegativeInteger
 }
 
+/**
+ * Validates the access ID of a user.
+ * @param accessId The access ID to validate.
+ */
+const validate_mission_forces_nodes_actions_effects_trigger = (
+  value: string,
+): boolean => {
+  return Effect.isValidTrigger(value)
+}
+
 /* -- SCHEMA SETTERS -- */
 
 /**
@@ -882,6 +893,12 @@ export const MissionSchema = new Schema<
                               type: String,
                               required: true,
                               maxLength: ServerEffect.MAX_NAME_LENGTH,
+                            },
+                            trigger: {
+                              type: String,
+                              required: true,
+                              validate:
+                                validate_mission_forces_nodes_actions_effects_trigger,
                             },
                             description: {
                               type: String,

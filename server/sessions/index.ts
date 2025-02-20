@@ -568,6 +568,46 @@ export default class SessionServer extends Session<TServerMissionTypes> {
   }
 
   /**
+   * Processes the effects of the given action, enacting
+   * those of the given trigger.
+   * @param action The action to process.
+   * @param trigger The trigger to look for in the effects.
+   * @param context The context of the target environment.
+   */
+  private applyEffects(
+    member: ServerSessionMember,
+    action: ServerMissionAction,
+    trigger: string,
+  ): void {
+    // If the effects are enabled...
+    if (this.config.effectsEnabled) {
+      // Get the effects for the given trigger.
+      let effects = action.effects.filter(
+        (effect) => effect.trigger === trigger,
+      )
+      // Iterate through each effect and apply it.
+      effects.forEach(async (effect) => {
+        try {
+          await this.applyEffect(effect, member)
+
+          // todo: implement feedback for modifiers
+          // participant.emit('effect-successful', {
+          //   message: 'The effect was successfully applied to its target.',
+          // })
+        } catch (error: any) {
+          // Log the error.
+          plcApiLogger.error(error)
+
+          // todo: implement feedback for modifiers
+          // participant.emitError(
+          //   new ServerEmittedError(ServerEmittedError.CODE_EFFECT_FAILED),
+          // )
+        }
+      })
+    }
+  }
+
+  /**
    * Called when a member requests to start the session.
    * @param member The member requesting to start the session.
    * @param event The event emitted by the member.
@@ -1191,7 +1231,6 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     const { effectsEnabled, infiniteResources } = config
     let { connection } = member
     let { actionId, cheats = {} } = event.data
-    let { zeroCost } = cheats
     let action: ServerMissionAction | undefined = this.actions.get(actionId)
     let request = connection.buildResponseReqData(event)
 
@@ -1302,6 +1341,9 @@ export default class SessionServer extends Session<TServerMissionTypes> {
           }
           // Send the output JSON to the force.
           this.sendOutput(outputJson, { userId: member.userId, execution })
+          // Apply the effects for the action that are triggered
+          // immediately.
+          this.applyEffects(member, action!, 'immediate')
         },
       })
 
@@ -1340,30 +1382,9 @@ export default class SessionServer extends Session<TServerMissionTypes> {
         }
         // Send the output to the force.
         this.sendOutput(outputJson, { userId: member.userId })
-
-        // If the effects are enabled...
-        if (effectsEnabled) {
-          // ...iterate through the effects and apply them.
-          action.effects.forEach(async (effect) => {
-            try {
-              // Apply the effect to the target.
-              await this.applyEffect(effect, member)
-
-              // todo: implement feedback for modifiers
-              // participant.emit('effect-successful', {
-              //   message: 'The effect was successfully applied to its target.',
-              // })
-            } catch (error: any) {
-              // Log the error.
-              plcApiLogger.error(error)
-
-              // todo: implement feedback for modifiers
-              // participant.emitError(
-              //   new ServerEmittedError(ServerEmittedError.CODE_EFFECT_FAILED),
-              // )
-            }
-          })
-        }
+        // Apply the effects for the action that are triggered
+        // on success.
+        this.applyEffects(member, action, 'success')
       }
       // Otherwise, if the action failed, then...
       else {
@@ -1379,6 +1400,9 @@ export default class SessionServer extends Session<TServerMissionTypes> {
         this.sendOutput(outputJson, {
           userId: member.userId,
         })
+        // Apply the effects for the action that are triggered
+        // on failure.
+        this.applyEffects(member, action, 'failure')
       }
 
       // Emit the action execution completed

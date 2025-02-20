@@ -888,7 +888,7 @@ export default function MissionPage({
         <EffectEntry
           effect={selection}
           handleDeleteEffectRequest={handleDeleteEffectRequest}
-          handleChange={handleChange}
+          onChange={handleChange}
           key={selection._id}
         />
       )

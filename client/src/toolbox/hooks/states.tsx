@@ -46,9 +46,21 @@ export function useObjectFormSync<
       value,
       // Create a setter for each stateful key.
       (newValue: any) => {
-        let newObjectState = [...objectState]
-        newObjectState[i] = newValue
-        setObjectState(newObjectState)
+        setObjectState((prevObjectState) => {
+          // If the new value has a preprocessing function,
+          // call it before setting the new value.
+          if (typeof newValue === 'function') {
+            newValue = newValue(prevObjectState[i])
+          }
+
+          // Create the new object state, replacing the
+          // value at the current index with the new value.
+          let newObjectState = [...prevObjectState]
+          newObjectState[i] = newValue
+
+          // Return the new object state.
+          return newObjectState
+        })
       },
     ]
   }

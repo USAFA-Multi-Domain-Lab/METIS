@@ -88,6 +88,7 @@ export default function CreateEffect({
   }, [targetEnv])
 
   /* -- FUNCTIONS -- */
+
   /**
    * Handles creating a new effect.
    */
