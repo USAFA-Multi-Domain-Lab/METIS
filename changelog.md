@@ -1,5 +1,10 @@
 # changelog
 
+# version-2.0.2 | 2-20-2025
+
+- Created a temporary (manual) solution for managing multiple users at once
+- Bug fixes and performance enhancements to provide a better user experience
+
 # version-2.0.1 | 1-17-2025
 
 - Implemented the ability to give sessions a custom name
