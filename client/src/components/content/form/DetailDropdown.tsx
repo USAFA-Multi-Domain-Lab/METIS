@@ -35,6 +35,7 @@ export function DetailDropdown<TOption>({
   const [expanded, setExpanded] = useState<boolean>(false)
 
   /* -- COMPUTED -- */
+
   /**
    * The class name for the detail.
    */
@@ -227,6 +228,7 @@ export function DetailDropdown<TOption>({
   }, [options, handleInvalidOption.method])
 
   /* -- RENDER -- */
+
   if (options.length > 0) {
     return (
       <div className={rootClassName}>

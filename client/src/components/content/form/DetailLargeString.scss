@@ -52,6 +52,7 @@
         border-radius: 0 0 $detail-field-border-radius
           $detail-field-border-radius;
         border-top: none;
+        overflow-x: auto;
 
         .ql-editor {
           * {

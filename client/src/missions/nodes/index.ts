@@ -208,10 +208,19 @@ export default class ClientMissionNode
   }
 
   /**
-   * Whether the node is selected in the mission.
+   * Whether the node, or any nested objects, are selected
+   * in the mission.
    */
   public get selected(): boolean {
-    return this.mission.selection === this
+    let selection = this.mission.selection
+
+    if (selection instanceof ClientMissionNode) {
+      return this.mission.selection === this
+    } else if ('node' in selection) {
+      return selection.node === this
+    } else {
+      return false
+    }
   }
 
   // Implemented
