@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
 import ClientMissionForce from 'src/missions/forces'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
 import Mission from '../../../../../../shared/missions'
+import Prompt from '../../communication/Prompt'
 import { DetailColorSelector } from '../../form/DetailColorSelector'
 import { DetailLargeString } from '../../form/DetailLargeString'
 import { DetailNumber } from '../../form/DetailNumber'
@@ -25,6 +27,9 @@ export default function ForceEntry({
   deleteForce,
   handleChange,
 }: TForceEntry): JSX.Element | null {
+  /* -- GLOBAL CONTEXT -- */
+  const { prompt } = useGlobalContext().actions
+
   /* -- STATE -- */
   const [introMessage, setIntroMessage] = useState<string>(force.introMessage)
   const [name, setName] = useState<string>(force.name)
@@ -61,6 +66,15 @@ export default function ForceEntry({
     let fillButton: TButtonText_P = {
       text: 'Apply to Nodes',
       onClick: async () => {
+        // Prompt the user to confirm the action.
+        let { choice } = await prompt(
+          `Are you sure you want to apply the color to all nodes in the force?`,
+          Prompt.ConfirmationChoices,
+        )
+
+        // If the user cancels, abort.
+        if (choice === 'Cancel') return
+
         force.nodes.forEach((node) => {
           node.color = color
         })
@@ -78,7 +92,6 @@ export default function ForceEntry({
 
   /* -- EFFECTS -- */
 
-  // Sync the component state with the force name.
   usePostInitEffect(() => {
     // Update the force properties.
     force.introMessage = introMessage
@@ -129,7 +142,6 @@ export default function ForceEntry({
             stateValue={introMessage}
             setState={setIntroMessage}
             defaultValue={ClientMissionForce.DEFAULT_PROPERTIES.introMessage}
-            elementBoundary='.SidePanelContent'
             key={`${force._id}_introMessage`}
           />
           <DetailNumber

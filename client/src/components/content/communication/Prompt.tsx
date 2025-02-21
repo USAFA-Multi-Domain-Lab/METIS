@@ -63,11 +63,15 @@ export default class Prompt<
     const { message } = this.props
 
     // Render JSX.
-    return (
-      <div className='message'>
-        <Markdown theme={MarkdownTheme.ThemeSecondary} markdown={message} />
-      </div>
-    )
+    if (!!message) {
+      return (
+        <div className='message'>
+          <Markdown theme={MarkdownTheme.ThemeSecondary} markdown={message} />
+        </div>
+      )
+    } else {
+      return null
+    }
   }
 
   /**

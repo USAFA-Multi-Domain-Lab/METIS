@@ -599,6 +599,10 @@ export default class SessionClient extends Session<TClientMissionTypes> {
               case 'session-config-updated':
                 // Update the session config.
                 Object.assign(this._config, configUpdates)
+                // Update the session name if it has changed.
+                if (this.name !== configUpdates.name && configUpdates.name) {
+                  this.name = configUpdates.name
+                }
                 return resolve()
               case 'error':
                 return onError(event.message)

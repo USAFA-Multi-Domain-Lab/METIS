@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
+import ClientMission from 'src/missions'
 import {
   TSessionAccessibility,
   TSessionConfig,
 } from '../../../../../shared/sessions'
 import { DetailDropdown } from '../form/DetailDropdown'
+import { DetailString } from '../form/DetailString'
 import { DetailToggle } from '../form/DetailToggle'
 import { ButtonText } from '../user-controls/buttons/ButtonText'
 import './SessionConfig.scss'
@@ -13,6 +15,7 @@ import './SessionConfig.scss'
  */
 export default function SessionConfig({
   sessionConfig,
+  mission,
   saveButtonText = 'Save',
   onChange = () => {},
   onSave,
@@ -29,6 +32,7 @@ export default function SessionConfig({
   const [effectsEnabled, setEffectsEnabled] = useState(
     sessionConfig.effectsEnabled,
   )
+  const [name, setName] = useState(sessionConfig.name ?? mission.name)
 
   /* -- EFFECTS -- */
 
@@ -38,13 +42,22 @@ export default function SessionConfig({
     sessionConfig.autoAssign = autoAssign
     sessionConfig.infiniteResources = infiniteResources
     sessionConfig.effectsEnabled = effectsEnabled
+    sessionConfig.name = name
     onChange()
-  }, [accessibility, autoAssign, infiniteResources, effectsEnabled])
+  }, [accessibility, autoAssign, infiniteResources, effectsEnabled, name])
 
   /* -- RENDER -- */
 
   return (
     <div className='SessionConfig'>
+      <DetailString
+        label='Name'
+        stateValue={name}
+        setState={setName}
+        fieldType='required'
+        handleOnBlur='repopulateValue'
+        defaultValue={mission.name}
+      />
       <DetailDropdown<TSessionConfig['accessibility']>
         label='Accessibility'
         options={['public', 'id-required']}
@@ -105,6 +118,10 @@ export type TSessionConfig_P = {
    * The session config to modify.
    */
   sessionConfig: TSessionConfig
+  /**
+   * The mission to which the session belongs.
+   */
+  mission: ClientMission
   /**
    * The text for the save button.
    * @default 'Save'

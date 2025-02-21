@@ -21,8 +21,10 @@ export default function TabBar({
   // Render root JSX.
   return (
     <div className='TitleBar'>
-      <div className='Title'>{title}</div>
-      <ButtonSvgPanel buttons={buttons} size={'small'} />
+      <div className='Title'>
+        Mission: <span className='MissionName'>{title}</span>
+      </div>
+      <ButtonSvgPanel buttons={buttons} />
     </div>
   )
 }

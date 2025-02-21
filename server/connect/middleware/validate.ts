@@ -2,7 +2,6 @@ import {
   TClientEvents,
   TClientMethod,
   TGenericClientMethod,
-  TRequestEvents,
   TRequestMethod,
 } from 'metis/connect/data'
 import { TSessionAccessibility } from 'metis/sessions'
@@ -63,6 +62,7 @@ export const clientEventSchemas: TClientEventSchemas = {
     'request-config-update',
     zod.object({
       config: zod.object({
+        name: zod.string().optional(),
         accessibility: zod
           .enum([
             'public',

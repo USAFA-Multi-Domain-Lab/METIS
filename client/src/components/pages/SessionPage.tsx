@@ -431,6 +431,10 @@ export default function SessionPage({
 
     return (
       <div className='TopBar'>
+        <div className='Title'>
+          Session: <span className='SessionName'>{session.name} </span>
+          <b>&bull;</b>
+        </div>
         <div className={resourcesClass}>
           {mission.resourceLabel}:{' '}
           <span className={resourceCountClass}>{resourceDisplay}</span>

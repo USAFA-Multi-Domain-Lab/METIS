@@ -65,6 +65,8 @@ const transformObjectIdToString = (
 const queryForApiResponse = (query: Query<TUserSchema, TUserModel>): void => {
   // Get projection.
   let projection = query.projection()
+  // Extract options.
+  let { includeDeleted = false } = query.getOptions() as TUserQueryOptions
 
   // Create if does not exist.
   if (projection === undefined) {
@@ -86,7 +88,7 @@ const queryForApiResponse = (query: Query<TUserSchema, TUserModel>): void => {
   // Set projection.
   query.projection(projection)
   // Hide deleted users.
-  query.where({ deleted: false })
+  query.where({ deleted: { $eq: includeDeleted ? true : false } })
 }
 
 /**
@@ -97,7 +99,11 @@ const queryForFilteredUsers = (query: Query<TUserSchema, TUserModel>): void => {
   // Get projection.
   let projection = query.projection()
   // Extract options.
-  let { currentUser, method } = query.getOptions() as TUserQueryOptions
+  let {
+    currentUser,
+    method,
+    includeDeleted = false,
+  } = query.getOptions() as TUserQueryOptions
 
   // Create if does not exist.
   if (projection === undefined) {
@@ -107,7 +113,7 @@ const queryForFilteredUsers = (query: Query<TUserSchema, TUserModel>): void => {
   // Set projection.
   query.projection(projection)
   // Hide deleted users.
-  query.where({ deleted: false })
+  query.where({ deleted: { $eq: includeDeleted ? true : false } })
 
   // Don't return the user currently
   // logged in if the find function
@@ -425,7 +431,7 @@ UserSchema.pre<TUserDoc>('save', function (next) {
 
 // Called before a find or update is made to the database.
 UserSchema.pre<Query<TUserSchema, TUserModel>>(
-  ['find', 'findOne', 'findOneAndUpdate', 'updateOne'],
+  ['find', 'findOne', 'findOneAndUpdate', 'updateOne', 'updateMany'],
   function (next) {
     // Modify the query.
     queryForApiResponse(this)
@@ -437,7 +443,7 @@ UserSchema.pre<Query<TUserSchema, TUserModel>>(
 
 // Converts ObjectIds to strings.
 UserSchema.post<Query<TUserSchema, TUserModel>>(
-  ['find', 'findOne', 'updateOne', 'findOneAndUpdate'],
+  ['find', 'findOne', 'updateOne', 'findOneAndUpdate', 'updateMany'],
   function (userData: TUserSchema | TUserSchema[]) {
     // If the user is null, then return.
     if (!userData) return
@@ -531,6 +537,10 @@ type TUserQueryOptions = QueryOptions<TUserSchema> & {
    * The middleware query method being used.
    */
   method?: MongooseQueryMiddleware
+  /**
+   * Determines if deleted users should be included in the results.
+   */
+  includeDeleted?: boolean
 }
 
 /* -- MODEL -- */

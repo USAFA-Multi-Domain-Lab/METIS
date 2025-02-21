@@ -1,4 +1,4 @@
-import RichTextOutputBox from 'src/components/content/communication/RichTextOutputBox'
+import RichText from 'src/components/content/general-layout/RichText'
 import ClientMissionAction from 'src/missions/actions'
 import { compute } from 'src/toolbox'
 import { TExecutionCheats } from '../../../../../../../../../../shared/missions/actions/executions'
@@ -89,7 +89,7 @@ export default function ActionProperties({
   return (
     <div className='ActionProperties'>
       <div className={descriptionClassName}>
-        <RichTextOutputBox text={action.description} />
+        <RichText options={{ content: action.description, editable: false }} />
       </div>
       <ActionProperty
         action={action}

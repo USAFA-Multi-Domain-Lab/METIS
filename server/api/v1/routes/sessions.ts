@@ -28,6 +28,7 @@ const routerMap = (router: Router, server: MetisServer, done: () => void) => {
           autoAssign: RequestBodyFilters.BOOLEAN,
           infiniteResources: RequestBodyFilters.BOOLEAN,
           effectsEnabled: RequestBodyFilters.BOOLEAN,
+          name: RequestBodyFilters.STRING,
         },
       },
     ),

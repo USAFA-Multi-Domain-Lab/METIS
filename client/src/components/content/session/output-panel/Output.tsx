@@ -1,8 +1,8 @@
 import ClientOutput from 'src/missions/forces/output'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
-import RichTextOutputBox from '../../communication/RichTextOutputBox'
 import Tooltip from '../../communication/Tooltip'
+import RichText from '../../general-layout/RichText'
 
 /**
  * Renders the output message.
@@ -21,17 +21,17 @@ export default function Output({
       case 'execution-succeeded':
         return (
           <span className='Succeeded'>
-            <RichTextOutputBox text={message} />
+            <RichText options={{ content: message, editable: false }} />
           </span>
         )
       case 'execution-failed':
         return (
           <span className='Failed'>
-            <RichTextOutputBox text={message} />
+            <RichText options={{ content: message, editable: false }} />
           </span>
         )
       default:
-        return <RichTextOutputBox text={message} />
+        return <RichText options={{ content: message, editable: false }} />
     }
   })
 

@@ -1,3 +1,4 @@
+import { AnyObject } from 'metis/toolbox/objects'
 import { TCommonTargetEnv, TTargetEnv } from '.'
 import { TTargetEnvExposedContext } from '../../server/target-environments/context'
 import { TCommonMissionTypes } from '../../shared/missions'
@@ -63,6 +64,25 @@ export default abstract class Target<
       script: this.script,
       args: Arg.toJson(this.args),
     }
+  }
+
+  /**
+   * A type guard that checks if the provided value is a Target JSON object.
+   * @param obj The object to check.
+   * @param excludedProperties The properties to exclude when checking if the value is a Target JSON object.
+   * @returns True if the value is a Target JSON object.
+   */
+  public static isJson(
+    obj: AnyObject,
+    excludedKeys: (keyof TCommonTargetJson)[] = [],
+  ): obj is TCommonTargetJson {
+    // Only grab the keys that are not excluded.
+    const requiredKeys = Object.keys(Target.DEFAULT_PROPERTIES).filter(
+      (key) => !excludedKeys.includes(key as keyof TCommonTargetJson),
+    )
+    // Check if the required keys are present in the object.
+    const keysPassed = Object.keys(obj)
+    return keysPassed.every((key) => requiredKeys.includes(key))
   }
 
   /**

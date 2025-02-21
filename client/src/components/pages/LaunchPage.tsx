@@ -7,13 +7,10 @@ import { useMountHandler, useRequireLogin } from 'src/toolbox/hooks'
 import { DefaultLayout } from '.'
 
 import Session from '../../../../shared/sessions'
-import { SingleTypeObject } from '../../../../shared/toolbox/objects'
 import { ESortByMethod } from '../content/general-layout/ListOld'
 import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
 import SessionConfig from '../content/session/SessionConfig'
-import ButtonSvgPanel, {
-  TValidPanelButton,
-} from '../content/user-controls/buttons/ButtonSvgPanel'
+import ButtonSvg from '../content/user-controls/buttons/ButtonSvg'
 import './LaunchPage.scss'
 
 /**
@@ -102,33 +99,21 @@ export default function LaunchPage({
     /* -- COMPUTED -- */
 
     /**
-     * The buttons for the object list.
+     * Tooltip description for the object list item.
      */
-    const buttons: TValidPanelButton[] = compute(() => {
-      // Create a default list of buttons.
-      let buttons: TValidPanelButton[] = []
-      // Create a list of mini actions that are available.
-      let availableMiniActions: SingleTypeObject<TValidPanelButton> = {
-        warning: {
-          type: 'warning-transparent',
-          key: 'warning',
-          onClick: () => {},
-          cursor: 'help',
-          description:
-            'If this conflict is not resolved, this mission can still be used to launch a session, but the session may not function as expected.',
-        },
-      }
-
-      // Add the buttons to the list.
-      buttons = Object.values(availableMiniActions)
-
-      // Return the buttons.
-      return buttons
-    })
+    const description: string = compute(
+      () =>
+        'If this conflict is not resolved, this mission can still be used to launch a session, but the session may not function as expected.',
+    )
 
     return (
       <div className='Row' key={`object-row-${object._id}`}>
-        <ButtonSvgPanel buttons={buttons} size={'small'} />
+        <ButtonSvg
+          type='warning-transparent'
+          cursor='help'
+          description={description}
+          onClick={() => {}}
+        />
         <div className='RowContent'>{object.defectiveMessage}</div>
       </div>
     )
@@ -234,6 +219,7 @@ export default function LaunchPage({
           <div className='MissionName'>{mission.name}</div>
           <SessionConfig
             sessionConfig={sessionConfig}
+            mission={mission}
             saveButtonText={'Launch'}
             onSave={launch}
             onCancel={cancel}

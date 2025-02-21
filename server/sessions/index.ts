@@ -779,6 +779,8 @@ export default class SessionServer extends Session<TServerMissionTypes> {
   ): void => {
     // Build request for response data.
     let request = member.connection.buildResponseReqData(event)
+    // Parse data from event.
+    let { config: configUpdates } = event.data
 
     // If the member does not have the correct permissions
     // to start the session, then emit an error.
@@ -802,7 +804,11 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     }
 
     // Assign the new configuration to the session.
-    Object.assign(this._config, event.data.config)
+    Object.assign(this._config, configUpdates)
+    // Update the session name if it has changed.
+    if (this.name !== configUpdates.name && configUpdates.name) {
+      this.name = configUpdates.name
+    }
 
     // Emit an event to all users that the session configuration
     // has been updated.
@@ -1794,7 +1800,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
 
     return new SessionServer(
       generateHash().substring(0, 8),
-      mission.name,
+      config.name ?? mission.name,
       owner,
       config,
       mission,

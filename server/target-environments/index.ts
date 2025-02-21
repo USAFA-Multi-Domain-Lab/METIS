@@ -1,4 +1,6 @@
 import fs from 'fs'
+import TargetEnvSchema from 'integration/library/target-env-classes'
+import TargetSchema from 'integration/library/target-env-classes/targets'
 import TargetEnvironment, {
   TCommonTargetEnvJson,
   TTargetEnvOptions,
@@ -87,134 +89,95 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TServerMi
   }
 
   /**
-   * Grabs the target environments from the provided directory.
+   * Grabs the target environments from the default/provided directory.
    * @param directory The directory to search.
-   * @param targetEnvironmentJson The target environment JSON.
-   * @param targetJson The target JSON.
    * @returns An array of target environment JSON.
    */
   public static scan(
-    directory: string,
-    targetEnvironmentJson: TCommonTargetEnvJson[] = [],
-    targetJson: TCommonTargetJson[] = [],
+    directory: string = this.DEFAULT_DIRECTORY,
   ): TCommonTargetEnvJson[] {
-    // The blacklisted files.
     let blackListedFiles: string[] = [
       path.join(directory, '.DS_Store'),
       path.join(directory, '.gitkeep'),
     ]
+    let isDirectory: boolean = fs.lstatSync(directory).isDirectory()
 
     // If the directory is not blacklisted, search for typescript files.
-    if (
-      fs.lstatSync(directory).isDirectory() &&
-      !blackListedFiles.includes(directory)
-    ) {
-      // The regex for target directories.
-      let targetDirectoryRegex: RegExp = /^(@)[a-zA-Z0-9_-]+$/
-      // The regex for index files.
-      let indexFileRegex: RegExp = /^(index.ts)$/
-      // The regex for target files.
-      let targetFileRegex: RegExp = /^[a-zA-Z0-9_-]+(.ts)$/
-      // Get the files in the directory.
+    if (isDirectory && !blackListedFiles.includes(directory)) {
       let directoryFiles: string[] = fs.readdirSync(directory)
 
       // Iterate over the files in the directory.
       directoryFiles.forEach((file: string) => {
-        // Check if previous file is a directory.
-        let isDirectory: boolean = fs.lstatSync(directory).isDirectory()
-        // If the previous file is a directory, then set the current directory
-        // to the previous file.
-        let currentDirectory: string = isDirectory
-          ? path.basename(directory)
-          : ''
-        // Check if the file is a file.
-        let isFile: boolean = fs.lstatSync(path.join(directory, file)).isFile()
-        // Check if the current directory is a target directory.
-        let isTargetDirectory: boolean =
-          isDirectory && targetDirectoryRegex.test(currentDirectory)
-        // Check if the file is an index file or a target file.
-        let isIndexFile: boolean = isFile && indexFileRegex.test(file)
-        let isTargetFile: boolean =
-          isFile && isTargetDirectory && targetFileRegex.test(file)
+        // Create the new path.
+        let newPath: string = path.join(directory, file)
+        // Check if the new path is a typescript file.
+        let isTsFile = fs.lstatSync(newPath).isFile() && file.endsWith('.ts')
 
-        // If the file is a typescript file and it's an index file...
-        if (isIndexFile && !isTargetFile) {
+        // If the file is a typescript file...
+        if (isTsFile) {
           // Grab the default export from the file.
-          let exportDefault: any = require(path.join(directory, file)).default
+          let exportDefault: any = require(newPath).default
 
-          // If the default export has an ID, a name, a description,
-          // and a version, then it is a target environment.
-          if (
-            exportDefault &&
-            exportDefault._id &&
-            exportDefault.name &&
-            exportDefault.description &&
-            exportDefault.version
-          ) {
+          // If there is no default export...
+          if (!exportDefault) {
+            // Log an error.
+            console.error(
+              `No default export found in "${newPath}." Skipping...`,
+            )
+          }
+
+          // If the default export is a target environment...
+          if (exportDefault instanceof TargetEnvSchema) {
+            // Set the ID of the target environment.
+            exportDefault.setId(directory)
             // Add the target environment JSON.
-            targetEnvironmentJson.push(exportDefault)
+            this.targetEnvRegistry.push(exportDefault)
           }
-        }
-        // If the file is a typescript file and it's a target file...
-        else if (isTargetFile && !isIndexFile) {
-          // Grab the default export from the file.
-          let exportDefault: any = require(path.join(directory, file)).default
-
-          // If the default export has an ID, a target environment ID, a name,
-          // a description, a script, and args, then it is a target.
-          if (
-            exportDefault &&
-            exportDefault._id &&
-            exportDefault.targetEnvId &&
-            exportDefault.name &&
-            exportDefault.description &&
-            exportDefault.script &&
-            exportDefault.args
+          // Or, if the default export is a target and
+          // a target environment has been scanned...
+          else if (
+            exportDefault instanceof TargetSchema &&
+            this.lastTargetEnvScannned
           ) {
+            // Set the target ID.
+            exportDefault.setId(directory)
+            // Set the target environment ID.
+            exportDefault.targetEnvId = this.lastTargetEnvScannned._id
             // Add the target JSON.
-            targetJson.push(exportDefault)
+            this.lastTargetEnvScannned.targets.push(exportDefault)
           }
         }
-        // Otherwise, the file is a directory.
-        else {
-          // If the file is a directory, recursively search for typescript files.
-          this.scan(
-            path.join(directory, file),
-            targetEnvironmentJson,
-            targetJson,
-          )
+        // Otherwise, the new path is a directory.
+        else if (isDirectory) {
+          // Move to the new path.
+          this.scan(newPath)
         }
       })
     }
 
-    // Add the targets to the target environments.
-    targetJson.forEach((target: any) => {
-      // Find the target environment that the target belongs to.
-      let targetEnvironment: TCommonTargetEnvJson | undefined =
-        targetEnvironmentJson.find(
-          (targetEnvironment: TCommonTargetEnvJson) => {
-            return targetEnvironment._id === target.targetEnvId
-          },
-        )
-
-      // If the target environment is found, add the target to it.
-      if (targetEnvironment) {
-        // If the target environment does not have targets, then create an array.
-        if (!targetEnvironment.targets) {
-          targetEnvironment.targets = []
-        }
-
-        // Delete the target environment ID from the target.
-        // Note: The target environment ID is not needed on the client.
-        delete target.targetEnvId
-        // Add the target to the target environment.
-        targetEnvironment.targets.push(target)
-      }
-    })
-
     // Return the target environments.
-    return targetEnvironmentJson
+    return this.targetEnvRegistry
   }
+
+  /**
+   * A registry of all the target environments found in the last scan.
+   */
+  private static targetEnvRegistry: TCommonTargetEnvJson[] = []
+
+  /**
+   * The last target environment scanned.
+   */
+  private static get lastTargetEnvScannned(): TCommonTargetEnvJson | undefined {
+    return this.targetEnvRegistry[this.targetEnvRegistry.length - 1]
+  }
+
+  /**
+   * The default directory to scan for target environments.
+   */
+  private static DEFAULT_DIRECTORY: string = path.join(
+    process.cwd(), // "metis/server/"
+    '../integration/target-env',
+  )
 }
 
 /* ------------------------------ SERVER TARGET ENVIRONMENT TYPES ------------------------------ */

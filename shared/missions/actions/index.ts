@@ -218,7 +218,9 @@ export default abstract class MissionAction<
   ): TEffect<T>[]
 
   // Implemented
-  public toJson(): TCommonMissionActionJson {
+  public toJson(
+    options: TMissionActionJsonOptions = {},
+  ): TCommonMissionActionJson {
     let json: TCommonMissionActionJson = {
       _id: this._id,
       name: this.name,
@@ -330,7 +332,7 @@ export type TMissionActionOptions = {
 /**
  * Options for converting a MissionAction to JSON.
  */
-export type TMissionActionJsonOtions = {}
+export type TMissionActionJsonOptions = {}
 
 /**
  * Interface of the abstract MissionAction class.
@@ -434,7 +436,7 @@ export interface TCommonMissionAction {
    * Converts the action to JSON.
    * @returns the JSON for the action.
    */
-  toJson: (options?: TMissionActionJsonOtions) => TCommonMissionActionJson
+  toJson: (options?: TMissionActionJsonOptions) => TCommonMissionActionJson
   /**
    * Modifies the amount of time it takes to execute the action.
    * @param processTimeOperand The operand to modify the process time by.

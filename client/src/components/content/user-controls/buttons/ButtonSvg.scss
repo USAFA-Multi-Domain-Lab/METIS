@@ -8,9 +8,10 @@
   cursor: pointer;
   transition: 500ms transform, 500ms background-size, 500ms background-position,
     500ms opacity;
-  border-radius: $border-radius;
   width: 1em;
   height: 0.96em;
+  margin: 0 0.15em;
+  font-size: $button-svg-size;
 
   .ButtonLabel {
     display: flex;
@@ -20,31 +21,9 @@
     font-size: 0.75rem;
   }
 
-  &.small {
-    margin: 0 0.15em;
-    font-size: $button-svg-small-size;
-
-    &:not(.warning-transparent):hover {
-      filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(117deg)
-        brightness(200%) contrast(98%);
-    }
-
-    &.warning-transparent:hover {
-      background-image: url('/assets/images/icons/warning-filled.svg') !important;
-      transition: background-image 0.5s;
-    }
-  }
-
-  &.regular {
-    margin: 0 0.25em;
-    border: 2px solid $color-primary-light;
-    font-size: $button-svg-regular-size;
-  }
-
-  &.wide {
+  &.WithLabel {
     width: unset;
-    margin: 0 0.15em;
-    font-size: $button-svg-wide-size;
+    font-size: 1.25rem; // 20px
   }
 
   &.lock:hover {
@@ -72,5 +51,15 @@
 
   &.download {
     background-position-y: 0.4em !important;
+  }
+
+  &:not(.warning-transparent):hover {
+    filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(117deg)
+      brightness(200%) contrast(98%);
+  }
+
+  &.warning-transparent:hover {
+    background-image: url('/assets/images/icons/warning-filled.svg') !important;
+    transition: background-image 0.5s;
   }
 }

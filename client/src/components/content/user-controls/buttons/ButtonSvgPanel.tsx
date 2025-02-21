@@ -1,7 +1,7 @@
 import React from 'react'
 import { compute } from 'src/toolbox'
 import { TWithKey } from '../../../../../../shared/toolbox/objects'
-import ButtonSvg, { TButtonSvg_P, TButtonSvgSize } from './ButtonSvg'
+import ButtonSvg, { TButtonSvg_P } from './ButtonSvg'
 import './ButtonSvgPanel.scss'
 
 /**
@@ -10,7 +10,6 @@ import './ButtonSvgPanel.scss'
  */
 export default function ButtonSvgPanel({
   buttons,
-  size = 'regular',
   uniqueClassList = [],
   styling = {},
 }: TButtonSvgPanel): JSX.Element | null {
@@ -31,7 +30,7 @@ export default function ButtonSvgPanel({
   return (
     <div className={rootClass} style={styling}>
       {buttons.map((button) => (
-        <ButtonSvg {...button} size={size} key={button.key} />
+        <ButtonSvg {...button} key={button.key} />
       ))}
     </div>
   )
@@ -50,11 +49,6 @@ export type TButtonSvgPanel = {
    * The props for the buttons to display.
    */
   buttons: TWithKey<TButtonSvg_P>[]
-  /**
-   * The size of the buttons.
-   * @default 'regular'
-   */
-  size?: TButtonSvgSize
   /**
    * Unique classes to add to the panel.
    * @default []

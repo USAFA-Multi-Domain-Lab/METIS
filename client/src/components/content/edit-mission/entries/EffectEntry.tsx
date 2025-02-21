@@ -1,6 +1,5 @@
-import { useState } from 'react'
 import { ClientEffect } from 'src/missions/effects'
-import { useObjectFormSync, usePostInitEffect } from 'src/toolbox/hooks'
+import { useObjectFormSync } from 'src/toolbox/hooks'
 import { DetailLargeString } from '../../form/DetailLargeString'
 import { DetailLocked } from '../../form/DetailLocked'
 import { DetailString } from '../../form/DetailString'
@@ -22,6 +21,7 @@ export default function EffectEntry({
   onChange,
 }: TEffectEntry_P): JSX.Element | null {
   /* -- STATE -- */
+
   const effectState = useObjectFormSync(
     effect,
     ['name', 'trigger', 'description', 'args'],
@@ -74,7 +74,6 @@ export default function EffectEntry({
             label='Description'
             stateValue={description}
             setState={setDescription}
-            elementBoundary='.SidePanelContent'
             placeholder='Enter description...'
           />
           <DetailLocked

@@ -11,6 +11,7 @@ import './SessionConfigPage.scss'
 
 export default function SessionConfigPage({
   session,
+  session: { mission },
 }: TSessionConfigPage_P): JSX.Element | null {
   /* -- state -- */
 
@@ -131,11 +132,12 @@ export default function SessionConfigPage({
           </div>
           <div className='MissionName StaticDetail'>
             <div className='Label'>Mission:</div>
-            <div className='Value'>{session.name}</div>
+            <div className='Value'>{mission.name}</div>
           </div>
         </div>
         <SessionConfig
           sessionConfig={config}
+          mission={mission}
           saveButtonText={'Save'}
           onSave={save}
           onCancel={cancel}

@@ -16,6 +16,7 @@ export const createMissionWithNoForceData: Omit<TCommonMissionJson, 'forces'> =
     createdAt: new Date(),
     updatedAt: new Date(),
     launchedAt: null,
+    resourceLabel: 'Resources',
     structure: {
       '4767fab5-573e-4df3-b1cd-809240804e92': {},
     },
@@ -35,6 +36,7 @@ export const testMission: TCommonMissionJson = {
   createdAt: new Date(),
   updatedAt: new Date(),
   launchedAt: null,
+  resourceLabel: 'Resources',
   structure: {
     '4767fab5-573e-4df3-b1cd-809240804e92': {},
   },
@@ -63,6 +65,7 @@ export const testMission: TCommonMissionJson = {
               processTime: 5000,
               successChance: 0.5,
               resourceCost: 1,
+              opensNode: true,
               postExecutionSuccessText:
                 '<p>Enter your successful post-execution message here.</p>',
               postExecutionFailureText:
@@ -104,6 +107,7 @@ export const updateMissionWithNoMissionId: TCommonMissionJson = {
   createdAt: new Date(),
   updatedAt: new Date(),
   launchedAt: null,
+  resourceLabel: 'Resources',
   structure: {
     '4767fab5-573e-4df3-b1cd-809240804e92': {},
   },
@@ -132,6 +136,7 @@ export const updateMissionWithNoMissionId: TCommonMissionJson = {
               processTime: 5000,
               successChance: 0.5,
               resourceCost: 1,
+              opensNode: true,
               postExecutionSuccessText:
                 '<p>Enter your successful post-execution message here.</p>',
               postExecutionFailureText:
@@ -176,6 +181,7 @@ export const updateMissionWithNoStructure: Omit<
   createdAt: new Date(),
   updatedAt: new Date(),
   launchedAt: null,
+  resourceLabel: 'Resources',
   forces: [
     {
       _id: 'def3d81c-e8fd-470b-afb3-ba0a293bae73',
@@ -201,6 +207,7 @@ export const updateMissionWithNoStructure: Omit<
               processTime: 5000,
               successChance: 0.5,
               resourceCost: 1,
+              opensNode: true,
               postExecutionSuccessText:
                 '<p>Enter your successful post-execution message here.</p>',
               postExecutionFailureText:
@@ -243,6 +250,7 @@ export const updateMissionWithNoForceData: Omit<TCommonMissionJson, 'forces'> =
     createdAt: new Date(),
     updatedAt: new Date(),
     launchedAt: null,
+    resourceLabel: 'Resources',
     structure: {
       '4767fab5-573e-4df3-b1cd-809240804e92': {},
     },
@@ -262,6 +270,7 @@ export const correctUpdateTestMission: TCommonMissionJson = {
   createdAt: new Date(),
   updatedAt: new Date(),
   launchedAt: null,
+  resourceLabel: 'Resources',
   structure: {
     '4767fab5-573e-4df3-b1cd-809240804e92': {},
   },
@@ -290,6 +299,7 @@ export const correctUpdateTestMission: TCommonMissionJson = {
               processTime: 5000,
               successChance: 0.5,
               resourceCost: 1,
+              opensNode: true,
               postExecutionSuccessText:
                 '<p>Enter your successful post-execution message here.</p>',
               postExecutionFailureText:

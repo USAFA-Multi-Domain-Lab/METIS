@@ -1060,6 +1060,15 @@ export default class ClientMission
     if (selection.mission !== this)
       throw new Error('The given selection is not part of the mission.')
 
+    // If an action is selected when it's node is not
+    // executable, select the mission instead.
+    if (
+      selection instanceof ClientMissionAction &&
+      !selection.node.executable
+    ) {
+      selection = this
+    }
+
     this._selection = selection
 
     this.emitEvent('selection')
@@ -1132,6 +1141,28 @@ export default class ClientMission
       forceJson.color =
         nextColor?.color || MissionForce.DEFAULT_PROPERTIES.color
 
+      // Update the force's nodes.
+      forceJson.nodes = forceJson.nodes.map((nodeJson) => {
+        // Set the node's ID to a new ID.
+        nodeJson._id = ClientMissionNode.DEFAULT_PROPERTIES._id
+        // Update the node's actions.
+        nodeJson.actions = nodeJson.actions.map((actionJson) => {
+          // Set the action's ID to a new ID.
+          actionJson._id = ClientMissionAction.DEFAULT_PROPERTIES._id
+          // Update the action's effects.
+          actionJson.effects = actionJson.effects.map((effectJson) => {
+            // Set the effect's ID to a new ID.
+            effectJson._id = ClientEffect.DEFAULT_PROPERTIES._id
+            // Return the effect JSON.
+            return effectJson
+          })
+          // Return the action JSON.
+          return actionJson
+        })
+        // Return the node JSON.
+        return nodeJson
+      })
+
       // Create a new force object from the JSON.
       return new ClientMissionForce(this, forceJson, { populateTargets: true })
     })
@@ -1161,10 +1192,11 @@ export default class ClientMission
   }
 
   /**
-   * Commit any changes made and save them to the server. Calls
+   * Sends all changes made to the server to be saved.
+   * @resolves The mission was saved successfully.
+   * @rejects The error that occurred during the save.
    * @note Chooses between post and put based on the state of the `existsOnServer`
-   * property. This can be set as an option in the constructor.
-   * @returns Promise<void> A promise that resolves when the operation is complete.
+   * property.
    */
   public async saveToServer(): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
@@ -1172,15 +1204,15 @@ export default class ClientMission
         // Create a new mission if it doesn't
         // exist already.
         if (!this.existsOnServer) {
+          // Create the mission on the server.
           let { data } = await axios.post<
             any,
             AxiosResponse<Required<TCommonMissionJson>>
           >(ClientMission.API_ENDPOINT, this.toJson())
-          // Update the temporary client-generated
-          // seed with the server-generated seed.
-          this.seed = data.seed
           // Update existsOnServer to true.
           this._existsOnServer = true
+          // Update the mission ID, if necessary.
+          if (data._id) this._id = data._id
         }
         // Update the mission if it does exist.
         else {
@@ -1193,8 +1225,10 @@ export default class ClientMission
             }),
           )
         }
+
+        // Resolve.
         resolve()
-      } catch (error) {
+      } catch (error: any) {
         console.error('Failed to save mission.')
         console.error(error)
         reject(error)

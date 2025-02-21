@@ -17,6 +17,7 @@ const launchSession = async (request: Request, response: Response) => {
   // Get data from the request body.
   let {
     missionId,
+    name,
     accessibility,
     autoAssign,
     infiniteResources,
@@ -24,6 +25,7 @@ const launchSession = async (request: Request, response: Response) => {
   } = request.body
   // Define the session configuration.
   let sessionConfig: TSessionConfig = {
+    name,
     accessibility,
     autoAssign,
     infiniteResources,

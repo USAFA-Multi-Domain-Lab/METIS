@@ -1,9 +1,10 @@
+import { EditorEvents } from '@tiptap/react'
 import { useState } from 'react'
-import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 import { compute } from 'src/toolbox'
 import { TDetailWithInput_P } from '.'
 import Tooltip from '../communication/Tooltip'
+import RichText from '../general-layout/RichText'
 import './DetailLargeString.scss'
 
 /**
@@ -24,7 +25,6 @@ export function DetailLargeString({
   uniqueLabelClassName = undefined,
   uniqueFieldClassName = undefined,
   placeholder = 'Enter text here...',
-  elementBoundary = undefined,
   tooltipDescription = '',
 }: TDetailLargeString_P): JSX.Element | null {
   /* -- STATE -- */
@@ -110,7 +110,7 @@ export function DetailLargeString({
    */
   const fieldClassName: string = compute(() => {
     // Default class names
-    let classList: string[] = ['Field', 'FieldLargeString']
+    let classList: string[] = ['Field']
 
     // If the error message is displayed
     // then add the error class name.
@@ -155,29 +155,69 @@ export function DetailLargeString({
   const infoClassName: string = compute(() =>
     tooltipDescription ? 'DetailInfo' : 'Hidden',
   )
+  /**
+   * The boolean that determines if the field
+   * should be repopulated with the default value.
+   */
+  const shouldRepopulate: boolean = compute(
+    () =>
+      !displayError &&
+      handleOnBlur === 'repopulateValue' &&
+      fieldType === 'required',
+  )
 
-  /* -- PRE-RENDER PROCESSING -- */
+  /* -- FUNCTIONS -- */
 
   /**
-   * The modules used by the ReactQuill component.
+   * Determines if the html content is empty.
+   * @param value The html content to check.
+   * @returns True if the html content is empty.
    */
-  const reactQuillModules = {
-    toolbar: {
-      container: [
-        [{ list: 'ordered' }, { list: 'bullet' }],
-        ['bold', 'italic', 'underline', 'link'],
-        ['clean'],
-      ],
-    },
-    clipboard: {
-      matchVisual: false,
-    },
+  const checkForEmptyHtmlContent = (value: string): boolean => {
+    const strippedContent = value.replace(/<[^>]*>/g, '') // Remove HTML tags
+    const emptyHtmlContentRegex = /^\s*$/
+    return emptyHtmlContentRegex.test(strippedContent)
   }
 
   /**
-   * The formats used by the ReactQuill component.
+   * Handles the update event for the editor.
+   * @param editor The editor instance.
    */
-  const reactQuillFormats = ['bold', 'italic', 'underline', 'link', 'list']
+  const onUpdate = ({ editor }: EditorEvents['update']) => {
+    const value = editor.getHTML()
+    const isEmptyContent = checkForEmptyHtmlContent(value)
+    // Updates the parent component's state value
+    // and ensures that invalid empty values don't
+    // get saved to the database.
+    isEmptyContent ? setState('') : setState(value)
+  }
+
+  /**
+   * Handles the blur event for the editor.
+   * @param editor The editor instance.
+   */
+  const onBlur = ({ editor }: EditorEvents['blur']) => {
+    const value: string = editor.getHTML()
+    const isEmptyContent = checkForEmptyHtmlContent(value)
+    let { setContent } = editor.commands
+
+    // Indicate that the user has left the field.
+    // @note - This allows errors to be displayed.
+    setLeftField(true)
+
+    if (isEmptyContent && shouldRepopulate) {
+      // Update the parent component's state value
+      // and the editor's value (ensures both values
+      // are in sync without the need for a re-render).
+      if (!!defaultValue) {
+        setState(defaultValue)
+        setContent(defaultValue)
+      } else {
+        setState(placeholder)
+        setContent(placeholder)
+      }
+    }
+  }
 
   /* -- RENDER -- */
 
@@ -193,52 +233,15 @@ export function DetailLargeString({
         </div>
         <div className={`TitleColumnTwo ${optionalClassName}`}>optional</div>
       </div>
-      <div
-        className='FieldContainer'
-        onBlur={(event: React.FocusEvent) => {
-          let target: HTMLDivElement = event.target as HTMLDivElement
-          let value: string = target.innerHTML
-
-          // Indicate that the user has left the field.
-          // @note - This allows errors to be displayed.
-          setLeftField(true)
-
-          // If the field is empty or in a default
-          // state and the error message is not displayed
-          // and the default value is defined, but not an
-          // empty string, and the field is required, then
-          // set the input's value to a default value.
-          if (
-            (value === '<p><br></p>' || value === undefined) &&
-            !displayError &&
-            handleOnBlur === 'repopulateValue' &&
-            fieldType === 'required'
-          ) {
-            if (!!defaultValue) {
-              setState(defaultValue)
-            } else {
-              setState(placeholder)
-            }
-          }
+      <RichText
+        options={{
+          content: stateValue,
+          className: fieldClassName,
+          placeholder,
+          onUpdate,
+          onBlur,
         }}
-      >
-        <ReactQuill
-          bounds={elementBoundary}
-          className={fieldClassName}
-          modules={reactQuillModules}
-          formats={reactQuillFormats}
-          value={stateValue}
-          placeholder={placeholder}
-          theme='snow'
-          onChange={(value: string) => {
-            if (value === '<p><br></p>') {
-              setState('')
-            } else {
-              setState(value)
-            }
-          }}
-        />
-      </div>
+      />
       <div className={fieldErrorClassName}>{errorMessage}</div>
     </div>
   )
@@ -249,11 +252,4 @@ export function DetailLargeString({
 /**
  * The properties for the Detail Large String component.
  */
-type TDetailLargeString_P = TDetailWithInput_P<string> & {
-  /**
-   * The class name of the element that the detail is bound to.
-   * @note This is used to keep the tooltip from being cut off by the
-   * element's boundary.
-   */
-  elementBoundary?: string
-}
+type TDetailLargeString_P = TDetailWithInput_P<string>

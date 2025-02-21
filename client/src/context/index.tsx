@@ -13,9 +13,9 @@ import ServerConnection, { IServerConnectionOptions } from 'src/connect/servers'
 import MetisInfo from 'src/info'
 import ClientLogin from 'src/logins'
 import Notification from 'src/notifications'
+import { useInitRenderHandler } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import { v4 as generateHash } from 'uuid'
-import { TResponseEvents, TServerEvents } from '../../../shared/connect/data'
 import { ServerEmittedError } from '../../../shared/connect/errors'
 import { TLogin } from '../../../shared/logins'
 import { TExecutionCheats } from '../../../shared/missions/actions/executions'
@@ -25,8 +25,6 @@ import ObjectToolbox, {
 } from '../../../shared/toolbox/objects'
 import { Vector2D } from '../../../shared/toolbox/space'
 import StringToolbox from '../../../shared/toolbox/strings'
-import { UnionType } from 'typescript'
-import { useInitRenderHandler, useMountHandler } from 'src/toolbox/hooks'
 
 /* -- constants -- */
 
@@ -513,6 +511,7 @@ const initializeActions = (
         position = new Vector2D(100, 100),
         positioningTarget,
         highlightTarget,
+        persist = false,
         getDescription,
       } = options
       // Prepare the button menu props.
@@ -525,7 +524,9 @@ const initializeActions = (
         onButtonClick: (button) => {
           // Preprocess the button click,
           // starting by hiding the button menu.
-          setButtonMenu(null)
+          if (!persist) {
+            setButtonMenu(null)
+          }
 
           // Call the callback passed.
           onButtonClick(button as TButton)
@@ -988,6 +989,14 @@ export type TShowButtonMenuOptions<TButton extends TButtonSvgType> = {
    * Styles should be defined in the CSS.
    */
   highlightTarget?: HTMLElement
+  /**
+   * Whether the button menu should persist after a button
+   * is clicked.
+   * @note If true, the button menu will remain open after a
+   * button is clicked.
+   * @default false
+   */
+  persist?: boolean
   /**
    * A function to get the description for a button.
    * @param button The button for which to get the description.

@@ -3,8 +3,8 @@ import ClientOutput from 'src/missions/forces/output'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { useMountHandler } from 'src/toolbox/hooks'
-import RichTextOutputBox from '../../communication/RichTextOutputBox'
 import Tooltip from '../../communication/Tooltip'
+import RichText from '../../general-layout/RichText'
 
 /**
  * Renders the message for when an action is started.
@@ -32,7 +32,7 @@ export default function ExecutionStarted({
    * The class name for all list items used with this message.
    * @note This is used to update the time remaining for the action.
    */
-  const listItemClassName: string = compute(() => `output-${outputId}`)
+  const listClassName: string = compute(() => `output-${outputId}`)
 
   /**
    * The message to display for the execution.
@@ -96,7 +96,7 @@ export default function ExecutionStarted({
   useEffect(() => {
     // Grab all list elements within the output.
     const listElements = outputRef.current?.querySelectorAll(
-      `.${listItemClassName}`,
+      `.${listClassName}`,
     )
 
     // Loop through each list element.
@@ -104,7 +104,7 @@ export default function ExecutionStarted({
       // Check if the element contains the time remaining label and has the correct class name.
       if (
         element.innerHTML.includes(timeRemainingLabel) &&
-        element.className === listItemClassName
+        element.className === listClassName
       ) {
         // Update the time remaining element.
         element.innerHTML = `<p><u>${timeRemainingLabel}</u> ${timeRemaining}</p>`
@@ -120,12 +120,8 @@ export default function ExecutionStarted({
         <span className='LineCursor'>
           {locateNodeJsx} [{timeStamp}] {prefix}{' '}
         </span>
-        <RichTextOutputBox
-          text={message}
-          options={{
-            // This will add the class name to all list items used with this message.
-            listItemClassName,
-          }}
+        <RichText
+          options={{ content: message, editable: false, listClassName }}
         />
       </div>
     )

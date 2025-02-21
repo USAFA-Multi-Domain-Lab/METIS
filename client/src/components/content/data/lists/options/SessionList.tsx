@@ -6,6 +6,7 @@ import SessionClient from 'src/sessions'
 import { SessionBasic } from 'src/sessions/basic'
 import { compute } from 'src/toolbox'
 import { usePeriodicRerender, useRequireLogin } from 'src/toolbox/hooks'
+import { DateToolbox } from '../../../../../../../shared/toolbox/dates'
 import List, { TGetListButtonTooltip } from '../List'
 import {
   TGetItemButtonTooltip,
@@ -13,7 +14,6 @@ import {
   TOnItemButtonClick,
   TOnItemSelection,
 } from '../pages/ListItem'
-import { DateToolbox } from '../../../../../../../shared/toolbox/dates'
 
 /**
  * A component for displaying a list of sessions.
@@ -43,7 +43,7 @@ export default function SessionList({
 
   /* -- COMPUTED -- */
 
-  // todo: Implement the ability for instructors to only tear down sessions that they own.
+  // todo: Implement the ability for instructors to only delete sessions that they own.
   const itemButtons = compute<TButtonSvgType[]>(() => {
     let results: TButtonSvgType[] = []
 
@@ -146,7 +146,7 @@ export default function SessionList({
       case 'open':
         return 'Join'
       case 'remove':
-        return 'Tear down'
+        return 'Delete'
       default:
         return ''
     }
@@ -215,21 +215,21 @@ export default function SessionList({
   const onSessionTearDown = async (session: SessionBasic) => {
     // Confirm tear down.
     let { choice } = await prompt(
-      'Please confirm the tear down of this session.',
+      `Are you sure you want to delete the "${session.name}" session?`,
       Prompt.ConfirmationChoices,
     )
 
     // If confirmed, delete session.
     if (choice === 'Confirm') {
       try {
-        beginLoading('Tearing down session...')
+        beginLoading('Deleting session...')
         await SessionClient.$delete(session._id)
         finishLoading()
-        notify(`Successfully tore down "${session.name}".`)
+        notify(`Successfully deleted the "${session.name}" session.`)
         refresh()
       } catch (error) {
         finishLoading()
-        notify(`Failed to tear down "${session.name}".`)
+        notify(`Failed to delete the "${session.name}" session.`)
       }
     }
   }

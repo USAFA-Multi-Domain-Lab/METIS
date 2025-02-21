@@ -706,8 +706,20 @@ const validate_mission_forces_nodes_actions_effects_trigger = (
 const sanitizeHtml = (html: string): string => {
   try {
     let sanitizedHTML = DOMPurify.sanitize(html, {
-      ALLOWED_TAGS: ['a', 'br', 'p', 'strong', 'em', 'u', 'ul', 'ol', 'li'],
-      ALLOWED_ATTR: ['href', 'rel', 'target'],
+      ALLOWED_TAGS: [
+        'a',
+        'br',
+        'p',
+        'strong',
+        'em',
+        'u',
+        'ul',
+        'ol',
+        'li',
+        'code',
+        'pre',
+      ],
+      ALLOWED_ATTR: ['href', 'rel', 'target', 'class'],
       FORBID_TAGS: ['script', 'style', 'iframe'],
     })
 
