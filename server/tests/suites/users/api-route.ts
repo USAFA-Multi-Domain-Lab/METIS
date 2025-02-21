@@ -157,6 +157,24 @@ export default function UserApiRoute(): Mocha.Suite {
       }
     })
 
+    it(`Updating a user's password to a number should return a bad request (400) response`, async function () {
+      try {
+        let login = await agent.get('/api/v1/logins/')
+        let { user: currentUser } = login.body
+
+        let response = await agent.put('/api/v1/users/reset-password').send({
+          _id: currentUser._id,
+          password: 123456,
+          needsPasswordReset: false,
+        })
+
+        expect(response).to.have.status(400)
+      } catch (error: any) {
+        testLogger.error(error)
+        throw error
+      }
+    })
+
     it("Updating a user with all the correct properties in the body of the request should return a user with the same '_id' as the one in the body of the request", async function () {
       correctUser.firstName = 'UpdatedUserWithSameId'
 

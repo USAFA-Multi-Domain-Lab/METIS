@@ -1,5 +1,5 @@
 import fs from 'fs'
-import MetisServer, { IMetisServerOptions } from 'metis/server'
+import MetisServer from 'metis/server'
 import { TCommonUserJson } from 'metis/users'
 import { accessIds, TUserAccessId } from 'metis/users/accesses'
 import { createInterface } from 'readline/promises'
@@ -112,31 +112,12 @@ const commandLinePrompt = async (
  * Connects to the database.
  */
 const connectToDatabase = async () => {
-  // Get the environment file path.
-  let { ENVIRONMENT_FILE_PATH: environmentFilePath } = MetisServer
-  // Initialize the server options.
-  let serverOptions: IMetisServerOptions = {
-    port: 49152,
-  }
-
-  // Log message.
-  console.log('Reading enviroment.json file...')
-
-  // If the environment file exists, read it.
-  if (fs.existsSync(environmentFilePath)) {
-    let environmentData: any = fs.readFileSync(environmentFilePath, 'utf8')
-    // Parse data to JSON.
-    environmentData = JSON.parse(environmentData)
-    // Join environment data with server options.
-    serverOptions = { ...environmentData, ...serverOptions }
-  } else {
-    throw new Error('Environment file not found. Exiting...')
-  }
-
-  // Connect to the database.
-  let server = new MetisServer(serverOptions)
-  console.log('Connecting to database...')
   // Start the temporary server.
+  let server = new MetisServer({
+    port: 49152,
+  })
+  // Connect to the database.
+  console.log('Connecting to database...')
   await server.database.connect()
 }
 

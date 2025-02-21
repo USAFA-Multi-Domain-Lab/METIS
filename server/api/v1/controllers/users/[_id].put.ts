@@ -51,7 +51,7 @@ const updateUser = async (request: Request, response: Response) => {
     let userInfo: string = username
       ? `{  _id: "${userId}", name: "${username}" }`
       : `{ _id: "${userId}" }`
-    let errorMessage: string = `Failed to update mission ${userInfo}.\n`
+    let errorMessage: string = `Failed to update user ${userInfo}.\n`
     // Log the error.
     databaseLogger.error(errorMessage, error)
     // Handle the error.

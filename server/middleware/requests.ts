@@ -283,7 +283,9 @@ export class RequestBodyFilters {
     let passwordIsValid: boolean = User.isValidPassword(bodyValue)
 
     if (typeof bodyValue !== 'string' || !passwordIsValid) {
-      throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
+      throw new Error(
+        invalidRequestBodyPropertyException(bodyKey, bodyValue, true),
+      )
     }
   }
 
@@ -320,14 +322,20 @@ export class RequestBodyFilters {
  * This function is used to create an error message
  * when a property in the request body of a post
  * request is invalid.
- * @param key The key that was passed in the request body
- * @param value The value that was passed in the request body
- * @returns An error message
+ * @param key The key that was passed in the request body.
+ * @param value The value that was passed in the request body.
+ * @param hasSensitiveContent If the data contains sensitive content.
+ * @returns An error message.
  */
 const invalidRequestBodyPropertyException = (
   key: string,
   value: any,
+  hasSensitiveContent: boolean = false,
 ): string => {
+  if (hasSensitiveContent) {
+    return `Bad Request_The-property-"${key}"-in-the-request-body-has-an-invalid-value`
+  }
+
   return `Bad Request_{"${key}": "${value}"}-is-invalid`
 }
 
