@@ -41,7 +41,7 @@ export default function LaunchPage({
   /* -- LOGIN-SPECIFIC LOGIC -- */
 
   // Require login for page.
-  const [login] = useRequireLogin()
+  const { login } = useRequireLogin()
 
   // Grab the user currently logged in.
   let { user: currentUser } = login

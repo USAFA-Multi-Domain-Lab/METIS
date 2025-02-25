@@ -3,7 +3,7 @@ import MetisServer from 'metis/server'
 import defineRequests, {
   RequestBodyFilters,
 } from 'metis/server/middleware/requests'
-import { TSessionConfig } from 'metis/sessions'
+import Session, { TSessionConfig } from 'metis/sessions'
 import { auth } from '../../../middleware/users'
 import deleteSession from '../controllers/sessions/[_id].delete'
 import getSessions from '../controllers/sessions/index.get'
@@ -24,7 +24,7 @@ const routerMap = (router: Router, server: MetisServer, done: () => void) => {
         body: {
           accessibility: RequestBodyFilters.STRING_LITERAL<
             TSessionConfig['accessibility']
-          >(['public', 'id-required', 'invite-only']),
+          >(Session.ACCESSIBILITY_OPTIONS),
           autoAssign: RequestBodyFilters.BOOLEAN,
           infiniteResources: RequestBodyFilters.BOOLEAN,
           effectsEnabled: RequestBodyFilters.BOOLEAN,

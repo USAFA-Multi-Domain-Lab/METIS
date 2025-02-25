@@ -18,7 +18,7 @@ export default function SessionMembers({
   const globalContext = useGlobalContext()
   const { handleError, prompt, beginLoading, finishLoading } =
     globalContext.actions
-  const [login] = useRequireLogin()
+  const { login } = useRequireLogin()
   const [server] = globalContext.server
   const [members, setMembers] = useState<ClientSessionMember[]>(
     session.membersSorted,

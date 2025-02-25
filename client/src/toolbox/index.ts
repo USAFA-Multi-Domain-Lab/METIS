@@ -1,3 +1,5 @@
+import { TOs } from './index.d'
+
 /**
  * Immediately returns the computed value of the function
  * that is passed to it.
@@ -7,3 +9,17 @@
 export const compute = <TValue>(func: () => TValue): TValue => {
   return func()
 }
+
+/**
+ * @returns The operating system of the user.
+ */
+export function getOs(): TOs {
+  const userAgent = navigator.userAgent
+  if (userAgent.indexOf('Win') !== -1) return 'windows'
+  if (userAgent.indexOf('Mac') !== -1) return 'mac-os'
+  if (userAgent.indexOf('X11') !== -1) return 'unix'
+  if (userAgent.indexOf('Linux') !== -1) return 'linux'
+  return 'unknown'
+}
+
+export * from './index.d'

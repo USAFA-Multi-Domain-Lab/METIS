@@ -2,6 +2,7 @@ import React from 'react'
 import { compute } from 'src/toolbox'
 import Tooltip from '../../communication/Tooltip'
 import './ButtonSvg.scss'
+import { TWithKey } from '../../../../../../shared/toolbox/objects'
 
 /* -- components -- */
 
@@ -169,6 +170,11 @@ export type TButtonSvg_P = {
 }
 
 /**
+ * Props for `ButtonSVG` component with a key.
+ */
+export type TButtonSvg_PK = TWithKey<TButtonSvg_P>
+
+/**
  * The type of button being used.
  * @note Used to determine the icon to display.
  * ### Special Types
@@ -201,6 +207,7 @@ export type TButtonSvgType =
   | 'open'
   | 'options'
   | 'ordered-list'
+  | 'play'
   | 'question'
   | 'redo'
   | 'remove'

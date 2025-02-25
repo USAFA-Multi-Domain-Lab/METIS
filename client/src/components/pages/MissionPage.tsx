@@ -11,7 +11,7 @@ import ClientMissionPrototype, {
 } from 'src/missions/nodes/prototypes'
 import PrototypeCreation from 'src/missions/transformations/creations'
 import PrototypeTranslation from 'src/missions/transformations/translations'
-import { compute } from 'src/toolbox'
+import { compute, getOs } from 'src/toolbox'
 import {
   useEventListener,
   useMountHandler,
@@ -19,7 +19,11 @@ import {
 } from 'src/toolbox/hooks'
 import { DefaultLayout, TPage_P } from '.'
 import Mission from '../../../../shared/missions'
-import { TWithKey } from '../../../../shared/toolbox/objects'
+import {
+  TSingleTypeMapped,
+  TSingleTypeObject,
+  TWithKey,
+} from '../../../../shared/toolbox/objects'
 import Prompt from '../content/communication/Prompt'
 import ActionEntry from '../content/edit-mission/entries/ActionEntry'
 import EffectEntry from '../content/edit-mission/entries/EffectEntry'
@@ -40,9 +44,11 @@ import CreateEffect from '../content/session/mission-map/ui/overlay/modals/Creat
 import { TTabBarTab } from '../content/session/mission-map/ui/tabs/TabBar'
 import {
   TButtonSvg_P,
+  TButtonSvg_PK,
   TButtonSvgType,
 } from '../content/user-controls/buttons/ButtonSvg'
 import './MissionPage.scss'
+import SessionClient from 'src/sessions'
 
 /**
  * This will render page that allows the user to
@@ -51,9 +57,11 @@ import './MissionPage.scss'
 export default function MissionPage({
   missionId,
 }: IMissionPage): JSX.Element | null {
-  /* -- GLOBAL CONTEXT -- */
+  /* -- STATE -- */
+
   const globalContext = useGlobalContext()
   const {
+    navigateTo,
     beginLoading,
     finishLoading,
     handleError,
@@ -62,9 +70,7 @@ export default function MissionPage({
     forceUpdate,
     logout,
   } = globalContext.actions
-
-  /* -- STATE -- */
-
+  const [server] = globalContext.server
   const [mission, setMission] = useState<ClientMission>(new ClientMission())
   const selectedForceState = useState<ClientMissionForce | null>(null)
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(
@@ -80,10 +86,7 @@ export default function MissionPage({
   /* -- LOGIN-SPECIFIC LOGIC -- */
 
   // Require login for page.
-  const [login] = useRequireLogin()
-
-  // Grab the user currently logged in.
-  let { user: currentUser } = login
+  const { login, isAuthorized, authorize } = useRequireLogin()
 
   /* -- COMPUTED -- */
 
@@ -159,7 +162,7 @@ export default function MissionPage({
   const tabAddEnabled: boolean = compute(
     () =>
       mission.forces.length < Mission.MAX_FORCE_COUNT &&
-      currentUser.isAuthorized('missions_write'),
+      isAuthorized('missions_write'),
   )
 
   /**
@@ -171,7 +174,7 @@ export default function MissionPage({
 
     // If disabled is true then add the
     // disabled class name.
-    if (!currentUser.isAuthorized('missions_write')) {
+    if (!isAuthorized('missions_write')) {
       classList.push('ReadOnly')
     }
 
@@ -201,10 +204,7 @@ export default function MissionPage({
   // componentDidMount
   const [mountHandled] = useMountHandler(async (done) => {
     // Make sure the user has access to the page.
-    if (
-      !currentUser.isAuthorized('missions_write') &&
-      !currentUser.isAuthorized('missions_read')
-    ) {
+    if (!isAuthorized('missions_write') && !isAuthorized('missions_read')) {
       handleError(
         'You do not have access to this page. Please contact an administrator.',
       )
@@ -254,7 +254,7 @@ export default function MissionPage({
   useNavigationMiddleware(
     async (to, next) => {
       // If there are unsaved changes, prompt the user.
-      if (areUnsavedChanges && currentUser.isAuthorized('missions_write')) {
+      if (areUnsavedChanges && isAuthorized('missions_write')) {
         const { choice } = await prompt(
           'You have unsaved changes. What do you want to do with them?',
           ['Cancel', 'Save', 'Discard'],
@@ -281,6 +281,20 @@ export default function MissionPage({
 
       // Call next.
       next()
+    },
+    [areUnsavedChanges],
+  )
+
+  // Add an event listener to listen for cmd+s/ctrl+s
+  // key presses to save the mission.
+  useEventListener(
+    document,
+    'keydown',
+    (event: KeyboardEvent) => {
+      if (event.key === 's' && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault()
+        save()
+      }
     },
     [areUnsavedChanges],
   )
@@ -743,6 +757,37 @@ export default function MissionPage({
     }
   }
 
+  /**
+   * Handles the request to play-test the mission.
+   */
+  const onPlayTest = async () => {
+    try {
+      // If the server connection is not available, abort.
+      if (!server) {
+        throw new Error('Server connection is not available.')
+      }
+
+      // Launch, join, and start the session.
+      let sessionId = await SessionClient.$launch(mission._id, {
+        accessibility: 'testing',
+      })
+      let session = await server.$joinSession(sessionId)
+      // If the session is not found, abort.
+      if (!session) throw new Error('Failed to join test session.')
+      session.$start()
+
+      // Navigate to the session page.
+      navigateTo('SessionPage', { session })
+    } catch (error) {
+      console.error('Failed to play-test mission.')
+      console.error(error)
+      handleError({
+        message: 'Failed to play-test mission.',
+        notifyMethod: 'bubble',
+      })
+    }
+  }
+
   /* -- PRE-RENDER PROCESSING -- */
 
   /**
@@ -750,31 +795,51 @@ export default function MissionPage({
    */
   const mapCustomButtons: TWithKey<TButtonSvg_P>[] = compute(() => {
     // Define the buttons that will be used.
-    let buttons: TWithKey<TButtonSvg_P>[] = []
-    // Define the reorder button.
-    let reorderButton: TWithKey<TButtonSvg_P> = {
-      type: 'reorder',
-      key: 'reorder',
-      onClick: () => {
-        mission.deselect()
-        activateNodeStructuring(true)
+    let buttons: TWithKey<TButtonSvg_PK>[] = []
+
+    let commandKey: string = getOs() === 'mac-os' ? 'Cmd' : 'Ctrl'
+
+    const availableButtons: TSingleTypeMapped<
+      'play' | 'reorder' | 'save',
+      TButtonSvg_PK
+    > = {
+      play: {
+        type: 'play',
+        key: 'play',
+        onClick: onPlayTest,
+        description: 'Play-test the mission.',
       },
-      description: 'Edit the structure and order of nodes.',
-      disabled: nodeStructuringIsActive ? 'full' : 'none',
+      reorder: {
+        type: 'reorder',
+        key: 'reorder',
+        onClick: () => {
+          mission.deselect()
+          activateNodeStructuring(true)
+        },
+        description: 'Edit the structure and order of nodes.',
+        disabled: nodeStructuringIsActive ? 'full' : 'none',
+      },
+      save: {
+        type: 'save',
+        key: 'save',
+        onClick: save,
+        description: `Save changes. \`${commandKey}+S\``,
+        disabled: !areUnsavedChanges ? 'full' : 'none',
+      },
     }
-    // Define the save button.
-    let saveButton: TWithKey<TButtonSvg_P> = {
-      type: 'save',
-      key: 'save',
-      onClick: save,
-      description: 'Save changes.',
-      disabled: !areUnsavedChanges ? 'full' : 'none',
-    }
-    // Add the buttons to the list if the user is authorized.
-    if (currentUser.isAuthorized('missions_write')) {
-      buttons.push(reorderButton)
-      buttons.push(saveButton)
-    }
+
+    // Pushes a button from available buttons to the list.
+    const pushButton = (type: keyof typeof availableButtons) =>
+      buttons.push(availableButtons[type])
+
+    // Add the play button, if authorized.
+    authorize('sessions_write_native', () => pushButton('play'))
+    // Add reorder and save buttons, if authorized.
+    authorize('missions_write', () => {
+      pushButton('reorder')
+      pushButton('save')
+    })
+
     // Return the buttons.
     return buttons
   })

@@ -25,7 +25,7 @@ export default function SessionList({
 }: TSessionList_P): JSX.Element | null {
   const globalContext = useGlobalContext()
   const [server] = globalContext.server
-  const [login] = useRequireLogin()
+  const { login } = useRequireLogin()
   const {
     notify,
     handleError,

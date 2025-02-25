@@ -2,14 +2,21 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientUser from 'src/users'
 import { TLogin } from '../../../../shared/logins'
-import { TEventListenerTarget, TResizeObserverOptions } from './index.d'
+import {
+  TEventListenerTarget,
+  TRequireLoginReturn,
+  TResizeObserverOptions,
+} from './index.d'
 
 /* -- HOOKS -- */
 
 /**
- * Requires that a user is logged in to interact with the application. If the user is not logged in, the user will be redirected to the login page.
+ * Requires that a user is logged in to interact with the application.
+ * If the user is not logged in, the user will be redirected to the
+ * login page.
+ * @returns The login information for the user.
  */
-export function useRequireLogin(): [NonNullable<TLogin<ClientUser>>] {
+export function useRequireLogin(): TRequireLoginReturn {
   // Get login information from global context.
   const globalContext = useGlobalContext()
   const [login] = globalContext.login
@@ -18,7 +25,12 @@ export function useRequireLogin(): [NonNullable<TLogin<ClientUser>>] {
   if (login === null) throw new LoginRequiredError()
 
   // Return login information.
-  return [login]
+  return {
+    login: login as NonNullable<TLogin<ClientUser>>,
+    user: login.user,
+    isAuthorized: login.user.isAuthorized,
+    authorize: login.user.authorize,
+  }
 }
 
 /**

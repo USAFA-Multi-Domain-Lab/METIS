@@ -12,7 +12,7 @@ import Session, {
 } from 'metis/sessions'
 import { TSessionMemberJson } from 'metis/sessions/members'
 import MemberRole, { TMemberRoleId } from 'metis/sessions/members/roles'
-import { SingleTypeObject } from 'metis/toolbox/objects'
+import { TSingleTypeObject } from 'metis/toolbox/objects'
 import { TCommonUser } from 'metis/users'
 import { v4 as generateHash } from 'uuid'
 import ClientConnection from '../connect/clients'
@@ -52,7 +52,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
    * but this will help with rejoining, since a new `SessionMember`
    * object is created each time a user joins.
    */
-  private assignments: SingleTypeObject<{
+  private assignments: TSingleTypeObject<{
     forceId: string
     roleId: TMemberRoleId
   }>
@@ -112,7 +112,9 @@ export default class SessionServer extends Session<TServerMissionTypes> {
   public toJson(options: TSessionServerJsonOptions = {}): TSessionJson {
     // Gather details.
     const { requester } = options
-    let missionOptions: TMissionJsonOptions = { exportType: 'session-limited' }
+    let missionOptions: TMissionJsonOptions = {
+      exportType: 'session-limited',
+    }
     let banList: string[] = []
 
     // Handler a requester being passed.
@@ -376,6 +378,9 @@ export default class SessionServer extends Session<TServerMissionTypes> {
         this._members.splice(index, 1)
         // Remove session-specific listeners.
         this.removeListeners(member)
+        // If the session is for testing, then destroy
+        // the session.
+        if (this.config.accessibility === 'testing') this.destroy()
         // Handle quitting the session for the member.
         member.connection.login.handleQuit()
       }
@@ -492,7 +497,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     let request = member.connection.buildResponseReqData(event)
     // Cache used to not export the same force twice
     // for two members assigned to the same force.
-    const assignmentForceCache: SingleTypeObject<TCommonMissionJson> = {}
+    const assignmentForceCache: TSingleTypeObject<TCommonMissionJson> = {}
     // Cache complete visibility export.
     let completeVisibilityCache = this.mission.toJson({
       exportType: 'session-complete',
@@ -711,7 +716,6 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     this.emitToAll('session-ended', { data: {}, request })
 
     // Perform clean up.
-    this.clearMembers()
     this.destroy()
   }
 

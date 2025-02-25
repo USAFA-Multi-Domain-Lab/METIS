@@ -51,7 +51,7 @@ export default function HomePage(): JSX.Element | null {
   /* -- LOGIN-SPECIFIC LOGIC -- */
 
   // Require login for page.
-  const [login] = useRequireLogin()
+  const { login } = useRequireLogin()
 
   // Grab the user currently logged in.
   let { user: currentUser } = login

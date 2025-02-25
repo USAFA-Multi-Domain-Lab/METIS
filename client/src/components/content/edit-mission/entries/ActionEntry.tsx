@@ -74,7 +74,7 @@ export default function ActionEntry({
   const [targetEnvironments] = useState<ClientTargetEnvironment[]>(
     ClientTargetEnvironment.getAll(),
   )
-  const [login] = useRequireLogin()
+  const { login } = useRequireLogin()
 
   /* -- COMPUTED -- */
 

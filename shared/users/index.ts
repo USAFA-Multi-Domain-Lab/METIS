@@ -136,6 +136,26 @@ export default abstract class User implements TCommonUser {
   }
 
   /**
+   * Calls the given callback if the user is authorized to perform the action.
+   * @param requiredPermissions The permission(s) required to perform the action.
+   * @param callback The callback to call if the user is authorized.
+   * @returns The result of the callback, `true` if the user was authorized and the
+   * callback was called, `false` if the user was not authorized and the callback
+   * was not called.
+   */
+  public authorize = (
+    requiredPermissions: TUserPermissionId | TUserPermissionId[],
+    callback: () => any,
+  ): boolean => {
+    if (this.isAuthorized(requiredPermissions)) {
+      callback()
+      return false
+    } else {
+      return false
+    }
+  }
+
+  /**
    * Default properties set when creating a new User object.
    */
   public static get DEFAULT_PROPERTIES(): Required<
