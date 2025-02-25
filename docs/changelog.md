@@ -1,5 +1,9 @@
 # changelog
 
+# version-2.0.3 | 2-25-2025
+
+- Fixed all known issues centered around executing an action on a node during a session
+
 # version-2.0.2 | 2-20-2025
 
 - Created a temporary (manual) solution for managing multiple users at once

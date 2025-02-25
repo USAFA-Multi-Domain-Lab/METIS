@@ -331,7 +331,11 @@ export default function ActionExecModal({
 
     // Render JSX.
     return (
-      <ActionProperties action={selectedAction!} cheats={authorizedCheats} />
+      <ActionProperties
+        action={selectedAction!}
+        cheats={authorizedCheats}
+        config={session.config}
+      />
     )
   })
 

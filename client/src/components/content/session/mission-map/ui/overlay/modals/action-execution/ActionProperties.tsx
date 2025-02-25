@@ -2,6 +2,7 @@ import RichText from 'src/components/content/general-layout/RichText'
 import ClientMissionAction from 'src/missions/actions'
 import { compute } from 'src/toolbox'
 import { TExecutionCheats } from '../../../../../../../../../../shared/missions/actions/executions'
+import { TSessionConfig } from '../../../../../../../../../../shared/sessions'
 import './ActionProperties.scss'
 import ActionProperty from './ActionProperty'
 
@@ -19,6 +20,7 @@ const HIDDEN_VALUE: string = '???'
 export default function ActionProperties({
   action,
   cheats,
+  config,
 }: TActionProperties_P): JSX.Element | null {
   /* -- COMPUTED -- */
 
@@ -136,4 +138,8 @@ export type TActionProperties_P = {
    * The cheats that will be applied to the action.
    */
   cheats: TExecutionCheats
+  /**
+   * The session configuration.
+   */
+  config: TSessionConfig
 }
