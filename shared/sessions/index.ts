@@ -239,6 +239,13 @@ export default abstract class Session<T extends TCommonMissionTypes>
       effectsEnabled: true,
     }
   }
+
+  /**
+   * Options for the accessibility of the session.
+   */
+  public static get ACCESSIBILITY_OPTIONS(): TSessionAccessibility[] {
+    return ['public', 'id-required', 'invite-only', 'testing']
+  }
 }
 
 /**
@@ -246,8 +253,14 @@ export default abstract class Session<T extends TCommonMissionTypes>
  * @option 'public' The session is accessible to all students.
  * @option 'id-required' The session is accessible to students with the session ID.
  * @option 'invite-only' The session is accessible to students with an invite.
+ * @option 'testing' The session is only accessible to the owner for testing,
+ * and it is destroyed after the owner leaves.
  */
-export type TSessionAccessibility = 'public' | 'id-required' | 'invite-only'
+export type TSessionAccessibility =
+  | 'public'
+  | 'id-required'
+  | 'invite-only'
+  | 'testing'
 
 /**
  * Configuration options for a session, customizing the experience.

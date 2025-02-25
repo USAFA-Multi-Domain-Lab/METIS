@@ -24,9 +24,9 @@ export default function LobbyPage({
 }: TLobbyPage_P): JSX.Element | null {
   /* -- state -- */
 
+  const {} = useRequireLogin()
   const globalContext = useGlobalContext()
   const [server] = globalContext.server
-  const [_] = useRequireLogin()
   const { beginLoading, finishLoading, navigateTo, handleError, prompt } =
     globalContext.actions
 

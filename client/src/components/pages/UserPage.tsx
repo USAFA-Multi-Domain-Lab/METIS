@@ -107,7 +107,7 @@ export default function UserPage({ userId }: IUserPage): JSX.Element | null {
   /* -- LOGIN-SPECIFIC LOGIC -- */
 
   // Require login for page.
-  const [login] = useRequireLogin()
+  const { login } = useRequireLogin()
 
   // Grab the user currently logged in.
   const { user: currentUser } = login

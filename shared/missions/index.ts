@@ -147,7 +147,7 @@ export default abstract class Mission<
   public toJson(
     options: TMissionJsonOptions = { exportType: 'standard' },
   ): TCommonMissionJson {
-    let { includeId = false } = options
+    let { includeId = true } = options
 
     // Predefine limited JSON.
     let json: TCommonMissionJson = {
@@ -736,7 +736,7 @@ export type TMissionOptions = {
 export type TMissionJsonBaseOptions = {
   /**
    * Whether or not to include the ID in the JSON.
-   * @default false
+   * @default true
    */
   includeId?: boolean
 }

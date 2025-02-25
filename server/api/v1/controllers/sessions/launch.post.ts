@@ -5,7 +5,7 @@ import { sessionLogger } from 'metis/server/logging'
 import ServerMission from 'metis/server/missions'
 import SessionServer from 'metis/server/sessions'
 import ServerUser from 'metis/server/users'
-import { TSessionConfig } from 'metis/sessions'
+import Session, { TSessionConfig } from 'metis/sessions'
 import ApiResponse from '../../library/response'
 /**
  * This will launch a session for a user to execute a mission.
@@ -23,14 +23,17 @@ const launchSession = async (request: Request, response: Response) => {
     infiniteResources,
     effectsEnabled,
   } = request.body
+
   // Define the session configuration.
   let sessionConfig: TSessionConfig = {
-    name,
-    accessibility,
-    autoAssign,
-    infiniteResources,
-    effectsEnabled,
+    name: name ?? Session.DEFAULT_CONFIG.name,
+    accessibility: accessibility ?? Session.DEFAULT_CONFIG.accessibility,
+    autoAssign: autoAssign ?? Session.DEFAULT_CONFIG.autoAssign,
+    infiniteResources:
+      infiniteResources ?? Session.DEFAULT_CONFIG.infiniteResources,
+    effectsEnabled: effectsEnabled ?? Session.DEFAULT_CONFIG.effectsEnabled,
   }
+
   // Get the user who is launching the session.
   let owner: ServerUser = response.locals.user
 

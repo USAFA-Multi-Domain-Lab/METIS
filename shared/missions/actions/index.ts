@@ -14,7 +14,6 @@ import {
 } from '../effects'
 import { TCommonMissionForce, TForce } from '../forces'
 import { TCommonMissionNode, TNode } from '../nodes'
-import { SingleTypeObject } from 'metis/toolbox/objects'
 
 /**
  * An action that can be executed on a mission node, causing a certain effect.

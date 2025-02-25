@@ -19,7 +19,7 @@ import {
   TServerMethod,
 } from '../../../shared/connect/data'
 import { ServerEmittedError } from '../../../shared/connect/errors'
-import { SingleTypeObject } from '../../../shared/toolbox/objects'
+import { TSingleTypeObject } from '../../../shared/toolbox/objects'
 
 /**
  * METIS web-socket-based, server connection.
@@ -79,7 +79,7 @@ export default class ServerConnection
    * A map of request IDs to response listeners. These listeners will be called
    * anytime an event is received from the server with the corresponding request ID.
    */
-  protected responseListeners: SingleTypeObject<
+  protected responseListeners: TSingleTypeObject<
     TServerResponseListener<TResponseMethod>
   > = {}
 

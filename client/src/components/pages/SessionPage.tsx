@@ -56,7 +56,7 @@ export default function SessionPage({
   )
   const [selectedForce, selectForce] = useState<ClientMissionForce | null>(null)
   const [resourcesRemaining, setResourcesRemaining] = useState<number>(0)
-  const [login] = useRequireLogin()
+  const { login } = useRequireLogin()
   const [rightPanelTab, setRightPanelTab] =
     useState<TSessionRightPanelTab>('output')
 
@@ -217,15 +217,20 @@ export default function SessionPage({
    */
   const navigation = compute(() => {
     let links: TWithKey<TButtonText_P>[] = []
+    let { accessibility } = session.config
+
+    // todo: Clean this up.
 
     // Push end and reset session buttons, if user
     // is authorized.
     if (session.member.isAuthorized('startEndSessions')) {
-      links.push({
-        key: 'end-session',
-        text: 'End Session',
-        onClick: onClickEndSession,
-      })
+      if (accessibility !== 'testing') {
+        links.push({
+          key: 'end-session',
+          text: 'End Session',
+          onClick: onClickEndSession,
+        })
+      }
       links.push({
         key: 'reset-session',
         text: 'Reset Session',
@@ -234,7 +239,15 @@ export default function SessionPage({
     }
 
     // Push quit button.
-    links.push(HomeLink(globalContext, { text: 'Quit' }))
+    if (accessibility === 'testing') {
+      links.push({
+        key: 'quit-test',
+        text: 'Back to Mission',
+        onClick: () => navigateTo('MissionPage', { missionId: mission._id }),
+      })
+    } else {
+      links.push(HomeLink(globalContext, { text: 'Quit' }))
+    }
 
     // Return navigation.
     return {

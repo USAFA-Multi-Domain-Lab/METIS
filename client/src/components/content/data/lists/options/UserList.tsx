@@ -23,7 +23,7 @@ export default function UserList({
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
-  const [login] = useRequireLogin()
+  const { login } = useRequireLogin()
   const { notify, beginLoading, finishLoading, navigateTo, prompt } =
     globalContext.actions
 

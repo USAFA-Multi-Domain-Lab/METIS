@@ -47,7 +47,7 @@ export default function NodeEntry({
   const [executable, setExecutable] = useState<boolean>(node.executable)
   const [device, setDevice] = useState<boolean>(node.device)
   const [applyColorFill, setApplyColorFill] = useState<boolean>(false)
-  const [login] = useRequireLogin()
+  const { login } = useRequireLogin()
 
   /* -- COMPUTED -- */
   /**
