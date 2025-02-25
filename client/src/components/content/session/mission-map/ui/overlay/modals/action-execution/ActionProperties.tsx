@@ -4,6 +4,7 @@ import ClientMissionAction from 'src/missions/actions'
 import { compute } from 'src/toolbox'
 import { useEventListener } from 'src/toolbox/hooks'
 import { TExecutionCheats } from '../../../../../../../../../../shared/missions/actions/executions'
+import { TSessionConfig } from '../../../../../../../../../../shared/sessions'
 import './ActionProperties.scss'
 
 /**
@@ -12,6 +13,7 @@ import './ActionProperties.scss'
 export default function ActionProperties({
   action,
   cheats,
+  config,
 }: TActionProperties_P): JSX.Element | null {
   /* -- STATE -- */
 
@@ -130,9 +132,14 @@ export default function ActionProperties({
       classList.push('Updated')
     }
 
+    // Add the 'InfiniteResources' class if the session has
+    // infinite resources enabled.
+    if (config.infiniteResources) {
+      classList.push('InfiniteResources')
+    }
     // Add the 'CheatsApplied' class if the resource cost
     // is disabled by cheats.
-    if (cheats.zeroCost) {
+    else if (cheats.zeroCost) {
       classList.push('CheatsApplied')
     }
 
@@ -179,4 +186,8 @@ type TActionProperties_P = {
    * The cheats that will be applied to the action.
    */
   cheats: TExecutionCheats
+  /**
+   * The session configuration.
+   */
+  config: TSessionConfig
 }

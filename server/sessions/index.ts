@@ -1120,7 +1120,6 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     const { effectsEnabled, infiniteResources } = config
     let { connection } = member
     let { actionId, cheats = {} } = event.data
-    let { zeroCost } = cheats
     let action: ServerMissionAction | undefined = this.actions.get(actionId)
     let request = connection.buildResponseReqData(event)
 
@@ -1185,7 +1184,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     // emit an error.
     if (
       action.force.resourcesRemaining < action.resourceCost &&
-      !zeroCost &&
+      !cheats.zeroCost &&
       !infiniteResources
     ) {
       return connection.emitError(

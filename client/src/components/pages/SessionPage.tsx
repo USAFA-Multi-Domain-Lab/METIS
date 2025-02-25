@@ -11,7 +11,6 @@ import {
   useRequireLogin,
 } from 'src/toolbox/hooks'
 import { DefaultLayout, TPage_P } from '.'
-import MapToolbox from '../../../../shared/toolbox/maps'
 import { TWithKey } from '../../../../shared/toolbox/objects'
 import Prompt from '../content/communication/Prompt'
 import { HomeLink } from '../content/general-layout/Navigation'
@@ -102,33 +101,6 @@ export default function SessionPage({
     }
     // If the node is ready to execute...
     else if (node.readyToExecute) {
-      // If the user is authorized to use cheats,
-      // set the node to execute.
-      if (session.member.isAuthorized('cheats')) {
-        setNodeToExecute(node)
-        return
-      }
-
-      // If there are no more resources left
-      // to spend, notify the user.
-      if (node.force.resourcesRemaining === 0) {
-        notify(`You have no more resources left to spend.`)
-        return
-      }
-
-      // If there is not enough resources to
-      // execute an action, notify the user.
-      if (
-        !MapToolbox.mapToArray(
-          node.actions,
-          (action) => action.resourceCost <= node.force.resourcesRemaining,
-        ).includes(true)
-      ) {
-        notify('Insufficient resources available to execute action.')
-        return
-      }
-
-      // Else, select the node.
       setNodeToExecute(node)
     }
   }

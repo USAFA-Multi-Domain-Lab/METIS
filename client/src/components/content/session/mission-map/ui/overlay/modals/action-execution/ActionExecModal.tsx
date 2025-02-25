@@ -42,7 +42,7 @@ export default function ActionExecModal({
     () => {
       // If there is only one action, select it.
       if (node.actions.size === 1) {
-        return node.actions.values().next().value
+        return node.actions.values().next().value!
       }
       // Otherwise, select nothing.
       else {
@@ -178,11 +178,11 @@ export default function ActionExecModal({
     // select it.
     else if (node.actions.size === 1) {
       // Get the action.
-      let action: ClientMissionAction = node.actions.values().next().value
+      let action: ClientMissionAction = node.actions.values().next().value!
 
       // Select the action if not already selected.
       if (selectedAction?._id !== action._id) {
-        selectAction(node.actions.values().next().value)
+        selectAction(node.actions.values().next().value!)
       }
     }
   }, [node.actions.size])
@@ -212,6 +212,7 @@ export default function ActionExecModal({
    */
   const execute = () => {
     if (ready) {
+      console.log(cheats)
       session.executeAction(selectedAction!._id, {
         // This will be ignored if the member
         // does not have authorization to use cheats.
@@ -234,6 +235,7 @@ export default function ActionExecModal({
         <ExecOption
           key={action._id}
           action={action}
+          session={session}
           select={() => {
             selectAction(action)
             setDropDownExpanded(false)
@@ -325,7 +327,11 @@ export default function ActionExecModal({
 
     // Render JSX.
     return (
-      <ActionProperties action={selectedAction!} cheats={authorizedCheats} />
+      <ActionProperties
+        action={selectedAction!}
+        cheats={authorizedCheats}
+        config={session.config}
+      />
     )
   })
 
