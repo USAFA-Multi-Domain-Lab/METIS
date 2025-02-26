@@ -1,7 +1,8 @@
 import Mission, {
-  TCommonMissionJson,
+  TMissionJson,
   TCommonMissionTypes,
   TMissionOptions,
+  TCommonMissionJson,
 } from 'metis/missions'
 import { TCommonMissionForceJson } from 'metis/missions/forces'
 import {
@@ -50,7 +51,9 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
    * @param options The options for creating the mission.
    */
   public constructor(
-    data: Partial<TCommonMissionJson> = ServerMission.DEFAULT_PROPERTIES,
+    data:
+      | Partial<TMissionJson>
+      | Partial<TCommonMissionJson> = ServerMission.DEFAULT_PROPERTIES,
     options: TServerMissionOptions = {},
   ) {
     // Initialize base properties.

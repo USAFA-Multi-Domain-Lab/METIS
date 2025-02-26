@@ -1,6 +1,6 @@
 import { Request, Response } from 'express-serve-static-core'
 import fs from 'fs'
-import Mission, { TCommonMissionJson } from 'metis/missions'
+import Mission, { TCommonMissionJson, TMissionJson } from 'metis/missions'
 import MetisServer from 'metis/server'
 import InfoModel from 'metis/server/database/models/info'
 import MissionModel from 'metis/server/database/models/missions'

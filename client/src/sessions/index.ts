@@ -200,7 +200,13 @@ export default class SessionClient extends Session<TClientMissionTypes> {
       ownerFirstName: this.ownerFirstName,
       ownerLastName: this.ownerLastName,
       launchedAt: this.launchedAt.toISOString(),
-      mission: this.mission.toJson({ exportType: 'session-limited' }),
+      mission: this.mission.toJson({
+        forceExposure: { expose: 'none' },
+        sessionDataExposure: {
+          expose: 'user-specific',
+          userId: this.member.userId,
+        },
+      }),
       members: this.members.map((member) => member.toJson()),
       banList: this.banList,
       config: this.config,

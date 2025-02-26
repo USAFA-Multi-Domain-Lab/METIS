@@ -10,7 +10,7 @@ import { TEventListenerTarget } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import { v4 as generateHash } from 'uuid'
 import Mission, {
-  TCommonMissionJson,
+  TMissionJson,
   TCommonMissionTypes,
   TMissionOptions,
 } from '../../../shared/missions'
@@ -288,7 +288,7 @@ export default class ClientMission
    * @param options The options for creating the mission.
    */
   public constructor(
-    data: Partial<TCommonMissionJson> = ClientMission.DEFAULT_PROPERTIES,
+    data: Partial<TMissionJson> = ClientMission.DEFAULT_PROPERTIES,
     options: TClientMissionOptions = {},
   ) {
     // Initialize base properties.
@@ -1207,8 +1207,13 @@ export default class ClientMission
           // Create the mission on the server.
           let { data } = await axios.post<
             any,
-            AxiosResponse<Required<TCommonMissionJson>>
-          >(ClientMission.API_ENDPOINT, this.toJson())
+            AxiosResponse<Required<TMissionJson>>
+          >(
+            ClientMission.API_ENDPOINT,
+            this.toJson({
+              idExposure: false,
+            }),
+          )
           // Update existsOnServer to true.
           this._existsOnServer = true
           // Update the mission ID, if necessary.
@@ -1217,13 +1222,7 @@ export default class ClientMission
         // Update the mission if it does exist.
         else {
           // Update the mission with the current mission.
-          await axios.put(
-            ClientMission.API_ENDPOINT,
-            this.toJson({
-              exportType: 'standard',
-              includeId: true,
-            }),
-          )
+          await axios.put(ClientMission.API_ENDPOINT, this.toJson())
         }
 
         // Resolve.
@@ -1368,7 +1367,7 @@ export default class ClientMission
   ): Promise<ClientMission> {
     return new Promise<ClientMission>(async (resolve, reject) => {
       try {
-        let { data } = await axios.put<any, AxiosResponse<TCommonMissionJson>>(
+        let { data } = await axios.put<any, AxiosResponse<TMissionJson>>(
           `${ClientMission.API_ENDPOINT}/copy/`,
           {
             originalId,
@@ -1401,7 +1400,7 @@ export default class ClientMission
     return new Promise<ClientMission>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
-        let { data } = await axios.get<TCommonMissionJson>(
+        let { data } = await axios.get<TMissionJson>(
           `${ClientMission.API_ENDPOINT}/${_id}/`,
         )
         // Update options.
@@ -1429,7 +1428,7 @@ export default class ClientMission
   ): Promise<ClientMission[]> {
     return new Promise<ClientMission[]>(async (resolve, reject) => {
       try {
-        let { data } = await axios.get<TCommonMissionJson[]>(
+        let { data } = await axios.get<TMissionJson[]>(
           ClientMission.API_ENDPOINT,
         )
         // Update options.

@@ -4,7 +4,11 @@ import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
 import SessionClient from 'src/sessions'
 import { compute } from 'src/toolbox'
-import { useEventListener } from 'src/toolbox/hooks'
+import {
+  useEventListener,
+  useForcedUpdates,
+  useObjectFormSync,
+} from 'src/toolbox/hooks'
 import StringToolbox from '../../../../../../../../../../shared/toolbox/strings'
 import './ExecOption.scss'
 
@@ -15,20 +19,30 @@ import './ExecOption.scss'
  */
 export default function ExecOption({ action, session, select }: TExecOption_P) {
   /* -- STATE -- */
+
   const globalContext = useGlobalContext()
   const [cheats] = globalContext.cheats
-  const [successChance, setSuccessChance] = useState<number>(
-    action.successChance,
+  const [successChanceFormatted, setSuccessChanceFormatted] = useState<string>(
+    action.successChanceFormatted,
   )
-  const [resourceCost, setResourceCost] = useState<number>(action.resourceCost)
-  const [processTime, setProcessTime] = useState<number>(action.processTime)
+  const [processTimeFormatted, setProcessTimeFormatted] = useState<string>(
+    action.processTimeFormatted,
+  )
+  const [resourceCostFormatted, setResourceCostFormatted] = useState<string>(
+    action.resourceCostFormatted,
+  )
+  const [opensNodeFormatted, setOpensNodeFormatted] = useState<string>(
+    action.opensNodeFormatted,
+  )
 
-  /* -- HOOKS -- */
+  /* -- EFFECTS -- */
 
+  // Update the formatted values when the action is modified.
   useEventListener(action.node, 'modify-actions', () => {
-    setSuccessChance(action.successChance)
-    setResourceCost(action.resourceCost)
-    setProcessTime(action.processTime)
+    setSuccessChanceFormatted(action.successChanceFormatted)
+    setProcessTimeFormatted(action.processTimeFormatted)
+    setResourceCostFormatted(action.resourceCostFormatted)
+    setOpensNodeFormatted(action.opensNodeFormatted)
   })
 
   /* -- COMPUTED -- */
@@ -63,11 +77,12 @@ export default function ExecOption({ action, session, select }: TExecOption_P) {
     <div className={optionClassName} key={action._id} onClick={select}>
       <Tooltip
         description={
-          `**Time to execute:** ${processTime / 1000} second(s)\n` +
-          `**Probability of success:** ${successChance * 100}%\n` +
-          `**Resource cost:** ${resourceCost} resource(s)\n` +
-          `**Description:** ${StringToolbox.limit(action.description, 160)}\n` +
-          opensNodeDescription
+          StringToolbox.limit(action.description, 160) +
+          `\n\n` +
+          `**Time:** ${processTimeFormatted}\n` +
+          `**Success Chance:** ${successChanceFormatted}\n` +
+          `**Cost:** ${resourceCostFormatted}\n` +
+          `**Opens Node:** ${opensNodeFormatted}`
         }
       />
       {action.name}

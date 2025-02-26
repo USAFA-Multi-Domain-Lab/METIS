@@ -42,13 +42,9 @@ export default function ExecutionStarted({
       ? `<p>Started executing on ${node.name}.</p>` +
         `<ul>` +
         `<li><u>Action Selected:</u> ${action.name}</li>` +
-        `<li><u>Time to Execute:</u> ${
-          action.processTime / 1000
-        } second(s)</li>` +
-        `<li><u>Probability of Success:</u> ${
-          action.successChance * 100
-        }%</li>` +
-        `<li><u>Resource Cost:</u> ${action.resourceCost} resource(s)</li>` +
+        `<li><u>Success Chance:</u> ${action.successChanceFormatted}</li>` +
+        `<li><u>Time to Execute:</u> ${action.processTimeFormatted}</li>` +
+        `<li><u>Cost:</u> ${action.resourceCostFormatted}</li>` +
         `<li><u>${timeRemainingLabel}</u> ${timeRemaining}</li>` +
         `</ul>`
       : '',

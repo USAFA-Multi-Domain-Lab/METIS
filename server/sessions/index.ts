@@ -1,6 +1,6 @@
 import { TClientEvents, TServerEvents, TServerMethod } from 'metis/connect/data'
 import { ServerEmittedError } from 'metis/connect/errors'
-import { TCommonMissionJson, TMissionJsonOptions } from 'metis/missions'
+import { TMissionJson, TMissionJsonOptions } from 'metis/missions'
 import { TCommonOutputJson } from 'metis/missions/forces/output'
 import ServerMission, { TServerMissionTypes } from 'metis/server/missions'
 import ServerMissionAction from 'metis/server/missions/actions'
@@ -113,7 +113,8 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     // Gather details.
     const { requester } = options
     let missionOptions: TMissionJsonOptions = {
-      exportType: 'session-limited',
+      forceExposure: { expose: 'none' },
+      sessionDataExposure: { expose: 'all' },
     }
     let banList: string[] = []
 
@@ -122,25 +123,28 @@ export default class SessionServer extends Session<TServerMissionTypes> {
       // Gather details.
       let { forceId } = requester
 
+      // Update the session-data exposure to be user
+      // specific to the requester.
+      missionOptions.sessionDataExposure = {
+        expose: 'user-specific',
+        userId: requester.userId,
+      }
+
       // If the requester is assigned to a force,
       // then update the mission options to include
       // data pertinent to the force.
       if (forceId) {
-        missionOptions = {
-          exportType: 'session-force-specific',
+        missionOptions.forceExposure = {
+          expose: 'force-with-revealed-nodes',
           forceId,
-          userId: requester.userId,
         }
       }
 
       // If the requester has complete visibility,
-      // then update the mission options to include
-      // all data.
+      // then update the mission options to expose
+      // all force data.
       if (requester.isAuthorized('completeVisibility')) {
-        missionOptions = {
-          exportType: 'session-complete',
-          userId: requester.userId,
-        }
+        missionOptions.forceExposure = { expose: 'all' }
       }
 
       // If the requester is authorized to manager
@@ -497,11 +501,11 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     let request = member.connection.buildResponseReqData(event)
     // Cache used to not export the same force twice
     // for two members assigned to the same force.
-    const assignmentForceCache: TSingleTypeObject<TCommonMissionJson> = {}
+    const assignmentForceCache: TSingleTypeObject<TMissionJson> = {}
     // Cache complete visibility export.
     let completeVisibilityCache = this.mission.toJson({
-      exportType: 'session-complete',
-      userId: member.userId,
+      forceExposure: { expose: 'all' },
+      sessionDataExposure: { expose: 'all' },
     })
 
     // Loop through members, and emit a start event to
@@ -521,14 +525,20 @@ export default class SessionServer extends Session<TServerMissionTypes> {
         // If the force has not been cached, then cache it.
         if (!assignmentForceCache[forceId]) {
           assignmentForceCache[forceId] = this.mission.toJson({
-            exportType: 'session-force-specific',
-            forceId,
-            userId: member.userId,
+            forceExposure: { expose: 'force-with-revealed-nodes', forceId },
+            sessionDataExposure: {
+              expose: 'all',
+            },
           })
         }
 
         // Get relevant data from the mission for the member.
         let { structure, forces, prototypes } = assignmentForceCache[forceId]
+
+        // Filter the outputs not relevant to the member.
+        forces.forEach(({ filterOutputs }) => {
+          if (filterOutputs) filterOutputs(member.userId)
+        })
 
         // Emit the event to the member.
         member.emit(responseMethod, {
@@ -540,6 +550,11 @@ export default class SessionServer extends Session<TServerMissionTypes> {
       // Else if the member has complete visibility, then
       // provide all data.
       else if (hasCompleteVisibility) {
+        // Filter the outputs not relevant to the member.
+        completeVisibilityCache.forces.forEach(({ filterOutputs }) => {
+          if (filterOutputs) filterOutputs(member.userId)
+        })
+
         // Emit the event to the member.
         member.emit(responseMethod, {
           method: responseMethod,
@@ -1197,7 +1212,12 @@ export default class SessionServer extends Session<TServerMissionTypes> {
         data: {
           nodeId: nodeId,
           revealedChildNodes: node.children.map((node) =>
-            node.toJson({ includeSessionData: true }),
+            node.toJson({
+              sessionDataExposure: {
+                expose: 'user-specific',
+                userId: member.userId,
+              },
+            }),
           ),
           revealedChildPrototypes: node.prototype.children.map((prototype) =>
             prototype.toJson(),
@@ -1233,7 +1253,6 @@ export default class SessionServer extends Session<TServerMissionTypes> {
   ): Promise<void> => {
     // Gather data.
     let { config } = this
-    const { effectsEnabled, infiniteResources } = config
     let { connection } = member
     let { actionId, cheats = {} } = event.data
     let action: ServerMissionAction | undefined = this.actions.get(actionId)
@@ -1368,7 +1387,13 @@ export default class SessionServer extends Session<TServerMissionTypes> {
         if (action.node.opened) {
           // Add child nodes to the completion payload.
           completionPayload.data.revealedChildNodes = action.node.children.map(
-            (node) => node.toJson({ includeSessionData: true }),
+            (node) =>
+              node.toJson({
+                sessionDataExposure: {
+                  expose: 'user-specific',
+                  userId: member.userId,
+                },
+              }),
           )
           // Add child prototypes to the completion payload.
           completionPayload.data.revealedChildPrototypes =

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express-serve-static-core'
-import { TCommonMissionJson } from 'metis/missions'
+import { TMissionJson } from 'metis/missions'
 import MissionModel from 'metis/server/database/models/missions'
 import { databaseLogger } from 'metis/server/logging'
 import ApiResponse from '../../library/response'
@@ -19,7 +19,7 @@ const createMission = async (request: Request, response: Response) => {
     structure,
     forces,
     prototypes,
-  } = request.body as TCommonMissionJson
+  } = request.body as TMissionJson
 
   try {
     // Create mission.

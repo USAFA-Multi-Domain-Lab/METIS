@@ -1,5 +1,5 @@
 import StringToolbox from 'metis/toolbox/strings'
-import { TCommonMissionJson } from '../../shared/missions'
+import { TMissionJson } from '../../shared/missions'
 import { TCommonUserJson } from '../../shared/users'
 import UserAccess from '../../shared/users/accesses'
 
@@ -8,28 +8,27 @@ export const userCredentials = {
   password: 'temppass',
 }
 
-export const createMissionWithNoForceData: Omit<TCommonMissionJson, 'forces'> =
-  {
-    name: 'No Force Data Mission (To Delete)',
-    versionNumber: 1,
-    seed: StringToolbox.generateRandomId(),
-    createdAt: null,
-    updatedAt: null,
-    launchedAt: null,
-    resourceLabel: 'Resources',
-    structure: {
-      '4767fab5-573e-4df3-b1cd-809240804e92': {},
+export const createMissionWithNoForceData: Omit<TMissionJson, 'forces'> = {
+  name: 'No Force Data Mission (To Delete)',
+  versionNumber: 1,
+  seed: StringToolbox.generateRandomId(),
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  launchedAt: null,
+  resourceLabel: 'Resources',
+  structure: {
+    '4767fab5-573e-4df3-b1cd-809240804e92': {},
+  },
+  prototypes: [
+    {
+      _id: '41aea0c0-65f5-4008-a623-1ce41cb3008f',
+      structureKey: '4767fab5-573e-4df3-b1cd-809240804e92',
+      depthPadding: 0,
     },
-    prototypes: [
-      {
-        _id: '41aea0c0-65f5-4008-a623-1ce41cb3008f',
-        structureKey: '4767fab5-573e-4df3-b1cd-809240804e92',
-        depthPadding: 0,
-      },
-    ],
-  }
+  ],
+}
 
-export const testMission: TCommonMissionJson = {
+export const testMission: TMissionJson = {
   name: 'Test Mission (To Delete)',
   versionNumber: 1,
   seed: StringToolbox.generateRandomId(),
@@ -105,7 +104,7 @@ export const testMission: TCommonMissionJson = {
   ],
 }
 
-export const updateMissionWithNoMissionId: TCommonMissionJson = {
+export const updateMissionWithNoMissionId: TMissionJson = {
   name: 'Updated No Force Data (To Delete)',
   versionNumber: 1,
   seed: StringToolbox.generateRandomId(),
@@ -181,10 +180,7 @@ export const updateMissionWithNoMissionId: TCommonMissionJson = {
   ],
 }
 
-export const updateMissionWithNoStructure: Omit<
-  TCommonMissionJson,
-  'structure'
-> = {
+export const updateMissionWithNoStructure: Omit<TMissionJson, 'structure'> = {
   name: 'Update No Structure (To Delete)',
   versionNumber: 1,
   seed: StringToolbox.generateRandomId(),
@@ -257,28 +253,27 @@ export const updateMissionWithNoStructure: Omit<
   ],
 }
 
-export const updateMissionWithNoForceData: Omit<TCommonMissionJson, 'forces'> =
-  {
-    name: 'No Force Data Mission (To Delete)',
-    versionNumber: 1,
-    seed: StringToolbox.generateRandomId(),
-    createdAt: null,
-    updatedAt: null,
-    launchedAt: null,
-    resourceLabel: 'Resources',
-    structure: {
-      '4767fab5-573e-4df3-b1cd-809240804e92': {},
+export const updateMissionWithNoForceData: Omit<TMissionJson, 'forces'> = {
+  name: 'No Force Data Mission (To Delete)',
+  versionNumber: 1,
+  seed: StringToolbox.generateRandomId(),
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  launchedAt: null,
+  resourceLabel: 'Resources',
+  structure: {
+    '4767fab5-573e-4df3-b1cd-809240804e92': {},
+  },
+  prototypes: [
+    {
+      _id: '0d709d54-2f5e-44e3-b8ce-91534ce02f6f',
+      structureKey: '4767fab5-573e-4df3-b1cd-809240804e92',
+      depthPadding: 0,
     },
-    prototypes: [
-      {
-        _id: '0d709d54-2f5e-44e3-b8ce-91534ce02f6f',
-        structureKey: '4767fab5-573e-4df3-b1cd-809240804e92',
-        depthPadding: 0,
-      },
-    ],
-  }
+  ],
+}
 
-export const correctUpdateTestMission: TCommonMissionJson = {
+export const correctUpdateTestMission: TMissionJson = {
   name: 'Updated Test Mission (To Delete)',
   versionNumber: 1,
   seed: StringToolbox.generateRandomId(),

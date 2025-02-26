@@ -1,12 +1,12 @@
 // -- initial --
 
-import { TCommonMissionJson } from 'metis/missions'
+import { TMissionJson } from 'metis/missions'
 import ServerMissionAction from '../missions/actions'
 import ServerMissionForce from '../missions/forces'
 import ServerMissionNode from '../missions/nodes'
 import ServerMissionPrototype from '../missions/nodes/prototypes'
 
-export let demoMissionData: TCommonMissionJson = {
+export let demoMissionData: TMissionJson = {
   name: 'METIS > ASCOT 7 DEMO',
   versionNumber: 1,
   seed: '6499bf5b8214651c898d125f',
