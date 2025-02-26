@@ -19,7 +19,8 @@ import NodeArg from 'metis/target-environments/args/node-arg'
 import { AnyObject } from 'metis/toolbox/objects'
 import StringToolbox, { HEX_COLOR_REGEX } from 'metis/toolbox/strings'
 import mongoose, {
-  Document,
+  DefaultSchemaOptions,
+  HydratedDocument,
   Model,
   model,
   ProjectionType,
@@ -37,28 +38,24 @@ const PROCESS_TIME_MAX = 3600 /*seconds*/ * 1000
 /* -- FUNCTIONS -- */
 
 /**
- * Transforms the ObjectId to a string.
+ * Transforms the mission document to JSON.
  * @param doc The mongoose document which is being converted.
  * @param ret The plain object representation which has been converted.
  * @param options The options in use.
- * @returns
+ * @returns The JSON representation of a `Mission` document.
  */
-const transformObjectIdToString = (
-  doc: TMissionDoc,
-  ret: TCommonMissionJson,
-  options: any,
-) => {
-  if (ret._id) ret._id = ret._id.toString()
-  return ret
+const toJson = (doc: TMissionDoc, ret: TCommonMissionJson, options: any) => {
+  return {
+    ...ret,
+    _id: doc.id,
+  }
 }
 
 /**
  * Modifies the query to hide deleted missions and remove unneeded properties.
  * @param query The query to modify.
  */
-const queryForApiResponse = (
-  query: Query<TMissionSchema, TMissionModel>,
-): void => {
+const queryForApiResponse = (query: TPreMissionQuery): void => {
   // Get projection.
   let projection = query.projection()
 
@@ -114,8 +111,8 @@ const isNonNegativeInteger = (value: number): boolean => {
  */
 const findByIdAndModify = (
   _id: any,
-  projection?: ProjectionType<TMissionSchema> | null,
-  options?: QueryOptions<TMissionSchema> | null,
+  projection?: ProjectionType<TMission> | null,
+  options?: QueryOptions<TMission> | null,
   updates?: Partial<TCommonMissionJson> | null,
 ): Promise<TMissionDoc | null> => {
   return new Promise<TMissionDoc | null>(async (resolve, reject) => {
@@ -736,9 +733,14 @@ const sanitizeHtml = (html: string): string => {
  * The schema for a mission in the database.
  */
 export const MissionSchema = new Schema<
-  TMissionSchema,
+  TMission,
   TMissionModel,
-  TMissionMethods
+  TMissionMethods,
+  {},
+  TMissionVirtuals,
+  TMissionStaticMethods,
+  DefaultSchemaOptions,
+  TMissionDoc
 >(
   {
     name: {
@@ -952,10 +954,10 @@ export const MissionSchema = new Schema<
     strict: 'throw',
     minimize: false,
     toJSON: {
-      transform: transformObjectIdToString,
+      transform: toJson,
     },
     toObject: {
-      transform: transformObjectIdToString,
+      transform: toJson,
     },
     statics: {
       findByIdAndModify,
@@ -974,7 +976,7 @@ MissionSchema.pre<TMissionDoc>('save', function (next) {
 })
 
 // Called before a find or update is made to the database.
-MissionSchema.pre<Query<TMissionSchema, TMissionModel>>(
+MissionSchema.pre<TPreMissionQuery>(
   ['find', 'findOne', 'findOneAndUpdate', 'updateOne'],
   function (next) {
     // Modify the query.
@@ -985,9 +987,9 @@ MissionSchema.pre<Query<TMissionSchema, TMissionModel>>(
 )
 
 // Converts ObjectIds to strings.
-MissionSchema.post<Query<TMissionSchema, TMissionModel>>(
+MissionSchema.post<TPostMissionQuery>(
   ['find', 'findOne', 'updateOne', 'findOneAndUpdate'],
-  function (missionData: TMissionSchema | TMissionSchema[]) {
+  function (missionData: TMissionDoc | TMissionDoc[]) {
     // If the mission is null, then return.
     if (!missionData) return
 
@@ -996,7 +998,7 @@ MissionSchema.post<Query<TMissionSchema, TMissionModel>>(
 
     // Transform the ObjectIds to strings.
     for (let missionDatum of missionData) {
-      missionDatum._id = missionDatum._id?.toString()
+      missionDatum._id = missionDatum.id
     }
   },
 )
@@ -1012,8 +1014,9 @@ MissionSchema.post<TMissionDoc>('save', function () {
 
 /**
  * Represents a mission in the database.
+ * @see https://mongoosejs.com/docs/typescript/schemas.html#generic-parameters
  */
-type TMissionSchema = TCommonMissionJson & {
+type TMission = TCommonMissionJson & {
   /**
    * Determines if the mission is deleted.
    */
@@ -1022,11 +1025,13 @@ type TMissionSchema = TCommonMissionJson & {
 
 /**
  * Represents the methods available for a `MissionModel`.
+ * @see https://mongoosejs.com/docs/typescript/statics-and-methods.html
  */
 type TMissionMethods = {}
 
 /**
  * Represents the static methods available for a `MissionModel`.
+ * @see https://mongoosejs.com/docs/typescript/statics-and-methods.html
  */
 type TMissionStaticMethods = {
   /**
@@ -1044,30 +1049,47 @@ type TMissionStaticMethods = {
    */
   findByIdAndModify(
     _id: any,
-    projection?: ProjectionType<TMissionSchema> | null,
-    options?: QueryOptions<TMissionSchema> | null,
+    projection?: ProjectionType<TMission> | null,
+    options?: QueryOptions<TMission> | null,
     updates?: Partial<TCommonMissionJson> | null,
   ): Promise<TMissionDoc | null>
 }
 
 /**
  * Represents a mongoose model for a mission in the database.
+ * @see https://mongoosejs.com/docs/typescript/schemas.html#generic-parameters
  */
-type TMissionModel = Model<TMissionSchema, {}, TMissionMethods> &
+type TMissionModel = Model<TMission, {}, TMissionMethods> &
   TMissionStaticMethods
 
 /**
  * Represents a mongoose document for a mission in the database.
+ * @see https://mongoosejs.com/docs/typescript/schemas.html#generic-parameters
  */
-type TMissionDoc = Document<any, any, TMissionSchema>
+type TMissionDoc = HydratedDocument<TMission, TMissionMethods, TMissionVirtuals>
+
+/**
+ * Represents the virtual properties for a mission in the database.
+ * @see https://mongoosejs.com/docs/tutorials/virtuals.html
+ */
+type TMissionVirtuals = {}
+
+/* -- QUERY TYPES -- */
+
+/**
+ * The type for a pre-query middleware for a `MissionModel`.
+ */
+type TPreMissionQuery = Query<TMission, TMission>
+
+/**
+ * The type for a post-query middleware for a `MissionModel`.
+ */
+type TPostMissionQuery = Query<TMissionDoc, TMissionDoc>
 
 /* -- MODEL -- */
 
 /**
  * The mongoose model for a mission in the database.
  */
-const MissionModel = model<TMissionSchema, TMissionModel>(
-  'Mission',
-  MissionSchema,
-)
+const MissionModel = model<TMission, TMissionModel>('Mission', MissionSchema)
 export default MissionModel
