@@ -216,7 +216,7 @@ export default function ActionEntry({
           <Divider />
           <DetailNumber
             fieldType='required'
-            label='Probability of Success'
+            label='Success Chance'
             stateValue={successChance}
             setState={setSuccessChance}
             // Convert to percentage.

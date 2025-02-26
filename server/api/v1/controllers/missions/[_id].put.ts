@@ -1,5 +1,5 @@
 import { Request, Response } from 'express-serve-static-core'
-import { TCommonMissionJson } from 'metis/missions'
+import { TMissionJson } from 'metis/missions'
 import MissionModel from 'metis/server/database/models/missions'
 import { StatusError } from 'metis/server/http'
 import { databaseLogger } from 'metis/server/logging'
@@ -13,7 +13,7 @@ import ApiResponse from '../../library/response'
  */
 const updateMission = async (request: Request, response: Response) => {
   // Extract the necessary data from the request.
-  let missionUpdates = request.body as Partial<TCommonMissionJson>
+  let missionUpdates = request.body as Partial<TMissionJson>
   let { _id: missionId, name } = missionUpdates
 
   try {

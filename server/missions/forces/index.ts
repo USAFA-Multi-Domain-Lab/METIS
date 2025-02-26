@@ -95,7 +95,7 @@ export default class ServerMissionForce extends MissionForce<TServerMissionTypes
   }
 
   // Implemented
-  protected filterOutputs(userId?: ServerUser['_id']): ServerOutput[] {
+  public filterOutputs(userId?: ServerUser['_id']): ServerOutput[] {
     return this.outputs.filter(
       (output) =>
         output.broadcastType === 'force' ||

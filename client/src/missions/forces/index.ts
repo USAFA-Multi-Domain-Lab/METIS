@@ -476,7 +476,7 @@ export default class ClientMissionForce
    * Filter the outputs based on the conditions of the output and the current user.
    * @returns The filtered outputs.
    */
-  protected filterOutputs(): ClientOutput[] {
+  public filterOutputs(): ClientOutput[] {
     return this.outputs
   }
 

@@ -1,5 +1,5 @@
 import { v4 as generateHash } from 'uuid'
-import {
+import Mission, {
   TCommonMission,
   TCommonMissionType,
   TCommonMissionTypes,
@@ -13,7 +13,7 @@ import {
   TEffectOptions,
 } from '../effects'
 import { TCommonMissionForce, TForce } from '../forces'
-import { TCommonMissionNode, TNode } from '../nodes'
+import { TCommonMissionNode, TNode, TNodeJsonOptions } from '../nodes'
 
 /**
  * An action that can be executed on a mission node, causing a certain effect.
@@ -217,9 +217,10 @@ export default abstract class MissionAction<
   ): TEffect<T>[]
 
   // Implemented
-  public toJson(
-    options: TMissionActionJsonOptions = {},
-  ): TCommonMissionActionJson {
+  public toJson(options: TActionJsonOptions = {}): TCommonMissionActionJson {
+    const { sessionDataExposure = Mission.DEFAULT_SESSION_DATA_EXPOSURE } =
+      options
+
     let json: TCommonMissionActionJson = {
       _id: this._id,
       name: this.name,
@@ -235,6 +236,21 @@ export default abstract class MissionAction<
       postExecutionSuccessText: this.postExecutionSuccessText,
       postExecutionFailureText: this.postExecutionFailureText,
       effects: this.effects.map((effect) => effect.toJson()),
+    }
+
+    switch (sessionDataExposure.expose) {
+      case 'all':
+      case 'user-specific':
+        // Obfuscate any hidden properties within the exported JSON,
+        // preventing the students from seeing them.
+        if (json.processTimeHidden) json.processTime = -1
+        if (json.successChanceHidden) json.successChance = -1
+        if (json.resourceCostHidden) json.resourceCost = -1
+        if (json.opensNodeHidden) json.opensNode = false
+        break
+      case 'none':
+      default:
+        break
     }
 
     return json
@@ -329,9 +345,9 @@ export type TMissionActionOptions = {
 }
 
 /**
- * Options for converting a MissionAction to JSON.
+ * Options for converting a `MissionAction` to JSON.
  */
-export type TMissionActionJsonOptions = {}
+export type TActionJsonOptions = TNodeJsonOptions
 
 /**
  * Interface of the abstract MissionAction class.
@@ -435,7 +451,7 @@ export interface TCommonMissionAction {
    * Converts the action to JSON.
    * @returns the JSON for the action.
    */
-  toJson: (options?: TMissionActionJsonOptions) => TCommonMissionActionJson
+  toJson: (options?: TActionJsonOptions) => TCommonMissionActionJson
   /**
    * Modifies the amount of time it takes to execute the action.
    * @param processTimeOperand The operand to modify the process time by.

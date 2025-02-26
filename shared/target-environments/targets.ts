@@ -188,7 +188,7 @@ export default abstract class Target<
       {
         type: 'number',
         _id: 'successChance',
-        name: 'Probability of Success',
+        name: 'Success Chance',
         required: false,
         min: -100,
         max: 100,

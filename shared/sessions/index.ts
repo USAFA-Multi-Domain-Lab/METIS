@@ -1,6 +1,6 @@
 import {
   TCommonMission,
-  TCommonMissionJson,
+  TMissionJson,
   TCommonMissionTypes,
   TMission,
 } from 'metis/missions'
@@ -336,7 +336,7 @@ export type TSessionJson = {
   /**
    * The mission that is being executed in the session.
    */
-  mission: TCommonMissionJson
+  mission: TMissionJson
   /**
    * The members of the session in the mission.
    */

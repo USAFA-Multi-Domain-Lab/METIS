@@ -1,5 +1,5 @@
 import { v4 as generateHash } from 'uuid'
-import { TCommonMission, TCommonMissionTypes, TMission } from '..'
+import Mission, { TCommonMission, TCommonMissionTypes, TMission } from '..'
 import { Vector2D } from '../../../shared/toolbox/space'
 import ArrayToolbox from '../../toolbox/arrays'
 import MapToolbox from '../../toolbox/maps'
@@ -19,7 +19,7 @@ import {
   default as TCommonActionOutcome,
   TOutcome,
 } from '../actions/outcomes'
-import { TCommonMissionForce, TForce } from '../forces'
+import { TCommonMissionForce, TForce, TForceJsonOptions } from '../forces'
 import MissionPrototype, {
   TCommonMissionPrototype,
   TPrototype,
@@ -352,8 +352,8 @@ export default abstract class MissionNode<
 
   // Implemented
   public toJson(options: TNodeJsonOptions = {}): TMissionNodeJson {
-    let { includeSessionData = false } = options
-
+    const { sessionDataExposure = Mission.DEFAULT_SESSION_DATA_EXPOSURE } =
+      options
     // Construct base JSON.
     let json: TMissionNodeJson = {
       _id: this._id,
@@ -365,39 +365,43 @@ export default abstract class MissionNode<
       executable: this.executable,
       device: this.device,
       actions: MapToolbox.mapToArray(this.actions, (action: TAction) =>
-        action.toJson(),
+        action.toJson(options),
       ),
     }
 
-    // Include session data if includeSessionData
-    // flag was set.
-    if (includeSessionData) {
-      // Construct execution JSON.
-      let executionJson: TActionExecutionJson | null = null
+    // Include session-specific data based on exposure level.
+    switch (sessionDataExposure.expose) {
+      case 'all':
+      case 'user-specific':
+        // Construct execution JSON.
+        let executionJson: TActionExecutionJson | null = null
 
-      if (this.execution !== null) {
-        executionJson = this.execution.toJson()
-      }
+        if (this.execution !== null) {
+          executionJson = this.execution.toJson()
+        }
 
-      // Construct outcome JSON.
-      let outcomeJson: TActionOutcomeJson[] = this.outcomes.map((outcome) =>
-        outcome.toJson(),
-      )
+        // Construct outcome JSON.
+        let outcomeJson: TActionOutcomeJson[] = this.outcomes.map((outcome) =>
+          outcome.toJson(),
+        )
 
-      // Construct session-specific JSON.
-      let sessionJson: TMissionNodeSessionJson = {
-        opened: this.opened,
-        executionState: this.executionState,
-        execution: executionJson,
-        outcomes: outcomeJson,
-        blocked: this.blocked,
-      }
+        // Construct session-specific JSON.
+        let sessionJson: TMissionNodeSessionJson = {
+          opened: this.opened,
+          executionState: this.executionState,
+          execution: executionJson,
+          outcomes: outcomeJson,
+          blocked: this.blocked,
+        }
 
-      // Join session-specific JSON with base JSON.
-      json = {
-        ...json,
-        ...sessionJson,
-      }
+        // Join session-specific JSON with base JSON.
+        json = {
+          ...json,
+          ...sessionJson,
+        }
+        break
+      case 'none':
+        break
     }
 
     // Return finalized JSON.
@@ -709,13 +713,7 @@ export type TMissionNodeJson = TCommonMissionNodeJson &
 /**
  * Options for MissionNode.toJSON method.
  */
-export type TNodeJsonOptions = {
-  /**
-   * Whether to include session-specific data in the JSON export.
-   * @default false
-   */
-  includeSessionData?: boolean
-}
+export type TNodeJsonOptions = Omit<TForceJsonOptions, 'forceExposure'>
 
 /**
  * Options for creating a MissionNode object.

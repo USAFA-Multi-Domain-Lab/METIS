@@ -1,6 +1,11 @@
 import { AnyObject } from 'metis/toolbox/objects'
 import { TCommonUser } from 'metis/users'
-import Mission, { TCommonMission, TCommonMissionTypes, TMission } from '..'
+import Mission, {
+  TCommonMission,
+  TCommonMissionTypes,
+  TMission,
+  TMissionJsonOptions,
+} from '..'
 import context from '../../context'
 import StringToolbox from '../../toolbox/strings'
 import {
@@ -171,27 +176,55 @@ export abstract class MissionForce<
 
   // Implemented
   public toJson(options: TForceJsonOptions = {}): TMissionForceJson {
-    let {
-      revealedOnly = false,
-      includeSessionData = false,
-      userId = undefined,
-    } = options
-
+    let { sessionDataExposure = Mission.DEFAULT_SESSION_DATA_EXPOSURE } =
+      options
     let json: TMissionForceJson = {
       _id: this._id,
       introMessage: this.introMessage,
       name: this.name,
       color: this.color,
       initialResources: this.initialResources,
-      nodes: this.exportNodes({ revealedOnly, includeSessionData }),
+      nodes: this.exportNodes(options),
+      filterOutputs: (userId) => {
+        json.outputs = this.filterOutputs(userId).map((output) =>
+          output.toJson(),
+        )
+      },
     }
 
-    // Include session data if includeSessionData
-    // flag was set.
-    if (includeSessionData) {
+    /**
+     * Includes `resourcesRemaining` in the JSON.
+     */
+    const addResourcesRemaining = () => {
       json.resourcesRemaining = this.resourcesRemaining
-      let filteredOutputs = this.filterOutputs(userId)
-      json.outputs = filteredOutputs.map((output) => output.toJson())
+    }
+
+    /**
+     * Adds the outputs to the JSON.
+     */
+    const addOutputs = (userId?: TCommonUser['_id']) => {
+      if (userId) {
+        json.outputs = this.filterOutputs(userId).map((output) =>
+          output.toJson(),
+        )
+      } else {
+        json.outputs = this.outputs.map((output) => output.toJson())
+      }
+    }
+
+    // Expose force-level session data based on
+    // the options provided.
+    switch (sessionDataExposure.expose) {
+      case 'all':
+        addResourcesRemaining()
+        addOutputs()
+        break
+      case 'user-specific':
+        addResourcesRemaining()
+        addOutputs(sessionDataExposure.userId)
+        break
+      case 'none':
+        break
     }
 
     return json
@@ -204,23 +237,27 @@ export abstract class MissionForce<
    */
   protected exportNodes(options: TExportNodesOptions = {}): TMissionNodeJson[] {
     // Gather details.
-    const { revealedOnly = false, includeSessionData = false } = options
-    let nodes: TNode<T>[] = this.nodes
-    let nodeData: TMissionNodeJson[] = []
+    const { forceExposure = Mission.DEFAULT_FORCE_EXPOSURE } = options
+    let nodes: TNode<T>[]
 
-    // Apply filter if revealedOnly flag
-    // is set.
-    if (revealedOnly) {
-      nodes = nodes.filter((node: TNode<T>) => node.revealed)
+    // Determine which nodes to export based on the
+    // force exposure
+    switch (forceExposure.expose) {
+      case 'all':
+      case 'force-with-all-nodes':
+        nodes = [...this.nodes]
+        break
+      case 'force-with-revealed-nodes':
+        nodes = this.nodes.filter((node) => node.revealed)
+        break
+      case 'none':
+      default:
+        nodes = []
+        break
     }
 
-    // Construct node data.
-    nodeData = nodes.map((node: TNode<T>) =>
-      node.toJson({ includeSessionData: includeSessionData }),
-    )
-
-    // Return the exported node data.
-    return nodeData
+    // Convert nodes to JSON and return.
+    return nodes.map((node) => node.toJson(options))
   }
 
   /**
@@ -239,7 +276,7 @@ export abstract class MissionForce<
    * @param userId The ID of the user for which to filter the outputs.
    * @returns The filtered outputs.
    */
-  protected abstract filterOutputs(userId?: TCommonUser['_id']): TOutput<T>[]
+  public abstract filterOutputs(userId?: TCommonUser['_id']): TOutput<T>[]
 
   // Implemented
   public abstract storeOutput(output: TCommonOutput): void
@@ -361,7 +398,7 @@ export abstract class MissionForce<
   /**
    * Default forces for a mission.
    */
-  public static get DEFAULT_FORCES(): TCommonMissionForceJson[] {
+  public static get DEFAULT_FORCES(): TMissionForceJson[] {
     return [
       {
         ...MissionForce.DEFAULT_PROPERTIES,
@@ -473,7 +510,7 @@ export interface TCommonMissionForce {
    * @param options The options for converting the force to JSON.
    * @returns the JSON for the force.
    */
-  toJson: (options?: TForceJsonOptions) => TCommonMissionForceJson
+  toJson: (options?: TForceJsonOptions) => TMissionForceJson
   /**
    * Gets a node from the given node ID.
    */
@@ -538,6 +575,12 @@ export interface TMissionForceSessionJson {
    * The outputs for a force's output panel.
    */
   outputs: TCommonOutputJson[]
+  /**
+   * Updates the outputs in the JSON, only including
+   * the outputs that are relevant to the given user.
+   * @param userId The ID of the user for which to filter the outputs.
+   */
+  filterOutputs: (userId?: TCommonUser['_id']) => void
 }
 
 /**
@@ -566,24 +609,9 @@ export type TMissionForceOptions = {
 
 /**
  * Options for converting a MissionForce to JSON.
+ * @inheritdoc TMissionJsonOptions
  */
-export type TForceJsonOptions = {
-  /**
-   * Whether or not to only include revealed nodes.
-   * @default false
-   */
-  revealedOnly?: boolean
-  /**
-   * Whether or not to include session data.
-   * @default false
-   */
-  includeSessionData?: boolean
-  /**
-   * The ID of the user for which to include session data.
-   * @default undefined
-   */
-  userId?: TCommonUser['_id']
-}
+export type TForceJsonOptions = Omit<TMissionJsonOptions, 'idExposure'>
 
 /**
  * Options for MissionForce.importNodes.
@@ -604,18 +632,7 @@ export type TNodeImportOptions = {
 /**
  * Options for the MissionForce.exportNodes method.
  */
-export type TExportNodesOptions = {
-  /**
-   * Whether to exclude non-revealed nodes in the export.
-   * @default false
-   */
-  revealedOnly?: boolean
-  /**
-   * Whether or not to include session-specific data in the export.
-   * @default false
-   */
-  includeSessionData?: boolean
-}
+export type TExportNodesOptions = TForceJsonOptions
 
 /**
  * Options for MissionForce.mapRelationships.
