@@ -1,8 +1,8 @@
 import { ReactNode, useState } from 'react'
-import { compute } from 'src/toolbox'
-import './ActionProperty.scss'
 import ClientMissionAction from 'src/missions/actions'
+import { compute } from 'src/toolbox'
 import { useEventListener } from 'src/toolbox/hooks'
+import './ActionProperty.scss'
 
 /**
  * Renders a property of a mission action for display.
@@ -12,6 +12,7 @@ export default function ActionProperty<TKey extends keyof ClientMissionAction>({
   actionKey,
   label,
   cheatsApplied = false,
+  infiniteResources = false,
   renderValue = (value) => value.toString(),
 }: TActionProperty_P<TKey>): JSX.Element | null {
   /* -- STATE -- */
@@ -32,6 +33,9 @@ export default function ActionProperty<TKey extends keyof ClientMissionAction>({
     // Add the 'CheatsApplied' class if the
     // value is disabled by cheats.
     if (cheatsApplied) classList.push('CheatsApplied')
+    // Add the 'InfiniteResources' class if the
+    // session has infinite resources enabled.
+    if (infiniteResources) classList.push('InfiniteResources')
 
     return classList.join(' ')
   })
@@ -89,6 +93,11 @@ export type TActionProperty_P<TKey extends keyof ClientMissionAction> = {
    * @default false
    */
   cheatsApplied?: boolean
+  /**
+   * Whether the session has infinite resources enabled.
+   * @default false
+   */
+  infiniteResources?: boolean
   /**
    * Renders the value of the property.
    * @default (value) => value.toString()

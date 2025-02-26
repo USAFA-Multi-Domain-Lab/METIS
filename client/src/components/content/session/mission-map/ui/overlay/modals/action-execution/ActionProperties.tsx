@@ -112,6 +112,7 @@ export default function ActionProperties({
         actionKey='resourceCost'
         label='Cost'
         cheatsApplied={cheats.zeroCost}
+        infiniteResources={config.infiniteResources}
         renderValue={renderResourceCost}
       />
       <ActionProperty

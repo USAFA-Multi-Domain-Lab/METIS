@@ -25,7 +25,7 @@ export default function ArgDropdown({
     if (arg.type === 'dropdown' && arg.required) {
       // Grab the dropdown option.
       let option: TDropdownArgOption | undefined = arg.options.find(
-        (option: TDropdownArgOption) => option._id === effectArgs[arg._id],
+        (option: TDropdownArgOption) => option.value === effectArgs[arg._id],
       )
 
       // If the option is found then set the dropdown value.
@@ -38,6 +38,7 @@ export default function ArgDropdown({
       return {
         _id: 'temporary-option',
         name: 'Select an option',
+        value: null,
       }
     }
   })
@@ -48,7 +49,7 @@ export default function ArgDropdown({
       if (arg.type === 'dropdown' && !arg.required) {
         // Grab the dropdown option.
         let option: TDropdownArgOption | undefined = arg.options.find(
-          (option: TDropdownArgOption) => option._id === effectArgs[arg._id],
+          (option: TDropdownArgOption) => option.value === effectArgs[arg._id],
         )
 
         // If the option is found then set the dropdown value.
@@ -91,7 +92,7 @@ export default function ArgDropdown({
     // If the argument is required, then update the
     // required value in the effect's arguments.
     if (arg.required) {
-      setEffectArgs((prev) => ({ ...prev, [arg._id]: requiredValue._id }))
+      setEffectArgs((prev) => ({ ...prev, [arg._id]: requiredValue.value }))
     }
     // Or, if the argument is optional...
     else {
@@ -101,7 +102,7 @@ export default function ArgDropdown({
       if (optionalValue !== null) {
         setEffectArgs((prev) => ({
           ...prev,
-          [arg._id]: optionalValue._id,
+          [arg._id]: optionalValue.value,
         }))
       }
       // Or, if the optional value is null and the
@@ -139,7 +140,7 @@ export default function ArgDropdown({
         // *** stored in this state changes. If the value
         // *** in the state doesn't change then the value
         // *** needs to be set manually.
-        setEffectArgs((prev) => ({ ...prev, [arg._id]: requiredValue._id }))
+        setEffectArgs((prev) => ({ ...prev, [arg._id]: requiredValue.value }))
       }
       // Otherwise, set the required value to the default value.
       // *** Note: The default value is mandatory if the

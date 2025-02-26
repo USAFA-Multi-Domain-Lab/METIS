@@ -111,6 +111,7 @@ export default function ArgNumber({
         setState={setRequiredValue}
         minimum={arg.min}
         maximum={arg.max}
+        integersOnly={arg.integersOnly}
         unit={arg.unit}
         placeholder='Enter a number...'
         tooltipDescription={arg.tooltipDescription}
@@ -126,6 +127,7 @@ export default function ArgNumber({
         setState={setOptionalValue}
         minimum={arg.min}
         maximum={arg.max}
+        integersOnly={arg.integersOnly}
         unit={arg.unit}
         placeholder='Enter a number...'
         tooltipDescription={arg.tooltipDescription}

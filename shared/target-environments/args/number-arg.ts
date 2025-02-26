@@ -27,6 +27,7 @@ export default class NumberArg {
           min: arg.min,
           max: arg.max,
           unit: arg.unit,
+          integersOnly: arg.integersOnly,
         }
       : {
           _id: arg._id,
@@ -41,6 +42,7 @@ export default class NumberArg {
           min: arg.min,
           max: arg.max,
           unit: arg.unit,
+          integersOnly: arg.integersOnly,
         }
   }
 
@@ -67,6 +69,7 @@ export default class NumberArg {
           min: arg.min,
           max: arg.max,
           unit: arg.unit,
+          integersOnly: arg.integersOnly,
         }
       : {
           _id: arg._id,
@@ -81,6 +84,7 @@ export default class NumberArg {
           min: arg.min,
           max: arg.max,
           unit: arg.unit,
+          integersOnly: arg.integersOnly,
         }
   }
 }
@@ -109,6 +113,10 @@ export type TNumberArg = TBaseArg &
      * The unit of measurement for the argument.
      */
     unit?: string
+    /**
+     * Determines if only integers are allowed for the argument's value.
+     */
+    integersOnly?: boolean
   }
 /**
  * The optional number argument type for a target.
@@ -154,6 +162,10 @@ export type TNumberArgJson = TBaseArgJson &
      * The unit of measurement for the argument.
      */
     unit?: string
+    /**
+     * Determines if only integers are allowed for the argument's value.
+     */
+    integersOnly?: boolean
   }
 /**
  * The optional number argument type for a target.

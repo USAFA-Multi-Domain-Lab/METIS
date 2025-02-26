@@ -14,6 +14,7 @@ import ServerMissionForce from 'metis/server/missions/forces'
 import ServerMissionNode from 'metis/server/missions/nodes'
 import ServerTargetEnvironment from 'metis/server/target-environments'
 import { TTargetArg } from 'metis/target-environments/args'
+import DropdownArg from 'metis/target-environments/args/dropdown-arg'
 import ForceArg from 'metis/target-environments/args/force-arg'
 import NodeArg from 'metis/target-environments/args/node-arg'
 import { AnyObject } from 'metis/toolbox/objects'
@@ -31,6 +32,7 @@ import mongoose, {
 
 let ObjectId = mongoose.Types.ObjectId
 
+/* -- CONSTANTS -- */
 const NODE_DATA_MIN_LENGTH = 1
 const ACTIONS_MIN_LENGTH = 1
 const PROCESS_TIME_MAX = 3600 /*seconds*/ * 1000
@@ -84,14 +86,19 @@ const queryForApiResponse = (query: TPreMissionQuery): void => {
 /* -- SCHEMA VALIDATION HELPERS -- */
 
 /**
+ * Global validator for integers.
+ * @param value The value to validate.
+ */
+const isInteger = (value: number): boolean => Math.floor(value) === value
+
+/**
  * Global validator for non-negative integers.
  * @param value The value to validate.
  */
 const isNonNegativeInteger = (value: number): boolean => {
-  let isInteger: boolean = Math.floor(value) === value
   let isNonNegative: boolean = value >= 0
 
-  return isInteger && isNonNegative
+  return isInteger(value) && isNonNegative
 }
 
 /* -- SCHEMA STATIC FUNCTIONS -- */
@@ -217,41 +224,17 @@ const validateMissionEffects = (
               }
 
               // Get the value.
-              let value = effect.args[effectArgId]
-              // Ensure the value is of the correct type.
-              if (
-                (arg.type === 'string' ||
-                  arg.type === 'large-string' ||
-                  arg.type === 'dropdown') &&
-                typeof value !== 'string'
-              ) {
-                throw new Error(
-                  `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "string."`,
-                )
-              } else if (
-                arg &&
-                arg.type === 'number' &&
-                typeof value !== 'number'
-              ) {
-                throw new Error(
-                  `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "number."`,
-                )
-              } else if (
-                arg &&
-                arg.type === 'boolean' &&
-                typeof value !== 'boolean'
-              ) {
-                throw new Error(
-                  `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "boolean."`,
-                )
-              }
+              const value = effect.args[effectArgId]
 
-              // If the argument is a dropdown, ensure the value one of the options.
-              // Ensure the argument is a dropdown.
               if (arg.type === 'dropdown') {
-                // Get the option.
-                let option = arg.options.find((option) => option._id === value)
+                if (!DropdownArg.OPTION_VALUE_TYPES.includes(typeof value)) {
+                  throw new Error(
+                    `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "string", "number", "boolean", "object", or "undefined."`,
+                  )
+                }
+
                 // Ensure the option exists.
+                let option = arg.options.find((option) => option._id === value)
                 if (!option) {
                   throw new Error(
                     `The argument with ID ("${effectArgId}") has a value ("${value}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) that is not a valid option in the effect's target ({ _id: "${target._id}", name: "${target.name}" }).`,
@@ -259,17 +242,30 @@ const validateMissionEffects = (
                 }
               }
 
-              // If the argument is a string, ensure the value matches the pattern.
-              if (arg.type === 'string' && arg.pattern) {
-                let isValid = arg.pattern.test(value)
-                if (isValid === false) {
+              if (arg.type === 'string') {
+                if (typeof value !== 'string') {
+                  throw new Error(
+                    `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "string."`,
+                  )
+                }
+
+                // Ensure the string-argument passes the custom validation.
+                let isValid = arg.pattern?.test(value)
+                if (!isValid) {
                   throw new Error(
                     `The argument with ID ("${effectArgId}") has a value ("${value}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) that is invalid.`,
                   )
                 }
               }
 
-              // Ensure the force argument has the correct type.
+              if (arg.type === 'large-string') {
+                if (typeof value !== 'string') {
+                  throw new Error(
+                    `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "string."`,
+                  )
+                }
+              }
+
               if (arg.type === 'force') {
                 if (typeof value !== 'object') {
                   throw new Error(
@@ -292,7 +288,6 @@ const validateMissionEffects = (
                 }
               }
 
-              // Ensure the node argument has the correct type.
               if (arg.type === 'node') {
                 if (typeof value !== 'object') {
                   throw new Error(
@@ -313,6 +308,28 @@ const validateMissionEffects = (
                     )}") within the effect ({ _id: "${effect._id}", name: "${
                       effect.name
                     }" }) that has missing properties that are required.`,
+                  )
+                }
+              }
+
+              if (arg.type === 'number') {
+                if (typeof value !== 'number') {
+                  throw new Error(
+                    `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "number."`,
+                  )
+                }
+
+                if (arg.integersOnly && !isInteger(value)) {
+                  throw new Error(
+                    `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is not an integer.`,
+                  )
+                }
+              }
+
+              if (arg.type === 'boolean') {
+                if (typeof value !== 'boolean') {
+                  throw new Error(
+                    `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "boolean."`,
                   )
                 }
               }
@@ -899,7 +916,7 @@ export const MissionSchema = new Schema<
                         set: sanitizeHtml,
                       },
                       effects: {
-                        // Effect validation takes places in the pre-save hook.
+                        //! Effect validation takes places in the pre-save hook.
                         type: [
                           {
                             _id: { type: String, required: true },
