@@ -3,14 +3,16 @@ import Placeholder from '@tiptap/extension-placeholder'
 import Underline from '@tiptap/extension-underline'
 import { Editor, EditorContent, EditorEvents, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import { useGlobalContext } from 'src/context'
 import { compute } from 'src/toolbox'
 import {
   TButtonSvgDisabled,
   TButtonSvgType,
-} from '../user-controls/buttons/ButtonSvg'
-import ButtonSvgPanel_v2 from '../user-controls/buttons/ButtonSvgPanel_v2'
+} from '../../user-controls/buttons/ButtonSvg'
+import ButtonSvgPanel_v2 from '../../user-controls/buttons/ButtonSvgPanel_v2'
 import './RichText.scss'
+import MetisSpan from './nodes/span'
+import MetisParagraph from './nodes/paragraph'
+import { TRichText_P } from '.'
 
 /**
  * Displays and manages rich text.
@@ -31,7 +33,7 @@ export default function RichText({
   } = options ?? {}
 
   /* -- GLOBAL CONTEXT -- */
-  const { prompt } = useGlobalContext().actions
+  // const { prompt } = useGlobalContext().actions
 
   /* -- COMPUTED -- */
 
@@ -67,23 +69,23 @@ export default function RichText({
     // Get the previous URL if it exists.
     const prevUrl = editor.getAttributes('link').href
     // Prompt the user for a URL.
-    const { choice, text: url } = await prompt('', ['Cancel', 'Submit'], {
-      textField: {
-        boundChoices: ['Submit'],
-        label: 'URL',
-        initialValue: prevUrl,
-      },
-      defaultChoice: 'Submit',
-    })
-    // Set the link.
-    if (choice === 'Submit') {
-      editor
-        .chain()
-        .focus()
-        .extendMarkRange('link')
-        .setLink({ href: url })
-        .run()
-    }
+    // const { choice, text: url } = await prompt('', ['Cancel', 'Submit'], {
+    //   textField: {
+    //     boundChoices: ['Submit'],
+    //     label: 'URL',
+    //     initialValue: prevUrl,
+    //   },
+    //   defaultChoice: 'Submit',
+    // })
+    // // Set the link.
+    // if (choice === 'Submit') {
+    //   editor
+    //     .chain()
+    //     .focus()
+    //     .extendMarkRange('link')
+    //     .setLink({ href: url })
+    //     .run()
+    // }
   }
 
   /**
@@ -183,6 +185,8 @@ export default function RichText({
         Link.configure({
           protocols: ['http', 'https'],
         }),
+        MetisParagraph,
+        MetisSpan,
       ],
     },
     [deps],
@@ -216,54 +220,4 @@ export default function RichText({
       <EditorContent editor={editor} />
     </div>
   )
-}
-
-/**
- * Props for `RichText` component.
- */
-export type TRichText_P = {
-  options?: TRichTextOptions
-  /**
-   * The dependencies for the component.
-   * @note This is used to re-render the editor when the dependencies change.
-   */
-  deps?: React.DependencyList
-}
-
-/**
- * The options for the `RichText` component.
- */
-export type TRichTextOptions = {
-  /**
-   * The content to display in the editor.
-   */
-  content?: string
-  /**
-   * Indicates whether the editor is editable.
-   * @default true
-   */
-  editable?: boolean
-  /**
-   * The placeholder text.
-   * @default 'Enter text here...'
-   */
-  placeholder?: string
-  /**
-   * The class name for the list items in the editor.
-   */
-  listClassName?: string
-  /**
-   * The class name for the root element.
-   */
-  className?: string
-  /**
-   * The event handler for the update event.
-   * @note Equivalent to the `onChange` event for a text input.
-   */
-  onUpdate?: (props: EditorEvents['update']) => void
-  /**
-   * The event handler for the blur event.
-   * @note Equivalent to the `onBlur` event for a text input.
-   */
-  onBlur?: (props: EditorEvents['blur']) => void
 }

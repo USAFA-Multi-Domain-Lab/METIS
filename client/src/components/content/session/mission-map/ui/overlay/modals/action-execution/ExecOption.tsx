@@ -64,23 +64,23 @@ export default function ExecOption({ action, session, select }: TExecOption_P) {
     return classList.join(' ')
   })
 
-  /**
-   * A description which informs the user whether the action
-   * opens a node or not.
-   */
-  const opensNodeDescription = compute(() =>
-    action.opensNode ? '**Opens node.**' : '**Does not open node.**',
-  )
+  const descriptionTooltipPortion = compute(() => {
+    let result = StringToolbox.limit(action.description, 160)
+
+    // Add line breaks if there is a description.
+    if (result) result += `\n \n`
+
+    return result
+  })
 
   /* -- RENDER -- */
   return (
     <div className={optionClassName} key={action._id} onClick={select}>
       <Tooltip
         description={
-          StringToolbox.limit(action.description, 160) +
-          `\n\n` +
-          `**Time:** ${processTimeFormatted}\n` +
+          `${descriptionTooltipPortion}` +
           `**Success Chance:** ${successChanceFormatted}\n` +
+          `**Time:** ${processTimeFormatted}\n` +
           `**Cost:** ${resourceCostFormatted}\n` +
           `**Opens Node:** ${opensNodeFormatted}`
         }

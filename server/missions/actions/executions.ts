@@ -13,27 +13,32 @@ export default class ServerActionExecution
 {
   // Implemented
   public readonly action: ServerMissionAction
+
   // Implemented
   public get node(): ServerMissionNode {
     return this.action.node
   }
+
   // Implmented
   public get actionId(): ServerMissionAction['_id'] {
     return this.action._id
   }
+
   // Implemented
   public get nodeId(): ServerMissionNode['_id'] {
     return this.action.node._id
   }
+
   // Implemented
   public readonly start: number
+
   // Implemented
   public readonly end: number
 
   /**
    * The time remaining for the action to complete.
    */
-  get timeRemaining(): number {
+  public get timeRemaining(): number {
     let executionTimeEnd: number = this.end
     let now: number = Date.now()
 

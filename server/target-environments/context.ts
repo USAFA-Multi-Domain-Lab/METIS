@@ -204,7 +204,7 @@ export default class TargetEnvContext {
 
     // Create a new output JSON object.
     let outputJson: Partial<TCommonOutputJson> = {
-      key: 'custom',
+      type: 'custom',
       forceId: targetForce._id,
       prefix: `${force.name.replaceAll(' ', '-')}:`,
       message,
@@ -271,6 +271,13 @@ export default class TargetEnvContext {
   ) => {
     const targetForce = this.determineTargetForce(options)
     this.session.modifyResourcePool(targetForce, operand)
+
+    // todo: Remove this.
+    // Log the resource pool modification.
+    this.sendOutput(
+      /*html*/ `Resource pool was modified by ${operand}. Also here is the success chance <success-chance></success-chance>. Also here is the time remaining <time-remaining></time-remaining>.`,
+      { forceId: this.forceId },
+    )
   }
 }
 

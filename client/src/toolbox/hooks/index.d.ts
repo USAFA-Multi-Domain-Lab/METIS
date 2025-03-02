@@ -5,7 +5,7 @@ import User from '../../../../shared/users'
  * Interface for making a class compatible with the `useEventListener`
  * hook.
  */
-export interface TEventListenerTarget<
+export interface TListenerTarget<
   TEventMethod extends string,
   TCallbackArgs extends Array<any> = [],
 > {
@@ -30,6 +30,21 @@ export interface TEventListenerTarget<
     method: TEventMethod,
     callback: (...args: TCallbackArgs) => any,
   ) => void
+}
+
+/**
+ * Advanced listener-target, with a method used to emit events.
+ */
+export interface TListenerTargetEmittable<
+  TEventMethod extends string,
+  TCallbackArgs extends Array<any> = [],
+> extends TListenerTarget<TEventMethod, TCallbackArgs> {
+  /**
+   * Emits an event to the target.
+   * @param method The method of the event to emit.
+   * @param args The arguments to pass to the event.
+   */
+  emitEvent: (method: TEventMethod, ...args: TCallbackArgs) => void
 }
 
 /**

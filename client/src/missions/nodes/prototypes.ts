@@ -1,5 +1,5 @@
 import { TPrototypeButton } from 'src/components/content/session/mission-map/objects/MissionPrototype'
-import { TEventListenerTarget } from 'src/toolbox/hooks'
+import { TListenerTargetEmittable } from 'src/toolbox/hooks'
 import ClientMission, { TClientMissionTypes, TMissionNavigable } from '..'
 import MissionPrototype, {
   TCommonMissionPrototypeJson,
@@ -12,7 +12,7 @@ import { Vector2D } from '../../../../shared/toolbox/space'
  */
 export default class ClientMissionPrototype
   extends MissionPrototype<TClientMissionTypes>
-  implements TEventListenerTarget<TPrototypeEventMethod>, TMissionNavigable
+  implements TListenerTargetEmittable<TPrototypeEventMethod>, TMissionNavigable
 {
   /**
    * The position of the prototype on a mission map.
@@ -135,7 +135,7 @@ export default class ClientMissionPrototype
    * Calls the callbacks of listeners for the given event.
    * @param method The method of the event to emit.
    */
-  protected emitEvent(method: TPrototypeEventMethod): void {
+  public emitEvent(method: TPrototypeEventMethod): void {
     // Call any matching listener callbacks
     // or any activity listener callbacks.
     for (let [listenerEvent, listenerCallback] of this.listeners) {

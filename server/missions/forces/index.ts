@@ -82,7 +82,7 @@ export default class ServerMissionForce extends MissionForce<TServerMissionTypes
     if (!!this.introMessage) {
       // Create the output JSON.
       let outputJson: Partial<TCommonOutputJson> = {
-        key: 'intro',
+        type: 'intro',
         forceId: this._id,
         prefix: `${this.name.replaceAll(' ', '-')}:`,
         message: this.introMessage,

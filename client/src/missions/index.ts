@@ -6,7 +6,7 @@ import SessionClient from 'src/sessions'
 import ClientSessionMember from 'src/sessions/members'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
-import { TEventListenerTarget } from 'src/toolbox/hooks'
+import { TListenerTargetEmittable } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import { v4 as generateHash } from 'uuid'
 import Mission, {
@@ -31,7 +31,7 @@ import ClientActionExecution from './actions/executions'
 import ClientActionOutcome from './actions/outcomes'
 import { ClientEffect } from './effects'
 import ClientMissionForce, { TClientMissionForceOptions } from './forces'
-import ClientOutput from './forces/output'
+import ClientOutput from './forces/outputs'
 import ClientMissionNode from './nodes'
 import ClientMissionPrototype, { TPrototypeRelation } from './nodes/prototypes'
 import MissionTransformation from './transformations'
@@ -45,7 +45,10 @@ import User from '../../../shared/users'
  */
 export default class ClientMission
   extends Mission<TClientMissionTypes>
-  implements TEventListenerTarget<TMissionEvent>, TMissionNavigable, TListItem
+  implements
+    TListenerTargetEmittable<TMissionEvent>,
+    TMissionNavigable,
+    TListItem
 {
   /**
    * Whether the resource exists on the server.
@@ -1557,9 +1560,9 @@ export type TMissionImportResult = {
 export type TStructureChangeListener = (structureChangeKey: string) => void
 
 /**
- * An event that occurs on a node, which can be listened for.
+ * An event that occurs on a mission, which can be listened for.
  * @option 'activity'
- * Triggered when any other event occurs.
+ * Triggered when any event occurs.
  * @option 'structure-change'
  * Triggered when the structure of the mission, including the prototypes and actions
  * that make up the mission, change.
