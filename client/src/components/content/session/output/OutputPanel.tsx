@@ -2,11 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
 import { useEventListener, usePostRenderEffect } from 'src/toolbox/hooks'
-import ExecutionStarted from './ExecutionStarted'
-import './index.scss'
-import Output from './Output'
-import { set } from 'lodash'
+import './OutputPanel.scss'
 import { compute } from 'src/toolbox'
+import { Output } from '.'
 
 /* -- CONSTANTS -- */
 
@@ -134,24 +132,13 @@ export default function OutputPanel({
       <div className='BorderBox'>
         <div className='Outputs' ref={outputsElm}>
           {outputs.map((output) => {
-            switch (output.key) {
-              case 'execution-started':
-                return (
-                  <ExecutionStarted
-                    output={output}
-                    selectNode={selectNode}
-                    key={`output-${output._id}_time-${output.time}`}
-                  />
-                )
-              default:
-                return (
-                  <Output
-                    output={output}
-                    selectNode={selectNode}
-                    key={`output-${output._id}_time-${output.time}`}
-                  />
-                )
-            }
+            return (
+              <Output
+                output={output}
+                selectNode={selectNode}
+                key={`output-${output._id}_time-${output.time}`}
+              />
+            )
           })}
         </div>
         <div className='OutputNavigation'>

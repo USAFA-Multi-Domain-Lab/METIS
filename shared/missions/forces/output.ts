@@ -1,4 +1,4 @@
-import { TCommonMissionTypes } from 'metis/missions'
+import { TCommonMission, TCommonMissionTypes } from 'metis/missions'
 import {
   TAction,
   TCommonMissionAction,
@@ -11,7 +11,6 @@ import IActionExecution, {
 import {
   TCommonMissionNode,
   TCommonMissionNodeJson,
-  TNode,
 } from 'metis/missions/nodes'
 import { TCommonMissionForce, TCommonMissionForceJson, TForce } from '.'
 import StringToolbox from '../../toolbox/strings'
@@ -25,30 +24,44 @@ export default abstract class Output<
 {
   // Implemented
   public readonly _id: TCommonOutput['_id']
+
   // Implemented
-  public readonly key: TCommonOutput['key']
+  public readonly type: TCommonOutput['type']
+
+  public get mission(): TCommonMission {
+    return this.force.mission
+  }
+
   // Implemented
   public readonly force: TForce<T>
+
   // Implemented
-  public readonly node: TNode<T> | null
+  public readonly node: T['node'] | null
+
   // Implemented
-  public readonly action: TAction<T> | null
+  public readonly action: T['action'] | null
+
   // Implemented
   public readonly prefix: TCommonOutput['prefix']
+
   // Implemented
   public readonly message: TCommonOutput['message']
+
   // Implemented
   public readonly time: TCommonOutput['time']
+
   // Implemented
   public readonly timeStamp: TCommonOutput['timeStamp']
+
   /**
    * The current execution in process on the node by an action.
    */
-  protected _execution: TExecution<T> | null
+  protected _execution: T['execution'] | null
+
   /**
    * The current execution in process on the node by an action.
    */
-  public get execution(): TExecution<T> | null {
+  public get execution(): T['execution'] | null {
     return this._execution
   }
 
@@ -63,14 +76,14 @@ export default abstract class Output<
     options: TOutputOptions = {},
   ) {
     this._id = data._id ?? Output.DEFAULT_PROPERTIES._id
-    this.key = data.key ?? Output.DEFAULT_PROPERTIES.key
+    this.type = data.type ?? Output.DEFAULT_PROPERTIES.type
     this.prefix = data.prefix ?? Output.DEFAULT_PROPERTIES.prefix
     this.message = data.message ?? Output.DEFAULT_PROPERTIES.message
     this.time = data.time ?? Output.DEFAULT_PROPERTIES.time
     this.timeStamp = data.timeStamp ?? Output.DEFAULT_PROPERTIES.timeStamp
 
     this.force = force
-    this.node = null
+    this.node = null as any
     this.action = null
     // This gets set in the constructor of the child classes (ClientOutput and ServerOutput).
     this._execution = null
@@ -91,7 +104,7 @@ export default abstract class Output<
   public toJson(): TCommonOutputJson {
     return {
       _id: this._id,
-      key: this.key,
+      type: this.type,
       forceId: this.force._id,
       nodeId: this.node?._id ?? null,
       actionId: this.action?._id ?? null,
@@ -109,7 +122,7 @@ export default abstract class Output<
   public static get DEFAULT_PROPERTIES(): TCommonOutputJson {
     return {
       _id: StringToolbox.generateRandomId(),
-      key: 'custom',
+      type: 'custom',
       forceId: '',
       nodeId: null,
       actionId: null,
@@ -135,15 +148,17 @@ export default abstract class Output<
 }
 
 /**
- * The key used to identify the output type.
+ * Different types of outputs that can be displayed
+ * in a force's output panel.
  */
-type TOutputKey =
+type TOutputType =
   | 'custom'
   | 'intro'
   | 'execution-failed'
   | 'execution-started'
   | 'execution-succeeded'
   | 'pre-execution'
+  | 'dynamic'
 
 /**
  * Options used to create an `Output`.
@@ -159,11 +174,15 @@ export type TCommonOutput = {
    */
   _id: string
   /**
-   * The key used to identify the output type.
+   * Differentiates different types of outputs being used.
    */
-  key: TOutputKey
+  type: TOutputType
   /**
-   * The force where the output panel belongs.
+   * The mission where the output belongs.
+   */
+  get mission(): TCommonMission
+  /**
+   * The force where the output belongs.
    */
   force: TCommonMissionForce
   /**
@@ -209,9 +228,9 @@ export type TCommonOutputJson = {
    */
   _id: string
   /**
-   * The key used to identify the output type.
+   * Differentiates different types of outputs being used.
    */
-  key: TOutputKey
+  type: TOutputType
   /**
    * The ID of the force where the output panel belongs.
    */

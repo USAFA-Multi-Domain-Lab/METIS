@@ -1339,6 +1339,8 @@ export default class SessionServer extends Session<TServerMissionTypes> {
         sessionConfig: config,
         cheats,
         onInit: (execution: ServerActionExecution) => {
+          let { action } = execution
+
           // Construct payload for action execution
           // initiated event.
           let initiationPayload: TServerEvents['action-execution-initiated'] = {
@@ -1362,17 +1364,46 @@ export default class SessionServer extends Session<TServerMissionTypes> {
 
           // Create a new output JSON object.
           let outputJson: Partial<TCommonOutputJson> = {
-            key: 'execution-started',
-            forceId: action!.force._id,
-            nodeId: action!.node._id,
-            actionId: action!._id,
+            type: 'execution-started',
+            forceId: action.force._id,
+            nodeId: action.node._id,
+            actionId: action._id,
             prefix: `${member.user.username.replaceAll(' ', '-')}:`,
+            message: /*html*/ `
+              <p>Executing <i><action-name></action-name></i> on <i><node-name></node-name></i>.</p>
+              <i><action-description></action-description></i>
+              <p></p>
+              <p class="DetailDisplay">
+                <span class="Label">Success Chance</span>
+                <span class="Value">
+                  <success-chance></success-chance>
+                </span>
+              </p>
+              <p class="DetailDisplay">
+                <span class="Label">Time</span>
+                <span class="Value">
+                  <time-remaining></time-remaining> (<process-time></process-time>)
+                </span>
+              </p>
+              <p class="DetailDisplay">
+                <span class="Label">Cost</span>
+                <span class="Value">
+                  <resource-cost></resource-cost>
+                </span>
+              </p>
+              <p class="DetailDisplay">
+                <span class="Label">Opens Node</span>
+                <span class="Value">
+                  <opens-node></opens-node>
+                </span>
+              </p>
+            `,
           }
           // Send the output JSON to the force.
           this.sendOutput(outputJson, { userId: member.userId, execution })
           // Apply the effects for the action that are triggered
           // immediately.
-          this.applyEffects(member, action!, 'immediate')
+          this.applyEffects(member, action, 'immediate')
         },
       })
 
@@ -1409,7 +1440,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
 
         // Create a new output JSON object.
         let outputJson: Partial<TCommonOutputJson> = {
-          key: 'execution-succeeded',
+          type: 'execution-succeeded',
           forceId: action.force._id,
           nodeId: action.node._id,
           prefix: `${member.user.username.replaceAll(' ', '-')}:`,
@@ -1425,7 +1456,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
       else {
         // Create a new output JSON object.
         let outputJson: Partial<TCommonOutputJson> = {
-          key: 'execution-failed',
+          type: 'execution-failed',
           forceId: action.force._id,
           nodeId: action.node._id,
           prefix: `${member.user.username.replaceAll(' ', '-')}:`,
@@ -1530,7 +1561,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
 
           // Create a new output JSON object.
           let outputJson: Partial<TCommonOutputJson> = {
-            key: 'pre-execution',
+            type: 'pre-execution',
             forceId: node.force._id,
             nodeId: node._id,
             prefix: `${member.user.username.replaceAll(' ', '-')}:`,
@@ -1747,7 +1778,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     options: TServerOutputOptions = {},
   ) => {
     // Extract data.
-    let { key, forceId } = outputJson
+    let { type: key, forceId } = outputJson
 
     // Find the force given the ID.
     let force = this.mission.getForce(forceId)

@@ -3,7 +3,8 @@ import { useGlobalContext } from 'src/context'
 import ClientUser from 'src/users'
 import { TLogin } from '../../../../shared/logins'
 import {
-  TEventListenerTarget,
+  TListenerTarget,
+  TListenerTargetEmittable,
   TRequireLoginReturn,
   TResizeObserverOptions,
 } from './index.d'
@@ -85,7 +86,7 @@ export function useEventListener<
   TEventMethod extends string,
   TCallbackArgs extends Array<any>,
 >(
-  target: TEventListenerTarget<TEventMethod, TCallbackArgs> | null,
+  target: TListenerTarget<TEventMethod, TCallbackArgs> | null,
   methods: TEventMethod | TEventMethod[],
   callback: (...args: TCallbackArgs) => any,
   dependencies: React.DependencyList = [],

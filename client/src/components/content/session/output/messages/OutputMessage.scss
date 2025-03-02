@@ -1,0 +1,11 @@
+@import 'src/assets/styles/config.scss';
+
+.OutputMessage {
+  &.OutputMessage_execution-succeeded * {
+    color: $color-success;
+  }
+
+  &.OutputMessage_execution-failed * {
+    color: $color-failure;
+  }
+}

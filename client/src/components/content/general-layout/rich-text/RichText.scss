@@ -1,5 +1,5 @@
 @import 'src/assets/styles/config.scss';
-@import '../form/index.scss';
+@import '../../form/index.scss';
 
 @mixin code-styling() {
   background-color: $color-accent-dark;
@@ -17,8 +17,9 @@
     }
 
     .Editor p {
-      margin: 0;
-      padding: 0;
+      // todo: Determine what to do with this.
+      // margin: 0;
+      // padding: 0;
 
       &:first-of-type {
         display: inline;
@@ -71,6 +72,25 @@
         padding: unset;
         border: unset;
         border-radius: unset;
+      }
+    }
+
+    .DetailDisplay {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      width: 100%;
+      max-width: 30em;
+
+      .Label {
+        font-weight: bold;
+
+        &::after {
+          content: ':';
+        }
+      }
+
+      .Value {
+        color: $color-accent-light;
       }
     }
   }

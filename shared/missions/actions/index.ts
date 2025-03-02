@@ -475,7 +475,6 @@ export interface TCommonMissionAction {
  * @returns The action type.
  */
 export type TAction<T extends TCommonMissionTypes> = T['action']
-
 /**
  * Plain JSON representation of a MissionAction object.
  */

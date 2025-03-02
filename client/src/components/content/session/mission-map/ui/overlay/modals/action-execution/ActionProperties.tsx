@@ -1,4 +1,4 @@
-import RichText from 'src/components/content/general-layout/RichText'
+import RichText from 'src/components/content/general-layout/rich-text/RichText'
 import ClientMissionAction from 'src/missions/actions'
 import { compute } from 'src/toolbox'
 import { TExecutionCheats } from '../../../../../../../../../../shared/missions/actions/executions'

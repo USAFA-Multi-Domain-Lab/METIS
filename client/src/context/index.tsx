@@ -8,7 +8,7 @@ import {
 import { TButtonMenu_P } from 'src/components/content/user-controls/buttons/ButtonMenu'
 import { TButtonSvgType } from 'src/components/content/user-controls/buttons/ButtonSvg'
 import { TButtonText_P } from 'src/components/content/user-controls/buttons/ButtonText'
-import { PAGE_REGISTRY, TPage_P } from 'src/components/pages'
+import { PAGE_REGISTRY, TPage_P, TPageKey } from 'src/components/pages'
 import ServerConnection, { IServerConnectionOptions } from 'src/connect/servers'
 import MetisInfo from 'src/info'
 import ClientLogin from 'src/logins'
@@ -744,7 +744,7 @@ export type TGlobalContextValues = {
   forcedUpdateCounter: number
   server: ServerConnection | null
   login: TLogin<ClientUser>
-  currentPageKey: keyof typeof PAGE_REGISTRY
+  currentPageKey: TPageKey
   currentPageProps: AnyObject
   appMountHandled: boolean
   loading: boolean
@@ -798,13 +798,13 @@ export type TGlobalContextActions = {
    * @param props The props to pass to the destination page.
    */
   navigateTo: <
-    TPageKey extends keyof typeof PAGE_REGISTRY,
-    TComponent extends (typeof PAGE_REGISTRY)[TPageKey],
+    TKey extends TPageKey,
+    TComponent extends (typeof PAGE_REGISTRY)[TKey],
     TProps extends Parameters<TComponent>[0] extends {}
       ? Parameters<TComponent>[0]
       : {},
   >(
-    pageKey: TPageKey,
+    pageKey: TKey,
     props: TProps,
     options?: TNavigateOptions,
   ) => void

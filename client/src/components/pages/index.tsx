@@ -77,3 +77,8 @@ export type TDefaultLayout_P = {
    */
   includeFooter?: boolean
 }
+
+/**
+ * A valid key for a page within the page registry.
+ */
+export type TPageKey = keyof typeof PAGE_REGISTRY

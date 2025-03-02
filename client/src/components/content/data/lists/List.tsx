@@ -43,7 +43,7 @@ const ListContext = React.createContext<TListContextData<any> | null>(null)
 export const useListContext = <TItem extends TListItem>() => {
   const context = useContext(ListContext) as TListContextData<TItem> | null
   if (!context) {
-    throw new Error('useListContext must be used within a ListProvider')
+    throw new Error('useListContext must be used within a list provider')
   }
   return context
 }

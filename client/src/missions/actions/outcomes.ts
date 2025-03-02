@@ -13,6 +13,7 @@ export default class ClientActionOutcome
 {
   // Implemented
   public readonly action: ClientMissionAction
+
   // Implemented
   public get node(): ClientMissionNode {
     return this.action.node

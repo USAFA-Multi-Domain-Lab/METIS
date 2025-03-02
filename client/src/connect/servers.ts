@@ -1,6 +1,6 @@
 import { io, Socket } from 'socket.io-client'
 import SessionClient from 'src/sessions'
-import { TEventListenerTarget } from 'src/toolbox/hooks'
+import { TListenerTarget } from 'src/toolbox/hooks'
 import Logging from 'src/toolbox/logging'
 import { v4 as generateHash } from 'uuid'
 import {
@@ -25,7 +25,7 @@ import { TSingleTypeObject } from '../../../shared/toolbox/objects'
  * METIS web-socket-based, server connection.
  */
 export default class ServerConnection
-  implements TEventListenerTarget<TServerMethod>
+  implements TListenerTarget<TServerMethod>
 {
   /**
    * The web socket connection itself.

@@ -1,6 +1,6 @@
 import memoizeOne from 'memoize-one'
 import { TNodeButton } from 'src/components/content/session/mission-map/objects/MissionNode'
-import { TEventListenerTarget } from 'src/toolbox/hooks'
+import { TListenerTargetEmittable } from 'src/toolbox/hooks'
 import { TClientMissionTypes, TMissionComponent, TMissionNavigable } from '..'
 import { TRequestMethod } from '../../../../shared/connect/data'
 import { TCommonMissionActionJson } from '../../../../shared/missions/actions'
@@ -23,7 +23,7 @@ import ClientMissionPrototype from './prototypes'
  */
 export default class ClientMissionNode
   extends MissionNode<TClientMissionTypes>
-  implements TEventListenerTarget<TNodeEventMethod>, TMissionComponent
+  implements TListenerTargetEmittable<TNodeEventMethod>, TMissionComponent
 {
   /**
    * Listeners for node events.
@@ -244,7 +244,7 @@ export default class ClientMissionNode
    */
   public get execTimeRemaining(): string {
     if (this.execution) {
-      return this.execution.formatTimeRemaining(true)
+      return this.execution.timeRemainingFormatted
     } else {
       return '00:00:00'
     }
@@ -336,7 +336,7 @@ export default class ClientMissionNode
    * Calls the callbacks of listeners for the given node event.
    * @param method The event method emitted.
    */
-  protected emitEvent(method: TNodeEventMethod): void {
+  public emitEvent(method: TNodeEventMethod): void {
     // Call any matching listener callbacks
     // or any activity listener callbacks.
     for (let [listenerMethod, listenerCallback] of this.listeners) {
@@ -511,8 +511,6 @@ export default class ClientMissionNode
 
     // Remove execution.
     this._execution = null
-
-    console.log('revealedChildNodes', revealedChildNodes)
 
     // If the child nodes are revealed, open the node.
     if (revealedChildNodes) {

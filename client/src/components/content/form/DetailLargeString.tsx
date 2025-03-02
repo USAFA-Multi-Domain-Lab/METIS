@@ -4,7 +4,7 @@ import 'react-quill/dist/quill.snow.css'
 import { compute } from 'src/toolbox'
 import { TDetailWithInput_P } from '.'
 import Tooltip from '../communication/Tooltip'
-import RichText from '../general-layout/RichText'
+import RichText from '../general-layout/rich-text/RichText'
 import './DetailLargeString.scss'
 
 /**

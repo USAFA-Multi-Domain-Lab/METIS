@@ -11,10 +11,8 @@ import {
   useRequireLogin,
 } from 'src/toolbox/hooks'
 import { DefaultLayout, TPage_P } from '.'
-import MapToolbox from '../../../../shared/toolbox/maps'
 import { TWithKey } from '../../../../shared/toolbox/objects'
 import Prompt from '../content/communication/Prompt'
-import { HomeLink } from '../content/general-layout/Navigation'
 import {
   EPanelSizingMode,
   PanelSizeRelationship,
@@ -24,7 +22,7 @@ import SessionMembersPanel from '../content/session/members/SessionMembersPanel'
 import MissionMap from '../content/session/mission-map'
 import ActionExecModal from '../content/session/mission-map/ui/overlay/modals/action-execution/ActionExecModal'
 import { TTabBarTab } from '../content/session/mission-map/ui/tabs/TabBar'
-import OutputPanel from '../content/session/output-panel'
+import { OutputPanel } from '../content/session/output/'
 import StatusBar from '../content/session/StatusBar'
 import { TValidPanelButton } from '../content/user-controls/buttons/ButtonSvgPanel'
 import { TButtonText_P } from '../content/user-controls/buttons/ButtonText'
@@ -36,7 +34,7 @@ import './SessionPage.scss'
 export default function SessionPage({
   session,
 }: TSessionPage_P): JSX.Element | null {
-  /* -- GLOBAL CONTEXT -- */
+  /* -- STATE -- */
 
   const globalContext = useGlobalContext()
   const [server] = globalContext.server
@@ -48,15 +46,12 @@ export default function SessionPage({
     handleError,
     beginLoading,
   } = globalContext.actions
-
-  /* -- STATE -- */
-
   const [nodeToExecute, setNodeToExecute] = useState<ClientMissionNode | null>(
     null,
   )
   const [selectedForce, selectForce] = useState<ClientMissionForce | null>(null)
   const [resourcesRemaining, setResourcesRemaining] = useState<number>(0)
-  const { login } = useRequireLogin()
+  const {} = useRequireLogin()
   const [rightPanelTab, setRightPanelTab] =
     useState<TSessionRightPanelTab>('output')
 
@@ -218,35 +213,70 @@ export default function SessionPage({
   const navigation = compute(() => {
     let links: TWithKey<TButtonText_P>[] = []
     let { accessibility } = session.config
+    let canStartEndSessions = session.member.isAuthorized('startEndSessions')
 
-    // todo: Clean this up.
-
-    // Push end and reset session buttons, if user
-    // is authorized.
-    if (session.member.isAuthorized('startEndSessions')) {
-      if (accessibility !== 'testing') {
-        links.push({
-          key: 'end-session',
-          text: 'End Session',
-          onClick: onClickEndSession,
-        })
-      }
+    /**
+     * Adds link to the navigation that will reset the progress
+     * in the session.
+     * @param text The text to display on the link.
+     */
+    const addResetSession = (text: string = 'Reset Session') => {
       links.push({
         key: 'reset-session',
-        text: 'Reset Session',
+        text,
         onClick: onClickResetSession,
       })
     }
 
-    // Push quit button.
-    if (accessibility === 'testing') {
+    /**
+     * Adds a link to the navigation to end the session.
+     * @param text The text to display on the link.
+     */
+    const addEndSession = (text: string = 'End Session') => {
       links.push({
-        key: 'quit-test',
-        text: 'Back to Mission',
-        onClick: () => navigateTo('MissionPage', { missionId: mission._id }),
+        key: 'end-session',
+        text,
+        onClick: onClickEndSession,
       })
-    } else {
-      links.push(HomeLink(globalContext, { text: 'Quit' }))
+    }
+
+    /**
+     * Adds a link to the navigation to quit the session.
+     * @param text The text to display on the link.
+     * @param destination The destination to navigate to when quitting.
+     */
+    const addQuit = (
+      text: string = 'Quit',
+      destination: 'HomePage' | 'MissionPage' = 'HomePage',
+    ) => {
+      links.push({
+        key: 'quit',
+        text,
+        onClick: () => {
+          let props = {}
+          if (destination === 'MissionPage') props = { missionId: mission._id }
+          navigateTo(destination, props)
+        },
+      })
+    }
+
+    // Add links based on the session accessibility.
+    switch (accessibility) {
+      case 'testing':
+        // Add reset link and a quit link that
+        // navigates back to the mission page.
+        if (canStartEndSessions) addResetSession('Reset Play-Test')
+        addQuit('Back to Mission', 'MissionPage')
+        break
+      default:
+        // Add reset and end session links if the member
+        // is authorized. Then add the quit link.
+        if (canStartEndSessions) {
+          addResetSession()
+          addEndSession()
+        }
+        addQuit()
+        break
     }
 
     // Return navigation.
