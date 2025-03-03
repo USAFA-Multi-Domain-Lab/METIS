@@ -2,7 +2,6 @@ import {
   TClientEvent,
   TClientEvents,
   TClientMethod,
-  TRequestEvent,
   TRequestEvents,
   TRequestMethod,
   TRequestOfResponse,
@@ -12,7 +11,9 @@ import {
 } from 'metis/connect/data'
 import { ServerEmittedError } from 'metis/connect/errors'
 import ServerLogin from 'metis/server/logins'
+import { RateLimiterMemory, RateLimiterRes } from 'rate-limiter-flexible'
 import { Socket } from 'socket.io'
+import MetisServer from '../index'
 import SessionServer from '../sessions'
 import ServerUser from '../users'
 import { clientEventSchemas, looseEventSchema } from './middleware/validate'
@@ -28,6 +29,11 @@ export default class ClientConnection {
    * The web socket connection itself.
    */
   protected socket: Socket
+
+  /**
+   * The METIS server instance.
+   */
+  protected metis: MetisServer
 
   /**
    * The login information associated with this client.
@@ -61,15 +67,22 @@ export default class ClientConnection {
   protected listeners: [TClientMethod, TClientHandler<any>][] = []
 
   /**
+   * The rate limiter for the client.
+   */
+  protected limiter: RateLimiterMemory
+
+  /**
    * @param socket The web socket connection itself.
    * @param login The client login
    */
   public constructor(
     socket: Socket,
+    metis: MetisServer,
     login: ServerLogin,
     options: IClientConnectionOptions,
   ) {
     this.socket = socket
+    this.metis = metis
     this._login = login
     login.client = this
 
@@ -80,6 +93,12 @@ export default class ClientConnection {
         this.addEventListener(key, value)
       }
     }
+
+    // Create rate limiter.
+    this.limiter = new RateLimiterMemory({
+      points: metis.wsRateLimit,
+      duration: metis.wsRateLimitDuration,
+    })
 
     // Prepare the socket for use.
     this.prepareSocket()
@@ -323,7 +342,7 @@ export default class ClientConnection {
    * Handler for when the web socket event is sent by a client.
    * @param event The message event data.
    */
-  private onMessage = (data: string): void => {
+  private onMessage = async (data: string): Promise<void> => {
     let event: TClientEvent
     let looseEventData:
       | ReturnType<(typeof looseEventSchema)['parse']>
@@ -355,6 +374,9 @@ export default class ClientConnection {
 
       // Validate/sanitize the data.
       event = zodSchema.parse(looseEventData)
+
+      // Update the rate limiter.
+      await this.limiter.consume(this.userId)
     } catch (error) {
       let request: TRequestOfResponse | undefined
 
@@ -363,6 +385,17 @@ export default class ClientConnection {
       // request data to include in the error event.
       if (looseEventData && looseEventData.requestId) {
         request = this.buildResponseReqData(looseEventData as any)
+      }
+
+      // If the error is a rate limiter error,
+      // emit a rate limit error.
+      if (error instanceof RateLimiterRes) {
+        this.emitError(
+          new ServerEmittedError(ServerEmittedError.CODE_MESSAGE_RATE_LIMIT, {
+            request,
+          }),
+        )
+        return
       }
 
       this.emitError(

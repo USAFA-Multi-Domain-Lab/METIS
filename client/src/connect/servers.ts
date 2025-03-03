@@ -539,7 +539,6 @@ export default class ServerConnection
       // to false.
       if (
         error.code === ServerEmittedError.CODE_DUPLICATE_CLIENT ||
-        error.code === ServerEmittedError.CODE_MESSAGE_RATE_LIMIT ||
         error.code === ServerEmittedError.CODE_SWITCHED_CLIENT ||
         error.code === ServerEmittedError.CODE_UNAUTHENTICATED
       ) {

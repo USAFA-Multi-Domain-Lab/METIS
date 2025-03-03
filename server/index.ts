@@ -1,6 +1,6 @@
 import MongoStore from 'connect-mongo'
 import express, { Express, RequestHandler } from 'express'
-import rateLimit from 'express-rate-limit'
+import rateLimit, { RateLimitRequestHandler } from 'express-rate-limit'
 import session, { Session, SessionData } from 'express-session'
 import fs from 'fs'
 import http, { Server as HttpServer } from 'http'
@@ -156,6 +156,17 @@ export default class MetisServer {
   }
 
   /**
+   * The duration of the rate limit for the http server.
+   */
+  private _httpRateLimitDuration: number
+  /**
+   * The duration of the rate limit for the http server.
+   */
+  public get httpRateLimitDuration(): number {
+    return this._httpRateLimitDuration
+  }
+
+  /**
    * The maximum number of websocket messages allowed per second.
    */
   private _wsRateLimit: number
@@ -164,6 +175,17 @@ export default class MetisServer {
    */
   public get wsRateLimit(): number {
     return this._wsRateLimit
+  }
+
+  /**
+   * The duration of the rate limit for the web socket server.
+   */
+  private _wsRateLimitDuration: number
+  /**
+   * The duration of the rate limit for the web socket server.
+   */
+  public get wsRateLimitDuration(): number {
+    return this._wsRateLimitDuration
   }
 
   /**
@@ -196,6 +218,11 @@ export default class MetisServer {
   private routers: MetisRouter[] = []
 
   /**
+   * The rate limiter for the express server.
+   */
+  private limiter: RateLimitRequestHandler
+
+  /**
    * @param options Options for creating the METIS server.
    */
   public constructor(options: Partial<TMetisServerOptions> = {}) {
@@ -220,7 +247,9 @@ export default class MetisServer {
     this._mongoUsername = completedOptions.mongoUsername
     this._mongoPassword = completedOptions.mongoPassword
     this._httpRateLimit = completedOptions.httpRateLimit
+    this._httpRateLimitDuration = completedOptions.httpRateLimitDuration * 1000 // ms
     this._wsRateLimit = completedOptions.wsRateLimit
+    this._wsRateLimitDuration = completedOptions.wsRateLimitDuration
     this._fileStoreDir = completedOptions.fileStoreDir
 
     // Create database and file store objects.
@@ -230,6 +259,12 @@ export default class MetisServer {
     // Temporary session middleware until configured
     // with the database connection.
     this._sessionMiddleware = () => {}
+
+    // Create the rate limiter.
+    this.limiter = rateLimit({
+      windowMs: this.httpRateLimitDuration,
+      limit: this.httpRateLimit,
+    })
   }
 
   /**
@@ -325,13 +360,8 @@ export default class MetisServer {
       expressApp.use(express.urlencoded({ limit: '10mb', extended: true }))
       expressApp.use(express.json({ limit: '10mb' }))
 
-      // Limits the rate of requests to the server
-      expressApp.use(
-        rateLimit({
-          windowMs: 1000,
-          limit: this.httpRateLimit,
-        }),
-      )
+      // rate limiter
+      expressApp.use(this.limiter)
 
       // links the file path to css and resource files
       expressApp.use(express.static(path.resolve(__dirname, '../client/build')))
@@ -463,7 +493,9 @@ export default class MetisServer {
       'MONGO_HOST',
       'MONGO_PORT',
       'HTTP_RATE_LIMIT',
+      'HTTP_RATE_LIMIT_DURATION',
       'WS_RATE_LIMIT',
+      'WS_RATE_LIMIT_DURATION',
       'FILE_STORE_DIR',
     ] as const
 
@@ -484,7 +516,9 @@ export default class MetisServer {
         mongoUsername: process.env.MONGO_USERNAME,
         mongoPassword: process.env.MONGO_PASSWORD,
         httpRateLimit: parseInt(process.env.HTTP_RATE_LIMIT!),
+        httpRateLimitDuration: parseInt(process.env.HTTP_RATE_LIMIT_DURATION!),
         wsRateLimit: parseInt(process.env.WS_RATE_LIMIT!),
+        wsRateLimitDuration: parseInt(process.env.WS_RATE_LIMIT_DURATION!),
         fileStoreDir: process.env.FILE_STORE_DIR!,
       }
     } catch (error) {
@@ -548,9 +582,19 @@ export interface TMetisServerOptions {
    */
   httpRateLimit: number
   /**
+   * The duration of the rate limit for the http server.
+   * @default 1 (second)
+   */
+  httpRateLimitDuration: number
+  /**
    * The maximum number of websocket messages allowed per second.
    */
   wsRateLimit: number
+  /**
+   * The duration of the rate limit for the web socket server.
+   * @default 1 (second)
+   */
+  wsRateLimitDuration: number
   /**
    * The location of the file store.
    * @default "./files/store"
