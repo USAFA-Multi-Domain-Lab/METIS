@@ -1,6 +1,7 @@
 import { expect } from 'chai'
 import { testLogger } from 'metis/server/logging'
 import ServerUser from 'metis/server/users'
+import StringToolbox from 'metis/toolbox/strings'
 import { correctUser, userCredentials, userWithNoPassword } from '../../data'
 import { agent } from '../../index.test'
 
@@ -96,8 +97,12 @@ export default function UserApiRoute(): Mocha.Suite {
         expect(response).to.have.status(200)
         // Check if the user's first and last name have been updated.
         let { firstName, lastName } = response.body
-        expect(firstName).to.equal('updatedFirstName')
-        expect(lastName).to.equal('updatedLastName')
+        expect(firstName).to.equal(
+          StringToolbox.capitalize(correctUser.firstName),
+        )
+        expect(lastName).to.equal(
+          StringToolbox.capitalize(correctUser.lastName),
+        )
       } catch (error: any) {
         testLogger.error(error)
         throw error

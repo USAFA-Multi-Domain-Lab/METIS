@@ -186,6 +186,11 @@ export default abstract class Target<
         groupingId: 'block-node',
         options: [
           {
+            _id: 'no-change',
+            name: 'No Change',
+            value: undefined,
+          },
+          {
             _id: 'block',
             name: 'Block',
             value: 'block',
@@ -194,11 +199,6 @@ export default abstract class Target<
             _id: 'unblock',
             name: 'Unblock',
             value: 'unblock',
-          },
-          {
-            _id: 'no-change',
-            name: 'No Change',
-            value: undefined,
           },
         ],
         default: { _id: 'no-change', name: 'No Change', value: undefined },

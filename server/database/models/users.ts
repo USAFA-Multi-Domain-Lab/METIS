@@ -252,10 +252,12 @@ const findByIdAndModify = (
 /**
  * Validates the user data.
  * @param userJson The user data to validate.
+ * @param isNew Determines if the user is new.
  * @param next The next function to call.
  */
 const validate_users = async (
   userJson: Partial<TCommonUserJson>,
+  isNew: boolean,
   next: CallbackWithoutResultAndOptionalError,
 ): Promise<void> => {
   // Object to store results.
@@ -318,11 +320,25 @@ const validate_users = async (
     return {}
   }
 
-  // Check for duplicate usernames.
-  if (userJson.username) {
-    let user = await UserModel.findOne({ username: userJson.username }).exec()
+  // Check for duplicate _id's.
+  results = _idCheckerAlgorithm()
+  // Check for error.
+  if (results.error) return next(results.error)
 
-    if (user) {
+  // Check for duplicate usernames.
+  let user = await UserModel.findById(userJson._id).exec()
+  if (isNew && user?.username === userJson.username) {
+    let error = new StatusError(
+      `Error in user:\nUsername "${userJson.username}" already exists.`,
+      409,
+    )
+    return next(error)
+  } else if (!isNew && user?.username !== userJson.username) {
+    let userWithSameUsername = await UserModel.findOne({
+      username: userJson.username,
+    }).exec()
+
+    if (userWithSameUsername) {
       let error = new StatusError(
         `Error in user:\nUsername "${userJson.username}" already exists.`,
         409,
@@ -330,11 +346,6 @@ const validate_users = async (
       return next(error)
     }
   }
-
-  // Check for duplicate _id's.
-  results = _idCheckerAlgorithm()
-  // Check for error.
-  if (results.error) return next(results.error)
 }
 
 /**
@@ -469,7 +480,7 @@ const UserSchema = new Schema<
 // Called before a save is made to the database.
 UserSchema.pre<TUserDoc>('save', async function (next) {
   let user: TCommonUserJson = this.toJSON()
-  await validate_users(user, next)
+  await validate_users(user, this.isNew, next)
   return next()
 })
 

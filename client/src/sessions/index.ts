@@ -1267,36 +1267,29 @@ export default class SessionClient extends Session<TClientMissionTypes> {
    * @resolves To the session ID.
    * @rejects If the session failed to launch.
    */
-  public static $launch(
+  public static async $launch(
     missionId: string,
     sessionConfig: Partial<TSessionConfig>,
   ): Promise<string> {
-    return new Promise<string>(
-      async (
-        resolve: (sessionId: string) => void,
-        reject: (error: any) => void,
-      ): Promise<void> => {
-        try {
-          // Call API to launch new session with
-          // the mission ID. Await the generated
-          // session ID.
-          let { sessionId } = (
-            await axios.post<{ sessionId: string }>(
-              `${Session.API_ENDPOINT}/launch/`,
-              {
-                missionId,
-                ...sessionConfig,
-              },
-            )
-          ).data
-          return resolve(sessionId)
-        } catch (error) {
-          console.error('Failed to launch session.')
-          console.error(error)
-          return reject(error)
-        }
-      },
-    )
+    try {
+      // Call API to launch new session with
+      // the mission ID. Await the generated
+      // session ID.
+      let { sessionId } = (
+        await axios.post<{ sessionId: string }>(
+          `${Session.API_ENDPOINT}/launch/`,
+          {
+            missionId,
+            ...sessionConfig,
+          },
+        )
+      ).data
+      return sessionId
+    } catch (error) {
+      console.error('Failed to launch session.')
+      console.error(error)
+      throw error
+    }
   }
 
   /**

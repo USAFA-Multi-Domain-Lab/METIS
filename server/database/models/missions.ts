@@ -234,7 +234,9 @@ const validateMissionEffects = (
                 }
 
                 // Ensure the option exists.
-                let option = arg.options.find((option) => option._id === value)
+                let option = arg.options.find(
+                  (option) => option.value === value,
+                )
                 if (!option) {
                   throw new Error(
                     `The argument with ID ("${effectArgId}") has a value ("${value}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) that is not a valid option in the effect's target ({ _id: "${target._id}", name: "${target.name}" }).`,
@@ -250,7 +252,7 @@ const validateMissionEffects = (
                 }
 
                 // Ensure the string-argument passes the custom validation.
-                let isValid = arg.pattern?.test(value)
+                let isValid = arg.pattern ? arg.pattern.test(value) : true
                 if (!isValid) {
                   throw new Error(
                     `The argument with ID ("${effectArgId}") has a value ("${value}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) that is invalid.`,
