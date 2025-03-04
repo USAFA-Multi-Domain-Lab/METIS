@@ -363,7 +363,10 @@ const initializeActions = (
                   })
                   break
                 case ServerEmittedError.CODE_MESSAGE_RATE_LIMIT:
-                  handleError(message)
+                  handleError({
+                    message,
+                    notifyMethod: 'bubble',
+                  })
                   break
                 case ServerEmittedError.CODE_DUPLICATE_CLIENT:
                   handleError({
@@ -406,7 +409,8 @@ const initializeActions = (
       })
     },
     handleError: (error: TAppError | string): void => {
-      const { notify } = initialState.actions
+      const { notify, finishLoading } = initialState.actions
+      const { loading } = refs.current
 
       // Converts strings passed to TAppError
       // objects.
@@ -416,6 +420,9 @@ const initializeActions = (
 
       // Parse notify method.
       let notifyMethod: TAppErrorNotifyMethod = error.notifyMethod ?? 'page'
+
+      // Finish loading if loading is active.
+      if (loading) finishLoading()
 
       // Handle error accordingly.
       switch (notifyMethod) {

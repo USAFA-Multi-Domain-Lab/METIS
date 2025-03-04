@@ -2,12 +2,14 @@ import bcryptjs from 'bcryptjs'
 import { Request } from 'express'
 import ServerUser from 'metis/server/users'
 import { AnyObject } from 'metis/toolbox/objects'
+import StringToolbox from 'metis/toolbox/strings'
 import User, { TCommonUserJson } from 'metis/users'
 import UserAccess, { TUserAccess } from 'metis/users/accesses'
 import UserPermission, { TUserPermission } from 'metis/users/permissions'
 import mongoose, {
   CallbackWithoutResultAndOptionalError,
-  Document,
+  DefaultSchemaOptions,
+  HydratedDocument,
   Model,
   model,
   MongooseQueryMiddleware,
@@ -20,7 +22,15 @@ import MetisDatabase from '..'
 import { StatusError } from '../../http'
 import { databaseLogger } from '../../logging'
 
-let ObjectId = mongoose.Types.ObjectId
+/* -- CONSTANTS -- */
+
+/**
+ * The collation to use when querying the database.
+ * @note This collation is used to ensure that the database
+ * queries are case-insensitive for the username field.
+ * @see For more information, see the MongoDB documentation: [ https://www.mongodb.com/docs/manual/reference/collation ]
+ */
+const collation = { locale: 'en', strength: 2 }
 
 /* -- FUNCTIONS -- */
 
@@ -43,30 +53,33 @@ export const hashPassword = async (password: string): Promise<string> => {
 }
 
 /**
- * Transforms the ObjectId to a string.
+ * Transforms the user document to JSON.
  * @param doc The mongoose document which is being converted.
  * @param ret The plain object representation which has been converted.
  * @param options The options in use.
- * @returns
+ * @returns The JSON representation of a `User` document.
  */
-const transformObjectIdToString = (
+const toJson = (
   doc: TUserDoc,
   ret: TCommonUserJson,
   options: any,
-) => {
-  if (ret._id) ret._id = ret._id.toString()
-  return ret
+): TCommonUserJson => {
+  return {
+    ...ret,
+    _id: doc.id,
+    firstName: StringToolbox.capitalize(ret.firstName),
+    lastName: StringToolbox.capitalize(ret.lastName),
+  }
 }
 
 /**
  * Modifies the query to hide deleted users and remove unneeded properties.
  * @param query The query to modify.
  */
-const queryForApiResponse = (query: Query<TUserSchema, TUserModel>): void => {
-  // Get projection.
-  let projection = query.projection()
+const queryForApiResponse = (query: TPreUserQuery): void => {
   // Extract options.
-  let { includeDeleted = false } = query.getOptions() as TUserQueryOptions
+  const { includeDeleted = false } = query.getOptions() as TUserQueryOptions
+  let projection = query.projection()
 
   // Create if does not exist.
   if (projection === undefined) {
@@ -87,6 +100,8 @@ const queryForApiResponse = (query: Query<TUserSchema, TUserModel>): void => {
 
   // Set projection.
   query.projection(projection)
+  // Set the collation.
+  query.collation(collation)
   // Hide deleted users.
   query.where({ deleted: { $eq: includeDeleted ? true : false } })
 }
@@ -95,7 +110,7 @@ const queryForApiResponse = (query: Query<TUserSchema, TUserModel>): void => {
  * Modifies the query to filter users based on the current user's permissions.
  * @param query The query to modify.
  */
-const queryForFilteredUsers = (query: Query<TUserSchema, TUserModel>): void => {
+const queryForFilteredUsers = (query: TPreUserQuery): void => {
   // Get projection.
   let projection = query.projection()
   // Extract options.
@@ -204,7 +219,7 @@ const authenticate = async (request: Request): Promise<TCommonUserJson> => {
  */
 const findByIdAndModify = (
   _id: any,
-  projection?: ProjectionType<TUserSchema> | null,
+  projection?: ProjectionType<TUser> | null,
   options?: TUserQueryOptions | null,
   updates?: Partial<TCommonUserJson> | null,
 ): Promise<TUserDoc | null> => {
@@ -237,12 +252,14 @@ const findByIdAndModify = (
 /**
  * Validates the user data.
  * @param userJson The user data to validate.
+ * @param isNew Determines if the user is new.
  * @param next The next function to call.
  */
-const validate_users = (
+const validate_users = async (
   userJson: Partial<TCommonUserJson>,
+  isNew: boolean,
   next: CallbackWithoutResultAndOptionalError,
-): void => {
+): Promise<void> => {
   // Object to store results.
   let results: { error?: Error } = {}
   // Object to store existing _id's.
@@ -256,7 +273,7 @@ const validate_users = (
     if (
       cursor instanceof Object &&
       !Array.isArray(cursor) &&
-      !(cursor instanceof ObjectId)
+      !mongoose.isObjectIdOrHexString(cursor)
     ) {
       // ...and it has an _id property and the _id already exists...
       if (cursor._id && cursor._id in existingIds) {
@@ -307,6 +324,28 @@ const validate_users = (
   results = _idCheckerAlgorithm()
   // Check for error.
   if (results.error) return next(results.error)
+
+  // Check for duplicate usernames.
+  let user = await UserModel.findById(userJson._id).exec()
+  if (isNew && user?.username === userJson.username) {
+    let error = new StatusError(
+      `Error in user:\nUsername "${userJson.username}" already exists.`,
+      409,
+    )
+    return next(error)
+  } else if (!isNew && user?.username !== userJson.username) {
+    let userWithSameUsername = await UserModel.findOne({
+      username: userJson.username,
+    }).exec()
+
+    if (userWithSameUsername) {
+      let error = new StatusError(
+        `Error in user:\nUsername "${userJson.username}" already exists.`,
+        409,
+      )
+      return next(error)
+    }
+  }
 }
 
 /**
@@ -359,7 +398,20 @@ const validator_users_password = (
 
 /* -- SCHEMA -- */
 
-const UserSchema = new Schema<TUserSchema, TUserModel, TUserMethods>(
+/**
+ * Represents the schema for a user in the database.
+ * @see (Schema Generic Type Parameters) [ https://mongoosejs.com/docs/typescript/schemas.html#generic-parameters ]
+ */
+const UserSchema = new Schema<
+  TUser,
+  TUserModel,
+  TUserMethods,
+  {},
+  TUserVirtuals,
+  TUserStaticMethods,
+  DefaultSchemaOptions,
+  TUserDoc
+>(
   {
     username: {
       type: String,
@@ -367,6 +419,9 @@ const UserSchema = new Schema<TUserSchema, TUserModel, TUserMethods>(
       required: true,
       trim: true,
       validate: validate_users_username,
+      index: {
+        collation: collation,
+      },
     },
     accessId: {
       type: String,
@@ -407,10 +462,10 @@ const UserSchema = new Schema<TUserSchema, TUserModel, TUserMethods>(
     strict: 'throw',
     minimize: false,
     toJSON: {
-      transform: transformObjectIdToString,
+      transform: toJson,
     },
     toObject: {
-      transform: transformObjectIdToString,
+      transform: toJson,
     },
     statics: {
       authenticate,
@@ -423,14 +478,14 @@ const UserSchema = new Schema<TUserSchema, TUserModel, TUserMethods>(
 /* -- SCHEMA MIDDLEWARE -- */
 
 // Called before a save is made to the database.
-UserSchema.pre<TUserDoc>('save', function (next) {
+UserSchema.pre<TUserDoc>('save', async function (next) {
   let user: TCommonUserJson = this.toJSON()
-  validate_users(user, next)
+  await validate_users(user, this.isNew, next)
   return next()
 })
 
 // Called before a find or update is made to the database.
-UserSchema.pre<Query<TUserSchema, TUserModel>>(
+UserSchema.pre<TPreUserQuery>(
   ['find', 'findOne', 'findOneAndUpdate', 'updateOne', 'updateMany'],
   function (next) {
     // Modify the query.
@@ -442,9 +497,9 @@ UserSchema.pre<Query<TUserSchema, TUserModel>>(
 )
 
 // Converts ObjectIds to strings.
-UserSchema.post<Query<TUserSchema, TUserModel>>(
+UserSchema.post<TPostUserQuery>(
   ['find', 'findOne', 'updateOne', 'findOneAndUpdate', 'updateMany'],
-  function (userData: TUserSchema | TUserSchema[]) {
+  function (userData: TUserDoc | TUserDoc[]) {
     // If the user is null, then return.
     if (!userData) return
 
@@ -453,7 +508,7 @@ UserSchema.post<Query<TUserSchema, TUserModel>>(
 
     // Transform the ObjectIds to strings.
     for (let userDatum of userData) {
-      userDatum._id = userDatum._id?.toString()
+      userDatum._id = userDatum.id
     }
   },
 )
@@ -470,8 +525,9 @@ UserSchema.post<TUserDoc>('save', function () {
 
 /**
  * Represents a user in the database.
+ * @see https://mongoosejs.com/docs/typescript/schemas.html#generic-parameters
  */
-type TUserSchema = TCommonUserJson & {
+type TUser = TCommonUserJson & {
   /**
    * Determines if the user is deleted.
    */
@@ -480,11 +536,13 @@ type TUserSchema = TCommonUserJson & {
 
 /**
  * Represents the methods available for a `UserModel`.
+ * @see https://mongoosejs.com/docs/typescript/statics-and-methods.html
  */
 type TUserMethods = {}
 
 /**
  * Represents the static methods available for a `UserModel`.
+ * @see https://mongoosejs.com/docs/typescript/statics-and-methods.html
  */
 type TUserStaticMethods = {
   /**
@@ -509,7 +567,7 @@ type TUserStaticMethods = {
    */
   findByIdAndModify(
     _id: any,
-    projection?: ProjectionType<TUserSchema> | null,
+    projection?: ProjectionType<TUser> | null,
     options?: TUserQueryOptions | null,
     updates?: Partial<TCommonUserJson> | null,
   ): Promise<TUserDoc | null>
@@ -517,18 +575,39 @@ type TUserStaticMethods = {
 
 /**
  * Represents a mongoose model for a user in the database.
+ * @see https://mongoosejs.com/docs/typescript/schemas.html#generic-parameters
  */
-type TUserModel = Model<TUserSchema, {}, TUserMethods> & TUserStaticMethods
+type TUserModel = Model<TUser, {}, TUserMethods, TUserVirtuals, TUserDoc> &
+  TUserStaticMethods
 
 /**
  * Represents a mongoose document for a user in the database.
+ * @see https://mongoosejs.com/docs/typescript/schemas.html#generic-parameters
  */
-type TUserDoc = Document<any, any, TUserSchema>
+type TUserDoc = HydratedDocument<TUser, TUserMethods, TUserVirtuals>
 
 /**
- * The available options within a query for a user model.
+ * Represents the virtual properties for a user in the database.
+ * @see https://mongoosejs.com/docs/tutorials/virtuals.html
  */
-type TUserQueryOptions = QueryOptions<TUserSchema> & {
+type TUserVirtuals = {}
+
+/* -- QUERY TYPES -- */
+
+/**
+ * The type for a pre-query middleware for a `UserModel`.
+ */
+type TPreUserQuery = Query<TUser, TUser>
+
+/**
+ * The type for a post-query middleware for a `UserModel`.
+ */
+type TPostUserQuery = Query<TUserDoc, TUserDoc>
+
+/**
+ * The available options within a query for a `UserModel`.
+ */
+type TUserQueryOptions = QueryOptions<TUser> & {
   /**
    * The user currently logged in.
    */
@@ -548,5 +627,5 @@ type TUserQueryOptions = QueryOptions<TUserSchema> & {
 /**
  * The mongoose model for a user in the database.
  */
-const UserModel = model<TUserSchema, TUserModel>('User', UserSchema)
+const UserModel = model<TUser, TUserModel>('User', UserSchema)
 export default UserModel

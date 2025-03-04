@@ -12,8 +12,8 @@ export const createMissionWithNoForceData: Omit<TMissionJson, 'forces'> = {
   name: 'No Force Data Mission (To Delete)',
   versionNumber: 1,
   seed: StringToolbox.generateRandomId(),
-  createdAt: new Date(),
-  updatedAt: new Date(),
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
   launchedAt: null,
   resourceLabel: 'Resources',
   structure: {
@@ -32,8 +32,8 @@ export const testMission: TMissionJson = {
   name: 'Test Mission (To Delete)',
   versionNumber: 1,
   seed: StringToolbox.generateRandomId(),
-  createdAt: new Date(),
-  updatedAt: new Date(),
+  createdAt: null,
+  updatedAt: null,
   launchedAt: null,
   resourceLabel: 'Resources',
   structure: {
@@ -65,6 +65,10 @@ export const testMission: TMissionJson = {
               successChance: 0.5,
               resourceCost: 1,
               opensNode: true,
+              processTimeHidden: false,
+              successChanceHidden: false,
+              resourceCostHidden: false,
+              opensNodeHidden: false,
               postExecutionSuccessText:
                 '<p>Enter your successful post-execution message here.</p>',
               postExecutionFailureText:
@@ -74,6 +78,7 @@ export const testMission: TMissionJson = {
                   _id: '0c6eb646-061b-4598-b748-e54e49d1cba6',
                   name: 'New Effect',
                   description: '',
+                  trigger: 'success',
                   targetEnvironmentVersion: '0.1',
                   targetId: 'output',
                   args: {
@@ -103,8 +108,8 @@ export const updateMissionWithNoMissionId: TMissionJson = {
   name: 'Updated No Force Data (To Delete)',
   versionNumber: 1,
   seed: StringToolbox.generateRandomId(),
-  createdAt: new Date(),
-  updatedAt: new Date(),
+  createdAt: null,
+  updatedAt: null,
   launchedAt: null,
   resourceLabel: 'Resources',
   structure: {
@@ -136,6 +141,10 @@ export const updateMissionWithNoMissionId: TMissionJson = {
               successChance: 0.5,
               resourceCost: 1,
               opensNode: true,
+              processTimeHidden: false,
+              successChanceHidden: false,
+              resourceCostHidden: false,
+              opensNodeHidden: false,
               postExecutionSuccessText:
                 '<p>Enter your successful post-execution message here.</p>',
               postExecutionFailureText:
@@ -145,6 +154,7 @@ export const updateMissionWithNoMissionId: TMissionJson = {
                   _id: '0c6eb646-061b-4598-b748-e54e49d1cba6',
                   name: 'New Effect',
                   description: '',
+                  trigger: 'success',
                   targetEnvironmentVersion: '0.1',
                   targetId: 'output',
                   args: {
@@ -174,8 +184,8 @@ export const updateMissionWithNoStructure: Omit<TMissionJson, 'structure'> = {
   name: 'Update No Structure (To Delete)',
   versionNumber: 1,
   seed: StringToolbox.generateRandomId(),
-  createdAt: new Date(),
-  updatedAt: new Date(),
+  createdAt: null,
+  updatedAt: null,
   launchedAt: null,
   resourceLabel: 'Resources',
   forces: [
@@ -204,6 +214,10 @@ export const updateMissionWithNoStructure: Omit<TMissionJson, 'structure'> = {
               successChance: 0.5,
               resourceCost: 1,
               opensNode: true,
+              processTimeHidden: false,
+              successChanceHidden: false,
+              resourceCostHidden: false,
+              opensNodeHidden: false,
               postExecutionSuccessText:
                 '<p>Enter your successful post-execution message here.</p>',
               postExecutionFailureText:
@@ -213,6 +227,7 @@ export const updateMissionWithNoStructure: Omit<TMissionJson, 'structure'> = {
                   _id: '0c6eb646-061b-4598-b748-e54e49d1cba6',
                   name: 'New Effect',
                   description: '',
+                  trigger: 'success',
                   targetEnvironmentVersion: '0.1',
                   targetId: 'output',
                   args: {
@@ -242,8 +257,8 @@ export const updateMissionWithNoForceData: Omit<TMissionJson, 'forces'> = {
   name: 'No Force Data Mission (To Delete)',
   versionNumber: 1,
   seed: StringToolbox.generateRandomId(),
-  createdAt: new Date(),
-  updatedAt: new Date(),
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
   launchedAt: null,
   resourceLabel: 'Resources',
   structure: {
@@ -262,8 +277,8 @@ export const correctUpdateTestMission: TMissionJson = {
   name: 'Updated Test Mission (To Delete)',
   versionNumber: 1,
   seed: StringToolbox.generateRandomId(),
-  createdAt: new Date(),
-  updatedAt: new Date(),
+  createdAt: null,
+  updatedAt: null,
   launchedAt: null,
   resourceLabel: 'Resources',
   structure: {
@@ -295,6 +310,10 @@ export const correctUpdateTestMission: TMissionJson = {
               successChance: 0.5,
               resourceCost: 1,
               opensNode: true,
+              processTimeHidden: false,
+              successChanceHidden: false,
+              resourceCostHidden: false,
+              opensNodeHidden: false,
               postExecutionSuccessText:
                 '<p>Enter your successful post-execution message here.</p>',
               postExecutionFailureText:
@@ -304,6 +323,7 @@ export const correctUpdateTestMission: TMissionJson = {
                   _id: '0c6eb646-061b-4598-b748-e54e49d1cba6',
                   name: 'New Effect',
                   description: '',
+                  trigger: 'success',
                   targetEnvironmentVersion: '0.1',
                   targetId: 'output',
                   args: {

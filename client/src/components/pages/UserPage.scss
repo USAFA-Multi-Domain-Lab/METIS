@@ -3,6 +3,7 @@
 .Page.UserPage {
   $page-width: 100vw;
   $page-height: 100vh;
+  $content-spacing: 1em;
   // $page-row-1-height: 82px;
   // $page-row-3-height: 12px;
   // $page-row-2-height: calc(
@@ -30,7 +31,7 @@
     .Form {
       display: grid;
       place-items: center;
-      align-items: center;
+      row-gap: $content-spacing;
       margin: 50px auto;
       border: 2px solid $color-primary-light;
       border-radius: 10px;
@@ -38,6 +39,26 @@
       max-width: 800px;
       padding: 2em 2em;
       background: $color-primary;
+
+      form {
+        display: grid;
+        row-gap: $content-spacing;
+
+        .DetailToggle {
+          grid-template-columns: auto 1fr;
+          column-gap: $content-spacing;
+          padding: 1.3em 0;
+        }
+      }
+
+      .Buttons {
+        justify-self: flex-start;
+
+        :first-child {
+          margin-left: 0;
+          padding-left: 0;
+        }
+      }
     }
   }
 }

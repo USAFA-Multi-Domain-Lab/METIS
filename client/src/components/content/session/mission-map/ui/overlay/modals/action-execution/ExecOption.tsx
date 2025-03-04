@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import Tooltip from 'src/components/content/communication/Tooltip'
+import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
+import SessionClient from 'src/sessions'
 import { compute } from 'src/toolbox'
 import {
   useEventListener,
@@ -9,8 +11,6 @@ import {
 } from 'src/toolbox/hooks'
 import StringToolbox from '../../../../../../../../../../shared/toolbox/strings'
 import './ExecOption.scss'
-import SessionClient from 'src/sessions'
-import { useGlobalContext } from 'src/context'
 
 /* -- COMPONENT -- */
 

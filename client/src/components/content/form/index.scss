@@ -34,14 +34,12 @@ $detail-field-font-size: 0.92rem;
 
 .Detail {
   display: grid;
-  grid-template-rows: auto auto;
+  grid-template-columns: repeat(auto-fill, minmax(225px, 100%));
   row-gap: 0.5em;
-  min-width: 225px;
 
   .FieldErrorMessage {
     font-size: 0.7em;
     color: $color-failure-light;
-    margin-top: 1em;
     font-weight: bold;
 
     &.hide {

@@ -1,6 +1,8 @@
+import { Request } from 'express-serve-static-core'
 import { ServerEmittedError } from 'metis/connect/errors'
 import { TLoginJson } from 'metis/logins'
 import ClientConnection from 'metis/server/connect/clients'
+import SessionServer from '../sessions'
 import ServerUser from '../users'
 
 /**
@@ -91,6 +93,24 @@ export default class ServerLogin {
   }
 
   /**
+   * When the login timeout ends.
+   */
+  private _timeoutEnd: number | null
+  /**
+   * When the login timeout ends.
+   */
+  public get timeoutEnd(): number | null {
+    return this._timeoutEnd
+  }
+
+  /**
+   * Whether the login is in a timeout.
+   */
+  public get inTimeout(): boolean {
+    return this.timeoutEnd !== null && this.timeoutEnd > Date.now()
+  }
+
+  /**
    * @param user The user to log in.
    */
   public constructor(user: ServerUser, options: TServerLoginOptions = {}) {
@@ -100,11 +120,12 @@ export default class ServerLogin {
     this._client = null
     this._sessionId = null
     this._destroyed = false
+    this._timeoutEnd = ServerLogin.getTimeoutEnd(this.userId) ?? null
 
     // Get any current login registered, conflicting
     // with the new login.
     let conflictingLogin: ServerLogin | undefined = ServerLogin.registry.get(
-      this.userId.toString(),
+      this.userId,
     )
 
     // Handle duplicate login.
@@ -121,14 +142,17 @@ export default class ServerLogin {
           )
         }
         // Destroy the login.
-        ServerLogin.destroy(this.userId)
+        this.destroy()
       } else {
         throw new Error('User is already logged in.')
       }
     }
 
-    // Store the login in the registry.
-    ServerLogin.registry.set(this.userId.toString(), this)
+    // Store the login in the registry if the user
+    // isn't in a timeout.
+    if (!this.inTimeout) {
+      ServerLogin.registry.set(this.userId, this)
+    }
   }
 
   /**
@@ -151,6 +175,18 @@ export default class ServerLogin {
   }
 
   /**
+   * Sets the timeout information for the user logged in.
+   * @param timeoutEnd When the timeout ends.
+   * @note This will also destroy the login information to
+   * ensure that the user is logged out.
+   */
+  public timeout(timeoutEnd: number): void {
+    this._timeoutEnd = timeoutEnd
+    ServerLogin.timeoutRegistry.set(this.userId, timeoutEnd)
+    this.destroy()
+  }
+
+  /**
    * Handles when the user joins a session.
    * @param sessionId The ID of the joined session.
    */
@@ -163,6 +199,14 @@ export default class ServerLogin {
    */
   public handleQuit(): void {
     this._sessionId = null
+  }
+
+  /**
+   * Quits the session the user is in.
+   */
+  public quitSession(): void {
+    let session = SessionServer.get(this.sessionId ?? undefined)
+    session?.quit(this.userId)
   }
 
   /**
@@ -187,13 +231,72 @@ export default class ServerLogin {
   }
 
   /**
-   * Destroys the login information associated with the given user ID.
+   * Destroys the login information for the user associated with the current web session.
+   * @param session The current web session.
    */
-  public static destroy(userId: ServerUser['_id'] | undefined): void {
-    let login: ServerLogin | undefined = ServerLogin.get(userId)
-    if (login !== undefined) {
-      login.destroy()
+  public static async destroy(session: Request['session']): Promise<void> {
+    return new Promise((resolve, reject) => {
+      let login = ServerLogin.get(session.userId)
+      // Quit the METIS session, if necessary.
+      if (login?.inSession) login.quitSession()
+      // Destroy the login information associated
+      // with METIS and stored in memory.
+      login?.destroy()
+      // Destroy the express session.
+      session.destroy((error) => {
+        if (error) return reject(error)
+        resolve()
+      })
+    })
+  }
+
+  /**
+   * A registry of all logins that are in timeout.
+   */
+  private static timeoutRegistry: Map<string, number> = new Map<
+    string,
+    number
+  >()
+
+  /**
+   * @returns the login timeout end time associated with the given user ID.
+   */
+  public static getTimeoutEnd(
+    userId: ServerUser['_id'] | undefined,
+  ): number | undefined {
+    if (userId === undefined) {
+      return undefined
+    } else {
+      return ServerLogin.timeoutRegistry.get(userId)
     }
+  }
+
+  /**
+   * Sets a timeout for the user in the current web session.
+   * @param session The current web session.
+   * @param timeoutEnd When the timeout ends.
+   * @note This will also destroy the login information to
+   * ensure that the user is logged out.
+   */
+  public static async timeout(
+    session: Request['session'],
+    timeoutEnd: number,
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      let login = ServerLogin.get(session.userId)
+      // Quit the METIS session, if necessary.
+      if (login?.inSession) login.quitSession()
+      // Set the timeout for the login.
+      // *** Note: This also destroys the login
+      // *** information associated with METIS
+      // *** and stored in memory.
+      login?.timeout(timeoutEnd)
+      // Destroy the express session.
+      session.destroy((error) => {
+        if (error) return reject(error)
+        resolve()
+      })
+    })
   }
 }
 

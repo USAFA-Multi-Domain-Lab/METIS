@@ -5,11 +5,11 @@ import { compute } from 'src/toolbox'
 import { TPage_P } from '.'
 import { DetailString } from '../content/form/DetailString'
 import Branding from '../content/general-layout/Branding'
-import './AuthPage.scss'
 import {
   ButtonText,
   TButtonTextDisabled,
 } from '../content/user-controls/buttons/ButtonText'
+import './AuthPage.scss'
 
 export interface IAuthPage extends TPage_P {}
 
@@ -110,6 +110,12 @@ export default function AuthPage(): JSX.Element | null {
       // Handles incorrect username or password.
       else if (error.response?.status === 401) {
         handleLoginError('Incorrect username or password.')
+      }
+      // Handles account lockout.
+      else if (error.response?.status === 403) {
+        handleLoginError(
+          'The account has timed out likely due to too many requests being made. Please try again later.',
+        )
       }
       // Handles any other error.
       else {

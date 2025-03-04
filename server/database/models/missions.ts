@@ -14,12 +14,14 @@ import ServerMissionForce from 'metis/server/missions/forces'
 import ServerMissionNode from 'metis/server/missions/nodes'
 import ServerTargetEnvironment from 'metis/server/target-environments'
 import { TTargetArg } from 'metis/target-environments/args'
+import DropdownArg from 'metis/target-environments/args/dropdown-arg'
 import ForceArg from 'metis/target-environments/args/force-arg'
 import NodeArg from 'metis/target-environments/args/node-arg'
 import { AnyObject } from 'metis/toolbox/objects'
 import StringToolbox, { HEX_COLOR_REGEX } from 'metis/toolbox/strings'
 import mongoose, {
-  Document,
+  DefaultSchemaOptions,
+  HydratedDocument,
   Model,
   model,
   ProjectionType,
@@ -30,6 +32,7 @@ import mongoose, {
 
 let ObjectId = mongoose.Types.ObjectId
 
+/* -- CONSTANTS -- */
 const NODE_DATA_MIN_LENGTH = 1
 const ACTIONS_MIN_LENGTH = 1
 const PROCESS_TIME_MAX = 3600 /*seconds*/ * 1000
@@ -37,28 +40,24 @@ const PROCESS_TIME_MAX = 3600 /*seconds*/ * 1000
 /* -- FUNCTIONS -- */
 
 /**
- * Transforms the ObjectId to a string.
+ * Transforms the mission document to JSON.
  * @param doc The mongoose document which is being converted.
  * @param ret The plain object representation which has been converted.
  * @param options The options in use.
- * @returns
+ * @returns The JSON representation of a `Mission` document.
  */
-const transformObjectIdToString = (
-  doc: TMissionDoc,
-  ret: TCommonMissionJson,
-  options: any,
-) => {
-  if (ret._id) ret._id = ret._id.toString()
-  return ret
+const toJson = (doc: TMissionDoc, ret: TCommonMissionJson, options: any) => {
+  return {
+    ...ret,
+    _id: doc.id,
+  }
 }
 
 /**
  * Modifies the query to hide deleted missions and remove unneeded properties.
  * @param query The query to modify.
  */
-const queryForApiResponse = (
-  query: Query<TMissionSchema, TMissionModel>,
-): void => {
+const queryForApiResponse = (query: TPreMissionQuery): void => {
   // Get projection.
   let projection = query.projection()
 
@@ -87,14 +86,19 @@ const queryForApiResponse = (
 /* -- SCHEMA VALIDATION HELPERS -- */
 
 /**
+ * Global validator for integers.
+ * @param value The value to validate.
+ */
+const isInteger = (value: number): boolean => Math.floor(value) === value
+
+/**
  * Global validator for non-negative integers.
  * @param value The value to validate.
  */
 const isNonNegativeInteger = (value: number): boolean => {
-  let isInteger: boolean = Math.floor(value) === value
   let isNonNegative: boolean = value >= 0
 
-  return isInteger && isNonNegative
+  return isInteger(value) && isNonNegative
 }
 
 /* -- SCHEMA STATIC FUNCTIONS -- */
@@ -114,8 +118,8 @@ const isNonNegativeInteger = (value: number): boolean => {
  */
 const findByIdAndModify = (
   _id: any,
-  projection?: ProjectionType<TMissionSchema> | null,
-  options?: QueryOptions<TMissionSchema> | null,
+  projection?: ProjectionType<TMission> | null,
+  options?: QueryOptions<TMission> | null,
   updates?: Partial<TCommonMissionJson> | null,
 ): Promise<TMissionDoc | null> => {
   return new Promise<TMissionDoc | null>(async (resolve, reject) => {
@@ -220,41 +224,19 @@ const validateMissionEffects = (
               }
 
               // Get the value.
-              let value = effect.args[effectArgId]
-              // Ensure the value is of the correct type.
-              if (
-                (arg.type === 'string' ||
-                  arg.type === 'large-string' ||
-                  arg.type === 'dropdown') &&
-                typeof value !== 'string'
-              ) {
-                throw new Error(
-                  `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "string."`,
-                )
-              } else if (
-                arg &&
-                arg.type === 'number' &&
-                typeof value !== 'number'
-              ) {
-                throw new Error(
-                  `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "number."`,
-                )
-              } else if (
-                arg &&
-                arg.type === 'boolean' &&
-                typeof value !== 'boolean'
-              ) {
-                throw new Error(
-                  `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "boolean."`,
-                )
-              }
+              const value = effect.args[effectArgId]
 
-              // If the argument is a dropdown, ensure the value one of the options.
-              // Ensure the argument is a dropdown.
               if (arg.type === 'dropdown') {
-                // Get the option.
-                let option = arg.options.find((option) => option._id === value)
+                if (!DropdownArg.OPTION_VALUE_TYPES.includes(typeof value)) {
+                  throw new Error(
+                    `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "string", "number", "boolean", "object", or "undefined."`,
+                  )
+                }
+
                 // Ensure the option exists.
+                let option = arg.options.find(
+                  (option) => option.value === value,
+                )
                 if (!option) {
                   throw new Error(
                     `The argument with ID ("${effectArgId}") has a value ("${value}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) that is not a valid option in the effect's target ({ _id: "${target._id}", name: "${target.name}" }).`,
@@ -262,17 +244,30 @@ const validateMissionEffects = (
                 }
               }
 
-              // If the argument is a string, ensure the value matches the pattern.
-              if (arg.type === 'string' && arg.pattern) {
-                let isValid = arg.pattern.test(value)
-                if (isValid === false) {
+              if (arg.type === 'string') {
+                if (typeof value !== 'string') {
+                  throw new Error(
+                    `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "string."`,
+                  )
+                }
+
+                // Ensure the string-argument passes the custom validation.
+                let isValid = arg.pattern ? arg.pattern.test(value) : true
+                if (!isValid) {
                   throw new Error(
                     `The argument with ID ("${effectArgId}") has a value ("${value}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) that is invalid.`,
                   )
                 }
               }
 
-              // Ensure the force argument has the correct type.
+              if (arg.type === 'large-string') {
+                if (typeof value !== 'string') {
+                  throw new Error(
+                    `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "string."`,
+                  )
+                }
+              }
+
               if (arg.type === 'force') {
                 if (typeof value !== 'object') {
                   throw new Error(
@@ -295,7 +290,6 @@ const validateMissionEffects = (
                 }
               }
 
-              // Ensure the node argument has the correct type.
               if (arg.type === 'node') {
                 if (typeof value !== 'object') {
                   throw new Error(
@@ -316,6 +310,28 @@ const validateMissionEffects = (
                     )}") within the effect ({ _id: "${effect._id}", name: "${
                       effect.name
                     }" }) that has missing properties that are required.`,
+                  )
+                }
+              }
+
+              if (arg.type === 'number') {
+                if (typeof value !== 'number') {
+                  throw new Error(
+                    `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "number."`,
+                  )
+                }
+
+                if (arg.integersOnly && !isInteger(value)) {
+                  throw new Error(
+                    `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is not an integer.`,
+                  )
+                }
+              }
+
+              if (arg.type === 'boolean') {
+                if (typeof value !== 'boolean') {
+                  throw new Error(
+                    `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "boolean."`,
                   )
                 }
               }
@@ -736,9 +752,14 @@ const sanitizeHtml = (html: string): string => {
  * The schema for a mission in the database.
  */
 export const MissionSchema = new Schema<
-  TMissionSchema,
+  TMission,
   TMissionModel,
-  TMissionMethods
+  TMissionMethods,
+  {},
+  TMissionVirtuals,
+  TMissionStaticMethods,
+  DefaultSchemaOptions,
+  TMissionDoc
 >(
   {
     name: {
@@ -897,7 +918,7 @@ export const MissionSchema = new Schema<
                         set: sanitizeHtml,
                       },
                       effects: {
-                        // Effect validation takes places in the pre-save hook.
+                        //! Effect validation takes places in the pre-save hook.
                         type: [
                           {
                             _id: { type: String, required: true },
@@ -952,10 +973,10 @@ export const MissionSchema = new Schema<
     strict: 'throw',
     minimize: false,
     toJSON: {
-      transform: transformObjectIdToString,
+      transform: toJson,
     },
     toObject: {
-      transform: transformObjectIdToString,
+      transform: toJson,
     },
     statics: {
       findByIdAndModify,
@@ -974,7 +995,7 @@ MissionSchema.pre<TMissionDoc>('save', function (next) {
 })
 
 // Called before a find or update is made to the database.
-MissionSchema.pre<Query<TMissionSchema, TMissionModel>>(
+MissionSchema.pre<TPreMissionQuery>(
   ['find', 'findOne', 'findOneAndUpdate', 'updateOne'],
   function (next) {
     // Modify the query.
@@ -985,9 +1006,9 @@ MissionSchema.pre<Query<TMissionSchema, TMissionModel>>(
 )
 
 // Converts ObjectIds to strings.
-MissionSchema.post<Query<TMissionSchema, TMissionModel>>(
+MissionSchema.post<TPostMissionQuery>(
   ['find', 'findOne', 'updateOne', 'findOneAndUpdate'],
-  function (missionData: TMissionSchema | TMissionSchema[]) {
+  function (missionData: TMissionDoc | TMissionDoc[]) {
     // If the mission is null, then return.
     if (!missionData) return
 
@@ -996,7 +1017,7 @@ MissionSchema.post<Query<TMissionSchema, TMissionModel>>(
 
     // Transform the ObjectIds to strings.
     for (let missionDatum of missionData) {
-      missionDatum._id = missionDatum._id?.toString()
+      missionDatum._id = missionDatum.id
     }
   },
 )
@@ -1012,8 +1033,9 @@ MissionSchema.post<TMissionDoc>('save', function () {
 
 /**
  * Represents a mission in the database.
+ * @see https://mongoosejs.com/docs/typescript/schemas.html#generic-parameters
  */
-type TMissionSchema = TCommonMissionJson & {
+type TMission = TCommonMissionJson & {
   /**
    * Determines if the mission is deleted.
    */
@@ -1022,11 +1044,13 @@ type TMissionSchema = TCommonMissionJson & {
 
 /**
  * Represents the methods available for a `MissionModel`.
+ * @see https://mongoosejs.com/docs/typescript/statics-and-methods.html
  */
 type TMissionMethods = {}
 
 /**
  * Represents the static methods available for a `MissionModel`.
+ * @see https://mongoosejs.com/docs/typescript/statics-and-methods.html
  */
 type TMissionStaticMethods = {
   /**
@@ -1044,30 +1068,47 @@ type TMissionStaticMethods = {
    */
   findByIdAndModify(
     _id: any,
-    projection?: ProjectionType<TMissionSchema> | null,
-    options?: QueryOptions<TMissionSchema> | null,
+    projection?: ProjectionType<TMission> | null,
+    options?: QueryOptions<TMission> | null,
     updates?: Partial<TCommonMissionJson> | null,
   ): Promise<TMissionDoc | null>
 }
 
 /**
  * Represents a mongoose model for a mission in the database.
+ * @see https://mongoosejs.com/docs/typescript/schemas.html#generic-parameters
  */
-type TMissionModel = Model<TMissionSchema, {}, TMissionMethods> &
+type TMissionModel = Model<TMission, {}, TMissionMethods> &
   TMissionStaticMethods
 
 /**
  * Represents a mongoose document for a mission in the database.
+ * @see https://mongoosejs.com/docs/typescript/schemas.html#generic-parameters
  */
-type TMissionDoc = Document<any, any, TMissionSchema>
+type TMissionDoc = HydratedDocument<TMission, TMissionMethods, TMissionVirtuals>
+
+/**
+ * Represents the virtual properties for a mission in the database.
+ * @see https://mongoosejs.com/docs/tutorials/virtuals.html
+ */
+type TMissionVirtuals = {}
+
+/* -- QUERY TYPES -- */
+
+/**
+ * The type for a pre-query middleware for a `MissionModel`.
+ */
+type TPreMissionQuery = Query<TMission, TMission>
+
+/**
+ * The type for a post-query middleware for a `MissionModel`.
+ */
+type TPostMissionQuery = Query<TMissionDoc, TMissionDoc>
 
 /* -- MODEL -- */
 
 /**
  * The mongoose model for a mission in the database.
  */
-const MissionModel = model<TMissionSchema, TMissionModel>(
-  'Mission',
-  MissionSchema,
-)
+const MissionModel = model<TMission, TMissionModel>('Mission', MissionSchema)
 export default MissionModel

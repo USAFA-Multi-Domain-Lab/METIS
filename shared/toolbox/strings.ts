@@ -36,6 +36,7 @@ export default class StringToolbox {
    * Capitalizes the first letter of the given string.
    */
   public static capitalize(str: string): string {
-    return str.charAt(0).toUpperCase() + str.slice(1)
+    // Replaces the first letter of each word with its uppercase version.
+    return str.replace(/\b\w/g, (char) => char.toUpperCase())
   }
 }

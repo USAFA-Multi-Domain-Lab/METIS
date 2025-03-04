@@ -109,7 +109,7 @@ export default abstract class Target<
       // Extract the arguments from the effect.
       let {
         nodeMetadata,
-        blockNode,
+        blockStatus,
         successChance,
         processTime,
         resourceCost,
@@ -126,15 +126,22 @@ export default abstract class Target<
       if (
         typeof nodeMetadata.forceId !== 'string' ||
         typeof nodeMetadata.nodeId !== 'string' ||
-        typeof blockNode !== 'boolean'
+        typeof blockStatus !== 'string'
       ) {
         throw new Error(errorMessage)
       }
 
       // Update the block status of the node.
-      blockNode
-        ? context.blockNode({ nodeId })
-        : context.unblockNode({ nodeId })
+      if (blockStatus === 'block') {
+        context.blockNode({ nodeId })
+      } else if (blockStatus === 'unblock') {
+        context.unblockNode({ nodeId })
+      } else if (
+        typeof blockStatus !== 'string' &&
+        typeof blockStatus !== 'undefined'
+      ) {
+        throw new Error(errorMessage)
+      }
 
       // If the success chance is a number, then modify the success chance.
       if (successChance && typeof successChance === 'number') {
@@ -172,10 +179,29 @@ export default abstract class Target<
         groupingId: 'node',
       },
       {
-        type: 'boolean',
-        _id: 'blockNode',
-        name: 'Block Node',
+        _id: 'blockStatus',
+        type: 'dropdown',
+        name: 'Block Status',
+        required: true,
         groupingId: 'block-node',
+        options: [
+          {
+            _id: 'no-change',
+            name: 'No Change',
+            value: undefined,
+          },
+          {
+            _id: 'block',
+            name: 'Block',
+            value: 'block',
+          },
+          {
+            _id: 'unblock',
+            name: 'Unblock',
+            value: 'unblock',
+          },
+        ],
+        default: { _id: 'no-change', name: 'No Change', value: undefined },
         dependencies: [Dependency.NODE('nodeMetadata')],
       },
       {
