@@ -1,7 +1,7 @@
 import Paragraph from '@tiptap/extension-paragraph'
 
 /**
- * Custom paragraph node for the rich-text editor.
+ * Custom paragraph extension for the rich-text editor.
  */
 const MetisParagraph = Paragraph.extend({
   addAttributes() {

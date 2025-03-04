@@ -2,7 +2,7 @@ import MissionAction, {
   TCommonMissionActionJson,
   TMissionActionOptions,
 } from 'metis/missions/actions'
-import IActionExecution, {
+import TCommonActionExecution, {
   TActionExecutionJson,
   TExecutionCheats,
 } from 'metis/missions/actions/executions'
@@ -156,7 +156,7 @@ export type TServerMissionActionOptions = TMissionActionOptions & {}
 /**
  * Options for TExecuteOptions.
  */
-export type TExecuteOptions<TActionExecution extends IActionExecution> = {
+export type TExecuteOptions<TActionExecution extends TCommonActionExecution> = {
   /**
    * The configuration for the session.
    */

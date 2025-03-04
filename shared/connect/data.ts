@@ -538,7 +538,7 @@ export type TResponseEvents = {
       /**
        * The action that was executed.
        */
-      execution: NonNullable<TActionExecutionJson>
+      execution: TActionExecutionJson
       /**
        * The resource remaining for the force after the
        * action's execution cost was deducted.

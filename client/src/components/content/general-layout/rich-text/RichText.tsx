@@ -10,8 +10,8 @@ import {
 } from '../../user-controls/buttons/ButtonSvg'
 import ButtonSvgPanel_v2 from '../../user-controls/buttons/ButtonSvgPanel_v2'
 import './RichText.scss'
-import MetisSpan from './nodes/span'
-import MetisParagraph from './nodes/paragraph'
+import MetisSpan from './extensions/span'
+import MetisParagraph from './extensions/paragraph'
 import { TRichText_P } from '.'
 
 /**

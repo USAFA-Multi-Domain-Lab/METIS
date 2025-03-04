@@ -10,6 +10,7 @@ import {
 } from '../actions'
 import TActionExecution, {
   TActionExecutionJson,
+  TActionExecutionState,
   default as TCommonMissionExecution,
   TExecution,
 } from '../actions/executions'
@@ -79,7 +80,7 @@ export default abstract class MissionNode<
     } else if (execution !== null) {
       return 'executing'
     } else {
-      return ArrayToolbox.lastOf(outcomes).successful ? 'successful' : 'failed'
+      return ArrayToolbox.lastOf(outcomes).successful ? 'success' : 'failure'
     }
   }
 
@@ -420,7 +421,7 @@ export default abstract class MissionNode<
   public abstract loadOutcome(
     data: TActionOutcomeJson,
     options?: ILoadOutcomeOptions,
-  ): IActionOutcome
+  ): TOutcome<T>
 
   // Implemented
   public abstract updateBlockStatus(blocked: boolean): void
@@ -729,11 +730,7 @@ export type TMissionNodeOptions = {
 /**
  * Possible states for the execution of a node.
  */
-export type TNodeExecutionState =
-  | 'unexecuted'
-  | 'executing'
-  | 'successful'
-  | 'failed'
+export type TNodeExecutionState = 'unexecuted' | TActionExecutionState
 
 /**
  * Options for the `MissionNode.open` method.
