@@ -4,7 +4,7 @@ import {
   TCommonMissionAction,
   TCommonMissionActionJson,
 } from 'metis/missions/actions'
-import IActionExecution, {
+import TCommonActionExecution, {
   TActionExecutionJson,
   TExecution,
 } from 'metis/missions/actions/executions'
@@ -212,7 +212,7 @@ export type TCommonOutput = {
   /**
    * The current execution in process on the node by an action.
    */
-  get execution(): IActionExecution | null
+  get execution(): TCommonActionExecution | null
   /**
    * Converts the output to JSON.
    */

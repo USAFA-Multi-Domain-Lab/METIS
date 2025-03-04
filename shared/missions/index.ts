@@ -5,9 +5,9 @@ import { TCommonTarget } from 'metis/target-environments/targets'
 import { TCommonUser } from 'metis/users'
 import { v4 as generateHash } from 'uuid'
 import context from '../context'
-import ObjectToolbox, { AnyObject } from '../toolbox/objects'
+import { AnyObject } from '../toolbox/objects'
 import { TAction, TCommonMissionAction } from './actions'
-import IActionExecution from './actions/executions'
+import { TCommonActionExecution } from './actions/executions'
 import IActionOutcome from './actions/outcomes'
 import { TCommonEffect, TEffect } from './effects'
 import {
@@ -27,7 +27,6 @@ import MissionPrototype, {
   TPrototype,
 } from './nodes/prototypes'
 import { DateToolbox } from '../toolbox/dates'
-import exp from 'constants'
 
 /**
  * This represents a mission for a student to complete.
@@ -600,7 +599,7 @@ export type TCommonMissionTypes = {
   prototype: TCommonMissionPrototype
   node: TCommonMissionNode
   action: TCommonMissionAction
-  execution: IActionExecution
+  execution: TCommonActionExecution
   outcome: IActionOutcome
   targetEnv: TCommonTargetEnv
   target: TCommonTarget

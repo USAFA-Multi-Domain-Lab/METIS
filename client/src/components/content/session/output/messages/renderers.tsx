@@ -68,6 +68,9 @@ const tagRenderers: TSingleTypeMapped<TOutputTag, TOutputTagRenderer> = {
   'opens-node': ({ action }) => {
     return defaultTo(action, 'opensNodeFormatted')
   },
+  'execution-state': ({ execution }) => {
+    return defaultTo(execution, 'state')
+  },
 }
 
 /**

@@ -53,6 +53,7 @@ type TOutputTag =
   | 'time-remaining'
   | 'resource-cost'
   | 'opens-node'
+  | 'execution-state'
 
 /**
  * A renderer function for a specific HTML tag which

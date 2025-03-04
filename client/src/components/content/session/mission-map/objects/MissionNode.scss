@@ -69,11 +69,11 @@
       }
     }
 
-    &.Successful {
+    &.Success {
       background-color: $color-success-dark;
     }
 
-    &.Failed {
+    &.Failure {
       background-color: $color-failure-dark;
     }
 

@@ -1,7 +1,7 @@
 import { Node } from '@tiptap/core'
 
 /**
- * Span-element node for the editor.
+ * Span-element extension for the editor.
  */
 const MetisSpan = Node.create({
   name: 'span',
