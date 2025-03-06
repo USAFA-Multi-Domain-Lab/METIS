@@ -1,28 +1,26 @@
-import { TCommonSession } from 'metis/sessions'
-import { TCommonSessionMember } from 'metis/sessions/members'
-import { TCommonTargetEnv } from 'metis/target-environments'
-import { TCommonTarget } from 'metis/target-environments/targets'
-import { TCommonUser } from 'metis/users'
+import Session from 'metis/sessions'
+import SessionMember from 'metis/sessions/members'
+import TargetEnvironment from 'metis/target-environments'
+import Target from 'metis/target-environments/targets'
+import User from 'metis/users'
 import { v4 as generateHash } from 'uuid'
 import context from '../context'
 import { AnyObject } from '../toolbox/objects'
-import { TAction, TCommonMissionAction } from './actions'
-import { TCommonActionExecution } from './actions/executions'
+import MissionAction, { TAction } from './actions'
+import ActionExecution from './actions/executions'
 import IActionOutcome from './actions/outcomes'
-import { TCommonEffect, TEffect } from './effects'
+import Effect, { TEffect } from './effects'
 import {
   MissionForce,
-  TCommonMissionForce,
-  TCommonMissionForceJson,
+  TMissionForceSaveJson,
   TForce,
   TMissionForceJson,
   TMissionForceOptions,
 } from './forces'
-import { TCommonOutput } from './forces/output'
-import { TCommonMissionNode, TNode } from './nodes'
+import MissionOutput from './forces/output'
+import MissionNode, { TNode } from './nodes'
 import MissionPrototype, {
-  TCommonMissionPrototype,
-  TCommonMissionPrototypeJson,
+  TMissionPrototypeJson,
   TMissionPrototypeOptions,
   TPrototype,
 } from './nodes/prototypes'
@@ -33,14 +31,17 @@ import { DateToolbox } from '../toolbox/dates'
  */
 export default abstract class Mission<
   T extends TCommonMissionTypes = TCommonMissionTypes,
-> implements TCommonMission
-{
-  // Implemented
+> {
+  /**
+   * All nodes that exist in the mission.
+   */
   public get nodes(): TNode<T>[] {
     return this.forces.flatMap((force) => force.nodes)
   }
 
-  // Implemented
+  /**
+   * All actions that exist in the mission.
+   */
   public get actions(): Map<string, TAction<T>> {
     let actions = new Map<string, TAction<T>>()
 
@@ -53,50 +54,81 @@ export default abstract class Mission<
     return actions
   }
 
-  // Implemented
+  /**
+   * All effects that exist in the mission.
+   */
   public get effects(): TEffect<T>[] {
     return Array.from(this.actions.values()).flatMap((action) => action.effects)
   }
 
-  // Implemented
+  /**
+   * The ID of the mission.
+   */
   public _id: string
 
-  // Implemented
+  /**
+   * The name of the mission.
+   */
   public name: string
 
-  // Implemented
+  /**
+   * The file name to use to store an export for the mission.
+   */
   public get fileName(): string {
     return Mission.determineFileName(this.name)
   }
 
-  // Implemented
+  /**
+   * The version number of the mission.
+   */
   public versionNumber: number
 
-  // Implemented
-  public prototypes: TPrototype<T>[]
-
-  // Implemented
-  public forces: TForce<T>[]
-
-  // Implemented
+  /**
+   * The seed for the mission. Pre-determines outcomes.
+   */
   public seed: string
 
-  // Implemented
+  /**
+   * A label given to resources that defines the currency used in the mission.
+   */
   public resourceLabel: string
 
-  // Implemented
+  /**
+   * The date/time the mission was created.
+   */
   public createdAt: Date | null
 
-  // Implemented
+  /**
+   * The date/time the mission was last updated.
+   */
   public updatedAt: Date | null
 
-  // Implemented
+  /**
+   * The date/time the mission was last launched.
+   */
   public launchedAt: Date | null
 
-  // Implemented
+  /**
+   * Prototype nodes for the mission, representing the mission's node
+   * structure outside of any forces.
+   */
+  public prototypes: TPrototype<T>[]
+
+  /**
+   * Forces in the mission, representing different implementation of nodes
+   * from their corresponding prototypes.
+   */
+  public forces: TForce<T>[]
+
+  /**
+   * The root prototype of the mission.
+   */
   public root: TPrototype<T>
 
-  // Implemented
+  /**
+   * The structure of the mission, representing the relationships between
+   * the prototypes in the mission.
+   */
   public get structure(): AnyObject {
     return Mission.determineStructure(this.root)
   }
@@ -144,7 +176,11 @@ export default abstract class Mission<
     })
   }
 
-  // Implemented
+  /**
+   * Converts the mission to JSON.
+   * @param options The options for converting the mission to JSON.
+   * @returns the JSON for the mission.
+   */
   public toJson(options: TMissionJsonOptions = {}): TMissionJson {
     let { idExposure = true, forceExposure = Mission.DEFAULT_FORCE_EXPOSURE } =
       options
@@ -168,7 +204,7 @@ export default abstract class Mission<
      * @returns The force with the given ID.
      * @throws An error if the force with the given ID is not found.
      */
-    const determineForce = (forceId: TCommonMissionForce['_id']) => {
+    const determineForce = (forceId: TForce<T>['_id']) => {
       force = this.forces.find(({ _id }) => _id === forceId)
       if (!force) {
         throw Error(
@@ -183,7 +219,7 @@ export default abstract class Mission<
      * @param force If included, only this force will be added to the JSON,
      * otherwise all forces will be added.
      */
-    const addForces = (force?: TCommonMissionForce) => {
+    const addForces = (force?: TForce<T>) => {
       if (force) json.forces.push(force.toJson(options))
       else json.forces = this.forces.map((force) => force.toJson(options))
     }
@@ -199,7 +235,7 @@ export default abstract class Mission<
      * and revealed prototypes of this force will be added
      * to the JSON.
      */
-    const addStructuralData = (force?: TCommonMissionForce) => {
+    const addStructuralData = (force?: TForce<T>) => {
       if (force) {
         json.structure = force.revealedStructure
         json.prototypes = force.revealedPrototypes.map((prototype) =>
@@ -255,7 +291,7 @@ export default abstract class Mission<
    */
   protected importStructure(
     structure: AnyObject,
-    prototypeData: TCommonMissionPrototypeJson[],
+    prototypeData: TMissionPrototypeJson[],
   ): void {
     try {
       /**
@@ -308,7 +344,7 @@ export default abstract class Mission<
    * @returns The imported prototype.
    */
   protected abstract importPrototype(
-    data?: Partial<TCommonMissionPrototypeJson>,
+    data?: Partial<TMissionPrototypeJson>,
     options?: TMissionPrototypeOptions<TPrototype<T>>,
   ): TPrototype<T>
 
@@ -319,11 +355,15 @@ export default abstract class Mission<
    * @returns The parsed force data.
    */
   protected abstract importForces(
-    data: TCommonMissionForceJson[],
+    data: TMissionForceSaveJson[],
     options?: TMissionForceOptions,
   ): TForce<T>[]
 
-  // Implemented
+  /**
+   * @param prototypeId The ID of the prototype to get.
+   * @returns The prototype with the given ID, or undefined
+   * if no prototype is found.
+   */
   public getPrototype(
     prototypeId: TPrototype<T>['_id'] | undefined,
   ): TPrototype<T> | undefined {
@@ -331,7 +371,11 @@ export default abstract class Mission<
     else return this.prototypes.find(({ _id }) => _id === prototypeId)
   }
 
-  // Implemented
+  /**
+   * @param forceId The ID of the force to get.
+   * @returns The force with the given ID, or undefined
+   * if no force is found.
+   */
   public getForce(
     forceId: TForce<T>['_id'] | null | undefined,
   ): TForce<T> | undefined {
@@ -339,7 +383,11 @@ export default abstract class Mission<
     return Mission.getForce(this, forceId)
   }
 
-  // Implemented
+  /**
+   * @param nodeId The ID of the node to get.
+   * @returns The node with the given ID, or undefined
+   * if no node is found.
+   */
   public getNode(nodeId: TNode<T>['_id']): TNode<T> | undefined {
     return nodeId ? Mission.getNode(this, nodeId) : undefined
   }
@@ -475,9 +523,7 @@ export default abstract class Mission<
    * @param structure The node structure from which to map the relationships.
    * @param rootPrototype The root prototype of the structure. This root prototype should not be defined in the prototype map, nor in the node structure.
    */
-  protected static mapRelationships = <
-    TPrototype extends TCommonMissionPrototype,
-  >(
+  protected static mapRelationships = <TPrototype extends MissionPrototype>(
     prototypes: Map<string, TPrototype>,
     structure: AnyObject,
     rootPrototype: TPrototype,
@@ -509,16 +555,14 @@ export default abstract class Mission<
    * @param root The root prototype from which to determine the structure.
    * @returns The raw structure.
    */
-  protected static determineStructure(
-    root: TCommonMissionPrototype,
-  ): AnyObject {
+  protected static determineStructure(root: MissionPrototype): AnyObject {
     /**
      * The recursive algorithm used to determine the structure.
      * @param cursor The current prototype being processed.
      * @param cursorStructure The structure of the current prototype being processed.
      */
     const operation = (
-      cursor: TCommonMissionPrototype = root,
+      cursor: MissionPrototype = root,
       cursorStructure: AnyObject = {},
     ): AnyObject => {
       for (let child of cursor.children) {
@@ -542,7 +586,7 @@ export default abstract class Mission<
    * @param forceId The ID of the force to get.
    * @returns The force with the given ID, or undefined if no force is found.
    */
-  public static getForce<TMission extends TMissionJson | TCommonMission>(
+  public static getForce<TMission extends TMissionJson | Mission>(
     mission: TMission,
     forceId: string | null | undefined,
   ): TMission['forces'][0] | undefined {
@@ -555,7 +599,7 @@ export default abstract class Mission<
    * @param nodeId The ID of the node to get.
    * @returns The node with the given ID, or undefined if no node is found.
    */
-  public static getNode<TMission extends TMissionJson | TCommonMission>(
+  public static getNode<TMission extends TMissionJson | Mission>(
     mission: TMission,
     nodeId: string,
   ): TMission['forces'][0]['nodes'][0] | undefined {
@@ -572,7 +616,7 @@ export default abstract class Mission<
    * @param prototypeId The ID of the prototype to get.
    * @returns The prototype with the given ID, or undefined if no prototype is found.
    */
-  public static getPrototype<TMission extends TMissionJson | TCommonMission>(
+  public static getPrototype<TMission extends TMissionJson | Mission>(
     mission: TMission,
     prototypeId: string | undefined,
   ): TMission['prototypes'][0] | undefined {
@@ -590,20 +634,20 @@ export default abstract class Mission<
  * mission-related classes.
  */
 export type TCommonMissionTypes = {
-  session: TCommonSession
-  member: TCommonSessionMember
-  user: TCommonUser
-  mission: TCommonMission
-  force: TCommonMissionForce
-  output: TCommonOutput
-  prototype: TCommonMissionPrototype
-  node: TCommonMissionNode
-  action: TCommonMissionAction
-  execution: TCommonActionExecution
+  session: Session
+  member: SessionMember
+  user: User
+  mission: Mission
+  force: MissionForce
+  output: MissionOutput
+  prototype: MissionPrototype
+  node: MissionNode
+  action: MissionAction
+  execution: ActionExecution
   outcome: IActionOutcome
-  targetEnv: TCommonTargetEnv
-  target: TCommonTarget
-  effect: TCommonEffect
+  targetEnv: TargetEnvironment
+  target: Target
+  effect: Effect
 }
 
 /**
@@ -629,104 +673,6 @@ export type TCreateMissionJsonType<
 }
 
 /**
- * Interface of the abstract `Mission` class.
- * @note Any public, non-static properties and functions of the `Mission`
- * class must first be defined here for them to be accessible to other
- * mission-related classes.
- */
-export interface TCommonMission {
-  /**
-   * All nodes that exist in the mission.
-   */
-  get nodes(): TCommonMissionNode[]
-  /**
-   * All actions that exist in the mission.
-   */
-  get actions(): Map<string, TCommonMissionAction>
-  /**
-   * All effects that exist in the mission.
-   */
-  get effects(): TCommonEffect[]
-  /**
-   * The ID of the mission.
-   */
-  _id: string
-  /**
-   * The name of the mission.
-   */
-  name: string
-  /**
-   * The file name to use to store an export for the mission.
-   */
-  get fileName(): string
-  /**
-   * The version number of the mission.
-   */
-  versionNumber: number
-  /**
-   * The seed for the mission. Pre-determines outcomes.
-   */
-  seed: string
-  /**
-   * A label given to resources that defines the currency used in the mission.
-   */
-  resourceLabel: string
-  /**
-   * The date/time the mission was created.
-   */
-  createdAt: Date | null
-  /**
-   * The date/time the mission was last updated.
-   */
-  updatedAt: Date | null
-  /**
-   * The date/time the mission was last launched.
-   */
-  launchedAt: Date | null
-  /**
-   * Prototype nodes for the mission, representing the mission's node
-   * structure outside of any forces.
-   */
-  prototypes: TCommonMissionPrototype[]
-  /**
-   * Forces in the mission, representing different implementation of nodes
-   * from their corresponding prototypes.
-   */
-  forces: TCommonMissionForce[]
-  /**
-   * The root prototype of the mission.
-   */
-  root: TCommonMissionPrototype
-  /**
-   * The structure of the mission, representing the relationships between
-   * the prototypes in the mission.
-   */
-  structure: AnyObject
-  /**
-   * Converts the mission to JSON.
-   * @param options The options for converting the mission to JSON.
-   * @returns the JSON for the mission.
-   */
-  toJson: (options?: TMissionJsonOptions) => TMissionJson
-  /**
-   * Gets a prototype from the mission by its ID.
-   */
-  getPrototype: (
-    prototypeId: TCommonMissionPrototype['_id'] | undefined,
-  ) => TCommonMissionPrototype | undefined
-  /**
-   * Gets a force from the mission by its ID.
-   */
-  getForce: (
-    forceId: TCommonMissionForce['_id'],
-  ) => TCommonMissionForce | undefined
-  /**
-   * Gets a node from the mission by its ID.
-   */
-  getNode: (nodeId: TCommonMissionNode['_id']) => TCommonMissionNode | undefined
-}
-
-/**
  * Extracts the mission type from the mission types.
  * @param T The mission types.
  * @returns The mission type.
@@ -737,23 +683,25 @@ export type TMission<T extends TCommonMissionTypes> = T['mission']
  * JSON representation of a `Mission` object.
  */
 export type TMissionJson = TCreateMissionJsonType<
-  TCommonMission,
-  'name' | 'versionNumber' | 'seed' | 'resourceLabel' | 'structure',
+  Mission,
+  'name' | 'versionNumber' | 'seed' | 'resourceLabel',
   {
     _id?: string
     createdAt: string | null
     updatedAt: string | null
     launchedAt: string | null
     forces: TMissionForceJson[]
-    prototypes: TCommonMissionPrototypeJson[]
+    prototypes: TMissionPrototypeJson[]
+    structure: AnyObject
   }
 >
 
 /**
- * Plain non-session-specific JSON representation of a `Mission` object.
+ * Session-agnostic JSON representation of a Mission object
+ * which can be saved to a database.
  */
-export type TCommonMissionJson = Omit<TMissionJson, 'forces'> & {
-  forces: TCommonMissionForceJson[]
+export type TMissionSaveJson = Omit<TMissionJson, 'forces'> & {
+  forces: TMissionForceSaveJson[]
 }
 
 /**
@@ -797,7 +745,7 @@ export type TMissionJsonOptions = {
  */
 export type TSessionDataExposure =
   | { expose: 'all' }
-  | { expose: 'user-specific'; userId: TCommonUser['_id'] }
+  | { expose: 'user-specific'; userId: User['_id'] }
   | { expose: 'none' }
 
 /**
@@ -814,8 +762,8 @@ export type TSessionDataExposure =
  */
 export type TForceExposure =
   | { expose: 'all' }
-  | { expose: 'force-with-all-nodes'; forceId: TCommonMissionForce['_id'] }
-  | { expose: 'force-with-revealed-nodes'; forceId: TCommonMissionForce['_id'] }
+  | { expose: 'force-with-all-nodes'; forceId: MissionForce['_id'] }
+  | { expose: 'force-with-revealed-nodes'; forceId: MissionForce['_id'] }
   | { expose: 'none' }
 
 /**
@@ -828,7 +776,7 @@ export type TDetermineRevealedOptions = {
    * revealed portion of the mission.
    * @note If `null`, all forces will be included.
    */
-  forceIds: TCommonMissionForce['_id'][] | null
+  forceIds: MissionForce['_id'][] | null
 }
 
 /**

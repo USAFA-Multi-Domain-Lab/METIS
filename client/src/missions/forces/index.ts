@@ -1,5 +1,4 @@
 import { TLine_P } from 'src/components/content/session/mission-map/objects/Line'
-import { TListenerTargetEmittable } from 'src/toolbox/hooks'
 import ClientMission, {
   TClientMissionTypes,
   TMissionComponent,
@@ -10,7 +9,7 @@ import {
   TMissionForceJson,
   TMissionForceOptions,
 } from '../../../../shared/missions/forces'
-import { TCommonOutputJson } from '../../../../shared/missions/forces/output'
+import { TOutputJson } from '../../../../shared/missions/forces/output'
 import {
   TMissionNodeJson,
   TMissionNodeOptions,
@@ -21,6 +20,7 @@ import { Vector2D } from '../../../../shared/toolbox/space'
 import ClientMissionAction from '../actions'
 import ClientMissionNode from '../nodes'
 import ClientOutput from './outputs'
+import { TListenerTargetEmittable } from '../../../../shared/events'
 
 /**
  * Class for managing mission prototypes on the client.
@@ -468,7 +468,7 @@ export default class ClientMissionForce
    * Parses the output data into output objects.
    * @param outputs The output data to parse.
    */
-  private parseOutputs(outputs: TCommonOutputJson[]): ClientOutput[] {
+  private parseOutputs(outputs: TOutputJson[]): ClientOutput[] {
     return outputs.map((outputJson) => new ClientOutput(this, outputJson))
   }
 

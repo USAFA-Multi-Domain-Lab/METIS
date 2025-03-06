@@ -2,12 +2,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientUser from 'src/users'
 import { TLogin } from '../../../../shared/logins'
-import {
-  TListenerTarget,
-  TListenerTargetEmittable,
-  TRequireLoginReturn,
-  TResizeObserverOptions,
-} from './index.d'
+import { TRequireLoginReturn, TResizeObserverOptions } from './index.d'
+import { TListenerTarget } from '../../../../shared/events'
 
 /* -- HOOKS -- */
 

@@ -1,7 +1,6 @@
 import axios, { AxiosError, AxiosResponse } from 'axios'
 import ClientUser from 'src/users'
 import { TLogin, TLoginJson } from '../../../shared/logins'
-import { TCommonUser } from '../../../shared/users'
 
 export default class ClientLogin {
   /**
@@ -53,7 +52,7 @@ export default class ClientLogin {
    * @rejects The error that occurred while logging in.
    */
   public static $logIn(
-    username: TCommonUser['username'],
+    username: ClientUser['username'],
     password: string,
     forceful: boolean = false,
   ): Promise<{

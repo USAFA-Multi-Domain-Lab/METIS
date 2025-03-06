@@ -3,7 +3,7 @@ import { Request } from 'express'
 import ServerUser from 'metis/server/users'
 import { AnyObject } from 'metis/toolbox/objects'
 import StringToolbox from 'metis/toolbox/strings'
-import User, { TCommonUserJson } from 'metis/users'
+import User, { TUserJson } from 'metis/users'
 import UserAccess, { TUserAccess } from 'metis/users/accesses'
 import UserPermission, { TUserPermission } from 'metis/users/permissions'
 import mongoose, {
@@ -59,11 +59,7 @@ export const hashPassword = async (password: string): Promise<string> => {
  * @param options The options in use.
  * @returns The JSON representation of a `User` document.
  */
-const toJson = (
-  doc: TUserDoc,
-  ret: TCommonUserJson,
-  options: any,
-): TCommonUserJson => {
+const toJson = (doc: TUserDoc, ret: TUserJson, options: any): TUserJson => {
   return {
     ...ret,
     _id: doc.id,
@@ -155,8 +151,8 @@ const queryForFilteredUsers = (query: TPreUserQuery): void => {
  * @resolves When the user has been authenticated.
  * @rejects When the user could not be authenticated.
  */
-const authenticate = async (request: Request): Promise<TCommonUserJson> => {
-  return new Promise<TCommonUserJson>(async (resolve, reject) => {
+const authenticate = async (request: Request): Promise<TUserJson> => {
+  return new Promise<TUserJson>(async (resolve, reject) => {
     try {
       // Extract user data from the request.
       let { username, password } = request.body
@@ -192,7 +188,7 @@ const authenticate = async (request: Request): Promise<TCommonUserJson> => {
       if (!same) throw new StatusError('Incorrect password.', 401)
 
       // Convert the user document to JSON.
-      let userJson: TCommonUserJson = userDoc.toJSON()
+      let userJson: TUserJson = userDoc.toJSON()
       // Return the user.
       resolve(userJson)
     } catch (error: any) {
@@ -221,7 +217,7 @@ const findByIdAndModify = (
   _id: any,
   projection?: ProjectionType<TUser> | null,
   options?: TUserQueryOptions | null,
-  updates?: Partial<TCommonUserJson> | null,
+  updates?: Partial<TUserJson> | null,
 ): Promise<TUserDoc | null> => {
   return new Promise<TUserDoc | null>(async (resolve, reject) => {
     try {
@@ -256,7 +252,7 @@ const findByIdAndModify = (
  * @param next The next function to call.
  */
 const validate_users = async (
-  userJson: Partial<TCommonUserJson>,
+  userJson: Partial<TUserJson>,
   isNew: boolean,
   next: CallbackWithoutResultAndOptionalError,
 ): Promise<void> => {
@@ -352,9 +348,7 @@ const validate_users = async (
  * Validates the username of a user.
  * @param username The username to validate.
  */
-const validate_users_username = (
-  username: TCommonUserJson['username'],
-): boolean => {
+const validate_users_username = (username: TUserJson['username']): boolean => {
   return User.isValidUsername(username)
 }
 
@@ -381,7 +375,7 @@ const validate_users_expressPermissionId = (
  * @param name The name to validate.
  */
 const validate_users_name = (
-  name: TCommonUserJson['firstName'] | TCommonUserJson['lastName'],
+  name: TUserJson['firstName'] | TUserJson['lastName'],
 ): boolean => {
   return User.isValidName(name)
 }
@@ -391,7 +385,7 @@ const validate_users_name = (
  * @param password The password to validate.
  */
 const validator_users_password = (
-  password: NonNullable<TCommonUserJson['password']>,
+  password: NonNullable<TUserJson['password']>,
 ): boolean => {
   return ServerUser.isValidHashedPassword(password)
 }
@@ -479,7 +473,7 @@ const UserSchema = new Schema<
 
 // Called before a save is made to the database.
 UserSchema.pre<TUserDoc>('save', async function (next) {
-  let user: TCommonUserJson = this.toJSON()
+  let user: TUserJson = this.toJSON()
   await validate_users(user, this.isNew, next)
   return next()
 })
@@ -527,7 +521,7 @@ UserSchema.post<TUserDoc>('save', function () {
  * Represents a user in the database.
  * @see https://mongoosejs.com/docs/typescript/schemas.html#generic-parameters
  */
-type TUser = TCommonUserJson & {
+type TUser = TUserJson & {
   /**
    * Determines if the user is deleted.
    */
@@ -551,7 +545,7 @@ type TUserStaticMethods = {
    * @resolves When the user has been authenticated.
    * @rejects When the user could not be authenticated.
    */
-  authenticate: (request: Request) => Promise<TCommonUserJson>
+  authenticate: (request: Request) => Promise<TUserJson>
   /**
    * Finds a single document by its `_id` field. Then, if the
    * document is found, modifies the document with the given
@@ -569,7 +563,7 @@ type TUserStaticMethods = {
     _id: any,
     projection?: ProjectionType<TUser> | null,
     options?: TUserQueryOptions | null,
-    updates?: Partial<TCommonUserJson> | null,
+    updates?: Partial<TUserJson> | null,
   ): Promise<TUserDoc | null>
 }
 

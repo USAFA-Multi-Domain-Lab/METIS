@@ -1,57 +1,68 @@
-import { TCommonMission, TCommonMissionTypes } from 'metis/missions'
-import {
-  TAction,
-  TCommonMissionAction,
-  TCommonMissionActionJson,
-} from 'metis/missions/actions'
-import TCommonActionExecution, {
-  TActionExecutionJson,
-  TExecution,
-} from 'metis/missions/actions/executions'
-import {
-  TCommonMissionNode,
-  TCommonMissionNodeJson,
-} from 'metis/missions/nodes'
-import { TCommonMissionForce, TCommonMissionForceJson, TForce } from '.'
+import Mission, { TCommonMissionTypes } from 'metis/missions'
+import { TMissionActionJson } from 'metis/missions/actions'
+import { TActionExecutionJson } from 'metis/missions/actions/executions'
+import { TMissionNodeJson } from 'metis/missions/nodes'
+import { TMissionForceSaveJson, TForce } from '.'
 import StringToolbox from '../../toolbox/strings'
 
 /**
  * An output that's displayed in a force's output panel.
  */
-export default abstract class Output<
+export default abstract class MissionOutput<
   T extends TCommonMissionTypes = TCommonMissionTypes,
-> implements TCommonOutput
-{
-  // Implemented
-  public readonly _id: TCommonOutput['_id']
+> {
+  /**
+   * The output's ID.
+   */
+  public readonly _id: string
 
-  // Implemented
-  public readonly type: TCommonOutput['type']
+  /**
+   * Differentiates different types of outputs being used.
+   */
+  public readonly type: TOutputType
 
-  public get mission(): TCommonMission {
+  /**
+   * The mission where the output belongs.
+   */
+  public get mission(): Mission {
     return this.force.mission
   }
 
-  // Implemented
+  /**
+   * The force where the output belongs.
+   */
   public readonly force: TForce<T>
 
-  // Implemented
+  /**
+   * The node that the session member
+   * interacted with to trigger the output.
+   */
   public readonly node: T['node'] | null
 
-  // Implemented
+  /**
+   * The action that's being executed.
+   */
   public readonly action: T['action'] | null
 
-  // Implemented
-  public readonly prefix: TCommonOutput['prefix']
+  /**
+   * The prefix displayed before the output message.
+   */
+  public readonly prefix: string
 
-  // Implemented
-  public readonly message: TCommonOutput['message']
+  /**
+   * The message to display in the output panel.
+   */
+  public readonly message: string
 
-  // Implemented
-  public readonly time: TCommonOutput['time']
+  /**
+   * The time the output was sent.
+   */
+  public readonly time: number
 
-  // Implemented
-  public readonly timeStamp: TCommonOutput['timeStamp']
+  /**
+   * The formatted time the output was sent.
+   */
+  public readonly timeStamp: string
 
   /**
    * The current execution in process on the node by an action.
@@ -72,15 +83,15 @@ export default abstract class Output<
    */
   public constructor(
     force: TForce<T>,
-    data: Partial<TCommonOutputJson> = Output.DEFAULT_PROPERTIES,
-    options: TOutputOptions = {},
+    data: Partial<TOutputJson> = MissionOutput.DEFAULT_PROPERTIES,
   ) {
-    this._id = data._id ?? Output.DEFAULT_PROPERTIES._id
-    this.type = data.type ?? Output.DEFAULT_PROPERTIES.type
-    this.prefix = data.prefix ?? Output.DEFAULT_PROPERTIES.prefix
-    this.message = data.message ?? Output.DEFAULT_PROPERTIES.message
-    this.time = data.time ?? Output.DEFAULT_PROPERTIES.time
-    this.timeStamp = data.timeStamp ?? Output.DEFAULT_PROPERTIES.timeStamp
+    this._id = data._id ?? MissionOutput.DEFAULT_PROPERTIES._id
+    this.type = data.type ?? MissionOutput.DEFAULT_PROPERTIES.type
+    this.prefix = data.prefix ?? MissionOutput.DEFAULT_PROPERTIES.prefix
+    this.message = data.message ?? MissionOutput.DEFAULT_PROPERTIES.message
+    this.time = data.time ?? MissionOutput.DEFAULT_PROPERTIES.time
+    this.timeStamp =
+      data.timeStamp ?? MissionOutput.DEFAULT_PROPERTIES.timeStamp
 
     this.force = force
     this.node = null as any
@@ -100,8 +111,11 @@ export default abstract class Output<
     }
   }
 
-  // Implemented
-  public toJson(): TCommonOutputJson {
+  /**
+   * Converts the output to JSON.
+   * @returns The JSON representation of the output.
+   */
+  public toJson(): TOutputJson {
     return {
       _id: this._id,
       type: this.type,
@@ -119,7 +133,7 @@ export default abstract class Output<
   /**
    * The default properties for an output.
    */
-  public static get DEFAULT_PROPERTIES(): TCommonOutputJson {
+  public static get DEFAULT_PROPERTIES(): TOutputJson {
     return {
       _id: StringToolbox.generateRandomId(),
       type: 'custom',
@@ -129,7 +143,7 @@ export default abstract class Output<
       prefix: '',
       message: '',
       time: Date.now(),
-      timeStamp: Output.FORMAT_TIME(Date.now()),
+      timeStamp: MissionOutput.FORMAT_TIME(Date.now()),
       execution: null,
     }
   }
@@ -161,68 +175,9 @@ type TOutputType =
   | 'dynamic'
 
 /**
- * Options used to create an `Output`.
- */
-export type TOutputOptions = {}
-
-/**
- * Represents an output for a force's output panel.
- */
-export type TCommonOutput = {
-  /**
-   * The output's ID.
-   */
-  _id: string
-  /**
-   * Differentiates different types of outputs being used.
-   */
-  type: TOutputType
-  /**
-   * The mission where the output belongs.
-   */
-  get mission(): TCommonMission
-  /**
-   * The force where the output belongs.
-   */
-  force: TCommonMissionForce
-  /**
-   * The node that the session member interacted with to trigger the output.
-   */
-  node: TCommonMissionNode | null
-  /**
-   * The action that's being executed.
-   */
-  action: TCommonMissionAction | null
-  /**
-   * The prefix displayed before the output message.
-   */
-  prefix: string
-  /**
-   * The message to display in the output panel.
-   */
-  message: string
-  /**
-   * The time the output was sent.
-   */
-  time: number
-  /**
-   * The formatted time the output was sent.
-   */
-  timeStamp: string
-  /**
-   * The current execution in process on the node by an action.
-   */
-  get execution(): TCommonActionExecution | null
-  /**
-   * Converts the output to JSON.
-   */
-  toJson: () => TCommonOutputJson
-}
-
-/**
  * Plain JSON representation of an output for a force's output panel.
  */
-export type TCommonOutputJson = {
+export type TOutputJson = {
   /**
    * The output's ID.
    */
@@ -234,15 +189,15 @@ export type TCommonOutputJson = {
   /**
    * The ID of the force where the output panel belongs.
    */
-  forceId: TCommonMissionForceJson['_id']
+  forceId: TMissionForceSaveJson['_id']
   /**
    * The ID of the node that the session member interacted with to trigger the output.
    */
-  nodeId: TCommonMissionNodeJson['_id'] | null
+  nodeId: TMissionNodeJson['_id'] | null
   /**
    * The ID of the action that's being executed.
    */
-  actionId: TCommonMissionActionJson['_id'] | null
+  actionId: TMissionActionJson['_id'] | null
   /**
    * The prefix displayed before the output message.
    */

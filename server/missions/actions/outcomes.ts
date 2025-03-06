@@ -1,5 +1,6 @@
 import IActionOutcome, {
   TActionOutcomeJson,
+  TOutcomeStatus,
 } from 'metis/missions/actions/outcomes'
 import { PRNG } from 'seedrandom'
 import ServerMissionAction from '.'
@@ -36,8 +37,9 @@ export class ServerPotentialOutcome
   /**
    * Whether the action is successful in its execution.
    */
-  public get successful(): boolean {
-    return this.successStrength > this.action.failureChance
+  public get status(): TOutcomeStatus {
+    let susccessful = this.successStrength > this.action.failureChance
+    return susccessful ? 'success' : 'failure'
   }
 
   /**
@@ -63,7 +65,7 @@ export class ServerPotentialOutcome
     return {
       actionId: this.actionId,
       nodeId: this.nodeId,
-      successful: this.successful,
+      status: this.status,
     }
   }
 
@@ -98,28 +100,32 @@ export class ServerPotentialOutcome
 export class ServerRealizedOutcome implements IActionOutcome {
   // Implemented
   public readonly action: ServerMissionAction
+
   // Implemented
   public get node(): ServerMissionNode {
     return this.action.node
   }
+
   // Implemented
   public get actionId(): ServerMissionAction['_id'] {
     return this.action._id
   }
+
   // Implemented
   public get nodeId(): ServerMissionNode['_id'] {
     return this.action.node._id
   }
+
   // Implmented
-  public readonly successful: boolean
+  public readonly status: TOutcomeStatus
 
   /**
    * @param action The action itself.
    * @param successful Whether the action succeeded.
    */
-  public constructor(action: ServerMissionAction, successful: boolean) {
+  public constructor(action: ServerMissionAction, status: TOutcomeStatus) {
     this.action = action
-    this.successful = successful
+    this.status = status
   }
 
   // Inherited
@@ -127,7 +133,7 @@ export class ServerRealizedOutcome implements IActionOutcome {
     return {
       actionId: this.actionId,
       nodeId: this.nodeId,
-      successful: this.successful,
+      status: this.status,
     }
   }
 }

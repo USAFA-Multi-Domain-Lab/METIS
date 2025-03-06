@@ -1,4 +1,4 @@
-import { TCommonMissionActionJson } from 'metis/missions/actions'
+import { TMissionActionJson } from 'metis/missions/actions'
 import { TActionExecutionJson } from 'metis/missions/actions/executions'
 import { TActionOutcomeJson } from 'metis/missions/actions/outcomes'
 import MissionNode from 'metis/missions/nodes'
@@ -14,7 +14,7 @@ import { ServerRealizedOutcome } from '../actions/outcomes'
 export default class ServerMissionNode extends MissionNode<TServerMissionTypes> {
   // Implemented
   protected importActions(
-    data: TCommonMissionActionJson[],
+    data: TMissionActionJson[],
     options: TServerMissionActionOptions = {},
   ): Map<string, ServerMissionAction> {
     let actions: Map<string, ServerMissionAction> = new Map<
@@ -72,7 +72,7 @@ export default class ServerMissionNode extends MissionNode<TServerMissionTypes> 
       }
 
       // Return new outcome object.
-      return new ServerRealizedOutcome(action, datum.successful)
+      return new ServerRealizedOutcome(action, datum.status)
     })
   }
 
@@ -114,7 +114,12 @@ export default class ServerMissionNode extends MissionNode<TServerMissionTypes> 
     }
 
     // Generate and set the node's execution.
-    this._execution = new ServerActionExecution(action, data.start, data.end)
+    this._execution = new ServerActionExecution(
+      action,
+      data.start,
+      data.end,
+      data.aborted,
+    )
 
     // Return execution.
     return this._execution
@@ -141,7 +146,7 @@ export default class ServerMissionNode extends MissionNode<TServerMissionTypes> 
     // Generate outcome.
     let outcome: ServerRealizedOutcome = new ServerRealizedOutcome(
       action,
-      data.successful,
+      data.status,
     )
 
     // Add to list of outcomes.
@@ -153,7 +158,7 @@ export default class ServerMissionNode extends MissionNode<TServerMissionTypes> 
     // If the outcome was successful, the node is
     // openable, and the action opens the node on
     // success, then mark the node as opened.
-    if (outcome.successful && this.openable && action.opensNode) {
+    if (outcome.status === 'success' && this.openable && action.opensNode) {
       this._opened = true
     }
 
@@ -165,6 +170,12 @@ export default class ServerMissionNode extends MissionNode<TServerMissionTypes> 
   public updateBlockStatus(blocked: boolean): void {
     // Set blocked.
     this._blocked = blocked
+
+    // Abort the execution, if present.
+    if (this.execution) {
+      this.execution.abort()
+      this._execution = null
+    }
 
     // If the node is open and has children,
     // update the block status for children.

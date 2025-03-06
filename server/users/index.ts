@@ -1,4 +1,4 @@
-import User, { TCommonUserJson, TUserOptions } from 'metis/users'
+import User, { TUserJson, TUserOptions } from 'metis/users'
 import { TTargetEnvExposedUser } from '../target-environments/context'
 
 /**
@@ -12,7 +12,7 @@ export default class ServerUser extends User {
    * @returns Whether the password is valid.
    */
   public static isValidHashedPassword = (
-    password: NonNullable<TCommonUserJson['password']>,
+    password: NonNullable<TUserJson['password']>,
   ): boolean => {
     let passwordExpression: RegExp = /^\$2[ayb]\$.{56}$/
     let isValidPassword: boolean = passwordExpression.test(password)

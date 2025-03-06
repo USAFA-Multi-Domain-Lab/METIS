@@ -9,42 +9,60 @@ import UserPermission, {
 /**
  * Represents a user using METIS.
  */
-export default abstract class User implements TCommonUser {
-  // Inherited
-  public _id: TCommonUser['_id']
+export default abstract class User {
+  /**
+   * The user's ID.
+   */
+  public _id: string
 
-  // Inherited
-  public username: TCommonUser['username']
+  /**
+   * The user's username.
+   */
+  public username: string
 
-  // Inherited
-  public access: TCommonUser['access']
+  /**
+   * The user's access.
+   */
+  public access: UserAccess
 
-  // Inherited
-  public expressPermissions: TCommonUser['expressPermissions']
+  /**
+   * The user's permissions.
+   */
+  public expressPermissions: UserPermission[]
 
-  // Inherited
-  public firstName: TCommonUser['firstName']
+  /**
+   * The user's first name.
+   */
+  public firstName: string
 
-  // Inherited
-  public lastName: TCommonUser['lastName']
+  /**
+   * The user's last name.
+   */
+  public lastName: string
 
-  // Inherited
-  public get name(): TCommonUser['name'] {
+  /**
+   * The user's full name.
+   */
+  public get name(): string {
     return `${this.lastName}, ${this.firstName}`
   }
 
-  // Inherited
-  public needsPasswordReset: TCommonUser['needsPasswordReset']
+  /**
+   * Whether the user needs to reset their password.
+   */
+  public needsPasswordReset: boolean
 
-  // Inherited
-  public password?: TCommonUser['password']
+  /**
+   * The user's password.
+   */
+  public password: string | undefined
 
   /**
    * @param data The user data from which to create the user. Any ommitted values will be set to the default properties defined in User.DEFAULT_PROPERTIES.
    * @param options Options for creating the user.
    */
   public constructor(
-    data: Partial<TCommonUserJson> = User.DEFAULT_PROPERTIES,
+    data: Partial<TUserJson> = User.DEFAULT_PROPERTIES,
     options: TUserOptions = {},
   ) {
     this._id = data._id ?? User.DEFAULT_PROPERTIES._id
@@ -64,11 +82,11 @@ export default abstract class User implements TCommonUser {
    * @param options Options for converting the user to JSON.
    * @returns A JSON representation of the user.
    */
-  public toJson(options: TUserJsonOptions = {}): TCommonUserJson {
+  public toJson(options: TUserJsonOptions = {}): TUserJson {
     let { includeId = false } = options
 
     // Construct JSON object to send to server.
-    let json: TCommonUserJson = {
+    let json: TUserJson = {
       username: this.username,
       firstName: this.firstName,
       lastName: this.lastName,
@@ -159,7 +177,7 @@ export default abstract class User implements TCommonUser {
    * Default properties set when creating a new User object.
    */
   public static get DEFAULT_PROPERTIES(): Required<
-    Omit<TCommonUserJson, 'password'>
+    Omit<TUserJson, 'password'>
   > {
     return {
       _id: generateHash(),
@@ -178,7 +196,7 @@ export default abstract class User implements TCommonUser {
    * @returns Whether the username is valid.
    */
   public static isValidUsername = (
-    username: TCommonUserJson['username'],
+    username: TUserJson['username'],
   ): boolean => {
     let userExpression: RegExp = /^([a-zA-Z0-9-_.]{5,25})$/
     let isValidUsername: boolean = userExpression.test(username)
@@ -192,7 +210,7 @@ export default abstract class User implements TCommonUser {
    * @returns Whether the password is valid.
    */
   public static isValidPassword = (
-    password: NonNullable<TCommonUserJson['password']>,
+    password: NonNullable<TUserJson['password']>,
   ): boolean => {
     let passwordExpression: RegExp = /^([^\s]{8,50})$/
     let isValidPassword: boolean = passwordExpression.test(password)
@@ -206,7 +224,7 @@ export default abstract class User implements TCommonUser {
    * @returns Whether the name is valid.
    */
   public static isValidName = (
-    name: TCommonUserJson['firstName'] | TCommonUserJson['lastName'],
+    name: TUserJson['firstName'] | TUserJson['lastName'],
   ): boolean => {
     let nameExpression: RegExp = /^([a-zA-Z']{1,50})$/
     let isValidName: boolean = nameExpression.test(name)
@@ -222,8 +240,8 @@ export default abstract class User implements TCommonUser {
    * @returns The full name.
    */
   public static getFullName = (
-    firstName: TCommonUserJson['firstName'],
-    lastName: TCommonUserJson['lastName'],
+    firstName: TUserJson['firstName'],
+    lastName: TUserJson['lastName'],
   ): string => {
     return `${lastName}, ${firstName}`
   }
@@ -255,56 +273,9 @@ export type TUserJsonOptions = {
 }
 
 /**
- * Type used for the abstract User class.
- */
-export interface TCommonUser {
-  /**
-   * The user's ID.
-   */
-  _id: string
-  /**
-   * The user's username.
-   */
-  username: string
-  /**
-   * The user's access.
-   */
-  access: UserAccess
-  /**
-   * The user's permissions.
-   */
-  expressPermissions: UserPermission[]
-  /**
-   * The user's first name.
-   */
-  firstName: string
-  /**
-   * The user's last name.
-   */
-  lastName: string
-  /**
-   * The user's full name.
-   */
-  name: string
-  /**
-   * Whether the user needs to reset their password.
-   */
-  needsPasswordReset: boolean
-  /**
-   * The user's password.
-   */
-  password?: string
-  /**
-   * Converts the User object to JSON.
-   * @returns A JSON representation of the user.
-   */
-  toJson: (options?: TUserJsonOptions) => TCommonUserJson
-}
-
-/**
  * The JSON representation of a User object.
  */
-export interface TCommonUserJson {
+export interface TUserJson {
   /**
    * The user's ID.
    */

@@ -1,6 +1,6 @@
 import { io, Socket } from 'socket.io-client'
 import SessionClient from 'src/sessions'
-import { TListenerTarget } from 'src/toolbox/hooks'
+import { TListenerTarget } from '../../../shared/events'
 import Logging from 'src/toolbox/logging'
 import { v4 as generateHash } from 'uuid'
 import {

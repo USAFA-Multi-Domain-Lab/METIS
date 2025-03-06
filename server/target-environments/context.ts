@@ -1,4 +1,4 @@
-import { TCommonOutputJson } from 'metis/missions/forces/output'
+import { TOutputJson } from 'metis/missions/forces/output'
 import { TNode } from 'metis/missions/nodes'
 import ServerEffect from 'metis/server/missions/effects'
 import ServerMissionNode from 'metis/server/missions/nodes'
@@ -203,7 +203,7 @@ export default class TargetEnvContext {
     const targetForce = this.determineTargetForce(options)
 
     // Create a new output JSON object.
-    let outputJson: Partial<TCommonOutputJson> = {
+    let outputJson: Partial<TOutputJson> = {
       type: 'custom',
       forceId: targetForce._id,
       prefix: `${force.name.replaceAll(' ', '-')}:`,
@@ -271,13 +271,6 @@ export default class TargetEnvContext {
   ) => {
     const targetForce = this.determineTargetForce(options)
     this.session.modifyResourcePool(targetForce, operand)
-
-    // todo: Remove this.
-    // Log the resource pool modification.
-    this.sendOutput(
-      /*html*/ `Resource pool was modified by ${operand}. Also here is the success chance <success-chance></success-chance>. Also here is the time remaining <time-remaining></time-remaining>.`,
-      { forceId: this.forceId },
-    )
   }
 }
 

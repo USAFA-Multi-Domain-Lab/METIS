@@ -1,52 +1,63 @@
 import { v4 as generateHash } from 'uuid'
 import Mission, {
-  TCommonMission,
-  TCommonMissionType,
   TCommonMissionTypes,
   TCreateMissionJsonType,
   TMission,
 } from '..'
-import {
-  TCommonEffect,
-  TCommonEffectJson,
-  TEffect,
-  TEffectOptions,
-} from '../effects'
-import { TCommonMissionForce, TForce } from '../forces'
-import { TCommonMissionNode, TNode, TNodeJsonOptions } from '../nodes'
+import Effect, { TEffectJson, TEffect, TEffectOptions } from '../effects'
+import { MissionForce, TForce } from '../forces'
+import MissionNode, { TNode, TNodeJsonOptions } from '../nodes'
 
 /**
  * An action that can be executed on a mission node, causing a certain effect.
  */
 export default abstract class MissionAction<
   T extends TCommonMissionTypes = TCommonMissionTypes,
-> implements TCommonMissionAction
-{
-  // Implemented
+> {
+  /**
+   * The node on which the action is being executed.
+   */
   public node: TNode<T>
 
-  // Implemented
-  public _id: TCommonMissionAction['_id']
+  /**
+   * The ID of the action.
+   */
+  public _id: string
 
-  // Implemented
-  public name: TCommonMissionAction['name']
+  /**
+   * The name of the action.
+   */
+  public name: string
 
-  // Implemented
-  public description: TCommonMissionAction['description']
+  /**
+   * The description of the action.
+   */
+  public description: string
 
-  // Implemented
-  public postExecutionSuccessText: TCommonMissionAction['postExecutionSuccessText']
+  /**
+   * Text sent to the output panel after the action is
+   * executed successfully.
+   */
+  public postExecutionSuccessText: string
 
-  // Implemented
-  public postExecutionFailureText: TCommonMissionAction['postExecutionFailureText']
+  /**
+   * Text sent to the output panel after the action is
+   * executed unsuccessfully
+   */
+  public postExecutionFailureText: string
 
-  // Implemented
+  /**
+   * The effects that can be applied to the targets.
+   */
   public effects: TEffect<T>[]
 
   /**
    * The amount of time it takes to execute the action.
    */
-  protected _processTime: TCommonMissionAction['processTime']
+  protected _processTime: number
+  /**
+   * The amount of time it takes to execute the action.
+   */
   public get processTime(): number {
     // Return the process time within the correct range.
     // ***Note: This ensures the process time is never less than 0 or greater than 1 hour.
@@ -62,13 +73,19 @@ export default abstract class MissionAction<
     this._processTime = value
   }
 
-  // Implemented
-  public processTimeHidden: TCommonMissionAction['processTimeHidden']
+  /**
+   * Hides the process time from students.
+   * @default false
+   */
+  public processTimeHidden: boolean
 
   /**
    * The chance that the action will succeed.
    */
-  protected _successChance: TCommonMissionAction['successChance']
+  protected _successChance: number
+  /**
+   * The chance that the action will succeed.
+   */
   public get successChance(): number {
     // Return the success chance within the correct range.
     // ***Note: This ensures the success chance is never less than 0 or greater than 1.
@@ -84,13 +101,21 @@ export default abstract class MissionAction<
     this._successChance = value
   }
 
-  // Implemented
-  public successChanceHidden: TCommonMissionAction['successChanceHidden']
+  /**
+   * Hides the success chance from students.
+   * @default false
+   */
+  public successChanceHidden: boolean
 
   /**
-   * The amount of resources the action will be subtracted from that available to the executor of the action.
+   * The amount of resources the action will be subtracted
+   * from that available to the executor of the action.
    */
-  protected _resourceCost: TCommonMissionAction['resourceCost']
+  protected _resourceCost: number
+  /**
+   * The amount of resources the action will be subtracted
+   * from that available to the executor of the action.
+   */
   public get resourceCost(): number {
     // Return the resource cost within the correct range.
     // ***Note: This ensures the resource cost is never less than 0.
@@ -103,31 +128,50 @@ export default abstract class MissionAction<
     this._resourceCost = value
   }
 
-  // Implemented
-  public resourceCostHidden: TCommonMissionAction['resourceCostHidden']
+  /**
+   * Hides the resource cost from students.
+   * @default false
+   */
+  public resourceCostHidden: boolean
 
-  // Implemented
-  public opensNode: TCommonMissionAction['opensNode']
+  /**
+   * Whether the successful completion of this action will
+   * result in the node being opened, assuming it has not
+   * been opened already.
+   * @default true
+   */
+  public opensNode: boolean
 
-  // Implemented
-  public opensNodeHidden: TCommonMissionAction['opensNodeHidden']
+  /**
+   * Hides the `opensNode` property from students.
+   * @default false
+   */
+  public opensNodeHidden: boolean
 
-  // Implemented
-  public get failureChance(): TCommonMissionAction['failureChance'] {
+  /**
+   * The chance that the action will fail (1 - successChance).
+   */
+  public get failureChance(): number {
     return 1 - this.successChance
   }
 
-  // Implemented
-  public get executing(): TCommonMissionAction['executing'] {
+  /**
+   * Whether or not this action is currently being executed
+   */
+  public get executing(): boolean {
     return this.node.executionState === 'executing'
   }
 
-  // Implemented
+  /**
+   * The mission of which the action is a part.
+   */
   public get mission(): TMission<T> {
     return this.node.mission as TMission<T>
   }
 
-  // Implemented
+  /**
+   * The force of which the action is a part.
+   */
   public get force(): TForce<T> {
     return this.node.force
   }
@@ -148,7 +192,13 @@ export default abstract class MissionAction<
    */
   private resourceCostOperand: number
 
-  // Implemented
+  /**
+   * Whether the associated force has enough resources
+   * remaining to perform the action, given the resource
+   * cost.
+   * @note This does not take into account any session
+   * configuration or any cheats that may be applied.
+   */
   public get areEnoughResources(): boolean {
     return this.resourceCost <= Math.max(this.force.resourcesRemaining, 0)
   }
@@ -160,7 +210,7 @@ export default abstract class MissionAction<
    */
   public constructor(
     node: TNode<T>,
-    data: Partial<TCommonMissionActionJson> = MissionAction.DEFAULT_PROPERTIES,
+    data: Partial<TMissionActionJson> = MissionAction.DEFAULT_PROPERTIES,
     options: TMissionActionOptions = {},
   ) {
     let { populateTargets = false } = options
@@ -212,16 +262,20 @@ export default abstract class MissionAction<
    * @returns An array of Effect Objects.
    */
   protected abstract parseEffects(
-    data: TCommonEffectJson[],
+    data: TEffectJson[],
     options?: TEffectOptions,
   ): TEffect<T>[]
 
-  // Implemented
-  public toJson(options: TActionJsonOptions = {}): TCommonMissionActionJson {
+  /**
+   * Converts the action to JSON.
+   * @param options The options for converting the action to JSON.
+   * @returns The JSON for the action.
+   */
+  public toJson(options: TActionJsonOptions = {}): TMissionActionJson {
     const { sessionDataExposure = Mission.DEFAULT_SESSION_DATA_EXPOSURE } =
       options
 
-    let json: TCommonMissionActionJson = {
+    let json: TMissionActionJson = {
       _id: this._id,
       name: this.name,
       description: this.description,
@@ -256,19 +310,30 @@ export default abstract class MissionAction<
     return json
   }
 
-  // Implemented
+  /**
+   * Modifies the amount of time it takes to execute the action.
+   * @param processTimeOperand The operand to modify the process time by.
+   */
   public modifyProcessTime(processTimeOperand: number): void {
     this._processTime = this.processTime
     this.processTimeOperand = processTimeOperand
   }
 
-  // Implemented
+  /**
+   * Modifies the chance that the action will succeed.
+   * @param successChanceOperand The operand to modify the success
+   * chance by.
+   */
   public modifySuccessChance(successChanceOperand: number): void {
     this._successChance = this.successChance
     this.successChanceOperand = successChanceOperand
   }
 
-  // Implemented
+  /**
+   * Modifies the amount of resources the action costs to execute.
+   * @param resourceCostOperand The operand to modify the resource
+   * cost by.
+   */
   public modifyResourceCost(resourceCostOperand: number): void {
     this._resourceCost = this.resourceCost
     this.resourceCostOperand = resourceCostOperand
@@ -309,7 +374,7 @@ export default abstract class MissionAction<
   /**
    * Default properties set when creating a new MissionAction object.
    */
-  public static get DEFAULT_PROPERTIES(): Required<TCommonMissionActionJson> {
+  public static get DEFAULT_PROPERTIES(): Required<TMissionActionJson> {
     return {
       _id: generateHash(),
       name: 'New Action',
@@ -350,126 +415,6 @@ export type TMissionActionOptions = {
 export type TActionJsonOptions = TNodeJsonOptions
 
 /**
- * Interface of the abstract MissionAction class.
- * @note Any public, non-static properties and functions of the MissionAction class
- * must first be defined here for them to be accessible to the Mission and
- * MissionNode classes.
- */
-export interface TCommonMissionAction {
-  /**
-   * The node on which the action is being executed.
-   */
-  node: TCommonMissionNode
-  /**
-   * The ID of the action.
-   */
-  _id: string
-  /**
-   * The name of the action.
-   */
-  name: string
-  /**
-   * The description of the action.
-   */
-  description: string
-  /**
-   * The amount of time it takes to execute the action.
-   */
-  processTime: number
-  /**
-   * Hides the process time from students.
-   * @default false
-   */
-  processTimeHidden: boolean
-  /**
-   * The chance that the action will succeed.
-   */
-  successChance: number
-  /**
-   * Hides the success chance from students.
-   * @default false
-   */
-  successChanceHidden: boolean
-  /**
-   * The amount of resources the action will be subtracted from that available to the executor of the action.
-   */
-  resourceCost: number
-  /**
-   * Hides the resource cost from students.
-   * @default false
-   */
-  resourceCostHidden: boolean
-  /**
-   * Whether the successful completion of this action will
-   * result in the node being opened, assuming it has not
-   * been opened already.
-   * @default true
-   */
-  opensNode: boolean
-  /**
-   * Hides the `opensNode` property from students.
-   * @default false
-   */
-  opensNodeHidden: boolean
-  /**
-   * Text sent to the output panel after the action is executed successfully.
-   */
-  postExecutionSuccessText: string
-  /**
-   * Text sent to the output panel after the action is executed unsuccessfully.
-   */
-  postExecutionFailureText: string
-  /**
-   * The effects that can be applied to the targets.
-   */
-  effects: TCommonEffect[]
-  /**
-   * The chance that the action will fail (1 - successChance).
-   */
-  failureChance: number
-  /**
-   * Whether or not this action is currently being executed.
-   */
-  executing: boolean
-  /**
-   * Whether the associated force has enough resources
-   * remaining to perform the action, given the resource
-   * cost.
-   * @note This does not take into account any session
-   * configuration or any cheats that may be applied.
-   */
-  get areEnoughResources(): boolean
-  /**
-   * The mission of which the action is a part.
-   */
-  mission: TCommonMission
-  /**
-   * The force of which the action is a part.
-   */
-  force: TCommonMissionForce
-  /**
-   * Converts the action to JSON.
-   * @returns the JSON for the action.
-   */
-  toJson: (options?: TActionJsonOptions) => TCommonMissionActionJson
-  /**
-   * Modifies the amount of time it takes to execute the action.
-   * @param processTimeOperand The operand to modify the process time by.
-   */
-  modifyProcessTime: (processTimeOperand: number) => void
-  /**
-   * Modifies the chance that the action will succeed.
-   * @param successChanceOperand The operand to modify the success chance by.
-   */
-  modifySuccessChance: (successChanceOperand: number) => void
-  /**
-   * Modifies the amount of resources the action costs to execute.
-   * @param resourceCostOperand The operand to modify the resource cost by.
-   */
-  modifyResourceCost: (resourceCostOperand: number) => void
-}
-
-/**
  * Extracts the action type from the mission types.
  * @param T The mission types.
  * @returns The action type.
@@ -478,8 +423,8 @@ export type TAction<T extends TCommonMissionTypes> = T['action']
 /**
  * Plain JSON representation of a MissionAction object.
  */
-export type TCommonMissionActionJson = TCreateMissionJsonType<
-  TCommonMissionAction,
+export type TMissionActionJson = TCreateMissionJsonType<
+  MissionAction,
   | '_id'
   | 'name'
   | 'description'
@@ -493,5 +438,5 @@ export type TCommonMissionActionJson = TCreateMissionJsonType<
   | 'opensNodeHidden'
   | 'postExecutionSuccessText'
   | 'postExecutionFailureText',
-  { effects: TCommonEffectJson[] }
+  { effects: TEffectJson[] }
 >

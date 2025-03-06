@@ -1,48 +1,48 @@
 import fs from 'fs'
-import { TCommonTargetEnvJson } from 'metis/target-environments'
+import { TTargetEnvJson } from 'metis/target-environments'
 import path from 'path'
 
 /**
  * Defines a target environment.
  */
-export default class TargetEnvSchema implements TCommonTargetEnvJson {
+export default class TargetEnvSchema implements TTargetEnvJson {
   /**
    * The ID of the target environment.
    */
-  private id: TCommonTargetEnvJson['_id']
-  public get _id(): TCommonTargetEnvJson['_id'] {
+  private id: TTargetEnvJson['_id']
+  public get _id(): TTargetEnvJson['_id'] {
     return this.id
   }
 
   /**
    * The name of the target environment.
    */
-  private _name: TCommonTargetEnvJson['name']
-  public get name(): TCommonTargetEnvJson['name'] {
+  private _name: TTargetEnvJson['name']
+  public get name(): TTargetEnvJson['name'] {
     return this._name
   }
 
   /**
    * Describes what the target environment is.
    */
-  private _description: TCommonTargetEnvJson['description']
-  public get description(): TCommonTargetEnvJson['description'] {
+  private _description: TTargetEnvJson['description']
+  public get description(): TTargetEnvJson['description'] {
     return this._description
   }
 
   /**
    * The current version of the target environment.
    */
-  private _version: TCommonTargetEnvJson['version']
-  public get version(): TCommonTargetEnvJson['version'] {
+  private _version: TTargetEnvJson['version']
+  public get version(): TTargetEnvJson['version'] {
     return this._version
   }
 
   /**
    * The JSON representation of the targets in the environment.
    */
-  private _targets: TCommonTargetEnvJson['targets']
-  public get targets(): TCommonTargetEnvJson['targets'] {
+  private _targets: TTargetEnvJson['targets']
+  public get targets(): TTargetEnvJson['targets'] {
     return this._targets
   }
 
@@ -95,4 +95,4 @@ export default class TargetEnvSchema implements TCommonTargetEnvJson {
 /**
  * Defines the target environment data.
  */
-type TTargetEnv = Omit<TCommonTargetEnvJson, 'targets' | '_id'>
+type TTargetEnv = Omit<TTargetEnvJson, 'targets' | '_id'>

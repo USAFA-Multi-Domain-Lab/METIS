@@ -6,7 +6,7 @@ import SessionClient from 'src/sessions'
 import ClientSessionMember from 'src/sessions/members'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
-import { TListenerTargetEmittable } from 'src/toolbox/hooks'
+import { TListenerTargetEmittable } from '../../../shared/events'
 import ClientUser from 'src/users'
 import { v4 as generateHash } from 'uuid'
 import Mission, {
@@ -16,11 +16,11 @@ import Mission, {
 } from '../../../shared/missions'
 import {
   MissionForce,
-  TCommonMissionForceJson,
+  TMissionForceSaveJson,
   TMissionForceOptions,
 } from '../../../shared/missions/forces'
 import {
-  TCommonMissionPrototypeJson,
+  TMissionPrototypeJson,
   TMissionPrototypeOptions,
 } from '../../../shared/missions/nodes/prototypes'
 import { Counter } from '../../../shared/toolbox/numbers'
@@ -330,7 +330,7 @@ export default class ClientMission
 
   // Implemented
   protected importPrototype(
-    data: Partial<TCommonMissionPrototypeJson> = ClientMissionPrototype.DEFAULT_PROPERTIES,
+    data: Partial<TMissionPrototypeJson> = ClientMissionPrototype.DEFAULT_PROPERTIES,
     options: TMissionPrototypeOptions<ClientMissionPrototype> = {},
   ): ClientMissionPrototype {
     let rootPrototype: ClientMissionPrototype | null = this.root
@@ -362,7 +362,7 @@ export default class ClientMission
 
   // Implemented
   protected importForces(
-    data: TCommonMissionForceJson[],
+    data: TMissionForceSaveJson[],
     options: TClientMissionForceOptions = {},
   ): ClientMissionForce[] {
     let forces: ClientMissionForce[] = data.map(
@@ -425,8 +425,8 @@ export default class ClientMission
    */
   public importStartData(
     structure: AnyObject,
-    forces: TCommonMissionForceJson[],
-    prototypes: TCommonMissionPrototypeJson[],
+    forces: TMissionForceSaveJson[],
+    prototypes: TMissionPrototypeJson[],
   ): void {
     // Clear forces and prototypes.
     this.prototypes = []
@@ -453,7 +453,7 @@ export default class ClientMission
    * @returns The newly created prototype.
    */
   public createPrototype(
-    data: Partial<TCommonMissionPrototypeJson> = ClientMissionPrototype.DEFAULT_PROPERTIES,
+    data: Partial<TMissionPrototypeJson> = ClientMissionPrototype.DEFAULT_PROPERTIES,
     options: TMissionPrototypeOptions<ClientMissionPrototype> = {},
   ): ClientMissionPrototype {
     let rootPrototype: ClientMissionPrototype | null = this.root

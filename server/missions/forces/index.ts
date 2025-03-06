@@ -3,7 +3,7 @@ import {
   TMissionForceJson,
   TMissionForceOptions,
 } from 'metis/missions/forces'
-import { TCommonOutputJson } from 'metis/missions/forces/output'
+import { TOutputJson } from 'metis/missions/forces/output'
 import { TMissionNodeJson, TMissionNodeOptions } from 'metis/missions/nodes'
 import { TTargetEnvExposedForce } from 'metis/server/target-environments/context'
 import ServerUser from 'metis/server/users'
@@ -81,7 +81,7 @@ export default class ServerMissionForce extends MissionForce<TServerMissionTypes
     // Send the intro message if it exists and isn't an empty string.
     if (!!this.introMessage) {
       // Create the output JSON.
-      let outputJson: Partial<TCommonOutputJson> = {
+      let outputJson: Partial<TOutputJson> = {
         type: 'intro',
         forceId: this._id,
         prefix: `${this.name.replaceAll(' ', '-')}:`,

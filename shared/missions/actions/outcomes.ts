@@ -1,6 +1,6 @@
-import { TAction, TCommonMissionAction, TCommonMissionActionJson } from '.'
+import { TAction, TMissionActionJson } from '.'
 import { TCommonMissionTypes } from '..'
-import { TCommonMissionNode, TCommonMissionNodeJson, TNode } from '../nodes'
+import { TMissionNodeJson, TNode } from '../nodes'
 
 /**
  * Extracts the outcome type from the mission types.
@@ -16,15 +16,16 @@ export interface TActionOutcomeJson {
   /**
    * The ID of the action executed.
    */
-  actionId: NonNullable<TCommonMissionActionJson['_id']>
+  actionId: NonNullable<TMissionActionJson['_id']>
   /**
    * The ID of the node upon which the action executed.
    */
-  nodeId: TCommonMissionNodeJson['_id']
+  nodeId: TMissionNodeJson['_id']
   /**
-   * Whether the action is successful in its execution.
+   * Whether the action was a success, failure,
+   * or was aborted.
    */
-  successful: boolean
+  status: TOutcomeStatus
 }
 
 /**
@@ -44,17 +45,26 @@ export default interface IActionOutcome<
   /**
    * The ID of the action executed.
    */
-  actionId: TCommonMissionAction['_id']
+  actionId: TAction<T>['_id']
   /**
    * The ID of the node upon which the action executed.
    */
-  nodeId: TCommonMissionNode['_id']
+  nodeId: TNode<T>['_id']
   /**
-   * Whether the action is successful in its execution.
+   * Whether the action was a success, failure,
+   * or was aborted.
    */
-  successful: boolean
+  status: TOutcomeStatus
   /**
    * Converts the action outcome to JSON.
    */
   toJson: () => TActionOutcomeJson
 }
+
+/**
+ * The status of an action outcome.
+ * @option 'success' The action was successful.
+ * @option 'failure' The action was a failure.
+ * @option 'aborted' The action was aborted before completion.
+ */
+export type TOutcomeStatus = 'success' | 'failure' | 'aborted'

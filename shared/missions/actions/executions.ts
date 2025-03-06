@@ -1,6 +1,6 @@
-import { TAction, TCommonMissionAction, TCommonMissionActionJson } from '.'
+import { TAction, TMissionActionJson } from '.'
 import { TCommonMissionTypes } from '..'
-import { TCommonMissionNode, TCommonMissionNodeJson, TNode } from '../nodes'
+import MissionNode, { TMissionNodeJson, TNode } from '../nodes'
 
 /* -- CLASSES -- */
 
@@ -9,42 +9,75 @@ import { TCommonMissionNode, TCommonMissionNodeJson, TNode } from '../nodes'
  */
 export default abstract class ActionExecution<
   T extends TCommonMissionTypes = TCommonMissionTypes,
-> implements TCommonActionExecution<T>
-{
-  // Implemented
+> {
+  /**
+   * The action executed.
+   */
   public readonly action: TAction<T>
 
-  // Implemented
+  /**
+   * The node upon which the action executed.
+   */
   public get node(): TNode<T> {
     return this.action.node
   }
 
-  // Implmented
-  public get actionId(): TCommonMissionAction['_id'] {
+  /**
+   * The ID of the action executed.
+   */
+  public get actionId(): TAction<T>['_id'] {
     return this.action._id
   }
 
-  // Implemented
-  public get nodeId(): TCommonMissionNode['_id'] {
+  /**
+   * The ID of the node upon which the action executed
+   */
+  public get nodeId(): TNode<T>['_id'] {
     return this.action.node._id
   }
 
-  // Implemented
+  /**
+   * The timestamp for when the action began executing.
+   */
   public readonly start: number
 
-  // Implemented
+  /**
+   * The timestamp for when the action is expected to
+   * finish executing
+   */
   public readonly end: number
 
-  // Implemented
+  /**
+   * Whether the action execution has been aborted
+   * before completion.
+   */
+  protected _aborted: boolean
+
+  /**
+   * Whether the action execution has been aborted
+   * before completion.
+   */
+  public get aborted(): boolean {
+    return this._aborted
+  }
+
+  /**
+   * The state of the action execution (e.g. executing,
+   * success, failure).
+   */
   public get state(): TActionExecutionState {
     if (this.timeRemaining) {
       return 'executing'
     } else {
+      // todo: Add logic to determine success or failure.
       return 'success'
     }
   }
 
-  // Implemented
+  /**
+   * The time remaining for the action to complete
+   * (in milliseconds).
+   */
   public get timeRemaining(): number {
     let executionTimeEnd: number = this.end
     let now: number = Date.now()
@@ -56,7 +89,10 @@ export default abstract class ActionExecution<
     }
   }
 
-  // Implemented
+  /**
+   * The number of seconds remaining for the action
+   * to complete.
+   */
   public get secondsRemaining(): number {
     let executionTimeEnd: number = this.end
     let now: number = Date.now()
@@ -71,12 +107,18 @@ export default abstract class ActionExecution<
     }
   }
 
-  // Implemented
+  /**
+   * The total amount of time the action is expected
+   * to take to execute (in milliseconds).
+   */
   public get duration(): number {
     return this.end - this.start
   }
 
-  // Implemented
+  /**
+   * The percentage value of completion for the given
+   * execution based on the start and end times.
+   */
   public get completionPercentage(): number {
     let duration: number = this.duration
     let end: number = this.end
@@ -91,84 +133,55 @@ export default abstract class ActionExecution<
     return Math.min(percentCompleted, 1)
   }
 
-  // Implemented
-  public constructor(action: TAction<T>, start: number, end: number) {
+  /**
+   * @param action The action to execute.
+   * @param start The timestamp for when the action began executing.
+   * @param end The timestamp for when the action is expected to
+   * finish
+   * @param aborted Whether the action execution has been aborted
+   * before completion.
+   */
+  public constructor(
+    action: TAction<T>,
+    start: number,
+    end: number,
+    aborted: boolean = false,
+  ) {
     this.action = action
     this.start = start
     this.end = end
+    this._aborted = aborted
   }
 
-  // Implemented
+  /**
+   * Converts the action execution to JSON.
+   * @returns The JSON representation of the action execution.
+   */
   public toJson(): TActionExecutionJson {
     return {
       actionId: this.actionId,
       nodeId: this.nodeId,
       start: this.start,
       end: this.end,
+      aborted: this.aborted,
+    }
+  }
+
+  /**
+   * Aborts the execution of the action.
+   * @returns Whether the action execution was successfully aborted.
+   */
+  public abort(): boolean {
+    if (!this.aborted && this.state === 'executing') {
+      this._aborted = true
+      return true
+    } else {
+      return false
     }
   }
 }
 
 /* -- TYPES -- */
-
-/**
- * The execution of an action.
- */
-export type TCommonActionExecution<
-  T extends TCommonMissionTypes = TCommonMissionTypes,
-> = {
-  /**
-   * The action executed.
-   */
-  readonly action: TAction<T>
-  /**
-   * The node upon which the action executed.
-   */
-  get node(): TNode<T>
-  /**
-   * The ID of the action executed.
-   */
-  get actionId(): TCommonMissionAction['_id']
-  /**
-   * The ID of the node upon which the action executed.
-   */
-  get nodeId(): TCommonMissionNode['_id']
-  /**
-   * The timestamp for when the action began executing.
-   */
-  readonly start: number
-  /**
-   * The timestamp for when the action is expected to finish executing.
-   */
-  readonly end: number
-  /**
-   * The state of the action execution (e.g. executing,
-   * success, failure).
-   */
-  get state(): TActionExecutionState
-  /**
-   * The time remaining for the action to complete (in milliseconds).
-   */
-  get timeRemaining(): number
-  /**
-   * The number of seconds remaining for the action to complete.
-   */
-  get secondsRemaining(): number
-  /**
-   * The total amount of time the action is expected
-   * to take to execute.
-   */
-  get duration(): number
-  /**
-   * The percentage value of completion for the given execution
-   * based on the start and end times.
-   */
-  get completionPercentage(): number
-  /**
-   * Converts the action execution to JSON.
-   */
-  toJson: () => TActionExecutionJson
-}
 
 /**
  * Extracts the execution type from the mission types.
@@ -184,11 +197,11 @@ export type TActionExecutionJson = {
   /**
    * The ID of the action executed.
    */
-  actionId: NonNullable<TCommonMissionActionJson['_id']>
+  actionId: NonNullable<TMissionActionJson['_id']>
   /**
    * The ID of the node upon which the action executed.
    */
-  nodeId: NonNullable<TCommonMissionNodeJson['_id']>
+  nodeId: NonNullable<TMissionNodeJson['_id']>
   /**
    * The timestamp for when the action began executing.
    */
@@ -197,6 +210,12 @@ export type TActionExecutionJson = {
    * The timestamp for when the action is expected to finish executing.
    */
   end: number
+  /**
+   * Whether the action execution has been aborted
+   * before completion.
+   * @default false
+   */
+  aborted?: boolean
 } | null
 
 /**

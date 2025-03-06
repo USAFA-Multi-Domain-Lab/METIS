@@ -1,7 +1,7 @@
 import { TClientEvents, TServerEvents, TServerMethod } from 'metis/connect/data'
 import { ServerEmittedError } from 'metis/connect/errors'
 import { TMissionJson, TMissionJsonOptions } from 'metis/missions'
-import { TCommonOutputJson } from 'metis/missions/forces/output'
+import { TOutputJson } from 'metis/missions/forces/output'
 import ServerMission, { TServerMissionTypes } from 'metis/server/missions'
 import ServerMissionAction from 'metis/server/missions/actions'
 import ServerMissionNode from 'metis/server/missions/nodes'
@@ -13,7 +13,6 @@ import Session, {
 import { TSessionMemberJson } from 'metis/sessions/members'
 import MemberRole, { TMemberRoleId } from 'metis/sessions/members/roles'
 import { TSingleTypeObject } from 'metis/toolbox/objects'
-import { TCommonUser } from 'metis/users'
 import { v4 as generateHash } from 'uuid'
 import ClientConnection from '../connect/clients'
 import { plcApiLogger } from '../logging'
@@ -24,6 +23,7 @@ import ServerOutput, { TServerOutputOptions } from '../missions/forces/output'
 import TargetEnvContext from '../target-environments/context'
 import ServerUser from '../users'
 import ServerSessionMember from './members'
+import User from 'metis/users'
 
 /**
  * Server instance for sessions. Handles server-side logic for a session with participating clients. Communicates with clients to conduct the session.
@@ -207,7 +207,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
   /**
    * Gets the role of the given user in the session.
    */
-  public getRole(userId: TCommonUser['_id']): MemberRole | undefined {
+  public getRole(userId: User['_id']): MemberRole | undefined {
     return this.getMemberByUserId(userId)?.role
   }
 
@@ -1358,7 +1358,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
           }
 
           // Create a new output JSON object.
-          let outputJson: Partial<TCommonOutputJson> = {
+          let outputJson: Partial<TOutputJson> = {
             type: 'execution-started',
             forceId: action.force._id,
             nodeId: action.node._id,
@@ -1413,7 +1413,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
       }
 
       // If the action was successful, then...
-      if (outcome.successful) {
+      if (outcome.status === 'success') {
         // If the node is now open...
         if (action.node.opened) {
           // Add child nodes to the completion payload.
@@ -1434,7 +1434,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
         }
 
         // Create a new output JSON object.
-        let outputJson: Partial<TCommonOutputJson> = {
+        let outputJson: Partial<TOutputJson> = {
           type: 'execution-succeeded',
           forceId: action.force._id,
           nodeId: action.node._id,
@@ -1448,9 +1448,9 @@ export default class SessionServer extends Session<TServerMissionTypes> {
         this.applyEffects(member, action, 'success')
       }
       // Otherwise, if the action failed, then...
-      else {
+      else if (outcome.status === 'failure') {
         // Create a new output JSON object.
-        let outputJson: Partial<TCommonOutputJson> = {
+        let outputJson: Partial<TOutputJson> = {
           type: 'execution-failed',
           forceId: action.force._id,
           nodeId: action.node._id,
@@ -1555,7 +1555,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
           }
 
           // Create a new output JSON object.
-          let outputJson: Partial<TCommonOutputJson> = {
+          let outputJson: Partial<TOutputJson> = {
             type: 'pre-execution',
             forceId: node.force._id,
             nodeId: node._id,
@@ -1769,7 +1769,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
    * @param options Options for sending the output.
    */
   public sendOutput = (
-    outputJson: Partial<TCommonOutputJson>,
+    outputJson: Partial<TOutputJson>,
     options: TServerOutputOptions = {},
   ) => {
     // Extract data.

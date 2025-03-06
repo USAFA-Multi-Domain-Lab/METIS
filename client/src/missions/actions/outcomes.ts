@@ -2,6 +2,7 @@ import ClientMissionAction from '.'
 import { TClientMissionTypes } from '..'
 import IActionOutcome, {
   TActionOutcomeJson,
+  TOutcomeStatus,
 } from '../../../../shared/missions/actions/outcomes'
 import ClientMissionNode from '../nodes'
 
@@ -27,15 +28,15 @@ export default class ClientActionOutcome
     return this.action.node._id
   }
   // Implmented
-  public readonly successful: boolean
+  public readonly status: TOutcomeStatus
 
   /**
    * @param action The action itself.
    * @param successful Whether the action succeeded.
    */
-  public constructor(action: ClientMissionAction, successful: boolean) {
+  public constructor(action: ClientMissionAction, status: TOutcomeStatus) {
     this.action = action
-    this.successful = successful
+    this.status = status
   }
 
   // Implemented
@@ -43,7 +44,7 @@ export default class ClientActionOutcome
     return {
       actionId: this.actionId,
       nodeId: this.nodeId,
-      successful: this.successful,
+      status: this.status,
     }
   }
 }

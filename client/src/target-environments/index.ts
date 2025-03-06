@@ -2,10 +2,9 @@ import axios from 'axios'
 import { TClientMissionTypes } from 'src/missions'
 import ClientUser from 'src/users'
 import TargetEnvironment, {
-  TCommonTargetEnvJson,
-  TTargetEnvOptions,
+  TTargetEnvJson,
 } from '../../../shared/target-environments'
-import { TCommonTargetJson } from '../../../shared/target-environments/targets'
+import { TTargetJson } from '../../../shared/target-environments/targets'
 import ClientTarget from './targets'
 
 /**
@@ -37,8 +36,8 @@ export class ClientTargetEnvironment extends TargetEnvironment<TClientMissionTyp
   }
 
   // Implemented
-  protected parseTargets(data: TCommonTargetJson[]): ClientTarget[] {
-    return data.map((datum: TCommonTargetJson) => {
+  protected parseTargets(data: TTargetJson[]): ClientTarget[] {
+    return data.map((datum: TTargetJson) => {
       return new ClientTarget(this, datum)
     })
   }
@@ -63,7 +62,7 @@ export class ClientTargetEnvironment extends TargetEnvironment<TClientMissionTyp
           ClientTargetEnvironment.registry.length === 0
         ) {
           // Fetch the target environments from the API.
-          let response = await axios.get<TCommonTargetEnvJson[]>(
+          let response = await axios.get<TTargetEnvJson[]>(
             `${ClientTargetEnvironment.API_ENDPOINT}`,
           )
           // Parse the response data.
@@ -94,10 +93,3 @@ export class ClientTargetEnvironment extends TargetEnvironment<TClientMissionTyp
     })
   }
 }
-
-/* ------------------------------ CLIENT TARGET ENVIRONMENT TYPES ------------------------------ */
-
-/**
- * Options for creating a new ClientTargetEnvironment object.
- */
-export type TClientTargetEnvOptions = TTargetEnvOptions & {}

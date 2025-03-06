@@ -109,6 +109,7 @@ export default function MissionNode({
     if (node.executionState !== 'executing')
       setInitialProgress(calculateInitialProgress(node))
     setBlocked((prev) => {
+      console.log(node.name)
       setPrevBlocked(prev)
       return node.blocked
     })

@@ -1,12 +1,12 @@
 import MissionAction, {
-  TCommonMissionActionJson,
+  TMissionActionJson,
   TMissionActionOptions,
 } from 'metis/missions/actions'
 import TCommonActionExecution, {
   TActionExecutionJson,
   TExecutionCheats,
 } from 'metis/missions/actions/executions'
-import { TCommonEffectJson } from 'metis/missions/effects'
+import { TEffectJson } from 'metis/missions/effects'
 import { TTargetEnvExposedAction } from 'metis/server/target-environments/context'
 import { TSessionConfig } from 'metis/sessions'
 import seedrandom, { PRNG } from 'seedrandom'
@@ -32,7 +32,7 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
    */
   public constructor(
     node: ServerMissionNode,
-    data: TCommonMissionActionJson,
+    data: TMissionActionJson,
     options: TServerMissionActionOptions = {},
   ) {
     super(node, data, options)
@@ -43,11 +43,11 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
 
   // Implemented
   protected parseEffects(
-    data: TCommonEffectJson[],
+    data: TEffectJson[],
     options: TServerEffectOptions = {},
   ): ServerEffect[] {
     return data.map(
-      (datum: TCommonEffectJson) => new ServerEffect(this, datum, options),
+      (datum: TEffectJson) => new ServerEffect(this, datum, options),
     )
   }
 
@@ -90,6 +90,11 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
       // Load execution.
       let execution = this.node.loadExecution(executionData)
 
+      // Add abort callback to execution.
+      execution.addEventListener('aborted', () => {
+        resolve(new ServerRealizedOutcome(this, 'aborted'))
+      })
+
       // Generate next outcome for the action.
       let potentialOutcome: ServerPotentialOutcome
       // If the "Guaranteed Success" cheat is enabled,
@@ -115,6 +120,10 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
       // Set timeout for when the execution
       // is completed.
       setTimeout(() => {
+        // If the execution has been aborted,
+        // return.
+        if (execution.aborted) return
+
         // Realize the outcome.
         let realizedOutcome: ServerRealizedOutcome = potentialOutcome!.realize()
 

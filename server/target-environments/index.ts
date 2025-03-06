@@ -1,11 +1,8 @@
 import fs from 'fs'
 import TargetEnvSchema from 'integration/library/target-env-classes'
 import TargetSchema from 'integration/library/target-env-classes/targets'
-import TargetEnvironment, {
-  TCommonTargetEnvJson,
-  TTargetEnvOptions,
-} from 'metis/target-environments'
-import { TCommonTargetJson } from 'metis/target-environments/targets'
+import TargetEnvironment, { TTargetEnvJson } from 'metis/target-environments'
+import { TTargetJson } from 'metis/target-environments/targets'
 import path from 'path'
 import { TServerMissionTypes } from '../missions'
 import ServerTarget from './targets'
@@ -19,10 +16,9 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TServerMi
    * @param options The options for creating the ServerTargetEnvironment.
    */
   public constructor(
-    data: Partial<TCommonTargetEnvJson> = ServerTargetEnvironment.DEFAULT_PROPERTIES,
-    options: TServerTargetEnvOptions = {},
+    data: Partial<TTargetEnvJson> = ServerTargetEnvironment.DEFAULT_PROPERTIES,
   ) {
-    super(data, options)
+    super(data)
 
     // Add the target environment to the registry.
     ServerTargetEnvironment.registry.push(this)
@@ -31,8 +27,8 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TServerMi
   }
 
   // Implemented
-  protected parseTargets(data: TCommonTargetJson[]): ServerTarget[] {
-    return data.map((datum: TCommonTargetJson) => {
+  protected parseTargets(data: TTargetJson[]): ServerTarget[] {
+    return data.map((datum: TTargetJson) => {
       return new ServerTarget(this, datum)
     })
   }
@@ -45,7 +41,7 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TServerMi
   /**
    * A registry of all the target environment JSON.
    */
-  private static registryJson: TCommonTargetEnvJson[] = []
+  private static registryJson: TTargetEnvJson[] = []
 
   /**
    * Grabs all the target environments from the registry.
@@ -73,7 +69,7 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TServerMi
    * @returns An array with all the target environment JSON
    * in the registry.
    */
-  public static getAllJson(): TCommonTargetEnvJson[] {
+  public static getAllJson(): TTargetEnvJson[] {
     return ServerTargetEnvironment.registryJson
   }
 
@@ -82,9 +78,9 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TServerMi
    * @param id The ID of the target environment to grab.
    * @returns A target environment JSON with the provided ID.
    */
-  public static getJson(id: string): TCommonTargetEnvJson | undefined {
+  public static getJson(id: string): TTargetEnvJson | undefined {
     return ServerTargetEnvironment.registryJson.find(
-      (targetEnvironment: TCommonTargetEnvJson) => targetEnvironment._id === id,
+      (targetEnvironment: TTargetEnvJson) => targetEnvironment._id === id,
     )
   }
 
@@ -95,7 +91,7 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TServerMi
    */
   public static scan(
     directory: string = this.DEFAULT_DIRECTORY,
-  ): TCommonTargetEnvJson[] {
+  ): TTargetEnvJson[] {
     let blackListedFiles: string[] = [
       path.join(directory, '.DS_Store'),
       path.join(directory, '.gitkeep'),
@@ -162,12 +158,12 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TServerMi
   /**
    * A registry of all the target environments found in the last scan.
    */
-  private static targetEnvRegistry: TCommonTargetEnvJson[] = []
+  private static targetEnvRegistry: TTargetEnvJson[] = []
 
   /**
    * The last target environment scanned.
    */
-  private static get lastTargetEnvScannned(): TCommonTargetEnvJson | undefined {
+  private static get lastTargetEnvScannned(): TTargetEnvJson | undefined {
     return this.targetEnvRegistry[this.targetEnvRegistry.length - 1]
   }
 
@@ -179,10 +175,3 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TServerMi
     '../integration/target-env',
   )
 }
-
-/* ------------------------------ SERVER TARGET ENVIRONMENT TYPES ------------------------------ */
-
-/**
- * Options for creating a new ServerTargetEnvironment object.
- */
-export type TServerTargetEnvOptions = TTargetEnvOptions & {}

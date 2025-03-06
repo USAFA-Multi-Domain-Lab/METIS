@@ -1,11 +1,11 @@
 import { TPrototypeButton } from 'src/components/content/session/mission-map/objects/MissionPrototype'
-import { TListenerTargetEmittable } from 'src/toolbox/hooks'
 import ClientMission, { TClientMissionTypes, TMissionNavigable } from '..'
 import MissionPrototype, {
-  TCommonMissionPrototypeJson,
+  TMissionPrototypeJson,
   TMissionPrototypeOptions,
 } from '../../../../shared/missions/nodes/prototypes'
 import { Vector2D } from '../../../../shared/toolbox/space'
+import { TListenerTargetEmittable } from '../../../../shared/events'
 
 /**
  * Class for managing mission prototypes on the client.
@@ -121,7 +121,7 @@ export default class ClientMissionPrototype
    */
   public constructor(
     mission: ClientMission,
-    data: Partial<TCommonMissionPrototypeJson> = ClientMissionPrototype.DEFAULT_PROPERTIES,
+    data: Partial<TMissionPrototypeJson> = ClientMissionPrototype.DEFAULT_PROPERTIES,
     options: TMissionPrototypeOptions<ClientMissionPrototype> = {},
   ) {
     super(mission, data, options)
@@ -362,7 +362,7 @@ export default class ClientMissionPrototype
    * Populates the children of the prototype with the given data.
    * @param data The data to populate the children with.
    */
-  public populateChildren(data: TCommonMissionPrototypeJson[]): void {
+  public populateChildren(data: TMissionPrototypeJson[]): void {
     // If children are already set,
     // return them.
     if (this.children.length > 0) return

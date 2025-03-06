@@ -1,7 +1,4 @@
-import Output, {
-  TCommonOutputJson,
-  TOutputOptions,
-} from 'metis/missions/forces/output'
+import MissionOutput, { TOutputJson } from 'metis/missions/forces/output'
 import ServerUser from 'metis/server/users'
 import ServerMissionForce from '.'
 import { TServerMissionTypes } from '..'
@@ -10,7 +7,7 @@ import ServerActionExecution from '../actions/executions'
 /**
  * An output that's displayed in a force's output panel on the server.
  */
-export default class ServerOutput extends Output<TServerMissionTypes> {
+export default class ServerOutput extends MissionOutput<TServerMissionTypes> {
   /**
    * The ID of the user who triggered the output.
    */
@@ -27,10 +24,10 @@ export default class ServerOutput extends Output<TServerMissionTypes> {
    */
   public constructor(
     force: ServerMissionForce,
-    data: Partial<TCommonOutputJson> = ServerOutput.DEFAULT_PROPERTIES,
+    data: Partial<TOutputJson> = ServerOutput.DEFAULT_PROPERTIES,
     options: Partial<TServerOutputOptions> = {},
   ) {
-    super(force, data, options)
+    super(force, data)
 
     let { userId = null, broadcastType = 'force', execution = null } = options
 
@@ -43,7 +40,7 @@ export default class ServerOutput extends Output<TServerMissionTypes> {
 /**
  * Options used for creating a `ServerOutput`.
  */
-export type TServerOutputOptions = TOutputOptions & {
+export type TServerOutputOptions = {
   /**
    * The ID of the user who triggered the output.
    * @default null

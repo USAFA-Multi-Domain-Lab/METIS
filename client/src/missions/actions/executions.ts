@@ -1,10 +1,12 @@
-import { TListenerTargetEmittable } from 'src/toolbox/hooks'
 import ClientMissionAction from '.'
 import { TClientMissionTypes } from '..'
 import TActionExecution, {
   TActionExecutionJson,
 } from '../../../../shared/missions/actions/executions'
-import EventManager from 'src/events'
+import {
+  TListenerTargetEmittable,
+  EventManager,
+} from '../../../../shared/events'
 
 /**
  * The execution of an action on the client.
@@ -63,8 +65,13 @@ export default class ClientActionExecution
    * @param start The time at which the action started executing.
    * @param end The time at which the action finishes executing.
    */
-  public constructor(action: ClientMissionAction, start: number, end: number) {
-    super(action, start, end)
+  public constructor(
+    action: ClientMissionAction,
+    start: number,
+    end: number,
+    aborted: boolean = false,
+  ) {
+    super(action, start, end, aborted)
 
     // Set up event management.
     this.eventManager = new EventManager(this)
@@ -74,16 +81,6 @@ export default class ClientActionExecution
 
     // Initiate ticking.
     this.tick()
-  }
-
-  // Implemented
-  public toJson(): TActionExecutionJson {
-    return {
-      actionId: this.actionId,
-      nodeId: this.nodeId,
-      start: this.start,
-      end: this.end,
-    }
   }
 
   /**

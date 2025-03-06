@@ -1,9 +1,8 @@
 import memoizeOne from 'memoize-one'
 import { TNodeButton } from 'src/components/content/session/mission-map/objects/MissionNode'
-import { TListenerTargetEmittable } from 'src/toolbox/hooks'
+
 import { TClientMissionTypes, TMissionComponent, TMissionNavigable } from '..'
 import { TRequestMethod } from '../../../../shared/connect/data'
-import { TCommonMissionActionJson } from '../../../../shared/missions/actions'
 import { TActionExecutionJson } from '../../../../shared/missions/actions/executions'
 import { TActionOutcomeJson } from '../../../../shared/missions/actions/outcomes'
 import MissionNode, {
@@ -17,6 +16,8 @@ import ClientActionExecution from '../actions/executions'
 import ClientActionOutcome from '../actions/outcomes'
 import ClientMissionForce from '../forces'
 import ClientMissionPrototype from './prototypes'
+import { TListenerTargetEmittable } from '../../../../shared/events'
+import { TMissionActionJson } from '../../../../shared/missions/actions'
 
 /**
  * Class for managing mission nodes on the client.
@@ -275,7 +276,7 @@ export default class ClientMissionNode
 
   // Implemented
   protected importActions(
-    data: TCommonMissionActionJson[],
+    data: TMissionActionJson[],
     options?: TClientMissionActionOptions,
   ): Map<string, ClientMissionAction> {
     let actions: Map<string, ClientMissionAction> = new Map<
@@ -328,7 +329,7 @@ export default class ClientMissionNode
         throw new Error('Action not found for given outcome datum.')
       }
 
-      return new ClientActionOutcome(action, datum.successful)
+      return new ClientActionOutcome(action, datum.status)
     })
   }
 
@@ -486,7 +487,7 @@ export default class ClientMissionNode
     options: IClientLoadOutcomeOptions = {},
   ): ClientActionOutcome {
     // Parse data and options.
-    const { actionId, successful } = data
+    const { actionId, status } = data
     const { revealedChildNodes } = options
 
     // Get the action for the outcome.
@@ -504,7 +505,7 @@ export default class ClientMissionNode
     }
 
     // Generate outcome.
-    let outcome = new ClientActionOutcome(action, successful)
+    let outcome = new ClientActionOutcome(action, status)
 
     // Add to list of outcomes.
     this._outcomes.push(outcome)

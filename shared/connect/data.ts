@@ -3,9 +3,9 @@ import {
   TExecutionCheats,
 } from 'metis/missions/actions/executions'
 import { TActionOutcomeJson } from 'metis/missions/actions/outcomes'
-import { TCommonMissionForceJson } from 'metis/missions/forces'
-import { TCommonOutputJson } from 'metis/missions/forces/output'
-import { TCommonMissionPrototypeJson } from 'metis/missions/nodes/prototypes'
+import { TMissionForceSaveJson } from 'metis/missions/forces'
+import { TOutputJson } from 'metis/missions/forces/output'
+import { TMissionPrototypeJson } from 'metis/missions/nodes/prototypes'
 import { TSessionConfig, TSessionJson } from 'metis/sessions'
 import SessionMember, {
   TCommonSessionMember,
@@ -13,7 +13,7 @@ import SessionMember, {
 } from 'metis/sessions/members'
 import MemberRole from 'metis/sessions/members/roles'
 import { AnyObject } from 'metis/toolbox/objects'
-import { TCommonMissionNodeJson } from '../missions/nodes'
+import { TMissionNodeJson } from '../missions/nodes'
 
 /* -- TYPES -- */
 
@@ -338,7 +338,7 @@ export type TGenericServerEvents = {
       /**
        * The message to send to the force's output panel.
        */
-      outputData: TCommonOutputJson
+      outputData: TOutputJson
     }
   >
   /**
@@ -381,11 +381,11 @@ export type TResponseEvents = {
       /**
        * The force(s) the client has access to.
        */
-      forces: TCommonMissionForceJson[]
+      forces: TMissionForceSaveJson[]
       /**
        * The prototype data used to create the mission's structure of nodes.
        */
-      prototypes: TCommonMissionPrototypeJson[]
+      prototypes: TMissionPrototypeJson[]
     },
     TClientEvents['request-start-session']
   >
@@ -410,11 +410,11 @@ export type TResponseEvents = {
       /**
        * The force(s) the client has access to.
        */
-      forces: TCommonMissionForceJson[]
+      forces: TMissionForceSaveJson[]
       /**
        * The prototype data used to create the mission's structure of nodes.
        */
-      prototypes: TCommonMissionPrototypeJson[]
+      prototypes: TMissionPrototypeJson[]
     },
     TClientEvents['request-reset-session']
   >
@@ -521,11 +521,11 @@ export type TResponseEvents = {
       /**
        * The nodes that were revealed as a result of opening the node.
        */
-      revealedChildNodes: TCommonMissionNodeJson[]
+      revealedChildNodes: TMissionNodeJson[]
       /**
        * The prototypes of the nodes that were revealed as a result of opening the node.
        */
-      revealedChildPrototypes: TCommonMissionPrototypeJson[]
+      revealedChildPrototypes: TMissionPrototypeJson[]
     },
     TClientEvents['request-open-node']
   >
@@ -560,11 +560,11 @@ export type TResponseEvents = {
       /**
        * The nodes that were revealed as a result of executing the action.
        */
-      revealedChildNodes?: TCommonMissionNodeJson[]
+      revealedChildNodes?: TMissionNodeJson[]
       /**
        * The prototypes of the nodes that were revealed as a result of executing the action.
        */
-      revealedChildPrototypes?: TCommonMissionPrototypeJson[]
+      revealedChildPrototypes?: TMissionPrototypeJson[]
     },
     TClientEvents['request-execute-action']
   >

@@ -1,10 +1,7 @@
 import { TClientMissionTypes } from 'src/missions'
 import ClientActionExecution from 'src/missions/actions/executions'
 import ClientMissionForce from '.'
-import Output, {
-  TCommonOutputJson,
-  TOutputOptions,
-} from '../../../../shared/missions/forces/output'
+import Output, { TOutputJson } from '../../../../shared/missions/forces/output'
 
 /**
  * An output that's displayed in a force's output panel on the client.
@@ -16,10 +13,9 @@ export default class ClientOutput extends Output<TClientMissionTypes> {
    */
   public constructor(
     force: ClientMissionForce,
-    data: Partial<TCommonOutputJson> = ClientOutput.DEFAULT_PROPERTIES,
-    options: Partial<TClientOutputOptions> = {},
+    data: Partial<TOutputJson> = ClientOutput.DEFAULT_PROPERTIES,
   ) {
-    super(force, data, options)
+    super(force, data)
 
     // If there is an execution, create a new action execution object.
     if (data.execution && this.action) {
@@ -31,8 +27,3 @@ export default class ClientOutput extends Output<TClientMissionTypes> {
     }
   }
 }
-
-/**
- * Options used for creating a `ServerOutput`.
- */
-export type TClientOutputOptions = TOutputOptions & {}

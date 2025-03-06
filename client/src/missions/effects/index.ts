@@ -2,7 +2,7 @@ import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
 import { TClientMissionTypes, TMissionComponent, TMissionNavigable } from '..'
 import Effect, {
-  TCommonEffectJson,
+  TEffectJson,
   TEffectOptions,
 } from '../../../../shared/missions/effects'
 import ForceArg from '../../../../shared/target-environments/args/force-arg'
@@ -40,7 +40,7 @@ export class ClientEffect
    */
   public constructor(
     action: ClientMissionAction,
-    data: Partial<TCommonEffectJson> = ClientEffect.DEFAULT_PROPERTIES,
+    data: Partial<TEffectJson> = ClientEffect.DEFAULT_PROPERTIES,
     options: TClientEffectOptions = {},
   ) {
     super(action, data, options)

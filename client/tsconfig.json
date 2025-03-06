@@ -9,5 +9,5 @@
     //   "metis/*": ["../../shared/*"]
     // }
   },
-  "include": ["src", "src/setupProxy.js", "src/global.d.ts"]
+  "include": ["src", "src/setupProxy.js", "src/global.d.ts", "../shared/events"]
 }
