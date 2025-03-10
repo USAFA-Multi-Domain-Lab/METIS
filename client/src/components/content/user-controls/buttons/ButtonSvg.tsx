@@ -1,8 +1,8 @@
 import React from 'react'
 import { compute } from 'src/toolbox'
+import { TWithKey } from '../../../../../../shared/toolbox/objects'
 import Tooltip from '../../communication/Tooltip'
 import './ButtonSvg.scss'
-import { TWithKey } from '../../../../../../shared/toolbox/objects'
 
 /* -- components -- */
 

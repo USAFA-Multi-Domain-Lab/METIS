@@ -1,18 +1,27 @@
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
 import Underline from '@tiptap/extension-underline'
-import { Editor, EditorContent, EditorEvents, useEditor } from '@tiptap/react'
+import {
+  BubbleMenu,
+  Editor,
+  EditorContent,
+  FloatingMenu,
+  useEditor,
+} from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
+import { all, createLowlight } from 'lowlight'
+import { useGlobalContext } from 'src/context'
 import { compute } from 'src/toolbox'
+import { TRichText_P } from '.'
 import {
   TButtonSvgDisabled,
   TButtonSvgType,
 } from '../../user-controls/buttons/ButtonSvg'
 import ButtonSvgPanel_v2 from '../../user-controls/buttons/ButtonSvgPanel_v2'
 import './RichText.scss'
-import MetisSpan from './extensions/span'
 import MetisParagraph from './extensions/paragraph'
-import { TRichText_P } from '.'
+import MetisSpan from './extensions/span'
 
 /**
  * Displays and manages rich text.
@@ -33,19 +42,34 @@ export default function RichText({
   } = options ?? {}
 
   /* -- GLOBAL CONTEXT -- */
-  // const { prompt } = useGlobalContext().actions
+  const { prompt } = useGlobalContext().actions
 
   /* -- COMPUTED -- */
 
   /**
-   * Determines how to group the toolbar buttons.
+   * Determines how to group the buttons for the bubble toolbar.
    */
-  const toolbarGroupings: Array<TButtonSvgType[]> = [
-    ['undo', 'redo'],
-    ['ordered-list', 'unordered-list'],
-    ['bold', 'italic', 'underline', 'strike'],
-    ['code', 'code-block', 'link'],
-    ['clear-format'],
+  const bubbleToolbarGroupings: Array<TButtonSvgType[]> = [
+    [
+      'undo',
+      'redo',
+      'ordered-list',
+      'unordered-list',
+      'bold',
+      'italic',
+      'underline',
+      'strike',
+      'code',
+      'code-block',
+      'link',
+      'clear-format',
+    ],
+  ]
+  /**
+   * Determines how to group the buttons for the floating toolbar.
+   */
+  const floatingToolbarGroupings: Array<TButtonSvgType[]> = [
+    ['ordered-list', 'unordered-list', 'code-block'],
   ]
   /**
    * The class name for the root element.
@@ -69,23 +93,23 @@ export default function RichText({
     // Get the previous URL if it exists.
     const prevUrl = editor.getAttributes('link').href
     // Prompt the user for a URL.
-    // const { choice, text: url } = await prompt('', ['Cancel', 'Submit'], {
-    //   textField: {
-    //     boundChoices: ['Submit'],
-    //     label: 'URL',
-    //     initialValue: prevUrl,
-    //   },
-    //   defaultChoice: 'Submit',
-    // })
-    // // Set the link.
-    // if (choice === 'Submit') {
-    //   editor
-    //     .chain()
-    //     .focus()
-    //     .extendMarkRange('link')
-    //     .setLink({ href: url })
-    //     .run()
-    // }
+    const { choice, text: url } = await prompt('', ['Cancel', 'Submit'], {
+      textField: {
+        boundChoices: ['Submit'],
+        label: 'URL',
+        initialValue: prevUrl,
+      },
+      defaultChoice: 'Submit',
+    })
+    // Set the link.
+    if (choice === 'Submit') {
+      editor
+        .chain()
+        .focus()
+        .extendMarkRange('link')
+        .setLink({ href: url })
+        .run()
+    }
   }
 
   /**
@@ -150,6 +174,41 @@ export default function RichText({
     }
   }
 
+  /**
+   * Gets the class list for a button.
+   * @param button The button for which to get the class list.
+   * @param editor The editor instance.
+   * @returns The class list for the button.
+   */
+  const getButtonClassList = (
+    button: TButtonSvgType,
+    editor: Editor | null,
+  ): string[] => {
+    switch (button) {
+      case 'bold':
+        return editor?.isActive('bold') ? ['Selected'] : ['NotSelected']
+      case 'italic':
+        return editor?.isActive('italic') ? ['Selected'] : ['NotSelected']
+      case 'underline':
+        return editor?.isActive('underline') ? ['Selected'] : ['NotSelected']
+      case 'strike':
+        return editor?.isActive('strike') ? ['Selected'] : ['NotSelected']
+      case 'code':
+        return editor?.isActive('code') ? ['Selected'] : ['NotSelected']
+      case 'code-block':
+        return editor?.isActive('codeBlock') ? ['Selected'] : ['NotSelected']
+      case 'link':
+        return editor?.isActive('link') ? ['Selected'] : ['NotSelected']
+      case 'ordered-list':
+        return editor?.isActive('orderedList') ? ['Selected'] : ['NotSelected']
+      case 'unordered-list':
+        return editor?.isActive('bulletList') ? ['Selected'] : ['NotSelected']
+
+      default:
+        return ['NotSelected']
+    }
+  }
+
   /* -- PRE-RENDER PROCESSING -- */
 
   const editor = useEditor(
@@ -172,6 +231,7 @@ export default function RichText({
       },
       extensions: [
         StarterKit.configure({
+          paragraph: false,
           listItem: {
             HTMLAttributes: {
               class: listClassName,
@@ -187,6 +247,10 @@ export default function RichText({
         }),
         MetisParagraph,
         MetisSpan,
+        CodeBlockLowlight.configure({
+          lowlight: createLowlight(all),
+          defaultLanguage: 'plaintext',
+        }),
       ],
     },
     [deps],
@@ -195,16 +259,37 @@ export default function RichText({
   /**
    * @note Only renders if the editor is editable.
    */
-  const toolbarJsx = compute((): JSX.Element | null => {
+  const bubbleToolbarJsx = compute((): JSX.Element | null => {
     if (!editor?.isEditable) return null
     return (
       <div className='Toolbar'>
-        {toolbarGroupings.map((grouping, index) => (
+        {bubbleToolbarGroupings.map((grouping, index) => (
           <ButtonSvgPanel_v2
             key={index} // todo: fix this to not use the index.
             buttons={grouping}
-            onButtonClick={(button) => handleToolbarButtonClick(button, editor)}
             disableButton={disableButton}
+            onButtonClick={(button) => handleToolbarButtonClick(button, editor)}
+            getButtonClassList={(button) => getButtonClassList(button, editor)}
+          />
+        ))}
+      </div>
+    )
+  })
+
+  /**
+   * @note Only renders if the editor is editable.
+   */
+  const floatingToolbarJsx = compute((): JSX.Element | null => {
+    if (!editor?.isEditable) return null
+    return (
+      <div className='Toolbar'>
+        {floatingToolbarGroupings.map((grouping, index) => (
+          <ButtonSvgPanel_v2
+            key={index} // todo: fix this to not use the index.
+            buttons={grouping}
+            disableButton={disableButton}
+            onButtonClick={(button) => handleToolbarButtonClick(button, editor)}
+            getButtonClassList={(button) => getButtonClassList(button, editor)}
           />
         ))}
       </div>
@@ -216,7 +301,12 @@ export default function RichText({
 
   return (
     <div className={rootClassName}>
-      {toolbarJsx}
+      <BubbleMenu editor={editor} className='BubbleToolbar'>
+        {bubbleToolbarJsx}
+      </BubbleMenu>
+      <FloatingMenu editor={editor} className='FloatingToolbar'>
+        {floatingToolbarJsx}
+      </FloatingMenu>
       <EditorContent editor={editor} />
     </div>
   )

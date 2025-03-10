@@ -3,20 +3,31 @@
 
 .Detail.DetailToggle {
   align-items: center;
-  grid-template-columns: 1fr auto;
-  grid-template-rows: auto;
+  grid-template-columns: auto auto 1fr;
   @include detail-field-styling;
   background: none;
   padding: 0;
 
-  .TitleRow {
-    margin: 0;
+  &.NoInfo {
+    grid-template-columns: auto 1fr;
+  }
+
+  .Label {
+    @include label-styling;
+  }
+
+  .DetailInfo {
+    @include detail-info-styling;
+    align-self: center;
   }
 
   .Field {
     border: none;
     padding: 0;
     background: none;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
   }
 
   .FieldErrorMessage {

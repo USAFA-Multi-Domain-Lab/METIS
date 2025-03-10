@@ -18,6 +18,7 @@ export default function ButtonSvgPanel_v2({
   styling = {},
   getLabel = () => '',
   getTooltip = () => '',
+  getButtonClassList = () => [],
   onButtonClick,
   disableButton = () => 'none',
 }: TButtonSvgPanel_v2_P): JSX.Element | null {
@@ -49,6 +50,7 @@ export default function ButtonSvgPanel_v2({
           description={getTooltip(type)}
           onClick={() => onButtonClick(type)}
           disabled={disableButton(type)}
+          uniqueClassList={getButtonClassList(type)}
         />
       ))}
     </div>
@@ -91,6 +93,13 @@ export type TButtonSvgPanel_v2_P = {
    * @default () => ''
    */
   getTooltip?: TSvgPanelGetTooltip
+  /**
+   * Gets the class list for the button.
+   * @param button The type of button for which to get the class list.
+   * @returns The class list for the button.
+   * @default () => []
+   */
+  getButtonClassList?: (button: TButtonSvgType) => string[]
   /**
    * Callback for when a button is clicked.
    * @param button The type of button clicked.

@@ -27,22 +27,12 @@ export function DetailToggle({
    * The class name for the detail.
    */
   const rootClassName: string = compute(() => {
-    // Default class names
     let classList: string[] = ['Detail', 'DetailToggle']
 
-    // If a unique class name is passed
-    // then add it to the list of class names.
-    if (uniqueClassName) {
-      classList.push(uniqueClassName)
-    }
+    if (uniqueClassName) classList.push(uniqueClassName)
+    if (disabled) classList.push('Disabled')
+    if (!tooltipDescription) classList.push('NoInfo')
 
-    // If disabled is true then add the
-    // disabled class name.
-    if (disabled) {
-      classList.push('Disabled')
-    }
-
-    // Return the list of class names as one string.
     return classList.join(' ')
   })
   /**
@@ -103,15 +93,11 @@ export function DetailToggle({
   /* -- RENDER -- */
   return (
     <div className={rootClassName}>
-      <div className='TitleRow'>
-        <div className='TitleColumnOne'>
-          <div className={labelClassName}>{label}</div>
-          <sup className={infoClassName}>
-            i
-            <Tooltip description={tooltipDescription} />
-          </sup>
-        </div>
-      </div>
+      <div className={labelClassName}>{label}</div>
+      <sup className={infoClassName}>
+        i
+        <Tooltip description={tooltipDescription} />
+      </sup>
       <div className={fieldClassName}>
         <Toggle
           stateValue={stateValue}

@@ -1,6 +1,6 @@
 // -- script-imports --
 
-import parse from 'marked'
+import { parse } from 'marked'
 import React from 'react'
 import './Markdown.scss'
 

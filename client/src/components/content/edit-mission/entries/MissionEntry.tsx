@@ -142,9 +142,6 @@ export default function MissionEntry({
               applyItemStyling={() => {
                 return {}
               }}
-              listStyling={{
-                borderBottom: '2px solid #ffffff',
-              }}
               itemsPerPage={null}
               listSpecificItemClassName='AltDesign2'
             />

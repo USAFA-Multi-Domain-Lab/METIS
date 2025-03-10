@@ -1,6 +1,5 @@
 import { EditorEvents } from '@tiptap/react'
 import { useState } from 'react'
-import 'react-quill/dist/quill.snow.css'
 import { compute } from 'src/toolbox'
 import { TDetailWithInput_P } from '.'
 import Tooltip from '../communication/Tooltip'
@@ -230,6 +229,16 @@ export function DetailLargeString({
             i
             <Tooltip description={tooltipDescription} />
           </sup>
+          <a
+            href='/files/shortcuts.pdf'
+            target='_blank'
+            className='DetailInfo Link'
+          >
+            ?
+            <Tooltip
+              description={`Click here to view the shortcuts for this editor.`}
+            />
+          </a>
         </div>
         <div className={`TitleColumnTwo ${optionalClassName}`}>optional</div>
       </div>

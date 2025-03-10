@@ -53,9 +53,19 @@
     background-position-y: 0.4em !important;
   }
 
-  &:not(.warning-transparent):hover {
+  &:not(.warning-transparent):hover,
+  &.Selected {
     filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(117deg)
       brightness(200%) contrast(98%);
+  }
+
+  &.Selected:hover,
+  &.NotSelected:hover {
+    box-shadow: 0 1.5px 0 $color-primary-light;
+  }
+
+  &.NotSelected:hover {
+    filter: none;
   }
 
   &.warning-transparent:hover {

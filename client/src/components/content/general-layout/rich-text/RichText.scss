@@ -17,14 +17,8 @@
       display: inline;
     }
 
-    .Editor p {
-      // todo: Determine what to do with this.
-      // margin: 0;
-      // padding: 0;
-
-      &:first-of-type {
-        display: inline;
-      }
+    .Editor p:first-of-type {
+      display: inline;
     }
   }
 
@@ -47,8 +41,12 @@
     }
 
     a {
-      color: $color-accent;
       text-decoration: none;
+    }
+
+    a,
+    a * {
+      color: $color-accent;
       cursor: pointer;
 
       &:hover {
@@ -73,6 +71,64 @@
         border: unset;
         border-radius: unset;
       }
+
+      /* Code block styling */
+      .hljs-comment,
+      .hljs-quote {
+        color: $color-secondary-light;
+      }
+
+      .hljs-variable,
+      .hljs-template-variable,
+      .hljs-attribute,
+      .hljs-tag,
+      .hljs-regexp,
+      .hljs-link,
+      .hljs-name,
+      .hljs-selector-id,
+      .hljs-selector-class {
+        color: #f98181;
+      }
+
+      .hljs-number,
+      .hljs-meta,
+      .hljs-built_in,
+      .hljs-builtin-name,
+      .hljs-literal,
+      .hljs-type,
+      .hljs-params {
+        color: #fbbc88;
+      }
+
+      .hljs-string,
+      .hljs-symbol,
+      .hljs-bullet {
+        color: #b9f18d;
+      }
+
+      .hljs-title,
+      .hljs-section {
+        color: #faf594;
+      }
+
+      .hljs-keyword,
+      .hljs-selector-tag {
+        color: #70cff8;
+      }
+
+      .hljs-emphasis {
+        font-style: italic;
+      }
+
+      .hljs-strong {
+        font-weight: 700;
+      }
+    }
+
+    blockquote {
+      border-left: 3px solid $color-accent-light;
+      margin: 1.5rem 0;
+      padding-left: 1rem;
     }
 
     .DetailDisplay {
@@ -95,13 +151,17 @@
     }
   }
 
-  .Toolbar {
-    display: flex;
-    align-items: center;
-    flex-flow: row wrap;
+  .BubbleToolbar,
+  .FloatingToolbar {
+    background-color: $color-primary;
+    border-radius: 0.4em;
+    padding-bottom: 0.5em;
 
-    .ButtonSvgPanel_v2 {
-      margin: 0.5em 0.5em 0.5em 0;
+    .Toolbar {
+      display: flex;
+      align-items: center;
+      flex-flow: row wrap;
+      padding: 0.5em 0.5em 0.25em !important;
     }
   }
 }
