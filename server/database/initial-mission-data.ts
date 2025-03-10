@@ -63,6 +63,7 @@ export let demoMissionData: TMissionJson = {
       name: 'Friendly Force',
       color: '#34a1fb',
       initialResources: 100,
+      revealAllNodes: false,
       nodes: [
         {
           _id: ServerMissionNode.DEFAULT_PROPERTIES._id,

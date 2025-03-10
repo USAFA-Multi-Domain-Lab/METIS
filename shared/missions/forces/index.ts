@@ -56,6 +56,11 @@ export abstract class MissionForce<
   public resourcesRemaining: number
 
   /**
+   * Whether or not to reveal all nodes in the force.
+   */
+  public revealAllNodes: boolean
+
+  /**
    * The nodes in the force.
    */
   public nodes: TNode<T>[]
@@ -76,7 +81,7 @@ export abstract class MissionForce<
       cursor: TNode<T> = this.root,
       cursorStructure: AnyObject = {},
     ): AnyObject => {
-      if (cursor.opened) {
+      if (cursor.revealed) {
         for (let child of cursor.children) {
           if (child.hasChildren) {
             cursorStructure[child.prototype.structureKey] = algorithm(child)
@@ -146,7 +151,7 @@ export abstract class MissionForce<
     options: TMissionForceOptions = {},
   ) {
     // Parse options.
-    const { openAll = false, populateTargets = false } = options
+    const { populateTargets = false } = options
 
     // Set properties.
     this.mission = mission
@@ -157,6 +162,8 @@ export abstract class MissionForce<
     this.color = data.color ?? MissionForce.DEFAULT_PROPERTIES.color
     this.initialResources =
       data.initialResources ?? MissionForce.DEFAULT_PROPERTIES.initialResources
+    this.revealAllNodes =
+      data.revealAllNodes ?? MissionForce.DEFAULT_PROPERTIES.revealAllNodes
     this.resourcesRemaining = data.resourcesRemaining ?? this.initialResources
     this.nodes = []
     this._outputs = []
@@ -164,7 +171,6 @@ export abstract class MissionForce<
 
     // Import nodes into the force.
     this.importNodes(data.nodes ?? MissionForce.DEFAULT_PROPERTIES.nodes, {
-      openAll,
       populateTargets,
     })
 
@@ -184,6 +190,7 @@ export abstract class MissionForce<
       name: this.name,
       color: this.color,
       initialResources: this.initialResources,
+      revealAllNodes: this.revealAllNodes,
       nodes: this.exportNodes(options),
       filterOutputs: (userId) => {
         json.outputs = this.filterOutputs(userId).map((output) =>
@@ -307,14 +314,11 @@ export abstract class MissionForce<
   ): void {
     try {
       // Parse options.
-      const { openAll, populateTargets } = options
+      const { populateTargets } = options
 
       // Loop through data, spawn new nodes,
       // and add them to the nodes map.
       for (let datum of data) {
-        // Set node as open, if openAll is marked.
-        if (openAll) datum.opened = true
-
         this.nodes.push(this.createNode(datum, { populateTargets }))
       }
     } catch (error) {
@@ -369,6 +373,7 @@ export abstract class MissionForce<
       name: 'New Force',
       color: '#ffffff',
       initialResources: 100,
+      revealAllNodes: false,
       nodes: [],
     }
   }
@@ -479,6 +484,10 @@ export interface TCommonMissionForce {
    */
   initialResources: number
   /**
+   * Whether or not to reveal all nodes in the force.
+   */
+  revealAllNodes: boolean
+  /**
    * The nodes in the force.
    */
   nodes: TCommonMissionNode[]
@@ -558,6 +567,10 @@ export interface TCommonMissionForceJson {
    */
   initialResources: number
   /**
+   * Whether or not to reveal all nodes in the force.
+   */
+  revealAllNodes: boolean
+  /**
    * The nodes in the force.
    */
   nodes: TCommonMissionNodeJson[]
@@ -596,11 +609,6 @@ export type TMissionForceJson = TCommonMissionForceJson &
  */
 export type TMissionForceOptions = {
   /**
-   * Whether or not to force open all nodes.
-   * @default false
-   */
-  openAll?: boolean
-  /**
    * Whether to populate the targets.
    * @default false
    */
@@ -616,34 +624,12 @@ export type TForceJsonOptions = Omit<TMissionJsonOptions, 'idExposure'>
 /**
  * Options for MissionForce.importNodes.
  */
-export type TNodeImportOptions = {
-  /**
-   * Whether or not to force open the newly created nodes.
-   * @default false
-   */
-  openAll?: boolean
-  /**
-   * Whether to populate the targets.
-   * @default false
-   */
-  populateTargets?: boolean
-}
+export type TNodeImportOptions = TMissionForceOptions
 
 /**
  * Options for the MissionForce.exportNodes method.
  */
 export type TExportNodesOptions = TForceJsonOptions
-
-/**
- * Options for MissionForce.mapRelationships.
- */
-export type TMapRelationshipOptions = {
-  /**
-   * Whether or not to force open all nodes.
-   * @default false
-   */
-  openAll?: boolean
-}
 
 /**
  * Extracts the force type from the mission types.

@@ -44,6 +44,8 @@ environment-test.json
 
 # file store
 /server/files/store
+/server/files/store-dev
+/server/files/store-test
 
 # user data for importing
 /server/database/scripts/**/*.csv

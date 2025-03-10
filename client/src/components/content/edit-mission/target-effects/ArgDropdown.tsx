@@ -24,8 +24,8 @@ export default function ArgDropdown({
     // is in the effect's arguments then set the dropdown value.
     if (arg.type === 'dropdown' && arg.required) {
       // Grab the dropdown option.
-      let option: TDropdownArgOption | undefined = arg.options.find(
-        (option: TDropdownArgOption) => option.value === effectArgs[arg._id],
+      let option = arg.options.find(
+        (option) => option.value === effectArgs[arg._id],
       )
 
       // If the option is found then set the dropdown value.
@@ -34,12 +34,13 @@ export default function ArgDropdown({
       } else {
         return arg.default
       }
-    } else {
-      return {
-        _id: 'temporary-option',
-        name: 'Select an option',
-        value: null,
-      }
+    }
+
+    // Otherwise, return a temporary option.
+    return {
+      _id: 'temporary-option',
+      name: 'Select an option',
+      value: null,
     }
   })
   const [optionalValue, setOptionalValue] = useState<TDropdownArgOption | null>(
@@ -48,8 +49,8 @@ export default function ArgDropdown({
       // is in the effect's arguments then set the dropdown value.
       if (arg.type === 'dropdown' && !arg.required) {
         // Grab the dropdown option.
-        let option: TDropdownArgOption | undefined = arg.options.find(
-          (option: TDropdownArgOption) => option.value === effectArgs[arg._id],
+        let option = arg.options.find(
+          (option) => option.value === effectArgs[arg._id],
         )
 
         // If the option is found then set the dropdown value.
@@ -58,9 +59,10 @@ export default function ArgDropdown({
         } else {
           return null
         }
-      } else {
-        return null
       }
+
+      // Otherwise, return null
+      return null
     },
   )
 

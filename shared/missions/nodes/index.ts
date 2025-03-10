@@ -110,6 +110,7 @@ export default abstract class MissionNode<
 
   // Implemented
   public get opened(): TCommonMissionNode['opened'] {
+    if (!this._opened && this.force.revealAllNodes) return false
     return this._opened
   }
 
@@ -249,12 +250,14 @@ export default abstract class MissionNode<
 
   // Implemented
   public get openable(): TCommonMissionNode['openable'] {
-    return !this.opened
+    return !this.opened && !this.force.revealAllNodes
   }
 
   // Implemented
   public get revealed(): TCommonMissionNode['revealed'] {
-    return this.parent === null || this.parent.opened
+    return (
+      this.parent === null || this.parent.opened || this.force.revealAllNodes
+    )
   }
 
   /**

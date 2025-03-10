@@ -136,10 +136,7 @@ export default abstract class Target<
         context.blockNode({ nodeId })
       } else if (blockStatus === 'unblock') {
         context.unblockNode({ nodeId })
-      } else if (
-        typeof blockStatus !== 'string' &&
-        typeof blockStatus !== 'undefined'
-      ) {
+      } else if (typeof blockStatus !== 'string') {
         throw new Error(errorMessage)
       }
 
@@ -188,7 +185,7 @@ export default abstract class Target<
           {
             _id: 'no-change',
             name: 'No Change',
-            value: undefined,
+            value: 'no-change',
           },
           {
             _id: 'block',
@@ -201,15 +198,13 @@ export default abstract class Target<
             value: 'unblock',
           },
         ],
-        default: { _id: 'no-change', name: 'No Change', value: undefined },
-        dependencies: [Dependency.NODE('nodeMetadata')],
+        default: { _id: 'no-change', name: 'No Change', value: 'no-change' },
       },
       {
         type: 'boolean',
         _id: 'modifyActions',
         name: 'Modify Actions',
         groupingId: 'actions',
-        dependencies: [Dependency.NODE('nodeMetadata')],
       },
       {
         type: 'number',

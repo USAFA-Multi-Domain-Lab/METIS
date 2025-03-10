@@ -5,6 +5,7 @@ import { TCommonTarget } from 'metis/target-environments/targets'
 import { TCommonUser } from 'metis/users'
 import { v4 as generateHash } from 'uuid'
 import context from '../context'
+import { DateToolbox } from '../toolbox/dates'
 import { AnyObject } from '../toolbox/objects'
 import { TAction, TCommonMissionAction } from './actions'
 import { TCommonActionExecution } from './actions/executions'
@@ -26,7 +27,6 @@ import MissionPrototype, {
   TMissionPrototypeOptions,
   TPrototype,
 } from './nodes/prototypes'
-import { DateToolbox } from '../toolbox/dates'
 
 /**
  * This represents a mission for a student to complete.
@@ -188,9 +188,6 @@ export default abstract class Mission<
       else json.forces = this.forces.map((force) => force.toJson(options))
     }
 
-    // Adds structure data to the JSON, including the
-    // structure and the prototypes, based on the
-    // parameters passed.
     /**
      * Adds structural data to the JSON, including the
      * structure and the prototypes, based on the
@@ -817,38 +814,3 @@ export type TForceExposure =
   | { expose: 'force-with-all-nodes'; forceId: TCommonMissionForce['_id'] }
   | { expose: 'force-with-revealed-nodes'; forceId: TCommonMissionForce['_id'] }
   | { expose: 'none' }
-
-/**
- * Options for `Mission.determineRevealedStructure`
- * and `Mission.determineRevealedPrototypes`.
- */
-export type TDetermineRevealedOptions = {
-  /**
-   * The IDs of the forces to include in the
-   * revealed portion of the mission.
-   * @note If `null`, all forces will be included.
-   */
-  forceIds: TCommonMissionForce['_id'][] | null
-}
-
-/**
- * Options for Mission.mapRelationships.
- */
-export type TMapRelationshipOptions = {
-  /**
-   * Whether or not to force open all nodes.
-   * @default false
-   */
-  openAll?: boolean
-}
-
-/**
- * Options for Mission.importNodes.
- */
-export type TNodeImportOptions = {
-  /**
-   * Whether or not to force open the newly created nodes.
-   * @default false
-   */
-  openAll?: boolean
-}

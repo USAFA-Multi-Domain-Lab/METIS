@@ -10,6 +10,7 @@ import { DetailColorSelector } from '../../form/DetailColorSelector'
 import { DetailLargeString } from '../../form/DetailLargeString'
 import { DetailNumber } from '../../form/DetailNumber'
 import { DetailString } from '../../form/DetailString'
+import { DetailToggle } from '../../form/DetailToggle'
 import {
   ButtonText,
   TButtonText_P,
@@ -37,6 +38,9 @@ export default function ForceEntry({
   const [initialResources, setInitialResources] = useState<number>(
     force.initialResources,
   )
+  const [revealAllNodes, setRevealAllNodes] = useState<
+    ClientMissionForce['revealAllNodes']
+  >(force.revealAllNodes)
 
   /* -- COMPUTED -- */
 
@@ -98,10 +102,11 @@ export default function ForceEntry({
     force.name = name
     force.color = color
     force.initialResources = initialResources
+    force.revealAllNodes = revealAllNodes
 
     // Allow the user to save the changes.
     handleChange()
-  }, [introMessage, name, color, initialResources])
+  }, [introMessage, name, color, initialResources, revealAllNodes])
 
   /* -- RENDER -- */
 
@@ -125,6 +130,21 @@ export default function ForceEntry({
             maxLength={ClientMissionForce.MAX_NAME_LENGTH}
             key={`${force._id}_name`}
           />
+          <DetailNumber
+            fieldType='required'
+            label='Initial Resources'
+            stateValue={initialResources}
+            setState={setInitialResources}
+            integersOnly={true}
+            key={`${force._id}_initialResources`}
+          />
+          <DetailToggle
+            label='Reveal All Nodes in Session'
+            stateValue={revealAllNodes}
+            setState={setRevealAllNodes}
+            tooltipDescription='If enabled, all nodes in the force will be revealed to the player at the start of the session.'
+            key={`${force._id}_revealAllNodes`}
+          />
           <DetailColorSelector
             fieldType='required'
             label='Color'
@@ -143,14 +163,6 @@ export default function ForceEntry({
             setState={setIntroMessage}
             defaultValue={ClientMissionForce.DEFAULT_PROPERTIES.introMessage}
             key={`${force._id}_introMessage`}
-          />
-          <DetailNumber
-            fieldType='required'
-            label='Initial Resources'
-            stateValue={initialResources}
-            setState={setInitialResources}
-            integersOnly={true}
-            key={`${force._id}_initialResources`}
           />
 
           <div className='ButtonContainer'>

@@ -46,9 +46,9 @@ export default class DropdownArg {
    * @param options The dropdown argument options to convert.
    * @returns The dropdown argument options as JSON.
    */
-  public static OPTIONS_TO_JSON = (
-    options: TDropdownArgOption[],
-  ): TDropdownArgOptionJson[] => {
+  public static OPTIONS_TO_JSON<T extends TDropdownArgOptionVal>(
+    options: TDropdownArgOption<T>[],
+  ): TDropdownArgOptionJson<T>[] {
     return options.map((option) => {
       return {
         _id: option._id,
@@ -65,9 +65,9 @@ export default class DropdownArg {
    * @param option The dropdown argument option to convert.
    * @returns The dropdown argument option as JSON.
    */
-  public static OPTION_TO_JSON = (
-    option: TDropdownArgOption,
-  ): TDropdownArgOptionJson => {
+  public static OPTION_TO_JSON<T extends TDropdownArgOptionVal>(
+    option: TDropdownArgOption<T>,
+  ): TDropdownArgOptionJson<T> {
     return {
       _id: option._id,
       name: option.name,
@@ -118,9 +118,9 @@ export default class DropdownArg {
    * @param options The dropdown argument options as JSON to convert.
    * @returns The dropdown argument options.
    */
-  public static OPTIONS_FROM_JSON = (
-    options: TDropdownArgOptionJson[],
-  ): TDropdownArgOption[] => {
+  public static OPTIONS_FROM_JSON<T extends TDropdownArgOptionVal>(
+    options: TDropdownArgOptionJson<T>[],
+  ): TDropdownArgOption<T>[] {
     return options.map((option) => {
       return {
         _id: option._id,
@@ -137,9 +137,9 @@ export default class DropdownArg {
    * @param option The dropdown argument option as JSON to convert.
    * @returns The dropdown argument option.
    */
-  public static OPTION_FROM_JSON = (
-    option: TDropdownArgOptionJson,
-  ): TDropdownArgOption => {
+  public static OPTION_FROM_JSON<T extends TDropdownArgOptionVal>(
+    option: TDropdownArgOptionJson<T>,
+  ): TDropdownArgOption<T> {
     return {
       _id: option._id,
       name: option.name,
@@ -215,10 +215,6 @@ export type TDropdownArg = TBaseArg &
      * ```
      */
     type: 'dropdown'
-    /**
-     * The options for the argument.
-     */
-    options: TDropdownArgOption[]
   }
 /**
  * The optional dropdown argument type for a target.
@@ -228,6 +224,10 @@ type TDropdownArgOptional = {
    * Determines whether the argument is required or not.
    */
   required: false
+  /**
+   * The options for the argument.
+   */
+  options: TDropdownArgOption<TOptDropdownArgOptionVal>[]
 }
 /**
  * The required dropdown argument type for a target.
@@ -238,14 +238,20 @@ type TDropdownArgRequired = {
    */
   required: true
   /**
+   * The options for the argument.
+   */
+  options: TDropdownArgOption<TReqDropdownArgOptionVal>[]
+  /**
    * The default value for the argument.
    */
-  default: TDropdownArgOption
+  default: TDropdownArgOption<TReqDropdownArgOptionVal>
 }
 /**
  * The dropdown argument option type for a target.
  */
-export type TDropdownArgOption = {
+export type TDropdownArgOption<
+  Value extends TDropdownArgOptionVal = TDropdownArgOptionVal,
+> = {
   /**
    * The ID of the option.
    */
@@ -301,7 +307,7 @@ export type TDropdownArgOption = {
    * }
    * ```
    */
-  value: string | number | boolean | object | undefined | null
+  value: Value
   /**
    * These are the keys of the arguments that the current option depends on.
    * @note If the option depends on another argument, the option will only be displayed in the dropdown list if the dependency is met.
@@ -380,7 +386,6 @@ export type TDropdownArgOption = {
    */
   dependencies?: Dependency[]
 }
-
 /**
  * The dropdown argument type for a target.
  */
@@ -433,10 +438,6 @@ export type TDropdownArgJson = TBaseArgJson &
      * ```
      */
     type: 'dropdown'
-    /**
-     * The options for the argument.
-     */
-    options: TDropdownArgOptionJson[]
   }
 /**
  * The optional dropdown argument type for a target.
@@ -446,6 +447,10 @@ type TDropdownArgOptionalJson = {
    * Determines whether the argument is required or not.
    */
   required: false
+  /**
+   * The options for the argument.
+   */
+  options: TDropdownArgOptionJson<TOptDropdownArgOptionVal>[]
 }
 /**
  * The required dropdown argument type for a target as JSON.
@@ -458,12 +463,18 @@ type TDropdownArgRequiredJson = {
   /**
    * The default value for the argument.
    */
-  default: TDropdownArgOptionJson
+  default: TDropdownArgOptionJson<TReqDropdownArgOptionVal>
+  /**
+   * The options for the argument.
+   */
+  options: TDropdownArgOptionJson<TReqDropdownArgOptionVal>[]
 }
 /**
  * The dropdown argument option type for a target.
  */
-export type TDropdownArgOptionJson = {
+export type TDropdownArgOptionJson<
+  Value extends TDropdownArgOptionVal = TDropdownArgOptionVal,
+> = {
   /**
    * The ID of the option.
    */
@@ -519,7 +530,7 @@ export type TDropdownArgOptionJson = {
    * }
    * ```
    */
-  value: string | number | boolean | object | undefined | null
+  value: Value
   /**
    * These are the keys of the arguments that the current option depends on.
    * @note If the option depends on another argument, the option will only be displayed in the dropdown list if the dependency is met.
@@ -598,3 +609,26 @@ export type TDropdownArgOptionJson = {
    */
   dependencies?: string[]
 }
+
+/**
+ * The option value types for a required dropdown argument.
+ */
+export type TReqDropdownArgOptionVal = string | number | boolean | object
+
+/**
+ * The option value types for an optional dropdown argument.
+ */
+export type TOptDropdownArgOptionVal =
+  | string
+  | number
+  | boolean
+  | object
+  | null
+  | undefined
+
+/**
+ * The option value types for a dropdown argument.
+ */
+export type TDropdownArgOptionVal =
+  | TReqDropdownArgOptionVal
+  | TOptDropdownArgOptionVal
