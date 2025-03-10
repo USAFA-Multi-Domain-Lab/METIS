@@ -1,8 +1,8 @@
+import fs from 'fs'
 import { AnyObject } from 'metis/toolbox/objects'
+import MissionModel from '../../database/models/missions'
 import { TMulterFile } from '../../files'
 import { databaseLogger } from '../../logging'
-import MissionModel from '../../database/models/missions'
-import fs from 'fs'
 import build_000005 from './builds/build_000005'
 import build_000009 from './builds/build_000009'
 import build_000010 from './builds/build_000010'
@@ -24,6 +24,7 @@ import build_000033 from './builds/build_000033'
 import build_000034 from './builds/build_000034'
 import build_000035 from './builds/build_000035'
 import build_000036 from './builds/build_000036'
+import build_000037 from './builds/build_000037'
 
 /**
  * This class is responsible for executing the import of .metis and .cesar files.
@@ -255,6 +256,7 @@ export default class MissionImport {
     this.processBuild(missionData, 34, /**/ build_000034)
     this.processBuild(missionData, 35, /**/ build_000035)
     this.processBuild(missionData, 36, /**/ build_000036)
+    this.processBuild(missionData, 37, /**/ build_000037)
   }
 
   /**

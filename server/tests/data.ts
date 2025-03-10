@@ -46,6 +46,7 @@ export const testMission: TMissionJson = {
       name: 'Test Force',
       color: '#52b1ff',
       initialResources: 100,
+      revealAllNodes: false,
       nodes: [
         {
           _id: '211e5104-1c9d-487c-92b8-0a296f758d90',
@@ -122,6 +123,7 @@ export const updateMissionWithNoMissionId: TMissionJson = {
       name: 'Test Force',
       color: '#52b1ff',
       initialResources: 100,
+      revealAllNodes: false,
       nodes: [
         {
           _id: '211e5104-1c9d-487c-92b8-0a296f758d90',
@@ -195,6 +197,7 @@ export const updateMissionWithNoStructure: Omit<TMissionJson, 'structure'> = {
       name: 'Test Force',
       color: '#52b1ff',
       initialResources: 100,
+      revealAllNodes: false,
       nodes: [
         {
           _id: '211e5104-1c9d-487c-92b8-0a296f758d90',
@@ -291,6 +294,7 @@ export const correctUpdateTestMission: TMissionJson = {
       name: 'Test Force',
       color: '#52b1ff',
       initialResources: 100,
+      revealAllNodes: false,
       nodes: [
         {
           _id: '211e5104-1c9d-487c-92b8-0a296f758d90',
