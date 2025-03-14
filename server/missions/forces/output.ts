@@ -1,8 +1,11 @@
-import MissionOutput, { TOutputJson } from 'metis/missions/forces/output'
+import MissionOutput, {
+  TOutputContext,
+  TOutputJson,
+} from 'metis/missions/forces/output'
 import ServerUser from 'metis/server/users'
+import StringToolbox from 'metis/toolbox/strings'
 import ServerMissionForce from '.'
 import { TServerMissionTypes } from '..'
-import ServerActionExecution from '../actions/executions'
 
 /**
  * An output that's displayed in a force's output panel on the server.
@@ -24,16 +27,36 @@ export default class ServerOutput extends MissionOutput<TServerMissionTypes> {
    */
   public constructor(
     force: ServerMissionForce,
-    data: Partial<TOutputJson> = ServerOutput.DEFAULT_PROPERTIES,
+    data: TOutputJson,
     options: Partial<TServerOutputOptions> = {},
   ) {
     super(force, data)
 
-    let { userId = null, broadcastType = 'force', execution = null } = options
+    let { userId = null, broadcastType = 'force' } = options
 
     this.broadcastType = broadcastType
     this.userId = userId
-    this._execution = execution
+  }
+
+  public static generate(
+    force: ServerMissionForce,
+    prefix: string,
+    message: string,
+    context: TOutputContext,
+    options: Partial<TServerOutputOptions> = {},
+  ): ServerOutput {
+    return new ServerOutput(
+      force,
+      {
+        _id: StringToolbox.generateRandomId(),
+        forceId: force._id,
+        prefix,
+        message,
+        time: Date.now(),
+        context,
+      },
+      options,
+    )
   }
 }
 
@@ -51,11 +74,6 @@ export type TServerOutputOptions = {
    * @default 'force'
    */
   broadcastType?: TOutputBroadcast
-  /**
-   * The current execution in process on the node by an action.
-   * @default null
-   */
-  execution?: ServerActionExecution | null
 }
 
 /**

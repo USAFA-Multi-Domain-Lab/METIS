@@ -1,18 +1,27 @@
-import { TPrototypeButton } from 'src/components/content/session/mission-map/objects/MissionPrototype'
+import {
+  TMapCompatibleNode,
+  TMapCompatibleNodeEvent,
+  TNodeButton,
+} from 'src/components/content/session/mission-map/objects/nodes'
 import ClientMission, { TClientMissionTypes, TMissionNavigable } from '..'
+import { TListenerTargetEmittable } from '../../../../shared/events'
+import { TNodeExecutionState } from '../../../../shared/missions/nodes'
 import MissionPrototype, {
   TMissionPrototypeJson,
   TMissionPrototypeOptions,
 } from '../../../../shared/missions/nodes/prototypes'
 import { Vector2D } from '../../../../shared/toolbox/space'
-import { TListenerTargetEmittable } from '../../../../shared/events'
+import ClientActionExecution from '../actions/executions'
 
 /**
  * Class for managing mission prototypes on the client.
  */
 export default class ClientMissionPrototype
   extends MissionPrototype<TClientMissionTypes>
-  implements TListenerTargetEmittable<TPrototypeEventMethod>, TMissionNavigable
+  implements
+    TListenerTargetEmittable<TPrototypeEventMethod>,
+    TMissionNavigable,
+    TMapCompatibleNode
 {
   /**
    * The position of the prototype on a mission map.
@@ -31,17 +40,27 @@ export default class ClientMissionPrototype
     return this._id.substring(0, 8)
   }
 
+  // Implemented
+  public get nameLineCount(): number {
+    // The line count for a prototype is
+    // always 1.
+    return 1
+  }
+
+  // Implemented
+  public color: string = '#ffffff'
+
   /**
    * Buttons to manage this specific prototype on a mission map.
    */
-  private _buttons: TPrototypeButton[]
+  private _buttons: TNodeButton<ClientMissionPrototype>[]
   /**
    * Buttons to manage this specific prototype on a mission map.
    */
-  public get buttons(): TPrototypeButton[] {
+  public get buttons(): TNodeButton<ClientMissionPrototype>[] {
     return [...this._buttons]
   }
-  public set buttons(value: TPrototypeButton[]) {
+  public set buttons(value: TNodeButton<ClientMissionPrototype>[]) {
     // Gather details.
     let structureChange: boolean = false
 
@@ -66,12 +85,45 @@ export default class ClientMissionPrototype
     }
   }
 
+  // Implemented
+  public get icon(): TMetisIcon {
+    return '_blank'
+  }
+
   /**
    * Whether the prototype is selected in the mission.
    */
   public get selected(): boolean {
     return this.mission.selection === this
   }
+
+  // Implemented
+  public get pending(): boolean {
+    return false
+  }
+
+  // Implemented
+  public get revealed(): boolean {
+    return true
+  }
+
+  // Implemented
+  public get latestExecution(): ClientActionExecution | null {
+    return null
+  }
+
+  // Implemented
+  public get executionState(): TNodeExecutionState {
+    return { status: 'unexecuted' }
+  }
+
+  // Implemented
+  public get executing(): boolean {
+    return this.executionState.status === 'executing'
+  }
+
+  // Implemented
+  public blocked: boolean = false
 
   // Implemented
   public get path(): TMissionNavigable[] {
@@ -362,7 +414,7 @@ export default class ClientMissionPrototype
    * Populates the children of the prototype with the given data.
    * @param data The data to populate the children with.
    */
-  public populateChildren(data: TMissionPrototypeJson[]): void {
+  protected populateChildren(data: TMissionPrototypeJson[]): void {
     // If children are already set,
     // return them.
     if (this.children.length > 0) return
@@ -378,6 +430,32 @@ export default class ClientMissionPrototype
       this.children.push(child)
     })
   }
+
+  /**
+   * Callback for when the server emits a node open
+   * event, processing the event here at the prototype
+   * level.
+   * @param revealedChildPrototypes The child prototypes revealed by
+   * the open event, if any.
+   */
+  public onOpen(
+    revealedChildPrototypes: TMissionPrototypeJson[] | undefined,
+  ): void {
+    if (revealedChildPrototypes) this.populateChildren(revealedChildPrototypes)
+  }
+
+  /**
+   * Callback for when an outcome is received from
+   * the server, processing the outcome here at the
+   * prototype level.
+   * @param revealedChildPrototypes The child prototypes revealed by the outcome,
+   * if any.
+   */
+  public onOutcome(
+    revealedChildPrototypes: TMissionPrototypeJson[] | undefined,
+  ): void {
+    if (revealedChildPrototypes) this.populateChildren(revealedChildPrototypes)
+  }
 }
 
 /**
@@ -387,7 +465,7 @@ export default class ClientMissionPrototype
  * @option 'set-buttons'
  * Triggered when the buttons for the prototype are set.
  */
-export type TPrototypeEventMethod = 'activity' | 'set-buttons'
+export type TPrototypeEventMethod = TMapCompatibleNodeEvent
 
 /**
  * The relation of prototype to another prototype.

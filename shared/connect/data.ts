@@ -2,17 +2,15 @@ import {
   TActionExecutionJson,
   TExecutionCheats,
 } from 'metis/missions/actions/executions'
-import { TActionOutcomeJson } from 'metis/missions/actions/outcomes'
+import { TExecutionOutcomeJson } from 'metis/missions/actions/outcomes'
 import { TMissionForceSaveJson } from 'metis/missions/forces'
 import { TOutputJson } from 'metis/missions/forces/output'
 import { TMissionPrototypeJson } from 'metis/missions/nodes/prototypes'
 import { TSessionConfig, TSessionJson } from 'metis/sessions'
-import SessionMember, {
-  TCommonSessionMember,
-  TSessionMemberJson,
-} from 'metis/sessions/members'
+import SessionMember, { TSessionMemberJson } from 'metis/sessions/members'
 import MemberRole from 'metis/sessions/members/roles'
 import { AnyObject } from 'metis/toolbox/objects'
+import { TMetisComponent } from '..'
 import { TMissionNodeJson } from '../missions/nodes'
 
 /* -- TYPES -- */
@@ -556,7 +554,7 @@ export type TResponseEvents = {
       /**
        * The outcome of the action being executed.
        */
-      outcome: TActionOutcomeJson
+      outcome: TExecutionOutcomeJson
       /**
        * The nodes that were revealed as a result of executing the action.
        */
@@ -588,9 +586,9 @@ export type TResponseEvents = {
        */
       session: TSessionJson | null
       /**
-       * The ID of the member associated with the session.
+       * The ID of the member associated with the session client.
        */
-      memberId: TCommonSessionMember['_id'] | null
+      memberId: TMetisComponent['_id']
     },
     TClientEvents['request-current-session']
   >
@@ -607,7 +605,7 @@ export type TResponseEvents = {
       /**
        * The ID of the member in the session.
        */
-      memberId: TCommonSessionMember['_id']
+      memberId: TMetisComponent['_id']
     },
     TClientEvents['request-join-session']
   >

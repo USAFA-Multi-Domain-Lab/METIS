@@ -4,6 +4,7 @@ import ClientMission, {
   TMissionComponent,
   TMissionNavigable,
 } from '..'
+import { TListenerTargetEmittable } from '../../../../shared/events'
 import {
   MissionForce,
   TMissionForceJson,
@@ -20,7 +21,6 @@ import { Vector2D } from '../../../../shared/toolbox/space'
 import ClientMissionAction from '../actions'
 import ClientMissionNode from '../nodes'
 import ClientOutput from './outputs'
-import { TListenerTargetEmittable } from '../../../../shared/events'
 
 /**
  * Class for managing mission prototypes on the client.

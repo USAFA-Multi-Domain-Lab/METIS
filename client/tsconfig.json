@@ -1,6 +1,7 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
+    "types": ["./src/global.d.ts"],
     "jsx": "react-jsx",
     "baseUrl": "."
     // "paths": {

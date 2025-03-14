@@ -4,18 +4,20 @@ import TargetEnvironment from 'metis/target-environments'
 import Target from 'metis/target-environments/targets'
 import User from 'metis/users'
 import { v4 as generateHash } from 'uuid'
+import { TMetisComponent } from '..'
 import context from '../context'
+import { DateToolbox } from '../toolbox/dates'
 import { AnyObject } from '../toolbox/objects'
 import MissionAction, { TAction } from './actions'
-import ActionExecution from './actions/executions'
-import IActionOutcome from './actions/outcomes'
+import ActionExecution, { TExecution } from './actions/executions'
+import ExecutionOutcome from './actions/outcomes'
 import Effect, { TEffect } from './effects'
 import {
   MissionForce,
-  TMissionForceSaveJson,
   TForce,
   TMissionForceJson,
   TMissionForceOptions,
+  TMissionForceSaveJson,
 } from './forces'
 import MissionOutput from './forces/output'
 import MissionNode, { TNode } from './nodes'
@@ -24,7 +26,6 @@ import MissionPrototype, {
   TMissionPrototypeOptions,
   TPrototype,
 } from './nodes/prototypes'
-import { DateToolbox } from '../toolbox/dates'
 
 /**
  * This represents a mission for a student to complete.
@@ -388,8 +389,23 @@ export default abstract class Mission<
    * @returns The node with the given ID, or undefined
    * if no node is found.
    */
-  public getNode(nodeId: TNode<T>['_id']): TNode<T> | undefined {
+  public getNode(nodeId: TMetisComponent['_id']): TNode<T> | undefined {
     return nodeId ? Mission.getNode(this, nodeId) : undefined
+  }
+
+  /**
+   * @param executionId The ID of the execution to get.
+   * @returns The execution with the given ID, or undefined
+   * if the execution is not found.
+   */
+  public getExecution(
+    executionId: TMetisComponent['_id'],
+  ): TExecution<T> | undefined {
+    for (let node of this.nodes.values()) {
+      let execution = node.getExecution(executionId)
+      if (execution) return execution
+    }
+    return undefined
   }
 
   /**
@@ -644,7 +660,7 @@ export type TCommonMissionTypes = {
   node: MissionNode
   action: MissionAction
   execution: ActionExecution
-  outcome: IActionOutcome
+  outcome: ExecutionOutcome
   targetEnv: TargetEnvironment
   target: Target
   effect: Effect
@@ -667,7 +683,7 @@ export type TCreateMissionJsonType<
   TDirect extends keyof T,
   TIndirect extends { [k in keyof T]?: any } = {},
 > = {
-  [k in TDirect]: T[k]
+  -readonly [k in TDirect]: T[k]
 } & {
   [k in keyof TIndirect]: TIndirect[k]
 }

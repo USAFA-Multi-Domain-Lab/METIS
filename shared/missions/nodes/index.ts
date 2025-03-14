@@ -4,18 +4,12 @@ import { Vector2D } from '../../../shared/toolbox/space'
 import ArrayToolbox from '../../toolbox/arrays'
 import MapToolbox from '../../toolbox/maps'
 import { TAction, TMissionActionJson, TMissionActionOptions } from '../actions'
-import TActionExecution, {
+import {
   TActionExecutionJson,
   TActionExecutionState,
-  default as TCommonMissionExecution,
   TExecution,
 } from '../actions/executions'
-import {
-  default as IActionOutcome,
-  TActionOutcomeJson,
-  default as TCommonActionOutcome,
-  TOutcome,
-} from '../actions/outcomes'
+import { TOutcome } from '../actions/outcomes'
 import { TForce, TForceJsonOptions } from '../forces'
 import MissionPrototype, { TPrototype } from './prototypes'
 
@@ -34,6 +28,13 @@ export default abstract class MissionNode<
    * The force the node belongs to.
    */
   public force: TForce<T>
+
+  /**
+   * The ID of the force the node belongs to.
+   */
+  public get forceId(): string {
+    return this.force._id
+  }
 
   /**
    * The ID for the node.
@@ -89,23 +90,19 @@ export default abstract class MissionNode<
    * The execution state of the node.
    */
   public get executionState(): TNodeExecutionState {
-    let execution: TActionExecution | null = this.execution
-    let outcomes: IActionOutcome[] = this.outcomes
+    let { latestExecution } = this
+    // Determine the execution state from
+    // the value of the latest execution.
+    if (latestExecution === null) return { status: 'unexecuted' }
+    else return latestExecution.state
+  }
 
-    // Check for 'unexecuted' state.
-    if (execution === null && outcomes.length === 0) {
-      return 'unexecuted'
-    } else if (execution !== null) {
-      return 'executing'
-    } else {
-      let outcomeStatus = ArrayToolbox.lastOf(outcomes).status
-
-      if (outcomeStatus === 'aborted') {
-        return 'unexecuted'
-      } else {
-        return outcomeStatus
-      }
-    }
+  /**
+   * The execution status of the node, determined
+   * by the execution state.
+   */
+  public get executionStatus(): TNodeExecutionState['status'] {
+    return this.executionState.status
   }
 
   /**
@@ -116,7 +113,7 @@ export default abstract class MissionNode<
     return (
       this.executable &&
       this.actions.size > 0 &&
-      this.executionState !== 'executing'
+      this.executionStatus !== 'executing'
     )
   }
 
@@ -124,11 +121,7 @@ export default abstract class MissionNode<
    * Whether an action is currently being executed on the node.
    */
   public get executing(): boolean {
-    return (
-      this.execution !== null &&
-      this.execution.timeRemaining > 0 &&
-      !this.execution.aborted
-    )
+    return this.latestExecution?.status === 'executing'
   }
 
   /**
@@ -162,26 +155,33 @@ export default abstract class MissionNode<
   }
 
   /**
-   * The current execution in process on the node by an action.
+   * Cache for the `executions` field.
    */
-  protected _execution: TExecution<T> | null
+  protected _executions: T['execution'][]
   /**
-   * The current execution in process on the node by an action.
+   * A list of executions that have been performed on the node.
    */
-  public get execution(): TExecution<T> | null {
-    return this._execution
+  public get executions(): T['execution'][] {
+    return this._executions
   }
 
   /**
-   * The outcomes of the actions that are performed on the node.
+   * The current execution being performed on the node,
+   * or the last execution, if not executing. `null` is
+   * returned if no executions have been performed.
    */
-  protected _outcomes: TOutcome<T>[]
+  public get latestExecution(): TExecution<T> | null {
+    return this.executions.length ? ArrayToolbox.lastOf(this.executions) : null
+  }
+
   /**
    * The outcomes of the actions that are performed on
    * the node.
    */
   public get outcomes(): TOutcome<T>[] {
-    return [...this._outcomes]
+    return this.executions
+      .map(({ outcome }) => outcome)
+      .filter((outcome) => outcome !== null)
   }
 
   /**
@@ -361,20 +361,10 @@ export default abstract class MissionNode<
     this.executable =
       data.executable ?? MissionNode.DEFAULT_PROPERTIES.executable
     this.device = data.device ?? MissionNode.DEFAULT_PROPERTIES.device
-    this.actions = this.importActions(
-      data.actions ?? MissionNode.DEFAULT_PROPERTIES.actions,
-      { populateTargets },
-    )
+    this.actions = new Map<string, TAction<T>>()
+    this._executions = []
     this._opened = data.opened ?? MissionNode.DEFAULT_PROPERTIES.opened
     this._blocked = data.blocked ?? MissionNode.DEFAULT_PROPERTIES.blocked
-    this._execution = this.importExecutions(
-      data.execution !== undefined
-        ? data.execution
-        : MissionNode.DEFAULT_PROPERTIES.execution,
-    )
-    this._outcomes = this.importOutcomes(
-      data.outcomes ?? MissionNode.DEFAULT_PROPERTIES.outcomes,
-    )
     this.position = new Vector2D(0, 0)
 
     // Attempt to get prototype from mission.
@@ -385,36 +375,31 @@ export default abstract class MissionNode<
 
     // Set prototype.
     this.prototype = prototype
+
+    // Import action and execution data.
+    this.importActions(data.actions ?? MissionNode.DEFAULT_PROPERTIES.actions, {
+      populateTargets,
+    })
+    this.importExecutions(
+      data.executions ?? MissionNode.DEFAULT_PROPERTIES.executions,
+    )
   }
 
   /**
-   * Imports the action data into MissionAction objects.
-   * @param data The action data to parse.
+   * Imports the action JSON data, storing it in `actions`.
+   * @param data The action data to import.
    * @param options The options used to create the actions.
-   * @returns The parsed action data.
    */
   protected abstract importActions(
     data: TMissionActionJson[],
     options?: TMissionActionOptions,
-  ): Map<string, TAction<T>>
+  ): void
 
   /**
-   * Imports the execution data into a execution object of the
-   * type passed in IActionExecution.
-   * @param data The outcome data to parse.
-   * @returns The parsed outcome data.
+   * Imports the execution JSON data, storing it in `_executions`.
+   * @param data The outcome data to import.
    */
-  protected abstract importExecutions(
-    data: TActionExecutionJson,
-  ): TExecution<T> | null
-
-  /**
-   * Imports the outcome data into the outcome objects of the
-   * type passed in IActionOutcome.
-   * @param data The outcome data to parse.
-   * @returns The parsed outcome data.
-   */
-  protected abstract importOutcomes(data: TActionOutcomeJson[]): TOutcome<T>[]
+  protected abstract importExecutions(data: TActionExecutionJson[]): void
 
   /**
    * Handles the blocking and unblocking of the node's children.
@@ -454,23 +439,14 @@ export default abstract class MissionNode<
       case 'all':
       case 'user-specific':
         // Construct execution JSON.
-        let executionJson: TActionExecutionJson | null = null
-
-        if (this.execution !== null) {
-          executionJson = this.execution.toJson()
-        }
-
-        // Construct outcome JSON.
-        let outcomeJson: TActionOutcomeJson[] = this.outcomes.map((outcome) =>
-          outcome.toJson(),
+        let executionJson = this.executions.map((execution) =>
+          execution.toJson(),
         )
 
         // Construct session-specific JSON.
         let sessionJson: TMissionNodeSessionJson = {
           opened: this.opened,
-          executionState: this.executionState,
-          execution: executionJson,
-          outcomes: outcomeJson,
+          executions: executionJson,
           blocked: this.blocked,
         }
 
@@ -489,33 +465,13 @@ export default abstract class MissionNode<
   }
 
   /**
-   * Opens the node.
-   * @param options Options for opening the node.
-   * @returns a promise that resolves when the node opening has been fulfilled.
+   * @param _id The ID of the execution to retrieve.
+   * @returns The execution with the given ID, or `undefined`
+   * if no execution with the given ID is found.
    */
-  public abstract open(options?: INodeOpenOptions): Promise<void>
-
-  /**
-   * Loads the execution JSON into the node, returning a new
-   * execution object.
-   * @param data The execution data to load.
-   * @returns The generated execution object.
-   */
-  public abstract loadExecution(
-    data: NonNullable<TActionExecutionJson>,
-  ): TActionExecution
-
-  /**
-   * Loads the execution JSON into the node, returning a new
-   * execution object..
-   * @param data The outcome data to load.
-   * @param options Options for loading the outcome.
-   * @returns The generated outcome object.
-   */
-  public abstract loadOutcome(
-    data: TActionOutcomeJson,
-    options?: ILoadOutcomeOptions,
-  ): TOutcome<T>
+  public getExecution(_id: string): TExecution<T> | undefined {
+    return this.executions.find((execution) => execution._id === _id)
+  }
 
   /**
    * Handles the blocking and unblocking of the node.
@@ -548,6 +504,21 @@ export default abstract class MissionNode<
   public abstract modifyResourceCost(resourceCostOperand: number): void
 
   /**
+   * Processes an incoming execution that is being performed
+   * on the node, appending it to the end of the execution list.
+   * @param execution The execution object to process.
+   * @throws If the execution is not associated with this node.
+   */
+  public onExecution(execution: TExecution<T>): void {
+    if (execution.nodeId !== this._id) {
+      throw new Error(
+        `Execution node ID "${execution.nodeId}" does not match node ID "${this._id}".`,
+      )
+    }
+    this._executions.push(execution)
+  }
+
+  /**
    * The maximum length allowed for a node's name.
    */
   public static readonly MAX_NAME_LENGTH: number = 175
@@ -568,9 +539,7 @@ export default abstract class MissionNode<
       actions: [],
       opened: false,
       blocked: false,
-      executionState: 'unexecuted',
-      execution: null,
-      outcomes: [],
+      executions: [],
     }
   }
 }
@@ -631,9 +600,7 @@ export type TNode<T extends TCommonMissionTypes> = T['node']
  */
 export interface TMissionNodeSessionJson {
   opened: boolean
-  executionState: TNodeExecutionState
-  execution: TActionExecutionJson | null
-  outcomes: TActionOutcomeJson[]
+  executions: TActionExecutionJson[]
   blocked: boolean
 }
 
@@ -664,7 +631,9 @@ export type TMissionNodeOptions = {
 /**
  * Possible states for the execution of a node.
  */
-export type TNodeExecutionState = 'unexecuted' | TActionExecutionState
+export type TNodeExecutionState =
+  | { status: 'unexecuted' }
+  | TActionExecutionState
 
 /**
  * Options for the `MissionNode.open` method.

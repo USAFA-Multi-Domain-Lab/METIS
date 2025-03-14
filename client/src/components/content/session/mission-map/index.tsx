@@ -13,9 +13,12 @@ import Scene from './Scene'
 import './index.scss'
 import Grid from './objects/Grid'
 import Line from './objects/Line'
-import MissionNode, { MAX_NODE_CONTENT_ZOOM } from './objects/MissionNode'
-import MissionPrototype from './objects/MissionPrototype'
 import PrototypeSlot from './objects/PrototypeSlot'
+import {
+  MAX_NODE_CONTENT_ZOOM,
+  MapNode,
+  TMapCompatibleNode,
+} from './objects/nodes'
 import Hud from './ui/Hud'
 import PanController from './ui/PanController'
 import Overlay from './ui/overlay'
@@ -572,42 +575,20 @@ export default function MissionMap({
    * @memoized
    */
   const nodesJsx = useMemo((): JSX.Element[] => {
-    if (selectedForce === null) {
-      return mission.prototypes.map((prototype) => {
-        // Construct the onSelect callback for
-        // the specific prototype using the generic
-        // onSelect callback passed in props.
-        let onSelect = onPrototypeSelect
-          ? () => onPrototypeSelect(prototype)
-          : undefined
-        // let applyTooltip = applyNodeTooltip
-        //   ? () => applyNodeTooltip(prototype)
-        //   : undefined
-
-        // Return the JSX for the prototype.
+    /**
+     * Renders the given nodes into JSX.
+     * @param nodes The nodes to render.
+     * @param onSelect Callback for when a node is selected.
+     * @param applyTooltip Callback for applying a tooltip to a node.
+     */
+    const render = <TNode extends TMapCompatibleNode>(
+      nodes: TNode[],
+      onSelect?: (node: TNode) => void,
+      applyTooltip?: (node: TNode) => string,
+    ): JSX.Element[] => {
+      return nodes.map((node) => {
         return (
-          <MissionPrototype
-            key={prototype._id}
-            prototype={prototype}
-            cameraZoom={cameraZoom}
-            onSelect={onSelect}
-            // applyTooltip={applyTooltip}
-          />
-        )
-      })
-    } else {
-      return selectedForce.nodes.map((node) => {
-        // Construct the onSelect callback for
-        // the specific node using the generic
-        // onNodeSelect callback passed in props.
-        let onSelect = onNodeSelect ? () => onNodeSelect(node) : undefined
-        let applyTooltip = applyNodeTooltip
-          ? () => applyNodeTooltip(node)
-          : undefined
-
-        // Return the JSX for the node.
-        return (
-          <MissionNode
+          <MapNode
             key={node._id}
             node={node}
             cameraZoom={cameraZoom}
@@ -616,6 +597,14 @@ export default function MissionMap({
           />
         )
       })
+    }
+
+    // If a force is selected, render the nodes
+    // for that force. Otherwise, render the prototypes.
+    if (selectedForce) {
+      return render(selectedForce.nodes, onNodeSelect, applyNodeTooltip)
+    } else {
+      return render(mission.prototypes, onPrototypeSelect, undefined)
     }
   }, [
     // ! Recomputes when:

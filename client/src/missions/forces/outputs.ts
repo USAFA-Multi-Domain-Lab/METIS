@@ -1,5 +1,4 @@
 import { TClientMissionTypes } from 'src/missions'
-import ClientActionExecution from 'src/missions/actions/executions'
 import ClientMissionForce from '.'
 import Output, { TOutputJson } from '../../../../shared/missions/forces/output'
 
@@ -11,19 +10,7 @@ export default class ClientOutput extends Output<TClientMissionTypes> {
    * @param data The data for the output.
    * @param options The options for the output.
    */
-  public constructor(
-    force: ClientMissionForce,
-    data: Partial<TOutputJson> = ClientOutput.DEFAULT_PROPERTIES,
-  ) {
+  public constructor(force: ClientMissionForce, data: TOutputJson) {
     super(force, data)
-
-    // If there is an execution, create a new action execution object.
-    if (data.execution && this.action) {
-      this._execution = new ClientActionExecution(
-        this.action,
-        data.execution.start,
-        data.execution.end,
-      )
-    }
   }
 }

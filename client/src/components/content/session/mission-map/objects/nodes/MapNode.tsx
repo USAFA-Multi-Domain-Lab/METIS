@@ -1,16 +1,13 @@
 import { useState } from 'react'
 import Tooltip from 'src/components/content/communication/Tooltip'
-import ButtonSvg, {
-  TButtonSvg_P,
-} from 'src/components/content/user-controls/buttons/ButtonSvg'
+import ButtonSvg from 'src/components/content/user-controls/buttons/ButtonSvg'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { useEventListener, useInlineStyling } from 'src/toolbox/hooks'
-import { TNodeExecutionState } from '../../../../../../../shared/missions/nodes'
-import { TWithKey } from '../../../../../../../shared/toolbox/objects'
-import { Vector1D } from '../../../../../../../shared/toolbox/space'
-import StringToolbox from '../../../../../../../shared/toolbox/strings'
-import './MissionNode.scss'
+import { TMapCompatibleNode, TMapNode_P, TNodeButton } from '.'
+import { TNodeExecutionState } from '../../../../../../../../shared/missions/nodes'
+import ClassList from '../../../../../../../../shared/toolbox/html/class-lists'
+import './MapNode.scss'
 
 /* -- CONSTANTS -- */
 
@@ -26,12 +23,12 @@ export const MAX_NODE_CONTENT_ZOOM = 1 / 30 // [numerator]em = [denominator]px
  * @param node The node in question.
  * @returns The initial progress.
  */
-function calculateInitialProgress(node: ClientMissionNode): number {
+function calculateInitialProgress(node: TMapCompatibleNode): number {
   // If executing, calculate the initial progress
   // by subtracting the start time from the current
   // time.
   if (node.executing) {
-    return Date.now() - node.execution!.start
+    return Date.now() - node.latestExecution!.start
   }
   // Else, return 0.
   else {
@@ -39,17 +36,17 @@ function calculateInitialProgress(node: ClientMissionNode): number {
   }
 }
 
-/* -- COMPONENTS -- */
+/* -- COMPONENT -- */
 
 /**
  * An object representing a node on the mission map.
  */
-export default function MissionNode({
+export default function <TNode extends TMapCompatibleNode>({
   node,
   cameraZoom,
   onSelect,
-  applyTooltip = () => node.description,
-}: TMissionNode_P): JSX.Element | null {
+  applyTooltip = () => '',
+}: TMapNode_P<TNode>): JSX.Element | null {
   /* -- STATE -- */
 
   /**
@@ -59,32 +56,20 @@ export default function MissionNode({
     node.executionState,
   )
   /**
-   * Whether the node is pending to be opened.
+   * The buttons to display on the node.
    */
-  const [pendingOpen, setPendingOpen] = useState<boolean>(node.pendingOpen)
+  const [buttons, setButtons] = useState<TNodeButton<TNode>[]>(node.buttons)
   /**
-   * Whether the node is pending execution initiation.
+   * Whether the node is pending.
    */
-  const [pendingExecInit, setPendingExecInit] = useState<boolean>(
-    node.pendingExecInit,
-  )
-  /**
-   * Whether the node's output has been sent.
-   */
-  const [pendingOutputSent, setPendingOutputSent] = useState<boolean>(
-    node.pendingOutputSent,
-  )
+  const [pending, setPending] = useState<boolean>(node.pending)
   /**
    * The initial progress shown on the progress bar,
    * helping account for latency.
    */
-  const [initialProgress, setInitialProgress] = useState<number>(() =>
+  const [initialProgress] = useState<number>(() =>
     calculateInitialProgress(node),
   )
-  /**
-   * The buttons to display on the node.
-   */
-  const [buttons, setButtons] = useState<TNodeButton[]>(node.buttons)
   /**
    * Whether the node is blocked.
    */
@@ -101,21 +86,44 @@ export default function MissionNode({
   useEventListener(node, 'activity', () => {
     // Update the state with details stored in
     // the node object.
-    setPendingOpen(node.pendingOpen)
-    setPendingExecInit(node.pendingExecInit)
-    setExecutionState(node.executionState)
-    setPendingOutputSent(node.pendingOutputSent)
+    // setPendingOpen(node.pendingOpen)
+    // setPendingExecInit(node.pendingExecInit)
+    // setExecutionState(node.executionState)
+    // setPendingOutputSent(node.pendingOutputSent)
+    // if (node.executionState !== 'executing')
+    //   setInitialProgress(calculateInitialProgress(node))
+  })
+
+  // Update the pending state when the node's
+  // pending state changes.
+  useEventListener(node, 'set-pending', () => {
+    setPending(node.pending)
+  })
+
+  // Update the buttons when the node's buttons
+  // change.
+  useEventListener(node, 'set-buttons', () => {
     setButtons(node.buttons)
-    if (node.executionState !== 'executing')
-      setInitialProgress(calculateInitialProgress(node))
+  })
+
+  // Update the blocked state when the node's
+  // blocked state changes.
+  useEventListener(node, 'set-blocked', () => {
     setBlocked((prev) => {
-      console.log(node.name)
       setPrevBlocked(prev)
       return node.blocked
     })
   })
 
+  // Update the execution state when the node's
+  // execution state changes.
+  useEventListener(node, 'exec-state-change', () => {
+    setExecutionState(node.executionState)
+  })
+
   /* -- COMPUTED -- */
+
+  const { mission } = node
 
   /**
    * The inline styles for the root element.
@@ -182,17 +190,16 @@ export default function MissionNode({
   })
 
   /**
-   * The inline styles for the progress bar.
+   * The inline styles for the node's icon.
    */
-  const progressBarStyle = useInlineStyling((style) => {
-    // If the node is executing, animate
-    // the progress bar.
-    if (node.executing) {
-      let duration = node.execution!.duration
+  const iconStyle: React.CSSProperties = compute(() => {
+    if (node.icon === '_blank') return {}
 
-      style.animation = 'loading-animation 750ms linear 0ms infinite'
-      style.animation += ', '
-      style.animation += `progress-animation ${duration}ms linear -${initialProgress}ms 1 normal forwards`
+    return {
+      backgroundImage: `url(${require(`../../../../../../assets/images/icons/${node.icon}.svg`)})`,
+      backgroundSize: 'contain',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
     }
   })
 
@@ -216,9 +223,9 @@ export default function MissionNode({
     let fontSize: number = ClientMissionNode.FONT_SIZE
     let lineHeight: number = ClientMissionNode.LINE_HEIGHT
 
-    // If the node is executable, make the
-    // width smaller.
-    if (node.executable) {
+    // If the node has an icon, reduce
+    // the width of the name.
+    if (node.icon !== '_blank') {
       width = ClientMissionNode.NAME_WIDTH_RATIO * 100
     }
 
@@ -237,71 +244,44 @@ export default function MissionNode({
   })
 
   /**
+   * The inline styles for the progress bar.
+   */
+  const progressBarStyle = useInlineStyling((style) => {
+    // If the node is executing, animate
+    // the progress bar.
+    if (node.executing) {
+      console.log(node.latestExecution)
+      let duration = node.latestExecution!.duration
+
+      style.animation = 'loading-animation 750ms linear 0ms infinite'
+      style.animation += ', '
+      style.animation += `progress-animation ${duration}ms linear -${initialProgress}ms 1 normal forwards`
+    }
+  })
+
+  /**
    * The class for the root element.
    */
-  const rootClassName: string = compute(() => {
-    let classList = ['MissionNode']
-    let mission = node.mission
+  const rootClasses = compute<ClassList>(() => {
+    let classes = new ClassList('MapNode')
 
-    // Add the selectable class if the node has
-    // a selection handler.
-    if (onSelect) {
-      classList.push('Selectable')
-    }
-    // Add the selected class if the node is selected.
-    if (node.selected) {
-      classList.push('Selected')
-    }
-    // Add the opened class if the node is opened.
-    if (node.opened) {
-      classList.push('Opened')
-    }
-    // Add the executable class if the node is
-    // executable.
-    if (node.executable) {
-      classList.push('Executable')
-    }
-    // Add the device class if the node is a
-    // device.
-    if (node.device) {
-      classList.push('Device')
-    }
-    // Add pending open class if the node is
-    // pending to be opened.
-    if (pendingOpen) {
-      classList.push('PendingOpen')
-    }
-    // Add pending execution initiation class if the node
-    // is pending execution initiation.
-    if (pendingExecInit) {
-      classList.push('PendingExecInit')
-    }
-    // Add pending output sent class if the node's output
-    // has been sent.
-    if (pendingOutputSent) {
-      classList.push('PendingOutputSent')
-    }
-    // Add the blocked class if the node is blocked.
-    if (blocked) {
-      classList.push('Blocked')
-    }
-    // Add the "Hidden" class if the node is not
-    // revealed and if the non-revealed display
-    // mode is set to 'hide'.
-    if (mission.nonRevealedDisplayMode === 'hide' && !node.revealed) {
-      classList.push('Hidden')
-    }
-    // Add the "Blurred" class if the node is not
-    // revealed and if the non-revealed display
-    // mode is set to 'blur'.
-    if (mission.nonRevealedDisplayMode === 'blur' && !node.revealed) {
-      classList.push('Blurred')
-    }
+    classes.set('Selectable', !!onSelect)
+    classes.set('Selected', node.selected)
+    classes.set('Pending', pending)
+    classes.set('Blocked', blocked)
+    classes.set(
+      'Hidden',
+      mission.nonRevealedDisplayMode === 'hide' && !node.revealed,
+    )
+    classes.set(
+      'Blurred',
+      mission.nonRevealedDisplayMode === 'blur' && !node.revealed,
+    )
+    classes.set('Executing', executionState.status === 'executing')
+    classes.set('Success', executionState.status === 'success')
+    classes.set('Failure', executionState.status === 'failure')
 
-    // Add the execution state class.
-    classList.push(StringToolbox.capitalize(executionState))
-
-    return classList.join(' ')
+    return classes
   })
 
   /**
@@ -358,7 +338,7 @@ export default function MissionNode({
    * The JSX for the buttons.
    */
   const buttonsJsx: JSX.Element[] = compute(() => {
-    return buttons.map((button: TNodeButton): JSX.Element => {
+    return buttons.map((button): JSX.Element => {
       return (
         <ButtonSvg
           {...button}
@@ -378,7 +358,7 @@ export default function MissionNode({
     // If there are no buttons, add a tooltip
     // to the node.
     if (buttons.length === 0) {
-      return <Tooltip description={applyTooltip()} />
+      return <Tooltip description={applyTooltip(node)} />
     }
     // Else, do not add a tooltip, since the tooltips
     // for the buttons will conflict.
@@ -389,17 +369,18 @@ export default function MissionNode({
 
   // Render root JSX.
   return (
-    <div key={node._id} className={rootClassName} style={rootStyle}>
+    <div
+      key={node._id}
+      className={rootClasses.value}
+      style={rootStyle}
+      onClick={() => onSelect!(node)}
+    >
       <div className='ProgressBar' style={progressBarStyle}></div>
-      <div
-        className='PrimaryContent'
-        style={primaryContentStyle}
-        onClick={onSelect}
-      >
+      <div className='PrimaryContent' style={primaryContentStyle}>
         <div className={nameClassName} style={nameStyle}>
           {node.name}
         </div>
-        <div className={iconClassName}></div>
+        <div className={iconClassName} style={iconStyle}></div>
       </div>
       <div className={buttonsClassName} style={buttonsStyle}>
         {buttonsJsx}
@@ -407,41 +388,4 @@ export default function MissionNode({
       {tooltipJsx}
     </div>
   )
-}
-
-/**
- * Props for `MissionNode`.
- */
-export type TMissionNode_P = {
-  /**
-   * The node to display.
-   */
-  node: ClientMissionNode
-  /**
-   * The current camera zoom.
-   */
-  cameraZoom: Vector1D
-  /**
-   * Handler for when the node is selected.
-   * @default () => {}
-   */
-  onSelect?: () => void
-  /**
-   * Applies a tooltip to the node.
-   * @default () => node.description
-   */
-  applyTooltip?: () => string
-}
-
-/**
- * Button SVG type for node-specific buttons.
- */
-export type TNodeButton = TWithKey<Omit<TButtonSvg_P, 'onClick'>> & {
-  // Overridden
-  /**
-   * Handles when the button is clicked.
-   * @param event The click event.
-   * @param node The node associated with the button.
-   */
-  onClick: (event: React.MouseEvent, node: ClientMissionNode) => void
 }

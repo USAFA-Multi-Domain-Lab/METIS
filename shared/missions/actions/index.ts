@@ -4,9 +4,9 @@ import Mission, {
   TCreateMissionJsonType,
   TMission,
 } from '..'
-import Effect, { TEffectJson, TEffect, TEffectOptions } from '../effects'
-import { MissionForce, TForce } from '../forces'
-import MissionNode, { TNode, TNodeJsonOptions } from '../nodes'
+import { TEffect, TEffectJson, TEffectOptions } from '../effects'
+import { TForce } from '../forces'
+import { TNode, TNodeJsonOptions } from '../nodes'
 
 /**
  * An action that can be executed on a mission node, causing a certain effect.
@@ -159,7 +159,17 @@ export default abstract class MissionAction<
    * Whether or not this action is currently being executed
    */
   public get executing(): boolean {
-    return this.node.executionState === 'executing'
+    let { latestExecution } = this.node
+
+    // Check latest execution on the node, if
+    // it exists, confirm that it isn't referencing
+    // another action and that it is currently
+    // executing.
+    return (
+      !!latestExecution &&
+      latestExecution.action._id === this._id &&
+      latestExecution.status === 'executing'
+    )
   }
 
   /**
@@ -174,6 +184,14 @@ export default abstract class MissionAction<
    */
   public get force(): TForce<T> {
     return this.node.force
+  }
+
+  /**
+   * The ID of the force of which the action is
+   * a part.
+   */
+  public get forceId(): string {
+    return this.force._id
   }
 
   /**

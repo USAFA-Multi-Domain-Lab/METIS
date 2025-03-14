@@ -1,6 +1,5 @@
 import { io, Socket } from 'socket.io-client'
 import SessionClient from 'src/sessions'
-import { TListenerTarget } from '../../../shared/events'
 import Logging from 'src/toolbox/logging'
 import { v4 as generateHash } from 'uuid'
 import {
@@ -19,6 +18,7 @@ import {
   TServerMethod,
 } from '../../../shared/connect/data'
 import { ServerEmittedError } from '../../../shared/connect/errors'
+import { TListenerTarget } from '../../../shared/events'
 import { TSingleTypeObject } from '../../../shared/toolbox/objects'
 
 /**
@@ -319,6 +319,7 @@ export default class ServerConnection
         onResponse: (event) => {
           switch (event.method) {
             case 'current-session':
+              console.log(event.data.session)
               resolve(
                 new SessionClient(
                   event.data.session,

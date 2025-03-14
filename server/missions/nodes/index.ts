@@ -1,12 +1,11 @@
 import { TMissionActionJson } from 'metis/missions/actions'
 import { TActionExecutionJson } from 'metis/missions/actions/executions'
-import { TActionOutcomeJson } from 'metis/missions/actions/outcomes'
 import MissionNode from 'metis/missions/nodes'
 import { TTargetEnvExposedNode } from 'metis/server/target-environments/context'
 import { TServerMissionTypes } from '..'
 import ServerMissionAction, { TServerMissionActionOptions } from '../actions'
 import ServerActionExecution from '../actions/executions'
-import { ServerRealizedOutcome } from '../actions/outcomes'
+import ServerExecutionOutcome from '../actions/outcomes'
 
 /**
  * Class for managing mission nodes on a session server.
@@ -16,67 +15,35 @@ export default class ServerMissionNode extends MissionNode<TServerMissionTypes> 
   protected importActions(
     data: TMissionActionJson[],
     options: TServerMissionActionOptions = {},
-  ): Map<string, ServerMissionAction> {
-    let actions: Map<string, ServerMissionAction> = new Map<
-      string,
-      ServerMissionAction
-    >()
+  ): void {
     data.forEach((datum) => {
       let action: ServerMissionAction = new ServerMissionAction(
         this,
         datum,
         options,
       )
-      actions.set(action._id, action)
+      this.actions.set(action._id, action)
     })
-    return actions
   }
 
   // Implemented
-  protected importExecutions(
-    data: TActionExecutionJson,
-  ): ServerActionExecution | null {
-    // If data is null return null.
-    if (data === null) {
-      return null
-    }
-
-    // Get action for the ID passed.
-    let action: ServerMissionAction | undefined = this.actions.get(
-      data.actionId,
+  protected importExecutions(data: TActionExecutionJson[]): void {
+    this._executions = data.map(
+      ({ _id, actionId, outcome: outcomeData, start, end }) => {
+        let action: ServerMissionAction | undefined = this.actions.get(actionId)
+        if (!action) throw new Error(`Action "${actionId}" not found.`)
+        return new ServerActionExecution(_id, action, start, end, {
+          outcomeData,
+        })
+      },
     )
-
-    // Handle undefined action.
-    if (action === undefined) {
-      throw new Error('Action not found for given execution datum.')
-    }
-
-    // Return new execution object.
-    return new ServerActionExecution(action, data.start, data.end)
   }
 
-  // Implemented
-  protected importOutcomes(
-    data: TActionOutcomeJson[],
-  ): ServerRealizedOutcome[] {
-    // Map JSON to an Array of outcome objects.
-    return data.map((datum: TActionOutcomeJson) => {
-      // Get action for ID passed.
-      let action: ServerMissionAction | undefined = this.actions.get(
-        datum.actionId,
-      )
-
-      // Handle undefined action.
-      if (action === undefined) {
-        throw new Error('Action not found for given outcome datum.')
-      }
-
-      // Return new outcome object.
-      return new ServerRealizedOutcome(action, datum.status)
-    })
-  }
-
-  // Implemented
+  /**
+   * Opens the node.
+   * @param options Options for opening the node.
+   * @returns a promise that resolves when the node opening has been fulfilled.
+   */
   public open(): Promise<void> {
     return new Promise<void>(
       (resolve: () => void, reject: (error: Error) => void) => {
@@ -91,91 +58,11 @@ export default class ServerMissionNode extends MissionNode<TServerMissionTypes> 
   }
 
   // Implemented
-  public loadExecution(
-    data: NonNullable<TActionExecutionJson>,
-  ): ServerActionExecution {
-    // Get the action action being executed.
-    let { actionId } = data
-    let action = this.actions.get(actionId)
-
-    // Throw an error if action is undefined.
-    if (action === undefined) {
-      throw new Error(
-        'Action not found for given the action ID in the execution data.',
-      )
-    }
-    // Throw an error if not executable.
-    if (!this.executable) {
-      throw new Error('Cannot handle execution: Node is not executable.')
-    }
-    // Throw an error if non ready to execute.
-    if (!this.readyToExecute) {
-      throw new Error('Cannot handle execution: Node is not ready to execute.')
-    }
-
-    // Generate and set the node's execution.
-    this._execution = new ServerActionExecution(
-      action,
-      data.start,
-      data.end,
-      data.aborted,
-    )
-
-    // Return execution.
-    return this._execution
-  }
-
-  // Implemented
-  public loadOutcome(data: TActionOutcomeJson): ServerRealizedOutcome {
-    // Get the action for the outcome.
-    let action: ServerMissionAction | undefined = this.actions.get(
-      data.actionId,
-    )
-
-    // Throw an error if action is undefined.
-    if (action === undefined) {
-      throw new Error(
-        'Action not found for given the action ID in the outcome data.',
-      )
-    }
-    // Throw an error if the execution state is not executed.
-    if (this.executionState !== 'executing') {
-      throw new Error('Cannot handle outcome: Node is not executing.')
-    }
-
-    // Generate outcome.
-    let outcome: ServerRealizedOutcome = new ServerRealizedOutcome(
-      action,
-      data.status,
-    )
-
-    // Add to list of outcomes.
-    this._outcomes.push(outcome)
-
-    // Remove execution.
-    this._execution = null
-
-    // If the outcome was successful, the node is
-    // openable, and the action opens the node on
-    // success, then mark the node as opened.
-    if (outcome.status === 'success' && this.openable && action.opensNode) {
-      this._opened = true
-    }
-
-    // Return outcome.
-    return outcome
-  }
-
-  // Implemented
   public updateBlockStatus(blocked: boolean): void {
-    // Set blocked.
     this._blocked = blocked
 
-    // Abort the execution, if present.
-    if (this.execution) {
-      this.execution.abort()
-      this._execution = null
-    }
+    // Abort execution, if executing.
+    if (this.executing) this.latestExecution!.abort()
 
     // If the node is open and has children,
     // update the block status for children.
@@ -233,6 +120,31 @@ export default class ServerMissionNode extends MissionNode<TServerMissionTypes> 
       actions: Array.from(this.actions.values()).map((action) =>
         action.toTargetEnvContext(),
       ),
+    }
+  }
+
+  /**
+   * Processes an incoming outcome that was produced as a result
+   * of an action execution on this node.
+   * @param outcome The outcome object to process.
+   * @throws An error if the outcome is not associated with this node.
+   */
+  public onOutcome(outcome: ServerExecutionOutcome): void {
+    if (outcome.node._id !== this._id) {
+      throw new Error(
+        `Outcome node ID "${outcome.node._id}" does not match node ID "${this._id}".`,
+      )
+    }
+
+    // If the outcome was successful, the node is
+    // openable, and the action opens the node on
+    // success, then mark the node as opened.
+    if (
+      outcome.status === 'success' &&
+      this.openable &&
+      outcome.action.opensNode
+    ) {
+      this._opened = true
     }
   }
 }

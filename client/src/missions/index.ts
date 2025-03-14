@@ -6,18 +6,18 @@ import SessionClient from 'src/sessions'
 import ClientSessionMember from 'src/sessions/members'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
-import { TListenerTargetEmittable } from '../../../shared/events'
 import ClientUser from 'src/users'
 import { v4 as generateHash } from 'uuid'
+import { TListenerTargetEmittable } from '../../../shared/events'
 import Mission, {
-  TMissionJson,
   TCommonMissionTypes,
+  TMissionJson,
   TMissionOptions,
 } from '../../../shared/missions'
 import {
   MissionForce,
-  TMissionForceSaveJson,
   TMissionForceOptions,
+  TMissionForceSaveJson,
 } from '../../../shared/missions/forces'
 import {
   TMissionPrototypeJson,
@@ -26,9 +26,10 @@ import {
 import { Counter } from '../../../shared/toolbox/numbers'
 import { AnyObject, TWithKey } from '../../../shared/toolbox/objects'
 import { Vector2D } from '../../../shared/toolbox/space'
+import User from '../../../shared/users'
 import ClientMissionAction from './actions'
 import ClientActionExecution from './actions/executions'
-import ClientActionOutcome from './actions/outcomes'
+import ClientExecutionOutcome from './actions/outcomes'
 import { ClientEffect } from './effects'
 import ClientMissionForce, { TClientMissionForceOptions } from './forces'
 import ClientOutput from './forces/outputs'
@@ -37,7 +38,6 @@ import ClientMissionPrototype, { TPrototypeRelation } from './nodes/prototypes'
 import MissionTransformation from './transformations'
 import PrototypeCreation from './transformations/creations'
 import PrototypeTranslation from './transformations/translations'
-import User from '../../../shared/users'
 
 /**
  * Class for managing missions on the client.
@@ -1486,7 +1486,7 @@ export interface TClientMissionTypes extends TCommonMissionTypes {
   node: ClientMissionNode
   action: ClientMissionAction
   execution: ClientActionExecution
-  outcome: ClientActionOutcome
+  outcome: ClientExecutionOutcome
   targetEnv: ClientTargetEnvironment
   target: ClientTarget
   effect: ClientEffect

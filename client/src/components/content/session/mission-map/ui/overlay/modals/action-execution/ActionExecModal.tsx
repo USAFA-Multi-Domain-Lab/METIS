@@ -67,7 +67,7 @@ export default function ActionExecModal({
 
   /* -- HOOKS -- */
 
-  useEventListener(node, ['update-block', 'output-sent'], () => {
+  useEventListener(node, ['set-blocked', 'output-sent'], () => {
     setBlocked(node.blocked)
     setPendingOutputSent(node.pendingOutputSent)
   })

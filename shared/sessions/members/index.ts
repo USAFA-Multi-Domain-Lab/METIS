@@ -1,6 +1,6 @@
 import { TCommonMissionTypes } from 'metis/missions'
 import { MissionForce, TForce } from 'metis/missions/forces'
-import { TUserJson, TSessionUser } from 'metis/users'
+import { TSessionUser, TUserJson } from 'metis/users'
 import { TSession } from '..'
 import MemberPermission from './permissions'
 import MemberRole, { TMemberRoleId } from './roles'
@@ -102,6 +102,14 @@ export default abstract class SessionMember<
    */
   public get isAssigned(): boolean {
     return this.forceId !== null
+  }
+
+  /**
+   * Creates a prefix for an output message that is
+   * displayed in a force's output panel.
+   */
+  public get outputPrefix(): string {
+    return `${this.username.replaceAll(' ', '-')}:`
   }
 
   /**

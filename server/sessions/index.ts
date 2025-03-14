@@ -1,7 +1,13 @@
-import { TClientEvents, TServerEvents, TServerMethod } from 'metis/connect/data'
+import {
+  TClientEvents,
+  TRequestOfResponse,
+  TServerEvents,
+  TServerMethod,
+} from 'metis/connect/data'
 import { ServerEmittedError } from 'metis/connect/errors'
 import { TMissionJson, TMissionJsonOptions } from 'metis/missions'
-import { TOutputJson } from 'metis/missions/forces/output'
+import { TEffectTrigger } from 'metis/missions/effects'
+import { TOutputContext, TOutputType } from 'metis/missions/forces/output'
 import ServerMission, { TServerMissionTypes } from 'metis/server/missions'
 import ServerMissionAction from 'metis/server/missions/actions'
 import ServerMissionNode from 'metis/server/missions/nodes'
@@ -13,17 +19,18 @@ import Session, {
 import { TSessionMemberJson } from 'metis/sessions/members'
 import MemberRole, { TMemberRoleId } from 'metis/sessions/members/roles'
 import { TSingleTypeObject } from 'metis/toolbox/objects'
+import User from 'metis/users'
 import { v4 as generateHash } from 'uuid'
 import ClientConnection from '../connect/clients'
 import { plcApiLogger } from '../logging'
 import ServerActionExecution from '../missions/actions/executions'
+import ServerExecutionOutcome from '../missions/actions/outcomes'
 import ServerEffect from '../missions/effects'
 import ServerMissionForce from '../missions/forces'
 import ServerOutput, { TServerOutputOptions } from '../missions/forces/output'
 import TargetEnvContext from '../target-environments/context'
 import ServerUser from '../users'
 import ServerSessionMember from './members'
-import User from 'metis/users'
 
 /**
  * Server instance for sessions. Handles server-side logic for a session with participating clients. Communicates with clients to conduct the session.
@@ -592,7 +599,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
   private applyEffects(
     member: ServerSessionMember,
     action: ServerMissionAction,
-    trigger: string,
+    trigger: TEffectTrigger,
   ): void {
     // If the effects are enabled...
     if (this.config.effectsEnabled) {
@@ -1333,38 +1340,60 @@ export default class SessionServer extends Session<TServerMissionTypes> {
       let outcome = await action.execute({
         sessionConfig: config,
         cheats,
-        onInit: (execution: ServerActionExecution) => {
-          let { action } = execution
+        onInit: (execution: ServerActionExecution) =>
+          this.onExecution(member, request, execution),
+      })
 
-          // Construct payload for action execution
-          // initiated event.
-          let initiationPayload: TServerEvents['action-execution-initiated'] = {
-            method: 'action-execution-initiated',
-            data: {
-              execution: execution.toJson(),
-              resourcesRemaining: action!.force.resourcesRemaining,
-            },
-            request: {
-              event,
-              requesterId: member.userId,
-              fulfilled: false,
-            },
-          }
+      // Handle the outcome of the action.
+      this.onOutcome(member, request, outcome)
+    } catch (error) {
+      // Emit an error if the action could not be executed.
+      connection.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR, {
+          request: connection.buildResponseReqData(event),
+          message: 'Failed to execute action.',
+        }),
+      )
+    }
+  }
 
-          // Emit action execution initiated event
-          // to each member.
-          for (let member of this.getMembersForForce(action!.force._id)) {
-            member.emit('action-execution-initiated', initiationPayload)
-          }
+  /**
+   * Sub-handler of `onRequestExecuteAction` which processes the
+   * initiation of an action execution.
+   * @param member The member provided to `onRequestExecuteAction`.
+   * @param event The event provided to `onRequestExecuteAction`.
+   * @param execution The execution that was initiated.
+   */
+  private onExecution(
+    member: ServerSessionMember,
+    request: TRequestOfResponse,
+    execution: ServerActionExecution,
+  ): void {
+    let { action } = execution
 
-          // Create a new output JSON object.
-          let outputJson: Partial<TOutputJson> = {
-            type: 'execution-started',
-            forceId: action.force._id,
-            nodeId: action.node._id,
-            actionId: action._id,
-            prefix: `${member.user.username.replaceAll(' ', '-')}:`,
-            message: /*html*/ `
+    // Construct payload for action execution
+    // initiated event.
+    let initiationPayload: TServerEvents['action-execution-initiated'] = {
+      method: 'action-execution-initiated',
+      data: {
+        execution: execution.toJson(),
+        resourcesRemaining: action!.force.resourcesRemaining,
+      },
+      request: {
+        event: request.event,
+        requesterId: member.userId,
+        fulfilled: false,
+      },
+    }
+
+    // Emit action execution initiated event
+    // to each member.
+    for (let member of this.getMembersForForce(action!.force._id)) {
+      member.emit('action-execution-initiated', initiationPayload)
+    }
+
+    // Create a new output JSON object.
+    let message = /*html*/ `
               <p>Executing <i><action-name></action-name></i> on <i><node-name></node-name></i>.</p>
               <i><action-description></action-description></i>
               <p></p>
@@ -1392,93 +1421,96 @@ export default class SessionServer extends Session<TServerMissionTypes> {
                   <opens-node></opens-node>
                 </span>
               </p>
-            `,
-          }
-          // Send the output JSON to the force.
-          this.sendOutput(outputJson, { userId: member.userId, execution })
-          // Apply the effects for the action that are triggered
-          // immediately.
-          this.applyEffects(member, action, 'immediate')
-        },
-      })
+            `
 
-      // Construct payload for action execution
-      // completed event.
-      let completionPayload: TServerEvents['action-execution-completed'] = {
-        method: 'action-execution-completed',
-        data: {
-          outcome: outcome.toJson(),
-        },
-        request,
-      }
+    // Send the output JSON to the force.
+    this.sendOutput(
+      action.forceId,
+      member.outputPrefix,
+      message,
+      { type: 'execution-started', sourceExecutionId: execution._id },
+      { userId: member.userId },
+    )
+    // Apply the effects for the action that are triggered
+    // immediately.
+    this.applyEffects(member, action, 'immediate')
+  }
 
-      // If the action was successful, then...
-      if (outcome.status === 'success') {
-        // If the node is now open...
-        if (action.node.opened) {
-          // Add child nodes to the completion payload.
-          completionPayload.data.revealedChildNodes = action.node.children.map(
-            (node) =>
-              node.toJson({
-                sessionDataExposure: {
-                  expose: 'user-specific',
-                  userId: member.userId,
-                },
-              }),
-          )
-          // Add child prototypes to the completion payload.
-          completionPayload.data.revealedChildPrototypes =
-            action.node.prototype.children.map((prototype) =>
-              prototype.toJson(),
-            )
-        }
+  /**
+   * Sub-handler of `onRequestExecuteAction` which processes the
+   * outcome of an action execution.
+   */
+  private onOutcome(
+    member: ServerSessionMember,
+    request: TRequestOfResponse,
+    outcome: ServerExecutionOutcome,
+  ): void {
+    const { action, node } = outcome
 
-        // Create a new output JSON object.
-        let outputJson: Partial<TOutputJson> = {
-          type: 'execution-succeeded',
-          forceId: action.force._id,
-          nodeId: action.node._id,
-          prefix: `${member.user.username.replaceAll(' ', '-')}:`,
-          message: action.postExecutionSuccessText,
-        }
-        // Send the output to the force.
-        this.sendOutput(outputJson, { userId: member.userId })
-        // Apply the effects for the action that are triggered
-        // on success.
-        this.applyEffects(member, action, 'success')
-      }
-      // Otherwise, if the action failed, then...
-      else if (outcome.status === 'failure') {
-        // Create a new output JSON object.
-        let outputJson: Partial<TOutputJson> = {
-          type: 'execution-failed',
-          forceId: action.force._id,
-          nodeId: action.node._id,
-          prefix: `${member.user.username.replaceAll(' ', '-')}:`,
-          message: action.postExecutionFailureText,
-        }
-        // Send the output to the force.
-        this.sendOutput(outputJson, {
-          userId: member.userId,
-        })
-        // Apply the effects for the action that are triggered
-        // on failure.
-        this.applyEffects(member, action, 'failure')
-      }
+    // Construct payload for action execution
+    // completed event.
+    let completionPayload: TServerEvents['action-execution-completed'] = {
+      method: 'action-execution-completed',
+      data: {
+        outcome: outcome.toJson(),
+      },
+      request,
+    }
 
-      // Emit the action execution completed
-      // event to each member for the force.
-      for (let { connection } of this.getMembersForForce(action.force._id)) {
-        connection.emit('action-execution-completed', completionPayload)
-      }
-    } catch (error) {
-      // Emit an error if the action could not be executed.
-      connection.emitError(
-        new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR, {
-          request: connection.buildResponseReqData(event),
-          message: 'Failed to execute action.',
+    // If the node has been opened, then process this
+    // information in the completion payload.
+    if (node.opened) {
+      // Add child nodes to the completion payload.
+      completionPayload.data.revealedChildNodes = node.children.map((node) =>
+        node.toJson({
+          sessionDataExposure: {
+            expose: 'user-specific',
+            userId: member.userId,
+          },
         }),
       )
+      // Add child prototypes to the completion payload.
+      completionPayload.data.revealedChildPrototypes =
+        node.prototype.children.map((prototype) => prototype.toJson())
+    }
+
+    // Determine output and effect details based on
+    // the status of the outcome.
+    let outputType: TOutputType | null = null
+    let outputMessage: string = ''
+    let effectTrigger: TEffectTrigger | null = null
+
+    switch (outcome.status) {
+      case 'success':
+        outputType = 'execution-succeeded'
+        outputMessage = action.postExecutionSuccessText
+        effectTrigger = 'success'
+        break
+      case 'failure':
+        outputType = 'execution-failed'
+        outputMessage = action.postExecutionFailureText
+        effectTrigger = 'failure'
+        break
+    }
+
+    // Send the output to the force, if the outcome
+    // calls for it.
+    if (outputType) {
+      this.sendOutput(
+        action.force._id,
+        member.outputPrefix,
+        outputMessage,
+        { type: outputType, sourceExecutionId: outcome.executionId },
+        { userId: member.userId },
+      )
+    }
+    // Apply effects, if the outcome calls for it.
+    if (effectTrigger) this.applyEffects(member, action, effectTrigger)
+
+    // Emit the action execution completed
+    // event to each member for the force.
+    for (let { connection } of this.getMembersForForce(outcome.forceId)) {
+      connection.emit('action-execution-completed', completionPayload)
     }
   }
 
@@ -1554,19 +1586,17 @@ export default class SessionServer extends Session<TServerMissionTypes> {
             return
           }
 
-          // Create a new output JSON object.
-          let outputJson: Partial<TOutputJson> = {
-            type: 'pre-execution',
-            forceId: node.force._id,
-            nodeId: node._id,
-            prefix: `${member.user.username.replaceAll(' ', '-')}:`,
-            message: node.preExecutionText,
-          }
-          // Send the output to the force.
-          this.sendOutput(outputJson, {
-            userId: member.userId,
-            broadcastType: 'user',
-          })
+          // Send an output to the force.
+          this.sendOutput(
+            node.forceId,
+            member.outputPrefix,
+            node.preExecutionText,
+            { type: 'pre-execution', sourceNodeId: node._id },
+            {
+              userId: member.userId,
+              broadcastType: 'user',
+            },
+          )
 
           // Emit an event to the participant that the
           // pre-execution message was sent.
@@ -1763,17 +1793,21 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     })
   }
 
+  // todo: Rework this.
   /**
    * Sends an output to the force's output panel.
    * @param output The output to send to the force.
    * @param options Options for sending the output.
    */
   public sendOutput = (
-    outputJson: Partial<TOutputJson>,
+    forceId: string,
+    prefix: string,
+    message: string,
+    context: TOutputContext,
     options: TServerOutputOptions = {},
   ) => {
     // Extract data.
-    let { type: key, forceId } = outputJson
+    const { type } = context
 
     // Find the force given the ID.
     let force = this.mission.getForce(forceId)
@@ -1781,12 +1815,12 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     // If the force is undefined, throw an error.
     if (!force) {
       throw new Error(
-        `Could not send output with key "${key}" to the force with ID "${forceId}" because the force was not found.`,
+        `Could not send output of type "${type}" to the force with ID "${forceId}" because the force was not found.`,
       )
     }
 
     // Create a new output object.
-    let output = new ServerOutput(force, outputJson, options)
+    let output = ServerOutput.generate(force, prefix, message, context, options)
     // Store the output in the force.
     force.storeOutput(output)
 
@@ -1806,7 +1840,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
       // If the user ID is not provided, then throw an error.
       if (!output.userId) {
         throw new Error(
-          `Could not send output with key "${key}" to the user with ID "${output.userId}" because the user ID was not provided.`,
+          `Could not send output with key "${type}" to the user with ID "${output.userId}" because the user ID was not provided.`,
         )
       }
 
@@ -1815,7 +1849,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
       // If the member is not found, then throw an error.
       if (!member) {
         throw new Error(
-          `Could not send output with key "${key}" to the user with ID "${output.userId}" because the user was not found in the session.`,
+          `Could not send output with key "${type}" to the user with ID "${output.userId}" because the user was not found in the session.`,
         )
       }
 

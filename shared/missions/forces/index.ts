@@ -1,11 +1,11 @@
 import { AnyObject } from 'metis/toolbox/objects'
+import User from 'metis/users'
 import Mission, { TCommonMissionTypes, TMission, TMissionJsonOptions } from '..'
 import context from '../../context'
 import StringToolbox from '../../toolbox/strings'
 import { TMissionNodeJson, TMissionNodeOptions, TNode } from '../nodes'
-import { TOutputJson, TOutput } from './output'
-import User from 'metis/users'
 import { TPrototype } from '../nodes/prototypes'
+import { TOutput, TOutputJson } from './output'
 
 /* -- CLASSES -- */
 
@@ -141,6 +141,14 @@ export abstract class MissionForce<
   }
 
   /**
+   * The prefix to display for an output sent by this
+   * force.
+   */
+  public get outputPrefix(): string {
+    return `${this.name.replaceAll(' ', '-')}:`
+  }
+
+  /**
    * @param mission The mission to which the force belongs.
    * @param data The force data from which to create the force. Any ommitted
    * values will be set to the default properties defined in
@@ -174,11 +182,6 @@ export abstract class MissionForce<
       openAll,
       populateTargets,
     })
-
-    // If root node is not open, open it.
-    if (!this.root.opened) {
-      this.root.open()
-    }
   }
 
   /**

@@ -27,4 +27,60 @@ declare global {
   export type TGenericType<Type> = Type extends TWithGeneric<infer X>
     ? X
     : never
+
+  /**
+   * Valid icons to use in the application.
+   * @note These are all SVG icons that are stored
+   * in the `src/assets/icons` directory. New icons
+   * should be added there.
+   * ### Special Types
+   * - `'_blank'`: Does not do anything and cannot be seen.
+   * Acts as a filler when the space needs to be
+   * filled up, but no button is required.
+   */
+  export type TMetisIcon =
+    // ! If adding to list, please maintain
+    // ! alphabetical order.
+    | '_blank'
+    | 'add'
+    | 'ban'
+    | 'blockquote'
+    | 'bold'
+    | 'cancel'
+    | 'clear-format'
+    | 'code'
+    | 'copy'
+    | 'code-block'
+    | 'device'
+    | 'divider'
+    | 'down'
+    | 'download'
+    | 'edit'
+    | 'italic'
+    | 'kick'
+    | 'launch'
+    | 'lightning'
+    | 'link'
+    | 'lock'
+    | 'open'
+    | 'options'
+    | 'ordered-list'
+    | 'play'
+    | 'question'
+    | 'redo'
+    | 'remove'
+    | 'reorder'
+    | 'save'
+    | 'search'
+    | 'shell'
+    | 'strike'
+    | 'text-cursor'
+    | 'underline'
+    | 'undo'
+    | 'unordered-list'
+    | 'upload'
+    | 'user'
+    | 'warning-transparent'
+    | 'zoom-in'
+    | 'zoom-out'
 }

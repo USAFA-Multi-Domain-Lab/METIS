@@ -193,17 +193,11 @@ export default class ClientConnection {
   protected addDefaultListeners(): void {
     // Add a `request-current-session` listener.
     this.addEventListener('request-current-session', (event) => {
-      // Get the current session.
       let session = SessionServer.get(this.login.sessionId ?? undefined)
-      // Create default data object.
-      let data: TServerEvents['current-session']['data'] = {
-        session: null,
-        memberId: null,
-      }
       let requester = session?.getMemberByUserId(this.userId)
 
-      // If the requester cannot be found, emit an error.
-      if (requester === undefined) {
+      // Handle missing requester or session.
+      if (!requester) {
         this.emitError(
           new ServerEmittedError(ServerEmittedError.CODE_MEMBER_NOT_FOUND, {
             request: this.buildResponseReqData(event),
@@ -211,23 +205,29 @@ export default class ClientConnection {
         )
         return
       }
+      if (!session) {
+        this.emitError(
+          new ServerEmittedError(
+            ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
+            {
+              request: this.buildResponseReqData(event),
+            },
+          ),
+        )
+        return
+      }
 
-      // If there is a session and a member, update the
-      // data object.
-      if (session && requester) {
-        data.session = session.toJson({
+      // Prepare payload and send response.
+      let data: TServerEvents['current-session']['data'] = {
+        session: session.toJson({
           requester,
-        })
-        data.memberId = requester._id
+        }),
+        memberId: requester._id,
       }
-
-      // Emit the current session in response to the client.
-      if (session !== undefined) {
-        this.emit('current-session', {
-          data,
-          request: this.buildResponseReqData(event),
-        })
-      }
+      this.emit('current-session', {
+        data,
+        request: this.buildResponseReqData(event),
+      })
     })
 
     // Add a `request-join-session` listener.

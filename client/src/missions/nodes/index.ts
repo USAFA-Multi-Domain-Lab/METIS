@@ -1,30 +1,33 @@
 import memoizeOne from 'memoize-one'
-import { TNodeButton } from 'src/components/content/session/mission-map/objects/MissionNode'
-
+import {
+  TMapCompatibleNode,
+  TMapCompatibleNodeEvent,
+  TNodeButton,
+} from 'src/components/content/session/mission-map/objects/nodes'
 import { TClientMissionTypes, TMissionComponent, TMissionNavigable } from '..'
 import { TRequestMethod } from '../../../../shared/connect/data'
+import { TListenerTargetEmittable } from '../../../../shared/events'
+import { TMissionActionJson } from '../../../../shared/missions/actions'
 import { TActionExecutionJson } from '../../../../shared/missions/actions/executions'
-import { TActionOutcomeJson } from '../../../../shared/missions/actions/outcomes'
 import MissionNode, {
   ILoadOutcomeOptions,
-  INodeOpenOptions,
   TMissionNodeJson,
   TMissionNodeOptions,
 } from '../../../../shared/missions/nodes'
 import ClientMissionAction, { TClientMissionActionOptions } from '../actions'
 import ClientActionExecution from '../actions/executions'
-import ClientActionOutcome from '../actions/outcomes'
 import ClientMissionForce from '../forces'
 import ClientMissionPrototype from './prototypes'
-import { TListenerTargetEmittable } from '../../../../shared/events'
-import { TMissionActionJson } from '../../../../shared/missions/actions'
 
 /**
  * Class for managing mission nodes on the client.
  */
 export default class ClientMissionNode
   extends MissionNode<TClientMissionTypes>
-  implements TListenerTargetEmittable<TNodeEventMethod>, TMissionComponent
+  implements
+    TListenerTargetEmittable<TNodeEventMethod>,
+    TMissionComponent,
+    TMapCompatibleNode
 {
   /**
    * Listeners for node events.
@@ -43,6 +46,10 @@ export default class ClientMissionNode
    * has not yet responded.
    * @throws In setter if the node is not openable.
    */
+  private set pendingOpen(value: boolean) {
+    this._pendingOpen = value
+    this.emitEvent('set-pending')
+  }
   public get pendingOpen(): boolean {
     return this._pendingOpen
   }
@@ -62,6 +69,10 @@ export default class ClientMissionNode
   public get pendingExecInit(): boolean {
     return this._pendingExecInit
   }
+  public set pendingExecInit(value: boolean) {
+    this._pendingExecInit = value
+    this.emitEvent('set-pending')
+  }
 
   /**
    * Whether the node is pending an "output-sent" event from the server.
@@ -76,6 +87,15 @@ export default class ClientMissionNode
    */
   public get pendingOutputSent(): boolean {
     return this._pendingOutputSent
+  }
+  public set pendingOutputSent(value: boolean) {
+    this._pendingOutputSent = value
+    this.emitEvent('set-pending')
+  }
+
+  // Implemented
+  public get pending(): boolean {
+    return this.pendingOpen || this.pendingExecInit || this.pendingOutputSent
   }
 
   /**
@@ -176,14 +196,14 @@ export default class ClientMissionNode
   /**
    * Buttons to manage this specific node on a mission map.
    */
-  private _buttons: TNodeButton[]
+  private _buttons: TNodeButton<ClientMissionNode>[]
   /**
    * Buttons to manage this specific node on a mission map.
    */
-  public get buttons(): TNodeButton[] {
+  public get buttons(): TNodeButton<ClientMissionNode>[] {
     return [...this._buttons]
   }
-  public set buttons(value: TNodeButton[]) {
+  public set buttons(value: TNodeButton<ClientMissionNode>[]) {
     // Gather details.
     let structureChange: boolean = false
 
@@ -205,6 +225,16 @@ export default class ClientMissionNode
     // Handle structure change.
     if (structureChange) {
       this.mission.handleStructureChange()
+    }
+  }
+
+  // Implemented
+  public get icon(): TMetisIcon {
+    if (this.executable) {
+      if (this.device) return 'device'
+      else return 'lightning'
+    } else {
+      return '_blank'
     }
   }
 
@@ -244,11 +274,7 @@ export default class ClientMissionNode
    * The execution time remaining for the node.
    */
   public get execTimeRemaining(): string {
-    if (this.execution) {
-      return this.execution.timeRemainingFormatted
-    } else {
-      return '00:00:00'
-    }
+    return this.latestExecution?.timeRemainingFormatted ?? '00:00:00'
   }
 
   /**
@@ -278,59 +304,28 @@ export default class ClientMissionNode
   protected importActions(
     data: TMissionActionJson[],
     options?: TClientMissionActionOptions,
-  ): Map<string, ClientMissionAction> {
-    let actions: Map<string, ClientMissionAction> = new Map<
-      string,
-      ClientMissionAction
-    >()
+  ): void {
     data.forEach((datum) => {
       let action: ClientMissionAction = new ClientMissionAction(
         this,
         datum,
         options,
       )
-      actions.set(action._id, action)
+      this.actions.set(action._id, action)
     })
-    return actions
   }
 
   // Implemented
-  protected importExecutions(
-    data: TActionExecutionJson,
-  ): ClientActionExecution | null {
-    // If data is null return null.
-    if (data === null) {
-      return null
-    }
-
-    // Get action for the ID passed.
-    let action: ClientMissionAction | undefined = this.actions.get(
-      data.actionId,
+  protected importExecutions(data: TActionExecutionJson[]): void {
+    this._executions = data.map(
+      ({ _id, actionId, outcome: outcomeData, start, end }) => {
+        let action: ClientMissionAction | undefined = this.actions.get(actionId)
+        if (!action) throw new Error(`Action "${actionId}" not found.`)
+        return new ClientActionExecution(_id, action, start, end, {
+          outcomeData,
+        })
+      },
     )
-
-    // Handle undefined action.
-    if (action === undefined) {
-      throw new Error('Action not found for given execution datum.')
-    }
-
-    // Return new execution object.
-    return new ClientActionExecution(action, data.start, data.end)
-  }
-
-  // Implemented
-  protected importOutcomes(data: TActionOutcomeJson[]): ClientActionOutcome[] {
-    return data.map((datum: TActionOutcomeJson) => {
-      let action: ClientMissionAction | undefined = this.actions.get(
-        datum.actionId,
-      )
-
-      // Handle undefined action.
-      if (action === undefined) {
-        throw new Error('Action not found for given outcome datum.')
-      }
-
-      return new ClientActionOutcome(action, datum.status)
-    })
   }
 
   /**
@@ -368,39 +363,6 @@ export default class ClientMissionNode
     )
   }
 
-  // Implemented
-  public open(options: INodeClientOpenOptions = {}): Promise<void> {
-    // Parse options.
-    let { revealedChildNodes } = options
-
-    // Return a promise to open the node.
-    return new Promise<void>((resolve) => {
-      // If the node is openable...
-      if (this.openable && revealedChildNodes) {
-        // Set the node to open.
-        this._opened = true
-        // Update last opened node cache.
-        this.mission.lastOpenedNode = this
-        // Reveal child nodes, if any.
-        this.populateChildNodes(revealedChildNodes)
-
-        // Handle structure change.
-        this.mission.handleStructureChange()
-
-        // Resolve.
-        resolve()
-
-        // Set pending open to false.
-        this._pendingOpen = false
-
-        // Emit event.
-        this.emitEvent('open')
-      } else {
-        throw new Error('Node is not openable.')
-      }
-    })
-  }
-
   /**
    * Handles node-specific, server-connection events that occur in-session.
    * @param method The method of the request event.
@@ -409,13 +371,13 @@ export default class ClientMissionNode
     // Handle method accordingly.
     switch (method) {
       case 'request-open-node':
-        this._pendingOpen = true
+        this.pendingOpen = true
         break
       case 'request-execute-action':
-        this._pendingExecInit = true
+        this.pendingExecInit = true
         break
       case 'request-send-output':
-        this._pendingOutputSent = true
+        this.pendingOutputSent = true
         break
     }
 
@@ -431,13 +393,13 @@ export default class ClientMissionNode
     // Handle method accordingly.
     switch (method) {
       case 'request-open-node':
-        this._pendingOpen = false
+        this.pendingOpen = false
         break
       case 'request-execute-action':
-        this._pendingExecInit = false
+        this.pendingExecInit = false
         break
       case 'request-send-output':
-        this._pendingOutputSent = false
+        this.pendingOutputSent = false
         break
     }
 
@@ -445,74 +407,44 @@ export default class ClientMissionNode
     this.emitEvent('request-failed')
   }
 
-  // Implemented
-  public loadExecution(
-    data: NonNullable<TActionExecutionJson>,
-  ): ClientActionExecution {
-    // Get the action action being executed.
-    let { actionId } = data
-    let action = this.actions.get(actionId)
-
-    // Throw an error if action is undefined.
-    if (action === undefined) {
-      throw new Error(
-        'Action not found for given the action ID in the execution data.',
-      )
+  /**
+   * Processses an open event emitted by the server.
+   * @param revealedChildNodes The child nodes revealed by the opening
+   * of the node.
+   */
+  public onOpen(revealedChildNodes: TMissionNodeJson[] | undefined): void {
+    if (revealedChildNodes) {
+      if (!this.openable) throw new Error(`Node ${this._id} is not openable.`)
+      // Set the node to open.
+      this._opened = true
+      // Update last opened node cache.
+      this.mission.lastOpenedNode = this
+      // Reveal child nodes, if any.
+      this.populateChildNodes(revealedChildNodes)
+      // Handle structure change.
+      this.mission.handleStructureChange()
+      // Set pending open to false.
+      this.pendingOpen = false
+      // Emit event.
+      this.emitEvent('open')
     }
-    // Throw an error if not executable.
-    if (!this.executable) {
-      throw new Error('Cannot handle execution: Node is not executable.')
-    }
-    // Throw an error if non ready to execute.
-    if (!this.readyToExecute) {
-      throw new Error('Cannot handle execution: Node is not ready to execute.')
-    }
-
-    // Generate and set the node's execution.
-    this._execution = new ClientActionExecution(action, data.start, data.end)
-
-    // Set "_pendingExecInit" to false.
-    this._pendingExecInit = false
-
-    // Handle node event.
-    this.emitEvent('exec-state-change')
-
-    // Return execution.
-    return this._execution
   }
 
-  // Implemented
-  public loadOutcome(
-    data: TActionOutcomeJson,
-    options: IClientLoadOutcomeOptions = {},
-  ): ClientActionOutcome {
-    // Parse data and options.
-    const { actionId, status } = data
-    const { revealedChildNodes } = options
+  // Overridden
+  public onExecution(execution: ClientActionExecution): void {
+    super.onExecution(execution)
+    this.pendingExecInit = false
+    this.emitEvent('exec-state-change')
+  }
 
-    // Get the action for the outcome.
-    let action = this.actions.get(actionId)
-
-    // Throw an error if action is undefined.
-    if (action === undefined) {
-      throw new Error(
-        'Action not found for given the action ID in the outcome data.',
-      )
-    }
-    // Throw an error if the execution state is not executed.
-    if (this.executionState !== 'executing') {
-      throw new Error('Cannot handle outcome: Node is not executing.')
-    }
-
-    // Generate outcome.
-    let outcome = new ClientActionOutcome(action, status)
-
-    // Add to list of outcomes.
-    this._outcomes.push(outcome)
-
-    // Remove execution.
-    this._execution = null
-
+  /**
+   * Callback for when an outcome is received from
+   * the server, processing the outcome here at the
+   * node level.
+   * @param revealedChildNodes The child nodes revealed by the outcome,
+   * if any.
+   */
+  public onOutcome(revealedChildNodes: TMissionNodeJson[] | undefined): void {
     // If the child nodes are revealed, open the node.
     if (revealedChildNodes) {
       // Set the node to open.
@@ -529,17 +461,15 @@ export default class ClientMissionNode
 
     // Handle node event.
     this.emitEvent('exec-state-change')
-
-    // Return outcome.
-    return outcome
   }
 
   /**
-   * Handles node-specific outputs that have been sent to the output panel via the server.
+   * Handles node-specific outputs that have been sent
+   * to the output panel via the server.
    */
-  public handleOutputSent(): void {
+  public onOutput(): void {
     // Set pending output sent to false.
-    this._pendingOutputSent = false
+    this.pendingOutputSent = false
 
     // Emit event.
     this.emitEvent('output-sent')
@@ -557,7 +487,7 @@ export default class ClientMissionNode
     }
 
     // Emit event.
-    this.emitEvent('update-block')
+    this.emitEvent('set-blocked')
   }
 
   // Implemented
@@ -735,18 +665,6 @@ export default class ClientMissionNode
 /* ------------------------------ CLIENT NODE TYPES ------------------------------ */
 
 /**
- * Options for the ClientMissionNode.open method.
- */
-export interface INodeClientOpenOptions extends INodeOpenOptions {
-  /**
-   * The child node data with which to populate the now open node.
-   * @note Fails if the node already has children.
-   * @default undefined
-   */
-  revealedChildNodes?: TMissionNodeJson[]
-}
-
-/**
  * Options for the `ClientMissionNode.loadOutcome` method.
  */
 export interface IClientLoadOutcomeOptions extends ILoadOutcomeOptions {
@@ -779,7 +697,7 @@ export interface IClientLoadOutcomeOptions extends ILoadOutcomeOptions {
  * Triggered when the node is opened.
  * @option 'set-buttons'
  * Triggered when the buttons for the node are set.
- * @option 'update-block'
+ * @option 'set-blocked'
  * Triggered when the following occurs:
  * - The node is blocked.
  * - The node is unblocked.
@@ -792,12 +710,9 @@ export interface IClientLoadOutcomeOptions extends ILoadOutcomeOptions {
  * - Triggered when a message has been sent to the output panel.
  */
 export type TNodeEventMethod =
-  | 'activity'
+  | TMapCompatibleNodeEvent
   | 'request-made'
   | 'request-failed'
-  | 'exec-state-change'
   | 'open'
-  | 'set-buttons'
-  | 'update-block'
   | 'modify-actions'
   | 'output-sent'

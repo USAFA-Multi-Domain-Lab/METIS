@@ -1,10 +1,7 @@
-import { TOutputJson } from 'metis/missions/forces/output'
-import { TNode } from 'metis/missions/nodes'
 import ServerEffect from 'metis/server/missions/effects'
 import ServerMissionNode from 'metis/server/missions/nodes'
 import SessionServer from 'metis/server/sessions'
 import ServerSessionMember from 'metis/server/sessions/members'
-import ServerUser from 'metis/server/users'
 import { AnyObject } from 'metis/toolbox/objects'
 import ServerMissionForce from '../missions/forces'
 
@@ -202,15 +199,14 @@ export default class TargetEnvContext {
     const { force, userId } = this
     const targetForce = this.determineTargetForce(options)
 
-    // Create a new output JSON object.
-    let outputJson: Partial<TOutputJson> = {
-      type: 'custom',
-      forceId: targetForce._id,
-      prefix: `${force.name.replaceAll(' ', '-')}:`,
-      message,
-    }
     // Create a custom output to send to the output panel.
-    this.session.sendOutput(outputJson, { userId })
+    this.session.sendOutput(
+      targetForce._id,
+      force.outputPrefix,
+      message,
+      { type: 'custom' },
+      { userId },
+    )
   }
 
   /**

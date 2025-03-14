@@ -1,6 +1,8 @@
-import { TAction, TMissionActionJson } from '.'
-import { TCommonMissionTypes } from '..'
-import MissionNode, { TMissionNodeJson, TNode } from '../nodes'
+import { TMetisComponent } from 'metis/index'
+import { TAction } from '.'
+import { TCommonMissionTypes, TCreateMissionJsonType } from '..'
+import { TNode } from '../nodes'
+import { TExecutionOutcomeJson, TOutcome, TOutcomeState } from './outcomes'
 
 /* -- CLASSES -- */
 
@@ -9,11 +11,32 @@ import MissionNode, { TMissionNodeJson, TNode } from '../nodes'
  */
 export default abstract class ActionExecution<
   T extends TCommonMissionTypes = TCommonMissionTypes,
-> {
+> implements TMetisComponent
+{
+  // Implemented
+  public readonly _id: string
+
+  // Implemented
+  public get name(): string {
+    return this._id.substring(0, 8)
+  }
+
   /**
    * The action executed.
    */
   public readonly action: TAction<T>
+
+  /**
+   * Cache for `outcome` field.
+   */
+  protected _outcome: TOutcome<T> | null
+
+  /**
+   * The outcome of the action execution.
+   */
+  public get outcome(): TOutcome<T> | null {
+    return this._outcome
+  }
 
   /**
    * The node upon which the action executed.
@@ -48,30 +71,21 @@ export default abstract class ActionExecution<
   public readonly end: number
 
   /**
-   * Whether the action execution has been aborted
-   * before completion.
-   */
-  protected _aborted: boolean
-
-  /**
-   * Whether the action execution has been aborted
-   * before completion.
-   */
-  public get aborted(): boolean {
-    return this._aborted
-  }
-
-  /**
    * The state of the action execution (e.g. executing,
    * success, failure).
    */
   public get state(): TActionExecutionState {
-    if (this.timeRemaining) {
-      return 'executing'
-    } else {
-      // todo: Add logic to determine success or failure.
-      return 'success'
-    }
+    let { outcome } = this
+    if (!outcome) return { status: 'executing' }
+    else return outcome.state
+  }
+
+  /**
+   * The status of the execution, determined
+   * by the state.
+   */
+  public get status(): TActionExecutionState['status'] {
+    return this.state.status
   }
 
   /**
@@ -79,13 +93,20 @@ export default abstract class ActionExecution<
    * (in milliseconds).
    */
   public get timeRemaining(): number {
-    let executionTimeEnd: number = this.end
-    let now: number = Date.now()
+    let { state, end } = this
+    // Initialize the time cursor to the current time.
+    let timeCursor: number = Date.now()
 
-    if (executionTimeEnd < now) {
+    // If aborted, then the time cursor should
+    // be set to the time the action was aborted.
+    if (state.status === 'aborted') {
+      timeCursor = state.abortedAt
+    }
+
+    if (end < timeCursor) {
       return 0
     } else {
-      return executionTimeEnd - now
+      return end - timeCursor
     }
   }
 
@@ -134,23 +155,23 @@ export default abstract class ActionExecution<
   }
 
   /**
+   * @param _id The ID of the execution.
    * @param action The action to execute.
    * @param start The timestamp for when the action began executing.
    * @param end The timestamp for when the action is expected to
    * finish
-   * @param aborted Whether the action execution has been aborted
-   * before completion.
    */
   public constructor(
+    _id: string,
     action: TAction<T>,
     start: number,
     end: number,
-    aborted: boolean = false,
   ) {
+    this._id = _id
     this.action = action
+    this._outcome = null
     this.start = start
     this.end = end
-    this._aborted = aborted
   }
 
   /**
@@ -159,25 +180,30 @@ export default abstract class ActionExecution<
    */
   public toJson(): TActionExecutionJson {
     return {
+      _id: this._id,
       actionId: this.actionId,
       nodeId: this.nodeId,
       start: this.start,
       end: this.end,
-      aborted: this.aborted,
+      outcome: this.outcome?.toJson() ?? null,
     }
   }
 
   /**
-   * Aborts the execution of the action.
-   * @returns Whether the action execution was successfully aborted.
+   * Processes an outcome that occurs after the
+   * execution object was created.
+   * @param outcome The outcome of the action execution.
+   * @throws If an outcome has already been processed.
    */
-  public abort(): boolean {
-    if (!this.aborted && this.state === 'executing') {
-      this._aborted = true
-      return true
-    } else {
-      return false
+  public onOutcome(outcome: T['outcome']): void {
+    // If an outcome has already been processed, ignore
+    // this outcome, logging a warning.
+    if (this.outcome) {
+      console.warn('Outcome already processed. Ignoring new outcome.')
+      return
     }
+    // Set the outcome.
+    this._outcome = outcome
   }
 }
 
@@ -193,30 +219,11 @@ export type TExecution<T extends TCommonMissionTypes> = T['execution']
 /**
  * The JSON representation of an action execution.
  */
-export type TActionExecutionJson = {
-  /**
-   * The ID of the action executed.
-   */
-  actionId: NonNullable<TMissionActionJson['_id']>
-  /**
-   * The ID of the node upon which the action executed.
-   */
-  nodeId: NonNullable<TMissionNodeJson['_id']>
-  /**
-   * The timestamp for when the action began executing.
-   */
-  start: number
-  /**
-   * The timestamp for when the action is expected to finish executing.
-   */
-  end: number
-  /**
-   * Whether the action execution has been aborted
-   * before completion.
-   * @default false
-   */
-  aborted?: boolean
-} | null
+export type TActionExecutionJson = TCreateMissionJsonType<
+  ActionExecution,
+  '_id' | 'actionId' | 'nodeId' | 'start' | 'end',
+  { outcome: TExecutionOutcomeJson | null }
+>
 
 /**
  * Cheats that can be applied when executing an action.
@@ -239,6 +246,14 @@ export type TExecutionCheats = {
 }
 
 /**
- * Possible states for an action execution.
+ * Execution-specific state possiblilities. States that
+ * aren't possible for an execution outcome.
  */
-export type TActionExecutionState = 'executing' | 'success' | 'failure'
+type TActionExecutionStateBase = { status: 'executing' }
+
+/**
+ * Possible states for an action execution.
+ * @note An execution-state will be the state of the
+ * outcome if an outcome is present.
+ */
+export type TActionExecutionState = TActionExecutionStateBase | TOutcomeState
