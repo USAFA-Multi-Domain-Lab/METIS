@@ -1,4 +1,5 @@
 @import 'src/assets/styles/config.scss';
+@import 'src/components/content/form/index.scss';
 
 .Page.UserResetPage {
   $page-width: 100vw;
@@ -27,7 +28,13 @@
     background: $color-primary;
 
     .ResetUserEntry {
+      @include form-container;
+
       width: 100%;
+    }
+
+    .Buttons {
+      margin: 1.5em 0 0;
     }
   }
 }

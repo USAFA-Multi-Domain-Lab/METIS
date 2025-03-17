@@ -73,7 +73,7 @@ export default class ClassList {
    * const class1Impeded = false
    * let classList = new ClassList('InitialClass')
    * // Adds 'Class1' to the list if the condition
-   * is met, otherwise removing it.
+   * // is met, otherwise removing it.
    * classList.set('Class1', class1Enabled && !class1Impeded)
    * console.log(classList.value) // 'InitialClass Class1'
    */
