@@ -1,13 +1,9 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientUser from 'src/users'
+import { TListenerTarget } from '../../../../shared/events'
 import { TLogin } from '../../../../shared/logins'
-import {
-  TListenerTarget,
-  TListenerTargetEmittable,
-  TRequireLoginReturn,
-  TResizeObserverOptions,
-} from './index.d'
+import { TRequireLoginReturn, TResizeObserverOptions } from './index.d'
 
 /* -- HOOKS -- */
 
@@ -235,5 +231,5 @@ export class LoginRequiredError extends Error {
 /* -- EXPORTS -- */
 
 export * from './index.d'
-export * from './states'
 export * from './lifecycles'
+export * from './states'

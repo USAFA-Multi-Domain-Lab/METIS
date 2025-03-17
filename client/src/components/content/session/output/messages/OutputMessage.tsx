@@ -1,8 +1,8 @@
-import { compute } from 'src/toolbox'
-import './OutputMessage.scss'
-import { useOutputContext } from '../Output'
-import { useOutputRenderer } from './renderers'
 import RichText from 'src/components/content/general-layout/rich-text/RichText'
+import { compute } from 'src/toolbox'
+import { useOutputContext } from '../Output'
+import './OutputMessage.scss'
+import { useOutputRenderer } from './renderers'
 
 /**
  * The actual message displayed in an output.

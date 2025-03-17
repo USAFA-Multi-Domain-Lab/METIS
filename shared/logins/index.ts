@@ -1,4 +1,4 @@
-import { TCommonUserJson } from 'metis/users'
+import { TUserJson } from 'metis/users'
 
 /**
  * The JSON representation of a login object.
@@ -7,7 +7,7 @@ export type TLoginJson = {
   /**
    * The user with the given login.
    */
-  user: TCommonUserJson
+  user: TUserJson
 
   /**
    * The ID of the session the user has joined, if any.

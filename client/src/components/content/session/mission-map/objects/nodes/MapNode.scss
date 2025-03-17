@@ -1,13 +1,17 @@
 @import 'src/assets/styles/config.scss';
 @import 'src/assets/styles/util.scss';
-@import '../mixins.scss';
+@import '../../mixins.scss';
 
 .Scene {
-  .MissionNode {
+  .MapNode {
     $text-fade-transition: background-color 300ms ease-in-out;
     $pending-transition: opacity 200ms ease-in-out;
 
-    @include mission-node-like;
+    border-color: $color-primary-light;
+    border-width: min(2px, 0.04em);
+    border-style: solid;
+    border-radius: 0.11em;
+    overflow: hidden;
 
     // Set box-sizing to content-box to
     // help with font size calculations
@@ -38,27 +42,6 @@
       @include background-mask;
     }
 
-    &.Opened {
-      border-right-style: dashed;
-    }
-
-    &.Executable {
-      .Icon {
-        // If the node is executable, show the
-        // lightning icon.
-        background-image: url(../../../../../assets/images/icons/lightning.svg);
-      }
-    }
-
-    &.Device {
-      .Icon {
-        // If the node is a device, show the
-        // device icon. This will overwrite the
-        // lightning icon.
-        background-image: url(../../../../../assets/images/icons/device.svg);
-      }
-    }
-
     &.Executing {
       // pointer-events: none;
 
@@ -77,11 +60,14 @@
       background-color: $color-failure-dark;
     }
 
-    &.PendingOpen,
-    &.PendingExecInit,
-    &.PendingOutputSent {
+    &.Pending {
       pointer-events: none;
       opacity: 0.35;
+    }
+
+    // Add a transition out of the pending state.
+    &:not(.Pending) {
+      transition: $text-fade-transition, $pending-transition;
     }
 
     &.Blocked {
@@ -138,12 +124,6 @@
     &.Blurred {
       pointer-events: none;
       opacity: 0.4;
-    }
-
-    // Add a transition out of the pending
-    // open state.
-    &:not(.PendingOpen):not(.PendingExecInit):not(.Executing) {
-      transition: $text-fade-transition, $pending-transition;
     }
 
     .ProgressBar {
@@ -216,10 +196,6 @@
       // Make the icon 15% of the width of the
       // node.
       width: 12%;
-
-      background-size: contain;
-      background-position: center;
-      background-repeat: no-repeat;
     }
 
     .Buttons {

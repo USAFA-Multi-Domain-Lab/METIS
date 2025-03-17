@@ -1,12 +1,12 @@
 import Mission, {
-  TMissionJson,
   TCommonMissionTypes,
+  TMissionJson,
   TMissionOptions,
-  TCommonMissionJson,
+  TMissionSaveJson,
 } from 'metis/missions'
-import { TCommonMissionForceJson } from 'metis/missions/forces'
+import { TMissionForceSaveJson } from 'metis/missions/forces'
 import {
-  TCommonMissionPrototypeJson,
+  TMissionPrototypeJson,
   TMissionPrototypeOptions,
 } from 'metis/missions/nodes/prototypes'
 import seedrandom, { PRNG } from 'seedrandom'
@@ -18,7 +18,7 @@ import ServerTarget from '../target-environments/targets'
 import ServerUser from '../users'
 import ServerMissionAction from './actions'
 import ServerActionExecution from './actions/executions'
-import { ServerRealizedOutcome } from './actions/outcomes'
+import ServerOutcome from './actions/outcomes'
 import ServerEffect from './effects'
 import ServerMissionForce, { TServerMissionForceOptions } from './forces'
 import ServerOutput from './forces/output'
@@ -53,7 +53,7 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
   public constructor(
     data:
       | Partial<TMissionJson>
-      | Partial<TCommonMissionJson> = ServerMission.DEFAULT_PROPERTIES,
+      | Partial<TMissionSaveJson> = ServerMission.DEFAULT_PROPERTIES,
     options: TServerMissionOptions = {},
   ) {
     // Initialize base properties.
@@ -67,7 +67,7 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
 
   // Implemented
   public importPrototype(
-    data: Partial<TCommonMissionPrototypeJson> = ServerMissionPrototype.DEFAULT_PROPERTIES,
+    data: Partial<TMissionPrototypeJson> = ServerMissionPrototype.DEFAULT_PROPERTIES,
     options: TMissionPrototypeOptions<ServerMissionPrototype> = {},
   ): ServerMissionPrototype {
     let root: ServerMissionPrototype | null = this.root
@@ -99,7 +99,7 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
 
   // Implemented
   protected importForces(
-    data: TCommonMissionForceJson[],
+    data: TMissionForceSaveJson[],
     options: TServerMissionForceOptions = {},
   ): ServerMissionForce[] {
     let forces = data.map(
@@ -141,7 +141,7 @@ export interface TServerMissionTypes extends TCommonMissionTypes {
   node: ServerMissionNode
   action: ServerMissionAction
   execution: ServerActionExecution
-  outcome: ServerRealizedOutcome
+  outcome: ServerOutcome
   targetEnv: ServerTargetEnvironment
   target: ServerTarget
   effect: ServerEffect

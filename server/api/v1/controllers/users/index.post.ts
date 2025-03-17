@@ -1,7 +1,7 @@
 import { Request, Response } from 'express-serve-static-core'
 import UserModel, { hashPassword } from 'metis/server/database/models/users'
 import { databaseLogger } from 'metis/server/logging'
-import { TCommonUserJson } from 'metis/users'
+import { TUserJson } from 'metis/users'
 import ApiResponse from '../../library/response'
 /**
  * This will create a new user.
@@ -19,7 +19,7 @@ const createNewUser = async (request: Request, response: Response) => {
     lastName,
     needsPasswordReset,
     password,
-  } = request.body as TCommonUserJson
+  } = request.body as TUserJson
 
   // Hash the password.
   if (!!password) password = await hashPassword(password)

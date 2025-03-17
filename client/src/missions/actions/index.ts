@@ -1,9 +1,9 @@
 import { TClientMissionTypes, TMissionComponent, TMissionNavigable } from '..'
 import MissionAction, {
-  TCommonMissionActionJson,
+  TMissionActionJson,
   TMissionActionOptions,
 } from '../../../../shared/missions/actions'
-import { TCommonEffectJson } from '../../../../shared/missions/effects'
+import { TEffectJson } from '../../../../shared/missions/effects'
 import { ClientEffect, TClientEffectOptions } from '../effects'
 import ClientMissionNode from '../nodes'
 
@@ -81,7 +81,7 @@ export default class ClientMissionAction
    */
   public constructor(
     node: ClientMissionNode,
-    data: Partial<TCommonMissionActionJson> = ClientMissionAction.DEFAULT_PROPERTIES,
+    data: Partial<TMissionActionJson> = ClientMissionAction.DEFAULT_PROPERTIES,
     options: TClientMissionActionOptions = {},
   ) {
     super(node, data, options)
@@ -97,11 +97,11 @@ export default class ClientMissionAction
 
   // Implemented
   protected parseEffects(
-    data: TCommonEffectJson[],
+    data: TEffectJson[],
     options: TClientEffectOptions = {},
   ): ClientEffect[] {
     return data.map(
-      (datum: TCommonEffectJson) => new ClientEffect(this, datum, options),
+      (datum: TEffectJson) => new ClientEffect(this, datum, options),
     )
   }
 

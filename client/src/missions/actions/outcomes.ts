@@ -1,49 +1,18 @@
-import ClientMissionAction from '.'
 import { TClientMissionTypes } from '..'
-import IActionOutcome, {
-  TActionOutcomeJson,
+import ExecutionOutcome, {
+  TOutcomeState,
 } from '../../../../shared/missions/actions/outcomes'
-import ClientMissionNode from '../nodes'
+import ClientActionExecution from './executions'
 
 /**
- * An outcome for the execution of an action via the Mission.execute method.
+ * An outcome for the execution of an action via the MissionNode.prototype.execute method.
  */
-export default class ClientActionOutcome
-  implements IActionOutcome<TClientMissionTypes>
-{
-  // Implemented
-  public readonly action: ClientMissionAction
-
-  // Implemented
-  public get node(): ClientMissionNode {
-    return this.action.node
-  }
-  // Implemented
-  public get actionId(): ClientMissionAction['_id'] {
-    return this.action._id
-  }
-  // Implemented
-  public get nodeId(): ClientMissionNode['_id'] {
-    return this.action.node._id
-  }
-  // Implmented
-  public readonly successful: boolean
-
+export default class ClientExecutionOutcome extends ExecutionOutcome<TClientMissionTypes> {
   /**
-   * @param action The action itself.
-   * @param successful Whether the action succeeded.
+   * @param state The state of the outcome.
+   * @param execution The execution associated with the outcome.
    */
-  public constructor(action: ClientMissionAction, successful: boolean) {
-    this.action = action
-    this.successful = successful
-  }
-
-  // Implemented
-  public toJson(): TActionOutcomeJson {
-    return {
-      actionId: this.actionId,
-      nodeId: this.nodeId,
-      successful: this.successful,
-    }
+  public constructor(state: TOutcomeState, execution: ClientActionExecution) {
+    super(state, execution)
   }
 }

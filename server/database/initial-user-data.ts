@@ -1,7 +1,7 @@
-import { TCommonUserJson } from 'metis/users'
+import { TUserJson } from 'metis/users'
 
 // Default student user data.
-export let studentUserData: TCommonUserJson = {
+export let studentUserData: TUserJson = {
   username: 'student1',
   accessId: 'student',
   firstName: 'student',
@@ -11,7 +11,7 @@ export let studentUserData: TCommonUserJson = {
   password: 'password',
 }
 // Default instructor user data.
-export let instructorUserData: TCommonUserJson = {
+export let instructorUserData: TUserJson = {
   username: 'instructor1',
   accessId: 'instructor',
   firstName: 'instructor',
@@ -21,7 +21,7 @@ export let instructorUserData: TCommonUserJson = {
   password: 'password',
 }
 // Default admin user data.
-export let adminUserData: TCommonUserJson = {
+export let adminUserData: TUserJson = {
   username: 'admin',
   accessId: 'admin',
   firstName: 'admin',

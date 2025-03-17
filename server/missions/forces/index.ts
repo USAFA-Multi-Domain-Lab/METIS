@@ -3,7 +3,6 @@ import {
   TMissionForceJson,
   TMissionForceOptions,
 } from 'metis/missions/forces'
-import { TCommonOutputJson } from 'metis/missions/forces/output'
 import { TMissionNodeJson, TMissionNodeOptions } from 'metis/missions/nodes'
 import { TTargetEnvExposedForce } from 'metis/server/target-environments/context'
 import ServerUser from 'metis/server/users'
@@ -70,6 +69,11 @@ export default class ServerMissionForce extends MissionForce<TServerMissionTypes
 
   // Implemented
   public storeOutput(output: ServerOutput): void {
+    if (output.force._id !== this._id) {
+      throw new Error(
+        `Output force ID "${output.force._id}" does not match force ID "${this._id}".`,
+      )
+    }
     let index = this.findInsertionIndex(output)
     this._outputs.splice(index, 0, output)
   }
@@ -80,15 +84,13 @@ export default class ServerMissionForce extends MissionForce<TServerMissionTypes
   public sendIntroMessage(): void {
     // Send the intro message if it exists and isn't an empty string.
     if (!!this.introMessage) {
-      // Create the output JSON.
-      let outputJson: Partial<TCommonOutputJson> = {
-        type: 'intro',
-        forceId: this._id,
-        prefix: `${this.name.replaceAll(' ', '-')}:`,
-        message: this.introMessage,
-      }
-      // Create the output.
-      let output = new ServerOutput(this, outputJson)
+      // Generate new output.
+      let output = ServerOutput.generate(
+        this,
+        `${this.name.replaceAll(' ', '-')}:`,
+        this.introMessage,
+        { type: 'intro' },
+      )
       // Store the output.
       this.storeOutput(output)
     }

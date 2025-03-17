@@ -1,10 +1,10 @@
 import DOMPurify from 'isomorphic-dompurify'
-import Mission, { TCommonMissionJson } from 'metis/missions'
-import { TCommonMissionActionJson } from 'metis/missions/actions'
+import Mission, { TMissionSaveJson } from 'metis/missions'
+import { TMissionActionJson } from 'metis/missions/actions'
 import Effect from 'metis/missions/effects'
-import { TCommonMissionForceJson } from 'metis/missions/forces'
-import { TCommonMissionNodeJson } from 'metis/missions/nodes'
-import { TCommonMissionPrototypeJson } from 'metis/missions/nodes/prototypes'
+import { TMissionForceSaveJson } from 'metis/missions/forces'
+import { TMissionNodeJson } from 'metis/missions/nodes'
+import { TMissionPrototypeJson } from 'metis/missions/nodes/prototypes'
 import MetisDatabase from 'metis/server/database'
 import { databaseLogger } from 'metis/server/logging'
 import ServerMission from 'metis/server/missions'
@@ -46,7 +46,7 @@ const PROCESS_TIME_MAX = 3600 /*seconds*/ * 1000
  * @param options The options in use.
  * @returns The JSON representation of a `Mission` document.
  */
-const toJson = (doc: TMissionDoc, ret: TCommonMissionJson, options: any) => {
+const toJson = (doc: TMissionDoc, ret: TMissionSaveJson, options: any) => {
   return {
     ...ret,
     _id: doc.id,
@@ -120,7 +120,7 @@ const findByIdAndModify = (
   _id: any,
   projection?: ProjectionType<TMission> | null,
   options?: QueryOptions<TMission> | null,
-  updates?: Partial<TCommonMissionJson> | null,
+  updates?: Partial<TMissionSaveJson> | null,
 ): Promise<TMissionDoc | null> => {
   return new Promise<TMissionDoc | null>(async (resolve, reject) => {
     try {
@@ -157,7 +157,7 @@ const findByIdAndModify = (
  * @param missionJson The mission JSON to validate.
  */
 const validateMissionEffects = (
-  missionJson: TCommonMissionJson,
+  missionJson: TMissionSaveJson,
 ): { error?: Error } => {
   // Object to store results.
   let results: { error?: Error } = {}
@@ -367,8 +367,8 @@ const validateMissionEffects = (
  * @returns An error if any of the validation checks fail.
  */
 const validateMissionForces = (
-  missionJson: TCommonMissionJson,
-  structureKeys: TCommonMissionPrototypeJson['structureKey'][],
+  missionJson: TMissionSaveJson,
+  structureKeys: TMissionPrototypeJson['structureKey'][],
 ): { error?: Error } => {
   // Object to store results.
   let results: { error?: Error } = {}
@@ -393,7 +393,7 @@ const validateMissionForces = (
   // Loop through each force.
   for (let force of missionJson.forces) {
     // Used to ensure each node has a corresponding prototype.
-    let prototypesRetrieved: TCommonMissionPrototypeJson['_id'][] = []
+    let prototypesRetrieved: TMissionPrototypeJson['_id'][] = []
 
     // Loop through nodes.
     for (let node of force.nodes) {
@@ -462,14 +462,11 @@ const validateMissionForces = (
  * @param missionJson The mission JSON to validate.
  * @param next The next function to call.
  */
-const validate_missions = (
-  missionJson: TCommonMissionJson,
-  next: any,
-): void => {
+const validate_missions = (missionJson: TMissionSaveJson, next: any): void => {
   // Get the initial structure.
-  let initStructure: TCommonMissionJson['structure'] = missionJson.structure
+  let initStructure: TMissionSaveJson['structure'] = missionJson.structure
   // Array to store the structure keys.
-  let structureKeys: TCommonMissionPrototypeJson['structureKey'][] = []
+  let structureKeys: TMissionPrototypeJson['structureKey'][] = []
   // Object to store results.
   let results: { error?: Error } = {}
   // Object to store existing _id's.
@@ -600,7 +597,7 @@ const validate_missions = (
  * @param depthPadding The depth padding to validate.
  */
 const validate_mission_prototypes_depthPadding = (
-  depthPadding: TCommonMissionPrototypeJson['depthPadding'],
+  depthPadding: TMissionPrototypeJson['depthPadding'],
 ): boolean => {
   let nonNegativeInteger: boolean = isNonNegativeInteger(depthPadding)
 
@@ -612,7 +609,7 @@ const validate_mission_prototypes_depthPadding = (
  * @param initialResources The initial resources to validate.
  */
 const validate_missions_forces_initialResources = (
-  initialResources: TCommonMissionForceJson['initialResources'],
+  initialResources: TMissionForceSaveJson['initialResources'],
 ): boolean => {
   let nonNegativeInteger: boolean = isNonNegativeInteger(initialResources)
 
@@ -624,7 +621,7 @@ const validate_missions_forces_initialResources = (
  * @param nodes The nodeData to validate.
  */
 const validate_missions_forces_nodes = (
-  nodes: TCommonMissionForceJson['nodes'],
+  nodes: TMissionForceSaveJson['nodes'],
 ): boolean => {
   let minLengthReached: boolean = nodes.length >= NODE_DATA_MIN_LENGTH
   let minLengthOfActionsReached: boolean = true
@@ -643,7 +640,7 @@ const validate_missions_forces_nodes = (
  * Validates the color for a force.
  */
 const validate_force_color = (
-  color: TCommonMissionForceJson['color'],
+  color: TMissionForceSaveJson['color'],
 ): boolean => {
   let isValidColor: boolean = HEX_COLOR_REGEX.test(color)
 
@@ -655,7 +652,7 @@ const validate_force_color = (
  * @param color The color to validate.
  */
 const validate_missions_forces_nodes_color = (
-  color: TCommonMissionNodeJson['color'],
+  color: TMissionNodeJson['color'],
 ): boolean => {
   let isValidColor: boolean = HEX_COLOR_REGEX.test(color)
 
@@ -667,7 +664,7 @@ const validate_missions_forces_nodes_color = (
  * @param processTime The process time to validate.
  */
 const validate_mission_forces_nodes_actions_processTime = (
-  processTime: TCommonMissionActionJson['processTime'],
+  processTime: TMissionActionJson['processTime'],
 ): boolean => {
   let processTimeRegexRegExp = /^[0-9+-]+[.]?[0-9]{0,6}$/
   let isValidNumber: boolean = processTimeRegexRegExp.test(
@@ -683,7 +680,7 @@ const validate_mission_forces_nodes_actions_processTime = (
  * @param successChance The success chance to validate.
  */
 const validate_mission_forces_nodes_actions_successChance = (
-  successChance: TCommonMissionActionJson['successChance'],
+  successChance: TMissionActionJson['successChance'],
 ): boolean => {
   let betweenZeroAndOne: boolean = successChance >= 0 && successChance <= 1
 
@@ -695,7 +692,7 @@ const validate_mission_forces_nodes_actions_successChance = (
  * @param resourceCost The resource cost to validate.
  */
 const validate_mission_forces_nodes_actions_resourceCost = (
-  resourceCost: TCommonMissionActionJson['resourceCost'],
+  resourceCost: TMissionActionJson['resourceCost'],
 ): boolean => {
   let nonNegativeInteger: boolean = isNonNegativeInteger(resourceCost)
 
@@ -1006,7 +1003,7 @@ export const MissionSchema = new Schema<
 
 // Called before a save is made to the database.
 MissionSchema.pre<TMissionDoc>('save', function (next) {
-  let mission: TCommonMissionJson = this.toJSON()
+  let mission: TMissionSaveJson = this.toJSON()
   validate_missions(mission, next)
   return next()
 })
@@ -1052,7 +1049,7 @@ MissionSchema.post<TMissionDoc>('save', function () {
  * Represents a mission in the database.
  * @see https://mongoosejs.com/docs/typescript/schemas.html#generic-parameters
  */
-type TMission = TCommonMissionJson & {
+type TMission = TMissionSaveJson & {
   /**
    * Determines if the mission is deleted.
    */
@@ -1087,7 +1084,7 @@ type TMissionStaticMethods = {
     _id: any,
     projection?: ProjectionType<TMission> | null,
     options?: QueryOptions<TMission> | null,
-    updates?: Partial<TCommonMissionJson> | null,
+    updates?: Partial<TMissionSaveJson> | null,
   ): Promise<TMissionDoc | null>
 }
 

@@ -2,18 +2,16 @@ import {
   TActionExecutionJson,
   TExecutionCheats,
 } from 'metis/missions/actions/executions'
-import { TActionOutcomeJson } from 'metis/missions/actions/outcomes'
-import { TCommonMissionForceJson } from 'metis/missions/forces'
-import { TCommonOutputJson } from 'metis/missions/forces/output'
-import { TCommonMissionPrototypeJson } from 'metis/missions/nodes/prototypes'
+import { TExecutionOutcomeJson } from 'metis/missions/actions/outcomes'
+import { TMissionForceSaveJson } from 'metis/missions/forces'
+import { TOutputJson } from 'metis/missions/forces/output'
+import { TMissionPrototypeJson } from 'metis/missions/nodes/prototypes'
 import { TSessionConfig, TSessionJson } from 'metis/sessions'
-import SessionMember, {
-  TCommonSessionMember,
-  TSessionMemberJson,
-} from 'metis/sessions/members'
+import SessionMember, { TSessionMemberJson } from 'metis/sessions/members'
 import MemberRole from 'metis/sessions/members/roles'
 import { AnyObject } from 'metis/toolbox/objects'
-import { TCommonMissionNodeJson } from '../missions/nodes'
+import { TMetisComponent } from '..'
+import { TMissionNodeJson } from '../missions/nodes'
 
 /* -- TYPES -- */
 
@@ -338,7 +336,7 @@ export type TGenericServerEvents = {
       /**
        * The message to send to the force's output panel.
        */
-      outputData: TCommonOutputJson
+      outputData: TOutputJson
     }
   >
   /**
@@ -381,11 +379,11 @@ export type TResponseEvents = {
       /**
        * The force(s) the client has access to.
        */
-      forces: TCommonMissionForceJson[]
+      forces: TMissionForceSaveJson[]
       /**
        * The prototype data used to create the mission's structure of nodes.
        */
-      prototypes: TCommonMissionPrototypeJson[]
+      prototypes: TMissionPrototypeJson[]
     },
     TClientEvents['request-start-session']
   >
@@ -410,11 +408,11 @@ export type TResponseEvents = {
       /**
        * The force(s) the client has access to.
        */
-      forces: TCommonMissionForceJson[]
+      forces: TMissionForceSaveJson[]
       /**
        * The prototype data used to create the mission's structure of nodes.
        */
-      prototypes: TCommonMissionPrototypeJson[]
+      prototypes: TMissionPrototypeJson[]
     },
     TClientEvents['request-reset-session']
   >
@@ -521,11 +519,11 @@ export type TResponseEvents = {
       /**
        * The nodes that were revealed as a result of opening the node.
        */
-      revealedChildNodes: TCommonMissionNodeJson[]
+      revealedChildNodes: TMissionNodeJson[]
       /**
        * The prototypes of the nodes that were revealed as a result of opening the node.
        */
-      revealedChildPrototypes: TCommonMissionPrototypeJson[]
+      revealedChildPrototypes: TMissionPrototypeJson[]
     },
     TClientEvents['request-open-node']
   >
@@ -556,15 +554,15 @@ export type TResponseEvents = {
       /**
        * The outcome of the action being executed.
        */
-      outcome: TActionOutcomeJson
+      outcome: TExecutionOutcomeJson
       /**
        * The nodes that were revealed as a result of executing the action.
        */
-      revealedChildNodes?: TCommonMissionNodeJson[]
+      revealedChildNodes?: TMissionNodeJson[]
       /**
        * The prototypes of the nodes that were revealed as a result of executing the action.
        */
-      revealedChildPrototypes?: TCommonMissionPrototypeJson[]
+      revealedChildPrototypes?: TMissionPrototypeJson[]
     },
     TClientEvents['request-execute-action']
   >
@@ -588,9 +586,9 @@ export type TResponseEvents = {
        */
       session: TSessionJson | null
       /**
-       * The ID of the member associated with the session.
+       * The ID of the member associated with the session client.
        */
-      memberId: TCommonSessionMember['_id'] | null
+      memberId: TMetisComponent['_id']
     },
     TClientEvents['request-current-session']
   >
@@ -607,7 +605,7 @@ export type TResponseEvents = {
       /**
        * The ID of the member in the session.
        */
-      memberId: TCommonSessionMember['_id']
+      memberId: TMetisComponent['_id']
     },
     TClientEvents['request-join-session']
   >

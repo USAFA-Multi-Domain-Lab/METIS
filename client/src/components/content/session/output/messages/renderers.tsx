@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react'
+import { useEventListener } from 'src/toolbox/hooks'
 import {
   TOutputRendererResults,
   TOutputTag,
@@ -5,8 +7,6 @@ import {
   useOutputContext,
 } from '..'
 import { TSingleTypeMapped } from '../../../../../../../shared/toolbox/objects'
-import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
-import { useEffect, useState } from 'react'
 import StringToolbox from '../../../../../../../shared/toolbox/strings'
 
 /**
@@ -44,32 +44,36 @@ const tagRenderers: TSingleTypeMapped<TOutputTag, TOutputTagRenderer> = {
   'resource-label': ({ mission }) => {
     return mission.resourceLabel
   },
-  'node-name': ({ node }) => {
-    return defaultTo(node, 'name')
+  'node-name': ({ sourceNode }) => {
+    return defaultTo(sourceNode, 'name')
   },
-  'action-name': ({ action }) => {
-    return defaultTo(action, 'name')
+  'action-name': ({ sourceAction }) => {
+    return defaultTo(sourceAction, 'name')
   },
-  'action-description': ({ action }) => {
-    return defaultTo(action, 'description', '<i>No description provided.</i>')
+  'action-description': ({ sourceAction }) => {
+    return defaultTo(
+      sourceAction,
+      'description',
+      '<i>No description provided.</i>',
+    )
   },
-  'success-chance': ({ action }) => {
-    return defaultTo(action, 'successChanceFormatted')
+  'success-chance': ({ sourceAction }) => {
+    return defaultTo(sourceAction, 'successChanceFormatted')
   },
-  'process-time': ({ action }) => {
-    return defaultTo(action, 'processTimeFormatted')
+  'process-time': ({ sourceAction }) => {
+    return defaultTo(sourceAction, 'processTimeFormatted')
   },
-  'time-remaining': ({ execution }) => {
-    return defaultTo(execution, 'timeRemainingFormatted')
+  'time-remaining': ({ sourceExecution }) => {
+    return defaultTo(sourceExecution, 'timeRemainingFormatted')
   },
-  'resource-cost': ({ action }) => {
-    return defaultTo(action, 'resourceCostFormatted')
+  'resource-cost': ({ sourceAction }) => {
+    return defaultTo(sourceAction, 'resourceCostFormatted')
   },
-  'opens-node': ({ action }) => {
-    return defaultTo(action, 'opensNodeFormatted')
+  'opens-node': ({ sourceAction }) => {
+    return defaultTo(sourceAction, 'opensNodeFormatted')
   },
-  'execution-state': ({ execution }) => {
-    return defaultTo(execution, 'state')
+  'execution-state': ({ sourceExecution }) => {
+    return defaultTo(sourceExecution, 'state')
   },
 }
 
@@ -89,7 +93,7 @@ export function useOutputRenderer(): TOutputRendererResults {
   const [listenForCountdown, setListenForCountdown] = useState<boolean>(true)
   const [renderedMessage, setRenderedMessage] = useState<string>('')
   const { output } = useOutputContext()
-  const { execution } = output
+  const { sourceExecution } = output
 
   /* -- FUNCTIONS -- */
 
@@ -134,7 +138,7 @@ export function useOutputRenderer(): TOutputRendererResults {
   // Re-render the tags when there is a countdown
   // event.
   useEventListener(
-    execution,
+    sourceExecution,
     'countdown',
     () => {
       // Re-render the tags if the message contains

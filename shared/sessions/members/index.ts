@@ -1,7 +1,7 @@
 import { TCommonMissionTypes } from 'metis/missions'
-import { TCommonMissionForce, TForce } from 'metis/missions/forces'
-import { TCommonUser, TCommonUserJson, TSessionUser } from 'metis/users'
-import { TCommonSession, TSession } from '..'
+import { MissionForce, TForce } from 'metis/missions/forces'
+import { TSessionUser, TUserJson } from 'metis/users'
+import { TSession } from '..'
 import MemberPermission from './permissions'
 import MemberRole, { TMemberRoleId } from './roles'
 
@@ -12,67 +12,104 @@ import MemberRole, { TMemberRoleId } from './roles'
  */
 export default abstract class SessionMember<
   T extends TCommonMissionTypes = TCommonMissionTypes,
-> implements TCommonSessionMember
-{
-  // Implemented
+> {
+  /**
+   * The unique ID of the session member.
+   */
   public _id: string
 
-  // Implemented
+  /**
+   * The user that is a member of the session.
+   */
   public user: TSessionUser<T>
 
-  // Implemented
+  /**
+   * The ID of the user that is a member of the session.
+   */
   public get userId(): TSessionUser<T>['_id'] {
     return this.user._id
   }
 
-  // Implemented
+  /**
+   * The username of the user that is a member of the session.
+   */
   public get username(): TSessionUser<T>['username'] {
     return this.user.username
   }
 
-  // Implemented
+  /**
+   * The role of the member in the session.
+   */
   public role: MemberRole
 
-  // Implemented
+  /**
+   * The ID of the member's role in the session.
+   */
   public get roleId(): TMemberRoleId {
     return this.role._id
   }
 
-  // Implemented
-  public forceId: TCommonMissionForce['_id'] | null
+  /**
+   * The ID of the force to which the member is assigned.
+   * @note If `null`, the member is not assigned to a force.
+   */
+  public forceId: string | null
 
-  // Implemented
+  /**
+   * The force to which the member is assigned.
+   * @note If `null`, the member is not assigned to a force.
+   */
   public get force(): TForce<T> | null {
     if (this.forceId === null) return null
     return this.session.mission.getForce(this.forceId) ?? null
   }
 
-  // Implemented
+  /**
+   * The session to which the member belongs.
+   */
   public session: TSession<T>
 
-  // Implemented
+  /**
+   * Whether the member is a participant in the session.
+   */
   public get isParticipant(): boolean {
     return this.role._id === 'participant'
   }
 
-  // Implemented
+  /**
+   * Whether the member is a limited observer in the session.
+   */
   public get isLimitedObserver(): boolean {
     return this.role._id === 'observer_limited'
   }
 
-  // Implemented
+  /**
+   * Whether the member is an observer in the session.
+   */
   public get isObserver(): boolean {
     return this.role._id === 'observer'
   }
 
-  // Implemented
+  /**
+   * Whether the member is a manager in the session.
+   */
   public get isManager(): boolean {
     return this.role._id === 'manager'
   }
 
-  // Implemented
+  /**
+   * Whether the member has been assigned to a force.
+   */
   public get isAssigned(): boolean {
     return this.forceId !== null
+  }
+
+  /**
+   * Creates a prefix for an output message that is
+   * displayed in a force's output panel.
+   */
+  public get outputPrefix(): string {
+    return `${this.username.replaceAll(' ', '-')}:`
   }
 
   /**
@@ -85,7 +122,7 @@ export default abstract class SessionMember<
     _id: string,
     user: TSessionUser<T>,
     role: MemberRole,
-    forceId: TCommonMissionForce['_id'] | null,
+    forceId: TForce<T>['_id'] | null,
     session: TSession<T>,
   ) {
     this._id = _id
@@ -95,7 +132,10 @@ export default abstract class SessionMember<
     this.session = session
   }
 
-  // Implemented
+  /**
+   * Converts the SessionMember object to JSON.
+   * @returns A JSON representation of the session member.
+   */
   public toJson(): TSessionMemberJson {
     return {
       _id: this._id,
@@ -105,90 +145,6 @@ export default abstract class SessionMember<
     }
   }
 
-  // Implemented
-  public isAuthorized = (requiredPermissions: TSessionAuthParam): boolean =>
-    this.role.isAuthorized(requiredPermissions)
-}
-
-/* -- TYPES -- */
-
-/**
- * Extracts the session member type from the session types.
- * @param T The session types.
- * @returns The session member type.
- */
-export type TMember<T extends TCommonMissionTypes> = T['member']
-
-/**
- * Interface for the abstract `SessionMember` class.
- * @note Any public, non-static properties and functions of the `SessionMember`
- * class must first be defined here for them to be accessible to other
- * mission-related classes.
- */
-export interface TCommonSessionMember {
-  /**
-   * The unique ID of the session member.
-   */
-  _id: string
-  /**
-   * The user that is a member of the session.
-   */
-  user: TCommonUser
-  /**
-   * The ID of the user that is a member of the session.
-   */
-  get userId(): TCommonUser['_id']
-  /**
-   * The username of the user that is a member of the session.
-   */
-  get username(): TCommonUser['username']
-  /**
-   * The role of the member in the session.
-   */
-  role: MemberRole
-  /**
-   * The ID of the member's role in the session.
-   */
-  get roleId(): TMemberRoleId
-  /**
-   * The ID of the force to which the member is assigned.
-   * @note If `null`, the member is not assigned to a force.
-   */
-  forceId: TCommonMissionForce['_id'] | null
-  /**
-   * The force to which the member is assigned.
-   * @note If `null`, the member is not assigned to a force.
-   */
-  get force(): TCommonMissionForce | null
-  /**
-   * The session to which the member belongs.
-   */
-  session: TCommonSession
-  /**
-   * Whether the member is a participant in the session.
-   */
-  get isParticipant(): boolean
-  /**
-   * Whether the member is a limited observer in the session.
-   */
-  get isLimitedObserver(): boolean
-  /**
-   * Whether the member is an observer in the session.
-   */
-  get isObserver(): boolean
-  /**
-   * Whether the member is a manager in the session.
-   */
-  get isManager(): boolean
-  /**
-   * Whether the member has been assigned to a force.
-   */
-  get isAssigned(): boolean
-  /**
-   * Converts the SessionMember object to JSON.
-   * @returns A JSON representation of the session member.
-   */
-  toJson(): TSessionMemberJson
   /**
    * Checks to see if a member is authorized to perform an action
    * by comparing the member's permissions to the permissions
@@ -203,8 +159,18 @@ export interface TCommonSessionMember {
    * @example // Check if the member has the 'completeVisibility' and 'configureSessions' permissions:
    * member.isAuthorized(['completeVisibility', 'configureSessions'])
    */
-  isAuthorized(requiredPermissions: TSessionAuthParam): boolean
+  public isAuthorized = (requiredPermissions: TSessionAuthParam): boolean =>
+    this.role.isAuthorized(requiredPermissions)
 }
+
+/* -- TYPES -- */
+
+/**
+ * Extracts the session member type from the session types.
+ * @param T The session types.
+ * @returns The session member type.
+ */
+export type TMember<T extends TCommonMissionTypes> = T['member']
 
 /**
  * The JSON representation of a User object.
@@ -217,7 +183,7 @@ export interface TSessionMemberJson {
   /**
    * The user that is a member of the session.
    */
-  user: TCommonUserJson
+  user: TUserJson
   /**
    * The ID of the member's role in the session.
    */
@@ -226,7 +192,7 @@ export interface TSessionMemberJson {
    * The ID of the force to which the member is assigned.
    * @note If `null`, the member is not assigned to a force.
    */
-  forceId: TCommonMissionForce['_id'] | null
+  forceId: MissionForce['_id'] | null
 }
 
 /**

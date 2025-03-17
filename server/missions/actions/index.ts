@@ -1,12 +1,11 @@
 import MissionAction, {
-  TCommonMissionActionJson,
+  TMissionActionJson,
   TMissionActionOptions,
 } from 'metis/missions/actions'
 import TCommonActionExecution, {
-  TActionExecutionJson,
   TExecutionCheats,
 } from 'metis/missions/actions/executions'
-import { TCommonEffectJson } from 'metis/missions/effects'
+import { TEffectJson } from 'metis/missions/effects'
 import { TTargetEnvExposedAction } from 'metis/server/target-environments/context'
 import { TSessionConfig } from 'metis/sessions'
 import seedrandom, { PRNG } from 'seedrandom'
@@ -14,7 +13,7 @@ import { TServerMissionTypes } from '..'
 import ServerEffect, { TServerEffectOptions } from '../effects'
 import ServerMissionNode from '../nodes'
 import ServerActionExecution from './executions'
-import { ServerPotentialOutcome, ServerRealizedOutcome } from './outcomes'
+import ServerExecutionOutcome from './outcomes'
 
 /**
  * Class for managing mission actions on the server.
@@ -32,7 +31,7 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
    */
   public constructor(
     node: ServerMissionNode,
-    data: TCommonMissionActionJson,
+    data: TMissionActionJson,
     options: TServerMissionActionOptions = {},
   ) {
     super(node, data, options)
@@ -43,11 +42,11 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
 
   // Implemented
   protected parseEffects(
-    data: TCommonEffectJson[],
+    data: TEffectJson[],
     options: TServerEffectOptions = {},
   ): ServerEffect[] {
     return data.map(
-      (datum: TCommonEffectJson) => new ServerEffect(this, datum, options),
+      (datum: TEffectJson) => new ServerEffect(this, datum, options),
     )
   }
 
@@ -59,52 +58,22 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
    */
   public execute(
     options: TExecuteOptions<ServerActionExecution>,
-  ): Promise<ServerRealizedOutcome> {
-    let { infiniteResources } = options.sessionConfig
-    let { cheats = {}, onInit = () => {} } = options
+  ): Promise<ServerExecutionOutcome> {
+    const { infiniteResources } = options.sessionConfig
+    const { cheats = {}, onInit = () => {} } = options
+    const { zeroCost, guaranteedSuccess } = cheats
 
-    let {
-      zeroCost = false,
-      instantaneous = false,
-      guaranteedSuccess = false,
-    } = cheats
+    return new Promise<ServerExecutionOutcome>((resolve) => {
+      let execution = ServerActionExecution.generateExecution(this, cheats)
 
-    return new Promise<ServerRealizedOutcome>((resolve) => {
-      // Determine the start and end time of
-      // the execution process.
-      let start: number = Date.now()
-      let end: number = start
+      // Process the execution at the node level.
+      this.node.onExecution(execution)
 
-      // If the "Instantaneous Execution" cheat is not enabled,
-      // add the process time to the end time.
-      if (!instantaneous) end += this.processTime
-
-      // Create execution data.
-      let executionData: NonNullable<TActionExecutionJson> = {
-        actionId: this._id,
-        nodeId: this.node._id,
-        start,
-        end,
-      }
-
-      // Load execution.
-      let execution = this.node.loadExecution(executionData)
-
-      // Generate next outcome for the action.
-      let potentialOutcome: ServerPotentialOutcome
-      // If the "Guaranteed Success" cheat is enabled,
-      // generate a guaranteed successful outcome.
-      if (guaranteedSuccess) {
-        potentialOutcome =
-          ServerPotentialOutcome.generateGuaranteedSuccess(this)
-      }
-      // Else, generate a potential outcome based on the action's success chance.
-      else {
-        potentialOutcome = ServerPotentialOutcome.generateOutcome(
-          this,
-          this.rng,
-        )
-      }
+      // Listen for if the execution is ever aborted,
+      // resolving with the outcome, if so.
+      execution.addEventListener('aborted', () => {
+        resolve(execution.outcome!)
+      })
 
       // If the "Zero Resource Cost" cheat is not enabled,
       // deduct the resource cost from the force's resources.
@@ -112,15 +81,31 @@ export default class ServerMissionAction extends MissionAction<TServerMissionTyp
         this.force.resourcesRemaining -= this.resourceCost
       }
 
-      // Set timeout for when the execution
-      // is completed.
+      // Set timeout for when the execution is completed.
       setTimeout(() => {
-        // Realize the outcome.
-        let realizedOutcome: ServerRealizedOutcome = potentialOutcome!.realize()
+        let outcome: ServerExecutionOutcome
 
-        // Resolve with the determined outcome.
-        resolve(realizedOutcome)
-      }, end - Date.now())
+        // If the execution has been aborted,
+        // return without resolving, since the
+        // promise was already resolved by the
+        // event listener.
+        if (execution.status === 'aborted') return
+
+        // Generate a new outcome based on the cheat
+        // configuration.
+        if (guaranteedSuccess) {
+          outcome = ServerExecutionOutcome.generateGuaranteedSuccess(execution)
+        } else {
+          outcome = ServerExecutionOutcome.generateRandom(execution, this.rng)
+        }
+
+        // Process the outcome at the different levels.
+        execution.onOutcome(outcome)
+        this.node.onOutcome(outcome)
+
+        // Resolve with the outcome.
+        resolve(outcome)
+      }, execution.timeRemaining)
 
       // Call onInit now that the timeout
       // has started.

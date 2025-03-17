@@ -1,27 +1,27 @@
 import fs from 'fs'
-import { TCommonTargetJson } from 'metis/target-environments/targets'
+import { TTargetJson } from 'metis/target-environments/targets'
 import path from 'path'
 
 /**
  * Defines a target.
  */
-export default class TargetSchema implements TCommonTargetJson {
+export default class TargetSchema implements TTargetJson {
   /**
    * The ID of the target.
    */
-  private id: TCommonTargetJson['_id']
-  public get _id(): TCommonTargetJson['_id'] {
+  private id: TTargetJson['_id']
+  public get _id(): TTargetJson['_id'] {
     return this.id
   }
 
   /**
    * The ID of the target environment.
    */
-  private _targetEnvId: TCommonTargetJson['targetEnvId']
-  public get targetEnvId(): TCommonTargetJson['targetEnvId'] {
+  private _targetEnvId: TTargetJson['targetEnvId']
+  public get targetEnvId(): TTargetJson['targetEnvId'] {
     return this._targetEnvId
   }
-  public set targetEnvId(targetEnvId: TCommonTargetJson['targetEnvId']) {
+  public set targetEnvId(targetEnvId: TTargetJson['targetEnvId']) {
     if (this.canUpdateTargetEnvId) {
       this._targetEnvId = targetEnvId
       this._canUpdateTargetEnvId = false
@@ -35,32 +35,32 @@ export default class TargetSchema implements TCommonTargetJson {
   /**
    * The name of the target.
    */
-  private _name: TCommonTargetJson['name']
-  public get name(): TCommonTargetJson['name'] {
+  private _name: TTargetJson['name']
+  public get name(): TTargetJson['name'] {
     return this._name
   }
 
   /**
    * Describes what the target is.
    */
-  private _description: TCommonTargetJson['description']
-  public get description(): TCommonTargetJson['description'] {
+  private _description: TTargetJson['description']
+  public get description(): TTargetJson['description'] {
     return this._description
   }
 
   /**
    * The function used to execute an effect on the target.
    */
-  private _script: TCommonTargetJson['script']
-  public get script(): TCommonTargetJson['script'] {
+  private _script: TTargetJson['script']
+  public get script(): TTargetJson['script'] {
     return this._script
   }
 
   /**
    * The arguments used to create the effect on the target.
    */
-  private _args: TCommonTargetJson['args']
-  public get args(): TCommonTargetJson['args'] {
+  private _args: TTargetJson['args']
+  public get args(): TTargetJson['args'] {
     return this._args
   }
 
@@ -126,4 +126,4 @@ export default class TargetSchema implements TCommonTargetJson {
 /**
  * Defines the target data.
  */
-type TTargetData = Omit<TCommonTargetJson, '_id' | 'targetEnvId'>
+type TTargetData = Omit<TTargetJson, '_id' | 'targetEnvId'>

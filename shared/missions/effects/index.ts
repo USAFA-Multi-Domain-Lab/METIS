@@ -1,67 +1,67 @@
 import { v4 as generateHash } from 'uuid'
-import {
-  TCommonMission,
-  TCommonMissionTypes,
-  TCreateMissionJsonType,
-  TMission,
-} from '..'
-import { TCommonTargetEnv, TTargetEnv } from '../../target-environments'
+import { TCommonMissionTypes, TCreateMissionJsonType, TMission } from '..'
+import { TTargetEnv } from '../../target-environments'
 import { TTargetArg } from '../../target-environments/args'
 import ForceArg from '../../target-environments/args/force-arg'
 import NodeArg from '../../target-environments/args/node-arg'
 import Dependency from '../../target-environments/dependencies'
-import Target, {
-  TCommonTarget,
-  TCommonTargetJson,
-  TTarget,
-} from '../../target-environments/targets'
+import Target, { TTargetJson, TTarget } from '../../target-environments/targets'
 import { AnyObject } from '../../toolbox/objects'
-import { TAction, TCommonMissionAction } from '../actions'
-import { TCommonMissionForce, TForce } from '../forces'
-import { TCommonMissionNode, TNode } from '../nodes'
+import { TAction } from '../actions'
+import { TForce } from '../forces'
+import { TNode } from '../nodes'
 
 /**
  * An effect that can be applied to a target.
  */
 export default abstract class Effect<
   T extends TCommonMissionTypes = TCommonMissionTypes,
-> implements TCommonEffect
-{
-  // Implemented
+> {
+  /**
+   * The corresponding mission for the effect.
+   */
   public get mission(): TMission<T> {
     return this.action.mission
   }
 
-  // Implemented
+  /**
+   * The corresponding force for the effect.
+   */
   public get force(): TForce<T> {
     return this.action.force
   }
 
-  // Implemented
+  /**
+   * The corresponding node for the effect.
+   */
   public get node(): TNode<T> {
     return this.action.node
   }
 
-  // Implemented
+  /**
+   * The corresponding action for the effect.
+   */
   public action: TAction<T>
 
-  // Implemented
-  public _id: TCommonEffect['_id']
+  /**
+   * The ID of the effect.
+   */
+  public _id: string
 
   // Implemented
-  public name: TCommonEffect['name']
+  public name: string
 
   // Implemented
-  public trigger: TCommonEffect['trigger']
+  public trigger: TEffectTrigger
 
   // Implemented
-  public description: TCommonEffect['description']
+  public description: string
 
   // Implemented
-  public targetEnvironmentVersion: TCommonEffect['targetEnvironmentVersion']
+  public targetEnvironmentVersion: string
 
   // Implemented
-  public args: TCommonEffect['args']
+  public args: AnyObject
 
   /**
    * The target to which the effect will be applied.
@@ -70,7 +70,7 @@ export default abstract class Effect<
    * of the target. If the target is not set, it will be
    * null.
    */
-  protected _target: TTarget<T> | TCommonTargetJson['_id'] | null
+  protected _target: TTarget<T> | TTargetJson['_id'] | null
   /**
    * The target to which the effect will be applied.
    */
@@ -95,8 +95,8 @@ export default abstract class Effect<
   /**
    * The ID of the target to which the effect will be applied.
    */
-  public get targetId(): TCommonTargetJson['_id'] | null {
-    let target: TTarget<T> | TCommonTargetJson['_id'] | null = this._target
+  public get targetId(): TTargetJson['_id'] | null {
+    let target: TTarget<T> | TTargetJson['_id'] | null = this._target
 
     // If the target is a Target Object, return its ID.
     if (target instanceof Target) {
@@ -130,7 +130,7 @@ export default abstract class Effect<
    */
   public constructor(
     action: TAction<T>,
-    data: Partial<TCommonEffectJson> = Effect.DEFAULT_PROPERTIES,
+    data: Partial<TEffectJson> = Effect.DEFAULT_PROPERTIES,
     options: TEffectOptions = {},
   ) {
     let { populateTargets = false } = options
@@ -154,10 +154,14 @@ export default abstract class Effect<
    */
   protected abstract populateTargetData(targetId: string | null): void
 
-  // Inherited
-  public toJson(options: TEffectJsonOptions = {}): TCommonEffectJson {
+  /**
+   * Converts the Effect Object to JSON.
+   * @param options Options for converting the Effect to JSON.
+   * @returns A JSON representation of the Effect.
+   */
+  public toJson(options: TEffectJsonOptions = {}): TEffectJson {
     // Construct JSON object to send to the server.
-    let json: TCommonEffectJson = {
+    let json: TEffectJson = {
       _id: this._id,
       trigger: this.trigger,
       name: this.name,
@@ -277,7 +281,7 @@ export default abstract class Effect<
   /**
    * Default properties set when creating a new Effect object.
    */
-  public static get DEFAULT_PROPERTIES(): Required<TCommonEffectJson> {
+  public static get DEFAULT_PROPERTIES(): Required<TEffectJson> {
     return {
       _id: generateHash(),
       trigger: 'success',
@@ -324,72 +328,6 @@ export type TEffectOptions = {
 export type TEffectJsonOptions = {}
 
 /**
- * Interface used for the Effect class.
- * @note Any public, non-static properties and functions of the `Effect`
- * class must first be defined here for them to be accessible to other
- * effect-related classes.
- */
-export interface TCommonEffect {
-  /**
-   * The corresponding mission for the effect.
-   */
-  get mission(): TCommonMission
-  /**
-   * The corresponding force for the effect.
-   */
-  get force(): TCommonMissionForce
-  /**
-   * The corresponding node for the effect.
-   */
-  get node(): TCommonMissionNode
-  /**
-   * The ID of the target to which the effect will be applied.
-   */
-  get targetId(): TCommonTargetJson['_id'] | null
-  /**
-   * The environment in which the target exists.
-   */
-  get targetEnvironment(): TCommonTargetEnv | null
-  /**
-   * The corresponding action for the effect.
-   */
-  action: TCommonMissionAction
-  /**
-   * The target to which the effect will be applied.
-   */
-  target: TCommonTarget | null
-  /**
-   * The ID of the effect.
-   */
-  _id: string
-  /**
-   * The name of the effect.
-   */
-  name: string
-  /**
-   * The event in the action that causes the effect to be carried out.
-   */
-  trigger: TEffectTrigger
-  /**
-   * Describes what the effect does.
-   */
-  description: string
-  /**
-   * The current version of the target environment.
-   */
-  targetEnvironmentVersion: string
-  /**
-   * The arguments used to affect the target.
-   */
-  args: AnyObject
-  /**
-   * Converts the Effect Object to JSON.
-   * @returns A JSON representation of the Effect.
-   */
-  toJson: (options?: TEffectJsonOptions) => TCommonEffectJson
-}
-
-/**
  * Extracts the effect type from the mission types.
  * @param T The mission types.
  * @returns The effect type.
@@ -404,13 +342,13 @@ export type TEffectTrigger = 'immediate' | 'success' | 'failure'
 /**
  * The JSON representation of an `Effect` object.
  */
-export type TCommonEffectJson = TCreateMissionJsonType<
-  TCommonEffect,
+export type TEffectJson = TCreateMissionJsonType<
+  Effect,
   | '_id'
   | 'trigger'
   | 'name'
   | 'description'
   | 'targetEnvironmentVersion'
   | 'args',
-  { targetId: TCommonTargetJson['_id'] | null }
+  { targetId: TTargetJson['_id'] | null }
 >

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express-serve-static-core'
 import fs from 'fs'
-import Mission, { TCommonMissionJson, TMissionJson } from 'metis/missions'
+import Mission, { TMissionSaveJson } from 'metis/missions'
 import MetisServer from 'metis/server'
 import InfoModel from 'metis/server/database/models/info'
 import MissionModel from 'metis/server/database/models/missions'
@@ -40,7 +40,7 @@ const exportMission = async (request: Request, response: Response) => {
     databaseLogger.info(`Mission with ID "${missionId}" retrieved.`)
 
     // Convert the mission document to JSON.
-    let missionJson: TCommonMissionJson = missionDoc.toJSON()
+    let missionJson: TMissionSaveJson = missionDoc.toJSON()
 
     // Gather details for temporary file
     // that will be sent in the response.

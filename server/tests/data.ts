@@ -1,6 +1,6 @@
 import StringToolbox from 'metis/toolbox/strings'
 import { TMissionJson } from '../../shared/missions'
-import { TCommonUserJson } from '../../shared/users'
+import { TUserJson } from '../../shared/users'
 import UserAccess from '../../shared/users/accesses'
 
 export const userCredentials = {
@@ -353,7 +353,7 @@ export const correctUpdateTestMission: TMissionJson = {
   ],
 }
 
-export let correctUser: TCommonUserJson = {
+export let correctUser: TUserJson = {
   username: 'test23',
   accessId: UserAccess.AVAILABLE_ACCESSES.student._id,
   expressPermissionIds: [],
@@ -363,7 +363,7 @@ export let correctUser: TCommonUserJson = {
   password: 'password',
 }
 
-export let newCorrectUser: TCommonUserJson = {
+export let newCorrectUser: TUserJson = {
   username: 'test24',
   accessId: UserAccess.AVAILABLE_ACCESSES.student._id,
   expressPermissionIds: [],
@@ -373,7 +373,7 @@ export let newCorrectUser: TCommonUserJson = {
   password: 'password',
 }
 
-export const userWithNoPassword: TCommonUserJson = {
+export const userWithNoPassword: TUserJson = {
   username: 'test23',
   accessId: UserAccess.AVAILABLE_ACCESSES.student._id,
   expressPermissionIds: [],

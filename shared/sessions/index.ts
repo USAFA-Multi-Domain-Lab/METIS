@@ -1,52 +1,64 @@
-import {
-  TCommonMission,
-  TMissionJson,
-  TCommonMissionTypes,
-  TMission,
-} from 'metis/missions'
-import { TAction, TCommonMissionAction } from '../missions/actions'
-import User, { TCommonUser } from '../users'
-import { TCommonSessionMember, TMember, TSessionMemberJson } from './members'
-import { TExecuteOptions } from '../../server/missions/actions'
+import { TMissionJson, TCommonMissionTypes, TMission } from 'metis/missions'
+import { TAction } from '../missions/actions'
+import User, { TUserJson } from '../users'
+import { TMember, TSessionMemberJson } from './members'
 import { TExecutionCheats } from 'metis/missions/actions/executions'
 
 /**
  * Base class for sessions. Represents a session of a mission being executed by users.
  */
-export default abstract class Session<T extends TCommonMissionTypes>
-  implements TCommonSession
-{
-  // Implemented
+export default abstract class Session<
+  T extends TCommonMissionTypes = TCommonMissionTypes,
+> {
+  /**
+   * The ID of the session.
+   */
   public readonly _id: string
 
-  // Implemented
+  /**
+   * The name of the session.
+   */
   public name: string
 
-  // Implemented
-  public readonly ownerId: TCommonUser['_id']
+  /**
+   * The user ID of the owner of the session.
+   */
+  public readonly ownerId: User['_id']
 
-  // Implemented
-  public readonly ownerUsername: TCommonUser['username']
+  /**
+   * The username of the owner.
+   */
+  public readonly ownerUsername: User['username']
 
-  // Implemented
-  public readonly ownerFirstName: TCommonUser['firstName']
+  /**
+   * The first name of the owner.
+   */
+  public readonly ownerFirstName: User['firstName']
 
-  // Implemented
-  public readonly ownerLastName: TCommonUser['lastName']
+  /**
+   * The last name of the owner.
+   */
+  public readonly ownerLastName: User['lastName']
 
-  // Implemented
-  public get ownerFullName(): TCommonUser['name'] {
+  /**
+   * The full name of the owner.
+   */
+  public get ownerFullName(): User['name'] {
     return User.getFullName(this.ownerFirstName, this.ownerLastName)
   }
 
-  // Implemented
+  /**
+   * The date/time that the session was launched.
+   */
   public readonly launchedAt: Date
 
   /**
    * Protected cache for `config`.
    */
   protected _config: TSessionConfig
-  // Implemented
+  /**
+   * The configuration for the session.
+   */
   public get config(): TSessionConfig {
     return { ...this._config }
   }
@@ -55,7 +67,9 @@ export default abstract class Session<T extends TCommonMissionTypes>
    * The mission being executed by the participants.
    */
   protected _mission: TMission<T>
-  // Implemented
+  /**
+   * The mission being executed by the participants.
+   */
   public get mission(): T['mission'] {
     return this._mission
   }
@@ -69,12 +83,17 @@ export default abstract class Session<T extends TCommonMissionTypes>
    * Protected cache for `members`.
    */
   protected _members: TMember<T>[]
-  // Implemented
+  /**
+   * The members who have joined the session.
+   */
   public get members(): TMember<T>[] {
     return [...this._members]
   }
 
-  // Implemented
+  /**
+   * The members sorted by their role in the session.
+   * @note Sort order: Participants, Managers, Observers.
+   */
   public get membersSorted(): TMember<T>[] {
     let membersRaw = [...this._members]
     let weights = {
@@ -88,17 +107,23 @@ export default abstract class Session<T extends TCommonMissionTypes>
     })
   }
 
-  // Implemented
+  /**
+   * The session members with the 'participant' role.
+   */
   public get participants(): TMember<T>[] {
     return this._members.filter(({ role }) => role._id === 'participant')
   }
 
-  // Implemented
+  /**
+   * The session members with the 'observer' role.
+   */
   public get observers(): TMember<T>[] {
     return this._members.filter(({ role }) => role._id === 'observer')
   }
 
-  // Implemented
+  /**
+   * The session members with the 'manager' role.
+   */
   public get managers(): TMember<T>[] {
     return this._members.filter(({ role }) => role._id === 'manager')
   }
@@ -107,7 +132,9 @@ export default abstract class Session<T extends TCommonMissionTypes>
    * Protected cache for `banList`.
    */
   protected _banList: string[]
-  // Implemented
+  /**
+   * IDs of users who have been banned from the session.
+   */
   public get banList(): string[] {
     return [...this._banList]
   }
@@ -116,7 +143,9 @@ export default abstract class Session<T extends TCommonMissionTypes>
    * Protected cache for `state`.
    */
   protected _state: TSessionState
-  // Implemented
+  /**
+   * The state of the session (unstarted, started, ended).
+   */
   public get state(): TSessionState {
     return this._state
   }
@@ -126,7 +155,21 @@ export default abstract class Session<T extends TCommonMissionTypes>
    */
   protected actions: Map<string, TAction<T>> = new Map<string, TAction<T>>()
 
-  // Implemented
+  /**
+   * Checks if the given action has enough resources given the
+   * session and any configured cheats.
+   * @param action The action in question.
+   * @param cheats The cheats to apply to the action. This will determine
+   * whether the action can be executed, even if a typical requirement
+   * is not met.
+   * @returns Whether the action has enough resources to be executed
+   * in the session.
+   * @note This will be true if one of any of the following conditions
+   * are met:
+   * 1. The action has zero cost.
+   * 2. There are infinite resources in the session.
+   * 3. There are enough resources remaining in the session.
+   */
   public areEnoughResources(
     action: TAction<T>,
     cheats: Partial<TExecutionCheats> = {},
@@ -141,7 +184,17 @@ export default abstract class Session<T extends TCommonMissionTypes>
     return zeroCost || infiniteResources || enoughResources
   }
 
-  // Implemented
+  /**
+   * Determines whether the given action can currently be executed in the session.
+   * @param action The action in question.
+   * @param cheats The cheats to apply to the action. This will determine
+   * whether the action can be executed, even if a typical requirement
+   * is not met.
+   * @returns Whether the action is ready to be executed in the session.
+   * @note This will be true if all of the following conditions are met:
+   * 1. The action's node is ready to execute.
+   * 2. The action has enough resources to execute, given the session and cheats.
+   */
   public readyToExecute(
     action: TAction<T>,
     cheats: Partial<TExecutionCheats> = {},
@@ -162,9 +215,9 @@ export default abstract class Session<T extends TCommonMissionTypes>
     _id: string,
     name: string,
     ownerId: string,
-    ownerUsername: TCommonUser['username'],
-    ownerFirstName: TCommonUser['firstName'],
-    ownerLastName: TCommonUser['firstName'],
+    ownerUsername: User['username'],
+    ownerFirstName: User['firstName'],
+    ownerLastName: User['firstName'],
     launchedAt: Date,
     config: Partial<TSessionConfig>,
     mission: TMission<T>,
@@ -201,26 +254,45 @@ export default abstract class Session<T extends TCommonMissionTypes>
    */
   protected abstract mapActions(): void
 
-  // Implemented
-  public isJoined(userId: TCommonUser['_id']): boolean {
+  /**
+   * Checks if the given user is currently in the session
+   * (Whether as a participant, manager, or observer).
+   * @param userId The ID of the user to check.
+   * @returns Whether the given user is joined into the session.
+   */
+  public isJoined(userId: User['_id']): boolean {
     for (let { userId: x } of this.members) if (x === userId) return true
     return false
   }
 
-  // Implemented
+  /**
+   * @param _id The ID of the member to get.
+   * @returns The member with the given ID, or undefined
+   * if not found.
+   */
   public getMember(_id: TMember<T>['_id']): TMember<T> | undefined {
     return this.members.find((member) => member._id === _id)
   }
 
-  // Implemented
-  public getMemberByUserId(userId: TCommonUser['_id']): TMember<T> | undefined {
+  /**
+   * @param userId The ID of the user to get the member for.
+   * @returns The member with the given user ID, or undefined
+   * if not found.
+   */
+  public getMemberByUserId(userId: User['_id']): TMember<T> | undefined {
     return this.members.find((member) => member.userId === userId)
   }
 
-  // Implemented
+  /**
+   * Converts the Session object to JSON.
+   * @returns A JSON representation of the session.
+   */
   public abstract toJson(): TSessionJson
 
-  // Implemented
+  /**
+   * Converts the Session object to basic JSON.
+   * @returns A basic (Limited) JSON representation of the session.
+   */
   public abstract toBasicJson(): TSessionBasicJson
 
   /**
@@ -312,19 +384,19 @@ export type TSessionJson = {
   /**
    * The ID of the owner of the session.
    */
-  ownerId: TCommonUser['_id']
+  ownerId: User['_id']
   /**
    * The username of the owner.
    */
-  ownerUsername: TCommonUser['username']
+  ownerUsername: User['username']
   /**
    * The first name of the owner.
    */
-  ownerFirstName: TCommonUser['firstName']
+  ownerFirstName: User['firstName']
   /**
    * The last name of the owner.
    */
-  ownerLastName: TCommonUser['lastName']
+  ownerLastName: User['lastName']
   /**
    * The ISO date/time that the session was launched.
    */
@@ -370,19 +442,19 @@ export type TSessionBasicJson = {
   /**
    * The ID of the owner of the session.
    */
-  ownerId: TCommonUser['_id']
+  ownerId: NonNullable<TUserJson['_id']>
   /**
    * The username of the owner.
    */
-  ownerUsername: TCommonUser['username']
+  ownerUsername: TUserJson['username']
   /**
    * The first name of the owner.
    */
-  ownerFirstName: TCommonUser['firstName']
+  ownerFirstName: TUserJson['firstName']
   /**
    * The last name of the owner.
    */
-  ownerLastName: TCommonUser['lastName']
+  ownerLastName: TUserJson['lastName']
   /**
    * The ISO date/time that the session was launched.
    */
@@ -416,144 +488,6 @@ export type TSessionBasicJson = {
  * @returns The session type.
  */
 export type TSession<T extends TCommonMissionTypes> = T['session']
-
-/**
- * Interface of the abstract `Session` class.
- * @note Any public, non-static properties and functions of the `Session`
- * class must first be defined here for them to be accessible to other
- * session-related classes.
- */
-export type TCommonSession = {
-  /**
-   * The ID of the session.
-   */
-  readonly _id: string
-  /**
-   * The name of the session.
-   */
-  name: string
-  /**
-   * The user ID of the owner of the session.
-   */
-  readonly ownerId: TCommonUser['_id']
-  /**
-   * The username of the owner.
-   */
-  readonly ownerUsername: TCommonUser['username']
-  /**
-   * The first name of the owner.
-   */
-  readonly ownerFirstName: TCommonUser['firstName']
-  /**
-   * The last name of the owner.
-   */
-  readonly ownerLastName: TCommonUser['lastName']
-  /**
-   * The full name of the owner.
-   */
-  get ownerFullName(): TCommonUser['name']
-  /**
-   * The date/time that the session was launched.
-   */
-  readonly launchedAt: Date
-  /**
-   * The configuration for the session.
-   */
-  config: TSessionConfig
-  /**
-   * The mission being executed by the participants.
-   */
-  readonly mission: TCommonMission
-  /**
-   * The members who have joined the session.
-   */
-  get members(): TCommonSessionMember[]
-  /**
-   * The members sorted by their role in the session.
-   * @note Sort order: Participants, Managers, Observers.
-   */
-  get membersSorted(): TCommonSessionMember[]
-  /**
-   * The session members with the 'participant' role.
-   */
-  get participants(): TCommonSessionMember[]
-  /**
-   * The session members with the 'observer' role.
-   */
-  get observers(): TCommonSessionMember[]
-  /**
-   * The session members with the 'manager' role.
-   */
-  get managers(): TCommonSessionMember[]
-  /**
-   * IDs of users who have been banned from the session.
-   */
-  get banList(): string[]
-  /**
-   * The state of the session (unstarted, started, ended).
-   */
-  get state(): TSessionState
-  /**
-   * Checks if the given action has enough resources given the
-   * session and any configured cheats.
-   * @param action The action in question.
-   * @param cheats The cheats to apply to the action. This will determine
-   * whether the action can be executed, even if a typical requirement
-   * is not met.
-   * @returns Whether the action has enough resources to be executed
-   * in the session.
-   * @note This will be true if one of any of the following conditions
-   * are met:
-   * 1. The action has zero cost.
-   * 2. There are infinite resources in the session.
-   * 3. There are enough resources remaining in the session.
-   */
-  /**
-   * Determines whether the given action can currently be executed in the session.
-   * @param action The action in question.
-   * @param cheats The cheats to apply to the action. This will determine
-   * whether the action can be executed, even if a typical requirement
-   * is not met.
-   * @returns Whether the action is ready to be executed in the session.
-   * @note This will be true if the following conditions are met:
-   * 1. The action's node is ready to execute.
-   * 2. The action has enough resources to execute, given the session and cheats.
-   */
-  readyToExecute(
-    action: TCommonMissionAction,
-    cheats: TExecutionCheats,
-  ): boolean
-  /**
-   * Checks if the given user is currently in the session (Whether as a participant, manager, or observer).
-   * @param userId The ID of the user to check.
-   * @returns Whether the given user is joined into the session.
-   */
-  isJoined(userId: TCommonUser['_id']): boolean
-  /**
-   * Gets the member with the given member ID.
-   * @param _id The ID of the member to get.
-   * @returns The member with the given ID, or undefined if not found.
-   */
-  getMember(_id: TCommonSessionMember['_id']): TCommonSessionMember | undefined
-  /**
-   * Gets the member with the given user ID.
-   * @param userId The ID of the user to get the member for.
-   * @returns The member with the given user ID, or undefined if not found.
-   */
-  getMemberByUserId(
-    userId: TCommonUser['_id'],
-  ): TCommonSessionMember | undefined
-  /**
-   * Converts the Session object to JSON.
-   * @returns A JSON representation of the session.
-   */
-  toJson(): TSessionJson
-  /**
-   * Converts the Session object to basic JSON.
-   * @returns A basic (Limited) JSON representation of the session.
-   */
-  toBasicJson(): TSessionBasicJson
-}
 
 /**
  * The state of a session.

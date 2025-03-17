@@ -1,8 +1,7 @@
 import axios from 'axios'
 import { TListItem } from 'src/components/content/data/lists/pages/ListItem'
 import User, {
-  TCommonUser,
-  TCommonUserJson,
+  TUserJson,
   TUserJsonOptions,
   TUserOptions,
 } from '../../../shared/users'
@@ -16,12 +15,12 @@ export default class ClientUser extends User implements TListItem {
   /**
    * Used for the first password field.
    */
-  public password1: TCommonUser['password']
+  public password1: ClientUser['password']
   /**
    * Used for the second password field.
    * @note This is used to confirm the password.
    */
-  public password2: TCommonUser['password']
+  public password2: ClientUser['password']
 
   /**
    * Whether the password is required.
@@ -168,7 +167,7 @@ export default class ClientUser extends User implements TListItem {
    * @param options Options for creating the user.
    */
   public constructor(
-    data: Partial<TCommonUserJson> = ClientUser.DEFAULT_PROPERTIES,
+    data: Partial<TUserJson> = ClientUser.DEFAULT_PROPERTIES,
     options: TClientUserOptions = {},
   ) {
     // Initialize base properties.
@@ -181,7 +180,7 @@ export default class ClientUser extends User implements TListItem {
   }
 
   // Overridden abstract method
-  public toJson(options: TClientUserJsonOptions = {}): TCommonUserJson {
+  public toJson(options: TClientUserJsonOptions = {}): TUserJson {
     // Extract the passwordIsRequired option.
     let { passwordIsRequired = false } = options
 
@@ -223,7 +222,7 @@ export default class ClientUser extends User implements TListItem {
     return new Promise<ClientUser>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
-        let { data: userJson } = await axios.get<TCommonUserJson>(
+        let { data: userJson } = await axios.get<TUserJson>(
           `${ClientUser.API_ENDPOINT}/${_id}/`,
         )
         // Convert JSON to Client User object.
@@ -247,7 +246,7 @@ export default class ClientUser extends User implements TListItem {
     return new Promise<ClientUser[]>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
-        let { data: usersJson } = await axios.get<TCommonUserJson[]>(
+        let { data: usersJson } = await axios.get<TUserJson[]>(
           ClientUser.API_ENDPOINT,
         )
         // Convert JSON to Client User objects.
@@ -273,7 +272,7 @@ export default class ClientUser extends User implements TListItem {
     return new Promise<ClientUser>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
-        let { data: userJson } = await axios.post<TCommonUserJson>(
+        let { data: userJson } = await axios.post<TUserJson>(
           ClientUser.API_ENDPOINT,
           clientUser.toJson({ passwordIsRequired: true }),
         )
@@ -299,7 +298,7 @@ export default class ClientUser extends User implements TListItem {
     return new Promise<ClientUser>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
-        let { data: userJson } = await axios.put<TCommonUserJson>(
+        let { data: userJson } = await axios.put<TUserJson>(
           ClientUser.API_ENDPOINT,
           clientUser.toJson({ passwordIsRequired: false, includeId: true }),
         )
@@ -345,7 +344,7 @@ export default class ClientUser extends User implements TListItem {
    * @resolves When the user is deleted.
    * @rejects The error that occurred while deleting the user.
    */
-  public static $delete(_id: TCommonUser['username']): Promise<void> {
+  public static $delete(_id: ClientUser['_id']): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
       try {
         await axios.delete(`${ClientUser.API_ENDPOINT}/${_id}/`)

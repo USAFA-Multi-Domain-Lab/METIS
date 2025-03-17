@@ -1,6 +1,6 @@
 import fs from 'fs'
 import MetisServer from 'metis/server'
-import { TCommonUserJson } from 'metis/users'
+import { TUserJson } from 'metis/users'
 import { accessIds, TUserAccessId } from 'metis/users/accesses'
 import { createInterface } from 'readline/promises'
 import UserModel, { hashPassword } from '../../models/users'
@@ -35,7 +35,7 @@ const parseUsers = async (data: string) => {
     // Convert the needsPasswordReset value to a boolean.
     const updatedPasswordReset = needsPasswordReset.toLowerCase() === 'true'
 
-    const user: TCommonUserJson = {
+    const user: TUserJson = {
       username,
       accessId: accessId as TUserAccessId,
       firstName,
@@ -58,7 +58,7 @@ const parseUsers = async (data: string) => {
  */
 const parseUsernames = (data: string) => {
   // Initialize an array to store the users.
-  let usernames: TCommonUserJson['_id'][] = []
+  let usernames: TUserJson['_id'][] = []
 
   // Iterate over each line in the data.
   for (let line of data.split('\n')) {
@@ -149,7 +149,7 @@ const manageUsers = async () => {
 
     if (method === 'create' || method === 'restore') {
       // Parse the data.
-      const users: TCommonUserJson[] = await parseUsers(data)
+      const users: TUserJson[] = await parseUsers(data)
       // Connect to the database.
       await connectToDatabase()
 
@@ -177,7 +177,7 @@ const manageUsers = async () => {
       }
     } else if (method === 'delete' || method === 'archive') {
       // Parse the data.
-      const usernames: TCommonUserJson['_id'][] = parseUsernames(data)
+      const usernames: TUserJson['_id'][] = parseUsernames(data)
 
       // Connect to the database.
       await connectToDatabase()

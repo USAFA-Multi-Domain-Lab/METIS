@@ -34,9 +34,29 @@ export default class ArrayToolbox {
 
     return true
   }
+
+  /**
+   * Maps an array calling the given method on each element,
+   * storing the returned values of the method in a new array.
+   * @param array The array to map.
+   * @param method The method to call on each element.
+   */
+  public static methodMap<
+    TInput extends Record<TMethodKey, (...args: any) => any>,
+    TMethodKey extends TMethodKeys<TInput> = TMethodKeys<TInput>,
+    TOutput extends ReturnType<TInput[TMethodKey]> = ReturnType<
+      TInput[TMethodKey]
+    >,
+  >(array: TInput[], key: TMethodKey): TOutput[] {
+    return array.map((element: TInput) => element[key]())
+  }
 }
 
 /* -- TYPES -- */
+
+export type TMethodKeys<T> = {
+  [K in keyof T]: T[K] extends (...args: any) => any ? K : never
+}[keyof T]
 
 /**
  * An array with at least one index.

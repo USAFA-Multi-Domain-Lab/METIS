@@ -11,6 +11,7 @@ import ClientMissionPrototype, {
 } from 'src/missions/nodes/prototypes'
 import PrototypeCreation from 'src/missions/transformations/creations'
 import PrototypeTranslation from 'src/missions/transformations/translations'
+import SessionClient from 'src/sessions'
 import { compute, getOs } from 'src/toolbox'
 import {
   useEventListener,
@@ -19,11 +20,7 @@ import {
 } from 'src/toolbox/hooks'
 import { DefaultLayout, TPage_P } from '.'
 import Mission from '../../../../shared/missions'
-import {
-  TSingleTypeMapped,
-  TSingleTypeObject,
-  TWithKey,
-} from '../../../../shared/toolbox/objects'
+import { TSingleTypeMapped, TWithKey } from '../../../../shared/toolbox/objects'
 import Prompt from '../content/communication/Prompt'
 import ActionEntry from '../content/edit-mission/entries/ActionEntry'
 import EffectEntry from '../content/edit-mission/entries/EffectEntry'
@@ -39,7 +36,7 @@ import {
   ResizablePanel,
 } from '../content/general-layout/ResizablePanels'
 import MissionMap from '../content/session/mission-map'
-import { TPrototypeButton } from '../content/session/mission-map/objects/MissionPrototype'
+import { TNodeButton } from '../content/session/mission-map/objects/nodes'
 import CreateEffect from '../content/session/mission-map/ui/overlay/modals/CreateEffect'
 import { TTabBarTab } from '../content/session/mission-map/ui/tabs/TabBar'
 import {
@@ -48,7 +45,6 @@ import {
   TButtonSvgType,
 } from '../content/user-controls/buttons/ButtonSvg'
 import './MissionPage.scss'
-import SessionClient from 'src/sessions'
 
 /**
  * This will render page that allows the user to
@@ -95,36 +91,7 @@ export default function MissionPage({
    */
   const logoutLink = compute(() => ({
     text: 'Log out',
-    onClick: async () => {
-      // If there are unsaved changes, prompt the user.
-      if (areUnsavedChanges) {
-        const { choice } = await prompt(
-          'You have unsaved changes. What do you want to do with them?',
-          ['Cancel', 'Save', 'Discard'],
-        )
-
-        try {
-          // Abort if cancelled.
-          if (choice === 'Cancel') {
-            return
-          }
-          // Save if requested.
-          else if (choice === 'Save') {
-            beginLoading('Saving...')
-            await save()
-          }
-
-          await logout()
-        } catch (error) {
-          return handleError({
-            message: 'Failed to save mission.',
-            notifyMethod: 'bubble',
-          })
-        }
-      } else {
-        await logout()
-      }
-    },
+    onClick: () => enforceSavePrompt().then(logout),
     key: 'logout',
   }))
 
@@ -252,36 +219,7 @@ export default function MissionPage({
   // Navigation middleware to protect from navigating
   // away with unsaved changes.
   useNavigationMiddleware(
-    async (to, next) => {
-      // If there are unsaved changes, prompt the user.
-      if (areUnsavedChanges && isAuthorized('missions_write')) {
-        const { choice } = await prompt(
-          'You have unsaved changes. What do you want to do with them?',
-          ['Cancel', 'Save', 'Discard'],
-        )
-
-        try {
-          // Abort if cancelled.
-          if (choice === 'Cancel') {
-            return
-          }
-          // Save if requested.
-          else if (choice === 'Save') {
-            beginLoading('Saving...')
-            await save()
-            finishLoading()
-          }
-        } catch (error) {
-          return handleError({
-            message: 'Failed to save mission.',
-            notifyMethod: 'bubble',
-          })
-        }
-      }
-
-      // Call next.
-      next()
-    },
+    (to, next) => enforceSavePrompt().then(next),
     [areUnsavedChanges],
   )
 
@@ -344,7 +282,7 @@ export default function MissionPage({
             key: 'prototype-button-deselect',
             description: 'Deselect this prototype (Closes panel view also).',
             onClick: () => mission.deselect(),
-          } as TPrototypeButton,
+          } as TNodeButton<ClientMissionPrototype>,
           add: {
             type: 'add',
             key: 'prototype-button-add',
@@ -352,7 +290,7 @@ export default function MissionPage({
             onClick: (_, prototype) => {
               onPrototypeAddRequest(prototype)
             },
-          } as TPrototypeButton,
+          } as TNodeButton<ClientMissionPrototype>,
           move: {
             type: 'reorder',
             key: 'prototype-button-move',
@@ -360,13 +298,13 @@ export default function MissionPage({
             onClick: (_, prototype) => {
               onPrototypeMoveRequest(prototype)
             },
-          } as TPrototypeButton,
+          } as TNodeButton<ClientMissionPrototype>,
           transform_cancel: {
             type: 'cancel',
             key: 'prototype-button-add-cancel',
             description: 'Cancel action.',
             onClick: () => (mission.transformation = null),
-          } as TPrototypeButton,
+          } as TNodeButton<ClientMissionPrototype>,
           remove: {
             type: 'remove',
             key: 'prototype-button-remove',
@@ -375,7 +313,7 @@ export default function MissionPage({
             onClick: (_, prototype) => {
               onPrototypeDeleteRequest(prototype)
             },
-          } as TPrototypeButton,
+          } as TNodeButton<ClientMissionPrototype>,
         }
 
         // Define the buttons that will actually be used.
@@ -446,9 +384,55 @@ export default function MissionPage({
       }
     } catch (error) {
       // Notify and revert upon error.
-      notify('Mission failed to save')
+      notify('Mission failed to save.')
       setAreUnsavedChanges(true)
     }
+  }
+
+  /**
+   * Ensures any unsaved changes are addressed before
+   * any further action is taken.
+   * @resolves If the user either saves or discards the changes.
+   * If the user cancels, the promise will never resolve.
+   * @example
+   * ```typescript
+   * const saveSensitiveOperation = async () => {
+   *   // Enforce the save prompt, only allowing
+   *   // this function to perform its operation
+   *   // once any unsaved changes, if there any,
+   *   // are addressed.
+   *   await enforceSavePrompt()
+   *
+   *   // Then, perform the sensitive operation.
+   *   // If the user cancels the save prompt, this
+   *   // code will never be reached.
+   *   // ...
+   * }
+   * ```
+   */
+  const enforceSavePrompt = async (): Promise<void> => {
+    return new Promise<void>(async (resolve, reject) => {
+      // If there are unsaved changes, prompt the user.
+      if (areUnsavedChanges) {
+        const { choice } = await prompt(
+          'You have unsaved changes. What do you want to do with them?',
+          ['Cancel', 'Save', 'Discard'],
+        )
+
+        // If the user opted to save, then save
+        // the mission.
+        if (choice === 'Save') {
+          beginLoading('Saving...')
+          await save()
+          finishLoading()
+        }
+
+        // Then, unless the user cancelled, resolve.
+        if (choice !== 'Cancel') resolve()
+      } else {
+        resolve()
+      }
+    })
   }
 
   /**
@@ -762,6 +746,10 @@ export default function MissionPage({
    */
   const onPlayTest = async () => {
     try {
+      // Ensure any unsaved changes are addressed,
+      // before proceeding.
+      await enforceSavePrompt()
+
       // If the server connection is not available, abort.
       if (!server) {
         throw new Error('Server connection is not available.')
@@ -777,7 +765,7 @@ export default function MissionPage({
       session.$start()
 
       // Navigate to the session page.
-      navigateTo('SessionPage', { session })
+      navigateTo('SessionPage', { session }, { bypassMiddleware: true })
     } catch (error) {
       console.error('Failed to play-test mission.')
       console.error(error)

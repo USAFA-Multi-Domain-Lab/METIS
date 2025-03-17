@@ -6,29 +6,30 @@ import SessionClient from 'src/sessions'
 import ClientSessionMember from 'src/sessions/members'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
-import { TListenerTargetEmittable } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import { v4 as generateHash } from 'uuid'
+import { TListenerTargetEmittable } from '../../../shared/events'
 import Mission, {
-  TMissionJson,
   TCommonMissionTypes,
+  TMissionJson,
   TMissionOptions,
 } from '../../../shared/missions'
 import {
   MissionForce,
-  TCommonMissionForceJson,
   TMissionForceOptions,
+  TMissionForceSaveJson,
 } from '../../../shared/missions/forces'
 import {
-  TCommonMissionPrototypeJson,
+  TMissionPrototypeJson,
   TMissionPrototypeOptions,
 } from '../../../shared/missions/nodes/prototypes'
 import { Counter } from '../../../shared/toolbox/numbers'
 import { AnyObject, TWithKey } from '../../../shared/toolbox/objects'
 import { Vector2D } from '../../../shared/toolbox/space'
+import User from '../../../shared/users'
 import ClientMissionAction from './actions'
 import ClientActionExecution from './actions/executions'
-import ClientActionOutcome from './actions/outcomes'
+import ClientExecutionOutcome from './actions/outcomes'
 import { ClientEffect } from './effects'
 import ClientMissionForce, { TClientMissionForceOptions } from './forces'
 import ClientOutput from './forces/outputs'
@@ -37,7 +38,6 @@ import ClientMissionPrototype, { TPrototypeRelation } from './nodes/prototypes'
 import MissionTransformation from './transformations'
 import PrototypeCreation from './transformations/creations'
 import PrototypeTranslation from './transformations/translations'
-import User from '../../../shared/users'
 
 /**
  * Class for managing missions on the client.
@@ -330,7 +330,7 @@ export default class ClientMission
 
   // Implemented
   protected importPrototype(
-    data: Partial<TCommonMissionPrototypeJson> = ClientMissionPrototype.DEFAULT_PROPERTIES,
+    data: Partial<TMissionPrototypeJson> = ClientMissionPrototype.DEFAULT_PROPERTIES,
     options: TMissionPrototypeOptions<ClientMissionPrototype> = {},
   ): ClientMissionPrototype {
     let rootPrototype: ClientMissionPrototype | null = this.root
@@ -362,7 +362,7 @@ export default class ClientMission
 
   // Implemented
   protected importForces(
-    data: TCommonMissionForceJson[],
+    data: TMissionForceSaveJson[],
     options: TClientMissionForceOptions = {},
   ): ClientMissionForce[] {
     let forces: ClientMissionForce[] = data.map(
@@ -425,8 +425,8 @@ export default class ClientMission
    */
   public importStartData(
     structure: AnyObject,
-    forces: TCommonMissionForceJson[],
-    prototypes: TCommonMissionPrototypeJson[],
+    forces: TMissionForceSaveJson[],
+    prototypes: TMissionPrototypeJson[],
   ): void {
     // Clear forces and prototypes.
     this.prototypes = []
@@ -453,7 +453,7 @@ export default class ClientMission
    * @returns The newly created prototype.
    */
   public createPrototype(
-    data: Partial<TCommonMissionPrototypeJson> = ClientMissionPrototype.DEFAULT_PROPERTIES,
+    data: Partial<TMissionPrototypeJson> = ClientMissionPrototype.DEFAULT_PROPERTIES,
     options: TMissionPrototypeOptions<ClientMissionPrototype> = {},
   ): ClientMissionPrototype {
     let rootPrototype: ClientMissionPrototype | null = this.root
@@ -1486,7 +1486,7 @@ export interface TClientMissionTypes extends TCommonMissionTypes {
   node: ClientMissionNode
   action: ClientMissionAction
   execution: ClientActionExecution
-  outcome: ClientActionOutcome
+  outcome: ClientExecutionOutcome
   targetEnv: ClientTargetEnvironment
   target: ClientTarget
   effect: ClientEffect

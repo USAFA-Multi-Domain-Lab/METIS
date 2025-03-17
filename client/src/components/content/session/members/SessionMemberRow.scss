@@ -30,6 +30,16 @@
           margin: 0;
           border: none;
           padding: 0;
+          background: none;
+
+          .Option {
+            padding-top: 0;
+            padding-left: 0;
+
+            &:not(.Selected) {
+              padding-bottom: 0.75em;
+            }
+          }
         }
       }
     }

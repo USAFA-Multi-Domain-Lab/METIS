@@ -2,16 +2,21 @@ import axios from 'axios'
 import ServerConnection from 'src/connect/servers'
 import ClientMission, { TClientMissionTypes } from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
+import ClientActionExecution from 'src/missions/actions/executions'
+import ClientExecutionOutcome from 'src/missions/actions/outcomes'
 import ClientOutput from 'src/missions/forces/outputs'
 import ClientMissionNode from 'src/missions/nodes'
-import ClientMissionPrototype from 'src/missions/nodes/prototypes'
 import ClientUser from 'src/users'
 import {
   TGenericServerEvents,
   TResponseEvents,
   TServerEvents,
 } from '../../../shared/connect/data'
-import { TExecutionCheats } from '../../../shared/missions/actions/executions'
+import {
+  TActionExecutionJson,
+  TExecutionCheats,
+} from '../../../shared/missions/actions/executions'
+import { TExecutionOutcomeJson } from '../../../shared/missions/actions/outcomes'
 import Session, {
   TSessionBasicJson,
   TSessionConfig,
@@ -842,92 +847,6 @@ export default class SessionClient extends Session<TClientMissionTypes> {
   }
 
   /**
-   * Handles when the session is started.
-   * @param event The event emitted by the server.
-   */
-  private onStart = (event: TResponseEvents['session-started']): void => {
-    this.importStartData(event)
-  }
-
-  /**
-   * Handles when the session is ended.
-   * @param event The event emitted by the server.
-   */
-  private onEnd = (): void => {
-    this._state = 'ended'
-  }
-
-  /**
-   * Handles when the session is reset.
-   * @param event The event emitted by the server.
-   */
-  private onReset = (event: TResponseEvents['session-reset']): void => {
-    this.importStartData(event)
-  }
-
-  /**
-   * Handles when the session configuration is updated.
-   * @param event The event emitted by the server.
-   */
-  private onConfigUpdate = (
-    event: TServerEvents['session-config-updated'],
-  ): void => {
-    this._config = event.data.config
-  }
-
-  /**
-   * Handles when the lists of users joined in the session
-   * changes, due to a join, quit, kick, or ban.
-   * @param event The event emitted by the server.
-   */
-  private onUsersUpdated = (
-    event: TGenericServerEvents['session-members-updated'],
-  ): void => {
-    let { members } = event.data
-    this._members = members.map(
-      ({ _id, user: userData, roleId, forceId }) =>
-        new ClientSessionMember(
-          _id,
-          new ClientUser(userData),
-          roleId,
-          forceId,
-          this,
-        ),
-    )
-  }
-
-  /**
-   * Handles when a force is assigned to a member.
-   * @param event The event emitted by the server.
-   */
-  private onForceAssigned = (event: TServerEvents['force-assigned']): void => {
-    let { memberId, forceId } = event.data
-    let member = this.getMember(memberId)
-    if (member === undefined) {
-      return console.warn(
-        `Event "force-assigned" was triggered, but the member with the given memberId ("${memberId}") could not be found.`,
-      )
-    }
-    member.forceId = forceId
-  }
-
-  /**
-   * Handles when a role is assigned to a member.
-   * @param event The event emitted by the server.
-   */
-  private onRoleAssigned = (event: TServerEvents['role-assigned']): void => {
-    let { memberId, roleId } = event.data
-    let member = this.getMember(memberId)
-    let role = MemberRole.get(roleId)
-    if (member === undefined) {
-      return console.warn(
-        `Event "role-assigned" was triggered, but the member with the given memberId ("${memberId}") could not be found.`,
-      )
-    }
-    member.role = role
-  }
-
-  /**
    * Handles the blocking and unblocking of nodes.
    * @param nodeId The ID of the node to be blocked or unblocked.
    * @param blocked Whether or not the node is blocked.
@@ -1027,6 +946,92 @@ export default class SessionClient extends Session<TClientMissionTypes> {
   }
 
   /**
+   * Handles when the session is started.
+   * @param event The event emitted by the server.
+   */
+  private onStart = (event: TResponseEvents['session-started']): void => {
+    this.importStartData(event)
+  }
+
+  /**
+   * Handles when the session is ended.
+   * @param event The event emitted by the server.
+   */
+  private onEnd = (): void => {
+    this._state = 'ended'
+  }
+
+  /**
+   * Handles when the session is reset.
+   * @param event The event emitted by the server.
+   */
+  private onReset = (event: TResponseEvents['session-reset']): void => {
+    this.importStartData(event)
+  }
+
+  /**
+   * Handles when the session configuration is updated.
+   * @param event The event emitted by the server.
+   */
+  private onConfigUpdate = (
+    event: TServerEvents['session-config-updated'],
+  ): void => {
+    this._config = event.data.config
+  }
+
+  /**
+   * Handles when the lists of users joined in the session
+   * changes, due to a join, quit, kick, or ban.
+   * @param event The event emitted by the server.
+   */
+  private onUsersUpdated = (
+    event: TGenericServerEvents['session-members-updated'],
+  ): void => {
+    let { members } = event.data
+    this._members = members.map(
+      ({ _id, user: userData, roleId, forceId }) =>
+        new ClientSessionMember(
+          _id,
+          new ClientUser(userData),
+          roleId,
+          forceId,
+          this,
+        ),
+    )
+  }
+
+  /**
+   * Handles when a force is assigned to a member.
+   * @param event The event emitted by the server.
+   */
+  private onForceAssigned = (event: TServerEvents['force-assigned']): void => {
+    let { memberId, forceId } = event.data
+    let member = this.getMember(memberId)
+    if (member === undefined) {
+      return console.warn(
+        `Event "force-assigned" was triggered, but the member with the given memberId ("${memberId}") could not be found.`,
+      )
+    }
+    member.forceId = forceId
+  }
+
+  /**
+   * Handles when a role is assigned to a member.
+   * @param event The event emitted by the server.
+   */
+  private onRoleAssigned = (event: TServerEvents['role-assigned']): void => {
+    let { memberId, roleId } = event.data
+    let member = this.getMember(memberId)
+    let role = MemberRole.get(roleId)
+    if (member === undefined) {
+      return console.warn(
+        `Event "role-assigned" was triggered, but the member with the given memberId ("${memberId}") could not be found.`,
+      )
+    }
+    member.role = role
+  }
+
+  /**
    * Handles when a modifier has been enacted.
    * @param event The event emitted by the server.
    */
@@ -1108,7 +1113,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
         }
 
         // Handle output sent.
-        node.handleOutputSent()
+        node.onOutput()
     }
   }
 
@@ -1117,41 +1122,18 @@ export default class SessionClient extends Session<TClientMissionTypes> {
    * @param event The event emitted by the server.
    */
   private onNodeOpened = (event: TServerEvents['node-opened']): void => {
-    // Extract data.
-    let { nodeId, revealedChildNodes, revealedChildPrototypes } = event.data
+    // Gather data.
+    const { nodeId, revealedChildNodes, revealedChildPrototypes } = event.data
+    const node = this.mission.getNode(nodeId)
+    if (!node) throw new Error(`Node "${nodeId}" was not found.`)
+    const { prototype } = node
 
-    // Find the node, given the ID.
-    let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
+    // Handle opening at different levels.
+    prototype.onOpen(revealedChildPrototypes)
+    node.onOpen(revealedChildNodes)
 
-    // Handle node not found.
-    if (node === undefined) {
-      throw new Error(
-        `Event "node-opened" was triggered, but the node with the given nodeId ("${nodeId}") could not be found.`,
-      )
-    }
-
-    // Find the prototype, given the ID.
-    let prototype: ClientMissionPrototype | undefined =
-      this.mission.getPrototype(node.prototype._id)
-
-    // Handle prototype not found.
-    if (prototype === undefined) {
-      throw new Error(
-        `Event "node-opened" was triggered, but the prototype with the given prototypeId ("${node.prototype._id}") could not be found.`,
-      )
-    }
-
-    // Update the prototype's revealed child nodes.
-    prototype.populateChildren(revealedChildPrototypes)
-
-    // Open node, if there are revealed
-    // child nodes.
-    if (revealedChildNodes !== undefined) {
-      node.open({ revealedChildNodes })
-      // Remap actions, since new actions
-      // may have been populated.
-      this.mapActions()
-    }
+    // Remap actions, if new nodes have been revealed.
+    if (revealedChildNodes) this.mapActions()
   }
 
   /**
@@ -1162,8 +1144,12 @@ export default class SessionClient extends Session<TClientMissionTypes> {
     event: TServerEvents['action-execution-initiated'],
   ): void => {
     // Extract data.
-    let { execution: executionData, resourcesRemaining } = event.data
-    let { actionId } = executionData
+    const { resourcesRemaining } = event.data
+    // Type is defined here below because for some reason
+    // there are type issues when I extract it using
+    // the destructuring syntax above.
+    const executionData: TActionExecutionJson = event.data.execution
+    const { actionId } = executionData
 
     // Find the action and node, given the action ID.
     let action: ClientMissionAction | undefined = this.actions.get(actionId)
@@ -1180,8 +1166,16 @@ export default class SessionClient extends Session<TClientMissionTypes> {
       node = action.node
     }
 
+    // Create a new execution object.
+    let execution = new ClientActionExecution(
+      executionData._id,
+      action,
+      executionData.start,
+      executionData.end,
+    )
+
     // Handle execution on the node.
-    node.loadExecution(executionData)
+    node.onExecution(execution)
 
     // Update the resources remaining for
     // the force.
@@ -1195,48 +1189,23 @@ export default class SessionClient extends Session<TClientMissionTypes> {
   private onActionExecutionCompleted = (
     event: TServerEvents['action-execution-completed'],
   ): void => {
-    // Extract data.
-    let { outcome, revealedChildNodes, revealedChildPrototypes } = event.data
-    let { actionId } = outcome
+    // Gather data.
+    const { revealedChildNodes, revealedChildPrototypes } = event.data
+    const outcomeData: TExecutionOutcomeJson = event.data.outcome
+    const { executionId } = outcomeData
+    const execution = this.mission.getExecution(executionId)
+    if (!execution) throw new Error(`Execution "${executionId}" not be found.`)
+    const { node } = execution
+    const outcome = new ClientExecutionOutcome(outcomeData.state, execution)
 
-    // Find the action given the action ID.
-    let action: ClientMissionAction | undefined = this.actions.get(actionId)
-
-    // Handle action not found.
-    if (action === undefined) {
-      throw new Error(
-        `Event "action-execution-initiated" was triggered, but the action with the given actionId ("${actionId}") could not be found.`,
-      )
-    }
-
-    // Get the action's node.
-    let node: ClientMissionNode = action.node
-
-    // Handle revealed child prototypes.
-    if (revealedChildPrototypes) {
-      // Find the prototype, given the ID.
-      let prototype: ClientMissionPrototype | undefined =
-        this.mission.getPrototype(node.prototype._id)
-
-      // Handle prototype not found.
-      if (prototype === undefined) {
-        throw new Error(
-          `Event "action-execution-completed" was triggered, but the prototype with the given prototypeId ("${node.prototype._id}") could not be found.`,
-        )
-      }
-
-      // Update the prototype's revealed child nodes.
-      prototype.populateChildren(revealedChildPrototypes)
-    }
-
-    // Handle outcome on the node.
-    node.loadOutcome(outcome, { revealedChildNodes })
+    // Handle outcome on different levels.
+    execution.onOutcome(outcome)
+    node.prototype.onOutcome(revealedChildPrototypes)
+    node.onOutcome(revealedChildNodes)
 
     // Remap actions if there are revealed nodes, since
     // those revealed nodes may contain new actions.
-    if (revealedChildNodes !== undefined) {
-      this.mapActions()
-    }
+    if (revealedChildNodes) this.mapActions()
   }
 
   /**

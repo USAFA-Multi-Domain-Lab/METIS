@@ -1,16 +1,18 @@
-import { TListenerTargetEmittable } from 'src/toolbox/hooks'
 import ClientMissionAction from '.'
 import { TClientMissionTypes } from '..'
-import TActionExecution, {
-  TActionExecutionJson,
-} from '../../../../shared/missions/actions/executions'
-import EventManager from 'src/events'
+import {
+  EventManager,
+  TListenerTargetEmittable,
+} from '../../../../shared/events'
+import ActionExecution from '../../../../shared/missions/actions/executions'
+import { TExecutionOutcomeJson } from '../../../../shared/missions/actions/outcomes'
+import ClientExecutionOutcome from './outcomes'
 
 /**
  * The execution of an action on the client.
  */
 export default class ClientActionExecution
-  extends TActionExecution<TClientMissionTypes>
+  extends ActionExecution<TClientMissionTypes>
   implements TListenerTargetEmittable<TExecutionEvent>
 {
   /**
@@ -59,12 +61,31 @@ export default class ClientActionExecution
   private eventManager: EventManager<TExecutionEvent, []>
 
   /**
+   * @param _id The ID of the execution.
    * @param action The action being executed.
    * @param start The time at which the action started executing.
    * @param end The time at which the action finishes executing.
+   * @param aborted Whether the execution was aborted.
+   * @param abortedAt The time at which the execution was aborted,
+   * if it was aborted.
    */
-  public constructor(action: ClientMissionAction, start: number, end: number) {
-    super(action, start, end)
+  public constructor(
+    _id: string,
+    action: ClientMissionAction,
+    start: number,
+    end: number,
+    options: TClientExecutionOptions = {},
+  ) {
+    const { outcomeData = null } = options
+
+    super(_id, action, start, end)
+
+    // Parse outcome data, if present.
+    if (outcomeData) {
+      this._outcome = new ClientExecutionOutcome(outcomeData.state, this)
+    } else {
+      this._outcome = null
+    }
 
     // Set up event management.
     this.eventManager = new EventManager(this)
@@ -74,16 +95,6 @@ export default class ClientActionExecution
 
     // Initiate ticking.
     this.tick()
-  }
-
-  // Implemented
-  public toJson(): TActionExecutionJson {
-    return {
-      actionId: this.actionId,
-      nodeId: this.nodeId,
-      start: this.start,
-      end: this.end,
-    }
   }
 
   /**
@@ -128,3 +139,15 @@ export default class ClientActionExecution
  * user in a React component.
  */
 export type TExecutionEvent = 'activity' | 'countdown'
+
+/**
+ * Options for constructor `ClientActionExecution`.
+ */
+export type TClientExecutionOptions = {
+  /**
+   * Data used to load a pre-existing outcome into
+   * the execution.
+   * @default null
+   */
+  outcomeData?: TExecutionOutcomeJson | null
+}

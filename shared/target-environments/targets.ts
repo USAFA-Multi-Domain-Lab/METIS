@@ -1,5 +1,5 @@
 import { AnyObject } from 'metis/toolbox/objects'
-import { TCommonTargetEnv, TTargetEnv } from '.'
+import { TTargetEnv } from '.'
 import { TTargetEnvExposedContext } from '../../server/target-environments/context'
 import { TCommonMissionTypes } from '../../shared/missions'
 import Arg, { TTargetArg, TTargetArgJson } from './args'
@@ -10,25 +10,36 @@ import Dependency from './dependencies'
  */
 export default abstract class Target<
   T extends TCommonMissionTypes = TCommonMissionTypes,
-> implements TCommonTarget
-{
-  // Inherited
+> {
+  /**
+   * The environment in which the target exists.
+   */
   public targetEnvironment: TTargetEnv<T>
 
-  // Inherited
-  public _id: TCommonTarget['_id']
+  /**
+   * The ID of the target.
+   */
+  public _id: string
 
-  // Inherited
-  public name: TCommonTarget['name']
+  /**
+   * The name of the target.
+   */
+  public name: string
 
-  // Inherited
-  public description: TCommonTarget['description']
+  /**
+   * Describes what the target is.
+   */
+  public description: string
 
-  // Inherited
-  public script: TCommonTarget['script']
+  /**
+   * The function used to execute an effect on the target.
+   */
+  public script: TTargetScript
 
-  // Inherited
-  public args: TCommonTarget['args']
+  /**
+   * The arguments used to create the effect on the target.
+   */
+  public args: TTargetArg[]
 
   /**
    * Creates a new Target Object.
@@ -38,7 +49,7 @@ export default abstract class Target<
    */
   public constructor(
     targetEnvironment: TTargetEnv<T>,
-    data: Partial<TCommonTargetJson> = Target.DEFAULT_PROPERTIES,
+    data: Partial<TTargetJson> = Target.DEFAULT_PROPERTIES,
     options: TTargetOptions = {},
   ) {
     this.targetEnvironment = targetEnvironment
@@ -54,7 +65,7 @@ export default abstract class Target<
    * @param options Options for converting the Target to JSON.
    * @returns A JSON representation of the Target.
    */
-  public toJson(): TCommonTargetJson {
+  public toJson(): TTargetJson {
     // Construct JSON object to send to the server.
     return {
       targetEnvId: this.targetEnvironment._id,
@@ -74,11 +85,11 @@ export default abstract class Target<
    */
   public static isJson(
     obj: AnyObject,
-    excludedKeys: (keyof TCommonTargetJson)[] = [],
-  ): obj is TCommonTargetJson {
+    excludedKeys: (keyof TTargetJson)[] = [],
+  ): obj is TTargetJson {
     // Only grab the keys that are not excluded.
     const requiredKeys = Object.keys(Target.DEFAULT_PROPERTIES).filter(
-      (key) => !excludedKeys.includes(key as keyof TCommonTargetJson),
+      (key) => !excludedKeys.includes(key as keyof TTargetJson),
     )
     // Check if the required keys are present in the object.
     const keysPassed = Object.keys(obj)
@@ -88,7 +99,7 @@ export default abstract class Target<
   /**
    * Default properties set when creating a new Target object.
    */
-  public static readonly DEFAULT_PROPERTIES: TCommonTargetJson = {
+  public static readonly DEFAULT_PROPERTIES: TTargetJson = {
     targetEnvId: 'metis-target-env-default',
     _id: 'metis-target-default',
     name: 'Select a target',
@@ -100,7 +111,7 @@ export default abstract class Target<
   /**
    * The node target that is available in the METIS target environment.
    */
-  public static readonly NODE_TARGET: TCommonTargetJson = {
+  public static readonly NODE_TARGET: TTargetJson = {
     targetEnvId: 'metis',
     _id: 'node',
     name: 'Node',
@@ -269,7 +280,7 @@ export default abstract class Target<
   /**
    * The output target that is available in the METIS target environment.
    */
-  public static readonly OUTPUT_TARGET: TCommonTargetJson = {
+  public static readonly OUTPUT_TARGET: TTargetJson = {
     targetEnvId: 'metis',
     _id: 'output',
     name: 'Output Panel',
@@ -310,7 +321,7 @@ export default abstract class Target<
    * A target available in the METIS target environment that enables a user
    * to manipulate the resource pool.
    */
-  public static readonly RESOURCE_POOL_TARGET: TCommonTargetJson = {
+  public static readonly RESOURCE_POOL_TARGET: TTargetJson = {
     _id: 'resource-pool',
     targetEnvId: 'metis',
     name: 'Resource Pool',
@@ -346,7 +357,7 @@ export default abstract class Target<
   /**
    * The internal targets that are available in the METIS target environment.
    */
-  public static readonly INTERNAL_TARGETS: TCommonTargetJson[] = [
+  public static readonly INTERNAL_TARGETS: TTargetJson[] = [
     Target.NODE_TARGET,
     Target.OUTPUT_TARGET,
     Target.RESOURCE_POOL_TARGET,
@@ -366,45 +377,14 @@ export type TTargetOptions = {}
 export type TTargetJsonOptions = {}
 
 /**
- * Interface for the Target class.
+ * A valid script that can be executed on a target.
  */
-export interface TCommonTarget {
+export type TTargetScript = (
   /**
-   * The environment in which the target exists.
+   * The context for the target environment.
    */
-  targetEnvironment: TCommonTargetEnv
-  /**
-   * The ID of the target.
-   */
-  _id: string
-  /**
-   * The name of the target.
-   */
-  name: string
-  /**
-   * Describes what the target is.
-   */
-  description: string
-  /**
-   * The function used to execute an effect on the target.
-   */
-  script: (
-    /**
-     * The context for the target environment.
-     */
-    context: TTargetEnvExposedContext,
-  ) => Promise<void>
-  /**
-   * The arguments used to create the effect on the target.
-   */
-  args: TTargetArg[]
-  /**
-   * Converts the Target Object to JSON.
-   * @param options Options for converting the Target to JSON.
-   * @returns A JSON representation of the Target.
-   */
-  toJson: (options?: TTargetJsonOptions) => TCommonTargetJson
-}
+  context: TTargetEnvExposedContext,
+) => Promise<void>
 
 /**
  * Extracts the target type from the mission types.
@@ -416,7 +396,7 @@ export type TTarget<T extends TCommonMissionTypes> = T['target']
 /**
  * The JSON representation of a Target Object.
  */
-export interface TCommonTargetJson {
+export interface TTargetJson {
   /**
    * The ID of the target environment.
    */

@@ -3,7 +3,7 @@ import UserModel, { hashPassword } from 'metis/server/database/models/users'
 import { StatusError } from 'metis/server/http'
 import { databaseLogger } from 'metis/server/logging'
 import ServerLogin from 'metis/server/logins'
-import { TCommonUserJson } from 'metis/users'
+import { TUserJson } from 'metis/users'
 import ApiResponse from '../../library/response'
 
 /**
@@ -15,7 +15,7 @@ import ApiResponse from '../../library/response'
 const updateUser = async (request: Request, response: Response) => {
   // Extract the user updates from the request body.
   let userUpdates = request.body
-  let { _id: userId, username } = userUpdates as Partial<TCommonUserJson>
+  let { _id: userId, username } = userUpdates as Partial<TUserJson>
   // Get the user that is logged in.
   let login: ServerLogin | undefined = ServerLogin.get(request.session.userId)
   let { user: currentUser } = login ?? {}

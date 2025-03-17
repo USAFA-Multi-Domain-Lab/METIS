@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express-serve-static-core'
-import { TCommonUserJson } from 'metis/users'
+import { TUserJson } from 'metis/users'
 import { TUserPermissionId } from 'metis/users/permissions'
 import UserModel from '../database/models/users'
 import ServerLogin from '../logins'
@@ -79,8 +79,8 @@ export const restrictUserManagement = async (
   }
 
   // Grab the user and user ID from the request.
-  let user: TCommonUserJson = request.body
-  let userId: TCommonUserJson['_id'] = request.params._id ?? request.query._id
+  let user: TUserJson = request.body
+  let userId: TUserJson['_id'] = request.params._id ?? request.query._id
   // Check if the user is defined.
   let userIsDefined: boolean = Object.keys(user).length > 0
 
@@ -173,7 +173,7 @@ export const restrictPasswordReset = (
   }
 
   // Grab the user ID from the request.
-  let userId: TCommonUserJson['_id'] = request.body._id
+  let userId: TUserJson['_id'] = request.body._id
 
   // If the user ID is undefined, return 400.
   if (userId === undefined) {

@@ -1,5 +1,5 @@
-import { TCommonTargetEnvJson } from 'metis/target-environments'
-import Target, { TCommonTargetJson } from 'metis/target-environments/targets'
+import { TTargetEnvJson } from 'metis/target-environments'
+import Target, { TTargetJson } from 'metis/target-environments/targets'
 import ServerTargetEnvironment from '.'
 import { TServerMissionTypes } from '../missions'
 
@@ -44,19 +44,19 @@ export default class ServerTarget extends Target<TServerMissionTypes> {
    * @param id The ID of the target to grab.
    * @returns The target JSON with the provided ID.
    */
-  public static getTargetJson(id: string): TCommonTargetJson | undefined {
+  public static getTargetJson(id: string): TTargetJson | undefined {
     // Get all the target environment JSON.
-    let targetEnvArrayJson: TCommonTargetEnvJson[] =
+    let targetEnvArrayJson: TTargetEnvJson[] =
       ServerTargetEnvironment.getAllJson()
 
     // Declare the target JSON.
-    let targetJson: TCommonTargetJson | undefined
+    let targetJson: TTargetJson | undefined
 
     // Iterate over the target environment JSON.
     for (let targetEnvJson of targetEnvArrayJson) {
       // Find the target JSON that matches the ID.
       targetJson = targetEnvJson.targets.find(
-        (target: TCommonTargetJson) => target._id === id,
+        (target: TTargetJson) => target._id === id,
       )
 
       // If the target JSON is found, break the loop.

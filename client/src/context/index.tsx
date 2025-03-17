@@ -2,8 +2,8 @@ import React, { ReactNode, useEffect, useRef, useState } from 'react'
 import { TAppError, TAppErrorNotifyMethod } from 'src/components/App'
 import { message as connectionStatusMessage } from 'src/components/content/communication/ConnectionStatus'
 import {
-  TPromptResult,
   TPrompt_P,
+  TPromptResult,
 } from 'src/components/content/communication/Prompt'
 import { TButtonMenu_P } from 'src/components/content/user-controls/buttons/ButtonMenu'
 import { TButtonSvgType } from 'src/components/content/user-controls/buttons/ButtonSvg'
@@ -564,7 +564,7 @@ const initializeActions = (
       const { server } = refs.current
 
       // Notify the user of logout.
-      beginLoading('Signing out...')
+      beginLoading('Logging out...')
 
       // If connected to the server via web
       // socket, disconnect now.

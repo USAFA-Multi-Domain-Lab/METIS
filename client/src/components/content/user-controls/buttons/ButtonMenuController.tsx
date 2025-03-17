@@ -39,6 +39,9 @@ export default function ButtonMenuController({
         getDescription,
       })
     },
+    // todo: Using these as dependencies causes the
+    // todo: event listener to constantly refresh.
+    // todo: This should be fixed.
     [showButtonMenu, getDescription, onButtonClick],
   )
 

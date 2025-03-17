@@ -1,22 +1,11 @@
 import { AnyObject } from 'metis/toolbox/objects'
-import { TCommonUser } from 'metis/users'
-import Mission, {
-  TCommonMission,
-  TCommonMissionTypes,
-  TMission,
-  TMissionJsonOptions,
-} from '..'
+import User from 'metis/users'
+import Mission, { TCommonMissionTypes, TMission, TMissionJsonOptions } from '..'
 import context from '../../context'
 import StringToolbox from '../../toolbox/strings'
-import {
-  TCommonMissionNode,
-  TCommonMissionNodeJson,
-  TMissionNodeJson,
-  TMissionNodeOptions,
-  TNode,
-} from '../nodes'
-import { TCommonMissionPrototype } from '../nodes/prototypes'
-import { TCommonOutput, TCommonOutputJson, TOutput } from './output'
+import { TMissionNodeJson, TMissionNodeOptions, TNode } from '../nodes'
+import { TPrototype } from '../nodes/prototypes'
+import { TOutput, TOutputJson } from './output'
 
 /* -- CLASSES -- */
 
@@ -26,9 +15,10 @@ import { TCommonOutput, TCommonOutputJson, TOutput } from './output'
  */
 export abstract class MissionForce<
   T extends TCommonMissionTypes = TCommonMissionTypes,
-> implements TCommonMissionForce
-{
-  // Implemented
+> {
+  /**
+   * The mission to which the force belongs.
+   */
   public mission: TMission<T>
 
   /**
@@ -36,7 +26,10 @@ export abstract class MissionForce<
    */
   public _id: string
 
-  // Implemented
+  /**
+   * The introductory message for the mission, displayed
+   * when the mission is first started in a session.
+   */
   public introMessage: string
 
   /**
@@ -49,10 +42,16 @@ export abstract class MissionForce<
    */
   public color: string
 
-  // Implemented
+  /**
+   * The amount of resources available to the force at
+   * the start of the session.
+   */
   public initialResources: number
 
-  // Implementd
+  /**
+   * The current amount of resources available to the force.
+   * @note Only relevant when in a session.
+   */
   public resourcesRemaining: number
 
   /**
@@ -70,7 +69,10 @@ export abstract class MissionForce<
    */
   public root: TNode<T>
 
-  // Implemented
+  /**
+   * The revealed structure found in the force, based on the nodes
+   * that have been opened.
+   */
   public get revealedStructure(): AnyObject {
     /**
      * The recursive algorithm used to determine the structure.
@@ -97,10 +99,13 @@ export abstract class MissionForce<
     return algorithm()
   }
 
-  // Implemented
-  public get revealedPrototypes(): TCommonMissionPrototype[] {
+  /**
+   * The revealed prototypes in the force based on the revealed structure and
+   * the nodes that have been opened.
+   */
+  public get revealedPrototypes(): TPrototype<T>[] {
     // The revealed prototypes.
-    let revealedPrototypes: TCommonMissionPrototype[] = []
+    let revealedPrototypes: TPrototype<T>[] = []
 
     /**
      * Recursively finds prototypes from the node structure.
@@ -133,9 +138,19 @@ export abstract class MissionForce<
    * The outputs for the force's output panel.
    */
   protected _outputs: TOutput<T>[]
-  // Implemented
+  /**
+   * The outputs for the force's output panel.
+   */
   public get outputs(): TOutput<T>[] {
     return this._outputs
+  }
+
+  /**
+   * The prefix to display for an output sent by this
+   * force.
+   */
+  public get outputPrefix(): string {
+    return `${this.name.replaceAll(' ', '-')}:`
   }
 
   /**
@@ -173,14 +188,13 @@ export abstract class MissionForce<
     this.importNodes(data.nodes ?? MissionForce.DEFAULT_PROPERTIES.nodes, {
       populateTargets,
     })
-
-    // If root node is not open, open it.
-    if (!this.root.opened) {
-      this.root.open()
-    }
   }
 
-  // Implemented
+  /**
+   * Converts the force to JSON.
+   * @param options The options for converting the force to JSON.
+   * @returns The JSON for the force.
+   */
   public toJson(options: TForceJsonOptions = {}): TMissionForceJson {
     let { sessionDataExposure = Mission.DEFAULT_SESSION_DATA_EXPOSURE } =
       options
@@ -209,7 +223,7 @@ export abstract class MissionForce<
     /**
      * Adds the outputs to the JSON.
      */
-    const addOutputs = (userId?: TCommonUser['_id']) => {
+    const addOutputs = (userId?: User['_id']) => {
       if (userId) {
         json.outputs = this.filterOutputs(userId).map((output) =>
           output.toJson(),
@@ -283,21 +297,36 @@ export abstract class MissionForce<
    * @param userId The ID of the user for which to filter the outputs.
    * @returns The filtered outputs.
    */
-  public abstract filterOutputs(userId?: TCommonUser['_id']): TOutput<T>[]
+  public abstract filterOutputs(userId?: User['_id']): TOutput<T>[]
 
-  // Implemented
-  public abstract storeOutput(output: TCommonOutput): void
+  /**
+   * Stores an output in the force which is then displayed
+   * in the force's output panel.
+   * @param output The output to store.
+   */
+  public abstract storeOutput(output: TOutput<T>): void
 
-  // Implemented
+  /**
+   * Modifies the resource pool.
+   * @param operand The amount by which to modify the resource pool.
+   */
   public abstract modifyResourcePool(operand: number): void
 
-  // Implemented
+  /**
+   * @param nodeId The ID of the node to retrieve.
+   * @returns The node with the given ID, or undefined
+   * if not found.
+   */
   public getNode(nodeId: string): TNode<T> | undefined {
     if (nodeId === this.root._id) return this.root
     else return this.nodes.find((node) => node._id === nodeId)
   }
 
-  // Implemented
+  /**
+   * @param prototypeId The ID of the prototype to retrieve.
+   * @returns The node with the given prototype ID, or undefined
+   * if not found.
+   */
   public getNodeFromPrototype(prototypeId: string): TNode<T> | undefined {
     if (prototypeId === this.mission.root._id) return this.root
     else return this.nodes.find((node) => node.prototype._id === prototypeId)
@@ -366,7 +395,7 @@ export abstract class MissionForce<
   /**
    * The default properties for a Mission object.
    */
-  public static get DEFAULT_PROPERTIES(): Required<TCommonMissionForceJson> {
+  public static get DEFAULT_PROPERTIES(): Required<TMissionForceSaveJson> {
     return {
       _id: StringToolbox.generateRandomId(),
       introMessage: '<p>Welcome to your force!</p>',
@@ -452,100 +481,10 @@ export abstract class MissionForce<
 /* -- TYPES -- */
 
 /**
- * Interface of the abstract MissionForce class.
- * @note Any public, non-static properties and functions of the Force
- * class must first be defined here for them to be accessible to the
- * Mission, MissionNode, and MissionAction classes.
+ * Session-agnostic JSON representation of a MissionForce object
+ * which can be saved to a database.
  */
-export interface TCommonMissionForce {
-  /**
-   * The mission to which the force belongs.
-   */
-  mission: TCommonMission
-  /**
-   * The ID of the force.
-   */
-  _id: string
-  /**
-   * The introductory message for the mission, displayed when the mission is first started in a session.
-   */
-  introMessage: string
-  /**
-   * The name of the force.
-   */
-  name: string
-  /**
-   * The color of the force.
-   */
-  color: string
-  /**
-   * The amount of resources available to the force at
-   * the start of the session.
-   */
-  initialResources: number
-  /**
-   * Whether or not to reveal all nodes in the force.
-   */
-  revealAllNodes: boolean
-  /**
-   * The nodes in the force.
-   */
-  nodes: TCommonMissionNode[]
-  /**
-   * The root node of the force.
-   */
-  root: TCommonMissionNode
-  /**
-   * The current amount of resources available to the force.
-   * @note Only relevant when in a session.
-   */
-  resourcesRemaining: number
-  /**
-   * The revealed structure found in the force, based on the nodes
-   * that have been opened.
-   */
-  get revealedStructure(): AnyObject
-  /**
-   * The revealed prototypes in the force based on the revealed structure and
-   * the nodes that have been opened.
-   */
-  get revealedPrototypes(): TCommonMissionPrototype[]
-  /**
-   * The outputs for the force's output panel.
-   */
-  get outputs(): TCommonOutput[]
-  /**
-   * Converts the force to JSON.
-   * @param options The options for converting the force to JSON.
-   * @returns the JSON for the force.
-   */
-  toJson: (options?: TForceJsonOptions) => TMissionForceJson
-  /**
-   * Gets a node from the given node ID.
-   */
-  getNode(nodeId: string | undefined): TCommonMissionNode | undefined
-  /**
-   * Gets a node from the given prototype ID.
-   */
-  getNodeFromPrototype(
-    prototypeId: string | undefined,
-  ): TCommonMissionNode | undefined
-  /**
-   * Stores an output in the force which is then displayed in the force's output panel.
-   * @param output The output to store.
-   */
-  storeOutput(output: TCommonOutput): void
-  /**
-   * Modifies the resource pool.
-   * @param operand The amount by which to modify the resource pool.
-   */
-  modifyResourcePool: (operand: number) => void
-}
-
-/**
- * Session-agnostic JSON representation of a MissionNode object.
- */
-export interface TCommonMissionForceJson {
+export interface TMissionForceSaveJson {
   /**
    * The ID of the force.
    */
@@ -573,7 +512,7 @@ export interface TCommonMissionForceJson {
   /**
    * The nodes in the force.
    */
-  nodes: TCommonMissionNodeJson[]
+  nodes: TMissionNodeJson[]
 }
 
 /**
@@ -587,21 +526,21 @@ export interface TMissionForceSessionJson {
   /**
    * The outputs for a force's output panel.
    */
-  outputs: TCommonOutputJson[]
+  outputs: TOutputJson[]
   /**
    * Updates the outputs in the JSON, only including
    * the outputs that are relevant to the given user.
    * @param userId The ID of the user for which to filter the outputs.
    */
-  filterOutputs: (userId?: TCommonUser['_id']) => void
+  filterOutputs: (userId?: User['_id']) => void
 }
 
 /**
  * Plain JSON representation of a MissionForce object.
- * Type built from TCommonMissionForceJson and TMissionForceSessionJSON,
- * with all properties from TMissionNodeSessionJSON being partial.
+ * Type built from TMissionForceJsonBase and TMissionForceSessionJson,
+ * with all properties from TMissionForceSessionJson being partial.
  */
-export type TMissionForceJson = TCommonMissionForceJson &
+export type TMissionForceJson = TMissionForceSaveJson &
   Partial<TMissionForceSessionJson>
 
 /**
