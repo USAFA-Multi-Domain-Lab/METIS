@@ -1,5 +1,5 @@
+import { TMetisClientComponents } from 'src'
 import ClientMissionAction from '.'
-import { TClientMissionTypes } from '..'
 import {
   EventManager,
   TListenerTargetEmittable,
@@ -12,7 +12,7 @@ import ClientExecutionOutcome from './outcomes'
  * The execution of an action on the client.
  */
 export default class ClientActionExecution
-  extends ActionExecution<TClientMissionTypes>
+  extends ActionExecution<TMetisClientComponents>
   implements TListenerTargetEmittable<TExecutionEvent>
 {
   /**
@@ -82,7 +82,11 @@ export default class ClientActionExecution
 
     // Parse outcome data, if present.
     if (outcomeData) {
-      this._outcome = new ClientExecutionOutcome(outcomeData.state, this)
+      this._outcome = new ClientExecutionOutcome(
+        outcomeData._id,
+        outcomeData.state,
+        this,
+      )
     } else {
       this._outcome = null
     }

@@ -188,7 +188,7 @@ const validateMissionEffects = (
             }
 
             // Ensure the target environment exists.
-            if (!effect.targetEnvironment) {
+            if (!effect.environment) {
               throw new Error(
                 `The effect ({ _id: "${effect._id}", name: "${effect.name}" }) does not have a target environment. ` +
                   `This is likely because the target environment doesn't exist in the target-environment registry.`,
@@ -197,7 +197,7 @@ const validateMissionEffects = (
 
             // Check to see if the target environment version is current.
             let targetEnvironment = ServerTargetEnvironment.getJson(
-              effect.targetEnvironment._id,
+              effect.environment._id,
             )
             if (
               targetEnvironment?.version !== effect.targetEnvironmentVersion
@@ -940,6 +940,14 @@ export const MissionSchema = new Schema<
                         type: [
                           {
                             _id: { type: String, required: true },
+                            targetId: {
+                              type: String,
+                              required: true,
+                            },
+                            targetEnvironmentVersion: {
+                              type: String,
+                              required: true,
+                            },
                             name: {
                               type: String,
                               required: true,
@@ -956,14 +964,6 @@ export const MissionSchema = new Schema<
                               required: false,
                               default: '',
                               set: sanitizeHtml,
-                            },
-                            targetEnvironmentVersion: {
-                              type: String,
-                              required: true,
-                            },
-                            targetId: {
-                              type: String,
-                              required: true,
                             },
                             args: {
                               type: Object,

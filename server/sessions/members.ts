@@ -5,12 +5,12 @@ import MemberRole, { TMemberRoleId } from 'metis/sessions/members/roles'
 import StringToolbox from 'metis/toolbox/strings'
 import SessionServer from '.'
 import ClientConnection from '../connect/clients'
-import { TServerMissionTypes } from '../missions'
+import { TMetisServerComponents } from '../index'
 
 /**
  * Server-side representation of a session member.
  */
-export default class ServerSessionMember extends SessionMember<TServerMissionTypes> {
+export default class ServerSessionMember extends SessionMember<TMetisServerComponents> {
   /**
    * The WS connection to the client where the given user is logged in.
    */

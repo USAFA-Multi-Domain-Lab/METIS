@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { TMetisClientComponents } from 'src'
 import { TListItem } from 'src/components/content/data/lists/pages/ListItem'
 import User, {
   TUserJson,
@@ -11,7 +12,10 @@ import UserAccess from '../../../shared/users/accesses'
  * Class for managing users on the client.
  * @extends {User}
  */
-export default class ClientUser extends User implements TListItem {
+export default class ClientUser
+  extends User<TMetisClientComponents>
+  implements TListItem
+{
   /**
    * Used for the first password field.
    */

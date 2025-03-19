@@ -1,11 +1,11 @@
+import { TCreateJsonType, TMetisBaseComponents } from 'metis/index'
 import { v4 as generateHash } from 'uuid'
-import { TCommonMissionTypes, TCreateMissionJsonType, TMission } from '..'
-import { TTargetEnv } from '../../target-environments'
+import { TMission, TMissionComponent } from '..'
 import { TTargetArg } from '../../target-environments/args'
 import ForceArg from '../../target-environments/args/force-arg'
 import NodeArg from '../../target-environments/args/node-arg'
 import Dependency from '../../target-environments/dependencies'
-import Target, { TTargetJson, TTarget } from '../../target-environments/targets'
+import Target, { TTargetJson } from '../../target-environments/targets'
 import { AnyObject } from '../../toolbox/objects'
 import { TAction } from '../actions'
 import { TForce } from '../forces'
@@ -15,11 +15,10 @@ import { TNode } from '../nodes'
  * An effect that can be applied to a target.
  */
 export default abstract class Effect<
-  T extends TCommonMissionTypes = TCommonMissionTypes,
-> {
-  /**
-   * The corresponding mission for the effect.
-   */
+  T extends TMetisBaseComponents = TMetisBaseComponents,
+> implements TMissionComponent<T, Effect<T>>
+{
+  // Implemented
   public get mission(): TMission<T> {
     return this.action.mission
   }
@@ -39,42 +38,17 @@ export default abstract class Effect<
   }
 
   /**
-   * The corresponding action for the effect.
-   */
-  public action: TAction<T>
-
-  /**
-   * The ID of the effect.
-   */
-  public _id: string
-
-  // Implemented
-  public name: string
-
-  // Implemented
-  public trigger: TEffectTrigger
-
-  // Implemented
-  public description: string
-
-  // Implemented
-  public targetEnvironmentVersion: string
-
-  // Implemented
-  public args: AnyObject
-
-  /**
    * The target to which the effect will be applied.
    * @note This will be a Target Object if the data has
    * already been loaded. Otherwise, it will be the ID
    * of the target. If the target is not set, it will be
    * null.
    */
-  protected _target: TTarget<T> | TTargetJson['_id'] | null
+  protected _target: T['target'] | TTargetJson['_id'] | null
   /**
    * The target to which the effect will be applied.
    */
-  public get target(): TTarget<T> | null {
+  public get target(): T['target'] | null {
     if (this._target instanceof Target) {
       return this._target
     } else {
@@ -84,7 +58,7 @@ export default abstract class Effect<
   /**
    * The target to which the effect will be applied.
    */
-  public set target(target: TTarget<T>) {
+  public set target(target: T['target']) {
     if (target instanceof Target) {
       this._target = target
     } else {
@@ -96,7 +70,7 @@ export default abstract class Effect<
    * The ID of the target to which the effect will be applied.
    */
   public get targetId(): TTargetJson['_id'] | null {
-    let target: TTarget<T> | TTargetJson['_id'] | null = this._target
+    let target: T['target'] | TTargetJson['_id'] | null = this._target
 
     // If the target is a Target Object, return its ID.
     if (target instanceof Target) {
@@ -115,13 +89,201 @@ export default abstract class Effect<
   /**
    * The environment in which the target exists.
    */
-  public get targetEnvironment(): TTargetEnv<T> | null {
+  public get environment(): T['targetEnv'] | null {
     if (this.target instanceof Target) {
       return this.target.targetEnvironment
     } else {
       return null
     }
   }
+
+  /**
+   * The ID of the environment in which the target exists.
+   */
+  public get targetEnvironmentId(): TTargetJson['_id'] | null {
+    if (this.target instanceof Target) {
+      return this.target.targetEnvironment._id
+    } else {
+      return null
+    }
+  }
+
+  /**
+   * The corresponding action for the effect.
+   */
+  public action: TAction<T>
+
+  // Implemented
+  public _id: string
+
+  // Implemented
+  public targetEnvironmentVersion: string
+
+  // Implemented
+  public name: string
+
+  // Implemented
+  public get path(): [...TMissionComponent<any, any>[], this] {
+    return [this.mission, this.force, this.node, this.action, this]
+  }
+
+  // Implemented
+  public get defective(): boolean {
+    return this.defectiveMessage.length > 0
+  }
+
+  // Implemented
+  public get defectiveMessage(): string {
+    const { environment, target } = this
+
+    // If the effect's target or target environment cannot be found, then the effect is defective.
+    // *** Note: An effect grabs the target environment from the target after the
+    // *** target is populated. So, if the target cannot be found, the target will
+    // *** be set null which means the target environment will be null also.
+    // *** Also, if a target-environment cannot be found, then obviously the target
+    // *** within that environment cannot be found either.
+    if (!environment || !target) {
+      return (
+        `The effect, "${this.name}", has a target or a target environment that couldn't be found. ` +
+        `Please contact an administrator on how to resolve this conflict, or delete the effect and create a new one.`
+      )
+    }
+
+    // If the effect's target environment version doesn't match
+    // the current version, then the effect is defective.
+    if (this.targetEnvironmentVersion !== environment.version) {
+      return (
+        `The effect, "${this.name}", has a target environment, "${environment.name}", with an incompatible version. ` +
+        `Incompatible versions can cause an effect to fail to be applied to its target during a session. ` +
+        `Please contact an administrator on how to resolve this conflict, or delete the effect and create a new one.`
+      )
+    }
+
+    // Check the effect's arguments against the target's arguments.
+    // Check each argument.
+    for (let argId in this.args) {
+      // Find the argument in the target.
+      let arg = target.args.find((arg) => arg._id === argId)
+      // If the argument cannot be found, then the effect is defective.
+      if (!arg) {
+        return (
+          `The effect, "${this.name}", has an argument, "${argId}", that couldn't be found within the target, "${target.name}." ` +
+          `Please delete the effect and create a new one.`
+        )
+      }
+      // Otherwise, check the argument's value.
+      else {
+        // Check if the argument is required and has a value.
+        // * Note: Boolean arguments are always required because
+        // * they always have a value (true or false). Therefore,
+        // * they don't contain the required property.
+        if (
+          arg.type !== 'boolean' &&
+          arg.required &&
+          this.args[argId] === undefined &&
+          this.allDependenciesMet(arg.dependencies)
+        ) {
+          return (
+            `The argument, "${arg.name}", within the effect, "${this.name}", is required, yet has no value. ` +
+            `Please enter a value, or delete the effect and create a new one.`
+          )
+        }
+        // Check if the argument is a boolean and has a value.
+        if (
+          arg.type === 'boolean' &&
+          this.args[argId] === undefined &&
+          this.allDependenciesMet(arg.dependencies)
+        ) {
+          return (
+            `The argument, "${arg.name}", within the effect, "${this.name}", is required, yet has no value. ` +
+            `Please update the value by clicking the toggle switch, or delete the effect and create a new one.`
+          )
+        }
+        // Check if the argument is a dropdown and the selected option is valid.
+        if (
+          arg.type === 'dropdown' &&
+          !arg.options.find((option) => option._id === this.args[argId])
+        ) {
+          return (
+            `The effect, "${this.name}", has an invalid option selected. ` +
+            `Please select a valid option, or delete the effect and create a new one.`
+          )
+        }
+        // todo: implement pattern validation and determine how to display the pattern to the user
+        // // Check if the argument is a string and matches the required pattern.
+        // if (
+        //   arg.type === 'string' &&
+        //   arg.pattern &&
+        //   !arg.pattern.test(this.args[argId])
+        // ) {
+        //   this._invalidMessage =
+        //     `The field labeled "${arg.name}" does not match the required pattern ${arg.pattern}` +
+        //     `Please enter a valid value or delete this effect and create a new one.`
+        //   return true
+        // }
+        // Check if the argument is a force and the force exists.
+        if (
+          arg.type === 'force' &&
+          !this.mission.getForce(this.args[argId][ForceArg.FORCE_ID_KEY])
+        ) {
+          return `The effect, "${this.name}", targets a force, "${
+            this.args[argId][ForceArg.FORCE_NAME_KEY]
+          }", which cannot be found.`
+        }
+        // Check if the argument is a node and the node exists.
+        if (arg.type === 'node') {
+          // Get the force and node.
+          let force = this.mission.getForce(
+            this.args[argId][ForceArg.FORCE_ID_KEY],
+          )
+          let node = this.mission.getNode(this.args[argId][NodeArg.NODE_ID_KEY])
+          // If the force cannot be found, then the effect is defective.
+          if (!force) {
+            return `The effect, "${this.name}", targets a force, "${
+              this.args[argId][ForceArg.FORCE_NAME_KEY]
+            }", which cannot be found.`
+          }
+          // If the node cannot be found, then the effect is defective.
+          if (!node) {
+            return `The effect, "${this.name}", targets a node "${
+              this.args[argId][NodeArg.NODE_NAME_KEY]
+            }", which cannot be found.`
+          }
+        }
+        // If the argument exists within the effect even thought not all of its dependencies are met, then
+        // effect is defective.
+        if (
+          !this.allDependenciesMet(arg.dependencies) &&
+          this.args[argId] !== undefined
+        ) {
+          return (
+            `The effect, "${this.name}", has an argument, "${arg.name}", that doesn't belong. ` +
+            `Please delete the effect and create a new one.`
+          )
+        }
+      }
+    }
+
+    // If all checks pass, then the effect is not defective.
+    return ''
+  }
+
+  /**
+   * The impetus for the effect. Once the give event occurs
+   * on an action, this effect will be enacted.
+   */
+  public trigger: TEffectTrigger
+
+  /**
+   * Describes the purpose of the effect.
+   */
+  public description: string
+
+  /**
+   * The arguments to pass to the script in the
+   * target that will enact the effect.
+   */
+  public args: AnyObject
 
   /**
    * @param action The action to which the effect belongs.
@@ -182,7 +344,7 @@ export default abstract class Effect<
    */
   public allDependenciesMet = (
     dependencies: Dependency[] = [],
-    args: TEffect<T>['args'] = this.args,
+    args: T['effect']['args'] = this.args,
   ): boolean => {
     // If the argument has no dependencies, then the argument is always displayed.
     if (!dependencies || dependencies.length === 0) {
@@ -328,11 +490,12 @@ export type TEffectOptions = {
 export type TEffectJsonOptions = {}
 
 /**
- * Extracts the effect type from the mission types.
- * @param T The mission types.
+ * Extracts the effect type from a registry of
+ * METIS components that extends `TMetisBaseComponents`.
+ * @param T The type registry.
  * @returns The effect type.
  */
-export type TEffect<T extends TCommonMissionTypes> = T['effect']
+export type TEffect<T extends TMetisBaseComponents> = T['effect']
 
 /**
  * Valid triggers for an effect.
@@ -342,7 +505,7 @@ export type TEffectTrigger = 'immediate' | 'success' | 'failure'
 /**
  * The JSON representation of an `Effect` object.
  */
-export type TEffectJson = TCreateMissionJsonType<
+export type TEffectJson = TCreateJsonType<
   Effect,
   | '_id'
   | 'trigger'

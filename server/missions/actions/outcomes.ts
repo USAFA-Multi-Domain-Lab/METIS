@@ -2,8 +2,9 @@ import ExecutionOutcome, {
   TExecutionOutcomeJson,
   TOutcomeState,
 } from 'metis/missions/actions/outcomes'
+import { TMetisServerComponents } from 'metis/server'
+import StringToolbox from 'metis/toolbox/strings'
 import { PRNG } from 'seedrandom'
-import { TServerMissionTypes } from '..'
 import ServerActionExecution from './executions'
 
 /**
@@ -11,14 +12,16 @@ import ServerActionExecution from './executions'
  * @note Added to the node automatically by calling the `ServerMissionNode.handleOutcome`
  * method in the constructor.
  */
-export default class ServerExecutionOutcome extends ExecutionOutcome<TServerMissionTypes> {
+export default class ServerExecutionOutcome extends ExecutionOutcome<TMetisServerComponents> {
   /**
-   * @note Uses private constructor. Use the static `generateOutcome` method to generate an outcome.
+   * @note Uses private constructor. Use static methods to create new instances.
+   * @param _id Unique identifier for the outcome.
    * @param execution The execution itself.
    * @param options Options for creating the outcome. Pass `successStrength` to generate a successful
    * or failed outcome, or pass `aborted` to generate an aborted outcome.
    */
   private constructor(
+    _id: string,
     execution: ServerActionExecution,
     options: TServerOutcomeOptions,
   ) {
@@ -44,20 +47,20 @@ export default class ServerExecutionOutcome extends ExecutionOutcome<TServerMiss
     }
 
     // Call the parent constructor.
-    super(state, execution)
+    super(_id, state, execution)
   }
 
   /**
    * Create a new outcome object by loading a preexisting
    * outcome.
-   * @param state The state of the outcome.
+   * @param data The preexisting outcome data.
    * @param execution The execution associated with the outcome.
    */
   public static loadExisting(
     data: TExecutionOutcomeJson,
     execution: ServerActionExecution,
   ): ServerExecutionOutcome {
-    return new ServerExecutionOutcome(execution, {
+    return new ServerExecutionOutcome(data._id, execution, {
       method: 'load-existing',
       data,
     })
@@ -73,10 +76,14 @@ export default class ServerExecutionOutcome extends ExecutionOutcome<TServerMiss
     execution: ServerActionExecution,
     rng: PRNG,
   ): ServerExecutionOutcome {
-    return new ServerExecutionOutcome(execution, {
-      method: 'rng',
-      successStrength: rng.double(),
-    })
+    return new ServerExecutionOutcome(
+      StringToolbox.generateRandomId(),
+      execution,
+      {
+        method: 'rng',
+        successStrength: rng.double(),
+      },
+    )
   }
 
   /**
@@ -87,10 +94,14 @@ export default class ServerExecutionOutcome extends ExecutionOutcome<TServerMiss
   public static generateGuaranteedSuccess(
     execution: ServerActionExecution,
   ): ServerExecutionOutcome {
-    return new ServerExecutionOutcome(execution, {
-      method: 'rng',
-      successStrength: 2,
-    })
+    return new ServerExecutionOutcome(
+      StringToolbox.generateRandomId(),
+      execution,
+      {
+        method: 'rng',
+        successStrength: 2,
+      },
+    )
   }
 
   /**
@@ -101,10 +112,14 @@ export default class ServerExecutionOutcome extends ExecutionOutcome<TServerMiss
   public static generateAborted(
     execution: ServerActionExecution,
   ): ServerExecutionOutcome {
-    return new ServerExecutionOutcome(execution, {
-      method: 'abort',
-      abortedAt: Date.now(),
-    })
+    return new ServerExecutionOutcome(
+      StringToolbox.generateRandomId(),
+      execution,
+      {
+        method: 'abort',
+        abortedAt: Date.now(),
+      },
+    )
   }
 }
 

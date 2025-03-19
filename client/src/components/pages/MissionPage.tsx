@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useBeforeunload } from 'react-beforeunload'
 import { useGlobalContext, useNavigationMiddleware } from 'src/context'
-import ClientMission, { TMissionNavigable } from 'src/missions'
+import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
 import ClientMissionForce from 'src/missions/forces'
@@ -19,7 +19,7 @@ import {
   useRequireLogin,
 } from 'src/toolbox/hooks'
 import { DefaultLayout, TPage_P } from '.'
-import Mission from '../../../../shared/missions'
+import Mission, { TMissionComponent } from '../../../../shared/missions'
 import { TSingleTypeMapped, TWithKey } from '../../../../shared/toolbox/objects'
 import Prompt from '../content/communication/Prompt'
 import ActionEntry from '../content/edit-mission/entries/ActionEntry'
@@ -72,7 +72,7 @@ export default function MissionPage({
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(
     missionId === null ? true : false,
   )
-  const [selection, setSelection] = useState<TMissionNavigable>(
+  const [selection, setSelection] = useState<TMissionComponent<any, any>>(
     mission.selection,
   )
   const [nodeStructuringIsActive, activateNodeStructuring] =
@@ -249,8 +249,8 @@ export default function MissionPage({
     ['selection', 'set-transformation'],
     () => {
       // Get previous and next selections.
-      let prevSelection: TMissionNavigable = selection
-      let nextSelection: TMissionNavigable = mission.selection
+      let prevSelection = selection
+      let nextSelection = mission.selection
       let prevNode: ClientMissionNode | null =
         ClientMission.getNodeFromSelection(prevSelection)
       let nextNode: ClientMissionNode | null =
@@ -380,7 +380,7 @@ export default function MissionPage({
    */
   const handleChange = (): void => {
     setAreUnsavedChanges(true)
-    mission.evaluateObjects()
+    mission.evaluateComponents()
     forceUpdate()
   }
 

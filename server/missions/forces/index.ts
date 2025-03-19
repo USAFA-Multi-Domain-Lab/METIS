@@ -4,16 +4,17 @@ import {
   TMissionForceOptions,
 } from 'metis/missions/forces'
 import { TMissionNodeJson, TMissionNodeOptions } from 'metis/missions/nodes'
+import { TMetisServerComponents } from 'metis/server'
 import { TTargetEnvExposedForce } from 'metis/server/target-environments/context'
 import ServerUser from 'metis/server/users'
-import ServerMission, { TServerMissionTypes } from '..'
+import ServerMission from '..'
 import ServerMissionNode from '../nodes'
 import ServerOutput from './output'
 
 /**
- * Class for managing mission prototypes on the client.
+ * Class for managing mission forces on the server.
  */
-export default class ServerMissionForce extends MissionForce<TServerMissionTypes> {
+export default class ServerMissionForce extends MissionForce<TMetisServerComponents> {
   /**
    * @param mission The mission to which the force belongs.
    * @param data The force data from which to create the force. Any ommitted

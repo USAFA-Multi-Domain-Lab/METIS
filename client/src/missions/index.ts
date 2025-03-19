@@ -1,24 +1,23 @@
 import axios, { AxiosResponse } from 'axios'
+import { TMetisClientComponents } from 'src'
 import { TListItem } from 'src/components/content/data/lists/pages/ListItem'
 import { TLine_P } from 'src/components/content/session/mission-map/objects/Line'
 import { TPrototypeSlot_P } from 'src/components/content/session/mission-map/objects/PrototypeSlot'
-import SessionClient from 'src/sessions'
-import ClientSessionMember from 'src/sessions/members'
-import { ClientTargetEnvironment } from 'src/target-environments'
-import ClientTarget from 'src/target-environments/targets'
-import ClientUser from 'src/users'
 import { v4 as generateHash } from 'uuid'
 import { EventManager, TListenerTargetEmittable } from '../../../shared/events'
 import Mission, {
-  TCommonMissionTypes,
+  TMissionComponent,
   TMissionJson,
   TMissionOptions,
 } from '../../../shared/missions'
+import { TMissionActionJson } from '../../../shared/missions/actions'
+import { TEffectJson } from '../../../shared/missions/effects'
 import {
   MissionForce,
   TMissionForceOptions,
   TMissionForceSaveJson,
 } from '../../../shared/missions/forces'
+import { TMissionNodeJson } from '../../../shared/missions/nodes'
 import {
   TMissionPrototypeJson,
   TMissionPrototypeOptions,
@@ -28,11 +27,8 @@ import { AnyObject, TWithKey } from '../../../shared/toolbox/objects'
 import { Vector2D } from '../../../shared/toolbox/space'
 import User from '../../../shared/users'
 import ClientMissionAction from './actions'
-import ClientActionExecution from './actions/executions'
-import ClientExecutionOutcome from './actions/outcomes'
 import { ClientEffect } from './effects'
 import ClientMissionForce, { TClientMissionForceOptions } from './forces'
-import ClientOutput from './forces/outputs'
 import ClientMissionNode from './nodes'
 import ClientMissionPrototype, { TPrototypeRelation } from './nodes/prototypes'
 import MissionTransformation from './transformations'
@@ -44,10 +40,9 @@ import PrototypeTranslation from './transformations/translations'
  * @extends {Mission<ClientMissionNode>}
  */
 export default class ClientMission
-  extends Mission<TClientMissionTypes>
+  extends Mission<TMetisClientComponents>
   implements
     TListenerTargetEmittable<TMissionEventMethods, TMissionEventArgs>,
-    TMissionNavigable,
     TListItem
 {
   /**
@@ -116,20 +111,20 @@ export default class ClientMission
 
   /**
    * The current selection for the mission.
-   * @note This can be most type of nested, mission-related objects,
+   * @note This can be most type of nested, mission-related component,
    * such as nodes, forces, etc.
    * @note This is used in the form for editing.
    * @note By default, the mission itself.
    */
-  private _selection: TMissionNavigable
+  private _selection: TMissionComponent<any, any>
   /**
    * The current selection for the mission.
-   * @note This can be most type of nested, mission-related objects,
+   * @note This can be most type of nested, mission-related components,
    * such as nodes, forces, etc.
    * @note This is used in the form for editing.
    * @note By default, the mission itself.
    */
-  public get selection(): TMissionNavigable {
+  public get selection(): TMissionComponent<any, any> {
     return this._selection
   }
 
@@ -232,27 +227,6 @@ export default class ClientMission
    */
   public relationshipLines: TWithKey<TLine_P>[]
 
-  // Implemented
-  public get mission(): ClientMission {
-    return this
-  }
-
-  // Implemented
-  public get path(): TMissionNavigable[] {
-    return [this]
-  }
-
-  /**
-   * The list of defective objects found the mission.
-   */
-  private _defectiveObjects: TMissionComponent[]
-  /**
-   * The list of defective objects found the mission.
-   */
-  public get defectiveObjects(): TMissionComponent[] {
-    return this._defectiveObjects
-  }
-
   /**
    * The ID of the user that created the mission.
    */
@@ -308,7 +282,6 @@ export default class ClientMission
     this._transformation = null
     this.relationshipLines = []
     this.lastOpenedNode = null
-    this._defectiveObjects = []
     this._nonRevealedDisplayMode = nonRevealedDisplayMode
 
     // Initialize event manager.
@@ -330,7 +303,7 @@ export default class ClientMission
     this.handleStructureChange()
 
     // Evaluate nested objects.
-    this.evaluateObjects()
+    this.evaluateComponents()
   }
 
   // Implemented
@@ -375,51 +348,6 @@ export default class ClientMission
     )
     this.forces.push(...forces)
     return forces
-  }
-
-  /**
-   * Evaluates objects found within the mission to determine if they are defective.
-   * @param maxAmount The maximum amount of defective objects to evaluate.
-   */
-  public evaluateObjects(maxAmount?: number): void {
-    // Initialize invalid objects.
-    this._defectiveObjects = []
-
-    // Loop through forces.
-    for (let force of this.forces) {
-      // Validate the force.
-      if (force.isDefective()) this._defectiveObjects.push(force)
-      // Break if the max amount of defective objects
-      // has been reached.
-      if (maxAmount && this._defectiveObjects.length >= maxAmount) break
-
-      // Loop through nodes.
-      for (let node of force.nodes) {
-        // Validate the node.
-        if (node.isDefective()) this._defectiveObjects.push(node)
-        // Break if the max amount of defective objects
-        // has been reached.
-        if (maxAmount && this._defectiveObjects.length >= maxAmount) break
-
-        // Loop through actions.
-        for (let action of node.actions.values()) {
-          // Validate the action.
-          if (action.isDefective()) this._defectiveObjects.push(action)
-          // Break if the max amount of defective objects
-          // has been reached.
-          if (maxAmount && this._defectiveObjects.length >= maxAmount) break
-
-          // Loop through effects.
-          for (let effect of action.effects) {
-            // Validate the effect.
-            if (effect.isDefective()) this._defectiveObjects.push(effect)
-            // Break if the max amount of defective objects
-            // has been reached.
-            if (maxAmount && this._defectiveObjects.length >= maxAmount) break
-          }
-        }
-      }
-    }
   }
 
   /**
@@ -1044,7 +972,7 @@ export default class ClientMission
    * @param selection The selection to make for the mission.
    * @note Selection can be accessed via non-static field `ClientMission.selection`.
    */
-  public select(selection: TMissionNavigable): void {
+  public select(selection: TMissionComponent<any, any>): void {
     // Throw an error if the selection is not
     // part of the mission.
     if (selection.mission !== this)
@@ -1132,23 +1060,27 @@ export default class ClientMission
         nextColor?.color || MissionForce.DEFAULT_PROPERTIES.color
 
       // Update the force's nodes.
-      forceJson.nodes = forceJson.nodes.map((nodeJson) => {
+      forceJson.nodes = forceJson.nodes.map((nodeJson: TMissionNodeJson) => {
         // Set the node's ID to a new ID.
         nodeJson._id = ClientMissionNode.DEFAULT_PROPERTIES._id
         // Update the node's actions.
-        nodeJson.actions = nodeJson.actions.map((actionJson) => {
-          // Set the action's ID to a new ID.
-          actionJson._id = ClientMissionAction.DEFAULT_PROPERTIES._id
-          // Update the action's effects.
-          actionJson.effects = actionJson.effects.map((effectJson) => {
-            // Set the effect's ID to a new ID.
-            effectJson._id = ClientEffect.DEFAULT_PROPERTIES._id
-            // Return the effect JSON.
-            return effectJson
-          })
-          // Return the action JSON.
-          return actionJson
-        })
+        nodeJson.actions = nodeJson.actions.map(
+          (actionJson: TMissionActionJson) => {
+            // Set the action's ID to a new ID.
+            actionJson._id = ClientMissionAction.DEFAULT_PROPERTIES._id
+            // Update the action's effects.
+            actionJson.effects = actionJson.effects.map(
+              (effectJson: TEffectJson) => {
+                // Set the effect's ID to a new ID.
+                effectJson._id = ClientEffect.DEFAULT_PROPERTIES._id
+                // Return the effect JSON.
+                return effectJson
+              },
+            )
+            // Return the action JSON.
+            return actionJson
+          },
+        )
         // Return the node JSON.
         return nodeJson
       })
@@ -1233,7 +1165,7 @@ export default class ClientMission
    * selection.
    */
   public static getNodeFromSelection(
-    selection: TMissionNavigable,
+    selection: TMissionComponent<any, any>,
   ): ClientMissionNode | null {
     // Loop through path, and return the first node found.
     for (let item of selection.path) {
@@ -1251,7 +1183,7 @@ export default class ClientMission
    * selection.
    */
   public static getForceFromSelection(
-    selection: TMissionNavigable,
+    selection: TMissionComponent<any, any>,
   ): ClientMissionForce | null {
     // Loop through path, and return the first force found.
     for (let item of selection.path) {
@@ -1458,28 +1390,6 @@ export default class ClientMission
 /* ------------------------------ CLIENT MISSION TYPES ------------------------------ */
 
 /**
- * Client types for Mission objects.
- * @note Used as a generic argument for all client,
- * mission-related classes.
- */
-export interface TClientMissionTypes extends TCommonMissionTypes {
-  session: SessionClient
-  member: ClientSessionMember
-  user: ClientUser
-  mission: ClientMission
-  force: ClientMissionForce
-  output: ClientOutput
-  prototype: ClientMissionPrototype
-  node: ClientMissionNode
-  action: ClientMissionAction
-  execution: ClientActionExecution
-  outcome: ClientExecutionOutcome
-  targetEnv: ClientTargetEnvironment
-  target: ClientTarget
-  effect: ClientEffect
-}
-
-/**
  * Options for the creation of a ClientMission object.
  */
 export type TClientMissionOptions = TMissionOptions & {
@@ -1545,71 +1455,6 @@ export type TMissionImportResult = {
  * A function that handles a change in the mission's structure.
  */
 export type TStructureChangeListener = (structureChangeKey: string) => void
-
-/**
- * Represents an object that can support navigation within
- * a mission.
- * @note Implement this to make a class compatible.
- */
-export interface TMissionNavigable {
-  /**
-   * The mission associated with the object.
-   */
-  mission: ClientMission
-  /**
-   * The name of the object.
-   */
-  name: string
-  /**
-   * The path to object within the mission.
-   */
-  get path(): TMissionNavigable[]
-}
-
-/**
- * Represents an object that is a component of a mission.
- * @note Implement this to make a class compatible.
- */
-export interface TMissionComponent extends TMissionNavigable {
-  /**
-   * The object's ID.
-   */
-  _id: string
-  /**
-   * Whether the object is defective.
-   */
-  isDefective(): boolean
-  /**
-   * The message to display when the object is defective.
-   */
-  get defectiveMessage(): string
-}
-
-/**
- * Keyword arguments needed to evaluate objects found within the mission.
- * @example
- * {
- *  key: 'effects',
- *  targetEnvironments: []
- * }
- */
-export type TMissionObjectEvalKwargs<
-  T extends TCommonMissionTypes = TClientMissionTypes,
-> = TEffectEvalKwargs<T>
-
-/**
- * Keyword arguments needed to evaluate effects found within the mission.
- */
-type TEffectEvalKwargs<T extends TCommonMissionTypes = TClientMissionTypes> = {
-  /**
-   * The key to evaluate the objects against.
-   */
-  key: 'effects'
-  /**
-   * The target environments to use for evaluating effects.
-   */
-  targetEnvironments: T['targetEnv'][]
-}
 
 /**
  * The information needed to duplicate a force in a mission.

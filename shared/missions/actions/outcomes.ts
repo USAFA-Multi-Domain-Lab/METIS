@@ -1,6 +1,9 @@
-import { TMetisComponent } from 'metis/index'
+import {
+  TCreateJsonType,
+  TMetisBaseComponents,
+  TMetisComponent,
+} from 'metis/index'
 import { TAction } from '.'
-import { TCommonMissionTypes, TCreateMissionJsonType } from '..'
 import { TForce } from '../forces'
 import { TNode } from '../nodes'
 import { TExecution } from './executions'
@@ -9,8 +12,17 @@ import { TExecution } from './executions'
  * The outcome of an action being executed.
  */
 export default abstract class ExecutionOutcome<
-  T extends TCommonMissionTypes = TCommonMissionTypes,
-> {
+  T extends TMetisBaseComponents = TMetisBaseComponents,
+> implements TMetisComponent
+{
+  // Implemented
+  public readonly _id: string
+
+  // Implemented
+  public get name(): string {
+    return this._id.substring(0, 8)
+  }
+
   /**
    * Cache for `state` field.
    */
@@ -89,7 +101,12 @@ export default abstract class ExecutionOutcome<
    * any modifications are made.
    * @param execution The execution associated with the outcome.
    */
-  public constructor(initialState: TOutcomeState, execution: TExecution<T>) {
+  public constructor(
+    _id: string,
+    initialState: TOutcomeState,
+    execution: TExecution<T>,
+  ) {
+    this._id = _id
     this._state = initialState
     this.execution = execution
   }
@@ -99,6 +116,7 @@ export default abstract class ExecutionOutcome<
    */
   public toJson(): TExecutionOutcomeJson {
     return {
+      _id: this._id,
       executionId: this.executionId,
       state: this.state,
     }
@@ -106,18 +124,19 @@ export default abstract class ExecutionOutcome<
 }
 
 /**
- * Extracts the outcome type from the mission types.
- * @param T The mission types.
+ * Extracts the outcome type from a registry of
+ * METIS components that extends `TMetisBaseComponents`.
+ * @param T The type registry.
  * @returns The outcome type.
  */
-export type TOutcome<T extends TCommonMissionTypes> = T['outcome']
+export type TOutcome<T extends TMetisBaseComponents> = T['outcome']
 
 /**
  * The JSON representation of an execution outcome.
  */
-export type TExecutionOutcomeJson = TCreateMissionJsonType<
+export type TExecutionOutcomeJson = TCreateJsonType<
   ExecutionOutcome,
-  'executionId' | 'state'
+  '_id' | 'executionId' | 'state'
 >
 
 /**

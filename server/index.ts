@@ -4,6 +4,7 @@ import rateLimit, { RateLimitRequestHandler } from 'express-rate-limit'
 import session, { Session, SessionData } from 'express-session'
 import fs from 'fs'
 import http, { Server as HttpServer } from 'http'
+import { TMetisBaseComponents } from 'metis/index'
 import MetisDatabase from 'metis/server/database'
 import MetisRouter from 'metis/server/http/router'
 import { expressLogger, expressLoggingHandler } from 'metis/server/logging'
@@ -12,7 +13,20 @@ import path from 'path'
 import { sys } from 'typescript'
 import MetisWsServer from './connect'
 import MetisFileStore from './files'
+import ServerMission from './missions'
+import ServerMissionAction from './missions/actions'
+import ServerActionExecution from './missions/actions/executions'
+import ServerExecutionOutcome from './missions/actions/outcomes'
+import ServerEffect from './missions/effects'
+import ServerMissionForce from './missions/forces'
+import ServerOutput from './missions/forces/output'
+import ServerMissionNode from './missions/nodes'
+import ServerMissionPrototype from './missions/nodes/prototypes'
+import SessionServer from './sessions'
+import ServerSessionMember from './sessions/members'
 import ServerTargetEnvironment from './target-environments'
+import ServerTarget from './target-environments/targets'
+import ServerUser from './users'
 
 const dotenv = require('dotenv')
 const cookieParser = require('cookie-parser')
@@ -540,6 +554,28 @@ declare module 'express-session' {
   export interface SessionData {
     userId: string
   }
+}
+
+/**
+ * Server registry of METIS components types.
+ * @note This is used for all server-side METIS
+ * component classes.
+ */
+export interface TMetisServerComponents extends TMetisBaseComponents {
+  session: SessionServer
+  member: ServerSessionMember
+  user: ServerUser
+  targetEnv: ServerTargetEnvironment
+  target: ServerTarget
+  mission: ServerMission
+  force: ServerMissionForce
+  output: ServerOutput
+  prototype: ServerMissionPrototype
+  node: ServerMissionNode
+  action: ServerMissionAction
+  execution: ServerActionExecution
+  outcome: ServerExecutionOutcome
+  effect: ServerEffect
 }
 
 /**

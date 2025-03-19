@@ -1,5 +1,6 @@
-import { TMetisComponent } from 'metis/index'
-import Mission, { TCommonMissionTypes } from 'metis/missions'
+import memoizeOne from 'memoize-one/dist/memoize-one'
+import { TMetisBaseComponents, TMetisComponent } from 'metis/index'
+import Mission from 'metis/missions'
 import { TExecution } from 'metis/missions/actions/executions'
 import { TForce, TMissionForceSaveJson } from '.'
 
@@ -7,12 +8,16 @@ import { TForce, TMissionForceSaveJson } from '.'
  * An output that's displayed in a force's output panel.
  */
 export default abstract class MissionOutput<
-  T extends TCommonMissionTypes = TCommonMissionTypes,
-> {
-  /**
-   * The output's ID.
-   */
+  T extends TMetisBaseComponents = TMetisBaseComponents,
+> implements TMetisComponent
+{
+  // Implemented
   public readonly _id: string
+
+  // Implemented
+  public get name(): string {
+    return this._id.substring(0, 8)
+  }
 
   /**
    * Context for the output, providing additional
@@ -48,14 +53,14 @@ export default abstract class MissionOutput<
    * @returns The node in question, null if not found.
    * @memoized Recomputes when `nodeId` changes.
    */
-  private sourceNodeMemo = (nodeId: string): T['node'] | null => {
+  private sourceNodeMemo = memoizeOne((nodeId: string): T['node'] | null => {
     // todo: It may be useful to track when the
     // todo: node is referenced but not found in
     // todo: the mission. Perhaps the node is
     // todo: part of a different force, and therefore
     // todo: inaccessible, but very much a real node.
     return this.mission.getNode(nodeId) ?? null
-  }
+  })
 
   /**
    * A memoized function that returns the source execution
@@ -65,14 +70,16 @@ export default abstract class MissionOutput<
    * @returns The execution in question, null if not found.
    * @memoized Recomputes when `executionId` changes.
    */
-  private sourceExecutionMemo = (executionId: string): TExecution<T> | null => {
-    // todo: It may be useful to track when the
-    // todo: execution is referenced but not found in
-    // todo: the mission. Perhaps the execution is
-    // todo: part of a different force, and therefore
-    // todo: inaccessible, but very much a real execution.
-    return this.mission.getExecution(executionId) ?? null
-  }
+  private sourceExecutionMemo = memoizeOne(
+    (executionId: string): TExecution<T> | null => {
+      // todo: It may be useful to track when the
+      // todo: execution is referenced but not found in
+      // todo: the mission. Perhaps the execution is
+      // todo: part of a different force, and therefore
+      // todo: inaccessible, but very much a real execution.
+      return this.mission.getExecution(executionId) ?? null
+    },
+  )
 
   /**
    * The node that invoked the output, or associated
@@ -319,8 +326,9 @@ export type TOutputJson = {
 }
 
 /**
- * Extracts the output type from the mission types.
- * @param T The mission types.
- * @returns The output's type.
+ * Extracts the output type from a registry of
+ * METIS components that extends `TMetisBaseComponents`.
+ * @param T The type registry.
+ * @returns The output type.
  */
-export type TOutput<T extends TCommonMissionTypes> = T['output']
+export type TOutput<T extends TMetisBaseComponents> = T['output']

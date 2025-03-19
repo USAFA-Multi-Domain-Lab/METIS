@@ -101,7 +101,7 @@ export default function ActionEntry({
    * @returns The tooltip description for the effect list item.
    */
   const getEffectDescription = (effect: ClientEffect) => {
-    if (!effect.targetEnvironment || !effect.target) {
+    if (!effect.environment || !effect.target) {
       return 'This effect cannot be edited because either the target environment or the target associated with this effect is not available.'
     } else if (login.user.isAuthorized('missions_write')) {
       return 'Edit effect.'
@@ -122,7 +122,7 @@ export default function ActionEntry({
       <div className='BorderBox'>
         {/* -- TOP OF BOX -- */}
         <div className='BoxTop'>
-          <EntryNavigation object={action} />
+          <EntryNavigation component={action} />
         </div>
 
         {/* -- MAIN CONTENT -- */}

@@ -230,7 +230,7 @@ export default function NodeEntry({
       <div className='BorderBox'>
         {/* -- TOP OF BOX -- */}
         <div className='BoxTop'>
-          <EntryNavigation object={node} />
+          <EntryNavigation component={node} />
         </div>
 
         {/* -- MAIN CONTENT -- */}

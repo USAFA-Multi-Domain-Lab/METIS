@@ -1,10 +1,10 @@
 import memoizeOne from 'memoize-one'
+import { TMetisClientComponents } from 'src'
 import {
   TMapCompatibleNode,
   TMapCompatibleNodeEvent,
   TNodeButton,
 } from 'src/components/content/session/mission-map/objects/nodes'
-import { TClientMissionTypes, TMissionComponent, TMissionNavigable } from '..'
 import { TRequestMethod } from '../../../../shared/connect/data'
 import {
   EventManager,
@@ -24,11 +24,8 @@ import ClientMissionForce from '../forces'
  * Class for managing mission nodes on the client.
  */
 export default class ClientMissionNode
-  extends MissionNode<TClientMissionTypes>
-  implements
-    TListenerTargetEmittable<TNodeEventMethod>,
-    TMissionComponent,
-    TMapCompatibleNode
+  extends MissionNode<TMetisClientComponents>
+  implements TListenerTargetEmittable<TNodeEventMethod>, TMapCompatibleNode
 {
   // Implemented
   public get exclude(): boolean {
@@ -261,22 +258,6 @@ export default class ClientMissionNode
     }
   }
 
-  // Implemented
-  public get path(): TMissionNavigable[] {
-    return [this.mission, this.force, this]
-  }
-
-  /**
-   * The message to display when the node is defective.
-   */
-  private _defectiveMessage: string
-  /**
-   * The message to display when the node is defective.
-   */
-  public get defectiveMessage(): string {
-    return this._defectiveMessage
-  }
-
   /**
    * The execution time remaining for the node.
    */
@@ -301,19 +282,11 @@ export default class ClientMissionNode
   ) {
     super(force, data, options)
     this._buttons = []
-    this._defectiveMessage = ''
+
     this.eventManager = new EventManager(this)
     this.addEventListener = this.eventManager.addEventListener
     this.removeEventListener = this.eventManager.removeEventListener
     this.emitEvent = this.eventManager.emitEvent
-  }
-
-  /**
-   * Evaluates if the node is defective or not.
-   * @returns boolean indicating if the node is defective or not.
-   */
-  public isDefective(): boolean {
-    return false
   }
 
   // Implemented

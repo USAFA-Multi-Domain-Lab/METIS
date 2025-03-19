@@ -1,6 +1,6 @@
-import { TCommonMissionTypes } from 'metis/missions'
+import { TMetisBaseComponents, TMetisComponent } from 'metis/index'
 import { MissionForce, TForce } from 'metis/missions/forces'
-import { TSessionUser, TUserJson } from 'metis/users'
+import { TUser, TUserJson } from 'metis/users'
 import { TSession } from '..'
 import MemberPermission from './permissions'
 import MemberRole, { TMemberRoleId } from './roles'
@@ -11,29 +11,33 @@ import MemberRole, { TMemberRoleId } from './roles'
  * Represents a user using METIS.
  */
 export default abstract class SessionMember<
-  T extends TCommonMissionTypes = TCommonMissionTypes,
-> {
-  /**
-   * The unique ID of the session member.
-   */
+  T extends TMetisBaseComponents = TMetisBaseComponents,
+> implements TMetisComponent
+{
+  // Implemented
   public _id: string
+
+  // Implemented
+  public get name(): string {
+    return this.user.name
+  }
 
   /**
    * The user that is a member of the session.
    */
-  public user: TSessionUser<T>
+  public user: TUser<T>
 
   /**
    * The ID of the user that is a member of the session.
    */
-  public get userId(): TSessionUser<T>['_id'] {
+  public get userId(): TUser<T>['_id'] {
     return this.user._id
   }
 
   /**
    * The username of the user that is a member of the session.
    */
-  public get username(): TSessionUser<T>['username'] {
+  public get username(): TUser<T>['username'] {
     return this.user.username
   }
 
@@ -120,7 +124,7 @@ export default abstract class SessionMember<
    */
   protected constructor(
     _id: string,
-    user: TSessionUser<T>,
+    user: TUser<T>,
     role: MemberRole,
     forceId: TForce<T>['_id'] | null,
     session: TSession<T>,
@@ -166,11 +170,12 @@ export default abstract class SessionMember<
 /* -- TYPES -- */
 
 /**
- * Extracts the session member type from the session types.
- * @param T The session types.
- * @returns The session member type.
+ * Extracts the member type from a registry of METIS
+ * components type that extends `TMetisBaseComponents`.
+ * @param T The type registry.
+ * @returns The member type.
  */
-export type TMember<T extends TCommonMissionTypes> = T['member']
+export type TMember<T extends TMetisBaseComponents> = T['member']
 
 /**
  * The JSON representation of a User object.

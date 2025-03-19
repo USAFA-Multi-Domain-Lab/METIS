@@ -1,4 +1,4 @@
-import { TClientMissionTypes } from 'src/missions'
+import { TMetisClientComponents } from 'src'
 import { ClientTargetEnvironment } from '.'
 import Target from '../../../shared/target-environments/targets'
 
@@ -6,7 +6,7 @@ import Target from '../../../shared/target-environments/targets'
  * Class representing a target within a target environment
  * on the client-side.
  */
-export default class ClientTarget extends Target<TClientMissionTypes> {
+export default class ClientTarget extends Target<TMetisClientComponents> {
   /**
    * Grabs a specific target from a target environment by its ID.
    * @param id The ID of the target to grab.

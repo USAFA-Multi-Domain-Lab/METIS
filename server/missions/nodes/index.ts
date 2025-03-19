@@ -1,8 +1,8 @@
 import { TMissionActionJson } from 'metis/missions/actions'
 import { TActionExecutionJson } from 'metis/missions/actions/executions'
 import MissionNode from 'metis/missions/nodes'
+import { TMetisServerComponents } from 'metis/server'
 import { TTargetEnvExposedNode } from 'metis/server/target-environments/context'
-import { TServerMissionTypes } from '..'
 import ServerMissionAction, { TServerMissionActionOptions } from '../actions'
 import ServerActionExecution from '../actions/executions'
 import ServerExecutionOutcome from '../actions/outcomes'
@@ -10,7 +10,7 @@ import ServerExecutionOutcome from '../actions/outcomes'
 /**
  * Class for managing mission nodes on a session server.
  */
-export default class ServerMissionNode extends MissionNode<TServerMissionTypes> {
+export default class ServerMissionNode extends MissionNode<TMetisServerComponents> {
   // Implemented
   public get exclude(): boolean {
     return this._exclude

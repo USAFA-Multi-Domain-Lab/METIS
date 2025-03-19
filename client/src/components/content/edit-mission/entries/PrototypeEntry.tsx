@@ -56,7 +56,7 @@ export default function PrototypeEntry({
       <div className='BorderBox'>
         {/* -- TOP OF BOX -- */}
         <div className='BoxTop'>
-          <EntryNavigation object={prototype} />
+          <EntryNavigation component={prototype} />
         </div>
 
         {/* -- MAIN CONTENT -- */}

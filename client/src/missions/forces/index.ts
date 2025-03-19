@@ -1,9 +1,6 @@
+import { TMetisClientComponents } from 'src'
 import { TLine_P } from 'src/components/content/session/mission-map/objects/Line'
-import ClientMission, {
-  TClientMissionTypes,
-  TMissionComponent,
-  TMissionNavigable,
-} from '..'
+import ClientMission from '..'
 import { TListenerTargetEmittable } from '../../../../shared/events'
 import {
   MissionForce,
@@ -26,29 +23,14 @@ import ClientOutput from './outputs'
  * Class for managing mission prototypes on the client.
  */
 export default class ClientMissionForce
-  extends MissionForce<TClientMissionTypes>
-  implements TListenerTargetEmittable<TForceEventMethod>, TMissionComponent
+  extends MissionForce<TMetisClientComponents>
+  implements TListenerTargetEmittable<TForceEventMethod>
 {
   /**
    * The lines used to connect nodes on the mission map.
    */
   public relationshipLines: TWithKey<TLine_P>[]
 
-  // Implemented
-  public get path(): TMissionNavigable[] {
-    return [this.mission, this]
-  }
-
-  /**
-   * The message to display when the force is defective.
-   */
-  private _defectiveMessage: string
-  /**
-   * The message to display when the force is defective.
-   */
-  public get defectiveMessage(): string {
-    return this._defectiveMessage
-  }
   /**
    * Listeners for force events.
    */
@@ -83,18 +65,9 @@ export default class ClientMissionForce
   ) {
     super(mission, data, options)
     this.relationshipLines = []
-    this._defectiveMessage = ''
 
     // If output data is provided, parse it.
     if (data.outputs) this._outputs = this.parseOutputs(data.outputs)
-  }
-
-  /**
-   * Evaluates if the force is defective or not.
-   * @returns boolean indicating if the force is defective or not.
-   */
-  public isDefective(): boolean {
-    return false
   }
 
   // Implemented

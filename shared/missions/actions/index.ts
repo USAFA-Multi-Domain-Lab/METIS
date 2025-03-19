@@ -1,9 +1,6 @@
+import { TCreateJsonType, TMetisBaseComponents } from 'metis/index'
 import { v4 as generateHash } from 'uuid'
-import Mission, {
-  TCommonMissionTypes,
-  TCreateMissionJsonType,
-  TMission,
-} from '..'
+import Mission, { TMission, TMissionComponent } from '..'
 import { TEffect, TEffectJson, TEffectOptions } from '../effects'
 import { TForce } from '../forces'
 import { TNode, TNodeJsonOptions } from '../nodes'
@@ -12,8 +9,12 @@ import { TNode, TNodeJsonOptions } from '../nodes'
  * An action that can be executed on a mission node, causing a certain effect.
  */
 export default abstract class MissionAction<
-  T extends TCommonMissionTypes = TCommonMissionTypes,
-> {
+  T extends TMetisBaseComponents = TMetisBaseComponents,
+> implements TMissionComponent<T, MissionAction<T>>
+{
+  public get mission(): TMission<T> {
+    return this.node.mission
+  }
   /**
    * The node on which the action is being executed.
    */
@@ -28,6 +29,21 @@ export default abstract class MissionAction<
    * The name of the action.
    */
   public name: string
+
+  // Implemented
+  public get path(): [...TMissionComponent<any, any>[], this] {
+    return [this.mission, this.force, this.node, this]
+  }
+
+  // Implemented
+  public get defective(): boolean {
+    return false
+  }
+
+  // Implemented
+  public get defectiveMessage(): string {
+    return ''
+  }
 
   /**
    * The description of the action.
@@ -170,13 +186,6 @@ export default abstract class MissionAction<
       latestExecution.action._id === this._id &&
       latestExecution.status === 'executing'
     )
-  }
-
-  /**
-   * The mission of which the action is a part.
-   */
-  public get mission(): TMission<T> {
-    return this.node.mission as TMission<T>
   }
 
   /**
@@ -433,15 +442,17 @@ export type TMissionActionOptions = {
 export type TActionJsonOptions = TNodeJsonOptions
 
 /**
- * Extracts the action type from the mission types.
- * @param T The mission types.
+ * Extracts the action type from a registry of
+ * METIS components that extends `TMetisBaseComponents`.
+ * @param T The type registry.
  * @returns The action type.
  */
-export type TAction<T extends TCommonMissionTypes> = T['action']
+export type TAction<T extends TMetisBaseComponents> = T['action']
+
 /**
- * Plain JSON representation of a MissionAction object.
+ * Plain JSON representation of a `MissionAction` object.
  */
-export type TMissionActionJson = TCreateMissionJsonType<
+export type TMissionActionJson = TCreateJsonType<
   MissionAction,
   | '_id'
   | 'name'
