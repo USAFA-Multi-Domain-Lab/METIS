@@ -8,7 +8,7 @@ import { ServerEmittedError } from 'metis/connect/errors'
 import { TMissionJson, TMissionJsonOptions } from 'metis/missions'
 import { TEffectTrigger } from 'metis/missions/effects'
 import { TOutputContext, TOutputType } from 'metis/missions/forces/output'
-import ServerMission, { TServerMissionTypes } from 'metis/server/missions'
+import ServerMission from 'metis/server/missions'
 import ServerMissionAction from 'metis/server/missions/actions'
 import ServerMissionNode from 'metis/server/missions/nodes'
 import Session, {
@@ -22,6 +22,7 @@ import { TSingleTypeObject } from 'metis/toolbox/objects'
 import User from 'metis/users'
 import { v4 as generateHash } from 'uuid'
 import ClientConnection from '../connect/clients'
+import { TMetisServerComponents } from '../index'
 import { plcApiLogger } from '../logging'
 import ServerActionExecution from '../missions/actions/executions'
 import ServerExecutionOutcome from '../missions/actions/outcomes'
@@ -35,7 +36,7 @@ import ServerSessionMember from './members'
 /**
  * Server instance for sessions. Handles server-side logic for a session with participating clients. Communicates with clients to conduct the session.
  */
-export default class SessionServer extends Session<TServerMissionTypes> {
+export default class SessionServer extends Session<TMetisServerComponents> {
   // Overridden.
   public get state() {
     return this._state
@@ -103,7 +104,6 @@ export default class SessionServer extends Session<TServerMissionTypes> {
    * @returns The users.
    */
   public getMembersForForce(forceId: string): ServerSessionMember[] {
-    let x: TServerMissionTypes['member']
     // Get all members that either have complete visibility
     // or are assigned to the force with the given ID.
     return [
@@ -1630,7 +1630,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
   ): Promise<void> {
     // If the effect doesn't have a target environment,
     // log an error.
-    if (effect.targetEnvironment === null) {
+    if (effect.environment === null) {
       throw new Error(
         `The force - "${effect.force.name}" - has a node - "${effect.node.name}" - has an action - "${effect.action.name}" - with an effect - "${effect.name}" - that doesn't have a target environment or the target environment doesn't exist.`,
       )
@@ -1653,7 +1653,7 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     } catch (error: any) {
       // Give additional information about the error.
       let message =
-        `Failed to apply effect - "${effect.name}" - to target - "${effect.target.name}" - found in the environment - "${effect.targetEnvironment.name}".\n` +
+        `Failed to apply effect - "${effect.name}" - to target - "${effect.target.name}" - found in the environment - "${effect.environment.name}".\n` +
         `The effect - "${effect.name}" - can be found here:\n` +
         `force - "${effect.force.name}" - node - "${effect.node.name}" - action - "${effect.action.name}" - effect - "${effect.name}".\n`
       // Log the error.

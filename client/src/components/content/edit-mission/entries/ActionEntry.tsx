@@ -13,14 +13,13 @@ import { DetailLargeString } from '../../form/DetailLargeString'
 import { DetailNumber } from '../../form/DetailNumber'
 import { DetailString } from '../../form/DetailString'
 import { DetailToggle } from '../../form/DetailToggle'
+import Divider from '../../form/Divider'
 import ListOld, { ESortByMethod } from '../../general-layout/ListOld'
 import { TButtonSvgType } from '../../user-controls/buttons/ButtonSvg'
 import ButtonSvgPanel_v2 from '../../user-controls/buttons/ButtonSvgPanel_v2'
 import { ButtonText } from '../../user-controls/buttons/ButtonText'
 import './index.scss'
 import EntryNavigation from './navigation/EntryNavigation'
-import DetailGrouping from '../../form/DetailGrouping'
-import Divider from '../../form/Divider'
 
 /**
  * This will render the entry fields for an action
@@ -127,7 +126,7 @@ export default function ActionEntry({
      * The tooltip description for the edit button.
      */
     const editTooltipDescription: string = compute(() => {
-      if (!effect.targetEnvironment || !effect.target) {
+      if (!effect.environment || !effect.target) {
         return 'This effect cannot be edited because either the target environment or the target associated with this effect is not available.'
       } else if (login.user.isAuthorized('missions_write')) {
         return 'Edit effect.'
@@ -147,7 +146,7 @@ export default function ActionEntry({
 
       // If the effect doesn't have a target or target environment,
       // then partially disable the effect.
-      if (!effect.targetEnvironment || !effect.target) {
+      if (!effect.environment || !effect.target) {
         classList.push('PartiallyDisabled')
       }
 
@@ -188,7 +187,7 @@ export default function ActionEntry({
       <div className='BorderBox'>
         {/* -- TOP OF BOX -- */}
         <div className='BoxTop'>
-          <EntryNavigation object={action} />
+          <EntryNavigation component={action} />
         </div>
 
         {/* -- MAIN CONTENT -- */}

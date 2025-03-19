@@ -115,7 +115,7 @@ export default function ForceEntry({
       <div className='BorderBox'>
         {/* -- TOP OF BOX -- */}
         <div className='BoxTop'>
-          <EntryNavigation object={force} />
+          <EntryNavigation component={force} />
         </div>
 
         {/* -- MAIN CONTENT -- */}

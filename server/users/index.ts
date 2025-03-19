@@ -1,11 +1,12 @@
 import User, { TUserJson, TUserOptions } from 'metis/users'
+import { TMetisServerComponents } from '../index'
 import { TTargetEnvExposedUser } from '../target-environments/context'
 
 /**
  * Class for managing users on the server.
  * @extends {User}
  */
-export default class ServerUser extends User {
+export default class ServerUser extends User<TMetisServerComponents> {
   /**
    * Validates a hashed password.
    * @param password The password to validate.

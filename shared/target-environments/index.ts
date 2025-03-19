@@ -1,12 +1,12 @@
-import { TCommonMissionTypes } from 'metis/missions'
 import { AnyObject } from 'metis/toolbox/objects'
-import Target, { TTargetJson, TTarget } from './targets'
+import { TMetisBaseComponents } from '..'
+import Target, { TTarget, TTargetJson } from './targets'
 
 /**
  * This is the environment in which the target(s) exist.
  */
 export default abstract class TargetEnvironment<
-  T extends TCommonMissionTypes = TCommonMissionTypes,
+  T extends TMetisBaseComponents = TMetisBaseComponents,
 > {
   /**
    * The ID of the target environment.
@@ -120,11 +120,12 @@ export default abstract class TargetEnvironment<
 /* ------------------------------ TARGET ENVIRONMENT TYPES ------------------------------ */
 
 /**
- * Extracts the target env type from the mission types.
- * @param T The mission types.
- * @returns The target env type.
+ * Extracts the target environment type from a registry of METIS
+ * components type that extends `TMetisBaseComponents`.
+ * @param T The type registry.
+ * @returns The target environment type.
  */
-export type TTargetEnv<T extends TCommonMissionTypes> = T['targetEnv']
+export type TTargetEnv<T extends TMetisBaseComponents> = T['targetEnv']
 
 /**
  * The JSON representation of a TargetEnvironment object.

@@ -1,6 +1,7 @@
 import axios from 'axios'
+import { TMetisClientComponents } from 'src'
 import ServerConnection from 'src/connect/servers'
-import ClientMission, { TClientMissionTypes } from 'src/missions'
+import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
 import ClientActionExecution from 'src/missions/actions/executions'
 import ClientExecutionOutcome from 'src/missions/actions/outcomes'
@@ -32,7 +33,7 @@ import ClientSessionMember from './members'
 /**
  * Client instance for sessions. Handles client-side logic for sessions. Communicates with server to conduct a session.
  */
-export default class SessionClient extends Session<TClientMissionTypes> {
+export default class SessionClient extends Session<TMetisClientComponents> {
   /**
    * The server connection used to communicate with the server.
    */
@@ -1196,7 +1197,11 @@ export default class SessionClient extends Session<TClientMissionTypes> {
     const execution = this.mission.getExecution(executionId)
     if (!execution) throw new Error(`Execution "${executionId}" not be found.`)
     const { node } = execution
-    const outcome = new ClientExecutionOutcome(outcomeData.state, execution)
+    const outcome = new ClientExecutionOutcome(
+      outcomeData._id,
+      outcomeData.state,
+      execution,
+    )
 
     // Handle outcome on different levels.
     execution.onOutcome(outcome)

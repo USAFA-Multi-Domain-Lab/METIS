@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
-import ClientMission, { TMissionComponent } from 'src/missions'
+import ClientMission from 'src/missions'
 import SessionClient from 'src/sessions'
 import { compute } from 'src/toolbox'
 import { useMountHandler, useRequireLogin } from 'src/toolbox/hooks'
 import { DefaultLayout } from '.'
 
+import { TMissionComponent } from '../../../../shared/missions'
 import Session from '../../../../shared/sessions'
 import { ESortByMethod } from '../content/general-layout/ListOld'
 import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
@@ -95,7 +96,7 @@ export default function LaunchPage({
   /**
    * Renders JSX for the effect list item.
    */
-  const renderObjectListItem = (object: TMissionComponent) => {
+  const renderObjectListItem = (component: TMissionComponent<any, any>) => {
     /* -- COMPUTED -- */
 
     /**
@@ -107,14 +108,14 @@ export default function LaunchPage({
     )
 
     return (
-      <div className='Row' key={`object-row-${object._id}`}>
+      <div className='Row' key={`object-row-${component._id}`}>
         <ButtonSvg
           type='warning-transparent'
           cursor='help'
           description={description}
           onClick={() => {}}
         />
-        <div className='RowContent'>{object.defectiveMessage}</div>
+        <div className='RowContent'>{component.defectiveMessage}</div>
       </div>
     )
   }
@@ -129,7 +130,7 @@ export default function LaunchPage({
         // If there are invalid objects and effects are enabled...
         if (
           sessionConfig.effectsEnabled &&
-          mission.defectiveObjects.length > 0
+          mission.defectiveComponents.length > 0
         ) {
           // Create a message for the user.
           let message =
@@ -155,7 +156,7 @@ export default function LaunchPage({
           // Prompt the user for a choice.
           let { choice } = await prompt(message, choices, {
             list: {
-              items: mission.defectiveObjects,
+              items: mission.defectiveComponents,
               headingText: 'Unresolved Conflicts',
               sortByMethods: [ESortByMethod.Name],
               searchableProperties: ['name'],

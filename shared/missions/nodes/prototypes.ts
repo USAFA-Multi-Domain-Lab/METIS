@@ -1,13 +1,15 @@
+import { TMetisBaseComponents } from 'metis/index'
 import { v4 as generateHash } from 'uuid'
-import Mission, { TCommonMissionTypes, TMission } from '..'
+import { TMission, TMissionComponent } from '..'
 
 /**
  * This represents a prototype for a mission node displayed
  * in the master tab in the mission map.
  */
 export default abstract class MissionPrototype<
-  T extends TCommonMissionTypes = TCommonMissionTypes,
-> {
+  T extends TMetisBaseComponents = TMetisBaseComponents,
+> implements TMissionComponent<T, MissionPrototype<T>>
+{
   /**
    * The mission of which the prototype is a part.
    */
@@ -17,6 +19,27 @@ export default abstract class MissionPrototype<
    * The ID for the prototype.
    */
   public _id: string
+
+  /**
+   * The display name of the prototype.
+   */
+  public get name(): string {
+    return this._id.substring(0, 8)
+  }
+
+  public get path(): [...TMissionComponent<any, any>[], this] {
+    return [this.mission, this]
+  }
+
+  // Implemented
+  public get defective(): boolean {
+    return false
+  }
+
+  // Implemented
+  public get defectiveMessage(): string {
+    return ''
+  }
 
   /**
    * The parent of this prototype in the tree structure.
@@ -250,8 +273,9 @@ export type TMissionPrototypeOptions<TRelative extends MissionPrototype> = {
 }
 
 /**
- * Extracts the prototype type from the mission types.
- * @param T The mission types.
+ * Extracts the prototype type from a registry of
+ * METIS components that extends `TMetisBaseComponents`.
+ * @param T The type registry.
  * @returns The prototype type.
  */
-export type TPrototype<T extends TCommonMissionTypes> = T['prototype']
+export type TPrototype<T extends TMetisBaseComponents> = T['prototype']

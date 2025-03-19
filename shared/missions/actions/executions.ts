@@ -1,6 +1,10 @@
-import { TMetisComponent } from 'metis/index'
+import {
+  TCreateJsonType,
+  TMetisBaseComponents,
+  TMetisComponent,
+} from 'metis/index'
 import { TAction } from '.'
-import { TCommonMissionTypes, TCreateMissionJsonType } from '..'
+import { TMission } from '..'
 import { TNode } from '../nodes'
 import { TExecutionOutcomeJson, TOutcome, TOutcomeState } from './outcomes'
 
@@ -10,7 +14,7 @@ import { TExecutionOutcomeJson, TOutcome, TOutcomeState } from './outcomes'
  * The execution of an action.
  */
 export default abstract class ActionExecution<
-  T extends TCommonMissionTypes = TCommonMissionTypes,
+  T extends TMetisBaseComponents = TMetisBaseComponents,
 > implements TMetisComponent
 {
   // Implemented
@@ -39,10 +43,17 @@ export default abstract class ActionExecution<
   }
 
   /**
-   * The node upon which the action executed.
+   * The node upon which the execution takes place.
    */
   public get node(): TNode<T> {
     return this.action.node
+  }
+
+  /**
+   * The mission in which the execution takes place.
+   */
+  public get mission(): TMission<T> {
+    return this.node.mission
   }
 
   /**
@@ -210,16 +221,17 @@ export default abstract class ActionExecution<
 /* -- TYPES -- */
 
 /**
- * Extracts the execution type from the mission types.
- * @param T The mission types.
+ * Extracts the execution type from a registry of
+ * METIS components that extends `TMetisBaseComponents`.
+ * @param T The type registry.
  * @returns The execution type.
  */
-export type TExecution<T extends TCommonMissionTypes> = T['execution']
+export type TExecution<T extends TMetisBaseComponents> = T['execution']
 
 /**
  * The JSON representation of an action execution.
  */
-export type TActionExecutionJson = TCreateMissionJsonType<
+export type TActionExecutionJson = TCreateJsonType<
   ActionExecution,
   '_id' | 'actionId' | 'nodeId' | 'start' | 'end',
   { outcome: TExecutionOutcomeJson | null }

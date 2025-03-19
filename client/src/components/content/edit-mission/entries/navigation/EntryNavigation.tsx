@@ -1,13 +1,14 @@
 import Tooltip from 'src/components/content/communication/Tooltip'
-import ClientMission, { TMissionNavigable } from 'src/missions'
+import ClientMission from 'src/missions'
 import { compute } from 'src/toolbox'
+import { TMissionComponent } from '../../../../../../../shared/missions'
 import './EntryNavigation.scss'
 
 /**
  * Navigation for an entry component.
  */
 export default function EntryNavigation({
-  object,
+  component: object,
 }: TEntryNavigation_P): JSX.Element | null {
   /* -- COMPUTED -- */
 
@@ -86,7 +87,8 @@ export default function EntryNavigation({
  */
 export type TEntryNavigation_P = {
   /**
-   * The navigation-compatible object displayed in the entry.
+   * The navigation-compatible component displayed
+   * in the entry.
    */
-  object: TMissionNavigable
+  component: TMissionComponent<any, any>
 }

@@ -1,5 +1,6 @@
-import { TCommonMissionTypes } from 'metis/missions'
+import { TBaseMissionComponents } from 'metis/missions'
 import { v4 as generateHash } from 'uuid'
+import { TMetisBaseComponents, TMetisComponent } from '..'
 import UserAccess, { TUserAccess } from './accesses'
 import UserPermission, {
   TUserPermission,
@@ -9,10 +10,11 @@ import UserPermission, {
 /**
  * Represents a user using METIS.
  */
-export default abstract class User {
-  /**
-   * The user's ID.
-   */
+export default abstract class User<
+  T extends TBaseMissionComponents = TBaseMissionComponents,
+> implements TMetisComponent
+{
+  // Implemented
   public _id: string
 
   /**
@@ -250,11 +252,12 @@ export default abstract class User {
 /* ------------------------------ USER TYPES ------------------------------ */
 
 /**
- * Extracts the session user type from the session types.
- * @param T The session types.
- * @returns The session user type.
+ * Extracts the user type from a registry of METIS
+ * components type that extends `TMetisBaseComponents`.
+ * @param T The type registry.
+ * @returns The user type.
  */
-export type TSessionUser<T extends TCommonMissionTypes> = T['user']
+export type TUser<T extends TMetisBaseComponents> = T['user']
 
 /**
  * Options for creating new User objects.

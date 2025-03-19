@@ -1,5 +1,8 @@
 import { ClientEffect } from 'src/missions/effects'
 import { useObjectFormSync } from 'src/toolbox/hooks'
+import { TEffectTrigger } from '../../../../../../shared/missions/effects'
+import StringToolbox from '../../../../../../shared/toolbox/strings'
+import { DetailDropdown } from '../../form/DetailDropdown'
 import { DetailLargeString } from '../../form/DetailLargeString'
 import { DetailLocked } from '../../form/DetailLocked'
 import { DetailString } from '../../form/DetailString'
@@ -7,16 +10,13 @@ import { ButtonText } from '../../user-controls/buttons/ButtonText'
 import ArgEntry from '../target-effects/ArgEntry'
 import './index.scss'
 import EntryNavigation from './navigation/EntryNavigation'
-import { TEffectTrigger } from '../../../../../../shared/missions/effects'
-import { DetailDropdown } from '../../form/DetailDropdown'
-import StringToolbox from '../../../../../../shared/toolbox/strings'
 
 /**
  * Entry fields for an effect.
  */
 export default function EffectEntry({
   effect,
-  effect: { target, targetEnvironment: targetEnv },
+  effect: { target, environment },
   handleDeleteEffectRequest,
   onChange,
 }: TEffectEntry_P): JSX.Element | null {
@@ -39,7 +39,7 @@ export default function EffectEntry({
       <div className='BorderBox'>
         {/* -- TOP OF BOX -- */}
         <div className='BoxTop'>
-          <EntryNavigation object={effect} />
+          <EntryNavigation component={effect} />
         </div>
 
         {/* -- MAIN CONTENT -- */}
@@ -78,7 +78,7 @@ export default function EffectEntry({
           />
           <DetailLocked
             label='Target Environment'
-            stateValue={targetEnv?.name ?? 'No target environment selected.'}
+            stateValue={environment?.name ?? 'No target environment selected.'}
           />
           <DetailLocked
             label='Target'

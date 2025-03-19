@@ -1,4 +1,4 @@
-import { TClientMissionTypes, TMissionComponent, TMissionNavigable } from '..'
+import { TMetisClientComponents } from 'src'
 import MissionAction, {
   TMissionActionJson,
   TMissionActionOptions,
@@ -10,25 +10,7 @@ import ClientMissionNode from '../nodes'
 /**
  * Class representing a mission action on the client-side.
  */
-export default class ClientMissionAction
-  extends MissionAction<TClientMissionTypes>
-  implements TMissionComponent
-{
-  // Implemented
-  public get path(): TMissionNavigable[] {
-    return [this.mission, this.force, this.node, this]
-  }
-  /**
-   * The message to display when the action is defective.
-   */
-  private _defectiveMessage: string
-  /**
-   * The message to display when the action is defective.
-   */
-  public get defectiveMessage(): string {
-    return this._defectiveMessage
-  }
-
+export default class ClientMissionAction extends MissionAction<TMetisClientComponents> {
   /**
    * The formatted success chance to display to a session
    * member.
@@ -85,14 +67,6 @@ export default class ClientMissionAction
     options: TClientMissionActionOptions = {},
   ) {
     super(node, data, options)
-    this._defectiveMessage = ''
-  }
-  /**
-   * Evaluates if the action is defective or not.
-   * @returns boolean indicating if the action is defective or not.
-   */
-  public isDefective(): boolean {
-    return false
   }
 
   // Implemented

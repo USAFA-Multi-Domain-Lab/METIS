@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import ClientMission, { TMissionComponent } from 'src/missions'
+import ClientMission from 'src/missions'
 import { compute } from 'src/toolbox'
 import { useMountHandler, usePostInitEffect } from 'src/toolbox/hooks'
+import { TMissionComponent } from '../../../../../../shared/missions'
 import Tooltip from '../../communication/Tooltip'
 import { DetailString } from '../../form/DetailString'
 import ListOld, { ESortByMethod } from '../../general-layout/ListOld'
@@ -21,33 +22,32 @@ export default function MissionEntry({
   const [resourceLabel, setResourceLabel] = useState<string>(
     mission.resourceLabel,
   )
-  const [defectiveObjects, setDefectiveObjects] = useState<TMissionComponent[]>(
-    mission.defectiveObjects,
-  )
+  const [defectiveComponents, setDefectiveComponents] = useState<
+    TMissionComponent<any, any>[]
+  >(mission.defectiveComponents)
 
   /* -- EFFECTS -- */
 
   // componentDidMount
   const [mountHandled] = useMountHandler((done) => {
-    // Evaluate the objects to determine if they are defective.
-    // Stop if there are 500 defective objects or more.
-    mission.evaluateObjects(500)
-    setDefectiveObjects(mission.defectiveObjects)
+    // Evaluate the components to determine if they are defective.
+    mission.evaluateComponents()
+    setDefectiveComponents(mission.defectiveComponents)
     done()
   })
 
-  // Finish evaluating the objects, if necessary.
+  // Finish evaluating the components, if necessary.
   useEffect(() => {
-    if (mountHandled && defectiveObjects.length === 500) {
-      mission.evaluateObjects()
-      setDefectiveObjects(mission.defectiveObjects)
+    if (mountHandled && defectiveComponents.length === 500) {
+      mission.evaluateComponents()
+      setDefectiveComponents(mission.defectiveComponents)
     }
   }, [mountHandled])
 
   // Update the defective objects when they change elsewhere.
   useEffect(() => {
-    setDefectiveObjects(mission.defectiveObjects)
-  }, [mission.defectiveObjects.length])
+    setDefectiveComponents(mission.defectiveComponents)
+  }, [mission.defectiveComponents.length])
 
   // Sync the component state with the mission introduction message
   // and initial resources.
@@ -66,7 +66,7 @@ export default function MissionEntry({
   /**
    * Renders JSX for the effect list item.
    */
-  const renderObjectListItem = (object: TMissionComponent) => {
+  const renderObjectListItem = (component: TMissionComponent<any, any>) => {
     /* -- COMPUTED -- */
 
     /**
@@ -78,7 +78,7 @@ export default function MissionEntry({
     )
 
     return (
-      <div className='Row IconFirst' key={`object-row-${object._id}`}>
+      <div className='Row IconFirst' key={`object-row-${component._id}`}>
         <ButtonSvg
           type='warning-transparent'
           cursor='help'
@@ -87,9 +87,9 @@ export default function MissionEntry({
         />
         <div
           className='RowContent Select'
-          onClick={() => mission.select(object)}
+          onClick={() => mission.select(component)}
         >
-          {object.defectiveMessage}
+          {component.defectiveMessage}
           <Tooltip description='Click to resolve.' />
         </div>
       </div>
@@ -102,7 +102,7 @@ export default function MissionEntry({
       <div className='BorderBox'>
         {/* -- TOP OF BOX -- */}
         <div className='BoxTop'>
-          <EntryNavigation object={mission} />
+          <EntryNavigation component={mission} />
         </div>
 
         {/* -- MAIN CONTENT -- */}
@@ -128,9 +128,9 @@ export default function MissionEntry({
             key={`${mission._id}_resourceLabel`}
           />
 
-          {defectiveObjects.length > 0 ? (
-            <ListOld<TMissionComponent>
-              items={defectiveObjects}
+          {defectiveComponents.length > 0 ? (
+            <ListOld<TMissionComponent<any, any>>
+              items={defectiveComponents}
               renderItemDisplay={(object) => renderObjectListItem(object)}
               headingText={'Unresolved Conflicts'}
               sortByMethods={[ESortByMethod.Name]}
@@ -138,7 +138,7 @@ export default function MissionEntry({
               alwaysUseBlanks={false}
               searchableProperties={['name']}
               noItemsDisplay={null}
-              ajaxStatus={defectiveObjects.length > 0 ? 'Loaded' : 'Loading'}
+              ajaxStatus={defectiveComponents.length > 0 ? 'Loaded' : 'Loading'}
               applyItemStyling={() => {
                 return {}
               }}

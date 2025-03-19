@@ -1,17 +1,17 @@
 import Effect, { TEffectOptions } from 'metis/missions/effects'
+import { TMetisServerComponents } from 'metis/server'
+import { TTargetEnvExposedEffect } from 'metis/server/target-environments/context'
 import ServerTarget from 'metis/server/target-environments/targets'
 import { TTargetArg } from 'metis/target-environments/args'
 import ForceArg from 'metis/target-environments/args/force-arg'
 import NodeArg from 'metis/target-environments/args/node-arg'
 import { AnyObject } from 'metis/toolbox/objects'
-import { TServerMissionTypes } from '..'
-import { TTargetEnvExposedEffect } from 'metis/server/target-environments/context'
 
 /**
  * Class representing an effect on the server-side that can be
  * applied to a target.
  */
-export default class ServerEffect extends Effect<TServerMissionTypes> {
+export default class ServerEffect extends Effect<TMetisServerComponents> {
   /**
    * Populates the target data for the effect.
    * @param targetId The ID of the target to populate.

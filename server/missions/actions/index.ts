@@ -6,10 +6,10 @@ import TCommonActionExecution, {
   TExecutionCheats,
 } from 'metis/missions/actions/executions'
 import { TEffectJson } from 'metis/missions/effects'
+import { TMetisServerComponents } from 'metis/server'
 import { TTargetEnvExposedAction } from 'metis/server/target-environments/context'
 import { TSessionConfig } from 'metis/sessions'
 import seedrandom, { PRNG } from 'seedrandom'
-import { TServerMissionTypes } from '..'
 import ServerEffect, { TServerEffectOptions } from '../effects'
 import ServerMissionNode from '../nodes'
 import ServerActionExecution from './executions'
@@ -18,7 +18,7 @@ import ServerExecutionOutcome from './outcomes'
 /**
  * Class for managing mission actions on the server.
  */
-export default class ServerMissionAction extends MissionAction<TServerMissionTypes> {
+export default class ServerMissionAction extends MissionAction<TMetisServerComponents> {
   /**
    * The RNG used to generate random numbers for the action.
    */

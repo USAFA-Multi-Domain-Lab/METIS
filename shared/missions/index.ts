@@ -1,17 +1,12 @@
-import Session from 'metis/sessions'
-import SessionMember from 'metis/sessions/members'
-import TargetEnvironment from 'metis/target-environments'
-import Target from 'metis/target-environments/targets'
 import User from 'metis/users'
 import { v4 as generateHash } from 'uuid'
-import { TMetisComponent } from '..'
+import { TCreateJsonType, TMetisBaseComponents, TMetisComponent } from '..'
 import context from '../context'
 import { DateToolbox } from '../toolbox/dates'
 import { AnyObject } from '../toolbox/objects'
-import MissionAction, { TAction } from './actions'
-import ActionExecution, { TExecution } from './actions/executions'
-import ExecutionOutcome from './actions/outcomes'
-import Effect, { TEffect } from './effects'
+import { TAction } from './actions'
+import { TExecution } from './actions/executions'
+import { TEffect } from './effects'
 import {
   MissionForce,
   TForce,
@@ -19,8 +14,7 @@ import {
   TMissionForceOptions,
   TMissionForceSaveJson,
 } from './forces'
-import MissionOutput from './forces/output'
-import MissionNode, { TNode } from './nodes'
+import { TNode } from './nodes'
 import MissionPrototype, {
   TMissionPrototypeJson,
   TMissionPrototypeOptions,
@@ -31,8 +25,18 @@ import MissionPrototype, {
  * This represents a mission for a student to complete.
  */
 export default abstract class Mission<
-  T extends TCommonMissionTypes = TCommonMissionTypes,
-> {
+  T extends TMetisBaseComponents = TMetisBaseComponents,
+> implements TMissionComponent<T, Mission<T>>
+{
+  /**
+   * The mission associated with the component.
+   * @note This is only used to properly implement `TMissionComponent`.
+   * Technically, this field just references `this`.
+   */
+  public get mission(): this {
+    return this
+  }
+
   /**
    * All nodes that exist in the mission.
    */
@@ -62,15 +66,38 @@ export default abstract class Mission<
     return Array.from(this.actions.values()).flatMap((action) => action.effects)
   }
 
-  /**
-   * The ID of the mission.
-   */
+  // Implemented
   public _id: string
 
-  /**
-   * The name of the mission.
-   */
+  // Implemented
   public name: string
+
+  // Implemented
+  public get path(): [...TMissionComponent<any, any>[], this] {
+    return [this]
+  }
+
+  // Implemented
+  public get defective(): boolean {
+    return false
+  }
+
+  // Implemented
+  public get defectiveMessage(): string {
+    return ''
+  }
+
+  /**
+   * Private cache field for `defectiveComponents`.
+   */
+  private _defectiveComponents: TMissionComponent<any, any>[]
+  /**
+   * Components within the mission with issues that need to
+   * be resolved by a mission designer.
+   */
+  public get defectiveComponents(): TMissionComponent<any, any>[] {
+    return this._defectiveComponents
+  }
 
   /**
    * The file name to use to store an export for the mission.
@@ -161,6 +188,7 @@ export default abstract class Mission<
     this.prototypes = []
     this.forces = []
     this.root = this.initializeRoot()
+    this._defectiveComponents = []
 
     // Parse options.
     let { populateTargets = false } = options
@@ -356,6 +384,38 @@ export default abstract class Mission<
     data: TMissionForceSaveJson[],
     options?: TMissionForceOptions,
   ): TForce<T>[]
+
+  /**
+   * Evaluates components found within the mission to determine
+   * if they are defective.
+   */
+  public evaluateComponents(): void {
+    // Initialize invalid components.
+    this._defectiveComponents = []
+
+    // Loop through forces.
+    for (let force of this.forces) {
+      // Validate the force.
+      if (force.defective) this._defectiveComponents.push(force)
+
+      // Loop through nodes.
+      for (let node of force.nodes) {
+        // Validate the node.
+        if (node.defective) this._defectiveComponents.push(node)
+        // Loop through actions.
+        for (let action of node.actions.values()) {
+          // Validate the action.
+          if (action.defective) this._defectiveComponents.push(action)
+
+          // Loop through effects.
+          for (let effect of action.effects) {
+            // Validate the effect.
+            if (effect.defective) this._defectiveComponents.push(effect)
+          }
+        }
+      }
+    }
+  }
 
   /**
    * @param prototypeId The ID of the prototype to get.
@@ -642,60 +702,25 @@ export default abstract class Mission<
 /* ------------------------------ MISSION TYPES ------------------------------ */
 
 /**
- * Common types for Mission objects.
- * @note Used as a generic argument for all base,
- * mission-related classes.
+ * Type registry for base mission component classes.
  */
-export type TCommonMissionTypes = {
-  session: Session
-  member: SessionMember
-  user: User
-  mission: Mission
-  force: MissionForce
-  output: MissionOutput
-  prototype: MissionPrototype
-  node: MissionNode
-  action: MissionAction
-  execution: ActionExecution
-  outcome: ExecutionOutcome
-  targetEnv: TargetEnvironment
-  target: Target
-  effect: Effect
-}
+export type TBaseMissionComponents = Pick<
+  TMetisBaseComponents,
+  'mission' | 'force' | 'output' | 'prototype' | 'node' | 'action' | 'effect'
+>
 
 /**
- * One of the types outlined in `TCommonMissionTypes`.
- */
-export type TCommonMissionType = TCommonMissionTypes[keyof TCommonMissionTypes]
-
-/**
- * Creates a JSON representation type from a common mission type.
- * @param T The common mission type (TCommonMission, TCommonMissionNode, etc.).
- * @param TDirect The keys of T to translate directly to the JSON as the exact same type (string -> string, number -> number).
- * @param TIndirect The keys of T to translate to the JSON as a different type (string -> string[], number -> string).
- * @returns The JSON representation type.
- */
-export type TCreateMissionJsonType<
-  T extends TCommonMissionType,
-  TDirect extends keyof T,
-  TIndirect extends { [k in keyof T]?: any } = {},
-> = {
-  -readonly [k in TDirect]: T[k]
-} & {
-  [k in keyof TIndirect]: TIndirect[k]
-}
-
-/**
- * Extracts the mission type from the mission types.
- * @param T The mission types.
+ * Extracts the mission type from a registry of METIS
+ * components type that extends `TMetisBaseComponents`.
+ * @param T The type registry.
  * @returns The mission type.
  */
-export type TMission<T extends TCommonMissionTypes> = T['mission']
+export type TMission<T extends TMetisBaseComponents> = T['mission']
 
 /**
  * JSON representation of a `Mission` object.
  */
-export type TMissionJson = TCreateMissionJsonType<
+export type TMissionJson = TCreateJsonType<
   Mission,
   'name' | 'versionNumber' | 'seed' | 'resourceLabel',
   {
@@ -778,3 +803,44 @@ export type TForceExposure =
   | { expose: 'force-with-all-nodes'; forceId: MissionForce['_id'] }
   | { expose: 'force-with-revealed-nodes'; forceId: MissionForce['_id'] }
   | { expose: 'none' }
+
+/**
+ * An object that makes up a part of a mission, including
+ * a mission itself. Examples are nodes, actions, effects,
+ * and so on.
+ * @note Implement this to make a class compatible.
+ */
+export interface TMissionComponent<
+  T extends TMetisBaseComponents,
+  Self extends TMissionComponent<T, Self>,
+> extends TMetisComponent {
+  /**
+   * The mission associated with the component.
+   */
+  mission: Self extends Mission<any> ? Self : T['mission']
+  /**
+   * The path to the component within the mission.
+   */
+  get path(): [...TMissionComponent<any, any>[], Self]
+  /**
+   * Whether the component has some issue that needs to
+   * be resolved by the designer of the mission. Added
+   * context for the defect of the component can be found
+   * by checking the `defectiveMessage` field.
+   */
+  get defective(): boolean
+  /**
+   * Provides additional context for why the component
+   * is defective, assuming `isDefective` is true.
+   */
+  get defectiveMessage(): string
+}
+
+/**
+ * Defines the type for the `path` property
+ * of a mission component.
+ */
+export type TMissionComponentPath<
+  T extends TMetisBaseComponents,
+  Self extends TMissionComponent<T, Self>,
+> = [...TMissionComponent<any, any>[], Self]

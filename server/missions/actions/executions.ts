@@ -3,16 +3,16 @@ import ActionExecution, {
   TExecutionCheats,
 } from 'metis/missions/actions/executions'
 import { TExecutionOutcomeJson } from 'metis/missions/actions/outcomes'
+import { TMetisServerComponents } from 'metis/server'
 import StringToolbox from 'metis/toolbox/strings'
 import ServerMissionAction from '.'
-import { TServerMissionTypes } from '..'
 import ServerExecutionOutcome from './outcomes'
 
 /**
  * The execution of an action on the server.
  */
 export default class ServerActionExecution
-  extends ActionExecution<TServerMissionTypes>
+  extends ActionExecution<TMetisServerComponents>
   implements TListenerTargetEmittable<TServerExecutionEvent, []>
 {
   /**

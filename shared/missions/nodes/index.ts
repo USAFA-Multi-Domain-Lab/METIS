@@ -1,6 +1,6 @@
-import { TMetisComponent } from 'metis/index'
+import { TMetisBaseComponents, TMetisComponent } from 'metis/index'
 import { v4 as generateHash } from 'uuid'
-import Mission, { TCommonMissionTypes, TMission } from '..'
+import Mission, { TMission, TMissionComponent } from '..'
 import { Vector2D } from '../../../shared/toolbox/space'
 import ArrayToolbox from '../../toolbox/arrays'
 import MapToolbox from '../../toolbox/maps'
@@ -18,9 +18,14 @@ import MissionPrototype, { TPrototype } from './prototypes'
  * This represents an individual node in a mission.
  */
 export default abstract class MissionNode<
-  T extends TCommonMissionTypes = TCommonMissionTypes,
-> implements TMetisComponent
+  T extends TMetisBaseComponents = TMetisBaseComponents,
+> implements TMissionComponent<T, MissionNode<T>>
 {
+  // Implemented
+  public get mission(): TMission<T> {
+    return this.force.mission
+  }
+
   /**
    * The corresponding prototype for the node.
    */
@@ -43,6 +48,21 @@ export default abstract class MissionNode<
 
   // Implemented
   public name: string
+
+  // Implemented
+  public get path(): [...TMissionComponent<any, any>[], this] {
+    return [this.mission, this.force, this]
+  }
+
+  // Implemented
+  public get defective(): boolean {
+    return false
+  }
+
+  // Implemented
+  public get defectiveMessage(): string {
+    return ''
+  }
 
   /**
    * The color for the node used as a border in the mission
@@ -76,13 +96,6 @@ export default abstract class MissionNode<
    * @note Mapped by action ID.
    */
   public actions: Map<string, TAction<T>>
-
-  /**
-   * The mission of which the node is a part.
-   */
-  public get mission(): TMission<T> {
-    return this.force.mission
-  }
 
   /**
    * The execution state of the node.
@@ -588,11 +601,12 @@ export interface TMissionNodeJsonBase {
 }
 
 /**
- * Extracts the node type from the mission types.
- * @param T The mission types.
+ * Extracts the node type from a registry of
+ * METIS components that extends `TMetisBaseComponents`.
+ * @param T The type registry.
  * @returns The node type.
  */
-export type TNode<T extends TCommonMissionTypes> = T['node']
+export type TNode<T extends TMetisBaseComponents> = T['node']
 
 /**
  * Session-specific JSON data for a MissionNode object.

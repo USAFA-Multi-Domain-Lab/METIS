@@ -1,9 +1,10 @@
+import { TMetisClientComponents } from 'src'
 import {
   TMapCompatibleNode,
   TMapCompatibleNodeEvent,
   TNodeButton,
 } from 'src/components/content/session/mission-map/objects/nodes'
-import ClientMission, { TClientMissionTypes, TMissionNavigable } from '..'
+import ClientMission from '..'
 import { TListenerTargetEmittable } from '../../../../shared/events'
 import { TNodeExecutionState } from '../../../../shared/missions/nodes'
 import MissionPrototype, {
@@ -17,10 +18,9 @@ import ClientActionExecution from '../actions/executions'
  * Class for managing mission prototypes on the client.
  */
 export default class ClientMissionPrototype
-  extends MissionPrototype<TClientMissionTypes>
+  extends MissionPrototype<TMetisClientComponents>
   implements
     TListenerTargetEmittable<TPrototypeEventMethod>,
-    TMissionNavigable,
     TMapCompatibleNode
 {
   /**
@@ -32,13 +32,6 @@ export default class ClientMissionPrototype
    * The depth of the prototype in the structure.
    */
   public depth: number
-
-  /**
-   * The display name of the prototype.
-   */
-  public get name(): string {
-    return this._id.substring(0, 8)
-  }
 
   // Implemented
   public get nameLineCount(): number {
@@ -124,11 +117,6 @@ export default class ClientMissionPrototype
 
   // Implemented
   public blocked: boolean = false
-
-  // Implemented
-  public get path(): TMissionNavigable[] {
-    return [this.mission, this]
-  }
 
   /**
    * Listeners for prototype events.

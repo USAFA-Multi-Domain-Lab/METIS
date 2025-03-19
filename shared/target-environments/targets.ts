@@ -1,7 +1,7 @@
 import { AnyObject } from 'metis/toolbox/objects'
 import { TTargetEnv } from '.'
+import { TMetisBaseComponents } from '..'
 import { TTargetEnvExposedContext } from '../../server/target-environments/context'
-import { TCommonMissionTypes } from '../../shared/missions'
 import Arg, { TTargetArg, TTargetArgJson } from './args'
 import Dependency from './dependencies'
 
@@ -9,12 +9,19 @@ import Dependency from './dependencies'
  * This is an entity that can be found in a target environment.
  */
 export default abstract class Target<
-  T extends TCommonMissionTypes = TCommonMissionTypes,
+  T extends TMetisBaseComponents = TMetisBaseComponents,
 > {
   /**
    * The environment in which the target exists.
    */
   public targetEnvironment: TTargetEnv<T>
+
+  /**
+   * The ID of the target environment.
+   */
+  public get targetEnvironmentId(): string {
+    return this.targetEnvironment._id
+  }
 
   /**
    * The ID of the target.
@@ -387,11 +394,12 @@ export type TTargetScript = (
 ) => Promise<void>
 
 /**
- * Extracts the target type from the mission types.
- * @param T The mission types.
+ * Extracts the target type from a registry of METIS
+ * components type that extends `TMetisBaseComponents`.
+ * @param T The type registry.
  * @returns The target type.
  */
-export type TTarget<T extends TCommonMissionTypes> = T['target']
+export type TTarget<T extends TMetisBaseComponents> = T['target']
 
 /**
  * The JSON representation of a Target Object.

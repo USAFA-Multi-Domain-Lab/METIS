@@ -1,23 +1,19 @@
-import { TMissionJson, TCommonMissionTypes, TMission } from 'metis/missions'
+import { TMission, TMissionJson } from 'metis/missions'
+import { TExecutionCheats } from 'metis/missions/actions/executions'
+import { TMetisBaseComponents, TMetisComponent } from '..'
 import { TAction } from '../missions/actions'
 import User, { TUserJson } from '../users'
 import { TMember, TSessionMemberJson } from './members'
-import { TExecutionCheats } from 'metis/missions/actions/executions'
 
 /**
  * Base class for sessions. Represents a session of a mission being executed by users.
  */
 export default abstract class Session<
-  T extends TCommonMissionTypes = TCommonMissionTypes,
-> {
-  /**
-   * The ID of the session.
-   */
+  T extends TMetisBaseComponents = TMetisBaseComponents,
+> implements TMetisComponent
+{
   public readonly _id: string
 
-  /**
-   * The name of the session.
-   */
   public name: string
 
   /**
@@ -483,11 +479,12 @@ export type TSessionBasicJson = {
 }
 
 /**
- * Extracts the session type from the session types.
- * @param T The session types.
+ * Extracts the session type from a registry of METIS
+ * components type that extends `TMetisBaseComponents`.
+ * @param T The type registry.
  * @returns The session type.
  */
-export type TSession<T extends TCommonMissionTypes> = T['session']
+export type TSession<T extends TMetisBaseComponents> = T['session']
 
 /**
  * The state of a session.

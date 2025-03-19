@@ -1,6 +1,7 @@
+import { TMetisBaseComponents } from 'metis/index'
 import { AnyObject } from 'metis/toolbox/objects'
 import User from 'metis/users'
-import Mission, { TCommonMissionTypes, TMission, TMissionJsonOptions } from '..'
+import Mission, { TMission, TMissionComponent, TMissionJsonOptions } from '..'
 import context from '../../context'
 import StringToolbox from '../../toolbox/strings'
 import { TMissionNodeJson, TMissionNodeOptions, TNode } from '../nodes'
@@ -14,8 +15,9 @@ import { TOutput, TOutputJson } from './output'
  * that are interacted with by a group of participants in a session.
  */
 export abstract class MissionForce<
-  T extends TCommonMissionTypes = TCommonMissionTypes,
-> {
+  T extends TMetisBaseComponents = TMetisBaseComponents,
+> implements TMissionComponent<T, MissionForce<T>>
+{
   /**
    * The mission to which the force belongs.
    */
@@ -36,6 +38,21 @@ export abstract class MissionForce<
    * The name of the force.
    */
   public name: string
+
+  // Implemented
+  public get path(): [...TMissionComponent<any, any>[], this] {
+    return [this.mission, this]
+  }
+
+  // Implemented
+  public get defective(): boolean {
+    return false
+  }
+
+  // Implemented
+  public get defectiveMessage(): string {
+    return ''
+  }
 
   /**
    * The color of the force.
@@ -571,8 +588,9 @@ export type TNodeImportOptions = TMissionForceOptions
 export type TExportNodesOptions = TForceJsonOptions
 
 /**
- * Extracts the force type from the mission types.
- * @param T The mission types.
+ * Extracts the force type from a registry of
+ * METIS components that extends `TMetisBaseComponents`.
+ * @param T The type registry.
  * @returns The force type.
  */
-export type TForce<T extends TCommonMissionTypes> = T['force']
+export type TForce<T extends TMetisBaseComponents> = T['force']

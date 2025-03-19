@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { TClientMissionTypes } from 'src/missions'
+import { TMetisClientComponents } from 'src'
 import ClientUser from 'src/users'
 import TargetEnvironment, {
   TTargetEnvJson,
@@ -10,7 +10,7 @@ import ClientTarget from './targets'
 /**
  * Class representing a target environment on the client-side.
  */
-export class ClientTargetEnvironment extends TargetEnvironment<TClientMissionTypes> {
+export class ClientTargetEnvironment extends TargetEnvironment<TMetisClientComponents> {
   /**
    * A registry of all target environments.
    */

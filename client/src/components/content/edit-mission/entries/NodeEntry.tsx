@@ -11,6 +11,7 @@ import { DetailColorSelector } from '../../form/DetailColorSelector'
 import { DetailLargeString } from '../../form/DetailLargeString'
 import { DetailString } from '../../form/DetailString'
 import { DetailToggle } from '../../form/DetailToggle'
+import Divider from '../../form/Divider'
 import ListOld, { ESortByMethod } from '../../general-layout/ListOld'
 import { TButtonSvgType } from '../../user-controls/buttons/ButtonSvg'
 import ButtonSvgPanel_v2 from '../../user-controls/buttons/ButtonSvgPanel_v2'
@@ -21,7 +22,6 @@ import {
 import { TToggleLockState } from '../../user-controls/Toggle'
 import './index.scss'
 import EntryNavigation from './navigation/EntryNavigation'
-import Divider from '../../form/Divider'
 
 /**
  * This will render the entry fields for a mission-node
@@ -279,7 +279,7 @@ export default function NodeEntry({
       <div className='BorderBox'>
         {/* -- TOP OF BOX -- */}
         <div className='BoxTop'>
-          <EntryNavigation object={node} />
+          <EntryNavigation component={node} />
         </div>
 
         {/* -- MAIN CONTENT -- */}

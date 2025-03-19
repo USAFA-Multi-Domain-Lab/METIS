@@ -1,5 +1,4 @@
 import Mission, {
-  TCommonMissionTypes,
   TMissionJson,
   TMissionOptions,
   TMissionSaveJson,
@@ -10,25 +9,15 @@ import {
   TMissionPrototypeOptions,
 } from 'metis/missions/nodes/prototypes'
 import seedrandom, { PRNG } from 'seedrandom'
-import SessionServer from '../sessions'
-import ServerSessionMember from '../sessions/members'
-import ServerTargetEnvironment from '../target-environments'
+import { TMetisServerComponents } from '../index'
 import { TTargetEnvExposedMission } from '../target-environments/context'
-import ServerTarget from '../target-environments/targets'
-import ServerUser from '../users'
-import ServerMissionAction from './actions'
-import ServerActionExecution from './actions/executions'
-import ServerOutcome from './actions/outcomes'
-import ServerEffect from './effects'
 import ServerMissionForce, { TServerMissionForceOptions } from './forces'
-import ServerOutput from './forces/output'
-import ServerMissionNode from './nodes'
 import ServerMissionPrototype from './nodes/prototypes'
 
 /**
  * Class for managing missions on the server.
  */
-export default class ServerMission extends Mission<TServerMissionTypes> {
+export default class ServerMission extends Mission<TMetisServerComponents> {
   /**
    * The RNG used to generate random numbers for the mission.
    */
@@ -126,26 +115,12 @@ export default class ServerMission extends Mission<TServerMissionTypes> {
 /* ------------------------------ SERVER MISSION TYPES ------------------------------ */
 
 /**
- * Server types for Mission objects.
- * @note Used as a generic argument for all server,
- * mission-related classes.
+ * Type registry for server mission component classes.
  */
-export interface TServerMissionTypes extends TCommonMissionTypes {
-  session: SessionServer
-  member: ServerSessionMember
-  user: ServerUser
-  mission: ServerMission
-  force: ServerMissionForce
-  output: ServerOutput
-  prototype: ServerMissionPrototype
-  node: ServerMissionNode
-  action: ServerMissionAction
-  execution: ServerActionExecution
-  outcome: ServerOutcome
-  targetEnv: ServerTargetEnvironment
-  target: ServerTarget
-  effect: ServerEffect
-}
+export type TServerMissionComponents = Pick<
+  TMetisServerComponents,
+  'mission' | 'force' | 'output' | 'prototype' | 'node' | 'action' | 'effect'
+>
 
 /**
  * Options for the creation of a `ServerMission` object.
