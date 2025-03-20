@@ -24,13 +24,13 @@ enum ENodeDropLocation {
 // can be defined.
 export default function NodeStructuring(props: {
   mission: ClientMission
-  handleChange: () => void
+  onChange: (...prototypes: ClientMissionPrototype[]) => void
   handleCloseRequest: () => void
 }): JSX.Element | null {
   /* -- PROPS -- */
 
   let mission: ClientMission = props.mission
-  let handleChange = props.handleChange
+  let onChange = props.onChange
   let handleCloseRequest = props.handleCloseRequest
   let root: ClientMissionPrototype = mission.root
 
@@ -97,7 +97,7 @@ export default function NodeStructuring(props: {
 
             if (nodeGrabbed !== null) {
               nodeGrabbed.move(destinationNode, 'child-of-target')
-              handleChange()
+              onChange(nodeGrabbed, destinationNode)
             }
 
             pendDrop(null)
@@ -184,7 +184,7 @@ export default function NodeStructuring(props: {
 
               if (nodeGrabbed !== null) {
                 nodeGrabbed.move(target, targetRelation)
-                handleChange()
+                onChange(nodeGrabbed, target)
               }
               pendDrop(null)
               grabNode(null)

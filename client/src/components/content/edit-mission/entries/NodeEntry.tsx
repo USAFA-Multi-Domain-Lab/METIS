@@ -1,10 +1,13 @@
 import { useState } from 'react'
+import { TMetisClientComponents } from 'src'
 import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect, useRequireLogin } from 'src/toolbox/hooks'
+import { TMissionComponent } from '../../../../../../shared/missions'
+import { TNonEmptyArray } from '../../../../../../shared/toolbox/arrays'
 import Prompt from '../../communication/Prompt'
 import Tooltip from '../../communication/Tooltip'
 import { DetailColorSelector } from '../../form/DetailColorSelector'
@@ -31,7 +34,7 @@ export default function NodeEntry({
   node,
   node: { mission },
   handleDeleteActionRequest,
-  handleChange,
+  onChange,
 }: TNodeEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const globalContext = useGlobalContext()
@@ -161,10 +164,14 @@ export default function NodeEntry({
         node.applyColorFill()
         setApplyColorFill(false)
       })
+
+      // Allow the user to save the changes.
+      if (node.hasChildren) {
+        onChange(...(node.descendants as TNonEmptyArray<ClientMissionNode>))
+      }
     }
 
-    // Allow the user to save the changes.
-    handleChange()
+    onChange(node)
   }, [
     name,
     color,
@@ -193,7 +200,7 @@ export default function NodeEntry({
     // Add the action to the node.
     node.actions.set(newAction._id, newAction)
     // Allow the user to save the changes.
-    handleChange()
+    onChange(newAction)
   }
 
   /**
@@ -388,7 +395,13 @@ export type TNodeEntry_P = {
     navigateBack?: boolean,
   ) => Promise<void>
   /**
-   * A function that will be called when a change has been made.
+   * A callback that will be called when a change
+   * has been made.
+   * @param node The same node passed.
    */
-  handleChange: () => void
+  onChange: (
+    ...components: TNonEmptyArray<
+      TMissionComponent<TMetisClientComponents, any>
+    >
+  ) => void
 }

@@ -17,7 +17,7 @@ import './CreateEffect.scss'
 export default function CreateEffect({
   action,
   setIsNewEffect,
-  handleChange,
+  onChange,
 }: TCreateEffect_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const { forceUpdate } = useGlobalContext().actions
@@ -100,7 +100,7 @@ export default function CreateEffect({
     // Display the changes.
     forceUpdate()
     // Allow the user to save the changes.
-    handleChange()
+    onChange(effect)
   }
 
   /**
@@ -184,6 +184,7 @@ export type TCreateEffect_P = {
   setIsNewEffect: TReactSetter<boolean>
   /**
    * Handles when a change is made that would require saving.
+   * @param effect The effect that was changed.
    */
-  handleChange: () => void
+  onChange: (effect: ClientEffect) => void
 }

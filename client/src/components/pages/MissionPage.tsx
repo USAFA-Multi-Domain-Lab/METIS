@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import { useBeforeunload } from 'react-beforeunload'
 import { useGlobalContext, useNavigationMiddleware } from 'src/context'
 import ClientMission from 'src/missions'
@@ -20,6 +20,7 @@ import {
 } from 'src/toolbox/hooks'
 import { DefaultLayout, TPage_P } from '.'
 import Mission, { TMissionComponent } from '../../../../shared/missions'
+import { TNonEmptyArray } from '../../../../shared/toolbox/arrays'
 import { TSingleTypeMapped, TWithKey } from '../../../../shared/toolbox/objects'
 import Prompt from '../content/communication/Prompt'
 import ActionEntry from '../content/edit-mission/entries/ActionEntry'
@@ -47,12 +48,37 @@ import {
 import './MissionPage.scss'
 
 /**
+ * Context for the mission page, which will help distribute
+ * mission page properties to its children.
+ */
+const MissionPageContext = React.createContext<TMissionPageContextData | null>(
+  null,
+)
+
+/**
+ * Hook used by MissionPage-related components to access
+ * the mission-page context.
+ */
+export const useMissionPageContext = () => {
+  const context = useContext(
+    MissionPageContext,
+  ) as TMissionPageContextData | null
+  if (!context) {
+    throw new Error(
+      'useMissionPageContext must be used within an output provider',
+    )
+  }
+  return context
+}
+
+/**
  * This will render page that allows the user to
  * edit a mission.
  */
-export default function MissionPage({
-  missionId,
-}: IMissionPage): JSX.Element | null {
+export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
+  const Provider =
+    MissionPageContext.Provider as React.Provider<TMissionPageContextData>
+
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
@@ -67,10 +93,13 @@ export default function MissionPage({
     logout,
   } = globalContext.actions
   const [server] = globalContext.server
+  const state: TMissionPage_S = {
+    defectiveComponents: useState<TMissionComponent<any, any>[]>([]),
+  }
   const [mission, setMission] = useState<ClientMission>(new ClientMission())
   const selectedForceState = useState<ClientMissionForce | null>(null)
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(
-    missionId === null ? true : false,
+    props.missionId === null ? true : false,
   )
   const [selection, setSelection] = useState<TMissionComponent<any, any>>(
     mission.selection,
@@ -78,6 +107,9 @@ export default function MissionPage({
   const [nodeStructuringIsActive, activateNodeStructuring] =
     useState<boolean>(false)
   const [isNewEffect, setIsNewEffect] = useState<boolean>(false)
+  const [defectiveComponents, setDefectiveComponents] =
+    state.defectiveComponents
+  const root = useRef<HTMLDivElement>(null)
 
   /* -- LOGIN-SPECIFIC LOGIC -- */
 
@@ -179,10 +211,10 @@ export default function MissionPage({
     }
 
     // Handle the editing of an existing mission.
-    if (missionId !== null) {
+    if (props.missionId !== null) {
       try {
         beginLoading('Loading mission...')
-        let mission = await ClientMission.$fetchOne(missionId, {
+        let mission = await ClientMission.$fetchOne(props.missionId, {
           nonRevealedDisplayMode: 'show',
           populateTargets: true,
         })
@@ -200,6 +232,12 @@ export default function MissionPage({
     // Mark mount as handled.
     done()
   })
+
+  // Update the defective components if a new mission
+  // object is created.
+  useEffect(() => {
+    setDefectiveComponents(mission.defectiveComponents)
+  }, [mission])
 
   // Cleanup when a new effect is created.
   useEffect(() => {
@@ -359,10 +397,25 @@ export default function MissionPage({
 
   /**
    * Handles when a change is made that would require saving.
+   * @param components The components that have been changed.
    */
-  const handleChange = (): void => {
+  const onChange = (
+    ...components: TNonEmptyArray<TMissionComponent<any, any>>
+  ): void => {
+    let updatedState = defectiveComponents
+
+    // todo: Store last changed component for efficiency purposes.
+    components.forEach((component) => {
+      // If the component was defective and is no
+      // longer defective, then remove it from the
+      // list.
+      if (defectiveComponents.includes(component) && !component.defective) {
+        updatedState = updatedState.filter((c) => c._id !== component._id)
+      }
+    })
+
+    setDefectiveComponents(updatedState)
     setAreUnsavedChanges(true)
-    mission.evaluateComponents()
     forceUpdate()
   }
 
@@ -456,7 +509,7 @@ export default function MissionPage({
         `Auto-generated an action for ${selection.name} because it is an executable node with no actions to execute.`,
       )
 
-      handleChange()
+      onChange(newAction)
     }
   }
 
@@ -465,8 +518,8 @@ export default function MissionPage({
    * (force) is made.
    */
   const onTabAdd = () => {
-    mission.createForce()
-    handleChange()
+    let force = mission.createForce()
+    onChange(force)
   }
 
   /**
@@ -546,7 +599,7 @@ export default function MissionPage({
       deleteMethod,
     })
     // Handle the change.
-    handleChange()
+    onChange(prototype)
     activateNodeStructuring(false)
     mission.deselect()
   }
@@ -596,7 +649,7 @@ export default function MissionPage({
       node.actions.delete(action._id)
 
       // Allow the user to save the changes.
-      handleChange()
+      onChange(action)
     }
   }
 
@@ -629,7 +682,7 @@ export default function MissionPage({
     )
 
     // Allow the user to save the changes.
-    handleChange()
+    onChange(effect)
   }
 
   /**
@@ -680,11 +733,14 @@ export default function MissionPage({
     if (choice === 'Submit') {
       try {
         // Duplicate the force.
-        mission.duplicateForces({ originalId: force._id, duplicateName: text })
+        let newForces = mission.duplicateForces({
+          originalId: force._id,
+          duplicateName: text,
+        })
         // Notify the user that the force was duplicated.
         notify(`Successfully duplicated "${force.name}".`)
         // Allow the user to save the changes.
-        handleChange()
+        onChange(...newForces)
       } catch (error: any) {
         notify(`Failed to duplicate "${force.name}".`)
       }
@@ -715,9 +771,12 @@ export default function MissionPage({
     // If the user cancels, abort.
     if (choice === 'Cancel') return
     // Delete the force.
-    mission.deleteForces(forceId)
+    let deletedForces = mission.deleteForces(forceId)
+
     // Allow the user to save the changes.
-    handleChange()
+    if (deletedForces.length) {
+      onChange(...(deletedForces as TNonEmptyArray<ClientMissionForce>))
+    }
   }
 
   /**
@@ -863,7 +922,7 @@ export default function MissionPage({
         <CreateEffect
           action={mission.selection as ClientMissionAction}
           setIsNewEffect={setIsNewEffect}
-          handleChange={handleChange}
+          onChange={onChange}
         />
       )
     }
@@ -881,7 +940,7 @@ export default function MissionPage({
       return (
         <NodeStructuring
           mission={mission}
-          handleChange={handleChange}
+          onChange={onChange}
           handleCloseRequest={() => activateNodeStructuring(false)}
         />
       )
@@ -889,7 +948,7 @@ export default function MissionPage({
       return (
         <MissionEntry
           mission={selection}
-          handleChange={handleChange}
+          onChange={onChange}
           key={selection._id}
         />
       )
@@ -898,7 +957,7 @@ export default function MissionPage({
         <PrototypeEntry
           key={selection._id}
           prototype={selection}
-          handleChange={handleChange}
+          onChange={onChange}
           onAddRequest={() => onPrototypeAddRequest(selection)}
           onDeleteRequest={() => onPrototypeDeleteRequest(selection)}
         />
@@ -913,7 +972,7 @@ export default function MissionPage({
           deleteForce={async () =>
             await handleDeleteForceRequest(selection._id)
           }
-          handleChange={handleChange}
+          onChange={onChange}
           key={selection._id}
         />
       )
@@ -923,7 +982,7 @@ export default function MissionPage({
           key={selection._id}
           node={selection}
           handleDeleteActionRequest={handleDeleteActionRequest}
-          handleChange={handleChange}
+          onChange={onChange}
         />
       )
     } else if (selection instanceof ClientMissionAction) {
@@ -933,7 +992,7 @@ export default function MissionPage({
           setIsNewEffect={setIsNewEffect}
           handleDeleteActionRequest={handleDeleteActionRequest}
           handleDeleteEffectRequest={handleDeleteEffectRequest}
-          handleChange={handleChange}
+          onChange={onChange}
           key={selection._id}
         />
       )
@@ -942,7 +1001,7 @@ export default function MissionPage({
         <EffectEntry
           effect={selection}
           handleDeleteEffectRequest={handleDeleteEffectRequest}
-          onChange={handleChange}
+          onChange={onChange}
           key={selection._id}
         />
       )
@@ -951,11 +1010,23 @@ export default function MissionPage({
     }
   }
 
+  /**
+   * The value to provide to the context.
+   */
+  const contextValue = {
+    root,
+    ...props,
+    state,
+  }
+
   /* -- RENDER -- */
 
-  if (mountHandled) {
-    return (
-      <div className={rootClassName}>
+  // Don't render if the mount hasn't yet been handled.
+  if (!mountHandled) return null
+
+  return (
+    <Provider value={contextValue}>
+      <div className={rootClassName} ref={root}>
         <DefaultLayout navigation={navigation}>
           <PanelSizeRelationship
             panel1={{
@@ -985,18 +1056,44 @@ export default function MissionPage({
           />
         </DefaultLayout>
       </div>
-    )
-  } else {
-    return null
-  }
+    </Provider>
+  )
 }
 
 /* ---------------------------- TYPES FOR MISSION PAGE ---------------------------- */
 
-export interface IMissionPage extends TPage_P {
+export interface TMissionPage_P extends TPage_P {
   /**
    * The ID of the mission to be edited. If null,
    * a new mission is being created.
    */
   missionId: string | null
 }
+
+/**
+ * The state for `MissionPage`, provided
+ * in the context.
+ */
+export type TMissionPage_S = {
+  /**
+   * The defected components that are currently
+   * tracked within the mission.
+   */
+  defectiveComponents: TReactState<TMissionComponent<any, any>[]>
+}
+
+/**
+ * The mission-page context data provided to all children
+ * of `MissionPage`.
+ */
+export type TMissionPageContextData = {
+  /**
+   * The ref for the root element of the mission page.
+   */
+  root: React.RefObject<HTMLDivElement>
+} & Required<TMissionPage_P> & {
+    /**
+     * The state for the mission page.
+     */
+    state: TMissionPage_S
+  }

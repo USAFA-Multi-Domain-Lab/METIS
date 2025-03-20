@@ -23,8 +23,8 @@ export type TOutput_P = {
 export type TOutput_S = {}
 
 /**
- * The list context data provided to all children
- * of `List`.
+ * The output context data provided to all children
+ * of `Output`.
  */
 export type TOutputContextData = {
   /**
@@ -33,7 +33,7 @@ export type TOutputContextData = {
   root: React.RefObject<HTMLDivElement>
 } & Required<TOutput_P> & {
     /**
-     * The state for the list.
+     * The state for the output.
      */
     state: TOutput_S
   }

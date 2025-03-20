@@ -25,7 +25,7 @@ export default function EffectEntry({
   const effectState = useObjectFormSync(
     effect,
     ['name', 'trigger', 'description', 'args'],
-    { onChange },
+    { onChange: () => onChange(effect) },
   )
   const [name, setName] = effectState.name
   const [trigger, setTrigger] = effectState.trigger
@@ -123,7 +123,9 @@ export type TEffectEntry_P = {
     navigateBack?: boolean,
   ) => Promise<void>
   /**
-   * A function that will be called when a change has been made.
+   * A callback that will be called when a
+   * change has been made.
+   * @param effect The same effect passed.
    */
-  onChange: () => void
+  onChange: (effect: ClientEffect) => void
 }

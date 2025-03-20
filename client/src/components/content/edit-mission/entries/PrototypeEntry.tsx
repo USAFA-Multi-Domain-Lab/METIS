@@ -14,7 +14,7 @@ import EntryNavigation from './navigation/EntryNavigation'
 export default function PrototypeEntry({
   prototype,
   prototype: { mission },
-  handleChange,
+  onChange,
   onAddRequest,
   onDeleteRequest,
 }: TPrototypeEntry): JSX.Element | null {
@@ -46,7 +46,7 @@ export default function PrototypeEntry({
     prototype.depthPadding = depthPadding
 
     // Allow the user to save the changes.
-    handleChange()
+    onChange(prototype)
   }, [depthPadding])
 
   /* -- RENDER -- */
@@ -102,10 +102,11 @@ export type TPrototypeEntry = {
    */
   prototype: ClientMissionPrototype
   /**
-   * A function that will be used to notify the parent
+   * A callback that will be used to notify the parent
    * component that this component has changed.
+   * @param prototype The same prototype passed.
    */
-  handleChange: () => void
+  onChange: (prototype: ClientMissionPrototype) => void
   /**
    * A function that will be called when the user
    * requests to add a new prototype.

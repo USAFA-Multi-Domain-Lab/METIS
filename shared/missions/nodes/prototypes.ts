@@ -47,9 +47,25 @@ export default abstract class MissionPrototype<
   public parent: TPrototype<T> | null
 
   /**
-   * The children of this prototype in the tree structure.
+   * The direct children of this prototype in
+   * the tree structure.
    */
   public children: TPrototype<T>[]
+
+  /**
+   * Any prototypes that descend from this prototype
+   * in the tree structure.
+   */
+  public get descendants(): TPrototype<T>[] {
+    let descendants: TPrototype<T>[] = []
+
+    this.children.forEach((child: TPrototype<T>) => {
+      descendants.push(child)
+      descendants.push(...child.descendants)
+    })
+
+    return descendants
+  }
 
   /**
    * The key used in the structure object to represent
