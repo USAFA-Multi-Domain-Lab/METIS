@@ -58,11 +58,13 @@ export default abstract class MissionNode<
   // Implemented
   public get defective(): boolean {
     return false
+    // return true
   }
 
   // Implemented
   public get defectiveMessage(): string {
     return ''
+    // return `There is something wrong with the node "${this.name}".`
   }
 
   /**
@@ -222,7 +224,8 @@ export default abstract class MissionNode<
   }
 
   /**
-   * The children of this node in the tree structure.
+   * The direct children of this node in the
+   * tree structure.
    */
   public get children(): TNode<T>[] {
     let children: TNode<T>[] = []

@@ -2,9 +2,11 @@ import { useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
 import ClientMissionForce from 'src/missions/forces'
+import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import Mission from '../../../../../../shared/missions'
+import Mission, { TMissionComponent } from '../../../../../../shared/missions'
+import { TNonEmptyArray } from '../../../../../../shared/toolbox/arrays'
 import Prompt from '../../communication/Prompt'
 import { DetailColorSelector } from '../../form/DetailColorSelector'
 import { DetailLargeString } from '../../form/DetailLargeString'
@@ -26,7 +28,7 @@ export default function ForceEntry({
   force: { mission },
   duplicateForce,
   deleteForce,
-  handleChange,
+  onChange,
 }: TForceEntry): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const { prompt } = useGlobalContext().actions
@@ -82,7 +84,9 @@ export default function ForceEntry({
         force.nodes.forEach((node) => {
           node.color = color
         })
-        handleChange()
+        if (force.nodes.length) {
+          onChange(...(force.nodes as TNonEmptyArray<ClientMissionNode>))
+        }
       },
       tooltipDescription: `Applies the selected color to all nodes in the force.`,
     }
@@ -105,7 +109,7 @@ export default function ForceEntry({
     force.revealAllNodes = revealAllNodes
 
     // Allow the user to save the changes.
-    handleChange()
+    onChange(force)
   }, [introMessage, name, color, initialResources, revealAllNodes])
 
   /* -- RENDER -- */
@@ -205,8 +209,11 @@ export type TForceEntry = {
    */
   deleteForce: () => void
   /**
-   * A function that will be used to notify the parent
+   * A callback that will be used to notify the parent
    * component that this component has changed.
+   * @param components Any components that have been
+   * changed by this component, including the force
+   * itself, and any child components of the force.
    */
-  handleChange: () => void
+  onChange: (...components: TNonEmptyArray<TMissionComponent<any, any>>) => void
 }

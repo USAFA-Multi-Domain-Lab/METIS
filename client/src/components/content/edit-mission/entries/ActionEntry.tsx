@@ -27,7 +27,7 @@ export default function ActionEntry({
   setIsNewEffect,
   handleDeleteActionRequest,
   handleDeleteEffectRequest,
-  handleChange,
+  onChange,
 }: TActionEntry_P): JSX.Element | null {
   /* -- STATE -- */
 
@@ -45,7 +45,7 @@ export default function ActionEntry({
       'postExecutionSuccessText',
       'postExecutionFailureText',
     ],
-    { onChange: handleChange },
+    { onChange: () => onChange(action) },
   )
   const [name, setName] = actionState.name
   const [description, setDescription] = actionState.description
@@ -90,7 +90,7 @@ export default function ActionEntry({
     action.processTime = processTime * 1000
 
     // Allow the user to save the changes.
-    handleChange()
+    onChange(action)
   }, [successChance, processTime])
 
   /* -- FUNCTIONS -- */
@@ -321,7 +321,9 @@ export type TActionEntry_P = {
     navigateBack?: boolean,
   ) => Promise<void>
   /**
-   * Handles when a change is made that would require saving.
+   * Callback for when a change is made that would
+   * require saving.
+   * @param action The same action passed.
    */
-  handleChange: () => void
+  onChange: (action: ClientMissionAction) => void
 }

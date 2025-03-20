@@ -22,6 +22,7 @@ import {
   TMissionPrototypeJson,
   TMissionPrototypeOptions,
 } from '../../../shared/missions/nodes/prototypes'
+import { TNonEmptyArray } from '../../../shared/toolbox/arrays'
 import { Counter } from '../../../shared/toolbox/numbers'
 import { AnyObject, TWithKey } from '../../../shared/toolbox/objects'
 import { Vector2D } from '../../../shared/toolbox/space'
@@ -301,9 +302,6 @@ export default class ClientMission
 
     // Initialize structure.
     this.handleStructureChange()
-
-    // Evaluate nested objects.
-    this.evaluateComponents()
   }
 
   // Implemented
@@ -1028,13 +1026,11 @@ export default class ClientMission
   /**
    * Duplicates the selected forces in the mission.
    * @param forcesInfo The information needed to duplicate the forces.
+   * @returns The new, duplicated forces.
    */
   public duplicateForces(
-    forcesInfo: TDuplicateForceInfo | TDuplicateForceInfo[],
-  ): void {
-    // If the forcesInfo is not an array, make it an array.
-    if (!Array.isArray(forcesInfo)) forcesInfo = [forcesInfo]
-
+    ...forcesInfo: TNonEmptyArray<TDuplicateForceInfo>
+  ): TNonEmptyArray<ClientMissionForce> {
     // Duplicate the forces.
     let duplicatedForces = forcesInfo.map(({ originalId, duplicateName }) => {
       // Find the force to duplicate.
@@ -1087,13 +1083,15 @@ export default class ClientMission
 
       // Create a new force object from the JSON.
       return new ClientMissionForce(this, forceJson, { populateTargets: true })
-    })
+    }) as TNonEmptyArray<ClientMissionForce>
 
     // Add the duplicated forces to the mission.
     this.forces.push(...duplicatedForces)
 
     // Handle structure change.
     this.handleStructureChange()
+
+    return duplicatedForces
   }
 
   /**
@@ -1101,16 +1099,24 @@ export default class ClientMission
    * @param forceIds The IDs of the forces to delete.
    */
   public deleteForces(
-    forceIds: ClientMissionForce['_id'] | ClientMissionForce['_id'][],
-  ): void {
+    ...forceIds: TNonEmptyArray<ClientMissionForce['_id']>
+  ): ClientMissionForce[] {
+    let deletedForces: ClientMissionForce[] = []
+
     // If the forces is not an array, make it an array.
     if (!Array.isArray(forceIds)) forceIds = [forceIds]
 
     // Remove the forces from the mission.
-    this.forces = this.forces.filter((force) => !forceIds.includes(force._id))
+    this.forces = this.forces.filter((force) => {
+      let deleteIt = forceIds.includes(force._id)
+      if (deleteIt) deletedForces.push(force)
+      return !deleteIt
+    })
 
     // Handle structure change.
     this.handleStructureChange()
+
+    return deletedForces
   }
 
   /**

@@ -1,11 +1,11 @@
 /* -- CONTEXT -- */
 
 import React, { useContext, useRef } from 'react'
-import { TOutput_P, TOutput_S, TOutputContextData } from '.'
 import { useDefaultProps } from 'src/toolbox/hooks'
+import { TOutput_P, TOutput_S, TOutputContextData } from '.'
 import OutputInfo from './info/OutputInfo'
-import './Output.scss'
 import OutputMessage from './messages/OutputMessage'
+import './Output.scss'
 
 /**
  * Context for the output, which will help distribute
@@ -31,7 +31,7 @@ export const useOutputContext = () => {
  * Renders an output with the given content for
  * an output panel.
  */
-export default function Output(props: TOutput_P): JSX.Element | null {
+export default function (props: TOutput_P): JSX.Element | null {
   /* -- PROPS -- */
 
   const defaultedProps = useDefaultProps(props, {})

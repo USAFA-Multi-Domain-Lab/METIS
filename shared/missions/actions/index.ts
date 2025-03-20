@@ -38,11 +38,13 @@ export default abstract class MissionAction<
   // Implemented
   public get defective(): boolean {
     return false
+    // return true
   }
 
   // Implemented
   public get defectiveMessage(): string {
     return ''
+    // return `There is something wrong with the action "${this.name}".`
   }
 
   /**

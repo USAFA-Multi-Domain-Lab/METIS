@@ -47,7 +47,8 @@ export default abstract class MissionPrototype<
   public parent: TPrototype<T> | null
 
   /**
-   * The children of this prototype in the tree structure.
+   * The direct children of this prototype in
+   * the tree structure.
    */
   public children: TPrototype<T>[]
 

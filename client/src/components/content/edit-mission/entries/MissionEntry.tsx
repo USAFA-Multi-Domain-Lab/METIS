@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { useMissionPageContext } from 'src/components/pages/MissionPage'
 import ClientMission from 'src/missions'
 import { compute } from 'src/toolbox'
-import { useMountHandler, usePostInitEffect } from 'src/toolbox/hooks'
+import { usePostInitEffect } from 'src/toolbox/hooks'
 import { TMissionComponent } from '../../../../../../shared/missions'
 import Tooltip from '../../communication/Tooltip'
 import { DetailString } from '../../form/DetailString'
@@ -15,39 +16,16 @@ import EntryNavigation from './navigation/EntryNavigation'
  */
 export default function MissionEntry({
   mission,
-  handleChange,
+  onChange,
 }: TMissionEntry_P): JSX.Element | null {
   /* -- STATE -- */
+  const { state } = useMissionPageContext()
+  const [defectiveComponents] = state.defectiveComponents
   const [name, setName] = useState<string>(mission.name)
   const [resourceLabel, setResourceLabel] = useState<string>(
     mission.resourceLabel,
   )
-  const [defectiveComponents, setDefectiveComponents] = useState<
-    TMissionComponent<any, any>[]
-  >(mission.defectiveComponents)
-
   /* -- EFFECTS -- */
-
-  // componentDidMount
-  const [mountHandled] = useMountHandler((done) => {
-    // Evaluate the components to determine if they are defective.
-    mission.evaluateComponents()
-    setDefectiveComponents(mission.defectiveComponents)
-    done()
-  })
-
-  // Finish evaluating the components, if necessary.
-  useEffect(() => {
-    if (mountHandled && defectiveComponents.length === 500) {
-      mission.evaluateComponents()
-      setDefectiveComponents(mission.defectiveComponents)
-    }
-  }, [mountHandled])
-
-  // Update the defective objects when they change elsewhere.
-  useEffect(() => {
-    setDefectiveComponents(mission.defectiveComponents)
-  }, [mission.defectiveComponents.length])
 
   // Sync the component state with the mission introduction message
   // and initial resources.
@@ -58,7 +36,7 @@ export default function MissionEntry({
     mission.resourceLabel = resourceLabel
 
     // Allow the user to save the changes.
-    handleChange()
+    onChange(mission)
   }, [name, resourceLabel])
 
   /* -- FUNCTIONS -- */
@@ -138,7 +116,7 @@ export default function MissionEntry({
               alwaysUseBlanks={false}
               searchableProperties={['name']}
               noItemsDisplay={null}
-              ajaxStatus={defectiveComponents.length > 0 ? 'Loaded' : 'Loading'}
+              ajaxStatus={'Loaded'}
               applyItemStyling={() => {
                 return {}
               }}
@@ -165,6 +143,7 @@ type TMissionEntry_P = {
   /**
    * A function that will be used to notify the parent
    * component that this component has changed.
+   * @param mission The same mission that was passed.
    */
-  handleChange: () => void
+  onChange: (mission: ClientMission) => void
 }

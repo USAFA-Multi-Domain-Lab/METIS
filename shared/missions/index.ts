@@ -88,15 +88,40 @@ export default abstract class Mission<
   }
 
   /**
-   * Private cache field for `defectiveComponents`.
-   */
-  private _defectiveComponents: TMissionComponent<any, any>[]
-  /**
    * Components within the mission with issues that need to
    * be resolved by a mission designer.
    */
   public get defectiveComponents(): TMissionComponent<any, any>[] {
-    return this._defectiveComponents
+    // Initialize the list.
+    let result = []
+
+    // Loop through prototypes.
+    for (let prototype of this.prototypes) {
+      if (prototype.defective) result.push(prototype)
+    }
+
+    // Loop through forces.
+    for (let force of this.forces) {
+      // Validate the force.
+      if (force.defective) result.push(force)
+      // Loop through nodes.
+      for (let node of force.nodes) {
+        // Validate the node.
+        if (node.defective) result.push(node)
+        // Loop through actions.
+        for (let action of node.actions.values()) {
+          // Validate the action.
+          if (action.defective) result.push(action)
+          // Loop through effects.
+          for (let effect of action.effects) {
+            // Validate the effect.
+            if (effect.defective) result.push(effect)
+          }
+        }
+      }
+    }
+
+    return result
   }
 
   /**
@@ -188,7 +213,6 @@ export default abstract class Mission<
     this.prototypes = []
     this.forces = []
     this.root = this.initializeRoot()
-    this._defectiveComponents = []
 
     // Parse options.
     let { populateTargets = false } = options
@@ -384,38 +408,6 @@ export default abstract class Mission<
     data: TMissionForceSaveJson[],
     options?: TMissionForceOptions,
   ): TForce<T>[]
-
-  /**
-   * Evaluates components found within the mission to determine
-   * if they are defective.
-   */
-  public evaluateComponents(): void {
-    // Initialize invalid components.
-    this._defectiveComponents = []
-
-    // Loop through forces.
-    for (let force of this.forces) {
-      // Validate the force.
-      if (force.defective) this._defectiveComponents.push(force)
-
-      // Loop through nodes.
-      for (let node of force.nodes) {
-        // Validate the node.
-        if (node.defective) this._defectiveComponents.push(node)
-        // Loop through actions.
-        for (let action of node.actions.values()) {
-          // Validate the action.
-          if (action.defective) this._defectiveComponents.push(action)
-
-          // Loop through effects.
-          for (let effect of action.effects) {
-            // Validate the effect.
-            if (effect.defective) this._defectiveComponents.push(effect)
-          }
-        }
-      }
-    }
-  }
 
   /**
    * @param prototypeId The ID of the prototype to get.
