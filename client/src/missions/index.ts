@@ -8,13 +8,11 @@ import { EventManager, TListenerTargetEmittable } from '../../../shared/events'
 import Mission, {
   TMissionComponent,
   TMissionJson,
-  TMissionOptions,
 } from '../../../shared/missions'
 import { TMissionActionJson } from '../../../shared/missions/actions'
 import { TEffectJson } from '../../../shared/missions/effects'
 import {
   MissionForce,
-  TMissionForceOptions,
   TMissionForceSaveJson,
 } from '../../../shared/missions/forces'
 import { TMissionNodeJson } from '../../../shared/missions/nodes'
@@ -29,7 +27,7 @@ import { Vector2D } from '../../../shared/toolbox/space'
 import User from '../../../shared/users'
 import ClientMissionAction from './actions'
 import { ClientEffect } from './effects'
-import ClientMissionForce, { TClientMissionForceOptions } from './forces'
+import ClientMissionForce from './forces'
 import ClientMissionNode from './nodes'
 import ClientMissionPrototype, { TPrototypeRelation } from './nodes/prototypes'
 import MissionTransformation from './transformations'
@@ -270,7 +268,7 @@ export default class ClientMission
     options: TClientMissionOptions = {},
   ) {
     // Initialize base properties.
-    super(data, options)
+    super(data)
 
     // Parse client-specific options.
     let { existsOnServer = false, nonRevealedDisplayMode = 'hide' } = options
@@ -337,12 +335,9 @@ export default class ClientMission
   }
 
   // Implemented
-  protected importForces(
-    data: TMissionForceSaveJson[],
-    options: TClientMissionForceOptions = {},
-  ): ClientMissionForce[] {
+  protected importForces(data: TMissionForceSaveJson[]): ClientMissionForce[] {
     let forces: ClientMissionForce[] = data.map(
-      (datum) => new ClientMissionForce(this, datum, options),
+      (datum) => new ClientMissionForce(this, datum),
     )
     this.forces.push(...forces)
     return forces
@@ -424,7 +419,7 @@ export default class ClientMission
    * @param options Options passed to the constructor.
    * @returns The newly created force.
    */
-  public createForce(options: TMissionForceOptions = {}): ClientMissionForce {
+  public createForce(): ClientMissionForce {
     // Throw an error if the max number of forces
     // has already been reached.
     if (this.forces.length >= Mission.MAX_FORCE_COUNT) {
@@ -449,14 +444,14 @@ export default class ClientMission
       }
 
       // Create a new force.
-      force = new ClientMissionForce(this, defaultForce, options)
+      force = new ClientMissionForce(this, defaultForce)
       // Break the loop.
       break
     }
 
     // This theoretically shouldn't happen, but if
     // no force has been created yet, create one here.
-    if (!force) force = new ClientMissionForce(this, {}, options)
+    if (!force) force = new ClientMissionForce(this, {})
 
     // Add the force to the mission.
     this.forces.push(force)
@@ -1082,7 +1077,7 @@ export default class ClientMission
       })
 
       // Create a new force object from the JSON.
-      return new ClientMissionForce(this, forceJson, { populateTargets: true })
+      return new ClientMissionForce(this, forceJson)
     }) as TNonEmptyArray<ClientMissionForce>
 
     // Add the duplicated forces to the mission.
@@ -1398,7 +1393,7 @@ export default class ClientMission
 /**
  * Options for the creation of a ClientMission object.
  */
-export type TClientMissionOptions = TMissionOptions & {
+export type TClientMissionOptions = {
   /**
    * Whether the data already exists on the server.
    * @default false

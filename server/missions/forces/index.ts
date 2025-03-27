@@ -1,9 +1,5 @@
-import {
-  MissionForce,
-  TMissionForceJson,
-  TMissionForceOptions,
-} from 'metis/missions/forces'
-import { TMissionNodeJson, TMissionNodeOptions } from 'metis/missions/nodes'
+import { MissionForce, TMissionForceJson } from 'metis/missions/forces'
+import { TMissionNodeJson } from 'metis/missions/nodes'
 import { TMetisServerComponents } from 'metis/server'
 import { TTargetEnvExposedForce } from 'metis/server/target-environments/context'
 import ServerUser from 'metis/server/users'
@@ -25,28 +21,21 @@ export default class ServerMissionForce extends MissionForce<TMetisServerCompone
   public constructor(
     mission: ServerMission,
     data: Partial<TMissionForceJson> = MissionForce.DEFAULT_PROPERTIES,
-    options: TServerMissionForceOptions = {},
   ) {
-    super(mission, data, options)
+    super(mission, data)
   }
 
   // Implemented
-  public createNode(
-    data: Partial<TMissionNodeJson>,
-    options: TMissionNodeOptions = {},
-  ): ServerMissionNode {
-    return new ServerMissionNode(this, data, options)
+  public createNode(data: Partial<TMissionNodeJson>): ServerMissionNode {
+    return new ServerMissionNode(this, data)
   }
 
   // Implemented
-  public spawnNode(
-    data: Partial<TMissionNodeJson>,
-    options: TMissionNodeOptions,
-  ): ServerMissionNode {
+  public spawnNode(data: Partial<TMissionNodeJson>): ServerMissionNode {
     let root: ServerMissionNode = this.root
 
     // Create new node.
-    let node: ServerMissionNode = new ServerMissionNode(this, data, options)
+    let node: ServerMissionNode = new ServerMissionNode(this, data)
 
     // Add the node to the node map.
     this.nodes.push(node)
@@ -124,10 +113,3 @@ export default class ServerMissionForce extends MissionForce<TMetisServerCompone
     this.resourcesRemaining += operand
   }
 }
-
-/* ------------------------------ SERVER FORCE TYPES ------------------------------ */
-
-/**
- * Options for creating a ServerMissionForce object.
- */
-export type TServerMissionForceOptions = TMissionForceOptions & {}

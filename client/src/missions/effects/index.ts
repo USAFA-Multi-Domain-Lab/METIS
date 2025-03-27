@@ -1,9 +1,7 @@
 import { TMetisClientComponents } from 'src'
+import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
-import Effect, {
-  TEffectJson,
-  TEffectOptions,
-} from '../../../../shared/missions/effects'
+import Effect, { TEffectJson } from '../../../../shared/missions/effects'
 import ClientMissionAction from '../actions'
 
 /**
@@ -11,36 +9,43 @@ import ClientMissionAction from '../actions'
  * applied to a target.
  */
 export class ClientEffect extends Effect<TMetisClientComponents> {
-  /**
-   * @param action The action to which the effect belongs.
-   * @param data The data for the effect.
-   * @param options The options for the effect.
-   */
-  public constructor(
-    action: ClientMissionAction,
-    data: Partial<TEffectJson> = ClientEffect.DEFAULT_PROPERTIES,
-    options: TClientEffectOptions = {},
-  ) {
-    super(action, data, options)
+  // Implemented
+  protected determineTarget(
+    targetId: string,
+    environmentId: string,
+  ): ClientTarget | null {
+    // todo: Allow user to decide which target to use
+    // todo: if multiple targets with the same ID exist
+    // todo: in different environments
+    if (environmentId === ClientEffect.ENVIRONMENT_ID_INFER) {
+      return ClientTargetEnvironment.REGISTRY.inferTarget(targetId) ?? null
+    } else {
+      return (
+        ClientTargetEnvironment.REGISTRY.getTarget(targetId, environmentId) ??
+        null
+      )
+    }
   }
 
   /**
-   * Populates the target data for the effect.
-   * @param targetId The ID of the target to populate.
+   * @param target The target for the new effect.
+   * @param action The action that will trigger the effect.
+   * @returns A new effect with the provided target,
+   * populated with the corresponding target environment
+   * and target environment version. All other values
+   * will be set to the default values found in
+   * `Effect.DEFAULT_PROPERTIES`.
    */
-  protected populateTargetData(targetId: string | null | undefined): void {
-    // Get the target from the target environment.
-    let target = ClientTarget.getTarget(targetId)
-
-    // If the target is found, set it and update the
-    // target status to 'Populated'.
-    if (target) this._target = target
+  public static createBlankEffect(
+    target: ClientTarget,
+    action: ClientMissionAction,
+  ): ClientEffect {
+    let data: TEffectJson = {
+      ...Effect.DEFAULT_PROPERTIES,
+      targetId: target._id,
+      environmentId: target.environment._id,
+      targetEnvironmentVersion: target.environment.version,
+    }
+    return new ClientEffect(action, data)
   }
 }
-
-/* ------------------------------ CLIENT EFFECT TYPES ------------------------------ */
-
-/**
- * The options for creating a ClientEffect.
- */
-export type TClientEffectOptions = TEffectOptions & {}

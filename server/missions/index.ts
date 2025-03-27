@@ -1,8 +1,4 @@
-import Mission, {
-  TMissionJson,
-  TMissionOptions,
-  TMissionSaveJson,
-} from 'metis/missions'
+import Mission, { TMissionJson, TMissionSaveJson } from 'metis/missions'
 import { TMissionForceSaveJson } from 'metis/missions/forces'
 import {
   TMissionPrototypeJson,
@@ -11,7 +7,7 @@ import {
 import seedrandom, { PRNG } from 'seedrandom'
 import { TMetisServerComponents } from '../index'
 import { TTargetEnvExposedMission } from '../target-environments/context'
-import ServerMissionForce, { TServerMissionForceOptions } from './forces'
+import ServerMissionForce from './forces'
 import ServerMissionPrototype from './nodes/prototypes'
 
 /**
@@ -43,10 +39,9 @@ export default class ServerMission extends Mission<TMetisServerComponents> {
     data:
       | Partial<TMissionJson>
       | Partial<TMissionSaveJson> = ServerMission.DEFAULT_PROPERTIES,
-    options: TServerMissionOptions = {},
   ) {
     // Initialize base properties.
-    super(data, options)
+    super(data)
   }
 
   // Implemented
@@ -87,13 +82,8 @@ export default class ServerMission extends Mission<TMetisServerComponents> {
   }
 
   // Implemented
-  protected importForces(
-    data: TMissionForceSaveJson[],
-    options: TServerMissionForceOptions = {},
-  ): ServerMissionForce[] {
-    let forces = data.map(
-      (datum) => new ServerMissionForce(this, datum, options),
-    )
+  protected importForces(data: TMissionForceSaveJson[]): ServerMissionForce[] {
+    let forces = data.map((datum) => new ServerMissionForce(this, datum))
     this.forces.push(...forces)
     return forces
   }
@@ -121,8 +111,3 @@ export type TServerMissionComponents = Pick<
   TMetisServerComponents,
   'mission' | 'force' | 'output' | 'prototype' | 'node' | 'action' | 'effect'
 >
-
-/**
- * Options for the creation of a `ServerMission` object.
- */
-type TServerMissionOptions = TMissionOptions & {}

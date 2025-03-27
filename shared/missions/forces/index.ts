@@ -4,7 +4,7 @@ import User from 'metis/users'
 import Mission, { TMission, TMissionComponent, TMissionJsonOptions } from '..'
 import context from '../../context'
 import StringToolbox from '../../toolbox/strings'
-import { TMissionNodeJson, TMissionNodeOptions, TNode } from '../nodes'
+import { TMissionNodeJson, TNode } from '../nodes'
 import { TPrototype } from '../nodes/prototypes'
 import { TOutput, TOutputJson } from './output'
 
@@ -130,11 +130,7 @@ export abstract class MissionForce<
   public constructor(
     mission: TMission<T>,
     data: Partial<TMissionForceJson> = MissionForce.DEFAULT_PROPERTIES,
-    options: TMissionForceOptions = {},
   ) {
-    // Parse options.
-    const { populateTargets = false } = options
-
     // Set properties.
     this.mission = mission
     this._id = data._id ?? MissionForce.DEFAULT_PROPERTIES._id
@@ -152,9 +148,7 @@ export abstract class MissionForce<
     this.root = this.createNode(MissionForce.ROOT_NODE_PROPERTIES)
 
     // Import nodes into the force.
-    this.importNodes(data.nodes ?? MissionForce.DEFAULT_PROPERTIES.nodes, {
-      populateTargets,
-    })
+    this.importNodes(data.nodes ?? MissionForce.DEFAULT_PROPERTIES.nodes)
   }
 
   /**
@@ -254,10 +248,7 @@ export abstract class MissionForce<
    * @param data The data for the node.
    * @param options The options for creating the node.
    */
-  protected abstract createNode(
-    data: Partial<TMissionNodeJson>,
-    options?: TMissionNodeOptions,
-  ): TNode<T>
+  protected abstract createNode(data: Partial<TMissionNodeJson>): TNode<T>
 
   /**
    * Filter the outputs based on the conditions of the output and the current user.
@@ -304,18 +295,12 @@ export abstract class MissionForce<
    * @param data The raw node data to import.
    * @param options The options for importing the nodes.
    */
-  protected importNodes(
-    data: TMissionNodeJson[],
-    options: TNodeImportOptions = {},
-  ): void {
+  protected importNodes(data: TMissionNodeJson[]): void {
     try {
-      // Parse options.
-      const { populateTargets } = options
-
       // Loop through data, spawn new nodes,
       // and add them to the nodes map.
       for (let datum of data) {
-        this.nodes.push(this.createNode(datum, { populateTargets }))
+        this.nodes.push(this.createNode(datum))
       }
     } catch (error) {
       if (context === 'react') {
@@ -512,26 +497,10 @@ export type TMissionForceJson = TMissionForceSaveJson &
   Partial<TMissionForceSessionJson>
 
 /**
- * Options for creating a MissionForce object.
- */
-export type TMissionForceOptions = {
-  /**
-   * Whether to populate the targets.
-   * @default false
-   */
-  populateTargets?: boolean
-}
-
-/**
  * Options for converting a MissionForce to JSON.
  * @inheritdoc TMissionJsonOptions
  */
 export type TForceJsonOptions = Omit<TMissionJsonOptions, 'idExposure'>
-
-/**
- * Options for MissionForce.importNodes.
- */
-export type TNodeImportOptions = TMissionForceOptions
 
 /**
  * Options for the MissionForce.exportNodes method.

@@ -5,13 +5,9 @@ import { TListenerTargetEmittable } from '../../../../shared/events'
 import {
   MissionForce,
   TMissionForceJson,
-  TMissionForceOptions,
 } from '../../../../shared/missions/forces'
 import { TOutputJson } from '../../../../shared/missions/forces/output'
-import {
-  TMissionNodeJson,
-  TMissionNodeOptions,
-} from '../../../../shared/missions/nodes'
+import { TMissionNodeJson } from '../../../../shared/missions/nodes'
 import { Counter } from '../../../../shared/toolbox/numbers'
 import { TWithKey } from '../../../../shared/toolbox/objects'
 import { Vector2D } from '../../../../shared/toolbox/space'
@@ -61,9 +57,8 @@ export default class ClientMissionForce
   public constructor(
     mission: ClientMission,
     data: Partial<TMissionForceJson> = ClientMissionForce.DEFAULT_PROPERTIES,
-    options: TClientMissionForceOptions = {},
   ) {
-    super(mission, data, options)
+    super(mission, data)
     this.relationshipLines = []
 
     // If output data is provided, parse it.
@@ -71,11 +66,8 @@ export default class ClientMissionForce
   }
 
   // Implemented
-  public createNode(
-    data: Partial<TMissionNodeJson>,
-    options: TMissionNodeOptions = {},
-  ): ClientMissionNode {
-    return new ClientMissionNode(this, data, options)
+  public createNode(data: Partial<TMissionNodeJson>): ClientMissionNode {
+    return new ClientMissionNode(this, data)
   }
 
   /**
@@ -512,11 +504,6 @@ export default class ClientMissionForce
 }
 
 /* ------------------------------ CLIENT FORCE TYPES ------------------------------ */
-
-/**
- * Options for creating a ClientMissionForce object.
- */
-export type TClientMissionForceOptions = TMissionForceOptions & {}
 
 /**
  * An event that occurs on a force, which can be listened for.

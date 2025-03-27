@@ -1,9 +1,9 @@
 import axios from 'axios'
 import { TMetisClientComponents } from 'src'
-import ClientUser from 'src/users'
 import TargetEnvironment, {
   TTargetEnvJson,
 } from '../../../shared/target-environments'
+import TargetEnvRegistry from '../../../shared/target-environments/registry'
 import { TTargetJson } from '../../../shared/target-environments/targets'
 import ClientTarget from './targets'
 
@@ -11,35 +11,17 @@ import ClientTarget from './targets'
  * Class representing a target environment on the client-side.
  */
 export class ClientTargetEnvironment extends TargetEnvironment<TMetisClientComponents> {
-  /**
-   * A registry of all target environments.
-   */
-  private static registry: ClientTargetEnvironment[] = []
-  /**
-   * Grabs all the target environments from the registry.
-   * @returns An array of all the target environments in the
-   * registry.
-   */
-  public static getAll(): ClientTargetEnvironment[] {
-    return ClientTargetEnvironment.registry
-  }
-
-  /**
-   * Grabs a target environment from the registry by its ID.
-   * @param id The ID of the target environment to grab.
-   * @returns A target environment with the provided ID.
-   */
-  public static get(id: string): ClientTargetEnvironment | undefined {
-    return ClientTargetEnvironment.registry.find(
-      (targetEnvironment) => targetEnvironment._id === id,
-    )
-  }
-
   // Implemented
   protected parseTargets(data: TTargetJson[]): ClientTarget[] {
     return data.map((datum: TTargetJson) => {
       return new ClientTarget(this, datum)
     })
+  }
+
+  // Implemented
+  public register(): ClientTargetEnvironment {
+    ClientTargetEnvironment.REGISTRY.register(this)
+    return this
   }
 
   /**
@@ -48,43 +30,31 @@ export class ClientTargetEnvironment extends TargetEnvironment<TMetisClientCompo
   public static readonly API_ENDPOINT: string = '/api/v1/target-environments'
 
   /**
-   * Loads all target environments via the API.
-   * @param user The user to load the target environments for.
+   * A registry of all target environments installed
+   * on the server and provided to the client.
+   */
+  public static readonly REGISTRY: TargetEnvRegistry<TMetisClientComponents> =
+    new TargetEnvRegistry()
+
+  /**
+   * Populates the registry with the target environments
+   * found on the server.
    * @resolves If the target environments are successfully loaded.
    * @rejects If there is an error loading the target environments.
+   * @note The registry will be cleared before population.
    */
-  public static $loadAll(user: ClientUser): Promise<void> {
+  public static $populateRegistry(): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
       try {
-        // Add the target environments to the registry if the user is authorized.
-        if (
-          user.isAuthorized('environments_read') &&
-          ClientTargetEnvironment.registry.length === 0
-        ) {
-          // Fetch the target environments from the API.
-          let response = await axios.get<TTargetEnvJson[]>(
-            `${ClientTargetEnvironment.API_ENDPOINT}`,
-          )
-          // Parse the response data.
-          let data = response.data
-          // Create an array of ClientTargetEnvironment Objects.
-          let targetEnvironments = data.map(
-            (datum) => new ClientTargetEnvironment(datum),
-          )
-          // Add the target environments to the registry.
-          ClientTargetEnvironment.registry = targetEnvironments
-          // Resolve the promise.
-          resolve()
-        }
-        // Otherwise, clear the registry if the user is not authorized.
-        else if (
-          !user.isAuthorized('environments_read') &&
-          ClientTargetEnvironment.registry.length > 0
-        ) {
-          ClientTargetEnvironment.registry = []
-          // Resolve the promise.
-          resolve()
-        }
+        // Wipe the registry.
+        ClientTargetEnvironment.REGISTRY.clear()
+
+        // Fetch the target environments from the API.
+        let { data } = await axios.get<TTargetEnvJson[]>(
+          `${ClientTargetEnvironment.API_ENDPOINT}`,
+        )
+        // Create new target environments from the data.
+        data.map((datum) => new ClientTargetEnvironment(datum).register())
       } catch (error: any) {
         console.error('Failed to load target environments.')
         console.error(error)

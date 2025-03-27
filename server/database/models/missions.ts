@@ -164,9 +164,7 @@ const validateMissionEffects = (
 
   try {
     // Create a new server mission.
-    let mission: ServerMission = new ServerMission(missionJson, {
-      populateTargets: true,
-    })
+    let mission: ServerMission = new ServerMission(missionJson)
 
     // Loop through each force.
     for (let force of mission.forces) {
@@ -196,15 +194,14 @@ const validateMissionEffects = (
             }
 
             // Check to see if the target environment version is current.
-            let targetEnvironment = ServerTargetEnvironment.getJson(
+            let targetEnvironment = ServerTargetEnvironment.REGISTRY.get(
               effect.environment._id,
             )
             if (
               targetEnvironment?.version !== effect.targetEnvironmentVersion
             ) {
               let errorMessage = `The effect's ({ _id: "${effect._id}", name: "${effect.name}" }) target environment version is out-of-date. Current version: "${targetEnvironment?.version}".`
-              databaseLogger.error(errorMessage)
-              console.error(errorMessage)
+              databaseLogger.warn(errorMessage)
             }
 
             // Grab the argument IDs from the effect.
@@ -941,6 +938,10 @@ export const MissionSchema = new Schema<
                           {
                             _id: { type: String, required: true },
                             targetId: {
+                              type: String,
+                              required: true,
+                            },
+                            environmentId: {
                               type: String,
                               required: true,
                             },

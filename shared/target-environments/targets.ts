@@ -14,13 +14,13 @@ export default abstract class Target<
   /**
    * The environment in which the target exists.
    */
-  public targetEnvironment: TTargetEnv<T>
+  public environment: TTargetEnv<T>
 
   /**
    * The ID of the target environment.
    */
-  public get targetEnvironmentId(): string {
-    return this.targetEnvironment._id
+  public environmentId(): string {
+    return this.environment._id
   }
 
   /**
@@ -50,16 +50,14 @@ export default abstract class Target<
 
   /**
    * Creates a new Target Object.
-   * @param targetEnvironment The environment in which the target exists.
+   * @param environment The environment in which the target exists.
    * @param data The data to use to create the Target.
-   * @param options The options for creating the Target.
    */
   public constructor(
-    targetEnvironment: TTargetEnv<T>,
+    environment: TTargetEnv<T>,
     data: Partial<TTargetJson> = Target.DEFAULT_PROPERTIES,
-    options: TTargetOptions = {},
   ) {
-    this.targetEnvironment = targetEnvironment
+    this.environment = environment
     this._id = data._id ?? Target.DEFAULT_PROPERTIES._id
     this.name = data.name ?? Target.DEFAULT_PROPERTIES.name
     this.description = data.description ?? Target.DEFAULT_PROPERTIES.description
@@ -75,32 +73,13 @@ export default abstract class Target<
   public toJson(): TTargetJson {
     // Construct JSON object to send to the server.
     return {
-      targetEnvId: this.targetEnvironment._id,
+      targetEnvId: this.environment._id,
       _id: this._id,
       name: this.name,
       description: this.description,
       script: this.script,
       args: Arg.toJson(this.args),
     }
-  }
-
-  /**
-   * A type guard that checks if the provided value is a Target JSON object.
-   * @param obj The object to check.
-   * @param excludedProperties The properties to exclude when checking if the value is a Target JSON object.
-   * @returns True if the value is a Target JSON object.
-   */
-  public static isJson(
-    obj: AnyObject,
-    excludedKeys: (keyof TTargetJson)[] = [],
-  ): obj is TTargetJson {
-    // Only grab the keys that are not excluded.
-    const requiredKeys = Object.keys(Target.DEFAULT_PROPERTIES).filter(
-      (key) => !excludedKeys.includes(key as keyof TTargetJson),
-    )
-    // Check if the required keys are present in the object.
-    const keysPassed = Object.keys(obj)
-    return keysPassed.every((key) => requiredKeys.includes(key))
   }
 
   /**
@@ -369,6 +348,25 @@ export default abstract class Target<
     Target.OUTPUT_TARGET,
     Target.RESOURCE_POOL_TARGET,
   ]
+
+  /**
+   * A type guard that checks if the provided value is a Target JSON object.
+   * @param obj The object to check.
+   * @param excludedProperties The properties to exclude when checking if the value is a Target JSON object.
+   * @returns True if the value is a Target JSON object.
+   */
+  public static isJson(
+    obj: AnyObject,
+    excludedKeys: (keyof TTargetJson)[] = [],
+  ): obj is TTargetJson {
+    // Only grab the keys that are not excluded.
+    const requiredKeys = Object.keys(Target.DEFAULT_PROPERTIES).filter(
+      (key) => !excludedKeys.includes(key as keyof TTargetJson),
+    )
+    // Check if the required keys are present in the object.
+    const keysPassed = Object.keys(obj)
+    return keysPassed.every((key) => requiredKeys.includes(key))
+  }
 }
 
 /* ------------------------------ TARGET TYPES ------------------------------ */
