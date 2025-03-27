@@ -261,7 +261,7 @@ function App(props: {}): JSX.Element | null {
       if (login !== null) {
         try {
           // Load target environments.
-          await ClientTargetEnvironment.$loadAll(login.user)
+          await ClientTargetEnvironment.$populateRegistry()
         } catch {
           handleError('Failed to load post-login data.')
         }

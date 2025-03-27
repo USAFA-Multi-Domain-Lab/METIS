@@ -216,10 +216,10 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
         beginLoading('Loading mission...')
         let mission = await ClientMission.$fetchOne(props.missionId, {
           nonRevealedDisplayMode: 'show',
-          populateTargets: true,
         })
         setMission(mission)
         setSelection(mission)
+        setDefectiveComponents(mission.defectiveComponents)
       } catch {
         handleError('Failed to load mission.')
       }
@@ -232,12 +232,6 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     // Mark mount as handled.
     done()
   })
-
-  // Update the defective components if a new mission
-  // object is created.
-  useEffect(() => {
-    setDefectiveComponents(mission.defectiveComponents)
-  }, [mission])
 
   // Cleanup when a new effect is created.
   useEffect(() => {

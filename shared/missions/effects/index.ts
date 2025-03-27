@@ -1,12 +1,11 @@
 import { TCreateJsonType, TMetisBaseComponents } from 'metis/index'
-import { v4 as generateHash } from 'uuid'
 import { TMission, TMissionComponent } from '..'
 import { TTargetArg } from '../../target-environments/args'
 import ForceArg from '../../target-environments/args/force-arg'
 import NodeArg from '../../target-environments/args/node-arg'
 import Dependency from '../../target-environments/dependencies'
-import Target, { TTargetJson } from '../../target-environments/targets'
 import { AnyObject } from '../../toolbox/objects'
+import StringToolbox from '../../toolbox/strings'
 import { TAction } from '../actions'
 import { TForce } from '../forces'
 import { TNode } from '../nodes'
@@ -18,7 +17,14 @@ export default abstract class Effect<
   T extends TMetisBaseComponents = TMetisBaseComponents,
 > implements TMissionComponent<T, Effect<T>>
 {
-  // Implemented
+  /**
+   * The original data used to construct the effect.
+   */
+  private originalData: TEffectJson
+
+  /**
+   * The mission to which the effect belongs.
+   */
   public get mission(): TMission<T> {
     return this.action.mission
   }
@@ -38,75 +44,16 @@ export default abstract class Effect<
   }
 
   /**
-   * The target to which the effect will be applied.
-   * @note This will be a Target Object if the data has
-   * already been loaded. Otherwise, it will be the ID
-   * of the target. If the target is not set, it will be
-   * null.
-   */
-  protected _target: T['target'] | TTargetJson['_id'] | null
-  /**
-   * The target to which the effect will be applied.
-   */
-  public get target(): T['target'] | null {
-    if (this._target instanceof Target) {
-      return this._target
-    } else {
-      return null
-    }
-  }
-  /**
-   * The target to which the effect will be applied.
-   */
-  public set target(target: T['target']) {
-    if (target instanceof Target) {
-      this._target = target
-    } else {
-      this._target = null
-    }
-  }
-
-  /**
-   * The ID of the target to which the effect will be applied.
-   */
-  public get targetId(): TTargetJson['_id'] | null {
-    let target: T['target'] | TTargetJson['_id'] | null = this._target
-
-    // If the target is a Target Object, return its ID.
-    if (target instanceof Target) {
-      return target._id
-    }
-    // Or, the target is an ID.
-    else if (typeof target === 'string') {
-      return target
-    }
-    // Otherwise, return the default target ID.
-    else {
-      return Effect.DEFAULT_PROPERTIES.targetId
-    }
-  }
-
-  /**
    * The environment in which the target exists.
    */
   public get environment(): T['targetEnv'] | null {
-    if (this.target instanceof Target) {
-      return this.target.targetEnvironment
-    } else {
-      return null
-    }
+    return this.target?.environment ?? null
   }
 
   /**
-   * The ID of the environment in which the target exists.
+   * The target to which the effect will be applied.
    */
-  public get targetEnvironmentId(): TTargetJson['_id'] | null {
-    if (this.target instanceof Target) {
-      return this.target.targetEnvironment._id
-    } else {
-      return null
-    }
-  }
+  public target: T['target'] | null
 
   /**
    * The corresponding action for the effect.
@@ -116,7 +63,27 @@ export default abstract class Effect<
   // Implemented
   public _id: string
 
-  // Implemented
+  /**
+   * The ID of the target for the effect.
+   */
+  public get targetId(): string {
+    return this.target?._id ?? this.originalData.targetId
+  }
+
+  /**
+   * The ID of the environment in which the
+   * target exists.
+   */
+  public get environmentId(): string {
+    return this.environment?._id ?? this.originalData.environmentId
+  }
+
+  /**
+   * The version of the corresponding target environment
+   * for which this effect is compatible. If the version
+   * of the target environment does not match this version,
+   * a migration may be required to apply the effect.
+   */
   public targetEnvironmentVersion: string
 
   // Implemented
@@ -264,6 +231,10 @@ export default abstract class Effect<
       }
     }
 
+    if (this.environmentId === 'infer-for-build_000038') {
+      return `The effect, "${this.name}" has a reference to a target, but not to a target environment.`
+    }
+
     // If all checks pass, then the effect is not defective.
     return ''
   }
@@ -286,54 +257,50 @@ export default abstract class Effect<
   public args: AnyObject
 
   /**
-   * @param action The action to which the effect belongs.
-   * @param data The data to use to create the Effect.
-   * @param options The options for creating the Effect.
+   * @param target The target upon which the effect will
+   * be enacted.
+   * @param action The action that will trigger the effect.
+   * @param data Additional information for the effect.
    */
-  public constructor(
-    action: TAction<T>,
-    data: Partial<TEffectJson> = Effect.DEFAULT_PROPERTIES,
-    options: TEffectOptions = {},
-  ) {
-    let { populateTargets = false } = options
-
+  public constructor(action: T['action'], data: TEffectJson) {
     this.action = action
-    this._id = data._id ?? Effect.DEFAULT_PROPERTIES._id
-    this.trigger = data.trigger ?? Effect.DEFAULT_PROPERTIES.trigger
-    this.name = data.name ?? Effect.DEFAULT_PROPERTIES.name
-    this.description = data.description ?? Effect.DEFAULT_PROPERTIES.description
-    this.targetEnvironmentVersion =
-      data.targetEnvironmentVersion ??
-      Effect.DEFAULT_PROPERTIES.targetEnvironmentVersion
-    this._target = data.targetId ?? Effect.DEFAULT_PROPERTIES.targetId
-    this.args = data.args ?? Effect.DEFAULT_PROPERTIES.args
+    this.target = this.determineTarget(data.targetId, data.environmentId)
 
-    if (populateTargets) this.populateTargetData(this.targetId)
+    // Parse data.
+    this.originalData = data
+    this._id = data._id
+    this.targetEnvironmentVersion = data.targetEnvironmentVersion
+    this.trigger = data.trigger
+    this.name = data.name
+    this.description = data.description
+    this.args = data.args
   }
 
   /**
-   * Populates the target data.
+   * Determines the target for the effect.
+   * @param targetId The ID of the target.
+   * @param environmentId The ID of the environment.
+   * @returns The target for the effect.
    */
-  protected abstract populateTargetData(targetId: string | null): void
+  protected abstract determineTarget(
+    targetId: string,
+    environmentId: string,
+  ): T['target'] | null
 
   /**
-   * Converts the Effect Object to JSON.
-   * @param options Options for converting the Effect to JSON.
    * @returns A JSON representation of the Effect.
    */
-  public toJson(options: TEffectJsonOptions = {}): TEffectJson {
-    // Construct JSON object to send to the server.
-    let json: TEffectJson = {
+  public toJson(): TEffectJson {
+    return {
       _id: this._id,
+      targetId: this.targetId,
+      environmentId: this.environmentId,
+      targetEnvironmentVersion: this.targetEnvironmentVersion,
       trigger: this.trigger,
       name: this.name,
       description: this.description,
-      targetEnvironmentVersion: this.targetEnvironmentVersion,
-      targetId: this.target ? this.target._id : this.targetId,
       args: this.args,
     }
-
-    return json
   }
 
   /**
@@ -441,16 +408,23 @@ export default abstract class Effect<
   public static readonly MAX_NAME_LENGTH: number = 175
 
   /**
+   * A value for `environmentId` that indicates the
+   * target should be inferred based on the `targetId`
+   * alone.
+   */
+  public static readonly ENVIRONMENT_ID_INFER: string = 'INFER'
+
+  /**
    * Default properties set when creating a new Effect object.
    */
-  public static get DEFAULT_PROPERTIES(): Required<TEffectJson> {
+  public static get DEFAULT_PROPERTIES(): Required<
+    Omit<TEffectJson, 'targetId' | 'environmentId' | 'targetEnvironmentVersion'>
+  > {
     return {
-      _id: generateHash(),
+      _id: StringToolbox.generateRandomId(),
       trigger: 'success',
       name: 'New Effect',
       description: '',
-      targetEnvironmentVersion: '0.1',
-      targetId: null,
       args: {},
     }
   }
@@ -474,22 +448,6 @@ export default abstract class Effect<
 /* ------------------------------ EFFECT TYPES ------------------------------ */
 
 /**
- * Options for creating a new Effect Object.
- */
-export type TEffectOptions = {
-  /**
-   * Whether to populate the targets.
-   * @default false
-   */
-  populateTargets?: boolean
-}
-
-/**
- * Options for the Effect.toJson() method.
- */
-export type TEffectJsonOptions = {}
-
-/**
  * Extracts the effect type from a registry of
  * METIS components that extends `TMetisBaseComponents`.
  * @param T The type registry.
@@ -508,10 +466,11 @@ export type TEffectTrigger = 'immediate' | 'success' | 'failure'
 export type TEffectJson = TCreateJsonType<
   Effect,
   | '_id'
+  | 'targetId'
+  | 'environmentId'
+  | 'targetEnvironmentVersion'
   | 'trigger'
   | 'name'
   | 'description'
-  | 'targetEnvironmentVersion'
-  | 'args',
-  { targetId: TTargetJson['_id'] | null }
+  | 'args'
 >

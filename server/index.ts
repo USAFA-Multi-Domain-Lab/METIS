@@ -316,6 +316,10 @@ export default class MetisServer {
       let mongooseConnection: mongoose.Connection | null
       let { expressApp, database, fileStore, wsServer } = this
 
+      // Register target environments.
+      ServerTargetEnvironment.registerInternal()
+      ServerTargetEnvironment.scan()
+
       // Logger setup.
       expressApp.use(expressLoggingHandler)
 
@@ -340,24 +344,6 @@ export default class MetisServer {
         store: MongoStore.create({
           client: mongooseConnection.getClient(),
         }),
-      })
-
-      // Create the internal (METIS) target environment.
-      // Note: This gets added to the registry upon creation.
-      new ServerTargetEnvironment(ServerTargetEnvironment.INTERNAL_TARGET_ENV)
-      // Get all other target environments.
-      let targetEnvJson = ServerTargetEnvironment.scan()
-      // Add the target environments to the registry
-      // by creating new target environment objects
-      // and log the successful integration.
-      targetEnvJson.forEach((targetEnv) => {
-        new ServerTargetEnvironment(targetEnv)
-        let { name, targets } = targetEnv
-        if (targets.length > 0) {
-          console.log(`Successfully integrated ${name} with METIS.`)
-        } else {
-          console.warn(`No targets found in ${name}.`)
-        }
       })
 
       // sets up pug as the view engine
@@ -465,7 +451,7 @@ export default class MetisServer {
   /**
    * The current build number for the database.
    */
-  public static readonly SCHEMA_BUILD_NUMBER: number = 37
+  public static readonly SCHEMA_BUILD_NUMBER: number = 38
   /**
    * The root directory for the METIS server.
    */

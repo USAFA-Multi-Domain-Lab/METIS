@@ -8,6 +8,7 @@ import {
   usePostInitEffect,
   useRequireLogin,
 } from 'src/toolbox/hooks'
+import ClassList from '../../../../../../shared/toolbox/html/class-lists'
 import Tooltip from '../../communication/Tooltip'
 import { DetailLargeString } from '../../form/DetailLargeString'
 import { DetailNumber } from '../../form/DetailNumber'
@@ -70,9 +71,6 @@ export default function ActionEntry({
     actionState.postExecutionSuccessText
   const [postExecutionFailureText, setPostExecutionFailureText] =
     actionState.postExecutionFailureText
-  const [targetEnvironments] = useState<ClientTargetEnvironment[]>(
-    ClientTargetEnvironment.getAll(),
-  )
   const { login } = useRequireLogin()
 
   /* -- COMPUTED -- */
@@ -80,17 +78,10 @@ export default function ActionEntry({
   /**
    * The class name for the new effect button.
    */
-  const newEffectButtonClassName: string = compute(() => {
-    // Create a default list of class names.
-    let classList: string[] = []
-
-    // If there are no target environments then disable the button.
-    if (targetEnvironments.length === 0) {
-      classList.push('Disabled')
-    }
-
-    // Combine the class names into a single string.
-    return classList.join(' ')
+  const newEffectButtonClasses = compute<ClassList>(() => {
+    let classList = new ClassList()
+    classList.set('Disabled', !ClientTargetEnvironment.REGISTRY.populated)
+    return classList
   })
   /**
    * The tooltip description for the (action) delete button.
@@ -340,7 +331,7 @@ export default function ActionEntry({
               text='New Effect'
               onClick={() => setIsNewEffect(true)}
               tooltipDescription='Create a new effect.'
-              uniqueClassName={newEffectButtonClassName}
+              uniqueClassName={newEffectButtonClasses.value}
             />
           </div>
 

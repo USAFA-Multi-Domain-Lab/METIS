@@ -1,5 +1,6 @@
-import Effect, { TEffectOptions } from 'metis/missions/effects'
+import Effect from 'metis/missions/effects'
 import { TMetisServerComponents } from 'metis/server'
+import ServerTargetEnvironment from 'metis/server/target-environments'
 import { TTargetEnvExposedEffect } from 'metis/server/target-environments/context'
 import ServerTarget from 'metis/server/target-environments/targets'
 import { TTargetArg } from 'metis/target-environments/args'
@@ -12,23 +13,18 @@ import { AnyObject } from 'metis/toolbox/objects'
  * applied to a target.
  */
 export default class ServerEffect extends Effect<TMetisServerComponents> {
-  /**
-   * Populates the target data for the effect.
-   * @param targetId The ID of the target to populate.
-   */
-  protected populateTargetData(targetId: string | null | undefined): void {
-    // Get the target from the target environment.
-    let target = ServerTarget.getTarget(targetId)
-
-    // If the target is found, set it and update the target status to 'Populated'.
-    if (target) {
-      this._target = target
+  // Implemented
+  protected determineTarget(
+    targetId: string,
+    environmentId: string,
+  ): ServerTarget | null {
+    if (environmentId === ServerEffect.ENVIRONMENT_ID_INFER) {
+      return ServerTargetEnvironment.REGISTRY.inferTarget(targetId) ?? null
     } else {
-      // Throw an error.
-      let message: string =
-        `Error loading target data for effect:\n` +
-        `Effect: { name: "${this.name}", _id: "${this._id}" }`
-      console.error(message)
+      return (
+        ServerTargetEnvironment.REGISTRY.getTarget(targetId, environmentId) ??
+        null
+      )
     }
   }
 
@@ -140,11 +136,6 @@ export default class ServerEffect extends Effect<TMetisServerComponents> {
 }
 
 /* ------------------------------ SERVER EFFECT TYPES ------------------------------ */
-
-/**
- * The options for creating a ServerEffect.
- */
-export type TServerEffectOptions = TEffectOptions & {}
 
 /**
  * The status on whether the target for the effect has been populated.

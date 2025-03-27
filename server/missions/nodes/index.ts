@@ -3,7 +3,7 @@ import { TActionExecutionJson } from 'metis/missions/actions/executions'
 import MissionNode from 'metis/missions/nodes'
 import { TMetisServerComponents } from 'metis/server'
 import { TTargetEnvExposedNode } from 'metis/server/target-environments/context'
-import ServerMissionAction, { TServerMissionActionOptions } from '../actions'
+import ServerMissionAction from '../actions'
 import ServerActionExecution from '../actions/executions'
 import ServerExecutionOutcome from '../actions/outcomes'
 
@@ -12,16 +12,9 @@ import ServerExecutionOutcome from '../actions/outcomes'
  */
 export default class ServerMissionNode extends MissionNode<TMetisServerComponents> {
   // Implemented
-  protected importActions(
-    data: TMissionActionJson[],
-    options: TServerMissionActionOptions = {},
-  ): void {
+  protected importActions(data: TMissionActionJson[]): void {
     data.forEach((datum) => {
-      let action: ServerMissionAction = new ServerMissionAction(
-        this,
-        datum,
-        options,
-      )
+      let action: ServerMissionAction = new ServerMissionAction(this, datum)
       this.actions.set(action._id, action)
     })
   }

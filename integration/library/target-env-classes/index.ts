@@ -10,8 +10,19 @@ export default class TargetEnvSchema implements TTargetEnvJson {
    * The ID of the target environment.
    */
   private id: TTargetEnvJson['_id']
+  /**
+   * The ID of the target environment.
+   */
   public get _id(): TTargetEnvJson['_id'] {
     return this.id
+  }
+  private set _id(value: TTargetEnvJson['_id']) {
+    if (TargetEnvSchema.RESERVED_IDS.includes(value)) {
+      throw new Error(
+        `The ID "${value}" is reserved and cannot be used as a target-environment ID.`,
+      )
+    }
+    this.id = value
   }
 
   /**
@@ -84,12 +95,17 @@ export default class TargetEnvSchema implements TTargetEnvJson {
       fs.existsSync(filePath) && fs.lstatSync(filePath).isDirectory()
 
     if (isValid) {
-      this.id = path.basename(filePath)
+      this._id = path.basename(filePath)
       this._canUpdateId = false
     } else {
       throw new Error('Invalid path provided.')
     }
   }
+
+  /**
+   * IDs that cannot be used as target environment IDs.
+   */
+  private static readonly RESERVED_IDS = ['INFER']
 }
 
 /**

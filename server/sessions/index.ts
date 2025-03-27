@@ -778,9 +778,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     this._state = 'started'
     // Recreate the new mission from the JSON of
     // the current mission.
-    this._mission = new ServerMission(this.mission.toJson(), {
-      populateTargets: this.config.effectsEnabled,
-    })
+    this._mission = new ServerMission(this.mission.toJson())
     // Remap actions.
     this.mapActions()
 

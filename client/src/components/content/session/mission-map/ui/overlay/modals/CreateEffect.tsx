@@ -20,12 +20,13 @@ export default function CreateEffect({
   onChange,
 }: TCreateEffect_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
+
   const { forceUpdate } = useGlobalContext().actions
 
   /* -- STATE -- */
-  const [effect] = useState<ClientEffect>(new ClientEffect(action))
+
   const [targetEnvironments] = useState<ClientTargetEnvironment[]>(
-    ClientTargetEnvironment.getAll(),
+    ClientTargetEnvironment.REGISTRY.getAll(),
   )
   const [targetEnv, setTargetEnv] = useState<ClientTargetEnvironment>(
     new ClientTargetEnvironment(),
@@ -35,6 +36,7 @@ export default function CreateEffect({
   )
 
   /* -- COMPUTED -- */
+
   /**
    * The current mission.
    */
@@ -77,11 +79,6 @@ export default function CreateEffect({
 
   /* -- EFFECTS -- */
 
-  // Sync the component state with the effect.
-  usePostInitEffect(() => {
-    effect.target = target
-  }, [target])
-
   // Reset the target when the target environment changes.
   usePostInitEffect(() => {
     setTarget(new ClientTarget(targetEnv))
@@ -93,12 +90,12 @@ export default function CreateEffect({
    * Handles creating a new effect.
    */
   const createEffect = () => {
+    // Create a new effect.
+    let effect = ClientEffect.createBlankEffect(target, action)
     // Push the new effect to the action.
     action.effects.push(effect)
     // Select the new effect.
     mission.select(effect)
-    // Display the changes.
-    forceUpdate()
     // Allow the user to save the changes.
     onChange(effect)
   }

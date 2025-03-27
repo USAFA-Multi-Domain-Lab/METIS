@@ -8,6 +8,6 @@ import ApiResponse from '../../library/response'
  * @returns The target environments in JSON format.
  */
 const getTargetEnvironments = (request: Request, response: Response) =>
-  ApiResponse.sendJson(response, ServerTargetEnvironment.getAllJson())
+  ApiResponse.sendJson(response, ServerTargetEnvironment.REGISTRY.toJson())
 
 export default getTargetEnvironments

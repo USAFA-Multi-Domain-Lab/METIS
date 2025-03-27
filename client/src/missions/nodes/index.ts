@@ -12,9 +12,8 @@ import { TActionExecutionJson } from '../../../../shared/missions/actions/execut
 import MissionNode, {
   ILoadOutcomeOptions,
   TMissionNodeJson,
-  TMissionNodeOptions,
 } from '../../../../shared/missions/nodes'
-import ClientMissionAction, { TClientMissionActionOptions } from '../actions'
+import ClientMissionAction from '../actions'
 import ClientActionExecution from '../actions/executions'
 import ClientMissionForce from '../forces'
 import ClientMissionPrototype from './prototypes'
@@ -260,29 +259,22 @@ export default class ClientMissionNode
 
   /**
    * @param force The force of which the node is a part.
-   * @param data The node data from which to create the node. Any ommitted values will be set to the default properties defined in MissionNode.DEFAULT_PROPERTIES.
-   * @param options The options for creating the node.
+   * @param data The node data from which to create the node.
+   *  Any ommitted values will be set to the default properties
+   *  defined in MissionNode.DEFAULT_PROPERTIES.
    */
   public constructor(
     force: ClientMissionForce,
     data: Partial<TMissionNodeJson> = MissionNode.DEFAULT_PROPERTIES,
-    options: TMissionNodeOptions = {},
   ) {
-    super(force, data, options)
+    super(force, data)
     this._buttons = []
   }
 
   // Implemented
-  protected importActions(
-    data: TMissionActionJson[],
-    options?: TClientMissionActionOptions,
-  ): void {
+  protected importActions(data: TMissionActionJson[]): void {
     data.forEach((datum) => {
-      let action: ClientMissionAction = new ClientMissionAction(
-        this,
-        datum,
-        options,
-      )
+      let action: ClientMissionAction = new ClientMissionAction(this, datum)
       this.actions.set(action._id, action)
     })
   }

@@ -1,8 +1,10 @@
 import fs from 'fs'
 import TargetEnvSchema from 'integration/library/target-env-classes'
 import TargetSchema from 'integration/library/target-env-classes/targets'
-import TargetEnvironment, { TTargetEnvJson } from 'metis/target-environments'
+import TargetEnvironment from 'metis/target-environments'
+import TargetEnvRegistry from 'metis/target-environments/registry'
 import { TTargetJson } from 'metis/target-environments/targets'
+import FileToolbox from 'metis/toolbox/files'
 import path from 'path'
 import { TMetisServerComponents } from '../index'
 import ServerTarget from './targets'
@@ -11,21 +13,6 @@ import ServerTarget from './targets'
  * A class for managing target environments on the server.
  */
 export default class ServerTargetEnvironment extends TargetEnvironment<TMetisServerComponents> {
-  /**
-   * @param data The data to use to create the ServerTargetEnvironment.
-   * @param options The options for creating the ServerTargetEnvironment.
-   */
-  public constructor(
-    data: Partial<TTargetEnvJson> = ServerTargetEnvironment.DEFAULT_PROPERTIES,
-  ) {
-    super(data)
-
-    // Add the target environment to the registry.
-    ServerTargetEnvironment.registry.push(this)
-    // Add the target environment JSON to the registry.
-    ServerTargetEnvironment.registryJson.push(this.toJson())
-  }
-
   // Implemented
   protected parseTargets(data: TTargetJson[]): ServerTarget[] {
     return data.map((datum: TTargetJson) => {
@@ -33,139 +20,191 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
     })
   }
 
+  // Implemented
+  public register(): ServerTargetEnvironment {
+    ServerTargetEnvironment.REGISTRY.register(this)
+    return this
+  }
+
   /**
    * A registry of all target environments.
    */
-  private static registry: ServerTargetEnvironment[] = []
+  public static readonly REGISTRY: TargetEnvRegistry<TMetisServerComponents> =
+    new TargetEnvRegistry()
 
   /**
-   * A registry of all the target environment JSON.
-   */
-  private static registryJson: TTargetEnvJson[] = []
-
-  /**
-   * Grabs all the target environments from the registry.
-   * @returns An array of all the target environments in the
-   * registry.
-   */
-  public static getAll(): ServerTargetEnvironment[] {
-    return ServerTargetEnvironment.registry
-  }
-
-  /**
-   * Grabs a target environment from the registry by its ID.
-   * @param id The ID of the target environment to grab.
-   * @returns A target environment with the provided ID.
-   */
-  public static get(id: string): ServerTargetEnvironment | undefined {
-    return ServerTargetEnvironment.registry.find(
-      (targetEnvironment: ServerTargetEnvironment) =>
-        targetEnvironment._id === id,
-    )
-  }
-
-  /**
-   * Grabs all the target environment JSON from the registry.
-   * @returns An array with all the target environment JSON
-   * in the registry.
-   */
-  public static getAllJson(): TTargetEnvJson[] {
-    return ServerTargetEnvironment.registryJson
-  }
-
-  /**
-   * Grabs a target environment JSON from the registry by its ID.
-   * @param id The ID of the target environment to grab.
-   * @returns A target environment JSON with the provided ID.
-   */
-  public static getJson(id: string): TTargetEnvJson | undefined {
-    return ServerTargetEnvironment.registryJson.find(
-      (targetEnvironment: TTargetEnvJson) => targetEnvironment._id === id,
-    )
-  }
-
-  /**
-   * Grabs the target environments from the default/provided directory.
+   * Scans the given directory for targets, adding
+   * them to the given target environment.
    * @param directory The directory to search.
-   * @returns An array of target environment JSON.
+   * @param environment The target environment to add the
+   * targets to.
    */
-  public static scan(
-    directory: string = this.DEFAULT_DIRECTORY,
-  ): TTargetEnvJson[] {
-    let blackListedFiles: string[] = [
-      path.join(directory, '.DS_Store'),
-      path.join(directory, '.gitkeep'),
-    ]
-    let isDirectory: boolean = fs.lstatSync(directory).isDirectory()
+  private static scanTargetDirectory(
+    directory: string,
+    environment: ServerTargetEnvironment,
+  ): void {
+    let schemaFilePath = path.join(
+      directory,
+      ServerTargetEnvironment.TARGET_SCHEMA_FILE_NAME,
+    )
 
-    // If the directory is not blacklisted, search for typescript files.
-    if (isDirectory && !blackListedFiles.includes(directory)) {
-      let directoryFiles: string[] = fs.readdirSync(directory)
-
-      // Iterate over the files in the directory.
-      directoryFiles.forEach((file: string) => {
-        // Create the new path.
-        let newPath: string = path.join(directory, file)
-        // Check if the new path is a typescript file.
-        let isTsFile = fs.lstatSync(newPath).isFile() && file.endsWith('.ts')
-
-        // If the file is a typescript file...
-        if (isTsFile) {
-          // Grab the default export from the file.
-          let exportDefault: any = require(newPath).default
-
-          // If there is no default export...
-          if (!exportDefault) {
-            // Log an error.
-            console.error(
-              `No default export found in "${newPath}." Skipping...`,
-            )
-          }
-
-          // If the default export is a target environment...
-          if (exportDefault instanceof TargetEnvSchema) {
-            // Set the ID of the target environment.
-            exportDefault.setId(directory)
-            // Add the target environment JSON.
-            this.targetEnvRegistry.push(exportDefault)
-          }
-          // Or, if the default export is a target and
-          // a target environment has been scanned...
-          else if (
-            exportDefault instanceof TargetSchema &&
-            this.lastTargetEnvScannned
-          ) {
-            // Set the target ID.
-            exportDefault.setId(directory)
-            // Set the target environment ID.
-            exportDefault.targetEnvId = this.lastTargetEnvScannned._id
-            // Add the target JSON.
-            this.lastTargetEnvScannned.targets.push(exportDefault)
-          }
-        }
-        // Otherwise, the new path is a directory.
-        else if (isDirectory) {
-          // Move to the new path.
-          this.scan(newPath)
-        }
-      })
+    // If the directory provided is not a folder,
+    // throw an error.
+    if (!FileToolbox.isFolder(directory)) {
+      throw new Error(
+        `Cannot scan target directory. "${directory}" is not a folder.`,
+      )
     }
 
-    // Return the target environments.
-    return this.targetEnvRegistry
+    // If the schema file exists, grab the default export.
+    if (fs.existsSync(schemaFilePath)) {
+      let exportDefault: any = require(schemaFilePath).default
+
+      // If there is no default export or the default
+      // export is not a target schema.
+      if (!exportDefault || !(exportDefault instanceof TargetSchema)) {
+        console.warn(
+          `Invalid schema found at "${schemaFilePath}". Skipping target...`,
+        )
+      }
+      // Else, add the target to the environment.
+      else {
+        // Set the target ID.
+        exportDefault.setId(directory)
+        // Set the target environment ID.
+        exportDefault.targetEnvId = environment._id
+        // Add the target JSON.
+        environment.targets.push(new ServerTarget(environment, exportDefault))
+      }
+    }
+
+    // Scan subdirectories for additional targets.
+    let directoryContents: string[] = fs.readdirSync(directory)
+
+    for (let subdirectory of directoryContents) {
+      if (FileToolbox.isFolder(subdirectory)) {
+        this.scanTargetDirectory(subdirectory, environment)
+      }
+    }
   }
 
   /**
-   * A registry of all the target environments found in the last scan.
+   * Scans the given directory for a target environment,
+   * adding it to the registry.
+   * @param directory The directory to search.
    */
-  private static targetEnvRegistry: TTargetEnvJson[] = []
+  private static scanTargetEnvDirectory(directory: string): void {
+    // Gather details.
+    let schemaFilePath = path.join(
+      directory,
+      ServerTargetEnvironment.SCHEMA_FILE_NAME,
+    )
+    let targetFolderPath = path.join(
+      directory,
+      ServerTargetEnvironment.TARGET_FOLDER_NAME,
+    )
+    let invalidSchemaMessage = `No valid schema found at "${schemaFilePath}". Skipping target environment...`
+
+    // If the directory provided is not a folder,
+    // throw an error.
+    if (!FileToolbox.isFolder(directory)) {
+      throw new Error(
+        `Cannot scan target environment directory. "${directory}" is not a folder.`,
+      )
+    }
+    // If the index file does not exist, abort.
+    if (!fs.existsSync(schemaFilePath)) {
+      console.warn(invalidSchemaMessage)
+      return
+    }
+    // If the target folder does not exist, abort.
+    if (!fs.existsSync(targetFolderPath)) {
+      console.warn(
+        `No target folder found at "${targetFolderPath}". Skipping target environment...`,
+      )
+      return
+    }
+
+    // Grab the default export from the file.
+    let exportDefault: any = require(schemaFilePath).default
+
+    // If there is no default export or the default
+    // export is not a target-environment schema, abort.
+    if (!exportDefault || !(exportDefault instanceof TargetEnvSchema)) {
+      console.warn(invalidSchemaMessage)
+      return
+    }
+
+    // Set the ID of the target environment.
+    exportDefault.setId(directory)
+    // Create a new target environment.
+    let environment = new ServerTargetEnvironment(exportDefault).register()
+
+    // If the target environment has a target folder,
+    // scan it for targets.
+    // Scan the directory for targets.
+    this.scanTargetDirectory(directory, environment)
+
+    // If no targets were found, log a warning message.
+    if (!environment.targets.length) {
+      console.warn(`No targets found in "${environment.name}".`)
+    }
+
+    // Log the success of the integration.
+    console.log(`Successfully integrated "${environment.name}" with METIS.`)
+  }
 
   /**
-   * The last target environment scanned.
+   * Registers the internal, target environment in
+   * the registry.
    */
-  private static get lastTargetEnvScannned(): TTargetEnvJson | undefined {
-    return this.targetEnvRegistry[this.targetEnvRegistry.length - 1]
+  public static registerInternal(): void {
+    new ServerTargetEnvironment(
+      ServerTargetEnvironment.INTERNAL_TARGET_ENV,
+    ).register()
   }
+
+  /**
+   * Scans the given directory for target environments,
+   * adding all that are found to the registry.
+   * @param directory The directory to search.
+   * @param recursiveOptions Ignore this parameter.
+   */
+  public static scan(directory: string = this.DEFAULT_DIRECTORY): void {
+    // If the directory provided is not a folder,
+    // throw an error.
+    if (!FileToolbox.isFolder(directory)) {
+      throw new Error(
+        `Cannot scan for target environments. "${directory}" is not a folder.`,
+      )
+    }
+
+    // Scan the contents of the directory for
+    // target environments.
+    let directoryContents: string[] = fs.readdirSync(directory)
+
+    for (let subdirectory of directoryContents) {
+      if (FileToolbox.isFolder(subdirectory)) {
+        ServerTargetEnvironment.scanTargetEnvDirectory(subdirectory)
+      }
+    }
+  }
+
+  /**
+   * The file name for target environment schemas.
+   */
+  private static SCHEMA_FILE_NAME: string = 'index.ts'
+
+  /**
+   * The file name for target schemas.
+   */
+  private static TARGET_SCHEMA_FILE_NAME: string = 'schema.ts'
+
+  /**
+   * The folder name where targets are stored within
+   * a target environment.
+   */
+  private static TARGET_FOLDER_NAME: string = 'targets'
 
   /**
    * The default directory to scan for target environments.
@@ -174,4 +213,17 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
     process.cwd(), // "metis/server/"
     '../integration/target-env',
   )
+}
+
+/* -- TYPES -- */
+
+/**
+ * Options recurisvely passed when scanning directories.
+ */
+export type TScanEnvOptions = {
+  /**
+   * The target environment to which targets
+   * should be added.
+   */
+  targetEnvironment?: ServerTargetEnvironment | null
 }

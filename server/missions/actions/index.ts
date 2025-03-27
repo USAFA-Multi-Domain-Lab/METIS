@@ -1,7 +1,4 @@
-import MissionAction, {
-  TMissionActionJson,
-  TMissionActionOptions,
-} from 'metis/missions/actions'
+import MissionAction, { TMissionActionJson } from 'metis/missions/actions'
 import TCommonActionExecution, {
   TExecutionCheats,
 } from 'metis/missions/actions/executions'
@@ -10,7 +7,7 @@ import { TMetisServerComponents } from 'metis/server'
 import { TTargetEnvExposedAction } from 'metis/server/target-environments/context'
 import { TSessionConfig } from 'metis/sessions'
 import seedrandom, { PRNG } from 'seedrandom'
-import ServerEffect, { TServerEffectOptions } from '../effects'
+import ServerEffect from '../effects'
 import ServerMissionNode from '../nodes'
 import ServerActionExecution from './executions'
 import ServerExecutionOutcome from './outcomes'
@@ -29,25 +26,18 @@ export default class ServerMissionAction extends MissionAction<TMetisServerCompo
    * @param data The data to use to create the ServerMissionAction.
    * @param options The options for creating the ServerMissionAction.
    */
-  public constructor(
-    node: ServerMissionNode,
-    data: TMissionActionJson,
-    options: TServerMissionActionOptions = {},
-  ) {
-    super(node, data, options)
+  public constructor(node: ServerMissionNode, data: TMissionActionJson) {
+    super(node, data)
 
     // Initialize the RNG for the action.
     this.rng = seedrandom(`${this.mission.rng.double()}`)
   }
 
   // Implemented
-  protected parseEffects(
-    data: TEffectJson[],
-    options: TServerEffectOptions = {},
-  ): ServerEffect[] {
-    return data.map(
-      (datum: TEffectJson) => new ServerEffect(this, datum, options),
-    )
+  protected parseEffects(data: TEffectJson[]): ServerEffect[] {
+    return data.map((datum: TEffectJson) => {
+      return new ServerEffect(this, datum)
+    })
   }
 
   /**
@@ -132,11 +122,6 @@ export default class ServerMissionAction extends MissionAction<TMetisServerCompo
 }
 
 /* ------------------------------ SERVER ACTION TYPES ------------------------------ */
-
-/**
- * Options for creating a new ServerMissionAction object.
- */
-export type TServerMissionActionOptions = TMissionActionOptions & {}
 
 /**
  * Options for TExecuteOptions.

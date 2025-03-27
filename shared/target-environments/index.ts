@@ -58,6 +58,15 @@ export default abstract class TargetEnvironment<
   protected abstract parseTargets(data: TTargetJson[]): TTarget<T>[]
 
   /**
+   * Registers the target environment with the registry.
+   * @note If the target environment is already registered,
+   * a warning will be logged and the registration will be
+   * skipped.
+   * @returns Itself, to allow for chaining calls.
+   */
+  public abstract register(): T['targetEnv']
+
+  /**
    * Converts the TargetEnvironment Object to JSON.
    * @param options Options for converting the TargetEnvironment to JSON.
    * @returns A JSON representation of the TargetEnvironment.
@@ -71,6 +80,15 @@ export default abstract class TargetEnvironment<
       version: this.version,
       targets: this.targets.map((target) => target.toJson()),
     }
+  }
+
+  /**
+   * @param _id The ID of the target.
+   * @returns The target with the provided ID, or
+   * undefined if the target cannot be found.
+   */
+  public getTarget(_id: string | null | undefined): T['target'] | undefined {
+    return this.targets.find((target) => target._id === _id)
   }
 
   /**

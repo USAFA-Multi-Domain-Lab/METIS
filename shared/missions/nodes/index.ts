@@ -4,7 +4,7 @@ import Mission, { TMission, TMissionComponent } from '..'
 import { Vector2D } from '../../../shared/toolbox/space'
 import ArrayToolbox from '../../toolbox/arrays'
 import MapToolbox from '../../toolbox/maps'
-import { TAction, TMissionActionJson, TMissionActionOptions } from '../actions'
+import { TAction, TMissionActionJson } from '../actions'
 import {
   TActionExecutionJson,
   TActionExecutionState,
@@ -375,10 +375,7 @@ export default abstract class MissionNode<
   public constructor(
     force: TForce<T>,
     data: Partial<TMissionNodeJson> = MissionNode.DEFAULT_PROPERTIES,
-    options: TMissionNodeOptions = {},
   ) {
-    let { populateTargets = false } = options
-
     // Set properties from data.
     this.force = force
     this._id = data._id ?? MissionNode.DEFAULT_PROPERTIES._id
@@ -401,15 +398,15 @@ export default abstract class MissionNode<
     let prototype = this.mission.getPrototype(data.prototypeId)
 
     // Throw error if prototype not found.
-    if (!prototype) throw new Error('Prototype not found.')
+    if (!prototype) {
+      throw new Error('Prototype not found.')
+    }
 
     // Set prototype.
     this.prototype = prototype
 
     // Import action and execution data.
-    this.importActions(data.actions ?? MissionNode.DEFAULT_PROPERTIES.actions, {
-      populateTargets,
-    })
+    this.importActions(data.actions ?? MissionNode.DEFAULT_PROPERTIES.actions)
     this.importExecutions(
       data.executions ?? MissionNode.DEFAULT_PROPERTIES.executions,
     )
@@ -420,10 +417,7 @@ export default abstract class MissionNode<
    * @param data The action data to import.
    * @param options The options used to create the actions.
    */
-  protected abstract importActions(
-    data: TMissionActionJson[],
-    options?: TMissionActionOptions,
-  ): void
+  protected abstract importActions(data: TMissionActionJson[]): void
 
   /**
    * Imports the execution JSON data, storing it in `_executions`.
@@ -647,17 +641,6 @@ export type TMissionNodeJson = TMissionNodeJsonBase &
  * Options for MissionNode.toJSON method.
  */
 export type TNodeJsonOptions = Omit<TForceJsonOptions, 'forceExposure'>
-
-/**
- * Options for creating a MissionNode object.
- */
-export type TMissionNodeOptions = {
-  /**
-   * Whether to populate the targets.
-   * @default false
-   */
-  populateTargets?: boolean
-}
 
 /**
  * Possible states for the execution of a node.

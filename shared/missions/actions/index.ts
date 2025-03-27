@@ -1,7 +1,7 @@
 import { TCreateJsonType, TMetisBaseComponents } from 'metis/index'
 import { v4 as generateHash } from 'uuid'
 import Mission, { TMission, TMissionComponent } from '..'
-import { TEffect, TEffectJson, TEffectOptions } from '../effects'
+import { TEffect, TEffectJson } from '../effects'
 import { TForce } from '../forces'
 import { TNode, TNodeJsonOptions } from '../nodes'
 
@@ -240,10 +240,7 @@ export default abstract class MissionAction<
   public constructor(
     node: TNode<T>,
     data: Partial<TMissionActionJson> = MissionAction.DEFAULT_PROPERTIES,
-    options: TMissionActionOptions = {},
   ) {
-    let { populateTargets = false } = options
-
     this.node = node
     this._id = data._id ?? MissionAction.DEFAULT_PROPERTIES._id
     this.name = data.name ?? MissionAction.DEFAULT_PROPERTIES.name
@@ -276,7 +273,6 @@ export default abstract class MissionAction<
       MissionAction.DEFAULT_PROPERTIES.postExecutionFailureText
     this.effects = this.parseEffects(
       data.effects ?? MissionAction.DEFAULT_PROPERTIES.effects,
-      { populateTargets },
     )
 
     this.processTimeOperand = 0
@@ -290,10 +286,7 @@ export default abstract class MissionAction<
    * @param options The options for parsing the effect data.
    * @returns An array of Effect Objects.
    */
-  protected abstract parseEffects(
-    data: TEffectJson[],
-    options?: TEffectOptions,
-  ): TEffect<T>[]
+  protected abstract parseEffects(data: TEffectJson[]): TEffect<T>[]
 
   /**
    * Converts the action to JSON.
@@ -426,17 +419,6 @@ export default abstract class MissionAction<
 }
 
 /* ------------------------------ ACTION TYPES ------------------------------ */
-
-/**
- * Options for creating a mission action.
- */
-export type TMissionActionOptions = {
-  /**
-   * Whether to populate the targets.
-   * @default false
-   */
-  populateTargets?: boolean
-}
 
 /**
  * Options for converting a `MissionAction` to JSON.

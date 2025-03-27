@@ -11,7 +11,6 @@ import {
   MissionForce,
   TForce,
   TMissionForceJson,
-  TMissionForceOptions,
   TMissionForceSaveJson,
 } from './forces'
 import { TNode } from './nodes'
@@ -190,10 +189,7 @@ export default abstract class Mission<
    * @param data The mission data from which to create the mission. Any ommitted values will be set to the default properties defined in Mission.DEFAULT_PROPERTIES.
    * @param options The options for creating the mission.
    */
-  public constructor(
-    data: Partial<TMissionJson> = Mission.DEFAULT_PROPERTIES,
-    options: TMissionOptions = {},
-  ) {
+  public constructor(data: Partial<TMissionJson> = Mission.DEFAULT_PROPERTIES) {
     this._id = data._id ?? Mission.DEFAULT_PROPERTIES._id
     this.name = data.name ?? Mission.DEFAULT_PROPERTIES.name
     this.versionNumber =
@@ -214,9 +210,6 @@ export default abstract class Mission<
     this.forces = []
     this.root = this.initializeRoot()
 
-    // Parse options.
-    let { populateTargets = false } = options
-
     // Import node structure into the mission.
     this.importStructure(
       data.structure ?? Mission.DEFAULT_PROPERTIES.structure,
@@ -224,9 +217,7 @@ export default abstract class Mission<
     )
 
     // Parse force data.
-    this.importForces(data.forces ?? Mission.DEFAULT_PROPERTIES.forces, {
-      populateTargets,
-    })
+    this.importForces(data.forces ?? Mission.DEFAULT_PROPERTIES.forces)
   }
 
   /**
@@ -404,10 +395,7 @@ export default abstract class Mission<
    * @param data The force data to parse.
    * @returns The parsed force data.
    */
-  protected abstract importForces(
-    data: TMissionForceSaveJson[],
-    options?: TMissionForceOptions,
-  ): TForce<T>[]
+  protected abstract importForces(data: TMissionForceSaveJson[]): TForce<T>[]
 
   /**
    * @param prototypeId The ID of the prototype to get.
@@ -732,17 +720,6 @@ export type TMissionJson = TCreateJsonType<
  */
 export type TMissionSaveJson = Omit<TMissionJson, 'forces'> & {
   forces: TMissionForceSaveJson[]
-}
-
-/**
- * Options for creating a Mission object.
- */
-export type TMissionOptions = {
-  /**
-   * Whether to populate the targets.
-   * @default false
-   */
-  populateTargets?: boolean
 }
 
 export type TMissionJsonOptions = {

@@ -1,11 +1,7 @@
 import { TMetisClientComponents } from 'src'
-import MissionAction, {
-  TMissionActionJson,
-  TMissionActionOptions,
-} from '../../../../shared/missions/actions'
+import MissionAction from '../../../../shared/missions/actions'
 import { TEffectJson } from '../../../../shared/missions/effects'
-import { ClientEffect, TClientEffectOptions } from '../effects'
-import ClientMissionNode from '../nodes'
+import { ClientEffect } from '../effects'
 
 /**
  * Class representing a mission action on the client-side.
@@ -56,27 +52,9 @@ export default class ClientMissionAction extends MissionAction<TMetisClientCompo
     return this.opensNode ? 'Yes' : 'No'
   }
 
-  /**
-   * @param node The node on which the action is being executed.
-   * @param data The action data from which to create the action. Any ommitted values will be set to the default properties defined in MissionAction.DEFAULT_PROPERTIES.
-   * @param options The options for creating the action.
-   */
-  public constructor(
-    node: ClientMissionNode,
-    data: Partial<TMissionActionJson> = ClientMissionAction.DEFAULT_PROPERTIES,
-    options: TClientMissionActionOptions = {},
-  ) {
-    super(node, data, options)
-  }
-
   // Implemented
-  protected parseEffects(
-    data: TEffectJson[],
-    options: TClientEffectOptions = {},
-  ): ClientEffect[] {
-    return data.map(
-      (datum: TEffectJson) => new ClientEffect(this, datum, options),
-    )
+  protected parseEffects(data: TEffectJson[]): ClientEffect[] {
+    return data.map((datum: TEffectJson) => new ClientEffect(this, datum))
   }
 
   /**
@@ -87,8 +65,3 @@ export default class ClientMissionAction extends MissionAction<TMetisClientCompo
 }
 
 /* ------------------------------ CLIENT ACTION TYPES ------------------------------ */
-
-/**
- * Options for creating a new ClientMissionAction object.
- */
-export type TClientMissionActionOptions = TMissionActionOptions & {}

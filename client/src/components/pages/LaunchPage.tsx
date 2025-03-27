@@ -64,9 +64,7 @@ export default function LaunchPage({
         // Notify user of loading.
         beginLoading('Loading mission...')
         // Load mission.
-        let mission = await ClientMission.$fetchOne(missionId, {
-          populateTargets: true,
-        })
+        let mission = await ClientMission.$fetchOne(missionId)
         // Store mission in the state.
         setMission(mission)
       } catch {
