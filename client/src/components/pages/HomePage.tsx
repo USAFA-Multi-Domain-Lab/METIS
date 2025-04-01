@@ -1,6 +1,7 @@
 import { AxiosError } from 'axios'
 import { useRef, useState } from 'react'
 import { useGlobalContext } from 'src/context'
+import ClientFileReference from 'src/files/references'
 import ClientMission from 'src/missions'
 import Notification from 'src/notifications'
 import SessionClient from 'src/sessions'
@@ -255,11 +256,11 @@ export default function HomePage(): JSX.Element | null {
         // Notifies of invalid files
         // rejected from being uploaded.
         if (invalidFileExtensionCount > 0) {
-          // notify(
-          //   `${invalidFileExtensionCount} of the files uploaded did not have the .metis extension and therefore ${
-          //     invalidFileExtensionCount === 1 ? 'was' : 'were'
-          //   } rejected.`,
-          // )
+          notify(
+            `${invalidFileExtensionCount} of the files uploaded did not have the .metis extension and therefore ${
+              invalidFileExtensionCount === 1 ? 'was' : 'were'
+            } rejected.`,
+          )
         }
       }
 
@@ -270,31 +271,37 @@ export default function HomePage(): JSX.Element | null {
 
     // Switch to load screen.
     beginLoading(
-      '', //`Importing ${files.length} file${files.length === 1 ? '' : 's'}...`,
+      `Importing ${files.length} file${files.length === 1 ? '' : 's'}...`,
     )
 
+    validFiles = Array.from(files)
+
     // Iterates over files for upload.
-    for (let file of files) {
-      if (file.name.toLowerCase().endsWith('.cesar')) {
-        // If a .cesar file, import it.
-        validFiles.push(file)
-      }
-      // If a .metis file, import it.
-      else if (file.name.toLowerCase().endsWith('.metis')) {
-        validFiles.push(file)
-      }
-      // Else, don't.
-      else {
-        invalidFileExtensionCount++
-      }
-    }
+    // todo: Resolve this comment.
+    // for (let file of files) {
+    //   if (file.name.toLowerCase().endsWith('.cesar')) {
+    //     // If a .cesar file, import it.
+    //     validFiles.push(file)
+    //   }
+    //   // If a .metis file, import it.
+    //   else if (file.name.toLowerCase().endsWith('.metis')) {
+    //     validFiles.push(file)
+    //   }
+    //   // Else, don't.
+    //   else {
+    //     invalidFileExtensionCount++
+    //   }
+    // }
 
     // Import the files.
     try {
-      let response = await ClientMission.$import(validFiles)
-      successfulImportCount += response.successfulImportCount
-      invalidContentsCount += response.failedImportCount
-      invalidContentsErrorMessages = response.failedImportErrorMessages
+      let files = await ClientFileReference.$import(validFiles)
+      successfulImportCount += files.length
+      // todo: Resolve this comment.
+      // let response = await ClientMission.$import(validFiles)
+      // successfulImportCount += response.successfulImportCount
+      // invalidContentsCount += response.failedImportCount
+      // invalidContentsErrorMessages = response.failedImportErrorMessages
       handleFileImportCompletion()
     } catch (error: any) {
       if (error instanceof AxiosError) {

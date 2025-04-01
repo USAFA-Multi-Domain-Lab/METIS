@@ -214,6 +214,10 @@ export default class MetisServer {
   }
 
   /**
+   *
+   */
+
+  /**
    * The session middleware for the server responsible
    * for enabling and managing sessions.
    */
@@ -325,9 +329,6 @@ export default class MetisServer {
 
       // Database setup.
       await database.connect()
-
-      // File store setup.
-      await fileStore.initialize()
 
       // Grab and confirm mongoose connection.
       mongooseConnection = database.mongooseConnection

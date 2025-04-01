@@ -1,5 +1,11 @@
+import crypto from 'crypto'
+import { RequestHandler } from 'express'
+import { Response } from 'express-serve-static-core'
 import fs from 'fs'
 import MetisServer from 'metis/server'
+import multer from 'multer'
+import path from 'path'
+import ServerFileReference from './references'
 
 /* -- CLASSES -- */
 
@@ -19,6 +25,12 @@ export default class MetisFileStore {
   }
 
   /**
+   * The Multer instance that manages file
+   * uploads.
+   */
+  private multer: multer.Multer
+
+  /**
    * The directory to store files in.
    */
   public readonly directory: string
@@ -35,6 +47,21 @@ export default class MetisFileStore {
   }
 
   /**
+   * Creates upload middleware that can be used in a
+   * route handler.
+   * @example
+   * ```ts
+   * router.post(
+   *  '/',
+   *  fileStore.uploadMiddleware,
+   *  uploadFiles,
+   * )
+   */
+  public get uploadMiddleware(): RequestHandler {
+    return this.multer.array('files') // todo: Determine file count limit.
+  }
+
+  /**
    * @param server The Metis server instance.
    * @param directory The directory to store files in.
    */
@@ -45,16 +72,37 @@ export default class MetisFileStore {
     // Set properties.
     this._server = server
     this.directory = directory
+
+    // Initialize Multer.
+    let storage = multer.diskStorage({
+      destination: (req, file, cb) => {
+        if (!fs.existsSync('./files/store-dev'))
+          fs.mkdirSync('./files/store-dev', { recursive: true })
+        cb(null, './files/store-dev')
+      },
+      filename: (req, file, cb) => {
+        const hash = crypto.randomBytes(16).toString('hex') // 32-char hex string
+        const ext = path.extname(file.originalname)
+        cb(null, `${hash}_${ext}`)
+      },
+    })
+    this.multer = multer({
+      storage,
+    })
   }
 
   /**
-   * Initializes the file store for use.
+   * Provides the file for the given reference in an
+   * Express response for the client to then download.
+   * @param response The Express response in which to provide the file.
+   * @param reference The reference to the file.
    */
-  public async initialize(): Promise<void> {
-    // Ensure the directory exists.
-    if (!fs.existsSync(this.directory)) {
-      fs.mkdirSync(this.directory, { recursive: true })
-    }
+  public provideInResponse(
+    response: Response,
+    reference: ServerFileReference,
+  ): void {
+    let pathToFile = path.join(this.directory, reference.name)
+    response.download(pathToFile, reference.originalName)
   }
 }
 
