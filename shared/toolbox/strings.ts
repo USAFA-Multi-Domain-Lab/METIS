@@ -39,4 +39,51 @@ export default class StringToolbox {
     // Replaces the first letter of each word with its uppercase version.
     return str.replace(/\b\w/g, (char) => char.toUpperCase())
   }
+
+  /**
+   * @param input A string in camelCase, PascalCase, or snake_case, or kebab-case.
+   * @returns A string in Title Case.
+   * @example
+   * StringToolbox.toTitleCase('helloWorld') // Hello World
+   * StringToolbox.toTitleCase('HelloWorld') // Hello World
+   * StringToolbox.toTitleCase('hello_world') // Hello World
+   * StringToolbox.toTitleCase('hello-world') // Hello World
+   */
+  public static toTitleCase(input: string): string {
+    const exceptions = new Set([
+      'a',
+      'an',
+      'and',
+      'as',
+      'at',
+      'but',
+      'by',
+      'for',
+      'in',
+      'nor',
+      'of',
+      'on',
+      'or',
+      'the',
+      'to',
+      'up',
+      'with',
+    ])
+
+    const words = input
+      .replace(/([a-z])([A-Z])/g, '$1 $2') // camelCase → camel Case
+      .replace(/[_-]/g, ' ') // snake_case / kebab-case → space
+      .replace(/\s+/g, ' ') // collapse spaces
+      .trim()
+      .toLowerCase()
+      .split(' ')
+
+    return words
+      .map((word, index) => {
+        const isFirstOrLast = index === 0 || index === words.length - 1
+        if (exceptions.has(word) && !isFirstOrLast) return word
+        return word.charAt(0).toUpperCase() + word.slice(1)
+      })
+      .join(' ')
+  }
 }

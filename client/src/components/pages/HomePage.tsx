@@ -296,9 +296,11 @@ export default function HomePage(): JSX.Element | null {
         }
       }
 
+      // todo: Resolve this comment.
       // Reloads missions now that all files
       // have been processed.
-      loadMissions().then(loadMissionsCallback).catch(loadMissionsCallback)
+      // loadMissions().then(loadMissionsCallback).catch(loadMissionsCallback)
+      loadFiles()
     }
 
     // Switch to load screen.

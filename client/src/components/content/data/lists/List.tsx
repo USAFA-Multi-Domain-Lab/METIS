@@ -1,6 +1,7 @@
 import React, { useContext, useRef, useState } from 'react'
 import { compute } from 'src/toolbox'
 import { useDefaultProps } from 'src/toolbox/hooks'
+import StringToolbox from '../../../../../../shared/toolbox/strings'
 import { TButtonSvgType } from '../../user-controls/buttons/ButtonSvg'
 import { TSvgPanelOnClick } from '../../user-controls/buttons/ButtonSvgPanel_v2'
 import './List.scss'
@@ -69,7 +70,7 @@ export default function List<TItem extends TListItem>(
     listButtons: [],
     itemButtons: [],
     initialSorting: { column: 'name', method: 'ascending' },
-    getColumnLabel: (x) => x.toString(),
+    getColumnLabel: (x) => StringToolbox.toTitleCase(x.toString()),
     getCellText: (item, column) => (item[column] as any).toString(),
     getItemTooltip: () => '',
     getListButtonTooltip: () => '',
@@ -235,7 +236,7 @@ export type TList_P<TItem extends TListItem> = {
    * Gets the column label for the given column.
    * @param column The column for which to get the label.
    * @returns The column label.
-   * @default (x) => x.toString()
+   * @default (x) => StringToolbox.toTitleCase(x.toString())
    */
   getColumnLabel?: (column: TListColumnType<TItem>) => string
   /**

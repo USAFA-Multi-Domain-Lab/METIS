@@ -4,6 +4,7 @@ import { TSvgPanelOnClick } from 'src/components/content/user-controls/buttons/B
 import { useGlobalContext } from 'src/context'
 import ClientFileReference from 'src/files/references'
 import { compute } from 'src/toolbox'
+import FileToolbox from '../../../../../../../shared/toolbox/files'
 import List, { TGetListButtonTooltip } from '../List'
 import {
   TGetItemButtonTooltip,
@@ -84,18 +85,6 @@ export default function ({ files }: TFileReferenceList_P): JSX.Element | null {
   }
 
   /**
-   * Gets the column label for a file list.
-   * @param column The column for which to get the label.
-   * @returns The label for the column.
-   */
-  const getFileColumnLabel = (column: keyof ClientFileReference): string => {
-    switch (column) {
-      default:
-        return 'Unknown column'
-    }
-  }
-
-  /**
    * Gets the text for a file list cell.
    * @param file The file for which to get the text.
    * @param column The column for which to get the text.
@@ -106,6 +95,10 @@ export default function ({ files }: TFileReferenceList_P): JSX.Element | null {
     column: keyof ClientFileReference,
   ): string => {
     switch (column) {
+      case 'mimetype':
+        return FileToolbox.mimeTypeToLabel(file.mimetype)
+      case 'size':
+        return FileToolbox.formatFileSize(file.size)
       default:
         return 'Unknown column'
     }
@@ -206,12 +199,11 @@ export default function ({ files }: TFileReferenceList_P): JSX.Element | null {
       <List<ClientFileReference>
         name={'Files'}
         items={files}
-        columns={[]}
+        columns={['mimetype', 'size']}
         listButtons={listButtons}
         itemButtons={itemButtons}
         initialSorting={{ column: 'name', method: 'descending' }}
         getItemTooltip={() => tooltipDescription}
-        getColumnLabel={getFileColumnLabel}
         getCellText={getFileCellText}
         getListButtonTooltip={getFileListButtonTooltip}
         getItemButtonTooltip={getFileItemButtonTooltip}
