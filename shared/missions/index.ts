@@ -1,3 +1,4 @@
+import { TFileReferenceJson } from 'metis/files/references'
 import User from 'metis/users'
 import { v4 as generateHash } from 'uuid'
 import { TCreateJsonType, TMetisBaseComponents, TMetisComponent } from '..'
@@ -173,6 +174,12 @@ export default abstract class Mission<
   public forces: TForce<T>[]
 
   /**
+   * Files attached to the mission that will be used
+   * during gameplay.
+   */
+  public files: T['fileReference'][]
+
+  /**
    * The root prototype of the mission.
    */
   public root: TPrototype<T>
@@ -208,6 +215,7 @@ export default abstract class Mission<
     )
     this.prototypes = []
     this.forces = []
+    this.files = []
     this.root = this.initializeRoot()
 
     // Import node structure into the mission.
@@ -215,9 +223,9 @@ export default abstract class Mission<
       data.structure ?? Mission.DEFAULT_PROPERTIES.structure,
       data.prototypes ?? Mission.DEFAULT_PROPERTIES.prototypes,
     )
-
     // Parse force data.
     this.importForces(data.forces ?? Mission.DEFAULT_PROPERTIES.forces)
+    this.importFiles(data.files ?? Mission.DEFAULT_PROPERTIES.files)
   }
 
   /**
@@ -240,6 +248,7 @@ export default abstract class Mission<
       launchedAt: DateToolbox.toNullableISOString(this.launchedAt),
       structure: {},
       forces: [],
+      files: [],
       prototypes: [],
     }
 
@@ -312,6 +321,9 @@ export default abstract class Mission<
       case 'none':
         break
     }
+
+    // Expose files.
+    json.files = this.files.map((file) => file.toJson())
 
     // Return the result.
     return json
@@ -395,7 +407,13 @@ export default abstract class Mission<
    * @param data The force data to parse.
    * @returns The parsed force data.
    */
-  protected abstract importForces(data: TMissionForceSaveJson[]): TForce<T>[]
+  protected abstract importForces(data: TMissionForceSaveJson[]): void
+
+  /**
+   * Imports the file data into the mission.
+   * @param data The file data to parse.
+   */
+  protected abstract importFiles(data: TFileReferenceJson[]): void
 
   /**
    * @param prototypeId The ID of the prototype to get.
@@ -557,6 +575,7 @@ export default abstract class Mission<
       structure: {},
       forces: [MissionForce.DEFAULT_FORCES[0]],
       prototypes: [MissionPrototype.DEFAULT_PROPERTIES],
+      files: [],
     }
   }
 
@@ -711,6 +730,7 @@ export type TMissionJson = TCreateJsonType<
     forces: TMissionForceJson[]
     prototypes: TMissionPrototypeJson[]
     structure: AnyObject
+    files: TFileReferenceJson[]
   }
 >
 
@@ -718,8 +738,9 @@ export type TMissionJson = TCreateJsonType<
  * Session-agnostic JSON representation of a Mission object
  * which can be saved to a database.
  */
-export type TMissionSaveJson = Omit<TMissionJson, 'forces'> & {
+export type TMissionSaveJson = Omit<TMissionJson, 'forces' | 'files'> & {
   forces: TMissionForceSaveJson[]
+  files: TFileReferenceJson[]
 }
 
 export type TMissionJsonOptions = {

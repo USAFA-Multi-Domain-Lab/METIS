@@ -1,3 +1,4 @@
+import FileReference from './files/references'
 import Mission from './missions'
 import MissionAction from './missions/actions'
 import ActionExecution from './missions/actions/executions'
@@ -48,6 +49,7 @@ export type TMetisBaseComponents = {
   execution: ActionExecution
   outcome: ExecutionOutcome
   effect: Effect
+  fileReference: FileReference
 }
 
 /**

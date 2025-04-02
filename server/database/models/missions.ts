@@ -983,6 +983,13 @@ export const MissionSchema = new Schema<
       ],
       required: true,
     },
+    files: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'FileReference',
+        required: true,
+      },
+    ],
   },
   {
     strict: 'throw',

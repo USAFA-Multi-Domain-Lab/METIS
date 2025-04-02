@@ -3,8 +3,10 @@ import { TMetisClientComponents } from 'src'
 import { TListItem } from 'src/components/content/data/lists/pages/ListItem'
 import { TLine_P } from 'src/components/content/session/mission-map/objects/Line'
 import { TPrototypeSlot_P } from 'src/components/content/session/mission-map/objects/PrototypeSlot'
+import ClientFileReference from 'src/files/references'
 import { v4 as generateHash } from 'uuid'
 import { TListenerTargetEmittable } from '../../../shared/events'
+import { TFileReferenceJson } from '../../../shared/files/references'
 import Mission, {
   TMissionComponent,
   TMissionJson,
@@ -328,12 +330,19 @@ export default class ClientMission
   }
 
   // Implemented
-  protected importForces(data: TMissionForceSaveJson[]): ClientMissionForce[] {
+  protected importForces(data: TMissionForceSaveJson[]): void {
     let forces: ClientMissionForce[] = data.map(
       (datum) => new ClientMissionForce(this, datum),
     )
     this.forces.push(...forces)
-    return forces
+  }
+
+  // Implemented
+  protected importFiles(data: TFileReferenceJson[]): void {
+    let files: ClientFileReference[] = data.map((datum) =>
+      ClientFileReference.fromJson(datum),
+    )
+    this.files.push(...files)
   }
 
   /**

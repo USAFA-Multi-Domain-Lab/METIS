@@ -13,6 +13,7 @@ import path from 'path'
 import { sys } from 'typescript'
 import MetisWsServer from './connect'
 import MetisFileStore from './files'
+import ServerFileReference from './files/references'
 import ServerMission from './missions'
 import ServerMissionAction from './missions/actions'
 import ServerActionExecution from './missions/actions/executions'
@@ -452,7 +453,7 @@ export default class MetisServer {
   /**
    * The current build number for the database.
    */
-  public static readonly SCHEMA_BUILD_NUMBER: number = 38
+  public static readonly SCHEMA_BUILD_NUMBER: number = 39
   /**
    * The root directory for the METIS server.
    */
@@ -563,6 +564,7 @@ export interface TMetisServerComponents extends TMetisBaseComponents {
   execution: ServerActionExecution
   outcome: ServerExecutionOutcome
   effect: ServerEffect
+  fileReference: ServerFileReference
 }
 
 /**

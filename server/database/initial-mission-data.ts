@@ -6,7 +6,7 @@ import ServerMissionForce from '../missions/forces'
 import ServerMissionNode from '../missions/nodes'
 import ServerMissionPrototype from '../missions/nodes/prototypes'
 
-export let demoMissionData: TMissionJson = {
+export const demoMissionData: TMissionJson = {
   name: 'METIS > ASCOT 7 DEMO',
   versionNumber: 1,
   seed: '6499bf5b8214651c898d125f',
@@ -947,4 +947,5 @@ export let demoMissionData: TMissionJson = {
       depthPadding: ServerMissionPrototype.DEFAULT_PROPERTIES.depthPadding,
     },
   ],
+  files: [],
 }

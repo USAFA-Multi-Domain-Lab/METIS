@@ -47,6 +47,20 @@ export default abstract class FileReference implements TMetisComponent {
     this.mimetype = mimetype
     this.size = size
   }
+
+  /**
+   * Converts the `FileReference` instance to a JSON representation.
+   * @returns The JSON representation of the `FileReference` instance.
+   */
+  public toJson(): TFileReferenceJson {
+    return {
+      _id: this._id,
+      name: this.name,
+      originalName: this.originalName,
+      mimetype: this.mimetype,
+      size: this.size,
+    }
+  }
 }
 
 /**

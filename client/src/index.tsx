@@ -3,6 +3,7 @@ import GlobalContext from 'src/context'
 import { TMetisBaseComponents } from '../../shared'
 import App from './components/App'
 import ErrorPage from './components/pages/ErrorPage'
+import ClientFileReference from './files/references'
 import './global.d.ts'
 import './index.scss'
 import ClientMission from './missions'
@@ -70,4 +71,5 @@ export interface TMetisClientComponents extends TMetisBaseComponents {
   execution: ClientActionExecution
   outcome: ClientExecutionOutcome
   effect: ClientEffect
+  fileReference: ClientFileReference
 }
