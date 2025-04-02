@@ -9,7 +9,7 @@ export default class ServerFileReference extends FileReference {
     return new ServerFileReference(
       json._id,
       json.name,
-      json.originalName,
+      json.path,
       json.mimetype,
       json.size,
     )

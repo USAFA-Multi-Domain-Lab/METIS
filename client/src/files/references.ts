@@ -109,7 +109,7 @@ export default class ClientFileReference extends FileReference {
     return new ClientFileReference(
       json._id,
       json.name,
-      json.originalName,
+      json.path,
       json.mimetype,
       json.size,
     )

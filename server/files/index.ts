@@ -101,8 +101,8 @@ export default class MetisFileStore {
     response: Response,
     reference: ServerFileReference,
   ): void {
-    let pathToFile = path.join(this.directory, reference.name)
-    response.download(pathToFile, reference.originalName)
+    let pathToFile = path.join(this.directory, reference.path)
+    response.download(pathToFile, reference.name)
   }
 }
 

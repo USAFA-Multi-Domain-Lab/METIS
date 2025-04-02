@@ -13,8 +13,8 @@ async function saveReference(file: Express.Multer.File) {
   const { filename, originalname, mimetype, size } = file
 
   const doc = new FileReferenceModel({
-    name: filename,
-    originalName: originalname,
+    name: originalname,
+    path: filename,
     mimetype,
     size,
   })

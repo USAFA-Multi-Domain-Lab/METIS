@@ -46,7 +46,7 @@ const FileReferenceSchema = new Schema<
         return true
       },
     },
-    originalName: {
+    path: {
       type: String,
       required: true,
       trim: true,

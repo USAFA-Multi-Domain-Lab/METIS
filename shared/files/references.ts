@@ -10,13 +10,17 @@ export default abstract class FileReference implements TMetisComponent {
   public _id: string
 
   // Implemented
+  /**
+   * This is the original name of the file when it was
+   * uploaded.
+   */
   public name: string
 
   /**
-   * The original name of the file on the system
-   * where it was uploaded from.
+   * The relative path to the file within the METIS
+   * file store.
    */
-  public originalName: string
+  public path: string
 
   /**
    * The MIME type of the file, such as image/png,
@@ -37,13 +41,13 @@ export default abstract class FileReference implements TMetisComponent {
   public constructor(
     _id: string,
     name: string,
-    originalName: string,
+    path: string,
     mimetype: string,
     size: number,
   ) {
     this._id = _id
     this.name = name
-    this.originalName = originalName
+    this.path = path
     this.mimetype = mimetype
     this.size = size
   }
@@ -56,7 +60,7 @@ export default abstract class FileReference implements TMetisComponent {
     return {
       _id: this._id,
       name: this.name,
-      originalName: this.originalName,
+      path: this.path,
       mimetype: this.mimetype,
       size: this.size,
     }
@@ -68,9 +72,9 @@ export default abstract class FileReference implements TMetisComponent {
  */
 export interface TFileReferenceJson extends TMetisComponent {
   /**
-   * @see FileReference.originalName
+   * @see FileReference.path
    */
-  originalName: string
+  path: string
   /**
    * @see FileReference.mimetype
    */
