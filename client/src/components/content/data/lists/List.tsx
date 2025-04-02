@@ -221,7 +221,7 @@ export type TList_P<TItem extends TListItem> = {
   itemButtons?: TButtonSvgType[]
   /**
    * The initial sorting state for the list.
-   * @default { column: 'name', method: 'DESC' }
+   * @default { column: 'name', method: 'descending' }
    */
   initialSorting?: TListSorting<TItem>
   /**

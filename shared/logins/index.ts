@@ -1,4 +1,4 @@
-import { TUserJson } from 'metis/users'
+import User, { TUserJson } from 'metis/users'
 
 /**
  * The JSON representation of a login object.
@@ -18,7 +18,7 @@ export type TLoginJson = {
 /**
  * Represents the login information for a user.
  */
-export type TLogin<TUser> = {
+export type TLogin<TUser extends User> = {
   /**
    * The user with the given login information.
    */

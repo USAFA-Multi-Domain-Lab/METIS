@@ -266,6 +266,7 @@ export default class ClientUser
       }
     })
   }
+
   /**
    * Calls the API to create a new user.
    * @param clientUser The user to create.

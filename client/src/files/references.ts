@@ -8,13 +8,69 @@ import FileReference, {
  */
 export default class ClientFileReference extends FileReference {
   /**
-   * Imports a list of files to the file store
+   * The API endpoint for managing files.
+   */
+  public static readonly API_ENDPOINT: string = '/api/v1/files'
+
+  /**
+   * Calls the API to fetch one file reference by ID.
+   * @param _id The ID of the reference to fetch.
+   * @resolves The file reference that was fetched.
+   * @rejects The error that occurred while fetching the reference.
+   */
+  public static $fetchOne(_id: string): Promise<ClientFileReference> {
+    return new Promise<ClientFileReference>(async (resolve, reject) => {
+      try {
+        // Retrieve data from API.
+        let { data: referenceData } = await axios.get<TFileReferenceJson>(
+          `${ClientFileReference.API_ENDPOINT}/${_id}/`,
+        )
+        // Convert JSON to `ClientFileReference` object.
+        let reference = ClientFileReference.fromJson(referenceData)
+        // Resolve
+        resolve(reference)
+      } catch (error) {
+        console.error('Failed to fetch file reference.')
+        console.error(error)
+        reject(error)
+      }
+    })
+  }
+
+  /**
+   * Calls the API to fetch all file references available.
+   * @resolves With the file references that were fetched.
+   * @rejects The error that occurred while fetching the references.
+   */
+  public static $fetchAll(): Promise<ClientFileReference[]> {
+    return new Promise<ClientFileReference[]>(async (resolve, reject) => {
+      try {
+        // Retrieve data from API.
+        let { data: referenceData } = await axios.get<TFileReferenceJson[]>(
+          ClientFileReference.API_ENDPOINT,
+        )
+        // Convert JSON to `ClientFileReference` objects.
+        let references: ClientFileReference[] = referenceData.map((datum) =>
+          ClientFileReference.fromJson(datum),
+        )
+        // Resolve
+        resolve(references)
+      } catch (error) {
+        console.error('Failed to fetch file references.')
+        console.error(error)
+        reject(error)
+      }
+    })
+  }
+
+  /**
+   * Uploads a list of files to the file store
    * on the server.
-   * @param files The files to import.
+   * @param files The files to upload.
    * @returns References to the files now stored
    * on the server.
    */
-  public static $import(
+  public static $upload(
     files: FileList | File[],
   ): Promise<ClientFileReference[]> {
     return new Promise<ClientFileReference[]>(async (resolve, reject) => {
@@ -28,7 +84,7 @@ export default class ClientFileReference extends FileReference {
         let { data: responseData } = await axios.post<
           any,
           AxiosResponse<TFileReferenceJson[]>
-        >(`/api/v1/files/`, formData, {
+        >(ClientFileReference.API_ENDPOINT, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },

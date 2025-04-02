@@ -15,6 +15,7 @@ import {
 import ClientUser from 'src/users'
 import { DefaultLayout } from '.'
 import Prompt from '../content/communication/Prompt'
+import FileReferenceList from '../content/data/lists/options/FileReferenceList'
 import MissionList from '../content/data/lists/options/MissionList'
 import SessionList from '../content/data/lists/options/SessionList'
 import UserList from '../content/data/lists/options/UserList'
@@ -48,6 +49,7 @@ export default function HomePage(): JSX.Element | null {
   const [sessions, setSessions] = useState<SessionBasic[]>([])
   const [missions, setMissions] = useState<ClientMission[]>([])
   const [users, setUsers] = useState<ClientUser[]>([])
+  const [files, setFiles] = useState<ClientFileReference[]>([])
 
   /* -- LOGIN-SPECIFIC LOGIC -- */
 
@@ -72,6 +74,14 @@ export default function HomePage(): JSX.Element | null {
       // users.
       if (currentUser.isAuthorized('users_read_students')) {
         await loadUsers()
+      }
+
+      // The user currently logged in must
+      // have restricted access to view the
+      // files.
+      // todo: Add proper authorization logic.
+      if (true) {
+        await loadFiles()
       }
 
       finishLoading()
@@ -165,6 +175,28 @@ export default function HomePage(): JSX.Element | null {
         resolve()
       } catch (error) {
         handleError('Failed to retrieve users.')
+        finishLoading()
+        reject(error)
+      }
+    })
+  }
+
+  /**
+   * This loads the files into the state for display and selection.
+   */
+  const loadFiles = (): Promise<void> => {
+    return new Promise<void>(async (resolve, reject) => {
+      try {
+        // Begin loading.
+        beginLoading('Retrieving files...')
+        // Fetch files from API and store
+        // them in the state.
+        setFiles(await ClientFileReference.$fetchAll())
+        // Finish loading and resolve.
+        finishLoading()
+        resolve()
+      } catch (error) {
+        handleError('Failed to retrieve files.')
         finishLoading()
         reject(error)
       }
@@ -295,7 +327,7 @@ export default function HomePage(): JSX.Element | null {
 
     // Import the files.
     try {
-      let files = await ClientFileReference.$import(validFiles)
+      let files = await ClientFileReference.$upload(validFiles)
       successfulImportCount += files.length
       // todo: Resolve this comment.
       // let response = await ClientMission.$import(validFiles)
@@ -440,6 +472,13 @@ export default function HomePage(): JSX.Element | null {
           onSuccessfulDeletion={onUserDeletion}
         />,
       )
+    }
+
+    // If the user is authorized to read and write files,
+    // then display the files list.
+    // todo: Add proper authorization logic.
+    if (true) {
+      results.push(<FileReferenceList key={'files-list'} files={files} />)
     }
 
     return results
