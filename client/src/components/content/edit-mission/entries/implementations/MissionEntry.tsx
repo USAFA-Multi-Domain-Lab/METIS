@@ -3,13 +3,12 @@ import { useMissionPageContext } from 'src/components/pages/MissionPage'
 import ClientMission from 'src/missions'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import { TMissionComponent } from '../../../../../../shared/missions'
-import Tooltip from '../../communication/Tooltip'
-import { DetailString } from '../../form/DetailString'
-import ListOld, { ESortByMethod } from '../../general-layout/ListOld'
-import ButtonSvg from '../../user-controls/buttons/ButtonSvg'
-import './index.scss'
-import EntryNavigation from './navigation/EntryNavigation'
+import { TMissionComponent } from '../../../../../../../shared/missions'
+import Tooltip from '../../../communication/Tooltip'
+import { DetailString } from '../../../form/DetailString'
+import ListOld, { ESortByMethod } from '../../../general-layout/ListOld'
+import ButtonSvg from '../../../user-controls/buttons/ButtonSvg'
+import Entry from '../Entry'
 
 /**
  * This will render the basic editable details of the mission itself.
@@ -76,57 +75,46 @@ export default function MissionEntry({
 
   /* -- RENDER -- */
   return (
-    <div className='Entry MissionEntry SidePanel'>
-      <div className='BorderBox'>
-        {/* -- TOP OF BOX -- */}
-        <div className='BoxTop'>
-          <EntryNavigation component={mission} />
-        </div>
-
-        {/* -- MAIN CONTENT -- */}
-        <div className='SidePanelContent'>
-          <DetailString
-            fieldType='required'
-            handleOnBlur='repopulateValue'
-            label='Name'
-            stateValue={name}
-            setState={setName}
-            defaultValue={ClientMission.DEFAULT_PROPERTIES.name}
-            maxLength={ClientMission.MAX_NAME_LENGTH}
-            key={`${mission._id}_name`}
-          />
-          <DetailString
-            fieldType='required'
-            handleOnBlur='repopulateValue'
-            label='Resource Label'
-            stateValue={resourceLabel}
-            setState={setResourceLabel}
-            defaultValue={ClientMission.DEFAULT_PROPERTIES.resourceLabel}
-            maxLength={ClientMission.MAX_RESOURCE_LABEL_LENGTH}
-            key={`${mission._id}_resourceLabel`}
-          />
-
-          {defectiveComponents.length > 0 ? (
-            <ListOld<TMissionComponent<any, any>>
-              items={defectiveComponents}
-              renderItemDisplay={(object) => renderObjectListItem(object)}
-              headingText={'Unresolved Conflicts'}
-              sortByMethods={[ESortByMethod.Name]}
-              nameProperty={'name'}
-              alwaysUseBlanks={false}
-              searchableProperties={['name']}
-              noItemsDisplay={null}
-              ajaxStatus={'Loaded'}
-              applyItemStyling={() => {
-                return {}
-              }}
-              itemsPerPage={null}
-              listSpecificItemClassName='AltDesign2'
-            />
-          ) : null}
-        </div>
-      </div>
-    </div>
+    <Entry missionComponent={mission}>
+      <DetailString
+        fieldType='required'
+        handleOnBlur='repopulateValue'
+        label='Name'
+        stateValue={name}
+        setState={setName}
+        defaultValue={ClientMission.DEFAULT_PROPERTIES.name}
+        maxLength={ClientMission.MAX_NAME_LENGTH}
+        key={`${mission._id}_name`}
+      />
+      <DetailString
+        fieldType='required'
+        handleOnBlur='repopulateValue'
+        label='Resource Label'
+        stateValue={resourceLabel}
+        setState={setResourceLabel}
+        defaultValue={ClientMission.DEFAULT_PROPERTIES.resourceLabel}
+        maxLength={ClientMission.MAX_RESOURCE_LABEL_LENGTH}
+        key={`${mission._id}_resourceLabel`}
+      />
+      {defectiveComponents.length > 0 ? (
+        <ListOld<TMissionComponent<any, any>>
+          items={defectiveComponents}
+          renderItemDisplay={(object) => renderObjectListItem(object)}
+          headingText={'Unresolved Conflicts'}
+          sortByMethods={[ESortByMethod.Name]}
+          nameProperty={'name'}
+          alwaysUseBlanks={false}
+          searchableProperties={['name']}
+          noItemsDisplay={null}
+          ajaxStatus={'Loaded'}
+          applyItemStyling={() => {
+            return {}
+          }}
+          itemsPerPage={null}
+          listSpecificItemClassName='AltDesign2'
+        />
+      ) : null}
+    </Entry>
   )
 }
 

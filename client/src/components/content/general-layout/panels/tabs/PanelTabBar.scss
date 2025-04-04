@@ -1,0 +1,15 @@
+@import 'src/assets/styles/config.scss';
+
+.PanelTabBar {
+  display: flex;
+  overflow: hidden;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  position: relative;
+  border: 2px solid $color-secondary;
+
+  .PanelTab:not(:last-child) {
+    border-right: 2px solid $color-secondary;
+  }
+}

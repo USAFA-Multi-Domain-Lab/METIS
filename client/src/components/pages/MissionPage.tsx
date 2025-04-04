@@ -23,19 +23,18 @@ import Mission, { TMissionComponent } from '../../../../shared/missions'
 import { TNonEmptyArray } from '../../../../shared/toolbox/arrays'
 import { TSingleTypeMapped, TWithKey } from '../../../../shared/toolbox/objects'
 import Prompt from '../content/communication/Prompt'
-import ActionEntry from '../content/edit-mission/entries/ActionEntry'
-import EffectEntry from '../content/edit-mission/entries/EffectEntry'
-import ForceEntry from '../content/edit-mission/entries/ForceEntry'
-import MissionEntry from '../content/edit-mission/entries/MissionEntry'
-import NodeEntry from '../content/edit-mission/entries/NodeEntry'
-import NodeStructuring from '../content/edit-mission/entries/NodeStructuring'
-import PrototypeEntry from '../content/edit-mission/entries/PrototypeEntry'
+import FileReferenceList from '../content/data/lists/implementations/FileReferenceList'
+import ActionEntry from '../content/edit-mission/entries/implementations/ActionEntry'
+import EffectEntry from '../content/edit-mission/entries/implementations/EffectEntry'
+import ForceEntry from '../content/edit-mission/entries/implementations/ForceEntry'
+import MissionEntry from '../content/edit-mission/entries/implementations/MissionEntry'
+import NodeEntry from '../content/edit-mission/entries/implementations/NodeEntry'
+import PrototypeEntry from '../content/edit-mission/entries/implementations/PrototypeEntry'
+import NodeStructuring from '../content/edit-mission/NodeStructuring'
 import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
-import {
-  EPanelSizingMode,
-  PanelSizeRelationship,
-  ResizablePanel,
-} from '../content/general-layout/ResizablePanels'
+import Panel from '../content/general-layout/panels/Panel'
+import PanelLayout from '../content/general-layout/panels/PanelLayout'
+import PanelView from '../content/general-layout/panels/PanelView'
 import MissionMap from '../content/session/mission-map'
 import { TNodeButton } from '../content/session/mission-map/objects/nodes'
 import CreateEffect from '../content/session/mission-map/ui/overlay/modals/CreateEffect'
@@ -46,6 +45,13 @@ import {
   TButtonSvgType,
 } from '../content/user-controls/buttons/ButtonSvg'
 import './MissionPage.scss'
+
+/**
+ * The description for the structure view in the
+ * secondary panel of the mission page.
+ */
+const STRUCTURE_DESCRIPTION =
+  'Drag and drop the nodes below to reorder the structure of the mission. Nodes can be placed inside another node to nest nodes. Nodes can also be placed beside each other for more exact placement.'
 
 /**
  * Context for the mission page, which will help distribute
@@ -65,7 +71,7 @@ export const useMissionPageContext = () => {
   ) as TMissionPageContextData | null
   if (!context) {
     throw new Error(
-      'useMissionPageContext must be used within an output provider',
+      'useMissionPageContext must be used within an mission-page provider',
     )
   }
   return context
@@ -104,8 +110,6 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   const [selection, setSelection] = useState<TMissionComponent<any, any>>(
     mission.selection,
   )
-  const [nodeStructuringIsActive, activateNodeStructuring] =
-    useState<boolean>(false)
   const [isNewEffect, setIsNewEffect] = useState<boolean>(false)
   const [defectiveComponents, setDefectiveComponents] =
     state.defectiveComponents
@@ -594,7 +598,6 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     })
     // Handle the change.
     onChange(prototype)
-    activateNodeStructuring(false)
     mission.deselect()
   }
 
@@ -840,34 +843,22 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
 
     let commandKey: string = getOs() === 'mac-os' ? 'Cmd' : 'Ctrl'
 
-    const availableButtons: TSingleTypeMapped<
-      'play' | 'reorder' | 'save',
-      TButtonSvg_PK
-    > = {
-      play: {
-        type: 'play',
-        key: 'play',
-        onClick: onPlayTest,
-        description: 'Play-test the mission.',
-      },
-      reorder: {
-        type: 'reorder',
-        key: 'reorder',
-        onClick: () => {
-          mission.deselect()
-          activateNodeStructuring(true)
+    const availableButtons: TSingleTypeMapped<'play' | 'save', TButtonSvg_PK> =
+      {
+        play: {
+          type: 'play',
+          key: 'play',
+          onClick: onPlayTest,
+          description: 'Play-test the mission.',
         },
-        description: 'Edit the structure and order of nodes.',
-        disabled: nodeStructuringIsActive ? 'full' : 'none',
-      },
-      save: {
-        type: 'save',
-        key: 'save',
-        onClick: save,
-        description: `Save changes. \`${commandKey}+S\``,
-        disabled: !areUnsavedChanges ? 'full' : 'none',
-      },
-    }
+        save: {
+          type: 'save',
+          key: 'save',
+          onClick: save,
+          description: `Save changes. \`${commandKey}+S\``,
+          disabled: !areUnsavedChanges ? 'full' : 'none',
+        },
+      }
 
     // Pushes a button from available buttons to the list.
     const pushButton = (type: keyof typeof availableButtons) =>
@@ -877,7 +868,6 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     authorize('sessions_write_native', () => pushButton('play'))
     // Add reorder and save buttons, if authorized.
     authorize('missions_write', () => {
-      pushButton('reorder')
       pushButton('save')
     })
 
@@ -927,18 +917,14 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   })
 
   /**
-   * Renders JSX for panel 2 of the resize relationship.
+   * Renders JSX for the inspector view of the
+   * mission page.
    */
-  const renderPanel2 = (): JSX.Element | null => {
-    if (nodeStructuringIsActive) {
-      return (
-        <NodeStructuring
-          mission={mission}
-          onChange={onChange}
-          handleCloseRequest={() => activateNodeStructuring(false)}
-        />
-      )
-    } else if (selection instanceof ClientMission) {
+  const renderInspector = (): JSX.Element | null => {
+    // if ('a' === 'a') {
+    //   return null
+    // }
+    if (selection instanceof ClientMission) {
       return (
         <MissionEntry
           mission={selection}
@@ -1022,11 +1008,9 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     <Provider value={contextValue}>
       <div className={rootClassName} ref={root}>
         <DefaultLayout navigation={navigation}>
-          <PanelSizeRelationship
-            panel1={{
-              ...ResizablePanel.defaultProps,
-              minSize: 330,
-              render: () => (
+          <PanelLayout initialSizes={['fill', panel2DefaultSize]}>
+            <Panel>
+              <PanelView title='Map'>
                 <MissionMap
                   mission={mission}
                   customButtons={mapCustomButtons}
@@ -1038,16 +1022,18 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
                   overlayContent={modalJsx}
                   selectedForce={selectedForceState}
                 />
-              ),
-            }}
-            panel2={{
-              ...ResizablePanel.defaultProps,
-              minSize: 330,
-              render: renderPanel2,
-            }}
-            sizingMode={EPanelSizingMode.Panel1_Auto__Panel2_Defined}
-            initialDefinedSize={panel2DefaultSize}
-          />
+              </PanelView>
+            </Panel>
+            <Panel>
+              <PanelView title='Inspector'>{renderInspector()}</PanelView>
+              <PanelView title='Structure' description={STRUCTURE_DESCRIPTION}>
+                <NodeStructuring mission={mission} onChange={onChange} />
+              </PanelView>
+              <PanelView title='Files'>
+                <FileReferenceList files={[]} columns={[]} />
+              </PanelView>
+            </Panel>
+          </PanelLayout>
         </DefaultLayout>
       </div>
     </Provider>

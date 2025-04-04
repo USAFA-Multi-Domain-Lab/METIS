@@ -558,7 +558,7 @@
           text-align: unset;
           font-size: 0.82rem;
           font-weight: bold;
-          color: $color-text-faded;
+          color: $color-faded;
         }
       }
     }
@@ -578,7 +578,7 @@
         max-width: unset;
 
         .NoContent {
-          color: $color-text-faded;
+          color: $color-faded;
         }
 
         &.item-status {

@@ -14,14 +14,13 @@ export const tooltipsOffsetY = 35 /*px*/
  * @param props.description The description to display in the tooltip.
  * @returns {JSX.Element} The tooltip component.
  */
-export default function Tooltip(props: { description: string }): JSX.Element {
-  /* -- COMPONENT PROPERTIES -- */
-
-  // Extract the description from the props.
-  let { description } = props
-  // The delay in milliseconds before the tooltip is displayed.
-  const tooltipDelay: number = 333 /*ms*/
-
+export default function Tooltip({
+  description,
+  delay = 333,
+}: {
+  description: string
+  delay?: number
+}): JSX.Element {
   /* -- GLOBAL CONTEXT -- */
 
   const globalContext = useGlobalContext()
@@ -118,7 +117,7 @@ export default function Tooltip(props: { description: string }): JSX.Element {
       // This will set the tooltip element's transition
       // to the tooltip delay so that it will fade in
       // after the delay.
-      tooltip_elm.style.transition = `opacity ${tooltipDelay}ms`
+      tooltip_elm.style.transition = `opacity ${delay}ms`
       // This will set the tooltip description to the
       // description passed to the component.
       setTooltipDescription(description)

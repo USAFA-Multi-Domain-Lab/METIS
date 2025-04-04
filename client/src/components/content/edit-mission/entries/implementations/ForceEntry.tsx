@@ -5,20 +5,21 @@ import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import Mission, { TMissionComponent } from '../../../../../../shared/missions'
-import { TNonEmptyArray } from '../../../../../../shared/toolbox/arrays'
-import Prompt from '../../communication/Prompt'
-import { DetailColorSelector } from '../../form/DetailColorSelector'
-import { DetailLargeString } from '../../form/DetailLargeString'
-import { DetailNumber } from '../../form/DetailNumber'
-import { DetailString } from '../../form/DetailString'
-import { DetailToggle } from '../../form/DetailToggle'
+import Mission, {
+  TMissionComponent,
+} from '../../../../../../../shared/missions'
+import { TNonEmptyArray } from '../../../../../../../shared/toolbox/arrays'
+import Prompt from '../../../communication/Prompt'
+import { DetailColorSelector } from '../../../form/DetailColorSelector'
+import { DetailLargeString } from '../../../form/DetailLargeString'
+import { DetailNumber } from '../../../form/DetailNumber'
+import { DetailString } from '../../../form/DetailString'
+import { DetailToggle } from '../../../form/DetailToggle'
 import {
   ButtonText,
   TButtonText_P,
-} from '../../user-controls/buttons/ButtonText'
-import './index.scss'
-import EntryNavigation from './navigation/EntryNavigation'
+} from '../../../user-controls/buttons/ButtonText'
+import Entry from '../Entry'
 
 /**
  * This will render the basic editable details of a mission force.
@@ -115,81 +116,69 @@ export default function ForceEntry({
   /* -- RENDER -- */
 
   return (
-    <div className='Entry ForceEntry SidePanel'>
-      <div className='BorderBox'>
-        {/* -- TOP OF BOX -- */}
-        <div className='BoxTop'>
-          <EntryNavigation component={force} />
-        </div>
+    <Entry missionComponent={force}>
+      <DetailString
+        fieldType='required'
+        handleOnBlur='repopulateValue'
+        label='Name'
+        stateValue={name}
+        setState={setName}
+        defaultValue={ClientMissionForce.DEFAULT_PROPERTIES.name}
+        maxLength={ClientMissionForce.MAX_NAME_LENGTH}
+        key={`${force._id}_name`}
+      />
+      <DetailNumber
+        fieldType='required'
+        label='Initial Resources'
+        stateValue={initialResources}
+        setState={setInitialResources}
+        integersOnly={true}
+        key={`${force._id}_initialResources`}
+      />
+      <DetailToggle
+        label='Reveal All Nodes in Session'
+        stateValue={revealAllNodes}
+        setState={setRevealAllNodes}
+        tooltipDescription='If enabled, all nodes in the force will be revealed to the player at the start of the session.'
+        key={`${force._id}_revealAllNodes`}
+      />
+      <DetailColorSelector
+        fieldType='required'
+        label='Color'
+        colors={ClientMission.COLOR_OPTIONS}
+        isExpanded={false}
+        stateValue={color}
+        setState={setColor}
+        buttons={colorButtons}
+        key={`${force._id}_color`}
+      />
+      <DetailLargeString
+        fieldType='required'
+        handleOnBlur='repopulateValue'
+        label='Introduction Message'
+        stateValue={introMessage}
+        setState={setIntroMessage}
+        defaultValue={ClientMissionForce.DEFAULT_PROPERTIES.introMessage}
+        key={`${force._id}_introMessage`}
+      />
 
-        {/* -- MAIN CONTENT -- */}
-        <div className='SidePanelContent'>
-          <DetailString
-            fieldType='required'
-            handleOnBlur='repopulateValue'
-            label='Name'
-            stateValue={name}
-            setState={setName}
-            defaultValue={ClientMissionForce.DEFAULT_PROPERTIES.name}
-            maxLength={ClientMissionForce.MAX_NAME_LENGTH}
-            key={`${force._id}_name`}
-          />
-          <DetailNumber
-            fieldType='required'
-            label='Initial Resources'
-            stateValue={initialResources}
-            setState={setInitialResources}
-            integersOnly={true}
-            key={`${force._id}_initialResources`}
-          />
-          <DetailToggle
-            label='Reveal All Nodes in Session'
-            stateValue={revealAllNodes}
-            setState={setRevealAllNodes}
-            tooltipDescription='If enabled, all nodes in the force will be revealed to the player at the start of the session.'
-            key={`${force._id}_revealAllNodes`}
-          />
-          <DetailColorSelector
-            fieldType='required'
-            label='Color'
-            colors={ClientMission.COLOR_OPTIONS}
-            isExpanded={false}
-            stateValue={color}
-            setState={setColor}
-            buttons={colorButtons}
-            key={`${force._id}_color`}
-          />
-          <DetailLargeString
-            fieldType='required'
-            handleOnBlur='repopulateValue'
-            label='Introduction Message'
-            stateValue={introMessage}
-            setState={setIntroMessage}
-            defaultValue={ClientMissionForce.DEFAULT_PROPERTIES.introMessage}
-            key={`${force._id}_introMessage`}
-          />
-
-          <div className='ButtonContainer'>
-            <ButtonText
-              text='Duplicate force'
-              onClick={duplicateForce}
-              tooltipDescription='Duplicate this force.'
-              disabled={
-                mission.forces.length >= Mission.MAX_FORCE_COUNT
-                  ? 'full'
-                  : 'none'
-              }
-            />
-            <ButtonText
-              text='Delete force'
-              onClick={deleteForce}
-              tooltipDescription='Delete this force.'
-              uniqueClassName={deleteClassName}
-            />
-          </div>
-        </div>
+      <div className='ButtonContainer'>
+        <ButtonText
+          text='Duplicate force'
+          onClick={duplicateForce}
+          tooltipDescription='Duplicate this force.'
+          disabled={
+            mission.forces.length >= Mission.MAX_FORCE_COUNT ? 'full' : 'none'
+          }
+        />
+        <ButtonText
+          text='Delete force'
+          onClick={deleteForce}
+          tooltipDescription='Delete this force.'
+          uniqueClassName={deleteClassName}
+        />
       </div>
-    </div>
+    </Entry>
   )
 }
 

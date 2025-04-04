@@ -1,0 +1,12 @@
+@import 'src/components/content/form/index.scss';
+
+.Entry {
+  &.SidePanel {
+    margin: 1.5em 2em 3.5em;
+
+    .BoxContent {
+      @include form-container();
+      margin: 1.5em 0 0;
+    }
+  }
+}

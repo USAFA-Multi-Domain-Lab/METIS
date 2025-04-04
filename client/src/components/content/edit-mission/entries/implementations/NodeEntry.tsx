@@ -6,25 +6,24 @@ import ClientMissionAction from 'src/missions/actions'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect, useRequireLogin } from 'src/toolbox/hooks'
-import { TMissionComponent } from '../../../../../../shared/missions'
-import { TNonEmptyArray } from '../../../../../../shared/toolbox/arrays'
-import Prompt from '../../communication/Prompt'
-import Tooltip from '../../communication/Tooltip'
-import { DetailColorSelector } from '../../form/DetailColorSelector'
-import { DetailLargeString } from '../../form/DetailLargeString'
-import { DetailString } from '../../form/DetailString'
-import { DetailToggle } from '../../form/DetailToggle'
-import Divider from '../../form/Divider'
-import ListOld, { ESortByMethod } from '../../general-layout/ListOld'
-import { TButtonSvgType } from '../../user-controls/buttons/ButtonSvg'
-import ButtonSvgPanel_v2 from '../../user-controls/buttons/ButtonSvgPanel_v2'
+import { TMissionComponent } from '../../../../../../../shared/missions'
+import { TNonEmptyArray } from '../../../../../../../shared/toolbox/arrays'
+import Prompt from '../../../communication/Prompt'
+import Tooltip from '../../../communication/Tooltip'
+import { DetailColorSelector } from '../../../form/DetailColorSelector'
+import { DetailLargeString } from '../../../form/DetailLargeString'
+import { DetailString } from '../../../form/DetailString'
+import { DetailToggle } from '../../../form/DetailToggle'
+import Divider from '../../../form/Divider'
+import ListOld, { ESortByMethod } from '../../../general-layout/ListOld'
+import { TButtonSvgType } from '../../../user-controls/buttons/ButtonSvg'
+import ButtonSvgPanel_v2 from '../../../user-controls/buttons/ButtonSvgPanel_v2'
 import {
   ButtonText,
   TButtonText_P,
-} from '../../user-controls/buttons/ButtonText'
-import { TToggleLockState } from '../../user-controls/Toggle'
-import './index.scss'
-import EntryNavigation from './navigation/EntryNavigation'
+} from '../../../user-controls/buttons/ButtonText'
+import { TToggleLockState } from '../../../user-controls/Toggle'
+import Entry from '../Entry'
 
 /**
  * This will render the entry fields for a mission-node
@@ -282,100 +281,90 @@ export default function NodeEntry({
   /* -- RENDER -- */
 
   return (
-    <div className='Entry NodeEntry SidePanel'>
-      <div className='BorderBox'>
-        {/* -- TOP OF BOX -- */}
-        <div className='BoxTop'>
-          <EntryNavigation component={node} />
-        </div>
-
-        {/* -- MAIN CONTENT -- */}
-        <div className='SidePanelContent'>
-          <DetailString
-            fieldType='required'
-            handleOnBlur='repopulateValue'
-            label='Name'
-            stateValue={name}
-            setState={setName}
-            defaultValue={ClientMissionNode.DEFAULT_PROPERTIES.name}
-            maxLength={ClientMissionNode.MAX_NAME_LENGTH}
-            key={`${node._id}_name`}
-          />
-          <DetailColorSelector
-            fieldType='required'
-            label='Color'
-            colors={ClientMission.COLOR_OPTIONS}
-            isExpanded={false}
-            stateValue={color}
-            setState={setColor}
-            buttons={colorButtons}
-            key={`${node._id}_color`}
-          />
-          <DetailLargeString
-            fieldType='optional'
-            handleOnBlur='none'
-            label='Description'
-            stateValue={description}
-            setState={setDescription}
-            placeholder='Enter description...'
-            key={`${node._id}_description`}
-          />
-          <DetailLargeString
-            fieldType='optional'
-            handleOnBlur='none'
-            label='Pre-Execution Text'
-            stateValue={preExecutionText}
-            setState={setPreExecutionText}
-            placeholder='Enter pre-execution text...'
-            key={`${node._id}_preExecutionText`}
-          />
-          <DetailToggle
-            fieldType='required'
-            label='Executable'
-            stateValue={executable}
-            setState={setExecutable}
-            key={`${node._id}_executable`}
-          />
-          <DetailToggle
-            fieldType='required'
-            label='Device'
-            stateValue={device}
-            setState={setDevice}
-            lockState={deviceLockState}
-            key={`${node._id}_device`}
-          />
-          <Divider />
-          {/* -- ACTIONS -- */}
-          <ListOld<ClientMissionAction>
-            items={Array.from(node.actions.values())}
-            renderItemDisplay={(action) => renderActionListItemJsx(action)}
-            headingText={'Actions'}
-            sortByMethods={[ESortByMethod.Name]}
-            nameProperty={'name'}
-            alwaysUseBlanks={false}
-            searchableProperties={['name']}
-            noItemsDisplay={
-              <div className='NoContent'>No actions available...</div>
-            }
-            ajaxStatus={'Loaded'}
-            applyItemStyling={() => {
-              return {}
-            }}
-            itemsPerPage={null}
-            listStyling={{ borderBottom: 'unset' }}
-            listSpecificItemClassName={actionClassName}
-          />
-          <Divider />
-          <div className={newActionClassName}>
-            <ButtonText
-              text='New Action'
-              onClick={createAction}
-              tooltipDescription='Create a new action.'
-            />
-          </div>
-        </div>
+    <Entry missionComponent={node}>
+      <DetailString
+        fieldType='required'
+        handleOnBlur='repopulateValue'
+        label='Name'
+        stateValue={name}
+        setState={setName}
+        defaultValue={ClientMissionNode.DEFAULT_PROPERTIES.name}
+        maxLength={ClientMissionNode.MAX_NAME_LENGTH}
+        key={`${node._id}_name`}
+      />
+      <DetailColorSelector
+        fieldType='required'
+        label='Color'
+        colors={ClientMission.COLOR_OPTIONS}
+        isExpanded={false}
+        stateValue={color}
+        setState={setColor}
+        buttons={colorButtons}
+        key={`${node._id}_color`}
+      />
+      <DetailLargeString
+        fieldType='optional'
+        handleOnBlur='none'
+        label='Description'
+        stateValue={description}
+        setState={setDescription}
+        placeholder='Enter description...'
+        key={`${node._id}_description`}
+      />
+      <DetailLargeString
+        fieldType='optional'
+        handleOnBlur='none'
+        label='Pre-Execution Text'
+        stateValue={preExecutionText}
+        setState={setPreExecutionText}
+        placeholder='Enter pre-execution text...'
+        key={`${node._id}_preExecutionText`}
+      />
+      <DetailToggle
+        fieldType='required'
+        label='Executable'
+        stateValue={executable}
+        setState={setExecutable}
+        key={`${node._id}_executable`}
+      />
+      <DetailToggle
+        fieldType='required'
+        label='Device'
+        stateValue={device}
+        setState={setDevice}
+        lockState={deviceLockState}
+        key={`${node._id}_device`}
+      />
+      <Divider />
+      {/* -- ACTIONS -- */}
+      <ListOld<ClientMissionAction>
+        items={Array.from(node.actions.values())}
+        renderItemDisplay={(action) => renderActionListItemJsx(action)}
+        headingText={'Actions'}
+        sortByMethods={[ESortByMethod.Name]}
+        nameProperty={'name'}
+        alwaysUseBlanks={false}
+        searchableProperties={['name']}
+        noItemsDisplay={
+          <div className='NoContent'>No actions available...</div>
+        }
+        ajaxStatus={'Loaded'}
+        applyItemStyling={() => {
+          return {}
+        }}
+        itemsPerPage={null}
+        listStyling={{ borderBottom: 'unset' }}
+        listSpecificItemClassName={actionClassName}
+      />
+      <Divider />
+      <div className={newActionClassName}>
+        <ButtonText
+          text='New Action'
+          onClick={createAction}
+          tooltipDescription='Create a new action.'
+        />
       </div>
-    </div>
+    </Entry>
   )
 }
 

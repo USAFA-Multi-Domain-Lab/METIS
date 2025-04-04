@@ -17,7 +17,7 @@ import {
   EPanelSizingMode,
   PanelSizeRelationship,
   ResizablePanel,
-} from '../content/general-layout/ResizablePanels'
+} from '../content/general-layout/panels/ResizablePanels'
 import SessionMembersPanel from '../content/session/members/SessionMembersPanel'
 import MissionMap from '../content/session/mission-map'
 import ActionExecModal from '../content/session/mission-map/ui/overlay/modals/action-execution/ActionExecModal'

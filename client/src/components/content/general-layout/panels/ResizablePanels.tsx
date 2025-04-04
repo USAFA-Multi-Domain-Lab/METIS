@@ -4,6 +4,9 @@ import './ResizablePanels.scss'
 
 // Settings to control how the panels
 // are sized.
+/**
+ * @deprecated
+ */
 export enum EPanelSizingMode {
   Panel1_Auto__Panel2_Defined,
   Panel1_Defined__Panel2_Auto,
@@ -20,6 +23,9 @@ interface IResizablePanel_S {}
 // A panel that can be used in a panel size
 // relationship to allow for resizing between
 // it and another panel.
+/**
+ * @deprecated
+ */
 export class ResizablePanel extends React.Component<
   IResizablePanel,
   IResizablePanel_S

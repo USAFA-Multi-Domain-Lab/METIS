@@ -2,11 +2,10 @@ import { useState } from 'react'
 import ClientMissionPrototype from 'src/missions/nodes/prototypes'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import { DetailLocked } from '../../form/DetailLocked'
-import { DetailNumber } from '../../form/DetailNumber'
-import { ButtonText } from '../../user-controls/buttons/ButtonText'
-import './index.scss'
-import EntryNavigation from './navigation/EntryNavigation'
+import { DetailLocked } from '../../../form/DetailLocked'
+import { DetailNumber } from '../../../form/DetailNumber'
+import { ButtonText } from '../../../user-controls/buttons/ButtonText'
+import Entry from '../Entry'
 
 /**
  * This will render the basic editable details of a mission prototype.
@@ -52,45 +51,35 @@ export default function PrototypeEntry({
   /* -- RENDER -- */
 
   return (
-    <div className='Entry PrototypeEntry SidePanel'>
-      <div className='BorderBox'>
-        {/* -- TOP OF BOX -- */}
-        <div className='BoxTop'>
-          <EntryNavigation component={prototype} />
-        </div>
-
-        {/* -- MAIN CONTENT -- */}
-        <div className='SidePanelContent'>
-          <DetailLocked
-            label='ID'
-            stateValue={prototype._id}
-            key={`${prototype._id}_name`}
-          />
-          <DetailNumber
-            fieldType='required'
-            label='Depth Padding'
-            stateValue={depthPadding}
-            setState={setDepthPadding}
-            integersOnly={true}
-            key={`${prototype._id}_depthPadding`}
-          />
-          {/* -- BUTTON(S) -- */}
-          <div className='ButtonContainer'>
-            <ButtonText
-              text='Add adjacent prototype'
-              onClick={onAddRequest}
-              tooltipDescription='Add one or multiple nodes adjacent to this node.'
-            />
-            <ButtonText
-              text='Delete prototype'
-              onClick={onDeleteRequest}
-              tooltipDescription='Delete this node.'
-              uniqueClassName={deleteClassName}
-            />
-          </div>
-        </div>
+    <Entry missionComponent={prototype}>
+      <DetailLocked
+        label='ID'
+        stateValue={prototype._id}
+        key={`${prototype._id}_name`}
+      />
+      <DetailNumber
+        fieldType='required'
+        label='Depth Padding'
+        stateValue={depthPadding}
+        setState={setDepthPadding}
+        integersOnly={true}
+        key={`${prototype._id}_depthPadding`}
+      />
+      {/* -- BUTTON(S) -- */}
+      <div className='ButtonContainer'>
+        <ButtonText
+          text='Add adjacent prototype'
+          onClick={onAddRequest}
+          tooltipDescription='Add one or multiple nodes adjacent to this node.'
+        />
+        <ButtonText
+          text='Delete prototype'
+          onClick={onDeleteRequest}
+          tooltipDescription='Delete this node.'
+          uniqueClassName={deleteClassName}
+        />
       </div>
-    </div>
+    </Entry>
   )
 }
 

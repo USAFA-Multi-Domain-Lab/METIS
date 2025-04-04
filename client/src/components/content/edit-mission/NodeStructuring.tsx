@@ -4,8 +4,6 @@ import ClientMission from 'src/missions'
 import ClientMissionPrototype, {
   TPrototypeRelation,
 } from 'src/missions/nodes/prototypes'
-import MoreInformation from '../../communication/MoreInformation'
-import Tooltip from '../../communication/Tooltip'
 import './NodeStructuring.scss'
 
 // This is a enum used to describe
@@ -25,13 +23,11 @@ enum ENodeDropLocation {
 export default function NodeStructuring(props: {
   mission: ClientMission
   onChange: (...prototypes: ClientMissionPrototype[]) => void
-  handleCloseRequest: () => void
 }): JSX.Element | null {
   /* -- PROPS -- */
 
   let mission: ClientMission = props.mission
   let onChange = props.onChange
-  let handleCloseRequest = props.handleCloseRequest
   let root: ClientMissionPrototype = mission.root
 
   /* -- STATE -- */
@@ -293,24 +289,7 @@ export default function NodeStructuring(props: {
 
   return (
     <div className='NodeStructuring SidePanel'>
-      <div className='BorderBox'>
-        <div className='BoxTop'>
-          <div className='ErrorMessage Hidden'></div>
-          <MoreInformation
-            tooltipDescription={
-              '##### Node Structuring\n' +
-              'Drag and drop the nodes below to reorder the structure of the mission. Nodes can be placed inside another node to nest nodes. Nodes can also be placed beside each other for more exact placement.'
-            }
-          />
-          <div className='Close' onClick={handleCloseRequest}>
-            <div className='CloseButton'>
-              x
-              <Tooltip description='Close panel.' />
-            </div>
-          </div>
-        </div>
-        {renderNodes()}
-      </div>
+      <div className='BorderBox'>{renderNodes()}</div>
     </div>
   )
 }

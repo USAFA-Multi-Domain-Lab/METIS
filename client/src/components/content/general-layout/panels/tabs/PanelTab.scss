@@ -1,0 +1,31 @@
+@import 'src/assets/styles/config.scss';
+
+.PanelTab {
+  $border-width: 2px;
+
+  cursor: pointer;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  height: calc(2em - #{$border-width});
+  padding: 0 0.75em;
+
+  .TabTitle {
+    user-select: none;
+    font-size: 0.75em;
+    font-weight: bold;
+    color: $color-faded;
+  }
+
+  &.Selected {
+    // background: $color-secondary;
+    border-bottom: $border-width solid $color-primary-light;
+  }
+
+  &.Selected,
+  &:hover {
+    .TabTitle {
+      color: $color-accent-light;
+    }
+  }
+}

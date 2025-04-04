@@ -16,7 +16,10 @@ import {
  * A component for displaying a list of file references.
  * @note Uses the `List` component.
  */
-export default function ({ files }: TFileReferenceList_P): JSX.Element | null {
+export default function ({
+  files,
+  columns = ['mimetype', 'size'],
+}: TFileReferenceList_P): JSX.Element | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
@@ -199,7 +202,7 @@ export default function ({ files }: TFileReferenceList_P): JSX.Element | null {
       <List<ClientFileReference>
         name={'Files'}
         items={files}
-        columns={['mimetype', 'size']}
+        columns={columns}
         listButtons={listButtons}
         itemButtons={itemButtons}
         initialSorting={{ column: 'name', method: 'descending' }}
@@ -232,4 +235,9 @@ export type TFileReferenceList_P = {
    * The files to display.
    */
   files: ClientFileReference[]
+  /**
+   * The columns to display in the list.
+   * @default ['mimetype', 'size']
+   */
+  columns?: Array<'mimetype' | 'size'>
 }
