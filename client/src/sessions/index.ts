@@ -854,14 +854,8 @@ export default class SessionClient extends Session<TClientMissionTypes> {
   private updateNodeBlockStatus = (nodeId: string, blocked: boolean): void => {
     // Find the node, given the ID.
     let node = this.mission.getNode(nodeId)
-    // Handle node not found.
-    if (node === undefined) {
-      throw new Error(
-        `Event "node-block" was triggered, but the node with the given nodeId ("${nodeId}") could not be found.`,
-      )
-    }
     // Handle the blocking and unblocking of the node.
-    node.updateBlockStatus(blocked)
+    node?.updateBlockStatus(blocked)
   }
 
   /**
@@ -875,14 +869,8 @@ export default class SessionClient extends Session<TClientMissionTypes> {
   ): void => {
     // Find the node, given the ID.
     let node = this.mission.getNode(nodeId)
-    // Handle node not found.
-    if (node === undefined) {
-      throw new Error(
-        `Event "node-action-success-chance" was triggered, but the node with the given nodeId ("${nodeId}") could not be found.`,
-      )
-    }
     // Modify the success chance for all the node's actions.
-    node.modifySuccessChance(successChanceOperand)
+    node?.modifySuccessChance(successChanceOperand)
   }
 
   /**
@@ -896,14 +884,8 @@ export default class SessionClient extends Session<TClientMissionTypes> {
   ): void => {
     // Find the node, given the ID.
     let node = this.mission.getNode(nodeId)
-    // Handle node not found.
-    if (node === undefined) {
-      throw new Error(
-        `Event "node-action-process-time" was triggered, but the node with the given nodeId ("${nodeId}") could not be found.`,
-      )
-    }
     // Modify the process time for all the node's actions.
-    node.modifyProcessTime(processTimeOperand)
+    node?.modifyProcessTime(processTimeOperand)
   }
 
   /**
@@ -917,14 +899,8 @@ export default class SessionClient extends Session<TClientMissionTypes> {
   ): void => {
     // Find the node, given the ID.
     let node = this.mission.getNode(nodeId)
-    // Handle node not found.
-    if (node === undefined) {
-      throw new Error(
-        `Event "node-action-resource-cost" was triggered, but the node with the given nodeId ("${nodeId}") could not be found.`,
-      )
-    }
     // Modify the resource cost for all the node's actions.
-    node.modifyResourceCost(resourceCostOperand)
+    node?.modifyResourceCost(resourceCostOperand)
   }
 
   /**
@@ -1069,24 +1045,13 @@ export default class SessionClient extends Session<TClientMissionTypes> {
    * @param event The event emitted by the server.
    */
   private onSendOutput = (event: TServerEvents['send-output']): void => {
-    // Extract data.
     let { outputData } = event.data
-    let { type, forceId } = outputData
-
-    // Find the force given the ID.
+    let { forceId } = outputData
     let force = this.mission.getForce(forceId)
-
-    // If the force is undefined, throw an error.
-    if (!force) {
-      throw new Error(
-        `Could not send output with type "${type}" to the force with ID "${forceId}" because the force was not found.`,
-      )
+    if (force) {
+      let output = new ClientOutput(force, outputData)
+      force.storeOutput(output)
     }
-
-    // Create the output.
-    let output = new ClientOutput(force, outputData)
-    // Store the output in the force.
-    force.storeOutput(output)
   }
 
   /**
@@ -1099,21 +1064,9 @@ export default class SessionClient extends Session<TClientMissionTypes> {
 
     switch (key) {
       case 'pre-execution':
-        // Extract data.
         let { nodeId } = event.data
-
-        // Find the node, given the ID.
-        let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
-
-        // Handle node not found.
-        if (node === undefined) {
-          throw new Error(
-            `Event "output-sent" was triggered, but the node with the given nodeId ("${nodeId}") could not be found.`,
-          )
-        }
-
-        // Handle output sent.
-        node.onOutput()
+        let node = this.mission.getNode(nodeId)
+        node?.onOutput()
     }
   }
 

@@ -4,11 +4,7 @@ import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
 import SessionClient from 'src/sessions'
 import { compute } from 'src/toolbox'
-import {
-  useEventListener,
-  useForcedUpdates,
-  useObjectFormSync,
-} from 'src/toolbox/hooks'
+import { useEventListener } from 'src/toolbox/hooks'
 import StringToolbox from '../../../../../../../../../../shared/toolbox/strings'
 import './ExecOption.scss'
 
