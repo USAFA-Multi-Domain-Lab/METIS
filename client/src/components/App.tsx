@@ -67,7 +67,7 @@ function App(props: {}): JSX.Element | null {
   const [loading] = globalContext.loading
   const [loadingMinTimeReached] = globalContext.loadingMinTimeReached
   const [pageSwitchMinTimeReached] = globalContext.pageSwitchMinTimeReached
-  const [notifications] = globalContext.notifications
+  const [notifications, setNotifications] = globalContext.notifications
   const [promptData] = globalContext.promptData
   const [currentPageKey] = globalContext.currentPageKey
   const [currentPageProps] = globalContext.currentPageProps
@@ -269,6 +269,21 @@ function App(props: {}): JSX.Element | null {
     }
     effect()
   }, [login === null])
+
+  // Removes expired and dismissed notifications.
+  useEffect(() => {
+    setNotifications((notifications) => {
+      // Remove expired notifications.
+      notifications = notifications.filter(
+        (notification) => !notification.expired,
+      )
+      // Remove dismissed notifications.
+      notifications = notifications.filter(
+        (notification) => !notification.dismissed,
+      )
+      return notifications
+    })
+  }, [notifications.length])
 
   /* -- PAGE DETAILS -- */
 

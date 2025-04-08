@@ -1,5 +1,10 @@
 # changelog
 
+# version-2.0.4 | 4-6-2025
+
+- Fixed the issue with errors being thrown on the client when a session participant executes an action with effects that have a node or output target from the METIS target environment tied to it
+- Fixed the issue with notifications not being removed from the global state after they expire or are dismissed
+
 # version-2.0.3 | 2-25-2025
 
 - Fixed all known issues centered around executing an action on a node during a session
