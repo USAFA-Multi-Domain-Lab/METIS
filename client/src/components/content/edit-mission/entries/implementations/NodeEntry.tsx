@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { TMetisClientComponents } from 'src'
+import If from 'src/components/content/util/If'
 import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
@@ -356,7 +357,6 @@ export default function NodeEntry({
         listStyling={{ borderBottom: 'unset' }}
         listSpecificItemClassName={actionClassName}
       />
-      <Divider />
       <div className={newActionClassName}>
         <ButtonText
           text='New Action'
@@ -364,6 +364,9 @@ export default function NodeEntry({
           tooltipDescription='Create a new action.'
         />
       </div>
+      <If condition={node.executable}>
+        <Divider />
+      </If>
     </Entry>
   )
 }

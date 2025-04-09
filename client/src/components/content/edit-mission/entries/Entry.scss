@@ -1,12 +1,19 @@
 @import 'src/components/content/form/index.scss';
 
 .Entry {
-  &.SidePanel {
-    margin: 1.5em 2em 3.5em;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
 
-    .BoxContent {
-      @include form-container();
-      margin: 1.5em 0 0;
-    }
+  > * {
+    padding: 1.5em 1.5em 0;
+  }
+
+  .EntryContent {
+    @include form-container();
+    overflow-y: auto;
+    padding-bottom: 3.5em;
   }
 }

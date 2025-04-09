@@ -1,0 +1,184 @@
+import ClientFileReference from 'src/files/references'
+import StringToolbox from '../../../../../../shared/toolbox/strings'
+import { TButtonSvgType } from '../../user-controls/buttons/ButtonSvg'
+import { TSvgPanelOnClick } from '../../user-controls/buttons/ButtonSvgPanel_v2'
+import standardFileListConfig from './engines/file-lists'
+import { TGetListButtonTooltip, TListColumnType, TListSorting } from './List'
+import {
+  TGetItemButtonTooltip,
+  TGetItemTooltip,
+  TListItem,
+  TOnItemButtonClick,
+  TOnItemSelection,
+} from './pages/ListItem'
+
+export default class ListEngine<TItem extends TListItem> {
+  /**
+   * The configuration for the list engine.
+   */
+  public readonly config: Required<TListEngineConfig<TItem>>
+  /**
+   * @param config The configuration for the list engine,
+   * which will override the default configuration for any
+   * included properties.
+   */
+  public constructor(config: TListEngineConfig<TItem> = {}) {
+    this.config = {
+      ...ListEngine.genDefaultConfig<TItem>(),
+      ...config,
+    }
+  }
+
+  /**
+   * The default configuration for the list engine.
+   */
+  public static genDefaultConfig<TItem extends TListItem>(): Required<
+    TListEngineConfig<TItem>
+  > {
+    return {
+      name: 'List',
+      columns: [],
+      itemsPerPageMin: 10,
+      minNameColumnWidth: '14em',
+      listButtons: [],
+      itemButtons: [],
+      initialSorting: { column: 'name', method: 'ascending' },
+      getColumnLabel: (x) => StringToolbox.toTitleCase(x.toString()),
+      getCellText: (item, column) => (item[column] as any).toString(),
+      getItemTooltip: () => '',
+      getListButtonTooltip: () => '',
+      getItemButtonTooltip: () => '',
+      getColumnWidth: () => '10em',
+      onSelection: null,
+      onListButtonClick: () => {},
+      onItemButtonClick: () => {},
+    }
+  }
+
+  /**
+   * @returns A new list engine using the standard file-list
+   * configuration, which can be modified and passed to a list
+   * component to power a list.
+   */
+  public static createFileListEngine(): ListEngine<ClientFileReference> {
+    return new ListEngine<ClientFileReference>(standardFileListConfig)
+  }
+}
+
+/**
+ * The configuration for the list engine.
+ */
+export type TListEngineConfig<TItem extends TListItem> = Partial<{
+  /**
+   * The name of the list.
+   * @default 'List'
+   */
+  name: string
+  /**
+   * Additional columns to display in the list.
+   * @default []
+   */
+  columns: TListColumnType<TItem>[]
+
+  /**
+   * The minimum number of items to display per page.
+   * @note More items will be displayed if there is
+   * enough space in the list.
+   * @default 10
+   */
+  itemsPerPageMin: number
+
+  /**
+   * The minimum width for the name column.
+   * @default '16em'
+   */
+  minNameColumnWidth: string
+
+  /**
+   * The list-specific buttons to display, which when clicked,
+   * will perform an action not specific to any item in the list.
+   * @default []
+   */
+  listButtons: TButtonSvgType[]
+
+  /**
+   * The item-specific buttons to display, which when clicked,
+   * will perform an action specific to an item in the list.
+   * @default []
+   */
+  itemButtons: TButtonSvgType[]
+
+  /**
+   * The initial sorting state for the list.
+   * @default { column: 'name', method: 'descending' }
+   */
+  initialSorting: TListSorting<TItem>
+
+  /**
+   * Gets the tooltip description for the item.
+   * @param item The item for which to get the tooltip.
+   * @returns The tooltip description.
+   * @default () => ''
+   */
+  getItemTooltip: TGetItemTooltip<TItem>
+
+  /**
+   * Gets the column label for the given column.
+   * @param column The column for which to get the label.
+   * @returns The column label.
+   * @default (x) => StringToolbox.toTitleCase(x.toString())
+   */
+  getColumnLabel: (column: TListColumnType<TItem>) => string
+
+  /**
+   * Gets the text for a list item cell.
+   * @param item The item for which to get the text.
+   * @param column The column for which to get the text.
+   * @returns The text to display in the cell.
+   * @default () => (item[column] as any).toString()
+   */
+  getCellText: (item: TItem, column: TListColumnType<TItem>) => string
+
+  /**
+   * Gets the tooltip description for a list button.
+   * @param button The button for which to get the tooltip.
+   * @returns The tooltip description.
+   * @default () => ''
+   */
+  getListButtonTooltip: TGetListButtonTooltip
+
+  /**
+   * Gets the tooltip description for the item's button.
+   * @param button The button for which to get the tooltip.
+   * @param item The item for which to get the tooltip.
+   * @default () => ''
+   */
+  getItemButtonTooltip: TGetItemButtonTooltip<TItem>
+
+  /**
+   * Gets the width of the given column.
+   * @param column The column for which to get the width.
+   * @returns The width of the column.
+   * @default () => '10em'
+   */
+  getColumnWidth: (column: TListColumnType<TItem>) => string
+
+  /**
+   * A callback for when an item in the list is selected.
+   * @note If `null`, the items will not be selectable.
+   * @default null
+   */
+  onSelection: TOnItemSelection<TItem> | null
+
+  /**
+   * Callback for when a list button is clicked.
+   * @default () => {}
+   */
+  onListButtonClick: TSvgPanelOnClick
+
+  /**
+   * Callback for when an item button is clicked.
+   * @default () => {}
+   */
+  onItemButtonClick: TOnItemButtonClick<TItem>
+}>

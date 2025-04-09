@@ -15,7 +15,7 @@ export default function ListItemCell<TItem extends TListItem>({
   /* -- STATE -- */
 
   const listContext = useListContext<TItem>()
-  const { onSelection, getItemTooltip } = listContext
+  const { onSelection, getItemTooltip, itemButtons } = listContext
 
   /* -- COMPUTED -- */
 
@@ -35,7 +35,18 @@ export default function ListItemCell<TItem extends TListItem>({
   /**
    * The tooltip description for the item.
    */
-  const tooltipDescription = getItemTooltip(item)
+  const tooltipDescription = compute<string>(() => {
+    // Get vanilla tooltip.
+    let description: string = getItemTooltip(item)
+
+    // Add R-Click prompt, if there
+    // are item buttons.
+    if (itemButtons.length) {
+      description += `\n\t\n\`R-Click\` for more options`
+    }
+
+    return description
+  })
 
   /* -- FUNCTIONS -- */
 

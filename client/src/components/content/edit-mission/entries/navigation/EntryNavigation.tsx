@@ -1,4 +1,6 @@
-import Tooltip from 'src/components/content/communication/Tooltip'
+import ButtonSvg, {
+  TButtonSvgDisabled,
+} from 'src/components/content/user-controls/buttons/ButtonSvg'
 import ClientMission from 'src/missions'
 import { compute } from 'src/toolbox'
 import { TMissionComponent } from '../../../../../../../shared/missions'
@@ -28,10 +30,12 @@ export default function EntryNavigation({
   )
 
   /**
-   * The class for the back button.
+   * Whether the up button should be disabed,
+   * which is there is no parent for the current
+   * selection.
    */
-  const backButtonClass = compute<string>(() =>
-    object.path.length > 1 ? 'BackButton' : 'BackButton Disabled',
+  const upButtonDisabled = compute<TButtonSvgDisabled>(() =>
+    object.path.length === 1 ? 'full' : 'none',
   )
 
   /* -- FUNCTION -- */
@@ -70,10 +74,12 @@ export default function EntryNavigation({
   // Render root element.
   return (
     <div className='EntryNavigation'>
-      <div className={backButtonClass} onClick={onBackClick}>
-        &lt;
-        <Tooltip description='Go back.' />
-      </div>
+      <ButtonSvg
+        type={'left'}
+        onClick={onBackClick}
+        description={'Go back.'}
+        disabled={upButtonDisabled}
+      />
       <div className='Path'>
         <div className='Label'>Path: </div>
         <div className='Positions'>{positionsJsx}</div>

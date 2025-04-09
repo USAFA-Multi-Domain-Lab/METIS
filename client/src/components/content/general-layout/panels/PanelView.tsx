@@ -1,3 +1,5 @@
+import { compute } from 'src/toolbox'
+import ClassList from '../../../../../../shared/toolbox/html/class-lists'
 import { usePanelContext } from './Panel'
 import './PanelView.scss'
 
@@ -20,15 +22,22 @@ export default function ({
 
   /* -- COMPUTED -- */
 
+  /**
+   * The classes used for the root element of
+   * the component.
+   */
+  const classes = compute<ClassList>(() => {
+    let result = new ClassList(
+      'PanelView',
+      `PanelView_${title.replace(/\s+/g, '_')}`,
+    )
+    result.set('Hidden', selectedView?.title !== title)
+    return result
+  })
+
   /* -- RENDER -- */
 
-  // If the view is not selected, do not render
-  // anything.
-  // if (selectedView?.title !== title) return null
-  let className = 'PanelView'
-  if (selectedView?.title !== title) className += ' Hidden'
-
-  return <div className={className}>{children}</div>
+  return <div className={classes.value}>{children}</div>
 }
 
 /**

@@ -18,7 +18,10 @@ import {
  */
 export default function ({
   files,
+  name = 'Files',
   columns = ['mimetype', 'size'],
+  itemsPerPageMin = 10,
+  onSelect = () => {},
 }: TFileReferenceList_P): JSX.Element | null {
   /* -- STATE -- */
 
@@ -145,10 +148,11 @@ export default function ({
   /**
    * Handler for when a file is selected.
    */
-  const onFileSelection: TOnItemSelection<ClientFileReference> = async ({
-    _id,
-  }) => {
+  const onFileSelection: TOnItemSelection<ClientFileReference> = async (
+    file,
+  ) => {
     // todo: Implement this.
+    onSelect(file)
   }
 
   /**
@@ -200,8 +204,9 @@ export default function ({
   return (
     <>
       <List<ClientFileReference>
-        name={'Files'}
+        name={name}
         items={files}
+        itemsPerPageMin={itemsPerPageMin}
         columns={columns}
         listButtons={listButtons}
         itemButtons={itemButtons}
@@ -236,8 +241,24 @@ export type TFileReferenceList_P = {
    */
   files: ClientFileReference[]
   /**
+   * The name of the list.
+   * @default 'Files'
+   */
+  name?: string
+  /**
+   * The minimum number of items to display per page.
+   * @default 10
+   */
+  itemsPerPageMin?: number
+  /**
    * The columns to display in the list.
    * @default ['mimetype', 'size']
    */
   columns?: Array<'mimetype' | 'size'>
+  /**
+   * Callback for when a file is selected.
+   * @param file The file that was selected.
+   * @default () => {}
+   */
+  onSelect?: (file: ClientFileReference) => void
 }

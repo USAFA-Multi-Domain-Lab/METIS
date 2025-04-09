@@ -44,6 +44,19 @@
       }
     }
 
+    .PanelView_Files {
+      display: grid;
+      grid-template-rows: 1fr 1fr;
+
+      .InMission {
+        border-bottom: 2px solid $color-secondary;
+      }
+
+      .List {
+        height: 100%;
+      }
+    }
+
     .SidePanel {
       height: 100%;
       scrollbar-color: $color-primary-light $color-primary-dark;

@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import { useBeforeunload } from 'react-beforeunload'
 import { useGlobalContext, useNavigationMiddleware } from 'src/context'
+import ClientFileReference from 'src/files/references'
 import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
@@ -103,6 +104,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     defectiveComponents: useState<TMissionComponent<any, any>[]>([]),
   }
   const [mission, setMission] = useState<ClientMission>(new ClientMission())
+  const [globalFiles, setGlobalFiles] = useState<ClientFileReference[]>([])
   const selectedForceState = useState<ClientMissionForce | null>(null)
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(
     props.missionId === null ? true : false,
@@ -224,6 +226,15 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
         setMission(mission)
         setSelection(mission)
         setDefectiveComponents(mission.defectiveComponents)
+
+        beginLoading('Loading global files...')
+        // The user currently logged in must
+        // have restricted access to view the
+        // files.
+        // todo: Add proper authorization logic.
+        if (true) {
+          await loadGlobalFiles()
+        }
       } catch {
         handleError('Failed to load mission.')
       }
@@ -394,30 +405,6 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   /* -- FUNCTIONS -- */
 
   /**
-   * Handles when a change is made that would require saving.
-   * @param components The components that have been changed.
-   */
-  const onChange = (
-    ...components: TNonEmptyArray<TMissionComponent<any, any>>
-  ): void => {
-    let updatedState = defectiveComponents
-
-    // todo: Store last changed component for efficiency purposes.
-    components.forEach((component) => {
-      // If the component was defective and is no
-      // longer defective, then remove it from the
-      // list.
-      if (defectiveComponents.includes(component) && !component.defective) {
-        updatedState = updatedState.filter((c) => c._id !== component._id)
-      }
-    })
-
-    setDefectiveComponents(updatedState)
-    setAreUnsavedChanges(true)
-    forceUpdate()
-  }
-
-  /**
    * Saves the mission to the server with
    * any changes made.
    * @returns A promise that resolves when the mission has been saved.
@@ -509,6 +496,53 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
 
       onChange(newAction)
     }
+  }
+
+  /**
+   * This loads the global files into the state for
+   * display and selection.
+   */
+  const loadGlobalFiles = (): Promise<void> => {
+    return new Promise<void>(async (resolve, reject) => {
+      try {
+        // Begin loading.
+        beginLoading('Retrieving files...')
+        // Fetch files from API and store
+        // them in the state.
+        setGlobalFiles(await ClientFileReference.$fetchAll())
+        // Finish loading and resolve.
+        finishLoading()
+        resolve()
+      } catch (error) {
+        handleError('Failed to retrieve files.')
+        finishLoading()
+        reject(error)
+      }
+    })
+  }
+
+  /**
+   * Handles when a change is made that would require saving.
+   * @param components The components that have been changed.
+   */
+  const onChange = (
+    ...components: TNonEmptyArray<TMissionComponent<any, any>>
+  ): void => {
+    let updatedState = defectiveComponents
+
+    // todo: Store last changed component for efficiency purposes.
+    components.forEach((component) => {
+      // If the component was defective and is no
+      // longer defective, then remove it from the
+      // list.
+      if (defectiveComponents.includes(component) && !component.defective) {
+        updatedState = updatedState.filter((c) => c._id !== component._id)
+      }
+    })
+
+    setDefectiveComponents(updatedState)
+    setAreUnsavedChanges(true)
+    forceUpdate()
   }
 
   /**
@@ -1023,14 +1057,33 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
                   selectedForce={selectedForceState}
                 />
               </PanelView>
+              <PanelView title='Files'>
+                <div className='InMission'>
+                  <FileReferenceList
+                    files={mission.files}
+                    name={'In Mission'}
+                    columns={[]}
+                    itemsPerPageMin={4}
+                  />
+                </div>
+                <div className='InStore'>
+                  <FileReferenceList
+                    files={globalFiles}
+                    name={'In Store'}
+                    columns={[]}
+                    onSelect={(file) => {
+                      mission.files.push(file)
+                      forceUpdate()
+                    }}
+                    itemsPerPageMin={4}
+                  />
+                </div>
+              </PanelView>
             </Panel>
             <Panel>
               <PanelView title='Inspector'>{renderInspector()}</PanelView>
               <PanelView title='Structure' description={STRUCTURE_DESCRIPTION}>
                 <NodeStructuring mission={mission} onChange={onChange} />
-              </PanelView>
-              <PanelView title='Files'>
-                <FileReferenceList files={[]} columns={[]} />
               </PanelView>
             </Panel>
           </PanelLayout>

@@ -22,6 +22,7 @@ export default function Tab({
   onClick = () => {},
 }: TTab_P): JSX.Element | null {
   /* -- REFS -- */
+
   const root = useRef<HTMLDivElement>(null)
 
   /* -- COMPUTED -- */

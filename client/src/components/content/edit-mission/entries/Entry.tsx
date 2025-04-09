@@ -16,11 +16,11 @@ export default function <
   /* -- RENDER -- */
 
   return (
-    <div className='Entry SidePanel'>
-      <div className='BoxTop'>
+    <div className='Entry'>
+      <div className='EntryTop'>
         <EntryNavigation component={component} />
       </div>
-      <div className='BoxContent'>{children}</div>
+      <div className='EntryContent'>{children}</div>
     </div>
   )
 }

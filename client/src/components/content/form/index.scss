@@ -29,6 +29,7 @@ $detail-field-font-size: 0.92rem;
 
 @mixin form-container {
   display: grid;
+  align-content: start;
   row-gap: 1.5em;
 }
 
