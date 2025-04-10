@@ -6,6 +6,19 @@
       .SidePanelContent {
         @include form-container();
         margin: 1.5em 2em 3.5em;
+
+        .List {
+          $border: 0.2em solid $color-secondary;
+
+          border: none;
+          border-radius: unset;
+          border-top: $border;
+          border-bottom: $border;
+
+          .ListItem {
+            border: none;
+          }
+        }
       }
     }
   }

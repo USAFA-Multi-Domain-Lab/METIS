@@ -6,14 +6,12 @@ import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect, useRequireLogin } from 'src/toolbox/hooks'
 import Prompt from '../../communication/Prompt'
-import Tooltip from '../../communication/Tooltip'
+import List from '../../data/lists/List'
 import { DetailColorSelector } from '../../form/DetailColorSelector'
 import { DetailLargeString } from '../../form/DetailLargeString'
 import { DetailString } from '../../form/DetailString'
 import { DetailToggle } from '../../form/DetailToggle'
-import ListOld, { ESortByMethod } from '../../general-layout/ListOld'
 import { TButtonSvgType } from '../../user-controls/buttons/ButtonSvg'
-import ButtonSvgPanel_v2 from '../../user-controls/buttons/ButtonSvgPanel_v2'
 import {
   ButtonText,
   TButtonText_P,
@@ -21,7 +19,6 @@ import {
 import { TToggleLockState } from '../../user-controls/Toggle'
 import './index.scss'
 import EntryNavigation from './navigation/EntryNavigation'
-import Divider from '../../form/Divider'
 
 /**
  * This will render the entry fields for a mission-node
@@ -46,41 +43,11 @@ export default function NodeEntry({
   )
   const [executable, setExecutable] = useState<boolean>(node.executable)
   const [device, setDevice] = useState<boolean>(node.device)
+  const [exclude, setExclude] = useState<boolean>(node.exclude)
   const [applyColorFill, setApplyColorFill] = useState<boolean>(false)
   const { login } = useRequireLogin()
 
   /* -- COMPUTED -- */
-  /**
-   * The class name for the list of actions.
-   */
-  const actionClassName: string = compute(() => {
-    // Create a default list of class names.
-    let classList: string[] = ['AltDesign2']
-
-    // If the node is not executable then hide the list of actions.
-    if (!executable) {
-      classList.unshift('Hidden')
-    }
-
-    // Combine the class names into a single string.
-    return classList.join(' ')
-  })
-  /**
-   * The class name for the new action container.
-   */
-  const newActionClassName: string = compute(() => {
-    // Create a default list of class names.
-    let classList: string[] = ['ButtonContainer', 'New']
-
-    // If the node is not executable then hide the add action container.
-    if (!executable) {
-      classList.push('Hidden')
-    }
-
-    // Combine the class names into a single string.
-    return classList.join(' ')
-  })
-
   /**
    * The lock state for the device toggle.
    */
@@ -126,6 +93,41 @@ export default function NodeEntry({
     // Return the buttons.
     return buttons
   })
+  /**
+   * The tooltip description for the action.
+   */
+  const actionTooltipDescription: string = compute(() => {
+    if (login.user.isAuthorized('missions_write')) {
+      return 'Edit action'
+    } else if (login.user.isAuthorized('missions_read')) {
+      return 'View action'
+    } else {
+      return ''
+    }
+  })
+  /**
+   * The buttons for the node action list.
+   */
+  const itemButtons: TButtonSvgType[] = compute(() => {
+    let buttons: TButtonSvgType[] = []
+
+    if (node.executable && node.actions.size > 1) {
+      buttons.push('remove')
+    }
+
+    // Return the buttons.
+    return buttons
+  })
+  /**
+   * The tooltip description for the node exclude button.
+   */
+  const excludeButtonDescription: string = compute(() => {
+    let excludeButton = node.buttons.find(({ type }) => type === 'divider')
+    return (
+      excludeButton?.description ??
+      'Exclude this node from the force (Closes panel view also).'
+    )
+  })
 
   /* -- EFFECTS -- */
 
@@ -137,6 +139,7 @@ export default function NodeEntry({
     node.preExecutionText = preExecutionText
     node.executable = executable
     node.device = device
+    node.exclude = exclude
 
     // If the node is not executable, then the device
     // status should be false.
@@ -163,6 +166,8 @@ export default function NodeEntry({
       })
     }
 
+    if (exclude) mission.select(node.force)
+
     // Allow the user to save the changes.
     handleChange()
   }, [
@@ -172,6 +177,7 @@ export default function NodeEntry({
     preExecutionText,
     executable,
     device,
+    exclude,
     applyColorFill,
   ])
 
@@ -213,61 +219,6 @@ export default function NodeEntry({
 
       notify(
         `Auto-generated an action for ${node.name} because it is an executable node with no actions to execute.`,
-      )
-    }
-  }
-
-  /**
-   * Renders JSX for an action list item.
-   */
-  const renderActionListItemJsx = (action: ClientMissionAction) => {
-    {
-      /* -- COMPUTED -- */
-      /**
-       * The tooltip description for the (action) delete button.
-       */
-      const deleteTooltipDescription: string = compute(() => {
-        if (node.actions.size < 2) {
-          return 'This action cannot be deleted because the node must have at least one action if it is executable.'
-        } else {
-          return 'Delete action.'
-        }
-      })
-
-      /**
-       * The buttons for the action list.
-       */
-      const actionButtons: TButtonSvgType[] = compute(() => ['remove'])
-
-      /**
-       * The tooltip description for the action.
-       */
-      const actionTooltipDescription: string = compute(() => {
-        if (login.user.isAuthorized('missions_write')) {
-          return 'Edit action.'
-        } else if (login.user.isAuthorized('missions_read')) {
-          return 'View action.'
-        } else {
-          return ''
-        }
-      })
-
-      return (
-        <div className='Row Select' key={`action-row-${action._id}`}>
-          <div
-            className='RowContent Select'
-            onClick={() => mission.select(action)}
-          >
-            {action.name}
-            <Tooltip description={actionTooltipDescription} />
-          </div>
-          <ButtonSvgPanel_v2
-            buttons={actionButtons}
-            onButtonClick={async () => await handleDeleteActionRequest(action)}
-            getTooltip={() => deleteTooltipDescription}
-            disableButton={() => (node.actions.size < 2 ? 'partial' : 'none')}
-          />
-        </div>
       )
     }
   }
@@ -337,33 +288,54 @@ export default function NodeEntry({
             lockState={deviceLockState}
             key={`${node._id}_device`}
           />
-          <Divider />
           {/* -- ACTIONS -- */}
-          <ListOld<ClientMissionAction>
-            items={Array.from(node.actions.values())}
-            renderItemDisplay={(action) => renderActionListItemJsx(action)}
-            headingText={'Actions'}
-            sortByMethods={[ESortByMethod.Name]}
-            nameProperty={'name'}
-            alwaysUseBlanks={false}
-            searchableProperties={['name']}
-            noItemsDisplay={
-              <div className='NoContent'>No actions available...</div>
-            }
-            ajaxStatus={'Loaded'}
-            applyItemStyling={() => {
-              return {}
-            }}
-            itemsPerPage={null}
-            listStyling={{ borderBottom: 'unset' }}
-            listSpecificItemClassName={actionClassName}
-          />
-          <Divider />
-          <div className={newActionClassName}>
+          {node.executable ? (
+            <List<ClientMissionAction>
+              name={'Actions'}
+              items={Array.from(node.actions.values())}
+              itemsPerPageMin={5}
+              listButtons={['add']}
+              itemButtons={itemButtons}
+              getItemTooltip={() => actionTooltipDescription}
+              getCellText={(action) => action.name}
+              getListButtonTooltip={(button) => {
+                switch (button) {
+                  case 'add':
+                    return 'Create a new action'
+                  default:
+                    return ''
+                }
+              }}
+              getItemButtonTooltip={(button) => {
+                switch (button) {
+                  case 'remove':
+                    return 'Delete action'
+                  default:
+                    return ''
+                }
+              }}
+              onSelection={(action) => mission.select(action)}
+              onListButtonClick={(button) => {
+                switch (button) {
+                  case 'add':
+                    createAction()
+                }
+              }}
+              onItemButtonClick={async (button, action) => {
+                switch (button) {
+                  case 'remove':
+                    await handleDeleteActionRequest(action)
+                }
+              }}
+            />
+          ) : null}
+
+          {/* -- BUTTON(S) -- */}
+          <div className='ButtonContainer'>
             <ButtonText
-              text='New Action'
-              onClick={createAction}
-              tooltipDescription='Create a new action.'
+              text='Exclude Node'
+              onClick={() => setExclude(true)}
+              tooltipDescription={excludeButtonDescription}
             />
           </div>
         </div>

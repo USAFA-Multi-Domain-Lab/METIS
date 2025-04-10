@@ -517,13 +517,17 @@ export type TResponseEvents = {
        */
       nodeId: string
       /**
+       * The structure of the nodes that were revealed as a result of executing the action.
+       */
+      structure: AnyObject
+      /**
        * The nodes that were revealed as a result of opening the node.
        */
-      revealedChildNodes: TMissionNodeJson[]
+      revealedDescendants: TMissionNodeJson[]
       /**
        * The prototypes of the nodes that were revealed as a result of opening the node.
        */
-      revealedChildPrototypes: TMissionPrototypeJson[]
+      revealedDescendantPrototypes: TMissionPrototypeJson[]
     },
     TClientEvents['request-open-node']
   >
@@ -556,13 +560,17 @@ export type TResponseEvents = {
        */
       outcome: TExecutionOutcomeJson
       /**
+       * The structure of the nodes that were revealed as a result of executing the action.
+       */
+      structure?: AnyObject
+      /**
        * The nodes that were revealed as a result of executing the action.
        */
-      revealedChildNodes?: TMissionNodeJson[]
+      revealedDescendants?: TMissionNodeJson[]
       /**
        * The prototypes of the nodes that were revealed as a result of executing the action.
        */
-      revealedChildPrototypes?: TMissionPrototypeJson[]
+      revealedDescendantPrototypes?: TMissionPrototypeJson[]
     },
     TClientEvents['request-execute-action']
   >

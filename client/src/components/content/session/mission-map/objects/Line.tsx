@@ -22,7 +22,7 @@ export default function Line({
     let lineThickness: number = 0.05 //em
     let halfLineThickness: number = lineThickness / 2 //em
     let minLineThickness: number = 2 //px
-    let halfMinLineThickness: number = minLineThickness / 2 //px
+    let halfMinLineThickness: number = minLineThickness / 20 //px
     let x: number = start.x
     let y: number = start.y
     let style: React.CSSProperties = {}

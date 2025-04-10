@@ -70,68 +70,18 @@ export abstract class MissionForce<
   public root: TNode<T>
 
   /**
-   * The revealed structure found in the force, based on the nodes
-   * that have been opened.
+   * The revealed structure found in the force, based on the node's
+   * descendants that have been revealed.
    */
   public get revealedStructure(): AnyObject {
-    /**
-     * The recursive algorithm used to determine the structure.
-     * @param cursor The current prototype being processed.
-     * @param cursorStructure The structure of the current prototype being processed.
-     */
-    const algorithm = (
-      cursor: TNode<T> = this.root,
-      cursorStructure: AnyObject = {},
-    ): AnyObject => {
-      if (cursor.revealed) {
-        for (let child of cursor.children) {
-          if (child.hasChildren) {
-            cursorStructure[child.prototype.structureKey] = algorithm(child)
-          } else {
-            cursorStructure[child.prototype.structureKey] = {}
-          }
-        }
-      }
-      return cursorStructure
-    }
-
-    // Return the result of the operation.
-    return algorithm()
+    return this.root.revealedStructure
   }
 
   /**
-   * The revealed prototypes in the force based on the revealed structure and
-   * the nodes that have been opened.
+   * The revealed prototypes based on the revealed node structure.
    */
   public get revealedPrototypes(): TPrototype<T>[] {
-    // The revealed prototypes.
-    let revealedPrototypes: TPrototype<T>[] = []
-
-    /**
-     * Recursively finds prototypes from the node structure.
-     */
-    const findPrototypes = (cursor: AnyObject = this.revealedStructure) => {
-      for (let key of Object.keys(cursor)) {
-        // Get the child structure.
-        let childStructure: AnyObject = cursor[key]
-        // Find the prototype data for the current key.
-        let prototype = this.mission.prototypes.find(
-          ({ structureKey }) => structureKey === key,
-        )
-        // If the prototype was found, add it to the list.
-        if (prototype) {
-          revealedPrototypes.push(prototype)
-        }
-        // Find this prototype's children.
-        findPrototypes(childStructure)
-      }
-    }
-
-    // Find prototypes from the node structure.
-    findPrototypes()
-
-    // Return the revealed prototypes.
-    return revealedPrototypes
+    return this.root.revealedPrototypes
   }
 
   /**
@@ -427,6 +377,7 @@ export abstract class MissionForce<
     device: false,
     actions: [],
     opened: true,
+    exclude: false,
   }
 
   /**

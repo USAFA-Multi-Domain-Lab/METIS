@@ -1,8 +1,8 @@
-import { TMissionJson, TCommonMissionTypes, TMission } from 'metis/missions'
+import { TCommonMissionTypes, TMission, TMissionJson } from 'metis/missions'
+import { TExecutionCheats } from 'metis/missions/actions/executions'
 import { TAction } from '../missions/actions'
 import User, { TUserJson } from '../users'
 import { TMember, TSessionMemberJson } from './members'
-import { TExecutionCheats } from 'metis/missions/actions/executions'
 
 /**
  * Base class for sessions. Represents a session of a mission being executed by users.
@@ -99,8 +99,9 @@ export default abstract class Session<
     let weights = {
       participant: 0,
       observer_limited: 1,
-      manager: 2,
-      observer: 3,
+      manager_limited: 2,
+      manager: 3,
+      observer: 4,
     }
     return membersRaw.sort((a, b) => {
       return weights[a.role._id] - weights[b.role._id]

@@ -282,7 +282,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
         // request.
         onResponse: (event) => {
           if (event.method === 'node-opened') {
-            this.mission.emitEvent('autopan')
+            this.mission.emitEvent('autopan', [])
           }
 
           if (event.method === 'error') {
@@ -911,14 +911,8 @@ export default class SessionClient extends Session<TClientMissionTypes> {
   private modifyResourcePool = (forceId: string, operand: number): void => {
     // Find the force, given the ID.
     let force = this.mission.getForce(forceId)
-    // Handle force not found.
-    if (force === undefined) {
-      throw new Error(
-        `Event "force-resource-pool" was triggered, but the force with the given forceId ("${forceId}") could not be found.`,
-      )
-    }
     // Modify the resource pool for the force.
-    force.modifyResourcePool(operand)
+    force?.modifyResourcePool(operand)
   }
 
   /**
@@ -1076,17 +1070,22 @@ export default class SessionClient extends Session<TClientMissionTypes> {
    */
   private onNodeOpened = (event: TServerEvents['node-opened']): void => {
     // Gather data.
-    const { nodeId, revealedChildNodes, revealedChildPrototypes } = event.data
+    const {
+      nodeId,
+      structure,
+      revealedDescendants,
+      revealedDescendantPrototypes,
+    } = event.data
     const node = this.mission.getNode(nodeId)
     if (!node) throw new Error(`Node "${nodeId}" was not found.`)
     const { prototype } = node
 
     // Handle opening at different levels.
-    prototype.onOpen(revealedChildPrototypes)
-    node.onOpen(revealedChildNodes)
+    prototype.onOpen(revealedDescendantPrototypes, structure)
+    node.onOpen(revealedDescendants)
 
     // Remap actions, if new nodes have been revealed.
-    if (revealedChildNodes) this.mapActions()
+    if (revealedDescendants) this.mapActions()
   }
 
   /**
@@ -1143,22 +1142,25 @@ export default class SessionClient extends Session<TClientMissionTypes> {
     event: TServerEvents['action-execution-completed'],
   ): void => {
     // Gather data.
-    const { revealedChildNodes, revealedChildPrototypes } = event.data
+    const { structure, revealedDescendants, revealedDescendantPrototypes } =
+      event.data
     const outcomeData: TExecutionOutcomeJson = event.data.outcome
     const { executionId } = outcomeData
     const execution = this.mission.getExecution(executionId)
     if (!execution) throw new Error(`Execution "${executionId}" not be found.`)
     const { node } = execution
+    const { prototype } = node
     const outcome = new ClientExecutionOutcome(outcomeData.state, execution)
 
     // Handle outcome on different levels.
     execution.onOutcome(outcome)
-    node.prototype.onOutcome(revealedChildPrototypes)
-    node.onOutcome(revealedChildNodes)
+    prototype.onOpen(revealedDescendantPrototypes, structure)
+    node.onOpen(revealedDescendants)
+    node.emitEvent('exec-state-change')
 
     // Remap actions if there are revealed nodes, since
     // those revealed nodes may contain new actions.
-    if (revealedChildNodes) this.mapActions()
+    if (revealedDescendants) this.mapActions()
   }
 
   /**

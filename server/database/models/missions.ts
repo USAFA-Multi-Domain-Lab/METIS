@@ -796,6 +796,7 @@ export const MissionSchema = new Schema<
       required: true,
     },
     prototypes: {
+      required: true,
       type: [
         {
           _id: { type: String, required: true },
@@ -807,9 +808,9 @@ export const MissionSchema = new Schema<
           },
         },
       ],
-      required: true,
     },
     forces: {
+      required: true,
       type: [
         {
           _id: { type: String, required: true },
@@ -838,6 +839,8 @@ export const MissionSchema = new Schema<
             required: true,
           },
           nodes: {
+            required: true,
+            validate: validate_missions_forces_nodes,
             type: [
               {
                 _id: { type: String, required: true },
@@ -866,6 +869,7 @@ export const MissionSchema = new Schema<
                 },
                 executable: { type: Boolean, required: true },
                 device: { type: Boolean, required: true },
+                exclude: { type: Boolean, required: true },
                 actions: {
                   type: [
                     {
@@ -975,12 +979,9 @@ export const MissionSchema = new Schema<
                 },
               },
             ],
-            required: true,
-            validate: validate_missions_forces_nodes,
           },
         },
       ],
-      required: true,
     },
   },
   {

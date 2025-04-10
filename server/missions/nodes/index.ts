@@ -12,6 +12,14 @@ import ServerExecutionOutcome from '../actions/outcomes'
  */
 export default class ServerMissionNode extends MissionNode<TServerMissionTypes> {
   // Implemented
+  public get exclude(): boolean {
+    return this._exclude
+  }
+  public set exclude(value: boolean) {
+    this._exclude = value
+  }
+
+  // Implemented
   protected importActions(
     data: TMissionActionJson[],
     options: TServerMissionActionOptions = {},
@@ -41,7 +49,6 @@ export default class ServerMissionNode extends MissionNode<TServerMissionTypes> 
 
   /**
    * Opens the node.
-   * @param options Options for opening the node.
    * @returns a promise that resolves when the node opening has been fulfilled.
    */
   public open(): Promise<void> {
@@ -146,5 +153,18 @@ export default class ServerMissionNode extends MissionNode<TServerMissionTypes> 
     ) {
       this._opened = true
     }
+  }
+
+  /**
+   * Retains necessary properties only (ID, prototype ID, and exclusion status) and
+   * converts all other properties to their default values.
+   * @returns A ghost node with only the necessary properties.
+   */
+  public toGhost(): ServerMissionNode {
+    return new ServerMissionNode(this.force, {
+      _id: this._id,
+      prototypeId: this.prototype._id,
+      exclude: this.exclude,
+    })
   }
 }

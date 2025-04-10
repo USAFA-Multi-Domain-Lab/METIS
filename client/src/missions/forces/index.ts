@@ -114,6 +114,7 @@ export default class ClientMissionForce
     // a corresponding nodes exists.
     for (let prototype of this.mission.prototypes) {
       let node = this.getNodeFromPrototype(prototype._id)
+
       if (!node) {
         this.nodes.push(
           this.createNode({
@@ -137,6 +138,7 @@ export default class ClientMissionForce
     // Reposition nodes and draw the lines between them.
     this.positionNodes()
     this.drawRelationshipLines()
+    this.emitEvent('structure-change')
   }
 
   /**
@@ -157,6 +159,8 @@ export default class ClientMissionForce
     rowMostLinesFound: Counter = new Counter(0),
     buttonData = { foundOnRow: false, rowCount: 0 },
   ): void => {
+    // Get details.
+    const { nonRevealedDisplayMode } = this.mission
     let yOffset: number = 0
 
     // Offset the y position by the number of extra
@@ -222,6 +226,15 @@ export default class ClientMissionForce
         // Then clear found on row, so that the
         // next row can start fresh.
         buttonData.foundOnRow = false
+
+        if (nonRevealedDisplayMode !== 'show') {
+          // Shift children up if their previous sibling is excluded.
+          const previousSibling = children[index - 1]
+
+          if (previousSibling?.exclude && !previousSibling.hasChildren) {
+            rowCount.decrement()
+          }
+        }
       }
 
       // Position the child node.
@@ -256,9 +269,12 @@ export default class ClientMissionForce
     const baseAlgorithm = (parent: ClientMissionNode = this.root) => {
       // Get details.
       const { nonRevealedDisplayMode } = this.mission
-      let children: ClientMissionNode[] = parent.children
-      let firstChild: ClientMissionNode | null = parent.firstChildNode
-      let lastChild: ClientMissionNode | null = parent.lastChildNode
+      let children: ClientMissionNode[] =
+        nonRevealedDisplayMode !== 'show'
+          ? parent.relativeChildren
+          : parent.children
+      let firstChild: ClientMissionNode | null = parent.firstRelativeChildNode
+      let lastChild: ClientMissionNode | null = parent.lastRelativeChildNode
       let childCount: number = children.length
       let blurred: boolean = nonRevealedDisplayMode === 'blur' && !parent.opened
 
@@ -266,6 +282,29 @@ export default class ClientMissionForce
       // display mode is set to hide, then prevent the algorithm
       // from drawing lines any deeper in the structure by returning.
       if (nonRevealedDisplayMode === 'hide' && !parent.opened) return
+
+      if (
+        nonRevealedDisplayMode === 'show' &&
+        parent === this.root &&
+        childCount > 0
+      ) {
+        // If the parent is the invisible root node,
+        // then set the start position to the middle
+        // of the column.
+        let midStart: Vector2D = parent.position
+          .clone()
+          .translateX(0)
+          .translateY(halfDefaultNodeHeight)
+
+        // Push a new line.
+        relationshipLines.push({
+          key: 'invisible-root-to-middle',
+          direction: 'horizontal',
+          start: midStart,
+          length: ClientMissionNode.WIDTH / 2,
+          blurred,
+        })
+      }
 
       // If the parent is not the invisible root node
       // in the mission and the parent has children,
@@ -393,6 +432,15 @@ export default class ClientMissionForce
           // between the x values of the start and end positions.
           let midToChildLength: number = midToChildEnd.x - midToChildStart.x
 
+          if (nonRevealedDisplayMode === 'show') {
+            if (child.hasChildren) {
+              midToChildLength = ClientMissionNode.WIDTH + columnEdgeDistance
+            } else {
+              midToChildLength =
+                ClientMissionNode.WIDTH / 2 + columnEdgeDistance
+            }
+          }
+
           // Push the new line.
           relationshipLines.push({
             key: `middle-to-child_${child._id}`,
@@ -407,7 +455,7 @@ export default class ClientMissionForce
       }
 
       // Iterate through the child nodes.
-      for (let child of parent.children) {
+      for (let child of children) {
         // Call recursively the algorithm with
         // the child.
         baseAlgorithm(child)
@@ -505,5 +553,11 @@ export type TClientMissionForceOptions = TMissionForceOptions & {}
  * Triggered when an output is sent.
  * @option 'modify-forces'
  * Triggered when the force was manipulated by an effect.
+ * @option 'structure-change'
+ * Triggered when the structure of the force changes.
  */
-export type TForceEventMethod = 'activity' | 'output' | 'modify-forces'
+export type TForceEventMethod =
+  | 'activity'
+  | 'output'
+  | 'modify-forces'
+  | 'structure-change'

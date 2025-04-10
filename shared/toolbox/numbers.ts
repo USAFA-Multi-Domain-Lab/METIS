@@ -15,6 +15,11 @@ export class Counter {
   increment(): void {
     this.count++
   }
+
+  // This ticks the count down one.
+  decrement(): void {
+    this.count--
+  }
 }
 
 /**

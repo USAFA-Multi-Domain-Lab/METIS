@@ -1114,7 +1114,10 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     // If the target member has the `manageSessionMembers`
     // permission, then they cannot have their role
     // changed.
-    if (targetMember.isAuthorized('manageSessionMembers')) {
+    if (
+      targetMember.isAuthorized('manageSessionMembers') &&
+      this.config.accessibility !== 'testing'
+    ) {
       return member.emitError(
         new ServerEmittedError(
           ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
@@ -1210,25 +1213,23 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     }
 
     try {
-      // Open the node.
       node.open()
+
+      // Extract data from the node.
+      const {
+        revealedStructure: structure,
+        revealedDescendants: descendants,
+        revealedDescendantPrototypes: prototypes,
+      } = node
 
       // Construct open event payload.
       let payload: TServerEvents['node-opened'] = {
         method: 'node-opened',
         data: {
-          nodeId: nodeId,
-          revealedChildNodes: node.children.map((node) =>
-            node.toJson({
-              sessionDataExposure: {
-                expose: 'user-specific',
-                userId: member.userId,
-              },
-            }),
-          ),
-          revealedChildPrototypes: node.prototype.children.map((prototype) =>
-            prototype.toJson(),
-          ),
+          nodeId,
+          structure: structure,
+          revealedDescendants: descendants.map((n) => n.toJson()),
+          revealedDescendantPrototypes: prototypes.map((p) => p.toJson()),
         },
         request: { event, requesterId: member.userId, fulfilled: true },
       }
@@ -1460,18 +1461,20 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     // If the node has been opened, then process this
     // information in the completion payload.
     if (node.opened) {
-      // Add child nodes to the completion payload.
-      completionPayload.data.revealedChildNodes = node.children.map((node) =>
-        node.toJson({
-          sessionDataExposure: {
-            expose: 'user-specific',
-            userId: member.userId,
-          },
-        }),
-      )
-      // Add child prototypes to the completion payload.
-      completionPayload.data.revealedChildPrototypes =
-        node.prototype.children.map((prototype) => prototype.toJson())
+      // Extract data from the node.
+      const {
+        revealedStructure: structure,
+        revealedDescendants: descendants,
+        revealedDescendantPrototypes: prototypes,
+      } = node
+
+      // Update the payload with the gathered data.
+      completionPayload.data = {
+        ...completionPayload.data,
+        structure: structure,
+        revealedDescendants: descendants.map((n) => n.toJson()),
+        revealedDescendantPrototypes: prototypes.map((p) => p.toJson()),
+      }
     }
 
     // Determine output and effect details based on
@@ -1882,9 +1885,11 @@ export default class SessionServer extends Session<TServerMissionTypes> {
     config: Partial<TSessionConfig> = {},
     owner: ServerUser,
   ): SessionServer {
-    // Generate the intro message output for every force.
     mission.forces.forEach((force) => {
+      // Generate the intro message output for every force.
       force.sendIntroMessage()
+      // Handle excluded nodes.
+      force.handleExcludedNodes()
     })
 
     return new SessionServer(

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import Tooltip from 'src/components/content/communication/Tooltip'
 import ButtonSvg from 'src/components/content/user-controls/buttons/ButtonSvg'
 import ClientMissionNode from 'src/missions/nodes'
@@ -78,6 +78,7 @@ export default function <TNode extends TMapCompatibleNode>({
    * Caches the previous blocked state.
    */
   const [prevBlocked, setPrevBlocked] = useState<boolean>(node.blocked)
+  const [excluded, setExcluded] = useState<boolean>(node.exclude)
 
   /* -- EFFECTS -- */
 
@@ -121,9 +122,27 @@ export default function <TNode extends TMapCompatibleNode>({
     setExecutionState(node.executionState)
   })
 
+  // Update the excluded state when the node's
+  // excluded state changes.
+  useEventListener(node, 'set-exclude', () => {
+    setExcluded(node.exclude)
+  })
+
   /* -- COMPUTED -- */
 
   const { mission } = node
+
+  /**
+   * Determines the context in which the node is being rendered.
+   * - `edit`: The node is being rendered on the mission page and can be edited.
+   * - `session`: The node is being rendered on the session page and cannot be
+   * edited, but it can be interacted with.
+   * @memoized
+   */
+  const context = useMemo(
+    () => (mission.nonRevealedDisplayMode === 'show' ? 'edit' : 'session'),
+    [mission.nonRevealedDisplayMode],
+  )
 
   /**
    * The inline styles for the root element.
@@ -250,7 +269,7 @@ export default function <TNode extends TMapCompatibleNode>({
     // If the node is executing, animate
     // the progress bar.
     if (node.executing) {
-      console.log(node.latestExecution)
+      // console.log(node.latestExecution)
       let duration = node.latestExecution!.duration
 
       style.animation = 'loading-animation 750ms linear 0ms infinite'
@@ -277,6 +296,7 @@ export default function <TNode extends TMapCompatibleNode>({
       'Blurred',
       mission.nonRevealedDisplayMode === 'blur' && !node.revealed,
     )
+    classes.set('Excluded', excluded)
     classes.set('Executing', executionState.status === 'executing')
     classes.set('Success', executionState.status === 'success')
     classes.set('Failure', executionState.status === 'failure')
@@ -367,13 +387,39 @@ export default function <TNode extends TMapCompatibleNode>({
     }
   })
 
+  /**
+   * The JSX for the reveal node button.
+   */
+  const revealNodeButton: JSX.Element | null = compute(() => {
+    if (context !== 'edit' || !excluded) return null
+
+    return (
+      <div className='IncludeButton'>
+        <ButtonSvg
+          type='add'
+          description={`Include this node ("${node.name}") in the force.`}
+          onClick={() => {
+            if (node instanceof ClientMissionNode) {
+              onSelect!(node)
+              node.exclude = false
+            }
+          }}
+        />
+      </div>
+    )
+  })
+
+  // Don't render the node on the session page if it's
+  // excluded.
+  if (context === 'session' && excluded) return null
+
   // Render root JSX.
   return (
     <div
       key={node._id}
       className={rootClasses.value}
       style={rootStyle}
-      onClick={() => onSelect!(node)}
+      onClick={!excluded ? () => onSelect!(node) : () => {}}
     >
       <div className='ProgressBar' style={progressBarStyle}></div>
       <div className='PrimaryContent' style={primaryContentStyle}>
@@ -386,6 +432,7 @@ export default function <TNode extends TMapCompatibleNode>({
         {buttonsJsx}
       </div>
       {tooltipJsx}
+      {revealNodeButton}
     </div>
   )
 }

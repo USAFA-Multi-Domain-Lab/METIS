@@ -82,7 +82,7 @@ export default function MissionPage({
   /* -- LOGIN-SPECIFIC LOGIC -- */
 
   // Require login for page.
-  const { login, isAuthorized, authorize } = useRequireLogin()
+  const { isAuthorized, authorize } = useRequireLogin()
 
   /* -- COMPUTED -- */
 
@@ -159,12 +159,17 @@ export default function MissionPage({
 
     // If the user has the proper authorization, add
     // the copy button.
-    if (login.user.isAuthorized('missions_write')) {
+    if (isAuthorized('missions_write')) {
       results.push('copy', 'remove')
     }
 
     return results
   })
+
+  /**
+   * The selected force in the mission.
+   */
+  const selectedForce = compute(() => selectedForceState[0])
 
   /* -- EFFECTS -- */
 
@@ -265,6 +270,16 @@ export default function MissionPage({
             description: 'Deselect this node (Closes panel view also).',
             onClick: () => mission.select(nextNode!.force),
           },
+          {
+            type: 'divider',
+            key: 'node-button-exclude',
+            description:
+              'Exclude this node from the force (Closes panel view also).',
+            onClick: () => {
+              nextNode!.exclude = true
+              mission.select(nextNode!.force)
+            },
+          },
         ]
       }
 
@@ -339,7 +354,9 @@ export default function MissionPage({
         }
 
         // Set the buttons on the next selection.
-        nextSelection.buttons = activeButtons
+        nextSelection.buttons = isAuthorized('missions_write')
+          ? activeButtons
+          : [availableButtons.deselect]
       }
 
       // Update the selection state.
@@ -349,11 +366,12 @@ export default function MissionPage({
   )
 
   // Add event listener to watch for when a new
-  // node is spawned in the mission.
-  useEventListener(mission, 'new-prototype', () => {
-    // Mark unsaved changes as true.
-    setAreUnsavedChanges(true)
-  })
+  // prototype is spawned in the mission.
+  useEventListener(mission, 'new-prototype', () => setAreUnsavedChanges(true))
+
+  // useEventListener(mission, 'activity', (updatedComponents) =>
+  //   onChange(...updatedComponents),
+  // )
 
   /* -- FUNCTIONS -- */
 
@@ -755,6 +773,28 @@ export default function MissionPage({
         throw new Error('Server connection is not available.')
       }
 
+      // Prompt the user to choose a role.
+      const { choice: sessionRole } = await prompt(
+        'How would you like to join the session?',
+        ['Cancel', 'Participant', 'Manager'],
+      )
+
+      // Select the force to play as.
+      let forceId: ClientMissionForce['_id'] | null = mission.forces[0]._id
+      // todo: Refactor prompt to allow for force selection.
+      // const { choice: forceChoice } = await prompt(
+      //   'Which force would you like to play as?',
+      //   ['Cancel', 'Confirm'],
+      // )
+
+      // If the user cancels, abort.
+      if (
+        sessionRole === 'Cancel'
+        // || forceChoice === 'Cancel'
+      ) {
+        return
+      }
+
       // Launch, join, and start the session.
       let sessionId = await SessionClient.$launch(mission._id, {
         accessibility: 'testing',
@@ -762,8 +802,16 @@ export default function MissionPage({
       let session = await server.$joinSession(sessionId)
       // If the session is not found, abort.
       if (!session) throw new Error('Failed to join test session.')
-      session.$start()
 
+      switch (sessionRole) {
+        case 'Participant':
+          await session.$assignRole(session.member._id, 'manager_limited')
+          await session.$assignForce(session.member._id, forceId)
+          break
+      }
+
+      // Start the session.
+      await session.$start()
       // Navigate to the session page.
       navigateTo('SessionPage', { session }, { bypassMiddleware: true })
     } catch (error) {

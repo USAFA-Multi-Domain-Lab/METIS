@@ -319,7 +319,6 @@ export default class ServerConnection
         onResponse: (event) => {
           switch (event.method) {
             case 'current-session':
-              console.log(event.data.session)
               resolve(
                 new SessionClient(
                   event.data.session,

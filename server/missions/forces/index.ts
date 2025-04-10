@@ -96,6 +96,19 @@ export default class ServerMissionForce extends MissionForce<TServerMissionTypes
     }
   }
 
+  /**
+   * Handles the excluded nodes in the force.
+   * @note This function is meant to prepare the force and its
+   * nodes for a session. In order for the force and its nodes
+   * to be ready for a session, the excluded nodes must be taken
+   * care of.
+   */
+  public handleExcludedNodes(): void {
+    this.nodes.forEach((node) => {
+      if (node.exclude) node.toGhost()
+    })
+  }
+
   // Implemented
   public filterOutputs(userId?: ServerUser['_id']): ServerOutput[] {
     return this.outputs.filter(

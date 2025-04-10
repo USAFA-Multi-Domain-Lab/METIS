@@ -8,7 +8,7 @@ import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
 import ClientUser from 'src/users'
 import { v4 as generateHash } from 'uuid'
-import { TListenerTargetEmittable } from '../../../shared/events'
+import { EventManager, TListenerTargetEmittable } from '../../../shared/events'
 import Mission, {
   TCommonMissionTypes,
   TMissionJson,
@@ -46,7 +46,7 @@ import PrototypeTranslation from './transformations/translations'
 export default class ClientMission
   extends Mission<TClientMissionTypes>
   implements
-    TListenerTargetEmittable<TMissionEvent>,
+    TListenerTargetEmittable<TMissionEventMethods, TMissionEventArgs>,
     TMissionNavigable,
     TListItem
 {
@@ -115,11 +115,6 @@ export default class ClientMission
   protected structureInitialized: boolean = false
 
   /**
-   * Listeners for mission events.
-   */
-  private listeners: Array<[TMissionEvent, () => void]>
-
-  /**
    * The current selection for the mission.
    * @note This can be most type of nested, mission-related objects,
    * such as nodes, forces, etc.
@@ -152,7 +147,7 @@ export default class ClientMission
   }
   public set transformation(value: MissionTransformation | null) {
     this._transformation = value
-    this.emitEvent('set-transformation')
+    this.emitEvent('set-transformation', [])
     this.handleStructureChange()
   }
 
@@ -287,6 +282,11 @@ export default class ClientMission
   }
 
   /**
+   * Manages the mission's event listeners and events.
+   */
+  private eventManager: EventManager<TMissionEventMethods, TMissionEventArgs>
+
+  /**
    * @param data The mission data from which to create the mission. Any ommitted values will be set to the default properties defined in Mission.DEFAULT_PROPERTIES.
    * @param options The options for creating the mission.
    */
@@ -304,13 +304,18 @@ export default class ClientMission
     this._existsOnServer = existsOnServer
     this._depth = -1
     this._structureChangeKey = generateHash()
-    this.listeners = []
     this._selection = this
     this._transformation = null
     this.relationshipLines = []
     this.lastOpenedNode = null
     this._defectiveObjects = []
     this._nonRevealedDisplayMode = nonRevealedDisplayMode
+
+    // Initialize event manager.
+    this.eventManager = new EventManager(this)
+    this.addEventListener = this.eventManager.addEventListener
+    this.removeEventListener = this.eventManager.removeEventListener
+    this.emitEvent = this.eventManager.emitEvent
 
     // If there is no existing prototypes,
     // create one.
@@ -481,7 +486,7 @@ export default class ClientMission
 
     // Handle event.
     this.handleStructureChange()
-    this.emitEvent('new-prototype')
+    this.emitEvent('new-prototype', [])
 
     // Return the prototype.
     return prototype
@@ -570,35 +575,17 @@ export default class ClientMission
     })
 
     // Emit the structure change event.
-    this.emitEvent('structure-change')
-  }
-
-  /**
-   * Emits an event for the mission.
-   * @param method The method of the event to emit.
-   */
-  public emitEvent(method: TMissionEvent): void {
-    // Call any matching listener callbacks
-    // or any activity listener callbacks.
-    for (let [listenerEvent, listenerCallback] of this.listeners) {
-      if (listenerEvent === method || listenerEvent === 'activity') {
-        listenerCallback()
-      }
-    }
+    this.emitEvent('structure-change', [])
   }
 
   // Implemented
-  public addEventListener(method: TMissionEvent, callback: () => void) {
-    this.listeners.push([method, callback])
-  }
+  public emitEvent
 
   // Implemented
-  public removeEventListener(method: TMissionEvent, callback: () => void) {
-    // Filter out listener.
-    this.listeners = this.listeners.filter(
-      ([m, h]) => m !== method || h !== callback,
-    )
-  }
+  public addEventListener
+
+  // Implemented
+  public removeEventListener
 
   /**
    * This will position all the prototypes in the mission
@@ -1074,7 +1061,7 @@ export default class ClientMission
 
     this._selection = selection
 
-    this.emitEvent('selection')
+    this.emitEvent('selection', [])
 
     // If there is a transformation, clear it.
     if (this.transformation) this.transformation = null
@@ -1086,7 +1073,7 @@ export default class ClientMission
    */
   public deselect(): void {
     this._selection = this
-    this.emitEvent('selection')
+    this.emitEvent('selection', [])
 
     // If there is a transformation, clear it.
     if (this.transformation) this.transformation = null
@@ -1560,33 +1547,6 @@ export type TMissionImportResult = {
 export type TStructureChangeListener = (structureChangeKey: string) => void
 
 /**
- * An event that occurs on a mission, which can be listened for.
- * @option 'activity'
- * Triggered when any event occurs.
- * @option 'structure-change'
- * Triggered when the structure of the mission, including the prototypes and actions
- * that make up the mission, change.
- * @option 'selection'
- * Triggered when a selection or deselection is made in the mission.
- * @option 'new-prototype'
- * Triggered when a new prototype is created.
- * @option 'buttons'
- * Triggered when buttons are set within any prototype or node.
- * @option 'set-transformation'
- * Triggered when a transformation is set for the mission.
- * @option 'autopan'
- * Triggered when nodes are opened and the mission map needs to auto-pan to them.
- */
-export type TMissionEvent =
-  | 'activity'
-  | 'structure-change'
-  | 'selection'
-  | 'new-prototype'
-  | 'set-buttons'
-  | 'set-transformation'
-  | 'autopan'
-
-/**
  * Represents an object that can support navigation within
  * a mission.
  * @note Implement this to make a class compatible.
@@ -1664,3 +1624,35 @@ type TDuplicateForceInfo = {
    */
   duplicateName: string
 }
+
+/**
+ * An event that occurs on a mission, which can be listened for.
+ * @option 'activity'
+ * Triggered when any event occurs.
+ * @option 'structure-change'
+ * Triggered when the structure of the mission, including the prototypes and actions
+ * that make up the mission, change.
+ * @option 'selection'
+ * Triggered when a selection or deselection is made in the mission.
+ * @option 'new-prototype'
+ * Triggered when a new prototype is created.
+ * @option 'buttons'
+ * Triggered when buttons are set within any prototype or node.
+ * @option 'set-transformation'
+ * Triggered when a transformation is set for the mission.
+ * @option 'autopan'
+ * Triggered when nodes are opened and the mission map needs to auto-pan to them.
+ * @option `set-node-exclusion`
+ * - Triggered when a node's exclusion status is set.
+ */
+export type TMissionEventMethods =
+  | 'activity'
+  | 'structure-change'
+  | 'selection'
+  | 'new-prototype'
+  | 'set-buttons'
+  | 'set-transformation'
+  | 'autopan'
+  | 'set-node-exclusion'
+
+export type TMissionEventArgs = [updatedComponents: TMissionComponent[]]

@@ -40,7 +40,7 @@
  */
 export class EventManager<
   TMethod extends string,
-  TCallbackArgs extends [],
+  TCallbackArgs extends Array<any> = [],
   TTarget extends TListenerTargetEmittable<
     TMethod,
     TCallbackArgs

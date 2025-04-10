@@ -115,12 +115,10 @@
   }
 
   &.ReadOnly {
-    .MainDetails {
+    .SidePanelContent {
       @include disabled();
       opacity: 0.65 !important;
-    }
 
-    .SidePanel {
       .ButtonText,
       .ButtonSvg {
         @include disabled();

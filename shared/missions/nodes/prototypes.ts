@@ -1,5 +1,5 @@
 import { v4 as generateHash } from 'uuid'
-import Mission, { TCommonMissionTypes, TMission } from '..'
+import { TCommonMissionTypes, TMission } from '..'
 
 /**
  * This represents a prototype for a mission node displayed
@@ -27,6 +27,21 @@ export default abstract class MissionPrototype<
    * The children of this prototype in the tree structure.
    */
   public children: TPrototype<T>[]
+
+  /**
+   * Any prototypes that descend from this prototype
+   * in the tree structure.
+   */
+  public get descendants(): TPrototype<T>[] {
+    let descendants: TPrototype<T>[] = []
+
+    this.children.forEach((child: TPrototype<T>) => {
+      descendants.push(child)
+      descendants.push(...child.descendants)
+    })
+
+    return descendants
+  }
 
   /**
    * The key used in the structure object to represent
