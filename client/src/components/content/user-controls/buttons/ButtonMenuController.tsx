@@ -1,5 +1,6 @@
 import { RefObject } from 'react'
 import { useGlobalContext } from 'src/context'
+import { compute } from 'src/toolbox'
 import { useEventListener } from 'src/toolbox/hooks'
 import { Vector2D } from '../../../../../../shared/toolbox/space'
 import { TButtonMenu_P } from './ButtonMenu'
@@ -12,6 +13,7 @@ export default function ButtonMenuController({
   target,
   buttons,
   highlightTarget,
+  trigger = 'r-click',
   getDescription,
   onButtonClick,
 }: TButtonMenuController_P): null {
@@ -20,6 +22,23 @@ export default function ButtonMenuController({
   const globalContext = useGlobalContext()
   const { showButtonMenu } = globalContext.actions
 
+  /* -- COMPUTED -- */
+
+  /**
+   * The method to pass to the event listener
+   * hook.
+   */
+  const eventListenerMethod = compute<'click' | 'contextmenu'>(() => {
+    switch (trigger) {
+      case 'l-click':
+        return 'click'
+      case 'r-click':
+        return 'contextmenu'
+      default:
+        return 'contextmenu'
+    }
+  })
+
   /* -- EFFECTS -- */
 
   // When the target element is right-clicked,
@@ -27,10 +46,14 @@ export default function ButtonMenuController({
   // the button menu.
   useEventListener(
     target.current,
-    'contextmenu',
+    eventListenerMethod,
     (event: React.MouseEvent<HTMLElement>) => {
       // Prevent the default context menu.
       event.preventDefault()
+
+      // No need to show the button menu if there
+      // are no buttons.
+      if (!buttons) return
 
       // Show the button menu.
       showButtonMenu(buttons, onButtonClick, {
@@ -72,6 +95,11 @@ export type TButtonMenuController_P = {
    */
   highlightTarget?: TButtonMenu_P['highlightTarget']
   /**
+   * How the option menu should be triggered.
+   * @default 'r-click'
+   */
+  trigger?: TButtonMenuTrigger
+  /**
    * Gets the description for a button.
    * @param button The button for which to get the description.
    * @returns The description for the button, if null, the type
@@ -86,3 +114,12 @@ export type TButtonMenuController_P = {
    */
   onButtonClick: TButtonMenu_P['onButtonClick']
 }
+
+/**
+ * How the option menu should be triggered.
+ * @option 'l-click' The option menu will be triggered
+ * when the target element is left-clicked.
+ * @option 'r-click' The option menu will be triggered
+ * when the target element is right-clicked.
+ */
+export type TButtonMenuTrigger = 'l-click' | 'r-click'

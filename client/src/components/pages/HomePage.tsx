@@ -480,7 +480,9 @@ export default function HomePage(): JSX.Element | null {
     // then display the files list.
     // todo: Add proper authorization logic.
     if (true) {
-      results.push(<FileReferenceList key={'files-list'} files={files} />)
+      results.push(
+        <FileReferenceList key={'files-list'} name={'Files'} items={files} />,
+      )
     }
 
     return results

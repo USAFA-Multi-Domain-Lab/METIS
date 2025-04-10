@@ -53,3 +53,11 @@ export type TRequireLoginReturn = {
    */
   authorize: User['authorize']
 }
+
+/**
+ * The type used for `TDefaultProps` in the `useDefaultProps`
+ * hook.
+ */
+export type TDefaultProps<TProps extends {}> = Required<{
+  [K in keyof TProps as undefined extends TProps[K] ? K : never]: TProps[K]
+}>

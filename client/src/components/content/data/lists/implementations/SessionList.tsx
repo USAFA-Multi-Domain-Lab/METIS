@@ -308,7 +308,6 @@ export default function SessionList({
       getItemTooltip={() => 'Join session'}
       getListButtonTooltip={getSessionListButtonTooltip}
       getItemButtonTooltip={getSessionItemButtonTooltip}
-      onSelection={onSessionSelection}
       onListButtonClick={onSessionListButtonClick}
       onItemButtonClick={onSessionItemButtonClick}
     />

@@ -4,25 +4,23 @@
 // For more styling rules of the `ListItem` component,
 // see the `.ListItemLike` styling rules in `ListPage.scss`.
 .ListItem {
+  cursor: pointer;
+
+  &:hover,
+  &.ButtonMenuHighlight {
+    $hover-color: $color-accent;
+
+    @include background-mask;
+
+    color: $hover-color;
+
+    .ItemName {
+      color: $hover-color;
+    }
+  }
+
   .ItemOptions {
     display: flex;
     align-items: center;
-  }
-
-  &.Selectable {
-    cursor: pointer;
-
-    &:hover,
-    &.ButtonMenuHighlight {
-      $hover-color: $color-accent;
-
-      @include background-mask;
-
-      color: $hover-color;
-
-      .ItemName {
-        color: $hover-color;
-      }
-    }
   }
 }

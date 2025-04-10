@@ -1,6 +1,6 @@
 import React, { useContext, useRef, useState } from 'react'
 import { compute } from 'src/toolbox'
-import { useDefaultProps } from 'src/toolbox/hooks'
+import { TDefaultProps, useDefaultProps } from 'src/toolbox/hooks'
 import StringToolbox from '../../../../../../shared/toolbox/strings'
 import { TButtonSvgType } from '../../user-controls/buttons/ButtonSvg'
 import { TSvgPanelOnClick } from '../../user-controls/buttons/ButtonSvgPanel_v2'
@@ -12,7 +12,6 @@ import {
   TGetItemTooltip,
   TListItem,
   TOnItemButtonClick,
-  TOnItemSelection,
 } from './pages/ListItem'
 import ListPage, { TListPage_P } from './pages/ListPage'
 
@@ -49,6 +48,32 @@ export const useListContext = <TItem extends TListItem>() => {
   return context
 }
 
+/* -- FUNCTIONS -- */
+
+/**
+ * The defaults used for `List` props.
+ */
+export function createDefaultListProps<
+  TItem extends TListItem,
+>(): TDefaultProps<TList_P<TItem>> {
+  return {
+    columns: [],
+    itemsPerPageMin: 10,
+    minNameColumnWidth: '14em',
+    listButtons: [],
+    itemButtons: [],
+    initialSorting: { column: 'name', method: 'ascending' },
+    getColumnLabel: (x) => StringToolbox.toTitleCase(x.toString()),
+    getCellText: (item, column) => (item[column] as any).toString(),
+    getItemTooltip: () => '',
+    getListButtonTooltip: () => '',
+    getItemButtonTooltip: () => '',
+    getColumnWidth: () => '10em',
+    onListButtonClick: () => {},
+    onItemButtonClick: () => {},
+  }
+}
+
 /* -- COMPONENT -- */
 
 /**
@@ -63,39 +88,7 @@ export default function List<TItem extends TListItem>(
   /* -- PROPS -- */
 
   // Set default props.
-  const defaultedProps = useDefaultProps(props, {
-    columns: [],
-    itemsPerPageMin: 10,
-    minNameColumnWidth: '14em',
-    listButtons: [],
-    itemButtons: [],
-    initialSorting: { column: 'name', method: 'ascending' },
-    getColumnLabel: (x) => StringToolbox.toTitleCase(x.toString()),
-    getCellText: (item, column) => (item[column] as any).toString(),
-    getItemTooltip: () => '',
-    getListButtonTooltip: () => '',
-    getItemButtonTooltip: () => '',
-    getColumnWidth: () => '10em',
-    onSelection: null,
-    onListButtonClick: () => {},
-    onItemButtonClick: () => {},
-  })
-
-  // Get and modify `getItemTooltip` to include
-  // R-Click prompt.
-  const getItemTooltip = defaultedProps.getItemTooltip
-  defaultedProps.getItemTooltip = (item) => {
-    // Get vanilla tooltip.
-    let description: string = getItemTooltip(item)
-
-    // Add R-Click prompt, if there
-    // are item buttons.
-    if (defaultedProps.itemButtons.length) {
-      description += `\n\t\n\`R-Click\` for more options`
-    }
-
-    return description
-  }
+  const defaultedProps = useDefaultProps(props, createDefaultListProps<TItem>())
 
   // Parse props needed by the main list
   // component.
@@ -155,17 +148,17 @@ export default function List<TItem extends TListItem>(
    */
   const pageCount = compute<number>(() => pages.length)
 
+  /* -- RENDER -- */
+
   /**
    * The value to provide to the context.
    */
   const contextValue = {
     list: root,
     ...defaultedProps,
-    state,
     pageCount,
+    state,
   }
-
-  /* -- RENDER -- */
 
   // Render the list.
   return (
@@ -178,6 +171,8 @@ export default function List<TItem extends TListItem>(
     </Provider>
   )
 }
+
+/* -- TYPES -- */
 
 /**
  * Props for `List`.
@@ -269,11 +264,11 @@ export type TList_P<TItem extends TListItem> = {
    */
   getColumnWidth?: (column: TListColumnType<TItem>) => string
   /**
-   * A callback for when an item in the list is selected.
-   * @note If `null`, the items will not be selectable.
-   * @default null
+   * @param item The item to check.
+   * @returns Whether the item is disabled.
+   * @note This will grey out the item in the list.
    */
-  onSelection?: TOnItemSelection<TItem> | null
+  // isDisabled?: (item: TItem) => boolean
   /**
    * Callback for when a list button is clicked.
    * @default () => {}

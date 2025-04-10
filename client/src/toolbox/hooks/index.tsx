@@ -3,7 +3,11 @@ import { useGlobalContext } from 'src/context'
 import ClientUser from 'src/users'
 import { TListenerTarget } from '../../../../shared/events'
 import { TLogin } from '../../../../shared/logins'
-import { TRequireLoginReturn, TResizeObserverOptions } from './index.d'
+import {
+  TDefaultProps,
+  TRequireLoginReturn,
+  TResizeObserverOptions,
+} from './index.d'
 
 /* -- HOOKS -- */
 
@@ -204,11 +208,9 @@ export function useResizeObserver(
  */
 export function useDefaultProps<
   TProps extends {},
-  TDefaultProps extends Required<{
-    [K in keyof TProps as undefined extends TProps[K] ? K : never]: TProps[K]
-  }>,
-  TReturnedProps extends Required<TProps> = Required<TProps>,
->(props: TProps, defaultProps: TDefaultProps): TReturnedProps {
+  TDefault extends TDefaultProps<TProps>,
+  TReturned extends Required<TProps> = Required<TProps>,
+>(props: TProps, defaultProps: TDefault): TReturned {
   let returnedProps: any = {
     ...defaultProps,
     ...props,

@@ -69,9 +69,7 @@ export default function ListResizeHandler<
       // Update the last window resize update.
       lastResizeUpdate.current = Date.now()
       // Set the window to resizing, if it is not already.
-      if (!isResizing) {
-        setIsResizing(true)
-      }
+      if (!isResizing) setIsResizing(true)
     },
     [isResizing],
   )

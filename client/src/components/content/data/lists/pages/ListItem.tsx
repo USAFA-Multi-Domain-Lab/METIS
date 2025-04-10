@@ -2,9 +2,8 @@ import { ReactNode, useRef } from 'react'
 import ButtonMenuController from 'src/components/content/user-controls/buttons/ButtonMenuController'
 import { useGlobalContext } from 'src/context'
 import { compute } from 'src/toolbox'
-import ButtonSvg, {
-  TButtonSvgType,
-} from '../../../user-controls/buttons/ButtonSvg'
+import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
+import { TButtonSvgType } from '../../../user-controls/buttons/ButtonSvg'
 import {
   OPTIONS_COLUMN_WIDTH,
   OPTIONS_COLUMN_WIDTH_IF_LAST,
@@ -12,8 +11,6 @@ import {
 } from '../List'
 import './ListItem.scss'
 import ListItemCell from './ListItemCell'
-import StringToolbox from '../../../../../../../shared/toolbox/strings'
-import ClientMission from 'src/missions'
 
 /**
  * A list item in a `List` component.
@@ -33,7 +30,6 @@ export default function ListItem<T extends TListItem>({
     getCellText,
     getItemButtonTooltip,
     getColumnWidth,
-    onSelection,
     onItemButtonClick,
   } = listContext
   const root = useRef<HTMLDivElement>(null)
@@ -43,14 +39,9 @@ export default function ListItem<T extends TListItem>({
   /**
    * Root class name for the component.
    */
-  const rootClass = compute<string>(() => {
-    const classList = ['ListItem', 'ListItemLike']
-
-    // Add 'Selectable' class if a click callback
-    // is provided.
-    if (onSelection) classList.push('Selectable')
-
-    return classList.join(' ')
+  const rootClass = compute<ClassList>(() => {
+    let result = new ClassList('ListItem', 'ListItemLike')
+    return result
   })
 
   /**
@@ -127,21 +118,6 @@ export default function ListItem<T extends TListItem>({
       />,
     )
 
-    // If there are item buttons, add the options
-    // cell.
-    if (itemButtons.length) {
-      result.push(
-        <div key={'options'} className='ItemCellLike ItemOptions'>
-          <ButtonSvg
-            type='options'
-            onClick={onOptionsClick}
-            description={'View option menu'}
-            disabled={itemButtons.length === 0 ? 'full' : 'none'}
-          />
-        </div>,
-      )
-    }
-
     // Add a cell for each column
     // passed in the props.
     columns.forEach((column) =>
@@ -160,12 +136,13 @@ export default function ListItem<T extends TListItem>({
 
   // Render the list item.
   return (
-    <div className={rootClass} style={rootStyle} ref={root}>
+    <div className={rootClass.value} style={rootStyle} ref={root}>
       {cellsJsx}
       <ButtonMenuController
         target={root}
         buttons={itemButtons}
         highlightTarget={root.current ?? undefined}
+        trigger={'l-click'}
         getDescription={getButtonDescription}
         onButtonClick={onButtonClick}
       />

@@ -1060,22 +1060,26 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
               <PanelView title='Files'>
                 <div className='InMission'>
                   <FileReferenceList
-                    files={mission.files}
                     name={'In Mission'}
-                    columns={[]}
+                    items={mission.files}
                     itemsPerPageMin={4}
                   />
                 </div>
                 <div className='InStore'>
                   <FileReferenceList
-                    files={globalFiles}
                     name={'In Store'}
-                    columns={[]}
-                    onSelect={(file) => {
+                    items={globalFiles}
+                    itemButtons={['link']}
+                    itemsPerPageMin={4}
+                    getItemButtonTooltip={(button, file) => {
+                      if (button === 'link') return 'Attach to mission'
+                      else return ''
+                    }}
+                    onItemButtonClick={(button, file) => {
+                      if (button !== 'link') return
                       mission.files.push(file)
                       forceUpdate()
                     }}
-                    itemsPerPageMin={4}
                   />
                 </div>
               </PanelView>

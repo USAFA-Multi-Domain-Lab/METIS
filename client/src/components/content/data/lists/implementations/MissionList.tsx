@@ -73,15 +73,6 @@ export default function MissionList({
     return results
   })
 
-  /**
-   * The tooltip description for the open button.
-   */
-  const tooltipDescription = compute<string>(() =>
-    login.user.isAuthorized('missions_write')
-      ? 'Open mission'
-      : 'Launch session',
-  )
-
   /* -- FUNCTIONS -- */
 
   /**
@@ -224,7 +215,7 @@ export default function MissionList({
   ) => {
     switch (button) {
       case 'open':
-        if (login.user.isAuthorized('missions_write')) return 'Open'
+        if (login.user.isAuthorized('missions_write')) return 'View/edit'
         else if (login.user.isAuthorized('missions_read')) return 'View'
         else return ''
       case 'launch':
@@ -354,13 +345,11 @@ export default function MissionList({
         listButtons={listButtons}
         itemButtons={itemButtons}
         initialSorting={{ column: 'updatedAt', method: 'descending' }}
-        getItemTooltip={() => tooltipDescription}
         getColumnLabel={getMissionColumnLabel}
         getCellText={getMissionCellText}
         getListButtonTooltip={getMissionListButtonTooltip}
         getItemButtonTooltip={getMissionItemButtonTooltip}
         getColumnWidth={getMissionColumnWidth}
-        onSelection={onMissionSelection}
         onListButtonClick={onMissionListButtonClick}
         onItemButtonClick={onMissionItemButtonClick}
       />

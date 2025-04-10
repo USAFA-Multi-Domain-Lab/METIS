@@ -207,7 +207,7 @@ export default function MissionMap({
     new Vector1D(DEFAULT_CAMERA_ZOOM, { onChange: () => forceUpdate() }),
   )
 
-  /* -- hooks -- */
+  /* -- HOOKS -- */
 
   // Create an event listener to handle when the mission
   // structure changes by forcing a state update.
@@ -307,7 +307,7 @@ export default function MissionMap({
     }
   }, [tabIndex])
 
-  /* -- functions -- */
+  /* -- FUNCTIONS -- */
 
   /**
    * Handles a mouse wheel event on the map.
