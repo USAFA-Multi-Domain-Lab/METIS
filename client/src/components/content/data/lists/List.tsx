@@ -66,9 +66,11 @@ export function createDefaultListProps<
     getColumnLabel: (x) => StringToolbox.toTitleCase(x.toString()),
     getCellText: (item, column) => (item[column] as any).toString(),
     getItemTooltip: () => '',
+    getDisabledItemTooltip: () => '',
     getListButtonTooltip: () => '',
     getItemButtonTooltip: () => '',
     getColumnWidth: () => '10em',
+    isDisabled: () => false,
     onListButtonClick: () => {},
     onItemButtonClick: () => {},
   }
@@ -257,6 +259,13 @@ export type TList_P<TItem extends TListItem> = {
    */
   getItemButtonTooltip?: TGetItemButtonTooltip<TItem>
   /**
+   * Gets the tooltip description for a disabled item.
+   * @param item The item for which to get the tooltip.
+   * @returns The tooltip description.
+   * @default () => ''
+   */
+  getDisabledItemTooltip?: TGetItemTooltip<TItem>
+  /**
    * Gets the width of the given column.
    * @param column The column for which to get the width.
    * @returns The width of the column.
@@ -268,7 +277,7 @@ export type TList_P<TItem extends TListItem> = {
    * @returns Whether the item is disabled.
    * @note This will grey out the item in the list.
    */
-  // isDisabled?: (item: TItem) => boolean
+  isDisabled?: (item: TItem) => boolean
   /**
    * Callback for when a list button is clicked.
    * @default () => {}

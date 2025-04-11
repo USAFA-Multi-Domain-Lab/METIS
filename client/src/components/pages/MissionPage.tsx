@@ -1071,6 +1071,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
                     items={globalFiles}
                     itemButtons={['link']}
                     itemsPerPageMin={4}
+                    isDisabled={(file) => mission.files.includes(file)}
                     getItemButtonTooltip={(button, file) => {
                       if (button === 'link') return 'Attach to mission'
                       else return ''

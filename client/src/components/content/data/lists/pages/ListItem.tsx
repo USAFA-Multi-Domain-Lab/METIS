@@ -1,6 +1,5 @@
 import { ReactNode, useRef } from 'react'
 import ButtonMenuController from 'src/components/content/user-controls/buttons/ButtonMenuController'
-import { useGlobalContext } from 'src/context'
 import { compute } from 'src/toolbox'
 import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
 import { TButtonSvgType } from '../../../user-controls/buttons/ButtonSvg'
@@ -20,9 +19,7 @@ export default function ListItem<T extends TListItem>({
 }: TListItem_P<T>): JSX.Element | null {
   /* -- STATE -- */
 
-  const globalContext = useGlobalContext()
   const listContext = useListContext<T>()
-  const { showButtonMenu } = globalContext.actions
   const {
     columns,
     itemButtons,
@@ -30,6 +27,7 @@ export default function ListItem<T extends TListItem>({
     getCellText,
     getItemButtonTooltip,
     getColumnWidth,
+    isDisabled,
     onItemButtonClick,
   } = listContext
   const root = useRef<HTMLDivElement>(null)
@@ -41,6 +39,7 @@ export default function ListItem<T extends TListItem>({
    */
   const rootClass = compute<ClassList>(() => {
     let result = new ClassList('ListItem', 'ListItemLike')
+    result.set('Disabled', isDisabled(item))
     return result
   })
 
@@ -78,18 +77,6 @@ export default function ListItem<T extends TListItem>({
    */
   const getButtonDescription = (button: TButtonSvgType) =>
     getItemButtonTooltip(button, item)
-
-  /**
-   * Handles the click event for the item
-   * options button.
-   */
-  const onOptionsClick = (event: React.MouseEvent) => {
-    showButtonMenu(itemButtons, onButtonClick, {
-      positioningTarget: event.target as HTMLDivElement,
-      highlightTarget: root.current ?? undefined,
-      getDescription: getButtonDescription,
-    })
-  }
 
   /**
    * Handles the click event for an item
