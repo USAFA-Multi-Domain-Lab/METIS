@@ -1112,10 +1112,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     // If the target member has the `manageSessionMembers`
     // permission, then they cannot have their role
     // changed.
-    if (
-      targetMember.isAuthorized('manageSessionMembers') &&
-      this.config.accessibility !== 'testing'
-    ) {
+    if (targetMember.isAuthorized('manageSessionMembers')) {
       return member.emitError(
         new ServerEmittedError(
           ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,

@@ -49,21 +49,6 @@ const AVAILABLE_ROLES_RAW = [
       MemberPermission.AVAILABLE_PERMISSIONS.cheats,
     ] as MemberPermission[],
   } as const,
-  {
-    _id: 'manager_limited',
-    name: 'Limited Manager',
-    description:
-      'Member of a session that has limited control of a session and its members. They have full access to all forces and can manipulate them without restrictions. However, they do not have complete visibility of the node structure.',
-    permissions: [
-      MemberPermission.AVAILABLE_PERMISSIONS.manipulateNodes,
-      MemberPermission.AVAILABLE_PERMISSIONS.configureSessions,
-      MemberPermission.AVAILABLE_PERMISSIONS.manageSessionMembers,
-      MemberPermission.AVAILABLE_PERMISSIONS.startEndSessions,
-      MemberPermission.AVAILABLE_PERMISSIONS.cheats,
-      MemberPermission.AVAILABLE_PERMISSIONS.forceAssignable,
-      MemberPermission.AVAILABLE_PERMISSIONS.roleAssignable,
-    ] as MemberPermission[],
-  } as const,
 ] as const
 
 /* -- CLASSES -- */

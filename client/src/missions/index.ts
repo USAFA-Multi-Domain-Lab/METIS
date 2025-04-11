@@ -1491,7 +1491,7 @@ type TDuplicateForceInfo = {
  * @option `set-node-exclusion`
  * - Triggered when a node's exclusion status is set.
  */
-export type TMissionEventMethods =
+type TMissionEventMethods =
   | 'activity'
   | 'structure-change'
   | 'selection'
@@ -1501,4 +1501,9 @@ export type TMissionEventMethods =
   | 'autopan'
   | 'set-node-exclusion'
 
-export type TMissionEventArgs = [updatedComponents: TMissionComponent[]]
+/**
+ * The argument(s) used in the event handler for the mission's event manager.
+ */
+type TMissionEventArgs = [
+  updatedComponents: TMissionComponent<TMetisClientComponents, any>[],
+]

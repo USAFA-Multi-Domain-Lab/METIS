@@ -198,11 +198,6 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     return results
   })
 
-  /**
-   * The selected force in the mission.
-   */
-  const selectedForce = compute(() => selectedForceState[0])
-
   /* -- EFFECTS -- */
 
   // componentDidMount
@@ -401,9 +396,11 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   // prototype is spawned in the mission.
   useEventListener(mission, 'new-prototype', () => setAreUnsavedChanges(true))
 
-  // useEventListener(mission, 'activity', (updatedComponents) =>
-  //   onChange(...updatedComponents),
-  // )
+  // Add event listener to watch for any changes
+  // made to the mission.
+  useEventListener(mission, 'activity', (updatedComponents) =>
+    onChange(...updatedComponents),
+  )
 
   /* -- FUNCTIONS -- */
 
@@ -411,9 +408,10 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
    * Handles when a change is made that would require saving.
    * @param components The components that have been changed.
    */
-  const onChange = (
-    ...components: TNonEmptyArray<TMissionComponent<any, any>>
-  ): void => {
+  const onChange = (...components: TMissionComponent<any, any>[]): void => {
+    // Abort if there are no components.
+    if (!components.length) return
+
     let updatedState = defectiveComponents
 
     // todo: Store last changed component for efficiency purposes.
@@ -826,28 +824,6 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
         throw new Error('Server connection is not available.')
       }
 
-      // Prompt the user to choose a role.
-      const { choice: sessionRole } = await prompt(
-        'How would you like to join the session?',
-        ['Cancel', 'Participant', 'Manager'],
-      )
-
-      // Select the force to play as.
-      let forceId: ClientMissionForce['_id'] | null = mission.forces[0]._id
-      // todo: Refactor prompt to allow for force selection.
-      // const { choice: forceChoice } = await prompt(
-      //   'Which force would you like to play as?',
-      //   ['Cancel', 'Confirm'],
-      // )
-
-      // If the user cancels, abort.
-      if (
-        sessionRole === 'Cancel'
-        // || forceChoice === 'Cancel'
-      ) {
-        return
-      }
-
       // Launch, join, and start the session.
       let sessionId = await SessionClient.$launch(mission._id, {
         accessibility: 'testing',
@@ -855,16 +831,8 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
       let session = await server.$joinSession(sessionId)
       // If the session is not found, abort.
       if (!session) throw new Error('Failed to join test session.')
+      session.$start()
 
-      switch (sessionRole) {
-        case 'Participant':
-          await session.$assignRole(session.member._id, 'manager_limited')
-          await session.$assignForce(session.member._id, forceId)
-          break
-      }
-
-      // Start the session.
-      await session.$start()
       // Navigate to the session page.
       navigateTo('SessionPage', { session }, { bypassMiddleware: true })
     } catch (error) {

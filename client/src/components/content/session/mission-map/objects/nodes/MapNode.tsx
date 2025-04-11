@@ -82,19 +82,6 @@ export default function <TNode extends TMapCompatibleNode>({
 
   /* -- EFFECTS -- */
 
-  // Register an event listener to handle activity
-  // on the node.
-  useEventListener(node, 'activity', () => {
-    // Update the state with details stored in
-    // the node object.
-    // setPendingOpen(node.pendingOpen)
-    // setPendingExecInit(node.pendingExecInit)
-    // setExecutionState(node.executionState)
-    // setPendingOutputSent(node.pendingOutputSent)
-    // if (node.executionState !== 'executing')
-    //   setInitialProgress(calculateInitialProgress(node))
-  })
-
   // Update the pending state when the node's
   // pending state changes.
   useEventListener(node, 'set-pending', () => {

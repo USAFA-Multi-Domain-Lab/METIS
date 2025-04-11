@@ -235,11 +235,17 @@ export default class ClientMissionForce
       // Get details.
       const { nonRevealedDisplayMode } = this.mission
       let children: ClientMissionNode[] =
-        nonRevealedDisplayMode !== 'show'
-          ? parent.relativeChildren
-          : parent.children
-      let firstChild: ClientMissionNode | null = parent.firstRelativeChildNode
-      let lastChild: ClientMissionNode | null = parent.lastRelativeChildNode
+        nonRevealedDisplayMode === 'show'
+          ? parent.children
+          : parent.relativeChildren
+      let firstChild: ClientMissionNode | null =
+        nonRevealedDisplayMode === 'show'
+          ? parent.firstChildNode
+          : parent.firstRelativeChildNode
+      let lastChild: ClientMissionNode | null =
+        nonRevealedDisplayMode === 'show'
+          ? parent.lastChildNode
+          : parent.lastRelativeChildNode
       let childCount: number = children.length
       let blurred: boolean = nonRevealedDisplayMode === 'blur' && !parent.opened
 
