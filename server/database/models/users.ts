@@ -126,13 +126,6 @@ const queryForFilteredUsers = (query: TPreUserQuery): void => {
   // Hide deleted users.
   query.where({ deleted: { $eq: includeDeleted ? true : false } })
 
-  // Don't return the user currently
-  // logged in if the find function
-  // is for finding all users.
-  if (method === 'find') {
-    query.where({ _id: { $ne: currentUser?._id } })
-  }
-
   // If the user can only read students, hide all users
   // that are not students.
   if (
