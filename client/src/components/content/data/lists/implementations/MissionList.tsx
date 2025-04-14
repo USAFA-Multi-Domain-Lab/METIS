@@ -7,9 +7,9 @@ import ClientMission from 'src/missions'
 import { compute } from 'src/toolbox'
 import { useRequireLogin } from 'src/toolbox/hooks'
 import { DateToolbox } from '../../../../../../../shared/toolbox/dates'
-import List, { TGetListButtonTooltip } from '../List'
+import List, { TGetListButtonLabel } from '../List'
 import {
-  TGetItemButtonTooltip,
+  TGetItemButtonLabel,
   TOnItemButtonClick,
   TOnItemSelection,
 } from '../pages/ListItem'
@@ -195,7 +195,7 @@ export default function MissionList({
   /**
    * Gets the tooltip description for a mission list button.
    */
-  const getMissionListButtonTooltip: TGetListButtonTooltip = (button) => {
+  const getMissionListButtonTooltip: TGetListButtonLabel = (button) => {
     switch (button) {
       case 'add':
         return 'New mission'
@@ -209,7 +209,7 @@ export default function MissionList({
   /**
    * Gets the tooltip description for a mission item button.
    */
-  const getMissionItemButtonTooltip: TGetItemButtonTooltip<ClientMission> = (
+  const getMissionItemButtonTooltip: TGetItemButtonLabel<ClientMission> = (
     button,
     item,
   ) => {
@@ -347,8 +347,8 @@ export default function MissionList({
         initialSorting={{ column: 'updatedAt', method: 'descending' }}
         getColumnLabel={getMissionColumnLabel}
         getCellText={getMissionCellText}
-        getListButtonTooltip={getMissionListButtonTooltip}
-        getItemButtonTooltip={getMissionItemButtonTooltip}
+        getListButtonLabel={getMissionListButtonTooltip}
+        getItemButtonLabel={getMissionItemButtonTooltip}
         getColumnWidth={getMissionColumnWidth}
         onListButtonClick={onMissionListButtonClick}
         onItemButtonClick={onMissionItemButtonClick}

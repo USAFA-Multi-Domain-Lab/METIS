@@ -7,9 +7,9 @@ import { SessionBasic } from 'src/sessions/basic'
 import { compute } from 'src/toolbox'
 import { usePeriodicRerender, useRequireLogin } from 'src/toolbox/hooks'
 import { DateToolbox } from '../../../../../../../shared/toolbox/dates'
-import List, { TGetListButtonTooltip } from '../List'
+import List, { TGetListButtonLabel } from '../List'
 import {
-  TGetItemButtonTooltip,
+  TGetItemButtonLabel,
   TListItem,
   TOnItemButtonClick,
   TOnItemSelection,
@@ -126,7 +126,7 @@ export default function SessionList({
   /**
    * Gets the tooltip description for a session list button.
    */
-  const getSessionListButtonTooltip: TGetListButtonTooltip = (button) => {
+  const getSessionListButtonTooltip: TGetListButtonLabel = (button) => {
     switch (button) {
       case 'lock':
         return 'Join private'
@@ -138,7 +138,7 @@ export default function SessionList({
   /**
    * Gets the tooltip description for a session item button.
    */
-  const getSessionItemButtonTooltip: TGetItemButtonTooltip<SessionBasic> = (
+  const getSessionItemButtonTooltip: TGetItemButtonLabel<SessionBasic> = (
     button,
     item,
   ) => {
@@ -306,8 +306,8 @@ export default function SessionList({
       getCellText={getSessionCellText}
       getColumnWidth={getSessionColumnWidth}
       getItemTooltip={() => 'Join session'}
-      getListButtonTooltip={getSessionListButtonTooltip}
-      getItemButtonTooltip={getSessionItemButtonTooltip}
+      getListButtonLabel={getSessionListButtonTooltip}
+      getItemButtonLabel={getSessionItemButtonTooltip}
       onListButtonClick={onSessionListButtonClick}
       onItemButtonClick={onSessionItemButtonClick}
     />

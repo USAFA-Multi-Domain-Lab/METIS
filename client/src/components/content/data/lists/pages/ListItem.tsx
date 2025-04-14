@@ -25,7 +25,7 @@ export default function ListItem<T extends TListItem>({
     itemButtons,
     minNameColumnWidth,
     getCellText,
-    getItemButtonTooltip,
+    getItemButtonLabel: getItemButtonTooltip,
     getColumnWidth,
     isDisabled,
     onItemButtonClick,
@@ -172,12 +172,12 @@ export type TListItem = {
 export type TGetItemTooltip<TItem extends TListItem> = (item: TItem) => string
 
 /**
- * Gets the tooltip description for the item's button.
- * @param button The button for which to get the tooltip.
- * @param item The item for which to get the tooltip.
- * @returns The tooltip description.
+ * Gets the label for the item's button.
+ * @param button The button for which to get the label.
+ * @param item The item for which to get the label.
+ * @returns The label.
  */
-export type TGetItemButtonTooltip<TItem extends TListItem> = (
+export type TGetItemButtonLabel<TItem extends TListItem> = (
   button: TButtonSvgType,
   item: TItem,
 ) => string

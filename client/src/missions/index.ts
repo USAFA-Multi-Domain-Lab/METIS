@@ -3,16 +3,15 @@ import { TMetisClientComponents } from 'src'
 import { TListItem } from 'src/components/content/data/lists/pages/ListItem'
 import { TLine_P } from 'src/components/content/session/mission-map/objects/Line'
 import { TPrototypeSlot_P } from 'src/components/content/session/mission-map/objects/PrototypeSlot'
-import ClientFileReference from 'src/files/references'
 import { v4 as generateHash } from 'uuid'
 import { TListenerTargetEmittable } from '../../../shared/events'
-import { TFileReferenceJson } from '../../../shared/files/references'
 import Mission, {
   TMissionComponent,
   TMissionJson,
 } from '../../../shared/missions'
 import { TMissionActionJson } from '../../../shared/missions/actions'
 import { TEffectJson } from '../../../shared/missions/effects'
+import { TMissionFileJson } from '../../../shared/missions/files'
 import {
   MissionForce,
   TMissionForceSaveJson,
@@ -29,6 +28,7 @@ import { Vector2D } from '../../../shared/toolbox/space'
 import User from '../../../shared/users'
 import ClientMissionAction from './actions'
 import { ClientEffect } from './effects'
+import ClientMissionFile from './files'
 import ClientMissionForce from './forces'
 import ClientMissionNode from './nodes'
 import ClientMissionPrototype, { TPrototypeRelation } from './nodes/prototypes'
@@ -338,9 +338,9 @@ export default class ClientMission
   }
 
   // Implemented
-  protected importFiles(data: TFileReferenceJson[]): void {
-    let files: ClientFileReference[] = data.map((datum) =>
-      ClientFileReference.fromJson(datum),
+  protected importFiles(data: TMissionFileJson[]): void {
+    let files: ClientMissionFile[] = data.map((datum) =>
+      ClientMissionFile.fromJson(datum, this),
     )
     this.files.push(...files)
   }

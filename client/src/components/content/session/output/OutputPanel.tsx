@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
-import { useEventListener, usePostRenderEffect } from 'src/toolbox/hooks'
-import './OutputPanel.scss'
 import { compute } from 'src/toolbox'
+import { useEventListener, usePostRenderEffect } from 'src/toolbox/hooks'
 import { Output } from '.'
+import './OutputPanel.scss'
 
 /* -- CONSTANTS -- */
 
@@ -26,9 +26,7 @@ export default function OutputPanel({
 }: TOutputPanel_P): JSX.Element {
   /* -- STATE -- */
 
-  const [outputs, setOutputs] = useState<ClientMissionForce['outputs']>(
-    force.outputs,
-  )
+  const [outputs, setOutputs] = useState<ClientMissionForce['outputs']>([])
   const outputsElm = useRef<HTMLDivElement>(null)
   const smoothScrollInProgress = useRef<boolean>(false)
   const smoothScrollTimeout = useRef<
@@ -129,23 +127,21 @@ export default function OutputPanel({
 
   return (
     <div className='OutputPanel'>
-      <div className='BorderBox'>
-        <div className='Outputs' ref={outputsElm}>
-          {outputs.map((output) => {
-            return (
-              <Output
-                output={output}
-                selectNode={selectNode}
-                key={`output-${output._id}_time-${output.time}`}
-              />
-            )
-          })}
-        </div>
-        <div className='OutputNavigation'>
-          <div className={viewNewOutputsClass} onClick={onViewNewOutputs}>
-            <div className='Text'>New outputs</div>
-            <div className='Icon'></div>{' '}
-          </div>
+      <div className='Outputs' ref={outputsElm}>
+        {outputs.map((output) => {
+          return (
+            <Output
+              output={output}
+              selectNode={selectNode}
+              key={`output-${output._id}_time-${output.time}`}
+            />
+          )
+        })}
+      </div>
+      <div className='OutputNavigation'>
+        <div className={viewNewOutputsClass} onClick={onViewNewOutputs}>
+          <div className='Text'>New outputs</div>
+          <div className='Icon'></div>{' '}
         </div>
       </div>
     </div>

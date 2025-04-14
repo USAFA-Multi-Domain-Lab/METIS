@@ -5,9 +5,9 @@ import { useGlobalContext } from 'src/context'
 import { compute } from 'src/toolbox'
 import { useRequireLogin } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
-import List, { TGetListButtonTooltip } from '../List'
+import List, { TGetListButtonLabel } from '../List'
 import {
-  TGetItemButtonTooltip,
+  TGetItemButtonLabel,
   TOnItemButtonClick,
   TOnItemSelection,
 } from '../pages/ListItem'
@@ -140,7 +140,7 @@ export default function UserList({
   /**
    * Gets the tooltip description for a user list button.
    */
-  const getUserListButtonTooltip: TGetListButtonTooltip = (button) => {
+  const getUserListButtonTooltip: TGetListButtonLabel = (button) => {
     switch (button) {
       case 'add':
         return 'New user'
@@ -152,7 +152,7 @@ export default function UserList({
   /**
    * Gets the tooltip description for a user item button.
    */
-  const getUserItemButtonTooltip: TGetItemButtonTooltip<ClientUser> = (
+  const getUserItemButtonTooltip: TGetItemButtonLabel<ClientUser> = (
     button,
     item,
   ) => {
@@ -229,8 +229,8 @@ export default function UserList({
       getCellText={getUserCellText}
       getColumnWidth={getUserColumnWidth}
       getItemTooltip={() => 'Open user'}
-      getListButtonTooltip={getUserListButtonTooltip}
-      getItemButtonTooltip={getUserItemButtonTooltip}
+      getListButtonLabel={getUserListButtonTooltip}
+      getItemButtonLabel={getUserItemButtonTooltip}
       onListButtonClick={onUserListButtonClick}
       onItemButtonClick={onUserItemButtonClick}
     />

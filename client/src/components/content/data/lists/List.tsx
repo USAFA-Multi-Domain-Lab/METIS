@@ -8,7 +8,7 @@ import './List.scss'
 import ListResizeHandler from './ListResizeHandler'
 import ListNav from './navs/ListNav'
 import {
-  TGetItemButtonTooltip,
+  TGetItemButtonLabel,
   TGetItemTooltip,
   TListItem,
   TOnItemButtonClick,
@@ -67,8 +67,8 @@ export function createDefaultListProps<
     getCellText: (item, column) => (item[column] as any).toString(),
     getItemTooltip: () => '',
     getDisabledItemTooltip: () => '',
-    getListButtonTooltip: () => '',
-    getItemButtonTooltip: () => '',
+    getListButtonLabel: () => '',
+    getItemButtonLabel: () => '',
     getColumnWidth: () => '10em',
     isDisabled: () => false,
     onListButtonClick: () => {},
@@ -245,22 +245,22 @@ export type TList_P<TItem extends TListItem> = {
    */
   getCellText?: (item: TItem, column: TListColumnType<TItem>) => string
   /**
-   * Gets the tooltip description for a list button.
-   * @param button The button for which to get the tooltip.
-   * @returns The tooltip description.
+   * Gets the label for a list button.
+   * @param button The button for which to get the label.
+   * @returns The label.
    * @default () => ''
    */
-  getListButtonTooltip?: TGetListButtonTooltip
+  getListButtonLabel?: TGetListButtonLabel
   /**
-   * Gets the tooltip description for the item's button.
-   * @param button The button for which to get the tooltip.
-   * @param item The item for which to get the tooltip.
+   * Gets the label for the item's button.
+   * @param button The button for which to get the label.
+   * @param item The item for which to get the label.
    * @default () => ''
    */
-  getItemButtonTooltip?: TGetItemButtonTooltip<TItem>
+  getItemButtonLabel?: TGetItemButtonLabel<TItem>
   /**
    * Gets the tooltip description for a disabled item.
-   * @param item The item for which to get the tooltip.
+   * @param item The item for which to get the tooltip description.
    * @returns The tooltip description.
    * @default () => ''
    */
@@ -337,12 +337,12 @@ export type TListContextData<TItem extends TListItem> = {
   }
 
 /**
- * Gets the tooltip description for a list button.
- * @param button The button for which to get the tooltip.
- * @returns The tooltip description.
+ * Gets the label for a list button.
+ * @param button The button for which to get the label.
+ * @returns The label.
  * @default () => ''
  */
-export type TGetListButtonTooltip = (button: TButtonSvgType) => string
+export type TGetListButtonLabel = (button: TButtonSvgType) => string
 
 /**
  * A column type for the list.

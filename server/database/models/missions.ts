@@ -983,13 +983,30 @@ export const MissionSchema = new Schema<
       ],
       required: true,
     },
-    files: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'FileReference',
-        required: true,
-      },
-    ],
+    files: {
+      type: [
+        {
+          _id: { type: String, required: true },
+          reference: {
+            type: Schema.Types.ObjectId,
+            ref: 'FileReference',
+            required: true,
+          },
+          alias: {
+            type: String,
+            required: true,
+            maxLength: Mission.MAX_NAME_LENGTH,
+          },
+          // todo: Determine what initial access looks like
+          // todo: force-to-force.
+          initialAccess: {
+            type: Boolean,
+            required: true,
+            default: true,
+          },
+        },
+      ],
+    },
   },
   {
     strict: 'throw',

@@ -17,8 +17,12 @@ export default function ListButtons<
   const globalContext = useGlobalContext()
   const listContext = useListContext<TItem>()
   const { showButtonMenu } = globalContext.actions
-  const { list, listButtons, getListButtonTooltip, onListButtonClick } =
-    listContext
+  const {
+    list,
+    listButtons,
+    getListButtonLabel: getListButtonTooltip,
+    onListButtonClick,
+  } = listContext
 
   /* -- FUNCTIONS -- */
 

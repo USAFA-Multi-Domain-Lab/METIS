@@ -1,17 +1,17 @@
 import { TButtonSvgType } from 'src/components/content/user-controls/buttons/ButtonSvg'
-import ClientFileReference from 'src/files/references'
+import ClientMissionFile from 'src/missions/files'
 import { compute } from 'src/toolbox'
 import { useDefaultProps } from 'src/toolbox/hooks'
 import FileToolbox from '../../../../../../../shared/toolbox/files'
 import List, { createDefaultListProps, TList_P } from '../List'
 
 /**
- * A component for displaying a list of file references.
+ * A component for displaying a list of mission files.
  * @note Uses the `List` component.
  */
-export default function (props: TFileReferenceList_P): JSX.Element | null {
+export default function (props: TMissionFileList_P): JSX.Element | null {
   const defaultedProps = useDefaultProps(props, {
-    ...createDefaultListProps<ClientFileReference>(),
+    ...createDefaultListProps<ClientMissionFile>(),
     itemsPerPageMin: 10,
     columns: ['mimetype', 'size'],
     listButtons: compute<TButtonSvgType[]>(() => {
@@ -49,8 +49,8 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
     }),
     initialSorting: { column: 'name', method: 'ascending' },
     getCellText: (
-      file: ClientFileReference,
-      column: keyof ClientFileReference,
+      file: ClientMissionFile,
+      column: keyof ClientMissionFile,
     ): string => {
       switch (column) {
         case 'mimetype':
@@ -80,7 +80,7 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
           return ''
       }
     },
-    getColumnWidth: (column: keyof ClientFileReference): string => {
+    getColumnWidth: (column: keyof ClientMissionFile): string => {
       switch (column) {
         default:
           return '10em'
@@ -109,10 +109,10 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
   })
 
   // Render the list of files.
-  return <List<ClientFileReference> {...defaultedProps} />
+  return <List<ClientMissionFile> {...defaultedProps} />
 }
 
 /**
  * Props for `FileList`.
  */
-export interface TFileReferenceList_P extends TList_P<ClientFileReference> {}
+export interface TMissionFileList_P extends TList_P<ClientMissionFile> {}

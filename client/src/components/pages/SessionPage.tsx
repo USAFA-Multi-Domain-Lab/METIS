@@ -13,19 +13,18 @@ import {
 import { DefaultLayout, TPage_P } from '.'
 import { TWithKey } from '../../../../shared/toolbox/objects'
 import Prompt from '../content/communication/Prompt'
-import {
-  EPanelSizingMode,
-  PanelSizeRelationship,
-  ResizablePanel,
-} from '../content/general-layout/panels/ResizablePanels'
+import MissionFileList from '../content/data/lists/implementations/MissionFileList'
+import Panel from '../content/general-layout/panels/Panel'
+import PanelLayout from '../content/general-layout/panels/PanelLayout'
+import PanelView from '../content/general-layout/panels/PanelView'
 import SessionMembersPanel from '../content/session/members/SessionMembersPanel'
 import MissionMap from '../content/session/mission-map'
 import ActionExecModal from '../content/session/mission-map/ui/overlay/modals/action-execution/ActionExecModal'
 import { TTabBarTab } from '../content/session/mission-map/ui/tabs/TabBar'
 import { OutputPanel } from '../content/session/output/'
 import StatusBar from '../content/session/StatusBar'
-import { TValidPanelButton } from '../content/user-controls/buttons/ButtonSvgPanel'
 import { TButtonText_P } from '../content/user-controls/buttons/ButtonText'
+import If from '../content/util/If'
 import './SessionPage.scss'
 
 /**
@@ -52,8 +51,6 @@ export default function SessionPage({
   const [selectedForce, selectForce] = useState<ClientMissionForce | null>(null)
   const [resourcesRemaining, setResourcesRemaining] = useState<number>(0)
   const {} = useRequireLogin()
-  const [rightPanelTab, setRightPanelTab] =
-    useState<TSessionRightPanelTab>('output')
 
   /* -- VARIABLES -- */
 
@@ -346,44 +343,6 @@ export default function SessionPage({
   })
 
   /**
-   * Custom buttons for the mission map.
-   */
-  const customButtons = compute((): TValidPanelButton[] => {
-    let buttons: TValidPanelButton[] = []
-
-    // If the right panel tab is the output panel,
-    // push the button to change it to the users panel.
-    if (rightPanelTab === 'output') {
-      buttons.push({
-        key: 'users',
-        type: 'user',
-        description: 'Open users panel.',
-        onClick: () => {
-          setRightPanelTab('users')
-        },
-      })
-    }
-    // If the right panel tab is the users panel,
-    // push the button to change it to the output panel.
-    else if (rightPanelTab === 'users') {
-      buttons.push({
-        key: 'output',
-        type: 'shell',
-        description: selectedForce
-          ? 'Open output panel.'
-          : 'Cannot open the output panel at this time. Please contact your system administrator.',
-        disabled: selectedForce === undefined ? 'partial' : 'none',
-        onClick: () => {
-          if (selectedForce) setRightPanelTab('output')
-        },
-      })
-    }
-
-    // Return the buttons.
-    return buttons
-  })
-
-  /**
    * Tabs for the mission map's tab bar.
    */
   const mapTabs: TTabBarTab[] = compute(() => {
@@ -402,7 +361,6 @@ export default function SessionPage({
 
   // Verify navigation on mount and on session state change.
   useMountHandler((done) => {
-    if (selectedForce === undefined) setRightPanelTab('users')
     finishLoading()
     verifyNavigation.current()
     done()
@@ -514,69 +472,78 @@ export default function SessionPage({
     <div className={rootClass}>
       <DefaultLayout navigation={navigation} includeFooter={false}>
         {topBarJsx}
-        <PanelSizeRelationship
-          sizingMode={EPanelSizingMode.Panel1_Auto__Panel2_Defined}
-          initialDefinedSize={panel2DefaultSize}
-          panel1={{
-            ...ResizablePanel.defaultProps,
-            minSize: 400,
-            render: () => (
+        <PanelLayout initialSizes={['fill', 400]}>
+          <Panel>
+            <PanelView title='Map'>
               <MissionMap
                 mission={mission}
                 overlayContent={overlayContentJsx}
-                customButtons={customButtons}
                 tabs={mapTabs}
                 showMasterTab={false}
                 onNodeSelect={onNodeSelect}
                 selectedForce={[selectedForce, selectForce]}
               />
-            ),
-          }}
-          panel2={{
-            ...ResizablePanel.defaultProps,
-            minSize: 400,
-            isOpen: true,
-            render: () => {
-              switch (rightPanelTab) {
-                case 'output':
-                  return selectedForce ? (
-                    <OutputPanel
-                      force={selectedForce}
-                      selectNode={(node: ClientMissionNode | null) => {
-                        // todo: Implement panning to the node on the mission map.
-                        // if (node === null) {
-                        //   notify(
-                        //     'This node cannot be accessed from the current force.',
-                        //   )
-                        //   return
-                        // } else if (node.executing) {
-                        //   notify(
-                        //     `The node "${node.name}" is currently executing and cannot be located at this time.`,
-                        //   )
-                        //   return
-                        // } else if (node.blocked) {
-                        //   notify(
-                        //     `The node "${node.name}" is blocked and cannot be accessed at this time.`,
-                        //   )
-                        //   return
-                        // }
-                        // setNodeToExecute(node)
-                      }}
-                    />
-                  ) : null
-                case 'users':
-                  return (
-                    <SessionMembersPanel
-                      session={session}
-                      key={'users-panel'}
-                    />
-                  )
-                default:
-                  return null
-              }
-            },
-          }}
-        />
+            </PanelView>
+          </Panel>
+          <Panel>
+            <PanelView title='Output'>
+              <If condition={!!selectedForce}>
+                <OutputPanel
+                  force={selectedForce!}
+                  selectNode={(node) => {
+                    // todo: Implement panning to the node on the mission map.
+                    // if (node === null) {
+                    //   notify(
+                    //     'This node cannot be accessed from the current force.',
+                    //   )
+                    //   return
+                    // } else if (node.executing) {
+                    //   notify(
+                    //     `The node "${node.name}" is currently executing and cannot be located at this time.`,
+                    //   )
+                    //   return
+                    // } else if (node.blocked) {
+                    //   notify(
+                    //     `The node "${node.name}" is blocked and cannot be accessed at this time.`,
+                    //   )
+                    //   return
+                    // }
+                    // setNodeToExecute(node)
+                  }}
+                />
+              </If>
+            </PanelView>
+            <PanelView title='Files'>
+              <MissionFileList
+                name={'Files'}
+                items={mission.files}
+                itemsPerPageMin={4}
+                columns={[]}
+                itemButtons={['download']}
+                getItemButtonLabel={(button) => {
+                  switch (button) {
+                    case 'download':
+                      return 'Download'
+                    default:
+                      return ''
+                  }
+                }}
+                onItemButtonClick={(button, item) => {
+                  switch (button) {
+                    case 'download':
+                      item.download()
+                      break
+                    default:
+                      break
+                  }
+                }}
+              />
+            </PanelView>
+            <PanelView title='Members'>
+              <SessionMembersPanel session={session} key={'members-panel'} />
+            </PanelView>
+          </Panel>
+        </PanelLayout>
       </DefaultLayout>
     </div>
   )

@@ -4,6 +4,7 @@ import MissionAction from './missions/actions'
 import ActionExecution from './missions/actions/executions'
 import ExecutionOutcome from './missions/actions/outcomes'
 import Effect from './missions/effects'
+import MissionFile from './missions/files'
 import { MissionForce } from './missions/forces'
 import MissionOutput from './missions/forces/output'
 import MissionNode from './missions/nodes'
@@ -40,16 +41,17 @@ export type TMetisBaseComponents = {
   user: User
   targetEnv: TargetEnvironment
   target: Target
+  fileReference: FileReference
   mission: Mission
+  prototype: MissionPrototype
+  missionFile: MissionFile
   force: MissionForce
   output: MissionOutput
-  prototype: MissionPrototype
   node: MissionNode
   action: MissionAction
   execution: ActionExecution
   outcome: ExecutionOutcome
   effect: Effect
-  fileReference: FileReference
 }
 
 /**

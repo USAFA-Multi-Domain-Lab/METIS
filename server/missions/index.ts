@@ -1,14 +1,14 @@
-import { TFileReferenceJson } from 'metis/files/references'
 import Mission, { TMissionJson, TMissionSaveJson } from 'metis/missions'
+import { TMissionFileJson } from 'metis/missions/files'
 import { TMissionForceSaveJson } from 'metis/missions/forces'
 import {
   TMissionPrototypeJson,
   TMissionPrototypeOptions,
 } from 'metis/missions/nodes/prototypes'
 import seedrandom, { PRNG } from 'seedrandom'
-import ServerFileReference from '../files/references'
 import { TMetisServerComponents } from '../index'
 import { TTargetEnvExposedMission } from '../target-environments/context'
+import ServerMissionFile from './files'
 import ServerMissionForce from './forces'
 import ServerMissionPrototype from './nodes/prototypes'
 
@@ -90,9 +90,9 @@ export default class ServerMission extends Mission<TMetisServerComponents> {
   }
 
   // Implemented
-  protected importFiles(data: TFileReferenceJson[]): void {
-    let files: ServerFileReference[] = data.map((datum) =>
-      ServerFileReference.fromJson(datum),
+  protected importFiles(data: TMissionFileJson[]): void {
+    let files: ServerMissionFile[] = data.map((datum) =>
+      ServerMissionFile.fromJson(datum, this),
     )
     this.files.push(...files)
   }

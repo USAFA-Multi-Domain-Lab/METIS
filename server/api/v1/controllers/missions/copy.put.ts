@@ -32,6 +32,7 @@ const copyMission = async (request: Request, response: Response) => {
       structure: originalMissionDoc.structure,
       forces: originalMissionDoc.forces,
       prototypes: originalMissionDoc.prototypes,
+      files: originalMissionDoc.files,
     })
     // Extract the necessary data from the copy.
     let { _id, name, versionNumber, seed } = copiedMissionDoc

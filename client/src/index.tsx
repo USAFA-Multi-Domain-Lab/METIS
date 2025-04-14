@@ -11,6 +11,7 @@ import ClientMissionAction from './missions/actions'
 import ClientActionExecution from './missions/actions/executions'
 import ClientExecutionOutcome from './missions/actions/outcomes'
 import { ClientEffect } from './missions/effects'
+import ClientMissionFile from './missions/files'
 import ClientMissionForce from './missions/forces'
 import ClientOutput from './missions/forces/outputs'
 import ClientMissionNode from './missions/nodes'
@@ -62,14 +63,15 @@ export interface TMetisClientComponents extends TMetisBaseComponents {
   user: ClientUser
   targetEnv: ClientTargetEnvironment
   target: ClientTarget
+  fileReference: ClientFileReference
   mission: ClientMission
+  prototype: ClientMissionPrototype
+  missionFile: ClientMissionFile
   force: ClientMissionForce
   output: ClientOutput
-  prototype: ClientMissionPrototype
   node: ClientMissionNode
   action: ClientMissionAction
   execution: ClientActionExecution
   outcome: ClientExecutionOutcome
   effect: ClientEffect
-  fileReference: ClientFileReference
 }

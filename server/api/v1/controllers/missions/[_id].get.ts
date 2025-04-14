@@ -17,7 +17,7 @@ const getMission = async (request: Request, response: Response) => {
   try {
     // Retrieve the mission.
     let missionDoc = await MissionModel.findById(missionId)
-      .populate('files')
+      .populate('files.reference')
       .exec()
     // If the mission is not found, throw an error.
     if (missionDoc === null) {

@@ -86,4 +86,18 @@ export default class StringToolbox {
       })
       .join(' ')
   }
+
+  /**
+   * Joins multiple path segments into a single path.
+   * @param segments The path segments to join.
+   * @returns The joined path.
+   * @note This function behaves like `path.join` in Node.js, but is
+   * implemented in a way that works in the browser.
+   */
+  public static joinPaths(...segments: string[]): string {
+    return segments
+      .map((segment) => segment.replace(/^\/+|\/+$/g, '')) // Remove leading/trailing slashes
+      .filter(Boolean) // Remove empty segments
+      .join('/')
+  }
 }

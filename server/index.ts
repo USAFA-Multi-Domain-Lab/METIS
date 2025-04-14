@@ -19,6 +19,7 @@ import ServerMissionAction from './missions/actions'
 import ServerActionExecution from './missions/actions/executions'
 import ServerExecutionOutcome from './missions/actions/outcomes'
 import ServerEffect from './missions/effects'
+import ServerMissionFile from './missions/files'
 import ServerMissionForce from './missions/forces'
 import ServerOutput from './missions/forces/output'
 import ServerMissionNode from './missions/nodes'
@@ -555,16 +556,17 @@ export interface TMetisServerComponents extends TMetisBaseComponents {
   user: ServerUser
   targetEnv: ServerTargetEnvironment
   target: ServerTarget
+  fileReference: ServerFileReference
   mission: ServerMission
+  prototype: ServerMissionPrototype
+  missionFile: ServerMissionFile
   force: ServerMissionForce
   output: ServerOutput
-  prototype: ServerMissionPrototype
   node: ServerMissionNode
   action: ServerMissionAction
   execution: ServerActionExecution
   outcome: ServerExecutionOutcome
   effect: ServerEffect
-  fileReference: ServerFileReference
 }
 
 /**

@@ -19,6 +19,10 @@ import FileReferenceList from '../content/data/lists/implementations/FileReferen
 import MissionList from '../content/data/lists/implementations/MissionList'
 import SessionList from '../content/data/lists/implementations/SessionList'
 import UserList from '../content/data/lists/implementations/UserList'
+import {
+  TGetItemButtonLabel,
+  TOnItemButtonClick,
+} from '../content/data/lists/pages/ListItem'
 import { LogoutLink } from '../content/general-layout/Navigation'
 import './HomePage.scss'
 
@@ -413,6 +417,39 @@ export default function HomePage(): JSX.Element | null {
     setUsers(users.filter(({ _id }) => _id !== user._id))
   }
 
+  /**
+   * Callback for when a file item button is clicked.
+   * @param button The button that was clicked.
+   * @param item The file reference that was clicked.
+   */
+  const onFileItemButtonClick: TOnItemButtonClick<ClientFileReference> = (
+    button,
+    item,
+  ) => {
+    switch (button) {
+      case 'download':
+        item.download()
+        break
+      default:
+        break
+    }
+  }
+
+  /**
+   * @param button The button to label.
+   * @returns The label for a file-reference item button.
+   */
+  const getFileItemButtonLabel: TGetItemButtonLabel<ClientFileReference> = (
+    button,
+  ) => {
+    switch (button) {
+      case 'download':
+        return 'Download'
+      default:
+        return ''
+    }
+  }
+
   /* -- RENDER -- */
 
   // If the page has not yet mounted, there
@@ -481,7 +518,14 @@ export default function HomePage(): JSX.Element | null {
     // todo: Add proper authorization logic.
     if (true) {
       results.push(
-        <FileReferenceList key={'files-list'} name={'Files'} items={files} />,
+        <FileReferenceList
+          key={'files-list'}
+          name={'Files'}
+          items={files}
+          itemButtons={['download']}
+          getItemButtonLabel={getFileItemButtonLabel}
+          onItemButtonClick={onFileItemButtonClick}
+        />,
       )
     }
 

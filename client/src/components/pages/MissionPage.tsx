@@ -5,6 +5,7 @@ import ClientFileReference from 'src/files/references'
 import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
+import ClientMissionFile from 'src/missions/files'
 import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
 import ClientMissionPrototype, {
@@ -25,6 +26,7 @@ import { TNonEmptyArray } from '../../../../shared/toolbox/arrays'
 import { TSingleTypeMapped, TWithKey } from '../../../../shared/toolbox/objects'
 import Prompt from '../content/communication/Prompt'
 import FileReferenceList from '../content/data/lists/implementations/FileReferenceList'
+import MissionFileList from '../content/data/lists/implementations/MissionFileList'
 import ActionEntry from '../content/edit-mission/entries/implementations/ActionEntry'
 import EffectEntry from '../content/edit-mission/entries/implementations/EffectEntry'
 import ForceEntry from '../content/edit-mission/entries/implementations/ForceEntry'
@@ -1059,7 +1061,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
               </PanelView>
               <PanelView title='Files'>
                 <div className='InMission'>
-                  <FileReferenceList
+                  <MissionFileList
                     name={'In Mission'}
                     items={mission.files}
                     itemsPerPageMin={4}
@@ -1071,15 +1073,24 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
                     items={globalFiles}
                     itemButtons={['link']}
                     itemsPerPageMin={4}
-                    isDisabled={(file) => mission.files.includes(file)}
-                    getItemButtonTooltip={(button, file) => {
+                    isDisabled={(file) =>
+                      mission.files.some(
+                        ({ referenceId }) => referenceId === file._id,
+                      )
+                    }
+                    getItemButtonLabel={(button, reference) => {
                       if (button === 'link') return 'Attach to mission'
                       else return ''
                     }}
-                    onItemButtonClick={(button, file) => {
+                    onItemButtonClick={(button, reference) => {
                       if (button !== 'link') return
+
+                      let file = ClientMissionFile.fromFileReference(
+                        reference,
+                        mission,
+                      )
                       mission.files.push(file)
-                      forceUpdate()
+                      onChange(file)
                     }}
                   />
                 </div>

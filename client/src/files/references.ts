@@ -2,11 +2,27 @@ import axios, { AxiosResponse } from 'axios'
 import FileReference, {
   TFileReferenceJson,
 } from '../../../shared/files/references'
+import StringToolbox from '../../../shared/toolbox/strings'
 
 /**
  * Client implementation of `FileReference` class.
  */
 export default class ClientFileReference extends FileReference {
+  /**
+   * Downloads the file from the server by opening up
+   * a new tab with the file's URI.
+   */
+  public download(): void {
+    window.open(
+      StringToolbox.joinPaths(
+        ClientFileReference.API_ENDPOINT,
+        this._id,
+        'download',
+      ),
+      '_blank',
+    )
+  }
+
   /**
    * The API endpoint for managing files.
    */

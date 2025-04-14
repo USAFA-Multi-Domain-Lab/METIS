@@ -1,4 +1,3 @@
-import { TFileReferenceJson } from 'metis/files/references'
 import User from 'metis/users'
 import { v4 as generateHash } from 'uuid'
 import { TCreateJsonType, TMetisBaseComponents, TMetisComponent } from '..'
@@ -8,6 +7,7 @@ import { AnyObject } from '../toolbox/objects'
 import { TAction } from './actions'
 import { TExecution } from './actions/executions'
 import { TEffect } from './effects'
+import { TMissionFileJson } from './files'
 import {
   MissionForce,
   TForce,
@@ -177,7 +177,7 @@ export default abstract class Mission<
    * Files attached to the mission that will be used
    * during gameplay.
    */
-  public files: T['fileReference'][]
+  public files: T['missionFile'][]
 
   /**
    * The root prototype of the mission.
@@ -413,7 +413,7 @@ export default abstract class Mission<
    * Imports the file data into the mission.
    * @param data The file data to parse.
    */
-  protected abstract importFiles(data: TFileReferenceJson[]): void
+  protected abstract importFiles(data: TMissionFileJson[]): void
 
   /**
    * @param prototypeId The ID of the prototype to get.
@@ -467,6 +467,13 @@ export default abstract class Mission<
    * The maximum length allowed for a mission's name.
    */
   public static readonly MAX_NAME_LENGTH: number = 175
+
+  /**
+   * The maximum length allowed for an alias in a file mission.
+   * todo: Add this to a MissionFile class when and if it is
+   * todo: created.
+   */
+  public static readonly MAX_FILE_ALIAS_LENGTH: number = 175
 
   /**
    * The maximum length allowed for a mission resource
@@ -705,7 +712,14 @@ export default abstract class Mission<
  */
 export type TBaseMissionComponents = Pick<
   TMetisBaseComponents,
-  'mission' | 'force' | 'output' | 'prototype' | 'node' | 'action' | 'effect'
+  | 'mission'
+  | 'prototype'
+  | 'missionFile'
+  | 'force'
+  | 'output'
+  | 'node'
+  | 'action'
+  | 'effect'
 >
 
 /**
@@ -730,7 +744,7 @@ export type TMissionJson = TCreateJsonType<
     forces: TMissionForceJson[]
     prototypes: TMissionPrototypeJson[]
     structure: AnyObject
-    files: TFileReferenceJson[]
+    files: TMissionFileJson[]
   }
 >
 
@@ -738,9 +752,8 @@ export type TMissionJson = TCreateJsonType<
  * Session-agnostic JSON representation of a Mission object
  * which can be saved to a database.
  */
-export type TMissionSaveJson = Omit<TMissionJson, 'forces' | 'files'> & {
+export type TMissionSaveJson = Omit<TMissionJson, 'forces'> & {
   forces: TMissionForceSaveJson[]
-  files: TFileReferenceJson[]
 }
 
 export type TMissionJsonOptions = {
@@ -821,7 +834,7 @@ export interface TMissionComponent<
   get defective(): boolean
   /**
    * Provides additional context for why the component
-   * is defective, assuming `isDefective` is true.
+   * is defective, assuming `defective` is true.
    */
   get defectiveMessage(): string
 }
