@@ -19,10 +19,6 @@ import FileReferenceList from '../content/data/lists/implementations/FileReferen
 import MissionList from '../content/data/lists/implementations/MissionList'
 import SessionList from '../content/data/lists/implementations/SessionList'
 import UserList from '../content/data/lists/implementations/UserList'
-import {
-  TGetItemButtonLabel,
-  TOnItemButtonClick,
-} from '../content/data/lists/pages/ListItem'
 import { LogoutLink } from '../content/general-layout/Navigation'
 import './HomePage.scss'
 
@@ -53,7 +49,9 @@ export default function HomePage(): JSX.Element | null {
   const [sessions, setSessions] = useState<SessionBasic[]>([])
   const [missions, setMissions] = useState<ClientMission[]>([])
   const [users, setUsers] = useState<ClientUser[]>([])
-  const [files, setFiles] = useState<ClientFileReference[]>([])
+  const [fileReferences, setFileReferences] = useState<ClientFileReference[]>(
+    [],
+  )
 
   /* -- LOGIN-SPECIFIC LOGIC -- */
 
@@ -195,7 +193,7 @@ export default function HomePage(): JSX.Element | null {
         beginLoading('Retrieving files...')
         // Fetch files from API and store
         // them in the state.
-        setFiles(await ClientFileReference.$fetchAll())
+        setFileReferences(await ClientFileReference.$fetchAll())
         // Finish loading and resolve.
         finishLoading()
         resolve()
@@ -418,36 +416,13 @@ export default function HomePage(): JSX.Element | null {
   }
 
   /**
-   * Callback for when a file item button is clicked.
-   * @param button The button that was clicked.
-   * @param item The file reference that was clicked.
+   * Callback for when a file reference is successfully
+   * deleted.
+   * @param reference The reference that was deleted.
    */
-  const onFileItemButtonClick: TOnItemButtonClick<ClientFileReference> = (
-    button,
-    item,
-  ) => {
-    switch (button) {
-      case 'download':
-        item.download()
-        break
-      default:
-        break
-    }
-  }
-
-  /**
-   * @param button The button to label.
-   * @returns The label for a file-reference item button.
-   */
-  const getFileItemButtonLabel: TGetItemButtonLabel<ClientFileReference> = (
-    button,
-  ) => {
-    switch (button) {
-      case 'download':
-        return 'Download'
-      default:
-        return ''
-    }
+  const onFileReferenceDeletion = (reference: ClientFileReference) => {
+    // Remove user from state.
+    setFileReferences(fileReferences.filter(({ _id }) => _id !== reference._id))
   }
 
   /* -- RENDER -- */
@@ -521,10 +496,8 @@ export default function HomePage(): JSX.Element | null {
         <FileReferenceList
           key={'files-list'}
           name={'Files'}
-          items={files}
-          itemButtons={['download']}
-          getItemButtonLabel={getFileItemButtonLabel}
-          onItemButtonClick={onFileItemButtonClick}
+          items={fileReferences}
+          onSuccessfulDeletion={onFileReferenceDeletion}
         />,
       )
     }

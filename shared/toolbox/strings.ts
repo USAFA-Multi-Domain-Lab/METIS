@@ -96,7 +96,20 @@ export default class StringToolbox {
    */
   public static joinPaths(...segments: string[]): string {
     return segments
-      .map((segment) => segment.replace(/^\/+|\/+$/g, '')) // Remove leading/trailing slashes
+      .map((segment, index) => {
+        // Remove trailing slash from the first segment.
+        if (index === 0) {
+          return segment.replace(/\/+$/g, '')
+        }
+        // Remove leading slashes from the last segment.
+        else if (index === segments.length - 1) {
+          return segment.replace(/^\/+/g, '')
+        }
+        // Else, remove leading/trailing slashes.
+        else {
+          return segment.replace(/^\/+|\/+$/g, '')
+        }
+      })
       .filter(Boolean) // Remove empty segments
       .join('/')
   }

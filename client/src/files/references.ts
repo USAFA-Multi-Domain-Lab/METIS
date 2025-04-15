@@ -29,6 +29,19 @@ export default class ClientFileReference extends FileReference {
   public static readonly API_ENDPOINT: string = '/api/v1/files'
 
   /**
+   * @param json The JSON object to convert.
+   * @returns A new `ClientFileReference` object from the JSON.
+   */
+  public static fromJson(json: TFileReferenceJson): ClientFileReference {
+    return new ClientFileReference(
+      json._id,
+      json.name,
+      json.path,
+      json.mimetype,
+      json.size,
+    )
+  }
+  /**
    * Calls the API to fetch one file reference by ID.
    * @param _id The ID of the reference to fetch.
    * @resolves The file reference that was fetched.
@@ -118,16 +131,21 @@ export default class ClientFileReference extends FileReference {
   }
 
   /**
-   * @param json The JSON object to convert.
-   * @returns A new `ClientFileReference` object from the JSON.
+   * Deletes the reference with the given ID.
+   * @param _id The ID of the reference to delete.
+   * @resolves The reference was successfully deleted.
+   * @rejects The error that occurred during the deletion.
    */
-  public static fromJson(json: TFileReferenceJson): ClientFileReference {
-    return new ClientFileReference(
-      json._id,
-      json.name,
-      json.path,
-      json.mimetype,
-      json.size,
-    )
+  public static $delete(_id: ClientFileReference['_id']): Promise<void> {
+    return new Promise<void>(async (resolve, reject) => {
+      try {
+        await axios.delete(`${ClientFileReference.API_ENDPOINT}/${_id}/`)
+        resolve()
+      } catch (error) {
+        console.error('Failed to delete reference.')
+        console.error(error)
+        reject(error)
+      }
+    })
   }
 }
