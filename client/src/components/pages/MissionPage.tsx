@@ -1065,6 +1065,12 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
                     name={'In Mission'}
                     items={mission.files}
                     itemsPerPageMin={4}
+                    onDetachRequest={(file) => {
+                      mission.files = mission.files.filter(
+                        (f) => f._id !== file._id,
+                      )
+                      onChange(file)
+                    }}
                   />
                 </div>
                 <div className='InStore'>

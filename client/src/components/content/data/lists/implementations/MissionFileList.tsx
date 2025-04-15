@@ -29,21 +29,8 @@ export default function (props: TMissionFileList_P): JSX.Element | null {
     itemButtons: compute<TButtonSvgType[]>(() => {
       let results: TButtonSvgType[] = []
 
-      // Add the open button.
-      // results.push('open')
-
-      // todo: Uncomment and resolve this.
-      //     // If the user has the proper authorization, add
-      //     // the launch button.
-      //     if (login.user.isAuthorized('sessions_write_native')) {
-      //       results.push('launch')
-      //     }
-      //
-      //     // If the user has the proper authorization, add
-      //     // the edit, remove, copy, and download buttons.
-      //     if (login.user.isAuthorized('files_write')) {
-      //       results.push('download', 'copy', 'remove')
-      //     }
+      // todo: Add auth.
+      if (props.onDetachRequest) results.push('divider')
 
       return results
     }),
@@ -68,16 +55,12 @@ export default function (props: TMissionFileList_P): JSX.Element | null {
       }
     },
     getItemButtonLabel: (button, item) => {
-      // Call function in the props instead,
-      // if it exists, overriding the default
-      // behavior.
-      if (props.getItemButtonLabel) {
-        return props.getItemButtonLabel(button, item)
-      }
-
       switch (button) {
+        case 'divider':
+          return 'Detach'
         default:
-          return ''
+          console.warn('Unknown button label requested in file list.')
+          return button
       }
     },
     getColumnWidth: (column: keyof ClientMissionFile): string => {
@@ -94,18 +77,16 @@ export default function (props: TMissionFileList_P): JSX.Element | null {
       }
     },
     onItemButtonClick: (button, file) => {
-      // Call function in the props instead,
-      // if it exists, overriding the default
-      // behavior.
-      if (props.onItemButtonClick) {
-        return props.onItemButtonClick(button, file)
-      }
       switch (button) {
+        case 'divider':
+          props.onDetachRequest?.(file)
+          break
         default:
           console.warn('Unknown button clicked in file list.')
           break
       }
     },
+    onDetachRequest: () => {},
   })
 
   // Render the list of files.
@@ -115,4 +96,14 @@ export default function (props: TMissionFileList_P): JSX.Element | null {
 /**
  * Props for `FileList`.
  */
-export interface TMissionFileList_P extends TList_P<ClientMissionFile> {}
+export interface TMissionFileList_P extends TList_P<ClientMissionFile> {
+  /**
+   * Callback to the parent component, requesting to
+   * detach the given file from the mission.
+   * @param file The file to detach.
+   * @note If no callback is provided, this operation
+   * will not be available in the default item-button
+   * list.
+   */
+  onDetachRequest?: (file: ClientMissionFile) => void
+}
