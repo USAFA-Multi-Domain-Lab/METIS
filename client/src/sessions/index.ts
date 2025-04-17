@@ -1148,7 +1148,8 @@ export default class SessionClient extends Session<TMetisClientComponents> {
     const outcomeData: TExecutionOutcomeJson = event.data.outcome
     const { executionId } = outcomeData
     const execution = this.mission.getExecution(executionId)
-    if (!execution) throw new Error(`Execution "${executionId}" not be found.`)
+    if (!execution)
+      throw new Error(`Execution "${executionId}" could not be found.`)
     const { node } = execution
     const { prototype } = node
     const outcome = new ClientExecutionOutcome(

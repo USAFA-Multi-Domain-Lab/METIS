@@ -87,6 +87,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     )
     this._state = 'unstarted'
     this._destroyed = false
+    this.initializeMission()
     this.register()
     this.assignments = {}
   }
@@ -243,6 +244,34 @@ export default class SessionServer extends Session<TMetisServerComponents> {
    */
   private unregister(): void {
     SessionServer.registry.delete(this._id)
+  }
+
+  /**
+   * Handles any actions that are executing on a node.
+   */
+  private async handleExecutions(): Promise<void> {
+    return new Promise<void>(async (resolve) => {
+      let allExecutions: Promise<void>[] = []
+
+      this.mission.nodes.forEach((node) => {
+        if (node.executing) {
+          let execution = node.latestExecution!
+          execution.abort()
+
+          // Once the execution is aborted, push a promise
+          // to the array of all executions.
+          execution.addEventListener('aborted', () => {
+            allExecutions.push(new Promise((resolve) => resolve()))
+          })
+        }
+      })
+
+      // If there are no executions, resolve.
+      if (allExecutions.length === 0) resolve()
+      // Resolve all executions.
+      await Promise.all(allExecutions)
+      resolve()
+    })
   }
 
   /**
@@ -416,6 +445,17 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     this.members.forEach((member) => this.removeListeners(member))
     // Clear member list.
     this._members = []
+  }
+
+  /**
+   * Initializes the mission for the session.
+   */
+  private initializeMission(): void {
+    this.mission.forces.forEach((force) => {
+      // Generate the intro message output for every force.
+      force.sendIntroMessage()
+      force.handleExcludedNodes()
+    })
   }
 
   // todo: There should be a strict requirement with this method
@@ -746,11 +786,11 @@ export default class SessionServer extends Session<TMetisServerComponents> {
    * @param member The member requesting to reset the session.
    * @param event The event emitted by the member.
    */
-  public onRequestReset = (
+  public onRequestReset = async (
     member: ServerSessionMember,
     event: TClientEvents['request-reset-session'],
-  ): void => {
     // Build request for response data.
+  ): Promise<void> => {
     let request = member.connection.buildResponseReqData(event)
 
     // If the member does not have the correct permissions
@@ -774,12 +814,21 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       )
     }
 
+    // Handle any action executions that are executing.
+    await this.handleExecutions()
+
     // Mark the session as unstarted.
     this._state = 'started'
-    // Recreate the new mission from the JSON of
-    // the current mission.
-    this._mission = new ServerMission(this.mission.toJson())
-    // Remap actions.
+
+    // Retains the necessary mission data and resets
+    // all other data to their default values within
+    // the mission.
+    this._mission = new ServerMission(
+      this.mission.toJson({
+        sessionDataExposure: { expose: 'none' },
+      }),
+    )
+    this.initializeMission()
     this.mapActions()
 
     // Emit responses to all members.
@@ -1880,13 +1929,6 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     config: Partial<TSessionConfig> = {},
     owner: ServerUser,
   ): SessionServer {
-    mission.forces.forEach((force) => {
-      // Generate the intro message output for every force.
-      force.sendIntroMessage()
-      // Handle excluded nodes.
-      force.handleExcludedNodes()
-    })
-
     return new SessionServer(
       generateHash().substring(0, 8),
       config.name ?? mission.name,

@@ -365,6 +365,8 @@ export default class ClientMission
 
     // Handle structure change.
     this.handleStructureChange()
+    // Emit event.
+    this.emitEvent('session-reset', [])
   }
 
   // Implemented
@@ -1490,6 +1492,8 @@ type TDuplicateForceInfo = {
  * Triggered when nodes are opened and the mission map needs to auto-pan to them.
  * @option `set-node-exclusion`
  * - Triggered when a node's exclusion status is set.
+ * @option `session-reset`
+ * - Triggered when a session that uses this mission resets.
  */
 type TMissionEventMethods =
   | 'activity'
@@ -1500,6 +1504,7 @@ type TMissionEventMethods =
   | 'set-transformation'
   | 'autopan'
   | 'set-node-exclusion'
+  | 'session-reset'
 
 /**
  * The argument(s) used in the event handler for the mission's event manager.

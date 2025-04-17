@@ -59,31 +59,18 @@ export default class ServerMissionNode extends MissionNode<TMetisServerComponent
 
   // Implemented
   public updateBlockStatus(blocked: boolean): void {
-    this._blocked = blocked
-
-    // Abort execution, if executing.
-    if (this.executing) this.latestExecution!.abort()
-
-    // If the node is open and has children,
-    // update the block status for children.
-    if (this.opened && this.hasChildren) {
-      this.updateBlockStatusForChildren(blocked)
+    // Blocks this node and all of its revealed descendants.
+    const algorithm = (blocked: boolean, node: ServerMissionNode = this) => {
+      node._blocked = blocked
+      // Abort execution, if executing.
+      if (node.executing) node.latestExecution!.abort()
+      node.revealedDescendants.forEach((descendant) => {
+        algorithm(blocked, descendant)
+      })
     }
-  }
 
-  // Implemented
-  protected updateBlockStatusForChildren(
-    blocked: boolean,
-    node: ServerMissionNode = this,
-  ): void {
-    // Handle blocking of children.
-    node.children.forEach((child) => {
-      child.updateBlockStatus(blocked)
-
-      if (child.opened && child.hasChildren) {
-        child.updateBlockStatusForChildren(blocked, child)
-      }
-    })
+    // Set the block status.
+    algorithm(blocked)
   }
 
   // Implemented

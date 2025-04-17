@@ -168,7 +168,7 @@ export default abstract class MissionOutput<
    * The formatted time the output was sent.
    */
   public get timeStamp(): string {
-    return this.time.toLocaleString()
+    return MissionOutput.formatTime(this.time)
   }
 
   /**

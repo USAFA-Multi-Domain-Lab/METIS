@@ -501,7 +501,7 @@ export default abstract class MissionNode<
    * All descendants of the node that are revealed.
    * @note Relies on the `revealed` property of the node.
    */
-  get revealedDescendants(): TNode<T>[] {
+  public get revealedDescendants(): TNode<T>[] {
     return this.descendants.filter((descendant) => descendant.revealed)
   }
 
@@ -509,7 +509,7 @@ export default abstract class MissionNode<
    * All prototypes of the node that are revealed.
    * @note Relies on the `revealed` property of the node.
    */
-  get revealedDescendantPrototypes(): TPrototype<T>[] {
+  public get revealedDescendantPrototypes(): TPrototype<T>[] {
     return this.revealedDescendants.map((descendant) => descendant.prototype)
   }
 
@@ -576,16 +576,6 @@ export default abstract class MissionNode<
    * @param data The outcome data to import.
    */
   protected abstract importExecutions(data: TActionExecutionJson[]): void
-
-  /**
-   * Handles the blocking and unblocking of the node's children.
-   * @param blocked Whether or not the node is blocked.
-   * @param node The starting node.
-   */
-  protected abstract updateBlockStatusForChildren(
-    blocked: boolean,
-    node?: TNode<T>,
-  ): void
 
   /**
    * Converts the node to JSON.

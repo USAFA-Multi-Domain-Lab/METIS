@@ -440,17 +440,20 @@ export default function SessionPage({
   useEventListener(
     server,
     ['action-execution-initiated', 'modifier-enacted'],
-    () => {
-      syncResources()
-    },
+    () => syncResources(),
     [selectedForce],
   )
 
+  useEventListener(server, 'session-reset', () => {
+    beginLoading('Resetting session...')
+    navigateTo('SessionPage', { session }, { bypassMiddleware: true })
+    finishLoading()
+    notify('A manager has reset the session.')
+  })
+
   // Update the resources remaining state whenever the
   // force changes.
-  useEffect(() => {
-    syncResources()
-  }, [selectedForce])
+  useEffect(() => syncResources(), [selectedForce])
 
   /* -- PRE-RENDER PROCESSING -- */
 

@@ -94,8 +94,9 @@ export default class ServerMissionForce extends MissionForce<TMetisServerCompone
    * care of.
    */
   public handleExcludedNodes(): void {
-    this.nodes.forEach((node) => {
-      if (node.exclude) node.toGhost()
+    this.nodes = this.nodes.map((node) => {
+      if (node.exclude) return node.toGhost()
+      return node
     })
   }
 

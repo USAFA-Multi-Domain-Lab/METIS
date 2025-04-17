@@ -4,6 +4,7 @@ import { compute } from 'src/toolbox'
 import { TDetailWithInput_P } from '.'
 import Tooltip from '../communication/Tooltip'
 import RichText from '../general-layout/rich-text/RichText'
+import ButtonSvg from '../user-controls/buttons/ButtonSvg'
 import './DetailLargeString.scss'
 
 /**
@@ -229,13 +230,10 @@ export function DetailLargeString({
             i
             <Tooltip description={tooltipDescription} />
           </sup>
-          <a
-            href='/files/shortcuts.pdf'
-            target='_blank'
-            className='DetailInfo Link'
-          >
-            ?
-            <Tooltip
+          <a href='/files/shortcuts.pdf' target='_blank' className='Shortcuts'>
+            <ButtonSvg
+              type='file'
+              onClick={() => {}}
               description={`Click here to view the shortcuts for this editor.`}
             />
           </a>

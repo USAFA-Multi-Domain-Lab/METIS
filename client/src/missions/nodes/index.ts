@@ -368,7 +368,9 @@ export default class ClientMissionNode
    */
   public onOpen(revealedDescendants: TMissionNodeJson[] | undefined): void {
     if (revealedDescendants) {
-      if (!this.openable) throw new Error(`Node ${this._id} is not openable.`)
+      if (!this.openable && !this.executed) {
+        throw new Error(`Node ${this._id} is not openable.`)
+      }
       // Set the node to open.
       this._opened = true
       // Update last opened node cache.
@@ -405,32 +407,17 @@ export default class ClientMissionNode
 
   // Implemented
   public updateBlockStatus(blocked: boolean): void {
-    // Set blocked.
-    this._blocked = blocked
-
-    // If the node is open and has children,
-    // update the block status for children.
-    if (this.opened && this.hasChildren) {
-      this.updateBlockStatusForChildren(blocked)
+    // Blocks this node and all of its revealed descendants.
+    const algorithm = (blocked: boolean, node: ClientMissionNode = this) => {
+      node._blocked = blocked
+      node.emitEvent('set-blocked')
+      node.revealedDescendants.forEach((descendant) => {
+        algorithm(blocked, descendant)
+      })
     }
 
-    // Emit event.
-    this.emitEvent('set-blocked')
-  }
-
-  // Implemented
-  protected updateBlockStatusForChildren(
-    blocked: boolean,
-    node: ClientMissionNode = this,
-  ): void {
-    // Handle blocking of children.
-    node.children.forEach((child) => {
-      child.updateBlockStatus(blocked)
-
-      if (child.opened && child.hasChildren) {
-        child.updateBlockStatusForChildren(blocked, child)
-      }
-    })
+    // Set the block status.
+    algorithm(blocked)
   }
 
   // Implemented

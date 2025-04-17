@@ -39,4 +39,31 @@ export default class StringToolbox {
     // Replaces the first letter of each word with its uppercase version.
     return str.replace(/\b\w/g, (char) => char.toUpperCase())
   }
+
+  /**
+   * Joins multiple path segments into a single path.
+   * @param segments The path segments to join.
+   * @returns The joined path.
+   * @note This function behaves like `path.join` in Node.js, but is
+   * implemented in a way that works in the browser.
+   */
+  public static joinPaths(...segments: string[]): string {
+    return segments
+      .map((segment, index) => {
+        // Remove trailing slash from the first segment.
+        if (index === 0) {
+          return segment.replace(/\/+$/g, '')
+        }
+        // Remove leading slashes from the last segment.
+        else if (index === segments.length - 1) {
+          return segment.replace(/^\/+/g, '')
+        }
+        // Else, remove leading/trailing slashes.
+        else {
+          return segment.replace(/^\/+|\/+$/g, '')
+        }
+      })
+      .filter(Boolean) // Remove empty segments
+      .join('/')
+  }
 }

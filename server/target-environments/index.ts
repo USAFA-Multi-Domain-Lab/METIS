@@ -5,6 +5,7 @@ import TargetEnvironment from 'metis/target-environments'
 import TargetEnvRegistry from 'metis/target-environments/registry'
 import { TTargetJson } from 'metis/target-environments/targets'
 import FileToolbox from 'metis/toolbox/files'
+import StringToolbox from 'metis/toolbox/strings'
 import path from 'path'
 import { TMetisServerComponents } from '../index'
 import ServerTarget from './targets'
@@ -79,7 +80,9 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
     }
 
     // Scan subdirectories for additional targets.
-    let directoryContents: string[] = fs.readdirSync(directory)
+    let directoryContents: string[] = fs
+      .readdirSync(directory)
+      .map((subdir) => StringToolbox.joinPaths(directory, subdir))
 
     for (let subdirectory of directoryContents) {
       if (FileToolbox.isFolder(subdirectory)) {
@@ -143,7 +146,7 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
     // If the target environment has a target folder,
     // scan it for targets.
     // Scan the directory for targets.
-    this.scanTargetDirectory(directory, environment)
+    this.scanTargetDirectory(targetFolderPath, environment)
 
     // If no targets were found, log a warning message.
     if (!environment.targets.length) {
@@ -181,7 +184,9 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
 
     // Scan the contents of the directory for
     // target environments.
-    let directoryContents: string[] = fs.readdirSync(directory)
+    let directoryContents: string[] = fs
+      .readdirSync(directory)
+      .map((subdir) => StringToolbox.joinPaths(directory, subdir))
 
     for (let subdirectory of directoryContents) {
       if (FileToolbox.isFolder(subdirectory)) {

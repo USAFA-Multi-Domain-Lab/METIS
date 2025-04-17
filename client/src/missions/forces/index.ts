@@ -1,7 +1,11 @@
 import { TMetisClientComponents } from 'src'
 import { TLine_P } from 'src/components/content/session/mission-map/objects/Line'
 import ClientMission from '..'
-import { TListenerTargetEmittable } from '../../../../shared/events'
+import {
+  EventManager,
+  TListenerTargetEmittable,
+} from '../../../../shared/events'
+import { TMissionComponent } from '../../../../shared/missions'
 import {
   MissionForce,
   TMissionForceJson,
@@ -20,17 +24,12 @@ import ClientOutput from './outputs'
  */
 export default class ClientMissionForce
   extends MissionForce<TMetisClientComponents>
-  implements TListenerTargetEmittable<TForceEventMethod>
+  implements TListenerTargetEmittable<TForceEventMethods, TForceEventArgs>
 {
   /**
    * The lines used to connect nodes on the mission map.
    */
   public relationshipLines: TWithKey<TLine_P>[]
-
-  /**
-   * Listeners for force events.
-   */
-  private listeners: Array<[TForceEventMethod, () => void]> = []
 
   /**
    * All actions that exist in the force.
@@ -48,6 +47,11 @@ export default class ClientMissionForce
   }
 
   /**
+   * Manages the force's event listeners and events.
+   */
+  private eventManager: EventManager<TForceEventMethods, TForceEventArgs>
+
+  /**
    * @param mission The mission to which the force belongs.
    * @param data The force data from which to create the force. Any ommitted
    * values will be set to the default properties defined in
@@ -60,6 +64,12 @@ export default class ClientMissionForce
   ) {
     super(mission, data)
     this.relationshipLines = []
+
+    // Initialize event manager.
+    this.eventManager = new EventManager(this)
+    this.addEventListener = this.eventManager.addEventListener
+    this.removeEventListener = this.eventManager.removeEventListener
+    this.emitEvent = this.eventManager.emitEvent
 
     // If output data is provided, parse it.
     if (data.outputs) this._outputs = this.parseOutputs(data.outputs)
@@ -103,7 +113,7 @@ export default class ClientMissionForce
     // Reposition nodes and draw the lines between them.
     this.positionNodes()
     this.drawRelationshipLines()
-    this.emitEvent('structure-change')
+    this.emitEvent('structure-change', [])
   }
 
   /**
@@ -441,38 +451,14 @@ export default class ClientMissionForce
     this.relationshipLines = relationshipLines
   }
 
-  /**
-   * Calls the callbacks of listeners for the given force event.
-   * @param method The event method emitted.
-   */
-  public emitEvent(method: TForceEventMethod): void {
-    // Call any matching listener callbacks
-    // or any activity listener callbacks.
-    for (let [listenerMethod, listenerCallback] of this.listeners) {
-      if (listenerMethod === method || listenerMethod === 'activity') {
-        listenerCallback()
-      }
-    }
-  }
+  // Implemented
+  public emitEvent
 
   // Implemented
-  public addEventListener(
-    event: TForceEventMethod,
-    callback: () => void,
-  ): void {
-    this.listeners.push([event, callback])
-  }
+  public addEventListener
 
   // Implemented
-  public removeEventListener<TMethod extends TForceEventMethod>(
-    method: TMethod,
-    handler: () => void,
-  ): void {
-    // Filter out the handler.
-    this.listeners = this.listeners.filter(
-      ([m, h]) => m !== method || h !== handler,
-    )
-  }
+  public removeEventListener
 
   // Implemented
   public storeOutput(newOutput: ClientOutput): void {
@@ -480,7 +466,7 @@ export default class ClientMissionForce
     this._outputs.splice(index, 0, newOutput)
 
     // Emit an output event.
-    this.emitEvent('output')
+    this.emitEvent('output', [])
   }
 
   /**
@@ -505,7 +491,7 @@ export default class ClientMissionForce
     this.resourcesRemaining += operand
 
     // Emit event.
-    this.emitEvent('modify-forces')
+    this.emitEvent('modify-forces', [])
   }
 }
 
@@ -522,8 +508,15 @@ export default class ClientMissionForce
  * @option 'structure-change'
  * Triggered when the structure of the force changes.
  */
-export type TForceEventMethod =
+export type TForceEventMethods =
   | 'activity'
   | 'output'
   | 'modify-forces'
   | 'structure-change'
+
+/**
+ * The argument(s) used in the event handler for the force's event manager.
+ */
+type TForceEventArgs = [
+  updatedComponents: TMissionComponent<TMetisClientComponents, any>[],
+]

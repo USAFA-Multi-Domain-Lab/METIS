@@ -2,35 +2,11 @@
 @import '../form/index.scss';
 
 .Detail.DetailToggle {
-  align-items: center;
-  grid-template-columns: auto auto 1fr;
-  @include detail-field-styling;
   background: none;
   padding: 0;
 
-  &.NoInfo {
-    grid-template-columns: auto 1fr;
-  }
-
-  .Label {
-    @include label-styling;
-  }
-
-  .DetailInfo {
-    @include detail-info-styling;
-    align-self: center;
-  }
-
   .Field {
-    border: none;
     padding: 0;
     background: none;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-  }
-
-  .FieldErrorMessage {
-    grid-column: span 2;
   }
 }

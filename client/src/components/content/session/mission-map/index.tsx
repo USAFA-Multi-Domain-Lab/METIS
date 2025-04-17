@@ -137,7 +137,7 @@ export default function MissionMap({
   onNodeSelect,
   applyNodeTooltip,
 }: TMissionMap): JSX.Element | null {
-  /* -- variables -- */
+  /* -- VARIABLES -- */
 
   /**
    * Whether to disable the zooming functionality of the map
@@ -145,7 +145,7 @@ export default function MissionMap({
    */
   const disableZoom: boolean = !!overlayContent
 
-  /* -- refs -- */
+  /* -- REFS -- */
 
   /**
    * Ref for the root element of the mission map.
@@ -157,7 +157,7 @@ export default function MissionMap({
    */
   const sceneRef: React.RefObject<HTMLDivElement> = useRef<HTMLDivElement>(null)
 
-  /* -- state -- */
+  /* -- STATE -- */
 
   /**
    * Counter that is incremented whenever the component
@@ -207,7 +207,7 @@ export default function MissionMap({
     new Vector1D(DEFAULT_CAMERA_ZOOM, { onChange: () => forceUpdate() }),
   )
 
-  /* -- hooks -- */
+  /* -- HOOKS -- */
 
   // Create an event listener to handle when the mission
   // structure changes by forcing a state update.
@@ -307,7 +307,7 @@ export default function MissionMap({
     }
   }, [tabIndex])
 
-  /* -- functions -- */
+  /* -- FUNCTIONS -- */
 
   /**
    * Handles a mouse wheel event on the map.
@@ -423,7 +423,7 @@ export default function MissionMap({
     setTimeout(() => panSmoothly(destination), 5)
   }
 
-  /* -- computed -- */
+  /* -- COMPUTED -- */
 
   /**
    * The tabs to display in the tab bar.
@@ -543,7 +543,7 @@ export default function MissionMap({
     return classList.join(' ')
   })
 
-  /* -- render -- */
+  /* -- RENDER -- */
 
   /**
    * The JSX for the relationship lines drawn between nodes.

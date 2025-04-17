@@ -56,6 +56,7 @@ declare global {
     | 'down'
     | 'download'
     | 'edit'
+    | 'file'
     | 'italic'
     | 'kick'
     | 'launch'

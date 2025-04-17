@@ -417,9 +417,12 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     // todo: Store last changed component for efficiency purposes.
     components.forEach((component) => {
       // If the component was defective and is no
-      // longer defective, then remove it from the
-      // list.
-      if (defectiveComponents.includes(component) && !component.defective) {
+      // longer defective or no longer exists, then
+      // remove it from the list.
+      if (
+        (defectiveComponents.includes(component) && !component.defective) ||
+        !mission.defectiveComponents.includes(component)
+      ) {
         updatedState = updatedState.filter((c) => c._id !== component._id)
       }
     })
