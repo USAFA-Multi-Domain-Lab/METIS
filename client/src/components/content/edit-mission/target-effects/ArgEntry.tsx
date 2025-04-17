@@ -1,6 +1,7 @@
 import { ClientEffect } from 'src/missions/effects'
 import { compute } from 'src/toolbox'
 import { TTargetArg } from '../../../../../../shared/target-environments/args'
+import Divider from '../../form/Divider'
 import './ArgEntry.scss'
 import ArgGrouping from './ArgGrouping'
 
@@ -63,26 +64,26 @@ export default function ArgEntry({
 
   /* -- RENDER -- */
 
-  if (groupings.length > 0) {
-    return (
-      <div className='ArgEntry'>
-        <div className='Title'>Modifications</div>
-        {groupings.map(([groupingId, grouping]) => {
-          return (
-            <ArgGrouping
-              effect={effect}
-              grouping={grouping}
-              effectArgs={effectArgs}
-              setEffectArgs={setEffectArgs}
-              key={`grouping-${groupingId}`}
-            />
-          )
-        })}
-      </div>
-    )
-  } else {
-    return null
-  }
+  // If there are no groupings then return null.
+  if (groupings.length === 0) return null
+
+  return (
+    <div className='ArgEntry'>
+      <div className='Title'>Modifications</div>
+      <Divider />
+      {groupings.map(([groupingId, grouping]) => {
+        return (
+          <ArgGrouping
+            effect={effect}
+            grouping={grouping}
+            effectArgs={effectArgs}
+            setEffectArgs={setEffectArgs}
+            key={`grouping-${groupingId}`}
+          />
+        )
+      })}
+    </div>
+  )
 }
 
 /* ---------------------------- TYPES FOR ARG ENTRY ---------------------------- */
