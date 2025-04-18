@@ -17,4 +17,39 @@
     transition: 0.2s opacity;
     opacity: 0.65;
   }
+
+  &.DropPending {
+    .ListDropBox {
+      opacity: 0.65;
+
+      .UploadIcon {
+        transform: scale(1);
+      }
+    }
+  }
+
+  &:not(.DropPending) {
+    .ListDropBox {
+      opacity: 0;
+
+      .UploadIcon {
+        transform: scale(0.65);
+      }
+    }
+  }
+
+  .ListNav {
+    grid-row: 1 / 2;
+    grid-column: 1 / -1;
+  }
+
+  .ListPage {
+    grid-row: 2 / 3;
+    grid-column: 1 / -1;
+  }
+
+  .ListDropBox {
+    grid-row: 1 / -1;
+    grid-column: 1 / -1;
+  }
 }

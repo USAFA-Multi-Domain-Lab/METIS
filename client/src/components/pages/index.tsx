@@ -36,7 +36,7 @@ export const PAGE_REGISTRY = {
 /**
  * Wraps a page component with the default layout.
  */
-export function DefaultLayout({
+export function DefaultPageLayout({
   children,
   navigation,
   includeFooter = true,

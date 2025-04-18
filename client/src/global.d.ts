@@ -86,4 +86,17 @@ declare global {
     | 'warning-transparent'
     | 'zoom-in'
     | 'zoom-out'
+
+  /**
+   * Creates a union type with the given type
+   * and `null`.
+   * @type T The type with which to create the union.
+   * @returns The union type, with `null`.
+   * @example
+   * ```ts
+   * type T = TWithNull<string>
+   * // T = string | null
+   * ```
+   */
+  export type TNullable<T> = T | null
 }

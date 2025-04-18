@@ -1,0 +1,23 @@
+@import 'src/assets/styles/config.scss';
+
+.ListDropBox {
+  display: grid;
+  pointer-events: none;
+  place-content: center;
+  box-sizing: border-box;
+  transition: opacity 175ms;
+  margin: 0;
+  width: 100%;
+  padding: 0;
+  background: rgba($color-accent, 0.3);
+
+  .UploadIcon {
+    transition: transform 175ms;
+    width: 15em;
+    height: 15em;
+    background: url('/assets/images/icons/upload.svg');
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+}

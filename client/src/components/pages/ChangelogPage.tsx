@@ -3,7 +3,7 @@ import { useGlobalContext } from 'src/context'
 import MetisInfo from 'src/info'
 import { compute } from 'src/toolbox'
 import { useMountHandler } from 'src/toolbox/hooks'
-import { DefaultLayout, TPage_P } from '.'
+import { DefaultPageLayout, TPage_P } from '.'
 import Markdown, {
   MarkdownTheme as EMarkdownTheme,
 } from '../content/general-layout/Markdown'
@@ -63,11 +63,11 @@ export default function IChangelogPage({}: IChangelogPage): JSX.Element | null {
 
   return (
     <div className='ChangelogPage Page'>
-      <DefaultLayout navigation={navigation} includeFooter={false}>
+      <DefaultPageLayout navigation={navigation} includeFooter={false}>
         <div className='Changelog'>
           <Markdown markdown={changelog} theme={EMarkdownTheme.ThemePrimary} />
         </div>
-      </DefaultLayout>
+      </DefaultPageLayout>
     </div>
   )
 }

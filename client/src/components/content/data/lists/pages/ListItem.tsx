@@ -1,8 +1,11 @@
 import { ReactNode, useRef } from 'react'
 import ButtonMenuController from 'src/components/content/user-controls/buttons/ButtonMenuController'
+import { useGlobalContext } from 'src/context'
 import { compute } from 'src/toolbox'
 import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
-import { TButtonSvgType } from '../../../user-controls/buttons/ButtonSvg'
+import ButtonSvg, {
+  TButtonSvgType,
+} from '../../../user-controls/buttons/ButtonSvg'
 import {
   OPTIONS_COLUMN_WIDTH,
   OPTIONS_COLUMN_WIDTH_IF_LAST,
@@ -19,7 +22,9 @@ export default function ListItem<T extends TListItem>({
 }: TListItem_P<T>): JSX.Element | null {
   /* -- STATE -- */
 
+  const globalContext = useGlobalContext()
   const listContext = useListContext<T>()
+  const { showButtonMenu } = globalContext.actions
   const {
     columns,
     itemButtons,
@@ -85,6 +90,17 @@ export default function ListItem<T extends TListItem>({
   const onButtonClick = (button: TButtonSvgType) => {
     onItemButtonClick(button, item)
   }
+  /**
+   * Handles the click event for the item
+   * options button.
+   */
+  const onOptionsClick = (event: React.MouseEvent) => {
+    showButtonMenu(itemButtons, onButtonClick, {
+      positioningTarget: event.target as HTMLDivElement,
+      highlightTarget: root.current ?? undefined,
+      getDescription: getButtonDescription,
+    })
+  }
 
   /* -- RENDER -- */
 
@@ -104,6 +120,21 @@ export default function ListItem<T extends TListItem>({
         text={item.name}
       />,
     )
+
+    // If there are item buttons, add the options
+    // cell.
+    if (itemButtons.length) {
+      result.push(
+        <div key={'options'} className='ItemCellLike ItemOptions'>
+          <ButtonSvg
+            type='options'
+            onClick={onOptionsClick}
+            description={'View option menu'}
+            disabled={itemButtons.length === 0 ? 'full' : 'none'}
+          />
+        </div>,
+      )
+    }
 
     // Add a cell for each column
     // passed in the props.

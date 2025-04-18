@@ -7,7 +7,7 @@ import {
   useMountHandler,
   useRequireLogin,
 } from 'src/toolbox/hooks'
-import { DefaultLayout } from '.'
+import { DefaultPageLayout } from '.'
 import Prompt from '../content/communication/Prompt'
 import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
 import SessionMembers from '../content/session/members/SessionMembers'
@@ -209,7 +209,7 @@ export default function LobbyPage({
   // Render root component.
   return (
     <div className='LobbyPage Page DarkPage'>
-      <DefaultLayout navigation={navigation}>
+      <DefaultPageLayout navigation={navigation}>
         <div className='Title'>Lobby</div>
         <div className='DetailSection Section'>
           <div className='SessionId StaticDetail'>
@@ -233,7 +233,7 @@ export default function LobbyPage({
           <SessionMembers session={session} />
         </div>
         {buttonSectionJsx}
-      </DefaultLayout>
+      </DefaultPageLayout>
     </div>
   )
 }

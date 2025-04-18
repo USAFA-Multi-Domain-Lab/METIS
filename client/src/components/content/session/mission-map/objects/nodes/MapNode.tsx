@@ -237,7 +237,6 @@ export default function <TNode extends TMapCompatibleNode>({
     // If the node is executing, animate
     // the progress bar.
     if (node.executing) {
-      console.log(node.latestExecution)
       let duration = node.latestExecution!.duration
 
       style.animation = 'loading-animation 750ms linear 0ms infinite'

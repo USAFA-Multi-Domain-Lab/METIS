@@ -4,7 +4,7 @@ import ClientMission from 'src/missions'
 import SessionClient from 'src/sessions'
 import { compute } from 'src/toolbox'
 import { useMountHandler, useRequireLogin } from 'src/toolbox/hooks'
-import { DefaultLayout } from '.'
+import { DefaultPageLayout } from '.'
 
 import { TMissionComponent } from '../../../../shared/missions'
 import Session from '../../../../shared/sessions'
@@ -214,7 +214,7 @@ export default function LaunchPage({
   if (mountHandled) {
     return (
       <div className='LaunchPage Page'>
-        <DefaultLayout navigation={navigation}>
+        <DefaultPageLayout navigation={navigation}>
           <div className='MissionName'>{mission.name}</div>
           <SessionConfig
             sessionConfig={sessionConfig}
@@ -223,7 +223,7 @@ export default function LaunchPage({
             onSave={launch}
             onCancel={cancel}
           />
-        </DefaultLayout>
+        </DefaultPageLayout>
       </div>
     )
   } else {

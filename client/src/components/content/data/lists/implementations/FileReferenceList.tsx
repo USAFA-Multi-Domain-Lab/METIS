@@ -1,5 +1,7 @@
+import { useRef } from 'react'
 import Prompt from 'src/components/content/communication/Prompt'
 import { TButtonSvgType } from 'src/components/content/user-controls/buttons/ButtonSvg'
+import If from 'src/components/content/util/If'
 import { useGlobalContext } from 'src/context'
 import ClientFileReference from 'src/files/references'
 import { compute } from 'src/toolbox'
@@ -12,8 +14,13 @@ import List, { createDefaultListProps, TList_P } from '../List'
  * @note Uses the `List` component.
  */
 export default function (props: TFileReferenceList_P): JSX.Element | null {
+  /* -- STATE -- */
+
   const globalContext = useGlobalContext()
   const { prompt, notify, beginLoading, finishLoading } = globalContext.actions
+  const importFileTrigger = useRef<HTMLInputElement>(null)
+
+  /* -- FUNCTIONS -- */
 
   /**
    * Handles a request to delete a file reference.
@@ -41,6 +48,29 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
     }
   }
 
+  /**
+   * Handles a change to the import file trigger.
+   */
+  const onImportTriggerChange = (): void => {
+    const { onFileDrop } = defaultedProps
+    let importFileTrigger_elm: HTMLInputElement | null =
+      importFileTrigger.current
+
+    // Abort, if no file-drop callback is provided.
+    if (!onFileDrop) return
+
+    // If files are found, upload is begun.
+    if (
+      importFileTrigger_elm &&
+      importFileTrigger_elm.files !== null &&
+      importFileTrigger_elm.files.length > 0
+    ) {
+      onFileDrop(importFileTrigger_elm.files)
+    }
+  }
+
+  /* -- PROPS -- */
+
   const defaultedProps = useDefaultProps(props, {
     ...createDefaultListProps<ClientFileReference>(),
     itemsPerPageMin: 10,
@@ -48,11 +78,12 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
     listButtons: compute<TButtonSvgType[]>(() => {
       let results: TButtonSvgType[] = []
 
-      // todo: Uncomment and resolve this.
+      // todo: Add auth.
       // // If the user has the proper authorization, add
       // // the add and upload buttons.
       // if (login.user.isAuthorized('files_write')) {
       //   results.push('add', 'upload')
+      if (props.onFileDrop) results.push('upload')
       // }
 
       return results
@@ -86,7 +117,10 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
     },
     getListButtonLabel: (button) => {
       switch (button) {
+        case 'upload':
+          return 'Upload'
         default:
+          console.warn(`"${button}" button in file list does not have a label.`)
           return ''
       }
     },
@@ -108,6 +142,14 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
     },
     onListButtonClick: (button) => {
       switch (button) {
+        case 'upload':
+          let importFileTrigger_elm: HTMLInputElement | null =
+            importFileTrigger.current
+
+          if (importFileTrigger_elm) {
+            importFileTrigger_elm.click()
+          }
+          break
         default:
           console.warn('Unknown button clicked in file list.')
           break
@@ -129,8 +171,23 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
     onSuccessfulDeletion: () => {},
   })
 
+  /* -- RENDER -- */
+
   // Render the list of files.
-  return <List<ClientFileReference> {...defaultedProps} />
+  return (
+    <>
+      <List<ClientFileReference> {...defaultedProps} />
+      <If condition={props.onFileDrop}>
+        <input
+          className='ImportFileTrigger'
+          type='file'
+          ref={importFileTrigger}
+          onChange={onImportTriggerChange}
+          hidden
+        />
+      </If>
+    </>
+  )
 }
 
 /**

@@ -13,7 +13,7 @@ import {
   useUnmountHandler,
 } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
-import { DefaultLayout } from '.'
+import { DefaultPageLayout } from '.'
 import Prompt from '../content/communication/Prompt'
 import FileReferenceList from '../content/data/lists/implementations/FileReferenceList'
 import MissionList from '../content/data/lists/implementations/MissionList'
@@ -22,11 +22,11 @@ import UserList from '../content/data/lists/implementations/UserList'
 import { LogoutLink } from '../content/general-layout/Navigation'
 import './HomePage.scss'
 
-/* -- constants -- */
+/* -- CONSTANTS -- */
 
 const SESSIONS_SYNC_RATE: number = 1000
 
-/* -- components -- */
+/* -- COMPONENTS -- */
 
 /**
  * This will render the home page.
@@ -37,15 +37,11 @@ const SESSIONS_SYNC_RATE: number = 1000
  * select from to edit if they have proper permissions.
  */
 export default function HomePage(): JSX.Element | null {
-  /* -- GLOBAL CONTEXT -- */
+  /* -- STATE -- */
+
   const globalContext = useGlobalContext()
   const { beginLoading, finishLoading, handleError, notify, prompt } =
     globalContext.actions
-
-  /* -- REFS -- */
-  const page = useRef<HTMLDivElement>(null)
-
-  /* -- STATE -- */
   const [sessions, setSessions] = useState<SessionBasic[]>([])
   const [missions, setMissions] = useState<ClientMission[]>([])
   const [users, setUsers] = useState<ClientUser[]>([])
@@ -218,8 +214,140 @@ export default function HomePage(): JSX.Element | null {
     setTimeout(() => syncSessions.current(), SESSIONS_SYNC_RATE)
   })
 
-  // This will import files as missions.
+  /**
+   * Imports the given files as missions.
+   * @param files The files to import.
+   * @resolves When the files have been processed
+   * and imported if valid.
+   */
   const importMissionFiles = async (files: FileList) => {
+    let validFiles: Array<File> = []
+    let successfulImportCount = 0
+    let invalidContentsCount = 0
+    let invalidFileExtensionCount: number = 0
+    let serverErrorFailureCount: number = 0
+    let invalidContentsErrorMessages: Array<{
+      fileName: string
+      errorMessage: string
+    }> = []
+
+    // This is called when a file
+    // import is processed, whether
+    // successfully or unsuccessfully
+    // uploaded.
+    const handleFileImportCompletion = () => {
+      // This is called after the missions
+      // are reloaded to retrieve the newly
+      // created missions.
+      const loadMissionsCallback = () => {
+        // Notifies of successful uploads.
+        if (successfulImportCount > 0) {
+          notify(
+            `Successfully imported ${successfulImportCount} mission${
+              successfulImportCount === 1 ? '' : 's'
+            }.`,
+          )
+        }
+        // Notifies of files that were valid
+        // to upload but failed due to a server
+        // error.
+        if (serverErrorFailureCount) {
+          notify(
+            `An unexpected error occurred while importing ${serverErrorFailureCount} file${
+              serverErrorFailureCount !== 1 ? 's' : ''
+            }.`,
+          )
+        }
+        // Notifies of failed uploads.
+        if (invalidContentsCount > 0) {
+          let notification: Notification = notify(
+            `${invalidContentsCount} of the files uploaded did not have valid content and therefore ${
+              invalidContentsCount === 1 ? 'was' : 'were'
+            } rejected.`,
+            {
+              duration: null,
+              buttons: [
+                {
+                  text: 'View errors',
+                  onClick: () => {
+                    let message: string = ''
+
+                    invalidContentsErrorMessages.forEach(
+                      ({ errorMessage, fileName }) => {
+                        message += `**${fileName}**\n`
+                        message += `\`\`\`\n`
+                        message += `${errorMessage}\n`
+                        message += `\`\`\`\n`
+                      },
+                    )
+                    notification.dismiss()
+                    prompt(message, Prompt.AlertChoices)
+                  },
+                },
+              ],
+            },
+          )
+        }
+        // Notifies of invalid files
+        // rejected from being uploaded.
+        if (invalidFileExtensionCount > 0) {
+          notify(
+            `${invalidFileExtensionCount} of the files uploaded did not have the .metis extension and therefore ${
+              invalidFileExtensionCount === 1 ? 'was' : 'were'
+            } rejected.`,
+          )
+        }
+      }
+
+      // todo: Resolve this comment.
+      // Reloads missions now that all files
+      // have been processed.
+      loadMissions().then(loadMissionsCallback).catch(loadMissionsCallback)
+    }
+
+    // Switch to load screen.
+    beginLoading(
+      `Importing ${files.length} file${files.length === 1 ? '' : 's'}...`,
+    )
+
+    // Iterates over files for upload.
+    for (let file of files) {
+      if (file.name.toLowerCase().endsWith('.cesar')) {
+        // If a .cesar file, import it.
+        validFiles.push(file)
+      }
+      // If a .metis file, import it.
+      else if (file.name.toLowerCase().endsWith('.metis')) {
+        validFiles.push(file)
+      }
+      // Else, don't.
+      else {
+        invalidFileExtensionCount++
+      }
+    }
+
+    // Import the files.
+    try {
+      let response = await ClientMission.$import(validFiles)
+      successfulImportCount += response.successfulImportCount
+      invalidContentsCount += response.failedImportCount
+      invalidContentsErrorMessages = response.failedImportErrorMessages
+      handleFileImportCompletion()
+    } catch (error: any) {
+      if (error instanceof AxiosError) {
+        serverErrorFailureCount += validFiles.length
+        handleFileImportCompletion()
+      }
+    }
+  }
+
+  /**
+   * Imports the given files to the file store.
+   * @param files The files to import.
+   * @resolves When the files have been processed
+   * and imported.
+   */
+  const uploadToStore = async (files: FileList) => {
     let validFiles: Array<File> = []
     let successfulImportCount = 0
     let invalidContentsCount = 0
@@ -347,47 +475,6 @@ export default function HomePage(): JSX.Element | null {
     }
   }
 
-  // This is a file is dropped onto the page.
-  const handleFileDrop = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault()
-
-    let page_elm: HTMLDivElement | null = page.current
-
-    if (page_elm !== null) {
-      let files: FileList = event.dataTransfer.files
-
-      page_elm.classList.remove('DropPending')
-
-      if (files.length > 0 && currentUser.isAuthorized('missions_write')) {
-        importMissionFiles(files)
-      }
-    }
-  }
-
-  // This is called when a user drags over
-  // the page.
-  const handleFileDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault()
-
-    let page_elm: HTMLDivElement | null = page.current
-
-    if (page_elm !== null) {
-      page_elm.classList.add('DropPending')
-    }
-  }
-
-  // This is called when the user is
-  // no longer dragging over the page.
-  const handleFileDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault()
-
-    let page_elm: HTMLDivElement | null = page.current
-
-    if (page_elm !== null) {
-      page_elm.classList.remove('DropPending')
-    }
-  }
-
   /**
    * Callback for when a mission is successfully copied.
    * @param mission The new mission created.
@@ -431,19 +518,6 @@ export default function HomePage(): JSX.Element | null {
   // is nothing to render yet.
   if (!mountHandled) return null
 
-  /**
-   * The file drop box for uploading mission files.
-   */
-  const fileDropBoxJsx = compute(() => (
-    <div
-      className={
-        currentUser.isAuthorized('missions_write') ? 'FileDropBox' : 'Hidden'
-      }
-    >
-      <div className='UploadIcon'></div>
-    </div>
-  ))
-
   const listsJsx = compute(() => {
     let results: JSX.Element[] = []
 
@@ -465,10 +539,11 @@ export default function HomePage(): JSX.Element | null {
       results.push(
         <MissionList
           key={'missions-list'}
-          missions={missions}
+          name={'Missions'}
+          items={missions}
+          onFileDrop={importMissionFiles}
           onSuccessfulCopy={onMissionCopy}
           onSuccessfulDeletion={onMissionDeletion}
-          importMissionFiles={importMissionFiles}
         />,
       )
     }
@@ -497,6 +572,7 @@ export default function HomePage(): JSX.Element | null {
           key={'files-list'}
           name={'Files'}
           items={fileReferences}
+          onFileDrop={uploadToStore}
           onSuccessfulDeletion={onFileReferenceDeletion}
         />,
       )
@@ -507,15 +583,8 @@ export default function HomePage(): JSX.Element | null {
 
   // Render root element.
   return (
-    <div
-      className='HomePage Page'
-      ref={page}
-      onDragOver={handleFileDragOver}
-      onDragLeave={handleFileDragLeave}
-      onDrop={handleFileDrop}
-    >
-      {fileDropBoxJsx}
-      <DefaultLayout navigation={navigation}>{listsJsx}</DefaultLayout>
+    <div className='HomePage Page'>
+      <DefaultPageLayout navigation={navigation}>{listsJsx}</DefaultPageLayout>
     </div>
   )
 }

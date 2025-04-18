@@ -3,7 +3,7 @@ import { useGlobalContext, useNavigationMiddleware } from 'src/context'
 import SessionClient from 'src/sessions'
 import { compute } from 'src/toolbox'
 import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
-import { DefaultLayout } from '.'
+import { DefaultPageLayout } from '.'
 import Prompt from '../content/communication/Prompt'
 import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
 import SessionConfig from '../content/session/SessionConfig'
@@ -123,7 +123,7 @@ export default function SessionConfigPage({
 
   return (
     <div className='SessionConfigPage Page DarkPage'>
-      <DefaultLayout navigation={navigation}>
+      <DefaultPageLayout navigation={navigation}>
         <div className='Title'>Session Configuration</div>
         <div className='DetailSection Section'>
           <div className='SessionId StaticDetail'>
@@ -142,7 +142,7 @@ export default function SessionConfigPage({
           onSave={save}
           onCancel={cancel}
         />
-      </DefaultLayout>
+      </DefaultPageLayout>
     </div>
   )
 }

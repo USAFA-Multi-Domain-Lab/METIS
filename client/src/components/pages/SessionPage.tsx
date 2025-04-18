@@ -10,7 +10,7 @@ import {
   useMountHandler,
   useRequireLogin,
 } from 'src/toolbox/hooks'
-import { DefaultLayout, TPage_P } from '.'
+import { DefaultPageLayout, TPage_P } from '.'
 import { TWithKey } from '../../../../shared/toolbox/objects'
 import Prompt from '../content/communication/Prompt'
 import MissionFileList from '../content/data/lists/implementations/MissionFileList'
@@ -369,6 +369,18 @@ export default function SessionPage({
   useEventListener(server, ['session-started', 'session-ended'], () =>
     verifyNavigation.current(),
   )
+  // On session reset, reselect the force in
+  // the mission, since a new force object
+  // will be created.
+  useEventListener(
+    server,
+    'session-reset',
+    () => {
+      selectForce(() => mission.getForce(selectedForce?._id) ?? null)
+      notify('All progress has been reset by a manager.')
+    },
+    [selectedForce],
+  )
 
   // Add navigation middleware to properly
   // quit the session before the user navigates
@@ -470,7 +482,7 @@ export default function SessionPage({
   // Return the rendered component.
   return (
     <div className={rootClass}>
-      <DefaultLayout navigation={navigation} includeFooter={false}>
+      <DefaultPageLayout navigation={navigation} includeFooter={false}>
         {topBarJsx}
         <PanelLayout initialSizes={['fill', 400]}>
           <Panel>
@@ -544,7 +556,7 @@ export default function SessionPage({
             </PanelView>
           </Panel>
         </PanelLayout>
-      </DefaultLayout>
+      </DefaultPageLayout>
     </div>
   )
 }

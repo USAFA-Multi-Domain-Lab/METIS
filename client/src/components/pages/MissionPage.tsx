@@ -20,7 +20,7 @@ import {
   useMountHandler,
   useRequireLogin,
 } from 'src/toolbox/hooks'
-import { DefaultLayout, TPage_P } from '.'
+import { DefaultPageLayout, TPage_P } from '.'
 import Mission, { TMissionComponent } from '../../../../shared/missions'
 import { TNonEmptyArray } from '../../../../shared/toolbox/arrays'
 import { TSingleTypeMapped, TWithKey } from '../../../../shared/toolbox/objects'
@@ -1043,7 +1043,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   return (
     <Provider value={contextValue}>
       <div className={rootClassName} ref={root}>
-        <DefaultLayout navigation={navigation}>
+        <DefaultPageLayout navigation={navigation}>
           <PanelLayout initialSizes={['fill', panel2DefaultSize]}>
             <Panel>
               <PanelView title='Map'>
@@ -1109,7 +1109,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
               </PanelView>
             </Panel>
           </PanelLayout>
-        </DefaultLayout>
+        </DefaultPageLayout>
       </div>
     </Provider>
   )

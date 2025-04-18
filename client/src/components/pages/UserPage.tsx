@@ -4,15 +4,15 @@ import { useGlobalContext, useNavigationMiddleware } from 'src/context'
 import { compute } from 'src/toolbox'
 import { useMountHandler, useRequireLogin } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
-import { DefaultLayout, TPage_P } from '.'
+import { DefaultPageLayout, TPage_P } from '.'
 import CreateUserEntry from '../content/edit-user/CreateUserEntry'
 import EditUserEntry from '../content/edit-user/EditUserEntry'
 import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
-import './UserPage.scss'
 import {
   ButtonText,
   TButtonTextDisabled,
 } from '../content/user-controls/buttons/ButtonText'
+import './UserPage.scss'
 
 /**
  * Renders a page for creating or editing a user.
@@ -300,7 +300,7 @@ export default function UserPage({ userId }: IUserPage): JSX.Element | null {
   if (mountHandled && currentUser.isAuthorized('users_write_students')) {
     return (
       <div className='UserPage Page'>
-        <DefaultLayout navigation={navigation}>
+        <DefaultPageLayout navigation={navigation}>
           <div className='Form'>
             {renderUserEntry()}
 
@@ -312,7 +312,7 @@ export default function UserPage({ userId }: IUserPage): JSX.Element | null {
               />
             </div>
           </div>
-        </DefaultLayout>
+        </DefaultPageLayout>
       </div>
     )
   } else {

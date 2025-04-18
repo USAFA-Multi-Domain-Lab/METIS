@@ -3,15 +3,15 @@ import { useGlobalContext } from 'src/context'
 import { compute } from 'src/toolbox'
 import { useMountHandler, usePostInitEffect } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
-import { DefaultLayout, TPage_P } from '.'
+import { DefaultPageLayout, TPage_P } from '.'
 import { DetailLocked } from '../content/form/DetailLocked'
 import { DetailString } from '../content/form/DetailString'
 import { LogoutLink, TNavigation } from '../content/general-layout/Navigation'
-import './UserResetPage.scss'
 import {
   ButtonText,
   TButtonTextDisabled,
 } from '../content/user-controls/buttons/ButtonText'
+import './UserResetPage.scss'
 
 /**
  * This page allows the user to reset their password.
@@ -180,7 +180,7 @@ export default function UserResetPage(): JSX.Element | null {
 
   return (
     <div className='UserResetPage Page'>
-      <DefaultLayout navigation={navigation}>
+      <DefaultPageLayout navigation={navigation}>
         <div className='ResetUserEntry'>
           <DetailLocked label='Username' stateValue={user.username} />
           <DetailString
@@ -212,7 +212,7 @@ export default function UserResetPage(): JSX.Element | null {
             onClick={() => save()}
           />
         </div>
-      </DefaultLayout>
+      </DefaultPageLayout>
     </div>
   )
 }

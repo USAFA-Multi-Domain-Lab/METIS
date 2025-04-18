@@ -1,29 +1,22 @@
 import { useRef } from 'react'
 import Prompt from 'src/components/content/communication/Prompt'
 import { TButtonSvgType } from 'src/components/content/user-controls/buttons/ButtonSvg'
-import { TSvgPanelOnClick } from 'src/components/content/user-controls/buttons/ButtonSvgPanel_v2'
+import If from 'src/components/content/util/If'
 import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
 import { compute } from 'src/toolbox'
-import { useRequireLogin } from 'src/toolbox/hooks'
+import { useDefaultProps, useRequireLogin } from 'src/toolbox/hooks'
 import { DateToolbox } from '../../../../../../../shared/toolbox/dates'
-import List, { TGetListButtonLabel } from '../List'
-import {
-  TGetItemButtonLabel,
-  TOnItemButtonClick,
-  TOnItemSelection,
-} from '../pages/ListItem'
+import List, { createDefaultListProps, TList_P } from '../List'
+import { TOnItemSelection } from '../pages/ListItem'
 
+// todo: Convert this list to be organized
+// todo like `FileReferenceList`.
 /**
  * A component for displaying a list of missions.
  * @note Uses the `List` component.
  */
-export default function MissionList({
-  missions,
-  onSuccessfulDeletion,
-  onSuccessfulCopy,
-  importMissionFiles,
-}: TMissionList_P): JSX.Element | null {
+export default function MissionList(props: TMissionList_P): JSX.Element | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
@@ -32,53 +25,14 @@ export default function MissionList({
     globalContext.actions
   const importMissionTrigger = useRef<HTMLInputElement>(null)
 
-  /* -- COMPUTED -- */
-
-  /**
-   * The list buttons to display based on permissions.
-   */
-  const listButtons = compute<TButtonSvgType[]>(() => {
-    let results: TButtonSvgType[] = []
-
-    // If the user has the proper authorization, add
-    // the add and upload buttons.
-    if (login.user.isAuthorized('missions_write')) {
-      results.push('add', 'upload')
-    }
-
-    return results
-  })
-
-  /**
-   * The item buttons to display based on permissions.
-   */
-  const itemButtons = compute<TButtonSvgType[]>(() => {
-    let results: TButtonSvgType[] = []
-
-    // Add the open button.
-    results.push('open')
-
-    // If the user has the proper authorization, add
-    // the launch button.
-    if (login.user.isAuthorized('sessions_write_native')) {
-      results.push('launch')
-    }
-
-    // If the user has the proper authorization, add
-    // the edit, remove, copy, and download buttons.
-    if (login.user.isAuthorized('missions_write')) {
-      results.push('download', 'copy', 'remove')
-    }
-
-    return results
-  })
-
   /* -- FUNCTIONS -- */
 
   /**
    * Handles a request to delete a mission.
    */
   const onDeleteRequest = async (mission: ClientMission) => {
+    const { onSuccessfulDeletion } = defaultedProps
+
     // Prompt the user for confirmation.
     let { choice } = await prompt(
       'Please confirm the deletion of this mission.',
@@ -104,6 +58,8 @@ export default function MissionList({
    * Handles a request to copy a mission.
    */
   const onCopyRequest = async (mission: ClientMission) => {
+    const { onSuccessfulCopy } = defaultedProps
+
     let { choice, text } = await prompt(
       'Enter the name of the new mission',
       ['Cancel', 'Submit'],
@@ -149,105 +105,6 @@ export default function MissionList({
   }
 
   /**
-   * Gets the column label for a mission list.
-   * @param column The column for which to get the label.
-   * @returns The label for the column.
-   */
-  const getMissionColumnLabel = (column: keyof ClientMission): string => {
-    switch (column) {
-      case 'createdAt':
-        return 'Created'
-      case 'updatedAt':
-        return 'Last Modified'
-      case 'launchedAt':
-        return 'Last Launched'
-      case 'creatorFullName':
-        return 'Created By'
-      default:
-        return 'Unknown column'
-    }
-  }
-
-  /**
-   * Gets the text for a mission list cell.
-   * @param mission The mission for which to get the text.
-   * @param column The column for which to get the text.
-   * @returns The text to display in the cell.
-   */
-  const getMissionCellText = (
-    mission: ClientMission,
-    column: keyof ClientMission,
-  ): string => {
-    switch (column) {
-      case 'createdAt':
-      case 'updatedAt':
-      case 'launchedAt':
-        let datetime = mission[column]
-        if (datetime === null) return 'N/A'
-        else return DateToolbox.format(datetime, 'yyyy-mm-dd HH:MM')
-      case 'creatorFullName':
-        return mission.creatorFullName
-      default:
-        return 'Unknown column'
-    }
-  }
-
-  /**
-   * Gets the tooltip description for a mission list button.
-   */
-  const getMissionListButtonTooltip: TGetListButtonLabel = (button) => {
-    switch (button) {
-      case 'add':
-        return 'New mission'
-      case 'upload':
-        return 'Import from .metis file'
-      default:
-        return ''
-    }
-  }
-
-  /**
-   * Gets the tooltip description for a mission item button.
-   */
-  const getMissionItemButtonTooltip: TGetItemButtonLabel<ClientMission> = (
-    button,
-    item,
-  ) => {
-    switch (button) {
-      case 'open':
-        if (login.user.isAuthorized('missions_write')) return 'View/edit'
-        else if (login.user.isAuthorized('missions_read')) return 'View'
-        else return ''
-      case 'launch':
-        return 'Launch session'
-      case 'copy':
-        return 'Duplicate'
-      case 'download':
-        return 'Export to .metis file'
-      case 'remove':
-        return 'Delete'
-      default:
-        return ''
-    }
-  }
-
-  /**
-   * Gets the width of the given column.
-   * @param column The column for which to get the width.
-   * @returns The width of the column.
-   */
-  const getMissionColumnWidth = (column: keyof ClientMission): string => {
-    switch (column) {
-      case 'createdAt':
-      case 'updatedAt':
-      case 'launchedAt':
-        return '9em'
-      default:
-        return '10em'
-    }
-  }
-
-  /**
    * Handler for when a mission is selected.
    */
   const onMissionSelection: TOnItemSelection<ClientMission> = async ({
@@ -261,68 +118,15 @@ export default function MissionList({
   }
 
   /**
-   * Callback for when a list-specific button in the
-   * mission list is clicked.
+   * Handles a change to the import mission trigger.
    */
-  const onMissionListButtonClick: TSvgPanelOnClick = (button) => {
-    switch (button) {
-      case 'add':
-        if (login.user.isAuthorized('missions_write')) {
-          navigateTo('MissionPage', { missionId: null })
-        }
-        break
-      case 'upload':
-        let importMissionTrigger_elm: HTMLInputElement | null =
-          importMissionTrigger.current
-
-        if (importMissionTrigger_elm) {
-          importMissionTrigger_elm.click()
-        }
-        break
-      default:
-        console.warn('Unknown button clicked in mission list.')
-        break
-    }
-  }
-
-  /**
-   * Callback for when a item-specific button in the
-   * mission list is clicked.
-   */
-  const onMissionItemButtonClick: TOnItemButtonClick<ClientMission> = (
-    button,
-    mission,
-  ) => {
-    switch (button) {
-      case 'open':
-        onOpenRequest(mission)
-        break
-      case 'launch':
-        onLaunchRequest(mission)
-        break
-      case 'copy':
-        onCopyRequest(mission)
-        break
-      case 'remove':
-        onDeleteRequest(mission)
-        break
-      case 'download':
-        window.open(
-          `/api/v1/missions/${mission._id}/export/${mission.fileName}`,
-          '_blank',
-        )
-        break
-      default:
-        console.warn('Unknown button clicked in mission list.')
-        break
-    }
-  }
-
-  // This is called when a change is made
-  // to the mission import input element.
   const onImportTriggerChange = (): void => {
+    const { onFileDrop } = defaultedProps
     let importMissionTrigger_elm: HTMLInputElement | null =
       importMissionTrigger.current
+
+    // Abort, if no file-drop callback is provided.
+    if (!onFileDrop) return
 
     // If files are found, upload
     // is begun.
@@ -331,35 +135,177 @@ export default function MissionList({
       importMissionTrigger_elm.files !== null &&
       importMissionTrigger_elm.files.length > 0
     ) {
-      importMissionFiles(importMissionTrigger_elm.files)
+      onFileDrop(importMissionTrigger_elm.files)
     }
   }
+
+  const defaultedProps = useDefaultProps(props, {
+    ...createDefaultListProps<ClientMission>(),
+    itemsPerPageMin: 10,
+    columns: ['createdAt', 'updatedAt', 'launchedAt', 'creatorFullName'],
+    listButtons: compute<TButtonSvgType[]>(() => {
+      let results: TButtonSvgType[] = []
+
+      // If the user has the proper authorization, add
+      // the add and upload buttons.
+      if (login.user.isAuthorized('missions_write')) {
+        results.push('add', 'upload')
+      }
+
+      return results
+    }),
+    itemButtons: compute<TButtonSvgType[]>(() => {
+      let results: TButtonSvgType[] = []
+
+      // Add the open button.
+      results.push('open')
+
+      // If the user has the proper authorization, add
+      // the launch button.
+      if (login.user.isAuthorized('sessions_write_native')) {
+        results.push('launch')
+      }
+
+      // If the user has the proper authorization, add
+      // the edit, remove, copy, and download buttons.
+      if (login.user.isAuthorized('missions_write')) {
+        results.push('download', 'copy', 'remove')
+      }
+
+      return results
+    }),
+    initialSorting: { column: 'updatedAt', method: 'descending' },
+    getColumnLabel: (column: keyof ClientMission): string => {
+      switch (column) {
+        case 'createdAt':
+          return 'Created'
+        case 'updatedAt':
+          return 'Last Modified'
+        case 'launchedAt':
+          return 'Last Launched'
+        case 'creatorFullName':
+          return 'Created By'
+        default:
+          return 'Unknown column'
+      }
+    },
+    getCellText: (
+      mission: ClientMission,
+      column: keyof ClientMission,
+    ): string => {
+      switch (column) {
+        case 'createdAt':
+        case 'updatedAt':
+        case 'launchedAt':
+          let datetime = mission[column]
+          if (datetime === null) return 'N/A'
+          else return DateToolbox.format(datetime, 'yyyy-mm-dd HH:MM')
+        case 'creatorFullName':
+          return mission.creatorFullName
+        default:
+          return 'Unknown column'
+      }
+    },
+    getListButtonLabel: (button) => {
+      switch (button) {
+        case 'add':
+          return 'New mission'
+        case 'upload':
+          return 'Import from .metis file'
+        default:
+          return ''
+      }
+    },
+    getItemButtonLabel: (button, item) => {
+      switch (button) {
+        case 'open':
+          if (login.user.isAuthorized('missions_write')) return 'View/edit'
+          else if (login.user.isAuthorized('missions_read')) return 'View'
+          else return ''
+        case 'launch':
+          return 'Launch session'
+        case 'copy':
+          return 'Duplicate'
+        case 'download':
+          return 'Export to .metis file'
+        case 'remove':
+          return 'Delete'
+        default:
+          return ''
+      }
+    },
+    getColumnWidth: (column: keyof ClientMission): string => {
+      switch (column) {
+        case 'createdAt':
+        case 'updatedAt':
+        case 'launchedAt':
+          return '9em'
+        default:
+          return '10em'
+      }
+    },
+    onListButtonClick: (button) => {
+      switch (button) {
+        case 'add':
+          if (login.user.isAuthorized('missions_write')) {
+            navigateTo('MissionPage', { missionId: null })
+          }
+          break
+        case 'upload':
+          let importMissionTrigger_elm: HTMLInputElement | null =
+            importMissionTrigger.current
+
+          if (importMissionTrigger_elm) {
+            importMissionTrigger_elm.click()
+          }
+          break
+        default:
+          console.warn('Unknown button clicked in mission list.')
+          break
+      }
+    },
+    onItemButtonClick: (button, mission) => {
+      switch (button) {
+        case 'open':
+          onOpenRequest(mission)
+          break
+        case 'launch':
+          onLaunchRequest(mission)
+          break
+        case 'copy':
+          onCopyRequest(mission)
+          break
+        case 'remove':
+          onDeleteRequest(mission)
+          break
+        case 'download':
+          window.open(
+            `/api/v1/missions/${mission._id}/export/${mission.fileName}`,
+            '_blank',
+          )
+          break
+        default:
+          console.warn('Unknown button clicked in mission list.')
+          break
+      }
+    },
+    onSuccessfulDeletion: () => {},
+    onSuccessfulCopy: () => {},
+  })
 
   // Render the list of missions.
   return (
     <>
-      <List<ClientMission>
-        name={'Missions'}
-        items={missions}
-        columns={['createdAt', 'updatedAt', 'launchedAt', 'creatorFullName']}
-        listButtons={listButtons}
-        itemButtons={itemButtons}
-        initialSorting={{ column: 'updatedAt', method: 'descending' }}
-        getColumnLabel={getMissionColumnLabel}
-        getCellText={getMissionCellText}
-        getListButtonLabel={getMissionListButtonTooltip}
-        getItemButtonLabel={getMissionItemButtonTooltip}
-        getColumnWidth={getMissionColumnWidth}
-        onListButtonClick={onMissionListButtonClick}
-        onItemButtonClick={onMissionItemButtonClick}
-      />
-      <input
-        className='ImportMissionTrigger'
-        type='file'
-        ref={importMissionTrigger}
-        onChange={onImportTriggerChange}
-        hidden
-      />
+      <List<ClientMission> {...defaultedProps} />
+      <If condition={defaultedProps.onFileDrop}>
+        <input
+          className='ImportMissionTrigger'
+          type='file'
+          ref={importMissionTrigger}
+          onChange={onImportTriggerChange}
+          hidden
+        />
+      </If>
     </>
   )
 }
@@ -367,24 +313,18 @@ export default function MissionList({
 /**
  * Props for `MissionList`.
  */
-export type TMissionList_P = {
-  /**
-   * The missions to display.
-   */
-  missions: ClientMission[]
+export interface TMissionList_P extends TList_P<ClientMission> {
   /**
    * Callback for a successful copy event.
-   * @param resultingMission The resulting mission from the copy event.
+   * @param resultingMission The resulting mission from
+   * the copy event.
+   * @default () => {}
    */
-  onSuccessfulCopy: (resultingMission: ClientMission) => void
+  onSuccessfulCopy?: (resultingMission: ClientMission) => void
   /**
    * Callback for a successful deletion event.
    * @param deletedMission The deleted mission.
+   * @default () => {}
    */
-  onSuccessfulDeletion: (deletedMission: ClientMission) => void
-  /**
-   * Callback to import mission files.
-   * @param files The files to import.
-   */
-  importMissionFiles: (files: FileList) => void
+  onSuccessfulDeletion?: (deletedMission: ClientMission) => void
 }

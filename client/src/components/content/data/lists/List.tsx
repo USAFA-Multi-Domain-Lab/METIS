@@ -5,6 +5,7 @@ import StringToolbox from '../../../../../../shared/toolbox/strings'
 import { TButtonSvgType } from '../../user-controls/buttons/ButtonSvg'
 import { TSvgPanelOnClick } from '../../user-controls/buttons/ButtonSvgPanel_v2'
 import './List.scss'
+import ListDropBox from './ListDropBox'
 import ListResizeHandler from './ListResizeHandler'
 import ListNav from './navs/ListNav'
 import {
@@ -73,6 +74,7 @@ export function createDefaultListProps<
     isDisabled: () => false,
     onListButtonClick: () => {},
     onItemButtonClick: () => {},
+    onFileDrop: null,
   }
 }
 
@@ -94,7 +96,7 @@ export default function List<TItem extends TListItem>(
 
   // Parse props needed by the main list
   // component.
-  const { items, itemsPerPageMin } = defaultedProps
+  const { items, itemsPerPageMin, onFileDrop } = defaultedProps
 
   /* -- STATE -- */
 
@@ -150,6 +152,66 @@ export default function List<TItem extends TListItem>(
    */
   const pageCount = compute<number>(() => pages.length)
 
+  /* -- FUNCTIONS -- */
+
+  /**
+   * Callback for when file(s) are dropped into
+   * the list.
+   * @param event The event that triggered the file drop.
+   * @note Only relevant if a file-drop callback is provided.
+   */
+  const onDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+
+    // Abort if no file-drop callback is provided.
+    if (!onFileDrop) return
+
+    let root_elm: HTMLDivElement | null = root.current
+
+    if (root_elm !== null) {
+      let files: FileList = event.dataTransfer.files
+
+      root_elm.classList.remove('DropPending')
+
+      onFileDrop(files)
+    }
+  }
+
+  /**
+   * Callback for when file(s) are dragged over the list.
+   * @param event The event that triggered the drag over.
+   * @note Only relevant if a file-drop callback is provided.
+   */
+  const onDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+
+    // Abort if no file-drop callback is provided.
+    if (!onFileDrop) return
+
+    let root_elm: HTMLDivElement | null = root.current
+
+    if (root_elm !== null) {
+      root_elm.classList.add('DropPending')
+    }
+  }
+  /**
+   * Callback for when file(s) are dragged out of the list.
+   * @param event The event that triggered the drag leave.
+   * @note Only relevant if a file-drop callback is provided.
+   */
+  const onDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+
+    // Abort if no file-drop callback is provided.
+    if (!onFileDrop) return
+
+    let root_elm: HTMLDivElement | null = root.current
+
+    if (root_elm !== null) {
+      root_elm.classList.remove('DropPending')
+    }
+  }
+
   /* -- RENDER -- */
 
   /**
@@ -165,10 +227,17 @@ export default function List<TItem extends TListItem>(
   // Render the list.
   return (
     <Provider value={contextValue}>
-      <div className={'List'} ref={root}>
+      <div
+        className='List'
+        ref={root}
+        onDrop={onDrop}
+        onDragOver={onDragOver}
+        onDragLeave={onDragLeave}
+      >
         <ListNav />
         {currentPageJsx}
         <ListResizeHandler />
+        <ListDropBox />
       </div>
     </Provider>
   )
@@ -288,6 +357,13 @@ export type TList_P<TItem extends TListItem> = {
    * @default () => {}
    */
   onItemButtonClick?: TOnItemButtonClick<TItem>
+  /**
+   * Callback for when files are dropped into the list.
+   * @default null
+   * @note If no callback is provided, the list will not
+   * accept dropped files.
+   */
+  onFileDrop?: TNullable<(files: FileList) => void>
 }
 
 /**
