@@ -4,8 +4,10 @@ import Mission, { TMissionSaveJson } from 'metis/missions'
 import MetisServer from 'metis/server'
 import InfoModel from 'metis/server/database/models/info'
 import MissionModel from 'metis/server/database/models/missions'
+import MetisFileStore from 'metis/server/files'
 import { StatusError } from 'metis/server/http'
 import { databaseLogger } from 'metis/server/logging'
+import ServerFileToolbox from 'metis/server/toolbox/files'
 import path from 'path'
 import { v4 as generateHash } from 'uuid'
 import ApiResponse from '../../library/response'
@@ -16,7 +18,11 @@ import ApiResponse from '../../library/response'
  * @param response The express response.
  * @returns The mission file.
  */
-const exportMission = async (request: Request, response: Response) => {
+const exportMission = async (
+  request: Request,
+  response: Response,
+  fileStore: MetisFileStore,
+) => {
   // Extract the mission ID.
   let { _id: missionId } = request.params
 
@@ -31,7 +37,9 @@ const exportMission = async (request: Request, response: Response) => {
     databaseLogger.info('Database info retrieved.')
 
     // Retrieve the mission.
-    let missionDoc = await MissionModel.findById(missionId).exec()
+    let missionDoc = await MissionModel.findById(missionId)
+      .populate('files.reference')
+      .exec()
     // If the mission is not found, throw an error.
     if (missionDoc === null) {
       throw new StatusError(`Mission with ID "${missionId}" not found.`, 404)
@@ -44,15 +52,17 @@ const exportMission = async (request: Request, response: Response) => {
 
     // Gather details for temporary file
     // that will be sent in the response.
-    let tempSubfolderName: string = generateHash()
-    let tempFileName: string = Mission.determineFileName(missionJson.name)
-    let tempFolderPath: string = path.join(
+    let exportsRootDir: string = path.join(
       MetisServer.APP_DIR,
       '/temp/missions/exports/',
     )
-    let tempSubfolderPath: string = path.join(tempFolderPath, tempSubfolderName)
-    let tempFilePath: string = path.join(tempSubfolderPath, tempFileName)
-    let tempFileContents = JSON.stringify(
+    let exportId: string = generateHash()
+    let exportDir: string = path.join(exportsRootDir, exportId)
+    let exportFilesDir: string = path.join(exportDir, 'files')
+    let exportZipName: string = Mission.determineFileName(missionJson.name)
+    let exportZipPath: string = path.join(exportDir, exportZipName)
+    let exportDataPath: string = path.join(exportDir, 'data.json')
+    let exportDataContents = JSON.stringify(
       {
         ...missionJson,
         createdAt: undefined,
@@ -66,18 +76,31 @@ const exportMission = async (request: Request, response: Response) => {
       2,
     )
 
-    // Create the temp directory
-    // if it doesn't exist.
-    if (!fs.existsSync(tempFolderPath)) {
-      fs.mkdirSync(tempFolderPath, { recursive: true })
+    // Create necessary directories.
+    if (!fs.existsSync(exportsRootDir)) {
+      fs.mkdirSync(exportsRootDir, { recursive: true })
+    }
+    fs.mkdirSync(exportFilesDir, { recursive: true })
+
+    // Create data file.
+    fs.writeFileSync(exportDataPath, exportDataContents)
+
+    // Copy files to the export directory.
+    for (let missionFile of missionDoc.files) {
+      let { reference } = missionFile
+      let source = fileStore.getFullPath(reference)
+      let destination = path.join(exportFilesDir, reference.name)
+      fs.copyFileSync(source, destination)
     }
 
-    // Create the file.
-    fs.mkdirSync(tempSubfolderPath, {})
-    fs.writeFileSync(tempFilePath, tempFileContents)
+    // Create the zip file.
+    await ServerFileToolbox.zipFiles(exportZipPath, [
+      exportDataPath,
+      exportFilesDir,
+    ])
 
     // Send it in the response.
-    ApiResponse.sendFile(response, tempFilePath)
+    ApiResponse.sendFile(response, exportZipPath)
   } catch (error: any) {
     // Log the error.
     databaseLogger.error(

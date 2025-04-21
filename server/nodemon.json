@@ -1,4 +1,4 @@
 {
   "ext": "js,json,ts",
-  "ignore": ["/database/backups/**"]
+  "ignore": ["/database/backups/**", "/temp/**"]
 }

@@ -60,7 +60,7 @@ export const routerMap: TMetisRouterMap = async (
     '/:_id/export/*', // The "*" is to ensure the downloaded file includes the mission's name and the .metis extension.
     auth({ permissions: ['missions_read', 'missions_write'] }),
     defineRequests({ params: { _id: 'objectId' } }),
-    exportMission,
+    (request, response) => exportMission(request, response, server.fileStore),
   )
 
   /* -- UPDATE -- */

@@ -2,7 +2,9 @@ import crypto from 'crypto'
 import { RequestHandler } from 'express'
 import { Response } from 'express-serve-static-core'
 import fs from 'fs'
+import FileReference, { TFileReferenceJson } from 'metis/files/references'
 import MetisServer from 'metis/server'
+import StringToolbox from 'metis/toolbox/strings'
 import multer from 'multer'
 import path from 'path'
 import ServerFileReference from './references'
@@ -76,9 +78,9 @@ export default class MetisFileStore {
     // Initialize Multer.
     let storage = multer.diskStorage({
       destination: (req, file, cb) => {
-        if (!fs.existsSync('./files/store-dev'))
-          fs.mkdirSync('./files/store-dev', { recursive: true })
-        cb(null, './files/store-dev')
+        if (!fs.existsSync(directory))
+          fs.mkdirSync(directory, { recursive: true })
+        cb(null, directory)
       },
       filename: (req, file, cb) => {
         const hash = crypto.randomBytes(16).toString('hex') // 32-char hex string
@@ -103,6 +105,14 @@ export default class MetisFileStore {
   ): void {
     let pathToFile = path.join(this.directory, reference.path)
     response.download(pathToFile, reference.name)
+  }
+
+  /**
+   * @param reference The reference to the file.
+   * @returns The full path to the file.
+   */
+  public getFullPath(reference: FileReference | TFileReferenceJson): string {
+    return StringToolbox.joinPaths(this.directory, reference.path)
   }
 }
 

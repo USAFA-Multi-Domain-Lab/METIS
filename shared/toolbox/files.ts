@@ -11,24 +11,6 @@ if (context === 'express') {
  */
 export default class FileToolbox {
   /**
-   * @param dir The directory to check.
-   * @returns Whether the given directory is a folder.
-   */
-  public static isFolder(dir: string): boolean {
-    try {
-      if (context === 'react') {
-        console.warn(
-          'FileToolbox.isFolder() is not available in the browser context. Returning false.',
-        )
-        return false
-      }
-      return fs.lstatSync(dir).isDirectory()
-    } catch (error) {
-      return false
-    }
-  }
-
-  /**
    * @param mimetype The MIME type of a file.
    * @returns The label for the MIME type.
    * @example

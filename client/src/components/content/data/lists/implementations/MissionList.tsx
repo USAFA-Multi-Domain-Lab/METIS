@@ -279,6 +279,9 @@ export default function MissionList(props: TMissionList_P): JSX.Element | null {
           onDeleteRequest(mission)
           break
         case 'download':
+          console.log(
+            `/api/v1/missions/${mission._id}/export/${mission.fileName}`,
+          )
           window.open(
             `/api/v1/missions/${mission._id}/export/${mission.fileName}`,
             '_blank',

@@ -4,10 +4,10 @@ import TargetSchema from 'integration/library/target-env-classes/targets'
 import TargetEnvironment from 'metis/target-environments'
 import TargetEnvRegistry from 'metis/target-environments/registry'
 import { TTargetJson } from 'metis/target-environments/targets'
-import FileToolbox from 'metis/toolbox/files'
 import StringToolbox from 'metis/toolbox/strings'
 import path from 'path'
 import { TMetisServerComponents } from '../index'
+import ServerFileToolbox from '../toolbox/files'
 import ServerTarget from './targets'
 
 /**
@@ -51,7 +51,7 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
 
     // If the directory provided is not a folder,
     // throw an error.
-    if (!FileToolbox.isFolder(directory)) {
+    if (!ServerFileToolbox.isFolder(directory)) {
       throw new Error(
         `Cannot scan target directory. "${directory}" is not a folder.`,
       )
@@ -85,7 +85,7 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
       .map((subdirectory) => StringToolbox.joinPaths(directory, subdirectory))
 
     for (let subdirectory of directoryContents) {
-      if (FileToolbox.isFolder(subdirectory)) {
+      if (ServerFileToolbox.isFolder(subdirectory)) {
         this.scanTargetDirectory(subdirectory, environment)
       }
     }
@@ -110,7 +110,7 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
 
     // If the directory provided is not a folder,
     // throw an error.
-    if (!FileToolbox.isFolder(directory)) {
+    if (!ServerFileToolbox.isFolder(directory)) {
       throw new Error(
         `Cannot scan target environment directory. "${directory}" is not a folder.`,
       )
@@ -176,7 +176,7 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
   public static scan(directory: string = this.DEFAULT_DIRECTORY): void {
     // If the directory provided is not a folder,
     // throw an error.
-    if (!FileToolbox.isFolder(directory)) {
+    if (!ServerFileToolbox.isFolder(directory)) {
       throw new Error(
         `Cannot scan for target environments. "${directory}" is not a folder.`,
       )
@@ -189,7 +189,7 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
       .map((subdirectory) => StringToolbox.joinPaths(directory, subdirectory))
 
     for (let subdirectory of directoryContents) {
-      if (FileToolbox.isFolder(subdirectory)) {
+      if (ServerFileToolbox.isFolder(subdirectory)) {
         ServerTargetEnvironment.scanTargetEnvDirectory(subdirectory)
       }
     }
