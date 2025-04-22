@@ -6,6 +6,7 @@ import {
   model,
   Schema,
 } from 'mongoose'
+import path from 'path'
 import { buildToJson, excludeDeletedForFinds, TRecoverableDoc } from '.'
 
 /* -- FUNCTIONS -- */
@@ -97,29 +98,34 @@ excludeDeletedForFinds(FileReferenceSchema)
 // Ensures that the file name is unique by appending
 // a number to the end of the file name if it already
 // exists.
-// FileReferenceSchema.pre('save', async function (next) {
-//   const file = this as TFileReferenceDoc
-//
-//   if (!file.isNew && !file.isModified('name')) {
-//     return next()
-//   }
-//
-//   const ext = path.extname(file.name)
-//   const base = path.basename(file.name, ext)
-//
-//   let candidate = file.name
-//   let counter = 1
-//
-//   while (
-//     await FileReferenceModel.exists({ name: candidate, _id: { $ne: file._id } })
-//   ) {
-//     candidate = `${base} (${counter})${ext}`
-//     counter++
-//   }
-//
-//   file.name = candidate
-//   next()
-// })
+FileReferenceSchema.pre('save', async function (next) {
+  const file = this as TFileReferenceDoc
+
+  if (!file.isNew && !file.isModified('name')) {
+    return next()
+  }
+
+  const ext = path.extname(file.name)
+  const base = path.basename(file.name, ext)
+
+  let candidate = file.name
+  let counter = 1
+
+  while (
+    await FileReferenceModel.exists({
+      name: candidate,
+      _id: { $ne: file._id },
+    }).setOptions({
+      includeDeleted: true,
+    })
+  ) {
+    candidate = `${base} (${counter})${ext}`
+    counter++
+  }
+
+  file.name = candidate
+  next()
+})
 
 /* -- SCHEMA TYPES -- */
 

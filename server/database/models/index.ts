@@ -32,31 +32,24 @@ export const excludeDeletedForFinds = <
   schema.pre(
     ['find', 'findOne', 'findOneAndUpdate', 'updateOne'],
     function (next) {
-      // Get projection.
-      let projection = this.projection()
+      const { includeDeleted = false } = this.getOptions()
 
-      // Create if does not exist.
-      if (projection === undefined) {
-        projection = {}
+      // If includeDeleted is false, filter out deleted documents
+      // from the query.
+      if (!includeDeleted) {
+        this.where({ deleted: false })
       }
 
-      // Check if the projection is empty.
-      let projectionKeys = Object.keys(projection)
-
-      // If the projection is empty, create a default projection.
-      if (projectionKeys.length === 0) {
+      // Default projection logic
+      let projection = this.projection() ?? {}
+      if (Object.keys(projection).length === 0) {
         projection = {
           deleted: 0,
           __v: 0,
         }
       }
 
-      // Set projection.
       this.projection(projection)
-      // Hide deleted missions.
-      this.where({ deleted: false })
-
-      // Call the next middleware.
       return next()
     },
   )
