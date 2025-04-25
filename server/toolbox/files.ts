@@ -2,7 +2,12 @@ import archiver from 'archiver'
 import fs from 'fs'
 import FileToolbox from 'metis/toolbox/files'
 import path from 'path'
+import unzipper from 'unzipper'
 
+/**
+ * Extension of `FileToolbox` with support for server-side
+ * operations.
+ */
 export default class ServerFileToolbox extends FileToolbox {
   /**
    * @param dir The directory to check.
@@ -48,13 +53,7 @@ export default class ServerFileToolbox extends FileToolbox {
     }
 
     return new Promise<void>((resolve, reject) => {
-      output.on('close', () => {
-        console.log(
-          `✅ Zipped ${archive.pointer()} total bytes to ${outputPath}`,
-        )
-        resolve()
-      })
-
+      output.on('close', resolve)
       archive.on('error', reject)
       archive.pipe(output)
 
@@ -64,6 +63,25 @@ export default class ServerFileToolbox extends FileToolbox {
       }
 
       archive.finalize()
+    })
+  }
+
+  /**
+   * Extracts a ZIP file to a target directory.
+   * @param zipPath The path to the .zip file.
+   * @param destination The folder to extract to.
+   * @resolves When extraction completes.
+   * @rejects If an error occurs during extraction.
+   */
+  public static async unzipFiles(
+    zipPath: string,
+    destination: string,
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      fs.createReadStream(zipPath)
+        .pipe(unzipper.Extract({ path: destination }))
+        .on('close', resolve)
+        .on('error', reject)
     })
   }
 }

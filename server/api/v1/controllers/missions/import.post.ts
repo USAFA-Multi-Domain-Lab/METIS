@@ -1,7 +1,8 @@
 import { Request, Response } from 'express-serve-static-core'
+import MetisFileStore from 'metis/server/files'
 import { StatusError } from 'metis/server/http'
-import ApiResponse from '../../library/response'
 import MissionImport from 'metis/server/missions/imports'
+import ApiResponse from '../../library/response'
 
 /**
  * This will import a mission from a file.
@@ -9,7 +10,11 @@ import MissionImport from 'metis/server/missions/imports'
  * @param response The express response.
  * @returns The response to send to the client.
  */
-const importMission = async (request: Request, response: Response) => {
+const importMission = async (
+  request: Request,
+  response: Response,
+  fileStore: MetisFileStore,
+) => {
   // If no files are included in the request,
   // return a 400 status code.
   if (
@@ -22,13 +27,13 @@ const importMission = async (request: Request, response: Response) => {
   }
 
   // Create a new mission-import instance.
-  let missionImport = MissionImport.fromMulterFiles(request.files)
+  let missionImport = MissionImport.fromMulterFiles(request.files, fileStore)
 
   // Execute the mission import.
   await missionImport.execute()
 
   // Send a response.
-  ApiResponse.sendJson(response, missionImport.results)
+  return ApiResponse.sendJson(response, missionImport.results)
 }
 
 export default importMission

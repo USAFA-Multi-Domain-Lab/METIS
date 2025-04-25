@@ -5,8 +5,10 @@ import fs from 'fs'
 import FileReference, { TFileReferenceJson } from 'metis/files/references'
 import MetisServer from 'metis/server'
 import StringToolbox from 'metis/toolbox/strings'
+import mime from 'mime-types'
 import multer from 'multer'
 import path from 'path'
+import FileReferenceModel from '../database/models/file-references'
 import ServerFileReference from './references'
 
 /* -- CLASSES -- */
@@ -91,6 +93,13 @@ export default class MetisFileStore {
     this.multer = multer({
       storage,
     })
+
+    // Create the store directory, if it doesn't exist.
+    if (!fs.existsSync(this.directory)) {
+      fs.mkdirSync(this.directory, { recursive: true })
+    }
+
+    this._initialized = true
   }
 
   /**
@@ -114,6 +123,71 @@ export default class MetisFileStore {
   public getFullPath(reference: FileReference | TFileReferenceJson): string {
     return StringToolbox.joinPaths(this.directory, reference.path)
   }
+
+  /**
+   * This will create and save a reference for a Multer
+   * file to the database.
+   * @param file The file for which to create a reference.
+   * @returns The saved reference.
+   */
+  public async createReference(file: Express.Multer.File) {
+    const { filename, originalname, mimetype, size } = file
+
+    const doc = new FileReferenceModel({
+      name: originalname,
+      path: filename,
+      mimetype,
+      size,
+    })
+
+    return await doc.save()
+  }
+
+  /**
+   * Imports a file from the given path into the
+   * file store, automatically creating a reference
+   * for it in the database.
+   * @param sourcePath The path of the file to import.
+   * @param referenceId The ID of the file reference to
+   * create in the database.
+   * @resolves With the new database reference to the file.
+   * @rejects If an error occurs while importing the file or
+   * creating the reference.
+   */
+  public async import(
+    sourcePath: string,
+    options: TFileStoreImportOptions = {},
+  ): Promise<TFileReferenceJson> {
+    // 1. Get original info
+    const { referenceId } = options
+    const name = path.basename(sourcePath)
+    const extension = path.extname(sourcePath)
+    const mimetype = mime.lookup(extension) || 'application/octet-stream'
+    const size = fs.statSync(sourcePath).size
+
+    // 2. Create hash
+    const hash = crypto.randomBytes(16).toString('hex')
+    const hashedName = `${hash}_${extension}`
+
+    // 3. Define destination
+    const destPath = path.join(this.directory, hashedName)
+
+    // 4. Copy file into store
+    fs.copyFileSync(sourcePath, destPath)
+
+    // 5. Save reference
+    let referenceDoc = await FileReferenceModel.create({
+      _id: referenceId,
+      name,
+      path: hashedName,
+      mimetype,
+      size,
+    })
+
+    // 6. Return reference as JSON.
+    let referenceData: TFileReferenceJson = referenceDoc.toJSON()
+    return referenceData
+  }
 }
 
 /* -- TYPES -- */
@@ -133,3 +207,15 @@ export type TMetisFileStoreConfig = {
  * A file uploaded with Multer.
  */
 export type TMulterFile = Express.Multer.File
+
+/**
+ * Options for importing a file into the file store.
+ */
+export type TFileStoreImportOptions = {
+  /**
+   * The ID to use when creating the new file reference
+   * in the database.
+   * @note If not provided, a new ID will be generated.
+   */
+  referenceId?: string
+}

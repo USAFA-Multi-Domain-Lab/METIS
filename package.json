@@ -22,5 +22,9 @@
     "semi": false,
     "trailingComma": "all",
     "quoteProps": "consistent"
+  },
+  "dependencies": {
+    "@types/mime-types": "^2.1.4",
+    "mime-types": "^3.0.1"
   }
 }

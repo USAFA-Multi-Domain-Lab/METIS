@@ -15,6 +15,12 @@ export default class ServerMissionFile extends MissionFile {
     data: TMissionFileJson,
     mission: ServerMission,
   ): ServerMissionFile {
+    if (typeof data.reference === 'string') {
+      throw new Error(
+        '`reference` property must be populated to create a `ServerMissionFile` instance.',
+      )
+    }
+
     let reference = new ServerFileReference(
       data.reference._id,
       data.reference.name,

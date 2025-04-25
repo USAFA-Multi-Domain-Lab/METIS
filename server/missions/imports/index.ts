@@ -1,7 +1,12 @@
 import fs from 'fs'
+import { TMissionFileJson } from 'metis/missions/files'
+import FileReferenceModel from 'metis/server/database/models/file-references'
+import MissionModel from 'metis/server/database/models/missions'
+import ServerFileToolbox from 'metis/server/toolbox/files'
+import NumberToolbox from 'metis/toolbox/numbers'
 import { AnyObject } from 'metis/toolbox/objects'
-import MissionModel from '../../database/models/missions'
-import { TMulterFile } from '../../files'
+import path from 'path'
+import MetisFileStore, { TMulterFile } from '../../files'
 import { databaseLogger } from '../../logging'
 import build_000005 from './builds/build_000005'
 import build_000009 from './builds/build_000009'
@@ -26,6 +31,7 @@ import build_000035 from './builds/build_000035'
 import build_000036 from './builds/build_000036'
 import build_000037 from './builds/build_000037'
 import build_000038 from './builds/build_000038'
+import build_000039 from './builds/build_000039'
 
 /**
  * This class is responsible for executing the import of .metis and .cesar files.
@@ -36,6 +42,12 @@ export default class MissionImport {
    * The array of files to import.
    */
   private files: TFileImportData[]
+
+  /**
+   * The file store where any supporting files
+   * will be stored.
+   */
+  private fileStore: MetisFileStore
 
   /**
    * Keeps track of the number of files that have been processed.
@@ -63,10 +75,16 @@ export default class MissionImport {
 
   /**
    * @param files An array of files to import.
+   * @param fileStore The file store where any supporting files
+   * will be stored.
    */
-  public constructor(files: TFileImportData | TFileImportData[]) {
+  public constructor(
+    files: TFileImportData | TFileImportData[],
+    fileStore: MetisFileStore,
+  ) {
     if (!Array.isArray(files)) files = [files]
     this.files = files
+    this.fileStore = fileStore
   }
 
   /**
@@ -79,9 +97,12 @@ export default class MissionImport {
     error: Error,
   ): void => {
     // Log the error.
-    databaseLogger.error(`Failed to import mission "${file.name}".\n`, error)
+    databaseLogger.error(
+      `Failed to import mission "${file.originalName}".\n`,
+      error,
+    )
     // Create the error message.
-    let fileName: string = file.name
+    let fileName: string = file.originalName
     let errorMessage: string = error.message
     // Replace all backticks with asterisks.
     while (errorMessage.includes('`')) {
@@ -174,8 +195,10 @@ export default class MissionImport {
 
     // If the schemaBuildNumber field is missing,
     // handle the error.
-    if (!contents_JSON.schemaBuildNumber) {
-      throw new Error('The schemaBuildNumber field is missing from the JSON.')
+    if (isNaN(contents_JSON.schemaBuildNumber)) {
+      throw new Error(
+        'The schemaBuildNumber field is missing or invalid in the JSON.',
+      )
     }
 
     // If the file's schemaBuildNumber is 9
@@ -183,33 +206,32 @@ export default class MissionImport {
     // it is skipped.
     if (
       contents_JSON.schemaBuildNumber <= 9 &&
-      !file.name.toLowerCase().endsWith('.cesar')
+      !file.originalName.toLowerCase().endsWith('.cesar')
     ) {
       throw new Error(
-        `The file "${file.name}" was rejected because it did not have the .cesar extension.`,
+        `The file "${file.originalName}" was rejected because it did not have the .cesar extension.`,
       )
     }
-
-    // If the file's schemaBuildNumber is 10
-    // or greater and it is not a .metis file,
-    // it is skipped.
-    if (
-      contents_JSON.schemaBuildNumber >= 10 &&
-      !file.name.toLowerCase().endsWith('.metis')
+    // If the file's schemaBuildNumber is
+    // between 10 and 38 and it is not a
+    // .metis file, it is skipped.
+    else if (
+      NumberToolbox.isBetween(contents_JSON.schemaBuildNumber, 10, 38) &&
+      !file.originalName.toLowerCase().endsWith('.metis')
     ) {
       throw new Error(
-        `The file "${file.name}" was rejected because it did not have the .metis extension.`,
+        `The file "${file.originalName}" was rejected because it did not have the .metis extension.`,
       )
     }
-
-    // If the file does not have the .metis
-    // or .cesar extension, it is skipped.
-    if (
-      !file.name.toLowerCase().endsWith('.metis') &&
-      !file.name.toLowerCase().endsWith('.cesar')
+    // If the file's schemaBuildNumber is 39
+    // or greater and it is not a .metis.zip
+    // file, it is skipped.
+    else if (
+      contents_JSON.schemaBuildNumber >= 39 &&
+      !file.originalName.toLowerCase().endsWith('.metis.zip')
     ) {
       throw new Error(
-        `The file "${file.name}" was rejected because it did not have the .metis or .cesar extension.`,
+        `The file "${file.originalName}" was rejected because it did not have the .metis.zip extension.`,
       )
     }
   }
@@ -259,6 +281,63 @@ export default class MissionImport {
     this.processBuild(missionData, 36, /**/ build_000036)
     this.processBuild(missionData, 37, /**/ build_000037)
     this.processBuild(missionData, 38, /**/ build_000038)
+    this.processBuild(missionData, 39, /**/ build_000039)
+  }
+
+  /**
+   * Imports the files needed for the mission.
+   * @param importDir The directory where the import has been
+   * unzipped.
+   * @param data The contents of the file as a `JSON` object.
+   * @param sourceFile The file from where all data and associated
+   * files were extracted.
+   */
+  private async importFiles(
+    importDir: string,
+    mission: AnyObject,
+    sourceFile: TFileImportData,
+  ): Promise<void> {
+    // Import the files.
+    for (let missionFile of mission.files as TMissionFileJson[]) {
+      // Handle absence of file reference data.
+      if (typeof missionFile.reference !== 'object') {
+        return this.handleMissionImportError(
+          sourceFile,
+          new Error(
+            'File reference found in mission import was not populated.',
+          ),
+        )
+      }
+
+      // Gather details.
+      const { _id: referenceId } = missionFile.reference
+      const filePath: string = path.join(
+        importDir,
+        'files',
+        missionFile.reference.name,
+      )
+
+      // Determine if the referenced file is tracked
+      // in the database already.
+      let referenceExists = Boolean(
+        await FileReferenceModel.exists({
+          _id: missionFile.reference._id,
+        }),
+      )
+
+      // If the file reference does not exist,
+      // import it into the file store, which will
+      // also create the reference.
+      if (!referenceExists) {
+        await this.fileStore.import(filePath, {
+          referenceId,
+        })
+      }
+
+      // Replace the file reference in the mission file
+      // with its ID.
+      missionFile.reference = referenceId
+    }
   }
 
   /**
@@ -267,17 +346,26 @@ export default class MissionImport {
    */
   public execute = async (): Promise<void> => {
     const promises = this.files.map(async (file) => {
+      let importsRootDir = path.dirname(file.path)
+      let importDir = path.join(importsRootDir, `contents_${file.name}`)
+      let importDataPath = path.join(importDir, 'data.json')
+
+      // todo: Handle non-zip files.
+      // Unzip the file into a temporary directory.
+      fs.mkdirSync(importDir)
+      await ServerFileToolbox.unzipFiles(file.path, importDir)
+
       let contents_string: string
       let contents_JSON: AnyObject
 
       // Reads files contents.
       try {
-        contents_string = await fs.promises.readFile(file.path, {
+        contents_string = await fs.promises.readFile(importDataPath, {
           encoding: 'utf-8',
         })
       } catch (error: any) {
         error.message =
-          'Failed to read file. This file is either not actually a .cesar file, not actually a .metis file, or is corrupted.'
+          'Failed to read file. This file is either invalid or corrupted.'
 
         this.handleMissionImportError(file, error)
         return
@@ -297,12 +385,9 @@ export default class MissionImport {
 
       // Model creation.
       try {
-        // Deletes the schemaBuildNumber field
-        // so an error isn't thrown, since the
-        // schema is set to strict and this field
-        // is not in the schema.
         delete contents_JSON.schemaBuildNumber
-
+        // Import any files needed for the mission.
+        await this.importFiles(importDir, contents_JSON, file)
         // Create the new mission.
         let missionDoc = await MissionModel.create(contents_JSON)
         // Log the creation of the mission.
@@ -353,12 +438,14 @@ export default class MissionImport {
    */
   public static fromMulterFiles = (
     multerFiles: TMulterFile[],
+    fileStore: MetisFileStore,
   ): MissionImport => {
     let files = multerFiles.map((file) => ({
-      name: file.originalname,
+      name: file.filename,
+      originalName: file.originalname,
       path: file.path,
     }))
-    return new MissionImport(files)
+    return new MissionImport(files, fileStore)
   }
 }
 
@@ -369,9 +456,13 @@ export default class MissionImport {
  */
 export type TFileImportData = {
   /**
-   * The name of the file.
+   * The current name of the file on the server.
    */
   name: string
+  /**
+   * The original name of the file.
+   */
+  originalName: string
   /**
    * The path to the file.
    */

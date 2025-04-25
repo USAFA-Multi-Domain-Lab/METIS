@@ -88,6 +88,16 @@ const exportMission = async (
     // Copy files to the export directory.
     for (let missionFile of missionDoc.files) {
       let { reference } = missionFile
+
+      // If the reference is not populated, throw an
+      // error. This should theoretically not happen.
+      if (typeof reference === 'string') {
+        throw new StatusError(
+          `File reference is not populated for mission.`,
+          500,
+        )
+      }
+
       let source = fileStore.getFullPath(reference)
       let destination = path.join(exportFilesDir, reference.name)
       fs.copyFileSync(source, destination)

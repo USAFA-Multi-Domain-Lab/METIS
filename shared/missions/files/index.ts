@@ -85,17 +85,40 @@ export default abstract class MissionFile<
       reference: this.reference.toJson(),
     }
   }
+
+  /**
+   * @param data File reference data.
+   * @returns The ID of the file reference from
+   * mission file JSON.
+   */
+  public static getRefIdFromJson(data: TMissionFileJson): string {
+    return typeof data.reference === 'string'
+      ? data.reference
+      : data.reference._id
+  }
 }
 
 /**
  * JSON representation of a mission file.
  */
-export type TMissionFileJson = Pick<
-  MissionFile,
-  '_id' | 'alias' | 'initialAccess'
-> & {
+export type TMissionFileJson = {
+  /**
+   * Uniquely identifies the file in the mission.
+   */
+  _id: string
+  /**
+   * An alias given to the file, specific to the
+   * scenario's needs.
+   */
+  alias: string
+  /**
+   * Whether the session member will have initial
+   * access to the file, or if it will be hidden
+   * until an effect provides access.
+   */
+  initialAccess: boolean
   /**
    * The reference to the file in the store.
    */
-  reference: TFileReferenceJson
+  reference: TFileReferenceJson | string
 }

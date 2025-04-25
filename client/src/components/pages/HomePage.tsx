@@ -292,7 +292,7 @@ export default function HomePage(): JSX.Element | null {
         // rejected from being uploaded.
         if (invalidFileExtensionCount > 0) {
           notify(
-            `${invalidFileExtensionCount} of the files uploaded did not have the .metis extension and therefore ${
+            `${invalidFileExtensionCount} of the files uploaded did not have the .metis.zip extension and therefore ${
               invalidFileExtensionCount === 1 ? 'was' : 'were'
             } rejected.`,
           )
@@ -300,9 +300,12 @@ export default function HomePage(): JSX.Element | null {
       }
 
       // todo: Resolve this comment.
-      // Reloads missions now that all files
+      // Reloads missions and files now that all files
       // have been processed.
-      loadMissions().then(loadMissionsCallback).catch(loadMissionsCallback)
+      loadMissions()
+        .then(loadFiles)
+        .then(loadMissionsCallback)
+        .catch(loadMissionsCallback)
     }
 
     // Switch to load screen.
@@ -310,20 +313,12 @@ export default function HomePage(): JSX.Element | null {
       `Importing ${files.length} file${files.length === 1 ? '' : 's'}...`,
     )
 
-    // Iterates over files for upload.
+    // Iterates over files for upload, determining
+    // if they are valid or not.
     for (let file of files) {
-      if (file.name.toLowerCase().endsWith('.cesar')) {
-        // If a .cesar file, import it.
-        validFiles.push(file)
-      }
-      // If a .metis file, import it.
-      else if (file.name.toLowerCase().endsWith('.metis')) {
-        validFiles.push(file)
-      }
-      // Else, don't.
-      else {
-        invalidFileExtensionCount++
-      }
+      let regex = /^.*\.metis$|^.*\.cesar$|^.*\.metis.zip$/
+      if (regex.test(file.name.toLowerCase())) validFiles.push(file)
+      else invalidFileExtensionCount++
     }
 
     // Import the files.

@@ -1,13 +1,12 @@
 import { expect } from 'chai'
 import { before } from 'mocha'
+import MissionModel from '../database/models/missions'
 import { testLogger } from '../logging/index'
+import ServerMission from '../missions'
+import MissionImport from '../missions/imports'
 import { userCredentials } from './data'
 import { agent } from './index.test'
-import fs from 'fs'
 import { testServer } from './server'
-import MissionImport from '../missions/imports'
-import MissionModel from '../database/models/missions'
-import ServerMission from '../missions'
 
 export let missionToLaunch: ServerMission
 
@@ -20,7 +19,7 @@ export let missionToLaunch: ServerMission
 async function seedDatabase(): Promise<void> {
   // Create a test mission in the database.
   let missionImport = new MissionImport({
-    name: 'Space ISR Operations (MSS 251).metis',
+    originalName: 'Space ISR Operations (MSS 251).metis',
     path: './tests/static/seeding/Space ISR Operations (MSS 251).metis',
   })
   await missionImport.execute()

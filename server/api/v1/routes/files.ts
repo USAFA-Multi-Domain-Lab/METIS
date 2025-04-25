@@ -45,7 +45,7 @@ const routerMap: TMetisRouterMap = (
     '/',
     auth({}), // todo: Add file permissions.
     fileStore.uploadMiddleware,
-    uploadFiles,
+    (request, response) => uploadFiles(request, response, fileStore),
   )
 
   router.delete(

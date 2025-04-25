@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useGlobalContext } from 'src/context'
 import ClientLogin from 'src/logins'
 import { compute } from 'src/toolbox'
@@ -9,6 +9,7 @@ import {
   ButtonText,
   TButtonTextDisabled,
 } from '../content/user-controls/buttons/ButtonText'
+import If from '../content/util/If'
 import './AuthPage.scss'
 
 export interface IAuthPage extends TPage_P {}
@@ -17,19 +18,17 @@ export interface IAuthPage extends TPage_P {}
  * This will render a page where a user can login.
  */
 export default function AuthPage(): JSX.Element | null {
-  /* -- GLOBAL CONTEXT -- */
-
   const globalContext = useGlobalContext()
   const { beginLoading, finishLoading, navigateTo, connectToServer, prompt } =
     globalContext.actions
   const [_, setLogin] = globalContext.login
 
-  /* -- STATE -- */
-
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const [username, setUsername] = useState<string>('')
   const [password, setPassword] = useState<string>('')
+  const [submitManually, setSubmitManually] = useState<boolean>(false)
+  const form = useRef<HTMLFormElement>(null)
 
   /* -- COMPUTED -- */
 
@@ -140,6 +139,33 @@ export default function AuthPage(): JSX.Element | null {
     }
   }
 
+  /**
+   * This is called when the dev admin button is clicked.
+   */
+  const onDevAdminClick = () => {
+    let form_elm = form.current
+
+    // Fill out username and password,
+    // then trigger a manual submission.
+    if (form_elm) {
+      // Note: This will only work if the username
+      // and password of the default admin user is
+      // not changed to no longer be their default
+      // values.
+      setUsername('admin')
+      setPassword('temppass')
+      setSubmitManually(true)
+    }
+  }
+
+  /* -- EFFECTS -- */
+
+  // This will trigger a manual submission whenever
+  // `submitManually` is set to true.
+  useEffect(() => {
+    if (submitManually) form.current?.requestSubmit()
+  }, [submitManually])
+
   /* -- RENDER -- */
 
   return (
@@ -151,6 +177,7 @@ export default function AuthPage(): JSX.Element | null {
           className='Form'
           onChange={() => setErrorMessage(null)}
           onSubmit={handleSubmit}
+          ref={form}
         >
           <DetailString
             fieldType='required'
@@ -178,6 +205,13 @@ export default function AuthPage(): JSX.Element | null {
               onClick={() => {}}
               disabled={submitDisabled}
             />
+            <If condition={process.env.NODE_ENV === 'development'}>
+              <ButtonText
+                type='button'
+                text='Dev Admin'
+                onClick={onDevAdminClick}
+              />
+            </If>
           </div>
         </form>
       </div>

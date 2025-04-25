@@ -695,7 +695,9 @@ export default abstract class Mission<
    * @param prototypeId The ID of the prototype to get.
    * @returns The prototype with the given ID, or undefined if no prototype is found.
    */
-  public static getPrototype<TMission extends TMissionJson | Mission>(
+  public static getPrototype<
+    TMission extends TMissionJson | TMissionSaveJson | Mission,
+  >(
     mission: TMission,
     prototypeId: string | undefined,
   ): TMission['prototypes'][0] | undefined {
@@ -773,6 +775,12 @@ export type TMissionJsonOptions = {
    * @default { expose: 'all' }
    */
   forceExposure?: TForceExposure
+  /**
+   * The exposure of the file references within each
+   * mission file in the mission.
+   * @default { expose: 'auto' }
+   */
+  fileReferenceExposure?: TFileReferenceExposure
 }
 
 /**
@@ -806,6 +814,15 @@ export type TForceExposure =
   | { expose: 'force-with-all-nodes'; forceId: MissionForce['_id'] }
   | { expose: 'force-with-revealed-nodes'; forceId: MissionForce['_id'] }
   | { expose: 'none' }
+
+/**
+ * @option 'auto'
+ * The reference object is exposed in the JSON if
+ * available, otherwise only the ID is exposed.
+ * @option 'id-only'
+ * Only the ID of the file reference is exposed.
+ */
+export type TFileReferenceExposure = { expose: 'auto' } | { expose: 'id-only' }
 
 /**
  * An object that makes up a part of a mission, including
