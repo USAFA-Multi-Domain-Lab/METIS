@@ -349,23 +349,31 @@ export default class MissionImport {
       let importsRootDir = path.dirname(file.path)
       let importDir = path.join(importsRootDir, `contents_${file.name}`)
       let importDataPath = path.join(importDir, 'data.json')
+      let isZipFile: boolean = /^.*\.metis\.zip$/.test(file.originalName)
+      let dataAsStr: string
+      let dataAsJson: AnyObject
 
-      // todo: Handle non-zip files.
-      // Unzip the file into a temporary directory.
-      fs.mkdirSync(importDir)
-      await ServerFileToolbox.unzipFiles(file.path, importDir)
-
-      let contents_string: string
-      let contents_JSON: AnyObject
-
-      // Reads files contents.
       try {
-        contents_string = await fs.promises.readFile(importDataPath, {
+        // Create a temporary directory to manage the
+        // contents of the import.
+        fs.mkdirSync(importDir)
+
+        if (isZipFile) {
+          // Unzip the file into a temporary directory.
+          await ServerFileToolbox.unzipFiles(file.path, importDir)
+        } else {
+          // If the file is not a .metis.zip file, copy it
+          // to the temporary directory.
+          fs.copyFileSync(file.path, importDataPath)
+        }
+
+        // Reads files contents.
+        dataAsStr = await fs.promises.readFile(importDataPath, {
           encoding: 'utf-8',
         })
       } catch (error: any) {
         error.message =
-          'Failed to read file. This file is either invalid or corrupted.'
+          'Failed to unpack mission import contents. This file is either invalid or corrupted.'
 
         this.handleMissionImportError(file, error)
         return
@@ -373,11 +381,11 @@ export default class MissionImport {
 
       try {
         // Convert the contents of the file to JSON.
-        contents_JSON = this.toJson(contents_string)
+        dataAsJson = this.toJson(dataAsStr)
         // Validates the contents of the file.
-        this.validateFileContents(file, contents_JSON)
+        this.validateFileContents(file, dataAsJson)
         // Migrates if necessary.
-        this.migrateIfOutdated(contents_JSON)
+        this.migrateIfOutdated(dataAsJson)
       } catch (error: any) {
         this.handleMissionImportError(file, error)
         return
@@ -385,11 +393,11 @@ export default class MissionImport {
 
       // Model creation.
       try {
-        delete contents_JSON.schemaBuildNumber
+        delete dataAsJson.schemaBuildNumber
         // Import any files needed for the mission.
-        await this.importFiles(importDir, contents_JSON, file)
+        if (isZipFile) await this.importFiles(importDir, dataAsJson, file)
         // Create the new mission.
-        let missionDoc = await MissionModel.create(contents_JSON)
+        let missionDoc = await MissionModel.create(dataAsJson)
         // Log the creation of the mission.
         databaseLogger.info(`New mission created named "${missionDoc.name}".`)
         // Indicate that the file was successfully imported.
