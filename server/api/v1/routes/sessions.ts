@@ -6,11 +6,15 @@ import defineRequests, {
 import Session, { TSessionConfig } from 'metis/sessions'
 import { auth } from '../../../middleware/users'
 import deleteSession from '../controllers/sessions/[_id].delete'
+import downloadMissionFile from '../controllers/sessions/files/[_id]/download.get'
 import getSessions from '../controllers/sessions/index.get'
 import launchSession from '../controllers/sessions/launch.post'
 
 const routerMap = (router: Router, server: MetisServer, done: () => void) => {
+  const { fileStore } = server
+
   /* -- CREATE -- */
+
   router.post(
     '/launch/',
     auth({ permissions: ['sessions_write_native', 'missions_read'] }),
@@ -36,9 +40,17 @@ const routerMap = (router: Router, server: MetisServer, done: () => void) => {
   )
 
   /* -- READ -- */
+
   router.get('/', auth({}), getSessions)
 
   /* -- UPDATE -- */
+
+  router.get(
+    '/files/:_id/download',
+    auth({ authentication: 'in-session' }),
+    defineRequests({ params: { _id: 'string' } }),
+    (request, response) => downloadMissionFile(request, response, fileStore),
+  )
 
   /* -- DELETE -- */
 

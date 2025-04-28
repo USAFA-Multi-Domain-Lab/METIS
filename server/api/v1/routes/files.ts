@@ -18,39 +18,37 @@ const routerMap: TMetisRouterMap = (
 
   /* ---------------------------- ROUTES ---------------------------- */
 
-  router.get('/', auth({}), defineRequests({}), getFiles)
+  router.get(
+    '/',
+    auth({ permissions: ['files_read'] }),
+    defineRequests({}),
+    getFiles,
+  )
 
   router.get(
     '/:_id',
-    auth({}), // todo: Add file permissions.
+    auth({ permissions: ['files_read'] }),
     defineRequests({ params: { _id: 'objectId' } }),
     getFile,
   )
 
   router.get(
     '/:_id/download',
-    auth({}), // todo: Add file permissions.
+    auth({ permissions: ['files_read'] }),
     defineRequests({ params: { _id: 'objectId' } }),
     (request, response) => downloadFile(request, response, fileStore),
   )
 
-  // router.get(
-  //   '/:_id/download',
-  //   auth({}), // todo: Add file permissions.
-  //   defineRequests({ params: { _id: 'objectId' } }),
-  //   downloadFile,
-  // )
-
   router.post(
     '/',
-    auth({}), // todo: Add file permissions.
+    auth({ permissions: ['files_write'] }),
     fileStore.uploadMiddleware,
     (request, response) => uploadFiles(request, response, fileStore),
   )
 
   router.delete(
     '/:_id',
-    auth({}), // todo: Add file permissions.
+    auth({ permissions: ['files_write'] }),
     defineRequests({ params: { _id: 'objectId' } }),
     deleteFile,
   )

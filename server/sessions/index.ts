@@ -27,6 +27,7 @@ import { plcApiLogger } from '../logging'
 import ServerActionExecution from '../missions/actions/executions'
 import ServerExecutionOutcome from '../missions/actions/outcomes'
 import ServerEffect from '../missions/effects'
+import ServerMissionFile from '../missions/files'
 import ServerMissionForce from '../missions/forces'
 import ServerOutput, { TServerOutputOptions } from '../missions/forces/output'
 import TargetEnvContext from '../target-environments/context'
@@ -374,6 +375,15 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     }
     // Return whether the member was found.
     return !!member
+  }
+
+  /**
+   * Gets the file from the mission with the given ID.
+   * @param missionFileId The ID of the file to get.
+   * @returns The file, or undefined if not found.
+   */
+  public getFile(missionFileId: string): ServerMissionFile | undefined {
+    return this.mission.files.find(({ _id }) => missionFileId === _id)
   }
 
   /**

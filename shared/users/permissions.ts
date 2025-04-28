@@ -44,6 +44,18 @@ const AVAILABLE_PERMISSIONS_RAW = [
       'Allows the user currently logged in to create, update, and delete student users only in the database.',
   } as const,
   {
+    _id: 'files_read',
+    name: 'Read Files',
+    description:
+      'Allows the user currently logged in to retrieve files from the file store.',
+  } as const,
+  {
+    _id: 'files_write',
+    name: 'Write Files',
+    description:
+      'Allows the user currently logged in to create, update, and delete files in the file store.',
+  } as const,
+  {
     _id: 'sessions_read',
     name: 'Read Sessions',
     description:

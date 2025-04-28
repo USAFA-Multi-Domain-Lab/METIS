@@ -543,7 +543,7 @@ export default function SessionPage({
                 onItemButtonClick={(button, item) => {
                   switch (button) {
                     case 'download':
-                      item.download()
+                      item.download({ method: 'session-api' })
                       break
                     default:
                       break

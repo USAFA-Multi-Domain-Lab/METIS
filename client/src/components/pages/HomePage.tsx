@@ -14,12 +14,14 @@ import {
 } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import { DefaultPageLayout } from '.'
+import { PromiseManager } from '../../../../shared/toolbox/promises'
 import Prompt from '../content/communication/Prompt'
 import FileReferenceList from '../content/data/lists/implementations/FileReferenceList'
 import MissionList from '../content/data/lists/implementations/MissionList'
 import SessionList from '../content/data/lists/implementations/SessionList'
 import UserList from '../content/data/lists/implementations/UserList'
 import { LogoutLink } from '../content/general-layout/Navigation'
+import Auth from '../content/util/Auth'
 import './HomePage.scss'
 
 /* -- CONSTANTS -- */
@@ -55,37 +57,30 @@ export default function HomePage(): JSX.Element | null {
   const { login } = useRequireLogin()
 
   // Grab the user currently logged in.
-  let { user: currentUser } = login
+  const { user: currentUser } = login
+  const { authorize } = currentUser
 
   /* -- EFFECTS -- */
 
   // componentDidMount
   const [mountHandled] = useMountHandler(async (done) => {
     try {
-      if (currentUser.isAuthorized(['sessions_read', 'missions_read'])) {
-        await loadSessions()
-        await loadMissions()
-      }
+      let promiseManager = new PromiseManager([], { authUser: currentUser })
 
-      // The user currently logged in must
-      // have restricted access to view the
-      // users.
-      if (currentUser.isAuthorized('users_read_students')) {
-        await loadUsers()
-      }
+      // Initiate loading of any data that the
+      // current user is authorized to view.
+      promiseManager.authorize(['sessions_read'], loadSessions)
+      promiseManager.authorize(['missions_read'], loadMissions)
+      promiseManager.authorize(['users_read_students'], loadUsers)
+      promiseManager.authorize(['files_read'], loadFiles)
 
-      // The user currently logged in must
-      // have restricted access to view the
-      // files.
-      // todo: Add proper authorization logic.
-      if (true) {
-        await loadFiles()
-      }
+      // Wait for all data to be loaded.
+      await promiseManager.all()
 
-      finishLoading()
-
-      // Begin syncing sessions.
-      setTimeout(() => syncSessions.current(), SESSIONS_SYNC_RATE)
+      // Begin syncing sessions, if authorized.
+      authorize('sessions_read', () =>
+        setTimeout(() => syncSessions.current(), SESSIONS_SYNC_RATE),
+      )
     } catch (error: any) {
       handleError('Failed to load data. Contact system administrator.')
     }
@@ -299,7 +294,6 @@ export default function HomePage(): JSX.Element | null {
         }
       }
 
-      // todo: Resolve this comment.
       // Reloads missions and files now that all files
       // have been processed.
       loadMissions()
@@ -339,134 +333,30 @@ export default function HomePage(): JSX.Element | null {
   /**
    * Imports the given files to the file store.
    * @param files The files to import.
-   * @resolves When the files have been processed
-   * and imported.
+   * @resolves When the files import has been processed
+   * and finalized.
    */
   const uploadToStore = async (files: FileList) => {
-    let validFiles: Array<File> = []
-    let successfulImportCount = 0
-    let invalidContentsCount = 0
-    let invalidFileExtensionCount: number = 0
-    let serverErrorFailureCount: number = 0
-    let invalidContentsErrorMessages: Array<{
-      fileName: string
-      errorMessage: string
-    }> = []
-
-    // This is called when a file
-    // import is processed, whether
-    // successfully or unsuccessfully
-    // uploaded.
-    const handleFileImportCompletion = () => {
-      // This is called after the missions
-      // are reloaded to retrieve the newly
-      // created missions.
-      const loadMissionsCallback = () => {
-        // Notifies of successful uploads.
-        if (successfulImportCount > 0) {
-          notify(
-            `Successfully imported ${successfulImportCount} mission${
-              successfulImportCount === 1 ? '' : 's'
-            }.`,
-          )
-        }
-        // Notifies of files that were valid
-        // to upload but failed due to a server
-        // error.
-        if (serverErrorFailureCount) {
-          notify(
-            `An unexpected error occurred while importing ${serverErrorFailureCount} file${
-              serverErrorFailureCount !== 1 ? 's' : ''
-            }.`,
-          )
-        }
-        // Notifies of failed uploads.
-        if (invalidContentsCount > 0) {
-          let notification: Notification = notify(
-            `${invalidContentsCount} of the files uploaded did not have valid content and therefore ${
-              invalidContentsCount === 1 ? 'was' : 'were'
-            } rejected.`,
-            {
-              duration: null,
-              buttons: [
-                {
-                  text: 'View errors',
-                  onClick: () => {
-                    let message: string = ''
-
-                    invalidContentsErrorMessages.forEach(
-                      ({ errorMessage, fileName }) => {
-                        message += `**${fileName}**\n`
-                        message += `\`\`\`\n`
-                        message += `${errorMessage}\n`
-                        message += `\`\`\`\n`
-                      },
-                    )
-                    notification.dismiss()
-                    prompt(message, Prompt.AlertChoices)
-                  },
-                },
-              ],
-            },
-          )
-        }
-        // Notifies of invalid files
-        // rejected from being uploaded.
-        if (invalidFileExtensionCount > 0) {
-          notify(
-            `${invalidFileExtensionCount} of the files uploaded did not have the .metis extension and therefore ${
-              invalidFileExtensionCount === 1 ? 'was' : 'were'
-            } rejected.`,
-          )
-        }
-      }
-
-      // todo: Resolve this comment.
-      // Reloads missions now that all files
-      // have been processed.
-      // loadMissions().then(loadMissionsCallback).catch(loadMissionsCallback)
-      loadFiles()
-    }
-
     // Switch to load screen.
     beginLoading(
       `Importing ${files.length} file${files.length === 1 ? '' : 's'}...`,
     )
 
-    validFiles = Array.from(files)
-
-    // Iterates over files for upload.
-    // todo: Resolve this comment.
-    // for (let file of files) {
-    //   if (file.name.toLowerCase().endsWith('.cesar')) {
-    //     // If a .cesar file, import it.
-    //     validFiles.push(file)
-    //   }
-    //   // If a .metis file, import it.
-    //   else if (file.name.toLowerCase().endsWith('.metis')) {
-    //     validFiles.push(file)
-    //   }
-    //   // Else, don't.
-    //   else {
-    //     invalidFileExtensionCount++
-    //   }
-    // }
-
     // Import the files.
     try {
-      let files = await ClientFileReference.$upload(validFiles)
-      successfulImportCount += files.length
-      // todo: Resolve this comment.
-      // let response = await ClientMission.$import(validFiles)
-      // successfulImportCount += response.successfulImportCount
-      // invalidContentsCount += response.failedImportCount
-      // invalidContentsErrorMessages = response.failedImportErrorMessages
-      handleFileImportCompletion()
+      let references = await ClientFileReference.$upload(files)
+      setFileReferences([...fileReferences, ...references])
+      notify(
+        `Successfully imported ${references.length} file${
+          references.length === 1 ? '' : 's'
+        }.`,
+      )
     } catch (error: any) {
-      if (error instanceof AxiosError) {
-        serverErrorFailureCount += validFiles.length
-        handleFileImportCompletion()
-      }
+      finishLoading()
+      handleError({
+        message: `Failed to upload files to file store.`,
+        notifyMethod: 'bubble',
+      })
     }
   }
 
@@ -514,66 +404,43 @@ export default function HomePage(): JSX.Element | null {
   if (!mountHandled) return null
 
   const listsJsx = compute(() => {
-    let results: JSX.Element[] = []
-
-    // If the user is authorized to read sessions,
-    // then display the sessions list.
-    if (currentUser.isAuthorized('sessions_read')) {
-      results.push(
-        <SessionList
-          key={'sessions-list'}
-          sessions={sessions}
-          refresh={loadSessions}
-        />,
-      )
-    }
-
-    // If the user is authorized to read missions,
-    // then display the missions list.
-    if (currentUser.isAuthorized('missions_read')) {
-      results.push(
-        <MissionList
-          key={'missions-list'}
-          name={'Missions'}
-          items={missions}
-          onFileDrop={importMissionFiles}
-          onSuccessfulCopy={onMissionCopy}
-          onSuccessfulDeletion={onMissionDeletion}
-        />,
-      )
-    }
-
-    // If the user is authorized to read and write,
-    // at the very least, students, then display the
-    // users list.
-    if (
-      currentUser.isAuthorized(['users_read_students', 'users_write_students'])
-    ) {
-      results.push(
-        <UserList
-          key={'users-list'}
-          users={users}
-          onSuccessfulDeletion={onUserDeletion}
-        />,
-      )
-    }
-
-    // If the user is authorized to read and write files,
-    // then display the files list.
-    // todo: Add proper authorization logic.
-    if (true) {
-      results.push(
-        <FileReferenceList
-          key={'files-list'}
-          name={'Files'}
-          items={fileReferences}
-          onFileDrop={uploadToStore}
-          onSuccessfulDeletion={onFileReferenceDeletion}
-        />,
-      )
-    }
-
-    return results
+    return (
+      <>
+        <Auth permissions={['sessions_read']}>
+          <SessionList
+            key={'sessions-list'}
+            sessions={sessions}
+            refresh={loadSessions}
+          />
+        </Auth>
+        <Auth permissions={['missions_read']}>
+          <MissionList
+            key={'missions-list'}
+            name={'Missions'}
+            items={missions}
+            onFileDrop={importMissionFiles}
+            onSuccessfulCopy={onMissionCopy}
+            onSuccessfulDeletion={onMissionDeletion}
+          />
+        </Auth>
+        <Auth permissions={['users_read_students']}>
+          <UserList
+            key={'users-list'}
+            users={users}
+            onSuccessfulDeletion={onUserDeletion}
+          />
+        </Auth>
+        <Auth permissions={['files_read']}>
+          <FileReferenceList
+            key={'files-list'}
+            name={'Files'}
+            items={fileReferences}
+            onFileDrop={uploadToStore}
+            onSuccessfulDeletion={onFileReferenceDeletion}
+          />
+        </Auth>
+      </>
+    )
   })
 
   // Render root element.

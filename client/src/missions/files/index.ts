@@ -1,5 +1,6 @@
 import { TMetisClientComponents } from 'src'
 import ClientFileReference from 'src/files/references'
+import SessionClient from 'src/sessions'
 import ClientMission from '..'
 import { TFileReferenceJson } from '../../../../shared/files/references'
 import MissionFile, {
@@ -29,7 +30,30 @@ export default class ClientMissionFile extends MissionFile<TMetisClientComponent
    * Downloads the file from the server by opening up
    * a new tab with the file's URI.
    */
-  public download(): void {
+  public download(options: TMissionFileDownloadOptions = {}): void {
+    const { method = 'file-api' } = options
+    switch (options.method) {
+      case 'file-api':
+        this.reference.download()
+        break
+      case 'session-api':
+        window.open(
+          StringToolbox.joinPaths(
+            SessionClient.API_ENDPOINT,
+            'files',
+            this._id,
+            'download',
+          ),
+          '_blank',
+        )
+        break
+      default:
+        console.warn(
+          `Invalid download method "${method}" specified. Defaulting to "file-api".`,
+        )
+        this.reference.download()
+        break
+    }
     this.reference.download()
   }
 
@@ -87,4 +111,21 @@ export default class ClientMissionFile extends MissionFile<TMetisClientComponent
       mission,
     )
   }
+}
+
+/**
+ * Options for `ClientMissionFile.download` method.
+ */
+export type TMissionFileDownloadOptions = {
+  /**
+   * The method used to download the file.
+   * @option 'file-api' Uses the file API to download the file.
+   * @option 'session-api' Uses the session API to download the file.
+   * @note This option is dependent on permissions. If the user is a
+   * student, they will only have access to download the file through
+   * the session API, if they have already be granted access to the file
+   * via the session.
+   * @default 'file-api'
+   */
+  method?: 'file-api' | 'session-api'
 }

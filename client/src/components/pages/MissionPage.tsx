@@ -25,8 +25,12 @@ import Mission, { TMissionComponent } from '../../../../shared/missions'
 import { TNonEmptyArray } from '../../../../shared/toolbox/arrays'
 import { TSingleTypeMapped, TWithKey } from '../../../../shared/toolbox/objects'
 import Prompt from '../content/communication/Prompt'
-import FileReferenceList from '../content/data/lists/implementations/FileReferenceList'
-import MissionFileList from '../content/data/lists/implementations/MissionFileList'
+import FileReferenceList, {
+  TFileReferenceList_P,
+} from '../content/data/lists/implementations/FileReferenceList'
+import MissionFileList, {
+  TMissionFileList_P,
+} from '../content/data/lists/implementations/MissionFileList'
 import ActionEntry from '../content/edit-mission/entries/implementations/ActionEntry'
 import EffectEntry from '../content/edit-mission/entries/implementations/EffectEntry'
 import ForceEntry from '../content/edit-mission/entries/implementations/ForceEntry'
@@ -205,6 +209,44 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
 
     return results
   })
+
+  /**
+   * Props for the mission-file list displaying
+   * files that are attached to the mission.
+   */
+  const missionFileListProps: TMissionFileList_P = {
+    name: 'In Mission',
+    items: mission.files,
+    itemsPerPageMin: 4,
+    onDetachRequest: (file) => {
+      mission.files = mission.files.filter((f) => f._id !== file._id)
+      onChange(file)
+    },
+  }
+
+  /**
+   * Props for the file-reference list displaying
+   * files available in the store.
+   */
+  const inStoreListProps: TFileReferenceList_P = {
+    name: 'In Store',
+    items: globalFiles,
+    itemButtons: ['link'],
+    itemsPerPageMin: 4,
+    isDisabled: (file) =>
+      mission.files.some(({ referenceId }) => referenceId === file._id),
+    getItemButtonLabel: (button, reference) => {
+      if (button === 'link') return 'Attach to mission'
+      else return ''
+    },
+    onItemButtonClick: (button, reference) => {
+      if (button !== 'link') return
+
+      let file = ClientMissionFile.fromFileReference(reference, mission)
+      mission.files.push(file)
+      onChange(file)
+    },
+  }
 
   /* -- EFFECTS -- */
 
@@ -1061,44 +1103,10 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
               </PanelView>
               <PanelView title='Files'>
                 <div className='InMission'>
-                  <MissionFileList
-                    name={'In Mission'}
-                    items={mission.files}
-                    itemsPerPageMin={4}
-                    onDetachRequest={(file) => {
-                      mission.files = mission.files.filter(
-                        (f) => f._id !== file._id,
-                      )
-                      onChange(file)
-                    }}
-                  />
+                  <MissionFileList {...missionFileListProps} />
                 </div>
                 <div className='InStore'>
-                  <FileReferenceList
-                    name={'In Store'}
-                    items={globalFiles}
-                    itemButtons={['link']}
-                    itemsPerPageMin={4}
-                    isDisabled={(file) =>
-                      mission.files.some(
-                        ({ referenceId }) => referenceId === file._id,
-                      )
-                    }
-                    getItemButtonLabel={(button, reference) => {
-                      if (button === 'link') return 'Attach to mission'
-                      else return ''
-                    }}
-                    onItemButtonClick={(button, reference) => {
-                      if (button !== 'link') return
-
-                      let file = ClientMissionFile.fromFileReference(
-                        reference,
-                        mission,
-                      )
-                      mission.files.push(file)
-                      onChange(file)
-                    }}
-                  />
+                  <FileReferenceList {...inStoreListProps} />
                 </div>
               </PanelView>
             </Panel>
