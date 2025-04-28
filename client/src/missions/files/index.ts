@@ -106,7 +106,7 @@ export default class ClientMissionFile extends MissionFile<TMetisClientComponent
     return new ClientMissionFile(
       StringToolbox.generateRandomId(),
       reference.name,
-      true,
+      [],
       reference,
       mission,
     )

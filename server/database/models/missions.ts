@@ -997,12 +997,13 @@ export const MissionSchema = new Schema<
             required: true,
             maxLength: Mission.MAX_NAME_LENGTH,
           },
-          // todo: Determine what initial access looks like
-          // todo: force-to-force.
+          // todo: Add validation to check that the
+          // todo: values of the array point to forces
+          // todo: present in the mission.
           initialAccess: {
-            type: Boolean,
+            type: [String],
             required: true,
-            default: true,
+            default: [],
           },
         },
       ],
