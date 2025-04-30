@@ -1,38 +1,30 @@
-import { TTargetJson } from '.'
-import Dependency from '../dependencies'
+import Dependency from 'metis/target-environments/dependencies'
+import TargetSchema from '../../../../library/target-env-classes/targets'
 
 /**
  * A target available in the METIS target environment that enables a user
  * to manipulate the resource cost of a specific action within a node or
  * all actions within a node.
  */
-export const resourceCostMod: TTargetJson = {
-  targetEnvId: 'metis',
-  _id: 'node',
-  name: 'Node',
+const ResourceCostMod = new TargetSchema({
+  name: 'Resource Cost Modifier',
   description: '',
   script: async (context) => {
-    // Extract the arguments from the effect.
-    let { nodeMetadata, resourceCost } = context.effect.args
-    let { nodeId } = nodeMetadata
-
-    // Set the error message.
+    // Gather details.
+    let { actionMetadata, resourceCost } = context.effect.args
+    let { forceId, nodeId, actionId } = actionMetadata
     const errorMessage =
       `Bad request. The arguments sent with the effect are invalid. Please check the arguments within the effect.\n` +
       `Effect ID: "${context.effect._id}"\n` +
       `Effect Name: "${context.effect.name}"`
 
-    // Check if the arguments are valid.
-    if (
-      typeof nodeMetadata.forceId !== 'string' ||
-      typeof nodeMetadata.nodeId !== 'string'
-    ) {
+    if (typeof forceId !== 'string' || typeof nodeId !== 'string') {
       throw new Error(errorMessage)
     }
 
     // If the resource cost is a number, then modify the resource cost.
     if (resourceCost && typeof resourceCost === 'number') {
-      context.modifyResourceCost(resourceCost, { nodeId })
+      context.modifyResourceCost(resourceCost, { nodeId, actionId })
     }
     // Otherwise, throw an error.
     else if (resourceCost && typeof resourceCost !== 'number') {
@@ -41,19 +33,19 @@ export const resourceCostMod: TTargetJson = {
   },
   args: [
     {
-      type: 'node',
-      _id: 'nodeMetadata',
-      name: 'Node',
-      required: true,
-      groupingId: 'node',
+      type: 'action',
+      _id: 'actionMetadata',
+      name: 'Action',
+      required: false,
+      groupingId: 'action',
     },
     {
       type: 'number',
       _id: 'resourceCost',
       name: 'Resource Cost',
       required: true,
-      groupingId: 'node',
-      dependencies: [Dependency.NODE('nodeMetadata')],
+      groupingId: 'action',
+      dependencies: [Dependency.ACTION('actionMetadata')],
       default: 0,
       tooltipDescription:
         `This allows you to positively or negatively affect the resource cost for all actions within the node. A positive value increases the resource cost, while a negative value decreases the resource cost.\n` +
@@ -63,6 +55,6 @@ export const resourceCostMod: TTargetJson = {
         `*Note: If the result is less than 0, then the resource cost will be 0.*`,
     },
   ],
-}
+})
 
-export default resourceCostMod
+export default ResourceCostMod

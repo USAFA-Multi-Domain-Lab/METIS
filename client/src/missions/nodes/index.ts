@@ -421,30 +421,57 @@ export default class ClientMissionNode
   }
 
   // Implemented
-  public modifySuccessChance(successChanceOperand: number): void {
-    this.actions.forEach((action) => {
+  public modifySuccessChance(
+    successChanceOperand: number,
+    actionId?: string,
+  ): void {
+    if (!actionId) {
+      this.actions.forEach((action) => {
+        action.modifySuccessChance(successChanceOperand)
+      })
+    } else {
+      const action = this.actions.get(actionId)
+      if (!action) throw new Error(`Action "${actionId}" not found.`)
       action.modifySuccessChance(successChanceOperand)
-    })
+    }
 
     // Emit event.
     this.emitEvent('modify-actions')
   }
 
   // Implemented
-  public modifyProcessTime(processTimeOperand: number): void {
-    this.actions.forEach((action) => {
+  public modifyProcessTime(
+    processTimeOperand: number,
+    actionId?: string,
+  ): void {
+    if (!actionId) {
+      this.actions.forEach((action) => {
+        action.modifyProcessTime(processTimeOperand)
+      })
+    } else {
+      const action = this.actions.get(actionId)
+      if (!action) throw new Error(`Action "${actionId}" not found.`)
       action.modifyProcessTime(processTimeOperand)
-    })
+    }
 
     // Emit event.
     this.emitEvent('modify-actions')
   }
 
   // Implemented
-  public modifyResourceCost(resourceCostOperand: number): void {
-    this.actions.forEach((action) => {
+  public modifyResourceCost(
+    resourceCostOperand: number,
+    actionId?: string,
+  ): void {
+    if (!actionId) {
+      this.actions.forEach((action) => {
+        action.modifyResourceCost(resourceCostOperand)
+      })
+    } else {
+      const action = this.actions.get(actionId)
+      if (!action) throw new Error(`Action "${actionId}" not found.`)
       action.modifyResourceCost(resourceCostOperand)
-    })
+    }
 
     // Emit event.
     this.emitEvent('modify-actions')

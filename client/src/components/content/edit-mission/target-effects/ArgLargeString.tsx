@@ -36,6 +36,15 @@ export default function ArgLargeString({
     if (value !== defaultValue) {
       setEffectArgs((prev) => ({ ...prev, [arg._id]: value }))
     }
+
+    // Otherwise, remove the argument from the effect's
+    // arguments.
+    if (value === defaultValue) {
+      setEffectArgs((prev) => {
+        delete prev[arg._id]
+        return prev
+      })
+    }
   }, [value])
 
   /* -- FUNCTIONS -- */

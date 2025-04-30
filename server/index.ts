@@ -317,7 +317,6 @@ export default class MetisServer {
       let { expressApp, database, fileStore, wsServer } = this
 
       // Register target environments.
-      ServerTargetEnvironment.registerInternal()
       ServerTargetEnvironment.scan()
 
       // Logger setup.

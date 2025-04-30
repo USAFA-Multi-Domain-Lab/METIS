@@ -1,18 +1,17 @@
-import { TTargetJson } from '.'
+import Dependency from 'metis/target-environments/dependencies'
+import TargetSchema from '../../../../library/target-env-classes/targets'
 
 /**
  * A target available in the METIS target environment that enables a user
  * to manipulate the block status of a node.
  */
-export const blockNode: TTargetJson = {
-  targetEnvId: 'metis',
-  _id: 'node',
-  name: 'Node',
+const BlockNode = new TargetSchema({
+  name: 'Block Node',
   description: '',
   script: async (context) => {
     // Extract the arguments from the effect.
     let { nodeMetadata, blockStatus } = context.effect.args
-    let { nodeId } = nodeMetadata
+    let { forceId, nodeId } = nodeMetadata
 
     // Set the error message.
     const errorMessage =
@@ -22,8 +21,8 @@ export const blockNode: TTargetJson = {
 
     // Check if the arguments are valid.
     if (
-      typeof nodeMetadata.forceId !== 'string' ||
-      typeof nodeMetadata.nodeId !== 'string' ||
+      typeof forceId !== 'string' ||
+      typeof nodeId !== 'string' ||
       typeof blockStatus !== 'string'
     ) {
       throw new Error(errorMessage)
@@ -52,6 +51,7 @@ export const blockNode: TTargetJson = {
       name: 'Block Status',
       required: true,
       groupingId: 'node',
+      dependencies: [Dependency.NODE('nodeMetadata')],
       options: [
         {
           _id: 'no-change',
@@ -72,6 +72,6 @@ export const blockNode: TTargetJson = {
       default: { _id: 'no-change', name: 'No Change', value: 'no-change' },
     },
   ],
-}
+})
 
-export default blockNode
+export default BlockNode

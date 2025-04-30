@@ -860,48 +860,63 @@ export default class SessionClient extends Session<TMetisClientComponents> {
   }
 
   /**
-   * Modifies the success chance of all the node's actions.
-   * @param nodeId The ID of the node.
+   * Modifies the success chance of a specific action within a node or
+   * all actions within a node.
    * @param successChanceOperand The operand to modify the success chance by.
+   * @param nodeId The ID of the node.
+   * @param actionId The ID of the action.
+   * @note If the action is not provided, the success chance of all actions
+   * within the node will be modified.
    */
   private modifySuccessChance = (
-    nodeId: string,
     successChanceOperand: number,
+    nodeId: string,
+    actionId?: string,
   ): void => {
     // Find the node, given the ID.
     let node = this.mission.getNode(nodeId)
     // Modify the success chance for all the node's actions.
-    node?.modifySuccessChance(successChanceOperand)
+    node?.modifySuccessChance(successChanceOperand, actionId)
   }
 
   /**
-   * Modifies the process time of all the node's actions.
-   * @param nodeId The ID of the node.
+   * Modifies the process time of a specific action within a node or
+   * all actions within a node.
    * @param processTimeOperand The operand to modify the process time by.
+   * @param nodeId The ID of the node.
+   * @param actionId The ID of the action.
+   * @note If the action is not provided, the process time of all actions
+   * within the node will be modified.
    */
   private modifyProcessTime = (
-    nodeId: string,
     processTimeOperand: number,
+    nodeId: string,
+    actionId?: string,
   ): void => {
     // Find the node, given the ID.
     let node = this.mission.getNode(nodeId)
     // Modify the process time for all the node's actions.
-    node?.modifyProcessTime(processTimeOperand)
+    node?.modifyProcessTime(processTimeOperand, actionId)
   }
 
   /**
-   * Modifies the resource cost of all the node's actions.
-   * @param nodeId The ID of the node.
+   * Modifies the resource cost of a specific action within a node or
+   * all actions within a node.
    * @param resourceCostOperand The operand to modify the resource cost by.
+   * @param nodeId The ID of the node.
+   * @param actionId The ID of the action.
+   * @note If the action is not provided, the resource cost of all actions
+   * within the node will be modified.
    */
   private modifyResourceCost = (
-    nodeId: string,
     resourceCostOperand: number,
+    nodeId: string,
+    actionId?: string,
   ): void => {
     // Find the node, given the ID.
     let node = this.mission.getNode(nodeId)
     // Modify the resource cost for all the node's actions.
-    node?.modifyResourceCost(resourceCostOperand)
+    node?.modifyResourceCost(resourceCostOperand, actionId)
   }
 
   /**
@@ -1017,13 +1032,25 @@ export default class SessionClient extends Session<TMetisClientComponents> {
         this.updateNodeBlockStatus(data.nodeId, data.blocked)
         break
       case 'node-action-success-chance':
-        this.modifySuccessChance(data.nodeId, data.successChanceOperand)
+        this.modifySuccessChance(
+          data.successChanceOperand,
+          data.nodeId,
+          data.actionId,
+        )
         break
       case 'node-action-process-time':
-        this.modifyProcessTime(data.nodeId, data.processTimeOperand)
+        this.modifyProcessTime(
+          data.processTimeOperand,
+          data.nodeId,
+          data.actionId,
+        )
         break
       case 'node-action-resource-cost':
-        this.modifyResourceCost(data.nodeId, data.resourceCostOperand)
+        this.modifyResourceCost(
+          data.resourceCostOperand,
+          data.nodeId,
+          data.actionId,
+        )
         break
       case 'force-resource-pool':
         this.modifyResourcePool(data.forceId, data.operand)

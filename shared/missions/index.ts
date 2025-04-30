@@ -4,7 +4,7 @@ import { TCreateJsonType, TMetisBaseComponents, TMetisComponent } from '..'
 import context from '../context'
 import { DateToolbox } from '../toolbox/dates'
 import { AnyObject } from '../toolbox/objects'
-import { TAction } from './actions'
+import { TAction, TMissionActionJson } from './actions'
 import { TExecution } from './actions/executions'
 import { TEffect } from './effects'
 import {
@@ -417,7 +417,6 @@ export default abstract class Mission<
   public getForce(
     forceId: TForce<T>['_id'] | null | undefined,
   ): TForce<T> | undefined {
-    let color = '#000000'
     return Mission.getForce(this, forceId)
   }
 
@@ -426,8 +425,21 @@ export default abstract class Mission<
    * @returns The node with the given ID, or undefined
    * if no node is found.
    */
-  public getNode(nodeId: TMetisComponent['_id']): TNode<T> | undefined {
-    return nodeId ? Mission.getNode(this, nodeId) : undefined
+  public getNode(
+    nodeId: TMetisComponent['_id'] | null | undefined,
+  ): TNode<T> | undefined {
+    return Mission.getNode(this, nodeId)
+  }
+
+  /**
+   * @param actionId The ID of the action to get.
+   * @returns The action with the given ID, or undefined
+   * if the action is not found.
+   */
+  public getAction(
+    actionId: TMetisComponent['_id'] | null | undefined,
+  ): TAction<T> | TMissionActionJson | undefined {
+    return actionId ? Mission.getAction(this, actionId) : undefined
   }
 
   /**
@@ -654,11 +666,12 @@ export default abstract class Mission<
    */
   public static getNode<TMission extends TMissionJson | Mission>(
     mission: TMission,
-    nodeId: string,
+    nodeId: string | null | undefined,
   ): TMission['forces'][0]['nodes'][0] | undefined {
     for (let force of mission.forces) {
       let node = force.nodes.find((node) => node._id === nodeId)
       if (node) return node
+      continue
     }
     return undefined
   }
@@ -673,9 +686,29 @@ export default abstract class Mission<
     mission: TMission,
     prototypeId: string | undefined,
   ): TMission['prototypes'][0] | undefined {
-    return prototypeId
-      ? mission.prototypes.find(({ _id }) => _id === prototypeId)
-      : undefined
+    return mission.prototypes.find(({ _id }) => _id === prototypeId)
+  }
+
+  /**
+   * Gets an action from the mission by its ID.
+   * @param mission The mission to get the action from.
+   * @param actionId The ID of the action to get.
+   * @returns The action with the given ID, or undefined if no action is found.
+   */
+  public static getAction<TMission extends TMissionJson | Mission>(
+    mission: TMission,
+    actionId: string,
+  ): TAction<TMetisBaseComponents> | TMissionActionJson | undefined {
+    for (let force of mission.forces) {
+      for (let node of force.nodes) {
+        let action = Array.isArray(node.actions)
+          ? node.actions.find((action) => action._id === actionId)
+          : node.actions.get(actionId)
+        if (action) return action
+        continue
+      }
+    }
+    return undefined
   }
 }
 

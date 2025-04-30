@@ -20,10 +20,12 @@ export default function ArgForce({
   setEffectArgs,
 }: TForceArgEntry_P): JSX.Element | null {
   /* -- STATE -- */
-  const [defaultValue] = useState<ClientMissionForce>(effect.force)
+
+  // Force
+  const [defaultForce] = useState<ClientMissionForce>(effect.force)
   const [forceId] = useState<string>(ForceArg.FORCE_ID_KEY)
   const [forceName] = useState<string>(ForceArg.FORCE_NAME_KEY)
-  const [requiredValue, setRequiredValue] = useState<ClientMissionForce>(() => {
+  const [forceValue, setForceValue] = useState<ClientMissionForce>(() => {
     // If the argument is required and the argument's value
     // is in the effect's arguments...
     if (arg.required && effectArgs[arg._id]) {
@@ -48,16 +50,16 @@ export default function ArgForce({
         })
       }
 
-      // Otherwise, return the default value.
-      return defaultValue
+      // Otherwise, return the default force.
+      return defaultForce
     }
-    // Otherwise, return the default value.
+    // Otherwise, return the default force.
     else {
-      return defaultValue
+      return defaultForce
     }
   })
-  const [optionalValue, setOptionalValue] = useState<ClientMissionForce | null>(
-    () => {
+  const [optionalForceValue, setOptionalForceValue] =
+    useState<ClientMissionForce | null>(() => {
       // If the argument is optional and the argument's value
       // is in the effect's arguments...
       if (!arg.required && effectArgs[arg._id]) {
@@ -89,16 +91,37 @@ export default function ArgForce({
       else {
         return null
       }
-    },
-  )
+    })
 
   /* -- COMPUTED -- */
 
   /**
+   * Determines if the argument is required.
+   */
+  const isRequired: boolean = compute(() => arg.required)
+
+  /**
+   * Determines if the argument is optional.
+   */
+  const isOptional: boolean = compute(() => !arg.required)
+
+  /**
+   * Determines if the argument is already present in the effect's arguments.
+   */
+  const existsInEffectArgs: boolean = compute(
+    () => effectArgs[arg._id] !== undefined,
+  )
+
+  /**
+   * The list of forces to display in the dropdown.
+   */
+  const forces: ClientMissionForce[] = compute(() => mission.forces)
+
+  /**
    * The warning message to display when the force is no longer available in the mission.
    */
-  const warningMessage: string = compute(() => {
-    if (effectArgs[arg._id]) {
+  const forceWarningMessage: string = compute(() => {
+    if (existsInEffectArgs) {
       return (
         `"${
           effectArgs[arg._id][forceName]
@@ -110,6 +133,41 @@ export default function ArgForce({
     }
   })
 
+  /**
+   * Determines if the force value should be inserted or updated in the
+   * effect's arguments.
+   */
+  const upsertForce: boolean = compute(() => {
+    // If the argument is required then add the force value
+    // to the effect's arguments.
+    if (isRequired) return true
+
+    // If the argument is optional and a force has been selected
+    // then upsert the force to the effect's arguments.
+    if (isOptional && optionalForceValue !== null) {
+      return true
+    }
+
+    // Otherwise, return false.
+    return false
+  })
+
+  /**
+   * Determines if the force value should be removed from the
+   * effect's arguments.
+   */
+  const removeForce: boolean = compute(() => {
+    // If the argument is optional, a force hasn't been selected,
+    // yet the argument exists in the effect's arguments then remove
+    // the force value from the effect's arguments.
+    if (isOptional && optionalForceValue === null && existsInEffectArgs) {
+      return true
+    }
+
+    // Otherwise, return false.
+    return false
+  })
+
   /* -- EFFECTS -- */
 
   // Determine if the argument needs to be initialized.
@@ -118,45 +176,26 @@ export default function ArgForce({
   }, [initialize])
 
   // Update the argument's value in the effect's arguments
-  // when the argument's value changes.
+  // when any of the required argument's values in the state changes.
   // *** Note: this doesn't execute on the first render. ***
   usePostInitEffect(() => {
-    // If the argument is required, then update the
-    // required value in the effect's arguments.
-    if (arg.required) {
-      setEffectArgs((prev) => ({
-        ...prev,
-        [arg._id]: {
-          forceId: requiredValue._id,
-          forceName: requiredValue.name,
-        },
-      }))
+    if (upsertForce) {
+      upsert({ force: forceValue })
     }
-    // Or, if the argument is optional...
-    else {
-      // ...and the optional value is not null
-      // then update the optional value in the
-      // effect's arguments.
-      if (optionalValue !== null) {
-        setEffectArgs((prev) => ({
-          ...prev,
-          [arg._id]: {
-            forceId: optionalValue._id,
-            forceName: optionalValue.name,
-          },
-        }))
-      }
-      // Or, if the optional value is null and the
-      // argument is in the effect's arguments, then
-      // remove the argument from the effect's arguments.
-      else if (optionalValue === null && effectArgs[arg._id] !== undefined) {
-        setEffectArgs((prev) => {
-          delete prev[arg._id]
-          return prev
-        })
-      }
+  }, [forceValue])
+
+  // Update the argument's value in the effect's arguments
+  // when any of the optional argument's values in the state changes.
+  // *** Note: this doesn't execute on the first render. ***
+  usePostInitEffect(() => {
+    if (upsertForce) {
+      upsert({ force: optionalForceValue })
     }
-  }, [requiredValue, optionalValue])
+
+    if (removeForce) {
+      remove(optionalForceValue)
+    }
+  }, [optionalForceValue])
 
   /* -- FUNCTIONS -- */
 
@@ -167,78 +206,121 @@ export default function ArgForce({
    */
   const initializeArg = () => {
     // If the argument is required, then set the argument's
-    // value to the default value.
-    // *** Note: The default value is mandatory if the
+    // values to their default values.
+    // *** Note: A default value is mandatory if the
     // *** argument is required.
     if (arg.required) {
-      // If the required value stored in the state is the
-      // same as the default value, then manually update the
-      // effect's arguments by adding this argument and its
-      // value.
-      if (requiredValue === defaultValue) {
+      // If the force value stored in the state is the
+      // same as the default force value, then manually
+      // update the effect's arguments by adding this argument
+      // and its value.
+      if (forceValue === defaultForce) {
         // *** Note: An argument's value in the effect's
         // *** arguments is automatically set if the value
         // *** stored in this state changes. If the value
         // *** in the state doesn't change then the value
         // *** needs to be set manually.
-        setEffectArgs((prev) => ({
-          ...prev,
-          [arg._id]: {
-            forceId: requiredValue._id,
-            forceName: requiredValue.name,
-          },
-        }))
+        upsert({ force: forceValue })
       }
-      // Otherwise, set the required value to the default value.
-      // *** Note: The default value is mandatory if the
+      // Otherwise, set the force value to the default force value.
+      // *** Note: A default value is mandatory if the
       // *** argument is required.
       else {
-        // *** Note: When this value in the state changes,
-        // *** the effect's arguments automatically updates
-        // *** with the current value.
-        setRequiredValue(defaultValue)
+        upsert({ force: defaultForce })
       }
     }
   }
 
+  /**
+   * Updates or inserts the provided argument(s) into the effect's arguments.
+   * @param stateValues The values to set in the effect's arguments.
+   * @param stateValues.force The force value to set in the effect's arguments.
+   */
+  const upsert = (stateValues: { force?: ClientMissionForce | null }) => {
+    const { force } = stateValues
+    let data: ClientEffect['args'] = {}
+
+    if (force) {
+      data = {
+        forceId: force._id,
+        forceName: force.name,
+      }
+    }
+
+    setEffectArgs((prev) => ({
+      ...prev,
+      [arg._id]: {
+        ...prev[arg._id],
+        ...data,
+      },
+    }))
+  }
+
+  /**
+   * Removes the argument from the effect's arguments.
+   * @param forceValue The force value to remove.
+   * @note An argument that is required should never be removed
+   * from the effect's arguments.
+   */
+  const remove = (forceValue: ClientMissionForce | null) => {
+    setEffectArgs((prev) => {
+      if (!forceValue) {
+        delete prev[arg._id][forceId]
+        delete prev[arg._id][forceName]
+      }
+
+      // If the argument is empty, then remove the argument
+      // from the effect's arguments.
+      if (
+        Object.keys(prev[arg._id]).length === 0 &&
+        prev[arg._id][forceId] === undefined
+      ) {
+        delete prev[arg._id]
+      }
+
+      return prev
+    })
+  }
+
   /* -- RENDER -- */
 
-  if (arg.required) {
+  if (isRequired) {
     return (
       <DetailDropdown<ClientMissionForce>
         fieldType={'required'}
-        label={arg.name}
-        options={mission.forces}
-        stateValue={requiredValue}
-        setState={setRequiredValue}
+        label={'Force'}
+        options={forces}
+        stateValue={forceValue}
+        setState={setForceValue}
         isExpanded={false}
         tooltipDescription={arg.tooltipDescription}
         getKey={({ _id }) => _id}
         render={(option) => option.name}
         handleInvalidOption={{
           method: 'warning',
-          message: warningMessage,
+          message: forceWarningMessage,
         }}
-        key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}_required`}
+        key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}_force_required`}
       />
     )
   } else {
     return (
       <DetailDropdown<ClientMissionForce>
         fieldType={'optional'}
-        label={arg.name}
-        options={mission.forces}
-        stateValue={optionalValue}
-        setState={setOptionalValue}
+        label={'Force'}
+        options={forces}
+        stateValue={optionalForceValue}
+        setState={setOptionalForceValue}
         isExpanded={false}
         tooltipDescription={arg.tooltipDescription}
-        getKey={({ _id }) => _id}
-        render={(option) => option.name}
+        render={(option) => option?.name}
+        getKey={(option) => option?._id}
         handleInvalidOption={{
           method: 'warning',
-          message: warningMessage,
+          message: forceWarningMessage,
         }}
-        key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}_optional`}
+        emptyText='Select a force'
+        key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}_force_optional`}
       />
     )
   }

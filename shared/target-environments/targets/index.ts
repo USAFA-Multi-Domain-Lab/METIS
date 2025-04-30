@@ -3,12 +3,6 @@ import { TTargetEnv } from '..'
 import { TMetisBaseComponents } from '../..'
 import { TTargetEnvExposedContext } from '../../../server/target-environments/context'
 import Arg, { TTargetArg, TTargetArgJson } from '../args'
-import blockNode from './block-node'
-import output from './output'
-import processTimeMod from './process-time-mod'
-import resourceCostMod from './resource-cost-mod'
-import resourcePool from './resource-pool'
-import successChanceMod from './success-chance-mod'
 
 /**
  * This is an entity that can be found in a target environment.
@@ -98,18 +92,6 @@ export default abstract class Target<
     script: async () => {},
     args: [],
   }
-
-  /**
-   * The internal targets that are available in the METIS target environment.
-   */
-  public static readonly INTERNAL_TARGETS: TTargetJson[] = [
-    blockNode,
-    successChanceMod,
-    processTimeMod,
-    resourceCostMod,
-    output,
-    resourcePool,
-  ]
 
   /**
    * A type guard that checks if the provided value is a Target JSON object.

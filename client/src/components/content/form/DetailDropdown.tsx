@@ -227,6 +227,64 @@ export function DetailDropdown<TOption>({
     }
   }, [options, handleInvalidOption.method])
 
+  /* -- PRE-RENDER PROCESSING -- */
+
+  const optionsJsx: Array<JSX.Element | null> = compute(() => {
+    switch (fieldType) {
+      case 'required': {
+        return options.map((option) => {
+          return (
+            <div
+              className='Option'
+              key={getKey(option)}
+              onClick={() => {
+                setState(option)
+                setExpanded(isExpanded)
+              }}
+            >
+              {render(option)}
+            </div>
+          )
+        })
+      }
+      case 'optional': {
+        let newOptions = [null, ...options]
+
+        return newOptions.map((option, index) => {
+          if (index > 0 && option === null) return null
+
+          if (index === 0 && option === null) {
+            return (
+              <div
+                className='Option'
+                key={`initial-null-value`}
+                onClick={() => {
+                  setState(null)
+                  setExpanded(isExpanded)
+                }}
+              >
+                {emptyText}
+              </div>
+            )
+          }
+
+          return (
+            <div
+              className='Option'
+              key={getKey(option)}
+              onClick={() => {
+                setState(option)
+                setExpanded(isExpanded)
+              }}
+            >
+              {render(option)}
+            </div>
+          )
+        })
+      }
+    }
+  })
+
   /* -- RENDER -- */
 
   if (options.length > 0) {
@@ -255,22 +313,7 @@ export function DetailDropdown<TOption>({
             <div className={stateValueClassName}>{valueDisplayed}</div>
             <div className='Indicator'>v</div>
           </div>
-          <div className={allOptionsClassName}>
-            {options.map((option: NonNullable<TOption>) => {
-              return (
-                <div
-                  className={'Option'}
-                  key={getKey(option)}
-                  onClick={() => {
-                    setState(option)
-                    setExpanded(isExpanded)
-                  }}
-                >
-                  {render(option)}
-                </div>
-              )
-            })}
-          </div>
+          <div className={allOptionsClassName}>{optionsJsx}</div>
         </div>
       </div>
     )
@@ -284,25 +327,12 @@ export function DetailDropdown<TOption>({
 /**
  * The base properties for the Detail Dropdown component.
  */
-type TDetailDropdownBase_P<TOption> = TDetailBase_P & {
-  /**
-   * The options available for the detail.
-   */
-  options: NonNullable<TOption>[]
+type TDetailDropdownBase_P = TDetailBase_P & {
   /**
    * The boolean that determines if the detail is expanded.
    */
   isExpanded: boolean
-  /**
-   * The function to render the display name for the option.
-   */
-  render: (option: NonNullable<TOption>) => ReactNode
-  /**
-   * Gets the key for the given option.
-   * @param option The option for which to get the key.
-   * @returns The key for the given option.
-   */
-  getKey: (option: NonNullable<TOption>) => string
+
   /**
    * The unique class name for the detail.
    */
@@ -332,7 +362,21 @@ type TDetailDropdown_P<TOption> =
  * The required properties for the Detail Dropdown component.
  */
 type TDetailDropdownRequired_P<TOption> = TDetailRequired_P<TOption> &
-  TDetailDropdownBase_P<TOption> & {
+  TDetailDropdownBase_P & {
+    /**
+     * The options available for the detail.
+     */
+    options: NonNullable<TOption>[]
+    /**
+     * The function to render the display name for the option.
+     */
+    render: (option: NonNullable<TOption>) => ReactNode
+    /**
+     * Gets the key for the given option.
+     * @param option The option for which to get the key.
+     * @returns The key for the given option.
+     */
+    getKey: (option: NonNullable<TOption>) => string
     /**
      * How to handle the selected option if it's invalid or not in the list.
      * @methods
@@ -370,7 +414,21 @@ type TDetailDropdownRequired_P<TOption> = TDetailRequired_P<TOption> &
  * The optional properties for the Detail Dropdown component.
  */
 type TDetailDropdownOptional_P<TOption> = TDetailOptional_P<TOption> &
-  TDetailDropdownBase_P<TOption> & {
+  TDetailDropdownBase_P & {
+    /**
+     * The options available for the detail.
+     */
+    options: TOption[]
+    /**
+     * The function to render the display name for the option.
+     */
+    render: (option: TOption) => ReactNode | null | undefined
+    /**
+     * Gets the key for the given option.
+     * @param option The option for which to get the key.
+     * @returns The key for the given option.
+     */
+    getKey: (option: TOption) => string | null | undefined
     /**
      * How to handle the selected option if it's invalid or not in the list.
      * @methods

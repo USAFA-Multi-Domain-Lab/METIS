@@ -1696,7 +1696,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
 
     // Apply the effect to the target.
     try {
-      await effect.target.script(context)
+      if (!effect.defective) await effect.target.script(context)
     } catch (error: any) {
       // Give additional information about the error.
       let message =
@@ -1730,6 +1730,19 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     if (node.mission._id !== this.mission._id) {
       throw new Error(
         `Could not perform the operation on the node with ID "${node._id}" because it does not belong to the mission with ID "${this.mission._id}".`,
+      )
+    }
+  }
+
+  /**
+   * Confirms the action is a part of the mission.
+   * @param action The action to confirm.
+   * @throws If the action does not belong to the mission.
+   */
+  private confirmActionInMission(action: ServerMissionAction): void {
+    if (action.mission._id !== this.mission._id) {
+      throw new Error(
+        `Could not perform the operation on the action with ID "${action._id}" because it does not belong to the mission with ID "${this.mission._id}".`,
       )
     }
   }
@@ -1770,53 +1783,107 @@ export default class SessionServer extends Session<TMetisServerComponents> {
   }
 
   /**
-   * Modifies the success chance of all the node's actions.
-   * @param node The node with the actions to modify.
-   * @param operand The operand to modify the success chance by.
+   * Modifies the success chance of a specific action within a node or
+   * all actions within a node.
+   * @param data The data for the modification.
+   * @param data.operand The operand to modify the success chance by.
+   * @param data.node The node containing the action to modify.
+   * @param data.action The action to modify.
+   * @note If the action is not provided, the success chance of all actions
+   * within the node will be modified.
    */
-  public modifySuccessChance = (node: ServerMissionNode, operand: number) => {
-    // Confirm the node exists, modify the success chance,
-    // then emit an event to the members.
+  public modifySuccessChance = (data: {
+    operand: number
+    node: ServerMissionNode
+    action?: ServerMissionAction
+  }) => {
+    const { operand, node, action } = data
+
+    // Confirm the node exists.
     this.confirmNodeInMission(node)
-    node.modifySuccessChance(operand)
+
+    // If the action is provided, confirm it exists
+    // and belongs to the node.
+    if (action) this.confirmActionInMission(action)
+
+    // Modify the success chance of the action or
+    // all actions within the node.
+    node.modifySuccessChance(operand, action?._id)
     this.emitModifierEnacted(node.force, {
       key: 'node-action-success-chance',
-      nodeId: node._id,
       successChanceOperand: operand,
+      nodeId: node._id,
+      actionId: action?._id,
     })
   }
 
   /**
-   * Modifies the processing time of all the node's actions.
-   * @param node The node with the actions to modify.
-   * @param operand The operand to modify the processing time by.
+   * Modifies the processing time of a specific action within a node or
+   * all actions within a node.
+   * @param data The data for the modification.
+   * @param data.operand The operand to modify the processing time by.
+   * @param data.node The node containing the action to modify.
+   * @param data.action The action to modify.
+   * @note If the action is not provided, the processing time of all actions
+   * within the node will be modified.
    */
-  public modifyProcessTime = (node: ServerMissionNode, operand: number) => {
-    // Confirm the node exists, modify the process time,
-    // then emit an event to the members.
+  public modifyProcessTime = (data: {
+    operand: number
+    node: ServerMissionNode
+    action?: ServerMissionAction
+  }) => {
+    const { operand, node, action } = data
+
+    // Confirm the node exists.
     this.confirmNodeInMission(node)
-    node.modifyProcessTime(operand)
+
+    // If the action is provided, confirm it exists
+    // and belongs to the node.
+    if (action) this.confirmActionInMission(action)
+
+    // Modify the processing time of the action or
+    // all actions within the node.
+    node.modifyProcessTime(operand, action?._id)
     this.emitModifierEnacted(node.force, {
       key: 'node-action-process-time',
-      nodeId: node._id,
       processTimeOperand: operand,
+      nodeId: node._id,
+      actionId: action?._id,
     })
   }
 
   /**
-   * Modifies the resource cost of all the node's actions.
-   * @param node The node with the actions to modify.
-   * @param operand The operand to modify the resource cost by.
+   * Modifies the resource cost of a specific action within a node or
+   * all actions within a node.
+   * @param data The data for the modification.
+   * @param data.operand The operand to modify the resource cost by.
+   * @param data.node The node containing the action to modify.
+   * @param data.action The action to modify.
+   * @note If the action is not provided, the resource cost of all actions
+   * within the node will be modified.
    */
-  public modifyResourceCost = (node: ServerMissionNode, operand: number) => {
-    // Confirm the node exists, modify the resource cost,
-    // then emit an event to the members.
+  public modifyResourceCost = (data: {
+    operand: number
+    node: ServerMissionNode
+    action?: ServerMissionAction
+  }) => {
+    const { operand, node, action } = data
+
+    // Confirm the node exists.
     this.confirmNodeInMission(node)
-    node.modifyResourceCost(operand)
+
+    // If the action is provided, confirm it exists
+    // and belongs to the node.
+    if (action) this.confirmActionInMission(action)
+
+    // Modify the resource cost of the action or
+    // all actions within the node.
+    node.modifyResourceCost(operand, action?._id)
     this.emitModifierEnacted(node.force, {
       key: 'node-action-resource-cost',
-      nodeId: node._id,
       resourceCostOperand: operand,
+      nodeId: node._id,
+      actionId: action?._id,
     })
   }
 

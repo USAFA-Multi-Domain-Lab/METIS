@@ -9,7 +9,8 @@
     padding-bottom: 20px;
   }
 
-  &.Node {
+  &.Node,
+  &.Action {
     display: grid;
     row-gap: 1.5em;
   }

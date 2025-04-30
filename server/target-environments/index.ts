@@ -46,7 +46,7 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
   ): void {
     let schemaFilePath = path.join(
       directory,
-      ServerTargetEnvironment.TARGET_SCHEMA_FILE_NAME,
+      ServerTargetEnvironment.SCHEMA_FILE_NAME,
     )
 
     // If the directory provided is not a folder,
@@ -158,16 +158,6 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
   }
 
   /**
-   * Registers the internal, target environment in
-   * the registry.
-   */
-  public static registerInternal(): void {
-    new ServerTargetEnvironment(
-      ServerTargetEnvironment.INTERNAL_TARGET_ENV,
-    ).register()
-  }
-
-  /**
    * Scans the given directory for target environments,
    * adding all that are found to the registry.
    * @param directory The directory to search.
@@ -193,17 +183,18 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
         ServerTargetEnvironment.scanTargetEnvDirectory(subdirectory)
       }
     }
+
+    // Sort the registry to ensure that
+    // the default METIS target environment is
+    // always the first one in the list.
+    ServerTargetEnvironment.REGISTRY.sort()
   }
 
   /**
-   * The file name for target environment schemas.
+   * The file name for target environment and target
+   * schemas.
    */
-  private static SCHEMA_FILE_NAME: string = 'index.ts'
-
-  /**
-   * The file name for target schemas.
-   */
-  private static TARGET_SCHEMA_FILE_NAME: string = 'schema.ts'
+  private static SCHEMA_FILE_NAME: string = 'schema.ts'
 
   /**
    * The folder name where targets are stored within

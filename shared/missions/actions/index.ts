@@ -81,7 +81,7 @@ export default abstract class MissionAction<
     // ***Note: This ensures the process time is never less than 0 or greater than 1 hour.
     return Math.min(
       Math.max(
-        this._processTime + this.processTimeOperand,
+        this._processTime + this._processTimeOperand,
         MissionAction.PROCESS_TIME_MIN,
       ),
       MissionAction.PROCESS_TIME_MAX,
@@ -109,7 +109,7 @@ export default abstract class MissionAction<
     // ***Note: This ensures the success chance is never less than 0 or greater than 1.
     return Math.min(
       Math.max(
-        this._successChance + this.successChanceOperand,
+        this._successChance + this._successChanceOperand,
         MissionAction.SUCCESS_CHANCE_MIN,
       ),
       MissionAction.SUCCESS_CHANCE_MAX,
@@ -138,7 +138,7 @@ export default abstract class MissionAction<
     // Return the resource cost within the correct range.
     // ***Note: This ensures the resource cost is never less than 0.
     return Math.max(
-      this._resourceCost + this.resourceCostOperand,
+      this._resourceCost + this._resourceCostOperand,
       MissionAction.RESOURCE_COST_MIN,
     )
   }
@@ -209,17 +209,17 @@ export default abstract class MissionAction<
    * Used to modify the amount of time it takes to execute the action.
    * @note The operand can be positive or negative. It will either increase or decrease the process time.
    */
-  private processTimeOperand: number
+  private _processTimeOperand: number
   /**
    * Used to modify the chance that the action will succeed.
    * @note The operand can be positive or negative. It will either increase or decrease the success chance.
    */
-  private successChanceOperand: number
+  private _successChanceOperand: number
   /**
    * Used to modify the amount of resources the action costs to execute.
    * @note The operand can be positive or negative. It will either increase or decrease the resource cost.
    */
-  private resourceCostOperand: number
+  private _resourceCostOperand: number
 
   /**
    * Whether the associated force has enough resources
@@ -275,9 +275,9 @@ export default abstract class MissionAction<
       data.effects ?? MissionAction.DEFAULT_PROPERTIES.effects,
     )
 
-    this.processTimeOperand = 0
-    this.successChanceOperand = 0
-    this.resourceCostOperand = 0
+    this._processTimeOperand = 0
+    this._successChanceOperand = 0
+    this._resourceCostOperand = 0
   }
 
   /**
@@ -301,11 +301,11 @@ export default abstract class MissionAction<
       _id: this._id,
       name: this.name,
       description: this.description,
-      processTime: this.processTime,
+      processTime: this._processTime,
       processTimeHidden: this.processTimeHidden,
-      successChance: this.successChance,
+      successChance: this._successChance,
       successChanceHidden: this.successChanceHidden,
-      resourceCost: this.resourceCost,
+      resourceCost: this._resourceCost,
       resourceCostHidden: this.resourceCostHidden,
       opensNode: this.opensNode,
       opensNodeHidden: this.opensNodeHidden,
@@ -338,7 +338,7 @@ export default abstract class MissionAction<
    */
   public modifyProcessTime(processTimeOperand: number): void {
     this._processTime = this.processTime
-    this.processTimeOperand = processTimeOperand
+    this._processTimeOperand = processTimeOperand
   }
 
   /**
@@ -348,7 +348,7 @@ export default abstract class MissionAction<
    */
   public modifySuccessChance(successChanceOperand: number): void {
     this._successChance = this.successChance
-    this.successChanceOperand = successChanceOperand
+    this._successChanceOperand = successChanceOperand
   }
 
   /**
@@ -358,7 +358,7 @@ export default abstract class MissionAction<
    */
   public modifyResourceCost(resourceCostOperand: number): void {
     this._resourceCost = this.resourceCost
-    this.resourceCostOperand = resourceCostOperand
+    this._resourceCostOperand = resourceCostOperand
   }
 
   /**

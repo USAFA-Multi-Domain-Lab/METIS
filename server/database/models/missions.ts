@@ -12,11 +12,6 @@ import ServerMissionAction from 'metis/server/missions/actions'
 import ServerEffect from 'metis/server/missions/effects'
 import ServerMissionForce from 'metis/server/missions/forces'
 import ServerMissionNode from 'metis/server/missions/nodes'
-import ServerTargetEnvironment from 'metis/server/target-environments'
-import { TTargetArg } from 'metis/target-environments/args'
-import DropdownArg from 'metis/target-environments/args/dropdown-arg'
-import ForceArg from 'metis/target-environments/args/force-arg'
-import NodeArg from 'metis/target-environments/args/node-arg'
 import { AnyObject } from 'metis/toolbox/objects'
 import StringToolbox, { HEX_COLOR_REGEX } from 'metis/toolbox/strings'
 import mongoose, {
@@ -156,215 +151,194 @@ const findByIdAndModify = (
  * Validates all of the effects within the mission.
  * @param missionJson The mission JSON to validate.
  */
-const validateMissionEffects = (
-  missionJson: TMissionSaveJson,
-): { error?: Error } => {
-  // Object to store results.
-  let results: { error?: Error } = {}
+const validateMissionEffects = (missionJson: TMissionSaveJson): void => {
+  // todo: Reevaluate if this block is needed.
+  // // Object to store results.
+  // let results: { error?: Error } = {}
 
   try {
-    // Create a new server mission.
-    let mission: ServerMission = new ServerMission(missionJson)
+    let mission = new ServerMission(missionJson)
 
-    // Loop through each force.
-    for (let force of mission.forces) {
-      // Loop through each node.
-      for (let node of force.nodes) {
-        // Loop through each action.
-        for (let action of node.actions.values()) {
-          // Loop through each effect.
-          for (let effect of action.effects) {
-            // Get the target.
-            let target = effect.target
-
-            // Ensure the target exists.
-            if (!target) {
-              databaseLogger.warn(
-                `The effect ({ _id: "${effect._id}", name: "${effect.name}" }) does not have a target. ` +
-                  `This is likely because the target doesn't exist within any of the target environments stored in the registry.`,
-              )
-            }
-
-            // Ensure the target environment exists.
-            if (!effect.environment) {
-              databaseLogger.warn(
-                `The effect ({ _id: "${effect._id}", name: "${effect.name}" }) does not have a target environment. ` +
-                  `This is likely because the target environment doesn't exist in the target-environment registry.`,
-              )
-            }
-
-            // Check to see if the target environment version is current.
-            let targetEnvironment = ServerTargetEnvironment.REGISTRY.get(
-              effect.environment?._id,
-            )
-            if (
-              targetEnvironment?.version !== effect.targetEnvironmentVersion
-            ) {
-              let errorMessage = `The effect's ({ _id: "${effect._id}", name: "${effect.name}" }) target environment version is out-of-date. Current version: "${targetEnvironment?.version}".`
-              databaseLogger.warn(errorMessage)
-            }
-
-            // Grab the argument IDs from the effect.
-            let effectArgIds = Object.keys(effect.args)
-            // Loop through the argument IDs.
-            for (let effectArgId of effectArgIds) {
-              // Find the argument.
-              let arg = target?.args.find(
-                (arg: TTargetArg) => arg._id === effectArgId,
-              )
-
-              // Ensure the argument exists.
-              if (!arg) {
-                databaseLogger.warn(
-                  `The argument with ID ("${effectArgId}") within the effect ({ _id: "${
-                    effect._id
-                  }", name: "${
-                    effect.name
-                  }" }) doesn't exist in the target's ({ _id: "${
-                    target!._id
-                  }", name: "${target!.name}" }) arguments.`,
-                )
-              }
-
-              // Get the value.
-              const value = effect.args[effectArgId]
-
-              if (arg?.type === 'dropdown') {
-                if (!DropdownArg.OPTION_VALUE_TYPES.includes(typeof value)) {
-                  databaseLogger.warn(
-                    `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "string", "number", "boolean", "object", or "undefined."`,
-                  )
-                }
-
-                // Ensure the option exists.
-                let option = arg.options.find(
-                  (option) => option.value === value,
-                )
-                if (!option) {
-                  databaseLogger.warn(
-                    `The argument with ID ("${effectArgId}") has a value ("${value}") within the effect ({ _id: "${
-                      effect._id
-                    }", name: "${
-                      effect.name
-                    }" }) that is not a valid option in the effect's target ({ _id: "${
-                      target!._id
-                    }", name: "${target!.name}" }).`,
-                  )
-                }
-              }
-
-              if (arg?.type === 'string') {
-                if (typeof value !== 'string') {
-                  databaseLogger.warn(
-                    `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "string."`,
-                  )
-                }
-
-                // Ensure the string-argument passes the custom validation.
-                let isValid = arg.pattern ? arg.pattern.test(value) : true
-                if (!isValid) {
-                  databaseLogger.warn(
-                    `The argument with ID ("${effectArgId}") has a value ("${value}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) that is invalid.`,
-                  )
-                }
-              }
-
-              if (arg?.type === 'large-string') {
-                if (typeof value !== 'string') {
-                  databaseLogger.warn(
-                    `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "string."`,
-                  )
-                }
-              }
-
-              if (arg?.type === 'force') {
-                if (typeof value !== 'object') {
-                  databaseLogger.warn(
-                    `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "object."`,
-                  )
-                }
-
-                // Ensure the force argument has the correct keys.
-                if (
-                  !(ForceArg.FORCE_ID_KEY in value) ||
-                  !(ForceArg.FORCE_NAME_KEY in value)
-                ) {
-                  databaseLogger.warn(
-                    `The argument with ID ("${effectArgId}") has a value ("${JSON.stringify(
-                      value,
-                    )}") within the effect ({ _id: "${effect._id}", name: "${
-                      effect.name
-                    }" }) that has missing properties that are required.`,
-                  )
-                }
-              }
-
-              if (arg?.type === 'node') {
-                if (typeof value !== 'object') {
-                  databaseLogger.warn(
-                    `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "object."`,
-                  )
-                }
-
-                // Ensure the node argument has the correct keys.
-                if (
-                  !(ForceArg.FORCE_ID_KEY in value) ||
-                  !(ForceArg.FORCE_NAME_KEY in value) ||
-                  !(NodeArg.NODE_ID_KEY in value) ||
-                  !(NodeArg.NODE_NAME_KEY in value)
-                ) {
-                  databaseLogger.warn(
-                    `The argument with ID ("${effectArgId}") has a value ("${JSON.stringify(
-                      value,
-                    )}") within the effect ({ _id: "${effect._id}", name: "${
-                      effect.name
-                    }" }) that has missing properties that are required.`,
-                  )
-                }
-              }
-
-              if (arg?.type === 'number') {
-                if (typeof value !== 'number') {
-                  databaseLogger.warn(
-                    `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "number."`,
-                  )
-                }
-
-                if (arg?.integersOnly && !isInteger(value)) {
-                  databaseLogger.warn(
-                    `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is not an integer.`,
-                  )
-                }
-              }
-
-              if (arg?.type === 'boolean') {
-                if (typeof value !== 'boolean') {
-                  databaseLogger.warn(
-                    `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "boolean."`,
-                  )
-                }
-              }
-            }
-
-            // Check to see if there are any missing arguments.
-            let missingArg = effect.checkForMissingArg()
-            // Ensure all of the required arguments are present in the effect.
-            if (missingArg) {
-              databaseLogger.warn(
-                `The required argument ({ _id: "${missingArg._id}", name: "${missingArg.name}" }) within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is missing.`,
-              )
-            }
-          }
-        }
+    for (let effect of mission.effects) {
+      if (effect.defective) {
+        throw new Error(effect.defectiveMessage)
       }
-    }
 
-    // Return the results.
-    return results
+      // todo: Reevaluate if this block is needed.
+      // // Get the target.
+      // let target = effect.target
+
+      // // Ensure the target exists.
+      // if (!target) {
+      //   databaseLogger.warn(
+      //     `The effect ({ _id: "${effect._id}", name: "${effect.name}" }) does not have a target. ` +
+      //       `This is likely because the target doesn't exist within any of the target environments stored in the registry.`,
+      //   )
+      // }
+
+      // // Ensure the target environment exists.
+      // if (!effect.environment) {
+      //   databaseLogger.warn(
+      //     `The effect ({ _id: "${effect._id}", name: "${effect.name}" }) does not have a target environment. ` +
+      //       `This is likely because the target environment doesn't exist in the target-environment registry.`,
+      //   )
+      // }
+
+      // // Check to see if the target environment version is current.
+      // let targetEnvironment = ServerTargetEnvironment.REGISTRY.get(
+      //   effect.environment?._id,
+      // )
+      // if (
+      //   targetEnvironment?.version !== effect.targetEnvironmentVersion
+      // ) {
+      //   let errorMessage = `The effect's ({ _id: "${effect._id}", name: "${effect.name}" }) target environment version is out-of-date. Current version: "${targetEnvironment?.version}".`
+      //   databaseLogger.warn(errorMessage)
+      // }
+
+      // // Grab the argument IDs from the effect.
+      // let effectArgIds = Object.keys(effect.args)
+      // // Loop through the argument IDs.
+      // for (let effectArgId of effectArgIds) {
+      //   // Find the argument.
+      //   let arg = target?.args.find(
+      //     (arg: TTargetArg) => arg._id === effectArgId,
+      //   )
+
+      //   // Ensure the argument exists.
+      //   if (!arg) {
+      //     databaseLogger.warn(
+      //       `The argument with ID ("${effectArgId}") within the effect ({ _id: "${
+      //         effect._id
+      //       }", name: "${
+      //         effect.name
+      //       }" }) doesn't exist in the target's ({ _id: "${
+      //         target!._id
+      //       }", name: "${target!.name}" }) arguments.`,
+      //     )
+      //   }
+
+      //   // Get the value.
+      //   const value = effect.args[effectArgId]
+
+      //   if (arg?.type === 'dropdown') {
+      //     if (!DropdownArg.OPTION_VALUE_TYPES.includes(typeof value)) {
+      //       databaseLogger.warn(
+      //         `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "string", "number", "boolean", "object", or "undefined."`,
+      //       )
+      //     }
+
+      //     // Ensure the option exists.
+      //     let option = arg.options.find(
+      //       (option) => option.value === value,
+      //     )
+      //     if (!option) {
+      //       databaseLogger.warn(
+      //         `The argument with ID ("${effectArgId}") has a value ("${value}") within the effect ({ _id: "${
+      //           effect._id
+      //         }", name: "${
+      //           effect.name
+      //         }" }) that is not a valid option in the effect's target ({ _id: "${
+      //           target!._id
+      //         }", name: "${target!.name}" }).`,
+      //       )
+      //     }
+      //   }
+
+      //   if (arg?.type === 'string') {
+      //     if (typeof value !== 'string') {
+      //       databaseLogger.warn(
+      //         `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "string."`,
+      //       )
+      //     }
+
+      //     // Ensure the string-argument passes the custom validation.
+      //     let isValid = arg.pattern ? arg.pattern.test(value) : true
+      //     if (!isValid) {
+      //       databaseLogger.warn(
+      //         `The argument with ID ("${effectArgId}") has a value ("${value}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) that is invalid.`,
+      //       )
+      //     }
+      //   }
+
+      //   if (arg?.type === 'large-string') {
+      //     if (typeof value !== 'string') {
+      //       databaseLogger.warn(
+      //         `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "string."`,
+      //       )
+      //     }
+      //   }
+
+      //   if (arg?.type === 'force') {
+      //     if (typeof value !== 'object') {
+      //       databaseLogger.warn(
+      //         `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "object."`,
+      //       )
+      //     }
+
+      //     // Ensure the force argument has the correct keys.
+      //     if (
+      //       !(ForceArg.FORCE_ID_KEY in value) ||
+      //       !(ForceArg.FORCE_NAME_KEY in value)
+      //     ) {
+      //       databaseLogger.warn(
+      //         `The argument with ID ("${effectArgId}") has a value ("${JSON.stringify(
+      //           value,
+      //         )}") within the effect ({ _id: "${effect._id}", name: "${
+      //           effect.name
+      //         }" }) that has missing properties that are required.`,
+      //       )
+      //     }
+      //   }
+
+      //   if (arg?.type === 'node') {
+      //     if (typeof value !== 'object') {
+      //       databaseLogger.warn(
+      //         `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "object."`,
+      //       )
+      //     }
+
+      //     // Ensure the node argument has the correct keys.
+      //     if (
+      //       !(ForceArg.FORCE_ID_KEY in value) ||
+      //       !(ForceArg.FORCE_NAME_KEY in value) ||
+      //       !(NodeArg.NODE_ID_KEY in value) ||
+      //       !(NodeArg.NODE_NAME_KEY in value)
+      //     ) {
+      //       databaseLogger.warn(
+      //         `The argument with ID ("${effectArgId}") has a value ("${JSON.stringify(
+      //           value,
+      //         )}") within the effect ({ _id: "${effect._id}", name: "${
+      //           effect.name
+      //         }" }) that has missing properties that are required.`,
+      //       )
+      //     }
+      //   }
+
+      //   if (arg?.type === 'number') {
+      //     if (typeof value !== 'number') {
+      //       databaseLogger.warn(
+      //         `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "number."`,
+      //       )
+      //     }
+
+      //     if (arg?.integersOnly && !isInteger(value)) {
+      //       databaseLogger.warn(
+      //         `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is not an integer.`,
+      //       )
+      //     }
+      //   }
+
+      //   if (arg?.type === 'boolean') {
+      //     if (typeof value !== 'boolean') {
+      //       databaseLogger.warn(
+      //         `The argument with ID ("${effectArgId}") within the effect ({ _id: "${effect._id}", name: "${effect.name}" }) is of the wrong type. Expected type: "boolean."`,
+      //       )
+      //     }
+      //   }
+      // }
+    }
   } catch (error: any) {
-    results.error = new Error(`Error in mission:\n${error.message}`)
-    results.error.name = MetisDatabase.ERROR_BAD_DATA
-    return results
+    databaseLogger.warn(error.message)
   }
 }
 
@@ -595,10 +569,14 @@ const validate_missions = (missionJson: TMissionSaveJson, next: any): void => {
   // Check for error.
   if (results.error) return next(results.error)
 
+  // todo: Reevaluate if this block is needed.
+  // // Validate the mission effects.
+  // results = validateMissionEffects(missionJson)
+  // // Check for error.
+  // if (results.error) return next(results.error)
+
   // Validate the mission effects.
-  results = validateMissionEffects(missionJson)
-  // Check for error.
-  if (results.error) return next(results.error)
+  validateMissionEffects(missionJson)
 }
 
 /**

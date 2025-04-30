@@ -1,4 +1,5 @@
 import Dependency from '../dependencies'
+import ActionArg, { TActionArg, TActionArgJson } from './action-arg'
 import BooleanArg, { TBooleanArg, TBooleanArgJson } from './boolean-arg'
 import DropdownArg, { TDropdownArg, TDropdownArgJson } from './dropdown-arg'
 import ForceArg, { TForceArg, TForceArgJson } from './force-arg'
@@ -21,7 +22,7 @@ export default class Arg {
    */
   public static decodeDependencies = (dependencies: string[]): Dependency[] => {
     return dependencies.map((dependency: string) => {
-      return Dependency.decode(dependency)
+      return Dependency.DECODE(dependency)
     })
   }
 
@@ -58,6 +59,8 @@ export default class Arg {
           return ForceArg.toJson(arg)
         case 'node':
           return NodeArg.toJson(arg)
+        case 'action':
+          return ActionArg.toJson(arg)
       }
     })
   }
@@ -84,6 +87,8 @@ export default class Arg {
           return ForceArg.fromJson(arg)
         case 'node':
           return NodeArg.fromJson(arg)
+        case 'action':
+          return ActionArg.fromJson(arg)
       }
     })
   }
@@ -169,6 +174,10 @@ export type TBaseArg = {
   tooltipDescription?: string
 }
 /**
+ * Arguments that reference a mission component within METIS (e.g. a force or node).
+ */
+export type TMissionComponentArg = TForceArg | TNodeArg | TActionArg
+/**
  * The arguments used for the target-effect interface and the target-effect API.
  */
 export type TTargetArg =
@@ -177,8 +186,7 @@ export type TTargetArg =
   | TLargeStringArg
   | TDropdownArg
   | TBooleanArg
-  | TForceArg
-  | TNodeArg
+  | TMissionComponentArg
 
 /**
  * The JSON representation of the base argument type for a target.
@@ -258,6 +266,13 @@ export type TBaseArgJson = {
   tooltipDescription?: string
 }
 /**
+ * The JSON representation of the arguments that reference a mission component within METIS (e.g. a force or node).
+ */
+export type TMissionComponentArgJson =
+  | TForceArgJson
+  | TNodeArgJson
+  | TActionArgJson
+/**
  * The arguments used for the target-effect interface and the target-effect API.
  */
 export type TTargetArgJson =
@@ -266,5 +281,4 @@ export type TTargetArgJson =
   | TLargeStringArgJson
   | TDropdownArgJson
   | TBooleanArgJson
-  | TForceArgJson
-  | TNodeArgJson
+  | TMissionComponentArgJson

@@ -1,12 +1,13 @@
 import { TCreateJsonType, TMetisBaseComponents } from 'metis/index'
 import { TMission, TMissionComponent } from '..'
 import { TTargetArg } from '../../target-environments/args'
+import ActionArg from '../../target-environments/args/action-arg'
 import ForceArg from '../../target-environments/args/force-arg'
 import NodeArg from '../../target-environments/args/node-arg'
 import Dependency from '../../target-environments/dependencies'
 import { AnyObject } from '../../toolbox/objects'
 import StringToolbox from '../../toolbox/strings'
-import { TAction } from '../actions'
+import MissionAction, { TAction } from '../actions'
 import { TForce } from '../forces'
 import { TNode } from '../nodes'
 
@@ -176,6 +177,7 @@ export default abstract class Effect<
             `Please select a valid option, or delete the effect and create a new one.`
           )
         }
+
         // todo: implement pattern validation and determine how to display the pattern to the user
         // // Check if the argument is a string and matches the required pattern.
         // if (
@@ -188,35 +190,46 @@ export default abstract class Effect<
         //     `Please enter a valid value or delete this effect and create a new one.`
         //   return true
         // }
-        // Check if the argument is a force and the force exists.
-        if (
-          arg.type === 'force' &&
-          !this.mission.getForce(this.args[argId][ForceArg.FORCE_ID_KEY])
-        ) {
-          return `The effect, "${this.name}", targets a force, "${
-            this.args[argId][ForceArg.FORCE_NAME_KEY]
-          }", which cannot be found.`
-        }
-        // Check if the argument is a node and the node exists.
-        if (arg.type === 'node') {
-          // Get the force and node.
-          let force = this.mission.getForce(
-            this.args[argId][ForceArg.FORCE_ID_KEY],
-          )
-          let node = this.mission.getNode(this.args[argId][NodeArg.NODE_ID_KEY])
+
+        // Check if the argument is a mission component and has a value.
+        const isMissionComponentReference =
+          arg.type === 'force' || arg.type === 'node' || arg.type === 'action'
+
+        if (isMissionComponentReference && arg.required) {
+          // Get the force, node, and action from the mission via the
+          // data stored in the effect's arguments.
+          const forceInMission = this.getForceFromArgs(argId)
+          const nodeInMission = this.getNodeFromArgs(argId)
+          const actionInMission = this.getActionFromArgs(argId)
+          // Get the force, node, and action data from the effect's arguments.
+          const forceInArgs = this.getForceDataInArgs(argId)
+          const nodeInArgs = this.getNodeDataInArgs(argId)
+          const actionInArgs = this.getActionDataInArgs(argId)
+          // Check if the force is required to be in the arguments.
+          const forceIsRequired = !forceInMission
+          // Check if the node is required to be in the arguments.
+          const nodeIsRequired =
+            (arg.type === 'node' || arg.type === 'action') && !nodeInMission
+          // Check if the action is required to be in the arguments.
+          const actionIsRequired =
+            arg.type === 'action' &&
+            !(actionInMission instanceof MissionAction) &&
+            actionInMission !== undefined
+
           // If the force cannot be found, then the effect is defective.
-          if (!force) {
-            return `The effect, "${this.name}", targets a force, "${
-              this.args[argId][ForceArg.FORCE_NAME_KEY]
-            }", which cannot be found.`
+          if (forceIsRequired) {
+            return `The effect, "${this.name}", targets a force, "${forceInArgs?._id}", which cannot be found.`
           }
           // If the node cannot be found, then the effect is defective.
-          if (!node) {
-            return `The effect, "${this.name}", targets a node "${
-              this.args[argId][NodeArg.NODE_NAME_KEY]
-            }", which cannot be found.`
+          if (nodeIsRequired) {
+            return `The effect, "${this.name}", targets a node "${nodeInArgs?._id}", which cannot be found.`
+          }
+          // If the action cannot be found, then the effect is defective.
+          if (actionIsRequired) {
+            return `The effect, "${this.name}", targets an action "${actionInArgs?._id}", which cannot be found.`
           }
         }
+
         // If the argument exists within the effect even thought not all of its dependencies are met, then
         // effect is defective.
         if (
@@ -229,6 +242,13 @@ export default abstract class Effect<
           )
         }
       }
+    }
+
+    // Check to see if there are any missing arguments.
+    let missingArg = this.checkForMissingArg()
+    // Ensure all of the required arguments are present in the effect.
+    if (missingArg) {
+      return `The required argument ({ _id: "${missingArg._id}", name: "${missingArg.name}" }) within the effect ({ _id: "${this._id}", name: "${this.name}" }) is missing.`
     }
 
     if (this.environmentId === 'infer-for-build_000038') {
@@ -288,6 +308,38 @@ export default abstract class Effect<
   ): T['target'] | null
 
   /**
+   * Checks if there are any required target-arguments missing in the effect.
+   * @returns The missing argument if there is one.
+   */
+  private checkForMissingArg(): TTargetArg | undefined {
+    // If the target is not set, throw an error.
+    if (!this.target) {
+      throw new Error(
+        `The effect ({ _id: "${this._id}", name: "${this.name}" }) does not have a target. ` +
+          `This is likely because the target doesn't exist within any of the target environments stored in the registry.`,
+      )
+    }
+
+    for (let arg of this.target.args) {
+      // Check if all the dependencies for the argument are met.
+      let allDependenciesMet: boolean = this.allDependenciesMet(
+        arg.dependencies,
+      )
+
+      // If all the dependencies are met and the argument is not in the effect's arguments...
+      if (allDependenciesMet && !(arg._id in this.args)) {
+        // ...and the argument's type is a boolean or the argument is required, then return
+        // the argument.
+        // *** Note: A boolean argument is always required because it's value
+        // *** is always defined.
+        if (arg.type === 'boolean' || arg.required) {
+          return arg
+        }
+      }
+    }
+  }
+
+  /**
    * @returns A JSON representation of the Effect.
    */
   public toJson(): TEffectJson {
@@ -340,7 +392,7 @@ export default abstract class Effect<
 
         // If the dependency is a force dependency then check
         // if the force exists and if the condition is met.
-        if (dependency.name === 'FORCE') {
+        if (dependency.name === 'force') {
           // Ensure the force argument exists within the effect arguments.
           let forceInArgs: AnyObject | undefined = args[dependency.dependentId]
           // Ensure the force ID exists within the force argument.
@@ -348,13 +400,13 @@ export default abstract class Effect<
             ? forceInArgs[ForceArg.FORCE_ID_KEY]
             : undefined
           // Get the force from the mission.
-          let force = forceId ? this.mission.getForce(forceId) : undefined
+          let force = this.mission.getForce(forceId)
           // Check if the condition is met.
           dependencyMet = dependency.condition(force)
         }
         // If the dependency is a node dependency then check
         // if the node exists and if the condition is met.
-        else if (dependency.name === 'NODE') {
+        else if (dependency.name === 'node') {
           // Ensure the node argument exists within the effect arguments.
           let nodeInArgs: AnyObject | undefined = args[dependency.dependentId]
           // Ensure the force ID exists within the node argument.
@@ -366,14 +418,39 @@ export default abstract class Effect<
             ? nodeInArgs[NodeArg.NODE_ID_KEY]
             : undefined
           // Get the force from the mission.
-          let force = forceId ? this.mission.getForce(forceId) : undefined
+          let force = this.mission.getForce(forceId)
           // Get the node from the mission.
-          let node = nodeId ? this.mission.getNode(nodeId) : undefined
+          let node = this.mission.getNode(nodeId)
           // Create the value to check if the condition is met.
-          let value = {
-            force: force,
-            node: node,
-          }
+          let value = { force, node }
+          // Check if the condition is met.
+          dependencyMet = dependency.condition(value)
+        }
+        // If the dependency is an action dependency then check
+        // if the action exists and if the condition is met.
+        else if (dependency.name === 'action') {
+          // Ensure the action argument exists within the effect arguments.
+          let actionInArgs: AnyObject | undefined = args[dependency.dependentId]
+          // Ensure the force ID exists within the action argument.
+          let forceId: string | undefined = actionInArgs
+            ? actionInArgs[ForceArg.FORCE_ID_KEY]
+            : undefined
+          // Ensure the node ID exists within the action argument.
+          let nodeId: string | undefined = actionInArgs
+            ? actionInArgs[NodeArg.NODE_ID_KEY]
+            : undefined
+          // Ensure the action ID exists within the action argument.
+          let actionId: string | undefined = actionInArgs
+            ? actionInArgs[ActionArg.ACTION_ID_KEY]
+            : undefined
+          // Get the force from the mission.
+          let force = this.mission.getForce(forceId)
+          // Get the node from the mission.
+          let node = this.mission.getNode(nodeId)
+          // Get the action from the mission.
+          let action = this.mission.getAction(actionId)
+          // Create the value to check if the condition is met.
+          let value = { force, node, action }
           // Check if the condition is met.
           dependencyMet = dependency.condition(value)
         }
@@ -400,6 +477,128 @@ export default abstract class Effect<
 
     // Return the status of all the dependencies.
     return allDependenciesMet
+  }
+
+  /**
+   * Gets the force ID and name stored in the effect's arguments.
+   * @param argId The ID of the argument to get the force from.
+   * @returns The force ID and name if found, otherwise undefined.
+   */
+  public getForceDataInArgs = (
+    argId: string,
+  ): { _id: string; name: string } | undefined => {
+    // Get the force argument.
+    let forceInArgs: AnyObject | undefined = this.args[argId]
+    // Ensure the force ID exists within the force argument.
+    let forceId: string | undefined = forceInArgs
+      ? forceInArgs[ForceArg.FORCE_ID_KEY]
+      : undefined
+    // Ensure the force name exists within the force argument.
+    let forceName: string | undefined = forceInArgs
+      ? forceInArgs[ForceArg.FORCE_NAME_KEY]
+      : undefined
+    // If the force ID is not found, then return undefined.
+    if (!forceId || !forceName) return undefined
+    // Otherwise, return the force ID and name.
+    return { _id: forceId, name: forceName }
+  }
+
+  /**
+   * Gets the node ID and name stored in the effect's arguments.
+   * @param argId The ID of the argument to get the node from.
+   * @returns The node ID and name if found, otherwise undefined.
+   */
+  public getNodeDataInArgs = (
+    argId: string,
+  ): { _id: string; name: string } | undefined => {
+    // Get the node argument.
+    let nodeInArgs: AnyObject | undefined = this.args[argId]
+    // Ensure the node ID exists within the node argument.
+    let nodeId: string | undefined = nodeInArgs
+      ? nodeInArgs[NodeArg.NODE_ID_KEY]
+      : undefined
+    // Ensure the node name exists within the node argument.
+    let nodeName: string | undefined = nodeInArgs
+      ? nodeInArgs[NodeArg.NODE_NAME_KEY]
+      : undefined
+    // If the node ID is not found, then return undefined.
+    if (!nodeId || !nodeName) return undefined
+    // Otherwise, return the node ID and name.
+    return { _id: nodeId, name: nodeName }
+  }
+
+  /**
+   * Gets the action ID and name stored in the effect's arguments.
+   * @param argId The ID of the argument to get the action from.
+   * @returns The action ID and name if found, otherwise undefined.
+   */
+  public getActionDataInArgs = (
+    argId: string,
+  ): { _id: string; name: string } | undefined => {
+    // Get the action argument.
+    let actionInArgs: AnyObject | undefined = this.args[argId]
+    // Ensure the action ID exists within the action argument.
+    let actionId: string | undefined = actionInArgs
+      ? actionInArgs[ActionArg.ACTION_ID_KEY]
+      : undefined
+    // Ensure the action name exists within the action argument.
+    let actionName: string | undefined = actionInArgs
+      ? actionInArgs[ActionArg.ACTION_NAME_KEY]
+      : undefined
+    // If the action ID is not found, then return undefined.
+    if (!actionId || !actionName) return undefined
+    // Otherwise, return the action ID and name.
+    return { _id: actionId, name: actionName }
+  }
+
+  /**
+   * Gets the force stored in the effect's arguments.
+   * @param argId The ID of the argument to get the force from.
+   * @returns The force if found, otherwise undefined.
+   */
+  public getForceFromArgs = (argId: string): T['force'] | undefined => {
+    // Get the force argument.
+    let forceInArgs: AnyObject | undefined = this.args[argId]
+    // Ensure the force ID exists within the force argument.
+    let forceId: string | undefined = forceInArgs
+      ? forceInArgs[ForceArg.FORCE_ID_KEY]
+      : undefined
+    // Get the force from the mission.
+    return this.mission.getForce(forceId)
+  }
+
+  /**
+   * Gets the node stored in the effect's arguments.
+   * @param argId The ID of the argument to get the node from.
+   * @returns The node if found, otherwise undefined.
+   */
+  public getNodeFromArgs = (argId: string): T['node'] | undefined => {
+    // Get the node argument.
+    let nodeInArgs: AnyObject | undefined = this.args[argId]
+    // Ensure the node ID exists within the node argument.
+    let nodeId: string | undefined = nodeInArgs
+      ? nodeInArgs[NodeArg.NODE_ID_KEY]
+      : undefined
+    // Get the node from the mission.
+    return this.mission.getNode(nodeId)
+  }
+
+  /**
+   * Gets the action stored in the effect's arguments.
+   * @param argId The ID of the argument to get the action from.
+   * @returns The action if found, otherwise undefined.
+   */
+  public getActionFromArgs = (argId: string): T['action'] | undefined => {
+    // Get the action argument.
+    let actionInArgs: AnyObject | undefined = this.args[argId]
+    // Ensure the action ID exists within the action argument.
+    let actionId: string | undefined = actionInArgs
+      ? actionInArgs[ActionArg.ACTION_ID_KEY]
+      : undefined
+
+    let action = this.mission.getAction(actionId)
+    if (action instanceof MissionAction) return action
+    return undefined
   }
 
   /**

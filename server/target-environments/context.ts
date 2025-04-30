@@ -3,6 +3,7 @@ import ServerMissionNode from 'metis/server/missions/nodes'
 import SessionServer from 'metis/server/sessions'
 import ServerSessionMember from 'metis/server/sessions/members'
 import { AnyObject } from 'metis/toolbox/objects'
+import ServerMissionAction from '../missions/actions'
 import ServerMissionForce from '../missions/forces'
 
 export default class TargetEnvContext {
@@ -133,15 +134,13 @@ export default class TargetEnvContext {
   }
 
   /**
-   * Determines the target node for a node-manipulation method.
-   * @param options The options from the node-manipulation method.
+   * Determines the target node.
+   * @param nodeId The ID of the node to manipulate.
    * @returns The target node.
    * @throws If a node was specified in the options, but it could
    * not be found.
    */
-  private determineTargetNode(options: TManipulateNodeOptions = {}) {
-    // Determine details.
-    const { nodeId } = options
+  private determineTargetNode(nodeId?: string) {
     const { mission, missionId } = this
 
     // If the node wasn't specified, return the
@@ -161,15 +160,13 @@ export default class TargetEnvContext {
   }
 
   /**
-   * Determines the target force for a force-manipulation method.
-   * @param options The options from the force-manipulation method.
+   * Determines the target force.
+   * @param forceId The ID of the force to manipulate.
    * @returns The target force.
    * @throws If a force was specified in the options, but it could
    * not be found.
    */
-  private determineTargetForce(options: TManipulateForceOptions = {}) {
-    // Determine details.
-    const { forceId } = options
+  private determineTargetForce(forceId?: string) {
     const { mission, missionId } = this
 
     // If the force wasn't specified, return the
@@ -189,6 +186,33 @@ export default class TargetEnvContext {
   }
 
   /**
+   * Determines the target action.
+   * @param actionId The ID of the action to manipulate.
+   * @returns The target action.
+   * @throws If an action was specified in the options, but it could
+   * not be found.
+   */
+  private determineTargetAction(
+    actionId?: string,
+  ): ServerMissionAction | undefined {
+    const { mission, missionId } = this
+
+    // If the action wasn't specified, return undefined.
+    if (!actionId) return undefined
+
+    // Find the specified action.
+    const result = mission.actions.get(actionId)
+
+    if (!result) {
+      throw new Error(
+        `Could not find action with ID "${actionId}" in the mission with ID "${missionId}".`,
+      )
+    }
+
+    return result
+  }
+
+  /**
    * @inheritdoc TTargetEnvExposedContext.sendOutput
    */
   private sendOutput = (
@@ -197,7 +221,8 @@ export default class TargetEnvContext {
   ) => {
     // Parse details.
     const { force, userId } = this
-    const targetForce = this.determineTargetForce(options)
+    const { forceId } = options
+    const targetForce = this.determineTargetForce(forceId)
 
     // Create a custom output to send to the output panel.
     this.session.sendOutput(
@@ -213,7 +238,8 @@ export default class TargetEnvContext {
    * @inheritdoc TTargetEnvExposedContext.blockNode
    */
   private blockNode = (options: TManipulateNodeOptions = {}) => {
-    const targetNode = this.determineTargetNode(options)
+    const { nodeId } = options
+    const targetNode = this.determineTargetNode(nodeId)
     this.session.updateNodeBlockStatus(targetNode, true)
   }
 
@@ -221,7 +247,8 @@ export default class TargetEnvContext {
    * @inheritdoc TTargetEnvExposedContext.unblockNode
    */
   private unblockNode = (options: TManipulateNodeOptions) => {
-    const targetNode = this.determineTargetNode(options)
+    const { nodeId } = options
+    const targetNode = this.determineTargetNode(nodeId)
     this.session.updateNodeBlockStatus(targetNode, false)
   }
 
@@ -230,10 +257,17 @@ export default class TargetEnvContext {
    */
   private modifySuccessChance = (
     operand: number,
-    options: TManipulateNodeOptions = {},
+    options: TManipulateActionOptions = {},
   ) => {
-    const targetNode = this.determineTargetNode(options)
-    this.session.modifySuccessChance(targetNode, operand)
+    const { nodeId, actionId } = options
+    const targetAction = this.determineTargetAction(actionId)
+    const targetNode = this.determineTargetNode(nodeId)
+
+    this.session.modifySuccessChance({
+      operand,
+      node: targetNode,
+      action: targetAction,
+    })
   }
 
   /**
@@ -241,10 +275,17 @@ export default class TargetEnvContext {
    */
   private modifyProcessTime = (
     operand: number,
-    options: TManipulateNodeOptions = {},
+    options: TManipulateActionOptions = {},
   ) => {
-    const targetNode = this.determineTargetNode(options)
-    this.session.modifyProcessTime(targetNode, operand)
+    const { nodeId, actionId } = options
+    const targetAction = this.determineTargetAction(actionId)
+    const targetNode = this.determineTargetNode(nodeId)
+
+    this.session.modifyProcessTime({
+      operand,
+      node: targetNode,
+      action: targetAction,
+    })
   }
 
   /**
@@ -252,10 +293,17 @@ export default class TargetEnvContext {
    */
   private modifyResourceCost = (
     operand: number,
-    options: TManipulateNodeOptions = {},
+    options: TManipulateActionOptions = {},
   ) => {
-    const targetNode = this.determineTargetNode(options)
-    this.session.modifyResourceCost(targetNode, operand)
+    const { nodeId, actionId } = options
+    const targetAction = this.determineTargetAction(actionId)
+    const targetNode = this.determineTargetNode(nodeId)
+
+    this.session.modifyResourceCost({
+      operand,
+      node: targetNode,
+      action: targetAction,
+    })
   }
 
   /**
@@ -265,7 +313,8 @@ export default class TargetEnvContext {
     operand: number,
     options: TManipulateForceOptions = {},
   ) => {
-    const targetForce = this.determineTargetForce(options)
+    const { forceId } = options
+    const targetForce = this.determineTargetForce(forceId)
     this.session.modifyResourcePool(targetForce, operand)
   }
 }
@@ -524,4 +573,22 @@ export type TManipulateForceOptions = {
    * @default this.forceId // The force to which the current effect belongs.
    */
   forceId?: string
+}
+
+/**
+ * Options for methods that manipulate an action.
+ */
+export type TManipulateActionOptions = {
+  /**
+   * The ID of the action to manipulate.
+   * @note If this is not specified, then all actions within the node
+   * will be manipulated.
+   * @default undefined
+   */
+  actionId?: string
+  /**
+   * The ID of the node to which the action belongs.
+   * @default this.nodeId // The node to which the current effect belongs.
+   */
+  nodeId?: string
 }
