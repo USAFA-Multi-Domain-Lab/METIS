@@ -13,6 +13,11 @@
     grid-template-rows: auto 1fr;
   }
 
+  .PanelView {
+    grid-row: -2 / -1;
+    grid-column: -2 / -1;
+  }
+
   .List {
     background: none;
     border: none;

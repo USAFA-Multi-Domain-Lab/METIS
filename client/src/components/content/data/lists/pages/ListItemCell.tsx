@@ -16,6 +16,7 @@ export default function ListItemCell<TItem extends TListItem>({
 
   const listContext = useListContext<TItem>()
   const { getItemTooltip, itemButtons } = listContext
+  const [selection, setSelection] = listContext.state.selection
 
   /* -- COMPUTED -- */
 
@@ -43,17 +44,32 @@ export default function ListItemCell<TItem extends TListItem>({
     // are item buttons.
     if (itemButtons.length) {
       if (description) description += '\n\t\n'
-      description += `\`L-Click\` for options`
+      description += `\`L-Click\` to select \n\t\n`
+      description += `\`R-Click\` for options`
     }
 
     return description
   })
 
+  /* -- FUNCTIONS -- */
+
+  /**
+   * Callback for when the item cell is clicked.
+   */
+  const onClick = () => {
+    // Select the item, deselecting if the item
+    // is already selected.
+    setSelection((prev) => {
+      if (prev?._id === item._id) return null
+      else return item
+    })
+  }
+
   /* -- RENDER -- */
 
   // Render the item cell.
   return (
-    <div className={rootClass}>
+    <div className={rootClass} onClick={onClick}>
       {text} <Tooltip description={tooltipDescription} />
     </div>
   )

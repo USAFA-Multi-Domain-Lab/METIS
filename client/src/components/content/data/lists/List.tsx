@@ -1,4 +1,4 @@
-import React, { useContext, useRef, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import { compute } from 'src/toolbox'
 import { TDefaultProps, useDefaultProps } from 'src/toolbox/hooks'
 import StringToolbox from '../../../../../../shared/toolbox/strings'
@@ -72,6 +72,7 @@ export function createDefaultListProps<
     getItemButtonLabel: () => '',
     getColumnWidth: () => '10em',
     isDisabled: () => false,
+    onSelect: () => {},
     onListButtonClick: () => {},
     onItemButtonClick: () => {},
     onFileDrop: null,
@@ -96,7 +97,7 @@ export default function List<TItem extends TListItem>(
 
   // Parse props needed by the main list
   // component.
-  const { items, itemsPerPageMin, onFileDrop } = defaultedProps
+  const { items, itemsPerPageMin, onSelect, onFileDrop } = defaultedProps
 
   /* -- STATE -- */
 
@@ -105,10 +106,12 @@ export default function List<TItem extends TListItem>(
     processedItems: useState<TItem[]>(items),
     itemsPerPage: useState<number>(itemsPerPageMin),
     sorting: useState<TListSorting<TItem>>(defaultedProps.initialSorting),
+    selection: useState<TItem | null>(null),
   }
   const [pageNumber] = state.pageNumber
   const [processedItems] = state.processedItems
   const [itemsPerPage] = state.itemsPerPage
+  const [selection] = state.selection
   // Reference to the root element.
   const root = useRef<HTMLDivElement>(null)
 
@@ -194,6 +197,7 @@ export default function List<TItem extends TListItem>(
       root_elm.classList.add('DropPending')
     }
   }
+
   /**
    * Callback for when file(s) are dragged out of the list.
    * @param event The event that triggered the drag leave.
@@ -211,6 +215,12 @@ export default function List<TItem extends TListItem>(
       root_elm.classList.remove('DropPending')
     }
   }
+
+  /* -- EFFECTS -- */
+
+  // Call `onSelect` callback whenever selection-state
+  // changes.
+  useEffect(() => onSelect(selection), [selection])
 
   /* -- RENDER -- */
 
@@ -348,6 +358,14 @@ export type TList_P<TItem extends TListItem> = {
    */
   isDisabled?: (item: TItem) => boolean
   /**
+   * Callback for when an item in the list is selected
+   * or deselected.
+   * @param item The item that was selected, `null` if
+   * deselected.
+   * @default () => {}
+   */
+  onSelect?: (item: TItem | null) => void
+  /**
    * Callback for when a list button is clicked.
    * @default () => {}
    */
@@ -390,6 +408,10 @@ export type TList_S<TItem extends TListItem> = {
    * be sorted.
    */
   sorting: TReactState<TListSorting<TItem>>
+  /**
+   * The currently selected item in the list.
+   */
+  selection: TReactState<TItem | null>
 }
 
 /**

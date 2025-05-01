@@ -16,6 +16,7 @@ export default function ButtonMenuController({
   trigger = 'r-click',
   getDescription,
   onButtonClick,
+  onActivate = () => {},
 }: TButtonMenuController_P): null {
   /* -- STATE -- */
 
@@ -61,6 +62,7 @@ export default function ButtonMenuController({
         highlightTarget,
         getDescription,
       })
+      onActivate()
     },
     // todo: Using these as dependencies causes the
     // todo: event listener to constantly refresh.
@@ -113,6 +115,10 @@ export type TButtonMenuController_P = {
    * @param button The button that was clicked.
    */
   onButtonClick: TButtonMenu_P['onButtonClick']
+  /**
+   * A callback for when the button menu is activated.
+   */
+  onActivate?: () => void
 }
 
 /**

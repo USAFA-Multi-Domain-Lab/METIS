@@ -350,20 +350,26 @@ export default class ClientMission
    * into the mission on session start.
    * @param forces The JSON data for the forces.
    * @param structure The JSON data for the structure.
+   * @param prototypes The JSON data for the prototypes.
+   * @param files The JSON data for the files.
    */
   public importStartData(
     structure: AnyObject,
     forces: TMissionForceSaveJson[],
     prototypes: TMissionPrototypeJson[],
+    files: TMissionFileJson[],
   ): void {
-    // Clear forces and prototypes.
+    // Clear prototypes, forces, and files.
     this.prototypes = []
     this.forces = []
+    this.files = []
 
     // Import structure.
     this.importStructure(structure, prototypes)
     // Import forces.
     this.importForces(forces)
+    // Import files.
+    this.importFiles(files)
 
     // Handle structure change.
     this.handleStructureChange()

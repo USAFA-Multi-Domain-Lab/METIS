@@ -6,20 +6,12 @@
 .ListItem {
   cursor: pointer;
 
-  &:hover,
-  &.ButtonMenuHighlight {
-    $hover-color: $color-accent;
-
-    @include background-mask;
-
-    color: $hover-color;
-
-    .ItemName {
-      color: $hover-color;
-    }
+  &:hover:not(.Selected) {
+    @include background-mask($opacity: 0.05);
   }
 
-  .Disabled {
+  &.Selected {
+    @include background-mask($opacity: 0.15);
   }
 
   .ItemOptions {

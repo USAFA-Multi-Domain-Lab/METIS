@@ -208,6 +208,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
       launchedAt: this.launchedAt.toISOString(),
       mission: this.mission.toJson({
         forceExposure: { expose: 'none' },
+        fileExposure: { expose: 'none' },
         sessionDataExposure: {
           expose: 'user-specific',
           userId: this.member.userId,
@@ -838,11 +839,11 @@ export default class SessionClient extends Session<TMetisClientComponents> {
     event: TResponseEvents['session-started' | 'session-reset'],
   ): void {
     // Gather details.
-    let { structure, forces, prototypes } = event.data
+    let { structure, forces, prototypes, files } = event.data
     // Mark the session as started.
     this._state = 'started'
     // Import start data, revealing forces to user.
-    this.mission.importStartData(structure, forces, prototypes)
+    this.mission.importStartData(structure, forces, prototypes, files)
     // Remap actions.
     this.mapActions()
   }

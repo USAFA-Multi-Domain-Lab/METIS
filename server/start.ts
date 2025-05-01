@@ -1,5 +1,4 @@
-import fs from 'fs'
-import MetisServer, { TMetisServerOptions } from 'metis/server'
+import MetisServer from 'metis/server'
 import routerMap_files from 'metis/server/api/v1/routes/files'
 import routerMap_info from 'metis/server/api/v1/routes/info'
 import routerMap_logins from 'metis/server/api/v1/routes/logins'

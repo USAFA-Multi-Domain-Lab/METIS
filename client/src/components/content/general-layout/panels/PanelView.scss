@@ -1,5 +1,16 @@
 .PanelView {
+  position: relative;
   overflow-x: hidden;
   overflow-y: hidden;
   height: 100%;
+
+  &.Active {
+    z-index: 2;
+  }
+
+  &:not(.Active) {
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0;
+  }
 }

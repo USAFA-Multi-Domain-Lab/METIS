@@ -14,6 +14,7 @@ import MetisInfo from 'src/info'
 import ClientLogin from 'src/logins'
 import Notification from 'src/notifications'
 import { useInitRenderHandler } from 'src/toolbox/hooks'
+import Logging from 'src/toolbox/logging'
 import ClientUser from 'src/users'
 import { v4 as generateHash } from 'uuid'
 import { ServerEmittedError } from '../../../shared/connect/errors'
@@ -37,6 +38,7 @@ const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
     description: '',
     version: '',
   }),
+  debugMode: false,
   forcedUpdateCounter: 0,
   server: null,
   login: null,
@@ -679,6 +681,14 @@ function GlobalContextProvider(props: { children: ReactNode }): JSX.Element {
   // the state of the context into the
   // context object.
   const context = useGlobalContextDefinition()
+  const [debugMode] = context.debugMode
+
+  // Update the debug mode in the logging
+  // system if the debug-mode state ever
+  // changes.
+  useEffect(() => {
+    Logging.debugMode = debugMode
+  }, [debugMode])
 
   // Return JSX with the context provider
   // wrapping the children dependent on
@@ -748,6 +758,12 @@ export default class GlobalContext {
  */
 export type TGlobalContextValues = {
   info: MetisInfo
+  /**
+   * If `true`, the app will be optimized for the
+   * purpose of debugging.
+   * @note This is only used in development environments.
+   */
+  debugMode: boolean
   forcedUpdateCounter: number
   server: ServerConnection | null
   login: TLogin<ClientUser>

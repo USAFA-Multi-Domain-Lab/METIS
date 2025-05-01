@@ -9,7 +9,7 @@ import {
   ButtonText,
   TButtonTextDisabled,
 } from '../content/user-controls/buttons/ButtonText'
-import If from '../content/util/If'
+import DevOnly from '../content/util/DevOnly'
 import './AuthPage.scss'
 
 export interface IAuthPage extends TPage_P {}
@@ -205,13 +205,13 @@ export default function AuthPage(): JSX.Element | null {
               onClick={() => {}}
               disabled={submitDisabled}
             />
-            <If condition={process.env.NODE_ENV === 'development'}>
+            <DevOnly>
               <ButtonText
                 type='button'
                 text='Dev Admin'
                 onClick={onDevAdminClick}
               />
-            </If>
+            </DevOnly>
           </div>
         </form>
       </div>

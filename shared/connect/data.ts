@@ -3,6 +3,7 @@ import {
   TExecutionCheats,
 } from 'metis/missions/actions/executions'
 import { TExecutionOutcomeJson } from 'metis/missions/actions/outcomes'
+import { TMissionFileJson } from 'metis/missions/files'
 import { TMissionForceSaveJson } from 'metis/missions/forces'
 import { TOutputJson } from 'metis/missions/forces/output'
 import { TMissionPrototypeJson } from 'metis/missions/nodes/prototypes'
@@ -384,6 +385,10 @@ export type TResponseEvents = {
        * The prototype data used to create the mission's structure of nodes.
        */
       prototypes: TMissionPrototypeJson[]
+      /**
+       * The file(s) that the client has access to.
+       */
+      files: TMissionFileJson[]
     },
     TClientEvents['request-start-session']
   >
@@ -413,6 +418,10 @@ export type TResponseEvents = {
        * The prototype data used to create the mission's structure of nodes.
        */
       prototypes: TMissionPrototypeJson[]
+      /**
+       * The file(s) that the client has access to.
+       */
+      files: TMissionFileJson[]
     },
     TClientEvents['request-reset-session']
   >

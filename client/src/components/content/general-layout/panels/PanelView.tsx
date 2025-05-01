@@ -18,8 +18,6 @@ export default function ({
   const { state } = usePanelContext()
   const [selectedView] = state.selectedView
 
-  /* -- EFFECTS -- */
-
   /* -- COMPUTED -- */
 
   /**
@@ -31,7 +29,7 @@ export default function ({
       'PanelView',
       `PanelView_${title.replace(/\s+/g, '_')}`,
     )
-    result.set('Hidden', selectedView?.title !== title)
+    result.set('Active', selectedView?.title === title)
     return result
   })
 

@@ -6,6 +6,12 @@ import { DateToolbox } from '../../../shared/toolbox/dates'
  */
 export default class Logging {
   /**
+   * Whether the app is in debug mode of not.
+   * @note This is set by the global context.
+   */
+  public static debugMode: boolean = false
+
+  /**
    * Logs information to the console.
    * @param message The message to log, if any.
    * @param context The context of the message. Defaults to `Logging.CONTEXT_METIS`.
@@ -25,11 +31,12 @@ export default class Logging {
    * // [07:54:10][WS]['request-open-node'] Requesting to open 'Initial Access'...
    * ```
    */
-  public static info(
-    message: string,
-    context: string = Logging.CONTEXT_METIS,
-    properties: string[] = [],
-  ): void {
+  public static info(message: string, options: TLoggingOptions = {}): void {
+    // Parse the options.
+    let { context, properties, verboseAppendix } = {
+      ...Logging.DEFAULT_OPTIONS,
+      ...options,
+    }
     // Combine all properties.
     properties = [DateToolbox.nowFormatted, context, ...properties]
     // Format all properties.
@@ -41,6 +48,9 @@ export default class Logging {
 
     // Log the output to the console.
     console.log(output)
+    // Include the verbose appendix if the debug
+    // mode is enabled, and the appendix is not empty.
+    if (this.debugMode && verboseAppendix) console.log(verboseAppendix)
   }
 
   /**
@@ -64,9 +74,13 @@ export default class Logging {
    */
   public static error(
     error: string | Error,
-    context: string = this.CONTEXT_METIS,
-    properties: string[] = [],
+    options: TLoggingOptions = {},
   ): void {
+    // Parse the options.
+    let { context, properties, verboseAppendix } = {
+      ...Logging.DEFAULT_OPTIONS,
+      ...options,
+    }
     // Convert the error to a string.
     let message = error instanceof Error ? error.message : error
     // Combine all properties.
@@ -80,6 +94,9 @@ export default class Logging {
 
     // Log the output to the console.
     console.error(output)
+    // Include the verbose appendix if the debug
+    // mode is enabled, and the appendix is not empty.
+    if (this.debugMode && verboseAppendix) console.log(verboseAppendix)
 
     // If the error is an instance of `Error`, log the stack trace.
     if (error instanceof Error) {
@@ -96,4 +113,41 @@ export default class Logging {
    * Context for the WebSocket system.
    */
   public static readonly CONTEXT_WS = 'WS'
+
+  /**
+   * Default options for logging.
+   */
+  public static get DEFAULT_OPTIONS(): Required<TLoggingOptions> {
+    return {
+      context: Logging.CONTEXT_METIS,
+      properties: [],
+      verboseAppendix: '',
+    }
+  }
+}
+
+/* -- TYPES -- */
+
+/**
+ * Options for `Logging` methods that are responsible
+ * for the actual logging process.
+ */
+export type TLoggingOptions = {
+  /**
+   * The context of the message.
+   * @default `Logging.DEFAULT_OPTIONS.context`.
+   */
+  context?: string
+  /**
+   * Extra properties to log, other than the time and type.
+   * @default `Logging.DEFAULT_OPTIONS.properties`.
+   */
+  properties?: string[]
+  /**
+   * A message added to the end of the main message
+   * passed, which will only be shown if the verbose
+   * logging is enabled.
+   * @default `Logging.DEFAULT_OPTIONS.verboseAppendix`.
+   */
+  verboseAppendix?: string
 }

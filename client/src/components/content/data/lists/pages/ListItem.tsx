@@ -35,6 +35,7 @@ export default function ListItem<T extends TListItem>({
     isDisabled,
     onItemButtonClick,
   } = listContext
+  const [selection, setSelection] = listContext.state.selection
   const root = useRef<HTMLDivElement>(null)
 
   /* -- COMPUTED -- */
@@ -45,6 +46,7 @@ export default function ListItem<T extends TListItem>({
   const rootClass = compute<ClassList>(() => {
     let result = new ClassList('ListItem', 'ListItemLike')
     result.set('Disabled', isDisabled(item))
+    result.set('Selected', selection?._id === item._id)
     return result
   })
 
@@ -95,11 +97,22 @@ export default function ListItem<T extends TListItem>({
    * options button.
    */
   const onOptionsClick = (event: React.MouseEvent) => {
+    // Show the button menu.
     showButtonMenu(itemButtons, onButtonClick, {
       positioningTarget: event.target as HTMLDivElement,
       highlightTarget: root.current ?? undefined,
       getDescription: getButtonDescription,
     })
+    // Force selection of the item.
+    setSelection(item)
+  }
+
+  /**
+   * Callback for when the button menu is activated.
+   */
+  const onButtonMenuActivate = () => {
+    // Force selection of the item.
+    setSelection(item)
   }
 
   /* -- RENDER -- */
@@ -160,9 +173,10 @@ export default function ListItem<T extends TListItem>({
         target={root}
         buttons={itemButtons}
         highlightTarget={root.current ?? undefined}
-        trigger={'l-click'}
+        trigger={'r-click'}
         getDescription={getButtonDescription}
         onButtonClick={onButtonClick}
+        onActivate={onButtonMenuActivate}
       />
     </div>
   )

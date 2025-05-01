@@ -17,7 +17,16 @@ export default abstract class MissionFile<
 
   // Implemented.
   public get name(): string {
-    return this.alias
+    return this.alias ?? this.originalName
+  }
+
+  /**
+   * The original name of the file.
+   * @note This simply returns the name of
+   * the file reference.
+   */
+  public get originalName(): string {
+    return this.reference.name
   }
 
   // Implemented
@@ -55,8 +64,10 @@ export default abstract class MissionFile<
     /**
      * An alias given to the file, specific to the
      * scenario's needs.
+     * @note If `null`, the original name of the file
+     * will be used.
      */
-    public alias: string,
+    public alias: string | null,
     /**
      * Forces which have initial access to the file.
      * Otherwise, any non-specified forces will only
@@ -86,6 +97,15 @@ export default abstract class MissionFile<
       reference: this.reference.toJson(),
     }
   }
+
+  public static DEFAULT_PROPERTIES: Omit<
+    Required<TMissionFileJson>,
+    'reference'
+  > = {
+    _id: '',
+    alias: null,
+    initialAccess: [],
+  }
 }
 
 /**
@@ -99,8 +119,10 @@ export type TMissionFileJson = {
   /**
    * An alias given to the file, specific to the
    * scenario's needs.
+   * @note If `null`, the original name of the file
+   * will be used.
    */
-  alias: string
+  alias: string | null
   /**
    * Forces which have initial access to the file.
    * Otherwise, any non-specified forces will only

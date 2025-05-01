@@ -122,6 +122,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     const { requester } = options
     let missionOptions: TMissionJsonOptions = {
       forceExposure: { expose: 'none' },
+      fileExposure: { expose: 'none' },
       sessionDataExposure: { expose: 'all' },
     }
     let banList: string[] = []
@@ -146,13 +147,18 @@ export default class SessionServer extends Session<TMetisServerComponents> {
           expose: 'force-with-revealed-nodes',
           forceId,
         }
+        missionOptions.fileExposure = {
+          expose: 'accessible',
+          forceId,
+        }
       }
 
       // If the requester has complete visibility,
       // then update the mission options to expose
-      // all force data.
+      // all force data and file data.
       if (requester.isAuthorized('completeVisibility')) {
         missionOptions.forceExposure = { expose: 'all' }
+        missionOptions.fileExposure = { expose: 'all' }
       }
 
       // If the requester is authorized to manager
@@ -522,6 +528,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     // Cache complete visibility export.
     let completeVisibilityCache = this.mission.toJson({
       forceExposure: { expose: 'all' },
+      fileExposure: { expose: 'all' },
       sessionDataExposure: { expose: 'all' },
     })
 
@@ -543,6 +550,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
         if (!assignmentForceCache[forceId]) {
           assignmentForceCache[forceId] = this.mission.toJson({
             forceExposure: { expose: 'force-with-revealed-nodes', forceId },
+            fileExposure: { expose: 'accessible', forceId },
             sessionDataExposure: {
               expose: 'all',
             },
@@ -550,7 +558,8 @@ export default class SessionServer extends Session<TMetisServerComponents> {
         }
 
         // Get relevant data from the mission for the member.
-        let { structure, forces, prototypes } = assignmentForceCache[forceId]
+        let { structure, forces, prototypes, files } =
+          assignmentForceCache[forceId]
 
         // Filter the outputs not relevant to the member.
         forces.forEach(({ filterOutputs }) => {
@@ -560,7 +569,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
         // Emit the event to the member.
         member.emit(responseMethod, {
           method: responseMethod,
-          data: { structure, forces, prototypes },
+          data: { structure, forces, prototypes, files },
           request,
         })
       }
@@ -579,6 +588,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
             structure: completeVisibilityCache.structure,
             forces: completeVisibilityCache.forces,
             prototypes: completeVisibilityCache.prototypes,
+            files: completeVisibilityCache.files,
           },
           request,
         })
@@ -592,6 +602,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
             structure: {},
             forces: [],
             prototypes: [],
+            files: [],
           },
           request,
         })

@@ -1,24 +1,20 @@
 import { expect } from 'chai'
-import { testLogger } from 'metis/server/logging'
-import { testServer } from '../../server'
-import { io, Socket } from 'socket.io-client'
-import { agent } from '../../index.test'
-import { userCredentials } from '../../data'
-import { missionToLaunch } from '../../setup'
-import SessionServer from 'metis/server/sessions'
-import ServerUser from 'metis/server/users'
-import UserModel from 'metis/server/database/models/users'
 import {
-  TClientEvents,
-  TRequestEvent,
   TRequestEvents,
   TRequestMethod,
   TResponseEvent,
-  TResponseEvents,
-  TResponseMethod,
   TServerEvents,
 } from 'metis/connect/data'
+import UserModel from 'metis/server/database/models/users'
+import { testLogger } from 'metis/server/logging'
+import SessionServer from 'metis/server/sessions'
+import ServerUser from 'metis/server/users'
 import StringToolbox from 'metis/toolbox/strings'
+import { io, Socket } from 'socket.io-client'
+import { userCredentials } from '../../data'
+import { agent } from '../../index.test'
+import { testServer } from '../../server'
+import { missionToLaunch } from '../../setup'
 
 /**
  * Tests for the middleware function used to validate the data sent in the request body of the API routes.

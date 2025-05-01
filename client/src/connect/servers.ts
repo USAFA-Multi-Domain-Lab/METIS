@@ -405,14 +405,21 @@ export default class ServerConnection
 
     // Log activity.
     if (typeof event === 'object' && event.method === 'error') {
-      Logging.error(event.message, Logging.CONTEXT_WS, [
-        method,
-        event.code.toString(),
-      ])
+      Logging.error(event.message, {
+        context: Logging.CONTEXT_WS,
+        properties: [method, event.code.toString()],
+      })
     } else if (method === 'error') {
-      Logging.error('', Logging.CONTEXT_WS, [method])
+      Logging.error('', {
+        context: Logging.CONTEXT_WS,
+        properties: [method],
+      })
     } else {
-      Logging.info('', Logging.CONTEXT_WS, [method])
+      Logging.info('', {
+        context: Logging.CONTEXT_WS,
+        properties: [method],
+        verboseAppendix: JSON.stringify(event),
+      })
     }
   }
 

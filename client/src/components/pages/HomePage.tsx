@@ -346,6 +346,7 @@ export default function HomePage(): JSX.Element | null {
     try {
       let references = await ClientFileReference.$upload(files)
       setFileReferences([...fileReferences, ...references])
+      finishLoading()
       notify(
         `Successfully imported ${references.length} file${
           references.length === 1 ? '' : 's'

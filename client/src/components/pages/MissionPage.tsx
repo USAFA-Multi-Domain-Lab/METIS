@@ -35,6 +35,7 @@ import ActionEntry from '../content/edit-mission/entries/implementations/ActionE
 import EffectEntry from '../content/edit-mission/entries/implementations/EffectEntry'
 import ForceEntry from '../content/edit-mission/entries/implementations/ForceEntry'
 import MissionEntry from '../content/edit-mission/entries/implementations/MissionEntry'
+import MissionFileEntry from '../content/edit-mission/entries/implementations/MissionFileEntry'
 import NodeEntry from '../content/edit-mission/entries/implementations/NodeEntry'
 import PrototypeEntry from '../content/edit-mission/entries/implementations/PrototypeEntry'
 import NodeStructuring from '../content/edit-mission/NodeStructuring'
@@ -218,6 +219,10 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     name: 'In Mission',
     items: mission.files,
     itemsPerPageMin: 4,
+    onSelect: (file) => {
+      if (file) mission.select(file)
+      else mission.deselect()
+    },
     onDetachRequest: (file) => {
       mission.files = mission.files.filter((f) => f._id !== file._id)
       onChange(file)
@@ -1005,9 +1010,17 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     if (selection instanceof ClientMission) {
       return (
         <MissionEntry
+          key={selection._id}
           mission={selection}
           onChange={onChange}
+        />
+      )
+    } else if (selection instanceof ClientMissionFile) {
+      return (
+        <MissionFileEntry
           key={selection._id}
+          file={selection}
+          onChange={onChange}
         />
       )
     } else if (selection instanceof ClientMissionPrototype) {

@@ -32,7 +32,7 @@ const uploadFiles = async (
 
   // Send a response, including the resulting data
   // for the newly uploaded files.
-  response.json(uploadedFiles)
+  return response.json(uploadedFiles)
 }
 
 export default uploadFiles

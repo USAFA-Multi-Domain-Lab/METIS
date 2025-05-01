@@ -70,8 +70,6 @@ export default function ({ children }: TPanel_P): JSX.Element | null {
     return result
   })
 
-  const viewProps = viewElements.map((view) => view.props)
-
   /**
    * The props for the views passed to the panel.
    */
@@ -86,8 +84,6 @@ export default function ({ children }: TPanel_P): JSX.Element | null {
       views,
     }
   })
-
-  /* -- EFFECTS -- */
 
   /* -- RENDER -- */
 

@@ -15,6 +15,14 @@ export default function ListPage<TItem extends TListItem>({
 
   const listContext = useListContext<TItem>()
   const [itemsPerPage] = listContext.state.itemsPerPage
+  const [_, setSelection] = listContext.state.selection
+
+  /* -- FUNCTIONS -- */
+
+  /**
+   * Callback for when a item blank is clicked.
+   */
+  const onItemBlankClick = () => setSelection(null)
 
   /* -- RENDER -- */
 
@@ -45,6 +53,7 @@ export default function ListPage<TItem extends TListItem>({
         <div
           key={`blank_${result.length}`}
           className='ItemBlank ListItemLike'
+          onClick={onItemBlankClick}
         ></div>,
       )
     }

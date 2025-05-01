@@ -234,8 +234,11 @@ export default abstract class Mission<
    * @returns the JSON for the mission.
    */
   public toJson(options: TMissionJsonOptions = {}): TMissionJson {
-    let { idExposure = true, forceExposure = Mission.DEFAULT_FORCE_EXPOSURE } =
-      options
+    let {
+      idExposure = true,
+      forceExposure = Mission.DEFAULT_FORCE_EXPOSURE,
+      fileExposure = Mission.DEFAULT_FILE_EXPOSURE,
+    } = options
     let force: TForce<T> | undefined
     // Predefine limited JSON.
     let json: TMissionJson = {
@@ -299,6 +302,27 @@ export default abstract class Mission<
       }
     }
 
+    /**
+     * Adds files to the JSON based on the parameters passed.
+     * @param force If passed, only the files that are accessible
+     * to the given force will be added to the JSON.
+     */
+    const addFiles = (force?: TForce<T>) => {
+      let filesToAdd: T['missionFile'][] = []
+
+      // Filter files based on the force passed,
+      // if one is passed.
+      if (force) {
+        filesToAdd = this.files.filter((file) =>
+          file.initialAccess.includes(force._id),
+        )
+      } else {
+        filesToAdd = this.files
+      }
+
+      json.files = filesToAdd.map((file) => file.toJson())
+    }
+
     // Expose the ID if the option is set.
     if (idExposure) json._id = this._id
 
@@ -319,11 +343,23 @@ export default abstract class Mission<
         addStructuralData(force)
         break
       case 'none':
+      default:
         break
     }
 
-    // Expose files.
-    json.files = this.files.map((file) => file.toJson())
+    // Expose files in the JSON.
+    switch (fileExposure.expose) {
+      case 'all':
+        addFiles()
+        break
+      case 'accessible':
+        force = determineForce(fileExposure.forceId)
+        addFiles(force)
+        break
+      case 'none':
+      default:
+        break
+    }
 
     // Return the result.
     return json
@@ -567,6 +603,16 @@ export default abstract class Mission<
   }
 
   /**
+   * The default file exposure options when exporting
+   * a mission with the `toJson` method.
+   */
+  public static get DEFAULT_FILE_EXPOSURE(): TFileExposure {
+    return {
+      expose: 'all',
+    }
+  }
+
+  /**
    * The default properties for a Mission object.
    */
   public static get DEFAULT_PROPERTIES(): Required<TMissionJson> {
@@ -776,11 +822,10 @@ export type TMissionJsonOptions = {
    */
   forceExposure?: TForceExposure
   /**
-   * The exposure of the file references within each
-   * mission file in the mission.
-   * @default { expose: 'auto' }
+   * The exposure of the files within the mission.
+   * @default { expose: 'all' }
    */
-  fileReferenceExposure?: TFileReferenceExposure
+  fileExposure?: TFileExposure
 }
 
 /**
@@ -798,6 +843,7 @@ export type TSessionDataExposure =
   | { expose: 'none' }
 
 /**
+ * Options for `TMissionJsonOptions.forceExposure`.
  * @option 'all'
  * All forces are exposed, along with all nodes.
  * @option 'force-with-all-nodes'
@@ -811,18 +857,24 @@ export type TSessionDataExposure =
  */
 export type TForceExposure =
   | { expose: 'all' }
-  | { expose: 'force-with-all-nodes'; forceId: MissionForce['_id'] }
-  | { expose: 'force-with-revealed-nodes'; forceId: MissionForce['_id'] }
+  | { expose: 'force-with-all-nodes'; forceId: string }
+  | { expose: 'force-with-revealed-nodes'; forceId: string }
   | { expose: 'none' }
 
 /**
- * @option 'auto'
- * The reference object is exposed in the JSON if
- * available, otherwise only the ID is exposed.
- * @option 'id-only'
- * Only the ID of the file reference is exposed.
+ * Options for `TMissionJsonOptions.fileExposure`.
+ * @option 'all'
+ * All files are exposed.
+ * @option 'accessible'
+ * Only the files that are accessible to the given force
+ * are exposed.
+ * @option 'none'
+ * No files are exposed.
  */
-export type TFileReferenceExposure = { expose: 'auto' } | { expose: 'id-only' }
+export type TFileExposure =
+  | { expose: 'all' }
+  | { expose: 'accessible'; forceId: string }
+  | { expose: 'none' }
 
 /**
  * An object that makes up a part of a mission, including

@@ -590,6 +590,15 @@ const validate_missions = (missionJson: TMissionSaveJson, next: any): void => {
 }
 
 /**
+ * Validates the alias of a file in a mission.
+ * @param value The value to validate.
+ * @returns True if valid, false otherwise.
+ */
+const validate_mission_files_alias = (value: unknown) => {
+  return typeof value === 'string' || value === null
+}
+
+/**
  * Validates the depth padding for a prototype node.
  * @param depthPadding The depth padding to validate.
  */
@@ -994,7 +1003,9 @@ export const MissionSchema = new Schema<
           },
           alias: {
             type: String,
+            default: null,
             required: true,
+            validate: validate_mission_files_alias,
             maxLength: Mission.MAX_NAME_LENGTH,
           },
           // todo: Add validation to check that the
