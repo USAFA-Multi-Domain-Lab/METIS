@@ -3,7 +3,7 @@
 .ListNav {
   box-sizing: border-box;
   display: grid;
-  grid-template-columns: auto auto auto 1fr;
+  grid-template-columns: auto auto auto auto 1fr;
   align-items: center;
   column-gap: 1em;
   width: 100%;
@@ -12,6 +12,7 @@
 
   .ListHeader,
   .ListProcessor,
+  .ListOverflowPanel,
   .ListPageControls {
     height: 2em;
     box-sizing: border-box;
@@ -23,7 +24,7 @@
     overflow-x: hidden;
     margin: 0;
     height: 2em;
-    min-width: unset;
+    min-width: fit-content;
     border-radius: 1em;
     padding: 0;
     background-color: transparent;
@@ -37,6 +38,19 @@
       white-space: nowrap;
       font-size: 1.1em;
       font-weight: bold;
+    }
+  }
+
+  .ListOverflowPanel {
+    .ButtonSvg {
+      transition: 200ms transform ease-in-out;
+
+      &.Active {
+        transform: scale(1);
+      }
+      &.Inactive {
+        transform: scale(0);
+      }
     }
   }
 }

@@ -56,14 +56,7 @@ export default function ListItemCell<TItem extends TListItem>({
   /**
    * Callback for when the item cell is clicked.
    */
-  const onClick = () => {
-    // Select the item, deselecting if the item
-    // is already selected.
-    setSelection((prev) => {
-      if (prev?._id === item._id) return null
-      else return item
-    })
-  }
+  const onClick = () => setSelection(item)
 
   /* -- RENDER -- */
 

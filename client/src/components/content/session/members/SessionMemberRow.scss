@@ -4,11 +4,9 @@
 .SessionMemberRow {
   @include member-row-like;
 
-  .ButtonSvg {
-    &.ban:hover {
-      filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(300deg)
-        brightness(200%) contrast(98%);
-    }
+  .ButtonSvg_ban:hover {
+    filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(300deg)
+      brightness(200%) contrast(98%);
   }
 
   .Cell {

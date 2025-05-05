@@ -7,7 +7,13 @@ export default class ClassList {
   /**
    * The list of classes.
    */
-  private classes: Set<string>
+  private _classes: Set<string>
+  /**
+   * The list of classes, as an array.
+   */
+  public get classes(): string[] {
+    return this._classes.values().toArray()
+  }
 
   /**
    * The value to apply to the `class` attribute
@@ -21,7 +27,7 @@ export default class ClassList {
    * @param classes The initial list of classes.
    */
   public constructor(...classes: string[]) {
-    this.classes = new Set<string>()
+    this._classes = new Set<string>()
     // Use the `add` method to validate the classes.
     this.add(...classes)
   }
@@ -41,7 +47,7 @@ export default class ClassList {
     })
 
     // Add the classes.
-    for (let cls of classes) this.classes.add(cls)
+    for (let cls of classes) this._classes.add(cls)
   }
 
   /**
@@ -49,7 +55,7 @@ export default class ClassList {
    * @param classes The classes to remove.
    */
   public remove(...classes: string[]): void {
-    for (let cls of classes) this.classes.delete(cls)
+    for (let cls of classes) this._classes.delete(cls)
   }
 
   /**
@@ -88,7 +94,7 @@ export default class ClassList {
    * @param cls The class to toggle.
    */
   public toggle(cls: string): void {
-    if (this.classes.has(cls)) this.remove(cls)
+    if (this._classes.has(cls)) this.remove(cls)
     else this.add(cls)
   }
 
@@ -97,7 +103,7 @@ export default class ClassList {
    * @returns The string of classes.
    */
   public toString(): string {
-    return this.classes.values().toArray().join(' ')
+    return this._classes.values().toArray().join(' ')
   }
 
   /**

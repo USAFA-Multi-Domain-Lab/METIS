@@ -40,14 +40,14 @@
     );
 
     &.map-is-zoomed-in {
-      .ButtonSvg.zoom-in {
+      .ButtonSvg_zoom-in {
         pointer-events: none;
         opacity: 0.5;
       }
     }
 
     &.map-is-zoomed-out {
-      .ButtonSvg.zoom-out {
+      .ButtonSvg_zoom-out {
         pointer-events: none;
         opacity: 0.5;
       }

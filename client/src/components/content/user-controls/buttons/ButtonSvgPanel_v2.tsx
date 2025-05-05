@@ -1,5 +1,6 @@
 import React from 'react'
 import { compute } from 'src/toolbox'
+import ClassList from '../../../../../../shared/toolbox/html/class-lists'
 import ButtonSvg, { TButtonSvgDisabled, TButtonSvgType } from './ButtonSvg'
 import './ButtonSvgPanel_v2.scss'
 
@@ -22,10 +23,6 @@ export default function ButtonSvgPanel_v2({
   onButtonClick,
   disableButton = () => 'none',
 }: TButtonSvgPanel_v2_P): JSX.Element | null {
-  // If no buttons, add a blank to
-  // maintain the correct height.
-  if (!buttons.length) buttons.push('_blank')
-
   /* -- COMPUTED -- */
 
   /**
@@ -34,11 +31,17 @@ export default function ButtonSvgPanel_v2({
   const rootClass = compute((): string => {
     // Gather details.
     let classList: string[] = ['ButtonSvgPanel_v2', ...uniqueClassList]
+    // If, no buttons, add "PanelEmpty" class.
+    if (buttons.length === 0) classList.push('PanelEmpty')
     // Join and return class list.
     return classList.join(' ')
   })
 
   /* -- RENDER -- */
+
+  // If no buttons, add a blank to
+  // maintain the correct height.
+  if (!buttons.length) buttons.push('_blank')
 
   return (
     <div className={rootClass} style={styling}>
@@ -50,7 +53,7 @@ export default function ButtonSvgPanel_v2({
           description={getTooltip(type)}
           onClick={() => onButtonClick(type)}
           disabled={disableButton(type)}
-          uniqueClassList={getButtonClassList(type)}
+          uniqueClassList={getButtonClassList(type, index)}
         />
       ))}
     </div>
@@ -96,10 +99,14 @@ export type TButtonSvgPanel_v2_P = {
   /**
    * Gets the class list for the button.
    * @param button The type of button for which to get the class list.
+   * @param index The index of the button.
    * @returns The class list for the button.
    * @default () => []
    */
-  getButtonClassList?: (button: TButtonSvgType) => string[]
+  getButtonClassList?: (
+    button: TButtonSvgType,
+    index: number,
+  ) => string[] | ClassList
   /**
    * Callback for when a button is clicked.
    * @param button The type of button clicked.

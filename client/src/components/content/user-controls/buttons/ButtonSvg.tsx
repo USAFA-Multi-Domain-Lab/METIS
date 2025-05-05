@@ -1,5 +1,6 @@
 import React from 'react'
 import { compute } from 'src/toolbox'
+import ClassList from '../../../../../../shared/toolbox/html/class-lists'
 import { TWithKey } from '../../../../../../shared/toolbox/objects'
 import Tooltip from '../../communication/Tooltip'
 import './ButtonSvg.scss'
@@ -24,24 +25,23 @@ export default function ButtonSvg({
   /**
    * The class for the root element.
    */
-  const rootClass = compute((): string => {
-    // Gather details.
-    let classList: string[] = [
+  const rootClass = compute<ClassList>(() => {
+    let result = new ClassList(
       'ButtonSvg',
-      type,
+      `ButtonSvg_${type}`,
       !!label ? 'WithLabel' : 'WithoutLabel',
-      ...uniqueClassList,
-    ]
+    )
 
-    // Determine if the button is partially or fully disabled.
-    if (disabled === 'partial') {
-      classList.push('PartiallyDisabled')
-    } else if (disabled === 'full') {
-      classList.push('Disabled')
+    result.set('Disabled', disabled === 'full')
+    result.set('PartiallyDisabled', disabled === 'partial')
+
+    if (uniqueClassList instanceof ClassList) {
+      result.add(...uniqueClassList.classes)
+    } else {
+      result.add(...uniqueClassList)
     }
 
-    // Join and return class list.
-    return classList.join(' ')
+    return result
   })
 
   /**
@@ -50,19 +50,16 @@ export default function ButtonSvg({
   const rootStyle = compute((): React.CSSProperties => {
     // Construct result.
     let result: React.CSSProperties = {
-      backgroundImage: `url(${require(`../../../../assets/images/icons/${type}.svg`)})`,
+      backgroundImage: 'linear-gradient(transparent, transparent)',
       backgroundSize: '0.65em',
       backgroundRepeat: 'no-repeat',
       backgroundPosition: 'center',
     }
 
-    // Return as is if the type is '_blank'.
-    if (type === '_blank') return result
-
-    // Offset the background position for 'upload' and
-    // 'download' icons to center them.
-    if (type === 'upload' || type === 'download') {
-      result.backgroundPosition = 'center 0.25em, center'
+    // If the type is not '_blank', import the SVG
+    // and set it as the background image.
+    if (type !== '_blank') {
+      result.backgroundImage = `url(${require(`../../../../assets/images/icons/${type}.svg`)})`
     }
 
     // If a cursor is provided, use it.
@@ -104,7 +101,7 @@ export default function ButtonSvg({
 
   return (
     <div
-      className={rootClass}
+      className={rootClass.value}
       style={rootStyle}
       onClick={onClick}
       onCopy={onCopy}
@@ -145,7 +142,7 @@ export type TButtonSvg_P = {
    * Unique class lists to apply to the component.
    * @default []
    */
-  uniqueClassList?: string[]
+  uniqueClassList?: string[] | ClassList
   /**
    * The disabled state of the button.
    * @default 'none'

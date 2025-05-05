@@ -106,14 +106,19 @@ export default function List<TItem extends TListItem>(
     processedItems: useState<TItem[]>(items),
     itemsPerPage: useState<number>(itemsPerPageMin),
     sorting: useState<TListSorting<TItem>>(defaultedProps.initialSorting),
+    searchActive: useState<boolean>(false),
     selection: useState<TItem | null>(null),
+    buttonOverflowCount: useState<number>(0),
   }
   const [pageNumber] = state.pageNumber
   const [processedItems] = state.processedItems
   const [itemsPerPage] = state.itemsPerPage
   const [selection] = state.selection
-  // Reference to the root element.
-  const root = useRef<HTMLDivElement>(null)
+  const elements: TListElements = {
+    root: useRef<HTMLDivElement>(null),
+    nav: useRef<HTMLDivElement>(null),
+    buttons: useRef<HTMLDivElement>(null),
+  }
 
   /* -- COMPUTED -- */
 
@@ -169,7 +174,7 @@ export default function List<TItem extends TListItem>(
     // Abort if no file-drop callback is provided.
     if (!onFileDrop) return
 
-    let root_elm: HTMLDivElement | null = root.current
+    let root_elm: HTMLDivElement | null = elements.root.current
 
     if (root_elm !== null) {
       let files: FileList = event.dataTransfer.files
@@ -191,7 +196,7 @@ export default function List<TItem extends TListItem>(
     // Abort if no file-drop callback is provided.
     if (!onFileDrop) return
 
-    let root_elm: HTMLDivElement | null = root.current
+    let root_elm: HTMLDivElement | null = elements.root.current
 
     if (root_elm !== null) {
       root_elm.classList.add('DropPending')
@@ -209,7 +214,7 @@ export default function List<TItem extends TListItem>(
     // Abort if no file-drop callback is provided.
     if (!onFileDrop) return
 
-    let root_elm: HTMLDivElement | null = root.current
+    let root_elm: HTMLDivElement | null = elements.root.current
 
     if (root_elm !== null) {
       root_elm.classList.remove('DropPending')
@@ -227,11 +232,11 @@ export default function List<TItem extends TListItem>(
   /**
    * The value to provide to the context.
    */
-  const contextValue = {
-    list: root,
+  const contextValue: TListContextData<TItem> = {
     ...defaultedProps,
     pageCount,
     state,
+    elements,
   }
 
   // Render the list.
@@ -239,7 +244,7 @@ export default function List<TItem extends TListItem>(
     <Provider value={contextValue}>
       <div
         className='List'
-        ref={root}
+        ref={elements.root}
         onDrop={onDrop}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
@@ -254,6 +259,25 @@ export default function List<TItem extends TListItem>(
 }
 
 /* -- TYPES -- */
+
+/**
+ * Elements that need to be referenced throughout the
+ * component tree.
+ */
+export type TListElements = {
+  /**
+   * The root element of the list.
+   */
+  root: React.RefObject<HTMLDivElement>
+  /**
+   * The element that contains the list navigation.
+   */
+  nav: React.RefObject<HTMLDivElement>
+  /**
+   * The element that contains the list buttons.
+   */
+  buttons: React.RefObject<HTMLDivElement>
+}
 
 /**
  * Props for `List`.
@@ -409,30 +433,41 @@ export type TList_S<TItem extends TListItem> = {
    */
   sorting: TReactState<TListSorting<TItem>>
   /**
+   * Whether the search bar is currently active.
+   */
+  searchActive: TReactState<boolean>
+  /**
    * The currently selected item in the list.
    */
   selection: TReactState<TItem | null>
+  /**
+   * The number of buttons overflowing in the
+   * list navigation.
+   */
+  buttonOverflowCount: TReactState<number>
 }
 
 /**
  * The list context data provided to all children
  * of `List`.
  */
-export type TListContextData<TItem extends TListItem> = {
+export type TListContextData<TItem extends TListItem> = Required<
+  TList_P<TItem>
+> & {
   /**
-   * The ref for the root element of the list.
+   * The current number of pages in the list.
    */
-  list: React.RefObject<HTMLDivElement>
-} & Required<TList_P<TItem>> & {
-    /**
-     * The current number of pages in the list.
-     */
-    pageCount: number
-    /**
-     * The state for the list.
-     */
-    state: TList_S<TItem>
-  }
+  pageCount: number
+  /**
+   * The state for the list.
+   */
+  state: TList_S<TItem>
+  /**
+   * Elements that need to be referenced throughout the
+   * component tree.
+   */
+  elements: TListElements
+}
 
 /**
  * Gets the label for a list button.

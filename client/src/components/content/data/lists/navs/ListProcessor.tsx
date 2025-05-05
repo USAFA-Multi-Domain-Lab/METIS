@@ -1,10 +1,12 @@
 import { createRef, ReactNode, useEffect, useState } from 'react'
+import ButtonSvg from 'src/components/content/user-controls/buttons/ButtonSvg'
+import If from 'src/components/content/util/If'
 import { compute } from 'src/toolbox'
+import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
 import Tooltip from '../../../communication/Tooltip'
 import { useListContext } from '../List'
-import './ListProcessor.scss'
 import { TListItem } from '../pages/ListItem'
-import ClientMission from 'src/missions'
+import './ListProcessor.scss'
 
 /**
  * Processes the items available in a list by applying
@@ -18,12 +20,22 @@ export default function ListProcessor(): JSX.Element | null {
   const { getCellText } = listContext
   const [_, setProcessedItems] = listContext.state.processedItems
   const [sorting] = listContext.state.sorting
+  const [searchActive, activateSearch] = listContext.state.searchActive
   const [searchHint, setSearchHint] = useState<string>('')
   const [hideSearchTooltip, showSearchTooltip] = useState<boolean>(false)
   const searchField = createRef<HTMLInputElement>()
   const { column: sortingColumn, method: sortingMethod } = sorting
 
   /* -- COMPUTED -- */
+
+  /**
+   * The classes for the root element.
+   */
+  const rootClasses = compute<ClassList>(() => {
+    let result = new ClassList('ListProcessor')
+    result.set('SearchActive', searchActive)
+    return result
+  })
 
   /**
    * The search hint formatted for display.
@@ -45,7 +57,13 @@ export default function ListProcessor(): JSX.Element | null {
    */
   const process = () => {
     let result: TListItem[] = []
-    let searchFieldElm = searchField.current!
+    let searchFieldElm = searchField.current
+
+    if (!searchFieldElm) {
+      console.warn('Search field element not found.')
+      return
+    }
+
     let filterTermRaw = searchFieldElm.value
     let filterTerm = filterTermRaw.trim().toLowerCase()
     let searchHintFound = false
@@ -118,6 +136,27 @@ export default function ListProcessor(): JSX.Element | null {
   }
 
   /**
+   * Clears the search field and deactivates the search.
+   * @param event The click event.
+   */
+  const cancelSearch = () => {
+    let searchFieldElm = searchField.current
+    if (!searchFieldElm) {
+      console.warn('Search field element not found.')
+      return
+    }
+
+    // Clear the search field and deactivate the search.
+    searchFieldElm.value = ''
+    searchFieldElm.blur()
+    activateSearch(false)
+    setSearchHint('')
+
+    // Process the list to show all items.
+    process()
+  }
+
+  /**
    * Handles the key down event for the search field.
    */
   const onSearchKeyDown = (
@@ -138,11 +177,36 @@ export default function ListProcessor(): JSX.Element | null {
     }
   }
 
+  /**
+   * Callback for when the search field is focused.
+   * @param event The focus/blur event.
+   */
+  const onSearchFocus = (event: React.FocusEvent<HTMLInputElement>) => {
+    showSearchTooltip(true)
+  }
+
+  /**
+   * Callback for when the search field is blurred.
+   * @param event The focus/blur event.
+   */
+  const onSearchBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    showSearchTooltip(false)
+    // Deactivate the search if the field is empty.
+    if (event.target.value === '') activateSearch(false)
+  }
+
   /* -- EFFECTS -- */
 
   // This will re-process the list when the items
   // change or if the sorting state changes.
   useEffect(() => process(), [items, items.length, sorting])
+
+  // Focus the search field when the search is
+  // activated.
+  useEffect(() => {
+    let searchFieldElm = searchField.current
+    if (searchActive && searchFieldElm) searchFieldElm.focus()
+  }, [searchActive])
 
   /* -- RENDER -- */
 
@@ -155,30 +219,37 @@ export default function ListProcessor(): JSX.Element | null {
     return <Tooltip description={'Search list.'} />
   })
 
-  // Render the list filtering.
   return (
-    <div className='ListProcessor'>
-      <div className='SearchBox'>
-        <div className='SearchIcon'></div>
-        <input
-          type='text'
-          className='SearchField'
-          spellCheck={false}
-          placeholder={''}
-          onChange={process}
-          onKeyDown={onSearchKeyDown}
-          ref={searchField}
-          onFocus={() => showSearchTooltip(true)}
-          onBlur={() => showSearchTooltip(false)}
-        />
-        <input
-          type='text'
-          className='SearchHint'
-          value={searchHintFormatted}
-          readOnly
-        />
-        {tooltipJsx}
+    <>
+      <div className={rootClasses.value}>
+        <If condition={!searchActive}>
+          <ButtonSvg type={'search'} onClick={() => activateSearch(true)} />
+        </If>
+        <If condition={searchActive}>
+          <div className='SearchBox'>
+            <div className='SearchIcon'></div>
+            <input
+              type='text'
+              className='SearchField'
+              spellCheck={false}
+              placeholder={''}
+              onChange={process}
+              onKeyDown={onSearchKeyDown}
+              ref={searchField}
+              onFocus={onSearchFocus}
+              onBlur={onSearchBlur}
+            />
+            <input
+              type='text'
+              className='SearchHint'
+              value={searchHintFormatted}
+              readOnly
+            />
+            <ButtonSvg type={'close'} onClick={cancelSearch} />
+            {tooltipJsx}
+          </div>
+        </If>
       </div>
-    </div>
+    </>
   )
 }

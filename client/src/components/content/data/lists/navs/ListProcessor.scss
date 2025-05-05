@@ -1,29 +1,41 @@
 @import '../../../../../assets/styles/config.scss';
 
 .ListProcessor {
+  display: flex;
+  align-items: center;
+  justify-content: end;
   margin: 0;
+  min-width: 2em;
   height: 2em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 
+  &.SearchActive {
+    min-width: 10em;
+
+    .SearchBox {
+      display: grid;
+    }
+  }
+
   .SearchBox {
-    display: grid;
-    grid-template-columns: auto 0;
+    display: none;
+    grid-template-columns: 0 auto 0;
+    align-items: center;
     width: 100%;
     height: 100%;
 
     .SearchIcon {
       z-index: 5;
-      grid-column: 2 / 3;
+      grid-column: 1 / 2;
       grid-row: 1 / 2;
       position: relative;
-      right: 2.5em;
       margin: 0;
       width: 2em;
       height: 100%;
       background-image: url('/assets/images/icons/search.svg');
-      background-position: center;
+      background-position: 1em center;
       background-size: 50%;
       background-repeat: no-repeat;
       filter: unset;
@@ -32,13 +44,13 @@
     .SearchField,
     .SearchHint {
       box-sizing: border-box;
-      grid-column: 1 / 2;
+      grid-column: 2 / 3;
       grid-row: 1 / 2;
       margin: 0;
       border: none;
       width: 100%;
       height: 100%;
-      padding: 0.325em 2em;
+      padding: 0.325em 2em 0.325em 3em;
       background: none;
       font-family: 'monospace', sans-serif;
       font-size: 0.95em;
@@ -63,6 +75,12 @@
         outline: none;
         background-color: rgba(#ffffff, 0.175);
       }
+    }
+
+    .ButtonSvg_close {
+      position: relative;
+      right: 1.5em;
+      transform: scale(0.725);
     }
 
     .Tooltip {

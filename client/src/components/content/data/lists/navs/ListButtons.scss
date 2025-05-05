@@ -1,7 +1,21 @@
 @import 'src/assets/styles/config.scss';
 
 .ListButtons {
+  overflow: hidden;
   display: flex;
   align-items: center;
   height: 100%;
+
+  .ButtonSvgPanel_v2 {
+    display: flex;
+    flex-wrap: nowrap;
+
+    .ButtonSvg {
+      transition: background-size 200ms ease-in-out;
+
+      &.ListButtonOverflow {
+        background-size: 0 !important;
+      }
+    }
+  }
 }
