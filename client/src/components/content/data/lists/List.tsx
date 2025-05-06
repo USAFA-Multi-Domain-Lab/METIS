@@ -7,6 +7,7 @@ import { TSvgPanelOnClick } from '../../user-controls/buttons/ButtonSvgPanel_v2'
 import './List.scss'
 import ListDropBox from './ListDropBox'
 import ListResizeHandler from './ListResizeHandler'
+import ListValidator from './ListValidator'
 import ListNav from './navs/ListNav'
 import {
   TGetItemButtonLabel,
@@ -90,6 +91,7 @@ export default function List<TItem extends TListItem>(
   const Provider = ListContext.Provider as React.Provider<
     TListContextData<TItem>
   >
+
   /* -- PROPS -- */
 
   // Set default props.
@@ -249,6 +251,7 @@ export default function List<TItem extends TListItem>(
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
       >
+        <ListValidator />
         <ListNav />
         {currentPageJsx}
         <ListResizeHandler />

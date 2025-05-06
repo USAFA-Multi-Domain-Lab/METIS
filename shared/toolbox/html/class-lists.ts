@@ -62,7 +62,8 @@ export default class ClassList {
    * Adds or removes classes based on a condition.
    * @param classes The class/classes to add or remove.
    * @param condition The condition to determine
-   * whether to add or remove the classes.
+   * whether to add or remove the classes. This condition
+   * is passed to the `Boolean` constructor and then evaluated.
    * @example
    * ```ts
    * let classList = new ClassList('InitialClass')
@@ -83,9 +84,9 @@ export default class ClassList {
    * classList.set('Class1', class1Enabled && !class1Impeded)
    * console.log(classList.value) // 'InitialClass Class1'
    */
-  public set(classes: string | string[], condition: boolean): void {
+  public set(classes: string | string[], condition: any): void {
     if (typeof classes === 'string') classes = [classes]
-    if (condition) this.add(...classes)
+    if (Boolean(condition)) this.add(...classes)
     else this.remove(...classes)
   }
 

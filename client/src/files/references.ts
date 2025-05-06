@@ -2,6 +2,7 @@ import axios, { AxiosResponse } from 'axios'
 import FileReference, {
   TFileReferenceJson,
 } from '../../../shared/files/references'
+import { DateToolbox } from '../../../shared/toolbox/dates'
 import StringToolbox from '../../../shared/toolbox/strings'
 
 /**
@@ -39,6 +40,8 @@ export default class ClientFileReference extends FileReference {
       json.path,
       json.mimetype,
       json.size,
+      DateToolbox.fromNullableISOString(json.createdAt),
+      DateToolbox.fromNullableISOString(json.updatedAt),
     )
   }
   /**

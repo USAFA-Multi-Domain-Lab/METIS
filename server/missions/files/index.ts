@@ -21,13 +21,8 @@ export default class ServerMissionFile extends MissionFile {
       )
     }
 
-    let reference = new ServerFileReference(
-      data.reference._id,
-      data.reference.name,
-      data.reference.path,
-      data.reference.mimetype,
-      data.reference.size,
-    )
+    let reference = ServerFileReference.fromJson(data.reference)
+
     return new ServerMissionFile(
       data._id,
       data.alias,

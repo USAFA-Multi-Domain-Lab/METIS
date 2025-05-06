@@ -1,4 +1,5 @@
 import FileReference, { TFileReferenceJson } from 'metis/files/references'
+import { DateToolbox } from 'metis/toolbox/dates'
 
 export default class ServerFileReference extends FileReference {
   /**
@@ -12,6 +13,8 @@ export default class ServerFileReference extends FileReference {
       json.path,
       json.mimetype,
       json.size,
+      DateToolbox.fromNullableISOString(json.createdAt),
+      DateToolbox.fromNullableISOString(json.updatedAt),
     )
   }
 }

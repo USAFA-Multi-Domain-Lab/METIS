@@ -5,7 +5,8 @@ import If from 'src/components/content/util/If'
 import { useGlobalContext } from 'src/context'
 import ClientFileReference from 'src/files/references'
 import { compute } from 'src/toolbox'
-import { useDefaultProps } from 'src/toolbox/hooks'
+import { useDefaultProps, useRequireLogin } from 'src/toolbox/hooks'
+import { DateToolbox } from '../../../../../../../shared/toolbox/dates'
 import FileToolbox from '../../../../../../../shared/toolbox/files'
 import List, { createDefaultListProps, TList_P } from '../List'
 
@@ -17,6 +18,7 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
+  const { authorize } = useRequireLogin()
   const { prompt, notify, beginLoading, finishLoading } = globalContext.actions
   const importFileTrigger = useRef<HTMLInputElement>(null)
 
@@ -74,34 +76,35 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
   const defaultedProps = useDefaultProps(props, {
     ...createDefaultListProps<ClientFileReference>(),
     itemsPerPageMin: 10,
-    columns: ['mimetype', 'size'],
+    columns: ['mimetype', 'size', 'createdAt', 'updatedAt'],
     listButtons: compute<TButtonSvgType[]>(() => {
       let results: TButtonSvgType[] = []
-
-      // todo: Add auth.
-      // // If the user has the proper authorization, add
-      // // the add and upload buttons.
-      // if (login.user.isAuthorized('files_write')) {
-      //   results.push('add', 'upload')
-      if (props.onFileDrop) results.push('upload')
-      // }
-
+      authorize('files_write', () => results.push('upload'))
       return results
     }),
     itemButtons: compute<TButtonSvgType[]>(() => {
       let results: TButtonSvgType[] = []
 
-      // todo: Add auth.
-      // If the user is authorized, add the download
-      // button.
-      // if (props.user.isAuthorized('files_read')) {
       results.push('download')
-      // }
-      results.push('remove')
+      authorize('files_write', () => results.push('remove'))
 
       return results
     }),
     initialSorting: { column: 'name', method: 'ascending' },
+    getColumnLabel: (column) => {
+      switch (column) {
+        case 'mimetype':
+          return 'Type'
+        case 'size':
+          return 'Size'
+        case 'createdAt':
+          return 'Uploaded'
+        case 'updatedAt':
+          return 'Last Modified'
+        default:
+          return 'Unknown column'
+      }
+    },
     getCellText: (
       file: ClientFileReference,
       column: keyof ClientFileReference,
@@ -111,6 +114,11 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
           return FileToolbox.mimeTypeToLabel(file.mimetype)
         case 'size':
           return FileToolbox.formatFileSize(file.size)
+        case 'createdAt':
+        case 'updatedAt':
+          let datetime = file[column]
+          if (datetime === null) return 'N/A'
+          else return DateToolbox.format(datetime, 'yyyy-mm-dd HH:MM')
         default:
           return 'Unknown column'
       }

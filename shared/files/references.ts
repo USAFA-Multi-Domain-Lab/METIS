@@ -1,4 +1,5 @@
 import { TMetisComponent } from '..'
+import { DateToolbox } from '../toolbox/dates'
 
 /**
  * A reference to a file stored in the METIS file store.
@@ -35,6 +36,16 @@ export default abstract class FileReference implements TMetisComponent {
   public size: number
 
   /**
+   * The date and time when the file was created.
+   */
+  public createdAt: Date | null
+
+  /**
+   * The date and time when the file was last updated.
+   */
+  public updatedAt: Date | null
+
+  /**
    * See corresponding class properties for details
    * on the parameters of this constructor.
    */
@@ -44,12 +55,16 @@ export default abstract class FileReference implements TMetisComponent {
     path: string,
     mimetype: string,
     size: number,
+    createdAt: Date | null,
+    updatedAt: Date | null,
   ) {
     this._id = _id
     this.name = name
     this.path = path
     this.mimetype = mimetype
     this.size = size
+    this.createdAt = createdAt
+    this.updatedAt = updatedAt
   }
 
   /**
@@ -63,6 +78,8 @@ export default abstract class FileReference implements TMetisComponent {
       path: this.path,
       mimetype: this.mimetype,
       size: this.size,
+      createdAt: DateToolbox.toNullableISOString(this.createdAt),
+      updatedAt: DateToolbox.toNullableISOString(this.updatedAt),
     }
   }
 }
@@ -83,4 +100,12 @@ export interface TFileReferenceJson extends TMetisComponent {
    * @see FileReference.size
    */
   size: number
+  /**
+   * @see FileReference.createdAt
+   */
+  createdAt: string | null
+  /**
+   * @see FileReference.updatedAt
+   */
+  updatedAt: string | null
 }

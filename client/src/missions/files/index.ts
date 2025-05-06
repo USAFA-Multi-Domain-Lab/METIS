@@ -74,13 +74,7 @@ export default class ClientMissionFile extends MissionFile<TMetisClientComponent
       )
     }
 
-    let reference = new ClientFileReference(
-      data.reference._id,
-      referenceJson.name,
-      referenceJson.path,
-      referenceJson.mimetype,
-      referenceJson.size,
-    )
+    let reference = ClientFileReference.fromJson(referenceJson)
 
     return new ClientMissionFile(
       data._id,

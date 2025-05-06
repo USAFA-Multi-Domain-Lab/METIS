@@ -2,20 +2,29 @@
 
 .ListNav {
   box-sizing: border-box;
-  display: grid;
-  grid-template-columns: auto auto auto auto 1fr;
+  display: flex;
+  flex-flow: row nowrap;
+  overflow: hidden;
   align-items: center;
   column-gap: 1em;
   width: 100%;
   height: 3em;
   padding: 1em 1em 0;
 
-  .ListHeader,
-  .ListProcessor,
-  .ListOverflowPanel,
-  .ListPageControls {
+  &:not(.Overflowing) {
+    .ListOverflowPanel {
+      display: none;
+    }
+  }
+
+  > * {
+    flex-grow: 0;
     height: 2em;
     box-sizing: border-box;
+  }
+
+  .ListProcessor {
+    flex-grow: 1;
   }
 
   .ListHeader {
