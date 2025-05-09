@@ -6,9 +6,9 @@ import './Arg.scss'
 import ArgBoolean from './ArgBoolean'
 import ArgDropdown from './ArgDropdown'
 import ArgLargeString from './ArgLargeString'
-import ArgMissionComponent from './ArgMissionComponent'
 import ArgNumber from './ArgNumber'
 import ArgString from './ArgString'
+import ArgMissionComponent from './mission-component'
 
 export default function ({
   effect,
@@ -128,45 +128,6 @@ export default function ({
           key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}`}
         />
       )
-    // case 'force':
-    //   return (
-    //     <div className={`Arg Force`}>
-    //       <ArgForce
-    //         effect={effect}
-    //         arg={arg}
-    //         initialize={initializeArg}
-    //         effectArgs={effectArgs}
-    //         setEffectArgs={setEffectArgs}
-    //         key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}`}
-    //       />
-    //     </div>
-    //   )
-    // case 'node':
-    //   return (
-    //     <div className={`Arg Node`}>
-    //       <ArgNode
-    //         effect={effect}
-    //         arg={arg}
-    //         initialize={initializeArg}
-    //         effectArgs={effectArgs}
-    //         setEffectArgs={setEffectArgs}
-    //         key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}`}
-    //       />
-    //     </div>
-    //   )
-    // case 'action':
-    //   return (
-    //     <div className={`Arg Action`}>
-    //       <ArgAction
-    //         effect={effect}
-    //         arg={arg}
-    //         initialize={initializeArg}
-    //         effectArgs={effectArgs}
-    //         setEffectArgs={setEffectArgs}
-    //         key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}`}
-    //       />
-    //     </div>
-    //   )
     default:
       return null
   }

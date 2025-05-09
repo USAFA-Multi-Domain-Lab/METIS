@@ -1,3 +1,4 @@
+import { TForceMetadata } from 'metis/target-environments/args/mission-component/force-arg'
 import Dependency from 'metis/target-environments/dependencies'
 import TargetSchema from '../../../../library/target-env-classes/targets'
 
@@ -10,12 +11,12 @@ const Output = new TargetSchema({
   description: '',
   script: async (context) => {
     // Extract the effect and its arguments from the context.
-    let { effect } = context
-    let { forceMetadata, message } = effect.args
-    let { forceId } = forceMetadata
+    const { effect } = context
+    const { forceMetadata, message } = effect.args
+    const { forceKey } = forceMetadata as TForceMetadata
 
     // Output the message to the force.
-    context.sendOutput(message, { forceId })
+    context.sendOutput(message, { forceKey })
   },
   args: [
     {

@@ -59,7 +59,7 @@ export default abstract class MissionOutput<
     // todo: the mission. Perhaps the node is
     // todo: part of a different force, and therefore
     // todo: inaccessible, but very much a real node.
-    return this.mission.getNode(nodeId) ?? null
+    return this.mission.getNodeById(nodeId) ?? null
   })
 
   /**

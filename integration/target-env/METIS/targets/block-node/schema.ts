@@ -1,3 +1,4 @@
+import { TNodeMetadata } from 'metis/target-environments/args/mission-component/node-arg'
 import Dependency from 'metis/target-environments/dependencies'
 import TargetSchema from '../../../../library/target-env-classes/targets'
 
@@ -10,8 +11,8 @@ const BlockNode = new TargetSchema({
   description: '',
   script: async (context) => {
     // Extract the arguments from the effect.
-    let { nodeMetadata, blockStatus } = context.effect.args
-    let { forceId, nodeId } = nodeMetadata
+    const { nodeMetadata, blockStatus } = context.effect.args
+    const { forceKey, nodeKey } = nodeMetadata as TNodeMetadata
 
     // Set the error message.
     const errorMessage =
@@ -21,8 +22,8 @@ const BlockNode = new TargetSchema({
 
     // Check if the arguments are valid.
     if (
-      typeof forceId !== 'string' ||
-      typeof nodeId !== 'string' ||
+      typeof forceKey !== 'string' ||
+      typeof nodeKey !== 'string' ||
       typeof blockStatus !== 'string'
     ) {
       throw new Error(errorMessage)
@@ -30,9 +31,9 @@ const BlockNode = new TargetSchema({
 
     // Update the block status of the node.
     if (blockStatus === 'block') {
-      context.blockNode({ nodeId })
+      context.blockNode({ forceKey, nodeKey })
     } else if (blockStatus === 'unblock') {
-      context.unblockNode({ nodeId })
+      context.unblockNode({ forceKey, nodeKey })
     } else if (typeof blockStatus !== 'string') {
       throw new Error(errorMessage)
     }

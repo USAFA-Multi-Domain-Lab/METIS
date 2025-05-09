@@ -47,6 +47,21 @@ export default class ClientMissionForce
   }
 
   /**
+   * The default properties for a duplcated force.
+   */
+  private readonly _defaultDuplicateProperties: TForceDuplicateParams = {
+    mission: this.mission,
+    _id: ClientMissionForce.DEFAULT_PROPERTIES._id,
+    introMessage: this.introMessage,
+    name: this.name,
+    color: this.color,
+    initialResources: this.initialResources,
+    revealAllNodes: this.revealAllNodes,
+    localKey: this.localKey,
+    nodes: [],
+  }
+
+  /**
    * Manages the force's event listeners and events.
    */
   private eventManager: EventManager<TForceEventMethods, TForceEventArgs>
@@ -493,6 +508,81 @@ export default class ClientMissionForce
     // Emit event.
     this.emitEvent('modify-forces', [])
   }
+
+  /**
+   * Duplicates the force, creating a new force with the same properties
+   * as this one or with the provided properties.
+   * @returns A new force with the same properties as this one or with the
+   * provided properties.
+   * @note **Any properties provided will override using the properties from
+   * the force that is being duplicated.**
+   * @note ***The nodes are cleanly duplicated, meaning that the new force
+   * will have its own set of nodes, actions, and effects with their own
+   * unique IDs. The effect arguments will also be handled correctly.***
+   * @default mission = originalForce.mission
+   * @default _id = ClientMissionForce.DEFAULT_PROPERTIES._id // generates a new UUID
+   * @default introMessage = originalForce.introMessage
+   * @default name = originalForce.name
+   * @default color = originalForce.color
+   * @default initialResources = originalForce.initialResources
+   * @default revealAllNodes = originalForce.revealAllNodes
+   * @default localKey = originalForce.localKey
+   * @default nodes = undefined // indicates that the nodes need to be properly duplicated also
+   * @example
+   * const newForce = force.duplicate({
+   *   mission: newMission, // This will be the duplicated force's mission.
+   *   _id: 'new-force-id', // This will be the duplicated force's new ID.
+   *   introMessage: 'Hello, world!', // This will be the duplicated force's new intro message.
+   *   name: 'New Force', // This will be the duplicated force's new name.
+   *   color: 'red', // This will be the duplicated force's new color.
+   *   initialResources: 100, // This will be the duplicated force's new initial resources.
+   *   revealAllNodes: true, // This will be the duplicated force's new reveal all nodes value.
+   *   localKey: 'new-local-key', // This will be the duplicated force's new local key.
+   *   nodes: [], // This will be what the node data is set as for the duplicated force.
+   * })
+   * @example
+   * // If no properties are provided, the duplicated force will
+   * // have the same properties as the original force except for
+   * // the ID and the nodes. The ID will be generated using
+   * // `ClientMissionForce.DEFAULT_PROPERTIES._id` and the nodes
+   * // will be duplicated using the `duplicate` method of the
+   * // `ClientMissionNode` class. See the default property values
+   * // above for more information.
+   * const newForce = force.duplicate()
+   */
+  public duplicate(
+    {
+      mission = this._defaultDuplicateProperties.mission,
+      _id = this._defaultDuplicateProperties._id,
+      introMessage = this._defaultDuplicateProperties.introMessage,
+      name = this._defaultDuplicateProperties.name,
+      color = this._defaultDuplicateProperties.color,
+      initialResources = this._defaultDuplicateProperties.initialResources,
+      revealAllNodes = this._defaultDuplicateProperties.revealAllNodes,
+      localKey = this._defaultDuplicateProperties.localKey,
+      nodes = this._defaultDuplicateProperties.nodes,
+    }: TForceDuplicateArgs = this._defaultDuplicateProperties,
+  ): ClientMissionForce {
+    let duplicatedForce = new ClientMissionForce(mission, {
+      _id,
+      introMessage,
+      name,
+      color,
+      initialResources,
+      revealAllNodes,
+      localKey,
+      nodes,
+    })
+
+    // Duplicate the nodes, if necessary.
+    if (nodes.length === 0) {
+      duplicatedForce.nodes = this.nodes.map((node) =>
+        node.duplicate({ force: duplicatedForce }),
+      )
+    }
+
+    return duplicatedForce
+  }
 }
 
 /* ------------------------------ CLIENT FORCE TYPES ------------------------------ */
@@ -520,3 +610,25 @@ export type TForceEventMethods =
 type TForceEventArgs = [
   updatedComponents: TMissionComponent<TMetisClientComponents, any>[],
 ]
+
+/**
+ * The arguments used to duplicate a force.
+ */
+type TForceDuplicateArgs = Partial<TMissionForceJson> & {
+  /**
+   * The mission that the duplicated force will belong to.
+   * @default originalForce.mission
+   */
+  mission?: ClientMission
+}
+
+/**
+ * The parameters used to duplicate a force.
+ */
+type TForceDuplicateParams = TMissionForceJson & {
+  /**
+   * The mission that the duplicated force will belong to.
+   * @default originalForce.mission
+   */
+  mission: ClientMission
+}

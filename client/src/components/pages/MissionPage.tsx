@@ -724,7 +724,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     forceId: ClientMissionForce['_id'],
   ) => {
     // Get the force to duplicate.
-    let force = mission.getForce(forceId)
+    let force = mission.getForceById(forceId)
 
     // If the force is not found, notify the user.
     if (!force) {
@@ -768,7 +768,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     forceId: ClientMissionForce['_id'],
   ) => {
     // Get the force to duplicate.
-    let force = mission.getForce(forceId)
+    let force = mission.getForceById(forceId)
 
     // If the force is not found, notify the user.
     if (!force) {

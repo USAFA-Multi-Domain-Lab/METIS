@@ -246,7 +246,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
   public openNode(nodeId: string, options: TSessionRequestOptions = {}): void {
     // Gather details.
     let server: ServerConnection = this.server
-    let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
+    let node: ClientMissionNode | undefined = this.mission.getNodeById(nodeId)
 
     // Callback for errors.
     const onError = (message: string) => {
@@ -370,7 +370,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
   ) {
     // Gather details.
     let server: ServerConnection = this.server
-    let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
+    let node: ClientMissionNode | undefined = this.mission.getNodeById(nodeId)
     let { onError = () => {} } = options
 
     // If the node doesn't have a pre-execution message,
@@ -854,7 +854,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
    */
   private updateNodeBlockStatus = (nodeId: string, blocked: boolean): void => {
     // Find the node, given the ID.
-    let node = this.mission.getNode(nodeId)
+    let node = this.mission.getNodeById(nodeId)
     // Handle the blocking and unblocking of the node.
     node?.updateBlockStatus(blocked)
   }
@@ -874,7 +874,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
     actionId?: string,
   ): void => {
     // Find the node, given the ID.
-    let node = this.mission.getNode(nodeId)
+    let node = this.mission.getNodeById(nodeId)
     // Modify the success chance for all the node's actions.
     node?.modifySuccessChance(successChanceOperand, actionId)
   }
@@ -894,7 +894,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
     actionId?: string,
   ): void => {
     // Find the node, given the ID.
-    let node = this.mission.getNode(nodeId)
+    let node = this.mission.getNodeById(nodeId)
     // Modify the process time for all the node's actions.
     node?.modifyProcessTime(processTimeOperand, actionId)
   }
@@ -914,7 +914,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
     actionId?: string,
   ): void => {
     // Find the node, given the ID.
-    let node = this.mission.getNode(nodeId)
+    let node = this.mission.getNodeById(nodeId)
     // Modify the resource cost for all the node's actions.
     node?.modifyResourceCost(resourceCostOperand, actionId)
   }
@@ -926,7 +926,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
    */
   private modifyResourcePool = (forceId: string, operand: number): void => {
     // Find the force, given the ID.
-    let force = this.mission.getForce(forceId)
+    let force = this.mission.getForceById(forceId)
     // Modify the resource pool for the force.
     force?.modifyResourcePool(operand)
   }
@@ -1069,7 +1069,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
   private onSendOutput = (event: TServerEvents['send-output']): void => {
     let { outputData } = event.data
     let { forceId } = outputData
-    let force = this.mission.getForce(forceId)
+    let force = this.mission.getForceById(forceId)
     if (force) {
       let output = new ClientOutput(force, outputData)
       force.storeOutput(output)
@@ -1087,7 +1087,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
     switch (key) {
       case 'pre-execution':
         let { nodeId } = event.data
-        let node = this.mission.getNode(nodeId)
+        let node = this.mission.getNodeById(nodeId)
         node?.onOutput()
     }
   }
@@ -1104,7 +1104,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
       revealedDescendants,
       revealedDescendantPrototypes,
     } = event.data
-    const node = this.mission.getNode(nodeId)
+    const node = this.mission.getNodeById(nodeId)
     if (!node) throw new Error(`Node "${nodeId}" was not found.`)
     const { prototype } = node
 

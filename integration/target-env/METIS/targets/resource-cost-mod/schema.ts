@@ -1,3 +1,4 @@
+import { TActionMetadata } from 'metis/target-environments/args/mission-component/action-arg'
 import Dependency from 'metis/target-environments/dependencies'
 import TargetSchema from '../../../../library/target-env-classes/targets'
 
@@ -11,20 +12,20 @@ const ResourceCostMod = new TargetSchema({
   description: '',
   script: async (context) => {
     // Gather details.
-    let { actionMetadata, resourceCost } = context.effect.args
-    let { forceId, nodeId, actionId } = actionMetadata
+    const { actionMetadata, resourceCost } = context.effect.args
+    const { forceKey, nodeKey, actionKey } = actionMetadata as TActionMetadata
     const errorMessage =
       `Bad request. The arguments sent with the effect are invalid. Please check the arguments within the effect.\n` +
       `Effect ID: "${context.effect._id}"\n` +
       `Effect Name: "${context.effect.name}"`
 
-    if (typeof forceId !== 'string' || typeof nodeId !== 'string') {
+    if (typeof forceKey !== 'string' || typeof nodeKey !== 'string') {
       throw new Error(errorMessage)
     }
 
     // If the resource cost is a number, then modify the resource cost.
     if (resourceCost && typeof resourceCost === 'number') {
-      context.modifyResourceCost(resourceCost, { nodeId, actionId })
+      context.modifyResourceCost(resourceCost, { forceKey, nodeKey, actionKey })
     }
     // Otherwise, throw an error.
     else if (resourceCost && typeof resourceCost !== 'number') {

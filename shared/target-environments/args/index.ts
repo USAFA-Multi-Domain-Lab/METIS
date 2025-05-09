@@ -1,13 +1,14 @@
 import Dependency from '../dependencies'
-import ActionArg, { TActionArg, TActionArgJson } from './action-arg'
 import BooleanArg, { TBooleanArg, TBooleanArgJson } from './boolean-arg'
 import DropdownArg, { TDropdownArg, TDropdownArgJson } from './dropdown-arg'
-import ForceArg, { TForceArg, TForceArgJson } from './force-arg'
 import LargeStringArg, {
   TLargeStringArg,
   TLargeStringArgJson,
 } from './large-string-arg'
-import NodeArg, { TNodeArg, TNodeArgJson } from './node-arg'
+import MissionComponentArg, {
+  TMissionComponentArg,
+  TMissionComponentArgJson,
+} from './mission-component'
 import NumberArg, { TNumberArg, TNumberArgJson } from './number-arg'
 import StringArg, { TStringArg, TStringArgJson } from './string-arg'
 
@@ -56,11 +57,9 @@ export default class Arg {
         case 'boolean':
           return BooleanArg.toJson(arg)
         case 'force':
-          return ForceArg.toJson(arg)
         case 'node':
-          return NodeArg.toJson(arg)
         case 'action':
-          return ActionArg.toJson(arg)
+          return MissionComponentArg.toJson(arg)
       }
     })
   }
@@ -84,11 +83,9 @@ export default class Arg {
         case 'boolean':
           return BooleanArg.fromJson(arg)
         case 'force':
-          return ForceArg.fromJson(arg)
         case 'node':
-          return NodeArg.fromJson(arg)
         case 'action':
-          return ActionArg.fromJson(arg)
+          return MissionComponentArg.fromJson(arg)
       }
     })
   }
@@ -173,10 +170,7 @@ export type TBaseArg = {
    */
   tooltipDescription?: string
 }
-/**
- * Arguments that reference a mission component within METIS (e.g. a force or node).
- */
-export type TMissionComponentArg = TForceArg | TNodeArg | TActionArg
+
 /**
  * The arguments used for the target-effect interface and the target-effect API.
  */
@@ -265,13 +259,7 @@ export type TBaseArgJson = {
    */
   tooltipDescription?: string
 }
-/**
- * The JSON representation of the arguments that reference a mission component within METIS (e.g. a force or node).
- */
-export type TMissionComponentArgJson =
-  | TForceArgJson
-  | TNodeArgJson
-  | TActionArgJson
+
 /**
  * The arguments used for the target-effect interface and the target-effect API.
  */

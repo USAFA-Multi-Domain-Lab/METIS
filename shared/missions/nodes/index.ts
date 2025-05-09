@@ -115,6 +115,11 @@ export default abstract class MissionNode<
   public abstract set exclude(value: boolean)
 
   /**
+   * A key for the node, used to identify it within the force.
+   */
+  public localKey: string
+
+  /**
    * The execution state of the node.
    */
   public get executionState(): TNodeExecutionState {
@@ -541,6 +546,7 @@ export default abstract class MissionNode<
     this.device = data.device ?? MissionNode.DEFAULT_PROPERTIES.device
     this.actions = new Map<string, TAction<T>>()
     this._exclude = data.exclude ?? MissionNode.DEFAULT_PROPERTIES.exclude
+    this.localKey = data.localKey ?? force.generateNodeKey()
     this._executions = []
     this._opened = data.opened ?? MissionNode.DEFAULT_PROPERTIES.opened
     this._blocked = data.blocked ?? MissionNode.DEFAULT_PROPERTIES.blocked
@@ -599,6 +605,7 @@ export default abstract class MissionNode<
         action.toJson(options),
       ),
       exclude: this.exclude,
+      localKey: this.localKey,
     }
 
     // Include session-specific data based on exposure level.
@@ -638,6 +645,26 @@ export default abstract class MissionNode<
    */
   public getExecution(_id: string): TExecution<T> | undefined {
     return this.executions.find((execution) => execution._id === _id)
+  }
+
+  /**
+   * Generates a new key for an action.
+   * @returns The new key for an action.
+   */
+  public generateActionKey(): string {
+    // Initialize
+    let newKey: number = 0
+
+    for (let action of this.actions.values()) {
+      let actionKey: number = Number(action.localKey)
+      // If the action has a key, and it is greater than the current
+      // new key, set the new key to the action's key.
+      if (actionKey > newKey) newKey = Math.max(newKey, actionKey)
+    }
+
+    // Increment the new key by 1 and return it as a string.
+    newKey++
+    return String(newKey)
   }
 
   /**
@@ -693,7 +720,7 @@ export default abstract class MissionNode<
   /**
    * The default properties for a `MissionNode` object.
    */
-  public static get DEFAULT_PROPERTIES(): Required<TMissionNodeJson> {
+  public static get DEFAULT_PROPERTIES(): TMissionNodeDefaultJson {
     return {
       _id: generateHash(),
       prototypeId: MissionPrototype.DEFAULT_PROPERTIES._id,
@@ -760,6 +787,10 @@ export interface TMissionNodeJsonBase {
    * participants during a session.
    */
   exclude: boolean
+  /**
+   * A key for the node, used to identify it within the force.
+   */
+  localKey: string
 }
 
 /**
@@ -778,6 +809,12 @@ export interface TMissionNodeSessionJson {
   executions: TActionExecutionJson[]
   blocked: boolean
 }
+
+/**
+ * The default properties for a `MissionNode` object.
+ * @inheritdoc TMissionNodeJson
+ */
+type TMissionNodeDefaultJson = Required<Omit<TMissionNodeJson, 'localKey'>>
 
 /**
  * Plain JSON representation of a MissionNode object.

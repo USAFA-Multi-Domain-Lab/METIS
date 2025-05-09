@@ -1,3 +1,4 @@
+import { TForceMetadata } from 'metis/target-environments/args/mission-component/force-arg'
 import Dependency from 'metis/target-environments/dependencies'
 import TargetSchema from '../../../../library/target-env-classes/targets'
 
@@ -10,12 +11,12 @@ const ResourcePool = new TargetSchema({
   description: '',
   script: async (context) => {
     // Extract the effect and its arguments from the context.
-    let { effect } = context
-    let { modifier, forceMetadata } = effect.args
-    let { forceId } = forceMetadata
+    const { effect } = context
+    const { modifier, forceMetadata } = effect.args
+    const { forceKey } = forceMetadata as TForceMetadata
 
     // Modify the resource pool.
-    context.modifyResourcePool(modifier, { forceId })
+    context.modifyResourcePool(modifier, { forceKey })
   },
   args: [
     {

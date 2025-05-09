@@ -43,16 +43,21 @@ const AVAILABLE_DEPENDENCIES_RAW = [
   } as const,
   {
     name: 'force',
-    condition: (value: any) => value instanceof MissionForce,
+    condition: (value: { force: MissionForce }) =>
+      value instanceof MissionForce,
   } as const,
   {
     name: 'node',
-    condition: (value: any) =>
+    condition: (value: { force: MissionForce; node: MissionNode }) =>
       value.force instanceof MissionForce && value.node instanceof MissionNode,
   } as const,
   {
     name: 'action',
-    condition: (value: any) =>
+    condition: (value: {
+      force: MissionForce
+      node: MissionNode
+      action: MissionAction | undefined
+    }) =>
       value.force instanceof MissionForce &&
       value.node instanceof MissionNode &&
       (value.action instanceof MissionAction || value.action === undefined),

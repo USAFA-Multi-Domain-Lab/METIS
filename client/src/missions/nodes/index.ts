@@ -265,6 +265,27 @@ export default class ClientMissionNode
   }
 
   /**
+   * The default properties for a duplcated node.
+   */
+  private readonly _defaultDuplicateProperties: TNodeDuplicateParams = {
+    force: this.force,
+    _id: ClientMissionNode.DEFAULT_PROPERTIES._id,
+    prototypeId: this.prototype._id,
+    name: this.name,
+    color: this.color,
+    description: this.description,
+    preExecutionText: this.preExecutionText,
+    executable: this.executable,
+    device: this.device,
+    actions: [],
+    opened: this.opened,
+    blocked: this.blocked,
+    executions: this.executions,
+    exclude: this.exclude,
+    localKey: this.localKey,
+  }
+
+  /**
    * Manages the mission's event listeners and events.
    */
   private eventManager: EventManager<TNodeEventMethod>
@@ -272,12 +293,12 @@ export default class ClientMissionNode
   /**
    * @param force The force of which the node is a part.
    * @param data The node data from which to create the node.
-   *  Any ommitted values will be set to the default properties
-   *  defined in MissionNode.DEFAULT_PROPERTIES.
+   *  @note Any ommitted values will be set to their default properties
+   *  defined in `ClientMissionNode.DEFAULT_PROPERTIES`.
    */
   public constructor(
     force: ClientMissionForce,
-    data: Partial<TMissionNodeJson> = MissionNode.DEFAULT_PROPERTIES,
+    data: Partial<TMissionNodeJson> = ClientMissionNode.DEFAULT_PROPERTIES,
   ) {
     super(force, data)
     this._buttons = []
@@ -505,6 +526,106 @@ export default class ClientMissionNode
     })
   }
 
+  /**
+   * Duplicates the node, creating a new node with the same properties
+   * as this one or with the provided properties.
+   * @returns A new node with the same properties as this one or with the
+   * provided properties.
+   * @note **Any properties provided will override using the properties from
+   * the node that is being duplicated.**
+   * @note ***The actions are cleanly duplicated, meaning that the new node
+   * will have its own set of actions and effects with their own unique IDs. The
+   * effect arguments will also be handled correctly.***
+   * @default force = originalNode.force
+   * @default _id = ClientMissionNode.DEFAULT_PROPERTIES._id // generates a new UUID
+   * @default prototypeId = originalNode.prototypeId
+   * @default name = originalNode.name
+   * @default color = originalNode.color
+   * @default description = originalNode.description
+   * @default preExecutionText = originalNode.preExecutionText
+   * @default executable = originalNode.executable
+   * @default device = originalNode.device
+   * @default actions = undefined // indicates that the actions need to be properly duplicated also
+   * @default opened = originalNode.opened
+   * @default blocked = originalNode.blocked
+   * @default executions = originalNode.executions
+   * @default exclude = originalNode.exclude
+   * @default localKey = originalNode.localKey
+   * @example
+   * const newNode = node.duplicate({
+   *   force: newForce, // This will be the duplicated node's new force.
+   *   _id: 'new-node-id', // This will be the duplicated node's new ID.
+   *   prototypeId: 'new-node-prototype-id', // This will be the duplicated node's new prototype ID.
+   *   name: 'New Node', // This will be the duplicated node's new name.
+   *   color: 'red', // This will be the duplicated node's new color.
+   *   description: 'New Node Description', // This will be the duplicated node's new description.
+   *   preExecutionText: 'New Node Pre-Execution Text', // This will be the duplicated node's new pre-execution text.
+   *   executable: true, // This will be the duplicated node's new executable value.
+   *   device: 'New Node Device', // This will be the duplicated node's new device.
+   *   actions: [], // This will be what the action data is set as for the duplicated node.
+   *   opened: true, // This will be the duplicated node's new opened value.
+   *   blocked: false, // This will be the duplicated node's new blocked value.
+   *   executions: [], // This will be what the execution data is set as for the duplicated node.
+   *   exclude: false, // This will be the duplicated node's new exclude value.
+   *   localKey: 'new-node-local-key', // This will be the duplicated node's new local key.
+   * })
+   * @example
+   * // If no properties are provided, the duplicated node will
+   * // have the same properties as the original node except for
+   * // the ID and the actions. The ID will be generated using
+   * // `ClientMissionNode.DEFAULT_PROPERTIES._id` and the actions
+   * // will be duplicated using the `duplicate` method of the
+   * // `ClientMissionAction` class. See the default property values
+   * // above for more information.
+   * const newNode = node.duplicate()
+   */
+  public duplicate(
+    {
+      force = this._defaultDuplicateProperties.force,
+      _id = this._defaultDuplicateProperties._id,
+      prototypeId = this._defaultDuplicateProperties.prototypeId,
+      name = this._defaultDuplicateProperties.name,
+      color = this._defaultDuplicateProperties.color,
+      description = this._defaultDuplicateProperties.description,
+      preExecutionText = this._defaultDuplicateProperties.preExecutionText,
+      executable = this._defaultDuplicateProperties.executable,
+      device = this._defaultDuplicateProperties.device,
+      actions = this._defaultDuplicateProperties.actions,
+      opened = this._defaultDuplicateProperties.opened,
+      blocked = this._defaultDuplicateProperties.blocked,
+      executions = this._defaultDuplicateProperties.executions,
+      exclude = this._defaultDuplicateProperties.exclude,
+      localKey = this._defaultDuplicateProperties.localKey,
+    }: TNodeDuplicateArgs = this._defaultDuplicateProperties,
+  ): ClientMissionNode {
+    let duplicatedNode = new ClientMissionNode(force, {
+      _id,
+      prototypeId,
+      name,
+      color,
+      description,
+      preExecutionText,
+      executable,
+      device,
+      actions,
+      opened,
+      blocked,
+      executions,
+      exclude,
+      localKey,
+    })
+
+    // Duplicate the actions, if necessary.
+    if (actions.length === 0) {
+      this.actions.forEach((action) => {
+        let duplicatedAction = action.duplicate({ node: duplicatedNode })
+        duplicatedNode.actions.set(duplicatedAction._id, duplicatedAction)
+      })
+    }
+
+    return duplicatedNode
+  }
+
   /* -- static -- */
 
   /**
@@ -611,3 +732,25 @@ export type TNodeEventMethod =
   | 'open'
   | 'modify-actions'
   | 'output-sent'
+
+/**
+ * The arguments used to duplicate a node.
+ */
+type TNodeDuplicateArgs = Partial<TMissionNodeJson> & {
+  /**
+   * The force that the duplicated node will belong to.
+   * @default originalNode.force
+   */
+  force?: ClientMissionForce
+}
+
+/**
+ * The parameters used to duplicate a node.
+ */
+type TNodeDuplicateParams = TMissionNodeJson & {
+  /**
+   * The force that the duplicated node will belong to.
+   * @default originalNode.force
+   */
+  force: ClientMissionForce
+}

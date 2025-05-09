@@ -3,8 +3,8 @@ import { TMetisServerComponents } from 'metis/server'
 import ServerTargetEnvironment from 'metis/server/target-environments'
 import { TTargetEnvExposedEffect } from 'metis/server/target-environments/context'
 import ServerTarget from 'metis/server/target-environments/targets'
-import ForceArg from 'metis/target-environments/args/force-arg'
-import NodeArg from 'metis/target-environments/args/node-arg'
+import ForceArg from 'metis/target-environments/args/mission-component/force-arg'
+import NodeArg from 'metis/target-environments/args/mission-component/node-arg'
 import { AnyObject } from 'metis/toolbox/objects'
 
 /**
@@ -38,11 +38,11 @@ export default class ServerEffect extends Effect<TMetisServerComponents> {
     let argsCopy = { ...args }
 
     Object.entries(argsCopy).forEach(([key, value]) => {
-      if (value[ForceArg.FORCE_NAME_KEY] !== undefined) {
-        delete argsCopy[key][ForceArg.FORCE_NAME_KEY]
+      if (value[ForceArg.FORCE_NAME] !== undefined) {
+        delete argsCopy[key][ForceArg.FORCE_NAME]
       }
-      if (value[NodeArg.NODE_NAME_KEY] !== undefined) {
-        delete argsCopy[key][NodeArg.NODE_NAME_KEY]
+      if (value[NodeArg.NODE_NAME] !== undefined) {
+        delete argsCopy[key][NodeArg.NODE_NAME]
       }
     })
 

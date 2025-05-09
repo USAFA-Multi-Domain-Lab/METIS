@@ -65,6 +65,11 @@ export default abstract class MissionAction<
   public postExecutionFailureText: string
 
   /**
+   * A key for the action, used to identify it within the node.
+   */
+  public localKey: string
+
+  /**
    * The effects that can be applied to the targets.
    */
   public effects: TEffect<T>[]
@@ -271,6 +276,7 @@ export default abstract class MissionAction<
     this.postExecutionFailureText =
       data.postExecutionFailureText ??
       MissionAction.DEFAULT_PROPERTIES.postExecutionFailureText
+    this.localKey = data.localKey ?? node.generateActionKey()
     this.effects = this.parseEffects(
       data.effects ?? MissionAction.DEFAULT_PROPERTIES.effects,
     )
@@ -311,6 +317,7 @@ export default abstract class MissionAction<
       opensNodeHidden: this.opensNodeHidden,
       postExecutionSuccessText: this.postExecutionSuccessText,
       postExecutionFailureText: this.postExecutionFailureText,
+      localKey: this.localKey,
       effects: this.effects.map((effect) => effect.toJson()),
     }
 
@@ -362,6 +369,26 @@ export default abstract class MissionAction<
   }
 
   /**
+   * Generates a new key for an effect.
+   * @returns The new key for an effect.
+   */
+  public generateEffectKey(): string {
+    // Initialize
+    let newKey: number = 0
+
+    for (let effect of this.effects) {
+      let effectKey: number = Number(effect.localKey)
+      // If the effect has a key, and it is greater than the current
+      // new key, set the new key to the effect's key.
+      if (effectKey > newKey) newKey = Math.max(newKey, effectKey)
+    }
+
+    // Increment the new key by 1 and return it as a string.
+    newKey++
+    return String(newKey)
+  }
+
+  /**
    * The minimum process time for an action in milliseconds.
    */
   public static readonly PROCESS_TIME_MIN: number = 0 /*ms*/
@@ -396,7 +423,7 @@ export default abstract class MissionAction<
   /**
    * Default properties set when creating a new MissionAction object.
    */
-  public static get DEFAULT_PROPERTIES(): Required<TMissionActionJson> {
+  public static get DEFAULT_PROPERTIES(): TMissionActionDefaultJson {
     return {
       _id: generateHash(),
       name: 'New Action',
@@ -434,22 +461,65 @@ export type TActionJsonOptions = TNodeJsonOptions
 export type TAction<T extends TMetisBaseComponents> = T['action']
 
 /**
+ * Extracts all the properties of a `MissionAction` that are
+ * needed for the JSON representation of the action.
+ */
+const JSON_PROPERTIES_RAW = {
+  direct: [
+    '_id',
+    'name',
+    'description',
+    'processTime',
+    'processTimeHidden',
+    'successChance',
+    'successChanceHidden',
+    'resourceCost',
+    'resourceCostHidden',
+    'opensNode',
+    'opensNodeHidden',
+    'postExecutionSuccessText',
+    'postExecutionFailureText',
+    'localKey',
+  ],
+  indirect: [
+    {
+      /**
+       * The effects that can be applied to the targets.
+       */
+      effects: [] as TEffectJson[],
+    },
+  ],
+} as const
+
+/**
+ * All of the property types of a `MissionAction` that are
+ * converted directly for the JSON representation of the action.
+ * @note The types for each property are the same as the types
+ * used in the `MissionAction` class.
+ */
+export type TMissionActionJsonDirect =
+  (typeof JSON_PROPERTIES_RAW)['direct'][number]
+/**
+ * All of the property types of a `MissionAction` that are
+ * converted indirectly for the JSON representation of the action.
+ * @note The types for each property have been converted to a
+ * different type than the types used for those properties in the
+ * `MissionAction` class.
+ */
+export type TMissionActionJsonIndirect =
+  (typeof JSON_PROPERTIES_RAW)['indirect'][number]
+
+/**
  * Plain JSON representation of a `MissionAction` object.
  */
 export type TMissionActionJson = TCreateJsonType<
   MissionAction,
-  | '_id'
-  | 'name'
-  | 'description'
-  | 'processTime'
-  | 'processTimeHidden'
-  | 'successChance'
-  | 'successChanceHidden'
-  | 'resourceCost'
-  | 'resourceCostHidden'
-  | 'opensNode'
-  | 'opensNodeHidden'
-  | 'postExecutionSuccessText'
-  | 'postExecutionFailureText',
-  { effects: TEffectJson[] }
+  TMissionActionJsonDirect,
+  TMissionActionJsonIndirect
 >
+
+/**
+ * The default properties for a `MissionAction` object.
+ * @inheritdoc TMissionActionJson
+ */
+type TMissionActionDefaultJson = Required<Omit<TMissionActionJson, 'localKey'>>

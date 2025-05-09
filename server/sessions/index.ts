@@ -1223,7 +1223,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     }
 
     // Find the node, given the ID.
-    let node: ServerMissionNode | undefined = mission.getNode(nodeId)
+    let node: ServerMissionNode | undefined = mission.getNodeById(nodeId)
 
     // If the session is not in the 'started' state,
     // then emit an error.
@@ -1593,7 +1593,8 @@ export default class SessionServer extends Session<TMetisServerComponents> {
         let { nodeId } = event.data
 
         // Find the node given the ID.
-        let node: ServerMissionNode | undefined = this.mission.getNode(nodeId)
+        let node: ServerMissionNode | undefined =
+          this.mission.getNodeById(nodeId)
 
         // If the node is undefined, then emit
         // an error.
@@ -1924,7 +1925,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     const { type } = context
 
     // Find the force given the ID.
-    let force = this.mission.getForce(forceId)
+    let force = this.mission.getForceById(forceId)
 
     // If the force is undefined, throw an error.
     if (!force) {

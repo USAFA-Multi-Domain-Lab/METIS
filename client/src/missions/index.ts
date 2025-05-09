@@ -9,13 +9,10 @@ import Mission, {
   TMissionComponent,
   TMissionJson,
 } from '../../../shared/missions'
-import { TMissionActionJson } from '../../../shared/missions/actions'
-import { TEffectJson } from '../../../shared/missions/effects'
 import {
   MissionForce,
   TMissionForceSaveJson,
 } from '../../../shared/missions/forces'
-import { TMissionNodeJson } from '../../../shared/missions/nodes'
 import {
   TMissionPrototypeJson,
   TMissionPrototypeOptions,
@@ -26,7 +23,6 @@ import { AnyObject, TWithKey } from '../../../shared/toolbox/objects'
 import { Vector2D } from '../../../shared/toolbox/space'
 import User from '../../../shared/users'
 import ClientMissionAction from './actions'
-import { ClientEffect } from './effects'
 import ClientMissionForce from './forces'
 import ClientMissionNode from './nodes'
 import ClientMissionPrototype, { TPrototypeRelation } from './nodes/prototypes'
@@ -1031,16 +1027,9 @@ export default class ClientMission
     // Duplicate the forces.
     let duplicatedForces = forcesInfo.map(({ originalId, duplicateName }) => {
       // Find the force to duplicate.
-      let force = this.forces.find((force) => force._id === originalId)
+      let force = this.getForceById(originalId)
       // Throw an error if the force is not found.
       if (!force) throw new Error(`Force with ID ${originalId} not found.`)
-
-      // Convert the force to JSON.
-      let forceJson = force.toJson()
-      // Set the force's ID to the default ID (a random hash).
-      forceJson._id = MissionForce.DEFAULT_PROPERTIES._id
-      // Set the force's name to the duplicate name.
-      forceJson.name = duplicateName
 
       // Determine what the next available color is.
       let existingColors = this.forces.map(({ color }) => color)
@@ -1048,38 +1037,11 @@ export default class ClientMission
         ({ color }) => !existingColors.includes(color),
       )
 
-      // Set the force's color to the next available color.
-      forceJson.color =
-        nextColor?.color || MissionForce.DEFAULT_PROPERTIES.color
-
-      // Update the force's nodes.
-      forceJson.nodes = forceJson.nodes.map((nodeJson: TMissionNodeJson) => {
-        // Set the node's ID to a new ID.
-        nodeJson._id = ClientMissionNode.DEFAULT_PROPERTIES._id
-        // Update the node's actions.
-        nodeJson.actions = nodeJson.actions.map(
-          (actionJson: TMissionActionJson) => {
-            // Set the action's ID to a new ID.
-            actionJson._id = ClientMissionAction.DEFAULT_PROPERTIES._id
-            // Update the action's effects.
-            actionJson.effects = actionJson.effects.map(
-              (effectJson: TEffectJson) => {
-                // Set the effect's ID to a new ID.
-                effectJson._id = ClientEffect.DEFAULT_PROPERTIES._id
-                // Return the effect JSON.
-                return effectJson
-              },
-            )
-            // Return the action JSON.
-            return actionJson
-          },
-        )
-        // Return the node JSON.
-        return nodeJson
+      return force.duplicate({
+        name: duplicateName,
+        color: nextColor?.color,
+        localKey: this.generateForceKey(),
       })
-
-      // Create a new force object from the JSON.
-      return new ClientMissionForce(this, forceJson)
     }) as TNonEmptyArray<ClientMissionForce>
 
     // Add the duplicated forces to the mission.

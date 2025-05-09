@@ -295,7 +295,7 @@ export default function MissionMap({
    */
   useEffect(() => {
     // Get force from the tab ID.
-    let force = mission.getForce(selectedTab._id)
+    let force = mission.getForceById(selectedTab._id)
 
     // If a force is found, select it in the mission.
     if (force) {

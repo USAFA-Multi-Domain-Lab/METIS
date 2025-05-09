@@ -318,6 +318,26 @@ export default abstract class Mission<
   }
 
   /**
+   * Generates a new key for the force.
+   * @returns The new key for the force.
+   */
+  public generateForceKey(): string {
+    // Initialize
+    let newKey: number = 0
+
+    for (let force of this.forces) {
+      let forceKey: number = Number(force.localKey)
+      // If the force has a local key, and it is greater than the current
+      // new key, set the new key to the force's local key.
+      if (forceKey > newKey) newKey = Math.max(newKey, forceKey)
+    }
+
+    // Increment the new key by 1 and return it as a string.
+    newKey++
+    return String(newKey)
+  }
+
+  /**
    * Creates a new prototype that is the root prototype of the mission structure.
    * This prototype is not added to the mission's prototypes map, as it is really
    * a pseudo-prototype.
@@ -414,10 +434,21 @@ export default abstract class Mission<
    * @returns The force with the given ID, or undefined
    * if no force is found.
    */
-  public getForce(
+  public getForceById(
     forceId: TForce<T>['_id'] | null | undefined,
   ): TForce<T> | undefined {
-    return Mission.getForce(this, forceId)
+    return Mission.getForceById(this, forceId)
+  }
+
+  /**
+   * @param forceKey The local key of the force to get.
+   * @returns The force with the given local key, or undefined
+   * if no force is found.
+   */
+  public getForceByLocalKey(
+    forceKey: TForce<T>['localKey'] | null | undefined,
+  ): TForce<T> | undefined {
+    return Mission.getForceByLocalKey(this, forceKey)
   }
 
   /**
@@ -425,10 +456,23 @@ export default abstract class Mission<
    * @returns The node with the given ID, or undefined
    * if no node is found.
    */
-  public getNode(
+  public getNodeById(
     nodeId: TMetisComponent['_id'] | null | undefined,
   ): TNode<T> | undefined {
-    return Mission.getNode(this, nodeId)
+    return Mission.getNodeById(this, nodeId)
+  }
+
+  /**
+   * @param forceKey The local key of the force that the node belongs to.
+   * @param nodeKey The local key of the node to get.
+   * @returns The node with the given local key, or undefined
+   * if no node is found.
+   */
+  public getNodeByLocalKey(
+    forceKey: TForce<T>['localKey'] | null | undefined,
+    nodeKey: TNode<T>['localKey'] | null | undefined,
+  ): TNode<T> | undefined {
+    return Mission.getNodeByLocalKey(this, forceKey, nodeKey)
   }
 
   /**
@@ -436,10 +480,25 @@ export default abstract class Mission<
    * @returns The action with the given ID, or undefined
    * if the action is not found.
    */
-  public getAction(
+  public getActionById(
     actionId: TMetisComponent['_id'] | null | undefined,
   ): TAction<T> | TMissionActionJson | undefined {
-    return actionId ? Mission.getAction(this, actionId) : undefined
+    return Mission.getActionById(this, actionId)
+  }
+
+  /**
+   * @param forceKey The local key of the force that the action belongs to.
+   * @param nodeKey The local key of the node that the action belongs to.
+   * @param actionKey The local key of the action to get.
+   * @returns The action with the given local key, or undefined
+   * if the action is not found.
+   */
+  public getActionByLocalKey(
+    forceKey: TForce<T>['localKey'] | null | undefined,
+    nodeKey: TNode<T>['localKey'] | null | undefined,
+    actionKey: TAction<T>['localKey'] | null | undefined,
+  ): TAction<T> | TMissionActionJson | undefined {
+    return Mission.getActionByLocalKey(this, forceKey, nodeKey, actionKey)
   }
 
   /**
@@ -651,11 +710,24 @@ export default abstract class Mission<
    * @param forceId The ID of the force to get.
    * @returns The force with the given ID, or undefined if no force is found.
    */
-  public static getForce<TMission extends TMissionJson | Mission>(
+  public static getForceById<TMission extends TMissionJson | Mission>(
     mission: TMission,
     forceId: string | null | undefined,
   ): TMission['forces'][0] | undefined {
     return mission.forces.find((force) => force._id === forceId)
+  }
+
+  /**
+   * Gets a force from the mission by its local key.
+   * @param mission The mission to get the force from.
+   * @param forceKey The local key of the force to get.
+   * @returns The force with the given local key, or undefined if no force is found.
+   */
+  public static getForceByLocalKey<TMission extends TMissionJson | Mission>(
+    mission: TMission,
+    forceKey: string | null | undefined,
+  ): TMission['forces'][0] | undefined {
+    return mission.forces.find((force) => force.localKey === forceKey)
   }
 
   /**
@@ -664,7 +736,7 @@ export default abstract class Mission<
    * @param nodeId The ID of the node to get.
    * @returns The node with the given ID, or undefined if no node is found.
    */
-  public static getNode<TMission extends TMissionJson | Mission>(
+  public static getNodeById<TMission extends TMissionJson | Mission>(
     mission: TMission,
     nodeId: string | null | undefined,
   ): TMission['forces'][0]['nodes'][0] | undefined {
@@ -674,6 +746,23 @@ export default abstract class Mission<
       continue
     }
     return undefined
+  }
+
+  /**
+   * Gets a node from the mission by its local key.
+   * @param mission The mission to get the node from.
+   * @param forceKey The local key of the force that the node belongs to.
+   * @param nodeKey The local key of the node to get.
+   * @returns The node with the given local key, or undefined if no node is found.
+   */
+  public static getNodeByLocalKey<TMission extends TMissionJson | Mission>(
+    mission: TMission,
+    forceKey: string | null | undefined,
+    nodeKey: string | null | undefined,
+  ): TMission['forces'][0]['nodes'][0] | undefined {
+    let force = mission.forces.find((force) => force.localKey === forceKey)
+    if (!force) return undefined
+    return force.nodes.find((node) => node.localKey === nodeKey)
   }
 
   /**
@@ -695,10 +784,15 @@ export default abstract class Mission<
    * @param actionId The ID of the action to get.
    * @returns The action with the given ID, or undefined if no action is found.
    */
-  public static getAction<TMission extends TMissionJson | Mission>(
+  public static getActionById<
+    TMission extends TMissionJson | Mission,
+    TAction extends TMetisBaseComponents['action'],
+  >(
     mission: TMission,
-    actionId: string,
-  ): TAction<TMetisBaseComponents> | TMissionActionJson | undefined {
+    actionId: string | null | undefined,
+  ): TAction | TMissionActionJson | undefined {
+    if (!actionId) return undefined
+
     for (let force of mission.forces) {
       for (let node of force.nodes) {
         let action = Array.isArray(node.actions)
@@ -708,7 +802,40 @@ export default abstract class Mission<
         continue
       }
     }
+
     return undefined
+  }
+
+  /**
+   * Gets an action from the mission by its local key.
+   * @param mission The mission to get the action from.
+   * @param forceKey The local key of the force that the action belongs to.
+   * @param nodeKey The local key of the node that the action belongs to.
+   * @param actionKey The local key of the action to get.
+   * @returns The action with the given local key, or undefined if no action is found.
+   */
+  public static getActionByLocalKey<
+    TMission extends TMissionJson | Mission,
+    TAction extends TMetisBaseComponents['action'],
+  >(
+    mission: TMission,
+    forceKey: string | null | undefined,
+    nodeKey: string | null | undefined,
+    actionKey: string | null | undefined,
+  ): TAction | TMissionActionJson | undefined {
+    if (!forceKey || !nodeKey || !actionKey) return undefined
+
+    let force = mission.forces.find((force) => force.localKey === forceKey)
+    if (!force) return undefined
+
+    let node = force.nodes.find((node) => node.localKey === nodeKey)
+    if (!node) return undefined
+
+    let action = Array.isArray(node.actions)
+      ? node.actions.find((action) => action.localKey === actionKey)
+      : node.actions.values().find((action) => action.localKey === actionKey)
+
+    return action
   }
 }
 
