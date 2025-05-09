@@ -9,6 +9,7 @@ import './ButtonSvg.scss'
 
 /**
  * A button with an SVG icon.
+ * @deprecated In favor of `ButtonSvg_v3`.
  */
 export default function ButtonSvg({
   type,

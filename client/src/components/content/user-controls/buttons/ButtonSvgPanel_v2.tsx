@@ -12,6 +12,7 @@ import './ButtonSvgPanel_v2.scss'
  * to the panel. When a button is clicked, the panel
  * will call the callback with the type of the button
  * clicked.
+ * @deprecated In favor of `ButtonSvgPanel_v3`.
  */
 export default function ButtonSvgPanel_v2({
   buttons,

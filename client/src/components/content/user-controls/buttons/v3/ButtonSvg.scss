@@ -1,0 +1,71 @@
+@import 'src/assets/styles/config.scss';
+
+.ButtonSvg_v3 {
+  $border-radius: 0.35em;
+  display: inline-block;
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: pointer;
+  transition: 500ms transform, 500ms background-size, 500ms background-position,
+    500ms opacity;
+  width: 1em;
+  height: 0.96em;
+  margin: 0 0.15em;
+  font-size: $button-svg-size;
+
+  .ButtonLabel {
+    display: flex;
+    align-items: center;
+    margin-left: 2em;
+    height: 100%;
+    font-size: 0.75rem;
+  }
+
+  &.Unauthorized {
+    display: none;
+  }
+
+  &.WithLabel {
+    width: unset;
+    font-size: 1.25rem; // 20px
+  }
+
+  &.Disabled {
+    // &.GrayOutIfDisabled {}
+
+    &.HideIfDisabled {
+      display: none;
+    }
+  }
+
+  &.lock:hover {
+    cursor: help;
+    filter: none;
+  }
+
+  &._blank {
+    background: none;
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  &:not(.warning-transparent):hover,
+  &.Selected {
+    filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(117deg)
+      brightness(200%) contrast(98%);
+  }
+
+  &.Selected:hover,
+  &.NotSelected:hover {
+    box-shadow: 0 1.5px 0 $color-primary-light;
+  }
+
+  &.NotSelected:hover {
+    filter: none;
+  }
+
+  &.warning-transparent:hover {
+    background-image: url('/assets/images/icons/warning-filled.svg') !important;
+    transition: background-image 0.5s;
+  }
+}

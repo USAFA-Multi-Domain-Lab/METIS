@@ -344,7 +344,14 @@ export default function <TNode extends TMapCompatibleNode>({
     // If there are no buttons, add a tooltip
     // to the node.
     if (buttons.length === 0) {
-      return <Tooltip description={applyTooltip(node)} />
+      return (
+        <Tooltip
+          description={compute<string>(() => {
+            if (applyTooltip) return applyTooltip(node)
+            else return ''
+          })}
+        />
+      )
     }
     // Else, do not add a tooltip, since the tooltips
     // for the buttons will conflict.

@@ -18,7 +18,7 @@ import Panel from '../content/general-layout/panels/Panel'
 import PanelLayout from '../content/general-layout/panels/PanelLayout'
 import PanelView from '../content/general-layout/panels/PanelView'
 import SessionMembersPanel from '../content/session/members/SessionMembersPanel'
-import MissionMap from '../content/session/mission-map'
+import MissionMap from '../content/session/mission-map/MissionMap'
 import ActionExecModal from '../content/session/mission-map/ui/overlay/modals/action-execution/ActionExecModal'
 import { TTabBarTab } from '../content/session/mission-map/ui/tabs/TabBar'
 import { OutputPanel } from '../content/session/output/'
@@ -365,10 +365,12 @@ export default function SessionPage({
     verifyNavigation.current()
     done()
   })
+
   // Verify navigation if the session is ended or destroyed.
   useEventListener(server, ['session-started', 'session-ended'], () =>
     verifyNavigation.current(),
   )
+
   // On session reset, reselect the force in
   // the mission, since a new force object
   // will be created.
@@ -410,9 +412,7 @@ export default function SessionPage({
   useEventListener(
     server,
     ['action-execution-initiated', 'modifier-enacted'],
-    () => {
-      syncResources()
-    },
+    () => syncResources(),
     [selectedForce],
   )
 

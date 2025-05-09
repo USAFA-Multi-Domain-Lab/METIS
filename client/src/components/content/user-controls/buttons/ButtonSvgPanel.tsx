@@ -6,7 +6,7 @@ import './ButtonSvgPanel.scss'
 
 /**
  * A panel of SVG buttons.
- * @deprecated Use `ButtonSvgPanel_v2` instead.
+ * @deprecated In favor of `ButtonSvgPanel_v2`.
  */
 export default function ButtonSvgPanel({
   buttons,

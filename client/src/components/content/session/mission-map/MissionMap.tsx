@@ -1,16 +1,30 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import ClientMission from 'src/missions'
 import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
 import ClientMissionPrototype from 'src/missions/nodes/prototypes'
 import { compute } from 'src/toolbox'
-import { useEventListener, withPreprocessor } from 'src/toolbox/hooks'
+import {
+  useDefaultProps,
+  useEventListener,
+  withPreprocessor,
+} from 'src/toolbox/hooks'
 import { v4 as generateHash } from 'uuid'
-import { TWithKey } from '../../../../../../shared/toolbox/objects'
 import { Vector1D, Vector2D } from '../../../../../../shared/toolbox/space'
-import { TButtonSvg_P } from '../../user-controls/buttons/ButtonSvg'
+import ButtonSvgEngine from '../../user-controls/buttons/v3/engines'
+import {
+  useButtonSvg,
+  useButtonSvgLayout,
+} from '../../user-controls/buttons/v3/hooks'
+import './MissionMap.scss'
 import Scene from './Scene'
-import './index.scss'
 import Grid from './objects/Grid'
 import Line from './objects/Line'
 import PrototypeSlot from './objects/PrototypeSlot'
@@ -24,7 +38,7 @@ import PanController from './ui/PanController'
 import Overlay from './ui/overlay'
 import { TTabBarTab } from './ui/tabs/TabBar'
 
-/* -- constants -- */
+/* -- CONSTANTS -- */
 
 /**
  * The default, starting x coordinate of the camera.
@@ -118,46 +132,82 @@ const MASTER_TAB: TTabBarTab = {
   color: '#ffffff',
 }
 
-/* -- components -- */
+/* -- CONTEXT -- */
+
+/**
+ * Context for the mission map, which will help distribute
+ * mission map properties to its children.
+ */
+const MapContext = React.createContext<TMapContextData | null>(null)
+
+/**
+ * Hook used by mission-map-related components to access
+ * the mission-map context.
+ */
+export const useMapContext = () => {
+  const context = useContext(MapContext) as TMapContextData | null
+  if (!context) {
+    throw new Error('useMapContext must be used within an map provider')
+  }
+  return context
+}
+
+/* -- COMPONENTS -- */
 
 /**
  * The heart of METIS, a 2D map of the mission displaying nodes
  * in relation to each other.
  */
-export default function MissionMap({
-  mission,
-  overlayContent,
-  customButtons = [],
-  tabs = [],
-  showMasterTab = true,
-  selectedForce: [selectedForce, selectForce],
-  tabAddEnabled = true,
-  onTabAdd = null,
-  onPrototypeSelect,
-  onNodeSelect,
-  applyNodeTooltip,
-}: TMissionMap): JSX.Element | null {
-  /* -- variables -- */
+export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
+  /* -- PROPS -- */
 
-  /**
-   * Whether to disable the zooming functionality of the map
-   * via the mouse wheel or track pad.
-   */
-  const disableZoom: boolean = !!overlayContent
+  const defaultedProps = useDefaultProps(props, {
+    overlayContent: null,
+    buttonEngine: ButtonSvgEngine.use(),
+    tabs: [],
+    showMasterTab: true,
+    tabAddEnabled: true,
+    onTabAdd: null,
+    onNodeSelect: null,
+    onPrototypeSelect: null,
+    applyNodeTooltip: null,
+  })
+  const {
+    mission,
+    overlayContent,
+    tabs,
+    buttonEngine,
+    showMasterTab,
+    onNodeSelect,
+    onPrototypeSelect,
+    applyNodeTooltip,
+    tabAddEnabled,
+    onTabAdd,
+  } = defaultedProps
 
-  /* -- refs -- */
+  /* -- STATE -- */
 
-  /**
-   * Ref for the root element of the mission map.
-   */
-  const rootRef: React.RefObject<HTMLDivElement> = useRef<HTMLDivElement>(null)
+  const elements: TMissionMap_E = {
+    root: useRef<HTMLDivElement>(null),
+    scene: useRef<HTMLDivElement>(null),
+  }
 
-  /**
-   * Ref for the scene element of the mission map.
-   */
-  const sceneRef: React.RefObject<HTMLDivElement> = useRef<HTMLDivElement>(null)
+  const state: TMissionMap_S = {
+    selectedForce: defaultedProps.selectedForce,
+    tabIndex: withPreprocessor(
+      useState<number>(0),
+      (newValue): TReactSetterArg<number> => {
+        // If the same tab is selected twice, reselect
+        // the given force.
+        if (tabIndex === newValue) mission.select(selectedForce ?? mission)
+        return newValue
+      },
+    ),
+  }
 
-  /* -- state -- */
+  const [selectedForce, selectForce] = state.selectedForce
+
+  const [tabIndex, setTabIndex] = state.tabIndex
 
   /**
    * Counter that is incremented whenever the component
@@ -170,19 +220,6 @@ export default function MissionMap({
    */
   const [structureChangeKey, setStructureChangeKey] = useState<string>(
     mission.structureChangeKey,
-  )
-
-  /**
-   * The selected tab in the HUD.
-   */
-  const [tabIndex, setTabIndex] = withPreprocessor(
-    useState<number>(0),
-    (newValue): TReactSetterArg<number> => {
-      // If the same tab is selected twice, reselect
-      // the given force.
-      if (tabIndex === newValue) mission.select(selectedForce ?? mission)
-      return newValue
-    },
   )
 
   /**
@@ -207,6 +244,179 @@ export default function MissionMap({
     new Vector1D(DEFAULT_CAMERA_ZOOM, { onChange: () => forceUpdate() }),
   )
 
+  /**
+   * The provider for the map context.
+   */
+  const Provider = MapContext.Provider as React.Provider<TMapContextData>
+
+  /* -- COMPUTED -- */
+
+  /**
+   * Whether to disable the zooming functionality of the map
+   * via the mouse wheel or track pad.
+   */
+  const disableZoom: boolean = !!overlayContent
+
+  /**
+   * The current value to provide to all child
+   * components of the map.
+   */
+  const contextValue: TMapContextData = {
+    ...defaultedProps,
+    elements,
+    state,
+  }
+
+  /* -- FUNCTIONS -- */
+
+  /**
+   * Pre-translates the scene to the camera position in the
+   * state. This makes the panning appear snappier.
+   */
+  const preTranslateScene = (): void => {
+    // If the scene element exists, pre translate it.
+    if (elements.scene.current) {
+      // Set the scene element's position to the
+      // negative of the camera position.
+      elements.scene.current.style.transform = `translate(${-cameraPosition.x}em, ${-cameraPosition.y}em)`
+    }
+  }
+
+  /**
+   * Pans the camera gradually to the given destination.
+   * @param destination The destination for the panning.
+   */
+  const panSmoothly = (destination: Vector2D): void => {
+    // Determine the difference between the camera
+    // position and the destination.
+    let difference = Vector2D.difference(destination, cameraPosition)
+    // Determine the change in position that
+    // must occur this frame in the transition.
+    let delta = difference.scaleByFactor(0.1)
+
+    // Enforce cuttoff points so that the transition
+    // doesn't exponentially slow down with no end.
+    if (Math.abs(delta.x) < 0.003) {
+      cameraPosition.x = destination.x
+    }
+    if (Math.abs(delta.y) < 0.003) {
+      cameraPosition.y = destination.y
+    }
+
+    // If the camera is at the destination, end
+    // the loop.
+    if (cameraPosition.locatedAt(destination)) {
+      return
+    }
+
+    // Translate by delta.
+    cameraPosition.translateBy(delta)
+
+    // Set a timeout for the next frame.
+    setTimeout(() => panSmoothly(destination), 5)
+  }
+
+  /**
+   * Handles a mouse wheel event on the map.
+   */
+  const onWheel = (event: React.WheelEvent<HTMLDivElement>): void => {
+    // If zooming is disabled, abort.
+    if (disableZoom) return
+
+    // Prevent default behavior.
+    event.preventDefault()
+
+    // Get root element.
+    let rootElm: HTMLDivElement | null = elements.root.current
+
+    // If the root element doesn't exist, warn
+    // and abort.
+    if (!rootElm) {
+      console.warn('Could not access root element for MissionMap.')
+      return
+    }
+
+    // Gather details.
+    let delta: number = event.deltaY ? event.deltaY : event.deltaX * 2.5
+    let clientMouseCoords: Vector2D = new Vector2D(event.clientX, event.clientY)
+    let mapBounds: DOMRect = rootElm.getBoundingClientRect()
+    let deltaZoom = delta * 0.000075
+
+    // Get the position of the mouse in the scene
+    // before the zoom.
+    let prevSceneMouseCoords: Vector2D = calcSceneMouseCoords(
+      mapBounds,
+      clientMouseCoords,
+      cameraPosition,
+      cameraZoom,
+    )
+
+    // Translate the camera zoom by the determined
+    // delta zoom, then clamp it to the min and max
+    // zoom levels.
+    cameraZoom.translate(deltaZoom).clamp(MIN_CAMERA_ZOOM, MAX_CAMERA_ZOOM)
+
+    // Get the position of the mouse in the scene
+    // after the zoom.
+    let newSceneMouseCoords: Vector2D = calcSceneMouseCoords(
+      mapBounds,
+      clientMouseCoords,
+      cameraPosition,
+      cameraZoom,
+    )
+
+    // Determine the difference between the mouse
+    // position before and after the zoom.
+    let difference: Vector2D = Vector2D.difference(
+      prevSceneMouseCoords,
+      newSceneMouseCoords,
+    )
+
+    // Translate the camera position by the difference
+    // in mouse position.
+    cameraPosition.translateBy(difference)
+
+    // Pre-transform the scene to make the zoom
+    // feel snappier.
+    if (!elements.scene.current) return
+    elements.scene.current.style.transform = `translate(${-cameraPosition.x}em, ${-cameraPosition.y}em)`
+    elements.scene.current.style.fontSize = `${1 / cameraZoom.x}px`
+  }
+
+  /**
+   * Callback for when the zoom-in button
+   * is clicked.
+   */
+  const onClickZoomIn = (): void => {
+    const zoomInStages: number[] = [...CAMERA_ZOOM_STAGES].reverse()
+    // Loop through the zoom in stages and
+    // set the camera zoom to the first stage
+    // that is less than the current zoom.
+    for (let stage of zoomInStages) {
+      if (stage < cameraZoom.x) {
+        cameraZoom.x = stage
+        break
+      }
+    }
+  }
+
+  /**
+   * Callback for when the zoom-out button
+   * is clicked.
+   */
+  const onClickZoomOut = (): void => {
+    const zoomOutStages: number[] = [...CAMERA_ZOOM_STAGES]
+    // Loop through the zoom out stages and
+    // set the camera zoom to the first stage
+    // that is greater than the current zoom.
+    for (let stage of zoomOutStages) {
+      if (stage > cameraZoom.x) {
+        cameraZoom.x = stage
+        break
+      }
+    }
+  }
+
   /* -- HOOKS -- */
 
   // Create an event listener to handle when the mission
@@ -214,12 +424,12 @@ export default function MissionMap({
   useEventListener(mission, 'autopan', () => {
     // If new nodes were revealed...
     if (
-      rootRef.current &&
+      elements.root.current &&
       mission.lastOpenedNode &&
       mission.lastOpenedNode.hasChildren
     ) {
       // Grab the map bounds.
-      let mapBounds: DOMRect = rootRef.current.getBoundingClientRect()
+      let mapBounds: DOMRect = elements.root.current.getBoundingClientRect()
       // Get the camera position x in terms of
       // of nodes.
       let viewNodeX =
@@ -290,6 +500,45 @@ export default function MissionMap({
     [selectedForce, tabs],
   )
 
+  // Initialize buttons for the map.
+  useButtonSvg(buttonEngine, {
+    icon: 'zoom-in',
+    onClick: onClickZoomIn,
+    description: 'Zoom in. \n*Scrolling on the map will also zoom in and out.*',
+    cursor: 'zoom-in',
+  })
+  useButtonSvg(buttonEngine, {
+    icon: 'zoom-out',
+    onClick: onClickZoomOut,
+    description:
+      'Zoom out. \n*Scrolling on the map will also zoom in and out.*',
+    cursor: 'zoom-out',
+  })
+  useButtonSvg(buttonEngine, {
+    icon: 'question',
+    description:
+      '##### Mission Map\n' +
+      'This map is a layout of the nodes in the mission and their order of progression (left to right). \n' +
+      '\t\n' +
+      'The lines indicate how the nodes relate to one another and help display their order of progression. \n' +
+      '\t\n' +
+      'The children of a node are revealed when certain criteria are met (e.g. an action is successfully executed on a node). \n' +
+      '\t\n' +
+      '##### Controls:\n' +
+      '`Click+Drag` *Pan.*\n' +
+      '\t\n' +
+      '`Scroll` *Zoom in/out.*\n',
+    cursor: 'help',
+  })
+  useButtonSvgLayout(
+    buttonEngine,
+    '<slot>',
+    '<divider>',
+    'zoom-in',
+    'zoom-out',
+    'question',
+  )
+
   /**
    * Updates the mission selection when the tab index changes.
    */
@@ -307,123 +556,7 @@ export default function MissionMap({
     }
   }, [tabIndex])
 
-  /* -- FUNCTIONS -- */
-
-  /**
-   * Handles a mouse wheel event on the map.
-   */
-  const onWheel = (event: React.WheelEvent<HTMLDivElement>): void => {
-    // If zooming is disabled, abort.
-    if (disableZoom) return
-
-    // Prevent default behavior.
-    event.preventDefault()
-
-    // Get root element.
-    let rootElm: HTMLDivElement | null = rootRef.current
-
-    // If the root element doesn't exist, warn
-    // and abort.
-    if (!rootElm) {
-      console.warn('Could not access root element for MissionMap.')
-      return
-    }
-
-    // Gather details.
-    let delta: number = event.deltaY ? event.deltaY : event.deltaX * 2.5
-    let clientMouseCoords: Vector2D = new Vector2D(event.clientX, event.clientY)
-    let mapBounds: DOMRect = rootElm.getBoundingClientRect()
-    let deltaZoom = delta * 0.000075
-
-    // Get the position of the mouse in the scene
-    // before the zoom.
-    let prevSceneMouseCoords: Vector2D = calcSceneMouseCoords(
-      mapBounds,
-      clientMouseCoords,
-      cameraPosition,
-      cameraZoom,
-    )
-
-    // Translate the camera zoom by the determined
-    // delta zoom, then clamp it to the min and max
-    // zoom levels.
-    cameraZoom.translate(deltaZoom).clamp(MIN_CAMERA_ZOOM, MAX_CAMERA_ZOOM)
-
-    // Get the position of the mouse in the scene
-    // after the zoom.
-    let newSceneMouseCoords: Vector2D = calcSceneMouseCoords(
-      mapBounds,
-      clientMouseCoords,
-      cameraPosition,
-      cameraZoom,
-    )
-
-    // Determine the difference between the mouse
-    // position before and after the zoom.
-    let difference: Vector2D = Vector2D.difference(
-      prevSceneMouseCoords,
-      newSceneMouseCoords,
-    )
-
-    // Translate the camera position by the difference
-    // in mouse position.
-    cameraPosition.translateBy(difference)
-
-    // Pre-transform the scene to make the zoom
-    // feel snappier.
-    if (!sceneRef.current) return
-    sceneRef.current.style.transform = `translate(${-cameraPosition.x}em, ${-cameraPosition.y}em)`
-    sceneRef.current.style.fontSize = `${1 / cameraZoom.x}px`
-  }
-
-  /**
-   * Pre-translates the scene to the camera position in the
-   * state. This makes the panning appear snappier.
-   */
-  const preTranslateScene = (): void => {
-    // If the scene element exists, pre translate it.
-    if (sceneRef.current) {
-      // Set the scene element's position to the
-      // negative of the camera position.
-      sceneRef.current.style.transform = `translate(${-cameraPosition.x}em, ${-cameraPosition.y}em)`
-    }
-  }
-
-  /**
-   * Pans the camera gradually to the given destination.
-   * @param destination The destination for the panning.
-   */
-  const panSmoothly = (destination: Vector2D): void => {
-    // Determine the difference between the camera
-    // position and the destination.
-    let difference = Vector2D.difference(destination, cameraPosition)
-    // Determine the change in position that
-    // must occur this frame in the transition.
-    let delta = difference.scaleByFactor(0.1)
-
-    // Enforce cuttoff points so that the transition
-    // doesn't exponentially slow down with no end.
-    if (Math.abs(delta.x) < 0.003) {
-      cameraPosition.x = destination.x
-    }
-    if (Math.abs(delta.y) < 0.003) {
-      cameraPosition.y = destination.y
-    }
-
-    // If the camera is at the destination, end
-    // the loop.
-    if (cameraPosition.locatedAt(destination)) {
-      return
-    }
-
-    // Translate by delta.
-    cameraPosition.translateBy(delta)
-
-    // Set a timeout for the next frame.
-    setTimeout(() => panSmoothly(destination), 5)
-  }
-
-  /* -- computed -- */
+  /* -- COMPUTED -- */
 
   /**
    * The tabs to display in the tab bar.
@@ -455,75 +588,6 @@ export default function MissionMap({
   })
 
   /**
-   * The data for the buttons displayed on the HUD.
-   */
-  const buttons = compute((): TWithKey<TButtonSvg_P>[] => {
-    let zoomInStages: number[] = [...CAMERA_ZOOM_STAGES].reverse()
-    let zoomOutStages: number[] = [...CAMERA_ZOOM_STAGES]
-
-    // Return buttons.
-    return [
-      // Add custom buttons.
-      ...customButtons,
-
-      {
-        type: 'zoom-in',
-        key: 'zoom-in',
-        onClick: () => {
-          // Loop through the zoom in stages and
-          // set the camera zoom to the first stage
-          // that is less than the current zoom.
-          for (let stage of zoomInStages) {
-            if (stage < cameraZoom.x) {
-              cameraZoom.x = stage
-              break
-            }
-          }
-        },
-        description:
-          'Zoom in. \n*Scrolling on the map will also zoom in and out.*',
-        cursor: 'zoom-in',
-      },
-      {
-        type: 'zoom-out',
-        key: 'zoom-out',
-        onClick: () => {
-          // Loop through the zoom out stages and
-          // set the camera zoom to the first stage
-          // that is greater than the current zoom.
-          for (let stage of zoomOutStages) {
-            if (stage > cameraZoom.x) {
-              cameraZoom.x = stage
-              break
-            }
-          }
-        },
-        description:
-          'Zoom out. \n*Scrolling on the map will also zoom in and out.*',
-        cursor: 'zoom-out',
-      },
-      {
-        type: 'question',
-        key: 'question',
-        onClick: () => {},
-        description:
-          '##### Mission Map\n' +
-          'This map is a layout of the nodes in the mission and their order of progression (left to right). \n' +
-          '\t\n' +
-          'The lines indicate how the nodes relate to one another and help display their order of progression. \n' +
-          '\t\n' +
-          'The children of a node are revealed when certain criteria are met (e.g. an action is successfully executed on a node). \n' +
-          '\t\n' +
-          '##### Controls:\n' +
-          '`Click+Drag` *Pan.*\n' +
-          '\t\n' +
-          '`Scroll` *Zoom in/out.*\n',
-        cursor: 'help',
-      },
-    ]
-  })
-
-  /**
    * The class name for the root element.
    */
   const rootClassName: string = compute(() => {
@@ -543,7 +607,7 @@ export default function MissionMap({
     return classList.join(' ')
   })
 
-  /* -- render -- */
+  /* -- RENDER -- */
 
   /**
    * The JSX for the relationship lines drawn between nodes.
@@ -583,8 +647,8 @@ export default function MissionMap({
      */
     const render = <TNode extends TMapCompatibleNode>(
       nodes: TNode[],
-      onSelect?: (node: TNode) => void,
-      applyTooltip?: (node: TNode) => string,
+      onSelect: ((node: TNode) => void) | null,
+      applyTooltip: ((node: TNode) => string) | null,
     ): JSX.Element[] => {
       return nodes.map((node) => {
         return (
@@ -604,7 +668,7 @@ export default function MissionMap({
     if (selectedForce) {
       return render(selectedForce.nodes, onNodeSelect, applyNodeTooltip)
     } else {
-      return render(mission.prototypes, onPrototypeSelect, undefined)
+      return render(mission.prototypes, onPrototypeSelect, null)
     }
   }, [
     // ! Recomputes when:
@@ -617,7 +681,7 @@ export default function MissionMap({
     // the node names should be displayed/hidden.
     cameraZoom.x > MAX_NODE_CONTENT_ZOOM,
     // The custom buttons change.
-    customButtons,
+    ...buttonEngine.panelElements,
     // The selected force changes.
     selectedForce,
   ])
@@ -641,7 +705,7 @@ export default function MissionMap({
     // the node names should be displayed/hidden.
     cameraZoom.x > MAX_NODE_CONTENT_ZOOM,
     // The custom buttons change.
-    customButtons,
+    ...buttonEngine.panelElements,
   ])
 
   /**
@@ -658,39 +722,37 @@ export default function MissionMap({
 
   // Render root JSX.
   return (
-    <div className={rootClassName} ref={rootRef} onWheel={onWheel}>
-      <PanController
-        cameraPosition={cameraPosition}
-        cameraZoom={cameraZoom}
-        onPan={preTranslateScene}
-      />
-      <Scene
-        cameraPosition={cameraPosition}
-        cameraZoom={cameraZoom}
-        ref={sceneRef}
-      >
-        {/* Scene objects */}
-        <Grid type={'em'} enabled={MAP_EM_GRID_ENABLED} />
-        <Grid type={'node'} enabled={MAP_NODE_GRID_ENABLED} />
-        {linesJsx}
-        {nodesJsx}
-        {slotsJsx}
-      </Scene>
-      <Hud
-        mission={mission}
-        tabs={tabsComputed}
-        tabIndex={tabIndex}
-        buttons={buttons}
-        tabAddEnabled={tabAddEnabled}
-        setTabIndex={setTabIndex}
-        onTabAdd={onTabAdd}
-      />
-      {overlayJsx}
-    </div>
+    <Provider value={contextValue}>
+      <div className={rootClassName} ref={elements.root} onWheel={onWheel}>
+        <PanController
+          cameraPosition={cameraPosition}
+          cameraZoom={cameraZoom}
+          onPan={preTranslateScene}
+        />
+        <Scene
+          cameraPosition={cameraPosition}
+          cameraZoom={cameraZoom}
+          ref={elements.scene}
+        >
+          {/* Scene objects */}
+          <Grid type={'em'} enabled={MAP_EM_GRID_ENABLED} />
+          <Grid type={'node'} enabled={MAP_NODE_GRID_ENABLED} />
+          {linesJsx}
+          {nodesJsx}
+          {slotsJsx}
+        </Scene>
+        <Hud
+          tabs={tabsComputed}
+          tabIndex={tabIndex}
+          setTabIndex={setTabIndex}
+        />
+        {overlayJsx}
+      </div>
+    </Provider>
   )
 }
 
-/* -- functions -- */
+/* -- FUNCTIONS -- */
 
 /**
  * @param mapBounds The bounds of the map element in the DOM.
@@ -727,22 +789,36 @@ function calcSceneMouseCoords(
   return sceneMouseCoords
 }
 
-/* -- types -- */
+/* -- TYPES -- */
+
+/**
+ * Elements that need to be referenced throughout the
+ * component tree of {@link MissionMap}.
+ */
+export type TMissionMap_E = {
+  /**
+   * The root element of the map.
+   */
+  root: React.RefObject<HTMLDivElement>
+  /**
+   * The scene element of the map.
+   */
+  scene: React.RefObject<HTMLDivElement>
+}
 
 /**
  * Props for `MissionMap`.
  */
-export type TMissionMap = {
+export type TMissionMap_P = {
   /**
    * The mission to display on the map.
    */
   mission: ClientMission
   /**
-   * Custom buttons to display in the button panel alongside
-   * the default buttons.
-   * @default []
+   * Engine to power buttons in the map title bar.
+   * @note This defaults to an internally managed engine.
    */
-  customButtons?: TWithKey<TButtonSvg_P>[]
+  buttonEngine?: ButtonSvgEngine
   /**
    * The tabs to display on the tab bar.
    * @default []
@@ -750,8 +826,7 @@ export type TMissionMap = {
   tabs?: TTabBarTab[]
   /**
    * Content to display in the overlay.
-   * @note If undefined, the overlay will not be displayed.
-   * @default undefined
+   * @default null
    */
   overlayContent?: React.ReactNode
   /**
@@ -781,20 +856,50 @@ export type TMissionMap = {
   /**
    * Handles when a prototype is selected.
    * @param prototype The prototype that was selected.
-   * @default undefined
+   * @default null
    */
-  onPrototypeSelect?: (prototype: ClientMissionPrototype) => void
+  onPrototypeSelect?: ((prototype: ClientMissionPrototype) => void) | null
   /**
    * Handles when a node is selected.
    * @param node The node that was selected.
-   * @default undefined
+   * @default null
    */
-  onNodeSelect?: (node: ClientMissionNode) => void
+  onNodeSelect?: ((node: ClientMissionNode) => void) | null
   /**
    * Applies a tooltip to the given node.
    * @param node The node to apply the tooltip to.
    * @returns The tooltip description to display.
-   * @default undefined
+   * @default null
    */
-  applyNodeTooltip?: (node: ClientMissionNode) => string
+  applyNodeTooltip?: ((node: ClientMissionNode) => string) | null
+}
+
+/**
+ * Consolidated, high-level state for `MissionMap`.
+ */
+export type TMissionMap_S = {
+  /**
+   * The currently selected tab.
+   */
+  tabIndex: TReactState<number>
+  /**
+   * The currently selected force.
+   */
+  selectedForce: TReactState<ClientMissionForce | null>
+}
+
+/**
+ * The map context data provided to all children
+ * of {@link MissionMap}.
+ */
+export type TMapContextData = Required<TMissionMap_P> & {
+  /**
+   * The state for the output.
+   */
+  state: TMissionMap_S
+  /**
+   * The elements that need to be referenced throughout
+   * the component tree.
+   */
+  elements: TMissionMap_E
 }

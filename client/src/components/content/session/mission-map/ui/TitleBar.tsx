@@ -1,20 +1,15 @@
-import { TButtonSvg_P } from 'src/components/content/user-controls/buttons/ButtonSvg'
-import ButtonSvgPanel from 'src/components/content/user-controls/buttons/ButtonSvgPanel'
-import { TWithKey } from '../../../../../../../shared/toolbox/objects'
+import ButtonSvgPanel from 'src/components/content/user-controls/buttons/v3/ButtonSvgPanel'
+import { useMapContext } from '../MissionMap'
 import './TitleBar.scss'
 
 /**
  * A bar with tabs that can be clicked to change the view.
  */
-export default function TabBar({
-  title,
-  buttons = [],
-}: TTitleBar_P): JSX.Element | null {
+export default function TabBar(): JSX.Element | null {
   /* -- STATE -- */
 
-  /* -- COMPUTED -- */
-
-  /* -- FUNCTIONS -- */
+  const mapContext = useMapContext()
+  const { mission, buttonEngine } = mapContext
 
   /* -- RENDER -- */
 
@@ -22,24 +17,9 @@ export default function TabBar({
   return (
     <div className='TitleBar'>
       <div className='Title'>
-        Mission: <span className='MissionName'>{title}</span>
+        Mission: <span className='MissionName'>{mission.name}</span>
       </div>
-      <ButtonSvgPanel buttons={buttons} />
+      <ButtonSvgPanel engine={buttonEngine} />
     </div>
   )
-}
-
-/**
- * Props for `TabBar`.
- */
-export type TTitleBar_P = {
-  /**
-   * The title to display.
-   */
-  title: string
-  /**
-   * The buttons to display.
-   * @default []
-   */
-  buttons?: TWithKey<TButtonSvg_P>[]
 }

@@ -14,7 +14,7 @@ import ClientMissionPrototype, {
 import PrototypeCreation from 'src/missions/transformations/creations'
 import PrototypeTranslation from 'src/missions/transformations/translations'
 import SessionClient from 'src/sessions'
-import { compute, getOs } from 'src/toolbox'
+import { compute } from 'src/toolbox'
 import {
   useEventListener,
   useMountHandler,
@@ -23,7 +23,6 @@ import {
 import { DefaultPageLayout, TPage_P } from '.'
 import Mission, { TMissionComponent } from '../../../../shared/missions'
 import { TNonEmptyArray } from '../../../../shared/toolbox/arrays'
-import { TSingleTypeMapped, TWithKey } from '../../../../shared/toolbox/objects'
 import Prompt from '../content/communication/Prompt'
 import FileReferenceList, {
   TFileReferenceList_P,
@@ -43,15 +42,15 @@ import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
 import Panel from '../content/general-layout/panels/Panel'
 import PanelLayout from '../content/general-layout/panels/PanelLayout'
 import PanelView from '../content/general-layout/panels/PanelView'
-import MissionMap from '../content/session/mission-map'
+import MissionMap from '../content/session/mission-map/MissionMap'
 import { TNodeButton } from '../content/session/mission-map/objects/nodes'
 import CreateEffect from '../content/session/mission-map/ui/overlay/modals/CreateEffect'
 import { TTabBarTab } from '../content/session/mission-map/ui/tabs/TabBar'
+import { TButtonSvgType } from '../content/user-controls/buttons/ButtonSvg'
 import {
-  TButtonSvg_P,
-  TButtonSvg_PK,
-  TButtonSvgType,
-} from '../content/user-controls/buttons/ButtonSvg'
+  useButtonSvg,
+  useButtonSvgEngine,
+} from '../content/user-controls/buttons/v3/hooks'
 import './MissionPage.scss'
 
 /**
@@ -123,11 +122,12 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   const [defectiveComponents, setDefectiveComponents] =
     state.defectiveComponents
   const root = useRef<HTMLDivElement>(null)
+  const mapButtonEngine = useButtonSvgEngine()
 
   /* -- LOGIN-SPECIFIC LOGIC -- */
 
   // Require login for page.
-  const { login, isAuthorized, authorize } = useRequireLogin()
+  const { login, isAuthorized } = useRequireLogin()
 
   /* -- COMPUTED -- */
 
@@ -297,11 +297,60 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     done()
   })
 
+  // Initializes the button engine to for
+  // the mission map.
+  useButtonSvg(mapButtonEngine, {
+    icon: 'play',
+    description: 'Play-test the mission.',
+    permissions: ['sessions_write_native'],
+    onClick: async () => {
+      try {
+        // Ensure any unsaved changes are addressed,
+        // before proceeding.
+        await enforceSavePrompt()
+
+        // If the server connection is not available, abort.
+        if (!server) {
+          throw new Error('Server connection is not available.')
+        }
+
+        // Launch, join, and start the session.
+        let sessionId = await SessionClient.$launch(mission._id, {
+          accessibility: 'testing',
+        })
+        let session = await server.$joinSession(sessionId)
+        // If the session is not found, abort.
+        if (!session) throw new Error('Failed to join test session.')
+        session.$start()
+
+        // Navigate to the session page.
+        navigateTo('SessionPage', { session }, { bypassMiddleware: true })
+      } catch (error) {
+        console.error('Failed to play-test mission.')
+        console.error(error)
+        handleError({
+          message: 'Failed to play-test mission.',
+          notifyMethod: 'bubble',
+        })
+      }
+    },
+  })
+  useButtonSvg(mapButtonEngine, {
+    icon: 'save',
+    description: 'Save changes.',
+    permissions: ['missions_write'],
+    onClick: () => save(),
+  })
+
+  // Enable/disable the save button based on
+  // whether there are unsaved changes or not.
+  useEffect(() => {
+    mapButtonEngine.setDisabled('save', !areUnsavedChanges)
+  }, [areUnsavedChanges])
+
   // Cleanup when a new effect is created.
   useEffect(() => {
-    if (isNewEffect) {
-      setIsNewEffect(false)
-    }
+    if (isNewEffect) setIsNewEffect(false)
   }, [selection])
 
   // Guards against refreshing or navigating away
@@ -459,6 +508,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
    * @returns A promise that resolves when the mission has been saved.
    */
   const save = async () => {
+    console.log(areUnsavedChanges)
     try {
       if (areUnsavedChanges) {
         // Set unsaved changes to false to
@@ -880,83 +930,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     }
   }
 
-  /**
-   * Handles the request to play-test the mission.
-   */
-  const onPlayTest = async () => {
-    try {
-      // Ensure any unsaved changes are addressed,
-      // before proceeding.
-      await enforceSavePrompt()
-
-      // If the server connection is not available, abort.
-      if (!server) {
-        throw new Error('Server connection is not available.')
-      }
-
-      // Launch, join, and start the session.
-      let sessionId = await SessionClient.$launch(mission._id, {
-        accessibility: 'testing',
-      })
-      let session = await server.$joinSession(sessionId)
-      // If the session is not found, abort.
-      if (!session) throw new Error('Failed to join test session.')
-      session.$start()
-
-      // Navigate to the session page.
-      navigateTo('SessionPage', { session }, { bypassMiddleware: true })
-    } catch (error) {
-      console.error('Failed to play-test mission.')
-      console.error(error)
-      handleError({
-        message: 'Failed to play-test mission.',
-        notifyMethod: 'bubble',
-      })
-    }
-  }
-
-  /* -- PRE-RENDER PROCESSING -- */
-
-  /**
-   * Custom buttons for the mission map.
-   */
-  const mapCustomButtons: TWithKey<TButtonSvg_P>[] = compute(() => {
-    // Define the buttons that will be used.
-    let buttons: TWithKey<TButtonSvg_PK>[] = []
-
-    let commandKey: string = getOs() === 'mac-os' ? 'Cmd' : 'Ctrl'
-
-    const availableButtons: TSingleTypeMapped<'play' | 'save', TButtonSvg_PK> =
-      {
-        play: {
-          type: 'play',
-          key: 'play',
-          onClick: onPlayTest,
-          description: 'Play-test the mission.',
-        },
-        save: {
-          type: 'save',
-          key: 'save',
-          onClick: save,
-          description: `Save changes. \`${commandKey}+S\``,
-          disabled: !areUnsavedChanges ? 'full' : 'none',
-        },
-      }
-
-    // Pushes a button from available buttons to the list.
-    const pushButton = (type: keyof typeof availableButtons) =>
-      buttons.push(availableButtons[type])
-
-    // Add the play button, if authorized.
-    authorize('sessions_write_native', () => pushButton('play'))
-    // Add reorder and save buttons, if authorized.
-    authorize('missions_write', () => {
-      pushButton('save')
-    })
-
-    // Return the buttons.
-    return buttons
-  })
+  /* -- COMPUTED  (CONTINUED) -- */
 
   /**
    * Tabs for the mission map's tab bar.
@@ -976,6 +950,8 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
 
     return tabs
   })
+
+  /* -- RENDER -- */
 
   /**
    * Computed JSX for the mission map modal.
@@ -1090,8 +1066,6 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     state,
   }
 
-  /* -- RENDER -- */
-
   // Don't render if the mount hasn't yet been handled.
   if (!mountHandled) return null
 
@@ -1104,7 +1078,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
               <PanelView title='Map'>
                 <MissionMap
                   mission={mission}
-                  customButtons={mapCustomButtons}
+                  buttonEngine={mapButtonEngine}
                   tabs={mapTabs}
                   tabAddEnabled={tabAddEnabled}
                   onTabAdd={onTabAdd}

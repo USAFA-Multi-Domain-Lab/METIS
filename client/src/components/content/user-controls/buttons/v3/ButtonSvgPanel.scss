@@ -1,0 +1,11 @@
+@import 'src/assets/styles/config.scss';
+
+.ButtonSvgPanel_v3 {
+  display: flex;
+  align-items: center;
+  flex-flow: row wrap;
+
+  &.PanelEmpty {
+    width: 0;
+  }
+}

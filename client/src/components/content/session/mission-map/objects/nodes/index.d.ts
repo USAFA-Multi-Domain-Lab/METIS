@@ -104,12 +104,12 @@ export type TMapNode_P<TNode extends TMapCompatibleNode> = {
    * Handler for when the node is selected.
    * @default () => {}
    */
-  onSelect?: (node: TNode) => void
+  onSelect: ((node: TNode) => void) | null
   /**
    * Applies a tooltip to the node.
    * @default () => ''
    */
-  applyTooltip?: (node: TNode) => string
+  applyTooltip: ((node: TNode) => string) | null
 }
 
 /**
