@@ -1,6 +1,8 @@
-import { Document, Model, model, Schema } from 'mongoose'
+import { model } from 'mongoose'
+import { InfoSchema } from './classes'
+import type { TInfo, TInfoModel } from './types'
 
-const InfoSchema: Schema = new Schema<TInfo, TInfoModel, TInfoMethods>(
+const Schema = new InfoSchema(
   {
     schemaBuildNumber: { type: Number, required: true },
   },
@@ -15,38 +17,6 @@ const InfoSchema: Schema = new Schema<TInfo, TInfoModel, TInfoMethods>(
   },
 )
 
-/* -- SCHEMA TYPES -- */
-
-/**
- * Represents an info object in the database.
- */
-type TInfo = {
-  /**
-   * The current build number that the schema is at.
-   */
-  schemaBuildNumber: number
-}
-
-/**
- * Represents the methods available for a `InfoModel`.
- */
-type TInfoMethods = {}
-
-/**
- * Represents the static methods available for a `InfoModel`.
- */
-type TInfoStaticMethods = {}
-
-/**
- * Represents a mongoose model for an info object in the database.
- */
-type TInfoModel = Model<TInfo, {}, TInfoMethods> & TInfoStaticMethods
-
-/**
- * Represents a mongoose document for an info object in the database.
- */
-export type TInfoDoc = Document<any, any, TInfo>
-
 /* -- MODEL -- */
-const InfoModel = model<TInfo, TInfoModel>('Info', InfoSchema)
+const InfoModel = model<TInfo, TInfoModel>('Info', Schema)
 export default InfoModel

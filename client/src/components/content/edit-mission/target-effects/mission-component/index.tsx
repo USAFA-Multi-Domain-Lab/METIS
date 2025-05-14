@@ -338,8 +338,8 @@ export default function ArgMissionComponent({
 
     if (forceContext === 'self') {
       return {
-        forceKey: 'self',
-        forceName: 'self',
+        [forceKey]: 'self',
+        [forceName]: 'self',
       }
     }
 
@@ -347,14 +347,14 @@ export default function ArgMissionComponent({
       // *** Note: The "optionalForceValue" is validated within
       // *** the "upsertForce" computed property.
       return {
-        forceKey: optionalForceValue!.localKey,
-        forceName: optionalForceValue!.name,
+        [forceKey]: optionalForceValue!.localKey,
+        [forceName]: optionalForceValue!.name,
       }
     }
 
     return {
-      forceKey: forceValue.localKey,
-      forceName: forceValue.name,
+      [forceKey]: forceValue.localKey,
+      [forceName]: forceValue.name,
     }
   })
 
@@ -410,9 +410,8 @@ export default function ArgMissionComponent({
     // from the effect's arguments.
     if (
       isOptional &&
-      optionalForceValue !== null &&
-      optionalNodeValue === null &&
-      existsInEffectArgs
+      existsInEffectArgs &&
+      (!optionalForceValue || !optionalNodeValue)
     ) {
       return true
     }
@@ -462,8 +461,8 @@ export default function ArgMissionComponent({
     if (nodeContext === 'self') {
       return {
         ...forceMetadata,
-        nodeKey: 'self',
-        nodeName: 'self',
+        [nodeKey]: 'self',
+        [nodeName]: 'self',
       }
     }
 
@@ -472,15 +471,15 @@ export default function ArgMissionComponent({
       // *** within the "upsertNode" computed property.
       return {
         ...forceMetadata,
-        nodeKey: optionalNodeValue!.localKey,
-        nodeName: optionalNodeValue!.name,
+        [nodeKey]: optionalNodeValue!.localKey,
+        [nodeName]: optionalNodeValue!.name,
       }
     }
 
     return {
       ...forceMetadata,
-      nodeKey: nodeValue.localKey,
-      nodeName: nodeValue.name,
+      [nodeKey]: nodeValue.localKey,
+      [nodeName]: nodeValue.name,
     }
   })
 
@@ -595,8 +594,8 @@ export default function ArgMissionComponent({
     if (actionContext === 'self') {
       return {
         ...nodeMetadata,
-        actionKey: 'self',
-        actionName: 'self',
+        [actionKey]: 'self',
+        [actionName]: 'self',
       }
     }
 
@@ -605,15 +604,15 @@ export default function ArgMissionComponent({
       // *** the "upsertAction" computed property.
       return {
         ...nodeMetadata,
-        actionKey: optionalActionValue!.localKey,
-        actionName: optionalActionValue!.name,
+        [actionKey]: optionalActionValue!.localKey,
+        [actionName]: optionalActionValue!.name,
       }
     }
 
     return {
       ...nodeMetadata,
-      actionKey: actionValue.localKey,
-      actionName: actionValue.name,
+      [actionKey]: actionValue.localKey,
+      [actionName]: actionValue.name,
     }
   })
 

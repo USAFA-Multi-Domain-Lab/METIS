@@ -523,4 +523,15 @@ export default class MetisDatabase {
 
     return `${MetisDatabase.BUILD_DIR}build_${buildNumberAsStr}.js`
   }
+
+  /**
+   * This will generate a validation error for the given message.
+   * @param message The error message.
+   * @returns The validation error.
+   */
+  public static generateValidationError(message: string): Error {
+    let error = new Error(message)
+    error.name = this.ERROR_BAD_DATA
+    return error
+  }
 }

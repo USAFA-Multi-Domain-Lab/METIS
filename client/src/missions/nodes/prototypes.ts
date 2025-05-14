@@ -159,16 +159,6 @@ export default class ClientMissionPrototype
   }
 
   /**
-   * The default properties for a duplcated prototype.
-   */
-  private readonly _defaultDuplicateProperties: TPrototypeDuplicateParams = {
-    mission: this.mission,
-    _id: ClientMissionPrototype.DEFAULT_PROPERTIES._id,
-    structureKey: this.structureKey,
-    depthPadding: this.depthPadding,
-  }
-
-  /**
    * @param mission The mission of which the prototype is a part.
    * @param data The prototype data from which to create the prototype node. Any ommitted values will be set to the default properties defined in MissionPrototype.DEFAULT_PROPERTIES.
    * @param options The options for creating the prototype.
@@ -480,41 +470,21 @@ export default class ClientMissionPrototype
   /**
    * Duplicates the prototype, creating a new prototype with the same properties
    * as this one or with the provided properties.
+   * @param options The options for duplicating the prototype.
+   * @param options.mission The mission to which the duplicated prototype belongs.
    * @returns A new prototype with the same properties as this one or with the
    * provided properties.
-   * @note **Any properties provided will override using the properties from
-   * the prototype that is being duplicated.**
-   * @default mission = originalPrototype.mission
-   * @default _id = ClientMissionPrototype.DEFAULT_PROPERTIES._id // generates a new UUID
-   * @default structureKey = originalPrototype.structureKey
-   * @default depthPadding = originalPrototype.depthPadding
-   * @example
-   * const newPrototype = prototype.duplicate({
-   *  mission: newMission, // This will be the duplicated prototype's new mission.
-   *   _id: 'new-prototype-id', // This will be the duplicated prototype's new ID.
-   *   structureKey: 'new-structure-key', // This will be the duplicated prototype's new structure key.
-   *   depthPadding: 10, // This will be the duplicated prototype's new depth padding.
-   * })
-   * @example
-   * // If no properties are provided, the duplicated prototype will
-   * // have the same properties as the original prototype except for
-   * // the ID. The ID will be generated using
-   * // `ClientMissionPrototype.DEFAULT_PROPERTIES._id`. See the default
-   * // property values above for more information.
-   * const newPrototype = prototype.duplicate()
    */
   public duplicate(
-    {
-      mission = this._defaultDuplicateProperties.mission,
-      _id = this._defaultDuplicateProperties._id,
-      structureKey = this._defaultDuplicateProperties.structureKey,
-      depthPadding = this._defaultDuplicateProperties.depthPadding,
-    }: TPrototypeDuplicateArgs = this._defaultDuplicateProperties,
+    options: TPrototypeDuplicateOptions = {},
   ): ClientMissionPrototype {
+    // Gather details.
+    const { mission = this.mission } = options
+
     return new ClientMissionPrototype(mission, {
-      _id,
-      structureKey,
-      depthPadding,
+      _id: ClientMissionPrototype.DEFAULT_PROPERTIES._id,
+      structureKey: this.structureKey,
+      depthPadding: this.depthPadding,
     })
   }
 }
@@ -556,23 +526,12 @@ export interface TPrototypeDeleteOptions {
 }
 
 /**
- * The arguments used to duplicate a prototype.
+ * The options for duplicating a prototype.
+ * @see {@link ClientMissionPrototype.duplicate}
  */
-type TPrototypeDuplicateArgs = Partial<TMissionPrototypeJson> & {
+type TPrototypeDuplicateOptions = {
   /**
-   * The mission that the duplicated prototype will belong to.
-   * @default originalPrototype.mission
+   * The mission to which the duplicated prototype belongs.
    */
   mission?: ClientMission
-}
-
-/**
- * The parameters used to duplicate a prototype.
- */
-type TPrototypeDuplicateParams = TMissionPrototypeJson & {
-  /**
-   * The mission that the duplicated prototype will belong to.
-   * @default originalPrototype.mission
-   */
-  mission: ClientMission
 }

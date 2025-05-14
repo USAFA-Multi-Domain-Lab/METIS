@@ -1037,11 +1037,15 @@ export default class ClientMission
         ({ color }) => !existingColors.includes(color),
       )
 
-      return force.duplicate({
+      // Duplicate the force.
+      let duplicatedForce = force.duplicate({
         name: duplicateName,
-        color: nextColor?.color,
         localKey: this.generateForceKey(),
       })
+      // Update properties of the duplicated force.
+      if (nextColor) duplicatedForce.color = nextColor.color
+      // Return the duplicated force.
+      return duplicatedForce
     }) as TNonEmptyArray<ClientMissionForce>
 
     // Add the duplicated forces to the mission.

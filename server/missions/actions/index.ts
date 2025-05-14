@@ -2,8 +2,9 @@ import MissionAction, { TMissionActionJson } from 'metis/missions/actions'
 import TCommonActionExecution, {
   TExecutionCheats,
 } from 'metis/missions/actions/executions'
-import { TEffectJson } from 'metis/missions/effects'
+import Effect, { TEffectJson } from 'metis/missions/effects'
 import { TMetisServerComponents } from 'metis/server'
+import MetisDatabase from 'metis/server/database'
 import { TTargetEnvExposedAction } from 'metis/server/target-environments/context'
 import { TSessionConfig } from 'metis/sessions'
 import seedrandom, { PRNG } from 'seedrandom'
@@ -119,6 +120,48 @@ export default class ServerMissionAction extends MissionAction<TMetisServerCompo
       effects: this.effects.map((effect) => effect.toTargetEnvContext()),
     }
   }
+
+  /**
+   * Validates the effects of the action.
+   * @param effects The effects to validate.
+   * @returns True if the effects are valid, false otherwise.
+   */
+  public static validateEffects(effects: TMissionActionJson['effects']): void {
+    let effectKeys: TEffectJson['localKey'][] = []
+
+    for (const effect of effects) {
+      const validTrigger = Effect.isValidTrigger(effect.trigger)
+      if (!validTrigger) {
+        throw MetisDatabase.generateValidationError(
+          `The effect "{ _id: ${effect._id}, name: ${effect.name} }" has an invalid trigger "${effect.trigger}".`,
+        )
+      }
+
+      // Check for duplicate local keys.
+      if (effectKeys.includes(effect.localKey)) {
+        throw MetisDatabase.generateValidationError(
+          `The effect "{ _id: ${effect._id}, name: ${effect.name} }" has a duplicate local key "${effect.localKey}".`,
+        )
+      }
+      effectKeys.push(effect.localKey)
+    }
+  }
+
+  /**
+   * The maximum process time for an action.
+   * @note This is set to 1 hour (3600 seconds).
+   * @note This is used to validate the actions within a node.
+   * @see {@link ServerMissionNode.validateActions}
+   */
+  public static readonly PROCESS_TIME_MAX: number = 3600 * 1000 /*ms*/
+
+  /**
+   * The regex used to validate the process time.
+   * @note This regex allows for numbers with up to 6 decimal places.
+   * @note This is used to validate the actions within a node.
+   * @see {@link ServerMissionNode.validateActions}
+   */
+  public static readonly PROCESS_TIME_REGEX: RegExp = /^[0-9+-]+[.]?[0-9]{0,6}$/
 }
 
 /* ------------------------------ SERVER ACTION TYPES ------------------------------ */

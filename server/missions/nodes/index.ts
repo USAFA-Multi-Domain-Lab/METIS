@@ -1,11 +1,14 @@
 import { TMissionActionJson } from 'metis/missions/actions'
 import { TActionExecutionJson } from 'metis/missions/actions/executions'
-import MissionNode from 'metis/missions/nodes'
+import MissionNode, { TMissionNodeJson } from 'metis/missions/nodes'
 import { TMetisServerComponents } from 'metis/server'
+import MetisDatabase from 'metis/server/database'
 import { TTargetEnvExposedNode } from 'metis/server/target-environments/context'
+import { isNonNegativeInteger } from 'metis/toolbox/numbers'
 import ServerMissionAction from '../actions'
 import ServerActionExecution from '../actions/executions'
 import ServerExecutionOutcome from '../actions/outcomes'
+import ServerMissionForce from '../forces'
 
 /**
  * Class for managing mission nodes on a session server.
@@ -174,4 +177,64 @@ export default class ServerMissionNode extends MissionNode<TMetisServerComponent
       exclude: this.exclude,
     })
   }
+
+  /**
+   * Validates the actions of the node.
+   * @param actions The actions to validate.
+   * @returns True if the actions are valid, false otherwise.
+   */
+  public static validateActions(actions: TMissionNodeJson['actions']): void {
+    let actionKeys: TMissionActionJson['localKey'][] = []
+
+    for (const action of actions) {
+      const { processTime, successChance, resourceCost } = action
+
+      // PROCESS TIME
+      let isValidNumber = ServerMissionAction.PROCESS_TIME_REGEX.test(
+        processTime.toString(),
+      )
+      if (!isValidNumber) {
+        throw MetisDatabase.generateValidationError(
+          `Process time "${processTime}" is not a valid number for action "{ _id: ${action._id}, name: ${action.name} }".`,
+        )
+      }
+      let lessThanMax = processTime <= ServerMissionAction.PROCESS_TIME_MAX
+      if (!lessThanMax) {
+        throw MetisDatabase.generateValidationError(
+          `Process time "${processTime}" exceeds the maximum process time "${ServerMissionAction.PROCESS_TIME_MAX}" for action "{ _id: ${action._id}, name: ${action.name} }".`,
+        )
+      }
+
+      // SUCCESS CHANCE
+      let betweenZeroAndOne = successChance >= 0 && successChance <= 1
+      if (!betweenZeroAndOne) {
+        throw MetisDatabase.generateValidationError(
+          `Success chance "${successChance}" is not between 0 and 1 for action "{ _id: ${action._id}, name: ${action.name} }".`,
+        )
+      }
+
+      // RESOURCE COST
+      let nonNegativeInteger = isNonNegativeInteger(resourceCost)
+      if (!nonNegativeInteger) {
+        throw MetisDatabase.generateValidationError(
+          `Resource cost "${resourceCost}" is a negative integer for action "{ _id: ${action._id}, name: ${action.name} }".`,
+        )
+      }
+
+      // Check for duplicate local keys.
+      if (actionKeys.includes(action.localKey)) {
+        throw MetisDatabase.generateValidationError(
+          `Duplicate local key "${action.localKey}" found for action "{ _id: ${action._id}, name: ${action.name} }".`,
+        )
+      }
+      actionKeys.push(action.localKey)
+    }
+  }
+
+  /**
+   * The minimum length of the actions in the node data.
+   * @note This is used to validate the nodes of the force.
+   * @see {@link ServerMissionForce.validateNodes}
+   */
+  public static readonly ACTIONS_MIN_LENGTH = 1
 }

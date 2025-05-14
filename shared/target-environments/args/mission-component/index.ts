@@ -1,7 +1,7 @@
 import Arg, { TBaseArg, TBaseArgJson } from '..'
-import ActionArg, { TActionMetadata } from './action-arg'
-import ForceArg, { TForceMetadata } from './force-arg'
-import NodeArg, { TNodeMetadata } from './node-arg'
+import { TActionMetadata } from './action-arg'
+import { TForceMetadata } from './force-arg'
+import { TNodeMetadata } from './node-arg'
 
 /**
  * The mission component argument type for a target.
@@ -48,15 +48,6 @@ export default class MissionComponentArg {
       required: arg.required,
     }
   }
-
-  public static readonly METADATA_KEYS: TMissionComponentMetadataKey[] = [
-    ForceArg.FORCE_KEY,
-    ForceArg.FORCE_NAME,
-    NodeArg.NODE_KEY,
-    NodeArg.NODE_NAME,
-    ActionArg.ACTION_KEY,
-    ActionArg.ACTION_NAME,
-  ]
 }
 
 /* ------------------------------ MISSION COMPONENT ARGUMENT TYPES ------------------------------ */
@@ -119,14 +110,3 @@ export type TMissionComponentMetadata =
   | TForceMetadata
   | TNodeMetadata
   | TActionMetadata
-
-/**
- * The possible metadata keys for a mission component target-argument
- * that is present in an effect's arguments.
- * @note This is used to determine which metadata keys are present in the
- * effect's arguments.
- */
-type TMissionComponentMetadataKey =
-  | keyof TForceMetadata
-  | keyof TNodeMetadata
-  | keyof TActionMetadata

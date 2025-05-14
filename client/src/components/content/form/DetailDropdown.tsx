@@ -287,42 +287,37 @@ export function DetailDropdown<TOption>({
 
   /* -- RENDER -- */
 
-  if (options.length > 0) {
-    return (
-      <div className={rootClassName}>
-        <div className='TitleRow'>
-          <div className='TitleColumnOne'>
-            <div className={labelClassName}>{label}</div>
-            <sup className={infoClassName}>
-              i
-              <Tooltip description={tooltipDescription} />
-            </sup>
-            <div className={warningClassName}>
-              <Tooltip description={warningTooltipDescription} />
-            </div>
-          </div>
-          <div className={'TitleColumnTwo'}>
-            <div className={optionalClassName}>optional</div>
+  if (options.length === 0 && fieldType === 'required') return null
+
+  return (
+    <div className={rootClassName}>
+      <div className='TitleRow'>
+        <div className='TitleColumnOne'>
+          <div className={labelClassName}>{label}</div>
+          <sup className={infoClassName}>
+            i
+            <Tooltip description={tooltipDescription} />
+          </sup>
+          <div className={warningClassName}>
+            <Tooltip description={warningTooltipDescription} />
           </div>
         </div>
-        <div className={fieldClassName}>
-          <div
-            className='Option Selected'
-            onClick={() => setExpanded(!expanded)}
-          >
-            <div className={stateValueClassName}>{valueDisplayed}</div>
-            <div className='Indicator'>v</div>
-          </div>
-          <div className={allOptionsClassName}>{optionsJsx}</div>
+        <div className={'TitleColumnTwo'}>
+          <div className={optionalClassName}>optional</div>
         </div>
       </div>
-    )
-  } else {
-    return null
-  }
+      <div className={fieldClassName}>
+        <div className='Option Selected' onClick={() => setExpanded(!expanded)}>
+          <div className={stateValueClassName}>{valueDisplayed}</div>
+          <div className='Indicator'>v</div>
+        </div>
+        <div className={allOptionsClassName}>{optionsJsx}</div>
+      </div>
+    </div>
+  )
 }
 
-/* ---------------------------- TYPES FOR DETAIL Dropdown ---------------------------- */
+/* ---------------------------- TYPES FOR DETAIL DROPDOWN ---------------------------- */
 
 /**
  * The base properties for the Detail Dropdown component.

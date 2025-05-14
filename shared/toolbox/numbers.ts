@@ -1,5 +1,24 @@
-export function isInteger(number: number): boolean {
-  return !`${number}`.includes('.')
+/**
+ * Global validator for integers.
+ * @param value The value to validate.
+ */
+export function isInteger(value: number): boolean {
+  return (
+    !`${value}`.includes('.') &&
+    !Number.isNaN(value) &&
+    value !== Infinity &&
+    Math.floor(value) === value
+  )
+}
+
+/**
+ * Global validator for non-negative integers.
+ * @param value The value to validate.
+ */
+export function isNonNegativeInteger(value: number): boolean {
+  let isNonNegative: boolean = value >= 0
+
+  return isInteger(value) && isNonNegative
 }
 
 // Simple counter class for incrementing
@@ -29,5 +48,6 @@ export class NumberToolbox {}
 
 export default {
   isInteger,
+  isNonNegativeInteger,
   Counter,
 }

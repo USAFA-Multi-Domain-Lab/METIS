@@ -1,30 +1,7 @@
-import ForceArg from './force-arg'
-import NodeArg from './node-arg'
-
 /**
  * The action argument type for a target.
  */
 export default class ActionArg {
-  /**
-   * @inheritdoc `ForceArg.FORCE_KEY`
-   */
-  public static readonly FORCE_KEY = ForceArg.FORCE_KEY
-
-  /**
-   * @inheritdoc `ForceArg.FORCE_NAME`
-   */
-  public static readonly FORCE_NAME = ForceArg.FORCE_NAME
-
-  /**
-   * @inheritdoc `NodeArg.NODE_KEY`
-   */
-  public static readonly NODE_KEY = NodeArg.NODE_KEY
-
-  /**
-   * @inheritdoc `NodeArg.NODE_NAME`
-   */
-  public static readonly NODE_NAME = NodeArg.NODE_NAME
-
   /**
    * The key used in the effect's arguments to reference the action's local key.
    */

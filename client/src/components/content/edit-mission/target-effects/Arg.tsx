@@ -63,7 +63,6 @@ export default function ({
             initialize={initializeArg}
             effectArgs={effectArgs}
             setEffectArgs={setEffectArgs}
-            key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}`}
           />
         </div>
       )
@@ -75,7 +74,6 @@ export default function ({
             initialize={initializeArg}
             effectArgs={effectArgs}
             setEffectArgs={setEffectArgs}
-            key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}`}
           />
         </div>
       )
@@ -87,7 +85,6 @@ export default function ({
             initialize={initializeArg}
             effectArgs={effectArgs}
             setEffectArgs={setEffectArgs}
-            key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}`}
           />
         </div>
       )
@@ -99,7 +96,6 @@ export default function ({
             initialize={initializeArg}
             effectArgs={effectArgs}
             setEffectArgs={setEffectArgs}
-            key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}`}
           />
         </div>
       )
@@ -111,7 +107,6 @@ export default function ({
             initialize={initializeArg}
             effectArgs={effectArgs}
             setEffectArgs={setEffectArgs}
-            key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}`}
           />
         </div>
       )
@@ -125,7 +120,6 @@ export default function ({
           initialize={initializeArg}
           effectArgs={effectArgs}
           setEffectArgs={setEffectArgs}
-          key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}`}
         />
       )
     default:

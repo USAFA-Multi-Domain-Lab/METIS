@@ -140,6 +140,33 @@ export default function ArgAction({
    */
   const label: string = compute(() => (type === 'action' ? name : 'Action'))
 
+  /**
+   * Determines if the action dropdown should be displayed or not.
+   */
+  const hide: boolean = compute(() => {
+    if (!actionIsActive) return true
+
+    // If the arg is required and the selected node is not in the
+    // selected force.
+    if (isRequired && !forceValue.nodes.includes(nodeValue)) return true
+
+    // If the arg is optional and a force hasn't been selected yet.
+    if (isOptional && !optionalForceValue) return true
+    // If the arg is optional and a node hasn't been selected yet.
+    if (isOptional && !optionalNodeValue) return true
+    // If the arg is optional and the selected node is not in the
+    // selected force.
+    if (
+      isOptional &&
+      optionalNodeValue &&
+      !optionalForceValue?.nodes.includes(optionalNodeValue)
+    ) {
+      return true
+    }
+
+    return false
+  })
+
   /* -- EFFECTS -- */
 
   // Determines what to do with the selected action if a different
@@ -167,24 +194,9 @@ export default function ArgAction({
 
   /* -- RENDER -- */
 
-  if (!actionIsActive) return null
+  if (hide) return null
 
-  if (isRequired) {
-    return (
-      <DetailDropdown<ClientMissionAction>
-        fieldType={'required'}
-        label={label}
-        options={actions}
-        stateValue={actionValue}
-        setState={setActionValue}
-        isExpanded={false}
-        tooltipDescription={actionTooltip}
-        getKey={({ _id }) => _id}
-        render={({ name }) => name}
-        handleInvalidOption={handleInvalidRequiredAction}
-      />
-    )
-  } else {
+  if (isOptional) {
     return (
       <DetailDropdown<ClientMissionAction>
         fieldType={'optional'}
@@ -201,6 +213,21 @@ export default function ArgAction({
       />
     )
   }
+
+  return (
+    <DetailDropdown<ClientMissionAction>
+      fieldType={'required'}
+      label={label}
+      options={actions}
+      stateValue={actionValue}
+      setState={setActionValue}
+      isExpanded={false}
+      tooltipDescription={actionTooltip}
+      getKey={({ _id }) => _id}
+      render={({ name }) => name}
+      handleInvalidOption={handleInvalidRequiredAction}
+    />
+  )
 }
 
 /* ---------------------------- TYPES FOR ACTION ARG ---------------------------- */

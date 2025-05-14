@@ -1,8 +1,14 @@
-import { MissionForce, TMissionForceJson } from 'metis/missions/forces'
+import {
+  MissionForce,
+  TMissionForceJson,
+  TMissionForceSaveJson,
+} from 'metis/missions/forces'
 import { TMissionNodeJson } from 'metis/missions/nodes'
 import { TMetisServerComponents } from 'metis/server'
+import MetisDatabase from 'metis/server/database'
 import { TTargetEnvExposedForce } from 'metis/server/target-environments/context'
 import ServerUser from 'metis/server/users'
+import { HEX_COLOR_REGEX } from 'metis/toolbox/strings'
 import ServerMission from '..'
 import ServerMissionNode from '../nodes'
 import ServerOutput from './output'
@@ -113,4 +119,55 @@ export default class ServerMissionForce extends MissionForce<TMetisServerCompone
   public modifyResourcePool(operand: number): void {
     this.resourcesRemaining += operand
   }
+
+  /**
+   * Validates the nodes of the force.
+   * @param nodes The nodes to validate.
+   * @returns True if the nodes are valid, false otherwise.
+   */
+  public static validateNodes(nodes: TMissionForceSaveJson['nodes']): void {
+    let nodeKeys: TMissionNodeJson['localKey'][] = []
+
+    // Make sure the nodes are not empty.
+    if (nodes.length < this.NODE_DATA_MIN_LENGTH) {
+      throw MetisDatabase.generateValidationError(
+        `There must be at least ${this.NODE_DATA_MIN_LENGTH} node(s) within the force.`,
+      )
+    }
+
+    for (let node of nodes) {
+      // If the node is executable, it must have at least one action.
+      if (
+        node.executable &&
+        node.actions.length < ServerMissionNode.ACTIONS_MIN_LENGTH
+      ) {
+        throw MetisDatabase.generateValidationError(
+          `The node "{ _id: ${node._id}, name: ${node.name} }" must have at least ${ServerMissionNode.ACTIONS_MIN_LENGTH} action(s).`,
+        )
+      }
+
+      // Make sure the node's color is a valid hex color.
+      let isValidColor = HEX_COLOR_REGEX.test(node.color)
+      if (!isValidColor) {
+        throw MetisDatabase.generateValidationError(
+          `The node "{ _id: ${node._id}, name: ${node.name} }" has an invalid color "${node.color}".`,
+        )
+      }
+
+      // Make sure the node's local key is unique within the force.
+      if (nodeKeys.includes(node.localKey)) {
+        throw MetisDatabase.generateValidationError(
+          `The node "{ _id: ${node._id}, name: ${node.name} }" has a duplicate local key "${node.localKey}".`,
+        )
+      }
+      nodeKeys.push(node.localKey)
+    }
+  }
+
+  /**
+   * The minimum length of the node data.
+   * @note This is used to validate the nodes of the force.
+   * @see {@link validateNodes}
+   */
+  private static readonly NODE_DATA_MIN_LENGTH = 1
 }

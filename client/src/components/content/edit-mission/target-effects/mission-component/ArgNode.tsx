@@ -131,10 +131,6 @@ export default function ArgNode({
       return tooltipDescription
     }
 
-    if (type === 'action') {
-      return 'Only nodes that have actions (executable) are displayed.'
-    }
-
     return ''
   })
 
@@ -170,7 +166,7 @@ export default function ArgNode({
 
   /* -- RENDER -- */
 
-  if (!nodeIsActive) return null
+  if (!nodeIsActive || nodes.length === 0) return null
 
   if (isRequired) {
     return (
