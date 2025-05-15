@@ -47,10 +47,7 @@ import { TNodeButton } from '../content/session/mission-map/objects/nodes'
 import CreateEffect from '../content/session/mission-map/ui/overlay/modals/CreateEffect'
 import { TTabBarTab } from '../content/session/mission-map/ui/tabs/TabBar'
 import { TButtonSvgType } from '../content/user-controls/buttons/ButtonSvg'
-import {
-  useButtonSvg,
-  useButtonSvgEngine,
-} from '../content/user-controls/buttons/v3/hooks'
+import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
 import './MissionPage.scss'
 
 /**
@@ -122,7 +119,50 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   const [defectiveComponents, setDefectiveComponents] =
     state.defectiveComponents
   const root = useRef<HTMLDivElement>(null)
-  const mapButtonEngine = useButtonSvgEngine()
+  const mapButtonEngine = useButtonSvgEngine([
+    {
+      icon: 'play',
+      description: 'Play-test the mission.',
+      permissions: ['sessions_write_native'],
+      onClick: async () => {
+        try {
+          // Ensure any unsaved changes are addressed,
+          // before proceeding.
+          await enforceSavePrompt()
+
+          // If the server connection is not available, abort.
+          if (!server) {
+            throw new Error('Server connection is not available.')
+          }
+
+          // Launch, join, and start the session.
+          let sessionId = await SessionClient.$launch(mission._id, {
+            accessibility: 'testing',
+          })
+          let session = await server.$joinSession(sessionId)
+          // If the session is not found, abort.
+          if (!session) throw new Error('Failed to join test session.')
+          session.$start()
+
+          // Navigate to the session page.
+          navigateTo('SessionPage', { session }, { bypassMiddleware: true })
+        } catch (error) {
+          console.error('Failed to play-test mission.')
+          console.error(error)
+          handleError({
+            message: 'Failed to play-test mission.',
+            notifyMethod: 'bubble',
+          })
+        }
+      },
+    },
+    {
+      icon: 'save',
+      description: 'Save changes.',
+      permissions: ['missions_write'],
+      onClick: () => save(),
+    },
+  ])
 
   /* -- LOGIN-SPECIFIC LOGIC -- */
 
@@ -236,11 +276,11 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   const inStoreListProps: TFileReferenceList_P = {
     name: 'In Store',
     items: globalFiles,
-    itemButtons: ['link'],
+    itemButtonIcons: ['link'],
     itemsPerPageMin: 4,
     isDisabled: (file) =>
       mission.files.some(({ referenceId }) => referenceId === file._id),
-    getItemButtonLabel: (button, reference) => {
+    getItemButtonLabel: (button) => {
       if (button === 'link') return 'Attach to mission'
       else return ''
     },
@@ -295,51 +335,6 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     finishLoading()
     // Mark mount as handled.
     done()
-  })
-
-  // Initializes the button engine to for
-  // the mission map.
-  useButtonSvg(mapButtonEngine, {
-    icon: 'play',
-    description: 'Play-test the mission.',
-    permissions: ['sessions_write_native'],
-    onClick: async () => {
-      try {
-        // Ensure any unsaved changes are addressed,
-        // before proceeding.
-        await enforceSavePrompt()
-
-        // If the server connection is not available, abort.
-        if (!server) {
-          throw new Error('Server connection is not available.')
-        }
-
-        // Launch, join, and start the session.
-        let sessionId = await SessionClient.$launch(mission._id, {
-          accessibility: 'testing',
-        })
-        let session = await server.$joinSession(sessionId)
-        // If the session is not found, abort.
-        if (!session) throw new Error('Failed to join test session.')
-        session.$start()
-
-        // Navigate to the session page.
-        navigateTo('SessionPage', { session }, { bypassMiddleware: true })
-      } catch (error) {
-        console.error('Failed to play-test mission.')
-        console.error(error)
-        handleError({
-          message: 'Failed to play-test mission.',
-          notifyMethod: 'bubble',
-        })
-      }
-    },
-  })
-  useButtonSvg(mapButtonEngine, {
-    icon: 'save',
-    description: 'Save changes.',
-    permissions: ['missions_write'],
-    onClick: () => save(),
   })
 
   // Enable/disable the save button based on

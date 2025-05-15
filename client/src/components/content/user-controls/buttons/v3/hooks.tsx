@@ -1,14 +1,26 @@
 import { useEffect } from 'react'
-import { defaultButtonSvgProps } from './ButtonSvg'
 import ButtonSvgEngine from './engines'
-import { TButtonSvg_PK, TSvgLayout } from './types'
+import {
+  TButtonSvg_Input,
+  TButtonSvgFlow,
+  TButtonSvgPanelOptions,
+  TSvgLayout,
+} from './types'
 
 /**
  * Hook which creates a new button engine for use
  * in a React component.
+ * @param buttons The buttons to add to the engine.
+ * @param options The options with which to configure the engine.
+ * @param dependencies The dependencies to use for the engine, creating
+ * a new engine if any of them change.
  */
-export function useButtonSvgEngine() {
-  return ButtonSvgEngine.use()
+export function useButtonSvgEngine(
+  buttons?: TButtonSvg_Input[],
+  options?: TButtonSvgPanelOptions,
+  dependencies?: any[],
+) {
+  return ButtonSvgEngine.use(buttons, options, dependencies)
 }
 
 /**
@@ -17,26 +29,24 @@ export function useButtonSvgEngine() {
  * @param initialProps The initial props to use for the button.
  * @note The button can later be modified statefully.
  */
-export function useButtonSvg(
+export function useButtonSvgs(
   engine: ButtonSvgEngine,
-  initialProps: Omit<TButtonSvg_PK, 'key' | 'type'>,
+  ...initialProps: TButtonSvg_Input[]
 ) {
-  let icon: TMetisIcon = initialProps.icon ?? defaultButtonSvgProps.icon
-
-  // Maintain `onClick` handler to make
+  // Maintain `onClick` handlers to make
   // sure it is always up to date and using
-  // the latest version of the function.
-  let current = engine.getButton(
-    initialProps.icon ?? defaultButtonSvgProps.icon,
-  )
-  if (current) current.onClick = initialProps.onClick
+  // the latest version of the callbacks.
+  initialProps.forEach((button) => {
+    let current = engine.getButton(
+      button.icon ?? ButtonSvgEngine.DEFAULT_BUTTON_PROPS.icon,
+    )
+    if (current && button.onClick) current.onClick = button.onClick
+    else if (current) current.onClick = () => {}
+  })
 
-  // Add button to the engine.
+  // Add buttons to the engine.
   useEffect(() => {
-    engine.add(initialProps)
-    return () => {
-      engine.remove(icon)
-    }
+    engine.add(...initialProps)
   }, [engine])
 }
 
@@ -58,6 +68,21 @@ export function useButtonSvgLayout(
         '`useLayout` hook was called but the engine already had a custom layout initialized elsewhere.',
       )
     }
-    engine.setLayout(...initialLayout)
+    engine.layout = initialLayout
+  }, [engine])
+}
+
+/**
+ * Hook which applies the given flow to the given engine.
+ * @param engine The engine to which to apply the flow.
+ * @param flow The flow to apply to the engine.
+ * @note The flow can later be modified statefully.
+ */
+export function useButtonSvgFlow(
+  engine: ButtonSvgEngine,
+  flow: TButtonSvgFlow,
+): void {
+  useEffect(() => {
+    engine.flow = flow
   }, [engine])
 }

@@ -98,6 +98,16 @@ export default class ClassList {
   }
 
   /**
+   * Imports the classes from another ClassList.
+   * @param classList The ClassList to import from.
+   * @returns Itself for chaining.
+   */
+  public import(classList: ClassList): ClassList {
+    classList.classes.forEach((cls) => this.add(cls))
+    return this
+  }
+
+  /**
    * Binary implementation of the `switch` method.
    * @see {@link ClassList.switch}
    */

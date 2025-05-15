@@ -15,7 +15,7 @@ export default function ListItemCell<TItem extends TListItem>({
   /* -- STATE -- */
 
   const listContext = useListContext<TItem>()
-  const { getItemTooltip, itemButtons } = listContext
+  const { getItemTooltip, itemButtonIcons: itemButtons } = listContext
   const [selection, setSelection] = listContext.state.selection
 
   /* -- COMPUTED -- */

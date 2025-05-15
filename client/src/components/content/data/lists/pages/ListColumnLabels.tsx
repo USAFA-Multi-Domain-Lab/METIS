@@ -20,7 +20,7 @@ export default function ListColumnLabels<
   const listContext = useListContext<TItem>()
   const {
     columns,
-    itemButtons,
+    itemButtonIcons: itemButtons,
     minNameColumnWidth,
     getColumnWidth,
     getColumnLabel,

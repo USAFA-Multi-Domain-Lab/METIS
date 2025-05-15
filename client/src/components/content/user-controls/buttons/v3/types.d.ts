@@ -1,6 +1,7 @@
 import type ClassList from '../../../../../../../shared/toolbox/html/class-lists'
 import { type TWithKey } from '../../../../../../../shared/toolbox/objects'
 import { type TUserPermissionId } from '../../../../../../../shared/users/permissions'
+import { defaultButtonSvgProps } from './ButtonSvg'
 import type ButtonSvgEngine from './engines'
 
 /**
@@ -41,58 +42,66 @@ export interface TButtonSvg_PK extends TSvgPanelElementBase<'button'> {
   /**
    * The icon for the button.
    */
-  icon?: TMetisIcon
+  icon: TMetisIcon
   /**
-   * The description for the button.
+   * Brief descriptor for the button.
+   * @note This will be displayed above the description
+   * in the tooltip, and it will be displayed beside the
+   * icon, if {@link TButtonSvg_PK.revealLabel} is set to true.
    */
-  description?: string | null
+  label: string
   /**
-   * The label for the button.
-   * @note This will be displayed beside the icon at all
-   * times.
+   * More detailed description for the button.
+   * @note This will be displayed in the tooltip
+   * underneath a label, if there is one.
    */
-  label?: string | null
+  description: string
   /**
    * Unique class lists to apply to the component.
-   * @default []
    */
-  uniqueClassList?: string[] | ClassList
+  uniqueClassList: ClassList
   /**
-   * Whether the button is currently disabled.
+   * Whether the button is currently disabled,
+   * which will gray it out and prevent it from
+   * being clicked.
    */
-  disabled?: boolean
+  disabled: boolean
   /**
-   * The behavior of the button when disabled.
-   * @default 'gray-out'
+   * Whether the button is hidden completely from
+   * view.
    */
-  disabledBehavior?: TButtonDisabledBehavior
+  hidden: boolean
   /**
    * Whether to show the tooltip even when
    * the button is disabled.
    * @note Not applicable if the disable behavior
    * is set to `hide`.
    */
-  alwaysShowTooltip?: boolean
+  alwaysShowTooltip: boolean
   /**
    * Cursor styling used for the button.
    */
-  cursor?: string
+  cursor: string
   /**
    * The permissions required to use the button.
-   * @default []
    */
-  permissions?: TUserPermissionId[]
+  permissions: TUserPermissionId[]
   /**
    * Handles the click event for the button.
    * @param event The click event.
    */
-  onClick?: (event: React.MouseEvent) => void
+  onClick: (event: React.MouseEvent) => void
   /**
    * Callback for a clipboard copy event.
    * @param event The clipboard event.
    */
-  onCopy?: (event: React.ClipboardEvent) => void
+  onCopy: (event: React.ClipboardEvent) => void
 }
+
+/**
+ * Input data used to create a new SVG button.
+ */
+export type TButtonSvg_Input = Partial<Omit<TButtonSvg_PK, 'key' | 'type'>>
 
 /**
  * Props for `ButtonSvgDivider` component.
@@ -111,7 +120,8 @@ export type TSvgPanelElement = TButtonSvg_PK | TButtonSvgDivider_PK
  * @option '<slot>' This will define where icons not defined
  * in the layout will be placed.
  * @option '<divider>' This will place a divider in the layout
- * between other elements.
+ * between other elements. This will only be visible if the divider
+ * is between two other elements.
  * @see {@link ButtonSvgEngine.setLayout}
  */
 export type TSvgLayoutElement = TMetisIcon | '<slot>' | '<divider>'
@@ -124,9 +134,22 @@ export type TSvgLayoutElement = TMetisIcon | '<slot>' | '<divider>'
 export type TSvgLayout = TSvgLayoutElement[]
 
 /**
- * The different ways a button can be disabled.
+ * Options for the `ButtonSvgPanel` component.
  */
-export type TButtonDisabledBehavior = 'gray-out' | 'hide'
+export type TButtonSvgPanelOptions = {
+  /**
+   * @see {@link ButtonSvgEngine.flow}
+   */
+  flow?: TButtonSvgFlow
+  /**
+   * @see {@link ButtonSvgEngine.layout}
+   */
+  layout?: TSvgLayout
+  /**
+   * @see {@link ButtonSvgEngine.labelsRevealed}
+   */
+  revealLabels?: boolean
+}
 
 /**
  * Props for `ButtonSvgPanel` component.
@@ -137,3 +160,9 @@ export interface TButtonSvgPanel_P {
    */
   engine: ButtonSvgEngine
 }
+
+/**
+ * The direction that buttons flow in the DOM
+ * for a SVG panel.
+ */
+export type TButtonSvgFlow = 'row' | 'column'

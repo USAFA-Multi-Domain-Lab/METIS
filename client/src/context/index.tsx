@@ -6,8 +6,8 @@ import {
   TPromptResult,
 } from 'src/components/content/communication/Prompt'
 import { TButtonMenu_P } from 'src/components/content/user-controls/buttons/ButtonMenu'
-import { TButtonSvgType } from 'src/components/content/user-controls/buttons/ButtonSvg'
 import { TButtonText_P } from 'src/components/content/user-controls/buttons/ButtonText'
+import ButtonSvgEngine from 'src/components/content/user-controls/buttons/v3/engines'
 import { PAGE_REGISTRY, TPage_P, TPageKey } from 'src/components/pages'
 import ServerConnection, { IServerConnectionOptions } from 'src/connect/servers'
 import MetisInfo from 'src/info'
@@ -507,50 +507,35 @@ const initializeActions = (
         setPromptData(promptData)
       })
     },
-    showButtonMenu: <TButton extends TButtonSvgType>(
-      buttons: TButton[],
-      onButtonClick: (button: TButton) => void,
-      options: TShowButtonMenuOptions<TButton> = {},
-    ): void => {
-      // If there aren't any buttons, do nothing.
-      if (buttons.length === 0) return
-
+    showButtonMenu: (engine, options = {}): void => {
       // Parse options.
       const {
         position = new Vector2D(100, 100),
         positioningTarget,
         highlightTarget,
-        persist = false,
-        getDescription,
       } = options
+
       // Prepare the button menu props.
       const buttonMenuProps: TWithKey<TButtonMenu_P> = {
         key: StringToolbox.generateRandomId(),
-        buttons,
+        engine,
         position,
         positioningTarget,
         highlightTarget,
-        onButtonClick: (button) => {
-          // Preprocess the button click,
-          // starting by hiding the button menu.
-          if (!persist) {
-            setButtonMenu(null)
-          }
-
-          // Call the callback passed.
-          onButtonClick(button as TButton)
-        },
+        // todo: Delete this.
+        //         onButtonClick: (button) => {
+        //           // Preprocess the button click,
+        //           // starting by hiding the button menu.
+        //           if (!persist) {
+        //             setButtonMenu(null)
+        //           }
+        //
+        //           // Call the callback passed.
+        //           onButtonClick(button as TButton)
+        //         },
         onCloseRequest: () => {
           setButtonMenu(null)
         },
-      }
-
-      // If a description function is provided,
-      // pass a new function with pre-processing
-      // that calls the function provided.
-      if (getDescription) {
-        buttonMenuProps.getDescription = (button) =>
-          getDescription(button as TButton)
       }
 
       // Update the state.
@@ -881,14 +866,13 @@ export type TGlobalContextActions = {
   ) => Promise<TPromptResult<TChoice, TList>>
   /**
    * Displays a button menu at the specified position.
-   * @param buttons The buttons to display in the menu.
+   * @param engine The engine used to power the buttons.
    * @param onButtonClick The function to call when a button is clicked.
    * @param options Additional configuration for the button menu.
    */
-  showButtonMenu: <TButton extends TButtonSvgType>(
-    buttons: TButton[],
-    onButtonClick: (button: TButton) => void,
-    options?: TShowButtonMenuOptions<TButton>,
+  showButtonMenu: (
+    engine: ButtonSvgEngine,
+    options?: TShowButtonMenuOptions,
   ) => void
   /**
    * Hides the button menu if it is currently displayed.
@@ -989,7 +973,7 @@ export type TNavigationMiddleware = <TProps extends TPage_P>(
 /**
  * Options for showing a button menu.
  */
-export type TShowButtonMenuOptions<TButton extends TButtonSvgType> = {
+export type TShowButtonMenuOptions = {
   /**
    * The focal position at which to place the button menu.
    * @note The actual position may be adjusted to ensure the
@@ -1012,21 +996,4 @@ export type TShowButtonMenuOptions<TButton extends TButtonSvgType> = {
    * Styles should be defined in the CSS.
    */
   highlightTarget?: HTMLElement
-  /**
-   * Whether the button menu should persist after a button
-   * is clicked.
-   * @note If true, the button menu will remain open after a
-   * button is clicked.
-   * @default false
-   */
-  persist?: boolean
-  /**
-   * A function to get the description for a button.
-   * @param button The button for which to get the description.
-   * @returns The description for the button, if null, the type
-   * will be used in its plain text form.
-   * @note If this function is not provided, the type will be
-   * used in its plain text form.
-   */
-  getDescription?: (button: TButton) => string | null
 }

@@ -2,32 +2,29 @@
 
 .ButtonSvg_v3 {
   $border-radius: 0.35em;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  flex-flow: row nowrap;
   -webkit-user-select: none;
   user-select: none;
   cursor: pointer;
   transition: 500ms transform, 500ms background-size, 500ms background-position,
     500ms opacity;
-  width: 1em;
-  height: 0.96em;
-  margin: 0 0.15em;
   font-size: $button-svg-size;
+
+  .ButtonIcon {
+    flex-grow: 0;
+    min-width: 1em;
+    height: 0.96em;
+  }
 
   .ButtonLabel {
     display: flex;
+    flex-grow: 1;
     align-items: center;
-    margin-left: 2em;
+    margin: 0 1em 0 0.4em;
     height: 100%;
     font-size: 0.75rem;
-  }
-
-  &.Unauthorized {
-    display: none;
-  }
-
-  &.WithLabel {
-    width: unset;
-    font-size: 1.25rem; // 20px
   }
 
   &.Disabled {

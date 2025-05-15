@@ -77,12 +77,12 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
     ...createDefaultListProps<ClientFileReference>(),
     itemsPerPageMin: 10,
     columns: ['mimetype', 'size', 'createdAt', 'updatedAt'],
-    listButtons: compute<TButtonSvgType[]>(() => {
+    listButtonIcons: compute<TButtonSvgType[]>(() => {
       let results: TButtonSvgType[] = []
       authorize('files_write', () => results.push('upload'))
       return results
     }),
-    itemButtons: compute<TButtonSvgType[]>(() => {
+    itemButtonIcons: compute<TButtonSvgType[]>(() => {
       let results: TButtonSvgType[] = []
 
       results.push('download')
@@ -132,7 +132,7 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
           return ''
       }
     },
-    getItemButtonLabel: (button, item) => {
+    getItemButtonLabel: (button) => {
       switch (button) {
         case 'download':
           return 'Download'

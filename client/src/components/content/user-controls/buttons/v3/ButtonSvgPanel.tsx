@@ -15,10 +15,10 @@ export default function ({ engine }: TButtonSvgPanel_P): JSX.Element | null {
    * The classes for the root element.
    */
   const rootClasses = compute<ClassList>(() =>
-    new ClassList('ButtonSvgPanel_v3').set(
-      'PanelEmpty',
-      !engine.panelElements.length,
-    ),
+    new ClassList('ButtonSvgPanel_v3')
+      .set('PanelEmpty', !engine.panelElements.length)
+      .switch({ row: 'FlowRow', column: 'FlowColumn' }, engine.flow)
+      .switch('RevealLabels', 'HideLabels', engine.labelsRevealed),
   )
 
   /* -- RENDER -- */

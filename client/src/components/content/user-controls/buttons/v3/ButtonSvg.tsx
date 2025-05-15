@@ -1,7 +1,6 @@
 import React from 'react'
 import { useGlobalContext } from 'src/context'
 import { compute } from 'src/toolbox'
-import { TDefaultProps, useDefaultProps } from 'src/toolbox/hooks'
 import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
 import Tooltip from '../../../communication/Tooltip'
 import './ButtonSvg.scss'
@@ -9,45 +8,24 @@ import { TButtonSvg_PK } from './types'
 
 /* -- CONSTANTS -- */
 
-/**
- * The default props for the `ButtonSvg` component.
- */
-export const defaultButtonSvgProps: TDefaultProps<TButtonSvg_PK> = {
-  icon: 'options',
-  description: null,
-  label: null,
-  uniqueClassList: [],
-  disabled: false,
-  disabledBehavior: 'gray-out',
-  alwaysShowTooltip: false,
-  cursor: 'pointer',
-  permissions: [],
-  onClick: () => {},
-  onCopy: () => {},
-}
-
 /* -- COMPONENTS -- */
 
 /**
  * A button with an SVG icon.
  */
-export default function (props: TButtonSvg_PK): JSX.Element | null {
-  /* -- PROPS -- */
-
-  const {
-    icon,
-    description,
-    label,
-    uniqueClassList,
-    disabled,
-    disabledBehavior,
-    alwaysShowTooltip,
-    cursor,
-    permissions,
-    onClick,
-    onCopy,
-  } = useDefaultProps(props, defaultButtonSvgProps)
-
+export default function ({
+  icon,
+  description,
+  label,
+  uniqueClassList,
+  disabled,
+  hidden,
+  alwaysShowTooltip,
+  cursor,
+  permissions,
+  onClick,
+  onCopy,
+}: TButtonSvg_PK): JSX.Element | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
@@ -65,32 +43,38 @@ export default function (props: TButtonSvg_PK): JSX.Element | null {
   })
 
   /**
-   * The class for the root element.
+   * The classes used for the root element.
    */
-  const rootClass = compute<ClassList>(() => {
-    let result = new ClassList('ButtonSvg_v3', `ButtonSvg_${icon}`)
+  const rootClasses = compute<ClassList>(() => {
+    return new ClassList()
+      .add('ButtonSvg_v3')
+      .add(`ButtonSvg_${icon}`)
       .switch('WithLabel', 'WithoutLabel', label)
-      .switch('Authorized', 'Unauthorized', isAuthorized)
       .set('AlwaysShowTooltip', alwaysShowTooltip)
-      .switch(
-        { 'gray-out': 'GrayOutIfDisabled', 'hide': 'HideIfDisabled' },
-        disabledBehavior,
-      )
       .set('Disabled', disabled)
+      .import(uniqueClassList)
+  })
 
-    if (uniqueClassList instanceof ClassList) {
-      result.add(...uniqueClassList.classes)
-    } else {
-      result.add(...uniqueClassList)
+  /**
+   * The dynamic styling for the root element.
+   */
+  const rootStyle = compute((): React.CSSProperties => {
+    // Construct result.
+    let result: React.CSSProperties = {}
+
+    // If a cursor is provided, use it.
+    if (cursor) {
+      result.cursor = cursor
     }
 
+    // Return result.
     return result
   })
 
   /**
-   * The style for the root element.
+   * The dynamic styling for the icon.
    */
-  const rootStyle = compute((): React.CSSProperties => {
+  const iconStyle = compute<React.CSSProperties>(() => {
     // Construct result.
     let result: React.CSSProperties = {
       backgroundImage: 'linear-gradient(transparent, transparent)',
@@ -105,51 +89,38 @@ export default function (props: TButtonSvg_PK): JSX.Element | null {
       result.backgroundImage = `url(${require(`../../../../../assets/images/icons/${icon}.svg`)})`
     }
 
-    // If a cursor is provided, use it.
-    if (cursor) {
-      result.cursor = cursor
-    }
+    return result
+  })
 
-    // Return result.
+  /**
+   * The description to display in the tooltip.
+   */
+  const tooltipDescription = compute((): string => {
+    let result: string = ''
+    result += label
+    if (result) result += '\n'
+    result += description
     return result
   })
 
   /* -- RENDER -- */
 
-  /**
-   * The JSX for the description.
-   */
-  const descriptionJsx = compute<JSX.Element | null>(() => {
-    if (!label && !!description) {
-      return <Tooltip description={description} />
-    } else if (!!label && !description) {
-      return (
-        <div className='ButtonLabel'>
-          <div className='ButtonLabelText'>{label}</div>
-        </div>
-      )
-    } else if (!!label && !!description) {
-      return (
-        <>
-          <div className='ButtonLabel'>
-            <div className='ButtonLabelText'>{description}</div>
-          </div>
-          <Tooltip description={description} />
-        </>
-      )
-    } else {
-      return null
-    }
-  })
+  // If the user is unauthorized to use the button,
+  // or if the button is explicitly hidden, return null.
+  if (!isAuthorized || hidden) return null
 
   return (
     <div
-      className={rootClass.value}
+      className={rootClasses.value}
       style={rootStyle}
       onClick={onClick}
       onCopy={onCopy}
     >
-      {descriptionJsx}
+      <div className='ButtonIcon' style={iconStyle}></div>
+      <div className='ButtonLabel'>
+        <div className='ButtonLabelText'>{label}</div>
+      </div>
+      <Tooltip description={tooltipDescription} />
     </div>
   )
 }

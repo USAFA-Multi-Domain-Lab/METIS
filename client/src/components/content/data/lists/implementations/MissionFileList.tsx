@@ -14,7 +14,7 @@ export default function (props: TMissionFileList_P): JSX.Element | null {
     ...createDefaultListProps<ClientMissionFile>(),
     itemsPerPageMin: 10,
     columns: ['mimetype', 'size'],
-    listButtons: compute<TButtonSvgType[]>(() => {
+    listButtonIcons: compute<TButtonSvgType[]>(() => {
       let results: TButtonSvgType[] = []
 
       // todo: Uncomment and resolve this.
@@ -26,7 +26,7 @@ export default function (props: TMissionFileList_P): JSX.Element | null {
 
       return results
     }),
-    itemButtons: compute<TButtonSvgType[]>(() => {
+    itemButtonIcons: compute<TButtonSvgType[]>(() => {
       let results: TButtonSvgType[] = []
 
       // todo: Add auth.
@@ -54,7 +54,7 @@ export default function (props: TMissionFileList_P): JSX.Element | null {
           return ''
       }
     },
-    getItemButtonLabel: (button, item) => {
+    getItemButtonLabel: (button) => {
       switch (button) {
         case 'divider':
           return 'Detach'

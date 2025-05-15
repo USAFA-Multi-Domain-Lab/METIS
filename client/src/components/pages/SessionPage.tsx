@@ -531,7 +531,7 @@ export default function SessionPage({
                 items={mission.files}
                 itemsPerPageMin={4}
                 columns={[]}
-                itemButtons={['download']}
+                itemButtonIcons={['download']}
                 getItemButtonLabel={(button) => {
                   switch (button) {
                     case 'download':

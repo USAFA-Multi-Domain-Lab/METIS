@@ -11,7 +11,10 @@ import {
 import { Vector2D } from '../../../../../../shared/toolbox/space'
 import StringToolbox from '../../../../../../shared/toolbox/strings'
 import './ButtonMenu.scss'
-import ButtonSvg, { TButtonSvgType } from './ButtonSvg'
+import ButtonSvgPanel from './v3/ButtonSvgPanel'
+import ButtonSvgEngine from './v3/engines'
+import { useButtonSvgEngine } from './v3/hooks'
+import { TButtonSvg_Input, TSvgLayout } from './v3/types'
 
 /* -- COMPONENT -- */
 
@@ -20,12 +23,10 @@ import ButtonSvg, { TButtonSvgType } from './ButtonSvg'
  * at the given position.
  */
 export default function ButtonMenu({
-  buttons,
+  engine,
   position,
   positioningTarget,
   highlightTarget,
-  getDescription,
-  onButtonClick,
   onCloseRequest,
 }: TButtonMenu_P): JSX.Element | null {
   /* -- STATE -- */
@@ -144,37 +145,48 @@ export default function ButtonMenu({
 
   /* -- RENDER -- */
 
-  /**
-   * The JSX for the buttons.
-   */
-  const buttonsJsx = buttons.map((button) => {
-    // Initialize the description, as the
-    // button type.
-    let description: string = button
-
-    // Get the description, if a function is provided,
-    // leaving the description as the button type, if
-    // the function returns null.
-    if (getDescription) description = getDescription(button) ?? button
-
-    return (
-      <ButtonSvg
-        key={button}
-        type={button}
-        label={description}
-        onClick={() => onButtonClick(button)}
-      />
-    )
-  })
+  // Update the button onClick handlers to
+  // close the menu when clicked.
+  for (let button of engine.buttons) {
+    button.onClick = (...args) => {
+      button.onClick(...args)
+      onCloseRequest()
+    }
+  }
 
   // Render the button menu.
   return (
     <div className='ButtonMenu'>
       <div className='InputBlocker' onMouseDown={onCloseRequest}></div>
       <div className='PopUp' style={popUpStyle} ref={popUp}>
-        {buttonsJsx}
+        <ButtonSvgPanel engine={engine} />
       </div>
     </div>
+  )
+}
+
+/* -- HOOKS -- */
+
+/**
+ * Creates a new {@link ButtonSvgEngine} for the button menu
+ * using the default options needed for a menu.
+ * @param buttons The buttons to display in the menu.
+ * @param layout The layout of the buttons in the menu.
+ * @returns The button engine.
+ */
+export const useButtonMenuEngine = (
+  buttons?: TButtonSvg_Input[],
+  layout?: TSvgLayout,
+  dependencies?: any[],
+): ButtonSvgEngine => {
+  return useButtonSvgEngine(
+    buttons,
+    {
+      flow: 'column',
+      revealLabels: true,
+      layout,
+    },
+    dependencies,
   )
 }
 
@@ -185,9 +197,9 @@ export default function ButtonMenu({
  */
 export type TButtonMenu_P = {
   /**
-   * The buttons to display in the button menu.
+   * The engine to power the buttons in the menu.
    */
-  buttons: TButtonSvgType[]
+  engine: ButtonSvgEngine
   /**
    * The position at which to display the button menu.
    */
@@ -206,20 +218,6 @@ export type TButtonMenu_P = {
    * Styles should be defined in the CSS.
    */
   highlightTarget?: HTMLElement
-  /**
-   * Gets the description for a button.
-   * @param button The button for which to get the description.
-   * @returns The description for the button, if null, the type
-   * will be used in its plain text form.
-   * @note If this function is not provided, the type will be
-   * used in its plain text form.
-   */
-  getDescription?: (button: TButtonSvgType) => string | null
-  /**
-   * The function to call when a button is clicked.
-   * @param button The button that was clicked.
-   */
-  onButtonClick: (button: TButtonSvgType) => void
   /**
    * Callback for when menu needs to be closed.
    */

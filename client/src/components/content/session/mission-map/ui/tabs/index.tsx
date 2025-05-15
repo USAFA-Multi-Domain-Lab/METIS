@@ -1,6 +1,5 @@
 import { useRef } from 'react'
 import Tooltip from 'src/components/content/communication/Tooltip'
-import ButtonMenuController from 'src/components/content/user-controls/buttons/ButtonMenuController'
 import { TButtonSvgType } from 'src/components/content/user-controls/buttons/ButtonSvg'
 import { compute } from 'src/toolbox'
 import './index.scss'
@@ -94,13 +93,14 @@ export default function Tab({
         {text}
       </div>
       <div className='TextFade'></div>
-      <ButtonMenuController
+      {/* <ButtonMenuController
         target={root}
-        buttons={menuOptions}
+        // todo: Add engine to button-menu controller.
+        // engine={}
         highlightTarget={root.current ?? undefined}
         getDescription={getButtonDescription}
         onButtonClick={onButtonClick}
-      />
+      /> */}
       <Tooltip description={description} />
     </div>
   )

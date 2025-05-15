@@ -1,10 +1,11 @@
+import { useEffect } from 'react'
 import { compute } from 'src/toolbox'
 import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
 import { useListContext } from '../List'
 import ListPageControls from '../pages/ListPageControls'
 import ListButtons from './ListButtons'
 import './ListNav.scss'
-import ListOverflowPanel from './ListOverflowPanel'
+import ListOverflow from './ListOverflow'
 import ListProcessor from './ListProcessor'
 
 export default function ListNav(): JSX.Element | null {
@@ -13,6 +14,7 @@ export default function ListNav(): JSX.Element | null {
   const listContext = useListContext()
   const { name, elements, state } = listContext
   const [buttonOverflowCount] = state.buttonOverflowCount
+  const [overflowActive] = state.overflowActive
 
   /* -- COMPUTED -- */
 
@@ -25,6 +27,26 @@ export default function ListNav(): JSX.Element | null {
     return result
   })
 
+  /* -- EFFECTS -- */
+
+  // Update the column count of the nav in
+  // the CSS to respond to the overflow state.
+  useEffect(() => {
+    let navElement = elements.nav.current
+
+    if (!navElement) {
+      console.warn('ListNav: navElement is null')
+      return
+    }
+
+    let autoColumnCount = overflowActive ? 4 : 3
+
+    navElement.style.setProperty(
+      '--auto-column-count',
+      autoColumnCount.toString(),
+    )
+  }, [overflowActive])
+
   /* -- RENDER -- */
 
   // Render the nav.
@@ -35,7 +57,7 @@ export default function ListNav(): JSX.Element | null {
       </div>
       <ListPageControls />
       <ListButtons />
-      <ListOverflowPanel />
+      <ListOverflow />
       <ListProcessor />
     </div>
   )

@@ -143,7 +143,7 @@ export default function MissionList(props: TMissionList_P): JSX.Element | null {
     ...createDefaultListProps<ClientMission>(),
     itemsPerPageMin: 10,
     columns: ['createdAt', 'updatedAt', 'launchedAt', 'creatorFullName'],
-    listButtons: compute<TButtonSvgType[]>(() => {
+    listButtonIcons: compute<TButtonSvgType[]>(() => {
       let results: TButtonSvgType[] = []
 
       // If the user has the proper authorization, add
@@ -154,7 +154,7 @@ export default function MissionList(props: TMissionList_P): JSX.Element | null {
 
       return results
     }),
-    itemButtons: compute<TButtonSvgType[]>(() => {
+    itemButtonIcons: compute<TButtonSvgType[]>(() => {
       let results: TButtonSvgType[] = []
 
       // Add the open button.
@@ -216,7 +216,7 @@ export default function MissionList(props: TMissionList_P): JSX.Element | null {
           return ''
       }
     },
-    getItemButtonLabel: (button, item) => {
+    getItemButtonLabel: (button) => {
       switch (button) {
         case 'open':
           if (login.user.isAuthorized('missions_write')) return 'View/edit'

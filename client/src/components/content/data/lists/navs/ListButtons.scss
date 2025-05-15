@@ -6,16 +6,29 @@
   align-items: center;
   height: 100%;
 
-  .ButtonSvgPanel_v2 {
+  .ButtonSvgPanel_v3 {
+    $transition-speed: 200ms;
+    $transition-timing: ease-in-out;
+
     display: flex;
     flex-wrap: nowrap;
 
-    .ButtonSvg {
-      transition: background-size 200ms ease-in-out;
+    .ButtonSvg_v3 {
+      .ButtonIcon {
+        transition: background-size $transition-speed $transition-timing;
+      }
 
-      &.ListButtonOverflow {
+      &.ListButtonOverflow .ButtonIcon {
         background-size: 0 !important;
       }
+    }
+
+    .ButtonSvgDivider {
+      transition: transform $transition-speed $transition-timing;
+    }
+
+    .ButtonSvgDivider:has(+ .ListButtonOverflow) {
+      transform: scale(0);
     }
   }
 }

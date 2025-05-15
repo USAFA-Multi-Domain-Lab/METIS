@@ -1,10 +1,17 @@
-import { useEffect, useRef } from 'react'
-import GlobalContext, { useGlobalContext } from 'src/context'
+import { useState } from 'react'
 import { compute } from 'src/toolbox'
-import { useForcedUpdates } from 'src/toolbox/hooks'
+import { useForcedUpdates, usePostInitEffect } from 'src/toolbox/hooks'
+import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
 import StringToolbox from '../../../../../../../shared/toolbox/strings'
-import { defaultButtonSvgProps } from './ButtonSvg'
-import { TButtonSvg_PK, TSvgLayout, TSvgPanelElement } from './types'
+import { useButtonSvgEngine, useButtonSvgs } from './hooks'
+import {
+  TButtonSvg_Input,
+  TButtonSvg_PK,
+  TButtonSvgFlow,
+  TButtonSvgPanelOptions,
+  TSvgLayout,
+  TSvgPanelElement,
+} from './types'
 
 /**
  * An engine used to power a `ButtonSvgPanel`
@@ -29,20 +36,63 @@ export default class ButtonSvgEngine {
    */
   public get buttons(): TButtonSvg_PK[] {
     return this._panelElements.filter(
-      (element) => typeof element !== 'string',
+      (element) => element.type === 'button',
     ) as TButtonSvg_PK[]
   }
 
   /**
-   * The global context of the app.
+   * @see {@link ButtonSvgEngine.flow}
    */
-  private globalContext: GlobalContext
+  private _flow: TButtonSvgFlow
+  /**
+   * The direction the elements in the panel flow
+   * in the DOM.
+   * @default 'row'
+   * @note Setting this will cause a re-render.
+   */
+  public get flow(): TButtonSvgFlow {
+    return this._flow
+  }
+  public set flow(flow: TButtonSvgFlow) {
+    this._flow = flow
+    this.onChange()
+  }
 
+  /**
+   * @see {@link ButtonSvgEngine.layout}
+   */
+  private _layout: TSvgLayout
   /**
    * The layout used to display the buttons.
    * @default ['<slot>']
+   * @note Setting this will cause a re-render.
    */
-  public layout: TSvgLayout
+  public get layout(): TSvgLayout {
+    return this._layout
+  }
+  public set layout(layout: TSvgLayout) {
+    this._layout = layout
+    this._hasCustomLayout = true
+    this.applyLayout()
+  }
+
+  /**
+   * @see {@link ButtonSvgEngine.labelsRevealed}
+   */
+  private _labelsRevealed: boolean
+  /**
+   * Whether the labels of the buttons should be
+   * shown inline with the icons.
+   * @default false
+   * @note Setting this will cause a re-render.
+   */
+  public get labelsRevealed(): boolean {
+    return this._labelsRevealed
+  }
+  public set labelsRevealed(revealLabels: boolean) {
+    this._labelsRevealed = revealLabels
+    this.onChange()
+  }
 
   /**
    * @see {@link ButtonSvgEngine.hasCustomLayout}
@@ -57,17 +107,28 @@ export default class ButtonSvgEngine {
   }
 
   /**
-   * Cannot be instantiated directly.
-   * @param globalContext The global context of the app.
-   * @param onChange The callback to call when the
+   * Cannot be instantiated externally.
+   * @param buttons The initial buttons to add to the engine.
+   * @param options Custom configuration for the engine.
+   * @param onChange The callback to call when the engine
+   * changes. This is used to trigger a re-render of
+   * the component using the engine.
    * global context changes.
    * @see {@link ButtonSvgEngine.use} hook.
    */
-  private constructor(globalContext: GlobalContext, onChange: () => void) {
+  private constructor(
+    options: TButtonSvgPanelOptions = {},
+    onChange: () => void,
+  ) {
+    this._hasCustomLayout = Boolean(options.layout)
+
+    const { layout = ['<slot>'], flow = 'row', revealLabels = false } = options
+
     this._panelElements = []
-    this.globalContext = globalContext
+    this._layout = layout
+    this._flow = flow
+    this._labelsRevealed = revealLabels
     this.onChange = onChange
-    this.layout = ['<slot>']
   }
 
   /**
@@ -82,61 +143,61 @@ export default class ButtonSvgEngine {
   }
 
   /**
-   * Adds a button to the engine.
-   * @param button The button to add.
+   * Adds buttons to the engine.
+   * @param buttons The buttons to add.
    * @returns Itself for chaining.
-   * @throws If the button icon is already in use.
+   * @throws If any of the icons of the buttons,
+   * with the exception of the '_blank' icon, are
+   * already in use.
+   * @note Calling this will cause a re-render.
    */
-  public add(button: Omit<TButtonSvg_PK, 'key' | 'type'>): ButtonSvgEngine {
-    let element: Required<TButtonSvg_PK> = {
-      key: StringToolbox.generateRandomId(),
-      type: 'button',
-      ...defaultButtonSvgProps,
-      ...button,
+  public add(...buttons: TButtonSvg_Input[]): ButtonSvgEngine {
+    for (let button of buttons) {
+      let element: TButtonSvg_PK = {
+        key: StringToolbox.generateRandomId(),
+        type: 'button',
+        ...ButtonSvgEngine.DEFAULT_BUTTON_PROPS,
+        ...button,
+      }
+
+      // Throw an error if the button is already in use.
+      if (element.icon !== '_blank' && this.inUse(element.icon)) {
+        throw new Error(`Button with icon "${button.icon}" is already in use.`)
+      }
+
+      this._panelElements.push(element)
     }
 
-    // Throw an error if the button is already in use.
-    if (this.inUse(element.icon)) {
-      throw new Error(`Button with icon "${button.icon}" is already in use.`)
-    }
-
-    this._panelElements.push(element)
     this.applyLayout()
     return this
   }
 
   /**
-   * Removes a button from the engine.
-   * @param icon The icon of the button to remove.
+   * Removes buttons from the engine.
+   * @param icons The icons of the buttons to remove.
    * @returns Itself for chaining.
+   * @note Calling this will cause a re-render.
    */
-  public remove(icon: TMetisIcon): ButtonSvgEngine {
-    let buttonIndex = this.buttons.findIndex((button) => button.icon === icon)
-    if (buttonIndex >= 0) {
-      this._panelElements.splice(buttonIndex, 1)
-      this.applyLayout()
+  public remove(...icons: TMetisIcon[]): ButtonSvgEngine {
+    for (let icon of icons) {
+      let buttonIndex = this.buttons.findIndex((button) => button.icon === icon)
+      if (buttonIndex >= 0) {
+        this._panelElements.splice(buttonIndex, 1)
+      }
     }
+    this.applyLayout()
     return this
   }
 
   /**
-   * Lays out an order and structure for the buttons
-   * in the engine for how they are rendered in the panel.
-   * @param layout The layout used on the buttons.
+   * Removes all buttons from the engine.
    * @returns Itself for chaining.
-   * @example
-   * ```ts
-   * // Order of the buttons before:
-   * // ['edit', 'add', 'zoom-in', 'zoom-out', 'remove']
-   *
-   * // Call `layout` method with the defined schema.
-   * engine.layout('<slot>', 'add', 'edit', 'remove')
-   *
-   * // Order after: ['zoom-in', 'zoom-out', 'add', 'edit', 'remove']
+   * @note Calling this will cause a re-render.
    */
-  public setLayout(...layout: TSvgLayout): ButtonSvgEngine {
-    this.layout = layout
-    this._hasCustomLayout = true
+  public removeAll(): ButtonSvgEngine {
+    this._panelElements = this._panelElements.filter(
+      (element) => element.type !== 'button',
+    )
     this.applyLayout()
     return this
   }
@@ -157,6 +218,7 @@ export default class ButtonSvgEngine {
    * @param propKey The key of the property to set.
    * @param propValue The value of the property to set.
    * @returns Itself for chaining.
+   * @note Calling this will cause a re-render.
    */
   private setButtonProp<
     TPropKey extends keyof TButtonSvg_PK,
@@ -166,7 +228,7 @@ export default class ButtonSvgEngine {
     propKey: TPropKey,
     propValue: TPropValue,
   ): ButtonSvgEngine {
-    let button = this.buttons.find((button) => button.icon === icon)
+    let button = this.getButton(icon)
     if (button) button[propKey] = propValue
     this.onChange()
     return this
@@ -178,10 +240,11 @@ export default class ButtonSvgEngine {
    * @param icon The icon of the button.
    * @param description The description to set.
    * @returns Itself for chaining.
+   * @note Calling this will cause a re-render.
    */
   public setDescription(
     icon: TMetisIcon,
-    description: string | null,
+    description: string,
   ): ButtonSvgEngine {
     return this.setButtonProp(icon, 'description', description)
   }
@@ -192,6 +255,7 @@ export default class ButtonSvgEngine {
    * @param icon The icon of the button.
    * @param disabled Whether the button is disabled.
    * @returns Itself for chaining.
+   * @note Calling this will cause a re-render.
    */
   public setDisabled(icon: TMetisIcon, disabled: boolean): ButtonSvgEngine {
     return this.setButtonProp(icon, 'disabled', disabled)
@@ -201,6 +265,7 @@ export default class ButtonSvgEngine {
    * Enables a button.
    * @param icon The icon of the button.
    * @returns Itself for chaining.
+   * @note Calling this will cause a re-render.
    */
   public enable(icon: TMetisIcon): ButtonSvgEngine {
     return this.setButtonProp(icon, 'disabled', false)
@@ -210,22 +275,67 @@ export default class ButtonSvgEngine {
    * Disables a button.
    * @param icon The icon of the button.
    * @returns Itself for chaining.
+   * @note Calling this will cause a re-render.
    */
   public disable(icon: TMetisIcon): ButtonSvgEngine {
     return this.setButtonProp(icon, 'disabled', true)
   }
 
   /**
-   * Callback for a global state update.
-   * @param globalContext The updated global context for the app.
+   * Sets whether the button of the given icon
+   * is hidden.
+   * @param icon The icon of the button.
+   * @param hidden Whether the button is hidden.
+   * @returns Itself for chaining.
+   * @note Calling this will cause a re-render.
    */
-  public onGlobalUpdate(globalContext: GlobalContext): void {
-    this.globalContext = globalContext
+  public setHidden(icon: TMetisIcon, hidden: boolean): ButtonSvgEngine {
+    return this.setButtonProp(icon, 'hidden', hidden)
+  }
+
+  /**
+   * Reveals a button that was previously hidden.
+   * @param icon The icon of the button.
+   * @returns Itself for chaining.
+   * @note Calling this will cause a re-render.
+   */
+  public reveal(icon: TMetisIcon): ButtonSvgEngine {
+    return this.setButtonProp(icon, 'hidden', false)
+  }
+
+  /**
+   * Hides a button that was previously visible.
+   * @param icon The icon of the button.
+   * @returns Itself for chaining.
+   * @note Calling this will cause a re-render.
+   */
+  public hide(icon: TMetisIcon): ButtonSvgEngine {
+    return this.setButtonProp(icon, 'hidden', true)
+  }
+
+  /**
+   * Allows modifications to be made to the unique class
+   * list of the button with the given icon.
+   * @param icon The icon of the button.
+   * @param callback A callback which will provide the class
+   * list to be modified by the caller.
+   * @returns Itself for chaining.
+   * @note Calling this will cause a re-render.
+   */
+  public modifyClassList(
+    icon: TMetisIcon,
+    callback: (classList: ClassList) => {},
+  ): ButtonSvgEngine {
+    let button = this.getButton(icon)
+    if (button) callback(button.uniqueClassList)
+    this.onChange()
+    return this
   }
 
   /**
    * Applies the current layout to the current
    * set of SVG panel elements.
+   * @note Calling this will cause a re-render.
    */
   private applyLayout(): void {
     let layout = this.layout
@@ -292,26 +402,49 @@ export default class ButtonSvgEngine {
   private onChange: () => void
 
   /**
+   * Default props when adding a new button.
+   */
+  public static get DEFAULT_BUTTON_PROPS(): Required<TButtonSvg_Input> {
+    return {
+      icon: 'options',
+      label: '',
+      description: '',
+      uniqueClassList: new ClassList(),
+      disabled: false,
+      hidden: false,
+      alwaysShowTooltip: false,
+      cursor: 'pointer',
+      permissions: [],
+      onClick: () => {},
+      onCopy: () => {},
+    }
+  }
+
+  /**
    * A hook used to create an manage a new instance of
    * `ButtonSvgEngine`.
    * @returns A new instance of `ButtonSvgEngine`.
    * @note Must be used within a React component.
+   * @see {@link useButtonSvgEngine} for details
+   * concerning the parameters of this method.
    */
-  public static use(): ButtonSvgEngine {
+  public static use(
+    buttons: TButtonSvg_Input[] = [],
+    options?: TButtonSvgPanelOptions,
+    dependencies: any[] = [],
+  ): ButtonSvgEngine {
     return compute(() => {
-      const globalContext = useGlobalContext()
       const forceUpdate = useForcedUpdates()
-      const engine = useRef(
-        new ButtonSvgEngine(globalContext, () => forceUpdate()),
+      const [engine, setEngine] = useState(
+        new ButtonSvgEngine(options, () => forceUpdate()),
       )
-
-      // Handle any global updates within the engine.
-      useEffect(
-        () => engine.current.onGlobalUpdate(globalContext),
-        [globalContext],
-      )
-
-      return engine.current
+      // Update the engine whenever the dependencies change.
+      usePostInitEffect(() => {
+        setEngine(new ButtonSvgEngine(options, () => forceUpdate()))
+      }, dependencies)
+      // Add the buttons to the engine.
+      useButtonSvgs(engine, ...buttons)
+      return engine
     })
   }
 }

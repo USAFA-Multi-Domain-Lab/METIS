@@ -20,8 +20,8 @@ import { v4 as generateHash } from 'uuid'
 import { Vector1D, Vector2D } from '../../../../../../shared/toolbox/space'
 import ButtonSvgEngine from '../../user-controls/buttons/v3/engines'
 import {
-  useButtonSvg,
   useButtonSvgLayout,
+  useButtonSvgs,
 } from '../../user-controls/buttons/v3/hooks'
 import './MissionMap.scss'
 import Scene from './Scene'
@@ -501,35 +501,39 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
   )
 
   // Initialize buttons for the map.
-  useButtonSvg(buttonEngine, {
-    icon: 'zoom-in',
-    onClick: onClickZoomIn,
-    description: 'Zoom in. \n*Scrolling on the map will also zoom in and out.*',
-    cursor: 'zoom-in',
-  })
-  useButtonSvg(buttonEngine, {
-    icon: 'zoom-out',
-    onClick: onClickZoomOut,
-    description:
-      'Zoom out. \n*Scrolling on the map will also zoom in and out.*',
-    cursor: 'zoom-out',
-  })
-  useButtonSvg(buttonEngine, {
-    icon: 'question',
-    description:
-      '##### Mission Map\n' +
-      'This map is a layout of the nodes in the mission and their order of progression (left to right). \n' +
-      '\t\n' +
-      'The lines indicate how the nodes relate to one another and help display their order of progression. \n' +
-      '\t\n' +
-      'The children of a node are revealed when certain criteria are met (e.g. an action is successfully executed on a node). \n' +
-      '\t\n' +
-      '##### Controls:\n' +
-      '`Click+Drag` *Pan.*\n' +
-      '\t\n' +
-      '`Scroll` *Zoom in/out.*\n',
-    cursor: 'help',
-  })
+  useButtonSvgs(
+    buttonEngine,
+    {
+      icon: 'zoom-in',
+      onClick: onClickZoomIn,
+      description:
+        'Zoom in. \n*Scrolling on the map will also zoom in and out.*',
+      cursor: 'zoom-in',
+    },
+    {
+      icon: 'zoom-out',
+      onClick: onClickZoomOut,
+      description:
+        'Zoom out. \n*Scrolling on the map will also zoom in and out.*',
+      cursor: 'zoom-out',
+    },
+    {
+      icon: 'question',
+      description:
+        '##### Mission Map\n' +
+        'This map is a layout of the nodes in the mission and their order of progression (left to right). \n' +
+        '\t\n' +
+        'The lines indicate how the nodes relate to one another and help display their order of progression. \n' +
+        '\t\n' +
+        'The children of a node are revealed when certain criteria are met (e.g. an action is successfully executed on a node). \n' +
+        '\t\n' +
+        '##### Controls:\n' +
+        '`Click+Drag` *Pan.*\n' +
+        '\t\n' +
+        '`Scroll` *Zoom in/out.*\n',
+      cursor: 'help',
+    },
+  )
   useButtonSvgLayout(
     buttonEngine,
     '<slot>',

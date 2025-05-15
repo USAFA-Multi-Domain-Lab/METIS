@@ -130,3 +130,17 @@ export function usePeriodicRerender(interval: number) {
     }
   }, [])
 }
+
+/**
+ * Continuously updates a ref to use the latest
+ * version of a callback.
+ * @param callback The callback to store in a ref.
+ * @returns The ref containing the callback.
+ */
+export function useCallbackRef<T extends (...args: any[]) => any>(
+  callback: T,
+): React.MutableRefObject<T> {
+  const ref = useRef(callback)
+  ref.current = callback
+  return ref
+}

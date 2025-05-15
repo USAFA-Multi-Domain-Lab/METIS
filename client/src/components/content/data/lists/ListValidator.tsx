@@ -4,7 +4,8 @@ import { useListContext } from './List'
  * Validates props passed to the list.
  */
 export default function (): null {
-  const { listButtons, itemButtons } = useListContext()
+  const { listButtonIcons: listButtons, itemButtonIcons: itemButtons } =
+    useListContext()
 
   let buttonCount = listButtons.length + itemButtons.length
   let uniqueButtonCount = new Set([...listButtons, ...itemButtons]).size

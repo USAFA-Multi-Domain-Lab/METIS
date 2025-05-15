@@ -2,10 +2,59 @@
 
 .ButtonSvgPanel_v3 {
   display: flex;
-  align-items: center;
-  flex-flow: row wrap;
+  justify-content: start;
+  flex-wrap: wrap;
+
+  &.FlowColumn {
+    flex-direction: column;
+
+    .ButtonSvgDivider {
+      align-self: center;
+      margin: 0.1em 0;
+      width: 100%;
+      height: 1px;
+      background-color: $color-faded;
+    }
+
+    .ButtonSvg_v3 {
+      margin: 0.175em 0;
+    }
+  }
+
+  &.FlowRow {
+    flex-direction: row;
+
+    .ButtonSvgDivider {
+      align-self: center;
+      margin: 0 0.5em;
+      width: 1px;
+      height: 1.1em;
+      background-color: $color-faded;
+    }
+
+    .ButtonSvg_v3 {
+      margin: 0 0.1em;
+    }
+  }
 
   &.PanelEmpty {
     width: 0;
+  }
+
+  &.RevealLabels {
+    .ButtonSvg_v3 {
+      font-size: 1.25rem; // 20px
+    }
+  }
+
+  &.HideLabels {
+    .ButtonLabel {
+      display: none;
+    }
+  }
+
+  .ButtonSvgDivider:first-child,
+  .ButtonSvgDivider:last-child {
+    display: none;
   }
 }

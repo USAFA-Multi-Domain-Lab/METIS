@@ -1,4 +1,5 @@
 import { ReactNode, useRef } from 'react'
+import { useButtonMenuEngine } from 'src/components/content/user-controls/buttons/ButtonMenu'
 import ButtonMenuController from 'src/components/content/user-controls/buttons/ButtonMenuController'
 import { useGlobalContext } from 'src/context'
 import { compute } from 'src/toolbox'
@@ -27,16 +28,20 @@ export default function ListItem<T extends TListItem>({
   const { showButtonMenu } = globalContext.actions
   const {
     columns,
+    itemButtonIcons,
     itemButtons,
     minNameColumnWidth,
     getCellText,
-    getItemButtonLabel: getItemButtonTooltip,
     getColumnWidth,
     isDisabled,
-    onItemButtonClick,
   } = listContext
   const [selection, setSelection] = listContext.state.selection
   const root = useRef<HTMLDivElement>(null)
+  const optionsEngine = useButtonMenuEngine(
+    itemButtons,
+    ['<slot>'],
+    itemButtonIcons,
+  )
 
   /* -- COMPUTED -- */
 
@@ -80,28 +85,14 @@ export default function ListItem<T extends TListItem>({
   /* -- FUNCTIONS -- */
 
   /**
-   * Gets the description for the given button.
-   */
-  const getButtonDescription = (button: TButtonSvgType) =>
-    getItemButtonTooltip(button, item)
-
-  /**
-   * Handles the click event for an item
-   * button in the options menu.
-   */
-  const onButtonClick = (button: TButtonSvgType) => {
-    onItemButtonClick(button, item)
-  }
-  /**
    * Handles the click event for the item
    * options button.
    */
   const onOptionsClick = (event: React.MouseEvent) => {
     // Show the button menu.
-    showButtonMenu(itemButtons, onButtonClick, {
+    showButtonMenu(optionsEngine, {
       positioningTarget: event.target as HTMLDivElement,
       highlightTarget: root.current ?? undefined,
-      getDescription: getButtonDescription,
     })
     // Force selection of the item.
     setSelection(item)
@@ -171,11 +162,9 @@ export default function ListItem<T extends TListItem>({
       {cellsJsx}
       <ButtonMenuController
         target={root}
-        buttons={itemButtons}
+        engine={optionsEngine}
         highlightTarget={root.current ?? undefined}
         trigger={'r-click'}
-        getDescription={getButtonDescription}
-        onButtonClick={onButtonClick}
         onActivate={onButtonMenuActivate}
       />
     </div>
@@ -224,7 +213,6 @@ export type TGetItemTooltip<TItem extends TListItem> = (item: TItem) => string
  */
 export type TGetItemButtonLabel<TItem extends TListItem> = (
   button: TButtonSvgType,
-  item: TItem,
 ) => string
 
 /**

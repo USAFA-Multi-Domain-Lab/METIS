@@ -154,7 +154,6 @@ export default function UserList({
    */
   const getUserItemButtonTooltip: TGetItemButtonLabel<ClientUser> = (
     button,
-    item,
   ) => {
     switch (button) {
       case 'open':
@@ -223,8 +222,8 @@ export default function UserList({
       name={'Users'}
       items={users}
       columns={['username', 'access']}
-      listButtons={listButtons}
-      itemButtons={itemButtons}
+      listButtonIcons={listButtons}
+      itemButtonIcons={itemButtons}
       getColumnLabel={getUserColumnLabel}
       getCellText={getUserCellText}
       getColumnWidth={getUserColumnWidth}

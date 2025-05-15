@@ -4,6 +4,7 @@ import { compute } from 'src/toolbox'
 import { useEventListener } from 'src/toolbox/hooks'
 import { Vector2D } from '../../../../../../shared/toolbox/space'
 import { TButtonMenu_P } from './ButtonMenu'
+import ButtonSvgEngine from './v3/engines'
 
 /**
  * Activates a button menu when the target element
@@ -11,11 +12,9 @@ import { TButtonMenu_P } from './ButtonMenu'
  */
 export default function ButtonMenuController({
   target,
-  buttons,
+  engine,
   highlightTarget,
   trigger = 'r-click',
-  getDescription,
-  onButtonClick,
   onActivate = () => {},
 }: TButtonMenuController_P): null {
   /* -- STATE -- */
@@ -52,22 +51,17 @@ export default function ButtonMenuController({
       // Prevent the default context menu.
       event.preventDefault()
 
-      // No need to show the button menu if there
-      // are no buttons.
-      if (!buttons) return
-
       // Show the button menu.
-      showButtonMenu(buttons, onButtonClick, {
+      showButtonMenu(engine, {
         position: new Vector2D(event.clientX, event.clientY),
         highlightTarget,
-        getDescription,
       })
       onActivate()
     },
     // todo: Using these as dependencies causes the
     // todo: event listener to constantly refresh.
     // todo: This should be fixed.
-    [showButtonMenu, getDescription, onButtonClick],
+    [engine, showButtonMenu],
   )
 
   /* -- RENDER -- */
@@ -83,14 +77,14 @@ export default function ButtonMenuController({
  */
 export type TButtonMenuController_P = {
   /**
+   * The engine to power the buttons in the menu.
+   */
+  engine: ButtonSvgEngine
+  /**
    * The target element ref that will activate the button menu
    * when right-clicked.
    */
   target: RefObject<HTMLElement>
-  /**
-   * The buttons to display in the button menu.
-   */
-  buttons: TButtonMenu_P['buttons']
   /**
    * The target element to highlight when the button menu is
    * shown.
@@ -101,20 +95,6 @@ export type TButtonMenuController_P = {
    * @default 'r-click'
    */
   trigger?: TButtonMenuTrigger
-  /**
-   * Gets the description for a button.
-   * @param button The button for which to get the description.
-   * @returns The description for the button, if null, the type
-   * will be used in its plain text form.
-   * @note If this function is not provided, the type will be
-   * used in its plain text form.
-   */
-  getDescription?: TButtonMenu_P['getDescription']
-  /**
-   * A callback for when a button in the button menu is clicked.
-   * @param button The button that was clicked.
-   */
-  onButtonClick: TButtonMenu_P['onButtonClick']
   /**
    * A callback for when the button menu is activated.
    */

@@ -140,7 +140,6 @@ export default function SessionList({
    */
   const getSessionItemButtonTooltip: TGetItemButtonLabel<SessionBasic> = (
     button,
-    item,
   ) => {
     switch (button) {
       case 'open':
@@ -299,8 +298,8 @@ export default function SessionList({
         'runtimeFormatted',
         'launchedAt',
       ]}
-      listButtons={['lock']}
-      itemButtons={itemButtons}
+      listButtonIcons={['lock']}
+      itemButtonIcons={itemButtons}
       initialSorting={{ column: 'launchedAt', method: 'descending' }}
       getColumnLabel={getSessionColumnLabel}
       getCellText={getSessionCellText}

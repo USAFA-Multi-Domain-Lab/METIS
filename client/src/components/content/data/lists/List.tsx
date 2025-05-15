@@ -4,6 +4,10 @@ import { TDefaultProps, useDefaultProps } from 'src/toolbox/hooks'
 import StringToolbox from '../../../../../../shared/toolbox/strings'
 import { TButtonSvgType } from '../../user-controls/buttons/ButtonSvg'
 import { TSvgPanelOnClick } from '../../user-controls/buttons/ButtonSvgPanel_v2'
+import {
+  TButtonSvg_Input,
+  TSvgLayout,
+} from '../../user-controls/buttons/v3/types'
 import './List.scss'
 import ListDropBox from './ListDropBox'
 import ListResizeHandler from './ListResizeHandler'
@@ -62,8 +66,8 @@ export function createDefaultListProps<
     columns: [],
     itemsPerPageMin: 10,
     minNameColumnWidth: '14em',
-    listButtons: [],
-    itemButtons: [],
+    listButtonIcons: [],
+    itemButtonIcons: [],
     initialSorting: { column: 'name', method: 'ascending' },
     getColumnLabel: (x) => StringToolbox.toTitleCase(x.toString()),
     getCellText: (item, column) => (item[column] as any).toString(),
@@ -99,7 +103,18 @@ export default function List<TItem extends TListItem>(
 
   // Parse props needed by the main list
   // component.
-  const { items, itemsPerPageMin, onSelect, onFileDrop } = defaultedProps
+  const {
+    items,
+    itemsPerPageMin,
+    listButtonIcons,
+    itemButtonIcons,
+    getListButtonLabel,
+    getItemButtonLabel,
+    onListButtonClick,
+    onItemButtonClick,
+    onSelect,
+    onFileDrop,
+  } = defaultedProps
 
   /* -- STATE -- */
 
@@ -111,15 +126,17 @@ export default function List<TItem extends TListItem>(
     searchActive: useState<boolean>(false),
     selection: useState<TItem | null>(null),
     buttonOverflowCount: useState<number>(0),
+    overflowActive: useState<boolean>(false),
   }
   const [pageNumber] = state.pageNumber
   const [processedItems] = state.processedItems
   const [itemsPerPage] = state.itemsPerPage
   const [selection] = state.selection
-  const elements: TListElements = {
+  const elements: TList_E = {
     root: useRef<HTMLDivElement>(null),
     nav: useRef<HTMLDivElement>(null),
     buttons: useRef<HTMLDivElement>(null),
+    overflow: useRef<HTMLDivElement>(null),
   }
 
   /* -- COMPUTED -- */
@@ -161,6 +178,57 @@ export default function List<TItem extends TListItem>(
    * The current number of pages in the list.
    */
   const pageCount = compute<number>(() => pages.length)
+
+  /**
+   * Input data to use for the list buttons,
+   * anywhere where they are needed throughout
+   * the list.
+   */
+  const listButtons = compute<TButtonSvg_Input[]>(() =>
+    listButtonIcons.map<TButtonSvg_Input>((icon) => ({
+      icon,
+      label: getListButtonLabel(icon),
+      onClick: () => onListButtonClick(icon),
+    })),
+  )
+
+  /**
+   * Input data to use for the item buttons,
+   * anywhere where they are needed throughout
+   * the list.
+   */
+  const itemButtons = compute<TButtonSvg_Input[]>(() =>
+    itemButtonIcons.map<TButtonSvg_Input>((icon) => ({
+      icon,
+      label: getItemButtonLabel(icon),
+      onClick: () => {
+        if (selection) onItemButtonClick(icon, selection)
+      },
+    })),
+  )
+
+  /**
+   * @see {@link TListContextData.aggregatedButtonIcons}
+   */
+  const aggregatedButtonIcons = compute<TMetisIcon[]>(() =>
+    listButtonIcons.concat(itemButtonIcons),
+  )
+
+  /**
+   * @see {@link TListContextData.aggregatedButtons}
+   */
+  const aggregatedButtons = compute<TButtonSvg_Input[]>(() =>
+    listButtons.concat(itemButtons),
+  )
+
+  /**
+   * @see {@link TListContextData.aggregateButtonLayout}
+   */
+  const aggregateButtonLayout = compute<TSvgLayout>(() => [
+    ...listButtonIcons,
+    '<divider>',
+    ...itemButtonIcons,
+  ])
 
   /* -- FUNCTIONS -- */
 
@@ -237,6 +305,11 @@ export default function List<TItem extends TListItem>(
   const contextValue: TListContextData<TItem> = {
     ...defaultedProps,
     pageCount,
+    listButtons,
+    itemButtons,
+    aggregatedButtonIcons,
+    aggregatedButtons,
+    aggregateButtonLayout,
     state,
     elements,
   }
@@ -267,7 +340,7 @@ export default function List<TItem extends TListItem>(
  * Elements that need to be referenced throughout the
  * component tree.
  */
-export type TListElements = {
+export type TList_E = {
   /**
    * The root element of the list.
    */
@@ -280,6 +353,10 @@ export type TListElements = {
    * The element that contains the list buttons.
    */
   buttons: React.RefObject<HTMLDivElement>
+  /**
+   * The element that contains the overflow button.
+   */
+  overflow: React.RefObject<HTMLDivElement>
 }
 
 /**
@@ -316,13 +393,13 @@ export type TList_P<TItem extends TListItem> = {
    * will perform an action not specific to any item in the list.
    * @default []
    */
-  listButtons?: TButtonSvgType[]
+  listButtonIcons?: TMetisIcon[]
   /**
    * The item-specific buttons to display, which when clicked,
    * will perform an action specific to an item in the list.
    * @default []
    */
-  itemButtons?: TButtonSvgType[]
+  itemButtonIcons?: TMetisIcon[]
   /**
    * The initial sorting state for the list.
    * @default { column: 'name', method: 'descending' }
@@ -448,6 +525,11 @@ export type TList_S<TItem extends TListItem> = {
    * list navigation.
    */
   buttonOverflowCount: TReactState<number>
+  /**
+   * Whether the overflow menu is currently active
+   * and displaying the overflow menu.
+   */
+  overflowActive: TReactState<boolean>
 }
 
 /**
@@ -462,6 +544,33 @@ export type TListContextData<TItem extends TListItem> = Required<
    */
   pageCount: number
   /**
+   * Input data to use for the item buttons,
+   * anywhere where they are needed throughout
+   * the list.
+   */
+  listButtons: TButtonSvg_Input[]
+  /**
+   * Input data to use for the item buttons,
+   * anywhere where they are needed throughout
+   * the list.
+   */
+  itemButtons: TButtonSvg_Input[]
+  /**
+   * Aggregated button icon list, including list and
+   * item button icons.
+   */
+  aggregatedButtonIcons: TMetisIcon[]
+  /**
+   * Aggregated buttons, including list and
+   * item buttons.
+   */
+  aggregatedButtons: TButtonSvg_Input[]
+  /**
+   * A button layout used to display the aggregated
+   * list of buttons, including the list and item buttons.
+   */
+  aggregateButtonLayout: TSvgLayout
+  /**
    * The state for the list.
    */
   state: TList_S<TItem>
@@ -469,7 +578,7 @@ export type TListContextData<TItem extends TListItem> = Required<
    * Elements that need to be referenced throughout the
    * component tree.
    */
-  elements: TListElements
+  elements: TList_E
 }
 
 /**
