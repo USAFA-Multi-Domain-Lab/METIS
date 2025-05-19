@@ -168,6 +168,7 @@ export default class TargetEnvContext {
       sendOutput: this.sendOutput,
       blockNode: this.blockNode,
       unblockNode: this.unblockNode,
+      openNode: this.openNode,
       modifySuccessChance: this.modifySuccessChance,
       modifyProcessTime: this.modifyProcessTime,
       modifyResourceCost: this.modifyResourceCost,
@@ -319,6 +320,14 @@ export default class TargetEnvContext {
   }
 
   /**
+   * @inheritdoc TTargetEnvExposedContext.openNode
+   */
+  private openNode = ({ forceKey, nodeKey }: TManipulateNodeOptions = {}) => {
+    const targetNode = this.determineTargetNode(forceKey, nodeKey)
+    this.session.openNode(targetNode)
+  }
+
+  /**
    * @inheritdoc TTargetEnvExposedContext.modifySuccessChance
    */
   private modifySuccessChance = (
@@ -435,6 +444,13 @@ export type TTargetEnvExposedContext = {
    * effect belongs, unless configured otherwise.
    */
   unblockNode: TargetEnvContext['unblockNode']
+  /**
+   * Opens the node to reveal the next set of nodes in the structure.
+   * @param options Additional options for opening the node.
+   * @note By default, this will open the node to which the current
+   * effect belongs, unless configured otherwise.
+   */
+  openNode: TargetEnvContext['openNode']
   /**
    * Modifies an action's chance of success.
    * @param operand The number used to modify the chance of success.

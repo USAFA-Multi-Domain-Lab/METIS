@@ -10,6 +10,7 @@ import ClientMissionNode from 'src/missions/nodes'
 import ClientUser from 'src/users'
 import {
   TGenericServerEvents,
+  TOpenNodeData,
   TResponseEvents,
   TServerEvents,
 } from '../../../shared/connect/data'
@@ -160,7 +161,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
     this.server.addEventListener('session-members-updated', this.onUsersUpdated)
     this.server.addEventListener('force-assigned', this.onForceAssigned)
     this.server.addEventListener('role-assigned', this.onRoleAssigned)
-    this.server.addEventListener('node-opened', this.onNodeOpened)
+    this.server.addEventListener('node-opened', this.onNodeOpenedResponse)
     this.server.addEventListener(
       'action-execution-initiated',
       this.onActionExecutionInitiated,
@@ -1026,11 +1027,19 @@ export default class SessionClient extends Session<TMetisClientComponents> {
     event: TServerEvents['modifier-enacted'],
   ): void => {
     // Extract data.
-    let data = event.data
+    const { data } = event
     // Handle the data.
     switch (data.key) {
       case 'node-update-block':
         this.updateNodeBlockStatus(data.nodeId, data.blocked)
+        break
+      case 'node-open':
+        this.onNodeOpened({
+          nodeId: data.nodeId,
+          structure: data.structure,
+          revealedDescendants: data.revealedDescendants,
+          revealedDescendantPrototypes: data.revealedDescendantPrototypes,
+        })
         break
       case 'node-action-success-chance':
         this.modifySuccessChance(
@@ -1094,10 +1103,12 @@ export default class SessionClient extends Session<TMetisClientComponents> {
   }
 
   /**
-   * Handles when a node has been opened.
+   * Handles when a node-opened response is received from the server.
    * @param event The event emitted by the server.
    */
-  private onNodeOpened = (event: TServerEvents['node-opened']): void => {
+  private onNodeOpenedResponse = (
+    event: TServerEvents['node-opened'],
+  ): void => {
     // Gather data.
     const {
       nodeId,
@@ -1105,16 +1116,13 @@ export default class SessionClient extends Session<TMetisClientComponents> {
       revealedDescendants,
       revealedDescendantPrototypes,
     } = event.data
-    const node = this.mission.getNodeById(nodeId)
-    if (!node) throw new Error(`Node "${nodeId}" was not found.`)
-    const { prototype } = node
-
-    // Handle opening at different levels.
-    prototype.onOpen(revealedDescendantPrototypes, structure)
-    node.onOpen(revealedDescendants)
-
-    // Remap actions, if new nodes have been revealed.
-    if (revealedDescendants) this.mapActions()
+    // Handle the node opening.
+    return this.onNodeOpened({
+      nodeId,
+      structure,
+      revealedDescendants,
+      revealedDescendantPrototypes,
+    })
   }
 
   /**
@@ -1173,6 +1181,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
     // Gather data.
     const { structure, revealedDescendants, revealedDescendantPrototypes } =
       event.data
+
     const outcomeData: TExecutionOutcomeJson = event.data.outcome
     const { executionId } = outcomeData
     const execution = this.mission.getExecution(executionId)
@@ -1180,6 +1189,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
       throw new Error(`Execution "${executionId}" could not be found.`)
     const { node } = execution
     const { prototype } = node
+
     const outcome = new ClientExecutionOutcome(
       outcomeData._id,
       outcomeData.state,
@@ -1190,10 +1200,35 @@ export default class SessionClient extends Session<TMetisClientComponents> {
     execution.onOutcome(outcome)
     prototype.onOpen(revealedDescendantPrototypes, structure)
     node.onOpen(revealedDescendants)
+
     node.emitEvent('exec-state-change')
 
     // Remap actions if there are revealed nodes, since
     // those revealed nodes may contain new actions.
+    if (revealedDescendants) this.mapActions()
+  }
+
+  /**
+   * Handles when a node has been opened.
+   * @param data The data needed to open the node.
+   */
+  private onNodeOpened = (data: TOpenNodeData): void => {
+    // Gather data.
+    const {
+      nodeId,
+      structure,
+      revealedDescendants,
+      revealedDescendantPrototypes,
+    } = data
+    const node = this.mission.getNodeById(nodeId)
+    if (!node) throw new Error(`Node "${nodeId}" was not found.`)
+    const { prototype } = node
+
+    // Handle opening at different levels.
+    prototype.onOpen(revealedDescendantPrototypes, structure)
+    node.onOpen(revealedDescendants)
+
+    // Remap actions, if new nodes have been revealed.
     if (revealedDescendants) this.mapActions()
   }
 

@@ -121,18 +121,33 @@ export type TServerMethod = keyof TServerEvents
 export type TServerEvent = TServerEvents[TServerMethod]
 
 /**
+ * The base properties for a modifier datum.
+ */
+type TModifierDatumBase = {
+  /**
+   * Used to identify the data structure.
+   * @option `"node-update-block":` The data needed to block or unblock a node.
+   * @option `"node-open":` The data needed to open a node.
+   * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
+   * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
+   * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
+   * @option `"force-resource-pool":` The data needed to modify the resource pool of a force.
+   */
+  key:
+    | 'node-update-block'
+    | 'node-open'
+    | 'node-action-success-chance'
+    | 'node-action-process-time'
+    | 'node-action-resource-cost'
+    | 'force-resource-pool'
+}
+
+/**
  * The data necessary to apply a modifier to an object in METIS.
  */
 type TModifierData = [
   {
-    /**
-     * Used to identify the data structure.
-     * @option `"node-block":` The data needed to block or unblock a node.
-     * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
-     * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
-     * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
-     * @option `"force-resource-pool":` The data needed to modify the resource pool of a force.
-     */
+    // See `TModifierDatumBase` for the key docstring.
     key: 'node-update-block'
     /**
      * The ID of the node to modify.
@@ -144,14 +159,11 @@ type TModifierData = [
     blocked: boolean
   },
   {
-    /**
-     * Used to identify the data structure.
-     * @option `"node-block":` The data needed to block or unblock a node.
-     * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
-     * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
-     * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
-     * @option `"force-resource-pool":` The data needed to modify the resource pool of a force.
-     */
+    // See `TModifierDatumBase` for the key docstring.
+    key: 'node-open'
+  } & TOpenNodeData,
+  {
+    // See `TModifierDatumBase` for the key docstring.
     key: 'node-action-success-chance'
     /**
      * The operand used to modify the chance of succes for all the node's actions.
@@ -168,14 +180,7 @@ type TModifierData = [
     actionId?: string
   },
   {
-    /**
-     * Used to identify the data structure.
-     * @option `"node-block":` The data needed to block or unblock a node.
-     * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
-     * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
-     * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
-     * @option `"force-resource-pool":` The data needed to modify the resource pool of a force.
-     */
+    // See `TModifierDatumBase` for the key docstring.
     key: 'node-action-process-time'
     /**
      * The operand used to modify the process time for all the node's actions.
@@ -192,14 +197,7 @@ type TModifierData = [
     actionId?: string
   },
   {
-    /**
-     * Used to identify the data structure.
-     * @option `"node-block":` The data needed to block or unblock a node.
-     * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
-     * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
-     * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
-     * @option `"force-resource-pool":` The data needed to modify the resource pool of a force.
-     */
+    // See `TModifierDatumBase` for the key docstring.
     key: 'node-action-resource-cost'
     /**
      * The operand used to modify the resource cost for all the node's actions.
@@ -216,14 +214,7 @@ type TModifierData = [
     actionId?: string
   },
   {
-    /**
-     * Used to identify the data structure.
-     * @option `"node-block":` The data needed to block or unblock a node.
-     * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
-     * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
-     * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
-     * @option `"force-resource-pool":` The data needed to modify the resource pool of a force.
-     */
+    // See `TModifierDatumBase` for the key docstring.
     key: 'force-resource-pool'
     /**
      * The ID of the force to modify.
@@ -239,7 +230,7 @@ type TModifierData = [
 /**
  * The data needed to apply a modifier to an object in METIS.
  */
-type TModifierDatum = TModifierData[number]
+type TModifierDatum = TModifierDatumBase & TModifierData[number]
 
 /**
  * The data necessary to send a message to the output panel.
@@ -262,6 +253,28 @@ type TOutputData = [
  * The data needed to send a message to the output panel.
  */
 export type TOutputDatum = TOutputData[number]
+
+/**
+ * The data needed to open a node and reveal its descendants.
+ */
+export type TOpenNodeData = {
+  /**
+   * The ID of the node to modify.
+   */
+  nodeId: string
+  /**
+   * The structure of the nodes that were revealed as a result of opening the node.
+   */
+  structure: AnyObject
+  /**
+   * The nodes that were revealed as a result of opening the node.
+   */
+  revealedDescendants: TMissionNodeJson[]
+  /**
+   * The prototypes of the nodes that were revealed as a result of opening the node.
+   */
+  revealedDescendantPrototypes: TMissionPrototypeJson[]
+}
 
 /**
  * General WS events emitted by the server, or caused due to a change in the connection with the server.
@@ -535,24 +548,7 @@ export type TResponseEvents = {
    */
   'node-opened': TResponseEvent<
     'node-opened',
-    {
-      /**
-       * The node that was opened.
-       */
-      nodeId: string
-      /**
-       * The structure of the nodes that were revealed as a result of executing the action.
-       */
-      structure: AnyObject
-      /**
-       * The nodes that were revealed as a result of opening the node.
-       */
-      revealedDescendants: TMissionNodeJson[]
-      /**
-       * The prototypes of the nodes that were revealed as a result of opening the node.
-       */
-      revealedDescendantPrototypes: TMissionPrototypeJson[]
-    },
+    TOpenNodeData,
     TClientEvents['request-open-node']
   >
   /**
@@ -583,19 +579,7 @@ export type TResponseEvents = {
        * The outcome of the action being executed.
        */
       outcome: TExecutionOutcomeJson
-      /**
-       * The structure of the nodes that were revealed as a result of executing the action.
-       */
-      structure?: AnyObject
-      /**
-       * The nodes that were revealed as a result of executing the action.
-       */
-      revealedDescendants?: TMissionNodeJson[]
-      /**
-       * The prototypes of the nodes that were revealed as a result of executing the action.
-       */
-      revealedDescendantPrototypes?: TMissionPrototypeJson[]
-    },
+    } & Partial<TOpenNodeData>,
     TClientEvents['request-execute-action']
   >
   /**

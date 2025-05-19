@@ -6,8 +6,8 @@ import TargetSchema from '../../../../library/target-env-classes/targets'
  * A target available in the METIS target environment that enables a user
  * to manipulate the block status of a node.
  */
-const BlockNode = new TargetSchema({
-  name: 'Block Node',
+const BlockStatus = new TargetSchema({
+  name: 'Block Status',
   description: '',
   script: async (context) => {
     // Extract the arguments from the effect.
@@ -32,10 +32,9 @@ const BlockNode = new TargetSchema({
     // Update the block status of the node.
     if (blockStatus === 'block') {
       context.blockNode({ forceKey, nodeKey })
-    } else if (blockStatus === 'unblock') {
+    }
+    if (blockStatus === 'unblock') {
       context.unblockNode({ forceKey, nodeKey })
-    } else if (typeof blockStatus !== 'string') {
-      throw new Error(errorMessage)
     }
   },
   args: [
@@ -75,4 +74,4 @@ const BlockNode = new TargetSchema({
   ],
 })
 
-export default BlockNode
+export default BlockStatus

@@ -45,19 +45,14 @@ export default class ServerMissionNode extends MissionNode<TMetisServerComponent
 
   /**
    * Opens the node.
-   * @returns a promise that resolves when the node opening has been fulfilled.
    */
-  public open(): Promise<void> {
-    return new Promise<void>(
-      (resolve: () => void, reject: (error: Error) => void) => {
-        if (this.openable) {
-          this._opened = true
-          resolve()
-        } else {
-          reject(new Error('Node is not openable.'))
-        }
-      },
-    )
+  public open(): void {
+    if (!this.openable) {
+      throw new Error('Node is not openable.')
+    }
+    // Abort execution, if executing.
+    if (this.executing) this.latestExecution!.abort()
+    this._opened = true
   }
 
   // Implemented

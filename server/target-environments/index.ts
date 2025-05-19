@@ -146,7 +146,7 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
     // If the target environment has a target folder,
     // scan it for targets.
     // Scan the directory for targets.
-    this.scanTargetDirectory(directory, environment)
+    this.scanTargetDirectory(targetFolderPath, environment)
 
     // If no targets were found, log a warning message.
     if (!environment.targets.length) {
