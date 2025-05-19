@@ -11,9 +11,17 @@
     padding: 1.5em 1.5em 0;
   }
 
-  .EntryContent {
-    @include form-container();
+  .ScrollBox {
     overflow-y: auto;
-    padding-bottom: 3.5em;
+
+    .EntryContent {
+      @include form-container();
+      height: max-content;
+      padding-bottom: 3.5em;
+    }
+  }
+
+  .List {
+    height: max-content;
   }
 }

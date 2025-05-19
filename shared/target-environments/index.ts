@@ -1,6 +1,6 @@
 import { AnyObject } from 'metis/toolbox/objects'
 import { TMetisBaseComponents } from '..'
-import Target, { TTarget, TTargetJson } from './targets'
+import { TTarget, TTargetJson } from './targets'
 
 /**
  * This is the environment in which the target(s) exist.
@@ -119,19 +119,6 @@ export default abstract class TargetEnvironment<
     description: 'This is a default target environment.',
     version: '0.1',
     targets: [],
-  }
-
-  /**
-   * The internal target environment used for creating effects.
-   */
-  public static get INTERNAL_TARGET_ENV(): TTargetEnvJson {
-    return {
-      _id: 'metis',
-      name: 'METIS',
-      description: '',
-      version: '0.1',
-      targets: Target.INTERNAL_TARGETS,
-    }
   }
 }
 

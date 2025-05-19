@@ -232,6 +232,7 @@ export default function RichText({
       extensions: [
         StarterKit.configure({
           paragraph: false,
+          codeBlock: false,
           listItem: {
             HTMLAttributes: {
               class: listClassName,

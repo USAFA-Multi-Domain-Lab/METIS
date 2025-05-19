@@ -3,6 +3,7 @@ import ServerMissionNode from 'metis/server/missions/nodes'
 import SessionServer from 'metis/server/sessions'
 import ServerSessionMember from 'metis/server/sessions/members'
 import { AnyObject } from 'metis/toolbox/objects'
+import ServerMissionAction from '../missions/actions'
 import ServerMissionForce from '../missions/forces'
 
 export default class TargetEnvContext {
@@ -16,6 +17,34 @@ export default class TargetEnvContext {
    */
   private get effectId() {
     return this.effect._id
+  }
+
+  /**
+   * The local key of the effect for the current context.
+   */
+  private get effectKey() {
+    return this.effect.localKey
+  }
+
+  /**
+   * The action for the current context.
+   */
+  private get action(): ServerMissionAction {
+    return this.effect.action
+  }
+
+  /**
+   * The ID of the action for the current context.
+   */
+  private get actionId() {
+    return this.action._id
+  }
+
+  /**
+   * The local key of the action for the current context.
+   */
+  private get actionKey() {
+    return this.action.localKey
   }
 
   /**
@@ -33,6 +62,13 @@ export default class TargetEnvContext {
   }
 
   /**
+   * The local key of the node for the current context.
+   */
+  private get nodeKey() {
+    return this.node.localKey
+  }
+
+  /**
    * The force for the current context.
    */
   private get force(): ServerMissionForce {
@@ -44,6 +80,13 @@ export default class TargetEnvContext {
    */
   private get forceId() {
     return this.force._id
+  }
+
+  /**
+   * The local key of the force for the current context.
+   */
+  private get forceKey() {
+    return this.force.localKey
   }
 
   /**
@@ -133,27 +176,36 @@ export default class TargetEnvContext {
   }
 
   /**
-   * Determines the target node for a node-manipulation method.
-   * @param options The options from the node-manipulation method.
+   * Determines the target node.
+   * @param forceKey The local key of the force to which the node belongs.
+   * @param nodeKey The local key of the node to manipulate.
    * @returns The target node.
    * @throws If a node was specified in the options, but it could
    * not be found.
    */
-  private determineTargetNode(options: TManipulateNodeOptions = {}) {
-    // Determine details.
-    const { nodeId } = options
+  private determineTargetNode(
+    forceKey: string | 'self' = 'self',
+    nodeKey: string | 'self' = 'self',
+  ): ServerMissionNode {
     const { mission, missionId } = this
 
     // If the node wasn't specified, return the
     // current node.
-    if (!nodeId) return this.node
+    // todo: Change this to return undefined when
+    // todo: we implement the ability to affect all
+    // todo: nodes in a force.
+    if (!nodeKey) return this.node
+
+    // Handle any keys that are set to 'self'.
+    if (nodeKey === 'self') return this.node
+    if (forceKey === 'self') forceKey = this.forceKey
 
     // Find the specified node.
-    let result = mission.nodes.find((node) => node._id === nodeId)
+    let result = mission.getNodeByLocalKey(forceKey, nodeKey)
 
     if (!result) {
       throw new Error(
-        `Could not node with ID "${nodeId}" in the mission with ID "${missionId}".`,
+        `Could not find node with these local keys { forceKey: "${forceKey}", nodeKey: "${nodeKey}" } in the mission with ID "${missionId}".`,
       )
     }
 
@@ -161,27 +213,68 @@ export default class TargetEnvContext {
   }
 
   /**
-   * Determines the target force for a force-manipulation method.
-   * @param options The options from the force-manipulation method.
+   * Determines the target force.
+   * @param forceKey The local key of the force to manipulate.
    * @returns The target force.
    * @throws If a force was specified in the options, but it could
    * not be found.
    */
-  private determineTargetForce(options: TManipulateForceOptions = {}) {
-    // Determine details.
-    const { forceId } = options
+  private determineTargetForce(
+    forceKey: string | 'self' = 'self',
+  ): ServerMissionForce {
     const { mission, missionId } = this
 
-    // If the force wasn't specified, return the
-    // current force.
-    if (!forceId) return this.force
+    // If the force is set to 'self', return the current force.
+    if (forceKey === 'self') return this.force
 
     // Find the specified force.
-    let result = mission.forces.find((force) => force._id === forceId)
+    let result = mission.getForceByLocalKey(forceKey)
 
     if (!result) {
       throw new Error(
-        `Could not find force with ID "${forceId}" in the mission with ID "${missionId}".`,
+        `Could not find force with local key "${forceKey}" in the mission with ID "${missionId}".`,
+      )
+    }
+
+    return result
+  }
+
+  /**
+   * Determines the target action.
+   * @param forceKey The local key of the force to which the action belongs.
+   * @param nodeKey The local key of the node to which the action belongs.
+   * @param actionKey The local key of the action to manipulate.
+   * @returns The target action.
+   * @throws If an action was specified in the options, but it could
+   * not be found or the action is not an instance of `ServerMissionAction`.
+   */
+  private determineTargetAction(
+    forceKey: string | 'self' = 'self',
+    nodeKey: string | 'self' = 'self',
+    actionKey: string | 'self' | 'all' = 'all',
+  ): ServerMissionAction | undefined {
+    const { mission, missionId } = this
+
+    // If the action is set to 'all', return undefined.
+    if (actionKey === 'all') return undefined
+
+    // Handle any keys that are set to 'self'.
+    if (actionKey === 'self') return this.action
+    if (nodeKey === 'self') nodeKey = this.nodeKey
+    if (forceKey === 'self') forceKey = this.forceKey
+
+    // Find the specified action.
+    const result = mission.getActionByLocalKey(forceKey, nodeKey, actionKey)
+
+    if (!result) {
+      throw new Error(
+        `Could not find action with these local keys { forceKey: "${forceKey}", nodeKey: "${nodeKey}", actionKey: "${actionKey}" } in the mission with ID "${missionId}".`,
+      )
+    }
+
+    if (!(result instanceof ServerMissionAction)) {
+      throw new Error(
+        `The action with these local keys { forceKey: "${forceKey}", nodeKey: "${nodeKey}", actionKey: "${actionKey}" } was found in the mission with ID "${missionId}", but it is not an instance of ServerMissionAction.`,
       )
     }
 
@@ -193,11 +286,11 @@ export default class TargetEnvContext {
    */
   private sendOutput = (
     message: string,
-    options: TManipulateForceOptions = {},
+    { forceKey }: TManipulateForceOptions = {},
   ) => {
     // Parse details.
     const { force, userId } = this
-    const targetForce = this.determineTargetForce(options)
+    const targetForce = this.determineTargetForce(forceKey)
 
     // Create a custom output to send to the output panel.
     this.session.sendOutput(
@@ -212,16 +305,16 @@ export default class TargetEnvContext {
   /**
    * @inheritdoc TTargetEnvExposedContext.blockNode
    */
-  private blockNode = (options: TManipulateNodeOptions = {}) => {
-    const targetNode = this.determineTargetNode(options)
+  private blockNode = ({ forceKey, nodeKey }: TManipulateNodeOptions = {}) => {
+    const targetNode = this.determineTargetNode(forceKey, nodeKey)
     this.session.updateNodeBlockStatus(targetNode, true)
   }
 
   /**
    * @inheritdoc TTargetEnvExposedContext.unblockNode
    */
-  private unblockNode = (options: TManipulateNodeOptions) => {
-    const targetNode = this.determineTargetNode(options)
+  private unblockNode = ({ forceKey, nodeKey }: TManipulateNodeOptions) => {
+    const targetNode = this.determineTargetNode(forceKey, nodeKey)
     this.session.updateNodeBlockStatus(targetNode, false)
   }
 
@@ -230,10 +323,20 @@ export default class TargetEnvContext {
    */
   private modifySuccessChance = (
     operand: number,
-    options: TManipulateNodeOptions = {},
+    { forceKey, nodeKey, actionKey }: TManipulateActionOptions = {},
   ) => {
-    const targetNode = this.determineTargetNode(options)
-    this.session.modifySuccessChance(targetNode, operand)
+    const targetAction = this.determineTargetAction(
+      forceKey,
+      nodeKey,
+      actionKey,
+    )
+    const targetNode = this.determineTargetNode(forceKey, nodeKey)
+
+    this.session.modifySuccessChance({
+      operand,
+      node: targetNode,
+      action: targetAction,
+    })
   }
 
   /**
@@ -241,10 +344,20 @@ export default class TargetEnvContext {
    */
   private modifyProcessTime = (
     operand: number,
-    options: TManipulateNodeOptions = {},
+    { forceKey, nodeKey, actionKey }: TManipulateActionOptions = {},
   ) => {
-    const targetNode = this.determineTargetNode(options)
-    this.session.modifyProcessTime(targetNode, operand)
+    const targetAction = this.determineTargetAction(
+      forceKey,
+      nodeKey,
+      actionKey,
+    )
+    const targetNode = this.determineTargetNode(forceKey, nodeKey)
+
+    this.session.modifyProcessTime({
+      operand,
+      node: targetNode,
+      action: targetAction,
+    })
   }
 
   /**
@@ -252,10 +365,20 @@ export default class TargetEnvContext {
    */
   private modifyResourceCost = (
     operand: number,
-    options: TManipulateNodeOptions = {},
+    { forceKey, nodeKey, actionKey }: TManipulateActionOptions = {},
   ) => {
-    const targetNode = this.determineTargetNode(options)
-    this.session.modifyResourceCost(targetNode, operand)
+    const targetAction = this.determineTargetAction(
+      forceKey,
+      nodeKey,
+      actionKey,
+    )
+    const targetNode = this.determineTargetNode(forceKey, nodeKey)
+
+    this.session.modifyResourceCost({
+      operand,
+      node: targetNode,
+      action: targetAction,
+    })
   }
 
   /**
@@ -263,9 +386,9 @@ export default class TargetEnvContext {
    */
   private modifyResourcePool = (
     operand: number,
-    options: TManipulateForceOptions = {},
+    { forceKey }: TManipulateForceOptions = {},
   ) => {
-    const targetForce = this.determineTargetForce(options)
+    const targetForce = this.determineTargetForce(forceKey)
     this.session.modifyResourcePool(targetForce, operand)
   }
 }
@@ -509,10 +632,15 @@ export type TSendOutputOptions = {
  */
 export type TManipulateNodeOptions = {
   /**
-   * The ID of the node to manipulate.
-   * @default this.nodeId // The node to which the current effect belongs.
+   * The local key of the node to manipulate.
+   * @default this.nodeKey // The node to which the current effect belongs.
    */
-  nodeId?: string
+  nodeKey?: string
+  /**
+   * The local key of the force to which the node belongs.
+   * @default this.forceKey // The force to which the current effect belongs.
+   */
+  forceKey?: string
 }
 
 /**
@@ -520,8 +648,31 @@ export type TManipulateNodeOptions = {
  */
 export type TManipulateForceOptions = {
   /**
-   * The ID of the force to manipulate.
-   * @default this.forceId // The force to which the current effect belongs.
+   * The local key of the force to manipulate.
+   * @default this.forceKey // The force to which the current effect belongs.
    */
-  forceId?: string
+  forceKey?: string
+}
+
+/**
+ * Options for methods that manipulate an action.
+ */
+export type TManipulateActionOptions = {
+  /**
+   * The local key of the action to manipulate.
+   * @note If this is not specified, then all actions within the node
+   * will be manipulated.
+   * @default undefined
+   */
+  actionKey?: string
+  /**
+   * The local key of the node to which the action belongs.
+   * @default this.nodeKey // The node to which the current effect belongs.
+   */
+  nodeKey?: string
+  /**
+   * The local key of the force to which the action belongs.
+   * @default this.forceKey // The force to which the current effect belongs.
+   */
+  forceKey?: string
 }

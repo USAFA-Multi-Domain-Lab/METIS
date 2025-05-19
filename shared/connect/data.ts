@@ -154,13 +154,18 @@ type TModifierData = [
      */
     key: 'node-action-success-chance'
     /**
+     * The operand used to modify the chance of succes for all the node's actions.
+     */
+    successChanceOperand: number
+    /**
      * The ID of the node to modify.
      */
     nodeId: string
     /**
-     * The operand used to modify the chance of succes for all the node's actions.
+     * The ID of the action to modify.
+     * @note If not provided, all actions will be modified.
      */
-    successChanceOperand: number
+    actionId?: string
   },
   {
     /**
@@ -173,13 +178,18 @@ type TModifierData = [
      */
     key: 'node-action-process-time'
     /**
+     * The operand used to modify the process time for all the node's actions.
+     */
+    processTimeOperand: number
+    /**
      * The ID of the node to modify.
      */
     nodeId: string
     /**
-     * The operand used to modify the process time for all the node's actions.
+     * The ID of the action to modify.
+     * @note If not provided, all actions will be modified.
      */
-    processTimeOperand: number
+    actionId?: string
   },
   {
     /**
@@ -192,13 +202,18 @@ type TModifierData = [
      */
     key: 'node-action-resource-cost'
     /**
+     * The operand used to modify the resource cost for all the node's actions.
+     */
+    resourceCostOperand: number
+    /**
      * The ID of the node to modify.
      */
     nodeId: string
     /**
-     * The operand used to modify the resource cost for all the node's actions.
+     * The ID of the action to modify.
+     * @note If not provided, all actions will be modified.
      */
-    resourceCostOperand: number
+    actionId?: string
   },
   {
     /**
@@ -526,13 +541,17 @@ export type TResponseEvents = {
        */
       nodeId: string
       /**
+       * The structure of the nodes that were revealed as a result of executing the action.
+       */
+      structure: AnyObject
+      /**
        * The nodes that were revealed as a result of opening the node.
        */
-      revealedChildNodes: TMissionNodeJson[]
+      revealedDescendants: TMissionNodeJson[]
       /**
        * The prototypes of the nodes that were revealed as a result of opening the node.
        */
-      revealedChildPrototypes: TMissionPrototypeJson[]
+      revealedDescendantPrototypes: TMissionPrototypeJson[]
     },
     TClientEvents['request-open-node']
   >
@@ -565,13 +584,17 @@ export type TResponseEvents = {
        */
       outcome: TExecutionOutcomeJson
       /**
+       * The structure of the nodes that were revealed as a result of executing the action.
+       */
+      structure?: AnyObject
+      /**
        * The nodes that were revealed as a result of executing the action.
        */
-      revealedChildNodes?: TMissionNodeJson[]
+      revealedDescendants?: TMissionNodeJson[]
       /**
        * The prototypes of the nodes that were revealed as a result of executing the action.
        */
-      revealedChildPrototypes?: TMissionPrototypeJson[]
+      revealedDescendantPrototypes?: TMissionPrototypeJson[]
     },
     TClientEvents['request-execute-action']
   >

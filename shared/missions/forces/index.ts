@@ -77,6 +77,11 @@ export abstract class MissionForce<
   public revealAllNodes: boolean
 
   /**
+   * A key for the force, used to identify it within the mission.
+   */
+  public localKey: string
+
+  /**
    * The nodes in the force.
    */
   public nodes: TNode<T>[]
@@ -87,68 +92,18 @@ export abstract class MissionForce<
   public root: TNode<T>
 
   /**
-   * The revealed structure found in the force, based on the nodes
-   * that have been opened.
+   * The revealed structure found in the force, based on the node's
+   * descendants that have been revealed.
    */
   public get revealedStructure(): AnyObject {
-    /**
-     * The recursive algorithm used to determine the structure.
-     * @param cursor The current prototype being processed.
-     * @param cursorStructure The structure of the current prototype being processed.
-     */
-    const algorithm = (
-      cursor: TNode<T> = this.root,
-      cursorStructure: AnyObject = {},
-    ): AnyObject => {
-      if (cursor.revealed) {
-        for (let child of cursor.children) {
-          if (child.hasChildren) {
-            cursorStructure[child.prototype.structureKey] = algorithm(child)
-          } else {
-            cursorStructure[child.prototype.structureKey] = {}
-          }
-        }
-      }
-      return cursorStructure
-    }
-
-    // Return the result of the operation.
-    return algorithm()
+    return this.root.revealedStructure
   }
 
   /**
-   * The revealed prototypes in the force based on the revealed structure and
-   * the nodes that have been opened.
+   * The revealed prototypes based on the revealed node structure.
    */
   public get revealedPrototypes(): TPrototype<T>[] {
-    // The revealed prototypes.
-    let revealedPrototypes: TPrototype<T>[] = []
-
-    /**
-     * Recursively finds prototypes from the node structure.
-     */
-    const findPrototypes = (cursor: AnyObject = this.revealedStructure) => {
-      for (let key of Object.keys(cursor)) {
-        // Get the child structure.
-        let childStructure: AnyObject = cursor[key]
-        // Find the prototype data for the current key.
-        let prototype = this.mission.prototypes.find(
-          ({ structureKey }) => structureKey === key,
-        )
-        // If the prototype was found, add it to the list.
-        if (prototype) {
-          revealedPrototypes.push(prototype)
-        }
-        // Find this prototype's children.
-        findPrototypes(childStructure)
-      }
-    }
-
-    // Find prototypes from the node structure.
-    findPrototypes()
-
-    // Return the revealed prototypes.
-    return revealedPrototypes
+    return this.root.revealedPrototypes
   }
 
   /**
@@ -192,6 +147,7 @@ export abstract class MissionForce<
       data.initialResources ?? MissionForce.DEFAULT_PROPERTIES.initialResources
     this.revealAllNodes =
       data.revealAllNodes ?? MissionForce.DEFAULT_PROPERTIES.revealAllNodes
+    this.localKey = data.localKey ?? mission.generateForceKey()
     this.resourcesRemaining = data.resourcesRemaining ?? this.initialResources
     this.nodes = []
     this._outputs = []
@@ -216,6 +172,7 @@ export abstract class MissionForce<
       color: this.color,
       initialResources: this.initialResources,
       revealAllNodes: this.revealAllNodes,
+      localKey: this.localKey,
       nodes: this.exportNodes(options),
       filterOutputs: (userId) => {
         json.outputs = this.filterOutputs(userId).map((output) =>
@@ -290,6 +247,26 @@ export abstract class MissionForce<
 
     // Convert nodes to JSON and return.
     return nodes.map((node) => node.toJson(options))
+  }
+
+  /**
+   * Generates a new key for the node.
+   * @returns The new key for the node.
+   */
+  public generateNodeKey(): string {
+    // Initialize
+    let newKey: number = 0
+
+    for (let node of this.nodes) {
+      let nodeKey: number = Number(node.localKey)
+      // If the node has a key, and it is greater than the current
+      // new key, set the new key to the node's key.
+      if (nodeKey > newKey) newKey = Math.max(newKey, nodeKey)
+    }
+
+    // Increment the new key by 1 and return it as a string.
+    newKey++
+    return String(newKey)
   }
 
   /**
@@ -397,7 +374,7 @@ export abstract class MissionForce<
   /**
    * The default properties for a Mission object.
    */
-  public static get DEFAULT_PROPERTIES(): Required<TMissionForceSaveJson> {
+  public static get DEFAULT_PROPERTIES(): TMissionForceDefaultJson {
     return {
       _id: StringToolbox.generateRandomId(),
       introMessage: '<p>Welcome to your force!</p>',
@@ -429,6 +406,8 @@ export abstract class MissionForce<
     device: false,
     actions: [],
     opened: true,
+    exclude: false,
+    localKey: 'ROOT',
   }
 
   /**
@@ -440,41 +419,49 @@ export abstract class MissionForce<
         ...MissionForce.DEFAULT_PROPERTIES,
         name: 'Friendly Force',
         color: Mission.BLUE,
+        localKey: '1',
       },
       {
         ...MissionForce.DEFAULT_PROPERTIES,
         name: 'Enemy Force',
         color: Mission.RED,
+        localKey: '2',
       },
       {
         ...MissionForce.DEFAULT_PROPERTIES,
         name: 'Guerrilla Force',
         color: Mission.YELLOW,
+        localKey: '3',
       },
       {
         ...MissionForce.DEFAULT_PROPERTIES,
         name: 'Local National Force',
         color: Mission.GREEN,
+        localKey: '4',
       },
       {
         ...MissionForce.DEFAULT_PROPERTIES,
         name: 'White Cell',
         color: Mission.WHITE,
+        localKey: '5',
       },
       {
         ...MissionForce.DEFAULT_PROPERTIES,
         name: 'Non-State Actors',
         color: Mission.BROWN,
+        localKey: '6',
       },
       {
         ...MissionForce.DEFAULT_PROPERTIES,
         name: 'Coalition Force',
         color: Mission.PURPLE,
+        localKey: '7',
       },
       {
         ...MissionForce.DEFAULT_PROPERTIES,
         name: 'Civilian Industry',
         color: Mission.MAGENTA,
+        localKey: '8',
       },
     ]
   }
@@ -511,6 +498,10 @@ export interface TMissionForceSaveJson {
    * Whether or not to reveal all nodes in the force.
    */
   revealAllNodes: boolean
+  /**
+   * A key for the force, used to identify it within the mission.
+   */
+  localKey: string
   /**
    * The nodes in the force.
    */
@@ -555,6 +546,14 @@ export type TForceJsonOptions = Omit<TMissionJsonOptions, 'idExposure'>
  * Options for the MissionForce.exportNodes method.
  */
 export type TExportNodesOptions = TForceJsonOptions
+
+/**
+ * The default properties for a MissionForce object.
+ * @inheritdoc TMissionForceSaveJson
+ */
+type TMissionForceDefaultJson = Required<
+  Omit<TMissionForceSaveJson, 'localKey'>
+>
 
 /**
  * Extracts the force type from a registry of

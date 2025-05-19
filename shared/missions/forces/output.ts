@@ -59,7 +59,7 @@ export default abstract class MissionOutput<
     // todo: the mission. Perhaps the node is
     // todo: part of a different force, and therefore
     // todo: inaccessible, but very much a real node.
-    return this.mission.getNode(nodeId) ?? null
+    return this.mission.getNodeById(nodeId) ?? null
   })
 
   /**
@@ -168,7 +168,7 @@ export default abstract class MissionOutput<
    * The formatted time the output was sent.
    */
   public get timeStamp(): string {
-    return this.time.toLocaleString()
+    return MissionOutput.formatTime(this.time)
   }
 
   /**

@@ -1,17 +1,17 @@
 import { exec } from 'child_process'
 import MetisServer from 'metis/server'
-import { demoMissionData } from 'metis/server/database/initial-mission-data'
 import InfoModel from 'metis/server/database/models/info'
 import MissionModel from 'metis/server/database/models/missions'
 import UserModel, { hashPassword } from 'metis/server/database/models/users'
 import { databaseLogger } from 'metis/server/logging'
+import MissionImport from 'metis/server/missions/imports'
+import { DateToolbox } from 'metis/toolbox/dates'
 import mongoose, { ConnectOptions } from 'mongoose'
 import {
   adminUserData,
   instructorUserData,
   studentUserData,
 } from './initial-user-data'
-import { DateToolbox } from 'metis/toolbox/dates'
 
 /**
  * Represents a connection to the Metis database.
@@ -348,10 +348,34 @@ export default class MetisDatabase {
         // If no missions are found, create the default mission(s).
         if (missionDocs.length === 0) {
           databaseLogger.info('No missions were found.')
-          databaseLogger.info('Creating default missions...')
+          databaseLogger.info('Creating default mission(s)...')
 
           // Create the default mission(s).
-          let missionDoc = await MissionModel.create(demoMissionData)
+          let missionImport = new MissionImport(
+            {
+              name: 'default.metis',
+              originalName: 'default.metis',
+              path: './database/seeding/default.metis',
+            },
+            this.server.fileStore,
+          )
+          await missionImport.execute()
+
+          // Check if the default mission was created.
+          if (missionImport.results.successfulImportCount === 0) {
+            throw new Error(`Failed to create default mission(s).`)
+          }
+
+          let missionDoc = await MissionModel.findOne({
+            name: 'METIS > ASCOT 7 DEMO',
+          }).exec()
+
+          if (!missionDoc) {
+            throw new Error(
+              `Failed to find the default mission in the database.`,
+            )
+          }
+
           databaseLogger.info(
             `Default mission created: { _id: ${missionDoc._id}, name: ${missionDoc.name} }`,
           )
@@ -502,5 +526,16 @@ export default class MetisDatabase {
     }
 
     return `${MetisDatabase.BUILD_DIR}build_${buildNumberAsStr}.js`
+  }
+
+  /**
+   * This will generate a validation error for the given message.
+   * @param message The error message.
+   * @returns The validation error.
+   */
+  public static generateValidationError(message: string): Error {
+    let error = new Error(message)
+    error.name = this.ERROR_BAD_DATA
+    return error
   }
 }

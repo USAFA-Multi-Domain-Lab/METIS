@@ -20,7 +20,9 @@ export default function <
       <div className='EntryTop'>
         <EntryNavigation component={component} />
       </div>
-      <div className='EntryContent'>{children}</div>
+      <div className='ScrollBox'>
+        <div className='EntryContent'>{children}</div>
+      </div>
     </div>
   )
 }

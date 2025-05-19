@@ -23,7 +23,11 @@
     }
   }
 
-  .ButtonSvgPanel {
+  .ButtonSvgPanel_v3 {
+    // Ensures the panel is displayed above
+    // the mission name.
+    z-index: 1;
+
     // Remove top rule set in base ButtonSVGPanel
     // styles.
     top: unset;
@@ -38,24 +42,10 @@
       $color-primary 0 calc(100% - 1.5em),
       transparent 100%
     );
-
-    &.map-is-zoomed-in {
-      .ButtonSvg_zoom-in {
-        pointer-events: none;
-        opacity: 0.5;
-      }
-    }
-
-    &.map-is-zoomed-out {
-      .ButtonSvg_zoom-out {
-        pointer-events: none;
-        opacity: 0.5;
-      }
-    }
   }
 
   .Title,
-  .ButtonSvgPanel {
+  .ButtonSvgPanel_v3 {
     height: $button-svg-size;
   }
 }

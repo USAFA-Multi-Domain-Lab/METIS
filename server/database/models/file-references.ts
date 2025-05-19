@@ -1,13 +1,8 @@
 import { TFileReferenceJson } from 'metis/files/references'
-import {
-  DefaultSchemaOptions,
-  HydratedDocument,
-  Model,
-  model,
-  Schema,
-} from 'mongoose'
+import { model } from 'mongoose'
 import path from 'path'
-import { buildToJson, excludeDeletedForFinds, TRecoverableDoc } from '.'
+import { buildToJson, excludeDeletedForFinds } from '.'
+import { FileReferenceSchema } from './classes'
 
 /* -- FUNCTIONS -- */
 
@@ -26,16 +21,7 @@ const toJson = buildToJson<TFileReferenceDoc, TFileReferenceJson>()
  * Represents the schema for a file reference in the database.
  * @see (Schema Generic Type Parameters) [ https://mongoosejs.com/docs/typescript/schemas.html#generic-parameters ]
  */
-const FileReferenceSchema = new Schema<
-  TFileReference,
-  TFileReferenceModel,
-  TFileReferenceMethods,
-  {},
-  TFileReferenceVirtuals,
-  TFileReferenceStaticMethods,
-  DefaultSchemaOptions,
-  TFileReferenceDoc
->(
+const fileReferenceSchema = new FileReferenceSchema(
   {
     name: {
       type: String,
@@ -93,12 +79,12 @@ const FileReferenceSchema = new Schema<
 
 // Prevent deleted files from being returned in queries,
 // unless explicitly requested.
-excludeDeletedForFinds(FileReferenceSchema)
+excludeDeletedForFinds(fileReferenceSchema)
 
 // Ensures that the file name is unique by appending
 // a number to the end of the file name if it already
 // exists.
-FileReferenceSchema.pre('save', async function (next) {
+fileReferenceSchema.pre('save', async function (next) {
   const file = this as TFileReferenceDoc
 
   if (!file.isNew && !file.isModified('name')) {
@@ -127,57 +113,6 @@ FileReferenceSchema.pre('save', async function (next) {
   next()
 })
 
-/* -- SCHEMA TYPES -- */
-
-/**
- * A file reference stored in the database, which
- * includes the location and the metadata for a file
- * stored within in the METIS file store.
- * @see https://mongoosejs.com/docs/typescript/schemas.html#generic-parameters
- */
-type TFileReference = TRecoverableDoc<TFileReferenceJson>
-
-/**
- * Represents the methods available for a `FileReferenceModel`.
- * @see https://mongoosejs.com/docs/typescript/statics-and-methods.html
- */
-type TFileReferenceMethods = {}
-
-/**
- * Represents the static methods available for a `FileReferenceModel`.
- * @see https://mongoosejs.com/docs/typescript/statics-and-methods.html
- */
-type TFileReferenceStaticMethods = {}
-
-/**
- * Represents a mongoose model for a file reference in the database.
- * @see https://mongoosejs.com/docs/typescript/schemas.html#generic-parameters
- */
-type TFileReferenceModel = Model<
-  TFileReference,
-  {},
-  TFileReferenceMethods,
-  TFileReferenceVirtuals,
-  TFileReferenceDoc
-> &
-  TFileReferenceStaticMethods
-
-/**
- * Represents a mongoose document for a file reference in the database.
- * @see https://mongoosejs.com/docs/typescript/schemas.html#generic-parameters
- */
-type TFileReferenceDoc = HydratedDocument<
-  TFileReference,
-  TFileReferenceMethods,
-  TFileReferenceVirtuals
->
-
-/**
- * Represents the virtual properties for a file reference in the database.
- * @see https://mongoosejs.com/docs/tutorials/virtuals.html
- */
-type TFileReferenceVirtuals = {}
-
 /* -- MODEL -- */
 
 /**
@@ -185,7 +120,7 @@ type TFileReferenceVirtuals = {}
  */
 const FileReferenceModel = model<TFileReference, TFileReferenceModel>(
   'FileReference',
-  FileReferenceSchema,
+  fileReferenceSchema,
 )
 
 export default FileReferenceModel

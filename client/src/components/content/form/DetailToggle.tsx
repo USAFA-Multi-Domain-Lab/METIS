@@ -31,7 +31,6 @@ export function DetailToggle({
 
     if (uniqueClassName) classList.push(uniqueClassName)
     if (disabled) classList.push('Disabled')
-    if (!tooltipDescription) classList.push('NoInfo')
 
     return classList.join(' ')
   })
@@ -93,17 +92,23 @@ export function DetailToggle({
   /* -- RENDER -- */
   return (
     <div className={rootClassName}>
-      <div className={labelClassName}>{label}</div>
-      <sup className={infoClassName}>
-        i
-        <Tooltip description={tooltipDescription} />
-      </sup>
-      <div className={fieldClassName}>
-        <Toggle
-          stateValue={stateValue}
-          setState={setState}
-          lockState={lockState}
-        />
+      <div className='TitleRow'>
+        <div className='TitleColumnOne'>
+          <div className={labelClassName}>{label}</div>
+          <sup className={infoClassName}>
+            i
+            <Tooltip description={tooltipDescription} />
+          </sup>
+        </div>
+        <div className='TitleColumnTwo'>
+          <div className={fieldClassName}>
+            <Toggle
+              stateValue={stateValue}
+              setState={setState}
+              lockState={lockState}
+            />
+          </div>
+        </div>
       </div>
       <div className={fieldErrorClassName}>{errorMessage}</div>
     </div>

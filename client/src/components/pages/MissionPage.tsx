@@ -167,7 +167,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   /* -- LOGIN-SPECIFIC LOGIC -- */
 
   // Require login for page.
-  const { login, isAuthorized } = useRequireLogin()
+  const { isAuthorized } = useRequireLogin()
 
   /* -- COMPUTED -- */
 
@@ -244,7 +244,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
 
     // If the user has the proper authorization, add
     // the copy button.
-    if (login.user.isAuthorized('missions_write')) {
+    if (isAuthorized('missions_write')) {
       results.push('copy', 'remove')
     }
 
@@ -320,10 +320,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
         // The user currently logged in must
         // have restricted access to view the
         // files.
-        // todo: Add proper authorization logic.
-        if (true) {
-          await loadGlobalFiles()
-        }
+        if (isAuthorized('files_read')) await loadGlobalFiles()
       } catch {
         handleError('Failed to load mission.')
       }
@@ -405,6 +402,16 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
             description: 'Deselect this node (Closes panel view also).',
             onClick: () => mission.select(nextNode!.force),
           },
+          {
+            type: 'divider',
+            key: 'node-button-exclude',
+            description:
+              'Exclude this node from the force (Closes panel view also).',
+            onClick: () => {
+              nextNode!.exclude = true
+              mission.select(nextNode!.force)
+            },
+          },
         ]
       }
 
@@ -479,7 +486,9 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
         }
 
         // Set the buttons on the next selection.
-        nextSelection.buttons = activeButtons
+        nextSelection.buttons = isAuthorized('missions_write')
+          ? activeButtons
+          : [availableButtons.deselect]
       }
 
       // Update the selection state.
@@ -489,11 +498,8 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   )
 
   // Add event listener to watch for when a new
-  // node is spawned in the mission.
-  useEventListener(mission, 'new-prototype', () => {
-    // Mark unsaved changes as true.
-    setAreUnsavedChanges(true)
-  })
+  // prototype is spawned in the mission.
+  useEventListener(mission, 'new-prototype', () => setAreUnsavedChanges(true))
 
   /* -- FUNCTIONS -- */
 
@@ -503,7 +509,6 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
    * @returns A promise that resolves when the mission has been saved.
    */
   const save = async () => {
-    console.log(areUnsavedChanges)
     try {
       if (areUnsavedChanges) {
         // Set unsaved changes to false to
@@ -836,7 +841,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     forceId: ClientMissionForce['_id'],
   ) => {
     // Get the force to duplicate.
-    let force = mission.getForce(forceId)
+    let force = mission.getForceById(forceId)
 
     // If the force is not found, notify the user.
     if (!force) {
@@ -880,7 +885,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     forceId: ClientMissionForce['_id'],
   ) => {
     // Get the force to duplicate.
-    let force = mission.getForce(forceId)
+    let force = mission.getForceById(forceId)
 
     // If the force is not found, notify the user.
     if (!force) {
@@ -975,9 +980,6 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
    * mission page.
    */
   const renderInspector = (): JSX.Element | null => {
-    // if ('a' === 'a') {
-    //   return null
-    // }
     if (selection instanceof ClientMission) {
       return (
         <MissionEntry

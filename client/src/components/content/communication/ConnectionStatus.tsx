@@ -4,7 +4,7 @@ import './ConnectionStatus.scss'
 
 /**
  * A signal for controlling the message of all
- * `ConnectionStatus` components.
+ * {@link ConnectionStatus} components.
  */
 export const message = signal<TConnectionStatusMessage | null>(null)
 

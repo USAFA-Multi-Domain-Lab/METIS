@@ -95,8 +95,9 @@ export default abstract class Session<
     let weights = {
       participant: 0,
       observer_limited: 1,
-      manager: 2,
-      observer: 3,
+      manager_limited: 2,
+      manager: 3,
+      observer: 4,
     }
     return membersRaw.sort((a, b) => {
       return weights[a.role._id] - weights[b.role._id]

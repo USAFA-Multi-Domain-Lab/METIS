@@ -247,7 +247,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
   public openNode(nodeId: string, options: TSessionRequestOptions = {}): void {
     // Gather details.
     let server: ServerConnection = this.server
-    let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
+    let node: ClientMissionNode | undefined = this.mission.getNodeById(nodeId)
 
     // Callback for errors.
     const onError = (message: string) => {
@@ -284,7 +284,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
         // request.
         onResponse: (event) => {
           if (event.method === 'node-opened') {
-            this.mission.emitEvent('autopan')
+            this.mission.emitEvent('autopan', [])
           }
 
           if (event.method === 'error') {
@@ -371,7 +371,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
   ) {
     // Gather details.
     let server: ServerConnection = this.server
-    let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
+    let node: ClientMissionNode | undefined = this.mission.getNodeById(nodeId)
     let { onError = () => {} } = options
 
     // If the node doesn't have a pre-execution message,
@@ -855,78 +855,69 @@ export default class SessionClient extends Session<TMetisClientComponents> {
    */
   private updateNodeBlockStatus = (nodeId: string, blocked: boolean): void => {
     // Find the node, given the ID.
-    let node = this.mission.getNode(nodeId)
-    // Handle node not found.
-    if (node === undefined) {
-      throw new Error(
-        `Event "node-block" was triggered, but the node with the given nodeId ("${nodeId}") could not be found.`,
-      )
-    }
+    let node = this.mission.getNodeById(nodeId)
     // Handle the blocking and unblocking of the node.
-    node.updateBlockStatus(blocked)
+    node?.updateBlockStatus(blocked)
   }
 
   /**
-   * Modifies the success chance of all the node's actions.
-   * @param nodeId The ID of the node.
+   * Modifies the success chance of a specific action within a node or
+   * all actions within a node.
    * @param successChanceOperand The operand to modify the success chance by.
+   * @param nodeId The ID of the node.
+   * @param actionId The ID of the action.
+   * @note If the action is not provided, the success chance of all actions
+   * within the node will be modified.
    */
   private modifySuccessChance = (
-    nodeId: string,
     successChanceOperand: number,
+    nodeId: string,
+    actionId?: string,
   ): void => {
     // Find the node, given the ID.
-    let node = this.mission.getNode(nodeId)
-    // Handle node not found.
-    if (node === undefined) {
-      throw new Error(
-        `Event "node-action-success-chance" was triggered, but the node with the given nodeId ("${nodeId}") could not be found.`,
-      )
-    }
+    let node = this.mission.getNodeById(nodeId)
     // Modify the success chance for all the node's actions.
-    node.modifySuccessChance(successChanceOperand)
+    node?.modifySuccessChance(successChanceOperand, actionId)
   }
 
   /**
-   * Modifies the process time of all the node's actions.
-   * @param nodeId The ID of the node.
+   * Modifies the process time of a specific action within a node or
+   * all actions within a node.
    * @param processTimeOperand The operand to modify the process time by.
+   * @param nodeId The ID of the node.
+   * @param actionId The ID of the action.
+   * @note If the action is not provided, the process time of all actions
+   * within the node will be modified.
    */
   private modifyProcessTime = (
-    nodeId: string,
     processTimeOperand: number,
+    nodeId: string,
+    actionId?: string,
   ): void => {
     // Find the node, given the ID.
-    let node = this.mission.getNode(nodeId)
-    // Handle node not found.
-    if (node === undefined) {
-      throw new Error(
-        `Event "node-action-process-time" was triggered, but the node with the given nodeId ("${nodeId}") could not be found.`,
-      )
-    }
+    let node = this.mission.getNodeById(nodeId)
     // Modify the process time for all the node's actions.
-    node.modifyProcessTime(processTimeOperand)
+    node?.modifyProcessTime(processTimeOperand, actionId)
   }
 
   /**
-   * Modifies the resource cost of all the node's actions.
-   * @param nodeId The ID of the node.
+   * Modifies the resource cost of a specific action within a node or
+   * all actions within a node.
    * @param resourceCostOperand The operand to modify the resource cost by.
+   * @param nodeId The ID of the node.
+   * @param actionId The ID of the action.
+   * @note If the action is not provided, the resource cost of all actions
+   * within the node will be modified.
    */
   private modifyResourceCost = (
-    nodeId: string,
     resourceCostOperand: number,
+    nodeId: string,
+    actionId?: string,
   ): void => {
     // Find the node, given the ID.
-    let node = this.mission.getNode(nodeId)
-    // Handle node not found.
-    if (node === undefined) {
-      throw new Error(
-        `Event "node-action-resource-cost" was triggered, but the node with the given nodeId ("${nodeId}") could not be found.`,
-      )
-    }
+    let node = this.mission.getNodeById(nodeId)
     // Modify the resource cost for all the node's actions.
-    node.modifyResourceCost(resourceCostOperand)
+    node?.modifyResourceCost(resourceCostOperand, actionId)
   }
 
   /**
@@ -936,15 +927,9 @@ export default class SessionClient extends Session<TMetisClientComponents> {
    */
   private modifyResourcePool = (forceId: string, operand: number): void => {
     // Find the force, given the ID.
-    let force = this.mission.getForce(forceId)
-    // Handle force not found.
-    if (force === undefined) {
-      throw new Error(
-        `Event "force-resource-pool" was triggered, but the force with the given forceId ("${forceId}") could not be found.`,
-      )
-    }
+    let force = this.mission.getForceById(forceId)
     // Modify the resource pool for the force.
-    force.modifyResourcePool(operand)
+    force?.modifyResourcePool(operand)
   }
 
   /**
@@ -1048,13 +1033,25 @@ export default class SessionClient extends Session<TMetisClientComponents> {
         this.updateNodeBlockStatus(data.nodeId, data.blocked)
         break
       case 'node-action-success-chance':
-        this.modifySuccessChance(data.nodeId, data.successChanceOperand)
+        this.modifySuccessChance(
+          data.successChanceOperand,
+          data.nodeId,
+          data.actionId,
+        )
         break
       case 'node-action-process-time':
-        this.modifyProcessTime(data.nodeId, data.processTimeOperand)
+        this.modifyProcessTime(
+          data.processTimeOperand,
+          data.nodeId,
+          data.actionId,
+        )
         break
       case 'node-action-resource-cost':
-        this.modifyResourceCost(data.nodeId, data.resourceCostOperand)
+        this.modifyResourceCost(
+          data.resourceCostOperand,
+          data.nodeId,
+          data.actionId,
+        )
         break
       case 'force-resource-pool':
         this.modifyResourcePool(data.forceId, data.operand)
@@ -1071,24 +1068,13 @@ export default class SessionClient extends Session<TMetisClientComponents> {
    * @param event The event emitted by the server.
    */
   private onSendOutput = (event: TServerEvents['send-output']): void => {
-    // Extract data.
     let { outputData } = event.data
-    let { type, forceId } = outputData
-
-    // Find the force given the ID.
-    let force = this.mission.getForce(forceId)
-
-    // If the force is undefined, throw an error.
-    if (!force) {
-      throw new Error(
-        `Could not send output with type "${type}" to the force with ID "${forceId}" because the force was not found.`,
-      )
+    let { forceId } = outputData
+    let force = this.mission.getForceById(forceId)
+    if (force) {
+      let output = new ClientOutput(force, outputData)
+      force.storeOutput(output)
     }
-
-    // Create the output.
-    let output = new ClientOutput(force, outputData)
-    // Store the output in the force.
-    force.storeOutput(output)
   }
 
   /**
@@ -1101,21 +1087,9 @@ export default class SessionClient extends Session<TMetisClientComponents> {
 
     switch (key) {
       case 'pre-execution':
-        // Extract data.
         let { nodeId } = event.data
-
-        // Find the node, given the ID.
-        let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
-
-        // Handle node not found.
-        if (node === undefined) {
-          throw new Error(
-            `Event "output-sent" was triggered, but the node with the given nodeId ("${nodeId}") could not be found.`,
-          )
-        }
-
-        // Handle output sent.
-        node.onOutput()
+        let node = this.mission.getNodeById(nodeId)
+        node?.onOutput()
     }
   }
 
@@ -1125,17 +1099,22 @@ export default class SessionClient extends Session<TMetisClientComponents> {
    */
   private onNodeOpened = (event: TServerEvents['node-opened']): void => {
     // Gather data.
-    const { nodeId, revealedChildNodes, revealedChildPrototypes } = event.data
-    const node = this.mission.getNode(nodeId)
+    const {
+      nodeId,
+      structure,
+      revealedDescendants,
+      revealedDescendantPrototypes,
+    } = event.data
+    const node = this.mission.getNodeById(nodeId)
     if (!node) throw new Error(`Node "${nodeId}" was not found.`)
     const { prototype } = node
 
     // Handle opening at different levels.
-    prototype.onOpen(revealedChildPrototypes)
-    node.onOpen(revealedChildNodes)
+    prototype.onOpen(revealedDescendantPrototypes, structure)
+    node.onOpen(revealedDescendants)
 
     // Remap actions, if new nodes have been revealed.
-    if (revealedChildNodes) this.mapActions()
+    if (revealedDescendants) this.mapActions()
   }
 
   /**
@@ -1192,12 +1171,15 @@ export default class SessionClient extends Session<TMetisClientComponents> {
     event: TServerEvents['action-execution-completed'],
   ): void => {
     // Gather data.
-    const { revealedChildNodes, revealedChildPrototypes } = event.data
+    const { structure, revealedDescendants, revealedDescendantPrototypes } =
+      event.data
     const outcomeData: TExecutionOutcomeJson = event.data.outcome
     const { executionId } = outcomeData
     const execution = this.mission.getExecution(executionId)
-    if (!execution) throw new Error(`Execution "${executionId}" not be found.`)
+    if (!execution)
+      throw new Error(`Execution "${executionId}" could not be found.`)
     const { node } = execution
+    const { prototype } = node
     const outcome = new ClientExecutionOutcome(
       outcomeData._id,
       outcomeData.state,
@@ -1206,12 +1188,13 @@ export default class SessionClient extends Session<TMetisClientComponents> {
 
     // Handle outcome on different levels.
     execution.onOutcome(outcome)
-    node.prototype.onOutcome(revealedChildPrototypes)
-    node.onOutcome(revealedChildNodes)
+    prototype.onOpen(revealedDescendantPrototypes, structure)
+    node.onOpen(revealedDescendants)
+    node.emitEvent('exec-state-change')
 
     // Remap actions if there are revealed nodes, since
     // those revealed nodes may contain new actions.
-    if (revealedChildNodes) this.mapActions()
+    if (revealedDescendants) this.mapActions()
   }
 
   /**

@@ -1,5 +1,6 @@
 // This migration script is responsible for adding the
-// `files` property to all missions in the database.
+// `exclude` property to all nodes in every
+// mission in the database.
 
 let dbName = 'metis'
 
@@ -12,15 +13,18 @@ use(dbName)
 print('Migrating mission data to updated schema...')
 
 // Query for all missions.
-let cursor_missions = db.missions.find({}, { _id: 1, files: 1 })
+let cursor_missions = db.missions.find({}, { _id: 1, forces: 1 })
 
 // Loop through missions.
 while (cursor_missions.hasNext()) {
   let mission = cursor_missions.next()
 
-  // Add a files property to the mission,
-  // if it doesn't exist.
-  if (!mission.files) mission.files = []
+  // Loop through effects.
+  for (let force of mission.forces) {
+    for (let node of force.nodes) {
+      if (node.exclude === undefined) node.exclude = false
+    }
+  }
 
   // Update the mission with the new force data.
   db.missions.updateOne({ _id: mission._id }, { $set: mission })

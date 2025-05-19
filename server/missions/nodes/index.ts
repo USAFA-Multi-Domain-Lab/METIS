@@ -1,16 +1,27 @@
 import { TMissionActionJson } from 'metis/missions/actions'
 import { TActionExecutionJson } from 'metis/missions/actions/executions'
-import MissionNode from 'metis/missions/nodes'
+import MissionNode, { TMissionNodeJson } from 'metis/missions/nodes'
 import { TMetisServerComponents } from 'metis/server'
+import MetisDatabase from 'metis/server/database'
 import { TTargetEnvExposedNode } from 'metis/server/target-environments/context'
+import NumberToolbox from 'metis/toolbox/numbers'
 import ServerMissionAction from '../actions'
 import ServerActionExecution from '../actions/executions'
 import ServerExecutionOutcome from '../actions/outcomes'
+import ServerMissionForce from '../forces'
 
 /**
  * Class for managing mission nodes on a session server.
  */
 export default class ServerMissionNode extends MissionNode<TMetisServerComponents> {
+  // Implemented
+  public get exclude(): boolean {
+    return this._exclude
+  }
+  public set exclude(value: boolean) {
+    this._exclude = value
+  }
+
   // Implemented
   protected importActions(data: TMissionActionJson[]): void {
     data.forEach((datum) => {
@@ -34,7 +45,6 @@ export default class ServerMissionNode extends MissionNode<TMetisServerComponent
 
   /**
    * Opens the node.
-   * @param options Options for opening the node.
    * @returns a promise that resolves when the node opening has been fulfilled.
    */
   public open(): Promise<void> {
@@ -52,52 +62,66 @@ export default class ServerMissionNode extends MissionNode<TMetisServerComponent
 
   // Implemented
   public updateBlockStatus(blocked: boolean): void {
-    this._blocked = blocked
+    // Blocks this node and all of its revealed descendants.
+    const algorithm = (blocked: boolean, node: ServerMissionNode = this) => {
+      node._blocked = blocked
+      // Abort execution, if executing.
+      if (node.executing) node.latestExecution!.abort()
+      node.revealedDescendants.forEach((descendant) => {
+        algorithm(blocked, descendant)
+      })
+    }
 
-    // Abort execution, if executing.
-    if (this.executing) this.latestExecution!.abort()
+    // Set the block status.
+    algorithm(blocked)
+  }
 
-    // If the node is open and has children,
-    // update the block status for children.
-    if (this.opened && this.hasChildren) {
-      this.updateBlockStatusForChildren(blocked)
+  // Implemented
+  public modifySuccessChance(
+    successChanceOperand: number,
+    actionId?: string,
+  ): void {
+    if (!actionId) {
+      this.actions.forEach((action) => {
+        action.modifySuccessChance(successChanceOperand)
+      })
+    } else {
+      const action = this.actions.get(actionId)
+      if (!action) throw new Error(`Action "${actionId}" not found.`)
+      action.modifySuccessChance(successChanceOperand)
     }
   }
 
   // Implemented
-  protected updateBlockStatusForChildren(
-    blocked: boolean,
-    node: ServerMissionNode = this,
+  public modifyProcessTime(
+    processTimeOperand: number,
+    actionId?: string,
   ): void {
-    // Handle blocking of children.
-    node.children.forEach((child) => {
-      child.updateBlockStatus(blocked)
-
-      if (child.opened && child.hasChildren) {
-        child.updateBlockStatusForChildren(blocked, child)
-      }
-    })
-  }
-
-  // Implemented
-  public modifySuccessChance(successChanceOperand: number): void {
-    this.actions.forEach((action) => {
-      action.modifySuccessChance(successChanceOperand)
-    })
-  }
-
-  // Implemented
-  public modifyProcessTime(processTimeOperand: number): void {
-    this.actions.forEach((action) => {
+    if (!actionId) {
+      this.actions.forEach((action) => {
+        action.modifyProcessTime(processTimeOperand)
+      })
+    } else {
+      const action = this.actions.get(actionId)
+      if (!action) throw new Error(`Action "${actionId}" not found.`)
       action.modifyProcessTime(processTimeOperand)
-    })
+    }
   }
 
   // Implemented
-  public modifyResourceCost(resourceCostOperand: number): void {
-    this.actions.forEach((action) => {
+  public modifyResourceCost(
+    resourceCostOperand: number,
+    actionId?: string,
+  ): void {
+    if (!actionId) {
+      this.actions.forEach((action) => {
+        action.modifyResourceCost(resourceCostOperand)
+      })
+    } else {
+      const action = this.actions.get(actionId)
+      if (!action) throw new Error(`Action "${actionId}" not found.`)
       action.modifyResourceCost(resourceCostOperand)
-    })
+    }
   }
 
   /**
@@ -140,4 +164,77 @@ export default class ServerMissionNode extends MissionNode<TMetisServerComponent
       this._opened = true
     }
   }
+
+  /**
+   * Retains necessary properties only (ID, prototype ID, and exclusion status) and
+   * converts all other properties to their default values.
+   * @returns A ghost node with only the necessary properties.
+   */
+  public toGhost(): ServerMissionNode {
+    return new ServerMissionNode(this.force, {
+      _id: this._id,
+      prototypeId: this.prototype._id,
+      exclude: this.exclude,
+    })
+  }
+
+  /**
+   * Validates the actions of the node.
+   * @param actions The actions to validate.
+   * @returns True if the actions are valid, false otherwise.
+   */
+  public static validateActions(actions: TMissionNodeJson['actions']): void {
+    let actionKeys: TMissionActionJson['localKey'][] = []
+
+    for (const action of actions) {
+      const { processTime, successChance, resourceCost } = action
+
+      // PROCESS TIME
+      let isValidNumber = ServerMissionAction.PROCESS_TIME_REGEX.test(
+        processTime.toString(),
+      )
+      if (!isValidNumber) {
+        throw MetisDatabase.generateValidationError(
+          `Process time "${processTime}" is not a valid number for action "{ _id: ${action._id}, name: ${action.name} }".`,
+        )
+      }
+      let lessThanMax = processTime <= ServerMissionAction.PROCESS_TIME_MAX
+      if (!lessThanMax) {
+        throw MetisDatabase.generateValidationError(
+          `Process time "${processTime}" exceeds the maximum process time "${ServerMissionAction.PROCESS_TIME_MAX}" for action "{ _id: ${action._id}, name: ${action.name} }".`,
+        )
+      }
+
+      // SUCCESS CHANCE
+      let betweenZeroAndOne = successChance >= 0 && successChance <= 1
+      if (!betweenZeroAndOne) {
+        throw MetisDatabase.generateValidationError(
+          `Success chance "${successChance}" is not between 0 and 1 for action "{ _id: ${action._id}, name: ${action.name} }".`,
+        )
+      }
+
+      // RESOURCE COST
+      let nonNegativeInteger = NumberToolbox.isNonNegativeInteger(resourceCost)
+      if (!nonNegativeInteger) {
+        throw MetisDatabase.generateValidationError(
+          `Resource cost "${resourceCost}" is a negative integer for action "{ _id: ${action._id}, name: ${action.name} }".`,
+        )
+      }
+
+      // Check for duplicate local keys.
+      if (actionKeys.includes(action.localKey)) {
+        throw MetisDatabase.generateValidationError(
+          `Duplicate local key "${action.localKey}" found for action "{ _id: ${action._id}, name: ${action.name} }".`,
+        )
+      }
+      actionKeys.push(action.localKey)
+    }
+  }
+
+  /**
+   * The minimum length of the actions in the node data.
+   * @note This is used to validate the nodes of the force.
+   * @see {@link ServerMissionForce.validateNodes}
+   */
+  public static readonly ACTIONS_MIN_LENGTH = 1
 }

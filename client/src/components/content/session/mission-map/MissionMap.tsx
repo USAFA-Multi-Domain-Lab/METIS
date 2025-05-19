@@ -206,7 +206,6 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
   }
 
   const [selectedForce, selectForce] = state.selectedForce
-
   const [tabIndex, setTabIndex] = state.tabIndex
 
   /**
@@ -241,7 +240,12 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
    * The zoom level of the camera. Changed by zooming with a mouse or trackpad.
    */
   const [cameraZoom] = useState<Vector1D>(
-    new Vector1D(DEFAULT_CAMERA_ZOOM, { onChange: () => forceUpdate() }),
+    new Vector1D(DEFAULT_CAMERA_ZOOM, {
+      onChange: () => {
+        buttonEngine.setDisabled('zoom-out', cameraZoom.x === MAX_CAMERA_ZOOM)
+        buttonEngine.setDisabled('zoom-in', cameraZoom.x === MIN_CAMERA_ZOOM)
+      },
+    }),
   )
 
   /**
@@ -534,21 +538,14 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
       cursor: 'help',
     },
   )
-  useButtonSvgLayout(
-    buttonEngine,
-    '<slot>',
-    '<divider>',
-    'zoom-in',
-    'zoom-out',
-    'question',
-  )
+  useButtonSvgLayout(buttonEngine, '<slot>', 'zoom-in', 'zoom-out', 'question')
 
   /**
    * Updates the mission selection when the tab index changes.
    */
   useEffect(() => {
     // Get force from the tab ID.
-    let force = mission.getForce(selectedTab._id)
+    let force = mission.getForceById(selectedTab._id)
 
     // If a force is found, select it in the mission.
     if (force) {

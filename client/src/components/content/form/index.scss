@@ -34,13 +34,12 @@ $detail-field-font-size: 0.92rem;
 }
 
 @mixin detail-info-styling() {
-  align-self: flex-start;
+  align-self: center;
   color: $color-accent;
   border: 1.5px solid $color-accent;
   opacity: 0.65;
   border-radius: 50%;
   font-size: 0.6em;
-  margin-right: 8px;
   padding: 0.2em 0.45em 0.1em;
   font-weight: bold;
   cursor: default;
@@ -51,11 +50,6 @@ $detail-field-font-size: 0.92rem;
     color: $color-accent-dark;
     border-color: $color-accent;
     opacity: 0.9;
-  }
-
-  &.Link {
-    cursor: pointer;
-    text-decoration: none;
   }
 }
 
@@ -94,13 +88,16 @@ $detail-field-font-size: 0.92rem;
   }
 
   .TitleRow {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    column-gap: 0.3em;
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    justify-content: space-between;
+    column-gap: 0.5rem;
 
     .TitleColumnOne {
       display: flex;
-      flex-flow: row wrap;
+      flex-flow: row nowrap;
+      column-gap: 0.5rem;
 
       // This is the default behavior because
       // a detail field should have a concise

@@ -88,6 +88,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     )
     this._state = 'unstarted'
     this._destroyed = false
+    this.initializeMission()
     this.register()
     this.assignments = {}
   }
@@ -250,6 +251,34 @@ export default class SessionServer extends Session<TMetisServerComponents> {
    */
   private unregister(): void {
     SessionServer.registry.delete(this._id)
+  }
+
+  /**
+   * Handles any actions that are executing on a node.
+   */
+  private async handleExecutions(): Promise<void> {
+    return new Promise<void>(async (resolve) => {
+      let allExecutions: Promise<void>[] = []
+
+      this.mission.nodes.forEach((node) => {
+        if (node.executing) {
+          let execution = node.latestExecution!
+          execution.abort()
+
+          // Once the execution is aborted, push a promise
+          // to the array of all executions.
+          execution.addEventListener('aborted', () => {
+            allExecutions.push(new Promise((resolve) => resolve()))
+          })
+        }
+      })
+
+      // If there are no executions, resolve.
+      if (allExecutions.length === 0) resolve()
+      // Resolve all executions.
+      await Promise.all(allExecutions)
+      resolve()
+    })
   }
 
   /**
@@ -432,6 +461,17 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     this.members.forEach((member) => this.removeListeners(member))
     // Clear member list.
     this._members = []
+  }
+
+  /**
+   * Initializes the mission for the session.
+   */
+  private initializeMission(): void {
+    this.mission.forces.forEach((force) => {
+      // Generate the intro message output for every force.
+      force.sendIntroMessage()
+      force.handleExcludedNodes()
+    })
   }
 
   // todo: There should be a strict requirement with this method
@@ -767,11 +807,11 @@ export default class SessionServer extends Session<TMetisServerComponents> {
    * @param member The member requesting to reset the session.
    * @param event The event emitted by the member.
    */
-  public onRequestReset = (
+  public onRequestReset = async (
     member: ServerSessionMember,
     event: TClientEvents['request-reset-session'],
-  ): void => {
     // Build request for response data.
+  ): Promise<void> => {
     let request = member.connection.buildResponseReqData(event)
 
     // If the member does not have the correct permissions
@@ -795,12 +835,15 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       )
     }
 
+    // Handle any action executions that are executing.
+    await this.handleExecutions()
+
     // Mark the session as unstarted.
     this._state = 'started'
     // Recreate the new mission from the JSON of
     // the current mission.
     this._mission = new ServerMission(this.mission.toJson())
-    // Remap actions.
+    this.initializeMission()
     this.mapActions()
 
     // Emit responses to all members.
@@ -1195,7 +1238,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     }
 
     // Find the node, given the ID.
-    let node: ServerMissionNode | undefined = mission.getNode(nodeId)
+    let node: ServerMissionNode | undefined = mission.getNodeById(nodeId)
 
     // If the session is not in the 'started' state,
     // then emit an error.
@@ -1229,25 +1272,23 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     }
 
     try {
-      // Open the node.
       node.open()
+
+      // Extract data from the node.
+      const {
+        revealedStructure: structure,
+        revealedDescendants: descendants,
+        revealedDescendantPrototypes: prototypes,
+      } = node
 
       // Construct open event payload.
       let payload: TServerEvents['node-opened'] = {
         method: 'node-opened',
         data: {
-          nodeId: nodeId,
-          revealedChildNodes: node.children.map((node) =>
-            node.toJson({
-              sessionDataExposure: {
-                expose: 'user-specific',
-                userId: member.userId,
-              },
-            }),
-          ),
-          revealedChildPrototypes: node.prototype.children.map((prototype) =>
-            prototype.toJson(),
-          ),
+          nodeId,
+          structure: structure,
+          revealedDescendants: descendants.map((n) => n.toJson()),
+          revealedDescendantPrototypes: prototypes.map((p) => p.toJson()),
         },
         request: { event, requesterId: member.userId, fulfilled: true },
       }
@@ -1479,18 +1520,20 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     // If the node has been opened, then process this
     // information in the completion payload.
     if (node.opened) {
-      // Add child nodes to the completion payload.
-      completionPayload.data.revealedChildNodes = node.children.map((node) =>
-        node.toJson({
-          sessionDataExposure: {
-            expose: 'user-specific',
-            userId: member.userId,
-          },
-        }),
-      )
-      // Add child prototypes to the completion payload.
-      completionPayload.data.revealedChildPrototypes =
-        node.prototype.children.map((prototype) => prototype.toJson())
+      // Extract data from the node.
+      const {
+        revealedStructure: structure,
+        revealedDescendants: descendants,
+        revealedDescendantPrototypes: prototypes,
+      } = node
+
+      // Update the payload with the gathered data.
+      completionPayload.data = {
+        ...completionPayload.data,
+        structure: structure,
+        revealedDescendants: descendants.map((n) => n.toJson()),
+        revealedDescendantPrototypes: prototypes.map((p) => p.toJson()),
+      }
     }
 
     // Determine output and effect details based on
@@ -1565,7 +1608,8 @@ export default class SessionServer extends Session<TMetisServerComponents> {
         let { nodeId } = event.data
 
         // Find the node given the ID.
-        let node: ServerMissionNode | undefined = this.mission.getNode(nodeId)
+        let node: ServerMissionNode | undefined =
+          this.mission.getNodeById(nodeId)
 
         // If the node is undefined, then emit
         // an error.
@@ -1668,7 +1712,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
 
     // Apply the effect to the target.
     try {
-      await effect.target.script(context)
+      if (!effect.defective) await effect.target.script(context)
     } catch (error: any) {
       // Give additional information about the error.
       let message =
@@ -1702,6 +1746,19 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     if (node.mission._id !== this.mission._id) {
       throw new Error(
         `Could not perform the operation on the node with ID "${node._id}" because it does not belong to the mission with ID "${this.mission._id}".`,
+      )
+    }
+  }
+
+  /**
+   * Confirms the action is a part of the mission.
+   * @param action The action to confirm.
+   * @throws If the action does not belong to the mission.
+   */
+  private confirmActionInMission(action: ServerMissionAction): void {
+    if (action.mission._id !== this.mission._id) {
+      throw new Error(
+        `Could not perform the operation on the action with ID "${action._id}" because it does not belong to the mission with ID "${this.mission._id}".`,
       )
     }
   }
@@ -1742,53 +1799,107 @@ export default class SessionServer extends Session<TMetisServerComponents> {
   }
 
   /**
-   * Modifies the success chance of all the node's actions.
-   * @param node The node with the actions to modify.
-   * @param operand The operand to modify the success chance by.
+   * Modifies the success chance of a specific action within a node or
+   * all actions within a node.
+   * @param data The data for the modification.
+   * @param data.operand The operand to modify the success chance by.
+   * @param data.node The node containing the action to modify.
+   * @param data.action The action to modify.
+   * @note If the action is not provided, the success chance of all actions
+   * within the node will be modified.
    */
-  public modifySuccessChance = (node: ServerMissionNode, operand: number) => {
-    // Confirm the node exists, modify the success chance,
-    // then emit an event to the members.
+  public modifySuccessChance = (data: {
+    operand: number
+    node: ServerMissionNode
+    action?: ServerMissionAction
+  }) => {
+    const { operand, node, action } = data
+
+    // Confirm the node exists.
     this.confirmNodeInMission(node)
-    node.modifySuccessChance(operand)
+
+    // If the action is provided, confirm it exists
+    // and belongs to the node.
+    if (action) this.confirmActionInMission(action)
+
+    // Modify the success chance of the action or
+    // all actions within the node.
+    node.modifySuccessChance(operand, action?._id)
     this.emitModifierEnacted(node.force, {
       key: 'node-action-success-chance',
-      nodeId: node._id,
       successChanceOperand: operand,
+      nodeId: node._id,
+      actionId: action?._id,
     })
   }
 
   /**
-   * Modifies the processing time of all the node's actions.
-   * @param node The node with the actions to modify.
-   * @param operand The operand to modify the processing time by.
+   * Modifies the processing time of a specific action within a node or
+   * all actions within a node.
+   * @param data The data for the modification.
+   * @param data.operand The operand to modify the processing time by.
+   * @param data.node The node containing the action to modify.
+   * @param data.action The action to modify.
+   * @note If the action is not provided, the processing time of all actions
+   * within the node will be modified.
    */
-  public modifyProcessTime = (node: ServerMissionNode, operand: number) => {
-    // Confirm the node exists, modify the process time,
-    // then emit an event to the members.
+  public modifyProcessTime = (data: {
+    operand: number
+    node: ServerMissionNode
+    action?: ServerMissionAction
+  }) => {
+    const { operand, node, action } = data
+
+    // Confirm the node exists.
     this.confirmNodeInMission(node)
-    node.modifyProcessTime(operand)
+
+    // If the action is provided, confirm it exists
+    // and belongs to the node.
+    if (action) this.confirmActionInMission(action)
+
+    // Modify the processing time of the action or
+    // all actions within the node.
+    node.modifyProcessTime(operand, action?._id)
     this.emitModifierEnacted(node.force, {
       key: 'node-action-process-time',
-      nodeId: node._id,
       processTimeOperand: operand,
+      nodeId: node._id,
+      actionId: action?._id,
     })
   }
 
   /**
-   * Modifies the resource cost of all the node's actions.
-   * @param node The node with the actions to modify.
-   * @param operand The operand to modify the resource cost by.
+   * Modifies the resource cost of a specific action within a node or
+   * all actions within a node.
+   * @param data The data for the modification.
+   * @param data.operand The operand to modify the resource cost by.
+   * @param data.node The node containing the action to modify.
+   * @param data.action The action to modify.
+   * @note If the action is not provided, the resource cost of all actions
+   * within the node will be modified.
    */
-  public modifyResourceCost = (node: ServerMissionNode, operand: number) => {
-    // Confirm the node exists, modify the resource cost,
-    // then emit an event to the members.
+  public modifyResourceCost = (data: {
+    operand: number
+    node: ServerMissionNode
+    action?: ServerMissionAction
+  }) => {
+    const { operand, node, action } = data
+
+    // Confirm the node exists.
     this.confirmNodeInMission(node)
-    node.modifyResourceCost(operand)
+
+    // If the action is provided, confirm it exists
+    // and belongs to the node.
+    if (action) this.confirmActionInMission(action)
+
+    // Modify the resource cost of the action or
+    // all actions within the node.
+    node.modifyResourceCost(operand, action?._id)
     this.emitModifierEnacted(node.force, {
       key: 'node-action-resource-cost',
-      nodeId: node._id,
       resourceCostOperand: operand,
+      nodeId: node._id,
+      actionId: action?._id,
     })
   }
 
@@ -1829,7 +1940,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     const { type } = context
 
     // Find the force given the ID.
-    let force = this.mission.getForce(forceId)
+    let force = this.mission.getForceById(forceId)
 
     // If the force is undefined, throw an error.
     if (!force) {
@@ -1901,11 +2012,6 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     config: Partial<TSessionConfig> = {},
     owner: ServerUser,
   ): SessionServer {
-    // Generate the intro message output for every force.
-    mission.forces.forEach((force) => {
-      force.sendIntroMessage()
-    })
-
     return new SessionServer(
       generateHash().substring(0, 8),
       config.name ?? mission.name,

@@ -1,14 +1,26 @@
 @import 'src/assets/styles/config.scss';
 @import '../form/index.scss';
 
-.Detail.DetailLargeString .Field {
-  padding: 0;
+.Detail.DetailLargeString {
+  .TitleRow .TitleColumnOne .Shortcuts {
+    display: flex;
+    align-items: center;
+    width: 1em;
 
-  .Toolbar {
-    padding: 1em 1em 0;
+    .ButtonSvg {
+      margin: 0;
+    }
   }
 
-  .Editor {
-    padding: 0 1.5em;
+  .Field {
+    padding: 0;
+
+    .Toolbar {
+      padding: 1em 1em 0;
+    }
+
+    .Editor {
+      padding: 0 1.5em;
+    }
   }
 }

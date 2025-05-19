@@ -11,6 +11,7 @@ import MissionPrototype, {
   TMissionPrototypeJson,
   TMissionPrototypeOptions,
 } from '../../../../shared/missions/nodes/prototypes'
+import { AnyObject } from '../../../../shared/toolbox/objects'
 import { Vector2D } from '../../../../shared/toolbox/space'
 import ClientActionExecution from '../actions/executions'
 
@@ -118,6 +119,9 @@ export default class ClientMissionPrototype
   // Implemented
   public blocked: boolean = false
 
+  // Implemented
+  public exclude: boolean = false
+
   /**
    * Listeners for prototype events.
    */
@@ -186,7 +190,7 @@ export default class ClientMissionPrototype
     // If the event is a set-buttons event, call
     // emit event on the mission level.
     if (method === 'set-buttons') {
-      this.mission.emitEvent('set-buttons')
+      this.mission.emitEvent('set-buttons', [])
     }
   }
 
@@ -399,50 +403,89 @@ export default class ClientMissionPrototype
   }
 
   /**
-   * Populates the children of the prototype with the given data.
-   * @param data The data to populate the children with.
+   * Maps the relationships between the prototypes
+   * based on the structure object.
+   * @param descendants The descendant prototypes to map the relationships for.
+   * @param cursor The current location in the structure object.
+   * @param parent **THIS IS FOR RECURSION ONLY. DO NOT SET!!**
    */
-  protected populateChildren(data: TMissionPrototypeJson[]): void {
-    // If children are already set,
-    // return them.
-    if (this.children.length > 0) return
+  protected mapDescendantRelationships(
+    descendants: TMissionPrototypeJson[],
+    cursor: AnyObject,
+    parent: ClientMissionPrototype = this,
+  ): void {
+    // Gather details.
+    let { mission } = parent
 
-    // Create and add children.
-    data.forEach((datum) => {
-      let child: ClientMissionPrototype = new ClientMissionPrototype(
-        this.mission,
-        datum,
+    // Arrange each prototypes children based on the
+    // structure object.
+    for (let key of Object.keys(cursor)) {
+      let childStructure = cursor[key]
+      let prototype = descendants.find(
+        ({ structureKey }) => structureKey === key,
       )
-      this.mission.prototypes.push(child)
-      child.parent = this
-      this.children.push(child)
-    })
+
+      // If the prototype is not found, skip it.
+      // *** Note: The first key in the structure object
+      // *** is always the prototype itself. This is why
+      // *** we continue on if the prototype is not found.
+      if (!prototype && childStructure !== undefined) {
+        this.mapDescendantRelationships(descendants, childStructure, parent)
+        continue
+      }
+
+      // Handle creating the prototype.
+      let child = new ClientMissionPrototype(mission, prototype)
+      mission.prototypes.push(child)
+      child.parent = parent
+      parent.children.push(child)
+
+      // Continue mapping the remaining descendants.
+      this.mapDescendantRelationships(descendants, childStructure, child)
+    }
   }
 
   /**
    * Callback for when the server emits a node open
    * event, processing the event here at the prototype
    * level.
-   * @param revealedChildPrototypes The child prototypes revealed by
+   * @param revealedDescendantPrototypes The prototypes revealed by
    * the open event, if any.
+   * @param structure The structure referenced for the relationships between
+   * the prototypes.
    */
   public onOpen(
-    revealedChildPrototypes: TMissionPrototypeJson[] | undefined,
+    revealedDescendantPrototypes: TMissionPrototypeJson[] | undefined,
+    structure: AnyObject | undefined,
   ): void {
-    if (revealedChildPrototypes) this.populateChildren(revealedChildPrototypes)
+    if (revealedDescendantPrototypes && structure) {
+      // If the descendants are already set,
+      // don't set them again.
+      if (this.descendants.length > 0) return
+      // Map the relationships.
+      this.mapDescendantRelationships(revealedDescendantPrototypes, structure)
+    }
   }
 
   /**
-   * Callback for when an outcome is received from
-   * the server, processing the outcome here at the
-   * prototype level.
-   * @param revealedChildPrototypes The child prototypes revealed by the outcome,
-   * if any.
+   * Duplicates the prototype, creating a new prototype with the same properties
+   * as this one or with the provided properties.
+   * @param options The options for duplicating the prototype.
+   * @param options.mission The mission to which the duplicated prototype belongs.
+   * @returns A new prototype with the same properties as this one or with the
+   * provided properties.
    */
-  public onOutcome(
-    revealedChildPrototypes: TMissionPrototypeJson[] | undefined,
-  ): void {
-    if (revealedChildPrototypes) this.populateChildren(revealedChildPrototypes)
+  public duplicate(
+    options: TPrototypeDuplicateOptions = {},
+  ): ClientMissionPrototype {
+    // Gather details.
+    const { mission = this.mission } = options
+
+    return new ClientMissionPrototype(mission, {
+      _id: ClientMissionPrototype.DEFAULT_PROPERTIES._id,
+      structureKey: this.structureKey,
+      depthPadding: this.depthPadding,
+    })
   }
 }
 
@@ -480,4 +523,15 @@ export type TPrototypeDeleteMethod = 'delete-children' | 'shift-children'
 export interface TPrototypeDeleteOptions {
   calledByParentDelete?: boolean // Default "false"
   deleteMethod?: TPrototypeDeleteMethod // Default 'delete-children'
+}
+
+/**
+ * The options for duplicating a prototype.
+ * @see {@link ClientMissionPrototype.duplicate}
+ */
+type TPrototypeDuplicateOptions = {
+  /**
+   * The mission to which the duplicated prototype belongs.
+   */
+  mission?: ClientMission
 }

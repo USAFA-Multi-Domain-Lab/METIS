@@ -136,7 +136,7 @@ export default function ForceEntry({
         key={`${force._id}_initialResources`}
       />
       <DetailToggle
-        label='Reveal All Nodes in Session'
+        label='Reveal All Nodes'
         stateValue={revealAllNodes}
         setState={setRevealAllNodes}
         tooltipDescription='If enabled, all nodes in the force will be revealed to the player at the start of the session.'

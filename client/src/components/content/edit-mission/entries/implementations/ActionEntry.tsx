@@ -1,23 +1,18 @@
 import { useState } from 'react'
+import List from 'src/components/content/data/lists/List'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
-import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
 import {
   useObjectFormSync,
   usePostInitEffect,
   useRequireLogin,
 } from 'src/toolbox/hooks'
-import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
-import Tooltip from '../../../communication/Tooltip'
 import { DetailLargeString } from '../../../form/DetailLargeString'
 import { DetailNumber } from '../../../form/DetailNumber'
 import { DetailString } from '../../../form/DetailString'
 import { DetailToggle } from '../../../form/DetailToggle'
 import Divider from '../../../form/Divider'
-import ListOld, { ESortByMethod } from '../../../general-layout/ListOld'
-import { TButtonSvgType } from '../../../user-controls/buttons/ButtonSvg'
-import ButtonSvgPanel_v2 from '../../../user-controls/buttons/ButtonSvgPanel_v2'
 import { ButtonText } from '../../../user-controls/buttons/ButtonText'
 import Entry from '../Entry'
 
@@ -75,14 +70,6 @@ export default function ActionEntry({
   /* -- COMPUTED -- */
 
   /**
-   * The class name for the new effect button.
-   */
-  const newEffectButtonClasses = compute<ClassList>(() => {
-    let classList = new ClassList()
-    classList.set('Disabled', !ClientTargetEnvironment.REGISTRY.populated)
-    return classList
-  })
-  /**
    * The tooltip description for the (action) delete button.
    */
   const deleteTooltipDescription: string = compute(() => {
@@ -108,63 +95,20 @@ export default function ActionEntry({
   /* -- FUNCTIONS -- */
 
   /**
-   * Renders JSX for the effect list item.
+   * Gets the tooltip description for the effect list item.
+   * @param effect The effect to get the tooltip description for.
+   * @returns The tooltip description for the effect list item.
    */
-  const renderEffectListItem = (effect: ClientEffect) => {
-    /* -- COMPUTED -- */
-    /**
-     * The tooltip description for the edit button.
-     */
-    const editTooltipDescription: string = compute(() => {
-      if (!effect.environment || !effect.target) {
-        return 'This effect cannot be edited because either the target environment or the target associated with this effect is not available.'
-      } else if (login.user.isAuthorized('missions_write')) {
-        return 'Edit effect.'
-      } else if (login.user.isAuthorized('missions_read')) {
-        return 'View effect.'
-      } else {
-        return ''
-      }
-    })
-
-    /**
-     * The class name for the effect row content.
-     */
-    const rowContentClassName: string = compute(() => {
-      // Create a default list of class names.
-      let classList: string[] = ['RowContent', 'Select']
-
-      // If the effect doesn't have a target or target environment,
-      // then partially disable the effect.
-      if (!effect.environment || !effect.target) {
-        classList.push('PartiallyDisabled')
-      }
-
-      // Combine the class names into a single string.
-      return classList.join(' ')
-    })
-
-    /**
-     * The buttons for the effect list.
-     */
-    const buttons: TButtonSvgType[] = compute(() => ['remove'])
-
-    return (
-      <div className='Row Select' key={`effect-row-${effect._id}`}>
-        <div
-          className={rowContentClassName}
-          onClick={() => mission.select(effect)}
-        >
-          {effect.name}
-          <Tooltip description={editTooltipDescription} />
-        </div>
-        <ButtonSvgPanel_v2
-          buttons={buttons}
-          onButtonClick={async () => await handleDeleteEffectRequest(effect)}
-          getTooltip={() => 'Delete effect.'}
-        />
-      </div>
-    )
+  const getEffectDescription = (effect: ClientEffect) => {
+    if (!effect.environment || !effect.target) {
+      return 'This effect cannot be edited because either the target environment or the target associated with this effect is not available.'
+    } else if (login.user.isAuthorized('missions_write')) {
+      return 'Edit effect.'
+    } else if (login.user.isAuthorized('missions_read')) {
+      return 'View effect.'
+    } else {
+      return ''
+    }
   }
 
   /* -- RENDER -- */
@@ -298,33 +242,43 @@ export default function ActionEntry({
       <Divider />
 
       {/* -- EFFECTS -- */}
-      <ListOld<ClientEffect>
+      <List<ClientEffect>
+        name={'Effects'}
         items={action.effects}
-        renderItemDisplay={(effect) => renderEffectListItem(effect)}
-        headingText={'Effects'}
-        sortByMethods={[ESortByMethod.Name]}
-        nameProperty={'name'}
-        alwaysUseBlanks={false}
-        searchableProperties={['name']}
-        noItemsDisplay={
-          <div className='NoContent'>No effects available...</div>
-        }
-        ajaxStatus={'Loaded'}
-        applyItemStyling={() => {
-          return {}
+        itemsPerPageMin={5}
+        listButtonIcons={['add']}
+        itemButtonIcons={['open', 'remove']}
+        getItemTooltip={getEffectDescription}
+        getCellText={(effect) => effect.name}
+        getListButtonLabel={() => 'Create a new effect'}
+        getItemButtonLabel={(button) => {
+          switch (button) {
+            case 'open':
+              return 'View effect'
+            case 'remove':
+              return 'Delete effect'
+            default:
+              return ''
+          }
         }}
-        itemsPerPage={null}
-        listStyling={{ borderBottom: 'unset' }}
-        listSpecificItemClassName='AltDesign2'
+        onListButtonClick={(button) => {
+          switch (button) {
+            case 'add':
+              setIsNewEffect(true)
+              break
+          }
+        }}
+        onItemButtonClick={async (button, effect) => {
+          switch (button) {
+            case 'open':
+              mission.select(effect)
+              break
+            case 'remove':
+              await handleDeleteEffectRequest(effect)
+              break
+          }
+        }}
       />
-      <div className='ButtonContainer New'>
-        <ButtonText
-          text='New Effect'
-          onClick={() => setIsNewEffect(true)}
-          tooltipDescription='Create a new effect.'
-          uniqueClassName={newEffectButtonClasses.value}
-        />
-      </div>
 
       <Divider />
       {/* -- BUTTON(S) -- */}

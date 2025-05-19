@@ -27,6 +27,8 @@ environment-test.json
 /integration/target-env/**
 !/integration/target-env/.gitkeep
 !/integration/target-env/tsconfig.json
+!/integration/target-env/METIS/
+!/integration/target-env/METIS/**
 /integration/library/node_modules
 
 # deployment

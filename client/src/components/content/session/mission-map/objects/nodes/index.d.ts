@@ -76,6 +76,11 @@ export type TMapCompatibleNode = TMetisComponent &
      * from being accessed.
      */
     blocked: boolean
+    /**
+     * Whether the node is currently excluded
+     * from the force it belongs to or not.
+     */
+    exclude: boolean
   }
 
 /**
@@ -87,6 +92,7 @@ export type TMapCompatibleNodeEvent =
   | 'set-pending'
   | 'set-blocked'
   | 'exec-state-change'
+  | 'set-exclude'
 
 /**
  * Props for `MapNode`.

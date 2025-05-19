@@ -11,6 +11,11 @@ export class Counter {
   increment(): void {
     this.count++
   }
+
+  // This ticks the count down one.
+  decrement(): void {
+    this.count--
+  }
 }
 
 /**
@@ -22,7 +27,20 @@ export default class NumberToolbox {
    * @returns Whether the given number is an integer.
    */
   public static isInteger(number: number): boolean {
-    return !`${number}`.includes('.')
+    return (
+      !`${number}`.includes('.') &&
+      !Number.isNaN(number) &&
+      number !== Infinity &&
+      Math.floor(number) === number
+    )
+  }
+
+  /**
+   * @param number The number to check.
+   * @returns Whether the given number is a non-negative integer.
+   */
+  public static isNonNegativeInteger(number: number): boolean {
+    return NumberToolbox.isInteger(number) && number >= 0
   }
 
   /**

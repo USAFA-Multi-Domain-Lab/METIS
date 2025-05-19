@@ -139,4 +139,25 @@ export default class TargetEnvRegistry<
   public toJson(): TTargetEnvJson[] {
     return this.getAll().map((environment) => environment.toJson())
   }
+
+  /**
+   * Sorts the environments in the registry.
+   * @note This primarily exists to ensure that the
+   * internal target environment (METIS) is always
+   * the first one in the list.
+   */
+  public sort(): void {
+    // Sort the environments by their ID.
+    this.environments = new Map(
+      [...this.environments.entries()].sort((a, b) => {
+        const ENV_ID_A = a[0].toLowerCase()
+        const ENV_ID_B = b[0].toLowerCase()
+
+        // Sort the METIS environment to the top.
+        if (ENV_ID_A === 'metis') return -1
+        else if (ENV_ID_B === 'metis') return 1
+        else return ENV_ID_A.localeCompare(ENV_ID_B)
+      }),
+    )
+  }
 }

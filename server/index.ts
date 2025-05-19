@@ -323,7 +323,6 @@ export default class MetisServer {
       let { expressApp, database, fileStore, wsServer } = this
 
       // Register target environments.
-      ServerTargetEnvironment.registerInternal()
       ServerTargetEnvironment.scan()
 
       // Logger setup.
@@ -454,7 +453,7 @@ export default class MetisServer {
   /**
    * The current build number for the database.
    */
-  public static readonly SCHEMA_BUILD_NUMBER: number = 39
+  public static readonly SCHEMA_BUILD_NUMBER: number = 40
   /**
    * The root directory for the METIS server.
    */

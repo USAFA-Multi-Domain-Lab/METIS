@@ -65,7 +65,7 @@ export default abstract class SessionMember<
    */
   public get force(): TForce<T> | null {
     if (this.forceId === null) return null
-    return this.session.mission.getForce(this.forceId) ?? null
+    return this.session.mission.getForceById(this.forceId) ?? null
   }
 
   /**

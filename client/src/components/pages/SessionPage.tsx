@@ -378,7 +378,7 @@ export default function SessionPage({
     server,
     'session-reset',
     () => {
-      selectForce(() => mission.getForce(selectedForce?._id) ?? null)
+      selectForce(() => mission.getForceById(selectedForce?._id) ?? null)
       notify('All progress has been reset by a manager.')
     },
     [selectedForce],
@@ -416,11 +416,16 @@ export default function SessionPage({
     [selectedForce],
   )
 
+  useEventListener(server, 'session-reset', () => {
+    beginLoading('Resetting session...')
+    navigateTo('SessionPage', { session }, { bypassMiddleware: true })
+    finishLoading()
+    notify('A manager has reset the session.')
+  })
+
   // Update the resources remaining state whenever the
   // force changes.
-  useEffect(() => {
-    syncResources()
-  }, [selectedForce])
+  useEffect(() => syncResources(), [selectedForce])
 
   /* -- PRE-RENDER PROCESSING -- */
 

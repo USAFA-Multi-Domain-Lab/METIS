@@ -1,6 +1,6 @@
 import { TMetisComponent } from 'metis/index'
 import { HydratedDocument, Model, Schema } from 'mongoose'
-import { TRecoverableDoc } from './index.d'
+import { TRecoverableDoc } from './types'
 
 /**
  * Factory for creating a JSON converter for a Mongoose document.

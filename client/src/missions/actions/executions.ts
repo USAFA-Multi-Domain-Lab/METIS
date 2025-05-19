@@ -58,7 +58,7 @@ export default class ClientActionExecution
   /**
    * Manages events for the action execution.
    */
-  private eventManager: EventManager<TExecutionEvent, []>
+  private eventManager: EventManager<TExecutionEvent>
 
   /**
    * @param _id The ID of the execution.

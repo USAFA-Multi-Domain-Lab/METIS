@@ -16,7 +16,7 @@ export default function ListProcessor(): JSX.Element | null {
   /* -- STATE -- */
 
   const listContext = useListContext()
-  const { items } = listContext
+  const { name, items } = listContext
   const { getCellText } = listContext
   const [_, setProcessedItems] = listContext.state.processedItems
   const [sorting] = listContext.state.sorting
@@ -58,15 +58,17 @@ export default function ListProcessor(): JSX.Element | null {
   const process = () => {
     let result: TListItem[] = []
     let searchFieldElm = searchField.current
-
-    if (!searchFieldElm) {
-      console.warn('Search field element not found.')
-      return
-    }
-
-    let filterTermRaw = searchFieldElm.value
-    let filterTerm = filterTermRaw.trim().toLowerCase()
+    let filterTermRaw: string = ''
+    let filterTerm: string = ''
     let searchHintFound = false
+
+    // If there is a search field element, get the
+    // current search term from it, otherwise default
+    // to an empty string.
+    if (searchFieldElm) {
+      filterTermRaw = searchFieldElm.value
+      filterTerm = filterTermRaw.trim().toLowerCase()
+    }
 
     // If the search term is empty, show all items.
     if (!filterTerm) {
@@ -141,11 +143,7 @@ export default function ListProcessor(): JSX.Element | null {
    */
   const cancelSearch = () => {
     let searchFieldElm = searchField.current
-    if (!searchFieldElm) {
-      console.warn('Search field element not found.')
-      return
-    }
-
+    if (!searchFieldElm) return
     // Clear the search field and deactivate the search.
     searchFieldElm.value = ''
     searchFieldElm.blur()
@@ -199,7 +197,9 @@ export default function ListProcessor(): JSX.Element | null {
 
   // This will re-process the list when the items
   // change or if the sorting state changes.
-  useEffect(() => process(), [items, items.length, sorting])
+  useEffect(() => {
+    process()
+  }, [items, items.length, sorting])
 
   // Focus the search field when the search is
   // activated.

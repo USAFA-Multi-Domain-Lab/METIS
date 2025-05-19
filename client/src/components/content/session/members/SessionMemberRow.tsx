@@ -283,15 +283,15 @@ export default function SessionMemberRow({
     // the dropdown.
     if (showForceDropdown) {
       innerJsx = (
-        <DetailDropdown<ClientMissionForce | null>
+        <DetailDropdown<ClientMissionForce>
           label='Force'
           options={session.mission.forces}
           stateValue={assignedForce}
           setState={setAssignedForce}
           isExpanded={false}
-          getKey={(value) => value._id}
+          getKey={(value) => value?._id}
           render={(value) => {
-            return <span style={{ color: value.color }}>{value.name}</span>
+            return <span style={{ color: value?.color }}>{value?.name}</span>
           }}
           fieldType='optional'
           handleInvalidOption={{

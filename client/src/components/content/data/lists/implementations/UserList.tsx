@@ -23,8 +23,8 @@ export default function UserList({
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
-  const { login } = useRequireLogin()
-  const { notify, beginLoading, finishLoading, navigateTo, prompt } =
+  const { login, user: currentUser, isAuthorized } = useRequireLogin()
+  const { notify, beginLoading, finishLoading, navigateTo, prompt, logout } =
     globalContext.actions
 
   /* -- COMPUTED -- */
@@ -37,7 +37,7 @@ export default function UserList({
 
     // If the user has the proper authorization, add
     // the add button.
-    if (login.user.isAuthorized('users_write_students')) {
+    if (isAuthorized('users_write_students')) {
       results.push('add')
     }
 
@@ -55,7 +55,7 @@ export default function UserList({
 
     // If the user has the proper authorization, add
     // the launch, copy, remove, and download buttons.
-    if (login.user.isAuthorized('users_write_students')) {
+    if (isAuthorized('users_write_students')) {
       results.push('remove')
     }
 
@@ -68,17 +68,27 @@ export default function UserList({
    * Handles a request to delete a user.
    */
   const onDeleteRequest = async (user: ClientUser) => {
+    let isSelf = user.username === currentUser.username
+    let promptMessage = isSelf
+      ? `Please confirm the deletion of your account.` +
+        `\t\n` +
+        `***Note: This will log you out afterwards.***`
+      : 'Please confirm the deletion of this user.'
+
     // Prompt the user for confirmation.
-    let { choice } = await prompt(
-      'Please confirm the deletion of this user.',
-      Prompt.ConfirmationChoices,
-    )
+    let { choice } = await prompt(promptMessage, Prompt.ConfirmationChoices)
 
     // If the user confirms the deletion, proceed.
     if (choice === 'Confirm') {
       try {
         beginLoading('Deleting user...')
         await ClientUser.$delete(user._id)
+        // If the user is deleting their own account,
+        // log them out.
+        if (isSelf) {
+          beginLoading('Logging out...')
+          await logout()
+        }
         finishLoading()
         notify(`Successfully deleted ${user.username}.`)
         onSuccessfulDeletion(user)
@@ -171,7 +181,7 @@ export default function UserList({
   const onUserSelection: TOnItemSelection<ClientUser> = async ({
     _id: userId,
   }) => {
-    if (login.user.isAuthorized('users_write_students')) {
+    if (isAuthorized('users_write_students')) {
       navigateTo('UserPage', { userId })
     }
   }
@@ -183,7 +193,7 @@ export default function UserList({
   const onUserListButtonClick: TSvgPanelOnClick = (button) => {
     switch (button) {
       case 'add':
-        if (login.user.isAuthorized('users_write_students')) {
+        if (isAuthorized('users_write_students')) {
           navigateTo('UserPage', {
             userId: null,
           })

@@ -8,6 +8,7 @@
   background-color: $color-primary;
   border: 2px solid $color-primary-light;
   border-radius: 1em;
+  height: max-content;
 
   &:not(.Resizing) {
     transition: 0.5s opacity;

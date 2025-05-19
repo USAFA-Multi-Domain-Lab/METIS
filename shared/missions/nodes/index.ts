@@ -1,4 +1,5 @@
 import { TMetisBaseComponents, TMetisComponent } from 'metis/index'
+import { AnyObject } from 'metis/toolbox/objects'
 import { v4 as generateHash } from 'uuid'
 import Mission, { TMission, TMissionComponent } from '..'
 import { Vector2D } from '../../../shared/toolbox/space'
@@ -100,6 +101,25 @@ export default abstract class MissionNode<
   public actions: Map<string, TAction<T>>
 
   /**
+   * Determines if this node should be excluded from the node structure.
+   * @note This allows for nodes within a force to be hidden from
+   * participants during a session.
+   */
+  protected _exclude: boolean
+  /**
+   * Determines if this node should be excluded from the node structure.
+   * @note This allows for nodes within a force to be hidden from
+   * participants during a session.
+   */
+  public abstract get exclude(): boolean
+  public abstract set exclude(value: boolean)
+
+  /**
+   * A key for the node, used to identify it within the force.
+   */
+  public localKey: string
+
+  /**
    * The execution state of the node.
    */
   public get executionState(): TNodeExecutionState {
@@ -148,10 +168,12 @@ export default abstract class MissionNode<
    * Whether or not this node was manually opened.
    */
   protected _opened: boolean
-
-  // Implemented
+  /**
+   * Whether or not this node was manually opened.
+   */
   public get opened(): boolean {
     if (!this._opened && this.force.revealAllNodes) return false
+    if (this.parent?.opened && this.exclude) return true
     return this._opened
   }
 
@@ -222,6 +244,26 @@ export default abstract class MissionNode<
   }
 
   /**
+   * The next set of nodes in the node structure that are not excluded.
+   * @note This is used to determine the next set of nodes that
+   * are available to be opened.
+   */
+  public get relativeChildren(): TNode<T>[] {
+    let directChildren: TNode<T>[] = this.children
+    let relativeChildren: TNode<T>[] = []
+
+    for (let child of directChildren) {
+      if (child.exclude) {
+        relativeChildren.push(...child.relativeChildren)
+      } else {
+        relativeChildren.push(child)
+      }
+    }
+
+    return relativeChildren
+  }
+
+  /**
    * Any nodes that descend from this node
    * in the tree structure.
    */
@@ -251,6 +293,28 @@ export default abstract class MissionNode<
   public get lastChildNode(): TNode<T> | null {
     return this.children.length > 0
       ? this.children[this.children.length - 1]
+      : null
+  }
+
+  /**
+   * The first child found in the node's relative children
+   * array.
+   * @note This is used to determine the first child that
+   * is not excluded.
+   */
+  public get firstRelativeChildNode(): TNode<T> | null {
+    return this.relativeChildren.length > 0 ? this.relativeChildren[0] : null
+  }
+
+  /**
+   * The last child found in the node's relative children
+   * array.
+   * @note This is used to determine the last child that
+   * is not excluded.
+   */
+  public get lastRelativeChildNode(): TNode<T> | null {
+    return this.relativeChildren.length > 0
+      ? this.relativeChildren[this.relativeChildren.length - 1]
       : null
   }
 
@@ -357,9 +421,101 @@ export default abstract class MissionNode<
    * is expected to be) revealed to the player.
    */
   public get revealed(): boolean {
-    return (
-      this.parent === null || this.parent.opened || this.force.revealAllNodes
-    )
+    const algorithm = (node: TNode<T> = this): boolean => {
+      if (!node.parent || this.force.revealAllNodes) return true
+      if (node.parent.exclude) algorithm(node.parent)
+      return node.parent.opened
+    }
+
+    return algorithm()
+  }
+
+  /**
+   * The revealed structure found in the node, based on the node's
+   * descendants that have been revealed.
+   */
+  public get revealedStructure(): AnyObject {
+    /**
+     * The recursive algorithm used to determine the structure.
+     * @param cursor The current node being processed.
+     * @param cursorStructure The structure of the current node being processed.
+     */
+    const algorithm = (
+      cursor: TNode<T> = this,
+      cursorStructure: AnyObject = {},
+    ): AnyObject => {
+      if (cursor.revealed) {
+        let { structureKey } = cursor.prototype
+        cursorStructure[structureKey] = {}
+        for (let child of cursor.children) {
+          algorithm(child, cursorStructure[structureKey])
+        }
+      }
+
+      return cursorStructure
+    }
+
+    // Gather details.
+    const { root: rootNode } = this.force
+    const { prototype: rootPrototype } = rootNode
+
+    // Get the structure of the node.
+    const structure = algorithm()
+
+    // If the node is the root node, return the
+    // next level of the structure to make sure
+    // the root node is not included in the structure.
+    if (this._id === rootNode._id) return structure[rootPrototype.structureKey]
+    // Otherwise, return the structure as is.
+    return structure
+  }
+
+  /**
+   * The revealed prototypes based on the revealed node structure.
+   */
+  public get revealedPrototypes(): TPrototype<T>[] {
+    // The revealed prototypes.
+    let revealedPrototypes: TPrototype<T>[] = []
+
+    /**
+     * Recursively finds prototypes from the node structure.
+     */
+    const findPrototypes = (cursor: AnyObject = this.revealedStructure) => {
+      for (let key of Object.keys(cursor)) {
+        // Get the child structure.
+        let childStructure: AnyObject = cursor[key]
+        // Find the prototype data for the current key.
+        let prototype = this.mission.prototypes.find(
+          ({ structureKey }) => structureKey === key,
+        )
+        // If the prototype was found, add it to the list.
+        if (prototype) revealedPrototypes.push(prototype)
+        // Find this prototype's children.
+        findPrototypes(childStructure)
+      }
+    }
+
+    // Find prototypes from the node structure.
+    findPrototypes()
+
+    // Return the revealed prototypes.
+    return revealedPrototypes
+  }
+
+  /**
+   * All descendants of the node that are revealed.
+   * @note Relies on the `revealed` property of the node.
+   */
+  public get revealedDescendants(): TNode<T>[] {
+    return this.descendants.filter((descendant) => descendant.revealed)
+  }
+
+  /**
+   * All prototypes of the node that are revealed.
+   * @note Relies on the `revealed` property of the node.
+   */
+  public get revealedDescendantPrototypes(): TPrototype<T>[] {
+    return this.revealedDescendants.map((descendant) => descendant.prototype)
   }
 
   /**
@@ -389,6 +545,8 @@ export default abstract class MissionNode<
       data.executable ?? MissionNode.DEFAULT_PROPERTIES.executable
     this.device = data.device ?? MissionNode.DEFAULT_PROPERTIES.device
     this.actions = new Map<string, TAction<T>>()
+    this._exclude = data.exclude ?? MissionNode.DEFAULT_PROPERTIES.exclude
+    this.localKey = data.localKey ?? force.generateNodeKey()
     this._executions = []
     this._opened = data.opened ?? MissionNode.DEFAULT_PROPERTIES.opened
     this._blocked = data.blocked ?? MissionNode.DEFAULT_PROPERTIES.blocked
@@ -426,16 +584,6 @@ export default abstract class MissionNode<
   protected abstract importExecutions(data: TActionExecutionJson[]): void
 
   /**
-   * Handles the blocking and unblocking of the node's children.
-   * @param blocked Whether or not the node is blocked.
-   * @param node The starting node.
-   */
-  protected abstract updateBlockStatusForChildren(
-    blocked: boolean,
-    node?: TNode<T>,
-  ): void
-
-  /**
    * Converts the node to JSON.
    * @param options Options for exporting the node to JSON.
    * @returns the JSON for the node.
@@ -456,6 +604,8 @@ export default abstract class MissionNode<
       actions: MapToolbox.mapToArray(this.actions, (action: TAction<T>) =>
         action.toJson(options),
       ),
+      exclude: this.exclude,
+      localKey: this.localKey,
     }
 
     // Include session-specific data based on exposure level.
@@ -495,6 +645,26 @@ export default abstract class MissionNode<
    */
   public getExecution(_id: string): TExecution<T> | undefined {
     return this.executions.find((execution) => execution._id === _id)
+  }
+
+  /**
+   * Generates a new key for an action.
+   * @returns The new key for an action.
+   */
+  public generateActionKey(): string {
+    // Initialize
+    let newKey: number = 0
+
+    for (let action of this.actions.values()) {
+      let actionKey: number = Number(action.localKey)
+      // If the action has a key, and it is greater than the current
+      // new key, set the new key to the action's key.
+      if (actionKey > newKey) newKey = Math.max(newKey, actionKey)
+    }
+
+    // Increment the new key by 1 and return it as a string.
+    newKey++
+    return String(newKey)
   }
 
   /**
@@ -550,7 +720,7 @@ export default abstract class MissionNode<
   /**
    * The default properties for a `MissionNode` object.
    */
-  public static get DEFAULT_PROPERTIES(): Required<TMissionNodeJson> {
+  public static get DEFAULT_PROPERTIES(): TMissionNodeDefaultJson {
     return {
       _id: generateHash(),
       prototypeId: MissionPrototype.DEFAULT_PROPERTIES._id,
@@ -564,6 +734,7 @@ export default abstract class MissionNode<
       opened: false,
       blocked: false,
       executions: [],
+      exclude: false,
     }
   }
 }
@@ -610,6 +781,16 @@ export interface TMissionNodeJsonBase {
    * The actions that can be performed on the node.
    */
   actions: TMissionActionJson[]
+  /**
+   * Determines if this node should be excluded from the node structure.
+   * @note This allows for nodes within a force to be hidden from
+   * participants during a session.
+   */
+  exclude: boolean
+  /**
+   * A key for the node, used to identify it within the force.
+   */
+  localKey: string
 }
 
 /**
@@ -628,6 +809,12 @@ export interface TMissionNodeSessionJson {
   executions: TActionExecutionJson[]
   blocked: boolean
 }
+
+/**
+ * The default properties for a `MissionNode` object.
+ * @inheritdoc TMissionNodeJson
+ */
+type TMissionNodeDefaultJson = Required<Omit<TMissionNodeJson, 'localKey'>>
 
 /**
  * Plain JSON representation of a MissionNode object.

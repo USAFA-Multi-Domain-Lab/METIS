@@ -1,12 +1,14 @@
 import Dependency from '../dependencies'
 import BooleanArg, { TBooleanArg, TBooleanArgJson } from './boolean-arg'
 import DropdownArg, { TDropdownArg, TDropdownArgJson } from './dropdown-arg'
-import ForceArg, { TForceArg, TForceArgJson } from './force-arg'
 import LargeStringArg, {
   TLargeStringArg,
   TLargeStringArgJson,
 } from './large-string-arg'
-import NodeArg, { TNodeArg, TNodeArgJson } from './node-arg'
+import MissionComponentArg, {
+  TMissionComponentArg,
+  TMissionComponentArgJson,
+} from './mission-component'
 import NumberArg, { TNumberArg, TNumberArgJson } from './number-arg'
 import StringArg, { TStringArg, TStringArgJson } from './string-arg'
 
@@ -21,7 +23,7 @@ export default class Arg {
    */
   public static decodeDependencies = (dependencies: string[]): Dependency[] => {
     return dependencies.map((dependency: string) => {
-      return Dependency.decode(dependency)
+      return Dependency.DECODE(dependency)
     })
   }
 
@@ -55,9 +57,9 @@ export default class Arg {
         case 'boolean':
           return BooleanArg.toJson(arg)
         case 'force':
-          return ForceArg.toJson(arg)
         case 'node':
-          return NodeArg.toJson(arg)
+        case 'action':
+          return MissionComponentArg.toJson(arg)
       }
     })
   }
@@ -81,9 +83,9 @@ export default class Arg {
         case 'boolean':
           return BooleanArg.fromJson(arg)
         case 'force':
-          return ForceArg.fromJson(arg)
         case 'node':
-          return NodeArg.fromJson(arg)
+        case 'action':
+          return MissionComponentArg.fromJson(arg)
       }
     })
   }
@@ -168,6 +170,7 @@ export type TBaseArg = {
    */
   tooltipDescription?: string
 }
+
 /**
  * The arguments used for the target-effect interface and the target-effect API.
  */
@@ -177,8 +180,7 @@ export type TTargetArg =
   | TLargeStringArg
   | TDropdownArg
   | TBooleanArg
-  | TForceArg
-  | TNodeArg
+  | TMissionComponentArg
 
 /**
  * The JSON representation of the base argument type for a target.
@@ -257,6 +259,7 @@ export type TBaseArgJson = {
    */
   tooltipDescription?: string
 }
+
 /**
  * The arguments used for the target-effect interface and the target-effect API.
  */
@@ -266,5 +269,4 @@ export type TTargetArgJson =
   | TLargeStringArgJson
   | TDropdownArgJson
   | TBooleanArgJson
-  | TForceArgJson
-  | TNodeArgJson
+  | TMissionComponentArgJson

@@ -4,19 +4,16 @@ import { TListItem } from 'src/components/content/data/lists/pages/ListItem'
 import { TLine_P } from 'src/components/content/session/mission-map/objects/Line'
 import { TPrototypeSlot_P } from 'src/components/content/session/mission-map/objects/PrototypeSlot'
 import { v4 as generateHash } from 'uuid'
-import { TListenerTargetEmittable } from '../../../shared/events'
+import { EventManager, TListenerTargetEmittable } from '../../../shared/events'
 import Mission, {
   TMissionComponent,
   TMissionJson,
 } from '../../../shared/missions'
-import { TMissionActionJson } from '../../../shared/missions/actions'
-import { TEffectJson } from '../../../shared/missions/effects'
 import { TMissionFileJson } from '../../../shared/missions/files'
 import {
   MissionForce,
   TMissionForceSaveJson,
 } from '../../../shared/missions/forces'
-import { TMissionNodeJson } from '../../../shared/missions/nodes'
 import {
   TMissionPrototypeJson,
   TMissionPrototypeOptions,
@@ -27,7 +24,6 @@ import { AnyObject, TWithKey } from '../../../shared/toolbox/objects'
 import { Vector2D } from '../../../shared/toolbox/space'
 import User from '../../../shared/users'
 import ClientMissionAction from './actions'
-import { ClientEffect } from './effects'
 import ClientMissionFile from './files'
 import ClientMissionForce from './forces'
 import ClientMissionNode from './nodes'
@@ -42,7 +38,9 @@ import PrototypeTranslation from './transformations/translations'
  */
 export default class ClientMission
   extends Mission<TMetisClientComponents>
-  implements TListenerTargetEmittable<TMissionEvent>, TListItem
+  implements
+    TListenerTargetEmittable<TMissionEventMethods, TMissionEventArgs>,
+    TListItem
 {
   /**
    * Whether the resource exists on the server.
@@ -109,11 +107,6 @@ export default class ClientMission
   protected structureInitialized: boolean = false
 
   /**
-   * Listeners for mission events.
-   */
-  private listeners: Array<[TMissionEvent, () => void]>
-
-  /**
    * The current selection for the mission.
    * @note This can be most type of nested, mission-related component,
    * such as nodes, forces, etc.
@@ -146,7 +139,7 @@ export default class ClientMission
   }
   public set transformation(value: MissionTransformation | null) {
     this._transformation = value
-    this.emitEvent('set-transformation')
+    this.emitEvent('set-transformation', [])
     this.handleStructureChange()
   }
 
@@ -260,6 +253,11 @@ export default class ClientMission
   }
 
   /**
+   * Manages the mission's event listeners and events.
+   */
+  private eventManager: EventManager<TMissionEventMethods, TMissionEventArgs>
+
+  /**
    * @param data The mission data from which to create the mission. Any ommitted values will be set to the default properties defined in Mission.DEFAULT_PROPERTIES.
    * @param options The options for creating the mission.
    */
@@ -277,12 +275,17 @@ export default class ClientMission
     this._existsOnServer = existsOnServer
     this._depth = -1
     this._structureChangeKey = generateHash()
-    this.listeners = []
     this._selection = this
     this._transformation = null
     this.relationshipLines = []
     this.lastOpenedNode = null
     this._nonRevealedDisplayMode = nonRevealedDisplayMode
+
+    // Initialize event manager.
+    this.eventManager = new EventManager(this)
+    this.addEventListener = this.eventManager.addEventListener
+    this.removeEventListener = this.eventManager.removeEventListener
+    this.emitEvent = this.eventManager.emitEvent
 
     // If there is no existing prototypes,
     // create one.
@@ -373,6 +376,8 @@ export default class ClientMission
 
     // Handle structure change.
     this.handleStructureChange()
+    // Emit event.
+    this.emitEvent('session-reset', [])
   }
 
   // Implemented
@@ -415,7 +420,7 @@ export default class ClientMission
 
     // Handle event.
     this.handleStructureChange()
-    this.emitEvent('new-prototype')
+    this.emitEvent('new-prototype', [])
 
     // Return the prototype.
     return prototype
@@ -504,35 +509,17 @@ export default class ClientMission
     })
 
     // Emit the structure change event.
-    this.emitEvent('structure-change')
-  }
-
-  /**
-   * Emits an event for the mission.
-   * @param method The method of the event to emit.
-   */
-  public emitEvent(method: TMissionEvent): void {
-    // Call any matching listener callbacks
-    // or any activity listener callbacks.
-    for (let [listenerEvent, listenerCallback] of this.listeners) {
-      if (listenerEvent === method || listenerEvent === 'activity') {
-        listenerCallback()
-      }
-    }
+    this.emitEvent('structure-change', [])
   }
 
   // Implemented
-  public addEventListener(method: TMissionEvent, callback: () => void) {
-    this.listeners.push([method, callback])
-  }
+  public emitEvent
 
   // Implemented
-  public removeEventListener(method: TMissionEvent, callback: () => void) {
-    // Filter out listener.
-    this.listeners = this.listeners.filter(
-      ([m, h]) => m !== method || h !== callback,
-    )
-  }
+  public addEventListener
+
+  // Implemented
+  public removeEventListener
 
   /**
    * This will position all the prototypes in the mission
@@ -1008,7 +995,7 @@ export default class ClientMission
 
     this._selection = selection
 
-    this.emitEvent('selection')
+    this.emitEvent('selection', [])
 
     // If there is a transformation, clear it.
     if (this.transformation) this.transformation = null
@@ -1020,7 +1007,7 @@ export default class ClientMission
    */
   public deselect(): void {
     this._selection = this
-    this.emitEvent('selection')
+    this.emitEvent('selection', [])
 
     // If there is a transformation, clear it.
     if (this.transformation) this.transformation = null
@@ -1055,16 +1042,9 @@ export default class ClientMission
     // Duplicate the forces.
     let duplicatedForces = forcesInfo.map(({ originalId, duplicateName }) => {
       // Find the force to duplicate.
-      let force = this.forces.find((force) => force._id === originalId)
+      let force = this.getForceById(originalId)
       // Throw an error if the force is not found.
       if (!force) throw new Error(`Force with ID ${originalId} not found.`)
-
-      // Convert the force to JSON.
-      let forceJson = force.toJson()
-      // Set the force's ID to the default ID (a random hash).
-      forceJson._id = MissionForce.DEFAULT_PROPERTIES._id
-      // Set the force's name to the duplicate name.
-      forceJson.name = duplicateName
 
       // Determine what the next available color is.
       let existingColors = this.forces.map(({ color }) => color)
@@ -1072,38 +1052,15 @@ export default class ClientMission
         ({ color }) => !existingColors.includes(color),
       )
 
-      // Set the force's color to the next available color.
-      forceJson.color =
-        nextColor?.color || MissionForce.DEFAULT_PROPERTIES.color
-
-      // Update the force's nodes.
-      forceJson.nodes = forceJson.nodes.map((nodeJson: TMissionNodeJson) => {
-        // Set the node's ID to a new ID.
-        nodeJson._id = ClientMissionNode.DEFAULT_PROPERTIES._id
-        // Update the node's actions.
-        nodeJson.actions = nodeJson.actions.map(
-          (actionJson: TMissionActionJson) => {
-            // Set the action's ID to a new ID.
-            actionJson._id = ClientMissionAction.DEFAULT_PROPERTIES._id
-            // Update the action's effects.
-            actionJson.effects = actionJson.effects.map(
-              (effectJson: TEffectJson) => {
-                // Set the effect's ID to a new ID.
-                effectJson._id = ClientEffect.DEFAULT_PROPERTIES._id
-                // Return the effect JSON.
-                return effectJson
-              },
-            )
-            // Return the action JSON.
-            return actionJson
-          },
-        )
-        // Return the node JSON.
-        return nodeJson
+      // Duplicate the force.
+      let duplicatedForce = force.duplicate({
+        name: duplicateName,
+        localKey: this.generateForceKey(),
       })
-
-      // Create a new force object from the JSON.
-      return new ClientMissionForce(this, forceJson)
+      // Update properties of the duplicated force.
+      if (nextColor) duplicatedForce.color = nextColor.color
+      // Return the duplicated force.
+      return duplicatedForce
     }) as TNonEmptyArray<ClientMissionForce>
 
     // Add the duplicated forces to the mission.
@@ -1484,6 +1441,20 @@ export type TMissionImportResult = {
 export type TStructureChangeListener = (structureChangeKey: string) => void
 
 /**
+ * The information needed to duplicate a force in a mission.
+ */
+type TDuplicateForceInfo = {
+  /**
+   * The ID of the force to duplicate.
+   */
+  originalId: string
+  /**
+   * The name of the duplicated force.
+   */
+  duplicateName: string
+}
+
+/**
  * An event that occurs on a mission, which can be listened for.
  * @option 'activity'
  * Triggered when any event occurs.
@@ -1500,8 +1471,12 @@ export type TStructureChangeListener = (structureChangeKey: string) => void
  * Triggered when a transformation is set for the mission.
  * @option 'autopan'
  * Triggered when nodes are opened and the mission map needs to auto-pan to them.
+ * @option `set-node-exclusion`
+ * - Triggered when a node's exclusion status is set.
+ * @option `session-reset`
+ * - Triggered when a session that uses this mission resets.
  */
-export type TMissionEvent =
+type TMissionEventMethods =
   | 'activity'
   | 'structure-change'
   | 'selection'
@@ -1509,17 +1484,12 @@ export type TMissionEvent =
   | 'set-buttons'
   | 'set-transformation'
   | 'autopan'
+  | 'set-node-exclusion'
+  | 'session-reset'
 
 /**
- * The information needed to duplicate a force in a mission.
+ * The argument(s) used in the event handler for the mission's event manager.
  */
-type TDuplicateForceInfo = {
-  /**
-   * The ID of the force to duplicate.
-   */
-  originalId: string
-  /**
-   * The name of the duplicated force.
-   */
-  duplicateName: string
-}
+type TMissionEventArgs = [
+  updatedComponents: TMissionComponent<TMetisClientComponents, any>[],
+]
