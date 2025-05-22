@@ -4,6 +4,8 @@ import ClientMission from 'src/missions'
 import ClientMissionPrototype, {
   TPrototypeRelation,
 } from 'src/missions/nodes/prototypes'
+import { useRequireLogin } from 'src/toolbox/hooks'
+import If from '../util/If'
 import './NodeStructuring.scss'
 
 // This is a enum used to describe
@@ -41,6 +43,7 @@ export default function NodeStructuring(props: {
   const [dropLocation, setDropLocation] = useState<ENodeDropLocation>(
     ENodeDropLocation.Center,
   )
+  const { isAuthorized } = useRequireLogin()
 
   /* -- FUNCTIONS -- */
 
@@ -81,7 +84,7 @@ export default function NodeStructuring(props: {
     return (
       <div
         className={className}
-        draggable={true}
+        draggable={isAuthorized('missions_write')}
         onDragOver={(event: React.DragEvent) => {
           event.preventDefault()
         }}
@@ -154,7 +157,7 @@ export default function NodeStructuring(props: {
       <div className={className}>
         <div
           className='ParentNode'
-          draggable={true}
+          draggable={isAuthorized('missions_write')}
           onDragCapture={() => {
             grabNode(node)
           }}
@@ -222,17 +225,19 @@ export default function NodeStructuring(props: {
               }
             }}
           >
-            <svg
-              className={indicatorClassName}
-              onMouseUp={toggleNode}
-              key={`${node._id}_triangle`}
-            >
-              <polygon
-                points='3,7 10,7 6.5,14'
-                className='Triangle'
-                fill='#fff'
-              />
-            </svg>
+            <If condition={node.hasChildren}>
+              <svg
+                className={indicatorClassName}
+                onMouseUp={toggleNode}
+                key={`${node._id}_triangle`}
+              >
+                <polygon
+                  points='3,7 10,7 6.5,14'
+                  className='Triangle'
+                  fill='#fff'
+                />
+              </svg>
+            </If>
             <div className='Name'>{node.name}</div>
           </div>
           <div

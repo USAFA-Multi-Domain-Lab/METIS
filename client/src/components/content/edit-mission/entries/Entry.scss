@@ -8,7 +8,7 @@
   height: 100%;
 
   > * {
-    padding: 1.5em 1.5em 0;
+    padding: 1.5em;
   }
 
   .ScrollBox {
@@ -18,10 +18,35 @@
       @include form-container();
       height: max-content;
       padding-bottom: 3.5em;
+
+      .ButtonContainer {
+        display: flex;
+        justify-content: flex-end;
+        flex-flow: row wrap;
+        min-width: 225px;
+        margin: 0 0;
+
+        .ButtonText {
+          margin: 1.25em 0 0;
+        }
+      }
+
+      .ButtonText {
+        font-size: 0.78em;
+      }
     }
   }
 
   .List {
+    $border: 0.2em solid $color-secondary !important;
+
     height: max-content;
+    border-top: $border;
+    border-bottom: $border;
+    border-radius: unset;
+
+    .ListItems .ListItem {
+      border-top: unset;
+    }
   }
 }

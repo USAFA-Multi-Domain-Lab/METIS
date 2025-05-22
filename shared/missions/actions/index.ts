@@ -234,13 +234,15 @@ export default abstract class MissionAction<
    * configuration or any cheats that may be applied.
    */
   public get areEnoughResources(): boolean {
-    return this.resourceCost <= Math.max(this.force.resourcesRemaining, 0)
+    return (
+      this.resourceCost <= Math.max(this.force.resourcesRemaining, 0) ||
+      this.force.allowNegativeResources
+    )
   }
 
   /**
    * @param node The node on which the action is being executed.
    * @param data The action data from which to create the action. Any ommitted values will be set to the default properties defined in MissionAction.DEFAULT_PROPERTIES.
-   * @param options The options for creating the action.
    */
   public constructor(
     node: TNode<T>,

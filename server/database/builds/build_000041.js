@@ -1,6 +1,6 @@
 // This migration script is responsible for adding the
-// `exclude` property to all nodes in every
-// mission in the database.
+// `allowNegativeResources` property to all forces within
+// the missions in the database.
 
 let dbName = 'metis'
 
@@ -20,8 +20,10 @@ while (cursor_missions.hasNext()) {
   let mission = cursor_missions.next()
 
   for (let force of mission.forces) {
-    for (let node of force.nodes) {
-      if (node.exclude === undefined) node.exclude = false
+    // Add the `allowNegativeResources` property to the force,
+    // if it doesn't exist.
+    if (force.allowNegativeResources === undefined) {
+      force.allowNegativeResources = false
     }
   }
 
@@ -31,4 +33,4 @@ while (cursor_missions.hasNext()) {
 
 print('Updating schema build number...')
 
-db.infos.updateOne({}, { $set: { schemaBuildNumber: 39 } })
+db.infos.updateOne({}, { $set: { schemaBuildNumber: 41 } })

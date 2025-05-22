@@ -48,7 +48,7 @@ export default class NumberToolbox {
    * @returns Whether the given number is a non-negative number.
    */
   public static isNonNegative(number: number): boolean {
-    return !Number.isNaN(number) && number !== Infinity && number >= 0
+    return number >= 0
   }
 
   /**

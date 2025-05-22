@@ -65,7 +65,7 @@ export default function ActionEntry({
     actionState.postExecutionSuccessText
   const [postExecutionFailureText, setPostExecutionFailureText] =
     actionState.postExecutionFailureText
-  const { login } = useRequireLogin()
+  const { isAuthorized } = useRequireLogin()
 
   /* -- COMPUTED -- */
 
@@ -102,9 +102,9 @@ export default function ActionEntry({
   const getEffectDescription = (effect: ClientEffect) => {
     if (!effect.environment || !effect.target) {
       return 'This effect cannot be edited because either the target environment or the target associated with this effect is not available.'
-    } else if (login.user.isAuthorized('missions_write')) {
+    } else if (isAuthorized('missions_write')) {
       return 'Edit effect.'
-    } else if (login.user.isAuthorized('missions_read')) {
+    } else if (isAuthorized('missions_read')) {
       return 'View effect.'
     } else {
       return ''
@@ -239,7 +239,6 @@ export default function ActionEntry({
         }
         key={`${action._id}_postExecutionFailureText`}
       />
-      <Divider />
 
       {/* -- EFFECTS -- */}
       <List<ClientEffect>
@@ -251,6 +250,14 @@ export default function ActionEntry({
         getItemTooltip={getEffectDescription}
         getCellText={(effect) => effect.name}
         getListButtonLabel={() => 'Create a new effect'}
+        getListButtonPermissions={(button) => {
+          switch (button) {
+            case 'add':
+              return ['missions_write']
+            default:
+              return []
+          }
+        }}
         getItemButtonLabel={(button) => {
           switch (button) {
             case 'open':
@@ -259,6 +266,16 @@ export default function ActionEntry({
               return 'Delete effect'
             default:
               return ''
+          }
+        }}
+        getItemButtonPermissions={(button) => {
+          switch (button) {
+            case 'open':
+              return ['missions_read']
+            case 'remove':
+              return ['missions_write']
+            default:
+              return []
           }
         }}
         onListButtonClick={(button) => {
@@ -280,7 +297,6 @@ export default function ActionEntry({
         }}
       />
 
-      <Divider />
       {/* -- BUTTON(S) -- */}
       <div className='ButtonContainer'>
         <ButtonText

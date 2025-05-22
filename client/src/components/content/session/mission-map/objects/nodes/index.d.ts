@@ -93,6 +93,7 @@ export type TMapCompatibleNodeEvent =
   | 'set-blocked'
   | 'exec-state-change'
   | 'set-exclude'
+  | 'set-color'
 
 /**
  * Props for `MapNode`.

@@ -244,6 +244,10 @@ export const schema = new MissionSchema(
             type: String,
             required: true,
           },
+          allowNegativeResources: {
+            type: Boolean,
+            required: true,
+          },
           nodes: {
             required: true,
             validate: ServerMissionForce.validateNodes,

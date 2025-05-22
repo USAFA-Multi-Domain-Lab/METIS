@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useRef, useState } from 'react'
 import { compute } from 'src/toolbox'
 import { TDefaultProps, useDefaultProps } from 'src/toolbox/hooks'
 import StringToolbox from '../../../../../../shared/toolbox/strings'
+import { TUserPermissionId } from '../../../../../../shared/users/permissions'
 import { TButtonSvgType } from '../../user-controls/buttons/ButtonSvg'
 import { TSvgPanelOnClick } from '../../user-controls/buttons/ButtonSvgPanel_v2'
 import {
@@ -15,6 +16,7 @@ import ListValidator from './ListValidator'
 import ListNav from './navs/ListNav'
 import {
   TGetItemButtonLabel,
+  TGetItemButtonPermission,
   TGetItemTooltip,
   TListItem,
   TOnItemButtonClick,
@@ -74,7 +76,9 @@ export function createDefaultListProps<
     getItemTooltip: () => '',
     getDisabledItemTooltip: () => '',
     getListButtonLabel: () => '',
+    getListButtonPermissions: () => [],
     getItemButtonLabel: () => '',
+    getItemButtonPermissions: () => [],
     getColumnWidth: () => '10em',
     isDisabled: () => false,
     onSelect: () => {},
@@ -109,7 +113,9 @@ export default function List<TItem extends TListItem>(
     listButtonIcons,
     itemButtonIcons,
     getListButtonLabel,
+    getListButtonPermissions,
     getItemButtonLabel,
+    getItemButtonPermissions,
     onListButtonClick,
     onItemButtonClick,
     onSelect,
@@ -188,6 +194,7 @@ export default function List<TItem extends TListItem>(
     listButtonIcons.map<TButtonSvg_Input>((icon) => ({
       icon,
       label: getListButtonLabel(icon),
+      permissions: getListButtonPermissions(icon),
       onClick: () => onListButtonClick(icon),
     })),
   )
@@ -201,6 +208,7 @@ export default function List<TItem extends TListItem>(
     itemButtonIcons.map<TButtonSvg_Input>((icon) => ({
       icon,
       label: getItemButtonLabel(icon),
+      permissions: getItemButtonPermissions(icon),
       onClick: () => {
         if (selection) onItemButtonClick(icon, selection)
       },
@@ -435,12 +443,26 @@ export type TList_P<TItem extends TListItem> = {
    */
   getListButtonLabel?: TGetListButtonLabel
   /**
+   * Gets the permissions for a list button.
+   * @param button The button for which to get the permissions.
+   * @returns The permissions.
+   * @default () => []
+   */
+  getListButtonPermissions?: TGetListButtonPermission
+  /**
    * Gets the label for the item's button.
    * @param button The button for which to get the label.
    * @param item The item for which to get the label.
    * @default () => ''
    */
   getItemButtonLabel?: TGetItemButtonLabel<TItem>
+  /**
+   * Gets the permissions for the item's button.
+   * @param button The button for which to get the permissions.
+   * @param item The item for which to get the permissions.
+   * @default () => []
+   */
+  getItemButtonPermissions?: TGetItemButtonPermission<TItem>
   /**
    * Gets the tooltip description for a disabled item.
    * @param item The item for which to get the tooltip description.
@@ -588,6 +610,16 @@ export type TListContextData<TItem extends TListItem> = Required<
  * @default () => ''
  */
 export type TGetListButtonLabel = (button: TButtonSvgType) => string
+
+/**
+ * Gets the permissions for a list button.
+ * @param button The button for which to get the permissions.
+ * @returns The permissions.
+ * @default () => []
+ */
+export type TGetListButtonPermission = (
+  button: TButtonSvgType,
+) => TUserPermissionId[]
 
 /**
  * A column type for the list.

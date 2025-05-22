@@ -75,7 +75,8 @@
               .Center {
                 z-index: 0;
                 display: grid;
-                grid-template-columns: 18px auto;
+                grid-template-columns: auto 1fr;
+                column-gap: 0.25rem;
                 margin: 0 0 -0.175rem;
                 pointer-events: all;
                 user-select: all;
@@ -115,9 +116,7 @@
 
             &.Ends {
               .ParentNode {
-                .Indicator {
-                  opacity: 0;
-                }
+                padding-left: 38px;
               }
             }
 
