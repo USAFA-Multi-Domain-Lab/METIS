@@ -1,4 +1,4 @@
-import { TGlobalContext } from 'src/context'
+import { TGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
 import { TWithKey } from '../../../../../shared/toolbox/objects'
 import { ButtonText, TButtonText_P } from '../user-controls/buttons/ButtonText'

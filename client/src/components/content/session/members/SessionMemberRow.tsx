@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from 'react'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import ClientMissionForce from 'src/missions/forces'
 import SessionClient from 'src/sessions'
 import ClientSessionMember from 'src/sessions/members'
@@ -9,7 +9,7 @@ import MemberRole, {
   TMemberRoleId,
 } from '../../../../../../shared/sessions/members/roles'
 import Prompt from '../../communication/Prompt'
-import { DetailDropdown } from '../../form/DetailDropdown'
+import { DetailDropdown } from '../../form/dropdown/'
 import ButtonSvgPanel_v2 from '../../user-controls/buttons/ButtonSvgPanel_v2'
 import './SessionMemberRow.scss'
 
@@ -286,8 +286,8 @@ export default function SessionMemberRow({
         <DetailDropdown<ClientMissionForce>
           label='Force'
           options={session.mission.forces}
-          stateValue={assignedForce}
-          setState={setAssignedForce}
+          value={assignedForce}
+          setValue={setAssignedForce}
           isExpanded={false}
           getKey={(value) => value?._id}
           render={(value) => {
@@ -326,8 +326,8 @@ export default function SessionMemberRow({
         <DetailDropdown<ClientSessionMember['role']>
           label='Role'
           options={MemberRole.ASSIGNABLE_ROLES}
-          stateValue={assignedRole}
-          setState={setAssignedRole}
+          value={assignedRole}
+          setValue={setAssignedRole}
           isExpanded={false}
           getKey={(value) => value._id}
           render={(value) => value.name}

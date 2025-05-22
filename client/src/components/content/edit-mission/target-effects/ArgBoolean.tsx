@@ -75,8 +75,8 @@ export default function ArgBoolean({
     <DetailToggle
       fieldType='required'
       label={arg.name}
-      stateValue={value}
-      setState={setValue}
+      value={value}
+      setValue={setValue}
       tooltipDescription={arg.tooltipDescription}
       key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}_required`}
     />

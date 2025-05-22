@@ -1,6 +1,6 @@
 import { AxiosError } from 'axios'
 import { useRef, useState } from 'react'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import ClientFileReference from 'src/files/references'
 import ClientMission from 'src/missions'
 import Notification from 'src/notifications'

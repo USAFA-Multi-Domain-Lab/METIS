@@ -44,8 +44,6 @@ export default function ListResizeHandler<
     let blanks = []
 
     for (; page.clientHeight <= initHeight && result < 100; result++) {
-      if (name === 'Actions') console.log(page.clientHeight, initHeight)
-
       let blank = document.createElement('div')
       blank.className = 'ItemBlank ListItemLike'
       items.appendChild(blank)

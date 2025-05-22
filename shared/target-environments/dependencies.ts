@@ -1,4 +1,5 @@
 import MissionAction from '../missions/actions'
+import MissionFile from '../missions/files'
 import { MissionForce } from '../missions/forces'
 import MissionNode from '../missions/nodes'
 
@@ -44,7 +45,7 @@ const AVAILABLE_DEPENDENCIES_RAW = [
   {
     name: 'force',
     condition: (value: { force: MissionForce }) =>
-      value instanceof MissionForce,
+      value.force instanceof MissionForce,
   } as const,
   {
     name: 'node',
@@ -61,6 +62,10 @@ const AVAILABLE_DEPENDENCIES_RAW = [
       value.force instanceof MissionForce &&
       value.node instanceof MissionNode &&
       (value.action instanceof MissionAction || value.action === undefined),
+  } as const,
+  {
+    name: 'file',
+    condition: (value: { file: any }) => value.file instanceof MissionFile,
   } as const,
 ] as const
 
@@ -234,6 +239,15 @@ export default class Dependency implements TDependency {
    */
   public static ACTION = (dependentId: string) =>
     Dependency.SELECT('action', dependentId)
+
+  /**
+   * Checks if the argument's (*referenced by the argument's ID*) value is a file object.
+   * @param dependentId The ID of the dependent argument.
+   * @returns A new dependency that checks if the argument's value is a file object.
+   * @example Dependency.FILE('dependentId')
+   */
+  public static FILE = (dependentId: string) =>
+    Dependency.SELECT('file', dependentId)
 
   /**
    * Encodes the dependency.

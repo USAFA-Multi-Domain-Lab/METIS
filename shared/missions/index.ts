@@ -554,6 +554,17 @@ export default abstract class Mission<
   }
 
   /**
+   * @param fileId The ID of the file to get.
+   * @returns The file with the given ID, or undefined
+   * if the file is not found.
+   */
+  public getFileById(
+    fileId: string | null | undefined,
+  ): T['missionFile'] | undefined {
+    return this.files.find((file) => file._id === fileId)
+  }
+
+  /**
    * @param executionId The ID of the execution to get.
    * @returns The execution with the given ID, or undefined
    * if the execution is not found.

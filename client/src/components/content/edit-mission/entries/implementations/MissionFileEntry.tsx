@@ -98,8 +98,8 @@ export default function MissionFileEntry({
           <DetailToggle
             label={force.name}
             key={`${file._id}_initialAccess_${force._id}`}
-            stateValue={initialAccess.includes(force._id)}
-            setState={(value) => onToggleForce(force._id, value)}
+            value={initialAccess.includes(force._id)}
+            setValue={(value) => onToggleForce(force._id, value)}
           />
         )
       })}

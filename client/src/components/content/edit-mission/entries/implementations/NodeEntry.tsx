@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { TMetisClientComponents } from 'src'
 import List from 'src/components/content/data/lists/List'
 import If from 'src/components/content/util/If'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
 import ClientMissionNode from 'src/missions/nodes'
@@ -229,8 +229,8 @@ export default function NodeEntry({
         fieldType='required'
         handleOnBlur='repopulateValue'
         label='Name'
-        stateValue={name}
-        setState={setName}
+        value={name}
+        setValue={setName}
         defaultValue={ClientMissionNode.DEFAULT_PROPERTIES.name}
         maxLength={ClientMissionNode.MAX_NAME_LENGTH}
         key={`${node._id}_name`}
@@ -240,8 +240,8 @@ export default function NodeEntry({
         label='Color'
         colors={ClientMission.COLOR_OPTIONS}
         isExpanded={false}
-        stateValue={color}
-        setState={setColor}
+        value={color}
+        setValue={setColor}
         buttons={colorButtons}
         key={`${node._id}_color`}
       />
@@ -249,8 +249,8 @@ export default function NodeEntry({
         fieldType='optional'
         handleOnBlur='none'
         label='Description'
-        stateValue={description}
-        setState={setDescription}
+        value={description}
+        setValue={setDescription}
         placeholder='Enter description...'
         key={`${node._id}_description`}
       />
@@ -258,23 +258,23 @@ export default function NodeEntry({
         fieldType='optional'
         handleOnBlur='none'
         label='Pre-Execution Text'
-        stateValue={preExecutionText}
-        setState={setPreExecutionText}
+        value={preExecutionText}
+        setValue={setPreExecutionText}
         placeholder='Enter pre-execution text...'
         key={`${node._id}_preExecutionText`}
       />
       <DetailToggle
         fieldType='required'
         label='Executable'
-        stateValue={executable}
-        setState={setExecutable}
+        value={executable}
+        setValue={setExecutable}
         key={`${node._id}_executable`}
       />
       <DetailToggle
         fieldType='required'
         label='Device'
-        stateValue={device}
-        setState={setDevice}
+        value={device}
+        setValue={setDevice}
         lockState={deviceLockState}
         key={`${node._id}_device`}
       />

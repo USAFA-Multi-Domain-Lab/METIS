@@ -1,4 +1,4 @@
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import If from './If'
 
 /**

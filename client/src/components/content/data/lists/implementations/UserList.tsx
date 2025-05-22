@@ -1,7 +1,7 @@
 import Prompt from 'src/components/content/communication/Prompt'
 import { TButtonSvgType } from 'src/components/content/user-controls/buttons/ButtonSvg'
 import { TSvgPanelOnClick } from 'src/components/content/user-controls/buttons/ButtonSvgPanel_v2'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
 import { useRequireLogin } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'

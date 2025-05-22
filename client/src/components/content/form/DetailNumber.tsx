@@ -13,8 +13,8 @@ import './DetailNumber.scss'
 export function DetailNumber({
   fieldType,
   label,
-  stateValue,
-  setState,
+  value: stateValue,
+  setValue: setState,
   // Optional Properties
   minimum = undefined,
   maximum = undefined,

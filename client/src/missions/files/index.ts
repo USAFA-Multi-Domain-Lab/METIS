@@ -105,6 +105,33 @@ export default class ClientMissionFile extends MissionFile<TMetisClientComponent
       mission,
     )
   }
+
+  /**
+   * @returns A new `ClientMissionFile` instance that
+   * represents a file that is referenced in the mission
+   * but not currently found in the mission.
+   */
+  public static createDetached(
+    _id: string,
+    name: string,
+    mission: ClientMission,
+  ): ClientMissionFile {
+    return new ClientMissionFile(
+      _id,
+      name,
+      [],
+      new ClientFileReference(
+        StringToolbox.generateRandomId(),
+        name,
+        '',
+        '',
+        0,
+        null,
+        null,
+      ),
+      mission,
+    )
+  }
 }
 
 /**

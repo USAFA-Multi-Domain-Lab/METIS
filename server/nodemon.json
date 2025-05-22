@@ -1,4 +1,5 @@
 {
   "ext": "js,json,ts",
+  "watch": ["../shared/**", "../integration/**", "./**"],
   "ignore": ["/database/backups/**", "/temp/**"]
 }

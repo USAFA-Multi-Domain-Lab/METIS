@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import { usePostInitEffect } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import { DetailLocked } from '../form/DetailLocked'
@@ -160,8 +160,8 @@ export default function EditUserEntry({
         fieldType='required'
         handleOnBlur={handleUsernameError}
         label='Username'
-        stateValue={username}
-        setState={setUsername}
+        value={username}
+        setValue={setUsername}
         errorMessage={usernameErrorMessage}
         placeholder='Enter a username here...'
       />
@@ -170,8 +170,8 @@ export default function EditUserEntry({
         fieldType='required'
         handleOnBlur={handleFirstNameError}
         label='First Name'
-        stateValue={firstName}
-        setState={setFirstName}
+        value={firstName}
+        setValue={setFirstName}
         errorMessage={firstNameErrorMessage}
         placeholder='Enter a first name here...'
       />
@@ -179,16 +179,16 @@ export default function EditUserEntry({
         fieldType='required'
         handleOnBlur={handleLastNameError}
         label='Last Name'
-        stateValue={lastName}
-        setState={setLastName}
+        value={lastName}
+        setValue={setLastName}
         errorMessage={lastNameErrorMessage}
         placeholder='Enter a last name here...'
       />
       <DetailToggle
         fieldType='required'
         label='Password Reset'
-        stateValue={needsPasswordReset}
-        setState={setNeedsPasswordReset}
+        value={needsPasswordReset}
+        setValue={setNeedsPasswordReset}
       />
     </form>
   )

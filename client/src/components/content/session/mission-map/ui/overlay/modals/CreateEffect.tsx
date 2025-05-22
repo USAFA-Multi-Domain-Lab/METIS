@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import Tooltip from 'src/components/content/communication/Tooltip'
-import { DetailDropdown } from 'src/components/content/form/DetailDropdown'
+import { DetailDropdown } from 'src/components/content/form/dropdown/'
 import { ButtonText } from 'src/components/content/user-controls/buttons/ButtonText'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
 import { ClientTargetEnvironment } from 'src/target-environments'
@@ -126,8 +126,8 @@ export default function CreateEffect({
           fieldType='required'
           label='Target Environment'
           options={targetEnvironments}
-          stateValue={targetEnv}
-          setState={setTargetEnv}
+          value={targetEnv}
+          setValue={setTargetEnv}
           isExpanded={false}
           getKey={({ _id }) => _id}
           render={(targetEnv: ClientTargetEnvironment) => targetEnv.name}
@@ -140,8 +140,8 @@ export default function CreateEffect({
           fieldType='required'
           label='Target'
           options={targetEnv.targets}
-          stateValue={target}
-          setState={setTarget}
+          value={target}
+          setValue={setTarget}
           isExpanded={false}
           getKey={({ _id }) => _id}
           render={(target: ClientTarget) => target.name}

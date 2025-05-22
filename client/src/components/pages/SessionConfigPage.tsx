@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { useGlobalContext, useNavigationMiddleware } from 'src/context'
+import { useGlobalContext, useNavigationMiddleware } from 'src/context/global'
 import SessionClient from 'src/sessions'
 import { compute } from 'src/toolbox'
 import { useEventListener, useMountHandler } from 'src/toolbox/hooks'

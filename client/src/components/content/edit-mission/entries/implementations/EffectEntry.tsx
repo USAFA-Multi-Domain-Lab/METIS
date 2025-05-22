@@ -2,10 +2,10 @@ import { ClientEffect } from 'src/missions/effects'
 import { useObjectFormSync } from 'src/toolbox/hooks'
 import { TEffectTrigger } from '../../../../../../../shared/missions/effects'
 import StringToolbox from '../../../../../../../shared/toolbox/strings'
-import { DetailDropdown } from '../../../form/DetailDropdown'
 import { DetailLargeString } from '../../../form/DetailLargeString'
 import { DetailLocked } from '../../../form/DetailLocked'
 import { DetailString } from '../../../form/DetailString'
+import DetailDropdown from '../../../form/dropdown/DetailDropdown'
 import { ButtonText } from '../../../user-controls/buttons/ButtonText'
 import ArgEntry from '../../target-effects/ArgEntry'
 import Entry from '../Entry'
@@ -39,8 +39,8 @@ export default function EffectEntry({
         fieldType='required'
         handleOnBlur='repopulateValue'
         label='Name'
-        stateValue={name}
-        setState={setName}
+        value={name}
+        setValue={setName}
         defaultValue={ClientEffect.DEFAULT_PROPERTIES.name}
         maxLength={ClientEffect.MAX_NAME_LENGTH}
         placeholder='Enter name...'
@@ -49,8 +49,8 @@ export default function EffectEntry({
         fieldType='required'
         label='Trigger'
         options={ClientEffect.TRIGGERS}
-        stateValue={trigger}
-        setState={setTrigger}
+        value={trigger}
+        setValue={setTrigger}
         isExpanded={false}
         render={(value: TEffectTrigger) => StringToolbox.capitalize(value)}
         getKey={(value) => value}
@@ -63,8 +63,8 @@ export default function EffectEntry({
         fieldType='optional'
         handleOnBlur='none'
         label='Description'
-        stateValue={description}
-        setState={setDescription}
+        value={description}
+        setValue={setDescription}
         placeholder='Enter description...'
       />
       <DetailLocked

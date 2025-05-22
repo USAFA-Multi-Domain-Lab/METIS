@@ -122,8 +122,8 @@ export default function ActionEntry({
         fieldType='required'
         handleOnBlur='repopulateValue'
         label='Name'
-        stateValue={name}
-        setState={setName}
+        value={name}
+        setValue={setName}
         defaultValue={ClientMissionAction.DEFAULT_PROPERTIES.name}
         maxLength={ClientMissionAction.MAX_NAME_LENGTH}
         placeholder='Enter name...'
@@ -133,8 +133,8 @@ export default function ActionEntry({
         fieldType='optional'
         handleOnBlur='none'
         label='Description'
-        stateValue={description}
-        setState={setDescription}
+        value={description}
+        setValue={setDescription}
         placeholder='Enter description...'
         key={`${action._id}_description`}
       />
@@ -142,8 +142,8 @@ export default function ActionEntry({
       <DetailNumber
         fieldType='required'
         label='Success Chance'
-        stateValue={successChance}
-        setState={setSuccessChance}
+        value={successChance}
+        setValue={setSuccessChance}
         // Convert to percentage.
         minimum={ClientMissionAction.SUCCESS_CHANCE_MIN * 100}
         // Convert to percentage.
@@ -156,16 +156,16 @@ export default function ActionEntry({
         fieldType='required'
         label='Hide'
         tooltipDescription='If enabled, the success chance will be hidden from the executor.'
-        stateValue={successChanceHidden}
-        setState={hideSuccessChance}
+        value={successChanceHidden}
+        setValue={hideSuccessChance}
         key={`${action._id}_successChanceHidden`}
       />
       <Divider />
       <DetailNumber
         fieldType='required'
         label='Process Time'
-        stateValue={processTime}
-        setState={setProcessTime}
+        value={processTime}
+        setValue={setProcessTime}
         // Convert to seconds.
         minimum={ClientMissionAction.PROCESS_TIME_MIN / 1000}
         // Convert to seconds.
@@ -177,16 +177,16 @@ export default function ActionEntry({
         fieldType='required'
         label='Hide'
         tooltipDescription='If enabled, the process time will be hidden from the executor.'
-        stateValue={processTimeHidden}
-        setState={hideProcessTime}
+        value={processTimeHidden}
+        setValue={hideProcessTime}
         key={`${action._id}_processTimeHidden`}
       />
       <Divider />
       <DetailNumber
         fieldType='required'
         label='Resource Cost'
-        stateValue={resourceCost}
-        setState={setResourceCost}
+        value={resourceCost}
+        setValue={setResourceCost}
         minimum={ClientMissionAction.RESOURCE_COST_MIN}
         integersOnly={true}
         key={`${action._id}_resourceCost`}
@@ -195,8 +195,8 @@ export default function ActionEntry({
         fieldType='required'
         label='Hide'
         tooltipDescription='If enabled, the resource cost will be hidden from the executor.'
-        stateValue={resourceCostHidden}
-        setState={hideResourceCost}
+        value={resourceCostHidden}
+        setValue={hideResourceCost}
         key={`${action._id}_resourceCostHidden`}
       />
       <Divider />
@@ -204,16 +204,16 @@ export default function ActionEntry({
         fieldType='required'
         label='Opens Node'
         tooltipDescription='If enabled, this action will open the node if successfully executed.'
-        stateValue={opensNode}
-        setState={setOpensNode}
+        value={opensNode}
+        setValue={setOpensNode}
         key={`${action._id}_opensNode`}
       />
       <DetailToggle
         fieldType='required'
         label='Hide'
         tooltipDescription='If enabled, the opens node option will be hidden from the executor.'
-        stateValue={opensNodeHidden}
-        setState={hideOpensNode}
+        value={opensNodeHidden}
+        setValue={hideOpensNode}
         key={`${action._id}_opensNodeHidden`}
       />
       <Divider />
@@ -221,8 +221,8 @@ export default function ActionEntry({
         fieldType='required'
         handleOnBlur='repopulateValue'
         label='Post-Execution Success Text'
-        stateValue={postExecutionSuccessText}
-        setState={setPostExecutionSuccessText}
+        value={postExecutionSuccessText}
+        setValue={setPostExecutionSuccessText}
         defaultValue={
           ClientMissionAction.DEFAULT_PROPERTIES.postExecutionSuccessText
         }
@@ -232,8 +232,8 @@ export default function ActionEntry({
         fieldType='required'
         handleOnBlur='repopulateValue'
         label='Post-Execution Failure Text'
-        stateValue={postExecutionFailureText}
-        setState={setPostExecutionFailureText}
+        value={postExecutionFailureText}
+        setValue={setPostExecutionFailureText}
         defaultValue={
           ClientMissionAction.DEFAULT_PROPERTIES.postExecutionFailureText
         }

@@ -80,8 +80,8 @@ export default function MissionEntry({
         fieldType='required'
         handleOnBlur='repopulateValue'
         label='Name'
-        stateValue={name}
-        setState={setName}
+        value={name}
+        setValue={setName}
         defaultValue={ClientMission.DEFAULT_PROPERTIES.name}
         maxLength={ClientMission.MAX_NAME_LENGTH}
         key={`${mission._id}_name`}
@@ -90,8 +90,8 @@ export default function MissionEntry({
         fieldType='required'
         handleOnBlur='repopulateValue'
         label='Resource Label'
-        stateValue={resourceLabel}
-        setState={setResourceLabel}
+        value={resourceLabel}
+        setValue={setResourceLabel}
         defaultValue={ClientMission.DEFAULT_PROPERTIES.resourceLabel}
         maxLength={ClientMission.MAX_RESOURCE_LABEL_LENGTH}
         key={`${mission._id}_resourceLabel`}

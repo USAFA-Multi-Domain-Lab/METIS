@@ -1,4 +1,4 @@
-import { DetailDropdown } from 'src/components/content/form/DetailDropdown'
+import { DetailDropdown } from 'src/components/content/form/dropdown/'
 import { ClientEffect } from 'src/missions/effects'
 import ClientMissionForce from 'src/missions/forces'
 import { compute } from 'src/toolbox'
@@ -63,8 +63,8 @@ export default function ArgForce({
         fieldType={'required'}
         label={label}
         options={forces}
-        stateValue={forceValue}
-        setState={setForceValue}
+        value={forceValue}
+        setValue={setForceValue}
         tooltipDescription={forceTooltip}
         isExpanded={false}
         getKey={({ _id }) => _id}
@@ -81,8 +81,8 @@ export default function ArgForce({
         fieldType={'optional'}
         label={label}
         options={forces}
-        stateValue={optionalForceValue}
-        setState={setOptionalForceValue}
+        value={optionalForceValue}
+        setValue={setOptionalForceValue}
         tooltipDescription={forceTooltip}
         isExpanded={false}
         render={(option) => option?.name}

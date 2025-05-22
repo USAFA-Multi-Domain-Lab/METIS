@@ -1,5 +1,5 @@
 import { RefObject } from 'react'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
 import { useEventListener } from 'src/toolbox/hooks'
 import { Vector2D } from '../../../../../../shared/toolbox/space'

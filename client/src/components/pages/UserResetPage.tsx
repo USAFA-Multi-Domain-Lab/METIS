@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
 import { useMountHandler, usePostInitEffect } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
@@ -187,8 +187,8 @@ export default function UserResetPage(): JSX.Element | null {
             fieldType='required'
             handleOnBlur={handlePassword1Error}
             label='New Password'
-            stateValue={password1}
-            setState={setPassword1}
+            value={password1}
+            setValue={setPassword1}
             errorMessage={password1ErrorMessage}
             inputType='password'
             placeholder='Enter a new password here...'
@@ -197,8 +197,8 @@ export default function UserResetPage(): JSX.Element | null {
             fieldType='required'
             handleOnBlur={handlePassword2Error}
             label='Confirm New Password'
-            stateValue={password2}
-            setState={setPassword2}
+            value={password2}
+            setValue={setPassword2}
             errorMessage={password2ErrorMessage}
             inputType='password'
             placeholder='Confirm your new password here...'

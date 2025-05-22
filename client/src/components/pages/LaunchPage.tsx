@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import ClientMission from 'src/missions'
 import SessionClient from 'src/sessions'
 import { compute } from 'src/toolbox'

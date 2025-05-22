@@ -3,7 +3,7 @@ import {
   ButtonText,
   TButtonText_P,
 } from 'src/components/content/user-controls/buttons/ButtonText'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import ClientMissionAction from 'src/missions/actions'
 import ClientMissionNode from 'src/missions/nodes'
 import SessionClient from 'src/sessions'

@@ -11,8 +11,8 @@ import './DetailToggle.scss'
  */
 export function DetailToggle({
   label,
-  stateValue,
-  setState,
+  value: stateValue,
+  setValue: setState,
   // Optional Properties
   lockState = 'unlocked',
   tooltipDescription = '',

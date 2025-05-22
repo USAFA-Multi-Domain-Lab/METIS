@@ -1,11 +1,5 @@
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { LocalContext, LocalContextProvider } from 'src/context/local'
 import ClientMission from 'src/missions'
 import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
@@ -138,19 +132,18 @@ const MASTER_TAB: TTabBarTab = {
  * Context for the mission map, which will help distribute
  * mission map properties to its children.
  */
-const MapContext = React.createContext<TMapContextData | null>(null)
+const mapContext = new LocalContext<
+  TMissionMap_P,
+  TMissionMap_C,
+  TMissionMap_S,
+  TMissionMap_E
+>()
 
 /**
  * Hook used by mission-map-related components to access
  * the mission-map context.
  */
-export const useMapContext = () => {
-  const context = useContext(MapContext) as TMapContextData | null
-  if (!context) {
-    throw new Error('useMapContext must be used within an map provider')
-  }
-  return context
-}
+export const useMapContext = mapContext.getHook()
 
 /* -- COMPONENTS -- */
 
@@ -248,11 +241,6 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
     }),
   )
 
-  /**
-   * The provider for the map context.
-   */
-  const Provider = MapContext.Provider as React.Provider<TMapContextData>
-
   /* -- COMPUTED -- */
 
   /**
@@ -260,16 +248,6 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
    * via the mouse wheel or track pad.
    */
   const disableZoom: boolean = !!overlayContent
-
-  /**
-   * The current value to provide to all child
-   * components of the map.
-   */
-  const contextValue: TMapContextData = {
-    ...defaultedProps,
-    elements,
-    state,
-  }
 
   /* -- FUNCTIONS -- */
 
@@ -723,7 +701,13 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
 
   // Render root JSX.
   return (
-    <Provider value={contextValue}>
+    <LocalContextProvider
+      context={mapContext}
+      defaultedProps={defaultedProps}
+      computed={{}}
+      state={state}
+      elements={elements}
+    >
       <div className={rootClassName} ref={elements.root} onWheel={onWheel}>
         <PanController
           cameraPosition={cameraPosition}
@@ -749,7 +733,7 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
         />
         {overlayJsx}
       </div>
-    </Provider>
+    </LocalContextProvider>
   )
 }
 
@@ -874,6 +858,11 @@ export type TMissionMap_P = {
    */
   applyNodeTooltip?: ((node: ClientMissionNode) => string) | null
 }
+
+/**
+ * Computed properties for {@link MissionMap} component.
+ */
+export type TMissionMap_C = {}
 
 /**
  * Consolidated, high-level state for `MissionMap`.

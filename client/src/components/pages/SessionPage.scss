@@ -84,25 +84,7 @@
     }
 
     .PanelSizeRelationship {
-      &,
-      .ResizablePanel,
-      .ResizeBar,
-      .MissionMap,
-      .OutputPanel {
-        height: $map-n-output-height;
-      }
-
-      .ResizablePanel:first-child {
-        display: grid;
-        align-items: center;
-
-        .MissionMap,
-        .NodeActions,
-        .ExecuteNodePath {
-          grid-column: 1 / 2;
-          grid-row: 1 / 2;
-        }
-      }
+      height: $map-n-output-height;
     }
 
     .MissionMap {
@@ -117,17 +99,6 @@
         width: 100%;
         height: 100%;
       }
-    }
-
-    .NodeActions {
-      position: relative;
-      max-height: 310px;
-    }
-
-    .ExecuteNodePath {
-      position: relative;
-      min-height: 320px;
-      max-height: 60%;
     }
   }
 

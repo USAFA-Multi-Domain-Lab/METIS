@@ -113,6 +113,7 @@ export default function ({
     case 'force':
     case 'node':
     case 'action':
+    case 'file':
       return (
         <ArgMissionComponent
           effect={effect}

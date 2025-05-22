@@ -1,4 +1,4 @@
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import { TUserPermissionId } from '../../../../../shared/users/permissions'
 import If from './If'
 

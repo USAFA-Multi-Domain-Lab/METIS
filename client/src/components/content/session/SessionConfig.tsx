@@ -4,9 +4,9 @@ import {
   TSessionAccessibility,
   TSessionConfig,
 } from '../../../../../shared/sessions'
-import { DetailDropdown } from '../form/DetailDropdown'
 import { DetailString } from '../form/DetailString'
 import { DetailToggle } from '../form/DetailToggle'
+import { DetailDropdown } from '../form/dropdown/'
 import { ButtonText } from '../user-controls/buttons/ButtonText'
 import './SessionConfig.scss'
 
@@ -52,8 +52,8 @@ export default function SessionConfig({
     <div className='SessionConfig'>
       <DetailString
         label='Name'
-        stateValue={name}
-        setState={setName}
+        value={name}
+        setValue={setName}
         fieldType='required'
         handleOnBlur='repopulateValue'
         defaultValue={mission.name}
@@ -61,8 +61,8 @@ export default function SessionConfig({
       <DetailDropdown<TSessionConfig['accessibility']>
         label='Accessibility'
         options={['public', 'id-required']}
-        stateValue={accessibility}
-        setState={setAccessibility}
+        value={accessibility}
+        setValue={setAccessibility}
         isExpanded={false}
         getKey={(value) => value}
         render={(value) => {
@@ -92,13 +92,13 @@ export default function SessionConfig({
       /> */}
       <DetailToggle
         label='Infinite Resources:'
-        stateValue={infiniteResources}
-        setState={setInfiniteResources}
+        value={infiniteResources}
+        setValue={setInfiniteResources}
       />
       <DetailToggle
         label='Enable Effects:'
-        stateValue={effectsEnabled}
-        setState={setEffectsEnabled}
+        value={effectsEnabled}
+        setValue={setEffectsEnabled}
       />
       <div className='Buttons'>
         <ButtonText text={saveButtonText} onClick={onSave} />

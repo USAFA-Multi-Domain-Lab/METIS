@@ -8,7 +8,7 @@ export interface AnyObject {
  * @param TValue The type for the values.
  */
 export interface TSingleTypeObject<TValue> {
-  [key: string]: TValue
+  [key: string | number | symbol]: TValue
 }
 
 /**
