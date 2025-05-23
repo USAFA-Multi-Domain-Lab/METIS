@@ -4,6 +4,7 @@ import { TUserPermissionId } from 'metis/users/permissions'
 import UserModel from '../database/models/users'
 import ServerLogin from '../logins'
 import SessionServer from '../sessions'
+import ServerSessionMember from '../sessions/members'
 
 /**
  * Middleware used to enforce authorization for a given route.
@@ -15,6 +16,9 @@ export const auth =
   (request: Request, response: Response, next: NextFunction): void => {
     // Gather details.
     let login: ServerLogin | undefined = ServerLogin.get(request.session.userId)
+    let session: SessionServer | undefined = SessionServer.get(login?.sessionId)
+    let sessionMember: ServerSessionMember | undefined =
+      session?.getMemberByUserId(login?.userId)
 
     // If no login information is returned, return 401.
     if (!login) {
@@ -29,7 +33,7 @@ export const auth =
     }
     // If the being in session is required and the user
     // is not in a session, return 401.
-    if (authentication === 'in-session' && !login.sessionId) {
+    if (authentication === 'in-session' && (!session || !sessionMember)) {
       response.sendStatus(401)
       return
     }
@@ -53,7 +57,8 @@ export const auth =
     // If authentication is 'in-session', store the session
     // in the response locals.
     if (authentication === 'in-session') {
-      response.locals.session = SessionServer.get(login.sessionId!)
+      response.locals.session = session
+      response.locals.sessionMember = sessionMember
     }
 
     // Call next middleware.

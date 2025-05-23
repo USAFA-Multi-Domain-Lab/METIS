@@ -1,6 +1,7 @@
 import { TFileReferenceJson } from 'metis/files/references'
 import { TMetisBaseComponents } from 'metis/index'
 import { TMissionComponent } from '..'
+import { MissionForce } from '../forces'
 
 /**
  * A file that is attached to a mission as a part
@@ -10,6 +11,11 @@ export default abstract class MissionFile<
   T extends TMetisBaseComponents = TMetisBaseComponents,
 > implements TMissionComponent<T, MissionFile<T>>
 {
+  /**
+   * The forces that currently have access to the file.
+   */
+  protected access: string[]
+
   // Implemented.
   public get referenceId(): string {
     return this.reference._id
@@ -83,7 +89,39 @@ export default abstract class MissionFile<
      * The mission of which this file is a part.
      */
     public readonly mission: T['mission'],
-  ) {}
+  ) {
+    this.access = [...initialAccess]
+  }
+
+  /**
+   * Whether the given force has access to the file.
+   * @param force The force or the ID of the force to check.
+   * @returns Whether the force has access to the file.
+   */
+  public hasAccess(force: MissionForce | string): boolean {
+    let forceId: string = force instanceof MissionForce ? force._id : force
+    return this.access.includes(forceId)
+  }
+
+  /**
+   * Grants access to the file to the given force.
+   * @param force The force or the ID of the force to grant access to.
+   */
+  public grantAccess(force: MissionForce | string): void {
+    let forceId: string = force instanceof MissionForce ? force._id : force
+    if (!this.access.includes(forceId)) {
+      this.access.push(forceId)
+    }
+  }
+
+  /**
+   * Revokes access to the file from the given force.
+   * @param force The force or the ID of the force to revoke access from.
+   */
+  public revokeAccess(force: MissionForce | string): void {
+    let forceId: string = force instanceof MissionForce ? force._id : force
+    this.access = this.access.filter((f) => f !== forceId)
+  }
 
   /**
    * Converts the mission file to a JSON

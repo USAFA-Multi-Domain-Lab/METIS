@@ -108,6 +108,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   }
   const [mission, setMission] = useState<ClientMission>(new ClientMission())
   const [globalFiles, setGlobalFiles] = useState<ClientFileReference[]>([])
+  const [localFiles, setLocalFiles] = useState<ClientMissionFile[]>([])
   const selectedForceState = useState<ClientMissionForce | null>(null)
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(
     props.missionId === null ? true : false,
@@ -257,14 +258,14 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
    */
   const missionFileListProps: TMissionFileList_P = {
     name: 'In Mission',
-    items: mission.files,
+    items: localFiles,
     itemsPerPageMin: 4,
     onSelect: (file) => {
       if (file) mission.select(file)
       else mission.deselect()
     },
     onDetachRequest: (file) => {
-      mission.files = mission.files.filter((f) => f._id !== file._id)
+      setLocalFiles(localFiles.filter((f) => f._id !== file._id))
       onChange(file)
     },
   }
@@ -288,7 +289,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
       if (button !== 'link') return
 
       let file = ClientMissionFile.fromFileReference(reference, mission)
-      mission.files.push(file)
+      setLocalFiles([...localFiles, file])
       onChange(file)
     },
   }
@@ -313,6 +314,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
           nonRevealedDisplayMode: 'show',
         })
         setMission(mission)
+        setLocalFiles(mission.files)
         setSelection(mission)
         setDefectiveComponents(mission.defectiveComponents)
 
@@ -333,6 +335,12 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     // Mark mount as handled.
     done()
   })
+
+  // Update the files in the mission when the
+  // local files list changes.
+  useEffect(() => {
+    mission.files = localFiles
+  }, [localFiles])
 
   // Enable/disable the save button based on
   // whether there are unsaved changes or not.
@@ -500,6 +508,16 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   // Add event listener to watch for when a new
   // prototype is spawned in the mission.
   useEventListener(mission, 'new-prototype', () => setAreUnsavedChanges(true))
+
+  // Update the list of local files when file access
+  // is granted or revoked.
+  useEventListener(
+    mission,
+    ['file-access-granted', 'file-access-revoked'],
+    () => {
+      setLocalFiles(mission.files)
+    },
+  )
 
   /* -- FUNCTIONS -- */
 

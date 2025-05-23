@@ -2,16 +2,24 @@ import { TMetisClientComponents } from 'src'
 import ClientFileReference from 'src/files/references'
 import SessionClient from 'src/sessions'
 import ClientMission from '..'
+import {
+  EventManager,
+  TListenerTargetEmittable,
+} from '../../../../shared/events'
 import { TFileReferenceJson } from '../../../../shared/files/references'
 import MissionFile, {
   TMissionFileJson,
 } from '../../../../shared/missions/files/'
 import StringToolbox from '../../../../shared/toolbox/strings'
+import ClientMissionForce from '../forces'
 
 /**
  * Client implementation of `MissionFile` class.
  */
-export default class ClientMissionFile extends MissionFile<TMetisClientComponents> {
+export default class ClientMissionFile
+  extends MissionFile<TMetisClientComponents>
+  implements TListenerTargetEmittable<TFileEventMethods>
+{
   /**
    * The MIME type of the file.
    */
@@ -24,6 +32,50 @@ export default class ClientMissionFile extends MissionFile<TMetisClientComponent
    */
   public get size(): number {
     return this.reference.size
+  }
+
+  /**
+   * Manages the mission's event listeners and events.
+   */
+  private eventManager: EventManager<TFileEventMethods>
+
+  public constructor(
+    _id: string,
+    alias: string | null,
+    initialAccess: string[],
+    reference: ClientFileReference,
+    mission: ClientMission,
+  ) {
+    super(_id, alias, initialAccess, reference, mission)
+
+    // Initialize the event manager.
+    this.eventManager = new EventManager(this)
+    this.emitEvent = this.eventManager.emitEvent
+    this.addEventListener = this.eventManager.addEventListener
+    this.removeEventListener = this.eventManager.removeEventListener
+  }
+
+  // Implemented
+  public emitEvent
+
+  // Implemented
+  public addEventListener
+
+  // Implemented
+  public removeEventListener
+
+  // Overridden
+  public grantAccess(force: ClientMissionForce | string): void {
+    super.grantAccess(force)
+    this.emitEvent('access-granted')
+    this.mission.emitEvent('file-access-granted', [])
+  }
+
+  // Overridden
+  public revokeAccess(force: ClientMissionForce | string): void {
+    super.revokeAccess(force)
+    this.emitEvent('access-revoked')
+    this.mission.emitEvent('file-access-revoked', [])
   }
 
   /**
@@ -150,3 +202,8 @@ export type TMissionFileDownloadOptions = {
    */
   method?: 'file-api' | 'session-api'
 }
+
+/**
+ * The methods that can be emitted by the `ClientMissionFile` class.
+ */
+export type TFileEventMethods = 'access-granted' | 'access-revoked'

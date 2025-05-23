@@ -1475,6 +1475,12 @@ type TDuplicateForceInfo = {
  * - Triggered when a node's exclusion status is set.
  * @option `session-reset`
  * - Triggered when a session that uses this mission resets.
+ * @option `file-access-granted'
+ * - Triggered when a force is granted access to a file in the
+ *   mission.
+ * @option `file-access-revoked'
+ * - Triggered when a force is revoked access to a file in the
+ *   mission.
  */
 type TMissionEventMethods =
   | 'activity'
@@ -1486,6 +1492,8 @@ type TMissionEventMethods =
   | 'autopan'
   | 'set-node-exclusion'
   | 'session-reset'
+  | 'file-access-granted'
+  | 'file-access-revoked'
 
 /**
  * The argument(s) used in the event handler for the mission's event manager.

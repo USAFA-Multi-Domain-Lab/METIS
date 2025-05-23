@@ -5,10 +5,12 @@ import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
 import ClientActionExecution from 'src/missions/actions/executions'
 import ClientExecutionOutcome from 'src/missions/actions/outcomes'
+import ClientMissionFile from 'src/missions/files'
 import ClientOutput from 'src/missions/forces/outputs'
 import ClientMissionNode from 'src/missions/nodes'
 import ClientUser from 'src/users'
 import {
+  TFileAccessModifierData,
   TGenericServerEvents,
   TResponseEvents,
   TServerEvents,
@@ -933,6 +935,51 @@ export default class SessionClient extends Session<TMetisClientComponents> {
   }
 
   /**
+   * Handles the granting/revoking of access to a file.
+   * @param fileId The ID of the file in question.
+   * @param forceId The ID of the force with newly granted/revoked access.
+   * @param granted Whether or not the access is granted.
+   */
+  private updateFileAccess = (data: TFileAccessModifierData): void => {
+    let force = this.mission.getForceById(data.forceId)
+    let file = this.mission.getFileById(data.fileId)
+
+    // If the force is not found, abort.
+    if (!force) return
+
+    // Handle file-access change based on whether
+    // access is granted or revoked.
+    if (data.granted) {
+      // If the file is not found in the mission,
+      // add it to the mission.
+      if (!file) {
+        file = ClientMissionFile.fromJson(data.fileData, this.mission)
+        this.mission.files.push(file)
+      }
+      // Grant access for the force to the file.
+      file.grantAccess(force)
+    } else {
+      // If the following conditions are met, remove
+      // the file from the mission entirely:
+      // 1. The file currently is found in the mission.
+      // 2. The member is assigned to the force in question.
+      // 3. The member does not have complete visibility, which
+      //    would otherwise negate file-access restrictions.
+      if (
+        file &&
+        this.member.forceId === data.forceId &&
+        !this.member.isAuthorized('completeVisibility')
+      ) {
+        this.mission.files = this.mission.files.filter(
+          (f) => f._id !== file!._id,
+        )
+      }
+      // Revoke access for the force to the file.
+      if (file) file.revokeAccess(force)
+    }
+  }
+
+  /**
    * Handles when the session is started.
    * @param event The event emitted by the server.
    */
@@ -1056,9 +1103,12 @@ export default class SessionClient extends Session<TMetisClientComponents> {
       case 'force-resource-pool':
         this.modifyResourcePool(data.forceId, data.operand)
         break
+      case 'file-update-access':
+        this.updateFileAccess(data)
+        break
       default:
         throw new Error(
-          `Error: Incorrect data sent to modifier handler. Data: ${data}`,
+          `Error: Data format sent to modifier handler is not recognized. Data: ${data}`,
         )
     }
   }

@@ -121,17 +121,28 @@ export type TServerMethod = keyof TServerEvents
 export type TServerEvent = TServerEvents[TServerMethod]
 
 /**
+ * Used to identify the data structure.
+ * @option `"node-block":` The data needed to block or unblock a node.
+ * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
+ * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
+ * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
+ * @option `"force-resource-pool":` The data needed to modify the resource pool of a force.
+ */
+type TModifierDataKey =
+  | 'node-update-block'
+  | 'node-action-success-chance'
+  | 'node-action-process-time'
+  | 'node-action-resource-cost'
+  | 'force-resource-pool'
+  | 'file-update-access'
+
+/**
  * The data necessary to apply a modifier to an object in METIS.
  */
 type TModifierData = [
   {
     /**
-     * Used to identify the data structure.
-     * @option `"node-block":` The data needed to block or unblock a node.
-     * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
-     * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
-     * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
-     * @option `"force-resource-pool":` The data needed to modify the resource pool of a force.
+     * @see {@link TModifierDataKey}
      */
     key: 'node-update-block'
     /**
@@ -145,12 +156,7 @@ type TModifierData = [
   },
   {
     /**
-     * Used to identify the data structure.
-     * @option `"node-block":` The data needed to block or unblock a node.
-     * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
-     * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
-     * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
-     * @option `"force-resource-pool":` The data needed to modify the resource pool of a force.
+     * @see {@link TModifierDataKey}
      */
     key: 'node-action-success-chance'
     /**
@@ -169,12 +175,7 @@ type TModifierData = [
   },
   {
     /**
-     * Used to identify the data structure.
-     * @option `"node-block":` The data needed to block or unblock a node.
-     * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
-     * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
-     * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
-     * @option `"force-resource-pool":` The data needed to modify the resource pool of a force.
+     * @see {@link TModifierDataKey}
      */
     key: 'node-action-process-time'
     /**
@@ -193,12 +194,7 @@ type TModifierData = [
   },
   {
     /**
-     * Used to identify the data structure.
-     * @option `"node-block":` The data needed to block or unblock a node.
-     * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
-     * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
-     * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
-     * @option `"force-resource-pool":` The data needed to modify the resource pool of a force.
+     * @see {@link TModifierDataKey}
      */
     key: 'node-action-resource-cost'
     /**
@@ -217,12 +213,7 @@ type TModifierData = [
   },
   {
     /**
-     * Used to identify the data structure.
-     * @option `"node-block":` The data needed to block or unblock a node.
-     * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
-     * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
-     * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
-     * @option `"force-resource-pool":` The data needed to modify the resource pool of a force.
+     * @see {@link TModifierDataKey}
      */
     key: 'force-resource-pool'
     /**
@@ -234,7 +225,56 @@ type TModifierData = [
      */
     operand: number
   },
+  {
+    /**
+     * @see {@link TModifierDataKey}
+     */
+    key: 'file-update-access'
+    /**
+     * The ID of the force to modify.
+     */
+    forceId: string
+    /**
+     * The ID of the file to modify.
+     */
+    fileId: string
+    /**
+     * The access to grant or revoke.
+     */
+    granted: true
+    /**
+     * The data for the file now accessible to
+     * the force.
+     */
+    fileData: TMissionFileJson
+  },
+  {
+    /**
+     * @see {@link TModifierDataKey}
+     */
+    key: 'file-update-access'
+    /**
+     * The ID of the force to modify.
+     */
+    forceId: string
+    /**
+     * The ID of the file to modify.
+     */
+    fileId: string
+    /**
+     * The access to grant or revoke.
+     */
+    granted: false
+  },
 ]
+
+/**
+ * Modifier data for granting/revoking access to a file.
+ */
+export type TFileAccessModifierData = Extract<
+  TModifierData[number],
+  { key: 'file-update-access' }
+>
 
 /**
  * The data needed to apply a modifier to an object in METIS.

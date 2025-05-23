@@ -267,7 +267,9 @@ export default abstract class Session<
    * @returns The member with the given ID, or undefined
    * if not found.
    */
-  public getMember(_id: TMember<T>['_id']): TMember<T> | undefined {
+  public getMember(
+    _id: TMember<T>['_id'] | null | undefined,
+  ): TMember<T> | undefined {
     return this.members.find((member) => member._id === _id)
   }
 
@@ -276,7 +278,9 @@ export default abstract class Session<
    * @returns The member with the given user ID, or undefined
    * if not found.
    */
-  public getMemberByUserId(userId: User['_id']): TMember<T> | undefined {
+  public getMemberByUserId(
+    userId: User['_id'] | null | undefined,
+  ): TMember<T> | undefined {
     return this.members.find((member) => member.userId === userId)
   }
 

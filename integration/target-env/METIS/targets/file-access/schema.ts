@@ -1,3 +1,4 @@
+import { TFileMetadata } from 'metis/target-environments/args/mission-component/file-arg'
 import { TForceMetadata } from 'metis/target-environments/args/mission-component/force-arg'
 import Dependency from 'metis/target-environments/dependencies'
 import TargetSchema from '../../../../library/target-env-classes/targets'
@@ -6,18 +7,33 @@ import TargetSchema from '../../../../library/target-env-classes/targets'
  * A target available in the METIS target environment that
  * allows a user to manage access to files from forces.
  */
-const ResourcePool = new TargetSchema({
-  name: 'File',
+const FileAccess = new TargetSchema({
+  name: 'File Access',
   description: '',
   script: async (context) => {
     // Extract the effect and its arguments from the context.
     const { effect } = context
-    const { fileMetadata, forceMetadata } = effect.args
+    const { fileMetadata, forceMetadata, access } = effect.args
     const { forceKey } = forceMetadata as TForceMetadata
-    const { fileId } = fileMetadata
+    const { fileId } = fileMetadata as TFileMetadata
 
-    // todo: Add access control here for files.
-    // context.modifyResourcePool(modifier, { forceKey })
+    // Throw an error if the file ID or force key is missing.
+    if (!fileId || !forceKey) {
+      throw new Error('File ID or Force Key is missing.')
+    }
+
+    // Realize effect based on the value of "access".
+    switch (access) {
+      case 'granted':
+        context.grantFileAccess(fileId, forceKey)
+        break
+      case 'revoked':
+        context.revokeFileAccess(fileId, forceKey)
+        break
+      case 'no-change':
+      default:
+        break
+    }
   },
   args: [
     {
@@ -57,4 +73,4 @@ const ResourcePool = new TargetSchema({
   ],
 })
 
-export default ResourcePool
+export default FileAccess

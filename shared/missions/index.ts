@@ -311,9 +311,7 @@ export default abstract class Mission<
       // Filter files based on the force passed,
       // if one is passed.
       if (force) {
-        filesToAdd = this.files.filter((file) =>
-          file.initialAccess.includes(force._id),
-        )
+        filesToAdd = this.files.filter((file) => file.hasAccess(force))
       } else {
         filesToAdd = this.files
       }
