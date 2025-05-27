@@ -79,15 +79,15 @@ export default class ClientMissionFile
   }
 
   /**
-   * Downloads the file from the server by opening up
-   * a new tab with the file's URI.
+   * Downloads the file from the server by opening up a new tab with
+   * the file's URI.
+   * @param options Additional parameters specifying how the download
+   * should be carried out.
    */
   public download(options: TMissionFileDownloadOptions = {}): void {
     const { method = 'file-api' } = options
-    switch (options.method) {
-      case 'file-api':
-        this.reference.download()
-        break
+
+    switch (method) {
       case 'session-api':
         window.open(
           StringToolbox.joinPaths(
@@ -96,17 +96,14 @@ export default class ClientMissionFile
             this._id,
             'download',
           ),
-          '_blank',
         )
         break
+      case 'file-api':
       default:
-        console.warn(
-          `Invalid download method "${method}" specified. Defaulting to "file-api".`,
-        )
-        this.reference.download()
+        if (this.reference) this.reference.download()
+        else console.warn('No file reference available for download.')
         break
     }
-    this.reference.download()
   }
 
   /**

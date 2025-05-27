@@ -25,7 +25,6 @@ const fileReferenceSchema = new FileReferenceSchema(
   {
     name: {
       type: String,
-      unique: true,
       required: true,
       trim: true,
       validate: () => {
@@ -75,6 +74,16 @@ const fileReferenceSchema = new FileReferenceSchema(
   },
 )
 
+/* -- SCHEMA INDEXES -- */
+
+fileReferenceSchema.index(
+  { name: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { deleted: false },
+  },
+)
+
 /* -- SCHEMA MIDDLEWARE -- */
 
 // Prevent deleted files from being returned in queries,
@@ -101,8 +110,6 @@ fileReferenceSchema.pre('save', async function (next) {
     await FileReferenceModel.exists({
       name: candidate,
       _id: { $ne: file._id },
-    }).setOptions({
-      includeDeleted: true,
     })
   ) {
     candidate = `${base} (${counter})${ext}`
