@@ -8,6 +8,7 @@ import ServerMissionForce from 'metis/server/missions/forces'
 import ServerMissionNode from 'metis/server/missions/nodes'
 import StringToolbox from 'metis/toolbox/strings'
 import { model, ProjectionType, QueryOptions, Schema } from 'mongoose'
+import MetisDatabase from '..'
 import { MissionSchema } from './classes'
 import type {
   TMission,
@@ -110,6 +111,56 @@ const findByIdAndModify = (
       return reject(error)
     }
   })
+}
+
+/**
+ * Ensures that any file references that are null
+ * get populated with the proper reference IDs.
+ * This is necessary because `null` indicates that
+ * the file reference has been deleted, but the ID
+ * is still needed for METIS to function properly.
+ * @param mission The mission document to process.
+ * @throws An error if the recursive query fails to
+ * retrieve the necessary data.
+ */
+const ensureNoNullFiles = async (mission: TMissionDoc) => {
+  // Quick scan to see if we even need to re-query
+  if (!mission.files || !mission.files.some((f) => f.reference === null)) return
+
+  // Fetch unpopulated file references only
+  const unpopulated = await MissionModel.findOne(
+    { _id: mission._id },
+    { files: 1 },
+    { populateFileReferences: false },
+  ).lean() // lean gives raw JS object
+
+  if (!unpopulated) {
+    throw MetisDatabase.generateValidationError(
+      `Failed to find mission document with ID "${mission._id}".`,
+    )
+  }
+
+  // Create a map of mission-file IDs to their references.
+  const idMap = new Map(
+    unpopulated.files.map((f) => [f._id.toString(), f.reference]),
+  )
+
+  for (let file of mission.files) {
+    if (file.reference === null) {
+      // Assign retrieved reference IDs to the original
+      // document.
+
+      const recoveredRef = idMap.get(file._id.toString())
+
+      if (!recoveredRef) {
+        throw MetisDatabase.generateValidationError(
+          `Failed to find reference ID for file ${file._id} in mission ${mission.name}`,
+        )
+      }
+
+      file.reference = recoveredRef
+    }
+  }
 }
 
 /**
@@ -408,8 +459,6 @@ export const schema = new MissionSchema(
           },
           alias: {
             type: String,
-            default: null,
-            required: true,
             validate: validate_mission_files_alias,
             maxLength: Mission.MAX_NAME_LENGTH,
           },
@@ -454,8 +503,12 @@ schema.pre<TMissionDoc>('save', function (next) {
 schema.pre<TPreMissionQuery>(
   ['find', 'findOne', 'findOneAndUpdate', 'updateOne'],
   function (next) {
+    const { populateFileReferences = true } = this.getOptions()
+
     // Modify the query.
     queryForApiResponse(this)
+    // Populate file-references.
+    if (populateFileReferences) this.populate('files.reference')
     // Call the next middleware.
     return next()
   },
@@ -464,16 +517,18 @@ schema.pre<TPreMissionQuery>(
 // Converts ObjectIds to strings.
 schema.post<TPostMissionQuery>(
   ['find', 'findOne', 'updateOne', 'findOneAndUpdate'],
-  function (missionData: TMissionDoc | TMissionDoc[]) {
+  async function (missionData: TMissionDoc | TMissionDoc[]) {
     // If the mission is null, then return.
     if (!missionData) return
 
     // Convert the mission data to an array if it isn't already.
     missionData = !Array.isArray(missionData) ? [missionData] : missionData
 
-    // Transform the ObjectIds to strings.
     for (let missionDatum of missionData) {
+      // Transform the ObjectIds to strings.
       missionDatum._id = missionDatum.id
+      // Confirm that no file references are null.
+      await ensureNoNullFiles(missionDatum)
     }
   },
 )

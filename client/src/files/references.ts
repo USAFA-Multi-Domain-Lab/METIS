@@ -42,8 +42,32 @@ export default class ClientFileReference extends FileReference {
       json.size,
       DateToolbox.fromNullableISOString(json.createdAt),
       DateToolbox.fromNullableISOString(json.updatedAt),
+      false,
     )
   }
+
+  /**
+   * Creates a new {@link ClientFileReference} instance used to represent
+   * a previously-existing and now-deleted file.
+   * @param knownData Optional partial data to initialize the reference.
+   * Only pass the properties known for the deleted file, if any.
+   * @returns A new {@link ClientFileReference} instance.
+   */
+  public static createDeleted(
+    knownData: Partial<TFileReferenceJson> = {},
+  ): ClientFileReference {
+    return new ClientFileReference(
+      knownData._id ?? StringToolbox.generateRandomId(),
+      knownData.name ?? 'File Deleted',
+      knownData.path ?? '/',
+      knownData.mimetype ?? 'application/octet-stream',
+      knownData.size ?? 0,
+      DateToolbox.fromNullableISOString(knownData.createdAt ?? null),
+      DateToolbox.fromNullableISOString(knownData.updatedAt ?? null),
+      true,
+    )
+  }
+
   /**
    * Calls the API to fetch one file reference by ID.
    * @param _id The ID of the reference to fetch.

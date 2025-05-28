@@ -46,10 +46,18 @@ export default abstract class FileReference implements TMetisComponent {
   public updatedAt: Date | null
 
   /**
+   * Whether the file has been deleted.
+   * This is used to indicate that the file
+   * is no longer available, but may still
+   * be referenced in some contexts.
+   */
+  public deleted: boolean
+
+  /**
    * See corresponding class properties for details
    * on the parameters of this constructor.
    */
-  public constructor(
+  protected constructor(
     _id: string,
     name: string,
     path: string,
@@ -57,6 +65,7 @@ export default abstract class FileReference implements TMetisComponent {
     size: number,
     createdAt: Date | null,
     updatedAt: Date | null,
+    deleted: boolean,
   ) {
     this._id = _id
     this.name = name
@@ -65,6 +74,7 @@ export default abstract class FileReference implements TMetisComponent {
     this.size = size
     this.createdAt = createdAt
     this.updatedAt = updatedAt
+    this.deleted = deleted
   }
 
   /**

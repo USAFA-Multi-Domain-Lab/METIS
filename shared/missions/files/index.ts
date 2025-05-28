@@ -23,7 +23,7 @@ export default abstract class MissionFile<
 
   // Implemented.
   public get name(): string {
-    return this.alias ?? this.originalName
+    return this.alias || this.originalName
   }
 
   /**
@@ -73,7 +73,7 @@ export default abstract class MissionFile<
      * @note If `null`, the original name of the file
      * will be used.
      */
-    public alias: string | null,
+    public alias: string,
     /**
      * Forces which have initial access to the file.
      * Otherwise, any non-specified forces will only
@@ -141,7 +141,7 @@ export default abstract class MissionFile<
     'reference'
   > = {
     _id: '',
-    alias: null,
+    alias: '',
     initialAccess: [],
   }
 }
@@ -157,10 +157,10 @@ export type TMissionFileJson = {
   /**
    * An alias given to the file, specific to the
    * scenario's needs.
-   * @note If `null`, the original name of the file
+   * @note If '', the original name of the file
    * will be used.
    */
-  alias: string | null
+  alias: string
   /**
    * Forces which have initial access to the file.
    * Otherwise, any non-specified forces will only

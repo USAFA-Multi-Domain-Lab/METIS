@@ -6,7 +6,6 @@ import {
   EventManager,
   TListenerTargetEmittable,
 } from '../../../../shared/events'
-import { TFileReferenceJson } from '../../../../shared/files/references'
 import MissionFile, {
   TMissionFileJson,
 } from '../../../../shared/missions/files/'
@@ -39,9 +38,9 @@ export default class ClientMissionFile
    */
   private eventManager: EventManager<TFileEventMethods>
 
-  public constructor(
+  protected constructor(
     _id: string,
-    alias: string | null,
+    alias: string,
     initialAccess: string[],
     reference: ClientFileReference,
     mission: ClientMission,
@@ -107,24 +106,24 @@ export default class ClientMissionFile
   }
 
   /**
-   * Creates a new `ClientMissionFile` instance from JSON.
    * @param data The JSON data from which to create the instance.
    * @param mission The mission to which this file belongs.
+   * @returns A new {@link ClientMissionFile} instance.
    */
   public static fromJson(
     data: TMissionFileJson,
     mission: ClientMission,
   ): ClientMissionFile {
-    let referenceJson: TFileReferenceJson | string = data.reference
+    let reference: ClientFileReference
 
-    if (typeof referenceJson === 'string') {
-      throw new Error(
-        '`reference` property must be populated to create a `ClientMissionFile` instance.',
-      )
+    // Parse reference data.
+    if (typeof data.reference === 'object') {
+      reference = ClientFileReference.fromJson(data.reference)
+    } else {
+      reference = ClientFileReference.createDeleted({ _id: data.reference })
     }
 
-    let reference = ClientFileReference.fromJson(referenceJson)
-
+    // Create and return new `ClientFileReference` instance.
     return new ClientMissionFile(
       data._id,
       data.alias,
@@ -148,7 +147,7 @@ export default class ClientMissionFile
   ): ClientMissionFile {
     return new ClientMissionFile(
       StringToolbox.generateRandomId(),
-      reference.name,
+      '',
       [],
       reference,
       mission,
@@ -157,8 +156,8 @@ export default class ClientMissionFile
 
   /**
    * @returns A new `ClientMissionFile` instance that
-   * represents a file that is referenced in the mission
-   * but not currently found in the mission.
+   * represents a file that is referenced in a effect
+   * but not currently found in the mission files.
    */
   public static createDetached(
     _id: string,
@@ -169,15 +168,10 @@ export default class ClientMissionFile
       _id,
       name,
       [],
-      new ClientFileReference(
-        StringToolbox.generateRandomId(),
+      ClientFileReference.createDeleted({
+        _id: StringToolbox.generateRandomId(),
         name,
-        '',
-        '',
-        0,
-        null,
-        null,
-      ),
+      }),
       mission,
     )
   }

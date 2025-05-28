@@ -37,9 +37,7 @@ const exportMission = async (
     databaseLogger.info('Database info retrieved.')
 
     // Retrieve the mission.
-    let missionDoc = await MissionModel.findById(missionId)
-      .populate('files.reference')
-      .exec()
+    let missionDoc = await MissionModel.findById(missionId).exec()
     // If the mission is not found, throw an error.
     if (missionDoc === null) {
       throw new StatusError(`Mission with ID "${missionId}" not found.`, 404)

@@ -64,7 +64,9 @@ export default class FileToolbox {
     // Fallback: turns "image/tiff" → "TIFF Image"
     function formatFallbackMime(mime: string): string {
       const [type, subtype] = mime.split('/')
-      if (!type || !subtype) return 'Unknown File Type'
+      if (!type || !subtype || mime === 'application/octet-stream') {
+        return 'Unknown File Type'
+      }
 
       const label = subtype.toUpperCase().replace(/[-_.]/g, ' ')
       const suffix =
