@@ -15,7 +15,6 @@ import { DetailColorSelector } from '../../../form/DetailColorSelector'
 import { DetailLargeString } from '../../../form/DetailLargeString'
 import { DetailString } from '../../../form/DetailString'
 import { DetailToggle } from '../../../form/DetailToggle'
-import Divider from '../../../form/Divider'
 import { TButtonSvgType } from '../../../user-controls/buttons/ButtonSvg'
 import {
   ButtonText,
@@ -49,7 +48,7 @@ export default function NodeEntry({
   const [device, setDevice] = useState<boolean>(node.device)
   const [exclude, setExclude] = useState<boolean>(node.exclude)
   const [applyColorFill, setApplyColorFill] = useState<boolean>(false)
-  const { login } = useRequireLogin()
+  const { isAuthorized } = useRequireLogin()
 
   /* -- COMPUTED -- */
   /**
@@ -101,14 +100,13 @@ export default function NodeEntry({
   /**
    * The buttons for the node action list.
    */
-  const itemButtons: TButtonSvgType[] = compute(() => {
+  const actionListItemButtons: TButtonSvgType[] = compute(() => {
     let buttons: TButtonSvgType[] = ['open']
 
     if (node.executable && node.actions.size > 1) {
       buttons.push('remove')
     }
 
-    // Return the buttons.
     return buttons
   })
   /**
@@ -260,7 +258,7 @@ export default function NodeEntry({
         label='Pre-Execution Text'
         value={preExecutionText}
         setValue={setPreExecutionText}
-        placeholder='Enter pre-execution text...'
+        placeholder='Enter text...'
         key={`${node._id}_preExecutionText`}
       />
       <DetailToggle
@@ -285,7 +283,7 @@ export default function NodeEntry({
           items={Array.from(node.actions.values())}
           itemsPerPageMin={5}
           listButtonIcons={['add']}
-          itemButtonIcons={itemButtons}
+          itemButtonIcons={actionListItemButtons}
           getCellText={(action) => action.name}
           getListButtonLabel={(button) => {
             switch (button) {
@@ -293,6 +291,14 @@ export default function NodeEntry({
                 return 'Create a new action'
               default:
                 return ''
+            }
+          }}
+          getListButtonPermissions={(button) => {
+            switch (button) {
+              case 'add':
+                return ['missions_write']
+              default:
+                return []
             }
           }}
           getItemButtonLabel={(button) => {
@@ -303,6 +309,16 @@ export default function NodeEntry({
                 return 'Delete action'
               default:
                 return ''
+            }
+          }}
+          getItemButtonPermissions={(button) => {
+            switch (button) {
+              case 'open':
+                return ['missions_read']
+              case 'remove':
+                return ['missions_write']
+              default:
+                return []
             }
           }}
           onListButtonClick={(button) => {
@@ -332,9 +348,6 @@ export default function NodeEntry({
           tooltipDescription={excludeButtonDescription}
         />
       </div>
-      <If condition={node.executable}>
-        <Divider />
-      </If>
     </Entry>
   )
 }

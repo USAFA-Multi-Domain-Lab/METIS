@@ -127,6 +127,7 @@ export type TServerEvent = TServerEvents[TServerMethod]
  * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
  * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
  * @option `"force-resource-pool":` The data needed to modify the resource pool of a force.
+ * @option `"file-update-access":` The data needed to modify the access of a file for a force.
  */
 type TModifierDataKey =
   | 'node-update-block'
@@ -279,7 +280,7 @@ export type TFileAccessModifierData = Extract<
 /**
  * The data needed to apply a modifier to an object in METIS.
  */
-type TModifierDatum = TModifierData[number]
+type TModifierDatum = Extract<TModifierData[number], { key: TModifierDataKey }>
 
 /**
  * The data necessary to send a message to the output panel.
@@ -302,6 +303,28 @@ type TOutputData = [
  * The data needed to send a message to the output panel.
  */
 export type TOutputDatum = TOutputData[number]
+
+/**
+ * The data needed to open a node and reveal its descendants.
+ */
+export type TOpenNodeData = {
+  /**
+   * The ID of the node to modify.
+   */
+  nodeId: string
+  /**
+   * The structure of the nodes that were revealed as a result of opening the node.
+   */
+  structure: AnyObject
+  /**
+   * The nodes that were revealed as a result of opening the node.
+   */
+  revealedDescendants: TMissionNodeJson[]
+  /**
+   * The prototypes of the nodes that were revealed as a result of opening the node.
+   */
+  revealedDescendantPrototypes: TMissionPrototypeJson[]
+}
 
 /**
  * General WS events emitted by the server, or caused due to a change in the connection with the server.
@@ -575,24 +598,7 @@ export type TResponseEvents = {
    */
   'node-opened': TResponseEvent<
     'node-opened',
-    {
-      /**
-       * The node that was opened.
-       */
-      nodeId: string
-      /**
-       * The structure of the nodes that were revealed as a result of executing the action.
-       */
-      structure: AnyObject
-      /**
-       * The nodes that were revealed as a result of opening the node.
-       */
-      revealedDescendants: TMissionNodeJson[]
-      /**
-       * The prototypes of the nodes that were revealed as a result of opening the node.
-       */
-      revealedDescendantPrototypes: TMissionPrototypeJson[]
-    },
+    TOpenNodeData,
     TClientEvents['request-open-node']
   >
   /**
@@ -623,19 +629,7 @@ export type TResponseEvents = {
        * The outcome of the action being executed.
        */
       outcome: TExecutionOutcomeJson
-      /**
-       * The structure of the nodes that were revealed as a result of executing the action.
-       */
-      structure?: AnyObject
-      /**
-       * The nodes that were revealed as a result of executing the action.
-       */
-      revealedDescendants?: TMissionNodeJson[]
-      /**
-       * The prototypes of the nodes that were revealed as a result of executing the action.
-       */
-      revealedDescendantPrototypes?: TMissionPrototypeJson[]
-    },
+    } & Partial<TOpenNodeData>,
     TClientEvents['request-execute-action']
   >
   /**

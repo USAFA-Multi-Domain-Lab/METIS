@@ -8,6 +8,7 @@ import { TMetisServerComponents } from 'metis/server'
 import MetisDatabase from 'metis/server/database'
 import { TTargetEnvExposedForce } from 'metis/server/target-environments/context'
 import ServerUser from 'metis/server/users'
+import NumberToolbox from 'metis/toolbox/numbers'
 import { HEX_COLOR_REGEX } from 'metis/toolbox/strings'
 import ServerMission from '..'
 import ServerMissionNode from '../nodes'
@@ -117,6 +118,9 @@ export default class ServerMissionForce extends MissionForce<TMetisServerCompone
 
   // Implemented
   public modifyResourcePool(operand: number): void {
+    if (!NumberToolbox.isNonNegative(operand)) {
+      throw new Error('The operand must be a positive number.')
+    }
     this.resourcesRemaining += operand
   }
 

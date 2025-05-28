@@ -1780,6 +1780,35 @@ export default class SessionServer extends Session<TMetisServerComponents> {
   }
 
   /**
+   * Handles the opening of a node during a session.
+   * @param nodeId The node to open.
+   */
+  public openNode = (node: ServerMissionNode) => {
+    // Confirm the node exists then open it.
+    this.confirmNodeInMission(node)
+    node.open()
+
+    // Extract data from the node.
+    const {
+      revealedStructure: structure,
+      revealedDescendants: descendants,
+      revealedDescendantPrototypes: prototypes,
+    } = node
+
+    // Construct payload for node opened event.
+    let payload: TServerEvents['modifier-enacted']['data'] = {
+      key: 'node-open',
+      nodeId: node._id,
+      structure: structure,
+      revealedDescendants: descendants.map((n) => n.toJson()),
+      revealedDescendantPrototypes: prototypes.map((p) => p.toJson()),
+    }
+
+    // Emit node opened event to each member.
+    this.emitModifierEnacted(node.force, payload)
+  }
+
+  /**
    * Modifies the success chance of a specific action within a node or
    * all actions within a node.
    * @param data The data for the modification.

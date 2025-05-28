@@ -23,6 +23,7 @@ import {
 import { DefaultPageLayout, TPage_P } from '.'
 import Mission, { TMissionComponent } from '../../../../shared/missions'
 import { TNonEmptyArray } from '../../../../shared/toolbox/arrays'
+import { TSingleTypeObject } from '../../../../shared/toolbox/objects'
 import Prompt from '../content/communication/Prompt'
 import FileReferenceList, {
   TFileReferenceList_P,
@@ -403,14 +404,16 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
 
       // If there is a next node, then add the buttons.
       if (nextNode) {
-        nextNode.buttons = [
-          {
+        const availableButtons: TSingleTypeObject<
+          TNodeButton<ClientMissionNode>
+        > = {
+          deselect: {
             type: 'cancel',
             key: 'node-button-deselect',
             description: 'Deselect this node (Closes panel view also).',
             onClick: () => mission.select(nextNode!.force),
           },
-          {
+          exclude: {
             type: 'divider',
             key: 'node-button-exclude',
             description:
@@ -420,7 +423,12 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
               mission.select(nextNode!.force)
             },
           },
-        ]
+        }
+
+        // Set the buttons on the next selection.
+        nextNode.buttons = isAuthorized('missions_write')
+          ? Object.values(availableButtons)
+          : [availableButtons.deselect]
       }
 
       // If there is a previous prototype, clear its buttons.
@@ -431,13 +439,15 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
       // If there is a next prototype, then add the buttons.
       if (nextSelection instanceof ClientMissionPrototype) {
         // Define potential buttons.
-        const availableButtons = {
+        const availableButtons: TSingleTypeObject<
+          TNodeButton<ClientMissionPrototype>
+        > = {
           deselect: {
             type: 'cancel',
             key: 'prototype-button-deselect',
             description: 'Deselect this prototype (Closes panel view also).',
             onClick: () => mission.deselect(),
-          } as TNodeButton<ClientMissionPrototype>,
+          },
           add: {
             type: 'add',
             key: 'prototype-button-add',
@@ -445,7 +455,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
             onClick: (_, prototype) => {
               onPrototypeAddRequest(prototype)
             },
-          } as TNodeButton<ClientMissionPrototype>,
+          },
           move: {
             type: 'reorder',
             key: 'prototype-button-move',
@@ -453,13 +463,13 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
             onClick: (_, prototype) => {
               onPrototypeMoveRequest(prototype)
             },
-          } as TNodeButton<ClientMissionPrototype>,
+          },
           transform_cancel: {
             type: 'cancel',
             key: 'prototype-button-add-cancel',
             description: 'Cancel action.',
             onClick: () => (mission.transformation = null),
-          } as TNodeButton<ClientMissionPrototype>,
+          },
           remove: {
             type: 'remove',
             key: 'prototype-button-remove',
@@ -468,7 +478,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
             onClick: (_, prototype) => {
               onPrototypeDeleteRequest(prototype)
             },
-          } as TNodeButton<ClientMissionPrototype>,
+          },
         }
 
         // Define the buttons that will actually be used.
@@ -528,7 +538,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
    */
   const save = async () => {
     try {
-      if (areUnsavedChanges) {
+      if (areUnsavedChanges && isAuthorized('missions_write')) {
         // Set unsaved changes to false to
         // prevent multiple saves.
         setAreUnsavedChanges(false)

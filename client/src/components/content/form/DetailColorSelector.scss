@@ -4,35 +4,38 @@
 .Detail.DetailColorSelector {
   .Field {
     &.IsExpanded {
-      .DisplayColorGrid {
+      .Dropdown {
         .Indicator {
-          transform: scale(1, -0.75);
+          transform: scale(1, -0.8);
         }
       }
     }
 
-    .DisplayColorGrid {
+    .Dropdown {
       display: grid;
       align-items: center;
-      grid-template-columns: 1fr auto;
+      grid-template-columns: auto auto;
+      column-gap: 0.5em;
       cursor: pointer;
       user-select: none;
 
-      .Indicator {
-        transform: scale(1, 0.75);
-        font-size: 1.25rem;
-      }
-
       .Text {
         color: $detail-field-text-color;
+        font-size: 0.92em;
+      }
+
+      .Indicator {
+        transform: scale(1, 0.8);
+        font-size: 1.25rem;
+        text-align: end;
       }
     }
 
     .AllColors {
       display: grid;
-      grid-template-columns: repeat(9, 1fr);
+      grid-template-columns: repeat(auto-fill, minmax(1.5rem, 1fr));
       max-width: 16rem;
-      margin: 20px 0 0;
+      margin: 1.25em 0 0.5em;
 
       .Color {
         width: 75%;
@@ -40,11 +43,8 @@
         aspect-ratio: 1 / 1;
         margin: 3px;
         padding: 0;
-        // border: 1px solid rgba($color-primary-light, 0.5);
 
         &.Selected {
-          // transform: scale(0.85);
-
           &::after {
             content: '';
             display: block;
@@ -56,37 +56,8 @@
       }
     }
 
-    .ColorInfo {
-      display: flex;
-      justify-content: space-between;
-      flex-flow: row wrap;
-      margin: 20px 0 0;
-
-      .SelectedColorText {
-        font-size: 0.78rem;
-        margin: 20px 3px 0 0;
-
-        .SelectedColorBox {
-          display: inline-block;
-          vertical-align: bottom;
-          box-sizing: border-box;
-          border: 2px solid $color-primary-dark;
-          width: 1.15rem;
-          height: 0.91rem;
-        }
-      }
-
-      .Buttons {
-        margin: 20px 0 0;
-
-        .ButtonText {
-          margin: 0 5px 0 0;
-
-          span {
-            font-size: 1.1em;
-          }
-        }
-      }
+    .ButtonContainer {
+      margin: 1.25em 0 0;
     }
   }
 }

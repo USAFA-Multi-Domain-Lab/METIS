@@ -79,6 +79,7 @@ export default function <TNode extends TMapCompatibleNode>({
    */
   const [prevBlocked, setPrevBlocked] = useState<boolean>(node.blocked)
   const [excluded, setExcluded] = useState<boolean>(node.exclude)
+  const [color, setColor] = useState<string>(node.color)
 
   /* -- EFFECTS -- */
 
@@ -114,6 +115,10 @@ export default function <TNode extends TMapCompatibleNode>({
   useEventListener(node, 'set-exclude', () => {
     setExcluded(node.exclude)
   })
+
+  // Update the color when the node's
+  // color changes.
+  useEventListener(node, 'set-color', () => setColor(node.color))
 
   /* -- COMPUTED -- */
 
@@ -152,12 +157,12 @@ export default function <TNode extends TMapCompatibleNode>({
     // color defined already in the CSS.
     let backgroundColor: string | undefined = undefined
     let transition: string | undefined = undefined
-    let borderColor: string = node.color
+    let borderColor: string = color
 
     // If the camera is zoomed out too far,
     // make the background color the node's color.
     if (cameraZoom.x > MAX_NODE_CONTENT_ZOOM) {
-      backgroundColor = node.color
+      backgroundColor = color
     }
 
     // If there are buttons to display, add height
@@ -179,7 +184,7 @@ export default function <TNode extends TMapCompatibleNode>({
     if (!blocked && prevBlocked) {
       transition =
         'border-color 1s ease-in-out, background-color 1s ease-in-out'
-      borderColor = node.color
+      borderColor = color
       backgroundColor = undefined
     }
 

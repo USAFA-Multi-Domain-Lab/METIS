@@ -66,6 +66,11 @@ export abstract class MissionForce<
   public initialResources: number
 
   /**
+   * Determines whether or not the force's resource pools can be negative.
+   */
+  public allowNegativeResources: boolean
+
+  /**
    * The current amount of resources available to the force.
    * @note Only relevant when in a session.
    */
@@ -130,7 +135,6 @@ export abstract class MissionForce<
    * @param data The force data from which to create the force. Any ommitted
    * values will be set to the default properties defined in
    * MissionForce.DEFAULT_PROPERTIES.
-   * @param options The options for creating the force.
    */
   public constructor(
     mission: TMission<T>,
@@ -145,6 +149,9 @@ export abstract class MissionForce<
     this.color = data.color ?? MissionForce.DEFAULT_PROPERTIES.color
     this.initialResources =
       data.initialResources ?? MissionForce.DEFAULT_PROPERTIES.initialResources
+    this.allowNegativeResources =
+      data.allowNegativeResources ??
+      MissionForce.DEFAULT_PROPERTIES.allowNegativeResources
     this.revealAllNodes =
       data.revealAllNodes ?? MissionForce.DEFAULT_PROPERTIES.revealAllNodes
     this.localKey = data.localKey ?? mission.generateForceKey()
@@ -171,6 +178,7 @@ export abstract class MissionForce<
       name: this.name,
       color: this.color,
       initialResources: this.initialResources,
+      allowNegativeResources: this.allowNegativeResources,
       revealAllNodes: this.revealAllNodes,
       localKey: this.localKey,
       nodes: this.exportNodes(options),
@@ -381,6 +389,7 @@ export abstract class MissionForce<
       name: 'New Force',
       color: '#ffffff',
       initialResources: 100,
+      allowNegativeResources: false,
       revealAllNodes: false,
       nodes: [],
     }
@@ -494,6 +503,10 @@ export interface TMissionForceSaveJson {
    * The amount of resources available to the student at the start of the mission.
    */
   initialResources: number
+  /**
+   * Determines whether or not the force's resource pools can be negative.
+   */
+  allowNegativeResources: boolean
   /**
    * Whether or not to reveal all nodes in the force.
    */

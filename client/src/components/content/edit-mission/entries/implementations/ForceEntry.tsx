@@ -41,6 +41,9 @@ export default function ForceEntry({
   const [initialResources, setInitialResources] = useState<number>(
     force.initialResources,
   )
+  const [allowNegativeResources, setAllowNegativeResources] = useState<boolean>(
+    force.allowNegativeResources,
+  )
   const [revealAllNodes, setRevealAllNodes] = useState<
     ClientMissionForce['revealAllNodes']
   >(force.revealAllNodes)
@@ -71,7 +74,7 @@ export default function ForceEntry({
     // Create a button that will fill all nodes
     // in the force with the selected color.
     let fillButton: TButtonText_P = {
-      text: 'Apply to Nodes',
+      text: 'Apply to nodes',
       onClick: async () => {
         // Prompt the user to confirm the action.
         let { choice } = await prompt(
@@ -84,6 +87,7 @@ export default function ForceEntry({
 
         force.nodes.forEach((node) => {
           node.color = color
+          node.emitEvent('set-color')
         })
         if (force.nodes.length) {
           onChange(...(force.nodes as TNonEmptyArray<ClientMissionNode>))
@@ -107,11 +111,19 @@ export default function ForceEntry({
     force.name = name
     force.color = color
     force.initialResources = initialResources
+    force.allowNegativeResources = allowNegativeResources
     force.revealAllNodes = revealAllNodes
 
     // Allow the user to save the changes.
     onChange(force)
-  }, [introMessage, name, color, initialResources, revealAllNodes])
+  }, [
+    introMessage,
+    name,
+    color,
+    initialResources,
+    allowNegativeResources,
+    revealAllNodes,
+  ])
 
   /* -- RENDER -- */
 
@@ -134,6 +146,13 @@ export default function ForceEntry({
         setValue={setInitialResources}
         integersOnly={true}
         key={`${force._id}_initialResources`}
+      />
+      <DetailToggle
+        label='Negative Resource Pool'
+        stateValue={allowNegativeResources}
+        setState={setAllowNegativeResources}
+        tooltipDescription="If enabled, the force's resource pool can go below zero."
+        key={`${force._id}_allowNegativeResources`}
       />
       <DetailToggle
         label='Reveal All Nodes'

@@ -4,6 +4,7 @@ import ButtonMenuController from 'src/components/content/user-controls/buttons/B
 import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
 import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
+import { TUserPermissionId } from '../../../../../../../shared/users/permissions'
 import ButtonSvg, {
   TButtonSvgType,
 } from '../../../user-controls/buttons/ButtonSvg'
@@ -214,6 +215,16 @@ export type TGetItemTooltip<TItem extends TListItem> = (item: TItem) => string
 export type TGetItemButtonLabel<TItem extends TListItem> = (
   button: TButtonSvgType,
 ) => string
+
+/**
+ * Gets the permissions for the item's button.
+ * @param button The button for which to get the permissions.
+ * @returns The permissions.
+ * @default () => []
+ */
+export type TGetItemButtonPermission<TItem extends TListItem> = (
+  button: TButtonSvgType,
+) => TUserPermissionId[]
 
 /**
  * A callback for when an item in the list is clicked.

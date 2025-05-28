@@ -29,21 +29,6 @@
     padding: $content-vertical-padding $content-horizontal-padding;
     width: calc(#{$page-width} - #{$content-horizontal-padding * 2});
 
-    .MissionMap {
-      height: 100%;
-      width: auto;
-
-      .ListOld {
-        .items {
-          .item {
-            &.mapped-node {
-              background-color: $color-secondary;
-            }
-          }
-        }
-      }
-    }
-
     .PanelView_Files {
       display: grid;
       grid-template-rows: 1fr 1fr;
@@ -57,63 +42,12 @@
       }
     }
 
-    .SidePanel {
+    .PanelView_Inspector {
       height: 100%;
       scrollbar-color: $color-primary-light $color-primary-dark;
 
       ::-webkit-scrollbar {
         background: $color-primary-dark;
-      }
-
-      .BorderBox {
-        $background: $color-primary;
-
-        overflow-y: auto;
-        box-sizing: border-box;
-        height: 100%;
-        padding: 0;
-        background-color: $background;
-
-        .BoxTop {
-          display: grid;
-          box-sizing: border-box;
-          position: sticky;
-          top: 0;
-          display: grid;
-          align-items: center;
-          z-index: 1;
-          margin: 0 0 -20px;
-          height: 80px;
-          padding: 5px 15px 10px;
-          background-color: $background;
-        }
-      }
-
-      .BoxContent {
-        .ListOld.AltDesign2 {
-          margin: 1.25em 0 0;
-          padding: 0;
-        }
-
-        .ButtonContainer {
-          display: flex;
-          justify-content: flex-end;
-          flex-flow: row wrap;
-          min-width: 225px;
-          margin: 0 0;
-
-          &.New {
-            padding-bottom: 15px;
-          }
-
-          .ButtonText {
-            margin: 1.25em 0 0;
-          }
-        }
-
-        .ButtonText {
-          font-size: 0.78em;
-        }
       }
     }
   }
@@ -126,14 +60,30 @@
     }
   }
 
-  &.ReadOnly {
-    .SidePanelContent {
-      @include disabled();
-      opacity: 0.65 !important;
+  &.ReadOnly .Content .PanelLayout .Panel .PanelView {
+    &:not(.PanelView_Map) {
+      .Detail {
+        @include disabled();
+        opacity: 0.65 !important;
+      }
 
       .ButtonText,
-      .ButtonSvg {
+      .ButtonSvg_v2:not(.ButtonSvg_open),
+      .ButtonSvg_v3:not(.ButtonSvg_open) {
         @include disabled();
+      }
+    }
+
+    &.PanelView_Structure {
+      .ParentNode .Center {
+        &:hover {
+          background-color: $color-primary !important;
+        }
+
+        .Name {
+          @include disabled();
+          opacity: 0.65 !important;
+        }
       }
     }
   }

@@ -126,7 +126,7 @@ export default class ServerMission extends Mission<TMetisServerComponents> {
    * @param forces The forces to validate.
    * @returns True if the forces are valid, false otherwise.
    */
-  public static validateForces(forces: TMissionSaveJson['forces']): boolean {
+  public static validateForces(forces: TMissionSaveJson['forces']): void {
     let forceKeys: TMissionForceSaveJson['localKey'][] = []
 
     for (const force of forces) {
@@ -156,8 +156,6 @@ export default class ServerMission extends Mission<TMetisServerComponents> {
       }
       forceKeys.push(force.localKey)
     }
-
-    return true
   }
 
   /**
@@ -167,7 +165,7 @@ export default class ServerMission extends Mission<TMetisServerComponents> {
    */
   public static validatePrototypes(
     prototypes: TMissionSaveJson['prototypes'],
-  ): boolean {
+  ): void {
     for (const prototype of prototypes) {
       const nonNegativeInteger = NumberToolbox.isNonNegativeInteger(
         prototype.depthPadding,
@@ -178,8 +176,6 @@ export default class ServerMission extends Mission<TMetisServerComponents> {
         )
       }
     }
-
-    return true
   }
 
   /**

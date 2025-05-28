@@ -30,6 +30,7 @@ export default function ({
       `PanelView_${title.replace(/\s+/g, '_')}`,
     )
     result.set('Active', selectedView?.title === title)
+    result.set('Hidden', selectedView?.title !== title)
     return result
   })
 

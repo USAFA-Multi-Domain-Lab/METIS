@@ -12,7 +12,7 @@ import {
 } from '../../../../shared/missions/forces'
 import { TOutputJson } from '../../../../shared/missions/forces/output'
 import { TMissionNodeJson } from '../../../../shared/missions/nodes'
-import { Counter } from '../../../../shared/toolbox/numbers'
+import NumberToolbox, { Counter } from '../../../../shared/toolbox/numbers'
 import { TWithKey } from '../../../../shared/toolbox/objects'
 import { Vector2D } from '../../../../shared/toolbox/space'
 import ClientMissionAction from '../actions'
@@ -487,6 +487,10 @@ export default class ClientMissionForce
 
   // Implemented
   public modifyResourcePool(operand: number): void {
+    if (!NumberToolbox.isNonNegative(operand)) {
+      throw new Error('The operand must be a positive number.')
+    }
+
     // Modify the resource pool by the operand.
     this.resourcesRemaining += operand
 
