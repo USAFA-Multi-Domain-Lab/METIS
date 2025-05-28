@@ -227,6 +227,15 @@ export default abstract class Mission<
   }
 
   /**
+   * @param component The component in question.
+   * @returns Whether the given component is a part of
+   * this mission.
+   */
+  public has(component: TMissionComponent<T, Mission<T>>): boolean {
+    return component.mission._id === this._id
+  }
+
+  /**
    * Converts the mission to JSON.
    * @param options The options for converting the mission to JSON.
    * @returns the JSON for the mission.

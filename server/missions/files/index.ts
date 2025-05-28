@@ -28,6 +28,7 @@ export default class ServerMissionFile extends MissionFile {
     return new ServerMissionFile(
       data._id,
       data.alias,
+      data.lastKnownName,
       data.initialAccess,
       reference,
       mission,

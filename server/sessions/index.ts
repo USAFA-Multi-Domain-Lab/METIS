@@ -1737,7 +1737,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
   private confirmComponentInMission(
     component: TMissionComponent<any, any>,
   ): void {
-    if (component.mission._id !== this.mission._id) {
+    if (this.mission.has(component)) {
       throw new Error(
         `Could not perform the operation on the component with ID "${component._id}" because it does not belong to the mission with ID "${this.mission._id}".`,
       )
@@ -1785,7 +1785,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
    */
   public openNode = (node: ServerMissionNode) => {
     // Confirm the node exists then open it.
-    this.confirmNodeInMission(node)
+    this.confirmComponentInMission(node)
     node.open()
 
     // Extract data from the node.

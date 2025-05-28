@@ -41,11 +41,12 @@ export default class ClientMissionFile
   protected constructor(
     _id: string,
     alias: string,
+    lastKnownName: string,
     initialAccess: string[],
     reference: ClientFileReference,
     mission: ClientMission,
   ) {
-    super(_id, alias, initialAccess, reference, mission)
+    super(_id, alias, lastKnownName, initialAccess, reference, mission)
 
     // Initialize the event manager.
     this.eventManager = new EventManager(this)
@@ -127,6 +128,7 @@ export default class ClientMissionFile
     return new ClientMissionFile(
       data._id,
       data.alias,
+      data.lastKnownName,
       data.initialAccess,
       reference,
       mission,
@@ -148,6 +150,7 @@ export default class ClientMissionFile
     return new ClientMissionFile(
       StringToolbox.generateRandomId(),
       '',
+      reference.name,
       [],
       reference,
       mission,
@@ -166,6 +169,7 @@ export default class ClientMissionFile
   ): ClientMissionFile {
     return new ClientMissionFile(
       _id,
+      name,
       name,
       [],
       ClientFileReference.createDeleted({

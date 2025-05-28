@@ -466,6 +466,10 @@ export const schema = new MissionSchema(
             validate: validate_mission_files_alias,
             maxLength: Mission.MAX_NAME_LENGTH,
           },
+          lastKnownName: {
+            type: String,
+            maxLength: Mission.MAX_NAME_LENGTH,
+          },
           // todo: Add validation to check that the
           // todo: values of the array point to forces
           // todo: present in the mission.

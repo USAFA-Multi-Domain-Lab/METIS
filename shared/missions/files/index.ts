@@ -75,6 +75,13 @@ export default abstract class MissionFile<
      */
     public alias: string,
     /**
+     * The last known name assigned to the file reference.
+     * This is stored in the event that the file reference
+     * is deleted. This value will provide a default value
+     * for the name of the deleted file.
+     */
+    public lastKnownName: string,
+    /**
      * Forces which have initial access to the file.
      * Otherwise, any non-specified forces will only
      * have access if later granted it, for instance,
@@ -90,6 +97,10 @@ export default abstract class MissionFile<
      */
     public readonly mission: T['mission'],
   ) {
+    // Update the last-known name if the reference
+    // is not deleted.
+    if (!reference.deleted) this.lastKnownName = reference.name
+    else reference.name = lastKnownName
     this.access = [...initialAccess]
   }
 
@@ -131,6 +142,7 @@ export default abstract class MissionFile<
     return {
       _id: this._id,
       alias: this.alias,
+      lastKnownName: this.lastKnownName,
       initialAccess: this.initialAccess,
       reference: this.reference.toJson(),
     }
@@ -142,6 +154,7 @@ export default abstract class MissionFile<
   > = {
     _id: '',
     alias: '',
+    lastKnownName: '',
     initialAccess: [],
   }
 }
@@ -155,12 +168,13 @@ export type TMissionFileJson = {
    */
   _id: string
   /**
-   * An alias given to the file, specific to the
-   * scenario's needs.
-   * @note If '', the original name of the file
-   * will be used.
+   * @see {@link MissionFile.alias}
    */
   alias: string
+  /**
+   * @see {@link MissionFile.lastKnownName}
+   */
+  lastKnownName: string
   /**
    * Forces which have initial access to the file.
    * Otherwise, any non-specified forces will only

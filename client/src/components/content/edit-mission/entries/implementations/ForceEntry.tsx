@@ -149,8 +149,8 @@ export default function ForceEntry({
       />
       <DetailToggle
         label='Negative Resource Pool'
-        stateValue={allowNegativeResources}
-        setState={setAllowNegativeResources}
+        value={allowNegativeResources}
+        setValue={setAllowNegativeResources}
         tooltipDescription="If enabled, the force's resource pool can go below zero."
         key={`${force._id}_allowNegativeResources`}
       />

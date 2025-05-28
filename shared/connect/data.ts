@@ -122,7 +122,8 @@ export type TServerEvent = TServerEvents[TServerMethod]
 
 /**
  * Used to identify the data structure.
- * @option `"node-block":` The data needed to block or unblock a node.
+ * @option `"node-update-block":` The data needed to block or unblock a node.
+ * @option `"node-open":` The data needed to open a node and reveal its descendants.
  * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
  * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
  * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
@@ -131,6 +132,7 @@ export type TServerEvent = TServerEvents[TServerMethod]
  */
 type TModifierDataKey =
   | 'node-update-block'
+  | 'node-open'
   | 'node-action-success-chance'
   | 'node-action-process-time'
   | 'node-action-resource-cost'
@@ -155,6 +157,12 @@ type TModifierData = [
      */
     blocked: boolean
   },
+  {
+    /**
+     * @see {@link TModifierDataKey}
+     */
+    key: 'node-open'
+  } & TOpenNodeData,
   {
     /**
      * @see {@link TModifierDataKey}
