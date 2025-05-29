@@ -1,4 +1,4 @@
-import { TListItem } from 'src/components/content/data/lists/pages/ListItem'
+import { TMetisComponent } from '../../../shared'
 import {
   TSessionAccessibility,
   TSessionBasicJson,
@@ -11,7 +11,7 @@ import User from '../../../shared/users'
  * More basic representation of a session.
  */
 export class SessionBasic
-  implements Omit<TSessionBasicJson, 'launchedAt'>, TListItem
+  implements Omit<TSessionBasicJson, 'launchedAt'>, TMetisComponent
 {
   // Implemented
   public _id: string

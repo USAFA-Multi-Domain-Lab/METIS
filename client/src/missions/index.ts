@@ -1,6 +1,5 @@
 import axios, { AxiosResponse } from 'axios'
 import { TMetisClientComponents } from 'src'
-import { TListItem } from 'src/components/content/data/lists/pages/ListItem'
 import { TLine_P } from 'src/components/content/session/mission-map/objects/Line'
 import { TPrototypeSlot_P } from 'src/components/content/session/mission-map/objects/PrototypeSlot'
 import { v4 as generateHash } from 'uuid'
@@ -38,9 +37,7 @@ import PrototypeTranslation from './transformations/translations'
  */
 export default class ClientMission
   extends Mission<TMetisClientComponents>
-  implements
-    TListenerTargetEmittable<TMissionEventMethods, TMissionEventArgs>,
-    TListItem
+  implements TListenerTargetEmittable<TMissionEventMethods, TMissionEventArgs>
 {
   /**
    * Whether the resource exists on the server.

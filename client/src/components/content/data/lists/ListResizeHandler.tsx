@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { useCallbackRef, useResizeObserver } from 'src/toolbox/hooks'
+import { TMetisComponent } from '../../../../../../shared'
 import { useListContext } from './List'
-import { TListItem } from './pages/ListItem'
 
 /**
  * Handles resizing of the list by recalculating
  * the number of items available per page.
  */
 export default function ListResizeHandler<
-  TItem extends TListItem,
+  TItem extends TMetisComponent,
 >(): JSX.Element | null {
   /* -- STATE -- */
 

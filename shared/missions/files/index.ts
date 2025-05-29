@@ -26,6 +26,11 @@ export default abstract class MissionFile<
     return this.alias || this.originalName
   }
 
+  // Implemented.
+  public get deleted(): boolean {
+    return this.reference.deleted
+  }
+
   /**
    * The original name of the file.
    * @note This simply returns the name of

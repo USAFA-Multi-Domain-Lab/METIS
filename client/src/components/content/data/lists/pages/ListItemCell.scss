@@ -4,6 +4,9 @@
   .ListPage {
     .ListItem {
       .ListItemCell {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
         font-size: 0.75rem;
         line-height: 2em;
       }

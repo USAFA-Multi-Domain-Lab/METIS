@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import { compute } from 'src/toolbox'
 import { TDefaultProps, useDefaultProps } from 'src/toolbox/hooks'
+import { TMetisComponent } from '../../../../../../shared'
 import StringToolbox from '../../../../../../shared/toolbox/strings'
 import { TUserPermissionId } from '../../../../../../shared/users/permissions'
 import { TButtonSvgType } from '../../user-controls/buttons/ButtonSvg'
@@ -18,7 +19,6 @@ import {
   TGetItemButtonLabel,
   TGetItemButtonPermission,
   TGetItemTooltip,
-  TListItem,
   TOnItemButtonClick,
 } from './pages/ListItem'
 import ListPage, { TListPage_P } from './pages/ListPage'
@@ -48,7 +48,7 @@ const ListContext = React.createContext<TListContextData<any> | null>(null)
  * Hook used by List-related components to access
  * the list context.
  */
-export const useListContext = <TItem extends TListItem>() => {
+export const useListContext = <TItem extends TMetisComponent>() => {
   const context = useContext(ListContext) as TListContextData<TItem> | null
   if (!context) {
     throw new Error('useListContext must be used within a list provider')
@@ -62,7 +62,7 @@ export const useListContext = <TItem extends TListItem>() => {
  * The defaults used for `List` props.
  */
 export function createDefaultListProps<
-  TItem extends TListItem,
+  TItem extends TMetisComponent,
 >(): TDefaultProps<TList_P<TItem>> {
   return {
     columns: [],
@@ -93,7 +93,7 @@ export function createDefaultListProps<
 /**
  * Displays a list of items of the given type.
  */
-export default function List<TItem extends TListItem>(
+export default function List<TItem extends TMetisComponent>(
   props: TList_P<TItem>,
 ): JSX.Element | null {
   const Provider = ListContext.Provider as React.Provider<
@@ -238,6 +238,13 @@ export default function List<TItem extends TListItem>(
     ...itemButtonIcons,
   ])
 
+  /**
+   * @see {@link TListContextData.showingDeletedItems}
+   */
+  const showingDeletedItems = compute<boolean>(() =>
+    pages[pageNumber].items.some(({ deleted }) => deleted),
+  )
+
   /* -- FUNCTIONS -- */
 
   /**
@@ -318,6 +325,7 @@ export default function List<TItem extends TListItem>(
     aggregatedButtonIcons,
     aggregatedButtons,
     aggregateButtonLayout,
+    showingDeletedItems,
     state,
     elements,
   }
@@ -370,7 +378,7 @@ export type TList_E = {
 /**
  * Props for `List`.
  */
-export type TList_P<TItem extends TListItem> = {
+export type TList_P<TItem extends TMetisComponent> = {
   /**
    * The name of the list.
    */
@@ -513,7 +521,7 @@ export type TList_P<TItem extends TListItem> = {
 /**
  * The entire state for `List`.
  */
-export type TList_S<TItem extends TListItem> = {
+export type TList_S<TItem extends TMetisComponent> = {
   /**
    * The current page number.
    */
@@ -558,7 +566,7 @@ export type TList_S<TItem extends TListItem> = {
  * The list context data provided to all children
  * of `List`.
  */
-export type TListContextData<TItem extends TListItem> = Required<
+export type TListContextData<TItem extends TMetisComponent> = Required<
   TList_P<TItem>
 > & {
   /**
@@ -592,6 +600,11 @@ export type TListContextData<TItem extends TListItem> = Required<
    * list of buttons, including the list and item buttons.
    */
   aggregateButtonLayout: TSvgLayout
+  /**
+   * Whether there exists any deleted items on the
+   * current page being displayed.
+   */
+  showingDeletedItems: boolean
   /**
    * The state for the list.
    */
@@ -630,7 +643,7 @@ export type TListColumnType<TItem> = keyof TItem
  * Data that defines how items in a list should
  * be sorted.
  */
-export type TListSorting<TItem extends TListItem> = {
+export type TListSorting<TItem extends TMetisComponent> = {
   /**
    * The column by which to sort.
    */

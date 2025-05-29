@@ -1,16 +1,17 @@
+import { ReactNode } from 'react'
 import { compute } from 'src/toolbox'
+import { TMetisComponent } from '../../../../../../../shared'
 import Tooltip from '../../../communication/Tooltip'
 import { TListColumnType, useListContext } from '../List'
-import { TListItem } from './ListItem'
 import './ListItemCell.scss'
 
 /**
  * A cell in a `List` component.
  */
-export default function ListItemCell<TItem extends TListItem>({
+export default function ListItemCell<TItem extends TMetisComponent>({
   item,
   column,
-  text,
+  children,
 }: TListItemCell<TItem>): JSX.Element | null {
   /* -- STATE -- */
 
@@ -43,7 +44,9 @@ export default function ListItemCell<TItem extends TListItem>({
     // Add R-Click prompt, if there
     // are item buttons.
     if (itemButtons.length) {
-      if (description) description += '\n\t\n'
+      if (description) {
+        description += '\n\t\n'
+      }
       description += `\`L-Click\` to select \n\t\n`
       description += `\`R-Click\` for options`
     }
@@ -63,7 +66,7 @@ export default function ListItemCell<TItem extends TListItem>({
   // Render the item cell.
   return (
     <div className={rootClass} onClick={onClick}>
-      {text} <Tooltip description={tooltipDescription} />
+      <Tooltip description={tooltipDescription} /> {children}
     </div>
   )
 }
@@ -71,7 +74,7 @@ export default function ListItemCell<TItem extends TListItem>({
 /**
  * Props for `ListColumnLabel`.
  */
-export type TListItemCell<TItem extends TListItem> = {
+export type TListItemCell<TItem extends TMetisComponent> = {
   /**
    * The item to display in the cell.
    */
@@ -81,7 +84,7 @@ export type TListItemCell<TItem extends TListItem> = {
    */
   column: TListColumnType<TItem>
   /**
-   * The text to display in the cell.
+   * The JSX to display in the cell.
    */
-  text: string
+  children?: ReactNode
 }

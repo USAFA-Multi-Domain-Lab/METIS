@@ -1,13 +1,13 @@
+import Tooltip from 'src/components/content/communication/Tooltip'
 import { compute } from 'src/toolbox'
+import { TMetisComponent } from '../../../../../../../shared'
 import { TListColumnType, useListContext } from '../List'
 import './ListColumnLabel.scss'
-import { TListItem } from './ListItem'
-import Tooltip from 'src/components/content/communication/Tooltip'
 
 /**
  * A label for a column of a `List` component.
  */
-export default function ListColumnLabel<TItem extends TListItem>({
+export default function ListColumnLabel<TItem extends TMetisComponent>({
   column,
   text,
 }: TListColumnLabel<TItem>): JSX.Element | null {
@@ -102,7 +102,7 @@ export default function ListColumnLabel<TItem extends TListItem>({
 /**
  * Props for `ListColumnLabel`.
  */
-export type TListColumnLabel<TItem extends TListItem> = {
+export type TListColumnLabel<TItem extends TMetisComponent> = {
   /**
    * The column associated with the label.
    */

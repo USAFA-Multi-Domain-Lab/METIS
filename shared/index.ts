@@ -28,6 +28,13 @@ export type TMetisComponent = {
    * A human-readable title for the component.
    */
   name: string
+  /**
+   * Whether the component is considered deleted in the
+   * system.
+   * @note If undefined, the component is assumed to not
+   * be deleted.
+   */
+  deleted?: boolean
 }
 
 /**

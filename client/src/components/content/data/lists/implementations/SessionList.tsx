@@ -6,11 +6,11 @@ import SessionClient from 'src/sessions'
 import { SessionBasic } from 'src/sessions/basic'
 import { compute } from 'src/toolbox'
 import { usePeriodicRerender, useRequireLogin } from 'src/toolbox/hooks'
+import { TMetisComponent } from '../../../../../../../shared'
 import { DateToolbox } from '../../../../../../../shared/toolbox/dates'
 import List, { TGetListButtonLabel } from '../List'
 import {
   TGetItemButtonLabel,
-  TListItem,
   TOnItemButtonClick,
   TOnItemSelection,
 } from '../pages/ListItem'
@@ -154,7 +154,7 @@ export default function SessionList({
   /**
    * Handler for when a session is selected.
    */
-  const onSessionSelection: TOnItemSelection<TListItem> = async ({
+  const onSessionSelection: TOnItemSelection<TMetisComponent> = async ({
     _id: sessionId,
   }: {
     _id: string

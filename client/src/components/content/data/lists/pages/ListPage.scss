@@ -52,6 +52,12 @@
         position: relative;
         left: -#{$item-cell-padding-left};
       }
+
+      &.ItemCellWarning {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+      }
     }
 
     .ItemButtons {
