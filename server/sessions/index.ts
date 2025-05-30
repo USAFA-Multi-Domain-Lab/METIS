@@ -5,11 +5,8 @@ import {
   TServerMethod,
 } from 'metis/connect/data'
 import { ServerEmittedError } from 'metis/connect/errors'
-import {
-  TMissionComponent,
-  TMissionJson,
-  TMissionJsonOptions,
-} from 'metis/missions'
+import { TMissionJson, TMissionJsonOptions } from 'metis/missions'
+import MissionComponent from 'metis/missions/component'
 import { TEffectTrigger } from 'metis/missions/effects'
 import { TOutputContext, TOutputType } from 'metis/missions/forces/output'
 import ServerMission from 'metis/server/missions'
@@ -1735,7 +1732,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
    * @throws If the force does not belong to the mission.
    */
   private confirmComponentInMission(
-    component: TMissionComponent<any, any>,
+    component: MissionComponent<any, any>,
   ): void {
     if (this.mission.has(component)) {
       throw new Error(

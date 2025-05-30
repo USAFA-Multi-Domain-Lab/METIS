@@ -1,4 +1,4 @@
-import { TMetisComponent } from '../../../shared'
+import { MetisComponent } from '../../../shared'
 import {
   TSessionAccessibility,
   TSessionBasicJson,
@@ -11,19 +11,14 @@ import User from '../../../shared/users'
  * More basic representation of a session.
  */
 export class SessionBasic
-  implements Omit<TSessionBasicJson, 'launchedAt'>, TMetisComponent
+  extends MetisComponent
+  implements Omit<TSessionBasicJson, 'launchedAt'>
 {
-  // Implemented
-  public _id: string
-
   // Implemented
   public missionId: string
 
   // Implemented
   public state: TSessionState
-
-  // Implemented
-  public name: string
 
   // Implemented
   public ownerId: string
@@ -124,8 +119,9 @@ export class SessionBasic
   }
 
   public constructor(data: TSessionBasicJson) {
+    super(data._id, data.name, false)
+
     // Parse the data.
-    this._id = data._id
     this.missionId = data.missionId
     this.state = data.state
     this.name = data.name
@@ -139,5 +135,37 @@ export class SessionBasic
     this.banList = data.banList
     this.observerIds = data.observerIds
     this.managerIds = data.managerIds
+  }
+
+  /**
+   * @param text Text entered by the user as a game
+   * code to join.
+   * @returns A {@link SessionBasic} object inaccurately
+   * representing the session that the user is trying to
+   * join. However, this object can be manipulated as
+   * more information is obtained concerning the session.
+   */
+  public static createManualJoin(text: string): SessionBasic {
+    return new SessionBasic({
+      _id: text,
+      name: 'manual-join',
+      missionId: '-1',
+      ownerId: '-1',
+      ownerFirstName: 'Unknown',
+      ownerLastName: 'Unknown',
+      ownerUsername: 'Unknown',
+      state: 'started',
+      launchedAt: new Date().toISOString(),
+      participantIds: [],
+      observerIds: [],
+      managerIds: [],
+      banList: [],
+      config: {
+        accessibility: 'id-required',
+        autoAssign: false,
+        infiniteResources: false,
+        effectsEnabled: true,
+      },
+    })
   }
 }

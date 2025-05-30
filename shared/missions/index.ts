@@ -1,11 +1,12 @@
-import User from 'metis/users'
 import { v4 as generateHash } from 'uuid'
-import { TCreateJsonType, TMetisBaseComponents, TMetisComponent } from '..'
+import { MetisComponent, TCreateJsonType, TMetisBaseComponents } from '..'
 import context from '../context'
 import { DateToolbox } from '../toolbox/dates'
 import { AnyObject } from '../toolbox/objects'
+import User from '../users'
 import { TAction, TMissionActionJson } from './actions'
 import { TExecution } from './actions/executions'
+import MissionComponent from './component'
 import { TEffect } from './effects'
 import { TMissionFileJson } from './files'
 import {
@@ -26,8 +27,7 @@ import MissionPrototype, {
  */
 export default abstract class Mission<
   T extends TMetisBaseComponents = TMetisBaseComponents,
-> implements TMissionComponent<T, Mission<T>>
-{
+> extends MissionComponent<T, Mission<T>> {
   /**
    * The mission associated with the component.
    * @note This is only used to properly implement `TMissionComponent`.
@@ -67,13 +67,7 @@ export default abstract class Mission<
   }
 
   // Implemented
-  public _id: string
-
-  // Implemented
-  public name: string
-
-  // Implemented
-  public get path(): [...TMissionComponent<any, any>[], this] {
+  public get path(): [...MissionComponent<any, any>[], this] {
     return [this]
   }
 
@@ -91,7 +85,7 @@ export default abstract class Mission<
    * Components within the mission with issues that need to
    * be resolved by a mission designer.
    */
-  public get defectiveComponents(): TMissionComponent<any, any>[] {
+  public get defectiveComponents(): MissionComponent<any, any>[] {
     // Initialize the list.
     let result = []
 
@@ -197,8 +191,12 @@ export default abstract class Mission<
    * @param options The options for creating the mission.
    */
   public constructor(data: Partial<TMissionJson> = Mission.DEFAULT_PROPERTIES) {
-    this._id = data._id ?? Mission.DEFAULT_PROPERTIES._id
-    this.name = data.name ?? Mission.DEFAULT_PROPERTIES.name
+    super(
+      data._id ?? Mission.DEFAULT_PROPERTIES._id,
+      data.name ?? Mission.DEFAULT_PROPERTIES.name,
+      false,
+    )
+
     this.versionNumber =
       data.versionNumber ?? Mission.DEFAULT_PROPERTIES.versionNumber
     this.seed = data.seed ?? Mission.DEFAULT_PROPERTIES.seed
@@ -231,7 +229,7 @@ export default abstract class Mission<
    * @returns Whether the given component is a part of
    * this mission.
    */
-  public has(component: TMissionComponent<T, Mission<T>>): boolean {
+  public has(component: MissionComponent<T, Mission<T>>): boolean {
     return component.mission._id === this._id
   }
 
@@ -516,7 +514,7 @@ export default abstract class Mission<
    * if no node is found.
    */
   public getNodeById(
-    nodeId: TMetisComponent['_id'] | null | undefined,
+    nodeId: MetisComponent['_id'] | null | undefined,
   ): TNode<T> | undefined {
     return Mission.getNodeById(this, nodeId)
   }
@@ -540,7 +538,7 @@ export default abstract class Mission<
    * if the action is not found.
    */
   public getActionById(
-    actionId: TMetisComponent['_id'] | null | undefined,
+    actionId: MetisComponent['_id'] | null | undefined,
   ): TAction<T> | TMissionActionJson | undefined {
     return Mission.getActionById(this, actionId)
   }
@@ -577,7 +575,7 @@ export default abstract class Mission<
    * if the execution is not found.
    */
   public getExecution(
-    executionId: TMetisComponent['_id'],
+    executionId: MetisComponent['_id'],
   ): TExecution<T> | undefined {
     for (let node of this.nodes.values()) {
       let execution = node.getExecution(executionId)
@@ -1053,42 +1051,10 @@ export type TFileExposure =
   | { expose: 'none' }
 
 /**
- * An object that makes up a part of a mission, including
- * a mission itself. Examples are nodes, actions, effects,
- * and so on.
- * @note Implement this to make a class compatible.
- */
-export interface TMissionComponent<
-  T extends TMetisBaseComponents,
-  Self extends TMissionComponent<T, Self>,
-> extends TMetisComponent {
-  /**
-   * The mission associated with the component.
-   */
-  mission: Self extends Mission<any> ? Self : T['mission']
-  /**
-   * The path to the component within the mission.
-   */
-  get path(): [...TMissionComponent<any, any>[], Self]
-  /**
-   * Whether the component has some issue that needs to
-   * be resolved by the designer of the mission. Added
-   * context for the defect of the component can be found
-   * by checking the `defectiveMessage` field.
-   */
-  get defective(): boolean
-  /**
-   * Provides additional context for why the component
-   * is defective, assuming `defective` is true.
-   */
-  get defectiveMessage(): string
-}
-
-/**
  * Defines the type for the `path` property
  * of a mission component.
  */
 export type TMissionComponentPath<
   T extends TMetisBaseComponents,
-  Self extends TMissionComponent<T, Self>,
-> = [...TMissionComponent<any, any>[], Self]
+  Self extends MissionComponent<T, Self>,
+> = [...MissionComponent<any, any>[], Self]

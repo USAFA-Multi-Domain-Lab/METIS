@@ -1,9 +1,10 @@
-import { TMetisBaseComponents } from 'metis/index'
-import { AnyObject } from 'metis/toolbox/objects'
-import User from 'metis/users'
-import Mission, { TMission, TMissionComponent, TMissionJsonOptions } from '..'
+import Mission, { TMission, TMissionJsonOptions } from '..'
+import { TMetisBaseComponents } from '../../'
+import { AnyObject } from '../..//toolbox/objects'
 import context from '../../context'
 import StringToolbox from '../../toolbox/strings'
+import User from '../../users'
+import MissionComponent from '../component'
 import { TMissionNodeJson, TNode } from '../nodes'
 import { TPrototype } from '../nodes/prototypes'
 import { TOutput, TOutputJson } from './output'
@@ -16,17 +17,15 @@ import { TOutput, TOutputJson } from './output'
  */
 export abstract class MissionForce<
   T extends TMetisBaseComponents = TMetisBaseComponents,
-> implements TMissionComponent<T, MissionForce<T>>
-{
+> extends MissionComponent<T, MissionForce<T>> {
   /**
-   * The mission to which the force belongs.
+   * @see {@link MissionComponent.mission}
    */
-  public mission: TMission<T>
-
-  /**
-   * The ID of the force.
-   */
-  public _id: string
+  protected _mission: TMission<T>
+  // Implemented
+  public get mission(): TMission<T> {
+    return this._mission
+  }
 
   /**
    * The introductory message for the mission, displayed
@@ -34,13 +33,8 @@ export abstract class MissionForce<
    */
   public introMessage: string
 
-  /**
-   * The name of the force.
-   */
-  public name: string
-
   // Implemented
-  public get path(): [...TMissionComponent<any, any>[], this] {
+  public get path(): [...MissionComponent<any, any>[], this] {
     return [this.mission, this]
   }
 
@@ -140,12 +134,16 @@ export abstract class MissionForce<
     mission: TMission<T>,
     data: Partial<TMissionForceJson> = MissionForce.DEFAULT_PROPERTIES,
   ) {
+    super(
+      data._id ?? MissionForce.DEFAULT_PROPERTIES._id,
+      data.name ?? MissionForce.DEFAULT_PROPERTIES.name,
+      false,
+    )
+
     // Set properties.
-    this.mission = mission
-    this._id = data._id ?? MissionForce.DEFAULT_PROPERTIES._id
+    this._mission = mission
     this.introMessage =
       data.introMessage ?? MissionForce.DEFAULT_PROPERTIES.introMessage
-    this.name = data.name ?? MissionForce.DEFAULT_PROPERTIES.name
     this.color = data.color ?? MissionForce.DEFAULT_PROPERTIES.color
     this.initialResources =
       data.initialResources ?? MissionForce.DEFAULT_PROPERTIES.initialResources

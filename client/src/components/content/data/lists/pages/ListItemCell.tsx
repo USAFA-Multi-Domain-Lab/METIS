@@ -1,6 +1,6 @@
 import { ReactNode } from 'react'
 import { compute } from 'src/toolbox'
-import { TMetisComponent } from '../../../../../../../shared'
+import { MetisComponent } from '../../../../../../../shared'
 import Tooltip from '../../../communication/Tooltip'
 import { TListColumnType, useListContext } from '../List'
 import './ListItemCell.scss'
@@ -8,7 +8,7 @@ import './ListItemCell.scss'
 /**
  * A cell in a `List` component.
  */
-export default function ListItemCell<TItem extends TMetisComponent>({
+export default function ListItemCell<TItem extends MetisComponent>({
   item,
   column,
   children,
@@ -74,7 +74,7 @@ export default function ListItemCell<TItem extends TMetisComponent>({
 /**
  * Props for `ListColumnLabel`.
  */
-export type TListItemCell<TItem extends TMetisComponent> = {
+export type TListItemCell<TItem extends MetisComponent> = {
   /**
    * The item to display in the cell.
    */

@@ -2,7 +2,7 @@ import { createRef, ReactNode, useEffect, useState } from 'react'
 import ButtonSvg from 'src/components/content/user-controls/buttons/ButtonSvg'
 import If from 'src/components/content/util/If'
 import { compute } from 'src/toolbox'
-import { TMetisComponent } from '../../../../../../../shared'
+import { MetisComponent } from '../../../../../../../shared'
 import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
 import Tooltip from '../../../communication/Tooltip'
 import { useListContext } from '../List'
@@ -56,7 +56,7 @@ export default function ListProcessor(): JSX.Element | null {
    * in the search field and the current sorting state.
    */
   const process = () => {
-    let result: TMetisComponent[] = []
+    let result: MetisComponent[] = []
     let searchFieldElm = searchField.current
     let filterTermRaw: string = ''
     let filterTerm: string = ''

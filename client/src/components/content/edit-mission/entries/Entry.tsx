@@ -1,5 +1,5 @@
 import { TMetisClientComponents } from 'src'
-import { TMissionComponent } from '../../../../../../shared/missions'
+import MissionComponent from '../../../../../../shared/missions/component'
 import './Entry.scss'
 import EntryNavigation from './navigation/EntryNavigation'
 
@@ -8,7 +8,7 @@ import EntryNavigation from './navigation/EntryNavigation'
  * of a mission component.
  */
 export default function <
-  TComponent extends TMissionComponent<TMetisClientComponents, any>,
+  TComponent extends MissionComponent<TMetisClientComponents, any>,
 >({
   missionComponent: component,
   children,
@@ -33,7 +33,7 @@ export default function <
  * The props for the `Entry` component.
  */
 interface TEntry_P<
-  TComponent extends TMissionComponent<TMetisClientComponents, any>,
+  TComponent extends MissionComponent<TMetisClientComponents, any>,
 > {
   /**
    * The mission component to be edited.

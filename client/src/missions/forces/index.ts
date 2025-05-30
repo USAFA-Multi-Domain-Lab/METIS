@@ -5,7 +5,7 @@ import {
   EventManager,
   TListenerTargetEmittable,
 } from '../../../../shared/events'
-import { TMissionComponent } from '../../../../shared/missions'
+import MissionComponent from '../../../../shared/missions/component'
 import {
   MissionForce,
   TMissionForceJson,
@@ -559,7 +559,7 @@ export type TForceEventMethods =
  * The argument(s) used in the event handler for the force's event manager.
  */
 type TForceEventArgs = [
-  updatedComponents: TMissionComponent<TMetisClientComponents, any>[],
+  updatedComponents: MissionComponent<TMetisClientComponents, any>[],
 ]
 
 /**

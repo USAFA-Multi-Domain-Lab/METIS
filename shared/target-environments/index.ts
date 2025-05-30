@@ -1,5 +1,5 @@
 import { AnyObject } from 'metis/toolbox/objects'
-import { TMetisBaseComponents } from '..'
+import { MetisComponent, TMetisBaseComponents } from '..'
 import { TTarget, TTargetJson } from './targets'
 
 /**
@@ -7,17 +7,7 @@ import { TTarget, TTargetJson } from './targets'
  */
 export default abstract class TargetEnvironment<
   T extends TMetisBaseComponents = TMetisBaseComponents,
-> {
-  /**
-   * The ID of the target environment.
-   */
-  public _id: string
-
-  /**
-   * The name of the target environment.
-   */
-  public name: string
-
+> extends MetisComponent {
   /**
    * Describes what the target environment is.
    */
@@ -40,8 +30,12 @@ export default abstract class TargetEnvironment<
   public constructor(
     data: Partial<TTargetEnvJson> = TargetEnvironment.DEFAULT_PROPERTIES,
   ) {
-    this._id = data._id ?? TargetEnvironment.DEFAULT_PROPERTIES._id
-    this.name = data.name ?? TargetEnvironment.DEFAULT_PROPERTIES.name
+    super(
+      data._id ?? TargetEnvironment.DEFAULT_PROPERTIES._id,
+      data.name ?? TargetEnvironment.DEFAULT_PROPERTIES.name,
+      false,
+    )
+
     this.description =
       data.description ?? TargetEnvironment.DEFAULT_PROPERTIES.description
     this.version = data.version ?? TargetEnvironment.DEFAULT_PROPERTIES.version

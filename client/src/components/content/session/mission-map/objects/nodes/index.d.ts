@@ -1,6 +1,6 @@
 import ClientMission from 'src/missions'
 import ClientActionExecution from 'src/missions/actions/executions'
-import { TMetisComponent } from '../../../../../../../../shared/'
+import { MetisComponent } from '../../../../../../../../shared/'
 import { TListenerTarget } from '../../../../../../../../shared/events'
 import { TWithKey } from '../../../../../../../../shared/toolbox/objects'
 import {
@@ -14,7 +14,7 @@ import { TButtonSvg_P } from '../../../../../content/user-controls/buttons/Butto
  * @note Implement this in a class to make
  * that class compatible with mission maps.
  */
-export type TMapCompatibleNode = TMetisComponent &
+export type TMapCompatibleNode = MetisComponent &
   TListenerTarget<TMapCompatibleNodeEvent> & {
     /**
      * The mission containing the node.

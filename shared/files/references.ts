@@ -1,4 +1,4 @@
-import { TMetisComponent } from '..'
+import { MetisComponent } from '..'
 import { DateToolbox } from '../toolbox/dates'
 
 /**
@@ -6,17 +6,7 @@ import { DateToolbox } from '../toolbox/dates'
  * This provides context to where its located, what
  * it is, and how it can be used.
  */
-export default abstract class FileReference implements TMetisComponent {
-  // Implemented
-  public _id: string
-
-  // Implemented
-  /**
-   * This is the original name of the file when it was
-   * uploaded.
-   */
-  public name: string
-
+export default abstract class FileReference extends MetisComponent {
   /**
    * The relative path to the file within the METIS
    * file store.
@@ -46,14 +36,6 @@ export default abstract class FileReference implements TMetisComponent {
   public updatedAt: Date | null
 
   /**
-   * Whether the file has been deleted.
-   * This is used to indicate that the file
-   * is no longer available, but may still
-   * be referenced in some contexts.
-   */
-  public deleted: boolean
-
-  /**
    * See corresponding class properties for details
    * on the parameters of this constructor.
    */
@@ -67,14 +49,14 @@ export default abstract class FileReference implements TMetisComponent {
     updatedAt: Date | null,
     deleted: boolean,
   ) {
-    this._id = _id
+    super(_id, name, deleted)
+
     this.name = name
     this.path = path
     this.mimetype = mimetype
     this.size = size
     this.createdAt = createdAt
     this.updatedAt = updatedAt
-    this.deleted = deleted
   }
 
   /**
@@ -90,6 +72,7 @@ export default abstract class FileReference implements TMetisComponent {
       size: this.size,
       createdAt: DateToolbox.toNullableISOString(this.createdAt),
       updatedAt: DateToolbox.toNullableISOString(this.updatedAt),
+      deleted: this.deleted,
     }
   }
 }
@@ -97,7 +80,15 @@ export default abstract class FileReference implements TMetisComponent {
 /**
  * A JSON representation of the `FileReference` class.
  */
-export interface TFileReferenceJson extends TMetisComponent {
+export interface TFileReferenceJson {
+  /**
+   * @see MetisComponent._id
+   */
+  _id: string
+  /**
+   * @see MetisComponent.name
+   */
+  name: string
   /**
    * @see FileReference.path
    */
@@ -118,4 +109,8 @@ export interface TFileReferenceJson extends TMetisComponent {
    * @see FileReference.updatedAt
    */
   updatedAt: string | null
+  /**
+   * @see MetisComponent.deleted
+   */
+  deleted: boolean
 }

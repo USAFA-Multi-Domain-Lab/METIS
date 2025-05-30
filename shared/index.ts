@@ -19,22 +19,38 @@ import User from './users'
  * A fundamental concept used in the application.
  * (e.g. a user, a mission, a session, etc.)
  */
-export type TMetisComponent = {
-  /**
-   * Uniquely identifies the component.
-   */
-  _id: string
+export abstract class MetisComponent {
   /**
    * A human-readable title for the component.
    */
-  name: string
+  private _name: string
   /**
-   * Whether the component is considered deleted in the
-   * system.
-   * @note If undefined, the component is assumed to not
-   * be deleted.
+   * A human-readable title for the component.
    */
-  deleted?: boolean
+  public get name(): string {
+    return this._name
+  }
+  public set name(name: string) {
+    this._name = name
+  }
+
+  public constructor(
+    /**
+     * Uniquely identifies the component.
+     */
+    public _id: string,
+    /**
+     * A human-readable title for the component.
+     */
+    name: string,
+    /**
+     * Whether the component is considered deleted in the
+     * system.
+     */
+    public deleted: boolean,
+  ) {
+    this._name = name
+  }
 }
 
 /**
@@ -69,11 +85,29 @@ export type TMetisBaseComponents = {
  * @returns The JSON representation type.
  */
 export type TCreateJsonType<
-  T extends TMetisComponent,
+  T extends MetisComponent,
   TDirect extends keyof T,
   TIndirect extends { [k in keyof T]?: any } = {},
 > = {
   -readonly [k in TDirect]: T[k]
 } & {
   [k in keyof TIndirect]: TIndirect[k]
+}
+
+/**
+ * JSON representation of {@link MetisComponent}.
+ */
+export interface TMetisComponentJson {
+  /**
+   * @see {@link MetisComponent._id}
+   */
+  _id: string
+  /**
+   * @see {@link MetisComponent.name}
+   */
+  name: string
+  /**
+   * @see {@link MetisComponent.deleted}
+   */
+  deleted: boolean
 }

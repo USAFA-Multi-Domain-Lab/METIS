@@ -1,6 +1,6 @@
 import { TFileReferenceJson } from 'metis/files/references'
-import { TMetisBaseComponents } from 'metis/index'
-import { TMissionComponent } from '..'
+import { TMetisBaseComponents } from '../../'
+import MissionComponent from '../component'
 import { MissionForce } from '../forces'
 
 /**
@@ -9,8 +9,12 @@ import { MissionForce } from '../forces'
  */
 export default abstract class MissionFile<
   T extends TMetisBaseComponents = TMetisBaseComponents,
-> implements TMissionComponent<T, MissionFile<T>>
-{
+> extends MissionComponent<T, MissionFile<T>> {
+  // Implemented.
+  public get mission(): T['mission'] {
+    return this._mission
+  }
+
   /**
    * The forces that currently have access to the file.
    */
@@ -21,14 +25,15 @@ export default abstract class MissionFile<
     return this.reference._id
   }
 
-  // Implemented.
+  // Overridden
   public get name(): string {
     return this.alias || this.originalName
   }
-
-  // Implemented.
-  public get deleted(): boolean {
-    return this.reference.deleted
+  // Overridden
+  public set name(value: string) {
+    throw new Error(
+      'Cannot set name of MissionFile directly. Use alias instead.',
+    )
   }
 
   /**
@@ -41,7 +46,7 @@ export default abstract class MissionFile<
   }
 
   // Implemented
-  public get path(): [...TMissionComponent<any, any>[], this] {
+  public get path(): [...MissionComponent<any, any>[], this] {
     return [this.mission, this]
   }
 
@@ -70,8 +75,7 @@ export default abstract class MissionFile<
   }
 
   public constructor(
-    // Implemented.
-    public readonly _id: string,
+    _id: string,
     /**
      * An alias given to the file, specific to the
      * scenario's needs.
@@ -98,10 +102,12 @@ export default abstract class MissionFile<
      */
     public readonly reference: T['fileReference'],
     /**
-     * The mission of which this file is a part.
+     * @see {@link MissionComponent.mission}
      */
-    public readonly mission: T['mission'],
+    protected readonly _mission: T['mission'],
   ) {
+    super(_id, '', reference.deleted)
+
     // Update the last-known name if the reference
     // is not deleted.
     if (!reference.deleted) this.lastKnownName = reference.name

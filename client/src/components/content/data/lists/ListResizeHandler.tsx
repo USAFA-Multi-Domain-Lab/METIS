@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useCallbackRef, useResizeObserver } from 'src/toolbox/hooks'
-import { TMetisComponent } from '../../../../../../shared'
+import { MetisComponent } from '../../../../../../shared'
 import { useListContext } from './List'
 
 /**
@@ -8,7 +8,7 @@ import { useListContext } from './List'
  * the number of items available per page.
  */
 export default function ListResizeHandler<
-  TItem extends TMetisComponent,
+  TItem extends MetisComponent,
 >(): JSX.Element | null {
   /* -- STATE -- */
 

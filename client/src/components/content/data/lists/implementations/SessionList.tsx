@@ -6,7 +6,7 @@ import SessionClient from 'src/sessions'
 import { SessionBasic } from 'src/sessions/basic'
 import { compute } from 'src/toolbox'
 import { usePeriodicRerender, useRequireLogin } from 'src/toolbox/hooks'
-import { TMetisComponent } from '../../../../../../../shared'
+import { MetisComponent } from '../../../../../../../shared'
 import { DateToolbox } from '../../../../../../../shared/toolbox/dates'
 import List, { TGetListButtonLabel } from '../List'
 import {
@@ -154,11 +154,9 @@ export default function SessionList({
   /**
    * Handler for when a session is selected.
    */
-  const onSessionSelection: TOnItemSelection<TMetisComponent> = async ({
+  const onSessionSelection: TOnItemSelection<MetisComponent> = async ({
     _id: sessionId,
-  }: {
-    _id: string
-  }) => {
+  }: MetisComponent) => {
     if (server !== null) {
       try {
         // Notify user of session join.
@@ -256,7 +254,7 @@ export default function SessionList({
 
         // Handle session selection if the user submits.
         if (choice === 'Submit') {
-          onSessionSelection({ _id: text, name: 'manual-join' })
+          onSessionSelection(SessionBasic.createManualJoin(text))
         }
         break
       default:

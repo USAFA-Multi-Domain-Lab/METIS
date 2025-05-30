@@ -1,6 +1,6 @@
 import { ReactNode } from 'react'
 import { compute } from 'src/toolbox'
-import { TMetisComponent } from '../../../../../../../shared'
+import { MetisComponent } from '../../../../../../../shared'
 import { useListContext } from '../List'
 import ListColumnLabels from './ListColumnLabels'
 import ListItem from './ListItem'
@@ -9,7 +9,7 @@ import './ListPage.scss'
 /**
  * Represents a page or grouping of items in a list.
  */
-export default function ListPage<TItem extends TMetisComponent>({
+export default function ListPage<TItem extends MetisComponent>({
   items,
 }: TListPage_P<TItem>): JSX.Element | null {
   /* -- STATE -- */
@@ -76,7 +76,7 @@ export default function ListPage<TItem extends TMetisComponent>({
 /**
  * Props for `ListPage`.
  */
-export type TListPage_P<TItem extends TMetisComponent> = {
+export type TListPage_P<TItem extends MetisComponent> = {
   /**
    * The items to display on the page.
    */

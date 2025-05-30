@@ -1,6 +1,7 @@
-import { TCreateJsonType, TMetisBaseComponents } from 'metis/index'
 import { v4 as generateHash } from 'uuid'
-import Mission, { TMission, TMissionComponent } from '..'
+import Mission, { TMission } from '..'
+import { TCreateJsonType, TMetisBaseComponents } from '../../'
+import MissionComponent from '../component'
 import { TEffect, TEffectJson } from '../effects'
 import { TForce } from '../forces'
 import { TNode, TNodeJsonOptions } from '../nodes'
@@ -10,28 +11,19 @@ import { TNode, TNodeJsonOptions } from '../nodes'
  */
 export default abstract class MissionAction<
   T extends TMetisBaseComponents = TMetisBaseComponents,
-> implements TMissionComponent<T, MissionAction<T>>
-{
+> extends MissionComponent<T, MissionAction<T>> {
+  // Implemented
   public get mission(): TMission<T> {
     return this.node.mission
   }
+
   /**
    * The node on which the action is being executed.
    */
   public node: TNode<T>
 
-  /**
-   * The ID of the action.
-   */
-  public _id: string
-
-  /**
-   * The name of the action.
-   */
-  public name: string
-
   // Implemented
-  public get path(): [...TMissionComponent<any, any>[], this] {
+  public get path(): [...MissionComponent<any, any>[], this] {
     return [this.mission, this.force, this.node, this]
   }
 
@@ -248,9 +240,13 @@ export default abstract class MissionAction<
     node: TNode<T>,
     data: Partial<TMissionActionJson> = MissionAction.DEFAULT_PROPERTIES,
   ) {
+    super(
+      data._id ?? MissionAction.DEFAULT_PROPERTIES._id,
+      data.name ?? MissionAction.DEFAULT_PROPERTIES.name,
+      false,
+    )
+
     this.node = node
-    this._id = data._id ?? MissionAction.DEFAULT_PROPERTIES._id
-    this.name = data.name ?? MissionAction.DEFAULT_PROPERTIES.name
     this.description =
       data.description ?? MissionAction.DEFAULT_PROPERTIES.description
     this._processTime =

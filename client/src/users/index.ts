@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { TMetisClientComponents } from 'src'
-import { TMetisComponent } from '../../../shared'
+import { MetisComponent } from '../../../shared'
 import User, {
   TUserJson,
   TUserJsonOptions,
@@ -14,7 +14,7 @@ import UserAccess from '../../../shared/users/accesses'
  */
 export default class ClientUser
   extends User<TMetisClientComponents>
-  implements TMetisComponent
+  implements MetisComponent
 {
   /**
    * Used for the first password field.

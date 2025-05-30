@@ -4,7 +4,7 @@ import ButtonMenuController from 'src/components/content/user-controls/buttons/B
 import WarningIndicator from 'src/components/content/user-controls/WarningIndicator'
 import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
-import { TMetisComponent } from '../../../../../../../shared'
+import { MetisComponent } from '../../../../../../../shared'
 import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
 import { TUserPermissionId } from '../../../../../../../shared/users/permissions'
 import ButtonSvg, {
@@ -21,7 +21,7 @@ import ListItemCell from './ListItemCell'
 /**
  * A list item in a `List` component.
  */
-export default function ListItem<T extends TMetisComponent>({
+export default function ListItem<T extends MetisComponent>({
   item,
 }: TListItem_P<T>): JSX.Element | null {
   /* -- STATE -- */
@@ -190,7 +190,7 @@ export default function ListItem<T extends TMetisComponent>({
 /**
  * Props for `ListItem`.
  */
-export type TListItem_P<T extends TMetisComponent> = {
+export type TListItem_P<T extends MetisComponent> = {
   /**
    * The item to display.
    */
@@ -202,7 +202,7 @@ export type TListItem_P<T extends TMetisComponent> = {
  * @param item The item for which to get the tooltip.
  * @returns The tooltip description.
  */
-export type TGetItemTooltip<TItem extends TMetisComponent> = (
+export type TGetItemTooltip<TItem extends MetisComponent> = (
   item: TItem,
 ) => string
 
@@ -212,7 +212,7 @@ export type TGetItemTooltip<TItem extends TMetisComponent> = (
  * @param item The item for which to get the label.
  * @returns The label.
  */
-export type TGetItemButtonLabel<TItem extends TMetisComponent> = (
+export type TGetItemButtonLabel<TItem extends MetisComponent> = (
   button: TButtonSvgType,
 ) => string
 
@@ -222,7 +222,7 @@ export type TGetItemButtonLabel<TItem extends TMetisComponent> = (
  * @returns The permissions.
  * @default () => []
  */
-export type TGetItemButtonPermission<TItem extends TMetisComponent> = (
+export type TGetItemButtonPermission<TItem extends MetisComponent> = (
   button: TButtonSvgType,
 ) => TUserPermissionId[]
 
@@ -230,7 +230,7 @@ export type TGetItemButtonPermission<TItem extends TMetisComponent> = (
  * A callback for when an item in the list is clicked.
  * @param item The item that was clicked.
  */
-export type TOnItemSelection<TItem extends TMetisComponent> = (
+export type TOnItemSelection<TItem extends MetisComponent> = (
   item: TItem,
 ) => void
 
@@ -239,7 +239,7 @@ export type TOnItemSelection<TItem extends TMetisComponent> = (
  * @param item The item with which the button is associated.
  * @param button The type of button clicked.
  */
-export type TOnItemButtonClick<TItem extends TMetisComponent> = (
+export type TOnItemButtonClick<TItem extends MetisComponent> = (
   button: TButtonSvgType,
   item: TItem,
 ) => void

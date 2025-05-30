@@ -5,8 +5,7 @@ import SessionClient from 'src/sessions'
 import { compute } from 'src/toolbox'
 import { useMountHandler, useRequireLogin } from 'src/toolbox/hooks'
 import { DefaultPageLayout } from '.'
-
-import { TMissionComponent } from '../../../../shared/missions'
+import MissionComponent from '../../../../shared/missions/component'
 import Session from '../../../../shared/sessions'
 import { ESortByMethod } from '../content/general-layout/ListOld'
 import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
@@ -94,7 +93,7 @@ export default function LaunchPage({
   /**
    * Renders JSX for the effect list item.
    */
-  const renderObjectListItem = (component: TMissionComponent<any, any>) => {
+  const renderObjectListItem = (component: MissionComponent<any, any>) => {
     /* -- COMPUTED -- */
 
     /**

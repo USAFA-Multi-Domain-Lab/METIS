@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import { compute } from 'src/toolbox'
 import { TDefaultProps, useDefaultProps } from 'src/toolbox/hooks'
-import { TMetisComponent } from '../../../../../../shared'
+import { MetisComponent } from '../../../../../../shared'
 import StringToolbox from '../../../../../../shared/toolbox/strings'
 import { TUserPermissionId } from '../../../../../../shared/users/permissions'
 import { TButtonSvgType } from '../../user-controls/buttons/ButtonSvg'
@@ -48,7 +48,7 @@ const ListContext = React.createContext<TListContextData<any> | null>(null)
  * Hook used by List-related components to access
  * the list context.
  */
-export const useListContext = <TItem extends TMetisComponent>() => {
+export const useListContext = <TItem extends MetisComponent>() => {
   const context = useContext(ListContext) as TListContextData<TItem> | null
   if (!context) {
     throw new Error('useListContext must be used within a list provider')
@@ -62,7 +62,7 @@ export const useListContext = <TItem extends TMetisComponent>() => {
  * The defaults used for `List` props.
  */
 export function createDefaultListProps<
-  TItem extends TMetisComponent,
+  TItem extends MetisComponent,
 >(): TDefaultProps<TList_P<TItem>> {
   return {
     columns: [],
@@ -93,7 +93,7 @@ export function createDefaultListProps<
 /**
  * Displays a list of items of the given type.
  */
-export default function List<TItem extends TMetisComponent>(
+export default function List<TItem extends MetisComponent>(
   props: TList_P<TItem>,
 ): JSX.Element | null {
   const Provider = ListContext.Provider as React.Provider<
@@ -378,7 +378,7 @@ export type TList_E = {
 /**
  * Props for `List`.
  */
-export type TList_P<TItem extends TMetisComponent> = {
+export type TList_P<TItem extends MetisComponent> = {
   /**
    * The name of the list.
    */
@@ -521,7 +521,7 @@ export type TList_P<TItem extends TMetisComponent> = {
 /**
  * The entire state for `List`.
  */
-export type TList_S<TItem extends TMetisComponent> = {
+export type TList_S<TItem extends MetisComponent> = {
   /**
    * The current page number.
    */
@@ -566,7 +566,7 @@ export type TList_S<TItem extends TMetisComponent> = {
  * The list context data provided to all children
  * of `List`.
  */
-export type TListContextData<TItem extends TMetisComponent> = Required<
+export type TListContextData<TItem extends MetisComponent> = Required<
   TList_P<TItem>
 > & {
   /**
@@ -643,7 +643,7 @@ export type TListColumnType<TItem> = keyof TItem
  * Data that defines how items in a list should
  * be sorted.
  */
-export type TListSorting<TItem extends TMetisComponent> = {
+export type TListSorting<TItem extends MetisComponent> = {
   /**
    * The column by which to sort.
    */

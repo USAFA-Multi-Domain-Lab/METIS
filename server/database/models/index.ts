@@ -1,4 +1,4 @@
-import { TMetisComponent } from 'metis/index'
+import { TMetisComponentJson } from 'metis/index'
 import { HydratedDocument, Model, Schema } from 'mongoose'
 import { TRecoverableDoc } from './types'
 
@@ -8,7 +8,7 @@ import { TRecoverableDoc } from './types'
  */
 export const buildToJson = <
   TDoc extends HydratedDocument<TRecoverableDoc<TJson>, {}, {}>,
-  TJson extends TMetisComponent,
+  TJson extends TMetisComponentJson,
 >() => {
   return (doc: TDoc, ret: TJson, options: any) => {
     return {

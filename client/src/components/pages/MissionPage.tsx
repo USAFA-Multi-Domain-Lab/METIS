@@ -21,7 +21,8 @@ import {
   useRequireLogin,
 } from 'src/toolbox/hooks'
 import { DefaultPageLayout, TPage_P } from '.'
-import Mission, { TMissionComponent } from '../../../../shared/missions'
+import Mission from '../../../../shared/missions'
+import MissionComponent from '../../../../shared/missions/component'
 import { TNonEmptyArray } from '../../../../shared/toolbox/arrays'
 import { TSingleTypeObject } from '../../../../shared/toolbox/objects'
 import Prompt from '../content/communication/Prompt'
@@ -105,7 +106,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   } = globalContext.actions
   const [server] = globalContext.server
   const state: TMissionPage_S = {
-    defectiveComponents: useState<TMissionComponent<any, any>[]>([]),
+    defectiveComponents: useState<MissionComponent<any, any>[]>([]),
   }
   const [mission, setMission] = useState<ClientMission>(new ClientMission())
   const [globalFiles, setGlobalFiles] = useState<ClientFileReference[]>([])
@@ -114,7 +115,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(
     props.missionId === null ? true : false,
   )
-  const [selection, setSelection] = useState<TMissionComponent<any, any>>(
+  const [selection, setSelection] = useState<MissionComponent<any, any>>(
     mission.selection,
   )
   const [isNewEffect, setIsNewEffect] = useState<boolean>(false)
@@ -653,7 +654,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
    * @param components The components that have been changed.
    */
   const onChange = (
-    ...components: TNonEmptyArray<TMissionComponent<any, any>>
+    ...components: TNonEmptyArray<MissionComponent<any, any>>
   ): void => {
     let updatedState = defectiveComponents
 
@@ -1154,7 +1155,7 @@ export type TMissionPage_S = {
    * The defected components that are currently
    * tracked within the mission.
    */
-  defectiveComponents: TReactState<TMissionComponent<any, any>[]>
+  defectiveComponents: TReactState<MissionComponent<any, any>[]>
 }
 
 /**

@@ -1,10 +1,6 @@
-import {
-  TCreateJsonType,
-  TMetisBaseComponents,
-  TMetisComponent,
-} from 'metis/index'
 import { TAction } from '.'
 import { TMission } from '..'
+import { MetisComponent, TCreateJsonType, TMetisBaseComponents } from '../../'
 import { TNode } from '../nodes'
 import { TExecutionOutcomeJson, TOutcome, TOutcomeState } from './outcomes'
 
@@ -15,12 +11,8 @@ import { TExecutionOutcomeJson, TOutcome, TOutcomeState } from './outcomes'
  */
 export default abstract class ActionExecution<
   T extends TMetisBaseComponents = TMetisBaseComponents,
-> implements TMetisComponent
-{
-  // Implemented
-  public readonly _id: string
-
-  // Implemented
+> extends MetisComponent {
+  // Overridden
   public get name(): string {
     return this._id.substring(0, 8)
   }
@@ -178,7 +170,8 @@ export default abstract class ActionExecution<
     start: number,
     end: number,
   ) {
-    this._id = _id
+    super(_id, '', false)
+
     this.action = action
     this._outcome = null
     this.start = start

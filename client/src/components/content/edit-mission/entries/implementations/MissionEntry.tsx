@@ -3,7 +3,7 @@ import { useMissionPageContext } from 'src/components/pages/MissionPage'
 import ClientMission from 'src/missions'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import { TMissionComponent } from '../../../../../../../shared/missions'
+import MissionComponent from '../../../../../../../shared/missions/component'
 import Tooltip from '../../../communication/Tooltip'
 import { DetailString } from '../../../form/DetailString'
 import ListOld, { ESortByMethod } from '../../../general-layout/ListOld'
@@ -43,7 +43,7 @@ export default function MissionEntry({
   /**
    * Renders JSX for the effect list item.
    */
-  const renderObjectListItem = (component: TMissionComponent<any, any>) => {
+  const renderObjectListItem = (component: MissionComponent<any, any>) => {
     /* -- COMPUTED -- */
 
     /**
@@ -97,7 +97,7 @@ export default function MissionEntry({
         key={`${mission._id}_resourceLabel`}
       />
       {defectiveComponents.length > 0 ? (
-        <ListOld<TMissionComponent<any, any>>
+        <ListOld<MissionComponent<any, any>>
           items={defectiveComponents}
           renderItemDisplay={(object) => renderObjectListItem(object)}
           headingText={'Unresolved Conflicts'}

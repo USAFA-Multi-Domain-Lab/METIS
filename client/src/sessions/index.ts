@@ -236,10 +236,10 @@ export default class SessionClient extends Session<TMetisClientComponents> {
       ownerLastName: this.ownerLastName,
       launchedAt: this.launchedAt.toISOString(),
       config: this.config,
-      participantIds: this.participants.map(({ _id: userId }) => userId),
+      participantIds: this.participants.map(({ _id: memberId }) => memberId),
       banList: this.banList,
-      observerIds: this.observers.map(({ _id: userId }) => userId),
-      managerIds: this.managers.map(({ _id: userId }) => userId),
+      observerIds: this.observers.map(({ _id: memberId }) => memberId),
+      managerIds: this.managers.map(({ _id: memberId }) => memberId),
     }
   }
 

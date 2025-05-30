@@ -1,6 +1,6 @@
-import { TCreateJsonType, TMetisBaseComponents } from 'metis/index'
 import { TFileMetadata } from 'metis/target-environments/args/mission-component/file-arg'
-import { TMission, TMissionComponent } from '..'
+import { TMission } from '..'
+import { TCreateJsonType, TMetisBaseComponents } from '../../'
 import { TTargetArg } from '../../target-environments/args'
 import { TActionMetadata } from '../../target-environments/args/mission-component/action-arg'
 import { TForceMetadata } from '../../target-environments/args/mission-component/force-arg'
@@ -9,6 +9,7 @@ import Dependency from '../../target-environments/dependencies'
 import { AnyObject } from '../../toolbox/objects'
 import StringToolbox from '../../toolbox/strings'
 import MissionAction, { TAction } from '../actions'
+import MissionComponent from '../component'
 import { TForce } from '../forces'
 import { TNode } from '../nodes'
 
@@ -17,8 +18,7 @@ import { TNode } from '../nodes'
  */
 export default abstract class Effect<
   T extends TMetisBaseComponents = TMetisBaseComponents,
-> implements TMissionComponent<T, Effect<T>>
-{
+> extends MissionComponent<T, Effect<T>> {
   /**
    * The original data used to construct the effect.
    */
@@ -62,9 +62,6 @@ export default abstract class Effect<
    */
   public action: TAction<T>
 
-  // Implemented
-  public _id: string
-
   /**
    * The ID of the target for the effect.
    */
@@ -89,10 +86,7 @@ export default abstract class Effect<
   public targetEnvironmentVersion: string
 
   // Implemented
-  public name: string
-
-  // Implemented
-  public get path(): [...TMissionComponent<any, any>[], this] {
+  public get path(): [...MissionComponent<any, any>[], this] {
     return [this.mission, this.force, this.node, this.action, this]
   }
 
@@ -282,15 +276,15 @@ export default abstract class Effect<
    * @param data Additional information for the effect.
    */
   public constructor(action: T['action'], data: TEffectJson) {
+    super(data._id, data.name, false)
+
     this.action = action
     this.target = this.determineTarget(data.targetId, data.environmentId)
 
     // Parse data.
     this.originalData = data
-    this._id = data._id
     this.targetEnvironmentVersion = data.targetEnvironmentVersion
     this.trigger = data.trigger
-    this.name = data.name
     this.description = data.description
     this.args = data.args
     this.localKey = data.localKey

@@ -4,10 +4,8 @@ import { TLine_P } from 'src/components/content/session/mission-map/objects/Line
 import { TPrototypeSlot_P } from 'src/components/content/session/mission-map/objects/PrototypeSlot'
 import { v4 as generateHash } from 'uuid'
 import { EventManager, TListenerTargetEmittable } from '../../../shared/events'
-import Mission, {
-  TMissionComponent,
-  TMissionJson,
-} from '../../../shared/missions'
+import Mission, { TMissionJson } from '../../../shared/missions'
+import MissionComponent from '../../../shared/missions/component'
 import { TMissionFileJson } from '../../../shared/missions/files'
 import {
   MissionForce,
@@ -110,7 +108,7 @@ export default class ClientMission
    * @note This is used in the form for editing.
    * @note By default, the mission itself.
    */
-  private _selection: TMissionComponent<any, any>
+  private _selection: MissionComponent<any, any>
   /**
    * The current selection for the mission.
    * @note This can be most type of nested, mission-related components,
@@ -118,7 +116,7 @@ export default class ClientMission
    * @note This is used in the form for editing.
    * @note By default, the mission itself.
    */
-  public get selection(): TMissionComponent<any, any> {
+  public get selection(): MissionComponent<any, any> {
     return this._selection
   }
 
@@ -975,7 +973,7 @@ export default class ClientMission
    * @param selection The selection to make for the mission.
    * @note Selection can be accessed via non-static field `ClientMission.selection`.
    */
-  public select(selection: TMissionComponent<any, any>): void {
+  public select(selection: MissionComponent<any, any>): void {
     // Throw an error if the selection is not
     // part of the mission.
     if (selection.mission !== this)
@@ -1146,7 +1144,7 @@ export default class ClientMission
    * selection.
    */
   public static getNodeFromSelection(
-    selection: TMissionComponent<any, any>,
+    selection: MissionComponent<any, any>,
   ): ClientMissionNode | null {
     // Loop through path, and return the first node found.
     for (let item of selection.path) {
@@ -1164,7 +1162,7 @@ export default class ClientMission
    * selection.
    */
   public static getForceFromSelection(
-    selection: TMissionComponent<any, any>,
+    selection: MissionComponent<any, any>,
   ): ClientMissionForce | null {
     // Loop through path, and return the first force found.
     for (let item of selection.path) {
@@ -1496,5 +1494,5 @@ type TMissionEventMethods =
  * The argument(s) used in the event handler for the mission's event manager.
  */
 type TMissionEventArgs = [
-  updatedComponents: TMissionComponent<TMetisClientComponents, any>[],
+  updatedComponents: MissionComponent<TMetisClientComponents, any>[],
 ]

@@ -5,9 +5,8 @@ import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import Mission, {
-  TMissionComponent,
-} from '../../../../../../../shared/missions'
+import Mission from '../../../../../../../shared/missions'
+import MissionComponent from '../../../../../../../shared/missions/component'
 import { TNonEmptyArray } from '../../../../../../../shared/toolbox/arrays'
 import Prompt from '../../../communication/Prompt'
 import { DetailColorSelector } from '../../../form/DetailColorSelector'
@@ -223,5 +222,5 @@ export type TForceEntry = {
    * changed by this component, including the force
    * itself, and any child components of the force.
    */
-  onChange: (...components: TNonEmptyArray<TMissionComponent<any, any>>) => void
+  onChange: (...components: TNonEmptyArray<MissionComponent<any, any>>) => void
 }

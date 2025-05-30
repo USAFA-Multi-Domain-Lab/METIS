@@ -1,9 +1,5 @@
-import {
-  TCreateJsonType,
-  TMetisBaseComponents,
-  TMetisComponent,
-} from 'metis/index'
 import { TAction } from '.'
+import { MetisComponent, TCreateJsonType, TMetisBaseComponents } from '../../'
 import { TForce } from '../forces'
 import { TNode } from '../nodes'
 import { TExecution } from './executions'
@@ -13,12 +9,8 @@ import { TExecution } from './executions'
  */
 export default abstract class ExecutionOutcome<
   T extends TMetisBaseComponents = TMetisBaseComponents,
-> implements TMetisComponent
-{
-  // Implemented
-  public readonly _id: string
-
-  // Implemented
+> extends MetisComponent {
+  // Overridden
   public get name(): string {
     return this._id.substring(0, 8)
   }
@@ -50,7 +42,7 @@ export default abstract class ExecutionOutcome<
   /**
    * The ID of the execution associated with the outcome.
    */
-  public get executionId(): TMetisComponent['_id'] {
+  public get executionId(): MetisComponent['_id'] {
     return this.execution._id
   }
 
@@ -64,7 +56,7 @@ export default abstract class ExecutionOutcome<
   /**
    * The ID of the action executed.
    */
-  public get actionId(): TMetisComponent['_id'] {
+  public get actionId(): MetisComponent['_id'] {
     return this.action._id
   }
 
@@ -78,7 +70,7 @@ export default abstract class ExecutionOutcome<
   /**
    * The ID of the node upon which the action executed.
    */
-  public get nodeId(): TMetisComponent['_id'] {
+  public get nodeId(): MetisComponent['_id'] {
     return this.node._id
   }
 
@@ -92,7 +84,7 @@ export default abstract class ExecutionOutcome<
   /**
    * The ID of the force where the action executed.
    */
-  public get forceId(): TMetisComponent['_id'] {
+  public get forceId(): MetisComponent['_id'] {
     return this.force._id
   }
 
@@ -106,7 +98,8 @@ export default abstract class ExecutionOutcome<
     initialState: TOutcomeState,
     execution: TExecution<T>,
   ) {
-    this._id = _id
+    super(_id, '', false)
+
     this._state = initialState
     this.execution = execution
   }

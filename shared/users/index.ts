@@ -1,6 +1,6 @@
 import { TBaseMissionComponents } from 'metis/missions'
 import { v4 as generateHash } from 'uuid'
-import { TMetisBaseComponents, TMetisComponent } from '..'
+import { MetisComponent, TMetisBaseComponents } from '..'
 import UserAccess, { TUserAccess } from './accesses'
 import UserPermission, {
   TUserPermission,
@@ -12,11 +12,7 @@ import UserPermission, {
  */
 export default abstract class User<
   T extends TBaseMissionComponents = TBaseMissionComponents,
-> implements TMetisComponent
-{
-  // Implemented
-  public _id: string
-
+> extends MetisComponent {
   /**
    * The user's username.
    */
@@ -42,11 +38,18 @@ export default abstract class User<
    */
   public lastName: string
 
+  // Overridden
   /**
    * The user's full name.
    */
   public get name(): string {
     return `${this.lastName}, ${this.firstName}`
+  }
+  // Overridden
+  public set name(value: string) {
+    throw new Error(
+      'Cannot set name of User directly. Use firstName and lastName instead.',
+    )
   }
 
   /**
@@ -67,7 +70,8 @@ export default abstract class User<
     data: Partial<TUserJson> = User.DEFAULT_PROPERTIES,
     options: TUserOptions = {},
   ) {
-    this._id = data._id ?? User.DEFAULT_PROPERTIES._id
+    super(data._id ?? User.DEFAULT_PROPERTIES._id, '', false)
+
     this.username = data.username ?? User.DEFAULT_PROPERTIES.username
     this.access = UserAccess.get(data.accessId ?? UserAccess.DEFAULT_ID)
     this.firstName = data.firstName ?? User.DEFAULT_PROPERTIES.firstName

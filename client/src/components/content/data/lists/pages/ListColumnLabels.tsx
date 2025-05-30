@@ -1,6 +1,6 @@
 import { ReactNode } from 'react'
 import { compute } from 'src/toolbox'
-import { TMetisComponent } from '../../../../../../../shared'
+import { MetisComponent } from '../../../../../../../shared'
 import {
   OPTIONS_COLUMN_WIDTH,
   OPTIONS_COLUMN_WIDTH_IF_LAST,
@@ -13,7 +13,7 @@ import './ListColumnLabels.scss'
  * Labels for the columns of a `List` component.
  */
 export default function ListColumnLabels<
-  TItem extends TMetisComponent,
+  TItem extends MetisComponent,
 >(): JSX.Element | null {
   /* -- STATE -- */
 

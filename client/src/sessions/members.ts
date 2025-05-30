@@ -12,7 +12,7 @@ import MemberRole, {
  */
 export default class ClientSessionMember extends SessionMember<TMetisClientComponents> {
   public constructor(
-    _id: ClientUser['_id'],
+    _id: SessionMember['_id'],
     user: ClientUser,
     role: MemberRole | TMemberRoleId,
     forceId: ClientMissionForce['_id'] | null,

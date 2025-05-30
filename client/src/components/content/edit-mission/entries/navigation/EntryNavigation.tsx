@@ -3,7 +3,7 @@ import ButtonSvg, {
 } from 'src/components/content/user-controls/buttons/ButtonSvg'
 import ClientMission from 'src/missions'
 import { compute } from 'src/toolbox'
-import { TMissionComponent } from '../../../../../../../shared/missions'
+import MissionComponent from '../../../../../../../shared/missions/component'
 import './EntryNavigation.scss'
 
 /**
@@ -96,5 +96,5 @@ export type TEntryNavigation_P = {
    * The navigation-compatible component displayed
    * in the entry.
    */
-  component: TMissionComponent<any, any>
+  component: MissionComponent<any, any>
 }

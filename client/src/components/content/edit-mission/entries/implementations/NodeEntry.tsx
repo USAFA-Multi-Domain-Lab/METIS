@@ -8,7 +8,7 @@ import ClientMissionAction from 'src/missions/actions'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect, useRequireLogin } from 'src/toolbox/hooks'
-import { TMissionComponent } from '../../../../../../../shared/missions'
+import MissionComponent from '../../../../../../../shared/missions/component'
 import { TNonEmptyArray } from '../../../../../../../shared/toolbox/arrays'
 import Prompt from '../../../communication/Prompt'
 import { DetailColorSelector } from '../../../form/DetailColorSelector'
@@ -373,8 +373,6 @@ export type TNodeEntry_P = {
    * @param node The same node passed.
    */
   onChange: (
-    ...components: TNonEmptyArray<
-      TMissionComponent<TMetisClientComponents, any>
-    >
+    ...components: TNonEmptyArray<MissionComponent<TMetisClientComponents, any>>
   ) => void
 }

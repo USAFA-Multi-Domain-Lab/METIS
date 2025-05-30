@@ -11,7 +11,7 @@ import { TSessionConfig, TSessionJson } from 'metis/sessions'
 import SessionMember, { TSessionMemberJson } from 'metis/sessions/members'
 import MemberRole from 'metis/sessions/members/roles'
 import { AnyObject } from 'metis/toolbox/objects'
-import { TMetisComponent } from '..'
+import { MetisComponent } from '..'
 import { TMissionNodeJson } from '../missions/nodes'
 
 /* -- TYPES -- */
@@ -662,7 +662,7 @@ export type TResponseEvents = {
       /**
        * The ID of the member associated with the session client.
        */
-      memberId: TMetisComponent['_id']
+      memberId: MetisComponent['_id']
     },
     TClientEvents['request-current-session']
   >
@@ -679,7 +679,7 @@ export type TResponseEvents = {
       /**
        * The ID of the member in the session.
        */
-      memberId: TMetisComponent['_id']
+      memberId: MetisComponent['_id']
     },
     TClientEvents['request-join-session']
   >
