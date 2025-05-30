@@ -1,4 +1,5 @@
 import { ReactNode, useState } from 'react'
+import Tooltip from 'src/components/content/communication/Tooltip'
 import ClientMissionAction from 'src/missions/actions'
 import { compute } from 'src/toolbox'
 import { useEventListener } from 'src/toolbox/hooks'
@@ -10,7 +11,6 @@ import './ActionProperty.scss'
 export default function ActionProperty<TKey extends keyof ClientMissionAction>({
   action,
   actionKey,
-  label,
   cheatsApplied = false,
   infiniteResources = false,
   renderValue = (value) => value.toString(),
@@ -24,6 +24,9 @@ export default function ActionProperty<TKey extends keyof ClientMissionAction>({
 
   /* -- COMPUTED -- */
 
+  /**
+   * The class name for the action property.
+   */
   const className = compute(() => {
     let classList = ['ActionProperty', `ActionProperty_${actionKey}`]
 
@@ -39,6 +42,64 @@ export default function ActionProperty<TKey extends keyof ClientMissionAction>({
 
     return classList.join(' ')
   })
+
+  /**
+   * The style for the icon based on the action key.
+   */
+  const iconStyle: React.CSSProperties = compute(() => {
+    let result: React.CSSProperties = {
+      backgroundImage: 'linear-gradient(transparent, transparent)',
+      backgroundSize: '0.65em',
+      backgroundRepeat: 'no-repeat',
+      backgroundPosition: 'center',
+    }
+
+    // Determine the icon based on the action key.
+    let icon: TMetisIcon
+    switch (actionKey) {
+      case 'successChanceFormatted':
+        icon = 'percent'
+        break
+      case 'processTimeFormatted':
+        icon = 'timer'
+        break
+      case 'resourceCostFormatted':
+        icon = 'coins'
+        break
+      case 'opensNodeFormatted':
+        icon = 'door'
+        break
+      default:
+        icon = '_blank'
+    }
+
+    result.backgroundImage = `url(${require(`../../../../../../../../assets/images/icons/${icon}.svg`)})`
+
+    // Return the style for the icon.
+    return result
+  })
+
+  /**
+   * Describes the property being displayed.
+   */
+  const description: string = compute(() => {
+    switch (actionKey) {
+      case 'successChanceFormatted':
+        return 'Success Chance'
+      case 'processTimeFormatted':
+        return 'Process Time'
+      case 'resourceCostFormatted':
+        return 'Resource Cost'
+      case 'opensNodeFormatted':
+        return 'Opens Node'
+      default:
+        return ''
+    }
+  })
+
+  /**
+   * The JSX for the value of the property.
+   */
   const valueJsx = renderValue(value)
 
   /* -- EFFECTS -- */
@@ -63,8 +124,13 @@ export default function ActionProperty<TKey extends keyof ClientMissionAction>({
 
   return (
     <div className={className}>
-      <span className='Label'>{label}</span>
-      <span className='Value'>{valueJsx}</span>
+      <div className='Icon' style={iconStyle}>
+        <Tooltip description={description} />
+      </div>
+      <span className='Value'>
+        <Tooltip description={description} />
+        {valueJsx}
+      </span>
     </div>
   )
 }
@@ -84,10 +150,6 @@ export type TActionProperty_P<TKey extends keyof ClientMissionAction> = {
    * The key of the property to display.
    */
   actionKey: TKey
-  /**
-   * The label to display for the property.
-   */
-  label: string
   /**
    * Whether the property is disabled by cheats.
    * @default false

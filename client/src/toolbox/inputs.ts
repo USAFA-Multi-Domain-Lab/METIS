@@ -26,6 +26,13 @@ export const enforceIndentOnTabDown = (
 export const enforceNumbericCharsOnly = (
   event: React.KeyboardEvent<HTMLInputElement>,
 ): void => {
+  // Allow: Ctrl/Cmd + A (select all)
+  if (
+    (event.ctrlKey || event.metaKey) &&
+    (event.key === 'a' || event.key === 'A')
+  ) {
+    return
+  }
   const condition: RegExp = /[0-9+-.]/
   let key: string = event.key
   let validKey: boolean = key.length > 1 || condition.test(key)

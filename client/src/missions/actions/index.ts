@@ -25,6 +25,27 @@ export default class ClientMissionAction extends MissionAction<TMetisClientCompo
   }
 
   /**
+   * How many hours the action takes to complete.
+   */
+  public get processTimeHours(): number {
+    return Math.floor(this.processTime / 1000 / 60 / 60)
+  }
+
+  /**
+   * How many minutes the action takes to complete.
+   */
+  public get processTimeMinutes(): number {
+    return Math.floor((this.processTime / 1000 / 60) % 60)
+  }
+
+  /**
+   * How many seconds the action takes to complete.
+   */
+  public get processTimeSeconds(): number {
+    return Math.floor((this.processTime / 1000) % 60)
+  }
+
+  /**
    * The formatted process time to display to a session
    * member.
    */
@@ -32,8 +53,14 @@ export default class ClientMissionAction extends MissionAction<TMetisClientCompo
     // If the process time is hidden, return the hidden
     // value.
     if (this.processTimeHidden) return ClientMissionAction.HIDDEN_VALUE
-    // Convert the value to a seconds format.
-    return `${this.processTime / 1000}s`
+
+    // Return the formatted process time.
+    const { processTimeHours, processTimeMinutes, processTimeSeconds } = this
+    const hours = processTimeHours > 0 ? `${processTimeHours}h` : ''
+    const minutes =
+      hours || processTimeMinutes > 0 ? `${processTimeMinutes}m` : ''
+    const seconds = `${processTimeSeconds}s`
+    return `${hours} ${minutes} ${seconds}`.trim()
   }
 
   /**

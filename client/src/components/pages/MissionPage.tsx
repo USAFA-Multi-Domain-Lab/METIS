@@ -511,6 +511,10 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   // prototype is spawned in the mission.
   useEventListener(mission, 'new-prototype', () => setAreUnsavedChanges(true))
 
+  // Add event listener to watch for a node exclusion
+  // request, updating the state accordingly.
+  useEventListener(mission, 'set-node-exclusion', ([node]) => onChange(node))
+
   /* -- FUNCTIONS -- */
 
   /**

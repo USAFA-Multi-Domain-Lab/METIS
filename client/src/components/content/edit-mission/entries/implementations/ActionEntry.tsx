@@ -53,9 +53,6 @@ export default function ActionEntry({
   )
   const [successChanceHidden, hideSuccessChance] =
     actionState.successChanceHidden
-  const [processTime, setProcessTime] = useState<number>(
-    action.processTime / 1000,
-  )
   const [processTimeHidden, hideProcessTime] = actionState.processTimeHidden
   const [resourceCost, setResourceCost] = actionState.resourceCost
   const [resourceCostHidden, hideResourceCost] = actionState.resourceCostHidden
@@ -65,6 +62,9 @@ export default function ActionEntry({
     actionState.postExecutionSuccessText
   const [postExecutionFailureText, setPostExecutionFailureText] =
     actionState.postExecutionFailureText
+  const [hours, setHours] = useState<number>(action.processTimeHours)
+  const [minutes, setMinutes] = useState<number>(action.processTimeMinutes)
+  const [seconds, setSeconds] = useState<number>(action.processTimeSeconds)
   const { isAuthorized } = useRequireLogin()
 
   /* -- COMPUTED -- */
@@ -84,13 +84,20 @@ export default function ActionEntry({
 
   // Sync the component state with the action.
   usePostInitEffect(() => {
-    // Update the success chance and the process time.
+    // Update the success chance.
     action.successChance = successChance / 100
-    action.processTime = processTime * 1000
+
+    // Convert and update the process time.
+    const processTime = ClientMissionAction.convertProcessTime(
+      hours,
+      minutes,
+      seconds,
+    )
+    action.processTime = processTime
 
     // Allow the user to save the changes.
     onChange(action)
-  }, [successChance, processTime])
+  }, [successChance, hours, minutes, seconds])
 
   /* -- FUNCTIONS -- */
 
@@ -161,17 +168,36 @@ export default function ActionEntry({
         key={`${action._id}_successChanceHidden`}
       />
       <Divider />
+      {/* -- PROCESS TIME -- */}
       <DetailNumber
         fieldType='required'
         label='Process Time'
-        stateValue={processTime}
-        setState={setProcessTime}
-        // Convert to seconds.
-        minimum={ClientMissionAction.PROCESS_TIME_MIN / 1000}
-        // Convert to seconds.
-        maximum={ClientMissionAction.PROCESS_TIME_MAX / 1000}
-        unit='s'
-        key={`${action._id}_timeCost`}
+        stateValue={hours}
+        setState={setHours}
+        minimum={0}
+        maximum={1}
+        unit='hours'
+        key={`${action._id}_processTimeHours`}
+      />
+      <DetailNumber
+        fieldType='required'
+        label=''
+        stateValue={minutes}
+        setState={setMinutes}
+        minimum={0}
+        maximum={59}
+        unit='minutes'
+        key={`${action._id}_processTimeMinutes`}
+      />
+      <DetailNumber
+        fieldType='required'
+        label=''
+        stateValue={seconds}
+        setState={setSeconds}
+        minimum={0}
+        maximum={59}
+        unit='seconds'
+        key={`${action._id}_processTimeSeconds`}
       />
       <DetailToggle
         fieldType='required'

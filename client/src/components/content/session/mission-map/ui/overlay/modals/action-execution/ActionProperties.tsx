@@ -41,27 +41,20 @@ export default function ActionProperties({
       <ActionProperty
         action={action}
         actionKey='successChanceFormatted'
-        label='Success Chance'
         cheatsApplied={cheats.guaranteedSuccess}
       />
       <ActionProperty
         action={action}
         actionKey='processTimeFormatted'
-        label='Time'
         cheatsApplied={cheats.instantaneous}
       />
       <ActionProperty
         action={action}
         actionKey='resourceCostFormatted'
-        label='Cost'
         cheatsApplied={cheats.zeroCost}
         infiniteResources={config.infiniteResources}
       />
-      <ActionProperty
-        action={action}
-        actionKey='opensNodeFormatted'
-        label='Opens Node'
-      />
+      <ActionProperty action={action} actionKey='opensNodeFormatted' />
     </div>
   )
 }

@@ -266,7 +266,7 @@ export default class ClientMissionForce
 
       if (
         nonRevealedDisplayMode === 'show' &&
-        parent === this.root &&
+        parent.parent === this.root &&
         childCount > 0
       ) {
         // If the parent is the invisible root node,
@@ -417,8 +417,7 @@ export default class ClientMissionForce
             if (child.hasChildren) {
               midToChildLength = ClientMissionNode.WIDTH + columnEdgeDistance
             } else {
-              midToChildLength =
-                ClientMissionNode.WIDTH / 2 + columnEdgeDistance
+              midToChildLength += ClientMissionNode.WIDTH / 2
             }
           }
 
