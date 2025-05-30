@@ -113,8 +113,14 @@ export default function ({
     <div
       className={rootClasses.value}
       style={rootStyle}
-      onClick={onClick}
-      onCopy={onCopy}
+      onClick={(event) => {
+        if (disabled) return
+        onClick(event)
+      }}
+      onCopy={(event) => {
+        if (disabled) return
+        onCopy(event)
+      }}
     >
       <div className='ButtonIcon' style={iconStyle}></div>
       <div className='ButtonLabel'>

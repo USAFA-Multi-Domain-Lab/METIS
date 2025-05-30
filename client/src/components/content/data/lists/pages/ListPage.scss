@@ -75,6 +75,10 @@
       }
     }
 
+    &.Disabled {
+      pointer-events: auto;
+    }
+
     &:last-child {
       height: $item-non-padded-height + $item-cell-padding-vertical * 2 +
         $last-item-padding-bottom;

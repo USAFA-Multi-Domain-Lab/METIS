@@ -21,7 +21,10 @@ export default class ServerMissionFile extends MissionFile {
     if (typeof data.reference === 'object') {
       reference = ServerFileReference.fromJson(data.reference)
     } else {
-      reference = ServerFileReference.createDeleted({ _id: data.reference })
+      reference = ServerFileReference.createDeleted({
+        _id: data.reference,
+        name: data.lastKnownName,
+      })
     }
 
     // Create and return new `ServerMissionFile` instance.

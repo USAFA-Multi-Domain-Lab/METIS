@@ -6,7 +6,7 @@
 .ListItem {
   cursor: pointer;
 
-  &:hover:not(.Selected) {
+  &:hover:not(.Selected):not(.PartiallyDisabled) {
     @include background-mask($opacity: 0.05);
   }
 

@@ -511,10 +511,13 @@ schema.pre<TMissionDoc>('save', function (next) {
 schema.pre<TPreMissionQuery>(
   ['find', 'findOne', 'findOneAndUpdate', 'updateOne'],
   function (next) {
-    const { populateFileReferences = true } = this.getOptions()
+    const { populateCreatedBy = true, populateFileReferences = true } =
+      this.getOptions()
 
     // Modify the query.
     queryForApiResponse(this)
+    // Populate createdBy.
+    if (populateCreatedBy) this.populate('createdBy')
     // Populate file-references.
     if (populateFileReferences) this.populate('files.reference')
     // Call the next middleware.

@@ -15,6 +15,7 @@ export default function ButtonMenuController({
   engine,
   highlightTarget,
   trigger = 'r-click',
+  listen = true,
   onActivate = () => {},
 }: TButtonMenuController_P): null {
   /* -- STATE -- */
@@ -48,6 +49,9 @@ export default function ButtonMenuController({
     target.current,
     eventListenerMethod,
     (event: React.MouseEvent<HTMLElement>) => {
+      // Abort if not listening.
+      if (!listen) return
+
       // Prevent the default context menu.
       event.preventDefault()
 
@@ -95,6 +99,13 @@ export type TButtonMenuController_P = {
    * @default 'r-click'
    */
   trigger?: TButtonMenuTrigger
+  /**
+   * Whether the button menu should be actively listening
+   * for trigger events. This is useful for temporarily
+   * pausing the button menu functionality.
+   * @default true
+   */
+  listen?: boolean
   /**
    * A callback for when the button menu is activated.
    */

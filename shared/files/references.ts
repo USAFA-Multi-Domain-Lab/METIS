@@ -1,4 +1,5 @@
-import { MetisComponent } from '..'
+import { TUserJson } from 'metis/users'
+import { MetisComponent, TMetisBaseComponents } from '..'
 import { DateToolbox } from '../toolbox/dates'
 
 /**
@@ -6,7 +7,9 @@ import { DateToolbox } from '../toolbox/dates'
  * This provides context to where its located, what
  * it is, and how it can be used.
  */
-export default abstract class FileReference extends MetisComponent {
+export default abstract class FileReference<
+  T extends TMetisBaseComponents = TMetisBaseComponents,
+> extends MetisComponent {
   /**
    * The relative path to the file within the METIS
    * file store.
@@ -36,6 +39,20 @@ export default abstract class FileReference extends MetisComponent {
   public updatedAt: Date | null
 
   /**
+   * The creator of the file.
+   */
+  public createdBy: T['user']
+
+  /**
+   * The username of the user who created the file.
+   * @note This is needed in the event that the user
+   * has been deleted, yet the file still exists. The
+   * username will then be displayed in the UI for the
+   * file.
+   */
+  public createdByUsername: string
+
+  /**
    * See corresponding class properties for details
    * on the parameters of this constructor.
    */
@@ -47,6 +64,8 @@ export default abstract class FileReference extends MetisComponent {
     size: number,
     createdAt: Date | null,
     updatedAt: Date | null,
+    createdBy: T['user'],
+    createdByUsername: string,
     deleted: boolean,
   ) {
     super(_id, name, deleted)
@@ -57,6 +76,8 @@ export default abstract class FileReference extends MetisComponent {
     this.size = size
     this.createdAt = createdAt
     this.updatedAt = updatedAt
+    this.createdBy = createdBy
+    this.createdByUsername = createdByUsername
   }
 
   /**
@@ -72,6 +93,8 @@ export default abstract class FileReference extends MetisComponent {
       size: this.size,
       createdAt: DateToolbox.toNullableISOString(this.createdAt),
       updatedAt: DateToolbox.toNullableISOString(this.updatedAt),
+      createdBy: this.createdBy.toJson(),
+      createdByUsername: this.createdByUsername,
       deleted: this.deleted,
     }
   }
@@ -105,6 +128,14 @@ export interface TFileReferenceJson {
    * @see FileReference.createdAt
    */
   createdAt: string | null
+  /**
+   * @see FileReference.createdBy
+   */
+  createdBy: TUserJson | string
+  /**
+   * @see FileReference.createdByUsername
+   */
+  createdByUsername: string
   /**
    * @see FileReference.updatedAt
    */

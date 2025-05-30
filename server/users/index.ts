@@ -238,6 +238,17 @@ export default class ServerUser extends User<TMetisServerComponents> {
       )
     }
   }
+
+  /**
+   * Creates a new {@link ServerUser} instance used to represent
+   * a previously-existing and now-deleted user.
+   * @param knownData Optional partial data to initialize the user.
+   * Only pass the properties known for the deleted user, if any.
+   * @returns A new {@link ServerUser} instance.
+   */
+  public static createDeleted(knownData: Partial<TUserJson> = {}): ServerUser {
+    return new ServerUser(knownData)
+  }
 }
 
 /* ------------------------------ SERVER USER TYPES ------------------------------ */

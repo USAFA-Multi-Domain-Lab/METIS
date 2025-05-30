@@ -268,6 +268,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     },
     onDetachRequest: (file) => {
       setLocalFiles(localFiles.filter((f) => f._id !== file._id))
+      file.reference.enable()
       onChange(file)
     },
   }
@@ -281,8 +282,6 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     items: globalFiles,
     itemButtonIcons: ['link'],
     itemsPerPageMin: 4,
-    isDisabled: (file) =>
-      mission.files.some(({ referenceId }) => referenceId === file._id),
     getItemButtonLabel: (button) => {
       if (button === 'link') return 'Attach to mission'
       else return ''
@@ -290,8 +289,12 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     onItemButtonClick: (button, reference) => {
       if (button !== 'link') return
 
+      // Add new file to the mission.
       let file = ClientMissionFile.fromFileReference(reference, mission)
       setLocalFiles([...localFiles, file])
+      // Disable the file-reference in the list.
+      reference.disable('File is already attached.')
+
       onChange(file)
     },
   }
@@ -321,10 +324,11 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
         setDefectiveComponents(mission.defectiveComponents)
 
         beginLoading('Loading global files...')
+
         // The user currently logged in must
         // have restricted access to view the
         // files.
-        if (isAuthorized('files_read')) await loadGlobalFiles()
+        if (isAuthorized('files_read')) await loadGlobalFiles(mission)
       } catch {
         handleError('Failed to load mission.')
       }
@@ -629,15 +633,28 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   /**
    * This loads the global files into the state for
    * display and selection.
+   * @param mission The current mission being viewed on
+   * the page.
+   * @resolves When the global files have been loaded.
+   * @rejects If the global files could not be loaded.
    */
-  const loadGlobalFiles = (): Promise<void> => {
+  const loadGlobalFiles = (mission: ClientMission): Promise<void> => {
     return new Promise<void>(async (resolve, reject) => {
       try {
         // Begin loading.
         beginLoading('Retrieving files...')
         // Fetch files from API and store
         // them in the state.
-        setGlobalFiles(await ClientFileReference.$fetchAll())
+        const globalFiles = await ClientFileReference.$fetchAll()
+        // Disable any files that are already in
+        // the mission.
+        globalFiles.forEach((file) => {
+          file.setDisabled(
+            mission.files.some((f) => f.reference._id === file._id),
+            'File is already attached.',
+          )
+        })
+        setGlobalFiles(globalFiles)
         // Finish loading and resolve.
         finishLoading()
         resolve()

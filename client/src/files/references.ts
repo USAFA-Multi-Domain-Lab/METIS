@@ -1,4 +1,6 @@
 import axios, { AxiosResponse } from 'axios'
+import { TMetisClientComponents } from 'src'
+import ClientUser from 'src/users'
 import FileReference, {
   TFileReferenceJson,
 } from '../../../shared/files/references'
@@ -8,7 +10,7 @@ import StringToolbox from '../../../shared/toolbox/strings'
 /**
  * Client implementation of `FileReference` class.
  */
-export default class ClientFileReference extends FileReference {
+export default class ClientFileReference extends FileReference<TMetisClientComponents> {
   /**
    * Downloads the file from the server by opening up
    * a new tab with the file's URI.
@@ -34,6 +36,18 @@ export default class ClientFileReference extends FileReference {
    * @returns A new `ClientFileReference` object from the JSON.
    */
   public static fromJson(json: TFileReferenceJson): ClientFileReference {
+    let createdBy: ClientUser
+
+    // Parse reference data.
+    if (typeof json.createdBy === 'object') {
+      createdBy = new ClientUser(json.createdBy)
+    } else {
+      createdBy = ClientUser.createDeleted({
+        _id: json.createdBy,
+        username: json.createdByUsername,
+      })
+    }
+
     return new ClientFileReference(
       json._id,
       json.name,
@@ -42,6 +56,8 @@ export default class ClientFileReference extends FileReference {
       json.size,
       DateToolbox.fromNullableISOString(json.createdAt),
       DateToolbox.fromNullableISOString(json.updatedAt),
+      createdBy,
+      json.createdByUsername,
       false,
     )
   }
@@ -64,6 +80,10 @@ export default class ClientFileReference extends FileReference {
       knownData.size ?? 0,
       DateToolbox.fromNullableISOString(knownData.createdAt ?? null),
       DateToolbox.fromNullableISOString(knownData.updatedAt ?? null),
+      ClientUser.createDeleted({
+        username: knownData.createdByUsername ?? 'Unknown user.',
+      }),
+      knownData.createdByUsername ?? 'Unknown user.',
       true,
     )
   }

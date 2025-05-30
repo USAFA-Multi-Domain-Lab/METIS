@@ -1,5 +1,11 @@
 import { DefaultSchemaOptions, Schema } from 'mongoose'
 import {
+  TFileReference,
+  TFileReferenceDoc,
+  TFileReferenceMethods,
+  TFileReferenceModel,
+  TFileReferenceStaticMethods,
+  TFileReferenceVirtuals,
   TInfo,
   TInfoMethods,
   TInfoModel,

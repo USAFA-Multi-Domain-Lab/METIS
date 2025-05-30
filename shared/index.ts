@@ -26,12 +26,47 @@ export abstract class MetisComponent {
   private _name: string
   /**
    * A human-readable title for the component.
+   * @note This can be overridden in any subclass
+   * to customize this property.
    */
   public get name(): string {
     return this._name
   }
   public set name(name: string) {
     this._name = name
+  }
+
+  /**
+   * @see {@link MetisComponent.disabled}
+   */
+  private _disabled: boolean
+  /**
+   * Whether the component is considered enabled for use.
+   * This will make the component interactive in various
+   * UI contexts.
+   */
+  public get enabled(): boolean {
+    return !this._disabled
+  }
+  /**
+   * Whether the component is considered disabled from use.
+   * This will make the component non-interactive in various
+   * UI contexts.
+   */
+  public get disabled(): boolean {
+    return this._disabled
+  }
+
+  /**
+   * @see {@link MetisComponent.disabled}
+   */
+  private _disabledReason: string
+  /**
+   * Text that can be displayed to the user to explain
+   * why the component is disabled.
+   */
+  public get disabledReason(): string {
+    return this._disabledReason
   }
 
   public constructor(
@@ -50,6 +85,43 @@ export abstract class MetisComponent {
     public deleted: boolean,
   ) {
     this._name = name
+    this._disabled = false
+    this._disabledReason = ''
+  }
+
+  /**
+   * Enables the previously disabled component.
+   */
+  public enable(): void {
+    this._disabled = false
+    this._disabledReason = ''
+  }
+
+  /**
+   * Disables the previously enabled component.
+   * @param reason A reason for why the component is
+   * being disabled. This can be left blank if no
+   * explanation is needed.
+   */
+  public disable(reason: string = ''): void {
+    this._disabled = true
+    this._disabledReason = reason
+  }
+
+  /**
+   * Sets the disabled state of the component.
+   * @param disabled Whether the component should be disabled.
+   * @param reason The reason why the component is being disabled.
+   * This can be left blank if no explanation is needed. Note that
+   * this will only be used if the component is being disabled,
+   * not enabled.
+   */
+  public setDisabled(disabled: boolean, reason: string = ''): void {
+    if (disabled) {
+      this.disable(reason)
+    } else {
+      this.enable()
+    }
   }
 }
 

@@ -217,6 +217,17 @@ export default class ClientUser
   public static readonly API_ENDPOINT: string = '/api/v1/users'
 
   /**
+   * Creates a new {@link ClientUser} instance used to represent
+   * a previously-existing and now-deleted user.
+   * @param knownData Optional partial data to initialize the user.
+   * Only pass the properties known for the deleted user, if any.
+   * @returns A new {@link ClientUser} instance.
+   */
+  public static createDeleted(knownData: Partial<TUserJson> = {}): ClientUser {
+    return new ClientUser(knownData)
+  }
+
+  /**
    * Calls the API to fetch one user by their user ID.
    * @param _id The user ID of the user to fetch.
    * @resolves The user that was fetched.

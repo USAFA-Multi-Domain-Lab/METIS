@@ -16,7 +16,7 @@ export default function ListItemCell<TItem extends MetisComponent>({
   /* -- STATE -- */
 
   const listContext = useListContext<TItem>()
-  const { getItemTooltip, itemButtonIcons: itemButtons } = listContext
+  const { getItemTooltip, itemButtonIcons, requireEnabledOnly } = listContext
   const [selection, setSelection] = listContext.state.selection
 
   /* -- COMPUTED -- */
@@ -41,14 +41,28 @@ export default function ListItemCell<TItem extends MetisComponent>({
     // Get vanilla tooltip.
     let description: string = getItemTooltip(item)
 
-    // Add R-Click prompt, if there
-    // are item buttons.
-    if (itemButtons.length) {
-      if (description) {
-        description += '\n\t\n'
+    // If the item is enabled, apply regular
+    // tooltip addendums.
+    if (item.enabled) {
+      // Add R-Click prompt, if there
+      // are item buttons.
+      if (itemButtonIcons.length) {
+        if (description) {
+          description += '\n\t\n'
+        }
+        description += `\`L-Click\` to select \n\t\n`
+        description += `\`R-Click\` for options`
       }
-      description += `\`L-Click\` to select \n\t\n`
-      description += `\`R-Click\` for options`
+    }
+    // Else add the reason for why the item
+    // is disabled.
+    else {
+      if (item.disabledReason) {
+        if (description) {
+          description += '\n\t\n'
+        }
+        description += `*${item.disabledReason}*`
+      }
     }
 
     return description
@@ -59,7 +73,7 @@ export default function ListItemCell<TItem extends MetisComponent>({
   /**
    * Callback for when the item cell is clicked.
    */
-  const onClick = () => setSelection(item)
+  const onClick = requireEnabledOnly(item, () => setSelection(item))
 
   /* -- RENDER -- */
 

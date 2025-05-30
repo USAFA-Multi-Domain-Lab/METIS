@@ -37,7 +37,7 @@ export default function ListItem<T extends MetisComponent>({
     showingDeletedItems,
     getCellText,
     getColumnWidth,
-    isDisabled,
+    requireEnabledOnly,
   } = listContext
   const [selection, setSelection] = listContext.state.selection
   const root = useRef<HTMLDivElement>(null)
@@ -54,7 +54,7 @@ export default function ListItem<T extends MetisComponent>({
    */
   const rootClass = compute<ClassList>(() =>
     new ClassList('ListItem', 'ListItemLike')
-      .set('Disabled', isDisabled(item))
+      .set('PartiallyDisabled', item.disabled)
       .set('Selected', selection?._id === item._id)
       .set('Deleted', item.deleted),
   )
@@ -98,7 +98,7 @@ export default function ListItem<T extends MetisComponent>({
    * Handles the click event for the item
    * options button.
    */
-  const onOptionsClick = (event: React.MouseEvent) => {
+  const onOptionsClick = requireEnabledOnly(item, (event: React.MouseEvent) => {
     // Show the button menu.
     showButtonMenu(optionsEngine, {
       positioningTarget: event.target as HTMLDivElement,
@@ -106,7 +106,7 @@ export default function ListItem<T extends MetisComponent>({
     })
     // Force selection of the item.
     setSelection(item)
-  }
+  })
 
   /**
    * Callback for when the button menu is activated.
@@ -152,7 +152,7 @@ export default function ListItem<T extends MetisComponent>({
           <ButtonSvg
             type='options'
             onClick={onOptionsClick}
-            description={'View option menu'}
+            description={!item.disabled ? 'View option menu' : ''}
             disabled={itemButtons.length === 0 ? 'full' : 'none'}
           />
         </div>,
@@ -181,6 +181,7 @@ export default function ListItem<T extends MetisComponent>({
         engine={optionsEngine}
         highlightTarget={root.current ?? undefined}
         trigger={'r-click'}
+        listen={!item.disabled}
         onActivate={onButtonMenuActivate}
       />
     </div>

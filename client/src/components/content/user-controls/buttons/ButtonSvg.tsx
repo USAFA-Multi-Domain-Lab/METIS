@@ -27,14 +27,10 @@ export default function ButtonSvg({
    * The class for the root element.
    */
   const rootClass = compute<ClassList>(() => {
-    let result = new ClassList(
-      'ButtonSvg',
-      `ButtonSvg_${type}`,
-      !!label ? 'WithLabel' : 'WithoutLabel',
-    )
-
-    result.set('Disabled', disabled === 'full')
-    result.set('PartiallyDisabled', disabled === 'partial')
+    let result = new ClassList('ButtonSvg', `ButtonSvg_${type}`)
+      .switch('WithLabel', 'WithoutLabel', label)
+      .set('Disabled', disabled === 'full')
+      .set('PartiallyDisabled', disabled === 'partial')
 
     if (uniqueClassList instanceof ClassList) {
       result.add(...uniqueClassList.classes)

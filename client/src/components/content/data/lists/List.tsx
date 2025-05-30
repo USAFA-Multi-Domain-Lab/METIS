@@ -74,13 +74,11 @@ export function createDefaultListProps<
     getColumnLabel: (x) => StringToolbox.toTitleCase(x.toString()),
     getCellText: (item, column) => (item[column] as any).toString(),
     getItemTooltip: () => '',
-    getDisabledItemTooltip: () => '',
     getListButtonLabel: () => '',
     getListButtonPermissions: () => [],
     getItemButtonLabel: () => '',
     getItemButtonPermissions: () => [],
     getColumnWidth: () => '10em',
-    isDisabled: () => false,
     onSelect: () => {},
     onListButtonClick: () => {},
     onItemButtonClick: () => {},
@@ -306,6 +304,17 @@ export default function List<TItem extends MetisComponent>(
     }
   }
 
+  /**
+   * @see {@link TListContextData.requireEnabledOnly}
+   */
+  const requireEnabledOnly: TListContextData<TItem>['requireEnabledOnly'] = (
+    item,
+    next,
+  ) => {
+    if (item.disabled) return () => {}
+    else return next
+  }
+
   /* -- EFFECTS -- */
 
   // Call `onSelect` callback whenever selection-state
@@ -326,6 +335,7 @@ export default function List<TItem extends MetisComponent>(
     aggregatedButtons,
     aggregateButtonLayout,
     showingDeletedItems,
+    requireEnabledOnly,
     state,
     elements,
   }
@@ -472,25 +482,12 @@ export type TList_P<TItem extends MetisComponent> = {
    */
   getItemButtonPermissions?: TGetItemButtonPermission<TItem>
   /**
-   * Gets the tooltip description for a disabled item.
-   * @param item The item for which to get the tooltip description.
-   * @returns The tooltip description.
-   * @default () => ''
-   */
-  getDisabledItemTooltip?: TGetItemTooltip<TItem>
-  /**
    * Gets the width of the given column.
    * @param column The column for which to get the width.
    * @returns The width of the column.
    * @default () => '10em'
    */
   getColumnWidth?: (column: TListColumnType<TItem>) => string
-  /**
-   * @param item The item to check.
-   * @returns Whether the item is disabled.
-   * @note This will grey out the item in the list.
-   */
-  isDisabled?: (item: TItem) => boolean
   /**
    * Callback for when an item in the list is selected
    * or deselected.
@@ -605,6 +602,16 @@ export type TListContextData<TItem extends MetisComponent> = Required<
    * current page being displayed.
    */
   showingDeletedItems: boolean
+  /**
+   * Middleware which will wrap a function in a requirement
+   * for the given item to be enabled for the code to be
+   * executed. If the item is disabled, the function will
+   * do nothing when called.
+   */
+  requireEnabledOnly: <TArgs extends Array<any>>(
+    item: TItem,
+    next: (...args: TArgs) => void,
+  ) => (...args: TArgs) => void
   /**
    * The state for the list.
    */

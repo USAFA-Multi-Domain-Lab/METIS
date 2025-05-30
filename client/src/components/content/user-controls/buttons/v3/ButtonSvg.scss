@@ -27,11 +27,10 @@
     font-size: 0.75rem;
   }
 
-  &.Disabled {
-    // &.GrayOutIfDisabled {}
-
-    &.HideIfDisabled {
-      display: none;
+  &.AlwaysShowTooltip {
+    &.Disabled {
+      pointer-events: all !important;
+      cursor: not-allowed;
     }
   }
 
@@ -46,23 +45,8 @@
     opacity: 0;
   }
 
-  &:not(.warning-transparent):hover,
-  &.Selected {
+  &:not(.Disabled):hover {
     filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(117deg)
       brightness(200%) contrast(98%);
-  }
-
-  &.Selected:hover,
-  &.NotSelected:hover {
-    box-shadow: 0 1.5px 0 $color-primary-light;
-  }
-
-  &.NotSelected:hover {
-    filter: none;
-  }
-
-  &.warning-transparent:hover {
-    background-image: url('/assets/images/icons/warning-filled.svg') !important;
-    transition: background-image 0.5s;
   }
 }
