@@ -1,7 +1,7 @@
 import { Request, Response } from 'express-serve-static-core'
 import MissionModel from 'metis/server/database/models/missions'
 import { StatusError } from 'metis/server/http'
-import { sessionLogger } from 'metis/server/logging'
+import { databaseLogger, sessionLogger } from 'metis/server/logging'
 import ServerMission from 'metis/server/missions'
 import SessionServer from 'metis/server/sessions'
 import ServerUser from 'metis/server/users'
@@ -52,10 +52,21 @@ const launchSession = async (request: Request, response: Response) => {
       sessionConfig,
       owner,
     )
-    // Update `launchedAt` for the mission to track
-    // the last time the mission was launched.
-    missionDoc.launchedAt = new Date().toISOString()
-    await missionDoc.save()
+
+    try {
+      // Update `launchedAt` for the mission to track
+      // the last time the mission was launched.
+      missionDoc.launchedAt = new Date().toISOString()
+      await missionDoc.save()
+    } catch (error: any) {
+      const databaseError = new Error(
+        `Failed to update launchedAt for mission "{ _id: ${missionDoc._id}, name: ${missionDoc.name} }".\n`,
+      )
+      databaseLogger.error(databaseError.message, error)
+      SessionServer.destroy(session._id)
+      throw error
+    }
+
     // Return the ID of the newly launched session as JSON.
     return ApiResponse.sendJson(response, { sessionId: session._id })
   } catch (error: any) {

@@ -534,6 +534,10 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     },
   )
 
+  // Add event listener to watch for a node exclusion
+  // request, updating the state accordingly.
+  useEventListener(mission, 'set-node-exclusion', ([node]) => onChange(node))
+
   /* -- FUNCTIONS -- */
 
   /**

@@ -1,11 +1,12 @@
 import MissionFile, { TMissionFileJson } from 'metis/missions/files/'
+import { TMetisServerComponents } from 'metis/server'
 import ServerFileReference from 'metis/server/files/references'
 import ServerMission from '..'
 
 /**
  * Server implementation of `MissionFile` class.
  */
-export default class ServerMissionFile extends MissionFile {
+export default class ServerMissionFile extends MissionFile<TMetisServerComponents> {
   /**
    * Creates a new `ServerMissionFile` instance from JSON.
    * @param data The JSON data from which to create the instance.

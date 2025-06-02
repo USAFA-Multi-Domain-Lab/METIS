@@ -6,8 +6,6 @@ import mongoose, {
   CallbackWithoutResultAndOptionalError,
 } from 'mongoose'
 import MetisDatabase from '../database'
-import UserModel from '../database/models/users'
-import { StatusError } from '../http'
 import { TMetisServerComponents } from '../index'
 import { TTargetEnvExposedUser } from '../target-environments/context'
 
@@ -112,34 +110,34 @@ export default class ServerUser extends User<TMetisServerComponents> {
     isNew: boolean,
   ): Promise<TUserValidationResults> => {
     try {
-      // Get the user from the database.
-      let user = await UserModel.findById(userJson._id).exec()
-
-      // If the user is new and the username already exists,
-      // throw an error.
-      if (isNew && user?.username === userJson.username) {
-        throw new StatusError(
-          `Error in user:\nUsername "${userJson.username}" already exists.`,
-          409,
-        )
-      }
-
-      // If the user isn't new and the username has changed,
-      // check if the new username already exists.
-      if (!isNew && user?.username !== userJson.username) {
-        // Check if the new username already exists.
-        let userWithSameUsername = await UserModel.findOne({
-          username: userJson.username,
-        }).exec()
-
-        // If the new username already exists, throw an error.
-        if (userWithSameUsername) {
-          throw new StatusError(
-            `Error in user:\nUsername "${userJson.username}" already exists.`,
-            409,
-          )
-        }
-      }
+      //       // Get the user from the database.
+      //       let user = await UserModel.findById(userJson._id).exec()
+      //
+      //       // If the user is new and the username already exists,
+      //       // throw an error.
+      //       if (isNew && user?.username === userJson.username) {
+      //         throw new StatusError(
+      //           `Error in user:\nUsername "${userJson.username}" already exists.`,
+      //           409,
+      //         )
+      //       }
+      //
+      //       // If the user isn't new and the username has changed,
+      //       // check if the new username already exists.
+      //       if (!isNew && user?.username !== userJson.username) {
+      //         // Check if the new username already exists.
+      //         let userWithSameUsername = await UserModel.findOne({
+      //           username: userJson.username,
+      //         }).exec()
+      //
+      //         // If the new username already exists, throw an error.
+      //         if (userWithSameUsername) {
+      //           throw new StatusError(
+      //             `Error in user:\nUsername "${userJson.username}" already exists.`,
+      //             409,
+      //           )
+      //         }
+      //       }
 
       // If no errors were found, return an empty object.
       return {}

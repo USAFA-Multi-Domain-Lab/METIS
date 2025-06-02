@@ -76,7 +76,13 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
   const defaultedProps = useDefaultProps(props, {
     ...createDefaultListProps<ClientFileReference>(),
     itemsPerPageMin: 10,
-    columns: ['mimetype', 'size', 'createdAt', 'updatedAt'],
+    columns: [
+      'mimetype',
+      'size',
+      'createdAt',
+      'createdByUsername',
+      'updatedAt',
+    ],
     listButtonIcons: compute<TButtonSvgType[]>(() => {
       let results: TButtonSvgType[] = []
       authorize('files_write', () => results.push('upload'))
@@ -99,6 +105,8 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
           return 'Size'
         case 'createdAt':
           return 'Uploaded'
+        case 'createdByUsername':
+          return 'Uploaded By'
         case 'updatedAt':
           return 'Last Modified'
         default:
@@ -120,7 +128,7 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
           if (datetime === null) return 'N/A'
           else return DateToolbox.format(datetime, 'yyyy-mm-dd HH:MM')
         default:
-          return 'Unknown column'
+          return file[column].toString()
       }
     },
     getListButtonLabel: (button) => {

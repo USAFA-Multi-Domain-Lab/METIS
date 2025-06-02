@@ -1,6 +1,6 @@
-import { TUserJson } from 'metis/users'
 import { MetisComponent, TMetisBaseComponents } from '..'
 import { DateToolbox } from '../toolbox/dates'
+import { TUserJson } from '../users'
 
 /**
  * A reference to a file stored in the METIS file store.

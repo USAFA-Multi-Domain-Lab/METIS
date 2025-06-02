@@ -148,14 +148,6 @@ export default class ServerMissionAction extends MissionAction<TMetisServerCompo
   }
 
   /**
-   * The maximum process time for an action.
-   * @note This is set to 1 hour (3600 seconds).
-   * @note This is used to validate the actions within a node.
-   * @see {@link ServerMissionNode.validateActions}
-   */
-  public static readonly PROCESS_TIME_MAX: number = 3600 * 1000 /*ms*/
-
-  /**
    * The regex used to validate the process time.
    * @note This regex allows for numbers with up to 6 decimal places.
    * @note This is used to validate the actions within a node.

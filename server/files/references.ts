@@ -1,7 +1,7 @@
 import FileReference, { TFileReferenceJson } from 'metis/files/references'
+import { TMetisServerComponents } from 'metis/server'
 import { DateToolbox } from 'metis/toolbox/dates'
 import StringToolbox from 'metis/toolbox/strings'
-import { TMetisServerComponents } from '../index'
 import ServerUser from '../users'
 
 export default class ServerFileReference extends FileReference<TMetisServerComponents> {

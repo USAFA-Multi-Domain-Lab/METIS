@@ -9,6 +9,7 @@ import mime from 'mime-types'
 import multer from 'multer'
 import path from 'path'
 import FileReferenceModel from '../database/models/file-references'
+import ServerUser from '../users'
 import ServerFileReference from './references'
 
 /* -- CLASSES -- */
@@ -130,7 +131,7 @@ export default class MetisFileStore {
    * @param file The file for which to create a reference.
    * @returns The saved reference.
    */
-  public async createReference(file: Express.Multer.File) {
+  public async createReference(file: Express.Multer.File, user: ServerUser) {
     const { filename, originalname, mimetype, size } = file
 
     const doc = new FileReferenceModel({
@@ -138,6 +139,8 @@ export default class MetisFileStore {
       path: filename,
       mimetype,
       size,
+      createdBy: user._id,
+      createdByUsername: user.username,
     })
 
     return await doc.save()

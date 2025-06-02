@@ -16,13 +16,16 @@
 }
 
 .ActionProperties {
-  margin: 0;
-  border: 2px solid $color-primary-light;
+  display: flex;
+  align-items: center;
+  flex-flow: row wrap;
+  gap: 0.75em;
+  background-color: $color-secondary;
   border-radius: 0.6em;
-  padding: 1em 2em;
-  font-size: 14px;
+  padding: 1.5em 2em;
+  font-size: 0.85em;
 
   .ActionDescription {
-    margin: 1em 0 2.5em;
+    width: 100%;
   }
 }

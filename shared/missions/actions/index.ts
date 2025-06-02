@@ -388,13 +388,53 @@ export default abstract class MissionAction<
 
   /**
    * The minimum process time for an action in milliseconds.
+   * @note This is set to 0 milliseconds.
    */
   public static readonly PROCESS_TIME_MIN: number = 0 /*ms*/
   /**
-   * The maximum process time for an action in milliseconds.
+   * The maximum process time for an action in hours.
    * @note This is set to 1 hour.
    */
-  public static readonly PROCESS_TIME_MAX: number = 3600000 /*ms*/
+  public static readonly PROCESS_TIME_MAX_HOURS: number = 1 /*hour*/
+  /**
+   * The maximum process time hours converted to milliseconds.
+   * @note The maximum process time hour(s) is set to 1 hour,
+   * which is 3,600,000 milliseconds.
+   */
+  private static readonly PROCESS_TIME_MAX_HOURS_CONVERTED: number =
+    this.PROCESS_TIME_MAX_HOURS * 3600 * 1000 /*ms*/
+  /**
+   * The maximum process time for an action in minutes.
+   * @note This is set to 59 minutes.
+   */
+  public static readonly PROCESS_TIME_MAX_MINUTES: number = 59 /*min*/
+  /**
+   * The maximum process time minutes converted to milliseconds.
+   * @note The maximum process time minute(s) is set to 59 minutes,
+   * which is 3,540,000 milliseconds.
+   */
+  private static readonly PROCESS_TIME_MAX_MINUTES_CONVERTED: number =
+    this.PROCESS_TIME_MAX_MINUTES * 60 * 1000 /*ms*/
+  /**
+   * The maximum process time for an action in seconds.
+   * @note This is set to 59 seconds.
+   */
+  public static readonly PROCESS_TIME_MAX_SECONDS: number = 59 /*sec*/
+  /**
+   * The maximum process time seconds converted to milliseconds.
+   * @note The maximum process time second(s) is set to 59 seconds,
+   * which is 59,000 milliseconds.
+   */
+  private static readonly PROCESS_TIME_MAX_SECONDS_CONVERTED: number =
+    this.PROCESS_TIME_MAX_SECONDS * 1000 /*ms*/
+  /**
+   * The maximum process time for an action in milliseconds.
+   * @note This is set to 1 hour 59 minutes 59 seconds (1:59:59) or 7,199,000 milliseconds.
+   */
+  public static readonly PROCESS_TIME_MAX: number =
+    this.PROCESS_TIME_MAX_HOURS_CONVERTED +
+    this.PROCESS_TIME_MAX_MINUTES_CONVERTED +
+    this.PROCESS_TIME_MAX_SECONDS_CONVERTED
 
   /**
    * The minimum success chance for an action in decimal form.
@@ -440,6 +480,37 @@ export default abstract class MissionAction<
         '<p>Enter your unsuccessful post-execution message here.</p>',
       effects: [],
     }
+  }
+
+  /**
+   * Converts the process time from hours, minutes, seconds, and milliseconds
+   * to milliseconds.
+   * @param hours The number of hours.
+   * @param minutes The number of minutes.
+   * @param seconds The number of seconds.
+   * @param milliseconds The number of milliseconds.
+   * @returns The process time in milliseconds.
+   * @note This is used to convert the process time from the
+   * user-friendly format to the format used by the server.
+   */
+  public static convertProcessTime(
+    hours: number = 0,
+    minutes: number = 0,
+    seconds: number = 0,
+    milliseconds: number = 0,
+  ): number {
+    // Ensure the values are non-negative integers.
+    hours = Math.max(this.PROCESS_TIME_MIN, Math.floor(hours))
+    minutes = Math.max(this.PROCESS_TIME_MIN, Math.floor(minutes))
+    seconds = Math.max(this.PROCESS_TIME_MIN, Math.floor(seconds))
+    milliseconds = Math.max(this.PROCESS_TIME_MIN, Math.floor(milliseconds))
+    // Ensure the values are within the allowed ranges.
+    hours = Math.max(this.PROCESS_TIME_MIN, hours) * 3600 * 1000
+    minutes = Math.max(this.PROCESS_TIME_MIN, minutes) * 60 * 1000
+    seconds = Math.max(this.PROCESS_TIME_MIN, seconds) * 1000
+
+    // Convert the time to milliseconds.
+    return hours + minutes + seconds + milliseconds
   }
 }
 

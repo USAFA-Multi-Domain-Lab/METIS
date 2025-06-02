@@ -1,6 +1,7 @@
 import { Request, Response } from 'express-serve-static-core'
 import MetisFileStore from 'metis/server/files'
 import { StatusError } from 'metis/server/http'
+import ServerUser from 'metis/server/users'
 import ApiResponse from '../../library/response'
 
 /**
@@ -14,6 +15,8 @@ const uploadFiles = async (
   response: Response,
   fileStore: MetisFileStore,
 ) => {
+  let user: ServerUser = response.locals.user
+
   // If no files are included in the request,
   // return a 400 status code.
   if (
@@ -27,7 +30,7 @@ const uploadFiles = async (
 
   // Save references to the files in the database.
   const uploadedFiles = await Promise.all(
-    request.files.map(fileStore.createReference),
+    request.files.map((file) => fileStore.createReference(file, user)),
   )
 
   // Send a response, including the resulting data

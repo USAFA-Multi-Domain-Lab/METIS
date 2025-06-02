@@ -9,9 +9,12 @@ import {
 
 /**
  * Hook which creates a new button engine for use
- * in a React component.
- * @param buttons The buttons to add to the engine.
- * @param options The options with which to configure the engine.
+ * in a React component. Options passed will initialize
+ * the engine for use and not be used again, unless a new
+ * engine is created. All changes to the engine must be
+ * made statefully via the methods available in {@link ButtonSvgEngine}.
+ * @param buttons The initial buttons to add to the engine.
+ * @param options The initial options with which to configure the engine.
  * @param dependencies The dependencies to use for the engine, creating
  * a new engine if any of them change.
  */

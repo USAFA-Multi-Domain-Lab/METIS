@@ -270,8 +270,6 @@ export default abstract class Effect<
   public localKey: string
 
   /**
-   * @param target The target upon which the effect will
-   * be enacted.
    * @param action The action that will trigger the effect.
    * @param data Additional information for the effect.
    */
