@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import Prompt from 'src/components/content/communication/Prompt'
-import { TButtonSvgType } from 'src/components/content/user-controls/buttons/ButtonSvg'
+
 import If from 'src/components/content/util/If'
 import { useGlobalContext } from 'src/context'
 import ClientMission from 'src/missions'
@@ -143,8 +143,8 @@ export default function MissionList(props: TMissionList_P): JSX.Element | null {
     ...createDefaultListProps<ClientMission>(),
     itemsPerPageMin: 10,
     columns: ['createdAt', 'updatedAt', 'launchedAt', 'creatorFullName'],
-    listButtonIcons: compute<TButtonSvgType[]>(() => {
-      let results: TButtonSvgType[] = []
+    listButtonIcons: compute<TMetisIcon[]>(() => {
+      let results: TMetisIcon[] = []
 
       // If the user has the proper authorization, add
       // the add and upload buttons.
@@ -154,8 +154,8 @@ export default function MissionList(props: TMissionList_P): JSX.Element | null {
 
       return results
     }),
-    itemButtonIcons: compute<TButtonSvgType[]>(() => {
-      let results: TButtonSvgType[] = []
+    itemButtonIcons: compute<TMetisIcon[]>(() => {
+      let results: TMetisIcon[] = []
 
       // Add the open button.
       results.push('open')

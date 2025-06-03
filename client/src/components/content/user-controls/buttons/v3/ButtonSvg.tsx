@@ -47,7 +47,7 @@ export default function ({
    */
   const rootClasses = compute<ClassList>(() => {
     return new ClassList()
-      .add('ButtonSvg_v3')
+      .add('ButtonSvg')
       .add(`ButtonSvg_${icon}`)
       .switch('WithLabel', 'WithoutLabel', label)
       .set('AlwaysShowTooltip', alwaysShowTooltip)

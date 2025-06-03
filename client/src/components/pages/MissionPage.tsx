@@ -23,7 +23,6 @@ import {
 import { DefaultPageLayout, TPage_P } from '.'
 import Mission, { TMissionComponent } from '../../../../shared/missions'
 import { TNonEmptyArray } from '../../../../shared/toolbox/arrays'
-import { TSingleTypeObject } from '../../../../shared/toolbox/objects'
 import Prompt from '../content/communication/Prompt'
 import FileReferenceList, {
   TFileReferenceList_P,
@@ -44,11 +43,10 @@ import Panel from '../content/general-layout/panels/Panel'
 import PanelLayout from '../content/general-layout/panels/PanelLayout'
 import PanelView from '../content/general-layout/panels/PanelView'
 import MissionMap from '../content/session/mission-map/MissionMap'
-import { TNodeButton } from '../content/session/mission-map/objects/nodes'
 import CreateEffect from '../content/session/mission-map/ui/overlay/modals/CreateEffect'
 import { TTabBarTab } from '../content/session/mission-map/ui/tabs/TabBar'
-import { TButtonSvgType } from '../content/user-controls/buttons/ButtonSvg'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
+import { TButtonSvg_Input } from '../content/user-controls/buttons/v3/types'
 import './MissionPage.scss'
 
 /**
@@ -120,50 +118,54 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   const [defectiveComponents, setDefectiveComponents] =
     state.defectiveComponents
   const root = useRef<HTMLDivElement>(null)
-  const mapButtonEngine = useButtonSvgEngine([
-    {
-      icon: 'play',
-      description: 'Play-test the mission.',
-      permissions: ['sessions_write_native'],
-      onClick: async () => {
-        try {
-          // Ensure any unsaved changes are addressed,
-          // before proceeding.
-          await enforceSavePrompt()
+  const mapButtonEngine = useButtonSvgEngine({
+    buttons: [
+      {
+        icon: 'play',
+        description: 'Play-test the mission.',
+        permissions: ['sessions_write_native'],
+        onClick: async () => {
+          try {
+            // Ensure any unsaved changes are addressed,
+            // before proceeding.
+            await enforceSavePrompt()
 
-          // If the server connection is not available, abort.
-          if (!server) {
-            throw new Error('Server connection is not available.')
+            // If the server connection is not available, abort.
+            if (!server) {
+              throw new Error('Server connection is not available.')
+            }
+
+            // Launch, join, and start the session.
+            let sessionId = await SessionClient.$launch(mission._id, {
+              accessibility: 'testing',
+            })
+            let session = await server.$joinSession(sessionId)
+            // If the session is not found, abort.
+            if (!session) throw new Error('Failed to join test session.')
+            session.$start()
+
+            // Navigate to the session page.
+            navigateTo('SessionPage', { session }, { bypassMiddleware: true })
+          } catch (error) {
+            console.error('Failed to play-test mission.')
+            console.error(error)
+            handleError({
+              message: 'Failed to play-test mission.',
+              notifyMethod: 'bubble',
+            })
           }
-
-          // Launch, join, and start the session.
-          let sessionId = await SessionClient.$launch(mission._id, {
-            accessibility: 'testing',
-          })
-          let session = await server.$joinSession(sessionId)
-          // If the session is not found, abort.
-          if (!session) throw new Error('Failed to join test session.')
-          session.$start()
-
-          // Navigate to the session page.
-          navigateTo('SessionPage', { session }, { bypassMiddleware: true })
-        } catch (error) {
-          console.error('Failed to play-test mission.')
-          console.error(error)
-          handleError({
-            message: 'Failed to play-test mission.',
-            notifyMethod: 'bubble',
-          })
-        }
+        },
       },
-    },
-    {
-      icon: 'save',
-      description: 'Save changes.',
-      permissions: ['missions_write'],
-      onClick: () => save(),
-    },
-  ])
+      {
+        icon: 'save',
+        description: 'Save changes.',
+        permissions: ['missions_write'],
+        onClick: () => save(),
+      },
+    ],
+  })
+  const nodeButtonEngine = useButtonSvgEngine({})
+  const prototypeButtonEngine = useButtonSvgEngine({})
 
   /* -- LOGIN-SPECIFIC LOGIC -- */
 
@@ -236,23 +238,6 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   })
 
   /**
-   * The option buttons for a tab's option menu.
-   * @note A tab can be found in the mission map's tab bar.
-   * @note The tab's option menu is displayed when the tab is right-clicked.
-   */
-  const menuOptions = compute<TButtonSvgType[]>(() => {
-    let results: TButtonSvgType[] = []
-
-    // If the user has the proper authorization, add
-    // the copy button.
-    if (isAuthorized('missions_write')) {
-      results.push('copy', 'remove')
-    }
-
-    return results
-  })
-
-  /**
    * Props for the mission-file list displaying
    * files that are attached to the mission.
    */
@@ -276,7 +261,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
    */
   const inStoreListProps: TFileReferenceList_P = {
     name: 'In Store',
-    items: globalFiles,
+    files: [globalFiles, setGlobalFiles],
     itemButtonIcons: ['link'],
     itemsPerPageMin: 4,
     isDisabled: (file) =>
@@ -391,114 +376,84 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
 
       // If there is a previous node, clear its buttons.
       if (prevNode) {
-        prevNode.buttons = []
+        nodeButtonEngine.removeAll()
+        prevNode.buttons = nodeButtonEngine.buttons
       }
 
       // If there is a next node, then add the buttons.
       if (nextNode) {
-        const availableButtons: TSingleTypeObject<
-          TNodeButton<ClientMissionNode>
-        > = {
-          deselect: {
-            type: 'cancel',
-            key: 'node-button-deselect',
+        nodeButtonEngine.add(
+          {
+            icon: 'cancel',
             description: 'Deselect this node (Closes panel view also).',
             onClick: () => mission.select(nextNode!.force),
           },
-          exclude: {
-            type: 'divider',
-            key: 'node-button-exclude',
+          {
+            icon: 'divider',
             description:
               'Exclude this node from the force (Closes panel view also).',
+            permissions: ['missions_write'],
             onClick: () => {
               nextNode!.exclude = true
               mission.select(nextNode!.force)
             },
           },
-        }
+        )
 
-        // Set the buttons on the next selection.
-        nextNode.buttons = isAuthorized('missions_write')
-          ? Object.values(availableButtons)
-          : [availableButtons.deselect]
+        nextNode.buttons = nodeButtonEngine.buttons
       }
 
       // If there is a previous prototype, clear its buttons.
       if (prevSelection instanceof ClientMissionPrototype) {
-        prevSelection.buttons = []
+        prototypeButtonEngine.removeAll()
+        prevSelection.buttons = prototypeButtonEngine.buttons
       }
 
       // If there is a next prototype, then add the buttons.
       if (nextSelection instanceof ClientMissionPrototype) {
-        // Define potential buttons.
-        const availableButtons: TSingleTypeObject<
-          TNodeButton<ClientMissionPrototype>
-        > = {
-          deselect: {
-            type: 'cancel',
-            key: 'prototype-button-deselect',
-            description: 'Deselect this prototype (Closes panel view also).',
-            onClick: () => mission.deselect(),
-          },
-          add: {
-            type: 'add',
-            key: 'prototype-button-add',
-            description: 'Create an adjacent prototype on the map.',
-            onClick: (_, prototype) => {
-              onPrototypeAddRequest(prototype)
-            },
-          },
-          move: {
-            type: 'reorder',
-            key: 'prototype-button-move',
-            description: 'Move this prototype to another location.',
-            onClick: (_, prototype) => {
-              onPrototypeMoveRequest(prototype)
-            },
-          },
-          transform_cancel: {
-            type: 'cancel',
-            key: 'prototype-button-add-cancel',
-            description: 'Cancel action.',
-            onClick: () => (mission.transformation = null),
-          },
-          remove: {
-            type: 'remove',
-            key: 'prototype-button-remove',
-            description: 'Delete this prototype.',
-            disabled: mission.prototypes.length < 2 ? 'full' : 'none',
-            onClick: (_, prototype) => {
-              onPrototypeDeleteRequest(prototype)
-            },
-          },
-        }
-
-        // Define the buttons that will actually be used.
-        const activeButtons = []
-
-        // If there is a transformation being made within the mission,
-        // then add a cancel button for the transformation.
         if (mission.transformation) {
-          activeButtons.push(availableButtons.transform_cancel)
-        }
-        // Else, add default buttons for a selected prototype.
-        else {
-          activeButtons.push(availableButtons.deselect, availableButtons.add)
-
-          // If there is at least two prototypes, then add
-          // the remove and move buttons.
-          if (mission.prototypes.length > 1) {
+          prototypeButtonEngine.add({
+            icon: 'cancel',
+            description: 'Cancel action.',
+            permissions: ['missions_write'],
+            onClick: () => (mission.transformation = null),
+          })
+        } else {
+          prototypeButtonEngine.add(
+            {
+              icon: 'cancel',
+              description: 'Deselect this prototype (Closes panel view also).',
+              onClick: () => mission.deselect(),
+            },
+            {
+              icon: 'add',
+              description: 'Create an adjacent prototype on the map.',
+              permissions: ['missions_write'],
+              onClick: () =>
+                onPrototypeAddRequest(nextSelection as ClientMissionPrototype),
+            },
             // todo: Reimplement this once node structure panel
             // todo: is removed.
-            // activeButtons.push(availableButtons.move)
-            activeButtons.push(availableButtons.remove)
-          }
+            // {
+            //   icon: 'reorder',
+            //   description: 'Move this prototype to another location.',
+            //   permissions: ['missions_write'],
+            //   onClick: () => onPrototypeMoveRequest(nextSelection),
+            // },
+            {
+              icon: 'remove',
+              description: 'Delete this prototype.',
+              permissions: ['missions_write'],
+              disabled: mission.prototypes.length < 2,
+              onClick: () =>
+                onPrototypeDeleteRequest(
+                  nextSelection as ClientMissionPrototype,
+                ),
+            },
+          )
         }
 
-        // Set the buttons on the next selection.
-        nextSelection.buttons = isAuthorized('missions_write')
-          ? activeButtons
-          : [availableButtons.deselect]
+        nextSelection.buttons = prototypeButtonEngine.buttons
       }
 
       // Update the selection state.
@@ -563,6 +518,12 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
    */
   const enforceSavePrompt = async (): Promise<void> => {
     return new Promise<void>(async (resolve, reject) => {
+      // If the user does not have write permissions
+      // and there are no unsaved changes, resolve immediately.
+      if (!isAuthorized('missions_write') && areUnsavedChanges) {
+        return resolve()
+      }
+
       // If there are unsaved changes, prompt the user.
       if (areUnsavedChanges) {
         const { choice } = await prompt(
@@ -763,9 +724,51 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   }
 
   /**
+   * Handles the request to duplicate an action.
+   * @param action The action to duplicate.
+   * @param selectNewAction Whether to select the new action after duplication.
+   */
+  const onDuplicateActionRequest = async (
+    action: ClientMissionAction,
+    selectNewAction: boolean = false,
+  ) => {
+    // Prompt the user to enter the name of the new action.
+    let { choice, text } = await prompt(
+      'Enter the name of the new action:',
+      ['Cancel', 'Submit'],
+      {
+        textField: { boundChoices: ['Submit'], label: 'Name' },
+        defaultChoice: 'Submit',
+      },
+    )
+
+    // If the user confirms the duplication, proceed.
+    if (choice === 'Submit') {
+      try {
+        const { node } = action
+        // Duplicate the action.
+        let newAction = action.duplicate({
+          name: text,
+          localKey: node.generateActionKey(),
+        })
+        // Add the new action to the node.
+        node.actions.set(newAction._id, newAction)
+        // Select the new action if necessary.
+        if (selectNewAction) mission.select(newAction)
+        // Notify the user that the force was duplicated.
+        notify(`Successfully duplicated "${newAction.name}".`)
+        // Allow the user to save the changes.
+        onChange(newAction)
+      } catch (error: any) {
+        notify(`Failed to duplicate "${action.name}".`)
+      }
+    }
+  }
+
+  /**
    * Handles the request to delete an action.
    */
-  const handleDeleteActionRequest = async (
+  const onDeleteActionRequest = async (
     action: ClientMissionAction,
     navigateBack: boolean = false,
   ) => {
@@ -798,9 +801,51 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   }
 
   /**
+   * Handles the request to duplicate an effect.
+   * @param effect The effect to duplicate.
+   * @param selectNewEffect Whether to select the new effect after duplication.
+   */
+  const onDuplicateEffectRequest = async (
+    effect: ClientEffect,
+    selectNewEffect: boolean = false,
+  ) => {
+    // Prompt the user to enter the name of the new effect.
+    let { choice, text } = await prompt(
+      'Enter the name of the new effect:',
+      ['Cancel', 'Submit'],
+      {
+        textField: { boundChoices: ['Submit'], label: 'Name' },
+        defaultChoice: 'Submit',
+      },
+    )
+
+    // If the user confirms the duplication, proceed.
+    if (choice === 'Submit') {
+      try {
+        const { action } = effect
+        // Duplicate the effect.
+        let newEffect = effect.duplicate({
+          name: text,
+          localKey: action.generateEffectKey(),
+        })
+        // Add the new effect to the action.
+        action.effects.push(newEffect)
+        // Select the new effect if necessary.
+        if (selectNewEffect) mission.select(newEffect)
+        // Notify the user that the force was duplicated.
+        notify(`Successfully duplicated "${newEffect.name}".`)
+        // Allow the user to save the changes.
+        onChange(newEffect)
+      } catch (error: any) {
+        notify(`Failed to duplicate "${effect.name}".`)
+      }
+    }
+  }
+
+  /**
    * Handles the request to delete an effect.
    */
-  const handleDeleteEffectRequest = async (
+  const onDeleteEffectRequest = async (
     effect: ClientEffect,
     navigateBack: boolean = false,
   ) => {
@@ -830,28 +875,10 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   }
 
   /**
-   * Gets the description for an option button found in a tab's option menu.
-   * @param button The button for which to get the tooltip.
-   * @returns The description for the button.
-   * @note A tab can be found in the mission map's tab bar.
-   * @note The tab's option menu is displayed when the tab is right-clicked.
-   */
-  const getOptionDescription = (button: TButtonSvgType) => {
-    switch (button) {
-      case 'copy':
-        return 'Duplicate'
-      case 'remove':
-        return 'Delete'
-      default:
-        return ''
-    }
-  }
-
-  /**
    * Handles the request to duplicate a force in the mission.
    * @param forceId The ID of the force to duplicate.
    */
-  const handleDuplicateForceRequest = async (
+  const onDuplicateForceRequest = async (
     forceId: ClientMissionForce['_id'],
   ) => {
     // Get the force to duplicate.
@@ -895,9 +922,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
    * Handles the request to delete a force.
    * @param forceId The ID of the force to delete.
    */
-  const handleDeleteForceRequest = async (
-    forceId: ClientMissionForce['_id'],
-  ) => {
+  const onDeleteForceRequest = async (forceId: ClientMissionForce['_id']) => {
     // Get the force to duplicate.
     let force = mission.getForceById(forceId)
 
@@ -923,46 +948,38 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     }
   }
 
-  /**
-   * Handles the request for clicking an option button found in a tab's option menu.
-   * @param button The button that was clicked.
-   * @param force The force that the button was clicked on.
-   * @note A tab can be found in the mission map's tab bar.
-   * @note The tab's option menu is displayed when the tab is right-clicked.
-   */
-  const onOptionClick = (button: TButtonSvgType, tabBarItem: TTabBarTab) => {
-    switch (button) {
-      case 'copy':
-        handleDuplicateForceRequest(tabBarItem._id)
-        break
-      case 'remove':
-        handleDeleteForceRequest(tabBarItem._id)
-        break
-      default:
-        console.warn('Unknown button clicked in mission list.')
-        break
-    }
-  }
-
   /* -- COMPUTED  (CONTINUED) -- */
 
   /**
    * Tabs for the mission map's tab bar.
    */
   const mapTabs: TTabBarTab[] = compute(() => {
-    let tabs: TTabBarTab[] = mission.forces.map((force) => {
-      return {
+    return mission.forces.map((force) => {
+      const buttons: TButtonSvg_Input[] = [
+        {
+          icon: 'copy',
+          label: 'Duplicate',
+          permissions: ['missions_write'],
+          onClick: () => onDuplicateForceRequest(force._id),
+        },
+        {
+          icon: 'remove',
+          label: 'Delete',
+          permissions: ['missions_write'],
+          onClick: () => onDeleteForceRequest(force._id),
+        },
+      ]
+
+      const tab: TTabBarTab = {
         _id: force._id,
         text: force.name,
         color: force.color,
         description: `Select force` + `\n\t\n\`R-Click\` for more options`,
-        menuOptions,
-        getOptionDescription,
-        onOptionClick,
+        engineProps: { buttons },
       }
-    })
 
-    return tabs
+      return tab
+    })
   })
 
   /* -- RENDER -- */
@@ -1025,11 +1042,9 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
         <ForceEntry
           force={selection}
           duplicateForce={async () =>
-            await handleDuplicateForceRequest(selection._id)
+            await onDuplicateForceRequest(selection._id)
           }
-          deleteForce={async () =>
-            await handleDeleteForceRequest(selection._id)
-          }
+          deleteForce={async () => await onDeleteForceRequest(selection._id)}
           onChange={onChange}
           key={selection._id}
         />
@@ -1039,7 +1054,8 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
         <NodeEntry
           key={selection._id}
           node={selection}
-          handleDeleteActionRequest={handleDeleteActionRequest}
+          onDeleteActionRequest={onDeleteActionRequest}
+          onDuplicateActionRequest={onDuplicateActionRequest}
           onChange={onChange}
         />
       )
@@ -1048,8 +1064,10 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
         <ActionEntry
           action={selection}
           setIsNewEffect={setIsNewEffect}
-          handleDeleteActionRequest={handleDeleteActionRequest}
-          handleDeleteEffectRequest={handleDeleteEffectRequest}
+          onDuplicateActionRequest={onDuplicateActionRequest}
+          onDeleteActionRequest={onDeleteActionRequest}
+          onDuplicateEffectRequest={onDuplicateEffectRequest}
+          onDeleteEffectRequest={onDeleteEffectRequest}
           onChange={onChange}
           key={selection._id}
         />
@@ -1058,7 +1076,8 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
       return (
         <EffectEntry
           effect={selection}
-          handleDeleteEffectRequest={handleDeleteEffectRequest}
+          onDuplicateEffectRequest={onDuplicateEffectRequest}
+          onDeleteEffectRequest={onDeleteEffectRequest}
           onChange={onChange}
           key={selection._id}
         />

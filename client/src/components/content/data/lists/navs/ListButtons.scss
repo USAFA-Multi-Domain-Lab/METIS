@@ -6,14 +6,14 @@
   align-items: center;
   height: 100%;
 
-  .ButtonSvgPanel_v3 {
+  .ButtonSvgPanel {
     $transition-speed: 200ms;
     $transition-timing: ease-in-out;
 
     display: flex;
     flex-wrap: nowrap;
 
-    .ButtonSvg_v3 {
+    .ButtonSvg {
       .ButtonIcon {
         transition: background-size $transition-speed $transition-timing;
       }

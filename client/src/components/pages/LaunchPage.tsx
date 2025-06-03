@@ -11,7 +11,8 @@ import Session from '../../../../shared/sessions'
 import { ESortByMethod } from '../content/general-layout/ListOld'
 import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
 import SessionConfig from '../content/session/SessionConfig'
-import ButtonSvg from '../content/user-controls/buttons/ButtonSvg'
+import ButtonSvgPanel from '../content/user-controls/buttons/v3/ButtonSvgPanel'
+import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
 import './LaunchPage.scss'
 
 /**
@@ -38,6 +39,16 @@ export default function LaunchPage({
     new ClientMission({ _id: missionId }),
   )
   const [sessionConfig] = useState(Session.DEFAULT_CONFIG)
+  const defectiveComponentButtonEngine = useButtonSvgEngine({
+    buttons: [
+      {
+        icon: 'warning-transparent',
+        cursor: 'help',
+        description:
+          'If this conflict is not resolved, this mission can still be used to launch a session, but the session may not function as expected.',
+      },
+    ],
+  })
 
   /* -- LOGIN-SPECIFIC LOGIC -- */
 
@@ -95,24 +106,9 @@ export default function LaunchPage({
    * Renders JSX for the effect list item.
    */
   const renderObjectListItem = (component: TMissionComponent<any, any>) => {
-    /* -- COMPUTED -- */
-
-    /**
-     * Tooltip description for the object list item.
-     */
-    const description: string = compute(
-      () =>
-        'If this conflict is not resolved, this mission can still be used to launch a session, but the session may not function as expected.',
-    )
-
     return (
       <div className='Row' key={`object-row-${component._id}`}>
-        <ButtonSvg
-          type='warning-transparent'
-          cursor='help'
-          description={description}
-          onClick={() => {}}
-        />
+        <ButtonSvgPanel engine={defectiveComponentButtonEngine} />
         <div className='RowContent'>{component.defectiveMessage}</div>
       </div>
     )

@@ -71,7 +71,7 @@ export default function ListResizeHandler<
       let buttonsElement = elements.buttons.current
       let overflowElement = elements.overflow.current
       let buttonElements = Array.from(
-        buttonsElement.querySelectorAll('.ButtonSvg_v3'),
+        buttonsElement.querySelectorAll('.ButtonSvg'),
       )
       let buttonsBox = buttonsElement.getBoundingClientRect()
       let overflowBox = overflowElement.getBoundingClientRect()

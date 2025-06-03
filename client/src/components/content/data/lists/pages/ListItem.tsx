@@ -1,13 +1,12 @@
 import { ReactNode, useRef } from 'react'
 import { useButtonMenuEngine } from 'src/components/content/user-controls/buttons/ButtonMenu'
 import ButtonMenuController from 'src/components/content/user-controls/buttons/ButtonMenuController'
+import ButtonSvgPanel from 'src/components/content/user-controls/buttons/v3/ButtonSvgPanel'
+import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
 import { useGlobalContext } from 'src/context'
 import { compute } from 'src/toolbox'
 import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
 import { TUserPermissionId } from '../../../../../../../shared/users/permissions'
-import ButtonSvg, {
-  TButtonSvgType,
-} from '../../../user-controls/buttons/ButtonSvg'
 import {
   OPTIONS_COLUMN_WIDTH,
   OPTIONS_COLUMN_WIDTH_IF_LAST,
@@ -38,11 +37,21 @@ export default function ListItem<T extends TListItem>({
   } = listContext
   const [selection, setSelection] = listContext.state.selection
   const root = useRef<HTMLDivElement>(null)
-  const optionsEngine = useButtonMenuEngine(
-    itemButtons,
-    ['<slot>'],
-    itemButtonIcons,
-  )
+  const optionsEngine = useButtonMenuEngine({
+    buttons: itemButtons,
+    layout: ['<slot>'],
+    dependencies: itemButtonIcons,
+  })
+  const optionMenuButtonEngine = useButtonSvgEngine({
+    buttons: [
+      {
+        icon: 'options',
+        onClick: (event) => onOptionsClick(event),
+        description: 'View option menu',
+        disabled: itemButtons.length === 0,
+      },
+    ],
+  })
 
   /* -- COMPUTED -- */
 
@@ -131,12 +140,7 @@ export default function ListItem<T extends TListItem>({
     if (itemButtons.length) {
       result.push(
         <div key={'options'} className='ItemCellLike ItemOptions'>
-          <ButtonSvg
-            type='options'
-            onClick={onOptionsClick}
-            description={'View option menu'}
-            disabled={itemButtons.length === 0 ? 'full' : 'none'}
-          />
+          <ButtonSvgPanel engine={optionMenuButtonEngine} />
         </div>,
       )
     }
@@ -213,7 +217,7 @@ export type TGetItemTooltip<TItem extends TListItem> = (item: TItem) => string
  * @returns The label.
  */
 export type TGetItemButtonLabel<TItem extends TListItem> = (
-  button: TButtonSvgType,
+  button: TMetisIcon,
 ) => string
 
 /**
@@ -223,7 +227,7 @@ export type TGetItemButtonLabel<TItem extends TListItem> = (
  * @default () => []
  */
 export type TGetItemButtonPermission<TItem extends TListItem> = (
-  button: TButtonSvgType,
+  button: TMetisIcon,
 ) => TUserPermissionId[]
 
 /**
@@ -238,6 +242,6 @@ export type TOnItemSelection<TItem extends TListItem> = (item: TItem) => void
  * @param button The type of button clicked.
  */
 export type TOnItemButtonClick<TItem extends TListItem> = (
-  button: TButtonSvgType,
+  button: TMetisIcon,
   item: TItem,
 ) => void

@@ -3,8 +3,6 @@ import { compute } from 'src/toolbox'
 import { TDefaultProps, useDefaultProps } from 'src/toolbox/hooks'
 import StringToolbox from '../../../../../../shared/toolbox/strings'
 import { TUserPermissionId } from '../../../../../../shared/users/permissions'
-import { TButtonSvgType } from '../../user-controls/buttons/ButtonSvg'
-import { TSvgPanelOnClick } from '../../user-controls/buttons/ButtonSvgPanel_v2'
 import {
   TButtonSvg_Input,
   TSvgLayout,
@@ -137,7 +135,7 @@ export default function List<TItem extends TListItem>(
   const [pageNumber] = state.pageNumber
   const [processedItems] = state.processedItems
   const [itemsPerPage] = state.itemsPerPage
-  const [selection] = state.selection
+  const [selection, setSelection] = state.selection
   const elements: TList_E = {
     root: useRef<HTMLDivElement>(null),
     nav: useRef<HTMLDivElement>(null),
@@ -304,6 +302,13 @@ export default function List<TItem extends TListItem>(
   // Call `onSelect` callback whenever selection-state
   // changes.
   useEffect(() => onSelect(selection), [selection])
+
+  // Deselect the item if it is not found in the
+  // list of items.
+  useEffect(() => {
+    const selectionIsMissing = !items.find(({ _id }) => _id === selection?._id)
+    if (selectionIsMissing) setSelection(null)
+  }, [items, selection])
 
   /* -- RENDER -- */
 
@@ -495,7 +500,7 @@ export type TList_P<TItem extends TListItem> = {
    * Callback for when a list button is clicked.
    * @default () => {}
    */
-  onListButtonClick?: TSvgPanelOnClick
+  onListButtonClick?: TOnListButtonClick
   /**
    * Callback for when an item button is clicked.
    * @default () => {}
@@ -609,7 +614,13 @@ export type TListContextData<TItem extends TListItem> = Required<
  * @returns The label.
  * @default () => ''
  */
-export type TGetListButtonLabel = (button: TButtonSvgType) => string
+export type TGetListButtonLabel = (button: TMetisIcon) => string
+
+/**
+ * Callback for when a list button is clicked.
+ * @default () => {}
+ */
+export type TOnListButtonClick = (button: TMetisIcon) => void
 
 /**
  * Gets the permissions for a list button.
@@ -618,7 +629,7 @@ export type TGetListButtonLabel = (button: TButtonSvgType) => string
  * @default () => []
  */
 export type TGetListButtonPermission = (
-  button: TButtonSvgType,
+  button: TMetisIcon,
 ) => TUserPermissionId[]
 
 /**

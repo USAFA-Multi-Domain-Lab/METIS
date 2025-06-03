@@ -682,7 +682,7 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
     // the node names should be displayed/hidden.
     cameraZoom.x > MAX_NODE_CONTENT_ZOOM,
     // The custom buttons change.
-    ...buttonEngine.panelElements,
+    buttonEngine.panelElements,
     // The selected force changes.
     selectedForce,
   ])
@@ -706,7 +706,7 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
     // the node names should be displayed/hidden.
     cameraZoom.x > MAX_NODE_CONTENT_ZOOM,
     // The custom buttons change.
-    ...buttonEngine.panelElements,
+    buttonEngine.panelElements,
   ])
 
   /**

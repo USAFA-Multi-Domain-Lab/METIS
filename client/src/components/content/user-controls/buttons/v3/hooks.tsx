@@ -2,8 +2,8 @@ import { useEffect } from 'react'
 import ButtonSvgEngine from './engines'
 import {
   TButtonSvg_Input,
+  TButtonSvgEngine_P,
   TButtonSvgFlow,
-  TButtonSvgPanelOptions,
   TSvgLayout,
 } from './types'
 
@@ -15,12 +15,12 @@ import {
  * @param dependencies The dependencies to use for the engine, creating
  * a new engine if any of them change.
  */
-export function useButtonSvgEngine(
-  buttons?: TButtonSvg_Input[],
-  options?: TButtonSvgPanelOptions,
-  dependencies?: any[],
-) {
-  return ButtonSvgEngine.use(buttons, options, dependencies)
+export function useButtonSvgEngine({
+  buttons,
+  options,
+  dependencies,
+}: TButtonSvgEngine_P) {
+  return ButtonSvgEngine.use({ buttons, options, dependencies })
 }
 
 /**

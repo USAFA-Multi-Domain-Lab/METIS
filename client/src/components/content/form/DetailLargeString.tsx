@@ -4,7 +4,8 @@ import { compute } from 'src/toolbox'
 import { TDetailWithInput_P } from '.'
 import Tooltip from '../communication/Tooltip'
 import RichText from '../general-layout/rich-text/RichText'
-import ButtonSvg from '../user-controls/buttons/ButtonSvg'
+import ButtonSvgPanel from '../user-controls/buttons/v3/ButtonSvgPanel'
+import { useButtonSvgEngine } from '../user-controls/buttons/v3/hooks'
 import './DetailLargeString.scss'
 
 /**
@@ -29,6 +30,14 @@ export function DetailLargeString({
 }: TDetailLargeString_P): JSX.Element | null {
   /* -- STATE -- */
   const [leftField, setLeftField] = useState<boolean>(false)
+  const buttonEngine = useButtonSvgEngine({
+    buttons: [
+      {
+        icon: 'file',
+        description: 'Click here to view the shortcuts for this editor.',
+      },
+    ],
+  })
 
   /* -- COMPUTED -- */
   /**
@@ -231,11 +240,7 @@ export function DetailLargeString({
             <Tooltip description={tooltipDescription} />
           </sup>
           <a href='/files/shortcuts.pdf' target='_blank' className='Shortcuts'>
-            <ButtonSvg
-              type='file'
-              onClick={() => {}}
-              description={`Click here to view the shortcuts for this editor.`}
-            />
+            <ButtonSvgPanel engine={buttonEngine} />
           </a>
         </div>
         <div className={`TitleColumnTwo ${optionalClassName}`}>optional</div>

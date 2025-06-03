@@ -23,7 +23,7 @@
     }
   }
 
-  .ButtonSvgPanel_v3 {
+  .ButtonSvgPanel {
     // Ensures the panel is displayed above
     // the mission name.
     z-index: 1;
@@ -45,7 +45,7 @@
   }
 
   .Title,
-  .ButtonSvgPanel_v3 {
+  .ButtonSvgPanel {
     height: $button-svg-size;
   }
 }

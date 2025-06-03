@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import Prompt from 'src/components/content/communication/Prompt'
-import { TButtonSvgType } from 'src/components/content/user-controls/buttons/ButtonSvg'
+
 import If from 'src/components/content/util/If'
 import { useGlobalContext } from 'src/context'
 import ClientFileReference from 'src/files/references'
@@ -19,8 +19,10 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
 
   const globalContext = useGlobalContext()
   const { authorize } = useRequireLogin()
-  const { prompt, notify, beginLoading, finishLoading } = globalContext.actions
+  const { prompt, notify, beginLoading, finishLoading, handleError } =
+    globalContext.actions
   const importFileTrigger = useRef<HTMLInputElement>(null)
+  const [files, setFiles] = props.files
 
   /* -- FUNCTIONS -- */
 
@@ -77,13 +79,13 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
     ...createDefaultListProps<ClientFileReference>(),
     itemsPerPageMin: 10,
     columns: ['mimetype', 'size', 'createdAt', 'updatedAt'],
-    listButtonIcons: compute<TButtonSvgType[]>(() => {
-      let results: TButtonSvgType[] = []
+    listButtonIcons: compute<TMetisIcon[]>(() => {
+      let results: TMetisIcon[] = []
       authorize('files_write', () => results.push('upload'))
       return results
     }),
-    itemButtonIcons: compute<TButtonSvgType[]>(() => {
-      let results: TButtonSvgType[] = []
+    itemButtonIcons: compute<TMetisIcon[]>(() => {
+      let results: TMetisIcon[] = []
 
       results.push('download')
       authorize('files_write', () => results.push('remove'))
@@ -177,6 +179,32 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
       }
     },
     onSuccessfulDeletion: () => {},
+    onFileDrop: async (incomingFiles: FileList) => {
+      // Switch to load screen.
+      beginLoading(
+        `Importing ${incomingFiles.length} file${
+          incomingFiles.length === 1 ? '' : 's'
+        }...`,
+      )
+
+      // Import the files.
+      try {
+        let references = await ClientFileReference.$upload(incomingFiles)
+        setFiles([...files, ...references])
+        finishLoading()
+        notify(
+          `Successfully imported ${references.length} file${
+            references.length === 1 ? '' : 's'
+          }.`,
+        )
+      } catch (error: any) {
+        finishLoading()
+        handleError({
+          message: `Failed to upload files to file store.`,
+          notifyMethod: 'bubble',
+        })
+      }
+    },
   })
 
   /* -- RENDER -- */
@@ -184,8 +212,8 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
   // Render the list of files.
   return (
     <>
-      <List<ClientFileReference> {...defaultedProps} />
-      <If condition={props.onFileDrop}>
+      <List<ClientFileReference> {...defaultedProps} items={files} />
+      <If condition={props.onFileDrop || defaultedProps.onFileDrop}>
         <input
           className='ImportFileTrigger'
           type='file'
@@ -201,7 +229,12 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
 /**
  * Props for `FileList`.
  */
-export interface TFileReferenceList_P extends TList_P<ClientFileReference> {
+export interface TFileReferenceList_P
+  extends Omit<TList_P<ClientFileReference>, 'items'> {
+  /**
+   * The list of file references to display.
+   */
+  files: TReactState<ClientFileReference[]>
   /**
    * Callback for a successful deletion event.
    * @param reference The deleted reference.

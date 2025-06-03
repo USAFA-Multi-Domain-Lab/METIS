@@ -1,3 +1,4 @@
+import { TButtonSvg_PK } from 'src/components/content/user-controls/buttons/v3/types'
 import ClientMission from 'src/missions'
 import ClientActionExecution from 'src/missions/actions/executions'
 import { TMetisComponent } from '../../../../../../../../shared/'
@@ -7,7 +8,6 @@ import {
   Vector1D,
   Vector2D,
 } from '../../../../../../../../shared/toolbox/space'
-import { TButtonSvg_P } from '../../../../../content/user-controls/buttons/ButtonSvg'
 
 /**
  * A node that can be displayed on the map.
@@ -122,14 +122,5 @@ export type TMapNode_P<TNode extends TMapCompatibleNode> = {
 /**
  * Button SVG type for node-specific buttons.
  */
-export type TNodeButton<TNode extends TMapCompatibleNode> = TWithKey<
-  Omit<TButtonSvg_P, 'onClick'>
-> & {
-  // Overridden
-  /**
-   * Handles when the button is clicked.
-   * @param event The click event.
-   * @param node The node associated with the button.
-   */
-  onClick: (event: React.MouseEvent, node: TNode) => void
-}
+export type TNodeButton<TNode extends TMapCompatibleNode> =
+  TWithKey<TButtonSvg_PK>
