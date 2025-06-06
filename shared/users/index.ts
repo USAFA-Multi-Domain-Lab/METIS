@@ -1,6 +1,6 @@
-import { TBaseMissionComponents } from 'metis/missions'
 import { v4 as generateHash } from 'uuid'
 import { MetisComponent, TMetisBaseComponents } from '..'
+import { DateToolbox } from '../toolbox/dates'
 import UserAccess, { TUserAccess } from './accesses'
 import UserPermission, {
   TUserPermission,
@@ -11,33 +11,8 @@ import UserPermission, {
  * Represents a user using METIS.
  */
 export default abstract class User<
-  T extends TBaseMissionComponents = TBaseMissionComponents,
+  T extends TMetisBaseComponents = TMetisBaseComponents,
 > extends MetisComponent {
-  /**
-   * The user's username.
-   */
-  public username: string
-
-  /**
-   * The user's access.
-   */
-  public access: UserAccess
-
-  /**
-   * The user's permissions.
-   */
-  public expressPermissions: UserPermission[]
-
-  /**
-   * The user's first name.
-   */
-  public firstName: string
-
-  /**
-   * The user's last name.
-   */
-  public lastName: string
-
   // Overridden
   /**
    * The user's full name.
@@ -53,34 +28,81 @@ export default abstract class User<
   }
 
   /**
-   * Whether the user needs to reset their password.
-   */
-  public needsPasswordReset: boolean
-
-  /**
    * The user's password.
    */
   public password: string | undefined
 
-  /**
-   * @param data The user data from which to create the user. Any ommitted values will be set to the default properties defined in User.DEFAULT_PROPERTIES.
-   * @param options Options for creating the user.
-   */
-  public constructor(
-    data: Partial<TUserJson> = User.DEFAULT_PROPERTIES,
-    options: TUserOptions = {},
-  ) {
-    super(data._id ?? User.DEFAULT_PROPERTIES._id, '', false)
+  //   /**
+  //    * @param data The user data from which to create the user. Any ommitted values will be set to the default properties defined in User.DEFAULT_PROPERTIES.
+  //    * @param options Options for creating the user.
+  //    */
+  //   public constructor(
+  //     data: Partial<TUserJson> = User.DEFAULT_PROPERTIES,
+  //     options: TUserOptions = {},
+  //   ) {
+  //     super(data._id ?? User.DEFAULT_PROPERTIES._id, '', false)
+  //
+  //     this.username = data.username ?? User.DEFAULT_PROPERTIES.username
+  //     this.access = UserAccess.get(data.accessId ?? UserAccess.DEFAULT_ID)
+  //     this.firstName = data.firstName ?? User.DEFAULT_PROPERTIES.firstName
+  //     this.lastName = data.lastName ?? User.DEFAULT_PROPERTIES.lastName
+  //     this.needsPasswordReset =
+  //       data.needsPasswordReset ?? User.DEFAULT_PROPERTIES.needsPasswordReset
+  //     this.expressPermissions = UserPermission.get(
+  //       data.expressPermissionIds ?? User.DEFAULT_PROPERTIES.expressPermissionIds,
+  //     )
+  //   }
 
-    this.username = data.username ?? User.DEFAULT_PROPERTIES.username
-    this.access = UserAccess.get(data.accessId ?? UserAccess.DEFAULT_ID)
-    this.firstName = data.firstName ?? User.DEFAULT_PROPERTIES.firstName
-    this.lastName = data.lastName ?? User.DEFAULT_PROPERTIES.lastName
-    this.needsPasswordReset =
-      data.needsPasswordReset ?? User.DEFAULT_PROPERTIES.needsPasswordReset
-    this.expressPermissions = UserPermission.get(
-      data.expressPermissionIds ?? User.DEFAULT_PROPERTIES.expressPermissionIds,
-    )
+  public constructor(
+    /**
+     * @see {@link MetisComponent._id}
+     */
+    _id: string,
+    /**
+     * The user's username.
+     */
+    public username: string,
+    /**
+     * The user's access.
+     */
+    public access: UserAccess,
+    /**
+     * The user's first name.
+     */
+    public firstName: string,
+    /**
+     * The user's last name.
+     */
+    public lastName: string,
+    /**
+     * Whether the user needs to reset their password.
+     */
+    public needsPasswordReset: boolean,
+    /**
+     * The user's permissions.
+     */
+    public expressPermissions: UserPermission[],
+    /**
+     * The date/time the user was created.
+     */
+    public createdAt: Date | null,
+    /**
+     * The date/time the user was last updated.
+     */
+    public updatedAt: Date | null,
+    /**
+     * The user who created the user.
+     */
+    public createdBy: T['user'] | null,
+    /**
+     * The username of the user who created the user.
+     * @note This is needed in the event that the user
+     * has been deleted, yet the user still exists. The
+     * username will then be displayed in the UI for the user.
+     */
+    public createdByUsername: string | null,
+  ) {
+    super(_id, '', false)
   }
 
   /**
@@ -91,7 +113,6 @@ export default abstract class User<
   public toJson(options: TUserJsonOptions = {}): TUserJson {
     let { includeId = false } = options
 
-    // Construct JSON object to send to server.
     let json: TUserJson = {
       username: this.username,
       firstName: this.firstName,
@@ -102,12 +123,97 @@ export default abstract class User<
         (permission) => permission._id,
       ),
       password: this.password,
+      createdAt: DateToolbox.toNullableISOString(this.createdAt),
+      updatedAt: DateToolbox.toNullableISOString(this.updatedAt),
+      createdBy: null,
+      createdByUsername: null,
     }
+
+    // Add createdBy and createdByUsername to the JSON,
+    // if not null.
+    if (this.createdBy) json.createdBy = this.createdBy.toCreatedByJson()
+    if (this.createdByUsername) json.createdByUsername = this.createdByUsername
 
     // Include the ID in the JSON if specified.
     if (includeId) json._id = this._id
 
     return json
+  }
+
+  /**
+   * Converts the User object to JSON representing
+   * a user that is already saved in the database.
+   * @param options Options for converting the user to JSON.
+   * @returns The JSON.
+   * @throws If the user is not saved in the database.
+   */
+  public toExistingJson(): TUserExistingJson {
+    if (
+      !this._id ||
+      !this.createdAt ||
+      !this.updatedAt ||
+      !this.createdBy ||
+      !this.createdByUsername
+    ) {
+      throw new Error(
+        "This user has data that indicates it doesn't yet exist in the database. Existing user fields represent users that have been saved to the database.",
+      )
+    }
+
+    // Convert the user to JSON.
+    return {
+      _id: this._id,
+      username: this.username,
+      firstName: this.firstName,
+      lastName: this.lastName,
+      accessId: this.access._id,
+      needsPasswordReset: this.needsPasswordReset,
+      expressPermissionIds: this.expressPermissions.map(
+        (permission) => permission._id,
+      ),
+      password: this.password,
+      createdAt: this.createdAt.toISOString(),
+      updatedAt: this.updatedAt.toISOString(),
+      createdBy: this.createdBy.toCreatedByJson(),
+      createdByUsername: this.createdByUsername,
+    }
+  }
+
+  /**
+   * Creates a JSON representation of the user
+   * for the purpose of the `createdBy` field
+   * of a document in the database.
+   */
+  public toCreatedByJson(): TCreatedByJson {
+    if (
+      !this._id ||
+      !this.createdAt ||
+      !this.updatedAt ||
+      !this.createdBy ||
+      !this.createdByUsername
+    ) {
+      throw new Error(
+        "This user has data that indicates it doesn't yet exist in the database. Created by fields represent existing users only.",
+      )
+    }
+
+    // Construct JSON object to send to server.
+    return {
+      _id: this._id,
+      username: this.username,
+      firstName: this.firstName,
+      lastName: this.lastName,
+      accessId: this.access._id,
+      needsPasswordReset: this.needsPasswordReset,
+      expressPermissionIds: this.expressPermissions.map(
+        (permission) => permission._id,
+      ),
+      password: this.password,
+      createdAt: this.createdAt.toISOString(),
+      updatedAt: this.updatedAt.toISOString(),
+      createdBy: this.createdBy._id,
+      createdByUsername: this.createdByUsername,
+    }
   }
 
   /**
@@ -182,9 +288,7 @@ export default abstract class User<
   /**
    * Default properties set when creating a new User object.
    */
-  public static get DEFAULT_PROPERTIES(): Required<
-    Omit<TUserJson, 'password'>
-  > {
+  public static get DEFAULT_PROPERTIES(): Required<TUserDefaultJson> {
     return {
       _id: generateHash(),
       username: '',
@@ -193,6 +297,83 @@ export default abstract class User<
       accessId: UserAccess.DEFAULT_ID,
       needsPasswordReset: false,
       expressPermissionIds: [],
+      createdAt: null,
+      updatedAt: null,
+      createdBy: null,
+      createdByUsername: null,
+    }
+  }
+
+  /**
+   * The predefined and fixed ID for the user representing
+   * METIS itself. This user will never be deleted.
+   */
+  public static readonly SYSTEM_ID: string = '000000000000000000000000'
+
+  /**
+   * The username for the system user. This username
+   * is fixed and should not be changed.
+   */
+  public static readonly SYSTEM_USERNAME: string = 'metis'
+
+  /**
+   * The predefined and fixed ID for the primary
+   * admin user. This user will never be deleted.
+   */
+  public static readonly ADMIN_ID: string = '000000000000000000000001'
+
+  /**
+   * The default username for the primary admin user.
+   * This is used for seeding only, as it could be
+   * changed afterwards.
+   */
+  public static readonly ADMIN_SEEDING_USERNAME: string = 'admin'
+
+  /**
+   * Used to seed the database with the system
+   * user. This user represents METIS itself and
+   * is not intended for human use. This user will
+   * never be deleted.
+   */
+  public static get SYSTEM_SEEDING_DATA(): TUserJson {
+    return {
+      _id: User.SYSTEM_ID,
+      username: User.SYSTEM_USERNAME,
+      accessId: 'system',
+      firstName: 'METIS',
+      lastName: 'System',
+      needsPasswordReset: false,
+      expressPermissionIds: [],
+      password: '',
+      createdAt: null,
+      updatedAt: null,
+      // The system user is created by the system
+      // itself through the seeding process.
+      createdBy: User.SYSTEM_ID,
+      createdByUsername: User.SYSTEM_USERNAME,
+    }
+  }
+
+  /**
+   * Used to seed the database with the primary
+   * admin user. This user will never be deleted.
+   */
+  public static get ADMIN_SEEDING_DATA(): TUserJson {
+    return {
+      _id: User.ADMIN_ID,
+      username: User.ADMIN_SEEDING_USERNAME,
+      accessId: 'admin',
+      firstName: 'admin',
+      lastName: 'user',
+      needsPasswordReset: true,
+      expressPermissionIds: [],
+      password: 'temppass',
+      createdAt: null,
+      updatedAt: null,
+      // The admin user is created by the system
+      // itself through the seeding process.
+      createdBy: User.SYSTEM_ID,
+      createdByUsername: User.SYSTEM_USERNAME,
     }
   }
 
@@ -316,4 +497,64 @@ export interface TUserJson {
    * The user's password.
    */
   password?: string
+  /**
+   * The date/time the user was created.
+   */
+  createdAt: string | null
+  /**
+   * The date/time the user was last updated.
+   */
+  updatedAt: string | null
+  /**
+   * The user who created the user.
+   */
+  createdBy: TCreatedByJson | string | null
+  /**
+   * The username of the user who created the user.
+   * @note This is needed in the event that the user
+   * has been deleted, yet the user still exists. The
+   * username will then be displayed in the UI for the user.
+   */
+  createdByUsername: string | null
+}
+
+/**
+ * JSON data for a user that is known to exist
+ * in the METIS database.
+ */
+export interface TUserExistingJson extends TUserJson {
+  // Require properties that are no longer
+  // optional post save.
+  _id: string
+  createdAt: string
+  updatedAt: string
+  createdBy: TCreatedByJson | string
+  createdByUsername: string
+}
+
+/**
+ * JSON representation of the default values for
+ * a brand new user.
+ */
+export interface TUserDefaultJson extends Omit<TUserJson, 'password'> {
+  // All create/update fields are null since
+  // the user has not been posted to the
+  // database yet.
+  createdAt: null
+  updatedAt: null
+  createdBy: null
+  createdByUsername: null
+}
+
+/**
+ * JSON representation of the user who created a
+ * particular document.
+ * @note Extends {@link TUserExistingJson} since the
+ * createdBy field should be a user that is already
+ * saved to the database.
+ */
+export interface TCreatedByJson extends TUserExistingJson {
+  // The createdBy field must be a string to
+  // prevent infinite reference loops.
+  createdBy: string
 }

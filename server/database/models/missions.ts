@@ -8,14 +8,15 @@ import ServerMissionForce from 'metis/server/missions/forces'
 import ServerMissionNode from 'metis/server/missions/nodes'
 import StringToolbox from 'metis/toolbox/strings'
 import { model, ProjectionType, QueryOptions, Schema } from 'mongoose'
+import { ensureNoNullCreatedBy, populateCreatedByIfFlagged } from '.'
 import MetisDatabase from '..'
 import { MissionSchema } from './classes'
-import type {
-  TMission,
-  TMissionDoc,
-  TMissionModel,
-  TPostMissionQuery,
-  TPreMissionQuery,
+import {
+  type TMission,
+  type TMissionDoc,
+  type TMissionModel,
+  type TPostMissionQuery,
+  type TPreMissionQuery,
 } from './types'
 
 /* -- SCHEMA FUNCTIONS -- */
@@ -113,6 +114,8 @@ const findByIdAndModify = (
   })
 }
 
+/* -- SCHEMA MIDDLEWARE -- */
+
 /**
  * Ensures that any file references that are null
  * get populated with the proper reference IDs.
@@ -130,8 +133,8 @@ const ensureNoNullFiles = async (mission: TMissionDoc) => {
   // Fetch unpopulated file references only
   const unpopulated = await MissionModel.findOne(
     { _id: mission._id },
-    { files: 1 },
-    { populateFileReferences: false },
+    { id: 1, files: 1 },
+    { populateCreatedBy: false, populateFileReferences: false },
   ).lean() // lean gives raw JS object
 
   if (!unpopulated) {
@@ -244,6 +247,15 @@ export const schema = new MissionSchema(
       maxlength: ServerMission.MAX_RESOURCE_LABEL_LENGTH,
     },
     launchedAt: { type: Date, default: null },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    createdByUsername: {
+      type: String,
+      required: true,
+    },
     deleted: { type: Boolean, required: true, default: false },
     structure: {
       type: {},
@@ -515,9 +527,11 @@ schema.pre<TPreMissionQuery>(
 
     // Modify the query.
     queryForApiResponse(this)
+    // Populate createdBy.
+    populateCreatedByIfFlagged(this)
     // Populate file-references.
     if (populateFileReferences) this.populate('files.reference')
-    // Call the next middleware.
+
     return next()
   },
 )
@@ -534,7 +548,10 @@ schema.post<TPostMissionQuery>(
 
     for (let missionDatum of missionData) {
       // Transform the ObjectIds to strings.
-      missionDatum._id = missionDatum.id
+      // todo: Confirm this is working with lean queries.
+      if (missionDatum.id) missionDatum._id = missionDatum.id
+      // Confirm that no createdBy fields are null.
+      await ensureNoNullCreatedBy(missionDatum, MissionModel)
       // Confirm that no file references are null.
       await ensureNoNullFiles(missionDatum)
     }

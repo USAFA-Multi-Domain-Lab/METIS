@@ -1,7 +1,7 @@
 import { TSession } from '..'
 import { MetisComponent, TMetisBaseComponents } from '../../'
 import { MissionForce, TForce } from '../../missions/forces'
-import { TUser, TUserJson } from '../../users'
+import { TUser, TUserExistingJson } from '../../users'
 import MemberPermission from './permissions'
 import MemberRole, { TMemberRoleId } from './roles'
 
@@ -146,7 +146,7 @@ export default abstract class SessionMember<
   public toJson(): TSessionMemberJson {
     return {
       _id: this._id,
-      user: this.user.toJson(),
+      user: this.user.toExistingJson(),
       roleId: this.role._id,
       forceId: this.forceId,
     }
@@ -191,7 +191,7 @@ export interface TSessionMemberJson {
   /**
    * The user that is a member of the session.
    */
-  user: TUserJson
+  user: TUserExistingJson
   /**
    * The ID of the member's role in the session.
    */

@@ -108,7 +108,9 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   const state: TMissionPage_S = {
     defectiveComponents: useState<MissionComponent<any, any>[]>([]),
   }
-  const [mission, setMission] = useState<ClientMission>(new ClientMission())
+  const [mission, setMission] = useState<ClientMission>(
+    ClientMission.createNew(),
+  )
   const [globalFiles, setGlobalFiles] = useState<ClientFileReference[]>([])
   const [localFiles, setLocalFiles] = useState<ClientMissionFile[]>([])
   const selectedForceState = useState<ClientMissionForce | null>(null)

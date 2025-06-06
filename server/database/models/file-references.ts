@@ -1,8 +1,12 @@
 import { TFileReferenceJson } from 'metis/files/references'
 import { model, Schema } from 'mongoose'
 import path from 'path'
-import { buildToJson, excludeDeletedForFinds } from '.'
-import MetisDatabase from '..'
+import {
+  buildToJson,
+  ensureNoNullCreatedBy,
+  excludeDeletedForFinds,
+  populateCreatedByIfFlagged,
+} from '.'
 import { FileReferenceSchema } from './classes'
 import {
   TFileReference,
@@ -22,38 +26,6 @@ import {
  * @returns The JSON representation of a `FileReference` document.
  */
 const toJson = buildToJson<TFileReferenceDoc, TFileReferenceJson>()
-
-/**
- * Ensures that if the createdBy column is null,
- * it is populated with the proper user ID.
- * This is necessary because `null` indicates that
- * the user has been deleted, but the ID is still
- * needed for METIS to function properly.
- * @param reference The reference document to process.
- * @throws An error if the recursive query fails to
- * retrieve the necessary data.
- */
-const ensureNoNullCreatedBy = async (reference: TFileReferenceDoc) => {
-  // Quick scan to see if we even need to re-query.
-  if (reference.createdBy !== null) return
-
-  // Fetch unpopulated createdBy only.
-  const unpopulated = await FileReferenceModel.findOne(
-    { _id: reference._id },
-    { createdBy: 1 },
-    { populateCreatedBy: false },
-  ).lean() // lean gives raw JS object
-
-  if (!unpopulated) {
-    throw MetisDatabase.generateValidationError(
-      `Failed to find file-reference document with ID "${reference._id}".`,
-    )
-  }
-
-  // Update the createdBy field with the
-  // unpopulated value.
-  reference.createdBy = unpopulated.createdBy
-}
 
 /* -- SCHEMA -- */
 
@@ -173,11 +145,8 @@ fileReferenceSchema.pre('save', async function (next) {
 fileReferenceSchema.pre<TPreReferenceQuery>(
   ['find', 'findOne', 'findOneAndUpdate', 'updateOne'],
   function (next) {
-    const { populateCreatedBy = true } = this.getOptions()
-
     // Populate createdBy.
-    if (populateCreatedBy) this.populate('createdBy')
-
+    populateCreatedByIfFlagged(this)
     // Call the next middleware.
     return next()
   },
@@ -196,7 +165,7 @@ fileReferenceSchema.post<TPostReferenceQuery>(
 
     for (let referenceDatum of referenceData) {
       // Confirm that no createdBy fields are null.
-      await ensureNoNullCreatedBy(referenceDatum)
+      await ensureNoNullCreatedBy(referenceDatum, FileReferenceModel)
     }
   },
 )

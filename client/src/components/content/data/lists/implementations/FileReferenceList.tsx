@@ -80,8 +80,8 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
       'mimetype',
       'size',
       'createdAt',
-      'createdByUsername',
       'updatedAt',
+      'createdByUsername',
     ],
     listButtonIcons: compute<TButtonSvgType[]>(() => {
       let results: TButtonSvgType[] = []
@@ -125,7 +125,7 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
         case 'createdAt':
         case 'updatedAt':
           let datetime = file[column]
-          if (datetime === null) return 'N/A'
+          if (file.deleted) return 'N/A'
           else return DateToolbox.format(datetime, 'yyyy-mm-dd HH:MM')
         default:
           return file[column].toString()

@@ -1,12 +1,13 @@
-import Mission, { TMissionJson, TMissionSaveJson } from 'metis/missions'
+import Mission, { TMissionSaveJson } from 'metis/missions'
 import { TMissionFileJson } from 'metis/missions/files'
 import { TMissionForceSaveJson } from 'metis/missions/forces'
 import {
   TMissionPrototypeJson,
   TMissionPrototypeOptions,
 } from 'metis/missions/nodes/prototypes'
+import { DateToolbox } from 'metis/toolbox/dates'
 import NumberToolbox from 'metis/toolbox/numbers'
-import { HEX_COLOR_REGEX } from 'metis/toolbox/strings'
+import StringToolbox, { HEX_COLOR_REGEX } from 'metis/toolbox/strings'
 import mongoose, {
   AnyObject,
   CallbackWithoutResultAndOptionalError,
@@ -16,6 +17,7 @@ import MetisDatabase from '../database'
 import { TMetisServerComponents } from '../index'
 import { databaseLogger } from '../logging'
 import { TTargetEnvExposedMission } from '../target-environments/context'
+import ServerUser from '../users'
 import ServerMissionFile from './files'
 import ServerMissionForce from './forces'
 import ServerMissionPrototype from './nodes/prototypes'
@@ -41,19 +43,6 @@ export default class ServerMission extends Mission<TMetisServerComponents> {
       this._rng = seedrandom(`${this.seed}`)
     }
     return this._rng
-  }
-
-  /**
-   * @param data The mission data from which to create the mission. Any ommitted values will be set to the default properties defined in Mission.DEFAULT_PROPERTIES.
-   * @param options The options for creating the mission.
-   */
-  public constructor(
-    data:
-      | Partial<TMissionJson>
-      | Partial<TMissionSaveJson> = ServerMission.DEFAULT_PROPERTIES,
-  ) {
-    // Initialize base properties.
-    super(data)
   }
 
   // Implemented
@@ -119,6 +108,48 @@ export default class ServerMission extends Mission<TMetisServerComponents> {
       forces: this.forces.map((force) => force.toTargetEnvContext()),
       nodes: this.nodes.map((node) => node.toTargetEnvContext()),
     }
+  }
+
+  /**
+   * Creates a new {@see ServerMission} from the given JSON data,
+   * which is formatted to be saved to the database.
+   * @param json The JSON data from which to create the mission.
+   */
+  public static fromSaveJson(json: TMissionSaveJson): ServerMission {
+    // Create a Serveruser object for the creator
+    // of the mission, if there is one.
+    let createdBy: ServerUser
+
+    // Parse reference data.
+    if (typeof json.createdBy === 'object') {
+      createdBy = ServerUser.fromCreatedByJson(json.createdBy)
+    } else {
+      createdBy = ServerUser.createUnpopulated(
+        json.createdBy,
+        json.createdByUsername,
+      )
+    }
+
+    // Create a new mission.
+    let mission: ServerMission = new ServerMission(
+      json._id || StringToolbox.generateRandomId(),
+      json.name,
+      json.versionNumber,
+      json.seed,
+      json.resourceLabel,
+      DateToolbox.fromNullableISOString(json.createdAt),
+      DateToolbox.fromNullableISOString(json.updatedAt),
+      DateToolbox.fromNullableISOString(json.launchedAt),
+      createdBy,
+      json.createdByUsername,
+      json.structure,
+      json.prototypes,
+      json.forces,
+      json.files,
+    )
+
+    // Return the mission.
+    return mission
   }
 
   /**
@@ -299,7 +330,7 @@ export default class ServerMission extends Mission<TMetisServerComponents> {
     missionJson: TMissionSaveJson,
   ): void => {
     try {
-      let mission = new ServerMission(missionJson)
+      let mission = ServerMission.fromSaveJson(missionJson)
 
       for (let effect of mission.effects) {
         if (effect.defective) {

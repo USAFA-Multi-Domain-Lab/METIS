@@ -1,6 +1,5 @@
 import { MetisComponent, TMetisBaseComponents } from '..'
-import { DateToolbox } from '../toolbox/dates'
-import { TUserJson } from '../users'
+import { TCreatedByJson } from '../users'
 
 /**
  * A reference to a file stored in the METIS file store.
@@ -31,12 +30,12 @@ export default abstract class FileReference<
   /**
    * The date and time when the file was created.
    */
-  public createdAt: Date | null
+  public createdAt: Date
 
   /**
    * The date and time when the file was last updated.
    */
-  public updatedAt: Date | null
+  public updatedAt: Date
 
   /**
    * The creator of the file.
@@ -62,8 +61,8 @@ export default abstract class FileReference<
     path: string,
     mimetype: string,
     size: number,
-    createdAt: Date | null,
-    updatedAt: Date | null,
+    createdAt: Date,
+    updatedAt: Date,
     createdBy: T['user'],
     createdByUsername: string,
     deleted: boolean,
@@ -91,9 +90,9 @@ export default abstract class FileReference<
       path: this.path,
       mimetype: this.mimetype,
       size: this.size,
-      createdAt: DateToolbox.toNullableISOString(this.createdAt),
-      updatedAt: DateToolbox.toNullableISOString(this.updatedAt),
-      createdBy: this.createdBy.toJson(),
+      createdAt: this.createdAt.toISOString(),
+      updatedAt: this.updatedAt.toISOString(),
+      createdBy: this.createdBy.toCreatedByJson(),
       createdByUsername: this.createdByUsername,
       deleted: this.deleted,
     }
@@ -127,19 +126,19 @@ export interface TFileReferenceJson {
   /**
    * @see FileReference.createdAt
    */
-  createdAt: string | null
+  createdAt: string
+  /**
+   * @see FileReference.updatedAt
+   */
+  updatedAt: string
   /**
    * @see FileReference.createdBy
    */
-  createdBy: TUserJson | string
+  createdBy: TCreatedByJson | string
   /**
    * @see FileReference.createdByUsername
    */
   createdByUsername: string
-  /**
-   * @see FileReference.updatedAt
-   */
-  updatedAt: string | null
   /**
    * @see MetisComponent.deleted
    */

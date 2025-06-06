@@ -121,7 +121,10 @@ export default class ClientMissionFile
     if (typeof data.reference === 'object') {
       reference = ClientFileReference.fromJson(data.reference)
     } else {
-      reference = ClientFileReference.createDeleted({ _id: data.reference })
+      reference = ClientFileReference.createDeleted(
+        data.reference,
+        data.lastKnownName,
+      )
     }
 
     // Create and return new `ClientFileReference` instance.
@@ -172,10 +175,7 @@ export default class ClientMissionFile
       name,
       name,
       [],
-      ClientFileReference.createDeleted({
-        _id: StringToolbox.generateRandomId(),
-        name,
-      }),
+      ClientFileReference.createDeleted(StringToolbox.generateRandomId(), name),
       mission,
     )
   }

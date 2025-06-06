@@ -18,7 +18,7 @@ const login = async (request: Request, response: Response) => {
     // Attempt to authenticate the user.
     let userJson = await UserModel.authenticate(request)
     // If the user was authenticated, create a new user object.
-    let user = new ServerUser(userJson)
+    let user = ServerUser.fromExistingJson(userJson)
 
     try {
       // Attempt to create a new login object.

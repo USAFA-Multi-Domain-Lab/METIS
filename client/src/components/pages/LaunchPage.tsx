@@ -34,7 +34,7 @@ export default function LaunchPage({
 
   /* -- STATE -- */
   const [mission, setMission] = useState<ClientMission>(
-    new ClientMission({ _id: missionId }),
+    ClientMission.createNew(),
   )
   const [sessionConfig] = useState(Session.DEFAULT_CONFIG)
 

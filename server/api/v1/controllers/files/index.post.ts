@@ -15,7 +15,7 @@ const uploadFiles = async (
   response: Response,
   fileStore: MetisFileStore,
 ) => {
-  let user: ServerUser = response.locals.user
+  let currentUser: ServerUser = response.locals.user
 
   // If no files are included in the request,
   // return a 400 status code.
@@ -30,7 +30,7 @@ const uploadFiles = async (
 
   // Save references to the files in the database.
   const uploadedFiles = await Promise.all(
-    request.files.map((file) => fileStore.createReference(file, user)),
+    request.files.map((file) => fileStore.createReference(file, currentUser)),
   )
 
   // Send a response, including the resulting data

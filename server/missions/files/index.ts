@@ -22,10 +22,10 @@ export default class ServerMissionFile extends MissionFile<TMetisServerComponent
     if (typeof data.reference === 'object') {
       reference = ServerFileReference.fromJson(data.reference)
     } else {
-      reference = ServerFileReference.createDeleted({
-        _id: data.reference,
-        name: data.lastKnownName,
-      })
+      reference = ServerFileReference.createDeleted(
+        data.reference,
+        data.lastKnownName,
+      )
     }
 
     // Create and return new `ServerMissionFile` instance.

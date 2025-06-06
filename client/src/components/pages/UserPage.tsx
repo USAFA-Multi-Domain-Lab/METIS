@@ -34,7 +34,7 @@ export default function UserPage({ userId }: IUserPage): JSX.Element | null {
 
   const [existsInDatabase, setExistsInDatabase] = useState<boolean>(false)
   const [user, setUser] = useState<ClientUser>(
-    new ClientUser({}, { passwordIsRequired: true }),
+    ClientUser.createNew({ passwordIsRequired: true }),
   )
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(false)
   const [userEmptyStringArray, setUserEmptyStringArray] = useState<string[]>([])

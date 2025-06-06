@@ -129,6 +129,7 @@ export default class MetisFileStore {
    * This will create and save a reference for a Multer
    * file to the database.
    * @param file The file for which to create a reference.
+   * @param user The user uploading the file.
    * @returns The saved reference.
    */
   public async createReference(file: Express.Multer.File, user: ServerUser) {

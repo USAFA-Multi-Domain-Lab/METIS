@@ -6,12 +6,8 @@ import UserModel, { hashPassword } from 'metis/server/database/models/users'
 import { databaseLogger } from 'metis/server/logging'
 import MissionImport from 'metis/server/missions/imports'
 import { DateToolbox } from 'metis/toolbox/dates'
+import User, { TUserJson } from 'metis/users'
 import mongoose, { ConnectOptions } from 'mongoose'
-import {
-  adminUserData,
-  instructorUserData,
-  studentUserData,
-} from './initial-user-data'
 
 /**
  * Represents a connection to the Metis database.
@@ -83,10 +79,14 @@ export default class MetisDatabase {
           databaseLogger.info('Connected to database.')
           // Create backup of database before use.
           await this.createBackup()
-          // Ensure that the default data exists.
-          await this.ensureDefaultDataExists()
+          // Ensure the info-collection exists.
+          await this.ensureDefaultInfoExists()
           // Ensure that the schema build is correct.
           await this.ensureCorrectSchemaBuild()
+          // Ensure default users and missions are
+          // populated.
+          await this.ensureDefaultUsersExists()
+          await this.ensureDefaultMissionsExists()
 
           try {
             // Schedule a backup every 24 hours
@@ -155,18 +155,6 @@ export default class MetisDatabase {
   }
 
   /**
-   * This will ensure that the database is populated with necessary default data.
-   * @returns A promise that resolves once the default data is ensured to exist.
-   */
-  private async ensureDefaultDataExists(): Promise<void> {
-    // Call sub-function for each database
-    // collection.
-    await this.ensureDefaultInfoExists()
-    await this.ensureDefaultUsersExists()
-    await this.ensureDefaultMissionsExists()
-  }
-
-  /**
    * This will ensure that the info collection is populated with necessary default data.
    * @returns A promise that resolves once the default data is ensured to exist.
    */
@@ -199,141 +187,67 @@ export default class MetisDatabase {
   }
 
   /**
+   * Ensures that a default user with the provided
+   * data exists in the database, creating it if not.
+   * @param userId The fixed ID of the default user.
+   * @param seedingData The data to use to seed the
+   * default user, if it is not found.
+   * @resolves Once the default user is found or once
+   * it is created, if not found.
+   * @rejects If an error occurs while checking for
+   * or creating the default user.
+   */
+  private async ensureDefaultUserExists(
+    userId: string,
+    seedingData: TUserJson,
+  ): Promise<void> {
+    try {
+      // Query for the user.
+      let user = await UserModel.findById(userId).exec()
+
+      // If no user is found, create the default admin user.
+      if (user === null) {
+        databaseLogger.info('Default user not found: ', userId)
+        databaseLogger.info(
+          'Creating default user with username: ',
+          seedingData.username,
+        )
+
+        // Hash admin user password.
+        if (seedingData.password) {
+          seedingData.password = await hashPassword(seedingData.password)
+        }
+
+        // Create admin user.
+        let newAdminUser = await UserModel.create(seedingData)
+
+        databaseLogger.info('Default user created:', newAdminUser.username)
+      }
+    } catch (error: any) {
+      databaseLogger.error(
+        'Failed to ensure default user exists in the database.\n',
+        error,
+      )
+      throw error
+    }
+  }
+
+  /**
    * This will ensure that the users collection is populated with necessary default data.
    * @returns A promise that resolves once the default data is ensured to exist.
    */
   private async ensureDefaultUsersExists(): Promise<void> {
-    return new Promise<void>(async (resolve, reject) => {
-      // Check if a student user exists.
-      const verifyStudent = new Promise<void>(async (resolve, reject) => {
-        try {
-          let studentUser = await UserModel.findOne({
-            accessId: studentUserData.accessId,
-          }).exec()
-
-          // If no student user is found, create the default student user.
-          if (studentUser === null) {
-            databaseLogger.info('Student user not found.')
-            databaseLogger.info('Creating student user...')
-
-            // Hash student user password.
-            if (studentUserData.password) {
-              studentUserData.password = await hashPassword(
-                studentUserData.password,
-              )
-            }
-
-            // Create student user.
-            let newStudentUser = await UserModel.create(studentUserData)
-            databaseLogger.info(
-              'Student user created:',
-              newStudentUser.username,
-            )
-          }
-
-          // Resolve.
-          resolve()
-        } catch (error: any) {
-          databaseLogger.error(
-            'Failed to ensure a student user exists in the database.\n',
-            error,
-          )
-          reject(error)
-        }
-      })
-
-      // Check if an instructor user exists.
-      const verifyInstructor = new Promise<void>(async (resolve, reject) => {
-        try {
-          let instructorUser = await UserModel.findOne({
-            accessId: instructorUserData.accessId,
-          }).exec()
-
-          // If no instructor user is found, create the default instructor user.
-          if (instructorUser === null) {
-            databaseLogger.info('Instructor user not found.')
-            databaseLogger.info('Creating instructor user...')
-
-            // Hash instructor user password.
-            if (instructorUserData.password) {
-              instructorUserData.password = await hashPassword(
-                instructorUserData.password,
-              )
-            }
-
-            // Create instructor user.
-            let newInstructorUser = await UserModel.create(instructorUserData)
-            databaseLogger.info(
-              'Instructor user created:',
-              newInstructorUser.username,
-            )
-          }
-
-          // Resolve.
-          resolve()
-        } catch (error: any) {
-          databaseLogger.error(
-            'Failed to ensure an instructor user exists in the database.\n',
-            error,
-          )
-          reject(error)
-        }
-      })
-
-      // Check if an admin user exists.
-      const verifyAdmin = new Promise<void>(async (resolve, reject) => {
-        try {
-          let adminUser = await UserModel.findOne({
-            accessId: adminUserData.accessId,
-          }).exec()
-
-          // If no admin user is found, create the default admin user.
-          if (adminUser === null) {
-            databaseLogger.info('Admin user not found.')
-            databaseLogger.info('Creating admin user...')
-
-            // Hash admin user password.
-            if (adminUserData.password) {
-              adminUserData.password = await hashPassword(
-                adminUserData.password,
-              )
-            }
-
-            // Create admin user.
-            let newAdminUser = await UserModel.create(adminUserData)
-            databaseLogger.info('Admin user created:', newAdminUser.username)
-          }
-
-          // Resolve.
-          resolve()
-        } catch (error: any) {
-          databaseLogger.error(
-            'Failed to ensure an admin user exists in the database.\n',
-            error,
-          )
-          reject(error)
-        }
-      })
-
-      // Create an array of promises.
-      const promises: Array<Promise<void>> = [
-        verifyStudent,
-        verifyInstructor,
-        verifyAdmin,
-      ]
-
-      // Wait for all promises to resolve.
-      try {
-        await Promise.all(promises)
-        resolve()
-      } catch (error: any) {
-        databaseLogger.error(
-          'Failed to ensure default users exist in the database.\n',
-          error,
-        )
-        reject(error)
-      }
-    })
+    // Create an array of promises to handle
+    // when all default-user verification is
+    // resolved.
+    const promises: Array<Promise<void>> = [
+      // Ensure the system user and admin users
+      // exist.
+      this.ensureDefaultUserExists(User.SYSTEM_ID, User.SYSTEM_SEEDING_DATA),
+      this.ensureDefaultUserExists(User.ADMIN_ID, User.ADMIN_SEEDING_DATA),
+    ]
+    // Await the completion of all operations.
+    await Promise.all(promises)
   }
 
   /**

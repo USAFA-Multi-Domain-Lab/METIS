@@ -4,7 +4,6 @@ import ClientUser from 'src/users'
 import FileReference, {
   TFileReferenceJson,
 } from '../../../shared/files/references'
-import { DateToolbox } from '../../../shared/toolbox/dates'
 import StringToolbox from '../../../shared/toolbox/strings'
 
 /**
@@ -40,12 +39,12 @@ export default class ClientFileReference extends FileReference<TMetisClientCompo
 
     // Parse reference data.
     if (typeof json.createdBy === 'object') {
-      createdBy = new ClientUser(json.createdBy)
+      createdBy = ClientUser.fromCreatedByJson(json.createdBy)
     } else {
-      createdBy = ClientUser.createDeleted({
-        _id: json.createdBy,
-        username: json.createdByUsername,
-      })
+      createdBy = ClientUser.createUnpopulated(
+        json.createdBy,
+        json.createdByUsername,
+      )
     }
 
     return new ClientFileReference(
@@ -54,8 +53,8 @@ export default class ClientFileReference extends FileReference<TMetisClientCompo
       json.path,
       json.mimetype,
       json.size,
-      DateToolbox.fromNullableISOString(json.createdAt),
-      DateToolbox.fromNullableISOString(json.updatedAt),
+      new Date(json.createdAt),
+      new Date(json.updatedAt),
       createdBy,
       json.createdByUsername,
       false,
@@ -69,21 +68,20 @@ export default class ClientFileReference extends FileReference<TMetisClientCompo
    * Only pass the properties known for the deleted file, if any.
    * @returns A new {@link ClientFileReference} instance.
    */
-  public static createDeleted(
-    knownData: Partial<TFileReferenceJson> = {},
-  ): ClientFileReference {
+  public static createDeleted(_id: string, name: string): ClientFileReference {
     return new ClientFileReference(
-      knownData._id ?? StringToolbox.generateRandomId(),
-      knownData.name ?? 'File Deleted',
-      knownData.path ?? '/',
-      knownData.mimetype ?? 'application/octet-stream',
-      knownData.size ?? 0,
-      DateToolbox.fromNullableISOString(knownData.createdAt ?? null),
-      DateToolbox.fromNullableISOString(knownData.updatedAt ?? null),
-      ClientUser.createDeleted({
-        username: knownData.createdByUsername ?? 'Unknown user.',
-      }),
-      knownData.createdByUsername ?? 'Unknown user.',
+      _id,
+      name,
+      '/',
+      'application/octet-stream',
+      0,
+      new Date(),
+      new Date(),
+      ClientUser.createUnpopulated(
+        StringToolbox.generateRandomId(),
+        'Unknown User',
+      ),
+      'Unknown User',
       true,
     )
   }

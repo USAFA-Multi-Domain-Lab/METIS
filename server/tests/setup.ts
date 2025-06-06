@@ -33,7 +33,7 @@ async function seedDatabase(): Promise<void> {
 
   // Create a new mission object and store it
   // in the `missionToLaunch` variable.
-  missionToLaunch = new ServerMission(missionDoc!)
+  missionToLaunch = ServerMission.fromSaveJson(missionDoc!.toJSON())
 }
 
 /**

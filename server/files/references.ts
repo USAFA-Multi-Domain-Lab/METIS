@@ -1,6 +1,5 @@
 import FileReference, { TFileReferenceJson } from 'metis/files/references'
 import { TMetisServerComponents } from 'metis/server'
-import { DateToolbox } from 'metis/toolbox/dates'
 import StringToolbox from 'metis/toolbox/strings'
 import ServerUser from '../users'
 
@@ -15,12 +14,12 @@ export default class ServerFileReference extends FileReference<TMetisServerCompo
 
     // Parse reference data.
     if (typeof json.createdBy === 'object') {
-      createdBy = new ServerUser(json.createdBy)
+      createdBy = ServerUser.fromCreatedByJson(json.createdBy)
     } else {
-      createdBy = ServerUser.createDeleted({
-        _id: json.createdBy,
-        username: json.createdByUsername,
-      })
+      createdBy = ServerUser.createUnpopulated(
+        json.createdBy,
+        json.createdByUsername,
+      )
     }
 
     return new ServerFileReference(
@@ -29,8 +28,8 @@ export default class ServerFileReference extends FileReference<TMetisServerCompo
       json.path,
       json.mimetype,
       json.size,
-      DateToolbox.fromNullableISOString(json.createdAt),
-      DateToolbox.fromNullableISOString(json.updatedAt),
+      new Date(json.createdAt),
+      new Date(json.updatedAt),
       createdBy,
       json.createdByUsername,
       false,
@@ -44,21 +43,20 @@ export default class ServerFileReference extends FileReference<TMetisServerCompo
    * Only pass the properties known for the deleted file, if any.
    * @returns A new {@link ServerFileReference} instance.
    */
-  public static createDeleted(
-    knownData: Partial<TFileReferenceJson> = {},
-  ): ServerFileReference {
+  public static createDeleted(_id: string, name: string): ServerFileReference {
     return new ServerFileReference(
-      knownData._id ?? StringToolbox.generateRandomId(),
-      knownData.name ?? 'File Deleted',
-      knownData.path ?? '/',
-      knownData.mimetype ?? 'application/octet-stream',
-      knownData.size ?? 0,
-      DateToolbox.fromNullableISOString(knownData.createdAt ?? null),
-      DateToolbox.fromNullableISOString(knownData.updatedAt ?? null),
-      ServerUser.createDeleted({
-        username: knownData.createdByUsername ?? 'Unknown user.',
-      }),
-      knownData.createdByUsername ?? 'Unknown user.',
+      _id,
+      name,
+      '/',
+      'application/octet-stream',
+      0,
+      new Date(),
+      new Date(),
+      ServerUser.createUnpopulated(
+        StringToolbox.generateRandomId(),
+        'Unknown User',
+      ),
+      'Unknown User',
       true,
     )
   }

@@ -5,6 +5,7 @@ import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
 import { useRequireLogin } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
+import { DateToolbox } from '../../../../../../../shared/toolbox/dates'
 import List, { TGetListButtonLabel } from '../List'
 import {
   TGetItemButtonLabel,
@@ -23,7 +24,7 @@ export default function UserList({
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
-  const { login, user: currentUser, isAuthorized } = useRequireLogin()
+  const { user: currentUser, isAuthorized } = useRequireLogin()
   const { notify, beginLoading, finishLoading, navigateTo, prompt, logout } =
     globalContext.actions
 
@@ -110,6 +111,12 @@ export default function UserList({
         return 'Username'
       case 'access':
         return 'Access'
+      case 'createdAt':
+        return 'Created'
+      case 'updatedAt':
+        return 'Last Modified'
+      case 'createdByUsername':
+        return 'Created By'
       default:
         return 'Unknown column'
     }
@@ -128,6 +135,11 @@ export default function UserList({
     switch (column) {
       case 'access':
         return user[column].name
+      case 'createdAt':
+      case 'updatedAt':
+        let datetime = user[column]
+        if (datetime === null) return 'N/A'
+        else return DateToolbox.format(datetime, 'yyyy-mm-dd HH:MM')
       default:
         return user[column]?.toString() ?? 'None'
     }
@@ -231,7 +243,13 @@ export default function UserList({
     <List<ClientUser>
       name={'Users'}
       items={users}
-      columns={['username', 'access']}
+      columns={[
+        'username',
+        'access',
+        'createdAt',
+        'updatedAt',
+        'createdByUsername',
+      ]}
       listButtonIcons={listButtons}
       itemButtonIcons={itemButtons}
       getColumnLabel={getUserColumnLabel}

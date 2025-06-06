@@ -2,11 +2,14 @@ import axios from 'axios'
 import { TMetisClientComponents } from 'src'
 import { MetisComponent } from '../../../shared'
 import User, {
+  TCreatedByJson,
+  TUserExistingJson,
   TUserJson,
   TUserJsonOptions,
   TUserOptions,
 } from '../../../shared/users'
 import UserAccess from '../../../shared/users/accesses'
+import UserPermission from '../../../shared/users/permissions'
 
 /**
  * Class for managing users on the client.
@@ -27,34 +30,10 @@ export default class ClientUser
   public password2: ClientUser['password']
 
   /**
-   * Whether the password is required.
-   */
-  private _passwordIsRequired: boolean
-
-  /**
    * @returns Whether the two passwords match.
    */
   public get passwordsMatch(): boolean {
     return this.password1 === this.password2
-  }
-
-  /**
-   * @returns Whether the password is required.
-   */
-  public set passwordIsRequired(required: boolean) {
-    this._passwordIsRequired = required
-  }
-
-  /**
-   * Whether the password is required.
-   * @note This is used to determine whether the
-   * password is required when saving the user.
-   * If the user is being created, then the password
-   * is required. If the user is being updated, then
-   * the password is not required.
-   */
-  public get passwordIsRequired(): boolean {
-    return this._passwordIsRequired
   }
 
   /**
@@ -145,7 +124,7 @@ export default class ClientUser
     let password2IsEmptyString: boolean = this.password2 === ''
     // there must be some kind of input for the password
     let requiredPasswordIsMissing: boolean =
-      this._passwordIsRequired && !passwordEntered
+      this.passwordIsRequired && !passwordEntered
 
     // Returns true if all conditions pass.
     return (
@@ -170,17 +149,18 @@ export default class ClientUser
    * @param data The user data from which to create the user. Any ommitted values will be set to the default properties defined in User.DEFAULT_PROPERTIES.
    * @param options Options for creating the user.
    */
-  public constructor(
-    data: Partial<TUserJson> = ClientUser.DEFAULT_PROPERTIES,
-    options: TClientUserOptions = {},
+  protected constructor(
+    /**
+     * Whether the password is required in order for this
+     * user to be sent to the server, whether as a part
+     * of a post or a put request.
+     */
+    public passwordIsRequired: boolean,
+    // Superclass properties.
+    ...args: ConstructorParameters<typeof User<TMetisClientComponents>>
   ) {
     // Initialize base properties.
-    super(data, options)
-
-    let { passwordIsRequired = false } = options
-
-    // Initialize client-specific properties.
-    this._passwordIsRequired = passwordIsRequired
+    super(...args)
   }
 
   // Overridden abstract method
@@ -217,14 +197,125 @@ export default class ClientUser
   public static readonly API_ENDPOINT: string = '/api/v1/users'
 
   /**
-   * Creates a new {@link ClientUser} instance used to represent
-   * a previously-existing and now-deleted user.
-   * @param knownData Optional partial data to initialize the user.
-   * Only pass the properties known for the deleted user, if any.
-   * @returns A new {@link ClientUser} instance.
+   * Creates a brand new user for use, ready
+   * to be filled out and saved to the server.
+   * @param passwordIsRequired Whether the password is required for this user.
    */
-  public static createDeleted(knownData: Partial<TUserJson> = {}): ClientUser {
-    return new ClientUser(knownData)
+  public static createNew(options: TClientUserOptions = {}): ClientUser {
+    const { passwordIsRequired = false } = options
+
+    return new ClientUser(
+      passwordIsRequired,
+      User.DEFAULT_PROPERTIES._id,
+      User.DEFAULT_PROPERTIES.username,
+      UserAccess.get(User.DEFAULT_PROPERTIES.accessId),
+      User.DEFAULT_PROPERTIES.firstName,
+      User.DEFAULT_PROPERTIES.lastName,
+      User.DEFAULT_PROPERTIES.needsPasswordReset,
+      UserPermission.get(User.DEFAULT_PROPERTIES.expressPermissionIds),
+      User.DEFAULT_PROPERTIES.createdAt,
+      User.DEFAULT_PROPERTIES.updatedAt,
+      User.DEFAULT_PROPERTIES.createdBy,
+      User.DEFAULT_PROPERTIES.createdByUsername,
+    )
+  }
+
+  /**
+   * @param json The JSON data of an existing user in the
+   * database.
+   * @returns a new {@link ClientUser} instance.
+   */
+  public static fromExistingJson(json: TUserExistingJson): ClientUser {
+    let createdBy: ClientUser
+
+    // Determine the value of createdBy.
+    if (typeof json.createdBy === 'object') {
+      createdBy = ClientUser.fromCreatedByJson(json.createdBy)
+    } else if (typeof json.createdBy === 'string') {
+      createdBy = ClientUser.createUnpopulated(
+        json.createdBy,
+        json.createdByUsername,
+      )
+    } else {
+      throw new Error('Invalid createdBy field in user JSON.')
+    }
+
+    // Create a new user.
+    return new ClientUser(
+      false,
+      json._id,
+      json.username,
+      UserAccess.get(json.accessId),
+      json.firstName,
+      json.lastName,
+      json.needsPasswordReset,
+      UserPermission.get(json.expressPermissionIds),
+      new Date(json.createdAt),
+      new Date(json.updatedAt),
+      createdBy,
+      json.createdByUsername,
+    )
+  }
+
+  /**
+   * Creates a new {@link ClientUser} instance used from the
+   * JSON data of a `createdBy` field of a document.
+   */
+  public static fromCreatedByJson(json: TCreatedByJson): ClientUser {
+    // Create a new user.
+    return new ClientUser(
+      false,
+      json._id,
+      json.username,
+      UserAccess.get(json.accessId),
+      json.firstName,
+      json.lastName,
+      json.needsPasswordReset,
+      UserPermission.get(json.expressPermissionIds),
+      new Date(json.createdAt),
+      new Date(json.updatedAt),
+      ClientUser.createUnpopulated(json.createdBy, json.createdByUsername),
+      json.createdByUsername,
+    )
+  }
+
+  /**
+   * @param _id The ID of the user.
+   * @param username The username of the user.
+   * @returns a new user that is not populated with
+   * any data, just the ID and username.
+   */
+  public static createUnpopulated(_id: string, username: string): ClientUser {
+    // Gather details.
+    const {
+      accessId,
+      firstName,
+      lastName,
+      needsPasswordReset,
+      expressPermissionIds,
+      createdAt,
+      updatedAt,
+      createdBy,
+      createdByUsername,
+    } = User.DEFAULT_PROPERTIES
+    const access = UserAccess.get(accessId)
+    const expressPermissions = UserPermission.get(expressPermissionIds)
+
+    // Return and create a new ClientUser instance.
+    return new ClientUser(
+      false,
+      _id,
+      username,
+      access,
+      firstName,
+      lastName,
+      needsPasswordReset,
+      expressPermissions,
+      createdAt,
+      updatedAt,
+      createdBy,
+      createdByUsername,
+    )
   }
 
   /**
@@ -237,11 +328,11 @@ export default class ClientUser
     return new Promise<ClientUser>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
-        let { data: userJson } = await axios.get<TUserJson>(
+        let { data: userJson } = await axios.get<TUserExistingJson>(
           `${ClientUser.API_ENDPOINT}/${_id}/`,
         )
         // Convert JSON to Client User object.
-        let user: ClientUser = new ClientUser(userJson)
+        let user: ClientUser = ClientUser.fromExistingJson(userJson)
         // Resolve
         resolve(user)
       } catch (error) {
@@ -261,12 +352,12 @@ export default class ClientUser
     return new Promise<ClientUser[]>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
-        let { data: usersJson } = await axios.get<TUserJson[]>(
+        let { data: usersJson } = await axios.get<TUserExistingJson[]>(
           ClientUser.API_ENDPOINT,
         )
         // Convert JSON to Client User objects.
-        let users: ClientUser[] = usersJson.map(
-          (userJson) => new ClientUser(userJson),
+        let users: ClientUser[] = usersJson.map((userJson) =>
+          ClientUser.fromExistingJson(userJson),
         )
         // Resolve
         resolve(users)
@@ -287,13 +378,13 @@ export default class ClientUser
   public static $create(clientUser: ClientUser): Promise<ClientUser> {
     return new Promise<ClientUser>(async (resolve, reject) => {
       try {
-        // Retrieve data from API.
-        let { data: userJson } = await axios.post<TUserJson>(
+        // Create record via API.
+        let { data: userJson } = await axios.post<TUserExistingJson>(
           ClientUser.API_ENDPOINT,
           clientUser.toJson({ passwordIsRequired: true }),
         )
         // Convert JSON to Client User object.
-        let createdUser: ClientUser = new ClientUser(userJson)
+        let createdUser: ClientUser = ClientUser.fromExistingJson(userJson)
         // Resolve
         resolve(createdUser)
       } catch (error) {
@@ -314,12 +405,12 @@ export default class ClientUser
     return new Promise<ClientUser>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
-        let { data: userJson } = await axios.put<TUserJson>(
+        let { data: userJson } = await axios.put<TUserExistingJson>(
           ClientUser.API_ENDPOINT,
           clientUser.toJson({ passwordIsRequired: false, includeId: true }),
         )
         // Convert JSON to Client User object.
-        let updatedUser: ClientUser = new ClientUser(userJson)
+        let updatedUser: ClientUser = ClientUser.fromExistingJson(userJson)
         // Resolve
         resolve(updatedUser)
       } catch (error) {

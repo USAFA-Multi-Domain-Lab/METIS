@@ -2,13 +2,19 @@ import axios, { AxiosResponse } from 'axios'
 import { TMetisClientComponents } from 'src'
 import { TLine_P } from 'src/components/content/session/mission-map/objects/Line'
 import { TPrototypeSlot_P } from 'src/components/content/session/mission-map/objects/PrototypeSlot'
+import ClientUser from 'src/users'
 import { v4 as generateHash } from 'uuid'
 import { EventManager, TListenerTargetEmittable } from '../../../shared/events'
-import Mission, { TMissionJson } from '../../../shared/missions'
+import Mission, {
+  TMissionExistingJson,
+  TMissionJson,
+  TMissionShallowExistingJson,
+} from '../../../shared/missions'
 import MissionComponent from '../../../shared/missions/component'
 import { TMissionFileJson } from '../../../shared/missions/files'
 import {
   MissionForce,
+  TMissionForceJson,
   TMissionForceSaveJson,
 } from '../../../shared/missions/forces'
 import {
@@ -16,6 +22,7 @@ import {
   TMissionPrototypeOptions,
 } from '../../../shared/missions/nodes/prototypes'
 import { TNonEmptyArray } from '../../../shared/toolbox/arrays'
+import { DateToolbox } from '../../../shared/toolbox/dates'
 import { Counter } from '../../../shared/toolbox/numbers'
 import { AnyObject, TWithKey } from '../../../shared/toolbox/objects'
 import { Vector2D } from '../../../shared/toolbox/space'
@@ -220,51 +227,46 @@ export default class ClientMission
   public relationshipLines: TWithKey<TLine_P>[]
 
   /**
-   * The ID of the user that created the mission.
-   */
-  public get creatorId(): string {
-    return 'admin'
-  }
-
-  /**
-   * The first name of the user that created the mission.
-   */
-  public get creatorFirstName(): string {
-    return 'admin'
-  }
-
-  /**
-   * The last name of the user that created the mission.
-   */
-  public get creatorLastName(): string {
-    return 'user'
-  }
-
-  /**
-   * The full name of the user that created the mission.
-   */
-  public get creatorFullName(): string {
-    return User.getFullName(this.creatorFirstName, this.creatorLastName)
-  }
-
-  /**
    * Manages the mission's event listeners and events.
    */
   private eventManager: EventManager<TMissionEventMethods, TMissionEventArgs>
 
-  /**
-   * @param data The mission data from which to create the mission. Any ommitted values will be set to the default properties defined in Mission.DEFAULT_PROPERTIES.
-   * @param options The options for creating the mission.
-   */
-  public constructor(
-    data: Partial<TMissionJson> = ClientMission.DEFAULT_PROPERTIES,
+  protected constructor(
+    _id: string,
+    name: string,
+    versionNumber: number,
+    seed: string,
+    resourceLabel: string,
+    createdAt: Date | null,
+    updatedAt: Date | null,
+    launchedAt: Date | null,
+    createdBy: User | null,
+    createdByUsername: string | null,
+    structure: AnyObject,
+    prototypeData: TMissionPrototypeJson[],
+    forceData: TMissionForceJson[],
+    fileData: TMissionFileJson[],
     options: TClientMissionOptions = {},
   ) {
-    // Initialize base properties.
-    super(data)
+    super(
+      _id,
+      name,
+      versionNumber,
+      seed,
+      resourceLabel,
+      createdAt,
+      updatedAt,
+      launchedAt,
+      createdBy,
+      createdByUsername,
+      structure,
+      prototypeData,
+      forceData,
+      fileData,
+    )
 
     // Parse client-specific options.
-    let { existsOnServer = false, nonRevealedDisplayMode = 'hide' } = options
+    const { existsOnServer = false, nonRevealedDisplayMode = 'hide' } = options
 
     // Initialize client-specific properties.
     this._existsOnServer = existsOnServer
@@ -1137,6 +1139,105 @@ export default class ClientMission
   }
 
   /**
+   * Creates a brand new mission for use, ready
+   * to be designed and saved to the server.
+   */
+  public static createNew(): ClientMission {
+    return new ClientMission(
+      ClientMission.DEFAULT_PROPERTIES._id,
+      ClientMission.DEFAULT_PROPERTIES.name,
+      ClientMission.DEFAULT_PROPERTIES.versionNumber,
+      ClientMission.DEFAULT_PROPERTIES.seed,
+      ClientMission.DEFAULT_PROPERTIES.resourceLabel,
+      ClientMission.DEFAULT_PROPERTIES.createdAt,
+      ClientMission.DEFAULT_PROPERTIES.updatedAt,
+      ClientMission.DEFAULT_PROPERTIES.launchedAt,
+      ClientMission.DEFAULT_PROPERTIES.createdBy,
+      ClientMission.DEFAULT_PROPERTIES.createdByUsername,
+      ClientMission.DEFAULT_PROPERTIES.structure,
+      ClientMission.DEFAULT_PROPERTIES.prototypes,
+      ClientMission.DEFAULT_PROPERTIES.forces,
+      ClientMission.DEFAULT_PROPERTIES.files,
+    )
+  }
+
+  /**
+   * Creates a new {@link ClientMission} from the given JSON data,
+   * which is from an existing record in the database.
+   * @param json The JSON data from which to create the mission.
+   * @param options Options to customize the mission based on its
+   * intended usage.
+   */
+  public static fromExistingJson(
+    json: TMissionExistingJson,
+    options: TExistingClientMissionOptions = {},
+  ): ClientMission {
+    // Create a ClientUser object for the creator
+    // of the mission, if there is one.
+    let createdBy: ClientUser
+
+    // Parse reference data.
+    if (typeof json.createdBy === 'object') {
+      createdBy = ClientUser.fromCreatedByJson(json.createdBy)
+    } else {
+      createdBy = ClientUser.createUnpopulated(
+        json.createdBy,
+        json.createdByUsername,
+      )
+    }
+
+    // Ensure existsOnServer is set to true.
+    options.existsOnServer = true
+
+    // Create a new mission.
+    let mission: ClientMission = new ClientMission(
+      json._id || generateHash(),
+      json.name,
+      json.versionNumber,
+      json.seed,
+      json.resourceLabel,
+      DateToolbox.fromNullableISOString(json.createdAt),
+      DateToolbox.fromNullableISOString(json.updatedAt),
+      DateToolbox.fromNullableISOString(json.launchedAt),
+      createdBy,
+      json.createdByUsername,
+      json.structure,
+      json.prototypes,
+      json.forces,
+      json.files,
+      options,
+    )
+
+    // Return the mission.
+    return mission
+  }
+
+  /**
+   * Creates a new {@link ClientMission} from the given JSON data,
+   * which is from an existing record in the database. This JSON
+   * data is incomplete, not including forces, files, or prototypes.
+   * @param json The JSON data from which to create the mission.
+   * @param options Options to customize the mission based on its
+   * intended usage.
+   */
+  public static fromShallowExistingJson(
+    json: TMissionShallowExistingJson,
+    options: TExistingClientMissionOptions = {},
+  ): ClientMission {
+    let existingJson: TMissionExistingJson = {
+      ...json,
+      forces: [],
+      files: [],
+      prototypes: [],
+      structure: {},
+    }
+    // Forward data to fromExistingJson method,
+    // passing empty arrays for forces, files,
+    // and prototypes.
+    return ClientMission.fromExistingJson(existingJson, options)
+  }
+
+  /**
    * Determines the selected node from the mission selection passed.
    * @param selection The selection in a mission.
    * @returns The node, if any.
@@ -1268,15 +1369,15 @@ export default class ClientMission
   ): Promise<ClientMission> {
     return new Promise<ClientMission>(async (resolve, reject) => {
       try {
-        let { data } = await axios.put<any, AxiosResponse<TMissionJson>>(
-          `${ClientMission.API_ENDPOINT}/copy/`,
-          {
-            originalId,
-            copyName,
-          },
-        )
+        let { data } = await axios.put<
+          any,
+          AxiosResponse<TMissionExistingJson>
+        >(`${ClientMission.API_ENDPOINT}/copy/`, {
+          originalId,
+          copyName,
+        })
         options.existsOnServer = true
-        resolve(new ClientMission(data, options))
+        resolve(ClientMission.fromExistingJson(data, options))
       } catch (error) {
         console.error('Failed to copy mission.')
         console.error(error)
@@ -1301,13 +1402,16 @@ export default class ClientMission
     return new Promise<ClientMission>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
-        let { data } = await axios.get<TMissionJson>(
+        let { data } = await axios.get<TMissionExistingJson>(
           `${ClientMission.API_ENDPOINT}/${_id}/`,
         )
         // Update options.
         options.existsOnServer = true
         // Convert JSON to ClientMission object.
-        let mission: ClientMission = new ClientMission(data, options)
+        let mission: ClientMission = ClientMission.fromExistingJson(
+          data,
+          options,
+        )
         // Resolve
         resolve(mission)
       } catch (error) {
@@ -1329,13 +1433,17 @@ export default class ClientMission
   ): Promise<ClientMission[]> {
     return new Promise<ClientMission[]>(async (resolve, reject) => {
       try {
-        let { data } = await axios.get<TMissionJson[]>(
+        let { data } = await axios.get<TMissionShallowExistingJson[]>(
           ClientMission.API_ENDPOINT,
         )
         // Update options.
         options.existsOnServer = true
         // Convert JSON to ClientMission objects.
-        resolve(data.map((datum) => new ClientMission(datum, options)))
+        resolve(
+          data.map((datum) =>
+            ClientMission.fromShallowExistingJson(datum, options),
+          ),
+        )
       } catch (error) {
         console.error('Failed to fetch missions.')
         console.error(error)

@@ -83,7 +83,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
     memberId: string,
   ) {
     // Gather details.
-    let mission: ClientMission = new ClientMission(data.mission, {
+    let mission: ClientMission = ClientMission.fromExistingJson(data.mission, {
       nonRevealedDisplayMode: 'blur',
     })
     let {
@@ -131,7 +131,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
       ({ _id, user: userData, roleId, forceId }) =>
         new ClientSessionMember(
           _id,
-          new ClientUser(userData),
+          ClientUser.fromExistingJson(userData),
           roleId,
           forceId,
           this,
@@ -1027,7 +1027,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
       ({ _id, user: userData, roleId, forceId }) =>
         new ClientSessionMember(
           _id,
-          new ClientUser(userData),
+          ClientUser.fromExistingJson(userData),
           roleId,
           forceId,
           this,

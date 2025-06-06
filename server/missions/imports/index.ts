@@ -35,6 +35,7 @@ import build_000039 from './builds/build_000039'
 import build_000040 from './builds/build_000040'
 import build_000041 from './builds/build_000041'
 import build_000042 from './builds/build_000042'
+import build_000044 from './builds/build_000044'
 
 /**
  * This class is responsible for executing the import of .metis and .cesar files.
@@ -288,6 +289,7 @@ export default class MissionImport {
     this.processBuild(missionData, 40, /**/ build_000040)
     this.processBuild(missionData, 41, /**/ build_000041)
     this.processBuild(missionData, 42, /**/ build_000042)
+    this.processBuild(missionData, 44, /**/ build_000044)
   }
 
   /**
@@ -347,13 +349,38 @@ export default class MissionImport {
   }
 
   /**
+   * Cleans up the uploads directory after all files
+   * are imported via {@link MissionImport.execute}
+   * method by removing temporary files and directories.
+   */
+  private cleanUpPostImport(): void {
+    // Perform cleanup.
+    try {
+      // Remove the uploads directory.
+      fs.rmSync(MissionImport.UPLOADS_DIRECTORY, {
+        recursive: true,
+        force: true,
+      })
+      // Recreate it as an empty directory.
+      fs.mkdirSync(MissionImport.UPLOADS_DIRECTORY, { recursive: true })
+    } catch (error) {
+      databaseLogger.error(
+        'Failed to clean up the uploads directory after import.\n',
+        error,
+      )
+    }
+  }
+
+  /**
    * Executes the import of the mission.
    * @returns A promise that resolves when the import is complete.
    */
   public execute = async (): Promise<void> => {
     const promises = this.files.map(async (file) => {
-      let importsRootDir = path.dirname(file.path)
-      let importDir = path.join(importsRootDir, `contents_${file.name}`)
+      let importDir = path.join(
+        MissionImport.UPLOADS_DIRECTORY,
+        `contents_${file.name}`,
+      )
       let importDataPath = path.join(importDir, 'data.json')
       let isZipFile: boolean = /^.*\.metis\.zip$/.test(file.originalName)
       let dataAsStr: string
@@ -423,6 +450,7 @@ export default class MissionImport {
 
         // Handle the error.
         this.handleMissionImportError(file, error)
+        return
       }
     })
 
@@ -441,8 +469,15 @@ export default class MissionImport {
         'There was an error importing the missions.\n',
         error,
       )
+    } finally {
+      this.cleanUpPostImport()
     }
   }
+
+  /**
+   * The directory where the files will be uploaded.
+   */
+  public static UPLOADS_DIRECTORY: string = 'temp/missions/imports/'
 
   /**
    * Creates a new `MissionImport` object from an array

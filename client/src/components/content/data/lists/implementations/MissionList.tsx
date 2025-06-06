@@ -142,7 +142,7 @@ export default function MissionList(props: TMissionList_P): JSX.Element | null {
   const defaultedProps = useDefaultProps(props, {
     ...createDefaultListProps<ClientMission>(),
     itemsPerPageMin: 10,
-    columns: ['createdAt', 'updatedAt', 'launchedAt', 'creatorFullName'],
+    columns: ['createdAt', 'updatedAt', 'launchedAt', 'createdByUsername'],
     listButtonIcons: compute<TButtonSvgType[]>(() => {
       let results: TButtonSvgType[] = []
 
@@ -183,7 +183,7 @@ export default function MissionList(props: TMissionList_P): JSX.Element | null {
           return 'Last Modified'
         case 'launchedAt':
           return 'Last Launched'
-        case 'creatorFullName':
+        case 'createdByUsername':
           return 'Created By'
         default:
           return 'Unknown column'
@@ -200,8 +200,8 @@ export default function MissionList(props: TMissionList_P): JSX.Element | null {
           let datetime = mission[column]
           if (datetime === null) return 'N/A'
           else return DateToolbox.format(datetime, 'yyyy-mm-dd HH:MM')
-        case 'creatorFullName':
-          return mission.creatorFullName
+        case 'createdByUsername':
+          return mission.createdByUsername || 'Unknown User'
         default:
           return 'Unknown column'
       }
