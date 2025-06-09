@@ -16,7 +16,8 @@ import Entry from '../Entry'
 export default function EffectEntry({
   effect,
   effect: { target, environment },
-  handleDeleteEffectRequest,
+  onDuplicateEffectRequest,
+  onDeleteEffectRequest,
   onChange,
 }: TEffectEntry_P): JSX.Element | null {
   /* -- STATE -- */
@@ -83,8 +84,13 @@ export default function EffectEntry({
       {/* -- BUTTON(S) -- */}
       <div className='ButtonContainer'>
         <ButtonText
+          text='Duplicate Effect'
+          onClick={async () => await onDuplicateEffectRequest(effect, true)}
+          tooltipDescription='Duplicate this effect.'
+        />
+        <ButtonText
           text='Delete Effect'
-          onClick={async () => await handleDeleteEffectRequest(effect, true)}
+          onClick={async () => await onDeleteEffectRequest(effect, true)}
           tooltipDescription='Delete this effect.'
         />
       </div>
@@ -103,9 +109,16 @@ export type TEffectEntry_P = {
    */
   effect: ClientEffect
   /**
+   * Handles the request to duplicate an effect.
+   */
+  onDuplicateEffectRequest: (
+    effect: ClientEffect,
+    selectNewEffect?: boolean,
+  ) => Promise<void>
+  /**
    * Handles the request to delete an effect.
    */
-  handleDeleteEffectRequest: (
+  onDeleteEffectRequest: (
     effect: ClientEffect,
     navigateBack?: boolean,
   ) => Promise<void>

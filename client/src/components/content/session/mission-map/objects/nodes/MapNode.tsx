@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import Tooltip from 'src/components/content/communication/Tooltip'
-import ButtonSvg from 'src/components/content/user-controls/buttons/ButtonSvg'
+import ButtonSvgPanel from 'src/components/content/user-controls/buttons/v3/ButtonSvgPanel'
+import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { useEventListener, useInlineStyling } from 'src/toolbox/hooks'
@@ -80,6 +81,25 @@ export default function <TNode extends TMapCompatibleNode>({
   const [prevBlocked, setPrevBlocked] = useState<boolean>(node.blocked)
   const [excluded, setExcluded] = useState<boolean>(node.exclude)
   const [color, setColor] = useState<string>(node.color)
+  const nodeButtonEngine = useButtonSvgEngine({
+    buttons: node.buttons,
+    dependencies: [buttons],
+  })
+  const excludeButtonEngine = useButtonSvgEngine({
+    buttons: [
+      {
+        icon: 'add',
+        description: `Include this node ("${node.name}") in the force.`,
+        onClick: () => {
+          if (node instanceof ClientMissionNode) {
+            onSelect!(node)
+            node.exclude = false
+          }
+        },
+      },
+    ],
+    dependencies: [excluded],
+  })
 
   /* -- EFFECTS -- */
 
@@ -129,11 +149,9 @@ export default function <TNode extends TMapCompatibleNode>({
    * - `edit`: The node is being rendered on the mission page and can be edited.
    * - `session`: The node is being rendered on the session page and cannot be
    * edited, but it can be interacted with.
-   * @memoized
    */
-  const context = useMemo(
-    () => (mission.nonRevealedDisplayMode === 'show' ? 'edit' : 'session'),
-    [mission.nonRevealedDisplayMode],
+  const context = compute(() =>
+    mission.nonRevealedDisplayMode === 'show' ? 'edit' : 'session',
   )
 
   /**
@@ -346,23 +364,6 @@ export default function <TNode extends TMapCompatibleNode>({
   onSelect = onSelect ?? (() => {})
 
   /**
-   * The JSX for the buttons.
-   */
-  const buttonsJsx: JSX.Element[] = compute(() => {
-    return buttons.map((button): JSX.Element => {
-      return (
-        <ButtonSvg
-          {...button}
-          onClick={(event: React.MouseEvent) => {
-            button.onClick(event, node)
-          }}
-          key={button.key}
-        />
-      )
-    })
-  })
-
-  /**
    * The JSX for the toopltip.
    */
   const tooltipJsx: JSX.Element | null = compute(() => {
@@ -393,16 +394,7 @@ export default function <TNode extends TMapCompatibleNode>({
 
     return (
       <div className='IncludeButton'>
-        <ButtonSvg
-          type='add'
-          description={`Include this node ("${node.name}") in the force.`}
-          onClick={() => {
-            if (node instanceof ClientMissionNode) {
-              onSelect!(node)
-              node.exclude = false
-            }
-          }}
-        />
+        <ButtonSvgPanel engine={excludeButtonEngine} />
       </div>
     )
   })
@@ -427,7 +419,7 @@ export default function <TNode extends TMapCompatibleNode>({
         <div className={iconClassName} style={iconStyle}></div>
       </div>
       <div className={buttonsClassName} style={buttonsStyle}>
-        {buttonsJsx}
+        <ButtonSvgPanel engine={nodeButtonEngine} />
       </div>
       {tooltipJsx}
       {revealNodeButton}

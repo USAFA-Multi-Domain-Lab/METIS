@@ -14,7 +14,7 @@ import './ButtonMenu.scss'
 import ButtonSvgPanel from './v3/ButtonSvgPanel'
 import ButtonSvgEngine from './v3/engines'
 import { useButtonSvgEngine } from './v3/hooks'
-import { TButtonSvg_Input, TSvgLayout } from './v3/types'
+import { TButtonSvgEngine_P, TButtonSvgPanelOptions } from './v3/types'
 
 /* -- COMPONENT -- */
 
@@ -172,22 +172,34 @@ export default function ButtonMenu({
  * using the default options needed for a menu.
  * @param buttons The buttons to display in the menu.
  * @param layout The layout of the buttons in the menu.
+ * @param dependencies The dependencies to use for the engine,
+ * creating a new engine if any of them change.
  * @returns The button engine.
  */
-export const useButtonMenuEngine = (
-  buttons?: TButtonSvg_Input[],
-  layout?: TSvgLayout,
-  dependencies?: any[],
-): ButtonSvgEngine => {
-  return useButtonSvgEngine(
+export const useButtonMenuEngine = ({
+  buttons,
+  layout,
+  dependencies,
+}: TButtonMenuEngine_P): ButtonSvgEngine => {
+  return useButtonSvgEngine({
     buttons,
-    {
+    options: {
       flow: 'column',
       revealLabels: true,
       layout,
     },
     dependencies,
-  )
+  })
+}
+
+/**
+ * Type for the button menu engine props.
+ */
+export type TButtonMenuEngine_P = Omit<TButtonSvgEngine_P, 'options'> & {
+  /**
+   * @see {@link ButtonSvgEngine.layout}
+   */
+  layout?: TButtonSvgPanelOptions['layout']
 }
 
 /* -- TYPES -- */

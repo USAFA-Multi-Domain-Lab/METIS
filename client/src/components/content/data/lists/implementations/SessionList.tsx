@@ -1,6 +1,4 @@
 import Prompt from 'src/components/content/communication/Prompt'
-import { TButtonSvgType } from 'src/components/content/user-controls/buttons/ButtonSvg'
-import { TSvgPanelOnClick } from 'src/components/content/user-controls/buttons/ButtonSvgPanel_v2'
 import { useGlobalContext } from 'src/context/global'
 import SessionClient from 'src/sessions'
 import { SessionBasic } from 'src/sessions/basic'
@@ -8,7 +6,7 @@ import { compute } from 'src/toolbox'
 import { usePeriodicRerender, useRequireLogin } from 'src/toolbox/hooks'
 import { MetisComponent } from '../../../../../../../shared'
 import { DateToolbox } from '../../../../../../../shared/toolbox/dates'
-import List, { TGetListButtonLabel } from '../List'
+import List, { TGetListButtonLabel, TOnListButtonClick } from '../List'
 import {
   TGetItemButtonLabel,
   TOnItemButtonClick,
@@ -44,8 +42,8 @@ export default function SessionList({
   /* -- COMPUTED -- */
 
   // todo: Implement the ability for instructors to only delete sessions that they own.
-  const itemButtons = compute<TButtonSvgType[]>(() => {
-    let results: TButtonSvgType[] = []
+  const itemButtons = compute<TMetisIcon[]>(() => {
+    let results: TMetisIcon[] = []
 
     // Add the join button.
     results.push('open')
@@ -235,7 +233,7 @@ export default function SessionList({
    * Callback for when a list-specific button in the
    * session list is clicked.
    */
-  const onSessionListButtonClick: TSvgPanelOnClick = async (button) => {
+  const onSessionListButtonClick: TOnListButtonClick = async (button) => {
     switch (button) {
       case 'lock':
         // Prompt user for session ID.

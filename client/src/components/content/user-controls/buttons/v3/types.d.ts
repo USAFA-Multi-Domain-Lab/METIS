@@ -15,6 +15,26 @@ export interface TButtonSvgPanel_P {
 }
 
 /**
+ * Parameters used to create a new
+ * `ButtonSvgEngine`.
+ */
+export interface TButtonSvgEngine_P {
+  /**
+   * buttons The buttons to add to the engine.
+   */
+  buttons?: TButtonSvg_Input[]
+  /**
+   * The options with which to configure the engine.
+   */
+  options?: TButtonSvgPanelOptions
+  /**
+   * The dependencies to use for the engine, creating
+   * a new engine if any of them change.
+   */
+  dependencies?: any[]
+}
+
+/**
  * Identifiers for different types of SVG panel
  * elements.
  */
@@ -149,16 +169,6 @@ export type TButtonSvgPanelOptions = {
    * @see {@link ButtonSvgEngine.labelsRevealed}
    */
   revealLabels?: boolean
-}
-
-/**
- * Props for `ButtonSvgPanel` component.
- */
-export interface TButtonSvgPanel_P {
-  /**
-   * The engine for the button panel.
-   */
-  engine: ButtonSvgEngine
 }
 
 /**

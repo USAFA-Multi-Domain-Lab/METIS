@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useButtonMenuEngine } from 'src/components/content/user-controls/buttons/ButtonMenu'
-import ButtonSvgPanel_v2 from 'src/components/content/user-controls/buttons/ButtonSvgPanel_v2'
+import ButtonSvgPanel from 'src/components/content/user-controls/buttons/v3/ButtonSvgPanel'
+import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
 import { useGlobalContext } from 'src/context/global'
 import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
 import { useListContext } from '../List'
@@ -27,11 +28,19 @@ export default function (): JSX.Element | null {
   const [selection] = state.selection
   const [buttonOverflowCount] = state.buttonOverflowCount
   const [overflowActive, setOverflowActive] = state.overflowActive
-  const overflowEngine = useButtonMenuEngine(
-    aggregatedButtons,
-    aggregateButtonLayout,
-    aggregatedButtonIcons,
-  )
+  const overflowEngine = useButtonMenuEngine({
+    buttons: aggregatedButtons,
+    layout: aggregateButtonLayout,
+    dependencies: aggregatedButtonIcons,
+  })
+  const buttonEngine = useButtonSvgEngine({
+    buttons: [
+      {
+        icon: 'overflow',
+        onClick: () => showOverflowMenu(),
+      },
+    ],
+  })
 
   /* -- FUNCTIONS -- */
 
@@ -47,7 +56,7 @@ export default function (): JSX.Element | null {
     }
 
     let overflowButton = navElement.querySelector<HTMLDivElement>(
-      '.ListOverflow .ButtonSvg',
+      '.ListOverflow .ButtonSvgPanel .ButtonSvg_overflow',
     )
 
     if (!overflowButton) {
@@ -58,13 +67,6 @@ export default function (): JSX.Element | null {
     showButtonMenu(overflowEngine, {
       positioningTarget: overflowButton,
     })
-  }
-
-  /**
-   * @returns The class list for the overflow button.
-   */
-  const getButtonClassList = () => {
-    return new ClassList().switch('Active', 'Inactive', overflowActive)
   }
 
   /* -- EFFECTS -- */
@@ -90,15 +92,17 @@ export default function (): JSX.Element | null {
     setOverflowActive(buttonOverflowCount > 0)
   }, [buttonOverflowCount])
 
+  useEffect(() => {
+    buttonEngine.modifyClassList('overflow', (classList: ClassList) =>
+      classList.switch('Active', 'Inactive', overflowActive),
+    )
+  }, [overflowActive])
+
   /* -- RENDER -- */
 
   return (
     <div className='ListOverflow' ref={elements.overflow}>
-      <ButtonSvgPanel_v2
-        buttons={['overflow']}
-        onButtonClick={showOverflowMenu}
-        getButtonClassList={getButtonClassList}
-      />
+      <ButtonSvgPanel engine={buttonEngine} />
     </div>
   )
 }

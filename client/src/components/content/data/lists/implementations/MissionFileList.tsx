@@ -1,4 +1,3 @@
-import { TButtonSvgType } from 'src/components/content/user-controls/buttons/ButtonSvg'
 import ClientMissionFile from 'src/missions/files'
 import { compute } from 'src/toolbox'
 import { useDefaultProps } from 'src/toolbox/hooks'
@@ -14,8 +13,8 @@ export default function (props: TMissionFileList_P): JSX.Element | null {
     ...createDefaultListProps<ClientMissionFile>(),
     itemsPerPageMin: 10,
     columns: ['mimetype', 'size'],
-    listButtonIcons: compute<TButtonSvgType[]>(() => {
-      let results: TButtonSvgType[] = []
+    listButtonIcons: compute<TMetisIcon[]>(() => {
+      let results: TMetisIcon[] = []
 
       // todo: Uncomment and resolve this.
       // // If the user has the proper authorization, add
@@ -26,8 +25,8 @@ export default function (props: TMissionFileList_P): JSX.Element | null {
 
       return results
     }),
-    itemButtonIcons: compute<TButtonSvgType[]>(() => {
-      let results: TButtonSvgType[] = []
+    itemButtonIcons: compute<TMetisIcon[]>(() => {
+      let results: TMetisIcon[] = []
 
       // todo: Add auth.
       if (props.onDetachRequest) results.push('divider')

@@ -68,9 +68,15 @@
       }
 
       .ButtonText,
-      .ButtonSvg_v2:not(.ButtonSvg_open),
-      .ButtonSvg_v3:not(.ButtonSvg_open) {
+      .ButtonSvg:not(.ButtonSvg_open) {
         @include disabled();
+      }
+    }
+
+    &.PanelView_Files {
+      .List .ListPage .ListItems {
+        @include disabled();
+        opacity: 0.65 !important;
       }
     }
 

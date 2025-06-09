@@ -24,8 +24,10 @@ export default function ActionEntry({
   action,
   action: { node, mission },
   setIsNewEffect,
-  handleDeleteActionRequest,
-  handleDeleteEffectRequest,
+  onDuplicateActionRequest,
+  onDeleteActionRequest,
+  onDuplicateEffectRequest,
+  onDeleteEffectRequest,
   onChange,
 }: TActionEntry_P): JSX.Element | null {
   /* -- STATE -- */
@@ -272,22 +274,22 @@ export default function ActionEntry({
         items={action.effects}
         itemsPerPageMin={5}
         listButtonIcons={['add']}
-        itemButtonIcons={['open', 'remove']}
+        itemButtonIcons={['open', 'copy', 'remove']}
         getItemTooltip={getEffectDescription}
         getCellText={(effect) => effect.name}
         getListButtonLabel={() => 'Create a new effect'}
         getListButtonPermissions={(button) => {
           switch (button) {
-            case 'add':
-              return ['missions_write']
             default:
-              return []
+              return ['missions_write']
           }
         }}
         getItemButtonLabel={(button) => {
           switch (button) {
             case 'open':
               return 'View effect'
+            case 'copy':
+              return 'Duplicate effect'
             case 'remove':
               return 'Delete effect'
             default:
@@ -298,10 +300,8 @@ export default function ActionEntry({
           switch (button) {
             case 'open':
               return ['missions_read']
-            case 'remove':
-              return ['missions_write']
             default:
-              return []
+              return ['missions_write']
           }
         }}
         onListButtonClick={(button) => {
@@ -316,8 +316,11 @@ export default function ActionEntry({
             case 'open':
               mission.select(effect)
               break
+            case 'copy':
+              await onDuplicateEffectRequest(effect)
+              break
             case 'remove':
-              await handleDeleteEffectRequest(effect)
+              await onDeleteEffectRequest(effect)
               break
           }
         }}
@@ -326,8 +329,13 @@ export default function ActionEntry({
       {/* -- BUTTON(S) -- */}
       <div className='ButtonContainer'>
         <ButtonText
+          text='Duplicate Action'
+          onClick={async () => await onDuplicateActionRequest(action, true)}
+          tooltipDescription='Duplicate this action.'
+        />
+        <ButtonText
           text='Delete Action'
-          onClick={async () => await handleDeleteActionRequest(action, true)}
+          onClick={async () => await onDeleteActionRequest(action, true)}
           tooltipDescription={deleteTooltipDescription}
           disabled={node.actions.size < 2 ? 'partial' : 'none'}
         />
@@ -351,16 +359,30 @@ export type TActionEntry_P = {
    */
   setIsNewEffect: TReactSetter<boolean>
   /**
+   * Handles the request to duplicate an action.
+   */
+  onDuplicateActionRequest: (
+    action: ClientMissionAction,
+    selectNewAction?: boolean,
+  ) => Promise<void>
+  /**
    * Handles the request to delete an action.
    */
-  handleDeleteActionRequest: (
+  onDeleteActionRequest: (
     action: ClientMissionAction,
     navigateBack?: boolean,
   ) => Promise<void>
   /**
+   * Handles the request to duplicate an effect.
+   */
+  onDuplicateEffectRequest: (
+    effect: ClientEffect,
+    selectNewEffect?: boolean,
+  ) => Promise<void>
+  /**
    * Handles the request to delete an effect.
    */
-  handleDeleteEffectRequest: (
+  onDeleteEffectRequest: (
     effect: ClientEffect,
     navigateBack?: boolean,
   ) => Promise<void>

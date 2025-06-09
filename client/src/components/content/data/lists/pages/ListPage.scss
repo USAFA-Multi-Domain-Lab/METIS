@@ -60,14 +60,6 @@
       }
     }
 
-    .ItemButtons {
-      width: fit-content;
-
-      .ButtonSvg {
-        margin: 0 0.025em;
-      }
-    }
-
     &.NoItems {
       .ItemName {
         font-style: italic;

@@ -7,7 +7,7 @@ import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
-import { usePostInitEffect, useRequireLogin } from 'src/toolbox/hooks'
+import { usePostInitEffect } from 'src/toolbox/hooks'
 import MissionComponent from '../../../../../../../shared/missions/component'
 import { TNonEmptyArray } from '../../../../../../../shared/toolbox/arrays'
 import Prompt from '../../../communication/Prompt'
@@ -15,7 +15,6 @@ import { DetailColorSelector } from '../../../form/DetailColorSelector'
 import { DetailLargeString } from '../../../form/DetailLargeString'
 import { DetailString } from '../../../form/DetailString'
 import { DetailToggle } from '../../../form/DetailToggle'
-import { TButtonSvgType } from '../../../user-controls/buttons/ButtonSvg'
 import {
   ButtonText,
   TButtonText_P,
@@ -30,7 +29,8 @@ import Entry from '../Entry'
 export default function NodeEntry({
   node,
   node: { mission },
-  handleDeleteActionRequest,
+  onDeleteActionRequest,
+  onDuplicateActionRequest,
   onChange,
 }: TNodeEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
@@ -48,7 +48,6 @@ export default function NodeEntry({
   const [device, setDevice] = useState<boolean>(node.device)
   const [exclude, setExclude] = useState<boolean>(node.exclude)
   const [applyColorFill, setApplyColorFill] = useState<boolean>(false)
-  const { isAuthorized } = useRequireLogin()
 
   /* -- COMPUTED -- */
   /**
@@ -100,8 +99,8 @@ export default function NodeEntry({
   /**
    * The buttons for the node action list.
    */
-  const actionListItemButtons: TButtonSvgType[] = compute(() => {
-    let buttons: TButtonSvgType[] = ['open']
+  const actionListItemButtons: TMetisIcon[] = compute(() => {
+    let buttons: TMetisIcon[] = ['open', 'copy']
 
     if (node.executable && node.actions.size > 1) {
       buttons.push('remove')
@@ -113,7 +112,7 @@ export default function NodeEntry({
    * The tooltip description for the node exclude button.
    */
   const excludeButtonDescription: string = compute(() => {
-    let excludeButton = node.buttons.find(({ type }) => type === 'divider')
+    let excludeButton = node.buttons.find(({ icon }) => icon === 'divider')
     return (
       excludeButton?.description ??
       'Exclude this node from the force (Closes panel view also).'
@@ -295,16 +294,16 @@ export default function NodeEntry({
           }}
           getListButtonPermissions={(button) => {
             switch (button) {
-              case 'add':
-                return ['missions_write']
               default:
-                return []
+                return ['missions_write']
             }
           }}
           getItemButtonLabel={(button) => {
             switch (button) {
               case 'open':
                 return 'View action'
+              case 'copy':
+                return 'Duplicate action'
               case 'remove':
                 return 'Delete action'
               default:
@@ -315,10 +314,8 @@ export default function NodeEntry({
             switch (button) {
               case 'open':
                 return ['missions_read']
-              case 'remove':
-                return ['missions_write']
               default:
-                return []
+                return ['missions_write']
             }
           }}
           onListButtonClick={(button) => {
@@ -332,8 +329,11 @@ export default function NodeEntry({
               case 'open':
                 mission.select(action)
                 break
+              case 'copy':
+                await onDuplicateActionRequest(action)
+                break
               case 'remove':
-                await handleDeleteActionRequest(action)
+                await onDeleteActionRequest(action)
                 break
             }
           }}
@@ -363,9 +363,16 @@ export type TNodeEntry_P = {
   /**
    * Handles the request to delete an action.
    */
-  handleDeleteActionRequest: (
+  onDeleteActionRequest: (
     action: ClientMissionAction,
     navigateBack?: boolean,
+  ) => Promise<void>
+  /**
+   * Handles the request to duplicate an action.
+   */
+  onDuplicateActionRequest: (
+    action: ClientMissionAction,
+    selectNewAction?: boolean,
   ) => Promise<void>
   /**
    * A callback that will be called when a change

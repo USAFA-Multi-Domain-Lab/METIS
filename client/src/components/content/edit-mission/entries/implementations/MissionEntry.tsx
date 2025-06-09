@@ -1,13 +1,13 @@
 import { useState } from 'react'
+import ButtonSvgPanel from 'src/components/content/user-controls/buttons/v3/ButtonSvgPanel'
+import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
 import { useMissionPageContext } from 'src/components/pages/MissionPage'
 import ClientMission from 'src/missions'
-import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
 import MissionComponent from '../../../../../../../shared/missions/component'
 import Tooltip from '../../../communication/Tooltip'
 import { DetailString } from '../../../form/DetailString'
 import ListOld, { ESortByMethod } from '../../../general-layout/ListOld'
-import ButtonSvg from '../../../user-controls/buttons/ButtonSvg'
 import Entry from '../Entry'
 
 /**
@@ -24,6 +24,17 @@ export default function MissionEntry({
   const [resourceLabel, setResourceLabel] = useState<string>(
     mission.resourceLabel,
   )
+  const warningButtonEngine = useButtonSvgEngine({
+    buttons: [
+      {
+        icon: 'warning-transparent',
+        cursor: 'help',
+        description:
+          'If this conflict is not resolved, this mission can still be used to launch a session, but the session may not function as expected.',
+      },
+    ],
+  })
+
   /* -- EFFECTS -- */
 
   // Sync the component state with the mission introduction message
@@ -44,24 +55,9 @@ export default function MissionEntry({
    * Renders JSX for the effect list item.
    */
   const renderObjectListItem = (component: MissionComponent<any, any>) => {
-    /* -- COMPUTED -- */
-
-    /**
-     * Tooltip description for the object list item.
-     */
-    const description: string = compute(
-      () =>
-        'If this conflict is not resolved, this mission can still be used to launch a session, but the session may not function as expected.',
-    )
-
     return (
       <div className='Row IconFirst' key={`object-row-${component._id}`}>
-        <ButtonSvg
-          type='warning-transparent'
-          cursor='help'
-          description={description}
-          onClick={() => {}}
-        />
+        <ButtonSvgPanel engine={warningButtonEngine} />
         <div
           className='RowContent Select'
           onClick={() => mission.select(component)}

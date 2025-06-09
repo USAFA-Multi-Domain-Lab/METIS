@@ -26,14 +26,13 @@ export default function ListButtons<
   } = listContext
   const [selection] = state.selection
   const [buttonOverflowCount] = state.buttonOverflowCount
-  const [_, setOverflowActive] = state.overflowActive
-  const buttonEngine = useButtonSvgEngine(
-    aggregatedButtons,
-    {
+  const buttonEngine = useButtonSvgEngine({
+    buttons: aggregatedButtons,
+    options: {
       layout: aggregateButtonLayout,
     },
-    aggregatedButtonIcons,
-  )
+    dependencies: aggregatedButtonIcons,
+  })
   /* -- EFFECTS -- */
 
   useEffect(() => {

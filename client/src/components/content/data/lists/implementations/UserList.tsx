@@ -1,12 +1,10 @@
 import Prompt from 'src/components/content/communication/Prompt'
-import { TButtonSvgType } from 'src/components/content/user-controls/buttons/ButtonSvg'
-import { TSvgPanelOnClick } from 'src/components/content/user-controls/buttons/ButtonSvgPanel_v2'
 import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
 import { useRequireLogin } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import { DateToolbox } from '../../../../../../../shared/toolbox/dates'
-import List, { TGetListButtonLabel } from '../List'
+import List, { TGetListButtonLabel, TOnListButtonClick } from '../List'
 import {
   TGetItemButtonLabel,
   TOnItemButtonClick,
@@ -33,8 +31,8 @@ export default function UserList({
   /**
    * The list buttons to display based on permissions.
    */
-  const listButtons = compute<TButtonSvgType[]>(() => {
-    let results: TButtonSvgType[] = []
+  const listButtons = compute<TMetisIcon[]>(() => {
+    let results: TMetisIcon[] = []
 
     // If the user has the proper authorization, add
     // the add button.
@@ -48,8 +46,8 @@ export default function UserList({
   /**
    * The item buttons to display based on permissions.
    */
-  const itemButtons = compute<TButtonSvgType[]>(() => {
-    let results: TButtonSvgType[] = []
+  const itemButtons = compute<TMetisIcon[]>(() => {
+    let results: TMetisIcon[] = []
 
     // Add the open button.
     results.push('open')
@@ -202,7 +200,7 @@ export default function UserList({
    * Callback for when a list-specific button in the
    * user list is clicked.
    */
-  const onUserListButtonClick: TSvgPanelOnClick = (button) => {
+  const onUserListButtonClick: TOnListButtonClick = (button) => {
     switch (button) {
       case 'add':
         if (isAuthorized('users_write_students')) {

@@ -10,7 +10,8 @@ import MemberRole, {
 } from '../../../../../../shared/sessions/members/roles'
 import Prompt from '../../communication/Prompt'
 import { DetailDropdown } from '../../form/dropdown/'
-import ButtonSvgPanel_v2 from '../../user-controls/buttons/ButtonSvgPanel_v2'
+import ButtonSvgPanel from '../../user-controls/buttons/v3/ButtonSvgPanel'
+import { useButtonSvgEngine } from '../../user-controls/buttons/v3/hooks'
 import './SessionMemberRow.scss'
 
 export default function SessionMemberRow({
@@ -29,6 +30,21 @@ export default function SessionMemberRow({
   const [forceLock, setForceLock] = useState<boolean>(false)
   const [assignedRole, setAssignedRole] = useState<MemberRole>(member.role)
   const [roleLock, setRoleLock] = useState<boolean>(false)
+  const controlsCellButtonEngine = useButtonSvgEngine({
+    buttons: [
+      {
+        icon: 'kick',
+        description:
+          'Kick member from the session (Can still choose to rejoin).',
+        onClick: () => onClickKick(),
+      },
+      {
+        icon: 'ban',
+        description: 'Ban member from the session (Cannot rejoin).',
+        onClick: () => onClickBan(),
+      },
+    ],
+  })
 
   /* -- COMPUTED -- */
 
@@ -362,31 +378,7 @@ export default function SessionMemberRow({
       currentMember?.isAuthorized('manageSessionMembers') &&
       !member.isAuthorized('manageSessionMembers')
     ) {
-      buttonPanel = (
-        <ButtonSvgPanel_v2
-          buttons={['kick', 'ban']}
-          onButtonClick={(button) => {
-            switch (button) {
-              case 'kick':
-                onClickKick()
-                break
-              case 'ban':
-                onClickBan()
-                break
-            }
-          }}
-          getTooltip={(button) => {
-            switch (button) {
-              case 'kick':
-                return 'Kick member from the session (Can still choose to rejoin).'
-              case 'ban':
-                return 'Ban member from the session (Cannot rejoin).'
-              default:
-                return ''
-            }
-          }}
-        />
-      )
+      buttonPanel = <ButtonSvgPanel engine={controlsCellButtonEngine} />
     }
     // Else, render 'N/A'.
     else {

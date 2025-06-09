@@ -7,6 +7,7 @@ import { useButtonSvgEngine, useButtonSvgs } from './hooks'
 import {
   TButtonSvg_Input,
   TButtonSvg_PK,
+  TButtonSvgEngine_P,
   TButtonSvgFlow,
   TButtonSvgPanelOptions,
   TSvgLayout,
@@ -428,11 +429,11 @@ export default class ButtonSvgEngine {
    * @see {@link useButtonSvgEngine} for details
    * concerning the parameters of this method.
    */
-  public static use(
-    buttons: TButtonSvg_Input[] = [],
-    options?: TButtonSvgPanelOptions,
-    dependencies: any[] = [],
-  ): ButtonSvgEngine {
+  public static use({
+    buttons = [],
+    options = {},
+    dependencies = [],
+  }: TButtonSvgEngine_P = {}): ButtonSvgEngine {
     return compute(() => {
       const forceUpdate = useForcedUpdates()
       const [engine, setEngine] = useState(

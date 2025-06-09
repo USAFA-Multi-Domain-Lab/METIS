@@ -331,37 +331,6 @@ export default function HomePage(): JSX.Element | null {
   }
 
   /**
-   * Imports the given files to the file store.
-   * @param files The files to import.
-   * @resolves When the files import has been processed
-   * and finalized.
-   */
-  const uploadToStore = async (files: FileList) => {
-    // Switch to load screen.
-    beginLoading(
-      `Importing ${files.length} file${files.length === 1 ? '' : 's'}...`,
-    )
-
-    // Import the files.
-    try {
-      let references = await ClientFileReference.$upload(files)
-      setFileReferences([...fileReferences, ...references])
-      finishLoading()
-      notify(
-        `Successfully imported ${references.length} file${
-          references.length === 1 ? '' : 's'
-        }.`,
-      )
-    } catch (error: any) {
-      finishLoading()
-      handleError({
-        message: `Failed to upload files to file store.`,
-        notifyMethod: 'bubble',
-      })
-    }
-  }
-
-  /**
    * Callback for when a mission is successfully copied.
    * @param mission The new mission created.
    */
@@ -435,8 +404,7 @@ export default function HomePage(): JSX.Element | null {
           <FileReferenceList
             key={'files-list'}
             name={'Files'}
-            items={fileReferences}
-            onFileDrop={uploadToStore}
+            files={[fileReferences, setFileReferences]}
             onSuccessfulDeletion={onFileReferenceDeletion}
           />
         </Auth>

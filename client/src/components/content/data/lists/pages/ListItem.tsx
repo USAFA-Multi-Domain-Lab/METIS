@@ -1,15 +1,14 @@
 import { ReactNode, useRef } from 'react'
 import { useButtonMenuEngine } from 'src/components/content/user-controls/buttons/ButtonMenu'
 import ButtonMenuController from 'src/components/content/user-controls/buttons/ButtonMenuController'
+import ButtonSvgPanel from 'src/components/content/user-controls/buttons/v3/ButtonSvgPanel'
+import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
 import WarningIndicator from 'src/components/content/user-controls/WarningIndicator'
 import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
 import { MetisComponent } from '../../../../../../../shared'
 import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
 import { TUserPermissionId } from '../../../../../../../shared/users/permissions'
-import ButtonSvg, {
-  TButtonSvgType,
-} from '../../../user-controls/buttons/ButtonSvg'
 import {
   OPTIONS_COLUMN_WIDTH,
   OPTIONS_COLUMN_WIDTH_IF_LAST,
@@ -41,11 +40,21 @@ export default function ListItem<T extends MetisComponent>({
   } = listContext
   const [selection, setSelection] = listContext.state.selection
   const root = useRef<HTMLDivElement>(null)
-  const optionsEngine = useButtonMenuEngine(
-    itemButtons,
-    ['<slot>'],
-    itemButtonIcons,
-  )
+  const optionsEngine = useButtonMenuEngine({
+    buttons: itemButtons,
+    layout: ['<slot>'],
+    dependencies: itemButtonIcons,
+  })
+  const optionMenuButtonEngine = useButtonSvgEngine({
+    buttons: [
+      {
+        icon: 'options',
+        onClick: (event) => onOptionsClick(event),
+        description: 'View option menu',
+        disabled: item.disabled,
+      },
+    ],
+  })
 
   /* -- COMPUTED -- */
 
@@ -149,12 +158,7 @@ export default function ListItem<T extends MetisComponent>({
     if (itemButtons.length) {
       result.push(
         <div key={'options'} className='ItemCellLike ItemOptions'>
-          <ButtonSvg
-            type='options'
-            onClick={onOptionsClick}
-            description={!item.disabled ? 'View option menu' : ''}
-            disabled={itemButtons.length === 0 ? 'full' : 'none'}
-          />
+          <ButtonSvgPanel engine={optionMenuButtonEngine} />
         </div>,
       )
     }
@@ -214,7 +218,7 @@ export type TGetItemTooltip<TItem extends MetisComponent> = (
  * @returns The label.
  */
 export type TGetItemButtonLabel<TItem extends MetisComponent> = (
-  button: TButtonSvgType,
+  button: TMetisIcon,
 ) => string
 
 /**
@@ -224,7 +228,7 @@ export type TGetItemButtonLabel<TItem extends MetisComponent> = (
  * @default () => []
  */
 export type TGetItemButtonPermission<TItem extends MetisComponent> = (
-  button: TButtonSvgType,
+  button: TMetisIcon,
 ) => TUserPermissionId[]
 
 /**
@@ -241,6 +245,6 @@ export type TOnItemSelection<TItem extends MetisComponent> = (
  * @param button The type of button clicked.
  */
 export type TOnItemButtonClick<TItem extends MetisComponent> = (
-  button: TButtonSvgType,
+  button: TMetisIcon,
   item: TItem,
 ) => void

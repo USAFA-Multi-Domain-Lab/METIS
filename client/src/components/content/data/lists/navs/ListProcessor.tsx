@@ -1,5 +1,6 @@
 import { createRef, ReactNode, useEffect, useState } from 'react'
-import ButtonSvg from 'src/components/content/user-controls/buttons/ButtonSvg'
+import ButtonSvgPanel from 'src/components/content/user-controls/buttons/v3/ButtonSvgPanel'
+import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
 import If from 'src/components/content/util/If'
 import { compute } from 'src/toolbox'
 import { MetisComponent } from '../../../../../../../shared'
@@ -25,6 +26,33 @@ export default function ListProcessor(): JSX.Element | null {
   const [hideSearchTooltip, showSearchTooltip] = useState<boolean>(false)
   const searchField = createRef<HTMLInputElement>()
   const { column: sortingColumn, method: sortingMethod } = sorting
+  const searchButtonEngine = useButtonSvgEngine({
+    buttons: [
+      {
+        icon: 'search',
+        onClick: () => activateSearch(true),
+      },
+    ],
+  })
+  const cancelButtonEngine = useButtonSvgEngine({
+    buttons: [
+      {
+        icon: 'close',
+        onClick: () => {
+          let searchFieldElm = searchField.current
+          if (!searchFieldElm) return
+          // Clear the search field and deactivate the search.
+          searchFieldElm.value = ''
+          searchFieldElm.blur()
+          activateSearch(false)
+          setSearchHint('')
+
+          // Process the list to show all items.
+          process()
+        },
+      },
+    ],
+  })
 
   /* -- COMPUTED -- */
 
@@ -138,23 +166,6 @@ export default function ListProcessor(): JSX.Element | null {
   }
 
   /**
-   * Clears the search field and deactivates the search.
-   * @param event The click event.
-   */
-  const cancelSearch = () => {
-    let searchFieldElm = searchField.current
-    if (!searchFieldElm) return
-    // Clear the search field and deactivate the search.
-    searchFieldElm.value = ''
-    searchFieldElm.blur()
-    activateSearch(false)
-    setSearchHint('')
-
-    // Process the list to show all items.
-    process()
-  }
-
-  /**
    * Handles the key down event for the search field.
    */
   const onSearchKeyDown = (
@@ -223,7 +234,7 @@ export default function ListProcessor(): JSX.Element | null {
     <>
       <div className={rootClasses.value}>
         <If condition={!searchActive}>
-          <ButtonSvg type={'search'} onClick={() => activateSearch(true)} />
+          <ButtonSvgPanel engine={searchButtonEngine} />
         </If>
         <If condition={searchActive}>
           <div className='SearchBox'>
@@ -245,7 +256,7 @@ export default function ListProcessor(): JSX.Element | null {
               value={searchHintFormatted}
               readOnly
             />
-            <ButtonSvg type={'close'} onClick={cancelSearch} />
+            <ButtonSvgPanel engine={cancelButtonEngine} />
             {tooltipJsx}
           </div>
         </If>

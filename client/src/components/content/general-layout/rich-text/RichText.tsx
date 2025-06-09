@@ -11,14 +11,13 @@ import {
 } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { all, createLowlight } from 'lowlight'
+import { useEffect } from 'react'
 import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
 import { TRichText_P } from '.'
-import {
-  TButtonSvgDisabled,
-  TButtonSvgType,
-} from '../../user-controls/buttons/ButtonSvg'
-import ButtonSvgPanel_v2 from '../../user-controls/buttons/ButtonSvgPanel_v2'
+import ButtonSvgPanel from '../../user-controls/buttons/v3/ButtonSvgPanel'
+import { useButtonSvgEngine } from '../../user-controls/buttons/v3/hooks'
+import If from '../../util/If'
 import './RichText.scss'
 import MetisParagraph from './extensions/paragraph'
 import MetisSpan from './extensions/span'
@@ -44,33 +43,83 @@ export default function RichText({
   /* -- GLOBAL CONTEXT -- */
   const { prompt } = useGlobalContext().actions
 
+  /* -- ENGINES -- */
+
+  const bubbleToolbarButtonEngine = useButtonSvgEngine({
+    buttons: [
+      {
+        icon: 'undo',
+        onClick: () => editor?.chain().focus().undo().run(),
+      },
+      {
+        icon: 'redo',
+        onClick: () => editor?.chain().focus().redo().run(),
+      },
+      {
+        icon: 'ordered-list',
+        onClick: () => editor?.chain().focus().toggleOrderedList().run(),
+      },
+      {
+        icon: 'bullet-list',
+        onClick: () => editor?.chain().focus().toggleBulletList().run(),
+      },
+      {
+        icon: 'bold',
+        onClick: () => editor?.chain().focus().toggleBold().run(),
+      },
+      {
+        icon: 'italic',
+        onClick: () => editor?.chain().focus().toggleItalic().run(),
+      },
+      {
+        icon: 'underline',
+        onClick: () => editor?.chain().focus().toggleUnderline().run(),
+      },
+      {
+        icon: 'strike',
+        onClick: () => editor?.chain().focus().toggleStrike().run(),
+      },
+      {
+        icon: 'code',
+        onClick: () => editor?.chain().focus().toggleCode().run(),
+      },
+      {
+        icon: 'code-block',
+        onClick: () => editor?.chain().focus().toggleCodeBlock().run(),
+      },
+      {
+        icon: 'link',
+        onClick: async () => await toggleLink(editor),
+      },
+      {
+        icon: 'clear-format',
+        onClick: () => {
+          editor?.chain().focus().unsetAllMarks().run()
+          editor?.chain().focus().clearNodes().run()
+        },
+      },
+    ],
+  })
+
+  const floatingToolbarButtonEngine = useButtonSvgEngine({
+    buttons: [
+      {
+        icon: 'ordered-list',
+        onClick: () => editor?.chain().focus().toggleOrderedList().run(),
+      },
+      {
+        icon: 'bullet-list',
+        onClick: () => editor?.chain().focus().toggleBulletList().run(),
+      },
+      {
+        icon: 'code-block',
+        onClick: () => editor?.chain().focus().toggleCodeBlock().run(),
+      },
+    ],
+  })
+
   /* -- COMPUTED -- */
 
-  /**
-   * Determines how to group the buttons for the bubble toolbar.
-   */
-  const bubbleToolbarGroupings: Array<TButtonSvgType[]> = [
-    [
-      'undo',
-      'redo',
-      'ordered-list',
-      'unordered-list',
-      'bold',
-      'italic',
-      'underline',
-      'strike',
-      'code',
-      'code-block',
-      'link',
-      'clear-format',
-    ],
-  ]
-  /**
-   * Determines how to group the buttons for the floating toolbar.
-   */
-  const floatingToolbarGroupings: Array<TButtonSvgType[]> = [
-    ['ordered-list', 'unordered-list', 'code-block'],
-  ]
   /**
    * The class name for the root element.
    */
@@ -113,103 +162,35 @@ export default function RichText({
   }
 
   /**
-   * Handles the button click event for the toolbar.
-   * @param button The button that was clicked.
-   * @param editor The editor instance.
+   * Checks if the icon is active for the current selection within the editor.
+   * @param icon The icon to check.
+   * @returns True if the icon is active, false otherwise.
    */
-  const handleToolbarButtonClick = (button: TButtonSvgType, editor: Editor) => {
-    switch (button) {
-      case 'undo':
-        editor.chain().focus().undo().run()
-        break
-      case 'redo':
-        editor.chain().focus().redo().run()
-        break
-      case 'ordered-list':
-        editor.chain().focus().toggleOrderedList().run()
-        break
-      case 'unordered-list':
-        editor.chain().focus().toggleBulletList().run()
-        break
-      case 'bold':
-        editor.chain().focus().toggleBold().run()
-        break
-      case 'italic':
-        editor.chain().focus().toggleItalic().run()
-        break
-      case 'underline':
-        editor.chain().focus().toggleUnderline().run()
-        break
-      case 'strike':
-        editor.chain().focus().toggleStrike().run()
-        break
-      case 'code':
-        editor.chain().focus().toggleCode().run()
-        break
-      case 'code-block':
-        editor.chain().focus().toggleCodeBlock().run()
-        break
-      case 'link':
-        toggleLink(editor)
-        break
-      case 'clear-format':
-        editor.chain().focus().unsetAllMarks().run()
-        break
-    }
+  const isIconActive = (icon: TMetisIcon): boolean => {
+    // Convert any kebab-case icon names to camelCase.
+    const camelCaseIcon = icon.replace(/-([a-z])/g, (g) => g[1].toUpperCase())
+
+    // Check if the editor is active for the icon.
+    return editor?.isActive(camelCaseIcon) ?? false
   }
 
   /**
-   * Disables a button.
+   * Checks if a button should be disabled based on the editor's capabilities.
    * @param button The button to disable.
-   * @returns The disabled state of the button.
+   * @returns True if the button should be disabled, false otherwise.
    */
-  const disableButton = (button: TButtonSvgType): TButtonSvgDisabled => {
+  const isButtonDisabled = (button: TMetisIcon): boolean => {
     switch (button) {
       case 'undo':
-        return !editor?.can().undo() ? 'full' : 'none'
+        return !editor?.can().undo()
       case 'redo':
-        return !editor?.can().redo() ? 'full' : 'none'
+        return !editor?.can().redo()
       default:
-        return 'none'
+        return false
     }
   }
 
-  /**
-   * Gets the class list for a button.
-   * @param button The button for which to get the class list.
-   * @param editor The editor instance.
-   * @returns The class list for the button.
-   */
-  const getButtonClassList = (
-    button: TButtonSvgType,
-    editor: Editor | null,
-  ): string[] => {
-    switch (button) {
-      case 'bold':
-        return editor?.isActive('bold') ? ['Selected'] : ['NotSelected']
-      case 'italic':
-        return editor?.isActive('italic') ? ['Selected'] : ['NotSelected']
-      case 'underline':
-        return editor?.isActive('underline') ? ['Selected'] : ['NotSelected']
-      case 'strike':
-        return editor?.isActive('strike') ? ['Selected'] : ['NotSelected']
-      case 'code':
-        return editor?.isActive('code') ? ['Selected'] : ['NotSelected']
-      case 'code-block':
-        return editor?.isActive('codeBlock') ? ['Selected'] : ['NotSelected']
-      case 'link':
-        return editor?.isActive('link') ? ['Selected'] : ['NotSelected']
-      case 'ordered-list':
-        return editor?.isActive('orderedList') ? ['Selected'] : ['NotSelected']
-      case 'unordered-list':
-        return editor?.isActive('bulletList') ? ['Selected'] : ['NotSelected']
-
-      default:
-        return ['NotSelected']
-    }
-  }
-
-  /* -- PRE-RENDER PROCESSING -- */
+  /* -- EFFECTS -- */
 
   const editor = useEditor(
     {
@@ -257,45 +238,35 @@ export default function RichText({
     [deps],
   )
 
-  /**
-   * @note Only renders if the editor is editable.
-   */
-  const bubbleToolbarJsx = compute((): JSX.Element | null => {
-    if (!editor?.isEditable) return null
-    return (
-      <div className='Toolbar'>
-        {bubbleToolbarGroupings.map((grouping, index) => (
-          <ButtonSvgPanel_v2
-            key={index} // todo: fix this to not use the index.
-            buttons={grouping}
-            disableButton={disableButton}
-            onButtonClick={(button) => handleToolbarButtonClick(button, editor)}
-            getButtonClassList={(button) => getButtonClassList(button, editor)}
-          />
-        ))}
-      </div>
-    )
-  })
+  // Update the bubble toolbar button engine
+  // properties when the input content changes.
+  useEffect(() => {
+    bubbleToolbarButtonEngine.buttons.forEach(({ icon }) => {
+      // Set the class list for the button.
+      bubbleToolbarButtonEngine.modifyClassList(icon, (classList) =>
+        classList.switch('Selected', 'NotSelected', isIconActive(icon)),
+      )
 
-  /**
-   * @note Only renders if the editor is editable.
-   */
-  const floatingToolbarJsx = compute((): JSX.Element | null => {
-    if (!editor?.isEditable) return null
-    return (
-      <div className='Toolbar'>
-        {floatingToolbarGroupings.map((grouping, index) => (
-          <ButtonSvgPanel_v2
-            key={index} // todo: fix this to not use the index.
-            buttons={grouping}
-            disableButton={disableButton}
-            onButtonClick={(button) => handleToolbarButtonClick(button, editor)}
-            getButtonClassList={(button) => getButtonClassList(button, editor)}
-          />
-        ))}
-      </div>
-    )
-  })
+      // Set the disabled state for the button.
+      const disabled = isButtonDisabled(icon)
+      bubbleToolbarButtonEngine.setDisabled(icon, disabled)
+    })
+  }, [content])
+
+  // Update the floating toolbar button engine
+  // properties when the input content changes.
+  useEffect(() => {
+    floatingToolbarButtonEngine.buttons.forEach(({ icon }) => {
+      // Set the class list for the button.
+      floatingToolbarButtonEngine.modifyClassList(icon, (classList) =>
+        classList.switch('Selected', 'NotSelected', editor?.isActive(icon)),
+      )
+
+      // Set the disabled state for the button.
+      const disabled = isButtonDisabled(icon)
+      floatingToolbarButtonEngine.setDisabled(icon, disabled)
+    })
+  }, [content])
 
   /* -- RENDER -- */
   if (!editor) return null
@@ -303,10 +274,18 @@ export default function RichText({
   return (
     <div className={rootClassName}>
       <BubbleMenu editor={editor} className='BubbleToolbar'>
-        {bubbleToolbarJsx}
+        <If condition={editor.isEditable}>
+          <div className='Toolbar'>
+            <ButtonSvgPanel engine={bubbleToolbarButtonEngine} />
+          </div>
+        </If>
       </BubbleMenu>
       <FloatingMenu editor={editor} className='FloatingToolbar'>
-        {floatingToolbarJsx}
+        <If condition={editor.isEditable}>
+          <div className='Toolbar'>
+            <ButtonSvgPanel engine={floatingToolbarButtonEngine} />
+          </div>
+        </If>
       </FloatingMenu>
       <EditorContent editor={editor} />
     </div>

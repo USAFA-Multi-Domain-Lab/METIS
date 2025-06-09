@@ -15,7 +15,7 @@ export default function ({ engine }: TButtonSvgPanel_P): JSX.Element | null {
    * The classes for the root element.
    */
   const rootClasses = compute<ClassList>(() =>
-    new ClassList('ButtonSvgPanel_v3')
+    new ClassList('ButtonSvgPanel')
       .set('PanelEmpty', !engine.panelElements.length)
       .switch({ row: 'FlowRow', column: 'FlowColumn' }, engine.flow)
       .switch('RevealLabels', 'HideLabels', engine.labelsRevealed),
@@ -25,7 +25,7 @@ export default function ({ engine }: TButtonSvgPanel_P): JSX.Element | null {
 
   return (
     <div className={rootClasses.value}>
-      {engine.panelElements.map((element, index) => {
+      {engine.panelElements.map((element) => {
         switch (element.type) {
           case 'divider':
             return <ButtonSvgDivider {...element} />
