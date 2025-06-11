@@ -1,14 +1,14 @@
 import { TMetisComponentJson } from 'metis/index'
 import { HydratedDocument, Model, Query, Schema } from 'mongoose'
 import MetisDatabase from '..'
-import { TDocWithCreatedBy, TRecoverableDoc } from './types'
+import { TMetisDoc } from './types'
 
 /**
  * Factory for creating a JSON converter for a Mongoose document.
  * @returns the JSON converter function.
  */
 export const buildToJson = <
-  TDoc extends HydratedDocument<TRecoverableDoc<TJson>, {}, {}>,
+  TDoc extends HydratedDocument<TMetisDoc<TJson>, {}, {}>,
   TJson extends TMetisComponentJson,
 >() => {
   return (doc: TDoc, ret: TJson, options: any) => {
@@ -26,7 +26,7 @@ export const buildToJson = <
  * @param schema The schema to which the pre-hook will be added.
  */
 export const excludeDeletedForFinds = <
-  TSchema extends Schema<TRecoverableDoc<any>, Model<TRecoverableDoc<any>>>,
+  TSchema extends Schema<TMetisDoc<any>, Model<TMetisDoc<any>>>,
 >(
   schema: TSchema,
 ): void => {
@@ -65,7 +65,7 @@ export const excludeDeletedForFinds = <
  * field to avoid infinite loops.
  */
 export const populateCreatedByIfFlagged = <
-  TQuery extends Query<TDocWithCreatedBy, TDocWithCreatedBy>,
+  TQuery extends Query<TMetisDoc, TMetisDoc>,
 >(
   query: TQuery,
 ) => {
@@ -91,7 +91,7 @@ export const populateCreatedByIfFlagged = <
  * @throws An error if the recursive query fails to
  * retrieve the necessary data.
  */
-export const ensureNoNullCreatedBy = async <TDoc extends TDocWithCreatedBy>(
+export const ensureNoNullCreatedBy = async <TDoc extends TMetisDoc>(
   doc: TDoc,
   model: Model<TDoc>,
 ) => {
@@ -114,4 +114,4 @@ export const ensureNoNullCreatedBy = async <TDoc extends TDocWithCreatedBy>(
   doc.createdBy = unpopulated.createdBy
 }
 
-export { TRecoverableDoc }
+export { TMetisDoc }

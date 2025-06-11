@@ -1,4 +1,5 @@
 import { TUserJson } from 'metis/users'
+import mongoose from 'mongoose'
 
 /**
  * A document that can be recovered, if need be,
@@ -6,26 +7,19 @@ import { TUserJson } from 'metis/users'
  * is accomplished by the setting of a flag.
  * @param TJson The JSON representation of the document.
  */
-export type TRecoverableDoc<TJson> = TJson & {
-  /**
-   * Whether the document has been deleted.
-   */
-  deleted: boolean
-}
-
-/**
- * A document that has a `createdBy` field,
- * which references the user who created it.
- */
-export type TDocWithCreatedBy = {
+export type TMetisDoc<TJson extends {} = {}> = TJson & {
   /**
    * The unique identifier of the document.
    */
   _id?: string
   /**
-   * The user who created this document.
+   * The creator of the document.
    */
-  createdBy: TUserJson | string
+  createdBy?: TUserJson | mongoose.Types.ObjectId
+  /**
+   * Whether the document has been deleted.
+   */
+  deleted: boolean
 }
 
 export * from './file-references'

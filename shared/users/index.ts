@@ -184,17 +184,23 @@ export default abstract class User<
    * for the purpose of the `createdBy` field
    * of a document in the database.
    */
-  public toCreatedByJson(): TCreatedByJson {
+  public toCreatedByJson(): TCreatedByJson | string {
+    if (!this._id) {
+      throw new Error(
+        "This user has data that indicates it doesn't yet exist in the database. Created by fields represent existing users only.",
+      )
+    }
+
+    // If creation data is missing, only return
+    // the ID of the user. This represents an
+    // unpopulated user for this document.
     if (
-      !this._id ||
       !this.createdAt ||
       !this.updatedAt ||
       !this.createdBy ||
       !this.createdByUsername
     ) {
-      throw new Error(
-        "This user has data that indicates it doesn't yet exist in the database. Created by fields represent existing users only.",
-      )
+      return this._id
     }
 
     // Construct JSON object to send to server.

@@ -6,17 +6,13 @@ import {
   Query,
   QueryOptions,
 } from 'mongoose'
+import { TMetisDoc } from '..'
 
 /**
  * Represents a mission in the database.
  * @see https://mongoosejs.com/docs/typescript/schemas.html#generic-parameters
  */
-export type TMission = TMissionSaveJson & {
-  /**
-   * Determines if the mission is deleted.
-   */
-  deleted: boolean
-}
+export type TMission = TMetisDoc<TMissionSaveJson>
 
 /**
  * Represents the methods available for a `MissionModel`.

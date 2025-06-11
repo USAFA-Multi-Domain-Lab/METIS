@@ -7,7 +7,13 @@ import ServerEffect from 'metis/server/missions/effects'
 import ServerMissionForce from 'metis/server/missions/forces'
 import ServerMissionNode from 'metis/server/missions/nodes'
 import StringToolbox from 'metis/toolbox/strings'
-import { model, ProjectionType, QueryOptions, Schema } from 'mongoose'
+import mongoose, {
+  AnyObject,
+  model,
+  ProjectionType,
+  QueryOptions,
+  Schema,
+} from 'mongoose'
 import { ensureNoNullCreatedBy, populateCreatedByIfFlagged } from '.'
 import MetisDatabase from '..'
 import { MissionSchema } from './classes'
@@ -22,6 +28,32 @@ import {
 /* -- SCHEMA FUNCTIONS -- */
 
 /**
+ * Converts all object IDs in the given object
+ * to strings.
+ * @param object The object to process.
+ */
+const objectIdsToStrings = (object: AnyObject): void => {
+  // The algorithm used to recursively process
+  // the object.
+  const algorithm = (cursor: any): any => {
+    if (cursor instanceof mongoose.Types.ObjectId) {
+      return cursor.toString()
+    } else if (Array.isArray(cursor)) {
+      return cursor.map(algorithm)
+    } else if (typeof cursor === 'object' && cursor !== null) {
+      for (const key in cursor) {
+        if (cursor.hasOwnProperty(key)) {
+          cursor[key] = algorithm(cursor[key])
+        }
+      }
+    }
+    return cursor
+  }
+
+  algorithm(object)
+}
+
+/**
  * Transforms the mission document to JSON.
  * @param doc The mongoose document which is being converted.
  * @param ret The plain object representation which has been converted.
@@ -29,10 +61,7 @@ import {
  * @returns The JSON representation of a `Mission` document.
  */
 const toJson = (doc: TMissionDoc, ret: TMissionSaveJson, options: any) => {
-  return {
-    ...ret,
-    _id: doc.id,
-  }
+  return objectIdsToStrings(ret)
 }
 
 /**
@@ -161,7 +190,7 @@ const ensureNoNullFiles = async (mission: TMissionDoc) => {
         )
       }
 
-      file.reference = recoveredRef
+      file.reference = recoveredRef.toString()
     }
   }
 }

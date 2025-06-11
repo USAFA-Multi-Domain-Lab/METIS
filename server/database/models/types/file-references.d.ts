@@ -1,6 +1,6 @@
 import { TFileReferenceJson } from 'metis/files/references'
 import { HydratedDocument, Model, Query } from 'mongoose'
-import { TRecoverableDoc } from '.'
+import { TMetisDoc } from '.'
 
 /**
  * A file reference stored in the database, which
@@ -8,7 +8,7 @@ import { TRecoverableDoc } from '.'
  * stored within in the METIS file store.
  * @see https://mongoosejs.com/docs/typescript/schemas.html#generic-parameters
  */
-type TFileReference = TRecoverableDoc<TFileReferenceJson>
+type TFileReference = TMetisDoc<TFileReferenceJson>
 
 /**
  * Represents the methods available for a `FileReferenceModel`.

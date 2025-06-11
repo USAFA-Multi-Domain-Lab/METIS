@@ -1734,7 +1734,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
   private confirmComponentInMission(
     component: MissionComponent<any, any>,
   ): void {
-    if (this.mission.has(component)) {
+    if (!this.mission.has(component)) {
       throw new Error(
         `Could not perform the operation on the component with ID "${component._id}" because it does not belong to the mission with ID "${this.mission._id}".`,
       )

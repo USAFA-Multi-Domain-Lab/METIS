@@ -105,6 +105,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   const [server] = globalContext.server
   const state: TMissionPage_S = {
     defectiveComponents: useState<MissionComponent<any, any>[]>([]),
+    checkForDefects: useState<boolean>(true),
   }
   const [mission, setMission] = useState<ClientMission>(
     ClientMission.createNew(),
@@ -121,6 +122,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   const [isNewEffect, setIsNewEffect] = useState<boolean>(false)
   const [defectiveComponents, setDefectiveComponents] =
     state.defectiveComponents
+  const [_, setCheckForDefects] = state.checkForDefects
   const root = useRef<HTMLDivElement>(null)
   const mapButtonEngine = useButtonSvgEngine({
     buttons: [
@@ -246,7 +248,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
    * files that are attached to the mission.
    */
   const missionFileListProps: TMissionFileList_P = {
-    name: 'In Mission',
+    name: 'Attached to Mission',
     items: localFiles,
     itemsPerPageMin: 4,
     onSelect: (file) => {
@@ -265,7 +267,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
    * files available in the store.
    */
   const inStoreListProps: TFileReferenceList_P = {
-    name: 'In Store',
+    name: 'Server Repository',
     files: [globalFiles, setGlobalFiles],
     itemButtonIcons: ['link'],
     itemsPerPageMin: 4,
@@ -638,21 +640,22 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
    * @param components The components that have been changed.
    */
   const onChange = (
+    // ? Is this still necessary?
     ...components: TNonEmptyArray<MissionComponent<any, any>>
   ): void => {
-    let updatedState = defectiveComponents
+    // todo: Remove this, maybe??
+    // components.forEach((component) => {
+    //   // If the component was defective and is no
+    //   // longer defective, then remove it from the
+    //   // list.
+    //   if (defectiveComponents.includes(component) && !component.defective) {
+    //     updatedState = updatedState.filter((c) => c._id !== component._id)
+    //   }
+    // })
 
-    // todo: Store last changed component for efficiency purposes.
-    components.forEach((component) => {
-      // If the component was defective and is no
-      // longer defective, then remove it from the
-      // list.
-      if (defectiveComponents.includes(component) && !component.defective) {
-        updatedState = updatedState.filter((c) => c._id !== component._id)
-      }
-    })
-
-    setDefectiveComponents(updatedState)
+    // Trigger a check for defects, now
+    // that a component has changed.
+    setCheckForDefects(true)
     setAreUnsavedChanges(true)
     forceUpdate()
   }
@@ -1198,6 +1201,11 @@ export type TMissionPage_S = {
    * tracked within the mission.
    */
   defectiveComponents: TReactState<MissionComponent<any, any>[]>
+  /**
+   * Triggers a recomputation of the defective
+   * components, updating the state with the result.
+   */
+  checkForDefects: TReactState<boolean>
 }
 
 /**
