@@ -508,6 +508,7 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
   useButtonSvgs(
     buttonEngine,
     {
+      type: 'button',
       icon: 'zoom-in',
       onClick: onClickZoomIn,
       description:
@@ -515,6 +516,7 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
       cursor: 'zoom-in',
     },
     {
+      type: 'button',
       icon: 'zoom-out',
       onClick: onClickZoomOut,
       description:
@@ -522,6 +524,7 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
       cursor: 'zoom-out',
     },
     {
+      type: 'button',
       icon: 'question',
       description:
         '##### Mission Map\n' +

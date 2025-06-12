@@ -2,16 +2,17 @@ import { useState } from 'react'
 import { compute } from 'src/toolbox'
 import { useForcedUpdates, usePostInitEffect } from 'src/toolbox/hooks'
 import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
-import StringToolbox from '../../../../../../../shared/toolbox/strings'
+import SvgButton from './button-svg'
+import SvgDivider from './divider-svg'
 import { useButtonSvgEngine, useButtonSvgs } from './hooks'
+import SvgStepper from './stepper-svg'
 import {
-  TButtonSvg_Input,
-  TButtonSvg_PK,
-  TButtonSvgEngine_P,
+  TButtonSvgEngine,
   TButtonSvgFlow,
   TButtonSvgPanelOptions,
   TSvgLayout,
   TSvgPanelElement,
+  TSvgPanelElement_Input,
 } from './types'
 
 /**
@@ -35,10 +36,21 @@ export default class ButtonSvgEngine {
   /**
    * The buttons powered by the engine.
    */
-  public get buttons(): TButtonSvg_PK[] {
-    return this._panelElements.filter(
-      (element) => element.type === 'button',
-    ) as TButtonSvg_PK[]
+  public get buttons(): SvgButton[] {
+    const buttonElements = this.panelElements.filter(
+      (element) => element instanceof SvgButton,
+    )
+    return buttonElements as SvgButton[]
+  }
+
+  /**
+   * The steppers powered by the engine.
+   */
+  public get steppers(): SvgStepper[] {
+    const stepperElements = this.panelElements.filter(
+      (element) => element instanceof SvgStepper,
+    )
+    return stepperElements as SvgStepper[]
   }
 
   /**
@@ -109,7 +121,6 @@ export default class ButtonSvgEngine {
 
   /**
    * Cannot be instantiated externally.
-   * @param buttons The initial buttons to add to the engine.
    * @param options Custom configuration for the engine.
    * @param onChange The callback to call when the engine
    * changes. This is used to trigger a re-render of
@@ -133,57 +144,43 @@ export default class ButtonSvgEngine {
   }
 
   /**
-   * @param icon The icon in question.
-   * @returns Whether the given icon is being used
-   * by one of the currently powered buttons.
+   * @param element The element in question.
+   * @returns Whether the given element is being used
+   * by the engine.
    */
-  private inUse(icon: TMetisIcon): boolean {
-    return this.buttons.some((button) => {
-      return button.icon === icon
-    })
+  private inUse(element: Partial<TSvgPanelElement_Input>): boolean {
+    return this.panelElements.some(
+      (panelElement) => panelElement.icon === element.icon,
+    )
   }
 
   /**
-   * Adds buttons to the engine.
-   * @param buttons The buttons to add.
-   * @returns Itself for chaining.
-   * @throws If any of the icons of the buttons,
-   * with the exception of the '_blank' icon, are
-   * already in use.
-   * @note Calling this will cause a re-render.
-   */
-  public add(...buttons: TButtonSvg_Input[]): ButtonSvgEngine {
-    for (let button of buttons) {
-      let element: TButtonSvg_PK = {
-        key: StringToolbox.generateRandomId(),
-        type: 'button',
-        ...ButtonSvgEngine.DEFAULT_BUTTON_PROPS,
-        ...button,
-      }
-
-      // Throw an error if the button is already in use.
-      if (element.icon !== '_blank' && this.inUse(element.icon)) {
-        throw new Error(`Button with icon "${button.icon}" is already in use.`)
-      }
-
-      this._panelElements.push(element)
-    }
-
-    this.applyLayout()
-    return this
-  }
-
-  /**
-   * Removes buttons from the engine.
-   * @param icons The icons of the buttons to remove.
+   * Adds elements to the engine.
+   * @param elements The elements to add.
    * @returns Itself for chaining.
    * @note Calling this will cause a re-render.
    */
-  public remove(...icons: TMetisIcon[]): ButtonSvgEngine {
-    for (let icon of icons) {
-      let buttonIndex = this.buttons.findIndex((button) => button.icon === icon)
-      if (buttonIndex >= 0) {
-        this._panelElements.splice(buttonIndex, 1)
+  public add(
+    ...elements: Required<TButtonSvgEngine>['elements']
+  ): ButtonSvgEngine {
+    for (let element of elements) {
+      // If the element is already in use, throw an error.
+      if (this.inUse(element)) {
+        throw new Error(
+          `Element "{ key: "${element.key}", type: "${element.type}" icon: "${element.icon}" }" is already in use.\n` +
+            `Element Data: ${JSON.stringify(element, null, 2)}`,
+        )
+      }
+
+      switch (element.type) {
+        case 'button':
+          const button = SvgButton.create(this, element)
+          this._panelElements.push(button)
+          break
+        case 'stepper':
+          const stepper = SvgStepper.create(this, element)
+          this._panelElements.push(stepper)
+          break
       }
     }
     this.applyLayout()
@@ -191,106 +188,132 @@ export default class ButtonSvgEngine {
   }
 
   /**
-   * Removes all buttons from the engine.
+   * Removes elements from the engine.
+   * @param elements The elements to remove.
+   * @returns Itself for chaining.
+   * @note Calling this will cause a re-render.
+   */
+  public remove(...elements: TSvgPanelElement_Input[]): ButtonSvgEngine {
+    for (let element of elements) {
+      let elementIndex = this.panelElements.findIndex(
+        ({ icon }) => icon === element.icon,
+      )
+      if (elementIndex >= 0) {
+        this._panelElements.splice(elementIndex, 1)
+      }
+    }
+    this.applyLayout()
+    return this
+  }
+
+  /**
+   * Removes all non-layout elements from the engine.
    * @returns Itself for chaining.
    * @note Calling this will cause a re-render.
    */
   public removeAll(): ButtonSvgEngine {
-    this._panelElements = this._panelElements.filter(
-      (element) => element.type !== 'button',
+    this._panelElements = this.panelElements.filter(
+      (element) => element instanceof SvgDivider,
     )
     this.applyLayout()
     return this
   }
 
   /**
-   * Gets a button by its icon.
-   * @param icon The icon of the button.
-   * @returns The button with the given icon.
+   * Gets an element by its icon.
+   * @param icon The icon of the SVG panel element to get.
+   * @returns The element with the given icon, or `undefined`
+   * if no such element exists.
    */
-  public getButton(icon: TMetisIcon): TButtonSvg_PK | undefined {
-    return this.buttons.find((button) => button.icon === icon)
+  public get(icon: TSvgPanelElement['icon']): TSvgPanelElement | undefined {
+    return this.panelElements.find((element) => element.icon === icon)
   }
 
   /**
-   * Sets the given property for the button of the
+   * Sets the given property for the element of the
    * given icon.
-   * @param icon The icon of the button.
+   * @param icon The icon of the element.
    * @param propKey The key of the property to set.
    * @param propValue The value of the property to set.
    * @returns Itself for chaining.
    * @note Calling this will cause a re-render.
    */
   private setButtonProp<
-    TPropKey extends keyof TButtonSvg_PK,
-    TPropValue extends TButtonSvg_PK[TPropKey],
+    TPropKey extends keyof TSvgPanelElement,
+    TPropValue extends TSvgPanelElement[TPropKey],
   >(
-    icon: TMetisIcon,
+    icon: TSvgPanelElement['icon'],
     propKey: TPropKey,
     propValue: TPropValue,
   ): ButtonSvgEngine {
-    let button = this.getButton(icon)
-    if (button) button[propKey] = propValue
+    let element = this.get(icon)
+    if (element) element[propKey] = propValue
     this.onChange()
     return this
   }
 
   /**
-   * Sets the description for the button of
+   * Sets the description for the element of
    * the given icon.
-   * @param icon The icon of the button.
+   * @param icon The icon of the element.
    * @param description The description to set.
    * @returns Itself for chaining.
    * @note Calling this will cause a re-render.
    */
   public setDescription(
-    icon: TMetisIcon,
+    icon: TSvgPanelElement['icon'],
     description: string,
   ): ButtonSvgEngine {
     return this.setButtonProp(icon, 'description', description)
   }
 
   /**
-   * Sets whether the button of the given icon
+   * Sets whether the element of the given icon
    * is disabled.
-   * @param icon The icon of the button.
-   * @param disabled Whether the button is disabled.
+   * @param icon The icon of the element.
+   * @param disabled Whether the element is disabled.
    * @returns Itself for chaining.
    * @note Calling this will cause a re-render.
    */
-  public setDisabled(icon: TMetisIcon, disabled: boolean): ButtonSvgEngine {
+  public setDisabled(
+    icon: TSvgPanelElement['icon'],
+    disabled: boolean,
+  ): ButtonSvgEngine {
     return this.setButtonProp(icon, 'disabled', disabled)
   }
 
   /**
-   * Enables a button.
-   * @param icon The icon of the button.
+   * Enables an element.
+   * @param icon The icon of the element.
    * @returns Itself for chaining.
    * @note Calling this will cause a re-render.
    */
-  public enable(icon: TMetisIcon): ButtonSvgEngine {
-    return this.setButtonProp(icon, 'disabled', false)
+  public enable(icon: TSvgPanelElement['icon']): ButtonSvgEngine {
+    return this.setDisabled(icon, false)
   }
 
   /**
-   * Disables a button.
-   * @param icon The icon of the button.
+   * Disables an element.
+   * @param icon The icon of the element.
    * @returns Itself for chaining.
    * @note Calling this will cause a re-render.
    */
-  public disable(icon: TMetisIcon): ButtonSvgEngine {
-    return this.setButtonProp(icon, 'disabled', true)
+  public disable(icon: TSvgPanelElement['icon']): ButtonSvgEngine {
+    return this.setDisabled(icon, true)
   }
 
   /**
-   * Sets whether the button of the given icon
+   * Sets whether the element of the given icon
    * is hidden.
-   * @param icon The icon of the button.
-   * @param hidden Whether the button is hidden.
+   * @param icon The icon of the element.
+   * @param hidden Whether the element is hidden.
    * @returns Itself for chaining.
    * @note Calling this will cause a re-render.
    */
-  public setHidden(icon: TMetisIcon, hidden: boolean): ButtonSvgEngine {
+  public setHidden(
+    icon: TSvgPanelElement['icon'],
+    hidden: boolean,
+  ): ButtonSvgEngine {
     return this.setButtonProp(icon, 'hidden', hidden)
   }
 
@@ -300,8 +323,8 @@ export default class ButtonSvgEngine {
    * @returns Itself for chaining.
    * @note Calling this will cause a re-render.
    */
-  public reveal(icon: TMetisIcon): ButtonSvgEngine {
-    return this.setButtonProp(icon, 'hidden', false)
+  public reveal(icon: TSvgPanelElement['icon']): ButtonSvgEngine {
+    return this.setHidden(icon, false)
   }
 
   /**
@@ -310,8 +333,8 @@ export default class ButtonSvgEngine {
    * @returns Itself for chaining.
    * @note Calling this will cause a re-render.
    */
-  public hide(icon: TMetisIcon): ButtonSvgEngine {
-    return this.setButtonProp(icon, 'hidden', true)
+  public hide(icon: TSvgPanelElement['icon']): ButtonSvgEngine {
+    return this.setHidden(icon, true)
   }
 
   /**
@@ -324,11 +347,11 @@ export default class ButtonSvgEngine {
    * @note Calling this will cause a re-render.
    */
   public modifyClassList(
-    icon: TMetisIcon,
+    icon: TSvgPanelElement['icon'],
     callback: (classList: ClassList) => {},
   ): ButtonSvgEngine {
-    let button = this.getButton(icon)
-    if (button) callback(button.uniqueClassList)
+    let element = this.get(icon)
+    if (element) callback(element.uniqueClassList)
     this.onChange()
     return this
   }
@@ -361,17 +384,13 @@ export default class ButtonSvgEngine {
           slotFound = true
           break
         case '<divider>':
-          pushElements({
-            key: StringToolbox.generateRandomId(),
-            type: 'divider',
-          })
+          pushElements(SvgDivider.create(this))
           break
         default:
-          // Add button for the current index, if present.
+          // Add the element to the next panel elements
+          // if it exists in the previous panel elements.
           let currentIndex = prevPanelElements.findIndex(
-            (panelElement) =>
-              panelElement.type === 'button' &&
-              panelElement.icon === layoutElement,
+            (panelElement) => panelElement.icon === layoutElement,
           )
           if (currentIndex >= 0) {
             pushElements(...prevPanelElements.splice(currentIndex, 1))
@@ -403,25 +422,6 @@ export default class ButtonSvgEngine {
   private onChange: () => void
 
   /**
-   * Default props when adding a new button.
-   */
-  public static get DEFAULT_BUTTON_PROPS(): Required<TButtonSvg_Input> {
-    return {
-      icon: 'options',
-      label: '',
-      description: '',
-      uniqueClassList: new ClassList(),
-      disabled: false,
-      hidden: false,
-      alwaysShowTooltip: false,
-      cursor: 'pointer',
-      permissions: [],
-      onClick: () => {},
-      onCopy: () => {},
-    }
-  }
-
-  /**
    * A hook used to create an manage a new instance of
    * `ButtonSvgEngine`.
    * @returns A new instance of `ButtonSvgEngine`.
@@ -430,10 +430,10 @@ export default class ButtonSvgEngine {
    * concerning the parameters of this method.
    */
   public static use({
-    buttons = [],
+    elements = [],
     options = {},
     dependencies = [],
-  }: TButtonSvgEngine_P = {}): ButtonSvgEngine {
+  }: TButtonSvgEngine = {}): ButtonSvgEngine {
     return compute(() => {
       const forceUpdate = useForcedUpdates()
       const [engine, setEngine] = useState(
@@ -444,7 +444,7 @@ export default class ButtonSvgEngine {
         setEngine(new ButtonSvgEngine(options, () => forceUpdate()))
       }, dependencies)
       // Add the buttons to the engine.
-      useButtonSvgs(engine, ...buttons)
+      useButtonSvgs(engine, ...elements)
       return engine
     })
   }

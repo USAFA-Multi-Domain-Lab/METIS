@@ -1,28 +1,28 @@
-.ListPageControls {
+@import 'src/assets/styles/config.scss';
+
+.SvgPanelElement.StepperSvg {
   display: flex;
   flex-direction: row;
   align-items: center;
   column-gap: 1em;
 
-  .PrevPage,
-  .NextPage {
+  .StepDown,
+  .StepUp {
     cursor: pointer;
     user-select: none;
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 1em;
+    width: 100%;
     height: 100%;
     font-size: 1.25em;
 
-    &.Disabled {
-      cursor: default;
-      pointer-events: none;
-      opacity: 0.45;
+    .Icon:hover {
+      color: $color-accent;
     }
   }
 
-  .PageNumber {
+  .Text {
     opacity: 0.65;
     background-color: transparent;
     color: white;

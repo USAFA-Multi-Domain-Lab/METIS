@@ -71,12 +71,12 @@ export default function ListResizeHandler<
       let buttonsElement = elements.buttons.current
       let overflowElement = elements.overflow.current
       let buttonElements = Array.from(
-        buttonsElement.querySelectorAll('.ButtonSvg'),
+        buttonsElement.querySelectorAll('.SvgPanelElement'),
       )
       let buttonsBox = buttonsElement.getBoundingClientRect()
       let overflowBox = overflowElement.getBoundingClientRect()
-      let buttonsX2 = buttonsBox.x + buttonsBox.width
-      let overflowX2 = overflowBox.x + overflowBox.width
+      let buttonsX2 = buttonsBox.right
+      let overflowX2 = overflowBox.right
       let nextOverflowCount = 0
       let overflowing = true
       let overflowIsVisible =
@@ -88,7 +88,7 @@ export default function ListResizeHandler<
         let lastElement = buttonElements[buttonElements.length - 1]
         if (!lastElement) return NaN
         let lastBox = lastElement.getBoundingClientRect()
-        return lastBox.x + lastBox.width
+        return lastBox.right
       }
 
       // If the overflow element is visible, check

@@ -8,7 +8,7 @@
   &.FlowColumn {
     flex-direction: column;
 
-    .ButtonSvgDivider {
+    .DividerSvg {
       align-self: center;
       margin: 0.1em 0;
       width: 100%;
@@ -24,7 +24,7 @@
   &.FlowRow {
     flex-direction: row;
 
-    .ButtonSvgDivider {
+    .DividerSvg {
       align-self: center;
       margin: 0 0.5em;
       width: 1px;
@@ -53,8 +53,8 @@
     }
   }
 
-  .ButtonSvgDivider:first-child,
-  .ButtonSvgDivider:last-child {
+  .DividerSvg:first-child,
+  .DividerSvg:last-child {
     display: none;
   }
 }

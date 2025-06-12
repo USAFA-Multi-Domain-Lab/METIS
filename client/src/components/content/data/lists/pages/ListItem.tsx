@@ -3,6 +3,7 @@ import { useButtonMenuEngine } from 'src/components/content/user-controls/button
 import ButtonMenuController from 'src/components/content/user-controls/buttons/ButtonMenuController'
 import ButtonSvgPanel from 'src/components/content/user-controls/buttons/v3/ButtonSvgPanel'
 import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
+import { TSvgPanelElement } from 'src/components/content/user-controls/buttons/v3/types'
 import { useGlobalContext } from 'src/context'
 import { compute } from 'src/toolbox'
 import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
@@ -38,17 +39,18 @@ export default function ListItem<T extends TListItem>({
   const [selection, setSelection] = listContext.state.selection
   const root = useRef<HTMLDivElement>(null)
   const optionsEngine = useButtonMenuEngine({
-    buttons: itemButtons,
+    elements: itemButtons,
     layout: ['<slot>'],
     dependencies: itemButtonIcons,
   })
   const optionMenuButtonEngine = useButtonSvgEngine({
-    buttons: [
+    elements: [
       {
+        type: 'button',
         icon: 'options',
         onClick: (event) => onOptionsClick(event),
         description: 'View option menu',
-        disabled: itemButtons.length === 0,
+        disabled: itemButtons?.length === 0,
       },
     ],
   })
@@ -77,7 +79,7 @@ export default function ListItem<T extends TListItem>({
 
     // If there are item buttons, add the options
     // column width.
-    if (itemButtons.length) {
+    if (itemButtons?.length) {
       columnWidths.push(
         columns.length ? OPTIONS_COLUMN_WIDTH : OPTIONS_COLUMN_WIDTH_IF_LAST,
       )
@@ -137,7 +139,7 @@ export default function ListItem<T extends TListItem>({
 
     // If there are item buttons, add the options
     // cell.
-    if (itemButtons.length) {
+    if (itemButtons?.length) {
       result.push(
         <div key={'options'} className='ItemCellLike ItemOptions'>
           <ButtonSvgPanel engine={optionMenuButtonEngine} />
@@ -217,7 +219,7 @@ export type TGetItemTooltip<TItem extends TListItem> = (item: TItem) => string
  * @returns The label.
  */
 export type TGetItemButtonLabel<TItem extends TListItem> = (
-  button: TMetisIcon,
+  button: TSvgPanelElement['icon'],
 ) => string
 
 /**
@@ -227,7 +229,7 @@ export type TGetItemButtonLabel<TItem extends TListItem> = (
  * @default () => []
  */
 export type TGetItemButtonPermission<TItem extends TListItem> = (
-  button: TMetisIcon,
+  button: TSvgPanelElement['icon'],
 ) => TUserPermissionId[]
 
 /**
@@ -242,6 +244,6 @@ export type TOnItemSelection<TItem extends TListItem> = (item: TItem) => void
  * @param button The type of button clicked.
  */
 export type TOnItemButtonClick<TItem extends TListItem> = (
-  button: TMetisIcon,
+  button: TSvgPanelElement['icon'],
   item: TItem,
 ) => void

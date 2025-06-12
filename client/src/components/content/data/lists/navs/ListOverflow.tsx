@@ -29,13 +29,14 @@ export default function (): JSX.Element | null {
   const [buttonOverflowCount] = state.buttonOverflowCount
   const [overflowActive, setOverflowActive] = state.overflowActive
   const overflowEngine = useButtonMenuEngine({
-    buttons: aggregatedButtons,
+    elements: aggregatedButtons,
     layout: aggregateButtonLayout,
     dependencies: aggregatedButtonIcons,
   })
   const buttonEngine = useButtonSvgEngine({
-    buttons: [
+    elements: [
       {
+        type: 'button',
         icon: 'overflow',
         onClick: () => showOverflowMenu(),
       },

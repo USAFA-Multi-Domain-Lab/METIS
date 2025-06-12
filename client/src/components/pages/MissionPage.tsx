@@ -46,7 +46,7 @@ import MissionMap from '../content/session/mission-map/MissionMap'
 import CreateEffect from '../content/session/mission-map/ui/overlay/modals/CreateEffect'
 import { TTabBarTab } from '../content/session/mission-map/ui/tabs/TabBar'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
-import { TButtonSvg_Input } from '../content/user-controls/buttons/v3/types'
+import { TSvgPanelElement_Input } from '../content/user-controls/buttons/v3/types'
 import './MissionPage.scss'
 
 /**
@@ -119,8 +119,9 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     state.defectiveComponents
   const root = useRef<HTMLDivElement>(null)
   const mapButtonEngine = useButtonSvgEngine({
-    buttons: [
+    elements: [
       {
+        type: 'button',
         icon: 'play',
         description: 'Play-test the mission.',
         permissions: ['sessions_write_native'],
@@ -157,6 +158,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
         },
       },
       {
+        type: 'button',
         icon: 'save',
         description: 'Save changes.',
         permissions: ['missions_write'],
@@ -384,11 +386,13 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
       if (nextNode) {
         nodeButtonEngine.add(
           {
+            type: 'button',
             icon: 'cancel',
             description: 'Deselect this node (Closes panel view also).',
             onClick: () => mission.select(nextNode!.force),
           },
           {
+            type: 'button',
             icon: 'divider',
             description:
               'Exclude this node from the force (Closes panel view also).',
@@ -413,6 +417,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
       if (nextSelection instanceof ClientMissionPrototype) {
         if (mission.transformation) {
           prototypeButtonEngine.add({
+            type: 'button',
             icon: 'cancel',
             description: 'Cancel action.',
             permissions: ['missions_write'],
@@ -421,11 +426,13 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
         } else {
           prototypeButtonEngine.add(
             {
+              type: 'button',
               icon: 'cancel',
               description: 'Deselect this prototype (Closes panel view also).',
               onClick: () => mission.deselect(),
             },
             {
+              type: 'button',
               icon: 'add',
               description: 'Create an adjacent prototype on the map.',
               permissions: ['missions_write'],
@@ -435,12 +442,14 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
             // todo: Reimplement this once node structure panel
             // todo: is removed.
             // {
+            //   type: 'button',
             //   icon: 'reorder',
             //   description: 'Move this prototype to another location.',
             //   permissions: ['missions_write'],
             //   onClick: () => onPrototypeMoveRequest(nextSelection),
             // },
             {
+              type: 'button',
               icon: 'remove',
               description: 'Delete this prototype.',
               permissions: ['missions_write'],
@@ -955,14 +964,16 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
    */
   const mapTabs: TTabBarTab[] = compute(() => {
     return mission.forces.map((force) => {
-      const buttons: TButtonSvg_Input[] = [
+      const buttons: TSvgPanelElement_Input[] = [
         {
+          type: 'button',
           icon: 'copy',
           label: 'Duplicate',
           permissions: ['missions_write'],
           onClick: () => onDuplicateForceRequest(force._id),
         },
         {
+          type: 'button',
           icon: 'remove',
           label: 'Delete',
           permissions: ['missions_write'],
@@ -975,7 +986,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
         text: force.name,
         color: force.color,
         description: `Select force` + `\n\t\n\`R-Click\` for more options`,
-        engineProps: { buttons },
+        engineProps: { elements: buttons },
       }
 
       return tab

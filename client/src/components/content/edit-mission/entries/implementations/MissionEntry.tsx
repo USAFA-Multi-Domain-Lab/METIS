@@ -25,8 +25,9 @@ export default function MissionEntry({
     mission.resourceLabel,
   )
   const warningButtonEngine = useButtonSvgEngine({
-    buttons: [
+    elements: [
       {
+        type: 'button',
         icon: 'warning-transparent',
         cursor: 'help',
         description:

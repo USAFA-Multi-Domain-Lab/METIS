@@ -1,11 +1,17 @@
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import { compute } from 'src/toolbox'
-import { TDefaultProps, useDefaultProps } from 'src/toolbox/hooks'
+import {
+  TDefaultProps,
+  useDefaultProps,
+  useEventListener,
+} from 'src/toolbox/hooks'
 import StringToolbox from '../../../../../../shared/toolbox/strings'
 import { TUserPermissionId } from '../../../../../../shared/users/permissions'
 import {
-  TButtonSvg_Input,
+  TButtonSvgEngine,
   TSvgLayout,
+  TSvgPanelElement,
+  TSvgPanelElement_Input,
 } from '../../user-controls/buttons/v3/types'
 import './List.scss'
 import ListDropBox from './ListDropBox'
@@ -188,49 +194,72 @@ export default function List<TItem extends TListItem>(
    * anywhere where they are needed throughout
    * the list.
    */
-  const listButtons = compute<TButtonSvg_Input[]>(() =>
-    listButtonIcons.map<TButtonSvg_Input>((icon) => ({
-      icon,
-      label: getListButtonLabel(icon),
-      permissions: getListButtonPermissions(icon),
-      onClick: () => onListButtonClick(icon),
-    })),
-  )
+  const listButtons = compute<TListContextData<TItem>['listButtons']>(() => {
+    let buttons: TSvgPanelElement_Input[] = []
+
+    buttons.push({
+      type: 'stepper',
+      icon: 'stepper-page',
+      maximum: pageCount,
+      value: state.pageNumber,
+    })
+
+    listButtonIcons.forEach((icon) => {
+      buttons.push({
+        type: 'button',
+        icon,
+        label: getListButtonLabel(icon),
+        permissions: getListButtonPermissions(icon),
+        onClick: () => onListButtonClick(icon),
+      })
+    })
+
+    return buttons
+  })
 
   /**
    * Input data to use for the item buttons,
    * anywhere where they are needed throughout
    * the list.
    */
-  const itemButtons = compute<TButtonSvg_Input[]>(() =>
-    itemButtonIcons.map<TButtonSvg_Input>((icon) => ({
-      icon,
-      label: getItemButtonLabel(icon),
-      permissions: getItemButtonPermissions(icon),
-      onClick: () => {
-        if (selection) onItemButtonClick(icon, selection)
-      },
-    })),
-  )
+  const itemButtons = compute<TListContextData<TItem>['itemButtons']>(() => {
+    let buttons: TSvgPanelElement_Input[] = []
+
+    itemButtonIcons.forEach((icon) => {
+      buttons.push({
+        type: 'button',
+        icon,
+        label: getItemButtonLabel(icon),
+        permissions: getItemButtonPermissions(icon),
+        onClick: () => {
+          if (selection) onItemButtonClick(icon, selection)
+        },
+      })
+    })
+
+    return buttons
+  })
 
   /**
    * @see {@link TListContextData.aggregatedButtonIcons}
    */
-  const aggregatedButtonIcons = compute<TMetisIcon[]>(() =>
-    listButtonIcons.concat(itemButtonIcons),
-  )
+  const aggregatedButtonIcons = compute<
+    TListContextData<TItem>['aggregatedButtonIcons']
+  >(() => ['stepper-page', ...listButtonIcons, ...itemButtonIcons])
 
   /**
    * @see {@link TListContextData.aggregatedButtons}
    */
-  const aggregatedButtons = compute<TButtonSvg_Input[]>(() =>
-    listButtons.concat(itemButtons),
-  )
+  const aggregatedButtons = compute<
+    TListContextData<TItem>['aggregatedButtons']
+  >(() => listButtons?.concat(itemButtons ?? []))
 
   /**
    * @see {@link TListContextData.aggregateButtonLayout}
    */
   const aggregateButtonLayout = compute<TSvgLayout>(() => [
+    'stepper-page',
+    '<divider>',
     ...listButtonIcons,
     '<divider>',
     ...itemButtonIcons,
@@ -309,6 +338,20 @@ export default function List<TItem extends TListItem>(
     const selectionIsMissing = !items.find(({ _id }) => _id === selection?._id)
     if (selectionIsMissing) setSelection(null)
   }, [items, selection])
+
+  // Deselect the item if the user clicks outside of the list.
+  useEventListener(document, 'click', (event: MouseEvent) => {
+    let rootElement = elements.root.current
+    // If the root element is not found, do nothing.
+    // This can happen if the component is unmounted.
+    if (!rootElement) return
+
+    // If the clicked element is not part of the list,
+    // deselect the item.
+    if (!rootElement.contains(event.target as Node)) {
+      setSelection(null)
+    }
+  })
 
   /* -- RENDER -- */
 
@@ -575,23 +618,23 @@ export type TListContextData<TItem extends TListItem> = Required<
    * anywhere where they are needed throughout
    * the list.
    */
-  listButtons: TButtonSvg_Input[]
+  listButtons: TButtonSvgEngine['elements']
   /**
    * Input data to use for the item buttons,
    * anywhere where they are needed throughout
    * the list.
    */
-  itemButtons: TButtonSvg_Input[]
+  itemButtons: TButtonSvgEngine['elements']
   /**
    * Aggregated button icon list, including list and
    * item button icons.
    */
-  aggregatedButtonIcons: TMetisIcon[]
+  aggregatedButtonIcons: TSvgPanelElement['icon'][]
   /**
    * Aggregated buttons, including list and
    * item buttons.
    */
-  aggregatedButtons: TButtonSvg_Input[]
+  aggregatedButtons: TButtonSvgEngine['elements']
   /**
    * A button layout used to display the aggregated
    * list of buttons, including the list and item buttons.
@@ -614,13 +657,13 @@ export type TListContextData<TItem extends TListItem> = Required<
  * @returns The label.
  * @default () => ''
  */
-export type TGetListButtonLabel = (button: TMetisIcon) => string
+export type TGetListButtonLabel = (button: TSvgPanelElement['icon']) => string
 
 /**
  * Callback for when a list button is clicked.
  * @default () => {}
  */
-export type TOnListButtonClick = (button: TMetisIcon) => void
+export type TOnListButtonClick = (button: TSvgPanelElement['icon']) => void
 
 /**
  * Gets the permissions for a list button.
@@ -629,7 +672,7 @@ export type TOnListButtonClick = (button: TMetisIcon) => void
  * @default () => []
  */
 export type TGetListButtonPermission = (
-  button: TMetisIcon,
+  button: TSvgPanelElement['icon'],
 ) => TUserPermissionId[]
 
 /**

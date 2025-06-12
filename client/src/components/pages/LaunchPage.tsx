@@ -40,8 +40,9 @@ export default function LaunchPage({
   )
   const [sessionConfig] = useState(Session.DEFAULT_CONFIG)
   const defectiveComponentButtonEngine = useButtonSvgEngine({
-    buttons: [
+    elements: [
       {
+        type: 'button',
         icon: 'warning-transparent',
         cursor: 'help',
         description:

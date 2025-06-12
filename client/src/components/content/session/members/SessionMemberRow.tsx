@@ -31,14 +31,16 @@ export default function SessionMemberRow({
   const [assignedRole, setAssignedRole] = useState<MemberRole>(member.role)
   const [roleLock, setRoleLock] = useState<boolean>(false)
   const controlsCellButtonEngine = useButtonSvgEngine({
-    buttons: [
+    elements: [
       {
+        type: 'button',
         icon: 'kick',
         description:
           'Kick member from the session (Can still choose to rejoin).',
         onClick: () => onClickKick(),
       },
       {
+        type: 'button',
         icon: 'ban',
         description: 'Ban member from the session (Cannot rejoin).',
         onClick: () => onClickBan(),
