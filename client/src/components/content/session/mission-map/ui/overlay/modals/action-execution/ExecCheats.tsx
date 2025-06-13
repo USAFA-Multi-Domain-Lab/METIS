@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { DetailToggle } from 'src/components/content/form/DetailToggle'
 import { TExecutionCheats } from '../../../../../../../../../../shared/missions/actions/executions'
 import './ExecCheats.scss'
-import Divider from 'src/components/content/form/Divider'
 
 /* -- COMPONENT -- */
 
@@ -45,18 +44,18 @@ export default function ExecCheats({
       <div className='Heading'>Cheats:</div>
       <DetailToggle
         label='Zero Resource Cost:'
-        stateValue={zeroCost}
-        setState={setZeroCost}
+        value={zeroCost}
+        setValue={setZeroCost}
       />
       <DetailToggle
         label='Instantaneous Execution:'
-        stateValue={instantaneous}
-        setState={setInstantaneous}
+        value={instantaneous}
+        setValue={setInstantaneous}
       />
       <DetailToggle
         label='Guaranteed Success:'
-        stateValue={guaranteedSuccess}
-        setState={setGuaranteedSuccess}
+        value={guaranteedSuccess}
+        setValue={setGuaranteedSuccess}
       />
     </div>
   )

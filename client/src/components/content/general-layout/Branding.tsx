@@ -1,4 +1,4 @@
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
 import Tooltip from '../communication/Tooltip'
 import './Branding.scss'

@@ -1,11 +1,12 @@
 import React, { useContext, useEffect, useRef, useState } from 'react'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
 import {
   TDefaultProps,
   useDefaultProps,
   useEventListener,
 } from 'src/toolbox/hooks'
+import { MetisComponent } from '../../../../../../shared'
 import StringToolbox from '../../../../../../shared/toolbox/strings'
 import { TUserPermissionId } from '../../../../../../shared/users/permissions'
 import {
@@ -23,7 +24,6 @@ import {
   TGetItemButtonLabel,
   TGetItemButtonPermission,
   TGetItemTooltip,
-  TListItem,
   TOnItemButtonClick,
 } from './pages/ListItem'
 import ListPage, { TListPage_P } from './pages/ListPage'
@@ -53,7 +53,7 @@ const ListContext = React.createContext<TListContextData<any> | null>(null)
  * Hook used by List-related components to access
  * the list context.
  */
-export const useListContext = <TItem extends TListItem>() => {
+export const useListContext = <TItem extends MetisComponent>() => {
   const context = useContext(ListContext) as TListContextData<TItem> | null
   if (!context) {
     throw new Error('useListContext must be used within a list provider')
@@ -67,7 +67,7 @@ export const useListContext = <TItem extends TListItem>() => {
  * The defaults used for `List` props.
  */
 export function createDefaultListProps<
-  TItem extends TListItem,
+  TItem extends MetisComponent,
 >(): TDefaultProps<TList_P<TItem>> {
   return {
     columns: [],
@@ -79,13 +79,11 @@ export function createDefaultListProps<
     getColumnLabel: (x) => StringToolbox.toTitleCase(x.toString()),
     getCellText: (item, column) => (item[column] as any).toString(),
     getItemTooltip: () => '',
-    getDisabledItemTooltip: () => '',
     getListButtonLabel: () => '',
     getListButtonPermissions: () => [],
     getItemButtonLabel: () => '',
     getItemButtonPermissions: () => [],
     getColumnWidth: () => '10em',
-    isDisabled: () => false,
     onSelect: () => {},
     onListButtonClick: () => {},
     onItemButtonClick: () => {},
@@ -98,7 +96,7 @@ export function createDefaultListProps<
 /**
  * Displays a list of items of the given type.
  */
-export default function List<TItem extends TListItem>(
+export default function List<TItem extends MetisComponent>(
   props: TList_P<TItem>,
 ): JSX.Element | null {
   const Provider = ListContext.Provider as React.Provider<
@@ -305,6 +303,13 @@ export default function List<TItem extends TListItem>(
     return results
   })
 
+  /**
+   * @see {@link TListContextData.showingDeletedItems}
+   */
+  const showingDeletedItems = compute<boolean>(() =>
+    pages[pageNumber].items.some(({ deleted }) => deleted),
+  )
+
   /* -- FUNCTIONS -- */
 
   /**
@@ -366,6 +371,17 @@ export default function List<TItem extends TListItem>(
     }
   }
 
+  /**
+   * @see {@link TListContextData.requireEnabledOnly}
+   */
+  const requireEnabledOnly: TListContextData<TItem>['requireEnabledOnly'] = (
+    item,
+    next,
+  ) => {
+    if (item.disabled) return () => {}
+    else return next
+  }
+
   /* -- EFFECTS -- */
 
   // Call `onSelect` callback whenever selection-state
@@ -406,6 +422,8 @@ export default function List<TItem extends TListItem>(
     aggregatedButtonIcons,
     aggregatedButtons,
     aggregateButtonLayout,
+    showingDeletedItems,
+    requireEnabledOnly,
     state,
     elements,
   }
@@ -458,7 +476,7 @@ export type TList_E = {
 /**
  * Props for `List`.
  */
-export type TList_P<TItem extends TListItem> = {
+export type TList_P<TItem extends MetisComponent> = {
   /**
    * The name of the list.
    */
@@ -552,25 +570,12 @@ export type TList_P<TItem extends TListItem> = {
    */
   getItemButtonPermissions?: TGetItemButtonPermission<TItem>
   /**
-   * Gets the tooltip description for a disabled item.
-   * @param item The item for which to get the tooltip description.
-   * @returns The tooltip description.
-   * @default () => ''
-   */
-  getDisabledItemTooltip?: TGetItemTooltip<TItem>
-  /**
    * Gets the width of the given column.
    * @param column The column for which to get the width.
    * @returns The width of the column.
    * @default () => '10em'
    */
   getColumnWidth?: (column: TListColumnType<TItem>) => string
-  /**
-   * @param item The item to check.
-   * @returns Whether the item is disabled.
-   * @note This will grey out the item in the list.
-   */
-  isDisabled?: (item: TItem) => boolean
   /**
    * Callback for when an item in the list is selected
    * or deselected.
@@ -601,7 +606,7 @@ export type TList_P<TItem extends TListItem> = {
 /**
  * The entire state for `List`.
  */
-export type TList_S<TItem extends TListItem> = {
+export type TList_S<TItem extends MetisComponent> = {
   /**
    * The current page number.
    */
@@ -646,7 +651,7 @@ export type TList_S<TItem extends TListItem> = {
  * The list context data provided to all children
  * of `List`.
  */
-export type TListContextData<TItem extends TListItem> = Required<
+export type TListContextData<TItem extends MetisComponent> = Required<
   TList_P<TItem>
 > & {
   /**
@@ -680,6 +685,21 @@ export type TListContextData<TItem extends TListItem> = Required<
    * list of buttons, including the list and item buttons.
    */
   aggregateButtonLayout: TSvgLayout
+  /**
+   * Whether there exists any deleted items on the
+   * current page being displayed.
+   */
+  showingDeletedItems: boolean
+  /**
+   * Middleware which will wrap a function in a requirement
+   * for the given item to be enabled for the code to be
+   * executed. If the item is disabled, the function will
+   * do nothing when called.
+   */
+  requireEnabledOnly: <TArgs extends Array<any>>(
+    item: TItem,
+    next: (...args: TArgs) => void,
+  ) => (...args: TArgs) => void
   /**
    * The state for the list.
    */
@@ -724,7 +744,7 @@ export type TListColumnType<TItem> = keyof TItem
  * Data that defines how items in a list should
  * be sorted.
  */
-export type TListSorting<TItem extends TListItem> = {
+export type TListSorting<TItem extends MetisComponent> = {
   /**
    * The column by which to sort.
    */

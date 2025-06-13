@@ -1,5 +1,5 @@
 import ReactDOM from 'react-dom/client'
-import GlobalContext from 'src/context'
+import GlobalContext from 'src/context/global'
 import { TMetisBaseComponents } from '../../shared'
 import App from './components/App'
 import ErrorPage from './components/pages/ErrorPage'

@@ -24,7 +24,7 @@ export default class ClientLogin {
           // parse the data.
           if (loginJson !== null) {
             login = {
-              user: new ClientUser(loginJson.user),
+              user: ClientUser.fromExistingJson(loginJson.user),
               sessionId: loginJson.sessionId,
             }
           }
@@ -76,7 +76,7 @@ export default class ClientLogin {
         // parse the date.
         if (loginJson !== null) {
           login = {
-            user: new ClientUser(loginJson.user),
+            user: ClientUser.fromExistingJson(loginJson.user),
             sessionId: loginJson.sessionId,
           }
         }

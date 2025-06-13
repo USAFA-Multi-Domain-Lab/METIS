@@ -3,7 +3,8 @@ import { Request } from 'express'
 import ServerUser from 'metis/server/users'
 import StringToolbox from 'metis/toolbox/strings'
 import { TUserJson } from 'metis/users'
-import { model, ProjectionType } from 'mongoose'
+import { model, ProjectionType, Schema } from 'mongoose'
+import { ensureNoNullCreatedBy, populateCreatedByIfFlagged } from '.'
 import { StatusError } from '../../http'
 import { databaseLogger } from '../../logging'
 import { UserSchema } from './classes'
@@ -153,6 +154,10 @@ const authenticate = async (request: Request): Promise<TUserJson> => {
           firstName: 1,
           lastName: 1,
           needsPasswordReset: 1,
+          createdBy: 1,
+          createdByUsername: 1,
+          createdAt: 1,
+          updatedAt: 1,
           password: 1,
         },
       ).exec()
@@ -160,7 +165,13 @@ const authenticate = async (request: Request): Promise<TUserJson> => {
       if (!userDoc) {
         throw new StatusError('Incorrect username.', 401)
       }
-
+      // If the user is a system user, throw an error.
+      if (userDoc.accessId === 'system') {
+        throw new StatusError(
+          `Failed to authenticate user because the user "{ username: ${username} }" is a system user. System users cannot log in.`,
+          400,
+        )
+      }
       // If the user does not have a password, throw an error.
       if (!userDoc.password) {
         throw new StatusError(
@@ -236,7 +247,7 @@ const findByIdAndModify = (
  * Represents the schema for a user in the database.
  * @see (Schema Generic Type Parameters) [ https://mongoosejs.com/docs/typescript/schemas.html#generic-parameters ]
  */
-const Schema = new UserSchema(
+const userSchema = new UserSchema(
   {
     username: {
       type: String,
@@ -275,12 +286,29 @@ const Schema = new UserSchema(
       trim: true,
       validate: ServerUser.validateName,
     },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    createdByUsername: {
+      type: String,
+      required: true,
+    },
     needsPasswordReset: { type: Boolean, required: true },
     password: {
       type: String,
-      required: true,
       validate: ServerUser.validatePassword,
     },
+    // createdBy: {
+    //   type: Schema.Types.ObjectId,
+    //   ref: 'User',
+    //   required: true,
+    // },
+    // createdByUsername: {
+    //   type: String,
+    //   required: true,
+    // },
     deleted: { type: Boolean, required: true, default: false },
   },
   {
@@ -303,28 +331,30 @@ const Schema = new UserSchema(
 /* -- SCHEMA MIDDLEWARE -- */
 
 // Called before a save is made to the database.
-Schema.pre<TUserDoc>('save', async function (next) {
+userSchema.pre<TUserDoc>('save', async function (next) {
   let user: TUserJson = this.toJSON()
-  await ServerUser.validate(user, this.isNew, next)
+  await ServerUser.validate(UserModel, user, this.isNew, next)
   return next()
 })
 
 // Called before a find or update is made to the database.
-Schema.pre<TPreUserQuery>(
+userSchema.pre<TPreUserQuery>(
   ['find', 'findOne', 'findOneAndUpdate', 'updateOne', 'updateMany'],
   function (next) {
     // Modify the query.
     queryForApiResponse(this)
     queryForFilteredUsers(this)
+    // Populate createdBy.
+    populateCreatedByIfFlagged(this)
     // Call the next middleware.
     return next()
   },
 )
 
 // Converts ObjectIds to strings.
-Schema.post<TPostUserQuery>(
+userSchema.post<TPostUserQuery>(
   ['find', 'findOne', 'updateOne', 'findOneAndUpdate', 'updateMany'],
-  function (userData: TUserDoc | TUserDoc[]) {
+  async function (userData: TUserDoc | TUserDoc[]) {
     // If the user is null, then return.
     if (!userData) return
 
@@ -334,12 +364,14 @@ Schema.post<TPostUserQuery>(
     // Transform the ObjectIds to strings.
     for (let userDatum of userData) {
       userDatum._id = userDatum.id
+      // Confirm that no createdBy fields are null.
+      await ensureNoNullCreatedBy(userDatum, UserModel)
     }
   },
 )
 
 // Called after a save is made to the database.
-Schema.post<TUserDoc>('save', function () {
+userSchema.post<TUserDoc>('save', function () {
   // Remove unneeded properties.
   this.set('__v', undefined)
   this.set('deleted', undefined)
@@ -351,5 +383,5 @@ Schema.post<TUserDoc>('save', function () {
 /**
  * The mongoose model for a user in the database.
  */
-const UserModel = model<TUser, TUserModel>('User', Schema)
+const UserModel = model<TUser, TUserModel>('User', userSchema)
 export default UserModel

@@ -5,6 +5,7 @@ import { databaseLogger } from 'metis/server/logging'
 import ServerLogin from 'metis/server/logins'
 import { TUserJson } from 'metis/users'
 import ApiResponse from '../../library/response'
+import { preventSystemUserWrite } from '../../library/users'
 
 /**
  * This will update a user.
@@ -15,7 +16,7 @@ import ApiResponse from '../../library/response'
 const updateUser = async (request: Request, response: Response) => {
   // Extract the user updates from the request body.
   let userUpdates = request.body
-  let { _id: userId, username } = userUpdates as Partial<TUserJson>
+  let { _id: userId, username, accessId } = userUpdates as Partial<TUserJson>
   // Get the user that is logged in.
   let login: ServerLogin | undefined = ServerLogin.get(request.session.userId)
   let { user: currentUser } = login ?? {}
@@ -26,6 +27,9 @@ const updateUser = async (request: Request, response: Response) => {
   }
 
   try {
+    // Disable system-user write operations.
+    preventSystemUserWrite({ currentUserId: userId, newAccessId: accessId })
+
     // Update the user.
     let userDoc = await UserModel.findByIdAndModify(
       userId,

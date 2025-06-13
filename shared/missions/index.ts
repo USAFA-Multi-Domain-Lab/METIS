@@ -1,11 +1,12 @@
-import User from 'metis/users'
 import { v4 as generateHash } from 'uuid'
-import { TCreateJsonType, TMetisBaseComponents, TMetisComponent } from '..'
+import { MetisComponent, TCreateJsonType, TMetisBaseComponents } from '..'
 import context from '../context'
 import { DateToolbox } from '../toolbox/dates'
 import { AnyObject } from '../toolbox/objects'
+import User, { TCreatedByJson } from '../users'
 import { TAction, TMissionActionJson } from './actions'
 import { TExecution } from './actions/executions'
+import MissionComponent from './component'
 import { TEffect } from './effects'
 import { TMissionFileJson } from './files'
 import {
@@ -26,8 +27,7 @@ import MissionPrototype, {
  */
 export default abstract class Mission<
   T extends TMetisBaseComponents = TMetisBaseComponents,
-> implements TMissionComponent<T, Mission<T>>
-{
+> extends MissionComponent<T, Mission<T>> {
   /**
    * The mission associated with the component.
    * @note This is only used to properly implement `TMissionComponent`.
@@ -67,13 +67,7 @@ export default abstract class Mission<
   }
 
   // Implemented
-  public _id: string
-
-  // Implemented
-  public name: string
-
-  // Implemented
-  public get path(): [...TMissionComponent<any, any>[], this] {
+  public get path(): [...MissionComponent<any, any>[], this] {
     return [this]
   }
 
@@ -91,7 +85,7 @@ export default abstract class Mission<
    * Components within the mission with issues that need to
    * be resolved by a mission designer.
    */
-  public get defectiveComponents(): TMissionComponent<any, any>[] {
+  public get defectiveComponents(): MissionComponent<any, any>[] {
     // Initialize the list.
     let result = []
 
@@ -162,6 +156,19 @@ export default abstract class Mission<
   public launchedAt: Date | null
 
   /**
+   * The user who created the mission.
+   */
+  public createdBy: T['user'] | null
+
+  /**
+   * The username of the user who created the mission.
+   * @note This is needed in the event that the user
+   * has been deleted, yet the mission still exists. The
+   * username will then be displayed in the UI for the mission.
+   */
+  public createdByUsername: string | null
+
+  /**
    * Prototype nodes for the mission, representing the mission's node
    * structure outside of any forces.
    */
@@ -192,38 +199,50 @@ export default abstract class Mission<
     return Mission.determineStructure(this.root)
   }
 
-  /**
-   * @param data The mission data from which to create the mission. Any ommitted values will be set to the default properties defined in Mission.DEFAULT_PROPERTIES.
-   * @param options The options for creating the mission.
-   */
-  public constructor(data: Partial<TMissionJson> = Mission.DEFAULT_PROPERTIES) {
-    this._id = data._id ?? Mission.DEFAULT_PROPERTIES._id
-    this.name = data.name ?? Mission.DEFAULT_PROPERTIES.name
-    this.versionNumber =
-      data.versionNumber ?? Mission.DEFAULT_PROPERTIES.versionNumber
-    this.seed = data.seed ?? Mission.DEFAULT_PROPERTIES.seed
-    this.resourceLabel =
-      data.resourceLabel ?? Mission.DEFAULT_PROPERTIES.resourceLabel
-    this.createdAt = DateToolbox.fromNullableISOString(
-      data.createdAt ?? Mission.DEFAULT_PROPERTIES.createdAt,
-    )
-    this.updatedAt = DateToolbox.fromNullableISOString(
-      data.updatedAt ?? Mission.DEFAULT_PROPERTIES.updatedAt,
-    )
-    this.launchedAt = DateToolbox.fromNullableISOString(
-      data.launchedAt ?? Mission.DEFAULT_PROPERTIES.launchedAt,
-    )
+  protected constructor(
+    _id: string,
+    name: string,
+    versionNumber: number,
+    seed: string,
+    resourceLabel: string,
+    createdAt: Date | null,
+    updatedAt: Date | null,
+    launchedAt: Date | null,
+    createdBy: User | null,
+    createdByUsername: string | null,
+    structure: AnyObject,
+    prototypeData: TMissionPrototypeJson[],
+    forceData: TMissionForceJson[],
+    fileData: TMissionFileJson[],
+  ) {
+    super(_id, name, false)
+
+    this.versionNumber = versionNumber
+    this.seed = seed
+    this.resourceLabel = resourceLabel
+    this.createdAt = createdAt
+    this.updatedAt = updatedAt
+    this.launchedAt = launchedAt
+    this.createdBy = createdBy
+    this.createdByUsername = createdByUsername
+
     this.prototypes = []
     this.forces = []
     this.files = []
     this.root = this.initializeRoot()
 
-    this.importStructure(
-      data.structure ?? Mission.DEFAULT_PROPERTIES.structure,
-      data.prototypes ?? Mission.DEFAULT_PROPERTIES.prototypes,
-    )
-    this.importForces(data.forces ?? Mission.DEFAULT_PROPERTIES.forces)
-    this.importFiles(data.files ?? Mission.DEFAULT_PROPERTIES.files)
+    this.importStructure(structure, prototypeData)
+    this.importForces(forceData)
+    this.importFiles(fileData)
+  }
+
+  /**
+   * @param component The component in question.
+   * @returns Whether the given component is a part of
+   * this mission.
+   */
+  public has(component: MissionComponent<T, Mission<T>>): boolean {
+    return component.mission._id === this._id
   }
 
   /**
@@ -247,6 +266,8 @@ export default abstract class Mission<
       createdAt: DateToolbox.toNullableISOString(this.createdAt),
       updatedAt: DateToolbox.toNullableISOString(this.updatedAt),
       launchedAt: DateToolbox.toNullableISOString(this.launchedAt),
+      createdBy: null,
+      createdByUsername: null,
       structure: {},
       forces: [],
       files: [],
@@ -311,15 +332,18 @@ export default abstract class Mission<
       // Filter files based on the force passed,
       // if one is passed.
       if (force) {
-        filesToAdd = this.files.filter((file) =>
-          file.initialAccess.includes(force._id),
-        )
+        filesToAdd = this.files.filter((file) => file.hasAccess(force))
       } else {
         filesToAdd = this.files
       }
 
       json.files = filesToAdd.map((file) => file.toJson())
     }
+
+    // Add createdBy and createdByUsername to the JSON,
+    // if not null.
+    if (this.createdBy) json.createdBy = this.createdBy.toCreatedByJson()
+    if (this.createdByUsername) json.createdByUsername = this.createdByUsername
 
     // Expose the ID if the option is set.
     if (idExposure) json._id = this._id
@@ -361,6 +385,26 @@ export default abstract class Mission<
 
     // Return the result.
     return json
+  }
+
+  /**
+   * Returns the mission as a JSON object that can be saved
+   * to the database.
+   * @param options Passed to {@link Mission.toJson}.
+   * @returns The JSON object representing the mission.
+   */
+  public toSaveJson(options: TMissionJsonOptions = {}): TMissionSaveJson {
+    let json: TMissionJson = this.toJson(options)
+
+    if (!json.createdBy || !json.createdByUsername) {
+      throw new Error('Mission must have a creator to be saved.')
+    }
+
+    return {
+      ...json,
+      createdBy: json.createdBy,
+      createdByUsername: json.createdByUsername,
+    }
   }
 
   /**
@@ -509,7 +553,7 @@ export default abstract class Mission<
    * if no node is found.
    */
   public getNodeById(
-    nodeId: TMetisComponent['_id'] | null | undefined,
+    nodeId: MetisComponent['_id'] | null | undefined,
   ): TNode<T> | undefined {
     return Mission.getNodeById(this, nodeId)
   }
@@ -533,7 +577,7 @@ export default abstract class Mission<
    * if the action is not found.
    */
   public getActionById(
-    actionId: TMetisComponent['_id'] | null | undefined,
+    actionId: MetisComponent['_id'] | null | undefined,
   ): TAction<T> | TMissionActionJson | undefined {
     return Mission.getActionById(this, actionId)
   }
@@ -554,12 +598,23 @@ export default abstract class Mission<
   }
 
   /**
+   * @param fileId The ID of the file to get.
+   * @returns The file with the given ID, or undefined
+   * if the file is not found.
+   */
+  public getFileById(
+    fileId: string | null | undefined,
+  ): T['missionFile'] | undefined {
+    return this.files.find((file) => file._id === fileId)
+  }
+
+  /**
    * @param executionId The ID of the execution to get.
    * @returns The execution with the given ID, or undefined
    * if the execution is not found.
    */
   public getExecution(
-    executionId: TMetisComponent['_id'],
+    executionId: MetisComponent['_id'],
   ): TExecution<T> | undefined {
     for (let node of this.nodes.values()) {
       let execution = node.getExecution(executionId)
@@ -684,7 +739,7 @@ export default abstract class Mission<
   /**
    * The default properties for a Mission object.
    */
-  public static get DEFAULT_PROPERTIES(): Required<TMissionJson> {
+  public static get DEFAULT_PROPERTIES(): Required<TMissionDefaultJson> {
     return {
       _id: generateHash(),
       name: 'New Mission',
@@ -694,6 +749,8 @@ export default abstract class Mission<
       createdAt: null,
       updatedAt: null,
       launchedAt: null,
+      createdBy: null,
+      createdByUsername: null,
       structure: {},
       forces: [MissionForce.DEFAULT_FORCES[0]],
       prototypes: [MissionPrototype.DEFAULT_PROPERTIES],
@@ -947,6 +1004,8 @@ export type TMissionJson = TCreateJsonType<
     createdAt: string | null
     updatedAt: string | null
     launchedAt: string | null
+    createdBy: TCreatedByJson | string | null
+    createdByUsername: string | null
     forces: TMissionForceJson[]
     prototypes: TMissionPrototypeJson[]
     structure: AnyObject
@@ -955,10 +1014,48 @@ export type TMissionJson = TCreateJsonType<
 >
 
 /**
+ * JSON representation of the default values for a
+ * Mission object.
+ */
+export interface TMissionDefaultJson extends TMissionJson {
+  createdAt: null
+  updatedAt: null
+  launchedAt: null
+  createdBy: null
+  createdByUsername: null
+}
+
+/**
+ * JSON data for a mission that is known to exist
+ * in the METIS database.
+ */
+export interface TMissionExistingJson extends TMissionJson {
+  // Require values that are no longer optional
+  // post save.
+  _id: string
+  createdAt: string
+  updatedAt: string
+  createdBy: TCreatedByJson | string
+  createdByUsername: string
+}
+
+/**
+ * JSON data for a mission that is known to exist
+ * in the METIS database, but does not include
+ * any force, prototype, or file data.
+ */
+export type TMissionShallowExistingJson = Omit<
+  TMissionExistingJson,
+  'forces' | 'prototypes' | 'files' | 'structure'
+>
+
+/**
  * Session-agnostic JSON representation of a Mission object
  * which can be saved to a database.
  */
 export type TMissionSaveJson = Omit<TMissionJson, 'forces'> & {
+  createdBy: TCreatedByJson | string
+  createdByUsername: string
   forces: TMissionForceSaveJson[]
 }
 
@@ -1035,42 +1132,10 @@ export type TFileExposure =
   | { expose: 'none' }
 
 /**
- * An object that makes up a part of a mission, including
- * a mission itself. Examples are nodes, actions, effects,
- * and so on.
- * @note Implement this to make a class compatible.
- */
-export interface TMissionComponent<
-  T extends TMetisBaseComponents,
-  Self extends TMissionComponent<T, Self>,
-> extends TMetisComponent {
-  /**
-   * The mission associated with the component.
-   */
-  mission: Self extends Mission<any> ? Self : T['mission']
-  /**
-   * The path to the component within the mission.
-   */
-  get path(): [...TMissionComponent<any, any>[], Self]
-  /**
-   * Whether the component has some issue that needs to
-   * be resolved by the designer of the mission. Added
-   * context for the defect of the component can be found
-   * by checking the `defectiveMessage` field.
-   */
-  get defective(): boolean
-  /**
-   * Provides additional context for why the component
-   * is defective, assuming `defective` is true.
-   */
-  get defectiveMessage(): string
-}
-
-/**
  * Defines the type for the `path` property
  * of a mission component.
  */
 export type TMissionComponentPath<
   T extends TMetisBaseComponents,
-  Self extends TMissionComponent<T, Self>,
-> = [...TMissionComponent<any, any>[], Self]
+  Self extends MissionComponent<T, Self>,
+> = [...MissionComponent<any, any>[], Self]

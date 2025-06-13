@@ -7,17 +7,51 @@ import ServerEffect from 'metis/server/missions/effects'
 import ServerMissionForce from 'metis/server/missions/forces'
 import ServerMissionNode from 'metis/server/missions/nodes'
 import StringToolbox from 'metis/toolbox/strings'
-import { model, ProjectionType, QueryOptions, Schema } from 'mongoose'
+import mongoose, {
+  AnyObject,
+  model,
+  ProjectionType,
+  QueryOptions,
+  Schema,
+} from 'mongoose'
+import { ensureNoNullCreatedBy, populateCreatedByIfFlagged } from '.'
+import MetisDatabase from '..'
 import { MissionSchema } from './classes'
-import type {
-  TMission,
-  TMissionDoc,
-  TMissionModel,
-  TPostMissionQuery,
-  TPreMissionQuery,
+import {
+  type TMission,
+  type TMissionDoc,
+  type TMissionModel,
+  type TPostMissionQuery,
+  type TPreMissionQuery,
 } from './types'
 
 /* -- SCHEMA FUNCTIONS -- */
+
+/**
+ * Converts all object IDs in the given object
+ * to strings.
+ * @param object The object to process.
+ */
+const objectIdsToStrings = (object: AnyObject): void => {
+  // The algorithm used to recursively process
+  // the object.
+  const algorithm = (cursor: any): any => {
+    if (cursor instanceof mongoose.Types.ObjectId) {
+      return cursor.toString()
+    } else if (Array.isArray(cursor)) {
+      return cursor.map(algorithm)
+    } else if (typeof cursor === 'object' && cursor !== null) {
+      for (const key in cursor) {
+        if (cursor.hasOwnProperty(key)) {
+          cursor[key] = algorithm(cursor[key])
+        }
+      }
+    }
+    return cursor
+  }
+
+  algorithm(object)
+}
 
 /**
  * Transforms the mission document to JSON.
@@ -27,10 +61,7 @@ import type {
  * @returns The JSON representation of a `Mission` document.
  */
 const toJson = (doc: TMissionDoc, ret: TMissionSaveJson, options: any) => {
-  return {
-    ...ret,
-    _id: doc.id,
-  }
+  return objectIdsToStrings(ret)
 }
 
 /**
@@ -110,6 +141,58 @@ const findByIdAndModify = (
       return reject(error)
     }
   })
+}
+
+/* -- SCHEMA MIDDLEWARE -- */
+
+/**
+ * Ensures that any file references that are null
+ * get populated with the proper reference IDs.
+ * This is necessary because `null` indicates that
+ * the file reference has been deleted, but the ID
+ * is still needed for METIS to function properly.
+ * @param mission The mission document to process.
+ * @throws An error if the recursive query fails to
+ * retrieve the necessary data.
+ */
+const ensureNoNullFiles = async (mission: TMissionDoc) => {
+  // Quick scan to see if we even need to re-query
+  if (!mission.files || !mission.files.some((f) => f.reference === null)) return
+
+  // Fetch unpopulated file references only
+  const unpopulated = await MissionModel.findOne(
+    { _id: mission._id },
+    { id: 1, files: 1 },
+    { populateCreatedBy: false, populateFileReferences: false },
+  ).lean() // lean gives raw JS object
+
+  if (!unpopulated) {
+    throw MetisDatabase.generateValidationError(
+      `Failed to find mission document with ID "${mission._id}".`,
+    )
+  }
+
+  // Create a map of mission-file IDs to their references.
+  const idMap = new Map(
+    unpopulated.files.map((f) => [f._id.toString(), f.reference]),
+  )
+
+  for (let file of mission.files) {
+    if (file.reference === null) {
+      // Assign retrieved reference IDs to the original
+      // document.
+
+      const recoveredRef = idMap.get(file._id.toString())
+
+      if (!recoveredRef) {
+        throw MetisDatabase.generateValidationError(
+          `Failed to find reference ID for file ${file._id} in mission ${mission.name}`,
+        )
+      }
+
+      file.reference = recoveredRef.toString()
+    }
+  }
 }
 
 /**
@@ -193,6 +276,15 @@ export const schema = new MissionSchema(
       maxlength: ServerMission.MAX_RESOURCE_LABEL_LENGTH,
     },
     launchedAt: { type: Date, default: null },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    createdByUsername: {
+      type: String,
+      required: true,
+    },
     deleted: { type: Boolean, required: true, default: false },
     structure: {
       type: {},
@@ -412,9 +504,11 @@ export const schema = new MissionSchema(
           },
           alias: {
             type: String,
-            default: null,
-            required: true,
             validate: validate_mission_files_alias,
+            maxLength: Mission.MAX_NAME_LENGTH,
+          },
+          lastKnownName: {
+            type: String,
             maxLength: Mission.MAX_NAME_LENGTH,
           },
           // todo: Add validation to check that the
@@ -458,9 +552,15 @@ schema.pre<TMissionDoc>('save', function (next) {
 schema.pre<TPreMissionQuery>(
   ['find', 'findOne', 'findOneAndUpdate', 'updateOne'],
   function (next) {
+    const { populateFileReferences = true } = this.getOptions()
+
     // Modify the query.
     queryForApiResponse(this)
-    // Call the next middleware.
+    // Populate createdBy.
+    populateCreatedByIfFlagged(this)
+    // Populate file-references.
+    if (populateFileReferences) this.populate('files.reference')
+
     return next()
   },
 )
@@ -468,16 +568,21 @@ schema.pre<TPreMissionQuery>(
 // Converts ObjectIds to strings.
 schema.post<TPostMissionQuery>(
   ['find', 'findOne', 'updateOne', 'findOneAndUpdate'],
-  function (missionData: TMissionDoc | TMissionDoc[]) {
+  async function (missionData: TMissionDoc | TMissionDoc[]) {
     // If the mission is null, then return.
     if (!missionData) return
 
     // Convert the mission data to an array if it isn't already.
     missionData = !Array.isArray(missionData) ? [missionData] : missionData
 
-    // Transform the ObjectIds to strings.
     for (let missionDatum of missionData) {
-      missionDatum._id = missionDatum.id
+      // Transform the ObjectIds to strings.
+      // todo: Confirm this is working with lean queries.
+      if (missionDatum.id) missionDatum._id = missionDatum.id
+      // Confirm that no createdBy fields are null.
+      await ensureNoNullCreatedBy(missionDatum, MissionModel)
+      // Confirm that no file references are null.
+      await ensureNoNullFiles(missionDatum)
     }
   },
 )

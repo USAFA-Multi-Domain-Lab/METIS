@@ -16,7 +16,7 @@ export default function UserApiRoute(): Mocha.Suite {
       try {
         let login = await agent.get('/api/v1/logins/')
         let { user: userJson } = login.body
-        let user = new ServerUser(userJson)
+        let user = ServerUser.fromExistingJson(userJson)
         let hasCorrectPermissions: boolean = user.isAuthorized([
           'users_read_students',
           'users_write_students',

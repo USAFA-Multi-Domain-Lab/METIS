@@ -1,6 +1,6 @@
 import { TMission, TMissionJson } from 'metis/missions'
 import { TExecutionCheats } from 'metis/missions/actions/executions'
-import { TMetisBaseComponents, TMetisComponent } from '..'
+import { MetisComponent, TMetisBaseComponents } from '..'
 import { TAction } from '../missions/actions'
 import User, { TUserJson } from '../users'
 import { TMember, TSessionMemberJson } from './members'
@@ -10,12 +10,7 @@ import { TMember, TSessionMemberJson } from './members'
  */
 export default abstract class Session<
   T extends TMetisBaseComponents = TMetisBaseComponents,
-> implements TMetisComponent
-{
-  public readonly _id: string
-
-  public name: string
-
+> extends MetisComponent {
   /**
    * The user ID of the owner of the session.
    */
@@ -221,8 +216,8 @@ export default abstract class Session<
     memberData: TSessionMemberJson[],
     banList: string[],
   ) {
-    this._id = _id
-    this.name = name
+    super(_id, name, false)
+
     this.ownerId = ownerId
     this.ownerUsername = ownerUsername
     this.ownerFirstName = ownerFirstName
@@ -267,7 +262,9 @@ export default abstract class Session<
    * @returns The member with the given ID, or undefined
    * if not found.
    */
-  public getMember(_id: TMember<T>['_id']): TMember<T> | undefined {
+  public getMember(
+    _id: TMember<T>['_id'] | null | undefined,
+  ): TMember<T> | undefined {
     return this.members.find((member) => member._id === _id)
   }
 
@@ -276,7 +273,9 @@ export default abstract class Session<
    * @returns The member with the given user ID, or undefined
    * if not found.
    */
-  public getMemberByUserId(userId: User['_id']): TMember<T> | undefined {
+  public getMemberByUserId(
+    userId: User['_id'] | null | undefined,
+  ): TMember<T> | undefined {
     return this.members.find((member) => member.userId === userId)
   }
 

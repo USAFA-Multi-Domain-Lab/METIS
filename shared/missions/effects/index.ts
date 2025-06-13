@@ -1,5 +1,6 @@
-import { TCreateJsonType, TMetisBaseComponents } from 'metis/index'
-import { TMission, TMissionComponent } from '..'
+import { TFileMetadata } from 'metis/target-environments/args/mission-component/file-arg'
+import { TMission } from '..'
+import { TCreateJsonType, TMetisBaseComponents } from '../../'
 import { TTargetArg } from '../../target-environments/args'
 import { TActionMetadata } from '../../target-environments/args/mission-component/action-arg'
 import { TForceMetadata } from '../../target-environments/args/mission-component/force-arg'
@@ -8,6 +9,7 @@ import Dependency from '../../target-environments/dependencies'
 import { AnyObject } from '../../toolbox/objects'
 import StringToolbox from '../../toolbox/strings'
 import MissionAction, { TAction } from '../actions'
+import MissionComponent from '../component'
 import { TForce } from '../forces'
 import { TNode } from '../nodes'
 
@@ -16,8 +18,7 @@ import { TNode } from '../nodes'
  */
 export default abstract class Effect<
   T extends TMetisBaseComponents = TMetisBaseComponents,
-> implements TMissionComponent<T, Effect<T>>
-{
+> extends MissionComponent<T, Effect<T>> {
   /**
    * The original data used to construct the effect.
    */
@@ -61,9 +62,6 @@ export default abstract class Effect<
    */
   public action: TAction<T>
 
-  // Implemented
-  public _id: string
-
   /**
    * The ID of the target for the effect.
    */
@@ -88,10 +86,7 @@ export default abstract class Effect<
   public targetEnvironmentVersion: string
 
   // Implemented
-  public name: string
-
-  // Implemented
-  public get path(): [...TMissionComponent<any, any>[], this] {
+  public get path(): [...MissionComponent<any, any>[], this] {
     return [this.mission, this.force, this.node, this.action, this]
   }
 
@@ -279,15 +274,15 @@ export default abstract class Effect<
    * @param data Additional information for the effect.
    */
   public constructor(action: T['action'], data: TEffectJson) {
+    super(data._id, data.name, false)
+
     this.action = action
     this.target = this.determineTarget(data.targetId, data.environmentId)
 
     // Parse data.
     this.originalData = data
-    this._id = data._id
     this.targetEnvironmentVersion = data.targetEnvironmentVersion
     this.trigger = data.trigger
-    this.name = data.name
     this.description = data.description
     this.args = data.args
     this.localKey = data.localKey
@@ -392,7 +387,8 @@ export default abstract class Effect<
         // if the force exists and if the condition is met.
         if (dependency.name === 'force') {
           const force = this.getForceFromArgs(dependency.dependentId)
-          dependencyMet = dependency.condition(force)
+          const value = { force }
+          dependencyMet = dependency.condition(value)
         }
         // If the dependency is a node dependency then check
         // if the node exists and if the condition is met.
@@ -409,6 +405,13 @@ export default abstract class Effect<
           const node = this.getNodeFromArgs(dependency.dependentId)
           const action = this.getActionFromArgs(dependency.dependentId)
           const value = { force, node, action }
+          dependencyMet = dependency.condition(value)
+        }
+        // If the dependency is a file dependency then check
+        // if the file exists and if the condition is met.
+        else if (dependency.name === 'file') {
+          const file = this.getFileFromArgs(dependency.dependentId)
+          const value = { file }
           dependencyMet = dependency.condition(value)
         }
         // Otherwise, check if the condition is met.
@@ -539,6 +542,29 @@ export default abstract class Effect<
   }
 
   /**
+   * Gets the file metadata that's stored in the effect's arguments.
+   * @param argId The ID of the argument from which to get the file.
+   * @returns The file metadata if found, otherwise undefined.
+   */
+  public getFileMetadataInArgs = (
+    argId: string,
+  ): Required<TFileMetadata> | undefined => {
+    const fileInArgs: TFileMetadata | undefined = this.args[argId]
+
+    // If the file argument is not found, then return undefined.
+    if (!fileInArgs) return undefined
+    // Otherwise, extract the metadata.
+    let fileId = fileInArgs.fileId
+    let fileName = fileInArgs.fileName
+
+    // If any metadata is missing, then return undefined.
+    if (!fileId || !fileName) return undefined
+
+    // Return the file metadata.
+    return { fileId, fileName }
+  }
+
+  /**
    * Gets the force stored in the effect's arguments.
    * @param argId The ID of the argument to get the force from.
    * @returns The force if found, otherwise undefined.
@@ -598,6 +624,21 @@ export default abstract class Effect<
     if (!(action instanceof MissionAction)) return undefined
     // Otherwise, return the action.
     return action
+  }
+
+  /**
+   * Gets the file stored in the effect's arguments.
+   * @param argId The ID of the argument from which to
+   * get the file.
+   * @returns The file if found, otherwise undefined.
+   */
+  public getFileFromArgs = (argId: string): T['missionFile'] | undefined => {
+    // Get the file argument.
+    const fileInArgs: TFileMetadata | undefined = this.args[argId]
+    // Extract the metadata.
+    const fileId = fileInArgs?.fileId
+    // Get the file from the mission.
+    return this.mission.getFileById(fileId)
   }
 
   /**

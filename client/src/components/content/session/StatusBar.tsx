@@ -1,10 +1,10 @@
 import './StatusBar.scss'
 
-import { TServerConnectionStatus } from '../../../../../shared/connect/data'
 import { useState } from 'react'
-import { useGlobalContext } from 'src/context'
-import { useEventListener } from 'src/toolbox/hooks'
 import { TUnfulfilledReqData } from 'src/connect/servers'
+import { useGlobalContext } from 'src/context/global'
+import { useEventListener } from 'src/toolbox/hooks'
+import { TServerConnectionStatus } from '../../../../../shared/connect/data'
 
 /**
  * A status bar that displays the status of a server connection

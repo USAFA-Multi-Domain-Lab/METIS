@@ -1,6 +1,7 @@
-import { TMetisBaseComponents } from 'metis/index'
 import { v4 as generateHash } from 'uuid'
-import { TMission, TMissionComponent } from '..'
+import { TMission } from '..'
+import { TMetisBaseComponents } from '../../'
+import MissionComponent from '../component'
 
 /**
  * This represents a prototype for a mission node displayed
@@ -8,26 +9,26 @@ import { TMission, TMissionComponent } from '..'
  */
 export default abstract class MissionPrototype<
   T extends TMetisBaseComponents = TMetisBaseComponents,
-> implements TMissionComponent<T, MissionPrototype<T>>
-{
+> extends MissionComponent<T, MissionPrototype<T>> {
   /**
-   * The mission of which the prototype is a part.
+   * @see {@link MissionComponent.mission}
    */
-  public mission: TMission<T>
+  protected _mission: TMission<T>
+  // Implemented
+  public get mission(): TMission<T> {
+    return this._mission
+  }
 
-  /**
-   * The ID for the prototype.
-   */
-  public _id: string
-
-  /**
-   * The display name of the prototype.
-   */
+  // Overridden
   public get name(): string {
     return this._id.substring(0, 8)
   }
+  // Overridden
+  public set name(value: string) {
+    throw new Error('Cannot set name of MissionPrototype.')
+  }
 
-  public get path(): [...TMissionComponent<any, any>[], this] {
+  public get path(): [...MissionComponent<any, any>[], this] {
     return [this.mission, this]
   }
 
@@ -208,9 +209,10 @@ export default abstract class MissionPrototype<
     data: Partial<TMissionPrototypeJson> = MissionPrototype.DEFAULT_PROPERTIES,
     options: TMissionPrototypeOptions<TPrototype<T>> = {},
   ) {
+    super(data._id ?? MissionPrototype.DEFAULT_PROPERTIES._id, '', false)
+
     // Set properties from data.
-    this.mission = mission
-    this._id = data._id ?? MissionPrototype.DEFAULT_PROPERTIES._id
+    this._mission = mission
     this.structureKey =
       data.structureKey ?? MissionPrototype.DEFAULT_PROPERTIES.structureKey
     this._depthPadding =

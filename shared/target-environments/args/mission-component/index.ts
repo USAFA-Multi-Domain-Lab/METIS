@@ -1,5 +1,6 @@
 import Arg, { TBaseArg, TBaseArgJson } from '..'
 import { TActionMetadata } from './action-arg'
+import { TFileMetadata } from './file-arg'
 import { TForceMetadata } from './force-arg'
 import { TNodeMetadata } from './node-arg'
 
@@ -69,8 +70,10 @@ export type TMissionComponentArg = TBaseArg & {
    *    1. A dropdown box populated with the current list of forces.
    *    2. A dropdown box populated with the current list of nodes (***populated based on the force selected***).
    *    3. A dropdown box populated with the current list of actions (***populated based on the node selected***).
+   * - type === `file`:
+   *    1. A dropdown box populated with the current list of files.
    */
-  type: 'force' | 'node' | 'action'
+  type: 'force' | 'node' | 'action' | 'file'
   /**
    * Determines whether the argument is required or not.
    */
@@ -82,22 +85,11 @@ export type TMissionComponentArg = TBaseArg & {
  */
 export type TMissionComponentArgJson = TBaseArgJson & {
   /**
-   * The argument's input type.
-   * @note This will render up to 3 dropdowns depending on the type.
-   * @options
-   * - type === `force`:
-   *    1. A dropdown box populated with the current list of forces.
-   * - type === `node`:
-   *    1. A dropdown box populated with the current list of forces.
-   *    2. A dropdown box populated with the current list of nodes (***populated based on the force selected***).
-   * - type === `action`:
-   *    1. A dropdown box populated with the current list of forces.
-   *    2. A dropdown box populated with the current list of nodes (***populated based on the force selected***).
-   *    3. A dropdown box populated with the current list of actions (***populated based on the node selected***).
+   * @see {@link TMissionComponentArg.type}
    */
-  type: 'force' | 'node' | 'action'
+  type: TMissionComponentArg['type']
   /**
-   * Determines whether the argument is required or not.
+   * @see {@link TMissionComponentArg.required}
    */
   required: boolean
 }
@@ -110,3 +102,4 @@ export type TMissionComponentMetadata =
   | TForceMetadata
   | TNodeMetadata
   | TActionMetadata
+  | TFileMetadata

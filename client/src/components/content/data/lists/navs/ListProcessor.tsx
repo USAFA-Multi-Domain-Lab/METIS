@@ -3,10 +3,10 @@ import ButtonSvgPanel from 'src/components/content/user-controls/buttons/v3/Butt
 import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
 import If from 'src/components/content/util/If'
 import { compute } from 'src/toolbox'
+import { MetisComponent } from '../../../../../../../shared'
 import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
 import Tooltip from '../../../communication/Tooltip'
 import { useListContext } from '../List'
-import { TListItem } from '../pages/ListItem'
 import './ListProcessor.scss'
 
 /**
@@ -86,7 +86,7 @@ export default function ListProcessor(): JSX.Element | null {
    * in the search field and the current sorting state.
    */
   const process = () => {
-    let result: TListItem[] = []
+    let result: MetisComponent[] = []
     let searchFieldElm = searchField.current
     let filterTermRaw: string = ''
     let filterTerm: string = ''

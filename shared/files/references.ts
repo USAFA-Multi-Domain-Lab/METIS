@@ -1,22 +1,14 @@
-import { TMetisComponent } from '..'
-import { DateToolbox } from '../toolbox/dates'
+import { MetisComponent, TMetisBaseComponents } from '..'
+import { TCreatedByJson } from '../users'
 
 /**
  * A reference to a file stored in the METIS file store.
  * This provides context to where its located, what
  * it is, and how it can be used.
  */
-export default abstract class FileReference implements TMetisComponent {
-  // Implemented
-  public _id: string
-
-  // Implemented
-  /**
-   * This is the original name of the file when it was
-   * uploaded.
-   */
-  public name: string
-
+export default abstract class FileReference<
+  T extends TMetisBaseComponents = TMetisBaseComponents,
+> extends MetisComponent {
   /**
    * The relative path to the file within the METIS
    * file store.
@@ -38,33 +30,53 @@ export default abstract class FileReference implements TMetisComponent {
   /**
    * The date and time when the file was created.
    */
-  public createdAt: Date | null
+  public createdAt: Date
 
   /**
    * The date and time when the file was last updated.
    */
-  public updatedAt: Date | null
+  public updatedAt: Date
+
+  /**
+   * The creator of the file.
+   */
+  public createdBy: T['user']
+
+  /**
+   * The username of the user who created the file.
+   * @note This is needed in the event that the user
+   * has been deleted, yet the file still exists. The
+   * username will then be displayed in the UI for the
+   * file.
+   */
+  public createdByUsername: string
 
   /**
    * See corresponding class properties for details
    * on the parameters of this constructor.
    */
-  public constructor(
+  protected constructor(
     _id: string,
     name: string,
     path: string,
     mimetype: string,
     size: number,
-    createdAt: Date | null,
-    updatedAt: Date | null,
+    createdAt: Date,
+    updatedAt: Date,
+    createdBy: T['user'],
+    createdByUsername: string,
+    deleted: boolean,
   ) {
-    this._id = _id
+    super(_id, name, deleted)
+
     this.name = name
     this.path = path
     this.mimetype = mimetype
     this.size = size
     this.createdAt = createdAt
     this.updatedAt = updatedAt
+    this.createdBy = createdBy
+    this.createdByUsername = createdByUsername
   }
 
   /**
@@ -78,8 +90,11 @@ export default abstract class FileReference implements TMetisComponent {
       path: this.path,
       mimetype: this.mimetype,
       size: this.size,
-      createdAt: DateToolbox.toNullableISOString(this.createdAt),
-      updatedAt: DateToolbox.toNullableISOString(this.updatedAt),
+      createdAt: this.createdAt.toISOString(),
+      updatedAt: this.updatedAt.toISOString(),
+      createdBy: this.createdBy.toCreatedByJson(),
+      createdByUsername: this.createdByUsername,
+      deleted: this.deleted,
     }
   }
 }
@@ -87,7 +102,15 @@ export default abstract class FileReference implements TMetisComponent {
 /**
  * A JSON representation of the `FileReference` class.
  */
-export interface TFileReferenceJson extends TMetisComponent {
+export interface TFileReferenceJson {
+  /**
+   * @see MetisComponent._id
+   */
+  _id: string
+  /**
+   * @see MetisComponent.name
+   */
+  name: string
   /**
    * @see FileReference.path
    */
@@ -103,9 +126,21 @@ export interface TFileReferenceJson extends TMetisComponent {
   /**
    * @see FileReference.createdAt
    */
-  createdAt: string | null
+  createdAt: string
   /**
    * @see FileReference.updatedAt
    */
-  updatedAt: string | null
+  updatedAt: string
+  /**
+   * @see FileReference.createdBy
+   */
+  createdBy: TCreatedByJson | string
+  /**
+   * @see FileReference.createdByUsername
+   */
+  createdByUsername: string
+  /**
+   * @see MetisComponent.deleted
+   */
+  deleted: boolean
 }

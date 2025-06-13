@@ -13,7 +13,7 @@ import { agent } from '../../index.test'
 export default function UserSchema(): Mocha.Suite {
   return describe('User Schema Validation', async function () {
     let response = await agent.get('/api/v1/logins/')
-    let currentUser = new ServerUser(response.body.user)
+    let currentUser = ServerUser.fromExistingJson(response.body.user)
 
     it('Creating a user with all the correct properties should save the user to the database', async function () {
       try {

@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { useCallbackRef, useResizeObserver } from 'src/toolbox/hooks'
+import { MetisComponent } from '../../../../../../shared'
 import { useListContext } from './List'
-import { TListItem } from './pages/ListItem'
 
 /**
  * Handles resizing of the list by recalculating
  * the number of items available per page.
  */
 export default function ListResizeHandler<
-  TItem extends TListItem,
+  TItem extends MetisComponent,
 >(): JSX.Element | null {
   /* -- STATE -- */
 
@@ -44,8 +44,6 @@ export default function ListResizeHandler<
     let blanks = []
 
     for (; page.clientHeight <= initHeight && result < 100; result++) {
-      if (name === 'Actions') console.log(page.clientHeight, initHeight)
-
       let blank = document.createElement('div')
       blank.className = 'ItemBlank ListItemLike'
       items.appendChild(blank)

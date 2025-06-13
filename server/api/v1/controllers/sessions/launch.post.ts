@@ -39,15 +39,13 @@ const launchSession = async (request: Request, response: Response) => {
 
   try {
     // Query for mission.
-    let missionDoc = await MissionModel.findById(missionId)
-      .populate('files.reference')
-      .exec()
+    let missionDoc = await MissionModel.findById(missionId).exec()
     // If mission is not found, throw an error.
     if (missionDoc === null) {
       throw new StatusError(`Mission with ID "${missionId}" not found.`, 404)
     }
     // Create mission.
-    let mission = new ServerMission(missionDoc.toJSON())
+    let mission = ServerMission.fromSaveJson(missionDoc.toJSON())
     // Launch the session.
     let session: SessionServer = SessionServer.launch(
       mission,

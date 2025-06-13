@@ -57,7 +57,7 @@ export default function WsValidation(): Mocha.Suite {
       username: userCredentials.username,
     }).exec()
     expect(userDoc).to.not.equal(null)
-    return new ServerUser(userDoc!)
+    return ServerUser.fromExistingJson(userDoc!)
   }
 
   /**

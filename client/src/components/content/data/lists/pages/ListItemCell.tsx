@@ -1,21 +1,22 @@
+import { ReactNode } from 'react'
 import { compute } from 'src/toolbox'
+import { MetisComponent } from '../../../../../../../shared'
 import Tooltip from '../../../communication/Tooltip'
 import { TListColumnType, useListContext } from '../List'
-import { TListItem } from './ListItem'
 import './ListItemCell.scss'
 
 /**
  * A cell in a `List` component.
  */
-export default function ListItemCell<TItem extends TListItem>({
+export default function ListItemCell<TItem extends MetisComponent>({
   item,
   column,
-  text,
+  children,
 }: TListItemCell<TItem>): JSX.Element | null {
   /* -- STATE -- */
 
   const listContext = useListContext<TItem>()
-  const { getItemTooltip, itemButtonIcons: itemButtons } = listContext
+  const { getItemTooltip, itemButtonIcons, requireEnabledOnly } = listContext
   const [selection, setSelection] = listContext.state.selection
 
   /* -- COMPUTED -- */
@@ -40,12 +41,28 @@ export default function ListItemCell<TItem extends TListItem>({
     // Get vanilla tooltip.
     let description: string = getItemTooltip(item)
 
-    // Add R-Click prompt, if there
-    // are item buttons.
-    if (itemButtons.length) {
-      if (description) description += '\n\t\n'
-      description += `\`L-Click\` to select \n\t\n`
-      description += `\`R-Click\` for options`
+    // If the item is enabled, apply regular
+    // tooltip addendums.
+    if (item.enabled) {
+      // Add R-Click prompt, if there
+      // are item buttons.
+      if (itemButtonIcons.length) {
+        if (description) {
+          description += '\n\t\n'
+        }
+        description += `\`L-Click\` to select \n\t\n`
+        description += `\`R-Click\` for options`
+      }
+    }
+    // Else add the reason for why the item
+    // is disabled.
+    else {
+      if (item.disabledReason) {
+        if (description) {
+          description += '\n\t\n'
+        }
+        description += `*${item.disabledReason}*`
+      }
     }
 
     return description
@@ -56,14 +73,14 @@ export default function ListItemCell<TItem extends TListItem>({
   /**
    * Callback for when the item cell is clicked.
    */
-  const onClick = () => setSelection(item)
+  const onClick = requireEnabledOnly(item, () => setSelection(item))
 
   /* -- RENDER -- */
 
   // Render the item cell.
   return (
     <div className={rootClass} onClick={onClick}>
-      {text} <Tooltip description={tooltipDescription} />
+      <Tooltip description={tooltipDescription} /> {children}
     </div>
   )
 }
@@ -71,7 +88,7 @@ export default function ListItemCell<TItem extends TListItem>({
 /**
  * Props for `ListColumnLabel`.
  */
-export type TListItemCell<TItem extends TListItem> = {
+export type TListItemCell<TItem extends MetisComponent> = {
   /**
    * The item to display in the cell.
    */
@@ -81,7 +98,7 @@ export type TListItemCell<TItem extends TListItem> = {
    */
   column: TListColumnType<TItem>
   /**
-   * The text to display in the cell.
+   * The JSX to display in the cell.
    */
-  text: string
+  children?: ReactNode
 }

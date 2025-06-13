@@ -16,8 +16,8 @@ export function DetailColorSelector({
   fieldType,
   label,
   colors,
-  stateValue,
-  setState,
+  value: stateValue,
+  setValue: setState,
   // Optional Properties
   buttons = [],
   isExpanded = false,

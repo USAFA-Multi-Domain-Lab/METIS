@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useButtonMenuEngine } from 'src/components/content/user-controls/buttons/ButtonMenu'
 import ButtonSvgPanel from 'src/components/content/user-controls/buttons/v3/ButtonSvgPanel'
 import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
 import { useListContext } from '../List'
 

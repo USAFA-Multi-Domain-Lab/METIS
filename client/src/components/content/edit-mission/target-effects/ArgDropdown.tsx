@@ -6,7 +6,7 @@ import {
   TDropdownArg,
   TDropdownArgOption,
 } from '../../../../../../shared/target-environments/args/dropdown-arg'
-import { DetailDropdown } from '../../form/DetailDropdown'
+import DetailDropdown from '../../form/dropdown/DetailDropdown'
 
 /**
  * Renders a dropdown for the argument whose type is `"dropdown"`.
@@ -164,8 +164,8 @@ export default function ArgDropdown({
         fieldType={'required'}
         label={arg.name}
         options={availableOptions}
-        stateValue={requiredValue}
-        setState={setRequiredValue}
+        value={requiredValue}
+        setValue={setRequiredValue}
         isExpanded={false}
         tooltipDescription={arg.tooltipDescription}
         getKey={({ _id }) => _id}
@@ -183,8 +183,8 @@ export default function ArgDropdown({
         fieldType={'optional'}
         label={arg.name}
         options={availableOptions}
-        stateValue={optionalValue}
-        setState={setOptionalValue}
+        value={optionalValue}
+        setValue={setOptionalValue}
         isExpanded={false}
         tooltipDescription={arg.tooltipDescription}
         getKey={(option) => option?._id}

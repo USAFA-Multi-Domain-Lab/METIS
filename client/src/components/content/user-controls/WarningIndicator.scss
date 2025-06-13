@@ -1,0 +1,21 @@
+@import 'src/assets/styles/config.scss';
+
+.WarningIndicator {
+  display: inline-block;
+  cursor: help;
+
+  .WarningIcon {
+    width: 1.5em;
+    height: 1.5em;
+    background-image: url('/assets/images/icons/warning-transparent.svg');
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  &:hover {
+    .WarningIcon {
+      background-image: url('/assets/images/icons/warning-filled.svg');
+    }
+  }
+}

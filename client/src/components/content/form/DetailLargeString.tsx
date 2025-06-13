@@ -17,8 +17,8 @@ export function DetailLargeString({
   fieldType,
   handleOnBlur,
   label,
-  stateValue,
-  setState,
+  value: stateValue,
+  setValue: setState,
   // Optional Properties
   defaultValue = undefined,
   errorMessage = 'At least one character is required here.',

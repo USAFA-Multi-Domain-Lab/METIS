@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import MetisInfo from 'src/info'
 import { compute } from 'src/toolbox'
 import { useMountHandler } from 'src/toolbox/hooks'

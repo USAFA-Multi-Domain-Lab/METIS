@@ -1,6 +1,6 @@
 import { AnyObject } from 'metis/toolbox/objects'
 import { TTargetEnv } from '..'
-import { TMetisBaseComponents } from '../..'
+import { MetisComponent, TMetisBaseComponents } from '../..'
 import { TTargetEnvExposedContext } from '../../../server/target-environments/context'
 import Arg, { TTargetArg, TTargetArgJson } from '../args'
 
@@ -9,7 +9,7 @@ import Arg, { TTargetArg, TTargetArgJson } from '../args'
  */
 export default abstract class Target<
   T extends TMetisBaseComponents = TMetisBaseComponents,
-> {
+> extends MetisComponent {
   /**
    * The environment in which the target exists.
    */
@@ -21,16 +21,6 @@ export default abstract class Target<
   public environmentId(): string {
     return this.environment._id
   }
-
-  /**
-   * The ID of the target.
-   */
-  public _id: string
-
-  /**
-   * The name of the target.
-   */
-  public name: string
 
   /**
    * Describes what the target is.
@@ -56,9 +46,13 @@ export default abstract class Target<
     environment: TTargetEnv<T>,
     data: Partial<TTargetJson> = Target.DEFAULT_PROPERTIES,
   ) {
+    super(
+      data._id ?? Target.DEFAULT_PROPERTIES._id,
+      data.name ?? Target.DEFAULT_PROPERTIES.name,
+      false,
+    )
+
     this.environment = environment
-    this._id = data._id ?? Target.DEFAULT_PROPERTIES._id
-    this.name = data.name ?? Target.DEFAULT_PROPERTIES.name
     this.description = data.description ?? Target.DEFAULT_PROPERTIES.description
     this.script = data.script ?? Target.DEFAULT_PROPERTIES.script
     this.args = Arg.fromJson(data.args ?? Target.DEFAULT_PROPERTIES.args)

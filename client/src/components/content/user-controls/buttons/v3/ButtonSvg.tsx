@@ -1,5 +1,5 @@
 import React from 'react'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
 import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
 import Tooltip from '../../../communication/Tooltip'
@@ -114,8 +114,14 @@ export default function ({
     <div
       className={rootClasses.value}
       style={rootStyle}
-      onClick={onClick}
-      onCopy={onCopy}
+      onClick={(event) => {
+        if (disabled) return
+        onClick(event)
+      }}
+      onCopy={(event) => {
+        if (disabled) return
+        onCopy(event)
+      }}
     >
       <div className='ButtonIcon' style={iconStyle}></div>
       <div className='ButtonLabel'>

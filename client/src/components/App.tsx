@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useRef } from 'react'
 import ServerConnection from 'src/connect/servers'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import MetisInfo from 'src/info'
 import SessionClient from 'src/sessions'
 import { ClientTargetEnvironment } from 'src/target-environments'

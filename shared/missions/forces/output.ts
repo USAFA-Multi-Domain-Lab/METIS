@@ -1,20 +1,16 @@
 import memoizeOne from 'memoize-one/dist/memoize-one'
-import { TMetisBaseComponents, TMetisComponent } from 'metis/index'
 import Mission from 'metis/missions'
 import { TExecution } from 'metis/missions/actions/executions'
 import { TForce, TMissionForceSaveJson } from '.'
+import { MetisComponent, TMetisBaseComponents } from '../../'
 
 /**
  * An output that's displayed in a force's output panel.
  */
 export default abstract class MissionOutput<
   T extends TMetisBaseComponents = TMetisBaseComponents,
-> implements TMetisComponent
-{
-  // Implemented
-  public readonly _id: string
-
-  // Implemented
+> extends MetisComponent {
+  // Overriden
   public get name(): string {
     return this._id.substring(0, 8)
   }
@@ -177,7 +173,8 @@ export default abstract class MissionOutput<
    * @param options The options for creating the output.
    */
   public constructor(force: TForce<T>, data: TOutputJson) {
-    this._id = data._id
+    super(data._id, '', false)
+
     this.context = data.context
     this.prefix = data.prefix
     this.message = data.message
@@ -268,7 +265,7 @@ export interface TOutputContextNode {
   /**
    * The ID of the node that invoked the output.
    */
-  sourceNodeId: TMetisComponent['_id']
+  sourceNodeId: MetisComponent['_id']
 }
 
 /**
@@ -283,7 +280,7 @@ export interface TOutputContextExecution {
   /**
    * The ID of the execution that invoked the output.
    */
-  sourceExecutionId: TMetisComponent['_id']
+  sourceExecutionId: MetisComponent['_id']
 }
 
 /**

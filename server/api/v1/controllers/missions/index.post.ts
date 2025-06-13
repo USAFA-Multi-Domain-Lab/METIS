@@ -2,6 +2,7 @@ import { Request, Response } from 'express-serve-static-core'
 import { TMissionSaveJson } from 'metis/missions'
 import MissionModel from 'metis/server/database/models/missions'
 import { databaseLogger } from 'metis/server/logging'
+import ServerUser from 'metis/server/users'
 import ApiResponse from '../../library/response'
 
 /**
@@ -20,6 +21,7 @@ const createMission = async (request: Request, response: Response) => {
     forces,
     prototypes,
   } = request.body as TMissionSaveJson
+  let currentUser: ServerUser = response.locals.user
 
   try {
     // Create mission.
@@ -31,6 +33,8 @@ const createMission = async (request: Request, response: Response) => {
       structure,
       forces,
       prototypes,
+      createdBy: currentUser._id,
+      createdByUsername: currentUser.username,
     })
     // Log the creation of the mission.
     databaseLogger.info(`New mission created named "${missionDoc.name}".`)

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef } from 'react'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import ClientUser from 'src/users'
 import { TListenerTarget } from '../../../../shared/events'
 import { TLogin } from '../../../../shared/logins'

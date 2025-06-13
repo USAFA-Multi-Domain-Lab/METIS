@@ -1,7 +1,7 @@
-import { TMetisBaseComponents, TMetisComponent } from 'metis/index'
 import { AnyObject } from 'metis/toolbox/objects'
 import { v4 as generateHash } from 'uuid'
-import Mission, { TMission, TMissionComponent } from '..'
+import Mission, { TMission } from '..'
+import { TMetisBaseComponents } from '../../'
 import { Vector2D } from '../../../shared/toolbox/space'
 import ArrayToolbox from '../../toolbox/arrays'
 import MapToolbox from '../../toolbox/maps'
@@ -12,6 +12,7 @@ import {
   TExecution,
 } from '../actions/executions'
 import { TOutcome } from '../actions/outcomes'
+import MissionComponent from '../component'
 import { TForce, TForceJsonOptions } from '../forces'
 import MissionPrototype, { TPrototype } from './prototypes'
 
@@ -20,8 +21,7 @@ import MissionPrototype, { TPrototype } from './prototypes'
  */
 export default abstract class MissionNode<
   T extends TMetisBaseComponents = TMetisBaseComponents,
-> implements TMissionComponent<T, MissionNode<T>>
-{
+> extends MissionComponent<T, MissionNode<T>> {
   // Implemented
   public get mission(): TMission<T> {
     return this.force.mission
@@ -45,13 +45,7 @@ export default abstract class MissionNode<
   }
 
   // Implemented
-  public _id: TMetisComponent['_id']
-
-  // Implemented
-  public name: string
-
-  // Implemented
-  public get path(): [...TMissionComponent<any, any>[], this] {
+  public get path(): [...MissionComponent<any, any>[], this] {
     return [this.mission, this.force, this]
   }
 
@@ -532,10 +526,14 @@ export default abstract class MissionNode<
     force: TForce<T>,
     data: Partial<TMissionNodeJson> = MissionNode.DEFAULT_PROPERTIES,
   ) {
+    super(
+      data._id ?? MissionNode.DEFAULT_PROPERTIES._id,
+      data.name ?? MissionNode.DEFAULT_PROPERTIES.name,
+      false,
+    )
+
     // Set properties from data.
     this.force = force
-    this._id = data._id ?? MissionNode.DEFAULT_PROPERTIES._id
-    this.name = data.name ?? MissionNode.DEFAULT_PROPERTIES.name
     this.color = data.color ?? MissionNode.DEFAULT_PROPERTIES.color
     this.description =
       data.description ?? MissionNode.DEFAULT_PROPERTIES.description

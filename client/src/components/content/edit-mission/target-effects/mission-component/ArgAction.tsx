@@ -3,7 +3,7 @@ import {
   DetailDropdown,
   TOptionalHandleInvalidOption,
   TRequiredHandleInvalidOption,
-} from 'src/components/content/form/DetailDropdown'
+} from 'src/components/content/form/dropdown/'
 import ClientMissionAction from 'src/missions/actions'
 import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
@@ -202,8 +202,8 @@ export default function ArgAction({
         fieldType={'optional'}
         label={label}
         options={actions}
-        stateValue={optionalActionValue}
-        setState={setOptionalActionValue}
+        value={optionalActionValue}
+        setValue={setOptionalActionValue}
         isExpanded={false}
         tooltipDescription={actionTooltip}
         render={(option) => option?.name}
@@ -219,8 +219,8 @@ export default function ArgAction({
       fieldType={'required'}
       label={label}
       options={actions}
-      stateValue={actionValue}
-      setState={setActionValue}
+      value={actionValue}
+      setValue={setActionValue}
       isExpanded={false}
       tooltipDescription={actionTooltip}
       getKey={({ _id }) => _id}

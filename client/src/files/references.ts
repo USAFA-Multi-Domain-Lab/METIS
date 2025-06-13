@@ -1,14 +1,15 @@
 import axios, { AxiosResponse } from 'axios'
+import { TMetisClientComponents } from 'src'
+import ClientUser from 'src/users'
 import FileReference, {
   TFileReferenceJson,
 } from '../../../shared/files/references'
-import { DateToolbox } from '../../../shared/toolbox/dates'
 import StringToolbox from '../../../shared/toolbox/strings'
 
 /**
  * Client implementation of `FileReference` class.
  */
-export default class ClientFileReference extends FileReference {
+export default class ClientFileReference extends FileReference<TMetisClientComponents> {
   /**
    * Downloads the file from the server by opening up
    * a new tab with the file's URI.
@@ -34,16 +35,57 @@ export default class ClientFileReference extends FileReference {
    * @returns A new `ClientFileReference` object from the JSON.
    */
   public static fromJson(json: TFileReferenceJson): ClientFileReference {
+    let createdBy: ClientUser
+
+    // Parse reference data.
+    if (typeof json.createdBy === 'object') {
+      createdBy = ClientUser.fromCreatedByJson(json.createdBy)
+    } else {
+      createdBy = ClientUser.createUnpopulated(
+        json.createdBy,
+        json.createdByUsername,
+      )
+    }
+
     return new ClientFileReference(
       json._id,
       json.name,
       json.path,
       json.mimetype,
       json.size,
-      DateToolbox.fromNullableISOString(json.createdAt),
-      DateToolbox.fromNullableISOString(json.updatedAt),
+      new Date(json.createdAt),
+      new Date(json.updatedAt),
+      createdBy,
+      json.createdByUsername,
+      false,
     )
   }
+
+  /**
+   * Creates a new {@link ClientFileReference} instance used to represent
+   * a previously-existing and now-deleted file.
+   * @param knownData Optional partial data to initialize the reference.
+   * Only pass the properties known for the deleted file, if any.
+   * @returns A new {@link ClientFileReference} instance.
+   */
+  public static createDeleted(_id: string, name: string): ClientFileReference {
+    return new ClientFileReference(
+      _id,
+      name,
+      '/',
+      'application/octet-stream',
+      0,
+      new Date(),
+      new Date(),
+      ClientUser.createUnpopulated(
+        StringToolbox.generateRandomId(),
+        'Unknown User',
+      ),
+      'Unknown User',
+      true,
+    )
+  }
+
   /**
    * Calls the API to fetch one file reference by ID.
    * @param _id The ID of the reference to fetch.

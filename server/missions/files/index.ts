@@ -1,11 +1,12 @@
 import MissionFile, { TMissionFileJson } from 'metis/missions/files/'
+import { TMetisServerComponents } from 'metis/server'
 import ServerFileReference from 'metis/server/files/references'
 import ServerMission from '..'
 
 /**
  * Server implementation of `MissionFile` class.
  */
-export default class ServerMissionFile extends MissionFile {
+export default class ServerMissionFile extends MissionFile<TMetisServerComponents> {
   /**
    * Creates a new `ServerMissionFile` instance from JSON.
    * @param data The JSON data from which to create the instance.
@@ -15,17 +16,23 @@ export default class ServerMissionFile extends MissionFile {
     data: TMissionFileJson,
     mission: ServerMission,
   ): ServerMissionFile {
-    if (typeof data.reference === 'string') {
-      throw new Error(
-        '`reference` property must be populated to create a `ServerMissionFile` instance.',
+    let reference: ServerFileReference
+
+    // Parse reference data.
+    if (typeof data.reference === 'object') {
+      reference = ServerFileReference.fromJson(data.reference)
+    } else {
+      reference = ServerFileReference.createDeleted(
+        data.reference,
+        data.lastKnownName,
       )
     }
 
-    let reference = ServerFileReference.fromJson(data.reference)
-
+    // Create and return new `ServerMissionFile` instance.
     return new ServerMissionFile(
       data._id,
       data.alias,
+      data.lastKnownName,
       data.initialAccess,
       reference,
       mission,

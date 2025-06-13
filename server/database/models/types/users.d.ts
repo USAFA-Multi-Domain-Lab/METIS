@@ -1,4 +1,5 @@
 import { Request } from 'express'
+import { TUserExistingJson } from 'metis/users'
 import {
   HydratedDocument,
   Model,
@@ -35,7 +36,7 @@ export type TUserStaticMethods = {
    * @resolves When the user has been authenticated.
    * @rejects When the user could not be authenticated.
    */
-  authenticate: (request: Request) => Promise<TUserJson>
+  authenticate: (request: Request) => Promise<TUserExistingJson>
   /**
    * Finds a single document by its `_id` field. Then, if the
    * document is found, modifies the document with the given

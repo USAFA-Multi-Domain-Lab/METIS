@@ -89,8 +89,8 @@ export default function ArgLargeString({
       fieldType={arg.required ? 'required' : 'optional'}
       handleOnBlur={arg.required ? 'repopulateValue' : 'none'}
       label={arg.name}
-      stateValue={value}
-      setState={setValue}
+      value={value}
+      setValue={setValue}
       defaultValue={arg.required ? arg.default : undefined}
       tooltipDescription={arg.tooltipDescription}
       key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}_${

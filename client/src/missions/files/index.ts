@@ -2,16 +2,23 @@ import { TMetisClientComponents } from 'src'
 import ClientFileReference from 'src/files/references'
 import SessionClient from 'src/sessions'
 import ClientMission from '..'
-import { TFileReferenceJson } from '../../../../shared/files/references'
+import {
+  EventManager,
+  TListenerTargetEmittable,
+} from '../../../../shared/events'
 import MissionFile, {
   TMissionFileJson,
 } from '../../../../shared/missions/files/'
 import StringToolbox from '../../../../shared/toolbox/strings'
+import ClientMissionForce from '../forces'
 
 /**
  * Client implementation of `MissionFile` class.
  */
-export default class ClientMissionFile extends MissionFile<TMetisClientComponents> {
+export default class ClientMissionFile
+  extends MissionFile<TMetisClientComponents>
+  implements TListenerTargetEmittable<TFileEventMethods>
+{
   /**
    * The MIME type of the file.
    */
@@ -27,15 +34,60 @@ export default class ClientMissionFile extends MissionFile<TMetisClientComponent
   }
 
   /**
-   * Downloads the file from the server by opening up
-   * a new tab with the file's URI.
+   * Manages the mission's event listeners and events.
+   */
+  private eventManager: EventManager<TFileEventMethods>
+
+  protected constructor(
+    _id: string,
+    alias: string,
+    lastKnownName: string,
+    initialAccess: string[],
+    reference: ClientFileReference,
+    mission: ClientMission,
+  ) {
+    super(_id, alias, lastKnownName, initialAccess, reference, mission)
+
+    // Initialize the event manager.
+    this.eventManager = new EventManager(this)
+    this.emitEvent = this.eventManager.emitEvent
+    this.addEventListener = this.eventManager.addEventListener
+    this.removeEventListener = this.eventManager.removeEventListener
+  }
+
+  // Implemented
+  public emitEvent
+
+  // Implemented
+  public addEventListener
+
+  // Implemented
+  public removeEventListener
+
+  // Overridden
+  public grantAccess(force: ClientMissionForce | string): void {
+    super.grantAccess(force)
+    this.emitEvent('access-granted')
+    this.mission.emitEvent('file-access-granted', [])
+  }
+
+  // Overridden
+  public revokeAccess(force: ClientMissionForce | string): void {
+    super.revokeAccess(force)
+    this.emitEvent('access-revoked')
+    this.mission.emitEvent('file-access-revoked', [])
+  }
+
+  /**
+   * Downloads the file from the server by opening up a new tab with
+   * the file's URI.
+   * @param options Additional parameters specifying how the download
+   * should be carried out.
    */
   public download(options: TMissionFileDownloadOptions = {}): void {
     const { method = 'file-api' } = options
-    switch (options.method) {
-      case 'file-api':
-        this.reference.download()
-        break
+
+    switch (method) {
       case 'session-api':
         window.open(
           StringToolbox.joinPaths(
@@ -44,41 +96,42 @@ export default class ClientMissionFile extends MissionFile<TMetisClientComponent
             this._id,
             'download',
           ),
-          '_blank',
         )
         break
+      case 'file-api':
       default:
-        console.warn(
-          `Invalid download method "${method}" specified. Defaulting to "file-api".`,
-        )
-        this.reference.download()
+        if (this.reference) this.reference.download()
+        else console.warn('No file reference available for download.')
         break
     }
-    this.reference.download()
   }
 
   /**
-   * Creates a new `ClientMissionFile` instance from JSON.
    * @param data The JSON data from which to create the instance.
    * @param mission The mission to which this file belongs.
+   * @returns A new {@link ClientMissionFile} instance.
    */
   public static fromJson(
     data: TMissionFileJson,
     mission: ClientMission,
   ): ClientMissionFile {
-    let referenceJson: TFileReferenceJson | string = data.reference
+    let reference: ClientFileReference
 
-    if (typeof referenceJson === 'string') {
-      throw new Error(
-        '`reference` property must be populated to create a `ClientMissionFile` instance.',
+    // Parse reference data.
+    if (typeof data.reference === 'object') {
+      reference = ClientFileReference.fromJson(data.reference)
+    } else {
+      reference = ClientFileReference.createDeleted(
+        data.reference,
+        data.lastKnownName,
       )
     }
 
-    let reference = ClientFileReference.fromJson(referenceJson)
-
+    // Create and return new `ClientFileReference` instance.
     return new ClientMissionFile(
       data._id,
       data.alias,
+      data.lastKnownName,
       data.initialAccess,
       reference,
       mission,
@@ -99,9 +152,30 @@ export default class ClientMissionFile extends MissionFile<TMetisClientComponent
   ): ClientMissionFile {
     return new ClientMissionFile(
       StringToolbox.generateRandomId(),
+      '',
       reference.name,
       [],
       reference,
+      mission,
+    )
+  }
+
+  /**
+   * @returns A new `ClientMissionFile` instance that
+   * represents a file that is referenced in a effect
+   * but not currently found in the mission files.
+   */
+  public static createDetached(
+    _id: string,
+    name: string,
+    mission: ClientMission,
+  ): ClientMissionFile {
+    return new ClientMissionFile(
+      _id,
+      name,
+      name,
+      [],
+      ClientFileReference.createDeleted(StringToolbox.generateRandomId(), name),
       mission,
     )
   }
@@ -123,3 +197,8 @@ export type TMissionFileDownloadOptions = {
    */
   method?: 'file-api' | 'session-api'
 }
+
+/**
+ * The methods that can be emitted by the `ClientMissionFile` class.
+ */
+export type TFileEventMethods = 'access-granted' | 'access-revoked'

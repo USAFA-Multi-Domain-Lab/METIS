@@ -1,13 +1,12 @@
 import { useState } from 'react'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import ClientMission from 'src/missions'
 import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import Mission, {
-  TMissionComponent,
-} from '../../../../../../../shared/missions'
+import Mission from '../../../../../../../shared/missions'
+import MissionComponent from '../../../../../../../shared/missions/component'
 import { TNonEmptyArray } from '../../../../../../../shared/toolbox/arrays'
 import Prompt from '../../../communication/Prompt'
 import { DetailColorSelector } from '../../../form/DetailColorSelector'
@@ -133,8 +132,8 @@ export default function ForceEntry({
         fieldType='required'
         handleOnBlur='repopulateValue'
         label='Name'
-        stateValue={name}
-        setState={setName}
+        value={name}
+        setValue={setName}
         defaultValue={ClientMissionForce.DEFAULT_PROPERTIES.name}
         maxLength={ClientMissionForce.MAX_NAME_LENGTH}
         key={`${force._id}_name`}
@@ -142,22 +141,22 @@ export default function ForceEntry({
       <DetailNumber
         fieldType='required'
         label='Initial Resources'
-        stateValue={initialResources}
-        setState={setInitialResources}
+        value={initialResources}
+        setValue={setInitialResources}
         integersOnly={true}
         key={`${force._id}_initialResources`}
       />
       <DetailToggle
         label='Negative Resource Pool'
-        stateValue={allowNegativeResources}
-        setState={setAllowNegativeResources}
+        value={allowNegativeResources}
+        setValue={setAllowNegativeResources}
         tooltipDescription="If enabled, the force's resource pool can go below zero."
         key={`${force._id}_allowNegativeResources`}
       />
       <DetailToggle
         label='Reveal All Nodes'
-        stateValue={revealAllNodes}
-        setState={setRevealAllNodes}
+        value={revealAllNodes}
+        setValue={setRevealAllNodes}
         tooltipDescription='If enabled, all nodes in the force will be revealed to the player at the start of the session.'
         key={`${force._id}_revealAllNodes`}
       />
@@ -166,8 +165,8 @@ export default function ForceEntry({
         label='Color'
         colors={ClientMission.COLOR_OPTIONS}
         isExpanded={false}
-        stateValue={color}
-        setState={setColor}
+        value={color}
+        setValue={setColor}
         buttons={colorButtons}
         key={`${force._id}_color`}
       />
@@ -175,8 +174,8 @@ export default function ForceEntry({
         fieldType='required'
         handleOnBlur='repopulateValue'
         label='Introduction Message'
-        stateValue={introMessage}
-        setState={setIntroMessage}
+        value={introMessage}
+        setValue={setIntroMessage}
         defaultValue={ClientMissionForce.DEFAULT_PROPERTIES.introMessage}
         key={`${force._id}_introMessage`}
       />
@@ -223,5 +222,5 @@ export type TForceEntry = {
    * changed by this component, including the force
    * itself, and any child components of the force.
    */
-  onChange: (...components: TNonEmptyArray<TMissionComponent<any, any>>) => void
+  onChange: (...components: TNonEmptyArray<MissionComponent<any, any>>) => void
 }

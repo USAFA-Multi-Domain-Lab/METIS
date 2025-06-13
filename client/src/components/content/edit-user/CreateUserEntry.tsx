@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import { TLogin } from '../../../../../shared/logins'
 import UserAccess from '../../../../../shared/users/accesses'
-import { DetailDropdown } from '../form/DetailDropdown'
 import { DetailString } from '../form/DetailString'
 import { DetailToggle } from '../form/DetailToggle'
+import { DetailDropdown } from '../form/dropdown/'
 import './CreateUserEntry.scss'
 
 /**
@@ -296,8 +296,8 @@ export default function CreateUserEntry({
         fieldType='required'
         handleOnBlur={handleUsernameError}
         label='Username'
-        stateValue={username}
-        setState={setUsername}
+        value={username}
+        setValue={setUsername}
         errorMessage={usernameErrorMessage}
         placeholder='Enter a username here...'
       />
@@ -305,8 +305,8 @@ export default function CreateUserEntry({
         fieldType='required'
         label='Access Level'
         options={listOfAccesses}
-        stateValue={access}
-        setState={setAccess}
+        value={access}
+        setValue={setAccess}
         isExpanded={false}
         render={(access: UserAccess) => access.name}
         getKey={({ _id }) => _id}
@@ -319,8 +319,8 @@ export default function CreateUserEntry({
         fieldType='required'
         handleOnBlur={handleFirstNameError}
         label='First Name'
-        stateValue={firstName}
-        setState={setFirstName}
+        value={firstName}
+        setValue={setFirstName}
         errorMessage={firstNameErrorMessage}
         placeholder='Enter a first name here...'
       />
@@ -328,8 +328,8 @@ export default function CreateUserEntry({
         fieldType='required'
         handleOnBlur={handleLastNameError}
         label='Last Name'
-        stateValue={lastName}
-        setState={setLastName}
+        value={lastName}
+        setValue={setLastName}
         errorMessage={lastNameErrorMessage}
         placeholder='Enter a last name here...'
       />
@@ -337,8 +337,8 @@ export default function CreateUserEntry({
         fieldType='required'
         handleOnBlur={handlePassword1Error}
         label={passwordLabel}
-        stateValue={password1}
-        setState={setPassword1}
+        value={password1}
+        setValue={setPassword1}
         errorMessage={password1ErrorMessage}
         inputType='password'
         placeholder='Enter a password here...'
@@ -348,8 +348,8 @@ export default function CreateUserEntry({
         fieldType='required'
         handleOnBlur={handlePassword2Error}
         label={confirmPasswordLabel}
-        stateValue={password2}
-        setState={setPassword2}
+        value={password2}
+        setValue={setPassword2}
         errorMessage={password2ErrorMessage}
         inputType='password'
         placeholder='Confirm your password here...'
@@ -357,8 +357,8 @@ export default function CreateUserEntry({
       <DetailToggle
         fieldType='required'
         label='Needs Password Reset'
-        stateValue={needsPasswordReset}
-        setState={setNeedsPasswordReset}
+        value={needsPasswordReset}
+        setValue={setNeedsPasswordReset}
       />
     </form>
   )

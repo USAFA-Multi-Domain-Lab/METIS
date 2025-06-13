@@ -1,4 +1,9 @@
-import User, { TUserJson, TUserOptions } from 'metis/users'
+import User, {
+  TCreatedByJson,
+  TUserExistingJson,
+  TUserJson,
+  TUserOptions,
+} from 'metis/users'
 import UserAccess, { TUserAccess } from 'metis/users/accesses'
 import UserPermission, { TUserPermission } from 'metis/users/permissions'
 import mongoose, {
@@ -6,7 +11,7 @@ import mongoose, {
   CallbackWithoutResultAndOptionalError,
 } from 'mongoose'
 import MetisDatabase from '../database'
-import UserModel from '../database/models/users'
+import { TUserModel } from '../database/models/types'
 import { StatusError } from '../http'
 import { TMetisServerComponents } from '../index'
 import { TTargetEnvExposedUser } from '../target-environments/context'
@@ -16,6 +21,12 @@ import { TTargetEnvExposedUser } from '../target-environments/context'
  * @extends {User}
  */
 export default class ServerUser extends User<TMetisServerComponents> {
+  protected constructor(
+    ...args: ConstructorParameters<typeof User<TMetisServerComponents>>
+  ) {
+    super(...args)
+  }
+
   /**
    * Validates a hashed password.
    * @param password The password to validate.
@@ -48,7 +59,7 @@ export default class ServerUser extends User<TMetisServerComponents> {
    * @param existingIds The existing _id's that have been found.
    * @returns Any errors that are found.
    */
-  private static idCheckerAlgorithm = (
+  private static validateAllIds = (
     cursor: AnyObject | AnyObject[],
     existingIds: AnyObject = {},
   ): TUserValidationResults => {
@@ -84,7 +95,7 @@ export default class ServerUser extends User<TMetisServerComponents> {
 
       // Check the object's values for duplicate _id's.
       for (let value of Object.values(cursor)) {
-        let results = this.idCheckerAlgorithm(value, existingIds)
+        let results = this.validateAllIds(value, existingIds)
         if (results.error) return results
       }
     }
@@ -92,7 +103,7 @@ export default class ServerUser extends User<TMetisServerComponents> {
     else if (Array.isArray(cursor)) {
       // ...then check each value in the array for duplicate _id's.
       for (let value of cursor) {
-        let results = this.idCheckerAlgorithm(value, existingIds)
+        let results = this.validateAllIds(value, existingIds)
         if (results.error) return results
       }
     }
@@ -107,13 +118,14 @@ export default class ServerUser extends User<TMetisServerComponents> {
    * @param isNew Determines if the user is new.
    * @returns The validation results.
    */
-  private static duplicateUsernameChecker = async (
+  private static validateUniqueUsername = async (
+    model: TUserModel,
     userJson: TUserJson,
     isNew: boolean,
   ): Promise<TUserValidationResults> => {
     try {
       // Get the user from the database.
-      let user = await UserModel.findById(userJson._id).exec()
+      let user = await model.findById(userJson._id).exec()
 
       // If the user is new and the username already exists,
       // throw an error.
@@ -128,9 +140,11 @@ export default class ServerUser extends User<TMetisServerComponents> {
       // check if the new username already exists.
       if (!isNew && user?.username !== userJson.username) {
         // Check if the new username already exists.
-        let userWithSameUsername = await UserModel.findOne({
-          username: userJson.username,
-        }).exec()
+        let userWithSameUsername = await model
+          .findOne({
+            username: userJson.username,
+          })
+          .exec()
 
         // If the new username already exists, throw an error.
         if (userWithSameUsername) {
@@ -149,12 +163,45 @@ export default class ServerUser extends User<TMetisServerComponents> {
   }
 
   /**
+   * Ensures that non-system users have passwords and
+   * system users do not.
+   * @param userJson The user data to validate.
+   * @param isNew Whether the user is new or existing.
+   */
+  public static validatePasswordRequirement = (
+    userJson: TUserJson,
+    isNew: boolean,
+  ): TUserValidationResults => {
+    // If the user is a system user, ensure that
+    //  the password is not set.
+    if (userJson.accessId === 'system' && userJson.password) {
+      return {
+        error: MetisDatabase.generateValidationError(
+          `Error in user:\nSystem users cannot have passwords.`,
+        ),
+      }
+    }
+    // If the user is not a system user, ensure
+    // that the password is set, if the user is new.
+    else if (userJson.accessId !== 'system' && !userJson.password && isNew) {
+      return {
+        error: MetisDatabase.generateValidationError(
+          `Error in user:\nNon-system users must have passwords.`,
+        ),
+      }
+    } else {
+      return {}
+    }
+  }
+
+  /**
    * Validates the user data.
    * @param userJson The user data to validate.
    * @param isNew Determines if the user is new.
    * @param next The next function to call.
    */
   public static validate = async (
+    model: TUserModel,
     userJson: TUserJson,
     isNew: boolean,
     next: CallbackWithoutResultAndOptionalError,
@@ -162,15 +209,29 @@ export default class ServerUser extends User<TMetisServerComponents> {
     // Object to store results.
     let results: TUserValidationResults = {}
 
-    // Check for duplicate _id's.
-    results = this.idCheckerAlgorithm(userJson)
-    // Check for error.
-    if (results.error) return next(results.error)
+    // Performs the given validation as long as no
+    // previous validation failed.
+    const validateIfNoError = async (
+      validator: () => Promise<TUserValidationResults>,
+    ) => {
+      // If there is no error, call the callback.
+      if (!results.error) {
+        results = await validator()
+        // If the callback returned an error, call
+        // the next function with the error.
+        if (results.error) return next(results.error)
+      }
+    }
 
-    // Check for duplicate usernames.
-    results = await this.duplicateUsernameChecker(userJson, isNew)
-    // Check for error.
-    if (results.error) return next(results.error)
+    // Run validations until error is found,
+    // or if no error, the data is valid.
+    await validateIfNoError(async () => this.validateAllIds(userJson))
+    await validateIfNoError(async () =>
+      this.validateUniqueUsername(model, userJson, isNew),
+    )
+    await validateIfNoError(async () =>
+      this.validatePasswordRequirement(userJson, isNew),
+    )
   }
 
   /**
@@ -237,6 +298,101 @@ export default class ServerUser extends User<TMetisServerComponents> {
         `Error in user:\nPassword "${password}" is not valid.`,
       )
     }
+  }
+
+  /**
+   * @param _id The ID of the user.
+   * @param username The username of the user.
+   * @returns a new user that is not populated with
+   * any data, just the ID and username.
+   */
+  public static createUnpopulated(_id: string, username: string): ServerUser {
+    // Gather details.
+    const {
+      accessId,
+      firstName,
+      lastName,
+      needsPasswordReset,
+      expressPermissionIds,
+      createdAt,
+      updatedAt,
+      createdBy,
+      createdByUsername,
+    } = User.DEFAULT_PROPERTIES
+    const access = UserAccess.get(accessId)
+    const expressPermissions = UserPermission.get(expressPermissionIds)
+
+    // Return and create a new ServerUser instance.
+    return new ServerUser(
+      _id,
+      username,
+      access,
+      firstName,
+      lastName,
+      needsPasswordReset,
+      expressPermissions,
+      createdAt,
+      updatedAt,
+      createdBy,
+      createdByUsername,
+    )
+  }
+
+  /**
+   * @param json The JSON data of an existing user in the
+   * database.
+   * @returns a new {@link ServerUser} instance.
+   */
+  public static fromExistingJson(json: TUserExistingJson): ServerUser {
+    let createdBy: ServerUser
+
+    // Determine the value of createdBy.
+    if (typeof json.createdBy === 'object') {
+      createdBy = ServerUser.fromCreatedByJson(json.createdBy)
+    } else if (typeof json.createdBy === 'string') {
+      createdBy = ServerUser.createUnpopulated(
+        json.createdBy,
+        json.createdByUsername,
+      )
+    } else {
+      throw new Error('Invalid createdBy field in user JSON.')
+    }
+
+    // Create a new user.
+    return new ServerUser(
+      json._id,
+      json.username,
+      UserAccess.get(json.accessId),
+      json.firstName,
+      json.lastName,
+      json.needsPasswordReset,
+      UserPermission.get(json.expressPermissionIds),
+      new Date(json.createdAt),
+      new Date(json.updatedAt),
+      createdBy,
+      json.createdByUsername,
+    )
+  }
+
+  /**
+   * Creates a new {@link ServerUser} instance used from the
+   * JSON data of a `createdBy` field of a document.
+   */
+  public static fromCreatedByJson(json: TCreatedByJson): ServerUser {
+    // Create a new user.
+    return new ServerUser(
+      json._id,
+      json.username,
+      UserAccess.get(json.accessId),
+      json.firstName,
+      json.lastName,
+      json.needsPasswordReset,
+      UserPermission.get(json.expressPermissionIds),
+      new Date(json.createdAt),
+      new Date(json.updatedAt),
+      ServerUser.createUnpopulated(json.createdBy, json.createdByUsername),
+      json.createdByUsername,
+    )
   }
 }
 

@@ -5,6 +5,7 @@ import { databaseLogger } from 'metis/server/logging'
 import ServerLogin from 'metis/server/logins'
 import { TUserJson } from 'metis/users'
 import ApiResponse from '../../library/response'
+import { preventSystemUserWrite } from '../../library/users'
 
 /**
  * This will reset the user's password.
@@ -25,6 +26,9 @@ const resetPassword = async (request: Request, response: Response) => {
   }
 
   try {
+    // Disable system-user write operations.
+    preventSystemUserWrite({ currentUserId: userId })
+
     // Update the user.
     let userJson = await UserModel.findByIdAndUpdate(userId, userUpdates, {
       returnOriginal: false,

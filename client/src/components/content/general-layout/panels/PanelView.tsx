@@ -24,14 +24,12 @@ export default function ({
    * The classes used for the root element of
    * the component.
    */
-  const classes = compute<ClassList>(() => {
-    let result = new ClassList(
-      'PanelView',
-      `PanelView_${title.replace(/\s+/g, '_')}`,
-    )
-    result.set('Active', selectedView?.title === title)
-    return result
-  })
+  const classes = compute<ClassList>(() =>
+    new ClassList('PanelView', `PanelView_${title.replace(/\s+/g, '_')}`).set(
+      'Active',
+      selectedView?.title === title,
+    ),
+  )
 
   /* -- RENDER -- */
 

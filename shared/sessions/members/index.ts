@@ -1,7 +1,7 @@
-import { TMetisBaseComponents, TMetisComponent } from 'metis/index'
-import { MissionForce, TForce } from 'metis/missions/forces'
-import { TUser, TUserJson } from 'metis/users'
 import { TSession } from '..'
+import { MetisComponent, TMetisBaseComponents } from '../../'
+import { MissionForce, TForce } from '../../missions/forces'
+import { TUser, TUserExistingJson } from '../../users'
 import MemberPermission from './permissions'
 import MemberRole, { TMemberRoleId } from './roles'
 
@@ -12,14 +12,16 @@ import MemberRole, { TMemberRoleId } from './roles'
  */
 export default abstract class SessionMember<
   T extends TMetisBaseComponents = TMetisBaseComponents,
-> implements TMetisComponent
-{
-  // Implemented
-  public _id: string
-
-  // Implemented
+> extends MetisComponent {
+  // Overridden
   public get name(): string {
     return this.user.name
+  }
+  // Overridden
+  public set name(value: string) {
+    throw new Error(
+      'Cannot set name of SessionMember directly. Use user.name instead.',
+    )
   }
 
   /**
@@ -129,7 +131,8 @@ export default abstract class SessionMember<
     forceId: TForce<T>['_id'] | null,
     session: TSession<T>,
   ) {
-    this._id = _id
+    super(_id, '', false)
+
     this.user = user
     this.role = role
     this.forceId = forceId
@@ -143,7 +146,7 @@ export default abstract class SessionMember<
   public toJson(): TSessionMemberJson {
     return {
       _id: this._id,
-      user: this.user.toJson(),
+      user: this.user.toExistingJson(),
       roleId: this.role._id,
       forceId: this.forceId,
     }
@@ -188,7 +191,7 @@ export interface TSessionMemberJson {
   /**
    * The user that is a member of the session.
    */
-  user: TUserJson
+  user: TUserExistingJson
   /**
    * The ID of the member's role in the session.
    */

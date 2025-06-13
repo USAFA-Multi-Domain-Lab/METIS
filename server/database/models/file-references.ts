@@ -1,8 +1,20 @@
 import { TFileReferenceJson } from 'metis/files/references'
-import { model } from 'mongoose'
+import { model, Schema } from 'mongoose'
 import path from 'path'
-import { buildToJson, excludeDeletedForFinds } from '.'
+import {
+  buildToJson,
+  ensureNoNullCreatedBy,
+  excludeDeletedForFinds,
+  populateCreatedByIfFlagged,
+} from '.'
 import { FileReferenceSchema } from './classes'
+import {
+  TFileReference,
+  TFileReferenceDoc,
+  TFileReferenceModel,
+  TPostReferenceQuery,
+  TPreReferenceQuery,
+} from './types'
 
 /* -- FUNCTIONS -- */
 
@@ -25,7 +37,6 @@ const fileReferenceSchema = new FileReferenceSchema(
   {
     name: {
       type: String,
-      unique: true,
       required: true,
       trim: true,
       validate: () => {
@@ -59,6 +70,15 @@ const fileReferenceSchema = new FileReferenceSchema(
         return true
       },
     },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    createdByUsername: {
+      type: String,
+      required: true,
+    },
     deleted: { type: Boolean, required: true, default: false },
   },
   {
@@ -72,6 +92,16 @@ const fileReferenceSchema = new FileReferenceSchema(
     },
     statics: {},
     timestamps: true,
+  },
+)
+
+/* -- SCHEMA INDEXES -- */
+
+fileReferenceSchema.index(
+  { name: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { deleted: false },
   },
 )
 
@@ -101,8 +131,6 @@ fileReferenceSchema.pre('save', async function (next) {
     await FileReferenceModel.exists({
       name: candidate,
       _id: { $ne: file._id },
-    }).setOptions({
-      includeDeleted: true,
     })
   ) {
     candidate = `${base} (${counter})${ext}`
@@ -112,6 +140,35 @@ fileReferenceSchema.pre('save', async function (next) {
   file.name = candidate
   next()
 })
+
+// Called before a find or update is made to the database.
+fileReferenceSchema.pre<TPreReferenceQuery>(
+  ['find', 'findOne', 'findOneAndUpdate', 'updateOne'],
+  function (next) {
+    // Populate createdBy.
+    populateCreatedByIfFlagged(this)
+    // Call the next middleware.
+    return next()
+  },
+)
+
+fileReferenceSchema.post<TPostReferenceQuery>(
+  ['find', 'findOne', 'updateOne', 'findOneAndUpdate'],
+  async function (referenceData: TFileReferenceDoc | TFileReferenceDoc[]) {
+    // If the data is null, then return.
+    if (!referenceData) return
+
+    // Convert the data to an array if it isn't already.
+    referenceData = !Array.isArray(referenceData)
+      ? [referenceData]
+      : referenceData
+
+    for (let referenceDatum of referenceData) {
+      // Confirm that no createdBy fields are null.
+      await ensureNoNullCreatedBy(referenceDatum, FileReferenceModel)
+    }
+  },
+)
 
 /* -- MODEL -- */
 

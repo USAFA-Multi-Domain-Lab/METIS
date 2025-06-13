@@ -1,4 +1,4 @@
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import { TPage_P } from '.'
 import './LoadingPage.scss'
 

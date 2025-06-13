@@ -59,6 +59,7 @@ export default class Arg {
         case 'force':
         case 'node':
         case 'action':
+        case 'file':
           return MissionComponentArg.toJson(arg)
       }
     })
@@ -85,6 +86,7 @@ export default class Arg {
         case 'force':
         case 'node':
         case 'action':
+        case 'file':
           return MissionComponentArg.fromJson(arg)
       }
     })

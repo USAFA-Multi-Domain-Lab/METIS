@@ -1,19 +1,19 @@
 @import 'src/assets/styles/config.scss';
-@import '../form/index.scss';
+@import '../../form/index.scss';
 
 .Detail.DetailDropdown {
   .Field {
     padding: 0;
 
     &.IsExpanded {
-      .Option.Selected {
+      .DropdownOption.Selected {
         .Indicator {
           transform: scale(1, -0.75);
         }
       }
     }
 
-    .Option.Selected {
+    .DropdownOption.Selected {
       cursor: pointer;
       user-select: none;
       display: grid;
@@ -36,7 +36,7 @@
     }
 
     .AllOptions {
-      .Option {
+      .DropdownOption {
         cursor: pointer;
         user-select: none;
         padding: 0.375em $detail-field-horizontal-padding;

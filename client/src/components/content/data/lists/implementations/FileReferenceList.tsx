@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import Prompt from 'src/components/content/communication/Prompt'
 
 import If from 'src/components/content/util/If'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import ClientFileReference from 'src/files/references'
 import { compute } from 'src/toolbox'
 import { useDefaultProps, useRequireLogin } from 'src/toolbox/hooks'
@@ -78,7 +78,13 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
   const defaultedProps = useDefaultProps(props, {
     ...createDefaultListProps<ClientFileReference>(),
     itemsPerPageMin: 10,
-    columns: ['mimetype', 'size', 'createdAt', 'updatedAt'],
+    columns: [
+      'mimetype',
+      'size',
+      'createdAt',
+      'updatedAt',
+      'createdByUsername',
+    ],
     listButtonIcons: compute<TMetisIcon[]>(() => {
       let results: TMetisIcon[] = []
       authorize('files_write', () => results.push('upload'))
@@ -101,6 +107,8 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
           return 'Size'
         case 'createdAt':
           return 'Uploaded'
+        case 'createdByUsername':
+          return 'Uploaded By'
         case 'updatedAt':
           return 'Last Modified'
         default:
@@ -119,10 +127,10 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
         case 'createdAt':
         case 'updatedAt':
           let datetime = file[column]
-          if (datetime === null) return 'N/A'
+          if (file.deleted) return 'N/A'
           else return DateToolbox.format(datetime, 'yyyy-mm-dd HH:MM')
         default:
-          return 'Unknown column'
+          return file[column].toString()
       }
     },
     getListButtonLabel: (button) => {

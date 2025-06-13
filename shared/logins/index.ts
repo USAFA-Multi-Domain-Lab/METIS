@@ -1,4 +1,4 @@
-import User, { TUserJson } from 'metis/users'
+import User, { TUserExistingJson } from 'metis/users'
 
 /**
  * The JSON representation of a login object.
@@ -7,7 +7,7 @@ export type TLoginJson = {
   /**
    * The user with the given login.
    */
-  user: TUserJson
+  user: TUserExistingJson
 
   /**
    * The ID of the session the user has joined, if any.

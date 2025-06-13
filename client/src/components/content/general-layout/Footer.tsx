@@ -1,4 +1,4 @@
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
 import { TWithKey } from '../../../../../shared/toolbox/objects'
 import Tooltip from '../communication/Tooltip'
@@ -61,8 +61,8 @@ export default function Footer({}: TFooter): JSX.Element | null {
         <DevOnly>
           <DetailToggle
             label='Debug Mode'
-            stateValue={debugMode}
-            setState={setDebugMode}
+            value={debugMode}
+            setValue={setDebugMode}
           />
         </DevOnly>
       </div>

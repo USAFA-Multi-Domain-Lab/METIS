@@ -4,6 +4,7 @@ import SessionServer from 'metis/server/sessions'
 import ServerSessionMember from 'metis/server/sessions/members'
 import { AnyObject } from 'metis/toolbox/objects'
 import ServerMissionAction from '../missions/actions'
+import ServerMissionFile from '../missions/files'
 import ServerMissionForce from '../missions/forces'
 
 export default class TargetEnvContext {
@@ -173,7 +174,36 @@ export default class TargetEnvContext {
       modifyProcessTime: this.modifyProcessTime,
       modifyResourceCost: this.modifyResourceCost,
       modifyResourcePool: this.modifyResourcePool,
+      grantFileAccess: this.grantFileAccess,
+      revokeFileAccess: this.revokeFileAccess,
     }
+  }
+
+  /**
+   * Determines the target force.
+   * @param forceKey The local key of the force to manipulate.
+   * @returns The target force.
+   * @throws If a force was specified in the options, but it could
+   * not be found.
+   */
+  private determineTargetForce(
+    forceKey: string | 'self' = 'self',
+  ): ServerMissionForce {
+    const { mission, missionId } = this
+
+    // If the force is set to 'self', return the current force.
+    if (forceKey === 'self') return this.force
+
+    // Find the specified force.
+    let result = mission.getForceByLocalKey(forceKey)
+
+    if (!result) {
+      throw new Error(
+        `Could not find force with local key "${forceKey}" in the mission with ID "${missionId}".`,
+      )
+    }
+
+    return result
   }
 
   /**
@@ -207,33 +237,6 @@ export default class TargetEnvContext {
     if (!result) {
       throw new Error(
         `Could not find node with these local keys { forceKey: "${forceKey}", nodeKey: "${nodeKey}" } in the mission with ID "${missionId}".`,
-      )
-    }
-
-    return result
-  }
-
-  /**
-   * Determines the target force.
-   * @param forceKey The local key of the force to manipulate.
-   * @returns The target force.
-   * @throws If a force was specified in the options, but it could
-   * not be found.
-   */
-  private determineTargetForce(
-    forceKey: string | 'self' = 'self',
-  ): ServerMissionForce {
-    const { mission, missionId } = this
-
-    // If the force is set to 'self', return the current force.
-    if (forceKey === 'self') return this.force
-
-    // Find the specified force.
-    let result = mission.getForceByLocalKey(forceKey)
-
-    if (!result) {
-      throw new Error(
-        `Could not find force with local key "${forceKey}" in the mission with ID "${missionId}".`,
       )
     }
 
@@ -279,6 +282,25 @@ export default class TargetEnvContext {
       )
     }
 
+    return result
+  }
+
+  /**
+   * Determines the target file.
+   * @param fileId The ID of the file to manipulate.
+   * @returns The target file.
+   * @throws If a file was specified in the options, but it could
+   * not be found.
+   */
+  private determineTargetFile(fileId: string): ServerMissionFile {
+    const { mission, missionId } = this
+    // Find the specified file.
+    const result = mission.getFileById(fileId)
+    if (!result) {
+      throw new Error(
+        `Could not find file with ID "${fileId}" in the mission with ID "${missionId}".`,
+      )
+    }
     return result
   }
 
@@ -400,6 +422,24 @@ export default class TargetEnvContext {
     const targetForce = this.determineTargetForce(forceKey)
     this.session.modifyResourcePool(targetForce, operand)
   }
+
+  /**
+   * @inheritdoc TTargetEnvExposedContext.grantFileAccess
+   */
+  private grantFileAccess = (fileId: string, forceKey: string) => {
+    const targetFile = this.determineTargetFile(fileId)
+    const targetForce = this.determineTargetForce(forceKey)
+    this.session.updateFileAccess(targetFile, targetForce, true)
+  }
+
+  /**
+   * @inheritdoc TTargetEnvExposedContext.revokeFileAccess
+   */
+  private revokeFileAccess = (fileId: string, forceKey: string) => {
+    const targetFile = this.determineTargetFile(fileId)
+    const targetForce = this.determineTargetForce(forceKey)
+    this.session.updateFileAccess(targetFile, targetForce, false)
+  }
 }
 
 /* -- TYPES -- */
@@ -498,6 +538,18 @@ export type TTargetEnvExposedContext = {
    * otherwise.
    */
   modifyResourcePool: TargetEnvContext['modifyResourcePool']
+  /**
+   * Grants access to the file for the specified force.
+   * @param fileId The ID of the file to grant access to.
+   * @param forceKey The local key of the force to which to grant access.
+   */
+  grantFileAccess: TargetEnvContext['grantFileAccess']
+  /**
+   * Revokes access to the file for the specified force.
+   * @param fileId The ID of the file to revoke access from.
+   * @param forceKey The local key of the force from which to revoke access.
+   */
+  revokeFileAccess: TargetEnvContext['revokeFileAccess']
 }
 
 /**

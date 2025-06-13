@@ -60,8 +60,8 @@ export default function PrototypeEntry({
       <DetailNumber
         fieldType='required'
         label='Depth Padding'
-        stateValue={depthPadding}
-        setState={setDepthPadding}
+        value={depthPadding}
+        setValue={setDepthPadding}
         integersOnly={true}
         key={`${prototype._id}_depthPadding`}
       />

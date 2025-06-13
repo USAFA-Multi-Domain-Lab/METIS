@@ -1,14 +1,14 @@
 import Prompt from 'src/components/content/communication/Prompt'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import SessionClient from 'src/sessions'
 import { SessionBasic } from 'src/sessions/basic'
 import { compute } from 'src/toolbox'
 import { usePeriodicRerender, useRequireLogin } from 'src/toolbox/hooks'
+import { MetisComponent } from '../../../../../../../shared'
 import { DateToolbox } from '../../../../../../../shared/toolbox/dates'
 import List, { TGetListButtonLabel, TOnListButtonClick } from '../List'
 import {
   TGetItemButtonLabel,
-  TListItem,
   TOnItemButtonClick,
   TOnItemSelection,
 } from '../pages/ListItem'
@@ -152,11 +152,9 @@ export default function SessionList({
   /**
    * Handler for when a session is selected.
    */
-  const onSessionSelection: TOnItemSelection<TListItem> = async ({
+  const onSessionSelection: TOnItemSelection<MetisComponent> = async ({
     _id: sessionId,
-  }: {
-    _id: string
-  }) => {
+  }: MetisComponent) => {
     if (server !== null) {
       try {
         // Notify user of session join.
@@ -254,7 +252,7 @@ export default function SessionList({
 
         // Handle session selection if the user submits.
         if (choice === 'Submit') {
-          onSessionSelection({ _id: text, name: 'manual-join' })
+          onSessionSelection(SessionBasic.createManualJoin(text))
         }
         break
       default:

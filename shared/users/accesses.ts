@@ -91,6 +91,24 @@ export default class UserAccess implements TUserAccess {
         UserPermission.AVAILABLE_PERMISSIONS.changelog_read,
       ],
     ),
+    system: new UserAccess(
+      'system',
+      'system',
+      'This access level is for the server itself and it has full access to the entire application. This user cannot be used via the web client and cannot be used to log in.',
+      [
+        UserPermission.AVAILABLE_PERMISSIONS.sessions_join_manager,
+        UserPermission.AVAILABLE_PERMISSIONS.sessions_read,
+        UserPermission.AVAILABLE_PERMISSIONS.sessions_write,
+        UserPermission.AVAILABLE_PERMISSIONS.missions_read,
+        UserPermission.AVAILABLE_PERMISSIONS.missions_write,
+        UserPermission.AVAILABLE_PERMISSIONS.environments_read,
+        UserPermission.AVAILABLE_PERMISSIONS.users_read,
+        UserPermission.AVAILABLE_PERMISSIONS.users_write,
+        UserPermission.AVAILABLE_PERMISSIONS.files_read,
+        UserPermission.AVAILABLE_PERMISSIONS.files_write,
+        UserPermission.AVAILABLE_PERMISSIONS.changelog_read,
+      ],
+    ),
     revokedAccess: new UserAccess(
       'revokedAccess',
       'revoked access',
@@ -140,6 +158,7 @@ const accessNames = [
   'student',
   'instructor',
   'admin',
+  'system',
   'revoked access',
 ] as const
 export type TUserAccessName = (typeof accessNames)[number]
@@ -149,6 +168,7 @@ export const accessIds = [
   'student',
   'instructor',
   'admin',
+  'system',
   'revokedAccess',
 ] as const
 export type TUserAccessId = (typeof accessIds)[number]

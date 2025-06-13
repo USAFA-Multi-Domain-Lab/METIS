@@ -11,7 +11,7 @@ import { TSessionConfig, TSessionJson } from 'metis/sessions'
 import SessionMember, { TSessionMemberJson } from 'metis/sessions/members'
 import MemberRole from 'metis/sessions/members/roles'
 import { AnyObject } from 'metis/toolbox/objects'
-import { TMetisComponent } from '..'
+import { MetisComponent } from '..'
 import { TMissionNodeJson } from '../missions/nodes'
 
 /* -- TYPES -- */
@@ -121,33 +121,32 @@ export type TServerMethod = keyof TServerEvents
 export type TServerEvent = TServerEvents[TServerMethod]
 
 /**
- * The base properties for a modifier datum.
+ * Used to identify the data structure.
+ * @option `"node-update-block":` The data needed to block or unblock a node.
+ * @option `"node-open":` The data needed to open a node and reveal its descendants.
+ * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
+ * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
+ * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
+ * @option `"force-resource-pool":` The data needed to modify the resource pool of a force.
+ * @option `"file-update-access":` The data needed to modify the access of a file for a force.
  */
-type TModifierDatumBase = {
-  /**
-   * Used to identify the data structure.
-   * @option `"node-update-block":` The data needed to block or unblock a node.
-   * @option `"node-open":` The data needed to open a node.
-   * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
-   * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
-   * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
-   * @option `"force-resource-pool":` The data needed to modify the resource pool of a force.
-   */
-  key:
-    | 'node-update-block'
-    | 'node-open'
-    | 'node-action-success-chance'
-    | 'node-action-process-time'
-    | 'node-action-resource-cost'
-    | 'force-resource-pool'
-}
+type TModifierDataKey =
+  | 'node-update-block'
+  | 'node-open'
+  | 'node-action-success-chance'
+  | 'node-action-process-time'
+  | 'node-action-resource-cost'
+  | 'force-resource-pool'
+  | 'file-update-access'
 
 /**
  * The data necessary to apply a modifier to an object in METIS.
  */
 type TModifierData = [
   {
-    // See `TModifierDatumBase` for the key docstring.
+    /**
+     * @see {@link TModifierDataKey}
+     */
     key: 'node-update-block'
     /**
      * The ID of the node to modify.
@@ -159,11 +158,15 @@ type TModifierData = [
     blocked: boolean
   },
   {
-    // See `TModifierDatumBase` for the key docstring.
+    /**
+     * @see {@link TModifierDataKey}
+     */
     key: 'node-open'
   } & TOpenNodeData,
   {
-    // See `TModifierDatumBase` for the key docstring.
+    /**
+     * @see {@link TModifierDataKey}
+     */
     key: 'node-action-success-chance'
     /**
      * The operand used to modify the chance of succes for all the node's actions.
@@ -180,7 +183,9 @@ type TModifierData = [
     actionId?: string
   },
   {
-    // See `TModifierDatumBase` for the key docstring.
+    /**
+     * @see {@link TModifierDataKey}
+     */
     key: 'node-action-process-time'
     /**
      * The operand used to modify the process time for all the node's actions.
@@ -197,7 +202,9 @@ type TModifierData = [
     actionId?: string
   },
   {
-    // See `TModifierDatumBase` for the key docstring.
+    /**
+     * @see {@link TModifierDataKey}
+     */
     key: 'node-action-resource-cost'
     /**
      * The operand used to modify the resource cost for all the node's actions.
@@ -214,7 +221,9 @@ type TModifierData = [
     actionId?: string
   },
   {
-    // See `TModifierDatumBase` for the key docstring.
+    /**
+     * @see {@link TModifierDataKey}
+     */
     key: 'force-resource-pool'
     /**
      * The ID of the force to modify.
@@ -225,12 +234,61 @@ type TModifierData = [
      */
     operand: number
   },
+  {
+    /**
+     * @see {@link TModifierDataKey}
+     */
+    key: 'file-update-access'
+    /**
+     * The ID of the force to modify.
+     */
+    forceId: string
+    /**
+     * The ID of the file to modify.
+     */
+    fileId: string
+    /**
+     * The access to grant or revoke.
+     */
+    granted: true
+    /**
+     * The data for the file now accessible to
+     * the force.
+     */
+    fileData: TMissionFileJson
+  },
+  {
+    /**
+     * @see {@link TModifierDataKey}
+     */
+    key: 'file-update-access'
+    /**
+     * The ID of the force to modify.
+     */
+    forceId: string
+    /**
+     * The ID of the file to modify.
+     */
+    fileId: string
+    /**
+     * The access to grant or revoke.
+     */
+    granted: false
+  },
 ]
+
+/**
+ * Modifier data for granting/revoking access to a file.
+ */
+export type TFileAccessModifierData = Extract<
+  TModifierData[number],
+  { key: 'file-update-access' }
+>
 
 /**
  * The data needed to apply a modifier to an object in METIS.
  */
-type TModifierDatum = TModifierDatumBase & TModifierData[number]
+type TModifierDatum = Extract<TModifierData[number], { key: TModifierDataKey }>
 
 /**
  * The data necessary to send a message to the output panel.
@@ -604,7 +662,7 @@ export type TResponseEvents = {
       /**
        * The ID of the member associated with the session client.
        */
-      memberId: TMetisComponent['_id']
+      memberId: MetisComponent['_id']
     },
     TClientEvents['request-current-session']
   >
@@ -621,7 +679,7 @@ export type TResponseEvents = {
       /**
        * The ID of the member in the session.
        */
-      memberId: TMetisComponent['_id']
+      memberId: MetisComponent['_id']
     },
     TClientEvents['request-join-session']
   >

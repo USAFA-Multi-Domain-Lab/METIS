@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import { useBeforeunload } from 'react-beforeunload'
-import { useGlobalContext, useNavigationMiddleware } from 'src/context'
+import { useGlobalContext, useNavigationMiddleware } from 'src/context/global'
 import ClientFileReference from 'src/files/references'
 import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
@@ -21,7 +21,8 @@ import {
   useRequireLogin,
 } from 'src/toolbox/hooks'
 import { DefaultPageLayout, TPage_P } from '.'
-import Mission, { TMissionComponent } from '../../../../shared/missions'
+import Mission from '../../../../shared/missions'
+import MissionComponent from '../../../../shared/missions/component'
 import { TNonEmptyArray } from '../../../../shared/toolbox/arrays'
 import Prompt from '../content/communication/Prompt'
 import FileReferenceList, {
@@ -103,20 +104,25 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   } = globalContext.actions
   const [server] = globalContext.server
   const state: TMissionPage_S = {
-    defectiveComponents: useState<TMissionComponent<any, any>[]>([]),
+    defectiveComponents: useState<MissionComponent<any, any>[]>([]),
+    checkForDefects: useState<boolean>(true),
   }
-  const [mission, setMission] = useState<ClientMission>(new ClientMission())
+  const [mission, setMission] = useState<ClientMission>(
+    ClientMission.createNew(),
+  )
   const [globalFiles, setGlobalFiles] = useState<ClientFileReference[]>([])
+  const [localFiles, setLocalFiles] = useState<ClientMissionFile[]>([])
   const selectedForceState = useState<ClientMissionForce | null>(null)
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(
     props.missionId === null ? true : false,
   )
-  const [selection, setSelection] = useState<TMissionComponent<any, any>>(
+  const [selection, setSelection] = useState<MissionComponent<any, any>>(
     mission.selection,
   )
   const [isNewEffect, setIsNewEffect] = useState<boolean>(false)
   const [defectiveComponents, setDefectiveComponents] =
     state.defectiveComponents
+  const [_, setCheckForDefects] = state.checkForDefects
   const root = useRef<HTMLDivElement>(null)
   const mapButtonEngine = useButtonSvgEngine({
     elements: [
@@ -244,8 +250,8 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
    * files that are attached to the mission.
    */
   const missionFileListProps: TMissionFileList_P = {
-    name: 'In Mission',
-    items: mission.files,
+    name: 'Attached to Mission',
+    items: localFiles,
     itemsPerPageMin: 4,
     getListButtonPermissions: () => ['missions_write'],
     getItemButtonPermissions: () => ['missions_write'],
@@ -254,7 +260,8 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
       else mission.deselect()
     },
     onDetachRequest: (file) => {
-      mission.files = mission.files.filter((f) => f._id !== file._id)
+      setLocalFiles(localFiles.filter((f) => f._id !== file._id))
+      file.reference.enable()
       onChange(file)
     },
   }
@@ -264,14 +271,12 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
    * files available in the store.
    */
   const inStoreListProps: TFileReferenceList_P = {
-    name: 'In Store',
+    name: 'Server Repository',
     files: [globalFiles, setGlobalFiles],
     itemButtonIcons: ['link'],
     itemsPerPageMin: 4,
     getListButtonPermissions: () => ['missions_write'],
     getItemButtonPermissions: () => ['missions_write'],
-    isDisabled: (file) =>
-      mission.files.some(({ referenceId }) => referenceId === file._id),
     getItemButtonLabel: (button) => {
       if (button === 'link') return 'Attach to mission'
       else return ''
@@ -279,8 +284,12 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     onItemButtonClick: (button, reference) => {
       if (button !== 'link') return
 
+      // Add new file to the mission.
       let file = ClientMissionFile.fromFileReference(reference, mission)
-      mission.files.push(file)
+      setLocalFiles([...localFiles, file])
+      // Disable the file-reference in the list.
+      reference.disable('File is already attached.')
+
       onChange(file)
     },
   }
@@ -305,14 +314,16 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
           nonRevealedDisplayMode: 'show',
         })
         setMission(mission)
+        setLocalFiles(mission.files)
         setSelection(mission)
         setDefectiveComponents(mission.defectiveComponents)
 
         beginLoading('Loading global files...')
+
         // The user currently logged in must
         // have restricted access to view the
         // files.
-        if (isAuthorized('files_read')) await loadGlobalFiles()
+        if (isAuthorized('files_read')) await loadGlobalFiles(mission)
       } catch {
         handleError('Failed to load mission.')
       }
@@ -325,6 +336,12 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     // Mark mount as handled.
     done()
   })
+
+  // Update the files in the mission when the
+  // local files list changes.
+  useEffect(() => {
+    mission.files = localFiles
+  }, [localFiles])
 
   // Enable/disable the save button based on
   // whether there are unsaved changes or not.
@@ -479,6 +496,16 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   // prototype is spawned in the mission.
   useEventListener(mission, 'new-prototype', () => setAreUnsavedChanges(true))
 
+  // Update the list of local files when file access
+  // is granted or revoked.
+  useEventListener(
+    mission,
+    ['file-access-granted', 'file-access-revoked'],
+    () => {
+      setLocalFiles(mission.files)
+    },
+  )
+
   // Add event listener to watch for a node exclusion
   // request, updating the state accordingly.
   useEventListener(mission, 'set-node-exclusion', ([node]) => onChange(node))
@@ -588,15 +615,28 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   /**
    * This loads the global files into the state for
    * display and selection.
+   * @param mission The current mission being viewed on
+   * the page.
+   * @resolves When the global files have been loaded.
+   * @rejects If the global files could not be loaded.
    */
-  const loadGlobalFiles = (): Promise<void> => {
+  const loadGlobalFiles = (mission: ClientMission): Promise<void> => {
     return new Promise<void>(async (resolve, reject) => {
       try {
         // Begin loading.
         beginLoading('Retrieving files...')
         // Fetch files from API and store
         // them in the state.
-        setGlobalFiles(await ClientFileReference.$fetchAll())
+        const globalFiles = await ClientFileReference.$fetchAll()
+        // Disable any files that are already in
+        // the mission.
+        globalFiles.forEach((file) => {
+          file.setDisabled(
+            mission.files.some((f) => f.reference._id === file._id),
+            'File is already attached.',
+          )
+        })
+        setGlobalFiles(globalFiles)
         // Finish loading and resolve.
         finishLoading()
         resolve()
@@ -613,21 +653,22 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
    * @param components The components that have been changed.
    */
   const onChange = (
-    ...components: TNonEmptyArray<TMissionComponent<any, any>>
+    // ? Is this still necessary?
+    ...components: TNonEmptyArray<MissionComponent<any, any>>
   ): void => {
-    let updatedState = defectiveComponents
+    // todo: Remove this, maybe??
+    // components.forEach((component) => {
+    //   // If the component was defective and is no
+    //   // longer defective, then remove it from the
+    //   // list.
+    //   if (defectiveComponents.includes(component) && !component.defective) {
+    //     updatedState = updatedState.filter((c) => c._id !== component._id)
+    //   }
+    // })
 
-    // todo: Store last changed component for efficiency purposes.
-    components.forEach((component) => {
-      // If the component was defective and is no
-      // longer defective, then remove it from the
-      // list.
-      if (defectiveComponents.includes(component) && !component.defective) {
-        updatedState = updatedState.filter((c) => c._id !== component._id)
-      }
-    })
-
-    setDefectiveComponents(updatedState)
+    // Trigger a check for defects, now
+    // that a component has changed.
+    setCheckForDefects(true)
     setAreUnsavedChanges(true)
     forceUpdate()
   }
@@ -1174,7 +1215,12 @@ export type TMissionPage_S = {
    * The defected components that are currently
    * tracked within the mission.
    */
-  defectiveComponents: TReactState<TMissionComponent<any, any>[]>
+  defectiveComponents: TReactState<MissionComponent<any, any>[]>
+  /**
+   * Triggers a recomputation of the defective
+   * components, updating the state with the result.
+   */
+  checkForDefects: TReactState<boolean>
 }
 
 /**

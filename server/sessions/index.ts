@@ -6,6 +6,7 @@ import {
 } from 'metis/connect/data'
 import { ServerEmittedError } from 'metis/connect/errors'
 import { TMissionJson, TMissionJsonOptions } from 'metis/missions'
+import MissionComponent from 'metis/missions/component'
 import { TEffectTrigger } from 'metis/missions/effects'
 import { TOutputContext, TOutputType } from 'metis/missions/forces/output'
 import ServerMission from 'metis/server/missions'
@@ -842,7 +843,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     this._state = 'started'
     // Recreate the new mission from the JSON of
     // the current mission.
-    this._mission = new ServerMission(this.mission.toJson())
+    this._mission = ServerMission.fromSaveJson(this.mission.toSaveJson())
     this.initializeMission()
     this.mapActions()
 
@@ -1725,40 +1726,17 @@ export default class SessionServer extends Session<TMetisServerComponents> {
   }
 
   /**
-   * Confirms the force is a part of the mission.
-   * @param force The force to confirm.
+   * Confirms the mission component is a part of the mission
+   * the session is using.
+   * @param component The component to check.
    * @throws If the force does not belong to the mission.
    */
-  private confirmForceInMission(force: ServerMissionForce): void {
-    if (force.mission._id !== this.mission._id) {
+  private confirmComponentInMission(
+    component: MissionComponent<any, any>,
+  ): void {
+    if (!this.mission.has(component)) {
       throw new Error(
-        `Could not perform the operation on the force with ID "${force._id}" because it does not belong to the mission with ID "${this.mission._id}".`,
-      )
-    }
-  }
-
-  /**
-   * Confirms the node is a part of the mission.
-   * @param node The node to confirm.
-   * @throws If the node does not belong to the mission.
-   */
-  private confirmNodeInMission(node: ServerMissionNode): void {
-    if (node.mission._id !== this.mission._id) {
-      throw new Error(
-        `Could not perform the operation on the node with ID "${node._id}" because it does not belong to the mission with ID "${this.mission._id}".`,
-      )
-    }
-  }
-
-  /**
-   * Confirms the action is a part of the mission.
-   * @param action The action to confirm.
-   * @throws If the action does not belong to the mission.
-   */
-  private confirmActionInMission(action: ServerMissionAction): void {
-    if (action.mission._id !== this.mission._id) {
-      throw new Error(
-        `Could not perform the operation on the action with ID "${action._id}" because it does not belong to the mission with ID "${this.mission._id}".`,
+        `Could not perform the operation on the component with ID "${component._id}" because it does not belong to the mission with ID "${this.mission._id}".`,
       )
     }
   }
@@ -1789,7 +1767,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
   ) => {
     // Confirm the node exists, update the block status,
     // then emit an event to the members.
-    this.confirmNodeInMission(node)
+    this.confirmComponentInMission(node)
     node.updateBlockStatus(blocked)
     this.emitModifierEnacted(node.force, {
       key: 'node-update-block',
@@ -1804,7 +1782,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
    */
   public openNode = (node: ServerMissionNode) => {
     // Confirm the node exists then open it.
-    this.confirmNodeInMission(node)
+    this.confirmComponentInMission(node)
     node.open()
 
     // Extract data from the node.
@@ -1845,11 +1823,11 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     const { operand, node, action } = data
 
     // Confirm the node exists.
-    this.confirmNodeInMission(node)
+    this.confirmComponentInMission(node)
 
     // If the action is provided, confirm it exists
     // and belongs to the node.
-    if (action) this.confirmActionInMission(action)
+    if (action) this.confirmComponentInMission(action)
 
     // Modify the success chance of the action or
     // all actions within the node.
@@ -1880,11 +1858,11 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     const { operand, node, action } = data
 
     // Confirm the node exists.
-    this.confirmNodeInMission(node)
+    this.confirmComponentInMission(node)
 
     // If the action is provided, confirm it exists
     // and belongs to the node.
-    if (action) this.confirmActionInMission(action)
+    if (action) this.confirmComponentInMission(action)
 
     // Modify the processing time of the action or
     // all actions within the node.
@@ -1915,11 +1893,11 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     const { operand, node, action } = data
 
     // Confirm the node exists.
-    this.confirmNodeInMission(node)
+    this.confirmComponentInMission(node)
 
     // If the action is provided, confirm it exists
     // and belongs to the node.
-    if (action) this.confirmActionInMission(action)
+    if (action) this.confirmComponentInMission(action)
 
     // Modify the resource cost of the action or
     // all actions within the node.
@@ -1943,13 +1921,54 @@ export default class SessionServer extends Session<TMetisServerComponents> {
   public modifyResourcePool = (force: ServerMissionForce, operand: number) => {
     // Confirm the force exists, modify the resource pool,
     // then emit an event to the members.
-    this.confirmForceInMission(force)
+    this.confirmComponentInMission(force)
     force.modifyResourcePool(operand)
     this.emitModifierEnacted(force, {
       key: 'force-resource-pool',
       forceId: force._id,
       operand,
     })
+  }
+
+  /**
+   * Updates the access to the given file in the mission to the
+   * given force.
+   * @param file The file to which access is granted/revoked.
+   * @param force The force which will have access to the file.
+   */
+  public updateFileAccess = (
+    file: ServerMissionFile,
+    force: ServerMissionForce,
+    granted: boolean,
+  ): void => {
+    this.confirmComponentInMission(file)
+
+    // Grant/revoke access based on the parameter
+    // passed.
+    if (granted) file.grantAccess(force)
+    else file.revokeAccess(force)
+
+    // Emit an event to members of the force,
+    // including file-data if the access
+    // to the file is now granted.
+    let eventPartialPayload = {
+      key: 'file-update-access',
+      fileId: file._id,
+      forceId: force._id,
+    } as const
+
+    if (granted) {
+      this.emitModifierEnacted(force, {
+        ...eventPartialPayload,
+        granted: true,
+        fileData: file.toJson(),
+      })
+    } else {
+      this.emitModifierEnacted(force, {
+        ...eventPartialPayload,
+        granted: false,
+      })
+    }
   }
 
   // todo: Rework this.
@@ -2053,8 +2072,8 @@ export default class SessionServer extends Session<TMetisServerComponents> {
   /**
    * @returns the session associated with the given session ID.
    */
-  public static get(_id: string | undefined): SessionServer | undefined {
-    if (_id === undefined) {
+  public static get(_id: string | null | undefined): SessionServer | undefined {
+    if (!_id) {
       return undefined
     } else {
       return SessionServer.registry.get(_id)

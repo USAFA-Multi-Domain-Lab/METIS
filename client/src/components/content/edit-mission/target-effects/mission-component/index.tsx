@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
+import ClientMissionFile from 'src/missions/files'
 import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
@@ -12,13 +13,18 @@ import {
 import ActionArg, {
   TActionMetadata,
 } from '../../../../../../../shared/target-environments/args/mission-component/action-arg'
+import FileArg, {
+  TFileMetadata,
+} from '../../../../../../../shared/target-environments/args/mission-component/file-arg'
 import ForceArg, {
   TForceMetadata,
 } from '../../../../../../../shared/target-environments/args/mission-component/force-arg'
 import NodeArg, {
   TNodeMetadata,
 } from '../../../../../../../shared/target-environments/args/mission-component/node-arg'
+import StringToolbox from '../../../../../../../shared/toolbox/strings'
 import ArgAction from './ArgAction'
+import ArgFile from './ArgFile'
 import ArgForce from './ArgForce'
 import ArgNode from './ArgNode'
 
@@ -38,6 +44,7 @@ export default function ArgMissionComponent({
   setEffectArgs,
 }: TArgMissionComponent_P): JSX.Element | null {
   /* -- CONSTANTS -- */
+
   /**
    * Determines if the argument is required.
    */
@@ -53,7 +60,8 @@ export default function ArgMissionComponent({
 
   /* -- STATE -- */
 
-  /** -- force -- */
+  /* -- force -- */
+
   const [defaultForce] = useState<ClientMissionForce>(effect.force)
   const [forceKey] = useState<string>(ForceArg.FORCE_KEY)
   const [forceName] = useState<string>(ForceArg.FORCE_NAME)
@@ -119,7 +127,8 @@ export default function ArgMissionComponent({
       }
     })
 
-  /** -- node -- */
+  /* -- node -- */
+
   const [defaultNode] = useState<ClientMissionNode>(effect.node)
   const [nodeKey] = useState<string>(NodeArg.NODE_KEY)
   const [nodeName] = useState<string>(NodeArg.NODE_NAME)
@@ -186,6 +195,7 @@ export default function ArgMissionComponent({
     })
 
   /* -- action -- */
+
   const [defaultAction] = useState<ClientMissionAction>(effect.action)
   const [actionKey] = useState<string>(ActionArg.ACTION_KEY)
   const [actionName] = useState<string>(ActionArg.ACTION_NAME)
@@ -247,6 +257,79 @@ export default function ArgMissionComponent({
       else {
         return null
       }
+    })
+
+  /* -- file -- */
+
+  const [defaultFile] = useState<ClientMissionFile>(() => {
+    // Return the first file in the mission. If
+    // there is no file in the mission, then return
+    // a detached file object.
+    if (mission.files.length) {
+      return mission.files[0]
+    } else {
+      return ClientMissionFile.createDetached(
+        StringToolbox.generateRandomId(),
+        'No files available.',
+        mission,
+      )
+    }
+  })
+  const [fileId] = useState<string>(FileArg.FILE_ID)
+  const [fileName] = useState<string>(FileArg.FILE_NAME)
+  const [fileValue, setFileValue] = useState<ClientMissionFile>(() => {
+    // If the argument is required and the argument's value
+    // is in the effect's arguments...
+    if (isRequired && existsInEffectArgs) {
+      // Search for the file in the mission.
+      let fileInMission = effect.getFileFromArgs(_id)
+      // If the file is found then return the file.
+      if (fileInMission) return fileInMission
+      let fileInArgs = effect.getFileMetadataInArgs(_id)
+      // If the file is not found, but the effect's arguments
+      // contains the file's metadata then return a file
+      // object using the metadata from the effect's arguments.
+      // *** Note: This will display the user's previous selection
+      // *** in the dropdown even though it no longer exists in the
+      // *** mission.
+      if (fileInArgs) {
+        return ClientMissionFile.createDetached(
+          fileInArgs.fileId,
+          fileInArgs.fileName,
+          mission,
+        )
+      }
+    }
+
+    // Otherwise, return the default file.
+    return defaultFile
+  })
+  const [optionalFileValue, setOptionalFileValue] =
+    useState<ClientMissionFile | null>(() => {
+      // If the argument is optional and the argument's value
+      // is in the effect's arguments...
+      if (isOptional && existsInEffectArgs) {
+        // Search for the file in the mission.
+        let fileInMission = effect.getFileFromArgs(_id)
+        // If the file is found then return the file.
+        if (fileInMission) return fileInMission
+        let fileInArgs = effect.getFileMetadataInArgs(_id)
+        // If the file is not found, but the effect's arguments
+        // contains the file's metadata then return a file
+        // object using the metadata from the effect's arguments.
+        // *** Note: This will display the user's previous selection
+        // *** in the dropdown even though it no longer exists in the
+        // *** mission.
+        if (fileInArgs) {
+          return ClientMissionFile.createDetached(
+            fileInArgs.fileId,
+            fileInArgs.fileName,
+            mission,
+          )
+        }
+      }
+      // Otherwise, return null.
+      return null
     })
 
   /* -- COMPUTED -- */
@@ -616,6 +699,75 @@ export default function ArgMissionComponent({
     }
   })
 
+  /* -- file -- */
+
+  /**
+   * Determines if the file should be present in the effect's arguments
+   * and if the file dropdown should be displayed.
+   */
+  const fileIsActive: boolean = compute(() => type === 'file')
+
+  /**
+   * Determines if the file value should be inserted or updated in the
+   * effect's arguments.
+   */
+  const upsertFile: boolean = compute(() => {
+    if (!fileIsActive) return false
+
+    // If the argument is required then add the file value
+    // to the effect's arguments.
+    if (isRequired) return true
+
+    // If the argument is optional and a file has been selected
+    // then upsert the file to the effect's arguments.
+    if (isOptional && optionalFileValue !== null) {
+      return true
+    }
+
+    // Otherwise, return false.
+    return false
+  })
+
+  /**
+   * Determines if the file value should be removed from the
+   * effect's arguments.
+   */
+  const removeFile: boolean = compute(() => {
+    if (!fileIsActive) return true
+
+    // If the argument is optional, a file hasn't been selected,
+    // yet the argument exists in the effect's arguments then remove
+    // the file value from the effect's arguments.
+    if (isOptional && optionalFileValue === null && existsInEffectArgs) {
+      return true
+    }
+
+    // Otherwise, return false.
+    return false
+  })
+
+  /**
+   * The metadata for the file argument.
+   * @note This is the metadata that is passed to the effect's arguments.
+   */
+  const fileMetadata: TFileMetadata = compute(() => {
+    if (!fileIsActive) return {}
+
+    if (isOptional && upsertFile) {
+      // *** Note: The "optionalFileValue" is validated within
+      // *** the "upsertFile" computed property.
+      return {
+        [fileId]: optionalFileValue!._id,
+        [fileName]: optionalFileValue!.name,
+      }
+    }
+
+    return {
+      [fileId]: fileValue._id,
+      [fileName]: fileValue.name,
+    }
+  })
+
   /* -- EFFECTS -- */
 
   // Determine if the argument needs to be initialized.
@@ -633,9 +785,11 @@ export default function ArgMissionComponent({
     forceValue,
     nodeValue,
     actionValue,
+    fileValue,
     optionalForceValue,
     optionalNodeValue,
     optionalActionValue,
+    optionalFileValue,
   ])
 
   /* -- FUNCTIONS -- */
@@ -716,6 +870,28 @@ export default function ArgMissionComponent({
         // *** with the current value.
         setActionValue(defaultAction)
       }
+
+      // If the file value stored in the state is the
+      // same as the default file value, then manually update the
+      // effect's arguments by adding this argument and its
+      // value.
+      if (fileValue === defaultFile) {
+        // *** Note: An argument's value in the effect's
+        // *** arguments is automatically set if the value
+        // *** stored in this state changes. If the value
+        // *** in the state doesn't change then the value
+        // *** needs to be set manually.
+        upsert()
+      }
+      // Otherwise, set the file value to the default file value.
+      // *** Note: A default value is mandatory if the
+      // *** argument is required.
+      else {
+        // *** Note: When this value in the state changes,
+        // *** the effect's arguments automatically updates
+        // *** with the current value.
+        setFileValue(defaultFile)
+      }
     }
   }
 
@@ -729,6 +905,7 @@ export default function ArgMissionComponent({
     if (upsertForce) data = forceMetadata
     if (upsertNode) data = nodeMetadata
     if (upsertAction) data = actionMetadata
+    if (upsertFile) data = fileMetadata
 
     // Update the effect's arguments with the new data.
     setEffectArgs((prev) => ({
@@ -757,6 +934,10 @@ export default function ArgMissionComponent({
         delete prev[_id][actionKey]
         delete prev[_id][actionName]
       }
+      if (removeFile) {
+        delete prev[_id][fileId]
+        delete prev[_id][fileName]
+      }
 
       // If the argument is empty, then remove the argument
       // from the effect's arguments.
@@ -764,7 +945,8 @@ export default function ArgMissionComponent({
         Object.keys(prev[_id]).length === 0 &&
         prev[_id][forceKey] === undefined &&
         prev[_id][nodeKey] === undefined &&
-        prev[_id][actionKey] === undefined
+        prev[_id][actionKey] === undefined &&
+        prev[_id][fileId] === undefined
       ) {
         delete prev[_id]
       }
@@ -808,6 +990,14 @@ export default function ArgMissionComponent({
         optionalForceValue={[optionalForceValue, setOptionalForceValue]}
         optionalNodeValue={[optionalNodeValue, setOptionalNodeValue]}
         optionalActionValue={[optionalActionValue, setOptionalActionValue]}
+      />
+      <ArgFile
+        effect={effect}
+        arg={arg}
+        existsInEffectArgs={existsInEffectArgs}
+        fileIsActive={fileIsActive}
+        fileValue={[fileValue, setFileValue]}
+        optionalFileValue={[optionalFileValue, setOptionalFileValue]}
       />
     </>
   )

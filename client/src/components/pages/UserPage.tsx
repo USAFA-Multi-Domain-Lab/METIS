@@ -1,6 +1,6 @@
 import { AxiosError } from 'axios'
 import { useState } from 'react'
-import { useGlobalContext, useNavigationMiddleware } from 'src/context'
+import { useGlobalContext, useNavigationMiddleware } from 'src/context/global'
 import { compute } from 'src/toolbox'
 import { useMountHandler, useRequireLogin } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
@@ -34,7 +34,7 @@ export default function UserPage({ userId }: IUserPage): JSX.Element | null {
 
   const [existsInDatabase, setExistsInDatabase] = useState<boolean>(false)
   const [user, setUser] = useState<ClientUser>(
-    new ClientUser({}, { passwordIsRequired: true }),
+    ClientUser.createNew({ passwordIsRequired: true }),
   )
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(false)
   const [userEmptyStringArray, setUserEmptyStringArray] = useState<string[]>([])

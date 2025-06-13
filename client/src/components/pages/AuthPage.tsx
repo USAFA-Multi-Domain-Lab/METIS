@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import ClientLogin from 'src/logins'
 import { compute } from 'src/toolbox'
 import { TPage_P } from '.'
@@ -183,8 +183,8 @@ export default function AuthPage(): JSX.Element | null {
             fieldType='required'
             handleOnBlur='deliverError'
             label={'Username'}
-            stateValue={username}
-            setState={setUsername}
+            value={username}
+            setValue={setUsername}
             uniqueLabelClassName='Hidden'
             placeholder='Username'
           />
@@ -192,8 +192,8 @@ export default function AuthPage(): JSX.Element | null {
             fieldType='required'
             handleOnBlur='deliverError'
             label={'Password'}
-            stateValue={password}
-            setState={setPassword}
+            value={password}
+            setValue={setPassword}
             uniqueLabelClassName='Hidden'
             inputType='password'
             placeholder='Password'

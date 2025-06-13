@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
 import ButtonSvgPanel from 'src/components/content/user-controls/buttons/v3/ButtonSvgPanel'
 import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
+import { MetisComponent } from '../../../../../../../shared'
 import { useListContext } from '../List'
-import { TListItem } from '../pages/ListItem'
 import './ListButtons.scss'
 
 /**
@@ -11,7 +11,7 @@ import './ListButtons.scss'
  * on the list.
  */
 export default function ListButtons<
-  TItem extends TListItem,
+  TItem extends MetisComponent,
 >(): JSX.Element | null {
   /* -- STATE -- */
 
