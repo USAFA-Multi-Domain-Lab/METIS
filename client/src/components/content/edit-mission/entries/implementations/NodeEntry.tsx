@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { TMetisClientComponents } from 'src'
 import List from 'src/components/content/data/lists/List'
+import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
 import If from 'src/components/content/util/If'
+import { useMissionPageContext } from 'src/components/pages/MissionPage'
 import { useGlobalContext } from 'src/context/global'
 import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
@@ -15,10 +17,7 @@ import { DetailColorSelector } from '../../../form/DetailColorSelector'
 import { DetailLargeString } from '../../../form/DetailLargeString'
 import { DetailString } from '../../../form/DetailString'
 import { DetailToggle } from '../../../form/DetailToggle'
-import {
-  ButtonText,
-  TButtonText_P,
-} from '../../../user-controls/buttons/ButtonText'
+import { TButtonText_P } from '../../../user-controls/buttons/ButtonText'
 import { TToggleLockState } from '../../../user-controls/Toggle'
 import Entry from '../Entry'
 
@@ -38,6 +37,9 @@ export default function NodeEntry({
   const { notify, prompt } = globalContext.actions
 
   /* -- STATE -- */
+
+  const { missionPageSvgEngine } = useMissionPageContext()
+
   const [name, setName] = useState<string>(node.name)
   const [color, setColor] = useState<string>(node.color)
   const [description, setDescription] = useState<string>(node.description)
@@ -48,6 +50,25 @@ export default function NodeEntry({
   const [device, setDevice] = useState<boolean>(node.device)
   const [exclude, setExclude] = useState<boolean>(node.exclude)
   const [applyColorFill, setApplyColorFill] = useState<boolean>(false)
+  const svgEngine = useButtonSvgEngine({
+    elements: [
+      {
+        type: 'button',
+        icon: 'divider',
+        description: compute(() => {
+          let excludeButton = node.buttons.find(
+            ({ icon }) => icon === 'divider',
+          )
+          return (
+            excludeButton?.description ??
+            'Exclude this node from the force (Closes panel view also).'
+          )
+        }),
+        permissions: ['missions_write'],
+        onClick: () => setExclude(true),
+      },
+    ],
+  })
 
   /* -- COMPUTED -- */
   /**
@@ -107,16 +128,6 @@ export default function NodeEntry({
     }
 
     return buttons
-  })
-  /**
-   * The tooltip description for the node exclude button.
-   */
-  const excludeButtonDescription: string = compute(() => {
-    let excludeButton = node.buttons.find(({ icon }) => icon === 'divider')
-    return (
-      excludeButton?.description ??
-      'Exclude this node from the force (Closes panel view also).'
-    )
   })
 
   /* -- EFFECTS -- */
@@ -221,7 +232,10 @@ export default function NodeEntry({
   /* -- RENDER -- */
 
   return (
-    <Entry missionComponent={node}>
+    <Entry
+      missionComponent={node}
+      svgEngines={[missionPageSvgEngine, svgEngine]}
+    >
       <DetailString
         fieldType='required'
         handleOnBlur='repopulateValue'
@@ -339,15 +353,6 @@ export default function NodeEntry({
           }}
         />
       </If>
-
-      {/* -- BUTTON(S) -- */}
-      <div className='ButtonContainer'>
-        <ButtonText
-          text='Exclude Node'
-          onClick={() => setExclude(true)}
-          tooltipDescription={excludeButtonDescription}
-        />
-      </div>
     </Entry>
   )
 }

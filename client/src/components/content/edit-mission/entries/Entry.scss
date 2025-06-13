@@ -49,4 +49,11 @@
       border-top: unset;
     }
   }
+
+  .EntryBottom {
+    border-top: 2px solid $color-secondary;
+    padding: 0.25em;
+    display: flex;
+    flex-flow: row wrap;
+  }
 }

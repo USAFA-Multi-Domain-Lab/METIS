@@ -76,6 +76,7 @@ export function createDefaultListProps<
     listButtonIcons: [],
     itemButtonIcons: [],
     initialSorting: { column: 'name', method: 'ascending' },
+    deselectOnClickOutside: true,
     getColumnLabel: (x) => StringToolbox.toTitleCase(x.toString()),
     getCellText: (item, column) => (item[column] as any).toString(),
     getItemTooltip: () => '',
@@ -115,6 +116,7 @@ export default function List<TItem extends MetisComponent>(
     itemsPerPageMin,
     listButtonIcons,
     itemButtonIcons,
+    deselectOnClickOutside,
     getListButtonLabel,
     getListButtonPermissions,
     getItemButtonLabel,
@@ -397,6 +399,9 @@ export default function List<TItem extends MetisComponent>(
 
   // Deselect the item if the user clicks outside of the list.
   useEventListener(document, 'click', (event: MouseEvent) => {
+    // If deselect-on-click-outside is not enabled,
+    // do nothing.
+    if (!deselectOnClickOutside) return
     let rootElement = elements.root.current
     // If the root element is not found, do nothing.
     // This can happen if the component is unmounted.
@@ -519,6 +524,12 @@ export type TList_P<TItem extends MetisComponent> = {
    * @default { column: 'name', method: 'descending' }
    */
   initialSorting?: TListSorting<TItem>
+  /**
+   * Determines if the selected item should deselect
+   * when the user clicks outside of the list.
+   * @default true
+   */
+  deselectOnClickOutside?: boolean
   /**
    * Gets the tooltip description for the item.
    * @param item The item for which to get the tooltip.

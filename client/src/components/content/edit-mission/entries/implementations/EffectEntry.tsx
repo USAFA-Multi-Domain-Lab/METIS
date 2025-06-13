@@ -1,3 +1,5 @@
+import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
+import { useMissionPageContext } from 'src/components/pages/MissionPage'
 import { ClientEffect } from 'src/missions/effects'
 import { useObjectFormSync } from 'src/toolbox/hooks'
 import { TEffectTrigger } from '../../../../../../../shared/missions/effects'
@@ -6,7 +8,6 @@ import { DetailLargeString } from '../../../form/DetailLargeString'
 import { DetailLocked } from '../../../form/DetailLocked'
 import { DetailString } from '../../../form/DetailString'
 import DetailDropdown from '../../../form/dropdown/DetailDropdown'
-import { ButtonText } from '../../../user-controls/buttons/ButtonText'
 import ArgEntry from '../../target-effects/ArgEntry'
 import Entry from '../Entry'
 
@@ -22,6 +23,8 @@ export default function EffectEntry({
 }: TEffectEntry_P): JSX.Element | null {
   /* -- STATE -- */
 
+  const { missionPageSvgEngine } = useMissionPageContext()
+
   const effectState = useObjectFormSync(
     effect,
     ['name', 'trigger', 'description', 'args'],
@@ -31,11 +34,32 @@ export default function EffectEntry({
   const [trigger, setTrigger] = effectState.trigger
   const [description, setDescription] = effectState.description
   const [effectArgs, setEffectArgs] = effectState.args
+  const svgEngine = useButtonSvgEngine({
+    elements: [
+      {
+        type: 'button',
+        icon: 'copy',
+        description: 'Duplicate',
+        permissions: ['missions_write'],
+        onClick: async () => await onDuplicateEffectRequest(effect, true),
+      },
+      {
+        type: 'button',
+        icon: 'remove',
+        description: 'Delete.',
+        permissions: ['missions_write'],
+        onClick: async () => await onDeleteEffectRequest(effect, true),
+      },
+    ],
+  })
 
   /* -- RENDER -- */
 
   return (
-    <Entry missionComponent={effect}>
+    <Entry
+      missionComponent={effect}
+      svgEngines={[missionPageSvgEngine, svgEngine]}
+    >
       <DetailString
         fieldType='required'
         handleOnBlur='repopulateValue'
@@ -81,19 +105,6 @@ export default function EffectEntry({
         effectArgs={effectArgs}
         setEffectArgs={setEffectArgs}
       />
-      {/* -- BUTTON(S) -- */}
-      <div className='ButtonContainer'>
-        <ButtonText
-          text='Duplicate Effect'
-          onClick={async () => await onDuplicateEffectRequest(effect, true)}
-          tooltipDescription='Duplicate this effect.'
-        />
-        <ButtonText
-          text='Delete Effect'
-          onClick={async () => await onDeleteEffectRequest(effect, true)}
-          tooltipDescription='Delete this effect.'
-        />
-      </div>
     </Entry>
   )
 }

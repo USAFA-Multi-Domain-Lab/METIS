@@ -1,5 +1,11 @@
 import { TMetisClientComponents } from 'src'
+import { useGlobalContext } from 'src/context/global'
+import { compute } from 'src/toolbox'
 import MissionComponent from '../../../../../../shared/missions/component'
+import ClassList from '../../../../../../shared/toolbox/html/class-lists'
+import SvgButton from '../../user-controls/buttons/v3/button-svg'
+import ButtonSvgPanel from '../../user-controls/buttons/v3/ButtonSvgPanel'
+import ButtonSvgEngine from '../../user-controls/buttons/v3/engines'
 import './Entry.scss'
 import EntryNavigation from './navigation/EntryNavigation'
 
@@ -12,7 +18,41 @@ export default function <
 >({
   missionComponent: component,
   children,
+  svgEngines = [],
 }: TEntry_P<TComponent>): JSX.Element | null {
+  const [login] = useGlobalContext().login
+  const isAuthorized = login?.user.isAuthorized ?? (() => false)
+
+  /* -- COMPUTED -- */
+
+  /**
+   * The class names for the entry bottom.
+   */
+  const entryBottomClasses = compute<ClassList>(() => {
+    // Create a default list of class names.
+    const classList: ClassList = new ClassList('EntryBottom')
+
+    // Check to see if there are any SVG buttons that are authorized.
+    const authorizedSvgButtons = svgEngines.flatMap(({ panelElements }) =>
+      panelElements.filter(
+        (element) =>
+          element instanceof SvgButton && isAuthorized(element.permissions),
+      ),
+    )
+    // Check to see if there are any other SVG elements that are not buttons.
+    const otherSvgElements = svgEngines.flatMap(({ panelElements }) =>
+      panelElements.filter((element) => !(element instanceof SvgButton)),
+    )
+
+    // If there are no SVG elements, hide the entry bottom.
+    if (authorizedSvgButtons.length === 0 && otherSvgElements.length === 0) {
+      classList.add('Hidden')
+    }
+
+    // Return the class list.
+    return classList
+  })
+
   /* -- RENDER -- */
 
   return (
@@ -22,6 +62,14 @@ export default function <
       </div>
       <div className='ScrollBox'>
         <div className='EntryContent'>{children}</div>
+      </div>
+      <div className={entryBottomClasses.value}>
+        {svgEngines.map((engine: ButtonSvgEngine, index: number) => (
+          <ButtonSvgPanel
+            key={`${component._id}_svg_engine_${index}`}
+            engine={engine}
+          />
+        ))}
       </div>
     </div>
   )
@@ -43,4 +91,8 @@ interface TEntry_P<
    * The children to be rendered.
    */
   children?: React.ReactNode
+  /**
+   * The engines that power the SVG buttons at the bottom of the entry.
+   */
+  svgEngines?: ButtonSvgEngine[]
 }

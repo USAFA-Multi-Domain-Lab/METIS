@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
+import { useMissionPageContext } from 'src/components/pages/MissionPage'
 import { useGlobalContext } from 'src/context/global'
 import ClientMission from 'src/missions'
 import ClientMissionForce from 'src/missions/forces'
@@ -14,10 +16,7 @@ import { DetailLargeString } from '../../../form/DetailLargeString'
 import { DetailNumber } from '../../../form/DetailNumber'
 import { DetailString } from '../../../form/DetailString'
 import { DetailToggle } from '../../../form/DetailToggle'
-import {
-  ButtonText,
-  TButtonText_P,
-} from '../../../user-controls/buttons/ButtonText'
+import { TButtonText_P } from '../../../user-controls/buttons/ButtonText'
 import Entry from '../Entry'
 
 /**
@@ -34,6 +33,9 @@ export default function ForceEntry({
   const { prompt } = useGlobalContext().actions
 
   /* -- STATE -- */
+
+  const { missionPageSvgEngine } = useMissionPageContext()
+
   const [introMessage, setIntroMessage] = useState<string>(force.introMessage)
   const [name, setName] = useState<string>(force.name)
   const [color, setColor] = useState<string>(force.color)
@@ -46,22 +48,28 @@ export default function ForceEntry({
   const [revealAllNodes, setRevealAllNodes] = useState<
     ClientMissionForce['revealAllNodes']
   >(force.revealAllNodes)
+  const svgEngine = useButtonSvgEngine({
+    elements: [
+      {
+        type: 'button',
+        icon: 'copy',
+        description: 'Duplicate',
+        disabled: mission.forces.length >= Mission.MAX_FORCE_COUNT,
+        permissions: ['missions_write'],
+        onClick: duplicateForce,
+      },
+      {
+        type: 'button',
+        icon: 'remove',
+        description: 'Delete this force.',
+        disabled: mission.forces.length < 2,
+        permissions: ['missions_write'],
+        onClick: deleteForce,
+      },
+    ],
+  })
 
   /* -- COMPUTED -- */
-
-  /**
-   * The class name for the delete node button.
-   */
-  const deleteClassName: string = compute(() => {
-    // Create a default list of class names.
-    let classList: string[] = []
-    // If the mission has only one force, add the disabled class.
-    if (mission.forces.length < 2) {
-      classList.push('Disabled')
-    }
-    // Combine the class names into a single string.
-    return classList.join(' ')
-  })
 
   /**
    * The list of buttons for the node's border color.
@@ -127,7 +135,10 @@ export default function ForceEntry({
   /* -- RENDER -- */
 
   return (
-    <Entry missionComponent={force}>
+    <Entry
+      missionComponent={force}
+      svgEngines={[missionPageSvgEngine, svgEngine]}
+    >
       <DetailString
         fieldType='required'
         handleOnBlur='repopulateValue'
@@ -179,23 +190,6 @@ export default function ForceEntry({
         defaultValue={ClientMissionForce.DEFAULT_PROPERTIES.introMessage}
         key={`${force._id}_introMessage`}
       />
-
-      <div className='ButtonContainer'>
-        <ButtonText
-          text='Duplicate force'
-          onClick={duplicateForce}
-          tooltipDescription='Duplicate this force.'
-          disabled={
-            mission.forces.length >= Mission.MAX_FORCE_COUNT ? 'full' : 'none'
-          }
-        />
-        <ButtonText
-          text='Delete force'
-          onClick={deleteForce}
-          tooltipDescription='Delete this force.'
-          uniqueClassName={deleteClassName}
-        />
-      </div>
     </Entry>
   )
 }

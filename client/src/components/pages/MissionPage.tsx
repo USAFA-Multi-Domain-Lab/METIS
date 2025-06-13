@@ -46,6 +46,7 @@ import PanelView from '../content/general-layout/panels/PanelView'
 import MissionMap from '../content/session/mission-map/MissionMap'
 import CreateEffect from '../content/session/mission-map/ui/overlay/modals/CreateEffect'
 import { TTabBarTab } from '../content/session/mission-map/ui/tabs/TabBar'
+import ButtonSvgEngine from '../content/user-controls/buttons/v3/engines'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
 import { TSvgPanelElement_Input } from '../content/user-controls/buttons/v3/types'
 import './MissionPage.scss'
@@ -124,7 +125,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     state.defectiveComponents
   const [_, setCheckForDefects] = state.checkForDefects
   const root = useRef<HTMLDivElement>(null)
-  const mapButtonEngine = useButtonSvgEngine({
+  const mapSvgEngine = useButtonSvgEngine({
     elements: [
       {
         type: 'button',
@@ -163,17 +164,22 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
           }
         },
       },
+    ],
+  })
+  const nodeSvgEngine = useButtonSvgEngine({})
+  const prototypeSvgEngine = useButtonSvgEngine({})
+  const missionPageSvgEngine = useButtonSvgEngine({
+    elements: [
       {
         type: 'button',
         icon: 'save',
         description: 'Save changes.',
         permissions: ['missions_write'],
+        disabled: !areUnsavedChanges,
         onClick: () => save(),
       },
     ],
   })
-  const nodeButtonEngine = useButtonSvgEngine({})
-  const prototypeButtonEngine = useButtonSvgEngine({})
 
   /* -- LOGIN-SPECIFIC LOGIC -- */
 
@@ -253,6 +259,8 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     name: 'Attached to Mission',
     items: localFiles,
     itemsPerPageMin: 4,
+    // Ensures the mission file list entry remains open.
+    deselectOnClickOutside: false,
     getListButtonPermissions: () => ['missions_write'],
     getItemButtonPermissions: () => ['missions_write'],
     onSelect: (file) => {
@@ -346,7 +354,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   // Enable/disable the save button based on
   // whether there are unsaved changes or not.
   useEffect(() => {
-    mapButtonEngine.setDisabled('save', !areUnsavedChanges)
+    missionPageSvgEngine.setDisabled('save', !areUnsavedChanges)
   }, [areUnsavedChanges])
 
   // Cleanup when a new effect is created.
@@ -399,13 +407,13 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
 
       // If there is a previous node, clear its buttons.
       if (prevNode) {
-        nodeButtonEngine.removeAll()
-        prevNode.buttons = nodeButtonEngine.buttons
+        nodeSvgEngine.removeAll()
+        prevNode.buttons = nodeSvgEngine.buttons
       }
 
       // If there is a next node, then add the buttons.
       if (nextNode) {
-        nodeButtonEngine.add(
+        nodeSvgEngine.add(
           {
             type: 'button',
             icon: 'cancel',
@@ -425,19 +433,19 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
           },
         )
 
-        nextNode.buttons = nodeButtonEngine.buttons
+        nextNode.buttons = nodeSvgEngine.buttons
       }
 
       // If there is a previous prototype, clear its buttons.
       if (prevSelection instanceof ClientMissionPrototype) {
-        prototypeButtonEngine.removeAll()
-        prevSelection.buttons = prototypeButtonEngine.buttons
+        prototypeSvgEngine.removeAll()
+        prevSelection.buttons = prototypeSvgEngine.buttons
       }
 
       // If there is a next prototype, then add the buttons.
       if (nextSelection instanceof ClientMissionPrototype) {
         if (mission.transformation) {
-          prototypeButtonEngine.add({
+          prototypeSvgEngine.add({
             type: 'button',
             icon: 'cancel',
             description: 'Cancel action.',
@@ -445,7 +453,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
             onClick: () => (mission.transformation = null),
           })
         } else {
-          prototypeButtonEngine.add(
+          prototypeSvgEngine.add(
             {
               type: 'button',
               icon: 'cancel',
@@ -483,7 +491,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
           )
         }
 
-        nextSelection.buttons = prototypeButtonEngine.buttons
+        nextSelection.buttons = prototypeSvgEngine.buttons
       }
 
       // Update the selection state.
@@ -1146,10 +1154,11 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   /**
    * The value to provide to the context.
    */
-  const contextValue = {
+  const contextValue: TMissionPageContextData = {
     root,
     ...props,
     state,
+    missionPageSvgEngine,
   }
 
   // Don't render if the mount hasn't yet been handled.
@@ -1164,7 +1173,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
               <PanelView title='Map'>
                 <MissionMap
                   mission={mission}
-                  buttonEngine={mapButtonEngine}
+                  buttonEngine={mapSvgEngine}
                   tabs={mapTabs}
                   tabAddEnabled={tabAddEnabled}
                   onTabAdd={onTabAdd}
@@ -1237,4 +1246,8 @@ export type TMissionPageContextData = {
      * The state for the mission page.
      */
     state: TMissionPage_S
+    /**
+     * SVG engine to use throughout the mission page.
+     */
+    missionPageSvgEngine: ButtonSvgEngine
   }
