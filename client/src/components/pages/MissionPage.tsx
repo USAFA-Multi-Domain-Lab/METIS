@@ -247,6 +247,8 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     name: 'In Mission',
     items: mission.files,
     itemsPerPageMin: 4,
+    getListButtonPermissions: () => ['missions_write'],
+    getItemButtonPermissions: () => ['missions_write'],
     onSelect: (file) => {
       if (file) mission.select(file)
       else mission.deselect()
@@ -266,6 +268,8 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     files: [globalFiles, setGlobalFiles],
     itemButtonIcons: ['link'],
     itemsPerPageMin: 4,
+    getListButtonPermissions: () => ['missions_write'],
+    getItemButtonPermissions: () => ['missions_write'],
     isDisabled: (file) =>
       mission.files.some(({ referenceId }) => referenceId === file._id),
     getItemButtonLabel: (button) => {

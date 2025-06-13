@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from 'react'
+import { useGlobalContext } from 'src/context'
 import { compute } from 'src/toolbox'
 import {
   TDefaultProps,
@@ -128,6 +129,9 @@ export default function List<TItem extends TListItem>(
 
   /* -- STATE -- */
 
+  const [login] = useGlobalContext().login
+  const isAuthorized = login?.user.isAuthorized ?? (() => false)
+
   const state: TList_S<TItem> = {
     pageNumber: useState<number>(0),
     processedItems: useState<TItem[]>(items),
@@ -190,6 +194,36 @@ export default function List<TItem extends TListItem>(
   const pageCount = compute<number>(() => pages.length)
 
   /**
+   * The list button icons that are available
+   * to be used in the list.
+   * @note This will filter out any icons
+   * that do not have any permissions associated
+   * with them, meaning that they will not be
+   * displayed in the list.
+   * @see {@link getListButtonPermissions}
+   */
+  const filteredListIcons = compute<TMetisIcon[]>(() =>
+    listButtonIcons.filter((icon) =>
+      isAuthorized(getListButtonPermissions(icon)),
+    ),
+  )
+
+  /**
+   * The item button icons that are available
+   * to be used in the list.
+   * @note This will filter out any icons
+   * that do not have any permissions associated
+   * with them, meaning that they will not be
+   * displayed in the list.
+   * @see {@link getItemButtonPermissions}
+   */
+  const filteredItemIcons = compute<TMetisIcon[]>(() =>
+    itemButtonIcons.filter((icon) =>
+      isAuthorized(getItemButtonPermissions(icon)),
+    ),
+  )
+
+  /**
    * Input data to use for the list buttons,
    * anywhere where they are needed throughout
    * the list.
@@ -204,7 +238,7 @@ export default function List<TItem extends TListItem>(
       value: state.pageNumber,
     })
 
-    listButtonIcons.forEach((icon) => {
+    filteredListIcons.forEach((icon) => {
       buttons.push({
         type: 'button',
         icon,
@@ -225,7 +259,7 @@ export default function List<TItem extends TListItem>(
   const itemButtons = compute<TListContextData<TItem>['itemButtons']>(() => {
     let buttons: TSvgPanelElement_Input[] = []
 
-    itemButtonIcons.forEach((icon) => {
+    filteredItemIcons.forEach((icon) => {
       buttons.push({
         type: 'button',
         icon,
@@ -245,7 +279,7 @@ export default function List<TItem extends TListItem>(
    */
   const aggregatedButtonIcons = compute<
     TListContextData<TItem>['aggregatedButtonIcons']
-  >(() => ['stepper-page', ...listButtonIcons, ...itemButtonIcons])
+  >(() => ['stepper-page', ...filteredListIcons, ...filteredItemIcons])
 
   /**
    * @see {@link TListContextData.aggregatedButtons}
@@ -257,13 +291,19 @@ export default function List<TItem extends TListItem>(
   /**
    * @see {@link TListContextData.aggregateButtonLayout}
    */
-  const aggregateButtonLayout = compute<TSvgLayout>(() => [
-    'stepper-page',
-    '<divider>',
-    ...listButtonIcons,
-    '<divider>',
-    ...itemButtonIcons,
-  ])
+  const aggregateButtonLayout = compute<TSvgLayout>(() => {
+    let results: TSvgLayout = ['stepper-page']
+
+    if (filteredListIcons.length > 0) {
+      results = results.concat(['<divider>', ...filteredListIcons])
+    }
+
+    if (filteredItemIcons.length > 0) {
+      results = results.concat(['<divider>', ...filteredItemIcons])
+    }
+
+    return results
+  })
 
   /* -- FUNCTIONS -- */
 

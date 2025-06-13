@@ -155,6 +155,23 @@ export default class ButtonSvgEngine {
   }
 
   /**
+   * Pushes an element to the panel elements.
+   * @param element The element to push.
+   * @throws If the element is already in use.
+   */
+  private pushElement(element: TSvgPanelElement): void {
+    // If the element is already in use, throw an error.
+    if (this.inUse(element)) {
+      throw new Error(
+        `Element "{ key: "${element.key}", type: "${element.type}" icon: "${element.icon}" }" is already in use.\n` +
+          `Element Data: ${JSON.stringify(element, null, 2)}`,
+      )
+    }
+    // Otherwise, push the element to the panel elements.
+    this._panelElements.push(element)
+  }
+
+  /**
    * Adds elements to the engine.
    * @param elements The elements to add.
    * @returns Itself for chaining.
@@ -164,22 +181,14 @@ export default class ButtonSvgEngine {
     ...elements: Required<TButtonSvgEngine>['elements']
   ): ButtonSvgEngine {
     for (let element of elements) {
-      // If the element is already in use, throw an error.
-      if (this.inUse(element)) {
-        throw new Error(
-          `Element "{ key: "${element.key}", type: "${element.type}" icon: "${element.icon}" }" is already in use.\n` +
-            `Element Data: ${JSON.stringify(element, null, 2)}`,
-        )
-      }
-
       switch (element.type) {
         case 'button':
           const button = SvgButton.create(this, element)
-          this._panelElements.push(button)
+          this.pushElement(button)
           break
         case 'stepper':
           const stepper = SvgStepper.create(this, element)
-          this._panelElements.push(stepper)
+          this.pushElement(stepper)
           break
       }
     }
@@ -389,8 +398,8 @@ export default class ButtonSvgEngine {
         default:
           // Add the element to the next panel elements
           // if it exists in the previous panel elements.
-          let currentIndex = prevPanelElements.findIndex(
-            (panelElement) => panelElement.icon === layoutElement,
+          const currentIndex = prevPanelElements.findIndex(
+            ({ icon }) => icon === layoutElement,
           )
           if (currentIndex >= 0) {
             pushElements(...prevPanelElements.splice(currentIndex, 1))
