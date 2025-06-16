@@ -47,6 +47,7 @@ export default function ({
    */
   const rootClasses = compute<ClassList>(() => {
     return new ClassList()
+      .add('SvgPanelElement')
       .add('ButtonSvg')
       .add(`ButtonSvg_${icon}`)
       .switch('WithLabel', 'WithoutLabel', label)

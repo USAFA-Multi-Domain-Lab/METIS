@@ -31,8 +31,9 @@ export function DetailLargeString({
   /* -- STATE -- */
   const [leftField, setLeftField] = useState<boolean>(false)
   const buttonEngine = useButtonSvgEngine({
-    buttons: [
+    elements: [
       {
+        type: 'button',
         icon: 'file',
         description: 'Click here to view the shortcuts for this editor.',
       },

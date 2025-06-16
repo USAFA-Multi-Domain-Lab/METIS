@@ -27,16 +27,18 @@ export default function ListProcessor(): JSX.Element | null {
   const searchField = createRef<HTMLInputElement>()
   const { column: sortingColumn, method: sortingMethod } = sorting
   const searchButtonEngine = useButtonSvgEngine({
-    buttons: [
+    elements: [
       {
+        type: 'button',
         icon: 'search',
         onClick: () => activateSearch(true),
       },
     ],
   })
   const cancelButtonEngine = useButtonSvgEngine({
-    buttons: [
+    elements: [
       {
+        type: 'button',
         icon: 'close',
         onClick: () => {
           let searchFieldElm = searchField.current

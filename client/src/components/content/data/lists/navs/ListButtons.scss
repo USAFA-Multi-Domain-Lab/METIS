@@ -13,22 +13,32 @@
     display: flex;
     flex-wrap: nowrap;
 
-    .ButtonSvg {
-      .ButtonIcon {
+    .SvgPanelElement {
+      &.StepperSvg {
         transition: background-size $transition-speed $transition-timing;
+
+        &.ListButtonOverflow {
+          opacity: 0;
+        }
       }
 
-      &.ListButtonOverflow .ButtonIcon {
-        background-size: 0 !important;
+      &.ButtonSvg {
+        .ButtonIcon {
+          transition: background-size $transition-speed $transition-timing;
+        }
+
+        &.ListButtonOverflow .ButtonIcon {
+          background-size: 0 !important;
+        }
       }
-    }
 
-    .ButtonSvgDivider {
-      transition: transform $transition-speed $transition-timing;
-    }
+      &.DividerSvg {
+        transition: transform $transition-speed $transition-timing;
 
-    .ButtonSvgDivider:has(+ .ListButtonOverflow) {
-      transform: scale(0);
+        &:has(+ .ListButtonOverflow) {
+          transform: scale(0);
+        }
+      }
     }
   }
 }

@@ -1,10 +1,10 @@
 import { useState } from 'react'
+import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
+import { useMissionPageContext } from 'src/components/pages/MissionPage'
 import ClientMissionPrototype from 'src/missions/nodes/prototypes'
-import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
 import { DetailLocked } from '../../../form/DetailLocked'
 import { DetailNumber } from '../../../form/DetailNumber'
-import { ButtonText } from '../../../user-controls/buttons/ButtonText'
 import Entry from '../Entry'
 
 /**
@@ -18,25 +18,30 @@ export default function PrototypeEntry({
   onDeleteRequest,
 }: TPrototypeEntry): JSX.Element | null {
   /* -- STATE -- */
+
+  const { missionPageSvgEngine } = useMissionPageContext()
+
   const [depthPadding, setDepthPadding] = useState<number>(
     prototype.depthPadding,
   )
-
-  /* -- COMPUTED -- */
-  /**
-   * The class name for the delete prototype button.
-   */
-  const deleteClassName: string = compute(() => {
-    // Create a default list of class names.
-    let classList: string[] = []
-
-    // If the mission has only one node, add the disabled class.
-    if (prototype && mission.prototypes.length < 2) {
-      classList.push('Disabled')
-    }
-
-    // Combine the class names into a single string.
-    return classList.join(' ')
+  const svgEngine = useButtonSvgEngine({
+    elements: [
+      {
+        type: 'button',
+        icon: 'add',
+        description: 'Add one or multiple nodes adjacent to this node.',
+        permissions: ['missions_write'],
+        onClick: onAddRequest,
+      },
+      {
+        type: 'button',
+        icon: 'remove',
+        description: 'Delete',
+        disabled: mission.prototypes.length < 2,
+        permissions: ['missions_write'],
+        onClick: onDeleteRequest,
+      },
+    ],
   })
 
   /* -- EFFECTS -- */
@@ -51,7 +56,10 @@ export default function PrototypeEntry({
   /* -- RENDER -- */
 
   return (
-    <Entry missionComponent={prototype}>
+    <Entry
+      missionComponent={prototype}
+      svgEngines={[missionPageSvgEngine, svgEngine]}
+    >
       <DetailLocked
         label='ID'
         stateValue={prototype._id}
@@ -65,20 +73,6 @@ export default function PrototypeEntry({
         integersOnly={true}
         key={`${prototype._id}_depthPadding`}
       />
-      {/* -- BUTTON(S) -- */}
-      <div className='ButtonContainer'>
-        <ButtonText
-          text='Add adjacent prototype'
-          onClick={onAddRequest}
-          tooltipDescription='Add one or multiple nodes adjacent to this node.'
-        />
-        <ButtonText
-          text='Delete prototype'
-          onClick={onDeleteRequest}
-          tooltipDescription='Delete this node.'
-          uniqueClassName={deleteClassName}
-        />
-      </div>
     </Entry>
   )
 }

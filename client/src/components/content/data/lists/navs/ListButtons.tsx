@@ -27,7 +27,7 @@ export default function ListButtons<
   const [selection] = state.selection
   const [buttonOverflowCount] = state.buttonOverflowCount
   const buttonEngine = useButtonSvgEngine({
-    buttons: aggregatedButtons,
+    elements: aggregatedButtons,
     options: {
       layout: aggregateButtonLayout,
     },

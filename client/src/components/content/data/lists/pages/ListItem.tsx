@@ -3,6 +3,7 @@ import { useButtonMenuEngine } from 'src/components/content/user-controls/button
 import ButtonMenuController from 'src/components/content/user-controls/buttons/ButtonMenuController'
 import ButtonSvgPanel from 'src/components/content/user-controls/buttons/v3/ButtonSvgPanel'
 import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
+import { TSvgPanelElement } from 'src/components/content/user-controls/buttons/v3/types'
 import WarningIndicator from 'src/components/content/user-controls/WarningIndicator'
 import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
@@ -41,13 +42,14 @@ export default function ListItem<T extends MetisComponent>({
   const [selection, setSelection] = listContext.state.selection
   const root = useRef<HTMLDivElement>(null)
   const optionsEngine = useButtonMenuEngine({
-    buttons: itemButtons,
+    elements: itemButtons,
     layout: ['<slot>'],
     dependencies: itemButtonIcons,
   })
   const optionMenuButtonEngine = useButtonSvgEngine({
-    buttons: [
+    elements: [
       {
+        type: 'button',
         icon: 'options',
         onClick: (event) => onOptionsClick(event),
         description: 'View option menu',
@@ -86,7 +88,7 @@ export default function ListItem<T extends MetisComponent>({
 
     // If there are item buttons, add the options
     // column width.
-    if (itemButtons.length) {
+    if (itemButtons?.length) {
       columnWidths.push(
         columns.length ? OPTIONS_COLUMN_WIDTH : OPTIONS_COLUMN_WIDTH_IF_LAST,
       )
@@ -155,7 +157,7 @@ export default function ListItem<T extends MetisComponent>({
 
     // If there are item buttons, add the options
     // cell.
-    if (itemButtons.length) {
+    if (itemButtons?.length) {
       result.push(
         <div key={'options'} className='ItemCellLike ItemOptions'>
           <ButtonSvgPanel engine={optionMenuButtonEngine} />
@@ -218,7 +220,7 @@ export type TGetItemTooltip<TItem extends MetisComponent> = (
  * @returns The label.
  */
 export type TGetItemButtonLabel<TItem extends MetisComponent> = (
-  button: TMetisIcon,
+  button: TSvgPanelElement['icon'],
 ) => string
 
 /**
@@ -228,7 +230,7 @@ export type TGetItemButtonLabel<TItem extends MetisComponent> = (
  * @default () => []
  */
 export type TGetItemButtonPermission<TItem extends MetisComponent> = (
-  button: TMetisIcon,
+  button: TSvgPanelElement['icon'],
 ) => TUserPermissionId[]
 
 /**
@@ -245,6 +247,6 @@ export type TOnItemSelection<TItem extends MetisComponent> = (
  * @param button The type of button clicked.
  */
 export type TOnItemButtonClick<TItem extends MetisComponent> = (
-  button: TMetisIcon,
+  button: TSvgPanelElement['icon'],
   item: TItem,
 ) => void

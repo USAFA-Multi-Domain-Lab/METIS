@@ -62,14 +62,11 @@
 
   &.ReadOnly .Content .PanelLayout .Panel .PanelView {
     &:not(.PanelView_Map) {
-      .Detail {
-        @include disabled();
-        opacity: 0.65 !important;
-      }
-
-      .ButtonText,
-      .ButtonSvg:not(.ButtonSvg_open) {
-        @include disabled();
+      .EntryContent {
+        > :not(.List) * {
+          @include disabled();
+          opacity: 0.75 !important;
+        }
       }
     }
 

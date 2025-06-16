@@ -46,52 +46,64 @@ export default function RichText({
   /* -- ENGINES -- */
 
   const bubbleToolbarButtonEngine = useButtonSvgEngine({
-    buttons: [
+    elements: [
       {
+        type: 'button',
         icon: 'undo',
         onClick: () => editor?.chain().focus().undo().run(),
       },
       {
+        type: 'button',
         icon: 'redo',
         onClick: () => editor?.chain().focus().redo().run(),
       },
       {
+        type: 'button',
         icon: 'ordered-list',
         onClick: () => editor?.chain().focus().toggleOrderedList().run(),
       },
       {
+        type: 'button',
         icon: 'bullet-list',
         onClick: () => editor?.chain().focus().toggleBulletList().run(),
       },
       {
+        type: 'button',
         icon: 'bold',
         onClick: () => editor?.chain().focus().toggleBold().run(),
       },
       {
+        type: 'button',
         icon: 'italic',
         onClick: () => editor?.chain().focus().toggleItalic().run(),
       },
       {
+        type: 'button',
         icon: 'underline',
         onClick: () => editor?.chain().focus().toggleUnderline().run(),
       },
       {
+        type: 'button',
         icon: 'strike',
         onClick: () => editor?.chain().focus().toggleStrike().run(),
       },
       {
+        type: 'button',
         icon: 'code',
         onClick: () => editor?.chain().focus().toggleCode().run(),
       },
       {
+        type: 'button',
         icon: 'code-block',
         onClick: () => editor?.chain().focus().toggleCodeBlock().run(),
       },
       {
+        type: 'button',
         icon: 'link',
         onClick: async () => await toggleLink(editor),
       },
       {
+        type: 'button',
         icon: 'clear-format',
         onClick: () => {
           editor?.chain().focus().unsetAllMarks().run()
@@ -102,16 +114,19 @@ export default function RichText({
   })
 
   const floatingToolbarButtonEngine = useButtonSvgEngine({
-    buttons: [
+    elements: [
       {
+        type: 'button',
         icon: 'ordered-list',
         onClick: () => editor?.chain().focus().toggleOrderedList().run(),
       },
       {
+        type: 'button',
         icon: 'bullet-list',
         onClick: () => editor?.chain().focus().toggleBulletList().run(),
       },
       {
+        type: 'button',
         icon: 'code-block',
         onClick: () => editor?.chain().focus().toggleCodeBlock().run(),
       },
@@ -168,6 +183,9 @@ export default function RichText({
    */
   const isIconActive = (icon: TMetisIcon): boolean => {
     // Convert any kebab-case icon names to camelCase.
+    // *** Note: This is necessary because the editor
+    // *** uses "camelCase" for its active state checks.
+    // *** For example, 'ordered-list' becomes 'orderedList'.
     const camelCaseIcon = icon.replace(/-([a-z])/g, (g) => g[1].toUpperCase())
 
     // Check if the editor is active for the icon.

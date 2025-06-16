@@ -1,4 +1,4 @@
-import { TButtonSvg_PK } from 'src/components/content/user-controls/buttons/v3/types'
+import { TButtonSvg_Input } from 'src/components/content/user-controls/buttons/v3/types'
 import ClientMission from 'src/missions'
 import ClientActionExecution from 'src/missions/actions/executions'
 import { MetisComponent } from '../../../../../../../../shared/'
@@ -123,4 +123,4 @@ export type TMapNode_P<TNode extends TMapCompatibleNode> = {
  * Button SVG type for node-specific buttons.
  */
 export type TNodeButton<TNode extends TMapCompatibleNode> =
-  TWithKey<TButtonSvg_PK>
+  TWithKey<TButtonSvg_Input>

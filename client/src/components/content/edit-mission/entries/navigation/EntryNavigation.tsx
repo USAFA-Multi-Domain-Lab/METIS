@@ -13,8 +13,9 @@ export default function EntryNavigation({
   component,
 }: TEntryNavigation_P): JSX.Element | null {
   const backButtonEngine = useButtonSvgEngine({
-    buttons: [
+    elements: [
       {
+        type: 'button',
         icon: 'left',
         onClick: () => component.mission.selectBack(),
         description: 'Go back.',

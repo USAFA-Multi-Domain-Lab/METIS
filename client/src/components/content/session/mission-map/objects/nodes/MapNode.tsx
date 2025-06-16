@@ -82,12 +82,13 @@ export default function <TNode extends TMapCompatibleNode>({
   const [excluded, setExcluded] = useState<boolean>(node.exclude)
   const [color, setColor] = useState<string>(node.color)
   const nodeButtonEngine = useButtonSvgEngine({
-    buttons: node.buttons,
+    elements: buttons,
     dependencies: [buttons],
   })
   const excludeButtonEngine = useButtonSvgEngine({
-    buttons: [
+    elements: [
       {
+        type: 'button',
         icon: 'add',
         description: `Include this node ("${node.name}") in the force.`,
         onClick: () => {

@@ -2,6 +2,8 @@ import { useRef } from 'react'
 import { DetailLocked } from 'src/components/content/form/DetailLocked'
 import { DetailToggle } from 'src/components/content/form/DetailToggle'
 import Divider from 'src/components/content/form/Divider'
+import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
+import { useMissionPageContext } from 'src/components/pages/MissionPage'
 import ClientMissionFile from 'src/missions/files'
 import { compute } from 'src/toolbox'
 import { useObjectFormSync } from 'src/toolbox/hooks'
@@ -21,6 +23,8 @@ export default function MissionFileEntry({
 
   /* -- STATE -- */
 
+  const { missionPageSvgEngine } = useMissionPageContext()
+
   const initialAccessTracker = useRef(
     compute(() => {
       let result = new Map<string, boolean>()
@@ -35,6 +39,7 @@ export default function MissionFileEntry({
   } = useObjectFormSync(file, ['initialAccess'], {
     onChange: () => onChange(file),
   })
+  const svgEngine = useButtonSvgEngine({})
 
   /* -- FUNCTIONS -- */
 
@@ -75,7 +80,10 @@ export default function MissionFileEntry({
   /* -- RENDER -- */
 
   return (
-    <Entry missionComponent={file}>
+    <Entry
+      missionComponent={file}
+      svgEngines={[missionPageSvgEngine, svgEngine]}
+    >
       <DetailLocked
         label='Original Name'
         stateValue={file.originalName}

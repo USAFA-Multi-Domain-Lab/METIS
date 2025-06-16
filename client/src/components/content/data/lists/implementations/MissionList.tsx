@@ -1,6 +1,5 @@
 import { useRef } from 'react'
 import Prompt from 'src/components/content/communication/Prompt'
-
 import If from 'src/components/content/util/If'
 import { useGlobalContext } from 'src/context/global'
 import ClientMission from 'src/missions'
@@ -8,7 +7,6 @@ import { compute } from 'src/toolbox'
 import { useDefaultProps, useRequireLogin } from 'src/toolbox/hooks'
 import { DateToolbox } from '../../../../../../../shared/toolbox/dates'
 import List, { createDefaultListProps, TList_P } from '../List'
-import { TOnItemSelection } from '../pages/ListItem'
 
 // todo: Convert this list to be organized
 // todo like `FileReferenceList`.
@@ -101,19 +99,6 @@ export default function MissionList(props: TMissionList_P): JSX.Element | null {
       login.user.isAuthorized('missions_read')
     ) {
       navigateTo('MissionPage', { missionId })
-    }
-  }
-
-  /**
-   * Handler for when a mission is selected.
-   */
-  const onMissionSelection: TOnItemSelection<ClientMission> = async ({
-    _id: missionId,
-  }) => {
-    if (login.user.isAuthorized('missions_write')) {
-      navigateTo('MissionPage', { missionId })
-    } else if (login.user.isAuthorized('sessions_write_native')) {
-      navigateTo('LaunchPage', { missionId })
     }
   }
 
