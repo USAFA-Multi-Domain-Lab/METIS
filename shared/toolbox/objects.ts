@@ -1,6 +1,4 @@
-export interface AnyObject {
-  [key: string]: any
-}
+export type AnyObject = Record<string | number | symbol, any>
 
 /**
  * An object that can have any key but every

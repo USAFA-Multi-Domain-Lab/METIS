@@ -2,6 +2,7 @@ import { Request, Response } from 'express-serve-static-core'
 import MissionModel from 'metis/server/database/models/missions'
 import { StatusError } from 'metis/server/http'
 import { databaseLogger } from 'metis/server/logging'
+import ServerUser from 'metis/server/users'
 import ApiResponse from '../../library/response'
 
 /**
@@ -14,6 +15,7 @@ const copyMission = async (request: Request, response: Response) => {
   // Extract the necessary data from the request.
   let body = request.body
   let { originalId, copyName } = body
+  let currentUser: ServerUser = response.locals.user
 
   try {
     // Retrieve the original mission.
@@ -33,11 +35,11 @@ const copyMission = async (request: Request, response: Response) => {
       forces: originalMissionDoc.forces,
       prototypes: originalMissionDoc.prototypes,
       files: originalMissionDoc.files,
+      createdBy: currentUser._id,
+      createdByUsername: currentUser.username,
     })
-    // Extract the necessary data from the copy.
-    let { _id, name, versionNumber, seed } = copiedMissionDoc
     // Return a successful API response.
-    return ApiResponse.sendJson(response, { _id, name, versionNumber, seed })
+    return ApiResponse.sendJson(response, copiedMissionDoc)
   } catch (error: any) {
     // Log the error.
     databaseLogger.error(

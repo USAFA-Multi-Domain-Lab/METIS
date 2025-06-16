@@ -4,7 +4,7 @@ import { AnyObject } from '../..//toolbox/objects'
 import context from '../../context'
 import StringToolbox from '../../toolbox/strings'
 import User from '../../users'
-import MissionComponent from '../component'
+import MissionComponent, { TMissionComponentDefect } from '../component'
 import { TMissionNodeJson, TNode } from '../nodes'
 import { TPrototype } from '../nodes/prototypes'
 import { TOutput, TOutputJson } from './output'
@@ -39,13 +39,8 @@ export abstract class MissionForce<
   }
 
   // Implemented
-  public get defective(): boolean {
-    return false
-  }
-
-  // Implemented
-  public get defectiveMessage(): string {
-    return ''
+  public get defects(): TMissionComponentDefect[] {
+    return MissionForce.consolidateDefects(...this.nodes)
   }
 
   /**

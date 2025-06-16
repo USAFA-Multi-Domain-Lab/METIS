@@ -1,6 +1,6 @@
 import { AnyObject } from 'metis/toolbox/objects'
 import { MetisComponent, TMetisBaseComponents } from '..'
-import { TTarget, TTargetJson } from './targets'
+import { TTargetJson } from './targets'
 
 /**
  * This is the environment in which the target(s) exist.
@@ -9,47 +9,30 @@ export default abstract class TargetEnvironment<
   T extends TMetisBaseComponents = TMetisBaseComponents,
 > extends MetisComponent {
   /**
-   * Describes what the target environment is.
+   * Creates a new {@link TargetEnvironment} Object.
    */
-  public description: string
+  protected constructor(
+    _id: string,
+    name: string,
+    /**
+     * Describes what the target environment is.
+     */
+    public description: string,
 
-  /**
-   * The current version of the target environment.
-   */
-  public version: string
-
-  /**
-   * The targets in the environment.
-   */
-  public targets: TTarget<T>[]
-
-  /**
-   * Creates a new TargetEnvironment Object.
-   * @param data The data to use to create the TargetEnvironment.
-   */
-  public constructor(
-    data: Partial<TTargetEnvJson> = TargetEnvironment.DEFAULT_PROPERTIES,
+    /**
+     * The current version of the target environment.
+     */
+    public version: string,
+    /**
+     * The targets in the environment.
+     */
+    public targets: T['target'][] = [],
   ) {
-    super(
-      data._id ?? TargetEnvironment.DEFAULT_PROPERTIES._id,
-      data.name ?? TargetEnvironment.DEFAULT_PROPERTIES.name,
-      false,
-    )
+    super(_id, name, false)
 
-    this.description =
-      data.description ?? TargetEnvironment.DEFAULT_PROPERTIES.description
-    this.version = data.version ?? TargetEnvironment.DEFAULT_PROPERTIES.version
-    this.targets = this.parseTargets(
-      data.targets ?? TargetEnvironment.DEFAULT_PROPERTIES.targets,
-    )
+    this.description = description
+    this.version = version
   }
-
-  /**
-   * Parses the target data into Target Objects.
-   * @param data The target data to parse.
-   * @returns An array of Target Objects.
-   */
-  protected abstract parseTargets(data: TTargetJson[]): TTarget<T>[]
 
   /**
    * Registers the target environment with the registry.

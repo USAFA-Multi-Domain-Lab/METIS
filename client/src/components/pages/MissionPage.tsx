@@ -22,7 +22,9 @@ import {
 } from 'src/toolbox/hooks'
 import { DefaultPageLayout, TPage_P } from '.'
 import Mission from '../../../../shared/missions'
-import MissionComponent from '../../../../shared/missions/component'
+import MissionComponent, {
+  TMissionComponentDefect,
+} from '../../../../shared/missions/component'
 import { TNonEmptyArray } from '../../../../shared/toolbox/arrays'
 import Prompt from '../content/communication/Prompt'
 import FileReferenceList, {
@@ -104,7 +106,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   } = globalContext.actions
   const [server] = globalContext.server
   const state: TMissionPage_S = {
-    defectiveComponents: useState<MissionComponent<any, any>[]>([]),
+    defects: useState<TMissionComponentDefect[]>([]),
     checkForDefects: useState<boolean>(true),
   }
   const [mission, setMission] = useState<ClientMission>(
@@ -120,9 +122,8 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     mission.selection,
   )
   const [isNewEffect, setIsNewEffect] = useState<boolean>(false)
-  const [defectiveComponents, setDefectiveComponents] =
-    state.defectiveComponents
-  const [_, setCheckForDefects] = state.checkForDefects
+  const [_, setDefects] = state.defects
+  const [__, setCheckForDefects] = state.checkForDefects
   const root = useRef<HTMLDivElement>(null)
   const mapButtonEngine = useButtonSvgEngine({
     buttons: [
@@ -310,7 +311,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
         setMission(mission)
         setLocalFiles(mission.files)
         setSelection(mission)
-        setDefectiveComponents(mission.defectiveComponents)
+        setDefects(mission.defects)
 
         beginLoading('Loading global files...')
 
@@ -1197,10 +1198,10 @@ export interface TMissionPage_P extends TPage_P {
  */
 export type TMissionPage_S = {
   /**
-   * The defected components that are currently
-   * tracked within the mission.
+   * The defects within mission components that must
+   * be addressed for the mission to function correctly.
    */
-  defectiveComponents: TReactState<MissionComponent<any, any>[]>
+  defects: TReactState<TMissionComponentDefect[]>
   /**
    * Triggers a recomputation of the defective
    * components, updating the state with the result.

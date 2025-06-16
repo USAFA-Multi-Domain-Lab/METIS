@@ -5,7 +5,7 @@ import path from 'path'
 /**
  * Defines a target environment.
  */
-export default class TargetEnvSchema implements TTargetEnvJson {
+export default class TargetEnvSchema {
   /**
    * The ID of the target environment.
    */
@@ -71,11 +71,11 @@ export default class TargetEnvSchema implements TTargetEnvJson {
   /**
    * @param data The data used to define the target environment.
    */
-  public constructor(data: TTargetEnv) {
+  public constructor(options: TTargetEnvOptions) {
     this.id = ''
-    this._name = data.name
-    this._description = data.description
-    this._version = data.version
+    this._name = options.name
+    this._description = options.description
+    this._version = options.version
     this._targets = []
     this._canUpdateId = true
   }
@@ -109,6 +109,6 @@ export default class TargetEnvSchema implements TTargetEnvJson {
 }
 
 /**
- * Defines the target environment data.
+ * Options passed to the TargetEnvSchema constructor.
  */
-type TTargetEnv = Omit<TTargetEnvJson, 'targets' | '_id'>
+type TTargetEnvOptions = Omit<TTargetEnvJson, 'targets' | '_id'>

@@ -1369,7 +1369,7 @@ export default class ClientMission
   ): Promise<ClientMission> {
     return new Promise<ClientMission>(async (resolve, reject) => {
       try {
-        let { data } = await axios.put<
+        let { data } = await axios.post<
           any,
           AxiosResponse<TMissionExistingJson>
         >(`${ClientMission.API_ENDPOINT}/copy/`, {

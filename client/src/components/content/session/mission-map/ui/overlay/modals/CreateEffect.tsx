@@ -2,7 +2,6 @@ import { useState } from 'react'
 import Tooltip from 'src/components/content/communication/Tooltip'
 import { DetailDropdown } from 'src/components/content/form/dropdown/'
 import { ButtonText } from 'src/components/content/user-controls/buttons/ButtonText'
-import { useGlobalContext } from 'src/context/global'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
 import { ClientTargetEnvironment } from 'src/target-environments'
@@ -19,20 +18,16 @@ export default function CreateEffect({
   setIsNewEffect,
   onChange,
 }: TCreateEffect_P): JSX.Element | null {
-  /* -- GLOBAL CONTEXT -- */
-
-  const { forceUpdate } = useGlobalContext().actions
-
   /* -- STATE -- */
 
   const [targetEnvironments] = useState<ClientTargetEnvironment[]>(
     ClientTargetEnvironment.REGISTRY.getAll(),
   )
   const [targetEnv, setTargetEnv] = useState<ClientTargetEnvironment>(
-    new ClientTargetEnvironment(),
+    ClientTargetEnvironment.createBlank(),
   )
   const [target, setTarget] = useState<ClientTarget>(
-    new ClientTarget(new ClientTargetEnvironment()),
+    ClientTarget.createBlank(targetEnv),
   )
 
   /* -- COMPUTED -- */
@@ -81,7 +76,7 @@ export default function CreateEffect({
 
   // Reset the target when the target environment changes.
   usePostInitEffect(() => {
-    setTarget(new ClientTarget(targetEnv))
+    setTarget(ClientTarget.createBlank(targetEnv))
   }, [targetEnv])
 
   /* -- FUNCTIONS -- */
@@ -133,7 +128,7 @@ export default function CreateEffect({
           render={(targetEnv: ClientTargetEnvironment) => targetEnv.name}
           handleInvalidOption={{
             method: 'setToDefault',
-            defaultValue: new ClientTargetEnvironment(),
+            defaultValue: ClientTargetEnvironment.createBlank(),
           }}
         />
         <DetailDropdown<ClientTarget>
@@ -148,7 +143,9 @@ export default function CreateEffect({
           uniqueClassName={targetClassName}
           handleInvalidOption={{
             method: 'setToDefault',
-            defaultValue: new ClientTarget(new ClientTargetEnvironment()),
+            defaultValue: ClientTarget.createBlank(
+              ClientTargetEnvironment.createBlank(),
+            ),
           }}
         />
 

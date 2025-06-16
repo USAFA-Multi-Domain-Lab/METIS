@@ -11,11 +11,6 @@ export default abstract class Target<
   T extends TMetisBaseComponents = TMetisBaseComponents,
 > extends MetisComponent {
   /**
-   * The environment in which the target exists.
-   */
-  public environment: TTargetEnv<T>
-
-  /**
    * The ID of the target environment.
    */
   public environmentId(): string {
@@ -23,39 +18,41 @@ export default abstract class Target<
   }
 
   /**
-   * Describes what the target is.
+   * The latest version of the target environment
+   * for which the target has a migration script.
    */
-  public description: string
+  public get latestMigratableVersion(): string | undefined {
+    return this.migrationVersions[this.migrationVersions.length - 1]
+  }
 
   /**
-   * The function used to execute an effect on the target.
+   * The versions of the target environment for which
+   * the target has a migration script.
    */
-  public script: TTargetScript
+  public abstract get migrationVersions(): string[]
 
-  /**
-   * The arguments used to create the effect on the target.
-   */
-  public args: TTargetArg[]
+  protected constructor(
+    _id: string,
+    name: string,
+    /**
+     * Describes what the target is.
+     */
+    public description: string,
 
-  /**
-   * Creates a new Target Object.
-   * @param environment The environment in which the target exists.
-   * @param data The data to use to create the Target.
-   */
-  public constructor(
-    environment: TTargetEnv<T>,
-    data: Partial<TTargetJson> = Target.DEFAULT_PROPERTIES,
+    /**
+     * The arguments used to create the effect on the target.
+     */
+    public args: TTargetArg[],
+    /**
+     * The environment in which the target exists.
+     */
+    public environment: TTargetEnv<T>,
   ) {
-    super(
-      data._id ?? Target.DEFAULT_PROPERTIES._id,
-      data.name ?? Target.DEFAULT_PROPERTIES.name,
-      false,
-    )
+    super(_id, name, false)
 
+    this.description = description
+    this.args = args
     this.environment = environment
-    this.description = data.description ?? Target.DEFAULT_PROPERTIES.description
-    this.script = data.script ?? Target.DEFAULT_PROPERTIES.script
-    this.args = Arg.fromJson(data.args ?? Target.DEFAULT_PROPERTIES.args)
   }
 
   /**
@@ -70,7 +67,7 @@ export default abstract class Target<
       _id: this._id,
       name: this.name,
       description: this.description,
-      script: this.script,
+      migrationVersions: this.migrationVersions,
       args: Arg.toJson(this.args),
     }
   }
@@ -83,7 +80,7 @@ export default abstract class Target<
     _id: 'metis-target-default',
     name: 'Select a target',
     description: 'This is a default target.',
-    script: async () => {},
+    migrationVersions: [],
     args: [],
   }
 
@@ -158,16 +155,12 @@ export interface TTargetJson {
    */
   description: string
   /**
-   * The function used to execute an effect on the target.
-   */
-  script: (
-    /**
-     * The context for the target environment.
-     */
-    context: TTargetEnvExposedContext,
-  ) => Promise<void>
-  /**
    * The arguments used to create the effect on the target.
    */
   args: TTargetArgJson[]
+  /**
+   * Target environment versions for the target for which
+   * the target has a migration script.
+   */
+  migrationVersions: string[]
 }

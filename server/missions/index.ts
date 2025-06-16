@@ -323,22 +323,16 @@ export default class ServerMission extends Mission<TMetisServerComponents> {
   }
 
   /**
-   * Validates all of the effects within the mission.
-   * @param missionJson The mission JSON to validate.
+   * Logs all defects found in a mission to the
+   * database logger.
+   * @param missionJson The JSON of the mission
+   * in question.
    */
-  private static validateMissionEffects = (
-    missionJson: TMissionSaveJson,
-  ): void => {
-    try {
-      let mission = ServerMission.fromSaveJson(missionJson)
+  private static logDefects = (missionJson: TMissionSaveJson): void => {
+    let mission = ServerMission.fromSaveJson(missionJson)
 
-      for (let effect of mission.effects) {
-        if (effect.defective) {
-          throw new Error(effect.defectiveMessage)
-        }
-      }
-    } catch (error: any) {
-      databaseLogger.warn(error.message)
+    for (let defect of mission.defects) {
+      databaseLogger.warn(defect.message)
     }
   }
 
@@ -495,8 +489,9 @@ export default class ServerMission extends Mission<TMetisServerComponents> {
     // Check for error.
     if (results.error) return next(results.error)
 
-    // Validate the mission effects.
-    this.validateMissionEffects(missionJson)
+    // Log any defects found in the mission
+    // to the database logger.
+    this.logDefects(missionJson)
   }
 }
 /* ------------------------------ SERVER MISSION TYPES ------------------------------ */

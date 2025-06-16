@@ -12,7 +12,7 @@ export default abstract class ApiResponse {
    * @param data The data to send to the client.
    * @returns The JSON response to send to the client.
    */
-  public static sendJson(response: Response, data: any): Response {
+  public static sendJson<TData>(response: Response, data: TData): Response {
     return response.status(200).json(data)
   }
 

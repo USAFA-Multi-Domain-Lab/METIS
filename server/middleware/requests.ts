@@ -1,6 +1,7 @@
 // ------- IMPORTS ------- //
 import { NextFunction, Request, Response } from 'express-serve-static-core'
 import { AnyObject } from 'metis/toolbox/objects'
+import VersionToolbox from 'metis/toolbox/versions'
 import User from 'metis/users'
 import UserAccess, { TUserAccess } from 'metis/users/accesses'
 import { isObjectIdOrHexString } from 'mongoose'
@@ -311,6 +312,12 @@ export class RequestBodyFilters {
    */
   public static ACCESS(bodyKey: string, bodyValue: TUserAccess['_id']) {
     if (!UserAccess.isValidAccessId(bodyValue)) {
+      throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
+    }
+  }
+
+  public static VERSION(bodyKey: string, bodyValue: any) {
+    if (!VersionToolbox.isValidVersion(bodyValue)) {
       throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     }
   }

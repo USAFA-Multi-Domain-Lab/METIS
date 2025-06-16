@@ -1,7 +1,7 @@
 import { v4 as generateHash } from 'uuid'
 import Mission, { TMission } from '..'
 import { TCreateJsonType, TMetisBaseComponents } from '../../'
-import MissionComponent from '../component'
+import MissionComponent, { TMissionComponentDefect } from '../component'
 import { TEffect, TEffectJson } from '../effects'
 import { TForce } from '../forces'
 import { TNode, TNodeJsonOptions } from '../nodes'
@@ -28,15 +28,8 @@ export default abstract class MissionAction<
   }
 
   // Implemented
-  public get defective(): boolean {
-    return false
-    // return true
-  }
-
-  // Implemented
-  public get defectiveMessage(): string {
-    return ''
-    // return `There is something wrong with the action "${this.name}".`
+  public get defects(): TMissionComponentDefect[] {
+    return MissionComponent.consolidateDefects(...this.effects)
   }
 
   /**

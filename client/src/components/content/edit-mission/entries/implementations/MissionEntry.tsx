@@ -1,17 +1,23 @@
 import { useRef, useState } from 'react'
 import ButtonSvgPanel from 'src/components/content/user-controls/buttons/v3/ButtonSvgPanel'
 import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
+import If from 'src/components/content/util/If'
 import { useMissionPageContext } from 'src/components/pages/MissionPage'
+import { useGlobalContext } from 'src/context/global'
 import ClientMission from 'src/missions'
+import { ClientEffect } from 'src/missions/effects'
+import { ClientTargetEnvironment } from 'src/target-environments'
 import {
   useMountHandler,
   usePostInitEffect,
   useUnmountHandler,
 } from 'src/toolbox/hooks'
-import MissionComponent from '../../../../../../../shared/missions/component'
+import MissionComponent, {
+  TMissionComponentDefect,
+} from '../../../../../../../shared/missions/component'
 import Tooltip from '../../../communication/Tooltip'
 import { DetailString } from '../../../form/DetailString'
-import ListOld, { ESortByMethod } from '../../../general-layout/ListOld'
+import ListOld from '../../../general-layout/ListOld'
 import Entry from '../Entry'
 
 /**
@@ -29,10 +35,11 @@ export default function MissionEntry({
 }: TMissionEntry_P): JSX.Element | null {
   /* -- STATE -- */
 
+  const globalContext = useGlobalContext()
   const { state } = useMissionPageContext()
+  const { prompt } = globalContext.actions
   const [checkForDefects, setCheckForDefects] = state.checkForDefects
-  const [defectiveComponents, setDefectiveComponents] =
-    state.defectiveComponents
+  const [defects, setDefects] = state.defects
   const [name, setName] = useState<string>(mission.name)
   const [resourceLabel, setResourceLabel] = useState<string>(
     mission.resourceLabel,
@@ -57,10 +64,10 @@ export default function MissionEntry({
     const callback = () => {
       // Every interval, if flagged to recheck
       // for defects, update the state to the
-      // defective components in the mission, which
-      // is a computed property.
+      // defects in the mission, which is a computed
+      //  property.
       if (checkForDefects) {
-        setDefectiveComponents(mission.defectiveComponents)
+        setDefects(mission.defects)
         setCheckForDefects(false)
       }
     }
@@ -84,25 +91,54 @@ export default function MissionEntry({
 
   /* -- FUNCTIONS -- */
 
+  const onDefectSelection = async (defect: TMissionComponentDefect) => {
+    const { type, component } = defect
+
+    if (component instanceof ClientEffect && type === 'outdated') {
+      let { choice } = await prompt(
+        'Would you like to attempt an update on this effect to make it compatible with the currently installed target-environment version?',
+        ['Update', 'Cancel'],
+      )
+
+      // Abort, if the user cancels.
+      if (choice === 'Cancel') return
+
+      // Call the API to migrate the effect arguments.
+      let results = await ClientTargetEnvironment.$migrateEffectArgs(component)
+
+      // Store the migrated data in the component.
+      component.targetEnvironmentVersion = results.resultingVersion
+      component.args = results.resultingArgs
+
+      onChange(component)
+    } else {
+      mission.select(component)
+    }
+  }
+
+  /* -- RENDER -- */
+
   /**
-   * Renders JSX for the effect list item.
+   * Renders JSX for a defect in the mission.
    */
-  const renderObjectListItem = (component: MissionComponent<any, any>) => {
+  const renderDefect = (defect: TMissionComponentDefect) => {
+    // Extract defect properties.
+    const { component, message } = defect
+
     return (
       <div className='Row IconFirst' key={`object-row-${component._id}`}>
         <ButtonSvgPanel engine={warningButtonEngine} />
         <div
           className='RowContent Select'
-          onClick={() => mission.select(component)}
+          onClick={() => onDefectSelection(defect)}
         >
-          {component.defectiveMessage}
+          {message}
           <Tooltip description='Click to resolve.' />
         </div>
       </div>
     )
   }
 
-  /* -- RENDER -- */
   return (
     <Entry missionComponent={mission}>
       <DetailString
@@ -125,15 +161,13 @@ export default function MissionEntry({
         maxLength={ClientMission.MAX_RESOURCE_LABEL_LENGTH}
         key={`${mission._id}_resourceLabel`}
       />
-      {defectiveComponents.length > 0 ? (
-        <ListOld<MissionComponent<any, any>>
-          items={defectiveComponents}
-          renderItemDisplay={(object) => renderObjectListItem(object)}
-          headingText={'Unresolved Conflicts'}
-          sortByMethods={[ESortByMethod.Name]}
-          nameProperty={'name'}
+      <If condition={defects.length}>
+        <ListOld<TMissionComponentDefect>
+          items={defects}
+          renderItemDisplay={(object) => renderDefect(object)}
+          headingText={'Unresolved Defects'}
           alwaysUseBlanks={false}
-          searchableProperties={['name']}
+          searchableProperties={['message']}
           noItemsDisplay={null}
           ajaxStatus={'Loaded'}
           applyItemStyling={() => {
@@ -142,7 +176,7 @@ export default function MissionEntry({
           itemsPerPage={null}
           listSpecificItemClassName='AltDesign2'
         />
-      ) : null}
+      </If>
     </Entry>
   )
 }
@@ -160,7 +194,7 @@ type TMissionEntry_P = {
   /**
    * A function that will be used to notify the parent
    * component that this component has changed.
-   * @param mission The same mission that was passed.
+   * @param component The component that received a change.
    */
-  onChange: (mission: ClientMission) => void
+  onChange: (component: MissionComponent<any, any>) => void
 }

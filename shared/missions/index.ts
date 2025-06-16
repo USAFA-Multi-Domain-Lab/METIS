@@ -6,7 +6,7 @@ import { AnyObject } from '../toolbox/objects'
 import User, { TCreatedByJson } from '../users'
 import { TAction, TMissionActionJson } from './actions'
 import { TExecution } from './actions/executions'
-import MissionComponent from './component'
+import MissionComponent, { TMissionComponentDefect } from './component'
 import { TEffect } from './effects'
 import { TMissionFileJson } from './files'
 import {
@@ -72,50 +72,12 @@ export default abstract class Mission<
   }
 
   // Implemented
-  public get defective(): boolean {
-    return false
-  }
-
-  // Implemented
-  public get defectiveMessage(): string {
-    return ''
-  }
-
-  /**
-   * Components within the mission with issues that need to
-   * be resolved by a mission designer.
-   */
-  public get defectiveComponents(): MissionComponent<any, any>[] {
-    // Initialize the list.
-    let result = []
-
-    // Loop through prototypes.
-    for (let prototype of this.prototypes) {
-      if (prototype.defective) result.push(prototype)
-    }
-
-    // Loop through forces.
-    for (let force of this.forces) {
-      // Validate the force.
-      if (force.defective) result.push(force)
-      // Loop through nodes.
-      for (let node of force.nodes) {
-        // Validate the node.
-        if (node.defective) result.push(node)
-        // Loop through actions.
-        for (let action of node.actions.values()) {
-          // Validate the action.
-          if (action.defective) result.push(action)
-          // Loop through effects.
-          for (let effect of action.effects) {
-            // Validate the effect.
-            if (effect.defective) result.push(effect)
-          }
-        }
-      }
-    }
-
-    return result
+  public get defects(): TMissionComponentDefect[] {
+    return Mission.consolidateDefects(
+      ...this.prototypes,
+      ...this.forces,
+      ...this.files,
+    )
   }
 
   /**

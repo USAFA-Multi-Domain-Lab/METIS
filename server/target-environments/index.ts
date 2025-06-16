@@ -3,7 +3,6 @@ import TargetEnvSchema from 'integration/library/target-env-classes'
 import TargetSchema from 'integration/library/target-env-classes/targets'
 import TargetEnvironment from 'metis/target-environments'
 import TargetEnvRegistry from 'metis/target-environments/registry'
-import { TTargetJson } from 'metis/target-environments/targets'
 import StringToolbox from 'metis/toolbox/strings'
 import path from 'path'
 import { TMetisServerComponents } from '../index'
@@ -15,13 +14,6 @@ import ServerTarget from './targets'
  */
 export default class ServerTargetEnvironment extends TargetEnvironment<TMetisServerComponents> {
   // Implemented
-  protected parseTargets(data: TTargetJson[]): ServerTarget[] {
-    return data.map((datum: TTargetJson) => {
-      return new ServerTarget(this, datum)
-    })
-  }
-
-  // Implemented
   public register(): ServerTargetEnvironment {
     ServerTargetEnvironment.REGISTRY.register(this)
     return this
@@ -32,6 +24,40 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
    */
   public static readonly REGISTRY: TargetEnvRegistry<TMetisServerComponents> =
     new TargetEnvRegistry()
+
+  /**
+   * The file name for target environment schemas.
+   */
+  private static SCHEMA_FILE_NAME: string = 'schema.ts'
+
+  /**
+   * The folder name where targets are stored within
+   * a target environment.
+   */
+  private static TARGET_FOLDER_NAME: string = 'targets'
+
+  /**
+   * The default directory to scan for target environments.
+   */
+  private static DEFAULT_DIRECTORY: string = path.join(
+    process.cwd(), // "metis/server/"
+    '../integration/target-env',
+  )
+
+  /**
+   * @param schema The schema defining the target environment.
+   * @returns A new {@link ServerTargetEnvironment} instance
+   * created from the schema.
+   */
+  public static fromSchema(schema: TargetEnvSchema): ServerTargetEnvironment {
+    return new ServerTargetEnvironment(
+      schema._id,
+      schema.name,
+      schema.description,
+      schema.version,
+      [],
+    )
+  }
 
   /**
    * Scans the given directory for targets, adding
@@ -59,11 +85,11 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
 
     // If the schema file exists, grab the default export.
     if (fs.existsSync(schemaFilePath)) {
-      let exportDefault: any = require(schemaFilePath).default
+      let targetSchema: any = require(schemaFilePath).default
 
       // If there is no default export or the default
       // export is not a target schema.
-      if (!exportDefault || !(exportDefault instanceof TargetSchema)) {
+      if (!targetSchema || !(targetSchema instanceof TargetSchema)) {
         console.warn(
           `Invalid schema found at "${schemaFilePath}". Skipping target...`,
         )
@@ -71,11 +97,13 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
       // Else, add the target to the environment.
       else {
         // Set the target ID.
-        exportDefault.setId(directory)
+        targetSchema.setId(directory)
         // Set the target environment ID.
-        exportDefault.targetEnvId = environment._id
+        targetSchema.targetEnvId = environment._id
         // Add the target JSON.
-        environment.targets.push(new ServerTarget(environment, exportDefault))
+        environment.targets.push(
+          ServerTarget.fromSchema(targetSchema, environment),
+        )
       }
     }
 
@@ -129,19 +157,20 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
     }
 
     // Grab the default export from the file.
-    let exportDefault: any = require(schemaFilePath).default
+    let environmentSchema: any = require(schemaFilePath).default
 
     // If there is no default export or the default
     // export is not a target-environment schema, abort.
-    if (!exportDefault || !(exportDefault instanceof TargetEnvSchema)) {
+    if (!environmentSchema || !(environmentSchema instanceof TargetEnvSchema)) {
       console.warn(invalidSchemaMessage)
       return
     }
 
     // Set the ID of the target environment.
-    exportDefault.setId(directory)
+    environmentSchema.setId(directory)
     // Create a new target environment.
-    let environment = new ServerTargetEnvironment(exportDefault).register()
+    let environment =
+      ServerTargetEnvironment.fromSchema(environmentSchema).register()
 
     // If the target environment has a target folder,
     // scan it for targets.
@@ -189,25 +218,6 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
     // always the first one in the list.
     ServerTargetEnvironment.REGISTRY.sort()
   }
-
-  /**
-   * The file name for target environment schemas.
-   */
-  private static SCHEMA_FILE_NAME: string = 'schema.ts'
-
-  /**
-   * The folder name where targets are stored within
-   * a target environment.
-   */
-  private static TARGET_FOLDER_NAME: string = 'targets'
-
-  /**
-   * The default directory to scan for target environments.
-   */
-  private static DEFAULT_DIRECTORY: string = path.join(
-    process.cwd(), // "metis/server/"
-    '../integration/target-env',
-  )
 }
 
 /* -- TYPES -- */

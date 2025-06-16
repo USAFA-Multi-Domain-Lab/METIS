@@ -1,6 +1,6 @@
 import { TFileReferenceJson } from 'metis/files/references'
 import { TMetisBaseComponents } from '../../'
-import MissionComponent from '../component'
+import MissionComponent, { TMissionComponentDefect } from '../component'
 import { MissionForce } from '../forces'
 
 /**
@@ -51,13 +51,8 @@ export default abstract class MissionFile<
   }
 
   // Implemented
-  public get defective(): boolean {
-    return !!this.defectiveMessage.length
-  }
-
-  // Implemented
-  public get defectiveMessage(): string {
-    return ''
+  public get defects(): TMissionComponentDefect[] {
+    return []
   }
 
   /**

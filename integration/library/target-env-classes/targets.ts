@@ -1,27 +1,29 @@
 import fs from 'fs'
-import { TTargetJson } from 'metis/target-environments/targets'
+import { TTargetArgJson } from 'metis/target-environments/args'
+import { TTargetJson, TTargetScript } from 'metis/target-environments/targets'
+import TargetMigrationRegistry from 'metis/target-environments/targets/migrations/registry'
 import path from 'path'
 
 /**
  * Defines a target.
  */
-export default class TargetSchema implements TTargetJson {
+export default class TargetSchema {
   /**
    * The ID of the target.
    */
-  private id: TTargetJson['_id']
-  public get _id(): TTargetJson['_id'] {
+  private id: string
+  public get _id(): string {
     return this.id
   }
 
   /**
    * The ID of the target environment.
    */
-  private _targetEnvId: TTargetJson['targetEnvId']
-  public get targetEnvId(): TTargetJson['targetEnvId'] {
+  private _targetEnvId: string
+  public get targetEnvId(): string {
     return this._targetEnvId
   }
-  public set targetEnvId(targetEnvId: TTargetJson['targetEnvId']) {
+  public set targetEnvId(targetEnvId: string) {
     if (this.canUpdateTargetEnvId) {
       this._targetEnvId = targetEnvId
       this._canUpdateTargetEnvId = false
@@ -35,33 +37,44 @@ export default class TargetSchema implements TTargetJson {
   /**
    * The name of the target.
    */
-  private _name: TTargetJson['name']
-  public get name(): TTargetJson['name'] {
+  private _name: string
+  public get name(): string {
     return this._name
   }
 
   /**
    * Describes what the target is.
    */
-  private _description: TTargetJson['description']
-  public get description(): TTargetJson['description'] {
+  private _description: string
+  public get description(): string {
     return this._description
   }
 
   /**
    * The function used to execute an effect on the target.
    */
-  private _script: TTargetJson['script']
-  public get script(): TTargetJson['script'] {
+  private _script: TTargetScript
+  public get script(): TTargetScript {
     return this._script
   }
 
   /**
    * The arguments used to create the effect on the target.
    */
-  private _args: TTargetJson['args']
-  public get args(): TTargetJson['args'] {
+  private _args: TTargetArgJson[]
+  public get args(): TTargetArgJson[] {
     return this._args
+  }
+
+  /**
+   * Registry of migrations used to migrate outdated effects
+   * to the latest version of the target environment.
+   */
+  public migrationRegistry: TargetMigrationRegistry
+
+  // Implemented
+  public get migrationVersions(): string[] {
+    return Object.keys(this.migrationRegistry.versions)
   }
 
   /**
@@ -87,17 +100,18 @@ export default class TargetSchema implements TTargetJson {
   }
 
   /**
-   * @param data The data used to define the target.
+   * @param options The data used to define the target.
    */
-  public constructor(data: TTargetData) {
+  public constructor(options: TTargetSchemaOptions) {
     this.id = ''
     this._targetEnvId = ''
-    this._name = data.name
-    this._description = data.description
-    this._script = data.script
-    this._args = data.args
+    this._name = options.name
+    this._description = options.description
+    this._script = options.script
+    this._args = options.args
     this._canUpdateId = true
     this._canUpdateTargetEnvId = true
+    this.migrationRegistry = options.migrations ?? new TargetMigrationRegistry()
   }
 
   /**
@@ -126,4 +140,14 @@ export default class TargetSchema implements TTargetJson {
 /**
  * Defines the target data.
  */
-type TTargetData = Omit<TTargetJson, '_id' | 'targetEnvId'>
+interface TTargetSchemaOptions
+  extends Omit<TTargetJson, '_id' | 'targetEnvId' | 'migrationVersions'> {
+  /**
+   * The script which will enact the effect on the target.
+   */
+  script: TTargetScript
+  /**
+   * @see {@link TargetSchema.migrationRegistry}
+   */
+  migrations?: TargetMigrationRegistry
+}

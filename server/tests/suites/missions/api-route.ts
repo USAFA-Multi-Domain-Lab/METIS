@@ -269,7 +269,7 @@ export default function MissionApiRoute(): Mocha.Suite {
     it('Copying a mission with (a) missing property/properties in the body of the request should return a bad request (400) response', async function () {
       try {
         let response = await agent
-          .put('/api/v1/missions/copy/')
+          .post('/api/v1/missions/copy/')
           .send({ copyName: 'Copied Mission' })
         expect(response).to.have.status(400)
       } catch (error: any) {

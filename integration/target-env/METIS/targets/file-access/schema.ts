@@ -1,7 +1,20 @@
 import { TFileMetadata } from 'metis/target-environments/args/mission-component/file-arg'
 import { TForceMetadata } from 'metis/target-environments/args/mission-component/force-arg'
 import Dependency from 'metis/target-environments/dependencies'
+import TargetMigrationRegistry from 'metis/target-environments/targets/migrations/registry'
 import TargetSchema from '../../../../library/target-env-classes/targets'
+
+/**
+ * Migrations for the File Access target.
+ */
+const migrations = new TargetMigrationRegistry().register(
+  '0.2.0',
+  (effectArgs) => {
+    console.log('Migrating File Access effect args to version 0.2.0.')
+    // effectArgs.test = 'This is a test value for the migration.'
+    return effectArgs
+  },
+)
 
 /**
  * A target available in the METIS target environment that
@@ -71,6 +84,7 @@ const FileAccess = new TargetSchema({
         'Grants or revokes access to the file for the force. If no change is selected, then the access will be left unmodified.',
     },
   ],
+  migrations,
 })
 
 export default FileAccess

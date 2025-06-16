@@ -12,7 +12,7 @@ import {
   TExecution,
 } from '../actions/executions'
 import { TOutcome } from '../actions/outcomes'
-import MissionComponent from '../component'
+import MissionComponent, { TMissionComponentDefect } from '../component'
 import { TForce, TForceJsonOptions } from '../forces'
 import MissionPrototype, { TPrototype } from './prototypes'
 
@@ -50,15 +50,8 @@ export default abstract class MissionNode<
   }
 
   // Implemented
-  public get defective(): boolean {
-    return false
-    // return true
-  }
-
-  // Implemented
-  public get defectiveMessage(): string {
-    return ''
-    // return `There is something wrong with the node "${this.name}".`
+  public get defects(): TMissionComponentDefect[] {
+    return MissionNode.consolidateDefects(...this.actions.values())
   }
 
   /**

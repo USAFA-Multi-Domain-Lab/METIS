@@ -1,7 +1,7 @@
 import { v4 as generateHash } from 'uuid'
 import { TMission } from '..'
 import { TMetisBaseComponents } from '../../'
-import MissionComponent from '../component'
+import MissionComponent, { TMissionComponentDefect } from '../component'
 
 /**
  * This represents a prototype for a mission node displayed
@@ -33,13 +33,8 @@ export default abstract class MissionPrototype<
   }
 
   // Implemented
-  public get defective(): boolean {
-    return false
-  }
-
-  // Implemented
-  public get defectiveMessage(): string {
-    return ''
+  public get defects(): TMissionComponentDefect[] {
+    return []
   }
 
   /**

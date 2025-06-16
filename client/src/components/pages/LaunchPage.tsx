@@ -5,7 +5,7 @@ import SessionClient from 'src/sessions'
 import { compute } from 'src/toolbox'
 import { useMountHandler, useRequireLogin } from 'src/toolbox/hooks'
 import { DefaultPageLayout } from '.'
-import MissionComponent from '../../../../shared/missions/component'
+import { TMissionComponentDefect } from '../../../../shared/missions/component'
 import Session from '../../../../shared/sessions'
 import { ESortByMethod } from '../content/general-layout/ListOld'
 import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
@@ -104,11 +104,13 @@ export default function LaunchPage({
   /**
    * Renders JSX for the effect list item.
    */
-  const renderObjectListItem = (component: MissionComponent<any, any>) => {
+  const renderObjectListItem = (defect: TMissionComponentDefect) => {
+    const { component, message } = defect
+
     return (
       <div className='Row' key={`object-row-${component._id}`}>
         <ButtonSvgPanel engine={defectiveComponentButtonEngine} />
-        <div className='RowContent'>{component.defectiveMessage}</div>
+        <div className='RowContent'>{message}</div>
       </div>
     )
   }
@@ -121,10 +123,7 @@ export default function LaunchPage({
     if (server !== null) {
       try {
         // If there are invalid objects and effects are enabled...
-        if (
-          sessionConfig.effectsEnabled &&
-          mission.defectiveComponents.length > 0
-        ) {
+        if (sessionConfig.effectsEnabled && mission.defects.length > 0) {
           // Create a message for the user.
           let message =
             `**Warning:** The mission for this session is defective due to unresolved conflicts. If you proceed, the session may not function as expected.\n` +
@@ -149,7 +148,7 @@ export default function LaunchPage({
           // Prompt the user for a choice.
           let { choice } = await prompt(message, choices, {
             list: {
-              items: mission.defectiveComponents,
+              items: mission.defects,
               headingText: 'Unresolved Conflicts',
               sortByMethods: [ESortByMethod.Name],
               searchableProperties: ['name'],
