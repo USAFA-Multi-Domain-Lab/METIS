@@ -88,7 +88,7 @@ export const routerMap: TMetisRouterMap = async (
     ),
     updateMission,
   )
-  router.put(
+  router.post(
     '/copy/',
     auth({ permissions: ['missions_write'] }),
     defineRequests({

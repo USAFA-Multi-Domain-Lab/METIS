@@ -304,7 +304,12 @@ export default class ServerMission extends Mission<TMetisServerComponents> {
       }
 
       // Check the object's values for duplicate _id's.
-      for (let value of Object.values(cursor)) {
+      for (let [key, value] of Object.entries(cursor)) {
+        // Skip the createdBy key, as it is a foreign
+        // reference, which could possibly be referenced
+        // twice, resulting in a duplicate _id in the mission.
+        // In this case, the duplicate _id is acceptable.
+        if (key === 'createdBy') continue
         let results = this.idCheckerAlgorithm(value, existingIds)
         if (results.error) return results
       }

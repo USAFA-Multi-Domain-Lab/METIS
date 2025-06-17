@@ -279,7 +279,7 @@ export default class ClientMissionForce
 
         // Push a new line.
         relationshipLines.push({
-          key: 'invisible-root-to-middle',
+          key: `invisible-root-to-middle`,
           direction: 'horizontal',
           start: midStart,
           length: ClientMissionNode.WIDTH / 2,
