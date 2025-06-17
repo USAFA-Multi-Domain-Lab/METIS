@@ -78,6 +78,7 @@ export default function (props: TMissionFileList_P): JSX.Element | null {
     onItemButtonClick: (button, file) => {
       switch (button) {
         case 'divider':
+          console.log('hello')
           props.onDetachRequest?.(file)
           break
         default:

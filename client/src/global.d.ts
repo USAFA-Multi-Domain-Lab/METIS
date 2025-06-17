@@ -64,6 +64,7 @@ declare global {
     | 'edit'
     | 'file'
     | 'italic'
+    | 'key'
     | 'kick'
     | 'launch'
     | 'left'

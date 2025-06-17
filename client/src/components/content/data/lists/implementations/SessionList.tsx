@@ -126,7 +126,7 @@ export default function SessionList({
    */
   const getSessionListButtonTooltip: TGetListButtonLabel = (button) => {
     switch (button) {
-      case 'lock':
+      case 'key':
         return 'Join private'
       default:
         return ''
@@ -235,7 +235,7 @@ export default function SessionList({
    */
   const onSessionListButtonClick: TOnListButtonClick = async (button) => {
     switch (button) {
-      case 'lock':
+      case 'key':
         // Prompt user for session ID.
         const { choice, text } = await prompt(
           'Please enter the ID of the session you wish to join:',
@@ -294,7 +294,7 @@ export default function SessionList({
         'runtimeFormatted',
         'launchedAt',
       ]}
-      listButtonIcons={['lock']}
+      listButtonIcons={['key']}
       itemButtonIcons={itemButtons}
       initialSorting={{ column: 'launchedAt', method: 'descending' }}
       getColumnLabel={getSessionColumnLabel}
