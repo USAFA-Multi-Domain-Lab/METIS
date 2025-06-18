@@ -1,4 +1,5 @@
 import { MetisComponent, TMetisBaseComponents } from '..'
+import FileToolbox from '../toolbox/files'
 import { TCreatedByJson } from '../users'
 
 /**
@@ -9,6 +10,15 @@ import { TCreatedByJson } from '../users'
 export default abstract class FileReference<
   T extends TMetisBaseComponents = TMetisBaseComponents,
 > extends MetisComponent {
+  /**
+   * The extension of the file, such as .png,
+   * .mp4, .mp3, etc.
+   * @note This is derived from the `name` property.
+   */
+  public get extension(): string {
+    return FileToolbox.getExtension(this.name)
+  }
+
   /**
    * The relative path to the file within the METIS
    * file store.

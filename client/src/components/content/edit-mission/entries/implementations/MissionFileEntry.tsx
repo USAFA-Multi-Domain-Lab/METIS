@@ -1,9 +1,11 @@
 import { useRef } from 'react'
 import { DetailLocked } from 'src/components/content/form/DetailLocked'
+import { DetailString } from 'src/components/content/form/DetailString'
 import { DetailToggle } from 'src/components/content/form/DetailToggle'
 import Divider from 'src/components/content/form/Divider'
 import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
 import { useMissionPageContext } from 'src/components/pages/MissionPage'
+import ClientMission from 'src/missions'
 import ClientMissionFile from 'src/missions/files'
 import { compute } from 'src/toolbox'
 import { useObjectFormSync } from 'src/toolbox/hooks'
@@ -35,8 +37,9 @@ export default function MissionFileEntry({
     }),
   )
   const {
+    alias: [alias, setAlias],
     initialAccess: [initialAccess, setInitialAccess],
-  } = useObjectFormSync(file, ['initialAccess'], {
+  } = useObjectFormSync(file, ['alias', 'initialAccess'], {
     onChange: () => onChange(file),
   })
   const svgEngine = useButtonSvgEngine({})
@@ -89,16 +92,16 @@ export default function MissionFileEntry({
         stateValue={file.originalName}
         key={`${file._id}_originalName`}
       />
-      {/* <DetailString
-              fieldType='optional'
-              handleOnBlur='none'
-              label='Alias'
-              stateValue={alias}
-              setState={setAlias}
-              defaultValue={ClientMissionFile.DEFAULT_PROPERTIES.alias}
-              maxLength={ClientMission.MAX_NAME_LENGTH}
-              key={`${file._id}_alias`}
-            /> */}
+      <DetailString
+        fieldType='optional'
+        handleOnBlur='none'
+        label='Alias'
+        value={alias}
+        setValue={setAlias}
+        defaultValue={ClientMissionFile.DEFAULT_PROPERTIES.alias}
+        maxLength={ClientMission.MAX_NAME_LENGTH}
+        key={`${file._id}_alias`}
+      />
       <Divider />
       <h4>INITIAL FORCE ACCESS</h4>
       {mission.forces.map((force) => {

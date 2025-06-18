@@ -11,6 +11,19 @@ if (context === 'express') {
  */
 export default class FileToolbox {
   /**
+   * Gets the extension from the given file path.
+   * @param path The file path or name from which to extract the extension.
+   * @returns The file extension, including the dot (e.g., `.txt`, `.jpg`).
+   */
+  public static getExtension(path: string): string {
+    const lastDotIndex = path.lastIndexOf('.')
+    if (lastDotIndex === -1 || lastDotIndex === path.length - 1) {
+      return '' // No extension
+    }
+    return path.slice(lastDotIndex).toLowerCase()
+  }
+
+  /**
    * @param mimetype The MIME type of a file.
    * @returns The label for the MIME type.
    * @example

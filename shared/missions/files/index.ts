@@ -27,7 +27,9 @@ export default abstract class MissionFile<
 
   // Overridden
   public get name(): string {
-    return this.alias || this.originalName
+    let result: string = this.originalName
+    if (this.alias) result = `${this.alias}${this.extension}`
+    return result
   }
   // Overridden
   public set name(value: string) {
@@ -43,6 +45,15 @@ export default abstract class MissionFile<
    */
   public get originalName(): string {
     return this.reference.name
+  }
+
+  /**
+   * The extension of the file.
+   * @note This simply returns the extension
+   * of the file reference.
+   */
+  public get extension(): string {
+    return this.reference.extension
   }
 
   // Implemented
@@ -153,6 +164,11 @@ export default abstract class MissionFile<
       reference: this.reference.toJson(),
     }
   }
+
+  /**
+   * The maximum length allowed for a mission file's name.
+   */
+  public static readonly MAX_NAME_LENGTH: number = 175
 
   public static DEFAULT_PROPERTIES: Omit<
     Required<TMissionFileJson>,
