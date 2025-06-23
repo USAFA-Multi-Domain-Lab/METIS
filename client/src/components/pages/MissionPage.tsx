@@ -780,10 +780,77 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   }
 
   /**
-   * Handler for when the user requests to add a new prototype.
+   * Handles the request to duplicate a force in the mission.
+   * @param forceId The ID of the force to duplicate.
    */
-  const onPrototypeMoveRequest = (prototype: ClientMissionPrototype): void => {
-    mission.transformation = new PrototypeTranslation(prototype)
+  const onDuplicateForceRequest = async (
+    forceId: ClientMissionForce['_id'],
+  ) => {
+    // Get the force to duplicate.
+    let force = mission.getForceById(forceId)
+
+    // If the force is not found, notify the user.
+    if (!force) {
+      notify('Failed to duplicate force.')
+      return
+    }
+
+    // Prompt the user to enter the name of the new force.
+    let { choice, text } = await prompt(
+      'Enter the name of the new force:',
+      ['Cancel', 'Submit'],
+      {
+        textField: { boundChoices: ['Submit'], label: 'Name' },
+        defaultChoice: 'Submit',
+      },
+    )
+
+    // If the user confirms the duplication, proceed.
+    if (choice === 'Submit') {
+      try {
+        // Duplicate the force.
+        let newForces = mission.duplicateForces({
+          originalId: force._id,
+          duplicateName: text,
+        })
+        // Notify the user that the force was duplicated.
+        notify(`Successfully duplicated "${force.name}".`)
+        // Allow the user to save the changes.
+        onChange(...newForces)
+      } catch (error: any) {
+        notify(`Failed to duplicate "${force.name}".`)
+      }
+    }
+  }
+
+  /**
+   * Handles the request to delete a force.
+   * @param forceId The ID of the force to delete.
+   */
+  const onDeleteForceRequest = async (forceId: ClientMissionForce['_id']) => {
+    // Get the force to duplicate.
+    let force = mission.getForceById(forceId)
+
+    // If the force is not found, notify the user.
+    if (!force) {
+      notify('Failed to delete the selected force.')
+      return
+    }
+
+    // Prompt the user to confirm the deletion.
+    let { choice } = await prompt(
+      `Please confirm the deletion of this force.`,
+      Prompt.ConfirmationChoices,
+    )
+    // If the user cancels, abort.
+    if (choice === 'Cancel') return
+    // Delete the force.
+    let deletedForces = mission.deleteForces(forceId)
+
+    // Allow the user to save the changes.
+    if (deletedForces.length) {
+      onChange(...(deletedForces as TNonEmptyArray<ClientMissionForce>))
+    }
   }
 
   /**
@@ -935,80 +1002,6 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
 
     // Allow the user to save the changes.
     onChange(effect)
-  }
-
-  /**
-   * Handles the request to duplicate a force in the mission.
-   * @param forceId The ID of the force to duplicate.
-   */
-  const onDuplicateForceRequest = async (
-    forceId: ClientMissionForce['_id'],
-  ) => {
-    // Get the force to duplicate.
-    let force = mission.getForceById(forceId)
-
-    // If the force is not found, notify the user.
-    if (!force) {
-      notify('Failed to duplicate force.')
-      return
-    }
-
-    // Prompt the user to enter the name of the new force.
-    let { choice, text } = await prompt(
-      'Enter the name of the new force:',
-      ['Cancel', 'Submit'],
-      {
-        textField: { boundChoices: ['Submit'], label: 'Name' },
-        defaultChoice: 'Submit',
-      },
-    )
-
-    // If the user confirms the duplication, proceed.
-    if (choice === 'Submit') {
-      try {
-        // Duplicate the force.
-        let newForces = mission.duplicateForces({
-          originalId: force._id,
-          duplicateName: text,
-        })
-        // Notify the user that the force was duplicated.
-        notify(`Successfully duplicated "${force.name}".`)
-        // Allow the user to save the changes.
-        onChange(...newForces)
-      } catch (error: any) {
-        notify(`Failed to duplicate "${force.name}".`)
-      }
-    }
-  }
-
-  /**
-   * Handles the request to delete a force.
-   * @param forceId The ID of the force to delete.
-   */
-  const onDeleteForceRequest = async (forceId: ClientMissionForce['_id']) => {
-    // Get the force to duplicate.
-    let force = mission.getForceById(forceId)
-
-    // If the force is not found, notify the user.
-    if (!force) {
-      notify('Failed to delete the selected force.')
-      return
-    }
-
-    // Prompt the user to confirm the deletion.
-    let { choice } = await prompt(
-      `Please confirm the deletion of this force.`,
-      Prompt.ConfirmationChoices,
-    )
-    // If the user cancels, abort.
-    if (choice === 'Cancel') return
-    // Delete the force.
-    let deletedForces = mission.deleteForces(forceId)
-
-    // Allow the user to save the changes.
-    if (deletedForces.length) {
-      onChange(...(deletedForces as TNonEmptyArray<ClientMissionForce>))
-    }
   }
 
   /* -- COMPUTED  (CONTINUED) -- */

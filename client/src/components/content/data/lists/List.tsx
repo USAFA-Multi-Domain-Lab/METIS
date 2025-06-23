@@ -266,7 +266,6 @@ export default function List<TItem extends MetisComponent>(
         label: getItemButtonLabel(icon),
         permissions: getItemButtonPermissions(icon),
         onClick: () => {
-          console.log('Item button clicked:', icon, selection)
           if (selection) onItemButtonClick(icon, selection)
         },
       })

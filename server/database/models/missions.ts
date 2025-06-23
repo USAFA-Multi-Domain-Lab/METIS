@@ -512,9 +512,6 @@ export const schema = new MissionSchema(
             type: String,
             maxLength: MissionFile.MAX_NAME_LENGTH,
           },
-          // todo: Add validation to check that the
-          // todo: values of the array point to forces
-          // todo: present in the mission.
           initialAccess: {
             type: [String],
             required: true,

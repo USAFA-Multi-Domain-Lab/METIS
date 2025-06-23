@@ -1088,6 +1088,14 @@ export default class ClientMission
       return !deleteIt
     })
 
+    // Remove forces from the inital access
+    // of any files that reference them.
+    this.files.forEach((file) => {
+      file.initialAccess = file.initialAccess.filter(
+        (forceId) => !forceIds.includes(forceId),
+      )
+    })
+
     // Handle structure change.
     this.handleStructureChange()
 

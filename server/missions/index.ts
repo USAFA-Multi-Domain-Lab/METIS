@@ -435,7 +435,10 @@ export default class ServerMission extends Mission<TMetisServerComponents> {
 
   /**
    * Validates the alias of a file in a mission.
-   * @param value The value to validate.
+   * @param files The value to validate.
+   * @param forces The forces in the mission, used to compare
+   * the initial access assignments of files and ensure that the
+   * force IDs used are not null-pointers.
    * @returns True if valid, false otherwise.
    */
   private static validateMissionFiles = (
