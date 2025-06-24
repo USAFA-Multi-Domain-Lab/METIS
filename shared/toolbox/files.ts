@@ -119,4 +119,14 @@ export default class FileToolbox {
 
     return `${parseFloat(size.toFixed(decimals))} ${units[i]}`
   }
+
+  /**
+   * Validates whether the given string is a valid mimetype.
+   * @param mimetype The string to validate as a mimetype.
+   * @returns Whether the value is valid.
+   */
+  public static isValidMimetype(mimetype: string): boolean {
+    const regex = /^[a-zA-Z0-9!#$&^_.+-]+\/[a-zA-Z0-9!#$&^_.+-]+$/
+    return regex.test(mimetype)
+  }
 }

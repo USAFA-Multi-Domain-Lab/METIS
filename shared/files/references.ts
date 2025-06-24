@@ -107,6 +107,11 @@ export default abstract class FileReference<
       deleted: this.deleted,
     }
   }
+
+  /**
+   * The maximum length allowed for a file reference's name.
+   */
+  public static readonly MAX_NAME_LENGTH: number = 175
 }
 
 /**

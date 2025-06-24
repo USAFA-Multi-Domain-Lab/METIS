@@ -239,7 +239,7 @@ export default class ServerUser extends User<TMetisServerComponents> {
    * @param username The username to validate.
    */
   public static validateUsername(username: TUserJson['username']): void {
-    if (!ServerUser.isValidUsername) {
+    if (!ServerUser.isValidUsername(username)) {
       throw MetisDatabase.generateValidationError(
         `Error in user:\nUsername "${username}" is not valid.`,
       )
@@ -251,7 +251,7 @@ export default class ServerUser extends User<TMetisServerComponents> {
    * @param accessId The access ID to validate.
    */
   public static validateAccessId(accessId: TUserAccess['_id']): void {
-    if (!UserAccess.isValidAccessId) {
+    if (!UserAccess.isValidAccessId(accessId)) {
       throw MetisDatabase.generateValidationError(
         `Error in user:\nAccess ID "${accessId}" is not valid.`,
       )
@@ -265,7 +265,7 @@ export default class ServerUser extends User<TMetisServerComponents> {
   public static validateExpressPermissionId(
     expressPermissionId: TUserPermission['_id'],
   ): void {
-    if (!UserPermission.isValidPermissionId) {
+    if (!UserPermission.isValidPermissionId(expressPermissionId)) {
       throw MetisDatabase.generateValidationError(
         `Error in user:\nExpress permission ID "${expressPermissionId}" is not valid.`,
       )
@@ -279,7 +279,7 @@ export default class ServerUser extends User<TMetisServerComponents> {
   public static validateName(
     name: TUserJson['firstName'] | TUserJson['lastName'],
   ): void {
-    if (!ServerUser.isValidName) {
+    if (!ServerUser.isValidName(name)) {
       throw MetisDatabase.generateValidationError(
         `Error in user:\nName "${name}" is not valid.`,
       )
@@ -293,7 +293,7 @@ export default class ServerUser extends User<TMetisServerComponents> {
   public static validatePassword(
     password: NonNullable<TUserJson['password']>,
   ): void {
-    if (!ServerUser.isValidHashedPassword) {
+    if (!ServerUser.isValidHashedPassword(password)) {
       throw MetisDatabase.generateValidationError(
         `Error in user:\nPassword "${password}" is not valid.`,
       )

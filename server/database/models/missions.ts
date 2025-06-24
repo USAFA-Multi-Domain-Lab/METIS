@@ -262,6 +262,7 @@ export const schema = new MissionSchema(
     name: {
       type: String,
       required: true,
+      trim: true,
       maxLength: ServerMission.MAX_NAME_LENGTH,
     },
     versionNumber: { type: Number, required: true },
