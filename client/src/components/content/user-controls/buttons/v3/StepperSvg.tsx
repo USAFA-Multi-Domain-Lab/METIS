@@ -173,8 +173,6 @@ export default function ({
 
   return (
     <div className={rootClasses.value}>
-      <Tooltip description={description} />
-
       {/* STEP DOWN CONTROL */}
       <div className={stepDownClasses.value} onClick={stepDown}>
         <span className={stepperIconClasses.value}>{stepDownIcon}</span>
@@ -182,7 +180,10 @@ export default function ({
       </div>
 
       {/* TEXT DISPLAY */}
-      <div className='Text'>{text}</div>
+      <div className='Text'>
+        {text}
+        <Tooltip description={description} />
+      </div>
 
       {/* STEP UP CONTROL */}
       <div className={stepUpClasses.value} onClick={stepUp}>

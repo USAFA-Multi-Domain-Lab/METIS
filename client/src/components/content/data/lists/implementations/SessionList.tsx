@@ -2,7 +2,6 @@ import Prompt from 'src/components/content/communication/Prompt'
 import { useGlobalContext } from 'src/context/global'
 import SessionClient from 'src/sessions'
 import { SessionBasic } from 'src/sessions/basic'
-import { compute } from 'src/toolbox'
 import { usePeriodicRerender, useRequireLogin } from 'src/toolbox/hooks'
 import { MetisComponent } from '../../../../../../../shared'
 import { DateToolbox } from '../../../../../../../shared/toolbox/dates'
@@ -38,22 +37,6 @@ export default function SessionList({
   // Force rerender the list every second
   // to keep the runtime column up-to-date.
   usePeriodicRerender(1000)
-
-  /* -- COMPUTED -- */
-
-  // todo: Implement the ability for instructors to only delete sessions that they own.
-  const itemButtons = compute<TMetisIcon[]>(() => {
-    let results: TMetisIcon[] = []
-
-    // Add the join button.
-    results.push('open')
-
-    // If the user has the proper authorization, add
-    // the remove button.
-    if (login.user.isAuthorized('sessions_write_native')) results.push('remove')
-
-    return results
-  })
 
   /* -- FUNCTIONS -- */
 
@@ -295,14 +278,31 @@ export default function SessionList({
         'launchedAt',
       ]}
       listButtonIcons={['lock']}
-      itemButtonIcons={itemButtons}
+      itemButtonIcons={['open', 'remove']}
       initialSorting={{ column: 'launchedAt', method: 'descending' }}
+      getItemButtonPermissions={(button) => {
+        switch (button) {
+          case 'remove':
+            return ['sessions_write_native']
+          default:
+            return []
+        }
+      }}
+      getItemButtonDisabled={(button, session) => {
+        switch (button) {
+          case 'remove':
+            return session?.ownerId !== login.user._id
+          default:
+            return false
+        }
+      }}
       getColumnLabel={getSessionColumnLabel}
       getCellText={getSessionCellText}
       getColumnWidth={getSessionColumnWidth}
       getItemTooltip={() => 'Join session'}
       getListButtonLabel={getSessionListButtonTooltip}
       getItemButtonLabel={getSessionItemButtonTooltip}
+      onItemDblClick={(session) => onSessionSelection(session)}
       onListButtonClick={onSessionListButtonClick}
       onItemButtonClick={onSessionItemButtonClick}
     />

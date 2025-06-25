@@ -13,11 +13,10 @@ export default function ListResizeHandler<
   /* -- STATE -- */
 
   const listContext = useListContext<TItem>()
-  const { itemsPerPageMin, elements, name } = listContext
-  const [_, setItemsPerPage] = listContext.state.itemsPerPage
-  const [___, setPageNumber] = listContext.state.pageNumber
-  const [buttonOverflowCount, setButtonOverflowCount] =
-    listContext.state.buttonOverflowCount
+  const { itemsPerPageMin, elements } = listContext
+  const [, setItemsPerPage] = listContext.state.itemsPerPage
+  const [, setPageNumber] = listContext.state.pageNumber
+  const [, setButtonOverflowCount] = listContext.state.buttonOverflowCount
   const [searchActive] = listContext.state.searchActive
   // Whether the list is currently being resized.
   const [isResizing, setIsResizing] = useState<boolean>(true)
@@ -65,23 +64,42 @@ export default function ListResizeHandler<
    * overflowing the available space.
    */
   const calculateButtonOverflow = useCallbackRef(() => {
-    if (elements.buttons.current && elements.overflow.current) {
+    if (
+      elements.buttons.current &&
+      elements.overflow.current &&
+      elements.processor.current &&
+      elements.nav.current
+    ) {
       let buttonsElement = elements.buttons.current
       let overflowElement = elements.overflow.current
+      let processorElement = elements.processor.current
+      let navElement = elements.nav.current
+      let headerElement = navElement.querySelector('.ListHeader')
       let buttonElements = Array.from(
-        buttonsElement.querySelectorAll('.SvgPanelElement'),
+        buttonsElement.querySelectorAll('.SvgPanelElement:not(.DividerSvg)'),
       )
       let buttonsBox = buttonsElement.getBoundingClientRect()
       let overflowBox = overflowElement.getBoundingClientRect()
       let buttonsX2 = buttonsBox.right
       let overflowX2 = overflowBox.right
       let nextOverflowCount = 0
-      let overflowing = true
       let overflowIsVisible =
         getComputedStyle(overflowElement).display !== 'none'
+      let processorWidth = getComputedStyle(processorElement).width
+      let processorMinWidth = getComputedStyle(processorElement).minWidth
+      let processorIsMinimized = processorWidth === processorMinWidth
+      let headerWidth: string | null = null
+      let headerMinWidth: string | null = null
+      if (headerElement) {
+        headerWidth = getComputedStyle(headerElement).width
+        headerMinWidth = getComputedStyle(headerElement).minWidth
+      }
+      let headerIsMinimized =
+        headerWidth && headerMinWidth && headerWidth === headerMinWidth
+      let overflowing = processorIsMinimized
 
-      // Gets the x2 position of the last button
-      // element in the list.
+      // Gets the x2 position of the last HTML element
+      // in the list nav.
       function getLastX2() {
         let lastElement = buttonElements[buttonElements.length - 1]
         if (!lastElement) return NaN

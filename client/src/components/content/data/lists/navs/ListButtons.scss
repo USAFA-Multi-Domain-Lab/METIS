@@ -15,10 +15,12 @@
 
     .SvgPanelElement {
       &.StepperSvg {
-        transition: background-size $transition-speed $transition-timing;
+        * {
+          transition: transform $transition-speed $transition-timing;
+        }
 
-        &.ListButtonOverflow {
-          opacity: 0;
+        &.ListButtonOverflow * {
+          transform: scale(0);
         }
       }
 
@@ -35,7 +37,7 @@
       &.DividerSvg {
         transition: transform $transition-speed $transition-timing;
 
-        &:has(+ .ListButtonOverflow) {
+        &.ListButtonOverflow {
           transform: scale(0);
         }
       }

@@ -43,8 +43,6 @@ declare global {
     // ! alphabetical order.
     | '_blank'
     | 'add'
-    | 'arrow-back'
-    | 'arrow-next'
     | 'ban'
     | 'blockquote'
     | 'bold'
@@ -91,6 +89,7 @@ declare global {
     | 'timer'
     | 'underline'
     | 'undo'
+    | 'unlink'
     | 'up'
     | 'upload'
     | 'user'

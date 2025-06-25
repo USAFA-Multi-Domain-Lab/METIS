@@ -229,6 +229,7 @@ export default function MissionList(props: TMissionList_P): JSX.Element | null {
           return '10em'
       }
     },
+    onItemDblClick: (mission) => onOpenRequest(mission),
     onListButtonClick: (button) => {
       switch (button) {
         case 'add':

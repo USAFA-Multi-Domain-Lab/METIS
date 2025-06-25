@@ -86,7 +86,7 @@ export default class SvgDivider implements TDividerSvg {
     return {
       key: StringToolbox.generateRandomId(),
       type: 'divider',
-      icon: 'divider',
+      icon: '_blank',
       description: '',
       uniqueClassList: new ClassList(),
       disabled: false,

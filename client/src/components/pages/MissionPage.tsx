@@ -123,8 +123,8 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     mission.selection,
   )
   const [isNewEffect, setIsNewEffect] = useState<boolean>(false)
-  const [_, setDefects] = state.defects
-  const [__, setCheckForDefects] = state.checkForDefects
+  const [, setDefects] = state.defects
+  const [, setCheckForDefects] = state.checkForDefects
   const root = useRef<HTMLDivElement>(null)
   const mapSvgEngine = useButtonSvgEngine({
     elements: [
@@ -260,8 +260,6 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     name: 'Attached to Mission',
     items: localFiles,
     itemsPerPageMin: 4,
-    // Ensures the mission file list entry remains open.
-    deselectOnClickOutside: false,
     getListButtonPermissions: () => ['missions_write'],
     getItemButtonPermissions: () => ['missions_write'],
     onSelect: (file) => {
@@ -269,8 +267,12 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
       else mission.deselect()
     },
     onDetachRequest: (file) => {
+      // Remove the file from the mission.
       setLocalFiles(localFiles.filter((f) => f._id !== file._id))
-      file.reference.enable()
+      // Re-enable the file-reference in the global files list.
+      const fileRefId = file.reference._id
+      const fileRef = globalFiles.find(({ _id }) => _id === fileRefId)
+      if (fileRef) fileRef.enable()
       onChange(file)
     },
   }
@@ -290,16 +292,10 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
       if (button === 'link') return 'Attach to mission'
       else return ''
     },
+    onItemDblClick: (reference) => onAttachFileRequest(reference),
     onItemButtonClick: (button, reference) => {
       if (button !== 'link') return
-
-      // Add new file to the mission.
-      let file = ClientMissionFile.fromFileReference(reference, mission)
-      setLocalFiles([...localFiles, file])
-      // Disable the file-reference in the list.
-      reference.disable('File is already attached.')
-
-      onChange(file)
+      onAttachFileRequest(reference)
     },
   }
 
@@ -510,9 +506,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   useEventListener(
     mission,
     ['file-access-granted', 'file-access-revoked'],
-    () => {
-      setLocalFiles(mission.files)
-    },
+    () => setLocalFiles(mission.files),
   )
 
   // Add event listener to watch for a node exclusion
@@ -1009,6 +1003,23 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     if (deletedForces.length) {
       onChange(...(deletedForces as TNonEmptyArray<ClientMissionForce>))
     }
+  }
+
+  /**
+   * Handles the request to attach a file to the mission.
+   * This will add the file to the mission's local files
+   * and disable the file-reference in the global files list.
+   * @param reference The file reference to attach.
+   */
+  const onAttachFileRequest = (reference: ClientFileReference): void => {
+    if (mission.files.some((f) => f.reference._id === reference._id)) return
+    // Add new file to the mission.
+    let file = ClientMissionFile.fromFileReference(reference, mission)
+    setLocalFiles([...localFiles, file])
+    // Disable the file-reference in the list.
+    reference.disable('File is already attached.')
+
+    onChange(file)
   }
 
   /* -- COMPUTED  (CONTINUED) -- */

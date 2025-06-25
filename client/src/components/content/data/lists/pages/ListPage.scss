@@ -28,35 +28,36 @@
     display: grid;
     box-sizing: border-box;
     grid-template-columns: 1fr auto;
-    column-gap: 0.5em;
-    min-width: 100%;
-    width: fit-content;
     height: $item-non-padded-height + $item-cell-padding-vertical * 2;
-    padding: 0 1em;
+    padding: 0 1em 0 0;
 
-    // Styles all list item cells, as well as anuything
+    // Styles all list item cells, as well as anything that
     // could be added as a substitute for a list item cell,
     // such as a column label.
     .ItemCellLike {
-      overflow: hidden;
       padding: $item-cell-padding-vertical 0 $item-cell-padding-vertical
         $item-cell-padding-left;
       text-align: left;
-      text-overflow: ellipsis;
-      white-space: nowrap;
       font-size: 0.8rem;
       line-height: 2.1em;
       color: rgba(white, 0.9);
-
-      &:first-child {
-        position: relative;
-        left: -#{$item-cell-padding-left};
-      }
+      user-select: none;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
 
       &.ItemCellWarning {
         display: flex;
         flex-direction: row;
         align-items: center;
+      }
+
+      &.ItemOptions {
+        padding: unset;
+
+        .ButtonSvgPanel .SvgPanelElement {
+          padding: 0.271rem 1rem;
+        }
       }
     }
 

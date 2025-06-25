@@ -198,14 +198,14 @@ export default class ButtonSvgEngine {
 
   /**
    * Removes elements from the engine.
-   * @param elements The elements to remove.
+   * @param icons The icons of the elements to remove.
    * @returns Itself for chaining.
    * @note Calling this will cause a re-render.
    */
-  public remove(...elements: TSvgPanelElement_Input[]): ButtonSvgEngine {
-    for (let element of elements) {
+  public remove(...icons: TSvgPanelElement_Input['icon'][]): ButtonSvgEngine {
+    for (let icon of icons) {
       let elementIndex = this.panelElements.findIndex(
-        ({ icon }) => icon === element.icon,
+        ({ icon: elementIcon }) => elementIcon === icon,
       )
       if (elementIndex >= 0) {
         this._panelElements.splice(elementIndex, 1)

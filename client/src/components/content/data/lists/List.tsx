@@ -21,6 +21,7 @@ import ListResizeHandler from './ListResizeHandler'
 import ListValidator from './ListValidator'
 import ListNav from './navs/ListNav'
 import {
+  TGetItemButtonDisabled,
   TGetItemButtonLabel,
   TGetItemButtonPermission,
   TGetItemTooltip,
@@ -76,16 +77,19 @@ export function createDefaultListProps<
     listButtonIcons: [],
     itemButtonIcons: [],
     initialSorting: { column: 'name', method: 'ascending' },
-    deselectOnClickOutside: true,
+    deselectionBlacklist: [],
     getColumnLabel: (x) => StringToolbox.toTitleCase(x.toString()),
     getCellText: (item, column) => (item[column] as any).toString(),
     getItemTooltip: () => '',
     getListButtonLabel: () => '',
     getListButtonPermissions: () => [],
+    getListButtonDisabled: () => false,
     getItemButtonLabel: () => '',
     getItemButtonPermissions: () => [],
+    getItemButtonDisabled: () => false,
     getColumnWidth: () => '10em',
     onSelect: () => {},
+    onItemDblClick: () => {},
     onListButtonClick: () => {},
     onItemButtonClick: () => {},
     onFileDrop: null,
@@ -116,11 +120,13 @@ export default function List<TItem extends MetisComponent>(
     itemsPerPageMin,
     listButtonIcons,
     itemButtonIcons,
-    deselectOnClickOutside,
+    deselectionBlacklist,
     getListButtonLabel,
     getListButtonPermissions,
+    getListButtonDisabled,
     getItemButtonLabel,
     getItemButtonPermissions,
+    getItemButtonDisabled,
     onListButtonClick,
     onItemButtonClick,
     onSelect,
@@ -151,6 +157,7 @@ export default function List<TItem extends MetisComponent>(
     nav: useRef<HTMLDivElement>(null),
     buttons: useRef<HTMLDivElement>(null),
     overflow: useRef<HTMLDivElement>(null),
+    processor: useRef<HTMLDivElement>(null),
   }
 
   /* -- COMPUTED -- */
@@ -244,6 +251,7 @@ export default function List<TItem extends MetisComponent>(
         icon,
         label: getListButtonLabel(icon),
         permissions: getListButtonPermissions(icon),
+        disabled: getListButtonDisabled(icon),
         onClick: () => onListButtonClick(icon),
       })
     })
@@ -397,21 +405,24 @@ export default function List<TItem extends MetisComponent>(
     if (selectionIsMissing) setSelection(null)
   }, [items, selection])
 
-  // Deselect the item if the user clicks outside of the list.
-  useEventListener(document, 'click', (event: MouseEvent) => {
-    // If deselect-on-click-outside is not enabled,
-    // do nothing.
-    if (!deselectOnClickOutside) return
-    let rootElement = elements.root.current
-    // If the root element is not found, do nothing.
-    // This can happen if the component is unmounted.
-    if (!rootElement) return
+  // Deselect the currently selected item, if necessary.
+  useEventListener(document, 'mousedown', (event: MouseEvent) => {
+    const ignoredElms = [
+      '.ButtonMenu .PopUp .ButtonSvgPanel',
+      ...deselectionBlacklist,
+    ]
+    const rootElement = elements.root.current
+    const target = event.target as HTMLElement
+    const targetInIgnoredElms = ignoredElms.some((cls) =>
+      document.querySelector(cls)?.contains(target),
+    )
+
+    // If the target is in the ignored elements, do not deselect.
+    if (targetInIgnoredElms) return
 
     // If the clicked element is not part of the list,
     // deselect the item.
-    if (!rootElement.contains(event.target as Node)) {
-      setSelection(null)
-    }
+    if (!rootElement?.contains(target)) setSelection(null)
   })
 
   /* -- RENDER -- */
@@ -476,6 +487,10 @@ export type TList_E = {
    * The element that contains the overflow button.
    */
   overflow: React.RefObject<HTMLDivElement>
+  /**
+   * The element that contains the list processor.
+   */
+  processor: React.RefObject<HTMLDivElement>
 }
 
 /**
@@ -525,11 +540,17 @@ export type TList_P<TItem extends MetisComponent> = {
    */
   initialSorting?: TListSorting<TItem>
   /**
-   * Determines if the selected item should deselect
-   * when the user clicks outside of the list.
-   * @default true
+   * A list of element class names used within a JavaScript query
+   * selector which, if clicked, will not deselect the
+   * currently selected item.
+   * @note Make sure to include the leading `"."` in the class names.
+   * @default []
+   * @example
+   * ```js
+   * ['.Class1', '.Class2', '.Class3']
+   * ```
    */
-  deselectOnClickOutside?: boolean
+  deselectionBlacklist?: string[]
   /**
    * Gets the tooltip description for the item.
    * @param item The item for which to get the tooltip.
@@ -567,6 +588,13 @@ export type TList_P<TItem extends MetisComponent> = {
    */
   getListButtonPermissions?: TGetListButtonPermission
   /**
+   * Gets whether the button for the list is disabled.
+   * @param button The button for which to check if it is disabled.
+   * @returns Whether the button is disabled.
+   * @default () => false
+   */
+  getListButtonDisabled?: TGetListButtonDisabled
+  /**
    * Gets the label for the item's button.
    * @param button The button for which to get the label.
    * @param item The item for which to get the label.
@@ -580,6 +608,13 @@ export type TList_P<TItem extends MetisComponent> = {
    * @default () => []
    */
   getItemButtonPermissions?: TGetItemButtonPermission<TItem>
+  /**
+   * Gets whether the button for the item is disabled.
+   * @param button The button for which to check if it is disabled.
+   * @returns Whether the button is disabled.
+   * @default () => false
+   */
+  getItemButtonDisabled?: TGetItemButtonDisabled<TItem>
   /**
    * Gets the width of the given column.
    * @param column The column for which to get the width.
@@ -595,6 +630,12 @@ export type TList_P<TItem extends MetisComponent> = {
    * @default () => {}
    */
   onSelect?: (item: TItem | null) => void
+  /**
+   * Callback for when an item in the list is double-clicked.
+   * @param item The item that was double-clicked.
+   * @default () => {}
+   */
+  onItemDblClick?: (item: TItem) => void
   /**
    * Callback for when a list button is clicked.
    * @default () => {}
@@ -745,6 +786,16 @@ export type TOnListButtonClick = (button: TSvgPanelElement['icon']) => void
 export type TGetListButtonPermission = (
   button: TSvgPanelElement['icon'],
 ) => TUserPermissionId[]
+
+/**
+ * Gets whether the button for the list is disabled.
+ * @param button The button for which to check if it is disabled.
+ * @returns Whether the button is disabled.
+ * @default () => false
+ */
+export type TGetListButtonDisabled = (
+  button: TSvgPanelElement['icon'],
+) => boolean
 
 /**
  * A column type for the list.

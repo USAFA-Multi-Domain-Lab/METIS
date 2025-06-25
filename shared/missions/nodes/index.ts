@@ -58,7 +58,17 @@ export default abstract class MissionNode<
    * The color for the node used as a border in the mission
    * map.
    */
-  public color: string
+  protected _color: string
+  /**
+   * The color for the node used as a border in the mission
+   * map.
+   */
+  public get color(): string {
+    return this._color
+  }
+  public set color(value: string) {
+    this._color = value
+  }
 
   /**
    * The description for the node.
@@ -74,12 +84,30 @@ export default abstract class MissionNode<
   /**
    * Whether an action can be executed on the node.
    */
-  public executable: boolean
+  protected _executable: boolean
+  /**
+   * Whether an action can be executed on the node.
+   */
+  public get executable(): boolean {
+    return this._executable
+  }
+  public set executable(value: boolean) {
+    this._executable = value
+  }
 
   /**
    * Whether or not this node is a device.
    */
-  public device: boolean
+  protected _device: boolean
+  /**
+   * Whether or not this node is a device.
+   */
+  public get device(): boolean {
+    return this._device
+  }
+  public set device(value: boolean) {
+    this._device = value
+  }
 
   /**
    * The actions that can be performed on the node.
@@ -527,14 +555,14 @@ export default abstract class MissionNode<
 
     // Set properties from data.
     this.force = force
-    this.color = data.color ?? MissionNode.DEFAULT_PROPERTIES.color
+    this._color = data.color ?? MissionNode.DEFAULT_PROPERTIES.color
     this.description =
       data.description ?? MissionNode.DEFAULT_PROPERTIES.description
     this.preExecutionText =
       data.preExecutionText ?? MissionNode.DEFAULT_PROPERTIES.preExecutionText
-    this.executable =
+    this._executable =
       data.executable ?? MissionNode.DEFAULT_PROPERTIES.executable
-    this.device = data.device ?? MissionNode.DEFAULT_PROPERTIES.device
+    this._device = data.device ?? MissionNode.DEFAULT_PROPERTIES.device
     this.actions = new Map<string, TAction<T>>()
     this._exclude = data.exclude ?? MissionNode.DEFAULT_PROPERTIES.exclude
     this.localKey = data.localKey ?? force.generateNodeKey()

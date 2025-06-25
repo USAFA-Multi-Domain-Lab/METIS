@@ -23,6 +23,7 @@ export default function ListButtons<
     aggregatedButtonIcons,
     aggregatedButtons,
     aggregateButtonLayout,
+    getItemButtonDisabled,
   } = listContext
   const [selection] = state.selection
   const [buttonOverflowCount] = state.buttonOverflowCount
@@ -31,7 +32,7 @@ export default function ListButtons<
     options: {
       layout: aggregateButtonLayout,
     },
-    dependencies: aggregatedButtonIcons,
+    dependencies: [...aggregatedButtonIcons],
   })
   /* -- EFFECTS -- */
 
@@ -39,7 +40,10 @@ export default function ListButtons<
     // Enable/disable any buttons when the
     // selection changes.
     itemButtonIcons.forEach((icon) =>
-      buttonEngine.setDisabled(icon, !selection),
+      buttonEngine.setDisabled(
+        icon,
+        !selection || getItemButtonDisabled(icon, selection),
+      ),
     )
   }, [selection])
 

@@ -50,19 +50,14 @@ export default function <TNode extends TMapCompatibleNode>({
 }: TMapNode_P<TNode>): JSX.Element | null {
   /* -- STATE -- */
 
-  /**
-   * The execution state of the node.
-   */
+  const [name, setName] = useState<string>(node.name)
+  const [color, setColor] = useState<string>(node.color)
+  const [excluded, setExcluded] = useState<boolean>(node.exclude)
+  const [icon, setIcon] = useState<TMetisIcon>(node.icon)
   const [executionState, setExecutionState] = useState<TNodeExecutionState>(
     node.executionState,
   )
-  /**
-   * The buttons to display on the node.
-   */
   const [buttons, setButtons] = useState<TNodeButton<TNode>[]>(node.buttons)
-  /**
-   * Whether the node is pending.
-   */
   const [pending, setPending] = useState<boolean>(node.pending)
   /**
    * The initial progress shown on the progress bar,
@@ -71,16 +66,11 @@ export default function <TNode extends TMapCompatibleNode>({
   const [initialProgress] = useState<number>(() =>
     calculateInitialProgress(node),
   )
-  /**
-   * Whether the node is blocked.
-   */
   const [blocked, setBlocked] = useState<boolean>(node.blocked)
   /**
    * Caches the previous blocked state.
    */
   const [prevBlocked, setPrevBlocked] = useState<boolean>(node.blocked)
-  const [excluded, setExcluded] = useState<boolean>(node.exclude)
-  const [color, setColor] = useState<string>(node.color)
   const nodeButtonEngine = useButtonSvgEngine({
     elements: buttons,
     dependencies: [buttons],
@@ -140,6 +130,14 @@ export default function <TNode extends TMapCompatibleNode>({
   // Update the color when the node's
   // color changes.
   useEventListener(node, 'set-color', () => setColor(node.color))
+
+  // Update the name when the node's
+  // name changes.
+  useEventListener(node, 'set-name', () => setName(node.name))
+
+  // Update the icon when the node's
+  // icon changes.
+  useEventListener(node, 'new-icon', () => setIcon(node.icon))
 
   /* -- COMPUTED -- */
 
@@ -223,10 +221,10 @@ export default function <TNode extends TMapCompatibleNode>({
    * The inline styles for the node's icon.
    */
   const iconStyle: React.CSSProperties = compute(() => {
-    if (node.icon === '_blank') return {}
+    if (icon === '_blank') return {}
 
     return {
-      backgroundImage: `url(${require(`../../../../../../assets/images/icons/${node.icon}.svg`)})`,
+      backgroundImage: `url(${require(`../../../../../../assets/images/icons/${icon}.svg`)})`,
       backgroundSize: 'contain',
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat',
@@ -255,7 +253,7 @@ export default function <TNode extends TMapCompatibleNode>({
 
     // If the node has an icon, reduce
     // the width of the name.
-    if (node.icon !== '_blank') {
+    if (icon !== '_blank') {
       width = ClientMissionNode.NAME_WIDTH_RATIO * 100
     }
 
@@ -415,7 +413,7 @@ export default function <TNode extends TMapCompatibleNode>({
       <div className='ProgressBar' style={progressBarStyle}></div>
       <div className='PrimaryContent' style={primaryContentStyle}>
         <div className={nameClassName} style={nameStyle}>
-          {node.name}
+          {name}
         </div>
         <div className={iconClassName} style={iconStyle}></div>
       </div>
