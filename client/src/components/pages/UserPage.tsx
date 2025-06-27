@@ -127,44 +127,6 @@ export default function UserPage({ userId }: IUserPage): JSX.Element | null {
   /* -- COMPUTED -- */
 
   /**
-   * Logout link for navigation.
-   */
-  const logoutLink = compute(() => ({
-    text: 'Log out',
-    onClick: async () => {
-      // If there are unsaved changes, prompt the user.
-      if (areUnsavedChanges) {
-        const { choice } = await prompt(
-          'You have unsaved changes. What do you want to do with them?',
-          ['Cancel', 'Save', 'Discard'],
-        )
-
-        try {
-          // Abort if cancelled.
-          if (choice === 'Cancel') {
-            return
-          }
-          // Save if requested.
-          else if (choice === 'Save') {
-            beginLoading('Saving...')
-            await save()
-          }
-
-          await logout()
-        } catch (error) {
-          return handleError({
-            message: 'Failed to save mission.',
-            notifyMethod: 'bubble',
-          })
-        }
-      } else {
-        await logout()
-      }
-    },
-    key: 'logout',
-  }))
-
-  /**
    * Config for the navigation on this page.
    */
   const navigation = compute<TNavigation_P>(() => {
@@ -301,27 +263,25 @@ export default function UserPage({ userId }: IUserPage): JSX.Element | null {
 
   /* -- RENDER -- */
 
-  if (mountHandled && currentUser.isAuthorized('users_write_students')) {
-    return (
-      <div className='UserPage Page'>
-        <DefaultPageLayout navigation={navigation}>
-          <div className='Form'>
-            {renderUserEntry()}
+  if (!mountHandled) return null
 
-            <div className='Buttons'>
-              <ButtonText
-                text={'Save'}
-                disabled={saveDisabled}
-                onClick={() => save()}
-              />
-            </div>
+  return (
+    <div className='UserPage Page'>
+      <DefaultPageLayout navigation={navigation}>
+        <div className='Form'>
+          {renderUserEntry()}
+
+          <div className='Buttons'>
+            <ButtonText
+              text={'Save'}
+              disabled={saveDisabled}
+              onClick={() => save()}
+            />
           </div>
-        </DefaultPageLayout>
-      </div>
-    )
-  } else {
-    return null
-  }
+        </div>
+      </DefaultPageLayout>
+    </div>
+  )
 }
 
 /* ---------------------------- TYPES FOR USER PAGE ---------------------------- */

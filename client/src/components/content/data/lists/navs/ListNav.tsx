@@ -11,50 +11,20 @@ export default function ListNav(): JSX.Element | null {
   /* -- STATE -- */
 
   const listContext = useListContext()
-  const { name, elements, state } = listContext
+  const { name, elements, state, aggregatedButtons } = listContext
   const [buttonOverflowCount] = state.buttonOverflowCount
   const [overflowActive] = state.overflowActive
-  const [searchActive] = state.searchActive
 
   /* -- COMPUTED -- */
 
   /**
    * Class list for the root element.
    */
-  const rootClasses = compute<ClassList>(() => {
-    let result = new ClassList('ListNav')
-    result.set('Overflowing', buttonOverflowCount > 0)
-    return result
-  })
-
-  /**
-   * The number of buttons that are currently overflowing.
-   */
-  const maxButtonCount = compute<number>(() => {
-    let buttonsElement = elements.buttons.current
-    if (!buttonsElement) return 0
-    let buttonElements = Array.from(
-      buttonsElement.querySelectorAll('.SvgPanelElement'),
-    )
-    return buttonElements.length
-  })
-
-  /**
-   * Whether the header should be hidden.
-   */
-  const hideHeader = compute<boolean>(
-    () =>
-      overflowActive && searchActive && buttonOverflowCount === maxButtonCount,
+  const rootClasses = compute<ClassList>(() =>
+    new ClassList('ListNav')
+      .set('Overflowing', buttonOverflowCount > 0)
+      .set('OverflowMaxed', buttonOverflowCount >= aggregatedButtons.length),
   )
-
-  /**
-   * Class list for the list header.
-   */
-  const listHeaderClasses = compute<ClassList>(() => {
-    let result = new ClassList('ListHeader')
-    result.set('Hidden', hideHeader)
-    return result
-  })
 
   /* -- EFFECTS -- */
 
@@ -68,7 +38,7 @@ export default function ListNav(): JSX.Element | null {
       return
     }
 
-    let autoColumnCount = overflowActive ? 3 : 2
+    let autoColumnCount = overflowActive ? 2 : 1
 
     navElement.style.setProperty(
       '--auto-column-count',
@@ -81,8 +51,10 @@ export default function ListNav(): JSX.Element | null {
   // Render the nav.
   return (
     <div className={rootClasses.value} ref={elements.nav}>
-      <div className={listHeaderClasses.value}>
-        <div className='ListHeading'>{name}</div>
+      <div className='ListHeader' ref={elements.navHeader}>
+        <div className='ListHeading' ref={elements.navHeading}>
+          {name}
+        </div>
       </div>
       <ListButtons />
       <ListOverflow />

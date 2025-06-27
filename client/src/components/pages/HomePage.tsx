@@ -392,7 +392,7 @@ export default function HomePage(): JSX.Element | null {
         <Auth permissions={['missions_read']}>
           <MissionList
             key={'missions-list'}
-            name={'Missions'}
+            name={'Missions Missions Missions Missions'}
             items={missions}
             onFileDrop={importMissionFiles}
             onSuccessfulCopy={onMissionCopy}
