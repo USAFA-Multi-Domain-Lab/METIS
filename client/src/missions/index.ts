@@ -1194,9 +1194,6 @@ export default class ClientMission
       )
     }
 
-    // Ensure existsOnServer is set to true.
-    options.existsOnServer = true
-
     // Create a new mission.
     let mission: ClientMission = new ClientMission(
       json._id || generateHash(),
@@ -1384,7 +1381,6 @@ export default class ClientMission
           originalId,
           copyName,
         })
-        options.existsOnServer = true
         resolve(ClientMission.fromExistingJson(data, options))
       } catch (error) {
         console.error('Failed to copy mission.')
@@ -1413,8 +1409,6 @@ export default class ClientMission
         let { data } = await axios.get<TMissionExistingJson>(
           `${ClientMission.API_ENDPOINT}/${_id}/`,
         )
-        // Update options.
-        options.existsOnServer = true
         // Convert JSON to ClientMission object.
         let mission: ClientMission = ClientMission.fromExistingJson(
           data,

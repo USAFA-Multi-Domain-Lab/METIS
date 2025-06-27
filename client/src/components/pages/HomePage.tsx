@@ -17,10 +17,14 @@ import { DefaultPageLayout } from '.'
 import { PromiseManager } from '../../../../shared/toolbox/promises'
 import Prompt from '../content/communication/Prompt'
 import FileReferenceList from '../content/data/lists/implementations/FileReferenceList'
-import MissionList from '../content/data/lists/implementations/MissionList'
+import MissionList from '../content/data/lists/implementations/missions/MissionList'
 import SessionList from '../content/data/lists/implementations/SessionList'
 import UserList from '../content/data/lists/implementations/UserList'
-import { LogoutLink } from '../content/general-layout/Navigation'
+import {
+  LogoutButton,
+  TNavigation_P,
+} from '../content/general-layout/Navigation'
+import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
 import Auth from '../content/util/Auth'
 import './HomePage.scss'
 
@@ -42,7 +46,7 @@ export default function HomePage(): JSX.Element | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
-  const { beginLoading, finishLoading, handleError, notify, prompt } =
+  const { beginLoading, finishLoading, handleError, notify, prompt, logout } =
     globalContext.actions
   const [sessions, setSessions] = useState<SessionBasic[]>([])
   const [missions, setMissions] = useState<ClientMission[]>([])
@@ -50,6 +54,9 @@ export default function HomePage(): JSX.Element | null {
   const [fileReferences, setFileReferences] = useState<ClientFileReference[]>(
     [],
   )
+  const navButtonEngine = useButtonSvgEngine({
+    elements: [LogoutButton()],
+  })
 
   /* -- LOGIN-SPECIFIC LOGIC -- */
 
@@ -93,16 +100,6 @@ export default function HomePage(): JSX.Element | null {
   useUnmountHandler(() => {
     syncSessions.current = async () => {}
   })
-
-  /* -- COMPUTED -- */
-
-  /**
-   * Props for navigation.
-   */
-  const navigation = compute(() => ({
-    links: [LogoutLink(globalContext)],
-    logoLinksHome: false,
-  }))
 
   /* -- FUNCTIONS -- */
 
@@ -366,6 +363,15 @@ export default function HomePage(): JSX.Element | null {
     // Remove user from state.
     setFileReferences(fileReferences.filter(({ _id }) => _id !== reference._id))
   }
+
+  /* -- COMPUTED -- */
+
+  /**
+   * Config for the navigation on this page.
+   */
+  const navigation = compute<TNavigation_P>(() => {
+    return { buttonEngine: navButtonEngine, logoLinksHome: false }
+  })
 
   /* -- RENDER -- */
 

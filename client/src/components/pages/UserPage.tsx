@@ -7,18 +7,24 @@ import ClientUser from 'src/users'
 import { DefaultPageLayout, TPage_P } from '.'
 import CreateUserEntry from '../content/edit-user/CreateUserEntry'
 import EditUserEntry from '../content/edit-user/EditUserEntry'
-import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
+import {
+  HomeButton,
+  LogoutButton,
+  TNavigation_P,
+} from '../content/general-layout/Navigation'
 import {
   ButtonText,
   TButtonTextDisabled,
 } from '../content/user-controls/buttons/ButtonText'
+import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
 import './UserPage.scss'
 
 /**
  * Renders a page for creating or editing a user.
  */
 export default function UserPage({ userId }: IUserPage): JSX.Element | null {
-  /* -- GLOBAL CONTEXT -- */
+  /* -- STATE -- */
+
   const globalContext = useGlobalContext()
   const {
     beginLoading,
@@ -29,9 +35,6 @@ export default function UserPage({ userId }: IUserPage): JSX.Element | null {
     navigateTo,
     logout,
   } = globalContext.actions
-
-  /* -- COMPONENT STATE -- */
-
   const [existsInDatabase, setExistsInDatabase] = useState<boolean>(false)
   const [user, setUser] = useState<ClientUser>(
     ClientUser.createNew({ passwordIsRequired: true }),
@@ -40,6 +43,9 @@ export default function UserPage({ userId }: IUserPage): JSX.Element | null {
   const [userEmptyStringArray, setUserEmptyStringArray] = useState<string[]>([])
   const [usernameAlreadyExists, setUsernameAlreadyExists] =
     useState<boolean>(false)
+  const navButtonEngine = useButtonSvgEngine({
+    elements: [HomeButton(), LogoutButton()],
+  })
 
   /* -- EFFECTS -- */
 
@@ -159,14 +165,12 @@ export default function UserPage({ userId }: IUserPage): JSX.Element | null {
   }))
 
   /**
-   * Props for navigation.
+   * Config for the navigation on this page.
    */
-  const navigation: TNavigation = compute(
-    (): TNavigation => ({
-      links: [HomeLink(globalContext), logoutLink],
-      boxShadow: 'alt-7',
-    }),
-  )
+  const navigation = compute<TNavigation_P>(() => {
+    return { buttonEngine: navButtonEngine }
+  })
+
   /**
    * Determines if the user form has any fields
    * with empty strings.

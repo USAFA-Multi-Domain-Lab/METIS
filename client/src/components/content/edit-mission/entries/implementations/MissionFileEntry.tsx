@@ -4,7 +4,6 @@ import { DetailString } from 'src/components/content/form/DetailString'
 import { DetailToggle } from 'src/components/content/form/DetailToggle'
 import Divider from 'src/components/content/form/Divider'
 import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
-import { useMissionPageContext } from 'src/components/pages/MissionPage'
 import ClientMission from 'src/missions'
 import ClientMissionFile from 'src/missions/files'
 import { compute } from 'src/toolbox'
@@ -24,8 +23,6 @@ export default function MissionFileEntry({
   const { mission } = file
 
   /* -- STATE -- */
-
-  const { missionPageSvgEngine } = useMissionPageContext()
 
   const initialAccessTracker = useRef(
     compute(() => {
@@ -83,10 +80,7 @@ export default function MissionFileEntry({
   /* -- RENDER -- */
 
   return (
-    <Entry
-      missionComponent={file}
-      svgEngines={[missionPageSvgEngine, svgEngine]}
-    >
+    <Entry missionComponent={file} svgEngines={[svgEngine]}>
       <DetailLocked
         label='Original Name'
         stateValue={file.originalName}

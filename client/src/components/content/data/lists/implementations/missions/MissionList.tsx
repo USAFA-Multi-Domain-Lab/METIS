@@ -1,12 +1,12 @@
 import { useRef } from 'react'
-import Prompt from 'src/components/content/communication/Prompt'
 import If from 'src/components/content/util/If'
 import { useGlobalContext } from 'src/context/global'
 import ClientMission from 'src/missions'
 import { compute } from 'src/toolbox'
 import { useDefaultProps, useRequireLogin } from 'src/toolbox/hooks'
-import { DateToolbox } from '../../../../../../../shared/toolbox/dates'
-import List, { createDefaultListProps, TList_P } from '../List'
+import { DateToolbox } from '../../../../../../../../shared/toolbox/dates'
+import List, { createDefaultListProps, TList_P } from '../../List'
+import { useMissionItemButtonCallbacks } from './item-buttons'
 
 // todo: Convert this list to be organized
 // todo like `FileReferenceList`.
@@ -19,110 +19,10 @@ export default function MissionList(props: TMissionList_P): JSX.Element | null {
 
   const globalContext = useGlobalContext()
   const { login } = useRequireLogin()
-  const { notify, beginLoading, finishLoading, navigateTo, prompt } =
-    globalContext.actions
+  const { navigateTo } = globalContext.actions
   const importMissionTrigger = useRef<HTMLInputElement>(null)
 
-  /* -- FUNCTIONS -- */
-
-  /**
-   * Handles a request to delete a mission.
-   */
-  const onDeleteRequest = async (mission: ClientMission) => {
-    const { onSuccessfulDeletion } = defaultedProps
-
-    // Prompt the user for confirmation.
-    let { choice } = await prompt(
-      'Please confirm the deletion of this mission.',
-      Prompt.ConfirmationChoices,
-    )
-
-    // If the user confirms the deletion, proceed.
-    if (choice === 'Confirm') {
-      try {
-        beginLoading('Deleting mission...')
-        await ClientMission.$delete(mission._id)
-        finishLoading()
-        notify(`Successfully deleted "${mission.name}".`)
-        onSuccessfulDeletion(mission)
-      } catch (error) {
-        finishLoading()
-        notify(`Failed to delete "${mission.name}".`)
-      }
-    }
-  }
-
-  /**
-   * Handles a request to copy a mission.
-   */
-  const onCopyRequest = async (mission: ClientMission) => {
-    const { onSuccessfulCopy } = defaultedProps
-
-    let { choice, text } = await prompt(
-      'Enter the name of the new mission',
-      ['Cancel', 'Submit'],
-      {
-        textField: { boundChoices: ['Submit'], label: 'Name' },
-        defaultChoice: 'Submit',
-      },
-    )
-
-    // If the user confirms the copy, proceed.
-    if (choice === 'Submit') {
-      try {
-        beginLoading('Copying mission...')
-        let resultingMission = await ClientMission.$copy(mission._id, text)
-        notify(`Successfully copied "${mission.name}".`)
-        finishLoading()
-        onSuccessfulCopy(resultingMission)
-      } catch (error) {
-        finishLoading()
-        notify(`Failed to copy "${mission.name}".`)
-      }
-    }
-  }
-
-  /**
-   * Handles a request to launch a new session from a mission.
-   */
-  const onLaunchRequest = (mission: ClientMission) => {
-    navigateTo('LaunchPage', { missionId: mission._id })
-  }
-
-  /**
-   * Opens the mission for editing or viewing.
-   * @param mission The mission to open.
-   */
-  const onOpenRequest = ({ _id: missionId }: ClientMission): void => {
-    if (
-      login.user.isAuthorized('missions_write') ||
-      login.user.isAuthorized('missions_read')
-    ) {
-      navigateTo('MissionPage', { missionId })
-    }
-  }
-
-  /**
-   * Handles a change to the import mission trigger.
-   */
-  const onImportTriggerChange = (): void => {
-    const { onFileDrop } = defaultedProps
-    let importMissionTrigger_elm: HTMLInputElement | null =
-      importMissionTrigger.current
-
-    // Abort, if no file-drop callback is provided.
-    if (!onFileDrop) return
-
-    // If files are found, upload
-    // is begun.
-    if (
-      importMissionTrigger_elm &&
-      importMissionTrigger_elm.files !== null &&
-      importMissionTrigger_elm.files.length > 0
-    ) {
-      onFileDrop(importMissionTrigger_elm.files)
-    }
-  }
+  /* -- PROPS -- */
 
   const defaultedProps = useDefaultProps(props, {
     ...createDefaultListProps<ClientMission>(),
@@ -148,6 +48,7 @@ export default function MissionList(props: TMissionList_P): JSX.Element | null {
       // If the user has the proper authorization, add
       // the launch button.
       if (login.user.isAuthorized('sessions_write_native')) {
+        results.push('play')
         results.push('launch')
       }
 
@@ -204,17 +105,21 @@ export default function MissionList(props: TMissionList_P): JSX.Element | null {
     getItemButtonLabel: (button) => {
       switch (button) {
         case 'open':
-          if (login.user.isAuthorized('missions_write')) return 'View/edit'
-          else if (login.user.isAuthorized('missions_read')) return 'View'
+          if (login.user.isAuthorized('missions_write'))
+            return 'View/edit mission'
+          else if (login.user.isAuthorized('missions_read'))
+            return 'View mission'
           else return ''
+        case 'play':
+          return 'Play-test mission'
         case 'launch':
-          return 'Launch session'
+          return 'Launch mission into multiplayer session'
         case 'copy':
-          return 'Duplicate'
+          return 'Duplicate mission'
         case 'download':
-          return 'Export to .metis file'
+          return 'Export mission to .metis file'
         case 'remove':
-          return 'Delete'
+          return 'Delete mission'
         default:
           return ''
       }
@@ -254,8 +159,11 @@ export default function MissionList(props: TMissionList_P): JSX.Element | null {
         case 'open':
           onOpenRequest(mission)
           break
+        case 'play':
+          onPlayTestRequest(mission, 'HomePage')
+          break
         case 'launch':
-          onLaunchRequest(mission)
+          onLaunchRequest(mission, 'HomePage')
           break
         case 'copy':
           onCopyRequest(mission)
@@ -264,13 +172,7 @@ export default function MissionList(props: TMissionList_P): JSX.Element | null {
           onDeleteRequest(mission)
           break
         case 'download':
-          console.log(
-            `/api/v1/missions/${mission._id}/export/${mission.fileName}`,
-          )
-          window.open(
-            `/api/v1/missions/${mission._id}/export/${mission.fileName}`,
-            '_blank',
-          )
+          onExportRequest(mission)
           break
         default:
           console.warn('Unknown button clicked in mission list.')
@@ -280,6 +182,44 @@ export default function MissionList(props: TMissionList_P): JSX.Element | null {
     onSuccessfulDeletion: () => {},
     onSuccessfulCopy: () => {},
   })
+  const { onSuccessfulCopy, onSuccessfulDeletion } = defaultedProps
+
+  /* -- FUNCTIONS -- */
+
+  // Callbacks for item buttons.
+  const {
+    onOpenRequest,
+    onPlayTestRequest,
+    onLaunchRequest,
+    onCopyRequest,
+    onDeleteRequest,
+    onExportRequest,
+  } = useMissionItemButtonCallbacks({
+    onSuccessfulCopy,
+    onSuccessfulDeletion,
+  })
+
+  /**
+   * Handles a change to the import mission trigger.
+   */
+  const onImportTriggerChange = (): void => {
+    const { onFileDrop } = defaultedProps
+    let importMissionTrigger_elm: HTMLInputElement | null =
+      importMissionTrigger.current
+
+    // Abort, if no file-drop callback is provided.
+    if (!onFileDrop) return
+
+    // If files are found, upload
+    // is begun.
+    if (
+      importMissionTrigger_elm &&
+      importMissionTrigger_elm.files !== null &&
+      importMissionTrigger_elm.files.length > 0
+    ) {
+      onFileDrop(importMissionTrigger_elm.files)
+    }
+  }
 
   // Render the list of missions.
   return (

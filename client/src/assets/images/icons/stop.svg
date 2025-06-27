@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="24"
+   height="24"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="stop.svg"
+   inkscape:version="1.4 (e7c3feb1, 2024-10-09)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#000000"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="19.991358"
+     inkscape:cx="8.428642"
+     inkscape:cy="13.00562"
+     inkscape:window-width="2112"
+     inkscape:window-height="1139"
+     inkscape:window-x="244"
+     inkscape:window-y="420"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="g1" />
+  <!-- Created with Method Draw - http://github.com/duopixel/Method-Draw/ -->
+  <g
+     id="g1"
+     transform="matrix(0.02528365,0,0,0.02772121,1.8865398,1.0585001)"
+     style="stroke-width:37.7723">
+    <title
+       id="title1">Layer 1</title>
+    <rect
+       style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:94.4305;stroke-linecap:round;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+       id="rect1"
+       width="854.79913"
+       height="771.33215"
+       x="-27.399559"
+       y="9.0316982" />
+  </g>
+</svg>

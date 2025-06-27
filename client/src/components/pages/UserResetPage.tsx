@@ -6,23 +6,26 @@ import ClientUser from 'src/users'
 import { DefaultPageLayout, TPage_P } from '.'
 import { DetailLocked } from '../content/form/DetailLocked'
 import { DetailString } from '../content/form/DetailString'
-import { LogoutLink, TNavigation } from '../content/general-layout/Navigation'
+import {
+  LogoutButton,
+  TNavigation_P,
+} from '../content/general-layout/Navigation'
 import {
   ButtonText,
   TButtonTextDisabled,
 } from '../content/user-controls/buttons/ButtonText'
+import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
 import './UserResetPage.scss'
 
 /**
  * This page allows the user to reset their password.
  */
 export default function UserResetPage(): JSX.Element | null {
-  /* -- GLOBAL CONTEXT -- */
+  /* -- STATE -- */
+
   const globalContext = useGlobalContext()
   const { notify, navigateTo, finishLoading } = globalContext.actions
   const [login] = globalContext.login
-
-  /* -- STATE -- */
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(false)
   const [userEmptyStringArray, setUserEmptyStringArray] = useState<string[]>([])
   const [handlePassword1Error, setHandlePassword1Error] =
@@ -33,6 +36,9 @@ export default function UserResetPage(): JSX.Element | null {
   const [password2ErrorMessage, setPassword2ErrorMessage] = useState<string>()
   const [password1, setPassword1] = useState<string>('')
   const [password2, setPassword2] = useState<string>('')
+  const navButtonEngine = useButtonSvgEngine({
+    elements: [LogoutButton()],
+  })
 
   /* -- EFFECTS -- */
 
@@ -123,15 +129,11 @@ export default function UserResetPage(): JSX.Element | null {
   /* -- COMPUTED -- */
 
   /**
-   * Props for navigation.
+   * Config for the navigation on this page.
    */
-  const navigation = compute(
-    (): TNavigation => ({
-      links: [LogoutLink(globalContext)],
-      logoLinksHome: false,
-      boxShadow: 'alt-6',
-    }),
-  )
+  const navigation = compute<TNavigation_P>(() => {
+    return { buttonEngine: navButtonEngine, logoLinksHome: false }
+  })
 
   /**
    * Boolean to determine if there are any fields with empty strings.
@@ -145,7 +147,7 @@ export default function UserResetPage(): JSX.Element | null {
     !areUnsavedChanges || isEmptyString || !user.canSave ? 'full' : 'none',
   )
 
-  /* -- FxUNCTIONS -- */
+  /* -- FUNCTIONS -- */
 
   /**
    * This is called to save any changes made.

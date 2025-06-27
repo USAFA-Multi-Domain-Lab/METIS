@@ -180,7 +180,7 @@ export default function SessionList({
         // If the session has started, go to the
         // session page with the new session client.
         if (session.state === 'started') {
-          navigateTo('SessionPage', { session })
+          navigateTo('SessionPage', { session, returnPage: 'HomePage' })
         }
         // Or, if the session has not started, go to
         // the lobby page with the new session client.

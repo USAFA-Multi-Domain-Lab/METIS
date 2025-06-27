@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
-import { useMissionPageContext } from 'src/components/pages/MissionPage'
 import ClientMissionPrototype from 'src/missions/nodes/prototypes'
 import { usePostInitEffect } from 'src/toolbox/hooks'
 import { DetailLocked } from '../../../form/DetailLocked'
@@ -19,8 +18,6 @@ export default function PrototypeEntry({
 }: TPrototypeEntry): JSX.Element | null {
   /* -- STATE -- */
 
-  const { missionPageSvgEngine } = useMissionPageContext()
-
   const [depthPadding, setDepthPadding] = useState<number>(
     prototype.depthPadding,
   )
@@ -29,14 +26,15 @@ export default function PrototypeEntry({
       {
         type: 'button',
         icon: 'add',
-        description: 'Add one or multiple nodes adjacent to this node.',
+        description:
+          'Add one or multiple nodes adjacent to this prototype node',
         permissions: ['missions_write'],
         onClick: onAddRequest,
       },
       {
         type: 'button',
         icon: 'remove',
-        description: 'Delete',
+        description: 'Delete prototype node',
         disabled: mission.prototypes.length < 2,
         permissions: ['missions_write'],
         onClick: onDeleteRequest,
@@ -56,10 +54,7 @@ export default function PrototypeEntry({
   /* -- RENDER -- */
 
   return (
-    <Entry
-      missionComponent={prototype}
-      svgEngines={[missionPageSvgEngine, svgEngine]}
-    >
+    <Entry missionComponent={prototype} svgEngines={[svgEngine]}>
       <DetailLocked
         label='ID'
         stateValue={prototype._id}

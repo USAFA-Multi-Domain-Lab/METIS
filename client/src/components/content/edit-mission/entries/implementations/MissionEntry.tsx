@@ -1,9 +1,8 @@
 import { useRef, useState } from 'react'
-import Prompt from 'src/components/content/communication/Prompt'
 import ButtonSvgPanel from 'src/components/content/user-controls/buttons/v3/ButtonSvgPanel'
 import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
 import If from 'src/components/content/util/If'
-import { useMissionPageContext } from 'src/components/pages/MissionPage'
+import { useMissionPageContext } from 'src/components/pages/missions/MissionPage'
 import { useGlobalContext } from 'src/context/global'
 import ClientMission from 'src/missions'
 import { ClientEffect } from 'src/missions/effects'
@@ -40,7 +39,7 @@ export default function MissionEntry({
   const { notify, beginLoading, finishLoading, navigateTo, prompt } =
     globalContext.actions
 
-  const { state, missionPageSvgEngine } = useMissionPageContext()
+  const { state } = useMissionPageContext()
   const [checkForDefects, setCheckForDefects] = state.checkForDefects
   const [defects, setDefects] = state.defects
   const [name, setName] = useState<string>(mission.name)
@@ -55,32 +54,6 @@ export default function MissionEntry({
         cursor: 'help',
         description:
           'If this conflict is not resolved, this mission can still be used to launch a session, but the session may not function as expected.',
-      },
-    ],
-  })
-  const entrySvgEngine = useButtonSvgEngine({
-    elements: [
-      {
-        type: 'button',
-        icon: 'copy',
-        description: 'Duplicate',
-        permissions: ['missions_write'],
-        onClick: async () => await onCopyRequest(),
-      },
-      {
-        type: 'button',
-        icon: 'download',
-        description: 'Export to .metis file',
-        permissions: ['missions_write'],
-        onClick: () => onExportRequest(),
-      },
-      {
-        type: 'button',
-        icon: 'remove',
-        description: 'Delete',
-        disabled: !mission.existsOnServer,
-        permissions: ['missions_write'],
-        onClick: async () => await onDeleteRequest(),
       },
     ],
   })
@@ -169,85 +142,9 @@ export default function MissionEntry({
     )
   }
 
-  /**
-   * Handles a request to copy a mission.
-   */
-  const onCopyRequest = async () => {
-    let { choice, text } = await prompt(
-      'Enter the name of the new mission',
-      ['Cancel', 'Submit'],
-      {
-        textField: { boundChoices: ['Submit'], label: 'Name' },
-        defaultChoice: 'Submit',
-      },
-    )
-
-    // If the user confirms the copy, proceed.
-    if (choice === 'Submit') {
-      try {
-        beginLoading('Copying mission...')
-        let resultingMission = await ClientMission.$copy(mission._id, text)
-        notify(`Successfully copied "${mission.name}".`)
-        finishLoading()
-
-        let { choice } = await prompt(
-          'Would you like to open the copied mission?',
-          Prompt.ConfirmationChoices,
-        )
-        if (choice === 'Confirm') {
-          navigateTo('MissionPage', {
-            missionId: resultingMission._id,
-          })
-        }
-      } catch (error) {
-        finishLoading()
-        notify(`Failed to copy "${mission.name}".`)
-      }
-    }
-  }
-
-  /**
-   * Handles a request to delete a mission.
-   */
-  const onDeleteRequest = async () => {
-    // Prompt the user for confirmation.
-    let { choice } = await prompt(
-      'Please confirm the deletion of this mission.',
-      Prompt.ConfirmationChoices,
-    )
-
-    // If the user confirms the deletion, proceed.
-    if (choice === 'Confirm') {
-      try {
-        beginLoading('Deleting mission...')
-        await ClientMission.$delete(mission._id)
-        finishLoading()
-        notify(`Successfully deleted "${mission.name}".`)
-        navigateTo('HomePage', {})
-      } catch (error) {
-        finishLoading()
-        notify(`Failed to delete "${mission.name}".`)
-      }
-    }
-  }
-
-  /**
-   * Handles a request to export the mission.
-   */
-  const onExportRequest = () => {
-    console.log(`/api/v1/missions/${mission._id}/export/${mission.fileName}`)
-    window.open(
-      `/api/v1/missions/${mission._id}/export/${mission.fileName}`,
-      '_blank',
-    )
-  }
-
   /* -- RENDER -- */
   return (
-    <Entry
-      missionComponent={mission}
-      svgEngines={[missionPageSvgEngine, entrySvgEngine]}
-    >
+    <Entry missionComponent={mission}>
       <DetailString
         fieldType='required'
         handleOnBlur='repopulateValue'

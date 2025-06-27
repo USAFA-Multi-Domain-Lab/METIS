@@ -8,7 +8,7 @@ import { DefaultPageLayout } from '.'
 import { TMissionComponentDefect } from '../../../../shared/missions/component'
 import Session from '../../../../shared/sessions'
 import { ESortByMethod } from '../content/general-layout/ListOld'
-import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
+import { TNavigation_P } from '../content/general-layout/Navigation'
 import SessionConfig from '../content/session/SessionConfig'
 import ButtonSvgPanel from '../content/user-controls/buttons/v3/ButtonSvgPanel'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
@@ -20,8 +20,10 @@ import './LaunchPage.scss'
  */
 export default function LaunchPage({
   missionId,
+  returnPage,
 }: TLaunchPage_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
+
   const globalContext = useGlobalContext()
   const [server] = globalContext.server
   const {
@@ -34,6 +36,7 @@ export default function LaunchPage({
   } = globalContext.actions
 
   /* -- STATE -- */
+
   const [mission, setMission] = useState<ClientMission>(
     ClientMission.createNew(),
   )
@@ -46,6 +49,16 @@ export default function LaunchPage({
         cursor: 'help',
         description:
           'If this conflict is not resolved, this mission can still be used to launch a session, but the session may not function as expected.',
+      },
+    ],
+  })
+  const navButtonEngine = useButtonSvgEngine({
+    elements: [
+      {
+        type: 'button',
+        icon: 'cancel',
+        description: 'Cancel',
+        onClick: () => cancel(),
       },
     ],
   })
@@ -88,18 +101,6 @@ export default function LaunchPage({
     // Mark mount as handled.
     done()
   })
-
-  /* -- COMPUTED -- */
-
-  /**
-   * Props for navigation.
-   */
-  const navigation = compute(
-    (): TNavigation => ({
-      links: [HomeLink(globalContext, { text: 'Cancel' })],
-      boxShadow: 'alt-7',
-    }),
-  )
 
   /* -- FUNCTIONS -- */
   /**
@@ -201,8 +202,16 @@ export default function LaunchPage({
    * Cancels the launch.
    */
   const cancel = () => {
-    navigateTo('HomePage', {})
+    if (returnPage === 'MissionPage') navigateTo('MissionPage', { missionId })
+    else if (returnPage === 'HomePage') navigateTo('HomePage', {})
   }
+
+  /**
+   * Config for the navigation on this page.
+   */
+  const navigation = compute<TNavigation_P>(() => {
+    return { buttonEngine: navButtonEngine }
+  })
 
   /* -- RENDER -- */
 
@@ -234,4 +243,8 @@ export type TLaunchPage_P = {
    * The ID of the session to configure.
    */
   missionId: string
+  /**
+   * The page to return to if the launch is cancelled.
+   */
+  returnPage: 'HomePage' | 'MissionPage'
 }

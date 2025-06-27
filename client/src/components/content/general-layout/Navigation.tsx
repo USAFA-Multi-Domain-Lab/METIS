@@ -1,7 +1,12 @@
-import { TGlobalContext } from 'src/context/global'
+import { PAGE_REGISTRY, TPageKey } from 'src/components/pages'
+import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
-import { TWithKey } from '../../../../../shared/toolbox/objects'
-import { ButtonText, TButtonText_P } from '../user-controls/buttons/ButtonText'
+import ButtonSvgPanel from '../user-controls/buttons/v3/ButtonSvgPanel'
+import ButtonSvgEngine from '../user-controls/buttons/v3/engines'
+import {
+  TButtonSvg_Input,
+  TButtonSvg_PK,
+} from '../user-controls/buttons/v3/types'
 import Branding from './Branding'
 import './Navigation.scss'
 
@@ -12,16 +17,15 @@ import './Navigation.scss'
  * the application.
  */
 export default function Navigation({
-  links = [],
+  buttonEngine,
   logoLinksHome = true,
-  boxShadow = 'alt-3',
-}: TNavigation): JSX.Element | null {
+}: TNavigation_P): JSX.Element | null {
   /**
    * The class for the root element.
    */
   const rootClass = compute(() => {
     // Gather details.
-    let classList: string[] = ['Navigation', boxShadow]
+    let classList: string[] = ['Navigation']
     // Join and return class list.
     return classList.join(' ')
   })
@@ -29,77 +33,88 @@ export default function Navigation({
   return (
     <div className={rootClass}>
       <Branding linksHome={logoLinksHome} />
-      <div className='Links'>
-        {links.map((link) => (
-          <ButtonText {...link} key={link.key} />
-        ))}
-      </div>
+      <ButtonSvgPanel engine={buttonEngine} />
     </div>
   )
 }
 
-/* -- functions -- */
+/* -- FUNTIONS -- */
 
 /**
- * Creates a navigation link to go home.
- * @param context The global context.
- * @param options Here props for the link can be overwritten with custom values.
- * @returns The navigation link.
+ * @returns Button input used to create a button
+ * which will link to the home page when clicked.
  */
-export const HomeLink = (
-  context: TGlobalContext,
-  options: Partial<TWithKey<TButtonText_P>> = {},
-): TWithKey<TButtonText_P> => {
+export const HomeButton = (
+  options: THomeButtonOptions = {},
+): TButtonSvg_Input => {
+  const { icon = 'home', description = 'Go home' } = options
   return {
-    text: 'Home',
-    onClick: () => context.actions.navigateTo('HomePage', {}),
-    key: 'home',
-    ...options,
+    type: 'button',
+    icon,
+    description,
+    onClick: usePageLink('HomePage', {}),
   }
 }
 
 /**
- * Creates a navigation link to logout the user.
- * @param context The global context.
- * @param options Here props for the link can be overwritten with custom values.
- * @returns The navigation link.
+ * @returns Button input used to create a button
+ * which will log out the user when clicked.
  */
-export const LogoutLink = (
-  context: TGlobalContext,
-  options: Partial<TWithKey<TButtonText_P>> = {},
-): TWithKey<TButtonText_P> => {
+export const LogoutButton = (): TButtonSvg_Input => {
+  const globalContext = useGlobalContext()
+  const { logout } = globalContext.actions
   return {
-    text: 'Log out',
-    onClick: context.actions.logout,
-    key: 'logout',
-    ...options,
+    type: 'button',
+    icon: 'logout',
+    description: 'Log out',
+    onClick: logout,
+  }
+}
+
+/**
+ * Can be used for the {@link TButtonSvg_PK.onClick} prop
+ * so that a button will link to the given page with the
+ * given props.
+ * @param pageKey The key of the page to which the button
+ * will link.
+ * @param pageProps The props to pass to the page.
+ * @returns A function that, when called, will navigate
+ * to the page with the given props.
+ */
+export function usePageLink<
+  TKey extends TPageKey,
+  TComponent extends (typeof PAGE_REGISTRY)[TKey],
+  TProps extends Parameters<TComponent>[0] extends {}
+    ? Parameters<TComponent>[0]
+    : {},
+>(pageKey: TKey, pageProps: TProps) {
+  const globalContext = useGlobalContext()
+  const { navigateTo } = globalContext.actions
+
+  return () => {
+    navigateTo(pageKey, pageProps)
   }
 }
 
 /* -- types -- */
 
 /**
- * Props for `Navigation` component.
+ * Props for {@link Navigation} component.
  */
-export type TNavigation = {
+export type TNavigation_P = {
   /**
-   * The links to include in the navigation.
-   * @default []
+   * The button engine to use to display buttons in
+   * the engine.
    */
-  links?: TWithKey<TButtonText_P>[]
+  buttonEngine: ButtonSvgEngine
   /**
    * Whether the logo will link to the home page.
    * @default true
    */
   logoLinksHome?: boolean
-  /**
-   * The box shadow used as a background for the navigation.
-   * @default 'alt-2'
-   */
-  boxShadow?: TNavBoxShadow
 }
 
 /**
- * Box shadow options for the navigation.
+ * Options for creating a home button.
  */
-export type TNavBoxShadow = 'alt-3' | 'alt-6' | 'alt-7'
+export type THomeButtonOptions = Pick<TButtonSvg_Input, 'icon' | 'description'>
