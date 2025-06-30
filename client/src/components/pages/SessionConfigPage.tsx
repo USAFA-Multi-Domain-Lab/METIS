@@ -5,8 +5,9 @@ import { compute } from 'src/toolbox'
 import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
 import { DefaultPageLayout } from '.'
 import Prompt from '../content/communication/Prompt'
-import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
+import { TNavigation_P } from '../content/general-layout/Navigation'
 import SessionConfig from '../content/session/SessionConfig'
+import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
 import './SessionConfigPage.scss'
 
 export default function SessionConfigPage({
@@ -17,9 +18,25 @@ export default function SessionConfigPage({
 
   const globalContext = useGlobalContext()
   const [server] = globalContext.server
-  const { navigateTo, beginLoading, finishLoading, prompt, handleError } =
-    globalContext.actions
+  const {
+    navigateTo,
+    beginLoading,
+    finishLoading,
+    prompt,
+    handleError,
+    notify,
+  } = globalContext.actions
   const [config] = useState(session.config)
+  const navButtonEngine = useButtonSvgEngine({
+    elements: [
+      {
+        type: 'button',
+        icon: 'cancel',
+        description: 'Cancel',
+        onClick: () => cancel(),
+      },
+    ],
+  })
 
   /* -- functions -- */
 
@@ -31,10 +48,15 @@ export default function SessionConfigPage({
   const verifyNavigation = useRef(() => {
     // If the session is started, navigate to the session page.
     if (session.state === 'started') {
-      navigateTo('SessionPage', { session }, { bypassMiddleware: true })
+      navigateTo(
+        'SessionPage',
+        { session, returnPage: 'HomePage' },
+        { bypassMiddleware: true },
+      )
     }
     // If the session is ended, navigate to the home page.
     if (session.state === 'ended') {
+      notify('Session has ended.')
       navigateTo('HomePage', {}, { bypassMiddleware: true })
     }
   })
@@ -75,8 +97,10 @@ export default function SessionConfigPage({
     done()
   })
   // Verify navigation if the session is ended or destroyed.
-  useEventListener(server, ['session-started', 'session-ended'], () =>
-    verifyNavigation.current(),
+  useEventListener(
+    server,
+    ['session-started', 'session-ended', 'session-destroyed'],
+    () => verifyNavigation.current(),
   )
 
   // Add navigation middleware to properly
@@ -109,17 +133,14 @@ export default function SessionConfigPage({
     }
   })
 
-  /* -- computed -- */
+  /* -- COMPUTED -- */
 
   /**
-   * Props for navigation.
+   * Config for the navigation on this page.
    */
-  const navigation = compute(
-    (): TNavigation => ({
-      links: [HomeLink(globalContext, { text: 'Quit' })],
-      boxShadow: 'alt-7',
-    }),
-  )
+  const navigation = compute<TNavigation_P>(() => {
+    return { buttonEngine: navButtonEngine }
+  })
 
   return (
     <div className='SessionConfigPage Page DarkPage'>

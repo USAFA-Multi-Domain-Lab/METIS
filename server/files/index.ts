@@ -112,9 +112,11 @@ export default class MetisFileStore {
   public provideInResponse(
     response: Response,
     reference: ServerFileReference,
+    alias?: string,
   ): void {
+    let fileName = alias || reference.name
     let pathToFile = path.join(this.directory, reference.path)
-    response.download(pathToFile, reference.name)
+    response.download(pathToFile, fileName)
   }
 
   /**

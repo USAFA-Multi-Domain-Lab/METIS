@@ -343,9 +343,6 @@ const initializeActions = (
                 handleError('You have been banned from the session.')
               }
             },
-            'session-destroyed': () => {
-              handleError('The session you were in has been deleted.')
-            },
             'error': ({ code, message }) => {
               const { handleError } = initialState.actions
               const { login } = refs.current

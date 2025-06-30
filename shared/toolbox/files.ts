@@ -11,6 +11,19 @@ if (context === 'express') {
  */
 export default class FileToolbox {
   /**
+   * Gets the extension from the given file path.
+   * @param path The file path or name from which to extract the extension.
+   * @returns The file extension, including the dot (e.g., `.txt`, `.jpg`).
+   */
+  public static getExtension(path: string): string {
+    const lastDotIndex = path.lastIndexOf('.')
+    if (lastDotIndex === -1 || lastDotIndex === path.length - 1) {
+      return '' // No extension
+    }
+    return path.slice(lastDotIndex).toLowerCase()
+  }
+
+  /**
    * @param mimetype The MIME type of a file.
    * @returns The label for the MIME type.
    * @example
@@ -105,5 +118,15 @@ export default class FileToolbox {
     const size = bytes / Math.pow(k, i)
 
     return `${parseFloat(size.toFixed(decimals))} ${units[i]}`
+  }
+
+  /**
+   * Validates whether the given string is a valid mimetype.
+   * @param mimetype The string to validate as a mimetype.
+   * @returns Whether the value is valid.
+   */
+  public static isValidMimetype(mimetype: string): boolean {
+    const regex = /^[a-zA-Z0-9!#$&^_.+-]+\/[a-zA-Z0-9!#$&^_.+-]+$/
+    return regex.test(mimetype)
   }
 }

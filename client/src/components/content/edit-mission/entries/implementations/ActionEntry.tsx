@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import List from 'src/components/content/data/lists/List'
 import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
-import { useMissionPageContext } from 'src/components/pages/MissionPage'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
 import { compute } from 'src/toolbox'
@@ -32,8 +31,6 @@ export default function ActionEntry({
   onChange,
 }: TActionEntry_P): JSX.Element | null {
   /* -- STATE -- */
-
-  const { missionPageSvgEngine } = useMissionPageContext()
 
   const actionState = useObjectFormSync(
     action,
@@ -76,7 +73,7 @@ export default function ActionEntry({
       {
         type: 'button',
         icon: 'copy',
-        description: 'Duplicate',
+        description: 'Duplicate action',
         permissions: ['missions_write'],
         onClick: async () => await onDuplicateActionRequest(action, true),
       },
@@ -87,7 +84,7 @@ export default function ActionEntry({
           if (node.actions.size < 2) {
             return 'This action cannot be deleted because the node must have at least one action if it is executable.'
           } else {
-            return 'Delete'
+            return 'Delete action'
           }
         }),
         disabled: node.actions.size < 2,
@@ -141,10 +138,7 @@ export default function ActionEntry({
   if (!node.executable) return null
 
   return (
-    <Entry
-      missionComponent={action}
-      svgEngines={[missionPageSvgEngine, svgEngine]}
-    >
+    <Entry missionComponent={action} svgEngines={[svgEngine]}>
       <DetailString
         fieldType='required'
         handleOnBlur='repopulateValue'

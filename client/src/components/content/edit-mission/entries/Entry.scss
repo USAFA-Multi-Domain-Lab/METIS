@@ -54,6 +54,7 @@
     border-top: 2px solid $color-secondary;
     padding: 0.25em;
     display: flex;
+    justify-content: end;
     flex-flow: row wrap;
   }
 }

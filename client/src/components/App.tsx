@@ -227,7 +227,7 @@ function App(props: {}): JSX.Element | null {
                 navigateTo('LobbyPage', { session })
                 break
               case 'started':
-                navigateTo('SessionPage', { session })
+                navigateTo('SessionPage', { session, returnPage: 'HomePage' })
                 break
               case 'ended':
                 navigateTo('HomePage', {})

@@ -109,7 +109,7 @@ export default function SessionList({
    */
   const getSessionListButtonTooltip: TGetListButtonLabel = (button) => {
     switch (button) {
-      case 'lock':
+      case 'key':
         return 'Join private'
       default:
         return ''
@@ -163,7 +163,7 @@ export default function SessionList({
         // If the session has started, go to the
         // session page with the new session client.
         if (session.state === 'started') {
-          navigateTo('SessionPage', { session })
+          navigateTo('SessionPage', { session, returnPage: 'HomePage' })
         }
         // Or, if the session has not started, go to
         // the lobby page with the new session client.
@@ -218,7 +218,7 @@ export default function SessionList({
    */
   const onSessionListButtonClick: TOnListButtonClick = async (button) => {
     switch (button) {
-      case 'lock':
+      case 'key':
         // Prompt user for session ID.
         const { choice, text } = await prompt(
           'Please enter the ID of the session you wish to join:',
@@ -277,7 +277,7 @@ export default function SessionList({
         'runtimeFormatted',
         'launchedAt',
       ]}
-      listButtonIcons={['lock']}
+      listButtonIcons={['key']}
       itemButtonIcons={['open', 'remove']}
       initialSorting={{ column: 'launchedAt', method: 'descending' }}
       getItemButtonPermissions={(button) => {

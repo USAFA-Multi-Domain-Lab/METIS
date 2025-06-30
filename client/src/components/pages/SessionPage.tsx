@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { useGlobalContext, useNavigationMiddleware } from 'src/context/global'
+import {
+  TNavigateOptions,
+  useGlobalContext,
+  useNavigationMiddleware,
+} from 'src/context/global'
 import ClientMission from 'src/missions'
 import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
@@ -11,9 +15,9 @@ import {
   useRequireLogin,
 } from 'src/toolbox/hooks'
 import { DefaultPageLayout, TPage_P } from '.'
-import { TWithKey } from '../../../../shared/toolbox/objects'
 import Prompt from '../content/communication/Prompt'
 import MissionFileList from '../content/data/lists/implementations/MissionFileList'
+import { TNavigation_P } from '../content/general-layout/Navigation'
 import Panel from '../content/general-layout/panels/Panel'
 import PanelLayout from '../content/general-layout/panels/PanelLayout'
 import PanelView from '../content/general-layout/panels/PanelView'
@@ -23,7 +27,7 @@ import ActionExecModal from '../content/session/mission-map/ui/overlay/modals/ac
 import { TTabBarTab } from '../content/session/mission-map/ui/tabs/TabBar'
 import { OutputPanel } from '../content/session/output/'
 import StatusBar from '../content/session/StatusBar'
-import { TButtonText_P } from '../content/user-controls/buttons/ButtonText'
+import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
 import If from '../content/util/If'
 import './SessionPage.scss'
 
@@ -32,6 +36,7 @@ import './SessionPage.scss'
  */
 export default function SessionPage({
   session,
+  returnPage,
 }: TSessionPage_P): JSX.Element | null {
   /* -- STATE -- */
 
@@ -51,6 +56,9 @@ export default function SessionPage({
   const [selectedForce, selectForce] = useState<ClientMissionForce | null>(null)
   const [resourcesRemaining, setResourcesRemaining] = useState<number>(0)
   const {} = useRequireLogin()
+  const navButtonEngine = useButtonSvgEngine({
+    elements: [],
+  })
 
   /* -- VARIABLES -- */
 
@@ -62,6 +70,80 @@ export default function SessionPage({
   let currentAspectRatio: number = window.innerWidth / window.innerHeight
 
   /* -- FUNCTIONS -- */
+
+  /**
+   * Initializes the navigation for the session page
+   * based on the context for which it is being used.
+   */
+  const initializeNavigation = () => {
+    let { accessibility } = session.config
+    let canStartEndSessions = session.member.isAuthorized('startEndSessions')
+
+    /**
+     * Adds a button to the navigation that will reset the progress
+     * in the session.
+     * @param description The text to display on the button when
+     * hovered over.
+     */
+    const addResetSession = (description: string = 'Reset session') => {
+      navButtonEngine.add({
+        type: 'button',
+        icon: 'redo',
+        description,
+        onClick: onClickResetSession,
+      })
+    }
+
+    /**
+     *  Adds a button to the navigation to end the session.
+     * @param description The text to display on the button when
+     * hovered over.
+     */
+    const addEndSession = (description: string = 'End Session') => {
+      navButtonEngine.add({
+        type: 'button',
+        icon: 'stop',
+        description,
+        onClick: onClickEndSession,
+      })
+    }
+
+    /**
+     * Adds a button to the navigation to quit the session.
+     * @param description The text to display on the button when
+     * hovered over.
+     * @param destination The destination to navigate to when quitting.
+     */
+    const addQuit = (description: string = 'Quit') => {
+      navButtonEngine.add({
+        type: 'button',
+        icon: 'quit',
+        description,
+        onClick: () => {
+          navigateToReturnPage()
+        },
+      })
+    }
+
+    // Add links based on the session accessibility.
+    switch (accessibility) {
+      case 'testing':
+        // Add reset link and a quit link that
+        // navigates back to the mission page.
+        if (canStartEndSessions) addResetSession('Reset play-test')
+        addQuit('Quit play-test')
+        break
+      default:
+        // Add reset and end session links if the member
+        // is authorized. Then add the quit link.
+        if (canStartEndSessions) {
+          addEndSession()
+          addResetSession()
+        }
+        addQuit()
+        break
+    }
+  }
 
   /**
    * Handles the selection of a node in the mission map by the user.
@@ -127,8 +209,8 @@ export default function SessionPage({
       beginLoading('Ending session...')
       // Start the session.
       await session.$end()
-      // Redirect to session page.
-      navigateTo('HomePage', {}, { bypassMiddleware: true })
+      // Go to return page.
+      navigateToReturnPage({ bypassMiddleware: true })
     } catch (error) {
       handleError({
         message: 'Failed to end session.',
@@ -167,7 +249,11 @@ export default function SessionPage({
       // Start the session.
       await session.$reset()
       // Refresh page.
-      navigateTo('SessionPage', { session }, { bypassMiddleware: true })
+      navigateTo(
+        'SessionPage',
+        { session, returnPage },
+        { bypassMiddleware: true },
+      )
       // Finish loading.
       finishLoading()
     } catch (error) {
@@ -190,7 +276,8 @@ export default function SessionPage({
     }
     // If the session is ended, navigate to the home page.
     if (session.state === 'ended') {
-      navigateTo('HomePage', {}, { bypassMiddleware: true })
+      notify('Session has ended.')
+      navigateToReturnPage({ bypassMiddleware: true })
     }
   })
 
@@ -202,83 +289,26 @@ export default function SessionPage({
     setResourcesRemaining(selectedForce?.resourcesRemaining ?? 0)
   }
 
+  /**
+   * Navigates to the return page based on the
+   * `returnPage` prop.
+   */
+  const navigateToReturnPage = (options: TNavigateOptions = {}) => {
+    if (returnPage === 'HomePage') {
+      navigateTo('HomePage', {}, options)
+    } else if (returnPage === 'MissionPage') {
+      navigateTo('MissionPage', { missionId: mission._id }, options)
+    }
+  }
+
   /* -- COMPUTED -- */
 
   /**
    * Props for navigation.
    */
-  const navigation = compute(() => {
-    let links: TWithKey<TButtonText_P>[] = []
-    let { accessibility } = session.config
-    let canStartEndSessions = session.member.isAuthorized('startEndSessions')
-
-    /**
-     * Adds link to the navigation that will reset the progress
-     * in the session.
-     * @param text The text to display on the link.
-     */
-    const addResetSession = (text: string = 'Reset Session') => {
-      links.push({
-        key: 'reset-session',
-        text,
-        onClick: onClickResetSession,
-      })
-    }
-
-    /**
-     * Adds a link to the navigation to end the session.
-     * @param text The text to display on the link.
-     */
-    const addEndSession = (text: string = 'End Session') => {
-      links.push({
-        key: 'end-session',
-        text,
-        onClick: onClickEndSession,
-      })
-    }
-
-    /**
-     * Adds a link to the navigation to quit the session.
-     * @param text The text to display on the link.
-     * @param destination The destination to navigate to when quitting.
-     */
-    const addQuit = (
-      text: string = 'Quit',
-      destination: 'HomePage' | 'MissionPage' = 'HomePage',
-    ) => {
-      links.push({
-        key: 'quit',
-        text,
-        onClick: () => {
-          let props = {}
-          if (destination === 'MissionPage') props = { missionId: mission._id }
-          navigateTo(destination, props)
-        },
-      })
-    }
-
-    // Add links based on the session accessibility.
-    switch (accessibility) {
-      case 'testing':
-        // Add reset link and a quit link that
-        // navigates back to the mission page.
-        if (canStartEndSessions) addResetSession('Reset Play-Test')
-        addQuit('Back to Mission', 'MissionPage')
-        break
-      default:
-        // Add reset and end session links if the member
-        // is authorized. Then add the quit link.
-        if (canStartEndSessions) {
-          addResetSession()
-          addEndSession()
-        }
-        addQuit()
-        break
-    }
-
-    // Return navigation.
+  const navigation = compute<TNavigation_P>(() => {
     return {
-      links,
+      buttonEngine: navButtonEngine,
       logoLinksHome: false,
     }
   })
@@ -363,12 +393,15 @@ export default function SessionPage({
   useMountHandler((done) => {
     finishLoading()
     verifyNavigation.current()
+    initializeNavigation()
     done()
   })
 
   // Verify navigation if the session is ended or destroyed.
-  useEventListener(server, ['session-started', 'session-ended'], () =>
-    verifyNavigation.current(),
+  useEventListener(
+    server,
+    ['session-started', 'session-ended', 'session-destroyed'],
+    () => verifyNavigation.current(),
   )
 
   // On session reset, reselect the force in
@@ -418,7 +451,11 @@ export default function SessionPage({
 
   useEventListener(server, 'session-reset', () => {
     beginLoading('Resetting session...')
-    navigateTo('SessionPage', { session }, { bypassMiddleware: true })
+    navigateTo(
+      'SessionPage',
+      { session, returnPage },
+      { bypassMiddleware: true },
+    )
     finishLoading()
     notify('A manager has reset the session.')
   })
@@ -576,6 +613,10 @@ export interface TSessionPage_P extends TPage_P {
    * The session client to use on the page.
    */
   session: SessionClient
+  /**
+   * The page to return to when the session is ended.
+   */
+  returnPage: 'HomePage' | 'MissionPage'
 }
 
 /**

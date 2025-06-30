@@ -2,8 +2,8 @@
 
 .Branding {
   display: grid;
-  grid-template-columns: 65px 135px;
-  width: 200px;
+  grid-template-columns: 1fr 2fr;
+  width: 11em;
   padding: 0;
   cursor: pointer;
   user-select: none;

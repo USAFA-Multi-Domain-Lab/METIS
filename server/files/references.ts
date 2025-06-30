@@ -1,6 +1,8 @@
 import FileReference, { TFileReferenceJson } from 'metis/files/references'
 import { TMetisServerComponents } from 'metis/server'
 import StringToolbox from 'metis/toolbox/strings'
+import MetisDatabase from '../database'
+import ServerFileToolbox from '../toolbox/files'
 import ServerUser from '../users'
 
 export default class ServerFileReference extends FileReference<TMetisServerComponents> {
@@ -59,5 +61,18 @@ export default class ServerFileReference extends FileReference<TMetisServerCompo
       'Unknown User',
       true,
     )
+  }
+
+  /**
+   * Ensures that the mimetype of a file is
+   * valid in its format.
+   * @param mimetype The value to validate.
+   */
+  public static validateMimetype(mimetype: string): void {
+    if (!ServerFileToolbox.isValidMimetype(mimetype)) {
+      throw MetisDatabase.generateValidationError(
+        `Error in file-reference:\nMimetype "${mimetype}" is not valid.`,
+      )
+    }
   }
 }

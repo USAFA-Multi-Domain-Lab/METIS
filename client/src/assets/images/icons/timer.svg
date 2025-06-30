@@ -1,7 +1,66 @@
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<!-- Uploaded to: SVG Repo, www.svgrepo.com, Transformed by: SVG Repo Mixer Tools -->
-<svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff">
-<g id="SVGRepo_bgCarrier" stroke-width="0"/>
-<g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/>
-<g id="SVGRepo_iconCarrier"> <path d="M4.51555 7C3.55827 8.4301 3 10.1499 3 12C3 16.9706 7.02944 21 12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3V6M12 12L8 8" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/> </g>
-</svg>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="24"
+   height="24"
+   viewBox="0 0 0.72 0.72"
+   fill="none"
+   stroke="#000000"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="timer.svg"
+   inkscape:version="1.4 (e7c3feb1, 2024-10-09)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#000000"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="14.269415"
+     inkscape:cx="23.021266"
+     inkscape:cy="4.3799974"
+     inkscape:window-width="2240"
+     inkscape:window-height="1296"
+     inkscape:window-x="130"
+     inkscape:window-y="291"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="g2" />
+  <g
+     id="g2"
+     transform="translate(0.05999999,0.12)">
+    <circle
+       style="fill:none;stroke:#ffffff;stroke-width:0.075;stroke-linecap:square;stroke-dasharray:none"
+       id="path1"
+       cx="0.30000001"
+       cy="0.30000001"
+       r="0.26249999" />
+    <path
+       style="fill:none;stroke:#ffffff;stroke-width:0.075;stroke-linecap:round;stroke-dasharray:none"
+       d="M 0.18443103,0.19904364 0.29957228,0.29999999"
+       id="path2"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:#ffffff;stroke-width:0.075;stroke-linecap:round;stroke-dasharray:none"
+       d="M 0.37246978,-0.0825 H 0.22753025"
+       id="path2-3"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:#ffffff;stroke-width:0.0749999;stroke-linecap:round;stroke-dasharray:none"
+       d="M 0.55850824,0.04570888 0.50259048,-0.01020888"
+       id="path2-3-4"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:#ffffff;stroke-width:0.0749999;stroke-linecap:square;stroke-dasharray:none"
+       d="M 0.51629911,0.03140835 0.50235071,0.04534269"
+       id="path2-3-5"
+       sodipodi:nodetypes="cc" />
+  </g>
+</svg>

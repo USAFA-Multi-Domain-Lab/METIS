@@ -1,16 +1,16 @@
 import Footer from '../content/general-layout/Footer'
-import Navigation, { TNavigation } from '../content/general-layout/Navigation'
+import Navigation, { TNavigation_P } from '../content/general-layout/Navigation'
 import AuthPage from './AuthPage'
 import ChangelogPage from './ChangelogPage'
 import HomePage from './HomePage'
+import './index.scss'
 import LaunchPage from './LaunchPage'
 import LobbyPage from './LobbyPage'
-import MissionPage from './MissionPage'
+import MissionPage from './missions/MissionPage'
 import SessionConfigPage from './SessionConfigPage'
 import SessionPage from './SessionPage'
 import UserPage from './UserPage'
 import UserResetPage from './UserResetPage'
-import './index.scss'
 
 /* -- constants -- */
 
@@ -68,9 +68,9 @@ export type TDefaultLayout_P = {
    */
   children?: React.ReactNode
   /**
-   * Props passed to navigation component.
+   * Props to pass to the navigation component.
    */
-  navigation: TNavigation
+  navigation: TNavigation_P
   /**
    * Whether to include the footer.
    * @default true

@@ -39,7 +39,7 @@ const downloadMissionFile = async (
   ) {
     // Provide the file in the response to
     // be downloaded, if found.
-    fileStore.provideInResponse(response, file.reference)
+    fileStore.provideInResponse(response, file.reference, file.name)
   } else {
     // The member is not authorized to download the file.
     // Return 403.

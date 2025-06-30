@@ -1,4 +1,5 @@
 import { TFileReferenceJson } from 'metis/files/references'
+import ServerFileReference from 'metis/server/files/references'
 import { model, Schema } from 'mongoose'
 import path from 'path'
 import {
@@ -39,36 +40,22 @@ const fileReferenceSchema = new FileReferenceSchema(
       type: String,
       required: true,
       trim: true,
-      validate: () => {
-        // todo: Add validation for filename.
-        return true
-      },
+      maxLength: ServerFileReference.MAX_NAME_LENGTH,
     },
     path: {
       type: String,
       required: true,
       trim: true,
-      validate: () => {
-        // todo: Add validation for original filename.
-        return true
-      },
     },
     mimetype: {
       type: String,
       required: true,
       trim: true,
-      validate: () => {
-        // todo: Add validation for mimetype.
-        return true
-      },
+      validate: ServerFileReference.validateMimetype,
     },
     size: {
       type: Number,
       required: true,
-      validate: () => {
-        // todo: Add validation for size.
-        return true
-      },
     },
     createdBy: {
       type: Schema.Types.ObjectId,

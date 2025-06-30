@@ -3,7 +3,6 @@ import { TMetisClientComponents } from 'src'
 import List from 'src/components/content/data/lists/List'
 import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
 import If from 'src/components/content/util/If'
-import { useMissionPageContext } from 'src/components/pages/MissionPage'
 import { useGlobalContext } from 'src/context/global'
 import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
@@ -37,8 +36,6 @@ export default function NodeEntry({
   const { notify, prompt } = globalContext.actions
 
   /* -- STATE -- */
-
-  const { missionPageSvgEngine } = useMissionPageContext()
 
   const [name, setName] = useState<string>(node.name)
   const [color, setColor] = useState<string>(node.color)
@@ -232,10 +229,7 @@ export default function NodeEntry({
   /* -- RENDER -- */
 
   return (
-    <Entry
-      missionComponent={node}
-      svgEngines={[missionPageSvgEngine, svgEngine]}
-    >
+    <Entry missionComponent={node} svgEngines={[svgEngine]}>
       <DetailString
         fieldType='required'
         handleOnBlur='repopulateValue'

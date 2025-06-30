@@ -1,5 +1,4 @@
 import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
-import { useMissionPageContext } from 'src/components/pages/MissionPage'
 import { ClientEffect } from 'src/missions/effects'
 import { useObjectFormSync } from 'src/toolbox/hooks'
 import { TEffectTrigger } from '../../../../../../../shared/missions/effects'
@@ -23,8 +22,6 @@ export default function EffectEntry({
 }: TEffectEntry_P): JSX.Element | null {
   /* -- STATE -- */
 
-  const { missionPageSvgEngine } = useMissionPageContext()
-
   const effectState = useObjectFormSync(
     effect,
     ['name', 'trigger', 'description', 'args'],
@@ -39,14 +36,14 @@ export default function EffectEntry({
       {
         type: 'button',
         icon: 'copy',
-        description: 'Duplicate',
+        description: 'Duplicate effect',
         permissions: ['missions_write'],
         onClick: async () => await onDuplicateEffectRequest(effect, true),
       },
       {
         type: 'button',
         icon: 'remove',
-        description: 'Delete.',
+        description: 'Delete effect',
         permissions: ['missions_write'],
         onClick: async () => await onDeleteEffectRequest(effect, true),
       },
@@ -56,10 +53,7 @@ export default function EffectEntry({
   /* -- RENDER -- */
 
   return (
-    <Entry
-      missionComponent={effect}
-      svgEngines={[missionPageSvgEngine, svgEngine]}
-    >
+    <Entry missionComponent={effect} svgEngines={[svgEngine]}>
       <DetailString
         fieldType='required'
         handleOnBlur='repopulateValue'

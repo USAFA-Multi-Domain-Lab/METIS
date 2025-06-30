@@ -34,6 +34,7 @@ export default function ListButtons<
     },
     dependencies: [...aggregatedButtonIcons],
   })
+
   /* -- EFFECTS -- */
 
   useEffect(() => {

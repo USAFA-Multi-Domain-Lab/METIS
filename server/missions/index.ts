@@ -304,7 +304,12 @@ export default class ServerMission extends Mission<TMetisServerComponents> {
       }
 
       // Check the object's values for duplicate _id's.
-      for (let value of Object.values(cursor)) {
+      for (let [key, value] of Object.entries(cursor)) {
+        // Skip the createdBy key, as it is a foreign
+        // reference, which could possibly be referenced
+        // twice, resulting in a duplicate _id in the mission.
+        // In this case, the duplicate _id is acceptable.
+        if (key === 'createdBy') continue
         let results = this.idCheckerAlgorithm(value, existingIds)
         if (results.error) return results
       }
@@ -430,7 +435,10 @@ export default class ServerMission extends Mission<TMetisServerComponents> {
 
   /**
    * Validates the alias of a file in a mission.
-   * @param value The value to validate.
+   * @param files The value to validate.
+   * @param forces The forces in the mission, used to compare
+   * the initial access assignments of files and ensure that the
+   * force IDs used are not null-pointers.
    * @returns True if valid, false otherwise.
    */
   private static validateMissionFiles = (

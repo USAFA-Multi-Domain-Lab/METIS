@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import { useBeforeunload } from 'react-beforeunload'
+import { useMissionItemButtonCallbacks } from 'src/components/content/data/lists/implementations/missions/item-buttons'
 import { useGlobalContext, useNavigationMiddleware } from 'src/context/global'
 import ClientFileReference from 'src/files/references'
 import ClientMission from 'src/missions'
@@ -13,44 +14,46 @@ import ClientMissionPrototype, {
 } from 'src/missions/nodes/prototypes'
 import PrototypeCreation from 'src/missions/transformations/creations'
 import PrototypeTranslation from 'src/missions/transformations/translations'
-import SessionClient from 'src/sessions'
 import { compute } from 'src/toolbox'
 import {
   useEventListener,
   useMountHandler,
   useRequireLogin,
 } from 'src/toolbox/hooks'
-import { DefaultPageLayout, TPage_P } from '.'
-import Mission from '../../../../shared/missions'
+import { DefaultPageLayout, TPage_P } from '..'
+import Mission from '../../../../../shared/missions'
 import MissionComponent, {
   TMissionComponentDefect,
-} from '../../../../shared/missions/component'
-import { TNonEmptyArray } from '../../../../shared/toolbox/arrays'
-import Prompt from '../content/communication/Prompt'
+} from '../../../../../shared/missions/component'
+import { TNonEmptyArray } from '../../../../../shared/toolbox/arrays'
+import Prompt from '../../content/communication/Prompt'
 import FileReferenceList, {
   TFileReferenceList_P,
-} from '../content/data/lists/implementations/FileReferenceList'
+} from '../../content/data/lists/implementations/FileReferenceList'
 import MissionFileList, {
   TMissionFileList_P,
-} from '../content/data/lists/implementations/MissionFileList'
-import ActionEntry from '../content/edit-mission/entries/implementations/ActionEntry'
-import EffectEntry from '../content/edit-mission/entries/implementations/EffectEntry'
-import ForceEntry from '../content/edit-mission/entries/implementations/ForceEntry'
-import MissionEntry from '../content/edit-mission/entries/implementations/MissionEntry'
-import MissionFileEntry from '../content/edit-mission/entries/implementations/MissionFileEntry'
-import NodeEntry from '../content/edit-mission/entries/implementations/NodeEntry'
-import PrototypeEntry from '../content/edit-mission/entries/implementations/PrototypeEntry'
-import NodeStructuring from '../content/edit-mission/NodeStructuring'
-import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
-import Panel from '../content/general-layout/panels/Panel'
-import PanelLayout from '../content/general-layout/panels/PanelLayout'
-import PanelView from '../content/general-layout/panels/PanelView'
-import MissionMap from '../content/session/mission-map/MissionMap'
-import CreateEffect from '../content/session/mission-map/ui/overlay/modals/CreateEffect'
-import { TTabBarTab } from '../content/session/mission-map/ui/tabs/TabBar'
-import ButtonSvgEngine from '../content/user-controls/buttons/v3/engines'
-import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
-import { TSvgPanelElement_Input } from '../content/user-controls/buttons/v3/types'
+} from '../../content/data/lists/implementations/MissionFileList'
+import ActionEntry from '../../content/edit-mission/entries/implementations/ActionEntry'
+import EffectEntry from '../../content/edit-mission/entries/implementations/EffectEntry'
+import ForceEntry from '../../content/edit-mission/entries/implementations/ForceEntry'
+import MissionEntry from '../../content/edit-mission/entries/implementations/MissionEntry'
+import MissionFileEntry from '../../content/edit-mission/entries/implementations/MissionFileEntry'
+import NodeEntry from '../../content/edit-mission/entries/implementations/NodeEntry'
+import PrototypeEntry from '../../content/edit-mission/entries/implementations/PrototypeEntry'
+import NodeStructuring from '../../content/edit-mission/NodeStructuring'
+import {
+  HomeButton,
+  LogoutButton,
+  TNavigation_P,
+} from '../../content/general-layout/Navigation'
+import Panel from '../../content/general-layout/panels/Panel'
+import PanelLayout from '../../content/general-layout/panels/PanelLayout'
+import PanelView from '../../content/general-layout/panels/PanelView'
+import MissionMap from '../../content/session/mission-map/MissionMap'
+import CreateEffect from '../../content/session/mission-map/ui/overlay/modals/CreateEffect'
+import { TTabBarTab } from '../../content/session/mission-map/ui/tabs/TabBar'
+import { useButtonSvgEngine } from '../../content/user-controls/buttons/v3/hooks'
+import { TSvgPanelElement_Input } from '../../content/user-controls/buttons/v3/types'
 import './MissionPage.scss'
 
 /**
@@ -105,7 +108,6 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     forceUpdate,
     logout,
   } = globalContext.actions
-  const [server] = globalContext.server
   const state: TMissionPage_S = {
     defects: useState<TMissionComponentDefect[]>([]),
     checkForDefects: useState<boolean>(true),
@@ -126,50 +128,9 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   const [, setDefects] = state.defects
   const [, setCheckForDefects] = state.checkForDefects
   const root = useRef<HTMLDivElement>(null)
-  const mapSvgEngine = useButtonSvgEngine({
-    elements: [
-      {
-        type: 'button',
-        icon: 'play',
-        description: 'Play-test the mission.',
-        permissions: ['sessions_write_native'],
-        onClick: async () => {
-          try {
-            // Ensure any unsaved changes are addressed,
-            // before proceeding.
-            await enforceSavePrompt()
-
-            // If the server connection is not available, abort.
-            if (!server) {
-              throw new Error('Server connection is not available.')
-            }
-
-            // Launch, join, and start the session.
-            let sessionId = await SessionClient.$launch(mission._id, {
-              accessibility: 'testing',
-            })
-            let session = await server.$joinSession(sessionId)
-            // If the session is not found, abort.
-            if (!session) throw new Error('Failed to join test session.')
-            session.$start()
-
-            // Navigate to the session page.
-            navigateTo('SessionPage', { session }, { bypassMiddleware: true })
-          } catch (error) {
-            console.error('Failed to play-test mission.')
-            console.error(error)
-            handleError({
-              message: 'Failed to play-test mission.',
-              notifyMethod: 'bubble',
-            })
-          }
-        },
-      },
-    ],
-  })
   const nodeSvgEngine = useButtonSvgEngine({})
   const prototypeSvgEngine = useButtonSvgEngine({})
-  const missionPageSvgEngine = useButtonSvgEngine({
+  const navButtonEngine = useButtonSvgEngine({
     elements: [
       {
         type: 'button',
@@ -179,7 +140,48 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
         disabled: !areUnsavedChanges,
         onClick: () => save(),
       },
+      {
+        type: 'button',
+        icon: 'play',
+        description: 'Play-test mission.',
+        permissions: ['sessions_write_native'],
+        onClick: () => onPlayTestRequest(mission, 'MissionPage'),
+      },
+      {
+        type: 'button',
+        icon: 'launch',
+        description: 'Launch mission as multiplayer session.',
+        permissions: ['sessions_write_native'],
+        onClick: () => onLaunchRequest(mission, 'MissionPage'),
+      },
+      {
+        type: 'button',
+        icon: 'download',
+        description: 'Export mission to .metis file',
+        permissions: ['missions_write'],
+        onClick: () => onExportRequest(mission),
+      },
+      {
+        type: 'button',
+        icon: 'copy',
+        description: 'Create a copy of mission',
+        permissions: ['missions_write'],
+        onClick: async () => await onCopyRequest(mission),
+      },
+      {
+        type: 'button',
+        icon: 'remove',
+        description: 'Delete mission',
+        disabled: !props.missionId,
+        permissions: ['missions_write'],
+        onClick: async () => await onDeleteRequest(mission),
+      },
+      HomeButton(),
+      LogoutButton(),
     ],
+    options: {
+      layout: ['<slot>', '<divider>', 'home', 'logout'],
+    },
   })
 
   /* -- LOGIN-SPECIFIC LOGIC -- */
@@ -188,24 +190,6 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   const { isAuthorized } = useRequireLogin()
 
   /* -- COMPUTED -- */
-
-  /**
-   * Logout link for navigation.
-   */
-  const logoutLink = compute(() => ({
-    text: 'Log out',
-    onClick: () => enforceSavePrompt().then(logout),
-    key: 'logout',
-  }))
-
-  /**
-   * Props for navigation.
-   */
-  const navigation = compute(
-    (): TNavigation => ({
-      links: [HomeLink(globalContext), logoutLink],
-    }),
-  )
 
   /**
    * Default size of the side panel.
@@ -299,6 +283,13 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     },
   }
 
+  /**
+   * Config for the navigation on this page.
+   */
+  const navigation = compute<TNavigation_P>(() => {
+    return { buttonEngine: navButtonEngine }
+  })
+
   /* -- EFFECTS -- */
 
   // componentDidMount
@@ -351,7 +342,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   // Enable/disable the save button based on
   // whether there are unsaved changes or not.
   useEffect(() => {
-    missionPageSvgEngine.setDisabled('save', !areUnsavedChanges)
+    navButtonEngine.setDisabled('save', !areUnsavedChanges)
   }, [areUnsavedChanges])
 
   // Cleanup when a new effect is created.
@@ -685,6 +676,29 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     onChange(force)
   }
 
+  const {
+    onPlayTestRequest,
+    onLaunchRequest,
+    onExportRequest,
+    onCopyRequest,
+    onDeleteRequest,
+  } = useMissionItemButtonCallbacks({
+    onSuccessfulCopy: async (resultingMission) => {
+      let { choice } = await prompt(
+        'Would you like to open the copied mission?',
+        Prompt.YesNoChoices,
+      )
+      if (choice === 'Yes') {
+        navigateTo('MissionPage', {
+          missionId: resultingMission._id,
+        })
+      }
+    },
+    onSuccessfulDeletion: () => {
+      navigateTo('HomePage', {})
+    },
+  })
+
   /**
    * Callback for when a prototype is selected.
    * @param prototype The selected prototype.
@@ -774,10 +788,77 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   }
 
   /**
-   * Handler for when the user requests to add a new prototype.
+   * Handles the request to duplicate a force in the mission.
+   * @param forceId The ID of the force to duplicate.
    */
-  const onPrototypeMoveRequest = (prototype: ClientMissionPrototype): void => {
-    mission.transformation = new PrototypeTranslation(prototype)
+  const onDuplicateForceRequest = async (
+    forceId: ClientMissionForce['_id'],
+  ) => {
+    // Get the force to duplicate.
+    let force = mission.getForceById(forceId)
+
+    // If the force is not found, notify the user.
+    if (!force) {
+      notify('Failed to duplicate force.')
+      return
+    }
+
+    // Prompt the user to enter the name of the new force.
+    let { choice, text } = await prompt(
+      'Enter the name of the new force:',
+      ['Cancel', 'Submit'],
+      {
+        textField: { boundChoices: ['Submit'], label: 'Name' },
+        defaultChoice: 'Submit',
+      },
+    )
+
+    // If the user confirms the duplication, proceed.
+    if (choice === 'Submit') {
+      try {
+        // Duplicate the force.
+        let newForces = mission.duplicateForces({
+          originalId: force._id,
+          duplicateName: text,
+        })
+        // Notify the user that the force was duplicated.
+        notify(`Successfully duplicated "${force.name}".`)
+        // Allow the user to save the changes.
+        onChange(...newForces)
+      } catch (error: any) {
+        notify(`Failed to duplicate "${force.name}".`)
+      }
+    }
+  }
+
+  /**
+   * Handles the request to delete a force.
+   * @param forceId The ID of the force to delete.
+   */
+  const onDeleteForceRequest = async (forceId: ClientMissionForce['_id']) => {
+    // Get the force to duplicate.
+    let force = mission.getForceById(forceId)
+
+    // If the force is not found, notify the user.
+    if (!force) {
+      notify('Failed to delete the selected force.')
+      return
+    }
+
+    // Prompt the user to confirm the deletion.
+    let { choice } = await prompt(
+      `Please confirm the deletion of this force.`,
+      Prompt.ConfirmationChoices,
+    )
+    // If the user cancels, abort.
+    if (choice === 'Cancel') return
+    // Delete the force.
+    let deletedForces = mission.deleteForces(forceId)
+
+    // Allow the user to save the changes.
+    if (deletedForces.length) {
+      onChange(...(deletedForces as TNonEmptyArray<ClientMissionForce>))
+    }
   }
 
   /**
@@ -929,80 +1010,6 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
 
     // Allow the user to save the changes.
     onChange(effect)
-  }
-
-  /**
-   * Handles the request to duplicate a force in the mission.
-   * @param forceId The ID of the force to duplicate.
-   */
-  const onDuplicateForceRequest = async (
-    forceId: ClientMissionForce['_id'],
-  ) => {
-    // Get the force to duplicate.
-    let force = mission.getForceById(forceId)
-
-    // If the force is not found, notify the user.
-    if (!force) {
-      notify('Failed to duplicate force.')
-      return
-    }
-
-    // Prompt the user to enter the name of the new force.
-    let { choice, text } = await prompt(
-      'Enter the name of the new force:',
-      ['Cancel', 'Submit'],
-      {
-        textField: { boundChoices: ['Submit'], label: 'Name' },
-        defaultChoice: 'Submit',
-      },
-    )
-
-    // If the user confirms the duplication, proceed.
-    if (choice === 'Submit') {
-      try {
-        // Duplicate the force.
-        let newForces = mission.duplicateForces({
-          originalId: force._id,
-          duplicateName: text,
-        })
-        // Notify the user that the force was duplicated.
-        notify(`Successfully duplicated "${force.name}".`)
-        // Allow the user to save the changes.
-        onChange(...newForces)
-      } catch (error: any) {
-        notify(`Failed to duplicate "${force.name}".`)
-      }
-    }
-  }
-
-  /**
-   * Handles the request to delete a force.
-   * @param forceId The ID of the force to delete.
-   */
-  const onDeleteForceRequest = async (forceId: ClientMissionForce['_id']) => {
-    // Get the force to duplicate.
-    let force = mission.getForceById(forceId)
-
-    // If the force is not found, notify the user.
-    if (!force) {
-      notify('Failed to delete the selected force.')
-      return
-    }
-
-    // Prompt the user to confirm the deletion.
-    let { choice } = await prompt(
-      `Please confirm the deletion of this force.`,
-      Prompt.ConfirmationChoices,
-    )
-    // If the user cancels, abort.
-    if (choice === 'Cancel') return
-    // Delete the force.
-    let deletedForces = mission.deleteForces(forceId)
-
-    // Allow the user to save the changes.
-    if (deletedForces.length) {
-      onChange(...(deletedForces as TNonEmptyArray<ClientMissionForce>))
-    }
   }
 
   /**
@@ -1170,7 +1177,6 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     root,
     ...props,
     state,
-    missionPageSvgEngine,
   }
 
   // Don't render if the mount hasn't yet been handled.
@@ -1185,7 +1191,6 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
               <PanelView title='Map'>
                 <MissionMap
                   mission={mission}
-                  buttonEngine={mapSvgEngine}
                   tabs={mapTabs}
                   tabAddEnabled={tabAddEnabled}
                   onTabAdd={onTabAdd}
@@ -1258,8 +1263,4 @@ export type TMissionPageContextData = {
      * The state for the mission page.
      */
     state: TMissionPage_S
-    /**
-     * SVG engine to use throughout the mission page.
-     */
-    missionPageSvgEngine: ButtonSvgEngine
   }

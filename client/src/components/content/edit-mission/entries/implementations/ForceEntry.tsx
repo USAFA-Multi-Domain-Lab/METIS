@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
-import { useMissionPageContext } from 'src/components/pages/MissionPage'
 import { useGlobalContext } from 'src/context/global'
 import ClientMission from 'src/missions'
 import ClientMissionForce from 'src/missions/forces'
@@ -34,8 +33,6 @@ export default function ForceEntry({
 
   /* -- STATE -- */
 
-  const { missionPageSvgEngine } = useMissionPageContext()
-
   const [introMessage, setIntroMessage] = useState<string>(force.introMessage)
   const [name, setName] = useState<string>(force.name)
   const [color, setColor] = useState<string>(force.color)
@@ -53,7 +50,7 @@ export default function ForceEntry({
       {
         type: 'button',
         icon: 'copy',
-        description: 'Duplicate',
+        description: 'Duplicate force',
         disabled: mission.forces.length >= Mission.MAX_FORCE_COUNT,
         permissions: ['missions_write'],
         onClick: duplicateForce,
@@ -61,7 +58,7 @@ export default function ForceEntry({
       {
         type: 'button',
         icon: 'remove',
-        description: 'Delete this force.',
+        description: 'Delete force',
         disabled: mission.forces.length < 2,
         permissions: ['missions_write'],
         onClick: deleteForce,
@@ -135,10 +132,7 @@ export default function ForceEntry({
   /* -- RENDER -- */
 
   return (
-    <Entry
-      missionComponent={force}
-      svgEngines={[missionPageSvgEngine, svgEngine]}
-    >
+    <Entry missionComponent={force} svgEngines={[svgEngine]}>
       <DetailString
         fieldType='required'
         handleOnBlur='repopulateValue'

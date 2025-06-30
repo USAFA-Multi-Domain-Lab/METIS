@@ -14,19 +14,7 @@ export default function (props: TMissionFileList_P): JSX.Element | null {
     itemsPerPageMin: 10,
     columns: ['mimetype', 'size'],
     deselectionBlacklist: ['.ResizeBar', '.ScrollBox', '.EntryBottom'],
-    // todo: Does the MissionFileList need ListButtons?
-    // listButtonIcons: compute<TMetisIcon[]>(() => {
-    //   let results: TMetisIcon[] = []
-
-    //   // todo: Uncomment and resolve this.
-    //   // // If the user has the proper authorization, add
-    //   // // the add and upload buttons.
-    //   // if (login.user.isAuthorized('files_write')) {
-    //   //   results.push('add', 'upload')
-    //   // }
-
-    //   return results
-    // }),
+    listButtonIcons: [],
     itemButtonIcons: compute<TMetisIcon[]>(() => {
       let results: TMetisIcon[] = []
 
@@ -49,13 +37,12 @@ export default function (props: TMissionFileList_P): JSX.Element | null {
           return 'Unknown column'
       }
     },
-    // todo: Does the MissionFileList need ListButtons?
-    // getListButtonLabel: (button) => {
-    //   switch (button) {
-    //     default:
-    //       return ''
-    //   }
-    // },
+    getListButtonLabel: (button) => {
+      switch (button) {
+        default:
+          return ''
+      }
+    },
     getItemButtonLabel: (button) => {
       switch (button) {
         case 'unlink':
@@ -72,14 +59,13 @@ export default function (props: TMissionFileList_P): JSX.Element | null {
       }
     },
     onItemDblClick: (file) => props.onDetachRequest?.(file),
-    // todo: Does the MissionFileList need ListButtons?
-    // onListButtonClick: (button) => {
-    //   switch (button) {
-    //     default:
-    //       console.warn('Unknown button clicked in file list.')
-    //       break
-    //   }
-    // },
+    onListButtonClick: (button) => {
+      switch (button) {
+        default:
+          console.warn('Unknown button clicked in file list.')
+          break
+      }
+    },
     onItemButtonClick: (button, file) => {
       switch (button) {
         case 'unlink':

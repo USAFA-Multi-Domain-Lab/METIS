@@ -18,7 +18,7 @@ const getUsers = async (request: Request, response: Response) => {
 
   try {
     // Retrieve all users.
-    let users = await UserModel.find()
+    let users = await UserModel.find({ accessId: { $ne: 'system' } })
       .setOptions({ currentUser, method: 'find' })
       .exec()
     // If no users were found, throw an error.

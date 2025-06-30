@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="24"
+   height="24"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="home.svg"
+   inkscape:version="1.4 (e7c3feb1, 2024-10-09)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#000000"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="19.991358"
+     inkscape:cx="8.4536528"
+     inkscape:cy="12.980609"
+     inkscape:window-width="1352"
+     inkscape:window-height="974"
+     inkscape:window-x="217"
+     inkscape:window-y="613"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="g1" />
+  <!-- Created with Method Draw - http://github.com/duopixel/Method-Draw/ -->
+  <g
+     id="g1"
+     transform="matrix(0.02528365,0,0,0.02772121,1.8865398,1.0585001)"
+     style="stroke-width:37.7723">
+    <title
+       id="title1">Layer 1</title>
+    <path
+       stroke="#ffffff"
+       id="svg_1"
+       d="M 1.82639,409.05503 400.00002,-0.65930949 798.17363,409.05503 Z"
+       stroke-width="56.6586"
+       fill="#ffffff" />
+    <rect
+       stroke="#ffffff"
+       id="svg_5"
+       height="412.29639"
+       width="121.32203"
+       y="386.95361"
+       x="151.47055"
+       stroke-opacity="null"
+       stroke-width="56.6586"
+       fill="#ffffff" />
+    <rect
+       stroke="#ffffff"
+       id="svg_5-4"
+       height="431.18271"
+       width="140.20833"
+       y="377.51047"
+       x="517.76428"
+       stroke-opacity="null"
+       stroke-width="56.6586"
+       fill="#ffffff"
+       style="stroke-width:37.7723" />
+    <rect
+       stroke="#ffffff"
+       id="svg_7"
+       height="242.81807"
+       width="210"
+       y="324.10089"
+       x="296"
+       stroke-opacity="null"
+       stroke-width="56.6586"
+       fill="#ffffff" />
+  </g>
+</svg>

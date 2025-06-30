@@ -1,5 +1,6 @@
 import DOMPurify from 'isomorphic-dompurify'
-import Mission, { TMissionSaveJson } from 'metis/missions'
+import { TMissionSaveJson } from 'metis/missions'
+import MissionFile from 'metis/missions/files'
 import { databaseLogger } from 'metis/server/logging'
 import ServerMission from 'metis/server/missions'
 import ServerMissionAction from 'metis/server/missions/actions'
@@ -261,6 +262,7 @@ export const schema = new MissionSchema(
     name: {
       type: String,
       required: true,
+      trim: true,
       maxLength: ServerMission.MAX_NAME_LENGTH,
     },
     versionNumber: { type: Number, required: true },
@@ -505,15 +507,12 @@ export const schema = new MissionSchema(
           alias: {
             type: String,
             validate: validate_mission_files_alias,
-            maxLength: Mission.MAX_NAME_LENGTH,
+            maxLength: MissionFile.MAX_NAME_LENGTH,
           },
           lastKnownName: {
             type: String,
-            maxLength: Mission.MAX_NAME_LENGTH,
+            maxLength: MissionFile.MAX_NAME_LENGTH,
           },
-          // todo: Add validation to check that the
-          // todo: values of the array point to forces
-          // todo: present in the mission.
           initialAccess: {
             type: [String],
             required: true,

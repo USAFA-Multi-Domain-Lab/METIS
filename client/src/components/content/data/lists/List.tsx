@@ -154,6 +154,8 @@ export default function List<TItem extends MetisComponent>(
   const elements: TList_E = {
     root: useRef<HTMLDivElement>(null),
     nav: useRef<HTMLDivElement>(null),
+    navHeader: useRef<HTMLDivElement>(null),
+    navHeading: useRef<HTMLDivElement>(null),
     buttons: useRef<HTMLDivElement>(null),
     overflow: useRef<HTMLDivElement>(null),
   }
@@ -292,7 +294,7 @@ export default function List<TItem extends MetisComponent>(
    */
   const aggregatedButtons = compute<
     TListContextData<TItem>['aggregatedButtons']
-  >(() => listButtons?.concat(itemButtons ?? []))
+  >(() => (listButtons ?? []).concat(itemButtons ?? []))
 
   /**
    * @see {@link TListContextData.aggregateButtonLayout}
@@ -488,6 +490,16 @@ export type TList_E = {
    * The element that contains the list navigation.
    */
   nav: React.RefObject<HTMLDivElement>
+  /**
+   * The element representing the header of the
+   * list navigation.
+   */
+  navHeader: React.RefObject<HTMLDivElement>
+  /**
+   * The element that contains the heading of the
+   * list navigation, which exists inside the header.
+   */
+  navHeading: React.RefObject<HTMLDivElement>
   /**
    * The element that contains the list buttons.
    */
@@ -735,7 +747,7 @@ export type TListContextData<TItem extends MetisComponent> = Required<
    * Aggregated buttons, including list and
    * item buttons.
    */
-  aggregatedButtons: TButtonSvgEngine['elements']
+  aggregatedButtons: NonNullable<TButtonSvgEngine['elements']>
   /**
    * A button layout used to display the aggregated
    * list of buttons, including the list and item buttons.

@@ -8,10 +8,11 @@ import Markdown, {
   MarkdownTheme as EMarkdownTheme,
 } from '../content/general-layout/Markdown'
 import {
-  HomeLink,
-  LogoutLink,
-  TNavigation,
+  HomeButton,
+  LogoutButton,
+  TNavigation_P,
 } from '../content/general-layout/Navigation'
+import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
 import './ChangelogPage.scss'
 
 export interface IChangelogPage extends TPage_P {}
@@ -19,16 +20,16 @@ export interface IChangelogPage extends TPage_P {}
 // This will render a page where a user can
 // view all the changes made to the application.
 export default function IChangelogPage({}: IChangelogPage): JSX.Element | null {
-  /* -- GLOBAL CONTEXT -- */
+  /* -- STATE -- */
 
   const globalContext = useGlobalContext()
   const [login] = globalContext.login
   const { beginLoading, finishLoading, handleError, navigateTo, logout } =
     globalContext.actions
-
-  /* -- COMPONENT STATE -- */
-
   const [changelog, setChangelog] = useState<string>('')
+  const navButtonEngine = useButtonSvgEngine({
+    elements: [HomeButton(), LogoutButton()],
+  })
 
   /* -- COMPONENT EFFECTS -- */
 
@@ -51,13 +52,11 @@ export default function IChangelogPage({}: IChangelogPage): JSX.Element | null {
   /* -- COMPUTED -- */
 
   /**
-   * Props for navigation.
+   * Config for the navigation on this page.
    */
-  const navigation = compute(
-    (): TNavigation => ({
-      links: [HomeLink(globalContext), LogoutLink(globalContext)],
-    }),
-  )
+  const navigation = compute<TNavigation_P>(() => {
+    return { buttonEngine: navButtonEngine }
+  })
 
   /* -- RENDER -- */
 

@@ -67,9 +67,16 @@ export default function ListResizeHandler<
    * overflowing the available space.
    */
   const calculateButtonOverflow = useCallbackRef(() => {
-    if (elements.buttons.current && elements.overflow.current) {
+    if (
+      elements.buttons.current &&
+      elements.overflow.current &&
+      elements.navHeader.current &&
+      elements.navHeading.current
+    ) {
       let buttonsElement = elements.buttons.current
       let overflowElement = elements.overflow.current
+      let navHeaderElement = elements.navHeader.current
+      let navHeadingElement = elements.navHeading.current
       let buttonElements = Array.from(
         buttonsElement.querySelectorAll('.SvgPanelElement:not(.DividerSvg)'),
       )
@@ -81,6 +88,10 @@ export default function ListResizeHandler<
       let overflowing = true
       let overflowIsVisible =
         getComputedStyle(overflowElement).display !== 'none'
+      let navHeaderWidth = navHeaderElement.getBoundingClientRect().width
+      let navHeadingWidth = navHeadingElement.getBoundingClientRect().width
+      let firstButtonElmWidth =
+        buttonElements[0]?.getBoundingClientRect().width ?? 0
 
       // Gets the x2 position of the last HTML element
       // in the list nav.
@@ -106,6 +117,13 @@ export default function ListResizeHandler<
         if (buttonX2 > buttonsX2) nextOverflowCount++
         else overflowing = false
         buttonElements.pop()
+      }
+
+      // If, while in max-overflow mode, the nav header
+      // finds itself with enough space to fit the first
+      // button element, then exit max-overflow mode.
+      if (navHeaderWidth > navHeadingWidth + firstButtonElmWidth) {
+        nextOverflowCount = Math.max(0, nextOverflowCount - 1)
       }
 
       setButtonOverflowCount(nextOverflowCount)

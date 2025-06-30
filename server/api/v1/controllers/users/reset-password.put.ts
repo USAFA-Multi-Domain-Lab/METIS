@@ -18,7 +18,7 @@ const resetPassword = async (request: Request, response: Response) => {
   let userUpdates = request.body
   let { _id: userId } = userUpdates as Partial<TUserJson>
   // Get the user that is logged in.
-  let login: ServerLogin | undefined = ServerLogin.get(request.session.userId)
+  let login: ServerLogin = response.locals.login
 
   // Hash the password if it exists.
   if (!!userUpdates.password) {
@@ -34,7 +34,7 @@ const resetPassword = async (request: Request, response: Response) => {
       returnOriginal: false,
       runValidators: true,
     })
-      .setOptions({ currentUser: login?.user, method: 'findOneAndUpdate' })
+      .setOptions({ currentUser: login.user, method: 'findOneAndUpdate' })
       .exec()
     // If the user was not found, throw an error.
     if (userJson === null) {
@@ -42,6 +42,9 @@ const resetPassword = async (request: Request, response: Response) => {
     }
     // Log the successful update of the user.
     databaseLogger.info(`User with ID "${userId}" updated.`)
+    // Update user in the login, marking it as no
+    // longer needing a password reset.
+    login.user.needsPasswordReset = false
     // Return the updated user.
     return ApiResponse.sendStatus(response, 200)
   } catch (error: any) {

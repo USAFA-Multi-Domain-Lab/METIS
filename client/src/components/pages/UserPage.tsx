@@ -5,12 +5,17 @@ import { compute } from 'src/toolbox'
 import { useMountHandler, useRequireLogin } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import { DefaultPageLayout, TPage_P } from '.'
-import CreateUserEntry from '../content/edit-user/UserEntry'
-import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
+import UserEntry from '../content/edit-user/UserEntry'
+import {
+  HomeButton,
+  LogoutButton,
+  TNavigation_P,
+} from '../content/general-layout/Navigation'
 import {
   ButtonText,
   TButtonTextDisabled,
 } from '../content/user-controls/buttons/ButtonText'
+import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
 import If from '../content/util/If'
 import './UserPage.scss'
 
@@ -69,6 +74,9 @@ export default function (props: TUserPage_P): JSX.Element | null {
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(false)
   const [userEmptyStringArray] = state.userEmptyStringArray
   const [, setUsernameAlreadyExists] = state.usernameAlreadyExists
+  const navButtonEngine = useButtonSvgEngine({
+    elements: [HomeButton(), LogoutButton()],
+  })
 
   /* -- EFFECTS -- */
 
@@ -100,22 +108,11 @@ export default function (props: TUserPage_P): JSX.Element | null {
   /* -- COMPUTED -- */
 
   /**
-   * Logout link for navigation.
+   * Config for the navigation on this page.
    */
-  const logoutLink = compute(() => ({
-    text: 'Log out',
-    onClick: () => enforceSavePrompt().then(logout),
-    key: 'logout',
-  }))
-
-  /**
-   * Props for navigation.
-   */
-  const navigation = compute(
-    (): TNavigation => ({
-      links: [HomeLink(globalContext), logoutLink],
-    }),
-  )
+  const navigation = compute<TNavigation_P>(() => {
+    return { buttonEngine: navButtonEngine }
+  })
 
   /**
    * Determines if the user form has any fields
@@ -252,7 +249,7 @@ export default function (props: TUserPage_P): JSX.Element | null {
         <div className='UserPage Page' ref={root}>
           <DefaultPageLayout navigation={navigation}>
             <div className='Form'>
-              <CreateUserEntry user={user} handleChange={handleChange} />
+              <UserEntry user={user} handleChange={handleChange} />
               <div className='Buttons'>
                 <ButtonText
                   text={'Save'}
