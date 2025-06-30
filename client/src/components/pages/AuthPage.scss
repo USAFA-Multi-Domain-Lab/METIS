@@ -18,8 +18,9 @@
     }
 
     .Branding {
-      width: 300px;
+      grid-template-columns: 1fr 2fr 100px;
       margin: 0 auto 10px;
+      width: 300px;
     }
 
     .Form {
