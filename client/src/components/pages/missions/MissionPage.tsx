@@ -106,7 +106,6 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     notify,
     prompt,
     forceUpdate,
-    logout,
   } = globalContext.actions
   const state: TMissionPage_S = {
     defects: useState<TMissionComponentDefect[]>([]),
