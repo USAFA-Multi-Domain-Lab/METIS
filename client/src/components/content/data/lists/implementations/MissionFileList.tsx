@@ -13,6 +13,7 @@ export default function (props: TMissionFileList_P): JSX.Element | null {
     ...createDefaultListProps<ClientMissionFile>(),
     itemsPerPageMin: 10,
     columns: ['mimetype', 'size'],
+    deselectionBlacklist: ['.ResizeBar', '.ScrollBox', '.EntryBottom'],
     listButtonIcons: [],
     itemButtonIcons: compute<TMetisIcon[]>(() => {
       let results: TMetisIcon[] = []
@@ -44,7 +45,7 @@ export default function (props: TMissionFileList_P): JSX.Element | null {
     },
     getItemButtonLabel: (button) => {
       switch (button) {
-        case 'divider':
+        case 'unlink':
           return 'Detach'
         default:
           console.warn('Unknown button label requested in file list.')
@@ -57,6 +58,7 @@ export default function (props: TMissionFileList_P): JSX.Element | null {
           return '10em'
       }
     },
+    onItemDblClick: (file) => props.onDetachRequest?.(file),
     onListButtonClick: (button) => {
       switch (button) {
         default:
@@ -66,13 +68,20 @@ export default function (props: TMissionFileList_P): JSX.Element | null {
     },
     onItemButtonClick: (button, file) => {
       switch (button) {
-        case 'divider':
-          console.log('hello')
+        case 'unlink':
           props.onDetachRequest?.(file)
           break
         default:
           console.warn('Unknown button clicked in file list.')
           break
+      }
+    },
+    getItemButtonPermissions: (button) => {
+      switch (button) {
+        case 'unlink':
+          return ['files_write']
+        default:
+          return []
       }
     },
     onDetachRequest: () => {},

@@ -73,7 +73,10 @@ export default function ListItemCell<TItem extends MetisComponent>({
   /**
    * Callback for when the item cell is clicked.
    */
-  const onClick = requireEnabledOnly(item, () => setSelection(item))
+  const onClick = requireEnabledOnly(item, () => {
+    if (selection?._id === item._id) setSelection(null)
+    else setSelection(item)
+  })
 
   /* -- RENDER -- */
 

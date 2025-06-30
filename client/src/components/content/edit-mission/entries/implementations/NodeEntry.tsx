@@ -326,6 +326,7 @@ export default function NodeEntry({
                 return ['missions_write']
             }
           }}
+          onItemDblClick={(action) => mission.select(action)}
           onListButtonClick={(button) => {
             switch (button) {
               case 'add':

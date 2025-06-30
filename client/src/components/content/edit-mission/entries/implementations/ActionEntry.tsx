@@ -316,6 +316,7 @@ export default function ActionEntry({
               return ['missions_write']
           }
         }}
+        onItemDblClick={(effect) => mission.select(effect)}
         onListButtonClick={(button) => {
           switch (button) {
             case 'add':

@@ -13,7 +13,6 @@ import { TButtonSvgPanel_P, TSvgPanelElement } from './types'
  * A panel for displaying buttons with SVG icons.
  */
 export default function ({
-  engine,
   engine: { panelElements, flow, labelsRevealed },
 }: TButtonSvgPanel_P): JSX.Element | null {
   /* -- COMPUTED -- */

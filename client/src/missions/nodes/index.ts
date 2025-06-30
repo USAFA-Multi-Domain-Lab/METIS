@@ -26,6 +26,42 @@ export default class ClientMissionNode
   extends MissionNode<TMetisClientComponents>
   implements TListenerTargetEmittable<TNodeEventMethod>, TMapCompatibleNode
 {
+  // Overridden
+  public get name(): string {
+    return this._name
+  }
+  public set name(value: string) {
+    this._name = value
+    this.emitEvent('set-name')
+  }
+
+  // Overridden
+  public get color(): string {
+    return this._color
+  }
+  public set color(value: string) {
+    this._color = value
+    this.emitEvent('set-color')
+  }
+
+  // Overridden
+  public get executable(): boolean {
+    return this._executable
+  }
+  public set executable(value: boolean) {
+    this._executable = value
+    this.emitEvent('new-icon')
+  }
+
+  // Overridden
+  public get device(): boolean {
+    return this._device
+  }
+  public set device(value: boolean) {
+    this._device = value
+    this.emitEvent('new-icon')
+  }
+
   // Implemented
   public get exclude(): boolean {
     return this._exclude
@@ -483,6 +519,7 @@ export default class ClientMissionNode
   public applyColorFill(): void {
     for (let childNode of this.children) {
       childNode.color = this.color
+      childNode.emitEvent('set-color')
       childNode.applyColorFill()
     }
   }

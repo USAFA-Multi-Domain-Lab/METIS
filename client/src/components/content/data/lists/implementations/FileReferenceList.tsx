@@ -4,8 +4,7 @@ import Prompt from 'src/components/content/communication/Prompt'
 import If from 'src/components/content/util/If'
 import { useGlobalContext } from 'src/context/global'
 import ClientFileReference from 'src/files/references'
-import { compute } from 'src/toolbox'
-import { useDefaultProps, useRequireLogin } from 'src/toolbox/hooks'
+import { useDefaultProps } from 'src/toolbox/hooks'
 import { DateToolbox } from '../../../../../../../shared/toolbox/dates'
 import FileToolbox from '../../../../../../../shared/toolbox/files'
 import List, { createDefaultListProps, TList_P } from '../List'
@@ -18,7 +17,6 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
-  const { authorize } = useRequireLogin()
   const { prompt, notify, beginLoading, finishLoading, handleError } =
     globalContext.actions
   const importFileTrigger = useRef<HTMLInputElement>(null)
@@ -85,20 +83,25 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
       'updatedAt',
       'createdByUsername',
     ],
-    listButtonIcons: compute<TMetisIcon[]>(() => {
-      let results: TMetisIcon[] = []
-      authorize('files_write', () => results.push('upload'))
-      return results
-    }),
-    itemButtonIcons: compute<TMetisIcon[]>(() => {
-      let results: TMetisIcon[] = []
-
-      results.push('download')
-      authorize('files_write', () => results.push('remove'))
-
-      return results
-    }),
+    listButtonIcons: ['upload'],
+    itemButtonIcons: ['download', 'remove'],
     initialSorting: { column: 'name', method: 'ascending' },
+    getListButtonPermissions: (button) => {
+      switch (button) {
+        case 'upload':
+          return ['files_write']
+        default:
+          return []
+      }
+    },
+    getItemButtonPermissions: (button) => {
+      switch (button) {
+        case 'remove':
+          return ['files_write']
+        default:
+          return []
+      }
+    },
     getColumnLabel: (column) => {
       switch (column) {
         case 'mimetype':
@@ -158,6 +161,7 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
           return '10em'
       }
     },
+    onItemDblClick: (item) => item.download(),
     onListButtonClick: (button) => {
       switch (button) {
         case 'upload':

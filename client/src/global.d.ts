@@ -43,8 +43,6 @@ declare global {
     // ! alphabetical order.
     | '_blank'
     | 'add'
-    | 'arrow-back'
-    | 'arrow-next'
     | 'ban'
     | 'blockquote'
     | 'bold'

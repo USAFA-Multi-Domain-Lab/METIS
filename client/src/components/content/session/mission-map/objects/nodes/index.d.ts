@@ -94,6 +94,8 @@ export type TMapCompatibleNodeEvent =
   | 'exec-state-change'
   | 'set-exclude'
   | 'set-color'
+  | 'set-name'
+  | 'new-icon'
 
 /**
  * Props for `MapNode`.

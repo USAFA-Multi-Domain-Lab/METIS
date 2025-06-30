@@ -16,8 +16,8 @@
       background-color: $color-faded;
     }
 
-    .ButtonSvg {
-      margin: 0.175em 0;
+    .SvgPanelElement {
+      padding: 0.175em 0;
     }
   }
 
@@ -33,7 +33,11 @@
     }
 
     .ButtonSvg {
-      margin: 0 0.1em;
+      padding: 0 0.1em;
+    }
+
+    .StepperSvg {
+      padding: 0 0.3em;
     }
   }
 

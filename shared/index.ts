@@ -23,7 +23,7 @@ export abstract class MetisComponent {
   /**
    * A human-readable title for the component.
    */
-  private _name: string
+  protected _name: string
   /**
    * A human-readable title for the component.
    * @note This can be overridden in any subclass

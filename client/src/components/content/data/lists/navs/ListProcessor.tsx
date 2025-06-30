@@ -3,6 +3,7 @@ import ButtonSvgPanel from 'src/components/content/user-controls/buttons/v3/Butt
 import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
 import If from 'src/components/content/util/If'
 import { compute } from 'src/toolbox'
+import { useEventListener } from 'src/toolbox/hooks'
 import { MetisComponent } from '../../../../../../../shared'
 import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
 import Tooltip from '../../../communication/Tooltip'
@@ -17,9 +18,9 @@ export default function ListProcessor(): JSX.Element | null {
   /* -- STATE -- */
 
   const listContext = useListContext()
-  const { name, items } = listContext
+  const { items, elements } = listContext
   const { getCellText } = listContext
-  const [_, setProcessedItems] = listContext.state.processedItems
+  const [, setProcessedItems] = listContext.state.processedItems
   const [sorting] = listContext.state.sorting
   const [searchActive, activateSearch] = listContext.state.searchActive
   const [searchHint, setSearchHint] = useState<string>('')
@@ -40,18 +41,7 @@ export default function ListProcessor(): JSX.Element | null {
       {
         type: 'button',
         icon: 'close',
-        onClick: () => {
-          let searchFieldElm = searchField.current
-          if (!searchFieldElm) return
-          // Clear the search field and deactivate the search.
-          searchFieldElm.value = ''
-          searchFieldElm.blur()
-          activateSearch(false)
-          setSearchHint('')
-
-          // Process the list to show all items.
-          process()
-        },
+        onClick: () => onClose(),
       },
     ],
   })
@@ -202,8 +192,22 @@ export default function ListProcessor(): JSX.Element | null {
    */
   const onSearchBlur = (event: React.FocusEvent<HTMLInputElement>) => {
     showSearchTooltip(false)
-    // Deactivate the search if the field is empty.
-    if (event.target.value === '') activateSearch(false)
+  }
+
+  /**
+   * Closes the search box and clears the search field.
+   */
+  const onClose = () => {
+    let searchFieldElm = searchField.current
+    if (!searchFieldElm) return
+    // Clear the search field and deactivate the search.
+    searchFieldElm.value = ''
+    searchFieldElm.blur()
+    activateSearch(false)
+    setSearchHint('')
+
+    // Process the list to show all items.
+    process()
   }
 
   /* -- EFFECTS -- */
@@ -219,7 +223,29 @@ export default function ListProcessor(): JSX.Element | null {
   useEffect(() => {
     let searchFieldElm = searchField.current
     if (searchActive && searchFieldElm) searchFieldElm.focus()
+
+    searchButtonEngine.modifyClassList('search', (classList) =>
+      classList.set('Hidden', searchActive),
+    )
   }, [searchActive])
+
+  // Deselect the item if the user clicks outside of the list.
+  useEventListener(
+    document,
+    'mousedown',
+    (event: MouseEvent) => {
+      const navElement = elements.nav.current
+      const target = event.target as HTMLElement
+      if (!navElement || !target) return
+
+      // If the clicked element is not part of the nav
+      // and the search input is empty, close the search box.
+      if (!navElement.contains(target) && searchField.current?.value === '') {
+        activateSearch(false)
+      }
+    },
+    [elements.nav, searchField],
+  )
 
   /* -- RENDER -- */
 
@@ -233,36 +259,32 @@ export default function ListProcessor(): JSX.Element | null {
   })
 
   return (
-    <>
-      <div className={rootClasses.value}>
-        <If condition={!searchActive}>
-          <ButtonSvgPanel engine={searchButtonEngine} />
-        </If>
-        <If condition={searchActive}>
-          <div className='SearchBox'>
-            <div className='SearchIcon'></div>
-            <input
-              type='text'
-              className='SearchField'
-              spellCheck={false}
-              placeholder={''}
-              onChange={process}
-              onKeyDown={onSearchKeyDown}
-              ref={searchField}
-              onFocus={onSearchFocus}
-              onBlur={onSearchBlur}
-            />
-            <input
-              type='text'
-              className='SearchHint'
-              value={searchHintFormatted}
-              readOnly
-            />
-            <ButtonSvgPanel engine={cancelButtonEngine} />
-            {tooltipJsx}
-          </div>
-        </If>
-      </div>
-    </>
+    <div className={rootClasses.value}>
+      <ButtonSvgPanel engine={searchButtonEngine} />
+      <If condition={searchActive}>
+        <div className='SearchBox'>
+          <div className='SearchIcon'></div>
+          <input
+            type='text'
+            className='SearchField'
+            spellCheck={false}
+            placeholder={''}
+            onChange={process}
+            onKeyDown={onSearchKeyDown}
+            ref={searchField}
+            onFocus={onSearchFocus}
+            onBlur={onSearchBlur}
+          />
+          <input
+            type='text'
+            className='SearchHint'
+            value={searchHintFormatted}
+            readOnly
+          />
+          <ButtonSvgPanel engine={cancelButtonEngine} />
+          {tooltipJsx}
+        </div>
+      </If>
+    </div>
   )
 }

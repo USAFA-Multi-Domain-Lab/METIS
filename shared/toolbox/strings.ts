@@ -11,7 +11,7 @@ export const HEX_COLOR_REGEX: RegExp = /^#([a-f0-9]{6})$/
 export default class StringToolbox {
   /**
    * Limits the given string to the given number of characters.
-   * @note Three extra characters are cut at the end of the result to include an elipsis.
+   * @note Three extra characters are cut at the end of the result to include an ellipsis.
    * @param toLimit The string to limit.
    * @param maxCharacters The number of characters to limit it to.
    * @returns The resulting string.

@@ -1,4 +1,5 @@
-import { ReactNode, useRef } from 'react'
+import { ReactNode, useEffect, useMemo, useRef } from 'react'
+import Tooltip from 'src/components/content/communication/Tooltip'
 import { useButtonMenuEngine } from 'src/components/content/user-controls/buttons/ButtonMenu'
 import ButtonMenuController from 'src/components/content/user-controls/buttons/ButtonMenuController'
 import ButtonSvgPanel from 'src/components/content/user-controls/buttons/v3/ButtonSvgPanel'
@@ -38,13 +39,15 @@ export default function ListItem<T extends MetisComponent>({
     getCellText,
     getColumnWidth,
     requireEnabledOnly,
+    onItemDblClick,
+    getItemButtonDisabled,
   } = listContext
   const [selection, setSelection] = listContext.state.selection
   const root = useRef<HTMLDivElement>(null)
   const optionsEngine = useButtonMenuEngine({
     elements: itemButtons,
     layout: ['<slot>'],
-    dependencies: itemButtonIcons,
+    dependencies: [...itemButtonIcons],
   })
   const optionMenuButtonEngine = useButtonSvgEngine({
     elements: [
@@ -53,7 +56,7 @@ export default function ListItem<T extends MetisComponent>({
         icon: 'options',
         onClick: (event) => onOptionsClick(event),
         description: 'View option menu',
-        disabled: item.disabled,
+        disabled: !itemButtonIcons.length,
       },
     ],
   })
@@ -103,6 +106,16 @@ export default function ListItem<T extends MetisComponent>({
     }
   })
 
+  /**
+   * The description for the JSX where the options button is rendered.
+   */
+  const optionsJsxDescription = useMemo<string>(() => {
+    // Get the description for the options button.
+    const button = optionMenuButtonEngine.get('options')
+    if (!button) return ''
+    return button.description
+  }, [optionMenuButtonEngine])
+
   /* -- FUNCTIONS -- */
 
   /**
@@ -126,6 +139,28 @@ export default function ListItem<T extends MetisComponent>({
     // Force selection of the item.
     setSelection(item)
   }
+
+  /* -- EFFECTS -- */
+
+  useEffect(() => {
+    // Enable/disable any buttons when the
+    // selection changes.
+    itemButtonIcons.forEach((icon) =>
+      optionsEngine.setDisabled(
+        icon,
+        !selection || getItemButtonDisabled(icon, selection),
+      ),
+    )
+  }, [selection])
+
+  useEffect(() => {
+    // If the item is disabled, disable the
+    // options button.
+    optionMenuButtonEngine.setDisabled(
+      'options',
+      item.disabled || !itemButtonIcons.length,
+    )
+  }, [item.disabled, itemButtonIcons.length])
 
   /* -- RENDER -- */
 
@@ -161,6 +196,7 @@ export default function ListItem<T extends MetisComponent>({
       result.push(
         <div key={'options'} className='ItemCellLike ItemOptions'>
           <ButtonSvgPanel engine={optionMenuButtonEngine} />
+          <Tooltip description={optionsJsxDescription} />
         </div>,
       )
     }
@@ -180,7 +216,12 @@ export default function ListItem<T extends MetisComponent>({
 
   // Render the list item.
   return (
-    <div className={rootClass.value} style={rootStyle} ref={root}>
+    <div
+      className={rootClass.value}
+      style={rootStyle}
+      ref={root}
+      onDoubleClick={() => onItemDblClick(item)}
+    >
       {cellsJsx}
       <ButtonMenuController
         target={root}
@@ -232,6 +273,17 @@ export type TGetItemButtonLabel<TItem extends MetisComponent> = (
 export type TGetItemButtonPermission<TItem extends MetisComponent> = (
   button: TSvgPanelElement['icon'],
 ) => TUserPermissionId[]
+
+/**
+ * Gets whether the button for the item is disabled.
+ * @param button The button for which to check if it is disabled.
+ * @returns Whether the button is disabled.
+ * @default () => false
+ */
+export type TGetItemButtonDisabled<TItem extends MetisComponent> = (
+  button: TSvgPanelElement['icon'],
+  item: TItem | null,
+) => boolean
 
 /**
  * A callback for when an item in the list is clicked.

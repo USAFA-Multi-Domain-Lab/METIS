@@ -2,9 +2,8 @@
 
 .SvgPanelElement.StepperSvg {
   display: flex;
-  flex-direction: row;
-  align-items: center;
   column-gap: 1em;
+  min-width: 2em;
 
   .StepDown,
   .StepUp {

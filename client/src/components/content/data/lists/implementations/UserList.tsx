@@ -256,6 +256,7 @@ export default function UserList({
       getItemTooltip={() => 'Open user'}
       getListButtonLabel={getUserListButtonTooltip}
       getItemButtonLabel={getUserItemButtonTooltip}
+      onItemDblClick={(user) => onUserSelection(user)}
       onListButtonClick={onUserListButtonClick}
       onItemButtonClick={onUserItemButtonClick}
     />
