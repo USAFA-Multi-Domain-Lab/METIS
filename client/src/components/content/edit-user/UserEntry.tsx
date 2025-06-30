@@ -1,28 +1,26 @@
 import { useEffect, useState } from 'react'
+import { useUserPageContext } from 'src/components/pages/UserPage'
 import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
-import { usePostInitEffect } from 'src/toolbox/hooks'
+import { usePostInitEffect, useRequireLogin } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
-import { TLogin } from '../../../../../shared/logins'
 import UserAccess from '../../../../../shared/users/accesses'
 import { DetailString } from '../form/DetailString'
 import { DetailToggle } from '../form/DetailToggle'
-import { DetailDropdown } from '../form/dropdown/'
-import './CreateUserEntry.scss'
+import { DetailDropdown } from '../form/dropdown'
+import If from '../util/If'
+import './UserEntry.scss'
 
 /**
- * This will render the form for creating a new user.
+ * This will render the entry form for a user.
  */
-export default function CreateUserEntry({
+export default function ({
   user,
-  userEmptyStringArray,
-  usernameAlreadyExists,
-  login,
-  setUserEmptyStringArray,
   handleChange,
-}: TCreateUserEntry_P): JSX.Element | null {
-  /* -- GLOBAL CONTEXT -- */
+}: TUserEntry_P): JSX.Element | null {
+  const { state } = useUserPageContext()
   const { forceUpdate } = useGlobalContext().actions
+  const { isAuthorized } = useRequireLogin()
 
   /* -- STATE -- */
   const [handleUsernameError, setHandleUsernameError] =
@@ -44,18 +42,18 @@ export default function CreateUserEntry({
   const [access, setAccess] = useState<UserAccess>(user.access)
   const [firstName, setFirstName] = useState<string>(user.firstName)
   const [lastName, setLastName] = useState<string>(user.lastName)
-  const [password1, setPassword1] = useState<string>(user.password1 || '')
-  const [password2, setPassword2] = useState<string>(user.password2 || '')
+  const [password1, setPassword1] = useState<string>('') // password should be empty on initial load
+  const [password2, setPassword2] = useState<string>('') // password should be empty on initial load
   const [needsPasswordReset, setNeedsPasswordReset] = useState<boolean>(
     user.needsPasswordReset,
   )
+  const [existsInDatabase] = state.existsInDatabase
+  const [userEmptyStringArray, setUserEmptyStringArray] =
+    state.userEmptyStringArray
+  const [usernameAlreadyExists] = state.usernameAlreadyExists
 
   /* -- COMPUTED -- */
 
-  /**
-   * The user currently logged in.
-   */
-  const currentUser: ClientUser = compute(() => login.user)
   /**
    * The label for the password field.
    */
@@ -76,15 +74,15 @@ export default function CreateUserEntry({
     let accesses: UserAccess[] = []
 
     // If the current user has proper authorization,
-    // they are allowed to create students.
-    if (currentUser.isAuthorized('users_write_students')) {
+    // they are allowed to upsert student users.
+    if (isAuthorized('users_write_students')) {
       accesses = [UserAccess.AVAILABLE_ACCESSES.student]
     }
 
     // If the current user has proper authorization,
-    // then they are allowed to create users with any
+    // then they are allowed to upsert users with any
     // access level.
-    if (currentUser.isAuthorized('users_write')) {
+    if (isAuthorized('users_write')) {
       accesses = [
         UserAccess.AVAILABLE_ACCESSES.student,
         UserAccess.AVAILABLE_ACCESSES.instructor,
@@ -284,11 +282,43 @@ export default function CreateUserEntry({
     })
   }
 
+  /* -- PRE-RENDER PROCESSING -- */
+
+  /**
+   * This is the JSX for the password fields.
+   */
+  const passwordJsx = compute<JSX.Element | null>(() => {
+    return (
+      <>
+        <DetailString
+          fieldType='required'
+          handleOnBlur={handlePassword1Error}
+          label={passwordLabel}
+          value={password1}
+          setValue={setPassword1}
+          errorMessage={password1ErrorMessage}
+          inputType='password'
+          placeholder='Enter a password here...'
+        />
+        <DetailString
+          fieldType='required'
+          handleOnBlur={handlePassword2Error}
+          label={confirmPasswordLabel}
+          value={password2}
+          setValue={setPassword2}
+          errorMessage={password2ErrorMessage}
+          inputType='password'
+          placeholder='Confirm your password here...'
+        />
+      </>
+    )
+  })
+
   /* -- RENDER -- */
 
   return (
     <form
-      className='CreateUserEntry'
+      className='UserEntry'
       onSubmit={(event) => event.preventDefault()}
       autoComplete='off'
     >
@@ -333,63 +363,30 @@ export default function CreateUserEntry({
         errorMessage={lastNameErrorMessage}
         placeholder='Enter a last name here...'
       />
-      <DetailString
-        fieldType='required'
-        handleOnBlur={handlePassword1Error}
-        label={passwordLabel}
-        value={password1}
-        setValue={setPassword1}
-        errorMessage={password1ErrorMessage}
-        inputType='password'
-        placeholder='Enter a password here...'
-      />
-
-      <DetailString
-        fieldType='required'
-        handleOnBlur={handlePassword2Error}
-        label={confirmPasswordLabel}
-        value={password2}
-        setValue={setPassword2}
-        errorMessage={password2ErrorMessage}
-        inputType='password'
-        placeholder='Confirm your password here...'
-      />
+      <If condition={!existsInDatabase}>{passwordJsx}</If>
       <DetailToggle
         fieldType='required'
         label='Needs Password Reset'
         value={needsPasswordReset}
         setValue={setNeedsPasswordReset}
       />
+      <If condition={existsInDatabase && user.needsPasswordReset}>
+        {passwordJsx}
+      </If>
     </form>
   )
 }
 
-/* ---------------------------- TYPES FOR CREATE USER ENTRY ---------------------------- */
+/* ---------------------------- TYPES FOR USER ENTRY ---------------------------- */
 
 /**
- * Props for CreateUserEntry component.
+ * Props for `UserEntry` component.
  */
-export type TCreateUserEntry_P = {
+export type TUserEntry_P = {
   /**
-   * The user to be created.
+   * The user to upsert.
    */
   user: ClientUser
-  /**
-   * An array of fields with empty strings.
-   */
-  userEmptyStringArray: string[]
-  /**
-   * Whether or not the username already exists.
-   */
-  usernameAlreadyExists: boolean
-  /**
-   * The login information for the user.
-   */
-  login: NonNullable<TLogin<ClientUser>>
-  /**
-   * A function that will update the array of fields with empty strings.
-   */
-  setUserEmptyStringArray: TReactSetter<string[]>
   /**
    * A function that will be called when a change has been made.
    */

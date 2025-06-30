@@ -126,7 +126,6 @@ export default function List<TItem extends MetisComponent>(
     getListButtonDisabled,
     getItemButtonLabel,
     getItemButtonPermissions,
-    getItemButtonDisabled,
     onListButtonClick,
     onItemButtonClick,
     onSelect,
@@ -157,7 +156,6 @@ export default function List<TItem extends MetisComponent>(
     nav: useRef<HTMLDivElement>(null),
     buttons: useRef<HTMLDivElement>(null),
     overflow: useRef<HTMLDivElement>(null),
-    processor: useRef<HTMLDivElement>(null),
   }
 
   /* -- COMPUTED -- */
@@ -317,7 +315,7 @@ export default function List<TItem extends MetisComponent>(
    * @see {@link TListContextData.showingDeletedItems}
    */
   const showingDeletedItems = compute<boolean>(() =>
-    pages[pageNumber].items.some(({ deleted }) => deleted),
+    pages[pageNumber]?.items.some(({ deleted }) => deleted),
   )
 
   /* -- FUNCTIONS -- */
@@ -407,19 +405,29 @@ export default function List<TItem extends MetisComponent>(
 
   // Deselect the currently selected item, if necessary.
   useEventListener(document, 'mousedown', (event: MouseEvent) => {
-    const ignoredElms = [
-      '.ButtonMenu .PopUp .ButtonSvgPanel',
-      ...deselectionBlacklist,
-    ]
+    const selectors = ['.ButtonMenu', ...deselectionBlacklist]
+    const blacklistedClasses = ['InputBlocker']
     const rootElement = elements.root.current
     const target = event.target as HTMLElement
-    const targetInIgnoredElms = ignoredElms.some((cls) =>
-      document.querySelector(cls)?.contains(target),
+    // Get all elements that prevent deselection
+    // of the item that is currently selected.
+    const ignoredElms: HTMLElement[] = []
+    selectors.forEach((selector) => {
+      const elements = document.querySelectorAll<HTMLElement>(selector)
+      if (elements.length > 0) ignoredElms.push(...elements)
+    })
+    // Check if any of the blacklisted elements contain the element that
+    // was clicked.
+    const targetInIgnoredElms = ignoredElms.some(
+      (elm) => elm.contains(target) || elm === target,
     )
-
+    // Check if the element that was clicked contains a class that's
+    // been blacklisted.
+    const targetHasBlacklistedClass = blacklistedClasses.some((cls) =>
+      target.classList.contains(cls),
+    )
     // If the target is in the ignored elements, do not deselect.
-    if (targetInIgnoredElms) return
-
+    if (targetInIgnoredElms || targetHasBlacklistedClass) return
     // If the clicked element is not part of the list,
     // deselect the item.
     if (!rootElement?.contains(target)) setSelection(null)
@@ -442,6 +450,7 @@ export default function List<TItem extends MetisComponent>(
     requireEnabledOnly,
     state,
     elements,
+    pages,
   }
 
   // Render the list.
@@ -487,10 +496,6 @@ export type TList_E = {
    * The element that contains the overflow button.
    */
   overflow: React.RefObject<HTMLDivElement>
-  /**
-   * The element that contains the list processor.
-   */
-  processor: React.RefObject<HTMLDivElement>
 }
 
 /**
@@ -540,10 +545,9 @@ export type TList_P<TItem extends MetisComponent> = {
    */
   initialSorting?: TListSorting<TItem>
   /**
-   * A list of element class names used within a JavaScript query
-   * selector which, if clicked, will not deselect the
-   * currently selected item.
-   * @note Make sure to include the leading `"."` in the class names.
+   * A list of HTML element css selectors used within a
+   * JavaScript query selector which, if clicked, will not
+   * deselect the currently selected item.
    * @default []
    * @example
    * ```js
@@ -761,6 +765,12 @@ export type TListContextData<TItem extends MetisComponent> = Required<
    * component tree.
    */
   elements: TList_E
+  /**
+   * The computed pages of items in the list
+   * based on the items passed and the number
+   * of items per page configured.
+   */
+  pages: TListPage_P<TItem>[]
 }
 
 /**

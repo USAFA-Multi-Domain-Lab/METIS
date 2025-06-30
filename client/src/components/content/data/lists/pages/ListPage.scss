@@ -28,6 +28,8 @@
     display: grid;
     box-sizing: border-box;
     grid-template-columns: 1fr auto;
+    min-width: 100%;
+    width: fit-content;
     height: $item-non-padded-height + $item-cell-padding-vertical * 2;
     padding: 0 1em 0 0;
 

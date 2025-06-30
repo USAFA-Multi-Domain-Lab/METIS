@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useCallbackRef, useResizeObserver } from 'src/toolbox/hooks'
 import { MetisComponent } from '../../../../../../shared'
 import { useListContext } from './List'
+import { TListPage_P } from './pages/ListPage'
 
 /**
  * Handles resizing of the list by recalculating
@@ -13,16 +14,18 @@ export default function ListResizeHandler<
   /* -- STATE -- */
 
   const listContext = useListContext<TItem>()
-  const { itemsPerPageMin, elements } = listContext
+  const { itemsPerPageMin, elements, pages } = listContext
   const [, setItemsPerPage] = listContext.state.itemsPerPage
   const [, setPageNumber] = listContext.state.pageNumber
   const [, setButtonOverflowCount] = listContext.state.buttonOverflowCount
+  const [selection] = listContext.state.selection
   const [searchActive] = listContext.state.searchActive
   // Whether the list is currently being resized.
   const [isResizing, setIsResizing] = useState<boolean>(true)
   // Whether an refresh has been initiated, which
   // will recalculate size-dependent states.
   const [refreshInitiated, setRefreshInitiated] = useState<boolean>(false)
+  const [updatePageNumber, setUpdatePageNumber] = useState<boolean>(false)
   // The last time a the list was resized.
   const lastResizeUpdate = useRef<number>(Date.now())
   /* -- FUNCTIONS -- */
@@ -64,17 +67,9 @@ export default function ListResizeHandler<
    * overflowing the available space.
    */
   const calculateButtonOverflow = useCallbackRef(() => {
-    if (
-      elements.buttons.current &&
-      elements.overflow.current &&
-      elements.processor.current &&
-      elements.nav.current
-    ) {
+    if (elements.buttons.current && elements.overflow.current) {
       let buttonsElement = elements.buttons.current
       let overflowElement = elements.overflow.current
-      let processorElement = elements.processor.current
-      let navElement = elements.nav.current
-      let headerElement = navElement.querySelector('.ListHeader')
       let buttonElements = Array.from(
         buttonsElement.querySelectorAll('.SvgPanelElement:not(.DividerSvg)'),
       )
@@ -83,20 +78,9 @@ export default function ListResizeHandler<
       let buttonsX2 = buttonsBox.right
       let overflowX2 = overflowBox.right
       let nextOverflowCount = 0
+      let overflowing = true
       let overflowIsVisible =
         getComputedStyle(overflowElement).display !== 'none'
-      let processorWidth = getComputedStyle(processorElement).width
-      let processorMinWidth = getComputedStyle(processorElement).minWidth
-      let processorIsMinimized = processorWidth === processorMinWidth
-      let headerWidth: string | null = null
-      let headerMinWidth: string | null = null
-      if (headerElement) {
-        headerWidth = getComputedStyle(headerElement).width
-        headerMinWidth = getComputedStyle(headerElement).minWidth
-      }
-      let headerIsMinimized =
-        headerWidth && headerMinWidth && headerWidth === headerMinWidth
-      let overflowing = processorIsMinimized
 
       // Gets the x2 position of the last HTML element
       // in the list nav.
@@ -134,9 +118,16 @@ export default function ListResizeHandler<
   // the state to reflect the change.
   useResizeObserver(
     elements.root,
-    () => {
+    (oldClientWidth, oldClientHeight) => {
       // Update the last window resize update.
       lastResizeUpdate.current = Date.now()
+      // If the list's height has changed, ensure
+      // that the list remains on the same page
+      // as before the resize.
+      const { clientWidth, clientHeight } = elements.root.current ?? {}
+      if (clientWidth !== oldClientWidth && clientHeight !== oldClientHeight) {
+        setUpdatePageNumber(true)
+      }
       // Set the window to resizing, if it is not already.
       if (!isResizing) setIsResizing(true)
     },
@@ -164,7 +155,20 @@ export default function ListResizeHandler<
         // of the item-per-page count.
         if (Date.now() - lastResizeUpdate.current >= 500) {
           clearInterval(interval)
-          setPageNumber(0)
+
+          if (updatePageNumber) {
+            let pageNumber = 0
+            let selectionPage: TListPage_P<TItem> | undefined = undefined
+            if (selection) {
+              selectionPage = pages.find(({ items }) =>
+                items.includes(selection),
+              )
+            }
+            if (selectionPage) pageNumber = pages.indexOf(selectionPage)
+            setPageNumber(pageNumber)
+            setUpdatePageNumber(false)
+          }
+
           setItemsPerPage(itemsPerPageMin)
           setIsResizing(false)
           setRefreshInitiated(true)
@@ -174,7 +178,7 @@ export default function ListResizeHandler<
   }, [isResizing])
 
   // On refresh initiation, recalculate the size
-  // depend
+  // dependent states.
   useEffect(() => {
     if (refreshInitiated) {
       calculateItemsPerPage()

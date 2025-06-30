@@ -31,7 +31,7 @@
 * @includes An inset box shadow with the provided color, modified by the provided opacity.
 */
 @mixin background-mask($color: $color-accent, $opacity: 0.1) {
-  box-shadow: inset 0 0 0 1000px rgba($color, $opacity);
+  box-shadow: inset 0 0 0 10000px rgba($color, $opacity);
 }
 
 /**

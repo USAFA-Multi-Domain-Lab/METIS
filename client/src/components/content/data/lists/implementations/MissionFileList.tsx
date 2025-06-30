@@ -90,6 +90,14 @@ export default function (props: TMissionFileList_P): JSX.Element | null {
           break
       }
     },
+    getItemButtonPermissions: (button) => {
+      switch (button) {
+        case 'unlink':
+          return ['files_write']
+        default:
+          return []
+      }
+    },
     onDetachRequest: () => {},
   })
 

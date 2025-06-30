@@ -259,7 +259,7 @@ export default function ListProcessor(): JSX.Element | null {
   })
 
   return (
-    <div className={rootClasses.value} ref={elements.processor}>
+    <div className={rootClasses.value}>
       <ButtonSvgPanel engine={searchButtonEngine} />
       <If condition={searchActive}>
         <div className='SearchBox'>

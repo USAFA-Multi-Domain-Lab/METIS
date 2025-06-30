@@ -48,16 +48,6 @@ export default class SvgButton implements TButtonSvg {
   }
 
   /**
-   * The description for the button.
-   */
-  public get description(): TButtonSvg['description'] {
-    return this.disabled ? '' : this._description
-  }
-  public set description(value: TButtonSvg['description']) {
-    this._description = value
-  }
-
-  /**
    * Whether the tooltip for the button should always be shown.
    */
   public get alwaysShowTooltip(): TButtonSvg['alwaysShowTooltip'] {
@@ -84,7 +74,7 @@ export default class SvgButton implements TButtonSvg {
     private _type: TButtonSvg['type'] = SvgButton.DEFAULT_PROPS.type,
     private _icon: TButtonSvg['icon'] = SvgButton.DEFAULT_PROPS.icon,
     private _label: TButtonSvg['label'] = SvgButton.DEFAULT_PROPS.label,
-    private _description: TButtonSvg['description'] = SvgButton.DEFAULT_PROPS
+    public description: TButtonSvg['description'] = SvgButton.DEFAULT_PROPS
       .description,
     public uniqueClassList: TButtonSvg['uniqueClassList'] = SvgButton
       .DEFAULT_PROPS.uniqueClassList,
@@ -103,7 +93,7 @@ export default class SvgButton implements TButtonSvg {
     this._type = _type
     this._icon = _icon
     this._label = _label
-    this._description = _description
+    this.description = description
     this.uniqueClassList = uniqueClassList
     this.disabled = disabled
     this.hidden = hidden

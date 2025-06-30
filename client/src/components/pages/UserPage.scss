@@ -4,11 +4,6 @@
   $page-width: 100vw;
   $page-height: 100vh;
   $content-spacing: 1em;
-  // $page-row-1-height: 82px;
-  // $page-row-3-height: 12px;
-  // $page-row-2-height: calc(
-  //   $page-height - $page-row-1-height - $page-row-3-height
-  // );
 
   display: grid;
   box-sizing: border-box;
@@ -16,7 +11,6 @@
   align-content: space-between;
   overflow-x: hidden;
   overflow-y: auto;
-  // grid-template-rows: $page-row-1-height $page-row-2-height $page-row-3-height;
   margin: 0 auto;
   width: $page-width;
   height: $page-height;
