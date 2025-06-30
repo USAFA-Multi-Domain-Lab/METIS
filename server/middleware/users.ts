@@ -76,6 +76,7 @@ export const restrictUserManagement = async (
 ): Promise<void> => {
   // Gather details.
   let login: ServerLogin | undefined = ServerLogin.get(request.session.userId)
+  let operation = request.method.toLowerCase()
 
   // If no login information is found, return 401.
   if (!login) {
@@ -83,81 +84,76 @@ export const restrictUserManagement = async (
     return
   }
 
-  // Grab the user and user ID from the request.
-  let user: TUserJson = request.body
-  let userId: TUserJson['_id'] = request.params._id ?? request.query._id
-  // Check if the user is defined.
-  let userIsDefined: boolean = Object.keys(user).length > 0
+  // Helper function to check user authorization
+  const checkUserAuth = (userAccessId: string | undefined): boolean => {
+    let adminAuth: TUserPermissionId = 'users_write'
+    let studentAuth: TUserPermissionId = 'users_write_students'
 
-  // If the user and user ID are undefined, return 400.
-  if (userIsDefined === false && userId === undefined) {
+    if (operation === 'get') {
+      adminAuth = 'users_read'
+      studentAuth = 'users_read_students'
+    }
+
+    if (login!.user.isAuthorized(adminAuth) && userAccessId !== undefined) {
+      return true
+    }
+
+    if (login!.user.isAuthorized(studentAuth) && userAccessId === 'student') {
+      return true
+    }
+
+    return false
+  }
+
+  // Handle request body (could be single user or array of users)
+  let users: TUserJson[] = Array.isArray(request.body)
+    ? request.body
+    : [request.body]
+  let userIds: string[] = []
+
+  // Collect user IDs from params, query, or request body
+  if (request.params._id) userIds.push(request.params._id)
+  if (request.query._id) userIds.push(request.query._id as string)
+
+  // Extract IDs from users in body if they exist
+  users.forEach((user) => {
+    if (user._id) userIds.push(user._id)
+  })
+
+  // Filter out undefined/empty users
+  users = users.filter((user) => user && Object.keys(user).length > 0)
+
+  // If no users or user IDs are provided, return 400
+  if (users.length === 0 && userIds.length === 0) {
     response.sendStatus(400)
     return
   }
 
-  // If the user is defined...
-  if (userIsDefined) {
-    // ...and the user trying to create, or update, another user has the
-    // highest level of authorization ("users_write") and the user being
-    // created or updated has an access level, call next middleware.
-    if (login.user.isAuthorized('users_write') && user.accessId !== undefined) {
-      // Call next middleware.
-      return next()
-    }
-    // Or, if the user trying to create, or update, another user has the
-    // the authorization to create, or update, students and the user being
-    // created or updated is a student, call next middleware.
-    else if (
-      login.user.isAuthorized('users_write_students') &&
-      user.accessId === 'student'
-    ) {
-      // Call next middleware.
-      return next()
-    }
-    // Otherwise, return 403.
-    else {
+  // Check authorization for users in request body
+  for (const user of users) {
+    if (!checkUserAuth(user.accessId)) {
       response.sendStatus(403)
       return
     }
   }
 
-  // If the user ID is defined...
-  if (userId !== undefined) {
-    // ...find the user.
-    let userDoc = await UserModel.findById(userId).exec()
+  // Check authorization for users identified by ID
+  for (const userId of userIds) {
+    const userDoc = await UserModel.findById(userId).exec()
 
-    // If the user is not found, return 404.
     if (!userDoc) {
       response.sendStatus(404)
       return
     }
 
-    // If the user trying to delete another user has the highest level of
-    // authorization ("users_write") and the user being deleted has an
-    // access level, call next middleware.
-    if (
-      login.user.isAuthorized('users_write') &&
-      userDoc.accessId !== undefined
-    ) {
-      // Call next middleware.
-      return next()
-    }
-    // Or, if the user trying to delete another user has the authorization
-    // to delete students and the user being deleted is a student, call next
-    // middleware.
-    else if (
-      login.user.isAuthorized('users_write_students') &&
-      userDoc.accessId === 'student'
-    ) {
-      // Call next middleware.
-      return next()
-    }
-    // Otherwise, return 403.
-    else {
+    if (!checkUserAuth(userDoc.accessId)) {
       response.sendStatus(403)
       return
     }
   }
+
+  // All checks passed, call next middleware
+  return next()
 }
 
 /**
@@ -169,34 +165,15 @@ export const restrictPasswordReset = (
   next: NextFunction,
 ): void => {
   // Gather details.
-  let login: ServerLogin | undefined = ServerLogin.get(request.session.userId)
+  const login = ServerLogin.get(request.session.userId)
 
   // If no login information is found, return 401.
-  if (!login) {
+  if (!login || !login.user || !login.userId) {
     response.sendStatus(401)
     return
   }
 
-  // Grab the user ID from the request.
-  let userId: TUserJson['_id'] = request.body._id
-
-  // If the user ID is undefined, return 400.
-  if (userId === undefined) {
-    response.sendStatus(400)
-    return
-  }
-  // Otherwise, if the user ID is defined...
-  else {
-    // Call the next middleware if the user is trying to reset their own password.
-    if (login.user._id === userId) {
-      return next()
-    }
-    // Otherwise, return 403.
-    else {
-      response.sendStatus(403)
-      return
-    }
-  }
+  return next()
 }
 
 /**

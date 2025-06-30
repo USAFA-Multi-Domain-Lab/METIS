@@ -398,19 +398,23 @@ export default class ClientUser
   /**
    * Calls the API to update the user.
    * @param clientUser The user to update.
+   * @param options Options for the user JSON.
    * @resolves The user that was updated.
    * @rejects The error that occurred while updating the user.
    */
-  public static $update(clientUser: ClientUser): Promise<ClientUser> {
+  public static $update(
+    clientUser: ClientUser,
+    options: TClientUserJsonOptions = {},
+  ): Promise<ClientUser> {
     return new Promise<ClientUser>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
         let { data: userJson } = await axios.put<TUserExistingJson>(
           ClientUser.API_ENDPOINT,
-          clientUser.toJson({ passwordIsRequired: false, includeId: true }),
+          clientUser.toJson({ ...options, includeId: true }),
         )
         // Convert JSON to Client User object.
-        let updatedUser: ClientUser = ClientUser.fromExistingJson(userJson)
+        let updatedUser = ClientUser.fromExistingJson(userJson)
         // Resolve
         resolve(updatedUser)
       } catch (error) {
@@ -432,9 +436,7 @@ export default class ClientUser
     return new Promise<void>(async (resolve, reject) => {
       try {
         await axios.put(`${ClientUser.API_ENDPOINT}/reset-password`, {
-          _id: user._id,
           password: user.password1,
-          needsPasswordReset: false,
         })
         resolve()
       } catch (error: any) {

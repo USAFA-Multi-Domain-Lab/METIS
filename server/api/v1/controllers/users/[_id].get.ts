@@ -2,7 +2,6 @@ import { Request, Response } from 'express-serve-static-core'
 import UserModel from 'metis/server/database/models/users'
 import { StatusError } from 'metis/server/http'
 import { databaseLogger } from 'metis/server/logging'
-import ServerLogin from 'metis/server/logins'
 import ApiResponse from '../../library/response'
 
 /**
@@ -14,15 +13,10 @@ import ApiResponse from '../../library/response'
 const getUser = async (request: Request, response: Response) => {
   // Extract the user ID from the request parameters.
   let { _id: userId } = request.params
-  // Get the user that is logged in.
-  let login: ServerLogin | undefined = ServerLogin.get(request.session.userId)
-  let { user: currentUser } = login ?? {}
 
   try {
     // Retrieve the user.
-    let userDoc = await UserModel.findById(userId)
-      .setOptions({ currentUser, method: 'findOne' })
-      .exec()
+    let userDoc = await UserModel.findById(userId).exec()
     // If the user was not found, throw an error.
     if (userDoc === null) {
       throw new StatusError(`User with ID "${userId}" not found.`, 404)

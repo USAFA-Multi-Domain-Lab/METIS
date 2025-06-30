@@ -16,41 +16,41 @@ import { preventSystemUserWrite } from '../../library/users'
 const resetPassword = async (request: Request, response: Response) => {
   // Extract the user updates from the request body.
   let userUpdates = request.body
-  let { _id: userId } = userUpdates as Partial<TUserJson>
+  let { password } = userUpdates as Partial<TUserJson>
   // Get the user that is logged in.
   let login: ServerLogin = response.locals.login
 
   // Hash the password if it exists.
-  if (!!userUpdates.password) {
-    userUpdates.password = await hashPassword(userUpdates.password)
-  }
+  if (!!password) password = await hashPassword(password)
 
   try {
     // Disable system-user write operations.
-    preventSystemUserWrite({ currentUserId: userId })
+    preventSystemUserWrite({ currentUserId: login.userId })
 
     // Update the user.
-    let userJson = await UserModel.findByIdAndUpdate(userId, userUpdates, {
-      returnOriginal: false,
-      runValidators: true,
-    })
-      .setOptions({ currentUser: login.user, method: 'findOneAndUpdate' })
-      .exec()
+    let userJson = await UserModel.findByIdAndUpdate(
+      login.userId,
+      { password, needsPasswordReset: false },
+      {
+        returnOriginal: false,
+        runValidators: true,
+      },
+    ).exec()
     // If the user was not found, throw an error.
     if (userJson === null) {
-      throw new StatusError(`User with ID "${userId}" not found.`, 404)
+      throw new StatusError(`User with ID "${login.userId}" not found.`, 404)
     }
     // Log the successful update of the user.
-    databaseLogger.info(`User with ID "${userId}" updated.`)
+    databaseLogger.info(`User with ID "${login.userId}" updated.`)
     // Update user in the login, marking it as no
     // longer needing a password reset.
-    login.user.needsPasswordReset = false
+    login.user.needsPasswordReset = userJson.needsPasswordReset
     // Return the updated user.
     return ApiResponse.sendStatus(response, 200)
   } catch (error: any) {
     // Log the error.
     databaseLogger.error(
-      `Failed to reset the password for the user with ID "${userId}".\n`,
+      `Failed to reset the password for the user with ID "${login.userId}".\n`,
       error,
     )
     // Handle the error.

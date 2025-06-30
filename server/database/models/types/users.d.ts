@@ -100,14 +100,6 @@ export type TPostUserQuery = Query<TUserDoc, TUserDoc>
  */
 export type TUserQueryOptions = QueryOptions<TUser> & {
   /**
-   * The user currently logged in.
-   */
-  currentUser?: ServerUser
-  /**
-   * The middleware query method being used.
-   */
-  method?: MongooseQueryMiddleware
-  /**
    * Determines if deleted users should be included in the results.
    */
   includeDeleted?: boolean
