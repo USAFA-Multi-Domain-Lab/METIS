@@ -96,6 +96,7 @@ declare global {
     | 'timer'
     | 'underline'
     | 'undo'
+    | 'unlink'
     | 'up'
     | 'upload'
     | 'user'

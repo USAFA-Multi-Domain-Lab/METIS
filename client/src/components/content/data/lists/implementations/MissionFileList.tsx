@@ -13,23 +13,12 @@ export default function (props: TMissionFileList_P): JSX.Element | null {
     ...createDefaultListProps<ClientMissionFile>(),
     itemsPerPageMin: 10,
     columns: ['mimetype', 'size'],
-    listButtonIcons: compute<TMetisIcon[]>(() => {
-      let results: TMetisIcon[] = []
-
-      // todo: Uncomment and resolve this.
-      // // If the user has the proper authorization, add
-      // // the add and upload buttons.
-      // if (login.user.isAuthorized('files_write')) {
-      //   results.push('add', 'upload')
-      // }
-
-      return results
-    }),
+    listButtonIcons: [],
     itemButtonIcons: compute<TMetisIcon[]>(() => {
       let results: TMetisIcon[] = []
 
       // todo: Add auth.
-      if (props.onDetachRequest) results.push('divider')
+      if (props.onDetachRequest) results.push('unlink')
 
       return results
     }),
