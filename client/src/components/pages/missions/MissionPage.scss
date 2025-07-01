@@ -31,7 +31,7 @@
 
     .PanelView_Files {
       display: grid;
-      grid-template-rows: 1fr 1fr;
+      grid-template-rows: 50% 50%;
 
       .InMission {
         border-bottom: 2px solid $color-secondary;

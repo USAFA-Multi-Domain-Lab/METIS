@@ -176,7 +176,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
         onClick: async () => await onDeleteRequest(mission),
       },
       HomeButton(),
-      LogoutButton(),
+      LogoutButton({ middleware: async () => await enforceSavePrompt() }),
     ],
     options: {
       layout: ['<slot>', '<divider>', 'home', 'logout'],
@@ -551,14 +551,8 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
    */
   const enforceSavePrompt = async (): Promise<void> => {
     return new Promise<void>(async (resolve, reject) => {
-      // If the user does not have write permissions
-      // and there are no unsaved changes, resolve immediately.
-      if (!isAuthorized('missions_write') && areUnsavedChanges) {
-        return resolve()
-      }
-
       // If there are unsaved changes, prompt the user.
-      if (areUnsavedChanges) {
+      if (isAuthorized('missions_write') && areUnsavedChanges) {
         const { choice } = await prompt(
           'You have unsaved changes. What do you want to do with them?',
           ['Cancel', 'Save', 'Discard'],
@@ -572,11 +566,12 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
           finishLoading()
         }
 
-        // Then, unless the user cancelled, resolve.
-        if (choice !== 'Cancel') resolve()
-      } else {
-        resolve()
+        // Abort if the user cancels.
+        if (choice === 'Cancel') return
       }
+
+      // Resolve after all checks are made.
+      resolve()
     })
   }
 

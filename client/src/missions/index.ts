@@ -1194,6 +1194,11 @@ export default class ClientMission
       )
     }
 
+    // Force options to have `existsOnServer`
+    // as true, since this is an existing
+    // mission.
+    options.existsOnServer = true
+
     // Create a new mission.
     let mission: ClientMission = new ClientMission(
       json._id || generateHash(),

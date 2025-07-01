@@ -55,7 +55,6 @@ export default function (props: TUserPage_P): JSX.Element | null {
     notify,
     prompt,
     navigateTo,
-    logout,
   } = globalContext.actions
   const { isAuthorized } = useRequireLogin()
 
@@ -75,7 +74,10 @@ export default function (props: TUserPage_P): JSX.Element | null {
   const [userEmptyStringArray] = state.userEmptyStringArray
   const [, setUsernameAlreadyExists] = state.usernameAlreadyExists
   const navButtonEngine = useButtonSvgEngine({
-    elements: [HomeButton(), LogoutButton()],
+    elements: [
+      HomeButton(),
+      LogoutButton({ middleware: async () => await enforceSavePrompt() }),
+    ],
   })
 
   /* -- EFFECTS -- */

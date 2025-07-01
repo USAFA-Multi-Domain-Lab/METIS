@@ -60,14 +60,21 @@ export const HomeButton = (
  * @returns Button input used to create a button
  * which will log out the user when clicked.
  */
-export const LogoutButton = (): TButtonSvg_Input => {
+export const LogoutButton = (
+  options: TLogoutButtonOptions = {},
+): TButtonSvg_Input => {
+  const { middleware = () => Promise.resolve() } = options
   const globalContext = useGlobalContext()
   const { logout } = globalContext.actions
+
   return {
     type: 'button',
     icon: 'logout',
     description: 'Log out',
-    onClick: logout,
+    onClick: async () => {
+      await middleware()
+      logout()
+    },
   }
 }
 
@@ -118,3 +125,15 @@ export type TNavigation_P = {
  * Options for creating a home button.
  */
 export type THomeButtonOptions = Pick<TButtonSvg_Input, 'icon' | 'description'>
+
+/**
+ * Options for creating a logout button.
+ */
+export type TLogoutButtonOptions = {
+  /**
+   * An async function that will be called before the
+   * logout action is performed. If this function does
+   * not resolve, the logout action will not be performed.
+   */
+  middleware?: () => Promise<void>
+}

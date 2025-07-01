@@ -16,7 +16,8 @@
     .SvgPanelElement {
       &.StepperSvg {
         * {
-          transition: transform $transition-speed $transition-timing;
+          transition: transform $transition-speed $transition-timing,
+            opacity $transition-speed $transition-timing;
         }
 
         &.ListButtonOverflow * {

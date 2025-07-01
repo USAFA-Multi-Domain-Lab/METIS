@@ -41,15 +41,25 @@ export default function ListResizeHandler<
     // If the elements were not found, return.
     if (!page || !items) return
 
-    let initHeight = page.clientHeight
-    let result = items.children.length - 1
+    let pageBoundingBox = page.getBoundingClientRect()
+    let pageY2 = pageBoundingBox.bottom
+    let result = items.children.length
     let blanks = []
 
-    for (; page.clientHeight <= initHeight && result < 100; result++) {
+    for (; result < 100; result++) {
+      // Push a test blank to see how it
+      // effects the height of the items.
       let blank = document.createElement('div')
       blank.className = 'ItemBlank ListItemLike'
       items.appendChild(blank)
       blanks.push(blank)
+
+      // Get the bounding box of the items
+      // and check if it is still within the
+      // page's bounding box.
+      let itemsBoundingBox = items.getBoundingClientRect()
+      let itemsY2 = itemsBoundingBox.bottom
+      if (itemsY2 > pageY2) break
     }
 
     // If the items calculated is less than 1,
@@ -114,7 +124,7 @@ export default function ListResizeHandler<
       // past the available space.
       while (overflowing) {
         let buttonX2 = getLastX2()
-        if (buttonX2 > buttonsX2) nextOverflowCount++
+        if (buttonX2 > buttonsX2 + 0.001) nextOverflowCount++
         else overflowing = false
         buttonElements.pop()
       }
