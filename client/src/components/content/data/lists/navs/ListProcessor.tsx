@@ -229,14 +229,36 @@ export default function ListProcessor(): JSX.Element | null {
     )
   }, [searchActive])
 
-  // Deselect the item if the user clicks outside of the list.
+  // Close the search box when the user clicks outside of the list nav
+  // or the button context menu.
   useEventListener(
     document,
     'mousedown',
     (event: MouseEvent) => {
+      const selectors = ['.ButtonMenu']
+      const blacklistedClasses = ['InputBlocker']
       const navElement = elements.nav.current
       const target = event.target as HTMLElement
       if (!navElement || !target) return
+
+      // Get all elements that prevent closing the search box.
+      const ignoredElms: HTMLElement[] = []
+      selectors.forEach((selector) => {
+        const elements = document.querySelectorAll<HTMLElement>(selector)
+        if (elements.length > 0) ignoredElms.push(...elements)
+      })
+      // Check if any of the blacklisted elements contain the element that
+      // was clicked.
+      const targetInIgnoredElms = ignoredElms.some(
+        (elm) => elm.contains(target) || elm === target,
+      )
+      // Check if the element that was clicked contains a class that's
+      // been blacklisted.
+      const targetHasBlacklistedClass = blacklistedClasses.some((cls) =>
+        target.classList.contains(cls),
+      )
+      // If the target is in the ignored elements, do not close the search box.
+      if (targetInIgnoredElms || targetHasBlacklistedClass) return
 
       // If the clicked element is not part of the nav
       // and the search input is empty, close the search box.

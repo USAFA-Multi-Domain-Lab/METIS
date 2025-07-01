@@ -144,28 +144,40 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
         icon: 'play',
         description: 'Play-test mission.',
         permissions: ['sessions_write_native'],
-        onClick: () => onPlayTestRequest(mission, 'MissionPage'),
+        onClick: async () => {
+          await enforceSavePrompt()
+          onPlayTestRequest(mission, 'MissionPage')
+        },
       },
       {
         type: 'button',
         icon: 'launch',
-        description: 'Launch mission as multiplayer session.',
+        description: 'Launch mission as a session.',
         permissions: ['sessions_write_native'],
-        onClick: () => onLaunchRequest(mission, 'MissionPage'),
+        onClick: async () => {
+          await enforceSavePrompt()
+          onLaunchRequest(mission, 'MissionPage')
+        },
       },
       {
         type: 'button',
         icon: 'download',
         description: 'Export mission to .metis file',
         permissions: ['missions_write'],
-        onClick: () => onExportRequest(mission),
+        onClick: async () => {
+          await enforceSavePrompt()
+          onExportRequest(mission)
+        },
       },
       {
         type: 'button',
         icon: 'copy',
         description: 'Create a copy of mission',
         permissions: ['missions_write'],
-        onClick: async () => await onCopyRequest(mission),
+        onClick: async () => {
+          await enforceSavePrompt()
+          await onCopyRequest(mission)
+        },
       },
       {
         type: 'button',

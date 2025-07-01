@@ -1,5 +1,6 @@
 import { AxiosError } from 'axios'
 import React, { useContext, useRef, useState } from 'react'
+import { useBeforeunload } from 'react-beforeunload'
 import { useGlobalContext, useNavigationMiddleware } from 'src/context/global'
 import { compute } from 'src/toolbox'
 import {
@@ -109,6 +110,14 @@ export default function (props: TUserPage_P): JSX.Element | null {
     finishLoading()
     // Mark mount as handled.
     done()
+  })
+
+  // Guards against refreshing or navigating away
+  // with unsaved changes.
+  useBeforeunload((event) => {
+    if (areUnsavedChanges) {
+      event.preventDefault()
+    }
   })
 
   // Navigation middleware to protect from navigating

@@ -88,7 +88,7 @@ export default function SessionPage({
     const addResetSession = (description: string = 'Reset session') => {
       navButtonEngine.add({
         type: 'button',
-        icon: 'redo',
+        icon: 'reset',
         description,
         onClick: onClickResetSession,
       })

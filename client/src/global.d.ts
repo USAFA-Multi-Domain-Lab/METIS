@@ -83,6 +83,7 @@ declare global {
     | 'redo'
     | 'remove'
     | 'reorder'
+    | 'reset'
     | 'right'
     | 'save'
     | 'search'

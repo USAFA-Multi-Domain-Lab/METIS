@@ -113,7 +113,7 @@ export default function MissionList(props: TMissionList_P): JSX.Element | null {
         case 'play':
           return 'Play-test mission'
         case 'launch':
-          return 'Launch mission into multiplayer session'
+          return 'Launch mission into a session'
         case 'copy':
           return 'Duplicate mission'
         case 'download':

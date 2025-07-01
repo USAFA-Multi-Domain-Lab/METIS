@@ -17,7 +17,6 @@
 
   .Content {
     display: flex;
-    flex-direction: column;
     box-sizing: border-box;
     width: 100%;
     padding: 0 2em;
@@ -30,6 +29,7 @@
       border: 2px solid $color-primary-light;
       border-radius: 10px;
       width: 100%;
+      min-width: calc(225px + 4em);
       max-width: 800px;
       padding: 2em 2em;
       background: $color-primary;
