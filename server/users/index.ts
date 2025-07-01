@@ -4,7 +4,7 @@ import User, {
   TUserJson,
   TUserOptions,
 } from 'metis/users'
-import UserAccess, { TUserAccess } from 'metis/users/accesses'
+import UserAccess, { TUserAccess, TUserAccessId } from 'metis/users/accesses'
 import UserPermission, { TUserPermission } from 'metis/users/permissions'
 import mongoose, {
   AnyObject,
@@ -393,6 +393,39 @@ export default class ServerUser extends User<TMetisServerComponents> {
       ServerUser.createUnpopulated(json.createdBy, json.createdByUsername),
       json.createdByUsername,
     )
+  }
+
+  /**
+   * Determines what types of users can be accessed by the current user.
+   * @param currentUser The user that is currently logged in and has an active session.
+   * @return An array of user access IDs that the current user can access.
+   */
+  public static canAccess(
+    currentUser: ServerUser,
+    operation?: 'read' | 'write',
+  ): TUserAccessId[] {
+    const { isAuthorized } = currentUser
+    const adminAccess: TUserAccessId[] = [
+      'default',
+      'student',
+      'instructor',
+      'admin',
+      'revokedAccess',
+    ]
+    const studentAccess: TUserAccessId[] = ['student']
+
+    switch (operation) {
+      case 'read':
+        if (isAuthorized(['users_read'])) return adminAccess
+        if (isAuthorized(['users_read_students'])) return studentAccess
+        return []
+      case 'write':
+        if (isAuthorized(['users_write'])) return adminAccess
+        if (isAuthorized(['users_write_students'])) return studentAccess
+        return []
+      default:
+        return []
+    }
   }
 }
 

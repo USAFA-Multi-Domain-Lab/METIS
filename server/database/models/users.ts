@@ -73,9 +73,7 @@ const queryForApiResponse = (query: TPreUserQuery): void => {
   let projection = query.projection()
 
   // Create if does not exist.
-  if (projection === undefined) {
-    projection = {}
-  }
+  if (projection === undefined) projection = {}
 
   // Check if the projection is empty.
   let projectionKeys = Object.keys(projection)
@@ -95,40 +93,6 @@ const queryForApiResponse = (query: TPreUserQuery): void => {
   query.collation(collation)
   // Hide deleted users.
   query.where({ deleted: { $eq: includeDeleted ? true : false } })
-}
-
-/**
- * Modifies the query to filter users based on the current user's permissions.
- * @param query The query to modify.
- */
-const queryForFilteredUsers = (query: TPreUserQuery): void => {
-  // Get projection.
-  let projection = query.projection()
-  // Extract options.
-  let {
-    currentUser,
-    method,
-    includeDeleted = false,
-  } = query.getOptions() as TUserQueryOptions
-
-  // Create if does not exist.
-  if (projection === undefined) {
-    projection = {}
-  }
-
-  // Set projection.
-  query.projection(projection)
-  // Hide deleted users.
-  query.where({ deleted: { $eq: includeDeleted ? true : false } })
-
-  // If the user can only read students, hide all users
-  // that are not students.
-  if (
-    currentUser?.isAuthorized('users_read_students') &&
-    !currentUser.isAuthorized('users_read')
-  ) {
-    query.where({ accessId: { $eq: 'student' } })
-  }
 }
 
 /* -- SCHEMA STATIC FUNCTIONS -- */
@@ -343,7 +307,6 @@ userSchema.pre<TPreUserQuery>(
   function (next) {
     // Modify the query.
     queryForApiResponse(this)
-    queryForFilteredUsers(this)
     // Populate createdBy.
     populateCreatedByIfFlagged(this)
     // Call the next middleware.

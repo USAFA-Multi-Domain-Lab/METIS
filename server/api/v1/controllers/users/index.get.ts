@@ -3,6 +3,7 @@ import UserModel from 'metis/server/database/models/users'
 import { StatusError } from 'metis/server/http'
 import { databaseLogger } from 'metis/server/logging'
 import ServerLogin from 'metis/server/logins'
+import ServerUser from 'metis/server/users'
 import ApiResponse from '../../library/response'
 
 /**
@@ -14,15 +15,29 @@ import ApiResponse from '../../library/response'
 const getUsers = async (request: Request, response: Response) => {
   // Get the user that is logged in.
   let login: ServerLogin | undefined = ServerLogin.get(request.session.userId)
-  let { user: currentUser } = login ?? {}
+  if (!login) throw new StatusError('User is not logged in.', 401)
+  let { user: currentUser } = login
+  // Determine what type of users the current user can access from
+  // the database.
+  const userAccessType = ServerUser.canAccess(currentUser, 'read')
 
   try {
     // Retrieve all users.
-    let users = await UserModel.find({ accessId: { $ne: 'system' } })
-      .setOptions({ currentUser, method: 'find' })
-      .exec()
+    let users = await UserModel.find({ accessId: userAccessType }).exec()
     // If no users were found, throw an error.
-    if (users === null) throw new StatusError('No users found.', 404)
+    if (users === null || users.length === 0) {
+      throw new StatusError('No users found.', 404)
+    }
+    // Ensure that the current user is allowed to access all the users
+    // that were retrieved.
+    for (let user of users) {
+      if (!userAccessType.includes(user.accessId)) {
+        throw new StatusError(
+          `User with ID "${user._id}" cannot be accessed by the current user with ID "${currentUser._id}".`,
+          403,
+        )
+      }
+    }
     // Log the successful retrieval of all users.
     databaseLogger.info('All users retrieved.')
     // Return the users.

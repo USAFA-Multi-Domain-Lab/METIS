@@ -2,9 +2,14 @@ import { AxiosError } from 'axios'
 import React, { useContext, useRef, useState } from 'react'
 import { useGlobalContext, useNavigationMiddleware } from 'src/context/global'
 import { compute } from 'src/toolbox'
-import { useMountHandler, useRequireLogin } from 'src/toolbox/hooks'
+import {
+  useEventListener,
+  useMountHandler,
+  useRequireLogin,
+} from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import { DefaultPageLayout, TPage_P } from '.'
+import StringToolbox from '../../../../shared/toolbox/strings'
 import UserEntry from '../content/edit-user/UserEntry'
 import {
   HomeButton,
@@ -65,14 +70,20 @@ export default function (props: TUserPage_P): JSX.Element | null {
     existsInDatabase: useState<boolean>(props.userId !== null),
     userEmptyStringArray: useState<string[]>([]),
     usernameAlreadyExists: useState<boolean>(false),
+    updatePassword: useState<boolean>(false),
+    areUnsavedChanges: useState<boolean>(false),
   }
   const [existsInDatabase, setExistsInDatabase] = state.existsInDatabase
   const [user, setUser] = useState<ClientUser>(
     ClientUser.createNew({ passwordIsRequired: true }),
   )
-  const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(false)
+  const [areUnsavedChanges, setAreUnsavedChanges] = state.areUnsavedChanges
   const [userEmptyStringArray] = state.userEmptyStringArray
+  const [updatePassword] = state.updatePassword
   const [, setUsernameAlreadyExists] = state.usernameAlreadyExists
+  const [userEntryKey, setUserEntryKey] = useState<string>(
+    StringToolbox.generateRandomId(),
+  )
   const navButtonEngine = useButtonSvgEngine({
     elements: [
       HomeButton(),
@@ -104,6 +115,20 @@ export default function (props: TUserPage_P): JSX.Element | null {
   // away with unsaved changes.
   useNavigationMiddleware(
     (to, next) => enforceSavePrompt().then(next),
+    [areUnsavedChanges],
+  )
+
+  // Add an event listener to listen for cmd+s/ctrl+s
+  // key presses to save the user.
+  useEventListener(
+    document,
+    'keydown',
+    (event: KeyboardEvent) => {
+      if (event.key === 's' && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault()
+        save()
+      }
+    },
     [areUnsavedChanges],
   )
 
@@ -160,7 +185,13 @@ export default function (props: TUserPage_P): JSX.Element | null {
       } else if (existsInDatabase && isAuthorized('users_write_students')) {
         try {
           beginLoading('Updating user...')
-          setUser(await ClientUser.$update(user))
+          setUser(
+            await ClientUser.$update(user, {
+              passwordIsRequired: updatePassword,
+            }),
+          )
+          // Reset the user entry key to force re-render.
+          setUserEntryKey(StringToolbox.generateRandomId())
           notify('User successfully saved.')
           finishLoading()
         } catch (error: any) {
@@ -251,7 +282,11 @@ export default function (props: TUserPage_P): JSX.Element | null {
         <div className='UserPage Page' ref={root}>
           <DefaultPageLayout navigation={navigation}>
             <div className='Form'>
-              <UserEntry user={user} handleChange={handleChange} />
+              <UserEntry
+                user={user}
+                handleChange={handleChange}
+                key={userEntryKey}
+              />
               <div className='Buttons'>
                 <ButtonText
                   text={'Save'}
@@ -294,6 +329,14 @@ export type TUserPage_S = {
    * Whether or not the username already exists.
    */
   usernameAlreadyExists: TReactState<boolean>
+  /**
+   * Whether or not the user's password is being updated.
+   */
+  updatePassword: TReactState<boolean>
+  /**
+   * Whether or not there are unsaved changes.
+   */
+  areUnsavedChanges: TReactState<boolean>
 }
 
 /**

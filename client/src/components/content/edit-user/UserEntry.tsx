@@ -42,8 +42,8 @@ export default function ({
   const [access, setAccess] = useState<UserAccess>(user.access)
   const [firstName, setFirstName] = useState<string>(user.firstName)
   const [lastName, setLastName] = useState<string>(user.lastName)
-  const [password1, setPassword1] = useState<string>('') // password should be empty on initial load
-  const [password2, setPassword2] = useState<string>('') // password should be empty on initial load
+  const [password1, setPassword1] = useState<string>(user.password1 ?? '')
+  const [password2, setPassword2] = useState<string>(user.password2 ?? '')
   const [needsPasswordReset, setNeedsPasswordReset] = useState<boolean>(
     user.needsPasswordReset,
   )
@@ -51,6 +51,7 @@ export default function ({
   const [userEmptyStringArray, setUserEmptyStringArray] =
     state.userEmptyStringArray
   const [usernameAlreadyExists] = state.usernameAlreadyExists
+  const [updatePassword, setUpdatePassword] = state.updatePassword
 
   /* -- COMPUTED -- */
 
@@ -282,38 +283,6 @@ export default function ({
     })
   }
 
-  /* -- PRE-RENDER PROCESSING -- */
-
-  /**
-   * This is the JSX for the password fields.
-   */
-  const passwordJsx = compute<JSX.Element | null>(() => {
-    return (
-      <>
-        <DetailString
-          fieldType='required'
-          handleOnBlur={handlePassword1Error}
-          label={passwordLabel}
-          value={password1}
-          setValue={setPassword1}
-          errorMessage={password1ErrorMessage}
-          inputType='password'
-          placeholder='Enter a password here...'
-        />
-        <DetailString
-          fieldType='required'
-          handleOnBlur={handlePassword2Error}
-          label={confirmPasswordLabel}
-          value={password2}
-          setValue={setPassword2}
-          errorMessage={password2ErrorMessage}
-          inputType='password'
-          placeholder='Confirm your password here...'
-        />
-      </>
-    )
-  })
-
   /* -- RENDER -- */
 
   return (
@@ -363,16 +332,42 @@ export default function ({
         errorMessage={lastNameErrorMessage}
         placeholder='Enter a last name here...'
       />
-      <If condition={!existsInDatabase}>{passwordJsx}</If>
+      <If condition={existsInDatabase}>
+        <DetailToggle
+          fieldType='required'
+          label='Update Password'
+          value={updatePassword}
+          setValue={setUpdatePassword}
+        />
+      </If>
+      <DetailString
+        fieldType='required'
+        handleOnBlur={handlePassword1Error}
+        label={passwordLabel}
+        value={password1}
+        setValue={setPassword1}
+        errorMessage={password1ErrorMessage}
+        inputType='password'
+        placeholder='Enter a password here...'
+        disabled={!updatePassword && existsInDatabase}
+      />
+      <DetailString
+        fieldType='required'
+        handleOnBlur={handlePassword2Error}
+        label={confirmPasswordLabel}
+        value={password2}
+        setValue={setPassword2}
+        errorMessage={password2ErrorMessage}
+        inputType='password'
+        placeholder='Confirm your password here...'
+        disabled={!updatePassword && existsInDatabase}
+      />
       <DetailToggle
         fieldType='required'
         label='Needs Password Reset'
         value={needsPasswordReset}
         setValue={setNeedsPasswordReset}
       />
-      <If condition={existsInDatabase && user.needsPasswordReset}>
-        {passwordJsx}
-      </If>
     </form>
   )
 }
