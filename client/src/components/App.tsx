@@ -5,7 +5,7 @@ import MetisInfo from 'src/info'
 import SessionClient from 'src/sessions'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
-import { LoginRequiredError } from 'src/toolbox/hooks'
+import { LoginRequiredError, useEventListener } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import { TLogin } from '../../../shared/logins'
 import './App.scss'
@@ -72,6 +72,7 @@ function App(props: {}): JSX.Element | null {
   const [currentPageKey] = globalContext.currentPageKey
   const [currentPageProps] = globalContext.currentPageProps
   const [error] = globalContext.error
+  const [server] = globalContext.server
 
   const {
     beginLoading,
@@ -80,6 +81,7 @@ function App(props: {}): JSX.Element | null {
     loadLoginInfo,
     navigateTo,
     connectToServer,
+    notify,
   } = globalContext.actions
 
   /* -- FUNCTIONS -- */
@@ -284,6 +286,22 @@ function App(props: {}): JSX.Element | null {
       return notifications
     })
   }, [notifications.length])
+
+  // Logs the user out if the server emits a logout event.
+  useEventListener(
+    server,
+    'logout-user-update',
+    async () => {
+      navigateTo('AuthPage', {}, { bypassMiddleware: true })
+      notify(
+        'You have been logged out due to a change to your account. If you believe this is an error, please contact your system administrator. Otherwise, please log back in.',
+        {
+          duration: null,
+        },
+      )
+    },
+    [server],
+  )
 
   /* -- PAGE DETAILS -- */
 

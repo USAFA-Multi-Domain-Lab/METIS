@@ -121,9 +121,9 @@ export default class MetisWsServer {
       // If the login information indicates that the user is
       // currently in a session, find the session and update
       // the connection for that participant.
-      if (login.sessionId !== null) {
+      if (login.metisSessionId !== null) {
         // Get the session.
-        let session = SessionServer.get(login.sessionId)
+        let session = SessionServer.get(login.metisSessionId)
 
         // If the session exists, update the connection.
         if (session !== undefined) {

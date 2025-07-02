@@ -16,7 +16,9 @@ export const auth =
   (request: Request, response: Response, next: NextFunction): void => {
     // Gather details.
     let login: ServerLogin | undefined = ServerLogin.get(request.session.userId)
-    let session: SessionServer | undefined = SessionServer.get(login?.sessionId)
+    let session: SessionServer | undefined = SessionServer.get(
+      login?.metisSessionId,
+    )
     let sessionMember: ServerSessionMember | undefined =
       session?.getMemberByUserId(login?.userId)
 

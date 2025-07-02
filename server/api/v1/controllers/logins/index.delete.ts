@@ -11,7 +11,7 @@ import ApiResponse from '../../library/response'
  */
 const logout = async (request: Request, response: Response) => {
   try {
-    await ServerLogin.destroy(request.session)
+    await ServerLogin.destroy(request)
     return ApiResponse.sendStatus(response, 200)
   } catch (error: any) {
     databaseLogger.error('Failed to log out user.\n', error)

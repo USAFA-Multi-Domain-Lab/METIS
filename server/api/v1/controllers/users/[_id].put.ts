@@ -2,7 +2,8 @@ import { Request, Response } from 'express-serve-static-core'
 import UserModel, { hashPassword } from 'metis/server/database/models/users'
 import { StatusError } from 'metis/server/http'
 import { databaseLogger } from 'metis/server/logging'
-import { TUserJson } from 'metis/users'
+import ServerLogin from 'metis/server/logins'
+import { TUserExistingJson, TUserJson } from 'metis/users'
 import ApiResponse from '../../library/response'
 import { preventSystemUserWrite } from '../../library/users'
 
@@ -15,7 +16,14 @@ import { preventSystemUserWrite } from '../../library/users'
 const updateUser = async (request: Request, response: Response) => {
   // Extract the user updates from the request body.
   let userUpdates = request.body
-  let { _id: userId, username, accessId } = userUpdates as Partial<TUserJson>
+  let {
+    _id: userId,
+    username,
+    accessId,
+    password,
+    needsPasswordReset,
+  } = userUpdates as Partial<TUserJson>
+  let foreignUserLogin = ServerLogin.get(userId)
 
   // Hash the password if it exists.
   if (!!userUpdates.password) {
@@ -26,8 +34,22 @@ const updateUser = async (request: Request, response: Response) => {
     // Disable system-user write operations.
     preventSystemUserWrite({ currentUserId: userId, newAccessId: accessId })
 
+    // Check if user properties changed that require logout
+    const prevUserData: TUserExistingJson = await UserModel.findById(
+      userId,
+    ).exec()
+    const changedFields = [
+      { prev: prevUserData.username, new: username },
+      { prev: prevUserData.accessId, new: accessId },
+      { prev: prevUserData.password, new: password },
+      { prev: prevUserData.needsPasswordReset, new: needsPasswordReset },
+    ]
+    const requiresLogout = changedFields.some(
+      (field) => field.prev !== field.new,
+    )
+
     // Update the user.
-    let userDoc = await UserModel.findByIdAndModify(
+    let userDoc: TUserExistingJson = await UserModel.findByIdAndModify(
       userId,
       {},
       {
@@ -39,6 +61,12 @@ const updateUser = async (request: Request, response: Response) => {
     // If the user was not found, throw an error.
     if (userDoc === null) {
       throw new StatusError(`User with ID "${userId}" not found.`, 404)
+    }
+    // If the user is required to be logged out, make sure the
+    // client is notified so that the user is logged out.
+    if (foreignUserLogin && requiresLogout) {
+      await ServerLogin.destroy(request, foreignUserLogin.userId)
+      foreignUserLogin.client?.emit('logout-user-update', { data: {} })
     }
     // Log the successful update of the user.
     databaseLogger.info(`User with ID "${userId}" updated.`)

@@ -427,6 +427,10 @@ export type TGenericServerEvents = {
     }
   >
   /**
+   * Occurs when the client needs to be logged out due to the user account being updated.
+   */
+  'logout-user-update': TConnectEvent<'logout-user-update', {}>
+  /**
    * Occurs when the server intentionally emits an error to client.
    */
   'error': {

@@ -22,7 +22,7 @@ const login = async (request: Request, response: Response) => {
 
     try {
       // Attempt to create a new login object.
-      let login = new ServerLogin(user, { forceful })
+      let login = new ServerLogin(user, request.sessionID, { forceful })
       // If the login is in a timeout, throw an error.
       if (login.inTimeout) {
         throw new StatusError(

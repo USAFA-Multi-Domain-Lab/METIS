@@ -582,6 +582,9 @@ export default function SessionPage({
                       return ''
                   }
                 }}
+                onItemDblClick={(item) =>
+                  item.download({ method: 'session-api' })
+                }
                 onItemButtonClick={(button, item) => {
                   switch (button) {
                     case 'download':

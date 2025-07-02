@@ -193,7 +193,7 @@ export default class ClientConnection {
   protected addDefaultListeners(): void {
     // Add a `request-current-session` listener.
     this.addEventListener('request-current-session', (event) => {
-      let session = SessionServer.get(this.login.sessionId ?? undefined)
+      let session = SessionServer.get(this.login.metisSessionId ?? undefined)
       let requester = session?.getMemberByUserId(this.userId)
 
       // Handle missing requester or session.
@@ -270,7 +270,7 @@ export default class ClientConnection {
     // Add a `request-quit-session` listener.
     this.addEventListener('request-quit-session', (event) => {
       // Get the session.
-      let session = SessionServer.get(this.login.sessionId ?? undefined)
+      let session = SessionServer.get(this.login.metisSessionId ?? undefined)
 
       // Quit the session, if defined.
       if (session !== undefined) {
