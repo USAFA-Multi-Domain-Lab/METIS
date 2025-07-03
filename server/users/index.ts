@@ -35,7 +35,7 @@ export default class ServerUser extends User<TMetisServerComponents> {
   public static isValidHashedPassword = (
     password: NonNullable<TUserJson['password']>,
   ): boolean => {
-    let passwordExpression: RegExp = /^\$2[ayb]\$.{56}$/
+    let passwordExpression: RegExp = /^$|^\$2[ayb]\$.{56}$/
     let isValidPassword: boolean = passwordExpression.test(password)
 
     return isValidPassword
