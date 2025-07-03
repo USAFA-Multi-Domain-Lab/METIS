@@ -1,0 +1,9 @@
+@import 'src/assets/styles/config.scss';
+@import 'src/assets/styles/util.scss';
+
+.DetailGrouping {
+  margin: 1.5em 0;
+  border-top: 2px solid rgba($color-faded, 0.2);
+  border-bottom: 2px solid rgba($color-faded, 0.2);
+  padding: 1.5em 0 0;
+}

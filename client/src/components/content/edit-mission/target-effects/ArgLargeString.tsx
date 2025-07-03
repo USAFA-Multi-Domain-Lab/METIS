@@ -36,6 +36,15 @@ export default function ArgLargeString({
     if (value !== defaultValue) {
       setEffectArgs((prev) => ({ ...prev, [arg._id]: value }))
     }
+
+    // Otherwise, remove the argument from the effect's
+    // arguments.
+    if (value === defaultValue) {
+      setEffectArgs((prev) => {
+        delete prev[arg._id]
+        return prev
+      })
+    }
   }, [value])
 
   /* -- FUNCTIONS -- */
@@ -80,10 +89,9 @@ export default function ArgLargeString({
       fieldType={arg.required ? 'required' : 'optional'}
       handleOnBlur={arg.required ? 'repopulateValue' : 'none'}
       label={arg.name}
-      stateValue={value}
-      setState={setValue}
+      value={value}
+      setValue={setValue}
       defaultValue={arg.required ? arg.default : undefined}
-      elementBoundary='.SidePanelSection'
       tooltipDescription={arg.tooltipDescription}
       key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}_${
         arg.required ? 'required' : 'optional'

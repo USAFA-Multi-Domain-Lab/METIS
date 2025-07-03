@@ -10,6 +10,7 @@
     .Text {
       overflow-x: auto;
       opacity: 0.35;
+      word-break: break-all;
     }
 
     .Lock {
@@ -18,11 +19,12 @@
 
       background: url('/assets/images/icons/lock.svg');
       background-repeat: no-repeat;
-      background-size: 100%;
+      background-size: 0.65em;
       background-position: center;
-      width: 1em;
-      height: 1em;
-      margin-left: 0.15em;
+      min-width: 1em;
+      height: 0.96em;
+      margin-left: 0.25em;
+      font-size: $button-svg-size;
     }
   }
 }

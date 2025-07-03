@@ -1,18 +1,28 @@
-import { TPrototypeButton } from 'src/components/content/session/mission-map/objects/MissionPrototype'
-import { TEventListenerTarget } from 'src/toolbox/hooks'
-import ClientMission, { TClientMissionTypes, TMissionNavigable } from '..'
+import { TMetisClientComponents } from 'src'
+import {
+  TMapCompatibleNode,
+  TMapCompatibleNodeEvent,
+  TNodeButton,
+} from 'src/components/content/session/mission-map/objects/nodes'
+import ClientMission from '..'
+import { TListenerTargetEmittable } from '../../../../shared/events'
+import { TNodeExecutionState } from '../../../../shared/missions/nodes'
 import MissionPrototype, {
-  TCommonMissionPrototypeJson,
+  TMissionPrototypeJson,
   TMissionPrototypeOptions,
 } from '../../../../shared/missions/nodes/prototypes'
+import { AnyObject } from '../../../../shared/toolbox/objects'
 import { Vector2D } from '../../../../shared/toolbox/space'
+import ClientActionExecution from '../actions/executions'
 
 /**
  * Class for managing mission prototypes on the client.
  */
 export default class ClientMissionPrototype
-  extends MissionPrototype<TClientMissionTypes>
-  implements TEventListenerTarget<TPrototypeEventMethod>, TMissionNavigable
+  extends MissionPrototype<TMetisClientComponents>
+  implements
+    TListenerTargetEmittable<TPrototypeEventMethod>,
+    TMapCompatibleNode
 {
   /**
    * The position of the prototype on a mission map.
@@ -24,24 +34,27 @@ export default class ClientMissionPrototype
    */
   public depth: number
 
-  /**
-   * The display name of the prototype.
-   */
-  public get name(): string {
-    return this._id.substring(0, 8)
+  // Implemented
+  public get nameLineCount(): number {
+    // The line count for a prototype is
+    // always 1.
+    return 1
   }
+
+  // Implemented
+  public color: string = '#ffffff'
 
   /**
    * Buttons to manage this specific prototype on a mission map.
    */
-  private _buttons: TPrototypeButton[]
+  private _buttons: TNodeButton<ClientMissionPrototype>[]
   /**
    * Buttons to manage this specific prototype on a mission map.
    */
-  public get buttons(): TPrototypeButton[] {
+  public get buttons(): TNodeButton<ClientMissionPrototype>[] {
     return [...this._buttons]
   }
-  public set buttons(value: TPrototypeButton[]) {
+  public set buttons(value: TNodeButton<ClientMissionPrototype>[]) {
     // Gather details.
     let structureChange: boolean = false
 
@@ -66,6 +79,11 @@ export default class ClientMissionPrototype
     }
   }
 
+  // Implemented
+  public get icon(): TMetisIcon {
+    return '_blank'
+  }
+
   /**
    * Whether the prototype is selected in the mission.
    */
@@ -74,9 +92,35 @@ export default class ClientMissionPrototype
   }
 
   // Implemented
-  public get path(): TMissionNavigable[] {
-    return [this.mission, this]
+  public get pending(): boolean {
+    return false
   }
+
+  // Implemented
+  public get revealed(): boolean {
+    return true
+  }
+
+  // Implemented
+  public get latestExecution(): ClientActionExecution | null {
+    return null
+  }
+
+  // Implemented
+  public get executionState(): TNodeExecutionState {
+    return { status: 'unexecuted' }
+  }
+
+  // Implemented
+  public get executing(): boolean {
+    return this.executionState.status === 'executing'
+  }
+
+  // Implemented
+  public blocked: boolean = false
+
+  // Implemented
+  public exclude: boolean = false
 
   /**
    * Listeners for prototype events.
@@ -121,7 +165,7 @@ export default class ClientMissionPrototype
    */
   public constructor(
     mission: ClientMission,
-    data: Partial<TCommonMissionPrototypeJson> = ClientMissionPrototype.DEFAULT_PROPERTIES,
+    data: Partial<TMissionPrototypeJson> = ClientMissionPrototype.DEFAULT_PROPERTIES,
     options: TMissionPrototypeOptions<ClientMissionPrototype> = {},
   ) {
     super(mission, data, options)
@@ -135,7 +179,7 @@ export default class ClientMissionPrototype
    * Calls the callbacks of listeners for the given event.
    * @param method The method of the event to emit.
    */
-  protected emitEvent(method: TPrototypeEventMethod): void {
+  public emitEvent(method: TPrototypeEventMethod): void {
     // Call any matching listener callbacks
     // or any activity listener callbacks.
     for (let [listenerEvent, listenerCallback] of this.listeners) {
@@ -146,7 +190,7 @@ export default class ClientMissionPrototype
     // If the event is a set-buttons event, call
     // emit event on the mission level.
     if (method === 'set-buttons') {
-      this.mission.emitEvent('set-buttons')
+      this.mission.emitEvent('set-buttons', [])
     }
   }
 
@@ -359,23 +403,88 @@ export default class ClientMissionPrototype
   }
 
   /**
-   * Populates the children of the prototype with the given data.
-   * @param data The data to populate the children with.
+   * Maps the relationships between the prototypes
+   * based on the structure object.
+   * @param descendants The descendant prototypes to map the relationships for.
+   * @param cursor The current location in the structure object.
+   * @param parent **THIS IS FOR RECURSION ONLY. DO NOT SET!!**
    */
-  public populateChildren(data: TCommonMissionPrototypeJson[]): void {
-    // If children are already set,
-    // return them.
-    if (this.children.length > 0) return
+  protected mapDescendantRelationships(
+    descendants: TMissionPrototypeJson[],
+    cursor: AnyObject,
+    parent: ClientMissionPrototype = this,
+  ): void {
+    // Gather details.
+    let { mission } = parent
 
-    // Create and add children.
-    data.forEach((datum) => {
-      let child: ClientMissionPrototype = new ClientMissionPrototype(
-        this.mission,
-        datum,
+    // Arrange each prototypes children based on the
+    // structure object.
+    for (let key of Object.keys(cursor)) {
+      let childStructure = cursor[key]
+      let prototype = descendants.find(
+        ({ structureKey }) => structureKey === key,
       )
-      this.mission.prototypes.push(child)
-      child.parent = this
-      this.children.push(child)
+
+      // If the prototype is not found, skip it.
+      // *** Note: The first key in the structure object
+      // *** is always the prototype itself. This is why
+      // *** we continue on if the prototype is not found.
+      if (!prototype && childStructure !== undefined) {
+        this.mapDescendantRelationships(descendants, childStructure, parent)
+        continue
+      }
+
+      // Handle creating the prototype.
+      let child = new ClientMissionPrototype(mission, prototype)
+      mission.prototypes.push(child)
+      child.parent = parent
+      parent.children.push(child)
+
+      // Continue mapping the remaining descendants.
+      this.mapDescendantRelationships(descendants, childStructure, child)
+    }
+  }
+
+  /**
+   * Callback for when the server emits a node open
+   * event, processing the event here at the prototype
+   * level.
+   * @param revealedDescendantPrototypes The prototypes revealed by
+   * the open event, if any.
+   * @param structure The structure referenced for the relationships between
+   * the prototypes.
+   */
+  public onOpen(
+    revealedDescendantPrototypes: TMissionPrototypeJson[] | undefined,
+    structure: AnyObject | undefined,
+  ): void {
+    if (revealedDescendantPrototypes && structure) {
+      // If the descendants are already set,
+      // don't set them again.
+      if (this.descendants.length > 0) return
+      // Map the relationships.
+      this.mapDescendantRelationships(revealedDescendantPrototypes, structure)
+    }
+  }
+
+  /**
+   * Duplicates the prototype, creating a new prototype with the same properties
+   * as this one or with the provided properties.
+   * @param options The options for duplicating the prototype.
+   * @param options.mission The mission to which the duplicated prototype belongs.
+   * @returns A new prototype with the same properties as this one or with the
+   * provided properties.
+   */
+  public duplicate(
+    options: TPrototypeDuplicateOptions = {},
+  ): ClientMissionPrototype {
+    // Gather details.
+    const { mission = this.mission } = options
+
+    return new ClientMissionPrototype(mission, {
+      _id: ClientMissionPrototype.DEFAULT_PROPERTIES._id,
+      structureKey: this.structureKey,
+      depthPadding: this.depthPadding,
     })
   }
 }
@@ -387,7 +496,7 @@ export default class ClientMissionPrototype
  * @option 'set-buttons'
  * Triggered when the buttons for the prototype are set.
  */
-export type TPrototypeEventMethod = 'activity' | 'set-buttons'
+export type TPrototypeEventMethod = TMapCompatibleNodeEvent
 
 /**
  * The relation of prototype to another prototype.
@@ -414,4 +523,15 @@ export type TPrototypeDeleteMethod = 'delete-children' | 'shift-children'
 export interface TPrototypeDeleteOptions {
   calledByParentDelete?: boolean // Default "false"
   deleteMethod?: TPrototypeDeleteMethod // Default 'delete-children'
+}
+
+/**
+ * The options for duplicating a prototype.
+ * @see {@link ClientMissionPrototype.duplicate}
+ */
+type TPrototypeDuplicateOptions = {
+  /**
+   * The mission to which the duplicated prototype belongs.
+   */
+  mission?: ClientMission
 }

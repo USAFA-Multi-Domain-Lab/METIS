@@ -5,16 +5,19 @@
   pointer-events: all;
   display: inline-block;
   margin: 0 5px 0;
+  border: none;
+  background: none;
+  font-size: 0.825rem;
   white-space: nowrap;
 
   .Text {
-    color: $color-accent-light;
+    color: $color-accent;
     font-weight: 400;
   }
 
   .Bracket {
     opacity: 0.25;
-    color: $color-main;
+    color: $color-primary-light;
   }
 
   .LeftBracket {

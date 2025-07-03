@@ -11,8 +11,8 @@ import './DetailToggle.scss'
  */
 export function DetailToggle({
   label,
-  stateValue,
-  setState,
+  value: stateValue,
+  setValue: setState,
   // Optional Properties
   lockState = 'unlocked',
   tooltipDescription = '',
@@ -27,22 +27,11 @@ export function DetailToggle({
    * The class name for the detail.
    */
   const rootClassName: string = compute(() => {
-    // Default class names
     let classList: string[] = ['Detail', 'DetailToggle']
 
-    // If a unique class name is passed
-    // then add it to the list of class names.
-    if (uniqueClassName) {
-      classList.push(uniqueClassName)
-    }
+    if (uniqueClassName) classList.push(uniqueClassName)
+    if (disabled) classList.push('Disabled')
 
-    // If disabled is true then add the
-    // disabled class name.
-    if (disabled) {
-      classList.push('Disabled')
-    }
-
-    // Return the list of class names as one string.
     return classList.join(' ')
   })
   /**
@@ -111,13 +100,15 @@ export function DetailToggle({
             <Tooltip description={tooltipDescription} />
           </sup>
         </div>
-      </div>
-      <div className={fieldClassName}>
-        <Toggle
-          stateValue={stateValue}
-          setState={setState}
-          lockState={lockState}
-        />
+        <div className='TitleColumnTwo'>
+          <div className={fieldClassName}>
+            <Toggle
+              stateValue={stateValue}
+              setState={setState}
+              lockState={lockState}
+            />
+          </div>
+        </div>
       </div>
       <div className={fieldErrorClassName}>{errorMessage}</div>
     </div>

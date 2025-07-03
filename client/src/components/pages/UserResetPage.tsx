@@ -1,24 +1,31 @@
 import { useState } from 'react'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
 import { useMountHandler, usePostInitEffect } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
-import { DefaultLayout, TPage_P } from '.'
+import { DefaultPageLayout, TPage_P } from '.'
 import { DetailLocked } from '../content/form/DetailLocked'
 import { DetailString } from '../content/form/DetailString'
-import { LogoutLink, TNavigation } from '../content/general-layout/Navigation'
+import {
+  LogoutButton,
+  TNavigation_P,
+} from '../content/general-layout/Navigation'
+import {
+  ButtonText,
+  TButtonTextDisabled,
+} from '../content/user-controls/buttons/ButtonText'
+import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
 import './UserResetPage.scss'
 
 /**
  * This page allows the user to reset their password.
  */
 export default function UserResetPage(): JSX.Element | null {
-  /* -- GLOBAL CONTEXT -- */
+  /* -- STATE -- */
+
   const globalContext = useGlobalContext()
   const { notify, navigateTo, finishLoading } = globalContext.actions
   const [login] = globalContext.login
-
-  /* -- STATE -- */
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(false)
   const [userEmptyStringArray, setUserEmptyStringArray] = useState<string[]>([])
   const [handlePassword1Error, setHandlePassword1Error] =
@@ -29,6 +36,9 @@ export default function UserResetPage(): JSX.Element | null {
   const [password2ErrorMessage, setPassword2ErrorMessage] = useState<string>()
   const [password1, setPassword1] = useState<string>('')
   const [password2, setPassword2] = useState<string>('')
+  const navButtonEngine = useButtonSvgEngine({
+    elements: [LogoutButton()],
+  })
 
   /* -- EFFECTS -- */
 
@@ -119,41 +129,23 @@ export default function UserResetPage(): JSX.Element | null {
   /* -- COMPUTED -- */
 
   /**
-   * Props for navigation.
+   * Config for the navigation on this page.
    */
-  const navigation = compute(
-    (): TNavigation => ({
-      links: [LogoutLink(globalContext)],
-      logoLinksHome: false,
-      boxShadow: 'alt-6',
-    }),
-  )
+  const navigation = compute<TNavigation_P>(() => {
+    return { buttonEngine: navButtonEngine, logoLinksHome: false }
+  })
+
   /**
    * Boolean to determine if there are any fields with empty strings.
    */
   const isEmptyString: boolean = compute(() => userEmptyStringArray.length > 0)
+
   /**
-   * Boolean to determine if the save button should be grayed out.
+   * Whether the save button is disabled.
    */
-  const grayOutSaveButton: boolean = compute(
-    () => !areUnsavedChanges || isEmptyString || !user.canSave,
+  const saveDisabled: TButtonTextDisabled = compute(() =>
+    !areUnsavedChanges || isEmptyString || !user.canSave ? 'full' : 'none',
   )
-  /**
-   * Class name for the save button.
-   */
-  const saveButtonClassName: string = compute(() => {
-    // Initialize the class list.
-    let classList: string[] = ['Button']
-
-    // If the save button should be grayed out,
-    // add the disabled class.
-    if (grayOutSaveButton) {
-      classList.push('Disabled')
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
 
   /* -- FUNCTIONS -- */
 
@@ -190,15 +182,15 @@ export default function UserResetPage(): JSX.Element | null {
 
   return (
     <div className='UserResetPage Page'>
-      <DefaultLayout navigation={navigation}>
+      <DefaultPageLayout navigation={navigation}>
         <div className='ResetUserEntry'>
           <DetailLocked label='Username' stateValue={user.username} />
           <DetailString
             fieldType='required'
             handleOnBlur={handlePassword1Error}
             label='New Password'
-            stateValue={password1}
-            setState={setPassword1}
+            value={password1}
+            setValue={setPassword1}
             errorMessage={password1ErrorMessage}
             inputType='password'
             placeholder='Enter a new password here...'
@@ -207,20 +199,22 @@ export default function UserResetPage(): JSX.Element | null {
             fieldType='required'
             handleOnBlur={handlePassword2Error}
             label='Confirm New Password'
-            stateValue={password2}
-            setState={setPassword2}
+            value={password2}
+            setValue={setPassword2}
             errorMessage={password2ErrorMessage}
             inputType='password'
             placeholder='Confirm your new password here...'
           />
         </div>
 
-        <div className='ButtonContainer'>
-          <div className={saveButtonClassName} onClick={() => save()}>
-            Save
-          </div>
+        <div className='Buttons'>
+          <ButtonText
+            text={'Save'}
+            disabled={saveDisabled}
+            onClick={() => save()}
+          />
         </div>
-      </DefaultLayout>
+      </DefaultPageLayout>
     </div>
   )
 }

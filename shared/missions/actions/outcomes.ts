@@ -1,60 +1,148 @@
-import { TAction, TCommonMissionAction, TCommonMissionActionJson } from '.'
-import { TCommonMissionTypes } from '..'
-import { TCommonMissionNode, TCommonMissionNodeJson, TNode } from '../nodes'
-
-/**
- * Extracts the outcome type from the mission types.
- * @param T The mission types.
- * @returns The outcome type.
- */
-export type TOutcome<T extends TCommonMissionTypes> = T['outcome']
-
-/**
- * The JSON representation of an action outcome.
- */
-export interface TActionOutcomeJson {
-  /**
-   * The ID of the action executed.
-   */
-  actionId: NonNullable<TCommonMissionActionJson['_id']>
-  /**
-   * The ID of the node upon which the action executed.
-   */
-  nodeId: TCommonMissionNodeJson['_id']
-  /**
-   * Whether the action is successful in its execution.
-   */
-  successful: boolean
-}
+import { TAction } from '.'
+import { MetisComponent, TCreateJsonType, TMetisBaseComponents } from '../../'
+import { TForce } from '../forces'
+import { TNode } from '../nodes'
+import { TExecution } from './executions'
 
 /**
  * The outcome of an action being executed.
  */
-export default interface IActionOutcome<
-  T extends TCommonMissionTypes = TCommonMissionTypes,
-> {
+export default abstract class ExecutionOutcome<
+  T extends TMetisBaseComponents = TMetisBaseComponents,
+> extends MetisComponent {
+  // Overridden
+  public get name(): string {
+    return this._id.substring(0, 8)
+  }
+
+  /**
+   * Cache for `state` field.
+   */
+  protected _state: TOutcomeState
+  /**
+   * The state of the outcome.
+   */
+  public get state(): TOutcomeState {
+    return this._state
+  }
+
+  /**
+   * The status of the outcome, determined
+   * by the state.
+   */
+  public get status(): TOutcomeState['status'] {
+    return this.state.status
+  }
+
+  /**
+   * The execution associated with the outcome.
+   */
+  public readonly execution: TExecution<T>
+
+  /**
+   * The ID of the execution associated with the outcome.
+   */
+  public get executionId(): MetisComponent['_id'] {
+    return this.execution._id
+  }
+
   /**
    * The action executed.
    */
-  action: TAction<T>
-  /**
-   * The node upon which the action executed.
-   */
-  node: TNode<T>
+  public get action(): TAction<T> {
+    return this.execution.action
+  }
+
   /**
    * The ID of the action executed.
    */
-  actionId: TCommonMissionAction['_id']
+  public get actionId(): MetisComponent['_id'] {
+    return this.action._id
+  }
+
+  /**
+   * The node upon which the action executed.
+   */
+  public get node(): TNode<T> {
+    return this.action.node
+  }
+
   /**
    * The ID of the node upon which the action executed.
    */
-  nodeId: TCommonMissionNode['_id']
+  public get nodeId(): MetisComponent['_id'] {
+    return this.node._id
+  }
+
   /**
-   * Whether the action is successful in its execution.
+   * The force where the action executed.
    */
-  successful: boolean
+  public get force(): TForce<T> {
+    return this.node.force
+  }
+
   /**
-   * Converts the action outcome to JSON.
+   * The ID of the force where the action executed.
    */
-  toJson: () => TActionOutcomeJson
+  public get forceId(): MetisComponent['_id'] {
+    return this.force._id
+  }
+
+  /**
+   * @param initialState The initial state of the outcome, before
+   * any modifications are made.
+   * @param execution The execution associated with the outcome.
+   */
+  public constructor(
+    _id: string,
+    initialState: TOutcomeState,
+    execution: TExecution<T>,
+  ) {
+    super(_id, '', false)
+
+    this._state = initialState
+    this.execution = execution
+  }
+
+  /**
+   * Converts the execution outcome to JSON.
+   */
+  public toJson(): TExecutionOutcomeJson {
+    return {
+      _id: this._id,
+      executionId: this.executionId,
+      state: this.state,
+    }
+  }
 }
+
+/**
+ * Extracts the outcome type from a registry of
+ * METIS components that extends `TMetisBaseComponents`.
+ * @param T The type registry.
+ * @returns The outcome type.
+ */
+export type TOutcome<T extends TMetisBaseComponents> = T['outcome']
+
+/**
+ * The JSON representation of an execution outcome.
+ */
+export type TExecutionOutcomeJson = TCreateJsonType<
+  ExecutionOutcome,
+  '_id' | 'executionId' | 'state'
+>
+
+/**
+ * Data associated with an outcome status.
+ */
+export type TOutcomeState =
+  | {
+      readonly status: 'success'
+    }
+  | {
+      readonly status: 'failure'
+    }
+  | {
+      readonly status: 'aborted'
+      readonly abortedAt: number
+    }

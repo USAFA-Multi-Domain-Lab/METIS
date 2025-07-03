@@ -1,69 +1,71 @@
-import { TCommonMissionTypes } from 'metis/missions'
 import { AnyObject } from 'metis/toolbox/objects'
-import Target, { TCommonTarget, TCommonTargetJson, TTarget } from './targets'
+import { MetisComponent, TMetisBaseComponents } from '..'
+import { TTargetJson } from './targets'
 
 /**
  * This is the environment in which the target(s) exist.
  */
 export default abstract class TargetEnvironment<
-  T extends TCommonMissionTypes = TCommonMissionTypes,
-> implements TCommonTargetEnv
-{
-  // Inherited
-  public _id: TCommonTargetEnv['_id']
-
-  // Inherited
-  public name: TCommonTargetEnv['name']
-
-  // Inherited
-  public description: TCommonTargetEnv['description']
-
-  // Inherited
-  public version: TCommonTargetEnv['version']
-
-  // Inherited
-  public targets: TTarget<T>[]
-
+  T extends TMetisBaseComponents = TMetisBaseComponents,
+> extends MetisComponent {
   /**
-   * Creates a new TargetEnvironment Object.
-   * @param data The data to use to create the TargetEnvironment.
-   * @param options The options for creating the TargetEnvironment.
+   * Creates a new {@link TargetEnvironment} Object.
    */
-  public constructor(
-    data: Partial<TCommonTargetEnvJson> = TargetEnvironment.DEFAULT_PROPERTIES,
-    options: TTargetEnvOptions = {},
+  protected constructor(
+    _id: string,
+    name: string,
+    /**
+     * Describes what the target environment is.
+     */
+    public description: string,
+
+    /**
+     * The current version of the target environment.
+     */
+    public version: string,
+    /**
+     * The targets in the environment.
+     */
+    public targets: T['target'][] = [],
   ) {
-    this._id = data._id ?? TargetEnvironment.DEFAULT_PROPERTIES._id
-    this.name = data.name ?? TargetEnvironment.DEFAULT_PROPERTIES.name
-    this.description =
-      data.description ?? TargetEnvironment.DEFAULT_PROPERTIES.description
-    this.version = data.version ?? TargetEnvironment.DEFAULT_PROPERTIES.version
-    this.targets = this.parseTargets(
-      data.targets ?? TargetEnvironment.DEFAULT_PROPERTIES.targets,
-    )
+    super(_id, name, false)
+
+    this.description = description
+    this.version = version
   }
 
   /**
-   * Parses the target data into Target Objects.
-   * @param data The target data to parse.
-   * @returns An array of Target Objects.
+   * Registers the target environment with the registry.
+   * @note If the target environment is already registered,
+   * a warning will be logged and the registration will be
+   * skipped.
+   * @returns Itself, to allow for chaining calls.
    */
-  protected abstract parseTargets(data: TCommonTargetJson[]): TTarget<T>[]
+  public abstract register(): T['targetEnv']
 
   /**
    * Converts the TargetEnvironment Object to JSON.
    * @param options Options for converting the TargetEnvironment to JSON.
    * @returns A JSON representation of the TargetEnvironment.
    */
-  public toJson(): TCommonTargetEnvJson {
+  public toJson(): TTargetEnvJson {
     // Construct JSON object to send to the server.
     return {
       _id: this._id,
       name: this.name,
       description: this.description,
       version: this.version,
-      targets: this.targets.map((target: TCommonTarget) => target.toJson()),
+      targets: this.targets.map((target) => target.toJson()),
     }
+  }
+
+  /**
+   * @param _id The ID of the target.
+   * @returns The target with the provided ID, or
+   * undefined if the target cannot be found.
+   */
+  public getTarget(_id: string | null | undefined): T['target'] | undefined {
+    return this.targets.find((target) => target._id === _id)
   }
 
   /**
@@ -74,12 +76,12 @@ export default abstract class TargetEnvironment<
    */
   public static isJson(
     obj: AnyObject,
-    excludedKeys: (keyof TCommonTargetEnvJson)[] = [],
-  ): obj is TCommonTargetEnvJson {
+    excludedKeys: (keyof TTargetEnvJson)[] = [],
+  ): obj is TTargetEnvJson {
     // Only grab the keys that are not excluded.
     const requiredKeys = Object.keys(
       TargetEnvironment.DEFAULT_PROPERTIES,
-    ).filter((key) => !excludedKeys.includes(key as keyof TCommonTargetEnvJson))
+    ).filter((key) => !excludedKeys.includes(key as keyof TTargetEnvJson))
     // Check if the required keys are present in the object.
     const keysPassed = Object.keys(obj)
     return keysPassed.every((key) => requiredKeys.includes(key))
@@ -88,79 +90,29 @@ export default abstract class TargetEnvironment<
   /**
    * Default properties set when creating a new TargetEnvironment object.
    */
-  public static readonly DEFAULT_PROPERTIES: TCommonTargetEnvJson = {
+  public static readonly DEFAULT_PROPERTIES: TTargetEnvJson = {
     _id: 'metis-target-env-default',
     name: 'Select a target environment',
     description: 'This is a default target environment.',
     version: '0.1',
     targets: [],
   }
-
-  /**
-   * The internal target environment used for creating effects.
-   */
-  public static readonly INTERNAL_TARGET_ENV: TCommonTargetEnvJson = {
-    _id: 'metis',
-    name: 'METIS',
-    description: '',
-    version: '0.1',
-    targets: Target.INTERNAL_TARGETS,
-  }
 }
 
 /* ------------------------------ TARGET ENVIRONMENT TYPES ------------------------------ */
 
 /**
- * Options for creating a new TargetEnvironment object.
+ * Extracts the target environment type from a registry of METIS
+ * components type that extends `TMetisBaseComponents`.
+ * @param T The type registry.
+ * @returns The target environment type.
  */
-export type TTargetEnvOptions = {}
-
-/**
- * Options for the TargetEnvironment.toJson() method.
- */
-export type TTargetEnvJsonOptions = {}
-
-/**
- * Type used for the Target Environment class.
- */
-export interface TCommonTargetEnv {
-  /**
-   * The ID of the target environment.
-   */
-  _id: string
-  /**
-   * The name of the target environment.
-   */
-  name: string
-  /**
-   * Describes what the target environment is.
-   */
-  description: string
-  /**
-   * The current version of the target environment.
-   */
-  version: string
-  /**
-   * The targets in the environment.
-   */
-  targets: TCommonTarget[]
-  /**
-   * Converts the TargetEnvironment Object to JSON.
-   */
-  toJson: (options?: TTargetEnvJsonOptions) => TCommonTargetEnvJson
-}
-
-/**
- * Extracts the target env type from the mission types.
- * @param T The mission types.
- * @returns The target env type.
- */
-export type TTargetEnv<T extends TCommonMissionTypes> = T['targetEnv']
+export type TTargetEnv<T extends TMetisBaseComponents> = T['targetEnv']
 
 /**
  * The JSON representation of a TargetEnvironment object.
  */
-export interface TCommonTargetEnvJson {
+export interface TTargetEnvJson {
   /**
    * The ID of the target environment.
    */
@@ -181,5 +133,5 @@ export interface TCommonTargetEnvJson {
    * The JSON representation of the targets in
    * the environment.
    */
-  targets: TCommonTargetJson[]
+  targets: TTargetJson[]
 }

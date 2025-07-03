@@ -1,41 +1,70 @@
-import { TClientMissionTypes } from 'src/missions'
+import { TMetisClientComponents } from 'src'
 import { ClientTargetEnvironment } from '.'
-import Target from '../../../shared/target-environments/targets'
+import Arg, { TTargetArg } from '../../../shared/target-environments/args'
+import Target, {
+  TTargetJson,
+} from '../../../shared/target-environments/targets'
 
 /**
  * Class representing a target within a target environment
  * on the client-side.
  */
-export default class ClientTarget extends Target<TClientMissionTypes> {
+export default class ClientTarget extends Target<TMetisClientComponents> {
   /**
-   * Grabs a specific target from a target environment by its ID.
-   * @param id The ID of the target to grab.
-   * @returns The target with the provided ID.
+   * @see {@link Target.migrationVersions}
    */
-  public static getTarget(
-    id: string | null | undefined,
-  ): ClientTarget | undefined {
-    // Get all the target environments.
-    let targetEnvironments: ClientTargetEnvironment[] =
-      ClientTargetEnvironment.getAll()
+  private _migrationVersions: string[]
+  // Implemented
+  public get migrationVersions(): string[] {
+    return this._migrationVersions
+  }
 
-    // Declare the target.
-    let target: ClientTarget | undefined
+  protected constructor(
+    _id: string,
+    name: string,
+    description: string,
+    args: TTargetArg[],
+    migrationVersions: string[],
+    environment: ClientTargetEnvironment,
+  ) {
+    super(_id, name, description, args, environment)
+    this._migrationVersions = migrationVersions
+  }
 
-    // Iterate over the target environments.
-    for (let targetEnvironment of targetEnvironments) {
-      // Find the target that matches the ID.
-      target = targetEnvironment.targets.find(
-        (target: ClientTarget) => target._id === id,
-      )
+  /**
+   * @returns A new {@link ClientTarget} instance
+   * with default values.
+   */
+  public static createBlank(
+    environment: ClientTargetEnvironment,
+  ): ClientTarget {
+    return new ClientTarget(
+      ClientTarget.DEFAULT_PROPERTIES._id,
+      ClientTarget.DEFAULT_PROPERTIES.name,
+      ClientTarget.DEFAULT_PROPERTIES.description,
+      Arg.fromJson(ClientTarget.DEFAULT_PROPERTIES.args),
+      ClientTarget.DEFAULT_PROPERTIES.migrationVersions,
+      environment,
+    )
+  }
 
-      // If the target is found, break the loop.
-      if (target) {
-        break
-      }
-    }
-
-    // Return the target.
-    return target
+  /**
+   * @param json The JSON representation of the target.
+   * @param environment The environment in which the target exists.
+   * @returns A new {@link ClientTarget} instance created
+   * from the JSON.
+   */
+  public static fromJson(
+    json: TTargetJson,
+    environment: ClientTargetEnvironment,
+  ): ClientTarget {
+    return new ClientTarget(
+      json._id,
+      json.name,
+      json.description,
+      Arg.fromJson(json.args),
+      json.migrationVersions,
+      environment,
+    )
   }
 }

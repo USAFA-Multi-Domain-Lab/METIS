@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import ClientSession from 'src/sessions'
 import ClientSessionMember from 'src/sessions/members'
 import { compute } from 'src/toolbox'
@@ -18,7 +18,7 @@ export default function SessionMembers({
   const globalContext = useGlobalContext()
   const { handleError, prompt, beginLoading, finishLoading } =
     globalContext.actions
-  const [login] = useRequireLogin()
+  const { login } = useRequireLogin()
   const [server] = globalContext.server
   const [members, setMembers] = useState<ClientSessionMember[]>(
     session.membersSorted,

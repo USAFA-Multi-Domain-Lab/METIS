@@ -64,7 +64,7 @@
         text-overflow: ellipsis;
 
         &.RedAlert {
-          color: $session-red;
+          color: $color-failure;
         }
 
         .Count {
@@ -83,63 +83,22 @@
       }
     }
 
-    .PanelSizeRelationship {
-      &,
-      .ResizablePanel,
-      .ResizeBar,
-      .MissionMap,
-      .OutputPanel {
-        height: $map-n-output-height;
-      }
-
-      .ResizablePanel:first-child {
-        display: grid;
-        align-items: center;
-
-        .MissionMap,
-        .NodeActions,
-        .ExecuteNodePath {
-          grid-column: 1 / 2;
-          grid-row: 1 / 2;
-        }
-      }
+    .PanelLayout {
+      height: $map-n-output-height;
     }
 
     .MissionMap {
       width: 100%;
       height: 100%;
+    }
 
-      .ButtonSvgPanel {
-        .glue {
-          box-shadow: $box-shadow-alt2;
-
-          .ButtonSvg {
-            &.cancel {
-              padding-left: 0;
-              padding-top: 0.75px;
-              height: 37px;
-            }
-          }
-        }
+    .PanelView {
+      .OutputPanel,
+      .SessionMembersPanel,
+      .List {
+        width: 100%;
+        height: 100%;
       }
-    }
-
-    .OutputPanel,
-    .SessionMembersPanel {
-      width: 100%;
-      height: 100%;
-      box-shadow: $box-shadow-alt2;
-    }
-
-    .NodeActions {
-      position: relative;
-      max-height: 310px;
-    }
-
-    .ExecuteNodePath {
-      position: relative;
-      min-height: 320px;
-      max-height: 60%;
     }
   }
 

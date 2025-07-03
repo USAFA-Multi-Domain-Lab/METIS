@@ -1,26 +1,21 @@
 @import 'src/assets/styles/config.scss';
+@import 'src/assets/styles/util.scss';
 
 // For more styling rules of the `ListItem` component,
 // see the `.ListItemLike` styling rules in `ListPage.scss`.
 .ListItem {
+  cursor: pointer;
+
+  &:hover:not(.Selected):not(.PartiallyDisabled) {
+    @include background-mask($opacity: 0.05);
+  }
+
+  &.Selected {
+    @include background-mask($opacity: 0.15);
+  }
+
   .ItemOptions {
     display: flex;
     align-items: center;
-  }
-
-  &.Selectable {
-    cursor: pointer;
-
-    &:hover,
-    &.ButtonMenuHighlight {
-      $hover-color: $color-alt1;
-
-      background-color: $node-blue;
-      color: $hover-color;
-
-      .ItemName {
-        color: $hover-color;
-      }
-    }
   }
 }

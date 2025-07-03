@@ -1,23 +1,86 @@
 @import 'src/assets/styles/config.scss';
 @import '/src/assets/styles/util.scss';
 
-@mixin dimensions() {
+$detail-field-text-color: $color-accent-light;
+$detail-field-border: none;
+$detail-field-border-radius: 0.35em;
+$detail-field-vertical-padding: 1em;
+$detail-field-horizontal-padding: 1.2em;
+$detail-field-padding: $detail-field-vertical-padding
+  $detail-field-horizontal-padding;
+$detail-field-font-size: 0.92rem;
+
+@mixin detail-field-styling() {
   box-sizing: border-box;
-  margin: 8px 0 0;
-  border-top: 2px solid $color-main;
-  border-bottom: 2px solid $color-main;
+  outline: none;
+  border: $detail-field-border;
+  border-radius: $detail-field-border-radius;
   width: 100%;
-  padding: 11px 10px;
+  padding: $detail-field-padding;
+  background-color: $color-secondary;
+  color: $detail-field-text-color;
+  font-size: $detail-field-font-size;
+
+  &.Error {
+    border: 2px solid $color-failure;
+    color: $color-failure-light;
+  }
+}
+
+@mixin form-container {
+  display: grid;
+  align-content: start;
+  row-gap: 1.5em;
+}
+
+@mixin detail-info-styling() {
+  align-self: center;
+  color: $color-accent;
+  border: 1.5px solid $color-accent;
+  opacity: 0.65;
+  border-radius: 50%;
+  font-size: 0.6em;
+  padding: 0.2em 0.45em 0.1em;
+  font-weight: bold;
+  cursor: default;
+  user-select: none;
+
+  &:hover {
+    background-color: $color-accent;
+    color: $color-accent-dark;
+    border-color: $color-accent;
+    opacity: 0.9;
+  }
+}
+
+@mixin label-styling() {
+  align-self: center;
+  font-size: 0.82rem;
+  margin-right: 0.5em;
+  color: $color-faded;
+  font-weight: bold;
+
+  // This is the default behavior because
+  // a detail field should have a concise
+  // label that is not too long.
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &.Error {
+    color: $color-failure-light;
+  }
 }
 
 .Detail {
-  margin: 20px 8% 0;
-  min-width: 225px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(225px, 100%));
+  row-gap: 0.5em;
 
   .FieldErrorMessage {
     font-size: 0.7em;
-    color: $color-error-alt;
-    margin-top: 5px;
+    color: $color-failure-light;
+    font-weight: bold;
 
     &.hide {
       @include hide();
@@ -25,14 +88,15 @@
   }
 
   .TitleRow {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    column-gap: 5px;
-    margin: 11px 0 0;
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    justify-content: space-between;
+    column-gap: 0.5rem;
 
     .TitleColumnOne {
       display: flex;
-      flex-flow: row wrap;
+      flex-flow: row nowrap;
 
       // This is the default behavior because
       // a detail field should have a concise
@@ -40,41 +104,11 @@
       overflow: hidden;
 
       .Label {
-        align-self: center;
-        font-size: 0.82rem;
-        margin-right: 8px;
-
-        // This is the default behavior because
-        // a detail field should have a concise
-        // label that is not too long.
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-
-        &.Error {
-          color: $color-error-alt;
-        }
+        @include label-styling();
       }
 
       .DetailInfo {
-        align-self: flex-start;
-        color: $color-accent-light;
-        border: 1.5px solid $color-accent-light;
-        opacity: 0.65;
-        border-radius: 50%;
-        font-size: 0.6em;
-        margin-right: 8px;
-        padding: 0.2em 0.45em 0.1em;
-        font-weight: bold;
-        cursor: default;
-        user-select: none;
-
-        &:hover {
-          background-color: $color-accent-light;
-          color: $background-alt1;
-          border-color: $color-accent-light;
-          opacity: 0.9;
-        }
+        @include detail-info-styling();
       }
 
       .Warning {
@@ -101,22 +135,16 @@
       align-items: center;
       font-size: 0.69em;
       font-style: italic;
-      color: $color-pointer-mark;
+      color: $color-faded;
     }
   }
 
   .Field {
-    @include dimensions();
-    color: $color-accent-light;
+    @include detail-field-styling();
     font-size: 0.92rem;
 
-    &.Error {
-      border-top: 2px solid $color-error-alt1;
-      border-bottom: 2px solid $color-error-alt1;
-    }
-
     &::placeholder {
-      color: $color-main;
+      color: $color-primary-light;
     }
   }
 }

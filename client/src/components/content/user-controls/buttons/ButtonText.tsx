@@ -13,12 +13,14 @@ export function ButtonText(props: TButtonText_P): JSX.Element | null {
   // props passed as needed.
   let {
     text,
+    type,
     onClick: onClick,
     tooltipDescription,
     uniqueClassName,
     style,
     disabled,
   } = useDefaultProps(props, {
+    type: 'button',
     tooltipDescription: null,
     uniqueClassName: '',
     style: {},
@@ -49,12 +51,12 @@ export function ButtonText(props: TButtonText_P): JSX.Element | null {
 
   // Render.
   return (
-    <div className={className} style={style} onClick={onClick}>
+    <button type={type} className={className} style={style} onClick={onClick}>
       <span className='Bracket LeftBracket'>{'['}</span>
       <span className='Text'>{text}</span>
       <span className='Bracket RightBracket'>{']'}</span>
       {tooltipDescription ? <Tooltip description={tooltipDescription} /> : null}
-    </div>
+    </button>
   )
 }
 
@@ -68,6 +70,11 @@ export interface TButtonText_P {
    * The text for the button.
    */
   text: string
+  /**
+   * The type of button to use.
+   * @default 'button'
+   */
+  type?: TButtonTextType
   /**
    * Handles the click event for the button.
    * @param event The click event.
@@ -92,5 +99,20 @@ export interface TButtonText_P {
    * The disabled state of the button.
    * @default 'none'
    */
-  disabled?: 'partial' | 'full' | 'none'
+  disabled?: TButtonTextDisabled
 }
+
+/**
+ * The type of button to use.
+ * @default 'button'
+ * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/button#type
+ */
+export type TButtonTextType = 'button' | 'reset' | 'submit'
+
+/**
+ * The disabled state of the button.
+ * @option 'partial' The button is disabled but can still show a tooltip.
+ * @option 'full' The button is fully disabled, and cannot show a tooltip.
+ * @option 'none' The button is not disabled and is fully functional.
+ */
+export type TButtonTextDisabled = 'partial' | 'full' | 'none'

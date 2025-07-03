@@ -3,6 +3,7 @@ import { compute } from 'src/toolbox'
 import { TDetail_P } from '.'
 import Tooltip from '../communication/Tooltip'
 import { ButtonText, TButtonText_P } from '../user-controls/buttons/ButtonText'
+import If from '../util/If'
 import './DetailColorSelector.scss'
 
 /**
@@ -15,8 +16,8 @@ export function DetailColorSelector({
   fieldType,
   label,
   colors,
-  stateValue,
-  setState,
+  value: stateValue,
+  setValue: setState,
   // Optional Properties
   buttons = [],
   isExpanded = false,
@@ -69,22 +70,6 @@ export function DetailColorSelector({
     return classList.join(' ')
   })
   /**
-   * The class name for all colors.
-   */
-  const allColorsClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['AllColors']
-
-    // If the detail is collapsed
-    // then hide the options.
-    if (!expanded) {
-      classList.push('Hidden')
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-  /**
    * The class name for the label.
    */
   const labelClassName: string = compute(() => {
@@ -126,39 +111,36 @@ export function DetailColorSelector({
         </div>
         <div className={`TitleColumnTwo ${optionalClassName}`}>optional</div>
       </div>
+
       <div className={fieldClassName}>
-        <div
-          className='DisplayColorGrid'
-          onClick={() => setExpanded(!expanded)}
-        >
-          <div className='Text'>Choose a color</div>
-          <div className='Indicator'>v</div>
-        </div>
-        <div className={allColorsClassName}>
-          {colors.map((color: string, index: number) => {
-            return (
-              <div
-                className={stateValue === color ? 'Color Selected' : 'Color'}
-                style={{ backgroundColor: color }}
-                key={`color_${color}_${index}`}
-                onClick={() => setState(color)}
-              ></div>
-            )
-          })}
-        </div>
-        <div className='ColorInfo'>
-          <div className='SelectedColorText'>
-            Selected color:{' '}
-            <span
-              className='SelectedColorBox'
-              style={{ backgroundColor: stateValue }}
-            ></span>
+        <div className='Dropdown' onClick={() => setExpanded(!expanded)}>
+          <div className='Text' style={{ color: stateValue }}>
+            {stateValue}
           </div>
-          <div className='Buttons'>
-            {buttons.map((button: TButtonText_P, index: number) => (
-              <ButtonText key={`button_${button.text}_${index}`} {...button} />
-            ))}
+          <div className='Indicator' style={{ color: stateValue }}>
+            v
           </div>
+        </div>
+
+        <If condition={expanded}>
+          <div className='AllColors'>
+            {colors.map((color: string, index: number) => {
+              return (
+                <div
+                  className={stateValue === color ? 'Color Selected' : 'Color'}
+                  style={{ backgroundColor: color }}
+                  key={`color_${color}_${index}`}
+                  onClick={() => setState(color)}
+                ></div>
+              )
+            })}
+          </div>
+        </If>
+
+        <div className='ButtonContainer'>
+          {buttons.map((button: TButtonText_P, index: number) => (
+            <ButtonText key={`button_${button.text}_${index}`} {...button} />
+          ))}
         </div>
       </div>
     </div>

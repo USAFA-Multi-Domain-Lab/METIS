@@ -1,0 +1,211 @@
+@import 'src/assets/styles/config.scss';
+@import 'src/assets/styles/util.scss';
+@import '../../mixins.scss';
+
+.Scene {
+  .MapNode {
+    $text-fade-transition: background-color 300ms ease-in-out;
+    $pending-transition: opacity 200ms ease-in-out;
+
+    border-color: $color-primary-light;
+    border-width: min(2px, 0.04em);
+    border-style: solid;
+    border-radius: 0.11em;
+    overflow: hidden;
+
+    // Set box-sizing to content-box to
+    // help with font size calculations
+    // in JS.
+    box-sizing: content-box;
+
+    // Enable pointer events for nodes,
+    // since they can be interacted with.
+    pointer-events: all;
+
+    // Make the origin of the scene object the
+    // top center of the node.
+    transform: translate(-50%, -0%);
+
+    // Add a transition to the background for
+    // when the text comes in and out of view.
+    transition: $text-fade-transition;
+
+    background-color: $color-secondary;
+
+    &.Selectable {
+      // Change the cursor to pointer if
+      // the node can be selected.
+      cursor: pointer;
+    }
+
+    &.Selected {
+      @include background-mask;
+    }
+
+    &.Executing {
+      // pointer-events: none;
+
+      .ProgressBar {
+        // If the node is executing, show the
+        // progress bar.
+        display: block;
+      }
+    }
+
+    &.Success {
+      background-color: $color-success-dark;
+    }
+
+    &.Failure {
+      background-color: $color-failure-dark;
+    }
+
+    &.Pending {
+      pointer-events: none;
+      opacity: 0.35;
+    }
+
+    // Add a transition out of the pending state.
+    &:not(.Pending) {
+      transition: $text-fade-transition, $pending-transition;
+    }
+
+    &.Blocked {
+      @include blocked-node;
+    }
+
+    &.Blurred {
+      pointer-events: none;
+      opacity: 0.4;
+    }
+
+    &.Excluded {
+      border-color: $color-primary-light !important;
+      background: unset;
+      padding: unset !important;
+      margin: unset !important;
+      width: 0.4em !important;
+      height: 0.4em !important;
+      transform: translate(-50%, 25%);
+      border-radius: 100% !important;
+
+      > *:not(.IncludeButton) {
+        @include hide;
+      }
+
+      .IncludeButton {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: $color-secondary;
+
+        .ButtonSvg {
+          margin: 0;
+          padding: 0;
+          font-size: 0.25em;
+          transition: none;
+        }
+      }
+    }
+
+    &:not(.Excluded) {
+      transition: none !important;
+    }
+
+    .ProgressBar {
+      // Animation to give the progress bar a conveyor
+      // belt effect.
+      @keyframes loading-animation {
+        from {
+          background-position-x: 0;
+        }
+        to {
+          background-position-x: 40px;
+        }
+      }
+
+      @keyframes progress-animation {
+        from {
+          width: 0%;
+        }
+        to {
+          width: 100%;
+        }
+      }
+
+      // Disable any mouse events on progress
+      // bar as it's purely visual.
+      pointer-events: none;
+
+      // Hide the progress bar by default.
+      display: none;
+
+      $color-1: $color-neutral-dark;
+      $color-2: lighten($color-neutral-dark, 5%);
+
+      background-image: linear-gradient(
+        -45deg,
+        $color-1 25%,
+        $color-2 25%,
+        $color-2 50%,
+        $color-1 50%,
+        $color-1 75%,
+        $color-2 75%,
+        $color-2 100%,
+        $color-1 100%
+      );
+      background-size: 40px 40px;
+    }
+
+    .Name {
+      // Position the name.
+      @include center-origin-y;
+      top: 50%;
+      left: 5%;
+
+      // Let height be automatic.
+      height: unset;
+
+      text-align: left;
+      word-break: break-word;
+    }
+
+    .Icon {
+      // Position the icon.
+      @include center-origin-y;
+      top: 50%;
+      right: 6.5%;
+
+      // Let height be automatic.
+      height: 100%;
+
+      // Make the icon 15% of the width of the
+      // node.
+      width: 12%;
+    }
+
+    .Buttons {
+      bottom: 0;
+
+      .ButtonSvgPanel {
+        display: flex;
+        flex-wrap: unset;
+        justify-content: center;
+        column-gap: 0.1em;
+
+        .ButtonSvg {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0;
+          width: 1em;
+          height: 1em;
+          padding: 0.55em;
+          font-size: 0.267em;
+          border: min(1px, 0.075em) solid rgba($color-primary-light, 0.65);
+        }
+      }
+    }
+  }
+}

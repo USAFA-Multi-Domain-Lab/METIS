@@ -1,0 +1,16 @@
+@import 'src/assets/styles/config.scss';
+
+.NodeLocation {
+  $content-size: 1.5em;
+
+  display: inline-block;
+  vertical-align: middle;
+  background: url('/assets/images/icons/locate-node.svg');
+  background-size: $content-size;
+  background-repeat: no-repeat;
+  background-position: center;
+  width: $content-size;
+  height: $content-size;
+  // cursor: pointer;
+  cursor: help;
+}

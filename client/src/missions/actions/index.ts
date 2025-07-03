@@ -1,69 +1,190 @@
-import { TClientMissionTypes, TMissionComponent, TMissionNavigable } from '..'
+import { TMetisClientComponents } from 'src'
+import { TCreateJsonType } from '../../../../shared'
 import MissionAction, {
-  TCommonMissionActionJson,
-  TMissionActionOptions,
+  TMissionActionJson,
+  TMissionActionJsonDirect,
+  TMissionActionJsonIndirect,
 } from '../../../../shared/missions/actions'
-import { TCommonEffectJson } from '../../../../shared/missions/effects'
-import { ClientEffect, TClientEffectOptions } from '../effects'
+import { TEffectJson } from '../../../../shared/missions/effects'
+import { ClientEffect } from '../effects'
 import ClientMissionNode from '../nodes'
 
 /**
  * Class representing a mission action on the client-side.
  */
-export default class ClientMissionAction
-  extends MissionAction<TClientMissionTypes>
-  implements TMissionComponent
-{
-  // Implemented
-  public get path(): TMissionNavigable[] {
-    return [this.mission, this.force, this.node, this]
-  }
+export default class ClientMissionAction extends MissionAction<TMetisClientComponents> {
   /**
-   * The message to display when the action is defective.
+   * The formatted success chance to display to a session
+   * member.
    */
-  private _defectiveMessage: string
-  /**
-   * The message to display when the action is defective.
-   */
-  public get defectiveMessage(): string {
-    return this._defectiveMessage
+  public get successChanceFormatted(): string {
+    // If the success chance is hidden, return `HIDDEN_VALUE`.
+    if (this.successChanceHidden) return ClientMissionAction.HIDDEN_VALUE
+    // Convert the value to a percentage format.
+    return `${this.successChance * 100}%`
   }
 
   /**
-   * @param node The node on which the action is being executed.
-   * @param data The action data from which to create the action. Any ommitted values will be set to the default properties defined in MissionAction.DEFAULT_PROPERTIES.
-   * @param options The options for creating the action.
+   * How many hours the action takes to complete.
+   */
+  public get processTimeHours(): number {
+    return Math.floor(this.processTime / 1000 / 60 / 60)
+  }
+
+  /**
+   * How many minutes the action takes to complete.
+   */
+  public get processTimeMinutes(): number {
+    return Math.floor((this.processTime / 1000 / 60) % 60)
+  }
+
+  /**
+   * How many seconds the action takes to complete.
+   */
+  public get processTimeSeconds(): number {
+    return Math.floor((this.processTime / 1000) % 60)
+  }
+
+  /**
+   * The formatted process time to display to a session
+   * member.
+   */
+  public get processTimeFormatted(): string {
+    // If the process time is hidden, return the hidden
+    // value.
+    if (this.processTimeHidden) return ClientMissionAction.HIDDEN_VALUE
+
+    // Return the formatted process time.
+    const { processTimeHours, processTimeMinutes, processTimeSeconds } = this
+    const hours = processTimeHours > 0 ? `${processTimeHours}h` : ''
+    const minutes =
+      hours || processTimeMinutes > 0 ? `${processTimeMinutes}m` : ''
+    const seconds = `${processTimeSeconds}s`
+    return `${hours} ${minutes} ${seconds}`.trim()
+  }
+
+  /**
+   * The formatted resource cost to display to a session
+   * member.
+   */
+  public get resourceCostFormatted(): string {
+    // If the resource cost is hidden, return `HIDDEN_VALUE`.
+    if (this.resourceCostHidden) return ClientMissionAction.HIDDEN_VALUE
+    // Convert the value to a negative format.
+    return `${-this.resourceCost} ${this.mission.resourceLabel}`
+  }
+
+  /**
+   * The formatted opens node property to display to a
+   * session member.
+   */
+  public get opensNodeFormatted(): string {
+    // If the opens node is hidden, return `HIDDEN_VALUE`.
+    if (this.opensNodeHidden) return ClientMissionAction.HIDDEN_VALUE
+    // Return 'Yes' if the value is true, otherwise 'No'.
+    return this.opensNode ? 'Yes' : 'No'
+  }
+
+  /**
+   * @param node The node that the action belongs to.
+   * @param data The action data from which to create the action.
+   *  @note Any ommitted values will be set to their default properties
+   *  defined in `ClientMissionAction.DEFAULT_PROPERTIES`.
    */
   public constructor(
     node: ClientMissionNode,
-    data: Partial<TCommonMissionActionJson> = ClientMissionAction.DEFAULT_PROPERTIES,
-    options: TClientMissionActionOptions = {},
+    data: Partial<TClientMissionActionJson> = ClientMissionAction.DEFAULT_PROPERTIES,
   ) {
-    super(node, data, options)
-    this._defectiveMessage = ''
-  }
-  /**
-   * Evaluates if the action is defective or not.
-   * @returns boolean indicating if the action is defective or not.
-   */
-  public isDefective(): boolean {
-    return false
+    super(node, data)
   }
 
   // Implemented
-  protected parseEffects(
-    data: TCommonEffectJson[],
-    options: TClientEffectOptions = {},
-  ): ClientEffect[] {
-    return data.map(
-      (datum: TCommonEffectJson) => new ClientEffect(this, datum, options),
-    )
+  protected parseEffects(data: TEffectJson[]): ClientEffect[] {
+    return data.map((datum: TEffectJson) => new ClientEffect(this, datum))
   }
+
+  /**
+   * Duplicates the action, creating a new action with the same properties
+   * as this one or with the provided properties.
+   * @param options The options for duplicating the action.
+   * @param options.node The node to which the duplicated action belongs.
+   * @param options.name The name of the duplicated action.
+   * @param options.localKey The local key of the duplicated action.
+   * @returns A new action with the same properties as this one or with the
+   * provided properties.
+   */
+  public duplicate(options: TDuplicateActionOptions = {}): ClientMissionAction {
+    // Gather details.
+    const {
+      node = this.node,
+      name = this.name,
+      localKey = this.localKey,
+    } = options
+
+    let duplicatedAction = new ClientMissionAction(node, {
+      name,
+      localKey,
+      _id: ClientMissionAction.DEFAULT_PROPERTIES._id,
+      description: this.description,
+      processTime: this.processTime,
+      processTimeHidden: this.processTimeHidden,
+      successChance: this.successChance,
+      successChanceHidden: this.successChanceHidden,
+      resourceCost: this.resourceCost,
+      resourceCostHidden: this.resourceCostHidden,
+      opensNode: this.opensNode,
+      opensNodeHidden: this.opensNodeHidden,
+      postExecutionSuccessText: this.postExecutionSuccessText,
+      postExecutionFailureText: this.postExecutionFailureText,
+      effects: [],
+    })
+
+    // Duplicate the effects.
+    duplicatedAction.effects = this.effects.map((effect) =>
+      effect.duplicate({ action: duplicatedAction }),
+    )
+
+    return duplicatedAction
+  }
+
+  /**
+   * Display for an action property that is hidden
+   * from the user.
+   */
+  public static readonly HIDDEN_VALUE: string = '???'
 }
 
 /* ------------------------------ CLIENT ACTION TYPES ------------------------------ */
 
 /**
- * Options for creating a new ClientMissionAction object.
+ * Plain JSON representation of a `MissionAction` object.
+ * @note This is a carbon copy of the `TMissionActionJson` type
+ * from the shared library and is used to temporarily fix the
+ * any issue that happens when importing from the shared
+ * library.
+ * @see {@link TMissionActionJson}
  */
-export type TClientMissionActionOptions = TMissionActionOptions & {}
+type TClientMissionActionJson = TCreateJsonType<
+  ClientMissionAction,
+  TMissionActionJsonDirect,
+  TMissionActionJsonIndirect
+>
+
+/**
+ * The options for duplicating an action.
+ * @see {@link ClientMissionAction.duplicate}
+ */
+type TDuplicateActionOptions = {
+  /**
+   * The node to which the duplicated action belongs.
+   */
+  node?: ClientMissionNode
+  /**
+   * The name of the duplicated action.
+   */
+  name?: string
+  /**
+   * The local key of the duplicated action.
+   */
+  localKey?: string
+}

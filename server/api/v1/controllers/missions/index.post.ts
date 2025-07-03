@@ -1,7 +1,8 @@
 import { Request, Response } from 'express-serve-static-core'
-import { TCommonMissionJson } from 'metis/missions'
+import { TMissionSaveJson } from 'metis/missions'
 import MissionModel from 'metis/server/database/models/missions'
 import { databaseLogger } from 'metis/server/logging'
+import ServerUser from 'metis/server/users'
 import ApiResponse from '../../library/response'
 
 /**
@@ -11,8 +12,16 @@ import ApiResponse from '../../library/response'
  * @returns The new mission.
  */
 const createMission = async (request: Request, response: Response) => {
-  let { name, versionNumber, structure, forces, prototypes, seed } =
-    request.body as TCommonMissionJson
+  let {
+    name,
+    versionNumber,
+    seed,
+    resourceLabel,
+    structure,
+    forces,
+    prototypes,
+  } = request.body as TMissionSaveJson
+  let currentUser: ServerUser = response.locals.user
 
   try {
     // Create mission.
@@ -20,9 +29,12 @@ const createMission = async (request: Request, response: Response) => {
       name,
       versionNumber,
       seed,
+      resourceLabel,
       structure,
       forces,
       prototypes,
+      createdBy: currentUser._id,
+      createdByUsername: currentUser.username,
     })
     // Log the creation of the mission.
     databaseLogger.info(`New mission created named "${missionDoc.name}".`)

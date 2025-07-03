@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
-   width="200"
-   height="200"
+   width="24"
+   height="24"
    stroke="null"
    version="1.1"
    id="svg2"
    sodipodi:docname="upload.svg"
-   inkscape:version="1.3 (0e150ed, 2023-07-21)"
+   inkscape:version="1.4 (e7c3feb1, 2024-10-09)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -15,7 +15,25 @@
    xmlns:cc="http://creativecommons.org/ns#"
    xmlns:dc="http://purl.org/dc/elements/1.1/">
   <defs
-     id="defs2" />
+     id="defs2">
+    <inkscape:path-effect
+       effect="fillet_chamfer"
+       id="path-effect3"
+       is_visible="true"
+       lpeversion="1"
+       nodesatellites_param="F,0,0,1,0,0,0,1 @ F,0,0,1,0,3.627005,0,1 @ F,0,1,1,0,3.627005,0,1 @ F,0,0,1,0,0,0,1"
+       radius="0"
+       unit="px"
+       method="auto"
+       mode="F"
+       chamfer_steps="1"
+       flexible="false"
+       use_knot_distance="true"
+       apply_no_radius="true"
+       apply_with_radius="true"
+       only_selected="false"
+       hide_knots="false" />
+  </defs>
   <sodipodi:namedview
      id="namedview2"
      pagecolor="#000000"
@@ -25,48 +43,36 @@
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="2.155"
-     inkscape:cx="95.823666"
-     inkscape:cy="100"
-     inkscape:window-width="2128"
-     inkscape:window-height="1212"
-     inkscape:window-x="321"
-     inkscape:window-y="538"
+     inkscape:zoom="20.748578"
+     inkscape:cx="14.458822"
+     inkscape:cy="14.169646"
+     inkscape:window-width="1512"
+     inkscape:window-height="989"
+     inkscape:window-x="217"
+     inkscape:window-y="38"
      inkscape:window-maximized="0"
-     inkscape:current-layer="svg2" />
+     inkscape:current-layer="g2" />
   <title
      id="title1">download</title>
   <g
      stroke="null"
      id="g2"
-     transform="matrix(1.0526316,0,0,1.0526316,-5.2631578,4.9672227)">
+     transform="matrix(0.13774414,0,0,0.12789556,-1.7743954,0.94879966)">
     <title
        stroke="null"
        id="title2">Layer 1</title>
-    <rect
-       fill="none"
-       x="15"
-       y="-84.377251"
-       width="170"
-       height="246"
-       id="svg_1"
-       stroke-width="20"
-       stroke="#ffffff"
-       rx="19"
-       ry="19" />
     <path
-       transform="rotate(135,99.9999,54.8491)"
        fill="#ffffff"
        stroke-width="0"
-       d="M 61.49881,93.3502 V 16.34804 l 77.00224,77.00216 z"
+       d="M 99.999893,0.40032928 150.81872,54.850951 49.181008,54.851008 Z"
        id="svg_4"
        stroke="null" />
     <line
        stroke="#ffffff"
        fill="none"
-       stroke-width="25"
+       stroke-width="28.92"
        x1="100"
-       y1="117.68352"
+       y1="135.50969"
        x2="100"
        y2="53.411449"
        id="svg_5" />
@@ -80,4 +86,12 @@
       </cc:Work>
     </rdf:RDF>
   </metadata>
+  <path
+     style="fill:none;fill-opacity:0.99637;stroke:#ffffff;stroke-width:3.05167;stroke-dasharray:none;stroke-opacity:1"
+     d="M 1.25,0 V 19.122995 A 3.627005,3.627005 45 0 0 4.877005,22.75 l 14.24599,0 A 3.627005,3.627005 135 0 0 22.75,19.122995 V 0"
+     id="path1"
+     sodipodi:nodetypes="cccc"
+     inkscape:path-effect="#path-effect3"
+     inkscape:original-d="m 1.25,0 v 22.75 h 21.5 V 0"
+     transform="matrix(0.97752471,0,0,0.98864124,0.26970348,-4.5826622e-5)" />
 </svg>

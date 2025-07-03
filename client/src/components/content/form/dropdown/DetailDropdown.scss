@@ -1,0 +1,53 @@
+@import 'src/assets/styles/config.scss';
+@import '../../form/index.scss';
+
+.Detail.DetailDropdown {
+  .Field {
+    padding: 0;
+
+    &.IsExpanded {
+      .DropdownOption.Selected {
+        .Indicator {
+          transform: scale(1, -0.75);
+        }
+      }
+    }
+
+    .DropdownOption.Selected {
+      cursor: pointer;
+      user-select: none;
+      display: grid;
+      align-items: center;
+      grid-template-columns: 1fr auto;
+      padding: $detail-field-padding;
+
+      .Indicator {
+        transform: scale(1, 0.75);
+        font-size: 1.1rem;
+      }
+
+      .Text {
+        color: $detail-field-text-color;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+        margin-right: 1em;
+      }
+    }
+
+    .AllOptions {
+      .DropdownOption {
+        cursor: pointer;
+        user-select: none;
+        padding: 0.375em $detail-field-horizontal-padding;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+
+        &:last-child {
+          margin: 0 0 0.6em;
+        }
+      }
+    }
+  }
+}

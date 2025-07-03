@@ -1,20 +1,29 @@
 import { ReactNode } from 'react'
 import { compute } from 'src/toolbox'
+import { MetisComponent } from '../../../../../../../shared'
 import { useListContext } from '../List'
 import ListColumnLabels from './ListColumnLabels'
-import ListItem, { TListItem } from './ListItem'
+import ListItem from './ListItem'
 import './ListPage.scss'
 
 /**
  * Represents a page or grouping of items in a list.
  */
-export default function ListPage<TItem extends TListItem>({
+export default function ListPage<TItem extends MetisComponent>({
   items,
 }: TListPage_P<TItem>): JSX.Element | null {
   /* -- STATE -- */
 
   const listContext = useListContext<TItem>()
   const [itemsPerPage] = listContext.state.itemsPerPage
+  const [_, setSelection] = listContext.state.selection
+
+  /* -- FUNCTIONS -- */
+
+  /**
+   * Callback for when a item blank is clicked.
+   */
+  const onItemBlankClick = () => setSelection(null)
 
   /* -- RENDER -- */
 
@@ -45,6 +54,7 @@ export default function ListPage<TItem extends TListItem>({
         <div
           key={`blank_${result.length}`}
           className='ItemBlank ListItemLike'
+          onClick={onItemBlankClick}
         ></div>,
       )
     }
@@ -66,7 +76,7 @@ export default function ListPage<TItem extends TListItem>({
 /**
  * Props for `ListPage`.
  */
-export type TListPage_P<TItem extends TListItem> = {
+export type TListPage_P<TItem extends MetisComponent> = {
   /**
    * The items to display on the page.
    */

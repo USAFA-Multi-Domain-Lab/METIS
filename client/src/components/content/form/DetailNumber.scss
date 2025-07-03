@@ -3,14 +3,22 @@
 
 .Detail.DetailNumber {
   .Unit {
+    @include detail-field-styling();
+
+    grid-row: 2 / 3;
     pointer-events: none;
-    @include dimensions();
-    margin-bottom: -51px;
     border-color: transparent;
     height: 43px;
     padding-right: 15px;
     text-align: right;
     font-size: 14px;
     font-weight: bold;
+    background: none;
+  }
+
+  .Unit,
+  .Field {
+    grid-column: 1 / 2;
+    grid-row: 2 / 3;
   }
 }

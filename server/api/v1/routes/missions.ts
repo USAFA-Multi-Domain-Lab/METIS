@@ -10,7 +10,7 @@ import { auth } from '../../../middleware/users'
 import deleteMission from '../controllers/missions/[_id].delete'
 import getMission from '../controllers/missions/[_id].get'
 import updateMission from '../controllers/missions/[_id].put'
-import copyMission from '../controllers/missions/copy.put'
+import copyMission from '../controllers/missions/copy.post'
 import getEnvironment from '../controllers/missions/environment.get'
 import exportMission from '../controllers/missions/export.get'
 import importMission from '../controllers/missions/import.post'
@@ -31,9 +31,11 @@ export const routerMap: TMetisRouterMap = async (
         name: RequestBodyFilters.STRING,
         versionNumber: RequestBodyFilters.NUMBER,
         seed: RequestBodyFilters.STRING,
+        resourceLabel: RequestBodyFilters.STRING,
         structure: RequestBodyFilters.OBJECT,
         forces: RequestBodyFilters.ARRAY,
         prototypes: RequestBodyFilters.ARRAY,
+        files: RequestBodyFilters.ARRAY,
       },
     }),
     createMission,
@@ -42,7 +44,7 @@ export const routerMap: TMetisRouterMap = async (
     '/import/',
     auth({ permissions: ['missions_write'] }),
     uploads.array('files', 12),
-    importMission,
+    (request, response) => importMission(request, response, server.fileStore),
   )
 
   /* -- READ -- */
@@ -58,7 +60,7 @@ export const routerMap: TMetisRouterMap = async (
     '/:_id/export/*', // The "*" is to ensure the downloaded file includes the mission's name and the .metis extension.
     auth({ permissions: ['missions_read', 'missions_write'] }),
     defineRequests({ params: { _id: 'objectId' } }),
-    exportMission,
+    (request, response) => exportMission(request, response, server.fileStore),
   )
 
   /* -- UPDATE -- */
@@ -76,15 +78,17 @@ export const routerMap: TMetisRouterMap = async (
           name: RequestBodyFilters.STRING,
           versionNumber: RequestBodyFilters.NUMBER,
           seed: RequestBodyFilters.STRING,
+          resourceLabel: RequestBodyFilters.STRING,
           structure: RequestBodyFilters.OBJECT,
           forces: RequestBodyFilters.ARRAY,
           prototypes: RequestBodyFilters.ARRAY,
+          files: RequestBodyFilters.ARRAY,
         },
       },
     ),
     updateMission,
   )
-  router.put(
+  router.post(
     '/copy/',
     auth({ permissions: ['missions_write'] }),
     defineRequests({

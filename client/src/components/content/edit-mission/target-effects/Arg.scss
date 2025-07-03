@@ -9,6 +9,12 @@
     padding-bottom: 20px;
   }
 
+  &.Node,
+  &.Action {
+    display: grid;
+    row-gap: 1.5em;
+  }
+
   .Detail {
     min-width: 0.83em;
 

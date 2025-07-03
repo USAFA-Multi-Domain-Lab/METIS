@@ -13,8 +13,8 @@ export function DetailString({
   fieldType,
   handleOnBlur,
   label,
-  stateValue,
-  setState,
+  value: stateValue,
+  setValue: setState,
   // Optional Properties
   defaultValue = undefined,
   errorMessage = 'At least one character is required here.',
@@ -75,7 +75,7 @@ export function DetailString({
    */
   const rootClassName: string = compute(() => {
     // Default class names
-    let classList: string[] = ['Detail']
+    let classList: string[] = ['Detail', 'DetailString']
 
     // If disabled is true then add the
     // disabled class name.
@@ -137,6 +137,12 @@ export function DetailString({
       classList.push(uniqueFieldClassName)
     }
 
+    // If the input type is password then
+    // add the password class name.
+    if (inputType === 'password') {
+      classList.push('Password')
+    }
+
     // If displayError is true then
     // add the error class name.
     if (displayError) {
@@ -146,29 +152,14 @@ export function DetailString({
     // Return the list of class names as one string.
     return classList.join(' ')
   })
-  /**
-   * The class name for the input container.
-   */
-  const inputContainerClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['InputContainer']
 
-    // If the input type is password then
-    // add the password class name.
-    if (inputType === 'password') {
-      classList.push('Password')
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
   /**
    * Class name for the toggle password display container.
    * @note Appears as a button with the text "show" or "hide".
    */
   const togglePasswordButtonClassName: string = compute(() => {
     // Default class names
-    let classList: string[] = ['TogglePasswordButton', fieldClassName]
+    let classList: string[] = ['TogglePasswordButton']
 
     // If the input type is not "password" then
     // add the hidden class name.
@@ -233,9 +224,9 @@ export function DetailString({
         </div>
         <div className={`TitleColumnTwo ${optionalClassName}`}>optional</div>
       </div>
-      <div className={inputContainerClassName}>
+      <div className={fieldClassName}>
         <input
-          className={fieldClassName}
+          className={'Input'}
           type={currentInputType}
           value={stateValue}
           placeholder={placeholderDisplayed}
@@ -279,12 +270,12 @@ export function DetailString({
           value={displayPasswordText}
           disabled={inputType !== 'password'}
         />
-        {maxLength ? (
-          <div className='CharacterCount'>
-            {stateValue.length}/{maxLength}
-          </div>
-        ) : null}
       </div>
+      {maxLength ? (
+        <div className='CharacterCount'>
+          {stateValue.length}/{maxLength}
+        </div>
+      ) : null}
       <div className={fieldErrorClassName}>{errorMessage}</div>
     </div>
   )

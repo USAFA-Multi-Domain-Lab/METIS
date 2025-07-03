@@ -6,7 +6,7 @@ import {
   TDropdownArg,
   TDropdownArgOption,
 } from '../../../../../../shared/target-environments/args/dropdown-arg'
-import { DetailDropdown } from '../../form/DetailDropdown'
+import DetailDropdown from '../../form/dropdown/DetailDropdown'
 
 /**
  * Renders a dropdown for the argument whose type is `"dropdown"`.
@@ -24,8 +24,8 @@ export default function ArgDropdown({
     // is in the effect's arguments then set the dropdown value.
     if (arg.type === 'dropdown' && arg.required) {
       // Grab the dropdown option.
-      let option: TDropdownArgOption | undefined = arg.options.find(
-        (option: TDropdownArgOption) => option._id === effectArgs[arg._id],
+      let option = arg.options.find(
+        (option) => option.value === effectArgs[arg._id],
       )
 
       // If the option is found then set the dropdown value.
@@ -34,11 +34,13 @@ export default function ArgDropdown({
       } else {
         return arg.default
       }
-    } else {
-      return {
-        _id: 'temporary-option',
-        name: 'Select an option',
-      }
+    }
+
+    // Otherwise, return a temporary option.
+    return {
+      _id: 'temporary-option',
+      name: 'Select an option',
+      value: null,
     }
   })
   const [optionalValue, setOptionalValue] = useState<TDropdownArgOption | null>(
@@ -47,8 +49,8 @@ export default function ArgDropdown({
       // is in the effect's arguments then set the dropdown value.
       if (arg.type === 'dropdown' && !arg.required) {
         // Grab the dropdown option.
-        let option: TDropdownArgOption | undefined = arg.options.find(
-          (option: TDropdownArgOption) => option._id === effectArgs[arg._id],
+        let option = arg.options.find(
+          (option) => option.value === effectArgs[arg._id],
         )
 
         // If the option is found then set the dropdown value.
@@ -57,9 +59,10 @@ export default function ArgDropdown({
         } else {
           return null
         }
-      } else {
-        return null
       }
+
+      // Otherwise, return null
+      return null
     },
   )
 
@@ -91,7 +94,7 @@ export default function ArgDropdown({
     // If the argument is required, then update the
     // required value in the effect's arguments.
     if (arg.required) {
-      setEffectArgs((prev) => ({ ...prev, [arg._id]: requiredValue._id }))
+      setEffectArgs((prev) => ({ ...prev, [arg._id]: requiredValue.value }))
     }
     // Or, if the argument is optional...
     else {
@@ -101,7 +104,7 @@ export default function ArgDropdown({
       if (optionalValue !== null) {
         setEffectArgs((prev) => ({
           ...prev,
-          [arg._id]: optionalValue._id,
+          [arg._id]: optionalValue.value,
         }))
       }
       // Or, if the optional value is null and the
@@ -139,7 +142,7 @@ export default function ArgDropdown({
         // *** stored in this state changes. If the value
         // *** in the state doesn't change then the value
         // *** needs to be set manually.
-        setEffectArgs((prev) => ({ ...prev, [arg._id]: requiredValue._id }))
+        setEffectArgs((prev) => ({ ...prev, [arg._id]: requiredValue.value }))
       }
       // Otherwise, set the required value to the default value.
       // *** Note: The default value is mandatory if the
@@ -161,8 +164,8 @@ export default function ArgDropdown({
         fieldType={'required'}
         label={arg.name}
         options={availableOptions}
-        stateValue={requiredValue}
-        setState={setRequiredValue}
+        value={requiredValue}
+        setValue={setRequiredValue}
         isExpanded={false}
         tooltipDescription={arg.tooltipDescription}
         getKey={({ _id }) => _id}
@@ -180,12 +183,12 @@ export default function ArgDropdown({
         fieldType={'optional'}
         label={arg.name}
         options={availableOptions}
-        stateValue={optionalValue}
-        setState={setOptionalValue}
+        value={optionalValue}
+        setValue={setOptionalValue}
         isExpanded={false}
         tooltipDescription={arg.tooltipDescription}
-        getKey={({ _id }) => _id}
-        render={({ name }) => name}
+        getKey={(option) => option?._id}
+        render={(option) => option?.name}
         handleInvalidOption={{
           method: 'setToDefault',
           defaultValue: null,

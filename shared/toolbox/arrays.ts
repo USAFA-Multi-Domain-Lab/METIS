@@ -34,4 +34,48 @@ export default class ArrayToolbox {
 
     return true
   }
+
+  /**
+   * Maps an array calling the given method on each element,
+   * storing the returned values of the method in a new array.
+   * @param array The array to map.
+   * @param method The method to call on each element.
+   */
+  public static methodMap<
+    TInput extends Record<TMethodKey, (...args: any) => any>,
+    TMethodKey extends TMethodKeys<TInput> = TMethodKeys<TInput>,
+    TOutput extends ReturnType<TInput[TMethodKey]> = ReturnType<
+      TInput[TMethodKey]
+    >,
+  >(array: TInput[], key: TMethodKey): TOutput[] {
+    return array.map((element: TInput) => element[key]())
+  }
+
+  /**
+   * Converts an object compatible with the `TOneOrMany<T>` type
+   * to an array of values of type `T`.
+   * @param value The value to convert to an array.
+   * @returns The array of values.
+   */
+  public static toArray<T>(value: TInstanceOrArray<T>): T[] {
+    return Array.isArray(value) ? value : [value]
+  }
 }
+
+/* -- TYPES -- */
+
+export type TMethodKeys<T> = {
+  [K in keyof T]: T[K] extends (...args: any) => any ? K : never
+}[keyof T]
+
+/**
+ * An array with at least one index.
+ */
+export type TNonEmptyArray<T> = [T, ...T[]]
+
+/**
+ * A type which represents either a single value
+ * of a certain type or an array of values of that
+ * same type.
+ */
+export type TInstanceOrArray<T> = T | T[]

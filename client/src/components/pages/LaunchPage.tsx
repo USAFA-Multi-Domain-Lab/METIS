@@ -1,19 +1,17 @@
 import { useState } from 'react'
-import { useGlobalContext } from 'src/context'
-import ClientMission, { TMissionComponent } from 'src/missions'
+import { useGlobalContext } from 'src/context/global'
+import ClientMission from 'src/missions'
 import SessionClient from 'src/sessions'
 import { compute } from 'src/toolbox'
 import { useMountHandler, useRequireLogin } from 'src/toolbox/hooks'
-import { DefaultLayout } from '.'
-
+import { DefaultPageLayout } from '.'
+import { TMissionComponentDefect } from '../../../../shared/missions/component'
 import Session from '../../../../shared/sessions'
-import { SingleTypeObject } from '../../../../shared/toolbox/objects'
 import { ESortByMethod } from '../content/general-layout/ListOld'
-import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
+import { TNavigation_P } from '../content/general-layout/Navigation'
 import SessionConfig from '../content/session/SessionConfig'
-import ButtonSvgPanel, {
-  TValidPanelButton,
-} from '../content/user-controls/buttons/ButtonSvgPanel'
+import ButtonSvgPanel from '../content/user-controls/buttons/v3/ButtonSvgPanel'
+import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
 import './LaunchPage.scss'
 
 /**
@@ -22,8 +20,10 @@ import './LaunchPage.scss'
  */
 export default function LaunchPage({
   missionId,
+  returnPage,
 }: TLaunchPage_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
+
   const globalContext = useGlobalContext()
   const [server] = globalContext.server
   const {
@@ -36,15 +36,37 @@ export default function LaunchPage({
   } = globalContext.actions
 
   /* -- STATE -- */
+
   const [mission, setMission] = useState<ClientMission>(
-    new ClientMission({ _id: missionId }),
+    ClientMission.createNew(),
   )
   const [sessionConfig] = useState(Session.DEFAULT_CONFIG)
+  const defectiveComponentButtonEngine = useButtonSvgEngine({
+    elements: [
+      {
+        type: 'button',
+        icon: 'warning-transparent',
+        cursor: 'help',
+        description:
+          'If this conflict is not resolved, this mission can still be used to launch a session, but the session may not function as expected.',
+      },
+    ],
+  })
+  const navButtonEngine = useButtonSvgEngine({
+    elements: [
+      {
+        type: 'button',
+        icon: 'cancel',
+        description: 'Cancel',
+        onClick: () => cancel(),
+      },
+    ],
+  })
 
   /* -- LOGIN-SPECIFIC LOGIC -- */
 
   // Require login for page.
-  const [login] = useRequireLogin()
+  const { login } = useRequireLogin()
 
   // Grab the user currently logged in.
   let { user: currentUser } = login
@@ -66,9 +88,7 @@ export default function LaunchPage({
         // Notify user of loading.
         beginLoading('Loading mission...')
         // Load mission.
-        let mission = await ClientMission.$fetchOne(missionId, {
-          populateTargets: true,
-        })
+        let mission = await ClientMission.$fetchOne(missionId)
         // Store mission in the state.
         setMission(mission)
       } catch {
@@ -82,54 +102,17 @@ export default function LaunchPage({
     done()
   })
 
-  /* -- COMPUTED -- */
-
-  /**
-   * Props for navigation.
-   */
-  const navigation = compute(
-    (): TNavigation => ({
-      links: [HomeLink(globalContext, { text: 'Cancel' })],
-      boxShadow: 'alt-7',
-    }),
-  )
-
   /* -- FUNCTIONS -- */
   /**
    * Renders JSX for the effect list item.
    */
-  const renderObjectListItem = (object: TMissionComponent) => {
-    /* -- COMPUTED -- */
-
-    /**
-     * The buttons for the object list.
-     */
-    const buttons: TValidPanelButton[] = compute(() => {
-      // Create a default list of buttons.
-      let buttons: TValidPanelButton[] = []
-      // Create a list of mini actions that are available.
-      let availableMiniActions: SingleTypeObject<TValidPanelButton> = {
-        warning: {
-          type: 'warning-transparent',
-          key: 'warning',
-          onClick: () => {},
-          cursor: 'help',
-          description:
-            'If this conflict is not resolved, this mission can still be used to launch a session, but the session may not function as expected.',
-        },
-      }
-
-      // Add the buttons to the list.
-      buttons = Object.values(availableMiniActions)
-
-      // Return the buttons.
-      return buttons
-    })
+  const renderObjectListItem = (defect: TMissionComponentDefect) => {
+    const { component, message } = defect
 
     return (
-      <div className='Row' key={`object-row-${object._id}`}>
-        <ButtonSvgPanel buttons={buttons} size={'small'} />
-        <div className='RowContent'>{object.defectiveMessage}</div>
+      <div className='Row' key={`object-row-${component._id}`}>
+        <ButtonSvgPanel engine={defectiveComponentButtonEngine} />
+        <div className='RowContent'>{message}</div>
       </div>
     )
   }
@@ -142,10 +125,7 @@ export default function LaunchPage({
     if (server !== null) {
       try {
         // If there are invalid objects and effects are enabled...
-        if (
-          sessionConfig.effectsEnabled &&
-          mission.defectiveObjects.length > 0
-        ) {
+        if (sessionConfig.effectsEnabled && mission.defects.length > 0) {
           // Create a message for the user.
           let message =
             `**Warning:** The mission for this session is defective due to unresolved conflicts. If you proceed, the session may not function as expected.\n` +
@@ -170,7 +150,7 @@ export default function LaunchPage({
           // Prompt the user for a choice.
           let { choice } = await prompt(message, choices, {
             list: {
-              items: mission.defectiveObjects,
+              items: mission.defects,
               headingText: 'Unresolved Conflicts',
               sortByMethods: [ESortByMethod.Name],
               searchableProperties: ['name'],
@@ -222,15 +202,23 @@ export default function LaunchPage({
    * Cancels the launch.
    */
   const cancel = () => {
-    navigateTo('HomePage', {})
+    if (returnPage === 'MissionPage') navigateTo('MissionPage', { missionId })
+    else if (returnPage === 'HomePage') navigateTo('HomePage', {})
   }
+
+  /**
+   * Config for the navigation on this page.
+   */
+  const navigation = compute<TNavigation_P>(() => {
+    return { buttonEngine: navButtonEngine }
+  })
 
   /* -- RENDER -- */
 
   if (mountHandled) {
     return (
       <div className='LaunchPage Page'>
-        <DefaultLayout navigation={navigation}>
+        <DefaultPageLayout navigation={navigation}>
           <div className='MissionName'>{mission.name}</div>
           <SessionConfig
             sessionConfig={sessionConfig}
@@ -239,7 +227,7 @@ export default function LaunchPage({
             onSave={launch}
             onCancel={cancel}
           />
-        </DefaultLayout>
+        </DefaultPageLayout>
       </div>
     )
   } else {
@@ -255,4 +243,8 @@ export type TLaunchPage_P = {
    * The ID of the session to configure.
    */
   missionId: string
+  /**
+   * The page to return to if the launch is cancelled.
+   */
+  returnPage: 'HomePage' | 'MissionPage'
 }

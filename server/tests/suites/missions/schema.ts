@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { TCommonMissionJson } from 'metis/missions'
+import { TMissionJson } from 'metis/missions'
 import { testLogger } from 'metis/server/logging'
 import MissionModel from '../../../database/models/missions'
 import { testMission } from '../../data'
@@ -51,7 +51,7 @@ export default function MissionSchema(): Mocha.Suite {
       try {
         // Query for the mission with the "_id"
         // set from the previous test
-        let retrievedMissionJson: TCommonMissionJson | null =
+        let retrievedMissionJson: TMissionJson | null =
           await MissionModel.findById(missionId).lean().exec()
         // The retrieved mission should have the same
         // name as the test mission

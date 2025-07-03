@@ -1,6 +1,7 @@
 @import 'src/assets/styles/config.scss';
+@import 'src/components/content/form/index.scss';
 
 .ArgGrouping {
-  margin: 10px 8%;
-  border: 2px solid $color-main;
+  @include form-container;
+  margin: 1em 0;
 }

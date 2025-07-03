@@ -45,12 +45,12 @@ export interface TDetailRequired_P<Type> extends TDetailBase_P {
    * The value stored in a component's state that
    * will be displayed in the detail.
    */
-  stateValue: NonNullable<Type>
+  value: NonNullable<Type>
   /**
    * React setter function used to update the value stored
    * in a component's state.
    */
-  setState: TReactSetter<NonNullable<Type>>
+  setValue: TReactSetter<NonNullable<Type>>
 }
 
 /**
@@ -67,12 +67,12 @@ export interface TDetailOptional_P<Type> extends TDetailBase_P {
    * The value stored in a component's state that
    * will be displayed in the detail.
    */
-  stateValue: Type
+  value: Type
   /**
    * React setter function used to update the value stored
    * in a component's state.
    */
-  setState: TReactSetter<Type>
+  setValue: TReactSetter<Type>
 }
 
 /**

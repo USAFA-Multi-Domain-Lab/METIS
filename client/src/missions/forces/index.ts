@@ -1,58 +1,35 @@
+import { TMetisClientComponents } from 'src'
 import { TLine_P } from 'src/components/content/session/mission-map/objects/Line'
-import { TEventListenerTarget } from 'src/toolbox/hooks'
-import ClientMission, {
-  TClientMissionTypes,
-  TMissionComponent,
-  TMissionNavigable,
-} from '..'
+import ClientMission from '..'
+import {
+  EventManager,
+  TListenerTargetEmittable,
+} from '../../../../shared/events'
+import MissionComponent from '../../../../shared/missions/component'
 import {
   MissionForce,
   TMissionForceJson,
-  TMissionForceOptions,
 } from '../../../../shared/missions/forces'
-import { TCommonOutputJson } from '../../../../shared/missions/forces/output'
-import {
-  TMissionNodeJson,
-  TMissionNodeOptions,
-} from '../../../../shared/missions/nodes'
-import { Counter } from '../../../../shared/toolbox/numbers'
+import { TOutputJson } from '../../../../shared/missions/forces/output'
+import { TMissionNodeJson } from '../../../../shared/missions/nodes'
+import NumberToolbox, { Counter } from '../../../../shared/toolbox/numbers'
 import { TWithKey } from '../../../../shared/toolbox/objects'
 import { Vector2D } from '../../../../shared/toolbox/space'
 import ClientMissionAction from '../actions'
 import ClientMissionNode from '../nodes'
-import ClientOutput from './output'
+import ClientOutput from './outputs'
 
 /**
  * Class for managing mission prototypes on the client.
  */
 export default class ClientMissionForce
-  extends MissionForce<TClientMissionTypes>
-  implements TEventListenerTarget<TForceEventMethod>, TMissionComponent
+  extends MissionForce<TMetisClientComponents>
+  implements TListenerTargetEmittable<TForceEventMethods, TForceEventArgs>
 {
   /**
    * The lines used to connect nodes on the mission map.
    */
   public relationshipLines: TWithKey<TLine_P>[]
-
-  // Implemented
-  public get path(): TMissionNavigable[] {
-    return [this.mission, this]
-  }
-
-  /**
-   * The message to display when the force is defective.
-   */
-  private _defectiveMessage: string
-  /**
-   * The message to display when the force is defective.
-   */
-  public get defectiveMessage(): string {
-    return this._defectiveMessage
-  }
-  /**
-   * Listeners for force events.
-   */
-  private listeners: Array<[TForceEventMethod, () => void]> = []
 
   /**
    * All actions that exist in the force.
@@ -70,6 +47,11 @@ export default class ClientMissionForce
   }
 
   /**
+   * Manages the force's event listeners and events.
+   */
+  private eventManager: EventManager<TForceEventMethods, TForceEventArgs>
+
+  /**
    * @param mission The mission to which the force belongs.
    * @param data The force data from which to create the force. Any ommitted
    * values will be set to the default properties defined in
@@ -79,30 +61,23 @@ export default class ClientMissionForce
   public constructor(
     mission: ClientMission,
     data: Partial<TMissionForceJson> = ClientMissionForce.DEFAULT_PROPERTIES,
-    options: TClientMissionForceOptions = {},
   ) {
-    super(mission, data, options)
+    super(mission, data)
     this.relationshipLines = []
-    this._defectiveMessage = ''
+
+    // Initialize event manager.
+    this.eventManager = new EventManager(this)
+    this.addEventListener = this.eventManager.addEventListener
+    this.removeEventListener = this.eventManager.removeEventListener
+    this.emitEvent = this.eventManager.emitEvent
 
     // If output data is provided, parse it.
     if (data.outputs) this._outputs = this.parseOutputs(data.outputs)
   }
 
-  /**
-   * Evaluates if the force is defective or not.
-   * @returns boolean indicating if the force is defective or not.
-   */
-  public isDefective(): boolean {
-    return false
-  }
-
   // Implemented
-  public createNode(
-    data: Partial<TMissionNodeJson>,
-    options: TMissionNodeOptions = {},
-  ): ClientMissionNode {
-    return new ClientMissionNode(this, data, options)
+  public createNode(data: Partial<TMissionNodeJson>): ClientMissionNode {
+    return new ClientMissionNode(this, data)
   }
 
   /**
@@ -114,6 +89,7 @@ export default class ClientMissionForce
     // a corresponding nodes exists.
     for (let prototype of this.mission.prototypes) {
       let node = this.getNodeFromPrototype(prototype._id)
+
       if (!node) {
         this.nodes.push(
           this.createNode({
@@ -137,6 +113,7 @@ export default class ClientMissionForce
     // Reposition nodes and draw the lines between them.
     this.positionNodes()
     this.drawRelationshipLines()
+    this.emitEvent('structure-change', [])
   }
 
   /**
@@ -157,6 +134,8 @@ export default class ClientMissionForce
     rowMostLinesFound: Counter = new Counter(0),
     buttonData = { foundOnRow: false, rowCount: 0 },
   ): void => {
+    // Get details.
+    const { nonRevealedDisplayMode } = this.mission
     let yOffset: number = 0
 
     // Offset the y position by the number of extra
@@ -222,6 +201,15 @@ export default class ClientMissionForce
         // Then clear found on row, so that the
         // next row can start fresh.
         buttonData.foundOnRow = false
+
+        if (nonRevealedDisplayMode !== 'show') {
+          // Shift children up if their previous sibling is excluded.
+          const previousSibling = children[index - 1]
+
+          if (previousSibling?.exclude && !previousSibling.hasChildren) {
+            rowCount.decrement()
+          }
+        }
       }
 
       // Position the child node.
@@ -256,9 +244,18 @@ export default class ClientMissionForce
     const baseAlgorithm = (parent: ClientMissionNode = this.root) => {
       // Get details.
       const { nonRevealedDisplayMode } = this.mission
-      let children: ClientMissionNode[] = parent.children
-      let firstChild: ClientMissionNode | null = parent.firstChildNode
-      let lastChild: ClientMissionNode | null = parent.lastChildNode
+      let children: ClientMissionNode[] =
+        nonRevealedDisplayMode === 'show'
+          ? parent.children
+          : parent.relativeChildren
+      let firstChild: ClientMissionNode | null =
+        nonRevealedDisplayMode === 'show'
+          ? parent.firstChildNode
+          : parent.firstRelativeChildNode
+      let lastChild: ClientMissionNode | null =
+        nonRevealedDisplayMode === 'show'
+          ? parent.lastChildNode
+          : parent.lastRelativeChildNode
       let childCount: number = children.length
       let blurred: boolean = nonRevealedDisplayMode === 'blur' && !parent.opened
 
@@ -266,6 +263,29 @@ export default class ClientMissionForce
       // display mode is set to hide, then prevent the algorithm
       // from drawing lines any deeper in the structure by returning.
       if (nonRevealedDisplayMode === 'hide' && !parent.opened) return
+
+      if (
+        nonRevealedDisplayMode === 'show' &&
+        parent.parent === this.root &&
+        childCount > 0
+      ) {
+        // If the parent is the invisible root node,
+        // then set the start position to the middle
+        // of the column.
+        let midStart: Vector2D = parent.position
+          .clone()
+          .translateX(0)
+          .translateY(halfDefaultNodeHeight)
+
+        // Push a new line.
+        relationshipLines.push({
+          key: `top-level-to-middle_${parent._id}`,
+          direction: 'horizontal',
+          start: midStart,
+          length: ClientMissionNode.WIDTH / 2,
+          blurred,
+        })
+      }
 
       // If the parent is not the invisible root node
       // in the mission and the parent has children,
@@ -393,6 +413,14 @@ export default class ClientMissionForce
           // between the x values of the start and end positions.
           let midToChildLength: number = midToChildEnd.x - midToChildStart.x
 
+          if (nonRevealedDisplayMode === 'show') {
+            if (child.hasChildren) {
+              midToChildLength = ClientMissionNode.WIDTH + columnEdgeDistance
+            } else {
+              midToChildLength += ClientMissionNode.WIDTH / 2
+            }
+          }
+
           // Push the new line.
           relationshipLines.push({
             key: `middle-to-child_${child._id}`,
@@ -407,7 +435,7 @@ export default class ClientMissionForce
       }
 
       // Iterate through the child nodes.
-      for (let child of parent.children) {
+      for (let child of children) {
         // Call recursively the algorithm with
         // the child.
         baseAlgorithm(child)
@@ -422,38 +450,14 @@ export default class ClientMissionForce
     this.relationshipLines = relationshipLines
   }
 
-  /**
-   * Calls the callbacks of listeners for the given force event.
-   * @param method The event method emitted.
-   */
-  private emitEvent(method: TForceEventMethod): void {
-    // Call any matching listener callbacks
-    // or any activity listener callbacks.
-    for (let [listenerMethod, listenerCallback] of this.listeners) {
-      if (listenerMethod === method || listenerMethod === 'activity') {
-        listenerCallback()
-      }
-    }
-  }
+  // Implemented
+  public emitEvent
 
   // Implemented
-  public addEventListener(
-    event: TForceEventMethod,
-    callback: () => void,
-  ): void {
-    this.listeners.push([event, callback])
-  }
+  public addEventListener
 
   // Implemented
-  public removeEventListener<TMethod extends TForceEventMethod>(
-    method: TMethod,
-    handler: () => void,
-  ): void {
-    // Filter out the handler.
-    this.listeners = this.listeners.filter(
-      ([m, h]) => m !== method || h !== handler,
-    )
-  }
+  public removeEventListener
 
   // Implemented
   public storeOutput(newOutput: ClientOutput): void {
@@ -461,14 +465,14 @@ export default class ClientMissionForce
     this._outputs.splice(index, 0, newOutput)
 
     // Emit an output event.
-    this.emitEvent('output')
+    this.emitEvent('output', [])
   }
 
   /**
    * Parses the output data into output objects.
    * @param outputs The output data to parse.
    */
-  private parseOutputs(outputs: TCommonOutputJson[]): ClientOutput[] {
+  private parseOutputs(outputs: TOutputJson[]): ClientOutput[] {
     return outputs.map((outputJson) => new ClientOutput(this, outputJson))
   }
 
@@ -476,17 +480,62 @@ export default class ClientMissionForce
    * Filter the outputs based on the conditions of the output and the current user.
    * @returns The filtered outputs.
    */
-  protected filterOutputs(): ClientOutput[] {
+  public filterOutputs(): ClientOutput[] {
     return this.outputs
+  }
+
+  // Implemented
+  public modifyResourcePool(operand: number): void {
+    if (!NumberToolbox.isNonNegative(operand)) {
+      throw new Error('The operand must be a positive number.')
+    }
+
+    // Modify the resource pool by the operand.
+    this.resourcesRemaining += operand
+
+    // Emit event.
+    this.emitEvent('modify-forces', [])
+  }
+
+  /**
+   * Duplicates the force, creating a new force with the same properties
+   * as this one or with the provided properties.
+   * @param options The options for duplicating the force.
+   * @param options.mission The mission to which the duplicated force belongs.
+   * @param options.name The name of the duplicated force.
+   * @param options.localKey The local key of the duplicated force.
+   * @returns A new force with the same properties as this one or with the
+   * provided properties.
+   */
+  public duplicate(options: TForceDuplicateOptions = {}): ClientMissionForce {
+    // Gather details.
+    const {
+      mission = this.mission,
+      name = this.name,
+      localKey = this.localKey,
+    } = options
+
+    let duplicatedForce = new ClientMissionForce(mission, {
+      name,
+      localKey,
+      _id: ClientMissionForce.DEFAULT_PROPERTIES._id,
+      introMessage: this.introMessage,
+      color: this.color,
+      initialResources: this.initialResources,
+      revealAllNodes: this.revealAllNodes,
+      nodes: [],
+    })
+
+    // Duplicate the nodes.
+    duplicatedForce.nodes = this.nodes.map((node) =>
+      node.duplicate({ force: duplicatedForce }),
+    )
+
+    return duplicatedForce
   }
 }
 
 /* ------------------------------ CLIENT FORCE TYPES ------------------------------ */
-
-/**
- * Options for creating a ClientMissionForce object.
- */
-export type TClientMissionForceOptions = TMissionForceOptions & {}
 
 /**
  * An event that occurs on a force, which can be listened for.
@@ -494,5 +543,39 @@ export type TClientMissionForceOptions = TMissionForceOptions & {}
  * Triggered when any other event occurs.
  * @option 'output'
  * Triggered when an output is sent.
+ * @option 'modify-forces'
+ * Triggered when the force was manipulated by an effect.
+ * @option 'structure-change'
+ * Triggered when the structure of the force changes.
  */
-export type TForceEventMethod = 'activity' | 'output'
+export type TForceEventMethods =
+  | 'activity'
+  | 'output'
+  | 'modify-forces'
+  | 'structure-change'
+
+/**
+ * The argument(s) used in the event handler for the force's event manager.
+ */
+type TForceEventArgs = [
+  updatedComponents: MissionComponent<TMetisClientComponents, any>[],
+]
+
+/**
+ * The options for duplicating a force.
+ * @see {@link ClientMissionForce.duplicate}
+ */
+type TForceDuplicateOptions = {
+  /**
+   * The mission to which the duplicated force belongs.
+   */
+  mission?: ClientMission
+  /**
+   * The name of the duplicated force.
+   */
+  name?: string
+  /**
+   * The local key of the duplicated force.
+   */
+  localKey?: string
+}

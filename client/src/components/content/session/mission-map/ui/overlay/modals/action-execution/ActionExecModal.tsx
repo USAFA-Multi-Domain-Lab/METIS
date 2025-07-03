@@ -3,7 +3,7 @@ import {
   ButtonText,
   TButtonText_P,
 } from 'src/components/content/user-controls/buttons/ButtonText'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import ClientMissionAction from 'src/missions/actions'
 import ClientMissionNode from 'src/missions/nodes'
 import SessionClient from 'src/sessions'
@@ -16,6 +16,11 @@ import './ActionExecModal.scss'
 import ActionProperties from './ActionProperties'
 import ExecCheats from './ExecCheats'
 import ExecOption from './ExecOption'
+
+// todo: Ensure that if there is only one action, and
+// todo: that action is not ready to execute, that the
+// todo: execution modal will not render the execution
+// todo: properties.
 
 /**
  * Prompt for a session participant to select an action to execute on a node.
@@ -62,7 +67,7 @@ export default function ActionExecModal({
 
   /* -- HOOKS -- */
 
-  useEventListener(node, ['update-block', 'output-sent'], () => {
+  useEventListener(node, ['set-blocked', 'output-sent'], () => {
     setBlocked(node.blocked)
     setPendingOutputSent(node.pendingOutputSent)
   })
@@ -212,7 +217,6 @@ export default function ActionExecModal({
    */
   const execute = () => {
     if (ready) {
-      console.log(cheats)
       session.executeAction(selectedAction!._id, {
         // This will be ignored if the member
         // does not have authorization to use cheats.
@@ -234,8 +238,8 @@ export default function ActionExecModal({
       return (
         <ExecOption
           key={action._id}
-          action={action}
           session={session}
+          action={action}
           select={() => {
             selectAction(action)
             setDropDownExpanded(false)

@@ -1,104 +1,181 @@
+import { AnyObject } from 'metis/toolbox/objects'
 import { v4 as generateHash } from 'uuid'
-import { TCommonMission, TCommonMissionTypes, TMission } from '..'
+import Mission, { TMission } from '..'
+import { TMetisBaseComponents } from '../../'
 import { Vector2D } from '../../../shared/toolbox/space'
 import ArrayToolbox from '../../toolbox/arrays'
 import MapToolbox from '../../toolbox/maps'
+import { TAction, TMissionActionJson } from '../actions'
 import {
-  TCommonMissionAction,
-  TCommonMissionActionJson,
-  TMissionActionOptions,
-} from '../actions'
-import TActionExecution, {
   TActionExecutionJson,
-  default as TCommonMissionExecution,
+  TActionExecutionState,
   TExecution,
 } from '../actions/executions'
-import {
-  default as IActionOutcome,
-  TActionOutcomeJson,
-  default as TCommonActionOutcome,
-  TOutcome,
-} from '../actions/outcomes'
-import { TCommonMissionForce, TForce } from '../forces'
-import MissionPrototype, {
-  TCommonMissionPrototype,
-  TPrototype,
-} from './prototypes'
+import { TOutcome } from '../actions/outcomes'
+import MissionComponent, { TMissionComponentDefect } from '../component'
+import { TForce, TForceJsonOptions } from '../forces'
+import MissionPrototype, { TPrototype } from './prototypes'
 
 /**
  * This represents an individual node in a mission.
  */
 export default abstract class MissionNode<
-  T extends TCommonMissionTypes = TCommonMissionTypes,
-  TAction extends T['action'] = T['action'],
-> implements TCommonMissionNode
-{
-  // Implemented
-  public prototype: TPrototype<T>
-
-  // Implemented
-  public force: TForce<T>
-
-  // Implemented
-  public _id: TCommonMissionNode['_id']
-
-  // Implemented
-  public name: TCommonMissionNode['name']
-
-  // Implemented
-  public color: TCommonMissionNode['color']
-
-  // Implemented
-  public description: TCommonMissionNode['description']
-
-  // Implemented
-  public preExecutionText: TCommonMissionNode['preExecutionText']
-
-  // Implemented
-  public executable: TCommonMissionNode['executable']
-
-  // Implemented
-  public device: TCommonMissionNode['device']
-
-  // Implemented
-  public actions: Map<string, TAction>
-
+  T extends TMetisBaseComponents = TMetisBaseComponents,
+> extends MissionComponent<T, MissionNode<T>> {
   // Implemented
   public get mission(): TMission<T> {
     return this.force.mission
   }
 
-  // Implemented
-  public get executionState(): TCommonMissionNode['executionState'] {
-    let execution: TActionExecution | null = this.execution
-    let outcomes: IActionOutcome[] = this.outcomes
+  /**
+   * The corresponding prototype for the node.
+   */
+  public prototype: TPrototype<T>
 
-    // Check for 'unexecuted' state.
-    if (execution === null && outcomes.length === 0) {
-      return 'unexecuted'
-    } else if (execution !== null) {
-      return 'executing'
-    } else {
-      return ArrayToolbox.lastOf(outcomes).successful ? 'successful' : 'failed'
-    }
+  /**
+   * The force the node belongs to.
+   */
+  public force: TForce<T>
+
+  /**
+   * The ID of the force the node belongs to.
+   */
+  public get forceId(): string {
+    return this.force._id
   }
 
   // Implemented
-  public get readyToExecute(): TCommonMissionNode['readyToExecute'] {
+  public get path(): [...MissionComponent<any, any>[], this] {
+    return [this.mission, this.force, this]
+  }
+
+  // Implemented
+  public get defects(): TMissionComponentDefect[] {
+    return MissionNode.consolidateDefects(...this.actions.values())
+  }
+
+  /**
+   * The color for the node used as a border in the mission
+   * map.
+   */
+  protected _color: string
+  /**
+   * The color for the node used as a border in the mission
+   * map.
+   */
+  public get color(): string {
+    return this._color
+  }
+  public set color(value: string) {
+    this._color = value
+  }
+
+  /**
+   * The description for the node.
+   */
+  public description: string
+
+  /**
+   * The text that is sent to the output panel when the node
+   * is clicked on.
+   */
+  public preExecutionText: string
+
+  /**
+   * Whether an action can be executed on the node.
+   */
+  protected _executable: boolean
+  /**
+   * Whether an action can be executed on the node.
+   */
+  public get executable(): boolean {
+    return this._executable
+  }
+  public set executable(value: boolean) {
+    this._executable = value
+  }
+
+  /**
+   * Whether or not this node is a device.
+   */
+  protected _device: boolean
+  /**
+   * Whether or not this node is a device.
+   */
+  public get device(): boolean {
+    return this._device
+  }
+  public set device(value: boolean) {
+    this._device = value
+  }
+
+  /**
+   * The actions that can be performed on the node.
+   * @note Mapped by action ID.
+   */
+  public actions: Map<string, TAction<T>>
+
+  /**
+   * Determines if this node should be excluded from the node structure.
+   * @note This allows for nodes within a force to be hidden from
+   * participants during a session.
+   */
+  protected _exclude: boolean
+  /**
+   * Determines if this node should be excluded from the node structure.
+   * @note This allows for nodes within a force to be hidden from
+   * participants during a session.
+   */
+  public abstract get exclude(): boolean
+  public abstract set exclude(value: boolean)
+
+  /**
+   * A key for the node, used to identify it within the force.
+   */
+  public localKey: string
+
+  /**
+   * The execution state of the node.
+   */
+  public get executionState(): TNodeExecutionState {
+    let { latestExecution } = this
+    // Determine the execution state from
+    // the value of the latest execution.
+    if (latestExecution === null) return { status: 'unexecuted' }
+    else return latestExecution.state
+  }
+
+  /**
+   * The execution status of the node, determined
+   * by the execution state.
+   */
+  public get executionStatus(): TNodeExecutionState['status'] {
+    return this.executionState.status
+  }
+
+  /**
+   * Whether or not this node is ready to be
+   * executed upon by an action.
+   */
+  public get readyToExecute(): boolean {
     return (
       this.executable &&
       this.actions.size > 0 &&
-      this.executionState !== 'executing'
+      this.executionStatus !== 'executing'
     )
   }
 
-  // Implemented
-  public get executing(): TCommonMissionNode['executing'] {
-    return this.execution !== null
+  /**
+   * Whether an action is currently being executed on the node.
+   */
+  public get executing(): boolean {
+    return this.latestExecution?.status === 'executing'
   }
 
-  // Implemented
-  public get executed(): TCommonMissionNode['executed'] {
+  /**
+   * Whether an action has been executed on the node.
+   */
+  public get executed(): boolean {
     return this.outcomes.length > 0
   }
 
@@ -106,9 +183,12 @@ export default abstract class MissionNode<
    * Whether or not this node was manually opened.
    */
   protected _opened: boolean
-
-  // Implemented
-  public get opened(): TCommonMissionNode['opened'] {
+  /**
+   * Whether or not this node was manually opened.
+   */
+  public get opened(): boolean {
+    if (!this._opened && this.force.revealAllNodes) return false
+    if (this.parent?.opened && this.exclude) return true
     return this._opened
   }
 
@@ -124,24 +204,38 @@ export default abstract class MissionNode<
   }
 
   /**
-   * The current execution in process on the node by an action.
+   * Cache for the `executions` field.
    */
-  protected _execution: TExecution<T> | null
-  // Implemented
-  public get execution(): TExecution<T> | null {
-    return this._execution
+  protected _executions: T['execution'][]
+  /**
+   * A list of executions that have been performed on the node.
+   */
+  public get executions(): T['execution'][] {
+    return this._executions
   }
 
   /**
-   * The outcomes of the actions that are performed on the node.
+   * The current execution being performed on the node,
+   * or the last execution, if not executing. `null` is
+   * returned if no executions have been performed.
    */
-  protected _outcomes: TOutcome<T>[]
-  // Inherited
-  public get outcomes(): TOutcome<T>[] {
-    return [...this._outcomes]
+  public get latestExecution(): TExecution<T> | null {
+    return this.executions.length ? ArrayToolbox.lastOf(this.executions) : null
   }
 
-  // Implemented
+  /**
+   * The outcomes of the actions that are performed on
+   * the node.
+   */
+  public get outcomes(): TOutcome<T>[] {
+    return this.executions
+      .map(({ outcome }) => outcome)
+      .filter((outcome) => outcome !== null)
+  }
+
+  /**
+   * The parent of this node in the tree structure.
+   */
   public get parent(): TNode<T> | null {
     let parentPrototype = this.prototype.parent
     return parentPrototype
@@ -149,7 +243,10 @@ export default abstract class MissionNode<
       : null
   }
 
-  // Implemented
+  /**
+   * The direct children of this node in the
+   * tree structure.
+   */
   public get children(): TNode<T>[] {
     let children: TNode<T>[] = []
 
@@ -161,29 +258,101 @@ export default abstract class MissionNode<
     return children
   }
 
-  // Implemented
+  /**
+   * The next set of nodes in the node structure that are not excluded.
+   * @note This is used to determine the next set of nodes that
+   * are available to be opened.
+   */
+  public get relativeChildren(): TNode<T>[] {
+    let directChildren: TNode<T>[] = this.children
+    let relativeChildren: TNode<T>[] = []
+
+    for (let child of directChildren) {
+      if (child.exclude) {
+        relativeChildren.push(...child.relativeChildren)
+      } else {
+        relativeChildren.push(child)
+      }
+    }
+
+    return relativeChildren
+  }
+
+  /**
+   * Any nodes that descend from this node
+   * in the tree structure.
+   */
+  public get descendants(): TNode<T>[] {
+    let descendants: TNode<T>[] = []
+
+    this.children.forEach((child: TNode<T>) => {
+      descendants.push(child)
+      descendants.push(...child.descendants)
+    })
+
+    return descendants
+  }
+
+  /**
+   * The first child node of the node in the
+   * tree structure.
+   */
   public get firstChildNode(): TNode<T> | null {
     return this.children.length > 0 ? this.children[0] : null
   }
 
-  // Implemented
+  /**
+   * The last child node of the node in the
+   * tree structure.
+   */
   public get lastChildNode(): TNode<T> | null {
     return this.children.length > 0
       ? this.children[this.children.length - 1]
       : null
   }
 
-  // Implemented
-  public get hasChildren(): TCommonMissionNode['hasChildren'] {
+  /**
+   * The first child found in the node's relative children
+   * array.
+   * @note This is used to determine the first child that
+   * is not excluded.
+   */
+  public get firstRelativeChildNode(): TNode<T> | null {
+    return this.relativeChildren.length > 0 ? this.relativeChildren[0] : null
+  }
+
+  /**
+   * The last child found in the node's relative children
+   * array.
+   * @note This is used to determine the last child that
+   * is not excluded.
+   */
+  public get lastRelativeChildNode(): TNode<T> | null {
+    return this.relativeChildren.length > 0
+      ? this.relativeChildren[this.relativeChildren.length - 1]
+      : null
+  }
+
+  /**
+   * Whether or not this nodes has child nodes
+   * in the tree structure.
+   */
+  public get hasChildren(): boolean {
     return this.children.length > 0
   }
 
-  // Implemented
-  public get hasSiblings(): TCommonMissionNode['hasSiblings'] {
+  /**
+   * Whether or not this node has siblings tree
+   * structure.
+   */
+  public get hasSiblings(): boolean {
     return this.childrenOfParent.length > 1
   }
 
-  // Implemented
+  /**
+   * The siblings of this node in the tree
+   * structure.
+   */
   public get siblings(): TNode<T>[] {
     let siblings: TNode<T>[] = []
 
@@ -198,7 +367,10 @@ export default abstract class MissionNode<
     return siblings
   }
 
-  // Implemented
+  /**
+   * The children of the parent of this node in the
+   * tree structure.
+   */
   public get childrenOfParent(): TNode<T>[] {
     let childrenOfParent: TNode<T>[] = []
 
@@ -209,7 +381,10 @@ export default abstract class MissionNode<
     return childrenOfParent
   }
 
-  // Implemented
+  /**
+   * The sibling, if any, ordered before this node in the
+   * tree structure.
+   */
   public get previousSibling(): TNode<T> | null {
     let previousSibling: TNode<T> | null = null
 
@@ -226,7 +401,10 @@ export default abstract class MissionNode<
     return previousSibling
   }
 
-  // Implemented
+  /**
+   * The sibling, if any, ordered after this node in the
+   * tree structure.
+   */
   public get followingSibling(): TNode<T> | null {
     let followingSibling: TNode<T> | null = null
 
@@ -246,14 +424,113 @@ export default abstract class MissionNode<
     return followingSibling
   }
 
-  // Implemented
-  public get openable(): TCommonMissionNode['openable'] {
-    return !this.opened
+  /**
+   * Whether or not this node can be opened.
+   */
+  public get openable(): boolean {
+    return !this.opened && !this.force.revealAllNodes
   }
 
-  // Implemented
-  public get revealed(): TCommonMissionNode['revealed'] {
-    return this.parent === null || this.parent.opened
+  /**
+   * Whether or not this node has been (or at least
+   * is expected to be) revealed to the player.
+   */
+  public get revealed(): boolean {
+    const algorithm = (node: TNode<T> = this): boolean => {
+      if (!node.parent || this.force.revealAllNodes) return true
+      if (node.parent.exclude) algorithm(node.parent)
+      return node.parent.opened
+    }
+
+    return algorithm()
+  }
+
+  /**
+   * The revealed structure found in the node, based on the node's
+   * descendants that have been revealed.
+   */
+  public get revealedStructure(): AnyObject {
+    /**
+     * The recursive algorithm used to determine the structure.
+     * @param cursor The current node being processed.
+     * @param cursorStructure The structure of the current node being processed.
+     */
+    const algorithm = (
+      cursor: TNode<T> = this,
+      cursorStructure: AnyObject = {},
+    ): AnyObject => {
+      if (cursor.revealed) {
+        let { structureKey } = cursor.prototype
+        cursorStructure[structureKey] = {}
+        for (let child of cursor.children) {
+          algorithm(child, cursorStructure[structureKey])
+        }
+      }
+
+      return cursorStructure
+    }
+
+    // Gather details.
+    const { root: rootNode } = this.force
+    const { prototype: rootPrototype } = rootNode
+
+    // Get the structure of the node.
+    const structure = algorithm()
+
+    // If the node is the root node, return the
+    // next level of the structure to make sure
+    // the root node is not included in the structure.
+    if (this._id === rootNode._id) return structure[rootPrototype.structureKey]
+    // Otherwise, return the structure as is.
+    return structure
+  }
+
+  /**
+   * The revealed prototypes based on the revealed node structure.
+   */
+  public get revealedPrototypes(): TPrototype<T>[] {
+    // The revealed prototypes.
+    let revealedPrototypes: TPrototype<T>[] = []
+
+    /**
+     * Recursively finds prototypes from the node structure.
+     */
+    const findPrototypes = (cursor: AnyObject = this.revealedStructure) => {
+      for (let key of Object.keys(cursor)) {
+        // Get the child structure.
+        let childStructure: AnyObject = cursor[key]
+        // Find the prototype data for the current key.
+        let prototype = this.mission.prototypes.find(
+          ({ structureKey }) => structureKey === key,
+        )
+        // If the prototype was found, add it to the list.
+        if (prototype) revealedPrototypes.push(prototype)
+        // Find this prototype's children.
+        findPrototypes(childStructure)
+      }
+    }
+
+    // Find prototypes from the node structure.
+    findPrototypes()
+
+    // Return the revealed prototypes.
+    return revealedPrototypes
+  }
+
+  /**
+   * All descendants of the node that are revealed.
+   * @note Relies on the `revealed` property of the node.
+   */
+  public get revealedDescendants(): TNode<T>[] {
+    return this.descendants.filter((descendant) => descendant.revealed)
+  }
+
+  /**
+   * All prototypes of the node that are revealed.
+   * @note Relies on the `revealed` property of the node.
+   */
+  public get revealedDescendantPrototypes(): TPrototype<T>[] {
+    return this.revealedDescendants.map((descendant) => descendant.prototype)
   }
 
   /**
@@ -269,91 +546,70 @@ export default abstract class MissionNode<
   public constructor(
     force: TForce<T>,
     data: Partial<TMissionNodeJson> = MissionNode.DEFAULT_PROPERTIES,
-    options: TMissionNodeOptions = {},
   ) {
-    let { populateTargets = false } = options
+    super(
+      data._id ?? MissionNode.DEFAULT_PROPERTIES._id,
+      data.name ?? MissionNode.DEFAULT_PROPERTIES.name,
+      false,
+    )
 
     // Set properties from data.
     this.force = force
-    this._id = data._id ?? MissionNode.DEFAULT_PROPERTIES._id
-    this.name = data.name ?? MissionNode.DEFAULT_PROPERTIES.name
-    this.color = data.color ?? MissionNode.DEFAULT_PROPERTIES.color
+    this._color = data.color ?? MissionNode.DEFAULT_PROPERTIES.color
     this.description =
       data.description ?? MissionNode.DEFAULT_PROPERTIES.description
     this.preExecutionText =
       data.preExecutionText ?? MissionNode.DEFAULT_PROPERTIES.preExecutionText
-    this.executable =
+    this._executable =
       data.executable ?? MissionNode.DEFAULT_PROPERTIES.executable
-    this.device = data.device ?? MissionNode.DEFAULT_PROPERTIES.device
-    this.actions = this.importActions(
-      data.actions ?? MissionNode.DEFAULT_PROPERTIES.actions,
-      { populateTargets },
-    )
+    this._device = data.device ?? MissionNode.DEFAULT_PROPERTIES.device
+    this.actions = new Map<string, TAction<T>>()
+    this._exclude = data.exclude ?? MissionNode.DEFAULT_PROPERTIES.exclude
+    this.localKey = data.localKey ?? force.generateNodeKey()
+    this._executions = []
     this._opened = data.opened ?? MissionNode.DEFAULT_PROPERTIES.opened
     this._blocked = data.blocked ?? MissionNode.DEFAULT_PROPERTIES.blocked
-    this._execution = this.importExecutions(
-      data.execution !== undefined
-        ? data.execution
-        : MissionNode.DEFAULT_PROPERTIES.execution,
-    )
-    this._outcomes = this.importOutcomes(
-      data.outcomes ?? MissionNode.DEFAULT_PROPERTIES.outcomes,
-    )
     this.position = new Vector2D(0, 0)
 
     // Attempt to get prototype from mission.
     let prototype = this.mission.getPrototype(data.prototypeId)
 
     // Throw error if prototype not found.
-    if (!prototype) throw new Error('Prototype not found.')
+    if (!prototype) {
+      throw new Error('Prototype not found.')
+    }
 
     // Set prototype.
     this.prototype = prototype
+
+    // Import action and execution data.
+    this.importActions(data.actions ?? MissionNode.DEFAULT_PROPERTIES.actions)
+    this.importExecutions(
+      data.executions ?? MissionNode.DEFAULT_PROPERTIES.executions,
+    )
   }
 
   /**
-   * Imports the action data into MissionAction objects.
-   * @param data The action data to parse.
+   * Imports the action JSON data, storing it in `actions`.
+   * @param data The action data to import.
    * @param options The options used to create the actions.
-   * @returns The parsed action data.
    */
-  protected abstract importActions(
-    data: TCommonMissionActionJson[],
-    options?: TMissionActionOptions,
-  ): Map<string, TAction>
+  protected abstract importActions(data: TMissionActionJson[]): void
 
   /**
-   * Imports the execution data into a execution object of the
-   * type passed in IActionExecution.
-   * @param data The outcome data to parse.
-   * @returns The parsed outcome data.
+   * Imports the execution JSON data, storing it in `_executions`.
+   * @param data The outcome data to import.
    */
-  protected abstract importExecutions(
-    data: TActionExecutionJson,
-  ): TExecution<T> | null
+  protected abstract importExecutions(data: TActionExecutionJson[]): void
 
   /**
-   * Imports the outcome data into the outcome objects of the
-   * type passed in IActionOutcome.
-   * @param data The outcome data to parse.
-   * @returns The parsed outcome data.
+   * Converts the node to JSON.
+   * @param options Options for exporting the node to JSON.
+   * @returns the JSON for the node.
    */
-  protected abstract importOutcomes(data: TActionOutcomeJson[]): TOutcome<T>[]
-
-  /**
-   * Handles the blocking and unblocking of the node's children.
-   * @param blocked Whether or not the node is blocked.
-   * @param node The starting node.
-   */
-  protected abstract updateBlockStatusForChildren(
-    blocked: boolean,
-    node?: TNode<T>,
-  ): void
-
-  // Implemented
   public toJson(options: TNodeJsonOptions = {}): TMissionNodeJson {
-    let { includeSessionData = false } = options
-
+    const { sessionDataExposure = Mission.DEFAULT_SESSION_DATA_EXPOSURE } =
+      options
     // Construct base JSON.
     let json: TMissionNodeJson = {
       _id: this._id,
@@ -364,71 +620,116 @@ export default abstract class MissionNode<
       preExecutionText: this.preExecutionText,
       executable: this.executable,
       device: this.device,
-      actions: MapToolbox.mapToArray(this.actions, (action: TAction) =>
-        action.toJson(),
+      actions: MapToolbox.mapToArray(this.actions, (action: TAction<T>) =>
+        action.toJson(options),
       ),
+      exclude: this.exclude,
+      localKey: this.localKey,
     }
 
-    // Include session data if includeSessionData
-    // flag was set.
-    if (includeSessionData) {
-      // Construct execution JSON.
-      let executionJson: TActionExecutionJson | null = null
+    // Include session-specific data based on exposure level.
+    switch (sessionDataExposure.expose) {
+      case 'all':
+      case 'user-specific':
+        // Construct execution JSON.
+        let executionJson = this.executions.map((execution) =>
+          execution.toJson(),
+        )
 
-      if (this.execution !== null) {
-        executionJson = this.execution.toJson()
-      }
+        // Construct session-specific JSON.
+        let sessionJson: TMissionNodeSessionJson = {
+          opened: this.opened,
+          executions: executionJson,
+          blocked: this.blocked,
+        }
 
-      // Construct outcome JSON.
-      let outcomeJson: TActionOutcomeJson[] = this.outcomes.map((outcome) =>
-        outcome.toJson(),
-      )
-
-      // Construct session-specific JSON.
-      let sessionJson: TMissionNodeSessionJson = {
-        opened: this.opened,
-        executionState: this.executionState,
-        execution: executionJson,
-        outcomes: outcomeJson,
-        blocked: this.blocked,
-      }
-
-      // Join session-specific JSON with base JSON.
-      json = {
-        ...json,
-        ...sessionJson,
-      }
+        // Join session-specific JSON with base JSON.
+        json = {
+          ...json,
+          ...sessionJson,
+        }
+        break
+      case 'none':
+        break
     }
 
     // Return finalized JSON.
     return json
   }
 
-  // Implemented
-  public abstract open(options?: INodeOpenOptions): Promise<void>
+  /**
+   * @param _id The ID of the execution to retrieve.
+   * @returns The execution with the given ID, or `undefined`
+   * if no execution with the given ID is found.
+   */
+  public getExecution(_id: string): TExecution<T> | undefined {
+    return this.executions.find((execution) => execution._id === _id)
+  }
 
-  // Implemented
-  public abstract loadExecution(
-    data: NonNullable<TActionExecutionJson>,
-  ): TActionExecution
+  /**
+   * Generates a new key for an action.
+   * @returns The new key for an action.
+   */
+  public generateActionKey(): string {
+    // Initialize
+    let newKey: number = 0
 
-  // Implemented
-  public abstract loadOutcome(
-    data: TActionOutcomeJson,
-    options?: ILoadOutcomeOptions,
-  ): IActionOutcome
+    for (let action of this.actions.values()) {
+      let actionKey: number = Number(action.localKey)
+      // If the action has a key, and it is greater than the current
+      // new key, set the new key to the action's key.
+      if (actionKey > newKey) newKey = Math.max(newKey, actionKey)
+    }
 
-  // Implemented
+    // Increment the new key by 1 and return it as a string.
+    newKey++
+    return String(newKey)
+  }
+
+  /**
+   * Handles the blocking and unblocking of the node.
+   * @param blocked Whether the node is blocked or unblocked.
+   */
   public abstract updateBlockStatus(blocked: boolean): void
 
-  // Implemented
+  /**
+   * Modifies the chance of success for all the node's
+   * actions.
+   * @param successChanceOperand The operand to modify
+   * the success chance by.
+   */
   public abstract modifySuccessChance(successChanceOperand: number): void
 
-  // Implemented
+  /**
+   * Modifies the processing time for all the node's
+   * actions.
+   * @param processTimeOperand The operand to modify
+   * the process time by.
+   */
   public abstract modifyProcessTime(processTimeOperand: number): void
 
-  // Implemented
+  /**
+   * Modifies the resource cost for all the node's
+   * actions.
+   * @param resourceCostOperand The operand to modify
+   * the resource cost by.
+   */
   public abstract modifyResourceCost(resourceCostOperand: number): void
+
+  /**
+   * Processes an incoming execution that is being performed
+   * on the node, appending it to the end of the execution list.
+   * @param execution The execution object to process.
+   * @throws If the execution is not associated with this node.
+   */
+  public onExecution(execution: TExecution<T>): void {
+    if (execution.nodeId !== this._id) {
+      throw new Error(
+        `Execution node ID "${execution.nodeId}" does not match node ID "${this._id}".`,
+      )
+    }
+    this._executions.push(execution)
+  }
 
   /**
    * The maximum length allowed for a node's name.
@@ -438,7 +739,7 @@ export default abstract class MissionNode<
   /**
    * The default properties for a `MissionNode` object.
    */
-  public static get DEFAULT_PROPERTIES(): Required<TMissionNodeJson> {
+  public static get DEFAULT_PROPERTIES(): TMissionNodeDefaultJson {
     return {
       _id: generateHash(),
       prototypeId: MissionPrototype.DEFAULT_PROPERTIES._id,
@@ -451,9 +752,8 @@ export default abstract class MissionNode<
       actions: [],
       opened: false,
       blocked: false,
-      executionState: 'unexecuted',
-      execution: null,
-      outcomes: [],
+      executions: [],
+      exclude: false,
     }
   }
 }
@@ -461,187 +761,9 @@ export default abstract class MissionNode<
 /* ------------------------------ NODE TYPES ------------------------------ */
 
 /**
- * Interface of the abstract MissionNode class.
- * @note Any public, non-static properties and functions of the MissionNode class
- * must first be defined here for them to be accessible to the Mission and
- * MissionAction classes.
- */
-export interface TCommonMissionNode {
-  /**
-   * The force the node belongs to.
-   */
-  force: TCommonMissionForce
-  /**
-   * The corresponding prototype for the node.
-   */
-  prototype: TCommonMissionPrototype
-  /**
-   * The ID for the node.
-   */
-  _id: string
-  /**
-   * The name for the node.
-   */
-  name: string
-  /**
-   * The color for the node used as a border in the mission map.
-   */
-  color: string
-  /**
-   * The description for the node.
-   */
-  description: string
-  /**
-   * The text that is sent to the output panel when the node is clicked on.
-   */
-  preExecutionText: string
-  /**
-   * Whether an action can be executed on the node.
-   */
-  executable: boolean
-  /**
-   * Whether or not this node is a device.
-   */
-  device: boolean
-  /**
-   * The actions that can be performed on the node.
-   * @note Mapped by action ID.
-   */
-  actions: Map<string, TCommonMissionAction>
-  /**
-   * The mission of which the node is a part.
-   */
-  get mission(): TCommonMission
-  /**
-   * The execution state of the node.
-   */
-  get executionState(): TNodeExecutionState
-  /**
-   * Whether or not this node is ready to be executed upon by an action.
-   */
-  get readyToExecute(): boolean
-  /**
-   * Whether an action is currently being executed on the node.
-   */
-  get executing(): boolean
-  /**
-   * Whether an action has been executed on the node.
-   */
-  get executed(): boolean
-  /**
-   * The current execution in process on the node by an action.
-   */
-  get execution(): TCommonMissionExecution | null
-  /**
-   * The outcomes of the actions that are performed on the node.
-   */
-  get outcomes(): TCommonActionOutcome[]
-  /**
-   * The parent of this node in the tree structure.
-   */
-  get parent(): TCommonMissionNode | null
-  /**
-   * The children of this node in the tree structure.
-   */
-  get children(): TCommonMissionNode[]
-  /**
-   * Whether or not this nodes has child nodes.
-   */
-  get hasChildren(): boolean
-  /**
-   * Whether or not this node has siblings.
-   */
-  get hasSiblings(): boolean
-  /**
-   * The siblings of this node.
-   */
-  get siblings(): TCommonMissionNode[]
-  /**
-   * The children of the parent of this node (Essentially siblings plus self).
-   */
-  get childrenOfParent(): TCommonMissionNode[]
-  /**
-   * The sibling, if any, ordered before this node in the structure.
-   */
-  get previousSibling(): TCommonMissionNode | null
-  /**
-   * The sibling, if any, ordered after this node in the structure.
-   */
-  get followingSibling(): TCommonMissionNode | null
-  /**
-   * Whether or not this node is open.
-   */
-  get opened(): boolean
-  /**
-   * Whether or not this node can be opened.
-   */
-  get openable(): boolean
-  /**
-   * Whether or not this node has been (or at least is expected to be) revealed to the player.
-   */
-  get revealed(): boolean
-  /**
-   * Whether or not this node is blocked.
-   */
-  get blocked(): boolean
-  /**
-   * Converts the node to JSON.
-   * @param options Options for exporting the node to JSON.
-   * @returns the JSON for the node.
-   */
-  toJson: (options?: TNodeJsonOptions) => TMissionNodeJson
-  /**
-   * Opens the node.
-   * @param options Options for opening the node.
-   * @returns a promise that resolves when the node opening has been fulfilled.
-   */
-  open: (options?: INodeOpenOptions) => Promise<void>
-  /**
-   * Loads the execution JSON into the node, returning a new
-   * execution object.
-   * @param data The execution data to load.
-   * @returns The generated execution object.
-   */
-  loadExecution: (
-    execution: NonNullable<TActionExecutionJson>,
-  ) => TCommonMissionExecution
-  /**
-   * Loads the execution JSON into the node, returning a new
-   * execution object..
-   * @param data The outcome data to load.
-   * @param options Options for loading the outcome.
-   * @returns The generated outcome object.
-   */
-  loadOutcome: (
-    data: TActionOutcomeJson,
-    options?: ILoadOutcomeOptions,
-  ) => TCommonActionOutcome
-  /**
-   * Handles the blocking and unblocking of the node.
-   * @param blocked Whether the node is blocked or unblocked.
-   */
-  updateBlockStatus: (blocked: boolean) => void
-  /**
-   * Modifies the chance of success for all the node's actions.
-   * @param successChanceOperand The operand to modify the success chance by.
-   */
-  modifySuccessChance: (successChanceOperand: number) => void
-  /**
-   * Modifies the processing time for all the node's actions.
-   * @param processTimeOperand The operand to modify the process time by.
-   */
-  modifyProcessTime: (processTimeOperand: number) => void
-  /**
-   * Modifies the resource cost for all the node's actions.
-   * @param resourceCostOperand The operand to modify the resource cost by.
-   */
-  modifyResourceCost: (resourceCostOperand: number) => void
-}
-
-/**
  * Session-agnostic JSON data for a MissionNode object.
  */
-export interface TCommonMissionNodeJson {
+export interface TMissionNodeJsonBase {
   /**
    * The ID for the node.
    */
@@ -677,65 +799,61 @@ export interface TCommonMissionNodeJson {
   /**
    * The actions that can be performed on the node.
    */
-  actions: TCommonMissionActionJson[]
+  actions: TMissionActionJson[]
+  /**
+   * Determines if this node should be excluded from the node structure.
+   * @note This allows for nodes within a force to be hidden from
+   * participants during a session.
+   */
+  exclude: boolean
+  /**
+   * A key for the node, used to identify it within the force.
+   */
+  localKey: string
 }
 
 /**
- * Extracts the node type from the mission types.
- * @param T The mission types.
+ * Extracts the node type from a registry of
+ * METIS components that extends `TMetisBaseComponents`.
+ * @param T The type registry.
  * @returns The node type.
  */
-export type TNode<T extends TCommonMissionTypes> = T['node']
+export type TNode<T extends TMetisBaseComponents> = T['node']
 
 /**
  * Session-specific JSON data for a MissionNode object.
  */
 export interface TMissionNodeSessionJson {
   opened: boolean
-  executionState: TNodeExecutionState
-  execution: TActionExecutionJson | null
-  outcomes: TActionOutcomeJson[]
+  executions: TActionExecutionJson[]
   blocked: boolean
 }
+
+/**
+ * The default properties for a `MissionNode` object.
+ * @inheritdoc TMissionNodeJson
+ */
+type TMissionNodeDefaultJson = Required<Omit<TMissionNodeJson, 'localKey'>>
 
 /**
  * Plain JSON representation of a MissionNode object.
  * Type built from TCommonMissionNodeJson and TMissionNodeSessionJSON,
  * with all properties from TMissionNodeSessionJSON being partial.
  */
-export type TMissionNodeJson = TCommonMissionNodeJson &
+export type TMissionNodeJson = TMissionNodeJsonBase &
   Partial<TMissionNodeSessionJson>
 
 /**
  * Options for MissionNode.toJSON method.
  */
-export type TNodeJsonOptions = {
-  /**
-   * Whether to include session-specific data in the JSON export.
-   * @default false
-   */
-  includeSessionData?: boolean
-}
-
-/**
- * Options for creating a MissionNode object.
- */
-export type TMissionNodeOptions = {
-  /**
-   * Whether to populate the targets.
-   * @default false
-   */
-  populateTargets?: boolean
-}
+export type TNodeJsonOptions = Omit<TForceJsonOptions, 'forceExposure'>
 
 /**
  * Possible states for the execution of a node.
  */
 export type TNodeExecutionState =
-  | 'unexecuted'
-  | 'executing'
-  | 'successful'
-  | 'failed'
+  | { status: 'unexecuted' }
+  | TActionExecutionState
 
 /**
  * Options for the `MissionNode.open` method.

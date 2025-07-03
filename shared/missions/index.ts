@@ -1,27 +1,23 @@
-import { TCommonSession } from 'metis/sessions'
-import { TCommonSessionMember } from 'metis/sessions/members'
-import { TCommonTargetEnv } from 'metis/target-environments'
-import { TCommonTarget } from 'metis/target-environments/targets'
-import { TCommonUser } from 'metis/users'
 import { v4 as generateHash } from 'uuid'
+import { MetisComponent, TCreateJsonType, TMetisBaseComponents } from '..'
 import context from '../context'
+import { DateToolbox } from '../toolbox/dates'
 import { AnyObject } from '../toolbox/objects'
-import { TAction, TCommonMissionAction } from './actions'
-import IActionExecution from './actions/executions'
-import IActionOutcome from './actions/outcomes'
-import { TCommonEffect, TEffect } from './effects'
+import User, { TCreatedByJson } from '../users'
+import { TAction, TMissionActionJson } from './actions'
+import { TExecution } from './actions/executions'
+import MissionComponent, { TMissionComponentDefect } from './component'
+import { TEffect } from './effects'
+import { TMissionFileJson } from './files'
 import {
   MissionForce,
-  TCommonMissionForce,
-  TCommonMissionForceJson,
   TForce,
-  TMissionForceOptions,
+  TMissionForceJson,
+  TMissionForceSaveJson,
 } from './forces'
-import { TCommonOutput } from './forces/output'
-import { TCommonMissionNode, TNode } from './nodes'
+import { TNode } from './nodes'
 import MissionPrototype, {
-  TCommonMissionPrototype,
-  TCommonMissionPrototypeJson,
+  TMissionPrototypeJson,
   TMissionPrototypeOptions,
   TPrototype,
 } from './nodes/prototypes'
@@ -30,15 +26,27 @@ import MissionPrototype, {
  * This represents a mission for a student to complete.
  */
 export default abstract class Mission<
-  T extends TCommonMissionTypes = TCommonMissionTypes,
-> implements TCommonMission
-{
-  // Implemented
+  T extends TMetisBaseComponents = TMetisBaseComponents,
+> extends MissionComponent<T, Mission<T>> {
+  /**
+   * The mission associated with the component.
+   * @note This is only used to properly implement `TMissionComponent`.
+   * Technically, this field just references `this`.
+   */
+  public get mission(): this {
+    return this
+  }
+
+  /**
+   * All nodes that exist in the mission.
+   */
   public get nodes(): TNode<T>[] {
     return this.forces.flatMap((force) => force.nodes)
   }
 
-  // Implemented
+  /**
+   * All actions that exist in the mission.
+   */
   public get actions(): Map<string, TAction<T>> {
     let actions = new Map<string, TAction<T>>()
 
@@ -51,132 +59,334 @@ export default abstract class Mission<
     return actions
   }
 
-  // Implemented
+  /**
+   * All effects that exist in the mission.
+   */
   public get effects(): TEffect<T>[] {
     return Array.from(this.actions.values()).flatMap((action) => action.effects)
   }
 
   // Implemented
-  public _id: string
+  public get path(): [...MissionComponent<any, any>[], this] {
+    return [this]
+  }
 
   // Implemented
-  public name: string
+  public get defects(): TMissionComponentDefect[] {
+    return Mission.consolidateDefects(
+      ...this.prototypes,
+      ...this.forces,
+      ...this.files,
+    )
+  }
 
-  // Implemented
+  /**
+   * The file name to use to store an export for the mission.
+   */
   public get fileName(): string {
     return Mission.determineFileName(this.name)
   }
 
-  // Implemented
+  /**
+   * The version number of the mission.
+   */
   public versionNumber: number
 
-  // Implemented
-  public prototypes: TPrototype<T>[]
-
-  // Implemented
-  public forces: TForce<T>[]
-
-  // Implemented
+  /**
+   * The seed for the mission. Pre-determines outcomes.
+   */
   public seed: string
 
-  // Implemented
+  /**
+   * A label given to resources that defines the currency used in the mission.
+   */
+  public resourceLabel: string
+
+  /**
+   * The date/time the mission was created.
+   */
+  public createdAt: Date | null
+
+  /**
+   * The date/time the mission was last updated.
+   */
+  public updatedAt: Date | null
+
+  /**
+   * The date/time the mission was last launched.
+   */
+  public launchedAt: Date | null
+
+  /**
+   * The user who created the mission.
+   */
+  public createdBy: T['user'] | null
+
+  /**
+   * The username of the user who created the mission.
+   * @note This is needed in the event that the user
+   * has been deleted, yet the mission still exists. The
+   * username will then be displayed in the UI for the mission.
+   */
+  public createdByUsername: string | null
+
+  /**
+   * Prototype nodes for the mission, representing the mission's node
+   * structure outside of any forces.
+   */
+  public prototypes: TPrototype<T>[]
+
+  /**
+   * Forces in the mission, representing different implementation of nodes
+   * from their corresponding prototypes.
+   */
+  public forces: TForce<T>[]
+
+  /**
+   * Files attached to the mission that will be used
+   * during gameplay.
+   */
+  public files: T['missionFile'][]
+
+  /**
+   * The root prototype of the mission.
+   */
   public root: TPrototype<T>
 
   /**
-   * @param data The mission data from which to create the mission. Any ommitted values will be set to the default properties defined in Mission.DEFAULT_PROPERTIES.
-   * @param options The options for creating the mission.
+   * The structure of the mission, representing the relationships between
+   * the prototypes in the mission.
    */
-  public constructor(
-    data: Partial<TCommonMissionJson> = Mission.DEFAULT_PROPERTIES,
-    options: TMissionOptions = {},
-  ) {
-    this._id = data._id ?? Mission.DEFAULT_PROPERTIES._id
-    this.name = data.name ?? Mission.DEFAULT_PROPERTIES.name
-    this.versionNumber =
-      data.versionNumber ?? Mission.DEFAULT_PROPERTIES.versionNumber
-    this.seed = data.seed ?? Mission.DEFAULT_PROPERTIES.seed
-    this.prototypes = []
-    this.forces = []
-    this.root = this.initializeRoot()
-
-    // Parse options.
-    let { populateTargets = false } = options
-
-    // Import node structure into the mission.
-    this.importStructure(
-      data.structure ?? Mission.DEFAULT_PROPERTIES.structure,
-      data.prototypes ?? Mission.DEFAULT_PROPERTIES.prototypes,
-    )
-
-    // Parse force data.
-    this.importForces(data.forces ?? Mission.DEFAULT_PROPERTIES.forces, {
-      populateTargets,
-    })
+  public get structure(): AnyObject {
+    return Mission.determineStructure(this.root)
   }
 
-  // Implemented
-  public toJson(
-    options: TMissionJsonOptions = { exportType: 'standard' },
-  ): TCommonMissionJson {
-    let { includeId = false } = options
+  protected constructor(
+    _id: string,
+    name: string,
+    versionNumber: number,
+    seed: string,
+    resourceLabel: string,
+    createdAt: Date | null,
+    updatedAt: Date | null,
+    launchedAt: Date | null,
+    createdBy: User | null,
+    createdByUsername: string | null,
+    structure: AnyObject,
+    prototypeData: TMissionPrototypeJson[],
+    forceData: TMissionForceJson[],
+    fileData: TMissionFileJson[],
+  ) {
+    super(_id, name, false)
 
+    this.versionNumber = versionNumber
+    this.seed = seed
+    this.resourceLabel = resourceLabel
+    this.createdAt = createdAt
+    this.updatedAt = updatedAt
+    this.launchedAt = launchedAt
+    this.createdBy = createdBy
+    this.createdByUsername = createdByUsername
+
+    this.prototypes = []
+    this.forces = []
+    this.files = []
+    this.root = this.initializeRoot()
+
+    this.importStructure(structure, prototypeData)
+    this.importForces(forceData)
+    this.importFiles(fileData)
+  }
+
+  /**
+   * @param component The component in question.
+   * @returns Whether the given component is a part of
+   * this mission.
+   */
+  public has(component: MissionComponent<T, Mission<T>>): boolean {
+    return component.mission._id === this._id
+  }
+
+  /**
+   * Converts the mission to JSON.
+   * @param options The options for converting the mission to JSON.
+   * @returns the JSON for the mission.
+   */
+  public toJson(options: TMissionJsonOptions = {}): TMissionJson {
+    let {
+      idExposure = true,
+      forceExposure = Mission.DEFAULT_FORCE_EXPOSURE,
+      fileExposure = Mission.DEFAULT_FILE_EXPOSURE,
+    } = options
+    let force: TForce<T> | undefined
     // Predefine limited JSON.
-    let json: TCommonMissionJson = {
+    let json: TMissionJson = {
       name: this.name,
       versionNumber: this.versionNumber,
       seed: this.seed,
+      resourceLabel: this.resourceLabel,
+      createdAt: DateToolbox.toNullableISOString(this.createdAt),
+      updatedAt: DateToolbox.toNullableISOString(this.updatedAt),
+      launchedAt: DateToolbox.toNullableISOString(this.launchedAt),
+      createdBy: null,
+      createdByUsername: null,
       structure: {},
       forces: [],
+      files: [],
       prototypes: [],
     }
 
-    // Include the ID if the option is set.
-    if (includeId) json._id = this._id
-
-    // Handle the export based on the export type
-    // passed in the options.
-    switch (options.exportType) {
-      case 'standard':
-        json.structure = Mission.determineStructure(this.root)
-        json.forces = this.forces.map((force) => force.toJson())
-        json.prototypes = this.prototypes.map((prototype) => prototype.toJson())
-        break
-      case 'session-force-specific':
-        // Get the force to include in the export.
-        let force = this.forces.find((force) => force._id === options.forceId)
-
-        // If the force is found, include it in the export.
-        if (force) {
-          json.forces = [
-            force.toJson({
-              revealedOnly: true,
-              includeSessionData: true,
-              userId: options.userId,
-            }),
-          ]
-          // Set the structure to revealed structure of the force.
-          json.structure = force.revealedStructure
-          // Set the prototypes to the revealed prototypes of the force.
-          json.prototypes = force.revealedPrototypes.map((prototype) =>
-            prototype.toJson(),
-          )
-        }
-        // todo: Log a warning if the force is not found.
-        break
-      case 'session-complete':
-        // Include all data.
-        json.structure = Mission.determineStructure(this.root)
-        json.forces = this.forces.map((force) =>
-          force.toJson({
-            includeSessionData: true,
-            userId: options.userId,
-          }),
+    /**
+     * @param forceId An ID of a force.
+     * @returns The force with the given ID.
+     * @throws An error if the force with the given ID is not found.
+     */
+    const determineForce = (forceId: TForce<T>['_id']) => {
+      force = this.forces.find(({ _id }) => _id === forceId)
+      if (!force) {
+        throw Error(
+          `Invalid force ID "${forceId}" passed during mission export.`,
         )
-        json.prototypes = this.prototypes.map((prototype) => prototype.toJson())
+      }
+      return force
+    }
+
+    /**
+     * Adds forces to the JSON based on the parameters passed.
+     * @param force If included, only this force will be added to the JSON,
+     * otherwise all forces will be added.
+     */
+    const addForces = (force?: TForce<T>) => {
+      if (force) json.forces.push(force.toJson(options))
+      else json.forces = this.forces.map((force) => force.toJson(options))
+    }
+
+    /**
+     * Adds structural data to the JSON, including the
+     * structure and the prototypes, based on the
+     * parameters passed.
+     * @param force If passed, only the revealed structure
+     * and revealed prototypes of this force will be added
+     * to the JSON.
+     */
+    const addStructuralData = (force?: TForce<T>) => {
+      if (force) {
+        json.structure = force.revealedStructure
+        json.prototypes = force.revealedPrototypes.map((prototype) =>
+          prototype.toJson(options),
+        )
+      } else {
+        json.structure = this.structure
+        json.prototypes = this.prototypes.map((prototype) =>
+          prototype.toJson(options),
+        )
+      }
+    }
+
+    /**
+     * Adds files to the JSON based on the parameters passed.
+     * @param force If passed, only the files that are accessible
+     * to the given force will be added to the JSON.
+     */
+    const addFiles = (force?: TForce<T>) => {
+      let filesToAdd: T['missionFile'][] = []
+
+      // Filter files based on the force passed,
+      // if one is passed.
+      if (force) {
+        filesToAdd = this.files.filter((file) => file.hasAccess(force))
+      } else {
+        filesToAdd = this.files
+      }
+
+      json.files = filesToAdd.map((file) => file.toJson())
+    }
+
+    // Add createdBy and createdByUsername to the JSON,
+    // if not null.
+    if (this.createdBy) json.createdBy = this.createdBy.toCreatedByJson()
+    if (this.createdByUsername) json.createdByUsername = this.createdByUsername
+
+    // Expose the ID if the option is set.
+    if (idExposure) json._id = this._id
+
+    // Expose relevant forces in the JSON.
+    switch (forceExposure.expose) {
+      case 'all':
+        addForces()
+        addStructuralData()
+        break
+      case 'force-with-all-nodes':
+        force = determineForce(forceExposure.forceId)
+        addForces(force)
+        addStructuralData()
+        break
+      case 'force-with-revealed-nodes':
+        force = determineForce(forceExposure.forceId)
+        addForces(force)
+        addStructuralData(force)
+        break
+      case 'none':
+      default:
         break
     }
 
+    // Expose files in the JSON.
+    switch (fileExposure.expose) {
+      case 'all':
+        addFiles()
+        break
+      case 'accessible':
+        force = determineForce(fileExposure.forceId)
+        addFiles(force)
+        break
+      case 'none':
+      default:
+        break
+    }
+
+    // Return the result.
     return json
+  }
+
+  /**
+   * Returns the mission as a JSON object that can be saved
+   * to the database.
+   * @param options Passed to {@link Mission.toJson}.
+   * @returns The JSON object representing the mission.
+   */
+  public toSaveJson(options: TMissionJsonOptions = {}): TMissionSaveJson {
+    let json: TMissionJson = this.toJson(options)
+
+    if (!json.createdBy || !json.createdByUsername) {
+      throw new Error('Mission must have a creator to be saved.')
+    }
+
+    return {
+      ...json,
+      createdBy: json.createdBy,
+      createdByUsername: json.createdByUsername,
+    }
+  }
+
+  /**
+   * Generates a new key for the force.
+   * @returns The new key for the force.
+   */
+  public generateForceKey(): string {
+    // Initialize
+    let newKey: number = 0
+
+    for (let force of this.forces) {
+      let forceKey: number = Number(force.localKey)
+      // If the force has a local key, and it is greater than the current
+      // new key, set the new key to the force's local key.
+      if (forceKey > newKey) newKey = Math.max(newKey, forceKey)
+    }
+
+    // Increment the new key by 1 and return it as a string.
+    newKey++
+    return String(newKey)
   }
 
   /**
@@ -194,7 +404,7 @@ export default abstract class Mission<
    */
   protected importStructure(
     structure: AnyObject,
-    prototypeData: TCommonMissionPrototypeJson[],
+    prototypeData: TMissionPrototypeJson[],
   ): void {
     try {
       /**
@@ -247,7 +457,7 @@ export default abstract class Mission<
    * @returns The imported prototype.
    */
   protected abstract importPrototype(
-    data?: Partial<TCommonMissionPrototypeJson>,
+    data?: Partial<TMissionPrototypeJson>,
     options?: TMissionPrototypeOptions<TPrototype<T>>,
   ): TPrototype<T>
 
@@ -257,12 +467,19 @@ export default abstract class Mission<
    * @param data The force data to parse.
    * @returns The parsed force data.
    */
-  protected abstract importForces(
-    data: TCommonMissionForceJson[],
-    options?: TMissionForceOptions,
-  ): TForce<T>[]
+  protected abstract importForces(data: TMissionForceSaveJson[]): void
 
-  // Implemented
+  /**
+   * Imports the file data into the mission.
+   * @param data The file data to parse.
+   */
+  protected abstract importFiles(data: TMissionFileJson[]): void
+
+  /**
+   * @param prototypeId The ID of the prototype to get.
+   * @returns The prototype with the given ID, or undefined
+   * if no prototype is found.
+   */
   public getPrototype(
     prototypeId: TPrototype<T>['_id'] | undefined,
   ): TPrototype<T> | undefined {
@@ -270,23 +487,121 @@ export default abstract class Mission<
     else return this.prototypes.find(({ _id }) => _id === prototypeId)
   }
 
-  // Implemented
-  public getForce(
+  /**
+   * @param forceId The ID of the force to get.
+   * @returns The force with the given ID, or undefined
+   * if no force is found.
+   */
+  public getForceById(
     forceId: TForce<T>['_id'] | null | undefined,
   ): TForce<T> | undefined {
-    let color = '#000000'
-    return Mission.getForce(this, forceId)
+    return Mission.getForceById(this, forceId)
   }
 
-  // Implemented
-  public getNode(nodeId: TNode<T>['_id']): TNode<T> | undefined {
-    return nodeId ? Mission.getNode(this, nodeId) : undefined
+  /**
+   * @param forceKey The local key of the force to get.
+   * @returns The force with the given local key, or undefined
+   * if no force is found.
+   */
+  public getForceByLocalKey(
+    forceKey: TForce<T>['localKey'] | null | undefined,
+  ): TForce<T> | undefined {
+    return Mission.getForceByLocalKey(this, forceKey)
+  }
+
+  /**
+   * @param nodeId The ID of the node to get.
+   * @returns The node with the given ID, or undefined
+   * if no node is found.
+   */
+  public getNodeById(
+    nodeId: MetisComponent['_id'] | null | undefined,
+  ): TNode<T> | undefined {
+    return Mission.getNodeById(this, nodeId)
+  }
+
+  /**
+   * @param forceKey The local key of the force that the node belongs to.
+   * @param nodeKey The local key of the node to get.
+   * @returns The node with the given local key, or undefined
+   * if no node is found.
+   */
+  public getNodeByLocalKey(
+    forceKey: TForce<T>['localKey'] | null | undefined,
+    nodeKey: TNode<T>['localKey'] | null | undefined,
+  ): TNode<T> | undefined {
+    return Mission.getNodeByLocalKey(this, forceKey, nodeKey)
+  }
+
+  /**
+   * @param actionId The ID of the action to get.
+   * @returns The action with the given ID, or undefined
+   * if the action is not found.
+   */
+  public getActionById(
+    actionId: MetisComponent['_id'] | null | undefined,
+  ): TAction<T> | TMissionActionJson | undefined {
+    return Mission.getActionById(this, actionId)
+  }
+
+  /**
+   * @param forceKey The local key of the force that the action belongs to.
+   * @param nodeKey The local key of the node that the action belongs to.
+   * @param actionKey The local key of the action to get.
+   * @returns The action with the given local key, or undefined
+   * if the action is not found.
+   */
+  public getActionByLocalKey(
+    forceKey: TForce<T>['localKey'] | null | undefined,
+    nodeKey: TNode<T>['localKey'] | null | undefined,
+    actionKey: TAction<T>['localKey'] | null | undefined,
+  ): TAction<T> | TMissionActionJson | undefined {
+    return Mission.getActionByLocalKey(this, forceKey, nodeKey, actionKey)
+  }
+
+  /**
+   * @param fileId The ID of the file to get.
+   * @returns The file with the given ID, or undefined
+   * if the file is not found.
+   */
+  public getFileById(
+    fileId: string | null | undefined,
+  ): T['missionFile'] | undefined {
+    return this.files.find((file) => file._id === fileId)
+  }
+
+  /**
+   * @param executionId The ID of the execution to get.
+   * @returns The execution with the given ID, or undefined
+   * if the execution is not found.
+   */
+  public getExecution(
+    executionId: MetisComponent['_id'],
+  ): TExecution<T> | undefined {
+    for (let node of this.nodes.values()) {
+      let execution = node.getExecution(executionId)
+      if (execution) return execution
+    }
+    return undefined
   }
 
   /**
    * The maximum length allowed for a mission's name.
    */
   public static readonly MAX_NAME_LENGTH: number = 175
+
+  /**
+   * The maximum length allowed for an alias in a file mission.
+   * todo: Add this to a MissionFile class when and if it is
+   * todo: created.
+   */
+  public static readonly MAX_FILE_ALIAS_LENGTH: number = 175
+
+  /**
+   * The maximum length allowed for a mission resource
+   * label.
+   */
+  public static readonly MAX_RESOURCE_LABEL_LENGTH: number = 16
 
   /**
    * The maximum number of forces allowed in a mission.
@@ -354,17 +669,54 @@ export default abstract class Mission<
   ]
 
   /**
+   * The default session data exposure options when
+   * exporting a mission with the `toJson` method.
+   */
+  public static get DEFAULT_SESSION_DATA_EXPOSURE(): TSessionDataExposure {
+    return {
+      expose: 'none',
+    }
+  }
+
+  /**
+   * The default force exposure options when exporting
+   * a mission with the `toJson` method.
+   */
+  public static get DEFAULT_FORCE_EXPOSURE(): TForceExposure {
+    return {
+      expose: 'all',
+    }
+  }
+
+  /**
+   * The default file exposure options when exporting
+   * a mission with the `toJson` method.
+   */
+  public static get DEFAULT_FILE_EXPOSURE(): TFileExposure {
+    return {
+      expose: 'all',
+    }
+  }
+
+  /**
    * The default properties for a Mission object.
    */
-  public static get DEFAULT_PROPERTIES(): Required<TCommonMissionJson> {
+  public static get DEFAULT_PROPERTIES(): Required<TMissionDefaultJson> {
     return {
       _id: generateHash(),
       name: 'New Mission',
       versionNumber: 1,
       seed: generateHash(),
+      resourceLabel: 'Resources',
+      createdAt: null,
+      updatedAt: null,
+      launchedAt: null,
+      createdBy: null,
+      createdByUsername: null,
       structure: {},
       forces: [MissionForce.DEFAULT_FORCES[0]],
       prototypes: [MissionPrototype.DEFAULT_PROPERTIES],
+      files: [],
     }
   }
 
@@ -375,7 +727,7 @@ export default abstract class Mission<
    * @returns The file name to use for the export.
    */
   public static determineFileName(name: string): string {
-    return `${name}.metis`.replace(/[^a-zA-Z0-9À-ÖØ-öø-ÿ._-]/g, '-')
+    return `${name}.metis.zip`.replace(/[^a-zA-Z0-9À-ÖØ-öø-ÿ._-]/g, '-')
   }
 
   /**
@@ -384,9 +736,7 @@ export default abstract class Mission<
    * @param structure The node structure from which to map the relationships.
    * @param rootPrototype The root prototype of the structure. This root prototype should not be defined in the prototype map, nor in the node structure.
    */
-  protected static mapRelationships = <
-    TPrototype extends TCommonMissionPrototype,
-  >(
+  protected static mapRelationships = <TPrototype extends MissionPrototype>(
     prototypes: Map<string, TPrototype>,
     structure: AnyObject,
     rootPrototype: TPrototype,
@@ -418,16 +768,14 @@ export default abstract class Mission<
    * @param root The root prototype from which to determine the structure.
    * @returns The raw structure.
    */
-  protected static determineStructure(
-    root: TCommonMissionPrototype,
-  ): AnyObject {
+  protected static determineStructure(root: MissionPrototype): AnyObject {
     /**
      * The recursive algorithm used to determine the structure.
      * @param cursor The current prototype being processed.
      * @param cursorStructure The structure of the current prototype being processed.
      */
     const operation = (
-      cursor: TCommonMissionPrototype = root,
+      cursor: MissionPrototype = root,
       cursorStructure: AnyObject = {},
     ): AnyObject => {
       for (let child of cursor.children) {
@@ -451,11 +799,24 @@ export default abstract class Mission<
    * @param forceId The ID of the force to get.
    * @returns The force with the given ID, or undefined if no force is found.
    */
-  public static getForce<TMission extends TCommonMissionJson | TCommonMission>(
+  public static getForceById<TMission extends TMissionJson | Mission>(
     mission: TMission,
     forceId: string | null | undefined,
   ): TMission['forces'][0] | undefined {
     return mission.forces.find((force) => force._id === forceId)
+  }
+
+  /**
+   * Gets a force from the mission by its local key.
+   * @param mission The mission to get the force from.
+   * @param forceKey The local key of the force to get.
+   * @returns The force with the given local key, or undefined if no force is found.
+   */
+  public static getForceByLocalKey<TMission extends TMissionJson | Mission>(
+    mission: TMission,
+    forceKey: string | null | undefined,
+  ): TMission['forces'][0] | undefined {
+    return mission.forces.find((force) => force.localKey === forceKey)
   }
 
   /**
@@ -464,15 +825,33 @@ export default abstract class Mission<
    * @param nodeId The ID of the node to get.
    * @returns The node with the given ID, or undefined if no node is found.
    */
-  public static getNode<TMission extends TCommonMissionJson | TCommonMission>(
+  public static getNodeById<TMission extends TMissionJson | Mission>(
     mission: TMission,
-    nodeId: string,
+    nodeId: string | null | undefined,
   ): TMission['forces'][0]['nodes'][0] | undefined {
     for (let force of mission.forces) {
       let node = force.nodes.find((node) => node._id === nodeId)
       if (node) return node
+      continue
     }
     return undefined
+  }
+
+  /**
+   * Gets a node from the mission by its local key.
+   * @param mission The mission to get the node from.
+   * @param forceKey The local key of the force that the node belongs to.
+   * @param nodeKey The local key of the node to get.
+   * @returns The node with the given local key, or undefined if no node is found.
+   */
+  public static getNodeByLocalKey<TMission extends TMissionJson | Mission>(
+    mission: TMission,
+    forceKey: string | null | undefined,
+    nodeKey: string | null | undefined,
+  ): TMission['forces'][0]['nodes'][0] | undefined {
+    let force = mission.forces.find((force) => force.localKey === forceKey)
+    if (!force) return undefined
+    return force.nodes.find((node) => node.localKey === nodeKey)
   }
 
   /**
@@ -482,267 +861,243 @@ export default abstract class Mission<
    * @returns The prototype with the given ID, or undefined if no prototype is found.
    */
   public static getPrototype<
-    TMission extends TCommonMissionJson | TCommonMission,
+    TMission extends TMissionJson | TMissionSaveJson | Mission,
   >(
     mission: TMission,
     prototypeId: string | undefined,
   ): TMission['prototypes'][0] | undefined {
-    return prototypeId
-      ? mission.prototypes.find(({ _id }) => _id === prototypeId)
-      : undefined
+    return mission.prototypes.find(({ _id }) => _id === prototypeId)
+  }
+
+  /**
+   * Gets an action from the mission by its ID.
+   * @param mission The mission to get the action from.
+   * @param actionId The ID of the action to get.
+   * @returns The action with the given ID, or undefined if no action is found.
+   */
+  public static getActionById<
+    TMission extends TMissionJson | Mission,
+    TAction extends TMetisBaseComponents['action'],
+  >(
+    mission: TMission,
+    actionId: string | null | undefined,
+  ): TAction | TMissionActionJson | undefined {
+    if (!actionId) return undefined
+
+    for (let force of mission.forces) {
+      for (let node of force.nodes) {
+        let action = Array.isArray(node.actions)
+          ? node.actions.find((action) => action._id === actionId)
+          : node.actions.get(actionId)
+        if (action) return action
+        continue
+      }
+    }
+
+    return undefined
+  }
+
+  /**
+   * Gets an action from the mission by its local key.
+   * @param mission The mission to get the action from.
+   * @param forceKey The local key of the force that the action belongs to.
+   * @param nodeKey The local key of the node that the action belongs to.
+   * @param actionKey The local key of the action to get.
+   * @returns The action with the given local key, or undefined if no action is found.
+   */
+  public static getActionByLocalKey<
+    TMission extends TMissionJson | Mission,
+    TAction extends TMetisBaseComponents['action'],
+  >(
+    mission: TMission,
+    forceKey: string | null | undefined,
+    nodeKey: string | null | undefined,
+    actionKey: string | null | undefined,
+  ): TAction | TMissionActionJson | undefined {
+    if (!forceKey || !nodeKey || !actionKey) return undefined
+
+    let force = mission.forces.find((force) => force.localKey === forceKey)
+    if (!force) return undefined
+
+    let node = force.nodes.find((node) => node.localKey === nodeKey)
+    if (!node) return undefined
+
+    let action = Array.isArray(node.actions)
+      ? node.actions.find((action) => action.localKey === actionKey)
+      : node.actions.values().find((action) => action.localKey === actionKey)
+
+    return action
   }
 }
 
 /* ------------------------------ MISSION TYPES ------------------------------ */
 
 /**
- * Common types for Mission objects.
- * @note Used as a generic argument for all base,
- * mission-related classes.
+ * Type registry for base mission component classes.
  */
-export type TCommonMissionTypes = {
-  session: TCommonSession
-  member: TCommonSessionMember
-  user: TCommonUser
-  mission: TCommonMission
-  force: TCommonMissionForce
-  output: TCommonOutput
-  prototype: TCommonMissionPrototype
-  node: TCommonMissionNode
-  action: TCommonMissionAction
-  execution: IActionExecution
-  outcome: IActionOutcome
-  targetEnv: TCommonTargetEnv
-  target: TCommonTarget
-  effect: TCommonEffect
-}
+export type TBaseMissionComponents = Pick<
+  TMetisBaseComponents,
+  | 'mission'
+  | 'prototype'
+  | 'missionFile'
+  | 'force'
+  | 'output'
+  | 'node'
+  | 'action'
+  | 'effect'
+>
 
 /**
- * Interface of the abstract `Mission` class.
- * @note Any public, non-static properties and functions of the `Mission`
- * class must first be defined here for them to be accessible to other
- * mission-related classes.
- */
-export interface TCommonMission {
-  /**
-   * All nodes that exist in the mission.
-   */
-  get nodes(): TCommonMissionNode[]
-  /**
-   * All actions that exist in the mission.
-   */
-  get actions(): Map<string, TCommonMissionAction>
-  /**
-   * All effects that exist in the mission.
-   */
-  get effects(): TCommonEffect[]
-  /**
-   * The ID of the mission.
-   */
-  _id: string
-  /**
-   * The name of the mission.
-   */
-  name: string
-  /**
-   * The file name to use to store an export for the mission.
-   */
-  get fileName(): string
-  /**
-   * The version number of the mission.
-   */
-  versionNumber: number
-  /**
-   * The seed for the mission. Pre-determines outcomes.
-   */
-  seed: string
-  /**
-   * Prototype nodes for the mission, representing the mission's node
-   * structure outside of any forces.
-   */
-  prototypes: TCommonMissionPrototype[]
-  /**
-   * Forces in the mission, representing different implementation of nodes
-   * from their corresponding prototypes.
-   */
-  forces: TCommonMissionForce[]
-  /**
-   * The root prototype of the mission.
-   */
-  root: TCommonMissionPrototype
-  /**
-   * Converts the mission to JSON.
-   * @param options The options for converting the mission to JSON.
-   * @returns the JSON for the mission.
-   */
-  toJson: (options?: TMissionJsonOptions) => TCommonMissionJson
-  /**
-   * Gets a prototype from the mission by its ID.
-   */
-  getPrototype: (
-    prototypeId: TCommonMissionPrototype['_id'] | undefined,
-  ) => TCommonMissionPrototype | undefined
-  /**
-   * Gets a force from the mission by its ID.
-   */
-  getForce: (
-    forceId: TCommonMissionForce['_id'],
-  ) => TCommonMissionForce | undefined
-  /**
-   * Gets a node from the mission by its ID.
-   */
-  getNode: (nodeId: TCommonMissionNode['_id']) => TCommonMissionNode | undefined
-}
-
-/**
- * Extracts the mission type from the mission types.
- * @param T The mission types.
+ * Extracts the mission type from a registry of METIS
+ * components type that extends `TMetisBaseComponents`.
+ * @param T The type registry.
  * @returns The mission type.
  */
-export type TMission<T extends TCommonMissionTypes> = T['mission']
+export type TMission<T extends TMetisBaseComponents> = T['mission']
 
 /**
- * Plain JSON representation of a `Mission` object.
+ * JSON representation of a `Mission` object.
  */
-export interface TCommonMissionJson {
-  /**
-   * The ID of the mission.
-   */
-  _id?: string
-  /**
-   * The name of the mission.
-   */
-  name: string
-  /**
-   * The version number of the mission.
-   */
-  versionNumber: number
-  /**
-   * The seed for the mission. Pre-determines outcomes.
-   */
-  seed: string
-  /**
-   * The tree structure used to determine the relationships and positions of the nodes in the mission.
-   */
-  structure: AnyObject
-  /**
-   * The forces in the mission.
-   */
-  forces: TCommonMissionForceJson[]
-  /**
-   * The prototype nodes for the mission.
-   */
-  prototypes: TCommonMissionPrototypeJson[]
-}
-
-/**
- * Options for creating a Mission object.
- */
-export type TMissionOptions = {
-  /**
-   * Whether to populate the targets.
-   * @default false
-   */
-  populateTargets?: boolean
-}
-
-/**
- * Base options for Mission.toJson.
- */
-export type TMissionJsonBaseOptions = {
-  /**
-   * Whether or not to include the ID in the JSON.
-   * @default false
-   */
-  includeId?: boolean
-}
-
-/**
- * Options for Mission.toJson with `exportType` set to 'standard'.
- */
-export type TMissionJsonStandardOptions = TMissionJsonBaseOptions & {
-  /**
-   * Standard export of the mission.
-   */
-  exportType: 'standard'
-}
-
-/**
- * Options for Mission.toJson with `exportType` set to 'session-limited'.
- */
-export type TMissionJsonSessionLimitedOptions = TMissionJsonBaseOptions & {
-  /**
-   * An export of a mission to be used in a session.
-   * This export will not include force or prototype
-   * data.
-   */
-  exportType: 'session-limited'
-}
-
-/**
- * Options for Mission.toJson with `exportType` set to 'session-force-specific'.
- */
-export type TMissionJsonSessionForceSpecificOptions =
-  TMissionJsonBaseOptions & {
-    /**
-     * An export of a mission to be used in a session.
-     * This export will only include the data available
-     * to a participant participating in the force with
-     * the ID passed.
-     */
-    exportType: 'session-force-specific'
-    /**
-     * The ID of the force to include in the export.
-     */
-    forceId: TCommonMissionForce['_id']
-    /**
-     * The user's ID to include in the export.
-     */
-    userId: TCommonUser['_id']
+export type TMissionJson = TCreateJsonType<
+  Mission,
+  'name' | 'versionNumber' | 'seed' | 'resourceLabel',
+  {
+    _id?: string
+    createdAt: string | null
+    updatedAt: string | null
+    launchedAt: string | null
+    createdBy: TCreatedByJson | string | null
+    createdByUsername: string | null
+    forces: TMissionForceJson[]
+    prototypes: TMissionPrototypeJson[]
+    structure: AnyObject
+    files: TMissionFileJson[]
   }
+>
 
 /**
- * Options for Mission.toJson with `exportType` set to 'session-complete'.
+ * JSON representation of the default values for a
+ * Mission object.
  */
-export type TMissionJsonSessionCompleteOptions = TMissionJsonBaseOptions & {
-  /**
-   * An export of a mission to be used in a session.
-   * This export will include all data.
-   */
-  exportType: 'session-complete'
-  /**
-   * The user's ID to include in the export.
-   */
-  userId: TCommonUser['_id']
+export interface TMissionDefaultJson extends TMissionJson {
+  createdAt: null
+  updatedAt: null
+  launchedAt: null
+  createdBy: null
+  createdByUsername: null
 }
 
 /**
- * Options for Mission.toJSON.
+ * JSON data for a mission that is known to exist
+ * in the METIS database.
  */
-export type TMissionJsonOptions =
-  | TMissionJsonStandardOptions
-  | TMissionJsonSessionLimitedOptions
-  | TMissionJsonSessionForceSpecificOptions
-  | TMissionJsonSessionCompleteOptions
-
-/**
- * Options for Mission.mapRelationships.
- */
-export type TMapRelationshipOptions = {
-  /**
-   * Whether or not to force open all nodes.
-   * @default false
-   */
-  openAll?: boolean
+export interface TMissionExistingJson extends TMissionJson {
+  // Require values that are no longer optional
+  // post save.
+  _id: string
+  createdAt: string
+  updatedAt: string
+  createdBy: TCreatedByJson | string
+  createdByUsername: string
 }
 
 /**
- * Options for Mission.importNodes.
+ * JSON data for a mission that is known to exist
+ * in the METIS database, but does not include
+ * any force, prototype, or file data.
  */
-export type TNodeImportOptions = {
-  /**
-   * Whether or not to force open the newly created nodes.
-   * @default false
-   */
-  openAll?: boolean
+export type TMissionShallowExistingJson = Omit<
+  TMissionExistingJson,
+  'forces' | 'prototypes' | 'files' | 'structure'
+>
+
+/**
+ * Session-agnostic JSON representation of a Mission object
+ * which can be saved to a database.
+ */
+export type TMissionSaveJson = Omit<TMissionJson, 'forces'> & {
+  createdBy: TCreatedByJson | string
+  createdByUsername: string
+  forces: TMissionForceSaveJson[]
 }
+
+export type TMissionJsonOptions = {
+  /**
+   * Whether or not to expose the mission ID in the JSON.
+   * @default true
+   */
+  idExposure?: boolean
+  /**
+   * Whether or not to expose session-specific data in the
+   * export.
+   * @default { expose: 'none' }
+   */
+  sessionDataExposure?: TSessionDataExposure
+  /**
+   * The exposure of the forces within the mission.
+   * @default { expose: 'all' }
+   */
+  forceExposure?: TForceExposure
+  /**
+   * The exposure of the files within the mission.
+   * @default { expose: 'all' }
+   */
+  fileExposure?: TFileExposure
+}
+
+/**
+ * Options for `TMissionJsonOptions.sessionDataExposure`.
+ * @option 'all'
+ * All session data is exposed.
+ * @option 'user-specific'
+ * Only session data relevant to the user is exposed.
+ * @option 'none'
+ * No session data is exposed.
+ */
+export type TSessionDataExposure =
+  | { expose: 'all' }
+  | { expose: 'user-specific'; userId: User['_id'] }
+  | { expose: 'none' }
+
+/**
+ * Options for `TMissionJsonOptions.forceExposure`.
+ * @option 'all'
+ * All forces are exposed, along with all nodes.
+ * @option 'force-with-all-nodes'
+ * Only the force with the given ID is exposed,
+ * along with all nodes.
+ * @option 'force-with-revealed-nodes'
+ * Only the force with the given ID is exposed,
+ * along with any revealed nodes, only.
+ * @option 'none'
+ * No forces are exposed.
+ */
+export type TForceExposure =
+  | { expose: 'all' }
+  | { expose: 'force-with-all-nodes'; forceId: string }
+  | { expose: 'force-with-revealed-nodes'; forceId: string }
+  | { expose: 'none' }
+
+/**
+ * Options for `TMissionJsonOptions.fileExposure`.
+ * @option 'all'
+ * All files are exposed.
+ * @option 'accessible'
+ * Only the files that are accessible to the given force
+ * are exposed.
+ * @option 'none'
+ * No files are exposed.
+ */
+export type TFileExposure =
+  | { expose: 'all' }
+  | { expose: 'accessible'; forceId: string }
+  | { expose: 'none' }
+
+/**
+ * Defines the type for the `path` property
+ * of a mission component.
+ */
+export type TMissionComponentPath<
+  T extends TMetisBaseComponents,
+  Self extends MissionComponent<T, Self>,
+> = [...MissionComponent<any, any>[], Self]

@@ -19,7 +19,7 @@ if (process.env.MONGO_DB) {
 
 use(dbName)
 
-print('Migrating user data to updated schema...')
+print('Migrating mission data to updated schema...')
 
 // Get missions from database.
 let cursor_missions = db.missions.find(

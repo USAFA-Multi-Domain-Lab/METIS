@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from 'react'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import ClientMissionForce from 'src/missions/forces'
 import SessionClient from 'src/sessions'
 import ClientSessionMember from 'src/sessions/members'
@@ -9,10 +9,9 @@ import MemberRole, {
   TMemberRoleId,
 } from '../../../../../../shared/sessions/members/roles'
 import Prompt from '../../communication/Prompt'
-import { DetailDropdown } from '../../form/DetailDropdown'
-import ButtonSvgPanel, {
-  TValidPanelButton,
-} from '../../user-controls/buttons/ButtonSvgPanel'
+import { DetailDropdown } from '../../form/dropdown/'
+import ButtonSvgPanel from '../../user-controls/buttons/v3/ButtonSvgPanel'
+import { useButtonSvgEngine } from '../../user-controls/buttons/v3/hooks'
 import './SessionMemberRow.scss'
 
 export default function SessionMemberRow({
@@ -31,6 +30,23 @@ export default function SessionMemberRow({
   const [forceLock, setForceLock] = useState<boolean>(false)
   const [assignedRole, setAssignedRole] = useState<MemberRole>(member.role)
   const [roleLock, setRoleLock] = useState<boolean>(false)
+  const controlsCellButtonEngine = useButtonSvgEngine({
+    elements: [
+      {
+        type: 'button',
+        icon: 'kick',
+        description:
+          'Kick member from the session (Can still choose to rejoin).',
+        onClick: () => onClickKick(),
+      },
+      {
+        type: 'button',
+        icon: 'ban',
+        description: 'Ban member from the session (Cannot rejoin).',
+        onClick: () => onClickBan(),
+      },
+    ],
+  })
 
   /* -- COMPUTED -- */
 
@@ -45,27 +61,6 @@ export default function SessionMemberRow({
    * The ID of the assigned role.
    */
   const assignedRoleId: TMemberRoleId = assignedRole._id
-
-  /**
-   * Buttons for SVG panel.
-   */
-  const buttons = compute((): TValidPanelButton[] => {
-    return [
-      {
-        type: 'kick',
-        key: 'kick',
-        onClick: () => onClickKick(),
-        description:
-          'Kick member from the session (Can still choose to rejoin).',
-      },
-      {
-        type: 'ban',
-        key: 'ban',
-        onClick: () => onClickBan(),
-        description: 'Ban member from the session (Cannot rejoin).',
-      },
-    ]
-  })
 
   /**
    * Whether the target member can be assigned a force.
@@ -306,15 +301,15 @@ export default function SessionMemberRow({
     // the dropdown.
     if (showForceDropdown) {
       innerJsx = (
-        <DetailDropdown<ClientMissionForce | null>
+        <DetailDropdown<ClientMissionForce>
           label='Force'
           options={session.mission.forces}
-          stateValue={assignedForce}
-          setState={setAssignedForce}
+          value={assignedForce}
+          setValue={setAssignedForce}
           isExpanded={false}
-          getKey={(value) => value._id}
+          getKey={(value) => value?._id}
           render={(value) => {
-            return <span style={{ color: value.color }}>{value.name}</span>
+            return <span style={{ color: value?.color }}>{value?.name}</span>
           }}
           fieldType='optional'
           handleInvalidOption={{
@@ -349,8 +344,8 @@ export default function SessionMemberRow({
         <DetailDropdown<ClientSessionMember['role']>
           label='Role'
           options={MemberRole.ASSIGNABLE_ROLES}
-          stateValue={assignedRole}
-          setState={setAssignedRole}
+          value={assignedRole}
+          setValue={setAssignedRole}
           isExpanded={false}
           getKey={(value) => value._id}
           render={(value) => value.name}
@@ -385,7 +380,7 @@ export default function SessionMemberRow({
       currentMember?.isAuthorized('manageSessionMembers') &&
       !member.isAuthorized('manageSessionMembers')
     ) {
-      buttonPanel = <ButtonSvgPanel buttons={buttons} size={'small'} />
+      buttonPanel = <ButtonSvgPanel engine={controlsCellButtonEngine} />
     }
     // Else, render 'N/A'.
     else {

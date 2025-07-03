@@ -3,6 +3,7 @@ import UserModel from 'metis/server/database/models/users'
 import { StatusError } from 'metis/server/http'
 import { databaseLogger } from 'metis/server/logging'
 import ApiResponse from '../../library/response'
+import { preventSystemUserWrite } from '../../library/users'
 
 /**
  * This will delete a user.
@@ -15,6 +16,9 @@ const deleteUser = async (request: Request, response: Response) => {
   let { _id: userId } = request.params
 
   try {
+    // Disable system-user write operations.
+    preventSystemUserWrite({ currentUserId: userId })
+
     // Delete the user.
     let deletedUserDoc = await UserModel.findByIdAndUpdate(
       userId,

@@ -2,126 +2,21 @@
 @import '../form/index.scss';
 
 .Detail.DetailLargeString {
-  * {
-    transition: transform 250ms, opacity 250ms;
-  }
-
-  &.Disabled {
-    opacity: unset;
-
-    * {
-      transform: scale(0.8);
-      opacity: 0.65;
+  .TitleRow .TitleColumnOne .Shortcuts {
+    .ButtonSvg {
+      margin: 0;
     }
   }
 
-  .FieldContainer {
-    // This container is only here because React Quill needs a parent container
-    // for the onBlur event to work properly.
+  .Field {
+    padding: 0;
 
-    .Field {
-      border: none;
-      resize: none;
-      padding: 0;
+    .Toolbar {
+      padding: 1em 1em 0;
+    }
 
-      .ql-toolbar {
-        border: 2px solid $color-main;
-
-        .ql-formats {
-          button {
-            &:hover {
-              border: 2px solid $color-accent-light;
-            }
-
-            svg {
-              line,
-              path,
-              rect {
-                stroke: $color-main;
-              }
-            }
-          }
-        }
-      }
-
-      .ql-container {
-        font-family: monospace, sans-serif;
-        border: 2px solid $color-main;
-        border-top: none;
-
-        .ql-editor {
-          * {
-            color: $color-accent-light;
-
-            &::before,
-            &::after {
-              color: $color-accent-light;
-            }
-          }
-
-          a {
-            color: $form-blue;
-          }
-
-          ul,
-          ol {
-            padding: 0;
-          }
-
-          &.ql-blank::before {
-            color: $color-main;
-            opacity: 0.775;
-            font-style: normal;
-            font-family: 'monospace', sans-serif;
-            font-size: 14px;
-          }
-        }
-
-        .ql-tooltip {
-          color: $color-main;
-          border-radius: 5px;
-          box-shadow: none;
-          background-color: $background-alt1;
-          border: 2px solid $color-main;
-
-          * {
-            color: $color-main;
-            font-family: 'monospace', sans-serif;
-          }
-
-          input {
-            border-radius: 5px;
-            background-color: $background-alt1;
-            border: 2px solid $color-main;
-
-            &:focus {
-              outline: none;
-            }
-          }
-
-          .ql-preview {
-            color: $form-blue;
-            text-decoration: underline;
-          }
-        }
-      }
-
-      &.Error {
-        .ql-toolbar {
-          border: 2px solid $color-error-alt;
-        }
-
-        .ql-container {
-          border: 2px solid $color-error-alt;
-          border-top: none;
-
-          .ql-editor {
-            &.ql-blank::before {
-              color: $color-error-alt;
-            }
-          }
-        }
-      }
+    .Editor {
+      padding: 0 1.5em;
     }
   }
 }

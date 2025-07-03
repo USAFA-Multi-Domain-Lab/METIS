@@ -11,7 +11,7 @@
   width: -moz-fit-content;
   width: fit-content;
   padding: 30px 40px 25px;
-  background-color: $background-main;
+  background-color: $color-secondary;
   white-space: nowrap;
 
   .list-header {
@@ -22,14 +22,14 @@
     border-radius: 25px;
     min-width: 220px;
     padding: 16px;
-    background-color: $background-color-negative;
+    background-color: $color-primary-light;
 
     .list-heading {
       margin: 0;
       border-radius: 16px;
       padding: 15px 50px;
-      background-color: $background-alt1;
-      color: $color-main;
+      background-color: $color-accent-dark;
+      color: $color-primary-light;
       text-align: center;
       font-size: 16px;
       letter-spacing: 0.65px;
@@ -48,10 +48,10 @@
     user-select: none;
     vertical-align: top;
     margin-top: 18px;
-    border: 8px solid $background-color-negative;
+    border: 8px solid $color-primary-light;
     border-radius: 25px;
     padding: 4.5px 11px 5.5px 12px;
-    background-color: $background-alt1;
+    background-color: $color-accent-dark;
     font-size: 18px;
     font-weight: 700;
   }
@@ -59,7 +59,7 @@
   .previous-page.disabled,
   .next-page.disabled {
     cursor: default;
-    // border: 8px solid $background-alt2;
+    // border: 8px solid $color-secondary;
     // background-color: $background-color-primary;
     // color: $color-font-faded;
     opacity: 0.45;
@@ -107,9 +107,9 @@
         width: 100%;
         height: 40.5px;
         padding: 12px 25px 12px 47.5px;
-        background-color: $background-color-negative;
+        background-color: $color-primary-light;
         text-align: left !important;
-        color: $color-negative;
+        color: $color-primary-dark;
         font-size: 13.5px;
       }
 
@@ -125,7 +125,7 @@
         height: 40.5px;
         padding: 12px 0 12px 47.5px;
         text-align: left !important;
-        color: $color-negative;
+        color: $color-primary-dark;
         overflow-x: hidden;
         white-space: nowrap;
         font-size: 13.5px;
@@ -165,16 +165,16 @@
           opacity: 0.45;
         }
 
-        &.clock {
+        &.ButtonSvg_clock {
           background-position: 2px 0px;
         }
 
-        &.clock-small {
+        &.ButtonSvg_clock-small {
           width: 19px;
           background-position: 1px 2px;
         }
 
-        &.alphabetical {
+        &.ButtonSvg_alphabetical {
           * {
             bottom: 11.5px;
           }
@@ -194,9 +194,9 @@
       width: 300px;
       min-height: 44px;
       padding: 12px 20px;
-      background-color: $background-color-negative;
+      background-color: $color-primary-light;
       font-size: 15.5px;
-      color: $color-negative;
+      color: $color-primary-dark;
       letter-spacing: 0.55px;
       white-space: nowrap;
       text-overflow: ellipsis;
@@ -204,14 +204,14 @@
       .properties {
         cursor: default;
         margin: 5px auto -2px;
-        border: 2px solid rgba($color-negative, 0.5);
+        border: 2px solid rgba($color-primary-dark, 0.5);
         border-radius: 7px;
         border-bottom: none;
         border-bottom-left-radius: 0;
         border-bottom-right-radius: 0;
         width: -moz-fit-content;
         width: fit-content;
-        background-color: rgba($background-alt2, 0.15);
+        background-color: rgba($color-secondary, 0.15);
 
         .property {
           -webkit-user-select: none;
@@ -246,9 +246,9 @@
         cursor: default !important;
         -webkit-user-select: none;
         user-select: none;
-        border: 1px solid $color-negative;
-        background-color: rgba($background-color-negative, 1);
-        color: $color-negative;
+        border: 1px solid $color-primary-dark;
+        background-color: rgba($color-primary-light, 1);
+        color: $color-primary-dark;
         font-style: italic;
       }
 
@@ -262,9 +262,9 @@
         margin-right: auto;
         width: max-content;
         max-width: 425px;
-        border: 2px solid $color-main;
+        border: 2px solid $color-primary-light;
         padding: 25px 40px 25px;
-        background-color: $background-alt1;
+        background-color: $color-accent-dark;
         letter-spacing: inherit;
         white-space: normal;
         text-overflow: inherit;
@@ -278,14 +278,14 @@
       }
 
       &.selected {
-        background-color: rgba($background-color-negative, 0.5);
+        background-color: rgba($color-primary-light, 0.5);
       }
 
       &.item-status {
         cursor: default;
         -webkit-user-select: none;
         user-select: none;
-        background-color: rgba($background-color-negative, 0.5);
+        background-color: rgba($color-primary-light, 0.5);
       }
     }
 
@@ -295,8 +295,8 @@
       width: fit-content;
       border-radius: 11px;
       padding: 6px 16px 5.5px;
-      background-color: $background-color-negative;
-      color: $color-negative;
+      background-color: $color-primary-light;
+      color: $color-primary-dark;
       font-weight: bold;
     }
   }
@@ -486,8 +486,10 @@
 
           &.Select:hover {
             cursor: pointer;
-            background-color: $node-blue;
-            color: $color-alt1;
+
+            @import 'src/assets/styles/util.scss';
+
+            color: $color-accent;
           }
 
           .Text {
@@ -499,7 +501,7 @@
 
             &.Select:hover {
               cursor: pointer;
-              color: $color-alt1;
+              color: $color-accent;
             }
           }
         }
@@ -518,7 +520,6 @@
     padding: 0;
     width: 100%;
     border-radius: unset;
-    border-bottom: 2px solid $color-main;
 
     &.PromptList {
       margin: 20px 0 10px;
@@ -535,7 +536,6 @@
 
     .top {
       grid-template-columns: auto;
-      border-bottom: 2px solid $color-main;
       padding-bottom: 8px;
 
       .previous-page,
@@ -556,6 +556,9 @@
           background: none;
           padding: 0;
           text-align: unset;
+          font-size: 0.82rem;
+          font-weight: bold;
+          color: $color-faded;
         }
       }
     }
@@ -574,9 +577,13 @@
         width: 100%;
         max-width: unset;
 
+        .NoContent {
+          color: $color-faded;
+        }
+
         &.item-status {
           background: none;
-          color: $color-main;
+          color: $color-primary-light;
         }
       }
     }
@@ -597,7 +604,7 @@
 
       &.Select:hover {
         cursor: pointer;
-        background-color: $node-blue;
+        @include background-mask;
       }
 
       .RowContent {
@@ -607,7 +614,7 @@
 
         &.Select:hover {
           cursor: pointer;
-          color: $color-alt1;
+          color: $color-accent;
         }
       }
     }
@@ -615,29 +622,29 @@
 }
 
 .ListOld.pending-edit {
-  background-color: $background-color-negative;
+  background-color: $color-primary-light;
 
   .item:not(.item-markdown) {
-    background-color: $background-alt1;
-    color: $color-main;
+    background-color: $color-accent-dark;
+    color: $color-primary-light;
   }
 
   .page-number {
-    background-color: $background-alt1;
-    color: $color-main;
+    background-color: $color-accent-dark;
+    color: $color-primary-light;
   }
 }
 
 .ListOld.pending-deletion {
-  background-color: $session-red;
+  background-color: $color-failure;
 
   .list-header {
-    background-color: $session-red;
+    background-color: $color-failure;
   }
 
   .item:not(.item-markdown) {
     background-color: adjust-color(
-      $background-color-negative,
+      $color-primary-light,
       $saturation: -75%,
       $lightness: 25%
     );
@@ -645,14 +652,14 @@
 
   .page-number {
     background-color: adjust-color(
-      $background-color-negative,
+      $color-primary-light,
       $saturation: -75%,
       $lightness: 25%
     );
   }
   .previous-page,
   .next-page {
-    border-color: $session-red;
+    border-color: $color-failure;
   }
 
   .ButtonSvg.cancel-pending-action {
@@ -669,19 +676,19 @@
     transform: scale(1.05);
 
     &:not(.item-markdown) {
-      border: 2px solid $color-negative;
+      border: 2px solid $color-primary-dark;
     }
 
     .properties {
       background-color: rgba(
-        adjust-color($background-main, $saturation: -65%),
+        adjust-color($color-secondary, $saturation: -65%),
         0.35
       );
     }
   }
 
   .page-number {
-    border: 2px solid $color-negative;
+    border: 2px solid $color-primary-dark;
   }
 
   .ButtonSvg.cancel-pending-action {

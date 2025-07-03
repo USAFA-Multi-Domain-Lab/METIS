@@ -1,3 +1,116 @@
+/* -- CONSTANTS -- */
+
+const AVAILABLE_PERMISSIONS_RAW = [
+  {
+    _id: 'missions_read',
+    name: 'Read Missions',
+    description:
+      'Allows the user currently logged in to retrieve missions from the database.',
+  } as const,
+  {
+    _id: 'missions_write',
+    name: 'Write Missions',
+    description:
+      'Allows the user currently logged in to create, update, and delete missions in the database.',
+  } as const,
+  {
+    _id: 'environments_read',
+    name: 'Read Target Environments',
+    description:
+      'Allows the user currently logged in to retrieve target environments from the registry.',
+  } as const,
+  {
+    _id: 'users_read',
+    name: 'Read Users',
+    description:
+      'Allows the user currently logged in to retrieve other users from the database.',
+  } as const,
+  {
+    _id: 'users_write',
+    name: 'Write Users',
+    description:
+      'Allows the user currently logged in to create, update, and delete other users in the database.',
+  } as const,
+  {
+    _id: 'users_read_students',
+    name: 'Read Student Users',
+    description:
+      'Allows the user currently logged in to retrieve student users only from the database.',
+  } as const,
+  {
+    _id: 'users_write_students',
+    name: 'Write Student Users',
+    description:
+      'Allows the user currently logged in to create, update, and delete student users only in the database.',
+  } as const,
+  {
+    _id: 'files_read',
+    name: 'Read Files',
+    description:
+      'Allows the user currently logged in to retrieve files from the file store.',
+  } as const,
+  {
+    _id: 'files_write',
+    name: 'Write Files',
+    description:
+      'Allows the user currently logged in to create, update, and delete files in the file store.',
+  } as const,
+  {
+    _id: 'sessions_read',
+    name: 'Read Sessions',
+    description:
+      'Allows the user currently logged in to retrieve sessions from the database.',
+  } as const,
+  {
+    _id: 'sessions_write',
+    name: 'Write Sessions',
+    description:
+      'Allows the user currently logged in to create, update, and delete all sessions in the database.',
+  } as const,
+  {
+    _id: 'sessions_write_native',
+    name: 'Write Sessions (Native)',
+    description:
+      'Allows the user currently logged in to create, update, and delete sessions that they own.',
+  } as const,
+  {
+    _id: 'sessions_write_foreign',
+    name: 'Write Sessions (Foreign)',
+    description:
+      'Allows the user currently logged in to create, update, and delete sessions that they do not own.',
+  } as const,
+  {
+    _id: 'sessions_join_participant',
+    name: 'Join Sessions (Participant)',
+    description:
+      'Allows the user currently logged in to join sessions as a participant.',
+  } as const,
+  {
+    _id: 'sessions_join_manager',
+    name: 'Join Sessions (Manager)',
+    description:
+      'Allows the user currently logged in to join sessions as a manager.',
+  } as const,
+  {
+    _id: 'sessions_join_manager_native',
+    name: 'Join Sessions (Manager of Native Sessions)',
+    description:
+      'Allows the user currently logged in to join sessions as a manager that they own.',
+  } as const,
+  {
+    _id: 'sessions_join_observer',
+    name: 'Join Sessions (Observer)',
+    description:
+      'Allows the user currently logged in to join sessions as an observer.',
+  } as const,
+  {
+    _id: 'changelog_read',
+    name: 'Read Changelog',
+    description:
+      'Allows the user currently logged in to retrieve the changelog.',
+  } as const,
+] as const
+
 /**
  * Represents any permission that can be assigned to a user.
  */
@@ -132,95 +245,32 @@ export default class UserPermission implements TUserPermission {
    * @param permissionId The permission ID to check.
    */
   public static isValidPermissionId(permissionId: TUserPermissionId): boolean {
-    return userPermissionIds.includes(permissionId)
+    return UserPermission.AVAILABLE_PERMISSION_IDS.includes(permissionId)
   }
 
   /**
    * All available user permissions in METIS.
    */
-  public static readonly AVAILABLE_PERMISSIONS: TUserPermissions = {
-    missions_read: new UserPermission(
-      'missions_read',
-      'Read Missions',
-      'Allows the user currently logged in to retrieve missions from the database.',
-    ),
-    missions_write: new UserPermission(
-      'missions_write',
-      'Write Missions',
-      'Allows the user currently logged in to create, update, and delete missions in the database.',
-    ),
-    environments_read: new UserPermission(
-      'environments_read',
-      'Read Target Environments',
-      'Allows the user currently logged in to retrieve target environments from the registry.',
-    ),
-    users_read: new UserPermission(
-      'users_read',
-      'Read Users',
-      'Allows the user currently logged in to retrieve other users from the database.',
-    ),
-    users_write: new UserPermission(
-      'users_write',
-      'Write Users',
-      'Allows the user currently logged in to create, update, and delete other users in the database.',
-    ),
-    users_read_students: new UserPermission(
-      'users_read_students',
-      'Read Student Users',
-      'Allows the user currently logged in to retrieve student users only from the database.',
-    ),
-    users_write_students: new UserPermission(
-      'users_write_students',
-      'Write Student Users',
-      'Allows the user currently logged in to create, update, and delete student users only in the database.',
-    ),
-    sessions_read: new UserPermission(
-      'sessions_read',
-      'Read Sessions',
-      'Allows the user currently logged in to retrieve sessions from the database.',
-    ),
-    sessions_write: new UserPermission(
-      'sessions_write',
-      'Write Sessions',
-      'Allows the user currently logged in to create, update, and delete sessions in the database.',
-    ),
-    sessions_write_native: new UserPermission(
-      'sessions_write_native',
-      'Write Sessions (Native)',
-      'Allows the user currently logged in to create, update, and delete sessions that they own.',
-    ),
-    sessions_join_participant: new UserPermission(
-      'sessions_join_participant',
-      'Join Sessions (Participant)',
-      'Allows the user currently logged in to join sessions as a participant.',
-    ),
-    sessions_join_manager: new UserPermission(
-      'sessions_join_manager',
-      'Join Sessions (Manager)',
-      'Allows the user currently logged in to join sessions as a manager.',
-    ),
-    sessions_join_manager_native: new UserPermission(
-      'sessions_join_manager_native',
-      'Join Sessions (Manager of Native Sessions)',
-      'Allows the user currently logged in to join sessions as a manager that they own.',
-    ),
-    sessions_join_observer: new UserPermission(
-      'sessions_join_observer',
-      'Join Sessions (Observer)',
-      'Allows the user currently logged in to join sessions as an observer.',
-    ),
-    changelog_read: new UserPermission(
-      'changelog_read',
-      'Read Changelog',
-      'Allows the user currently logged in to retrieve the changelog.',
-    ),
-  }
+  public static readonly AVAILABLE_PERMISSIONS: TUserPermissions = (() => {
+    let permissions: TUserPermissions = {} as TUserPermissions
+    AVAILABLE_PERMISSIONS_RAW.forEach(
+      ({ _id, name, description }) =>
+        (permissions[_id] = new UserPermission(_id, name, description)),
+    )
+    return permissions
+  })()
+
+  /**
+   * All available user permission IDs in METIS.
+   */
+  public static readonly AVAILABLE_PERMISSION_IDS =
+    AVAILABLE_PERMISSIONS_RAW.map(({ _id }) => _id)
 }
 
 /* ------------------------------ USER PERMISSION TYPES ------------------------------ */
 
 /**
- * Type used for the abstract UserPermission class.
+ * Represents a user permission.
  */
 export type TUserPermission = {
   /**
@@ -230,48 +280,31 @@ export type TUserPermission = {
   /**
    * The user permission's name.
    */
-  name: TPermissionName
+  name: TUserPermissionName
   /**
    * The user permission's description.
    */
-  description: string
+  description: TUserPermissionDescription
 }
 
-const userPermissionNames = [
-  'Read Missions',
-  'Write Missions',
-  'Read Target Environments',
-  'Read Users',
-  'Write Users',
-  'Read Student Users',
-  'Write Student Users',
-  'Read Sessions',
-  'Write Sessions',
-  'Write Sessions (Native)',
-  'Join Sessions (Participant)',
-  'Join Sessions (Manager)',
-  'Join Sessions (Manager of Native Sessions)',
-  'Join Sessions (Observer)',
-  'Read Changelog',
-] as const
-export type TPermissionName = (typeof userPermissionNames)[number]
+/**
+ * Type for a valid ID for a user permission.
+ */
+export type TUserPermissionId =
+  (typeof AVAILABLE_PERMISSIONS_RAW)[number]['_id']
 
-const userPermissionIds = [
-  'missions_read',
-  'missions_write',
-  'environments_read',
-  'users_read',
-  'users_write',
-  'users_read_students',
-  'users_write_students',
-  'sessions_read',
-  'sessions_write',
-  'sessions_write_native',
-  'sessions_join_participant',
-  'sessions_join_manager',
-  'sessions_join_manager_native',
-  'sessions_join_observer',
-  'changelog_read',
-] as const
-export type TUserPermissionId = (typeof userPermissionIds)[number]
-export type TUserPermissions = { [key in TUserPermissionId]: UserPermission }
+/**
+ * Type for a valid name for a user permission.
+ */
+type TUserPermissionName = (typeof AVAILABLE_PERMISSIONS_RAW)[number]['name']
+
+/**
+ * Type for a valid description for a user permission.
+ */
+type TUserPermissionDescription =
+  (typeof AVAILABLE_PERMISSIONS_RAW)[number]['description']
+
+/**
+ * Type for all valid user permissions available.
+ */
+type TUserPermissions = { [key in TUserPermissionId]: UserPermission }

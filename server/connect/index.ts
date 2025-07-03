@@ -6,7 +6,6 @@ import MetisServer from '../index'
 import SessionServer from '../sessions'
 import ClientConnection from './clients'
 import authMiddleware from './middleware/auth'
-import rateLimitMiddleware from './middleware/rate-limit'
 const createSocketIoServer = require('socket.io')
 
 /* -- CLASSES -- */
@@ -47,7 +46,6 @@ export default class MetisWsServer {
       metis.sessionMiddleware(request, response, next),
     )
     this.use(authMiddleware)
-    // this.use(rateLimitMiddleware)
 
     // Add event listeners.
     this.addEventListeners()
@@ -118,14 +116,14 @@ export default class MetisWsServer {
       }
       // Create a client connection object
       // with the socket and login.
-      let connection = new ClientConnection(socket, login, {})
+      let connection = new ClientConnection(socket, this.metis, login, {})
 
       // If the login information indicates that the user is
       // currently in a session, find the session and update
       // the connection for that participant.
-      if (login.sessionId !== null) {
+      if (login.metisSessionId !== null) {
         // Get the session.
-        let session = SessionServer.get(login.sessionId)
+        let session = SessionServer.get(login.metisSessionId)
 
         // If the session exists, update the connection.
         if (session !== undefined) {

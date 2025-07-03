@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { useGlobalContext, useNavigationMiddleware } from 'src/context'
+import {
+  TNavigateOptions,
+  useGlobalContext,
+  useNavigationMiddleware,
+} from 'src/context/global'
 import ClientMission from 'src/missions'
 import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
@@ -10,23 +14,21 @@ import {
   useMountHandler,
   useRequireLogin,
 } from 'src/toolbox/hooks'
-import { DefaultLayout, TPage_P } from '.'
-import { TWithKey } from '../../../../shared/toolbox/objects'
+import { DefaultPageLayout, TPage_P } from '.'
 import Prompt from '../content/communication/Prompt'
-import { HomeLink } from '../content/general-layout/Navigation'
-import {
-  EPanelSizingMode,
-  PanelSizeRelationship,
-  ResizablePanel,
-} from '../content/general-layout/ResizablePanels'
+import MissionFileList from '../content/data/lists/implementations/MissionFileList'
+import { TNavigation_P } from '../content/general-layout/Navigation'
+import Panel from '../content/general-layout/panels/Panel'
+import PanelLayout from '../content/general-layout/panels/PanelLayout'
+import PanelView from '../content/general-layout/panels/PanelView'
 import SessionMembersPanel from '../content/session/members/SessionMembersPanel'
-import MissionMap from '../content/session/mission-map'
+import MissionMap from '../content/session/mission-map/MissionMap'
 import ActionExecModal from '../content/session/mission-map/ui/overlay/modals/action-execution/ActionExecModal'
 import { TTabBarTab } from '../content/session/mission-map/ui/tabs/TabBar'
-import OutputPanel from '../content/session/output-panel'
+import { OutputPanel } from '../content/session/output/'
 import StatusBar from '../content/session/StatusBar'
-import { TValidPanelButton } from '../content/user-controls/buttons/ButtonSvgPanel'
-import { TButtonText_P } from '../content/user-controls/buttons/ButtonText'
+import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
+import If from '../content/util/If'
 import './SessionPage.scss'
 
 /**
@@ -34,8 +36,9 @@ import './SessionPage.scss'
  */
 export default function SessionPage({
   session,
+  returnPage,
 }: TSessionPage_P): JSX.Element | null {
-  /* -- GLOBAL CONTEXT -- */
+  /* -- STATE -- */
 
   const globalContext = useGlobalContext()
   const [server] = globalContext.server
@@ -47,17 +50,15 @@ export default function SessionPage({
     handleError,
     beginLoading,
   } = globalContext.actions
-
-  /* -- STATE -- */
-
   const [nodeToExecute, setNodeToExecute] = useState<ClientMissionNode | null>(
     null,
   )
   const [selectedForce, selectForce] = useState<ClientMissionForce | null>(null)
   const [resourcesRemaining, setResourcesRemaining] = useState<number>(0)
-  const [login] = useRequireLogin()
-  const [rightPanelTab, setRightPanelTab] =
-    useState<TSessionRightPanelTab>('output')
+  const {} = useRequireLogin()
+  const navButtonEngine = useButtonSvgEngine({
+    elements: [],
+  })
 
   /* -- VARIABLES -- */
 
@@ -69,6 +70,80 @@ export default function SessionPage({
   let currentAspectRatio: number = window.innerWidth / window.innerHeight
 
   /* -- FUNCTIONS -- */
+
+  /**
+   * Initializes the navigation for the session page
+   * based on the context for which it is being used.
+   */
+  const initializeNavigation = () => {
+    let { accessibility } = session.config
+    let canStartEndSessions = session.member.isAuthorized('startEndSessions')
+
+    /**
+     * Adds a button to the navigation that will reset the progress
+     * in the session.
+     * @param description The text to display on the button when
+     * hovered over.
+     */
+    const addResetSession = (description: string = 'Reset session') => {
+      navButtonEngine.add({
+        type: 'button',
+        icon: 'reset',
+        description,
+        onClick: onClickResetSession,
+      })
+    }
+
+    /**
+     *  Adds a button to the navigation to end the session.
+     * @param description The text to display on the button when
+     * hovered over.
+     */
+    const addEndSession = (description: string = 'End Session') => {
+      navButtonEngine.add({
+        type: 'button',
+        icon: 'stop',
+        description,
+        onClick: onClickEndSession,
+      })
+    }
+
+    /**
+     * Adds a button to the navigation to quit the session.
+     * @param description The text to display on the button when
+     * hovered over.
+     * @param destination The destination to navigate to when quitting.
+     */
+    const addQuit = (description: string = 'Quit') => {
+      navButtonEngine.add({
+        type: 'button',
+        icon: 'quit',
+        description,
+        onClick: () => {
+          navigateToReturnPage()
+        },
+      })
+    }
+
+    // Add links based on the session accessibility.
+    switch (accessibility) {
+      case 'testing':
+        // Add reset link and a quit link that
+        // navigates back to the mission page.
+        if (canStartEndSessions) addResetSession('Reset play-test')
+        addQuit('Quit play-test')
+        break
+      default:
+        // Add reset and end session links if the member
+        // is authorized. Then add the quit link.
+        if (canStartEndSessions) {
+          addEndSession()
+          addResetSession()
+        }
+        addQuit()
+        break
+    }
+  }
 
   /**
    * Handles the selection of a node in the mission map by the user.
@@ -134,11 +209,56 @@ export default function SessionPage({
       beginLoading('Ending session...')
       // Start the session.
       await session.$end()
-      // Redirect to session page.
-      navigateTo('HomePage', {}, { bypassMiddleware: true })
+      // Go to return page.
+      navigateToReturnPage({ bypassMiddleware: true })
     } catch (error) {
       handleError({
         message: 'Failed to end session.',
+        notifyMethod: 'bubble',
+      })
+    }
+  }
+
+  /**
+   * Callback for the reset session button.
+   */
+  const onClickResetSession = async () => {
+    // If the session is not started, verify navigation.
+    if (session.state !== 'started') {
+      verifyNavigation.current()
+      return
+    }
+
+    // Confirm the user wants to reset the session.
+    let { choice } = await prompt(
+      'Please confirm resetting the session.',
+      Prompt.ConfirmationChoices,
+    )
+
+    // If the user cancels, return.
+    if (choice === 'Cancel') {
+      return
+    }
+
+    try {
+      // Clear verify navigation function to prevent double
+      // redirect.
+      verifyNavigation.current = () => {}
+      // Begin loading.
+      beginLoading('Resetting session...')
+      // Start the session.
+      await session.$reset()
+      // Refresh page.
+      navigateTo(
+        'SessionPage',
+        { session, returnPage },
+        { bypassMiddleware: true },
+      )
+      // Finish loading.
+      finishLoading()
+    } catch (error) {
+      handleError({
+        message: 'Failed to reset session.',
         notifyMethod: 'bubble',
       })
     }
@@ -156,40 +276,39 @@ export default function SessionPage({
     }
     // If the session is ended, navigate to the home page.
     if (session.state === 'ended') {
-      navigateTo('HomePage', {}, { bypassMiddleware: true })
+      notify('Session has ended.')
+      navigateToReturnPage({ bypassMiddleware: true })
     }
   })
+
+  /**
+   * Syncs the resources remaining state with
+   * the selected force.
+   */
+  const syncResources = () => {
+    setResourcesRemaining(selectedForce?.resourcesRemaining ?? 0)
+  }
+
+  /**
+   * Navigates to the return page based on the
+   * `returnPage` prop.
+   */
+  const navigateToReturnPage = (options: TNavigateOptions = {}) => {
+    if (returnPage === 'HomePage') {
+      navigateTo('HomePage', {}, options)
+    } else if (returnPage === 'MissionPage') {
+      navigateTo('MissionPage', { missionId: mission._id }, options)
+    }
+  }
 
   /* -- COMPUTED -- */
 
   /**
-   * The initial resources for the selected force.
-   */
-  const initialResources = compute(() => {
-    return selectedForce?.initialResources ?? 0
-  })
-
-  /**
    * Props for navigation.
    */
-  const navigation = compute(() => {
-    let links: TWithKey<TButtonText_P>[] = []
-
-    // Push end session button, if user is authorized.
-    if (session.member.isAuthorized('startEndSessions')) {
-      links.push({
-        key: 'end-session',
-        text: 'End Session',
-        onClick: onClickEndSession,
-      })
-    }
-
-    // Push quit button.
-    links.push(HomeLink(globalContext, { text: 'Quit' }))
-
-    // Return navigation.
+  const navigation = compute<TNavigation_P>(() => {
     return {
-      links,
+      buttonEngine: navButtonEngine,
       logoLinksHome: false,
     }
   })
@@ -232,41 +351,25 @@ export default function SessionPage({
   })
 
   /**
-   * Custom buttons for the mission map.
+   * The class name for the resource count element.
    */
-  const customButtons = compute((): TValidPanelButton[] => {
-    let buttons: TValidPanelButton[] = []
+  const resourceCountClass = compute(() => {
+    // Define default list.
+    let resourceCountClassList: string[] = ['Count']
 
-    // If the right panel tab is the output panel,
-    // push the button to change it to the users panel.
-    if (rightPanelTab === 'output') {
-      buttons.push({
-        key: 'users',
-        type: 'user',
-        description: 'Open users panel.',
-        onClick: () => {
-          setRightPanelTab('users')
-        },
-      })
+    // If resources are infinite, add the infinite
+    // class to the resource count.
+    if (session.config.infiniteResources) {
+      resourceCountClassList.push('Infinite')
     }
-    // If the right panel tab is the users panel,
-    // push the button to change it to the output panel.
-    else if (rightPanelTab === 'users') {
-      buttons.push({
-        key: 'output',
-        type: 'shell',
-        description: selectedForce
-          ? 'Open output panel.'
-          : 'Cannot open the output panel at this time. Please contact your system administrator.',
-        disabled: selectedForce === undefined ? 'partial' : 'none',
-        onClick: () => {
-          if (selectedForce) setRightPanelTab('output')
-        },
-      })
+    // If resources are finite, add the finite
+    // class to the resource count.
+    else {
+      resourceCountClassList.push('Finite')
     }
 
-    // Return the buttons.
-    return buttons
+    // Return the class list as a joined string.
+    return resourceCountClassList.join(' ')
   })
 
   /**
@@ -288,14 +391,30 @@ export default function SessionPage({
 
   // Verify navigation on mount and on session state change.
   useMountHandler((done) => {
-    if (selectedForce === undefined) setRightPanelTab('users')
     finishLoading()
     verifyNavigation.current()
+    initializeNavigation()
     done()
   })
+
   // Verify navigation if the session is ended or destroyed.
-  useEventListener(server, ['session-started', 'session-ended'], () =>
-    verifyNavigation.current(),
+  useEventListener(
+    server,
+    ['session-started', 'session-ended', 'session-destroyed'],
+    () => verifyNavigation.current(),
+  )
+
+  // On session reset, reselect the force in
+  // the mission, since a new force object
+  // will be created.
+  useEventListener(
+    server,
+    'session-reset',
+    () => {
+      selectForce(() => mission.getForceById(selectedForce?._id) ?? null)
+      notify('All progress has been reset by a manager.')
+    },
+    [selectedForce],
   )
 
   // Add navigation middleware to properly
@@ -325,18 +444,25 @@ export default function SessionPage({
   // Update the resources remaining when an action is executed.
   useEventListener(
     server,
-    'action-execution-initiated',
-    () => {
-      setResourcesRemaining(selectedForce?.resourcesRemaining ?? 0)
-    },
+    ['action-execution-initiated', 'modifier-enacted'],
+    () => syncResources(),
     [selectedForce],
   )
 
+  useEventListener(server, 'session-reset', () => {
+    beginLoading('Resetting session...')
+    navigateTo(
+      'SessionPage',
+      { session, returnPage },
+      { bypassMiddleware: true },
+    )
+    finishLoading()
+    notify('A manager has reset the session.')
+  })
+
   // Update the resources remaining state whenever the
   // force changes.
-  useEffect(() => {
-    setResourcesRemaining(selectedForce?.resourcesRemaining ?? 0)
-  }, [selectedForce])
+  useEffect(() => syncResources(), [selectedForce])
 
   /* -- PRE-RENDER PROCESSING -- */
 
@@ -354,6 +480,10 @@ export default function SessionPage({
    * JSX for the top bar element.
    */
   const topBarJsx = compute((): JSX.Element | null => {
+    let resourceDisplay: string = session.config.infiniteResources
+      ? 'ထ'
+      : resourcesRemaining.toString()
+
     return (
       <div className='TopBar'>
         <div className='Title'>
@@ -361,14 +491,8 @@ export default function SessionPage({
           <b>&bull;</b>
         </div>
         <div className={resourcesClass}>
-          Resources:{' '}
-          {session.config.infiniteResources ? (
-            <span className='Count Infinite'>ထ</span>
-          ) : (
-            <span className='Count Finite'>
-              {resourcesRemaining} / {initialResources}
-            </span>
-          )}
+          {mission.resourceLabel}:{' '}
+          <span className={resourceCountClass}>{resourceDisplay}</span>
         </div>
         <StatusBar />
       </div>
@@ -400,72 +524,84 @@ export default function SessionPage({
   // Return the rendered component.
   return (
     <div className={rootClass}>
-      <DefaultLayout navigation={navigation} includeFooter={false}>
+      <DefaultPageLayout navigation={navigation} includeFooter={false}>
         {topBarJsx}
-        <PanelSizeRelationship
-          sizingMode={EPanelSizingMode.Panel1_Auto__Panel2_Defined}
-          initialDefinedSize={panel2DefaultSize}
-          panel1={{
-            ...ResizablePanel.defaultProps,
-            minSize: 400,
-            render: () => (
+        <PanelLayout initialSizes={['fill', 400]}>
+          <Panel>
+            <PanelView title='Map'>
               <MissionMap
                 mission={mission}
                 overlayContent={overlayContentJsx}
-                customButtons={customButtons}
                 tabs={mapTabs}
                 showMasterTab={false}
                 onNodeSelect={onNodeSelect}
                 selectedForce={[selectedForce, selectForce]}
               />
-            ),
-          }}
-          panel2={{
-            ...ResizablePanel.defaultProps,
-            minSize: 400,
-            isOpen: true,
-            render: () => {
-              switch (rightPanelTab) {
-                case 'output':
-                  return selectedForce ? (
-                    <OutputPanel
-                      force={selectedForce}
-                      selectNode={(node: ClientMissionNode | null) => {
-                        // todo: Implement panning to the node on the mission map.
-                        // if (node === null) {
-                        //   notify(
-                        //     'This node cannot be accessed from the current force.',
-                        //   )
-                        //   return
-                        // } else if (node.executing) {
-                        //   notify(
-                        //     `The node "${node.name}" is currently executing and cannot be located at this time.`,
-                        //   )
-                        //   return
-                        // } else if (node.blocked) {
-                        //   notify(
-                        //     `The node "${node.name}" is blocked and cannot be accessed at this time.`,
-                        //   )
-                        //   return
-                        // }
-                        // setNodeToExecute(node)
-                      }}
-                    />
-                  ) : null
-                case 'users':
-                  return (
-                    <SessionMembersPanel
-                      session={session}
-                      key={'users-panel'}
-                    />
-                  )
-                default:
-                  return null
-              }
-            },
-          }}
-        />
-      </DefaultLayout>
+            </PanelView>
+          </Panel>
+          <Panel>
+            <PanelView title='Output'>
+              <If condition={!!selectedForce}>
+                <OutputPanel
+                  force={selectedForce!}
+                  selectNode={(node) => {
+                    // todo: Implement panning to the node on the mission map.
+                    // if (node === null) {
+                    //   notify(
+                    //     'This node cannot be accessed from the current force.',
+                    //   )
+                    //   return
+                    // } else if (node.executing) {
+                    //   notify(
+                    //     `The node "${node.name}" is currently executing and cannot be located at this time.`,
+                    //   )
+                    //   return
+                    // } else if (node.blocked) {
+                    //   notify(
+                    //     `The node "${node.name}" is blocked and cannot be accessed at this time.`,
+                    //   )
+                    //   return
+                    // }
+                    // setNodeToExecute(node)
+                  }}
+                />
+              </If>
+            </PanelView>
+            <PanelView title='Files'>
+              <MissionFileList
+                name={'Files'}
+                items={mission.files}
+                itemsPerPageMin={4}
+                columns={[]}
+                itemButtonIcons={['download']}
+                getItemButtonLabel={(button) => {
+                  switch (button) {
+                    case 'download':
+                      return 'Download'
+                    default:
+                      return ''
+                  }
+                }}
+                onItemDblClick={(item) =>
+                  item.download({ method: 'session-api' })
+                }
+                onItemButtonClick={(button, item) => {
+                  switch (button) {
+                    case 'download':
+                      item.download({ method: 'session-api' })
+                      break
+                    default:
+                      break
+                  }
+                }}
+              />
+            </PanelView>
+            <PanelView title='Members'>
+              <SessionMembersPanel session={session} key={'members-panel'} />
+            </PanelView>
+          </Panel>
+        </PanelLayout>
+      </DefaultPageLayout>
     </div>
   )
 }
@@ -480,6 +616,10 @@ export interface TSessionPage_P extends TPage_P {
    * The session client to use on the page.
    */
   session: SessionClient
+  /**
+   * The page to return to when the session is ended.
+   */
+  returnPage: 'HomePage' | 'MissionPage'
 }
 
 /**

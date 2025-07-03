@@ -1,0 +1,58 @@
+@import 'src/assets/styles/config.scss';
+@import 'src/assets/styles/util.scss';
+
+@mixin modified-property($content) {
+  width: 100%;
+
+  .Value {
+    text-decoration: line-through;
+    color: $color-faded;
+
+    &::after {
+      content: $content;
+      display: inline-block;
+      margin-left: 0.5em;
+      color: $color-faded;
+      font-size: 0.8em;
+      font-style: italic;
+      font-weight: bold;
+    }
+  }
+}
+
+.ActionProperty {
+  display: flex;
+  column-gap: 0.2em;
+  color: $color-accent-light;
+  -webkit-user-select: none;
+  user-select: none;
+
+  .Icon {
+    width: 1em;
+    font-size: $button-svg-size;
+    cursor: help;
+  }
+
+  .Value {
+    transform: scale(1);
+    transition: color 250ms ease-in-out, transform 250ms ease-in-out;
+    color: $color-accent-light;
+    cursor: help;
+  }
+
+  &.Updated {
+    .Value {
+      transform: scale(1.1);
+      transition: color 250ms ease-in-out, transform 250ms ease-in-out;
+      color: $color-primary-light;
+    }
+  }
+
+  &.CheatsApplied {
+    @include modified-property('cheats applied ');
+  }
+
+  &.InfiniteResources {
+    @include modified-property('infinite resources ');
+  }
+}

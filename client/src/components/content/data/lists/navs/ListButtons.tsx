@@ -1,7 +1,8 @@
-import ButtonSvg from 'src/components/content/user-controls/buttons/ButtonSvg'
-import { useGlobalContext } from 'src/context'
+import { useEffect } from 'react'
+import ButtonSvgPanel from 'src/components/content/user-controls/buttons/v3/ButtonSvgPanel'
+import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
+import { MetisComponent } from '../../../../../../../shared'
 import { useListContext } from '../List'
-import { TListItem } from '../pages/ListItem'
 import './ListButtons.scss'
 
 /**
@@ -10,41 +11,58 @@ import './ListButtons.scss'
  * on the list.
  */
 export default function ListButtons<
-  TItem extends TListItem,
+  TItem extends MetisComponent,
 >(): JSX.Element | null {
   /* -- STATE -- */
 
-  const globalContext = useGlobalContext()
   const listContext = useListContext<TItem>()
-  const { showButtonMenu } = globalContext.actions
-  const { list, listButtons, getListButtonTooltip, onListButtonClick } =
-    listContext
+  const {
+    elements,
+    state,
+    itemButtonIcons,
+    aggregatedButtonIcons,
+    aggregatedButtons,
+    aggregateButtonLayout,
+    getItemButtonDisabled,
+  } = listContext
+  const [selection] = state.selection
+  const [buttonOverflowCount] = state.buttonOverflowCount
+  const buttonEngine = useButtonSvgEngine({
+    elements: aggregatedButtons,
+    options: {
+      layout: aggregateButtonLayout,
+    },
+    dependencies: [...aggregatedButtonIcons],
+  })
 
-  /* -- FUNCTIONS -- */
+  /* -- EFFECTS -- */
 
-  /**
-   * Handles the click event for the item
-   * options button.
-   */
-  const onOptionsClick = (event: React.MouseEvent) => {
-    showButtonMenu(listButtons, onListButtonClick, {
-      positioningTarget: event.target as HTMLDivElement,
-      getDescription: getListButtonTooltip,
+  useEffect(() => {
+    // Enable/disable any buttons when the
+    // selection changes.
+    itemButtonIcons.forEach((icon) =>
+      buttonEngine.setDisabled(
+        icon,
+        !selection || getItemButtonDisabled(icon, selection),
+      ),
+    )
+  }, [selection])
+
+  useEffect(() => {
+    let threshold = aggregatedButtonIcons.length - buttonOverflowCount
+    aggregatedButtonIcons.forEach((icon, index) => {
+      buttonEngine.modifyClassList(icon, (classList) =>
+        classList.set('ListButtonOverflow', index >= threshold),
+      )
     })
-  }
+  }, [buttonOverflowCount])
 
   /* -- RENDER -- */
 
   // Render the buttons.
   return (
-    <div className='ListButtons'>
-      <ButtonSvg
-        type='options'
-        size='small'
-        onClick={onOptionsClick}
-        description={'View option menu'}
-        disabled={listButtons.length === 0 ? 'full' : 'none'}
-      />
+    <div className='ListButtons' ref={elements.buttons}>
+      <ButtonSvgPanel engine={buttonEngine} />
     </div>
   )
 }

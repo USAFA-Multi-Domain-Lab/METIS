@@ -18,16 +18,25 @@ const login = async (request: Request, response: Response) => {
     // Attempt to authenticate the user.
     let userJson = await UserModel.authenticate(request)
     // If the user was authenticated, create a new user object.
-    let user = new ServerUser(userJson)
+    let user = ServerUser.fromExistingJson(userJson)
 
     try {
       // Attempt to create a new login object.
-      let login = new ServerLogin(user, { forceful })
+      let login = new ServerLogin(user, request.sessionID, { forceful })
+      // If the login is in a timeout, throw an error.
+      if (login.inTimeout) {
+        throw new StatusError(
+          'The account has timed out likely due to too many requests being made. Please try again later.',
+          403,
+        )
+      }
       // Store the logged in user's ID in the express session.
       request.session.userId = login.userId
       // Store the login data in the response json.
       return ApiResponse.sendJson(response, { login: login.toJson() })
     } catch (error: any) {
+      // Throw the 403 error one level up.
+      if (error.status === 403) throw error
       // If the user is already logged in on another device
       // or browser, throw an error.
       throw new StatusError(

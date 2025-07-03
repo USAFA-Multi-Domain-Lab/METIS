@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { compute } from 'src/toolbox'
 import { useForcedUpdates, usePostRenderEffect } from 'src/toolbox/hooks'
 import Tab, { TTab_P } from '.'
+import { useMapContext } from '../../MissionMap'
 import './TabBar.scss'
 
 /**
@@ -23,11 +24,12 @@ export default function TabBar({
   tabs,
   index,
   autoSelectNewTabs = true,
-  addEnabled = true,
   setIndex,
-  onAdd = null,
 }: TTabBar_P): JSX.Element | null {
   /* -- STATE -- */
+
+  const mapContext = useMapContext()
+  const { tabAddEnabled, onTabAdd } = mapContext
 
   /**
    * The amount of scroll in the tab bar.
@@ -300,7 +302,7 @@ export default function TabBar({
 
     // If `addEnabled` is false, then add the
     // "Disabled" class.
-    if (!addEnabled) classList.push('Disabled')
+    if (!tabAddEnabled) classList.push('Disabled')
 
     return classList.join(' ')
   })
@@ -361,7 +363,7 @@ export default function TabBar({
    */
   const onClickAdd = () => {
     // If there is an add callback, call it.
-    if (onAdd) onAdd()
+    if (onTabAdd) onTabAdd()
   }
 
   /**
@@ -402,7 +404,7 @@ export default function TabBar({
   const addJsx = compute<JSX.Element | null>(() => {
     // Return null if no callback for `onAdd`
     // is provided.
-    if (!onAdd) return null
+    if (!onTabAdd) return null
 
     // Else, render the add button.
     return (
@@ -453,22 +455,9 @@ export type TTabBar_P = {
    */
   autoSelectNewTabs?: boolean
   /**
-   * Enables the add button, if present.
-   * @default true
-   * @note A callback for `onAdd` must be provided
-   * for the add button to be present.
-   */
-  addEnabled?: boolean
-  /**
    * React setter to set the selected tab.
    */
   setIndex: (index: number) => void
-  /**
-   * Callback for when a new tab is requested.
-   * @default null
-   * @note If null, the add button will not even be displayed.
-   */
-  onAdd?: (() => void) | null
 }
 
 /**

@@ -1,0 +1,25 @@
+@import 'src/assets/styles/config.scss';
+
+.Panel {
+  display: grid;
+  grid-template-rows: 1fr;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  height: 100%;
+  background: $color-primary;
+  border: 2px solid $color-primary-light;
+
+  &.Tabbed {
+    grid-template-rows: auto 1fr;
+  }
+
+  .PanelView {
+    grid-row: -2 / -1;
+    grid-column: -2 / -1;
+  }
+
+  .List {
+    background: none;
+    border: none;
+  }
+}

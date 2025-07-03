@@ -1,17 +1,22 @@
 import {
+  TClientEvent,
   TClientEvents,
   TClientMethod,
   TRequestEvents,
   TRequestMethod,
+  TRequestOfResponse,
   TResponseEvent,
   TServerEvents,
   TServerMethod,
 } from 'metis/connect/data'
 import { ServerEmittedError } from 'metis/connect/errors'
 import ServerLogin from 'metis/server/logins'
+import { RateLimiterMemory, RateLimiterRes } from 'rate-limiter-flexible'
 import { Socket } from 'socket.io'
+import MetisServer from '../index'
 import SessionServer from '../sessions'
 import ServerUser from '../users'
+import { clientEventSchemas, looseEventSchema } from './middleware/validate'
 
 /* -- classes -- */
 
@@ -24,6 +29,11 @@ export default class ClientConnection {
    * The web socket connection itself.
    */
   protected socket: Socket
+
+  /**
+   * The METIS server instance.
+   */
+  protected metis: MetisServer
 
   /**
    * The login information associated with this client.
@@ -57,15 +67,22 @@ export default class ClientConnection {
   protected listeners: [TClientMethod, TClientHandler<any>][] = []
 
   /**
+   * The rate limiter for the client.
+   */
+  protected limiter: RateLimiterMemory
+
+  /**
    * @param socket The web socket connection itself.
    * @param login The client login
    */
   public constructor(
     socket: Socket,
+    metis: MetisServer,
     login: ServerLogin,
     options: IClientConnectionOptions,
   ) {
     this.socket = socket
+    this.metis = metis
     this._login = login
     login.client = this
 
@@ -76,6 +93,12 @@ export default class ClientConnection {
         this.addEventListener(key, value)
       }
     }
+
+    // Create rate limiter.
+    this.limiter = new RateLimiterMemory({
+      points: metis.wsRateLimit,
+      duration: metis.wsRateLimitDuration,
+    })
 
     // Prepare the socket for use.
     this.prepareSocket()
@@ -170,17 +193,11 @@ export default class ClientConnection {
   protected addDefaultListeners(): void {
     // Add a `request-current-session` listener.
     this.addEventListener('request-current-session', (event) => {
-      // Get the current session.
-      let session = SessionServer.get(this.login.sessionId ?? undefined)
-      // Create default data object.
-      let data: TServerEvents['current-session']['data'] = {
-        session: null,
-        memberId: null,
-      }
+      let session = SessionServer.get(this.login.metisSessionId ?? undefined)
       let requester = session?.getMemberByUserId(this.userId)
 
-      // If the requester cannot be found, emit an error.
-      if (requester === undefined) {
+      // Handle missing requester or session.
+      if (!requester) {
         this.emitError(
           new ServerEmittedError(ServerEmittedError.CODE_MEMBER_NOT_FOUND, {
             request: this.buildResponseReqData(event),
@@ -188,23 +205,29 @@ export default class ClientConnection {
         )
         return
       }
+      if (!session) {
+        this.emitError(
+          new ServerEmittedError(
+            ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
+            {
+              request: this.buildResponseReqData(event),
+            },
+          ),
+        )
+        return
+      }
 
-      // If there is a session and a member, update the
-      // data object.
-      if (session && requester) {
-        data.session = session.toJson({
+      // Prepare payload and send response.
+      let data: TServerEvents['current-session']['data'] = {
+        session: session.toJson({
           requester,
-        })
-        data.memberId = requester._id
+        }),
+        memberId: requester._id,
       }
-
-      // Emit the current session in response to the client.
-      if (session !== undefined) {
-        this.emit('current-session', {
-          data,
-          request: this.buildResponseReqData(event),
-        })
-      }
+      this.emit('current-session', {
+        data,
+        request: this.buildResponseReqData(event),
+      })
     })
 
     // Add a `request-join-session` listener.
@@ -247,7 +270,7 @@ export default class ClientConnection {
     // Add a `request-quit-session` listener.
     this.addEventListener('request-quit-session', (event) => {
       // Get the session.
-      let session = SessionServer.get(this.login.sessionId ?? undefined)
+      let session = SessionServer.get(this.login.metisSessionId ?? undefined)
 
       // Quit the session, if defined.
       if (session !== undefined) {
@@ -316,10 +339,15 @@ export default class ClientConnection {
   }
 
   /**
-   * Handler for when the web socket connection is opened. Calls all matching listeners stored in "listeners".
+   * Handler for when the web socket event is sent by a client.
    * @param event The message event data.
    */
-  private onMessage = (data: string): void => {
+  private onMessage = async (data: string): Promise<void> => {
+    let event: TClientEvent
+    let looseEventData:
+      | ReturnType<(typeof looseEventSchema)['parse']>
+      | undefined
+
     // If the data passed is not a string,
     // throw an error.
     if (typeof data !== 'string') {
@@ -331,8 +359,53 @@ export default class ClientConnection {
       return
     }
 
-    // Parse the data.
-    let event = JSON.parse(data)
+    try {
+      // Parse the data from a string into a
+      // JSON object.
+      let rawEventData = JSON.parse(data)
+      // Ensure the data is formatted correctly
+      // for METIS.
+      looseEventData = looseEventSchema.parse(rawEventData)
+
+      // Get the Zod schema to validate the event
+      // specific to its method.
+      let { method } = looseEventData
+      let zodSchema = clientEventSchemas[method]
+
+      // Validate/sanitize the data.
+      event = zodSchema.parse(looseEventData)
+
+      // Update the rate limiter.
+      await this.limiter.consume(this.userId)
+    } catch (error) {
+      let request: TRequestOfResponse | undefined
+
+      // If the data passed loose-validation and
+      // the data contains a requestId, build the
+      // request data to include in the error event.
+      if (looseEventData && looseEventData.requestId) {
+        request = this.buildResponseReqData(looseEventData as any)
+      }
+
+      // If the error is a rate limiter error,
+      // emit a rate limit error.
+      if (error instanceof RateLimiterRes) {
+        this.emitError(
+          new ServerEmittedError(ServerEmittedError.CODE_MESSAGE_RATE_LIMIT, {
+            request,
+          }),
+        )
+        return
+      }
+
+      this.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_INVALID_DATA, {
+          message: 'The data passed is invalid.',
+          request,
+        }),
+      )
+      return
+    }
 
     // Call any listeners matching the method found in the
     // data.

@@ -1,11 +1,10 @@
-import { useState } from 'react'
-import RichTextOutputBox from 'src/components/content/communication/RichTextOutputBox'
+import RichText from 'src/components/content/general-layout/rich-text/RichText'
 import ClientMissionAction from 'src/missions/actions'
 import { compute } from 'src/toolbox'
-import { useEventListener } from 'src/toolbox/hooks'
 import { TExecutionCheats } from '../../../../../../../../../../shared/missions/actions/executions'
 import { TSessionConfig } from '../../../../../../../../../../shared/sessions'
 import './ActionProperties.scss'
+import ActionProperty from './ActionProperty'
 
 /**
  * Displays the properties of the given action.
@@ -15,133 +14,17 @@ export default function ActionProperties({
   cheats,
   config,
 }: TActionProperties_P): JSX.Element | null {
-  /* -- STATE -- */
-
-  const [successChance, setSuccessChance] = useState<number>(
-    action.successChance,
-  )
-  const [processTime, setProcessTime] = useState<number>(action.processTime)
-  const [resourceCost, setResourceCost] = useState<number>(action.resourceCost)
-  const [successChanceUpdated, setSuccessChanceUpdated] =
-    useState<boolean>(false)
-  const [processTimeUpdated, setProcessTimeUpdated] = useState<boolean>(false)
-  const [resourceCostUpdated, setResourceCostUpdated] = useState<boolean>(false)
-
-  /* -- HOOKS -- */
-
-  useEventListener(action.node, 'activity', () => {
-    // Update the action's chance of success.
-    setSuccessChance((prev) => {
-      // If the chance of success has changed...
-      if (prev !== action.successChance) {
-        // ...set the updated state to true.
-        setSuccessChanceUpdated(true)
-        // ...and reset the updated state after a delay
-        setTimeout(() => setSuccessChanceUpdated(false), 500)
-        // ...and return the new chance of success.
-        return action.successChance
-      }
-      // Otherwise, return the previous chance of success.
-      return prev
-    })
-    // Update the action's process time.
-    setProcessTime((prev) => {
-      // If the process time has changed...
-      if (prev !== action.processTime) {
-        // ...set the updated state to true.
-        setProcessTimeUpdated(true)
-        // ...and reset the updated state after a delay.
-        setTimeout(() => setProcessTimeUpdated(false), 500)
-        // ...and return the new process time.
-        return action.processTime
-      }
-      // Otherwise, return the previous process time.
-      return prev
-    })
-    // Update the action's resource cost.
-    setResourceCost((prev) => {
-      // If the resource cost has changed...
-      if (prev !== action.resourceCost) {
-        // ...set the updated state to true.
-        setResourceCostUpdated(true)
-        // ...and reset the updated state after a delay.
-        setTimeout(() => setResourceCostUpdated(false), 500)
-        // ...and return the new resource cost.
-        return action.resourceCost
-      }
-      // Otherwise, return the previous resource cost.
-      return prev
-    })
-  })
-
   /* -- COMPUTED -- */
 
   /**
-   * The class name for the success chance.
+   * The class name for the description.
    */
-  const successChanceClassName: string = compute(() => {
+  const descriptionClassName: string = compute(() => {
     // Initialize the class list.
-    let classList: string[] = ['Property', 'SuccessChance']
+    let classList: string[] = ['ActionDescription']
 
-    // Add the updated class if the success chance has been updated.
-    if (successChanceUpdated) {
-      classList.push('Updated')
-    }
-
-    // Add the 'CheatsApplied' class if the success chance
-    // is disabled by cheats.
-    if (cheats.guaranteedSuccess) {
-      classList.push('CheatsApplied')
-    }
-
-    // Return the class list as a string.
-    return classList.join(' ')
-  })
-
-  /**
-   * The class name for the process time.
-   */
-  const processTimeClassName: string = compute(() => {
-    // Initialize the class list.
-    let classList: string[] = ['Property', 'ProcessTime']
-
-    // Add the updated class if the process time has been updated.
-    if (processTimeUpdated) {
-      classList.push('Updated')
-    }
-
-    // Add the 'CheatsApplied' class if the process time
-    // is disabled by cheats.
-    if (cheats.instantaneous) {
-      classList.push('CheatsApplied')
-    }
-
-    // Return the class list as a string.
-    return classList.join(' ')
-  })
-
-  /**
-   * The class name for the resource cost.
-   */
-  const resourceCostClassName: string = compute(() => {
-    // Initialize the class list.
-    let classList: string[] = ['Property', 'ResourceCost']
-
-    // Add the updated class if the resource cost has been updated.
-    if (resourceCostUpdated) {
-      classList.push('Updated')
-    }
-
-    // Add the 'InfiniteResources' class if the session has
-    // infinite resources enabled.
-    if (config.infiniteResources) {
-      classList.push('InfiniteResources')
-    }
-    // Add the 'CheatsApplied' class if the resource cost
-    // is disabled by cheats.
-    else if (cheats.zeroCost) {
-      classList.push('CheatsApplied')
-    }
+    // Hide the description if it is empty.
+    if (!action.description) classList.push('Hidden')
 
     // Return the class list as a string.
     return classList.join(' ')
@@ -151,24 +34,28 @@ export default function ActionProperties({
 
   // Render the root component.
   return (
-    <ul className='ActionProperties'>
-      <li className={successChanceClassName}>
-        <span className='Label'>Probability of success:</span>
-        <span className='Value'> {successChance * 100}%</span>
-      </li>
-      <li className={processTimeClassName}>
-        <span className='Label'>Time to execute:</span>
-        <span className='Value'> {processTime / 1000} second(s)</span>
-      </li>
-      <li className={resourceCostClassName}>
-        <span className='Label'>Resource cost:</span>
-        <span className='Value'> {resourceCost} resource(s)</span>
-      </li>
-      <li className='Property Description'>
-        <span className='Label'>Description:</span>{' '}
-        <RichTextOutputBox text={action.description} />
-      </li>
-    </ul>
+    <div className='ActionProperties'>
+      <div className={descriptionClassName}>
+        <RichText options={{ content: action.description, editable: false }} />
+      </div>
+      <ActionProperty
+        action={action}
+        actionKey='successChanceFormatted'
+        cheatsApplied={cheats.guaranteedSuccess}
+      />
+      <ActionProperty
+        action={action}
+        actionKey='processTimeFormatted'
+        cheatsApplied={cheats.instantaneous}
+      />
+      <ActionProperty
+        action={action}
+        actionKey='resourceCostFormatted'
+        cheatsApplied={cheats.zeroCost}
+        infiniteResources={config.infiniteResources}
+      />
+      <ActionProperty action={action} actionKey='opensNodeFormatted' />
+    </div>
   )
 }
 
@@ -177,7 +64,7 @@ export default function ActionProperties({
 /**
  * Props for `ActionPropertyDisplay` component.
  */
-type TActionProperties_P = {
+export type TActionProperties_P = {
   /**
    * The action of which to display properties.
    */

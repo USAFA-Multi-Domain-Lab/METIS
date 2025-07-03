@@ -1,5 +1,6 @@
 import { ReactNode } from 'react'
 import { compute } from 'src/toolbox'
+import { MetisComponent } from '../../../../../../../shared'
 import {
   OPTIONS_COLUMN_WIDTH,
   OPTIONS_COLUMN_WIDTH_IF_LAST,
@@ -7,21 +8,21 @@ import {
 } from '../List'
 import ListColumnLabel from './ListColumnLabel'
 import './ListColumnLabels.scss'
-import { TListItem } from './ListItem'
 
 /**
  * Labels for the columns of a `List` component.
  */
 export default function ListColumnLabels<
-  TItem extends TListItem,
+  TItem extends MetisComponent,
 >(): JSX.Element | null {
   /* -- STATE -- */
 
   const listContext = useListContext<TItem>()
   const {
     columns,
-    itemButtons,
+    itemButtonIcons,
     minNameColumnWidth,
+    showingDeletedItems,
     getColumnWidth,
     getColumnLabel,
   } = listContext
@@ -47,9 +48,15 @@ export default function ListColumnLabels<
     // Add the name column width.
     columnWidths.push(`minmax(${minNameColumnWidth}, 1fr)`)
 
+    // Add the warning column width,
+    // if showing deleted items.
+    if (showingDeletedItems) {
+      columnWidths.push('2.5em')
+    }
+
     // If there are item buttons, add the options
     // column width.
-    if (itemButtons.length) {
+    if (itemButtonIcons.length) {
       columnWidths.push(
         columns.length ? OPTIONS_COLUMN_WIDTH : OPTIONS_COLUMN_WIDTH_IF_LAST,
       )
@@ -76,9 +83,20 @@ export default function ListColumnLabels<
     // Add the name cell.
     result.push(<ListColumnLabel key={'name'} column={'name'} text={'Name'} />)
 
+    // If there is a deleted item, add the warning
+    // cell.
+    if (showingDeletedItems) {
+      result.push(
+        <div
+          key={'ItemWarningLabel'}
+          className='ItemCellLike ColumnLabelBlank'
+        ></div>,
+      )
+    }
+
     // If there are item buttons, add the options
     // cell.
-    if (itemButtons.length) {
+    if (itemButtonIcons.length) {
       result.push(
         <div
           key={'ItemOptionsLabel'}

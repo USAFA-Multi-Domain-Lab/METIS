@@ -4,11 +4,9 @@
 .SessionMemberRow {
   @include member-row-like;
 
-  .ButtonSvg {
-    &.ban:hover {
-      filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(300deg)
-        brightness(200%) contrast(98%);
-    }
+  .ButtonSvg_ban:hover {
+    filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(300deg)
+      brightness(200%) contrast(98%);
   }
 
   .Cell {
@@ -30,6 +28,16 @@
           margin: 0;
           border: none;
           padding: 0;
+          background: none;
+
+          .DropdownOption {
+            padding-top: 0;
+            padding-left: 0;
+
+            &:not(.Selected) {
+              padding-bottom: 0.75em;
+            }
+          }
         }
       }
     }

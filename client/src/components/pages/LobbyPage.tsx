@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { useGlobalContext, useNavigationMiddleware } from 'src/context'
+import { useGlobalContext, useNavigationMiddleware } from 'src/context/global'
 import SessionClient from 'src/sessions'
 import { compute } from 'src/toolbox'
 import {
@@ -7,11 +7,12 @@ import {
   useMountHandler,
   useRequireLogin,
 } from 'src/toolbox/hooks'
-import { DefaultLayout } from '.'
+import { DefaultPageLayout } from '.'
 import Prompt from '../content/communication/Prompt'
-import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
+import { HomeButton, TNavigation_P } from '../content/general-layout/Navigation'
 import SessionMembers from '../content/session/members/SessionMembers'
 import { ButtonText } from '../content/user-controls/buttons/ButtonText'
+import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
 import './LobbyPage.scss'
 
 /**
@@ -24,23 +25,22 @@ export default function LobbyPage({
 }: TLobbyPage_P): JSX.Element | null {
   /* -- state -- */
 
+  const {} = useRequireLogin()
   const globalContext = useGlobalContext()
   const [server] = globalContext.server
-  const [_] = useRequireLogin()
-  const { beginLoading, finishLoading, navigateTo, handleError, prompt } =
-    globalContext.actions
+  const {
+    beginLoading,
+    finishLoading,
+    navigateTo,
+    handleError,
+    prompt,
+    notify,
+  } = globalContext.actions
+  const navButtonEngine = useButtonSvgEngine({
+    elements: [HomeButton({ icon: 'quit', description: 'Quit session' })],
+  })
 
-  /* -- computed -- */
-
-  /**
-   * Props for navigation.
-   */
-  const navigation = compute(
-    (): TNavigation => ({
-      links: [HomeLink(globalContext, { text: 'Quit' })],
-      boxShadow: 'alt-3',
-    }),
-  )
+  /* -- COMPUTED -- */
 
   /**
    * The formatted accessibility for the session.
@@ -58,6 +58,13 @@ export default function LobbyPage({
     }
   })
 
+  /**
+   * Config for the navigation on this page.
+   */
+  const navigation = compute<TNavigation_P>(() => {
+    return { buttonEngine: navButtonEngine }
+  })
+
   /* -- FUNCTIONS -- */
 
   /**
@@ -68,10 +75,15 @@ export default function LobbyPage({
   const verifyNavigation = useRef(() => {
     // If the session is started, navigate to the session page.
     if (session.state === 'started') {
-      navigateTo('SessionPage', { session }, { bypassMiddleware: true })
+      navigateTo(
+        'SessionPage',
+        { session, returnPage: 'HomePage' },
+        { bypassMiddleware: true },
+      )
     }
     // If the session is ended, navigate to the home page.
     if (session.state === 'ended') {
+      notify('Session has ended.')
       navigateTo('HomePage', {}, { bypassMiddleware: true })
     }
   })
@@ -106,7 +118,11 @@ export default function LobbyPage({
       // Start the session.
       await session.$start()
       // Redirect to session page.
-      navigateTo('SessionPage', { session }, { bypassMiddleware: true })
+      navigateTo(
+        'SessionPage',
+        { session, returnPage: 'HomePage' },
+        { bypassMiddleware: true },
+      )
     } catch (error) {
       handleError({
         message: 'Failed to start session.',
@@ -208,8 +224,8 @@ export default function LobbyPage({
 
   // Render root component.
   return (
-    <div className='LobbyPage Page'>
-      <DefaultLayout navigation={navigation}>
+    <div className='LobbyPage Page DarkPage'>
+      <DefaultPageLayout navigation={navigation}>
         <div className='Title'>Lobby</div>
         <div className='DetailSection Section'>
           <div className='SessionId StaticDetail'>
@@ -233,7 +249,7 @@ export default function LobbyPage({
           <SessionMembers session={session} />
         </div>
         {buttonSectionJsx}
-      </DefaultLayout>
+      </DefaultPageLayout>
     </div>
   )
 }

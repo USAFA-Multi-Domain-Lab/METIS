@@ -16,6 +16,7 @@ npm-debug.log*
 # env
 .DS_Store
 *.env
+!*.defaults.env
 .env.local
 .env.development.local
 .env.test.local
@@ -26,8 +27,12 @@ environment-test.json
 /integration/target-env/**
 !/integration/target-env/.gitkeep
 !/integration/target-env/tsconfig.json
+!/integration/target-env/METIS/
+!/integration/target-env/METIS/**
 /integration/library/node_modules
 
+# deployment
+/deployment/docker/.out
 
 # log
 /server/logs
@@ -35,13 +40,14 @@ environment-test.json
 
 # temp
 /server/temp
-docker-compose.yml
 
 # backup
 /server/database/backups
 
 # file store
 /server/files/store
+/server/files/store-dev
+/server/files/store-test
 
 # user data for importing
 /server/database/scripts/**/*.csv

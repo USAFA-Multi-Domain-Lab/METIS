@@ -1,0 +1,167 @@
+@import 'src/assets/styles/config.scss';
+@import '../../form/index.scss';
+
+@mixin code-styling() {
+  background-color: $color-accent-dark;
+  border-radius: 0.4em;
+  padding: 0.25em 0.33em;
+  border: 1px solid rgba($color-primary-light, 0.65);
+  line-height: 1.5em;
+}
+
+.RichText {
+  &.ReadOnly {
+    display: inline;
+
+    div {
+      display: inline;
+    }
+
+    .Editor p:first-of-type {
+      display: inline;
+    }
+  }
+
+  .Editor {
+    &:focus-visible {
+      outline: none;
+    }
+
+    p {
+      line-height: 1.65;
+
+      &.is-editor-empty::before {
+        color: #adb5bd;
+        content: attr(data-placeholder);
+        float: left;
+        height: 0;
+        pointer-events: none;
+        font-size: 0.95em;
+      }
+    }
+
+    a {
+      text-decoration: none;
+    }
+
+    a,
+    a * {
+      color: $color-accent;
+      cursor: pointer;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    code {
+      @include code-styling();
+    }
+
+    pre {
+      @include code-styling();
+      padding: 0.5em 0.75em;
+      overflow-x: auto;
+
+      code {
+        white-space: pre;
+        background-color: unset;
+        border-radius: unset;
+        padding: unset;
+        border: unset;
+        border-radius: unset;
+      }
+
+      /* Code block styling */
+      .hljs-comment,
+      .hljs-quote {
+        color: $color-secondary-light;
+      }
+
+      .hljs-variable,
+      .hljs-template-variable,
+      .hljs-attribute,
+      .hljs-tag,
+      .hljs-regexp,
+      .hljs-link,
+      .hljs-name,
+      .hljs-selector-id,
+      .hljs-selector-class {
+        color: #f98181;
+      }
+
+      .hljs-number,
+      .hljs-meta,
+      .hljs-built_in,
+      .hljs-builtin-name,
+      .hljs-literal,
+      .hljs-type,
+      .hljs-params {
+        color: #fbbc88;
+      }
+
+      .hljs-string,
+      .hljs-symbol,
+      .hljs-bullet {
+        color: #b9f18d;
+      }
+
+      .hljs-title,
+      .hljs-section {
+        color: #faf594;
+      }
+
+      .hljs-keyword,
+      .hljs-selector-tag {
+        color: #70cff8;
+      }
+
+      .hljs-emphasis {
+        font-style: italic;
+      }
+
+      .hljs-strong {
+        font-weight: 700;
+      }
+    }
+
+    blockquote {
+      border-left: 3px solid $color-accent-light;
+      margin: 1.5rem 0;
+      padding-left: 1rem;
+    }
+
+    .DetailDisplay {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      width: 100%;
+      max-width: 30em;
+
+      .Label {
+        font-weight: bold;
+
+        &::after {
+          content: ':';
+        }
+      }
+
+      .Value {
+        color: $color-accent-light;
+      }
+    }
+  }
+
+  .BubbleToolbar,
+  .FloatingToolbar {
+    background-color: $color-primary;
+    border-radius: 0.4em;
+    padding-bottom: 0.5em;
+
+    .Toolbar {
+      display: flex;
+      align-items: center;
+      flex-flow: row wrap;
+      padding: 0.5em 0.5em 0.25em !important;
+    }
+  }
+}

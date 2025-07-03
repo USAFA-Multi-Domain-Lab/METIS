@@ -5,7 +5,7 @@
    version="1.1"
    id="svg1"
    sodipodi:docname="launch.svg"
-   inkscape:version="1.3 (0e150ed, 2023-07-21)"
+   inkscape:version="1.4 (e7c3feb1, 2024-10-09)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -21,18 +21,19 @@
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="15.2"
-     inkscape:cx="19.967105"
-     inkscape:cy="30.493421"
-     inkscape:window-width="2064"
-     inkscape:window-height="1212"
-     inkscape:window-x="248"
-     inkscape:window-y="531"
+     inkscape:zoom="10.879068"
+     inkscape:cx="25.875379"
+     inkscape:cy="21.601116"
+     inkscape:window-width="1512"
+     inkscape:window-height="989"
+     inkscape:window-x="217"
+     inkscape:window-y="38"
      inkscape:window-maximized="0"
-     inkscape:current-layer="Layer_1" />
+     inkscape:current-layer="svg1" />
   <!-- Created with Method Draw - http://github.com/duopixel/Method-Draw/ -->
   <g
-     id="Layer_1">
+     id="Layer_1"
+     transform="matrix(1.0227964,0,0,1.0227964,-0.45571773,-1.1922362)">
     <title
        id="title1">Layer 1</title>
     <path

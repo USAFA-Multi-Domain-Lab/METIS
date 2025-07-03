@@ -1,17 +1,13 @@
-import { AnyObject } from 'metis/toolbox/objects'
-import { TCommonUser } from 'metis/users'
-import Mission, { TCommonMission, TCommonMissionTypes, TMission } from '..'
+import Mission, { TMission, TMissionJsonOptions } from '..'
+import { TMetisBaseComponents } from '../../'
+import { AnyObject } from '../..//toolbox/objects'
 import context from '../../context'
 import StringToolbox from '../../toolbox/strings'
-import {
-  TCommonMissionNode,
-  TCommonMissionNodeJson,
-  TMissionNodeJson,
-  TMissionNodeOptions,
-  TNode,
-} from '../nodes'
-import { TCommonMissionPrototype } from '../nodes/prototypes'
-import { TCommonOutput, TCommonOutputJson, TOutput } from './output'
+import User from '../../users'
+import MissionComponent, { TMissionComponentDefect } from '../component'
+import { TMissionNodeJson, TNode } from '../nodes'
+import { TPrototype } from '../nodes/prototypes'
+import { TOutput, TOutputJson } from './output'
 
 /* -- CLASSES -- */
 
@@ -20,35 +16,64 @@ import { TCommonOutput, TCommonOutputJson, TOutput } from './output'
  * that are interacted with by a group of participants in a session.
  */
 export abstract class MissionForce<
-  T extends TCommonMissionTypes = TCommonMissionTypes,
-> implements TCommonMissionForce
-{
+  T extends TMetisBaseComponents = TMetisBaseComponents,
+> extends MissionComponent<T, MissionForce<T>> {
+  /**
+   * @see {@link MissionComponent.mission}
+   */
+  protected _mission: TMission<T>
   // Implemented
-  public mission: TMission<T>
+  public get mission(): TMission<T> {
+    return this._mission
+  }
 
   /**
-   * The ID of the force.
+   * The introductory message for the mission, displayed
+   * when the mission is first started in a session.
    */
-  public _id: string
-
-  // Implemented
   public introMessage: string
 
-  /**
-   * The name of the force.
-   */
-  public name: string
+  // Implemented
+  public get path(): [...MissionComponent<any, any>[], this] {
+    return [this.mission, this]
+  }
+
+  // Implemented
+  public get defects(): TMissionComponentDefect[] {
+    return MissionForce.consolidateDefects(...this.nodes)
+  }
 
   /**
    * The color of the force.
    */
   public color: string
 
-  // Implemented
+  /**
+   * The amount of resources available to the force at
+   * the start of the session.
+   */
   public initialResources: number
 
-  // Implementd
+  /**
+   * Determines whether or not the force's resource pools can be negative.
+   */
+  public allowNegativeResources: boolean
+
+  /**
+   * The current amount of resources available to the force.
+   * @note Only relevant when in a session.
+   */
   public resourcesRemaining: number
+
+  /**
+   * Whether or not to reveal all nodes in the force.
+   */
+  public revealAllNodes: boolean
+
+  /**
+   * A key for the force, used to identify it within the mission.
+   */
+  public localKey: string
 
   /**
    * The nodes in the force.
@@ -60,72 +85,38 @@ export abstract class MissionForce<
    */
   public root: TNode<T>
 
-  // Implemented
+  /**
+   * The revealed structure found in the force, based on the node's
+   * descendants that have been revealed.
+   */
   public get revealedStructure(): AnyObject {
-    /**
-     * The recursive algorithm used to determine the structure.
-     * @param cursor The current prototype being processed.
-     * @param cursorStructure The structure of the current prototype being processed.
-     */
-    const algorithm = (
-      cursor: TNode<T> = this.root,
-      cursorStructure: AnyObject = {},
-    ): AnyObject => {
-      if (cursor.opened) {
-        for (let child of cursor.children) {
-          if (child.hasChildren) {
-            cursorStructure[child.prototype.structureKey] = algorithm(child)
-          } else {
-            cursorStructure[child.prototype.structureKey] = {}
-          }
-        }
-      }
-      return cursorStructure
-    }
-
-    // Return the result of the operation.
-    return algorithm()
+    return this.root.revealedStructure
   }
 
-  // Implemented
-  public get revealedPrototypes(): TCommonMissionPrototype[] {
-    // The revealed prototypes.
-    let revealedPrototypes: TCommonMissionPrototype[] = []
-
-    /**
-     * Recursively finds prototypes from the node structure.
-     */
-    const findPrototypes = (cursor: AnyObject = this.revealedStructure) => {
-      for (let key of Object.keys(cursor)) {
-        // Get the child structure.
-        let childStructure: AnyObject = cursor[key]
-        // Find the prototype data for the current key.
-        let prototype = this.mission.prototypes.find(
-          ({ structureKey }) => structureKey === key,
-        )
-        // If the prototype was found, add it to the list.
-        if (prototype) {
-          revealedPrototypes.push(prototype)
-        }
-        // Find this prototype's children.
-        findPrototypes(childStructure)
-      }
-    }
-
-    // Find prototypes from the node structure.
-    findPrototypes()
-
-    // Return the revealed prototypes.
-    return revealedPrototypes
+  /**
+   * The revealed prototypes based on the revealed node structure.
+   */
+  public get revealedPrototypes(): TPrototype<T>[] {
+    return this.root.revealedPrototypes
   }
 
   /**
    * The outputs for the force's output panel.
    */
   protected _outputs: TOutput<T>[]
-  // Implemented
+  /**
+   * The outputs for the force's output panel.
+   */
   public get outputs(): TOutput<T>[] {
     return this._outputs
+  }
+
+  /**
+   * The prefix to display for an output sent by this
+   * force.
+   */
+  public get outputPrefix(): string {
+    return `${this.name.replaceAll(' ', '-')}:`
   }
 
   /**
@@ -133,65 +124,97 @@ export abstract class MissionForce<
    * @param data The force data from which to create the force. Any ommitted
    * values will be set to the default properties defined in
    * MissionForce.DEFAULT_PROPERTIES.
-   * @param options The options for creating the force.
    */
   public constructor(
     mission: TMission<T>,
     data: Partial<TMissionForceJson> = MissionForce.DEFAULT_PROPERTIES,
-    options: TMissionForceOptions = {},
   ) {
-    // Parse options.
-    const { openAll = false, populateTargets = false } = options
+    super(
+      data._id ?? MissionForce.DEFAULT_PROPERTIES._id,
+      data.name ?? MissionForce.DEFAULT_PROPERTIES.name,
+      false,
+    )
 
     // Set properties.
-    this.mission = mission
-    this._id = data._id ?? MissionForce.DEFAULT_PROPERTIES._id
+    this._mission = mission
     this.introMessage =
       data.introMessage ?? MissionForce.DEFAULT_PROPERTIES.introMessage
-    this.name = data.name ?? MissionForce.DEFAULT_PROPERTIES.name
     this.color = data.color ?? MissionForce.DEFAULT_PROPERTIES.color
     this.initialResources =
       data.initialResources ?? MissionForce.DEFAULT_PROPERTIES.initialResources
+    this.allowNegativeResources =
+      data.allowNegativeResources ??
+      MissionForce.DEFAULT_PROPERTIES.allowNegativeResources
+    this.revealAllNodes =
+      data.revealAllNodes ?? MissionForce.DEFAULT_PROPERTIES.revealAllNodes
+    this.localKey = data.localKey ?? mission.generateForceKey()
     this.resourcesRemaining = data.resourcesRemaining ?? this.initialResources
     this.nodes = []
     this._outputs = []
     this.root = this.createNode(MissionForce.ROOT_NODE_PROPERTIES)
 
     // Import nodes into the force.
-    this.importNodes(data.nodes ?? MissionForce.DEFAULT_PROPERTIES.nodes, {
-      openAll,
-      populateTargets,
-    })
-
-    // If root node is not open, open it.
-    if (!this.root.opened) {
-      this.root.open()
-    }
+    this.importNodes(data.nodes ?? MissionForce.DEFAULT_PROPERTIES.nodes)
   }
 
-  // Implemented
+  /**
+   * Converts the force to JSON.
+   * @param options The options for converting the force to JSON.
+   * @returns The JSON for the force.
+   */
   public toJson(options: TForceJsonOptions = {}): TMissionForceJson {
-    let {
-      revealedOnly = false,
-      includeSessionData = false,
-      userId = undefined,
-    } = options
-
+    let { sessionDataExposure = Mission.DEFAULT_SESSION_DATA_EXPOSURE } =
+      options
     let json: TMissionForceJson = {
       _id: this._id,
       introMessage: this.introMessage,
       name: this.name,
       color: this.color,
       initialResources: this.initialResources,
-      nodes: this.exportNodes({ revealedOnly, includeSessionData }),
+      allowNegativeResources: this.allowNegativeResources,
+      revealAllNodes: this.revealAllNodes,
+      localKey: this.localKey,
+      nodes: this.exportNodes(options),
+      filterOutputs: (userId) => {
+        json.outputs = this.filterOutputs(userId).map((output) =>
+          output.toJson(),
+        )
+      },
     }
 
-    // Include session data if includeSessionData
-    // flag was set.
-    if (includeSessionData) {
+    /**
+     * Includes `resourcesRemaining` in the JSON.
+     */
+    const addResourcesRemaining = () => {
       json.resourcesRemaining = this.resourcesRemaining
-      let filteredOutputs = this.filterOutputs(userId)
-      json.outputs = filteredOutputs.map((output) => output.toJson())
+    }
+
+    /**
+     * Adds the outputs to the JSON.
+     */
+    const addOutputs = (userId?: User['_id']) => {
+      if (userId) {
+        json.outputs = this.filterOutputs(userId).map((output) =>
+          output.toJson(),
+        )
+      } else {
+        json.outputs = this.outputs.map((output) => output.toJson())
+      }
+    }
+
+    // Expose force-level session data based on
+    // the options provided.
+    switch (sessionDataExposure.expose) {
+      case 'all':
+        addResourcesRemaining()
+        addOutputs()
+        break
+      case 'user-specific':
+        addResourcesRemaining()
+        addOutputs(sessionDataExposure.userId)
+        break
+      case 'none':
+        break
     }
 
     return json
@@ -204,23 +227,47 @@ export abstract class MissionForce<
    */
   protected exportNodes(options: TExportNodesOptions = {}): TMissionNodeJson[] {
     // Gather details.
-    const { revealedOnly = false, includeSessionData = false } = options
-    let nodes: TNode<T>[] = this.nodes
-    let nodeData: TMissionNodeJson[] = []
+    const { forceExposure = Mission.DEFAULT_FORCE_EXPOSURE } = options
+    let nodes: TNode<T>[]
 
-    // Apply filter if revealedOnly flag
-    // is set.
-    if (revealedOnly) {
-      nodes = nodes.filter((node: TNode<T>) => node.revealed)
+    // Determine which nodes to export based on the
+    // force exposure
+    switch (forceExposure.expose) {
+      case 'all':
+      case 'force-with-all-nodes':
+        nodes = [...this.nodes]
+        break
+      case 'force-with-revealed-nodes':
+        nodes = this.nodes.filter((node) => node.revealed)
+        break
+      case 'none':
+      default:
+        nodes = []
+        break
     }
 
-    // Construct node data.
-    nodeData = nodes.map((node: TNode<T>) =>
-      node.toJson({ includeSessionData: includeSessionData }),
-    )
+    // Convert nodes to JSON and return.
+    return nodes.map((node) => node.toJson(options))
+  }
 
-    // Return the exported node data.
-    return nodeData
+  /**
+   * Generates a new key for the node.
+   * @returns The new key for the node.
+   */
+  public generateNodeKey(): string {
+    // Initialize
+    let newKey: number = 0
+
+    for (let node of this.nodes) {
+      let nodeKey: number = Number(node.localKey)
+      // If the node has a key, and it is greater than the current
+      // new key, set the new key to the node's key.
+      if (nodeKey > newKey) newKey = Math.max(newKey, nodeKey)
+    }
+
+    // Increment the new key by 1 and return it as a string.
+    newKey++
+    return String(newKey)
   }
 
   /**
@@ -229,28 +276,43 @@ export abstract class MissionForce<
    * @param data The data for the node.
    * @param options The options for creating the node.
    */
-  protected abstract createNode(
-    data: Partial<TMissionNodeJson>,
-    options?: TMissionNodeOptions,
-  ): TNode<T>
+  protected abstract createNode(data: Partial<TMissionNodeJson>): TNode<T>
 
   /**
    * Filter the outputs based on the conditions of the output and the current user.
    * @param userId The ID of the user for which to filter the outputs.
    * @returns The filtered outputs.
    */
-  protected abstract filterOutputs(userId?: TCommonUser['_id']): TOutput<T>[]
+  public abstract filterOutputs(userId?: User['_id']): TOutput<T>[]
 
-  // Implemented
-  public abstract storeOutput(output: TCommonOutput): void
+  /**
+   * Stores an output in the force which is then displayed
+   * in the force's output panel.
+   * @param output The output to store.
+   */
+  public abstract storeOutput(output: TOutput<T>): void
 
-  // Implemented
+  /**
+   * Modifies the resource pool.
+   * @param operand The amount by which to modify the resource pool.
+   */
+  public abstract modifyResourcePool(operand: number): void
+
+  /**
+   * @param nodeId The ID of the node to retrieve.
+   * @returns The node with the given ID, or undefined
+   * if not found.
+   */
   public getNode(nodeId: string): TNode<T> | undefined {
     if (nodeId === this.root._id) return this.root
     else return this.nodes.find((node) => node._id === nodeId)
   }
 
-  // Implemented
+  /**
+   * @param prototypeId The ID of the prototype to retrieve.
+   * @returns The node with the given prototype ID, or undefined
+   * if not found.
+   */
   public getNodeFromPrototype(prototypeId: string): TNode<T> | undefined {
     if (prototypeId === this.mission.root._id) return this.root
     else return this.nodes.find((node) => node.prototype._id === prototypeId)
@@ -261,21 +323,12 @@ export abstract class MissionForce<
    * @param data The raw node data to import.
    * @param options The options for importing the nodes.
    */
-  protected importNodes(
-    data: TMissionNodeJson[],
-    options: TNodeImportOptions = {},
-  ): void {
+  protected importNodes(data: TMissionNodeJson[]): void {
     try {
-      // Parse options.
-      const { openAll, populateTargets } = options
-
       // Loop through data, spawn new nodes,
       // and add them to the nodes map.
       for (let datum of data) {
-        // Set node as open, if openAll is marked.
-        if (openAll) datum.opened = true
-
-        this.nodes.push(this.createNode(datum, { populateTargets }))
+        this.nodes.push(this.createNode(datum))
       }
     } catch (error) {
       if (context === 'react') {
@@ -322,13 +375,15 @@ export abstract class MissionForce<
   /**
    * The default properties for a Mission object.
    */
-  public static get DEFAULT_PROPERTIES(): Required<TCommonMissionForceJson> {
+  public static get DEFAULT_PROPERTIES(): TMissionForceDefaultJson {
     return {
       _id: StringToolbox.generateRandomId(),
       introMessage: '<p>Welcome to your force!</p>',
       name: 'New Force',
       color: '#ffffff',
       initialResources: 100,
+      allowNegativeResources: false,
+      revealAllNodes: false,
       nodes: [],
     }
   }
@@ -353,52 +408,62 @@ export abstract class MissionForce<
     device: false,
     actions: [],
     opened: true,
+    exclude: false,
+    localKey: 'ROOT',
   }
 
   /**
    * Default forces for a mission.
    */
-  public static get DEFAULT_FORCES(): TCommonMissionForceJson[] {
+  public static get DEFAULT_FORCES(): TMissionForceJson[] {
     return [
       {
         ...MissionForce.DEFAULT_PROPERTIES,
         name: 'Friendly Force',
         color: Mission.BLUE,
+        localKey: '1',
       },
       {
         ...MissionForce.DEFAULT_PROPERTIES,
         name: 'Enemy Force',
         color: Mission.RED,
+        localKey: '2',
       },
       {
         ...MissionForce.DEFAULT_PROPERTIES,
         name: 'Guerrilla Force',
         color: Mission.YELLOW,
+        localKey: '3',
       },
       {
         ...MissionForce.DEFAULT_PROPERTIES,
         name: 'Local National Force',
         color: Mission.GREEN,
+        localKey: '4',
       },
       {
         ...MissionForce.DEFAULT_PROPERTIES,
         name: 'White Cell',
         color: Mission.WHITE,
+        localKey: '5',
       },
       {
         ...MissionForce.DEFAULT_PROPERTIES,
         name: 'Non-State Actors',
         color: Mission.BROWN,
+        localKey: '6',
       },
       {
         ...MissionForce.DEFAULT_PROPERTIES,
         name: 'Coalition Force',
         color: Mission.PURPLE,
+        localKey: '7',
       },
       {
         ...MissionForce.DEFAULT_PROPERTIES,
         name: 'Civilian Industry',
         color: Mission.MAGENTA,
+        localKey: '8',
       },
     ]
   }
@@ -407,91 +472,10 @@ export abstract class MissionForce<
 /* -- TYPES -- */
 
 /**
- * Interface of the abstract MissionForce class.
- * @note Any public, non-static properties and functions of the Force
- * class must first be defined here for them to be accessible to the
- * Mission, MissionNode, and MissionAction classes.
+ * Session-agnostic JSON representation of a MissionForce object
+ * which can be saved to a database.
  */
-export interface TCommonMissionForce {
-  /**
-   * The mission to which the force belongs.
-   */
-  mission: TCommonMission
-  /**
-   * The ID of the force.
-   */
-  _id: string
-  /**
-   * The introductory message for the mission, displayed when the mission is first started in a session.
-   */
-  introMessage: string
-  /**
-   * The name of the force.
-   */
-  name: string
-  /**
-   * The color of the force.
-   */
-  color: string
-  /**
-   * The amount of resources available to the force at
-   * the start of the session.
-   */
-  initialResources: number
-  /**
-   * The nodes in the force.
-   */
-  nodes: TCommonMissionNode[]
-  /**
-   * The root node of the force.
-   */
-  root: TCommonMissionNode
-  /**
-   * The current amount of resources available to the force.
-   * @note Only relevant when in a session.
-   */
-  resourcesRemaining: number
-  /**
-   * The revealed structure found in the force, based on the nodes
-   * that have been opened.
-   */
-  get revealedStructure(): AnyObject
-  /**
-   * The revealed prototypes in the force based on the revealed structure and
-   * the nodes that have been opened.
-   */
-  get revealedPrototypes(): TCommonMissionPrototype[]
-  /**
-   * The outputs for the force's output panel.
-   */
-  get outputs(): TCommonOutput[]
-  /**
-   * Converts the force to JSON.
-   * @param options The options for converting the force to JSON.
-   * @returns the JSON for the force.
-   */
-  toJson: (options?: TForceJsonOptions) => TCommonMissionForceJson
-  /**
-   * Gets a node from the given node ID.
-   */
-  getNode(nodeId: string | undefined): TCommonMissionNode | undefined
-  /**
-   * Gets a node from the given prototype ID.
-   */
-  getNodeFromPrototype(
-    prototypeId: string | undefined,
-  ): TCommonMissionNode | undefined
-  /**
-   * Stores an output in the force which is then displayed in the force's output panel.
-   * @param output The output to store.
-   */
-  storeOutput(output: TCommonOutput): void
-}
-
-/**
- * Session-agnostic JSON representation of a MissionNode object.
- */
-export interface TCommonMissionForceJson {
+export interface TMissionForceSaveJson {
   /**
    * The ID of the force.
    */
@@ -513,9 +497,21 @@ export interface TCommonMissionForceJson {
    */
   initialResources: number
   /**
+   * Determines whether or not the force's resource pools can be negative.
+   */
+  allowNegativeResources: boolean
+  /**
+   * Whether or not to reveal all nodes in the force.
+   */
+  revealAllNodes: boolean
+  /**
+   * A key for the force, used to identify it within the mission.
+   */
+  localKey: string
+  /**
    * The nodes in the force.
    */
-  nodes: TCommonMissionNodeJson[]
+  nodes: TMissionNodeJson[]
 }
 
 /**
@@ -529,100 +525,46 @@ export interface TMissionForceSessionJson {
   /**
    * The outputs for a force's output panel.
    */
-  outputs: TCommonOutputJson[]
+  outputs: TOutputJson[]
+  /**
+   * Updates the outputs in the JSON, only including
+   * the outputs that are relevant to the given user.
+   * @param userId The ID of the user for which to filter the outputs.
+   */
+  filterOutputs: (userId?: User['_id']) => void
 }
 
 /**
  * Plain JSON representation of a MissionForce object.
- * Type built from TCommonMissionForceJson and TMissionForceSessionJSON,
- * with all properties from TMissionNodeSessionJSON being partial.
+ * Type built from TMissionForceJsonBase and TMissionForceSessionJson,
+ * with all properties from TMissionForceSessionJson being partial.
  */
-export type TMissionForceJson = TCommonMissionForceJson &
+export type TMissionForceJson = TMissionForceSaveJson &
   Partial<TMissionForceSessionJson>
 
 /**
- * Options for creating a MissionForce object.
- */
-export type TMissionForceOptions = {
-  /**
-   * Whether or not to force open all nodes.
-   * @default false
-   */
-  openAll?: boolean
-  /**
-   * Whether to populate the targets.
-   * @default false
-   */
-  populateTargets?: boolean
-}
-
-/**
  * Options for converting a MissionForce to JSON.
+ * @inheritdoc TMissionJsonOptions
  */
-export type TForceJsonOptions = {
-  /**
-   * Whether or not to only include revealed nodes.
-   * @default false
-   */
-  revealedOnly?: boolean
-  /**
-   * Whether or not to include session data.
-   * @default false
-   */
-  includeSessionData?: boolean
-  /**
-   * The ID of the user for which to include session data.
-   * @default undefined
-   */
-  userId?: TCommonUser['_id']
-}
-
-/**
- * Options for MissionForce.importNodes.
- */
-export type TNodeImportOptions = {
-  /**
-   * Whether or not to force open the newly created nodes.
-   * @default false
-   */
-  openAll?: boolean
-  /**
-   * Whether to populate the targets.
-   * @default false
-   */
-  populateTargets?: boolean
-}
+export type TForceJsonOptions = Omit<TMissionJsonOptions, 'idExposure'>
 
 /**
  * Options for the MissionForce.exportNodes method.
  */
-export type TExportNodesOptions = {
-  /**
-   * Whether to exclude non-revealed nodes in the export.
-   * @default false
-   */
-  revealedOnly?: boolean
-  /**
-   * Whether or not to include session-specific data in the export.
-   * @default false
-   */
-  includeSessionData?: boolean
-}
+export type TExportNodesOptions = TForceJsonOptions
 
 /**
- * Options for MissionForce.mapRelationships.
+ * The default properties for a MissionForce object.
+ * @inheritdoc TMissionForceSaveJson
  */
-export type TMapRelationshipOptions = {
-  /**
-   * Whether or not to force open all nodes.
-   * @default false
-   */
-  openAll?: boolean
-}
+type TMissionForceDefaultJson = Required<
+  Omit<TMissionForceSaveJson, 'localKey'>
+>
 
 /**
- * Extracts the force type from the mission types.
- * @param T The mission types.
+ * Extracts the force type from a registry of
+ * METIS components that extends `TMetisBaseComponents`.
+ * @param T The type registry.
  * @returns The force type.
  */
-export type TForce<T extends TCommonMissionTypes> = T['force']
+export type TForce<T extends TMetisBaseComponents> = T['force']

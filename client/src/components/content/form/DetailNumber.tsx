@@ -13,8 +13,8 @@ import './DetailNumber.scss'
 export function DetailNumber({
   fieldType,
   label,
-  stateValue,
-  setState,
+  value: stateValue,
+  setValue: setState,
   // Optional Properties
   minimum = undefined,
   maximum = undefined,
@@ -113,7 +113,6 @@ export function DetailNumber({
         </div>
         <div className={`TitleColumnTwo ${optionalClassName}`}>optional</div>
       </div>
-      <div className='Unit'>{unit}</div>
       <input
         className={fieldClassName}
         type='text'
@@ -245,6 +244,7 @@ export function DetailNumber({
           setInputValue(target.value)
         }}
       />
+      <div className='Unit'>{unit}</div>
     </div>
   )
 }

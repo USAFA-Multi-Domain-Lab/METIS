@@ -1,65 +1,124 @@
 import { v4 as generateHash } from 'uuid'
-import { TCommonMission, TCommonMissionTypes, TMission } from '..'
+import { TMission } from '..'
+import { TMetisBaseComponents } from '../../'
+import MissionComponent, { TMissionComponentDefect } from '../component'
 
 /**
  * This represents a prototype for a mission node displayed
  * in the master tab in the mission map.
  */
 export default abstract class MissionPrototype<
-  T extends TCommonMissionTypes = TCommonMissionTypes,
-> implements TCommonMissionPrototype
-{
+  T extends TMetisBaseComponents = TMetisBaseComponents,
+> extends MissionComponent<T, MissionPrototype<T>> {
+  /**
+   * @see {@link MissionComponent.mission}
+   */
+  protected _mission: TMission<T>
   // Implemented
-  public mission: TMission<T>
+  public get mission(): TMission<T> {
+    return this._mission
+  }
+
+  // Overridden
+  public get name(): string {
+    return this._id.substring(0, 8)
+  }
+  // Overridden
+  public set name(value: string) {
+    throw new Error('Cannot set name of MissionPrototype.')
+  }
+
+  public get path(): [...MissionComponent<any, any>[], this] {
+    return [this.mission, this]
+  }
 
   // Implemented
-  public _id: TCommonMissionPrototype['_id']
+  public get defects(): TMissionComponentDefect[] {
+    return []
+  }
 
-  // Implemented
+  /**
+   * The parent of this prototype in the tree structure.
+   */
   public parent: TPrototype<T> | null
 
-  // Implemented
+  /**
+   * The direct children of this prototype in
+   * the tree structure.
+   */
   public children: TPrototype<T>[]
 
-  // Inherited
-  public structureKey: TCommonMissionPrototype['structureKey']
+  /**
+   * Any prototypes that descend from this prototype
+   * in the tree structure.
+   */
+  public get descendants(): TPrototype<T>[] {
+    let descendants: TPrototype<T>[] = []
+
+    this.children.forEach((child: TPrototype<T>) => {
+      descendants.push(child)
+      descendants.push(...child.descendants)
+    })
+
+    return descendants
+  }
+
+  /**
+   * The key used in the structure object to represent
+   * a node's position and relationships to other nodes.
+   */
+  public structureKey: string
 
   /**
    * Cache for the depth padding of the node.
    */
   protected _depthPadding: number
-  // Implemented
+  /**
+   * The amount of visual padding to apply to the left
+   * of the node in the tree.
+   */
   public get depthPadding(): number {
     return this._depthPadding
   }
-  // Implemented
   public set depthPadding(value: number) {
     this._depthPadding = value
   }
 
-  // Implemented
+  /**
+   * The first child of this prototype in the tree structure.
+   */
   public get firstChild(): TPrototype<T> | null {
     return this.children.length > 0 ? this.children[0] : null
   }
 
-  // Implemented
+  /**
+   * The last child of this prototype in the tree structure.
+   */
   public get lastChild(): TPrototype<T> | null {
     return this.children.length > 0
       ? this.children[this.children.length - 1]
       : null
   }
 
-  // Implemented
-  public get hasChildren(): TCommonMissionPrototype['hasChildren'] {
+  /**
+   * Whether or not this prototype has children in the
+   * tree structure.
+   */
+  public get hasChildren(): boolean {
     return this.children.length > 0
   }
 
-  // Implemented
-  public get hasSiblings(): TCommonMissionPrototype['hasSiblings'] {
+  /**
+   * Whether or not this prototype has siblings in the
+   * tree structure.
+   */
+  public get hasSiblings(): boolean {
     return this.childrenOfParent.length > 1
   }
 
-  // Implemented
+  /**
+   * The siblings of this prototype in the tree structure.
+   */
   public get siblings(): TPrototype<T>[] {
     let siblings: TPrototype<T>[] = []
 
@@ -74,7 +133,10 @@ export default abstract class MissionPrototype<
     return siblings
   }
 
-  // Implemented
+  /**
+   * The children of the parent of this prototype in the
+   * tree structure.
+   */
   public get childrenOfParent(): TPrototype<T>[] {
     let childrenOfParent: TPrototype<T>[] = []
 
@@ -85,7 +147,10 @@ export default abstract class MissionPrototype<
     return childrenOfParent
   }
 
-  // Implemented
+  /**
+   * The sibling, if any, ordered before this prototype in
+   * the structure.
+   */
   public get previousSibling(): TPrototype<T> | null {
     let previousSibling: TPrototype<T> | null = null
 
@@ -104,7 +169,10 @@ export default abstract class MissionPrototype<
     return previousSibling
   }
 
-  // Implemented
+  /**
+   * The sibling, if any, ordered after this prototype in
+   * the structure.
+   */
   public get followingSibling(): TPrototype<T> | null {
     let followingSibling: TPrototype<T> | null = null
 
@@ -133,12 +201,13 @@ export default abstract class MissionPrototype<
    */
   public constructor(
     mission: TMission<T>,
-    data: Partial<TCommonMissionPrototypeJson> = MissionPrototype.DEFAULT_PROPERTIES,
+    data: Partial<TMissionPrototypeJson> = MissionPrototype.DEFAULT_PROPERTIES,
     options: TMissionPrototypeOptions<TPrototype<T>> = {},
   ) {
+    super(data._id ?? MissionPrototype.DEFAULT_PROPERTIES._id, '', false)
+
     // Set properties from data.
-    this.mission = mission
-    this._id = data._id ?? MissionPrototype.DEFAULT_PROPERTIES._id
+    this._mission = mission
     this.structureKey =
       data.structureKey ?? MissionPrototype.DEFAULT_PROPERTIES.structureKey
     this._depthPadding =
@@ -149,10 +218,12 @@ export default abstract class MissionPrototype<
     this.children = options.children ?? []
   }
 
-  // Implemented
-  public toJson(
-    options?: TMissionPrototypeJsonOptions,
-  ): TCommonMissionPrototypeJson {
+  /**
+   * Converts the prototype node to JSON.
+   * @param options The options for converting the prototype node to JSON.
+   * @returns the JSON for the prototype node.
+   */
+  public toJson(options?: TMissionPrototypeJsonOptions): TMissionPrototypeJson {
     return {
       _id: this._id,
       depthPadding: this.depthPadding,
@@ -163,7 +234,7 @@ export default abstract class MissionPrototype<
   /**
    * The default properties for a `MissionPrototype` object.
    */
-  public static get DEFAULT_PROPERTIES(): Required<TCommonMissionPrototypeJson> {
+  public static get DEFAULT_PROPERTIES(): Required<TMissionPrototypeJson> {
     return {
       _id: generateHash(),
       structureKey: generateHash(),
@@ -175,76 +246,9 @@ export default abstract class MissionPrototype<
 /* ------------------------------ NODE TYPES ------------------------------ */
 
 /**
- * Interface of the abstract MissionNode class.
- * @note Any public, non-static properties and functions of the MissionNode class
- * must first be defined here for them to be accessible to the Mission and
- * MissionAction classes.
- */
-export interface TCommonMissionPrototype {
-  /**
-   * The mission of which the prototype is a part.
-   */
-  mission: TCommonMission
-  /**
-   * The ID for the prototype.
-   */
-  _id: string
-  /**
-   * The amount of visual padding to apply to the left of the node in the tree.
-   */
-  get depthPadding(): number
-  set depthPadding(value: number)
-  /**
-   * The key used in the structure object to represent a node's position and relationships to other
-   * nodes.
-   */
-  structureKey: string
-  /**
-   * The parent of this prototype in the tree structure.
-   */
-  parent: TCommonMissionPrototype | null
-  /**
-   * The children of this prototype in the tree structure.
-   */
-  children: TCommonMissionPrototype[]
-  /**
-   * Whether or not this prototype has children.
-   */
-  hasChildren: boolean
-  /**
-   * Whether or not this prototype has siblings.
-   */
-  hasSiblings: boolean
-  /**
-   * The siblings of this prototype.
-   */
-  siblings: TCommonMissionPrototype[]
-  /**
-   * The children of the parent of this prototype (Essentially siblings plus self).
-   */
-  childrenOfParent: TCommonMissionPrototype[]
-  /**
-   * The sibling, if any, ordered before this prototype in the structure.
-   */
-  previousSibling: TCommonMissionPrototype | null
-  /**
-   * The sibling, if any, ordered after this prototype in the structure.
-   */
-  followingSibling: TCommonMissionPrototype | null
-  /**
-   * Converts the prototype node to JSON.
-   * @param options The options for converting the prototype node to JSON.
-   * @returns the JSON for the prototype node.
-   */
-  toJson: (
-    options?: TMissionPrototypeJsonOptions,
-  ) => TCommonMissionPrototypeJson
-}
-
-/**
  * Interface of the JSON object for a mission prototype.
  */
-export type TCommonMissionPrototypeJson = {
+export type TMissionPrototypeJson = {
   /**
    * The ID for the prototype.
    */
@@ -268,9 +272,7 @@ export type TMissionPrototypeJsonOptions = {}
 /**
  * Options for creating a MissionNode object.
  */
-export type TMissionPrototypeOptions<
-  TRelative extends TCommonMissionPrototype,
-> = {
+export type TMissionPrototypeOptions<TRelative extends MissionPrototype> = {
   /**
    * The prototype of which this prototype is a child.
    * @default null
@@ -284,8 +286,9 @@ export type TMissionPrototypeOptions<
 }
 
 /**
- * Extracts the prototype type from the mission types.
- * @param T The mission types.
+ * Extracts the prototype type from a registry of
+ * METIS components that extends `TMetisBaseComponents`.
+ * @param T The type registry.
  * @returns The prototype type.
  */
-export type TPrototype<T extends TCommonMissionTypes> = T['prototype']
+export type TPrototype<T extends TMetisBaseComponents> = T['prototype']

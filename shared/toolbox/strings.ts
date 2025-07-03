@@ -11,7 +11,7 @@ export const HEX_COLOR_REGEX: RegExp = /^#([a-f0-9]{6})$/
 export default class StringToolbox {
   /**
    * Limits the given string to the given number of characters.
-   * @note Three extra characters are cut at the end of the result to include an elipsis.
+   * @note Three extra characters are cut at the end of the result to include an ellipsis.
    * @param toLimit The string to limit.
    * @param maxCharacters The number of characters to limit it to.
    * @returns The resulting string.
@@ -36,6 +36,81 @@ export default class StringToolbox {
    * Capitalizes the first letter of the given string.
    */
   public static capitalize(str: string): string {
-    return str.charAt(0).toUpperCase() + str.slice(1)
+    // Replaces the first letter of each word with its uppercase version.
+    return str.replace(/\b\w/g, (char) => char.toUpperCase())
+  }
+
+  /**
+   * @param input A string in camelCase, PascalCase, or snake_case, or kebab-case.
+   * @returns A string in Title Case.
+   * @example
+   * StringToolbox.toTitleCase('helloWorld') // Hello World
+   * StringToolbox.toTitleCase('HelloWorld') // Hello World
+   * StringToolbox.toTitleCase('hello_world') // Hello World
+   * StringToolbox.toTitleCase('hello-world') // Hello World
+   */
+  public static toTitleCase(input: string): string {
+    const exceptions = new Set([
+      'a',
+      'an',
+      'and',
+      'as',
+      'at',
+      'but',
+      'by',
+      'for',
+      'in',
+      'nor',
+      'of',
+      'on',
+      'or',
+      'the',
+      'to',
+      'up',
+      'with',
+    ])
+
+    const words = input
+      .replace(/([a-z])([A-Z])/g, '$1 $2') // camelCase → camel Case
+      .replace(/[_-]/g, ' ') // snake_case / kebab-case → space
+      .replace(/\s+/g, ' ') // collapse spaces
+      .trim()
+      .toLowerCase()
+      .split(' ')
+
+    return words
+      .map((word, index) => {
+        const isFirstOrLast = index === 0 || index === words.length - 1
+        if (exceptions.has(word) && !isFirstOrLast) return word
+        return word.charAt(0).toUpperCase() + word.slice(1)
+      })
+      .join(' ')
+  }
+
+  /**
+   * Joins multiple path segments into a single path.
+   * @param segments The path segments to join.
+   * @returns The joined path.
+   * @note This function behaves like `path.join` in Node.js, but is
+   * implemented in a way that works in the browser.
+   */
+  public static joinPaths(...segments: string[]): string {
+    return segments
+      .map((segment, index) => {
+        // Remove trailing slash from the first segment.
+        if (index === 0) {
+          return segment.replace(/\/+$/g, '')
+        }
+        // Remove leading slashes from the last segment.
+        else if (index === segments.length - 1) {
+          return segment.replace(/^\/+/g, '')
+        }
+        // Else, remove leading/trailing slashes.
+        else {
+          return segment.replace(/^\/+|\/+$/g, '')
+        }
+      })
+      .filter(Boolean) // Remove empty segments
+      .join('/')
   }
 }

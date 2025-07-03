@@ -1,46 +1,36 @@
 import axios from 'axios'
-import { TClientMissionTypes } from 'src/missions'
-import ClientUser from 'src/users'
+import { TMetisClientComponents } from 'src'
+import { ClientEffect } from 'src/missions/effects'
 import TargetEnvironment, {
-  TCommonTargetEnvJson,
-  TTargetEnvOptions,
+  TTargetEnvJson,
 } from '../../../shared/target-environments'
-import { TCommonTargetJson } from '../../../shared/target-environments/targets'
+import TargetEnvRegistry from '../../../shared/target-environments/registry'
+import { TTargetJson } from '../../../shared/target-environments/targets'
+import { AnyObject } from '../../../shared/toolbox/objects'
 import ClientTarget from './targets'
 
 /**
  * Class representing a target environment on the client-side.
  */
-export class ClientTargetEnvironment extends TargetEnvironment<TClientMissionTypes> {
-  /**
-   * A registry of all target environments.
-   */
-  private static registry: ClientTargetEnvironment[] = []
-  /**
-   * Grabs all the target environments from the registry.
-   * @returns An array of all the target environments in the
-   * registry.
-   */
-  public static getAll(): ClientTargetEnvironment[] {
-    return ClientTargetEnvironment.registry
-  }
+export class ClientTargetEnvironment extends TargetEnvironment<TMetisClientComponents> {
+  protected constructor(
+    _id: string,
+    name: string,
+    description: string,
+    version: string,
+    targetData: TTargetJson[],
+  ) {
+    super(_id, name, description, version)
 
-  /**
-   * Grabs a target environment from the registry by its ID.
-   * @param id The ID of the target environment to grab.
-   * @returns A target environment with the provided ID.
-   */
-  public static get(id: string): ClientTargetEnvironment | undefined {
-    return ClientTargetEnvironment.registry.find(
-      (targetEnvironment) => targetEnvironment._id === id,
+    this.targets = targetData.map((target) =>
+      ClientTarget.fromJson(target, this),
     )
   }
 
   // Implemented
-  protected parseTargets(data: TCommonTargetJson[]): ClientTarget[] {
-    return data.map((datum: TCommonTargetJson) => {
-      return new ClientTarget(this, datum)
-    })
+  public register(): ClientTargetEnvironment {
+    ClientTargetEnvironment.REGISTRY.register(this)
+    return this
   }
 
   /**
@@ -49,43 +39,60 @@ export class ClientTargetEnvironment extends TargetEnvironment<TClientMissionTyp
   public static readonly API_ENDPOINT: string = '/api/v1/target-environments'
 
   /**
-   * Loads all target environments via the API.
-   * @param user The user to load the target environments for.
+   * A registry of all target environments installed
+   * on the server and provided to the client.
+   */
+  public static readonly REGISTRY: TargetEnvRegistry<TMetisClientComponents> =
+    new TargetEnvRegistry()
+
+  /**
+   * @returns A new {@link ClientTargetEnvironment} instance
+   * with default values.
+   */
+  public static createBlank(): ClientTargetEnvironment {
+    return new ClientTargetEnvironment(
+      ClientTargetEnvironment.DEFAULT_PROPERTIES._id,
+      ClientTargetEnvironment.DEFAULT_PROPERTIES.name,
+      ClientTargetEnvironment.DEFAULT_PROPERTIES.description,
+      ClientTargetEnvironment.DEFAULT_PROPERTIES.version,
+      ClientTargetEnvironment.DEFAULT_PROPERTIES.targets,
+    )
+  }
+
+  /**
+   * @param json The JSON representation of the target environment.
+   * @returns A new {@link ClientTargetEnvironment} instance created
+   * from the JSON.
+   */
+  public static fromJson(json: TTargetEnvJson): ClientTargetEnvironment {
+    return new ClientTargetEnvironment(
+      json._id,
+      json.name,
+      json.description,
+      json.version,
+      json.targets,
+    )
+  }
+
+  /**
+   * Populates the registry with the target environments
+   * found on the server.
    * @resolves If the target environments are successfully loaded.
    * @rejects If there is an error loading the target environments.
+   * @note The registry will be cleared before population.
    */
-  public static $loadAll(user: ClientUser): Promise<void> {
+  public static $populateRegistry(): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
       try {
-        // Add the target environments to the registry if the user is authorized.
-        if (
-          user.isAuthorized('environments_read') &&
-          ClientTargetEnvironment.registry.length === 0
-        ) {
-          // Fetch the target environments from the API.
-          let response = await axios.get<TCommonTargetEnvJson[]>(
-            `${ClientTargetEnvironment.API_ENDPOINT}`,
-          )
-          // Parse the response data.
-          let data = response.data
-          // Create an array of ClientTargetEnvironment Objects.
-          let targetEnvironments = data.map(
-            (datum) => new ClientTargetEnvironment(datum),
-          )
-          // Add the target environments to the registry.
-          ClientTargetEnvironment.registry = targetEnvironments
-          // Resolve the promise.
-          resolve()
-        }
-        // Otherwise, clear the registry if the user is not authorized.
-        else if (
-          !user.isAuthorized('environments_read') &&
-          ClientTargetEnvironment.registry.length > 0
-        ) {
-          ClientTargetEnvironment.registry = []
-          // Resolve the promise.
-          resolve()
-        }
+        // Wipe the registry.
+        ClientTargetEnvironment.REGISTRY.clear()
+
+        // Fetch the target environments from the API.
+        let { data } = await axios.get<TTargetEnvJson[]>(
+          `${ClientTargetEnvironment.API_ENDPOINT}`,
+        )
+        // Create new target environments from the data.
+        data.map((datum) => ClientTargetEnvironment.fromJson(datum).register())
       } catch (error: any) {
         console.error('Failed to load target environments.')
         console.error(error)
@@ -93,11 +100,41 @@ export class ClientTargetEnvironment extends TargetEnvironment<TClientMissionTyp
       }
     })
   }
+
+  public static async $migrateEffectArgs(
+    effect: ClientEffect,
+  ): Promise<TMigrateEffectArgsResults> {
+    try {
+      const response = await axios.post<TMigrateEffectArgsResults>(
+        `${ClientTargetEnvironment.API_ENDPOINT}/migrate/effect-args`,
+        {
+          targetId: effect.targetId,
+          environmentId: effect.environmentId,
+          effectEnvVersion: effect.targetEnvironmentVersion,
+          effectArgs: effect.args,
+        },
+      )
+      return response.data
+    } catch (error: any) {
+      console.error('Failed to migrate effect args.')
+      console.error(error)
+      throw error
+    }
+  }
 }
 
-/* ------------------------------ CLIENT TARGET ENVIRONMENT TYPES ------------------------------ */
-
 /**
- * Options for creating a new ClientTargetEnvironment object.
+ * The results returned in the response of the
+ * {@link ClientTargetEnvironment.$migrateEffectArgs} method.
  */
-export type TClientTargetEnvOptions = TTargetEnvOptions & {}
+export interface TMigrateEffectArgsResults {
+  /**
+   * The version the args with which the effect
+   * args are now compatible.
+   */
+  resultingVersion: string
+  /**
+   * The resulting effect args after migration.
+   */
+  resultingArgs: AnyObject
+}

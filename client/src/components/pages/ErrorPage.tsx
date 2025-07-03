@@ -1,4 +1,4 @@
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import { useListComponent } from 'src/toolbox/hooks'
 import { TPage_P } from '.'
 import { TAppError } from '../App'

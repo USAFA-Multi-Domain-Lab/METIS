@@ -1,6 +1,7 @@
 import { expect } from 'chai'
 import { testLogger } from 'metis/server/logging'
 import ServerUser from 'metis/server/users'
+import StringToolbox from 'metis/toolbox/strings'
 import { correctUser, userCredentials, userWithNoPassword } from '../../data'
 import { agent } from '../../index.test'
 
@@ -15,7 +16,7 @@ export default function UserApiRoute(): Mocha.Suite {
       try {
         let login = await agent.get('/api/v1/logins/')
         let { user: userJson } = login.body
-        let user = new ServerUser(userJson)
+        let user = ServerUser.fromExistingJson(userJson)
         let hasCorrectPermissions: boolean = user.isAuthorized([
           'users_read_students',
           'users_write_students',
@@ -96,8 +97,12 @@ export default function UserApiRoute(): Mocha.Suite {
         expect(response).to.have.status(200)
         // Check if the user's first and last name have been updated.
         let { firstName, lastName } = response.body
-        expect(firstName).to.equal('updatedFirstName')
-        expect(lastName).to.equal('updatedLastName')
+        expect(firstName).to.equal(
+          StringToolbox.capitalize(correctUser.firstName),
+        )
+        expect(lastName).to.equal(
+          StringToolbox.capitalize(correctUser.lastName),
+        )
       } catch (error: any) {
         testLogger.error(error)
         throw error
@@ -151,6 +156,24 @@ export default function UserApiRoute(): Mocha.Suite {
 
         // Check if the response is successful.
         expect(response).to.have.status(200)
+      } catch (error: any) {
+        testLogger.error(error)
+        throw error
+      }
+    })
+
+    it(`Updating a user's password to a number should return a bad request (400) response`, async function () {
+      try {
+        let login = await agent.get('/api/v1/logins/')
+        let { user: currentUser } = login.body
+
+        let response = await agent.put('/api/v1/users/reset-password').send({
+          _id: currentUser._id,
+          password: 123456,
+          needsPasswordReset: false,
+        })
+
+        expect(response).to.have.status(400)
       } catch (error: any) {
         testLogger.error(error)
         throw error

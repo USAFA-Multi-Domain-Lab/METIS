@@ -51,7 +51,7 @@ const AVAILABLE_PERMISSIONS_RAW = [
 /* -- CLASSES -- */
 
 /**
- * Represents any permission that can be assigned to a user.
+ * Represents any permission that can be assigned to a member.
  */
 export default class MemberPermission implements TGenericMemberPermission {
   // Implemented
@@ -74,9 +74,9 @@ export default class MemberPermission implements TGenericMemberPermission {
   }
 
   /**
-   * Gets the user permission objects from the given permission IDs.
-   * @param permissionIds The permission IDs used to get the user permission objects.
-   * @returns An array of user permission objects.
+   * Gets the member permission objects from the given permission IDs.
+   * @param permissionIds The permission IDs used to get the member permission objects.
+   * @returns An array of member permission objects.
    */
   public static get(permissionIds: TMemberPermissionId[]): MemberPermission[] {
     return permissionIds.map(
@@ -86,23 +86,23 @@ export default class MemberPermission implements TGenericMemberPermission {
   }
 
   /**
-   * Checks whether the user has the given permissions.
-   * @param userPermissions The user's permissions.
+   * Checks whether the member has the given permissions.
+   * @param memberPermissions The member's permissions.
    * @param requiredPermissionIds The required permission ID(s).
-   * @returns Whether the user has the given permissions.
+   * @returns Whether the member has the given permissions.
    * @note A single permission ID can be passed in as a string, or multiple permission IDs can be passed in as an array of strings.
-   * @example // Check if the user has the 'createUser' permission:
-   * UserPermission.hasPermissions(userPermissions, 'createUser')
-   * @example // Check if the user has the 'createUser' and 'deleteUser' permissions:
-   * UserPermission.hasPermissions(userPermissions, ['createUser', 'deleteUser'])
+   * @example // Check if the member has the 'cheats' permission:
+   * MemberPermission.hasPermissions(memberPermissions, 'cheats')
+   * @example // Check if the member has the 'cheats' and 'manipulateNodes' permissions:
+   * MemberPermission.hasPermissions(memberPermissions, ['cheats', 'manipulateNodes'])
    */
   public static hasPermissions(
-    userPermissions: MemberPermission[],
+    memberPermissions: MemberPermission[],
     requiredPermissionIds: TMemberPermissionId | TMemberPermissionId[],
   ): boolean {
     // This will contain all of the required permissions
-    // that the user has.
-    let requiredPermissionsInUser: TMemberPermissionId[] = []
+    // that the member has.
+    let requiredPermissionsInMember: TMemberPermissionId[] = []
     let hasPermissions: true[] = []
 
     // If the required permission IDs is not an array,
@@ -111,23 +111,23 @@ export default class MemberPermission implements TGenericMemberPermission {
       requiredPermissionIds = [requiredPermissionIds]
     }
 
-    // Loop through the user's permissions to check if
-    // the user has all of the required permissions.
-    userPermissions.forEach((userPermission: MemberPermission) => {
-      // If the user has the required permission, then
-      // add it to the allRequiredPermissionsInUser array.
-      if (requiredPermissionIds.includes(userPermission._id)) {
-        requiredPermissionsInUser.push(userPermission._id)
+    // Loop through the member's permissions to check if
+    // the member has all of the required permissions.
+    memberPermissions.forEach((memberPermission: MemberPermission) => {
+      // If the member has the required permission, then
+      // add it to the allRequiredPermissionsInMember array.
+      if (requiredPermissionIds.includes(memberPermission._id)) {
+        requiredPermissionsInMember.push(memberPermission._id)
       }
     })
 
-    // If the required permissions that the user has
+    // If the required permissions that the member has
     // is not equal to the required permissions passed,
-    // then check if the user has any permissions that
+    // then check if the member has any permissions that
     // are higher up in the permission hierarchy.
-    if (requiredPermissionsInUser.length !== requiredPermissionIds.length) {
+    if (requiredPermissionsInMember.length !== requiredPermissionIds.length) {
       // Loop through the required permission IDs to check
-      // if the user has any permissions that are higher up
+      // if the member has any permissions that are higher up
       // in the permission hierarchy.
       requiredPermissionIds.forEach(
         (requiredPermissionId: TMemberPermissionId) => {
@@ -138,28 +138,28 @@ export default class MemberPermission implements TGenericMemberPermission {
           let idCursor: any = ''
 
           // Loop through the layers of the required permission
-          // ID to check if the user has any permissions that
+          // ID to check if the member has any permissions that
           // are higher up in the permission hierarchy.
           while (idLayers.length > 0) {
             // Add the next layer to the idCursor.
             idCursor += idLayers.shift()
 
-            // Check if the user has the permission with the
+            // Check if the member has the permission with the
             // current idCursor.
             let permissionId: MemberPermission | undefined =
-              userPermissions.find(
-                (userPermission: MemberPermission) =>
-                  userPermission._id === idCursor,
+              memberPermissions.find(
+                (memberPermission: MemberPermission) =>
+                  memberPermission._id === idCursor,
               )
-            let userHasPermission: boolean =
+            let memberHasPermission: boolean =
               permissionId !== undefined ? true : false
 
-            // If the cursor is a valid permission ID and the user
+            // If the cursor is a valid permission ID and the member
             // has the valid permission, then add true to the
             // hasPermissions array and break the loop.
             if (
               MemberPermission.isValidPermissionId(idCursor) &&
-              userHasPermission
+              memberHasPermission
             ) {
               hasPermissions.push(true)
               break
@@ -174,13 +174,13 @@ export default class MemberPermission implements TGenericMemberPermission {
       )
     }
 
-    // If the required permissions that the user has
+    // If the required permissions that the member has
     // is equal to the required permissions passed,
-    // or if the user has any permissions that are higher
-    // up in the permission hierarchy, then the user has
+    // or if the member has any permissions that are higher
+    // up in the permission hierarchy, then the member has
     // all of the required permissions and true is returned.
     return (
-      requiredPermissionsInUser.length === requiredPermissionIds.length ||
+      requiredPermissionsInMember.length === requiredPermissionIds.length ||
       hasPermissions.length === requiredPermissionIds.length
     )
   }
@@ -217,7 +217,7 @@ export default class MemberPermission implements TGenericMemberPermission {
 /* -- TYPES -- */
 
 /**
- * Generice type for a member permission.
+ * Generic type for a member permission.
  */
 export type TGenericMemberPermission = {
   /**
@@ -237,24 +237,22 @@ export type TGenericMemberPermission = {
 /**
  * Type for a valid ID for a member permission.
  */
-export type TMemberPermissionId =
-  (typeof AVAILABLE_PERMISSIONS_RAW)[number]['_id']
+type TMemberPermissionId = (typeof AVAILABLE_PERMISSIONS_RAW)[number]['_id']
 
 /**
  * Type for a valid name for a member permission.
  */
-export type TMemberPermissionName =
-  (typeof AVAILABLE_PERMISSIONS_RAW)[number]['name']
+type TMemberPermissionName = (typeof AVAILABLE_PERMISSIONS_RAW)[number]['name']
 
 /**
  * Type for a valid description for a member permission.
  */
-export type TMemberPermissionDescription =
+type TMemberPermissionDescription =
   (typeof AVAILABLE_PERMISSIONS_RAW)[number]['description']
 
 /**
  * Type for all valid member permissions available.
  */
-export type TMemberPermissions = {
+type TMemberPermissions = {
   [key in TMemberPermissionId]: MemberPermission
 }

@@ -11,7 +11,7 @@ export default function TargetEnvApiRoute(): Mocha.Suite {
     it('The user should have the correct permission(s) to use the API route for missions', async function () {
       try {
         let response = await agent.get('/api/v1/logins/')
-        let user = new ServerUser(response.body.user)
+        let user = ServerUser.fromExistingJson(response.body.user)
         let hasCorrectPermissions: boolean = user.isAuthorized([
           'environments_read',
         ])

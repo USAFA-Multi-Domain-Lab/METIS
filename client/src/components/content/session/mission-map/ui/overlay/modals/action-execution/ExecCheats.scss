@@ -1,17 +1,12 @@
 @import 'src/assets/styles/config.scss';
+@import 'src/components/content/form/index.scss';
 
 .ExecCheats {
+  @include form-container();
   margin: 0.5em 0;
 
   .Heading {
-    margin: 0 0 1.75em;
+    margin: 0 0 0.5em;
     font-size: 0.82em;
-  }
-
-  .DetailToggle {
-    margin: 1em 0;
-    border: unset;
-    width: unset;
-    padding: unset;
   }
 }

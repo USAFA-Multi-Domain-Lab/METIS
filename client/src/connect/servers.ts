@@ -1,6 +1,5 @@
 import { io, Socket } from 'socket.io-client'
 import SessionClient from 'src/sessions'
-import { TEventListenerTarget } from 'src/toolbox/hooks'
 import Logging from 'src/toolbox/logging'
 import { v4 as generateHash } from 'uuid'
 import {
@@ -19,13 +18,14 @@ import {
   TServerMethod,
 } from '../../../shared/connect/data'
 import { ServerEmittedError } from '../../../shared/connect/errors'
-import { SingleTypeObject } from '../../../shared/toolbox/objects'
+import { TListenerTarget } from '../../../shared/events'
+import { TSingleTypeObject } from '../../../shared/toolbox/objects'
 
 /**
  * METIS web-socket-based, server connection.
  */
 export default class ServerConnection
-  implements TEventListenerTarget<TServerMethod>
+  implements TListenerTarget<TServerMethod>
 {
   /**
    * The web socket connection itself.
@@ -79,7 +79,7 @@ export default class ServerConnection
    * A map of request IDs to response listeners. These listeners will be called
    * anytime an event is received from the server with the corresponding request ID.
    */
-  protected responseListeners: SingleTypeObject<
+  protected responseListeners: TSingleTypeObject<
     TServerResponseListener<TResponseMethod>
   > = {}
 
@@ -405,14 +405,21 @@ export default class ServerConnection
 
     // Log activity.
     if (typeof event === 'object' && event.method === 'error') {
-      Logging.error(event.message, Logging.CONTEXT_WS, [
-        method,
-        event.code.toString(),
-      ])
+      Logging.error(event.message, {
+        context: Logging.CONTEXT_WS,
+        properties: [method, event.code.toString()],
+      })
     } else if (method === 'error') {
-      Logging.error('', Logging.CONTEXT_WS, [method])
+      Logging.error('', {
+        context: Logging.CONTEXT_WS,
+        properties: [method],
+      })
     } else {
-      Logging.info('', Logging.CONTEXT_WS, [method])
+      Logging.info('', {
+        context: Logging.CONTEXT_WS,
+        properties: [method],
+        verboseAppendix: JSON.stringify(event),
+      })
     }
   }
 
@@ -539,7 +546,6 @@ export default class ServerConnection
       // to false.
       if (
         error.code === ServerEmittedError.CODE_DUPLICATE_CLIENT ||
-        error.code === ServerEmittedError.CODE_MESSAGE_RATE_LIMIT ||
         error.code === ServerEmittedError.CODE_SWITCHED_CLIENT ||
         error.code === ServerEmittedError.CODE_UNAUTHENTICATED
       ) {

@@ -2,13 +2,14 @@
 
 .EntryNavigation {
   display: grid;
-  grid-template-columns: 50px auto;
+  grid-template-columns: auto 1fr;
+  column-gap: 0.25em;
   align-items: center;
 
   .BackButton {
-    border: 2px solid $color-main;
+    border: 2px solid $color-primary-light;
     border-radius: 50%;
-    background-color: $background-alt1;
+    background-color: $color-accent-dark;
     text-align: center;
     width: 22px;
     height: 22px;
@@ -21,17 +22,17 @@
   .Path {
     margin: 0;
     font-size: 0.75em;
-    color: $color-error-alt;
     width: 97%;
     max-height: 50px;
     display: block;
     display: -webkit-box;
+    line-clamp: 3;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
     word-break: break-all;
-    color: $color-main;
+    color: $color-primary-light;
 
     .Label {
       display: inline;
@@ -41,11 +42,11 @@
       display: inline;
 
       .Position {
-        color: $color-pointer-mark;
+        color: $color-primary-light;
 
         .Text {
           font-style: italic;
-          color: $color-alt1;
+          color: $color-accent;
 
           &:hover {
             cursor: pointer;

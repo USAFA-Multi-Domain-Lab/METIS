@@ -8,53 +8,6 @@
   min-height: 100vh;
   margin: 0;
 
-  &.DropPending {
-    .FileDropBox {
-      opacity: 0.65;
-
-      .UploadIcon {
-        transform: scale(1);
-      }
-    }
-  }
-
-  &:not(.DropPending) {
-    .FileDropBox {
-      opacity: 0;
-
-      .UploadIcon {
-        transform: scale(0.65);
-      }
-    }
-  }
-
-  .FileDropBox {
-    display: grid;
-    pointer-events: none;
-    place-content: center;
-    box-sizing: border-box;
-    position: fixed;
-    z-index: $z-index-file-drop-box;
-    top: 0;
-    left: 0;
-    transition: opacity 175ms;
-    width: 100vw;
-    height: 100vh;
-    margin: 0;
-    padding: 0;
-    background: $color-accent;
-
-    .UploadIcon {
-      transition: transform 175ms;
-      width: 250px;
-      height: 250px;
-      background: url('/assets/images/icons/upload.svg');
-      background-size: contain;
-      background-position: center;
-      background-repeat: no-repeat;
-    }
-  }
-
   .Content {
     box-sizing: border-box;
     display: grid;
@@ -73,7 +26,7 @@
       max-width: 1050px;
     }
 
-    @media (max-width: 1000px) {
+    @media (max-width: 1050px) {
       justify-content: center;
       grid-template-columns: 1fr;
     }

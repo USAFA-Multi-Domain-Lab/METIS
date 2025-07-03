@@ -44,18 +44,18 @@ export default function ExecCheats({
       <div className='Heading'>Cheats:</div>
       <DetailToggle
         label='Zero Resource Cost:'
-        stateValue={zeroCost}
-        setState={setZeroCost}
+        value={zeroCost}
+        setValue={setZeroCost}
       />
       <DetailToggle
         label='Instantaneous Execution:'
-        stateValue={instantaneous}
-        setState={setInstantaneous}
+        value={instantaneous}
+        setValue={setInstantaneous}
       />
       <DetailToggle
         label='Guaranteed Success:'
-        stateValue={guaranteedSuccess}
-        setState={setGuaranteedSuccess}
+        value={guaranteedSuccess}
+        setValue={setGuaranteedSuccess}
       />
     </div>
   )

@@ -27,3 +27,68 @@
 @mixin uncentered-origin {
   transform: unset;
 }
+
+// Applies to all mission-node-like objects,
+// such as MissionNode and MissionPrototype.
+@mixin mission-node-like {
+  // Default color, overridden by the
+  // color of the node iteself in the
+  // mission.
+  border-color: $color-primary-light;
+  border-width: min(2px, 0.04em);
+  border-style: solid;
+  border-radius: 0.11em;
+  overflow: hidden;
+}
+
+// An animation to display a `MissionNode` being blocked.
+@mixin blocked-node {
+  $blocked-cursor: not-allowed;
+  $user-select: none;
+  // Initial and final opacity values for
+  // the transition to the blocked state.
+  $init-opacity: 1;
+  $final-opacity: 0.5;
+  // Initialize the linear gradient background
+  // image for the blocked state.
+  $init-grad-color: rgba($color-accent-light, 0);
+  $init-fill: transparent 0% calc(50% - 1px),
+    $init-grad-color calc(50% - 1px) calc(50% + 1px),
+    transparent calc(50% + 1px) 100%;
+  $init-linear-grad1: linear-gradient(to bottom right, $init-fill);
+  $init-linear-grad2: linear-gradient(to bottom left, $init-fill);
+  $init-background-image: $init-linear-grad1, $init-linear-grad2;
+  // Finalize the linear gradient background
+  // image for the blocked state.
+  $final-grad-color: rgba($color-accent-light, $final-opacity);
+  $final-fill: transparent 0% calc(50% - 1px),
+    $final-grad-color calc(50% - 1px) calc(50% + 1px),
+    transparent calc(50% + 1px) 100%;
+  $final-linear-grad1: linear-gradient(to bottom right, $final-fill);
+  $final-linear-grad2: linear-gradient(to bottom left, $final-fill);
+  $final-background-image: $final-linear-grad1, $final-linear-grad2;
+
+  // Define the blocked animation
+  @keyframes blocked {
+    0% {
+      background-image: $init-background-image;
+      opacity: $init-opacity;
+      user-select: $user-select;
+      cursor: $blocked-cursor;
+    }
+    100% {
+      background-image: $final-background-image;
+      opacity: $final-opacity;
+      user-select: $user-select;
+      cursor: $blocked-cursor;
+    }
+  }
+
+  // Initial styles for the blocked state
+  opacity: $init-opacity;
+  user-select: $user-select;
+  cursor: $blocked-cursor;
+
+  // Transition to the blocked state
+  animation: blocked 1s ease-in-out forwards;
+}

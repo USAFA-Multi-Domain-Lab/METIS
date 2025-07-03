@@ -1,22 +1,21 @@
-import { TClientMissionTypes } from 'src/missions'
+import { TMetisClientComponents } from 'src'
+import ClientMissionForce from 'src/missions/forces'
 import ClientUser from 'src/users'
 import SessionClient from '.'
-import { TCommonMissionForce } from '../../../shared/missions/forces'
 import SessionMember from '../../../shared/sessions/members'
 import MemberRole, {
   TMemberRoleId,
 } from '../../../shared/sessions/members/roles'
-import { TCommonUser } from '../../../shared/users'
 
 /**
  * Client-side representation of a session member.
  */
-export default class ClientSessionMember extends SessionMember<TClientMissionTypes> {
+export default class ClientSessionMember extends SessionMember<TMetisClientComponents> {
   public constructor(
-    _id: TCommonUser['_id'],
+    _id: SessionMember['_id'],
     user: ClientUser,
     role: MemberRole | TMemberRoleId,
-    forceId: TCommonMissionForce['_id'] | null,
+    forceId: ClientMissionForce['_id'] | null,
     session: SessionClient,
   ) {
     if (typeof role === 'string') role = MemberRole.get(role)

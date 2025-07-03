@@ -12,9 +12,7 @@ export default function SessionMembersPanel({
 
   return (
     <div className='SessionMembersPanel'>
-      <div className='BorderBox'>
-        <SessionMembers session={session} />
-      </div>
+      <SessionMembers session={session} />
     </div>
   )
 }

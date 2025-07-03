@@ -2,18 +2,19 @@ import {
   TActionExecutionJson,
   TExecutionCheats,
 } from 'metis/missions/actions/executions'
-import { TActionOutcomeJson } from 'metis/missions/actions/outcomes'
-import { TCommonMissionForceJson } from 'metis/missions/forces'
-import { TCommonOutputJson } from 'metis/missions/forces/output'
-import { TCommonMissionPrototypeJson } from 'metis/missions/nodes/prototypes'
+import { TExecutionOutcomeJson } from 'metis/missions/actions/outcomes'
+import { TMissionFileJson } from 'metis/missions/files'
+import { TMissionForceSaveJson } from 'metis/missions/forces'
+import { TOutputJson } from 'metis/missions/forces/output'
+import { TMissionPrototypeJson } from 'metis/missions/nodes/prototypes'
 import { TSessionConfig, TSessionJson } from 'metis/sessions'
-import SessionMember, {
-  TCommonSessionMember,
-  TSessionMemberJson,
-} from 'metis/sessions/members'
+import SessionMember, { TSessionMemberJson } from 'metis/sessions/members'
 import MemberRole from 'metis/sessions/members/roles'
 import { AnyObject } from 'metis/toolbox/objects'
-import { TCommonMissionNodeJson } from '../missions/nodes'
+import { MetisComponent } from '..'
+import { TMissionNodeJson } from '../missions/nodes'
+
+/* -- TYPES -- */
 
 /**
  * Represents the status of a server connection.
@@ -120,16 +121,31 @@ export type TServerMethod = keyof TServerEvents
 export type TServerEvent = TServerEvents[TServerMethod]
 
 /**
+ * Used to identify the data structure.
+ * @option `"node-update-block":` The data needed to block or unblock a node.
+ * @option `"node-open":` The data needed to open a node and reveal its descendants.
+ * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
+ * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
+ * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
+ * @option `"force-resource-pool":` The data needed to modify the resource pool of a force.
+ * @option `"file-update-access":` The data needed to modify the access of a file for a force.
+ */
+type TModifierDataKey =
+  | 'node-update-block'
+  | 'node-open'
+  | 'node-action-success-chance'
+  | 'node-action-process-time'
+  | 'node-action-resource-cost'
+  | 'force-resource-pool'
+  | 'file-update-access'
+
+/**
  * The data necessary to apply a modifier to an object in METIS.
  */
 type TModifierData = [
   {
     /**
-     * Used to identify the data structure.
-     * @option `"node-block":` The data needed to block or unblock a node.
-     * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
-     * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
-     * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
+     * @see {@link TModifierDataKey}
      */
     key: 'node-update-block'
     /**
@@ -143,64 +159,136 @@ type TModifierData = [
   },
   {
     /**
-     * Used to identify the data structure.
-     * @option `"node-block":` The data needed to block or unblock a node.
-     * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
-     * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
-     * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
+     * @see {@link TModifierDataKey}
+     */
+    key: 'node-open'
+  } & TOpenNodeData,
+  {
+    /**
+     * @see {@link TModifierDataKey}
      */
     key: 'node-action-success-chance'
-    /**
-     * The ID of the node to modify.
-     */
-    nodeId: string
     /**
      * The operand used to modify the chance of succes for all the node's actions.
      */
     successChanceOperand: number
-  },
-  {
-    /**
-     * Used to identify the data structure.
-     * @option `"node-block":` The data needed to block or unblock a node.
-     * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
-     * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
-     * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
-     */
-    key: 'node-action-process-time'
     /**
      * The ID of the node to modify.
      */
     nodeId: string
+    /**
+     * The ID of the action to modify.
+     * @note If not provided, all actions will be modified.
+     */
+    actionId?: string
+  },
+  {
+    /**
+     * @see {@link TModifierDataKey}
+     */
+    key: 'node-action-process-time'
     /**
      * The operand used to modify the process time for all the node's actions.
      */
     processTimeOperand: number
-  },
-  {
-    /**
-     * Used to identify the data structure.
-     * @option `"node-block":` The data needed to block or unblock a node.
-     * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
-     * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
-     * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
-     */
-    key: 'node-action-resource-cost'
     /**
      * The ID of the node to modify.
      */
     nodeId: string
     /**
+     * The ID of the action to modify.
+     * @note If not provided, all actions will be modified.
+     */
+    actionId?: string
+  },
+  {
+    /**
+     * @see {@link TModifierDataKey}
+     */
+    key: 'node-action-resource-cost'
+    /**
      * The operand used to modify the resource cost for all the node's actions.
      */
     resourceCostOperand: number
+    /**
+     * The ID of the node to modify.
+     */
+    nodeId: string
+    /**
+     * The ID of the action to modify.
+     * @note If not provided, all actions will be modified.
+     */
+    actionId?: string
+  },
+  {
+    /**
+     * @see {@link TModifierDataKey}
+     */
+    key: 'force-resource-pool'
+    /**
+     * The ID of the force to modify.
+     */
+    forceId: string
+    /**
+     * The operand used to modify the resource pool of the force.
+     */
+    operand: number
+  },
+  {
+    /**
+     * @see {@link TModifierDataKey}
+     */
+    key: 'file-update-access'
+    /**
+     * The ID of the force to modify.
+     */
+    forceId: string
+    /**
+     * The ID of the file to modify.
+     */
+    fileId: string
+    /**
+     * The access to grant or revoke.
+     */
+    granted: true
+    /**
+     * The data for the file now accessible to
+     * the force.
+     */
+    fileData: TMissionFileJson
+  },
+  {
+    /**
+     * @see {@link TModifierDataKey}
+     */
+    key: 'file-update-access'
+    /**
+     * The ID of the force to modify.
+     */
+    forceId: string
+    /**
+     * The ID of the file to modify.
+     */
+    fileId: string
+    /**
+     * The access to grant or revoke.
+     */
+    granted: false
   },
 ]
 
 /**
+ * Modifier data for granting/revoking access to a file.
+ */
+export type TFileAccessModifierData = Extract<
+  TModifierData[number],
+  { key: 'file-update-access' }
+>
+
+/**
  * The data needed to apply a modifier to an object in METIS.
  */
-type TModifierDatum = TModifierData[number]
+type TModifierDatum = Extract<TModifierData[number], { key: TModifierDataKey }>
 
 /**
  * The data necessary to send a message to the output panel.
@@ -222,7 +310,29 @@ type TOutputData = [
 /**
  * The data needed to send a message to the output panel.
  */
-type TOutputDatum = TOutputData[number]
+export type TOutputDatum = TOutputData[number]
+
+/**
+ * The data needed to open a node and reveal its descendants.
+ */
+export type TOpenNodeData = {
+  /**
+   * The ID of the node to modify.
+   */
+  nodeId: string
+  /**
+   * The structure of the nodes that were revealed as a result of opening the node.
+   */
+  structure: AnyObject
+  /**
+   * The nodes that were revealed as a result of opening the node.
+   */
+  revealedDescendants: TMissionNodeJson[]
+  /**
+   * The prototypes of the nodes that were revealed as a result of opening the node.
+   */
+  revealedDescendantPrototypes: TMissionPrototypeJson[]
+}
 
 /**
  * General WS events emitted by the server, or caused due to a change in the connection with the server.
@@ -313,9 +423,13 @@ export type TGenericServerEvents = {
       /**
        * The message to send to the force's output panel.
        */
-      outputData: TCommonOutputJson
+      outputData: TOutputJson
     }
   >
+  /**
+   * Occurs when the client needs to be logged out due to the user account being updated.
+   */
+  'logout-user-update': TConnectEvent<'logout-user-update', {}>
   /**
    * Occurs when the server intentionally emits an error to client.
    */
@@ -356,11 +470,15 @@ export type TResponseEvents = {
       /**
        * The force(s) the client has access to.
        */
-      forces: TCommonMissionForceJson[]
+      forces: TMissionForceSaveJson[]
       /**
        * The prototype data used to create the mission's structure of nodes.
        */
-      prototypes: TCommonMissionPrototypeJson[]
+      prototypes: TMissionPrototypeJson[]
+      /**
+       * The file(s) that the client has access to.
+       */
+      files: TMissionFileJson[]
     },
     TClientEvents['request-start-session']
   >
@@ -371,6 +489,31 @@ export type TResponseEvents = {
     'session-ended',
     {},
     TClientEvents['request-end-session']
+  >
+  /**
+   * Occurs when the session has been reset.
+   */
+  'session-reset': TResponseEvent<
+    'session-reset',
+    {
+      /**
+       * The node structure available to the client.
+       */
+      structure: AnyObject
+      /**
+       * The force(s) the client has access to.
+       */
+      forces: TMissionForceSaveJson[]
+      /**
+       * The prototype data used to create the mission's structure of nodes.
+       */
+      prototypes: TMissionPrototypeJson[]
+      /**
+       * The file(s) that the client has access to.
+       */
+      files: TMissionFileJson[]
+    },
+    TClientEvents['request-reset-session']
   >
   /**
    * Occurs when configuration of the session is updated.
@@ -467,20 +610,7 @@ export type TResponseEvents = {
    */
   'node-opened': TResponseEvent<
     'node-opened',
-    {
-      /**
-       * The node that was opened.
-       */
-      nodeId: string
-      /**
-       * The nodes that were revealed as a result of opening the node.
-       */
-      revealedChildNodes: TCommonMissionNodeJson[]
-      /**
-       * The prototypes of the nodes that were revealed as a result of opening the node.
-       */
-      revealedChildPrototypes: TCommonMissionPrototypeJson[]
-    },
+    TOpenNodeData,
     TClientEvents['request-open-node']
   >
   /**
@@ -492,7 +622,7 @@ export type TResponseEvents = {
       /**
        * The action that was executed.
        */
-      execution: NonNullable<TActionExecutionJson>
+      execution: TActionExecutionJson
       /**
        * The resource remaining for the force after the
        * action's execution cost was deducted.
@@ -510,16 +640,8 @@ export type TResponseEvents = {
       /**
        * The outcome of the action being executed.
        */
-      outcome: TActionOutcomeJson
-      /**
-       * The nodes that were revealed as a result of executing the action.
-       */
-      revealedChildNodes?: TCommonMissionNodeJson[]
-      /**
-       * The prototypes of the nodes that were revealed as a result of executing the action.
-       */
-      revealedChildPrototypes?: TCommonMissionPrototypeJson[]
-    },
+      outcome: TExecutionOutcomeJson
+    } & Partial<TOpenNodeData>,
     TClientEvents['request-execute-action']
   >
   /**
@@ -542,9 +664,9 @@ export type TResponseEvents = {
        */
       session: TSessionJson | null
       /**
-       * The ID of the member associated with the session.
+       * The ID of the member associated with the session client.
        */
-      memberId: TCommonSessionMember['_id'] | null
+      memberId: MetisComponent['_id']
     },
     TClientEvents['request-current-session']
   >
@@ -561,7 +683,7 @@ export type TResponseEvents = {
       /**
        * The ID of the member in the session.
        */
-      memberId: TCommonSessionMember['_id']
+      memberId: MetisComponent['_id']
     },
     TClientEvents['request-join-session']
   >
@@ -622,6 +744,11 @@ export type TRequestEvents = {
    * session.
    */
   'request-end-session': TRequestEvent<'request-end-session'>
+  /**
+   * Occurs when the client requests to reset the joined
+   * session.
+   */
+  'request-reset-session': TRequestEvent<'request-reset-session'>
   /**
    * Occurs when the client requests to update the configuration
    * of the joined session.

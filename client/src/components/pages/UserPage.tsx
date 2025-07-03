@@ -1,19 +1,57 @@
 import { AxiosError } from 'axios'
-import { useState } from 'react'
-import { useGlobalContext, useNavigationMiddleware } from 'src/context'
+import React, { useContext, useRef, useState } from 'react'
+import { useBeforeunload } from 'react-beforeunload'
+import { useGlobalContext, useNavigationMiddleware } from 'src/context/global'
 import { compute } from 'src/toolbox'
-import { useMountHandler, useRequireLogin } from 'src/toolbox/hooks'
+import {
+  useEventListener,
+  useMountHandler,
+  useRequireLogin,
+} from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
-import { DefaultLayout, TPage_P } from '.'
-import CreateUserEntry from '../content/edit-user/CreateUserEntry'
-import EditUserEntry from '../content/edit-user/EditUserEntry'
-import { HomeLink, TNavigation } from '../content/general-layout/Navigation'
+import { DefaultPageLayout, TPage_P } from '.'
+import StringToolbox from '../../../../shared/toolbox/strings'
+import UserEntry from '../content/edit-user/UserEntry'
+import {
+  HomeButton,
+  LogoutButton,
+  TNavigation_P,
+} from '../content/general-layout/Navigation'
+import {
+  ButtonText,
+  TButtonTextDisabled,
+} from '../content/user-controls/buttons/ButtonText'
+import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
+import If from '../content/util/If'
 import './UserPage.scss'
 
 /**
- * Renders a page for creating or editing a user.
+ * Context for the user page, which will help distribute
+ * user page properties to its children.
  */
-export default function UserPage({ userId }: IUserPage): JSX.Element | null {
+const UserPageContext = React.createContext<TUserPageContextData | null>(null)
+
+/**
+ * Hook used by UserPage-related components to access
+ * the user-page context.
+ */
+export const useUserPageContext = () => {
+  const context = useContext(UserPageContext) as TUserPageContextData | null
+  if (!context) {
+    throw new Error(
+      'useUserPageContext must be used within an user-page provider',
+    )
+  }
+  return context
+}
+
+/**
+ * Renders a page for managing users.
+ */
+export default function (props: TUserPage_P): JSX.Element | null {
+  const Provider =
+    UserPageContext.Provider as React.Provider<TUserPageContextData>
+
   /* -- GLOBAL CONTEXT -- */
   const globalContext = useGlobalContext()
   const {
@@ -23,31 +61,46 @@ export default function UserPage({ userId }: IUserPage): JSX.Element | null {
     notify,
     prompt,
     navigateTo,
-    logout,
   } = globalContext.actions
+  const { isAuthorized } = useRequireLogin()
 
-  /* -- COMPONENT STATE -- */
+  /* -- STATE -- */
 
-  const [existsInDatabase, setExistsInDatabase] = useState<boolean>(false)
+  const root = useRef<HTMLDivElement>(null)
+  const state: TUserPage_S = {
+    existsInDatabase: useState<boolean>(props.userId !== null),
+    userEmptyStringArray: useState<string[]>([]),
+    usernameAlreadyExists: useState<boolean>(false),
+    updatePassword: useState<boolean>(false),
+    areUnsavedChanges: useState<boolean>(false),
+  }
+  const [existsInDatabase, setExistsInDatabase] = state.existsInDatabase
   const [user, setUser] = useState<ClientUser>(
-    new ClientUser({}, { passwordIsRequired: true }),
+    ClientUser.createNew({ passwordIsRequired: true }),
   )
-  const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(false)
-  const [userEmptyStringArray, setUserEmptyStringArray] = useState<string[]>([])
-  const [usernameAlreadyExists, setUsernameAlreadyExists] =
-    useState<boolean>(false)
+  const [areUnsavedChanges, setAreUnsavedChanges] = state.areUnsavedChanges
+  const [userEmptyStringArray] = state.userEmptyStringArray
+  const [updatePassword] = state.updatePassword
+  const [, setUsernameAlreadyExists] = state.usernameAlreadyExists
+  const [userEntryKey, setUserEntryKey] = useState<string>(
+    StringToolbox.generateRandomId(),
+  )
+  const navButtonEngine = useButtonSvgEngine({
+    elements: [
+      HomeButton(),
+      LogoutButton({ middleware: async () => await enforceSavePrompt() }),
+    ],
+  })
 
   /* -- EFFECTS -- */
 
   // componentDidMount
   const [mountHandled] = useMountHandler(async (done) => {
-    let existsInDatabase: boolean = userId !== null
-
     // Handle the editing of an existing user.
-    if (existsInDatabase && currentUser.isAuthorized('users_read_students')) {
+    if (existsInDatabase && isAuthorized('users_read_students')) {
       try {
         beginLoading('Loading user...')
-        setUser(await ClientUser.$fetchOne(userId as string))
+        setUser(await ClientUser.$fetchOne(props.userId!))
       } catch {
         handleError('Failed to load user.')
       }
@@ -55,166 +108,60 @@ export default function UserPage({ userId }: IUserPage): JSX.Element | null {
 
     // Finish loading.
     finishLoading()
-    // Update existsInDatabase state.
-    setExistsInDatabase(existsInDatabase)
     // Mark mount as handled.
     done()
+  })
+
+  // Guards against refreshing or navigating away
+  // with unsaved changes.
+  useBeforeunload((event) => {
+    if (areUnsavedChanges) {
+      event.preventDefault()
+    }
   })
 
   // Navigation middleware to protect from navigating
   // away with unsaved changes.
   useNavigationMiddleware(
-    async (to, next) => {
-      // If there are unsaved changes, prompt the user.
-      if (
-        areUnsavedChanges &&
-        currentUser.isAuthorized('users_write_students')
-      ) {
-        const { choice } = await prompt(
-          'You have unsaved changes. What do you want to do with them?',
-          ['Cancel', 'Save', 'Discard'],
-        )
+    (to, next) => enforceSavePrompt().then(next),
+    [areUnsavedChanges],
+  )
 
-        try {
-          // Abort if cancelled.
-          if (choice === 'Cancel') {
-            return
-          }
-          // Save if requested.
-          else if (choice === 'Save') {
-            beginLoading('Saving...')
-            await save()
-            finishLoading()
-          }
-        } catch (error) {
-          return handleError({
-            message: 'Failed to save mission.',
-            notifyMethod: 'bubble',
-          })
-        }
+  // Add an event listener to listen for cmd+s/ctrl+s
+  // key presses to save the user.
+  useEventListener(
+    document,
+    'keydown',
+    (event: KeyboardEvent) => {
+      if (event.key === 's' && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault()
+        save()
       }
-
-      // Call next.
-      next()
     },
     [areUnsavedChanges],
   )
 
-  /* -- LOGIN-SPECIFIC LOGIC -- */
-
-  // Require login for page.
-  const [login] = useRequireLogin()
-
-  // Grab the user currently logged in.
-  const { user: currentUser } = login
-
-  // Require mount to be handled for
-  // component to render.
-  if (!mountHandled) {
-    return null
-  }
-
   /* -- COMPUTED -- */
 
   /**
-   * Logout link for navigation.
+   * Config for the navigation on this page.
    */
-  const logoutLink = compute(() => ({
-    text: 'Log out',
-    onClick: async () => {
-      // If there are unsaved changes, prompt the user.
-      if (areUnsavedChanges) {
-        const { choice } = await prompt(
-          'You have unsaved changes. What do you want to do with them?',
-          ['Cancel', 'Save', 'Discard'],
-        )
+  const navigation = compute<TNavigation_P>(() => {
+    return { buttonEngine: navButtonEngine }
+  })
 
-        try {
-          // Abort if cancelled.
-          if (choice === 'Cancel') {
-            return
-          }
-          // Save if requested.
-          else if (choice === 'Save') {
-            beginLoading('Saving...')
-            await save()
-          }
-
-          await logout()
-        } catch (error) {
-          return handleError({
-            message: 'Failed to save mission.',
-            notifyMethod: 'bubble',
-          })
-        }
-      } else {
-        await logout()
-      }
-    },
-    key: 'logout',
-  }))
-
-  /**
-   * Props for navigation.
-   */
-  const navigation: TNavigation = compute(
-    (): TNavigation => ({
-      links: [HomeLink(globalContext), logoutLink],
-      boxShadow: 'alt-7',
-    }),
-  )
   /**
    * Determines if the user form has any fields
    * with empty strings.
    */
   const isEmptyString: boolean = compute(() => userEmptyStringArray.length > 0)
+
   /**
-   * The purpose of the user form.
+   * Whether the save button is disabled.
    */
-  const userFormPurpose: TUserFormPurpose = compute(() => {
-    // If the user does not exist in the database
-    // and the password is required, then the form
-    // is for creating a new user.
-    if (!existsInDatabase && user.passwordIsRequired) {
-      return 'Create'
-    }
-    // Or, if the user exists in the database
-    // and the password is not required, then
-    // the form is for updating an existing user.
-    else if (existsInDatabase && !user.passwordIsRequired) {
-      return 'Update'
-    }
-    // Otherwise, throw an error.
-    else {
-      throw new Error(
-        `Purpose for form page could not be determined.\nExists in database: "${existsInDatabase}"\nPassword is required: "${user.passwordIsRequired}"`,
-      )
-    }
-  })
-  /**
-   * This is used to gray out the save button if there are
-   * no unsaved changes or if there are empty strings or if
-   * the user does not have permission to save.
-   */
-  const grayOutSaveButton: boolean = compute(
-    () => !areUnsavedChanges || isEmptyString || !user.canSave,
+  const saveDisabled: TButtonTextDisabled = compute(() =>
+    !areUnsavedChanges || isEmptyString || !user.canSave ? 'full' : 'none',
   )
-  /**
-   * The class name for the save button.
-   */
-  const saveButtonClassName: string = compute(() => {
-    // Create a default list of class names.
-    let classList: string[] = ['Button']
-
-    // If the save button should be grayed out,
-    // add the 'Disabled' class name.
-    if (grayOutSaveButton) {
-      classList.push('Disabled')
-    }
-
-    // Return the class names as a single string.
-    return classList.join(' ')
-  })
 
   /* -- FUNCTIONS -- */
 
@@ -226,10 +173,7 @@ export default function UserPage({ userId }: IUserPage): JSX.Element | null {
       setAreUnsavedChanges(false)
       setUsernameAlreadyExists(false)
 
-      if (
-        !existsInDatabase &&
-        currentUser.isAuthorized('users_write_students')
-      ) {
+      if (!existsInDatabase && isAuthorized('users_write_students')) {
         try {
           beginLoading('Creating user...')
           await ClientUser.$create(user)
@@ -247,13 +191,16 @@ export default function UserPage({ userId }: IUserPage): JSX.Element | null {
           finishLoading()
           setAreUnsavedChanges(true)
         }
-      } else if (
-        existsInDatabase &&
-        currentUser.isAuthorized('users_write_students')
-      ) {
+      } else if (existsInDatabase && isAuthorized('users_write_students')) {
         try {
           beginLoading('Updating user...')
-          setUser(await ClientUser.$update(user))
+          setUser(
+            await ClientUser.$update(user, {
+              passwordIsRequired: updatePassword,
+            }),
+          )
+          // Reset the user entry key to force re-render.
+          setUserEntryKey(StringToolbox.generateRandomId())
           notify('User successfully saved.')
           finishLoading()
         } catch (error: any) {
@@ -271,63 +218,97 @@ export default function UserPage({ userId }: IUserPage): JSX.Element | null {
   }
 
   /**
-   * This is called when a change is made that would require saving.
+   * Ensures any unsaved changes are addressed before
+   * any further action is taken.
+   * @resolves If the user either saves or discards the changes.
+   * If the user cancels, the promise will never resolve.
+   * @example
+   * ```typescript
+   * const saveSensitiveOperation = async () => {
+   *   // Enforce the save prompt, only allowing
+   *   // this function to perform its operation
+   *   // once any unsaved changes, if there any,
+   *   // are addressed.
+   *   await enforceSavePrompt()
+   *
+   *   // Then, perform the sensitive operation.
+   *   // If the user cancels the save prompt, this
+   *   // code will never be reached.
+   *   // ...
+   * }
+   * ```
    */
-  const handleChange = (): void => {
-    setAreUnsavedChanges(true)
+  const enforceSavePrompt = async (): Promise<void> => {
+    return new Promise<void>(async (resolve, reject) => {
+      // If the user does not have write permissions
+      // and there are no unsaved changes, resolve immediately.
+      if (!isAuthorized('users_write_students') && areUnsavedChanges) {
+        return resolve()
+      }
+
+      // If there are unsaved changes, prompt the user.
+      if (areUnsavedChanges) {
+        const { choice } = await prompt(
+          'You have unsaved changes. What do you want to do with them?',
+          ['Cancel', 'Save', 'Discard'],
+        )
+
+        // If the user opted to save, then save
+        // the mission.
+        if (choice === 'Save') {
+          beginLoading('Saving...')
+          await save()
+          finishLoading()
+        }
+
+        // Then, unless the user cancelled, resolve.
+        if (choice !== 'Cancel') resolve()
+      } else {
+        resolve()
+      }
+    })
   }
 
   /**
-   * This will render the user entry form
-   * based on the user form purpose.
+   * This is called when a change is made that would require saving.
    */
-  const renderUserEntry = (): JSX.Element | null => {
-    if (userFormPurpose === 'Create') {
-      return (
-        <CreateUserEntry
-          user={user}
-          userEmptyStringArray={userEmptyStringArray}
-          usernameAlreadyExists={usernameAlreadyExists}
-          login={login}
-          setUserEmptyStringArray={setUserEmptyStringArray}
-          handleChange={handleChange}
-        />
-      )
-    } else if (userFormPurpose === 'Update') {
-      return (
-        <EditUserEntry
-          user={user}
-          usernameAlreadyExists={usernameAlreadyExists}
-          userEmptyStringArray={userEmptyStringArray}
-          setUserEmptyStringArray={setUserEmptyStringArray}
-          handleChange={handleChange}
-        />
-      )
-    } else {
-      return null
-    }
-  }
+  const handleChange = (): void => setAreUnsavedChanges(true)
 
   /* -- RENDER -- */
 
-  if (mountHandled && currentUser.isAuthorized('users_write_students')) {
-    return (
-      <div className='UserPage Page'>
-        <DefaultLayout navigation={navigation}>
-          <div className='Form'>
-            {renderUserEntry()}
-            <div className='ButtonContainer'>
-              <div className={saveButtonClassName} onClick={() => save()}>
-                Save
+  /**
+   * The value to provide to the context.
+   */
+  const contextValue: TUserPageContextData = {
+    root,
+    ...props,
+    state,
+  }
+
+  return (
+    <If condition={mountHandled && isAuthorized('users_read_students')}>
+      <Provider value={contextValue}>
+        <div className='UserPage Page' ref={root}>
+          <DefaultPageLayout navigation={navigation}>
+            <div className='Form'>
+              <UserEntry
+                user={user}
+                handleChange={handleChange}
+                key={userEntryKey}
+              />
+              <div className='Buttons'>
+                <ButtonText
+                  text={'Save'}
+                  disabled={saveDisabled}
+                  onClick={() => save()}
+                />
               </div>
             </div>
-          </div>
-        </DefaultLayout>
-      </div>
-    )
-  } else {
-    return null
-  }
+          </DefaultPageLayout>
+        </div>
+      </Provider>
+    </If>
+  )
 }
 
 /* ---------------------------- TYPES FOR USER PAGE ---------------------------- */
@@ -335,12 +316,50 @@ export default function UserPage({ userId }: IUserPage): JSX.Element | null {
 /**
  * Props for the UserPage component.
  */
-export interface IUserPage extends TPage_P {
+export interface TUserPage_P extends TPage_P {
   // If this is null, then a new user is being created.
   userId: string | null
 }
 
 /**
- * Types used to render the user form.
+ * The state for `UserPage`, provided
+ * in the context.
  */
-export type TUserFormPurpose = 'Create' | 'Update'
+export type TUserPage_S = {
+  /**
+   * Whether the user exists in the database.
+   */
+  existsInDatabase: TReactState<boolean>
+  /**
+   * An array of fields with empty strings.
+   */
+  userEmptyStringArray: TReactState<string[]>
+  /**
+   * Whether or not the username already exists.
+   */
+  usernameAlreadyExists: TReactState<boolean>
+  /**
+   * Whether or not the user's password is being updated.
+   */
+  updatePassword: TReactState<boolean>
+  /**
+   * Whether or not there are unsaved changes.
+   */
+  areUnsavedChanges: TReactState<boolean>
+}
+
+/**
+ * The user-page context data provided to all children
+ * of `UserPage`.
+ */
+export type TUserPageContextData = {
+  /**
+   * The ref for the root element of the user page.
+   */
+  root: React.RefObject<HTMLDivElement>
+} & Required<TUserPage_P> & {
+    /**
+     * The state for the user page.
+     */
+    state: TUserPage_S
+  }

@@ -10,17 +10,17 @@
   border-radius: 18px 18px 0 0;
   border: 2px solid white;
   padding: 10px 25px 8px;
-  background-color: $background-main;
+  background-color: $color-secondary;
 
   &.Inactive {
     display: none;
   }
 
   &.Red {
-    background-color: $color-error-alt3;
+    background-color: $color-failure-dark;
   }
 
   &.Green {
-    background-color: $color-correct-alt2;
+    background-color: $color-success-dark;
   }
 }

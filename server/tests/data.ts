@@ -1,6 +1,6 @@
 import StringToolbox from 'metis/toolbox/strings'
-import { TCommonMissionJson } from '../../shared/missions'
-import { TCommonUserJson } from '../../shared/users'
+import { TMissionJson } from '../../shared/missions'
+import { TUserJson } from '../../shared/users'
 import UserAccess from '../../shared/users/accesses'
 
 export const userCredentials = {
@@ -8,27 +8,34 @@ export const userCredentials = {
   password: 'temppass',
 }
 
-export const createMissionWithNoForceData: Omit<TCommonMissionJson, 'forces'> =
-  {
-    name: 'No Force Data Mission (To Delete)',
-    versionNumber: 1,
-    seed: StringToolbox.generateRandomId(),
-    structure: {
-      '4767fab5-573e-4df3-b1cd-809240804e92': {},
+export const createMissionWithNoForceData: Omit<TMissionJson, 'forces'> = {
+  name: 'No Force Data Mission (To Delete)',
+  versionNumber: 1,
+  seed: StringToolbox.generateRandomId(),
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  launchedAt: null,
+  resourceLabel: 'Resources',
+  structure: {
+    '4767fab5-573e-4df3-b1cd-809240804e92': {},
+  },
+  prototypes: [
+    {
+      _id: '41aea0c0-65f5-4008-a623-1ce41cb3008f',
+      structureKey: '4767fab5-573e-4df3-b1cd-809240804e92',
+      depthPadding: 0,
     },
-    prototypes: [
-      {
-        _id: '41aea0c0-65f5-4008-a623-1ce41cb3008f',
-        structureKey: '4767fab5-573e-4df3-b1cd-809240804e92',
-        depthPadding: 0,
-      },
-    ],
-  }
+  ],
+}
 
-export const testMission: TCommonMissionJson = {
+export const testMission: TMissionJson = {
   name: 'Test Mission (To Delete)',
   versionNumber: 1,
   seed: StringToolbox.generateRandomId(),
+  createdAt: null,
+  updatedAt: null,
+  launchedAt: null,
+  resourceLabel: 'Resources',
   structure: {
     '4767fab5-573e-4df3-b1cd-809240804e92': {},
   },
@@ -39,6 +46,7 @@ export const testMission: TCommonMissionJson = {
       name: 'Test Force',
       color: '#52b1ff',
       initialResources: 100,
+      revealAllNodes: false,
       nodes: [
         {
           _id: '211e5104-1c9d-487c-92b8-0a296f758d90',
@@ -57,6 +65,11 @@ export const testMission: TCommonMissionJson = {
               processTime: 5000,
               successChance: 0.5,
               resourceCost: 1,
+              opensNode: true,
+              processTimeHidden: false,
+              successChanceHidden: false,
+              resourceCostHidden: false,
+              opensNodeHidden: false,
               postExecutionSuccessText:
                 '<p>Enter your successful post-execution message here.</p>',
               postExecutionFailureText:
@@ -66,6 +79,7 @@ export const testMission: TCommonMissionJson = {
                   _id: '0c6eb646-061b-4598-b748-e54e49d1cba6',
                   name: 'New Effect',
                   description: '',
+                  trigger: 'success',
                   targetEnvironmentVersion: '0.1',
                   targetId: 'output',
                   args: {
@@ -91,10 +105,14 @@ export const testMission: TCommonMissionJson = {
   ],
 }
 
-export const updateMissionWithNoMissionId: TCommonMissionJson = {
+export const updateMissionWithNoMissionId: TMissionJson = {
   name: 'Updated No Force Data (To Delete)',
   versionNumber: 1,
   seed: StringToolbox.generateRandomId(),
+  createdAt: null,
+  updatedAt: null,
+  launchedAt: null,
+  resourceLabel: 'Resources',
   structure: {
     '4767fab5-573e-4df3-b1cd-809240804e92': {},
   },
@@ -105,6 +123,7 @@ export const updateMissionWithNoMissionId: TCommonMissionJson = {
       name: 'Test Force',
       color: '#52b1ff',
       initialResources: 100,
+      revealAllNodes: false,
       nodes: [
         {
           _id: '211e5104-1c9d-487c-92b8-0a296f758d90',
@@ -123,6 +142,11 @@ export const updateMissionWithNoMissionId: TCommonMissionJson = {
               processTime: 5000,
               successChance: 0.5,
               resourceCost: 1,
+              opensNode: true,
+              processTimeHidden: false,
+              successChanceHidden: false,
+              resourceCostHidden: false,
+              opensNodeHidden: false,
               postExecutionSuccessText:
                 '<p>Enter your successful post-execution message here.</p>',
               postExecutionFailureText:
@@ -132,6 +156,7 @@ export const updateMissionWithNoMissionId: TCommonMissionJson = {
                   _id: '0c6eb646-061b-4598-b748-e54e49d1cba6',
                   name: 'New Effect',
                   description: '',
+                  trigger: 'success',
                   targetEnvironmentVersion: '0.1',
                   targetId: 'output',
                   args: {
@@ -157,13 +182,14 @@ export const updateMissionWithNoMissionId: TCommonMissionJson = {
   ],
 }
 
-export const updateMissionWithNoStructure: Omit<
-  TCommonMissionJson,
-  'structure'
-> = {
+export const updateMissionWithNoStructure: Omit<TMissionJson, 'structure'> = {
   name: 'Update No Structure (To Delete)',
   versionNumber: 1,
   seed: StringToolbox.generateRandomId(),
+  createdAt: null,
+  updatedAt: null,
+  launchedAt: null,
+  resourceLabel: 'Resources',
   forces: [
     {
       _id: 'def3d81c-e8fd-470b-afb3-ba0a293bae73',
@@ -171,6 +197,7 @@ export const updateMissionWithNoStructure: Omit<
       name: 'Test Force',
       color: '#52b1ff',
       initialResources: 100,
+      revealAllNodes: false,
       nodes: [
         {
           _id: '211e5104-1c9d-487c-92b8-0a296f758d90',
@@ -189,6 +216,11 @@ export const updateMissionWithNoStructure: Omit<
               processTime: 5000,
               successChance: 0.5,
               resourceCost: 1,
+              opensNode: true,
+              processTimeHidden: false,
+              successChanceHidden: false,
+              resourceCostHidden: false,
+              opensNodeHidden: false,
               postExecutionSuccessText:
                 '<p>Enter your successful post-execution message here.</p>',
               postExecutionFailureText:
@@ -198,6 +230,7 @@ export const updateMissionWithNoStructure: Omit<
                   _id: '0c6eb646-061b-4598-b748-e54e49d1cba6',
                   name: 'New Effect',
                   description: '',
+                  trigger: 'success',
                   targetEnvironmentVersion: '0.1',
                   targetId: 'output',
                   args: {
@@ -223,27 +256,34 @@ export const updateMissionWithNoStructure: Omit<
   ],
 }
 
-export const updateMissionWithNoForceData: Omit<TCommonMissionJson, 'forces'> =
-  {
-    name: 'No Force Data Mission (To Delete)',
-    versionNumber: 1,
-    seed: StringToolbox.generateRandomId(),
-    structure: {
-      '4767fab5-573e-4df3-b1cd-809240804e92': {},
+export const updateMissionWithNoForceData: Omit<TMissionJson, 'forces'> = {
+  name: 'No Force Data Mission (To Delete)',
+  versionNumber: 1,
+  seed: StringToolbox.generateRandomId(),
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  launchedAt: null,
+  resourceLabel: 'Resources',
+  structure: {
+    '4767fab5-573e-4df3-b1cd-809240804e92': {},
+  },
+  prototypes: [
+    {
+      _id: '0d709d54-2f5e-44e3-b8ce-91534ce02f6f',
+      structureKey: '4767fab5-573e-4df3-b1cd-809240804e92',
+      depthPadding: 0,
     },
-    prototypes: [
-      {
-        _id: '0d709d54-2f5e-44e3-b8ce-91534ce02f6f',
-        structureKey: '4767fab5-573e-4df3-b1cd-809240804e92',
-        depthPadding: 0,
-      },
-    ],
-  }
+  ],
+}
 
-export const correctUpdateTestMission: TCommonMissionJson = {
+export const correctUpdateTestMission: TMissionJson = {
   name: 'Updated Test Mission (To Delete)',
   versionNumber: 1,
   seed: StringToolbox.generateRandomId(),
+  createdAt: null,
+  updatedAt: null,
+  launchedAt: null,
+  resourceLabel: 'Resources',
   structure: {
     '4767fab5-573e-4df3-b1cd-809240804e92': {},
   },
@@ -254,6 +294,7 @@ export const correctUpdateTestMission: TCommonMissionJson = {
       name: 'Test Force',
       color: '#52b1ff',
       initialResources: 100,
+      revealAllNodes: false,
       nodes: [
         {
           _id: '211e5104-1c9d-487c-92b8-0a296f758d90',
@@ -272,6 +313,11 @@ export const correctUpdateTestMission: TCommonMissionJson = {
               processTime: 5000,
               successChance: 0.5,
               resourceCost: 1,
+              opensNode: true,
+              processTimeHidden: false,
+              successChanceHidden: false,
+              resourceCostHidden: false,
+              opensNodeHidden: false,
               postExecutionSuccessText:
                 '<p>Enter your successful post-execution message here.</p>',
               postExecutionFailureText:
@@ -281,6 +327,7 @@ export const correctUpdateTestMission: TCommonMissionJson = {
                   _id: '0c6eb646-061b-4598-b748-e54e49d1cba6',
                   name: 'New Effect',
                   description: '',
+                  trigger: 'success',
                   targetEnvironmentVersion: '0.1',
                   targetId: 'output',
                   args: {
@@ -306,7 +353,7 @@ export const correctUpdateTestMission: TCommonMissionJson = {
   ],
 }
 
-export let correctUser: TCommonUserJson = {
+export let correctUser: TUserJson = {
   username: 'test23',
   accessId: UserAccess.AVAILABLE_ACCESSES.student._id,
   expressPermissionIds: [],
@@ -316,7 +363,7 @@ export let correctUser: TCommonUserJson = {
   password: 'password',
 }
 
-export let newCorrectUser: TCommonUserJson = {
+export let newCorrectUser: TUserJson = {
   username: 'test24',
   accessId: UserAccess.AVAILABLE_ACCESSES.student._id,
   expressPermissionIds: [],
@@ -326,7 +373,7 @@ export let newCorrectUser: TCommonUserJson = {
   password: 'password',
 }
 
-export const userWithNoPassword: TCommonUserJson = {
+export const userWithNoPassword: TUserJson = {
   username: 'test23',
   accessId: UserAccess.AVAILABLE_ACCESSES.student._id,
   expressPermissionIds: [],

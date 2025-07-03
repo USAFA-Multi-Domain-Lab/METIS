@@ -1,27 +1,29 @@
 import { useRef } from 'react'
 import Tooltip from 'src/components/content/communication/Tooltip'
+import {
+  TButtonMenuEngine_P,
+  useButtonMenuEngine,
+} from 'src/components/content/user-controls/buttons/ButtonMenu'
 import ButtonMenuController from 'src/components/content/user-controls/buttons/ButtonMenuController'
-import { TButtonSvgType } from 'src/components/content/user-controls/buttons/ButtonSvg'
 import { compute } from 'src/toolbox'
 import './index.scss'
-import { TTabBarTab } from './TabBar'
 
 /**
  * A tab that can be used on the tab bar to represent a view
  * on the mission map.
  */
 export default function Tab({
-  _id,
   text,
   color,
   selected,
   description = '',
-  menuOptions = [],
-  getOptionDescription = () => '',
-  onOptionClick = () => {},
+  engineProps = {},
   onClick = () => {},
 }: TTab_P): JSX.Element | null {
+  const buttonMenuEngine = useButtonMenuEngine(engineProps)
+
   /* -- REFS -- */
+
   const root = useRef<HTMLDivElement>(null)
 
   /* -- COMPUTED -- */
@@ -54,36 +56,6 @@ export default function Tab({
     return { color }
   })
 
-  /**
-   * The tab item for this tab.
-   */
-  const item: TTabBarTab = compute(() => ({
-    _id,
-    text,
-    color,
-    description,
-    tabItemOptions: menuOptions,
-    getOptionDescription,
-    onOptionClick,
-  }))
-
-  /* -- FUNCTIONS -- */
-
-  /**
-   * Handles a button click.
-   * @param button The button that was clicked.
-   * @returns The callback for the button.
-   */
-  const onButtonClick = (button: TButtonSvgType) => onOptionClick(button, item)
-
-  /**
-   * Gets the description for a button.
-   * @param button The button for which to get the description.
-   * @returns The description for the button.
-   */
-  const getButtonDescription = (button: TButtonSvgType) =>
-    getOptionDescription(button, item)
-
   /* -- RENDER -- */
 
   // Render root JSX.
@@ -95,10 +67,9 @@ export default function Tab({
       <div className='TextFade'></div>
       <ButtonMenuController
         target={root}
-        buttons={menuOptions}
+        engine={buttonMenuEngine}
         highlightTarget={root.current ?? undefined}
-        getDescription={getButtonDescription}
-        onButtonClick={onButtonClick}
+        trigger={'r-click'}
       />
       <Tooltip description={description} />
     </div>
@@ -112,7 +83,7 @@ export type TTab_P = {
   /**
    * A unique identifier for the tab.
    */
-  _id: string
+  _id: string // ! *** Note: DO NOT REMOVE. THIS IS USED EXTERNALLY ***
   /**
    * The text to display.
    */
@@ -126,36 +97,19 @@ export type TTab_P = {
    */
   color: string
   /**
-   * The tooltip description for the tab item.
-   */
-  description?: string
-  /**
-   * The options to display in the option menu for the tab item.
-   * @default []
-   * @note The option menu is displayed when the tab item is right-clicked.
-   */
-  menuOptions?: TButtonSvgType[]
-  /**
-   * Gets the description for an option button.
-   * @param button The button for which to get the description.
-   * @returns The description for the button, if null, the type
-   * will be used in its plain text form.
-   * @note If this function is not provided, the type will be
-   * used in its plain text form.
-   * @default () => ''
-   */
-  getOptionDescription?: (button: TButtonSvgType, item: TTabBarTab) => string
-  /**
-   * A callback for when a button in the option menu is clicked.
-   * @param button The button that was clicked.
-   * @default () => {}
-   */
-  onOptionClick?: (button: TButtonSvgType, item: TTabBarTab) => void
-  /**
    * Whether the tab is selected.
    * @default false
    */
   selected?: boolean
+  /**
+   * The button menu engine properties to use for the tab.
+   * @default {}
+   */
+  engineProps?: TButtonMenuEngine_P
+  /**
+   * The tooltip description for the tab item.
+   */
+  description?: string
   /**
    * Callback for when the tab is clicked.
    * @default () => {}

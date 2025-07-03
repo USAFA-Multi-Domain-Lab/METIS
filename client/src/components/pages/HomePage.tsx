@@ -1,6 +1,7 @@
 import { AxiosError } from 'axios'
 import { useRef, useState } from 'react'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
+import ClientFileReference from 'src/files/references'
 import ClientMission from 'src/missions'
 import Notification from 'src/notifications'
 import SessionClient from 'src/sessions'
@@ -12,19 +13,26 @@ import {
   useUnmountHandler,
 } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
-import { DefaultLayout } from '.'
+import { DefaultPageLayout } from '.'
+import { PromiseManager } from '../../../../shared/toolbox/promises'
 import Prompt from '../content/communication/Prompt'
-import MissionList from '../content/data/lists/options/MissionList'
-import SessionList from '../content/data/lists/options/SessionList'
-import UserList from '../content/data/lists/options/UserList'
-import { LogoutLink } from '../content/general-layout/Navigation'
+import FileReferenceList from '../content/data/lists/implementations/FileReferenceList'
+import MissionList from '../content/data/lists/implementations/missions/MissionList'
+import SessionList from '../content/data/lists/implementations/SessionList'
+import UserList from '../content/data/lists/implementations/UserList'
+import {
+  LogoutButton,
+  TNavigation_P,
+} from '../content/general-layout/Navigation'
+import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
+import Auth from '../content/util/Auth'
 import './HomePage.scss'
 
-/* -- constants -- */
+/* -- CONSTANTS -- */
 
 const SESSIONS_SYNC_RATE: number = 1000
 
-/* -- components -- */
+/* -- COMPONENTS -- */
 
 /**
  * This will render the home page.
@@ -35,48 +43,51 @@ const SESSIONS_SYNC_RATE: number = 1000
  * select from to edit if they have proper permissions.
  */
 export default function HomePage(): JSX.Element | null {
-  /* -- GLOBAL CONTEXT -- */
-  const globalContext = useGlobalContext()
-  const { beginLoading, finishLoading, handleError, notify, prompt } =
-    globalContext.actions
-
-  /* -- REFS -- */
-  const page = useRef<HTMLDivElement>(null)
-
   /* -- STATE -- */
+
+  const globalContext = useGlobalContext()
+  const { beginLoading, finishLoading, handleError, notify, prompt, logout } =
+    globalContext.actions
   const [sessions, setSessions] = useState<SessionBasic[]>([])
   const [missions, setMissions] = useState<ClientMission[]>([])
   const [users, setUsers] = useState<ClientUser[]>([])
+  const [fileReferences, setFileReferences] = useState<ClientFileReference[]>(
+    [],
+  )
+  const navButtonEngine = useButtonSvgEngine({
+    elements: [LogoutButton()],
+  })
 
   /* -- LOGIN-SPECIFIC LOGIC -- */
 
   // Require login for page.
-  const [login] = useRequireLogin()
+  const { login } = useRequireLogin()
 
   // Grab the user currently logged in.
-  let { user: currentUser } = login
+  const { user: currentUser } = login
+  const { authorize } = currentUser
 
   /* -- EFFECTS -- */
 
   // componentDidMount
   const [mountHandled] = useMountHandler(async (done) => {
     try {
-      if (currentUser.isAuthorized(['sessions_read', 'missions_read'])) {
-        await loadSessions()
-        await loadMissions()
-      }
+      let promiseManager = new PromiseManager([], { authUser: currentUser })
 
-      // The user currently logged in must
-      // have restricted access to view the
-      // users.
-      if (currentUser.isAuthorized('users_read_students')) {
-        await loadUsers()
-      }
+      // Initiate loading of any data that the
+      // current user is authorized to view.
+      promiseManager.authorize(['sessions_read'], loadSessions)
+      promiseManager.authorize(['missions_read'], loadMissions)
+      promiseManager.authorize(['users_read_students'], loadUsers)
+      promiseManager.authorize(['files_read'], loadFiles)
 
-      finishLoading()
+      // Wait for all data to be loaded.
+      await promiseManager.all()
 
-      // Begin syncing sessions.
-      setTimeout(() => syncSessions.current(), SESSIONS_SYNC_RATE)
+      // Begin syncing sessions, if authorized.
+      authorize('sessions_read', () =>
+        setTimeout(() => syncSessions.current(), SESSIONS_SYNC_RATE),
+      )
     } catch (error: any) {
       handleError('Failed to load data. Contact system administrator.')
     }
@@ -89,16 +100,6 @@ export default function HomePage(): JSX.Element | null {
   useUnmountHandler(() => {
     syncSessions.current = async () => {}
   })
-
-  /* -- COMPUTED -- */
-
-  /**
-   * Props for navigation.
-   */
-  const navigation = compute(() => ({
-    links: [LogoutLink(globalContext)],
-    logoLinksHome: false,
-  }))
 
   /* -- FUNCTIONS -- */
 
@@ -171,6 +172,28 @@ export default function HomePage(): JSX.Element | null {
   }
 
   /**
+   * This loads the files into the state for display and selection.
+   */
+  const loadFiles = (): Promise<void> => {
+    return new Promise<void>(async (resolve, reject) => {
+      try {
+        // Begin loading.
+        beginLoading('Retrieving files...')
+        // Fetch files from API and store
+        // them in the state.
+        setFileReferences(await ClientFileReference.$fetchAll())
+        // Finish loading and resolve.
+        finishLoading()
+        resolve()
+      } catch (error) {
+        handleError('Failed to retrieve files.')
+        finishLoading()
+        reject(error)
+      }
+    })
+  }
+
+  /**
    * Syncs the sessions periodically with the server.
    */
   const syncSessions = useRef(async () => {
@@ -183,7 +206,12 @@ export default function HomePage(): JSX.Element | null {
     setTimeout(() => syncSessions.current(), SESSIONS_SYNC_RATE)
   })
 
-  // This will import files as missions.
+  /**
+   * Imports the given files as missions.
+   * @param files The files to import.
+   * @resolves When the files have been processed
+   * and imported if valid.
+   */
   const importMissionFiles = async (files: FileList) => {
     let validFiles: Array<File> = []
     let successfulImportCount = 0
@@ -255,38 +283,33 @@ export default function HomePage(): JSX.Element | null {
         // Notifies of invalid files
         // rejected from being uploaded.
         if (invalidFileExtensionCount > 0) {
-          // notify(
-          //   `${invalidFileExtensionCount} of the files uploaded did not have the .metis extension and therefore ${
-          //     invalidFileExtensionCount === 1 ? 'was' : 'were'
-          //   } rejected.`,
-          // )
+          notify(
+            `${invalidFileExtensionCount} of the files uploaded did not have the .metis.zip extension and therefore ${
+              invalidFileExtensionCount === 1 ? 'was' : 'were'
+            } rejected.`,
+          )
         }
       }
 
-      // Reloads missions now that all files
+      // Reloads missions and files now that all files
       // have been processed.
-      loadMissions().then(loadMissionsCallback).catch(loadMissionsCallback)
+      loadMissions()
+        .then(loadFiles)
+        .then(loadMissionsCallback)
+        .catch(loadMissionsCallback)
     }
 
     // Switch to load screen.
     beginLoading(
-      '', //`Importing ${files.length} file${files.length === 1 ? '' : 's'}...`,
+      `Importing ${files.length} file${files.length === 1 ? '' : 's'}...`,
     )
 
-    // Iterates over files for upload.
+    // Iterates over files for upload, determining
+    // if they are valid or not.
     for (let file of files) {
-      if (file.name.toLowerCase().endsWith('.cesar')) {
-        // If a .cesar file, import it.
-        validFiles.push(file)
-      }
-      // If a .metis file, import it.
-      else if (file.name.toLowerCase().endsWith('.metis')) {
-        validFiles.push(file)
-      }
-      // Else, don't.
-      else {
-        invalidFileExtensionCount++
-      }
+      let regex = /^.*\.metis$|^.*\.cesar$|^.*\.metis.zip$/
+      if (regex.test(file.name.toLowerCase())) validFiles.push(file)
+      else invalidFileExtensionCount++
     }
 
     // Import the files.
@@ -301,47 +324,6 @@ export default function HomePage(): JSX.Element | null {
         serverErrorFailureCount += validFiles.length
         handleFileImportCompletion()
       }
-    }
-  }
-
-  // This is a file is dropped onto the page.
-  const handleFileDrop = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault()
-
-    let page_elm: HTMLDivElement | null = page.current
-
-    if (page_elm !== null) {
-      let files: FileList = event.dataTransfer.files
-
-      page_elm.classList.remove('DropPending')
-
-      if (files.length > 0 && currentUser.isAuthorized('missions_write')) {
-        importMissionFiles(files)
-      }
-    }
-  }
-
-  // This is called when a user drags over
-  // the page.
-  const handleFileDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault()
-
-    let page_elm: HTMLDivElement | null = page.current
-
-    if (page_elm !== null) {
-      page_elm.classList.add('DropPending')
-    }
-  }
-
-  // This is called when the user is
-  // no longer dragging over the page.
-  const handleFileDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault()
-
-    let page_elm: HTMLDivElement | null = page.current
-
-    if (page_elm !== null) {
-      page_elm.classList.remove('DropPending')
     }
   }
 
@@ -372,83 +354,74 @@ export default function HomePage(): JSX.Element | null {
     setUsers(users.filter(({ _id }) => _id !== user._id))
   }
 
+  /**
+   * Callback for when a file reference is successfully
+   * deleted.
+   * @param reference The reference that was deleted.
+   */
+  const onFileReferenceDeletion = (reference: ClientFileReference) => {
+    // Remove user from state.
+    setFileReferences(fileReferences.filter(({ _id }) => _id !== reference._id))
+  }
+
+  /* -- COMPUTED -- */
+
+  /**
+   * Config for the navigation on this page.
+   */
+  const navigation = compute<TNavigation_P>(() => {
+    return { buttonEngine: navButtonEngine, logoLinksHome: false }
+  })
+
   /* -- RENDER -- */
 
   // If the page has not yet mounted, there
   // is nothing to render yet.
   if (!mountHandled) return null
 
-  /**
-   * The file drop box for uploading mission files.
-   */
-  const fileDropBoxJsx = compute(() => (
-    <div
-      className={
-        currentUser.isAuthorized('missions_write') ? 'FileDropBox' : 'Hidden'
-      }
-    >
-      <div className='UploadIcon'></div>
-    </div>
-  ))
-
   const listsJsx = compute(() => {
-    let results: JSX.Element[] = []
-
-    // If the user is authorized to read sessions,
-    // then display the sessions list.
-    if (currentUser.isAuthorized('sessions_read')) {
-      results.push(
-        <SessionList
-          key={'sessions-list'}
-          sessions={sessions}
-          refresh={loadSessions}
-        />,
-      )
-    }
-
-    // If the user is authorized to read missions,
-    // then display the missions list.
-    if (currentUser.isAuthorized('missions_read')) {
-      results.push(
-        <MissionList
-          key={'missions-list'}
-          missions={missions}
-          onSuccessfulCopy={onMissionCopy}
-          onSuccessfulDeletion={onMissionDeletion}
-          importMissionFiles={importMissionFiles}
-        />,
-      )
-    }
-
-    // If the user is authorized to read and write,
-    // at the very least, students, then display the
-    // users list.
-    if (
-      currentUser.isAuthorized(['users_read_students', 'users_write_students'])
-    ) {
-      results.push(
-        <UserList
-          key={'users-list'}
-          users={users}
-          onSuccessfulDeletion={onUserDeletion}
-        />,
-      )
-    }
-
-    return results
+    return (
+      <>
+        <Auth permissions={['sessions_read']}>
+          <SessionList
+            key={'sessions-list'}
+            sessions={sessions}
+            refresh={loadSessions}
+          />
+        </Auth>
+        <Auth permissions={['missions_read']}>
+          <MissionList
+            key={'missions-list'}
+            name={'Missions'}
+            items={missions}
+            onFileDrop={importMissionFiles}
+            onSuccessfulCopy={onMissionCopy}
+            onSuccessfulDeletion={onMissionDeletion}
+          />
+        </Auth>
+        <Auth permissions={['users_read_students']}>
+          <UserList
+            key={'users-list'}
+            users={users}
+            onSuccessfulDeletion={onUserDeletion}
+          />
+        </Auth>
+        <Auth permissions={['files_read']}>
+          <FileReferenceList
+            key={'files-list'}
+            name={'Files'}
+            files={[fileReferences, setFileReferences]}
+            onSuccessfulDeletion={onFileReferenceDeletion}
+          />
+        </Auth>
+      </>
+    )
   })
 
   // Render root element.
   return (
-    <div
-      className='HomePage Page'
-      ref={page}
-      onDragOver={handleFileDragOver}
-      onDragLeave={handleFileDragLeave}
-      onDrop={handleFileDrop}
-    >
-      {fileDropBoxJsx}
-      <DefaultLayout navigation={navigation}>{listsJsx}</DefaultLayout>
+    <div className='HomePage Page'>
+      <DefaultPageLayout navigation={navigation}>{listsJsx}</DefaultPageLayout>
     </div>
   )
 }

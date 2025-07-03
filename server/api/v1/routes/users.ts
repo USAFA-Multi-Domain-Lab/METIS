@@ -45,12 +45,20 @@ const routerMap: TMetisRouterMap = (
   /* -- READ -- */
 
   // -- GET | /api/v1/users/ --
-  router.get('/', auth({ permissions: ['users_read_students'] }), getUsers)
+  router.get(
+    '/',
+    auth({ permissions: ['users_read_students'] }),
+    // todo: implement a way to ensure that only the proper
+    // todo: users are returned based on the user's permissions.
+    // restrictUserManagement,
+    getUsers,
+  )
 
   // -- GET | /api/v1/users/:_id/ --
   router.get(
     '/:_id/',
     auth({ permissions: ['users_read_students'] }),
+    restrictUserManagement,
     defineRequests({ params: { _id: 'objectId' } }),
     getUser,
   )
@@ -89,11 +97,7 @@ const routerMap: TMetisRouterMap = (
     auth({}),
     restrictPasswordReset,
     defineRequests({
-      body: {
-        _id: RequestBodyFilters.OBJECTID,
-        password: RequestBodyFilters.PASSWORD,
-        needsPasswordReset: RequestBodyFilters.BOOLEAN,
-      },
+      body: { password: RequestBodyFilters.PASSWORD },
     }),
     resetPassword,
   )

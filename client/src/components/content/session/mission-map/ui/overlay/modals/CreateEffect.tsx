@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import Tooltip from 'src/components/content/communication/Tooltip'
-import { DetailDropdown } from 'src/components/content/form/DetailDropdown'
+import { DetailDropdown } from 'src/components/content/form/dropdown/'
 import { ButtonText } from 'src/components/content/user-controls/buttons/ButtonText'
-import { useGlobalContext } from 'src/context'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
 import { ClientTargetEnvironment } from 'src/target-environments'
@@ -17,24 +16,22 @@ import './CreateEffect.scss'
 export default function CreateEffect({
   action,
   setIsNewEffect,
-  handleChange,
+  onChange,
 }: TCreateEffect_P): JSX.Element | null {
-  /* -- GLOBAL CONTEXT -- */
-  const { forceUpdate } = useGlobalContext().actions
-
   /* -- STATE -- */
-  const [effect] = useState<ClientEffect>(new ClientEffect(action))
+
   const [targetEnvironments] = useState<ClientTargetEnvironment[]>(
-    ClientTargetEnvironment.getAll(),
+    ClientTargetEnvironment.REGISTRY.getAll(),
   )
   const [targetEnv, setTargetEnv] = useState<ClientTargetEnvironment>(
-    new ClientTargetEnvironment(),
+    ClientTargetEnvironment.createBlank(),
   )
   const [target, setTarget] = useState<ClientTarget>(
-    new ClientTarget(new ClientTargetEnvironment()),
+    ClientTarget.createBlank(targetEnv),
   )
 
   /* -- COMPUTED -- */
+
   /**
    * The current mission.
    */
@@ -77,29 +74,25 @@ export default function CreateEffect({
 
   /* -- EFFECTS -- */
 
-  // Sync the component state with the effect.
-  usePostInitEffect(() => {
-    effect.target = target
-  }, [target])
-
   // Reset the target when the target environment changes.
   usePostInitEffect(() => {
-    setTarget(new ClientTarget(targetEnv))
+    setTarget(ClientTarget.createBlank(targetEnv))
   }, [targetEnv])
 
   /* -- FUNCTIONS -- */
+
   /**
    * Handles creating a new effect.
    */
   const createEffect = () => {
+    // Create a new effect.
+    let effect = ClientEffect.createBlankEffect(target, action)
     // Push the new effect to the action.
     action.effects.push(effect)
     // Select the new effect.
     mission.select(effect)
-    // Display the changes.
-    forceUpdate()
     // Allow the user to save the changes.
-    handleChange()
+    onChange(effect)
   }
 
   /**
@@ -128,29 +121,31 @@ export default function CreateEffect({
           fieldType='required'
           label='Target Environment'
           options={targetEnvironments}
-          stateValue={targetEnv}
-          setState={setTargetEnv}
+          value={targetEnv}
+          setValue={setTargetEnv}
           isExpanded={false}
           getKey={({ _id }) => _id}
           render={(targetEnv: ClientTargetEnvironment) => targetEnv.name}
           handleInvalidOption={{
             method: 'setToDefault',
-            defaultValue: new ClientTargetEnvironment(),
+            defaultValue: ClientTargetEnvironment.createBlank(),
           }}
         />
         <DetailDropdown<ClientTarget>
           fieldType='required'
           label='Target'
           options={targetEnv.targets}
-          stateValue={target}
-          setState={setTarget}
+          value={target}
+          setValue={setTarget}
           isExpanded={false}
           getKey={({ _id }) => _id}
           render={(target: ClientTarget) => target.name}
           uniqueClassName={targetClassName}
           handleInvalidOption={{
             method: 'setToDefault',
-            defaultValue: new ClientTarget(new ClientTargetEnvironment()),
+            defaultValue: ClientTarget.createBlank(
+              ClientTargetEnvironment.createBlank(),
+            ),
           }}
         />
 
@@ -183,6 +178,7 @@ export type TCreateEffect_P = {
   setIsNewEffect: TReactSetter<boolean>
   /**
    * Handles when a change is made that would require saving.
+   * @param effect The effect that was changed.
    */
-  handleChange: () => void
+  onChange: (effect: ClientEffect) => void
 }

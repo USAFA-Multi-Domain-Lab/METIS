@@ -5,13 +5,12 @@ import { TTargetArg } from '../../../../../../shared/target-environments/args'
 import './Arg.scss'
 import ArgBoolean from './ArgBoolean'
 import ArgDropdown from './ArgDropdown'
-import ArgForce from './ArgForce'
 import ArgLargeString from './ArgLargeString'
-import ArgNode from './ArgNode'
 import ArgNumber from './ArgNumber'
 import ArgString from './ArgString'
+import ArgMissionComponent from './mission-component'
 
-export default function Arg({
+export default function ({
   effect,
   arg,
   effectArgs,
@@ -50,115 +49,82 @@ export default function Arg({
 
   /* -- RENDER -- */
 
-  // If the argument type is "dropdown" then render
-  // the dropdown.
-  if (arg.type === 'dropdown' && allDependenciesMet) {
-    return (
-      <div className={`Arg Dropdown`}>
-        <ArgDropdown
+  // If all dependencies are not met, don't
+  // return anything.
+  if (!allDependenciesMet) return null
+
+  switch (arg.type) {
+    case 'dropdown':
+      return (
+        <div className={`Arg Dropdown`}>
+          <ArgDropdown
+            effect={effect}
+            arg={arg}
+            initialize={initializeArg}
+            effectArgs={effectArgs}
+            setEffectArgs={setEffectArgs}
+          />
+        </div>
+      )
+    case 'number':
+      return (
+        <div className={`Arg Number`}>
+          <ArgNumber
+            arg={arg}
+            initialize={initializeArg}
+            effectArgs={effectArgs}
+            setEffectArgs={setEffectArgs}
+          />
+        </div>
+      )
+    case 'string':
+      return (
+        <div className={`Arg String`}>
+          <ArgString
+            arg={arg}
+            initialize={initializeArg}
+            effectArgs={effectArgs}
+            setEffectArgs={setEffectArgs}
+          />
+        </div>
+      )
+    case 'large-string':
+      return (
+        <div className={`Arg LargeString`}>
+          <ArgLargeString
+            arg={arg}
+            initialize={initializeArg}
+            effectArgs={effectArgs}
+            setEffectArgs={setEffectArgs}
+          />
+        </div>
+      )
+    case 'boolean':
+      return (
+        <div className={`Arg Boolean`}>
+          <ArgBoolean
+            arg={arg}
+            initialize={initializeArg}
+            effectArgs={effectArgs}
+            setEffectArgs={setEffectArgs}
+          />
+        </div>
+      )
+    case 'force':
+    case 'node':
+    case 'action':
+    case 'file':
+      return (
+        <ArgMissionComponent
           effect={effect}
           arg={arg}
           initialize={initializeArg}
           effectArgs={effectArgs}
           setEffectArgs={setEffectArgs}
-          key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}`}
         />
-      </div>
-    )
-  }
-  // If the argument type is "number" then render
-  // the number input.
-  else if (arg.type === 'number' && allDependenciesMet) {
-    return (
-      <div className={`Arg Number`}>
-        <ArgNumber
-          arg={arg}
-          initialize={initializeArg}
-          effectArgs={effectArgs}
-          setEffectArgs={setEffectArgs}
-          key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}`}
-        />
-      </div>
-    )
-  }
-  // If the argument type is "string" then render
-  // the string input.
-  else if (arg.type === 'string' && allDependenciesMet) {
-    return (
-      <div className={`Arg String`}>
-        <ArgString
-          arg={arg}
-          initialize={initializeArg}
-          effectArgs={effectArgs}
-          setEffectArgs={setEffectArgs}
-          key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}`}
-        />
-      </div>
-    )
-  }
-  // If the argument type is "large-string" then render
-  // the large-string input.
-  else if (arg.type === 'large-string' && allDependenciesMet) {
-    return (
-      <div className={`Arg LargeString`}>
-        <ArgLargeString
-          arg={arg}
-          initialize={initializeArg}
-          effectArgs={effectArgs}
-          setEffectArgs={setEffectArgs}
-          key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}`}
-        />
-      </div>
-    )
-  }
-  // If the argument type is "boolean" then render
-  // the boolean toggle.
-  else if (arg.type === 'boolean' && allDependenciesMet) {
-    return (
-      <div className={`Arg Boolean`}>
-        <ArgBoolean
-          arg={arg}
-          initialize={initializeArg}
-          effectArgs={effectArgs}
-          setEffectArgs={setEffectArgs}
-          key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}`}
-        />
-      </div>
-    )
-  }
-  // If the argument type is "force" then render
-  // the force dropdown.
-  else if (arg.type === 'force' && allDependenciesMet) {
-    return (
-      <div className={`Arg Force`}>
-        <ArgForce
-          effect={effect}
-          arg={arg}
-          initialize={initializeArg}
-          effectArgs={effectArgs}
-          setEffectArgs={setEffectArgs}
-          key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}`}
-        />
-      </div>
-    )
-  }
-  // If the argument type is "node" then render
-  // dropdowns for forces and nodes.
-  else if (arg.type === 'node' && allDependenciesMet) {
-    return (
-      <div className={`Arg Node`}>
-        <ArgNode
-          effect={effect}
-          arg={arg}
-          initialize={initializeArg}
-          effectArgs={effectArgs}
-          setEffectArgs={setEffectArgs}
-          key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}`}
-        />
-      </div>
-    )
-  } else {
-    return null
+      )
+    default:
+      return null
   }
 }
 

@@ -56,7 +56,7 @@ export class RestApi extends Api {
 
       // If the environment variable exists in the file, load it.
       if (environmentData[envVar]) {
-        console.log('Target Environment successfully loaded.')
+        console.log(`Loading environment data for ${envVar}...`)
       }
 
       // Join environment data with server options.

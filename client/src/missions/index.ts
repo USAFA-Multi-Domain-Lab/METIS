@@ -1,37 +1,35 @@
 import axios, { AxiosResponse } from 'axios'
-import { TListItem } from 'src/components/content/data/lists/pages/ListItem'
+import { TMetisClientComponents } from 'src'
 import { TLine_P } from 'src/components/content/session/mission-map/objects/Line'
 import { TPrototypeSlot_P } from 'src/components/content/session/mission-map/objects/PrototypeSlot'
-import SessionClient from 'src/sessions'
-import ClientSessionMember from 'src/sessions/members'
-import { ClientTargetEnvironment } from 'src/target-environments'
-import ClientTarget from 'src/target-environments/targets'
-import { TEventListenerTarget } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import { v4 as generateHash } from 'uuid'
+import { EventManager, TListenerTargetEmittable } from '../../../shared/events'
 import Mission, {
-  TCommonMissionJson,
-  TCommonMissionTypes,
-  TMissionOptions,
+  TMissionExistingJson,
+  TMissionJson,
+  TMissionShallowExistingJson,
 } from '../../../shared/missions'
+import MissionComponent from '../../../shared/missions/component'
+import { TMissionFileJson } from '../../../shared/missions/files'
 import {
   MissionForce,
-  TCommonMissionForceJson,
-  TMissionForceOptions,
+  TMissionForceJson,
+  TMissionForceSaveJson,
 } from '../../../shared/missions/forces'
 import {
-  TCommonMissionPrototypeJson,
+  TMissionPrototypeJson,
   TMissionPrototypeOptions,
 } from '../../../shared/missions/nodes/prototypes'
+import { TNonEmptyArray } from '../../../shared/toolbox/arrays'
+import { DateToolbox } from '../../../shared/toolbox/dates'
 import { Counter } from '../../../shared/toolbox/numbers'
 import { AnyObject, TWithKey } from '../../../shared/toolbox/objects'
 import { Vector2D } from '../../../shared/toolbox/space'
+import User from '../../../shared/users'
 import ClientMissionAction from './actions'
-import ClientActionExecution from './actions/executions'
-import ClientActionOutcome from './actions/outcomes'
-import { ClientEffect } from './effects'
-import ClientMissionForce, { TClientMissionForceOptions } from './forces'
-import ClientOutput from './forces/output'
+import ClientMissionFile from './files'
+import ClientMissionForce from './forces'
 import ClientMissionNode from './nodes'
 import ClientMissionPrototype, { TPrototypeRelation } from './nodes/prototypes'
 import MissionTransformation from './transformations'
@@ -43,8 +41,8 @@ import PrototypeTranslation from './transformations/translations'
  * @extends {Mission<ClientMissionNode>}
  */
 export default class ClientMission
-  extends Mission<TClientMissionTypes>
-  implements TEventListenerTarget<TMissionEvent>, TMissionNavigable, TListItem
+  extends Mission<TMetisClientComponents>
+  implements TListenerTargetEmittable<TMissionEventMethods, TMissionEventArgs>
 {
   /**
    * Whether the resource exists on the server.
@@ -111,26 +109,21 @@ export default class ClientMission
   protected structureInitialized: boolean = false
 
   /**
-   * Listeners for mission events.
-   */
-  private listeners: Array<[TMissionEvent, () => void]>
-
-  /**
    * The current selection for the mission.
-   * @note This can be most type of nested, mission-related objects,
+   * @note This can be most type of nested, mission-related component,
    * such as nodes, forces, etc.
    * @note This is used in the form for editing.
    * @note By default, the mission itself.
    */
-  private _selection: TMissionNavigable
+  private _selection: MissionComponent<any, any>
   /**
    * The current selection for the mission.
-   * @note This can be most type of nested, mission-related objects,
+   * @note This can be most type of nested, mission-related components,
    * such as nodes, forces, etc.
    * @note This is used in the form for editing.
    * @note By default, the mission itself.
    */
-  public get selection(): TMissionNavigable {
+  public get selection(): MissionComponent<any, any> {
     return this._selection
   }
 
@@ -148,7 +141,7 @@ export default class ClientMission
   }
   public set transformation(value: MissionTransformation | null) {
     this._transformation = value
-    this.emitEvent('set-transformation')
+    this.emitEvent('set-transformation', [])
     this.handleStructureChange()
   }
 
@@ -233,82 +226,63 @@ export default class ClientMission
    */
   public relationshipLines: TWithKey<TLine_P>[]
 
-  // Implemented
-  public get mission(): ClientMission {
-    return this
-  }
-
-  // Implemented
-  public get path(): TMissionNavigable[] {
-    return [this]
-  }
-
   /**
-   * The list of defective objects found the mission.
+   * Manages the mission's event listeners and events.
    */
-  private _defectiveObjects: TMissionComponent[]
-  /**
-   * The list of defective objects found the mission.
-   */
-  public get defectiveObjects(): TMissionComponent[] {
-    return this._defectiveObjects
-  }
+  private eventManager: EventManager<TMissionEventMethods, TMissionEventArgs>
 
-  /**
-   * The date that the mission was created.
-   * @note This is not accurate. This feature still needs
-   * to be implemented on the back-end. This is for interface
-   * design purposes only.
-   */
-  public get createdAt(): Date {
-    return new Date()
-  }
-
-  /**
-   * The date that the mission was last modified.
-   * @note This is not accurate. This feature still needs
-   * to be implemented on the back-end. This is for interface
-   * design purposes only.
-   */
-  public get lastModifiedAt(): Date {
-    return new Date()
-  }
-
-  /**
-   * The date that the mission was last launched.
-   * @note This is not accurate. This feature still needs
-   * to be implemented on the back-end. This is for interface
-   * design purposes only.
-   */
-  public get lastLaunchedAt(): Date {
-    return new Date()
-  }
-
-  /**
-   * @param data The mission data from which to create the mission. Any ommitted values will be set to the default properties defined in Mission.DEFAULT_PROPERTIES.
-   * @param options The options for creating the mission.
-   */
-  public constructor(
-    data: Partial<TCommonMissionJson> = ClientMission.DEFAULT_PROPERTIES,
+  protected constructor(
+    _id: string,
+    name: string,
+    versionNumber: number,
+    seed: string,
+    resourceLabel: string,
+    createdAt: Date | null,
+    updatedAt: Date | null,
+    launchedAt: Date | null,
+    createdBy: User | null,
+    createdByUsername: string | null,
+    structure: AnyObject,
+    prototypeData: TMissionPrototypeJson[],
+    forceData: TMissionForceJson[],
+    fileData: TMissionFileJson[],
     options: TClientMissionOptions = {},
   ) {
-    // Initialize base properties.
-    super(data, options)
+    super(
+      _id,
+      name,
+      versionNumber,
+      seed,
+      resourceLabel,
+      createdAt,
+      updatedAt,
+      launchedAt,
+      createdBy,
+      createdByUsername,
+      structure,
+      prototypeData,
+      forceData,
+      fileData,
+    )
 
     // Parse client-specific options.
-    let { existsOnServer = false, nonRevealedDisplayMode = 'hide' } = options
+    const { existsOnServer = false, nonRevealedDisplayMode = 'hide' } = options
 
     // Initialize client-specific properties.
     this._existsOnServer = existsOnServer
     this._depth = -1
     this._structureChangeKey = generateHash()
-    this.listeners = []
     this._selection = this
     this._transformation = null
     this.relationshipLines = []
     this.lastOpenedNode = null
-    this._defectiveObjects = []
     this._nonRevealedDisplayMode = nonRevealedDisplayMode
+
+    // Initialize event manager.
+    this.eventManager = new EventManager(this)
+    this.addEventListener = this.eventManager.addEventListener
+    this.removeEventListener = this.eventManager.removeEventListener
+    this.emitEvent = this.eventManager.emitEvent
 
     // If there is no existing prototypes,
     // create one.
@@ -321,14 +295,11 @@ export default class ClientMission
 
     // Initialize structure.
     this.handleStructureChange()
-
-    // Evaluate nested objects.
-    this.evaluateObjects()
   }
 
   // Implemented
   protected importPrototype(
-    data: Partial<TCommonMissionPrototypeJson> = ClientMissionPrototype.DEFAULT_PROPERTIES,
+    data: Partial<TMissionPrototypeJson> = ClientMissionPrototype.DEFAULT_PROPERTIES,
     options: TMissionPrototypeOptions<ClientMissionPrototype> = {},
   ): ClientMissionPrototype {
     let rootPrototype: ClientMissionPrototype | null = this.root
@@ -359,60 +330,19 @@ export default class ClientMission
   }
 
   // Implemented
-  protected importForces(
-    data: TCommonMissionForceJson[],
-    options: TClientMissionForceOptions = {},
-  ): ClientMissionForce[] {
+  protected importForces(data: TMissionForceSaveJson[]): void {
     let forces: ClientMissionForce[] = data.map(
-      (datum) => new ClientMissionForce(this, datum, options),
+      (datum) => new ClientMissionForce(this, datum),
     )
     this.forces.push(...forces)
-    return forces
   }
 
-  /**
-   * Evaluates objects found within the mission to determine if they are defective.
-   * @param maxAmount The maximum amount of defective objects to evaluate.
-   */
-  public evaluateObjects(maxAmount?: number): void {
-    // Initialize invalid objects.
-    this._defectiveObjects = []
-
-    // Loop through forces.
-    for (let force of this.forces) {
-      // Validate the force.
-      if (force.isDefective()) this._defectiveObjects.push(force)
-      // Break if the max amount of defective objects
-      // has been reached.
-      if (maxAmount && this._defectiveObjects.length >= maxAmount) break
-
-      // Loop through nodes.
-      for (let node of force.nodes) {
-        // Validate the node.
-        if (node.isDefective()) this._defectiveObjects.push(node)
-        // Break if the max amount of defective objects
-        // has been reached.
-        if (maxAmount && this._defectiveObjects.length >= maxAmount) break
-
-        // Loop through actions.
-        for (let action of node.actions.values()) {
-          // Validate the action.
-          if (action.isDefective()) this._defectiveObjects.push(action)
-          // Break if the max amount of defective objects
-          // has been reached.
-          if (maxAmount && this._defectiveObjects.length >= maxAmount) break
-
-          // Loop through effects.
-          for (let effect of action.effects) {
-            // Validate the effect.
-            if (effect.isDefective()) this._defectiveObjects.push(effect)
-            // Break if the max amount of defective objects
-            // has been reached.
-            if (maxAmount && this._defectiveObjects.length >= maxAmount) break
-          }
-        }
-      }
-    }
+  // Implemented
+  protected importFiles(data: TMissionFileJson[]): void {
+    let files: ClientMissionFile[] = data.map((datum) =>
+      ClientMissionFile.fromJson(datum, this),
+    )
+    this.files.push(...files)
   }
 
   /**
@@ -420,23 +350,31 @@ export default class ClientMission
    * into the mission on session start.
    * @param forces The JSON data for the forces.
    * @param structure The JSON data for the structure.
+   * @param prototypes The JSON data for the prototypes.
+   * @param files The JSON data for the files.
    */
   public importStartData(
     structure: AnyObject,
-    forces: TCommonMissionForceJson[],
-    prototypes: TCommonMissionPrototypeJson[],
+    forces: TMissionForceSaveJson[],
+    prototypes: TMissionPrototypeJson[],
+    files: TMissionFileJson[],
   ): void {
-    // Clear forces and prototypes.
+    // Clear prototypes, forces, and files.
     this.prototypes = []
     this.forces = []
+    this.files = []
 
     // Import structure.
     this.importStructure(structure, prototypes)
     // Import forces.
     this.importForces(forces)
+    // Import files.
+    this.importFiles(files)
 
     // Handle structure change.
     this.handleStructureChange()
+    // Emit event.
+    this.emitEvent('session-reset', [])
   }
 
   // Implemented
@@ -451,7 +389,7 @@ export default class ClientMission
    * @returns The newly created prototype.
    */
   public createPrototype(
-    data: Partial<TCommonMissionPrototypeJson> = ClientMissionPrototype.DEFAULT_PROPERTIES,
+    data: Partial<TMissionPrototypeJson> = ClientMissionPrototype.DEFAULT_PROPERTIES,
     options: TMissionPrototypeOptions<ClientMissionPrototype> = {},
   ): ClientMissionPrototype {
     let rootPrototype: ClientMissionPrototype | null = this.root
@@ -479,7 +417,7 @@ export default class ClientMission
 
     // Handle event.
     this.handleStructureChange()
-    this.emitEvent('new-prototype')
+    this.emitEvent('new-prototype', [])
 
     // Return the prototype.
     return prototype
@@ -491,7 +429,7 @@ export default class ClientMission
    * @param options Options passed to the constructor.
    * @returns The newly created force.
    */
-  public createForce(options: TMissionForceOptions = {}): ClientMissionForce {
+  public createForce(): ClientMissionForce {
     // Throw an error if the max number of forces
     // has already been reached.
     if (this.forces.length >= Mission.MAX_FORCE_COUNT) {
@@ -516,14 +454,14 @@ export default class ClientMission
       }
 
       // Create a new force.
-      force = new ClientMissionForce(this, defaultForce, options)
+      force = new ClientMissionForce(this, defaultForce)
       // Break the loop.
       break
     }
 
     // This theoretically shouldn't happen, but if
     // no force has been created yet, create one here.
-    if (!force) force = new ClientMissionForce(this, {}, options)
+    if (!force) force = new ClientMissionForce(this, {})
 
     // Add the force to the mission.
     this.forces.push(force)
@@ -568,35 +506,17 @@ export default class ClientMission
     })
 
     // Emit the structure change event.
-    this.emitEvent('structure-change')
-  }
-
-  /**
-   * Emits an event for the mission.
-   * @param method The method of the event to emit.
-   */
-  public emitEvent(method: TMissionEvent): void {
-    // Call any matching listener callbacks
-    // or any activity listener callbacks.
-    for (let [listenerEvent, listenerCallback] of this.listeners) {
-      if (listenerEvent === method || listenerEvent === 'activity') {
-        listenerCallback()
-      }
-    }
+    this.emitEvent('structure-change', [])
   }
 
   // Implemented
-  public addEventListener(method: TMissionEvent, callback: () => void) {
-    this.listeners.push([method, callback])
-  }
+  public emitEvent
 
   // Implemented
-  public removeEventListener(method: TMissionEvent, callback: () => void) {
-    // Filter out listener.
-    this.listeners = this.listeners.filter(
-      ([m, h]) => m !== method || h !== callback,
-    )
-  }
+  public addEventListener
+
+  // Implemented
+  public removeEventListener
 
   /**
    * This will position all the prototypes in the mission
@@ -1055,15 +975,24 @@ export default class ClientMission
    * @param selection The selection to make for the mission.
    * @note Selection can be accessed via non-static field `ClientMission.selection`.
    */
-  public select(selection: TMissionNavigable): void {
+  public select(selection: MissionComponent<any, any>): void {
     // Throw an error if the selection is not
     // part of the mission.
     if (selection.mission !== this)
       throw new Error('The given selection is not part of the mission.')
 
+    // If an action is selected when it's node is not
+    // executable, select the mission instead.
+    if (
+      selection instanceof ClientMissionAction &&
+      !selection.node.executable
+    ) {
+      selection = this
+    }
+
     this._selection = selection
 
-    this.emitEvent('selection')
+    this.emitEvent('selection', [])
 
     // If there is a transformation, clear it.
     if (this.transformation) this.transformation = null
@@ -1075,7 +1004,7 @@ export default class ClientMission
    */
   public deselect(): void {
     this._selection = this
-    this.emitEvent('selection')
+    this.emitEvent('selection', [])
 
     // If there is a transformation, clear it.
     if (this.transformation) this.transformation = null
@@ -1102,26 +1031,17 @@ export default class ClientMission
   /**
    * Duplicates the selected forces in the mission.
    * @param forcesInfo The information needed to duplicate the forces.
+   * @returns The new, duplicated forces.
    */
   public duplicateForces(
-    forcesInfo: TDuplicateForceInfo | TDuplicateForceInfo[],
-  ): void {
-    // If the forcesInfo is not an array, make it an array.
-    if (!Array.isArray(forcesInfo)) forcesInfo = [forcesInfo]
-
+    ...forcesInfo: TNonEmptyArray<TDuplicateForceInfo>
+  ): TNonEmptyArray<ClientMissionForce> {
     // Duplicate the forces.
     let duplicatedForces = forcesInfo.map(({ originalId, duplicateName }) => {
       // Find the force to duplicate.
-      let force = this.forces.find((force) => force._id === originalId)
+      let force = this.getForceById(originalId)
       // Throw an error if the force is not found.
       if (!force) throw new Error(`Force with ID ${originalId} not found.`)
-
-      // Convert the force to JSON.
-      let forceJson = force.toJson()
-      // Set the force's ID to the default ID (a random hash).
-      forceJson._id = MissionForce.DEFAULT_PROPERTIES._id
-      // Set the force's name to the duplicate name.
-      forceJson.name = duplicateName
 
       // Determine what the next available color is.
       let existingColors = this.forces.map(({ color }) => color)
@@ -1129,41 +1049,24 @@ export default class ClientMission
         ({ color }) => !existingColors.includes(color),
       )
 
-      // Set the force's color to the next available color.
-      forceJson.color =
-        nextColor?.color || MissionForce.DEFAULT_PROPERTIES.color
-
-      // Update the force's nodes.
-      forceJson.nodes = forceJson.nodes.map((nodeJson) => {
-        // Set the node's ID to a new ID.
-        nodeJson._id = ClientMissionNode.DEFAULT_PROPERTIES._id
-        // Update the node's actions.
-        nodeJson.actions = nodeJson.actions.map((actionJson) => {
-          // Set the action's ID to a new ID.
-          actionJson._id = ClientMissionAction.DEFAULT_PROPERTIES._id
-          // Update the action's effects.
-          actionJson.effects = actionJson.effects.map((effectJson) => {
-            // Set the effect's ID to a new ID.
-            effectJson._id = ClientEffect.DEFAULT_PROPERTIES._id
-            // Return the effect JSON.
-            return effectJson
-          })
-          // Return the action JSON.
-          return actionJson
-        })
-        // Return the node JSON.
-        return nodeJson
+      // Duplicate the force.
+      let duplicatedForce = force.duplicate({
+        name: duplicateName,
+        localKey: this.generateForceKey(),
       })
-
-      // Create a new force object from the JSON.
-      return new ClientMissionForce(this, forceJson, { populateTargets: true })
-    })
+      // Update properties of the duplicated force.
+      if (nextColor) duplicatedForce.color = nextColor.color
+      // Return the duplicated force.
+      return duplicatedForce
+    }) as TNonEmptyArray<ClientMissionForce>
 
     // Add the duplicated forces to the mission.
     this.forces.push(...duplicatedForces)
 
     // Handle structure change.
     this.handleStructureChange()
+
+    return duplicatedForces
   }
 
   /**
@@ -1171,16 +1074,32 @@ export default class ClientMission
    * @param forceIds The IDs of the forces to delete.
    */
   public deleteForces(
-    forceIds: ClientMissionForce['_id'] | ClientMissionForce['_id'][],
-  ): void {
+    ...forceIds: TNonEmptyArray<ClientMissionForce['_id']>
+  ): ClientMissionForce[] {
+    let deletedForces: ClientMissionForce[] = []
+
     // If the forces is not an array, make it an array.
     if (!Array.isArray(forceIds)) forceIds = [forceIds]
 
     // Remove the forces from the mission.
-    this.forces = this.forces.filter((force) => !forceIds.includes(force._id))
+    this.forces = this.forces.filter((force) => {
+      let deleteIt = forceIds.includes(force._id)
+      if (deleteIt) deletedForces.push(force)
+      return !deleteIt
+    })
+
+    // Remove forces from the inital access
+    // of any files that reference them.
+    this.files.forEach((file) => {
+      file.initialAccess = file.initialAccess.filter(
+        (forceId) => !forceIds.includes(forceId),
+      )
+    })
 
     // Handle structure change.
     this.handleStructureChange()
+
+    return deletedForces
   }
 
   /**
@@ -1199,8 +1118,13 @@ export default class ClientMission
           // Create the mission on the server.
           let { data } = await axios.post<
             any,
-            AxiosResponse<Required<TCommonMissionJson>>
-          >(ClientMission.API_ENDPOINT, this.toJson())
+            AxiosResponse<Required<TMissionJson>>
+          >(
+            ClientMission.API_ENDPOINT,
+            this.toJson({
+              idExposure: false,
+            }),
+          )
           // Update existsOnServer to true.
           this._existsOnServer = true
           // Update the mission ID, if necessary.
@@ -1209,13 +1133,7 @@ export default class ClientMission
         // Update the mission if it does exist.
         else {
           // Update the mission with the current mission.
-          await axios.put(
-            ClientMission.API_ENDPOINT,
-            this.toJson({
-              exportType: 'standard',
-              includeId: true,
-            }),
-          )
+          await axios.put(ClientMission.API_ENDPOINT, this.toJson())
         }
 
         // Resolve.
@@ -1229,6 +1147,107 @@ export default class ClientMission
   }
 
   /**
+   * Creates a brand new mission for use, ready
+   * to be designed and saved to the server.
+   */
+  public static createNew(): ClientMission {
+    return new ClientMission(
+      ClientMission.DEFAULT_PROPERTIES._id,
+      ClientMission.DEFAULT_PROPERTIES.name,
+      ClientMission.DEFAULT_PROPERTIES.versionNumber,
+      ClientMission.DEFAULT_PROPERTIES.seed,
+      ClientMission.DEFAULT_PROPERTIES.resourceLabel,
+      ClientMission.DEFAULT_PROPERTIES.createdAt,
+      ClientMission.DEFAULT_PROPERTIES.updatedAt,
+      ClientMission.DEFAULT_PROPERTIES.launchedAt,
+      ClientMission.DEFAULT_PROPERTIES.createdBy,
+      ClientMission.DEFAULT_PROPERTIES.createdByUsername,
+      ClientMission.DEFAULT_PROPERTIES.structure,
+      ClientMission.DEFAULT_PROPERTIES.prototypes,
+      ClientMission.DEFAULT_PROPERTIES.forces,
+      ClientMission.DEFAULT_PROPERTIES.files,
+    )
+  }
+
+  /**
+   * Creates a new {@link ClientMission} from the given JSON data,
+   * which is from an existing record in the database.
+   * @param json The JSON data from which to create the mission.
+   * @param options Options to customize the mission based on its
+   * intended usage.
+   */
+  public static fromExistingJson(
+    json: TMissionExistingJson,
+    options: TExistingClientMissionOptions = {},
+  ): ClientMission {
+    // Create a ClientUser object for the creator
+    // of the mission, if there is one.
+    let createdBy: ClientUser
+
+    // Parse reference data.
+    if (typeof json.createdBy === 'object') {
+      createdBy = ClientUser.fromCreatedByJson(json.createdBy)
+    } else {
+      createdBy = ClientUser.createUnpopulated(
+        json.createdBy,
+        json.createdByUsername,
+      )
+    }
+
+    // Force options to have `existsOnServer`
+    // as true, since this is an existing
+    // mission.
+    options.existsOnServer = true
+
+    // Create a new mission.
+    let mission: ClientMission = new ClientMission(
+      json._id || generateHash(),
+      json.name,
+      json.versionNumber,
+      json.seed,
+      json.resourceLabel,
+      DateToolbox.fromNullableISOString(json.createdAt),
+      DateToolbox.fromNullableISOString(json.updatedAt),
+      DateToolbox.fromNullableISOString(json.launchedAt),
+      createdBy,
+      json.createdByUsername,
+      json.structure,
+      json.prototypes,
+      json.forces,
+      json.files,
+      options,
+    )
+
+    // Return the mission.
+    return mission
+  }
+
+  /**
+   * Creates a new {@link ClientMission} from the given JSON data,
+   * which is from an existing record in the database. This JSON
+   * data is incomplete, not including forces, files, or prototypes.
+   * @param json The JSON data from which to create the mission.
+   * @param options Options to customize the mission based on its
+   * intended usage.
+   */
+  public static fromShallowExistingJson(
+    json: TMissionShallowExistingJson,
+    options: TExistingClientMissionOptions = {},
+  ): ClientMission {
+    let existingJson: TMissionExistingJson = {
+      ...json,
+      forces: [],
+      files: [],
+      prototypes: [],
+      structure: {},
+    }
+    // Forward data to fromExistingJson method,
+    // passing empty arrays for forces, files,
+    // and prototypes.
+    return ClientMission.fromExistingJson(existingJson, options)
+  }
+
+  /**
    * Determines the selected node from the mission selection passed.
    * @param selection The selection in a mission.
    * @returns The node, if any.
@@ -1236,7 +1255,7 @@ export default class ClientMission
    * selection.
    */
   public static getNodeFromSelection(
-    selection: TMissionNavigable,
+    selection: MissionComponent<any, any>,
   ): ClientMissionNode | null {
     // Loop through path, and return the first node found.
     for (let item of selection.path) {
@@ -1254,7 +1273,7 @@ export default class ClientMission
    * selection.
    */
   public static getForceFromSelection(
-    selection: TMissionNavigable,
+    selection: MissionComponent<any, any>,
   ): ClientMissionForce | null {
     // Loop through path, and return the first force found.
     for (let item of selection.path) {
@@ -1360,15 +1379,14 @@ export default class ClientMission
   ): Promise<ClientMission> {
     return new Promise<ClientMission>(async (resolve, reject) => {
       try {
-        let { data } = await axios.put<any, AxiosResponse<TCommonMissionJson>>(
-          `${ClientMission.API_ENDPOINT}/copy/`,
-          {
-            originalId,
-            copyName,
-          },
-        )
-        options.existsOnServer = true
-        resolve(new ClientMission(data, options))
+        let { data } = await axios.post<
+          any,
+          AxiosResponse<TMissionExistingJson>
+        >(`${ClientMission.API_ENDPOINT}/copy/`, {
+          originalId,
+          copyName,
+        })
+        resolve(ClientMission.fromExistingJson(data, options))
       } catch (error) {
         console.error('Failed to copy mission.')
         console.error(error)
@@ -1393,13 +1411,14 @@ export default class ClientMission
     return new Promise<ClientMission>(async (resolve, reject) => {
       try {
         // Retrieve data from API.
-        let { data } = await axios.get<TCommonMissionJson>(
+        let { data } = await axios.get<TMissionExistingJson>(
           `${ClientMission.API_ENDPOINT}/${_id}/`,
         )
-        // Update options.
-        options.existsOnServer = true
         // Convert JSON to ClientMission object.
-        let mission: ClientMission = new ClientMission(data, options)
+        let mission: ClientMission = ClientMission.fromExistingJson(
+          data,
+          options,
+        )
         // Resolve
         resolve(mission)
       } catch (error) {
@@ -1421,13 +1440,17 @@ export default class ClientMission
   ): Promise<ClientMission[]> {
     return new Promise<ClientMission[]>(async (resolve, reject) => {
       try {
-        let { data } = await axios.get<TCommonMissionJson[]>(
+        let { data } = await axios.get<TMissionShallowExistingJson[]>(
           ClientMission.API_ENDPOINT,
         )
         // Update options.
         options.existsOnServer = true
         // Convert JSON to ClientMission objects.
-        resolve(data.map((datum) => new ClientMission(datum, options)))
+        resolve(
+          data.map((datum) =>
+            ClientMission.fromShallowExistingJson(datum, options),
+          ),
+        )
       } catch (error) {
         console.error('Failed to fetch missions.')
         console.error(error)
@@ -1461,31 +1484,9 @@ export default class ClientMission
 /* ------------------------------ CLIENT MISSION TYPES ------------------------------ */
 
 /**
- * Client types for Mission objects.
- * @note Used as a generic argument for all client,
- * mission-related classes.
- */
-export interface TClientMissionTypes extends TCommonMissionTypes {
-  session: SessionClient
-  member: ClientSessionMember
-  user: ClientUser
-  mission: ClientMission
-  force: ClientMissionForce
-  output: ClientOutput
-  prototype: ClientMissionPrototype
-  node: ClientMissionNode
-  action: ClientMissionAction
-  execution: ClientActionExecution
-  outcome: ClientActionOutcome
-  targetEnv: ClientTargetEnvironment
-  target: ClientTarget
-  effect: ClientEffect
-}
-
-/**
  * Options for the creation of a ClientMission object.
  */
-export type TClientMissionOptions = TMissionOptions & {
+export type TClientMissionOptions = {
   /**
    * Whether the data already exists on the server.
    * @default false
@@ -1550,9 +1551,23 @@ export type TMissionImportResult = {
 export type TStructureChangeListener = (structureChangeKey: string) => void
 
 /**
- * An event that occurs on a node, which can be listened for.
+ * The information needed to duplicate a force in a mission.
+ */
+type TDuplicateForceInfo = {
+  /**
+   * The ID of the force to duplicate.
+   */
+  originalId: string
+  /**
+   * The name of the duplicated force.
+   */
+  duplicateName: string
+}
+
+/**
+ * An event that occurs on a mission, which can be listened for.
  * @option 'activity'
- * Triggered when any other event occurs.
+ * Triggered when any event occurs.
  * @option 'structure-change'
  * Triggered when the structure of the mission, including the prototypes and actions
  * that make up the mission, change.
@@ -1566,8 +1581,18 @@ export type TStructureChangeListener = (structureChangeKey: string) => void
  * Triggered when a transformation is set for the mission.
  * @option 'autopan'
  * Triggered when nodes are opened and the mission map needs to auto-pan to them.
+ * @option `set-node-exclusion`
+ * - Triggered when a node's exclusion status is set.
+ * @option `session-reset`
+ * - Triggered when a session that uses this mission resets.
+ * @option `file-access-granted'
+ * - Triggered when a force is granted access to a file in the
+ *   mission.
+ * @option `file-access-revoked'
+ * - Triggered when a force is revoked access to a file in the
+ *   mission.
  */
-export type TMissionEvent =
+type TMissionEventMethods =
   | 'activity'
   | 'structure-change'
   | 'selection'
@@ -1575,82 +1600,14 @@ export type TMissionEvent =
   | 'set-buttons'
   | 'set-transformation'
   | 'autopan'
+  | 'set-node-exclusion'
+  | 'session-reset'
+  | 'file-access-granted'
+  | 'file-access-revoked'
 
 /**
- * Represents an object that can support navigation within
- * a mission.
- * @note Implement this to make a class compatible.
+ * The argument(s) used in the event handler for the mission's event manager.
  */
-export interface TMissionNavigable {
-  /**
-   * The mission associated with the object.
-   */
-  mission: ClientMission
-  /**
-   * The name of the object.
-   */
-  name: string
-  /**
-   * The path to object within the mission.
-   */
-  get path(): TMissionNavigable[]
-}
-
-/**
- * Represents an object that is a component of a mission.
- * @note Implement this to make a class compatible.
- */
-export interface TMissionComponent extends TMissionNavigable {
-  /**
-   * The object's ID.
-   */
-  _id: string
-  /**
-   * Whether the object is defective.
-   */
-  isDefective(): boolean
-  /**
-   * The message to display when the object is defective.
-   */
-  get defectiveMessage(): string
-}
-
-/**
- * Keyword arguments needed to evaluate objects found within the mission.
- * @example
- * {
- *  key: 'effects',
- *  targetEnvironments: []
- * }
- */
-export type TMissionObjectEvalKwargs<
-  T extends TCommonMissionTypes = TClientMissionTypes,
-> = TEffectEvalKwargs<T>
-
-/**
- * Keyword arguments needed to evaluate effects found within the mission.
- */
-type TEffectEvalKwargs<T extends TCommonMissionTypes = TClientMissionTypes> = {
-  /**
-   * The key to evaluate the objects against.
-   */
-  key: 'effects'
-  /**
-   * The target environments to use for evaluating effects.
-   */
-  targetEnvironments: T['targetEnv'][]
-}
-
-/**
- * The information needed to duplicate a force in a mission.
- */
-type TDuplicateForceInfo = {
-  /**
-   * The ID of the force to duplicate.
-   */
-  originalId: string
-  /**
-   * The name of the duplicated force.
-   */
-  duplicateName: string
-}
+type TMissionEventArgs = [
+  updatedComponents: MissionComponent<TMetisClientComponents, any>[],
+]

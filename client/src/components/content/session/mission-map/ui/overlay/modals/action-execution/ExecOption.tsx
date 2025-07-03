@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Tooltip from 'src/components/content/communication/Tooltip'
+import { useGlobalContext } from 'src/context/global'
 import ClientMissionAction from 'src/missions/actions'
 import SessionClient from 'src/sessions'
 import { compute } from 'src/toolbox'
@@ -12,24 +13,32 @@ import './ExecOption.scss'
 /**
  * An option in the drop down of actions to choose from.
  */
-export default function ExecOption({
-  action,
-  session: { member, config },
-  select,
-}: TExecOption_P) {
+export default function ExecOption({ action, session, select }: TExecOption_P) {
   /* -- STATE -- */
-  const [successChance, setSuccessChance] = useState<number>(
-    action.successChance,
+
+  const globalContext = useGlobalContext()
+  const [cheats] = globalContext.cheats
+  const [successChanceFormatted, setSuccessChanceFormatted] = useState<string>(
+    action.successChanceFormatted,
   )
-  const [resourceCost, setResourceCost] = useState<number>(action.resourceCost)
-  const [processTime, setProcessTime] = useState<number>(action.processTime)
+  const [processTimeFormatted, setProcessTimeFormatted] = useState<string>(
+    action.processTimeFormatted,
+  )
+  const [resourceCostFormatted, setResourceCostFormatted] = useState<string>(
+    action.resourceCostFormatted,
+  )
+  const [opensNodeFormatted, setOpensNodeFormatted] = useState<string>(
+    action.opensNodeFormatted,
+  )
 
-  /* -- HOOKS -- */
+  /* -- EFFECTS -- */
 
+  // Update the formatted values when the action is modified.
   useEventListener(action.node, 'modify-actions', () => {
-    setSuccessChance(action.successChance)
-    setResourceCost(action.resourceCost)
-    setProcessTime(action.processTime)
+    setSuccessChanceFormatted(action.successChanceFormatted)
+    setProcessTimeFormatted(action.processTimeFormatted)
+    setResourceCostFormatted(action.resourceCostFormatted)
+    setOpensNodeFormatted(action.opensNodeFormatted)
   })
 
   /* -- COMPUTED -- */
@@ -41,13 +50,9 @@ export default function ExecOption({
     // Initialize the class list.
     let classList: string[] = ['ExecOption']
 
-    // Disable the option if there are not enough resources
-    // to execute the particular action.
-    if (
-      resourceCost > action.force.resourcesRemaining &&
-      !member.isAuthorized('cheats') &&
-      !config.infiniteResources
-    ) {
+    // Disable the option if the action is
+    // not ready to execute.
+    if (!session.readyToExecute(action, cheats)) {
       classList.push('Disabled')
     }
 
@@ -55,15 +60,25 @@ export default function ExecOption({
     return classList.join(' ')
   })
 
+  const descriptionTooltipPortion = compute(() => {
+    let result = StringToolbox.limit(action.description, 160)
+
+    // Add line breaks if there is a description.
+    if (result) result += `\n \n`
+
+    return result
+  })
+
   /* -- RENDER -- */
   return (
     <div className={optionClassName} key={action._id} onClick={select}>
       <Tooltip
         description={
-          `**Time to execute:** ${processTime / 1000} second(s)\n` +
-          `**Probability of success:** ${successChance * 100}%\n` +
-          `**Resource cost:** ${resourceCost} resource(s)\n` +
-          `**Description:** ${StringToolbox.limit(action.description, 160)}`
+          `${descriptionTooltipPortion}` +
+          `**Success Chance:** ${successChanceFormatted}\n` +
+          `**Time:** ${processTimeFormatted}\n` +
+          `**Cost:** ${resourceCostFormatted}\n` +
+          `**Opens Node:** ${opensNodeFormatted}`
         }
       />
       {action.name}
@@ -82,7 +97,7 @@ export type TExecOption_P = {
    */
   action: ClientMissionAction
   /**
-   * The session that the member is a part of.
+   * The session where the action is being executed.
    */
   session: SessionClient
   /**

@@ -1,11 +1,11 @@
 import { ReactNode, useEffect, useRef } from 'react'
 import ServerConnection from 'src/connect/servers'
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import MetisInfo from 'src/info'
 import SessionClient from 'src/sessions'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
-import { LoginRequiredError } from 'src/toolbox/hooks'
+import { LoginRequiredError, useEventListener } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import { TLogin } from '../../../shared/logins'
 import './App.scss'
@@ -72,6 +72,7 @@ function App(props: {}): JSX.Element | null {
   const [currentPageKey] = globalContext.currentPageKey
   const [currentPageProps] = globalContext.currentPageProps
   const [error] = globalContext.error
+  const [server] = globalContext.server
 
   const {
     beginLoading,
@@ -80,6 +81,7 @@ function App(props: {}): JSX.Element | null {
     loadLoginInfo,
     navigateTo,
     connectToServer,
+    notify,
   } = globalContext.actions
 
   /* -- FUNCTIONS -- */
@@ -227,7 +229,7 @@ function App(props: {}): JSX.Element | null {
                 navigateTo('LobbyPage', { session })
                 break
               case 'started':
-                navigateTo('SessionPage', { session })
+                navigateTo('SessionPage', { session, returnPage: 'HomePage' })
                 break
               case 'ended':
                 navigateTo('HomePage', {})
@@ -261,7 +263,7 @@ function App(props: {}): JSX.Element | null {
       if (login !== null) {
         try {
           // Load target environments.
-          await ClientTargetEnvironment.$loadAll(login.user)
+          await ClientTargetEnvironment.$populateRegistry()
         } catch {
           handleError('Failed to load post-login data.')
         }
@@ -284,6 +286,22 @@ function App(props: {}): JSX.Element | null {
       return notifications
     })
   }, [notifications.length])
+
+  // Logs the user out if the server emits a logout event.
+  useEventListener(
+    server,
+    'logout-user-update',
+    async () => {
+      navigateTo('AuthPage', {}, { bypassMiddleware: true })
+      notify(
+        'You have been logged out due to a change to your account. If you believe this is an error, please contact your system administrator. Otherwise, please log back in.',
+        {
+          duration: null,
+        },
+      )
+    },
+    [server],
+  )
 
   /* -- PAGE DETAILS -- */
 
@@ -339,15 +357,15 @@ function App(props: {}): JSX.Element | null {
           </div>
         </div>
         {promptData !== null ? <Prompt {...promptData} /> : null}
-        <ErrorPage {...pageProps} />
-        <LoadingPage {...pageProps} />
+        <ErrorPage {...pageProps} key='error-page' />
+        <LoadingPage {...pageProps} key='loading-page' />
         <ConnectionStatus />
         <ReactErrorBoundary
           FallbackComponent={AuthPage}
           onError={handleUncaughtError}
           resetKeys={[currentPageKey, error]}
         >
-          <CurrentPage {...pageProps} />
+          <CurrentPage {...pageProps} key={pageProps.key} />
         </ReactErrorBoundary>
       </div>
     </ReactErrorBoundary>

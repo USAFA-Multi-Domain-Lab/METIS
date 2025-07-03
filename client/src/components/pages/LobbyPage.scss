@@ -1,9 +1,7 @@
 @import '../../assets/styles/config.scss';
+@import 'src/assets/styles/util.scss';
 
 .Page.LobbyPage {
-  // Double the box shadow to make the content stand out.
-  box-shadow: $box-shadow-main, $box-shadow-main;
-
   .Content {
     $content-padding: 3em;
 

@@ -1,21 +1,36 @@
-import Tooltip from 'src/components/content/communication/Tooltip'
-import ClientMission, { TMissionNavigable } from 'src/missions'
+import ButtonSvgPanel from 'src/components/content/user-controls/buttons/v3/ButtonSvgPanel'
+import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
+import If from 'src/components/content/util/If'
+import ClientMission from 'src/missions'
 import { compute } from 'src/toolbox'
+import MissionComponent from '../../../../../../../shared/missions/component'
 import './EntryNavigation.scss'
 
 /**
  * Navigation for an entry component.
  */
 export default function EntryNavigation({
-  object,
+  component,
 }: TEntryNavigation_P): JSX.Element | null {
+  const backButtonEngine = useButtonSvgEngine({
+    elements: [
+      {
+        type: 'button',
+        icon: 'left',
+        onClick: () => component.mission.selectBack(),
+        description: 'Go back.',
+        disabled: component.path.length === 1,
+      },
+    ],
+  })
+
   /* -- COMPUTED -- */
 
   /**
    * The path positions to display to the user.
    */
   const positions = compute<string[]>(() =>
-    object.path.map((item, index) => {
+    component.path.map((item, index) => {
       // If the root of the path is the mission,
       // then display 'Mission' instead of the
       // mission's name to save space in the UI.
@@ -26,13 +41,6 @@ export default function EntryNavigation({
     }),
   )
 
-  /**
-   * The class for the back button.
-   */
-  const backButtonClass = compute<string>(() =>
-    object.path.length > 1 ? 'BackButton' : 'BackButton Disabled',
-  )
-
   /* -- FUNCTION -- */
 
   /**
@@ -40,14 +48,7 @@ export default function EntryNavigation({
    * @param index The index of the path position that was clicked.
    */
   const onPositionClick = (index: number) => {
-    object.mission.select(object.path[index])
-  }
-
-  /**
-   * This will handle the back button being clicked.
-   */
-  const onBackClick = () => {
-    object.mission.selectBack()
+    component.mission.select(component.path[index])
   }
 
   /* -- RENDER -- */
@@ -69,14 +70,13 @@ export default function EntryNavigation({
   // Render root element.
   return (
     <div className='EntryNavigation'>
-      <div className={backButtonClass} onClick={onBackClick}>
-        &lt;
-        <Tooltip description='Go back.' />
-      </div>
-      <div className='Path'>
-        <div className='Label'>Path: </div>
-        <div className='Positions'>{positionsJsx}</div>
-      </div>
+      <If condition={backButtonEngine.panelElements.length}>
+        <ButtonSvgPanel engine={backButtonEngine} />
+        <div className='Path'>
+          <div className='Label'>Path: </div>
+          <div className='Positions'>{positionsJsx}</div>
+        </div>
+      </If>
     </div>
   )
 }
@@ -86,7 +86,8 @@ export default function EntryNavigation({
  */
 export type TEntryNavigation_P = {
   /**
-   * The navigation-compatible object displayed in the entry.
+   * The navigation-compatible component displayed
+   * in the entry.
    */
-  object: TMissionNavigable
+  component: MissionComponent<any, any>
 }

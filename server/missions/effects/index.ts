@@ -1,34 +1,29 @@
-import Effect, { TEffectOptions } from 'metis/missions/effects'
-import { TTargetEnvContextEffect } from 'metis/server/target-environments/context-provider'
+import Effect from 'metis/missions/effects'
+import { TMetisServerComponents } from 'metis/server'
+import ServerTargetEnvironment from 'metis/server/target-environments'
+import { TTargetEnvExposedEffect } from 'metis/server/target-environments/context'
 import ServerTarget from 'metis/server/target-environments/targets'
-import { TTargetArg } from 'metis/target-environments/args'
-import ForceArg from 'metis/target-environments/args/force-arg'
-import NodeArg from 'metis/target-environments/args/node-arg'
+import ForceArg from 'metis/target-environments/args/mission-component/force-arg'
+import NodeArg from 'metis/target-environments/args/mission-component/node-arg'
 import { AnyObject } from 'metis/toolbox/objects'
-import { TServerMissionTypes } from '..'
 
 /**
  * Class representing an effect on the server-side that can be
  * applied to a target.
  */
-export default class ServerEffect extends Effect<TServerMissionTypes> {
-  /**
-   * Populates the target data for the effect.
-   * @param targetId The ID of the target to populate.
-   */
-  protected populateTargetData(targetId: string | null | undefined): void {
-    // Get the target from the target environment.
-    let target = ServerTarget.getTarget(targetId)
-
-    // If the target is found, set it and update the target status to 'Populated'.
-    if (target) {
-      this._target = target
+export default class ServerEffect extends Effect<TMetisServerComponents> {
+  // Implemented
+  protected determineTarget(
+    targetId: string,
+    environmentId: string,
+  ): ServerTarget | null {
+    if (environmentId === ServerEffect.ENVIRONMENT_ID_INFER) {
+      return ServerTargetEnvironment.REGISTRY.inferTarget(targetId) ?? null
     } else {
-      // Throw an error.
-      let message: string =
-        `Error loading target data for effect:\n` +
-        `Effect: { name: "${this.name}", _id: "${this._id}" }`
-      console.error(message)
+      return (
+        ServerTargetEnvironment.REGISTRY.getTarget(targetId, environmentId) ??
+        null
+      )
     }
   }
 
@@ -43,11 +38,11 @@ export default class ServerEffect extends Effect<TServerMissionTypes> {
     let argsCopy = { ...args }
 
     Object.entries(argsCopy).forEach(([key, value]) => {
-      if (value[ForceArg.FORCE_NAME_KEY] !== undefined) {
-        delete argsCopy[key][ForceArg.FORCE_NAME_KEY]
+      if (value[ForceArg.FORCE_NAME] !== undefined) {
+        delete argsCopy[key][ForceArg.FORCE_NAME]
       }
-      if (value[NodeArg.NODE_NAME_KEY] !== undefined) {
-        delete argsCopy[key][NodeArg.NODE_NAME_KEY]
+      if (value[NodeArg.NODE_NAME] !== undefined) {
+        delete argsCopy[key][NodeArg.NODE_NAME]
       }
     })
 
@@ -60,7 +55,7 @@ export default class ServerEffect extends Effect<TServerMissionTypes> {
    * in a target environment.
    * @returns The effect's necessary properties.
    */
-  public toTargetEnvContext(): TTargetEnvContextEffect {
+  public toTargetEnvContext(): TTargetEnvExposedEffect {
     return {
       _id: this._id,
       name: this.name,
@@ -70,39 +65,8 @@ export default class ServerEffect extends Effect<TServerMissionTypes> {
   }
 
   /**
-   * Checks if there are any required target-arguments missing in the effect.
-   * @returns The missing argument if there is one.
-   */
-  public checkForMissingArg(): TTargetArg | undefined {
-    // If the target is not set, throw an error.
-    if (!this.target) {
-      throw new Error(
-        `The effect ({ _id: "${this._id}", name: "${this.name}" }) does not have a target. ` +
-          `This is likely because the target doesn't exist within any of the target environments stored in the registry.`,
-      )
-    }
-
-    for (let arg of this.target.args) {
-      // Check if all the dependencies for the argument are met.
-      let allDependenciesMet: boolean = this.allDependenciesMet(
-        arg.dependencies,
-      )
-
-      // If all the dependencies are met and the argument is not in the effect's arguments...
-      if (allDependenciesMet && !(arg._id in this.args)) {
-        // ...and the argument's type is a boolean or the argument is required, then return
-        // the argument.
-        // *** Note: A boolean argument is always required because it's value
-        // *** is always defined.
-        if (arg.type === 'boolean' || arg.required) {
-          return arg
-        }
-      }
-    }
-  }
-
-  /**
    * Sanitizes the arguments for the effect.
+   * todo: This is not currently used. Reevaluate if this is needed in the future.
    */
   public sanitizeArgs(): void {
     // If the target is not set, throw an error.
@@ -140,11 +104,6 @@ export default class ServerEffect extends Effect<TServerMissionTypes> {
 }
 
 /* ------------------------------ SERVER EFFECT TYPES ------------------------------ */
-
-/**
- * The options for creating a ServerEffect.
- */
-export type TServerEffectOptions = TEffectOptions & {}
 
 /**
  * The status on whether the target for the effect has been populated.

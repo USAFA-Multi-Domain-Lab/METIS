@@ -1,7 +1,47 @@
 @import 'src/assets/styles/config.scss';
 
 .ListButtons {
+  overflow: hidden;
   display: flex;
   align-items: center;
   height: 100%;
+
+  .ButtonSvgPanel {
+    $transition-speed: 200ms;
+    $transition-timing: ease-in-out;
+
+    display: flex;
+    flex-wrap: nowrap;
+
+    .SvgPanelElement {
+      &.StepperSvg {
+        * {
+          transition: transform $transition-speed $transition-timing,
+            opacity $transition-speed $transition-timing;
+        }
+
+        &.ListButtonOverflow * {
+          transform: scale(0);
+        }
+      }
+
+      &.ButtonSvg {
+        .ButtonIcon {
+          transition: background-size $transition-speed $transition-timing;
+        }
+
+        &.ListButtonOverflow .ButtonIcon {
+          background-size: 0 !important;
+        }
+      }
+
+      &.DividerSvg {
+        transition: transform $transition-speed $transition-timing;
+
+        &.ListButtonOverflow {
+          transform: scale(0);
+        }
+      }
+    }
+  }
 }

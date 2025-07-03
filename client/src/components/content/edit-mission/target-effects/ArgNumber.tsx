@@ -107,10 +107,11 @@ export default function ArgNumber({
       <DetailNumber
         fieldType={'required'}
         label={arg.name}
-        stateValue={requiredValue}
-        setState={setRequiredValue}
+        value={requiredValue}
+        setValue={setRequiredValue}
         minimum={arg.min}
         maximum={arg.max}
+        integersOnly={arg.integersOnly}
         unit={arg.unit}
         placeholder='Enter a number...'
         tooltipDescription={arg.tooltipDescription}
@@ -122,10 +123,11 @@ export default function ArgNumber({
       <DetailNumber
         fieldType={'optional'}
         label={arg.name}
-        stateValue={optionalValue}
-        setState={setOptionalValue}
+        value={optionalValue}
+        setValue={setOptionalValue}
         minimum={arg.min}
         maximum={arg.max}
+        integersOnly={arg.integersOnly}
         unit={arg.unit}
         placeholder='Enter a number...'
         tooltipDescription={arg.tooltipDescription}

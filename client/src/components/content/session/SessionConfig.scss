@@ -1,16 +1,23 @@
 @import '../../../assets/styles/config.scss';
+@import 'src/components/content/form/index.scss';
 
 .SessionConfig {
-  margin: 50px auto;
+  @include form-container;
+
+  display: flex;
+  box-sizing: border-box;
+  flex-direction: column;
+  margin: 3em auto;
   width: 100%;
   max-width: 800px;
-  border: 2px solid $color-main;
+  border: 2px solid $color-primary-light;
   border-radius: 10px;
-  padding: 1em 0;
-  box-shadow: $box-shadow-alt5;
+  padding: 2em 2em 1em;
+  background-color: $color-primary;
 
   .Buttons {
-    margin: 1.5em 8% 0.75em;
-    width: calc(100% - 16%);
+    display: flex;
+    justify-content: center;
+    margin: 0 0 1em;
   }
 }

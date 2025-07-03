@@ -1,9 +1,6 @@
 @import '../../assets/styles/config.scss';
 
 .Page.SessionConfigPage {
-  // Double the box shadow to make the content stand out.
-  box-shadow: $box-shadow-main, $box-shadow-main;
-
   .Content {
     display: flex;
     box-sizing: border-box;

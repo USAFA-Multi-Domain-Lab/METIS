@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { TCommonMissionJson } from 'metis/missions'
+import { TMissionJson } from 'metis/missions'
 import { testLogger } from 'metis/server/logging'
 import ServerUser from 'metis/server/users'
 import mongoose from 'mongoose'
@@ -21,7 +21,7 @@ export default function MissionApiRoute(): Mocha.Suite {
     it('The user should have the correct permission(s) to use the API route for missions', async function () {
       try {
         let response = await agent.get('/api/v1/logins/')
-        let user = new ServerUser(response.body.user)
+        let user = ServerUser.fromExistingJson(response.body.user)
         let hasCorrectPermissions: boolean = user.isAuthorized([
           'missions_write',
           'missions_read',
@@ -104,7 +104,7 @@ export default function MissionApiRoute(): Mocha.Suite {
       try {
         let response = await agent.post('/api/v1/missions/').send(testMission)
         let { _id, name, seed, structure, versionNumber, prototypes, forces } =
-          response.body as TCommonMissionJson
+          response.body as TMissionJson
 
         // Check to see if the _id is valid.
         let isValidId: boolean =
@@ -150,7 +150,7 @@ export default function MissionApiRoute(): Mocha.Suite {
           .send(updateMissionWithNoForceData)
 
         let { _id, name, seed, structure, versionNumber, prototypes, forces } =
-          response.body as TCommonMissionJson
+          response.body as TMissionJson
 
         // Check to see if the _id is valid.
         let isValidId: boolean =
@@ -187,7 +187,7 @@ export default function MissionApiRoute(): Mocha.Suite {
           .put('/api/v1/missions/')
           .send(updateMissionWithNoStructure)
         let { _id, name, seed, structure, versionNumber, prototypes, forces } =
-          response.body as TCommonMissionJson
+          response.body as TMissionJson
 
         // Check to see if the _id is valid.
         let isValidId: boolean =
@@ -225,7 +225,7 @@ export default function MissionApiRoute(): Mocha.Suite {
           .put('/api/v1/missions/')
           .send(correctUpdateTestMission)
         let { _id, name, seed, structure, versionNumber, prototypes, forces } =
-          response.body as TCommonMissionJson
+          response.body as TMissionJson
 
         // Check to see if the _id is valid.
         let isValidId: boolean =
@@ -269,7 +269,7 @@ export default function MissionApiRoute(): Mocha.Suite {
     it('Copying a mission with (a) missing property/properties in the body of the request should return a bad request (400) response', async function () {
       try {
         let response = await agent
-          .put('/api/v1/missions/copy/')
+          .post('/api/v1/missions/copy/')
           .send({ copyName: 'Copied Mission' })
         expect(response).to.have.status(400)
       } catch (error: any) {

@@ -13,12 +13,20 @@ const getSessions = (request: Request, response: Response) => {
   // Define an array to store the sessions.
   let sessions: TSessionBasicJson[] = []
   let user: ServerUser = response.locals.user
-  let hasAccess: boolean = user.isAuthorized(['sessions_write'])
+  let hasAccess: boolean = user.isAuthorized('sessions_write')
 
   // Loop through all sessions and add the public sessions
   // to the array.
   for (let session of SessionServer.getAll()) {
-    if (session.config.accessibility === 'public' || hasAccess) {
+    let hasNativeAccess: boolean =
+      user.isAuthorized('sessions_write_native') &&
+      session.ownerUsername === user.username
+
+    if (
+      session.config.accessibility === 'public' ||
+      hasAccess ||
+      hasNativeAccess
+    ) {
       sessions.push(session.toBasicJson())
     }
   }

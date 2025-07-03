@@ -1,8 +1,10 @@
-import { useGlobalContext } from 'src/context'
+import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
 import { TWithKey } from '../../../../../shared/toolbox/objects'
 import Tooltip from '../communication/Tooltip'
+import { DetailToggle } from '../form/DetailToggle'
 import { TButtonText_P } from '../user-controls/buttons/ButtonText'
+import DevOnly from '../util/DevOnly'
 import './Footer.scss'
 
 /* -- components -- */
@@ -16,6 +18,7 @@ export default function Footer({}: TFooter): JSX.Element | null {
   const { navigateTo } = globalContext.actions
   const [login] = globalContext.login
   const [info] = globalContext.info
+  const [debugMode, setDebugMode] = globalContext.debugMode
 
   /* -- computed -- */
 
@@ -53,6 +56,15 @@ export default function Footer({}: TFooter): JSX.Element | null {
       <div className={versionClass} onClick={viewChangelog} draggable={false}>
         {info.versionFormatted}
         <Tooltip description={'View changelog.'} />
+      </div>
+      <div className='FooterControls'>
+        <DevOnly>
+          <DetailToggle
+            label='Debug Mode'
+            value={debugMode}
+            setValue={setDebugMode}
+          />
+        </DevOnly>
       </div>
       <a
         href='https://www.midjourney.com/'

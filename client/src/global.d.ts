@@ -4,10 +4,7 @@ declare global {
   /**
    * What useState returns.
    */
-  export type TReactState<T extends any = any> = [
-    T,
-    React.Dispatch<React.SetStateAction<T>>,
-  ]
+  export type TReactState<T extends any = any> = [T, TReactSetter<T>]
 
   /**
    * The setter `useState` returns.
@@ -30,4 +27,92 @@ declare global {
   export type TGenericType<Type> = Type extends TWithGeneric<infer X>
     ? X
     : never
+
+  /**
+   * Valid icons to use in the application.
+   * @note These are all SVG icons that are stored
+   * in the `src/assets/icons` directory. New icons
+   * should be added there.
+   * ### Special Types
+   * - `'_blank'`: Does not do anything and cannot be seen.
+   * Acts as a filler when the space needs to be
+   * filled up, but no button is required.
+   */
+  export type TMetisIcon =
+    // ! If adding to list, please maintain
+    // ! alphabetical order.
+    | '_blank'
+    | 'add'
+    | 'ban'
+    | 'blockquote'
+    | 'bold'
+    | 'bullet-list'
+    | 'cancel'
+    | 'clear-format'
+    | 'close'
+    | 'code'
+    | 'coins'
+    | 'copy'
+    | 'code-block'
+    | 'device'
+    | 'divider'
+    | 'door'
+    | 'down'
+    | 'download'
+    | 'edit'
+    | 'file'
+    | 'home'
+    | 'italic'
+    | 'key'
+    | 'kick'
+    | 'launch'
+    | 'left'
+    | 'lightning'
+    | 'link'
+    | 'lock'
+    | 'logout'
+    | 'open'
+    | 'options'
+    | 'ordered-list'
+    | 'overflow'
+    | 'percent'
+    | 'play'
+    | 'private'
+    | 'question'
+    | 'quit'
+    | 'redo'
+    | 'remove'
+    | 'reorder'
+    | 'reset'
+    | 'right'
+    | 'save'
+    | 'search'
+    | 'shell'
+    | 'shown'
+    | 'strike'
+    | 'stop'
+    | 'text-cursor'
+    | 'timer'
+    | 'underline'
+    | 'undo'
+    | 'unlink'
+    | 'up'
+    | 'upload'
+    | 'user'
+    | 'warning-transparent'
+    | 'zoom-in'
+    | 'zoom-out'
+
+  /**
+   * Creates a union type with the given type
+   * and `null`.
+   * @type T The type with which to create the union.
+   * @returns The union type, with `null`.
+   * @example
+   * ```ts
+   * type T = TWithNull<string>
+   * // T = string | null
+   * ```
+   */
+  export type TNullable<T> = T | null
 }

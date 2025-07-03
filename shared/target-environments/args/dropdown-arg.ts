@@ -46,13 +46,14 @@ export default class DropdownArg {
    * @param options The dropdown argument options to convert.
    * @returns The dropdown argument options as JSON.
    */
-  public static OPTIONS_TO_JSON = (
-    options: TDropdownArgOption[],
-  ): TDropdownArgOptionJson[] => {
+  public static OPTIONS_TO_JSON<T extends TDropdownArgOptionVal>(
+    options: TDropdownArgOption<T>[],
+  ): TDropdownArgOptionJson<T>[] {
     return options.map((option) => {
       return {
         _id: option._id,
         name: option.name,
+        value: option.value,
         dependencies: option.dependencies
           ? Arg.encodeDependencies(option.dependencies)
           : undefined,
@@ -64,12 +65,13 @@ export default class DropdownArg {
    * @param option The dropdown argument option to convert.
    * @returns The dropdown argument option as JSON.
    */
-  public static OPTION_TO_JSON = (
-    option: TDropdownArgOption,
-  ): TDropdownArgOptionJson => {
+  public static OPTION_TO_JSON<T extends TDropdownArgOptionVal>(
+    option: TDropdownArgOption<T>,
+  ): TDropdownArgOptionJson<T> {
     return {
       _id: option._id,
       name: option.name,
+      value: option.value,
       dependencies: option.dependencies
         ? Arg.encodeDependencies(option.dependencies)
         : undefined,
@@ -116,13 +118,14 @@ export default class DropdownArg {
    * @param options The dropdown argument options as JSON to convert.
    * @returns The dropdown argument options.
    */
-  public static OPTIONS_FROM_JSON = (
-    options: TDropdownArgOptionJson[],
-  ): TDropdownArgOption[] => {
+  public static OPTIONS_FROM_JSON<T extends TDropdownArgOptionVal>(
+    options: TDropdownArgOptionJson<T>[],
+  ): TDropdownArgOption<T>[] {
     return options.map((option) => {
       return {
         _id: option._id,
         name: option.name,
+        value: option.value,
         dependencies: option.dependencies
           ? Arg.decodeDependencies(option.dependencies)
           : undefined,
@@ -134,17 +137,28 @@ export default class DropdownArg {
    * @param option The dropdown argument option as JSON to convert.
    * @returns The dropdown argument option.
    */
-  public static OPTION_FROM_JSON = (
-    option: TDropdownArgOptionJson,
-  ): TDropdownArgOption => {
+  public static OPTION_FROM_JSON<T extends TDropdownArgOptionVal>(
+    option: TDropdownArgOptionJson<T>,
+  ): TDropdownArgOption<T> {
     return {
       _id: option._id,
       name: option.name,
+      value: option.value,
       dependencies: option.dependencies
         ? Arg.decodeDependencies(option.dependencies)
         : undefined,
     }
   }
+  /**
+   * The dropdown argument option value types.
+   */
+  public static readonly OPTION_VALUE_TYPES = [
+    'string',
+    'number',
+    'boolean',
+    'object',
+    'undefined',
+  ]
 }
 
 /* ------------------------------ DROPDOWN ARGUMENT TYPES ------------------------------ */
@@ -158,12 +172,49 @@ export type TDropdownArg = TBaseArg &
      * The argument's input type.
      * @note This will render as a dropdown box with
      * predefined options for the user to select from.
+     * @note See example below as to how the data is built
+     * for the target's script.
+     * @example
+     * ```typescript
+     * // This data is used to render a dropdown box with
+     * // two predefined options for the user to select from.
+     * // See below for how the data will be built for the target's script.
+     *
+     * {
+     *   _id: 'argument1',
+     *   name: 'Argument 1',
+     *   required: false,
+     *   groupingId: 'argument',
+     *   type: 'dropdown',
+     *   options: [
+     *     {
+     *       _id: 'option1',
+     *       name: 'Option 1',
+     *       value: 1,
+     *     },
+     *     {
+     *       _id: 'option2',
+     *       name: 'Option 2',
+     *       value: 2,
+     *     },
+     *   ],
+     * }
+     *
+     * // Once the dropdown box is rendered, the user will be able to select
+     * // either 'Option 1' or 'Option 2'. If the user selects 'Option 1',
+     * // the value in the effect's arguments will look like this:
+     * {
+     *   argument1: 1,
+     * }
+     *
+     * // If the user selects 'Option 2', the value in the effect's arguments
+     * // will look like this:
+     * {
+     *   argument1: 2,
+     * }
+     * ```
      */
     type: 'dropdown'
-    /**
-     * The options for the argument.
-     */
-    options: TDropdownArgOption[]
   }
 /**
  * The optional dropdown argument type for a target.
@@ -173,6 +224,10 @@ type TDropdownArgOptional = {
    * Determines whether the argument is required or not.
    */
   required: false
+  /**
+   * The options for the argument.
+   */
+  options: TDropdownArgOption<TOptDropdownArgOptionVal>[]
 }
 /**
  * The required dropdown argument type for a target.
@@ -183,14 +238,20 @@ type TDropdownArgRequired = {
    */
   required: true
   /**
+   * The options for the argument.
+   */
+  options: TDropdownArgOption<TReqDropdownArgOptionVal>[]
+  /**
    * The default value for the argument.
    */
-  default: TDropdownArgOption
+  default: TDropdownArgOption<TReqDropdownArgOptionVal>
 }
 /**
  * The dropdown argument option type for a target.
  */
-export type TDropdownArgOption = {
+export type TDropdownArgOption<
+  Value extends TDropdownArgOptionVal = TDropdownArgOptionVal,
+> = {
   /**
    * The ID of the option.
    */
@@ -200,6 +261,53 @@ export type TDropdownArgOption = {
    * @note This is displayed to the user.
    */
   name: string
+  /**
+   * The option's value.
+   * @note This is the dropdown's value when the option is selected.
+   * This value is added to the effect's arguments when the option is selected.
+   * @see The example below as to how the data is built
+   * for the target's script.
+   * @example
+   * ```typescript
+   * // This data is used to render a dropdown box with
+   * // two predefined options for the user to select from.
+   * // See below for how the data will be built for the target's script.
+   *
+   * {
+   *   _id: 'argument1',
+   *   name: 'Argument 1',
+   *   required: false,
+   *   groupingId: 'argument',
+   *   type: 'dropdown',
+   *   options: [
+   *     {
+   *       _id: 'option1',
+   *       name: 'Option 1',
+   *       value: 1,
+   *     },
+   *     {
+   *       _id: 'option2',
+   *       name: 'Option 2',
+   *       value: 2,
+   *     },
+   *   ],
+   * }
+   *
+   * // Once the dropdown box is rendered, the user will be able to select
+   * // either 'Option 1' or 'Option 2'. If the user selects 'Option 1',
+   * // the value in the effect's arguments will look like this:
+   * {
+   *   argument1: 1,
+   * }
+   *
+   * // If the user selects 'Option 2', the value in the effect's arguments
+   * // will look like this:
+   * {
+   *   argument1: 2,
+   * }
+   * ```
+   */
+  value: Value
   /**
    * These are the keys of the arguments that the current option depends on.
    * @note If the option depends on another argument, the option will only be displayed in the dropdown list if the dependency is met.
@@ -278,7 +386,6 @@ export type TDropdownArgOption = {
    */
   dependencies?: Dependency[]
 }
-
 /**
  * The dropdown argument type for a target.
  */
@@ -288,12 +395,49 @@ export type TDropdownArgJson = TBaseArgJson &
      * The argument's input type.
      * @note This will render as a dropdown box with
      * predefined options for the user to select from.
+     * @note See example below as to how the data is built
+     * for the target's script.
+     * @example
+     * ```typescript
+     * // This data is used to render a dropdown box with
+     * // two predefined options for the user to select from.
+     * // See below for how the data will be built for the target's script.
+     *
+     * {
+     *   _id: 'argument1',
+     *   name: 'Argument 1',
+     *   required: false,
+     *   groupingId: 'argument',
+     *   type: 'dropdown',
+     *   options: [
+     *     {
+     *       _id: 'option1',
+     *       name: 'Option 1',
+     *       value: 1,
+     *     },
+     *     {
+     *       _id: 'option2',
+     *       name: 'Option 2',
+     *       value: 2,
+     *     },
+     *   ],
+     * }
+     *
+     * // Once the dropdown box is rendered, the user will be able to select
+     * // either 'Option 1' or 'Option 2'. If the user selects 'Option 1',
+     * // the value in the effect's arguments will look like this:
+     * {
+     *   argument1: 1,
+     * }
+     *
+     * // If the user selects 'Option 2', the value in the effect's arguments
+     * // will look like this:
+     * {
+     *   argument1: 2,
+     * }
+     * ```
      */
     type: 'dropdown'
-    /**
-     * The options for the argument.
-     */
-    options: TDropdownArgOptionJson[]
   }
 /**
  * The optional dropdown argument type for a target.
@@ -303,6 +447,10 @@ type TDropdownArgOptionalJson = {
    * Determines whether the argument is required or not.
    */
   required: false
+  /**
+   * The options for the argument.
+   */
+  options: TDropdownArgOptionJson<TOptDropdownArgOptionVal>[]
 }
 /**
  * The required dropdown argument type for a target as JSON.
@@ -315,12 +463,18 @@ type TDropdownArgRequiredJson = {
   /**
    * The default value for the argument.
    */
-  default: TDropdownArgOptionJson
+  default: TDropdownArgOptionJson<TReqDropdownArgOptionVal>
+  /**
+   * The options for the argument.
+   */
+  options: TDropdownArgOptionJson<TReqDropdownArgOptionVal>[]
 }
 /**
  * The dropdown argument option type for a target.
  */
-export type TDropdownArgOptionJson = {
+export type TDropdownArgOptionJson<
+  Value extends TDropdownArgOptionVal = TDropdownArgOptionVal,
+> = {
   /**
    * The ID of the option.
    */
@@ -330,6 +484,53 @@ export type TDropdownArgOptionJson = {
    * @note This is displayed to the user.
    */
   name: string
+  /**
+   * The option's value.
+   * @note This is the dropdown's value when the option is selected.
+   * This value is added to the effect's arguments when the option is selected.
+   * @see The example below as to how the data is built
+   * for the target's script.
+   * @example
+   * ```typescript
+   * // This data is used to render a dropdown box with
+   * // two predefined options for the user to select from.
+   * // See below for how the data will be built for the target's script.
+   *
+   * {
+   *   _id: 'argument1',
+   *   name: 'Argument 1',
+   *   required: false,
+   *   groupingId: 'argument',
+   *   type: 'dropdown',
+   *   options: [
+   *     {
+   *       _id: 'option1',
+   *       name: 'Option 1',
+   *       value: 1,
+   *     },
+   *     {
+   *       _id: 'option2',
+   *       name: 'Option 2',
+   *       value: 2,
+   *     },
+   *   ],
+   * }
+   *
+   * // Once the dropdown box is rendered, the user will be able to select
+   * // either 'Option 1' or 'Option 2'. If the user selects 'Option 1',
+   * // the value in the effect's arguments will look like this:
+   * {
+   *   argument1: 1,
+   * }
+   *
+   * // If the user selects 'Option 2', the value in the effect's arguments
+   * // will look like this:
+   * {
+   *   argument1: 2,
+   * }
+   * ```
+   */
+  value: Value
   /**
    * These are the keys of the arguments that the current option depends on.
    * @note If the option depends on another argument, the option will only be displayed in the dropdown list if the dependency is met.
@@ -408,3 +609,26 @@ export type TDropdownArgOptionJson = {
    */
   dependencies?: string[]
 }
+
+/**
+ * The option value types for a required dropdown argument.
+ */
+export type TReqDropdownArgOptionVal = string | number | boolean | object
+
+/**
+ * The option value types for an optional dropdown argument.
+ */
+export type TOptDropdownArgOptionVal =
+  | string
+  | number
+  | boolean
+  | object
+  | null
+  | undefined
+
+/**
+ * The option value types for a dropdown argument.
+ */
+export type TDropdownArgOptionVal =
+  | TReqDropdownArgOptionVal
+  | TOptDropdownArgOptionVal

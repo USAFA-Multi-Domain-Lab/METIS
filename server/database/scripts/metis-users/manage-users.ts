@@ -1,6 +1,6 @@
 import fs from 'fs'
-import MetisServer, { IMetisServerOptions } from 'metis/server'
-import { TCommonUserJson } from 'metis/users'
+import MetisServer from 'metis/server'
+import { TUserJson } from 'metis/users'
 import { accessIds, TUserAccessId } from 'metis/users/accesses'
 import { createInterface } from 'readline/promises'
 import UserModel, { hashPassword } from '../../models/users'
@@ -35,7 +35,7 @@ const parseUsers = async (data: string) => {
     // Convert the needsPasswordReset value to a boolean.
     const updatedPasswordReset = needsPasswordReset.toLowerCase() === 'true'
 
-    const user: TCommonUserJson = {
+    const user: TUserJson = {
       username,
       accessId: accessId as TUserAccessId,
       firstName,
@@ -58,7 +58,7 @@ const parseUsers = async (data: string) => {
  */
 const parseUsernames = (data: string) => {
   // Initialize an array to store the users.
-  let usernames: TCommonUserJson['_id'][] = []
+  let usernames: TUserJson['_id'][] = []
 
   // Iterate over each line in the data.
   for (let line of data.split('\n')) {
@@ -112,31 +112,12 @@ const commandLinePrompt = async (
  * Connects to the database.
  */
 const connectToDatabase = async () => {
-  // Get the environment file path.
-  let { ENVIRONMENT_FILE_PATH: environmentFilePath } = MetisServer
-  // Initialize the server options.
-  let serverOptions: IMetisServerOptions = {
-    port: 49152,
-  }
-
-  // Log message.
-  console.log('Reading enviroment.json file...')
-
-  // If the environment file exists, read it.
-  if (fs.existsSync(environmentFilePath)) {
-    let environmentData: any = fs.readFileSync(environmentFilePath, 'utf8')
-    // Parse data to JSON.
-    environmentData = JSON.parse(environmentData)
-    // Join environment data with server options.
-    serverOptions = { ...environmentData, ...serverOptions }
-  } else {
-    throw new Error('Environment file not found. Exiting...')
-  }
-
-  // Connect to the database.
-  let server = new MetisServer(serverOptions)
-  console.log('Connecting to database...')
   // Start the temporary server.
+  let server = new MetisServer({
+    port: 49152,
+  })
+  // Connect to the database.
+  console.log('Connecting to database...')
   await server.database.connect()
 }
 
@@ -168,7 +149,7 @@ const manageUsers = async () => {
 
     if (method === 'create' || method === 'restore') {
       // Parse the data.
-      const users: TCommonUserJson[] = await parseUsers(data)
+      const users: TUserJson[] = await parseUsers(data)
       // Connect to the database.
       await connectToDatabase()
 
@@ -196,7 +177,7 @@ const manageUsers = async () => {
       }
     } else if (method === 'delete' || method === 'archive') {
       // Parse the data.
-      const usernames: TCommonUserJson['_id'][] = parseUsernames(data)
+      const usernames: TUserJson['_id'][] = parseUsernames(data)
 
       // Connect to the database.
       await connectToDatabase()

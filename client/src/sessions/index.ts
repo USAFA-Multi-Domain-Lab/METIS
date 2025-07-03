@@ -1,17 +1,26 @@
 import axios from 'axios'
+import { TMetisClientComponents } from 'src'
 import ServerConnection from 'src/connect/servers'
-import ClientMission, { TClientMissionTypes } from 'src/missions'
+import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
-import ClientOutput from 'src/missions/forces/output'
+import ClientActionExecution from 'src/missions/actions/executions'
+import ClientExecutionOutcome from 'src/missions/actions/outcomes'
+import ClientMissionFile from 'src/missions/files'
+import ClientOutput from 'src/missions/forces/outputs'
 import ClientMissionNode from 'src/missions/nodes'
-import ClientMissionPrototype from 'src/missions/nodes/prototypes'
 import ClientUser from 'src/users'
 import {
+  TFileAccessModifierData,
   TGenericServerEvents,
+  TOpenNodeData,
   TResponseEvents,
   TServerEvents,
 } from '../../../shared/connect/data'
-import { TExecutionCheats } from '../../../shared/missions/actions/executions'
+import {
+  TActionExecutionJson,
+  TExecutionCheats,
+} from '../../../shared/missions/actions/executions'
+import { TExecutionOutcomeJson } from '../../../shared/missions/actions/outcomes'
 import Session, {
   TSessionBasicJson,
   TSessionConfig,
@@ -27,7 +36,7 @@ import ClientSessionMember from './members'
 /**
  * Client instance for sessions. Handles client-side logic for sessions. Communicates with server to conduct a session.
  */
-export default class SessionClient extends Session<TClientMissionTypes> {
+export default class SessionClient extends Session<TMetisClientComponents> {
   /**
    * The server connection used to communicate with the server.
    */
@@ -74,7 +83,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
     memberId: string,
   ) {
     // Gather details.
-    let mission: ClientMission = new ClientMission(data.mission, {
+    let mission: ClientMission = ClientMission.fromExistingJson(data.mission, {
       nonRevealedDisplayMode: 'blur',
     })
     let {
@@ -85,6 +94,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
       ownerUsername,
       ownerFirstName,
       ownerLastName,
+      launchedAt,
       members: memberData,
       banList,
       config,
@@ -98,6 +108,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
       ownerUsername,
       ownerFirstName,
       ownerLastName,
+      new Date(launchedAt),
       config,
       mission,
       memberData,
@@ -120,7 +131,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
       ({ _id, user: userData, roleId, forceId }) =>
         new ClientSessionMember(
           _id,
-          new ClientUser(userData),
+          ClientUser.fromExistingJson(userData),
           roleId,
           forceId,
           this,
@@ -147,11 +158,12 @@ export default class SessionClient extends Session<TClientMissionTypes> {
   private addListeners(): void {
     this.server.addEventListener('session-started', this.onStart)
     this.server.addEventListener('session-ended', this.onEnd)
+    this.server.addEventListener('session-reset', this.onReset)
     this.server.addEventListener('session-config-updated', this.onConfigUpdate)
     this.server.addEventListener('session-members-updated', this.onUsersUpdated)
     this.server.addEventListener('force-assigned', this.onForceAssigned)
     this.server.addEventListener('role-assigned', this.onRoleAssigned)
-    this.server.addEventListener('node-opened', this.onNodeOpened)
+    this.server.addEventListener('node-opened', this.onNodeOpenedResponse)
     this.server.addEventListener(
       'action-execution-initiated',
       this.onActionExecutionInitiated,
@@ -172,6 +184,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
     this.server.clearEventListeners([
       'session-started',
       'session-ended',
+      'session-reset',
       'session-config-updated',
       'session-members-updated',
       'force-assigned',
@@ -195,7 +208,15 @@ export default class SessionClient extends Session<TClientMissionTypes> {
       ownerUsername: this.ownerUsername,
       ownerFirstName: this.ownerFirstName,
       ownerLastName: this.ownerLastName,
-      mission: this.mission.toJson({ exportType: 'session-limited' }),
+      launchedAt: this.launchedAt.toISOString(),
+      mission: this.mission.toJson({
+        forceExposure: { expose: 'none' },
+        fileExposure: { expose: 'none' },
+        sessionDataExposure: {
+          expose: 'user-specific',
+          userId: this.member.userId,
+        },
+      }),
       members: this.members.map((member) => member.toJson()),
       banList: this.banList,
       config: this.config,
@@ -207,16 +228,18 @@ export default class SessionClient extends Session<TClientMissionTypes> {
     return {
       _id: this._id,
       missionId: this.missionId,
+      state: this.state,
       name: this.name,
       ownerId: this.ownerId,
       ownerUsername: this.ownerUsername,
       ownerFirstName: this.ownerFirstName,
       ownerLastName: this.ownerLastName,
+      launchedAt: this.launchedAt.toISOString(),
       config: this.config,
-      participantIds: this.participants.map(({ _id: userId }) => userId),
+      participantIds: this.participants.map(({ _id: memberId }) => memberId),
       banList: this.banList,
-      observerIds: this.observers.map(({ _id: userId }) => userId),
-      managerIds: this.managers.map(({ _id: userId }) => userId),
+      observerIds: this.observers.map(({ _id: memberId }) => memberId),
+      managerIds: this.managers.map(({ _id: memberId }) => memberId),
     }
   }
 
@@ -227,7 +250,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
   public openNode(nodeId: string, options: TSessionRequestOptions = {}): void {
     // Gather details.
     let server: ServerConnection = this.server
-    let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
+    let node: ClientMissionNode | undefined = this.mission.getNodeById(nodeId)
 
     // Callback for errors.
     const onError = (message: string) => {
@@ -264,7 +287,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
         // request.
         onResponse: (event) => {
           if (event.method === 'node-opened') {
-            this.mission.emitEvent('autopan')
+            this.mission.emitEvent('autopan', [])
           }
 
           if (event.method === 'error') {
@@ -351,7 +374,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
   ) {
     // Gather details.
     let server: ServerConnection = this.server
-    let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
+    let node: ClientMissionNode | undefined = this.mission.getNodeById(nodeId)
     let { onError = () => {} } = options
 
     // If the node doesn't have a pre-execution message,
@@ -500,6 +523,46 @@ export default class SessionClient extends Session<TClientMissionTypes> {
           switch (event.method) {
             case 'session-ended':
               this._state = 'ended'
+              return resolve()
+            case 'error':
+              return onError(event.message)
+            default:
+              return onError(
+                `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
+              )
+          }
+        },
+      })
+    })
+  }
+
+  /**
+   * Resets the session.
+   * @resolves When the session has been reset.
+   * @rejects If the session failed to reset, or if the session
+   * has not yet started.
+   */
+  public async $reset(): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      // Callback for errors.
+      const onError = (message: string) => {
+        let error: Error = new Error(message)
+        console.error(message)
+        console.error(error)
+        reject(error)
+      }
+
+      // If the session has not started, throw an error.
+      if (this.state === 'unstarted') {
+        return onError('Session has not yet started.')
+      }
+
+      // Emit a request to reset the session.
+      this.server.request('request-reset-session', {}, 'Resetting session.', {
+        onResponse: (event) => {
+          switch (event.method) {
+            case 'session-reset':
+              this._state = 'started'
               return resolve()
             case 'error':
               return onError(event.message)
@@ -771,18 +834,158 @@ export default class SessionClient extends Session<TClientMissionTypes> {
   }
 
   /**
+   * Imports data provided to a member when the session
+   * is started or reset.
+   * @param event The event emitted by the server.
+   */
+  private importStartData(
+    event: TResponseEvents['session-started' | 'session-reset'],
+  ): void {
+    // Gather details.
+    let { structure, forces, prototypes, files } = event.data
+    // Mark the session as started.
+    this._state = 'started'
+    // Import start data, revealing forces to user.
+    this.mission.importStartData(structure, forces, prototypes, files)
+    // Remap actions.
+    this.mapActions()
+  }
+
+  /**
+   * Handles the blocking and unblocking of nodes.
+   * @param nodeId The ID of the node to be blocked or unblocked.
+   * @param blocked Whether or not the node is blocked.
+   */
+  private updateNodeBlockStatus = (nodeId: string, blocked: boolean): void => {
+    // Find the node, given the ID.
+    let node = this.mission.getNodeById(nodeId)
+    // Handle the blocking and unblocking of the node.
+    node?.updateBlockStatus(blocked)
+  }
+
+  /**
+   * Modifies the success chance of a specific action within a node or
+   * all actions within a node.
+   * @param successChanceOperand The operand to modify the success chance by.
+   * @param nodeId The ID of the node.
+   * @param actionId The ID of the action.
+   * @note If the action is not provided, the success chance of all actions
+   * within the node will be modified.
+   */
+  private modifySuccessChance = (
+    successChanceOperand: number,
+    nodeId: string,
+    actionId?: string,
+  ): void => {
+    // Find the node, given the ID.
+    let node = this.mission.getNodeById(nodeId)
+    // Modify the success chance for all the node's actions.
+    node?.modifySuccessChance(successChanceOperand, actionId)
+  }
+
+  /**
+   * Modifies the process time of a specific action within a node or
+   * all actions within a node.
+   * @param processTimeOperand The operand to modify the process time by.
+   * @param nodeId The ID of the node.
+   * @param actionId The ID of the action.
+   * @note If the action is not provided, the process time of all actions
+   * within the node will be modified.
+   */
+  private modifyProcessTime = (
+    processTimeOperand: number,
+    nodeId: string,
+    actionId?: string,
+  ): void => {
+    // Find the node, given the ID.
+    let node = this.mission.getNodeById(nodeId)
+    // Modify the process time for all the node's actions.
+    node?.modifyProcessTime(processTimeOperand, actionId)
+  }
+
+  /**
+   * Modifies the resource cost of a specific action within a node or
+   * all actions within a node.
+   * @param resourceCostOperand The operand to modify the resource cost by.
+   * @param nodeId The ID of the node.
+   * @param actionId The ID of the action.
+   * @note If the action is not provided, the resource cost of all actions
+   * within the node will be modified.
+   */
+  private modifyResourceCost = (
+    resourceCostOperand: number,
+    nodeId: string,
+    actionId?: string,
+  ): void => {
+    // Find the node, given the ID.
+    let node = this.mission.getNodeById(nodeId)
+    // Modify the resource cost for all the node's actions.
+    node?.modifyResourceCost(resourceCostOperand, actionId)
+  }
+
+  /**
+   * Modifies the resource pool of a force.
+   * @param forceId The ID of the force.
+   * @param operand The operand to modify the resource pool by.
+   */
+  private modifyResourcePool = (forceId: string, operand: number): void => {
+    // Find the force, given the ID.
+    let force = this.mission.getForceById(forceId)
+    // Modify the resource pool for the force.
+    force?.modifyResourcePool(operand)
+  }
+
+  /**
+   * Handles the granting/revoking of access to a file.
+   * @param fileId The ID of the file in question.
+   * @param forceId The ID of the force with newly granted/revoked access.
+   * @param granted Whether or not the access is granted.
+   */
+  private updateFileAccess = (data: TFileAccessModifierData): void => {
+    let force = this.mission.getForceById(data.forceId)
+    let file = this.mission.getFileById(data.fileId)
+
+    // If the force is not found, abort.
+    if (!force) return
+
+    // Handle file-access change based on whether
+    // access is granted or revoked.
+    if (data.granted) {
+      // If the file is not found in the mission,
+      // add it to the mission.
+      if (!file) {
+        file = ClientMissionFile.fromJson(data.fileData, this.mission)
+        this.mission.files.push(file)
+      }
+      // Grant access for the force to the file.
+      file.grantAccess(force)
+    } else {
+      // If the following conditions are met, remove
+      // the file from the mission entirely:
+      // 1. The file currently is found in the mission.
+      // 2. The member is assigned to the force in question.
+      // 3. The member does not have complete visibility, which
+      //    would otherwise negate file-access restrictions.
+      if (
+        file &&
+        this.member.forceId === data.forceId &&
+        !this.member.isAuthorized('completeVisibility')
+      ) {
+        this.mission.files = this.mission.files.filter(
+          (f) => f._id !== file!._id,
+        )
+      }
+      // Revoke access for the force to the file.
+      if (file) file.revokeAccess(force)
+    }
+  }
+
+  /**
    * Handles when the session is started.
    * @param event The event emitted by the server.
    */
   private onStart = (event: TResponseEvents['session-started']): void => {
-    // Gather details.
-    let { structure, forces, prototypes } = event.data
-    // Mark the session as started.
-    this._state = 'started'
-    // Import start data, revealing forces to user.
-    this.mission.importStartData(structure, forces, prototypes)
-    // Remap actions.
-    this.mapActions()
+    this.importStartData(event)
   }
 
   /**
@@ -791,6 +994,14 @@ export default class SessionClient extends Session<TClientMissionTypes> {
    */
   private onEnd = (): void => {
     this._state = 'ended'
+  }
+
+  /**
+   * Handles when the session is reset.
+   * @param event The event emitted by the server.
+   */
+  private onReset = (event: TResponseEvents['session-reset']): void => {
+    this.importStartData(event)
   }
 
   /**
@@ -816,7 +1027,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
       ({ _id, user: userData, roleId, forceId }) =>
         new ClientSessionMember(
           _id,
-          new ClientUser(userData),
+          ClientUser.fromExistingJson(userData),
           roleId,
           forceId,
           this,
@@ -856,63 +1067,6 @@ export default class SessionClient extends Session<TClientMissionTypes> {
   }
 
   /**
-   * Handles the blocking and unblocking of nodes.
-   * @param nodeId The ID of the node to be blocked or unblocked.
-   * @param blocked Whether or not the node is blocked.
-   */
-  private updateNodeBlockStatus = (nodeId: string, blocked: boolean): void => {
-    // Find the node, given the ID.
-    let node = this.mission.getNode(nodeId)
-    // Handle the blocking and unblocking of the node.
-    node?.updateBlockStatus(blocked)
-  }
-
-  /**
-   * Modifies the success chance of all the node's actions.
-   * @param nodeId The ID of the node.
-   * @param successChanceOperand The operand to modify the success chance by.
-   */
-  private modifySuccessChance = (
-    nodeId: string,
-    successChanceOperand: number,
-  ): void => {
-    // Find the node, given the ID.
-    let node = this.mission.getNode(nodeId)
-    // Modify the success chance for all the node's actions.
-    node?.modifySuccessChance(successChanceOperand)
-  }
-
-  /**
-   * Modifies the process time of all the node's actions.
-   * @param nodeId The ID of the node.
-   * @param processTimeOperand The operand to modify the process time by.
-   */
-  private modifyProcessTime = (
-    nodeId: string,
-    processTimeOperand: number,
-  ): void => {
-    // Find the node, given the ID.
-    let node = this.mission.getNode(nodeId)
-    // Modify the process time for all the node's actions.
-    node?.modifyProcessTime(processTimeOperand)
-  }
-
-  /**
-   * Modifies the resource cost of all the node's actions.
-   * @param nodeId The ID of the node.
-   * @param resourceCostOperand The operand to modify the resource cost by.
-   */
-  private modifyResourceCost = (
-    nodeId: string,
-    resourceCostOperand: number,
-  ): void => {
-    // Find the node, given the ID.
-    let node = this.mission.getNode(nodeId)
-    // Modify the resource cost for all the node's actions.
-    node?.modifyResourceCost(resourceCostOperand)
-  }
-
-  /**
    * Handles when a modifier has been enacted.
    * @param event The event emitted by the server.
    */
@@ -920,24 +1074,50 @@ export default class SessionClient extends Session<TClientMissionTypes> {
     event: TServerEvents['modifier-enacted'],
   ): void => {
     // Extract data.
-    let data = event.data
+    const { data } = event
     // Handle the data.
     switch (data.key) {
       case 'node-update-block':
         this.updateNodeBlockStatus(data.nodeId, data.blocked)
         break
+      case 'node-open':
+        this.onNodeOpened({
+          nodeId: data.nodeId,
+          structure: data.structure,
+          revealedDescendants: data.revealedDescendants,
+          revealedDescendantPrototypes: data.revealedDescendantPrototypes,
+        })
+        break
       case 'node-action-success-chance':
-        this.modifySuccessChance(data.nodeId, data.successChanceOperand)
+        this.modifySuccessChance(
+          data.successChanceOperand,
+          data.nodeId,
+          data.actionId,
+        )
         break
       case 'node-action-process-time':
-        this.modifyProcessTime(data.nodeId, data.processTimeOperand)
+        this.modifyProcessTime(
+          data.processTimeOperand,
+          data.nodeId,
+          data.actionId,
+        )
         break
       case 'node-action-resource-cost':
-        this.modifyResourceCost(data.nodeId, data.resourceCostOperand)
+        this.modifyResourceCost(
+          data.resourceCostOperand,
+          data.nodeId,
+          data.actionId,
+        )
+        break
+      case 'force-resource-pool':
+        this.modifyResourcePool(data.forceId, data.operand)
+        break
+      case 'file-update-access':
+        this.updateFileAccess(data)
         break
       default:
         throw new Error(
-          `Error: Incorrect data sent to modifier handler. Data: ${data}`,
+          `Error: Data format sent to modifier handler is not recognized. Data: ${data}`,
         )
     }
   }
@@ -949,7 +1129,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
   private onSendOutput = (event: TServerEvents['send-output']): void => {
     let { outputData } = event.data
     let { forceId } = outputData
-    let force = this.mission.getForce(forceId)
+    let force = this.mission.getForceById(forceId)
     if (force) {
       let output = new ClientOutput(force, outputData)
       force.storeOutput(output)
@@ -967,51 +1147,32 @@ export default class SessionClient extends Session<TClientMissionTypes> {
     switch (key) {
       case 'pre-execution':
         let { nodeId } = event.data
-        let node = this.mission.getNode(nodeId)
-        node?.handleOutputSent()
+        let node = this.mission.getNodeById(nodeId)
+        node?.onOutput()
     }
   }
 
   /**
-   * Handles when a node has been opened.
+   * Handles when a node-opened response is received from the server.
    * @param event The event emitted by the server.
    */
-  private onNodeOpened = (event: TServerEvents['node-opened']): void => {
-    // Extract data.
-    let { nodeId, revealedChildNodes, revealedChildPrototypes } = event.data
-
-    // Find the node, given the ID.
-    let node: ClientMissionNode | undefined = this.mission.getNode(nodeId)
-
-    // Handle node not found.
-    if (node === undefined) {
-      throw new Error(
-        `Event "node-opened" was triggered, but the node with the given nodeId ("${nodeId}") could not be found.`,
-      )
-    }
-
-    // Find the prototype, given the ID.
-    let prototype: ClientMissionPrototype | undefined =
-      this.mission.getPrototype(node.prototype._id)
-
-    // Handle prototype not found.
-    if (prototype === undefined) {
-      throw new Error(
-        `Event "node-opened" was triggered, but the prototype with the given prototypeId ("${node.prototype._id}") could not be found.`,
-      )
-    }
-
-    // Update the prototype's revealed child nodes.
-    prototype.populateChildren(revealedChildPrototypes)
-
-    // Open node, if there are revealed
-    // child nodes.
-    if (revealedChildNodes !== undefined) {
-      node.open({ revealedChildNodes })
-      // Remap actions, since new actions
-      // may have been populated.
-      this.mapActions()
-    }
+  private onNodeOpenedResponse = (
+    event: TServerEvents['node-opened'],
+  ): void => {
+    // Gather data.
+    const {
+      nodeId,
+      structure,
+      revealedDescendants,
+      revealedDescendantPrototypes,
+    } = event.data
+    // Handle the node opening.
+    return this.onNodeOpened({
+      nodeId,
+      structure,
+      revealedDescendants,
+      revealedDescendantPrototypes,
+    })
   }
 
   /**
@@ -1022,8 +1183,12 @@ export default class SessionClient extends Session<TClientMissionTypes> {
     event: TServerEvents['action-execution-initiated'],
   ): void => {
     // Extract data.
-    let { execution: executionData, resourcesRemaining } = event.data
-    let { actionId } = executionData
+    const { resourcesRemaining } = event.data
+    // Type is defined here below because for some reason
+    // there are type issues when I extract it using
+    // the destructuring syntax above.
+    const executionData: TActionExecutionJson = event.data.execution
+    const { actionId } = executionData
 
     // Find the action and node, given the action ID.
     let action: ClientMissionAction | undefined = this.actions.get(actionId)
@@ -1040,8 +1205,16 @@ export default class SessionClient extends Session<TClientMissionTypes> {
       node = action.node
     }
 
+    // Create a new execution object.
+    let execution = new ClientActionExecution(
+      executionData._id,
+      action,
+      executionData.start,
+      executionData.end,
+    )
+
     // Handle execution on the node.
-    node.loadExecution(executionData)
+    node.onExecution(execution)
 
     // Update the resources remaining for
     // the force.
@@ -1055,48 +1228,58 @@ export default class SessionClient extends Session<TClientMissionTypes> {
   private onActionExecutionCompleted = (
     event: TServerEvents['action-execution-completed'],
   ): void => {
-    // Extract data.
-    let { outcome, revealedChildNodes, revealedChildPrototypes } = event.data
-    let { actionId } = outcome
+    // Gather data.
+    const { structure, revealedDescendants, revealedDescendantPrototypes } =
+      event.data
 
-    // Find the action given the action ID.
-    let action: ClientMissionAction | undefined = this.actions.get(actionId)
+    const outcomeData: TExecutionOutcomeJson = event.data.outcome
+    const { executionId } = outcomeData
+    const execution = this.mission.getExecution(executionId)
+    if (!execution)
+      throw new Error(`Execution "${executionId}" could not be found.`)
+    const { node } = execution
+    const { prototype } = node
 
-    // Handle action not found.
-    if (action === undefined) {
-      throw new Error(
-        `Event "action-execution-initiated" was triggered, but the action with the given actionId ("${actionId}") could not be found.`,
-      )
-    }
+    const outcome = new ClientExecutionOutcome(
+      outcomeData._id,
+      outcomeData.state,
+      execution,
+    )
 
-    // Get the action's node.
-    let node: ClientMissionNode = action.node
+    // Handle outcome on different levels.
+    execution.onOutcome(outcome)
+    prototype.onOpen(revealedDescendantPrototypes, structure)
+    node.onOpen(revealedDescendants)
 
-    // Handle revealed child prototypes.
-    if (revealedChildPrototypes) {
-      // Find the prototype, given the ID.
-      let prototype: ClientMissionPrototype | undefined =
-        this.mission.getPrototype(node.prototype._id)
-
-      // Handle prototype not found.
-      if (prototype === undefined) {
-        throw new Error(
-          `Event "action-execution-completed" was triggered, but the prototype with the given prototypeId ("${node.prototype._id}") could not be found.`,
-        )
-      }
-
-      // Update the prototype's revealed child nodes.
-      prototype.populateChildren(revealedChildPrototypes)
-    }
-
-    // Handle outcome on the node.
-    node.loadOutcome(outcome, { revealedChildNodes })
+    node.emitEvent('exec-state-change')
 
     // Remap actions if there are revealed nodes, since
     // those revealed nodes may contain new actions.
-    if (revealedChildNodes !== undefined) {
-      this.mapActions()
-    }
+    if (revealedDescendants) this.mapActions()
+  }
+
+  /**
+   * Handles when a node has been opened.
+   * @param data The data needed to open the node.
+   */
+  private onNodeOpened = (data: TOpenNodeData): void => {
+    // Gather data.
+    const {
+      nodeId,
+      structure,
+      revealedDescendants,
+      revealedDescendantPrototypes,
+    } = data
+    const node = this.mission.getNodeById(nodeId)
+    if (!node) throw new Error(`Node "${nodeId}" was not found.`)
+    const { prototype } = node
+
+    // Handle opening at different levels.
+    prototype.onOpen(revealedDescendantPrototypes, structure)
+    node.onOpen(revealedDescendants)
+
+    // Remap actions, if new nodes have been revealed.
+    if (revealedDescendants) this.mapActions()
   }
 
   /**
@@ -1107,7 +1290,7 @@ export default class SessionClient extends Session<TClientMissionTypes> {
   public static $fetchAll(): Promise<SessionBasic[]> {
     return new Promise<SessionBasic[]>(
       async (
-        resolve: (sessions: TSessionBasicJson[]) => void,
+        resolve: (sessions: SessionBasic[]) => void,
         reject: (error: any) => void,
       ): Promise<void> => {
         try {
@@ -1133,36 +1316,29 @@ export default class SessionClient extends Session<TClientMissionTypes> {
    * @resolves To the session ID.
    * @rejects If the session failed to launch.
    */
-  public static $launch(
+  public static async $launch(
     missionId: string,
     sessionConfig: Partial<TSessionConfig>,
   ): Promise<string> {
-    return new Promise<string>(
-      async (
-        resolve: (sessionId: string) => void,
-        reject: (error: any) => void,
-      ): Promise<void> => {
-        try {
-          // Call API to launch new session with
-          // the mission ID. Await the generated
-          // session ID.
-          let { sessionId } = (
-            await axios.post<{ sessionId: string }>(
-              `${Session.API_ENDPOINT}/launch/`,
-              {
-                missionId,
-                ...sessionConfig,
-              },
-            )
-          ).data
-          return resolve(sessionId)
-        } catch (error) {
-          console.error('Failed to launch session.')
-          console.error(error)
-          return reject(error)
-        }
-      },
-    )
+    try {
+      // Call API to launch new session with
+      // the mission ID. Await the generated
+      // session ID.
+      let { sessionId } = (
+        await axios.post<{ sessionId: string }>(
+          `${Session.API_ENDPOINT}/launch/`,
+          {
+            missionId,
+            ...sessionConfig,
+          },
+        )
+      ).data
+      return sessionId
+    } catch (error) {
+      console.error('Failed to launch session.')
+      console.error(error)
+      throw error
+    }
   }
 
   /**
