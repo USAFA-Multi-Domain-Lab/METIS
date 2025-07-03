@@ -1,5 +1,30 @@
 # changelog
 
+# version-2.1.0 | 7-3-2025
+
+- Full file store support has been implemented, enabling users to upload, manage, and download files, attach them to missions, and control when forces can access them.
+- Missions exported from METIS will now be exported as ZIP files. These ZIP files will include any files linked to the mission from the file store. When the export is imported into METIS, any files in the export absent from the file store will be uploaded.
+- The style and design of METIS have been revamped, simplifying the color palette used and smoothing out the overall look of the UI.
+- Lists received a massive overhaul, including support for additional columns, quicker access to list and item options, support for item selection, support for disabled items, and more.
+- Additional columns have been added to lists on the home page, providing extra details for the items in the lists, such as who created an item, when it was created, when it was last updated, and much more.
+- Prototypes no longer require a corresponding node in every force. Now, a node can be marked as excluded from a force, which will leave a gap in the structure for that force.
+- An option can now be toggled for a force making all nodes in that force immediately accessible to members of that force.
+- The METIS internal target environment has been restructured to contain more specific target options for nodes and actions. Additionally, effects, such as success-chance or process-time modification, can now be configured to target either an entire node (like before) or a specific action.
+- Triggers have been added for effects, which define when an effect is enacted. Now, an effect can also be triggered upon failed execution or upon execution initiation.
+- Resource labels have been added, which allow resources to be renamed on a per-mission basis based on the currency needed for a scenario.
+- Resource cost, success chance, and process time can now be obfuscated for an action in a mission. Any participant executing an action in a session cannot see the value of the obfuscated properties.
+- The behavior of an action opening a node upon success is now optional. Actions can now be created which will never open the node.
+- Support for opening nodes via the target-effect system has been added. Effects can now be created to open a specific node dynamically.
+- Support for awarding resources to a force via the target-effect system has been added. Effects can now be created to positively increase a force's resource pool dynamically.
+- Support for negative resource pools has been added. A mission designer can now enable negative resource pools for a mission, which will disable the default behavior preventing a force from going below 0.
+- Missions can now be play-tested. This allows users to walkthrough missions without the typical process of configuring, launching, joining, and starting a session manually.
+- Rich text editors used on the mission page have been revamped to be more intuitive and use a more powerful underlying engine. Code blocks are also now supported.
+- Actions can now be duplicated within a node and effects can be duplicated within an action. The ability to duplicate actions from one node to another node, or an effect from one action to another action is currently not supported, but it will be in the future.
+- User page now supports more advanced edits for users. Now an admin can update a user’s password to a new temporary or permanent password or change their access level.
+- Mission-issue-detection system has been improved and now supports the detection of a larger scope of issues.
+- New methods for deploying METIS have been created, including via Docker. Environment configuration for METIS installs can now be fine tuned and development, production, and testing configurations can be run from the same install in parallel.
+- Support for effect migrations has been added, allowing developers of target-environments to write code to migrate effects from one version of a target-environment to another version.
+
 # version-2.0.4 | 4-6-2025
 
 - Fixed the issue with errors being thrown on the client when a session participant executes an action with effects that have a node or output target from the METIS target environment tied to it
