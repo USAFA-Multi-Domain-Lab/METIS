@@ -230,10 +230,6 @@ export default class ClientMissionForce
   public drawRelationshipLines(): void {
     // The relationship lines drawn.
     let relationshipLines: TWithKey<TLine_P>[] = []
-    // Define the distance between the edge of a
-    // node and the edge of the column.
-    let columnEdgeDistance: number =
-      (ClientMissionNode.COLUMN_WIDTH - ClientMissionNode.WIDTH) / 2
     // Get half the default node height.
     const halfDefaultNodeHeight: number =
       ClientMissionNode.DEFAULT_NAME_NEEDED_HEIGHT / 2 +
@@ -244,6 +240,10 @@ export default class ClientMissionForce
     const baseAlgorithm = (parent: ClientMissionNode = this.root) => {
       // Get details.
       const { nonRevealedDisplayMode } = this.mission
+      // Define the distance between the edge of a
+      // node and the edge of the column.
+      const columnEdgeDistance: number =
+        (ClientMissionNode.COLUMN_WIDTH - parent.width) / 2
       let children: ClientMissionNode[] =
         nonRevealedDisplayMode === 'show'
           ? parent.children
@@ -256,8 +256,9 @@ export default class ClientMissionForce
         nonRevealedDisplayMode === 'show'
           ? parent.lastChildNode
           : parent.lastRelativeChildNode
-      let childCount: number = children.length
-      let blurred: boolean = nonRevealedDisplayMode === 'blur' && !parent.opened
+      const childCount: number = children.length
+      const blurred: boolean =
+        nonRevealedDisplayMode === 'blur' && !parent.opened
 
       // If the parent is not opened, and the non-revealed
       // display mode is set to hide, then prevent the algorithm
@@ -282,7 +283,7 @@ export default class ClientMissionForce
           key: `top-level-to-middle_${parent._id}`,
           direction: 'horizontal',
           start: midStart,
-          length: ClientMissionNode.WIDTH / 2,
+          length: parent.width / 2,
           blurred,
         })
       }
@@ -300,7 +301,7 @@ export default class ClientMissionForce
         // the parent node.
         let parentToMidStart: Vector2D = parent.position
           .clone()
-          .translateX(ClientMissionNode.WIDTH / 2)
+          .translateX(parent.width / 2)
           .translateY(halfDefaultNodeHeight)
 
         // Push a new line.
@@ -407,19 +408,11 @@ export default class ClientMissionForce
             .clone()
             // Then translate to the left edge of the node,
             // and down by half the default node height.
-            .translate(-ClientMissionNode.WIDTH / 2, halfDefaultNodeHeight)
+            .translate(-child.width / 2, halfDefaultNodeHeight)
 
           // Determine the length of the from the difference
           // between the x values of the start and end positions.
           let midToChildLength: number = midToChildEnd.x - midToChildStart.x
-
-          if (nonRevealedDisplayMode === 'show') {
-            if (child.hasChildren) {
-              midToChildLength = ClientMissionNode.WIDTH + columnEdgeDistance
-            } else {
-              midToChildLength += ClientMissionNode.WIDTH / 2
-            }
-          }
 
           // Push the new line.
           relationshipLines.push({

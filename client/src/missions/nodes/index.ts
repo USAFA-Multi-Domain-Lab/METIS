@@ -232,6 +232,13 @@ export default class ClientMissionNode
     return ClientMissionNode.VERTICAL_PADDING + this.nameHeight
   }
 
+  public get width(): number {
+    const { nonRevealedDisplayMode } = this.mission
+    const useExcludeWidth = nonRevealedDisplayMode === 'show' && this.exclude
+    if (useExcludeWidth) return ClientMissionNode.EXCLUDED_WIDTH
+    return ClientMissionNode.WIDTH
+  }
+
   /**
    * Buttons to manage this specific node on a mission map.
    */
@@ -592,6 +599,12 @@ export default class ClientMissionNode
    * The relative width of a node on the mission map.
    */
   public static readonly WIDTH = 2.25 //em
+
+  /**
+   * The relative width of an excluded node on the mission map.
+   */
+  public static readonly EXCLUDED_WIDTH = 0.45 //em
+
   /**
    * The vertical padding of a node on the mission map.
    */
