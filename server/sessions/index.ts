@@ -1532,7 +1532,14 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       completionPayload.data = {
         ...completionPayload.data,
         structure: structure,
-        revealedDescendants: descendants.map((n) => n.toJson()),
+        revealedDescendants: descendants.map((n) =>
+          n.toJson({
+            sessionDataExposure: {
+              expose: 'user-specific',
+              userId: member.userId,
+            },
+          }),
+        ),
         revealedDescendantPrototypes: prototypes.map((p) => p.toJson()),
       }
     }
@@ -1567,14 +1574,14 @@ export default class SessionServer extends Session<TMetisServerComponents> {
         { userId: member.userId },
       )
     }
-    // Apply effects, if the outcome calls for it.
-    if (effectTrigger) this.applyEffects(member, action, effectTrigger)
-
     // Emit the action execution completed
     // event to each member for the force.
     for (let { connection } of this.getMembersForForce(outcome.forceId)) {
       connection.emit('action-execution-completed', completionPayload)
     }
+
+    // Apply effects, if the outcome calls for it.
+    if (effectTrigger) this.applyEffects(member, action, effectTrigger)
   }
 
   /**
@@ -1780,7 +1787,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
    * Handles the opening of a node during a session.
    * @param nodeId The node to open.
    */
-  public openNode = (node: ServerMissionNode) => {
+  public openNode = (node: ServerMissionNode, userId: User['_id']) => {
     // Confirm the node exists then open it.
     this.confirmComponentInMission(node)
     node.open()
@@ -1797,7 +1804,14 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       key: 'node-open',
       nodeId: node._id,
       structure: structure,
-      revealedDescendants: descendants.map((n) => n.toJson()),
+      revealedDescendants: descendants.map((n) =>
+        n.toJson({
+          sessionDataExposure: {
+            expose: 'user-specific',
+            userId,
+          },
+        }),
+      ),
       revealedDescendantPrototypes: prototypes.map((p) => p.toJson()),
     }
 
