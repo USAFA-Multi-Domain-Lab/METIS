@@ -36,6 +36,7 @@ import build_000040 from './builds/build_000040'
 import build_000041 from './builds/build_000041'
 import build_000042 from './builds/build_000042'
 import build_000044 from './builds/build_000044'
+import build_000045 from './builds/build_000045'
 
 /**
  * This class is responsible for executing the import of .metis and .cesar files.
@@ -220,7 +221,7 @@ export default class MissionImport {
     // between 10 and 38 and it is not a
     // .metis file, it is skipped.
     else if (
-      NumberToolbox.isBetween(contents_JSON.schemaBuildNumber, 10, 38) &&
+      NumberToolbox.isBetween(contents_JSON.schemaBuildNumber, 10, 39) &&
       !file.originalName.toLowerCase().endsWith('.metis')
     ) {
       throw new Error(
@@ -231,7 +232,7 @@ export default class MissionImport {
     // or greater and it is not a .metis.zip
     // file, it is skipped.
     else if (
-      contents_JSON.schemaBuildNumber >= 39 &&
+      contents_JSON.schemaBuildNumber >= 40 &&
       !file.originalName.toLowerCase().endsWith('.metis.zip')
     ) {
       throw new Error(
@@ -262,34 +263,35 @@ export default class MissionImport {
    * @param missionData The mission data to migrate.
    */
   private migrateIfOutdated = (missionData: any): void => {
-    this.processBuild(missionData, 5, /***/ build_000005)
-    this.processBuild(missionData, 9, /***/ build_000009)
-    this.processBuild(missionData, 10, /**/ build_000010)
-    this.processBuild(missionData, 11, /**/ build_000011)
-    this.processBuild(missionData, 12, /**/ build_000012)
-    this.processBuild(missionData, 13, /**/ build_000013)
-    this.processBuild(missionData, 17, /**/ build_000017)
-    this.processBuild(missionData, 18, /**/ build_000018)
-    this.processBuild(missionData, 20, /**/ build_000020)
-    this.processBuild(missionData, 23, /**/ build_000023)
-    this.processBuild(missionData, 24, /**/ build_000024)
-    this.processBuild(missionData, 25, /**/ build_000025)
-    this.processBuild(missionData, 26, /**/ build_000026)
-    this.processBuild(missionData, 27, /**/ build_000027)
-    this.processBuild(missionData, 28, /**/ build_000028)
-    this.processBuild(missionData, 29, /**/ build_000029)
-    this.processBuild(missionData, 32, /**/ build_000032)
-    this.processBuild(missionData, 33, /**/ build_000033)
-    this.processBuild(missionData, 34, /**/ build_000034)
-    this.processBuild(missionData, 35, /**/ build_000035)
-    this.processBuild(missionData, 36, /**/ build_000036)
-    this.processBuild(missionData, 37, /**/ build_000037)
-    this.processBuild(missionData, 38, /**/ build_000038)
-    this.processBuild(missionData, 39, /**/ build_000039)
-    this.processBuild(missionData, 40, /**/ build_000040)
-    this.processBuild(missionData, 41, /**/ build_000041)
-    this.processBuild(missionData, 42, /**/ build_000042)
-    this.processBuild(missionData, 44, /**/ build_000044)
+    this.processBuild(missionData, 5, /*****/ build_000005)
+    this.processBuild(missionData, 9, /*****/ build_000009)
+    this.processBuild(missionData, 10, /****/ build_000010)
+    this.processBuild(missionData, 11, /****/ build_000011)
+    this.processBuild(missionData, 12, /****/ build_000012)
+    this.processBuild(missionData, 13, /****/ build_000013)
+    this.processBuild(missionData, 17, /****/ build_000017)
+    this.processBuild(missionData, 18, /****/ build_000018)
+    this.processBuild(missionData, 20, /****/ build_000020)
+    this.processBuild(missionData, 23, /****/ build_000023)
+    this.processBuild(missionData, 24, /****/ build_000024)
+    this.processBuild(missionData, 25, /****/ build_000025)
+    this.processBuild(missionData, 26, /****/ build_000026)
+    this.processBuild(missionData, 27, /****/ build_000027)
+    this.processBuild(missionData, 28, /****/ build_000028)
+    this.processBuild(missionData, 29, /****/ build_000029)
+    this.processBuild(missionData, 32, /****/ build_000032)
+    this.processBuild(missionData, 33, /****/ build_000033)
+    this.processBuild(missionData, 34, /****/ build_000034)
+    this.processBuild(missionData, 35, /****/ build_000035)
+    this.processBuild(missionData, 36, /****/ build_000036)
+    this.processBuild(missionData, 37, /****/ build_000037)
+    this.processBuild(missionData, 38, /****/ build_000038)
+    this.processBuild(missionData, 39, /****/ build_000039)
+    this.processBuild(missionData, 40, /****/ build_000040)
+    this.processBuild(missionData, 41, /****/ build_000041)
+    this.processBuild(missionData, 42, /****/ build_000042)
+    this.processBuild(missionData, 44, /****/ build_000044)
+    this.processBuild(missionData, 45, /****/ build_000045)
   }
 
   /**
