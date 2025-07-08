@@ -1116,7 +1116,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
         this.updateFileAccess(data)
         break
       default:
-        throw new Error(
+        return console.warn(
           `Error: Data format sent to modifier handler is not recognized. Data: ${data}`,
         )
     }
@@ -1196,15 +1196,13 @@ export default class SessionClient extends Session<TMetisClientComponents> {
 
     // Handle action not found.
     if (action === undefined) {
-      throw new Error(
+      return console.error(
         `Event "action-execution-initiated" was triggered, but the action with the given actionId ("${actionId}") could not be found.`,
       )
     }
-    // Handle action found.
-    else {
-      node = action.node
-    }
 
+    // Handle action found.
+    node = action.node
     // Create a new execution object.
     let execution = new ClientActionExecution(
       executionData._id,
@@ -1235,8 +1233,9 @@ export default class SessionClient extends Session<TMetisClientComponents> {
     const outcomeData: TExecutionOutcomeJson = event.data.outcome
     const { executionId } = outcomeData
     const execution = this.mission.getExecution(executionId)
-    if (!execution)
-      throw new Error(`Execution "${executionId}" could not be found.`)
+    if (!execution) {
+      return console.error(`Execution "${executionId}" could not be found.`)
+    }
     const { node } = execution
     const { prototype } = node
 
@@ -1271,7 +1270,11 @@ export default class SessionClient extends Session<TMetisClientComponents> {
       revealedDescendantPrototypes,
     } = data
     const node = this.mission.getNodeById(nodeId)
-    if (!node) throw new Error(`Node "${nodeId}" was not found.`)
+    if (!node) {
+      return console.warn(
+        `Node "${nodeId}" was not found. This is likely due to an effect being applied to a node that has not yet been revealed to the user.`,
+      )
+    }
     const { prototype } = node
 
     // Handle opening at different levels.
