@@ -36,8 +36,7 @@ export default function MissionEntry({
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
-  const { notify, beginLoading, finishLoading, navigateTo, prompt } =
-    globalContext.actions
+  const { prompt } = globalContext.actions
 
   const { state } = useMissionPageContext()
   const [checkForDefects, setCheckForDefects] = state.checkForDefects
