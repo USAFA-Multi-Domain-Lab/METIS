@@ -54,10 +54,11 @@ const launchSession = async (request: Request, response: Response) => {
     )
 
     try {
-      // Update `launchedAt` for the mission to track
-      // the last time the mission was launched.
-      missionDoc.launchedAt = new Date().toISOString()
-      await missionDoc.save()
+      await MissionModel.updateOne(
+        { _id: missionId },
+        { $set: { launchedAt: new Date().toISOString() } },
+        { timestamps: false },
+      )
     } catch (error: any) {
       const databaseError = new Error(
         `Failed to update launchedAt for mission "{ _id: ${missionDoc._id}, name: ${missionDoc.name} }".\n`,

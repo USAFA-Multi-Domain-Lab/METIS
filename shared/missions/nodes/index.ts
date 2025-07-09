@@ -200,7 +200,9 @@ export default abstract class MissionNode<
    * Whether or not this node is blocked.
    */
   public get blocked(): boolean {
-    return this._blocked
+    return this.ancestors.some((ancestor) => ancestor.blocked)
+      ? true
+      : this._blocked
   }
 
   /**
@@ -279,18 +281,22 @@ export default abstract class MissionNode<
   }
 
   /**
+   * The nodes that are ancestors of this node
+   * in the tree structure.
+   */
+  public get ancestors(): TNode<T>[] {
+    return this.parent ? [...this.parent.ancestors, this.parent] : []
+  }
+
+  /**
    * Any nodes that descend from this node
    * in the tree structure.
    */
   public get descendants(): TNode<T>[] {
-    let descendants: TNode<T>[] = []
-
-    this.children.forEach((child: TNode<T>) => {
-      descendants.push(child)
-      descendants.push(...child.descendants)
-    })
-
-    return descendants
+    return [
+      ...this.children,
+      ...this.children.flatMap((child) => child.descendants),
+    ]
   }
 
   /**
@@ -439,7 +445,7 @@ export default abstract class MissionNode<
     const algorithm = (node: TNode<T> = this): boolean => {
       if (!node.parent || this.force.revealAllNodes) return true
       if (node.parent.exclude) algorithm(node.parent)
-      return node.parent.opened
+      return node.ancestors.every(({ opened }) => opened)
     }
 
     return algorithm()

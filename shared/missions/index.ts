@@ -922,9 +922,15 @@ export default abstract class Mission<
     let node = force.nodes.find((node) => node.localKey === nodeKey)
     if (!node) return undefined
 
-    let action = Array.isArray(node.actions)
-      ? node.actions.find((action) => action.localKey === actionKey)
-      : node.actions.values().find((action) => action.localKey === actionKey)
+    const { actions } = node
+    let action = undefined
+
+    if (Array.isArray(actions)) {
+      action = actions.find((a) => a.localKey === actionKey)
+    } else if (actions instanceof Map) {
+      let actionsArray = Array.from(actions.values())
+      action = actionsArray.find((a) => a.localKey === actionKey)
+    }
 
     return action
   }

@@ -346,7 +346,7 @@ export default class TargetEnvContext {
    */
   private openNode = ({ forceKey, nodeKey }: TManipulateNodeOptions = {}) => {
     const targetNode = this.determineTargetNode(forceKey, nodeKey)
-    this.session.openNode(targetNode)
+    this.session.openNode(targetNode, this.userId)
   }
 
   /**
