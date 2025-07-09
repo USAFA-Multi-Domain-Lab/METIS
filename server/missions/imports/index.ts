@@ -5,6 +5,7 @@ import MissionModel from 'metis/server/database/models/missions'
 import ServerFileToolbox from 'metis/server/toolbox/files'
 import NumberToolbox from 'metis/toolbox/numbers'
 import { AnyObject } from 'metis/toolbox/objects'
+import { TCreatedByJson } from 'metis/users'
 import path from 'path'
 import MetisFileStore, { TMulterFile } from '../../files'
 import { databaseLogger } from '../../logging'
@@ -79,17 +80,25 @@ export default class MissionImport {
   }
 
   /**
+   * The options for the import.
+   */
+  private options: TMissionImportOptions
+
+  /**
    * @param files An array of files to import.
    * @param fileStore The file store where any supporting files
    * will be stored.
+   * @param options Additional options for the import.
    */
   public constructor(
     files: TFileImportData | TFileImportData[],
     fileStore: MetisFileStore,
+    options: TMissionImportOptions = {},
   ) {
     if (!Array.isArray(files)) files = [files]
     this.files = files
     this.fileStore = fileStore
+    this.options = options
   }
 
   /**
@@ -428,7 +437,18 @@ export default class MissionImport {
 
       // Model creation.
       try {
+        // Parse creator info from options.
+        const { createdByInfo } = this.options
+
+        // Remove unnecessary fields.
         delete dataAsJson.schemaBuildNumber
+
+        // Add creator info.
+        if (createdByInfo) {
+          dataAsJson.createdBy = createdByInfo.createdBy
+          dataAsJson.createdByUsername = createdByInfo.createdByUsername
+        }
+
         // Import any files needed for the mission.
         if (isZipFile) await this.importFiles(importDir, dataAsJson, file)
         // Create the new mission.
@@ -490,17 +510,31 @@ export default class MissionImport {
   public static fromMulterFiles = (
     multerFiles: TMulterFile[],
     fileStore: MetisFileStore,
+    options: TMissionImportOptions = {},
   ): MissionImport => {
     let files = multerFiles.map((file) => ({
       name: file.filename,
       originalName: file.originalname,
       path: file.path,
     }))
-    return new MissionImport(files, fileStore)
+    return new MissionImport(files, fileStore, options)
   }
 }
 
 /* -- TYPES -- */
+
+/**
+ * Options when creating a {@link MissionImport}
+ * instance.
+ */
+export type TMissionImportOptions = {
+  /**
+   * Used when creating missions from the import
+   * to set the user who created the mission.
+   * @note By default, the system user is used.
+   */
+  createdByInfo?: Pick<TCreatedByJson, 'createdBy' | 'createdByUsername'>
+}
 
 /**
  * File data needed to import a given file.
