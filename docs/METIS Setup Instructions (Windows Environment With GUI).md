@@ -179,23 +179,40 @@ npm run build
 
 ### Step #3 - Configure Environment
 
-For the web server to properly connect to the database, the environment file for the METIS must be configured correctly so that the web server knows how to connect to the database. Go into the METIS directory and create a new file called `environment.json` .
+For the web server to properly connect to the database, the environment for METIS must be configured correctly so that the web server knows how to connect.  
+**As of the current version, METIS uses environment variable files located in the `config` directory instead of an `environment.json` file.**
 
-In this file, METIS can be configured differently from its default values. All properties are optional, except the `mongoUsername` and `mongoPassword` , which are required due to the auth restrictions set up. If you have a custom host or port for MongoDB as well, this can also be configured here. All available environment options are outlined below:
+Go into the `config` directory in your METIS project. You will find several files such as:
 
-```json
-{
-  "port": "<your-port>", // Default: 8080, Optional
-  "mongoDB": "<your-db-name>", // Default: "metis", Optional
-  "mongoHost": "<your-host>", // Default: "localhost", Optional
-  "mongoPort": "<your-port>", // Default: 27017, Optional
-  "mongoUsername": "<your-username>", // Required
-  "mongoPassword": "<your-password>", // Required
-  "fileStoreDir": "<your-file-store-dir>", // Default: "./files/store" Optional
-  "httpRateLimit": "<your-rate-limit>", // Default: 25 Optional
-  "wsRateLimit": "<your-rate-limit>" // Default 25 Optional
-}
+- `dev.env` and `dev.defaults.env`
+- `prod.env` and `prod.defaults.env`
+- `docker.env` and `docker.defaults.env`
+- `test.env` and `test.defaults.env`
+
+To configure your environment, edit the appropriate `.env` file for your deployment (for example, `prod.env` for production, which is standard for this setup).  
+**Do not edit the `*.defaults.env` files directly.**  
+Override values by setting them in the corresponding `.env` file.
+
+All properties are optional except for `MONGO_USERNAME` and `MONGO_PASSWORD`, which are required due to the authentication restrictions set up.  
+If you have a custom host or port for MongoDB, you can also configure these here.
+
+All available environment options are outlined below (example for `prod.env`):
+
+```env
+PORT=8080                        # Default: 8080 (Optional)
+MONGO_DB='metis'                 # Default: "metis" (Optional)
+MONGO_HOST='localhost'           # Default: "localhost" (Optional)
+MONGO_PORT=27017                 # Default: 27017 (Optional)
+MONGO_USERNAME='<your-username>' # Required
+MONGO_PASSWORD='<your-password>' # Required
+FILE_STORE_DIR='./files/store'   # Default: "./files/store" (Optional)
+HTTP_RATE_LIMIT=25               # Default: 25 (Optional)
+HTTP_RATE_LIMIT_DURATION=1       # Default: 1 (second) (Optional)
+WS_RATE_LIMIT=25                 # Default: 25 (Optional)
+WS_RATE_LIMIT_DURATION=1         # Default: 1 (second) (Optional)
 ```
+
+**After editing your `.env` file, restart the METIS server for changes to take effect.**
 
 ### Step #4 - Run METIS
 
