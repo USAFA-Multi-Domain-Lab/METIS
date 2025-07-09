@@ -546,7 +546,10 @@ export type TMissionForceJson = TMissionForceSaveJson &
  * Options for converting a MissionForce to JSON.
  * @inheritdoc TMissionJsonOptions
  */
-export type TForceJsonOptions = Omit<TMissionJsonOptions, 'idExposure'>
+export type TForceJsonOptions = Omit<
+  TMissionJsonOptions,
+  'idExposure' | 'fileExposure'
+>
 
 /**
  * Options for the MissionForce.exportNodes method.
