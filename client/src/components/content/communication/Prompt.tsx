@@ -78,38 +78,36 @@ export default class Prompt<
    * @returns The JSX for the list.
    */
   protected get listJsx(): JSX.Element | null {
-    if (this.props.list) {
-      // Gather details.
-      const {
-        items,
-        headingText,
-        sortByMethods,
-        nameProperty,
-        searchableProperties,
-        renderObjectListItem,
-      } = this.props.list
+    if (!this.props.list) return null
 
-      return (
-        <ListOld<TList>
-          items={items}
-          renderItemDisplay={(object) => renderObjectListItem(object)}
-          headingText={headingText}
-          sortByMethods={sortByMethods}
-          nameProperty={nameProperty}
-          alwaysUseBlanks={false}
-          searchableProperties={searchableProperties}
-          noItemsDisplay={null}
-          ajaxStatus={'Loaded'}
-          applyItemStyling={() => {
-            return {}
-          }}
-          itemsPerPage={null}
-          listSpecificItemClassName='AltDesign2 PromptList'
-        />
-      )
-    } else {
-      return null
-    }
+    // Gather details.
+    const {
+      items,
+      headingText,
+      sortByMethods,
+      nameProperty,
+      searchableProperties,
+      renderObjectListItem,
+    } = this.props.list
+
+    return (
+      <ListOld<TList>
+        items={items}
+        renderItemDisplay={(object) => renderObjectListItem(object)}
+        headingText={headingText}
+        alwaysUseBlanks={false}
+        sortByMethods={sortByMethods}
+        nameProperty={nameProperty}
+        searchableProperties={searchableProperties}
+        noItemsDisplay={null}
+        ajaxStatus={'Loaded'}
+        applyItemStyling={() => {
+          return {}
+        }}
+        itemsPerPage={null}
+        listSpecificItemClassName='AltDesign2 PromptList'
+      />
+    )
   }
 
   /**

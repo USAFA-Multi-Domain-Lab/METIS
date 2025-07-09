@@ -3,13 +3,18 @@
   display: grid;
   grid-template-columns: 1fr auto auto;
   column-gap: 1em;
-  width: 100%;
   margin: 30px 0 0;
+  width: 100%;
   padding: 0 1.25em;
   font-size: 0.6em;
 
   & > * {
     opacity: 0.7;
+  }
+
+  .Version,
+  .Credit {
+    height: 2em;
   }
 
   .Version {

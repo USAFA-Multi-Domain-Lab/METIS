@@ -232,6 +232,13 @@ export default class ClientMissionNode
     return ClientMissionNode.VERTICAL_PADDING + this.nameHeight
   }
 
+  public get width(): number {
+    const { nonRevealedDisplayMode } = this.mission
+    const useExcludeWidth = nonRevealedDisplayMode === 'show' && this.exclude
+    if (useExcludeWidth) return ClientMissionNode.EXCLUDED_WIDTH
+    return ClientMissionNode.WIDTH
+  }
+
   /**
    * Buttons to manage this specific node on a mission map.
    */
@@ -405,7 +412,7 @@ export default class ClientMissionNode
   public onOpen(revealedDescendants: TMissionNodeJson[] | undefined): void {
     if (revealedDescendants) {
       if (!this.openable && !this.executed) {
-        throw new Error(`Node ${this._id} is not openable.`)
+        console.error(`Node ${this._id} is not openable.`)
       }
       // Set the node to open.
       this._opened = true
@@ -467,7 +474,9 @@ export default class ClientMissionNode
       })
     } else {
       const action = this.actions.get(actionId)
-      if (!action) throw new Error(`Action "${actionId}" not found.`)
+      if (!action) {
+        return console.error(`Action "${actionId}" not found.`)
+      }
       action.modifySuccessChance(successChanceOperand)
     }
 
@@ -486,7 +495,9 @@ export default class ClientMissionNode
       })
     } else {
       const action = this.actions.get(actionId)
-      if (!action) throw new Error(`Action "${actionId}" not found.`)
+      if (!action) {
+        return console.error(`Action "${actionId}" not found.`)
+      }
       action.modifyProcessTime(processTimeOperand)
     }
 
@@ -505,7 +516,9 @@ export default class ClientMissionNode
       })
     } else {
       const action = this.actions.get(actionId)
-      if (!action) throw new Error(`Action "${actionId}" not found.`)
+      if (!action) {
+        return console.error(`Action "${actionId}" not found.`)
+      }
       action.modifyResourceCost(resourceCostOperand)
     }
 
@@ -592,6 +605,12 @@ export default class ClientMissionNode
    * The relative width of a node on the mission map.
    */
   public static readonly WIDTH = 2.25 //em
+
+  /**
+   * The relative width of an excluded node on the mission map.
+   */
+  public static readonly EXCLUDED_WIDTH = 0.45 //em
+
   /**
    * The vertical padding of a node on the mission map.
    */
