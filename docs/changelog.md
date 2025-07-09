@@ -1,5 +1,15 @@
 # changelog
 
+# version-2.1.1 | 7-9-2025
+
+- An issue has been fixed regard mission imports. Importing a mission would assign the system as the creator of the mission, rather than the user who imported it.
+- An issue regarding mission import migration has been resolved.
+- A display issue resulting in inconsistent spacing at the bottom of the page has been fixed.
+- Issues pertaining to the handling of effects have been resolved, specifically issues with how the client and server handled effects enacted on nodes that were not yet revealed in a given force.
+- A visual issue with how relationship lines on the mission map were rendered has been fixed.
+- Launching a mission would update both the last-launched and last-updated timestamps. Now only the last-launched timestamp is updated.
+- The list of defects in a mission would not properly display to the user when launching a mission.
+
 # version-2.1.0 | 7-3-2025
 
 - Full file store support has been implemented, enabling users to upload, manage, and download files, attach them to missions, and control when forces can access them.
