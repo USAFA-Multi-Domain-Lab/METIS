@@ -1395,6 +1395,15 @@ export default class SessionServer extends Session<TMetisServerComponents> {
         ),
       )
     }
+    // If the action has exceeded its maximum
+    // number of executions, then emit an error.
+    if (action.executionLimitReached) {
+      return connection.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_ACTION_EXECUTION_LIMIT, {
+          request,
+        }),
+      )
+    }
 
     try {
       // Execute the action, awaiting result.

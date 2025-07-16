@@ -55,6 +55,7 @@ export default function ActionProperties({
         infiniteResources={config.infiniteResources}
       />
       <ActionProperty action={action} actionKey='opensNodeFormatted' />
+      <ActionProperty action={action} actionKey='type' renderValue={() => ''} />
     </div>
   )
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import List from 'src/components/content/data/lists/List'
+import { DetailDropdown } from 'src/components/content/form/dropdown'
 import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
@@ -9,6 +10,8 @@ import {
   usePostInitEffect,
   useRequireLogin,
 } from 'src/toolbox/hooks'
+import { TActionType } from '../../../../../../../shared/missions/actions'
+import StringToolbox from '../../../../../../../shared/toolbox/strings'
 import { DetailLargeString } from '../../../form/DetailLargeString'
 import { DetailNumber } from '../../../form/DetailNumber'
 import { DetailString } from '../../../form/DetailString'
@@ -37,6 +40,7 @@ export default function ActionEntry({
     [
       'name',
       'description',
+      'type',
       'successChanceHidden',
       'processTimeHidden',
       'resourceCost',
@@ -50,6 +54,7 @@ export default function ActionEntry({
   )
   const [name, setName] = actionState.name
   const [description, setDescription] = actionState.description
+  const [type, setType] = actionState.type
   const [successChance, setSuccessChance] = useState<number>(
     parseFloat(`${(action.successChance * 100.0).toFixed(2)}`),
   )
@@ -158,6 +163,20 @@ export default function ActionEntry({
         setValue={setDescription}
         placeholder='Enter description...'
         key={`${action._id}_description`}
+      />
+      <DetailDropdown<TActionType>
+        fieldType='required'
+        label='Type'
+        options={ClientMissionAction.TYPES}
+        value={type}
+        setValue={setType}
+        isExpanded={false}
+        getKey={(type) => type}
+        render={(type) => StringToolbox.capitalize(type)}
+        handleInvalidOption={{
+          method: 'setToDefault',
+          defaultValue: ClientMissionAction.DEFAULT_PROPERTIES.type,
+        }}
       />
       <Divider />
       <DetailNumber

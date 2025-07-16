@@ -1,10 +1,8 @@
 // This migration script is responsible for updating
-// effects to have the patch number included in the
-// targetEnvironmentVersion field, ensuring that
-// versions such as "1.0" are instead "1.0.0".
+// actions to include a type field, which by default
+// is set to 'repeatable'.
 
 let dbName = 'metis'
-let patchlessVersionRegex = /^\d+\.\d+$/
 
 if (process.env.MONGO_DB) {
   dbName = process.env.MONGO_DB
@@ -27,14 +25,8 @@ while (cursor_missions.hasNext()) {
     for (let node of force.nodes) {
       // Loop through actions.
       for (let action of node.actions) {
-        // Loop through effects.
-        for (let effect of action.effects) {
-          if (patchlessVersionRegex.test(effect.targetEnvironmentVersion)) {
-            // If the version is patchless (e.g., "1.0"),
-            // append ".0" to make it "1.0.0".
-            effect.targetEnvironmentVersion += '.0'
-          }
-        }
+        // Set the action type to 'repeatable' if not set.
+        if (!action.type) action.type = 'repeatable'
       }
     }
   }
@@ -45,4 +37,4 @@ while (cursor_missions.hasNext()) {
 
 print('Updating schema build number...')
 
-db.infos.updateOne({}, { $set: { schemaBuildNumber: 45 } })
+db.infos.updateOne({}, { $set: { schemaBuildNumber: 46 } })

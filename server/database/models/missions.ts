@@ -394,6 +394,12 @@ export const schema = new MissionSchema(
                         default: '',
                         set: sanitizeHtml,
                       },
+                      type: {
+                        type: String,
+                        required: true,
+                        default: 'repeatable',
+                        enum: ServerMissionAction.TYPES,
+                      },
                       processTime: {
                         type: Number,
                         required: true,
