@@ -73,6 +73,24 @@ export default class ClientMissionNode
     this.mission.emitEvent('set-node-exclusion', [this])
   }
 
+  // Overridden
+  public set blocked(value: boolean) {
+    // Emits a 'set-blocked' event on the node
+    // and all of its descendants.
+    const recursivelyEmitEvent = (cursor: ClientMissionNode = this) => {
+      cursor.emitEvent('set-blocked')
+      cursor.descendants.forEach((descendant) => {
+        recursivelyEmitEvent(descendant)
+      })
+    }
+
+    // Update block status of the node.
+    this._blocked = value
+    // Emit events on the node and all of
+    // its descendants.
+    recursivelyEmitEvent()
+  }
+
   /**
    * Whether the node is pending an "node-opened" event from the server.
    * This is used when the client requests to open a node, but the server
@@ -449,21 +467,6 @@ export default class ClientMissionNode
   }
 
   // Implemented
-  public updateBlockStatus(blocked: boolean): void {
-    // Blocks this node and all of its revealed descendants.
-    const algorithm = (blocked: boolean, node: ClientMissionNode = this) => {
-      node._blocked = blocked
-      node.emitEvent('set-blocked')
-      node.revealedDescendants.forEach((descendant) => {
-        algorithm(blocked, descendant)
-      })
-    }
-
-    // Set the block status.
-    algorithm(blocked)
-  }
-
-  // Implemented
   public modifySuccessChance(
     successChanceOperand: number,
     actionId?: string,
@@ -585,7 +588,7 @@ export default class ClientMissionNode
       device: this.device,
       actions: [],
       opened: this.opened,
-      blocked: this.blocked,
+      blocked: this._blocked,
       executions: this.executions,
       exclude: this.exclude,
     })

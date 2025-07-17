@@ -56,22 +56,6 @@ export default class ServerMissionNode extends MissionNode<TMetisServerComponent
   }
 
   // Implemented
-  public updateBlockStatus(blocked: boolean): void {
-    // Blocks this node and all of its revealed descendants.
-    const algorithm = (blocked: boolean, node: ServerMissionNode = this) => {
-      node._blocked = blocked
-      // Abort execution, if executing.
-      if (node.executing) node.latestExecution!.abort()
-      node.revealedDescendants.forEach((descendant) => {
-        algorithm(blocked, descendant)
-      })
-    }
-
-    // Set the block status.
-    algorithm(blocked)
-  }
-
-  // Implemented
   public modifySuccessChance(
     successChanceOperand: number,
     actionId?: string,

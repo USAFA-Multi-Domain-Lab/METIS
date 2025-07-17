@@ -41,54 +41,87 @@
   overflow: hidden;
 }
 
-// An animation to display a `MissionNode` being blocked.
-@mixin blocked-node {
-  $blocked-cursor: not-allowed;
-  $user-select: none;
-  // Initial and final opacity values for
-  // the transition to the blocked state.
-  $init-opacity: 1;
-  $final-opacity: 0.5;
-  // Initialize the linear gradient background
-  // image for the blocked state.
-  $init-grad-color: rgba($color-accent-light, 0);
-  $init-fill: transparent 0% calc(50% - 1px),
-    $init-grad-color calc(50% - 1px) calc(50% + 1px),
-    transparent calc(50% + 1px) 100%;
-  $init-linear-grad1: linear-gradient(to bottom right, $init-fill);
-  $init-linear-grad2: linear-gradient(to bottom left, $init-fill);
-  $init-background-image: $init-linear-grad1, $init-linear-grad2;
-  // Finalize the linear gradient background
-  // image for the blocked state.
-  $final-grad-color: rgba($color-accent-light, $final-opacity);
-  $final-fill: transparent 0% calc(50% - 1px),
-    $final-grad-color calc(50% - 1px) calc(50% + 1px),
-    transparent calc(50% + 1px) 100%;
-  $final-linear-grad1: linear-gradient(to bottom right, $final-fill);
-  $final-linear-grad2: linear-gradient(to bottom left, $final-fill);
-  $final-background-image: $final-linear-grad1, $final-linear-grad2;
+@function fromMiddle($value) {
+  @return calc(50% + #{$value});
+}
 
-  // Define the blocked animation
-  @keyframes blocked {
+@mixin block-node-context {
+  $cursor-scale: 2px;
+  $background-size-min: 100% 100%, 0 0, 0 0;
+  $background-size-max: 100% 100%, 100% 100%, 100% 100%;
+  $border-color-faded: $color-faded;
+  $background-faded: linear-gradient(rgba($color-faded, 0.05));
+  $x-fill-step-1: transparent 0% fromMiddle(-$cursor-scale);
+  $x-fill-step-2-red: rgba($color-failure-light, 0.35)
+    fromMiddle(-$cursor-scale) fromMiddle($cursor-scale);
+  $x-fill-step-2-faded: rgba($color-faded, 0.25) fromMiddle(-$cursor-scale)
+    fromMiddle($cursor-scale);
+  $x-fill-step-3: transparent fromMiddle($cursor-scale) 100%;
+  $x-fill-red: $x-fill-step-1, $x-fill-step-2-red, $x-fill-step-3;
+  $x-fill-faded: $x-fill-step-1, $x-fill-step-2-faded, $x-fill-step-3;
+  $x-red: linear-gradient(to bottom right, $x-fill-red),
+    linear-gradient(to bottom left, $x-fill-red);
+  $x-faded: linear-gradient(to bottom right, $x-fill-faded),
+    linear-gradient(to bottom left, $x-fill-faded);
+
+  @keyframes block-with-red-x {
     0% {
-      background-image: $init-background-image;
-      opacity: $init-opacity;
-      user-select: $user-select;
-      cursor: $blocked-cursor;
+      background-image: $background-faded, $x-red;
+      background-size: $background-size-min;
+      border-color: $border-color-faded;
     }
     100% {
-      background-image: $final-background-image;
-      opacity: $final-opacity;
-      user-select: $user-select;
-      cursor: $blocked-cursor;
+      background-image: $background-faded, $x-red;
+      background-size: $background-size-max;
+      border-color: $border-color-faded;
     }
   }
 
-  // Initial styles for the blocked state
-  opacity: $init-opacity;
-  user-select: $user-select;
-  cursor: $blocked-cursor;
+  @keyframes block-with-faded-x {
+    0% {
+      background-image: $background-faded, $x-faded;
+      background-size: $background-size-min;
+      border-color: $border-color-faded;
+    }
+    100% {
+      background-image: $background-faded, $x-faded;
+      background-size: $background-size-max;
+      border-color: $border-color-faded;
+    }
+  }
 
-  // Transition to the blocked state
-  animation: blocked 1s ease-in-out forwards;
+  @keyframes block-resolved {
+    0% {
+      background-image: none, $x-faded;
+      background-size: $background-size-max;
+    }
+    99% {
+      background-image: none, $x-faded;
+      background-size: $background-size-min;
+    }
+    100% {
+      background-image: unset;
+      background-size: unset;
+    }
+  }
+
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+// An animation to display a `MissionNode` being blocked.
+// Acceptable parameters for `$style` are 'red' and 'faded'.
+@mixin blocked-node($style: 'faded') {
+  @include block-node-context;
+
+  cursor: not-allowed;
+  user-select: none;
+  animation: block-with-#{$style}-x 500ms ease-in-out forwards;
+}
+
+// An animation to display a `MissionNode` being unblocked.
+@mixin blocked-node-resolved {
+  @include block-node-context;
+
+  animation: block-resolved 500ms ease-in-out forwards;
 }

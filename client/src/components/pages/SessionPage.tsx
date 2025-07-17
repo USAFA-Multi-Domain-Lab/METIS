@@ -155,8 +155,15 @@ export default function SessionPage({
     if (!session.member.isAuthorized('manipulateNodes')) return
 
     // If the node is blocked, notify the user.
-    if (node.blocked) {
+    if (node.blockStatus === 'blocked') {
       notify(`"${node.name}" has been blocked and cannot be accessed.`)
+      return
+    }
+    // If the node is cut-off, notify the user.
+    else if (node.blockStatus === 'cut-off') {
+      notify(
+        `You cannot access "${node.name}" because a node upstream has been blocked.`,
+      )
       return
     }
 

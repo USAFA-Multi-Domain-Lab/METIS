@@ -1784,7 +1784,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     // Confirm the node exists, update the block status,
     // then emit an event to the members.
     this.confirmComponentInMission(node)
-    node.updateBlockStatus(blocked)
+    node.blocked = blocked
     this.emitModifierEnacted(node.force, {
       key: 'node-update-block',
       nodeId: node._id,

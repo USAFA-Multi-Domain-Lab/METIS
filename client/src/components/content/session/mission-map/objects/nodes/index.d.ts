@@ -3,6 +3,7 @@ import ClientMission from 'src/missions'
 import ClientActionExecution from 'src/missions/actions/executions'
 import { MetisComponent } from '../../../../../../../../shared/'
 import { TListenerTarget } from '../../../../../../../../shared/events'
+import { TNodeBlockStatus } from '../../../../../../../../shared/missions/nodes'
 import { TWithKey } from '../../../../../../../../shared/toolbox/objects'
 import {
   Vector1D,
@@ -72,10 +73,12 @@ export type TMapCompatibleNode = MetisComponent &
      */
     get executing(): boolean
     /**
-     * Whether the node has been blocked
-     * from being accessed.
+     * The status of a node being blocked. That is,
+     * whether the node is directly blocked, cut-off
+     * from being accessed because one of its ancestors
+     * is blocked, or unblocked and is accessible.
      */
-    blocked: boolean
+    blockStatus: TNodeBlockStatus
     /**
      * Whether the node is currently excluded
      * from the force it belongs to or not.

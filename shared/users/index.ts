@@ -393,7 +393,6 @@ export default abstract class User<
   ): boolean => {
     let userExpression: RegExp = /^([a-zA-Z0-9-_.]{5,25})$/
     let isValidUsername: boolean = userExpression.test(username)
-
     return isValidUsername
   }
 

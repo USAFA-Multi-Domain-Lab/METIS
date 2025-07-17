@@ -348,6 +348,10 @@ export const schema = new MissionSchema(
             type: [
               {
                 _id: { type: String, required: true },
+                localKey: {
+                  type: String,
+                  required: true,
+                },
                 prototypeId: { type: String, required: true },
                 name: {
                   type: String,
@@ -373,10 +377,7 @@ export const schema = new MissionSchema(
                 executable: { type: Boolean, required: true },
                 device: { type: Boolean, required: true },
                 exclude: { type: Boolean, required: true },
-                localKey: {
-                  type: String,
-                  required: true,
-                },
+                initiallyBlocked: { type: Boolean, required: true },
                 actions: {
                   required: true,
                   validate: ServerMissionNode.validateActions,

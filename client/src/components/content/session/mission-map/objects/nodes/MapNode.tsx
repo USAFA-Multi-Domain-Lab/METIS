@@ -6,7 +6,10 @@ import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { useEventListener, useInlineStyling } from 'src/toolbox/hooks'
 import { TMapCompatibleNode, TMapNode_P, TNodeButton } from '.'
-import { TNodeExecutionState } from '../../../../../../../../shared/missions/nodes'
+import {
+  TNodeBlockStatus,
+  TNodeExecutionState,
+} from '../../../../../../../../shared/missions/nodes'
 import ClassList from '../../../../../../../../shared/toolbox/html/class-lists'
 import './MapNode.scss'
 
@@ -66,11 +69,10 @@ export default function <TNode extends TMapCompatibleNode>({
   const [initialProgress] = useState<number>(() =>
     calculateInitialProgress(node),
   )
-  const [blocked, setBlocked] = useState<boolean>(node.blocked)
-  /**
-   * Caches the previous blocked state.
-   */
-  const [prevBlocked, setPrevBlocked] = useState<boolean>(node.blocked)
+  const [blockStatus, setBlockStatus] = useState<TNodeBlockStatus>(
+    node.blockStatus,
+  )
+  const [blockResolved, setBlockResolved] = useState<boolean>(false)
   const nodeButtonEngine = useButtonSvgEngine({
     elements: buttons,
     dependencies: [buttons],
@@ -106,13 +108,15 @@ export default function <TNode extends TMapCompatibleNode>({
     setButtons(node.buttons)
   })
 
-  // Update the blocked state when the node's
-  // blocked state changes.
+  // Update the block status when the node's
+  // block status changes.
   useEventListener(node, 'set-blocked', () => {
-    setBlocked((prev) => {
-      setPrevBlocked(prev)
-      return node.blocked
-    })
+    let previouslyBlocked = blockStatus === 'blocked'
+    let previouslyCutOff = blockStatus === 'cut-off'
+    let nowUnblocked = node.blockStatus === 'unblocked'
+
+    setBlockResolved(nowUnblocked && (previouslyBlocked || previouslyCutOff))
+    setBlockStatus(node.blockStatus)
   })
 
   // Update the execution state when the node's
@@ -142,6 +146,8 @@ export default function <TNode extends TMapCompatibleNode>({
   /* -- COMPUTED -- */
 
   const { mission } = node
+  const blocked: boolean = compute(() => blockStatus === 'blocked')
+  const cutOff: boolean = compute(() => blockStatus === 'cut-off')
 
   /**
    * Determines the context in which the node is being rendered.
@@ -173,8 +179,7 @@ export default function <TNode extends TMapCompatibleNode>({
     // Undefined will default to the background
     // color defined already in the CSS.
     let backgroundColor: string | undefined = undefined
-    let transition: string | undefined = undefined
-    let borderColor: string = color
+    let borderColor: string | undefined = color
 
     // If the camera is zoomed out too far,
     // make the background color the node's color.
@@ -188,31 +193,13 @@ export default function <TNode extends TMapCompatibleNode>({
       height += ClientMissionNode.BUTTONS_HEIGHT
     }
 
-    // If the node is blocked, change the border
-    // and background color.
-    if (blocked) {
-      transition =
-        'border-color 500ms ease-in-out, background-color 500ms ease-in-out'
-      borderColor = '#616060'
-      backgroundColor = '#292f36'
-    }
-    // If the node is not blocked, change the border
-    // and background color.
-    if (!blocked && prevBlocked) {
-      transition =
-        'border-color 1s ease-in-out, background-color 1s ease-in-out'
-      borderColor = color
-      backgroundColor = undefined
-    }
-
     return {
       left: `${x}em`,
       top: `${y}em`,
+      borderColor,
       width: `${width}em`,
       height: `${height}em`,
       padding: `${verticalPadding}em 0`,
-      borderColor: borderColor,
-      transition: transition,
       backgroundColor,
     }
   })
@@ -289,28 +276,27 @@ export default function <TNode extends TMapCompatibleNode>({
   /**
    * The class for the root element.
    */
-  const rootClasses = compute<ClassList>(() => {
-    let classes = new ClassList('MapNode')
-
-    classes.set('Selectable', !!onSelect)
-    classes.set('Selected', node.selected)
-    classes.set('Pending', pending)
-    classes.set('Blocked', blocked)
-    classes.set(
-      'Hidden',
-      mission.nonRevealedDisplayMode === 'hide' && !node.revealed,
-    )
-    classes.set(
-      'Blurred',
-      mission.nonRevealedDisplayMode === 'blur' && !node.revealed,
-    )
-    classes.set('Excluded', excluded)
-    classes.set('Executing', executionState.status === 'executing')
-    classes.set('Success', executionState.status === 'success')
-    classes.set('Failure', executionState.status === 'failure')
-
-    return classes
-  })
+  const rootClasses = compute<ClassList>(() =>
+    new ClassList('MapNode')
+      .set('Selectable', !!onSelect)
+      .set('Selected', node.selected)
+      .set('Pending', pending)
+      .set('Blocked', blocked)
+      .set('CutOff', cutOff)
+      .set('BlockResolved', blockResolved)
+      .set(
+        'Hidden',
+        mission.nonRevealedDisplayMode === 'hide' && !node.revealed,
+      )
+      .set(
+        'Blurred',
+        mission.nonRevealedDisplayMode === 'blur' && !node.revealed,
+      )
+      .set('Excluded', excluded)
+      .set('Executing', executionState.status === 'executing')
+      .set('Success', executionState.status === 'success')
+      .set('Failure', executionState.status === 'failure'),
+  )
 
   /**
    * The class for the node's name.

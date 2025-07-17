@@ -860,7 +860,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
     // Find the node, given the ID.
     let node = this.mission.getNodeById(nodeId)
     // Handle the blocking and unblocking of the node.
-    node?.updateBlockStatus(blocked)
+    if (node) node.blocked = blocked
   }
 
   /**

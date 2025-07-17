@@ -6,7 +6,10 @@ import {
 } from 'src/components/content/session/mission-map/objects/nodes'
 import ClientMission from '..'
 import { TListenerTargetEmittable } from '../../../../shared/events'
-import { TNodeExecutionState } from '../../../../shared/missions/nodes'
+import {
+  TNodeBlockStatus,
+  TNodeExecutionState,
+} from '../../../../shared/missions/nodes'
 import MissionPrototype, {
   TMissionPrototypeJson,
   TMissionPrototypeOptions,
@@ -117,7 +120,7 @@ export default class ClientMissionPrototype
   }
 
   // Implemented
-  public blocked: boolean = false
+  public blockStatus: TNodeBlockStatus = 'unblocked'
 
   // Implemented
   public exclude: boolean = false
