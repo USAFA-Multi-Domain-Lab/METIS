@@ -11,6 +11,7 @@ import {
   TNodeExecutionState,
 } from '../../../../../../../../shared/missions/nodes'
 import ClassList from '../../../../../../../../shared/toolbox/html/class-lists'
+import { useMapContext } from '../../MissionMap'
 import './MapNode.scss'
 
 /* -- CONSTANTS -- */
@@ -53,6 +54,8 @@ export default function <TNode extends TMapCompatibleNode>({
 }: TMapNode_P<TNode>): JSX.Element | null {
   /* -- STATE -- */
 
+  const localContext = useMapContext()
+  const { centerOnMap } = localContext
   const [name, setName] = useState<string>(node.name)
   const [color, setColor] = useState<string>(node.color)
   const [excluded, setExcluded] = useState<boolean>(node.exclude)
@@ -142,6 +145,12 @@ export default function <TNode extends TMapCompatibleNode>({
   // Update the icon when the node's
   // icon changes.
   useEventListener(node, 'new-icon', () => setIcon(node.icon))
+
+  // Center the node on the map when an
+  // event to do so is emitted.
+  useEventListener(node, 'center-on-map', () => {
+    centerOnMap(node)
+  })
 
   /* -- COMPUTED -- */
 
@@ -278,6 +287,7 @@ export default function <TNode extends TMapCompatibleNode>({
    */
   const rootClasses = compute<ClassList>(() =>
     new ClassList('MapNode')
+      .add(`MapNode_${node._id}`)
       .set('Selectable', !!onSelect)
       .set('Selected', node.selected)
       .set('Pending', pending)

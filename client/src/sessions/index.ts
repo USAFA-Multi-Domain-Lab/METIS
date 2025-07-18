@@ -287,7 +287,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
         // request.
         onResponse: (event) => {
           if (event.method === 'node-opened') {
-            this.mission.emitEvent('autopan', [])
+            this.mission.emitEvent('autopan')
           }
 
           if (event.method === 'error') {

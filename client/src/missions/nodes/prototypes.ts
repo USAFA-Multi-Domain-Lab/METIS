@@ -193,7 +193,7 @@ export default class ClientMissionPrototype
     // If the event is a set-buttons event, call
     // emit event on the mission level.
     if (method === 'set-buttons') {
-      this.mission.emitEvent('set-buttons', [])
+      this.mission.emitEvent('set-buttons')
     }
   }
 
@@ -489,6 +489,12 @@ export default class ClientMissionPrototype
       structureKey: this.structureKey,
       depthPadding: this.depthPadding,
     })
+  }
+
+  // Implemented
+  public requestCenterOnMap(): void {
+    this.emitEvent('center-on-map')
+    this.mission.emitEvent('center-node-on-map', this)
   }
 }
 

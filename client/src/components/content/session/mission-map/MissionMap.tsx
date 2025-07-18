@@ -214,6 +214,12 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
     mission.structureChangeKey,
   )
 
+  // A cached node that should be centered on the map,
+  // but can't be until force-selection goes
+  // in effect.
+  const [nodeCenteringTarget, setNodeCenteringTarget] =
+    useState<TMapCompatibleNode | null>(null)
+
   /**
    * Force the component to re-render.
    */
@@ -296,6 +302,36 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
 
     // Set a timeout for the next frame.
     setTimeout(() => panSmoothly(destination), 5)
+  }
+
+  /**
+   * @see {@link TMissionMap_C.zoomSmoothly}
+   */
+  const zoomSmoothly = (destination: Vector1D): void => {
+    // Determine the difference between the camera
+    // zoom and the destination.
+    let difference = destination.x - cameraZoom.x
+    // Determine the change in zoom that
+    // must occur this frame in the transition.
+    let delta = difference * 0.1
+
+    // Enforce cuttoff points so that the transition
+    // doesn't exponentially slow down with no end.
+    if (Math.abs(delta) < 0.003) {
+      cameraZoom.x = destination.x
+    }
+
+    // If the camera is at the destination, end
+    // the loop.
+    if (cameraZoom.x === destination.x) {
+      return
+    }
+
+    // Translate by delta.
+    cameraZoom.translate(delta)
+
+    // Set a timeout for the next frame.
+    setTimeout(() => zoomSmoothly(destination), 5)
   }
 
   /**
@@ -399,6 +435,40 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
     }
   }
 
+  /**
+   * @see {@link TMissionMap_C.centerOnMap}
+   */
+  const centerOnMap = (node: TMapCompatibleNode): void => {
+    if (!elements.root.current) {
+      console.warn('Could not access elements on MissionMap.')
+      return
+    }
+
+    let nodeElement: HTMLDivElement | null =
+      elements.root.current.querySelector(`.MapNode_${node._id}`)
+
+    if (!nodeElement) {
+      console.warn(`Could not find element for node ${node._id}.`)
+      return
+    }
+
+    let rootBoundingBox = elements.root.current.getBoundingClientRect()
+    let nodeBoundingBox = nodeElement.getBoundingClientRect()
+    let rootDomMidpoint = new Vector2D(
+      rootBoundingBox.x + rootBoundingBox.width / 2,
+      rootBoundingBox.y + rootBoundingBox.height / 2,
+    )
+    let nodeDomMidpoint = new Vector2D(
+      nodeBoundingBox.x + nodeBoundingBox.width / 2,
+      nodeBoundingBox.y + nodeBoundingBox.height / 2,
+    )
+    let domDistance = Vector2D.difference(nodeDomMidpoint, rootDomMidpoint)
+    let distance = domDistance.scaleBy(cameraZoom)
+    let destination = cameraPosition.clone().translateBy(distance)
+
+    panSmoothly(destination)
+  }
+
   /* -- HOOKS -- */
 
   // Create an event listener to handle when the mission
@@ -482,6 +552,50 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
     [selectedForce, tabs],
   )
 
+  // Whenever a request is made to center a
+  // node on the map, ensure that it will be
+  // processed properly. If the request is on
+  // a node that is a part of a force that is
+  // in the process of being selected, then the
+  // centering will happen too early. This fixes
+  // that, by caching it so that it is centered
+  // after the selection finishes.
+  useEventListener(mission, 'center-node-on-map', (node) => {
+    // If the node is not a ClientMissionNode or
+    // ClientMissionPrototype, then return.
+    if (
+      !(node instanceof ClientMissionNode) &&
+      !(node instanceof ClientMissionPrototype)
+    ) {
+      return
+    }
+
+    // Get the next-selected force.
+    let nextSelectedForce: ClientMissionForce | null =
+      ClientMission.getForceFromSelection(mission.selection)
+    let forceOfNode: ClientMissionForce | null = null
+
+    // If the node passed is a ClientMissionNode,
+    // get its force.
+    if (node instanceof ClientMissionNode) {
+      forceOfNode = node.force
+    }
+
+    let selectedForceWillChange: boolean =
+      selectedForce?._id !== nextSelectedForce?._id
+    let forceOfNodeIsNextForce: boolean =
+      forceOfNode?._id === nextSelectedForce?._id
+
+    // If the selected force in on the verge of
+    // being updated, and the next-selected force
+    // is the force hosting the node, then cache
+    // the node so that the node-centering can be
+    // processed after the selection is handled.
+    if (selectedForceWillChange && forceOfNodeIsNextForce) {
+      setNodeCenteringTarget(node)
+    }
+  })
+
   // Initialize buttons for the map.
   useButtonSvgs(
     buttonEngine,
@@ -538,6 +652,14 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
     }
   }, [tabIndex])
 
+  // Whenever the selected-force changes, check
+  // for a node-centering target, and center it,
+  // if present.
+  useEffect(() => {
+    if (nodeCenteringTarget) nodeCenteringTarget.requestCenterOnMap()
+    setNodeCenteringTarget(null)
+  }, [selectedForce])
+
   /* -- COMPUTED -- */
 
   /**
@@ -588,6 +710,14 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
 
     return classList.join(' ')
   })
+
+  /**
+   * Computed properties to include in the context.
+   */
+  const computed: TMissionMap_C = {
+    zoomSmoothly,
+    centerOnMap,
+  }
 
   /* -- RENDER -- */
 
@@ -703,7 +833,7 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
     <LocalContextProvider
       context={mapContext}
       defaultedProps={defaultedProps}
-      computed={{}}
+      computed={computed}
       state={state}
       elements={elements}
     >
@@ -861,7 +991,19 @@ export type TMissionMap_P = {
 /**
  * Computed properties for {@link MissionMap} component.
  */
-export type TMissionMap_C = {}
+export type TMissionMap_C = {
+  /**
+   * Updates the camera zoom gradually, providing a
+   * smooth transition for the user.
+   * @param destination The new zoom level.
+   */
+  zoomSmoothly: (destination: Vector1D) => void
+  /**
+   * Centers the camera on the position of the given node.
+   * @param node The node in question.
+   */
+  centerOnMap: (node: TMapCompatibleNode) => void
+}
 
 /**
  * Consolidated, high-level state for `MissionMap`.

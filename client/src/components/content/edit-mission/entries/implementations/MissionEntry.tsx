@@ -115,6 +115,7 @@ export default function MissionEntry({
       onChange(component)
     } else {
       mission.select(component)
+      mission.requestFocusOnMap(component)
     }
   }
 
