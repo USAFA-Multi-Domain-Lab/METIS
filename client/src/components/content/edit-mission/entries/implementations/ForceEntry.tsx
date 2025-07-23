@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
+import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
 import { useGlobalContext } from 'src/context/global'
 import ClientMission from 'src/missions'
 import ClientMissionForce from 'src/missions/forces'
@@ -48,6 +48,7 @@ export default function ForceEntry({
   const svgEngine = useButtonSvgEngine({
     elements: [
       {
+        key: 'copy',
         type: 'button',
         icon: 'copy',
         description: 'Duplicate force',
@@ -56,6 +57,7 @@ export default function ForceEntry({
         onClick: duplicateForce,
       },
       {
+        key: 'remove',
         type: 'button',
         icon: 'remove',
         description: 'Delete force',

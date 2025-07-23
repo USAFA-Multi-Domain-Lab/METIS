@@ -1,12 +1,10 @@
 import React from 'react'
 import type ClassList from '../../../../../../../shared/toolbox/html/class-lists'
-import { type TWithKey } from '../../../../../../../shared/toolbox/objects'
 import { type TUserPermissionId } from '../../../../../../../shared/users/permissions'
-import SvgButton from './button-svg'
-import { defaultButtonSvgProps } from './ButtonSvg'
-import SvgDivider from './divider-svg'
+import { defaultButtonSvgProps } from './elements/ButtonSvg'
+import StepperSvg from './elements/StepperSvg'
+import TextSvg from './elements/TextSvg'
 import type ButtonSvgEngine from './engines'
-import SvgStepper from './stepper-svg'
 
 /**
  * Props for `ButtonSvgPanel` component.
@@ -37,50 +35,23 @@ export interface TButtonSvgEngine {
    */
   dependencies?: React.DependencyList
 }
-
 /**
- * Input data used to create a new SVG button.
+ * Creates an input type for the given props type
+ * that extends {@link TSvgPanelElementBase}.
  */
-type TButtonSvg_Input = Partial<TButtonSvg_PK> & {
-  /**
-   * Identifier for the class of element being
-   * used. Distinguishes different React component
-   * types in use.
-   */
-  type: TButtonSvg_PK['type']
-}
-
-/**
- * Input data used to create a new SVG divider.
- */
-type TDividerSvg_Input = Partial<TDividerSvg_PK> & {
-  /**
-   * Identifier for the class of element being
-   * used. Distinguishes different React component
-   * types in use.
-   */
-  type: TDividerSvg_PK['type']
-}
-
-/**
- * Input data used to create a new SVG stepper.
- */
-type TStepperSvg_Input = Partial<TStepperSvg_PK> & {
-  /**
-   * Identifier for the class of element being
-   * used. Distinguishes different React component
-   * types in use.
-   */
-  type: TStepperSvg_PK['type']
-}
+export type TButtonPanelInput<TProps extends TSvgPanelElementBase> = Partial<
+  Omit<TProps, 'key' | 'type'>
+> &
+  Pick<TProps, 'key' | 'type'>
 
 /**
  * An element that can be rendered in a `ButtonSvgPanel`.
  */
 type TSvgPanelElement_Input =
-  | TButtonSvg_Input
-  | TStepperSvg_Input
-  | TDividerSvg_Input
+  | TButtonPanelInput<TButtonSvg_PK>
+  | TButtonPanelInput<TStepperSvg_PK>
+  | TButtonPanelInput<TDividerSvg_PK>
+  | TButtonPanelInput<TTextSvg_PK>
 
 /**
  * A base interface for SVG panel elements
@@ -88,11 +59,11 @@ type TSvgPanelElement_Input =
  */
 interface TSvgPanelElementBase {
   /**
-   * The unique key for the SVG panel element.
-   * @note This is used to identify the element in the
-   * `ButtonSvgEngine` and should be unique.
+   * Uniquely identifies the element in the panel.
+   * @note Low case letters and hypens only.
+   * (Must match regex: `^[a-z-]+$`)
    */
-  key: TWithKey['key']
+  key: string
   /**
    * More detailed description for the SVG panel element.
    */
@@ -170,16 +141,10 @@ export interface TDividerSvg_PK extends TSvgPanelElementBase {
    * types in use.
    */
   type: 'divider'
-  /**
-   * The icon for the divider.
-   * @note This is used to display a visual divider
-   * in the SVG panel.
-   */
-  icon: TMetisIcon
 }
 
 /**
- * Props for `StepperSvg` component.
+ * Props for {@link StepperSvg} component.
  */
 export interface TStepperSvg_PK extends TSvgPanelElementBase {
   /**
@@ -189,11 +154,9 @@ export interface TStepperSvg_PK extends TSvgPanelElementBase {
    */
   type: 'stepper'
   /**
-   * The icon for the stepper.
-   * @note This is used to display the stepper icon
-   * in the SVG panel.
+   * Customizes the appearance of the stepper.
    */
-  icon: 'stepper-page' | 'stepper-zoom'
+  variation: 'page' | 'zoom'
   /**
    * The maximum value for the stepper.
    */
@@ -205,29 +168,44 @@ export interface TStepperSvg_PK extends TSvgPanelElementBase {
 }
 
 /**
- * @see {@link SvgButton}
+ * Props for {@link TextSvg} component.
  */
-export type TButtonSvg = TButtonSvg_PK
-
-/**
- * @see {@link SvgStepper}
- */
-export type TStepperSvg = TStepperSvg_PK
-
-/**
- * @see {@link DividerSvg}
- */
-export type TDividerSvg = TDividerSvg_PK
+export interface TTextSvg_PK extends TSvgPanelElementBase {
+  /**
+   * Identifier for the class of element being
+   * used. Distinguishes different React component
+   * types in use.
+   */
+  type: 'text'
+  /**
+   * The value of the text to display.
+   */
+  value: string
+  /**
+   * The size of the text to display.
+   * @default 'regular'
+   */
+  size: 'small' | 'regular' | 'large'
+  /**
+   * Makes the text appear bold.
+   * @default false
+   */
+  bold: boolean
+}
 
 /**
  * A type that represents all SVG panel elements
  * that can be rendered in a `ButtonSvgPanel`.
  */
-export type TSvgPanelElement = SvgButton | SvgStepper | SvgDivider
+export type TSvgPanelElement =
+  | TButtonSvg_PK
+  | TStepperSvg_PK
+  | TDividerSvg_PK
+  | TTextSvg_PK
 
 /**
  * A type used to layout panel elements in a `ButtonSvgEngine`.
- * If not a correct icon type, the option chosen will provide
+ * If not a key of a corresponding element, the option chosen will provide
  * special instruction to the `setLayout` method.
  * @option '<slot>' This will define where icons not defined
  * in the layout will be placed.
@@ -236,10 +214,7 @@ export type TSvgPanelElement = SvgButton | SvgStepper | SvgDivider
  * is between two other elements.
  * @see {@link ButtonSvgEngine.setLayout}
  */
-export type TSvgLayoutElement =
-  | TSvgPanelElement['icon']
-  | '<slot>'
-  | '<divider>'
+export type TSvgLayoutElement = string
 
 /**
  * An array of layout elements used to define the

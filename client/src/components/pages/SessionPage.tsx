@@ -27,7 +27,7 @@ import ActionExecModal from '../content/session/mission-map/ui/overlay/modals/ac
 import { TTabBarTab } from '../content/session/mission-map/ui/tabs/TabBar'
 import { OutputPanel } from '../content/session/output/'
 import StatusBar from '../content/session/StatusBar'
-import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
+import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
 import If from '../content/util/If'
 import './SessionPage.scss'
 
@@ -87,6 +87,7 @@ export default function SessionPage({
      */
     const addResetSession = (description: string = 'Reset session') => {
       navButtonEngine.add({
+        key: 'reset',
         type: 'button',
         icon: 'reset',
         description,
@@ -101,6 +102,7 @@ export default function SessionPage({
      */
     const addEndSession = (description: string = 'End Session') => {
       navButtonEngine.add({
+        key: 'stop',
         type: 'button',
         icon: 'stop',
         description,
@@ -116,6 +118,7 @@ export default function SessionPage({
      */
     const addQuit = (description: string = 'Quit') => {
       navButtonEngine.add({
+        key: 'quit',
         type: 'button',
         icon: 'quit',
         description,

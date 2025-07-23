@@ -1,16 +1,17 @@
 import { useEffect } from 'react'
 import Tooltip from 'src/components/content/communication/Tooltip'
 import { compute } from 'src/toolbox'
-import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
+import ClassList from '../../../../../../../../shared/toolbox/html/class-lists'
+import ButtonSvgEngine from '../engines'
+import { TStepperSvg_PK } from '../types'
 import './StepperSvg.scss'
-import { TStepperSvg_PK } from './types'
 
 /**
  * A component for displaying a stepper with SVG buttons
  * for stepping up and down, along with a text label.
  */
 export default function ({
-  icon,
+  variation,
   description,
   uniqueClassList,
   disabled,
@@ -31,7 +32,7 @@ export default function ({
     return new ClassList()
       .add('SvgPanelElement')
       .add('StepperSvg')
-      .add(`StepperSvg_${icon}`)
+      .add(`StepperSvg_${variation}`)
       .set('Disabled', disabled)
       .import(uniqueClassList)
   })
@@ -68,10 +69,10 @@ export default function ({
    * The text to display for the current value.
    */
   const text = compute<string>(() => {
-    switch (icon) {
-      case 'stepper-page':
+    switch (variation) {
+      case 'page':
         return `${currentValue + 1}/${maximum}`
-      case 'stepper-zoom':
+      case 'zoom':
         return `${currentValue + 1}%`
       default:
         return ''
@@ -82,10 +83,10 @@ export default function ({
    * The tooltip description for the step down control.
    */
   const stepDownTooltip = compute<string>(() => {
-    switch (icon) {
-      case 'stepper-page':
+    switch (variation) {
+      case 'page':
         return 'Previous page.'
-      case 'stepper-zoom':
+      case 'zoom':
         return 'Zoom out.'
       default:
         return ''
@@ -96,10 +97,10 @@ export default function ({
    * The tooltip description for the step up control.
    */
   const stepUpTooltip = compute<string>(() => {
-    switch (icon) {
-      case 'stepper-page':
+    switch (variation) {
+      case 'page':
         return 'Next page.'
-      case 'stepper-zoom':
+      case 'zoom':
         return 'Zoom in.'
       default:
         return ''
@@ -117,10 +118,10 @@ export default function ({
    * The icon to display for stepping down.
    */
   const stepDownIcon = compute<string>(() => {
-    switch (icon) {
-      case 'stepper-page':
+    switch (variation) {
+      case 'page':
         return '<'
-      case 'stepper-zoom':
+      case 'zoom':
         return '-'
       default:
         return ''
@@ -131,10 +132,10 @@ export default function ({
    * The icon to display for stepping up.
    */
   const stepUpIcon = compute<string>(() => {
-    switch (icon) {
-      case 'stepper-page':
+    switch (variation) {
+      case 'page':
         return '>'
-      case 'stepper-zoom':
+      case 'zoom':
         return '+'
       default:
         return ''
@@ -192,4 +193,19 @@ export default function ({
       </div>
     </div>
   )
+}
+
+/**
+ * Creates new default props for when a new stepper
+ * is added to an engine.
+ */
+export function createStepperDefaults(): Required<
+  Omit<TStepperSvg_PK, 'key' | 'type'>
+> {
+  return {
+    ...ButtonSvgEngine.DEFAULT_ELEMENT_PROPS,
+    variation: 'page',
+    maximum: 1,
+    value: [1, () => {}],
+  }
 }

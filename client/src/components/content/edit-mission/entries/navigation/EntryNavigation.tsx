@@ -1,5 +1,5 @@
-import ButtonSvgPanel from 'src/components/content/user-controls/buttons/v3/ButtonSvgPanel'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
+import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
 import If from 'src/components/content/util/If'
 import ClientMission from 'src/missions'
 import { compute } from 'src/toolbox'
@@ -15,6 +15,7 @@ export default function EntryNavigation({
   const backButtonEngine = useButtonSvgEngine({
     elements: [
       {
+        key: 'left',
         type: 'button',
         icon: 'left',
         onClick: () => component.mission.selectBack(),

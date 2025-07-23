@@ -1,4 +1,4 @@
-import { TButtonSvg_Input } from 'src/components/content/user-controls/buttons/v3/types'
+import { TButtonSvg_Input } from 'src/components/content/user-controls/buttons/panels/types'
 import ClientMission from 'src/missions'
 import ClientActionExecution from 'src/missions/actions/executions'
 import { MetisComponent } from '../../../../../../../../shared/'

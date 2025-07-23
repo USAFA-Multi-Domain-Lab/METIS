@@ -2,9 +2,8 @@ import { ReactNode, useEffect, useMemo, useRef } from 'react'
 import Tooltip from 'src/components/content/communication/Tooltip'
 import { useButtonMenuEngine } from 'src/components/content/user-controls/buttons/ButtonMenu'
 import ButtonMenuController from 'src/components/content/user-controls/buttons/ButtonMenuController'
-import ButtonSvgPanel from 'src/components/content/user-controls/buttons/v3/ButtonSvgPanel'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
-import { TSvgPanelElement } from 'src/components/content/user-controls/buttons/v3/types'
+import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
 import WarningIndicator from 'src/components/content/user-controls/WarningIndicator'
 import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
@@ -52,6 +51,7 @@ export default function ListItem<T extends MetisComponent>({
   const optionMenuButtonEngine = useButtonSvgEngine({
     elements: [
       {
+        key: 'options',
         type: 'button',
         icon: 'options',
         onClick: (event) => onOptionsClick(event),
@@ -261,7 +261,8 @@ export type TGetItemTooltip<TItem extends MetisComponent> = (
  * @returns The label.
  */
 export type TGetItemButtonLabel<TItem extends MetisComponent> = (
-  button: TSvgPanelElement['icon'],
+  // button: TSvgPanelElement['icon'],
+  button: string,
 ) => string
 
 /**
@@ -271,7 +272,8 @@ export type TGetItemButtonLabel<TItem extends MetisComponent> = (
  * @default () => []
  */
 export type TGetItemButtonPermission<TItem extends MetisComponent> = (
-  button: TSvgPanelElement['icon'],
+  // button: TSvgPanelElement['icon'],
+  button: string,
 ) => TUserPermissionId[]
 
 /**
@@ -281,7 +283,8 @@ export type TGetItemButtonPermission<TItem extends MetisComponent> = (
  * @default () => false
  */
 export type TGetItemButtonDisabled<TItem extends MetisComponent> = (
-  button: TSvgPanelElement['icon'],
+  // button: TSvgPanelElement['icon'],
+  button: string,
   item: TItem | null,
 ) => boolean
 
@@ -299,6 +302,7 @@ export type TOnItemSelection<TItem extends MetisComponent> = (
  * @param button The type of button clicked.
  */
 export type TOnItemButtonClick<TItem extends MetisComponent> = (
-  button: TSvgPanelElement['icon'],
+  // button: TSvgPanelElement['icon'],
+  button: string,
   item: TItem,
 ) => void

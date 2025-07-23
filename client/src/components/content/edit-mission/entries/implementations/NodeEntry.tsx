@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { TMetisClientComponents } from 'src'
 import List from 'src/components/content/data/lists/List'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
+import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
 import If from 'src/components/content/util/If'
 import { useGlobalContext } from 'src/context/global'
 import ClientMission from 'src/missions'
@@ -72,6 +72,7 @@ export default function NodeEntry({
   const svgEngine = useButtonSvgEngine({
     elements: [
       {
+        key: 'divider',
         type: 'button',
         icon: 'divider',
         description: compute(() => {

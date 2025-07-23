@@ -11,7 +11,6 @@ import deleteMission from '../controllers/missions/[_id].delete'
 import getMission from '../controllers/missions/[_id].get'
 import updateMission from '../controllers/missions/[_id].put'
 import copyMission from '../controllers/missions/copy.post'
-import getEnvironment from '../controllers/missions/environment.get'
 import exportMission from '../controllers/missions/export.get'
 import importMission from '../controllers/missions/import.post'
 import getMissions from '../controllers/missions/index.get'
@@ -48,7 +47,6 @@ export const routerMap: TMetisRouterMap = async (
   )
 
   /* -- READ -- */
-  router.get('/environment/', getEnvironment)
   router.get('/', auth({ permissions: ['missions_read'] }), getMissions)
   router.get(
     '/:_id/',

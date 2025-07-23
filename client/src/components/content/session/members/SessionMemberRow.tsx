@@ -10,8 +10,8 @@ import MemberRole, {
 } from '../../../../../../shared/sessions/members/roles'
 import Prompt from '../../communication/Prompt'
 import { DetailDropdown } from '../../form/dropdown/'
-import ButtonSvgPanel from '../../user-controls/buttons/v3/ButtonSvgPanel'
-import { useButtonSvgEngine } from '../../user-controls/buttons/v3/hooks'
+import ButtonSvgPanel from '../../user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from '../../user-controls/buttons/panels/hooks'
 import './SessionMemberRow.scss'
 
 export default function SessionMemberRow({
@@ -33,6 +33,7 @@ export default function SessionMemberRow({
   const controlsCellButtonEngine = useButtonSvgEngine({
     elements: [
       {
+        key: 'kick',
         type: 'button',
         icon: 'kick',
         description:
@@ -40,6 +41,7 @@ export default function SessionMemberRow({
         onClick: () => onClickKick(),
       },
       {
+        key: 'ban',
         type: 'button',
         icon: 'ban',
         description: 'Ban member from the session (Cannot rejoin).',

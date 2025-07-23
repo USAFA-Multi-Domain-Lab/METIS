@@ -1,10 +1,11 @@
 import React from 'react'
 import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
-import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
-import Tooltip from '../../../communication/Tooltip'
+import ClassList from '../../../../../../../../shared/toolbox/html/class-lists'
+import Tooltip from '../../../../communication/Tooltip'
+import ButtonSvgEngine from '../engines'
+import { TButtonSvg_PK } from '../types'
 import './ButtonSvg.scss'
-import { TButtonSvg_PK } from './types'
 
 /* -- CONSTANTS -- */
 
@@ -87,7 +88,7 @@ export default function ({
     // If the type is not '_blank', import the SVG
     // and set it as the background image.
     if (icon !== '_blank') {
-      result.backgroundImage = `url(${require(`../../../../../assets/images/icons/${icon}.svg`)})`
+      result.backgroundImage = `url(${require(`../../../../../../assets/images/icons/${icon}.svg`)})`
     }
 
     return result
@@ -130,4 +131,23 @@ export default function ({
       <Tooltip description={tooltipDescription} />
     </div>
   )
+}
+
+/**
+ * Creates new default props for when a new button
+ * is added to an engine.
+ */
+export function createButtonDefaults(): Required<
+  Omit<TButtonSvg_PK, 'key' | 'type'>
+> {
+  return {
+    ...ButtonSvgEngine.DEFAULT_ELEMENT_PROPS,
+    icon: 'options',
+    label: '',
+    alwaysShowTooltip: false,
+    cursor: 'pointer',
+    permissions: [],
+    onClick: () => {},
+    onCopy: () => {},
+  }
 }

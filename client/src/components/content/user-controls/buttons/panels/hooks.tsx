@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
-import SvgButton from './button-svg'
+import { createStepperDefaults } from './elements/StepperSvg'
 import ButtonSvgEngine from './engines'
-import SvgStepper from './stepper-svg'
 import { TButtonSvgEngine, TButtonSvgFlow, TSvgLayout } from './types'
 
 /**
@@ -40,19 +39,20 @@ export function useButtonSvgs(
   // *** because some properties are dynamic and change based
   // *** on the state where the element is rendered.
   initialProps.forEach((element) => {
-    const { icon, type } = element
-    let current = engine.get(icon ?? SvgButton.DEFAULT_PROPS.icon)
+    const { key, type } = element
+    let current = engine.get(key)
 
-    if (type === 'button' && current instanceof SvgButton) {
+    if (!current) return
+
+    if (type === 'button' && current.type === 'button') {
       if (element.onClick) current.onClick = element.onClick
       else current.onClick = () => {}
     }
 
-    if (type === 'stepper' && current instanceof SvgStepper) {
-      if (element.value) current.value = element.value
-      else current.value = SvgStepper.DEFAULT_PROPS.value
-      if (element.maximum) current.maximum = element.maximum
-      else current.maximum = SvgStepper.DEFAULT_PROPS.maximum
+    if (type === 'stepper' && current.type === 'stepper') {
+      const defaults = createStepperDefaults()
+      current.value = element.value ?? defaults.value
+      current.maximum = element.maximum ?? defaults.maximum
     }
   })
 

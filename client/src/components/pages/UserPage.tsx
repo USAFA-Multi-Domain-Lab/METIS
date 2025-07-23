@@ -14,14 +14,14 @@ import StringToolbox from '../../../../shared/toolbox/strings'
 import UserEntry from '../content/edit-user/UserEntry'
 import {
   HomeButton,
-  LogoutButton,
+  ProfileButton,
   TNavigation_P,
 } from '../content/general-layout/Navigation'
 import {
   ButtonText,
   TButtonTextDisabled,
 } from '../content/user-controls/buttons/ButtonText'
-import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
+import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
 import If from '../content/util/If'
 import './UserPage.scss'
 
@@ -88,7 +88,7 @@ export default function (props: TUserPage_P): JSX.Element | null {
   const navButtonEngine = useButtonSvgEngine({
     elements: [
       HomeButton(),
-      LogoutButton({ middleware: async () => await enforceSavePrompt() }),
+      ProfileButton({ middleware: async () => await enforceSavePrompt() }),
     ],
   })
 

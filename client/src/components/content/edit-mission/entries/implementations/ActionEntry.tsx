@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import List from 'src/components/content/data/lists/List'
 import { DetailDropdown } from 'src/components/content/form/dropdown'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
+import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
 import ClientMissionAction from 'src/missions/actions'
 import { ClientEffect } from 'src/missions/effects'
 import { compute } from 'src/toolbox'
@@ -76,6 +76,7 @@ export default function ActionEntry({
   const svgEngine = useButtonSvgEngine({
     elements: [
       {
+        key: 'copy',
         type: 'button',
         icon: 'copy',
         description: 'Duplicate action',
@@ -83,6 +84,7 @@ export default function ActionEntry({
         onClick: async () => await onDuplicateActionRequest(action, true),
       },
       {
+        key: 'remove',
         type: 'button',
         icon: 'remove',
         description: compute(() => {

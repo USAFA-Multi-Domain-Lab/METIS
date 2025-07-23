@@ -12,11 +12,11 @@ import {
 } from 'src/toolbox/hooks'
 import { v4 as generateHash } from 'uuid'
 import { Vector1D, Vector2D } from '../../../../../../shared/toolbox/space'
-import ButtonSvgEngine from '../../user-controls/buttons/v3/engines'
+import ButtonSvgEngine from '../../user-controls/buttons/panels/engines'
 import {
   useButtonSvgLayout,
   useButtonSvgs,
-} from '../../user-controls/buttons/v3/hooks'
+} from '../../user-controls/buttons/panels/hooks'
 import './MissionMap.scss'
 import Scene from './Scene'
 import Grid from './objects/Grid'
@@ -600,6 +600,7 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
   useButtonSvgs(
     buttonEngine,
     {
+      key: 'zoom-in',
       type: 'button',
       icon: 'zoom-in',
       onClick: onClickZoomIn,
@@ -608,6 +609,7 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
       cursor: 'zoom-in',
     },
     {
+      key: 'zoom-out',
       type: 'button',
       icon: 'zoom-out',
       onClick: onClickZoomOut,
@@ -616,6 +618,7 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
       cursor: 'zoom-out',
     },
     {
+      key: 'question',
       type: 'button',
       icon: 'question',
       description:

@@ -10,8 +10,8 @@ import Session from '../../../../shared/sessions'
 import { ESortByMethod } from '../content/general-layout/ListOld'
 import { TNavigation_P } from '../content/general-layout/Navigation'
 import SessionConfig from '../content/session/SessionConfig'
-import ButtonSvgPanel from '../content/user-controls/buttons/v3/ButtonSvgPanel'
-import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
+import ButtonSvgPanel from '../content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
 import './LaunchPage.scss'
 
 /**
@@ -44,6 +44,7 @@ export default function LaunchPage({
   const defectiveComponentButtonEngine = useButtonSvgEngine({
     elements: [
       {
+        key: 'warning-transparent',
         type: 'button',
         icon: 'warning-transparent',
         cursor: 'help',
@@ -55,6 +56,7 @@ export default function LaunchPage({
   const navButtonEngine = useButtonSvgEngine({
     elements: [
       {
+        key: 'cancel',
         type: 'button',
         icon: 'cancel',
         description: 'Cancel',

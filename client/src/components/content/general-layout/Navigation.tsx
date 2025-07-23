@@ -1,12 +1,14 @@
 import { PAGE_REGISTRY, TPageKey } from 'src/components/pages'
 import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
-import ButtonSvgPanel from '../user-controls/buttons/v3/ButtonSvgPanel'
-import ButtonSvgEngine from '../user-controls/buttons/v3/engines'
+import { useRequireLogin } from 'src/toolbox/hooks'
+import { useButtonMenuEngine } from '../user-controls/buttons/ButtonMenu'
+import ButtonSvgPanel from '../user-controls/buttons/panels/ButtonSvgPanel'
+import ButtonSvgEngine from '../user-controls/buttons/panels/engines'
 import {
-  TButtonSvg_Input,
+  TButtonPanelInput,
   TButtonSvg_PK,
-} from '../user-controls/buttons/v3/types'
+} from '../user-controls/buttons/panels/types'
 import Branding from './Branding'
 import './Navigation.scss'
 
@@ -41,14 +43,15 @@ export default function Navigation({
 /* -- FUNTIONS -- */
 
 /**
- * @returns Button input used to create a button
+ * @returns Creates a button for the navigation
  * which will link to the home page when clicked.
  */
 export const HomeButton = (
   options: THomeButtonOptions = {},
-): TButtonSvg_Input => {
+): TButtonPanelInput<TButtonSvg_PK> => {
   const { icon = 'home', description = 'Go home' } = options
   return {
+    key: icon,
     type: 'button',
     icon,
     description,
@@ -57,23 +60,56 @@ export const HomeButton = (
 }
 
 /**
- * @returns Button input used to create a button
- * which will log out the user when clicked.
+ * @returns Creates a button for the navigation
+ * which will present user-profile options when
+ * clicked.
  */
-export const LogoutButton = (
+export const ProfileButton = (
   options: TLogoutButtonOptions = {},
-): TButtonSvg_Input => {
+): TButtonPanelInput<TButtonSvg_PK> => {
   const { middleware = () => Promise.resolve() } = options
   const globalContext = useGlobalContext()
-  const { logout } = globalContext.actions
+  const login = useRequireLogin()
+  const { logout, showButtonMenu } = globalContext.actions
+
+  const buttonMenuEngine = useButtonMenuEngine({
+    elements: [
+      {
+        key: 'username',
+        type: 'text',
+        value: login.user.username,
+        size: 'regular',
+        bold: true,
+      },
+      {
+        key: 'full-name',
+        type: 'text',
+        value: login.user.name,
+        size: 'small',
+      },
+      {
+        key: 'logout',
+        type: 'button',
+        icon: 'logout',
+        label: 'Logout',
+        onClick: async () => {
+          await middleware()
+          logout()
+        },
+      },
+    ],
+    layout: ['username', 'full-name', '<divider>', '<slot>'],
+  })
 
   return {
+    key: 'profile',
     type: 'button',
-    icon: 'logout',
-    description: 'Log out',
-    onClick: async () => {
-      await middleware()
-      logout()
+    icon: 'user',
+    description: 'View account details and options',
+    onClick: async (event) => {
+      showButtonMenu(buttonMenuEngine, {
+        positioningTarget: event.target as HTMLDivElement,
+      })
     },
   }
 }
@@ -124,9 +160,12 @@ export type TNavigation_P = {
 /**
  * Options for creating a home button.
  */
-export type THomeButtonOptions = Pick<TButtonSvg_Input, 'icon' | 'description'>
+export type THomeButtonOptions = Pick<
+  TButtonPanelInput<TButtonSvg_PK>,
+  'icon' | 'description'
+>
 
-/**
+/**TButtonPanelInput<TButtonSvg_PK>
  * Options for creating a logout button.
  */
 export type TLogoutButtonOptions = {

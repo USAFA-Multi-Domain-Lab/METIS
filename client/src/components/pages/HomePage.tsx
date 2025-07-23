@@ -21,10 +21,10 @@ import MissionList from '../content/data/lists/implementations/missions/MissionL
 import SessionList from '../content/data/lists/implementations/SessionList'
 import UserList from '../content/data/lists/implementations/UserList'
 import {
-  LogoutButton,
+  ProfileButton,
   TNavigation_P,
 } from '../content/general-layout/Navigation'
-import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
+import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
 import Auth from '../content/util/Auth'
 import './HomePage.scss'
 
@@ -55,7 +55,7 @@ export default function HomePage(): JSX.Element | null {
     [],
   )
   const navButtonEngine = useButtonSvgEngine({
-    elements: [LogoutButton()],
+    elements: [ProfileButton()],
   })
 
   /* -- LOGIN-SPECIFIC LOGIC -- */

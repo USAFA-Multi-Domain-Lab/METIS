@@ -4,7 +4,7 @@ import { compute } from 'src/toolbox'
 import { useEventListener } from 'src/toolbox/hooks'
 import { Vector2D } from '../../../../../../shared/toolbox/space'
 import { TButtonMenu_P } from './ButtonMenu'
-import ButtonSvgEngine from './v3/engines'
+import ButtonSvgEngine from './panels/engines'
 
 /**
  * Activates a button menu when the target element

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Tooltip from 'src/components/content/communication/Tooltip'
-import ButtonSvgPanel from 'src/components/content/user-controls/buttons/v3/ButtonSvgPanel'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
+import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { useEventListener, useInlineStyling } from 'src/toolbox/hooks'
@@ -83,6 +83,7 @@ export default function <TNode extends TMapCompatibleNode>({
   const excludeButtonEngine = useButtonSvgEngine({
     elements: [
       {
+        key: 'add',
         type: 'button',
         icon: 'add',
         description: `Include this node ("${node.name}") in the force.`,
@@ -192,7 +193,7 @@ export default function <TNode extends TMapCompatibleNode>({
 
     // If the camera is zoomed out too far,
     // make the background color the node's color.
-    if (cameraZoom.x > MAX_NODE_CONTENT_ZOOM) {
+    if (cameraZoom.x > MAX_NODE_CONTENT_ZOOM && !blocked && !cutOff) {
       backgroundColor = color
     }
 

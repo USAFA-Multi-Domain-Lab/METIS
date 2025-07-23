@@ -52,8 +52,10 @@
   }
 
   &.HideLabels {
-    .ButtonLabel {
-      display: none;
+    .ButtonSvg {
+      .ButtonLabel {
+        display: none;
+      }
     }
   }
 

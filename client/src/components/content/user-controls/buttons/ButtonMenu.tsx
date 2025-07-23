@@ -11,10 +11,10 @@ import {
 import { Vector2D } from '../../../../../../shared/toolbox/space'
 import StringToolbox from '../../../../../../shared/toolbox/strings'
 import './ButtonMenu.scss'
-import ButtonSvgPanel from './v3/ButtonSvgPanel'
-import ButtonSvgEngine from './v3/engines'
-import { useButtonSvgEngine } from './v3/hooks'
-import { TButtonSvgEngine, TButtonSvgPanelOptions } from './v3/types'
+import ButtonSvgPanel from './panels/ButtonSvgPanel'
+import ButtonSvgEngine from './panels/engines'
+import { useButtonSvgEngine } from './panels/hooks'
+import { TButtonSvgEngine, TButtonSvgPanelOptions } from './panels/types'
 
 /* -- COMPONENT -- */
 

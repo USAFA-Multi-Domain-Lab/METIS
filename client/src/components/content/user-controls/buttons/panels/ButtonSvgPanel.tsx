@@ -1,12 +1,10 @@
 import { compute } from 'src/toolbox'
 import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
-import SvgButton from './button-svg'
-import ButtonSvg from './ButtonSvg'
 import './ButtonSvgPanel.scss'
-import SvgDivider from './divider-svg'
-import DividerSvg from './DividerSvg'
-import SvgStepper from './stepper-svg'
-import StepperSvg from './StepperSvg'
+import ButtonSvg from './elements/ButtonSvg'
+import DividerSvg from './elements/DividerSvg'
+import StepperSvg from './elements/StepperSvg'
+import TextSvg from './elements/TextSvg'
 import { TButtonSvgPanel_P, TSvgPanelElement } from './types'
 
 /**
@@ -35,14 +33,21 @@ export default function ({
    * @returns The rendered JSX element or null if not recognized.
    */
   const renderElement = (element: TSvgPanelElement): JSX.Element | null => {
-    if (element instanceof SvgButton) {
-      return <ButtonSvg {...element.toProps()} />
-    } else if (element instanceof SvgStepper) {
-      return <StepperSvg {...element.toProps()} />
-    } else if (element instanceof SvgDivider) {
-      return <DividerSvg {...element.toProps()} />
-    } else {
-      return null
+    switch (element.type) {
+      case 'button':
+        return <ButtonSvg {...element} />
+      case 'text':
+        return <TextSvg {...element} />
+      case 'stepper':
+        return <StepperSvg {...element} />
+      case 'divider':
+        return <DividerSvg {...element} />
+      default:
+        // If the type is not recognized, return null
+        console.warn(
+          `Unrecognized element type: ${(element as TSvgPanelElement)?.type}`,
+        )
+        return null
     }
   }
 

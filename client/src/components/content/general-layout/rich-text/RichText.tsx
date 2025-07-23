@@ -15,8 +15,8 @@ import { useEffect } from 'react'
 import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
 import { TRichText_P } from '.'
-import ButtonSvgPanel from '../../user-controls/buttons/v3/ButtonSvgPanel'
-import { useButtonSvgEngine } from '../../user-controls/buttons/v3/hooks'
+import ButtonSvgPanel from '../../user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from '../../user-controls/buttons/panels/hooks'
 import If from '../../util/If'
 import './RichText.scss'
 import MetisParagraph from './extensions/paragraph'
@@ -48,61 +48,73 @@ export default function RichText({
   const bubbleToolbarButtonEngine = useButtonSvgEngine({
     elements: [
       {
+        key: 'undo',
         type: 'button',
         icon: 'undo',
         onClick: () => editor?.chain().focus().undo().run(),
       },
       {
+        key: 'redo',
         type: 'button',
         icon: 'redo',
         onClick: () => editor?.chain().focus().redo().run(),
       },
       {
+        key: 'ordered-list',
         type: 'button',
         icon: 'ordered-list',
         onClick: () => editor?.chain().focus().toggleOrderedList().run(),
       },
       {
+        key: 'bullet-list',
         type: 'button',
         icon: 'bullet-list',
         onClick: () => editor?.chain().focus().toggleBulletList().run(),
       },
       {
+        key: 'bold',
         type: 'button',
         icon: 'bold',
         onClick: () => editor?.chain().focus().toggleBold().run(),
       },
       {
+        key: 'italic',
         type: 'button',
         icon: 'italic',
         onClick: () => editor?.chain().focus().toggleItalic().run(),
       },
       {
+        key: 'underline',
         type: 'button',
         icon: 'underline',
         onClick: () => editor?.chain().focus().toggleUnderline().run(),
       },
       {
+        key: 'strike',
         type: 'button',
         icon: 'strike',
         onClick: () => editor?.chain().focus().toggleStrike().run(),
       },
       {
+        key: 'code',
         type: 'button',
         icon: 'code',
         onClick: () => editor?.chain().focus().toggleCode().run(),
       },
       {
+        key: 'code-block',
         type: 'button',
         icon: 'code-block',
         onClick: () => editor?.chain().focus().toggleCodeBlock().run(),
       },
       {
+        key: 'link',
         type: 'button',
         icon: 'link',
         onClick: async () => await toggleLink(editor),
       },
       {
+        key: 'clear-format',
         type: 'button',
         icon: 'clear-format',
         onClick: () => {
@@ -116,16 +128,19 @@ export default function RichText({
   const floatingToolbarButtonEngine = useButtonSvgEngine({
     elements: [
       {
+        key: 'ordered-list',
         type: 'button',
         icon: 'ordered-list',
         onClick: () => editor?.chain().focus().toggleOrderedList().run(),
       },
       {
+        key: 'bullet-list',
         type: 'button',
         icon: 'bullet-list',
         onClick: () => editor?.chain().focus().toggleBulletList().run(),
       },
       {
+        key: 'code-block',
         type: 'button',
         icon: 'code-block',
         onClick: () => editor?.chain().focus().toggleCodeBlock().run(),

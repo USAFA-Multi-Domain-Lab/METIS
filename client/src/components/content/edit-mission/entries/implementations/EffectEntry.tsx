@@ -1,4 +1,4 @@
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
+import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
 import { ClientEffect } from 'src/missions/effects'
 import { useObjectFormSync } from 'src/toolbox/hooks'
 import { TEffectTrigger } from '../../../../../../../shared/missions/effects'
@@ -34,6 +34,7 @@ export default function EffectEntry({
   const svgEngine = useButtonSvgEngine({
     elements: [
       {
+        key: 'copy',
         type: 'button',
         icon: 'copy',
         description: 'Duplicate effect',
@@ -41,6 +42,7 @@ export default function EffectEntry({
         onClick: async () => await onDuplicateEffectRequest(effect, true),
       },
       {
+        key: 'remove',
         type: 'button',
         icon: 'remove',
         description: 'Delete effect',

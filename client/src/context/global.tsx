@@ -7,7 +7,7 @@ import {
 } from 'src/components/content/communication/Prompt'
 import { TButtonMenu_P } from 'src/components/content/user-controls/buttons/ButtonMenu'
 import { TButtonText_P } from 'src/components/content/user-controls/buttons/ButtonText'
-import ButtonSvgEngine from 'src/components/content/user-controls/buttons/v3/engines'
+import ButtonSvgEngine from 'src/components/content/user-controls/buttons/panels/engines'
 import { PAGE_REGISTRY, TPage_P, TPageKey } from 'src/components/pages'
 import ServerConnection, { IServerConnectionOptions } from 'src/connect/servers'
 import MetisInfo from 'src/info'

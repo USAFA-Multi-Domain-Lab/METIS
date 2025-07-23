@@ -12,9 +12,8 @@ import { TUserPermissionId } from '../../../../../../shared/users/permissions'
 import {
   TButtonSvgEngine,
   TSvgLayout,
-  TSvgPanelElement,
   TSvgPanelElement_Input,
-} from '../../user-controls/buttons/v3/types'
+} from '../../user-controls/buttons/panels/types'
 import './List.scss'
 import ListDropBox from './ListDropBox'
 import ListResizeHandler from './ListResizeHandler'
@@ -239,14 +238,15 @@ export default function List<TItem extends MetisComponent>(
     let buttons: TSvgPanelElement_Input[] = []
 
     buttons.push({
+      key: 'stepper-page',
       type: 'stepper',
-      icon: 'stepper-page',
       maximum: pageCount,
       value: state.pageNumber,
     })
 
     filteredListIcons.forEach((icon) => {
       buttons.push({
+        key: icon,
         type: 'button',
         icon,
         label: getListButtonLabel(icon),
@@ -269,6 +269,7 @@ export default function List<TItem extends MetisComponent>(
 
     filteredItemIcons.forEach((icon) => {
       buttons.push({
+        key: icon,
         type: 'button',
         icon,
         label: getItemButtonLabel(icon),
@@ -742,7 +743,8 @@ export type TListContextData<TItem extends MetisComponent> = Required<
    * Aggregated button icon list, including list and
    * item button icons.
    */
-  aggregatedButtonIcons: TSvgPanelElement['icon'][]
+  aggregatedButtonIcons: string[]
+  // aggregatedButtonIcons: TSvgPanelElement['icon'][]
   /**
    * Aggregated buttons, including list and
    * item buttons.
@@ -791,13 +793,15 @@ export type TListContextData<TItem extends MetisComponent> = Required<
  * @returns The label.
  * @default () => ''
  */
-export type TGetListButtonLabel = (button: TSvgPanelElement['icon']) => string
+// export type TGetListButtonLabel = (button: TSvgPanelElement['icon']) => string
+export type TGetListButtonLabel = (button: string) => string
 
 /**
  * Callback for when a list button is clicked.
  * @default () => {}
  */
-export type TOnListButtonClick = (button: TSvgPanelElement['icon']) => void
+// export type TOnListButtonClick = (button: TSvgPanelElement['icon']) => void
+export type TOnListButtonClick = (button: string) => void
 
 /**
  * Gets the permissions for a list button.
@@ -806,7 +810,8 @@ export type TOnListButtonClick = (button: TSvgPanelElement['icon']) => void
  * @default () => []
  */
 export type TGetListButtonPermission = (
-  button: TSvgPanelElement['icon'],
+  button: string,
+  // button: TSvgPanelElement['icon'],
 ) => TUserPermissionId[]
 
 /**
@@ -816,7 +821,8 @@ export type TGetListButtonPermission = (
  * @default () => false
  */
 export type TGetListButtonDisabled = (
-  button: TSvgPanelElement['icon'],
+  button: string,
+  // button: TSvgPanelElement['icon'],
 ) => boolean
 
 /**

@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
-import ButtonSvgPanel from 'src/components/content/user-controls/buttons/v3/ButtonSvgPanel'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
+import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
 import If from 'src/components/content/util/If'
 import { useMissionPageContext } from 'src/components/pages/missions/MissionPage'
 import { useGlobalContext } from 'src/context/global'
@@ -48,6 +48,7 @@ export default function MissionEntry({
   const warningButtonEngine = useButtonSvgEngine({
     elements: [
       {
+        key: 'warning-transparent',
         type: 'button',
         icon: 'warning-transparent',
         cursor: 'help',

@@ -9,10 +9,10 @@ import Markdown, {
 } from '../content/general-layout/Markdown'
 import {
   HomeButton,
-  LogoutButton,
+  ProfileButton,
   TNavigation_P,
 } from '../content/general-layout/Navigation'
-import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
+import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
 import './ChangelogPage.scss'
 
 export interface IChangelogPage extends TPage_P {}
@@ -28,7 +28,7 @@ export default function IChangelogPage({}: IChangelogPage): JSX.Element | null {
     globalContext.actions
   const [changelog, setChangelog] = useState<string>('')
   const navButtonEngine = useButtonSvgEngine({
-    elements: [HomeButton(), LogoutButton()],
+    elements: [HomeButton(), ProfileButton()],
   })
 
   /* -- COMPONENT EFFECTS -- */
