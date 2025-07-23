@@ -6,6 +6,7 @@ METIS provides API endpoints for managing mission sessions through the `SessionS
 
 ## Table of Contents
 
+- [Rate Limiting](#rate-limiting)
 - [Endpoints](#endpoints)
   - [Launch Session](#launch-session)
   - [Get All Sessions](#get-all-sessions)
@@ -15,6 +16,18 @@ METIS provides API endpoints for managing mission sessions through the `SessionS
   - [Session Object](#session-object)
   - [Session Configuration Object](#session-configuration-object)
 - [Notes](#notes)
+  - [Session States](#session-states)
+  - [Required Permissions](#required-permissions)
+  - [Session Access Levels](#session-access-levels)
+
+## Rate Limiting
+
+Sessions API endpoints follow METIS's standard rate limits:
+
+- HTTP API endpoints: 20 requests/second per IP address
+- WebSocket events: 10 messages/second per user
+
+Sessions make extensive use of WebSocket connections for real-time updates. Each WebSocket message (including session state changes, chat messages, and actions) counts toward the WebSocket rate limit.
 
 ## Endpoints
 
@@ -25,24 +38,14 @@ Creates and launches a new mission session.
 **HTTP Method:** `POST`  
 **Path:** `/api/v1/sessions/launch/`
 
-**Middleware**:
-
-- Authentication with appropriate [permissions](#required-permissions):
-  - Requires `sessions_write_native` or `sessions_write_foreign`
-  - Requires `missions_read` to access the mission
-- Request body validation:
-  - Required `missionId`: Valid ObjectId
-  - Optional configuration parameters
+**Required Permission(s)**: `sessions_write_native` or `sessions_write_foreign`, and `missions_read`
 
 #### Request Body
 
 ```json
 {
-  // Required, valid mission ObjectId
   "missionId": "662270879c5ca781c218123c",
-  // Optional session configuration
   "name": "Custom Session Name",
-  // See Session Access Levels in Notes
   "accessibility": "public",
   "autoAssign": true,
   "infiniteResources": false,
@@ -74,9 +77,7 @@ Retrieves all accessible sessions based on user permissions.
 **HTTP Method:** `GET`  
 **Path:** `/api/v1/sessions/`
 
-**Middleware**:
-
-- Basic authentication (no specific permissions required)
+**Required Permission(s)**: `sessions_read`
 
 #### Response
 
@@ -119,12 +120,7 @@ Downloads a file associated with the mission in the session.
 **HTTP Method:** `GET`  
 **Path:** `/api/v1/sessions/files/:_id/download`
 
-**Middleware**:
-
-- Authentication with `in-session` requirement
-- Parameter validation:
-  - `_id`: Valid file ID
-- File access permission check
+**Required Permission(s)**: `files_read`
 
 **Status Codes**:
 
@@ -141,12 +137,7 @@ Destroys a session.
 **HTTP Method:** `DELETE`  
 **Path:** `/api/v1/sessions/:_id`
 
-**Middleware**:
-
-- Basic authentication
-- [Permission check](#required-permissions):
-  - Owner must have `sessions_write_native`
-  - Non-owner must have `sessions_write_foreign`
+**Required Permission(s)**: `sessions_write_native` or `sessions_write_foreign`
 
 **Status Codes**:
 
@@ -159,22 +150,22 @@ Destroys a session.
 
 ### Session Object
 
-| Field            | Type       | Description                                           | Validation              |
-| ---------------- | ---------- | ----------------------------------------------------- | ----------------------- |
-| `_id`            | `objectId` | Unique identifier                                     | Valid MongoDB ObjectId  |
-| `missionId`      | `objectId` | Associated mission                                    | Valid mission ObjectId  |
-| `state`          | `string`   | Session state (see [Session States](#session-states)) | string                  |
-| `name`           | `string`   | Session display name                                  | Max 175 chars, optional |
-| `ownerId`        | `objectId` | Owner's user ID                                       | Valid user ObjectId     |
-| `ownerUsername`  | `string`   | Owner's username                                      | 5-25 chars              |
-| `ownerFirstName` | `string`   | Owner's first name                                    | 1-50 chars              |
-| `ownerLastName`  | `string`   | Owner's last name                                     | 1-50 chars              |
-| `launchedAt`     | `string`   | Launch timestamp                                      | ISO 8601 UTC            |
-| `config`         | `object`   | Session configuration                                 | Valid config object     |
-| `participantIds` | `array`    | Participant user IDs                                  | Array of ObjectIds      |
-| `banList`        | `array`    | Banned user IDs                                       | Array of ObjectIds      |
-| `observerIds`    | `array`    | Observer user IDs                                     | Array of ObjectIds      |
-| `managerIds`     | `array`    | Manager user IDs                                      | Array of ObjectIds      |
+| Field            | Type       | Description                                           |
+| ---------------- | ---------- | ----------------------------------------------------- |
+| `_id`            | `objectId` | Unique identifier                                     |
+| `missionId`      | `objectId` | Associated mission                                    |
+| `state`          | `string`   | Session state (see [Session States](#session-states)) |
+| `name`           | `string`   | Session display name                                  |
+| `ownerId`        | `objectId` | Owner's user ID                                       |
+| `ownerUsername`  | `string`   | Owner's username                                      |
+| `ownerFirstName` | `string`   | Owner's first name                                    |
+| `ownerLastName`  | `string`   | Owner's last name                                     |
+| `launchedAt`     | `string`   | Launch timestamp                                      |
+| `config`         | `object`   | Session configuration                                 |
+| `participantIds` | `array`    | Participant user IDs                                  |
+| `banList`        | `array`    | Banned user IDs                                       |
+| `observerIds`    | `array`    | Observer user IDs                                     |
+| `managerIds`     | `array`    | Manager user IDs                                      |
 
 ### Session Configuration Object
 

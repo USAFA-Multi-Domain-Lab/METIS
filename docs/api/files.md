@@ -2,18 +2,19 @@
 
 **Base URL:** `/api/v1/files/`
 
-METIS provides API endpoints for managing both file references and their associated physical files through a `MetisFileStore` instance. All endpoints require appropriate permissions and pass through middleware checks for authentication, validation and storage management.
+METIS provides API endpoints for managing files and their metadata. All endpoints require appropriate permissions for file operations.
 
-> **Important: File System Architecture**  
-> METIS uses a two-part file management system:
+> **Important: File Management**  
+> When you upload a file to METIS:
 >
-> 1. **Physical Files**: Actual file content stored on disk in the configured `FILE_STORE_DIR` directory. Files are renamed to secure hash values while preserving their extensions.
-> 2. **File References**: MongoDB documents that track metadata about each file (original name, size, type, etc.) and maintain the mapping between original filenames and their secure storage locations.
+> 1. The file is stored securely on the server with a unique identifier.
+> 2. A file reference is created amd stored in the database containing metadata (name, size, type).
 >
-> When you interact with this API, you're primarily working with file references. Operations like upload create both a physical file and its reference, while operations like delete only mark the reference as deleted while preserving the physical file.
+> All API operations work with these file references. When you delete a file, it is marked as deleted but may be preserved in the system for archival purposes.
 
 ## Table of Contents
 
+- [Rate Limiting](#rate-limiting)
 - [Endpoints](#endpoints)
   - [Upload Files](#upload-files)
   - [Get All Files](#get-all-files)
@@ -24,23 +25,28 @@ METIS provides API endpoints for managing both file references and their associa
   - [File Reference Object](#file-reference-object)
 - [Notes](#notes)
 
+## Rate Limiting
+
+Files API endpoints use METIS's standard rate limits. For large file operations:
+
+- Consider breaking uploads into smaller chunks
+- Each chunk counts as a separate request
+- Plan transfers to stay within rate limits
+
 ## Endpoints
 
 ### Upload Files
 
-Creates both a physical file in the file store and its corresponding database reference.
+Upload one or more files to the system.
 
 **HTTP Method:** `POST`  
 **Path:** `/api/v1/files/`
 
-**Middleware**:
+**Required Permission(s)**: `files_write`
 
-- Authentication with `files_write` permission
-- File upload handling through Multer
-  - Physical files stored in configured directory (`FILE_STORE_DIR` env variable, default: `'./files/store'`)
-  - Physical filenames are hashed using 16 bytes random hex for security
-  - Original file extensions preserved in both physical files and references
-  - MIME types detected from extensions and stored in file references
+- Physical filenames are hashed using 16 bytes random hex for security
+- Original file extensions preserved in both physical files and references
+- MIME types detected from extensions and stored in file references
 
 #### Request Body
 
@@ -104,14 +110,7 @@ Retrieves all non-deleted file references from the database. Does not return the
 **HTTP Method:** `GET`  
 **Path:** `/api/v1/files/`
 
-**Middleware**:
-
-- Authentication with `files_read` permission
-- Request validation
-
-**Query Parameters**:
-
-None currently implemented in the code. The API returns metadata for all non-deleted files.
+**Required Permission(s)**: `files_read`
 
 #### Response
 
@@ -145,11 +144,7 @@ Retrieves metadata for a specific file reference from the database. Use this to 
 **HTTP Method:** `GET`  
 **Path:** `/api/v1/files/:_id`
 
-**Middleware**:
-
-- Authentication with `files_read` permission
-- Parameter validation:
-  - `_id`: Must be valid ObjectId (references the database entry, not the physical file)
+**Required Permission(s)**: `files_read`
 
 #### Response
 
@@ -182,12 +177,7 @@ Downloads the actual physical file content from the file store. Uses the file re
 **HTTP Method:** `GET`  
 **Path:** `/api/v1/files/:_id/download`
 
-**Middleware**:
-
-- Authentication with `files_read` permission
-- Parameter validation:
-  - `_id`: Must be valid ObjectId (of the file reference)
-- File store access validation (verifies physical file exists)
+**Required Permission(s)**: `files_read`
 
 **Response**:
 
@@ -208,11 +198,7 @@ Performs a soft delete by marking the database file reference as deleted. The ph
 **HTTP Method:** `DELETE`  
 **Path:** `/api/v1/files/:_id`
 
-**Middleware**:
-
-- Authentication with `files_write` permission
-- Parameter validation:
-  - `_id`: Must be valid MongoDB ObjectId (of the file reference to mark as deleted)
+**Required Permission(s)**: `files_write`
 
 #### Response
 
@@ -230,69 +216,24 @@ Empty response on success.
 
 ### File Reference Object
 
-The following describes the MongoDB document structure used to track files in the database. This metadata links to the actual file content stored in the file system.
-
-| Field               | Type       | Description                          | Validation                             |
-| ------------------- | ---------- | ------------------------------------ | -------------------------------------- |
-| `_id`               | `objectId` | Database reference identifier        | Valid MongoDB ObjectId                 |
-| `name`              | `string`   | Original filename (for user display) | Max 175 chars, unique when not deleted |
-| `path`              | `string`   | Hashed name of physical file         | Required, generated by system          |
-| `mimetype`          | `string`   | MIME type                            | Must be valid MIME type                |
-| `size`              | `number`   | File size in bytes                   | Required, > 0                          |
-| `createdAt`         | `string`   | Creation timestamp                   | ISO 8601 UTC                           |
-| `updatedAt`         | `string`   | Last update time                     | ISO 8601 UTC                           |
-| `createdBy`         | `objectId` | Creator's ID                         | Valid MongoDB ObjectId                 |
-| `createdByUsername` | `string`   | Creator's username                   | Required                               |
-| `deleted`           | `boolean`  | Soft delete flag                     | Defaults to false                      |
+| Field               | Type      | Description           |
+| ------------------- | --------- | --------------------- |
+| `_id`               | `string`  | Unique identifier     |
+| `name`              | `string`  | Original filename     |
+| `path`              | `string`  | Internal file path    |
+| `mimetype`          | `string`  | MIME type of the file |
+| `size`              | `number`  | File size in bytes    |
+| `createdAt`         | `string`  | Creation timestamp    |
+| `updatedAt`         | `string`  | Last update time      |
+| `createdBy`         | `string`  | ID of creating user   |
+| `createdByUsername` | `string`  | Username of creator   |
+| `deleted`           | `boolean` | Deletion status       |
 
 ## Notes
 
-- Physical File Storage:
-
-  - Managed by `MetisFileStore` class
-  - Physical files stored in `FILE_STORE_DIR` directory (default: `'./files/store'`)
-  - Files stored with secure hash names (16 bytes random hex)
-  - Extensions preserved for MIME type detection
-  - No explicit size limits (bounded by Node.js/system limits)
-  - No file type restrictions beyond MIME format validation
-  - Files remain on disk even after reference deletion
-
-- File Reference Storage:
-
-  - MongoDB documents track all file metadata
-  - References map original names to physical files
-  - MIME types detected and stored during upload
-  - Database handles validation and constraints
-  - Soft deletion only affects references
-
-- Database handling:
-
-  - References stored in MongoDB
-  - Unique filename constraints
-  - Soft delete implementation
-  - Creator tracking
-  - Full audit trails with timestamps
-  - Automatic MIME type validation
-
-- Security features:
-
-  - Permission-based access control
-  - File reference validation
-  - MIME type validation
-  - Path traversal prevention
-  - Original files preserved after deletion
-
-- Query behavior:
-
-  - Deleted files excluded by default
-  - Creator information populated automatically
-  - Missing creators handled gracefully
-  - Case-sensitive path handling
-  - Timestamp conversion to UTC
-
-- File operations:
-  - Bulk upload support
-  - Original filenames preserved
-  - Download with original names
-  - Reference counting
-  - Import/Export support
+- Files are preserved even after deletion for archival purposes
+- Original filenames and file types are preserved
+- Bulk file upload is supported
+- Files can be downloaded using their original names
+- No explicit file size limits beyond system constraints
+- All file operations require appropriate permissions

@@ -6,7 +6,6 @@ Welcome to the official documentation for METIS. This index serves as the centra
 
 ## 📦 Setup Instructions
 
-- [Quick Start Guide](./setup/quick-start.md) - Get METIS up and running quickly.
 - [Debian Setup](./setup/debian.md) - Detailed setup for Debian environments.
 - [Windows Setup](./setup/windows.md) - Detailed setup for Windows environments.
 

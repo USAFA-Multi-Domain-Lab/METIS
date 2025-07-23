@@ -15,12 +15,11 @@ METIS provides API endpoints for managing user accounts. All endpoints require a
   - [Delete User](#delete-user)
 - [Data Types](#data-types)
   - [User Object](#user-object)
-- [Implementation Notes](#implementation-notes)
+- [Notes](#notes)
   - [Authentication System](#authentication-system)
   - [Access Control](#access-control)
-  - [Password Security](#password-security)
+  - [Security Features](#security-features)
   - [Data Handling](#data-handling)
-  - [Session Management](#session-management)
 
 ## Endpoints
 
@@ -31,33 +30,18 @@ Creates a new user account in the system.
 **HTTP Method:** `POST`  
 **Path:** `/api/v1/users/`
 
-**Middleware**:
-
-- Authentication requiring `users_write_students` permission
-- User management restriction validation:
-  - Admins can create any user type
-  - Instructors can only create student users
-  - Students cannot create users
-- Request body validation
-- System user protection check (prevents creation of system users)
+**Required Permission(s)**: `users_write` or `users_write_students` (students only)
 
 #### Request Body
 
 ```json
 {
-  // Required, 5-25 chars, alphanumeric with -_., case-insensitive unique
   "username": "student1",
-  // Required, must match valid access level ID
   "accessId": "student",
-  // Required, array of valid permission IDs
   "expressPermissionIds": [],
-  // Required, 1-50 chars, letters and apostrophes only
   "firstName": "student",
-  // Required, 1-50 chars, letters and apostrophes only
   "lastName": "user",
-  // Required, boolean
   "needsPasswordReset": false,
-  // Required for non-system users, 8-50 chars
   "password": "password"
 }
 ```
@@ -95,13 +79,13 @@ Retrieves all users based on the requesting user's permissions.
 **HTTP Method:** `GET`  
 **Path:** `/api/v1/users/`
 
-**Middleware**:
+**Required Permission(s)**: `users_read_students`
 
-- Authentication with `users_read_students` permission
-- Access level filtering:
-  - Admins can view all users
-  - Instructors can only view student users
-  - Students cannot view any users
+> **_Note: Access level determines which users can be viewed:_**
+>
+> - **_Admins: all users_**
+> - **_Instructors: student users only_**
+> - **_Students: no access_**
 
 #### Response
 
@@ -138,12 +122,7 @@ Retrieves a specific user by ID.
 **HTTP Method:** `GET`  
 **Path:** `/api/v1/users/:_id`
 
-**Middleware**:
-
-- Authentication with `users_read_students` permission
-- User management restriction check
-- Parameter validation:
-  - `_id`: Must be valid ObjectId
+**Required Permission(s)**: `users_read_students`
 
 #### Response
 
@@ -178,32 +157,19 @@ Updates an existing user's information.
 **HTTP Method:** `PUT`  
 **Path:** `/api/v1/users/`
 
-**Middleware**:
-
-- Authentication with `users_write_students` permission
-- User management restriction check
-- Request body validation
-- System user protection check
+**Required Permission(s)**: `users_write_students`
 
 #### Request Body
 
 ```json
 {
-  // Required
   "_id": "662270879c5ca781c218123c",
-  // Optional, 5-25 chars, alphanumeric with -_.
   "username": "student1",
-  // Optional, must match valid access level ID
   "accessId": "student",
-  // Optional, array of valid permission IDs
   "expressPermissionIds": [],
-  // Optional, 1-50 chars, letters and apostrophes
   "firstName": "Updated",
-  // Optional, 1-50 chars, letters and apostrophes
   "lastName": "User",
-  // Optional, boolean
   "needsPasswordReset": false,
-  // Optional, 8-50 chars
   "password": "newpassword"
 }
 ```
@@ -224,19 +190,14 @@ Allows a user to reset their own password.
 **HTTP Method:** `PUT`  
 **Path:** `/api/v1/users/reset-password`
 
-**Middleware**:
+**Authentication**: Required (no specific permissions)
 
-- Basic authentication (no specific permissions required)
-- Password reset restriction (can only reset own password)
-- Request body validation:
-  - Password format validation
-  - Password complexity requirements
+> **_Note: Users can only reset their own password._**
 
 #### Request Body
 
 ```json
 {
-  // Required, 8-50 chars
   "password": "new-password"
 }
 ```
@@ -256,13 +217,7 @@ Soft deletes a user account (sets deleted flag).
 **HTTP Method:** `DELETE`  
 **Path:** `/api/v1/users/:_id`
 
-**Middleware**:
-
-- Authentication with `users_write_students` permission
-- User management restriction check
-- Parameter validation:
-  - `_id`: Must be valid ObjectId
-- System user protection check
+**Required Permission(s)**: `users_write_students`
 
 **Status Codes**:
 
@@ -278,32 +233,33 @@ Soft deletes a user account (sets deleted flag).
 
 ### User Object
 
-| Field                  | Type       | Description            | Validation                                                  |
-| ---------------------- | ---------- | ---------------------- | ----------------------------------------------------------- |
-| `_id`                  | `objectId` | Unique identifier      | Valid MongoDB ObjectId                                      |
-| `username`             | `string`   | User's login name      | 5-25 chars, alphanumeric with -\_., case-insensitive unique |
-| `accessId`             | `string`   | Access level           | Must match valid access level ID                            |
-| `expressPermissionIds` | `array`    | Additional permissions | Array of valid permission IDs                               |
-| `firstName`            | `string`   | First name             | 1-50 chars, letters and apostrophes                         |
-| `lastName`             | `string`   | Last name              | 1-50 chars, letters and apostrophes                         |
-| `needsPasswordReset`   | `boolean`  | Password reset flag    | Boolean                                                     |
-| `password`             | `string`   | Password               | 8-50 chars, bcrypt hashed                                   |
-| `createdAt`            | `string`   | Creation timestamp     | ISO 8601 UTC                                                |
-| `updatedAt`            | `string`   | Last update timestamp  | ISO 8601 UTC                                                |
-| `createdBy`            | `objectId` | Creator's ID           | Valid MongoDB ObjectId                                      |
-| `createdByUsername`    | `string`   | Creator's username     | 5-25 chars                                                  |
+| Field                  | Type       | Description            |
+| ---------------------- | ---------- | ---------------------- |
+| `_id`                  | `objectId` | Unique identifier      |
+| `username`             | `string`   | User's login name      |
+| `accessId`             | `string`   | Access level           |
+| `expressPermissionIds` | `array`    | Additional permissions |
+| `firstName`            | `string`   | First name             |
+| `lastName`             | `string`   | Last name              |
+| `needsPasswordReset`   | `boolean`  | Password reset flag    |
+| `password`             | `string`   | Password (hashed)      |
+| `createdAt`            | `string`   | Creation timestamp     |
+| `updatedAt`            | `string`   | Last update timestamp  |
+| `createdBy`            | `objectId` | Creator's ID           |
+| `createdByUsername`    | `string`   | Creator's username     |
 
 ---
 
-## Implementation Notes
+## Notes
 
 ### Authentication System
 
-The METIS user authentication system uses a multi-layered approach:
+The METIS user authentication system uses Express sessions:
 
 - **Session Management**
 
-  - Express session with JWT for web authentication
+  - Express sessions with secure HTTP-only cookies
+  - MongoDB-backed session store
   - Single active session per user enforced
   - Session conflicts handled via forceful logout
   - Automatic timeout on session expiration
@@ -311,7 +267,7 @@ The METIS user authentication system uses a multi-layered approach:
 - **Request Validation**
   - WebSocket connection validation for real-time operations
   - Session membership verification for protected routes
-  - Rate limiting on authentication attempts
+  - Default rate limits apply (20/sec HTTP, 10/sec WebSocket)
   - Request origin validation
 
 ### Access Control
@@ -331,55 +287,17 @@ METIS implements a robust role-based access control system:
   - Permission escalation is prevented
   - Cross-user password resets are blocked
 
-### Password Security
+### Security Features
 
-Comprehensive password security measures include:
-
-- **Storage and Validation**
-
-  - bcrypt hashing with work factor 10
-  - Password length: 8-50 characters
-  - System users cannot have passwords
-  - Password complexity requirements enforced
-
-- **Security Measures**
-  - Immediate session termination on password change
-  - Password reset workflow with flag system
-  - Failed login attempt tracking
-  - Automatic account timeout after repeated failures
-  - Secure update procedures with verification
+- Secure password handling with bcrypt hashing
+- Password reset workflow
+- Failed login attempt tracking
+- Session security with auto-logout
+- Complete audit trail of changes
 
 ### Data Handling
 
-METIS ensures data integrity through:
-
-- **Data Protection**
-
-  - Soft deletion for user records
-  - Response filtering of sensitive data
-  - Complete audit trail maintenance
-  - Creator/modifier tracking
-
-- **Data Normalization**
-  - Case-insensitive username handling
-  - Automatic name capitalization
-  - UTC timestamps for all operations
-  - Strict validation of all user properties
-
-### Session Management
-
-Session operations are handled with attention to security:
-
-- **Session Operations**
-
-  - Atomic transaction handling
-  - Proper cleanup on logout/timeout
-  - Client switching detection
-  - Rate limiting on all operations
-
-- **Security Triggers**
-  Auto-logout is enforced on sensitive changes:
-  - Username modifications
-  - Access level updates
-  - Permission changes
-  - Account deletion
+- Soft deletion for user records
+- Case-insensitive usernames
+- UTC timestamps
+- Creator tracking

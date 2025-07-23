@@ -2,7 +2,7 @@
 
 **Base URL:** `/api/v1/logins/`
 
-METIS provides API endpoints for managing user authentication and session state through the `ServerLogin` class. These endpoints handle login/logout operations and manage user sessions across web and WebSocket connections.
+METIS provides API endpoints for managing user authentication and session state. These endpoints handle login/logout operations and manage user sessions across both web and WebSocket connections.
 
 ## Table of Contents
 
@@ -23,20 +23,14 @@ Authenticates a user and creates a new login session.
 **HTTP Method:** `POST`  
 **Path:** `/api/v1/logins/`
 
-**Middleware**:
-
-- Request body validation:
-  - Username validation (5-25 chars)
-  - Password validation (8-50 chars)
+**Required Permission(s)**: None
 
 #### Request Body
 
 ```json
 {
-  // Required, 5-25 chars, alphanumeric with -_., case-insensitive
-  "username": "student1",
-  // Required, 8-50 chars
-  "password": "password"
+  "username": "student1", // Required, 5-25 characters, alphanumeric with -_.
+  "password": "password" // Required, 8-50 characters
 }
 ```
 
@@ -75,7 +69,7 @@ Retrieves information about the current login session.
 **HTTP Method:** `GET`  
 **Path:** `/api/v1/logins/`
 
-**Middleware**: None
+**Required Permission(s)**: None
 
 #### Response
 
@@ -108,7 +102,7 @@ Destroys the current login session and associated data.
 **HTTP Method:** `DELETE`  
 **Path:** `/api/v1/logins/`
 
-**Middleware**: None
+**Required Permission(s)**: None
 
 **Status Codes**:
 
@@ -119,49 +113,14 @@ Destroys the current login session and associated data.
 
 ### Login Object
 
-| Field       | Type     | Description      | Validation                       |
-| ----------- | -------- | ---------------- | -------------------------------- |
-| `user`      | `object` | User information | Valid `TUserExistingJson` object |
-| `sessionId` | `string` | METIS session ID | null if not in session           |
+| Field       | Type     | Description      |
+| ----------- | -------- | ---------------- |
+| `user`      | `object` | User information |
+| `sessionId` | `string` | Session ID       |
 
 ## Notes
 
-- Session management:
-
-  - Express session for web authentication
-  - WebSocket connections tracked separately
-  - Single active session per user enforced
-  - Session conflicts handled via forceful logout
-  - METIS sessions distinct from express sessions
-  - Client connections managed per login
-
-- Login registry:
-
-  - In-memory storage of active logins
-  - Tracks user ID to login mapping
-  - Handles client connection state
-  - Manages METIS session membership
-  - Enforces single session policy
-
-- Timeout handling:
-
-  - Timeout registry tracks banned users
-  - Timeouts force immediate logout
-  - Express and METIS sessions cleared
-  - Client connections terminated
-  - Timeout duration enforcement
-
-- Security features:
-
-  - bcrypt password comparison
-  - System user login prevention
-  - Session verification
-  - Client switching detection
-  - Forced logout capability
-
-- Error handling:
-  - Username/password validation
-  - System user restrictions
-  - Session conflict resolution
-  - Client connection errors
-  - Database operation errors
+- Only one active session is allowed per user
+- Sessions use secure HTTP-only cookies
+- Rate limiting may temporarily restrict access on multiple failed attempts
+- System accounts cannot log in through the API

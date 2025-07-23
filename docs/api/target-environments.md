@@ -14,9 +14,6 @@ METIS provides API endpoints for managing target environments. Target environmen
   - [Target Object](#target-object)
   - [Target Argument Object](#target-argument-object)
 - [Notes](#notes)
-  - [Required Permissions](#required-permissions)
-  - [Version Control](#version-control)
-  - [Target Arguments](#target-arguments)
 
 ## Endpoints
 
@@ -27,9 +24,7 @@ Retrieves all available target environments and their associated targets.
 **HTTP Method:** `GET`  
 **Path:** `/api/v1/target-environments/`
 
-**Middleware**:
-
-- Authentication with `environments_read` permission
+**Required Permission(s)**: `environments_read`
 
 #### Response
 
@@ -68,14 +63,7 @@ Migrates effect arguments through available migration versions using the target'
 **HTTP Method:** `POST`  
 **Path:** `/api/v1/target-environments/migrate/effect-args`
 
-**Middleware**:
-
-- Authentication with `environments_read` permission
-- Request body validation:
-  - `targetId`: Required string
-  - `environmentId`: Required string
-  - `effectEnvVersion`: Must be valid semantic version string
-  - `effectArgs`: Required object
+**Required Permission(s)**: `environments_read`
 
 #### Request Body
 
@@ -115,69 +103,49 @@ Migrates effect arguments through available migration versions using the target'
 
 ### Target Environment Object
 
-| Field         | Type     | Description             | Validation              |
-| ------------- | -------- | ----------------------- | ----------------------- |
-| `_id`         | `string` | Unique identifier       | Required                |
-| `name`        | `string` | Display name            | Required                |
-| `description` | `string` | Environment description | Required                |
-| `version`     | `string` | Current version         | Semantic version        |
-| `targets`     | `array`  | Available targets       | Array of Target objects |
+| Field         | Type     | Description             |
+| ------------- | -------- | ----------------------- |
+| `_id`         | `string` | Unique identifier       |
+| `name`        | `string` | Display name            |
+| `description` | `string` | Environment description |
+| `version`     | `string` | Current version         |
+| `targets`     | `array`  | Available targets       |
 
 ### Target Object
 
-| Field               | Type     | Description           | Validation                |
-| ------------------- | -------- | --------------------- | ------------------------- |
-| `targetEnvId`       | `string` | Parent environment ID | Must match environment ID |
-| `_id`               | `string` | Unique identifier     | Required                  |
-| `name`              | `string` | Display name          | Required                  |
-| `description`       | `string` | Target description    | Required                  |
-| `args`              | `array`  | Target arguments      | Array of argument specs   |
-| `migrationVersions` | `array`  | Supported versions    | Array of version strings  |
+| Field               | Type     | Description           |
+| ------------------- | -------- | --------------------- |
+| `targetEnvId`       | `string` | Parent environment ID |
+| `_id`               | `string` | Unique identifier     |
+| `name`              | `string` | Display name          |
+| `description`       | `string` | Target description    |
+| `args`              | `array`  | Target arguments      |
+| `migrationVersions` | `array`  | Supported versions    |
 
 ### Target Argument Object
 
-All target arguments share these base properties:
+Base properties:
 
-| Field                | Type      | Description                       | Required |
-| -------------------- | --------- | --------------------------------- | -------- |
-| `_id`                | `string`  | Unique identifier                 | Yes      |
-| `type`               | `string`  | Argument type                     | Yes      |
-| `name`               | `string`  | Display name                      | Yes      |
-| `required`           | `boolean` | Whether input is required         | Yes      |
-| `groupingId`         | `string`  | Groups related arguments together | No       |
-| `dependencies`       | `array`   | Conditional display rules         | No       |
-| `tooltipDescription` | `string`  | Hover-over help text              | No       |
+| Field                | Type      | Description                       |
+| -------------------- | --------- | --------------------------------- |
+| `_id`                | `string`  | Unique identifier                 |
+| `type`               | `string`  | Argument type                     |
+| `name`               | `string`  | Display name                      |
+| `required`           | `boolean` | Whether input is required         |
+| `groupingId`         | `string`  | Groups related arguments together |
+| `dependencies`       | `array`   | Conditional display rules         |
+| `tooltipDescription` | `string`  | Hover-over help text              |
 
-When `required` is true, a `default` value must be provided.
+Available argument types:
 
-Additional properties by type:
-
-- `string`: Adds `pattern` and `title` (error message)
-- `number`: Adds `min`, `max`, `unit`, and `integersOnly`
-- `dropdown`: Adds `options` array of choices
-- `boolean`: Adds optional `default` (defaults to false)
-- `force`, `node`, `action`, `file`: Mission component references
+- `string`, `number`, `boolean`, `dropdown`
+- `force`, `node`, `action`, `file`
 
 For detailed implementation information, refer to the [Target Environment Integration Guide](../devs/target-environment-integration.md).
 
 ## Notes
 
-### Required Permissions
-
-To interact with target environments, users need:
-
-- `environments_read`: Required to view environments and perform migrations
-
-### Version Control
-
-Target environments use semantic versioning (MAJOR.MINOR.PATCH):
-
-- Version changes indicate breaking changes in target argument specifications
-- Migration paths handle argument format changes between versions
-- The migration endpoint provides automatic version compatibility
-
-### Target Arguments
-
-Target arguments specify the parameters that a target accepts. Each target defines its arguments in the `args` array of the [Target Object](#target-object). For detailed information about implementing target arguments, refer to the [Target Environment Integration Guide](../devs/target-environment-integration.md).
-
-Each argument in the array must follow the [Target Argument Object](#target-argument-object) structure. The supported argument types are `string`, `large-string`, `number`, `boolean`, `dropdown`, `force`, `node`, `action`, and `file`.
+- Required permission `environments_read` for all operations
+- Uses semantic versioning (MAJOR.MINOR.PATCH)
+- Migration system handles version compatibility
+- For target environment implementation details, see the [Target Environment Integration Guide](/docs/devs/target-environment-integration.md)

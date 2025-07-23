@@ -2,44 +2,86 @@
 
 ## System Overview
 
-METIS uses a microservices architecture with:
+METIS is a real-time training system built with:
 
-- Node.js/Express API server
-- React frontend
-- MongoDB database
+- Node.js/Express backend server
+- React Single Page Application frontend
+- MongoDB for data persistence
 - Socket.IO for real-time communication
 
-## Key Components
+## Core Components
 
 ### Backend Services
 
-- API Server: RESTful endpoints for CRUD operations
-- WebSocket Server: Real-time mission updates
-- Database Layer: MongoDB with Mongoose ODM
-- Target Environment System: Pluggable simulation integrations
+#### API
 
-### Frontend Architecture
+- RESTful API endpoints for CRUD operations
+- Express session-based authentication
+- Rate limiting and access control
+- Environment-specific configurations
+- [API Documentation](/docs/api/overview.md)
+
+#### WebSocket
+
+- Real-time mission & session updates
+- Client connection management
+- Integrated with session auth
+- Real-time state synchronization
+- [WebSocket Documentation](/docs/devs/websocket.md)
+
+#### Database
+
+- MongoDB with Mongoose ODM
+- Session storage
+- Automated backups
+- Schema versioning
+
+#### Target Environments
+
+- Pluggable training simulations
+- Dynamic environment registration
+- Real-time state synchronization
+
+### Frontend Application
+
+#### Core Features
 
 - React SPA with TypeScript
-- Redux state management
-- Socket.IO client for real-time updates
-- Modular component structure
+- Socket.IO for real-time updates
+- Modular component architecture
+- Responsive design
+
+#### State Management
+
+- React Context API
+- Global app state
+- Component-local state
+- Real-time sync with backend
+
+## Key Interactions
 
 ### Data Flow
 
-1. Client requests via REST/WebSocket
-2. API middleware validates requests
-3. Business logic processed
-4. Database operations executed
-5. Response returned to client
+1. REST API for CRUD operations
+2. WebSocket for real-time updates
+3. Session-based authentication
+4. Role-based access control
 
-### Security
+### Security Layer
 
-- JWT authentication
-- Role-based access control
-- Request validation
-- API rate limiting
+- Express sessions (HTTP-only cookies)
+- Multi-level authentication
+- Permission-based access
+- Rate limiting
 
-## Development
+## Developer Resources
 
-Refer to [Style Guide](style-guide.md) for coding standards
+### Implementation Details
+
+- [RESTful API](/docs/api/overview.md) - REST endpoints, authentication, and data models
+- [WebSocket](/docs/devs/websocket.md) - Real-time communication protocols and events
+- [Target Environment Integration](/docs/devs/target-environment-integration.md) - How to create and register new target environments
+
+### Development Guidelines
+
+- [Style Guide](style-guide.md) - Coding standards and best practices

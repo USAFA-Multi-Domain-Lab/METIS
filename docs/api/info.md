@@ -2,7 +2,7 @@
 
 **Base URL:** `/api/v1/info/`
 
-METIS provides API endpoints for retrieving system information and metadata through its `MetisServer` class. The core system information (name, description, version) is exposed through a public endpoint, while the changelog requires appropriate authentication permissions.
+METIS provides API endpoints for retrieving system information and metadata. Basic system information (name, description, version) is publicly available, while the changelog requires authentication.
 
 ## Table of Contents
 
@@ -12,17 +12,21 @@ METIS provides API endpoints for retrieving system information and metadata thro
 - [Data Types](#data-types)
   - [Info Object](#info-object)
 - [Notes](#notes)
+  - [Server Implementation](#server-implementation)
+  - [Security Considerations](#security-considerations)
+  - [Error Handling](#error-handling)
+  - [Content Delivery](#content-delivery)
 
 ## Endpoints
 
 ### Get System Info
 
-Retrieves basic system information including the project name, description, and version from the `MetisServer` class constants.
+Retrieves basic system information about the METIS system.
 
 **HTTP Method:** `GET`  
 **Path:** `/api/v1/info/`
 
-**Middleware**: None (public endpoint)
+**Required Permission(s)**: None required (public endpoint)
 
 #### Response
 
@@ -39,25 +43,18 @@ Retrieves basic system information including the project name, description, and 
 - 200 OK – System info retrieved successfully
 - 500 Internal Server Error – Server error during retrieval
 
-Notes:
-
-- Name, description, and version values are pulled directly from package.json via MetisServer constants
-- Values are fixed at build time and cannot be modified at runtime
-
 ### Get Changelog
 
-Retrieves the system changelog by reading the contents of the project's docs/changelog.md file.
+Retrieves the system changelog containing version history and updates.
 
 **HTTP Method:** `GET`  
 **Path:** `/api/v1/info/changelog/`
 
-**Middleware**:
-
-- Authentication with `changelog_read` permission required
+**Required Permission(s)**: `changelog_read`
 
 #### Response
 
-Plain text response containing the Markdown-formatted changelog content:
+Returns the changelog in Markdown format:
 
 ```
 # changelog
@@ -73,33 +70,24 @@ Plain text response containing the Markdown-formatted changelog content:
 - 200 OK – Changelog retrieved successfully
 - 401 Unauthorized – Missing authentication
 - 403 Forbidden – Insufficient permissions
-- 404 Not Found – Changelog file not found
+- 404 Not Found – Changelog not found
 - 500 Internal Server Error – Server error during retrieval
-
-Notes:
-
-- Returns raw Markdown content from changelog.md
-- Content is read directly from filesystem on each request
-- File encoding is UTF-8
 
 ## Data Types
 
 ### Info Object
 
-| Field         | Type     | Description         | Source                                             |
-| ------------- | -------- | ------------------- | -------------------------------------------------- |
-| `name`        | `string` | Project name        | package.json via `MetisServer.PROJECT_NAME`        |
-| `description` | `string` | Project description | package.json via `MetisServer.PROJECT_DESCRIPTION` |
-| `version`     | `string` | Project version     | package.json via `MetisServer.PROJECT_VERSION`     |
+| Field         | Type     | Description         |
+| ------------- | -------- | ------------------- |
+| `name`        | `string` | Project name        |
+| `description` | `string` | Project description |
+| `version`     | `string` | Project version     |
 
-Notes:
-
-- All fields are read-only and sourced from package.json at build time
-- Schema build number (currently 45) is tracked internally by MetisServer but not exposed via the API
+> _All fields are read-only_
 
 ## Notes
 
-- Server Implementation:
+- #### Server Implementation:
 
   - Routes defined in `/server/api/v1/routes/info.ts`
   - Controllers in `/server/api/v1/controllers/info/`
@@ -107,7 +95,7 @@ Notes:
   - Changelog file accessed directly from filesystem
   - No database interaction required
 
-- Security Considerations:
+- #### Security Considerations:
 
   - `/info` endpoint is public with no authentication required
   - `/info/changelog` requires `changelog_read` permission
@@ -115,7 +103,7 @@ Notes:
   - File paths are fixed to prevent traversal
   - No sensitive data exposed
 
-- Error Handling:
+- #### Error Handling:
 
   - Filesystem errors when reading changelog
   - Authentication/permission validation
@@ -123,7 +111,7 @@ Notes:
   - JSON error response format
   - Stack traces logged but not returned
 
-- Content Delivery:
+- #### Content Delivery:
   - Info endpoint returns JSON
   - Changelog endpoint returns raw Markdown
   - UTF-8 encoding enforced

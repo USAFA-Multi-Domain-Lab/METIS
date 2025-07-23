@@ -10,18 +10,31 @@ METIS provides a RESTful API for all system operations. The API is versioned to 
 - [Common Response Codes](#common-response-codes)
 - [Rate Limiting](#rate-limiting)
 - [Available Routes](#available-routes)
+  - [Missions API](#missions-api)
+  - [Users API](#users-api)
+  - [Sessions API](#sessions-api)
+  - [Target Environments API](#target-environments-api)
+  - [Files API](#files-api)
+  - [Logins API](#logins-api)
+  - [Info API](#info-api)
+- [Request Validation](#request-validation)
 - [Request Parameters](#request-parameter-data-types)
 - [Request Body Types](#request-json-data-types)
 - [Additional Notes](#notes)
+  - [General Guidelines](#general-guidelines)
+  - [Data Validation](#data-validation)
+  - [Security and Access Control](#security-and-access-control)
+- [Additional Resources](#additional-resources)
 
 ## Authentication
 
-All API requests require authentication through one of these methods:
+METIS uses Express sessions for authentication, managed via secure HTTP-only cookies and stored in MongoDB. There are three authentication levels:
 
-- Session cookie (for web browser access)
-- JWT token (for programmatic access)
+1. `login` - Basic authentication (default)
+2. `ws-connection` - Requires WebSocket connection
+3. `in-session` - Requires active METIS session
 
-See the [Logins API](/api/logins.md) documentation for authentication details.
+Each endpoint may require specific permissions in addition to authentication. For WebSocket authentication details, see the [WebSocket Documentation](/docs/devs/websocket.md#authentication--security).
 
 ## Common Response Codes
 
@@ -38,13 +51,17 @@ See the [Logins API](/api/logins.md) documentation for authentication details.
 
 ## Rate Limiting
 
-- Default rate limit: 100 requests per minute per user
-- Authentication endpoints: 10 requests per minute per IP
-- Bulk operations: 10 requests per minute per user
-- Rate limit headers included in responses:
+METIS implements rate limiting for both HTTP and WebSocket connections:
+
+- `HTTP API`: 20 requests/second per IP (default)
+- `WebSocket`: 10 messages/second per user (default)
+- [Configurable via environment variables](/docs/setup/debian.md#step-5---configure-environment)
+- Rate limit headers in HTTP responses:
   - `X-RateLimit-Limit`
   - `X-RateLimit-Remaining`
   - `X-RateLimit-Reset`
+
+> _For WebSocket-specific details, see [WebSocket Documentation](/docs/devs/websocket.md#authentication--security)._
 
 ## Available Routes
 
@@ -53,22 +70,36 @@ The METIS API provides the following main routes. Each route has its own detaile
 ### Missions API
 
 **Route:** `/api/v1/missions/`  
-**Documentation:** [Missions API](/api/missions.md)  
-**Description:** Manages training mission lifecycle  
+**Documentation:** [Missions API](/docs/api/missions.md)  
+**Description:** Manages mission lifecycle and configurations
+
 **Key Operations:**
 
-- Create and configure missions
-- Retrieve mission details and status
-- Update mission parameters
-- Delete missions
+- Mission Management:
+  - Create new missions
+  - Copy existing missions
+  - Import mission configurations
+  - List available missions
+  - Get mission details
+  - Update mission parameters
+  - Delete missions
+- Environment Operations:
+  - Get environment configuration
+  - Validate mission environment
+  - Apply environment effects
 
-**Permissions:** `missions_read`, `missions_write`
+**Permissions:**
+
+- Read operations: `missions_read`
+- Write operations: `missions_write`
+- Environment operations: `environments_read`
 
 ### Users API
 
 **Route:** `/api/v1/users/`  
-**Documentation:** [Users API](/api/users.md)  
-**Description:** Handles user account management  
+**Documentation:** [Users API](/docs/api/users.md)  
+**Description:** Handles user account management
+
 **Key Operations:**
 
 - User creation and profile management
@@ -76,75 +107,133 @@ The METIS API provides the following main routes. Each route has its own detaile
 - Password management
 - Account deactivation
 
-**Permissions:** `users_read_students`, `users_write_students`
+**Permissions:**
+
+- Full access: `users_read`, `users_write`
+- Student-only access: `users_read_students`, `users_write_students`
 
 ### Sessions API
 
 **Route:** `/api/v1/sessions/`  
-**Documentation:** [Sessions API](/api/sessions.md)  
-**Description:** Manages active mission sessions  
+**Documentation:** [Sessions API](/docs/api/sessions.md)  
+**Description:** Manages METIS mission sessions
+
 **Key Operations:**
 
 - Session creation and configuration
 - Participant management
-- Real-time session state
+- Retrieve real-time session state (via [WebSocket events](/docs/devs/websocket.md#session-events))
 - Session termination
 
-**Permissions:** `sessions_read`, `sessions_write`
+**Permissions:**
+
+- Reading: `sessions_read`
+- Writing (all sessions): `sessions_write`
+- Writing (own sessions): `sessions_write_native`
+- Writing (others' sessions): `sessions_write_foreign`
+- Joining as participant: `sessions_join_participant`
+- Joining as manager (all sessions): `sessions_join_manager`
+- Joining as manager (own sessions): `sessions_join_manager_native`
+- Joining as observer: `sessions_join_observer`
 
 ### Target Environments API
 
 **Route:** `/api/v1/target-environments/`  
-**Documentation:** [Target Environments API](/api/target-environments.md)  
-**Description:** Provides target environment configurations  
+**Documentation:** [Target Environments API](/docs/api/target-environments.md)  
+**Description:** Provides access to registered target environments and effect migration
+
 **Key Operations:**
 
-- Environment discovery
-- Configuration retrieval
-- Effect validation
+- List all registered target environments
+- Migrate outdated effect configurations
 
-**Permissions:** `environments_read`
+**Permissions:**
+
+- Basic access: `environments_read`
+
+> _Note: Effects are executed through the WebSocket system, not through this API endpoint. These effects are used to affect targets within their respective target environments._
 
 ### Files API
 
 **Route:** `/api/v1/files/`  
-**Documentation:** [Files API](/api/files.md)  
-**Description:** Manages file operations  
+**Documentation:** [Files API](/docs/api/files.md)  
+**Description:** Manages file operations
+
 **Key Operations:**
 
-- File upload and download
-- File metadata management
-- File deletion
+- File Management:
+  - Upload new files
+  - Download existing files
+  - Delete stored files
+- Metadata Operations:
+  - Get file information
+  - Update file metadata
+  - List available files
 
-**Permissions:** `files_read`, `files_write`
+**Permissions:**
+
+- Read operations: `files_read`
+- Write operations: `files_write`
 
 ### Logins API
 
 **Route:** `/api/v1/logins/`  
-**Documentation:** [Logins API](/api/logins.md)  
-**Description:** Handles authentication flows  
+**Documentation:** [Logins API](/docs/api/logins.md)  
+**Description:** Handles authentication flows
+
 **Key Operations:**
 
-- User authentication
-- Session management
-- Login status verification
+- Authentication:
+  - Login/logout management
+  - Authentication level control (login, ws-connection, in-session)
+  - Session verification
+- Status Operations:
+  - Check authentication status
+  - Verify session validity
+  - Get current permissions
 
 **Permissions:** None required for basic auth
 
 ### Info API
 
 **Route:** `/api/v1/info/`  
-**Documentation:** [Info API](/api/info.md)  
-**Description:** Provides system information  
+**Documentation:** [Info API](/docs/api/info.md)  
+**Description:** Provides system information
+
 **Key Operations:**
 
 - Version information
 - Changelog access
 - System status
 
-**Permissions:** Various, endpoint-specific
+**Permissions:**
+
+- Changelog access: `changelog_read`
+- Other endpoints: No specific permissions required
 
 ---
+
+## Request Validation
+
+The `defineRequests` middleware ensures data integrity for all API requests by validating:
+
+1. **Request Body**
+
+   - JSON payload data validation
+   - Type checking for all fields
+   - Removal of unexpected fields
+
+2. **Query Parameters**
+
+   - URL query string validation (e.g., ?key=value)
+   - Type conversion and verification
+   - Required parameter enforcement
+
+3. **URL Parameters**
+   - Route parameter validation (e.g., /users/:id)
+   - Type checking for IDs and other values
+
+> _Invalid requests receive a 400 Bad Request response with an error message. Routes may implement additional validation as needed._
 
 ## Request Parameter Data Types
 
@@ -191,29 +280,28 @@ Request JSON, which is data passed in the `body` of a request, is documented wit
 
 ### General Guidelines
 
-- All endpoints require authentication unless specifically noted
-- Use HTTPS for all API requests
-- Request bodies should be JSON encoded
-- Response bodies are always JSON encoded
-- UTF-8 character encoding is used for all requests/responses
+- Most endpoints require authentication with specific exceptions:
+  - `/api/v1/info/` - Public access for basic system info
+  - `/api/v1/logins/` - Public access for authentication endpoints
+- All API requests require HTTPS
+- Request/response bodies are JSON encoded with UTF-8 character encoding
+- See [architecture documentation](/docs/devs/architecture.md) for implementation details
 
 ### Data Validation
 
+- All requests are validated against the documented data types
 - Character length restrictions are strictly enforced
-- Data types are validated before processing
-- Rich text content is sanitized to prevent XSS attacks
 - Invalid data results in a 400 Bad Request response
+- See [Request Parameter Data Types](#request-parameter-data-types) and [Request JSON Data Types](#request-json-data-types) for specifics
 
-### Database Considerations
+### Security and Access Control
 
-- MongoDB is used as the backend database
-- ObjectId values follow MongoDB's format
-- Timestamps are in ISO 8601 UTC format
-- Soft deletion is used (deleted flag instead of removal)
+- Authentication required for most endpoints
+- Role-based access control system
+- Rate limiting on all connections
+- Permission-based endpoint restrictions
 
-### Security Notes
+## Additional Resources
 
-- All endpoints enforce permission checks
-- Rate limiting is applied to prevent abuse
-- Session tokens expire after 24 hours of inactivity
-- Failed authentication attempts are logged and limited
+- [WebSocket Documentation](/docs/devs/websocket.md)
+- [Architecture Documentation](/docs/devs/architecture.md)

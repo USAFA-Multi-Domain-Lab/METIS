@@ -6,6 +6,7 @@ METIS provides API endpoints for managing missions. All operations require appro
 
 ## Table of Contents
 
+- [Rate Limiting](#rate-limiting)
 - [Endpoints](#endpoints)
   - [Create Mission](#create-mission)
   - [Get All Missions](#get-all-missions)
@@ -14,11 +15,19 @@ METIS provides API endpoints for managing missions. All operations require appro
   - [Copy Mission](#copy-mission)
   - [Import Mission](#import-mission)
   - [Export Mission](#export-mission)
-  - [Get Environment](#get-environment)
   - [Delete Mission](#delete-mission)
 - [Data Types](#data-types)
   - [Mission Object](#mission-object)
 - [Notes](#notes)
+
+## Rate Limiting
+
+All missions API endpoints are subject to METIS's standard rate limits:
+
+- HTTP endpoints: 20 requests/second per IP address
+- WebSocket events: 10 messages/second per user
+
+Note that resource-intensive operations like mission import/export and bulk operations count toward these limits.
 
 ## Endpoints
 
@@ -29,38 +38,19 @@ Creates a new mission with specified configuration and resources.
 **HTTP Method:** `POST`  
 **Path:** `/api/v1/missions/`
 
-**Middleware**:
-
-- Authentication with `missions_write` permission
-- Request body validation:
-  - `name`: Must be string, max 175 chars
-  - `versionNumber`: Must be integer
-  - `seed`: Must be string
-  - `resourceLabel`: Must be string, max 16 chars
-  - `structure`: Must be object
-  - `forces`: Must be array, max 8 forces
-  - `prototypes`: Must be array
-  - `files`: Must be array (optional)
+**Required Permission(s)**: `missions_write`
 
 #### Request Body
 
 ```json
 {
-  // Required, max 175 chars
   "name": "New Mission",
-  // Required, integer
   "versionNumber": 1,
-  // Required, string (auto-generated if not provided)
   "seed": "uniqueSeedString",
-  // Required, max 16 chars
   "resourceLabel": "Resources",
-  // Required, mission structure object
   "structure": {},
-  // Required, array, max 8 forces
   "forces": [],
-  // Required, array of prototype objects
   "prototypes": [],
-  // Optional, array of file objects
   "files": []
 }
 ```
@@ -100,9 +90,7 @@ Retrieves all missions with basic metadata.
 **HTTP Method:** `GET`  
 **Path:** `/api/v1/missions/`
 
-**Middleware**:
-
-- Authentication with `missions_read` permission
+**Required Permission(s)**: `missions_read`
 
 #### Response
 
@@ -137,11 +125,7 @@ Retrieves a specific mission by ID with full details.
 **HTTP Method:** `GET`  
 **Path:** `/api/v1/missions/:_id`
 
-**Middleware**:
-
-- Authentication with `missions_read` permission
-- Parameter validation:
-  - `_id`: Must be valid ObjectId
+**Required Permission(s)**: `missions_read`
 
 #### Response
 
@@ -178,29 +162,13 @@ Updates an existing mission.
 **HTTP Method:** `PUT`  
 **Path:** `/api/v1/missions/`
 
-**Middleware**:
-
-- Authentication with `missions_write` permission
-- Request body validation:
-  - Required:
-    - `_id`: Must be valid ObjectId
-  - Optional:
-    - `name`: Must be string, max 175 chars
-    - `versionNumber`: Must be integer
-    - `seed`: Must be string
-    - `resourceLabel`: Must be string, max 16 chars
-    - `structure`: Must be object
-    - `forces`: Must be array, max 8 forces
-    - `prototypes`: Must be array
-    - `files`: Must be array
+**Required Permission(s)**: `missions_write`
 
 #### Request Body
 
 ```json
 {
-  // Required, valid ObjectId
   "_id": "662270879c5ca781c218123c",
-  // Optional fields below
   "name": "Updated Mission",
   "versionNumber": 2,
   "seed": "newSeedString",
@@ -228,20 +196,13 @@ Creates a copy of an existing mission.
 **HTTP Method:** `POST`  
 **Path:** `/api/v1/missions/copy/`
 
-**Middleware**:
-
-- Authentication with `missions_write` permission
-- Request body validation:
-  - `originalId`: Must be valid ObjectId
-  - `copyName`: Must be string, max 175 chars
+**Required Permission(s)**: `missions_write`
 
 #### Request Body
 
 ```json
 {
-  // Required, valid ObjectId of source mission
   "originalId": "662270879c5ca781c218123c",
-  // Required, max 175 chars
   "copyName": "Mission Copy"
 }
 ```
@@ -262,11 +223,7 @@ Imports a mission from a .metis file.
 **HTTP Method:** `POST`  
 **Path:** `/api/v1/missions/import/`
 
-**Middleware**:
-
-- Authentication with `missions_write` permission
-- File upload handling (max 12 files)
-- File store validation
+**Required Permission(s)**: `missions_write`
 
 #### Request Body
 
@@ -290,12 +247,7 @@ Exports a mission to a .metis file.
 **HTTP Method:** `GET`  
 **Path:** `/api/v1/missions/:_id/export/*`
 
-**Middleware**:
-
-- Authentication with both `missions_read` and `missions_write` permissions
-- Parameter validation:
-  - `_id`: Must be valid ObjectId
-- File store access validation
+**Required Permission(s)**: `missions_read`, `missions_write`
 
 #### Response
 
@@ -312,29 +264,6 @@ Exports a mission to a .metis file.
 - 404 Not Found – Mission not found
 - 500 Internal Server Error – Server error during export
 
-### Get Environment
-
-Retrieves current database environment information.
-
-**HTTP Method:** `GET`  
-**Path:** `/api/v1/missions/environment/`
-
-**Middleware**: None (public endpoint)
-
-#### Response
-
-```json
-{
-  "NODE_ENV": "production",
-  "DATABASE_URL": "mongodb://localhost:27017/metis"
-}
-```
-
-**Status Codes**:
-
-- 200 OK – Environment info retrieved successfully
-- 500 Internal Server Error – Server error during retrieval
-
 ### Delete Mission
 
 Soft deletes a mission (sets deleted flag).
@@ -342,11 +271,7 @@ Soft deletes a mission (sets deleted flag).
 **HTTP Method:** `DELETE`  
 **Path:** `/api/v1/missions/:_id`
 
-**Middleware**:
-
-- Authentication with `missions_write` permission
-- Parameter validation:
-  - `_id`: Must be valid ObjectId
+**Required Permission(s)**: `missions_write`
 
 **Status Codes**:
 
@@ -362,67 +287,30 @@ Soft deletes a mission (sets deleted flag).
 
 ### Mission Object
 
-| Field               | Type       | Description           | Validation              |
-| ------------------- | ---------- | --------------------- | ----------------------- |
-| `_id`               | `objectId` | Unique identifier     | Valid MongoDB ObjectId  |
-| `name`              | `string`   | Mission name          | Max 175 chars           |
-| `versionNumber`     | `number`   | Version number        | Integer                 |
-| `seed`              | `string`   | Mission seed          | String                  |
-| `resourceLabel`     | `string`   | Resource display name | Max 16 chars            |
-| `structure`         | `object`   | Mission structure     | Valid structure object  |
-| `forces`            | `array`    | Force configurations  | Max 8 forces            |
-| `prototypes`        | `array`    | Prototype objects     | Valid prototype objects |
-| `files`             | `array`    | Associated files      | Optional                |
-| `createdAt`         | `string`   | Creation timestamp    | ISO 8601 UTC            |
-| `updatedAt`         | `string`   | Last update timestamp | ISO 8601 UTC            |
-| `createdBy`         | `objectId` | Creator's ID          | Valid MongoDB ObjectId  |
-| `createdByUsername` | `string`   | Creator's username    | String                  |
+| Field               | Type       | Description           |
+| ------------------- | ---------- | --------------------- |
+| `_id`               | `objectId` | Unique identifier     |
+| `name`              | `string`   | Mission name          |
+| `versionNumber`     | `number`   | Version number        |
+| `seed`              | `string`   | Mission seed          |
+| `resourceLabel`     | `string`   | Resource display name |
+| `structure`         | `object`   | Mission structure     |
+| `forces`            | `array`    | Force configurations  |
+| `prototypes`        | `array`    | Prototype objects     |
+| `files`             | `array`    | Associated files      |
+| `createdAt`         | `string`   | Creation timestamp    |
+| `updatedAt`         | `string`   | Last update timestamp |
+| `createdBy`         | `objectId` | Creator's ID          |
+| `createdByUsername` | `string`   | Creator's username    |
 
 ---
 
 ## Notes
 
-- Authentication middleware verifies:
-
-  - Valid session with active JWT
-  - Required permissions for operations
-  - WebSocket connection (if required)
-  - Active session membership (if required)
-  - Request origin validation
-
-- Validation requirements:
-
-  - Mission names limited to 175 characters
-  - Resource labels limited to 16 characters
-  - Forces limited to 8 per mission
-  - File aliases limited to 175 characters
-  - File size limits enforced
-  - Schema validation for all objects
-  - Force structure validation
-  - Prototype structure validation
-  - Duplicate ID checking
-
-- File handling:
-
-  - Maximum 12 files per mission
-  - Files stored in MetisFileStore
-  - File size limits enforced
-  - Valid .metis format required
-  - Creator information preserved
-  - File access permissions checked
-
-- Data operations:
-
-  - All deletes are soft deletes (sets deleted=true)
-  - Timestamps automatically managed
-  - Creator information tracked
-  - Full audit trails maintained
-  - Schema version tracked
-  - All timestamps in UTC
-
-- Export/Import behavior:
-  - Exports include all associated files
-  - Schema version included in exports
-  - Imports validate data integrity
-  - Creator information preserved
-  - File references maintained
+- Authentication is required for all operations
+- All deletes are soft deletes (sets deleted=true)
+- Timestamps and creator information are automatically tracked
+- Export/Import features:
+  - Exports include all associated files and metadata
+  - Imports preserve all mission data and relationships
+  - Mission files are managed through the file store

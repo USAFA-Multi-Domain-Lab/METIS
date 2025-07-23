@@ -8,9 +8,8 @@ As a secondary function, and equally as flexible, is the open software design th
 
 ## Quick Links
 
-- [Quick Start Guide](docs/setup/quick-start.md) - Get METIS up and running quickly.
-- [Watch Demo Video](https://youtu.be/4rcTbKRUOEA?si=XPy1z3Y4KJ0Fg5E1) - Learn how to use METIS.
 - [Setup Instructions](docs/index.md#-setup-instructions) - Detailed setup for Debian and Windows.
+- [Watch Demo Video](https://youtu.be/4rcTbKRUOEA?si=XPy1z3Y4KJ0Fg5E1) - Learn how to use METIS.
 - [API Documentation](docs/index.md#-api-documentation) - Integrate with METIS.
 - [Developer Guide](docs/index.md#-developer-documentation) - Understand the codebase.
 
