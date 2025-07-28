@@ -36,11 +36,14 @@ METIS is a real-time training system built with:
 - Automated backups
 - Schema versioning
 
-#### Target Environments
+#### Target-Effect System
 
-- Pluggable training simulations
-- Dynamic environment registration
-- Real-time state synchronization
+- Target environments provide reusable target definitions
+- Targets expose configurable operations with typed arguments
+- Effects combine targets with specific configurations
+- WebSocket-based effect execution during sessions
+- Version-controlled schema migration for compatibility
+- Shared validation logic between client and server
 
 ### Frontend Application
 

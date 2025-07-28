@@ -2,7 +2,7 @@
 
 **Base URL:** `/api/v1/users/`
 
-METIS provides API endpoints for managing user accounts. All endpoints require authentication and specific permissions, with middleware validation ensuring proper authorization and data integrity. The API supports role-based access control where administrators can manage all users while instructors can only manage student accounts.
+METIS provides API endpoints for managing user accounts. The API supports role-based access control where administrators can manage all users while instructors can only manage student accounts. All operations require appropriate permissions.
 
 ## Table of Contents
 

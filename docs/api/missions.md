@@ -2,7 +2,7 @@
 
 **Base URL:** `/api/v1/missions/`
 
-METIS provides API endpoints for managing missions. All operations require appropriate permissions and pass through multiple middleware checks for authentication, validation and file handling.
+METIS provides API endpoints for managing missions. All operations require appropriate permissions and validate user authentication.
 
 ## Table of Contents
 

@@ -2,7 +2,7 @@
 
 **Base URL:** `/api/v1/sessions/`
 
-METIS provides API endpoints for managing mission sessions through the `SessionServer` class. All operations require appropriate permissions and pass through middleware checks for authentication, validation and session state management.
+METIS provides API endpoints for managing mission sessions. All operations require appropriate permissions and validate user authentication and session state.
 
 ## Table of Contents
 
@@ -115,7 +115,7 @@ Retrieves all accessible sessions based on user permissions.
 
 ### Download Mission File
 
-Downloads a file associated with the mission in the session.
+Downloads a mission file from a session.
 
 **HTTP Method:** `GET`  
 **Path:** `/api/v1/sessions/files/:_id/download`
