@@ -29,6 +29,17 @@
     padding: $content-vertical-padding $content-horizontal-padding;
     width: calc(#{$page-width} - #{$content-horizontal-padding * 2});
 
+    .MissionMap {
+      .Scene {
+        .MapNode {
+          &.Blocked,
+          &.CutOff {
+            cursor: pointer;
+          }
+        }
+      }
+    }
+
     .PanelView_Files {
       display: grid;
       grid-template-rows: 50% 50%;

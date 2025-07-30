@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { TMetisClientComponents } from 'src'
 import { MetisComponent } from '../../../shared'
+import PromiseToolbox from '../../../shared/toolbox/promises'
 import User, {
   TCreatedByJson,
   TUserExistingJson,
@@ -28,6 +29,15 @@ export default class ClientUser
    * @note This is used to confirm the password.
    */
   public password2: ClientUser['password']
+
+  /**
+   * Marked when {@link $savePreferences} is called
+   * and the preferences are already actively being
+   * saved. This will cache the request until the save
+   * is complete, at which point save will be recalled
+   * and this will be set to false.
+   */
+  public pendingPreferenceSave: boolean = false
 
   /**
    * @returns Whether the two passwords match.
@@ -192,6 +202,29 @@ export default class ClientUser
   }
 
   /**
+   * Saves the current state of the user's preferences
+   * to the server.
+   * @resolves When the preferences are saved successfully.
+   * @rejects The error that occurred while saving the preferences.
+   */
+  public $savePreferences = PromiseToolbox.createDeferredPublisher(() => {
+    return new Promise<void>(async (resolve, reject) => {
+      try {
+        // Publish changes to server.
+        await axios.put<void>(`${ClientUser.API_ENDPOINT}/preferences/`, {
+          preferences: this.preferences,
+        })
+        // Resolve
+        resolve()
+      } catch (error) {
+        console.error('Failed to save user preferences.')
+        console.error(error)
+        reject(error)
+      }
+    })
+  })
+
+  /**
    * The API endpoint for managing users.
    */
   public static readonly API_ENDPOINT: string = '/api/v1/users'
@@ -213,6 +246,7 @@ export default class ClientUser
       User.DEFAULT_PROPERTIES.lastName,
       User.DEFAULT_PROPERTIES.needsPasswordReset,
       UserPermission.get(User.DEFAULT_PROPERTIES.expressPermissionIds),
+      User.DEFAULT_PROPERTIES.preferences,
       User.DEFAULT_PROPERTIES.createdAt,
       User.DEFAULT_PROPERTIES.updatedAt,
       User.DEFAULT_PROPERTIES.createdBy,
@@ -250,6 +284,7 @@ export default class ClientUser
       json.lastName,
       json.needsPasswordReset,
       UserPermission.get(json.expressPermissionIds),
+      json.preferences,
       new Date(json.createdAt),
       new Date(json.updatedAt),
       createdBy,
@@ -260,6 +295,10 @@ export default class ClientUser
   /**
    * Creates a new {@link ClientUser} instance used from the
    * JSON data of a `createdBy` field of a document.
+   * @note createdBy will be unpopulated to prevent infinite
+   * population loops.
+   * @note Express permissions and preferences will be excluded
+   * to maintain security and privacy.
    */
   public static fromCreatedByJson(json: TCreatedByJson): ClientUser {
     // Create a new user.
@@ -271,7 +310,8 @@ export default class ClientUser
       json.firstName,
       json.lastName,
       json.needsPasswordReset,
-      UserPermission.get(json.expressPermissionIds),
+      UserPermission.get(User.DEFAULT_PROPERTIES.expressPermissionIds),
+      User.DEFAULT_PROPERTIES.preferences,
       new Date(json.createdAt),
       new Date(json.updatedAt),
       ClientUser.createUnpopulated(json.createdBy, json.createdByUsername),
@@ -293,6 +333,7 @@ export default class ClientUser
       lastName,
       needsPasswordReset,
       expressPermissionIds,
+      preferences,
       createdAt,
       updatedAt,
       createdBy,
@@ -311,6 +352,7 @@ export default class ClientUser
       lastName,
       needsPasswordReset,
       expressPermissions,
+      preferences,
       createdAt,
       updatedAt,
       createdBy,

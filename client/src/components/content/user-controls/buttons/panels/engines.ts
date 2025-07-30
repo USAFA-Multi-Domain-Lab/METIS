@@ -295,6 +295,26 @@ export default class ButtonSvgEngine {
   }
 
   /**
+   * Sets the icon for the button element of the given key.
+   * @param key The key of the button element.
+   * @param icon The icon to set.
+   * @returns Itself for chaining.
+   * @note Element will only be updated if it
+   * is of type "button".
+   */
+  public setButtonIcon(
+    key: TSvgPanelElement['key'],
+    icon: TMetisIcon,
+  ): ButtonSvgEngine {
+    let element = this.get(key)
+    if (element?.type === 'button') {
+      element.icon = icon
+      this.onChange()
+    }
+    return this
+  }
+
+  /**
    * Sets the description for the element of
    * the given key.
    * @param key The key of the element.

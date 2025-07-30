@@ -49,6 +49,7 @@ export type TButtonPanelInput<TProps extends TSvgPanelElementBase> = Partial<
  */
 type TSvgPanelElement_Input =
   | TButtonPanelInput<TButtonSvg_PK>
+  | TButtonPanelInput<TToggleSvg_PK>
   | TButtonPanelInput<TStepperSvg_PK>
   | TButtonPanelInput<TDividerSvg_PK>
   | TButtonPanelInput<TTextSvg_PK>
@@ -124,11 +125,54 @@ export interface TButtonSvg_PK extends TSvgPanelElementBase {
    * @param event The click event.
    */
   onClick: (event: React.MouseEvent) => void
+}
+
+/**
+ * Props for `ToggleSvg` component with the key included.
+ * @see {@link defaultButtonSvgProps} for default values.
+ */
+export interface TToggleSvg_PK extends TSvgPanelElementBase {
   /**
-   * Callback for a clipboard copy event.
-   * @param event The clipboard event.
+   * Identifier for the class of element being
+   * used. Distinguishes different React component
+   * types in use.
    */
-  onCopy: (event: React.ClipboardEvent) => void
+  type: 'toggle'
+  /**
+   * The icon for the SVG button.
+   */
+  icon: TMetisIcon
+  /**
+   * Brief descriptor for the button.
+   * @note This will be displayed above the description
+   * in the tooltip, and it will be displayed beside the
+   * icon, if {@link TButtonSvg_PK.revealLabel} is set to true.
+   */
+  label: string
+  /**
+   * The initial value for the toggle.
+   */
+  initialValue: boolean
+  /**
+   * Whether to show the tooltip even when
+   * the button is disabled.
+   * @note Not applicable if the disable behavior
+   * is set to `hide`.
+   */
+  alwaysShowTooltip: boolean
+  /**
+   * Cursor styling used for the button.
+   */
+  cursor: string
+  /**
+   * The permissions required to use the button.
+   */
+  permissions: TUserPermissionId[]
+  /**
+   * Callback for when the toggle state changes.
+   * @param value The new toggle state value.
+   */
+  onChange: (value: boolean) => void
 }
 
 /**
@@ -199,6 +243,7 @@ export interface TTextSvg_PK extends TSvgPanelElementBase {
  */
 export type TSvgPanelElement =
   | TButtonSvg_PK
+  | TToggleSvg_PK
   | TStepperSvg_PK
   | TDividerSvg_PK
   | TTextSvg_PK

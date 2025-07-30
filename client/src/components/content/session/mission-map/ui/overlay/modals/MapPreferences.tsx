@@ -1,0 +1,69 @@
+import Tooltip from 'src/components/content/communication/Tooltip'
+import { DetailToggle } from 'src/components/content/form/DetailToggle'
+import { useObjectFormSync, useRequireLogin } from 'src/toolbox/hooks'
+import { useMapContext } from '../../../MissionMap'
+import './MapPreferences.scss'
+
+/**
+ * Provides options to the user for customizing the mission map.
+ */
+export default function MapPreferences(): JSX.Element | null {
+  /* -- STATE -- */
+
+  const mapContext = useMapContext()
+  const { login } = useRequireLogin()
+  const { user } = login
+  const [mapPreferencesVisible, setMapPreferencesVisible] =
+    mapContext.state.mapPreferencesVisible
+  const preferencesState = useObjectFormSync(
+    user.preferences.missionMap,
+    ['panOnDefectSelection'],
+    {
+      onChange: async () => {
+        try {
+          await user.$savePreferences()
+        } catch (error) {
+          // todo: Notify the user of the error, keeping in
+          // todo: mind they shouldn't be spammed notifications.
+        }
+      },
+    },
+  )
+  const [panOnDefectSelection, setPanOnDefectSelection] =
+    preferencesState.panOnDefectSelection
+
+  /* -- FUNCTIONS -- */
+
+  /**
+   * Closes the map preferences modal.
+   */
+  const onCloseRequest = (): void => {
+    // Set the map preferences visible state to false.
+    setMapPreferencesVisible(false)
+  }
+
+  /* -- RENDER -- */
+
+  // If the map preferences are not visible,
+  // do not render.
+  if (!mapPreferencesVisible) return null
+
+  // Render root element.
+  return (
+    <div className='MapPreferences MapModal'>
+      <div className='Heading'>Map Preferences</div>
+      <div className='Close'>
+        <div className='CloseButton' onClick={onCloseRequest}>
+          x
+          <Tooltip description='Close window.' />
+        </div>
+      </div>
+      <DetailToggle
+        label={'Pan On Defect Selection'}
+        value={panOnDefectSelection}
+        setValue={setPanOnDefectSelection}
+        tooltipDescription='When enabled, any defect selected in the mission will cause the map to automatically pan to the associated node (Assuming there is an associated node).'
+      />
+    </div>
+  )
+}

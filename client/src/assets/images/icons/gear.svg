@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="600"
+   height="600"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="gear.svg"
+   inkscape:version="1.4 (e7c3feb1, 2024-10-09)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#000000"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="0.62777217"
+     inkscape:cx="298.67523"
+     inkscape:cy="512.92494"
+     inkscape:window-width="1568"
+     inkscape:window-height="989"
+     inkscape:window-x="166"
+     inkscape:window-y="38"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="g1" />
+  <g
+     id="g1">
+    <title
+       id="title1">Layer 1</title>
+    <ellipse
+       stroke="#ffffff"
+       stroke-width="108"
+       ry="150"
+       rx="150"
+       id="svg_1"
+       cy="300"
+       cx="300"
+       fill="none"
+       style="stroke-width:100;stroke-dasharray:none" />
+    <rect
+       transform="rotate(89.7785 525 298)"
+       rx="30"
+       stroke="#ffffff"
+       id="svg_4"
+       height="150"
+       width="100"
+       y="223"
+       x="475"
+       stroke-width="0"
+       fill="#ffffff" />
+    <rect
+       transform="rotate(30 412.71 106.799)"
+       rx="30"
+       stroke="#ffffff"
+       id="svg_5"
+       height="150"
+       width="100"
+       y="31.79904"
+       x="362.70973"
+       stroke-width="0"
+       fill="#ffffff" />
+    <rect
+       transform="rotate(-30 195.408 104.917)"
+       rx="30"
+       stroke="#ffffff"
+       id="svg_6"
+       height="150"
+       width="100"
+       y="29.91707"
+       x="145.40829"
+       stroke-width="0"
+       fill="#ffffff" />
+    <rect
+       transform="rotate(89.7785 79.0698 294.512)"
+       rx="30"
+       stroke="#ffffff"
+       id="svg_7"
+       height="150"
+       width="100"
+       y="219.51163"
+       x="29.06977"
+       stroke-width="0"
+       fill="#ffffff" />
+    <rect
+       transform="rotate(-30 414.545 492.364)"
+       rx="30"
+       stroke="#ffffff"
+       id="svg_8"
+       height="150"
+       width="100"
+       y="417.36364"
+       x="364.54545"
+       stroke-width="0"
+       fill="#ffffff" />
+    <rect
+       transform="rotate(30 206 497)"
+       rx="30"
+       stroke="#ffffff"
+       id="svg_9"
+       height="150"
+       width="100"
+       y="422"
+       x="156"
+       stroke-width="0"
+       fill="#ffffff" />
+  </g>
+</svg>

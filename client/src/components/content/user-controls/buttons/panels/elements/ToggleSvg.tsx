@@ -4,7 +4,7 @@ import { compute } from 'src/toolbox'
 import ClassList from '../../../../../../../../shared/toolbox/html/class-lists'
 import Tooltip from '../../../../communication/Tooltip'
 import ButtonSvgEngine from '../engines'
-import { TButtonSvg_PK } from '../types'
+import { TToggleSvg_PK } from '../types'
 import './ButtonSvg.scss'
 
 /* -- CONSTANTS -- */
@@ -18,18 +18,20 @@ export default function ({
   icon,
   description,
   label,
+  initialValue,
   uniqueClassList,
   disabled,
   hidden,
   alwaysShowTooltip,
   cursor,
   permissions,
-  onClick,
-}: TButtonSvg_PK): JSX.Element | null {
+  onChange,
+}: TToggleSvg_PK): JSX.Element | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
   const [login] = globalContext.login
+  const [value, setValue] = React.useState<boolean>(initialValue)
 
   /* -- COMPUTED -- */
 
@@ -48,8 +50,8 @@ export default function ({
   const rootClasses = compute<ClassList>(() => {
     return new ClassList()
       .add('SvgPanelElement')
-      .add('ButtonSvg')
-      .add(`ButtonSvg_${icon}`)
+      .add('ToggleSvg')
+      .add(`ToggleSvg_${icon}`)
       .switch('WithLabel', 'WithoutLabel', label)
       .set('AlwaysShowTooltip', alwaysShowTooltip)
       .set('Disabled', disabled)
@@ -114,14 +116,14 @@ export default function ({
     <div
       className={rootClasses.value}
       style={rootStyle}
-      onClick={(event) => {
+      onClick={() => {
         if (disabled) return
-        onClick(event)
+        setValue(!value)
       }}
     >
-      <div className='ButtonIcon' style={iconStyle}></div>
-      <div className='ButtonLabel'>
-        <div className='ButtonLabelText'>{label}</div>
+      <div className='ToggleSvgIcon' style={iconStyle}></div>
+      <div className='ToggleSvgLabel'>
+        <div className='ToggleLabelText'>{label}</div>
       </div>
       <Tooltip description={tooltipDescription} />
     </div>
@@ -129,19 +131,20 @@ export default function ({
 }
 
 /**
- * Creates new default props for when a new button
+ * Creates new default props for when a new toggle
  * is added to an engine.
  */
 export function createButtonDefaults(): Required<
-  Omit<TButtonSvg_PK, 'key' | 'type'>
+  Omit<TToggleSvg_PK, 'key' | 'type'>
 > {
   return {
     ...ButtonSvgEngine.DEFAULT_ELEMENT_PROPS,
     icon: 'options',
     label: '',
+    initialValue: false,
     alwaysShowTooltip: false,
     cursor: 'pointer',
     permissions: [],
-    onClick: () => {},
+    onChange: (value: boolean) => {},
   }
 }

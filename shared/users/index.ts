@@ -1,11 +1,14 @@
-import { v4 as generateHash } from 'uuid'
 import { MetisComponent, TMetisBaseComponents } from '..'
 import { DateToolbox } from '../toolbox/dates'
+import StringToolbox from '../toolbox/strings'
 import UserAccess, { TUserAccess } from './accesses'
 import UserPermission, {
   TUserPermission,
   TUserPermissionId,
 } from './permissions'
+import TUserPreferencesJson, {
+  TExistingUserPreferencesJson,
+} from './preferences'
 
 /**
  * Represents a user using METIS.
@@ -83,6 +86,10 @@ export default abstract class User<
      */
     public expressPermissions: UserPermission[],
     /**
+     * Settings which customize the user's experience in METIS.
+     */
+    public preferences: TUserPreferencesJson,
+    /**
      * The date/time the user was created.
      */
     public createdAt: Date | null,
@@ -123,6 +130,7 @@ export default abstract class User<
         (permission) => permission._id,
       ),
       password: this.password,
+      preferences: this.preferences,
       createdAt: DateToolbox.toNullableISOString(this.createdAt),
       updatedAt: DateToolbox.toNullableISOString(this.updatedAt),
       createdBy: null,
@@ -153,7 +161,9 @@ export default abstract class User<
       !this.createdAt ||
       !this.updatedAt ||
       !this.createdBy ||
-      !this.createdByUsername
+      !this.createdByUsername ||
+      !this.preferences._id ||
+      !this.preferences.missionMap._id
     ) {
       throw new Error(
         "This user has data that indicates it doesn't yet exist in the database. Existing user fields represent users that have been saved to the database.",
@@ -172,6 +182,7 @@ export default abstract class User<
         (permission) => permission._id,
       ),
       password: this.password,
+      preferences: this.preferences as TExistingUserPreferencesJson,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),
       createdBy: this.createdBy.toCreatedByJson(),
@@ -211,9 +222,6 @@ export default abstract class User<
       lastName: this.lastName,
       accessId: this.access._id,
       needsPasswordReset: this.needsPasswordReset,
-      expressPermissionIds: this.expressPermissions.map(
-        (permission) => permission._id,
-      ),
       password: this.password,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),
@@ -296,13 +304,18 @@ export default abstract class User<
    */
   public static get DEFAULT_PROPERTIES(): Required<TUserDefaultJson> {
     return {
-      _id: generateHash(),
+      _id: StringToolbox.generateRandomId(),
       username: '',
       firstName: '',
       lastName: '',
       accessId: UserAccess.DEFAULT_ID,
       needsPasswordReset: false,
       expressPermissionIds: [],
+      preferences: {
+        missionMap: {
+          panOnDefectSelection: true,
+        },
+      },
       createdAt: null,
       updatedAt: null,
       createdBy: null,
@@ -351,6 +364,7 @@ export default abstract class User<
       needsPasswordReset: false,
       expressPermissionIds: [],
       password: '',
+      preferences: User.DEFAULT_PROPERTIES.preferences,
       createdAt: null,
       updatedAt: null,
       // The system user is created by the system
@@ -374,6 +388,7 @@ export default abstract class User<
       needsPasswordReset: true,
       expressPermissionIds: [],
       password: 'temppass',
+      preferences: User.DEFAULT_PROPERTIES.preferences,
       createdAt: null,
       updatedAt: null,
       // The admin user is created by the system
@@ -503,6 +518,10 @@ export interface TUserJson {
    */
   password?: string
   /**
+   * Settings which customize the user's experience in METIS.
+   */
+  preferences: TUserPreferencesJson
+  /**
    * The date/time the user was created.
    */
   createdAt: string | null
@@ -535,6 +554,7 @@ export interface TUserExistingJson extends TUserJson {
   updatedAt: string
   createdBy: TCreatedByJson | string
   createdByUsername: string
+  preferences: TExistingUserPreferencesJson
 }
 
 /**
@@ -558,7 +578,8 @@ export interface TUserDefaultJson extends Omit<TUserJson, 'password'> {
  * createdBy field should be a user that is already
  * saved to the database.
  */
-export interface TCreatedByJson extends TUserExistingJson {
+export interface TCreatedByJson
+  extends Omit<TUserExistingJson, 'preferences' | 'expressPermissionIds'> {
   // The createdBy field must be a string to
   // prevent infinite reference loops.
   createdBy: string

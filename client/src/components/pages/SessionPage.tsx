@@ -59,6 +59,7 @@ export default function SessionPage({
   const navButtonEngine = useButtonSvgEngine({
     elements: [],
   })
+  const mapButtonEngine = useButtonSvgEngine({})
 
   /* -- VARIABLES -- */
 
@@ -399,11 +400,16 @@ export default function SessionPage({
 
   /* -- EFFECTS -- */
 
-  // Verify navigation on mount and on session state change.
   useMountHandler((done) => {
     finishLoading()
+
+    // Verify the user is on the right page.
     verifyNavigation.current()
+    // Initialize the navigation bar.
     initializeNavigation()
+    // Hide preferences button on the map.
+    mapButtonEngine.hide('preferences')
+
     done()
   })
 
@@ -542,6 +548,7 @@ export default function SessionPage({
               <MissionMap
                 mission={mission}
                 overlayContent={overlayContentJsx}
+                buttonEngine={mapButtonEngine}
                 tabs={mapTabs}
                 showMasterTab={false}
                 onNodeSelect={onNodeSelect}

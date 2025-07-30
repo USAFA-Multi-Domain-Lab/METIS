@@ -11,6 +11,7 @@ import {
   withPreprocessor,
 } from 'src/toolbox/hooks'
 import { v4 as generateHash } from 'uuid'
+import ClassList from '../../../../../../shared/toolbox/html/class-lists'
 import { Vector1D, Vector2D } from '../../../../../../shared/toolbox/space'
 import ButtonSvgEngine from '../../user-controls/buttons/panels/engines'
 import {
@@ -30,6 +31,7 @@ import {
 import Hud from './ui/Hud'
 import PanController from './ui/PanController'
 import Overlay from './ui/overlay'
+import MapPreferences from './ui/overlay/modals/MapPreferences'
 import { TTabBarTab } from './ui/tabs/TabBar'
 
 /* -- CONSTANTS -- */
@@ -174,8 +176,6 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
     onNodeSelect,
     onPrototypeSelect,
     applyNodeTooltip,
-    tabAddEnabled,
-    onTabAdd,
   } = defaultedProps
 
   /* -- STATE -- */
@@ -196,10 +196,13 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
         return newValue
       },
     ),
+    mapPreferencesVisible: useState<boolean>(false),
   }
 
   const [selectedForce, selectForce] = state.selectedForce
   const [tabIndex, setTabIndex] = state.tabIndex
+  const [mapPreferencesVisible, setMapPreferencesVisible] =
+    state.mapPreferencesVisible
 
   /**
    * Counter that is incremented whenever the component
@@ -436,6 +439,16 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
   }
 
   /**
+   * Callback for when the preferences button
+   * is clicked.
+   */
+  const onClickPreferences = (
+    event: React.MouseEvent<Element, MouseEvent>,
+  ): void => {
+    setMapPreferencesVisible(!mapPreferencesVisible)
+  }
+
+  /**
    * @see {@link TMissionMap_C.centerOnMap}
    */
   const centerOnMap = (node: TMapCompatibleNode): void => {
@@ -618,6 +631,13 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
       cursor: 'zoom-out',
     },
     {
+      key: 'preferences',
+      type: 'button',
+      icon: 'gear',
+      onClick: onClickPreferences,
+      description: 'Open map preferences.',
+    },
+    {
       key: 'question',
       type: 'button',
       icon: 'question',
@@ -636,7 +656,14 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
       cursor: 'help',
     },
   )
-  useButtonSvgLayout(buttonEngine, '<slot>', 'zoom-in', 'zoom-out', 'question')
+  useButtonSvgLayout(
+    buttonEngine,
+    '<slot>',
+    'zoom-in',
+    'zoom-out',
+    'preferences',
+    'question',
+  )
 
   /**
    * Updates the mission selection when the tab index changes.
@@ -697,21 +724,11 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
   /**
    * The class name for the root element.
    */
-  const rootClassName: string = compute(() => {
-    let classList = ['MissionMap']
-
-    // Add the creation mode class if the mission
-    // is in creation mode.
-    if (mission.transformation) {
-      classList.push('Transformation')
-    }
-    // Add has slots class if the mission has
-    // prototype slots.
-    if (mission.prototypeSlots.length > 0) {
-      classList.push('HasSlots')
-    }
-
-    return classList.join(' ')
+  const rootClasses = compute<ClassList>(() => {
+    return new ClassList()
+      .add('MissionMap')
+      .set('Transformation', mission.transformation)
+      .set('HasSlots', mission.prototypeSlots.length > 0)
   })
 
   /**
@@ -825,10 +842,15 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
    */
   const overlayJsx = compute((): JSX.Element | null => {
     // If there is no overlay content, return null.
-    if (!overlayContent) return null
+    if (!overlayContent && !mapPreferencesVisible) return null
 
     // Otherwise, render the overlay.
-    return <Overlay>{overlayContent}</Overlay>
+    return (
+      <Overlay>
+        {overlayContent}
+        <MapPreferences />
+      </Overlay>
+    )
   })
 
   // Render root JSX.
@@ -840,7 +862,7 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
       state={state}
       elements={elements}
     >
-      <div className={rootClassName} ref={elements.root} onWheel={onWheel}>
+      <div className={rootClasses.value} ref={elements.root} onWheel={onWheel}>
         <PanController
           cameraPosition={cameraPosition}
           cameraZoom={cameraZoom}
@@ -1020,6 +1042,11 @@ export type TMissionMap_S = {
    * The currently selected force.
    */
   selectedForce: TReactState<ClientMissionForce | null>
+  /**
+   * Whether the map preferences are currently being
+   * displayed to the user.
+   */
+  mapPreferencesVisible: TReactState<boolean>
 }
 
 /**

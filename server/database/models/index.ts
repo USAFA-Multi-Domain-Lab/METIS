@@ -75,7 +75,11 @@ export const populateCreatedByIfFlagged = <
   // If the query isn't recursive and createdBy is
   // marked to be populated, then populate it.
   if (populateCreatedBy) {
-    query.populate({ path: 'createdBy', options: { populateCreatedBy: false } })
+    query.populate({
+      path: 'createdBy',
+      select: '-preferences -password -expressPermissionIds',
+      options: { populateCreatedBy: false },
+    })
   }
 }
 

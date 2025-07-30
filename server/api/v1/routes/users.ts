@@ -14,6 +14,7 @@ import getUser from '../controllers/users/[_id].get'
 import updateUser from '../controllers/users/[_id].put'
 import getUsers from '../controllers/users/index.get'
 import createNewUser from '../controllers/users/index.post'
+import updateUserPreferences from '../controllers/users/preferences.put'
 import resetPassword from '../controllers/users/reset-password.put'
 
 const routerMap: TMetisRouterMap = (
@@ -89,6 +90,18 @@ const routerMap: TMetisRouterMap = (
       },
     ),
     updateUser,
+  )
+
+  // -- PUT | /api/v1/users/preferences/ --
+  router.put(
+    '/preferences/',
+    auth({}),
+    defineRequests({
+      body: {
+        preferences: RequestBodyFilters.USER_PREFERENCES(true),
+      },
+    }),
+    updateUserPreferences,
   )
 
   // -- PUT | /api/v1/users/reset-password --

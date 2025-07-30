@@ -118,6 +118,7 @@ const authenticate = async (request: Request): Promise<TUserJson> => {
           firstName: 1,
           lastName: 1,
           needsPasswordReset: 1,
+          preferences: 1,
           createdBy: 1,
           createdByUsername: 1,
           createdAt: 1,
@@ -264,15 +265,23 @@ const userSchema = new UserSchema(
       type: String,
       validate: ServerUser.validatePassword,
     },
-    // createdBy: {
-    //   type: Schema.Types.ObjectId,
-    //   ref: 'User',
-    //   required: true,
-    // },
-    // createdByUsername: {
-    //   type: String,
-    //   required: true,
-    // },
+    preferences: {
+      type: {
+        missionMap: {
+          type: {
+            panOnDefectSelection: {
+              type: Boolean,
+              required: true,
+              default: true,
+            },
+          },
+          required: true,
+          default: {},
+        },
+      },
+      required: true,
+      default: {},
+    },
     deleted: { type: Boolean, required: true, default: false },
   },
   {

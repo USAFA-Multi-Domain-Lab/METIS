@@ -47,6 +47,7 @@ export const routerMap: TMetisRouterMap = async (
   )
 
   /* -- READ -- */
+
   router.get('/', auth({ permissions: ['missions_read'] }), getMissions)
   router.get(
     '/:_id/',

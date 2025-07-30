@@ -11,13 +11,13 @@ export type TResizeObserverOptions = {}
 /**
  * Options for the `useObjectFormSync` hook.
  */
-export type TObjectFormSyncOptions = {
+export type TObjectFormSyncOptions<T extends {}> = {
   /**
    * Callback to call when the state updates for
    * one of the stateful properties in the object.
    * @default () => {}
    */
-  onChange?: () => void
+  onChange?: (prevState: T) => void
 }
 
 /**
