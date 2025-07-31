@@ -209,6 +209,15 @@ export class DateToolbox {
   }
 
   /**
+   * @returns The current datetime formatted as an
+   * appropriate, cross-platform filename.
+   * @example '2023-10-01T12-00-00' (for October 1st, 2023 at 12:00:00).
+   */
+  public static get fileName(): string {
+    return this.format(new Date(), 'isoDateTime').replaceAll(':', '-')
+  }
+
+  /**
    * Returns an ISO formatted date string using the
    * `Date.prototype.toISOString` method, returning null
    * if the date is null.

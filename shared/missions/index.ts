@@ -727,7 +727,10 @@ export default abstract class Mission<
    * @returns The file name to use for the export.
    */
   public static determineFileName(name: string): string {
-    return `${name}.metis.zip`.replace(/[^a-zA-Z0-9À-ÖØ-öø-ÿ._-]/g, '-')
+    return `${name}_${DateToolbox.fileName}.metis.zip`.replace(
+      /[^a-zA-Z0-9À-ÖØ-öø-ÿ._-]/g,
+      '-',
+    )
   }
 
   /**

@@ -121,12 +121,8 @@ export default class MetisDatabase {
       const { server } = this
       const { mongoHost, mongoPort, mongoDB, mongoUsername, mongoPassword } =
         server
-      const now: Date = new Date()
-      const nowFormatted: string = DateToolbox.format(
-        now,
-        'isoDateTime',
-      ).replaceAll(':', '-')
-      let command: string = `mongodump --host ${mongoHost} --port ${mongoPort} --db ${mongoDB} --out ./database/backups/${nowFormatted}`
+
+      let command: string = `mongodump --host ${mongoHost} --port ${mongoPort} --db ${mongoDB} --out ./database/backups/${DateToolbox.fileName}`
 
       if (mongoUsername !== undefined && mongoPassword !== undefined) {
         command += ` --username ${mongoUsername} --password ${mongoPassword} --authenticationDatabase ${mongoDB}`
