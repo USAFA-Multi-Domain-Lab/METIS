@@ -334,7 +334,7 @@ export default class ClientMissionNode
   // Implemented
   protected importActions(data: TMissionActionJson[]): void {
     data.forEach((datum) => {
-      let action: ClientMissionAction = new ClientMissionAction(this, datum)
+      let action = ClientMissionAction.create(this, datum)
       this.actions.set(action._id, action)
     })
   }

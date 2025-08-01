@@ -85,6 +85,20 @@ export default abstract class Target<
   }
 
   /**
+   * The target IDs for the METIS target environment.
+   */
+  public static METIS_TARGET_IDS = {
+    AWARD: 'award',
+    BLOCK_STATUS: 'block-status',
+    FILE_ACCESS: 'file-access',
+    OPEN_NODE: 'open-node',
+    OUTPUT: 'output',
+    PROCESS_TIME_MOD: 'process-time-mod',
+    RESOURCE_COST_MOD: 'resource-cost-mod',
+    SUCCESS_CHANCE_MOD: 'success-chance-mod',
+  }
+
+  /**
    * A type guard that checks if the provided value is a Target JSON object.
    * @param obj The object to check.
    * @param excludedProperties The properties to exclude when checking if the value is a Target JSON object.
@@ -103,7 +117,6 @@ export default abstract class Target<
     return keysPassed.every((key) => requiredKeys.includes(key))
   }
 }
-
 /* ------------------------------ TARGET TYPES ------------------------------ */
 
 /**

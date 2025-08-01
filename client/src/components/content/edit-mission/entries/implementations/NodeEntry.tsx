@@ -196,7 +196,7 @@ export default function NodeEntry({
    */
   const createAction = () => {
     // Create a new action object.
-    let newAction: ClientMissionAction = new ClientMissionAction(node)
+    let newAction = ClientMissionAction.create(node)
     // Update the action stored in the state.
     mission.select(newAction)
     // Add the action to the node.
@@ -216,10 +216,8 @@ export default function NodeEntry({
       // selected node does not have at least one
       // action then it will auto-generate one for
       // that node.
-      let newAction: ClientMissionAction = new ClientMissionAction(node)
-
+      let newAction = ClientMissionAction.create(node)
       node.actions.set(newAction._id, newAction)
-
       notify(
         `Auto-generated an action for ${node.name} because it is an executable node with no actions to execute.`,
       )
@@ -346,6 +344,7 @@ export default function NodeEntry({
                 break
             }
           }}
+          key={node.actions.size}
         />
       </If>
     </Entry>

@@ -4,7 +4,6 @@ import {
   useGlobalContext,
   useNavigationMiddleware,
 } from 'src/context/global'
-import ClientMission from 'src/missions'
 import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
 import SessionClient from 'src/sessions'
@@ -36,6 +35,7 @@ import './SessionPage.scss'
  */
 export default function SessionPage({
   session,
+  session: { mission },
   returnPage,
 }: TSessionPage_P): JSX.Element | null {
   /* -- STATE -- */
@@ -62,8 +62,6 @@ export default function SessionPage({
 
   /* -- VARIABLES -- */
 
-  // The mission for the session.
-  let mission: ClientMission = session.mission
   // Dynamic (default) sizing of the output panel.
   let panel2DefaultSize: number = 400
   // The current aspect ratio of the window.

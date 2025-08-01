@@ -110,12 +110,13 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   const state: TMissionPage_S = {
     defects: useState<TMissionComponentDefect[]>([]),
     checkForDefects: useState<boolean>(true),
+    localFiles: useState<ClientMissionFile[]>([]),
   }
   const [mission, setMission] = useState<ClientMission>(
     ClientMission.createNew(),
   )
   const [globalFiles, setGlobalFiles] = useState<ClientFileReference[]>([])
-  const [localFiles, setLocalFiles] = useState<ClientMissionFile[]>([])
+  const [localFiles, setLocalFiles] = state.localFiles
   const selectedForceState = useState<ClientMissionForce | null>(null)
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(
     props.missionId === null ? true : false,
@@ -601,7 +602,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
       // one action to choose from. If the selected node doesn't
       // have at least one action then it will auto-generate one
       // for that node.
-      let newAction: ClientMissionAction = new ClientMissionAction(selection)
+      let newAction = ClientMissionAction.create(selection)
       selection.actions.set(newAction._id, newAction)
 
       notify(
@@ -917,10 +918,10 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     navigateBack: boolean = false,
   ) => {
     // Extract the node from the action.
-    let node = action.node
+    let { actions } = action.node
 
     // Delete the action if the node has more than 2 actions.
-    if (node.actions.size > 1) {
+    if (actions.size > 1) {
       // Prompt the user to confirm the deletion.
       let { choice } = await prompt(
         `Please confirm the deletion of this action.`,
@@ -930,17 +931,13 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
       if (choice === 'Cancel') return
 
       // Go back to the previous selection.
-      if (navigateBack) {
-        mission.selectBack()
-      }
+      if (navigateBack) mission.selectBack()
 
-      // Extract the node from the action.
-      let { node } = action
       // Remove the action from the node.
-      node.actions.delete(action._id)
+      actions.delete(action._id)
 
       // Allow the user to save the changes.
-      onChange(action)
+      onChange(action, action.node)
     }
   }
 
@@ -1253,6 +1250,10 @@ export type TMissionPage_S = {
    * components, updating the state with the result.
    */
   checkForDefects: TReactState<boolean>
+  /**
+   * The current list of files attached to the mission.
+   */
+  localFiles: TReactState<ClientMissionFile[]>
 }
 
 /**

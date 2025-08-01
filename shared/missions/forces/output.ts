@@ -87,7 +87,6 @@ export default abstract class MissionOutput<
 
     switch (context.type) {
       case 'intro':
-      case 'custom':
         return null
       case 'pre-execution':
         return this.sourceNodeMemo(context.sourceNodeId)
@@ -110,7 +109,6 @@ export default abstract class MissionOutput<
 
     switch (context.type) {
       case 'intro':
-      case 'custom':
       case 'pre-execution':
         return null
       // Default is necessary here, instaed of case statements.
@@ -133,7 +131,6 @@ export default abstract class MissionOutput<
 
     switch (context.type) {
       case 'intro':
-      case 'custom':
       case 'pre-execution':
         return null
       // Default is necessary here, instaed of case statements.
@@ -220,7 +217,7 @@ export default abstract class MissionOutput<
  * Output types where the output is not specific
  * to a node or execution.
  */
-export type TOutputTypeSimple = 'custom' | 'intro'
+export type TOutputTypeSimple = 'intro'
 
 /**
  * Output types where the output is specific to a node.

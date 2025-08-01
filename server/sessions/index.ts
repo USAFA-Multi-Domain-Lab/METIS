@@ -8,7 +8,7 @@ import { ServerEmittedError } from 'metis/connect/errors'
 import { TMissionJson, TMissionJsonOptions } from 'metis/missions'
 import MissionComponent from 'metis/missions/component'
 import { TEffectTrigger } from 'metis/missions/effects'
-import { TOutputContext, TOutputType } from 'metis/missions/forces/output'
+import { TOutputContext } from 'metis/missions/forces/output'
 import ServerMission from 'metis/server/missions'
 import ServerMissionAction from 'metis/server/missions/actions'
 import ServerMissionNode from 'metis/server/missions/nodes'
@@ -654,14 +654,16 @@ export default class SessionServer extends Session<TMetisServerComponents> {
   /**
    * Processes the effects of the given action, enacting
    * those of the given trigger.
+   * @param member The member to apply the effects to.
    * @param action The action to process.
    * @param trigger The trigger to look for in the effects.
-   * @param context The context of the target environment.
+   * @param execution The action execution that is being processed.
    */
   private applyEffects(
     member: ServerSessionMember,
     action: ServerMissionAction,
     trigger: TEffectTrigger,
+    execution: ServerActionExecution,
   ): void {
     // If the effects are enabled...
     if (this.config.effectsEnabled) {
@@ -672,7 +674,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       // Iterate through each effect and apply it.
       effects.forEach(async (effect) => {
         try {
-          await this.applyEffect(effect, member)
+          await this.applyEffect(effect, member, execution)
 
           // todo: implement feedback for modifiers
           // participant.emit('effect-successful', {
@@ -1494,7 +1496,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     )
     // Apply the effects for the action that are triggered
     // immediately.
-    this.applyEffects(member, action, 'immediate')
+    this.applyEffects(member, action, 'immediate', execution)
   }
 
   /**
@@ -1544,36 +1546,17 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       }
     }
 
-    // Determine output and effect details based on
-    // the status of the outcome.
-    let outputType: TOutputType | null = null
-    let outputMessage: string = ''
+    // Determine effect details based on the status of the outcome.
     let effectTrigger: TEffectTrigger | null = null
-
     switch (outcome.status) {
       case 'success':
-        outputType = 'execution-succeeded'
-        outputMessage = action.postExecutionSuccessText
         effectTrigger = 'success'
         break
       case 'failure':
-        outputType = 'execution-failed'
-        outputMessage = action.postExecutionFailureText
         effectTrigger = 'failure'
         break
     }
 
-    // Send the output to the force, if the outcome
-    // calls for it.
-    if (outputType) {
-      this.sendOutput(
-        action.force._id,
-        member.outputPrefix,
-        outputMessage,
-        { type: outputType, sourceExecutionId: outcome.executionId },
-        { userId: member.userId },
-      )
-    }
     // Emit the action execution completed
     // event to each member for the force.
     for (let { connection } of this.getMembersForForce(outcome.forceId)) {
@@ -1581,7 +1564,8 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     }
 
     // Apply effects, if the outcome calls for it.
-    if (effectTrigger) this.applyEffects(member, action, effectTrigger)
+    if (effectTrigger)
+      this.applyEffects(member, action, effectTrigger, outcome.execution)
   }
 
   /**
@@ -1694,10 +1678,16 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     }
   }
 
-  // Implemented
+  /**
+   * Applies an effect to a target environment.
+   * @param effect The effect to apply.
+   * @param member The member applying the effect.
+   * @param execution The action execution that triggered the effect.
+   */
   public async applyEffect(
     effect: ServerEffect,
     member: ServerSessionMember,
+    execution: ServerActionExecution,
   ): Promise<void> {
     // If the effect doesn't have a target environment,
     // log an error.
@@ -1716,7 +1706,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
 
     // Create and expose a new context for the target
     // environment.
-    let context = new TargetEnvContext(effect, member, this).expose()
+    let context = new TargetEnvContext(effect, member, this, execution).expose()
 
     // Apply the effect to the target.
     try {
