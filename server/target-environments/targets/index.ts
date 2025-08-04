@@ -76,4 +76,26 @@ export default class ServerTarget extends Target<TMetisServerComponents> {
     )
     return target
   }
+
+  /**
+   * Ensures the current list of {@link ServerTarget.METIS_TARGET_IDS} exists
+   * in the METIS target environment found within the target environment registry.
+   * @param environmentId The ID of the target environment where the targets are defined.
+   * @throws Error if any of the target IDs are not found.
+   */
+  public static validateTargetIds(environmentId: string): void {
+    const metisTargetIds = Object.values(ServerTarget.METIS_TARGET_IDS)
+    const targetIds = ServerTargetEnvironment.REGISTRY.getTargets(environmentId)
+    const missingIds = targetIds.filter(
+      ({ _id }) => !metisTargetIds.includes(_id),
+    )
+
+    if (missingIds.length > 0) {
+      throw new Error(
+        `The following target IDs are missing in the METIS target environment: ${missingIds
+          .map(({ _id }) => _id)
+          .join(', ')}`,
+      )
+    }
+  }
 }

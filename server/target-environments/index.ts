@@ -28,21 +28,50 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
   /**
    * The file name for target environment schemas.
    */
-  private static SCHEMA_FILE_NAME: string = 'schema.ts'
+  private static readonly SCHEMA_FILE_NAME: string = 'schema.ts'
 
   /**
    * The folder name where targets are stored within
    * a target environment.
    */
-  private static TARGET_FOLDER_NAME: string = 'targets'
+  private static readonly TARGET_FOLDER_NAME: string = 'targets'
 
   /**
    * The default directory to scan for target environments.
    */
-  private static DEFAULT_DIRECTORY: string = path.join(
+  private static readonly DEFAULT_DIRECTORY: string = path.join(
     process.cwd(), // "metis/server/"
     '../integration/target-env',
   )
+
+  /**
+   * The folder name for the METIS target environment.
+   */
+  private static readonly METIS_TARGET_ENV_FOLDER_NAME: string = 'METIS'
+
+  /**
+   * The ID for the METIS target environment.
+   */
+  public static get METIS_TARGET_ENV_ID(): string {
+    // Get the path to the METIS target environment directory.
+    const metisTargetEnvPath = path.join(
+      this.DEFAULT_DIRECTORY,
+      this.METIS_TARGET_ENV_FOLDER_NAME,
+    )
+
+    // If the file exists, return the ID.
+    if (
+      fs.existsSync(metisTargetEnvPath) &&
+      ServerFileToolbox.isFolder(metisTargetEnvPath)
+    ) {
+      return path.basename(metisTargetEnvPath)
+    }
+
+    // If the file does not exist, throw an error.
+    throw new Error(
+      `METIS target environment not found at "${metisTargetEnvPath}".`,
+    )
+  }
 
   /**
    * @param schema The schema defining the target environment.
