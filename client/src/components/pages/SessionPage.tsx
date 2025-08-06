@@ -4,6 +4,7 @@ import {
   useGlobalContext,
   useNavigationMiddleware,
 } from 'src/context/global'
+import ClientMissionFile from 'src/missions/files'
 import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
 import SessionClient from 'src/sessions'
@@ -59,6 +60,9 @@ export default function SessionPage({
   const navButtonEngine = useButtonSvgEngine({
     elements: [],
   })
+  const [localFiles, setLocalFiles] = useState<ClientMissionFile[]>(
+    mission.files,
+  )
 
   /* -- VARIABLES -- */
 
@@ -458,6 +462,14 @@ export default function SessionPage({
     notify('A manager has reset the session.')
   })
 
+  // Update the list of local files when file access
+  // is granted or revoked.
+  useEventListener(
+    mission,
+    ['file-access-granted', 'file-access-revoked'],
+    (files) => setLocalFiles([...files] as ClientMissionFile[]),
+  )
+
   // Update the resources remaining state whenever the
   // force changes.
   useEffect(() => syncResources(), [selectedForce])
@@ -568,7 +580,7 @@ export default function SessionPage({
             <PanelView title='Files'>
               <MissionFileList
                 name={'Files'}
-                items={mission.files}
+                items={localFiles}
                 itemsPerPageMin={4}
                 columns={[]}
                 itemButtonIcons={['download']}

@@ -10,7 +10,7 @@ import ClientUser from 'src/users'
 import { TLogin } from '../../../shared/logins'
 import './App.scss'
 import ConnectionStatus from './content/communication/ConnectionStatus'
-import NotificationBubble from './content/communication/NotificationBubble'
+import Notifications from './content/communication/Notifications'
 import { default as Prompt } from './content/communication/Prompt'
 import {
   tooltipsOffsetX,
@@ -67,7 +67,6 @@ function App(props: {}): JSX.Element | null {
   const [loading] = globalContext.loading
   const [loadingMinTimeReached] = globalContext.loadingMinTimeReached
   const [pageSwitchMinTimeReached] = globalContext.pageSwitchMinTimeReached
-  const [notifications, setNotifications] = globalContext.notifications
   const [promptData] = globalContext.promptData
   const [currentPageKey] = globalContext.currentPageKey
   const [currentPageProps] = globalContext.currentPageProps
@@ -272,21 +271,6 @@ function App(props: {}): JSX.Element | null {
     effect()
   }, [login === null])
 
-  // Removes expired and dismissed notifications.
-  useEffect(() => {
-    setNotifications((notifications) => {
-      // Remove expired notifications.
-      notifications = notifications.filter(
-        (notification) => !notification.expired,
-      )
-      // Remove dismissed notifications.
-      notifications = notifications.filter(
-        (notification) => !notification.dismissed,
-      )
-      return notifications
-    })
-  }, [notifications.length])
-
   // Logs the user out if the server emits a logout event.
   useEventListener(
     server,
@@ -346,16 +330,7 @@ function App(props: {}): JSX.Element | null {
             theme={MarkdownTheme.ThemeSecondary}
           />
         </div>
-        <div className='Notifications'>
-          <div className='Glue'>
-            {notifications.map((notification) => (
-              <NotificationBubble
-                key={notification.notificationId}
-                notification={notification}
-              />
-            ))}
-          </div>
-        </div>
+        <Notifications />
         {promptData !== null ? <Prompt {...promptData} /> : null}
         <ErrorPage {...pageProps} key='error-page' />
         <LoadingPage {...pageProps} key='loading-page' />
