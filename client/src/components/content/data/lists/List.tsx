@@ -25,8 +25,9 @@ import {
   TGetItemButtonPermission,
   TGetItemTooltip,
   TOnItemButtonClick,
-} from './pages/ListItem'
+} from './pages/items/ListItem'
 import ListPage, { TListPage_P } from './pages/ListPage'
+import ListUpload from './uploads'
 
 /* -- CONSTANTS -- */
 
@@ -77,6 +78,7 @@ export function createDefaultListProps<
     itemButtonIcons: [],
     initialSorting: { column: 'name', method: 'ascending' },
     deselectionBlacklist: [],
+    uploads: [],
     getColumnLabel: (x) => StringToolbox.toTitleCase(x.toString()),
     getCellText: (item, column) => (item[column] as any).toString(),
     getItemTooltip: () => '',
@@ -115,11 +117,13 @@ export default function List<TItem extends MetisComponent>(
   // Parse props needed by the main list
   // component.
   const {
+    name,
     items,
     itemsPerPageMin,
     listButtonIcons,
     itemButtonIcons,
     deselectionBlacklist,
+    uploads,
     getListButtonLabel,
     getListButtonPermissions,
     getListButtonDisabled,
@@ -168,14 +172,36 @@ export default function List<TItem extends MetisComponent>(
    */
   const pages = compute<TListPage_P<TItem>[]>(() => {
     const results: Required<TListPage_P<TItem>>[] = []
-
-    for (
-      let i = 0;
-      i < processedItems.length || !results.length;
-      i += itemsPerPage
-    ) {
-      results.push({ items: processedItems.slice(i, i + itemsPerPage) })
+    let pageCursor: TListPage_P<TItem> = {
+      items: [],
     }
+
+    // Ensures that each page has the correct number
+    // of items, and that when it reaches the correct
+    // number, the page will be pushed to the results.
+    const enforcePageCount = () => {
+      if (pageCursor.items.length === itemsPerPage) {
+        results.push(pageCursor)
+        pageCursor = {
+          items: [],
+        }
+      }
+    }
+
+    // Add uploads to respective pages.
+    for (let upload of uploads) {
+      enforcePageCount()
+      pageCursor.items.push(upload)
+    }
+    // Add regular items to respective pages.
+    for (let item of processedItems) {
+      enforcePageCount()
+      pageCursor.items.push(item)
+    }
+
+    // Push final page, whether complete in
+    // count or not.
+    results.push(pageCursor)
 
     return results
   })
@@ -568,6 +594,12 @@ export type TList_P<TItem extends MetisComponent> = {
    * ```
    */
   deselectionBlacklist?: string[]
+  /**
+   * Items that are being uploaded to the server, which
+   * will be presumably added to the list once completed.
+   * @default []
+   */
+  uploads?: ListUpload[]
   /**
    * Gets the tooltip description for the item.
    * @param item The item for which to get the tooltip.

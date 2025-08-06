@@ -559,13 +559,20 @@ schema.pre<TPreMissionQuery>(
   ['find', 'findOne', 'findOneAndUpdate', 'updateOne'],
   function (next) {
     const { populateFileReferences = true } = this.getOptions()
+    const projection = this.projection()
+    const filesSelected =
+      !projection ||
+      projection.files === 1 ||
+      projection['files.reference'] === 1
 
     // Modify the query.
     queryForApiResponse(this)
     // Populate createdBy.
     populateCreatedByIfFlagged(this)
     // Populate file-references.
-    if (populateFileReferences) this.populate('files.reference')
+    if (populateFileReferences && filesSelected) {
+      this.populate('files.reference')
+    }
 
     return next()
   },

@@ -7,14 +7,14 @@ import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons
 import WarningIndicator from 'src/components/content/user-controls/WarningIndicator'
 import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
-import { MetisComponent } from '../../../../../../../shared'
-import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
-import { TUserPermissionId } from '../../../../../../../shared/users/permissions'
+import { MetisComponent } from '../../../../../../../../shared'
+import ClassList from '../../../../../../../../shared/toolbox/html/class-lists'
+import { TUserPermissionId } from '../../../../../../../../shared/users/permissions'
 import {
   OPTIONS_COLUMN_WIDTH,
   OPTIONS_COLUMN_WIDTH_IF_LAST,
   useListContext,
-} from '../List'
+} from '../../List'
 import './ListItem.scss'
 import ListItemCell from './ListItemCell'
 

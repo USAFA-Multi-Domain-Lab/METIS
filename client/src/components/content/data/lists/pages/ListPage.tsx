@@ -2,8 +2,10 @@ import { ReactNode } from 'react'
 import { compute } from 'src/toolbox'
 import { MetisComponent } from '../../../../../../../shared'
 import { useListContext } from '../List'
+import ListUpload from '../uploads'
+import ListItem from './items/ListItem'
+import ListItemUpload from './items/ListItemUpload'
 import ListColumnLabels from './ListColumnLabels'
-import ListItem from './ListItem'
 import './ListPage.scss'
 
 /**
@@ -15,6 +17,7 @@ export default function ListPage<TItem extends MetisComponent>({
   /* -- STATE -- */
 
   const listContext = useListContext<TItem>()
+  const uploads = listContext.uploads
   const [itemsPerPage] = listContext.state.itemsPerPage
   const [_, setSelection] = listContext.state.selection
 
@@ -35,7 +38,15 @@ export default function ListPage<TItem extends MetisComponent>({
 
     // If there are items, render them.
     if (items.length > 0) {
-      result = items.map((item) => <ListItem key={item._id} item={item} />)
+      result.push(
+        ...items.map((item) => {
+          if (item instanceof ListUpload) {
+            return <ListItemUpload key={item._id} upload={item} />
+          } else {
+            return <ListItem key={item._id} item={item} />
+          }
+        }),
+      )
     }
     // Else, render a message indicating that
     // there are no items.
@@ -80,5 +91,5 @@ export type TListPage_P<TItem extends MetisComponent> = {
   /**
    * The items to display on the page.
    */
-  items: TItem[]
+  items: Array<TItem | ListUpload>
 }

@@ -48,6 +48,8 @@ const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
   loading: true,
   loadingMessage: 'Initializing application...',
   loadingMinTimeReached: false,
+  loadingProgress: 0,
+  loadingPageId: StringToolbox.generateRandomId(),
   pageSwitchMinTimeReached: true,
   error: null,
   buttonMenu: null,
@@ -127,6 +129,8 @@ const initializeActions = (
   const setLoadingMessage = initialState.loadingMessage[1]
   const setLoadingMinTimeReached = initialState.loadingMinTimeReached[1]
   const setPageSwitchMinTimeReached = initialState.pageSwitchMinTimeReached[1]
+  const setLoadingProgress = initialState.loadingProgress[1]
+  const setLoadingPageId = initialState.loadingPageId[1]
   const setError = initialState.error[1]
   const setButtonMenu = initialState.buttonMenu[1]
   const setNotifications = initialState.notifications[1]
@@ -227,6 +231,8 @@ const initializeActions = (
         loadingMessage ?? GLOBAL_CONTEXT_DEFAULT.loadingMessage[0],
       )
       setLoadingMinTimeReached(false)
+      setLoadingProgress(0)
+      setLoadingPageId(StringToolbox.generateRandomId())
 
       setTimeout(() => {
         const { loading, pageSwitchMinTimeReached } = refs.current
@@ -248,6 +254,7 @@ const initializeActions = (
       const { loadingMinTimeReached, pageSwitchMinTimeReached } = refs.current
 
       setLoading(false)
+      setLoadingProgress(100)
 
       // If min times have been reached, then
       // call the completion handler. Else,
@@ -755,6 +762,17 @@ export type TGlobalContextValues = {
   loading: boolean
   loadingMessage: string
   loadingMinTimeReached: boolean
+  /**
+   * A percentage amount between 0 and 100 representing the
+   * amount of loading that has been completed.
+   */
+  loadingProgress: number
+  /**
+   * A key assigned to the loading page to ensure
+   * the loading progress is reset when a new load
+   * is started.
+   */
+  loadingPageId: string
   pageSwitchMinTimeReached: boolean
   error: TAppError | null
   /**

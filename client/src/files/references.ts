@@ -1,4 +1,4 @@
-import axios, { AxiosResponse } from 'axios'
+import axios, { AxiosProgressEvent, AxiosResponse } from 'axios'
 import { TMetisClientComponents } from 'src'
 import ClientUser from 'src/users'
 import FileReference, {
@@ -138,23 +138,25 @@ export default class ClientFileReference extends FileReference<TMetisClientCompo
   }
 
   /**
-   * Uploads a list of files to the file store
-   * on the server.
-   * @param files The files to upload.
-   * @returns References to the files now stored
+   * Uploads a file to the file store on the server.
+   * @param file The file to upload.
+   * @returns References to the file now stored
    * on the server.
    */
   public static $upload(
-    files: FileList | File[],
-  ): Promise<ClientFileReference[]> {
-    return new Promise<ClientFileReference[]>(async (resolve, reject) => {
+    file: File,
+    options: TFileUploadOptions = {},
+  ): Promise<ClientFileReference> {
+    return new Promise<ClientFileReference>(async (resolve, reject) => {
       try {
+        // Parse options.
+        const { onUploadProgress, abortController } = options
+
+        // Prepare form data for upload.
         const formData = new FormData()
+        formData.append('files', file)
 
-        for (let file of files) {
-          formData.append('files', file)
-        }
-
+        // Make request.
         let { data: responseData } = await axios.post<
           any,
           AxiosResponse<TFileReferenceJson[]>
@@ -162,15 +164,27 @@ export default class ClientFileReference extends FileReference<TMetisClientCompo
           headers: {
             'Content-Type': 'multipart/form-data',
           },
+          signal: abortController?.signal,
+          onUploadProgress,
         })
-        let references = responseData.map((datum) =>
-          ClientFileReference.fromJson(datum),
-        )
-        resolve(references)
+
+        // Handle no response data.
+        if (responseData.length === 0) {
+          throw new Error('No file references were returned from the server.')
+        }
+
+        // Parse response data and resolve.
+        let reference = ClientFileReference.fromJson(responseData[0])
+        resolve(reference)
       } catch (error) {
-        console.error('Failed to import file(s).')
-        console.error(error)
-        reject(error)
+        if (axios.isCancel(error)) {
+          console.warn('File upload was cancelled.')
+          return
+        } else {
+          console.error('Failed to import file(s).')
+          console.error(error)
+          reject(error)
+        }
       }
     })
   }
@@ -193,4 +207,21 @@ export default class ClientFileReference extends FileReference<TMetisClientCompo
       }
     })
   }
+}
+
+/**
+ * Options for {@link ClientFileReference.$upload} method.
+ */
+export type TFileUploadOptions = {
+  /**
+   * Called periodically during the upload process.
+   * @param event Event containing information concerning the
+   * state of the upload as it is progressing.
+   */
+  onUploadProgress?: (event: AxiosProgressEvent) => void
+  /**
+   * An abort controller used to cancel the upload
+   * externally, if needed.
+   */
+  abortController?: AbortController
 }

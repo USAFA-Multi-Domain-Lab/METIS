@@ -71,10 +71,12 @@ export const populateCreatedByIfFlagged = <
 ) => {
   // Get options and filter passed to the query.
   const { populateCreatedBy = true } = query.getOptions()
+  const projection = query.projection()
+  const createdBySelected = !projection || projection.createdBy === 1
 
   // If the query isn't recursive and createdBy is
   // marked to be populated, then populate it.
-  if (populateCreatedBy) {
+  if (populateCreatedBy && createdBySelected) {
     query.populate({
       path: 'createdBy',
       select: '-preferences -password -expressPermissionIds',

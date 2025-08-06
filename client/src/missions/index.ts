@@ -1,4 +1,4 @@
-import axios, { AxiosResponse } from 'axios'
+import axios, { AxiosProgressEvent, AxiosResponse } from 'axios'
 import { TMetisClientComponents } from 'src'
 import { TLine_P } from 'src/components/content/session/mission-map/objects/Line'
 import {
@@ -1387,13 +1387,18 @@ export default class ClientMission
   /**
    * Imports missions from .metis files, returns a Promise that resolves with the results of the import.
    * @param files The .metis files to import.
+   * @param onUploadProgress Optional callback for upload progress events.
    * @resolves The result of the import.
    * @rejects The error that occurred during the import.
    */
   public static $import(
     files: FileList | File[],
+    options: TMissionImportOptions = {},
   ): Promise<TMissionImportResult> {
     return new Promise<TMissionImportResult>(async (resolve, reject) => {
+      // Parse options.
+      const { onImportProgress } = options
+
       try {
         const formData = new FormData()
 
@@ -1408,6 +1413,7 @@ export default class ClientMission
           headers: {
             'Content-Type': 'multipart/form-data',
           },
+          onUploadProgress: onImportProgress,
         })
         resolve(result)
       } catch (error) {
@@ -1670,3 +1676,15 @@ type TMissionEventMethods =
 type TMissionEventArgs = [
   ...updatedComponents: MissionComponent<TMetisClientComponents, any>[],
 ]
+
+/**
+ * Options for {@link ClientMission.$import} method.
+ */
+export type TMissionImportOptions = {
+  /**
+   * Called periodically during the import process.
+   * @param event Event containing information concerning the
+   * state of the import as it is progressing.
+   */
+  onImportProgress?: (event: AxiosProgressEvent) => void
+}

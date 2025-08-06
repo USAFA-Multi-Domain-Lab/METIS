@@ -66,6 +66,7 @@ function App(props: {}): JSX.Element | null {
   const [buttonMenu] = globalContext.buttonMenu
   const [loading] = globalContext.loading
   const [loadingMinTimeReached] = globalContext.loadingMinTimeReached
+  const [loadingPageId] = globalContext.loadingPageId
   const [pageSwitchMinTimeReached] = globalContext.pageSwitchMinTimeReached
   const [notifications, setNotifications] = globalContext.notifications
   const [promptData] = globalContext.promptData
@@ -358,7 +359,7 @@ function App(props: {}): JSX.Element | null {
         </div>
         {promptData !== null ? <Prompt {...promptData} /> : null}
         <ErrorPage {...pageProps} key='error-page' />
-        <LoadingPage {...pageProps} key='loading-page' />
+        <LoadingPage {...pageProps} key={loadingPageId} />
         <ConnectionStatus />
         <ReactErrorBoundary
           FallbackComponent={AuthPage}

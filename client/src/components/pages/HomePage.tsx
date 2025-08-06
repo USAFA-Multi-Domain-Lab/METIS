@@ -48,6 +48,7 @@ export default function HomePage(): JSX.Element | null {
   const globalContext = useGlobalContext()
   const { beginLoading, finishLoading, handleError, notify, prompt, logout } =
     globalContext.actions
+  const [_, setLoadingProgress] = globalContext.loadingProgress
   const [sessions, setSessions] = useState<SessionBasic[]>([])
   const [missions, setMissions] = useState<ClientMission[]>([])
   const [users, setUsers] = useState<ClientUser[]>([])
@@ -314,7 +315,13 @@ export default function HomePage(): JSX.Element | null {
 
     // Import the files.
     try {
-      let response = await ClientMission.$import(validFiles)
+      let response = await ClientMission.$import(validFiles, {
+        onImportProgress: (event) => {
+          if (event.total) {
+            setLoadingProgress((event.loaded / event.total) * 100)
+          }
+        },
+      })
       successfulImportCount += response.successfulImportCount
       invalidContentsCount += response.failedImportCount
       invalidContentsErrorMessages = response.failedImportErrorMessages
