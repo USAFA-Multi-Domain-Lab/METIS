@@ -410,7 +410,7 @@ export default class ButtonSvgEngine {
    */
   public modifyClassList(
     key: TSvgPanelElement['key'],
-    callback: (classList: ClassList) => {},
+    callback: (classList: ClassList) => void,
   ): ButtonSvgEngine {
     let element = this.get(key)
     if (element) callback(element.uniqueClassList)
@@ -490,13 +490,15 @@ export default class ButtonSvgEngine {
   /**
    * Default properties for SVG panel elements.
    */
-  public static DEFAULT_ELEMENT_PROPS: Required<
+  public static get DEFAULT_ELEMENT_PROPS(): Required<
     Omit<TSvgPanelElementBase, 'key' | 'type'>
-  > = {
-    description: '',
-    uniqueClassList: new ClassList(),
-    disabled: false,
-    hidden: false,
+  > {
+    return {
+      description: '',
+      uniqueClassList: new ClassList(),
+      disabled: false,
+      hidden: false,
+    }
   }
 
   /**

@@ -51,9 +51,9 @@ export default function ListButtons<
   useEffect(() => {
     let threshold = aggregatedButtonIcons.length - buttonOverflowCount
     aggregatedButtonIcons.forEach((icon, index) => {
-      buttonEngine.modifyClassList(icon, (classList) =>
-        classList.set('ListButtonOverflow', index >= threshold),
-      )
+      buttonEngine.modifyClassList(icon, (classList) => {
+        classList.set('ListButtonOverflow', index >= threshold)
+      })
     })
   }, [buttonOverflowCount])
 
