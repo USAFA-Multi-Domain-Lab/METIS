@@ -2,10 +2,10 @@
 
 .OutputMessage {
   &.OutputMessage_execution-succeeded * {
-    color: $color-success;
+    // color: $color-success;
   }
 
   &.OutputMessage_execution-failed * {
-    color: $color-failure;
+    // color: $color-failure;
   }
 }

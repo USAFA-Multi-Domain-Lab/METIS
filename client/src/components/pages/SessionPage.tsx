@@ -4,7 +4,7 @@ import {
   useGlobalContext,
   useNavigationMiddleware,
 } from 'src/context/global'
-import ClientMission from 'src/missions'
+import ClientMissionFile from 'src/missions/files'
 import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
 import SessionClient from 'src/sessions'
@@ -36,6 +36,7 @@ import './SessionPage.scss'
  */
 export default function SessionPage({
   session,
+  session: { mission },
   returnPage,
 }: TSessionPage_P): JSX.Element | null {
   /* -- STATE -- */
@@ -60,11 +61,12 @@ export default function SessionPage({
     elements: [],
   })
   const mapButtonEngine = useButtonSvgEngine({})
+  const [localFiles, setLocalFiles] = useState<ClientMissionFile[]>(
+    mission.files,
+  )
 
   /* -- VARIABLES -- */
 
-  // The mission for the session.
-  let mission: ClientMission = session.mission
   // Dynamic (default) sizing of the output panel.
   let panel2DefaultSize: number = 400
   // The current aspect ratio of the window.
@@ -476,6 +478,14 @@ export default function SessionPage({
     notify('A manager has reset the session.')
   })
 
+  // Update the list of local files when file access
+  // is granted or revoked.
+  useEventListener(
+    mission,
+    ['file-access-granted', 'file-access-revoked'],
+    () => setLocalFiles([...mission.files]),
+  )
+
   // Update the resources remaining state whenever the
   // force changes.
   useEffect(() => syncResources(), [selectedForce])
@@ -587,7 +597,7 @@ export default function SessionPage({
             <PanelView title='Files'>
               <MissionFileList
                 name={'Files'}
-                items={mission.files}
+                items={localFiles}
                 itemsPerPageMin={4}
                 columns={[]}
                 itemButtonIcons={['download']}

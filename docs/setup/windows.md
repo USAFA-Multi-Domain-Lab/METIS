@@ -206,9 +206,9 @@ MONGO_PORT=27017                 # Default: 27017 (Optional)
 MONGO_USERNAME='<your-username>' # Required
 MONGO_PASSWORD='<your-password>' # Required
 FILE_STORE_DIR='./files/store'   # Default: "./files/store" (Optional)
-HTTP_RATE_LIMIT=25               # Default: 25 (Optional)
+HTTP_RATE_LIMIT=20               # Default: 20 (Optional)
 HTTP_RATE_LIMIT_DURATION=1       # Default: 1 (second) (Optional)
-WS_RATE_LIMIT=25                 # Default: 25 (Optional)
+WS_RATE_LIMIT=10                 # Default: 10 (Optional)
 WS_RATE_LIMIT_DURATION=1         # Default: 1 (second) (Optional)
 ```
 

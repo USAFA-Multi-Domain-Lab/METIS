@@ -6,13 +6,15 @@ import {
   TPromptResult,
 } from 'src/components/content/communication/Prompt'
 import { TButtonMenu_P } from 'src/components/content/user-controls/buttons/ButtonMenu'
-import { TButtonText_P } from 'src/components/content/user-controls/buttons/ButtonText'
 import ButtonSvgEngine from 'src/components/content/user-controls/buttons/panels/engines'
 import { PAGE_REGISTRY, TPage_P, TPageKey } from 'src/components/pages'
 import ServerConnection, { IServerConnectionOptions } from 'src/connect/servers'
 import MetisInfo from 'src/info'
 import ClientLogin from 'src/logins'
 import Notification from 'src/notifications'
+import NotificationManager, {
+  TAddNotificationOptions,
+} from 'src/notifications/manager'
 import { useInitRenderHandler } from 'src/toolbox/hooks'
 import Logging from 'src/toolbox/logging'
 import ClientUser from 'src/users'
@@ -55,7 +57,6 @@ const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
   buttonMenu: null,
   tooltips: React.createRef<HTMLDivElement>(),
   tooltipDescription: '',
-  notifications: [],
   promptData: null,
   cheats: {
     zeroCost: true,
@@ -133,7 +134,6 @@ const initializeActions = (
   const setLoadingPageId = initialState.loadingPageId[1]
   const setError = initialState.error[1]
   const setButtonMenu = initialState.buttonMenu[1]
-  const setNotifications = initialState.notifications[1]
   const setPromptData = initialState.promptData[1]
 
   /* -- CALLBACKS -- */
@@ -141,13 +141,7 @@ const initializeActions = (
   /**
    * Handles when loading has been completed.
    */
-  const onLoadCompletion = () => {
-    const { notifications } = refs.current
-
-    for (let notification of notifications) {
-      notification.startExpirationTimer()
-    }
-  }
+  const onLoadCompletion = () => NotificationManager.expireAllNotifications()
 
   /* -- ACTION DEFINITION -- */
 
@@ -442,47 +436,27 @@ const initializeActions = (
         // If notify via bubble, notify the
         // user with a bubble notification.
         case 'bubble':
-          notify(error.message, { errorMessage: true })
+          notify(error.message, { isError: true })
           break
       }
     },
-    notify: (message: string, options: TNotifyOptions = {}): Notification => {
+    notify: (message: string, options: TAddNotificationOptions = {}) => {
       // Gather details.
-      const {
-        loading,
-        loadingMinTimeReached,
-        pageSwitchMinTimeReached,
-        notifications,
-      } = refs.current
-      let onLoadingPage: boolean =
+      const { loading, loadingMinTimeReached, pageSwitchMinTimeReached } =
+        refs.current
+
+      // Check if the loading page is currently being displayed.
+      const onLoadingPage =
         loading || !loadingMinTimeReached || !pageSwitchMinTimeReached
 
-      // Create a notification with the message
-      // and provided options. Pass a callback
-      // that will automatically remove the
-      // notification from the state once it
-      // has been dismissed or expired.
-      let notification: Notification = new Notification(
-        message,
-        (dismissed: boolean, expired: boolean) => {
-          const { notifications } = refs.current
+      // Create the notification and delay the start of the expiration timer
+      // if the loading page is currently being displayed.
+      const notification = NotificationManager.addNotification(message, {
+        ...options,
+        startExpirationTimer: !onLoadingPage,
+      })
 
-          if (dismissed) {
-            notifications.splice(notifications.indexOf(notification), 1)
-          } else if (expired) {
-            setTimeout(() => {
-              notifications.splice(notifications.indexOf(notification), 1)
-              setNotifications([...notifications])
-            }, 1000)
-          }
-          setNotifications([...notifications])
-        },
-        { ...options, startExpirationTimer: !onLoadingPage },
-      )
-
-      // Add the new notification to the state.
-      setNotifications([...notifications, notification])
-
+      // Return the notification.
       return notification
     },
     prompt: <TChoice extends string, TList extends object = {}>(
@@ -782,7 +756,6 @@ export type TGlobalContextValues = {
   buttonMenu: TWithKey<TButtonMenu_P> | null
   tooltips: React.RefObject<HTMLDivElement>
   tooltipDescription: string
-  notifications: Notification[]
   /**
    * Current prompt to display to the user.
    */
@@ -899,7 +872,7 @@ export type TGlobalContextActions = {
    * @param options The options to use for the notification.
    * @returns The emitted notification.
    */
-  notify: (message: string, options?: TNotifyOptions) => Notification
+  notify: (message: string, options?: TAddNotificationOptions) => Notification
   /**
    * This will logout the user that is currently logged in, closing the connection
    * with the server as well. Afterwards, the user will be navigated to the auth page.
@@ -963,16 +936,6 @@ export type TPromptOptions<
   TChoice extends string,
   TList extends object = {},
 > = Omit<TPrompt_P<TChoice, TList>, 'message' | 'choices' | 'resolve'>
-
-/**
- * Options available when notifying the user using the
- * notify function in the global context actions.
- */
-export type TNotifyOptions = {
-  duration?: number | null
-  buttons?: TButtonText_P[]
-  errorMessage?: boolean
-}
 
 /**
  * Middleware that is run during navigation between pages.

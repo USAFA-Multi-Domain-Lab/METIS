@@ -324,6 +324,10 @@ export default class MetisServer {
 
       // Register target environments.
       ServerTargetEnvironment.scan()
+      // Validate target IDs.
+      ServerTarget.validateTargetIds(
+        ServerTargetEnvironment.METIS_TARGET_ENV_ID,
+      )
 
       // Logger setup.
       expressApp.use(expressLoggingHandler)

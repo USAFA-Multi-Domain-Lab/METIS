@@ -1,6 +1,6 @@
-import { v4 as generateHash } from 'uuid'
 import Mission, { TMission } from '..'
 import { TCreateJsonType, TMetisBaseComponents } from '../../'
+import StringToolbox from '../../toolbox/strings'
 import MissionComponent, { TMissionComponentDefect } from '../component'
 import { TEffect, TEffectJson } from '../effects'
 import { TForce } from '../forces'
@@ -41,18 +41,6 @@ export default abstract class MissionAction<
    * Categorizes an action, defining how it will behave in the mission.
    */
   public type: TActionType
-
-  /**
-   * Text sent to the output panel after the action is
-   * executed successfully.
-   */
-  public postExecutionSuccessText: string
-
-  /**
-   * Text sent to the output panel after the action is
-   * executed unsuccessfully
-   */
-  public postExecutionFailureText: string
 
   /**
    * A key for the action, used to identify it within the node.
@@ -305,12 +293,6 @@ export default abstract class MissionAction<
       data.opensNode ?? MissionAction.DEFAULT_PROPERTIES.opensNode
     this.opensNodeHidden =
       data.opensNodeHidden ?? MissionAction.DEFAULT_PROPERTIES.opensNodeHidden
-    this.postExecutionSuccessText =
-      data.postExecutionSuccessText ??
-      MissionAction.DEFAULT_PROPERTIES.postExecutionSuccessText
-    this.postExecutionFailureText =
-      data.postExecutionFailureText ??
-      MissionAction.DEFAULT_PROPERTIES.postExecutionFailureText
     this.localKey = data.localKey ?? node.generateActionKey()
     this.effects = this.parseEffects(
       data.effects ?? MissionAction.DEFAULT_PROPERTIES.effects,
@@ -351,8 +333,6 @@ export default abstract class MissionAction<
       resourceCostHidden: this.resourceCostHidden,
       opensNode: this.opensNode,
       opensNodeHidden: this.opensNodeHidden,
-      postExecutionSuccessText: this.postExecutionSuccessText,
-      postExecutionFailureText: this.postExecutionFailureText,
       localKey: this.localKey,
       effects: this.effects.map((effect) => effect.toJson()),
     }
@@ -509,7 +489,7 @@ export default abstract class MissionAction<
    */
   public static get DEFAULT_PROPERTIES(): TMissionActionDefaultJson {
     return {
-      _id: generateHash(),
+      _id: StringToolbox.generateRandomId(),
       name: 'New Action',
       description: '',
       type: 'repeatable',
@@ -521,10 +501,6 @@ export default abstract class MissionAction<
       resourceCostHidden: false,
       opensNode: true,
       opensNodeHidden: false,
-      postExecutionSuccessText:
-        '<p>Enter your successful post-execution message here.</p>',
-      postExecutionFailureText:
-        '<p>Enter your unsuccessful post-execution message here.</p>',
       effects: [],
     }
   }
@@ -594,8 +570,6 @@ const JSON_PROPERTIES_RAW = {
     'resourceCostHidden',
     'opensNode',
     'opensNodeHidden',
-    'postExecutionSuccessText',
-    'postExecutionFailureText',
     'localKey',
   ],
   indirect: [

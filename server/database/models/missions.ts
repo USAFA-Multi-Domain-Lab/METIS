@@ -408,18 +408,6 @@ export const missionSchema = new MissionSchema(
                         type: Boolean,
                         required: true,
                       },
-                      postExecutionSuccessText: {
-                        type: String,
-                        required: false,
-                        default: '',
-                        set: sanitizeHtml,
-                      },
-                      postExecutionFailureText: {
-                        type: String,
-                        required: false,
-                        default: '',
-                        set: sanitizeHtml,
-                      },
                       localKey: {
                         type: String,
                         required: true,

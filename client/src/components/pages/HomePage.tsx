@@ -3,7 +3,7 @@ import { useRef, useState } from 'react'
 import { useGlobalContext } from 'src/context/global'
 import ClientFileReference from 'src/files/references'
 import ClientMission from 'src/missions'
-import Notification from 'src/notifications'
+import NotificationManager from 'src/notifications/manager'
 import SessionClient from 'src/sessions'
 import { SessionBasic } from 'src/sessions/basic'
 import { compute } from 'src/toolbox'
@@ -253,7 +253,7 @@ export default function HomePage(): JSX.Element | null {
         }
         // Notifies of failed uploads.
         if (invalidContentsCount > 0) {
-          let notification: Notification = notify(
+          const notification = notify(
             `${invalidContentsCount} of the files uploaded did not have valid content and therefore ${
               invalidContentsCount === 1 ? 'was' : 'were'
             } rejected.`,
@@ -273,7 +273,8 @@ export default function HomePage(): JSX.Element | null {
                         message += `\`\`\`\n`
                       },
                     )
-                    notification.dismiss()
+                    // Dismiss the notification using the manager
+                    NotificationManager.removeNotification(notification._id)
                     prompt(message, Prompt.AlertChoices)
                   },
                 },
