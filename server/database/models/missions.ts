@@ -15,10 +15,16 @@ import mongoose, {
   QueryOptions,
   Schema,
 } from 'mongoose'
-import { ensureNoNullCreatedBy, populateCreatedByIfFlagged } from '.'
+import {
+  ensureNoNullCreatedBy,
+  excludeDeletedForFinds,
+  excludeSensitiveForFinds,
+  populateCreatedByIfFlagged,
+} from '.'
 import MetisDatabase from '..'
 import { MissionSchema } from './classes'
 import {
+  TMissionStaticMethods,
   type TMission,
   type TMissionDoc,
   type TMissionModel,
@@ -63,36 +69,6 @@ const objectIdsToStrings = (object: AnyObject): void => {
  */
 const toJson = (doc: TMissionDoc, ret: TMissionSaveJson, options: any) => {
   return objectIdsToStrings(ret)
-}
-
-/**
- * Modifies the query to hide deleted missions and remove unneeded properties.
- * @param query The query to modify.
- */
-const queryForApiResponse = (query: TPreMissionQuery): void => {
-  // Get projection.
-  let projection = query.projection()
-
-  // Create if does not exist.
-  if (projection === undefined) {
-    projection = {}
-  }
-
-  // Check if the projection is empty.
-  let projectionKeys = Object.keys(projection)
-
-  // If the projection is empty, create a default projection.
-  if (projectionKeys.length === 0) {
-    projection = {
-      deleted: 0,
-      __v: 0,
-    }
-  }
-
-  // Set projection.
-  query.projection(projection)
-  // Hide deleted missions.
-  query.where({ deleted: false })
 }
 
 /* -- SCHEMA STATIC FUNCTIONS -- */
@@ -257,7 +233,7 @@ const sanitizeHtml = (html: string): string => {
 /**
  * The schema for a mission in the database.
  */
-export const schema = new MissionSchema(
+export const missionSchema = new MissionSchema(
   {
     name: {
       type: String,
@@ -287,7 +263,6 @@ export const schema = new MissionSchema(
       type: String,
       required: true,
     },
-    deleted: { type: Boolean, required: true, default: false },
     structure: {
       type: {},
       required: true,
@@ -528,6 +503,7 @@ export const schema = new MissionSchema(
         },
       ],
     },
+    deleted: { type: Boolean, required: true, default: false },
   },
   {
     strict: 'throw',
@@ -548,25 +524,24 @@ export const schema = new MissionSchema(
 /* -- SCHEMA MIDDLEWARE -- */
 
 // Called before a save is made to the database.
-schema.pre<TMissionDoc>('save', function (next) {
+missionSchema.pre<TMissionDoc>('save', function (next) {
   let mission: TMissionSaveJson = this.toJSON()
   ServerMission.validate(mission, next)
   return next()
 })
 
 // Called before a find or update is made to the database.
-schema.pre<TPreMissionQuery>(
+missionSchema.pre<TPreMissionQuery>(
   ['find', 'findOne', 'findOneAndUpdate', 'updateOne'],
   function (next) {
-    const { populateFileReferences = true } = this.getOptions()
+    const { populateFileReferences = true, apiSafeProjection = true } =
+      this.getOptions()
     const projection = this.projection()
     const filesSelected =
       !projection ||
       projection.files === 1 ||
       projection['files.reference'] === 1
 
-    // Modify the query.
-    queryForApiResponse(this)
     // Populate createdBy.
     populateCreatedByIfFlagged(this)
     // Populate file-references.
@@ -578,8 +553,15 @@ schema.pre<TPreMissionQuery>(
   },
 )
 
+// Exclude sensitive information by default from query
+// results.
+excludeSensitiveForFinds(missionSchema)
+// Prevent deleted missions from being returned in queries,
+// unless explicitly requested.
+excludeDeletedForFinds(missionSchema)
+
 // Converts ObjectIds to strings.
-schema.post<TPostMissionQuery>(
+missionSchema.post<TPostMissionQuery>(
   ['find', 'findOne', 'updateOne', 'findOneAndUpdate'],
   async function (missionData: TMissionDoc | TMissionDoc[]) {
     // If the mission is null, then return.
@@ -601,7 +583,7 @@ schema.post<TPostMissionQuery>(
 )
 
 // Called after a save is made to the database.
-schema.post<TMissionDoc>('save', function () {
+missionSchema.post<TMissionDoc>('save', function () {
   // Remove unneeded properties.
   this.set('__v', undefined)
   this.set('deleted', undefined)
@@ -612,5 +594,8 @@ schema.post<TMissionDoc>('save', function () {
 /**
  * The mongoose model for a mission in the database.
  */
-const MissionModel = model<TMission, TMissionModel>('Mission', schema)
+const MissionModel = model<TMission, TMissionModel & TMissionStaticMethods>(
+  'Mission',
+  missionSchema,
+)
 export default MissionModel

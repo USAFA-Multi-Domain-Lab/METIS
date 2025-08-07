@@ -16,13 +16,7 @@ import { preventSystemUserWrite } from '../../library/users'
 const updateUser = async (request: Request, response: Response) => {
   // Extract the user updates from the request body.
   let userUpdates = request.body
-  let {
-    _id: userId,
-    username,
-    accessId,
-    password,
-    needsPasswordReset,
-  } = userUpdates as Partial<TUserJson>
+  let { _id: userId, username, accessId } = userUpdates as Partial<TUserJson>
   let foreignUserLogin = ServerLogin.get(userId)
 
   // Hash the password if it exists.
@@ -37,12 +31,17 @@ const updateUser = async (request: Request, response: Response) => {
     // Check if user properties changed that require logout
     const prevUserData: TUserExistingJson = await UserModel.findById(
       userId,
+      {},
+      { includeSensitive: true },
     ).exec()
     const changedFields = [
-      { prev: prevUserData.username, new: username },
-      { prev: prevUserData.accessId, new: accessId },
-      { prev: prevUserData.password, new: password },
-      { prev: prevUserData.needsPasswordReset, new: needsPasswordReset },
+      { prev: prevUserData.username, new: userUpdates.username },
+      { prev: prevUserData.accessId, new: userUpdates.accessId },
+      { prev: prevUserData.password, new: userUpdates.password },
+      {
+        prev: prevUserData.needsPasswordReset,
+        new: userUpdates.needsPasswordReset,
+      },
     ]
     const requiresLogout = changedFields.some(
       (field) => field.prev !== field.new,

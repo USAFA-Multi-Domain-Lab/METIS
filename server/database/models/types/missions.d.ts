@@ -50,8 +50,13 @@ export type TMissionStaticMethods = {
  * Represents a mongoose model for a mission in the database.
  * @see https://mongoosejs.com/docs/typescript/schemas.html#generic-parameters
  */
-export type TMissionModel = Model<TMission, {}, TMissionMethods> &
-  TMissionStaticMethods
+export type TMissionModel = Model<
+  TMission,
+  {},
+  TMissionMethods,
+  TMissionVirtuals,
+  TMissionDoc
+>
 
 /**
  * Represents a mongoose document for a mission in the database.
@@ -79,4 +84,5 @@ export type TPreMissionQuery = Query<TMission, TMission>
 /**
  * The type for a post-query middleware for a `MissionModel`.
  */
+export type TPostMissionQuery = Query<TMissionDoc, TMissionDoc>
 export type TPostMissionQuery = Query<TMissionDoc, TMissionDoc>
