@@ -88,7 +88,9 @@ export default class SessionClient extends Session<TMetisClientComponents> {
     return this.member.roleId
   }
 
-  // todo: Between the time the client joins and this object is constructed, there is possibility that changes have been made in the session. This should be handled.
+  // todo: Between the time the client joins and this object is
+  // todo: constructed, there is possibility that changes have been made
+  // todo: in the session. This should be handled.
   public constructor(
     data: TSessionJson,
     server: ServerConnection,
@@ -149,7 +151,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
       ['kicked', this.onKicked],
       ['banned', this.onBanned],
       ['dismissed', this.onDismissed],
-      ['session-destroyed', this.onSessionDestroyed],
+      ['session-destroyed', this.onDestroyed],
       ['session-quit', this.onQuit],
     ]
 
@@ -1050,9 +1052,8 @@ export default class SessionClient extends Session<TMetisClientComponents> {
   /**
    * Handles when the session is destroyed.
    */
-  private onSessionDestroyed = (
-    event: TServerEvents['session-destroyed'],
-  ): void => {
+  private onDestroyed = (event: TServerEvents['session-destroyed']): void => {
+    this._state = 'ended'
     this.cleanUp()
   }
 
