@@ -249,6 +249,10 @@ export default class ClientConnection {
       try {
         // Join the session.
         let member = session.join(this)
+        console.log(
+          member._id,
+          session.members.map((m) => m._id),
+        )
         // Return the session as JSON.
         this.emit('session-joined', {
           data: {
