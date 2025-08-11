@@ -326,7 +326,7 @@ export default class ClientMissionNode
   }
 
   /**
-   * Manages the mission's event listeners and events.
+   * Manages the node's event listeners and events.
    */
   private eventManager: EventManager<TNodeEventMethod>
 

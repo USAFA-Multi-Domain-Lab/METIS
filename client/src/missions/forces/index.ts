@@ -113,7 +113,7 @@ export default class ClientMissionForce
     // Reposition nodes and draw the lines between them.
     this.positionNodes()
     this.drawRelationshipLines()
-    this.emitEvent('structure-change', [])
+    this.emitEvent('structure-change')
   }
 
   /**
@@ -458,7 +458,7 @@ export default class ClientMissionForce
     this._outputs.splice(index, 0, newOutput)
 
     // Emit an output event.
-    this.emitEvent('output', [])
+    this.emitEvent('output')
   }
 
   /**
@@ -487,7 +487,7 @@ export default class ClientMissionForce
     this.resourcesRemaining += operand
 
     // Emit event.
-    this.emitEvent('modify-forces', [])
+    this.emitEvent('modify-forces')
   }
 
   /**
@@ -551,7 +551,7 @@ export type TForceEventMethods =
  * The argument(s) used in the event handler for the force's event manager.
  */
 type TForceEventArgs = [
-  updatedComponents: MissionComponent<TMetisClientComponents, any>[],
+  ...updatedComponents: MissionComponent<TMetisClientComponents, any>[],
 ]
 
 /**

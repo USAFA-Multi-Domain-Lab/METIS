@@ -110,12 +110,13 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   const state: TMissionPage_S = {
     defects: useState<TMissionComponentDefect[]>([]),
     checkForDefects: useState<boolean>(true),
+    globalFiles: useState<ClientFileReference[]>([]),
     localFiles: useState<ClientMissionFile[]>([]),
   }
   const [mission, setMission] = useState<ClientMission>(
     ClientMission.createNew(),
   )
-  const [globalFiles, setGlobalFiles] = useState<ClientFileReference[]>([])
+  const [globalFiles, setGlobalFiles] = state.globalFiles
   const [localFiles, setLocalFiles] = state.localFiles
   const selectedForceState = useState<ClientMissionForce | null>(null)
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(
@@ -1270,6 +1271,10 @@ export type TMissionPage_S = {
    * components, updating the state with the result.
    */
   checkForDefects: TReactState<boolean>
+  /**
+   * The current list of files available in the store.
+   */
+  globalFiles: TReactState<ClientFileReference[]>
   /**
    * The current list of files attached to the mission.
    */

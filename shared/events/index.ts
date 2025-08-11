@@ -65,14 +65,14 @@ export class EventManager<
   }
 
   /**
-   * @inheritdoc TListenerTargetEmittable.addEventListener
+   * @see {@link TListenerTargetEmittable.addEventListener}
    */
   public addEventListener: TTarget['addEventListener'] = (method, callback) => {
     this.listeners.push([method, callback])
   }
 
   /**
-   * @inheritdoc TListenerTargetEmittable.removeEventListener
+   * @see {@link TListenerTargetEmittable.removeEventListener}
    */
   public removeEventListener: TTarget['removeEventListener'] = (
     method,

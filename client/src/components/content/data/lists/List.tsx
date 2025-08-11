@@ -429,7 +429,8 @@ export default function List<TItem extends MetisComponent>(
   // list of items.
   useEffect(() => {
     const selectionIsMissing = !items.find(({ _id }) => _id === selection?._id)
-    if (selectionIsMissing) setSelection(null)
+    const selectionIsDisabled = selection?.disabled ?? false
+    if (selectionIsMissing || selectionIsDisabled) setSelection(null)
   }, [items, selection])
 
   // Deselect the currently selected item, if necessary.

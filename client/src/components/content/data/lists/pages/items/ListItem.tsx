@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useMemo, useRef } from 'react'
+import { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import Tooltip from 'src/components/content/communication/Tooltip'
 import { useButtonMenuEngine } from 'src/components/content/user-controls/buttons/ButtonMenu'
 import ButtonMenuController from 'src/components/content/user-controls/buttons/ButtonMenuController'
@@ -43,6 +43,7 @@ export default function ListItem<T extends MetisComponent>({
   } = listContext
   const [selection, setSelection] = listContext.state.selection
   const root = useRef<HTMLDivElement>(null)
+  const [disabled, setDisabled] = useState<boolean>(item.disabled)
   const optionsEngine = useButtonMenuEngine({
     elements: itemButtons,
     layout: ['<slot>'],
@@ -68,7 +69,7 @@ export default function ListItem<T extends MetisComponent>({
    */
   const rootClass = compute<ClassList>(() =>
     new ClassList('ListItem', 'ListItemLike')
-      .set('PartiallyDisabled', item.disabled)
+      .set('PartiallyDisabled', disabled)
       .set('Selected', selection?._id === item._id)
       .set('Deleted', item.deleted),
   )
@@ -142,6 +143,15 @@ export default function ListItem<T extends MetisComponent>({
 
   /* -- EFFECTS -- */
 
+  // Set up callback for disabled state changes
+  useEffect(() => {
+    // Register the callback and get the unregister function
+    const unregister = item.onDisabledChange(setDisabled)
+
+    // Return cleanup function that calls the unregister function
+    return unregister
+  }, [item])
+
   useEffect(() => {
     // Enable/disable any buttons when the
     // selection changes.
@@ -158,9 +168,17 @@ export default function ListItem<T extends MetisComponent>({
     // options button.
     optionMenuButtonEngine.setDisabled(
       'options',
-      item.disabled || !itemButtonIcons.length,
+      disabled || !itemButtonIcons.length,
     )
-  }, [item.disabled, itemButtonIcons.length])
+  }, [disabled, itemButtonIcons.length])
+
+  useEffect(() => {
+    if (selection?._id === item._id && disabled) {
+      // If the item is disabled and it is selected,
+      // clear the selection.
+      setSelection(null)
+    }
+  }, [disabled])
 
   /* -- RENDER -- */
 
@@ -228,7 +246,7 @@ export default function ListItem<T extends MetisComponent>({
         engine={optionsEngine}
         highlightTarget={root.current ?? undefined}
         trigger={'r-click'}
-        listen={!item.disabled}
+        listen={!disabled}
         onActivate={onButtonMenuActivate}
       />
     </div>
