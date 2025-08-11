@@ -3,7 +3,6 @@ import { useRef, useState } from 'react'
 import { useGlobalContext } from 'src/context/global'
 import ClientFileReference from 'src/files/references'
 import ClientMission from 'src/missions'
-import NotificationManager from 'src/notifications/manager'
 import SessionClient from 'src/sessions'
 import { SessionBasic } from 'src/sessions/basic'
 import { compute } from 'src/toolbox'
@@ -46,8 +45,14 @@ export default function HomePage(): JSX.Element | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
-  const { beginLoading, finishLoading, handleError, notify, prompt, logout } =
-    globalContext.actions
+  const {
+    beginLoading,
+    finishLoading,
+    handleError,
+    notify,
+    prompt,
+    dismissNotification,
+  } = globalContext.actions
   const [_, setLoadingProgress] = globalContext.loadingProgress
   const [sessions, setSessions] = useState<SessionBasic[]>([])
   const [missions, setMissions] = useState<ClientMission[]>([])
@@ -214,7 +219,7 @@ export default function HomePage(): JSX.Element | null {
    * and imported if valid.
    */
   const importMissionFiles = async (files: FileList) => {
-    let validFiles: Array<File> = []
+    let validFiles: File[] = []
     let successfulImportCount = 0
     let invalidContentsCount = 0
     let invalidFileExtensionCount: number = 0
@@ -273,8 +278,8 @@ export default function HomePage(): JSX.Element | null {
                         message += `\`\`\`\n`
                       },
                     )
-                    // Dismiss the notification using the manager
-                    NotificationManager.removeNotification(notification._id)
+                    // Dismiss the notification.
+                    dismissNotification(notification._id)
                     prompt(message, Prompt.AlertChoices)
                   },
                 },

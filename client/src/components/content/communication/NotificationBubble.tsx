@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
 import { useEventListener, useListComponent } from 'src/toolbox/hooks'
 import ClassList from '../../../../../shared/toolbox/html/class-lists'
@@ -7,7 +8,6 @@ import Markdown, { MarkdownTheme } from '../general-layout/Markdown'
 import { ButtonText } from '../user-controls/buttons/ButtonText'
 import If from '../util/If'
 import './NotificationBubble.scss'
-import { useNotifications } from './Notifications'
 
 /**
  * Displays a notification bubble with a message and optional buttons.
@@ -16,7 +16,7 @@ export default function NotificationBubble({
   notification,
 }: TNotificationBubble_P) {
   /* -- CONTEXT -- */
-  const { dismissNotification } = useNotifications().actions
+  const { dismissNotification } = useGlobalContext().actions
 
   /* -- STATE -- */
 
@@ -31,6 +31,10 @@ export default function NotificationBubble({
 
   useEventListener(notification, 'statusChange', () => {
     setStatus(notification.status)
+
+    if (notification.status === 'expired') {
+      dismissNotification(notification._id)
+    }
   })
 
   useEventListener(notification, 'buttonsChange', () => {
@@ -52,15 +56,6 @@ export default function NotificationBubble({
   const rootClasses = compute<ClassList>(() => {
     let result = new ClassList('NotificationBubble')
     result.set('Expiring', status === 'expiring')
-    return result
-  })
-
-  /**
-   * The class name for the buttons container.
-   */
-  const buttonListClasses = compute<ClassList>(() => {
-    let result = new ClassList('Buttons')
-    result.set('Hidden', buttons.length === 0)
     return result
   })
 
@@ -89,8 +84,8 @@ export default function NotificationBubble({
       >
         x
       </div>
-      <If condition={ButtonJsx}>
-        <div className={buttonListClasses.value}>{ButtonJsx}</div>
+      <If condition={ButtonJsx && buttons.length > 0}>
+        <div className='Buttons'>{ButtonJsx}</div>
       </If>
     </div>
   )

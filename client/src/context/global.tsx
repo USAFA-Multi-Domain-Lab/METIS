@@ -11,10 +11,7 @@ import { PAGE_REGISTRY, TPage_P, TPageKey } from 'src/components/pages'
 import ServerConnection, { IServerConnectionOptions } from 'src/connect/servers'
 import MetisInfo from 'src/info'
 import ClientLogin from 'src/logins'
-import Notification from 'src/notifications'
-import NotificationManager, {
-  TAddNotificationOptions,
-} from 'src/notifications/manager'
+import Notification, { TNotificationOptions } from 'src/notifications'
 import { useInitRenderHandler } from 'src/toolbox/hooks'
 import Logging from 'src/toolbox/logging'
 import ClientUser from 'src/users'
@@ -57,6 +54,7 @@ const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
   buttonMenu: null,
   tooltips: React.createRef<HTMLDivElement>(),
   tooltipDescription: '',
+  notifications: [],
   promptData: null,
   cheats: {
     zeroCost: true,
@@ -134,6 +132,7 @@ const initializeActions = (
   const setLoadingPageId = initialState.loadingPageId[1]
   const setError = initialState.error[1]
   const setButtonMenu = initialState.buttonMenu[1]
+  const setNotifications = initialState.notifications[1]
   const setPromptData = initialState.promptData[1]
 
   /* -- CALLBACKS -- */
@@ -141,7 +140,13 @@ const initializeActions = (
   /**
    * Handles when loading has been completed.
    */
-  const onLoadCompletion = () => NotificationManager.expireAllNotifications()
+  const onLoadCompletion = () => {
+    const { notifications } = refs.current
+
+    for (let notification of notifications) {
+      notification.startExpirationTimer()
+    }
+  }
 
   /* -- ACTION DEFINITION -- */
 
@@ -440,7 +445,7 @@ const initializeActions = (
           break
       }
     },
-    notify: (message: string, options: TAddNotificationOptions = {}) => {
+    notify: (message: string, options: TNotificationOptions = {}) => {
       // Gather details.
       const { loading, loadingMinTimeReached, pageSwitchMinTimeReached } =
         refs.current
@@ -451,13 +456,22 @@ const initializeActions = (
 
       // Create the notification and delay the start of the expiration timer
       // if the loading page is currently being displayed.
-      const notification = NotificationManager.addNotification(message, {
+      const notification = Notification.create(message, {
         ...options,
         startExpirationTimer: !onLoadingPage,
       })
 
+      // Add the notification to the state.
+      setNotifications((prev) => [...prev, notification])
+
       // Return the notification.
       return notification
+    },
+    dismissNotification: (notificationId: string): void => {
+      // Remove the notification from the state.
+      setNotifications((prev) =>
+        prev.filter(({ _id }) => _id !== notificationId),
+      )
     },
     prompt: <TChoice extends string, TList extends object = {}>(
       message: string,
@@ -756,6 +770,7 @@ export type TGlobalContextValues = {
   buttonMenu: TWithKey<TButtonMenu_P> | null
   tooltips: React.RefObject<HTMLDivElement>
   tooltipDescription: string
+  notifications: Notification[]
   /**
    * Current prompt to display to the user.
    */
@@ -872,7 +887,12 @@ export type TGlobalContextActions = {
    * @param options The options to use for the notification.
    * @returns The emitted notification.
    */
-  notify: (message: string, options?: TAddNotificationOptions) => Notification
+  notify: (message: string, options?: TNotificationOptions) => Notification
+  /**
+   * Dismisses a notification with the given ID.
+   * @param notificationId The ID of the notification to dismiss.
+   */
+  dismissNotification: (notificationId: Notification['_id']) => void
   /**
    * This will logout the user that is currently logged in, closing the connection
    * with the server as well. Afterwards, the user will be navigated to the auth page.
