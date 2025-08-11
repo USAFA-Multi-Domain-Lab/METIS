@@ -1,6 +1,7 @@
 import axios, { AxiosProgressEvent, AxiosResponse } from 'axios'
 import { TMetisClientComponents } from 'src'
 import ClientUser from 'src/users'
+import { EventManager, TListenerTargetEmittable } from '../../../shared/events'
 import FileReference, {
   TFileReferenceJson,
 } from '../../../shared/files/references'
@@ -9,7 +10,56 @@ import StringToolbox from '../../../shared/toolbox/strings'
 /**
  * Client implementation of `FileReference` class.
  */
-export default class ClientFileReference extends FileReference<TMetisClientComponents> {
+export default class ClientFileReference
+  extends FileReference<TMetisClientComponents>
+  implements TListenerTargetEmittable<TFileReferenceEventMethods>
+{
+  /**
+   * Manages the file reference's event listeners and events.
+   */
+  private eventManager: EventManager<TFileReferenceEventMethods>
+
+  protected constructor(
+    _id: string,
+    name: string,
+    path: string,
+    mimetype: string,
+    size: number,
+    createdAt: Date,
+    updatedAt: Date,
+    createdBy: ClientUser,
+    createdByUsername: string,
+    deleted: boolean,
+  ) {
+    super(
+      _id,
+      name,
+      path,
+      mimetype,
+      size,
+      createdAt,
+      updatedAt,
+      createdBy,
+      createdByUsername,
+      deleted,
+    )
+
+    // Initialize the event manager.
+    this.eventManager = new EventManager(this)
+    this.emitEvent = this.eventManager.emitEvent
+    this.addEventListener = this.eventManager.addEventListener
+    this.removeEventListener = this.eventManager.removeEventListener
+  }
+
+  // Implemented
+  public emitEvent
+
+  // Implemented
+  public addEventListener
+
+  // Implemented
+  public removeEventListener
+
   /**
    * Downloads the file from the server by opening up
    * a new tab with the file's URI.
@@ -225,3 +275,8 @@ export type TFileUploadOptions = {
    */
   abortController?: AbortController
 }
+
+/**
+ * The methods that can be emitted by the `ClientFileReference` class.
+ */
+export type TFileReferenceEventMethods = ''

@@ -1,7 +1,6 @@
 import { EventManager, TListenerTargetEmittable } from '../../../shared/events'
 import StringToolbox from '../../../shared/toolbox/strings'
 import { TButtonText_P } from '../components/content/user-controls/buttons/ButtonText'
-import NotificationManager from './manager'
 
 /**
  * Notifies a user of an event or message.
@@ -53,10 +52,11 @@ export default class Notification
    * @see {@link TNotification}
    */
   private constructor(
-    public readonly message: TNotification['message'] = '',
-    public readonly duration: TNotification['duration'] = 5000,
-    public readonly isError: TNotification['isError'] = false,
-    public readonly buttons: TNotification['buttons'] = [],
+    public readonly message: TNotification['message'],
+    public readonly duration: TNotification['duration'],
+    public readonly isError: TNotification['isError'],
+    public readonly buttons: TNotification['buttons'],
+    startExpirationTimer: TNotificationOptions['startExpirationTimer'],
   ) {
     this.message = message
     this.duration = duration
@@ -73,6 +73,9 @@ export default class Notification
     this.addEventListener = this.eventManager.addEventListener
     this.removeEventListener = this.eventManager.removeEventListener
     this.emitEvent = this.eventManager.emitEvent
+
+    // Start the expiration timer if applicable.
+    if (startExpirationTimer) this.startExpirationTimer()
   }
 
   // Implemented
@@ -99,7 +102,6 @@ export default class Notification
         setTimeout(() => {
           this._status = 'expired'
           this.emitEvent('statusChange')
-          NotificationManager.removeNotification(this._id)
         }, Notification.EXPIRED_FADE_OUT_DURATION)
       }, this.duration)
     }
@@ -121,8 +123,20 @@ export default class Notification
     message: TNotification['message'],
     options: TNotificationOptions = {},
   ): Notification {
-    const { duration, isError, buttons } = options
-    return new Notification(message, duration, isError, buttons)
+    const {
+      duration = 5000,
+      isError = false,
+      buttons = [],
+      startExpirationTimer = true,
+    } = options
+
+    return new Notification(
+      message,
+      duration,
+      isError,
+      buttons,
+      startExpirationTimer,
+    )
   }
 }
 
@@ -148,12 +162,20 @@ export type TNotificationOptions = {
    * @default []
    */
   buttons?: TButtonText_P[]
+  /**
+   * Whether to start the expiration timer for the notification.
+   * @default true
+   */
+  startExpirationTimer?: boolean
 }
 
 /**
  * Represents a notification in the application.
  */
-export type TNotification = Required<TNotificationOptions> & {
+export type TNotification = Omit<
+  Required<TNotificationOptions>,
+  'startExpirationTimer'
+> & {
   /**
    * Unique identifier for the notification.
    */
@@ -173,22 +195,6 @@ export type TNotification = Required<TNotificationOptions> & {
    * @option `expired:` Notification has been dismissed or expired.
    */
   status: 'active' | 'expiring' | 'expired'
-  /**
-   * Duration for which the notification is displayed, in milliseconds.
-   * @note If `null`, the notification does not expire automatically.
-   * @default 5000 // (5 sec)
-   */
-  duration: number | null
-  /**
-   * Whether the notification is an error message.
-   * @default false
-   */
-  isError: boolean
-  /**
-   * Buttons associated with the notification.
-   * @default []
-   */
-  buttons: TButtonText_P[]
 }
 
 /**

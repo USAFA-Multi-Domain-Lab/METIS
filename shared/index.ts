@@ -58,6 +58,27 @@ export abstract class MetisComponent {
   }
 
   /**
+   * Array of callbacks that get triggered when disabled state changes.
+   */
+  private _disabledChangeCallbacks: Array<(isDisabled: boolean) => void> = []
+
+  /**
+   * Registers a callback for disabled state changes.
+   * @param callback Function to call when disabled state changes.
+   * @returns Function to unregister the callback.
+   */
+  public onDisabledChange(callback: (isDisabled: boolean) => void): () => void {
+    this._disabledChangeCallbacks.push(callback)
+
+    // Return a function that removes this specific callback
+    return () => {
+      this._disabledChangeCallbacks = this._disabledChangeCallbacks.filter(
+        (cb) => cb !== callback,
+      )
+    }
+  }
+
+  /**
    * @see {@link MetisComponent.disabled}
    */
   private _disabledReason: string
@@ -93,8 +114,14 @@ export abstract class MetisComponent {
    * Enables the previously disabled component.
    */
   public enable(): void {
+    const wasDisabled = this._disabled
     this._disabled = false
     this._disabledReason = ''
+
+    // Notify all registered callbacks.
+    if (wasDisabled && this._disabledChangeCallbacks.length > 0) {
+      this._disabledChangeCallbacks.forEach((callback) => callback(false))
+    }
   }
 
   /**
@@ -104,8 +131,14 @@ export abstract class MetisComponent {
    * explanation is needed.
    */
   public disable(reason: string = ''): void {
+    const wasEnabled = !this._disabled
     this._disabled = true
     this._disabledReason = reason
+
+    // Notify all registered callbacks.
+    if (wasEnabled && this._disabledChangeCallbacks.length > 0) {
+      this._disabledChangeCallbacks.forEach((callback) => callback(true))
+    }
   }
 
   /**

@@ -68,13 +68,13 @@ const routerMap: TMetisRouterMap = (
 
   //  -- PUT | /api/v1/users/ --
   router.put(
-    '/',
+    '/:_id/',
     auth({ permissions: ['users_write_students'] }),
     restrictUserManagement,
     defineRequests(
       {
-        body: {
-          _id: RequestBodyFilters.OBJECTID,
+        params: {
+          _id: 'objectId',
         },
       },
       {
@@ -106,7 +106,7 @@ const routerMap: TMetisRouterMap = (
 
   // -- PUT | /api/v1/users/reset-password --
   router.put(
-    '/reset-password',
+    '/:_id/reset-password',
     auth({}),
     restrictPasswordReset,
     defineRequests({

@@ -844,14 +844,14 @@ export const defineRequests = (
 ) => {
   return (request: Request, response: Response, next: NextFunction): void => {
     try {
-      if (requiredStructures.query) {
+      if (requiredStructures.query || optionalStructures?.query) {
         // If an API route has a defined query with required
         // or optional keys, then validate the query keys and
         // their values
         let sanitizedQuery: AnyObject = validateQueryKeys(
           request.query,
-          requiredStructures.query,
-          optionalStructures ? optionalStructures.query : undefined,
+          requiredStructures?.query ?? {},
+          optionalStructures?.query ?? {},
         )
 
         // Set the request query to the sanitized query
@@ -871,13 +871,13 @@ export const defineRequests = (
         request.params = sanitizedParams
       }
 
-      if (requiredStructures.body) {
+      if (requiredStructures.body || optionalStructures?.body) {
         // If an API route has a defined body with required
         // or optional keys, then validate the body keys and
         // their values
         let sanitizedBody: AnyObject = validateBodyKeys(
           request.body,
-          requiredStructures.body,
+          requiredStructures?.body ?? {},
           optionalStructures?.body ?? {},
         )
 

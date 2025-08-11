@@ -34,7 +34,7 @@ export default class ClientMissionFile
   }
 
   /**
-   * Manages the mission's event listeners and events.
+   * Manages the file's event listeners and events.
    */
   private eventManager: EventManager<TFileEventMethods>
 

@@ -186,7 +186,7 @@ export default function (props: TUserPage_P): JSX.Element | null {
             notify('This user already exists. Try using a different username.')
             setUsernameAlreadyExists(true)
           } else {
-            notify('User failed to save.', { isError: true })
+            notify('User failed to save.')
           }
           finishLoading()
           setAreUnsavedChanges(true)
@@ -208,7 +208,7 @@ export default function (props: TUserPage_P): JSX.Element | null {
             notify('This user already exists. Try using a different username.')
             setUsernameAlreadyExists(true)
           } else {
-            notify('User failed to save.', { isError: true })
+            notify('User failed to save.')
           }
           finishLoading()
           setAreUnsavedChanges(true)
