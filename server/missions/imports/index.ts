@@ -8,7 +8,7 @@ import { AnyObject } from 'metis/toolbox/objects'
 import { TCreatedByJson } from 'metis/users'
 import path from 'path'
 import MetisFileStore, { TMulterFile } from '../../files'
-import { databaseLogger } from '../../logging'
+import { databaseLogger, expressLogger } from '../../logging'
 import build_000005 from './builds/build_000005'
 import build_000009 from './builds/build_000009'
 import build_000010 from './builds/build_000010'
@@ -326,12 +326,10 @@ export default class MissionImport {
     for (let missionFile of mission.files as TMissionFileJson[]) {
       // Handle absence of file reference data.
       if (typeof missionFile.reference !== 'object') {
-        return this.handleMissionImportError(
-          sourceFile,
-          new Error(
-            'File reference found in mission import was not populated.',
-          ),
+        expressLogger.warn(
+          `Deleted file-reference found in mission import ("${missionFile.reference}"). This file will not be included in the import.`,
         )
+        continue
       }
 
       // Gather details.

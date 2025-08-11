@@ -43,19 +43,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
    */
   protected server: ServerConnection
 
-  private _memberId: ClientSessionMember['_id'] = ''
-
-  /**
-   * The ID of the member associated with this client connection.
-   */
-  public get memberId(): ClientSessionMember['_id'] {
-    return this._memberId
-  }
-
-  public set memberId(value: string) {
-    console.log('Setting member ID:', value)
-    this._memberId = value
-  }
+  private memberId: ClientSessionMember['_id']
 
   /**
    * The session member for this client connection.

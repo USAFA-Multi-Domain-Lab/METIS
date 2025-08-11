@@ -149,7 +149,11 @@ export const ensureNoNullCreatedBy = async <TDoc extends TMetisDoc>(
 
   // Fetch unpopulated createdBy only.
   const unpopulated = await model
-    .findOne({ _id: doc._id }, { createdBy: 1 }, { populateCreatedBy: false })
+    .findOne(
+      { _id: doc._id },
+      { createdBy: 1 },
+      { populateCreatedBy: false, includeDeleted: true },
+    )
     .lean() // lean gives raw JS object
 
   if (!unpopulated) {

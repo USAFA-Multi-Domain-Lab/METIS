@@ -140,7 +140,11 @@ const ensureNoNullFiles = async (mission: TMissionDoc) => {
   const unpopulated = await MissionModel.findOne(
     { _id: mission._id },
     { id: 1, files: 1 },
-    { populateCreatedBy: false, populateFileReferences: false },
+    {
+      populateCreatedBy: false,
+      populateFileReferences: false,
+      includeDeleted: true,
+    },
   ).lean() // lean gives raw JS object
 
   if (!unpopulated) {
@@ -548,7 +552,6 @@ excludeSensitiveForFinds(missionSchema)
 // unless explicitly requested.
 excludeDeletedForFinds(missionSchema)
 
-// Converts ObjectIds to strings.
 missionSchema.post<TPostMissionQuery>(
   ['find', 'findOne', 'updateOne', 'findOneAndUpdate'],
   async function (missionData: TMissionDoc | TMissionDoc[]) {
