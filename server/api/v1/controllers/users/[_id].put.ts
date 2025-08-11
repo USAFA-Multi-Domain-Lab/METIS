@@ -3,7 +3,7 @@ import UserModel, { hashPassword } from 'metis/server/database/models/users'
 import { StatusError } from 'metis/server/http'
 import { databaseLogger } from 'metis/server/logging'
 import ServerLogin from 'metis/server/logins'
-import { TUserExistingJson, TUserJson } from 'metis/users'
+import { TUserJson } from 'metis/users'
 import ApiResponse from '../../library/response'
 import { preventSystemUserWrite } from '../../library/users'
 
@@ -14,10 +14,13 @@ import { preventSystemUserWrite } from '../../library/users'
  * @returns The updated user in JSON format.
  */
 const updateUser = async (request: Request, response: Response) => {
-  // Extract the user updates from the request body.
-  let userUpdates = request.body
-  let { _id: userId, username, accessId } = userUpdates as Partial<TUserJson>
-  let foreignUserLogin = ServerLogin.get(userId)
+  // Get userId from params and extract updates from the body.
+  const userId = request.params._id
+  let userUpdates = request.body as Partial<TUserJson>
+  // Prevent clients from overriding the _id.
+  if (userUpdates._id) delete userUpdates._id
+  const { username, accessId } = userUpdates
+  const foreignUserLogin = ServerLogin.get(userId)
 
   // Hash the password if it exists.
   if (!!userUpdates.password) {
@@ -28,37 +31,46 @@ const updateUser = async (request: Request, response: Response) => {
     // Disable system-user write operations.
     preventSystemUserWrite({ currentUserId: userId, newAccessId: accessId })
 
-    // Check if user properties changed that require logout
-    const prevUserData: TUserExistingJson = await UserModel.findById(
+    // Check if user exists and if properties changed requiring logout.
+    const prevUserData = await UserModel.findById(
       userId,
       {},
       { includeSensitive: true },
     ).exec()
-    const changedFields = [
-      { prev: prevUserData.username, new: userUpdates.username },
-      { prev: prevUserData.accessId, new: userUpdates.accessId },
-      { prev: prevUserData.password, new: userUpdates.password },
-      {
-        prev: prevUserData.needsPasswordReset,
-        new: userUpdates.needsPasswordReset,
-      },
-    ]
-    const requiresLogout = changedFields.some(
-      (field) => field.prev !== field.new,
+    if (!prevUserData) {
+      throw new StatusError(`User with ID "${userId}" not found.`, 404)
+    }
+    // Only compare fields actually submitted.
+    const fieldsToCheck = [
+      'username',
+      'accessId',
+      'password',
+      'needsPasswordReset',
+      'firstName',
+      'lastName',
+    ] as const
+    const requiresLogout = fieldsToCheck.some(
+      (field) =>
+        userUpdates[field] !== undefined &&
+        prevUserData[field] !== userUpdates[field],
     )
 
-    // Update the user.
-    let userDoc: TUserExistingJson = await UserModel.findByIdAndModify(
+    // Strip undefined values to avoid unintentional unsets.
+    const updates = Object.fromEntries(
+      Object.entries(userUpdates).filter(([, v]) => v !== undefined),
+    ) as Partial<TUserJson>
+    // Update the user and return the new doc (using filtered updates).
+    const userDoc = await UserModel.findByIdAndModify(
       userId,
       {},
       {
         returnOriginal: false,
         runValidators: true,
       },
-      userUpdates,
+      updates,
     )
     // If the user was not found, throw an error.
-    if (userDoc === null) {
+    if (!userDoc) {
       throw new StatusError(`User with ID "${userId}" not found.`, 404)
     }
     // If the user is required to be logged out, make sure the

@@ -452,8 +452,8 @@ export default class ClientUser
       try {
         // Retrieve data from API.
         let { data: userJson } = await axios.put<TUserExistingJson>(
-          ClientUser.API_ENDPOINT,
-          clientUser.toJson({ ...options, includeId: true }),
+          `${ClientUser.API_ENDPOINT}/${clientUser._id}/`,
+          clientUser.toJson({ ...options }),
         )
         // Convert JSON to Client User object.
         let updatedUser = ClientUser.fromExistingJson(userJson)
@@ -477,9 +477,12 @@ export default class ClientUser
   public static $resetPassword(user: ClientUser): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
       try {
-        await axios.put(`${ClientUser.API_ENDPOINT}/reset-password`, {
-          password: user.password1,
-        })
+        await axios.put(
+          `${ClientUser.API_ENDPOINT}/${user._id}/reset-password`,
+          {
+            password: user.password1,
+          },
+        )
         resolve()
       } catch (error: any) {
         console.error('Failed to reset password.')
