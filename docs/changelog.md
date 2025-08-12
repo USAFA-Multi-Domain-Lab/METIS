@@ -1,6 +1,6 @@
 # changelog
 
-# version-2.2 | 8-12-2025
+# version-2.2.0 | 8-12-2025
 
 - A new auto-focus feature was implemented, which in certain situations, will automatically pan the mission map to a particular node.
 - User preferences are now supported, allowing for a more personalized experience in the future.
