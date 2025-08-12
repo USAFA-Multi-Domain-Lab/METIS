@@ -149,8 +149,8 @@ export default function ButtonMenu({
   // close the menu when clicked.
   for (let button of engine.buttons) {
     button.onClick = (...args) => {
-      button.onClick(...args)
       onCloseRequest()
+      button.onClick(...args)
     }
   }
 
