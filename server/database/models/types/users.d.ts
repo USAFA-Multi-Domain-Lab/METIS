@@ -62,14 +62,7 @@ export type TUserStaticMethods = {
  * Represents a mongoose model for a user in the database.
  * @see https://mongoosejs.com/docs/typescript/schemas.html#generic-parameters
  */
-export type TUserModel = Model<
-  TUser,
-  {},
-  TUserMethods,
-  TUserVirtuals,
-  TUserDoc
-> &
-  TUserStaticMethods
+export type TUserModel = Model<TUser, {}, TUserMethods, TUserVirtuals, TUserDoc>
 
 /**
  * Represents a mongoose document for a user in the database.

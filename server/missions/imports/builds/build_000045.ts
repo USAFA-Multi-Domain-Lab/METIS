@@ -1,9 +1,10 @@
 import { TMissionImportBuild } from '..'
 
-// -- BUILD 44 --
-// This migration script is responsible for populating
-// the `createdBy` and `createdByUsername` fields in the
-// mission data with the system user.
+// -- BUILD 45 --
+// This migration script is responsible for updating
+// effects to have the patch number included in the
+// targetEnvironmentVersion field, ensuring that
+// versions such as "1.0" are instead "1.0.0".
 
 const patchlessVersionRegex = /^\d+\.\d+$/
 

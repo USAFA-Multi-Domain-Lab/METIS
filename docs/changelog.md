@@ -1,5 +1,10 @@
 # changelog
 
+# version-2.2 | 7-x-2025
+
+-
+- Clarification was added to the METIS target environment title and description to highlight its purpose of creating internal effects only.
+
 # version-2.1.1 | 7-9-2025
 
 - An issue has been fixed regard mission imports. Importing a mission would assign the system as the creator of the mission, rather than the user who imported it.

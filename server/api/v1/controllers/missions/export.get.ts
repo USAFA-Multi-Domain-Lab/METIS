@@ -6,7 +6,7 @@ import InfoModel from 'metis/server/database/models/info'
 import MissionModel from 'metis/server/database/models/missions'
 import MetisFileStore from 'metis/server/files'
 import { StatusError } from 'metis/server/http'
-import { databaseLogger } from 'metis/server/logging'
+import { databaseLogger, expressLogger } from 'metis/server/logging'
 import ServerFileToolbox from 'metis/server/toolbox/files'
 import path from 'path'
 import { v4 as generateHash } from 'uuid'
@@ -84,16 +84,15 @@ const exportMission = async (
     fs.writeFileSync(exportDataPath, exportDataContents)
 
     // Copy files to the export directory.
-    for (let missionFile of missionDoc.files) {
+    for (let missionFile of missionJson.files) {
       let { reference } = missionFile
 
-      // If the reference is not populated, throw an
-      // error. This should theoretically not happen.
+      // If the reference is not populated, warn and skip.
       if (typeof reference === 'string') {
-        throw new StatusError(
-          `File reference is not populated for mission.`,
-          500,
+        expressLogger.warn(
+          `Deleted file-reference found in mission export ("${reference}"). This file will not be included in the export.`,
         )
+        continue
       }
 
       let source = fileStore.getFullPath(reference)

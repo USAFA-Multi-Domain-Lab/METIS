@@ -1,0 +1,16 @@
+@import 'src/assets/styles/config.scss';
+@import 'src/assets/styles/util.scss';
+
+.MapPreferences {
+  border: 2px solid $color-primary-light;
+  padding: 0.75em;
+  background-color: $color-primary;
+
+  .Heading {
+    margin-bottom: 1em;
+  }
+
+  .Detail {
+    grid-column: span 2;
+  }
+}

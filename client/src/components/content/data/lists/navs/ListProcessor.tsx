@@ -1,6 +1,6 @@
 import { createRef, ReactNode, useEffect, useState } from 'react'
-import ButtonSvgPanel from 'src/components/content/user-controls/buttons/v3/ButtonSvgPanel'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
+import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
 import If from 'src/components/content/util/If'
 import { compute } from 'src/toolbox'
 import { useEventListener } from 'src/toolbox/hooks'
@@ -30,6 +30,7 @@ export default function ListProcessor(): JSX.Element | null {
   const searchButtonEngine = useButtonSvgEngine({
     elements: [
       {
+        key: 'search',
         type: 'button',
         icon: 'search',
         onClick: () => activateSearch(true),
@@ -39,6 +40,7 @@ export default function ListProcessor(): JSX.Element | null {
   const cancelButtonEngine = useButtonSvgEngine({
     elements: [
       {
+        key: 'close',
         type: 'button',
         icon: 'close',
         onClick: () => onClose(),

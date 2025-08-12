@@ -88,10 +88,10 @@ export default class ClientMissionAction extends MissionAction<TMetisClientCompo
   /**
    * @param node The node that the action belongs to.
    * @param data The action data from which to create the action.
-   *  @note Any ommitted values will be set to their default properties
+   * @note Any ommitted values will be set to their default properties
    *  defined in `ClientMissionAction.DEFAULT_PROPERTIES`.
    */
-  public constructor(
+  private constructor(
     node: ClientMissionNode,
     data: Partial<TClientMissionActionJson> = ClientMissionAction.DEFAULT_PROPERTIES,
   ) {
@@ -134,8 +134,6 @@ export default class ClientMissionAction extends MissionAction<TMetisClientCompo
       resourceCostHidden: this.resourceCostHidden,
       opensNode: this.opensNode,
       opensNodeHidden: this.opensNodeHidden,
-      postExecutionSuccessText: this.postExecutionSuccessText,
-      postExecutionFailureText: this.postExecutionFailureText,
       effects: [],
     })
 
@@ -145,6 +143,19 @@ export default class ClientMissionAction extends MissionAction<TMetisClientCompo
     )
 
     return duplicatedAction
+  }
+
+  /**
+   * Creates a new action with the provided data.
+   * @param node The node to which the action belongs.
+   * @param data The data to use for the action.
+   * @returns A new action with the provided data.
+   */
+  public static create(
+    node: ClientMissionNode,
+    data: Partial<TClientMissionActionJson> = ClientMissionAction.DEFAULT_PROPERTIES,
+  ): ClientMissionAction {
+    return new ClientMissionAction(node, data)
   }
 
   /**

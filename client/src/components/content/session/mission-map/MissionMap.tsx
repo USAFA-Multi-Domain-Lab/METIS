@@ -11,12 +11,13 @@ import {
   withPreprocessor,
 } from 'src/toolbox/hooks'
 import { v4 as generateHash } from 'uuid'
+import ClassList from '../../../../../../shared/toolbox/html/class-lists'
 import { Vector1D, Vector2D } from '../../../../../../shared/toolbox/space'
-import ButtonSvgEngine from '../../user-controls/buttons/v3/engines'
+import ButtonSvgEngine from '../../user-controls/buttons/panels/engines'
 import {
   useButtonSvgLayout,
   useButtonSvgs,
-} from '../../user-controls/buttons/v3/hooks'
+} from '../../user-controls/buttons/panels/hooks'
 import './MissionMap.scss'
 import Scene from './Scene'
 import Grid from './objects/Grid'
@@ -30,6 +31,7 @@ import {
 import Hud from './ui/Hud'
 import PanController from './ui/PanController'
 import Overlay from './ui/overlay'
+import MapPreferences from './ui/overlay/modals/MapPreferences'
 import { TTabBarTab } from './ui/tabs/TabBar'
 
 /* -- CONSTANTS -- */
@@ -174,8 +176,6 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
     onNodeSelect,
     onPrototypeSelect,
     applyNodeTooltip,
-    tabAddEnabled,
-    onTabAdd,
   } = defaultedProps
 
   /* -- STATE -- */
@@ -196,10 +196,13 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
         return newValue
       },
     ),
+    mapPreferencesVisible: useState<boolean>(false),
   }
 
   const [selectedForce, selectForce] = state.selectedForce
   const [tabIndex, setTabIndex] = state.tabIndex
+  const [mapPreferencesVisible, setMapPreferencesVisible] =
+    state.mapPreferencesVisible
 
   /**
    * Counter that is incremented whenever the component
@@ -213,6 +216,12 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
   const [structureChangeKey, setStructureChangeKey] = useState<string>(
     mission.structureChangeKey,
   )
+
+  // A cached node that should be centered on the map,
+  // but can't be until force-selection goes
+  // in effect.
+  const [nodeCenteringTarget, setNodeCenteringTarget] =
+    useState<TMapCompatibleNode | null>(null)
 
   /**
    * Force the component to re-render.
@@ -296,6 +305,36 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
 
     // Set a timeout for the next frame.
     setTimeout(() => panSmoothly(destination), 5)
+  }
+
+  /**
+   * @see {@link TMissionMap_C.zoomSmoothly}
+   */
+  const zoomSmoothly = (destination: Vector1D): void => {
+    // Determine the difference between the camera
+    // zoom and the destination.
+    let difference = destination.x - cameraZoom.x
+    // Determine the change in zoom that
+    // must occur this frame in the transition.
+    let delta = difference * 0.1
+
+    // Enforce cuttoff points so that the transition
+    // doesn't exponentially slow down with no end.
+    if (Math.abs(delta) < 0.003) {
+      cameraZoom.x = destination.x
+    }
+
+    // If the camera is at the destination, end
+    // the loop.
+    if (cameraZoom.x === destination.x) {
+      return
+    }
+
+    // Translate by delta.
+    cameraZoom.translate(delta)
+
+    // Set a timeout for the next frame.
+    setTimeout(() => zoomSmoothly(destination), 5)
   }
 
   /**
@@ -399,6 +438,50 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
     }
   }
 
+  /**
+   * Callback for when the preferences button
+   * is clicked.
+   */
+  const onClickPreferences = (
+    event: React.MouseEvent<Element, MouseEvent>,
+  ): void => {
+    setMapPreferencesVisible(!mapPreferencesVisible)
+  }
+
+  /**
+   * @see {@link TMissionMap_C.centerOnMap}
+   */
+  const centerOnMap = (node: TMapCompatibleNode): void => {
+    if (!elements.root.current) {
+      console.warn('Could not access elements on MissionMap.')
+      return
+    }
+
+    let nodeElement: HTMLDivElement | null =
+      elements.root.current.querySelector(`.MapNode_${node._id}`)
+
+    if (!nodeElement) {
+      console.warn(`Could not find element for node ${node._id}.`)
+      return
+    }
+
+    let rootBoundingBox = elements.root.current.getBoundingClientRect()
+    let nodeBoundingBox = nodeElement.getBoundingClientRect()
+    let rootDomMidpoint = new Vector2D(
+      rootBoundingBox.x + rootBoundingBox.width / 2,
+      rootBoundingBox.y + rootBoundingBox.height / 2,
+    )
+    let nodeDomMidpoint = new Vector2D(
+      nodeBoundingBox.x + nodeBoundingBox.width / 2,
+      nodeBoundingBox.y + nodeBoundingBox.height / 2,
+    )
+    let domDistance = Vector2D.difference(nodeDomMidpoint, rootDomMidpoint)
+    let distance = domDistance.scaleBy(cameraZoom)
+    let destination = cameraPosition.clone().translateBy(distance)
+
+    panSmoothly(destination)
+  }
+
   /* -- HOOKS -- */
 
   // Create an event listener to handle when the mission
@@ -482,10 +565,55 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
     [selectedForce, tabs],
   )
 
+  // Whenever a request is made to center a
+  // node on the map, ensure that it will be
+  // processed properly. If the request is on
+  // a node that is a part of a force that is
+  // in the process of being selected, then the
+  // centering will happen too early. This fixes
+  // that, by caching it so that it is centered
+  // after the selection finishes.
+  useEventListener(mission, 'center-node-on-map', (node) => {
+    // If the node is not a ClientMissionNode or
+    // ClientMissionPrototype, then return.
+    if (
+      !(node instanceof ClientMissionNode) &&
+      !(node instanceof ClientMissionPrototype)
+    ) {
+      return
+    }
+
+    // Get the next-selected force.
+    let nextSelectedForce: ClientMissionForce | null =
+      ClientMission.getForceFromSelection(mission.selection)
+    let forceOfNode: ClientMissionForce | null = null
+
+    // If the node passed is a ClientMissionNode,
+    // get its force.
+    if (node instanceof ClientMissionNode) {
+      forceOfNode = node.force
+    }
+
+    let selectedForceWillChange: boolean =
+      selectedForce?._id !== nextSelectedForce?._id
+    let forceOfNodeIsNextForce: boolean =
+      forceOfNode?._id === nextSelectedForce?._id
+
+    // If the selected force in on the verge of
+    // being updated, and the next-selected force
+    // is the force hosting the node, then cache
+    // the node so that the node-centering can be
+    // processed after the selection is handled.
+    if (selectedForceWillChange && forceOfNodeIsNextForce) {
+      setNodeCenteringTarget(node)
+    }
+  })
+
   // Initialize buttons for the map.
   useButtonSvgs(
     buttonEngine,
     {
+      key: 'zoom-in',
       type: 'button',
       icon: 'zoom-in',
       onClick: onClickZoomIn,
@@ -494,6 +622,7 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
       cursor: 'zoom-in',
     },
     {
+      key: 'zoom-out',
       type: 'button',
       icon: 'zoom-out',
       onClick: onClickZoomOut,
@@ -502,6 +631,14 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
       cursor: 'zoom-out',
     },
     {
+      key: 'preferences',
+      type: 'button',
+      icon: 'gear',
+      onClick: onClickPreferences,
+      description: 'Open map preferences.',
+    },
+    {
+      key: 'question',
       type: 'button',
       icon: 'question',
       description:
@@ -519,7 +656,14 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
       cursor: 'help',
     },
   )
-  useButtonSvgLayout(buttonEngine, '<slot>', 'zoom-in', 'zoom-out', 'question')
+  useButtonSvgLayout(
+    buttonEngine,
+    '<slot>',
+    'zoom-in',
+    'zoom-out',
+    'preferences',
+    'question',
+  )
 
   /**
    * Updates the mission selection when the tab index changes.
@@ -537,6 +681,14 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
       mission.deselect()
     }
   }, [tabIndex])
+
+  // Whenever the selected-force changes, check
+  // for a node-centering target, and center it,
+  // if present.
+  useEffect(() => {
+    if (nodeCenteringTarget) nodeCenteringTarget.requestCenterOnMap()
+    setNodeCenteringTarget(null)
+  }, [selectedForce])
 
   /* -- COMPUTED -- */
 
@@ -572,22 +724,20 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
   /**
    * The class name for the root element.
    */
-  const rootClassName: string = compute(() => {
-    let classList = ['MissionMap']
-
-    // Add the creation mode class if the mission
-    // is in creation mode.
-    if (mission.transformation) {
-      classList.push('Transformation')
-    }
-    // Add has slots class if the mission has
-    // prototype slots.
-    if (mission.prototypeSlots.length > 0) {
-      classList.push('HasSlots')
-    }
-
-    return classList.join(' ')
+  const rootClasses = compute<ClassList>(() => {
+    return new ClassList()
+      .add('MissionMap')
+      .set('Transformation', mission.transformation)
+      .set('HasSlots', mission.prototypeSlots.length > 0)
   })
+
+  /**
+   * Computed properties to include in the context.
+   */
+  const computed: TMissionMap_C = {
+    zoomSmoothly,
+    centerOnMap,
+  }
 
   /* -- RENDER -- */
 
@@ -692,10 +842,15 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
    */
   const overlayJsx = compute((): JSX.Element | null => {
     // If there is no overlay content, return null.
-    if (!overlayContent) return null
+    if (!overlayContent && !mapPreferencesVisible) return null
 
     // Otherwise, render the overlay.
-    return <Overlay>{overlayContent}</Overlay>
+    return (
+      <Overlay>
+        {overlayContent}
+        <MapPreferences />
+      </Overlay>
+    )
   })
 
   // Render root JSX.
@@ -703,11 +858,11 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
     <LocalContextProvider
       context={mapContext}
       defaultedProps={defaultedProps}
-      computed={{}}
+      computed={computed}
       state={state}
       elements={elements}
     >
-      <div className={rootClassName} ref={elements.root} onWheel={onWheel}>
+      <div className={rootClasses.value} ref={elements.root} onWheel={onWheel}>
         <PanController
           cameraPosition={cameraPosition}
           cameraZoom={cameraZoom}
@@ -861,7 +1016,19 @@ export type TMissionMap_P = {
 /**
  * Computed properties for {@link MissionMap} component.
  */
-export type TMissionMap_C = {}
+export type TMissionMap_C = {
+  /**
+   * Updates the camera zoom gradually, providing a
+   * smooth transition for the user.
+   * @param destination The new zoom level.
+   */
+  zoomSmoothly: (destination: Vector1D) => void
+  /**
+   * Centers the camera on the position of the given node.
+   * @param node The node in question.
+   */
+  centerOnMap: (node: TMapCompatibleNode) => void
+}
 
 /**
  * Consolidated, high-level state for `MissionMap`.
@@ -875,6 +1042,11 @@ export type TMissionMap_S = {
    * The currently selected force.
    */
   selectedForce: TReactState<ClientMissionForce | null>
+  /**
+   * Whether the map preferences are currently being
+   * displayed to the user.
+   */
+  mapPreferencesVisible: TReactState<boolean>
 }
 
 /**

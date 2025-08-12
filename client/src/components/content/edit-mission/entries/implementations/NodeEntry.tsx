@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { TMetisClientComponents } from 'src'
 import List from 'src/components/content/data/lists/List'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
+import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
 import If from 'src/components/content/util/If'
 import { useGlobalContext } from 'src/context/global'
 import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
-import { usePostInitEffect } from 'src/toolbox/hooks'
+import { useObjectFormSync, usePostInitEffect } from 'src/toolbox/hooks'
 import MissionComponent from '../../../../../../../shared/missions/component'
 import { TNonEmptyArray } from '../../../../../../../shared/toolbox/arrays'
 import Prompt from '../../../communication/Prompt'
@@ -37,19 +37,42 @@ export default function NodeEntry({
 
   /* -- STATE -- */
 
-  const [name, setName] = useState<string>(node.name)
-  const [color, setColor] = useState<string>(node.color)
-  const [description, setDescription] = useState<string>(node.description)
-  const [preExecutionText, setPreExecutionText] = useState<string>(
-    node.preExecutionText,
+  const nodeState = useObjectFormSync(
+    node,
+    [
+      'name',
+      'description',
+      'color',
+      'preExecutionText',
+      'executable',
+      'device',
+      'exclude',
+      'initiallyBlocked',
+    ],
+    {
+      onChange: () => {
+        // On the mission page, the initial block
+        // state should be reflected actively on
+        // the mission map to aid the designer
+        // in visualizing the mission.
+        node.blocked = node.initiallyBlocked
+        onChange(node)
+      },
+    },
   )
-  const [executable, setExecutable] = useState<boolean>(node.executable)
-  const [device, setDevice] = useState<boolean>(node.device)
-  const [exclude, setExclude] = useState<boolean>(node.exclude)
+  const [name, setName] = nodeState.name
+  const [description, setDescription] = nodeState.description
+  const [color, setColor] = nodeState.color
+  const [preExecutionText, setPreExecutionText] = nodeState.preExecutionText
+  const [executable, setExecutable] = nodeState.executable
+  const [device, setDevice] = nodeState.device
+  const [exclude, setExclude] = nodeState.exclude
+  const [initiallyBlocked, setInitiallyBlocked] = nodeState.initiallyBlocked
   const [applyColorFill, setApplyColorFill] = useState<boolean>(false)
   const svgEngine = useButtonSvgEngine({
     elements: [
       {
+        key: 'divider',
         type: 'button',
         icon: 'divider',
         description: compute(() => {
@@ -196,7 +219,7 @@ export default function NodeEntry({
    */
   const createAction = () => {
     // Create a new action object.
-    let newAction: ClientMissionAction = new ClientMissionAction(node)
+    let newAction = ClientMissionAction.create(node)
     // Update the action stored in the state.
     mission.select(newAction)
     // Add the action to the node.
@@ -216,10 +239,8 @@ export default function NodeEntry({
       // selected node does not have at least one
       // action then it will auto-generate one for
       // that node.
-      let newAction: ClientMissionAction = new ClientMissionAction(node)
-
+      let newAction = ClientMissionAction.create(node)
       node.actions.set(newAction._id, newAction)
-
       notify(
         `Auto-generated an action for ${node.name} because it is an executable node with no actions to execute.`,
       )
@@ -238,6 +259,7 @@ export default function NodeEntry({
         setValue={setName}
         defaultValue={ClientMissionNode.DEFAULT_PROPERTIES.name}
         maxLength={ClientMissionNode.MAX_NAME_LENGTH}
+        tooltipDescription='General title for the node, which will be displayed on the node itself in the mission map.'
         key={`${node._id}_name`}
       />
       <DetailColorSelector
@@ -248,6 +270,7 @@ export default function NodeEntry({
         value={color}
         setValue={setColor}
         buttons={colorButtons}
+        tooltipDescription='This applies a border color to the node, which can be used to visually distinguish it from other nodes.'
         key={`${node._id}_color`}
       />
       <DetailLargeString
@@ -257,6 +280,7 @@ export default function NodeEntry({
         value={description}
         setValue={setDescription}
         placeholder='Enter description...'
+        tooltipDescription='This is general text used to describe this node and provide additional context to the user.'
         key={`${node._id}_description`}
       />
       <DetailLargeString
@@ -266,6 +290,7 @@ export default function NodeEntry({
         value={preExecutionText}
         setValue={setPreExecutionText}
         placeholder='Enter text...'
+        tooltipDescription='This text that will be outputted to the force whenever the node is clicked.'
         key={`${node._id}_preExecutionText`}
       />
       <DetailToggle
@@ -273,6 +298,7 @@ export default function NodeEntry({
         label='Executable'
         value={executable}
         setValue={setExecutable}
+        tooltipDescription='If enabled, this node can host actions which can be executed on the node. This will disable the default click to open behavior of the node.'
         key={`${node._id}_executable`}
       />
       <DetailToggle
@@ -281,7 +307,18 @@ export default function NodeEntry({
         value={device}
         setValue={setDevice}
         lockState={deviceLockState}
+        tooltipDescription={
+          'Purely visual. If enabled, a device icon will be shown on the node instead of a lightning bolt.'
+        }
         key={`${node._id}_device`}
+      />
+      <DetailToggle
+        fieldType='required'
+        label='Initially Blocked'
+        value={initiallyBlocked}
+        setValue={setInitiallyBlocked}
+        tooltipDescription='If enabled, this node will be blocked by default when the mission starts. It can only then be unblocked by an effect targeting this node.'
+        key={`${node._id}_initiallyBlocked`}
       />
       {/* -- ACTIONS -- */}
       <If condition={node.executable}>
@@ -346,6 +383,7 @@ export default function NodeEntry({
                 break
             }
           }}
+          key={node.actions.size}
         />
       </If>
     </Entry>

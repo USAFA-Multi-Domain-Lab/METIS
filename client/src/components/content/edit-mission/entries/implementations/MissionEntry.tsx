@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
-import ButtonSvgPanel from 'src/components/content/user-controls/buttons/v3/ButtonSvgPanel'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
+import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
 import If from 'src/components/content/util/If'
 import { useMissionPageContext } from 'src/components/pages/missions/MissionPage'
 import { useGlobalContext } from 'src/context/global'
@@ -10,6 +10,7 @@ import { ClientTargetEnvironment } from 'src/target-environments'
 import {
   useMountHandler,
   usePostInitEffect,
+  useRequireLogin,
   useUnmountHandler,
 } from 'src/toolbox/hooks'
 import MissionComponent, {
@@ -37,7 +38,8 @@ export default function MissionEntry({
 
   const globalContext = useGlobalContext()
   const { prompt } = globalContext.actions
-
+  const { login } = useRequireLogin()
+  const { user } = login
   const { state } = useMissionPageContext()
   const [checkForDefects, setCheckForDefects] = state.checkForDefects
   const [defects, setDefects] = state.defects
@@ -48,6 +50,7 @@ export default function MissionEntry({
   const warningButtonEngine = useButtonSvgEngine({
     elements: [
       {
+        key: 'warning-transparent',
         type: 'button',
         icon: 'warning-transparent',
         cursor: 'help',
@@ -115,6 +118,12 @@ export default function MissionEntry({
       onChange(component)
     } else {
       mission.select(component)
+
+      // If configured, pan to the node associated
+      // with the defect, assuming there is one.
+      if (user.preferences.missionMap.panOnDefectSelection) {
+        mission.requestFocusOnMap(component)
+      }
     }
   }
 

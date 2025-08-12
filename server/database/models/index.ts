@@ -22,7 +22,8 @@ export const buildToJson = <
 /**
  * Adds a pre-hook to the given schema to exclude deleted documents
  * from the results of find queries. This only applies to schemas that
- * utilize the `TRecoverableDoc` interface.
+ * utilize the `TRecoverableDoc` interface. The `includeDeleted` option
+ * can be set to true on the query to override this behavior.
  * @param schema The schema to which the pre-hook will be added.
  */
 export const excludeDeletedForFinds = <
@@ -33,24 +34,66 @@ export const excludeDeletedForFinds = <
   schema.pre(
     ['find', 'findOne', 'findOneAndUpdate', 'updateOne'],
     function (next) {
+      // Abort if the includeDeleted option is set to true.
       const { includeDeleted = false } = this.getOptions()
+      if (includeDeleted) return next()
 
-      // If includeDeleted is false, filter out deleted documents
-      // from the query.
-      if (!includeDeleted) {
-        this.where({ deleted: false })
+      // Apply condition to exclude deleted documents.
+      this.where({ deleted: false })
+
+      return next()
+    },
+  )
+}
+
+/**
+ * Adds a pre-hook to the given query to exclude properties
+ * that should not be exposed to the client. This behavior can
+ * be overridden by setting the `includeSensitive` option
+ * to true on the query.
+ * @param schema The schema to which the pre-hook will be added.
+ * @param additionalFields Additional fields to exclude from the query,
+ * besides the default `deleted` and `__v` fields.
+ */
+export const excludeSensitiveForFinds = <
+  TSchema extends Schema<TMetisDoc<any>, Model<TMetisDoc<any>>>,
+>(
+  schema: TSchema,
+  additionalFields: string[] = [],
+): void => {
+  schema.pre(
+    ['find', 'findOne', 'findOneAndUpdate', 'updateOne'],
+    function (next) {
+      // Abort if sensitive data is marked as
+      // needing to be included.
+      const { includeSensitive = false } = this.getOptions()
+      if (includeSensitive) return next()
+
+      // Get projection.
+      let projection = this.projection()
+
+      // Create if does not exist.
+      if (projection === undefined) {
+        projection = {}
       }
 
-      // Default projection logic
-      let projection = this.projection() ?? {}
-      if (Object.keys(projection).length === 0) {
-        projection = {
-          deleted: 0,
-          __v: 0,
-        }
+      // If inclusion exists the projection, then
+      // there is no need to apply exclusion projection.
+      if (Object.values(projection).some((value) => value === 1)) {
+        return next()
       }
 
+      // Apply projections.
+      projection.deleted = 0
+      projection.__v = 0
+
+      for (const field of additionalFields) {
+        projection[field] = 0
+      }
+
+      // Set projection.
       this.projection(projection)
+
       return next()
     },
   )
@@ -71,11 +114,17 @@ export const populateCreatedByIfFlagged = <
 ) => {
   // Get options and filter passed to the query.
   const { populateCreatedBy = true } = query.getOptions()
+  const projection = query.projection()
+  const createdBySelected = !projection || projection.createdBy === 1
 
   // If the query isn't recursive and createdBy is
   // marked to be populated, then populate it.
-  if (populateCreatedBy) {
-    query.populate({ path: 'createdBy', options: { populateCreatedBy: false } })
+  if (populateCreatedBy && createdBySelected) {
+    query.populate({
+      path: 'createdBy',
+      select: '-preferences -password -expressPermissionIds',
+      options: { populateCreatedBy: false },
+    })
   }
 }
 
@@ -100,7 +149,11 @@ export const ensureNoNullCreatedBy = async <TDoc extends TMetisDoc>(
 
   // Fetch unpopulated createdBy only.
   const unpopulated = await model
-    .findOne({ _id: doc._id }, { createdBy: 1 }, { populateCreatedBy: false })
+    .findOne(
+      { _id: doc._id },
+      { createdBy: 1 },
+      { populateCreatedBy: false, includeDeleted: true },
+    )
     .lean() // lean gives raw JS object
 
   if (!unpopulated) {

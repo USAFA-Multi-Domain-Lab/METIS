@@ -78,7 +78,8 @@ export default function ExecOption({ action, session, select }: TExecOption_P) {
           `**Success Chance:** ${successChanceFormatted}\n` +
           `**Time:** ${processTimeFormatted}\n` +
           `**Cost:** ${resourceCostFormatted}\n` +
-          `**Opens Node:** ${opensNodeFormatted}`
+          `**Opens Node:** ${opensNodeFormatted}\n` +
+          `**${StringToolbox.toTitleCase(action.type)}**`
         }
       />
       {action.name}

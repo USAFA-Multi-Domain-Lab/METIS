@@ -3,6 +3,7 @@ import Tooltip from 'src/components/content/communication/Tooltip'
 import ClientMissionAction from 'src/missions/actions'
 import { compute } from 'src/toolbox'
 import { useEventListener } from 'src/toolbox/hooks'
+import StringToolbox from '../../../../../../../../../../shared/toolbox/strings'
 import './ActionProperty.scss'
 
 /**
@@ -69,11 +70,17 @@ export default function ActionProperty<TKey extends keyof ClientMissionAction>({
       case 'opensNodeFormatted':
         icon = 'door'
         break
+      case 'type':
+        icon = action.type === 'repeatable' ? 'repeat' : 'no-repeat'
+        break
       default:
         icon = '_blank'
+        break
     }
 
-    result.backgroundImage = `url(${require(`../../../../../../../../assets/images/icons/${icon}.svg`)})`
+    if (icon !== '_blank') {
+      result.backgroundImage = `url(${require(`../../../../../../../../assets/images/icons/${icon}.svg`)})`
+    }
 
     // Return the style for the icon.
     return result
@@ -92,6 +99,8 @@ export default function ActionProperty<TKey extends keyof ClientMissionAction>({
         return 'Resource Cost'
       case 'opensNodeFormatted':
         return 'Opens Node'
+      case 'type':
+        return StringToolbox.toTitleCase(action.type)
       default:
         return ''
     }

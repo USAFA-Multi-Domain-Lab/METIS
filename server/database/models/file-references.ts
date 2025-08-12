@@ -6,6 +6,7 @@ import {
   buildToJson,
   ensureNoNullCreatedBy,
   excludeDeletedForFinds,
+  excludeSensitiveForFinds,
   populateCreatedByIfFlagged,
 } from '.'
 import { FileReferenceSchema } from './classes'
@@ -94,6 +95,9 @@ fileReferenceSchema.index(
 
 /* -- SCHEMA MIDDLEWARE -- */
 
+// Exclude sensitive information by default from query
+// results.
+excludeSensitiveForFinds(fileReferenceSchema)
 // Prevent deleted files from being returned in queries,
 // unless explicitly requested.
 excludeDeletedForFinds(fileReferenceSchema)

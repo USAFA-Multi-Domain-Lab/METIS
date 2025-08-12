@@ -1,6 +1,5 @@
 import { Request, Response } from 'express-serve-static-core'
 import FileReferenceModel from 'metis/server/database/models/file-references'
-import { StatusError } from 'metis/server/http'
 import { databaseLogger } from 'metis/server/logging'
 import ApiResponse from '../../../library/response'
 
@@ -24,7 +23,7 @@ const deleteFile = async (request: Request, response: Response) => {
   ).exec()
   // If the mission was not found, throw an error.
   if (deletedFileReference === null) {
-    throw new StatusError(`File reference with ID "${_id}" not found.`, 404)
+    return ApiResponse.sendStatus(response, 404)
   }
   // Log the deletion.
   databaseLogger.info(`Deleted file reference with the ID "${_id}".`)

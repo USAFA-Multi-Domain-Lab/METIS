@@ -1,0 +1,74 @@
+@import 'src/assets/styles/config.scss';
+
+.List {
+  .ListItemUpload.ListItemLike {
+    grid-template-columns: 1fr;
+    padding-right: 0;
+
+    .UploadItemContent {
+      pointer-events: none;
+      display: grid;
+      grid-template-columns: 1fr auto auto 1em;
+      column-gap: 1em;
+      position: absolute;
+
+      > * {
+        grid-row: 1 / 2;
+      }
+
+      .UploadProgressBar {
+        // Animation to give the progress bar a conveyor
+        // belt effect.
+        @keyframes upload-animation {
+          from {
+            background-position-x: 0;
+          }
+          to {
+            background-position-x: 80px;
+          }
+        }
+
+        // Disable any mouse events on progress
+        // bar as it's purely visual.
+        pointer-events: none;
+
+        // Hide the progress bar by default.
+        // display: none;
+
+        $color-1: $color-neutral-dark;
+        $color-2: lighten($color-neutral-dark, 5%);
+
+        animation: upload-animation 1500ms linear 0ms infinite;
+        transition: 300ms width ease-out;
+        background-image: linear-gradient(
+          -45deg,
+          $color-1 25%,
+          $color-2 25%,
+          $color-2 50%,
+          $color-1 50%,
+          $color-1 75%,
+          $color-2 75%,
+          $color-2 100%,
+          $color-1 100%
+        );
+        background-size: 80px 80px;
+        grid-column: 1 / -1;
+        height: 1.95em;
+      }
+
+      .ItemName {
+        grid-column: 1 / 2;
+      }
+
+      .ProgressNumeric {
+        pointer-events: all;
+        grid-column: 2 / 3;
+      }
+
+      .ButtonSvgPanel {
+        pointer-events: all;
+        grid-column: 3 / 4;
+      }
+    }
+  }
+}

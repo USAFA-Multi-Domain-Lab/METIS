@@ -70,7 +70,25 @@ export default class ClientMissionNode
     this._exclude = value
     this.force.handleStructureChange()
     this.emitEvent('set-exclude')
-    this.mission.emitEvent('set-node-exclusion', [this])
+    this.mission.emitEvent('set-node-exclusion', this)
+  }
+
+  // Overridden
+  public set blocked(value: boolean) {
+    // Emits a 'set-blocked' event on the node
+    // and all of its descendants.
+    const recursivelyEmitEvent = (cursor: ClientMissionNode = this) => {
+      cursor.emitEvent('set-blocked')
+      cursor.descendants.forEach((descendant) => {
+        recursivelyEmitEvent(descendant)
+      })
+    }
+
+    // Update block status of the node.
+    this._blocked = value
+    // Emit events on the node and all of
+    // its descendants.
+    recursivelyEmitEvent()
   }
 
   /**
@@ -308,7 +326,7 @@ export default class ClientMissionNode
   }
 
   /**
-   * Manages the mission's event listeners and events.
+   * Manages the node's event listeners and events.
    */
   private eventManager: EventManager<TNodeEventMethod>
 
@@ -334,7 +352,7 @@ export default class ClientMissionNode
   // Implemented
   protected importActions(data: TMissionActionJson[]): void {
     data.forEach((datum) => {
-      let action: ClientMissionAction = new ClientMissionAction(this, datum)
+      let action = ClientMissionAction.create(this, datum)
       this.actions.set(action._id, action)
     })
   }
@@ -446,21 +464,6 @@ export default class ClientMissionNode
 
     // Emit event.
     this.emitEvent('output-sent')
-  }
-
-  // Implemented
-  public updateBlockStatus(blocked: boolean): void {
-    // Blocks this node and all of its revealed descendants.
-    const algorithm = (blocked: boolean, node: ClientMissionNode = this) => {
-      node._blocked = blocked
-      node.emitEvent('set-blocked')
-      node.revealedDescendants.forEach((descendant) => {
-        algorithm(blocked, descendant)
-      })
-    }
-
-    // Set the block status.
-    algorithm(blocked)
   }
 
   // Implemented
@@ -585,7 +588,7 @@ export default class ClientMissionNode
       device: this.device,
       actions: [],
       opened: this.opened,
-      blocked: this.blocked,
+      blocked: this._blocked,
       executions: this.executions,
       exclude: this.exclude,
     })
@@ -597,6 +600,12 @@ export default class ClientMissionNode
     })
 
     return duplicatedNode
+  }
+
+  // Implemented
+  public requestCenterOnMap(): void {
+    this.emitEvent('center-on-map')
+    this.mission.emitEvent('center-node-on-map', this)
   }
 
   /* -- static -- */
@@ -673,12 +682,7 @@ export default class ClientMissionNode
 
 /**
  * An event that occurs on a node, which can be listened for.
- * @option 'activity'
- * Triggered when any other event occurs.
- * @option 'exec-state-change'
- * Triggered when the following occurs:
- * - An execution is initiated on the server.
- * - An execution outcome is received from the server.
+ *
  * @option 'request-made'
  * Triggered when the following occurs:
  * - A node is requested to be opened by the client and is awaiting a response from the server.
@@ -690,12 +694,6 @@ export default class ClientMissionNode
  * - An action is requested to be executed by the client and the server fails to execute the action.
  * @option 'open'
  * Triggered when the node is opened.
- * @option 'set-buttons'
- * Triggered when the buttons for the node are set.
- * @option 'set-blocked'
- * Triggered when the following occurs:
- * - The node is blocked.
- * - The node is unblocked.
  * @option 'modify-actions'
  * Triggered when the following occurs:
  * - The success chance of the node's actions are modified.

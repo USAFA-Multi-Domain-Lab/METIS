@@ -78,16 +78,6 @@ export default function MissionApiRoute(): Mocha.Suite {
       }
     })
 
-    it('Getting the environment should return a successful (200) response', async function () {
-      try {
-        let response = await agent.get(`/api/v1/missions/environment/`)
-        expect(response).to.have.status(200)
-      } catch (error: any) {
-        testLogger.error(error)
-        throw error
-      }
-    })
-
     it('Creating a mission with (a) missing property/properties in the body of the request should return a bad request (400) response', async function () {
       try {
         let response = await agent

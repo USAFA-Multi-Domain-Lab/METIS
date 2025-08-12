@@ -502,6 +502,7 @@ export default class ServerMission extends Mission<TMetisServerComponents> {
     this.logDefects(missionJson)
   }
 }
+
 /* ------------------------------ SERVER MISSION TYPES ------------------------------ */
 
 /**

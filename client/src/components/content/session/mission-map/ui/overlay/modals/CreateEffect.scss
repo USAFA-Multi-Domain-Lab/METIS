@@ -6,20 +6,6 @@
       border: 2px solid $color-primary-light;
       background-color: $color-primary;
 
-      .Heading {
-        min-width: 12.5em;
-        user-select: none;
-        line-height: 1.5em;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-      }
-
-      .Close {
-        background: none;
-        padding: 0;
-      }
-
       .Detail {
         grid-column: span 2;
         margin: 0;

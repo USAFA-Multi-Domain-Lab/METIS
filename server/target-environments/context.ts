@@ -1,9 +1,12 @@
+import { TOutputTypeExecution } from 'metis/missions/forces/output'
 import ServerEffect from 'metis/server/missions/effects'
 import ServerMissionNode from 'metis/server/missions/nodes'
 import SessionServer from 'metis/server/sessions'
 import ServerSessionMember from 'metis/server/sessions/members'
 import { AnyObject } from 'metis/toolbox/objects'
 import ServerMissionAction from '../missions/actions'
+import ServerActionExecution from '../missions/actions/executions'
+import ServerExecutionOutcome from '../missions/actions/outcomes'
 import ServerMissionFile from '../missions/files'
 import ServerMissionForce from '../missions/forces'
 
@@ -143,18 +146,47 @@ export default class TargetEnvContext {
   }
 
   /**
+   * The execution for the current context.
+   */
+  private readonly execution: ServerActionExecution
+
+  /**
+   * The ID of the execution for the current context.
+   */
+  private get executionId() {
+    return this.execution._id
+  }
+
+  /**
+   * The outcome of the execution that triggered the effect.
+   */
+  private get outcome(): ServerExecutionOutcome | null {
+    return this.execution.outcome
+  }
+
+  /**
+   * The ID of the outcome for the current context.
+   */
+  private get outcomeId() {
+    return this.outcome?._id
+  }
+
+  /**
    * @param effect The effect for the current context.
    * @param user The user that triggered the effect.
    * @param session The session for the current context.
+   * @param execution The execution for the current context.
    */
   public constructor(
     effect: ServerEffect,
     member: ServerSessionMember,
     session: SessionServer,
+    execution: ServerActionExecution,
   ) {
     this.effect = effect
     this.member = member
     this.session = session
+    this.execution = execution
   }
 
   /**
@@ -312,15 +344,17 @@ export default class TargetEnvContext {
     { forceKey }: TManipulateForceOptions = {},
   ) => {
     // Parse details.
-    const { force, userId } = this
+    const { force, userId, effect, executionId: sourceExecutionId } = this
     const targetForce = this.determineTargetForce(forceKey)
+    let type: TOutputTypeExecution =
+      effect.trigger === 'failure' ? 'execution-failed' : 'execution-succeeded'
 
     // Create a custom output to send to the output panel.
     this.session.sendOutput(
       targetForce._id,
       force.outputPrefix,
       message,
-      { type: 'custom' },
+      { type, sourceExecutionId },
       { userId },
     )
   }

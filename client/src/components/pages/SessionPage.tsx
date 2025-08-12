@@ -4,7 +4,7 @@ import {
   useGlobalContext,
   useNavigationMiddleware,
 } from 'src/context/global'
-import ClientMission from 'src/missions'
+import ClientMissionFile from 'src/missions/files'
 import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
 import SessionClient from 'src/sessions'
@@ -27,7 +27,7 @@ import ActionExecModal from '../content/session/mission-map/ui/overlay/modals/ac
 import { TTabBarTab } from '../content/session/mission-map/ui/tabs/TabBar'
 import { OutputPanel } from '../content/session/output/'
 import StatusBar from '../content/session/StatusBar'
-import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
+import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
 import If from '../content/util/If'
 import './SessionPage.scss'
 
@@ -36,6 +36,7 @@ import './SessionPage.scss'
  */
 export default function SessionPage({
   session,
+  session: { mission },
   returnPage,
 }: TSessionPage_P): JSX.Element | null {
   /* -- STATE -- */
@@ -59,11 +60,13 @@ export default function SessionPage({
   const navButtonEngine = useButtonSvgEngine({
     elements: [],
   })
+  const mapButtonEngine = useButtonSvgEngine({})
+  const [localFiles, setLocalFiles] = useState<ClientMissionFile[]>(
+    mission.files,
+  )
 
   /* -- VARIABLES -- */
 
-  // The mission for the session.
-  let mission: ClientMission = session.mission
   // Dynamic (default) sizing of the output panel.
   let panel2DefaultSize: number = 400
   // The current aspect ratio of the window.
@@ -87,6 +90,7 @@ export default function SessionPage({
      */
     const addResetSession = (description: string = 'Reset session') => {
       navButtonEngine.add({
+        key: 'reset',
         type: 'button',
         icon: 'reset',
         description,
@@ -101,6 +105,7 @@ export default function SessionPage({
      */
     const addEndSession = (description: string = 'End Session') => {
       navButtonEngine.add({
+        key: 'stop',
         type: 'button',
         icon: 'stop',
         description,
@@ -116,6 +121,7 @@ export default function SessionPage({
      */
     const addQuit = (description: string = 'Quit') => {
       navButtonEngine.add({
+        key: 'quit',
         type: 'button',
         icon: 'quit',
         description,
@@ -155,8 +161,15 @@ export default function SessionPage({
     if (!session.member.isAuthorized('manipulateNodes')) return
 
     // If the node is blocked, notify the user.
-    if (node.blocked) {
+    if (node.blockStatus === 'blocked') {
       notify(`"${node.name}" has been blocked and cannot be accessed.`)
+      return
+    }
+    // If the node is cut-off, notify the user.
+    else if (node.blockStatus === 'cut-off') {
+      notify(
+        `You cannot access "${node.name}" because a node upstream has been blocked.`,
+      )
       return
     }
 
@@ -389,11 +402,16 @@ export default function SessionPage({
 
   /* -- EFFECTS -- */
 
-  // Verify navigation on mount and on session state change.
   useMountHandler((done) => {
     finishLoading()
+
+    // Verify the user is on the right page.
     verifyNavigation.current()
+    // Initialize the navigation bar.
     initializeNavigation()
+    // Hide preferences button on the map.
+    mapButtonEngine.hide('preferences')
+
     done()
   })
 
@@ -459,6 +477,14 @@ export default function SessionPage({
     finishLoading()
     notify('A manager has reset the session.')
   })
+
+  // Update the list of local files when file access
+  // is granted or revoked.
+  useEventListener(
+    mission,
+    ['file-access-granted', 'file-access-revoked'],
+    () => setLocalFiles([...mission.files]),
+  )
 
   // Update the resources remaining state whenever the
   // force changes.
@@ -532,6 +558,7 @@ export default function SessionPage({
               <MissionMap
                 mission={mission}
                 overlayContent={overlayContentJsx}
+                buttonEngine={mapButtonEngine}
                 tabs={mapTabs}
                 showMasterTab={false}
                 onNodeSelect={onNodeSelect}
@@ -570,7 +597,7 @@ export default function SessionPage({
             <PanelView title='Files'>
               <MissionFileList
                 name={'Files'}
-                items={mission.files}
+                items={localFiles}
                 itemsPerPageMin={4}
                 columns={[]}
                 itemButtonIcons={['download']}

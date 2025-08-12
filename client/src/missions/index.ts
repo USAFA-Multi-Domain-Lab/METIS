@@ -1,6 +1,10 @@
-import axios, { AxiosResponse } from 'axios'
+import axios, { AxiosProgressEvent, AxiosResponse } from 'axios'
 import { TMetisClientComponents } from 'src'
 import { TLine_P } from 'src/components/content/session/mission-map/objects/Line'
+import {
+  TMapCompatibleNode,
+  TMapCompatibleNodeEvent,
+} from 'src/components/content/session/mission-map/objects/nodes'
 import { TPrototypeSlot_P } from 'src/components/content/session/mission-map/objects/PrototypeSlot'
 import ClientUser from 'src/users'
 import { v4 as generateHash } from 'uuid'
@@ -141,7 +145,7 @@ export default class ClientMission
   }
   public set transformation(value: MissionTransformation | null) {
     this._transformation = value
-    this.emitEvent('set-transformation', [])
+    this.emitEvent('set-transformation')
     this.handleStructureChange()
   }
 
@@ -374,7 +378,7 @@ export default class ClientMission
     // Handle structure change.
     this.handleStructureChange()
     // Emit event.
-    this.emitEvent('session-reset', [])
+    this.emitEvent('session-reset')
   }
 
   // Implemented
@@ -417,7 +421,7 @@ export default class ClientMission
 
     // Handle event.
     this.handleStructureChange()
-    this.emitEvent('new-prototype', [])
+    this.emitEvent('new-prototype')
 
     // Return the prototype.
     return prototype
@@ -506,7 +510,7 @@ export default class ClientMission
     })
 
     // Emit the structure change event.
-    this.emitEvent('structure-change', [])
+    this.emitEvent('structure-change')
   }
 
   // Implemented
@@ -992,7 +996,7 @@ export default class ClientMission
 
     this._selection = selection
 
-    this.emitEvent('selection', [])
+    this.emitEvent('selection')
 
     // If there is a transformation, clear it.
     if (this.transformation) this.transformation = null
@@ -1004,7 +1008,7 @@ export default class ClientMission
    */
   public deselect(): void {
     this._selection = this
-    this.emitEvent('selection', [])
+    this.emitEvent('selection')
 
     // If there is a transformation, clear it.
     if (this.transformation) this.transformation = null
@@ -1026,6 +1030,56 @@ export default class ClientMission
 
     // If there is a transformation, clear it.
     if (this.transformation) this.transformation = null
+  }
+
+  /**
+   * Centers the given component on the map,
+   * if it is a node or prototype, or if it
+   * is hosted by a node or prototype.
+   * @param component
+   * @note This is contigent on the mission being
+   * used in a mission map component.
+   * @throws If the component is not part of the mission.
+   * @see {@link MissionMap}
+   */
+  public requestFocusOnMap(component: MissionComponent<any, any>): void {
+    // If the component is not part of the mission,
+    // throw an error.
+    if (!this.has(component)) {
+      throw new Error('The given component is not part of the mission.')
+    }
+
+    // Determine a focus, which will be centered on
+    // the map, if present.
+    let focus: TMapCompatibleNode | undefined
+
+    // If the component is a node or prototype,
+    // then the component itself should be the focus.
+    if (
+      component instanceof ClientMissionNode ||
+      component instanceof ClientMissionPrototype
+    ) {
+      focus = component
+    }
+    // If the component contains a single node, that node
+    // should be the focus.
+    else if (
+      'node' in component &&
+      component.node instanceof ClientMissionNode
+    ) {
+      focus = component.node
+    }
+    // If the component contains a single prototype, that
+    // prototype should be the focus.
+    else if (
+      'prototype' in component &&
+      component.prototype instanceof ClientMissionPrototype
+    ) {
+      focus = component.prototype
+    }
+
+    // Center the focus on the map.
+    if (focus) focus.requestCenterOnMap()
   }
 
   /**
@@ -1333,13 +1387,18 @@ export default class ClientMission
   /**
    * Imports missions from .metis files, returns a Promise that resolves with the results of the import.
    * @param files The .metis files to import.
+   * @param onUploadProgress Optional callback for upload progress events.
    * @resolves The result of the import.
    * @rejects The error that occurred during the import.
    */
   public static $import(
     files: FileList | File[],
+    options: TMissionImportOptions = {},
   ): Promise<TMissionImportResult> {
     return new Promise<TMissionImportResult>(async (resolve, reject) => {
+      // Parse options.
+      const { onImportProgress } = options
+
       try {
         const formData = new FormData()
 
@@ -1354,6 +1413,7 @@ export default class ClientMission
           headers: {
             'Content-Type': 'multipart/form-data',
           },
+          onUploadProgress: onImportProgress,
         })
         resolve(result)
       } catch (error) {
@@ -1591,6 +1651,10 @@ type TDuplicateForceInfo = {
  * @option `file-access-revoked'
  * - Triggered when a force is revoked access to a file in the
  *   mission.
+ * @option `center-node-on-map`
+ * - Triggered when a node is requested to be centered on the map.
+ *   This shouldn't be directly emitted by the mission, rather is
+ *   forwarded by a node `center-on-map` event. {@link TMapCompatibleNodeEvent}
  */
 type TMissionEventMethods =
   | 'activity'
@@ -1604,10 +1668,23 @@ type TMissionEventMethods =
   | 'session-reset'
   | 'file-access-granted'
   | 'file-access-revoked'
+  | 'center-node-on-map'
 
 /**
  * The argument(s) used in the event handler for the mission's event manager.
  */
 type TMissionEventArgs = [
-  updatedComponents: MissionComponent<TMetisClientComponents, any>[],
+  ...updatedComponents: MissionComponent<TMetisClientComponents, any>[],
 ]
+
+/**
+ * Options for {@link ClientMission.$import} method.
+ */
+export type TMissionImportOptions = {
+  /**
+   * Called periodically during the import process.
+   * @param event Event containing information concerning the
+   * state of the import as it is progressing.
+   */
+  onImportProgress?: (event: AxiosProgressEvent) => void
+}

@@ -3,7 +3,6 @@ import { useRef, useState } from 'react'
 import { useGlobalContext } from 'src/context/global'
 import ClientFileReference from 'src/files/references'
 import ClientMission from 'src/missions'
-import Notification from 'src/notifications'
 import SessionClient from 'src/sessions'
 import { SessionBasic } from 'src/sessions/basic'
 import { compute } from 'src/toolbox'
@@ -21,10 +20,10 @@ import MissionList from '../content/data/lists/implementations/missions/MissionL
 import SessionList from '../content/data/lists/implementations/SessionList'
 import UserList from '../content/data/lists/implementations/UserList'
 import {
-  LogoutButton,
+  ProfileButton,
   TNavigation_P,
 } from '../content/general-layout/Navigation'
-import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
+import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
 import Auth from '../content/util/Auth'
 import './HomePage.scss'
 
@@ -46,8 +45,15 @@ export default function HomePage(): JSX.Element | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
-  const { beginLoading, finishLoading, handleError, notify, prompt, logout } =
-    globalContext.actions
+  const {
+    beginLoading,
+    finishLoading,
+    handleError,
+    notify,
+    prompt,
+    dismissNotification,
+  } = globalContext.actions
+  const [_, setLoadingProgress] = globalContext.loadingProgress
   const [sessions, setSessions] = useState<SessionBasic[]>([])
   const [missions, setMissions] = useState<ClientMission[]>([])
   const [users, setUsers] = useState<ClientUser[]>([])
@@ -55,7 +61,7 @@ export default function HomePage(): JSX.Element | null {
     [],
   )
   const navButtonEngine = useButtonSvgEngine({
-    elements: [LogoutButton()],
+    elements: [ProfileButton()],
   })
 
   /* -- LOGIN-SPECIFIC LOGIC -- */
@@ -213,7 +219,7 @@ export default function HomePage(): JSX.Element | null {
    * and imported if valid.
    */
   const importMissionFiles = async (files: FileList) => {
-    let validFiles: Array<File> = []
+    let validFiles: File[] = []
     let successfulImportCount = 0
     let invalidContentsCount = 0
     let invalidFileExtensionCount: number = 0
@@ -252,7 +258,7 @@ export default function HomePage(): JSX.Element | null {
         }
         // Notifies of failed uploads.
         if (invalidContentsCount > 0) {
-          let notification: Notification = notify(
+          const notification = notify(
             `${invalidContentsCount} of the files uploaded did not have valid content and therefore ${
               invalidContentsCount === 1 ? 'was' : 'were'
             } rejected.`,
@@ -272,7 +278,8 @@ export default function HomePage(): JSX.Element | null {
                         message += `\`\`\`\n`
                       },
                     )
-                    notification.dismiss()
+                    // Dismiss the notification.
+                    dismissNotification(notification._id)
                     prompt(message, Prompt.AlertChoices)
                   },
                 },
@@ -314,7 +321,13 @@ export default function HomePage(): JSX.Element | null {
 
     // Import the files.
     try {
-      let response = await ClientMission.$import(validFiles)
+      let response = await ClientMission.$import(validFiles, {
+        onImportProgress: (event) => {
+          if (event.total) {
+            setLoadingProgress((event.loaded / event.total) * 100)
+          }
+        },
+      })
       successfulImportCount += response.successfulImportCount
       invalidContentsCount += response.failedImportCount
       invalidContentsErrorMessages = response.failedImportErrorMessages

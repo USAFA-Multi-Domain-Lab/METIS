@@ -314,6 +314,7 @@ export default class ServerUser extends User<TMetisServerComponents> {
       lastName,
       needsPasswordReset,
       expressPermissionIds,
+      preferences,
       createdAt,
       updatedAt,
       createdBy,
@@ -331,6 +332,7 @@ export default class ServerUser extends User<TMetisServerComponents> {
       lastName,
       needsPasswordReset,
       expressPermissions,
+      preferences,
       createdAt,
       updatedAt,
       createdBy,
@@ -367,6 +369,7 @@ export default class ServerUser extends User<TMetisServerComponents> {
       json.lastName,
       json.needsPasswordReset,
       UserPermission.get(json.expressPermissionIds),
+      json.preferences,
       new Date(json.createdAt),
       new Date(json.updatedAt),
       createdBy,
@@ -377,6 +380,10 @@ export default class ServerUser extends User<TMetisServerComponents> {
   /**
    * Creates a new {@link ServerUser} instance used from the
    * JSON data of a `createdBy` field of a document.
+   * @note createdBy will be unpopulated to prevent infinite
+   * population loops.
+   * @note Express permissions and preferences will be excluded
+   * to maintain security and privacy.
    */
   public static fromCreatedByJson(json: TCreatedByJson): ServerUser {
     // Create a new user.
@@ -387,7 +394,8 @@ export default class ServerUser extends User<TMetisServerComponents> {
       json.firstName,
       json.lastName,
       json.needsPasswordReset,
-      UserPermission.get(json.expressPermissionIds),
+      UserPermission.get(User.DEFAULT_PROPERTIES.expressPermissionIds),
+      User.DEFAULT_PROPERTIES.preferences,
       new Date(json.createdAt),
       new Date(json.updatedAt),
       ServerUser.createUnpopulated(json.createdBy, json.createdByUsername),

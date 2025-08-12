@@ -4,7 +4,12 @@ import { AnyObject } from 'metis/toolbox/objects'
 import VersionToolbox from 'metis/toolbox/versions'
 import User from 'metis/users'
 import UserAccess, { TUserAccess } from 'metis/users/accesses'
+import TUserPreferencesJson, {
+  TExistingUserPreferencesJson,
+} from 'metis/users/preferences'
 import { isObjectIdOrHexString } from 'mongoose'
+import { z as zod } from 'zod'
+import { TZodify } from '../connect/middleware/validate'
 
 // ------- GLOBAL VARIABLES ------- //
 
@@ -316,11 +321,57 @@ export class RequestBodyFilters {
     }
   }
 
+  /**
+   * This filters a version included in a request body, ensuring
+   * it matches the expected *.*.* format.
+   * @param bodyKey The key of the property in the request body
+   * @param bodyValue The value of the property in the request body
+   */
   public static VERSION(bodyKey: string, bodyValue: any) {
     if (!VersionToolbox.isValidVersion(bodyValue)) {
       throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
     }
   }
+
+  /**
+   * This filters user preferences included in a request body. Ensuring
+   * the preferences match the expected structure.
+   * @param existing If true, the preferences as well as all nested objects
+   * must have an _id.
+   * @throws An error message or null
+   */
+  public static USER_PREFERENCES =
+    (existing: boolean) => (bodyKey: string, bodyValue: any) => {
+      const preferencesSchema: TZodify<TUserPreferencesJson> = zod
+        .object({
+          _id: zod.string().optional(),
+          missionMap: zod.object({
+            _id: zod.string().optional(),
+            panOnDefectSelection: zod.boolean(),
+          }),
+        })
+        .strict()
+      const existingPreferencesSchema: TZodify<TExistingUserPreferencesJson> =
+        zod
+          .object({
+            _id: zod.string(),
+            missionMap: zod.object({
+              _id: zod.string(),
+              panOnDefectSelection: zod.boolean(),
+            }),
+          })
+          .strict()
+
+      const validationResult = existing
+        ? existingPreferencesSchema.safeParse(bodyValue)
+        : preferencesSchema.safeParse(bodyValue)
+
+      if (!validationResult.success) {
+        throw new Error(
+          invalidRequestBodyPropertyException(bodyKey, bodyValue, true),
+        )
+      }
+    }
 }
 
 // ------- INTERNAL FUNCTIONS ------- //
@@ -793,14 +844,14 @@ export const defineRequests = (
 ) => {
   return (request: Request, response: Response, next: NextFunction): void => {
     try {
-      if (requiredStructures.query) {
+      if (requiredStructures.query || optionalStructures?.query) {
         // If an API route has a defined query with required
         // or optional keys, then validate the query keys and
         // their values
         let sanitizedQuery: AnyObject = validateQueryKeys(
           request.query,
-          requiredStructures.query,
-          optionalStructures ? optionalStructures.query : undefined,
+          requiredStructures?.query ?? {},
+          optionalStructures?.query ?? {},
         )
 
         // Set the request query to the sanitized query
@@ -820,13 +871,13 @@ export const defineRequests = (
         request.params = sanitizedParams
       }
 
-      if (requiredStructures.body) {
+      if (requiredStructures.body || optionalStructures?.body) {
         // If an API route has a defined body with required
         // or optional keys, then validate the body keys and
         // their values
         let sanitizedBody: AnyObject = validateBodyKeys(
           request.body,
-          requiredStructures.body,
+          requiredStructures?.body ?? {},
           optionalStructures?.body ?? {},
         )
 

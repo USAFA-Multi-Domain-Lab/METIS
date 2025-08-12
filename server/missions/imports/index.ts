@@ -8,7 +8,7 @@ import { AnyObject } from 'metis/toolbox/objects'
 import { TCreatedByJson } from 'metis/users'
 import path from 'path'
 import MetisFileStore, { TMulterFile } from '../../files'
-import { databaseLogger } from '../../logging'
+import { databaseLogger, expressLogger } from '../../logging'
 import build_000005 from './builds/build_000005'
 import build_000009 from './builds/build_000009'
 import build_000010 from './builds/build_000010'
@@ -38,6 +38,9 @@ import build_000041 from './builds/build_000041'
 import build_000042 from './builds/build_000042'
 import build_000044 from './builds/build_000044'
 import build_000045 from './builds/build_000045'
+import build_000046 from './builds/build_000046'
+import build_000047 from './builds/build_000047'
+import build_000049 from './builds/build_000049'
 
 /**
  * This class is responsible for executing the import of .metis and .cesar files.
@@ -301,6 +304,9 @@ export default class MissionImport {
     this.processBuild(missionData, 42, /****/ build_000042)
     this.processBuild(missionData, 44, /****/ build_000044)
     this.processBuild(missionData, 45, /****/ build_000045)
+    this.processBuild(missionData, 46, /****/ build_000046)
+    this.processBuild(missionData, 47, /****/ build_000047)
+    this.processBuild(missionData, 49, /****/ build_000049)
   }
 
   /**
@@ -320,12 +326,10 @@ export default class MissionImport {
     for (let missionFile of mission.files as TMissionFileJson[]) {
       // Handle absence of file reference data.
       if (typeof missionFile.reference !== 'object') {
-        return this.handleMissionImportError(
-          sourceFile,
-          new Error(
-            'File reference found in mission import was not populated.',
-          ),
+        expressLogger.warn(
+          `Deleted file-reference found in mission import ("${missionFile.reference}"). This file will not be included in the import.`,
         )
+        continue
       }
 
       // Gather details.

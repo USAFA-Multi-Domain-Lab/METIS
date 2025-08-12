@@ -1,13 +1,15 @@
-import { TButtonSvg_Input } from 'src/components/content/user-controls/buttons/v3/types'
+import { TButtonSvg_Input } from 'src/components/content/user-controls/buttons/panels/types'
 import ClientMission from 'src/missions'
 import ClientActionExecution from 'src/missions/actions/executions'
 import { MetisComponent } from '../../../../../../../../shared/'
 import { TListenerTarget } from '../../../../../../../../shared/events'
+import { TNodeBlockStatus } from '../../../../../../../../shared/missions/nodes'
 import { TWithKey } from '../../../../../../../../shared/toolbox/objects'
 import {
   Vector1D,
   Vector2D,
 } from '../../../../../../../../shared/toolbox/space'
+import MissionMap from '../../MissionMap'
 
 /**
  * A node that can be displayed on the map.
@@ -72,19 +74,51 @@ export type TMapCompatibleNode = MetisComponent &
      */
     get executing(): boolean
     /**
-     * Whether the node has been blocked
-     * from being accessed.
+     * The status of a node being blocked. That is,
+     * whether the node is directly blocked, cut-off
+     * from being accessed because one of its ancestors
+     * is blocked, or unblocked and is accessible.
      */
-    blocked: boolean
+    blockStatus: TNodeBlockStatus
     /**
      * Whether the node is currently excluded
      * from the force it belongs to or not.
      */
     exclude: boolean
+    /**
+     * Requests to center the node on a mission map.
+     * This is contigent, of course, on the node being
+     * used on a mission map component.
+     * @see {@link MissionMap}
+     */
+    requestCenterOnMap(): void
   }
 
 /**
  * Valid events that can be emitted on a node.
+ * @option 'activity'
+ * Triggered when any other event occurs.
+ * @option 'set-buttons'
+ * Triggered when the buttons for the node are set.
+ * @option 'set-blocked'
+ * Triggered when the following occurs:
+ * - The node is blocked.
+ * - The node is unblocked.
+ * @option 'exec-state-change'
+ * Triggered when the following occurs:
+ * - An execution is initiated on the server.
+ * - An execution outcome is received from the server.
+ * @option 'set-exclude'
+ * Triggered when the node is excluded from the force it belongs to.
+ * @option 'set-color'
+ * Triggered when the color of the node is set.
+ * @option 'set-name'
+ * Triggered when the name of the node is set.
+ * @option 'new-icon'
+ * Triggered when the icon of the node is changed.
+ * @option 'center-on-map'
+ * Triggered when the node is requested to be centered on the map,
+ * assuming there is a MissionMap rendering the node.
  */
 export type TMapCompatibleNodeEvent =
   | 'activity'
@@ -96,6 +130,7 @@ export type TMapCompatibleNodeEvent =
   | 'set-color'
   | 'set-name'
   | 'new-icon'
+  | 'center-on-map'
 
 /**
  * Props for `MapNode`.

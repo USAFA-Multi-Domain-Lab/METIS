@@ -7,14 +7,14 @@ import { DefaultPageLayout, TPage_P } from '.'
 import { DetailLocked } from '../content/form/DetailLocked'
 import { DetailString } from '../content/form/DetailString'
 import {
-  LogoutButton,
+  ProfileButton,
   TNavigation_P,
 } from '../content/general-layout/Navigation'
 import {
   ButtonText,
   TButtonTextDisabled,
 } from '../content/user-controls/buttons/ButtonText'
-import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
+import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
 import './UserResetPage.scss'
 
 /**
@@ -37,7 +37,7 @@ export default function UserResetPage(): JSX.Element | null {
   const [password1, setPassword1] = useState<string>('')
   const [password2, setPassword2] = useState<string>('')
   const navButtonEngine = useButtonSvgEngine({
-    elements: [LogoutButton()],
+    elements: [ProfileButton()],
   })
 
   /* -- EFFECTS -- */

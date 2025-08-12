@@ -43,7 +43,7 @@ import PrototypeEntry from '../../content/edit-mission/entries/implementations/P
 import NodeStructuring from '../../content/edit-mission/NodeStructuring'
 import {
   HomeButton,
-  LogoutButton,
+  ProfileButton,
   TNavigation_P,
 } from '../../content/general-layout/Navigation'
 import Panel from '../../content/general-layout/panels/Panel'
@@ -52,8 +52,8 @@ import PanelView from '../../content/general-layout/panels/PanelView'
 import MissionMap from '../../content/session/mission-map/MissionMap'
 import CreateEffect from '../../content/session/mission-map/ui/overlay/modals/CreateEffect'
 import { TTabBarTab } from '../../content/session/mission-map/ui/tabs/TabBar'
-import { useButtonSvgEngine } from '../../content/user-controls/buttons/v3/hooks'
-import { TSvgPanelElement_Input } from '../../content/user-controls/buttons/v3/types'
+import { useButtonSvgEngine } from '../../content/user-controls/buttons/panels/hooks'
+import { TSvgPanelElement_Input } from '../../content/user-controls/buttons/panels/types'
 import './MissionPage.scss'
 
 /**
@@ -110,12 +110,14 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   const state: TMissionPage_S = {
     defects: useState<TMissionComponentDefect[]>([]),
     checkForDefects: useState<boolean>(true),
+    globalFiles: useState<ClientFileReference[]>([]),
+    localFiles: useState<ClientMissionFile[]>([]),
   }
   const [mission, setMission] = useState<ClientMission>(
     ClientMission.createNew(),
   )
-  const [globalFiles, setGlobalFiles] = useState<ClientFileReference[]>([])
-  const [localFiles, setLocalFiles] = useState<ClientMissionFile[]>([])
+  const [globalFiles, setGlobalFiles] = state.globalFiles
+  const [localFiles, setLocalFiles] = state.localFiles
   const selectedForceState = useState<ClientMissionForce | null>(null)
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(
     props.missionId === null ? true : false,
@@ -132,6 +134,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   const navButtonEngine = useButtonSvgEngine({
     elements: [
       {
+        key: 'save',
         type: 'button',
         icon: 'save',
         description: 'Save changes.',
@@ -140,6 +143,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
         onClick: () => save(),
       },
       {
+        key: 'play',
         type: 'button',
         icon: 'play',
         description: 'Play-test mission.',
@@ -150,6 +154,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
         },
       },
       {
+        key: 'launch',
         type: 'button',
         icon: 'launch',
         description: 'Launch mission as a session.',
@@ -160,6 +165,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
         },
       },
       {
+        key: 'download',
         type: 'button',
         icon: 'download',
         description: 'Export mission to .metis file',
@@ -170,6 +176,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
         },
       },
       {
+        key: 'copy',
         type: 'button',
         icon: 'copy',
         description: 'Create a copy of mission',
@@ -180,6 +187,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
         },
       },
       {
+        key: 'remove',
         type: 'button',
         icon: 'remove',
         description: 'Delete mission',
@@ -188,10 +196,10 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
         onClick: async () => await onDeleteRequest(mission),
       },
       HomeButton(),
-      LogoutButton({ middleware: async () => await enforceSavePrompt() }),
+      ProfileButton({ middleware: async () => await enforceSavePrompt() }),
     ],
     options: {
-      layout: ['<slot>', '<divider>', 'home', 'logout'],
+      layout: ['<slot>', '<divider>', 'home', 'profile'],
     },
   })
 
@@ -414,12 +422,14 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
       if (nextNode) {
         nodeSvgEngine.add(
           {
+            key: 'cancel',
             type: 'button',
             icon: 'cancel',
             description: 'Deselect this node (Closes panel view also).',
             onClick: () => mission.select(nextNode!.force),
           },
           {
+            key: 'divider',
             type: 'button',
             icon: 'divider',
             description:
@@ -445,6 +455,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
       if (nextSelection instanceof ClientMissionPrototype) {
         if (mission.transformation) {
           prototypeSvgEngine.add({
+            key: 'cancel',
             type: 'button',
             icon: 'cancel',
             description: 'Cancel action.',
@@ -454,12 +465,14 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
         } else {
           prototypeSvgEngine.add(
             {
+              key: 'cancel',
               type: 'button',
               icon: 'cancel',
               description: 'Deselect this prototype (Closes panel view also).',
               onClick: () => mission.deselect(),
             },
             {
+              key: 'add',
               type: 'button',
               icon: 'add',
               description: 'Create an adjacent prototype on the map.',
@@ -477,6 +490,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
             //   onClick: () => onPrototypeMoveRequest(nextSelection),
             // },
             {
+              key: 'remove',
               type: 'button',
               icon: 'remove',
               description: 'Delete this prototype.',
@@ -513,7 +527,13 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
 
   // Add event listener to watch for a node exclusion
   // request, updating the state accordingly.
-  useEventListener(mission, 'set-node-exclusion', ([node]) => onChange(node))
+  useEventListener(
+    mission,
+    'set-node-exclusion',
+    (component1, ...components) => {
+      if (component1!) onChange(component1, ...components)
+    },
+  )
 
   /* -- FUNCTIONS -- */
 
@@ -601,7 +621,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
       // one action to choose from. If the selected node doesn't
       // have at least one action then it will auto-generate one
       // for that node.
-      let newAction: ClientMissionAction = new ClientMissionAction(selection)
+      let newAction = ClientMissionAction.create(selection)
       selection.actions.set(newAction._id, newAction)
 
       notify(
@@ -917,10 +937,10 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     navigateBack: boolean = false,
   ) => {
     // Extract the node from the action.
-    let node = action.node
+    let { actions } = action.node
 
     // Delete the action if the node has more than 2 actions.
-    if (node.actions.size > 1) {
+    if (actions.size > 1) {
       // Prompt the user to confirm the deletion.
       let { choice } = await prompt(
         `Please confirm the deletion of this action.`,
@@ -930,17 +950,13 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
       if (choice === 'Cancel') return
 
       // Go back to the previous selection.
-      if (navigateBack) {
-        mission.selectBack()
-      }
+      if (navigateBack) mission.selectBack()
 
-      // Extract the node from the action.
-      let { node } = action
       // Remove the action from the node.
-      node.actions.delete(action._id)
+      actions.delete(action._id)
 
       // Allow the user to save the changes.
-      onChange(action)
+      onChange(action, action.node)
     }
   }
 
@@ -1044,6 +1060,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     return mission.forces.map((force) => {
       const buttons: TSvgPanelElement_Input[] = [
         {
+          key: 'copy',
           type: 'button',
           icon: 'copy',
           label: 'Duplicate',
@@ -1051,6 +1068,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
           onClick: () => onDuplicateForceRequest(force._id),
         },
         {
+          key: 'remove',
           type: 'button',
           icon: 'remove',
           label: 'Delete',
@@ -1253,6 +1271,14 @@ export type TMissionPage_S = {
    * components, updating the state with the result.
    */
   checkForDefects: TReactState<boolean>
+  /**
+   * The current list of files available in the store.
+   */
+  globalFiles: TReactState<ClientFileReference[]>
+  /**
+   * The current list of files attached to the mission.
+   */
+  localFiles: TReactState<ClientMissionFile[]>
 }
 
 /**

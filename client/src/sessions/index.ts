@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { TMetisClientComponents } from 'src'
-import ServerConnection from 'src/connect/servers'
+import ServerConnection, { TServerHandler } from 'src/connect/servers'
 import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
 import ClientActionExecution from 'src/missions/actions/executions'
@@ -15,6 +15,7 @@ import {
   TOpenNodeData,
   TResponseEvents,
   TServerEvents,
+  TServerMethod,
 } from '../../../shared/connect/data'
 import {
   TActionExecutionJson,
@@ -42,10 +43,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
    */
   protected server: ServerConnection
 
-  /**
-   * The ID of the member associated with this client connection.
-   */
-  public memberId: ClientSessionMember['_id']
+  private memberId: ClientSessionMember['_id']
 
   /**
    * The session member for this client connection.
@@ -56,7 +54,9 @@ export default class SessionClient extends Session<TMetisClientComponents> {
 
     // Throw an error if the member could not
     // be found in the members JSON passed.
-    if (!member) throw new Error('Member not found in session.')
+    if (!member) {
+      throw new Error('Member not found in session.')
+    }
 
     // Return the member.
     return member
@@ -76,7 +76,9 @@ export default class SessionClient extends Session<TMetisClientComponents> {
     return this.member.roleId
   }
 
-  // todo: Between the time the client joins and this object is constructed, there is possibility that changes have been made in the session. This should be handled.
+  // todo: Between the time the client joins and this object is
+  // todo: constructed, there is possibility that changes have been made
+  // todo: in the session. This should be handled.
   public constructor(
     data: TSessionJson,
     server: ServerConnection,
@@ -120,6 +122,27 @@ export default class SessionClient extends Session<TMetisClientComponents> {
     this.memberId = memberId
     this._state = state
 
+    this.listeners = [
+      ['session-started', this.onStart],
+      ['session-ended', this.onEnd],
+      ['session-reset', this.onReset],
+      ['session-config-updated', this.onConfigUpdate],
+      ['session-members-updated', this.onUsersUpdated],
+      ['force-assigned', this.onForceAssigned],
+      ['role-assigned', this.onRoleAssigned],
+      ['node-opened', this.onNodeOpenedResponse],
+      ['action-execution-initiated', this.onActionExecutionInitiated],
+      ['action-execution-completed', this.onActionExecutionCompleted],
+      ['modifier-enacted', this.onModifierEnacted],
+      ['send-output', this.onSendOutput],
+      ['output-sent', this.onOutputSent],
+      ['kicked', this.onKicked],
+      ['banned', this.onBanned],
+      ['dismissed', this.onDismissed],
+      ['session-destroyed', this.onDestroyed],
+      ['session-quit', this.onQuit],
+    ]
+
     // Add listeners to detect events that are
     // emitted to the client.
     this.addListeners()
@@ -153,49 +176,26 @@ export default class SessionClient extends Session<TMetisClientComponents> {
   }
 
   /**
+   * Cache for event listeners added by this SessionClient instance.
+   */
+  private listeners: [TServerMethod, TServerHandler<any>][]
+
+  /**
    * Creates session-specific listeners.
    */
   private addListeners(): void {
-    this.server.addEventListener('session-started', this.onStart)
-    this.server.addEventListener('session-ended', this.onEnd)
-    this.server.addEventListener('session-reset', this.onReset)
-    this.server.addEventListener('session-config-updated', this.onConfigUpdate)
-    this.server.addEventListener('session-members-updated', this.onUsersUpdated)
-    this.server.addEventListener('force-assigned', this.onForceAssigned)
-    this.server.addEventListener('role-assigned', this.onRoleAssigned)
-    this.server.addEventListener('node-opened', this.onNodeOpenedResponse)
-    this.server.addEventListener(
-      'action-execution-initiated',
-      this.onActionExecutionInitiated,
-    )
-    this.server.addEventListener(
-      'action-execution-completed',
-      this.onActionExecutionCompleted,
-    )
-    this.server.addEventListener('modifier-enacted', this.onModifierEnacted)
-    this.server.addEventListener('send-output', this.onSendOutput)
-    this.server.addEventListener('output-sent', this.onOutputSent)
+    this.listeners.forEach(([event, handler]) => {
+      this.server.addEventListener(event, handler)
+    })
   }
 
   /**
    * Removes session-specific listeners.
    */
   private removeListeners(): void {
-    this.server.clearEventListeners([
-      'session-started',
-      'session-ended',
-      'session-reset',
-      'session-config-updated',
-      'session-members-updated',
-      'force-assigned',
-      'role-assigned',
-      'node-opened',
-      'action-execution-initiated',
-      'action-execution-completed',
-      'modifier-enacted',
-      'send-output',
-      'output-sent',
-    ])
+    this.listeners.forEach(([event, handler]) => {
+      this.server.removeEventListener(event, handler)
+    })
   }
 
   // Implemented
@@ -287,7 +287,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
         // request.
         onResponse: (event) => {
           if (event.method === 'node-opened') {
-            this.mission.emitEvent('autopan', [])
+            this.mission.emitEvent('autopan')
           }
 
           if (event.method === 'error') {
@@ -428,8 +428,6 @@ export default class SessionClient extends Session<TMetisClientComponents> {
         onResponse: (event) => {
           switch (event.method) {
             case 'session-quit':
-              this.removeListeners()
-              this.server.clearUnfulfilledRequests()
               resolve()
               break
             case 'error':
@@ -860,7 +858,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
     // Find the node, given the ID.
     let node = this.mission.getNodeById(nodeId)
     // Handle the blocking and unblocking of the node.
-    node?.updateBlockStatus(blocked)
+    if (node) node.blocked = blocked
   }
 
   /**
@@ -981,6 +979,15 @@ export default class SessionClient extends Session<TMetisClientComponents> {
   }
 
   /**
+   * Handles clean-up when a session is quitted, ended,
+   * or destroyed.
+   */
+  private cleanUp(): void {
+    this.removeListeners()
+    this.server.clearUnfulfilledRequests()
+  }
+
+  /**
    * Handles when the session is started.
    * @param event The event emitted by the server.
    */
@@ -994,6 +1001,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
    */
   private onEnd = (): void => {
     this._state = 'ended'
+    this.cleanUp()
   }
 
   /**
@@ -1002,6 +1010,46 @@ export default class SessionClient extends Session<TMetisClientComponents> {
    */
   private onReset = (event: TResponseEvents['session-reset']): void => {
     this.importStartData(event)
+  }
+
+  /**
+   * Handles when the member is kicked from the session.
+   */
+  private onKicked = (event: TServerEvents['kicked']): void => {
+    if (event.data.memberId === this.memberId) {
+      this.cleanUp()
+    }
+  }
+
+  /**
+   * Handles when the member is banned from the session.
+   */
+  private onBanned = (event: TServerEvents['banned']): void => {
+    if (event.data.memberId === this.memberId) {
+      this.cleanUp()
+    }
+  }
+
+  /**
+   * Handles when the member is dismissed from the session.
+   */
+  private onDismissed = (event: TServerEvents['dismissed']): void => {
+    this.cleanUp()
+  }
+
+  /**
+   * Handles when the session is destroyed.
+   */
+  private onDestroyed = (event: TServerEvents['session-destroyed']): void => {
+    this._state = 'ended'
+    this.cleanUp()
+  }
+
+  /**
+   * Handles when the member quits the session.
+   */
+  private onQuit = (event: TServerEvents['session-quit']): void => {
+    this.cleanUp()
   }
 
   /**

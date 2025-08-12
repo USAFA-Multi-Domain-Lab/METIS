@@ -193,16 +193,39 @@ export default abstract class MissionNode<
   }
 
   /**
-   * Whether or not this node is blocked.
+   * Whether the node is blocked by default
+   * when the mission starts.
+   */
+  public initiallyBlocked: boolean
+
+  /**
+   * @see {@link blocked}
    */
   protected _blocked: boolean
   /**
-   * Whether or not this node is blocked.
+   * Whether a node is directly blocked.
    */
   public get blocked(): boolean {
-    return this.ancestors.some((ancestor) => ancestor.blocked)
-      ? true
-      : this._blocked
+    return this._blocked
+  }
+  public set blocked(value: boolean) {
+    this._blocked = value
+  }
+
+  /**
+   * The status of a node being blocked. That is,
+   * whether the node is directly blocked, cut-off
+   * from being accessed because one of its ancestors
+   * is blocked, or unblocked and is accessible.
+   */
+  public get blockStatus(): TNodeBlockStatus {
+    if (this._blocked) {
+      return 'blocked'
+    } else if (this.ancestors.some((ancestor) => ancestor._blocked)) {
+      return 'cut-off'
+    } else {
+      return 'unblocked'
+    }
   }
 
   /**
@@ -574,7 +597,9 @@ export default abstract class MissionNode<
     this.localKey = data.localKey ?? force.generateNodeKey()
     this._executions = []
     this._opened = data.opened ?? MissionNode.DEFAULT_PROPERTIES.opened
-    this._blocked = data.blocked ?? MissionNode.DEFAULT_PROPERTIES.blocked
+    this.initiallyBlocked =
+      data.initiallyBlocked ?? MissionNode.DEFAULT_PROPERTIES.initiallyBlocked
+    this._blocked = data.blocked ?? this.initiallyBlocked
     this.position = new Vector2D(0, 0)
 
     // Attempt to get prototype from mission.
@@ -630,6 +655,7 @@ export default abstract class MissionNode<
         action.toJson(options),
       ),
       exclude: this.exclude,
+      initiallyBlocked: this.initiallyBlocked,
       localKey: this.localKey,
     }
 
@@ -646,7 +672,7 @@ export default abstract class MissionNode<
         let sessionJson: TMissionNodeSessionJson = {
           opened: this.opened,
           executions: executionJson,
-          blocked: this.blocked,
+          blocked: this._blocked,
         }
 
         // Join session-specific JSON with base JSON.
@@ -691,12 +717,6 @@ export default abstract class MissionNode<
     newKey++
     return String(newKey)
   }
-
-  /**
-   * Handles the blocking and unblocking of the node.
-   * @param blocked Whether the node is blocked or unblocked.
-   */
-  public abstract updateBlockStatus(blocked: boolean): void
 
   /**
    * Modifies the chance of success for all the node's
@@ -760,6 +780,7 @@ export default abstract class MissionNode<
       blocked: false,
       executions: [],
       exclude: false,
+      initiallyBlocked: false,
     }
   }
 }
@@ -774,6 +795,10 @@ export interface TMissionNodeJsonBase {
    * The ID for the node.
    */
   _id: string
+  /**
+   * A key for the node, used to identify it within the force.
+   */
+  localKey: string
   /**
    * The ID of the prototype node that the node is based on.
    */
@@ -813,9 +838,10 @@ export interface TMissionNodeJsonBase {
    */
   exclude: boolean
   /**
-   * A key for the node, used to identify it within the force.
+   * Whether the node is blocked by default
+   * when the mission starts.
    */
-  localKey: string
+  initiallyBlocked: boolean
 }
 
 /**
@@ -870,3 +896,12 @@ export interface INodeOpenOptions {}
  * Options for the `MissionNode.loadOutcome` method.
  */
 export interface ILoadOutcomeOptions {}
+
+/**
+ * The status of a node in regards to node blocking.
+ * @option 'blocked' - The node is directly blocked.
+ * @option 'cut-off' - The node is blocked by proxy because
+ * one of its ancestors is blocked.
+ * @option 'unblocked' - The node is not blocked in any way.
+ */
+export type TNodeBlockStatus = 'blocked' | 'cut-off' | 'unblocked'

@@ -3,9 +3,8 @@ import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
 import MissionComponent from '../../../../../../shared/missions/component'
 import ClassList from '../../../../../../shared/toolbox/html/class-lists'
-import SvgButton from '../../user-controls/buttons/v3/button-svg'
-import ButtonSvgPanel from '../../user-controls/buttons/v3/ButtonSvgPanel'
-import ButtonSvgEngine from '../../user-controls/buttons/v3/engines'
+import ButtonSvgPanel from '../../user-controls/buttons/panels/ButtonSvgPanel'
+import ButtonSvgEngine from '../../user-controls/buttons/panels/engines'
 import './Entry.scss'
 import EntryNavigation from './navigation/EntryNavigation'
 
@@ -36,12 +35,12 @@ export default function <
     const authorizedSvgButtons = svgEngines.flatMap(({ panelElements }) =>
       panelElements.filter(
         (element) =>
-          element instanceof SvgButton && isAuthorized(element.permissions),
+          element.type === 'button' && isAuthorized(element.permissions),
       ),
     )
     // Check to see if there are any other SVG elements that are not buttons.
     const otherSvgElements = svgEngines.flatMap(({ panelElements }) =>
-      panelElements.filter((element) => !(element instanceof SvgButton)),
+      panelElements.filter((element) => !(element.type === 'button')),
     )
 
     // If there are no SVG elements, hide the entry bottom.

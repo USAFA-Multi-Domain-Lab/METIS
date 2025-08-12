@@ -4,7 +4,12 @@ import ServerUser from 'metis/server/users'
 import StringToolbox from 'metis/toolbox/strings'
 import { TUserJson } from 'metis/users'
 import { model, ProjectionType, Schema } from 'mongoose'
-import { ensureNoNullCreatedBy, populateCreatedByIfFlagged } from '.'
+import {
+  ensureNoNullCreatedBy,
+  excludeDeletedForFinds,
+  excludeSensitiveForFinds,
+  populateCreatedByIfFlagged,
+} from '.'
 import { StatusError } from '../../http'
 import { databaseLogger } from '../../logging'
 import { UserSchema } from './classes'
@@ -15,6 +20,7 @@ import type {
   TUserDoc,
   TUserModel,
   TUserQueryOptions,
+  TUserStaticMethods,
 } from './types'
 
 /* -- CONSTANTS -- */
@@ -63,38 +69,6 @@ const toJson = (doc: TUserDoc, ret: TUserJson, options: any): TUserJson => {
   }
 }
 
-/**
- * Modifies the query to hide deleted users and remove unneeded properties.
- * @param query The query to modify.
- */
-const queryForApiResponse = (query: TPreUserQuery): void => {
-  // Extract options.
-  const { includeDeleted = false } = query.getOptions() as TUserQueryOptions
-  let projection = query.projection()
-
-  // Create if does not exist.
-  if (projection === undefined) projection = {}
-
-  // Check if the projection is empty.
-  let projectionKeys = Object.keys(projection)
-
-  // If the projection is empty, create a default projection.
-  if (projectionKeys.length === 0) {
-    projection = {
-      password: 0,
-      deleted: 0,
-      __v: 0,
-    }
-  }
-
-  // Set projection.
-  query.projection(projection)
-  // Set the collation.
-  query.collation(collation)
-  // Hide deleted users.
-  query.where({ deleted: { $eq: includeDeleted ? true : false } })
-}
-
 /* -- SCHEMA STATIC FUNCTIONS -- */
 
 /**
@@ -111,19 +85,8 @@ const authenticate = async (request: Request): Promise<TUserJson> => {
       // Find the user in the database.
       let userDoc = await UserModel.findOne(
         { username },
-        {
-          username: 1,
-          accessId: 1,
-          expressPermissionIds: 1,
-          firstName: 1,
-          lastName: 1,
-          needsPasswordReset: 1,
-          createdBy: 1,
-          createdByUsername: 1,
-          createdAt: 1,
-          updatedAt: 1,
-          password: 1,
-        },
+        {},
+        { includeSensitive: true },
       ).exec()
       // If the user does not exist, throw an error.
       if (!userDoc) {
@@ -264,15 +227,23 @@ const userSchema = new UserSchema(
       type: String,
       validate: ServerUser.validatePassword,
     },
-    // createdBy: {
-    //   type: Schema.Types.ObjectId,
-    //   ref: 'User',
-    //   required: true,
-    // },
-    // createdByUsername: {
-    //   type: String,
-    //   required: true,
-    // },
+    preferences: {
+      type: {
+        missionMap: {
+          type: {
+            panOnDefectSelection: {
+              type: Boolean,
+              required: true,
+              default: true,
+            },
+          },
+          required: true,
+          default: {},
+        },
+      },
+      required: true,
+      default: {},
+    },
     deleted: { type: Boolean, required: true, default: false },
   },
   {
@@ -305,14 +276,21 @@ userSchema.pre<TUserDoc>('save', async function (next) {
 userSchema.pre<TPreUserQuery>(
   ['find', 'findOne', 'findOneAndUpdate', 'updateOne', 'updateMany'],
   function (next) {
-    // Modify the query.
-    queryForApiResponse(this)
+    // Set the collation.
+    this.collation(collation)
     // Populate createdBy.
     populateCreatedByIfFlagged(this)
     // Call the next middleware.
     return next()
   },
 )
+
+// Exclude sensitive information by default from query
+// results.
+excludeSensitiveForFinds(userSchema, ['password'])
+// Prevent deleted users from being returned in queries,
+// unless explicitly requested.
+excludeDeletedForFinds(userSchema)
 
 // Converts ObjectIds to strings.
 userSchema.post<TPostUserQuery>(
@@ -346,5 +324,8 @@ userSchema.post<TUserDoc>('save', function () {
 /**
  * The mongoose model for a user in the database.
  */
-const UserModel = model<TUser, TUserModel>('User', userSchema)
+const UserModel = model<TUser, TUserModel & TUserStaticMethods>(
+  'User',
+  userSchema,
+)
 export default UserModel

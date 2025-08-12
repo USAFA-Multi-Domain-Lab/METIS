@@ -1,7 +1,7 @@
 // This migration script is responsible for updating
-// various collections to have createdBy and
-// createdByUsername fields populated with the system
-// user.
+// effects to have the patch number included in the
+// targetEnvironmentVersion field, ensuring that
+// versions such as "1.0" are instead "1.0.0".
 
 let dbName = 'metis'
 let patchlessVersionRegex = /^\d+\.\d+$/
@@ -39,7 +39,7 @@ while (cursor_missions.hasNext()) {
     }
   }
 
-  // Update the mission with the new nodeData.
+  // Write changes to database.
   db.missions.updateOne({ _id: mission._id }, { $set: mission })
 }
 

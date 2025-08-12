@@ -10,7 +10,7 @@ import ApiResponse from '../../library/response'
  * @rejects If an error occurs.
  */
 const getFiles = async (request: Request, response: Response) => {
-  const referenceJson = await FileReferenceModel.find({ deleted: false }).exec()
+  const referenceJson = await FileReferenceModel.find().exec()
   return ApiResponse.sendJson(response, referenceJson)
 }
 

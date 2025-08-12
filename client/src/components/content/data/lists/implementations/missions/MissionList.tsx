@@ -19,7 +19,9 @@ export default function MissionList(props: TMissionList_P): JSX.Element | null {
 
   const globalContext = useGlobalContext()
   const { login } = useRequireLogin()
-  const { navigateTo } = globalContext.actions
+  const { navigateTo, beginLoading, finishLoading, notify, handleError } =
+    globalContext.actions
+  const [_, setLoadingProgress] = globalContext.loadingProgress
   const importMissionTrigger = useRef<HTMLInputElement>(null)
 
   /* -- PROPS -- */
@@ -182,6 +184,7 @@ export default function MissionList(props: TMissionList_P): JSX.Element | null {
     },
     onSuccessfulDeletion: () => {},
     onSuccessfulCopy: () => {},
+    onFileDrop: async (incomingFiles: FileList) => {},
   })
   const { onSuccessfulCopy, onSuccessfulDeletion } = defaultedProps
 

@@ -15,7 +15,13 @@ export default function () {
   if (!sourceNode) return null
 
   return (
-    <div className='NodeLocation' onClick={() => selectNode(sourceNode)}>
+    <div
+      className='NodeLocation'
+      onClick={() => {
+        selectNode(sourceNode)
+        sourceNode.requestCenterOnMap()
+      }}
+    >
       <Tooltip
         description={`Generated as a result of interacting with the node called "${sourceNode.name}."`}
       />

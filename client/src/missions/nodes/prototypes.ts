@@ -5,8 +5,14 @@ import {
   TNodeButton,
 } from 'src/components/content/session/mission-map/objects/nodes'
 import ClientMission from '..'
-import { TListenerTargetEmittable } from '../../../../shared/events'
-import { TNodeExecutionState } from '../../../../shared/missions/nodes'
+import {
+  EventManager,
+  TListenerTargetEmittable,
+} from '../../../../shared/events'
+import {
+  TNodeBlockStatus,
+  TNodeExecutionState,
+} from '../../../../shared/missions/nodes'
 import MissionPrototype, {
   TMissionPrototypeJson,
   TMissionPrototypeOptions,
@@ -117,7 +123,7 @@ export default class ClientMissionPrototype
   }
 
   // Implemented
-  public blocked: boolean = false
+  public blockStatus: TNodeBlockStatus = 'unblocked'
 
   // Implemented
   public exclude: boolean = false
@@ -159,6 +165,11 @@ export default class ClientMissionPrototype
   }
 
   /**
+   * Manages the prototype's event listeners and events.
+   */
+  private eventManager: EventManager<TPrototypeEventMethod>
+
+  /**
    * @param mission The mission of which the prototype is a part.
    * @param data The prototype data from which to create the prototype node. Any ommitted values will be set to the default properties defined in MissionPrototype.DEFAULT_PROPERTIES.
    * @param options The options for creating the prototype.
@@ -173,45 +184,22 @@ export default class ClientMissionPrototype
     this.position = new Vector2D(0, 0)
     this.depth = -1
     this._buttons = []
-  }
 
-  /**
-   * Calls the callbacks of listeners for the given event.
-   * @param method The method of the event to emit.
-   */
-  public emitEvent(method: TPrototypeEventMethod): void {
-    // Call any matching listener callbacks
-    // or any activity listener callbacks.
-    for (let [listenerEvent, listenerCallback] of this.listeners) {
-      if (listenerEvent === method || listenerEvent === 'activity') {
-        listenerCallback()
-      }
-    }
-    // If the event is a set-buttons event, call
-    // emit event on the mission level.
-    if (method === 'set-buttons') {
-      this.mission.emitEvent('set-buttons', [])
-    }
+    // Initialize event manager.
+    this.eventManager = new EventManager(this)
+    this.addEventListener = this.eventManager.addEventListener
+    this.removeEventListener = this.eventManager.removeEventListener
+    this.emitEvent = this.eventManager.emitEvent
   }
 
   // Implemented
-  public addEventListener(
-    method: TPrototypeEventMethod,
-    callback: () => void,
-  ): void {
-    this.listeners.push([method, callback])
-  }
+  public emitEvent
 
   // Implemented
-  public removeEventListener(
-    method: TPrototypeEventMethod,
-    callback: () => void,
-  ): void {
-    // Filter out listener.
-    this.listeners = this.listeners.filter(
-      ([m, h]) => m !== method || h !== callback,
-    )
-  }
+  public addEventListener
+
+  // Implemented
+  public removeEventListener
 
   /**
    * Moves the prototype to the given destination, placing it based on
@@ -486,6 +474,12 @@ export default class ClientMissionPrototype
       structureKey: this.structureKey,
       depthPadding: this.depthPadding,
     })
+  }
+
+  // Implemented
+  public requestCenterOnMap(): void {
+    this.emitEvent('center-on-map')
+    this.mission.emitEvent('center-node-on-map', this)
   }
 }
 

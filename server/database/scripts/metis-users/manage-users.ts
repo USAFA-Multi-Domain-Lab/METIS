@@ -1,5 +1,6 @@
 import fs from 'fs'
 import MetisServer from 'metis/server'
+import ServerUser from 'metis/server/users'
 import { TUserJson } from 'metis/users'
 import { accessIds, TUserAccessId } from 'metis/users/accesses'
 import { createInterface } from 'readline/promises'
@@ -35,7 +36,7 @@ const parseUsers = async (data: string) => {
     // Convert the needsPasswordReset value to a boolean.
     const updatedPasswordReset = needsPasswordReset.toLowerCase() === 'true'
 
-    const user: TUserJson = {
+    const user: TUserInsertData = {
       username,
       accessId: accessId as TUserAccessId,
       firstName,
@@ -43,6 +44,8 @@ const parseUsers = async (data: string) => {
       password: hashedPassword,
       needsPasswordReset: updatedPasswordReset,
       expressPermissionIds: [],
+      createdBy: ServerUser.SYSTEM_ID,
+      createdByUsername: ServerUser.SYSTEM_USERNAME,
     }
 
     return user
@@ -149,7 +152,7 @@ const manageUsers = async () => {
 
     if (method === 'create' || method === 'restore') {
       // Parse the data.
-      const users: TUserJson[] = await parseUsers(data)
+      const users: TUserInsertData[] = await parseUsers(data)
       // Connect to the database.
       await connectToDatabase()
 
@@ -216,3 +219,12 @@ const manageUsers = async () => {
 
 // Execute.
 manageUsers()
+
+/**
+ * Type for data that will be used to insert a
+ * new user into the database.
+ */
+type TUserInsertData = Omit<
+  TUserJson,
+  '_id' | 'createdAt' | 'updatedAt' | 'preferences'
+>

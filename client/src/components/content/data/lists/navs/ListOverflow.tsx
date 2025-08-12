@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useButtonMenuEngine } from 'src/components/content/user-controls/buttons/ButtonMenu'
-import ButtonSvgPanel from 'src/components/content/user-controls/buttons/v3/ButtonSvgPanel'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
+import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
 import { useGlobalContext } from 'src/context/global'
 import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
 import { useListContext } from '../List'
@@ -36,6 +36,7 @@ export default function (): JSX.Element | null {
   const buttonEngine = useButtonSvgEngine({
     elements: [
       {
+        key: 'overflow',
         type: 'button',
         icon: 'overflow',
         onClick: () => showOverflowMenu(),

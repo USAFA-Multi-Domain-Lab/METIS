@@ -1,0 +1,51 @@
+@import 'src/assets/styles/config.scss';
+
+.SvgPanelElement.ToggleSvg {
+  display: inline-flex;
+  align-items: center;
+  flex-flow: row nowrap;
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: pointer;
+  transition: 500ms transform, 500ms background-size, 500ms background-position,
+    500ms opacity;
+  font-size: $button-svg-size;
+
+  .ToggleSvgIcon {
+    flex-grow: 0;
+    min-width: 1em;
+    height: 0.96em;
+  }
+
+  .ToggleSvgLabel {
+    display: flex;
+    flex-grow: 1;
+    align-items: center;
+    margin: 0 1em 0 0.4em;
+    height: 100%;
+    font-size: 0.75rem;
+  }
+
+  &.AlwaysShowTooltip {
+    &.Disabled {
+      pointer-events: all !important;
+      cursor: not-allowed;
+    }
+  }
+
+  &.lock:hover {
+    cursor: help;
+    filter: none;
+  }
+
+  &._blank {
+    background: none;
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  &:not(.Disabled):hover {
+    filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(117deg)
+      brightness(200%) contrast(98%);
+  }
+}

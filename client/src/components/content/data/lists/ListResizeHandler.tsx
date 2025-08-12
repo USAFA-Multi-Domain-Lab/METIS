@@ -42,7 +42,7 @@ export default function ListResizeHandler<
     if (!page || !items) return
 
     let pageBoundingBox = page.getBoundingClientRect()
-    let pageY2 = pageBoundingBox.bottom
+    let pageY2 = page.clientHeight + pageBoundingBox.top
     let result = items.children.length
     let blanks = []
 

@@ -1,5 +1,5 @@
 import Prompt from 'src/components/content/communication/Prompt'
-import ButtonSvg from 'src/components/content/user-controls/buttons/v3/ButtonSvg'
+import ButtonSvg from 'src/components/content/user-controls/buttons/panels/elements/ButtonSvg'
 import { useGlobalContext } from 'src/context/global'
 import ClientMission from 'src/missions'
 import SessionClient from 'src/sessions'

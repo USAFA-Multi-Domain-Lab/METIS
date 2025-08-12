@@ -10,7 +10,7 @@ import {
   TGetItemButtonLabel,
   TOnItemButtonClick,
   TOnItemSelection,
-} from '../pages/ListItem'
+} from '../pages/items/ListItem'
 
 /**
  * A component for displaying a list of sessions.

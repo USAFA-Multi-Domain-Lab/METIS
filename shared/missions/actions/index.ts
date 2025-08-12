@@ -1,6 +1,6 @@
-import { v4 as generateHash } from 'uuid'
 import Mission, { TMission } from '..'
 import { TCreateJsonType, TMetisBaseComponents } from '../../'
+import StringToolbox from '../../toolbox/strings'
 import MissionComponent, { TMissionComponentDefect } from '../component'
 import { TEffect, TEffectJson } from '../effects'
 import { TForce } from '../forces'
@@ -38,16 +38,9 @@ export default abstract class MissionAction<
   public description: string
 
   /**
-   * Text sent to the output panel after the action is
-   * executed successfully.
+   * Categorizes an action, defining how it will behave in the mission.
    */
-  public postExecutionSuccessText: string
-
-  /**
-   * Text sent to the output panel after the action is
-   * executed unsuccessfully
-   */
-  public postExecutionFailureText: string
+  public type: TActionType
 
   /**
    * A key for the action, used to identify it within the node.
@@ -212,6 +205,18 @@ export default abstract class MissionAction<
   private _resourceCostOperand: number
 
   /**
+   * The number of times the action has been
+   * executed in the mission.
+   */
+  public get executionCount(): number {
+    let { executions } = this.node
+    let count = executions.filter(
+      (execution) => execution.actionId === this._id,
+    ).length
+    return count
+  }
+
+  /**
    * Whether the associated force has enough resources
    * remaining to perform the action, given the resource
    * cost.
@@ -223,6 +228,32 @@ export default abstract class MissionAction<
       this.resourceCost <= Math.max(this.force.resourcesRemaining, 0) ||
       this.force.allowNegativeResources
     )
+  }
+
+  /**
+   * Whether the action has reached its execution limit and
+   * can no longer be executed.
+   * @note Repeatable actions have no limit, so this will always
+   * return false for them.
+   * @note Single-use actions have a limit of 1 execution, so this
+   * will return true if the action has been executed once.
+   */
+  public get executionLimitReached(): boolean {
+    let { type, executionCount } = this
+
+    switch (type) {
+      case 'repeatable':
+        return false // Repeatable actions have no limit.
+      case 'single-use':
+        // Single-use actions have a limit of 1 execution.
+        return executionCount >= 1
+      default:
+        console.warn(
+          `Unrecognized action type in MissionAction.executionLimitReached: ${type}`,
+        )
+        // If the type is not recognized, default to false.
+        return false
+    }
   }
 
   /**
@@ -242,6 +273,7 @@ export default abstract class MissionAction<
     this.node = node
     this.description =
       data.description ?? MissionAction.DEFAULT_PROPERTIES.description
+    this.type = data.type ?? MissionAction.DEFAULT_PROPERTIES.type
     this._processTime =
       data.processTime ?? MissionAction.DEFAULT_PROPERTIES.processTime
     this.processTimeHidden =
@@ -261,12 +293,6 @@ export default abstract class MissionAction<
       data.opensNode ?? MissionAction.DEFAULT_PROPERTIES.opensNode
     this.opensNodeHidden =
       data.opensNodeHidden ?? MissionAction.DEFAULT_PROPERTIES.opensNodeHidden
-    this.postExecutionSuccessText =
-      data.postExecutionSuccessText ??
-      MissionAction.DEFAULT_PROPERTIES.postExecutionSuccessText
-    this.postExecutionFailureText =
-      data.postExecutionFailureText ??
-      MissionAction.DEFAULT_PROPERTIES.postExecutionFailureText
     this.localKey = data.localKey ?? node.generateActionKey()
     this.effects = this.parseEffects(
       data.effects ?? MissionAction.DEFAULT_PROPERTIES.effects,
@@ -298,6 +324,7 @@ export default abstract class MissionAction<
       _id: this._id,
       name: this.name,
       description: this.description,
+      type: this.type,
       processTime: this._processTime,
       processTimeHidden: this.processTimeHidden,
       successChance: this._successChance,
@@ -306,8 +333,6 @@ export default abstract class MissionAction<
       resourceCostHidden: this.resourceCostHidden,
       opensNode: this.opensNode,
       opensNodeHidden: this.opensNodeHidden,
-      postExecutionSuccessText: this.postExecutionSuccessText,
-      postExecutionFailureText: this.postExecutionFailureText,
       localKey: this.localKey,
       effects: this.effects.map((effect) => effect.toJson()),
     }
@@ -378,6 +403,14 @@ export default abstract class MissionAction<
     newKey++
     return String(newKey)
   }
+
+  /**
+   * The different types available for an action.
+   */
+  public static readonly TYPES: ['repeatable', 'single-use'] & TActionType[] = [
+    'repeatable',
+    'single-use',
+  ]
 
   /**
    * The minimum process time for an action in milliseconds.
@@ -456,9 +489,10 @@ export default abstract class MissionAction<
    */
   public static get DEFAULT_PROPERTIES(): TMissionActionDefaultJson {
     return {
-      _id: generateHash(),
+      _id: StringToolbox.generateRandomId(),
       name: 'New Action',
       description: '',
+      type: 'repeatable',
       processTime: 5000,
       processTimeHidden: false,
       successChance: 0.5,
@@ -467,10 +501,6 @@ export default abstract class MissionAction<
       resourceCostHidden: false,
       opensNode: true,
       opensNodeHidden: false,
-      postExecutionSuccessText:
-        '<p>Enter your successful post-execution message here.</p>',
-      postExecutionFailureText:
-        '<p>Enter your unsuccessful post-execution message here.</p>',
       effects: [],
     }
   }
@@ -531,6 +561,7 @@ const JSON_PROPERTIES_RAW = {
     '_id',
     'name',
     'description',
+    'type',
     'processTime',
     'processTimeHidden',
     'successChance',
@@ -539,8 +570,6 @@ const JSON_PROPERTIES_RAW = {
     'resourceCostHidden',
     'opensNode',
     'opensNodeHidden',
-    'postExecutionSuccessText',
-    'postExecutionFailureText',
     'localKey',
   ],
   indirect: [
@@ -585,3 +614,10 @@ export type TMissionActionJson = TCreateJsonType<
  * @inheritdoc TMissionActionJson
  */
 type TMissionActionDefaultJson = Required<Omit<TMissionActionJson, 'localKey'>>
+
+/**
+ * Categorizes an action, defining how it will behave in the mission.
+ * @option 'repeatable' - The action can be executed multiple times.
+ * @option 'single-use' - The action can only be executed once.
+ */
+export type TActionType = 'repeatable' | 'single-use'

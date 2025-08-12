@@ -4,7 +4,7 @@
 
 .Scene {
   .MapNode {
-    $text-fade-transition: background-color 300ms ease-in-out;
+    $background-transition: background-color 500ms ease-in-out;
     $pending-transition: opacity 200ms ease-in-out;
 
     border-color: $color-primary-light;
@@ -28,7 +28,10 @@
 
     // Add a transition to the background for
     // when the text comes in and out of view.
-    transition: $text-fade-transition;
+    transition: $background-transition;
+    transition-property: background-color, opacity;
+    transition-duration: 500ms, 200ms;
+    transition-timing-function: ease-in-out, ease-in-out;
 
     background-color: $color-secondary;
 
@@ -67,11 +70,19 @@
 
     // Add a transition out of the pending state.
     &:not(.Pending) {
-      transition: $text-fade-transition, $pending-transition;
+      transition: $background-transition, $pending-transition;
     }
 
     &.Blocked {
-      @include blocked-node;
+      @include blocked-node('red');
+    }
+
+    &.CutOff {
+      @include blocked-node('faded');
+    }
+
+    &.BlockResolved {
+      @include blocked-node-resolved;
     }
 
     &.Blurred {

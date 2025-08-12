@@ -193,11 +193,12 @@ export default abstract class Session<
   ): boolean {
     let nodeReady = action.node.readyToExecute
     let enoughResources = this.areEnoughResources(action, cheats)
+    let executionLimitReached = action.executionLimitReached
 
     // The action is ready to execute if the node is ready to execute
     // and there are enough resources for the action, given the session
     // and the cheats.
-    return nodeReady && enoughResources
+    return nodeReady && enoughResources && !executionLimitReached
   }
 
   /**

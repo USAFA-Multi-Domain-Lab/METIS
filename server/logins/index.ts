@@ -285,7 +285,7 @@ export default class ServerLogin {
       // If the user is not the same as the one making the request,
       // destroy the express session associated with the login.
       if (!isUserMakingRequest) {
-        request.sessionStore.destroy(webSessionId, (err) => {
+        return request.sessionStore.destroy(webSessionId, (err) => {
           if (err) return reject(err)
           return resolve()
         })
@@ -293,7 +293,7 @@ export default class ServerLogin {
 
       // If the user is making the request, destroy the local
       // express session.
-      request.session.destroy((err) => {
+      return request.session.destroy((err) => {
         if (err) return reject(err)
         return resolve()
       })

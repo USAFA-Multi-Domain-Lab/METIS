@@ -16,7 +16,7 @@ export function useObjectFormSync<
 >(
   object: T,
   statefulKeys: Array<TIncludedKey>,
-  options: TObjectFormSyncOptions = {},
+  options: TObjectFormSyncOptions<T> = {},
 ): { [K in keyof T]: K extends TIncludedKey ? TReactState<T[K]> : never } {
   const { onChange = () => {} } = options
   let [objectState, setObjectState] = useState<Array<any>>(() =>
@@ -26,12 +26,15 @@ export function useObjectFormSync<
   // When the state updates, transfer the state data
   // to the object, keeping it in sync.
   usePostInitEffect(() => {
+    let prevState: any = {}
+
     for (let i = 0; i < statefulKeys.length; i++) {
       let key = statefulKeys[i]
       let value = objectState[i]
+      prevState[key] = object[key]
       object[key] = value
     }
-    onChange()
+    onChange(prevState)
   }, [objectState])
 
   // Construct the state object to return

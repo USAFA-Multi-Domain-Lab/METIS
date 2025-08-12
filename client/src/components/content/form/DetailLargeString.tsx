@@ -4,8 +4,8 @@ import { compute } from 'src/toolbox'
 import { TDetailWithInput_P } from '.'
 import Tooltip from '../communication/Tooltip'
 import RichText from '../general-layout/rich-text/RichText'
-import ButtonSvgPanel from '../user-controls/buttons/v3/ButtonSvgPanel'
-import { useButtonSvgEngine } from '../user-controls/buttons/v3/hooks'
+import ButtonSvgPanel from '../user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from '../user-controls/buttons/panels/hooks'
 import './DetailLargeString.scss'
 
 /**
@@ -33,6 +33,7 @@ export function DetailLargeString({
   const buttonEngine = useButtonSvgEngine({
     elements: [
       {
+        key: 'file',
         type: 'button',
         icon: 'file',
         description: 'Click here to view the shortcuts for this editor.',

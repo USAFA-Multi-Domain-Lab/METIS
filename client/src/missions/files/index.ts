@@ -34,7 +34,7 @@ export default class ClientMissionFile
   }
 
   /**
-   * Manages the mission's event listeners and events.
+   * Manages the file's event listeners and events.
    */
   private eventManager: EventManager<TFileEventMethods>
 
@@ -68,14 +68,14 @@ export default class ClientMissionFile
   public grantAccess(force: ClientMissionForce | string): void {
     super.grantAccess(force)
     this.emitEvent('access-granted')
-    this.mission.emitEvent('file-access-granted', [])
+    this.mission.emitEvent('file-access-granted')
   }
 
   // Overridden
   public revokeAccess(force: ClientMissionForce | string): void {
     super.revokeAccess(force)
     this.emitEvent('access-revoked')
-    this.mission.emitEvent('file-access-revoked', [])
+    this.mission.emitEvent('file-access-revoked')
   }
 
   /**

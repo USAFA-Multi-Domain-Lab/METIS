@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
+import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
 import ClientMissionPrototype from 'src/missions/nodes/prototypes'
 import { usePostInitEffect } from 'src/toolbox/hooks'
 import { DetailLocked } from '../../../form/DetailLocked'
@@ -24,6 +24,7 @@ export default function PrototypeEntry({
   const svgEngine = useButtonSvgEngine({
     elements: [
       {
+        key: 'add',
         type: 'button',
         icon: 'add',
         description:
@@ -32,6 +33,7 @@ export default function PrototypeEntry({
         onClick: onAddRequest,
       },
       {
+        key: 'remove',
         type: 'button',
         icon: 'remove',
         description: 'Delete prototype node',

@@ -1,0 +1,31 @@
+@import 'src/assets/styles/config.scss';
+
+.SvgPanelElement.TextSvg {
+  display: inline-flex;
+  align-items: center;
+  flex-flow: row nowrap;
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: pointer;
+  font-size: $button-svg-size;
+
+  .TextSvgValue {
+    display: flex;
+    align-items: center;
+    padding: 0 1em 0 0.4em;
+    height: 100%;
+    font-size: 0.75rem;
+  }
+
+  &.TextSvgSmall {
+    .TextSvgValue {
+      font-size: 0.65rem;
+    }
+  }
+
+  &.TextSvgLarge {
+    .TextSvgValue {
+      font-size: 1rem;
+    }
+  }
+}

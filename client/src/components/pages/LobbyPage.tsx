@@ -12,7 +12,7 @@ import Prompt from '../content/communication/Prompt'
 import { HomeButton, TNavigation_P } from '../content/general-layout/Navigation'
 import SessionMembers from '../content/session/members/SessionMembers'
 import { ButtonText } from '../content/user-controls/buttons/ButtonText'
-import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
+import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
 import './LobbyPage.scss'
 
 /**

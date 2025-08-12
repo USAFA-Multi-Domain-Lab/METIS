@@ -1,20 +1,5 @@
 @import 'src/assets/styles/config.scss';
-
-@mixin fade() {
-  @keyframes fade {
-    from {
-      opacity: 1;
-    }
-    to {
-      opacity: 0;
-    }
-  }
-
-  animation-name: fade;
-  animation-timing-function: linear;
-  animation-fill-mode: both;
-  animation-duration: 1000ms;
-}
+@import 'src/assets/styles/util.scss';
 
 .NotificationBubble {
   pointer-events: all;
@@ -30,6 +15,7 @@
   line-height: 1.5em;
   font-size: 15px;
   font-weight: 700;
+  opacity: 1;
 
   .Message {
     display: inline-block;
@@ -54,11 +40,11 @@
     text-align: center;
   }
 
-  &.Dismissed {
-    display: none;
+  &.Expiring {
+    opacity: 0;
   }
 
-  &.Expired {
-    @include fade();
+  .Buttons {
+    margin-top: 10px;
   }
 }

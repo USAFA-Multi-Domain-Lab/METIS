@@ -324,6 +324,10 @@ export default class MetisServer {
 
       // Register target environments.
       ServerTargetEnvironment.scan()
+      // Validate target IDs.
+      ServerTarget.validateTargetIds(
+        ServerTargetEnvironment.METIS_TARGET_ENV_ID,
+      )
 
       // Logger setup.
       expressApp.use(expressLoggingHandler)
@@ -453,7 +457,7 @@ export default class MetisServer {
   /**
    * The current build number for the database.
    */
-  public static readonly SCHEMA_BUILD_NUMBER: number = 45
+  public static readonly SCHEMA_BUILD_NUMBER: number = 49
   /**
    * The root directory for the METIS server.
    */

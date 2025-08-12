@@ -7,7 +7,7 @@ import { DefaultPageLayout } from '.'
 import Prompt from '../content/communication/Prompt'
 import { TNavigation_P } from '../content/general-layout/Navigation'
 import SessionConfig from '../content/session/SessionConfig'
-import { useButtonSvgEngine } from '../content/user-controls/buttons/v3/hooks'
+import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
 import './SessionConfigPage.scss'
 
 export default function SessionConfigPage({
@@ -30,6 +30,7 @@ export default function SessionConfigPage({
   const navButtonEngine = useButtonSvgEngine({
     elements: [
       {
+        key: 'cancel',
         type: 'button',
         icon: 'cancel',
         description: 'Cancel',

@@ -1,4 +1,4 @@
-import ButtonSvgPanel from 'src/components/content/user-controls/buttons/v3/ButtonSvgPanel'
+import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
 import { useMapContext } from '../MissionMap'
 import './TitleBar.scss'
 

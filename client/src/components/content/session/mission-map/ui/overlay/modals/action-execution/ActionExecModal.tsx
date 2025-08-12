@@ -9,6 +9,7 @@ import ClientMissionNode from 'src/missions/nodes'
 import SessionClient from 'src/sessions'
 import { compute } from 'src/toolbox'
 import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
+import { TNodeBlockStatus } from '../../../../../../../../../../shared/missions/nodes'
 import MapToolbox from '../../../../../../../../../../shared/toolbox/maps'
 import { TWithKey } from '../../../../../../../../../../shared/toolbox/objects'
 import Tooltip from '../../../../../../communication/Tooltip'
@@ -55,7 +56,9 @@ export default function ActionExecModal({
       }
     },
   )
-  const [blocked, setBlocked] = useState<boolean>(node.blocked)
+  const [blockStatus, setBlockStatus] = useState<TNodeBlockStatus>(
+    node.blockStatus,
+  )
   const globalContext = useGlobalContext()
   const [cheats, setCheats] = globalContext.cheats
   const [showCheats, setShowCheats] = useState<boolean>(false)
@@ -68,18 +71,33 @@ export default function ActionExecModal({
   /* -- HOOKS -- */
 
   useEventListener(node, ['set-blocked', 'output-sent'], () => {
-    setBlocked(node.blocked)
+    setBlockStatus(node.blockStatus)
     setPendingOutputSent(node.pendingOutputSent)
   })
 
   /* -- COMPUTED -- */
 
   /**
+   * Whether the node is directly blocked.
+   */
+  const blocked = compute<boolean>(() => blockStatus === 'blocked')
+
+  /**
+   * Whether the node is cut-off from being accessed
+   * because one of its ancestors is blocked.
+   */
+  const cutOff = compute<boolean>(() => blockStatus === 'cut-off')
+
+  /**
    * Whether the modal is ready for execution.
    */
   const ready = compute<boolean>(() => {
     return (
-      !!selectedAction && !dropDownExpanded && !blocked && !pendingOutputSent
+      !!selectedAction &&
+      !dropDownExpanded &&
+      !blocked &&
+      !cutOff &&
+      !pendingOutputSent
     )
   })
 

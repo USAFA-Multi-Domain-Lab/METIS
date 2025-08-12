@@ -6,13 +6,12 @@ import {
   TPromptResult,
 } from 'src/components/content/communication/Prompt'
 import { TButtonMenu_P } from 'src/components/content/user-controls/buttons/ButtonMenu'
-import { TButtonText_P } from 'src/components/content/user-controls/buttons/ButtonText'
-import ButtonSvgEngine from 'src/components/content/user-controls/buttons/v3/engines'
+import ButtonSvgEngine from 'src/components/content/user-controls/buttons/panels/engines'
 import { PAGE_REGISTRY, TPage_P, TPageKey } from 'src/components/pages'
 import ServerConnection, { IServerConnectionOptions } from 'src/connect/servers'
 import MetisInfo from 'src/info'
 import ClientLogin from 'src/logins'
-import Notification from 'src/notifications'
+import Notification, { TNotificationOptions } from 'src/notifications'
 import { useInitRenderHandler } from 'src/toolbox/hooks'
 import Logging from 'src/toolbox/logging'
 import ClientUser from 'src/users'
@@ -48,6 +47,8 @@ const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
   loading: true,
   loadingMessage: 'Initializing application...',
   loadingMinTimeReached: false,
+  loadingProgress: 0,
+  loadingPageId: StringToolbox.generateRandomId(),
   pageSwitchMinTimeReached: true,
   error: null,
   buttonMenu: null,
@@ -127,6 +128,8 @@ const initializeActions = (
   const setLoadingMessage = initialState.loadingMessage[1]
   const setLoadingMinTimeReached = initialState.loadingMinTimeReached[1]
   const setPageSwitchMinTimeReached = initialState.pageSwitchMinTimeReached[1]
+  const setLoadingProgress = initialState.loadingProgress[1]
+  const setLoadingPageId = initialState.loadingPageId[1]
   const setError = initialState.error[1]
   const setButtonMenu = initialState.buttonMenu[1]
   const setNotifications = initialState.notifications[1]
@@ -227,6 +230,8 @@ const initializeActions = (
         loadingMessage ?? GLOBAL_CONTEXT_DEFAULT.loadingMessage[0],
       )
       setLoadingMinTimeReached(false)
+      setLoadingProgress(0)
+      setLoadingPageId(StringToolbox.generateRandomId())
 
       setTimeout(() => {
         const { loading, pageSwitchMinTimeReached } = refs.current
@@ -248,6 +253,7 @@ const initializeActions = (
       const { loadingMinTimeReached, pageSwitchMinTimeReached } = refs.current
 
       setLoading(false)
+      setLoadingProgress(100)
 
       // If min times have been reached, then
       // call the completion handler. Else,
@@ -435,48 +441,37 @@ const initializeActions = (
         // If notify via bubble, notify the
         // user with a bubble notification.
         case 'bubble':
-          notify(error.message, { errorMessage: true })
+          notify(error.message, { isError: true })
           break
       }
     },
-    notify: (message: string, options: TNotifyOptions = {}): Notification => {
+    notify: (message: string, options: TNotificationOptions = {}) => {
       // Gather details.
-      const {
-        loading,
-        loadingMinTimeReached,
-        pageSwitchMinTimeReached,
-        notifications,
-      } = refs.current
-      let onLoadingPage: boolean =
+      const { loading, loadingMinTimeReached, pageSwitchMinTimeReached } =
+        refs.current
+
+      // Check if the loading page is currently being displayed.
+      const onLoadingPage =
         loading || !loadingMinTimeReached || !pageSwitchMinTimeReached
 
-      // Create a notification with the message
-      // and provided options. Pass a callback
-      // that will automatically remove the
-      // notification from the state once it
-      // has been dismissed or expired.
-      let notification: Notification = new Notification(
-        message,
-        (dismissed: boolean, expired: boolean) => {
-          const { notifications } = refs.current
+      // Create the notification and delay the start of the expiration timer
+      // if the loading page is currently being displayed.
+      const notification = Notification.create(message, {
+        ...options,
+        startExpirationTimer: !onLoadingPage,
+      })
 
-          if (dismissed) {
-            notifications.splice(notifications.indexOf(notification), 1)
-          } else if (expired) {
-            setTimeout(() => {
-              notifications.splice(notifications.indexOf(notification), 1)
-              setNotifications([...notifications])
-            }, 1000)
-          }
-          setNotifications([...notifications])
-        },
-        { ...options, startExpirationTimer: !onLoadingPage },
-      )
+      // Add the notification to the state.
+      setNotifications((prev) => [...prev, notification])
 
-      // Add the new notification to the state.
-      setNotifications([...notifications, notification])
-
+      // Return the notification.
       return notification
+    },
+    dismissNotification: (notificationId: string): void => {
+      // Remove the notification from the state.
+      setNotifications((prev) =>
+        prev.filter(({ _id }) => _id !== notificationId),
+      )
     },
     prompt: <TChoice extends string, TList extends object = {}>(
       message: string,
@@ -755,6 +750,17 @@ export type TGlobalContextValues = {
   loading: boolean
   loadingMessage: string
   loadingMinTimeReached: boolean
+  /**
+   * A percentage amount between 0 and 100 representing the
+   * amount of loading that has been completed.
+   */
+  loadingProgress: number
+  /**
+   * A key assigned to the loading page to ensure
+   * the loading progress is reset when a new load
+   * is started.
+   */
+  loadingPageId: string
   pageSwitchMinTimeReached: boolean
   error: TAppError | null
   /**
@@ -881,7 +887,12 @@ export type TGlobalContextActions = {
    * @param options The options to use for the notification.
    * @returns The emitted notification.
    */
-  notify: (message: string, options?: TNotifyOptions) => Notification
+  notify: (message: string, options?: TNotificationOptions) => Notification
+  /**
+   * Dismisses a notification with the given ID.
+   * @param notificationId The ID of the notification to dismiss.
+   */
+  dismissNotification: (notificationId: Notification['_id']) => void
   /**
    * This will logout the user that is currently logged in, closing the connection
    * with the server as well. Afterwards, the user will be navigated to the auth page.
@@ -945,16 +956,6 @@ export type TPromptOptions<
   TChoice extends string,
   TList extends object = {},
 > = Omit<TPrompt_P<TChoice, TList>, 'message' | 'choices' | 'resolve'>
-
-/**
- * Options available when notifying the user using the
- * notify function in the global context actions.
- */
-export type TNotifyOptions = {
-  duration?: number | null
-  buttons?: TButtonText_P[]
-  errorMessage?: boolean
-}
 
 /**
  * Middleware that is run during navigation between pages.

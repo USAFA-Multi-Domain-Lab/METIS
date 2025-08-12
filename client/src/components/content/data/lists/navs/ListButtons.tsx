@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
-import ButtonSvgPanel from 'src/components/content/user-controls/buttons/v3/ButtonSvgPanel'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/v3/hooks'
+import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
 import { MetisComponent } from '../../../../../../../shared'
 import { useListContext } from '../List'
 import './ListButtons.scss'
@@ -51,9 +51,9 @@ export default function ListButtons<
   useEffect(() => {
     let threshold = aggregatedButtonIcons.length - buttonOverflowCount
     aggregatedButtonIcons.forEach((icon, index) => {
-      buttonEngine.modifyClassList(icon, (classList) =>
-        classList.set('ListButtonOverflow', index >= threshold),
-      )
+      buttonEngine.modifyClassList(icon, (classList) => {
+        classList.set('ListButtonOverflow', index >= threshold)
+      })
     })
   }, [buttonOverflowCount])
 

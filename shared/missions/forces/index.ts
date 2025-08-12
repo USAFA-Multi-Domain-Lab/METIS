@@ -398,6 +398,7 @@ export abstract class MissionForce<
    */
   public static readonly ROOT_NODE_PROPERTIES: TMissionNodeJson = {
     _id: 'ROOT',
+    localKey: 'ROOT',
     prototypeId: 'ROOT',
     name: 'ROOT',
     color: '#000000',
@@ -409,7 +410,7 @@ export abstract class MissionForce<
     actions: [],
     opened: true,
     exclude: false,
-    localKey: 'ROOT',
+    initiallyBlocked: false,
   }
 
   /**

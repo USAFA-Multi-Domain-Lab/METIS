@@ -1,0 +1,11 @@
+@import 'src/assets/styles/config.scss';
+
+.Notifications {
+  position: fixed;
+  pointer-events: none;
+  z-index: $z-index-notifications;
+  top: 4.6875rem; // 75px
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+}
