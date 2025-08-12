@@ -1,9 +1,18 @@
 # changelog
 
-# version-2.2 | 7-x-2025
+# version-2.2 | 8-12-2025
 
--
+- A new auto-focus feature was implemented, which in certain situations, will automatically pan the mission map to a particular node.
+- User preferences are now supported, allowing for a more personalized experience in the future.
+- Support for single-use actions has been added. Now a dropdown is available to define whether an action can be executed once or multiple times.
+- The initial block status for a node can now be configured. This means that a node can be blocked from the start of a mission.
+- A visual distinction has been made between directly blocked nodes and indirectly blocked nodes.
+- The logout option in the navigation has been replaced with an option to view the user's profile.
+- A load bar has been added to help show the progress of events throughout the application, namely file uploads.
+- Presets are now available for quickly creating common effects.
+- Converted hardcorded, success/failure text to utilize the target-effect system, while maintaining the existing functionality.
 - Clarification was added to the METIS target environment title and description to highlight its purpose of creating internal effects only.
+- Performed various bug fixes and improvements.
 
 # version-2.1.1 | 7-9-2025
 
