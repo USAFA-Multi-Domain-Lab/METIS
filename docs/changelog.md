@@ -1,5 +1,10 @@
 # changelog
 
+# version-2.2.1 | 8-14-2025
+
+- Fixed an issue with mission exports where exported files would only be cleaned up on server shutdown, causing unnecessary drive space usage. Mission export files are now automatically deleted once the user has downloaded them (note: this means downloads cannot be restarted by refreshing the page).
+- Minor fix applied to the button context menu.
+
 # version-2.2.0 | 8-12-2025
 
 - A new auto-focus feature was implemented, which in certain situations, will automatically pan the mission map to a particular node.
