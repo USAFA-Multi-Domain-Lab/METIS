@@ -1,16 +1,21 @@
 # changelog
 
+# version-2.2.1 | 8-14-2025
+
+- Fixed an issue with mission exports where exported files would only be cleaned up on server shutdown, causing unnecessary drive space usage. Mission export files are now automatically deleted once the user has downloaded them (note: this means downloads cannot be restarted by refreshing the page).
+- Minor fix applied to the button context menu.
+
 # version-2.2.0 | 8-12-2025
 
 - A new auto-focus feature was implemented, which in certain situations, will automatically pan the mission map to a particular node.
 - User preferences are now supported, allowing for a more personalized experience in the future.
-- Support for single-use actions has been added. Now a dropdown is available to define whether an action can be executed once or multiple times.
+- Support for single-use actions has been added. Now a drop-down is available to define whether an action can be executed once or multiple times.
 - The initial block status for a node can now be configured. This means that a node can be blocked from the start of a mission.
 - A visual distinction has been made between directly blocked nodes and indirectly blocked nodes.
 - The logout option in the navigation has been replaced with an option to view the user's profile.
 - A load bar has been added to help show the progress of events throughout the application, namely file uploads.
 - Presets are now available for quickly creating common effects.
-- Converted hardcorded, success/failure text to utilize the target-effect system, while maintaining the existing functionality.
+- Converted hard-coded, success/failure text to utilize the target-effect system, while maintaining the existing functionality.
 - Clarification was added to the METIS target environment title and description to highlight its purpose of creating internal effects only.
 - Performed various bug fixes and improvements.
 
