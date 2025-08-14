@@ -514,17 +514,6 @@ const initializeActions = (
         position,
         positioningTarget,
         highlightTarget,
-        // todo: Delete this.
-        //         onButtonClick: (button) => {
-        //           // Preprocess the button click,
-        //           // starting by hiding the button menu.
-        //           if (!persist) {
-        //             setButtonMenu(null)
-        //           }
-        //
-        //           // Call the callback passed.
-        //           onButtonClick(button as TButton)
-        //         },
         onCloseRequest: () => {
           setButtonMenu(null)
         },
