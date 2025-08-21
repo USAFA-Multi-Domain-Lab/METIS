@@ -27,7 +27,7 @@ METIS is a real-time training system built with:
 - Client connection management
 - Integrated with session auth
 - Real-time state synchronization
-- [WebSocket Documentation](/docs/devs/websocket.md)
+- [WebSocket Documentation](websocket.md)
 
 #### Database
 
@@ -82,8 +82,8 @@ METIS is a real-time training system built with:
 ### Implementation Details
 
 - [RESTful API](/docs/api/overview.md) - REST endpoints, authentication, and data models
-- [WebSocket](/docs/devs/websocket.md) - Real-time communication protocols and events
-- [Target Environment Integration](/docs/devs/target-environment-integration.md) - How to create and register new target environments
+- [WebSocket](websocket.md) - Real-time communication protocols and events
+- [Target Environment Integration](/docs/target-env-integration/index.md) - How to create and register new target environments
 
 ### Development Guidelines
 

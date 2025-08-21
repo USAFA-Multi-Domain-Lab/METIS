@@ -32,12 +32,12 @@ For a comprehensive walkthrough of METIS features and functionality, please watc
 
 ## 🛠 Developer Documentation
 
-- [Target Environment Integration](./developer/target-environment-integration.md) - Guide on creating target environment plugins.
-- [Architecture](./devs/architecture.md) - Understand the system architecture.
-- [Style Guide](./developer/style-guide.md) - Coding standards and best practices.
+- [Target Environment Integration](target-env-integration/index.md) - Guide on creating target environment plugins.
+- [Architecture](devs/architecture.md) - Understand the system architecture.
+- [Style Guide](devs/style-guide.md) - Coding standards and best practices.
 
 ---
 
 ## 📝 Changelog
 
-- [View Changelog](./changelog.md)
+- [View Changelog](changelog.md)

@@ -74,5 +74,5 @@ METIS uses Socket.IO to enable real-time communication between clients and the s
 
 ## Additional Resources
 
-- [Architecture Documentation](/docs/devs/architecture.md)
+- [Architecture Documentation](architecture.md)
 - [API Overview](/docs/api/overview.md)
