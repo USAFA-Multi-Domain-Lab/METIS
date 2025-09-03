@@ -22,7 +22,7 @@ Complete technical documentation and API references for target environment devel
 
 ### Version Management
 
-- **[Migration API](migrations.md)** - Migration system reference
+- **[Migrations](../guides/migrations.md)** - Migration system reference
   - Migration registry and versioning
   - Data transformation utilities
   - Upgrade and rollback patterns
@@ -30,17 +30,11 @@ Complete technical documentation and API references for target environment devel
 
 ## Quick Reference
 
-### Common Use Cases
-
-- **Context Access** → See [Context API](context-api.md#accessing-context)
-- **Type Definitions** → See [Schema Documentation](schemas.md#type-definitions)
-- **Version Upgrades** → See [Migration API](migrations.md#upgrade-patterns)
-
 ### Integration Points
 
 - **METIS Server** → Context API provides server integration
 - **Client UI** → Schemas define argument rendering
-- **Database** → Migration API handles data persistence
+- **Database** → Migrations handle data persistence
 
 ## Related Documentation
 

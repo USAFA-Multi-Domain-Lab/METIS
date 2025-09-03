@@ -20,7 +20,7 @@ Developers define target environments (external systems) and targets (specific a
 
 ### Registry Layer (`/shared` & `/server`)
 
-At startup, METIS scans the integration folder and builds a registry of all available targets. This registry is shared between client and server.
+At startup, METIS scans the integration folder and builds a registry of all available target environments and their targets. This registry is shared between client and server.
 
 **Key Benefit**: Automatic discovery means no manual registration required.
 

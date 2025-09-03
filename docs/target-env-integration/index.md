@@ -25,7 +25,7 @@ The target-effect system is METIS's framework for creating reusable, configurabl
 - **[Defining Targets](guides/defining-targets.md)** - Creating target operations
 - **[Argument Types](guides/argument-types.md)** - Working with typed arguments
 - **[Migrations](guides/migrations.md)** - Version management and data migrations
-- **[Best Practices](guides/best-practices.md)** - Recommended patterns and conventions
+- **[Tips & Conventions](guides/tips-and-conventions.md)** - Recommended patterns and conventions
 
 ## Examples & References
 
@@ -33,13 +33,11 @@ The target-effect system is METIS's framework for creating reusable, configurabl
 
 - **[Basic Target Example](examples/basic-target.md)** - Simple target implementation
 - **[Complex Target Example](examples/complex-target.md)** - Advanced patterns and features
-- **[Migration Example](examples/migration-example.md)** - Version upgrade patterns
 
 ### Technical References
 
 - **[Context API](references/context-api.md)** - Complete context object reference
 - **[Schema Documentation](references/schemas.md)** - TypeScript schemas and types
-- **[Migration API](references/migrations.md)** - Migration system reference
 
 ## Related Documentation
 

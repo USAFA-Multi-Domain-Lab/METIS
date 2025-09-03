@@ -34,7 +34,7 @@ Step-by-step guides for developing and implementing target environments in METIS
 
 ### Production Readiness
 
-- **[Best Practices](best-practices.md)** - Recommended patterns and conventions
+- **[Tips & Conventions](tips-and-conventions.md)** - Recommended patterns and conventions
   - Code organization and architecture patterns
   - Performance optimization
   - Security considerations and testing strategies

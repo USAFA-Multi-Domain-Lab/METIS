@@ -123,12 +123,12 @@ Congratulations! You've created your first target-effect integration. Here's wha
 - **[Context API](references/context-api.md)** - Modify mission state, access files, etc.
 - **[Argument Types](guides/argument-types.md)** - Use all available input types
 - **[Environment Integration](index.md)** - Detailed integration patterns
+- **[Migrations](guides/migrations.md)** - Version management and data migrations
 
 ### Real Examples
 
 - **[Basic Target Example](examples/basic-target.md)** - Simple target implementation
 - **[Complex Target Example](examples/complex-target.md)** - Advanced patterns
-- **[Migration Example](examples/migration-example.md)** - Version upgrade patterns
 
 ## Troubleshooting
 

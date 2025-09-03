@@ -86,6 +86,7 @@ const ProcessTimeMod = new TargetSchema({
       groupingId,
       dependencies: [Dependency.ACTION(actionArgId)],
       default: 0,
+      integersOnly: true,
       tooltipDescription:
         `This allows you to positively or negatively affect the process time for all actions within the node. A positive value increases the process time, while a negative value decreases the process time.\n` +
         `\t\n` +
@@ -103,6 +104,7 @@ const ProcessTimeMod = new TargetSchema({
       groupingId,
       dependencies: [Dependency.ACTION(actionArgId)],
       default: 0,
+      integersOnly: true,
       tooltipDescription:
         `This allows you to positively or negatively affect the process time for all actions within the node. A positive value increases the process time, while a negative value decreases the process time.\n` +
         `\t\n` +

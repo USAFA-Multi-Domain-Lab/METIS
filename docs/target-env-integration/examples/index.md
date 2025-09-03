@@ -20,7 +20,7 @@ This section provides real-world examples demonstrating different patterns and a
 
 ### Version Management
 
-- **[Migration Example](migration-example.md)** - Version upgrade patterns and data migration
+- **[Migration Guide](../guides/migrations.md)** - Version upgrade patterns and data migration
   - Handling schema changes between versions
   - Data transformation during upgrades
   - Backward compatibility strategies
