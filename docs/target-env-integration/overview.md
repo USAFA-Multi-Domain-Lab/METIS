@@ -34,11 +34,43 @@ User-configured instances of targets ready for execution:
 
 ## How It Works
 
-The system operates in three phases:
+The system operates in three clear phases:
 
-1. **Development** - Developers define target environments and targets
-2. **Configuration** - Users create effects from targets in the mission editor
-3. **Execution** - Effects run automatically during mission sessions
+1. **Development** - Developers define target environments and targets (templates)
+2. **Configuration** - Users create effects from targets in the mission editor (instances)
+3. **Execution** - Effects run automatically during mission sessions (real-time)
+
+```
+📝 DEVELOPMENT PHASE        👤 USER PHASE           🚀 MISSION PHASE
+(Developers)               (Mission Planners)      (During Missions)
+
+┌─────────────────┐       ┌─────────────────┐      ┌─────────────────┐
+│ Create Target   │  ──►  │ Configure       │ ──►  │ Execute Effects │
+│ Environments    │       │ Effects         │      │ in Real-Time    │
+│ & Targets       │       │ (fill forms)    │      │                 │
+└─────────────────┘       └─────────────────┘      └─────────────────┘
+         │                         │                        │
+         │                         │                        │
+    Write code once           Pick & configure         Run automatically
+```
+
+### Concept Relationships
+
+```
+Target Environment
+      │
+      └── Contains multiple Targets (templates)
+                    │
+                    └── Users configure into Effects (instances)
+                                  │
+                                  └── Execute during Missions
+```
+
+**Example Flow:**
+
+- Developer creates "User Management" environment with "Create User" target
+- Mission planner configures "Create User" effect with specific username/email
+- During mission, effect executes and actually creates the user account
 
 ## Key Benefits
 

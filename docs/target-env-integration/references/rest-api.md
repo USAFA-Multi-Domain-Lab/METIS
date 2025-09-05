@@ -30,7 +30,7 @@ The `RestApi` class automatically reads your [environment configuration](./envir
 ### Import and Initialize
 
 ```typescript
-import { RestApi } from '../api/rest-api'
+import { RestApi } from '../../library/api/rest-api'
 
 // Initialize with your environment configuration key
 const api = new RestApi('myTargetEnvironment')
@@ -199,7 +199,7 @@ await api.get('/endpoint', {
 ### Complete Plugin Example
 
 ```typescript
-import { RestApi } from '../api/rest-api'
+import { RestApi } from '../../library/api/rest-api'
 
 export class MyTargetEnvironment {
   private api: RestApi

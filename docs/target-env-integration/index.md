@@ -6,41 +6,61 @@ Welcome to the METIS Target Environment Integration documentation. This section 
 
 The target-effect system is METIS's framework for creating reusable, configurable operations that can be executed during mission sessions. Target environments provide collections of **targets** (operation templates) that users can configure into **effects** (specific operation instances) within their missions.
 
-## Getting Started
+## Quick Start
 
-### Quick Start
+- **[Quickstart Guide](quickstart.md)** - Create your first target environment in 10 minutes
+- **[Overview](overview.md)** - Understand the core concepts first
+- **[Architecture](architecture.md)** - See how everything fits together
 
-- **[Quickstart Guide](quickstart.md)** - Create your first target environment in minutes
+## 📚 Learning Paths
 
-### Core Documentation
+### New to Target Environments?
 
-- **[Overview](overview.md)** - High-level introduction to the target-effect system
-- **[Architecture](architecture.md)** - Technical architecture and design patterns
+1. **[Overview](overview.md)** → Understand concepts
+2. **[Quickstart](quickstart.md)** → Get hands-on experience
+3. **[Creating Target Environments](guides/creating-target-environments.md)** → Learn the structure
+4. **[Defining Targets](guides/defining-targets.md)** → Build your first targets
+5. **[Basic Example](examples/basic-target.md)** → See it in action
+6. **[Argument Types](guides/argument-types.md)** → Create better UIs
+7. **[Advanced Example](examples/complex-target.md)** → Learn advanced patterns
 
-## Implementation Guides
+### Integrating External Systems?
 
-### Step-by-Step Guides
+1. **[External API Integration](guides/external-api-integration.md)** → Master API connections
+2. **[REST API Reference](references/rest-api.md)** → HTTP patterns and authentication
+3. **[Environment Configuration](references/environment-configuration.md)** → Setup and deployment
 
-- **[Creating Target Environments](guides/creating-target-environments.md)** - Environment setup and structure
-- **[Defining Targets](guides/defining-targets.md)** - Creating target operations
-- **[Argument Types](guides/argument-types.md)** - Working with typed arguments
-- **[Migrations](guides/migrations.md)** - Version management and data migrations
-- **[Tips & Conventions](guides/tips-and-conventions.md)** - Recommended patterns and conventions
+### Need Reference Documentation?
 
-## Examples & References
+- **[Context API](references/context-api.md)** → Complete runtime API
+- **[Schema Documentation](references/schemas.md)** → TypeScript types and validation
+- **[Tips & Conventions](guides/tips-and-conventions.md)** → Best practices
+
+## Complete Documentation
+
+### Implementation Guides
+
+- **[Creating Target Environments](guides/creating-target-environments.md)** - Project setup and structure
+- **[Defining Targets](guides/defining-targets.md)** - Creating operations and business logic
+- **[External API Integration](guides/external-api-integration.md)** - Connecting to external systems
+- **[Argument Types](guides/argument-types.md)** - Building typed user interfaces
+- **[Migrations](guides/migrations.md)** - Version management and upgrades
+- **[Tips & Conventions](guides/tips-and-conventions.md)** - Best practices and patterns
 
 ### Real-World Examples
 
-- **[Basic Target Example](examples/basic-target.md)** - Simple target implementation
+- **[Basic Target Example](examples/basic-target.md)** - Simple implementation walkthrough
 - **[Complex Target Example](examples/complex-target.md)** - Advanced patterns and features
 
 ### Technical References
 
-- **[Context API](references/context-api.md)** - Complete context object reference
-- **[Schema Documentation](references/schemas.md)** - TypeScript schemas and types
+- **[Context API](references/context-api.md)** - Complete runtime API documentation
+- **[Schema Documentation](references/schemas.md)** - TypeScript types and validation
+- **[REST API](references/rest-api.md)** - HTTP endpoints and patterns
+- **[Environment Configuration](references/environment-configuration.md)** - Setup and deployment
 
 ## Related Documentation
 
 - **[Target Environments API](/docs/api/target-environments.md)** - REST API endpoints
 - **[WebSocket System](/docs/devs/websocket.md)** - Real-time communication
-- **[Architecture Overview](/docs/devs/architecture.md)** - System-wide architecture
+- **[System Architecture](/docs/devs/architecture.md)** - Overall METIS architecture

@@ -2,6 +2,18 @@
 
 This guide walks you through creating a new METIS target environment from scratch. The server auto-discovers environments by scanning for specific folder structures and schema files.
 
+## Table of Contents
+
+- [Prerequisites](#prerequisites)
+- [Planning Your Environment](#planning-your-environment)
+- [Basic Environment Setup](#basic-environment-setup)
+- [External System Integration](#external-system-integration-optional)
+- [Adding Your First Target](#adding-your-first-target)
+- [Recommended Project Structure](#recommended-project-structure)
+- [Testing Your Environment](#testing-your-environment)
+- [Troubleshooting](#troubleshooting)
+- [Related Documentation](#related-documentation)
+
 ## Prerequisites
 
 - Familiarity with [Tips & Conventions](tips-and-conventions.md) for naming and structure rules
@@ -25,7 +37,7 @@ Create your environment folder and main schema file:
 
 ```ts
 // integration/target-env/acme-cloud/schema.ts
-import TargetEnvSchema from 'integration/library/target-env-classes'
+import TargetEnvSchema from '../../library/target-env-classes'
 
 export default new TargetEnvSchema({
   name: 'ACME Cloud',
@@ -65,8 +77,8 @@ For HTTP/HTTPS REST API calls, add a REST client to your environment schema:
 
 ```ts
 // integration/target-env/acme-cloud/schema.ts
-import TargetEnvSchema from 'integration/library/target-env-classes'
-import RestApi from '../../library/rest-api'
+import TargetEnvSchema from '../../library/target-env-classes'
+import { RestApi } from '../../library/api/rest-api'
 
 // REST client using environment configuration
 export const AcmeCloudApi = new RestApi('acme-cloud')
@@ -98,6 +110,9 @@ As additional protocol support is added to METIS, you'll be able to configure ot
 
 For detailed configuration options and best practices:
 
+- **[REST API Reference](../references/rest-api.md)** - Complete `RestApi` class documentation
+- **[Environment Configuration](../references/environment-configuration.md)** - Configuration file reference
+- **[External API Integration](external-api-integration.md)** - Authentication patterns and API best practices
 - **[Rest API Reference](../references/rest-api.md)** - Complete REST API client documentation
 - **[Environment Configuration](../references/environment-config.md)** - Full config file reference
 
@@ -107,7 +122,7 @@ Create a target folder with its own schema file:
 
 ```ts
 // integration/target-env/acme-cloud/targets/health-check/schema.ts
-import TargetSchema from 'integration/library/target-env-classes/targets'
+import TargetSchema from '../../../../library/target-env-classes/targets'
 
 export default new TargetSchema({
   name: 'Health Check',
@@ -131,7 +146,11 @@ export default new TargetSchema({
 })
 ```
 
-For comprehensive target development guidance, see [Defining Targets](defining-targets.md).
+For comprehensive target development guidance, see:
+
+- **[Defining Targets](defining-targets.md)** - Complete target creation guide
+- **[Argument Types](argument-types.md)** - User input types and patterns
+- **[Context API](../references/context-api.md)** - Available context methods and properties
 
 ## Recommended Project Structure
 

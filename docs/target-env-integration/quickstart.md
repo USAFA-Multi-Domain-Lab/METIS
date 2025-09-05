@@ -120,6 +120,7 @@ Congratulations! You've created your first target-effect integration. Here's wha
 
 ### Advanced Features
 
+- **[External API Integration](guides/external-api-integration.md)** - Authentication, error handling, and API patterns
 - **[Context API](references/context-api.md)** - Modify mission state, access files, etc.
 - **[Argument Types](guides/argument-types.md)** - Use all available input types
 - **[Environment Integration](index.md)** - Detailed integration patterns

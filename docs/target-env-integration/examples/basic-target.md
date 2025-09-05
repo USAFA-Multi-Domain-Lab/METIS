@@ -92,7 +92,7 @@ const Greeting = new TargetSchema({
       name: 'Name',
       type: 'string',
       required: true,
-      default: 'John D.'
+      default: 'John D.',
       groupingId: 'greeting',
       tooltipDescription: 'The name to include in the greeting',
     },

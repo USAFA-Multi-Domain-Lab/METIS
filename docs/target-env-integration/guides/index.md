@@ -1,54 +1,41 @@
 # Implementation Guides
 
-Step-by-step guides for developing and implementing target environments in METIS. These guides provide detailed instructions, best practices, and practical advice for building production-ready target environments.
+Step-by-step guides for developing target environments in METIS. Each guide provides detailed instructions, code examples, and best practices to get you building production-ready integrations quickly.
 
-## Development Workflow
+## 🚀 Start Here
 
-### Core Setup
+New to target environment development? Follow this path:
 
-- **[Creating Target Environments](creating-target-environments.md)** - Environment setup and project structure
-  - Project initialization and file organization
-  - Configuration setup and environment variables
-  - Integration with METIS server
+1. **[Creating Target Environments](creating-target-environments.md)** → Set up your project
+2. **[Defining Targets](defining-targets.md)** → Build your first operations  
+3. **[Argument Types](argument-types.md)** → Create user-friendly interfaces
 
-### Target Development
+## 🔗 Connect External Systems
 
-- **[Defining Targets](defining-targets.md)** - Creating target operations and business logic
-  - Target schema definition and validation
-  - Implementing target execution logic
-  - Error handling and debugging
+- **[External API Integration](external-api-integration.md)** - REST APIs, authentication, and error handling
+  - OAuth flows and API key management
+  - Rate limiting and retry strategies  
+  - Security best practices
 
-### Configuration & Types
+## 🛠️ Advanced Development
 
-- **[Argument Types](argument-types.md)** - Working with typed arguments and validation
-  - Available argument types and their properties
-  - Custom validation rules and patterns
-  - UI integration and user experience
+- **[Target-Effect Conversion](target-effect-conversion.md)** - How targets become effects
+  - Understanding the conversion process
+  - Argument binding and validation
+  - Runtime context and execution flow
 
-### Version Management
+- **[Migrations](migrations.md)** - Manage versions and data changes
+  - Schema evolution and backward compatibility
+  - Testing migration scripts
+  - Production deployment strategies
 
-- **[Migrations](migrations.md)** - Version management and data migrations
-  - Planning version upgrades
-  - Writing migration scripts
-  - Testing and deployment strategies
-
-### Production Readiness
-
-- **[Tips & Conventions](tips-and-conventions.md)** - Recommended patterns and conventions
-  - Code organization and architecture patterns
+- **[Tips & Conventions](tips-and-conventions.md)** - Production-ready patterns
+  - Code organization and architecture
   - Performance optimization
-  - Security considerations and testing strategies
-
-## Recommended Learning Path
-
-1. **Environment Setup** → Start with creating your development environment
-2. **Basic Targets** → Learn to define simple targets with basic arguments
-3. **Advanced Arguments** → Master complex argument types and validation
-4. **Production Patterns** → Study best practices before deploying
-5. **Version Management** → Plan for future updates and migrations
+  - Security and testing strategies
 
 ## Related Documentation
 
-- **[Examples](/docs/target-env-integration/examples/index.md)** - Real-world implementation examples
-- **[Technical References](/docs/target-env-integration/references/index.md)** - Complete API documentation
-- **[Architecture Overview](/docs/target-env-integration/architecture.md)** - System design and patterns
+- **[Examples](../examples/index.md)** - See these guides in action
+- **[Technical References](../references/index.md)** - API documentation and schemas
+- **[Quickstart](../quickstart.md)** - Get started in 10 minutes

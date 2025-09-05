@@ -43,7 +43,7 @@ Each target lives in its own folder with a `schema.ts` file that exports a `Targ
 
 ```ts
 // integration/target-env/my-env/targets/ping/schema.ts
-import TargetSchema from 'integration/library/target-env-classes/targets'
+import TargetSchema from '../../../../library/target-env-classes/targets'
 
 export default new TargetSchema({
   name: 'Ping Host',
@@ -75,6 +75,8 @@ export default new TargetSchema({
 ```
 
 ## Target Schema Properties
+
+> 💡 **Need detailed argument types?** See the **[Argument Types Guide](argument-types.md)** for complete type reference and examples.
 
 ### Required Properties
 
@@ -258,6 +260,8 @@ script: async (ctx) => {
 
 ## 🔗 External API Integration
 
+> 🔗 **For comprehensive external API patterns**, see the **[External API Integration Guide](external-api-integration.md)** which covers authentication, error handling, and advanced patterns.
+
 ### Using REST APIs
 
 If your environment has a REST client configured, use it in your targets:
@@ -300,7 +304,8 @@ Use a `TargetMigrationRegistry` when you change target schema in ways that affec
 
 - **Register migrations** on the `migrations` option of `TargetSchema`
 - **Align versions** with the target environment versioning
-- **Learn more**: [migrations.md](migrations.md)
+
+> 📖 **For complete migration workflows**, see the **[Migrations Guide](migrations.md)** which covers version management, migration scripts, and best practices.
 
 ## 📚 Examples
 

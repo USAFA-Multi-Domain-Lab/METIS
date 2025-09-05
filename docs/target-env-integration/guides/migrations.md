@@ -183,7 +183,7 @@ Integrate migrations into your target schema:
 ### Complete Target with Migrations
 
 ```ts
-import TargetSchema from 'integration/library/target-env-classes/targets'
+import TargetSchema from '../../../../library/target-env-classes/targets'
 import TargetMigrationRegistry from 'metis/target-environments/targets/migrations/registry'
 
 // Define migrations

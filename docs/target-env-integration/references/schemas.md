@@ -80,7 +80,7 @@ The `TargetSchema` class represents an individual target within a target environ
 ### Constructor
 
 ```typescript
-import TargetSchema from '../../library/target-env-classes/targets'
+import TargetSchema from '../../../../library/target-env-classes/targets'
 
 const target = new TargetSchema({
   name: 'Create User',
@@ -229,7 +229,7 @@ const target = new TargetSchema({
 Each target environment gets its own file with a single default export:
 
 ```typescript
-// File: target-environments/user-management/schema.ts
+// File: integration/target-env/user-management/schema.ts
 import TargetEnvSchema from '../../library/target-env-classes'
 
 const userManagementEnv = new TargetEnvSchema({
@@ -247,9 +247,9 @@ export default userManagementEnv
 Each target gets its own file with a single default export:
 
 ```typescript
-// File: target-environments/user-management/create-user/schema.ts
-import TargetSchema from '../../library/target-env-classes/targets'
-import { RestApi } from '../../library/api/rest-api'
+// File: integration/target-env/user-management/targets/create-user/schema.ts
+import TargetSchema from '../../../../library/target-env-classes/targets'
+import { RestApi } from '../../../../library/api/rest-api'
 
 const createUserTarget = new TargetSchema({
   name: 'Create User',
@@ -296,9 +296,9 @@ export default createUserTarget
 ### Another Target File
 
 ```typescript
-// File: target-environments/user-management/delete-user/schema.ts
-import TargetSchema from '../../library/target-env-classes/targets'
-import { RestApi } from '../../library/api/rest-api'
+// File: integration/target-env/user-management/targets/delete-user/schema.ts
+import TargetSchema from '../../../../library/target-env-classes/targets'
+import { RestApi } from '../../../../library/api/rest-api'
 
 const deleteUserTarget = new TargetSchema({
   name: 'Delete User',

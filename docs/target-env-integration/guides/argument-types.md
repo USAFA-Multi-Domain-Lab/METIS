@@ -2,6 +2,20 @@
 
 This guide covers all available argument types in METIS target environments, their properties, use cases, and implementation patterns. Use this as a reference when designing arguments for your targets.
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Target Type Considerations](#target-type-considerations)
+- [Basic Argument Structure](#basic-argument-structure)
+- [String Types](#string-types)
+- [Selection Types](#selection-types)
+- [Numeric Types](#numeric-types)
+- [Boolean Types](#boolean-types)
+- [Mission Component Types](#mission-component-types)
+- [Advanced Features](#advanced-features)
+- [Best Practices](#best-practices)
+- [Related Documentation](#related-documentation)
+
 ## Overview
 
 Target arguments define the user interface for your targets in METIS. Each argument type provides different input methods and validation patterns, allowing you to create intuitive and powerful target configurations.
@@ -35,7 +49,11 @@ Every argument follows this base structure:
 
 **External System Targets**: Most targets that integrate with external systems (databases, APIs, file systems) only need basic argument types (string, number, boolean, dropdown, file) to configure their external operations.
 
+> 🔗 **Building external integrations?** See the **[External API Integration Guide](external-api-integration.md)** for complete patterns and examples.
+
 **Internal METIS Targets**: Targets that need to perform actions within METIS itself (modify missions, send output to forces, control nodes) require mission component types (force, node, action) in addition to basic types.
+
+> 📘 **Working with mission components?** The **[Context API Reference](../references/context-api.md)** documents all available methods for mission manipulation.
 
 ## String Types
 

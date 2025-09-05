@@ -62,15 +62,15 @@ integration/target-env/
 Import paths
 
 ```ts
-import TargetEnvSchema from 'integration/library/target-env-classes'
-import TargetSchema from 'integration/library/target-env-classes/targets'
+import TargetEnvSchema from '../../library/target-env-classes'
+import TargetSchema from '../../../../library/target-env-classes/targets'
 ```
 
 Minimal examples
 
 ```ts
 // integration/target-env/my-env/schema.ts
-import TargetEnvSchema from 'integration/library/target-env-classes'
+import TargetEnvSchema from '../../library/target-env-classes'
 
 export default new TargetEnvSchema({
   name: 'My Environment',
@@ -81,7 +81,7 @@ export default new TargetEnvSchema({
 
 ```ts
 // integration/target-env/my-env/targets/output-panel/schema.ts
-import TargetSchema from 'integration/library/target-env-classes/targets'
+import TargetSchema from '../../../../library/target-env-classes/targets'
 
 export default new TargetSchema({
   name: 'Output Panel',

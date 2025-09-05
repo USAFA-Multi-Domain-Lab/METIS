@@ -10,6 +10,35 @@ The Target-Effect system allows METIS to interact with external systems through 
 2. **Registry Layer** - Discover and manage available integrations
 3. **Execution Layer** - Execute effects against external systems during METIS sessions
 
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     METIS APPLICATION                           │
+├─────────────────────────────────────────────────────────────────┤
+│  EXECUTION LAYER                                               │
+│  • Execute effects during missions                             │
+│  • Secure context creation                                     │
+│  • Real-time feedback                                          │
+├─────────────────────────────────────────────────────────────────┤
+│  REGISTRY LAYER                                                │
+│  • Auto-discover integrations                                  │
+│  • Build target/environment registry                           │
+│  • Share between client/server                                 │
+├─────────────────────────────────────────────────────────────────┤
+│  INTEGRATION LAYER                                             │
+│  • Target environment definitions                              │
+│  • Target implementations                                      │
+│  • External system connections                                 │
+└─────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+                    ┌─────────────────────┐
+                    │  EXTERNAL SYSTEMS   │
+                    │  • APIs             │
+                    │  • Databases        │
+                    │  • Services         │
+                    └─────────────────────┘
+```
+
 ## How It Works
 
 ### Integration Layer (`/integration`)

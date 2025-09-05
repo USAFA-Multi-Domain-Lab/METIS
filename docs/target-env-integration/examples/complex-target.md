@@ -30,7 +30,7 @@ Create `/integration/target-env/mission-control/schema.ts`:
 
 ```typescript
 import TargetEnvSchema from '../../library/target-env-classes'
-import RestApi from '../../library/rest-api'
+import { RestApi } from '../../library/api/rest-api'
 
 /**
  * Configured REST API client for the Mission Control environment.
