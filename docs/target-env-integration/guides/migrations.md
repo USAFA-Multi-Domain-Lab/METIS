@@ -25,7 +25,8 @@ Target migrations allow you to update target schemas while maintaining compatibi
 - **Migration Registry** - Container for all migration scripts for a target
 - **Migration Script** - Function that transforms old effect arguments to new format
 - **Version Alignment** - Migration versions should align with target environment versions
-- **Automatic Execution** - METIS automatically runs pending migrations when effects execute
+- **Manual Execution** - Migrations are manually triggered through the mission page user-interface
+- **Effect Args Only** - Current system only supports migrating effect arguments (more features planned)
 
 ## 🔄 When to Use Migrations
 
@@ -40,12 +41,12 @@ Create migrations when you make **breaking changes** to target schemas:
   type: 'string',
 }
 
-// After (v1.1.0) - Breaking change: string → object
+// After (v1.1.0) - Breaking change: string → large-string
 {
   _id: 'serverConfig',
-  type: 'large-string', // Now expects JSON
+  type: 'large-string',
 }
-// ✅ Need migration: Parse old string values
+// ✅ Need migration: Convert short configs to multi-line format
 ```
 
 ### Argument ID Changes
@@ -92,7 +93,7 @@ args: [
 
 ## 📋 Migration Registry
 
-The `TargetMigrationRegistry` manages all migrations for a target:
+A `TargetMigrationRegistry` object manages all migrations for a target:
 
 ### Basic Registry Setup
 
@@ -143,16 +144,13 @@ type MigrationScript = (effectArgs: Record<any, any>) => Record<any, any>
 const migrateToV1_1_0 = (effectArgs) => {
   console.log('Migrating to version 1.1.0: Renaming hostName to hostname')
 
-  // Create new args object
-  const newArgs = { ...effectArgs }
-
   // Rename the argument
-  if (newArgs.hostName) {
-    newArgs.hostname = newArgs.hostName
-    delete newArgs.hostName
+  if (effectArgs.hostName) {
+    effectArgs.hostname = effectArgs.hostName
+    delete effectArgs.hostName
   }
 
-  return newArgs
+  return effectArgs
 }
 ```
 
@@ -175,37 +173,6 @@ const migrateToV2_0_0 = (effectArgs) => {
     // Add new optional args with defaults
     timeout: 30000,
     retryCount: 3,
-  }
-}
-```
-
-### Data Validation in Migrations
-
-```ts
-const migrateToV1_2_0 = (effectArgs) => {
-  console.log('Migrating to version 1.2.0: Validating config format')
-
-  const newArgs = { ...effectArgs }
-
-  // Handle different config formats
-  if (typeof newArgs.config === 'string') {
-    try {
-      // Parse JSON string to object
-      newArgs.config = JSON.parse(newArgs.config)
-    } catch (error) {
-      console.warn('Invalid JSON in config, using default')
-      newArgs.config = { default: true }
-    }
-  }
-
-  // Ensure required properties exist
-  newArgs.config = {
-    timeout: 30,
-    retries: 3,
-    ...newArgs.config,
-  }
-
-  return newArgs
 }
 ```
 
@@ -223,12 +190,11 @@ import TargetMigrationRegistry from 'metis/target-environments/targets/migration
 const migrations = new TargetMigrationRegistry()
   .register('1.1.0', (effectArgs) => {
     // Rename hostName → hostname
-    const newArgs = { ...effectArgs }
-    if (newArgs.hostName) {
-      newArgs.hostname = newArgs.hostName
-      delete newArgs.hostName
+    if (effectArgs.hostName) {
+      effectArgs.hostname = effectArgs.hostName
+      delete effectArgs.hostName
     }
-    return newArgs
+    return effectArgs
   })
   .register('2.0.0', (effectArgs) => {
     // Combine port + SSL → endpoint
@@ -264,35 +230,6 @@ export default new TargetSchema({
 
     ctx.sendOutput(`Deploying to ${endpoint}`)
     // Deploy logic here...
-  },
-})
-```
-
-### Migration-Only Updates
-
-```ts
-// When you only need to add migrations (no schema changes)
-const migrations = new TargetMigrationRegistry().register(
-  '1.0.1',
-  (effectArgs) => {
-    // Fix data corruption issue
-    if (effectArgs.config && effectArgs.config.includes('{{')) {
-      effectArgs.config = effectArgs.config.replace(/\{\{/g, '{')
-    }
-    return effectArgs
-  },
-)
-
-export default new TargetSchema({
-  name: 'Existing Target',
-  description: 'Target with migration fixes',
-  migrations, // Add migrations without changing args
-  args: [
-    // Existing args unchanged
-  ],
-  script: async (ctx) => {
-    // Existing script unchanged
-  },
 })
 ```
 
@@ -323,20 +260,22 @@ const migrations = new TargetMigrationRegistry()
   .register('2.0.0', handleMajorRestructure)
 ```
 
-### Migration Execution Order
+### Migration Execution
 
-METIS automatically determines which migrations to run:
+Migrations are manually triggered through the METIS mission page user-interface:
 
 ```ts
 // Effect created with Target Environment v1.0.0
 // Current Target Environment v2.1.0
-//
-// METIS will run migrations in order:
+
+// When triggered via mission page UI, METIS will run migrations in order:
 // 1. v1.2.0 migration (renames arguments)
 // 2. v2.0.0 migration (restructures arguments)
-//
+
 // Final result: Effect args compatible with v2.1.0
 ```
+
+> **Note:** The migration system currently only supports migrating **effect arguments**. This system is designed to be expanded in the future to handle other types of migrations and provide more robust migration capabilities.
 
 ## 🧪 Testing Migrations
 
@@ -384,33 +323,54 @@ const migrateWithValidation = (effectArgs) => {
 
 ### Migration Design
 
-✅ **Keep migrations simple and focused**
+✅ **Keep migrations focused but comprehensive**
 
 ```ts
-// Good: Single responsibility
-.register('1.1.0', (args) => renameHostname(args))
-.register('1.2.0', (args) => addDefaults(args))
+// Good: Handle all breaking changes for a version
+new TargetMigrationRegistry().register('2.0.0', (args) => {
+  // Multiple related changes in v2.0.0
+  const result = { ...args }
 
-// Avoid: Multiple changes in one migration
-.register('1.1.0', (args) => {
-  // Don't combine unrelated changes
-  args = renameHostname(args)
-  args = restructureConfig(args)
-  args = addNewFeatures(args)
-  return args
+  // Rename fields for consistency
+  if (result.hostName) {
+    result.hostname = result.hostName
+    delete result.hostName
+  }
+
+  // Restructure authentication
+  if (result.apiKey && result.authType) {
+    result.auth = {
+      type: result.authType,
+      key: result.apiKey,
+    }
+    delete result.apiKey
+    delete result.authType
+  }
+
+  // Add required defaults for new features
+  result.timeout = result.timeout || 30000
+  result.retryCount = result.retryCount || 3
+
+  return result
 })
+
+// Also good: Single change when that's what the version contains
+new TargetMigrationRegistry().register('1.1.0', (args) => renameHostname(args))
 ```
 
 ✅ **Preserve data integrity**
 
 ```ts
 const migrate = (effectArgs) => {
-  // Create copy to avoid mutation
-  const result = { ...effectArgs }
+  // Preserve unknown fields when restructuring
+  const { knownField, ...unknownFields } = effectArgs
 
-  // Preserve unknown fields
-  const { knownField, ...unknownFields } = result
+  // Option 1: Mutate original object
+  effectArgs.newKnownField = knownField
+  delete effectArgs.knownField
+  return effectArgs
 
+  // Option 2: Create new object (preserves unknowns)
   return {
     newKnownField: knownField,
     ...unknownFields, // Keep anything we don't recognize
@@ -447,7 +407,7 @@ const migrate = (effectArgs) => {
 ✅ **Document migration purpose**
 
 ```ts
-.register('2.0.0', (effectArgs) => {
+new TargetMigrationRegistry().register('2.0.0', (effectArgs) => {
   // Migration purpose: Combine authentication fields into single object
   // Breaking change: auth-type + api-key → auth: { type, key }
   return migrateAuthFields(effectArgs)
@@ -456,23 +416,51 @@ const migrate = (effectArgs) => {
 
 ## ⚠️ Common Pitfalls
 
-### Migration Versioning Issues
+### Migration Versioning Strategy
 
-❌ **Wrong: Skipping migration versions**
-
-```ts
-// Target env: v1.0.0 → v1.1.0 → v2.0.0
-// Migrations: v2.0.0 only
-// Problem: Effects from v1.1.0 won't migrate properly
-```
-
-✅ **Correct: Complete migration chain**
+✅ **Create migrations only for versions with breaking changes**
 
 ```ts
+// Your target environment releases:
+// v1.0.0 - Initial release
+// v1.1.0 - Added optional field (no breaking changes)
+// v1.2.0 - Renamed 'hostName' to 'hostname' (BREAKING)
+// v2.0.0 - Combined port + SSL into 'endpoint' (BREAKING)
+// v2.1.0 - Added new optional timeout field (no breaking changes)
+
+// Only create migrations for breaking change versions:
 const migrations = new TargetMigrationRegistry()
-  .register('1.1.0', migrateFromV1_0_0) // Handle v1.0.0 → v1.1.0
-  .register('2.0.0', migrateFromV1_1_0) // Handle v1.1.0 → v2.0.0
+  .register('1.2.0', (effectArgs) => {
+    // Migrate effects created before v1.2.0
+    if (effectArgs.hostName) {
+      effectArgs.hostname = effectArgs.hostName
+      delete effectArgs.hostName
+    }
+    return effectArgs
+  })
+  .register('2.0.0', (effectArgs) => {
+    // Migrate effects created before v2.0.0
+    const { port = 80, useSSL = false, hostname, ...rest } = effectArgs
+    const protocol = useSSL ? 'https' : 'http'
+    return {
+      ...rest,
+      endpoint: `${protocol}://${hostname}:${port}`,
+    }
+  })
 ```
+
+**How it works:**
+
+When an effect needs to be migrated, METIS runs all migrations between the effect's version and the current target version:
+
+| Effect Created With | Current Target | Migrations Applied | Result                    |
+| ------------------- | -------------- | ------------------ | ------------------------- |
+| v1.0.0              | v2.1.0         | `1.2.0` → `2.0.0`  | ✅ Compatible with v2.1.0 |
+| v1.1.0              | v2.1.0         | `1.2.0` → `2.0.0`  | ✅ Compatible with v2.1.0 |
+| v1.2.0              | v2.1.0         | `2.0.0` only       | ✅ Compatible with v2.1.0 |
+| v2.0.0+             | v2.1.0         | None needed        | ✅ Already compatible     |
+
+> 💡 **Key insight:** You only need migrations for versions that introduced breaking changes. METIS automatically chains them together to bridge any version gap.
 
 ### Data Loss
 
@@ -500,21 +488,19 @@ const migrate = (effectArgs) => {
 }
 ```
 
-### Mutation Issues
+### Object Handling
 
-❌ **Wrong: Mutating input arguments**
+✅ **Mutation is allowed - choose your preferred approach**
 
 ```ts
+// Option 1: Mutate the original (allowed and efficient)
 const migrate = (effectArgs) => {
-  effectArgs.newField = effectArgs.oldField // ❌ Mutates input
+  effectArgs.newField = effectArgs.oldField
   delete effectArgs.oldField
   return effectArgs
 }
-```
 
-✅ **Correct: Creating new object**
-
-```ts
+// Option 2: Create new object (also perfectly valid)
 const migrate = (effectArgs) => {
   const { oldField, ...rest } = effectArgs
   return {
@@ -522,6 +508,8 @@ const migrate = (effectArgs) => {
     newField: oldField,
   }
 }
+
+// Both approaches are supported by the migration system
 ```
 
 ## 📚 Examples
@@ -570,40 +558,6 @@ const migrations = new TargetMigrationRegistry().register(
       username: authConfig?.username || '',
       password: authConfig?.password || '',
     }
-  },
-)
-```
-
-### Example 3: Data Type Migration
-
-```ts
-// v2.0.0 → v3.0.0: String config → JSON object
-const migrations = new TargetMigrationRegistry().register(
-  '3.0.0',
-  (effectArgs) => {
-    const result = { ...effectArgs }
-
-    // Convert string config to object
-    if (typeof result.config === 'string') {
-      try {
-        result.config = JSON.parse(result.config)
-      } catch (error) {
-        console.warn('Failed to parse config JSON, using defaults')
-        result.config = {
-          timeout: 30000,
-          retries: 3,
-        }
-      }
-    }
-
-    // Ensure config has required fields
-    result.config = {
-      timeout: 30000,
-      retries: 3,
-      ...result.config,
-    }
-
-    return result
   },
 )
 ```
