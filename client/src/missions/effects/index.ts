@@ -27,9 +27,6 @@ export class ClientEffect extends Effect<TMetisClientComponents> {
     targetId: string,
     environmentId: string,
   ): ClientTarget | null {
-    // todo: Allow user to decide which target to use
-    // todo: if multiple targets with the same ID exist
-    // todo: in different environments
     if (environmentId === ClientEffect.ENVIRONMENT_ID_INFER) {
       return ClientTargetEnvironment.REGISTRY.inferTarget(targetId) ?? null
     } else {

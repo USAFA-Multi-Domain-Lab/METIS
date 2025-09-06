@@ -38,6 +38,7 @@ const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
     version: '',
   }),
   debugMode: false,
+  devOptionsActive: false,
   forcedUpdateCounter: 0,
   server: null,
   login: null,
@@ -730,6 +731,11 @@ export type TGlobalContextValues = {
    * @note This is only used in development environments.
    */
   debugMode: boolean
+  /**
+   * When active, the dev-options modal will be
+   * displayed.
+   */
+  devOptionsActive: boolean
   forcedUpdateCounter: number
   server: ServerConnection | null
   login: TLogin<ClientUser>

@@ -29,7 +29,6 @@ const routerMap = (router: Router, server: MetisServer, done: () => void) => {
           accessibility: RequestBodyFilters.STRING_LITERAL<
             TSessionConfig['accessibility']
           >(Session.ACCESSIBILITY_OPTIONS),
-          autoAssign: RequestBodyFilters.BOOLEAN,
           infiniteResources: RequestBodyFilters.BOOLEAN,
           effectsEnabled: RequestBodyFilters.BOOLEAN,
           name: RequestBodyFilters.STRING,

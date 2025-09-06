@@ -1,5 +1,6 @@
 import Tooltip from 'src/components/content/communication/Tooltip'
 import { DetailToggle } from 'src/components/content/form/DetailToggle'
+import { useGlobalContext } from 'src/context/global'
 import { useObjectFormSync, useRequireLogin } from 'src/toolbox/hooks'
 import { useMapContext } from '../../../MissionMap'
 import './MapPreferences.scss'
@@ -11,6 +12,8 @@ export default function MapPreferences(): JSX.Element | null {
   /* -- STATE -- */
 
   const mapContext = useMapContext()
+  const globalContext = useGlobalContext()
+  const { handleError } = globalContext.actions
   const { login } = useRequireLogin()
   const { user } = login
   const [mapPreferencesVisible, setMapPreferencesVisible] =
@@ -19,12 +22,15 @@ export default function MapPreferences(): JSX.Element | null {
     user.preferences.missionMap,
     ['panOnDefectSelection'],
     {
-      onChange: async () => {
+      onChange: async (prevState, revert) => {
         try {
           await user.$savePreferences()
         } catch (error) {
-          // todo: Notify the user of the error, keeping in
-          // todo: mind they shouldn't be spammed notifications.
+          revert()
+          handleError({
+            message: 'Failed to save map preference changes with server.',
+            notifyMethod: 'bubble',
+          })
         }
       },
     },

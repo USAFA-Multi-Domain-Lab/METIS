@@ -676,16 +676,6 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     // ? Is this still necessary?
     ...components: TNonEmptyArray<MissionComponent<any, any>>
   ): void => {
-    // todo: Remove this, maybe??
-    // components.forEach((component) => {
-    //   // If the component was defective and is no
-    //   // longer defective, then remove it from the
-    //   // list.
-    //   if (defectiveComponents.includes(component) && !component.defective) {
-    //     updatedState = updatedState.filter((c) => c._id !== component._id)
-    //   }
-    // })
-
     // Trigger a check for defects, now
     // that a component has changed.
     setCheckForDefects(true)

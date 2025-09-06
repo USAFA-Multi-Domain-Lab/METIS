@@ -67,7 +67,6 @@ export default function PrototypeSlot({
       onClick={onClick}
     >
       <div className='Icon'></div>
-      {/* todo: add tooltip */}
       <Tooltip description={tooltipDescription} />
     </div>
   )

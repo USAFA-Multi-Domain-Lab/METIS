@@ -5,6 +5,7 @@ import { useRequireLogin } from 'src/toolbox/hooks'
 import { useButtonMenuEngine } from '../user-controls/buttons/ButtonMenu'
 import ButtonSvgPanel from '../user-controls/buttons/panels/ButtonSvgPanel'
 import ButtonSvgEngine from '../user-controls/buttons/panels/engines'
+import { useButtonSvgs } from '../user-controls/buttons/panels/hooks'
 import {
   TButtonPanelInput,
   TButtonSvg_PK,
@@ -22,6 +23,21 @@ export default function Navigation({
   buttonEngine,
   logoLinksHome = true,
 }: TNavigation_P): JSX.Element | null {
+  const globalContext = useGlobalContext()
+  const [devOptionsActive, setDevOptionsActive] = globalContext.devOptionsActive
+
+  useButtonSvgs(buttonEngine, {
+    key: 'dev-options',
+    type: 'button',
+    icon: 'code',
+    // todo: Finish building this feature.
+    hidden: true,
+    // hidden: process.env.NODE_ENV !== 'development',
+    onClick: () => {
+      setDevOptionsActive(true)
+    },
+  })
+
   /**
    * The class for the root element.
    */

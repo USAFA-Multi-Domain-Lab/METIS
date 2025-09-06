@@ -16,6 +16,7 @@ import {
   tooltipsOffsetX,
   tooltipsOffsetY,
 } from './content/communication/Tooltip'
+import { DevOptions } from './content/debug/DevOptions'
 import Markdown, { MarkdownTheme } from './content/general-layout/Markdown'
 import ButtonMenu from './content/user-controls/buttons/ButtonMenu'
 import { TButtonText_P } from './content/user-controls/buttons/ButtonText'
@@ -63,6 +64,8 @@ function App(props: {}): JSX.Element | null {
   const [tooltips] = globalContext.tooltips
   const [tooltipDescription, setTooltipDescription] =
     globalContext.tooltipDescription
+  const [debugOptionsActive, setDebugOptionsActive] =
+    globalContext.devOptionsActive
   const [buttonMenu] = globalContext.buttonMenu
   const [loading] = globalContext.loading
   const [loadingMinTimeReached] = globalContext.loadingMinTimeReached
@@ -332,6 +335,7 @@ function App(props: {}): JSX.Element | null {
           />
         </div>
         <Notifications />
+        <DevOptions />
         {promptData !== null ? <Prompt {...promptData} /> : null}
         <ErrorPage {...pageProps} key='error-page' />
         <LoadingPage {...pageProps} key={loadingPageId} />

@@ -1,6 +1,5 @@
 import ClientMissionFile from 'src/missions/files'
-import { compute } from 'src/toolbox'
-import { useDefaultProps } from 'src/toolbox/hooks'
+import { useDefaultProps, useRequireLogin } from 'src/toolbox/hooks'
 import FileToolbox from '../../../../../../../shared/toolbox/files'
 import List, { createDefaultListProps, TList_P } from '../List'
 
@@ -9,20 +8,15 @@ import List, { createDefaultListProps, TList_P } from '../List'
  * @note Uses the `List` component.
  */
 export default function (props: TMissionFileList_P): JSX.Element | null {
+  const login = useRequireLogin()
+
   const defaultedProps = useDefaultProps(props, {
     ...createDefaultListProps<ClientMissionFile>(),
     itemsPerPageMin: 10,
     columns: ['mimetype', 'size'],
     deselectionBlacklist: ['.ResizeBar', '.ScrollBox', '.EntryBottom'],
     listButtonIcons: [],
-    itemButtonIcons: compute<TMetisIcon[]>(() => {
-      let results: TMetisIcon[] = []
-
-      // todo: Add auth.
-      if (props.onDetachRequest) results.push('unlink')
-
-      return results
-    }),
+    itemButtonIcons: ['unlink'],
     initialSorting: { column: 'name', method: 'ascending' },
     getCellText: (
       file: ClientMissionFile,
@@ -79,7 +73,7 @@ export default function (props: TMissionFileList_P): JSX.Element | null {
     getItemButtonPermissions: (button) => {
       switch (button) {
         case 'unlink':
-          return ['files_write']
+          return ['missions_write']
         default:
           return []
       }

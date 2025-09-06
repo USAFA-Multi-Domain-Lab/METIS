@@ -46,14 +46,7 @@ const routerMap: TMetisRouterMap = (
   /* -- READ -- */
 
   // -- GET | /api/v1/users/ --
-  router.get(
-    '/',
-    auth({ permissions: ['users_read_students'] }),
-    // todo: implement a way to ensure that only the proper
-    // todo: users are returned based on the user's permissions.
-    // restrictUserManagement,
-    getUsers,
-  )
+  router.get('/', auth({ permissions: ['users_read_students'] }), getUsers)
 
   // -- GET | /api/v1/users/:_id/ --
   router.get(
@@ -65,6 +58,29 @@ const routerMap: TMetisRouterMap = (
   )
 
   /* -- UPDATE -- */
+
+  // -- PUT | /api/v1/users/preferences/ --
+  router.put(
+    '/preferences/',
+    auth({}),
+    defineRequests({
+      body: {
+        preferences: RequestBodyFilters.USER_PREFERENCES(true),
+      },
+    }),
+    updateUserPreferences,
+  )
+
+  // -- PUT | /api/v1/users/reset-password --
+  router.put(
+    '/reset-password/',
+    auth({}),
+    restrictPasswordReset,
+    defineRequests({
+      body: { password: RequestBodyFilters.PASSWORD },
+    }),
+    resetPassword,
+  )
 
   //  -- PUT | /api/v1/users/ --
   router.put(
@@ -90,29 +106,6 @@ const routerMap: TMetisRouterMap = (
       },
     ),
     updateUser,
-  )
-
-  // -- PUT | /api/v1/users/preferences/ --
-  router.put(
-    '/preferences/',
-    auth({}),
-    defineRequests({
-      body: {
-        preferences: RequestBodyFilters.USER_PREFERENCES(true),
-      },
-    }),
-    updateUserPreferences,
-  )
-
-  // -- PUT | /api/v1/users/reset-password --
-  router.put(
-    '/:_id/reset-password',
-    auth({}),
-    restrictPasswordReset,
-    defineRequests({
-      body: { password: RequestBodyFilters.PASSWORD },
-    }),
-    resetPassword,
   )
 
   /* -- DELETE -- */

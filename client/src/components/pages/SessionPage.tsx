@@ -569,29 +569,7 @@ export default function SessionPage({
           <Panel>
             <PanelView title='Output'>
               <If condition={!!selectedForce}>
-                <OutputPanel
-                  force={selectedForce!}
-                  selectNode={(node) => {
-                    // todo: Implement panning to the node on the mission map.
-                    // if (node === null) {
-                    //   notify(
-                    //     'This node cannot be accessed from the current force.',
-                    //   )
-                    //   return
-                    // } else if (node.executing) {
-                    //   notify(
-                    //     `The node "${node.name}" is currently executing and cannot be located at this time.`,
-                    //   )
-                    //   return
-                    // } else if (node.blocked) {
-                    //   notify(
-                    //     `The node "${node.name}" is blocked and cannot be accessed at this time.`,
-                    //   )
-                    //   return
-                    // }
-                    // setNodeToExecute(node)
-                  }}
-                />
+                <OutputPanel force={selectedForce!} />
               </If>
             </PanelView>
             <PanelView title='Files'>

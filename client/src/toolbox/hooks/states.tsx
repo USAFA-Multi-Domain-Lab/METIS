@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { TObjectFormSyncOptions, usePostInitEffect } from '.'
+import StringToolbox from '../../../../shared/toolbox/strings'
 
 /**
  * Maintains states for all provided keys of a provided object,
@@ -19,8 +20,11 @@ export function useObjectFormSync<
   options: TObjectFormSyncOptions<T> = {},
 ): { [K in keyof T]: K extends TIncludedKey ? TReactState<T[K]> : never } {
   const { onChange = () => {} } = options
-  let [objectState, setObjectState] = useState<Array<any>>(() =>
+  const [objectState, setObjectState] = useState<Array<any>>(() =>
     statefulKeys.map((key) => object[key]),
+  )
+  const [updateId, setUpdateId] = useState<string>(
+    StringToolbox.generateRandomId(),
   )
 
   // When the state updates, transfer the state data
@@ -34,8 +38,18 @@ export function useObjectFormSync<
       prevState[key] = object[key]
       object[key] = value
     }
-    onChange(prevState)
-  }, [objectState])
+
+    onChange(prevState, () => {
+      // On callback, revert changes made.
+      for (let key of statefulKeys) {
+        object[key] = prevState[key]
+      }
+      // Since `updateId` isn't set, the hook
+      // won't retrigger, which would potentially
+      // cause an infinite loop.
+      setObjectState(statefulKeys.map((key) => object[key]))
+    })
+  }, [updateId])
 
   // Construct the state object to return
   // to the caller for use.
@@ -64,6 +78,8 @@ export function useObjectFormSync<
           // Return the new object state.
           return newObjectState
         })
+        // Trigger post-update hook.
+        setUpdateId(StringToolbox.generateRandomId())
       },
     ]
   }

@@ -15,9 +15,11 @@ export type TObjectFormSyncOptions<T extends {}> = {
   /**
    * Callback to call when the state updates for
    * one of the stateful properties in the object.
+   * @param prevState The previous state of the object.
+   * @param revert A function to call to revert the state to the previous value.
    * @default () => {}
    */
-  onChange?: (prevState: T) => void
+  onChange?: (prevState: T, revert: () => void) => void
 }
 
 /**

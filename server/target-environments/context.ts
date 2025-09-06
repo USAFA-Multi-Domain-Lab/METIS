@@ -719,17 +719,6 @@ export type TTargetEnvExposedUser = {
 }
 
 /**
- * Options for `TargetEnvContext.sendOutput` method.
- */
-export type TSendOutputOptions = {
-  /**
-   * The ID of the force to which the output is sent.
-   * @default this.forceId // The force to which the current effect belongs.
-   */
-  recipientForceId?: string
-}
-
-/**
  * Options for methods that manipulate a node.
  */
 export type TManipulateNodeOptions = {

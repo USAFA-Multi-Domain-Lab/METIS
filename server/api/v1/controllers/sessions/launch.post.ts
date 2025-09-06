@@ -15,20 +15,13 @@ import ApiResponse from '../../library/response'
  */
 const launchSession = async (request: Request, response: Response) => {
   // Get data from the request body.
-  let {
-    missionId,
-    name,
-    accessibility,
-    autoAssign,
-    infiniteResources,
-    effectsEnabled,
-  } = request.body
+  let { missionId, name, accessibility, infiniteResources, effectsEnabled } =
+    request.body
 
   // Define the session configuration.
   let sessionConfig: TSessionConfig = {
     name: name ?? Session.DEFAULT_CONFIG.name,
     accessibility: accessibility ?? Session.DEFAULT_CONFIG.accessibility,
-    autoAssign: autoAssign ?? Session.DEFAULT_CONFIG.autoAssign,
     infiniteResources:
       infiniteResources ?? Session.DEFAULT_CONFIG.infiniteResources,
     effectsEnabled: effectsEnabled ?? Session.DEFAULT_CONFIG.effectsEnabled,

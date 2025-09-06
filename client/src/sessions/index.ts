@@ -76,9 +76,13 @@ export default class SessionClient extends Session<TMetisClientComponents> {
     return this.member.roleId
   }
 
-  // todo: Between the time the client joins and this object is
-  // todo: constructed, there is possibility that changes have been made
-  // todo: in the session. This should be handled.
+  /**
+   * @param data Core data used to build the session object.
+   * @param server The connection to the server used to synchronize
+   * game logic.
+   * @param memberId The ID of the member associated with this
+   * client connection.
+   */
   public constructor(
     data: TSessionJson,
     server: ServerConnection,

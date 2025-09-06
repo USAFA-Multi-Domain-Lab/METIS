@@ -63,7 +63,7 @@ export default class MetisFileStore {
    * )
    */
   public get uploadMiddleware(): RequestHandler {
-    return this.multer.array('files') // todo: Determine file count limit.
+    return this.multer.array('files')
   }
 
   /**

@@ -303,7 +303,6 @@ export default abstract class Session<
   public static get DEFAULT_CONFIG(): TSessionConfig {
     return {
       accessibility: 'public',
-      autoAssign: true,
       infiniteResources: false,
       effectsEnabled: true,
     }
@@ -340,11 +339,6 @@ export type TSessionConfig = {
    * @default 'public'
    */
   accessibility: TSessionAccessibility
-  /**
-   * Whether students will be auto-assigned to their roles.
-   * @default true
-   */
-  autoAssign: boolean
   /**
    * Whether resources will be infinite in the session.
    * @default false

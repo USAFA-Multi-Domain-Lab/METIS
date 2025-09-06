@@ -70,7 +70,6 @@ export const clientEventSchemas: TClientEventSchemas = {
             'invite-only',
           ] as TNonEmptyArray<TSessionAccessibility>)
           .optional(),
-        autoAssign: zod.boolean().optional(),
         infiniteResources: zod.boolean().optional(),
         effectsEnabled: zod.boolean().optional(),
       }),

@@ -11,6 +11,7 @@ import User, {
 } from '../../../shared/users'
 import UserAccess from '../../../shared/users/accesses'
 import UserPermission from '../../../shared/users/permissions'
+import TUserPreferencesJson from '../../../shared/users/preferences'
 
 /**
  * Class for managing users on the client.
@@ -38,6 +39,12 @@ export default class ClientUser
    * and this will be set to false.
    */
   public pendingPreferenceSave: boolean = false
+
+  /**
+   * The last known version of preferences
+   * since a save has been made.
+   */
+  public lastSavedPreferences: TUserPreferencesJson
 
   /**
    * @returns Whether the two passwords match.
@@ -171,6 +178,7 @@ export default class ClientUser
   ) {
     // Initialize base properties.
     super(...args)
+    this.lastSavedPreferences = this.preferences
   }
 
   // Overridden abstract method
@@ -214,9 +222,12 @@ export default class ClientUser
         await axios.put<void>(`${ClientUser.API_ENDPOINT}/preferences/`, {
           preferences: this.preferences,
         })
+        this.lastSavedPreferences = this.preferences
         // Resolve
         resolve()
       } catch (error) {
+        // Revert preferences.
+        this.preferences = this.lastSavedPreferences
         console.error('Failed to save user preferences.')
         console.error(error)
         reject(error)
@@ -477,12 +488,9 @@ export default class ClientUser
   public static $resetPassword(user: ClientUser): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
       try {
-        await axios.put(
-          `${ClientUser.API_ENDPOINT}/${user._id}/reset-password`,
-          {
-            password: user.password1,
-          },
-        )
+        await axios.put(`${ClientUser.API_ENDPOINT}/reset-password`, {
+          password: user.password1,
+        })
         resolve()
       } catch (error: any) {
         console.error('Failed to reset password.')

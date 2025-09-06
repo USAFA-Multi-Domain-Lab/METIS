@@ -162,7 +162,6 @@ export class SessionBasic
       banList: [],
       config: {
         accessibility: 'id-required',
-        autoAssign: false,
         infiniteResources: false,
         effectsEnabled: true,
       },

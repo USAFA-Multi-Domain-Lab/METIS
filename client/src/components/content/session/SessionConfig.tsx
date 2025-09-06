@@ -25,7 +25,6 @@ export default function SessionConfig({
   const [accessibility, setAccessibility] = useState<TSessionAccessibility>(
     sessionConfig.accessibility,
   )
-  const [autoAssign, setAutoAssign] = useState(sessionConfig.autoAssign)
   const [infiniteResources, setInfiniteResources] = useState(
     sessionConfig.infiniteResources,
   )
@@ -39,12 +38,11 @@ export default function SessionConfig({
   // componentDidUpdate
   useEffect(() => {
     sessionConfig.accessibility = accessibility
-    sessionConfig.autoAssign = autoAssign
     sessionConfig.infiniteResources = infiniteResources
     sessionConfig.effectsEnabled = effectsEnabled
     sessionConfig.name = name
     onChange()
-  }, [accessibility, autoAssign, infiniteResources, effectsEnabled, name])
+  }, [accessibility, infiniteResources, effectsEnabled, name])
 
   /* -- RENDER -- */
 
@@ -83,13 +81,6 @@ export default function SessionConfig({
           defaultValue: 'public',
         }}
       />
-      {/* // todo: Decide what to do with auto assign. */}
-      {/* <DetailToggle
-        label='Auto-Assign:'
-        stateValue={autoAssign}
-        setState={setAutoAssign}
-        lockState={'locked-activation'}
-      /> */}
       <DetailToggle
         label='Infinite Resources:'
         value={infiniteResources}

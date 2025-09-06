@@ -8,8 +8,6 @@ import { DateToolbox } from '../../../../../../../../shared/toolbox/dates'
 import List, { createDefaultListProps, TList_P } from '../../List'
 import { useMissionItemButtonCallbacks } from './item-buttons'
 
-// todo: Convert this list to be organized
-// todo like `FileReferenceList`.
 /**
  * A component for displaying a list of missions.
  * @note Uses the `List` component.
@@ -19,9 +17,7 @@ export default function MissionList(props: TMissionList_P): JSX.Element | null {
 
   const globalContext = useGlobalContext()
   const { login } = useRequireLogin()
-  const { navigateTo, beginLoading, finishLoading, notify, handleError } =
-    globalContext.actions
-  const [_, setLoadingProgress] = globalContext.loadingProgress
+  const { navigateTo } = globalContext.actions
   const importMissionTrigger = useRef<HTMLInputElement>(null)
 
   /* -- PROPS -- */

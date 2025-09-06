@@ -401,23 +401,24 @@ export default function <TNode extends TMapCompatibleNode>({
 
   // Render root JSX.
   return (
-    <div
-      key={node._id}
-      className={rootClasses.value}
-      style={rootStyle}
-      onClick={!excluded ? () => onSelect!(node) : () => {}}
-    >
+    <div key={node._id} className={rootClasses.value} style={rootStyle}>
       <div className='ProgressBar' style={progressBarStyle}></div>
-      <div className='PrimaryContent' style={primaryContentStyle}>
+      <div
+        className='PrimaryContent'
+        style={primaryContentStyle}
+        // Moved this from root element due to
+        // selection issues when clicking buttons.
+        onClick={!excluded ? () => onSelect!(node) : () => {}}
+      >
         <div className={nameClassName} style={nameStyle}>
           {name}
         </div>
         <div className={iconClassName} style={iconStyle}></div>
+        {tooltipJsx}
       </div>
       <div className={buttonsClassName} style={buttonsStyle}>
         <ButtonSvgPanel engine={nodeButtonEngine} />
       </div>
-      {tooltipJsx}
       {revealNodeButton}
     </div>
   )

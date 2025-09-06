@@ -1984,7 +1984,6 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     }
   }
 
-  // todo: Rework this.
   /**
    * Sends an output to the force's output panel.
    * @param output The output to send to the force.

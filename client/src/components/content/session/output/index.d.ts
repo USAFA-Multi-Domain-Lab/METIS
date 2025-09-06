@@ -1,6 +1,5 @@
 import React from 'react'
 import ClientOutput from '../../../../missions/forces/outputs'
-import ClientMissionNode from '../../../../missions/nodes'
 
 /**
  * Prop type for `Output`.
@@ -10,11 +9,6 @@ export type TOutput_P = {
    * The output for the force's output panel.
    */
   output: ClientOutput
-  /**
-   * Selects a node.
-   * @param node The node to select.
-   */
-  selectNode: (node: ClientMissionNode | null) => void
 }
 
 /**

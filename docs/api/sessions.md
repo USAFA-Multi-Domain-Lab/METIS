@@ -47,7 +47,6 @@ Creates and launches a new mission session.
   "missionId": "662270879c5ca781c218123c",
   "name": "Custom Session Name",
   "accessibility": "public",
-  "autoAssign": true,
   "infiniteResources": false,
   "effectsEnabled": true
 }
@@ -95,7 +94,6 @@ Retrieves all accessible sessions based on user permissions.
     "launchedAt": "2025-07-15T10:30:00.000Z",
     "config": {
       "accessibility": "public",
-      "autoAssign": true,
       "infiniteResources": false,
       "effectsEnabled": true
     },
@@ -172,7 +170,6 @@ Destroys a session.
 | Field               | Type      | Description                                                                | Default      |
 | ------------------- | --------- | -------------------------------------------------------------------------- | ------------ |
 | `accessibility`     | `string`  | Session access level (see [Session Access Levels](#session-access-levels)) | "public"     |
-| `autoAssign`        | `boolean` | Auto-assign users to forces                                                | true         |
 | `infiniteResources` | `boolean` | Unlimited resources                                                        | false        |
 | `effectsEnabled`    | `boolean` | Enable effects                                                             | true         |
 | `name`              | `string`  | Custom session name                                                        | Mission name |

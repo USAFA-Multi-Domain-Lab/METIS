@@ -50,11 +50,10 @@ export default abstract class MissionOutput<
    * @memoized Recomputes when `nodeId` changes.
    */
   private sourceNodeMemo = memoizeOne((nodeId: string): T['node'] | null => {
-    // todo: It may be useful to track when the
-    // todo: node is referenced but not found in
-    // todo: the mission. Perhaps the node is
-    // todo: part of a different force, and therefore
-    // todo: inaccessible, but very much a real node.
+    // ? In the future should we track when a node
+    // ? is referenced but not found? Perhaps the node
+    // ? is part of a different force, and therefore
+    // ? inaccessible, but very much a real node.
     return this.mission.getNodeById(nodeId) ?? null
   })
 
@@ -68,11 +67,10 @@ export default abstract class MissionOutput<
    */
   private sourceExecutionMemo = memoizeOne(
     (executionId: string): TExecution<T> | null => {
-      // todo: It may be useful to track when the
-      // todo: execution is referenced but not found in
-      // todo: the mission. Perhaps the execution is
-      // todo: part of a different force, and therefore
-      // todo: inaccessible, but very much a real execution.
+      // ? In the future should we track when an execution
+      // ? is referenced but not found? Perhaps the execution is
+      // ? part of a different force, and therefore
+      // ? inaccessible, but very much a real execution.
       return this.mission.getExecution(executionId) ?? null
     },
   )

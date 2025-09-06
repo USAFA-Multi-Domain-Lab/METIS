@@ -44,22 +44,21 @@ export default class PromiseToolbox {
         // Initiate the publish call with the
         // latest data.
         await publish(...data)
-      } catch (error) {
-        console.error('Deferred publish failed:', error)
-        resolvers.forEach(({ reject }) => reject(error))
-      } finally {
         // After the publish is complete, mark
         // that a publish is no longer in progress.
         isPublishing = false
-
         // Call all resolvers queued for this publish.
         resolvers.forEach(({ resolve }) => resolve())
-
         // If more calls queued up during the request,
         // process again.
         if (queuedData !== null) {
           processQueue()
         }
+      } catch (error) {
+        isPublishing = false
+        console.error('Deferred publish failed:', error)
+        resolvers.forEach(({ reject }) => reject(error))
+      } finally {
       }
     }
 
