@@ -1,5 +1,4 @@
-import axios, { AxiosRequestConfig } from 'axios'
-import fs from 'fs'
+import axios, { AxiosRequestConfig, AxiosResponse } from 'axios'
 import https from 'https'
 import { Api } from '.'
 import { AnyObject } from '../toolbox/objects'
@@ -22,50 +21,20 @@ export class RestApi extends Api {
   /**
    * The configuration for the request.
    */
-  private _config: AxiosRequestConfig<AnyObject>
+  private _config: AxiosRequestConfig<any>
   /**
    * The configuration for the request.
    */
-  public get config(): AxiosRequestConfig<AnyObject> {
+  public get config(): AxiosRequestConfig<any> {
     return this._config
   }
 
   /**
-   * The path to the environment file.
+   * @param options Used to configure how the API
+   * is accessed.
    */
-  private environmentFilePath: string = '../environment.json'
-
-  /**
-   * @param envVar The variable to use in the `environment.json` file.
-   */
-  public constructor(envVar: string) {
+  public constructor(options: ApiOptions = {}) {
     super()
-
-    // Initialize options.
-    let options: ApiOptions = {}
-
-    // If the environment file exists, read it.
-    if (fs.existsSync(this.environmentFilePath)) {
-      let environmentData: any = fs.readFileSync(
-        this.environmentFilePath,
-        'utf8',
-      )
-
-      // Parse data to JSON.
-      environmentData = JSON.parse(environmentData)
-
-      // If the environment variable exists in the file, load it.
-      if (environmentData[envVar]) {
-        console.log(`Loading environment data for ${envVar}...`)
-      }
-
-      // Join environment data with server options.
-      options = { ...environmentData[envVar] }
-    } else {
-      console.error(
-        'Environment file not found. Please make sure the file exists and try again.',
-      )
-    }
 
     // Build the base URL.
     this._baseUrl = this.buildBaseUrl(options)
@@ -176,109 +145,110 @@ export class RestApi extends Api {
       }
     }
 
+    config.baseURL = this.baseUrl
+
     // Return the configuration.
     return config
   }
 
   /**
-   * Sends an HTTP POST request to the location specified by the url.
-   * @param url The url to send the request to.
+   * Sends an HTTP POST request to the location specified by the URI.
+   * @param uri The endpoint to send the request to.
    * @param data The data to send with the request.
    * @param config The configuration for the request.
    * @resolves If a successful response (200) is received.
    * @rejects If an error occurs.
    */
-  public async post(
-    url: string,
-    data: AnyObject = {},
-    config: AxiosRequestConfig<AnyObject> = {},
-  ): Promise<void> {
-    try {
-      let updatedConfig = { ...this.config, ...config }
-      return await axios.post(url, data, updatedConfig)
-    } catch (error: any) {
-      throw error
-    }
+  public post<TRequestData = any, TResponseData = any>(
+    uri: string,
+    data?: TRequestData,
+    config: AxiosRequestConfig<TRequestData> = {},
+  ): Promise<AxiosResponse<TResponseData>> {
+    return axios.post<
+      TResponseData,
+      AxiosResponse<TResponseData>,
+      TRequestData
+    >(uri, data, { ...this.config, ...config })
   }
 
   /**
-   * Sends an HTTP GET request to the location specified by the url.
-   * @param url The url to send the request to.
+   * Sends an HTTP GET request to the location specified by the URI.
+   * @param uri The endpoint to send the request to.
    * @param config The configuration for the request.
    * @resolves If a successful response (200) is received.
    * @rejects If an error occurs.
    */
-  public async get(
-    url: string,
-    config: AxiosRequestConfig<AnyObject> = {},
-  ): Promise<void> {
-    try {
-      let updatedConfig = { ...this.config, ...config }
-      return await axios.get(url, updatedConfig)
-    } catch (error: any) {
-      throw error
-    }
+  public get<TResponseData = any>(
+    uri: string,
+    config: AxiosRequestConfig = {},
+  ): Promise<AxiosResponse<TResponseData>> {
+    return axios.get<TResponseData>(uri, {
+      ...this.config,
+      ...config,
+    })
   }
 
   /**
-   * Sends an HTTP PUT request to the location specified by the url.
-   * @param url The url to send the request to.
+   * Sends an HTTP PUT request to the location specified by the URI.
+   * @param uri The endpoint to send the request to.
    * @param data The data to send with the request.
    * @param config The configuration for the request.
    * @resolves If a successful response (200) is received.
    * @rejects If an error occurs.
    */
-  public async put(
-    url: string,
-    data: AnyObject = {},
-    config: AxiosRequestConfig<AnyObject> = {},
-  ): Promise<void> {
-    try {
-      let updatedConfig = { ...this.config, ...config }
-      return await axios.put(url, data, updatedConfig)
-    } catch (error: any) {
-      throw error
-    }
+  public put<TRequestData = any, TResponseData = any>(
+    uri: string,
+    data?: TRequestData,
+    config: AxiosRequestConfig<TRequestData> = {},
+  ): Promise<AxiosResponse<TResponseData>> {
+    return axios.put<TResponseData, AxiosResponse<TResponseData>, TRequestData>(
+      uri,
+      data,
+      {
+        ...this.config,
+        ...config,
+      },
+    )
   }
 
   /**
-   * Sends an HTTP PATCH request to the location specified by the url.
-   * @param url The url to send the request to.
+   * Sends an HTTP PATCH request to the location specified by the URI.
+   * @param uri The endpoint to send the request to.
    * @param data The data to send with the request.
    * @param config The configuration for the request.
    * @resolves If a successful response (200) is received.
    * @rejects If an error occurs.
    */
-  public async patch(
-    url: string,
-    data: AnyObject = {},
-    config: AxiosRequestConfig<AnyObject> = {},
-  ): Promise<void> {
-    try {
-      let updatedConfig = { ...this.config, ...config }
-      return await axios.patch(url, data, updatedConfig)
-    } catch (error: any) {
-      throw error
-    }
+  public patch<TRequestData = any, TResponseData = any>(
+    uri: string,
+    data?: TRequestData,
+    config: AxiosRequestConfig<TRequestData> = {},
+  ): Promise<AxiosResponse<TResponseData>> {
+    return axios.patch<
+      TResponseData,
+      AxiosResponse<TResponseData>,
+      TRequestData
+    >(uri, data, {
+      ...this.config,
+      ...config,
+    })
   }
 
   /**
-   * Sends an HTTP DELETE request to the location specified by the url.
-   * @param url The url to send the request to.
+   * Sends an HTTP DELETE request to the location specified by the URI.
+   * @param uri The endpoint to send the request to.
    * @param config The configuration for the request.
    * @resolves If a successful response (200) is received.
    * @rejects If an error occurs.
    */
-  public async delete(
-    url: string,
-    config: AxiosRequestConfig<AnyObject> = {},
-  ): Promise<void> {
-    try {
-      let updatedConfig = { ...this.config, ...config }
-      return await axios.delete(url, updatedConfig)
-    } catch (error: any) {
-      throw error
-    }
+  public delete<TResponseData = any>(
+    uri: string,
+    config: AxiosRequestConfig = {},
+  ): Promise<AxiosResponse<TResponseData>> {
+    return axios.delete<TResponseData>(uri, {
+      ...this.config,
+      ...config,
+    })
   }
 }
 

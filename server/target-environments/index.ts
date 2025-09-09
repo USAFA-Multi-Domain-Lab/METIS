@@ -195,8 +195,6 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
       return
     }
 
-    // Set the ID of the target environment.
-    environmentSchema.setId(directory)
     // Create a new target environment.
     let environment =
       ServerTargetEnvironment.fromSchema(environmentSchema).register()
