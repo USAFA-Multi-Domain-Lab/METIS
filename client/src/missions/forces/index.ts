@@ -508,16 +508,15 @@ export default class ClientMissionForce
       localKey = this.localKey,
     } = options
 
-    let duplicatedForce = new ClientMissionForce(mission, {
+    const data = {
+      ...this.toJson(),
       name,
       localKey,
       _id: ClientMissionForce.DEFAULT_PROPERTIES._id,
-      introMessage: this.introMessage,
-      color: this.color,
-      initialResources: this.initialResources,
-      revealAllNodes: this.revealAllNodes,
       nodes: [],
-    })
+    }
+
+    let duplicatedForce = new ClientMissionForce(mission, data)
 
     // Duplicate the nodes.
     duplicatedForce.nodes = this.nodes.map((node) =>

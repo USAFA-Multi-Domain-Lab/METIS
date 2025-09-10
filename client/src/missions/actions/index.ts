@@ -121,21 +121,16 @@ export default class ClientMissionAction extends MissionAction<TMetisClientCompo
       localKey = this.localKey,
     } = options
 
-    let duplicatedAction = new ClientMissionAction(node, {
+    // Build data then initialize certain properties.
+    const data = {
+      ...this.toJson(),
       name,
       localKey,
       _id: ClientMissionAction.DEFAULT_PROPERTIES._id,
-      description: this.description,
-      processTime: this.processTime,
-      processTimeHidden: this.processTimeHidden,
-      successChance: this.successChance,
-      successChanceHidden: this.successChanceHidden,
-      resourceCost: this.resourceCost,
-      resourceCostHidden: this.resourceCostHidden,
-      opensNode: this.opensNode,
-      opensNodeHidden: this.opensNodeHidden,
       effects: [],
-    })
+    }
+
+    let duplicatedAction = new ClientMissionAction(node, data)
 
     // Duplicate the effects.
     duplicatedAction.effects = this.effects.map((effect) =>
