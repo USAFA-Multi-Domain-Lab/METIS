@@ -576,22 +576,15 @@ export default class ClientMissionNode
       localKey = this.localKey,
     } = options
 
-    let duplicatedNode = new ClientMissionNode(force, {
+    const data = {
+      ...this.toJson(),
       name,
       localKey,
       _id: ClientMissionNode.DEFAULT_PROPERTIES._id,
-      prototypeId: this.prototype._id,
-      color: this.color,
-      description: this.description,
-      preExecutionText: this.preExecutionText,
-      executable: this.executable,
-      device: this.device,
       actions: [],
-      opened: this.opened,
-      blocked: this._blocked,
-      executions: this.executions,
-      exclude: this.exclude,
-    })
+    }
+
+    let duplicatedNode = new ClientMissionNode(force, data)
 
     // Duplicate the actions.
     this.actions.forEach((action) => {
