@@ -85,26 +85,46 @@ docker_down() {
   docker-compose -f ${DOCKER_COMPOSE_OUTPUT} --env-file ${DEFAULTS_ENV_FILE} --env-file ${ENV_FILE} down -v
 }
 
+# Systemctl shortcuts for metis.service
+metis_cmd() {
+  case "$1" in
+    start)
+      sudo systemctl start metis.service
+      ;;
+    stop)
+      sudo systemctl stop metis.service
+      ;;
+    restart)
+      sudo systemctl restart metis.service
+      ;;
+    status)
+      sudo systemctl status metis.service
+      ;;
+    docker)
+      shift
+      # If the next arg is "up", then run the docker_up function.
+      if [[ "$1" == "up" ]]; then
+        docker_up
+      # If the next arg is "down", then run the docker_down function.
+      elif [[ "$1" == "down" ]]; then
+        docker_down
+      else
+        echo "❌ Error: Unrecognized docker command '$1'."
+      fi
+      ;;
+    *)
+      echo "❌ Error: Unrecognized command '$1'."
+      echo "Usage: metis {start|stop|restart|status|docker up|docker down}"
+      exit 1
+      ;;
+  esac
+}
+
 # Add whitespace to the console output.
 echo " "
 
-# If the first arg is "docker", then process the 
-# second arg.
-if [[ "$1" == "docker" ]]; then
-  # If the second arg is "up", then run the
-  # docker_up function. 
-  if [[ "$2" == "up" ]]; then
-    docker_up
-  # If the second arg is "down", then run the
-  # docker_down function.
-  elif [[ "$2" == "down" ]]; then
-    docker_down
-  else
-    echo "❌ Error: Unrecognized command '$2'."
-  fi
-else
-  echo "❌ Error: Unrecognized command '$1'."
-fi
+# Dispatch based on first argument
+metis_cmd "$@"
 
 # Add whitespace to the console output.
 echo " "

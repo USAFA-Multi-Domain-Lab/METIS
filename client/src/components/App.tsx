@@ -1,4 +1,5 @@
 import { ReactNode, useEffect, useRef } from 'react'
+import backgroundImage from 'src/assets/images/landing-page-img.webp'
 import ServerConnection from 'src/connect/servers'
 import { useGlobalContext } from 'src/context/global'
 import MetisInfo from 'src/info'
@@ -8,6 +9,7 @@ import { compute } from 'src/toolbox'
 import { LoginRequiredError, useEventListener } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import { TLogin } from '../../../shared/logins'
+import ClassList from '../../../shared/toolbox/html/class-lists'
 import './App.scss'
 import ConnectionStatus from './content/communication/ConnectionStatus'
 import Notifications from './content/communication/Notifications'
@@ -26,31 +28,10 @@ import ErrorPage from './pages/ErrorPage'
 import LoadingPage from './pages/LoadingPage'
 import ReactErrorBoundary from './ReactErrorBoundary'
 
-export type TAppErrorNotifyMethod = 'bubble' | 'page'
-
 /**
- * An error that is resolved either via a notification bubble or a message on the error page. Default is page.
+ * Component of all components, renders all of METIS.
  */
-export type TAppError = {
-  /**
-   * The error message to display.
-   */
-  message: string
-  notifyMethod?: TAppErrorNotifyMethod // Default is page.
-  solutions?: TButtonText_P[] // Only used when handled with error page.
-} & (
-  | {
-      notifyMethod?: 'bubble'
-      solutions?: never
-    }
-  | {
-      notifyMethod?: 'page'
-      solutions?: TButtonText_P[]
-    }
-)
-
-// This is the renderer for the entire application.
-function App(props: {}): JSX.Element | null {
+export default function (props: {}): JSX.Element | null {
   /* -- REFS -- */
   const app = useRef<HTMLDivElement>(null)
 
@@ -71,6 +52,7 @@ function App(props: {}): JSX.Element | null {
   const [loadingMinTimeReached] = globalContext.loadingMinTimeReached
   const [loadingPageId] = globalContext.loadingPageId
   const [pageSwitchMinTimeReached] = globalContext.pageSwitchMinTimeReached
+  const [backgroundLoaded, setBackgroundLoaded] = globalContext.backgroundLoaded
   const [promptData] = globalContext.promptData
   const [currentPageKey] = globalContext.currentPageKey
   const [currentPageProps] = globalContext.currentPageProps
@@ -180,6 +162,15 @@ function App(props: {}): JSX.Element | null {
         // Display default loading message to
         // the user.
         beginLoading()
+
+        // Preload the large background image.
+        // A smaller version is used initially
+        // until the large version is fully loaded.
+        const background = new window.Image()
+        background.src = backgroundImage
+        background.onload = () => {
+          setBackgroundLoaded(true)
+        }
 
         // Add global event listeners.
         document.addEventListener('mousemove', positionTooltip)
@@ -291,7 +282,20 @@ function App(props: {}): JSX.Element | null {
     [server],
   )
 
-  /* -- PAGE DETAILS -- */
+  /* -- COMPUTED -- */
+
+  /**
+   * Classes to apply to the root app element.
+   */
+  const rootClasses = compute<ClassList>(() =>
+    new ClassList('App')
+      .set('Error', error)
+      .set(
+        'Loading',
+        loading || !loadingMinTimeReached || !pageSwitchMinTimeReached,
+      )
+      .switch('BackgroundImageLarge', 'BackgroundImageSmall', backgroundLoaded),
+  )
 
   let CurrentPage = PAGE_REGISTRY[currentPageKey]
   let pageProps: any = {
@@ -299,14 +303,6 @@ function App(props: {}): JSX.Element | null {
   }
 
   /* -- RENDER -- */
-
-  let className: string = 'App'
-
-  if (error !== null) {
-    className += ' Error'
-  } else if (loading || !loadingMinTimeReached || !pageSwitchMinTimeReached) {
-    className += ' Loading'
-  }
 
   /**
    * The JSX for the button menu.
@@ -326,7 +322,7 @@ function App(props: {}): JSX.Element | null {
         console.error('ErrorBoundary caught an error -\n', error)
       }
     >
-      <div className={className} key={'App'} ref={app}>
+      <div className={rootClasses.value} key={'App'} ref={app}>
         {buttonMenuJsx}
         <div className='Tooltips' ref={tooltips}>
           <Markdown
@@ -352,4 +348,28 @@ function App(props: {}): JSX.Element | null {
   )
 }
 
-export default App
+/**
+ * The method by which an application error is resolved.
+ */
+export type TAppErrorNotifyMethod = 'bubble' | 'page'
+
+/**
+ * An error that is resolved either via a notification bubble or a message on the error page. Default is page.
+ */
+export type TAppError = {
+  /**
+   * The error message to display.
+   */
+  message: string
+  notifyMethod?: TAppErrorNotifyMethod // Default is page.
+  solutions?: TButtonText_P[] // Only used when handled with error page.
+} & (
+  | {
+      notifyMethod?: 'bubble'
+      solutions?: never
+    }
+  | {
+      notifyMethod?: 'page'
+      solutions?: TButtonText_P[]
+    }
+)

@@ -10,18 +10,10 @@
   width: 100vw;
   height: 100vh;
   padding: calc(50vh - 125px) 0 0;
-  background: linear-gradient(
-      to bottom right,
-      transparent 0% 70%,
-      rgba(#fff, 0.1) 100%
-    ),
-    url('../../assets/images/landing-page-img.png');
-  background-size: 100% 47.34%, 100% 47.34%;
-  background-position: center;
-  background-repeat: repeat;
   text-align: center;
 
   @include background-mask($color-primary-dark, 0.7);
+  @include background-image;
 
   .LoadingPageContent {
     display: flex;
