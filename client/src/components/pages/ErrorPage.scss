@@ -15,17 +15,9 @@
   grid-template-rows: unset;
   align-items: unset;
   grid-template-rows: auto auto 1fr;
-  background: linear-gradient(
-      to bottom right,
-      transparent 0% 70%,
-      rgba(#fff, 0.1) 100%
-    ),
-    url('/assets/images/landing-page-img.png');
-  background-size: 100% 47.34%, 100% 47.34%;
-  background-position: center;
-  background-repeat: repeat;
 
   @include background-mask($color-primary-dark, 0.7);
+  @include background-image;
 
   .Message {
     margin-top: 40px;

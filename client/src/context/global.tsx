@@ -50,6 +50,7 @@ const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
   loadingProgress: 0,
   loadingPageId: StringToolbox.generateRandomId(),
   pageSwitchMinTimeReached: true,
+  backgroundLoaded: false,
   error: null,
   buttonMenu: null,
   tooltips: React.createRef<HTMLDivElement>(),
@@ -758,6 +759,12 @@ export type TGlobalContextValues = {
    */
   loadingPageId: string
   pageSwitchMinTimeReached: boolean
+  /**
+   * Tracks whether the large background image
+   * has been loaded yet. If not, the smaller
+   * version is used in the meantime.
+   */
+  backgroundLoaded: boolean
   error: TAppError | null
   /**
    * The button menu to display.
