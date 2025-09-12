@@ -1,6 +1,8 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios'
 import https from 'https'
-import { Api } from '.'
+import BooleanToolbox from 'metis/toolbox/booleans'
+import z from 'zod'
+import { Api, apiOptionsSchema } from '.'
 import { AnyObject } from '../toolbox/objects'
 
 /**
@@ -33,7 +35,7 @@ export class RestApi extends Api {
    * @param options Used to configure how the API
    * is accessed.
    */
-  public constructor(options: ApiOptions = {}) {
+  public constructor(options: TApiOptions = {}) {
     super()
 
     // Build the base URL.
@@ -48,7 +50,7 @@ export class RestApi extends Api {
    * @param options The options to use to build the base URL.
    * @returns The base URL for the API.
    */
-  private buildBaseUrl(options: ApiOptions): string {
+  private buildBaseUrl(options: TApiOptions): string {
     // Initialize the base URL.
     let baseUrl: string = ''
     let defaultPort: string = '80'
@@ -64,27 +66,27 @@ export class RestApi extends Api {
       baseUrl = 'http://'
     }
 
-    // If there's an address...
-    if (options.address) {
-      // Use a regular expression to check if the address contains a port.
+    // If there's an host...
+    if (options.host) {
+      // Use a regular expression to check if the host contains a port.
       let portRegex: RegExp = /.*:([0-9]+).*/
-      // If the address contains a port...
-      if (portRegex.test(options.address)) {
-        // Add the entire address.
-        baseUrl += options.address
+      // If the host contains a port...
+      if (portRegex.test(options.host)) {
+        // Add the entire host.
+        baseUrl += options.host
       }
-      // Or if the address contains a port...
+      // Or if the host contains a port...
       else if (options.port) {
-        // Add the address and the port.
-        baseUrl += `${options.address}:${options.port}`
+        // Add the host and the port.
+        baseUrl += `${options.host}:${options.port}`
       }
-      // Otherwise, add the address and the default port.
+      // Otherwise, add the host and the default port.
       else {
-        baseUrl += `${options.address}:${defaultPort}`
+        baseUrl += `${options.host}:${defaultPort}`
       }
     }
     // Or if there's a port...
-    else if (options.address === undefined && options.port !== undefined) {
+    else if (options.host === undefined && options.port !== undefined) {
       // Add the localhost and the port.
       baseUrl += `localhost:${options.port}`
     }
@@ -103,7 +105,7 @@ export class RestApi extends Api {
    * @returns The configuration for the request.
    */
   private buildRequestConfig(
-    options: ApiOptions,
+    options: TApiOptions,
   ): AxiosRequestConfig<AnyObject> {
     // Initialize the configuration.
     let config: AxiosRequestConfig<AnyObject> = {}
@@ -250,29 +252,42 @@ export class RestApi extends Api {
       ...config,
     })
   }
+
+  /**
+   * Creates a RESTful API using the configuration from environment variables.
+   * @param envConfig The environment configuration to use.
+   * @returns A RESTful API instance.
+   * @throws If the configuration is invalid.
+   * @example
+   * ```typescript
+   * import { RestApi } from './library/api/rest-api'
+   * import { loadConfig } from './library/config'
+   * const api = RestApi.fromConfig(loadConfig())
+   * ```
+   */
+  public static fromConfig(
+    envConfig: Record<string, string | undefined>,
+  ): RestApi {
+    try {
+      let rejectUnauthorized: boolean | undefined = undefined
+      if (envConfig.rejectUnauthorized !== undefined) {
+        rejectUnauthorized = BooleanToolbox.parse(envConfig.rejectUnauthorized)
+      }
+      const apiOptions: TApiOptions = restApiOptionsSchema.parse({
+        ...envConfig,
+        rejectUnauthorized,
+      })
+      return new RestApi(apiOptions)
+    } catch (error: any) {
+      throw new Error(`Invalid REST API configuration: ${error.message}`)
+    }
+  }
 }
 
 /**
- * The options used to create a RESTful API.
+ * REST API options schema.
  */
-type ApiOptions = {
-  /**
-   * The protocol to use for the API. This determines the scheme used for
-   * the network requests.
-   * @note 'http' stands for HyperText Transfer Protocol, which is used for
-   * unsecured communication over a network.
-   * @note 'https' stands for HyperText Transfer Protocol Secure, which is
-   * the secure version of HTTP, providing encrypted communication
-   * and secure identification of a network web server.
-   * @default 'http'
-   */
-  protocol?: 'http' | 'https'
-  /**
-   * The address to use for the API. It specifies the location of the server
-   * to which requests will be sent.
-   * @note This can be a domain name (e.g., 'example.com') or an IP address (e.g., '192.168.1.1').
-   */
-  address?: string
+const restApiOptionsSchema = apiOptionsSchema.extend({
   /**
    * The port to use for the API. It specifies the port number on the server
    * to which requests will be sent.
@@ -280,26 +295,28 @@ type ApiOptions = {
    * running on the same machine.
    * @default 80
    */
-  port?: number | string
+  port: z
+    .union([z.number().int().min(1).max(65535), z.string().regex(/^\d+$/)])
+    .optional(),
   /**
    * The username for basic authentication.
    * This is added to the request headers and is used to authenticate the
    * user making the request in conjunction with the password.
    * @default undefined
    */
-  username?: string
+  username: z.string().optional(),
   /**
    * The password for basic authentication.
    * This is used in conjunction with the username to authenticate the user making the request.
    * @default undefined
    */
-  password?: string
+  password: z.string().optional(),
   /**
    * The API key to use for authentication.
    * This is a token that is used to authenticate the user making the request.
    * @default undefined
    */
-  apiKey?: string
+  apiKey: z.string().optional(),
   /**
    * Controls whether TLS client verifies the server's certificate against
    * trusted Certificate Authorities (CAs).
@@ -308,8 +325,13 @@ type ApiOptions = {
    * @note If false, the server will accept any certificate, even if it is invalid.
    * @default true
    */
-  rejectUnauthorized?: boolean
-}
+  rejectUnauthorized: z.boolean().optional(),
+})
+
+/**
+ * The options used to create a RESTful API.
+ */
+type TApiOptions = z.infer<typeof restApiOptionsSchema>
 
 /**
  * The supported HTTP request methods.

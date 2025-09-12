@@ -7,7 +7,7 @@ import { getCallerTargetEnv } from '../toolbox/files'
 export function loadConfig() {
   let environment = getCallerTargetEnv()
   let { _id } = environment
-  let variablePrefix = _id.toUpperCase().replace('-', '_') + '_'
+  let variablePrefix = _id.toUpperCase().replace(/-/g, '_') + '_'
   let config: Record<string, string> = {}
 
   for (let originalKey in process.env) {

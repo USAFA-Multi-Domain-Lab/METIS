@@ -1,5 +1,6 @@
 // ------- IMPORTS ------- //
 import { NextFunction, Request, Response } from 'express-serve-static-core'
+import BooleanToolbox from 'metis/toolbox/booleans'
 import { AnyObject } from 'metis/toolbox/objects'
 import VersionToolbox from 'metis/toolbox/versions'
 import User from 'metis/users'
@@ -10,33 +11,6 @@ import TUserPreferencesJson, {
 import { isObjectIdOrHexString } from 'mongoose'
 import { z as zod } from 'zod'
 import { TZodify } from '../connect/middleware/validate'
-
-// ------- GLOBAL VARIABLES ------- //
-
-let booleanValues: Array<string> = [
-  '0',
-  '1',
-  'true',
-  'false',
-  'True',
-  'False',
-  'TRUE',
-  'FALSE',
-  't',
-  'f',
-  'T',
-  'F',
-  'yes',
-  'no',
-  'Yes',
-  'No',
-  'YES',
-  'NO',
-  'y',
-  'n',
-  'Y',
-  'N',
-]
 
 // ------- ENUMERATIONS ------- //
 
@@ -205,7 +179,7 @@ export class RequestBodyFilters {
     if (typeof bodyValue === 'number' || typeof bodyValue === 'boolean') {
       let valueAsStr: string = bodyValue.toString()
 
-      if (!booleanValues.includes(valueAsStr)) {
+      if (!BooleanToolbox.isValid(valueAsStr)) {
         throw new Error(
           invalidRequestBodyPropertyException(bodyKey, valueAsStr),
         )
@@ -213,7 +187,7 @@ export class RequestBodyFilters {
         return null
       }
     } else if (typeof bodyValue === 'string') {
-      if (!booleanValues.includes(bodyValue)) {
+      if (!BooleanToolbox.isValid(bodyValue)) {
         throw new Error(invalidRequestBodyPropertyException(bodyKey, bodyValue))
       } else {
         return null
@@ -452,7 +426,7 @@ const validateTypeOfQueryKey = (
   // boolean then this validates to make sure the property being
   // sent via the API route is the right type
   else if (type === 'boolean') {
-    if (!booleanValues.includes(query[key])) {
+    if (!BooleanToolbox.isValid(query[key])) {
       throw new Error(errorMessage)
     } else {
       return null

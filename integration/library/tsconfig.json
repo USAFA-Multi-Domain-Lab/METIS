@@ -6,7 +6,8 @@
       "metis/target-environments/*": ["../../shared/target-environments/*"],
       "metis/toolbox/objects": ["../../shared/toolbox/objects"],
       "metis/toolbox/numbers": ["../../shared/toolbox/numbers"],
-      "metis/toolbox/versions": ["../../shared/toolbox/versions"]
+      "metis/toolbox/versions": ["../../shared/toolbox/versions"],
+      "metis/toolbox/booleans": ["../../shared/toolbox/booleans"]
     }
   }
 }
