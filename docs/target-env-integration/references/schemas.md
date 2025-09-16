@@ -250,12 +250,13 @@ Each target gets its own file with a single default export:
 // File: integration/target-env/user-management/targets/create-user/schema.ts
 import TargetSchema from '../../../../library/target-env-classes/targets'
 import { RestApi } from '../../../../library/api/rest-api'
+import { loadConfig } from '../../../../library/config'
 
 const createUserTarget = new TargetSchema({
   name: 'Create User',
   description: 'Creates a new user account with specified permissions',
   script: async (context, args) => {
-    const api = new RestApi('userSystem')
+    const api = RestApi.fromConfig(loadConfig())
 
     await api.post('/users', {
       username: args.username,
@@ -299,12 +300,13 @@ export default createUserTarget
 // File: integration/target-env/user-management/targets/delete-user/schema.ts
 import TargetSchema from '../../../../library/target-env-classes/targets'
 import { RestApi } from '../../../../library/api/rest-api'
+import { loadConfig } from '../../../../library/config'
 
 const deleteUserTarget = new TargetSchema({
   name: 'Delete User',
   description: 'Removes a user account from the system',
   script: async (context, args) => {
-    const api = new RestApi('userSystem')
+    const api = RestApi.fromConfig(loadConfig())
 
     await api.delete(`/users/${args.userId}`)
   },

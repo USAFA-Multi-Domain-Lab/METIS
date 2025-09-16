@@ -31,12 +31,13 @@ The `RestApi` class automatically reads your [environment configuration](./envir
 
 ```typescript
 import { RestApi } from '../../library/api/rest-api'
+import { loadConfig } from '../../library/config'
 
-// Initialize with your environment configuration key
-const api = new RestApi('myTargetEnvironment')
+// Recommended: Initialize with loadConfig()
+const api = RestApi.fromConfig(loadConfig())
 ```
 
-The environment key (`'myTargetEnvironment'`) must match a [configuration object](./environment-configuration.md#configuration-structure) in your `environment.json` file.
+Environment variables are automatically loaded based on your target environment folder name. See the [Environment Configuration Reference](./environment-configuration.md#configuration-structure) for complete configuration details.
 
 ### Basic Usage
 
@@ -53,7 +54,7 @@ await api.post('https://api.example.com/users', {
 
 ## Configuration
 
-The `RestApi` class automatically loads configuration from your `environment.json` file. See the [Environment Configuration Reference](./environment-configuration.md) for complete configuration details.
+The `RestApi` class automatically loads configuration from your `.env` files using the `loadConfig()` function. See the [Environment Configuration Reference](./environment-configuration.md) for complete configuration details.
 
 ### Configuration Properties Used
 
@@ -67,7 +68,7 @@ The `RestApi` class automatically loads configuration from your `environment.jso
 ### Accessing Configuration
 
 ```typescript
-const api = new RestApi('myEnvironment')
+const api = RestApi.fromConfig(loadConfig())
 
 // Access the computed base URL
 console.log(api.baseUrl) // e.g., "https://api.example.com:443"
@@ -178,9 +179,10 @@ await api.get('/endpoint', {
 
 ### Environment Configuration
 
-- Store sensitive data (API keys, passwords) in `environment.json`
+- Store sensitive data (API keys, passwords) in `.env` files
 - Use environment-specific configurations for dev/staging/production
-- Never commit `environment.json` to version control
+- Never commit `.env` files to version control
+- Use the `loadConfig()` function for automatic variable mapping
 
 ### Error Handling
 
@@ -200,13 +202,14 @@ await api.get('/endpoint', {
 
 ```typescript
 import { RestApi } from '../../library/api/rest-api'
+import { loadConfig } from '../../library/config'
 
 export class MyTargetEnvironment {
   private api: RestApi
 
   constructor() {
     // Initialize with environment configuration
-    this.api = new RestApi('myTarget')
+    this.api = RestApi.fromConfig(loadConfig())
   }
 
   async fetchUserData(userId: string) {
@@ -245,16 +248,13 @@ export class MyTargetEnvironment {
 
 ### Environment Configuration Example
 
-```json
-{
-  "myTarget": {
-    "protocol": "https",
-    "address": "api.myservice.com",
-    "port": 443,
-    "apiKey": "your-secret-api-key",
-    "rejectUnauthorized": true
-  }
-}
+```bash
+# For target environment "my-target"
+MY_TARGET_PROTOCOL="https"
+MY_TARGET_HOST="api.myservice.com"
+MY_TARGET_PORT="443"
+MY_TARGET_API_KEY="your-secret-api-key"
+MY_TARGET_REJECT_UNAUTHORIZED=true
 ```
 
 ## Related Documentation

@@ -395,12 +395,12 @@ integration/target-env/my-service/
 
 ## 🔧 Troubleshooting
 
-| Issue                         | Possible Cause                    | Solution                                      |
-| ----------------------------- | --------------------------------- | --------------------------------------------- |
-| 🚫 Target not appearing       | Wrong filename or export          | Ensure `schema.ts` exports `TargetSchema`     |
-| 📝 Arguments not showing      | Invalid argument definition       | Check argument types and required fields      |
-| ⚠️ Script not executing       | Syntax error in script function   | Check console logs for JavaScript errors      |
-| 🌐 External API calls failing | Missing environment configuration | Check `environment.json` and API client setup |
+| Issue                         | Possible Cause                    | Solution                                  |
+| ----------------------------- | --------------------------------- | ----------------------------------------- |
+| 🚫 Target not appearing       | Wrong filename or export          | Ensure `schema.ts` exports `TargetSchema` |
+| 📝 Arguments not showing      | Invalid argument definition       | Check argument types and required fields  |
+| ⚠️ Script not executing       | Syntax error in script function   | Check console logs for JavaScript errors  |
+| 🌐 External API calls failing | Missing environment configuration | Check `.env` files and API client setup   |
 
 ## 📖 Related Documentation
 
@@ -418,4 +418,4 @@ integration/target-env/my-service/
 ### 🔗 References
 
 - **[REST API Reference](../references/rest-api.md)** - API client configuration
-- **[Environment Configuration](../references/environment-config.md)** - Configuration file reference
+- **[Environment Configuration](../references/environment-configuration.md)** - Configuration file reference

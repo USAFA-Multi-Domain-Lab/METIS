@@ -31,12 +31,13 @@ Create `/integration/target-env/mission-control/schema.ts`:
 ```typescript
 import TargetEnvSchema from '../../library/target-env-classes'
 import { RestApi } from '../../library/api/rest-api'
+import { loadConfig } from '../../library/config'
 
 /**
  * Configured REST API client for the Mission Control environment.
- * Uses the 'mission-control' configuration from environment.json
+ * Uses environment variables with MISSION_CONTROL_ prefix
  */
-export const MissionControlApi = new RestApi('mission-control')
+export const MissionControlApi = RestApi.fromConfig(loadConfig())
 
 /**
  * Advanced target environment for mission control operations.
@@ -53,18 +54,15 @@ export default MissionControl
 
 ## Step 2: Environment Configuration
 
-Add to your `environment.json` file (or upcoming `.env` file):
+Configure connection details in your `.env` file:
 
-```json
-{
-  "mission-control": {
-    "protocol": "https",
-    "address": "api.mission-control.example.com",
-    "port": 443,
-    "apiKey": "your-api-key-here",
-    "rejectUnauthorized": true
-  }
-}
+```bash
+# For target environment "mission-control"
+MISSION_CONTROL_PROTOCOL="https"
+MISSION_CONTROL_HOST="api.mission-control.example.com"
+MISSION_CONTROL_PORT="443"
+MISSION_CONTROL_API_KEY="your-api-key-here"
+MISSION_CONTROL_REJECT_UNAUTHORIZED=true
 ```
 
 ## Step 3: Communication Target
@@ -388,7 +386,7 @@ When implementing similar patterns in production:
 
 ### **API Configuration**
 
-- Store sensitive credentials in environment variables, not `environment.json`
+- Store sensitive credentials in `.env` files, not in code
 - Use proper SSL/TLS certificate validation
 - Implement retry logic for network failures
 - Add request timeout handling

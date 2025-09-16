@@ -24,6 +24,7 @@ npm-debug.log*
 environment.json
 environment-test.json
 .vscode
+.github
 /integration/target-env/**
 !/integration/target-env/.gitkeep
 !/integration/target-env/tsconfig.json

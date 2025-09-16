@@ -36,9 +36,10 @@ First, configure your REST client in your target environment schema:
 // integration/target-env/my-service/schema.ts
 import TargetEnvSchema from '../../library/target-env-classes'
 import { RestApi } from '../../library/api/rest-api'
+import { loadConfig } from '../../library/config'
 
 // Create a REST client for your service
-export const MyServiceApi = new RestApi('my-service')
+export const MyServiceApi = RestApi.fromConfig(loadConfig())
 
 export default new TargetEnvSchema({
   name: 'My Service Integration',
@@ -49,21 +50,18 @@ export default new TargetEnvSchema({
 
 ### Environment Configuration
 
-Configure the connection details in your `environment.json`:
+Configure the connection details in your `.env` file:
 
-```json
-{
-  "my-service": {
-    "protocol": "https",
-    "address": "api.myservice.com",
-    "port": 443,
-    "apiKey": "${MY_SERVICE_API_KEY}",
-    "rejectUnauthorized": true
-  }
-}
+```bash
+# For target environment "my-service"
+MY_SERVICE_PROTOCOL="https"
+MY_SERVICE_HOST="api.myservice.com"
+MY_SERVICE_PORT="443"
+MY_SERVICE_API_KEY="your-api-key-here"
+MY_SERVICE_REJECT_UNAUTHORIZED=true
 ```
 
-> 💡 **Tip**: Use environment variables for sensitive data like API keys.
+> 💡 **Tip**: Use `.env` files for sensitive data like API keys and keep them out of version control.
 
 ## Authentication Patterns
 

@@ -79,9 +79,10 @@ For HTTP/HTTPS REST API calls, add a REST client to your environment schema:
 // integration/target-env/acme-cloud/schema.ts
 import TargetEnvSchema from '../../library/target-env-classes'
 import { RestApi } from '../../library/api/rest-api'
+import { loadConfig } from '../../library/config'
 
 // REST client using environment configuration
-export const AcmeCloudApi = new RestApi('acme-cloud')
+export const AcmeCloudApi = RestApi.fromConfig(loadConfig())
 
 export default new TargetEnvSchema({
   name: 'ACME Cloud',
@@ -90,18 +91,15 @@ export default new TargetEnvSchema({
 })
 ```
 
-Then configure the REST API connection in your root `environment.json`:
+Then configure the REST API connection in your `.env` file:
 
-```json
-{
-  "acme-cloud": {
-    "protocol": "https",
-    "address": "api.acme-cloud.example.com",
-    "port": 443,
-    "apiKey": "${ACME_CLOUD_API_KEY}",
-    "rejectUnauthorized": true
-  }
-}
+```bash
+# For target environment "acme-cloud"
+ACME_CLOUD_PROTOCOL="https"
+ACME_CLOUD_HOST="api.acme-cloud.example.com"
+ACME_CLOUD_PORT="443"
+ACME_CLOUD_API_KEY="your-api-key-here"
+ACME_CLOUD_REJECT_UNAUTHORIZED=true
 ```
 
 ### Other Protocol Support
@@ -114,7 +112,6 @@ For detailed configuration options and best practices:
 - **[Environment Configuration](../references/environment-configuration.md)** - Configuration file reference
 - **[External API Integration](external-api-integration.md)** - Authentication patterns and API best practices
 - **[Rest API Reference](../references/rest-api.md)** - Complete REST API client documentation
-- **[Environment Configuration](../references/environment-config.md)** - Full config file reference
 
 ## Adding Your First Target
 
@@ -218,7 +215,7 @@ No target folder found at "path/to/targets". Skipping...
 | Environment not discovered | Missing `schema.ts` or wrong export | Ensure default export of `TargetEnvSchema`         |
 | Environment skipped        | Missing `targets/` folder           | Create empty `targets/` directory                  |
 | Target not showing         | Wrong filename or export            | Use exactly `schema.ts` with `TargetSchema` export |
-| API calls failing          | Missing configuration               | Check `environment.json` and environment variables |
+| API calls failing          | Missing configuration               | Check `.env` files and environment variables       |
 
 ## Next Steps
 
@@ -239,7 +236,7 @@ No target folder found at "path/to/targets". Skipping...
 ### References
 
 - **[Rest API Reference](../references/rest-api.md)** - API client configuration and usage
-- **[Environment Configuration](../references/environment-config.md)** - Complete config file documentation
+- **[Environment Configuration](../references/environment-configuration.md)** - Complete config file documentation
 
 ### Examples
 
