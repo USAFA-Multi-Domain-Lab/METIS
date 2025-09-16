@@ -290,7 +290,6 @@ export type TGetItemButtonLabel<TItem extends MetisComponent> = (
  * @default () => []
  */
 export type TGetItemButtonPermission<TItem extends MetisComponent> = (
-  // button: TSvgPanelElement['icon'],
   button: string,
 ) => TUserPermissionId[]
 
