@@ -1,5 +1,9 @@
 # changelog
 
+# version-2.2.2 | 9-24-2025
+
+-
+
 # version-2.2.1 | 8-14-2025
 
 - Fixed an issue with mission exports where exported files would only be cleaned up on server shutdown, causing unnecessary drive space usage. Mission export files are now automatically deleted once the user has downloaded them (note: this means downloads cannot be restarted by refreshing the page).

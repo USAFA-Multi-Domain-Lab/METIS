@@ -58,17 +58,14 @@ export class ClientEffect extends Effect<TMetisClientComponents> {
       localKey = this.localKey,
     } = options
 
-    return new ClientEffect(action, {
+    const data = {
+      ...this.toJson(),
       name,
       localKey,
       _id: ClientEffect.DEFAULT_PROPERTIES._id,
-      description: this.description,
-      args: this.args,
-      targetId: this.targetId,
-      environmentId: this.environmentId,
-      targetEnvironmentVersion: this.targetEnvironmentVersion,
-      trigger: this.trigger,
-    })
+    }
+
+    return new ClientEffect(action, data)
   }
 
   /**
