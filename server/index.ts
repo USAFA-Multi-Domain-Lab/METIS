@@ -4,6 +4,7 @@ import rateLimit, { RateLimitRequestHandler } from 'express-rate-limit'
 import session, { Session, SessionData } from 'express-session'
 import fs from 'fs'
 import http, { Server as HttpServer } from 'http'
+import https from 'https'
 import { TMetisBaseComponents } from 'metis/index'
 import MetisDatabase from 'metis/server/database'
 import MetisRouter from 'metis/server/http/router'
@@ -217,10 +218,6 @@ export default class MetisServer {
   }
 
   /**
-   *
-   */
-
-  /**
    * The session middleware for the server responsible
    * for enabling and managing sessions.
    */
@@ -257,7 +254,24 @@ export default class MetisServer {
 
     // Create third-party server objects.
     this._expressApp = express()
-    this._httpServer = http.createServer(this.expressApp)
+    // HTTPS only in production if certs are provided
+    if (
+      process.env.METIS_ENV_TYPE === 'prod' &&
+      process.env.SSL_KEY_PATH &&
+      process.env.SSL_CERT_PATH
+    ) {
+      const key = fs.readFileSync(process.env.SSL_KEY_PATH)
+      const cert = fs.readFileSync(process.env.SSL_CERT_PATH)
+      this._httpServer = https.createServer({ key, cert }, this.expressApp)
+      console.log('SSL certifications found, running with HTTPS protocol.')
+    } else {
+      this._httpServer = http.createServer(this.expressApp)
+      if (process.env.METIS_ENV_TYPE === 'prod') {
+        console.warn(
+          'SSL certifications not found, running with HTTP protocol.',
+        )
+      }
+    }
     this._wsServer = new MetisWsServer(this)
 
     // Parse the options and store them in the class.
