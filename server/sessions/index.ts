@@ -31,6 +31,7 @@ import ServerEffect from '../missions/effects'
 import ServerMissionFile from '../missions/files'
 import ServerMissionForce from '../missions/forces'
 import ServerOutput, { TServerOutputOptions } from '../missions/forces/output'
+import ServerTargetEnvironment from '../target-environments'
 import TargetEnvContext from '../target-environments/context'
 import ServerUser from '../users'
 import ServerSessionMember from './members'
@@ -759,8 +760,15 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       },
     })
 
-    // Emit responses to all members.
-    this.emitStartResponses(event, member, 'session-started')
+    // todo: Replace this with a separate session
+    // todo: responsible for handling the transition
+    // todo: between unstarted and started states.
+
+    // Set up the target environments for the session.
+    ServerTargetEnvironment.setUp(this).then(() => {
+      // Emit responses to all members.
+      this.emitStartResponses(event, member, 'session-started')
+    })
   }
 
   /**
