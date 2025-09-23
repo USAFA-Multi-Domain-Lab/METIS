@@ -92,13 +92,16 @@ export default class ClientLogin {
 
   /**
    * Logs out the user currently logged in.
+   * @param forceful Whether to force logout any other client logged in.
    * @resolves When the user is logged out.
    * @rejects The error that occurred while logging out.
    */
-  public static $logOut(): Promise<void> {
+  public static $logOut(forceful: boolean = false): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
       try {
-        await axios.delete(`${ClientLogin.API_ENDPOINT}/`)
+        await axios.delete(`${ClientLogin.API_ENDPOINT}/`, {
+          headers: { forceful },
+        })
         await ClientLogin.$fetchLoginInfo()
         resolve()
       } catch (error: any) {

@@ -379,7 +379,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     this._members.push(member)
 
     // Handle joining the session for the client.
-    client.login.handleJoin(this._id)
+    client.login.onMetisSessionJoin(this._id)
 
     // Emit an event to all users that the user list
     // has changed.
@@ -439,7 +439,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
         // the session.
         if (this.config.accessibility === 'testing') this.destroy()
         // Handle quitting the session for the member.
-        member.connection.login.handleQuit()
+        member.connection.login.onMetisSessionQuit()
       }
     })
 
@@ -458,7 +458,9 @@ export default class SessionServer extends Session<TMetisServerComponents> {
   public clearMembers(): void {
     // Remove all members from the session by
     // forcing each member to quit.
-    this.members.forEach(({ connection }) => connection.login.handleQuit())
+    this.members.forEach(({ connection }) =>
+      connection.login.onMetisSessionQuit(),
+    )
     this.members.forEach((member) => this.removeListeners(member))
     // Clear member list.
     this._members = []
@@ -745,7 +747,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       // Remove session-specific listeners.
       this.removeListeners(member)
       // Handle quitting the session for the member.
-      member.connection.login.handleQuit()
+      member.connection.login.onMetisSessionQuit()
       // Emit an event to the member that they have
       // been dismissed.
       member.emit('dismissed', { data: {} })
@@ -960,7 +962,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     // Remove session-specific listeners.
     this.removeListeners(targetMember)
     // Handle quitting the session for the member.
-    targetMember.connection.login.handleQuit()
+    targetMember.connection.login.onMetisSessionQuit()
 
     // Emit an event to the target member and to the
     // requester that the target member has been kicked.
@@ -1041,7 +1043,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     // Remove session-specific listeners.
     this.removeListeners(targetMember)
     // Handle quitting the session for the member.
-    targetMember.connection.login.handleQuit()
+    targetMember.connection.login.onMetisSessionQuit()
 
     // Emit an event to the target member and to the
     // requester that the target member has been banned.
@@ -2113,6 +2115,17 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       // Destroy session.
       session.destroy()
     }
+  }
+
+  /**
+   * Handles a user quitting a METIS session.
+   * @param metisSessionId The ID of the METIS session to quit.
+   * @param userId The ID of the user quitting the METIS session.
+   */
+  public static quit(metisSessionId: string, userId: string): void {
+    // Find the METIS session.
+    const metisSession = SessionServer.get(metisSessionId)
+    metisSession?.quit(userId)
   }
 }
 

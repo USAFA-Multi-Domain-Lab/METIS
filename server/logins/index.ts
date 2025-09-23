@@ -5,6 +5,7 @@ import ClientConnection from 'metis/server/connect/clients'
 import Session from 'metis/sessions'
 import SessionServer from '../sessions'
 import ServerUser from '../users'
+import ServerWebSession from './web-sessions'
 
 /**
  * Express sessions are limited in what they can store. This class expands the functionality of logins in METIS.
@@ -91,14 +92,6 @@ export default class ServerLogin {
   }
 
   /**
-   * Whether the user is in a METIS session.
-   * @see {@link Session} class for more information.
-   */
-  public get inMetisSession(): boolean {
-    return this.metisSessionId !== null
-  }
-
-  /**
    * When the login timeout ends.
    */
   private _timeoutEnd: number | null
@@ -129,7 +122,7 @@ export default class ServerLogin {
 
   /**
    * @param user The user to log in.
-   * @param webSessionId The express session ID associated with the login.
+   * @param webSessionId The (express) web session ID associated with the login.
    * @param options Options for the login.
    */
   public constructor(
@@ -165,8 +158,17 @@ export default class ServerLogin {
             new ServerEmittedError(ServerEmittedError.CODE_SWITCHED_CLIENT),
           )
         }
-        // Destroy the login.
-        this.destroy()
+
+        // Force quit the previous METIS session, if any.
+        if (conflictingLogin.metisSessionId) {
+          SessionServer.quit(
+            conflictingLogin.metisSessionId,
+            conflictingLogin.userId,
+          )
+        }
+
+        // Destroy the old login.
+        conflictingLogin.destroy()
       } else {
         throw new Error('User is already logged in.')
       }
@@ -176,6 +178,8 @@ export default class ServerLogin {
     // isn't in a timeout.
     if (!this.inTimeout) {
       ServerLogin.registry.set(this.userId, this)
+      // Register the login with the session store.
+      ServerWebSession.registerLogin(this.webSessionId, this.userId)
     }
   }
 
@@ -201,13 +205,10 @@ export default class ServerLogin {
   /**
    * Sets the timeout information for the user logged in.
    * @param timeoutEnd When the timeout ends.
-   * @note This will also destroy the login information to
-   * ensure that the user is logged out.
    */
   public timeout(timeoutEnd: number): void {
     this._timeoutEnd = timeoutEnd
     ServerLogin.timeoutRegistry.set(this.userId, timeoutEnd)
-    this.destroy()
   }
 
   /**
@@ -215,7 +216,7 @@ export default class ServerLogin {
    * @param metisSessionId The ID of the joined METIS session.
    * @see {@link Session} class for more information.
    */
-  public handleJoin(metisSessionId: string): void {
+  public onMetisSessionJoin(metisSessionId: string): void {
     this._metisSessionId = metisSessionId
   }
 
@@ -223,17 +224,8 @@ export default class ServerLogin {
    * Handles when the user quits a METIS session.
    * @see {@link Session} class for more information.
    */
-  public handleQuit(): void {
+  public onMetisSessionQuit(): void {
     this._metisSessionId = null
-  }
-
-  /**
-   * Quits the METIS session the user is in.
-   * @see {@link Session} class for more information.
-   */
-  public quitMetisSession(): void {
-    let session = SessionServer.get(this.metisSessionId ?? undefined)
-    session?.quit(this.userId)
   }
 
   /**
@@ -258,46 +250,12 @@ export default class ServerLogin {
   }
 
   /**
-   * Destroys the login information for the user associated with the current web session.
-   * @param request The express request.
+   * Destroys the login information associated with the given user ID.
    * @param userId The ID of the user to log out.
    */
-  public static async destroy(
-    request: Request,
-    userId: ServerUser['_id'] | undefined = request.session.userId,
-  ): Promise<void> {
-    return new Promise((resolve, reject) => {
-      // Gather the necessary login info.
-      const login = ServerLogin.get(userId)
-      if (!login) return resolve()
-      const { inMetisSession, webSessionId } = login
-
-      // Quit the METIS session, if necessary.
-      if (inMetisSession) login.quitMetisSession()
-
-      // Destroy the login information associated
-      // with METIS and stored in memory.
-      login.destroy()
-
-      // Check if the user that needs to be logged out
-      // is the same as the one making the request.
-      const isUserMakingRequest = userId === request.session.userId
-      // If the user is not the same as the one making the request,
-      // destroy the express session associated with the login.
-      if (!isUserMakingRequest) {
-        return request.sessionStore.destroy(webSessionId, (err) => {
-          if (err) return reject(err)
-          return resolve()
-        })
-      }
-
-      // If the user is making the request, destroy the local
-      // express session.
-      return request.session.destroy((err) => {
-        if (err) return reject(err)
-        return resolve()
-      })
-    })
+  public static destroy(userId: ServerUser['_id'] | undefined): void {
+    let login = ServerLogin.get(userId)
+    login?.destroy()
   }
 
   /**
@@ -323,30 +281,15 @@ export default class ServerLogin {
 
   /**
    * Sets a timeout for the user in the current web session.
-   * @param session The current web session.
+   * @param userId The ID of the user to set the timeout for.
    * @param timeoutEnd When the timeout ends.
-   * @note This will also destroy the login information to
-   * ensure that the user is logged out.
    */
-  public static async timeout(
-    session: Request['session'],
+  public static timeout(
+    userId: ServerUser['_id'] | undefined,
     timeoutEnd: number,
-  ): Promise<void> {
-    return new Promise((resolve, reject) => {
-      let login = ServerLogin.get(session.userId)
-      // Quit the METIS session, if necessary.
-      if (login?.inMetisSession) login.quitMetisSession()
-      // Set the timeout for the login.
-      // *** Note: This also destroys the login
-      // *** information associated with METIS
-      // *** and stored in memory.
-      login?.timeout(timeoutEnd)
-      // Destroy the express session.
-      session.destroy((error) => {
-        if (error) return reject(error)
-        resolve()
-      })
-    })
+  ): void {
+    let login = ServerLogin.get(userId)
+    login?.timeout(timeoutEnd)
   }
 }
 

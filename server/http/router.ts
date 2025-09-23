@@ -39,9 +39,8 @@ export default class MetisRouter {
   }
 
   /**
-   * @param server The METIS server instance.
    * @param path The path for the router to control.
-   *
+   * @param map The map of routes for the router.
    */
   public constructor(path: string, map: TMetisRouterMap) {
     this._expressRouter = express.Router()

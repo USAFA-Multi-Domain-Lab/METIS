@@ -73,7 +73,9 @@ export default class ClientConnection {
 
   /**
    * @param socket The web socket connection itself.
-   * @param login The client login
+   * @param metis The METIS server instance.
+   * @param login The client login information associated with this connection.
+   * @param options Additional options for the client connection.
    */
   public constructor(
     socket: Socket,

@@ -14,6 +14,7 @@ import { sys } from 'typescript'
 import MetisWsServer from './connect'
 import MetisFileStore from './files'
 import ServerFileReference from './files/references'
+import ServerWebSession from './logins/web-sessions'
 import ServerMission from './missions'
 import ServerMissionAction from './missions/actions'
 import ServerActionExecution from './missions/actions/executions'
@@ -342,14 +343,22 @@ export default class MetisServer {
         return sys.exit(1)
       }
 
+      // Create the store that will be used for
+      // all (express) web sessions.
+      ServerWebSession.createSessionStore(
+        MongoStore.create({
+          client: mongooseConnection.getClient(),
+          touchAfter: 24 * 3600, // lazy update after 24 hours
+        }),
+      )
+
       // Configure sessions.
       this._sessionMiddleware = session({
+        name: MetisServer.WEB_SESSION_COOKIE_NAME,
         secret: '3c8V3DoMuJxjoife0asdfasdf023asd9isfd',
         resave: false,
         saveUninitialized: false,
-        store: MongoStore.create({
-          client: mongooseConnection.getClient(),
-        }),
+        store: ServerWebSession.store,
       })
 
       // sets up pug as the view engine
@@ -466,6 +475,11 @@ export default class MetisServer {
    * The path to the environment file.
    */
   public static readonly ENVIRONMENT_FILE_PATH: string = '../environment.json'
+
+  /**
+   * The name of the cookie used to store the web session ID.
+   */
+  public static readonly WEB_SESSION_COOKIE_NAME = 'connect.sid'
 
   /**
    * Creates METIS options from the environment.
