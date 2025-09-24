@@ -4,6 +4,7 @@ import rateLimit, { RateLimitRequestHandler } from 'express-rate-limit'
 import session, { Session, SessionData } from 'express-session'
 import fs from 'fs'
 import http, { Server as HttpServer } from 'http'
+import https from 'https'
 import { TMetisBaseComponents } from 'metis/index'
 import MetisDatabase from 'metis/server/database'
 import MetisRouter from 'metis/server/http/router'
@@ -14,6 +15,7 @@ import { sys } from 'typescript'
 import MetisWsServer from './connect'
 import MetisFileStore from './files'
 import ServerFileReference from './files/references'
+import ServerWebSession from './logins/web-sessions'
 import ServerMission from './missions'
 import ServerMissionAction from './missions/actions'
 import ServerActionExecution from './missions/actions/executions'
@@ -216,10 +218,6 @@ export default class MetisServer {
   }
 
   /**
-   *
-   */
-
-  /**
    * The session middleware for the server responsible
    * for enabling and managing sessions.
    */
@@ -256,7 +254,24 @@ export default class MetisServer {
 
     // Create third-party server objects.
     this._expressApp = express()
-    this._httpServer = http.createServer(this.expressApp)
+    // HTTPS only in production if certs are provided
+    if (
+      process.env.METIS_ENV_TYPE === 'prod' &&
+      process.env.SSL_KEY_PATH &&
+      process.env.SSL_CERT_PATH
+    ) {
+      const key = fs.readFileSync(process.env.SSL_KEY_PATH)
+      const cert = fs.readFileSync(process.env.SSL_CERT_PATH)
+      this._httpServer = https.createServer({ key, cert }, this.expressApp)
+      console.log('SSL certifications found, running with HTTPS protocol.')
+    } else {
+      this._httpServer = http.createServer(this.expressApp)
+      if (process.env.METIS_ENV_TYPE === 'prod') {
+        console.warn(
+          'SSL certifications not found, running with HTTP protocol.',
+        )
+      }
+    }
     this._wsServer = new MetisWsServer(this)
 
     // Parse the options and store them in the class.
@@ -342,14 +357,22 @@ export default class MetisServer {
         return sys.exit(1)
       }
 
+      // Create the store that will be used for
+      // all (express) web sessions.
+      ServerWebSession.createSessionStore(
+        MongoStore.create({
+          client: mongooseConnection.getClient(),
+          touchAfter: 24 * 3600, // lazy update after 24 hours
+        }),
+      )
+
       // Configure sessions.
       this._sessionMiddleware = session({
+        name: MetisServer.WEB_SESSION_COOKIE_NAME,
         secret: '3c8V3DoMuJxjoife0asdfasdf023asd9isfd',
         resave: false,
         saveUninitialized: false,
-        store: MongoStore.create({
-          client: mongooseConnection.getClient(),
-        }),
+        store: ServerWebSession.store,
       })
 
       // sets up pug as the view engine
@@ -466,6 +489,11 @@ export default class MetisServer {
    * The path to the environment file.
    */
   public static readonly ENVIRONMENT_FILE_PATH: string = '../environment.json'
+
+  /**
+   * The name of the cookie used to store the web session ID.
+   */
+  public static readonly WEB_SESSION_COOKIE_NAME = 'connect.sid'
 
   /**
    * Creates METIS options from the environment.

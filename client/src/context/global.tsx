@@ -408,6 +408,13 @@ const initializeActions = (
                     ],
                   })
                   break
+                case ServerEmittedError.CODE_FORCE_DISCONNECT_SELF:
+                  handleError({
+                    message:
+                      'You have logged yourself out from another tab or location. Please log in again to continue.',
+                    notifyMethod: 'page',
+                  })
+                  break
               }
             },
           },
@@ -544,7 +551,7 @@ const initializeActions = (
       }
 
       try {
-        await ClientLogin.$logOut()
+        await ClientLogin.$logOut(true)
         navigateTo('AuthPage', {}, { bypassMiddleware: true })
         setLogin(null)
         finishLoading()

@@ -1,9 +1,18 @@
 # changelog
 
+# version-2.2.2 | 9-24-2025
+
+- The server now supports running with the HTTPS protocol in production, using SSL certificates defined in the .env files.
+- Documentation has been greatly expanded to provide more details on the use of METIS.
+- CLI has been updated to support managing METIS as a service on Linux.
+- The session management system has been refactored to handle duplicate client connections and to resolve race conditions in the session store.
+- An issue was fixed with mission duplication, where properites from the original document were not being properly transferred to the new one.
+- Administrators previously were not able to tear down sessions they did not owned. This was unintended, and it has been resolved.
+
 # version-2.2.1 | 8-14-2025
 
-- Fixed an issue with mission exports where exported files would only be cleaned up on server shutdown, causing unnecessary drive space usage. Mission export files are now automatically deleted once the user has downloaded them (note: this means downloads cannot be restarted by refreshing the page).
-- Minor fix applied to the button context menu.
+- An issue was fixed with mission exports where exported files would only be cleaned up on server shutdown, causing unnecessary drive space usage. Mission export files are now automatically deleted once the user has downloaded them (note: this means downloads cannot be restarted by refreshing the page).
+- Minor fix was applied to the button context menu.
 
 # version-2.2.0 | 8-12-2025
 
