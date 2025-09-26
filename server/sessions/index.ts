@@ -366,7 +366,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     let hasCompleteVisibility = role.isAuthorized('completeVisibility')
     let isAssigned = forceId !== null
 
-    // If the session is already started, ensure that
+    // If the session is already starting/started, ensure that
     // the member has visibility to at least one force.
     if (!isUnstarted && !hasCompleteVisibility && !isAssigned) {
       throw ServerEmittedError.CODE_SESSION_LATE_JOIN
@@ -706,14 +706,20 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     event: TClientEvents['request-start-session'],
   ): void => {
     // Build request for response data.
-    let request = member.connection.buildResponseReqData(event)
+    let fulfilledRequest = member.connection.buildResponseReqData(event, {
+      fulfilled: true,
+    })
+    let unfulfilledRequest = member.connection.buildResponseReqData(event, {
+      fulfilled: false,
+    })
+
     // If the member does not have the correct permissions
     // to start the session, then emit an error.
     if (!member.isAuthorized('startEndSessions')) {
       return member.emitError(
         new ServerEmittedError(
           ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
-          { request },
+          { request: fulfilledRequest },
         ),
       )
     }
@@ -723,13 +729,10 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       return member.emitError(
         new ServerEmittedError(
           ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
-          { request },
+          { request: fulfilledRequest },
         ),
       )
     }
-
-    // Mark the session as started.
-    this._state = 'started'
 
     // Loop through all members and find any
     // that have no force availability, and
@@ -762,13 +765,15 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       },
     })
 
-    // todo: Replace this with a separate session
-    // todo: responsible for handling the transition
-    // todo: between unstarted and started states.
-
-    // Set up the target environments for the session.
+    // Emit starting event. Then, once set up is complete,
+    // emit started event.
+    this._state = 'starting'
+    this.emitToAll('session-starting', {
+      data: {},
+      request: unfulfilledRequest,
+    })
     ServerTargetEnvironment.setUp(this).then(() => {
-      // Emit responses to all members.
+      this._state = 'started'
       this.emitStartResponses(event, member, 'session-started')
     })
   }
@@ -783,7 +788,12 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     event: TClientEvents['request-end-session'],
   ): void => {
     // Build request for response data.
-    let request = member.connection.buildResponseReqData(event)
+    let fulfilledRequest = member.connection.buildResponseReqData(event, {
+      fulfilled: true,
+    })
+    let unfulfilledRequest = member.connection.buildResponseReqData(event, {
+      fulfilled: false,
+    })
 
     // If the member does not have the correct permissions
     // to start the session, then emit an error.
@@ -791,7 +801,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       return member.emitError(
         new ServerEmittedError(
           ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
-          { request },
+          { request: fulfilledRequest },
         ),
       )
     }
@@ -801,18 +811,23 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       return member.emitError(
         new ServerEmittedError(
           ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
-          { request },
+          { request: fulfilledRequest },
         ),
       )
     }
 
-    // Mark the session as ended.
-    this._state = 'ended'
-    // Emit an event to all users that the session has ended.
-    this.emitToAll('session-ended', { data: {}, request })
-
-    // Perform clean up.
-    this.destroy()
+    // Emit ending event. Then, once tear down is complete,
+    // emit ended event.
+    this._state = 'ending'
+    this.emitToAll('session-ending', {
+      data: {},
+      request: unfulfilledRequest,
+    })
+    ServerTargetEnvironment.tearDown(this).then(() => {
+      this._state = 'ended'
+      this.emitToAll('session-ended', { data: {}, request: fulfilledRequest })
+      this.destroy()
+    })
   }
 
   /**

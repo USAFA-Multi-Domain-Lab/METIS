@@ -49,7 +49,9 @@ export function useMissionItemButtonCallbacks(
         let session = await server.$joinSession(sessionId)
         // If the session is not found, abort.
         if (!session) throw new Error('Failed to join test session.')
-        await session.$start()
+        await session.$start({
+          onInit: () => beginLoading('Setting up play-test...'),
+        })
 
         // Navigate to the session page.
         navigateTo(

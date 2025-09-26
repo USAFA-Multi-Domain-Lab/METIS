@@ -458,6 +458,14 @@ export type TGenericServerEvents = {
  */
 export type TResponseEvents = {
   /**
+   * Occurs when the session is starting (transitionary state).
+   */
+  'session-starting': TResponseEvent<
+    'session-starting',
+    {},
+    TClientEvents['request-start-session']
+  >
+  /**
    * Occurs when the session starts while the client is joined.
    */
   'session-started': TResponseEvent<
@@ -481,6 +489,14 @@ export type TResponseEvents = {
       files: TMissionFileJson[]
     },
     TClientEvents['request-start-session']
+  >
+  /**
+   * Occurs when the session is ending (transitionary state).
+   */
+  'session-ending': TResponseEvent<
+    'session-ending',
+    {},
+    TClientEvents['request-end-session']
   >
   /**
    * Occurs when the session ends while the client is joined.

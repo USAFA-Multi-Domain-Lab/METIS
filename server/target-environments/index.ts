@@ -76,6 +76,16 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
   }
 
   /**
+   * Tears down the target environment for the given session.
+   * @param session The session used for teardown.
+   * @resolves When teardown is complete.
+   * @rejects If teardown fails.
+   */
+  public tearDown(session: SessionServer): Promise<void> {
+    return this.invoke('environment-teardown')
+  }
+
+  /**
    * A registry of all target environments.
    */
   public static readonly REGISTRY: TargetEnvRegistry<TMetisServerComponents> =
@@ -314,6 +324,20 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
     // For each target environment in the registry, set it up.
     for (let targetEnv of ServerTargetEnvironment.REGISTRY.getAll()) {
       await targetEnv.setUp(session)
+    }
+  }
+
+  /**
+   * Tears down all registered target environments for the given
+   * session.
+   * @param session The session used for teardown.
+   * @resolves When all target environments are torn down.
+   * @rejects If teardown of any target environment fails.
+   */
+  public static async tearDown(session: SessionServer): Promise<void> {
+    // For each target environment in the registry, tear it down.
+    for (let targetEnv of ServerTargetEnvironment.REGISTRY.getAll()) {
+      await targetEnv.tearDown(session)
     }
   }
 }

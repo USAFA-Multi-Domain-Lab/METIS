@@ -161,7 +161,7 @@ export default function (props: {}): JSX.Element | null {
       try {
         // Display default loading message to
         // the user.
-        beginLoading()
+        beginLoading('Initializing application...')
 
         // Preload the large background image.
         // A smaller version is used initially

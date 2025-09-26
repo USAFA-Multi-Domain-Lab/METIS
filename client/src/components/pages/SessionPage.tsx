@@ -1,9 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
-import {
-  TNavigateOptions,
-  useGlobalContext,
-  useNavigationMiddleware,
-} from 'src/context/global'
+import { useEffect, useState } from 'react'
+import { useGlobalContext, useNavigationMiddleware } from 'src/context/global'
 import ClientMissionFile from 'src/missions/files'
 import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
@@ -14,6 +10,7 @@ import {
   useMountHandler,
   useRequireLogin,
 } from 'src/toolbox/hooks'
+import { useSessionRedirects } from 'src/toolbox/hooks/sessions'
 import { DefaultPageLayout, TPage_P } from '.'
 import Prompt from '../content/communication/Prompt'
 import MissionFileList from '../content/data/lists/implementations/MissionFileList'
@@ -63,6 +60,10 @@ export default function SessionPage({
   const mapButtonEngine = useButtonSvgEngine({})
   const [localFiles, setLocalFiles] = useState<ClientMissionFile[]>(
     mission.files,
+  )
+  const { verifyNavigation, navigateToReturnPage } = useSessionRedirects(
+    session,
+    { returnPage },
   )
 
   /* -- VARIABLES -- */
@@ -220,10 +221,15 @@ export default function SessionPage({
       verifyNavigation.current = () => {}
       // Begin loading.
       beginLoading('Ending session...')
-      // Start the session.
-      await session.$end()
-      // Go to return page.
-      navigateToReturnPage({ bypassMiddleware: true })
+      // End the session.
+      session.$end({
+        onInit: () => {
+          // Go to return page once the session
+          // end has been initiated. Tear down
+          // does not need to hold up navigation.
+          navigateToReturnPage({ bypassMiddleware: true })
+        },
+      })
     } catch (error) {
       handleError({
         message: 'Failed to end session.',
@@ -278,40 +284,11 @@ export default function SessionPage({
   }
 
   /**
-   * Redirects to the correct page based on
-   * the session state. Stays on the same page
-   * if the session is started and not ended.
-   */
-  const verifyNavigation = useRef(() => {
-    // If the session is unstarted, navigate to the lobby page.
-    if (session.state === 'unstarted') {
-      navigateTo('LobbyPage', { session }, { bypassMiddleware: true })
-    }
-    // If the session is ended, navigate to the home page.
-    if (session.state === 'ended') {
-      notify('Session has ended.')
-      navigateToReturnPage({ bypassMiddleware: true })
-    }
-  })
-
-  /**
    * Syncs the resources remaining state with
    * the selected force.
    */
   const syncResources = () => {
     setResourcesRemaining(selectedForce?.resourcesRemaining ?? 0)
-  }
-
-  /**
-   * Navigates to the return page based on the
-   * `returnPage` prop.
-   */
-  const navigateToReturnPage = (options: TNavigateOptions = {}) => {
-    if (returnPage === 'HomePage') {
-      navigateTo('HomePage', {}, options)
-    } else if (returnPage === 'MissionPage') {
-      navigateTo('MissionPage', { missionId: mission._id }, options)
-    }
   }
 
   /* -- COMPUTED -- */
@@ -403,24 +380,13 @@ export default function SessionPage({
   /* -- EFFECTS -- */
 
   useMountHandler((done) => {
-    finishLoading()
-
-    // Verify the user is on the right page.
-    verifyNavigation.current()
     // Initialize the navigation bar.
     initializeNavigation()
     // Hide preferences button on the map.
     mapButtonEngine.hide('preferences')
-
+    finishLoading()
     done()
   })
-
-  // Verify navigation if the session is ended or destroyed.
-  useEventListener(
-    server,
-    ['session-started', 'session-ended', 'session-destroyed'],
-    () => verifyNavigation.current(),
-  )
 
   // On session reset, reselect the force in
   // the mission, since a new force object

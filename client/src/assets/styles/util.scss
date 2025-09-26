@@ -79,3 +79,33 @@
   background-position: center;
   background-repeat: repeat;
 }
+
+// An animation which will make the opacity
+// of an element pulse to draw attention to it.
+@mixin pulse {
+  @keyframes pulse {
+    0% {
+      opacity: 1;
+    }
+    5% {
+      opacity: 1;
+    }
+    45% {
+      opacity: 0.55;
+    }
+    50% {
+      opacity: 0.55;
+    }
+    55% {
+      opacity: 0.55;
+    }
+    95% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  animation: pulse 4s infinite;
+}

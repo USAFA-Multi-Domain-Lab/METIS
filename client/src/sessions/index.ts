@@ -127,7 +127,9 @@ export default class SessionClient extends Session<TMetisClientComponents> {
     this._state = state
 
     this.listeners = [
+      ['session-starting', this.onStarting],
       ['session-started', this.onStart],
+      ['session-ending', this.onEnding],
       ['session-ended', this.onEnd],
       ['session-reset', this.onReset],
       ['session-config-updated', this.onConfigUpdate],
@@ -456,8 +458,10 @@ export default class SessionClient extends Session<TMetisClientComponents> {
    * @rejects If the session failed to start, or if the session has already
    * started or ended.
    */
-  public async $start(): Promise<void> {
+  public async $start(options: TSessionClientStartOptions = {}): Promise<void> {
     return new Promise<void>((resolve, reject) => {
+      const { onInit = () => {} } = options
+
       // Callback for errors.
       const onError = (message: string) => {
         let error: Error = new Error(message)
@@ -479,6 +483,10 @@ export default class SessionClient extends Session<TMetisClientComponents> {
       this.server.request('request-start-session', {}, 'Starting session.', {
         onResponse: (event) => {
           switch (event.method) {
+            case 'session-starting':
+              this._state = 'starting'
+              onInit()
+              break
             case 'session-started':
               this._state = 'started'
               return resolve()
@@ -500,8 +508,10 @@ export default class SessionClient extends Session<TMetisClientComponents> {
    * @rejects If the session failed to end, or if the session has already
    * ended or has not yet started.
    */
-  public async $end(): Promise<void> {
+  public async $end(options: TSessionClientEndOptions = {}): Promise<void> {
     return new Promise<void>((resolve, reject) => {
+      const { onInit = () => {} } = options
+
       // Callback for errors.
       const onError = (message: string) => {
         let error: Error = new Error(message)
@@ -523,6 +533,10 @@ export default class SessionClient extends Session<TMetisClientComponents> {
       this.server.request('request-end-session', {}, 'Ending session.', {
         onResponse: (event) => {
           switch (event.method) {
+            case 'session-ending':
+              this._state = 'ending'
+              onInit()
+              break
             case 'session-ended':
               this._state = 'ended'
               return resolve()
@@ -992,11 +1006,27 @@ export default class SessionClient extends Session<TMetisClientComponents> {
   }
 
   /**
+   * Handles when the session is starting.
+   * @param event The event emitted by the server.
+   */
+  private onStarting = (event: TResponseEvents['session-starting']): void => {
+    this._state = 'starting'
+  }
+
+  /**
    * Handles when the session is started.
    * @param event The event emitted by the server.
    */
   private onStart = (event: TResponseEvents['session-started']): void => {
     this.importStartData(event)
+  }
+
+  /**
+   * Handles when the session is ending.
+   * @param event The event emitted by the server.
+   */
+  private onEnding = (event: TResponseEvents['session-ending']): void => {
+    this._state = 'ending'
   }
 
   /**
@@ -1434,6 +1464,30 @@ type TSessionRequestOptions = {
    * @param message The error message.
    */
   onError?: (message: string) => void
+}
+
+/**
+ * Options to pass to {@link SessionClient.$start} method.
+ */
+type TSessionClientStartOptions = {
+  /**
+   * Callback for when the server acknowledges
+   * the request to start the session and has
+   * marked the session as 'starting'.
+   */
+  onInit?: () => void
+}
+
+/**
+ * Options to pass to {@link SessionClient.$end} method.
+ */
+type TSessionClientEndOptions = {
+  /**
+   * Callback for when the server acknowledges
+   * the request to end the session and has
+   * marked the session as 'ending'.
+   */
+  onInit?: () => void
 }
 
 /**
