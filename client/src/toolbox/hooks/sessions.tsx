@@ -70,8 +70,10 @@ export function useSessionRedirects(
         }
         break
       // Once started, ensure the user is on the
-      // session page.
+      // session page. If resetting, stay on the
+      // session page also.
       case 'started':
+      case 'resetting':
         if (currentPageKey !== 'SessionPage') {
           navigateTo(
             'SessionPage',
@@ -84,7 +86,7 @@ export function useSessionRedirects(
       // return page, most likely the home page.
       case 'ending':
       case 'ended':
-        notify('Session has ended.')
+        notify('Session is now closed.')
         navigateToReturnPage({ bypassMiddleware: true })
         break
       default:
@@ -110,6 +112,8 @@ export function useSessionRedirects(
       'session-ending',
       'session-ended',
       'session-destroyed',
+      'session-resetting',
+      'session-reset',
     ],
     () => {
       verifyNavigation.current()

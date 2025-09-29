@@ -507,6 +507,14 @@ export type TResponseEvents = {
     TClientEvents['request-end-session']
   >
   /**
+   * Occurs when the session is resetting (transitionary state).
+   */
+  'session-resetting': TResponseEvent<
+    'session-resetting',
+    {},
+    TClientEvents['request-reset-session']
+  >
+  /**
    * Occurs when the session has been reset.
    */
   'session-reset': TResponseEvent<

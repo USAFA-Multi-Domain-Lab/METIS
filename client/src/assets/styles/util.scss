@@ -87,19 +87,13 @@
     0% {
       opacity: 1;
     }
-    5% {
+    18% {
       opacity: 1;
-    }
-    45% {
-      opacity: 0.55;
     }
     50% {
       opacity: 0.55;
     }
-    55% {
-      opacity: 0.55;
-    }
-    95% {
+    82% {
       opacity: 1;
     }
     100% {
@@ -107,5 +101,5 @@
     }
   }
 
-  animation: pulse 4s infinite;
+  animation: pulse 3s infinite;
 }

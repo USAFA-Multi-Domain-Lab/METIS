@@ -823,9 +823,14 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       data: {},
       request: unfulfilledRequest,
     })
+    this.clearMembers()
+
     ServerTargetEnvironment.tearDown(this).then(() => {
       this._state = 'ended'
-      this.emitToAll('session-ended', { data: {}, request: fulfilledRequest })
+      member.emit('session-ended', {
+        data: { sessionId: this._id },
+        request: fulfilledRequest,
+      })
       this.destroy()
     })
   }
@@ -840,7 +845,12 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     event: TClientEvents['request-reset-session'],
     // Build request for response data.
   ): Promise<void> => {
-    let request = member.connection.buildResponseReqData(event)
+    let fulfilledRequest = member.connection.buildResponseReqData(event, {
+      fulfilled: true,
+    })
+    let unfulfilledRequest = member.connection.buildResponseReqData(event, {
+      fulfilled: false,
+    })
 
     // If the member does not have the correct permissions
     // to start the session, then emit an error.
@@ -848,7 +858,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       return member.emitError(
         new ServerEmittedError(
           ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
-          { request },
+          { request: fulfilledRequest },
         ),
       )
     }
@@ -858,23 +868,35 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       return member.emitError(
         new ServerEmittedError(
           ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
-          { request },
+          { request: fulfilledRequest },
         ),
       )
     }
 
+    this._state = 'resetting'
+    this.emitToAll('session-resetting', {
+      data: {},
+      request: unfulfilledRequest,
+    })
+
     // Handle any action executions that are executing.
     await this.handleExecutions()
 
-    // Mark the session as unstarted.
-    this._state = 'started'
+    // Tear down the target environments.
+    await ServerTargetEnvironment.tearDown(this)
+
     // Recreate the new mission from the JSON of
     // the current mission.
     this._mission = ServerMission.fromSaveJson(this.mission.toSaveJson())
     this.initializeMission()
     this.mapActions()
 
-    // Emit responses to all members.
+    // Set up the target environments.
+    await ServerTargetEnvironment.setUp(this)
+
+    // Mark as started and emit the response to
+    // all members.
+    this._state = 'started'
     this.emitStartResponses(event, member, 'session-reset')
   }
 

@@ -458,7 +458,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
    * @rejects If the session failed to start, or if the session has already
    * started or ended.
    */
-  public async $start(options: TSessionClientStartOptions = {}): Promise<void> {
+  public async $start(options: TSessionLifecycleOptions = {}): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       const { onInit = () => {} } = options
 
@@ -508,7 +508,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
    * @rejects If the session failed to end, or if the session has already
    * ended or has not yet started.
    */
-  public async $end(options: TSessionClientEndOptions = {}): Promise<void> {
+  public async $end(options: TSessionLifecycleOptions = {}): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       const { onInit = () => {} } = options
 
@@ -558,8 +558,10 @@ export default class SessionClient extends Session<TMetisClientComponents> {
    * @rejects If the session failed to reset, or if the session
    * has not yet started.
    */
-  public async $reset(): Promise<void> {
+  public async $reset(options: TSessionLifecycleOptions = {}): Promise<void> {
     return new Promise<void>((resolve, reject) => {
+      const { onInit = () => {} } = options
+
       // Callback for errors.
       const onError = (message: string) => {
         let error: Error = new Error(message)
@@ -577,6 +579,10 @@ export default class SessionClient extends Session<TMetisClientComponents> {
       this.server.request('request-reset-session', {}, 'Resetting session.', {
         onResponse: (event) => {
           switch (event.method) {
+            case 'session-resetting':
+              this._state = 'resetting'
+              onInit()
+              break
             case 'session-reset':
               this._state = 'started'
               return resolve()
@@ -1467,25 +1473,15 @@ type TSessionRequestOptions = {
 }
 
 /**
- * Options to pass to {@link SessionClient.$start} method.
+ * Options to pass to {@link SessionClient.$start},
+ * {@link SessionClient.$end} and {@link SessionClient.$reset}
+ * methods.
  */
-type TSessionClientStartOptions = {
+type TSessionLifecycleOptions = {
   /**
    * Callback for when the server acknowledges
    * the request to start the session and has
    * marked the session as 'starting'.
-   */
-  onInit?: () => void
-}
-
-/**
- * Options to pass to {@link SessionClient.$end} method.
- */
-type TSessionClientEndOptions = {
-  /**
-   * Callback for when the server acknowledges
-   * the request to end the session and has
-   * marked the session as 'ending'.
    */
   onInit?: () => void
 }

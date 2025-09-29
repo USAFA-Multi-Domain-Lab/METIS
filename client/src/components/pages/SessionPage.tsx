@@ -12,6 +12,7 @@ import {
 } from 'src/toolbox/hooks'
 import { useSessionRedirects } from 'src/toolbox/hooks/sessions'
 import { DefaultPageLayout, TPage_P } from '.'
+import PendingPageModal from '../content/communication/PendingPageModal'
 import Prompt from '../content/communication/Prompt'
 import MissionFileList from '../content/data/lists/implementations/MissionFileList'
 import { TNavigation_P } from '../content/general-layout/Navigation'
@@ -64,6 +65,9 @@ export default function SessionPage({
   const { verifyNavigation, navigateToReturnPage } = useSessionRedirects(
     session,
     { returnPage },
+  )
+  const [resetInitiated, setResetInitiated] = useState<boolean>(
+    session.state === 'resetting',
   )
 
   /* -- VARIABLES -- */
@@ -222,7 +226,7 @@ export default function SessionPage({
       // Begin loading.
       beginLoading('Ending session...')
       // End the session.
-      session.$end({
+      await session.$end({
         onInit: () => {
           // Go to return page once the session
           // end has been initiated. Tear down
@@ -230,6 +234,9 @@ export default function SessionPage({
           navigateToReturnPage({ bypassMiddleware: true })
         },
       })
+      notify(
+        `"${session.name}" teardown complete. Session will now be deleted.`,
+      )
     } catch (error) {
       handleError({
         message: 'Failed to end session.',
@@ -263,8 +270,6 @@ export default function SessionPage({
       // Clear verify navigation function to prevent double
       // redirect.
       verifyNavigation.current = () => {}
-      // Begin loading.
-      beginLoading('Resetting session...')
       // Start the session.
       await session.$reset()
       // Refresh page.
@@ -433,15 +438,20 @@ export default function SessionPage({
     [selectedForce],
   )
 
+  useEventListener(server, 'session-resetting', () => {
+    setResetInitiated(true)
+    navButtonEngine.disable('stop').disable('reset')
+  })
+
   useEventListener(server, 'session-reset', () => {
-    beginLoading('Resetting session...')
+    beginLoading('Refreshing page...')
     navigateTo(
       'SessionPage',
       { session, returnPage },
       { bypassMiddleware: true },
     )
     finishLoading()
-    notify('A manager has reset the session.')
+    notify('All progress has been reset by a manager.')
   })
 
   // Update the list of local files when file access
@@ -572,6 +582,12 @@ export default function SessionPage({
             </PanelView>
           </Panel>
         </PanelLayout>
+        <PendingPageModal
+          message={
+            'Session reset initiated by a manager. Once teardown and setup are complete, the page will refresh...'
+          }
+          active={resetInitiated}
+        />
       </DefaultPageLayout>
     </div>
   )

@@ -490,6 +490,7 @@ export type TSessionState =
   | 'started'
   | 'ending'
   | 'ended'
+  | 'resetting'
 
 /**
  * The role of a user in a session.

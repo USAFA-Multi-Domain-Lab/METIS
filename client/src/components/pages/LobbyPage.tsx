@@ -9,7 +9,6 @@ import {
 } from 'src/toolbox/hooks'
 import { useSessionRedirects } from 'src/toolbox/hooks/sessions'
 import { DefaultPageLayout } from '.'
-import { TSessionState } from '../../../../shared/sessions'
 import Prompt from '../content/communication/Prompt'
 import { HomeButton, TNavigation_P } from '../content/general-layout/Navigation'
 import SessionMembers from '../content/session/members/SessionMembers'
@@ -37,7 +36,9 @@ export default function LobbyPage({
     elements: [HomeButton({ icon: 'quit', description: 'Quit session' })],
   })
   const { verifyNavigation } = useSessionRedirects(session)
-  const [sessionState, setSessionState] = useState<TSessionState>(session.state)
+  const [startInitiated, setStartInitiated] = useState<boolean>(
+    session.state === 'starting',
+  )
 
   /* -- COMPUTED -- */
 
@@ -115,7 +116,7 @@ export default function LobbyPage({
   // Listen for when session-start is initiated
   // by a manager.
   useEventListener(server, 'session-starting', () => {
-    setSessionState(session.state)
+    setStartInitiated(true)
   })
 
   // Add navigation middleware to properly
@@ -208,10 +209,10 @@ export default function LobbyPage({
             <div className='Value'>{mission.name}</div>
           </div>
         </div>
-        <If condition={sessionState === 'starting'}>
+        <If condition={startInitiated}>
           <div className='StatusSection Section'>
             <div className='StartStatus'>
-              Session start initiated by manager. Session will start once set up
+              Session start initiated by manager. Session will start once setup
               is complete...
             </div>
           </div>
@@ -219,7 +220,7 @@ export default function LobbyPage({
         <div className='MembersSection Section'>
           <SessionMembers session={session} />
         </div>
-        <If condition={sessionState === 'unstarted'}>{buttonSectionJsx}</If>
+        <If condition={!startInitiated}>{buttonSectionJsx}</If>
       </DefaultPageLayout>
     </div>
   )
