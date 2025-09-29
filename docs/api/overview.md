@@ -8,7 +8,7 @@ The METIS API enables you to **automate training scenarios**, **integrate with e
 
 **New to the METIS API?** Get up and running in minutes:
 
-1. **Authenticate** → Login via `/api/v1/logins/login` with username/password
+1. **Authenticate** → Login via `/api/v1/logins/` with username/password
 2. **Create a mission** → POST to `/api/v1/missions/` with mission data
 3. **Launch a session** → POST to `/api/v1/sessions/` to start the mission
 4. **Monitor progress** → Use WebSocket connection for real-time updates

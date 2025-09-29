@@ -8,7 +8,7 @@ import { AnyObject } from '../toolbox/objects'
 /**
  * The RESTful API class is used to make HTTP requests to target environments.
  */
-export class RestApi extends Api {
+export default class RestApi extends Api {
   /**
    * The base URL where the API can be reached at.
    */
@@ -29,6 +29,39 @@ export class RestApi extends Api {
    */
   public get config(): AxiosRequestConfig<any> {
     return this._config
+  }
+
+  /**
+   * The API key used for authentication.
+   */
+  private _apiKey?: string
+  /**
+   * The API key used for authentication.
+   */
+  public get apiKey(): string | undefined {
+    return this._apiKey
+  }
+
+  /**
+   * The username for basic authentication.
+   */
+  private _username?: string
+  /**
+   * The username for basic authentication.
+   */
+  public get username(): string | undefined {
+    return this._username
+  }
+
+  /**
+   * The password for basic authentication.
+   */
+  private _password?: string
+  /**
+   * The password for basic authentication.
+   */
+  public get password(): string | undefined {
+    return this._password
   }
 
   /**
@@ -126,27 +159,12 @@ export class RestApi extends Api {
       }
     }
 
-    // Basic authentication.
-    if (options.username && options.password) {
-      config = {
-        ...config,
-        auth: {
-          username: options.username,
-          password: options.password,
-        },
-      }
-    }
+    // Remaining properties.
+    this._username = options.username
+    this._password = options.password
+    this._apiKey = options.apiKey
 
-    // API key authentication.
-    if (options.apiKey) {
-      config = {
-        ...config,
-        headers: {
-          'api-key': options.apiKey,
-        },
-      }
-    }
-
+    // Set the base URL.
     config.baseURL = this.baseUrl
 
     // Return the configuration.
@@ -260,7 +278,7 @@ export class RestApi extends Api {
    * @throws If the configuration is invalid.
    * @example
    * ```typescript
-   * import { RestApi } from './library/api/rest-api'
+   * import RestApi from './library/api/rest-api'
    * import { loadConfig } from './library/config'
    * const api = RestApi.fromConfig(loadConfig())
    * ```
@@ -289,15 +307,12 @@ export class RestApi extends Api {
  */
 const restApiOptionsSchema = apiOptionsSchema.extend({
   /**
-   * The port to use for the API. It specifies the port number on the server
-   * to which requests will be sent.
-   * @note Ports are used to differentiate between multiple network services
-   * running on the same machine.
-   * @default 80
+   * The protocol to use for the API. This determines the scheme used for
+   * the network requests.
+   * @see {@link [GeeksforGeeks Reference](https://www.geeksforgeeks.org/computer-networks/web-protocols/)}
+   * @default 'http'
    */
-  port: z
-    .union([z.number().int().min(1).max(65535), z.string().regex(/^\d+$/)])
-    .optional(),
+  protocol: z.enum(['http', 'https']).optional(),
   /**
    * The username for basic authentication.
    * This is added to the request headers and is used to authenticate the
@@ -317,15 +332,6 @@ const restApiOptionsSchema = apiOptionsSchema.extend({
    * @default undefined
    */
   apiKey: z.string().optional(),
-  /**
-   * Controls whether TLS client verifies the server's certificate against
-   * trusted Certificate Authorities (CAs).
-   * @note If true, the server will reject any connection which is not authorized
-   * with the trusted Certificate Authorities (CAs).
-   * @note If false, the server will accept any certificate, even if it is invalid.
-   * @default true
-   */
-  rejectUnauthorized: z.boolean().optional(),
 })
 
 /**
