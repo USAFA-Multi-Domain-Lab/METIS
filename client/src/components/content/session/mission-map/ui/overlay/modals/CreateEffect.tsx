@@ -8,6 +8,7 @@ import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
+import { TEffectTrigger } from '../../../../../../../../../shared/missions/effects'
 import './CreateEffect.scss'
 
 /**
@@ -15,7 +16,8 @@ import './CreateEffect.scss'
  */
 export default function CreateEffect({
   action,
-  setIsNewEffect,
+  trigger,
+  onCloseRequest,
   onChange,
 }: TCreateEffect_P): JSX.Element | null {
   /* -- STATE -- */
@@ -87,19 +89,14 @@ export default function CreateEffect({
   const createEffect = () => {
     // Create a new effect.
     let effect = ClientEffect.createBlankEffect(target, action)
+    // Set the trigger.
+    effect.trigger = trigger
     // Push the new effect to the action.
     action.effects.push(effect)
     // Select the new effect.
     mission.select(effect)
     // Allow the user to save the changes.
     onChange(effect)
-  }
-
-  /**
-   * Callback for when the modal is requested to be closed.
-   */
-  const onCloseRequest = () => {
-    setIsNewEffect(false)
   }
 
   /* -- RENDER -- */
@@ -172,10 +169,15 @@ export type TCreateEffect_P = {
    * The action to create the effect for.
    */
   action: ClientMissionAction
+
   /**
-   * Function that updates the isNewEffect state.
+   * The trigger for the new effect.
    */
-  setIsNewEffect: TReactSetter<boolean>
+  trigger: TEffectTrigger
+  /**
+   * Callback to handle a request to close the modal.
+   */
+  onCloseRequest: () => void
   /**
    * Handles when a change is made that would require saving.
    * @param effect The effect that was changed.

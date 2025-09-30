@@ -1,5 +1,8 @@
 import { useRef, useState } from 'react'
-import List from 'src/components/content/data/lists/List'
+import EffectList, {
+  TEffectList_P,
+} from 'src/components/content/data/lists/implementations/EffectList'
+import { TList_E } from 'src/components/content/data/lists/List'
 import { DetailDropdown } from 'src/components/content/form/dropdown'
 import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
 import { useMissionPageContext } from 'src/components/pages/missions/MissionPage'
@@ -16,6 +19,7 @@ import {
 } from 'src/toolbox/hooks'
 import { TActionType } from '../../../../../../../shared/missions/actions'
 import MissionComponent from '../../../../../../../shared/missions/component'
+import { TEffectTrigger } from '../../../../../../../shared/missions/effects'
 import StringToolbox from '../../../../../../../shared/toolbox/strings'
 import { DetailLargeString } from '../../../form/DetailLargeString'
 import { DetailNumber } from '../../../form/DetailNumber'
@@ -30,7 +34,6 @@ import Entry from '../Entry'
 export default function ActionEntry({
   action,
   action: { node, mission },
-  setIsNewEffect,
   onDuplicateActionRequest,
   onDeleteActionRequest,
   onDuplicateEffectRequest,
@@ -39,10 +42,7 @@ export default function ActionEntry({
 }: TActionEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const { showButtonMenu } = useGlobalContext().actions
-  const { state } = useMissionPageContext()
-
-  /* -- REFS -- */
-  const listRef = useRef<HTMLDivElement>(null)
+  const { state, activateEffectModal } = useMissionPageContext()
 
   /* -- STATE -- */
 
@@ -149,7 +149,7 @@ export default function ActionEntry({
         icon: 'add',
         label: 'Custom Effect',
         permissions: ['missions_write'],
-        onClick: () => setIsNewEffect(true),
+        onClick: () => activateEffectModal(newEffectTrigger),
       },
     ],
     options: {
@@ -158,6 +158,11 @@ export default function ActionEntry({
     },
     dependencies: [localFiles.length],
   })
+  const [newEffectTrigger, setNewEffectTrigger] =
+    useState<TEffectTrigger>('immediate')
+  const immediateListRef = useRef<TList_E | null>(null)
+  const successListRef = useRef<TList_E | null>(null)
+  const failureListRef = useRef<TList_E | null>(null)
 
   /* -- EFFECTS -- */
 
@@ -181,23 +186,6 @@ export default function ActionEntry({
   /* -- FUNCTIONS -- */
 
   /**
-   * Gets the tooltip description for the effect list item.
-   * @param effect The effect to get the tooltip description for.
-   * @returns The tooltip description for the effect list item.
-   */
-  const getEffectDescription = (effect: ClientEffect) => {
-    if (!effect.environment || !effect.target) {
-      return 'This effect cannot be edited because either the target environment or the target associated with this effect is not available.'
-    } else if (isAuthorized('missions_write')) {
-      return 'Edit effect.'
-    } else if (isAuthorized('missions_read')) {
-      return 'View effect.'
-    } else {
-      return ''
-    }
-  }
-
-  /**
    * Handles creating a new effect.
    */
   const onCreateEffect = (targetId: string) => {
@@ -209,6 +197,8 @@ export default function ActionEntry({
 
     // Create a new effect.
     const effect = ClientEffect.createBlankEffect(target, action)
+    // Update the trigger.
+    effect.trigger = newEffectTrigger
     // Set the effect's target and environment.
     // Push the new effect to the action.
     action.effects.push(effect)
@@ -219,16 +209,68 @@ export default function ActionEntry({
   }
 
   /**
-   * Shows the effect preset menu.
+   * Props common to all effect lists in
+   * the entry.
    */
-  const showEffectPresetMenu = () => {
-    const listElm = listRef.current
+  const commonEffectProps: Omit<
+    TEffectList_P,
+    'name' | 'items' | 'onCreateRequest'
+  > = {
+    itemsPerPageMin: 5,
+    getItemTooltip: (effect) => {
+      if (!effect.environment || !effect.target) {
+        return 'This effect cannot be edited because either the target environment or the target associated with this effect is not available.'
+      } else if (isAuthorized('missions_write')) {
+        return 'Edit effect.'
+      } else if (isAuthorized('missions_read')) {
+        return 'View effect.'
+      } else {
+        return ''
+      }
+    },
+    onOpenRequest: (effect) => {
+      mission.select(effect)
+    },
+    onDuplicateRequest: (effect) => {
+      onDuplicateEffectRequest(effect, false)
+    },
+    onDeleteRequest: (effect) => {
+      onDeleteEffectRequest(effect)
+    },
+  }
 
-    if (!listElm) {
-      console.warn('ActionEntry: listRef is null')
-      return
+  /**
+   * Shows the effect preset menu, presenting various options
+   * for creating a new effect.
+   * @param newEffectTrigger The trigger for the new effect.
+   */
+  const showEffectPresetMenu = (newEffectTrigger: TEffectTrigger) => {
+    let listElm: HTMLDivElement | null | undefined = null
+
+    // Determine which list to use based on the effect trigger.
+    switch (newEffectTrigger) {
+      case 'immediate':
+        listElm = immediateListRef.current?.root.current
+        break
+      case 'success':
+        listElm = successListRef.current?.root.current
+        break
+      case 'failure':
+        listElm = failureListRef.current?.root.current
+        break
+      default:
+        console.warn(
+          `ActionEntry: Unknown effect trigger "${newEffectTrigger}"`,
+        )
+        return
     }
 
+    if (!listElm) {
+      throw new Error('List ref is null')
+    }
+
+    // Get the create effect button then confirm
+    // it is present.
     const createEffectButton = listElm.querySelector<HTMLDivElement>(
       '.ListNav .ButtonSvgPanel .ButtonSvg_add',
     )
@@ -238,10 +280,35 @@ export default function ActionEntry({
       return
     }
 
+    // Activate the effect preset menu.
     showButtonMenu(createEffectEngine, {
       positioningTarget: createEffectButton,
     })
+    setNewEffectTrigger(newEffectTrigger)
   }
+
+  /* -- COMPUTED -- */
+
+  /**
+   * Effects that trigger immediately upon action execution.
+   */
+  const immediateEffects = compute(() => {
+    return action.effects.filter((effect) => effect.trigger === 'immediate')
+  })
+
+  /**
+   * Effects that trigger upon successful action execution.
+   */
+  const successEffects = compute(() => {
+    return action.effects.filter((effect) => effect.trigger === 'success')
+  })
+
+  /**
+   * Effects that trigger upon failed action execution.
+   */
+  const failureEffects = compute(() => {
+    return action.effects.filter((effect) => effect.trigger === 'failure')
+  })
 
   /* -- RENDER -- */
 
@@ -381,65 +448,39 @@ export default function ActionEntry({
         setValue={hideOpensNode}
         key={`${action._id}_opensNodeHidden`}
       />
+      <Divider />
 
       {/* -- EFFECTS -- */}
-      <div ref={listRef}>
-        <List<ClientEffect>
-          name={'Effects'}
-          items={action.effects}
-          itemsPerPageMin={5}
-          listButtonIcons={['add']}
-          itemButtonIcons={['open', 'copy', 'remove']}
-          getItemTooltip={getEffectDescription}
-          getCellText={(effect) => effect.name}
-          getListButtonLabel={() => 'Create a new effect'}
-          getListButtonPermissions={(button) => {
-            switch (button) {
-              default:
-                return ['missions_write']
-            }
+
+      <h3>Effects</h3>
+
+      <div>
+        <EffectList
+          name='Immediate'
+          items={immediateEffects}
+          elementAccess={immediateListRef}
+          onCreateRequest={() => {
+            showEffectPresetMenu('immediate')
           }}
-          getItemButtonLabel={(button) => {
-            switch (button) {
-              case 'open':
-                return 'View effect'
-              case 'copy':
-                return 'Duplicate effect'
-              case 'remove':
-                return 'Delete effect'
-              default:
-                return ''
-            }
+          {...commonEffectProps}
+        />
+        <EffectList
+          name='Success'
+          items={successEffects}
+          elementAccess={successListRef}
+          onCreateRequest={() => {
+            showEffectPresetMenu('success')
           }}
-          getItemButtonPermissions={(button) => {
-            switch (button) {
-              case 'open':
-                return ['missions_read']
-              default:
-                return ['missions_write']
-            }
+          {...commonEffectProps}
+        />
+        <EffectList
+          name='Failure'
+          items={failureEffects}
+          elementAccess={failureListRef}
+          onCreateRequest={() => {
+            showEffectPresetMenu('failure')
           }}
-          onItemDblClick={(effect) => mission.select(effect)}
-          onListButtonClick={(button) => {
-            switch (button) {
-              case 'add':
-                showEffectPresetMenu()
-                break
-            }
-          }}
-          onItemButtonClick={async (button, effect) => {
-            switch (button) {
-              case 'open':
-                mission.select(effect)
-                break
-              case 'copy':
-                await onDuplicateEffectRequest(effect)
-                break
-              case 'remove':
-                await onDeleteEffectRequest(effect)
-                break
-            }
-          }}
+          {...commonEffectProps}
         />
       </div>
     </Entry>
@@ -456,10 +497,6 @@ export type TActionEntry_P = {
    * The action to be edited.
    */
   action: ClientMissionAction
-  /**
-   * Function that updates the isNewEffect state.
-   */
-  setIsNewEffect: TReactSetter<boolean>
   /**
    * Handles the request to duplicate an action.
    */

@@ -25,6 +25,7 @@ import Mission from '../../../../../shared/missions'
 import MissionComponent, {
   TMissionComponentDefect,
 } from '../../../../../shared/missions/component'
+import { TEffectTrigger } from '../../../../../shared/missions/effects'
 import { TNonEmptyArray } from '../../../../../shared/toolbox/arrays'
 import Prompt from '../../content/communication/Prompt'
 import FileReferenceList, {
@@ -125,7 +126,9 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   const [selection, setSelection] = useState<MissionComponent<any, any>>(
     mission.selection,
   )
-  const [isNewEffect, setIsNewEffect] = useState<boolean>(false)
+  const [effectModalActive, setEffectModalActive] = useState<boolean>(false)
+  const [effectModalTrigger, setEffectModalTrigger] =
+    useState<TEffectTrigger>('immediate')
   const [, setDefects] = state.defects
   const [, setCheckForDefects] = state.checkForDefects
   const root = useRef<HTMLDivElement>(null)
@@ -366,7 +369,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
 
   // Cleanup when a new effect is created.
   useEffect(() => {
-    if (isNewEffect) setIsNewEffect(false)
+    setEffectModalActive(false)
   }, [selection])
 
   // Guards against refreshing or navigating away
@@ -666,6 +669,14 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
         reject(error)
       }
     })
+  }
+
+  /**
+   * @see {@link TMissionPageContextData.activateEffectModal}
+   */
+  const activateEffectModal = (trigger: TEffectTrigger) => {
+    setEffectModalActive(true)
+    setEffectModalTrigger(trigger)
   }
 
   /**
@@ -1088,11 +1099,12 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     // If the selection is an action and the user has
     // requested to create a new effect, then display
     // the create effect modal.
-    if (selection instanceof ClientMissionAction && isNewEffect) {
+    if (selection instanceof ClientMissionAction && effectModalActive) {
       return (
         <CreateEffect
           action={mission.selection as ClientMissionAction}
-          setIsNewEffect={setIsNewEffect}
+          trigger={effectModalTrigger}
+          onCloseRequest={() => setEffectModalActive(false)}
           onChange={onChange}
         />
       )
@@ -1160,7 +1172,6 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
       return (
         <ActionEntry
           action={selection}
-          setIsNewEffect={setIsNewEffect}
           onDuplicateActionRequest={onDuplicateActionRequest}
           onDeleteActionRequest={onDeleteActionRequest}
           onDuplicateEffectRequest={onDuplicateEffectRequest}
@@ -1191,6 +1202,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     root,
     ...props,
     state,
+    activateEffectModal,
   }
 
   // Don't render if the mount hasn't yet been handled.
@@ -1285,4 +1297,11 @@ export type TMissionPageContextData = {
      * The state for the mission page.
      */
     state: TMissionPage_S
+    /**
+     * Allows the creation of a custom effect by
+     * opening a modal on the mission map which will
+     * allow the user to create an effect from scratch.
+     * @param trigger The trigger for the new effect.
+     */
+    activateEffectModal: (trigger: TEffectTrigger) => void
   }

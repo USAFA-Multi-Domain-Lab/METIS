@@ -79,6 +79,7 @@ export function createDefaultListProps<
     initialSorting: { column: 'name', method: 'ascending' },
     deselectionBlacklist: [],
     uploads: [],
+    elementAccess: null,
     getColumnLabel: (x) => StringToolbox.toTitleCase(x.toString()),
     getCellText: (item, column) => (item[column] as any).toString(),
     getItemTooltip: () => '',
@@ -463,6 +464,14 @@ export default function List<TItem extends MetisComponent>(
     if (!rootElement?.contains(target)) setSelection(null)
   })
 
+  // Give parent access to the list's elements, if
+  // requested.
+  useEffect(() => {
+    if (defaultedProps.elementAccess) {
+      defaultedProps.elementAccess.current = elements
+    }
+  }, [defaultedProps.elementAccess])
+
   /* -- RENDER -- */
 
   /**
@@ -601,6 +610,11 @@ export type TList_P<TItem extends MetisComponent> = {
    * @default []
    */
   uploads?: ListUpload[]
+  /**
+   * Grants parent access to the refs used internally
+   * by the list.
+   */
+  elementAccess?: React.MutableRefObject<TList_E | null> | null
   /**
    * Gets the tooltip description for the item.
    * @param item The item for which to get the tooltip.
