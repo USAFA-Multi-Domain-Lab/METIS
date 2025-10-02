@@ -304,7 +304,11 @@ export default function SessionList({
       ]}
       listButtonIcons={['key']}
       itemButtonIcons={sessionItemButtons}
-      initialSorting={{ column: 'launchedAt', method: 'descending' }}
+      initialSorting={{
+        method: 'column-based',
+        column: 'launchedAt',
+        direction: 'descending',
+      }}
       getItemButtonDisabled={(button, session) => {
         switch (button) {
           case 'remove':

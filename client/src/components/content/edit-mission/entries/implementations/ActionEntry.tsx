@@ -209,37 +209,6 @@ export default function ActionEntry({
   }
 
   /**
-   * Props common to all effect lists in
-   * the entry.
-   */
-  const commonEffectProps: Omit<
-    TEffectList_P,
-    'name' | 'items' | 'onCreateRequest'
-  > = {
-    itemsPerPageMin: 5,
-    getItemTooltip: (effect) => {
-      if (!effect.environment || !effect.target) {
-        return 'This effect cannot be edited because either the target environment or the target associated with this effect is not available.'
-      } else if (isAuthorized('missions_write')) {
-        return 'Edit effect.'
-      } else if (isAuthorized('missions_read')) {
-        return 'View effect.'
-      } else {
-        return ''
-      }
-    },
-    onOpenRequest: (effect) => {
-      mission.select(effect)
-    },
-    onDuplicateRequest: (effect) => {
-      onDuplicateEffectRequest(effect, false)
-    },
-    onDeleteRequest: (effect) => {
-      onDeleteEffectRequest(effect)
-    },
-  }
-
-  /**
    * Shows the effect preset menu, presenting various options
    * for creating a new effect.
    * @param newEffectTrigger The trigger for the new effect.
@@ -290,23 +259,56 @@ export default function ActionEntry({
   /* -- COMPUTED -- */
 
   /**
+   * Props common to all effect lists in
+   * the entry.
+   */
+  const commonEffectProps: Omit<
+    TEffectList_P,
+    'name' | 'items' | 'onCreateRequest'
+  > = {
+    initialSorting: { method: 'unsorted', fixedConfig: true },
+    ordering: { mode: 'maleable' },
+    itemsPerPageMin: 5,
+    getItemTooltip: (effect) => {
+      if (!effect.environment || !effect.target) {
+        return 'This effect cannot be edited because either the target environment or the target associated with this effect is not available.'
+      } else if (isAuthorized('missions_write')) {
+        return 'Edit effect.'
+      } else if (isAuthorized('missions_read')) {
+        return 'View effect.'
+      } else {
+        return ''
+      }
+    },
+    onOpenRequest: (effect) => {
+      mission.select(effect)
+    },
+    onDuplicateRequest: (effect) => {
+      onDuplicateEffectRequest(effect, false)
+    },
+    onDeleteRequest: (effect) => {
+      onDeleteEffectRequest(effect)
+    },
+  }
+
+  /**
    * Effects that trigger immediately upon action execution.
    */
-  const immediateEffects = compute(() => {
+  const [immediateEffects] = useState(() => {
     return action.effects.filter((effect) => effect.trigger === 'immediate')
   })
 
   /**
    * Effects that trigger upon successful action execution.
    */
-  const successEffects = compute(() => {
+  const [successEffects] = useState(() => {
     return action.effects.filter((effect) => effect.trigger === 'success')
   })
 
   /**
    * Effects that trigger upon failed action execution.
    */
-  const failureEffects = compute(() => {
+  const [failureEffects] = useState(() => {
     return action.effects.filter((effect) => effect.trigger === 'failure')
   })
 

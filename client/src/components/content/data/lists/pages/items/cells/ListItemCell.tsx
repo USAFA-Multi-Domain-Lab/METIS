@@ -1,8 +1,8 @@
 import { ReactNode } from 'react'
 import { compute } from 'src/toolbox'
-import { MetisComponent } from '../../../../../../../../shared'
-import Tooltip from '../../../../communication/Tooltip'
-import { TListColumnType, useListContext } from '../../List'
+import { MetisComponent } from '../../../../../../../../../shared'
+import Tooltip from '../../../../../communication/Tooltip'
+import { TListColumnType, useListContext } from '../../../List'
 import './ListItemCell.scss'
 
 /**

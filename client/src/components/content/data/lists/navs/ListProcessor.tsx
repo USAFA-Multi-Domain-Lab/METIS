@@ -23,10 +23,10 @@ export default function ListProcessor(): JSX.Element | null {
   const [, setProcessedItems] = listContext.state.processedItems
   const [sorting] = listContext.state.sorting
   const [searchActive, activateSearch] = listContext.state.searchActive
+  const [itemOrderUpdateId] = listContext.state.itemOrderUpdateId
   const [searchHint, setSearchHint] = useState<string>('')
   const [hideSearchTooltip, showSearchTooltip] = useState<boolean>(false)
   const searchField = createRef<HTMLInputElement>()
-  const { column: sortingColumn, method: sortingMethod } = sorting
   const searchButtonEngine = useButtonSvgEngine({
     elements: [
       {
@@ -121,36 +121,40 @@ export default function ListProcessor(): JSX.Element | null {
       })
     }
 
-    // Apply the sorting state to the result using
-    // a Schwartzian transform, starting by creating
-    // a temporary sorting array.
-    const sortingArray =
-      sortingColumn === 'name'
-        ? result.map((item) => ({
-            item,
-            sortKey: item.name,
-          }))
-        : result.map((item) => ({
-            item,
-            sortKey: getCellText(item, sortingColumn),
-          }))
+    // If there is automatic sorting enabled,
+    // apply it to the result.
+    if (sorting.method === 'column-based') {
+      // Apply the sorting state to the result using
+      // a Schwartzian transform, starting by creating
+      // a temporary sorting array.
+      const sortingArray =
+        sorting.column === 'name'
+          ? result.map((item) => ({
+              item,
+              sortKey: item.name,
+            }))
+          : result.map((item) => ({
+              item,
+              sortKey: getCellText(item, sorting.column),
+            }))
 
-    // Sort the sorting array based on the sorting
-    // method.
-    switch (sortingMethod) {
-      case 'ascending': {
-        sortingArray.sort((a, b) => a.sortKey.localeCompare(b.sortKey))
-        break
+      // Sort the sorting array based on the sorting
+      // method.
+      switch (sorting.direction) {
+        case 'ascending': {
+          sortingArray.sort((a, b) => a.sortKey.localeCompare(b.sortKey))
+          break
+        }
+        case 'descending': {
+          sortingArray.sort((a, b) => b.sortKey.localeCompare(a.sortKey))
+          break
+        }
       }
-      case 'descending': {
-        sortingArray.sort((a, b) => b.sortKey.localeCompare(a.sortKey))
-        break
-      }
+
+      // Convert the sorting array back and store it
+      // in the result.
+      result = sortingArray.map((entry) => entry.item)
     }
-
-    // Convert the sorting array back and store it
-    // in the result.
-    result = sortingArray.map((entry) => entry.item)
 
     // If no search hint was found, clear the hint.
     if (!searchHintFound) setSearchHint('')
@@ -218,7 +222,7 @@ export default function ListProcessor(): JSX.Element | null {
   // change or if the sorting state changes.
   useEffect(() => {
     process()
-  }, [items, items.length, sorting])
+  }, [items, items.length, sorting, itemOrderUpdateId])
 
   // Focus the search field when the search is
   // activated.

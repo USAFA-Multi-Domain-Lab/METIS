@@ -17,7 +17,11 @@ export default function (props: TMissionFileList_P): JSX.Element | null {
     deselectionBlacklist: ['.ResizeBar', '.ScrollBox', '.EntryBottom'],
     listButtonIcons: [],
     itemButtonIcons: ['unlink'],
-    initialSorting: { column: 'name', method: 'ascending' },
+    initialSorting: {
+      method: 'column-based',
+      column: 'name',
+      direction: 'ascending',
+    },
     getCellText: (
       file: ClientMissionFile,
       column: keyof ClientMissionFile,

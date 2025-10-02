@@ -22,14 +22,14 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:zoom="0.53875"
-     inkscape:cx="400"
+     inkscape:cx="401.85615"
      inkscape:cy="400.92807"
-     inkscape:window-width="1392"
+     inkscape:window-width="1560"
      inkscape:window-height="989"
-     inkscape:window-x="336"
-     inkscape:window-y="38"
+     inkscape:window-x="174"
+     inkscape:window-y="34"
      inkscape:window-maximized="0"
-     inkscape:current-layer="svg1" />
+     inkscape:current-layer="Layer_1" />
   <!-- Created with Method Draw - http://github.com/duopixel/Method-Draw/ -->
   <g
      id="Layer_1"
@@ -41,18 +41,20 @@
        stroke-width="50"
        transform="rotate(180,621.15027,400.26486)"
        id="svg_6"
-       d="M 499.44409,399.36798 621.15025,26.59866 742.85643,399.36798 H 682.00334 V 773.93101 H 560.29718 V 399.36798 Z"
+       d="M 465.63778,399.36798 621.15025,26.59866 776.66314,399.36798 h -94.6598 V 773.93101 H 560.29718 V 399.36798 Z"
        stroke-opacity="null"
        stroke-dasharray="none"
-       fill="#ffffff" />
+       fill="#ffffff"
+       sodipodi:nodetypes="cccccccc" />
     <path
        stroke="#ffffff"
        stroke-width="50"
        id="svg_7"
-       d="M 61.66736,399.93839 193.09609,28.00035 324.52482,399.93839 H 258.81045 V 773.66613 H 127.38173 V 399.93839 Z"
+       d="M 27.859989,399.93839 193.09609,28.00035 358.33218,399.93839 H 258.81045 V 773.66613 H 127.38173 V 399.93839 Z"
        opacity="undefined"
        stroke-opacity="null"
        stroke-dasharray="none"
-       fill="#ffffff" />
+       fill="#ffffff"
+       sodipodi:nodetypes="cccccccc" />
   </g>
 </svg>
