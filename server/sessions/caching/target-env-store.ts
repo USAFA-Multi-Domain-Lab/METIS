@@ -21,7 +21,7 @@ export default class TargetEnvStore {
    * @param defaultValue The value to use if the key does not exist.
    * @returns The value associated with the key.
    */
-  public use<T = any>(key: string, defaultValue: any): StoreState<T> {
+  public use<T extends any>(key: string, defaultValue: T): StoreState<T> {
     if (!this.store.has(key)) {
       this.store.set(key, new StoreState(defaultValue))
     }
@@ -29,36 +29,10 @@ export default class TargetEnvStore {
   }
 
   /**
-   * Checks if a key exists in the store.
-   * @param key The store key to check.
-   * @returns True if the key exists, false otherwise.
-   */
-  public has(key: string): boolean {
-    return this.store.has(key)
-  }
-
-  /**
-   * Deletes a key and its value from the store.
-   * @param key The store key to delete.
-   * @returns True if the key existed and was deleted, false otherwise.
-   */
-  public delete(key: string): boolean {
-    return this.store.delete(key)
-  }
-
-  /**
    * Removes all entries from the cache.
    */
-  public clear(): void {
+  private clear(): void {
     this.store.clear()
-  }
-
-  /**
-   * Returns an iterator of all keys in the store.
-   * @returns An iterator for the store's keys.
-   */
-  public keys(): IterableIterator<string> {
-    return this.store.keys()
   }
 
   /**

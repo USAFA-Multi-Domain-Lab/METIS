@@ -201,6 +201,39 @@ const target = new TargetSchema({
 })
 ```
 
+## Context API
+
+The `context` parameter in your target script provides access to METIS runtime services and session data. Here are the key properties available:
+
+### Core Properties
+
+- **`effect`** - Information about the current effect being executed
+- **`user`** - Details about the user who triggered the effect
+- **`mission`** - Information about the current mission
+- **`session`** - Session metadata and details
+
+### Data Stores
+
+METIS provides two types of stores for caching and sharing data between script executions:
+
+- **`localStore`** - Data specific to the current session and target environment
+- **`globalStore`** - Data shared across all target environments within the session
+
+### Communication & Control Methods
+
+The context object exposes several callback methods for manipulating the session and providing feedback to the members:
+
+- **`sendOutput(message, options)`** — Send messages to the output panel
+- **`blockNode(options)`** — Block the node from further interaction
+- **`unblockNode(options)`** — Unblock the node to allow further interaction
+- **`openNode(options)`** — Open the node to reveal the next set of nodes
+- **`modifySuccessChance(operand, options)`** — Modify an action's chance of success
+- **`modifyProcessTime(operand, options)`** — Modify an action's process time
+- **`modifyResourceCost(operand, options)`** — Modify an action's resource cost
+- **`modifyResourcePool(operand, options)`** — Modify the resource pool by a given amount
+- **`grantFileAccess(fileId, forceKey)`** — Grant access to a file for a specific force
+- **`revokeFileAccess(fileId, forceKey)`** — Revoke access to a file for a specific force
+
 ## Best Practices
 
 ### Environment Organization
