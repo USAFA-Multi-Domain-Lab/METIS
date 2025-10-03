@@ -1,6 +1,6 @@
 # changelog
 
-# version-2.2.2 | 9-24-2025
+# version-2.2.2 | 10-3-2025
 
 - Target environments now support data stores. These data stores will allow developers to cache random-access data between script executions.
 - Loggers now support log rotation, preventing log files from growing indefinitely.
