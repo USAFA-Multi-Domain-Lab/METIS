@@ -51,7 +51,6 @@ export default class MetisServer {
   public get expressApp(): Express {
     return this._expressApp
   }
-
   /**
    * The HTTP server instance.
    */
@@ -218,6 +217,28 @@ export default class MetisServer {
   }
 
   /**
+   * The path to the SSL key file (if any).
+   */
+  private _sslKeyPath: string | undefined
+  /**
+   * The path to the SSL key file (if any).
+   */
+  public get sslKeyPath(): string | undefined {
+    return this._sslKeyPath
+  }
+
+  /**
+   * The path to the SSL cert file (if any).
+   */
+  private _sslCertPath: string | undefined
+  /**
+   * The path to the SSL cert file (if any).
+   */
+  public get sslCertPath(): string | undefined {
+    return this._sslCertPath
+  }
+
+  /**
    * The session middleware for the server responsible
    * for enabling and managing sessions.
    */
@@ -252,28 +273,6 @@ export default class MetisServer {
       ...options,
     }
 
-    // Create third-party server objects.
-    this._expressApp = express()
-    // HTTPS only in production if certs are provided
-    if (
-      process.env.METIS_ENV_TYPE === 'prod' &&
-      process.env.SSL_KEY_PATH &&
-      process.env.SSL_CERT_PATH
-    ) {
-      const key = fs.readFileSync(process.env.SSL_KEY_PATH)
-      const cert = fs.readFileSync(process.env.SSL_CERT_PATH)
-      this._httpServer = https.createServer({ key, cert }, this.expressApp)
-      console.log('SSL certifications found, running with HTTPS protocol.')
-    } else {
-      this._httpServer = http.createServer(this.expressApp)
-      if (process.env.METIS_ENV_TYPE === 'prod') {
-        console.warn(
-          'SSL certifications not found, running with HTTP protocol.',
-        )
-      }
-    }
-    this._wsServer = new MetisWsServer(this)
-
     // Parse the options and store them in the class.
     this._port = completedOptions.port
     this._mongoDB = completedOptions.mongoDB
@@ -286,6 +285,30 @@ export default class MetisServer {
     this._wsRateLimit = completedOptions.wsRateLimit
     this._wsRateLimitDuration = completedOptions.wsRateLimitDuration
     this._fileStoreDir = completedOptions.fileStoreDir
+    this._sslKeyPath = completedOptions.sslKeyPath
+    this._sslCertPath = completedOptions.sslCertPath
+
+    // Create third-party server objects.
+    this._expressApp = express()
+    // HTTPS only in production if certs are provided
+    if (
+      process.env.METIS_ENV_TYPE === 'prod' &&
+      this.sslKeyPath &&
+      this.sslCertPath
+    ) {
+      const key = fs.readFileSync(this.sslKeyPath)
+      const cert = fs.readFileSync(this.sslCertPath)
+      this._httpServer = https.createServer({ key, cert }, this.expressApp)
+      console.log('SSL certifications found, running with HTTPS protocol.')
+    } else {
+      this._httpServer = http.createServer(this.expressApp)
+      if (process.env.METIS_ENV_TYPE === 'prod') {
+        console.warn(
+          'SSL certifications not found, running with HTTP protocol.',
+        )
+      }
+    }
+    this._wsServer = new MetisWsServer(this)
 
     // Create database and file store objects.
     this._database = new MetisDatabase(this)
@@ -554,6 +577,8 @@ export default class MetisServer {
         wsRateLimit: parseInt(process.env.WS_RATE_LIMIT!),
         wsRateLimitDuration: parseInt(process.env.WS_RATE_LIMIT_DURATION!),
         fileStoreDir: process.env.FILE_STORE_DIR!,
+        sslKeyPath: process.env.SSL_KEY_PATH,
+        sslCertPath: process.env.SSL_CERT_PATH,
       }
     } catch (error) {
       console.error('Failed to load environment variables.')
@@ -658,4 +683,14 @@ export interface TMetisServerOptions {
    * @default "./files/store"
    */
   fileStoreDir: string
+
+  /**
+   * The path to the SSL key file (if any).
+   */
+  sslKeyPath?: string
+
+  /**
+   * The path to the SSL cert file (if any).
+   */
+  sslCertPath?: string
 }
