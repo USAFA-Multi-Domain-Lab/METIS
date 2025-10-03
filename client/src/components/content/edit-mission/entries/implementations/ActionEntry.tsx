@@ -41,9 +41,6 @@ export default function ActionEntry({
   const { showButtonMenu } = useGlobalContext().actions
   const { state } = useMissionPageContext()
 
-  /* -- REFS -- */
-  const listRef = useRef<HTMLDivElement>(null)
-
   /* -- STATE -- */
 
   const actionState = useObjectFormSync(
@@ -158,6 +155,7 @@ export default function ActionEntry({
     },
     dependencies: [localFiles.length],
   })
+  const listWrapper = useRef<HTMLDivElement>(null)
 
   /* -- EFFECTS -- */
 
@@ -222,7 +220,7 @@ export default function ActionEntry({
    * Shows the effect preset menu.
    */
   const showEffectPresetMenu = () => {
-    const listElm = listRef.current
+    const listElm = listWrapper.current
 
     if (!listElm) {
       console.warn('ActionEntry: listRef is null')
@@ -383,7 +381,7 @@ export default function ActionEntry({
       />
 
       {/* -- EFFECTS -- */}
-      <div ref={listRef}>
+      <div className='ListWrapper' ref={listWrapper}>
         <List<ClientEffect>
           name={'Effects'}
           items={action.effects}

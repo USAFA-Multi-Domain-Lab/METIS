@@ -555,7 +555,8 @@ export default class ServerConnection
       if (
         error.code === ServerEmittedError.CODE_DUPLICATE_CLIENT ||
         error.code === ServerEmittedError.CODE_SWITCHED_CLIENT ||
-        error.code === ServerEmittedError.CODE_UNAUTHENTICATED
+        error.code === ServerEmittedError.CODE_UNAUTHENTICATED ||
+        error.code === ServerEmittedError.CODE_FORCE_DISCONNECT_SELF
       ) {
         this.shouldBeConnected = false
       }

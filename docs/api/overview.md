@@ -2,7 +2,24 @@
 
 **Base URL:** `/api/v1/`
 
-METIS provides a RESTful API for all system operations. The API is versioned to ensure backwards compatibility, with v1 being the current stable version. All operations in METIS, whether through the web interface or programmatic access, are performed via these API endpoints.
+The METIS API enables you to **automate training scenarios**, **integrate with external systems**, and **build custom applications** on top of the METIS platform. Whether you're creating missions programmatically, managing users at scale, or connecting METIS to your existing tools, this API provides complete access to all METIS functionality.
+
+## 🚀 Quick Start
+
+**New to the METIS API?** Get up and running in minutes:
+
+1. **Authenticate** → Login via `/api/v1/logins/login` with username/password
+2. **Create a mission** → POST to `/api/v1/missions/` with mission data
+3. **Launch a session** → POST to `/api/v1/sessions/` to start the mission
+4. **Monitor progress** → Use WebSocket connection for real-time updates
+
+## What You Can Do
+
+- **Mission Management** → Create, update, and launch training scenarios
+- **User Administration** → Manage accounts, permissions, and access control
+- **Real-time Control** → Monitor and control active training sessions
+- **File Management** → Upload resources and control access during missions
+- **External Integration** → Connect METIS to your existing systems and tools
 
 ## Table of Contents
 
@@ -303,5 +320,21 @@ Request JSON, which is data passed in the `body` of a request, is documented wit
 
 ## Additional Resources
 
-- [WebSocket Documentation](/docs/devs/websocket.md)
-- [Architecture Documentation](/docs/devs/architecture.md)
+### Integration & Development
+
+- **[Target Environment Integration](/docs/target-env-integration/index.md)** - Create custom external integrations
+- **[WebSocket Documentation](/docs/devs/websocket.md)** - Real-time communication patterns
+- **[Architecture Documentation](/docs/devs/architecture.md)** - System design and components
+
+### Getting Started
+
+- **[Setup Instructions](/docs/setup/index.md)** - Install and configure METIS
+- **[Developer Documentation](/docs/devs/index.md)** - Development guides and standards
+- **[Video Walkthrough](https://youtu.be/4rcTbKRUOEA?si=XPy1z3Y4KJ0Fg5E1)** - Visual tour of METIS features
+
+### API Reference
+
+- **[Missions API](missions.md)** - Create and manage training scenarios
+- **[Sessions API](sessions.md)** - Launch and control mission sessions
+- **[Users API](users.md)** - Manage participants and permissions
+- **[Files API](files.md)** - Handle mission resources and uploads

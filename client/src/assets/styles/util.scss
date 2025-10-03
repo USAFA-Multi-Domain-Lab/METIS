@@ -50,3 +50,32 @@
   background-image: $background-image;
   opacity: $opacity;
 }
+
+/**
+ * Applies a background image to the element.
+ * The image used depends on whether the element has
+ * the BackgroundImageSmall or BackgroundImageLarge class.
+ */
+@mixin background-image {
+  &.BackgroundImageSmall {
+    background-image: linear-gradient(
+        to bottom right,
+        transparent 0% 70%,
+        rgba(#fff, 0.1) 100%
+      ),
+      url('/assets/images/landing-page-img-small.webp');
+  }
+
+  &.BackgroundImageLarge {
+    background-image: linear-gradient(
+        to bottom right,
+        transparent 0% 70%,
+        rgba(#fff, 0.1) 100%
+      ),
+      url('/assets/images/landing-page-img.webp');
+  }
+
+  background-size: 100% 47.34%;
+  background-position: center;
+  background-repeat: repeat;
+}

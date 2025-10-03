@@ -2,6 +2,7 @@ import Prompt from 'src/components/content/communication/Prompt'
 import { useGlobalContext } from 'src/context/global'
 import SessionClient from 'src/sessions'
 import { SessionBasic } from 'src/sessions/basic'
+import { compute } from 'src/toolbox'
 import { usePeriodicRerender, useRequireLogin } from 'src/toolbox/hooks'
 import { MetisComponent } from '../../../../../../../shared'
 import { DateToolbox } from '../../../../../../../shared/toolbox/dates'
@@ -37,6 +38,30 @@ export default function SessionList({
   // Force rerender the list every second
   // to keep the runtime column up-to-date.
   usePeriodicRerender(1000)
+
+  /* -- COMPUTED -- */
+
+  /**
+   * The item buttons to display in the session list.
+   */
+  const sessionItemButtons = compute<TMetisIcon[]>(() => {
+    let buttons: TMetisIcon[] = []
+
+    if (login.user.isAuthorized('sessions_read')) {
+      buttons.push('open')
+    }
+
+    // If the user has no write permissions whatsoever
+    // for a session, there is no need to show it.
+    if (
+      login.user.isAuthorized('sessions_write_native') ||
+      login.user.isAuthorized('sessions_write_foreign')
+    ) {
+      buttons.push('remove')
+    }
+
+    return buttons
+  })
 
   /* -- FUNCTIONS -- */
 
@@ -278,20 +303,25 @@ export default function SessionList({
         'launchedAt',
       ]}
       listButtonIcons={['key']}
-      itemButtonIcons={['open', 'remove']}
+      itemButtonIcons={sessionItemButtons}
       initialSorting={{ column: 'launchedAt', method: 'descending' }}
-      getItemButtonPermissions={(button) => {
-        switch (button) {
-          case 'remove':
-            return ['sessions_write_native']
-          default:
-            return []
-        }
-      }}
       getItemButtonDisabled={(button, session) => {
         switch (button) {
           case 'remove':
-            return session?.ownerId !== login.user._id
+            // The user can remove a session if their
+            // permissions and ownership of the session
+            // correspond.
+            let isOwner = session?.ownerId === login.user._id
+            let hasNativeWrite = login.user.isAuthorized(
+              'sessions_write_native',
+            )
+            let hasForeignWrite = login.user.isAuthorized(
+              'sessions_write_foreign',
+            )
+            let canRemove =
+              (hasNativeWrite && isOwner) || (hasForeignWrite && !isOwner)
+
+            return !canRemove
           default:
             return false
         }
