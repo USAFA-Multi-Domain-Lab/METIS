@@ -96,6 +96,17 @@ export default class MetisServer {
   }
 
   /**
+   * The environment type in which METIS is running.
+   */
+  private _envType: string
+  /**
+   * The environment type in which METIS is running.
+   */
+  public get envType(): string {
+    return this._envType
+  }
+
+  /**
    * The port on which to run the server.
    */
   private _port: number
@@ -274,6 +285,7 @@ export default class MetisServer {
     }
 
     // Parse the options and store them in the class.
+    this._envType = completedOptions.envType
     this._port = completedOptions.port
     this._mongoDB = completedOptions.mongoDB
     this._mongoHost = completedOptions.mongoHost
@@ -291,21 +303,15 @@ export default class MetisServer {
     // Create third-party server objects.
     this._expressApp = express()
     // HTTPS only in production if certs are provided
-    if (
-      process.env.METIS_ENV_TYPE === 'prod' &&
-      this.sslKeyPath &&
-      this.sslCertPath
-    ) {
+    if (this.envType === 'prod' && this.sslKeyPath && this.sslCertPath) {
       const key = fs.readFileSync(this.sslKeyPath)
       const cert = fs.readFileSync(this.sslCertPath)
       this._httpServer = https.createServer({ key, cert }, this.expressApp)
-      console.log('SSL certifications found, running with HTTPS protocol.')
+      console.log('SSL certificates found, running with HTTPS protocol.')
     } else {
       this._httpServer = http.createServer(this.expressApp)
-      if (process.env.METIS_ENV_TYPE === 'prod') {
-        console.warn(
-          'SSL certifications not found, running with HTTP protocol.',
-        )
+      if (this.envType === 'prod') {
+        console.warn('SSL certificates not found, running with HTTP protocol.')
       }
     }
     this._wsServer = new MetisWsServer(this)
@@ -566,6 +572,7 @@ export default class MetisServer {
 
     try {
       return {
+        envType: process.env.METIS_ENV_TYPE ?? 'prod',
         port: parseInt(process.env.PORT!),
         mongoDB: process.env.MONGO_DB!,
         mongoHost: process.env.MONGO_HOST!,
@@ -629,6 +636,10 @@ export interface TMetisServerComponents extends TMetisBaseComponents {
  * Options for creating the METIS server.
  */
 export interface TMetisServerOptions {
+  /**
+   * The type of environment in which METIS is running.
+   */
+  envType: string
   /**
    * The port on which to run the server.
    * @default 8080
