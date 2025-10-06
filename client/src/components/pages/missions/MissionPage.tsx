@@ -127,8 +127,9 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     mission.selection,
   )
   const [effectModalActive, setEffectModalActive] = useState<boolean>(false)
-  const [effectModalTrigger, setEffectModalTrigger] =
-    useState<TEffectTrigger>('immediate')
+  const [effectModalTrigger, setEffectModalTrigger] = useState<TEffectTrigger>(
+    'execution-initiation',
+  )
   const [, setDefects] = state.defects
   const [, setCheckForDefects] = state.checkForDefects
   const root = useRef<HTMLDivElement>(null)

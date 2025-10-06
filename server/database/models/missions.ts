@@ -233,6 +233,30 @@ const sanitizeHtml = (html: string): string => {
 }
 
 /* -- SCHEMA -- */
+/**
+ * Shared subschema for mission and action effects.
+ */
+const effectSubschema = {
+  _id: { type: String, required: true },
+  targetId: { type: String, required: true },
+  environmentId: { type: String, required: true },
+  targetEnvironmentVersion: { type: String, required: true },
+  name: {
+    type: String,
+    required: true,
+    maxLength: ServerEffect.MAX_NAME_LENGTH,
+  },
+  trigger: { type: String, required: true },
+  order: { type: Number, required: true, default: 0 },
+  description: {
+    type: String,
+    required: false,
+    default: '',
+    set: sanitizeHtml,
+  },
+  args: { type: Object, required: true },
+  localKey: { type: String, required: true },
+}
 
 /**
  * The schema for a mission in the database.
@@ -418,47 +442,12 @@ export const missionSchema = new MissionSchema(
                       },
                       effects: {
                         required: true,
-                        validate: ServerMissionAction.validateEffects,
-                        type: [
-                          {
-                            _id: { type: String, required: true },
-                            targetId: {
-                              type: String,
-                              required: true,
-                            },
-                            environmentId: {
-                              type: String,
-                              required: true,
-                            },
-                            targetEnvironmentVersion: {
-                              type: String,
-                              required: true,
-                            },
-                            name: {
-                              type: String,
-                              required: true,
-                              maxLength: ServerEffect.MAX_NAME_LENGTH,
-                            },
-                            trigger: {
-                              type: String,
-                              required: true,
-                            },
-                            description: {
-                              type: String,
-                              required: false,
-                              default: '',
-                              set: sanitizeHtml,
-                            },
-                            args: {
-                              type: Object,
-                              required: true,
-                            },
-                            localKey: {
-                              type: String,
-                              required: true,
-                            },
-                          },
-                        ],
+                        validate: ServerMission.createEffectsValidator([
+                          'execution-initiation',
+                          'execution-success',
+                          'execution-failure',
+                        ]),
+                        type: [effectSubschema],
                       },
                     },
                   ],
@@ -494,6 +483,11 @@ export const missionSchema = new MissionSchema(
           },
         },
       ],
+    },
+    effects: {
+      required: false,
+      validate: ServerMission.createEffectsValidator([]),
+      type: [effectSubschema],
     },
     deleted: { type: Boolean, required: true, default: false },
   },

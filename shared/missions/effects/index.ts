@@ -271,6 +271,12 @@ export default abstract class Effect<
   public trigger: TEffectTrigger
 
   /**
+   * A numeric value which determines the order in which
+   * the effect will be applied relative to other effects.
+   */
+  public order: number = 0
+
+  /**
    * Describes the purpose of the effect.
    */
   public description: string
@@ -385,6 +391,7 @@ export default abstract class Effect<
       environmentId: this.environmentId,
       targetEnvironmentVersion: this.targetEnvironmentVersion,
       trigger: this.trigger,
+      order: this.order,
       name: this.name,
       description: this.description,
       args: this.args,
@@ -703,7 +710,8 @@ export default abstract class Effect<
   public static get DEFAULT_PROPERTIES(): TEffectDefaultJson {
     return {
       _id: StringToolbox.generateRandomId(),
-      trigger: 'success',
+      trigger: 'execution-success',
+      order: 0,
       name: 'New Effect',
       description: '',
       args: {},
@@ -714,15 +722,7 @@ export default abstract class Effect<
    * Available triggers for an effect.
    */
   public static get TRIGGERS(): TEffectTrigger[] {
-    return ['immediate', 'success', 'failure']
-  }
-
-  /**
-   * @param value The value to validate.
-   * @returns Whether the value is a valid effect trigger.
-   */
-  public static isValidTrigger(value: any): boolean {
-    return Effect.TRIGGERS.includes(value)
+    return ['execution-initiation', 'execution-success', 'execution-failure']
   }
 }
 
@@ -739,7 +739,10 @@ export type TEffect<T extends TMetisBaseComponents> = T['effect']
 /**
  * Valid triggers for an effect.
  */
-export type TEffectTrigger = 'immediate' | 'success' | 'failure'
+export type TEffectTrigger =
+  | 'execution-initiation'
+  | 'execution-success'
+  | 'execution-failure'
 
 /**
  * Extracts all the properties of an `Effect` that are
@@ -755,6 +758,7 @@ const JSON_PROPERTIES_RAW = {
     'environmentId',
     'targetEnvironmentVersion',
     'trigger',
+    'order',
     'localKey',
   ],
   indirect: [{}],

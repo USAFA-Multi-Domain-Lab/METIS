@@ -7,7 +7,7 @@ import User, { TCreatedByJson } from '../users'
 import { TAction, TMissionActionJson } from './actions'
 import { TExecution } from './actions/executions'
 import MissionComponent, { TMissionComponentDefect } from './component'
-import { TEffect } from './effects'
+import { TEffect, TEffectJson } from './effects'
 import { TMissionFileJson } from './files'
 import {
   MissionForce,
@@ -234,6 +234,7 @@ export default abstract class Mission<
       forces: [],
       files: [],
       prototypes: [],
+      effects: [],
     }
 
     /**
@@ -591,13 +592,6 @@ export default abstract class Mission<
   public static readonly MAX_NAME_LENGTH: number = 175
 
   /**
-   * The maximum length allowed for an alias in a file mission.
-   * todo: Add this to a MissionFile class when and if it is
-   * todo: created.
-   */
-  public static readonly MAX_FILE_ALIAS_LENGTH: number = 175
-
-  /**
    * The maximum length allowed for a mission resource
    * label.
    */
@@ -717,6 +711,7 @@ export default abstract class Mission<
       forces: [MissionForce.DEFAULT_FORCES[0]],
       prototypes: [MissionPrototype.DEFAULT_PROPERTIES],
       files: [],
+      effects: [],
     }
   }
 
@@ -981,6 +976,7 @@ export type TMissionJson = TCreateJsonType<
     prototypes: TMissionPrototypeJson[]
     structure: AnyObject
     files: TMissionFileJson[]
+    effects: TEffectJson[]
   }
 >
 

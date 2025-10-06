@@ -158,8 +158,9 @@ export default function ActionEntry({
     },
     dependencies: [localFiles.length],
   })
-  const [newEffectTrigger, setNewEffectTrigger] =
-    useState<TEffectTrigger>('immediate')
+  const [newEffectTrigger, setNewEffectTrigger] = useState<TEffectTrigger>(
+    'execution-initiation',
+  )
   const immediateListRef = useRef<TList_E | null>(null)
   const successListRef = useRef<TList_E | null>(null)
   const failureListRef = useRef<TList_E | null>(null)
@@ -218,13 +219,13 @@ export default function ActionEntry({
 
     // Determine which list to use based on the effect trigger.
     switch (newEffectTrigger) {
-      case 'immediate':
+      case 'execution-initiation':
         listElm = immediateListRef.current?.root.current
         break
-      case 'success':
+      case 'execution-success':
         listElm = successListRef.current?.root.current
         break
-      case 'failure':
+      case 'execution-failure':
         listElm = failureListRef.current?.root.current
         break
       default:
@@ -295,21 +296,27 @@ export default function ActionEntry({
    * Effects that trigger immediately upon action execution.
    */
   const [immediateEffects] = useState(() => {
-    return action.effects.filter((effect) => effect.trigger === 'immediate')
+    return action.effects.filter(
+      (effect) => effect.trigger === 'execution-initiation',
+    )
   })
 
   /**
    * Effects that trigger upon successful action execution.
    */
   const [successEffects] = useState(() => {
-    return action.effects.filter((effect) => effect.trigger === 'success')
+    return action.effects.filter(
+      (effect) => effect.trigger === 'execution-success',
+    )
   })
 
   /**
    * Effects that trigger upon failed action execution.
    */
   const [failureEffects] = useState(() => {
-    return action.effects.filter((effect) => effect.trigger === 'failure')
+    return action.effects.filter(
+      (effect) => effect.trigger === 'execution-failure',
+    )
   })
 
   /* -- RENDER -- */
@@ -462,7 +469,7 @@ export default function ActionEntry({
           items={immediateEffects}
           elementAccess={immediateListRef}
           onCreateRequest={() => {
-            showEffectPresetMenu('immediate')
+            showEffectPresetMenu('execution-initiation')
           }}
           {...commonEffectProps}
         />
@@ -471,7 +478,7 @@ export default function ActionEntry({
           items={successEffects}
           elementAccess={successListRef}
           onCreateRequest={() => {
-            showEffectPresetMenu('success')
+            showEffectPresetMenu('execution-success')
           }}
           {...commonEffectProps}
         />
@@ -480,7 +487,7 @@ export default function ActionEntry({
           items={failureEffects}
           elementAccess={failureListRef}
           onCreateRequest={() => {
-            showEffectPresetMenu('failure')
+            showEffectPresetMenu('execution-failure')
           }}
           {...commonEffectProps}
         />

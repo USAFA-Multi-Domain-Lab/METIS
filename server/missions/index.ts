@@ -1,4 +1,5 @@
 import Mission, { TMissionSaveJson } from 'metis/missions'
+import { TEffectJson, TEffectTrigger } from 'metis/missions/effects'
 import { TMissionFileJson } from 'metis/missions/files'
 import { TMissionForceSaveJson } from 'metis/missions/forces'
 import {
@@ -457,6 +458,37 @@ export default class ServerMission extends Mission<TMetisServerComponents> {
     }
 
     return results
+  }
+
+  /**
+   * Creates a validator function for effects in a mission.
+   * @param validTriggers The triggers valid for this particular
+   * validator. This is important because different places in the
+   * mission schema permit different triggers.
+   * @returns The validator function to pass to the schema.
+   */
+  public static createEffectsValidator = (validTriggers: TEffectTrigger[]) => {
+    return (effects: TEffectJson[]): void => {
+      let effectKeys: TEffectJson['localKey'][] = []
+
+      for (const effect of effects) {
+        const validTrigger = validTriggers.includes(effect.trigger)
+
+        if (!validTrigger) {
+          throw MetisDatabase.generateValidationError(
+            `The effect "{ _id: ${effect._id}, name: ${effect.name} }" has an invalid trigger "${effect.trigger}".`,
+          )
+        }
+
+        // Check for duplicate local keys.
+        if (effectKeys.includes(effect.localKey)) {
+          throw MetisDatabase.generateValidationError(
+            `The effect "{ _id: ${effect._id}, name: ${effect.name} }" has a duplicate local key "${effect.localKey}".`,
+          )
+        }
+        effectKeys.push(effect.localKey)
+      }
+    }
   }
 
   /**

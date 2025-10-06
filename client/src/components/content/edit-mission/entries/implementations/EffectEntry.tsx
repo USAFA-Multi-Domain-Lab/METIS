@@ -1,4 +1,5 @@
 import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
+import ClientActionExecution from 'src/missions/actions/executions'
 import { ClientEffect } from 'src/missions/effects'
 import { useObjectFormSync } from 'src/toolbox/hooks'
 import { TEffectTrigger } from '../../../../../../../shared/missions/effects'
@@ -69,15 +70,15 @@ export default function EffectEntry({
       <DetailDropdown<TEffectTrigger>
         fieldType='required'
         label='Trigger'
-        options={ClientEffect.TRIGGERS}
+        options={ClientActionExecution.EFFECT_TRIGGERS}
         value={trigger}
         setValue={setTrigger}
         isExpanded={false}
-        render={(value: TEffectTrigger) => StringToolbox.capitalize(value)}
+        render={(value: TEffectTrigger) => StringToolbox.toTitleCase(value)}
         getKey={(value) => value}
         handleInvalidOption={{
           method: 'setToDefault',
-          defaultValue: 'success',
+          defaultValue: 'execution-success',
         }}
       />
       <DetailLargeString

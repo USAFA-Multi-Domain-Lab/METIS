@@ -366,7 +366,9 @@ export default class TargetEnvContext {
     const { force, userId, effect, executionId: sourceExecutionId } = this
     const targetForce = this.determineTargetForce(forceKey)
     let type: TOutputTypeExecution =
-      effect.trigger === 'failure' ? 'execution-failed' : 'execution-succeeded'
+      effect.trigger === 'execution-failure'
+        ? 'execution-failed'
+        : 'execution-succeeded'
 
     // Create a custom output to send to the output panel.
     this.session.sendOutput(

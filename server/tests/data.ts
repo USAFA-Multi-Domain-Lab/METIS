@@ -79,7 +79,7 @@ export const testMission: TMissionJson = {
                   _id: '0c6eb646-061b-4598-b748-e54e49d1cba6',
                   name: 'New Effect',
                   description: '',
-                  trigger: 'success',
+                  trigger: 'execution-success',
                   targetEnvironmentVersion: '0.1',
                   targetId: 'output',
                   args: {
@@ -156,7 +156,7 @@ export const updateMissionWithNoMissionId: TMissionJson = {
                   _id: '0c6eb646-061b-4598-b748-e54e49d1cba6',
                   name: 'New Effect',
                   description: '',
-                  trigger: 'success',
+                  trigger: 'execution-success',
                   targetEnvironmentVersion: '0.1',
                   targetId: 'output',
                   args: {
@@ -230,7 +230,7 @@ export const updateMissionWithNoStructure: Omit<TMissionJson, 'structure'> = {
                   _id: '0c6eb646-061b-4598-b748-e54e49d1cba6',
                   name: 'New Effect',
                   description: '',
-                  trigger: 'success',
+                  trigger: 'execution-success',
                   targetEnvironmentVersion: '0.1',
                   targetId: 'output',
                   args: {
@@ -327,7 +327,7 @@ export const correctUpdateTestMission: TMissionJson = {
                   _id: '0c6eb646-061b-4598-b748-e54e49d1cba6',
                   name: 'New Effect',
                   description: '',
-                  trigger: 'success',
+                  trigger: 'execution-success',
                   targetEnvironmentVersion: '0.1',
                   targetId: 'output',
                   args: {

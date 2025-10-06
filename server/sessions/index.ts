@@ -1552,7 +1552,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     )
     // Apply the effects for the action that are triggered
     // immediately.
-    this.applyEffects(member, action, 'immediate', execution)
+    this.applyEffects(member, action, 'execution-initiation', execution)
   }
 
   /**
@@ -1606,10 +1606,10 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     let effectTrigger: TEffectTrigger | null = null
     switch (outcome.status) {
       case 'success':
-        effectTrigger = 'success'
+        effectTrigger = 'execution-success'
         break
       case 'failure':
-        effectTrigger = 'failure'
+        effectTrigger = 'execution-failure'
         break
     }
 
