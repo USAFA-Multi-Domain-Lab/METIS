@@ -1,13 +1,16 @@
 # changelog
 
-# version-2.2.2 | 9-24-2025
+# version-2.2.2 | 10-3-2025
 
+- Target environments now support data stores. These data stores will allow developers to cache random-access data between script executions.
+- Loggers now support log rotation, preventing log files from growing indefinitely.
 - The server now supports running with the HTTPS protocol in production, using SSL certificates defined in the .env files.
 - Documentation has been greatly expanded to provide more details on the use of METIS.
+- Fixed an issue where effects would be inaccessible when viewing a mission in read-only mode.
 - CLI has been updated to support managing METIS as a service on Linux.
 - The session management system has been refactored to handle duplicate client connections and to resolve race conditions in the session store.
-- An issue was fixed with mission duplication, where properites from the original document were not being properly transferred to the new one.
-- Administrators previously were not able to tear down sessions they did not owned. This was unintended, and it has been resolved.
+- An issue was fixed with mission duplication where properties from the original document were not properly transferred.
+- Administrators were previously unable to tear down sessions they did not own. This was unintended and has been resolved.
 
 # version-2.2.1 | 8-14-2025
 

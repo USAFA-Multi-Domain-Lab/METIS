@@ -74,9 +74,17 @@
   &.ReadOnly .Content .PanelLayout .Panel .PanelView {
     &:not(.PanelView_Map) {
       .EntryContent {
-        > :not(.List) * {
+        > :not(.List):not(.ListWrapper) * {
           @include disabled();
           opacity: 0.75 !important;
+        }
+
+        pre {
+          pointer-events: all;
+
+          code {
+            pointer-events: none;
+          }
         }
       }
     }

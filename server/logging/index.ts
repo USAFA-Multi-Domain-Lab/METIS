@@ -1,6 +1,24 @@
 import expressWinston from 'express-winston'
 import winston from 'winston'
 
+/**
+ * Creates a Winston transport for logging
+ * with Metis-specific settings.
+ * @param options Options for the transport.
+ * @returns The Winston transport.
+ */
+const createMetisTransport = (
+  options?: winston.transports.FileTransportOptions | undefined,
+) => {
+  const isErrorFile = options?.level === 'error'
+  return new winston.transports.File({
+    maxsize: 5 * 1024 * 1024, // 5 MB
+    maxFiles: isErrorFile ? 2 : 5, // Fewer rotations for error logs
+    tailable: true,
+    ...options,
+  })
+}
+
 export const databaseLogger = winston.createLogger({
   level: 'info',
   format: winston.format.combine(
@@ -10,18 +28,17 @@ export const databaseLogger = winston.createLogger({
   ),
   defaultMeta: { service: 'user-service' },
   transports: [
-    new winston.transports.File({
+    createMetisTransport({
       filename: './logs/database-error.log',
       level: 'error',
       format: winston.format.combine(
         winston.format.json(),
         winston.format.timestamp(),
         winston.format.errors({ stack: true }),
-        winston.format.colorize(),
         winston.format.prettyPrint(),
       ),
     }),
-    new winston.transports.File({ filename: './logs/database.log' }),
+    createMetisTransport({ filename: './logs/database.log' }),
   ],
 })
 
@@ -34,18 +51,17 @@ export const sessionLogger = winston.createLogger({
   ),
   defaultMeta: { service: 'user-service' },
   transports: [
-    new winston.transports.File({
+    createMetisTransport({
       filename: './logs/session-error.log',
       level: 'error',
       format: winston.format.combine(
         winston.format.json(),
         winston.format.timestamp(),
         winston.format.errors({ stack: true }),
-        winston.format.colorize(),
         winston.format.prettyPrint(),
       ),
     }),
-    new winston.transports.File({ filename: './logs/session.log' }),
+    createMetisTransport({ filename: './logs/session.log' }),
   ],
 })
 
@@ -58,35 +74,33 @@ export const expressLogger = winston.createLogger({
   ),
   defaultMeta: { service: 'user-service' },
   transports: [
-    new winston.transports.File({
+    createMetisTransport({
       filename: './logs/express-error.log',
       level: 'error',
       format: winston.format.combine(
         winston.format.json(),
         winston.format.timestamp(),
         winston.format.errors({ stack: true }),
-        winston.format.colorize(),
         winston.format.prettyPrint(),
       ),
     }),
-    new winston.transports.File({ filename: './logs/express.log' }),
+    createMetisTransport({ filename: './logs/express.log' }),
   ],
 })
 
 export const expressLoggingHandler = expressWinston.logger({
   transports: [
-    new winston.transports.File({
+    createMetisTransport({
       filename: './logs/express-error.log',
       level: 'error',
       format: winston.format.combine(
         winston.format.json(),
         winston.format.timestamp(),
         winston.format.errors({ stack: true }),
-        winston.format.colorize(),
         winston.format.prettyPrint(),
       ),
     }),
-    new winston.transports.File({ filename: './logs/express.log' }),
+    createMetisTransport({ filename: './logs/express.log' }),
   ],
   format: winston.format.combine(
     winston.format.json(),
@@ -110,18 +124,17 @@ export const plcApiLogger = winston.createLogger({
   ),
   defaultMeta: { service: 'user-service' },
   transports: [
-    new winston.transports.File({
+    createMetisTransport({
       filename: './logs/plc-api-error.log',
       level: 'error',
       format: winston.format.combine(
         winston.format.json(),
         winston.format.timestamp(),
         winston.format.errors({ stack: true }),
-        winston.format.colorize(),
         winston.format.prettyPrint(),
       ),
     }),
-    new winston.transports.File({ filename: './logs/plc-api.log' }),
+    createMetisTransport({ filename: './logs/plc-api.log' }),
   ],
 })
 
@@ -134,18 +147,17 @@ export const testLogger = winston.createLogger({
   ),
   defaultMeta: { service: 'user-service' },
   transports: [
-    new winston.transports.File({
+    createMetisTransport({
       filename: './logs/test-error.log',
       level: 'error',
       format: winston.format.combine(
         winston.format.json(),
         winston.format.timestamp(),
         winston.format.errors({ stack: true }),
-        winston.format.colorize(),
         winston.format.prettyPrint(),
       ),
     }),
-    new winston.transports.File({ filename: './logs/test.log' }),
+    createMetisTransport({ filename: './logs/test.log' }),
   ],
 })
 
