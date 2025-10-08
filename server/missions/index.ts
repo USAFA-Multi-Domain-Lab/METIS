@@ -1,5 +1,9 @@
 import Mission, { TMissionSaveJson } from 'metis/missions'
-import { TEffectJson, TEffectTrigger } from 'metis/missions/effects'
+import {
+  TEffectJson,
+  TEffectSessionTriggeredJson,
+  TEffectTrigger,
+} from 'metis/missions/effects'
 import { TMissionFileJson } from 'metis/missions/files'
 import { TMissionForceSaveJson } from 'metis/missions/forces'
 import {
@@ -19,6 +23,7 @@ import { TMetisServerComponents } from '../index'
 import { databaseLogger } from '../logging'
 import { TTargetEnvExposedMission } from '../target-environments/context'
 import ServerUser from '../users'
+import ServerEffect from './effects'
 import ServerMissionFile from './files'
 import ServerMissionForce from './forces'
 import ServerMissionPrototype from './nodes/prototypes'
@@ -97,6 +102,13 @@ export default class ServerMission extends Mission<TMetisServerComponents> {
     this.files.push(...files)
   }
 
+  // Implemented
+  protected importEffects(data: TEffectSessionTriggeredJson[]): void {
+    let effects = data.map((datum) =>
+      ServerEffect.fromSessionTriggeredJson(datum, this),
+    )
+  }
+
   /**
    * Extracts the necessary properties from the mission to be used as a reference
    * in a target environment.
@@ -147,6 +159,7 @@ export default class ServerMission extends Mission<TMetisServerComponents> {
       json.prototypes,
       json.forces,
       json.files,
+      json.effects,
     )
 
     // Return the mission.
@@ -542,7 +555,14 @@ export default class ServerMission extends Mission<TMetisServerComponents> {
  */
 export type TServerMissionComponents = Pick<
   TMetisServerComponents,
-  'mission' | 'force' | 'output' | 'prototype' | 'node' | 'action' | 'effect'
+  | 'mission'
+  | 'force'
+  | 'output'
+  | 'prototype'
+  | 'node'
+  | 'action'
+  | 'sessionTriggeredEffect'
+  | 'executionTriggeredEffect'
 >
 
 /**

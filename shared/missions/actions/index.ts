@@ -2,7 +2,7 @@ import Mission, { TMission } from '..'
 import { TCreateJsonType, TMetisBaseComponents } from '../../'
 import StringToolbox from '../../toolbox/strings'
 import MissionComponent, { TMissionComponentDefect } from '../component'
-import { TEffect, TEffectJson } from '../effects'
+import { TEffectExecutionTriggeredJson } from '../effects'
 import { TForce } from '../forces'
 import { TNode, TNodeJsonOptions } from '../nodes'
 
@@ -50,7 +50,7 @@ export default abstract class MissionAction<
   /**
    * The effects that can be applied to the targets.
    */
-  public effects: TEffect<T>[]
+  public effects: T['executionTriggeredEffect'][]
 
   /**
    * The amount of time it takes to execute the action.
@@ -309,7 +309,9 @@ export default abstract class MissionAction<
    * @param options The options for parsing the effect data.
    * @returns An array of Effect Objects.
    */
-  protected abstract parseEffects(data: TEffectJson[]): TEffect<T>[]
+  protected abstract parseEffects(
+    data: TEffectExecutionTriggeredJson[],
+  ): T['executionTriggeredEffect'][]
 
   /**
    * Converts the action to JSON.
@@ -334,7 +336,7 @@ export default abstract class MissionAction<
       opensNode: this.opensNode,
       opensNodeHidden: this.opensNodeHidden,
       localKey: this.localKey,
-      effects: this.effects.map((effect) => effect.toJson()),
+      effects: this.effects.map((effect) => effect.toExecutionTriggeredJson()),
     }
 
     switch (sessionDataExposure.expose) {
@@ -577,7 +579,7 @@ const JSON_PROPERTIES_RAW = {
       /**
        * The effects that can be applied to the targets.
        */
-      effects: [] as TEffectJson[],
+      effects: [] as TEffectExecutionTriggeredJson[],
     },
   ],
 } as const

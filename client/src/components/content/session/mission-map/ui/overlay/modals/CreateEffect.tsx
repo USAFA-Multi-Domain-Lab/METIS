@@ -8,7 +8,7 @@ import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import { TEffectTrigger } from '../../../../../../../../../shared/missions/effects'
+import { TEffectExecutionTriggered } from '../../../../../../../../../shared/missions/effects'
 import './CreateEffect.scss'
 
 /**
@@ -88,9 +88,11 @@ export default function CreateEffect({
    */
   const createEffect = () => {
     // Create a new effect.
-    let effect = ClientEffect.createBlankEffect(target, action)
-    // Set the trigger.
-    effect.trigger = trigger
+    let effect = ClientEffect.createBlankExecutionEffect(
+      target,
+      action,
+      trigger,
+    )
     // Push the new effect to the action.
     action.effects.push(effect)
     // Select the new effect.
@@ -173,7 +175,7 @@ export type TCreateEffect_P = {
   /**
    * The trigger for the new effect.
    */
-  trigger: TEffectTrigger
+  trigger: TEffectExecutionTriggered
   /**
    * Callback to handle a request to close the modal.
    */

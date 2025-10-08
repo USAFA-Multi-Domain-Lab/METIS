@@ -27,7 +27,7 @@ import { TMetisServerComponents } from '../index'
 import { plcApiLogger } from '../logging'
 import ServerActionExecution from '../missions/actions/executions'
 import ServerExecutionOutcome from '../missions/actions/outcomes'
-import ServerEffect from '../missions/effects'
+import ServerEffect, { TServerTriggerDataExec } from '../missions/effects'
 import ServerMissionFile from '../missions/files'
 import ServerMissionForce from '../missions/forces'
 import ServerOutput, { TServerOutputOptions } from '../missions/forces/output'
@@ -1741,7 +1741,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
    * @param execution The action execution that triggered the effect.
    */
   public async applyEffect(
-    effect: ServerEffect,
+    effect: ServerEffect<TServerTriggerDataExec>,
     member: ServerSessionMember,
     execution: ServerActionExecution,
   ): Promise<void> {
@@ -1749,14 +1749,14 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     // log an error.
     if (effect.environment === null) {
       throw new Error(
-        `The force - "${effect.force.name}" - has a node - "${effect.node.name}" - has an action - "${effect.action.name}" - with an effect - "${effect.name}" - that doesn't have a target environment or the target environment doesn't exist.`,
+        `The force - "${effect.sourceForce.name}" - has a node - "${effect.sourceNode.name}" - has an action - "${effect.sourceAction.name}" - with an effect - "${effect.name}" - that doesn't have a target environment or the target environment doesn't exist.`,
       )
     }
     // If the effect doesn't have a target,
     // log an error.
     if (effect.target === null) {
       throw new Error(
-        `The force - "${effect.force.name}" - has a node - "${effect.node.name}" - has an action - "${effect.action.name}" - with an effect - "${effect.name}" - that doesn't have a target or the target doesn't exist.`,
+        `The force - "${effect.sourceForce.name}" - has a node - "${effect.sourceNode.name}" - has an action - "${effect.sourceAction.name}" - with an effect - "${effect.name}" - that doesn't have a target or the target doesn't exist.`,
       )
     }
 
@@ -1772,7 +1772,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       let message =
         `Failed to apply effect - "${effect.name}" - to target - "${effect.target.name}" - found in the environment - "${effect.environment.name}".\n` +
         `The effect - "${effect.name}" - can be found here:\n` +
-        `force - "${effect.force.name}" - node - "${effect.node.name}" - action - "${effect.action.name}" - effect - "${effect.name}".\n`
+        `force - "${effect.sourceForce.name}" - node - "${effect.sourceNode.name}" - action - "${effect.sourceAction.name}" - effect - "${effect.name}".\n`
       // Log the error.
       plcApiLogger.error(message, error)
     }

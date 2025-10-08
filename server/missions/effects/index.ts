@@ -1,4 +1,10 @@
-import Effect from 'metis/missions/effects'
+import Effect, {
+  TEffectExecutionTriggeredJson,
+  TEffectSessionTriggeredJson,
+  TEffectTriggerData,
+  TTriggerDataExecution,
+  TTriggerDataSession,
+} from 'metis/missions/effects'
 import { TMetisServerComponents } from 'metis/server'
 import ServerTargetEnvironment from 'metis/server/target-environments'
 import { TTargetEnvExposedEffect } from 'metis/server/target-environments/context'
@@ -6,12 +12,16 @@ import ServerTarget from 'metis/server/target-environments/targets'
 import ForceArg from 'metis/target-environments/args/mission-component/force-arg'
 import NodeArg from 'metis/target-environments/args/mission-component/node-arg'
 import { AnyObject } from 'metis/toolbox/objects'
+import ServerMission from '..'
+import ServerMissionAction from '../actions'
 
 /**
  * Class representing an effect on the server-side that can be
  * applied to a target.
  */
-export default class ServerEffect extends Effect<TMetisServerComponents> {
+export default class ServerEffect<
+  TTriggerData extends TEffectTriggerData<TMetisServerComponents>,
+> extends Effect<TMetisServerComponents, TTriggerData> {
   // Implemented
   protected determineTarget(
     targetId: string,
@@ -59,7 +69,6 @@ export default class ServerEffect extends Effect<TMetisServerComponents> {
     return {
       _id: this._id,
       name: this.name,
-      forceName: this.force.name,
       args: this.argsToTargetEnvContext(this.args),
     }
   }
@@ -77,7 +86,7 @@ export default class ServerEffect extends Effect<TMetisServerComponents> {
       )
     }
     // The sanitized arguments.
-    let sanitizedArgs: ServerEffect['args'] = this.args
+    let sanitizedArgs = this.args
 
     // Loop through the target's arguments.
     for (let arg of this.target.args) {
@@ -101,6 +110,50 @@ export default class ServerEffect extends Effect<TMetisServerComponents> {
     // Set the sanitized arguments.
     this.args = sanitizedArgs
   }
+
+  /**
+   * @param json The JSON from which to create the effect.
+   * @param sourceMission The mission to which the effect belongs.
+   * @returns The effect created from the JSON.
+   */
+  public static fromSessionTriggeredJson(
+    json: TEffectSessionTriggeredJson,
+    sourceMission: ServerMission,
+  ): ServerEffect<TTriggerDataSession<TMetisServerComponents>> {
+    return new ServerEffect(
+      json._id,
+      json.name,
+      json.targetId,
+      json.environmentId,
+      json.targetEnvironmentVersion,
+      json.description,
+      { trigger: json.trigger, sourceMission },
+      json.args,
+      json.localKey,
+    )
+  }
+
+  /**
+   * @param json The JSON from which to create the effect.
+   * @param action The action to which the effect belongs.
+   * @returns The effect created from the JSON.
+   */
+  public static fromExecutionTriggeredJson(
+    json: TEffectExecutionTriggeredJson,
+    sourceAction: ServerMissionAction,
+  ): ServerEffect<TTriggerDataExecution<TMetisServerComponents>> {
+    return new ServerEffect(
+      json._id,
+      json.name,
+      json.targetId,
+      json.environmentId,
+      json.targetEnvironmentVersion,
+      json.description,
+      { trigger: json.trigger, sourceAction },
+      json.args,
+      json.localKey,
+    )
+  }
 }
 
 /* ------------------------------ SERVER EFFECT TYPES ------------------------------ */
@@ -113,3 +166,15 @@ export type TServerTargetStatus =
   | 'Populating'
   | 'Not Populated'
   | 'Error'
+
+/**
+ * Server implementation of {@link TTriggerDataSession}.
+ */
+export type TServerTriggerDataSession =
+  TTriggerDataSession<TMetisServerComponents>
+
+/**
+ * Server implementation of {@link TTriggerDataExecution}.
+ */
+export type TServerTriggerDataExec =
+  TTriggerDataExecution<TMetisServerComponents>

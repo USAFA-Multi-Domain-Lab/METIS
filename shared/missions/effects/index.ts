@@ -11,40 +11,100 @@ import { AnyObject } from '../../toolbox/objects'
 import StringToolbox from '../../toolbox/strings'
 import MissionAction, { TAction } from '../actions'
 import MissionComponent, { TMissionComponentDefect } from '../component'
-import { TForce } from '../forces'
-import { TNode } from '../nodes'
 
 /**
  * An effect that can be applied to a target.
  */
 export default abstract class Effect<
   T extends TMetisBaseComponents = TMetisBaseComponents,
+  TTriggerData extends TEffectTriggerData<T> = TEffectTriggerData<T>,
 > extends MissionComponent<T, Effect<T>> {
-  /**
-   * The original data used to construct the effect.
-   */
-  private originalData: TEffectJson
-
   /**
    * The mission to which the effect belongs.
    */
-  public get mission(): TMission<T> {
-    return this.action.mission
+  public get mission(): T['mission'] {
+    // Determine the mission based on the trigger data.
+    switch (this.triggerData.trigger) {
+      case 'session-setup':
+      case 'session-start':
+      case 'session-teardown':
+        return this.triggerData.sourceMission
+      case 'execution-initiation':
+      case 'execution-success':
+      case 'execution-failure':
+        return this.triggerData.sourceAction.mission
+    }
   }
 
   /**
-   * The corresponding force for the effect.
+   * The force which either directly or indirectly
+   * hosts the effect.
+   * @note If `null`, then the effect is not hosted
+   * by any force.
    */
-  public get force(): TForce<T> {
-    return this.action.force
+  public get sourceForce(): TTriggerData extends TTriggerDataExecution<T>
+    ? T['force']
+    : null {
+    switch (this.triggerData.trigger) {
+      case 'session-setup':
+      case 'session-start':
+      case 'session-teardown':
+        return null as any
+      case 'execution-initiation':
+      case 'execution-success':
+      case 'execution-failure':
+        return this.triggerData.sourceAction.force as any
+    }
   }
 
   /**
-   * The corresponding node for the effect.
+   * The node which either directly or indirectly
+   * hosts the effect.
+   * @note If `null`, then the effect is not hosted
+   * by any node.
    */
-  public get node(): TNode<T> {
-    return this.action.node
+  public get sourceNode(): TTriggerData extends TTriggerDataExecution<T>
+    ? T['node']
+    : null {
+    switch (this.triggerData.trigger) {
+      case 'session-setup':
+      case 'session-start':
+      case 'session-teardown':
+        return null as any
+      case 'execution-initiation':
+      case 'execution-success':
+      case 'execution-failure':
+        return this.triggerData.sourceAction.node as any
+    }
   }
+
+  /**
+   * The action which directly or indirectly
+   * hosts the effect.
+   * @note If `null`, then the effect is not hosted
+   * by any action.
+   */
+  public get sourceAction(): TTriggerData extends TTriggerDataExecution<T>
+    ? T['action']
+    : null {
+    switch (this.triggerData.trigger) {
+      case 'session-setup':
+      case 'session-start':
+      case 'session-teardown':
+        return null as any
+      case 'execution-initiation':
+      case 'execution-success':
+      case 'execution-failure':
+        return this.triggerData.sourceAction as any
+    }
+  }
+
+  /**
+   * The trigger that causes the effect to be applied
+   * along with any additional context needed for the
+   * trigger.
+   */
+  protected triggerData: TTriggerData
 
   /**
    * The environment in which the target exists.
@@ -54,29 +114,20 @@ export default abstract class Effect<
   }
 
   /**
+   * The ID of the environment in which the
+   * target exists.
+   */
+  public readonly environmentId: string
+
+  /**
    * The target to which the effect will be applied.
    */
   public target: T['target'] | null
 
   /**
-   * The corresponding action for the effect.
-   */
-  public action: TAction<T>
-
-  /**
    * The ID of the target for the effect.
    */
-  public get targetId(): string {
-    return this.target?._id ?? this.originalData.targetId
-  }
-
-  /**
-   * The ID of the environment in which the
-   * target exists.
-   */
-  public get environmentId(): string {
-    return this.environment?._id ?? this.originalData.environmentId
-  }
+  public readonly targetId: string
 
   /**
    * The version of the corresponding target environment
@@ -88,7 +139,25 @@ export default abstract class Effect<
 
   // Implemented
   public get path(): [...MissionComponent<any, any>[], this] {
-    return [this.mission, this.force, this.node, this.action, this]
+    // Dynamically construct the path based on
+    // the trigger data.
+    switch (this.triggerData.trigger) {
+      case 'session-setup':
+      case 'session-start':
+      case 'session-teardown':
+        return [this.mission, this]
+      case 'execution-initiation':
+      case 'execution-success':
+      case 'execution-failure':
+        let { sourceAction } = this.triggerData
+        return [
+          this.mission,
+          sourceAction.force,
+          sourceAction.node,
+          sourceAction,
+          this,
+        ]
+    }
   }
 
   // Implemented
@@ -268,7 +337,9 @@ export default abstract class Effect<
    * The impetus for the effect. Once the give event occurs
    * on an action, this effect will be enacted.
    */
-  public trigger: TEffectTrigger
+  public get trigger(): TTriggerData['trigger'] {
+    return this.triggerData.trigger
+  }
 
   /**
    * A numeric value which determines the order in which
@@ -323,19 +394,30 @@ export default abstract class Effect<
    * @param action The action that will trigger the effect.
    * @param data Additional information for the effect.
    */
-  public constructor(action: T['action'], data: TEffectJson) {
-    super(data._id, data.name, false)
+  protected constructor(
+    _id: string,
+    name: string,
+    targetId: string,
+    environmentId: string,
+    targetEnvironmentVersion: string,
+    description: string,
+    triggerData: TTriggerData,
+    args: AnyObject,
+    localKey: string,
+  ) {
+    super(_id, name, false)
 
-    this.action = action
-    this.target = this.determineTarget(data.targetId, data.environmentId)
+    // Determine the target based on the target ID
+    // and environment ID provided.
+    this.target = this.determineTarget(targetId, environmentId)
 
-    // Parse data.
-    this.originalData = data
-    this.targetEnvironmentVersion = data.targetEnvironmentVersion
-    this.trigger = data.trigger
-    this.description = data.description
-    this.args = data.args
-    this.localKey = data.localKey
+    this.targetId = targetId
+    this.environmentId = environmentId
+    this.targetEnvironmentVersion = targetEnvironmentVersion
+    this.triggerData = triggerData
+    this.description = description
+    this.args = args
+    this.localKey = localKey
   }
 
   /**
@@ -400,6 +482,56 @@ export default abstract class Effect<
   }
 
   /**
+   * @returns A JSON representation of the Effect,
+   * as {@link TEffectSessionTriggeredJson}.
+   * @throws If the effect is not triggered by a
+   * session-lifecycle event.
+   */
+  public toSessionTriggeredJson(): TEffectSessionTriggeredJson {
+    if (
+      this.trigger === 'execution-initiation' ||
+      this.trigger === 'execution-success' ||
+      this.trigger === 'execution-failure'
+    ) {
+      throw new Error(
+        'Cannot call `toSessionTriggeredJson` for a non-session-triggered effect.',
+      )
+    }
+
+    let sessionTriggeredJson: TEffectSessionTriggeredJson = {
+      ...this.toJson(),
+      trigger: this.trigger,
+    }
+
+    return sessionTriggeredJson
+  }
+
+  /**
+   * @returns A JSON representation of the Effect,
+   * as {@link TEffectExecutionTriggeredJson}.
+   * @throws If the effect is not triggered by an
+   * action-execution-lifecycle event.
+   */
+  public toExecutionTriggeredJson(): TEffectExecutionTriggeredJson {
+    if (
+      this.trigger === 'session-setup' ||
+      this.trigger === 'session-start' ||
+      this.trigger === 'session-teardown'
+    ) {
+      throw new Error(
+        'Cannot call `toExecutionTriggeredJson` for a non-execution-triggered effect.',
+      )
+    }
+
+    let executionTriggeredJson: TEffectExecutionTriggeredJson = {
+      ...this.toJson(),
+      trigger: this.trigger,
+    }
+
+    return executionTriggeredJson
+  }
+
+  /**
    * Determines if all the dependencies passed are met.
    * @param dependencies The dependencies to check if all are met.
    * @param args The arguments to check the dependencies against.
@@ -407,7 +539,7 @@ export default abstract class Effect<
    */
   public allDependenciesMet = (
     dependencies: Dependency[] = [],
-    args: T['effect']['args'] = this.args,
+    args: AnyObject = this.args,
   ): boolean => {
     // If the argument has no dependencies, then the argument is always displayed.
     if (!dependencies || dependencies.length === 0) {
@@ -510,8 +642,11 @@ export default abstract class Effect<
     if (!forceKey || !forceName) return undefined
 
     // Handle force keys that are set to 'self'.
-    if (forceKey === 'self') forceKey = this.force.localKey
-    if (forceName === 'self') forceName = this.force.name
+    if (forceKey === 'self') {
+      if (!this.sourceForce) return undefined
+      forceKey = this.sourceForce.localKey
+      forceName = this.sourceForce.name
+    }
 
     // Return the force metadata.
     return { forceKey, forceName }
@@ -539,10 +674,16 @@ export default abstract class Effect<
     if (!forceKey || !forceName || !nodeKey || !nodeName) return undefined
 
     // Handle force and node keys that are set to 'self'.
-    if (forceKey === 'self') forceKey = this.force.localKey
-    if (forceName === 'self') forceName = this.force.name
-    if (nodeKey === 'self') nodeKey = this.node.localKey
-    if (nodeName === 'self') nodeName = this.node.name
+    if (forceKey === 'self') {
+      if (!this.sourceForce) return undefined
+      forceKey = this.sourceForce.localKey
+      forceName = this.sourceForce.name
+    }
+    if (nodeKey === 'self') {
+      if (!this.sourceNode) return undefined
+      nodeKey = this.sourceNode.localKey
+      nodeName = this.sourceNode.name
+    }
 
     // Return the node metadata.
     return { forceKey, forceName, nodeKey, nodeName }
@@ -581,12 +722,21 @@ export default abstract class Effect<
     }
 
     // Handle force, node, and action keys that are set to 'self'.
-    if (forceKey === 'self') forceKey = this.force.localKey
-    if (forceName === 'self') forceName = this.force.name
-    if (nodeKey === 'self') nodeKey = this.node.localKey
-    if (nodeName === 'self') nodeName = this.node.name
-    if (actionKey === 'self') actionKey = this.action.localKey
-    if (actionName === 'self') actionName = this.action.name
+    if (forceKey === 'self') {
+      if (!this.sourceForce) return undefined
+      forceKey = this.sourceForce.localKey
+      forceName = this.sourceForce.name
+    }
+    if (nodeKey === 'self') {
+      if (!this.sourceNode) return undefined
+      nodeKey = this.sourceNode.localKey
+      nodeName = this.sourceNode.name
+    }
+    if (actionKey === 'self') {
+      if (!this.sourceAction) return undefined
+      actionKey = this.sourceAction.localKey
+      actionName = this.sourceAction.name
+    }
 
     // Return the action metadata.
     return { forceKey, forceName, nodeKey, nodeName, actionKey, actionName }
@@ -626,7 +776,10 @@ export default abstract class Effect<
     // Extract the metadata.
     let forceKey = forceInArgs?.forceKey
     // Handle force keys that are set to 'self'.
-    if (forceKey === 'self') return this.force
+    if (forceKey === 'self') {
+      if (!this.sourceForce) return undefined
+      return this.sourceForce
+    }
     // Get the force from the mission.
     return this.mission.getForceByLocalKey(forceKey)
   }
@@ -643,8 +796,14 @@ export default abstract class Effect<
     let forceKey = nodeInArgs?.forceKey
     let nodeKey = nodeInArgs?.nodeKey
     // Handle force and node keys that are set to 'self'.
-    if (nodeKey === 'self') return this.node
-    if (forceKey === 'self') forceKey = this.force.localKey
+    if (nodeKey === 'self') {
+      if (!this.sourceNode) return undefined
+      return this.sourceNode
+    }
+    if (forceKey === 'self') {
+      if (!this.sourceForce) return undefined
+      forceKey = this.sourceForce.localKey
+    }
     // Get the node from the mission.
     return this.mission.getNodeByLocalKey(forceKey, nodeKey)
   }
@@ -662,9 +821,18 @@ export default abstract class Effect<
     let nodeKey = actionInArgs?.nodeKey
     let actionKey = actionInArgs?.actionKey
     // Handle force, node, and action keys that are set to 'self'.
-    if (actionKey === 'self') return this.action
-    if (nodeKey === 'self') nodeKey = this.node.localKey
-    if (forceKey === 'self') forceKey = this.force.localKey
+    if (actionKey === 'self') {
+      if (!this.sourceAction) return undefined
+      return this.sourceAction
+    }
+    if (nodeKey === 'self') {
+      if (!this.sourceNode) return undefined
+      nodeKey = this.sourceNode.localKey
+    }
+    if (forceKey === 'self') {
+      if (!this.sourceForce) return undefined
+      forceKey = this.sourceForce.localKey
+    }
     // Get the action from the mission.
     const action = this.mission.getActionByLocalKey(
       forceKey,
@@ -705,12 +873,13 @@ export default abstract class Effect<
   public static readonly ENVIRONMENT_ID_INFER: string = 'INFER'
 
   /**
-   * Default properties set when creating a new Effect object.
+   * Default properties set when creating a new
+   * session-triggered effect.
    */
-  public static get DEFAULT_PROPERTIES(): TEffectDefaultJson {
+  public static get DEFAULT_SESSION_PROPERTIES(): TEffectDefaultJson<TEffectSessionTriggered> {
     return {
       _id: StringToolbox.generateRandomId(),
-      trigger: 'execution-success',
+      trigger: 'session-setup',
       order: 0,
       name: 'New Effect',
       description: '',
@@ -719,30 +888,94 @@ export default abstract class Effect<
   }
 
   /**
+   * Default properties set when creating a new
+   * execution-triggered effect.
+   */
+  public static get DEFAULT_EXEC_PROPERTIES(): TEffectDefaultJson<TEffectExecutionTriggered> {
+    return {
+      ...this.DEFAULT_SESSION_PROPERTIES,
+      trigger: 'execution-success',
+    }
+  }
+
+  /**
    * Available triggers for an effect.
    */
   public static get TRIGGERS(): TEffectTrigger[] {
-    return ['execution-initiation', 'execution-success', 'execution-failure']
+    return [
+      'session-setup',
+      'session-start',
+      'session-teardown',
+      'execution-initiation',
+      'execution-success',
+      'execution-failure',
+    ]
   }
 }
 
 /* ------------------------------ EFFECT TYPES ------------------------------ */
 
 /**
- * Extracts the effect type from a registry of
- * METIS components that extends `TMetisBaseComponents`.
- * @param T The type registry.
- * @returns The effect type.
+ * Effect triggers that occur as a result of
+ * a session-lifecycle event.
  */
-export type TEffect<T extends TMetisBaseComponents> = T['effect']
+export type TEffectSessionTriggered =
+  | 'session-setup'
+  | 'session-start'
+  | 'session-teardown'
+
+/**
+ * Effect triggers that occur as a result of
+ * an action-execution-lifecycle event.
+ */
+export type TEffectExecutionTriggered =
+  | 'execution-initiation'
+  | 'execution-success'
+  | 'execution-failure'
 
 /**
  * Valid triggers for an effect.
  */
-export type TEffectTrigger =
-  | 'execution-initiation'
-  | 'execution-success'
-  | 'execution-failure'
+export type TEffectTrigger = TEffectSessionTriggered | TEffectExecutionTriggered
+
+/**
+ * Data needed to create an effect that is triggered
+ * by a session-lifecycle event.
+ */
+export interface TTriggerDataSession<T extends TMetisBaseComponents> {
+  /**
+   * The trigger that causes the effect to be applied.
+   */
+  trigger: TEffectSessionTriggered
+  /**
+   * The mission hosting the effect.
+   */
+  sourceMission: TMission<T>
+}
+
+/**
+ * Data needed to create an effect that is triggered
+ * by an action-execution-lifecycle event.
+ */
+export interface TTriggerDataExecution<T extends TMetisBaseComponents> {
+  /**
+   * The trigger that causes the effect to be applied.
+   */
+  trigger: TEffectExecutionTriggered
+  /**
+   * The action that hosts the effect, which will
+   * trigger the effect when the action is executed.
+   */
+  sourceAction: TAction<T>
+}
+
+/**
+ * Additional context used for an effect, specific
+ * to the effect's trigger.
+ */
+export type TEffectTriggerData<T extends TMetisBaseComponents> =
+  | TTriggerDataSession<T>
+  | TTriggerDataExecution<T>
 
 /**
  * Extracts all the properties of an `Effect` that are
@@ -791,12 +1024,37 @@ export type TEffectJson = TCreateJsonType<
 >
 
 /**
+ * Plain JSON representation of an `Effect` object
+ * that is triggered by a session-lifecycle event.
+ */
+export interface TEffectExecutionTriggeredJson
+  extends Omit<TEffectJson, 'trigger'> {
+  trigger: TEffectExecutionTriggered
+}
+
+/**
+ * Plain JSON representation of an `Effect` object
+ * that is triggered by an action-execution-lifecycle event.
+ */
+export interface TEffectSessionTriggeredJson
+  extends Omit<TEffectJson, 'trigger'> {
+  trigger: TEffectSessionTriggered
+}
+
+/**
  * The default properties for an `Effect` object.
  * @inheritdoc TEffectJson
  */
-type TEffectDefaultJson = Required<
-  Omit<
-    TEffectJson,
-    'localKey' | 'targetId' | 'environmentId' | 'targetEnvironmentVersion'
-  >
->
+interface TEffectDefaultJson<TTrigger extends TEffectTrigger>
+  extends Required<
+    Omit<
+      TEffectJson,
+      | 'trigger'
+      | 'localKey'
+      | 'targetId'
+      | 'environmentId'
+      | 'targetEnvironmentVersion'
+    >
+  > {
+  trigger: TTrigger
+}

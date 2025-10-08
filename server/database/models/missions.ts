@@ -233,6 +233,7 @@ const sanitizeHtml = (html: string): string => {
 }
 
 /* -- SCHEMA -- */
+
 /**
  * Shared subschema for mission and action effects.
  */
@@ -486,7 +487,11 @@ export const missionSchema = new MissionSchema(
     },
     effects: {
       required: false,
-      validate: ServerMission.createEffectsValidator([]),
+      validate: ServerMission.createEffectsValidator([
+        'session-setup',
+        'session-start',
+        'session-teardown',
+      ]),
       type: [effectSubschema],
     },
     deleted: { type: Boolean, required: true, default: false },

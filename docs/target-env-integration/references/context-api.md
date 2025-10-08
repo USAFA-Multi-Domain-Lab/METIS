@@ -73,7 +73,6 @@ Provides access to the current effect and its arguments.
 interface TTargetEnvExposedEffect {
   readonly _id: string // Effect ID
   readonly name: string // Effect name
-  readonly forceName: string // Name of force where effect belongs
   readonly args: AnyObject // Effect arguments from target schema
 }
 ```
@@ -85,12 +84,11 @@ script: async (ctx) => {
   // Access effect metadata
   const effectId = ctx.effect._id
   const effectName = ctx.effect.name
-  const forceName = ctx.effect.forceName
 
   // Access arguments
   const { hostname, port, sslEnabled } = ctx.effect.args
 
-  ctx.sendOutput(`Executing ${effectName} on ${forceName}`)
+  ctx.sendOutput(`Executing ${effectName}.`)
   ctx.sendOutput(`Connecting to ${hostname}:${port}`)
 }
 ```

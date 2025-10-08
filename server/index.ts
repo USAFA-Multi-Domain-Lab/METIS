@@ -6,6 +6,10 @@ import fs from 'fs'
 import http, { Server as HttpServer } from 'http'
 import https from 'https'
 import { TMetisBaseComponents } from 'metis/index'
+import {
+  TTriggerDataExecution,
+  TTriggerDataSession,
+} from 'metis/missions/effects'
 import MetisDatabase from 'metis/server/database'
 import MetisRouter from 'metis/server/http/router'
 import { expressLogger, expressLoggingHandler } from 'metis/server/logging'
@@ -629,7 +633,12 @@ export interface TMetisServerComponents extends TMetisBaseComponents {
   action: ServerMissionAction
   execution: ServerActionExecution
   outcome: ServerExecutionOutcome
-  effect: ServerEffect
+  sessionTriggeredEffect: ServerEffect<
+    TTriggerDataSession<TMetisServerComponents>
+  >
+  executionTriggeredEffect: ServerEffect<
+    TTriggerDataExecution<TMetisServerComponents>
+  >
 }
 
 /**

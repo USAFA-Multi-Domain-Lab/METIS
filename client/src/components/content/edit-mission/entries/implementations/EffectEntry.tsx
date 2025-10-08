@@ -1,8 +1,11 @@
 import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
 import ClientActionExecution from 'src/missions/actions/executions'
-import { ClientEffect } from 'src/missions/effects'
+import { ClientEffect, TClientTriggerDataExec } from 'src/missions/effects'
 import { useObjectFormSync } from 'src/toolbox/hooks'
-import { TEffectTrigger } from '../../../../../../../shared/missions/effects'
+import {
+  TEffectExecutionTriggered,
+  TEffectTrigger,
+} from '../../../../../../../shared/missions/effects'
 import StringToolbox from '../../../../../../../shared/toolbox/strings'
 import { DetailLargeString } from '../../../form/DetailLargeString'
 import { DetailLocked } from '../../../form/DetailLocked'
@@ -63,11 +66,11 @@ export default function EffectEntry({
         label='Name'
         value={name}
         setValue={setName}
-        defaultValue={ClientEffect.DEFAULT_PROPERTIES.name}
+        defaultValue={ClientEffect.DEFAULT_EXEC_PROPERTIES.name}
         maxLength={ClientEffect.MAX_NAME_LENGTH}
         placeholder='Enter name...'
       />
-      <DetailDropdown<TEffectTrigger>
+      <DetailDropdown<TEffectExecutionTriggered>
         fieldType='required'
         label='Trigger'
         options={ClientActionExecution.EFFECT_TRIGGERS}
@@ -115,19 +118,19 @@ export type TEffectEntry_P = {
   /**
    * The effect to apply to the target.
    */
-  effect: ClientEffect
+  effect: ClientEffect<TClientTriggerDataExec>
   /**
    * Handles the request to duplicate an effect.
    */
   onDuplicateEffectRequest: (
-    effect: ClientEffect,
+    effect: ClientEffect<TClientTriggerDataExec>,
     selectNewEffect?: boolean,
   ) => Promise<void>
   /**
    * Handles the request to delete an effect.
    */
   onDeleteEffectRequest: (
-    effect: ClientEffect,
+    effect: ClientEffect<TClientTriggerDataExec>,
     navigateBack?: boolean,
   ) => Promise<void>
   /**
@@ -135,5 +138,5 @@ export type TEffectEntry_P = {
    * change has been made.
    * @param effect The same effect passed.
    */
-  onChange: (effect: ClientEffect) => void
+  onChange: (effect: ClientEffect<TClientTriggerDataExec>) => void
 }

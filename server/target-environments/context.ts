@@ -1,5 +1,7 @@
 import { TOutputTypeExecution } from 'metis/missions/forces/output'
-import ServerEffect from 'metis/server/missions/effects'
+import ServerEffect, {
+  TServerTriggerDataExec,
+} from 'metis/server/missions/effects'
 import ServerMissionNode from 'metis/server/missions/nodes'
 import SessionServer from 'metis/server/sessions'
 import ServerSessionMember from 'metis/server/sessions/members'
@@ -15,7 +17,7 @@ export default class TargetEnvContext {
   /**
    * The effect for the current context.
    */
-  private readonly effect: ServerEffect
+  private readonly effect: ServerEffect<TServerTriggerDataExec>
 
   /**
    * The ID of the effect for the current context.
@@ -35,7 +37,12 @@ export default class TargetEnvContext {
    * The action for the current context.
    */
   private get action(): ServerMissionAction {
-    return this.effect.action
+    if (!this.effect.sourceAction) {
+      throw new Error(
+        `The effect with ID "${this.effectId}" does not have a source action.`,
+      )
+    }
+    return this.effect.sourceAction
   }
 
   /**
@@ -56,7 +63,12 @@ export default class TargetEnvContext {
    * The node for the current context.
    */
   private get node(): ServerMissionNode {
-    return this.effect.node
+    if (!this.effect.sourceNode) {
+      throw new Error(
+        `The effect with ID "${this.effectId}" does not have a source node.`,
+      )
+    }
+    return this.effect.sourceNode
   }
 
   /**
@@ -77,7 +89,12 @@ export default class TargetEnvContext {
    * The force for the current context.
    */
   private get force(): ServerMissionForce {
-    return this.effect.force
+    if (!this.effect.sourceForce) {
+      throw new Error(
+        `The effect with ID "${this.effectId}" does not have a source force.`,
+      )
+    }
+    return this.effect.sourceForce
   }
 
   /**
@@ -195,7 +212,7 @@ export default class TargetEnvContext {
    * @param execution The execution for the current context.
    */
   public constructor(
-    effect: ServerEffect,
+    effect: ServerEffect<TServerTriggerDataExec>,
     member: ServerSessionMember,
     session: SessionServer,
     execution: ServerActionExecution,
@@ -727,10 +744,6 @@ export type TTargetEnvExposedEffect = {
    * The name for the effect.
    */
   readonly name: string
-  /**
-   * The name of the force where the effect belongs.
-   */
-  readonly forceName: string
   /**
    * The arguments used to affect the target.
    */

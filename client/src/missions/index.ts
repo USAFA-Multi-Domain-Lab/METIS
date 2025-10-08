@@ -15,6 +15,7 @@ import Mission, {
   TMissionShallowExistingJson,
 } from '../../../shared/missions'
 import MissionComponent from '../../../shared/missions/component'
+import { TEffectSessionTriggeredJson } from '../../../shared/missions/effects'
 import { TMissionFileJson } from '../../../shared/missions/files'
 import {
   MissionForce,
@@ -32,6 +33,7 @@ import { AnyObject, TWithKey } from '../../../shared/toolbox/objects'
 import { Vector2D } from '../../../shared/toolbox/space'
 import User from '../../../shared/users'
 import ClientMissionAction from './actions'
+import { ClientEffect } from './effects'
 import ClientMissionFile from './files'
 import ClientMissionForce from './forces'
 import ClientMissionNode from './nodes'
@@ -250,6 +252,7 @@ export default class ClientMission
     prototypeData: TMissionPrototypeJson[],
     forceData: TMissionForceJson[],
     fileData: TMissionFileJson[],
+    effectData: TEffectSessionTriggeredJson[],
     options: TClientMissionOptions = {},
   ) {
     super(
@@ -267,6 +270,7 @@ export default class ClientMission
       prototypeData,
       forceData,
       fileData,
+      effectData,
     )
 
     // Parse client-specific options.
@@ -347,6 +351,13 @@ export default class ClientMission
       ClientMissionFile.fromJson(datum, this),
     )
     this.files.push(...files)
+  }
+
+  // Implemented
+  protected importEffects(data: TEffectSessionTriggeredJson[]): void {
+    this.effects = data.map((datum) =>
+      ClientEffect.fromSessionTriggeredJson(datum, this),
+    )
   }
 
   /**
@@ -1220,6 +1231,7 @@ export default class ClientMission
       ClientMission.DEFAULT_PROPERTIES.prototypes,
       ClientMission.DEFAULT_PROPERTIES.forces,
       ClientMission.DEFAULT_PROPERTIES.files,
+      ClientMission.DEFAULT_PROPERTIES.effects,
     )
   }
 
@@ -1269,6 +1281,7 @@ export default class ClientMission
       json.prototypes,
       json.forces,
       json.files,
+      json.effects,
       options,
     )
 

@@ -1,5 +1,5 @@
 import React from 'react'
-import { ClientEffect } from 'src/missions/effects'
+import { ClientEffect, TClientTriggerDataExec } from 'src/missions/effects'
 import { compute } from 'src/toolbox'
 import { useDefaultProps } from 'src/toolbox/hooks'
 import List, { createDefaultListProps, TList_P } from '../List'
@@ -128,7 +128,7 @@ export default function EffectList(props: TEffectList_P): JSX.Element | null {
 
   /* -- RENDER -- */
 
-  return <List<ClientEffect> {...defaultedProps} />
+  return <List<ClientEffect<TClientTriggerDataExec>> {...defaultedProps} />
 }
 
 /* -- TYPES -- */
@@ -136,7 +136,8 @@ export default function EffectList(props: TEffectList_P): JSX.Element | null {
 /**
  * Props for EffectList component.
  */
-export interface TEffectList_P extends TList_P<ClientEffect> {
+export interface TEffectList_P
+  extends TList_P<ClientEffect<TClientTriggerDataExec>> {
   /**
    * Callback to handle a request to create a new effect.
    * @default () => {}
@@ -149,19 +150,19 @@ export interface TEffectList_P extends TList_P<ClientEffect> {
    * @default () => {}
    * @note If not provided, the open button will not be used.
    */
-  onOpenRequest?: (effect: ClientEffect) => void
+  onOpenRequest?: (effect: ClientEffect<TClientTriggerDataExec>) => void
   /**
    * Callback to handle a request to duplicate an effect.
    * @param effect The effect to duplicate.
    * @default () => {}
    * @note If not provided, the copy button will not be used.
    */
-  onDuplicateRequest?: (effect: ClientEffect) => void
+  onDuplicateRequest?: (effect: ClientEffect<TClientTriggerDataExec>) => void
   /**
    * Callback to handle a request to delete an effect.
    * @param effect The effect to delete.
    * @default () => {}
    * @note If not provided, the remove button will not be used.
    */
-  onDeleteRequest?: (effect: ClientEffect) => void
+  onDeleteRequest?: (effect: ClientEffect<TClientTriggerDataExec>) => void
 }

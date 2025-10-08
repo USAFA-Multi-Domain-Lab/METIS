@@ -8,7 +8,7 @@ import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons
 import { useMissionPageContext } from 'src/components/pages/missions/MissionPage'
 import { useGlobalContext } from 'src/context/global'
 import ClientMissionAction from 'src/missions/actions'
-import { ClientEffect } from 'src/missions/effects'
+import { ClientEffect, TClientTriggerDataExec } from 'src/missions/effects'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
@@ -19,7 +19,10 @@ import {
 } from 'src/toolbox/hooks'
 import { TActionType } from '../../../../../../../shared/missions/actions'
 import MissionComponent from '../../../../../../../shared/missions/component'
-import { TEffectTrigger } from '../../../../../../../shared/missions/effects'
+import {
+  TEffectExecutionTriggered,
+  TEffectTrigger,
+} from '../../../../../../../shared/missions/effects'
 import StringToolbox from '../../../../../../../shared/toolbox/strings'
 import { DetailLargeString } from '../../../form/DetailLargeString'
 import { DetailNumber } from '../../../form/DetailNumber'
@@ -158,9 +161,8 @@ export default function ActionEntry({
     },
     dependencies: [localFiles.length],
   })
-  const [newEffectTrigger, setNewEffectTrigger] = useState<TEffectTrigger>(
-    'execution-initiation',
-  )
+  const [newEffectTrigger, setNewEffectTrigger] =
+    useState<TEffectExecutionTriggered>('execution-initiation')
   const immediateListRef = useRef<TList_E | null>(null)
   const successListRef = useRef<TList_E | null>(null)
   const failureListRef = useRef<TList_E | null>(null)
@@ -197,9 +199,11 @@ export default function ActionEntry({
     }
 
     // Create a new effect.
-    const effect = ClientEffect.createBlankEffect(target, action)
-    // Update the trigger.
-    effect.trigger = newEffectTrigger
+    const effect = ClientEffect.createBlankExecutionEffect(
+      target,
+      action,
+      newEffectTrigger,
+    )
     // Set the effect's target and environment.
     // Push the new effect to the action.
     action.effects.push(effect)
@@ -524,7 +528,7 @@ export type TActionEntry_P = {
    * Handles the request to duplicate an effect.
    */
   onDuplicateEffectRequest: (
-    effect: ClientEffect,
+    effect: ClientEffect<TClientTriggerDataExec>,
     selectNewEffect?: boolean,
   ) => Promise<void>
   /**

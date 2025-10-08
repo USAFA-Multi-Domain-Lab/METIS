@@ -3,7 +3,10 @@ import Mission from './missions'
 import MissionAction from './missions/actions'
 import ActionExecution from './missions/actions/executions'
 import ExecutionOutcome from './missions/actions/outcomes'
-import Effect from './missions/effects'
+import Effect, {
+  TTriggerDataExecution,
+  TTriggerDataSession,
+} from './missions/effects'
 import MissionFile from './missions/files'
 import { MissionForce } from './missions/forces'
 import MissionOutput from './missions/forces/output'
@@ -179,7 +182,14 @@ export type TMetisBaseComponents = {
   action: MissionAction
   execution: ActionExecution
   outcome: ExecutionOutcome
-  effect: Effect
+  sessionTriggeredEffect: Effect<
+    TMetisBaseComponents,
+    TTriggerDataSession<TMetisBaseComponents>
+  >
+  executionTriggeredEffect: Effect<
+    TMetisBaseComponents,
+    TTriggerDataExecution<TMetisBaseComponents>
+  >
 }
 
 /**

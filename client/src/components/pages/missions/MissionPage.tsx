@@ -5,7 +5,7 @@ import { useGlobalContext, useNavigationMiddleware } from 'src/context/global'
 import ClientFileReference from 'src/files/references'
 import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
-import { ClientEffect } from 'src/missions/effects'
+import { ClientEffect, TClientTriggerDataExec } from 'src/missions/effects'
 import ClientMissionFile from 'src/missions/files'
 import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
@@ -25,7 +25,7 @@ import Mission from '../../../../../shared/missions'
 import MissionComponent, {
   TMissionComponentDefect,
 } from '../../../../../shared/missions/component'
-import { TEffectTrigger } from '../../../../../shared/missions/effects'
+import { TEffectExecutionTriggered } from '../../../../../shared/missions/effects'
 import { TNonEmptyArray } from '../../../../../shared/toolbox/arrays'
 import Prompt from '../../content/communication/Prompt'
 import FileReferenceList, {
@@ -127,9 +127,8 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     mission.selection,
   )
   const [effectModalActive, setEffectModalActive] = useState<boolean>(false)
-  const [effectModalTrigger, setEffectModalTrigger] = useState<TEffectTrigger>(
-    'execution-initiation',
-  )
+  const [effectModalTrigger, setEffectModalTrigger] =
+    useState<TEffectExecutionTriggered>('execution-initiation')
   const [, setDefects] = state.defects
   const [, setCheckForDefects] = state.checkForDefects
   const root = useRef<HTMLDivElement>(null)
@@ -675,7 +674,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   /**
    * @see {@link TMissionPageContextData.activateEffectModal}
    */
-  const activateEffectModal = (trigger: TEffectTrigger) => {
+  const activateEffectModal = (trigger: TEffectExecutionTriggered) => {
     setEffectModalActive(true)
     setEffectModalTrigger(trigger)
   }
@@ -968,7 +967,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
    * @param selectNewEffect Whether to select the new effect after duplication.
    */
   const onDuplicateEffectRequest = async (
-    effect: ClientEffect,
+    effect: ClientEffect<TClientTriggerDataExec>,
     selectNewEffect: boolean = false,
   ) => {
     // Prompt the user to enter the name of the new effect.
@@ -984,14 +983,17 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     // If the user confirms the duplication, proceed.
     if (choice === 'Submit') {
       try {
-        const { action } = effect
+        const { sourceAction } = effect
+        if (sourceAction === null) {
+          throw new Error('MissionPage: sourceAction is null.')
+        }
         // Duplicate the effect.
         let newEffect = effect.duplicate({
           name: text,
-          localKey: action.generateEffectKey(),
+          localKey: sourceAction.generateEffectKey(),
         })
         // Add the new effect to the action.
-        action.effects.push(newEffect)
+        sourceAction.effects.push(newEffect)
         // Select the new effect if necessary.
         if (selectNewEffect) mission.select(newEffect)
         // Notify the user that the force was duplicated.
@@ -1026,9 +1028,14 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     }
 
     // Extract the action from the effect.
-    let { action } = effect
+    let { sourceAction } = effect
+
+    if (!sourceAction) {
+      throw new Error('MissionPage: sourceAction is null.')
+    }
+
     // Filter out the effect from the action.
-    action.effects = action.effects.filter(
+    sourceAction.effects = sourceAction.effects.filter(
       (actionEffect: ClientEffect) => actionEffect._id !== effect._id,
     )
 
@@ -1304,5 +1311,5 @@ export type TMissionPageContextData = {
      * allow the user to create an effect from scratch.
      * @param trigger The trigger for the new effect.
      */
-    activateEffectModal: (trigger: TEffectTrigger) => void
+    activateEffectModal: (trigger: TEffectExecutionTriggered) => void
   }

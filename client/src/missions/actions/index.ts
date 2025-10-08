@@ -5,7 +5,10 @@ import MissionAction, {
   TMissionActionJsonDirect,
   TMissionActionJsonIndirect,
 } from '../../../../shared/missions/actions'
-import { TEffectJson } from '../../../../shared/missions/effects'
+import {
+  TEffectExecutionTriggeredJson,
+  TTriggerDataExecution,
+} from '../../../../shared/missions/effects'
 import { ClientEffect } from '../effects'
 import ClientMissionNode from '../nodes'
 
@@ -99,8 +102,12 @@ export default class ClientMissionAction extends MissionAction<TMetisClientCompo
   }
 
   // Implemented
-  protected parseEffects(data: TEffectJson[]): ClientEffect[] {
-    return data.map((datum: TEffectJson) => new ClientEffect(this, datum))
+  protected parseEffects(
+    data: TEffectExecutionTriggeredJson[],
+  ): ClientEffect<TTriggerDataExecution<TMetisClientComponents>>[] {
+    return data.map((datum) =>
+      ClientEffect.fromExecutionTriggeredJson(datum, this),
+    )
   }
 
   /**
@@ -133,9 +140,14 @@ export default class ClientMissionAction extends MissionAction<TMetisClientCompo
     let duplicatedAction = new ClientMissionAction(node, data)
 
     // Duplicate the effects.
-    duplicatedAction.effects = this.effects.map((effect) =>
-      effect.duplicate({ action: duplicatedAction }),
-    )
+    duplicatedAction.effects = this.effects.map((effect) => {
+      return effect.duplicate({
+        triggerData: {
+          trigger: effect.trigger,
+          sourceAction: duplicatedAction,
+        },
+      })
+    })
 
     return duplicatedAction
   }
@@ -151,6 +163,22 @@ export default class ClientMissionAction extends MissionAction<TMetisClientCompo
     data: Partial<TClientMissionActionJson> = ClientMissionAction.DEFAULT_PROPERTIES,
   ): ClientMissionAction {
     return new ClientMissionAction(node, data)
+  }
+
+  /**
+   * @returns A new `ClientMissionFile` instance that
+   * represents a file that is referenced in a effect
+   * but not currently found in the mission files.
+   */
+  public static createDetached(
+    _id: string,
+    name: string,
+    node: ClientMissionNode,
+  ): ClientMissionAction {
+    return new ClientMissionAction(node, {
+      _id,
+      name,
+    })
   }
 
   /**

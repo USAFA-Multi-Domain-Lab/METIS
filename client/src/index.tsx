@@ -1,6 +1,10 @@
 import ReactDOM from 'react-dom/client'
 import GlobalContext from 'src/context/global'
 import { TMetisBaseComponents } from '../../shared'
+import {
+  TTriggerDataExecution,
+  TTriggerDataSession,
+} from '../../shared/missions/effects'
 import App from './components/App'
 import ErrorPage from './components/pages/ErrorPage'
 import ClientFileReference from './files/references'
@@ -73,5 +77,10 @@ export interface TMetisClientComponents extends TMetisBaseComponents {
   action: ClientMissionAction
   execution: ClientActionExecution
   outcome: ClientExecutionOutcome
-  effect: ClientEffect
+  executionTriggeredEffect: ClientEffect<
+    TTriggerDataExecution<TMetisClientComponents>
+  >
+  sessionTriggeredEffect: ClientEffect<
+    TTriggerDataSession<TMetisClientComponents>
+  >
 }

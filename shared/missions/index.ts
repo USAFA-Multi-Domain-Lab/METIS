@@ -7,7 +7,7 @@ import User, { TCreatedByJson } from '../users'
 import { TAction, TMissionActionJson } from './actions'
 import { TExecution } from './actions/executions'
 import MissionComponent, { TMissionComponentDefect } from './component'
-import { TEffect, TEffectJson } from './effects'
+import { TEffectSessionTriggered, TEffectSessionTriggeredJson } from './effects'
 import { TMissionFileJson } from './files'
 import {
   MissionForce,
@@ -47,23 +47,8 @@ export default abstract class Mission<
   /**
    * All actions that exist in the mission.
    */
-  public get actions(): Map<string, TAction<T>> {
-    let actions = new Map<string, TAction<T>>()
-
-    for (let node of this.nodes) {
-      for (let action of node.actions.values()) {
-        actions.set(action._id, action)
-      }
-    }
-
-    return actions
-  }
-
-  /**
-   * All effects that exist in the mission.
-   */
-  public get effects(): TEffect<T>[] {
-    return Array.from(this.actions.values()).flatMap((action) => action.effects)
+  public get actions(): T['action'][] {
+    return this.nodes.flatMap((node) => Array.from(node.actions.values()))
   }
 
   // Implemented
@@ -149,6 +134,13 @@ export default abstract class Mission<
   public files: T['missionFile'][]
 
   /**
+   * Effects that can be applied at a high-level in
+   * the mission, such as aiding in the setup or teardown
+   * of a session.
+   */
+  public effects: T['sessionTriggeredEffect'][]
+
+  /**
    * The root prototype of the mission.
    */
   public root: TPrototype<T>
@@ -176,6 +168,7 @@ export default abstract class Mission<
     prototypeData: TMissionPrototypeJson[],
     forceData: TMissionForceJson[],
     fileData: TMissionFileJson[],
+    effectData: TEffectSessionTriggeredJson[],
   ) {
     super(_id, name, false)
 
@@ -191,11 +184,13 @@ export default abstract class Mission<
     this.prototypes = []
     this.forces = []
     this.files = []
+    this.effects = []
     this.root = this.initializeRoot()
 
     this.importStructure(structure, prototypeData)
     this.importForces(forceData)
     this.importFiles(fileData)
+    this.importEffects(effectData)
   }
 
   /**
@@ -391,6 +386,26 @@ export default abstract class Mission<
   }
 
   /**
+   * Generates a new key for an effect.
+   * @returns The new key for an effect.
+   */
+  public generateEffectKey(): string {
+    // Initialize
+    let newKey: number = 0
+
+    for (let effect of this.effects) {
+      let effectKey: number = Number(effect.localKey)
+      // If the effect has a key, and it is greater than the current
+      // new key, set the new key to the effect's key.
+      if (effectKey > newKey) newKey = Math.max(newKey, effectKey)
+    }
+
+    // Increment the new key by 1 and return it as a string.
+    newKey++
+    return String(newKey)
+  }
+
+  /**
    * Creates a new prototype that is the root prototype of the mission structure.
    * This prototype is not added to the mission's prototypes map, as it is really
    * a pseudo-prototype.
@@ -475,6 +490,12 @@ export default abstract class Mission<
    * @param data The file data to parse.
    */
   protected abstract importFiles(data: TMissionFileJson[]): void
+
+  /**
+   * Imports the effect data into the mission.
+   * @param data The effect data to parse.
+   */
+  protected abstract importEffects(data: TEffectSessionTriggeredJson[]): void
 
   /**
    * @param prototypeId The ID of the prototype to get.
@@ -661,6 +682,14 @@ export default abstract class Mission<
     Mission.PURPLE,
     Mission.MAGENTA,
   ]
+
+  /**
+   * Triggers that can cause effects at a high-level in
+   * the mission.
+   */
+  public static get EFFECT_TRIGGERS(): TEffectSessionTriggered[] {
+    return ['session-setup', 'session-start', 'session-teardown']
+  }
 
   /**
    * The default session data exposure options when
@@ -937,21 +966,6 @@ export default abstract class Mission<
 /* ------------------------------ MISSION TYPES ------------------------------ */
 
 /**
- * Type registry for base mission component classes.
- */
-export type TBaseMissionComponents = Pick<
-  TMetisBaseComponents,
-  | 'mission'
-  | 'prototype'
-  | 'missionFile'
-  | 'force'
-  | 'output'
-  | 'node'
-  | 'action'
-  | 'effect'
->
-
-/**
  * Extracts the mission type from a registry of METIS
  * components type that extends `TMetisBaseComponents`.
  * @param T The type registry.
@@ -976,7 +990,7 @@ export type TMissionJson = TCreateJsonType<
     prototypes: TMissionPrototypeJson[]
     structure: AnyObject
     files: TMissionFileJson[]
-    effects: TEffectJson[]
+    effects: TEffectSessionTriggeredJson[]
   }
 >
 

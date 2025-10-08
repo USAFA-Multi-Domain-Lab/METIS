@@ -2,12 +2,12 @@ import MissionAction, { TMissionActionJson } from 'metis/missions/actions'
 import TCommonActionExecution, {
   TExecutionCheats,
 } from 'metis/missions/actions/executions'
-import { TEffectJson } from 'metis/missions/effects'
+import { TEffectExecutionTriggeredJson } from 'metis/missions/effects'
 import { TMetisServerComponents } from 'metis/server'
 import { TTargetEnvExposedAction } from 'metis/server/target-environments/context'
 import { TSessionConfig } from 'metis/sessions'
 import seedrandom, { PRNG } from 'seedrandom'
-import ServerEffect from '../effects'
+import ServerEffect, { TServerTriggerDataExec } from '../effects'
 import ServerMissionNode from '../nodes'
 import ServerActionExecution from './executions'
 import ServerExecutionOutcome from './outcomes'
@@ -34,9 +34,11 @@ export default class ServerMissionAction extends MissionAction<TMetisServerCompo
   }
 
   // Implemented
-  protected parseEffects(data: TEffectJson[]): ServerEffect[] {
-    return data.map((datum: TEffectJson) => {
-      return new ServerEffect(this, datum)
+  protected parseEffects(
+    data: TEffectExecutionTriggeredJson[],
+  ): ServerEffect<TServerTriggerDataExec>[] {
+    return data.map((datum: TEffectExecutionTriggeredJson) => {
+      return ServerEffect.fromExecutionTriggeredJson(datum, this)
     })
   }
 
