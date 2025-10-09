@@ -9,6 +9,7 @@ import ServerActionExecution from '../missions/actions/executions'
 import ServerExecutionOutcome from '../missions/actions/outcomes'
 import ServerMissionFile from '../missions/files'
 import ServerMissionForce from '../missions/forces'
+import TargetEnvStore from '../sessions/caching/target-env-store'
 
 export default class TargetEnvContext {
   /**
@@ -172,6 +173,22 @@ export default class TargetEnvContext {
   }
 
   /**
+   * A store that is unique to the session and target environment.
+   */
+  private get localStore() {
+    return TargetEnvStore.getStore(this.sessionId, this.effect.environmentId)
+  }
+
+  /**
+   * A store that is unique to the session, but not to any particular
+   * target environment. This allows for data to be shared across different
+   * target environments within the same session.
+   */
+  private get globalStore() {
+    return TargetEnvStore.getStore(this.sessionId)
+  }
+
+  /**
    * @param effect The effect for the current context.
    * @param user The user that triggered the effect.
    * @param session The session for the current context.
@@ -198,6 +215,8 @@ export default class TargetEnvContext {
       effect: this.effect.toTargetEnvContext(),
       mission: this.mission.toTargetEnvContext(),
       user: this.user.toTargetEnvContext(),
+      localStore: this.localStore,
+      globalStore: this.globalStore,
       sendOutput: this.sendOutput,
       blockNode: this.blockNode,
       unblockNode: this.unblockNode,
@@ -496,6 +515,18 @@ export type TTargetEnvExposedContext = {
    * The user who triggered the effect.
    */
   readonly user: TTargetEnvExposedUser
+  /**
+   * A store that is unique to the session and target environment.
+   * This can be used to store and retrieve temporary, random-access
+   * data.
+   */
+  readonly localStore: TargetEnvStore
+  /**
+   * A store that is unique to the session, but not to any particular
+   * target environment. This allows for data to be shared across different
+   * target environments within the same session.
+   */
+  readonly globalStore: TargetEnvStore
   /**
    * Sends the message to the output panel within a session.
    * @param message The output's message.

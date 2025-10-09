@@ -3,6 +3,8 @@ import UserModel, { hashPassword } from 'metis/server/database/models/users'
 import { StatusError } from 'metis/server/http'
 import { databaseLogger } from 'metis/server/logging'
 import ServerLogin from 'metis/server/logins'
+import ServerWebSession from 'metis/server/logins/web-sessions'
+import SessionServer from 'metis/server/sessions'
 import { TUserJson } from 'metis/users'
 import ApiResponse from '../../library/response'
 import { preventSystemUserWrite } from '../../library/users'
@@ -76,7 +78,17 @@ const updateUser = async (request: Request, response: Response) => {
     // If the user is required to be logged out, make sure the
     // client is notified so that the user is logged out.
     if (foreignUserLogin && requiresLogout) {
-      await ServerLogin.destroy(request, foreignUserLogin.userId)
+      if (foreignUserLogin.metisSessionId) {
+        SessionServer.quit(
+          foreignUserLogin.metisSessionId,
+          foreignUserLogin.userId,
+        )
+      }
+      // Destroy the login.
+      ServerLogin.destroy(foreignUserLogin.userId)
+      // Destroy the session in the store.
+      await ServerWebSession.destroy(foreignUserLogin.webSessionId)
+      // Notify the client about the logout.
       foreignUserLogin.client?.emit('logout-user-update', { data: {} })
     }
     // Log the successful update of the user.

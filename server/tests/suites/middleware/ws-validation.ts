@@ -5,6 +5,7 @@ import {
   TResponseEvent,
   TServerEvents,
 } from 'metis/connect/data'
+import MetisServer from 'metis/server'
 import UserModel from 'metis/server/database/models/users'
 import { testLogger } from 'metis/server/logging'
 import SessionServer from 'metis/server/sessions'
@@ -40,7 +41,9 @@ export default function WsValidation(): Mocha.Suite {
     // Extract the Session ID cookie from the response.
     const cookies = response.header['set-cookie']
     let sidCookie: string = ''
-    sidCookie = cookies.find((cookie: any) => cookie.startsWith('connect.sid='))
+    sidCookie = cookies.find((cookie: any) =>
+      cookie.startsWith(`${MetisServer.WEB_SESSION_COOKIE_NAME}=`),
+    )
     if (!sidCookie) {
       throw Error('Failed to retrieve login ID cookie.')
     }

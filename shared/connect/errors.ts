@@ -123,6 +123,11 @@ export class ServerEmittedError extends WSEmittedError {
    */
   public static readonly CODE_SWITCHED_CLIENT: number = 10005
   /**
+   * Code for when a client is disconnected due to a forceful logout by the user
+   * from another client (such as a different tab in a browser).
+   */
+  public static readonly CODE_FORCE_DISCONNECT_SELF: number = 10006
+  /**
    * Code for a client requesting to join a session that cannot be found.
    */
   public static readonly CODE_SESSION_NOT_FOUND: number = 20000

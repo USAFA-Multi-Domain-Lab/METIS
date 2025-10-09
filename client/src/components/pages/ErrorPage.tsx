@@ -1,6 +1,8 @@
 import { useGlobalContext } from 'src/context/global'
+import { compute } from 'src/toolbox'
 import { useListComponent } from 'src/toolbox/hooks'
 import { TPage_P } from '.'
+import ClassList from '../../../../shared/toolbox/html/class-lists'
 import { TAppError } from '../App'
 import { ButtonText } from '../content/user-controls/buttons/ButtonText'
 import './ErrorPage.scss'
@@ -13,15 +15,7 @@ export default function ErrorPage({}: IErrorPage): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
 
   const globalContext = useGlobalContext()
-
-  /* -- VARIABLES -- */
-
-  // Extract error from globalContext.
-  let error: TAppError = globalContext.error[0] ?? {
-    message: 'Unexpected error. Please try again or contact an administrator.',
-  }
-  // Resolve button props from solutions passed in error object.
-  let solutions = error.solutions ?? []
+  const [backgroundLoaded] = globalContext.backgroundLoaded
 
   /* -- FUNCTIONS -- */
 
@@ -32,6 +26,35 @@ export default function ErrorPage({}: IErrorPage): JSX.Element | null {
     window.location.href = '/'
   }
 
+  /* -- COMPUTED -- */
+
+  /**
+   * The error object extracted from global context or a default error.
+   */
+  const error = compute<TAppError>(
+    () =>
+      globalContext.error[0] ?? {
+        message:
+          'Unexpected error. Please try again or contact an administrator.',
+      },
+  )
+
+  /**
+   * The solution button props resolved from the error object.
+   */
+  const solutions = compute<any[]>(() => error.solutions ?? [])
+
+  /**
+   * Classes to apply to the root element.
+   */
+  const rootClasses = compute<ClassList>(() =>
+    new ClassList('ErrorPage', 'Page').switch(
+      'BackgroundImageLarge',
+      'BackgroundImageSmall',
+      backgroundLoaded,
+    ),
+  )
+
   /* -- RENDER -- */
 
   // Create a list component to render
@@ -39,7 +62,7 @@ export default function ErrorPage({}: IErrorPage): JSX.Element | null {
   const Solutions = useListComponent(ButtonText, solutions, 'text')
 
   return (
-    <div className='ErrorPage Page'>
+    <div className={rootClasses.value}>
       <div className='Message'>{error.message}</div>
       <div className='Buttons'>
         <ButtonText

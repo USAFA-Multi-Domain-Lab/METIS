@@ -21,8 +21,9 @@ The target-effect system is METIS's framework for creating reusable, configurabl
 3. **[Creating Target Environments](guides/creating-target-environments.md)** → Learn the structure
 4. **[Defining Targets](guides/defining-targets.md)** → Build your first targets
 5. **[Basic Example](examples/basic-target.md)** → See it in action
-6. **[Argument Types](guides/argument-types.md)** → Create better UIs
-7. **[Advanced Example](examples/complex-target.md)** → Learn advanced patterns
+6. **[Data Stores](guides/data-stores.md)** → Cache and share data between scripts
+7. **[Argument Types](guides/argument-types.md)** → Create better UIs
+8. **[Advanced Example](examples/complex-target.md)** → Learn advanced patterns
 
 ### Integrating External Systems?
 
@@ -42,6 +43,7 @@ The target-effect system is METIS's framework for creating reusable, configurabl
 
 - **[Creating Target Environments](guides/creating-target-environments.md)** - Project setup and structure
 - **[Defining Targets](guides/defining-targets.md)** - Creating operations and business logic
+- **[Data Stores](guides/data-stores.md)** - Caching and sharing data between script executions
 - **[External API Integration](guides/external-api-integration.md)** - Connecting to external systems
 - **[Argument Types](guides/argument-types.md)** - Building typed user interfaces
 - **[Migrations](guides/migrations.md)** - Version management and upgrades

@@ -654,7 +654,6 @@ export type TList_P<TItem extends MetisComponent> = {
   /**
    * Gets the permissions for the item's button.
    * @param button The button for which to get the permissions.
-   * @param item The item for which to get the permissions.
    * @default () => []
    */
   getItemButtonPermissions?: TGetItemButtonPermission<TItem>
