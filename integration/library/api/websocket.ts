@@ -2,7 +2,7 @@ import BooleanToolbox from 'metis/toolbox/booleans'
 import WebSocket, { ClientOptions } from 'ws'
 import z from 'zod'
 import { Api, apiOptionsSchema } from '.'
-import { AnyObject } from '../toolbox/objects'
+import { AnyObject } from '../toolbox'
 
 /**
  * The WebSocket API class is used to establish real-time communication with target environments.

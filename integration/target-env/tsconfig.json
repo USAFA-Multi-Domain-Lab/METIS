@@ -3,8 +3,7 @@
   "compilerOptions": {
     "paths": {
       "metis/target-environments": ["../../shared/target-environments"],
-      "metis/target-environments/*": ["../../shared/target-environments/*"],
-      "library/toolbox": ["../library/toolbox/index"]
+      "metis/target-environments/*": ["../../shared/target-environments/*"]
     }
   }
 }

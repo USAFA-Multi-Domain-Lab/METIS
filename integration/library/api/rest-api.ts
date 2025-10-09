@@ -3,7 +3,7 @@ import https from 'https'
 import BooleanToolbox from 'metis/toolbox/booleans'
 import z from 'zod'
 import { Api, apiOptionsSchema } from '.'
-import { AnyObject } from '../toolbox/objects'
+import { AnyObject } from '../toolbox'
 
 /**
  * The RESTful API class is used to make HTTP requests to target environments.
