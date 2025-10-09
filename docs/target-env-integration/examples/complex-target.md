@@ -411,6 +411,25 @@ When implementing similar patterns in production:
 - Use encryption for sensitive data transmission
 - Implement proper authentication for API calls
 
+### **State Management with Data Stores**
+
+For production scenarios requiring state persistence or cross-target coordination, utilize **data stores**:
+
+```typescript
+script: async (context) => {
+  // Store data for the current session
+  await context.localStore.set('lastMessageId', messageId)
+
+  // Retrieve previously stored data
+  const lastId = await context.localStore.get('lastMessageId')
+
+  // Share data across all sessions (global scope)
+  await context.globalStore.set('systemStatus', 'active')
+}
+```
+
+**Learn more:** See the **[Data Stores Guide](../guides/data-stores.md)** and **[Context API Reference](../references/context-api.md)** for complete usage patterns, caching strategies, and cross-target coordination examples.
+
 ## Extending This Example
 
 ### **Add More Dependency Types**
@@ -496,5 +515,6 @@ script: async (context) => {
 ## Related Documentation
 
 - **[Basic Target Example](basic-target.md)** - Start here for foundation concepts
+- **[Data Stores Guide](../guides/data-stores.md)** - Session state management and caching
 - **[Defining Targets Guide](../guides/defining-targets.md)** - Target development patterns
 - **[Schema Documentation](../references/schemas.md)** - TypeScript interfaces and types

@@ -138,13 +138,22 @@ const target = new TargetSchema({
 
 #### `script` (function, required)
 
-The execution function that performs the target's action. This function receives context and arguments, and returns void.
+The execution function that performs the target's action. This function receives a context object with properties for accessing effect data, mission information, and methods for interacting with METIS. The context also provides data stores for caching and sharing data between script executions within a session.
 
 ```typescript
 const target = new TargetSchema({
   script: async (context, args) => {
+    // Access effect arguments
+    const { username, email } = context.effect.args
+
+    // Use data stores for caching or session state
+    const userCache = context.localStore.use('userCache', new Map())
+
     // Your target logic here
     await performAction(args)
+
+    // Send output to mission interface
+    context.sendOutput('User created successfully')
   },
   // ... other properties
 })
@@ -329,5 +338,7 @@ export default deleteUserTarget
 
 - **[Creating Target Environments](../guides/creating-target-environments.md)** - Step-by-step guide for building environments
 - **[Defining Targets](../guides/defining-targets.md)** - Best practices for target definition
+- **[Data Stores](../guides/data-stores.md)** - Caching and sharing data between script executions
+- **[Context API](./context-api.md)** - Complete context object reference and data store API
 - **[Argument Types](../guides/argument-types.md)** - Working with target arguments
 - **[REST API](./rest-api.md)** - HTTP client for target implementations

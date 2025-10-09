@@ -19,6 +19,11 @@ New to target environment development? Follow this path:
 
 ## 🛠️ Advanced Development
 
+- **[Data Stores](data-stores.md)** - Cache and share data between script executions
+  - Session-scoped data persistence
+  - Local vs global store patterns  
+  - Performance optimization techniques
+
 - **[Target-Effect Conversion](target-effect-conversion.md)** - How targets become effects
   - Understanding the conversion process
   - Argument binding and validation

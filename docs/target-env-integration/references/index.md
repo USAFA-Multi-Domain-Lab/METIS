@@ -7,6 +7,7 @@ Complete API documentation and technical specifications for target environment d
 ### **[Context API](context-api.md)** - Your main runtime interface
 Everything available during target execution:
 - Context object properties and methods
+- Data stores for caching and state management
 - File system and network access
 - WebSocket communication and state management
 

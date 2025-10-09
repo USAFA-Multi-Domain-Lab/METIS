@@ -12,31 +12,32 @@ The Target-Effect system allows METIS to interact with external systems through 
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     METIS APPLICATION                           │
+│                      METIS APPLICATION                          │
 ├─────────────────────────────────────────────────────────────────┤
-│  EXECUTION LAYER                                               │
-│  • Execute effects during missions                             │
-│  • Secure context creation                                     │
-│  • Real-time feedback                                          │
+│  EXECUTION LAYER                                                │
+│  • Execute effects during missions                              │
+│  • Secure context creation                                      │
+│  • Session-scoped data persistence                              │
+│  • Real-time feedback                                           │
 ├─────────────────────────────────────────────────────────────────┤
-│  REGISTRY LAYER                                                │
-│  • Auto-discover integrations                                  │
-│  • Build target/environment registry                           │
-│  • Share between client/server                                 │
+│  REGISTRY LAYER                                                 │
+│  • Auto-discover integrations                                   │
+│  • Build target/environment registry                            │
+│  • Share between client/server                                  │
 ├─────────────────────────────────────────────────────────────────┤
-│  INTEGRATION LAYER                                             │
-│  • Target environment definitions                              │
-│  • Target implementations                                      │
-│  • External system connections                                 │
+│  INTEGRATION LAYER                                              │
+│  • Target environment definitions                               │
+│  • Target implementations                                       │
+│  • External system connections                                  │
 └─────────────────────────────────────────────────────────────────┘
                                 │
                                 ▼
-                    ┌─────────────────────┐
-                    │  EXTERNAL SYSTEMS   │
-                    │  • APIs             │
-                    │  • Databases        │
-                    │  • Services         │
-                    └─────────────────────┘
+                     ┌─────────────────────┐
+                     │  EXTERNAL SYSTEMS   │
+                     │  • APIs             │
+                     │  • Databases        │
+                     │  • Services         │
+                     └─────────────────────┘
 ```
 
 ## How It Works

@@ -7,8 +7,8 @@ This reference documents the complete Context API available to target scripts, p
 - [Overview](#overview)
 - [🏗️ Context Structure](#️-context-structure)
 - [📋 Context Properties](#-context-properties)
-- [🔧 Context Methods](#-context-methods)
 - [📤 Output Methods](#-output-methods)
+- [📦 Data Store Methods](#-data-store-methods)
 - [🎯 Node Control Methods](#-node-control-methods)
 - [⚡ Action Modification Methods](#-action-modification-methods)
 - [💰 Resource Management Methods](#-resource-management-methods)
@@ -48,6 +48,8 @@ interface TTargetEnvExposedContext {
   readonly effect: TTargetEnvExposedEffect
   readonly mission: TTargetEnvExposedMission
   readonly user: TTargetEnvExposedUser
+  readonly localStore: TTargetEnvStore
+  readonly globalStore: TTargetEnvStore
 
   // Methods
   sendOutput: Function
@@ -153,6 +155,53 @@ script: async (ctx) => {
 }
 ```
 
+### ctx.localStore
+
+Provides session-scoped data storage specific to the current target environment. Data persists for the duration of the session and is isolated per target environment.
+
+**Usage Examples:**
+
+```ts
+script: async (ctx) => {
+  // Initialize or retrieve a counter
+  const counter = ctx.localStore.use('requestCounter', 0)
+
+  counter.value += 1
+  ctx.sendOutput(`Request #${counter.value} processed`)
+
+  // Cache API responses
+  const apiCache = ctx.localStore.use<Map<string, any>>('apiCache', new Map())
+
+  if (!apiCache.value.has('userList')) {
+    const users = await fetchUsers()
+    apiCache.value.set('userList', users)
+  }
+}
+```
+
+### ctx.globalStore
+
+Provides session-scoped data storage shared across all target environments. Enables communication and state sharing between different targets within the same session.
+
+**Usage Examples:**
+
+```ts
+script: async (ctx) => {
+  // Share session state across target environments
+  const sessionState = ctx.globalStore.use('missionState', {
+    phase: 'planning',
+    objectivesComplete: 0,
+    startTime: Date.now(),
+  })
+
+  // Update shared state
+  sessionState.value.phase = 'execution'
+  sessionState.value.objectivesComplete += 1
+
+  ctx.sendOutput(`Mission phase: ${sessionState.value.phase}`)
+}
+```
+
 ## 📤 Output Methods
 
 ### ctx.sendOutput()
@@ -201,6 +250,114 @@ script: async (ctx) => {
   // Hardcoded keys are also valid when you know the exact force
   ctx.sendOutput('Direct communication to blue team', {
     forceKey: 'blue-team',
+  })
+}
+```
+
+## 📦 Data Store Methods
+
+### ctx.localStore.use()
+
+Retrieves or initializes data in the local store (session and target-environment scoped).
+
+```ts
+use<T>(key: string, defaultValue: T): { value: T }
+```
+
+**Parameters:**
+
+- `key` (string) - Unique identifier for the stored data
+- `defaultValue` (T) - Value to use if key doesn't exist
+
+**Returns:**
+
+- Object with `value` property that can be read and modified
+
+**Examples:**
+
+```ts
+script: async (ctx) => {
+  // Initialize counter
+  const requestCounter = ctx.localStore.use('requests', 0)
+  requestCounter.value += 1
+
+  // Cache expensive API responses
+  const cache = ctx.localStore.use<Map<string, any>>('apiCache', new Map())
+
+  const cacheKey = `data_${args.userId}`
+  if (!cache.value.has(cacheKey)) {
+    const apiData = await fetchExpensiveData(args.userId)
+    cache.value.set(cacheKey, apiData)
+  }
+
+  // Configuration that persists across executions
+  const config = ctx.localStore.use('settings', {
+    retryAttempts: 3,
+    timeout: 5000,
+  })
+
+  if (args.enableDebugMode) {
+    config.value.timeout = 30000
+  }
+}
+```
+
+### ctx.globalStore.use()
+
+Retrieves or initializes data in the global store (session-wide, shared across target environments).
+
+```ts
+use<T>(key: string, defaultValue: T): { value: T }
+```
+
+**Parameters:**
+
+- `key` (string) - Unique identifier for the stored data
+- `defaultValue` (T) - Value to use if key doesn't exist
+
+**Returns:**
+
+- Object with `value` property that can be read and modified
+
+**Examples:**
+
+```ts
+script: async (ctx) => {
+  // Share mission state across different target environments
+  const missionState = ctx.globalStore.use('missionProgress', {
+    phase: 'planning',
+    tasksComplete: 0,
+    startTime: Date.now(),
+  })
+
+  // Update shared state
+  missionState.value.phase = 'execution'
+  missionState.value.tasksComplete += 1
+
+  // Cross-target authentication state
+  const authState = ctx.globalStore.use('authentication', {
+    isAuthenticated: false,
+    sessionToken: null,
+  })
+
+  if (authState.value.isAuthenticated) {
+    ctx.sendOutput('Using existing authentication')
+  } else {
+    // Perform authentication...
+    authState.value.isAuthenticated = true
+    authState.value.sessionToken = 'new-token'
+  }
+
+  // Multi-step workflow coordination
+  const deploymentState = ctx.globalStore.use('deployment', {
+    steps: [],
+    currentStep: 0,
+  })
+
+  deploymentState.value.steps.push({
+    name: ctx.effect.name,
+    completed: true,
+    timestamp: Date.now(),
   })
 }
 ```
@@ -902,6 +1059,7 @@ export default new TargetSchema({
 ### 📋 Essential Guides
 
 - **[Defining Targets](../guides/defining-targets.md)** - Target schema and script creation
+- **[Data Stores](../guides/data-stores.md)** - Caching and sharing data between script executions
 - **[Target-Effect Conversion](../guides/target-effect-conversion.md)** - Argument handling and extraction
 - **[Argument Types](../guides/argument-types.md)** - Mission component argument usage
 

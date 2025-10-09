@@ -10,6 +10,7 @@ This guide covers everything you need to know about creating individual targets 
 - [Target Schema Properties](#target-schema-properties)
 - [The Script Function](#the-script-function)
 - [Working with Arguments](#working-with-arguments)
+- [Working with Data Stores](#working-with-data-stores)
 - [🔗 External API Integration](#-external-api-integration)
 - [🔄 Migrations](#-migrations)
 - [📚 Examples](#-examples)
@@ -129,6 +130,7 @@ script: async (ctx) => {
 | Category          | Methods                                                                | Purpose                  |
 | ----------------- | ---------------------------------------------------------------------- | ------------------------ |
 | **Output**        | `sendOutput()`                                                         | Send output to users     |
+| **Data Stores**   | `localStore.use()`, `globalStore.use()`                                | Cache and share data     |
 | **Node Control**  | `blockNode()`, `unblockNode()`, `openNode()`                           | Control node states      |
 | **Action Tuning** | `modifySuccessChance()`, `modifyProcessTime()`, `modifyResourceCost()` | Modify action properties |
 | **Resources**     | `modifyResourcePool()`                                                 | Adjust force resources   |
@@ -257,6 +259,106 @@ script: async (ctx) => {
 > - **[Target-Effect Conversion Guide](target-effect-conversion.md)** - Guide on how target arguments are converted to effect arguments and how to extract them to use in target scripts
 > - **[Basic Target Example](../examples/basic-target.md)** - Simple argument patterns
 > - **[Complex Target Example](../examples/complex-target.md)** - Advanced argument usage
+
+## Working with Data Stores
+
+METIS provides data stores that allow you to cache and share data between target executions within a session. This enables stateful operations, API response caching, and cross-target communication.
+
+### Local Store (Target Environment Scoped)
+
+Use the local store for data that should persist within a specific target environment:
+
+```ts
+script: async (ctx) => {
+  const { userId } = ctx.effect.args
+
+  // Cache API responses to avoid repeated calls
+  const userCache = ctx.localStore.use<Map<string, any>>('userCache', new Map())
+
+  if (userCache.value.has(userId)) {
+    ctx.sendOutput('Using cached user data')
+    return userCache.value.get(userId)
+  }
+
+  // Fetch and cache user data
+  const userData = await fetchUserFromAPI(userId)
+  userCache.value.set(userId, userData)
+
+  ctx.sendOutput('User data cached for future requests')
+  return userData
+}
+```
+
+### Global Store (Session Wide)
+
+Use the global store for data that should be shared across different target environments:
+
+```ts
+script: async (ctx) => {
+  const { operationStatus } = ctx.effect.args
+
+  // Share mission state across all target environments
+  const missionState = ctx.globalStore.use('missionState', {
+    phase: 'planning',
+    operationsComplete: 0,
+    startTime: Date.now(),
+  })
+
+  // Update shared state
+  missionState.value.operationsComplete += 1
+  missionState.value.phase = operationStatus
+
+  ctx.sendOutput(`Mission phase: ${missionState.value.phase}`)
+  ctx.sendOutput(
+    `Operations completed: ${missionState.value.operationsComplete}`,
+  )
+}
+```
+
+### Common Data Store Patterns
+
+**Request Counter for Rate Limiting:**
+
+```ts
+script: async (ctx) => {
+  const requestTracker = ctx.localStore.use('requests', {
+    count: 0,
+    lastReset: Date.now(),
+  })
+
+  // Reset counter every minute
+  if (Date.now() - requestTracker.value.lastReset > 60000) {
+    requestTracker.value.count = 0
+    requestTracker.value.lastReset = Date.now()
+  }
+
+  if (requestTracker.value.count >= 10) {
+    throw new Error('Rate limit exceeded: max 10 requests per minute')
+  }
+
+  requestTracker.value.count += 1
+  // Proceed with request...
+}
+```
+
+**Cross-Target Communication:**
+
+```ts
+script: async (ctx) => {
+  // Target A sets up authentication
+  const authState = ctx.globalStore.use('auth', { token: null, expires: 0 })
+
+  if (Date.now() > authState.value.expires) {
+    authState.value.token = await getAuthToken()
+    authState.value.expires = Date.now() + 3600000 // 1 hour
+  }
+
+  // Now Target B can use the same token
+  return authState.value.token
+}
+```
+
+> 📘 **For comprehensive data store patterns and examples**, see the **[Data Stores Guide](data-stores.md)** which covers caching strategies, performance optimization, and advanced usage patterns.
 
 ## 🔗 External API Integration
 
@@ -406,6 +508,7 @@ integration/target-env/my-service/
 
 ### 📋 Essential Guides
 
+- **[Data Stores](data-stores.md)** - Session state management and caching patterns
 - **[Argument Types](argument-types.md)** - Complete argument system reference
 - **[Creating Target Environments](creating-target-environments.md)** - Environment setup guide
 - **[Tips & Conventions](tips-and-conventions.md)** - Best practices and naming conventions
