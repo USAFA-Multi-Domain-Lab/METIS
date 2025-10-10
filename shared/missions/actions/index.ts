@@ -2,7 +2,11 @@ import Mission, { TMission } from '..'
 import { TCreateJsonType, TMetisBaseComponents } from '../../'
 import StringToolbox from '../../toolbox/strings'
 import MissionComponent, { TMissionComponentDefect } from '../component'
-import { TEffectExecutionTriggeredJson } from '../effects'
+import {
+  TEffectExecutionTriggered,
+  TEffectExecutionTriggeredJson,
+  TEffectHost,
+} from '../effects'
 import { TForce } from '../forces'
 import { TNode, TNodeJsonOptions } from '../nodes'
 
@@ -10,8 +14,11 @@ import { TNode, TNodeJsonOptions } from '../nodes'
  * An action that can be executed on a mission node, causing a certain effect.
  */
 export default abstract class MissionAction<
-  T extends TMetisBaseComponents = TMetisBaseComponents,
-> extends MissionComponent<T, MissionAction<T>> {
+    T extends TMetisBaseComponents = TMetisBaseComponents,
+  >
+  extends MissionComponent<T, MissionAction<T>>
+  implements TEffectHost<T, 'executionTriggeredEffect'>
+{
   // Implemented
   public get mission(): TMission<T> {
     return this.node.mission
@@ -47,10 +54,16 @@ export default abstract class MissionAction<
    */
   public localKey: string
 
-  /**
-   * The effects that can be applied to the targets.
-   */
+  // Implemented
+  public effectType: 'executionTriggeredEffect' = 'executionTriggeredEffect'
+
+  // Implemented
   public effects: T['executionTriggeredEffect'][]
+
+  // Implemented
+  public get validTriggers(): TEffectExecutionTriggered[] {
+    return MissionAction.EFFECT_TRIGGERS
+  }
 
   /**
    * The amount of time it takes to execute the action.
@@ -313,6 +326,12 @@ export default abstract class MissionAction<
     data: TEffectExecutionTriggeredJson[],
   ): T['executionTriggeredEffect'][]
 
+  // Implemented
+  public abstract createEffect(
+    target: T['target'],
+    trigger: TEffectExecutionTriggered,
+  ): T['executionTriggeredEffect']
+
   /**
    * Converts the action to JSON.
    * @param options The options for converting the action to JSON.
@@ -485,6 +504,14 @@ export default abstract class MissionAction<
    * The maximum length allowed for an action's name.
    */
   public static readonly MAX_NAME_LENGTH: number = 175
+
+  /**
+   * Triggers that can cause effects during the action-execution
+   * lifecycle.
+   */
+  public static get EFFECT_TRIGGERS(): TEffectExecutionTriggered[] {
+    return ['execution-initiation', 'execution-success', 'execution-failure']
+  }
 
   /**
    * Default properties set when creating a new MissionAction object.

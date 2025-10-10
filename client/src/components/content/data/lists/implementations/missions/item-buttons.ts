@@ -6,7 +6,7 @@ import SessionClient from 'src/sessions'
 import { useRequireLogin } from 'src/toolbox/hooks'
 
 /**
- * Yields callback functions which can be used for
+ * Yields mission-related callback functions which can be used for
  * the {@link ButtonSvg.onClick} callback for a button.
  */
 export function useMissionItemButtonCallbacks(

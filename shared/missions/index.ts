@@ -7,7 +7,11 @@ import User, { TCreatedByJson } from '../users'
 import { TAction, TMissionActionJson } from './actions'
 import { TExecution } from './actions/executions'
 import MissionComponent, { TMissionComponentDefect } from './component'
-import { TEffectSessionTriggered, TEffectSessionTriggeredJson } from './effects'
+import {
+  TEffectHost,
+  TEffectSessionTriggered,
+  TEffectSessionTriggeredJson,
+} from './effects'
 import { TMissionFileJson } from './files'
 import {
   MissionForce,
@@ -26,8 +30,11 @@ import MissionPrototype, {
  * This represents a mission for a student to complete.
  */
 export default abstract class Mission<
-  T extends TMetisBaseComponents = TMetisBaseComponents,
-> extends MissionComponent<T, Mission<T>> {
+    T extends TMetisBaseComponents = TMetisBaseComponents,
+  >
+  extends MissionComponent<T, Mission<T>>
+  implements TEffectHost<T, 'sessionTriggeredEffect'>
+{
   /**
    * The mission associated with the component.
    * @note This is only used to properly implement `TMissionComponent`.
@@ -133,12 +140,16 @@ export default abstract class Mission<
    */
   public files: T['missionFile'][]
 
-  /**
-   * Effects that can be applied at a high-level in
-   * the mission, such as aiding in the setup or teardown
-   * of a session.
-   */
+  // Implemented
   public effects: T['sessionTriggeredEffect'][]
+
+  // Implemented
+  public effectType: 'sessionTriggeredEffect' = 'sessionTriggeredEffect'
+
+  // Implemented
+  public get validTriggers(): TEffectSessionTriggered[] {
+    return Mission.EFFECT_TRIGGERS
+  }
 
   /**
    * The root prototype of the mission.
@@ -212,6 +223,7 @@ export default abstract class Mission<
       idExposure = true,
       forceExposure = Mission.DEFAULT_FORCE_EXPOSURE,
       fileExposure = Mission.DEFAULT_FILE_EXPOSURE,
+      rootEffectsExposure = Mission.DEFAULT_ROOT_EFFECTS_EXPOSURE,
     } = options
     let force: TForce<T> | undefined
     // Predefine limited JSON.
@@ -298,6 +310,15 @@ export default abstract class Mission<
       json.files = filesToAdd.map((file) => file.toJson())
     }
 
+    /**
+     * Adds root effects to the JSON.
+     */
+    const addRootEffects = () => {
+      json.effects = this.effects.map((effect) =>
+        effect.toSessionTriggeredJson(),
+      )
+    }
+
     // Add createdBy and createdByUsername to the JSON,
     // if not null.
     if (this.createdBy) json.createdBy = this.createdBy.toCreatedByJson()
@@ -335,6 +356,16 @@ export default abstract class Mission<
       case 'accessible':
         force = determineForce(fileExposure.forceId)
         addFiles(force)
+        break
+      case 'none':
+      default:
+        break
+    }
+
+    // Expose root effects in the JSON.
+    switch (rootEffectsExposure.expose) {
+      case 'all':
+        addRootEffects()
         break
       case 'none':
       default:
@@ -496,6 +527,12 @@ export default abstract class Mission<
    * @param data The effect data to parse.
    */
   protected abstract importEffects(data: TEffectSessionTriggeredJson[]): void
+
+  // Implemented
+  public abstract createEffect(
+    target: T['target'],
+    trigger: TEffectSessionTriggered,
+  ): T['sessionTriggeredEffect']
 
   /**
    * @param prototypeId The ID of the prototype to get.
@@ -716,6 +753,16 @@ export default abstract class Mission<
    * a mission with the `toJson` method.
    */
   public static get DEFAULT_FILE_EXPOSURE(): TFileExposure {
+    return {
+      expose: 'all',
+    }
+  }
+
+  /**
+   * The default root exposure options when exporting
+   * a mission with the `toJson` method.
+   */
+  public static get DEFAULT_ROOT_EFFECTS_EXPOSURE(): TRootEffectsExposure {
     return {
       expose: 'all',
     }
@@ -1062,6 +1109,13 @@ export type TMissionJsonOptions = {
    * @default { expose: 'all' }
    */
   fileExposure?: TFileExposure
+  /**
+   * Whether or not to expose the effects that are stored
+   * at the root level of the mission, responsible for
+   * handling session-life-cycle events.
+   * @default { expose: 'all' }
+   */
+  rootEffectsExposure?: TRootEffectsExposure
 }
 
 /**
@@ -1111,6 +1165,15 @@ export type TFileExposure =
   | { expose: 'all' }
   | { expose: 'accessible'; forceId: string }
   | { expose: 'none' }
+
+/**
+ * Options for `TMissionJsonOptions.rootEffectsExposure`.
+ * @option 'all'
+ * All root-level effects are exposed.
+ * @option 'none'
+ * No root-level effects are exposed.
+ */
+export type TRootEffectsExposure = { expose: 'all' } | { expose: 'none' }
 
 /**
  * Defines the type for the `path` property

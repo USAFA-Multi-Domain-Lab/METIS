@@ -74,7 +74,7 @@ export default function ArgMissionComponent({
         return ClientMissionAction.createDetached(
           StringToolbox.generateRandomId(),
           'No actions available.',
-          defaultNode,
+          effect.sourceNode ? effect.sourceNode : mission.nodes[0],
         )
       }
     },

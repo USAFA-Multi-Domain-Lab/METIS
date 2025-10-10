@@ -5,11 +5,7 @@ import session, { Session, SessionData } from 'express-session'
 import fs from 'fs'
 import http, { Server as HttpServer } from 'http'
 import https from 'https'
-import { TMetisBaseComponents } from 'metis/index'
-import {
-  TTriggerDataExecution,
-  TTriggerDataSession,
-} from 'metis/missions/effects'
+import { TEffectType } from 'metis/missions/effects'
 import MetisDatabase from 'metis/server/database'
 import MetisRouter from 'metis/server/http/router'
 import { expressLogger, expressLoggingHandler } from 'metis/server/logging'
@@ -617,7 +613,7 @@ declare module 'express-session' {
  * @note This is used for all server-side METIS
  * component classes.
  */
-export interface TMetisServerComponents extends TMetisBaseComponents {
+export type TMetisServerComponents = {
   session: SessionServer
   member: ServerSessionMember
   user: ServerUser
@@ -633,12 +629,8 @@ export interface TMetisServerComponents extends TMetisBaseComponents {
   action: ServerMissionAction
   execution: ServerActionExecution
   outcome: ServerExecutionOutcome
-  sessionTriggeredEffect: ServerEffect<
-    TTriggerDataSession<TMetisServerComponents>
-  >
-  executionTriggeredEffect: ServerEffect<
-    TTriggerDataExecution<TMetisServerComponents>
-  >
+} & {
+  [TType in TEffectType]: ServerEffect<TType>
 }
 
 /**

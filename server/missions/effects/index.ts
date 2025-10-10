@@ -1,9 +1,11 @@
 import Effect, {
+  TEffectContextExecution,
+  TEffectContextSession,
+  TEffectExecutionTriggered,
   TEffectExecutionTriggeredJson,
+  TEffectSessionTriggered,
   TEffectSessionTriggeredJson,
-  TEffectTriggerData,
-  TTriggerDataExecution,
-  TTriggerDataSession,
+  TEffectType,
 } from 'metis/missions/effects'
 import { TMetisServerComponents } from 'metis/server'
 import ServerTargetEnvironment from 'metis/server/target-environments'
@@ -20,8 +22,8 @@ import ServerMissionAction from '../actions'
  * applied to a target.
  */
 export default class ServerEffect<
-  TTriggerData extends TEffectTriggerData<TMetisServerComponents>,
-> extends Effect<TMetisServerComponents, TTriggerData> {
+  TType extends TEffectType = TEffectType,
+> extends Effect<TMetisServerComponents, TType> {
   // Implemented
   protected determineTarget(
     targetId: string,
@@ -112,6 +114,92 @@ export default class ServerEffect<
   }
 
   /**
+   * @param target The target for the new effect.
+   * @param mission The mission that will host the effect.
+   * @returns A new effect with the provided target for
+   * a session, with session-lifecycle trigger,
+   * populated with the corresponding mission and target
+   * information. Non-mission and non-target specific values
+   * will be populated with {@link ServerEffect.DEFAULT_SESSION_PROPERTIES}.
+   */
+  public static createBlankSessionEffect(
+    target: ServerTarget,
+    mission: ServerMission,
+    trigger: TEffectSessionTriggered,
+  ): ServerEffect<'sessionTriggeredEffect'> {
+    return new ServerEffect(
+      ServerEffect.DEFAULT_SESSION_PROPERTIES._id,
+      ServerEffect.DEFAULT_SESSION_PROPERTIES.name,
+      target._id,
+      target.environment._id,
+      target.environment.version,
+      ServerEffect.DEFAULT_SESSION_PROPERTIES.description,
+      {
+        type: 'sessionTriggeredEffect',
+        trigger,
+        get sourceAction() {
+          return null
+        },
+        get sourceNode() {
+          return null
+        },
+        get sourceForce() {
+          return null
+        },
+        sourceMission: mission,
+        get host() {
+          return this.sourceMission
+        },
+      },
+      ServerEffect.DEFAULT_SESSION_PROPERTIES.args,
+      mission.generateEffectKey(),
+    )
+  }
+
+  /**
+   * @param target The target for the new effect.
+   * @param action The action that will host the effect.
+   * @returns A new effect with the provided target for
+   * an action, with execution-lifecycle trigger,
+   * populated with the corresponding action and target
+   * information. Non-action and non-target specific values
+   * will be populated with {@link ServerEffect.DEFAULT_EXEC_PROPERTIES}.
+   */
+  public static createBlankExecutionEffect(
+    target: ServerTarget,
+    action: ServerMissionAction,
+    trigger: TEffectExecutionTriggered,
+  ): ServerEffect<'executionTriggeredEffect'> {
+    return new ServerEffect(
+      ServerEffect.DEFAULT_EXEC_PROPERTIES._id,
+      ServerEffect.DEFAULT_EXEC_PROPERTIES.name,
+      target._id,
+      target.environment._id,
+      target.environment.version,
+      ServerEffect.DEFAULT_EXEC_PROPERTIES.description,
+      {
+        type: 'executionTriggeredEffect',
+        trigger,
+        sourceAction: action,
+        get sourceNode() {
+          return this.sourceAction.node
+        },
+        get sourceForce() {
+          return this.sourceAction.force
+        },
+        get sourceMission() {
+          return this.sourceAction.mission
+        },
+        get host() {
+          return this.sourceAction
+        },
+      },
+      ServerEffect.DEFAULT_EXEC_PROPERTIES.args,
+      action.generateEffectKey(),
+    )
+  }
+
+  /**
    * @param json The JSON from which to create the effect.
    * @param sourceMission The mission to which the effect belongs.
    * @returns The effect created from the JSON.
@@ -119,7 +207,7 @@ export default class ServerEffect<
   public static fromSessionTriggeredJson(
     json: TEffectSessionTriggeredJson,
     sourceMission: ServerMission,
-  ): ServerEffect<TTriggerDataSession<TMetisServerComponents>> {
+  ): ServerEffect<'sessionTriggeredEffect'> {
     return new ServerEffect(
       json._id,
       json.name,
@@ -127,7 +215,23 @@ export default class ServerEffect<
       json.environmentId,
       json.targetEnvironmentVersion,
       json.description,
-      { trigger: json.trigger, sourceMission },
+      {
+        type: 'sessionTriggeredEffect',
+        trigger: json.trigger,
+        get sourceAction() {
+          return null
+        },
+        get sourceNode() {
+          return null
+        },
+        get sourceForce() {
+          return null
+        },
+        sourceMission,
+        get host() {
+          return this.sourceMission
+        },
+      },
       json.args,
       json.localKey,
     )
@@ -141,7 +245,7 @@ export default class ServerEffect<
   public static fromExecutionTriggeredJson(
     json: TEffectExecutionTriggeredJson,
     sourceAction: ServerMissionAction,
-  ): ServerEffect<TTriggerDataExecution<TMetisServerComponents>> {
+  ): ServerEffect<'executionTriggeredEffect'> {
     return new ServerEffect(
       json._id,
       json.name,
@@ -149,7 +253,23 @@ export default class ServerEffect<
       json.environmentId,
       json.targetEnvironmentVersion,
       json.description,
-      { trigger: json.trigger, sourceAction },
+      {
+        type: 'executionTriggeredEffect',
+        trigger: json.trigger,
+        sourceAction,
+        get sourceNode() {
+          return this.sourceAction.node
+        },
+        get sourceForce() {
+          return this.sourceAction.force
+        },
+        get sourceMission() {
+          return this.sourceAction.mission
+        },
+        get host() {
+          return this.sourceAction
+        },
+      },
       json.args,
       json.localKey,
     )
@@ -168,13 +288,13 @@ export type TServerTargetStatus =
   | 'Error'
 
 /**
- * Server implementation of {@link TTriggerDataSession}.
+ * Server implementation of {@link TEffectContextSession}.
  */
 export type TServerTriggerDataSession =
-  TTriggerDataSession<TMetisServerComponents>
+  TEffectContextSession<TMetisServerComponents>
 
 /**
- * Server implementation of {@link TTriggerDataExecution}.
+ * Server implementation of {@link TEffectContextExecution}.
  */
 export type TServerTriggerDataExec =
-  TTriggerDataExecution<TMetisServerComponents>
+  TEffectContextExecution<TMetisServerComponents>

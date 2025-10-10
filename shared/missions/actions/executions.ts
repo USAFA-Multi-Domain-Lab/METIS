@@ -1,7 +1,6 @@
 import { TAction } from '.'
 import { TMission } from '..'
 import { MetisComponent, TCreateJsonType, TMetisBaseComponents } from '../../'
-import { TEffectExecutionTriggered } from '../effects'
 import { TNode } from '../nodes'
 import { TExecutionOutcomeJson, TOutcome, TOutcomeState } from './outcomes'
 
@@ -209,14 +208,6 @@ export default abstract class ActionExecution<
     }
     // Set the outcome.
     this._outcome = outcome
-  }
-
-  /**
-   * Triggers that can cause effects during the action-execution
-   * lifecycle.
-   */
-  public static get EFFECT_TRIGGERS(): TEffectExecutionTriggered[] {
-    return ['execution-initiation', 'execution-success', 'execution-failure']
   }
 }
 

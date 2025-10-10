@@ -6,6 +6,7 @@ import {
   TMapCompatibleNodeEvent,
 } from 'src/components/content/session/mission-map/objects/nodes'
 import { TPrototypeSlot_P } from 'src/components/content/session/mission-map/objects/PrototypeSlot'
+import ClientTarget from 'src/target-environments/targets'
 import ClientUser from 'src/users'
 import { v4 as generateHash } from 'uuid'
 import { EventManager, TListenerTargetEmittable } from '../../../shared/events'
@@ -15,7 +16,10 @@ import Mission, {
   TMissionShallowExistingJson,
 } from '../../../shared/missions'
 import MissionComponent from '../../../shared/missions/component'
-import { TEffectSessionTriggeredJson } from '../../../shared/missions/effects'
+import {
+  TEffectSessionTriggered,
+  TEffectSessionTriggeredJson,
+} from '../../../shared/missions/effects'
 import { TMissionFileJson } from '../../../shared/missions/files'
 import {
   MissionForce,
@@ -358,6 +362,16 @@ export default class ClientMission
     this.effects = data.map((datum) =>
       ClientEffect.fromSessionTriggeredJson(datum, this),
     )
+  }
+
+  // Implemented
+  public createEffect(
+    target: ClientTarget,
+    trigger: TEffectSessionTriggered,
+  ): ClientEffect<'sessionTriggeredEffect'> {
+    let effect = ClientEffect.createBlankSessionEffect(target, this, trigger)
+    this.effects.push(effect)
+    return effect
   }
 
   /**

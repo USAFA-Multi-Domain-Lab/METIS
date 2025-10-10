@@ -1,6 +1,7 @@
 import Mission, { TMissionSaveJson } from 'metis/missions'
 import {
   TEffectJson,
+  TEffectSessionTriggered,
   TEffectSessionTriggeredJson,
   TEffectTrigger,
 } from 'metis/missions/effects'
@@ -22,6 +23,7 @@ import MetisDatabase from '../database'
 import { TMetisServerComponents } from '../index'
 import { databaseLogger } from '../logging'
 import { TTargetEnvExposedMission } from '../target-environments/context'
+import ServerTarget from '../target-environments/targets'
 import ServerUser from '../users'
 import ServerEffect from './effects'
 import ServerMissionFile from './files'
@@ -107,6 +109,17 @@ export default class ServerMission extends Mission<TMetisServerComponents> {
     let effects = data.map((datum) =>
       ServerEffect.fromSessionTriggeredJson(datum, this),
     )
+    this.effects.push(...effects)
+  }
+
+  // Implemented
+  public createEffect(
+    target: ServerTarget,
+    trigger: TEffectSessionTriggered,
+  ): ServerEffect<'sessionTriggeredEffect'> {
+    let effect = ServerEffect.createBlankSessionEffect(target, this, trigger)
+    this.effects.push(effect)
+    return effect
   }
 
   /**

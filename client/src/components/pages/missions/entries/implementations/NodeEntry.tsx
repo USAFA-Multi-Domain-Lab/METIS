@@ -1,23 +1,23 @@
 import { useState } from 'react'
-import { TMetisClientComponents } from 'src'
 import List from 'src/components/content/data/lists/List'
 import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
 import If from 'src/components/content/util/If'
+import { useMissionPageContext } from 'src/components/pages/missions/context'
+import useActionItemButtonCallbacks from 'src/components/pages/missions/hooks/mission-components/actions'
 import { useGlobalContext } from 'src/context/global'
 import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { useObjectFormSync, usePostInitEffect } from 'src/toolbox/hooks'
-import MissionComponent from '../../../../../../../shared/missions/component'
 import { TNonEmptyArray } from '../../../../../../../shared/toolbox/arrays'
-import Prompt from '../../../communication/Prompt'
-import { DetailColorSelector } from '../../../form/DetailColorSelector'
-import { DetailLargeString } from '../../../form/DetailLargeString'
-import { DetailString } from '../../../form/DetailString'
-import { DetailToggle } from '../../../form/DetailToggle'
-import { TButtonText_P } from '../../../user-controls/buttons/ButtonText'
-import { TToggleLockState } from '../../../user-controls/Toggle'
+import Prompt from '../../../../content/communication/Prompt'
+import { DetailColorSelector } from '../../../../content/form/DetailColorSelector'
+import { DetailLargeString } from '../../../../content/form/DetailLargeString'
+import { DetailString } from '../../../../content/form/DetailString'
+import { DetailToggle } from '../../../../content/form/DetailToggle'
+import { TButtonText_P } from '../../../../content/user-controls/buttons/ButtonText'
+import { TToggleLockState } from '../../../../content/user-controls/Toggle'
 import Entry from '../Entry'
 
 /**
@@ -27,15 +27,18 @@ import Entry from '../Entry'
 export default function NodeEntry({
   node,
   node: { mission },
-  onDeleteActionRequest,
-  onDuplicateActionRequest,
-  onChange,
 }: TNodeEntry_P): JSX.Element | null {
   /* -- GLOBAL CONTEXT -- */
   const globalContext = useGlobalContext()
   const { notify, prompt } = globalContext.actions
 
   /* -- STATE -- */
+
+  const { onChange } = useMissionPageContext()
+  const {
+    onDuplicateRequest: onDuplicateActionRequest,
+    onDeleteRequest: onDeleteActionRequest,
+  } = useActionItemButtonCallbacks(node)
 
   const nodeState = useObjectFormSync(
     node,
@@ -398,26 +401,4 @@ export type TNodeEntry_P = {
    * The mission-node to be edited.
    */
   node: ClientMissionNode
-  /**
-   * Handles the request to delete an action.
-   */
-  onDeleteActionRequest: (
-    action: ClientMissionAction,
-    navigateBack?: boolean,
-  ) => Promise<void>
-  /**
-   * Handles the request to duplicate an action.
-   */
-  onDuplicateActionRequest: (
-    action: ClientMissionAction,
-    selectNewAction?: boolean,
-  ) => Promise<void>
-  /**
-   * A callback that will be called when a change
-   * has been made.
-   * @param node The same node passed.
-   */
-  onChange: (
-    ...components: TNonEmptyArray<MissionComponent<TMetisClientComponents, any>>
-  ) => void
 }

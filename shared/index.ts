@@ -3,10 +3,7 @@ import Mission from './missions'
 import MissionAction from './missions/actions'
 import ActionExecution from './missions/actions/executions'
 import ExecutionOutcome from './missions/actions/outcomes'
-import Effect, {
-  TTriggerDataExecution,
-  TTriggerDataSession,
-} from './missions/effects'
+import Effect, { TEffectType } from './missions/effects'
 import MissionFile from './missions/files'
 import { MissionForce } from './missions/forces'
 import MissionOutput from './missions/forces/output'
@@ -161,6 +158,10 @@ export abstract class MetisComponent {
   }
 }
 
+type TMetisEffects<T extends TMetisBaseComponents> = {
+  [TType in TEffectType]: Effect<T, TType>
+}
+
 /**
  * Base, shared registry of METIS components types.
  * @note Used as a generic argument for all base,
@@ -182,14 +183,8 @@ export type TMetisBaseComponents = {
   action: MissionAction
   execution: ActionExecution
   outcome: ExecutionOutcome
-  sessionTriggeredEffect: Effect<
-    TMetisBaseComponents,
-    TTriggerDataSession<TMetisBaseComponents>
-  >
-  executionTriggeredEffect: Effect<
-    TMetisBaseComponents,
-    TTriggerDataExecution<TMetisBaseComponents>
-  >
+} & {
+  [TType in TEffectType]: Effect<TMetisBaseComponents, TType>
 }
 
 /**

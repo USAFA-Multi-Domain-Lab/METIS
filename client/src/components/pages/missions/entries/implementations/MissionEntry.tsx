@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react'
+import Divider from 'src/components/content/form/Divider'
 import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
 import If from 'src/components/content/util/If'
-import { useMissionPageContext } from 'src/components/pages/missions/MissionPage'
+import { useMissionPageContext } from 'src/components/pages/missions/context'
 import { useGlobalContext } from 'src/context/global'
 import ClientMission from 'src/missions'
 import { ClientEffect } from 'src/missions/effects'
@@ -13,12 +14,11 @@ import {
   useRequireLogin,
   useUnmountHandler,
 } from 'src/toolbox/hooks'
-import MissionComponent, {
-  TMissionComponentDefect,
-} from '../../../../../../../shared/missions/component'
-import Tooltip from '../../../communication/Tooltip'
-import { DetailString } from '../../../form/DetailString'
-import ListOld from '../../../general-layout/ListOld'
+import { TMissionComponentDefect } from '../../../../../../../shared/missions/component'
+import Tooltip from '../../../../content/communication/Tooltip'
+import { DetailString } from '../../../../content/form/DetailString'
+import ListOld from '../../../../content/general-layout/ListOld'
+import EffectTimeline from '../../target-effects/timelines/EffectTimeline'
 import Entry from '../Entry'
 
 /**
@@ -32,7 +32,6 @@ const DEFECT_INTERVAL_TIME = 1000 // ms
  */
 export default function MissionEntry({
   mission,
-  onChange,
 }: TMissionEntry_P): JSX.Element | null {
   /* -- STATE -- */
 
@@ -40,7 +39,7 @@ export default function MissionEntry({
   const { prompt } = globalContext.actions
   const { login } = useRequireLogin()
   const { user } = login
-  const { state } = useMissionPageContext()
+  const { state, onChange } = useMissionPageContext()
   const [checkForDefects, setCheckForDefects] = state.checkForDefects
   const [defects, setDefects] = state.defects
   const [name, setName] = useState<string>(mission.name)
@@ -173,6 +172,9 @@ export default function MissionEntry({
         maxLength={ClientMission.MAX_RESOURCE_LABEL_LENGTH}
         key={`${mission._id}_resourceLabel`}
       />
+      <Divider />
+      <EffectTimeline<ClientMission> host={mission} />
+      <Divider />
       <If condition={defects.length}>
         <ListOld<TMissionComponentDefect>
           items={defects}
@@ -203,10 +205,4 @@ type TMissionEntry_P = {
    * The mission to be edited.
    */
   mission: ClientMission
-  /**
-   * A function that will be used to notify the parent
-   * component that this component has changed.
-   * @param component The component that received a change.
-   */
-  onChange: (component: MissionComponent<any, any>) => void
 }

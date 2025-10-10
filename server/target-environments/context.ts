@@ -1,7 +1,5 @@
 import { TOutputTypeExecution } from 'metis/missions/forces/output'
-import ServerEffect, {
-  TServerTriggerDataExec,
-} from 'metis/server/missions/effects'
+import ServerEffect from 'metis/server/missions/effects'
 import ServerMissionNode from 'metis/server/missions/nodes'
 import SessionServer from 'metis/server/sessions'
 import ServerSessionMember from 'metis/server/sessions/members'
@@ -17,7 +15,7 @@ export default class TargetEnvContext {
   /**
    * The effect for the current context.
    */
-  private readonly effect: ServerEffect<TServerTriggerDataExec>
+  private readonly effect: ServerEffect<'executionTriggeredEffect'>
 
   /**
    * The ID of the effect for the current context.
@@ -212,7 +210,7 @@ export default class TargetEnvContext {
    * @param execution The execution for the current context.
    */
   public constructor(
-    effect: ServerEffect<TServerTriggerDataExec>,
+    effect: ServerEffect<'executionTriggeredEffect'>,
     member: ServerSessionMember,
     session: SessionServer,
     execution: ServerActionExecution,

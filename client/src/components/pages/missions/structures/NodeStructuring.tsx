@@ -5,7 +5,7 @@ import ClientMissionPrototype, {
   TPrototypeRelation,
 } from 'src/missions/nodes/prototypes'
 import { useRequireLogin } from 'src/toolbox/hooks'
-import If from '../util/If'
+import If from '../../../content/util/If'
 import './NodeStructuring.scss'
 
 // This is a enum used to describe

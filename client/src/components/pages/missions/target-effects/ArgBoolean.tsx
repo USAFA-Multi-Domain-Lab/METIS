@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { ClientEffect } from 'src/missions/effects'
 import { usePostInitEffect } from 'src/toolbox/hooks'
 import { TBooleanArg } from '../../../../../../shared/target-environments/args/boolean-arg'
-import { DetailToggle } from '../../form/DetailToggle'
+import { DetailToggle } from '../../../content/form/DetailToggle'
 
 /**
  * Renders a toggle switch for the argument whose type is `"boolean"`.

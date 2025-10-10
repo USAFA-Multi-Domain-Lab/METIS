@@ -14,7 +14,7 @@ export default function ActionProperty<TKey extends keyof ClientMissionAction>({
   actionKey,
   cheatsApplied = false,
   infiniteResources = false,
-  renderValue = (value) => value.toString(),
+  renderValue = (value) => value?.toString(),
 }: TActionProperty_P<TKey>): JSX.Element | null {
   /* -- STATE -- */
 

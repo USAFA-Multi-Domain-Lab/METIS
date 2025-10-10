@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { ClientEffect } from 'src/missions/effects'
 import { usePostInitEffect } from 'src/toolbox/hooks'
 import { TNumberArg } from '../../../../../../shared/target-environments/args/number-arg'
-import { DetailNumber } from '../../form/DetailNumber'
+import { DetailNumber } from '../../../content/form/DetailNumber'
 
 /**
  * Renders a number input box for the argument whose type is `"number"`.

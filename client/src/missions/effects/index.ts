@@ -3,13 +3,14 @@ import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
 import ClientMission from '..'
 import Effect, {
+  TEffectContextExecution,
+  TEffectContextSession,
   TEffectExecutionTriggered,
   TEffectExecutionTriggeredJson,
   TEffectSessionTriggered,
   TEffectSessionTriggeredJson,
-  TEffectTriggerData,
-  TTriggerDataExecution,
-  TTriggerDataSession,
+  TEffectType,
+  TSelectEffectContext,
 } from '../../../../shared/missions/effects'
 import ClientMissionAction from '../actions'
 
@@ -18,8 +19,8 @@ import ClientMissionAction from '../actions'
  * applied to a target.
  */
 export class ClientEffect<
-  TTriggerData extends TEffectTriggerData<TMetisClientComponents> = TEffectTriggerData<TMetisClientComponents>,
-> extends Effect<TMetisClientComponents, TTriggerData> {
+  TType extends TEffectType = TEffectType,
+> extends Effect<TMetisClientComponents, TType> {
   // Implemented
   protected determineTarget(
     targetId: string,
@@ -46,16 +47,16 @@ export class ClientEffect<
    * provided properties.
    */
   public duplicate(
-    options: TDuplicateEffectOptions<TTriggerData>,
-  ): ClientEffect<TTriggerData> {
+    options: TDuplicateEffectOptions<TType>,
+  ): ClientEffect<TType> {
     // Gather details.
     const {
-      triggerData = this.triggerData,
+      triggerData = this.context,
       name = this.name,
       localKey = this.localKey,
     } = options
 
-    return new ClientEffect<TTriggerData>(
+    return new ClientEffect<TType>(
       ClientEffect.DEFAULT_EXEC_PROPERTIES._id,
       name,
       this.targetId,
@@ -81,7 +82,7 @@ export class ClientEffect<
     target: ClientTarget,
     mission: ClientMission,
     trigger: TEffectSessionTriggered,
-  ): ClientEffect<TTriggerDataSession<TMetisClientComponents>> {
+  ): ClientEffect<'sessionTriggeredEffect'> {
     return new ClientEffect(
       ClientEffect.DEFAULT_SESSION_PROPERTIES._id,
       ClientEffect.DEFAULT_SESSION_PROPERTIES.name,
@@ -90,8 +91,21 @@ export class ClientEffect<
       target.environment.version,
       ClientEffect.DEFAULT_SESSION_PROPERTIES.description,
       {
+        type: 'sessionTriggeredEffect',
         trigger,
+        get sourceAction() {
+          return null
+        },
+        get sourceNode() {
+          return null
+        },
+        get sourceForce() {
+          return null
+        },
         sourceMission: mission,
+        get host() {
+          return this.sourceMission
+        },
       },
       ClientEffect.DEFAULT_SESSION_PROPERTIES.args,
       mission.generateEffectKey(),
@@ -111,7 +125,7 @@ export class ClientEffect<
     target: ClientTarget,
     action: ClientMissionAction,
     trigger: TEffectExecutionTriggered,
-  ): ClientEffect<TTriggerDataExecution<TMetisClientComponents>> {
+  ): ClientEffect<'executionTriggeredEffect'> {
     return new ClientEffect(
       ClientEffect.DEFAULT_EXEC_PROPERTIES._id,
       ClientEffect.DEFAULT_EXEC_PROPERTIES.name,
@@ -120,8 +134,21 @@ export class ClientEffect<
       target.environment.version,
       ClientEffect.DEFAULT_EXEC_PROPERTIES.description,
       {
+        type: 'executionTriggeredEffect',
         trigger,
         sourceAction: action,
+        get sourceNode() {
+          return this.sourceAction.node
+        },
+        get sourceForce() {
+          return this.sourceAction.force
+        },
+        get sourceMission() {
+          return this.sourceAction.mission
+        },
+        get host() {
+          return this.sourceAction
+        },
       },
       ClientEffect.DEFAULT_EXEC_PROPERTIES.args,
       action.generateEffectKey(),
@@ -136,7 +163,7 @@ export class ClientEffect<
   public static fromSessionTriggeredJson(
     json: TEffectSessionTriggeredJson,
     sourceMission: ClientMission,
-  ): ClientEffect<TTriggerDataSession<TMetisClientComponents>> {
+  ): ClientEffect<'sessionTriggeredEffect'> {
     return new ClientEffect(
       json._id,
       json.name,
@@ -144,7 +171,23 @@ export class ClientEffect<
       json.environmentId,
       json.targetEnvironmentVersion,
       json.description,
-      { trigger: json.trigger, sourceMission },
+      {
+        type: 'sessionTriggeredEffect',
+        trigger: json.trigger,
+        get sourceAction() {
+          return null
+        },
+        get sourceNode() {
+          return null
+        },
+        get sourceForce() {
+          return null
+        },
+        sourceMission,
+        get host() {
+          return sourceMission
+        },
+      },
       json.args,
       json.localKey,
     )
@@ -158,7 +201,7 @@ export class ClientEffect<
   public static fromExecutionTriggeredJson(
     json: TEffectExecutionTriggeredJson,
     sourceAction: ClientMissionAction,
-  ): ClientEffect<TTriggerDataExecution<TMetisClientComponents>> {
+  ): ClientEffect<'executionTriggeredEffect'> {
     return new ClientEffect(
       json._id,
       json.name,
@@ -166,7 +209,23 @@ export class ClientEffect<
       json.environmentId,
       json.targetEnvironmentVersion,
       json.description,
-      { trigger: json.trigger, sourceAction },
+      {
+        type: 'executionTriggeredEffect',
+        trigger: json.trigger,
+        sourceAction,
+        get sourceNode() {
+          return this.sourceAction.node
+        },
+        get sourceForce() {
+          return this.sourceAction.force
+        },
+        get sourceMission() {
+          return this.sourceAction.mission
+        },
+        get host() {
+          return this.sourceAction
+        },
+      },
       json.args,
       json.localKey,
     )
@@ -179,13 +238,11 @@ export class ClientEffect<
  * The options for duplicating an effect.
  * @see {@link ClientEffect.duplicate}
  */
-type TDuplicateEffectOptions<
-  TTriggerData extends TEffectTriggerData<TMetisClientComponents>,
-> = {
+type TDuplicateEffectOptions<TType extends TEffectType> = {
   /**
-   * @see {@link ClientEffect.triggerData}
+   * @see {@link ClientEffect.context}
    */
-  triggerData?: TTriggerData
+  triggerData?: TSelectEffectContext<TMetisClientComponents>[TType]
   /**
    * @see {@link ClientEffect.name}
    */
@@ -197,13 +254,13 @@ type TDuplicateEffectOptions<
 }
 
 /**
- * Client implementation of {@link TTriggerDataSession}.
+ * Client implementation of {@link TEffectContextSession}.
  */
 export type TClientTriggerDataSession =
-  TTriggerDataSession<TMetisClientComponents>
+  TEffectContextSession<TMetisClientComponents>
 
 /**
- * Client implementation of {@link TTriggerDataExecution}.
+ * Client implementation of {@link TEffectContextExecution}.
  */
 export type TClientTriggerDataExec =
-  TTriggerDataExecution<TMetisClientComponents>
+  TEffectContextExecution<TMetisClientComponents>

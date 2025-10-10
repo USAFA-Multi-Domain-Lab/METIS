@@ -20,6 +20,8 @@ const createMission = async (request: Request, response: Response) => {
     structure,
     forces,
     prototypes,
+    files,
+    effects,
   } = request.body as TMissionSaveJson
   let currentUser: ServerUser = response.locals.user
 
@@ -35,6 +37,8 @@ const createMission = async (request: Request, response: Response) => {
       prototypes,
       createdBy: currentUser._id,
       createdByUsername: currentUser.username,
+      files,
+      effects,
     })
     // Log the creation of the mission.
     databaseLogger.info(`New mission created named "${missionDoc.name}".`)

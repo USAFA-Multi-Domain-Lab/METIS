@@ -4,6 +4,7 @@ import { DetailString } from 'src/components/content/form/DetailString'
 import { DetailToggle } from 'src/components/content/form/DetailToggle'
 import Divider from 'src/components/content/form/Divider'
 import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
+import { useMissionPageContext } from 'src/components/pages/missions/context'
 import ClientMission from 'src/missions'
 import ClientMissionFile from 'src/missions/files'
 import { compute } from 'src/toolbox'
@@ -16,7 +17,6 @@ import Entry from '../Entry'
  */
 export default function MissionFileEntry({
   file,
-  onChange,
 }: TMissionFileEntry_P): JSX.Element | null {
   /* -- PROPS -- */
 
@@ -24,6 +24,7 @@ export default function MissionFileEntry({
 
   /* -- STATE -- */
 
+  const { onChange } = useMissionPageContext()
   const initialAccessTracker = useRef(
     compute(() => {
       let result = new Map<string, boolean>()
@@ -122,10 +123,4 @@ export type TMissionFileEntry_P = {
    * The mission file to be edited.
    */
   file: ClientMissionFile
-  /**
-   * A callback that will be used to notify the parent
-   * component that this component has changed.
-   * @param file The same file passed.
-   */
-  onChange: (file: ClientMissionFile) => void
 }

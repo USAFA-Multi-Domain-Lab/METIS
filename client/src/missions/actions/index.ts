@@ -1,4 +1,5 @@
 import { TMetisClientComponents } from 'src'
+import ClientTarget from 'src/target-environments/targets'
 import { TCreateJsonType } from '../../../../shared'
 import MissionAction, {
   TMissionActionJson,
@@ -6,8 +7,8 @@ import MissionAction, {
   TMissionActionJsonIndirect,
 } from '../../../../shared/missions/actions'
 import {
+  TEffectExecutionTriggered,
   TEffectExecutionTriggeredJson,
-  TTriggerDataExecution,
 } from '../../../../shared/missions/effects'
 import { ClientEffect } from '../effects'
 import ClientMissionNode from '../nodes'
@@ -104,10 +105,20 @@ export default class ClientMissionAction extends MissionAction<TMetisClientCompo
   // Implemented
   protected parseEffects(
     data: TEffectExecutionTriggeredJson[],
-  ): ClientEffect<TTriggerDataExecution<TMetisClientComponents>>[] {
+  ): ClientEffect<'executionTriggeredEffect'>[] {
     return data.map((datum) =>
       ClientEffect.fromExecutionTriggeredJson(datum, this),
     )
+  }
+
+  // Implemented
+  public createEffect(
+    target: ClientTarget,
+    trigger: TEffectExecutionTriggered,
+  ): ClientEffect<'executionTriggeredEffect'> {
+    let effect = ClientEffect.createBlankExecutionEffect(target, this, trigger)
+    this.effects.push(effect)
+    return effect
   }
 
   /**
@@ -143,8 +154,21 @@ export default class ClientMissionAction extends MissionAction<TMetisClientCompo
     duplicatedAction.effects = this.effects.map((effect) => {
       return effect.duplicate({
         triggerData: {
+          type: 'executionTriggeredEffect',
           trigger: effect.trigger,
           sourceAction: duplicatedAction,
+          get sourceNode() {
+            return this.sourceAction.node
+          },
+          get sourceForce() {
+            return this.sourceAction.force
+          },
+          get sourceMission() {
+            return this.sourceAction.mission
+          },
+          get host() {
+            return this.sourceAction
+          },
         },
       })
     })

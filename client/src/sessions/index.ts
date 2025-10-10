@@ -222,6 +222,7 @@ export default class SessionClient extends Session<TMetisClientComponents> {
           expose: 'user-specific',
           userId: this.member.userId,
         },
+        rootEffectsExposure: { expose: 'none' },
       }),
       members: this.members.map((member) => member.toJson()),
       banList: this.banList,

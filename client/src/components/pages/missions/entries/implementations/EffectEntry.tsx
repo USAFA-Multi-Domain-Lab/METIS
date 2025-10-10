@@ -1,31 +1,33 @@
 import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
-import ClientActionExecution from 'src/missions/actions/executions'
-import { ClientEffect, TClientTriggerDataExec } from 'src/missions/effects'
+import { useMissionPageContext } from 'src/components/pages/missions/context'
+import useEffectItemButtonCallbacks from 'src/components/pages/missions/hooks/mission-components/effects'
+import { ClientEffect } from 'src/missions/effects'
 import { useObjectFormSync } from 'src/toolbox/hooks'
 import {
-  TEffectExecutionTriggered,
-  TEffectTrigger,
+  TEffectType,
+  TSelectEffectContext,
 } from '../../../../../../../shared/missions/effects'
 import StringToolbox from '../../../../../../../shared/toolbox/strings'
-import { DetailLargeString } from '../../../form/DetailLargeString'
-import { DetailLocked } from '../../../form/DetailLocked'
-import { DetailString } from '../../../form/DetailString'
-import DetailDropdown from '../../../form/dropdown/DetailDropdown'
+import { DetailLargeString } from '../../../../content/form/DetailLargeString'
+import { DetailLocked } from '../../../../content/form/DetailLocked'
+import { DetailString } from '../../../../content/form/DetailString'
+import DetailDropdown from '../../../../content/form/dropdown/DetailDropdown'
 import ArgEntry from '../../target-effects/ArgEntry'
 import Entry from '../Entry'
 
 /**
  * Entry fields for an effect.
  */
-export default function EffectEntry({
+export default function EffectEntry<TType extends TEffectType>({
   effect,
   effect: { target, environment },
-  onDuplicateEffectRequest,
-  onDeleteEffectRequest,
-  onChange,
-}: TEffectEntry_P): JSX.Element | null {
+}: TEffectEntry_P<TType>): JSX.Element | null {
   /* -- STATE -- */
 
+  const { onChange } = useMissionPageContext()
+  const { onDuplicateRequest, onDeleteRequest } = useEffectItemButtonCallbacks(
+    effect.parent,
+  )
   const effectState = useObjectFormSync(
     effect,
     ['name', 'trigger', 'description', 'args'],
@@ -43,7 +45,7 @@ export default function EffectEntry({
         icon: 'copy',
         description: 'Duplicate effect',
         permissions: ['missions_write'],
-        onClick: async () => await onDuplicateEffectRequest(effect, true),
+        onClick: async () => await onDuplicateRequest(effect, true),
       },
       {
         key: 'remove',
@@ -51,7 +53,7 @@ export default function EffectEntry({
         icon: 'remove',
         description: 'Delete effect',
         permissions: ['missions_write'],
-        onClick: async () => await onDeleteEffectRequest(effect, true),
+        onClick: async () => await onDeleteRequest(effect, true),
       },
     ],
   })
@@ -70,14 +72,14 @@ export default function EffectEntry({
         maxLength={ClientEffect.MAX_NAME_LENGTH}
         placeholder='Enter name...'
       />
-      <DetailDropdown<TEffectExecutionTriggered>
+      <DetailDropdown<TSelectEffectContext<any>[TType]['trigger']>
         fieldType='required'
         label='Trigger'
-        options={ClientActionExecution.EFFECT_TRIGGERS}
+        options={effect.parent.validTriggers}
         value={trigger}
         setValue={setTrigger}
         isExpanded={false}
-        render={(value: TEffectTrigger) => StringToolbox.toTitleCase(value)}
+        render={(value) => StringToolbox.toTitleCase(value)}
         getKey={(value) => value}
         handleInvalidOption={{
           method: 'setToDefault',
@@ -114,29 +116,9 @@ export default function EffectEntry({
 /**
  * Props for EffectEntry component.
  */
-export type TEffectEntry_P = {
+export type TEffectEntry_P<TType extends TEffectType> = {
   /**
    * The effect to apply to the target.
    */
-  effect: ClientEffect<TClientTriggerDataExec>
-  /**
-   * Handles the request to duplicate an effect.
-   */
-  onDuplicateEffectRequest: (
-    effect: ClientEffect<TClientTriggerDataExec>,
-    selectNewEffect?: boolean,
-  ) => Promise<void>
-  /**
-   * Handles the request to delete an effect.
-   */
-  onDeleteEffectRequest: (
-    effect: ClientEffect<TClientTriggerDataExec>,
-    navigateBack?: boolean,
-  ) => Promise<void>
-  /**
-   * A callback that will be called when a
-   * change has been made.
-   * @param effect The same effect passed.
-   */
-  onChange: (effect: ClientEffect<TClientTriggerDataExec>) => void
+  effect: ClientEffect<TType>
 }

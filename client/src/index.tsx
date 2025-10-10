@@ -1,10 +1,6 @@
 import ReactDOM from 'react-dom/client'
 import GlobalContext from 'src/context/global'
-import { TMetisBaseComponents } from '../../shared'
-import {
-  TTriggerDataExecution,
-  TTriggerDataSession,
-} from '../../shared/missions/effects'
+import { TEffectType } from '../../shared/missions/effects'
 import App from './components/App'
 import ErrorPage from './components/pages/ErrorPage'
 import ClientFileReference from './files/references'
@@ -61,7 +57,7 @@ declare global {
  * @note This is used for all client-side METIS
  * component classes.
  */
-export interface TMetisClientComponents extends TMetisBaseComponents {
+export type TMetisClientComponents = {
   session: SessionClient
   member: ClientSessionMember
   user: ClientUser
@@ -77,10 +73,6 @@ export interface TMetisClientComponents extends TMetisBaseComponents {
   action: ClientMissionAction
   execution: ClientActionExecution
   outcome: ClientExecutionOutcome
-  executionTriggeredEffect: ClientEffect<
-    TTriggerDataExecution<TMetisClientComponents>
-  >
-  sessionTriggeredEffect: ClientEffect<
-    TTriggerDataSession<TMetisClientComponents>
-  >
+} & {
+  [TType in TEffectType]: ClientEffect<TType>
 }

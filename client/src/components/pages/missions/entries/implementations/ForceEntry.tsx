@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
+import { useMissionPageContext } from 'src/components/pages/missions/context'
+import useForceItemButtonCallbacks from 'src/components/pages/missions/hooks/mission-components/forces'
 import { useGlobalContext } from 'src/context/global'
 import ClientMission from 'src/missions'
 import ClientMissionForce from 'src/missions/forces'
@@ -7,15 +9,14 @@ import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
 import Mission from '../../../../../../../shared/missions'
-import MissionComponent from '../../../../../../../shared/missions/component'
 import { TNonEmptyArray } from '../../../../../../../shared/toolbox/arrays'
-import Prompt from '../../../communication/Prompt'
-import { DetailColorSelector } from '../../../form/DetailColorSelector'
-import { DetailLargeString } from '../../../form/DetailLargeString'
-import { DetailNumber } from '../../../form/DetailNumber'
-import { DetailString } from '../../../form/DetailString'
-import { DetailToggle } from '../../../form/DetailToggle'
-import { TButtonText_P } from '../../../user-controls/buttons/ButtonText'
+import Prompt from '../../../../content/communication/Prompt'
+import { DetailColorSelector } from '../../../../content/form/DetailColorSelector'
+import { DetailLargeString } from '../../../../content/form/DetailLargeString'
+import { DetailNumber } from '../../../../content/form/DetailNumber'
+import { DetailString } from '../../../../content/form/DetailString'
+import { DetailToggle } from '../../../../content/form/DetailToggle'
+import { TButtonText_P } from '../../../../content/user-controls/buttons/ButtonText'
 import Entry from '../Entry'
 
 /**
@@ -24,15 +25,12 @@ import Entry from '../Entry'
 export default function ForceEntry({
   force,
   force: { mission },
-  duplicateForce,
-  deleteForce,
-  onChange,
 }: TForceEntry): JSX.Element | null {
-  /* -- GLOBAL CONTEXT -- */
-  const { prompt } = useGlobalContext().actions
-
   /* -- STATE -- */
 
+  const { prompt } = useGlobalContext().actions
+  const { onChange } = useMissionPageContext()
+  const { onDuplicateRequest, onDeleteRequest } = useForceItemButtonCallbacks()
   const [introMessage, setIntroMessage] = useState<string>(force.introMessage)
   const [name, setName] = useState<string>(force.name)
   const [color, setColor] = useState<string>(force.color)
@@ -54,7 +52,7 @@ export default function ForceEntry({
         description: 'Duplicate force',
         disabled: mission.forces.length >= Mission.MAX_FORCE_COUNT,
         permissions: ['missions_write'],
-        onClick: duplicateForce,
+        onClick: () => onDuplicateRequest(force),
       },
       {
         key: 'remove',
@@ -63,7 +61,7 @@ export default function ForceEntry({
         description: 'Delete force',
         disabled: mission.forces.length < 2,
         permissions: ['missions_write'],
-        onClick: deleteForce,
+        onClick: () => onDeleteRequest(force),
       },
     ],
   })
@@ -197,20 +195,4 @@ export type TForceEntry = {
    * The force to be edited.
    */
   force: ClientMissionForce
-  /**
-   * A function that will be used to duplicate the force.
-   */
-  duplicateForce: () => void
-  /**
-   * A function that will be used to delete the force.
-   */
-  deleteForce: () => void
-  /**
-   * A callback that will be used to notify the parent
-   * component that this component has changed.
-   * @param components Any components that have been
-   * changed by this component, including the force
-   * itself, and any child components of the force.
-   */
-  onChange: (...components: TNonEmptyArray<MissionComponent<any, any>>) => void
 }

@@ -1,5 +1,4 @@
 import { TFileMetadata } from 'metis/target-environments/args/mission-component/file-arg'
-import { TMission } from '..'
 import { TCreateJsonType, TMetisBaseComponents } from '../../'
 import VersionToolbox from '../../../shared/toolbox/versions'
 import { TTargetArg } from '../../target-environments/args'
@@ -9,7 +8,7 @@ import { TNodeMetadata } from '../../target-environments/args/mission-component/
 import Dependency from '../../target-environments/dependencies'
 import { AnyObject } from '../../toolbox/objects'
 import StringToolbox from '../../toolbox/strings'
-import MissionAction, { TAction } from '../actions'
+import MissionAction from '../actions'
 import MissionComponent, { TMissionComponentDefect } from '../component'
 
 /**
@@ -17,23 +16,13 @@ import MissionComponent, { TMissionComponentDefect } from '../component'
  */
 export default abstract class Effect<
   T extends TMetisBaseComponents = TMetisBaseComponents,
-  TTriggerData extends TEffectTriggerData<T> = TEffectTriggerData<T>,
-> extends MissionComponent<T, Effect<T>> {
+  TType extends TEffectType = TEffectType,
+> extends MissionComponent<T, Effect<T, TType>> {
   /**
    * The mission to which the effect belongs.
    */
-  public get mission(): T['mission'] {
-    // Determine the mission based on the trigger data.
-    switch (this.triggerData.trigger) {
-      case 'session-setup':
-      case 'session-start':
-      case 'session-teardown':
-        return this.triggerData.sourceMission
-      case 'execution-initiation':
-      case 'execution-success':
-      case 'execution-failure':
-        return this.triggerData.sourceAction.mission
-    }
+  public get mission(): TSelectEffectContext<T>[TType]['sourceMission'] {
+    return this.context.sourceMission
   }
 
   /**
@@ -42,19 +31,8 @@ export default abstract class Effect<
    * @note If `null`, then the effect is not hosted
    * by any force.
    */
-  public get sourceForce(): TTriggerData extends TTriggerDataExecution<T>
-    ? T['force']
-    : null {
-    switch (this.triggerData.trigger) {
-      case 'session-setup':
-      case 'session-start':
-      case 'session-teardown':
-        return null as any
-      case 'execution-initiation':
-      case 'execution-success':
-      case 'execution-failure':
-        return this.triggerData.sourceAction.force as any
-    }
+  public get sourceForce(): TSelectEffectContext<T>[TType]['sourceForce'] {
+    return this.context.sourceForce
   }
 
   /**
@@ -63,19 +41,8 @@ export default abstract class Effect<
    * @note If `null`, then the effect is not hosted
    * by any node.
    */
-  public get sourceNode(): TTriggerData extends TTriggerDataExecution<T>
-    ? T['node']
-    : null {
-    switch (this.triggerData.trigger) {
-      case 'session-setup':
-      case 'session-start':
-      case 'session-teardown':
-        return null as any
-      case 'execution-initiation':
-      case 'execution-success':
-      case 'execution-failure':
-        return this.triggerData.sourceAction.node as any
-    }
+  public get sourceNode(): TSelectEffectContext<T>[TType]['sourceNode'] {
+    return this.context.sourceNode
   }
 
   /**
@@ -84,27 +51,22 @@ export default abstract class Effect<
    * @note If `null`, then the effect is not hosted
    * by any action.
    */
-  public get sourceAction(): TTriggerData extends TTriggerDataExecution<T>
-    ? T['action']
-    : null {
-    switch (this.triggerData.trigger) {
-      case 'session-setup':
-      case 'session-start':
-      case 'session-teardown':
-        return null as any
-      case 'execution-initiation':
-      case 'execution-success':
-      case 'execution-failure':
-        return this.triggerData.sourceAction as any
-    }
+  public get sourceAction(): TSelectEffectContext<T>[TType]['sourceAction'] {
+    return this.context.sourceAction
   }
 
   /**
-   * The trigger that causes the effect to be applied
-   * along with any additional context needed for the
-   * trigger.
+   * The direct parent of the effect.
    */
-  protected triggerData: TTriggerData
+  public get parent(): TSelectEffectContext<T>[TType]['host'] {
+    return this.context.host
+  }
+
+  /**
+   * Additional data for the effect specific to the
+   * type used.
+   */
+  protected context: TSelectEffectContext<T>[TType]
 
   /**
    * The environment in which the target exists.
@@ -141,7 +103,7 @@ export default abstract class Effect<
   public get path(): [...MissionComponent<any, any>[], this] {
     // Dynamically construct the path based on
     // the trigger data.
-    switch (this.triggerData.trigger) {
+    switch (this.context.trigger) {
       case 'session-setup':
       case 'session-start':
       case 'session-teardown':
@@ -149,7 +111,7 @@ export default abstract class Effect<
       case 'execution-initiation':
       case 'execution-success':
       case 'execution-failure':
-        let { sourceAction } = this.triggerData
+        let { sourceAction } = this.context
         return [
           this.mission,
           sourceAction.force,
@@ -337,8 +299,11 @@ export default abstract class Effect<
    * The impetus for the effect. Once the give event occurs
    * on an action, this effect will be enacted.
    */
-  public get trigger(): TTriggerData['trigger'] {
-    return this.triggerData.trigger
+  public get trigger(): TSelectEffectContext<T>[TType]['trigger'] {
+    return this.context.trigger
+  }
+  public set trigger(value: TSelectEffectContext<T>[TType]['trigger']) {
+    this.context.trigger = value
   }
 
   /**
@@ -401,7 +366,7 @@ export default abstract class Effect<
     environmentId: string,
     targetEnvironmentVersion: string,
     description: string,
-    triggerData: TTriggerData,
+    context: TSelectEffectContext<T>[TType],
     args: AnyObject,
     localKey: string,
   ) {
@@ -414,7 +379,7 @@ export default abstract class Effect<
     this.targetId = targetId
     this.environmentId = environmentId
     this.targetEnvironmentVersion = targetEnvironmentVersion
-    this.triggerData = triggerData
+    this.context = context
     this.description = description
     this.args = args
     this.localKey = localKey
@@ -939,43 +904,110 @@ export type TEffectExecutionTriggered =
 export type TEffectTrigger = TEffectSessionTriggered | TEffectExecutionTriggered
 
 /**
+ * Map of effect-types to their valid triggers.
+ */
+export type TEffectTriggerGroups = {
+  sessionTriggered: TEffectSessionTriggered
+  executionTriggered: TEffectExecutionTriggered
+}
+
+/**
  * Data needed to create an effect that is triggered
  * by a session-lifecycle event.
  */
-export interface TTriggerDataSession<T extends TMetisBaseComponents> {
+export interface TEffectContextSession<T extends TMetisBaseComponents> {
+  /**
+   * The type of effect in use. Defines data structure
+   * for the effect.
+   */
+  type: 'sessionTriggeredEffect'
   /**
    * The trigger that causes the effect to be applied.
    */
   trigger: TEffectSessionTriggered
   /**
+   * The action hosting the effect. This will
+   * trigger the effect when the action's
+   * is executed and the correct lifecycle event
+   * occurs.
+   */
+  get sourceAction(): null
+  /**
+   * The node hosting the effect.
+   */
+  get sourceNode(): null
+  /**
+   * The force hosting the effect.
+   */
+  get sourceForce(): null
+  /**
    * The mission hosting the effect.
    */
-  sourceMission: TMission<T>
+  sourceMission: T['mission']
+  /**
+   * Directly houses the effect in a list.
+   */
+  get host(): T['mission']
 }
 
 /**
  * Data needed to create an effect that is triggered
  * by an action-execution-lifecycle event.
  */
-export interface TTriggerDataExecution<T extends TMetisBaseComponents> {
+export interface TEffectContextExecution<T extends TMetisBaseComponents> {
+  /**
+   * The type of effect in use. Defines data structure
+   * for the effect.
+   */
+  type: 'executionTriggeredEffect'
   /**
    * The trigger that causes the effect to be applied.
    */
   trigger: TEffectExecutionTriggered
   /**
-   * The action that hosts the effect, which will
-   * trigger the effect when the action is executed.
+   * The action hosting the effect.
    */
-  sourceAction: TAction<T>
+  sourceAction: T['action']
+  /**
+   * The node hosting the effect.
+   */
+  get sourceNode(): T['node']
+  /**
+   * The force hosting the effect.
+   */
+  get sourceForce(): T['force']
+  /**
+   * The mission hosting the effect.
+   */
+  get sourceMission(): T['mission']
+  /**
+   * Directly houses the effect in a list.
+   */
+  get host(): T['action']
 }
 
 /**
  * Additional context used for an effect, specific
  * to the effect's trigger.
  */
-export type TEffectTriggerData<T extends TMetisBaseComponents> =
-  | TTriggerDataSession<T>
-  | TTriggerDataExecution<T>
+export type TEffectContext<T extends TMetisBaseComponents> =
+  | TEffectContextSession<T>
+  | TEffectContextExecution<T>
+
+/**
+ * The type of effect in use. Defines data structure
+ * for the effect.
+ */
+export type TEffectType = TEffectContext<any>['type']
+
+/**
+ * Allows a trigger-data type to be selected from
+ * the effect type.
+ */
+export type TSelectEffectContext<T extends TMetisBaseComponents> = {
+  sessionTriggeredEffect: TEffectContextSession<T>
+  executionTriggeredEffect: TEffectContextExecution<T>
+}
 
 /**
  * Extracts all the properties of an `Effect` that are
@@ -1057,4 +1089,39 @@ interface TEffectDefaultJson<TTrigger extends TEffectTrigger>
     >
   > {
   trigger: TTrigger
+}
+
+/**
+ * A mission component that hosts a list of effects.
+ */
+export interface TEffectHost<
+  T extends TMetisBaseComponents,
+  TType extends TEffectType,
+> extends MissionComponent<T> {
+  /**
+   * The effects hosted by the component.
+   */
+  effects: T[TType][]
+  /**
+   * Used to identify the type of effects hosted by the component.
+   */
+  effectType: TType
+  /**
+   * Triggers that are valid for effects hosted by the component.
+   */
+  get validTriggers(): T[TType]['trigger'][]
+  /**
+   * Creates a new effect and adds it to the list of effects
+   * hosted by the component.
+   * @param target The target of the effect.
+   * @param trigger What causes the effect to be enacted.
+   * @returns The new effect.
+   */
+  createEffect: (target: T['target'], trigger: T[TType]['trigger']) => T[TType]
+  /**
+   * Generates a new key for an effect which
+   * is unique among all effects hosted by the component.
+   * @returns The new key for an effect.
+   */
+  generateEffectKey(): string
 }

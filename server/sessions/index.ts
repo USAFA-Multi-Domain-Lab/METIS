@@ -27,7 +27,7 @@ import { TMetisServerComponents } from '../index'
 import { plcApiLogger } from '../logging'
 import ServerActionExecution from '../missions/actions/executions'
 import ServerExecutionOutcome from '../missions/actions/outcomes'
-import ServerEffect, { TServerTriggerDataExec } from '../missions/effects'
+import ServerEffect from '../missions/effects'
 import ServerMissionFile from '../missions/files'
 import ServerMissionForce from '../missions/forces'
 import ServerOutput, { TServerOutputOptions } from '../missions/forces/output'
@@ -127,6 +127,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       forceExposure: { expose: 'none' },
       fileExposure: { expose: 'none' },
       sessionDataExposure: { expose: 'all' },
+      rootEffectsExposure: { expose: 'none' },
     }
     let banList: string[] = []
 
@@ -1741,7 +1742,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
    * @param execution The action execution that triggered the effect.
    */
   public async applyEffect(
-    effect: ServerEffect<TServerTriggerDataExec>,
+    effect: ServerEffect<'executionTriggeredEffect'>,
     member: ServerSessionMember,
     execution: ServerActionExecution,
   ): Promise<void> {
