@@ -187,7 +187,7 @@ export default function EffectTimeline<
     // selected, therefore activate the effect
     // modal.
     if (!targetId) {
-      activateEffectModal(trigger)
+      activateEffectModal(host, trigger)
       return
     }
 

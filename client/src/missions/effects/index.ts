@@ -7,6 +7,7 @@ import Effect, {
   TEffectContextSession,
   TEffectExecutionTriggered,
   TEffectExecutionTriggeredJson,
+  TEffectHost,
   TEffectSessionTriggered,
   TEffectSessionTriggeredJson,
   TEffectType,
@@ -264,3 +265,11 @@ export type TClientTriggerDataSession =
  */
 export type TClientTriggerDataExec =
   TEffectContextExecution<TMetisClientComponents>
+
+/**
+ * Client implementation of {@link TEffectHost}.
+ */
+export type TClientEffectHost<TType extends TEffectType = any> = TEffectHost<
+  TMetisClientComponents,
+  TType
+>

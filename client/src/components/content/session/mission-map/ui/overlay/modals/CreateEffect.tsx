@@ -1,25 +1,30 @@
 import { useState } from 'react'
+import { TMetisClientComponents } from 'src'
 import Tooltip from 'src/components/content/communication/Tooltip'
 import { DetailDropdown } from 'src/components/content/form/dropdown/'
 import { ButtonText } from 'src/components/content/user-controls/buttons/ButtonText'
-import ClientMissionAction from 'src/missions/actions'
-import { ClientEffect } from 'src/missions/effects'
+import { ClientEffect, TClientEffectHost } from 'src/missions/effects'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import { TEffectExecutionTriggered } from '../../../../../../../../../shared/missions/effects'
+import {
+  TEffectHost,
+  TEffectType,
+} from '../../../../../../../../../shared/missions/effects'
 import './CreateEffect.scss'
 
 /**
  * Prompt modal for creating an effect to apply to a target.
  */
-export default function CreateEffect({
-  action,
+export default function CreateEffect<
+  THost extends TClientEffectHost = TClientEffectHost<TEffectType>,
+>({
+  host,
   trigger,
   onCloseRequest,
   onChange,
-}: TCreateEffect_P): JSX.Element | null {
+}: TCreateEffect_P<THost>): JSX.Element | null {
   /* -- STATE -- */
 
   const [targetEnvironments] = useState<ClientTargetEnvironment[]>(
@@ -37,7 +42,7 @@ export default function CreateEffect({
   /**
    * The current mission.
    */
-  const mission = compute(() => action.mission)
+  const mission = compute(() => host.mission)
   /**
    * The class name for the target drop down.
    */
@@ -87,14 +92,7 @@ export default function CreateEffect({
    * Handles creating a new effect.
    */
   const createEffect = () => {
-    // Create a new effect.
-    let effect = ClientEffect.createBlankExecutionEffect(
-      target,
-      action,
-      trigger,
-    )
-    // Push the new effect to the action.
-    action.effects.push(effect)
+    let effect = host.createEffect(target, trigger)
     // Select the new effect.
     mission.select(effect)
     // Allow the user to save the changes.
@@ -166,16 +164,17 @@ export default function CreateEffect({
 /**
  * Props for CreateEffect component.
  */
-export type TCreateEffect_P = {
+export type TCreateEffect_P<
+  THost extends TEffectHost<TMetisClientComponents, any>,
+> = {
   /**
-   * The action to create the effect for.
+   * The host for which to create the effect.
    */
-  action: ClientMissionAction
-
+  host: THost
   /**
    * The trigger for the new effect.
    */
-  trigger: TEffectExecutionTriggered
+  trigger: THost['validTriggers'][number]
   /**
    * Callback to handle a request to close the modal.
    */

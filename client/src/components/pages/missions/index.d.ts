@@ -1,4 +1,5 @@
 import { TMetisClientComponents } from 'src'
+import { TCreateEffect_P } from 'src/components/content/session/mission-map/ui/overlay/modals/CreateEffect'
 import ClientFileReference from 'src/files/references'
 import ClientMission from 'src/missions'
 import ClientMissionFile from 'src/missions/files'
@@ -53,9 +54,9 @@ export type TMissionPage_S = {
    */
   effectModalActive: TReactState<boolean>
   /**
-   * The trigger for the effect modal, if active.
+   * Arguments to pass to the effect modal when active.
    */
-  effectModalTrigger: TReactState<TEffectExecutionTriggered>
+  effectModalArgs: TReactState<Pick<TCreateEffect_P, 'host' | 'trigger'>>
 }
 
 /**
@@ -84,7 +85,11 @@ export type TMissionPageContextData = {
      * Allows the creation of a custom effect by
      * opening a modal on the mission map which will
      * allow the user to create an effect from scratch.
+     * @param host The host for which to create the effect.
      * @param trigger The trigger for the new effect.
      */
-    activateEffectModal: (trigger: TEffectExecutionTriggered) => void
+    activateEffectModal: (
+      host: TClientEffectHost,
+      trigger: TEffectExecutionTriggered,
+    ) => void
   }

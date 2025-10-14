@@ -31,7 +31,7 @@ export default function MissionPageMap(): JSX.Element {
   const [selection, setSelection] = missionPageState.selection
   const [effectModalActive, setEffectModalActive] =
     missionPageState.effectModalActive
-  const [effectModalTrigger] = missionPageState.effectModalTrigger
+  const [effectModalArgs] = missionPageState.effectModalArgs
   const {
     onDuplicateRequest: onDuplicateForceRequest,
     onDeleteRequest: onDeleteForceRequest,
@@ -287,11 +287,11 @@ export default function MissionPageMap(): JSX.Element {
     // If the selection is an action and the user has
     // requested to create a new effect, then display
     // the create effect modal.
-    if (selection instanceof ClientMissionAction && effectModalActive) {
+    if (effectModalActive) {
       return (
         <CreateEffect
-          action={mission.selection as ClientMissionAction}
-          trigger={effectModalTrigger}
+          host={effectModalArgs.host}
+          trigger={effectModalArgs.trigger}
           onCloseRequest={() => setEffectModalActive(false)}
           onChange={onChange}
         />

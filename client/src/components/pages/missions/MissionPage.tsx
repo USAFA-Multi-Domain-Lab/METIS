@@ -2,11 +2,12 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useBeforeunload } from 'react-beforeunload'
 import { TMetisClientComponents } from 'src'
 import { useMissionItemButtonCallbacks } from 'src/components/content/data/lists/implementations/missions/item-buttons'
+import { TCreateEffect_P } from 'src/components/content/session/mission-map/ui/overlay/modals/CreateEffect'
 import { useGlobalContext, useNavigationMiddleware } from 'src/context/global'
 import ClientFileReference from 'src/files/references'
 import ClientMission from 'src/missions'
 import ClientMissionAction from 'src/missions/actions'
-import { ClientEffect } from 'src/missions/effects'
+import { ClientEffect, TClientEffectHost } from 'src/missions/effects'
 import ClientMissionFile from 'src/missions/files'
 import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
@@ -90,9 +91,12 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     globalFiles: useState<ClientFileReference[]>([]),
     localFiles: useState<ClientMissionFile[]>([]),
     effectModalActive: useState<boolean>(false),
-    effectModalTrigger: useState<TEffectExecutionTriggered>(
-      'execution-initiation',
-    ),
+    effectModalArgs: useState<
+      Pick<TCreateEffect_P<TClientEffectHost>, 'host' | 'trigger'>
+    >({
+      host: missionState[0],
+      trigger: 'session-setup',
+    }),
   }
   const [mission, setMission] = state.mission
   const [globalFiles, setGlobalFiles] = state.globalFiles
@@ -102,7 +106,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   )
   const [selection, setSelection] = state.selection
   const [, setEffectModalActive] = state.effectModalActive
-  const [, setEffectModalTrigger] = state.effectModalTrigger
+  const [, setEffectModalArgs] = state.effectModalArgs
   const [, setDefects] = state.defects
   const [, setCheckForDefects] = state.checkForDefects
   const root = useRef<HTMLDivElement>(null)
@@ -496,9 +500,12 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   /**
    * @see {@link TMissionPageContextData.activateEffectModal}
    */
-  const activateEffectModal = (trigger: TEffectExecutionTriggered) => {
+  const activateEffectModal = (
+    host: TClientEffectHost,
+    trigger: TEffectExecutionTriggered,
+  ) => {
     setEffectModalActive(true)
-    setEffectModalTrigger(trigger)
+    setEffectModalArgs({ host, trigger })
   }
 
   /**
