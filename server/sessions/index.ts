@@ -7,7 +7,11 @@ import {
 import { ServerEmittedError } from 'metis/connect/errors'
 import { TMissionJson, TMissionJsonOptions } from 'metis/missions'
 import MissionComponent from 'metis/missions/component'
-import { TEffectTrigger } from 'metis/missions/effects'
+import {
+  TEffectExecutionTriggered,
+  TEffectSessionTriggered,
+  TEffectTrigger,
+} from 'metis/missions/effects'
 import { TOutputContext } from 'metis/missions/forces/output'
 import ServerMission from 'metis/server/missions'
 import ServerMissionAction from 'metis/server/missions/actions'
@@ -30,7 +34,7 @@ import ServerExecutionOutcome from '../missions/actions/outcomes'
 import ServerEffect from '../missions/effects'
 import ServerMissionFile from '../missions/files'
 import ServerMissionForce from '../missions/forces'
-import ServerOutput, { TServerOutputOptions } from '../missions/forces/output'
+import ServerOutput from '../missions/forces/output'
 import ServerTargetEnvironment from '../target-environments'
 import TargetEnvContext from '../target-environments/context'
 import ServerUser from '../users'
@@ -139,8 +143,8 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       // Update the session-data exposure to be user
       // specific to the requester.
       missionOptions.sessionDataExposure = {
-        expose: 'user-specific',
-        userId: requester.userId,
+        expose: 'member-specific',
+        memberId: requester._id,
       }
 
       // If the requester is assigned to a force,
@@ -608,7 +612,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
 
         // Filter the outputs not relevant to the member.
         forces.forEach(({ filterOutputs }) => {
-          if (filterOutputs) filterOutputs(member.userId)
+          if (filterOutputs) filterOutputs(member._id)
         })
 
         // Emit the event to the member.
@@ -623,7 +627,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       else if (hasCompleteVisibility) {
         // Filter the outputs not relevant to the member.
         completeVisibilityCache.forces.forEach(({ filterOutputs }) => {
-          if (filterOutputs) filterOutputs(member.userId)
+          if (filterOutputs) filterOutputs(member._id)
         })
 
         // Emit the event to the member.
@@ -652,48 +656,6 @@ export default class SessionServer extends Session<TMetisServerComponents> {
           request,
         })
       }
-    }
-  }
-
-  /**
-   * Processes the effects of the given action, enacting
-   * those of the given trigger.
-   * @param member The member to apply the effects to.
-   * @param action The action to process.
-   * @param trigger The trigger to look for in the effects.
-   * @param execution The action execution that is being processed.
-   */
-  private applyEffects(
-    member: ServerSessionMember,
-    action: ServerMissionAction,
-    trigger: TEffectTrigger,
-    execution: ServerActionExecution,
-  ): void {
-    // If the effects are enabled...
-    if (this.config.effectsEnabled) {
-      // Get the effects for the given trigger.
-      let effects = action.effects.filter(
-        (effect) => effect.trigger === trigger,
-      )
-      // Iterate through each effect and apply it.
-      effects.forEach(async (effect) => {
-        try {
-          await this.applyEffect(effect, member, execution)
-
-          // todo: implement feedback for modifiers
-          // participant.emit('effect-successful', {
-          //   message: 'The effect was successfully applied to its target.',
-          // })
-        } catch (error: any) {
-          // Log the error.
-          plcApiLogger.error(error)
-
-          // todo: implement feedback for modifiers
-          // participant.emitError(
-          //   new ServerEmittedError(ServerEmittedError.CODE_EFFECT_FAILED),
-          // )
-        }
-      })
     }
   }
 
@@ -1545,15 +1507,14 @@ export default class SessionServer extends Session<TMetisServerComponents> {
 
     // Send the output JSON to the force.
     this.sendOutput(
-      action.forceId,
       member.outputPrefix,
       message,
-      { type: 'execution-started', sourceExecutionId: execution._id },
-      { userId: member.userId },
+      { type: 'execution-initiation', sourceExecutionId: execution._id },
+      { forceKey: action.force.localKey, memberId: member._id },
     )
     // Apply the effects for the action that are triggered
     // immediately.
-    this.applyEffects(member, action, 'execution-initiation', execution)
+    this.applyActionEffects(member, action, 'execution-initiation', execution)
   }
 
   /**
@@ -1594,8 +1555,8 @@ export default class SessionServer extends Session<TMetisServerComponents> {
         revealedDescendants: descendants.map((n) =>
           n.toJson({
             sessionDataExposure: {
-              expose: 'user-specific',
-              userId: member.userId,
+              expose: 'member-specific',
+              memberId: member._id,
             },
           }),
         ),
@@ -1622,7 +1583,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
 
     // Apply effects, if the outcome calls for it.
     if (effectTrigger)
-      this.applyEffects(member, action, effectTrigger, outcome.execution)
+      this.applyActionEffects(member, action, effectTrigger, outcome.execution)
   }
 
   /**
@@ -1700,13 +1661,12 @@ export default class SessionServer extends Session<TMetisServerComponents> {
 
           // Send an output to the force.
           this.sendOutput(
-            node.forceId,
             member.outputPrefix,
             node.preExecutionText,
             { type: 'pre-execution', sourceNodeId: node._id },
             {
-              userId: member.userId,
-              broadcastType: 'user',
+              forceKey: node.force.localKey,
+              memberId: member._id,
             },
           )
 
@@ -1736,12 +1696,80 @@ export default class SessionServer extends Session<TMetisServerComponents> {
   }
 
   /**
-   * Applies an effect to a target environment.
+   * Applies a session-triggered effect to the session.
+   * @param effect The effect to apply.
+   */
+  private async applyMissionEffect(
+    effect: ServerEffect<'sessionTriggeredEffect'>,
+  ): Promise<void> {
+    // If the effect doesn't have a target environment,
+    // log an error.
+    if (effect.environment === null) {
+      throw new Error(
+        `"${effect.name}" doesn't have a target environment or the target environment doesn't exist.`,
+      )
+    }
+    // If the effect doesn't have a target,
+    // log an error.
+    if (effect.target === null) {
+      throw new Error(
+        `"${effect.name}" doesn't have a target or the target doesn't exist.`,
+      )
+    }
+
+    // Create and expose a new context for the target
+    // environment.
+    let context = TargetEnvContext.createSessionContext(effect, this).expose()
+
+    // Apply the effect to the target.
+    try {
+      if (!effect.defective) {
+        await effect.target.script(context)
+      }
+    } catch (error: any) {
+      // Give additional information about the error.
+      let message =
+        `Failed to apply effect - "${effect.name}" - to target - "${effect.target.name}" - found in the environment - "${effect.environment.name}".\n` +
+        `The effect - "${effect.name}" - can be found here:\n` +
+        `mission - "${this.mission.name}" - effect - "${effect.name}".\n`
+      // Log the error.
+      plcApiLogger.error(message, error)
+    }
+  }
+
+  /**
+   * Processes the effects of the mission, enacting
+   * those of the given trigger.
+   * @param trigger The trigger to look for in the effects.
+   */
+  public async applyMissionEffects(
+    trigger: TEffectSessionTriggered,
+  ): Promise<void> {
+    // If the effects are enabled...
+    if (this.config.effectsEnabled) {
+      // Get the effects for the given trigger.
+      let effects = this.mission.effects.filter(
+        (effect) => effect.trigger === trigger,
+      )
+      // Iterate through each effect and apply it.
+      for (let effect of effects) {
+        try {
+          await this.applyMissionEffect(effect)
+        } catch (error: any) {
+          // Log the error.
+          plcApiLogger.error(error)
+        }
+      }
+    }
+  }
+
+  /**
+   * Applies an execution-triggered effect to a target environment.
    * @param effect The effect to apply.
    * @param member The member applying the effect.
    * @param execution The action execution that triggered the effect.
    */
-  public async applyEffect(
+  private async applyActionEffect(
     effect: ServerEffect<'executionTriggeredEffect'>,
     member: ServerSessionMember,
     execution: ServerActionExecution,
@@ -1763,11 +1791,18 @@ export default class SessionServer extends Session<TMetisServerComponents> {
 
     // Create and expose a new context for the target
     // environment.
-    let context = new TargetEnvContext(effect, member, this, execution).expose()
+    let context = TargetEnvContext.createExecutionContext(
+      effect,
+      this,
+      member,
+      execution,
+    ).expose()
 
     // Apply the effect to the target.
     try {
-      if (!effect.defective) await effect.target.script(context)
+      if (!effect.defective) {
+        await effect.target.script(context)
+      }
     } catch (error: any) {
       // Give additional information about the error.
       let message =
@@ -1776,6 +1811,48 @@ export default class SessionServer extends Session<TMetisServerComponents> {
         `force - "${effect.sourceForce.name}" - node - "${effect.sourceNode.name}" - action - "${effect.sourceAction.name}" - effect - "${effect.name}".\n`
       // Log the error.
       plcApiLogger.error(message, error)
+    }
+  }
+
+  /**
+   * Processes the effects of the given action, enacting
+   * those of the given trigger.
+   * @param member The member to apply the effects to.
+   * @param action The action to process.
+   * @param trigger The trigger to look for in the effects.
+   * @param execution The action execution that is being processed.
+   */
+  private async applyActionEffects(
+    member: ServerSessionMember,
+    action: ServerMissionAction,
+    trigger: TEffectExecutionTriggered,
+    execution: ServerActionExecution,
+  ): Promise<void> {
+    // If the effects are enabled...
+    if (this.config.effectsEnabled) {
+      // Get the effects for the given trigger.
+      let effects = action.effects.filter(
+        (effect) => effect.trigger === trigger,
+      )
+      // Iterate through each effect and apply it.
+      for (let effect of effects) {
+        try {
+          await this.applyActionEffect(effect, member, execution)
+
+          // todo: implement feedback for modifiers
+          // participant.emit('effect-successful', {
+          //   message: 'The effect was successfully applied to its target.',
+          // })
+        } catch (error: any) {
+          // Log the error.
+          plcApiLogger.error(error)
+
+          // todo: implement feedback for modifiers
+          // participant.emitError(
+          //   new ServerEmittedError(ServerEmittedError.CODE_EFFECT_FAILED),
+          // )
+        }
+      }
     }
   }
 
@@ -1833,8 +1910,9 @@ export default class SessionServer extends Session<TMetisServerComponents> {
   /**
    * Handles the opening of a node during a session.
    * @param nodeId The node to open.
+   * if any.
    */
-  public openNode = (node: ServerMissionNode, userId: User['_id']) => {
+  public openNode = (node: ServerMissionNode) => {
     // Confirm the node exists then open it.
     this.confirmComponentInMission(node)
     node.open()
@@ -1846,7 +1924,16 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       revealedDescendantPrototypes: prototypes,
     } = node
 
-    // Construct payload for node opened event.
+    // Get a member from the force to use for exporting
+    // revealed data.
+    let member = this.getMembersForForce(node.force._id)[0]
+
+    // If there is no member in the force, return
+    // since no event needs to be emitted.
+    if (!member) return
+
+    // Emit revealed data to members of the force
+    // containing the now opened node.
     let payload: TServerEvents['modifier-enacted']['data'] = {
       key: 'node-open',
       nodeId: node._id,
@@ -1854,15 +1941,13 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       revealedDescendants: descendants.map((n) =>
         n.toJson({
           sessionDataExposure: {
-            expose: 'user-specific',
-            userId,
+            expose: 'member-specific',
+            memberId: member._id,
           },
         }),
       ),
       revealedDescendantPrototypes: prototypes.map((p) => p.toJson()),
     }
-
-    // Emit node opened event to each member.
     this.emitModifierEnacted(node.force, payload)
   }
 
@@ -2038,32 +2123,74 @@ export default class SessionServer extends Session<TMetisServerComponents> {
    * @param options Options for sending the output.
    */
   public sendOutput = (
-    forceId: string,
     prefix: string,
     message: string,
     context: TOutputContext,
-    options: TServerOutputOptions = {},
+    to?: TOutputTo,
   ) => {
     // Extract data.
     const { type } = context
+    let forceRecipients: ServerMissionForce[] = []
+    let member: ServerSessionMember | undefined = undefined
 
-    // Find the force given the ID.
-    let force = this.mission.getForceById(forceId)
-
-    // If the force is undefined, throw an error.
-    if (!force) {
-      throw new Error(
-        `Could not send output of type "${type}" to the force with ID "${forceId}" because the force was not found.`,
-      )
+    // Find the member with the member ID,
+    // if provided.
+    if (to?.memberId) {
+      member = this.getMemberByUserId(to.memberId)
+      // If the member is not found, then throw an error.
+      if (!member) {
+        throw new Error(
+          `Could not send output with key "${type}" to the member with ID "${to.memberId}" because the member was not found in the session.`,
+        )
+      }
     }
 
-    // Create a new output object.
-    let output = ServerOutput.generate(force, prefix, message, context, options)
-    // Store the output in the force.
-    force.storeOutput(output)
+    // Mark all forces as recipients if
+    // no recipient is specified.
+    if (!to) {
+      forceRecipients = this.mission.forces
+    }
+    // Mark only specified force as recipient,
+    // otherwise.
+    else {
+      // Send to a specific force.
+      let force = this.mission.getForceByLocalKey(to.forceKey)
+      // If the force is undefined, throw an error.
+      if (!force) {
+        throw new Error(
+          `Could not send output of type "${type}" to the force with ID "${to.forceKey}" because the force was not found.`,
+        )
+      }
+      forceRecipients = [force]
+    }
 
-    // If the broadcast type is "force', then send the output to all members in the force.
-    if (output.broadcastType === 'force') {
+    // Loop through any forceRecipients and send the
+    // output to each.
+    for (let force of forceRecipients) {
+      // Create a new output object.
+      let output = ServerOutput.generate(
+        force,
+        prefix,
+        message,
+        context,
+        to?.memberId,
+      )
+
+      // Store the output in the force.
+      force.storeOutput(output)
+
+      // If a member is specified, only send the output to that member.
+      if (member) {
+        member.emit('send-output', {
+          data: {
+            outputData: output.toJson(),
+          },
+        })
+        continue
+      }
+
+      // Otherwise, send the output to all members
+      // of the force.
       for (let member of this.getMembersForForce(force._id)) {
         member.emit('send-output', {
           data: {
@@ -2071,32 +2198,6 @@ export default class SessionServer extends Session<TMetisServerComponents> {
           },
         })
       }
-    }
-
-    // If the broadcast type is "user", then send the output to the user.
-    if (output.broadcastType === 'user') {
-      // If the user ID is not provided, then throw an error.
-      if (!output.userId) {
-        throw new Error(
-          `Could not send output with key "${type}" to the user with ID "${output.userId}" because the user ID was not provided.`,
-        )
-      }
-
-      // Find the member with the user ID.
-      let member = this.getMemberByUserId(output.userId)
-      // If the member is not found, then throw an error.
-      if (!member) {
-        throw new Error(
-          `Could not send output with key "${type}" to the user with ID "${output.userId}" because the user was not found in the session.`,
-        )
-      }
-
-      // Send the output to the member.
-      member.emit('send-output', {
-        data: {
-          outputData: output.toJson(),
-        },
-      })
     }
   }
 
@@ -2186,4 +2287,22 @@ export type TSessionServerJsonOptions = {
    * @note If defined, then only the data accessible by the user will be included.
    */
   requester?: ServerSessionMember
+}
+
+/**
+ * Defines who will receive the output.
+ * @default {}
+ * @note To broadcast to the entire session, pass nothing.
+ * @note To broadcast to a specific force, pass `forceKey`.
+ * @note To broadcast to a specific member in the force, pass `memberId`.
+ */
+export type TOutputTo = {
+  /**
+   * The key of the force to which the output is sent.
+   */
+  forceKey: string
+  /**
+   * The ID of the member to whom the output is sent.
+   */
+  memberId?: string
 }

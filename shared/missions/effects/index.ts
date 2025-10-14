@@ -19,6 +19,13 @@ export default abstract class Effect<
   TType extends TEffectType = TEffectType,
 > extends MissionComponent<T, Effect<T, TType>> {
   /**
+   * The type of effect in use. Defines data structure for the effect.
+   */
+  public get type(): TType {
+    return this.context.type as TType
+  }
+
+  /**
    * The mission to which the effect belongs.
    */
   public get mission(): TSelectEffectContext<T>[TType]['sourceMission'] {

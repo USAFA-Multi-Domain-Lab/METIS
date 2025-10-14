@@ -360,7 +360,7 @@ export default abstract class MissionAction<
 
     switch (sessionDataExposure.expose) {
       case 'all':
-      case 'user-specific':
+      case 'member-specific':
         // Obfuscate any hidden properties within the exported JSON,
         // preventing the students from seeing them.
         if (json.processTimeHidden) json.processTime = -1

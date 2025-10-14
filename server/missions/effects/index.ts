@@ -71,6 +71,8 @@ export default class ServerEffect<
     return {
       _id: this._id,
       name: this.name,
+      type: this.type,
+      trigger: this.trigger,
       args: this.argsToTargetEnvContext(this.args),
     }
   }

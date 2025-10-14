@@ -48,8 +48,7 @@ export default function ListItem<T extends MetisComponent>({
   const { root: list } = listContext.elements
   const [selection, setSelection] = listContext.state.selection
   const [draggedItem] = listContext.state.draggedItem
-  const [draggedItemStartY, setDraggedItemStartY] =
-    listContext.state.draggedItemStartY
+  const [draggedItemStartY] = listContext.state.draggedItemStartY
   const [_, setItemOrderUpdateId] = listContext.state.itemOrderUpdateId
   const root = useRef<HTMLDivElement>(null)
   const [disabled, setDisabled] = useState<boolean>(item.disabled)

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 import { TMetisClientComponents } from 'src'
 import EffectList from 'src/components/content/data/lists/implementations/EffectList'
 import { TList_E } from 'src/components/content/data/lists/List'
@@ -128,7 +128,7 @@ export default function EffectTimeline<
   /**
    * A map of trigger to their corresponding effects.
    */
-  const effectsMap = compute<Record<string, THost['effects']>>(() => {
+  const effectsMap = useMemo<Record<string, THost['effects']>>(() => {
     let map: Record<string, THost['effects']> = {}
 
     for (let trigger of host.validTriggers) {
@@ -139,7 +139,7 @@ export default function EffectTimeline<
     }
 
     return map
-  })
+  }, [...host.validTriggers, host.effects])
 
   /* -- FUNCTIONS -- */
 
@@ -205,6 +205,24 @@ export default function EffectTimeline<
     onChange(effect)
   }
 
+  /**
+   * Callback for when the order of items in a list
+   * is changed by drag-and-drop.
+   */
+  const onReorder = () => {
+    // Rebuild the host's effects array
+    // based on the order of effects in
+    // each list.
+    let effects: THost['effects'] = []
+
+    for (let trigger of host.validTriggers) {
+      effects.push(...effectsMap[trigger])
+    }
+    host.effects = effects
+
+    onChange(host)
+  }
+
   /* -- RENDER -- */
 
   /**
@@ -241,6 +259,7 @@ export default function EffectTimeline<
           onOpenRequest={(effect) => {
             host.mission.select(effect)
           }}
+          onReorder={onReorder}
         />
       )
     })

@@ -5,6 +5,7 @@ import {
   TDefaultProps,
   useDefaultProps,
   useEventListener,
+  usePostInitEffect,
 } from 'src/toolbox/hooks'
 import { MetisComponent } from '../../../../../../shared'
 import StringToolbox from '../../../../../../shared/toolbox/strings'
@@ -102,6 +103,7 @@ export function createDefaultListProps<
     onListButtonClick: () => {},
     onItemButtonClick: () => {},
     onFileDrop: null,
+    onReorder: () => {},
   }
 }
 
@@ -141,6 +143,7 @@ export default function List<TItem extends MetisComponent>(
     onItemButtonClick,
     onSelect,
     onFileDrop,
+    onReorder,
   } = defaultedProps
 
   /* -- STATE -- */
@@ -165,6 +168,7 @@ export default function List<TItem extends MetisComponent>(
   const [processedItems] = state.processedItems
   const [itemsPerPage] = state.itemsPerPage
   const [selection, setSelection] = state.selection
+  const [itemOrderUpdateId] = state.itemOrderUpdateId
   const elements: TList_E = {
     root: useRef<HTMLDivElement>(null),
     nav: useRef<HTMLDivElement>(null),
@@ -514,6 +518,12 @@ export default function List<TItem extends MetisComponent>(
     }
   }, [defaultedProps.elementAccess])
 
+  // Call reorder callback function when item order
+  // update ID changes.
+  usePostInitEffect(() => {
+    onReorder()
+  }, [itemOrderUpdateId])
+
   /* -- RENDER -- */
 
   /**
@@ -762,6 +772,13 @@ export type TList_P<TItem extends MetisComponent> = {
    * accept dropped files.
    */
   onFileDrop?: TNullable<(files: FileList) => void>
+  /**
+   * Callback for when the order of items in the list
+   * is changed by drag-and-drop.
+   * @default () => {}
+   * @note Only relevant if ordering mode is 'maleable'.
+   */
+  onReorder?: () => void
 }
 
 /**

@@ -325,6 +325,8 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
     for (let targetEnv of ServerTargetEnvironment.REGISTRY.getAll()) {
       await targetEnv.setUp(session)
     }
+
+    await session.applyMissionEffects('session-setup')
   }
 
   /**
@@ -339,6 +341,8 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
     for (let targetEnv of ServerTargetEnvironment.REGISTRY.getAll()) {
       await targetEnv.tearDown(session)
     }
+
+    await session.applyMissionEffects('session-teardown')
   }
 }
 

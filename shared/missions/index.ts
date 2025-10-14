@@ -1122,14 +1122,14 @@ export type TMissionJsonOptions = {
  * Options for `TMissionJsonOptions.sessionDataExposure`.
  * @option 'all'
  * All session data is exposed.
- * @option 'user-specific'
- * Only session data relevant to the user is exposed.
+ * @option 'member-specific'
+ * Only session data relevant to the member is exposed.
  * @option 'none'
  * No session data is exposed.
  */
 export type TSessionDataExposure =
   | { expose: 'all' }
-  | { expose: 'user-specific'; userId: User['_id'] }
+  | { expose: 'member-specific'; memberId: string }
   | { expose: 'none' }
 
 /**

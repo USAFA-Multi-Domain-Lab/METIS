@@ -14,9 +14,10 @@ const Output = new TargetSchema({
     const { effect } = context
     const { forceMetadata, message } = effect.args
     const { forceKey } = forceMetadata as TForceMetadata
+    let to = forceKey ? { forceKey } : undefined
 
     // Output the message to the force.
-    context.sendOutput(message, { forceKey })
+    context.sendOutput(message, to)
   },
   args: [
     {
