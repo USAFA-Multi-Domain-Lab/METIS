@@ -63,9 +63,9 @@ export default abstract class Effect<
   }
 
   /**
-   * The direct parent of the effect.
+   * The component that directly hosts the effect.
    */
-  public get parent(): TSelectEffectContext<T>[TType]['host'] {
+  public get host(): TSelectEffectContext<T>[TType]['host'] {
     return this.context.host
   }
 

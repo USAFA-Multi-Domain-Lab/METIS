@@ -1,0 +1,14 @@
+@import 'src/assets/styles/config.scss';
+@import 'src/assets/styles/util.scss';
+
+.TimelineItem {
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  position: relative;
+  height: 2.1em;
+
+  &:hover {
+    @include background-mask($opacity: 0.05);
+  }
+}

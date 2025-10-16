@@ -19,7 +19,7 @@ export interface IChangelogPage extends TPage_P {}
 
 // This will render a page where a user can
 // view all the changes made to the application.
-export default function IChangelogPage({}: IChangelogPage): JSX.Element | null {
+export default function ChangelogPage({}: IChangelogPage): JSX.Element | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()

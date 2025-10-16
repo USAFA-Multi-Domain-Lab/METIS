@@ -6,21 +6,30 @@ import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons
 import { useMissionPageContext } from 'src/components/pages/missions/context'
 import useEffectItemButtonCallbacks from 'src/components/pages/missions/hooks/mission-components/effects'
 import { useGlobalContext } from 'src/context/global'
+import { LocalContextProvider } from 'src/context/local'
+import { ClientEffect, TClientEffectHost } from 'src/missions/effects'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
 import { useRequireLogin } from 'src/toolbox/hooks'
-import { TEffectHost } from '../../../../../../../shared/missions/effects'
+import { TEffectType } from '../../../../../../../shared/missions/effects'
 import StringToolbox from '../../../../../../../shared/toolbox/strings'
+import { timelineContext } from './context'
+import './EffectTimeline.scss'
+import { TimelineSection } from './subcomponents/TimelineSection'
 
 /**
  * Presents a timeline view of effects for a given
  * effect host, providing options to create new
  * effects, as well as manage existing ones.
  */
-export default function EffectTimeline<
-  THost extends TEffectHost<TMetisClientComponents, any>,
->({ host }: TEffectTimeline_P<THost>): JSX.Element | null {
+export function EffectTimeline<TType extends TEffectType>(
+  props: TEffectTimeline_P<TType>,
+): JSX.Element | null {
+  /* -- PROPS -- */
+
+  const { host } = props
+
   /* -- STATE -- */
 
   const { isAuthorized } = useRequireLogin()
@@ -35,8 +44,15 @@ export default function EffectTimeline<
   const [localFiles] = missionPageState.localFiles
   const { onDuplicateRequest, onDeleteRequest } =
     useEffectItemButtonCallbacks(host)
-  const [newEffectTrigger, setNewEffectTrigger] =
-    useState<THost['validTriggers'][number]>()
+  const state: TEffectTimeline_S<TType> = {
+    draggedItem: useState<TMetisClientComponents[TType] | null>(null),
+    draggedItemStartY: useState<number>(0),
+    itemOrderUpdateId: useState<string>(StringToolbox.generateRandomId()),
+  }
+  const [itemOrderUpdateId] = state.itemOrderUpdateId
+  const [newEffectTrigger, setNewEffectTrigger] = useState<
+    ClientEffect<TType>['trigger']
+  >(host.validTriggers[0])
   const createEffectEngine = useButtonSvgEngine({
     elements: [
       {
@@ -106,6 +122,9 @@ export default function EffectTimeline<
     },
     dependencies: [localFiles.length],
   })
+  const elements: TEffectTimeline_E = {
+    root: useRef<HTMLDivElement>(null),
+  }
 
   /* -- COMPUTED -- */
 
@@ -128,8 +147,10 @@ export default function EffectTimeline<
   /**
    * A map of trigger to their corresponding effects.
    */
-  const effectsMap = useMemo<Record<string, THost['effects']>>(() => {
-    let map: Record<string, THost['effects']> = {}
+  const effectsMap = useMemo<
+    Record<string, TMetisClientComponents[TType][]>
+  >(() => {
+    let map: Record<string, TMetisClientComponents[TType][]> = {}
 
     for (let trigger of host.validTriggers) {
       map[trigger] = []
@@ -137,9 +158,13 @@ export default function EffectTimeline<
     for (let effect of host.effects) {
       map[effect.trigger].push(effect)
     }
+    // Sort each trigger's effects by order
+    for (let trigger of host.validTriggers) {
+      map[trigger].sort((a, b) => a.order - b.order)
+    }
 
     return map
-  }, [...host.validTriggers, host.effects])
+  }, [...host.validTriggers, host.effects, itemOrderUpdateId])
 
   /* -- FUNCTIONS -- */
 
@@ -149,7 +174,7 @@ export default function EffectTimeline<
    * @param newEffectTrigger The trigger for the new effect.
    */
   const showEffectPresetMenu = (
-    newEffectTrigger: THost['validTriggers'][number],
+    newEffectTrigger: ClientEffect<TType>['trigger'],
   ) => {
     let listElm: HTMLDivElement | null | undefined =
       listRefMap.current[newEffectTrigger].current?.root.current
@@ -180,7 +205,7 @@ export default function EffectTimeline<
    * Handles creating a new effect from a preset.
    */
   const createEffect = (
-    trigger: THost['validTriggers'][number],
+    trigger: ClientEffect<TType>['trigger'],
     targetId?: string,
   ) => {
     // If no target ID is provided, one must be
@@ -213,13 +238,11 @@ export default function EffectTimeline<
     // Rebuild the host's effects array
     // based on the order of effects in
     // each list.
-    let effects: THost['effects'] = []
-
-    for (let trigger of host.validTriggers) {
-      effects.push(...effectsMap[trigger])
-    }
-    host.effects = effects
-
+    host.effects = host.validTriggers.flatMap(
+      (trigger: ClientEffect<TType>['trigger']) => {
+        return effectsMap[trigger]
+      },
+    )
     onChange(host)
   }
 
@@ -230,12 +253,12 @@ export default function EffectTimeline<
    * List component of effects for each trigger.
    */
   const listsJsx = compute<JSX.Element[]>(() => {
-    return Object.entries(effectsMap).map(([trigger, effects]) => {
+    return host.validTriggers.map((trigger: ClientEffect<TType>['trigger']) => {
       return (
-        <EffectList
+        <EffectList<TType>
           key={trigger}
           name={StringToolbox.toTitleCase(trigger)}
-          items={effects as any}
+          items={effectsMap[trigger]}
           elementAccess={listRefMap.current[trigger]}
           onCreateRequest={() => {
             showEffectPresetMenu(trigger)
@@ -265,22 +288,77 @@ export default function EffectTimeline<
     })
   })
 
+  /**
+   * The JSX elements for all effects across all valid triggers.
+   */
+  const effectsSectionsJsx = compute<JSX.Element[]>(() => {
+    return host.validTriggers
+      .map((trigger: ClientEffect<TType>['trigger']) => (
+        <TimelineSection
+          key={trigger}
+          trigger={trigger}
+          effects={effectsMap[trigger]}
+        />
+      ))
+      .filter(Boolean) as JSX.Element[]
+  })
+
   return (
-    <div className='EffectTimeline'>
-      <h3>Effects</h3>
-      {listsJsx}
-    </div>
+    <LocalContextProvider
+      context={timelineContext}
+      defaultedProps={props}
+      computed={{}}
+      state={state}
+      elements={elements}
+    >
+      <div className='EffectTimeline' ref={elements.root}>
+        <h3 className='TimelineHeading'>Effects</h3>
+        {effectsSectionsJsx}
+        <h3 className='TimelineHeadingLegacy'>Effects - Legacy</h3>
+        {listsJsx}
+      </div>
+    </LocalContextProvider>
   )
 }
 
 /**
  * Props for {@link EffectTimeline}.
  */
-export type TEffectTimeline_P<
-  THost extends TEffectHost<TMetisClientComponents, any>,
-> = {
+export type TEffectTimeline_P<TType extends TEffectType> = {
   /**
    * The mission component hosting the list of effects.
    */
-  host: THost
+  host: TClientEffectHost<TType>
+}
+
+/**
+ * State for {@link EffectTimeline}.
+ */
+export type TEffectTimeline_S<TType extends TEffectType> = {
+  /**
+   * The currently dragged item.
+   */
+  draggedItem: TReactState<TMetisClientComponents[TType] | null>
+
+  /**
+   * The starting Y position of the dragged item.
+   */
+  draggedItemStartY: TReactState<number>
+  /**
+   * Represents an update to the order of items
+   * in the timeline, which can be used to trigger
+   * effects when the order changes.
+   */
+  itemOrderUpdateId: TReactState<string>
+}
+
+/**
+ * Elements that need to be referenced throughout the
+ * {@link EffectTimeline} component tree.
+ */
+export type TEffectTimeline_E = {
+  /**
+   * The root element of the list.
+   */
+  root: React.RefObject<HTMLDivElement>
 }

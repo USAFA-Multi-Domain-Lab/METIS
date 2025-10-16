@@ -18,12 +18,14 @@ import {
   useMountHandler,
   useRequireLogin,
 } from 'src/toolbox/hooks'
-import { TMissionPage_P, TMissionPage_S, TMissionPageContextData } from '.'
-import { DefaultPageLayout } from '..'
+import { DefaultPageLayout, TPage_P } from '..'
 import MissionComponent, {
   TMissionComponentDefect,
 } from '../../../../../shared/missions/component'
-import { TEffectExecutionTriggered } from '../../../../../shared/missions/effects'
+import {
+  TEffectTrigger,
+  TEffectType,
+} from '../../../../../shared/missions/effects'
 import { TNonEmptyArray } from '../../../../../shared/toolbox/arrays'
 import Prompt from '../../content/communication/Prompt'
 import FileReferenceList, {
@@ -41,7 +43,7 @@ import Panel from '../../content/general-layout/panels/Panel'
 import PanelLayout from '../../content/general-layout/panels/PanelLayout'
 import PanelView from '../../content/general-layout/panels/PanelView'
 import { useButtonSvgEngine } from '../../content/user-controls/buttons/panels/hooks'
-import { MissionPageContext } from './context'
+import { MissionPageContext, TMissionPageContextData } from './context'
 import ActionEntry from './entries/implementations/ActionEntry'
 import EffectEntry from './entries/implementations/EffectEntry'
 import ForceEntry from './entries/implementations/ForceEntry'
@@ -91,9 +93,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     globalFiles: useState<ClientFileReference[]>([]),
     localFiles: useState<ClientMissionFile[]>([]),
     effectModalActive: useState<boolean>(false),
-    effectModalArgs: useState<
-      Pick<TCreateEffect_P<TClientEffectHost>, 'host' | 'trigger'>
-    >({
+    effectModalArgs: useState<Pick<TCreateEffect_P<any>, 'host' | 'trigger'>>({
       host: missionState[0],
       trigger: 'session-setup',
     }),
@@ -500,9 +500,9 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   /**
    * @see {@link TMissionPageContextData.activateEffectModal}
    */
-  const activateEffectModal = (
-    host: TClientEffectHost,
-    trigger: TEffectExecutionTriggered,
+  const activateEffectModal = <TType extends TEffectType>(
+    host: TClientEffectHost<TType>,
+    trigger: TEffectTrigger,
   ) => {
     setEffectModalActive(true)
     setEffectModalArgs({ host, trigger })
@@ -632,4 +632,57 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
       </div>
     </Provider>
   )
+}
+
+/* -- TYPES -- */
+
+/**
+ * Props for {@link MissionPage}.
+ */
+export interface TMissionPage_P extends TPage_P {
+  /**
+   * The ID of the mission to be edited. If null,
+   * a new mission is being created.
+   */
+  missionId: string | null
+}
+
+/**
+ * State for {@link MissionPage}.
+ */
+export type TMissionPage_S = {
+  /**
+   * The current mission being viewed/edited.
+   */
+  mission: TReactState<ClientMission>
+  /**
+   * The current selection within the mission.
+   */
+  selection: TReactState<MissionComponent<TMetisClientComponents>>
+  /**
+   * The defects within mission components that must
+   * be addressed for the mission to function correctly.
+   */
+  defects: TReactState<TMissionComponentDefect[]>
+  /**
+   * Triggers a recomputation of the defective
+   * components, updating the state with the result.
+   */
+  checkForDefects: TReactState<boolean>
+  /**
+   * The current list of files available in the store.
+   */
+  globalFiles: TReactState<ClientFileReference[]>
+  /**
+   * The current list of files attached to the mission.
+   */
+  localFiles: TReactState<ClientMissionFile[]>
+  /**
+   * Whether the effect modal is currently active.
+   */
+  effectModalActive: TReactState<boolean>
+  /**
+   * Arguments to pass to the effect modal when active.
+   */
+  effectModalArgs: TReactState<Pick<TCreateEffect_P, 'host' | 'trigger'>>
 }

@@ -1,8 +1,10 @@
 import { TMetisClientComponents } from 'src'
 import Prompt from 'src/components/content/communication/Prompt'
 import { useGlobalContext } from 'src/context/global'
-import { ClientEffect } from 'src/missions/effects'
-import { TEffectHost } from '../../../../../../../shared/missions/effects'
+import {
+  TEffectHost,
+  TEffectType,
+} from '../../../../../../../shared/missions/effects'
 import { useMissionPageContext } from '../../context'
 
 /**
@@ -13,8 +15,10 @@ export default function useEffectItemButtonCallbacks<
   THost extends TEffectHost<TMetisClientComponents, any>,
 >(
   host: THost,
-  options: TEffectButtonCallbackOptions<ClientEffect<THost['effectType']>> = {},
-): TEffectItemButtonCallbacks<ClientEffect<THost['effectType']>> {
+  options: TEffectButtonCallbackOptions<
+    TMetisClientComponents[THost['effectType']]
+  > = {},
+): TEffectItemButtonCallbacks<TMetisClientComponents[THost['effectType']]> {
   const { onSuccessfulDuplicate = () => {}, onSuccessfulDeletion = () => {} } =
     options
   const globalContext = useGlobalContext()
@@ -24,7 +28,7 @@ export default function useEffectItemButtonCallbacks<
 
   return {
     onDuplicateRequest: async (
-      effect: ClientEffect<THost['effectType']>,
+      effect: TMetisClientComponents[THost['effectType']],
       selectNewEffect: boolean = false,
     ) => {
       // Prompt the user to enter the name of the new effect.
@@ -61,7 +65,7 @@ export default function useEffectItemButtonCallbacks<
       }
     },
     onDeleteRequest: async (
-      effect: ClientEffect<THost['effectType']>,
+      effect: TMetisClientComponents[THost['effectType']],
       navigateBack: boolean = false,
     ) => {
       // Prompt the user to confirm the deletion.
@@ -80,7 +84,7 @@ export default function useEffectItemButtonCallbacks<
 
       // Filter out the effect from the action.
       host.effects = host.effects.filter(
-        (actionEffect: ClientEffect<THost['effectType']>) =>
+        (actionEffect: TMetisClientComponents[THost['effectType']]) =>
           actionEffect._id !== effect._id,
       )
 
@@ -98,7 +102,9 @@ export default function useEffectItemButtonCallbacks<
  * Options for when using the {@link useEffectItemButtonCallbacks}
  * hook.
  */
-export type TEffectButtonCallbackOptions<TEffect extends ClientEffect> = {
+export type TEffectButtonCallbackOptions<
+  TEffect extends TMetisClientComponents[TEffectType],
+> = {
   /**
    * Optional post-hook for handling when an effect
    * has been successfully duplicated.
@@ -117,7 +123,9 @@ export type TEffectButtonCallbackOptions<TEffect extends ClientEffect> = {
  * The yielded value from the {@link useEffectItemButtonCallbacks}
  * hook, containing the callback functions.
  */
-export type TEffectItemButtonCallbacks<TEffect extends ClientEffect> = {
+export type TEffectItemButtonCallbacks<
+  TEffect extends TMetisClientComponents[TEffectType],
+> = {
   /**
    * Callback for when the user requests to duplicate an effect.
    * @param effect The effect to duplicate.

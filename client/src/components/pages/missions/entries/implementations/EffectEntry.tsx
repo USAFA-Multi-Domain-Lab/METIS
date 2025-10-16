@@ -1,3 +1,4 @@
+import { TMetisClientComponents } from 'src'
 import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
 import { useMissionPageContext } from 'src/components/pages/missions/context'
 import useEffectItemButtonCallbacks from 'src/components/pages/missions/hooks/mission-components/effects'
@@ -26,7 +27,7 @@ export default function EffectEntry<TType extends TEffectType>({
 
   const { onChange } = useMissionPageContext()
   const { onDuplicateRequest, onDeleteRequest } = useEffectItemButtonCallbacks(
-    effect.parent,
+    effect.host,
   )
   const effectState = useObjectFormSync(
     effect,
@@ -75,7 +76,7 @@ export default function EffectEntry<TType extends TEffectType>({
       <DetailDropdown<TSelectEffectContext<any>[TType]['trigger']>
         fieldType='required'
         label='Trigger'
-        options={effect.parent.validTriggers}
+        options={effect.host.validTriggers}
         value={trigger}
         setValue={setTrigger}
         isExpanded={false}
@@ -120,5 +121,5 @@ export type TEffectEntry_P<TType extends TEffectType> = {
   /**
    * The effect to apply to the target.
    */
-  effect: ClientEffect<TType>
+  effect: TMetisClientComponents[TType]
 }

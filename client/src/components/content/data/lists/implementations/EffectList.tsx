@@ -1,18 +1,20 @@
-import React from 'react'
-import { ClientEffect } from 'src/missions/effects'
+import { TMetisClientComponents } from 'src'
 import { compute } from 'src/toolbox'
 import { useDefaultProps } from 'src/toolbox/hooks'
+import { TEffectType } from '../../../../../../../shared/missions/effects'
 import List, { createDefaultListProps, TList_P } from '../List'
 
 /**
  * A component for displaying a list of effects.
  * @note Uses the `List` component.
  */
-export default function EffectList(props: TEffectList_P): JSX.Element | null {
+export default function EffectList<TType extends TEffectType>(
+  props: TEffectList_P<TType>,
+): JSX.Element | null {
   /* -- PROPS -- */
 
   const defaultedProps = useDefaultProps(props, {
-    ...createDefaultListProps<ClientEffect>(),
+    ...createDefaultListProps<TMetisClientComponents[TType]>(),
     itemsPerPageMin: 10,
     columns: [],
     listButtonIcons: compute<TMetisIcon[]>(() => {
@@ -113,7 +115,6 @@ export default function EffectList(props: TEffectList_P): JSX.Element | null {
           break
       }
     },
-    rootRef: React.useRef<HTMLDivElement>(null),
     onCreateRequest: () => {},
     onOpenRequest: () => {},
     onDuplicateRequest: () => {},
@@ -128,7 +129,7 @@ export default function EffectList(props: TEffectList_P): JSX.Element | null {
 
   /* -- RENDER -- */
 
-  return <List<ClientEffect<'executionTriggeredEffect'>> {...defaultedProps} />
+  return <List<TMetisClientComponents[TType]> {...defaultedProps} />
 }
 
 /* -- TYPES -- */
@@ -136,8 +137,8 @@ export default function EffectList(props: TEffectList_P): JSX.Element | null {
 /**
  * Props for EffectList component.
  */
-export interface TEffectList_P
-  extends TList_P<ClientEffect<'executionTriggeredEffect'>> {
+export interface TEffectList_P<TType extends TEffectType>
+  extends TList_P<TMetisClientComponents[TType]> {
   /**
    * Callback to handle a request to create a new effect.
    * @default () => {}
@@ -150,21 +151,19 @@ export interface TEffectList_P
    * @default () => {}
    * @note If not provided, the open button will not be used.
    */
-  onOpenRequest?: (effect: ClientEffect<'executionTriggeredEffect'>) => void
+  onOpenRequest?: (effect: TMetisClientComponents[TType]) => void
   /**
    * Callback to handle a request to duplicate an effect.
    * @param effect The effect to duplicate.
    * @default () => {}
    * @note If not provided, the copy button will not be used.
    */
-  onDuplicateRequest?: (
-    effect: ClientEffect<'executionTriggeredEffect'>,
-  ) => void
+  onDuplicateRequest?: (effect: TMetisClientComponents[TType]) => void
   /**
    * Callback to handle a request to delete an effect.
    * @param effect The effect to delete.
    * @default () => {}
    * @note If not provided, the remove button will not be used.
    */
-  onDeleteRequest?: (effect: ClientEffect<'executionTriggeredEffect'>) => void
+  onDeleteRequest?: (effect: TMetisClientComponents[TType]) => void
 }

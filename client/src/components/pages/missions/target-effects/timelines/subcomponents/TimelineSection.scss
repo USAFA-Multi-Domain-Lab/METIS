@@ -1,0 +1,10 @@
+@import 'src/assets/styles/config.scss';
+
+.TimelineSection {
+  .TimelineSectionHeading {
+    margin: 1.5em 0 0.5em;
+    font-size: 0.9em;
+    font-weight: 500;
+    color: $color-primary-light;
+  }
+}

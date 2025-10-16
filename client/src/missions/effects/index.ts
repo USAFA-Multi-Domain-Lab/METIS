@@ -269,7 +269,5 @@ export type TClientTriggerDataExec =
 /**
  * Client implementation of {@link TEffectHost}.
  */
-export type TClientEffectHost<TType extends TEffectType = any> = TEffectHost<
-  TMetisClientComponents,
-  TType
->
+export type TClientEffectHost<TType extends TEffectType = TEffectType> =
+  TEffectHost<TMetisClientComponents, TType>

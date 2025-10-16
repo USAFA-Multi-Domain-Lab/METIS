@@ -18,7 +18,7 @@ import { TMissionComponentDefect } from '../../../../../../../shared/missions/co
 import Tooltip from '../../../../content/communication/Tooltip'
 import { DetailString } from '../../../../content/form/DetailString'
 import ListOld from '../../../../content/general-layout/ListOld'
-import EffectTimeline from '../../target-effects/timelines/EffectTimeline'
+import { EffectTimeline } from '../../target-effects/timelines'
 import Entry from '../Entry'
 
 /**
@@ -173,7 +173,7 @@ export default function MissionEntry({
         key={`${mission._id}_resourceLabel`}
       />
       <Divider />
-      <EffectTimeline<ClientMission> host={mission} />
+      <EffectTimeline<'sessionTriggeredEffect'> host={mission} />
       <Divider />
       <If condition={defects.length}>
         <ListOld<TMissionComponentDefect>

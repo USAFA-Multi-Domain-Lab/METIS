@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { TMetisClientComponents } from 'src'
 import Tooltip from 'src/components/content/communication/Tooltip'
 import { DetailDropdown } from 'src/components/content/form/dropdown/'
 import { ButtonText } from 'src/components/content/user-controls/buttons/ButtonText'
@@ -8,23 +7,20 @@ import { ClientTargetEnvironment } from 'src/target-environments'
 import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import {
-  TEffectHost,
-  TEffectType,
-} from '../../../../../../../../../shared/missions/effects'
+import { TEffectType } from '../../../../../../../../../shared/missions/effects'
 import './CreateEffect.scss'
 
 /**
  * Prompt modal for creating an effect to apply to a target.
  */
 export default function CreateEffect<
-  THost extends TClientEffectHost = TClientEffectHost<TEffectType>,
+  TType extends TEffectType = 'sessionTriggeredEffect',
 >({
   host,
   trigger,
   onCloseRequest,
   onChange,
-}: TCreateEffect_P<THost>): JSX.Element | null {
+}: TCreateEffect_P<TType>): JSX.Element | null {
   /* -- STATE -- */
 
   const [targetEnvironments] = useState<ClientTargetEnvironment[]>(
@@ -164,17 +160,15 @@ export default function CreateEffect<
 /**
  * Props for CreateEffect component.
  */
-export type TCreateEffect_P<
-  THost extends TEffectHost<TMetisClientComponents, any>,
-> = {
+export type TCreateEffect_P<TType extends TEffectType = any> = {
   /**
    * The host for which to create the effect.
    */
-  host: THost
+  host: TClientEffectHost<TType>
   /**
    * The trigger for the new effect.
    */
-  trigger: THost['validTriggers'][number]
+  trigger: ClientEffect<TType>['trigger']
   /**
    * Callback to handle a request to close the modal.
    */

@@ -13,7 +13,7 @@ import { DetailNumber } from '../../../../content/form/DetailNumber'
 import { DetailString } from '../../../../content/form/DetailString'
 import { DetailToggle } from '../../../../content/form/DetailToggle'
 import Divider from '../../../../content/form/Divider'
-import EffectTimeline from '../../target-effects/timelines/EffectTimeline'
+import { EffectTimeline } from '../../target-effects/timelines/'
 import Entry from '../Entry'
 
 /**
@@ -247,7 +247,7 @@ export default function ActionEntry({
         key={`${action._id}_opensNodeHidden`}
       />
       <Divider />
-      <EffectTimeline<ClientMissionAction> host={action} />
+      <EffectTimeline<'executionTriggeredEffect'> host={action} />
     </Entry>
   )
 }

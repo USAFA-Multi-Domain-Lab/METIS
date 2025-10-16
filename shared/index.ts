@@ -158,10 +158,6 @@ export abstract class MetisComponent {
   }
 }
 
-type TMetisEffects<T extends TMetisBaseComponents> = {
-  [TType in TEffectType]: Effect<T, TType>
-}
-
 /**
  * Base, shared registry of METIS components types.
  * @note Used as a generic argument for all base,
