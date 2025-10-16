@@ -317,7 +317,7 @@ export default abstract class Effect<
    * A numeric value which determines the order in which
    * the effect will be applied relative to other effects.
    */
-  public order: number = 0
+  public order: number
 
   /**
    * Describes the purpose of the effect.
@@ -372,6 +372,7 @@ export default abstract class Effect<
     targetId: string,
     environmentId: string,
     targetEnvironmentVersion: string,
+    order: number,
     description: string,
     context: TSelectEffectContext<T>[TType],
     args: AnyObject,
@@ -387,6 +388,7 @@ export default abstract class Effect<
     this.environmentId = environmentId
     this.targetEnvironmentVersion = targetEnvironmentVersion
     this.context = context
+    this.order = order
     this.description = description
     this.args = args
     this.localKey = localKey
@@ -1131,4 +1133,15 @@ export interface TEffectHost<
    * @returns The new key for an effect.
    */
   generateEffectKey(): string
+  /**
+   * Generates a new order number for a new effect
+   * with the given trigger. This will be the
+   * highest existing order number for this trigger
+   * plus one.
+   * @param trigger The trigger to generate the order
+   * number for.
+   * @returns The new order number for a new effect with
+   * the given trigger.
+   */
+  generateEffectOrder(trigger: T[TType]['trigger']): number
 }

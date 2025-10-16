@@ -41,9 +41,6 @@ export class ClientEffect<
    * Duplicates the effect, creating a new effect with the same properties
    * as this one or with the provided properties.
    * @param options The options for duplicating the effect.
-   * @param options.action The action to which the duplicated effect belongs.
-   * @param options.name The name of the duplicated effect.
-   * @param options.localKey The local key of the duplicated effect.
    * @returns A new effect with the same properties as this one or with the
    * provided properties.
    */
@@ -52,7 +49,7 @@ export class ClientEffect<
   ): ClientEffect<TType> {
     // Gather details.
     const {
-      triggerData = this.context,
+      context = this.context,
       name = this.name,
       localKey = this.localKey,
     } = options
@@ -63,8 +60,9 @@ export class ClientEffect<
       this.targetId,
       this.environmentId,
       this.targetEnvironmentVersion,
+      this.host.generateEffectOrder(this.trigger as never),
       this.description,
-      triggerData,
+      context,
       this.args,
       localKey,
     )
@@ -90,6 +88,7 @@ export class ClientEffect<
       target._id,
       target.environment._id,
       target.environment.version,
+      mission.generateEffectOrder(trigger),
       ClientEffect.DEFAULT_SESSION_PROPERTIES.description,
       {
         type: 'sessionTriggeredEffect',
@@ -133,6 +132,7 @@ export class ClientEffect<
       target._id,
       target.environment._id,
       target.environment.version,
+      action.generateEffectOrder(trigger),
       ClientEffect.DEFAULT_EXEC_PROPERTIES.description,
       {
         type: 'executionTriggeredEffect',
@@ -171,6 +171,7 @@ export class ClientEffect<
       json.targetId,
       json.environmentId,
       json.targetEnvironmentVersion,
+      json.order,
       json.description,
       {
         type: 'sessionTriggeredEffect',
@@ -209,6 +210,7 @@ export class ClientEffect<
       json.targetId,
       json.environmentId,
       json.targetEnvironmentVersion,
+      json.order,
       json.description,
       {
         type: 'executionTriggeredEffect',
@@ -243,7 +245,7 @@ type TDuplicateEffectOptions<TType extends TEffectType> = {
   /**
    * @see {@link ClientEffect.context}
    */
-  triggerData?: TSelectEffectContext<TMetisClientComponents>[TType]
+  context?: TSelectEffectContext<TMetisClientComponents>[TType]
   /**
    * @see {@link ClientEffect.name}
    */

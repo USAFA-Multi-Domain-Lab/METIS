@@ -405,10 +405,7 @@ export default abstract class MissionAction<
     this._resourceCostOperand = resourceCostOperand
   }
 
-  /**
-   * Generates a new key for an effect.
-   * @returns The new key for an effect.
-   */
+  // Implemented
   public generateEffectKey(): string {
     // Initialize
     let newKey: number = 0
@@ -423,6 +420,20 @@ export default abstract class MissionAction<
     // Increment the new key by 1 and return it as a string.
     newKey++
     return String(newKey)
+  }
+
+  // Implemented
+  public generateEffectOrder(trigger: TEffectExecutionTriggered): number {
+    // Find the highest existing order number for the given trigger.
+    let highestOrder = 0
+    for (let effect of this.effects) {
+      if (effect.trigger === trigger) {
+        highestOrder = Math.max(highestOrder, effect.order)
+      }
+    }
+    // Return the new order number, which is the highest existing order
+    // plus one.
+    return highestOrder + 1
   }
 
   /**

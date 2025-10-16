@@ -27,21 +27,20 @@ while (cursor_missions.hasNext()) {
     for (let node of force.nodes) {
       // Loop through actions.
       for (let action of node.actions) {
+        // Tracks ordering on a per-trigger basis.
+        let orderByTrigger = {
+          'execution-initiation': 1,
+          'execution-success': 1,
+          'execution-failure': 1,
+        }
+
         // Loop through effects.
         for (let effect of action.effects) {
-          switch (effect.trigger) {
-            // Update the trigger value based
-            // on its current value.
-            case 'immediate':
-              effect.trigger = 'execution-initiation'
-              break
-            case 'success':
-              effect.trigger = 'execution-success'
-              break
-            case 'failure':
-              effect.trigger = 'execution-failure'
-              break
-          }
+          // Assign order based on trigger
+          // and its position within the
+          // array of effects.
+          effect.order = orderByTrigger[effect.trigger]
+          orderByTrigger[effect.trigger]++
         }
       }
     }

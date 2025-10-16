@@ -153,7 +153,7 @@ export default class ClientMissionAction extends MissionAction<TMetisClientCompo
     // Duplicate the effects.
     duplicatedAction.effects = this.effects.map((effect) => {
       return effect.duplicate({
-        triggerData: {
+        context: {
           type: 'executionTriggeredEffect',
           trigger: effect.trigger,
           sourceAction: duplicatedAction,

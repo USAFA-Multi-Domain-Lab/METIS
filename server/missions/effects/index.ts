@@ -135,6 +135,7 @@ export default class ServerEffect<
       target._id,
       target.environment._id,
       target.environment.version,
+      mission.generateEffectOrder(trigger),
       ServerEffect.DEFAULT_SESSION_PROPERTIES.description,
       {
         type: 'sessionTriggeredEffect',
@@ -178,6 +179,7 @@ export default class ServerEffect<
       target._id,
       target.environment._id,
       target.environment.version,
+      action.generateEffectOrder(trigger),
       ServerEffect.DEFAULT_EXEC_PROPERTIES.description,
       {
         type: 'executionTriggeredEffect',
@@ -216,6 +218,7 @@ export default class ServerEffect<
       json.targetId,
       json.environmentId,
       json.targetEnvironmentVersion,
+      json.order,
       json.description,
       {
         type: 'sessionTriggeredEffect',
@@ -254,6 +257,7 @@ export default class ServerEffect<
       json.targetId,
       json.environmentId,
       json.targetEnvironmentVersion,
+      json.order,
       json.description,
       {
         type: 'executionTriggeredEffect',
