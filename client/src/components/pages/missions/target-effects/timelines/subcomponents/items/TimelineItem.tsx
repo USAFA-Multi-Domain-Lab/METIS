@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react'
 import { TMetisClientComponents } from 'src'
 import { compute } from 'src/toolbox'
-import { TEffectType } from '../../../../../../../../shared/missions/effects'
-import ClassList from '../../../../../../../../shared/toolbox/html/class-lists'
-import StringToolbox from '../../../../../../../../shared/toolbox/strings'
-import { useTimelineContext } from '../context'
+import { TEffectType } from '../../../../../../../../../shared/missions/effects'
+import ClassList from '../../../../../../../../../shared/toolbox/html/class-lists'
+import StringToolbox from '../../../../../../../../../shared/toolbox/strings'
+import { useTimelineContext } from '../../context'
 import './TimelineItem.scss'
 import TimelineDragHandle, {
   TIMELINE_DRAG_HANDLE_CLASS,
@@ -23,6 +23,7 @@ export function TimelineItem<TType extends TEffectType>({
   const { host } = timelineContext
   const [draggedItem] = timelineContext.state.draggedItem
   const [draggedItemStartY] = timelineContext.state.draggedItemStartY
+  const prevMouseY = timelineContext.state.previousMouseY
   const [_, setItemOrderUpdateId] = timelineContext.state.itemOrderUpdateId
   const { root: timeline } = timelineContext.elements
   const root = useRef<HTMLDivElement>(null)
@@ -43,24 +44,33 @@ export function TimelineItem<TType extends TEffectType>({
    */
   const isDragged = compute<boolean>(() => item._id === draggedItem?._id)
 
+  /**
+   * Looks at the state of the dragged item and the
+   * movement of the mouse to determine if the item
+   * should be moved in the list.
+   * @param event The most recent mouse event.
+   */
   const moveItemIfNeeded = (event: MouseEvent) => {
     // Only the dragged item should handle
     // reordering logic. Also, if no list element
     // is available, abort.
-    if (!isDragged || !timeline.current) return
+    if (!draggedItem || !timeline.current) return
 
     const hoverOverOffset = -5
 
     let mouseY = event.clientY
     // Find all list items other than the dragged item.
     let potentialTargetElements = Array.from(
-      timeline.current.querySelectorAll('.TimelineItem'),
-    ).filter(
-      (element) => !element.classList.contains('Dragged'),
-    ) as HTMLElement[]
-    let targetElement: HTMLElement | null = null
-    let targetEffect: TMetisClientComponents[TType] | null = null
-    let previousOrder = item.order
+      timeline.current.querySelectorAll('.TimelineItem, .TimelineLandingPad'),
+    ).filter((element) => !element.classList.contains('Dragged'))
+
+    // Gather details about dragged and targeted items.
+    let draggedEffect = draggedItem
+    let draggedOrderPrev = draggedEffect.order
+    let draggedTriggerPrev = draggedEffect.trigger
+    let targetedEffect: TMetisClientComponents[TType] | null = null
+    let targetedTrigger: TMetisClientComponents[TType]['trigger'] | null = null
+    let targetedOrder: number = -1
 
     // Find target effect.
     for (let element of potentialTargetElements) {
@@ -73,118 +83,66 @@ export function TimelineItem<TType extends TEffectType>({
       ) {
         // If in bounds for any given element,
         // mark that element as the target.
-        targetElement = element
+        let targetedElement = element
 
         // Find the effect associated with the element.
-        let itemId = targetElement.getAttribute('data-item-id')
-        targetEffect = host.effects.find((i) => i._id === itemId) ?? null
+        let effectId = targetedElement.getAttribute('data-id')
+
+        targetedEffect = host.effects.find((i) => i._id === effectId) ?? null
+        targetedTrigger = targetedElement.getAttribute(
+          'data-trigger',
+        ) as TMetisClientComponents[TType]['trigger']
+        targetedOrder = parseInt(
+          targetedElement.getAttribute('data-order') ?? '-1',
+        )
 
         // No need to continue looping.
         break
       }
     }
 
-    console.log({ targetElement, targetEffect })
+    // Abort if no targeted order or trigger.
+    if (!targetedOrder || !targetedTrigger) return
 
-    // Abort if no target element or effect found.
-    if (!targetElement || !targetEffect) return
+    // If the triggers match, then the order is simply
+    // swapped between the two effects.
+    if (draggedEffect.trigger === targetedTrigger) {
+      if (!targetedEffect) return
 
-    // Swap orders.
-    item.order = targetEffect.order
-    targetEffect.order = previousOrder
+      draggedEffect.order = targetedOrder
+      targetedEffect.order = draggedOrderPrev
+    }
+    // If the trigger differs, then the dragged effect
+    // still takes the order of the targeted effect,
+    // but the targeted effect, and the effects from
+    // both triggers must be adjusted accordingly.
+    else {
+      draggedEffect.order = targetedOrder
+      draggedEffect.trigger = targetedTrigger
 
-    console.log(item.order, targetEffect.order)
+      for (let effect of host.effects) {
+        // Adjust effects in the original trigger section
+        // to close the gap left by the moved effect.
+        if (
+          effect.trigger === draggedTriggerPrev &&
+          effect.order > draggedOrderPrev
+        ) {
+          effect.order--
+        }
+        // Adjust effects in the targeted trigger section
+        // to make room for the incoming effect.
+        if (
+          effect.trigger === targetedTrigger &&
+          effect._id !== draggedEffect._id &&
+          effect.order >= targetedOrder
+        ) {
+          effect.order++
+        }
+      }
+    }
 
     // Trigger update.
     setItemOrderUpdateId(StringToolbox.generateRandomId())
-  }
-
-  /**
-   * Looks at the state of the dragged item and the
-   * movement of the mouse to determine if the item
-   * should be moved in the list.
-   * @param event The most recent mouse event.
-   */
-  const moveItemIfNeededLegacy = (event: MouseEvent) => {
-    // Only the dragged item should handle
-    // reordering logic. Also, if no list element
-    // is available, abort.
-    if (!isDragged || !timeline.current) return
-
-    const hoverOverOffset = -5
-    let mouseY = event.clientY
-
-    // Find all list items and determine which one the mouse is over
-    let listItems = Array.from(
-      timeline.current.querySelectorAll('.ListItem'),
-    ).filter(
-      (element) => !element.classList.contains('Dragged'),
-    ) as HTMLElement[]
-
-    let targetItem: HTMLElement | null = null
-    let targetIndex = -1
-
-    // Find the item the mouse is currently over
-    for (const element of listItems) {
-      let rect = element.getBoundingClientRect()
-      if (
-        mouseY >= rect.top - hoverOverOffset &&
-        mouseY <= rect.bottom + hoverOverOffset
-      ) {
-        targetItem = element
-        break
-      }
-    }
-
-    if (targetItem) {
-      // Get the item ID from the element and find its index
-      let itemId = targetItem.getAttribute('data-item-id')
-      if (itemId) {
-        targetIndex = host.effects.findIndex((i) => i._id === itemId)
-      }
-    }
-
-    if (targetIndex !== -1) {
-      const draggedIndex = host.effects.findIndex((i) => i._id === item._id)
-      if (draggedIndex === -1) return
-
-      // Track previous mouse Y position using a ref
-      const prevMouseYRef = ((moveItemIfNeeded as any).prevMouseYRef ??= {
-        value: null,
-      })
-
-      let insertIndex: number
-
-      if (prevMouseYRef.value !== null) {
-        if (mouseY > prevMouseYRef.value) {
-          // Moving downward, place below target
-          insertIndex = targetIndex + 1
-        } else if (mouseY < prevMouseYRef.value) {
-          // Moving upward, place above target
-          insertIndex = targetIndex
-        } else {
-          // No movement
-          return
-        }
-      } else {
-        // First move, default to above target
-        insertIndex = targetIndex
-      }
-
-      prevMouseYRef.value = mouseY
-
-      // Adjust insert index if dragged item is before the target
-      if (draggedIndex < insertIndex) {
-        insertIndex--
-      }
-
-      // If the dragged item is not already at the target position, move it
-      if (draggedIndex !== insertIndex) {
-        host.effects.splice(draggedIndex, 1)
-        host.effects.splice(insertIndex, 0, item)
-        setItemOrderUpdateId(StringToolbox.generateRandomId())
-      }
-    }
   }
 
   /**
@@ -247,7 +205,14 @@ export function TimelineItem<TType extends TEffectType>({
   /* -- RENDER -- */
 
   return (
-    <div className={rootClass.value} data-item-id={item._id} ref={root}>
+    <div
+      className={rootClass.value}
+      data-id={item._id}
+      data-trigger={item.trigger}
+      data-order={item.order}
+      ref={root}
+      onDoubleClick={() => host.mission.select(item)}
+    >
       <TimelineDragHandle item={item} />
       <TimelineItemCell>{item.name}</TimelineItemCell>
       <TimelineItemCell className='TimelineItemOptions'></TimelineItemCell>

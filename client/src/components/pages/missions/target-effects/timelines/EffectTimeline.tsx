@@ -48,6 +48,7 @@ export function EffectTimeline<TType extends TEffectType>(
     draggedItem: useState<TMetisClientComponents[TType] | null>(null),
     draggedItemStartY: useState<number>(0),
     itemOrderUpdateId: useState<string>(StringToolbox.generateRandomId()),
+    previousMouseY: useRef<number>(0),
   }
   const [itemOrderUpdateId] = state.itemOrderUpdateId
   const [newEffectTrigger, setNewEffectTrigger] = useState<
@@ -350,6 +351,11 @@ export type TEffectTimeline_S<TType extends TEffectType> = {
    * effects when the order changes.
    */
   itemOrderUpdateId: TReactState<string>
+  /**
+   * The previous mouse Y position, used
+   * for calculating drag-and-drop movements.
+   */
+  previousMouseY: React.MutableRefObject<number>
 }
 
 /**

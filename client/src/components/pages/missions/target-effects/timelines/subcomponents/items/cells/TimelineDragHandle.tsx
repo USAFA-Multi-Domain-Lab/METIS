@@ -1,8 +1,8 @@
 import { useRef } from 'react'
 import { TMetisClientComponents } from 'src'
 import Tooltip from 'src/components/content/communication/Tooltip'
-import { TEffectType } from '../../../../../../../../../shared/missions/effects'
-import { useTimelineContext } from '../../context'
+import { TEffectType } from '../../../../../../../../../../shared/missions/effects'
+import { useTimelineContext } from '../../../context'
 import './TimelineDragHandle.scss'
 import { TimelineItemCell } from './TimelineItemCell'
 
