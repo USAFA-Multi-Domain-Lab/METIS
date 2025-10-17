@@ -124,7 +124,7 @@ export interface TButtonSvg_PK extends TSvgPanelElementBase {
    * Handles the click event for the button.
    * @param event The click event.
    */
-  onClick: (event: React.MouseEvent) => void
+  onClick: (event: React.MouseEvent<HTMLDivElement>) => void
 }
 
 /**

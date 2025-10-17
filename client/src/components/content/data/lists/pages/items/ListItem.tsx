@@ -1,5 +1,4 @@
-import { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
-import Tooltip from 'src/components/content/communication/Tooltip'
+import { ReactNode, useEffect, useRef, useState } from 'react'
 import { useButtonMenuEngine } from 'src/components/content/user-controls/buttons/ButtonMenu'
 import ButtonMenuController from 'src/components/content/user-controls/buttons/ButtonMenuController'
 import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
@@ -64,7 +63,7 @@ export default function ListItem<T extends MetisComponent>({
         type: 'button',
         icon: 'options',
         onClick: (event) => onOptionsClick(event),
-        description: 'View option menu',
+        label: 'View option menu',
         disabled: !itemButtonIcons.length,
       },
     ],
@@ -126,16 +125,6 @@ export default function ListItem<T extends MetisComponent>({
       gridTemplateColumns: columnWidths.join(' '),
     }
   })
-
-  /**
-   * The description for the JSX where the options button is rendered.
-   */
-  const optionsJsxDescription = useMemo<string>(() => {
-    // Get the description for the options button.
-    const button = optionMenuButtonEngine.get('options')
-    if (!button) return ''
-    return button.description
-  }, [optionMenuButtonEngine])
 
   /* -- FUNCTIONS -- */
 
@@ -382,7 +371,6 @@ export default function ListItem<T extends MetisComponent>({
       result.push(
         <div key={'options'} className='ItemCellLike ItemOptions'>
           <ButtonSvgPanel engine={optionMenuButtonEngine} />
-          <Tooltip description={optionsJsxDescription} />
         </div>,
       )
     }

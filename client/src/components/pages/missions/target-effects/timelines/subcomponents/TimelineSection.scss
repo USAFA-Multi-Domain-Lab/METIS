@@ -1,10 +1,19 @@
 @import 'src/assets/styles/config.scss';
 
 .TimelineSection {
-  .TimelineSectionHeading {
-    margin: 0;
-    font-size: 0.9em;
-    font-weight: 500;
-    color: $color-primary-light;
+  .TimelineSectionHeader {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    flex-direction: row;
+    align-items: center;
+    padding: 0.8em;
+    border-bottom: 2px solid $color-secondary;
+
+    .TimelineSectionHeading {
+      margin: 0;
+      font-size: 0.9em;
+      font-weight: 500;
+      color: $color-primary-light;
+    }
   }
 }

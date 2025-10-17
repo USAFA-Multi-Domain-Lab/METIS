@@ -1,21 +1,15 @@
 import React, { useMemo, useRef, useState } from 'react'
 import { TMetisClientComponents } from 'src'
-import EffectList from 'src/components/content/data/lists/implementations/EffectList'
-import { TList_E } from 'src/components/content/data/lists/List'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
 import { useMissionPageContext } from 'src/components/pages/missions/context'
-import useEffectItemButtonCallbacks from 'src/components/pages/missions/hooks/mission-components/effects'
-import { useGlobalContext } from 'src/context/global'
 import { LocalContextProvider } from 'src/context/local'
 import { ClientEffect, TClientEffectHost } from 'src/missions/effects'
-import { ClientTargetEnvironment } from 'src/target-environments'
-import ClientTarget from 'src/target-environments/targets'
 import { compute } from 'src/toolbox'
-import { useRequireLogin } from 'src/toolbox/hooks'
+import { useEventListener, usePostInitEffect } from 'src/toolbox/hooks'
 import { TEffectType } from '../../../../../../../shared/missions/effects'
 import StringToolbox from '../../../../../../../shared/toolbox/strings'
 import { timelineContext } from './context'
 import './EffectTimeline.scss'
+import TimelineControlPanel from './subcomponents/TimelineControlPanel'
 import { TimelineSection } from './subcomponents/TimelineSection'
 
 /**
@@ -32,118 +26,21 @@ export function EffectTimeline<TType extends TEffectType>(
 
   /* -- STATE -- */
 
-  const { isAuthorized } = useRequireLogin()
-  const globalContext = useGlobalContext()
-  const { showButtonMenu } = globalContext.actions
   const missionPageContext = useMissionPageContext()
-  const {
-    onChange,
-    activateEffectModal,
-    state: missionPageState,
-  } = missionPageContext
-  const [localFiles] = missionPageState.localFiles
-  const { onDuplicateRequest, onDeleteRequest } =
-    useEffectItemButtonCallbacks(host)
+  const { onChange } = missionPageContext
   const state: TEffectTimeline_S<TType> = {
+    selection: useState<TMetisClientComponents[TType] | null>(null),
     draggedItem: useState<TMetisClientComponents[TType] | null>(null),
     draggedItemStartY: useState<number>(0),
     itemOrderUpdateId: useState<string>(StringToolbox.generateRandomId()),
-    previousMouseY: useRef<number>(0),
   }
   const [itemOrderUpdateId] = state.itemOrderUpdateId
-  const [newEffectTrigger, setNewEffectTrigger] = useState<
-    ClientEffect<TType>['trigger']
-  >(host.validTriggers[0])
-  const createEffectEngine = useButtonSvgEngine({
-    elements: [
-      {
-        key: 'shell',
-        type: 'button',
-        icon: 'shell',
-        label: 'Output Message',
-        permissions: ['missions_write'],
-        onClick: () => {
-          createEffect(newEffectTrigger, ClientTarget.METIS_TARGET_IDS.OUTPUT)
-        },
-      },
-      {
-        key: 'ban',
-        type: 'button',
-        icon: 'ban',
-        label: 'Block Status',
-        permissions: ['missions_write'],
-        onClick: () => {
-          createEffect(
-            newEffectTrigger,
-            ClientTarget.METIS_TARGET_IDS.BLOCK_STATUS,
-          )
-        },
-      },
-      {
-        key: 'file',
-        type: 'button',
-        icon: 'file',
-        label: 'File Access',
-        permissions: ['missions_write'],
-        disabled: localFiles.length === 0,
-        onClick: () => {
-          createEffect(
-            newEffectTrigger,
-            ClientTarget.METIS_TARGET_IDS.FILE_ACCESS,
-          )
-        },
-      },
-      {
-        key: 'open',
-        type: 'button',
-        icon: 'door',
-        label: 'Open Status',
-        permissions: ['missions_write'],
-        onClick: () => {
-          createEffect(
-            newEffectTrigger,
-            ClientTarget.METIS_TARGET_IDS.OPEN_NODE,
-          )
-        },
-      },
-      {
-        key: 'add',
-        type: 'button',
-        icon: 'add',
-        label: 'Custom Effect',
-        permissions: ['missions_write'],
-        onClick: () => {
-          createEffect(newEffectTrigger)
-        },
-      },
-    ],
-    options: {
-      revealLabels: true,
-      flow: 'column',
-    },
-    dependencies: [localFiles.length],
-  })
+  const [, setSelection] = state.selection
   const elements: TEffectTimeline_E = {
     root: useRef<HTMLDivElement>(null),
   }
 
   /* -- COMPUTED -- */
-
-  /**
-   * A map of triggers to their corresponding list
-   * elements.
-   */
-  const listRefMap = useRef(
-    compute(() => {
-      let map: Record<string, React.MutableRefObject<TList_E | null>> = {}
-
-      for (let trigger of host.validTriggers) {
-        map[trigger] = React.createRef<TList_E>()
-      }
-
-      return map
-    }),
-  )
 
   /**
    * A map of trigger to their corresponding effects.
@@ -165,129 +62,46 @@ export function EffectTimeline<TType extends TEffectType>(
     }
 
     return map
-  }, [...host.validTriggers, host.effects, itemOrderUpdateId])
+  }, [...host.validTriggers, ...host.effects, itemOrderUpdateId])
 
-  /* -- FUNCTIONS -- */
+  /* -- EFFECTS -- */
 
-  /**
-   * Shows the effect preset menu, presenting various options
-   * for creating a new effect.
-   * @param newEffectTrigger The trigger for the new effect.
-   */
-  const showEffectPresetMenu = (
-    newEffectTrigger: ClientEffect<TType>['trigger'],
-  ) => {
-    let listElm: HTMLDivElement | null | undefined =
-      listRefMap.current[newEffectTrigger].current?.root.current
-
-    if (!listElm) {
-      throw new Error('List ref is null')
-    }
-
-    // Get the create effect button then confirm
-    // it is present.
-    const createEffectButton = listElm.querySelector<HTMLDivElement>(
-      '.ListNav .ButtonSvgPanel .ButtonSvg_add',
-    )
-
-    if (!createEffectButton) {
-      console.warn('ActionEntry: createEffectButton is null')
-      return
-    }
-
-    // Activate the effect preset menu.
-    showButtonMenu(createEffectEngine, {
-      positioningTarget: createEffectButton,
+  // Deselect the currently selected item, if necessary.
+  useEventListener(document, 'mousedown', (event: MouseEvent) => {
+    const selectors = ['.ButtonMenu']
+    const blacklistedClasses = ['InputBlocker']
+    const rootElement = elements.root.current
+    const target = event.target as HTMLElement
+    // Get all elements that prevent deselection
+    // of the item that is currently selected.
+    const ignoredElms: HTMLElement[] = []
+    selectors.forEach((selector) => {
+      const elements = document.querySelectorAll<HTMLElement>(selector)
+      if (elements.length > 0) ignoredElms.push(...elements)
     })
-    setNewEffectTrigger(newEffectTrigger)
-  }
-
-  /**
-   * Handles creating a new effect from a preset.
-   */
-  const createEffect = (
-    trigger: ClientEffect<TType>['trigger'],
-    targetId?: string,
-  ) => {
-    // If no target ID is provided, one must be
-    // selected, therefore activate the effect
-    // modal.
-    if (!targetId) {
-      activateEffectModal(host, trigger)
-      return
-    }
-
-    // Confirm target can be found.
-    const target = ClientTargetEnvironment.REGISTRY.inferTarget(targetId)
-    if (!target) {
-      console.warn('ActionEntry: No target found for new preset effect.')
-      return
-    }
-
-    // Create the effect, select it, and
-    // notify of changes.
-    const effect = host.createEffect(target, trigger)
-    host.mission.select(effect)
-    onChange(effect)
-  }
-
-  /**
-   * Callback for when the order of items in a list
-   * is changed by drag-and-drop.
-   */
-  const onReorder = () => {
-    // Rebuild the host's effects array
-    // based on the order of effects in
-    // each list.
-    host.effects = host.validTriggers.flatMap(
-      (trigger: ClientEffect<TType>['trigger']) => {
-        return effectsMap[trigger]
-      },
+    // Check if any of the blacklisted elements contain the element that
+    // was clicked.
+    const targetInIgnoredElms = ignoredElms.some(
+      (elm) => elm.contains(target) || elm === target,
     )
+    // Check if the element that was clicked contains a class that's
+    // been blacklisted.
+    const targetHasBlacklistedClass = blacklistedClasses.some((cls) =>
+      target.classList.contains(cls),
+    )
+    // If the target is in the ignored elements, do not deselect.
+    if (targetInIgnoredElms || targetHasBlacklistedClass) return
+    // If the clicked element is not part of the list,
+    // deselect the item.
+    if (!rootElement?.contains(target)) setSelection(null)
+  })
+
+  // Enable save button when item order changes.
+  usePostInitEffect(() => {
     onChange(host)
-  }
+  }, [itemOrderUpdateId])
 
   /* -- RENDER -- */
-
-  /**
-   * Takes the effects map and creates a corresponding
-   * List component of effects for each trigger.
-   */
-  const listsJsx = compute<JSX.Element[]>(() => {
-    return host.validTriggers.map((trigger: ClientEffect<TType>['trigger']) => {
-      return (
-        <EffectList<TType>
-          key={trigger}
-          name={StringToolbox.toTitleCase(trigger)}
-          items={effectsMap[trigger]}
-          elementAccess={listRefMap.current[trigger]}
-          onCreateRequest={() => {
-            showEffectPresetMenu(trigger)
-          }}
-          onDuplicateRequest={onDuplicateRequest}
-          onDeleteRequest={onDeleteRequest}
-          initialSorting={{ method: 'unsorted', fixedConfig: true }}
-          ordering={{ mode: 'maleable' }}
-          itemsPerPageMin={5}
-          getItemTooltip={(effect) => {
-            if (!effect.environment || !effect.target) {
-              return 'This effect cannot be edited because either the target environment or the target associated with this effect is not available.'
-            } else if (isAuthorized('missions_write')) {
-              return 'Edit effect.'
-            } else if (isAuthorized('missions_read')) {
-              return 'View effect.'
-            } else {
-              return ''
-            }
-          }}
-          onOpenRequest={(effect) => {
-            host.mission.select(effect)
-          }}
-          onReorder={onReorder}
-        />
-      )
-    })
-  })
 
   /**
    * The JSX elements for all effects across all valid triggers.
@@ -313,10 +127,8 @@ export function EffectTimeline<TType extends TEffectType>(
       elements={elements}
     >
       <div className='EffectTimeline' ref={elements.root}>
-        <h3 className='TimelineHeading'>Effects</h3>
+        <TimelineControlPanel />
         {effectsSectionsJsx}
-        <h3 className='TimelineHeadingLegacy'>Effects - Legacy</h3>
-        {listsJsx}
       </div>
     </LocalContextProvider>
   )
@@ -337,6 +149,11 @@ export type TEffectTimeline_P<TType extends TEffectType> = {
  */
 export type TEffectTimeline_S<TType extends TEffectType> = {
   /**
+   * The currently selected effect in the timeline.
+   * @note If `null`, no effect is selected.
+   */
+  selection: TReactState<TMetisClientComponents[TType] | null>
+  /**
    * The currently dragged item.
    */
   draggedItem: TReactState<TMetisClientComponents[TType] | null>
@@ -351,11 +168,6 @@ export type TEffectTimeline_S<TType extends TEffectType> = {
    * effects when the order changes.
    */
   itemOrderUpdateId: TReactState<string>
-  /**
-   * The previous mouse Y position, used
-   * for calculating drag-and-drop movements.
-   */
-  previousMouseY: React.MutableRefObject<number>
 }
 
 /**

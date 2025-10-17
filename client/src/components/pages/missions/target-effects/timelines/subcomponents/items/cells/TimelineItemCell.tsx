@@ -1,4 +1,6 @@
 import React from 'react'
+import { compute } from 'src/toolbox'
+import ClassList from '../../../../../../../../../../shared/toolbox/html/class-lists'
 import './TimelineItemCell.scss'
 
 /**
@@ -6,14 +8,29 @@ import './TimelineItemCell.scss'
  */
 export function TimelineItemCell({
   children,
-  className,
+  className = '',
   rootRef,
+  onClick,
+  onDoubleClick,
   onMouseDown,
 }: TTimelineItemCell_P): JSX.Element {
+  /* -- COMPUTED -- */
+
+  /**
+   * Classes for the root element of the component.
+   */
+  const rootClasses = compute<ClassList>(() => {
+    return new ClassList('TimelineItemCell').set(className, className)
+  })
+
+  /* -- RENDER -- */
+
   return (
     <div
-      className={`TimelineItemCell ${className || ''}`}
+      className={rootClasses.value}
       ref={rootRef}
+      onClick={onClick}
+      onDoubleClick={onDoubleClick}
       onMouseDown={onMouseDown}
     >
       {children}
@@ -21,6 +38,9 @@ export function TimelineItemCell({
   )
 }
 
+/**
+ * Props for {@link TimelineItemCell}.
+ */
 export type TTimelineItemCell_P = {
   /**
    * The content to display in the cell.
@@ -35,7 +55,15 @@ export type TTimelineItemCell_P = {
    */
   rootRef?: React.Ref<HTMLDivElement>
   /**
-   * Handles a mouse-down event on the cell.
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/Element/click_event
+   */
+  onClick?: (event: React.MouseEvent<HTMLDivElement>) => void
+  /**
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/Element/dblclick_event
+   */
+  onDoubleClick?: (event: React.MouseEvent<HTMLDivElement>) => void
+  /**
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/Element/mousedown_event
    */
   onMouseDown?: (event: React.MouseEvent<HTMLDivElement>) => void
 }

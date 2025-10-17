@@ -1,7 +1,16 @@
 import { useEffect, useRef } from 'react'
 import { TMetisClientComponents } from 'src'
+import Tooltip from 'src/components/content/communication/Tooltip'
+import { useButtonMenuEngine } from 'src/components/content/user-controls/buttons/ButtonMenu'
+import ButtonMenuController from 'src/components/content/user-controls/buttons/ButtonMenuController'
+import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
+import useEffectItemButtonCallbacks from 'src/components/pages/missions/hooks/mission-components/effects'
+import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
+import { useRequireLogin } from 'src/toolbox/hooks'
 import { TEffectType } from '../../../../../../../../../shared/missions/effects'
+import { ifNonNullable } from '../../../../../../../../../shared/toolbox/calls'
 import ClassList from '../../../../../../../../../shared/toolbox/html/class-lists'
 import StringToolbox from '../../../../../../../../../shared/toolbox/strings'
 import { useTimelineContext } from '../../context'
@@ -19,14 +28,77 @@ export function TimelineItem<TType extends TEffectType>({
 }: TTimelineItem_P<TType>) {
   /* -- STATE -- */
 
+  const { isAuthorized } = useRequireLogin()
+  const globalContext = useGlobalContext()
+  const { showButtonMenu } = globalContext.actions
   const timelineContext = useTimelineContext<TType>()
-  const { host } = timelineContext
-  const [draggedItem] = timelineContext.state.draggedItem
-  const [draggedItemStartY] = timelineContext.state.draggedItemStartY
-  const prevMouseY = timelineContext.state.previousMouseY
-  const [_, setItemOrderUpdateId] = timelineContext.state.itemOrderUpdateId
+  const { host, state } = timelineContext
+  const [selection, setSelection] = state.selection
+  const [draggedItem] = state.draggedItem
+  const [draggedItemStartY] = state.draggedItemStartY
+  const [_, setItemOrderUpdateId] = state.itemOrderUpdateId
   const { root: timeline } = timelineContext.elements
+  const { onDuplicateRequest, onDeleteRequest } =
+    useEffectItemButtonCallbacks(host)
   const root = useRef<HTMLDivElement>(null)
+  const viewOptionsButtonEngine = useButtonSvgEngine({
+    elements: [
+      {
+        key: 'options',
+        type: 'button',
+        icon: 'options',
+        onClick: (event) => onOptionsClick(event),
+        label: 'View option menu',
+      },
+    ],
+  })
+  const optionMenuEngine = useButtonMenuEngine({
+    elements: [
+      {
+        key: 'open',
+        icon: 'open',
+        type: 'button',
+        label: compute<string>(() => {
+          if (isAuthorized('missions_write')) {
+            return 'View/Edit effect.'
+          } else {
+            return 'View effect.'
+          }
+        }),
+        description: compute<string>(() => {
+          if (!item.environment || !item.target) {
+            return 'This effect cannot be edited because either the target environment or the target associated with this effect is not available.'
+          } else {
+            return ''
+          }
+        }),
+        permissions: ['missions_read'],
+        onClick: () => {
+          if (selection) {
+            host.mission.select(selection)
+          }
+        },
+      },
+      {
+        key: 'duplicate',
+        icon: 'copy',
+        type: 'button',
+        label: 'Duplicate',
+        description: 'Duplicate the selected effect.',
+        permissions: ['missions_write'],
+        onClick: () => ifNonNullable(onDuplicateRequest, selection),
+      },
+      {
+        key: 'delete',
+        icon: 'remove',
+        type: 'button',
+        label: 'Delete',
+        description: 'Delete the selected effect.',
+        permissions: ['missions_write'],
+        onClick: () => ifNonNullable(onDeleteRequest, selection),
+      },
+    ],
+  })
 
   /* -- COMPUTED -- */
 
@@ -35,7 +107,7 @@ export function TimelineItem<TType extends TEffectType>({
    */
   const rootClass = compute<ClassList>(() =>
     new ClassList('TimelineItem', 'TimelineItemLike')
-      // .set('Selected', selection?._id === item._id)
+      .set('Selected', selection?._id === item._id)
       .set('Dragged', item._id === draggedItem?._id),
   )
 
@@ -43,6 +115,18 @@ export function TimelineItem<TType extends TEffectType>({
    * Whether this item is currently being dragged.
    */
   const isDragged = compute<boolean>(() => item._id === draggedItem?._id)
+
+  /**
+   * The tooltip description for the item.
+   */
+  const tooltipDescription = compute<string>(() => {
+    let description: string = ''
+    description += `\`L-Click\` to select \n\t\n`
+    description += `\`R-Click\` for options`
+    return description
+  })
+
+  /* -- FUNCTIONS -- */
 
   /**
    * Looks at the state of the dragged item and the
@@ -186,6 +270,36 @@ export function TimelineItem<TType extends TEffectType>({
     }
   }
 
+  /**
+   * Callback for when the item-name cell is clicked.
+   */
+  const onNameClick = () => {
+    if (selection?._id === item._id) setSelection(null)
+    else setSelection(item)
+  }
+
+  /**
+   * Handles the click event for the item
+   * options button.
+   */
+  const onOptionsClick = (event: React.MouseEvent) => {
+    // Show the button menu.
+    showButtonMenu(optionMenuEngine, {
+      positioningTarget: event.target as HTMLDivElement,
+      highlightTarget: root.current ?? undefined,
+    })
+    // Force selection of the item.
+    setSelection(item)
+  }
+
+  /**
+   * Callback for when the button menu is activated.
+   */
+  const onButtonMenuActivate = () => {
+    // Force selection of the item.
+    setSelection(item)
+  }
+
   /* -- EFFECTS -- */
 
   // Set up global mouse event listeners when this
@@ -211,11 +325,25 @@ export function TimelineItem<TType extends TEffectType>({
       data-trigger={item.trigger}
       data-order={item.order}
       ref={root}
-      onDoubleClick={() => host.mission.select(item)}
     >
+      <ButtonMenuController
+        target={root}
+        engine={optionMenuEngine}
+        highlightTarget={root.current ?? undefined}
+        trigger={'r-click'}
+        onActivate={onButtonMenuActivate}
+      />
       <TimelineDragHandle item={item} />
-      <TimelineItemCell>{item.name}</TimelineItemCell>
-      <TimelineItemCell className='TimelineItemOptions'></TimelineItemCell>
+      <TimelineItemCell
+        onClick={onNameClick}
+        onDoubleClick={() => host.mission.select(item)}
+      >
+        {item.name}
+        <Tooltip description={tooltipDescription} />
+      </TimelineItemCell>
+      <TimelineItemCell className='TimelineItemOptions'>
+        <ButtonSvgPanel engine={viewOptionsButtonEngine} />
+      </TimelineItemCell>
     </div>
   )
 }
