@@ -738,6 +738,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     ServerTargetEnvironment.setUp(this).then(() => {
       this._state = 'started'
       this.emitStartResponses(event, member, 'session-started')
+      this.applyMissionEffects('session-start')
     })
   }
 
@@ -861,6 +862,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     // all members.
     this._state = 'started'
     this.emitStartResponses(event, member, 'session-reset')
+    this.applyMissionEffects('session-start')
   }
 
   /**
