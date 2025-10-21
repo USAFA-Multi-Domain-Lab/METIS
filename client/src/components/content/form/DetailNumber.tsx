@@ -30,7 +30,6 @@ export function DetailNumber({
   const [inputValue, setInputValue] = useState<string>(
     stateValue?.toString() ?? '',
   )
-  const [selectTarget, setSelectTarget] = useState<boolean>(false)
 
   /* -- COMPUTED -- */
   /**
@@ -97,7 +96,11 @@ export function DetailNumber({
   /* -- EFFECTS -- */
   // Set the input value to the state value.
   useEffect(() => {
-    setInputValue(stateValue?.toString() ?? '')
+    const stateAsString = stateValue?.toString() ?? ''
+    // Don't overwrite if user is typing a decimal (preserve trailing ".")
+    // Check if current input is the state value + "." (e.g. "12.")
+    if (inputValue === stateAsString + '.') return
+    setInputValue(stateAsString)
   }, [stateValue])
 
   /* -- RENDER -- */
@@ -118,6 +121,7 @@ export function DetailNumber({
         type='text'
         placeholder={placeholder}
         value={inputValue}
+        disabled={disabled}
         onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) => {
           // Enforce the input to only accept numeric characters.
           inputs.enforceNumbericCharsOnly(event)
@@ -137,47 +141,18 @@ export function DetailNumber({
           let target: HTMLInputElement = event.target as HTMLInputElement
           let value: number | null
 
-          // If a minimum or maximum value is passed
-          // then enforce the minimum and maximum values.
-          if (minimum !== undefined) {
-            inputs.enforceNumberFloor(event, minimum)
-          }
-          if (maximum !== undefined) {
-            inputs.enforceNumberCap(event, maximum)
-          }
-
-          // If the field is required and the input value is empty...
-          if (fieldType === 'required' && target.value === '') {
-            // ...but the minimum value is greater than 0,
-            // then set the input's value to the minimum value.
-            if (minimum !== undefined && minimum > 0) {
-              target.value = minimum.toString()
-            }
-            // Or, if the maximum value is less than 0,
-            // then set the input's value to the maximum value.
-            else if (maximum !== undefined && maximum < 0) {
-              target.value = maximum.toString()
-            }
-            // Otherwise, set the input's value to 0.
-            else {
-              target.value = '0'
-            }
-
-            setSelectTarget(true)
-          }
-
           // Ensure the input value is a valid number.
-          const inputValueRegex: RegExp = /^[+-]?[0-9]{0,9}[.]?[0-9]{0,6}$/
+          const inputValueRegex: RegExp = integersOnly
+            ? /^[+-]?[0-9]{0,9}$/
+            : /^[+-]?[0-9]{0,9}[.]?[0-9]{0,6}$/
           let isValidValue: boolean = inputValueRegex.test(target.value)
 
-          // If decimals are allowed and the input value
-          // is valid, then set the input value.
-          if (isValidValue && !integersOnly) {
-            // *** @note - The setInputValue is only called here so that
-            // *** a user can enter a decimal point followed by any set
-            // *** of (6) numbers. Otherwise, the input value is set in
-            // *** the useEffect hook which is called when the state value
-            // *** changes.
+          // Update the input value to show user feedback
+          if (isValidValue) {
+            // *** @note - The setInputValue is called here so that
+            // *** a user can see their input immediately (especially for
+            // *** decimal points followed by numbers). The useEffect also
+            // *** updates this when the state value changes externally.
             setInputValue(target.value)
           }
 
@@ -186,8 +161,10 @@ export function DetailNumber({
           value = parseFloat(target.value)
           value = isNaN(value) ? null : value
 
-          // If the value is valid, the field is required, and
-          // the value is not null, update the value.
+          // Always update state with the parsed value, even if typing decimal.
+          // The setInputValue above preserves the trailing decimal for UX.
+          // If the value is valid, the field is required, the value is
+          // not null, update the value.
           if (isValidValue && fieldType === 'required' && value !== null) {
             setState(value)
           }
@@ -197,15 +174,37 @@ export function DetailNumber({
             setState(value)
           }
         }}
-        onKeyUp={(event: React.KeyboardEvent<HTMLInputElement>) => {
-          if (selectTarget) {
-            let target: HTMLInputElement = event.target as HTMLInputElement
-            target.select()
-            setSelectTarget(false)
-          }
-        }}
         onBlur={(event: React.FocusEvent<HTMLInputElement>) => {
           let target: HTMLInputElement = event.target as HTMLInputElement
+
+          // Enforce minimum and maximum values on blur
+          let numValue = parseFloat(target.value)
+          let isEmpty = target.value === '' || isNaN(numValue)
+
+          // Handle empty required fields
+          if (isEmpty && fieldType === 'required') {
+            if (minimum !== undefined && minimum > 0) {
+              target.value = minimum.toString()
+            } else if (maximum !== undefined && maximum < 0) {
+              target.value = maximum.toString()
+            } else {
+              target.value = '0'
+            }
+            // Recalculate after setting default value
+            numValue = parseFloat(target.value)
+            isEmpty = false
+          }
+
+          // Enforce minimum constraint
+          if (!isEmpty && minimum !== undefined && numValue < minimum) {
+            target.value = minimum.toString()
+            numValue = minimum
+          }
+
+          // Enforce maximum constraint
+          if (!isEmpty && maximum !== undefined && numValue > maximum) {
+            target.value = maximum.toString()
+          }
 
           // Ensure the input value is a valid number.
           const zerosTrailingDecimalPoint: RegExp = /^[-+]{0,1}[0-9]+[.]+[0]+$/
@@ -216,6 +215,10 @@ export function DetailNumber({
           // If decimals are allowed, then remove
           // unnecessary leading and trailing zeros.
           if (!integersOnly) {
+            // Example: 128. -> 128
+            if (target.value.endsWith('.')) {
+              target.value = target.value.slice(0, -1)
+            }
             // Example: 1.0000 -> 1
             if (zerosTrailingDecimalPoint.test(target.value)) {
               target.value = target.value.replace(/[.]+[0]*$/, '')
@@ -234,14 +237,16 @@ export function DetailNumber({
             }
           }
 
-          // If the input value is only a plus or minus sign,
-          // then remove the sign.
-          if (target.value === '+' || target.value === '-') {
-            // target.value = target.value.replace(/[-+]/, '')
-          }
-
           // Update the input value.
           setInputValue(target.value)
+
+          // Update the state value with the parsed number
+          let finalValue = parseFloat(target.value)
+          if (!isNaN(finalValue)) {
+            setState(finalValue)
+          } else if (fieldType === 'optional') {
+            setState(null)
+          }
         }}
       />
       <div className='Unit'>{unit}</div>

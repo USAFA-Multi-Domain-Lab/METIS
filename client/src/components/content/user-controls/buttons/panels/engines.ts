@@ -426,7 +426,11 @@ export default class ButtonSvgEngine {
   private applyLayout(): void {
     let layout = this.layout
     let slotFound = false
-    let prevPanelElements = this.panelElements
+    // Filter out existing dividers before applying layout
+    // to prevent duplicates when layout is reapplied
+    let prevPanelElements = this.panelElements.filter(
+      ({ type }) => type !== 'divider',
+    )
     let nextPanelElementsPreSlot: TSvgPanelElement[] = []
     let nextPanelElementsPostSlot: TSvgPanelElement[] = []
     let nextPanelElements: TSvgPanelElement[] = []
