@@ -13,7 +13,6 @@ import StringToolbox from '../../../../../../../../shared/toolbox/strings'
 import { useMissionPageContext } from '../../../context'
 import { useTimelineContext } from '../context'
 import { TimelineItem } from './items/TimelineItem'
-import TimelineLandingPad from './items/TimelineLandingPad'
 import { TimelineNoItems } from './items/TimelineNoItems'
 import './TimelineSection.scss'
 
@@ -162,19 +161,14 @@ export function TimelineSection<TType extends TEffectType>({
         <ButtonSvgPanel engine={buttonEngine} />
       </div>
       <div className='TimelineItems'>
-        <TimelineLandingPad trigger={trigger} order={1} />
         <If condition={effects.length === 0}>
-          <TimelineNoItems />
+          <TimelineNoItems trigger={trigger} />
         </If>
         <If condition={effects.length > 0}>
           {effects.map((effect) => (
             <TimelineItem key={effect._id} item={effect} />
           ))}
         </If>
-        <TimelineLandingPad
-          trigger={trigger}
-          order={host.generateEffectOrder(trigger)}
-        />
       </div>
     </section>
   )

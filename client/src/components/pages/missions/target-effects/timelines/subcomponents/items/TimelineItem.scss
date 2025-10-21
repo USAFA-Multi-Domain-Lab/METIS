@@ -20,10 +20,7 @@
     @include background-mask($opacity: 0.15);
   }
 
-  &.Dragged {
+  &.Dragged:not(.HoverTop):not(.HoverBottom):hover {
     @include background-mask($opacity: 0.25);
-
-    position: relative;
-    z-index: 1;
   }
 }

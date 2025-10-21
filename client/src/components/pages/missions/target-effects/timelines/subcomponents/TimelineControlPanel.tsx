@@ -18,7 +18,7 @@ export default function TimelineControlPanel({}: TTimelineControlPanel_P): JSX.E
   /* -- STATE -- */
 
   const { isAuthorized } = useRequireLogin()
-  const { host, state } = useTimelineContext()
+  const { host, state, elements } = useTimelineContext()
   const [selection] = state.selection
   const { onDuplicateRequest, onDeleteRequest } =
     useEffectItemButtonCallbacks(host)
@@ -88,7 +88,7 @@ export default function TimelineControlPanel({}: TTimelineControlPanel_P): JSX.E
   /* -- RENDER -- */
 
   return (
-    <div className='TimelineControlPanel'>
+    <div className={'TimelineControlPanel'} ref={elements.controlPanel}>
       <div className='TimelineHeading'>Effects</div>
       <ButtonSvgPanel engine={engine} />
     </div>

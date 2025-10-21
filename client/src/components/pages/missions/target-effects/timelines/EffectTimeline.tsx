@@ -4,11 +4,17 @@ import { useMissionPageContext } from 'src/components/pages/missions/context'
 import { LocalContextProvider } from 'src/context/local'
 import { ClientEffect, TClientEffectHost } from 'src/missions/effects'
 import { compute } from 'src/toolbox'
-import { useEventListener, usePostInitEffect } from 'src/toolbox/hooks'
+import { getScrollableAncestor } from 'src/toolbox/dom'
+import {
+  useEventListener,
+  useMountHandler,
+  usePostInitEffect,
+} from 'src/toolbox/hooks'
 import { TEffectType } from '../../../../../../../shared/missions/effects'
 import StringToolbox from '../../../../../../../shared/toolbox/strings'
 import { timelineContext } from './context'
 import './EffectTimeline.scss'
+import { NO_TIMELINE_ITEMS_ID } from './subcomponents/items/TimelineNoItems'
 import TimelineControlPanel from './subcomponents/TimelineControlPanel'
 import { TimelineSection } from './subcomponents/TimelineSection'
 
@@ -30,14 +36,18 @@ export function EffectTimeline<TType extends TEffectType>(
   const { onChange } = missionPageContext
   const state: TEffectTimeline_S<TType> = {
     selection: useState<TMetisClientComponents[TType] | null>(null),
-    draggedItem: useState<TMetisClientComponents[TType] | null>(null),
+    draggedItem: useState<TTimelineDragDropItem<TType> | null>(null),
     draggedItemStartY: useState<number>(0),
+    targetedItem: useState<TTimelineDragDropItem<TType> | null>(null),
+    hoverOver: useState<TTimelineItemHoverOver>('nothing'),
     itemOrderUpdateId: useState<string>(StringToolbox.generateRandomId()),
   }
   const [itemOrderUpdateId] = state.itemOrderUpdateId
   const [, setSelection] = state.selection
   const elements: TEffectTimeline_E = {
     root: useRef<HTMLDivElement>(null),
+    scrollContainer: useRef<Element | null>(null),
+    controlPanel: useRef<HTMLDivElement>(null),
   }
 
   /* -- COMPUTED -- */
@@ -65,6 +75,13 @@ export function EffectTimeline<TType extends TEffectType>(
   }, [...host.validTriggers, ...host.effects, itemOrderUpdateId])
 
   /* -- EFFECTS -- */
+
+  useMountHandler((done) => {
+    if (!elements.root.current) return
+    const scrollContainer = getScrollableAncestor(elements.root.current)
+    elements.scrollContainer.current = scrollContainer
+    done()
+  })
 
   // Deselect the currently selected item, if necessary.
   useEventListener(document, 'mousedown', (event: MouseEvent) => {
@@ -156,12 +173,22 @@ export type TEffectTimeline_S<TType extends TEffectType> = {
   /**
    * The currently dragged item.
    */
-  draggedItem: TReactState<TMetisClientComponents[TType] | null>
+  draggedItem: TReactState<TTimelineDragDropItem<TType> | null>
 
   /**
    * The starting Y position of the dragged item.
    */
   draggedItemStartY: TReactState<number>
+  /**
+   * The current item being hovered over by the
+   * dragged item.
+   */
+  targetedItem: TReactState<TTimelineDragDropItem<TType> | null>
+  /**
+   * The part of the item that is currently being
+   * hovered over.
+   */
+  hoverOver: TReactState<TTimelineItemHoverOver>
   /**
    * Represents an update to the order of items
    * in the timeline, which can be used to trigger
@@ -179,4 +206,39 @@ export type TEffectTimeline_E = {
    * The root element of the list.
    */
   root: React.RefObject<HTMLDivElement>
+  /**
+   * The scrollable ancestor of the root element.
+   */
+  scrollContainer: React.MutableRefObject<Element | null>
+  /**
+   * The root element of the {@link TimelineControlPanel}
+   * component instance used.
+   */
+  controlPanel: React.RefObject<HTMLDivElement>
+}
+
+/**
+ * Possible states when hovering over a timeline item.
+ */
+type TTimelineItemHoverOver = 'top' | 'bottom' | 'nothing'
+
+/**
+ * Necessary data for an item being dragged or being
+ * targeted for a drop.
+ */
+export type TTimelineDragDropItem<TType extends TEffectType> = {
+  /**
+   * The ID of the dragged effect item.
+   * If {@link NO_TIMELINE_ITEMS_ID}, it represents a placeholder item
+   * for an empty section.
+   */
+  _id: string
+  /**
+   * The trigger of the dragged effect item.
+   */
+  trigger: TMetisClientComponents[TType]['trigger']
+  /**
+   * The order of the dragged effect item.
+   */
+  order: number
 }

@@ -7,4 +7,18 @@
     min-width: 100%;
     width: fit-content;
   }
+
+  .TimelineItemLike {
+    box-sizing: border-box;
+    border-top: 2px solid transparent;
+    border-bottom: 2px solid transparent;
+
+    &.HoverTop {
+      border-top-color: $color-accent-light;
+    }
+
+    &.HoverBottom {
+      border-bottom-color: $color-accent-light;
+    }
+  }
 }

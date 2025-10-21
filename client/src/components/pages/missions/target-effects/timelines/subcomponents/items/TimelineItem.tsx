@@ -9,16 +9,31 @@ import useEffectItemButtonCallbacks from 'src/components/pages/missions/hooks/mi
 import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
 import { useRequireLogin } from 'src/toolbox/hooks'
-import { TEffectType } from '../../../../../../../../../shared/missions/effects'
+import {
+  TEffectTrigger,
+  TEffectType,
+} from '../../../../../../../../../shared/missions/effects'
 import { ifNonNullable } from '../../../../../../../../../shared/toolbox/calls'
 import ClassList from '../../../../../../../../../shared/toolbox/html/class-lists'
-import StringToolbox from '../../../../../../../../../shared/toolbox/strings'
+import { TTimelineDragDropItem } from '../../EffectTimeline'
 import { useTimelineContext } from '../../context'
 import './TimelineItem.scss'
-import TimelineDragHandle, {
-  TIMELINE_DRAG_HANDLE_CLASS,
-} from './cells/TimelineDragHandle'
+import { NO_TIMELINE_ITEMS_ID } from './TimelineNoItems'
+import TimelineDragHandle from './cells/TimelineDragHandle'
 import { TimelineItemCell } from './cells/TimelineItemCell'
+
+/**
+ * The rate (in seconds) at which the timeline
+ * scroll container should scroll when an item
+ * is dragged to the top/bottom edge.
+ */
+const SCROLL_RATE = 50
+
+/**
+ * The amount of pixels scrolled every
+ * {@link SCROLL_RATE} elapsed.
+ */
+const SCROLL_AMOUNT = 5
 
 /**
  * A single effect item within a timeline list.
@@ -32,14 +47,17 @@ export function TimelineItem<TType extends TEffectType>({
   const globalContext = useGlobalContext()
   const { showButtonMenu } = globalContext.actions
   const timelineContext = useTimelineContext<TType>()
-  const { host, state } = timelineContext
+  const { host, state, elements } = timelineContext
   const [selection, setSelection] = state.selection
   const [draggedItem] = state.draggedItem
   const [draggedItemStartY] = state.draggedItemStartY
+  const [hoverOver, setHoverOver] = state.hoverOver
+  const [targetedItem, setTargetedItem] = state.targetedItem
   const [_, setItemOrderUpdateId] = state.itemOrderUpdateId
-  const { root: timeline } = timelineContext.elements
   const { onDuplicateRequest, onDeleteRequest } =
     useEffectItemButtonCallbacks(host)
+  const lastScrollTime = useRef<number>(0)
+  const lastMouseMove = useRef<MouseEvent | null>(null)
   const root = useRef<HTMLDivElement>(null)
   const viewOptionsButtonEngine = useButtonSvgEngine({
     elements: [
@@ -103,18 +121,26 @@ export function TimelineItem<TType extends TEffectType>({
   /* -- COMPUTED -- */
 
   /**
+   * Whether this item is currently being dragged.
+   */
+  const isDragged = compute<boolean>(() => item._id === draggedItem?._id)
+
+  /**
+   * Whether this item is the current target of a
+   * drag-and-drop operation.
+   */
+  const isTargeted = compute<boolean>(() => item._id === targetedItem?._id)
+
+  /**
    * Root class name for the component.
    */
   const rootClass = compute<ClassList>(() =>
     new ClassList('TimelineItem', 'TimelineItemLike')
       .set('Selected', selection?._id === item._id)
-      .set('Dragged', item._id === draggedItem?._id),
+      .set('Dragged', item._id === draggedItem?._id)
+      .set('HoverTop', isTargeted && hoverOver === 'top')
+      .set('HoverBottom', isTargeted && hoverOver === 'bottom'),
   )
-
-  /**
-   * Whether this item is currently being dragged.
-   */
-  const isDragged = compute<boolean>(() => item._id === draggedItem?._id)
 
   /**
    * The tooltip description for the item.
@@ -129,145 +155,171 @@ export function TimelineItem<TType extends TEffectType>({
   /* -- FUNCTIONS -- */
 
   /**
-   * Looks at the state of the dragged item and the
-   * movement of the mouse to determine if the item
-   * should be moved in the list.
-   * @param event The most recent mouse event.
+   * Called every mouse move event in order to
+   * determine if this item is the target of a
+   * drag-and-drop operation, and if so, the
+   * hover position is marked in the styles to
+   * indicate where the dragged item will be
+   * dropped if released.
    */
-  const moveItemIfNeeded = (event: MouseEvent) => {
-    // Only the dragged item should handle
-    // reordering logic. Also, if no list element
-    // is available, abort.
-    if (!draggedItem || !timeline.current) return
+  const highlightTarget = () => {
+    // Only the dragged item should run this logic.
+    if (
+      !isDragged ||
+      !draggedItem ||
+      !elements.root.current ||
+      !lastMouseMove.current
+    ) {
+      return
+    }
 
-    const hoverOverOffset = -5
-
+    let event = lastMouseMove.current
+    let timeline = elements.root.current
     let mouseY = event.clientY
-    // Find all list items other than the dragged item.
+
+    // Find all potential target items (excluding the dragged item).
     let potentialTargetElements = Array.from(
-      timeline.current.querySelectorAll('.TimelineItem, .TimelineLandingPad'),
-    ).filter((element) => !element.classList.contains('Dragged'))
+      timeline.querySelectorAll('.TimelineItem, .TimelineNoItems'),
+    )
 
-    // Gather details about dragged and targeted items.
-    let draggedEffect = draggedItem
-    let draggedOrderPrev = draggedEffect.order
-    let draggedTriggerPrev = draggedEffect.trigger
-    let targetedEffect: TMetisClientComponents[TType] | null = null
-    let targetedTrigger: TMetisClientComponents[TType]['trigger'] | null = null
-    let targetedOrder: number = -1
+    let newHoverOver: 'top' | 'bottom' | 'nothing' = 'nothing'
+    let newTargetedItem: TTimelineDragDropItem<TType> | null = null
 
-    // Find target effect.
+    // Find the target element under the mouse.
     for (let element of potentialTargetElements) {
       let rect = element.getBoundingClientRect()
 
-      // Check mouse position against element bounds.
-      if (
-        mouseY >= rect.top - hoverOverOffset &&
-        mouseY <= rect.bottom + hoverOverOffset
-      ) {
-        // If in bounds for any given element,
-        // mark that element as the target.
-        let targetedElement = element
+      // Check if mouse is within bounds of this element.
+      if (mouseY >= rect.top && mouseY <= rect.bottom) {
+        let targetedElement: Element = element
+        let idData = targetedElement.getAttribute('data-id')
+        let triggerData = targetedElement.getAttribute('data-trigger')
+        let orderData = targetedElement.getAttribute('data-order')
 
-        // Find the effect associated with the element.
-        let effectId = targetedElement.getAttribute('data-id')
+        // Abort if necessary data is missing.
+        if (!idData || !triggerData || !orderData) {
+          console.warn(
+            'TimelineItem: Missing data attributes on targeted element.',
+          )
+          return
+        }
 
-        targetedEffect = host.effects.find((i) => i._id === effectId) ?? null
-        targetedTrigger = targetedElement.getAttribute(
-          'data-trigger',
-        ) as TMetisClientComponents[TType]['trigger']
-        targetedOrder = parseInt(
-          targetedElement.getAttribute('data-order') ?? '-1',
-        )
+        // Construct the new targeted item from
+        // the HTML data attributes.
+        newTargetedItem = {
+          _id: idData,
+          trigger: triggerData as TEffectTrigger,
+          order: parseInt(orderData),
+        }
 
-        // No need to continue looping.
+        // Use top-half indicator if hovering over the top half
+        // of the dragged item, or if the targeted item is the
+        // dragged item.
+        if (
+          mouseY <= rect.top + rect.height / 2 ||
+          newTargetedItem?._id === draggedItem._id ||
+          newTargetedItem?._id === NO_TIMELINE_ITEMS_ID
+        ) {
+          newHoverOver = 'top'
+        }
+        // Otherwise, if hovering over bottom half, use
+        // bottom-half indicator.
+        else {
+          newHoverOver = 'bottom'
+        }
+
         break
       }
     }
 
-    // Abort if no targeted order or trigger.
-    if (!targetedOrder || !targetedTrigger) return
-
-    // If the triggers match, then the order is simply
-    // swapped between the two effects.
-    if (draggedEffect.trigger === targetedTrigger) {
-      if (!targetedEffect) return
-
-      draggedEffect.order = targetedOrder
-      targetedEffect.order = draggedOrderPrev
+    // Update targeted item if it has changed.
+    if (newTargetedItem?._id !== targetedItem?._id) {
+      setTargetedItem(newTargetedItem)
     }
-    // If the trigger differs, then the dragged effect
-    // still takes the order of the targeted effect,
-    // but the targeted effect, and the effects from
-    // both triggers must be adjusted accordingly.
-    else {
-      draggedEffect.order = targetedOrder
-      draggedEffect.trigger = targetedTrigger
-
-      for (let effect of host.effects) {
-        // Adjust effects in the original trigger section
-        // to close the gap left by the moved effect.
-        if (
-          effect.trigger === draggedTriggerPrev &&
-          effect.order > draggedOrderPrev
-        ) {
-          effect.order--
-        }
-        // Adjust effects in the targeted trigger section
-        // to make room for the incoming effect.
-        if (
-          effect.trigger === targetedTrigger &&
-          effect._id !== draggedEffect._id &&
-          effect.order >= targetedOrder
-        ) {
-          effect.order++
-        }
-      }
+    // Update hover state if it has changed.
+    if (newHoverOver !== hoverOver) {
+      setHoverOver(newHoverOver)
     }
-
-    // Trigger update.
-    setItemOrderUpdateId(StringToolbox.generateRandomId())
   }
 
   /**
-   * Offsets the position of the dragged item
-   * to make it follow the mouse cursor.
+   * Scrolls the scrollable container of the timeline
+   * if the mouse is near the top or bottom edges of
+   * the container, and part of the timeline is out
+   * of view.
    * @param event The most recent mouse event.
    */
-  const offsetDraggedItem = (event: MouseEvent) => {
-    // Abort if not dragging or if
-    // the root element is not available.
-    if (!isDragged || !root.current) return
+  const scrollIfNeeded = () => {
+    // Abort if necessary conditions are not met.
+    if (
+      !isDragged ||
+      !elements.root.current ||
+      !elements.scrollContainer.current ||
+      !elements.controlPanel.current ||
+      !lastMouseMove.current ||
+      // Abort if mouse movement is made before
+      // the scroll rate time has elapsed.
+      lastScrollTime.current + SCROLL_RATE > Date.now()
+    ) {
+      return
+    }
 
-    let rootElm = root.current
+    // Gather element details.
+    let event = lastMouseMove.current
+    let timeline = elements.root.current
+    let scrollContainer = elements.scrollContainer.current
+    let controlPanel = elements.controlPanel.current
+    let timelineRect = timeline.getBoundingClientRect()
+    let scrollContainerRect = scrollContainer.getBoundingClientRect()
+    let controlPanelRect = controlPanel.getBoundingClientRect()
 
-    // First clear the top to get accurate measurements.
-    rootElm.style.top = `unset`
+    // Scroll up if an item is dragged near the
+    // top edge and the timeline is not fully visible
+    // within the scroll container.
+    if (
+      event.clientY < controlPanelRect.bottom &&
+      timelineRect.top < scrollContainerRect.top &&
+      scrollContainer.scrollTop > 0
+    ) {
+      scrollContainer.scrollTop -= SCROLL_AMOUNT
+      scrollContainer.scrollTop = Math.max(0, scrollContainer.scrollTop)
+    }
+    // Scroll down if an item is dragged near the
+    // bottom edge and the timeline is not fully visible
+    // within the scroll container.
+    else if (
+      event.clientY > scrollContainerRect.bottom &&
+      timelineRect.bottom > scrollContainerRect.bottom
+    ) {
+      // Scroll but not beyond the bottom limit.
+      scrollContainer.scrollTop += Math.min(
+        SCROLL_AMOUNT,
+        timelineRect.bottom - scrollContainerRect.bottom,
+      )
+    }
+    // Else, break loop.
+    else {
+      return
+    }
 
-    // Find the drag-handle for the item,
-    // aborting if it is not found.
-    let dragHandle = rootElm.querySelector(`.${TIMELINE_DRAG_HANDLE_CLASS}`)
-    if (!dragHandle) return
+    // Record the last scroll time.
+    lastScrollTime.current = Date.now()
 
-    // Determine the offset for the dragged
-    // item based on the initially recorded
-    // mouse Y position and the current mouse
-    // Y position.
-    let dragHandleRect = dragHandle.getBoundingClientRect()
-    let offsetY = event.clientY - dragHandleRect.top - draggedItemStartY
-
-    // Update the styling.`
-    rootElm.style.top = `${offsetY}px`
+    // Repeat scrolling until a condition breaks
+    // the loop.
+    setTimeout(() => {
+      scrollIfNeeded()
+    }, SCROLL_RATE)
   }
 
   /**
    * Callback for global mouse move events when this item is being dragged.
    */
-  const onGlobalMouseMove = (event: MouseEvent) => {
-    if (isDragged) {
-      moveItemIfNeeded(event)
-      offsetDraggedItem(event)
-    }
+  const onGlobalMouseMove = useRef<(event: MouseEvent) => void>(() => {})
+  onGlobalMouseMove.current = (event: MouseEvent) => {
+    lastMouseMove.current = event
+    highlightTarget()
+    scrollIfNeeded()
   }
 
   /**
@@ -306,10 +358,14 @@ export function TimelineItem<TType extends TEffectType>({
   // item is being dragged
   useEffect(() => {
     if (isDragged) {
-      window.addEventListener('mousemove', onGlobalMouseMove)
+      const eventListener = (event: MouseEvent) => {
+        onGlobalMouseMove.current(event)
+      }
+
+      window.addEventListener('mousemove', eventListener)
 
       return () => {
-        window.removeEventListener('mousemove', onGlobalMouseMove)
+        window.removeEventListener('mousemove', eventListener)
       }
     } else {
       if (root.current) root.current.style.top = `${0}px`
@@ -348,6 +404,9 @@ export function TimelineItem<TType extends TEffectType>({
   )
 }
 
+/**
+ * Props for {@link TimelineItem}.
+ */
 export type TTimelineItem_P<TType extends TEffectType> = {
   /**
    * The effect item to display.
