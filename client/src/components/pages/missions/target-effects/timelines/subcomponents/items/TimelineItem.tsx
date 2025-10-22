@@ -50,10 +50,8 @@ export function TimelineItem<TType extends TEffectType>({
   const { host, state, elements } = timelineContext
   const [selection, setSelection] = state.selection
   const [draggedItem] = state.draggedItem
-  const [draggedItemStartY] = state.draggedItemStartY
   const [hoverOver, setHoverOver] = state.hoverOver
   const [targetedItem, setTargetedItem] = state.targetedItem
-  const [_, setItemOrderUpdateId] = state.itemOrderUpdateId
   const { onDuplicateRequest, onDeleteRequest } =
     useEffectItemButtonCallbacks(host)
   const lastScrollTime = useRef<number>(0)

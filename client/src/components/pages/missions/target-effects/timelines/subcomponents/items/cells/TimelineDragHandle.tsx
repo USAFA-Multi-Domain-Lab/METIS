@@ -25,7 +25,6 @@ export default function TimelineDragHandle<TType extends TEffectType>({
   const timelineContext = useTimelineContext<TType>()
   const { host } = timelineContext
   const [draggedItem, setDraggedItem] = timelineContext.state.draggedItem
-  const [, setDraggedItemStartY] = timelineContext.state.draggedItemStartY
   const [targetedItem, setTargetedItem] = timelineContext.state.targetedItem
   const [hoverOver, setHoverOver] = timelineContext.state.hoverOver
   const [, setSelection] = timelineContext.state.selection
@@ -112,7 +111,6 @@ export default function TimelineDragHandle<TType extends TEffectType>({
   onMouseUp.current = () => {
     moveItemIfNeeded()
     setDraggedItem(null)
-    setDraggedItemStartY(0)
     setTargetedItem(null)
     setHoverOver('nothing')
   }
@@ -122,15 +120,7 @@ export default function TimelineDragHandle<TType extends TEffectType>({
    * root element.
    */
   const onMouseDown = (event: React.MouseEvent<HTMLDivElement>): void => {
-    if (!rootRef.current) {
-      return
-    }
-
-    const rect = rootRef.current.getBoundingClientRect()
-    const startY = event.clientY - rect.top
-
     setDraggedItem(item)
-    setDraggedItemStartY(startY)
     setSelection(null)
 
     // Register a global mouse up event to

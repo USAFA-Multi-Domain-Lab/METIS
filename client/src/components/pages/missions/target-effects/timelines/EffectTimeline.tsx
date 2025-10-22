@@ -37,7 +37,6 @@ export function EffectTimeline<TType extends TEffectType>(
   const state: TEffectTimeline_S<TType> = {
     selection: useState<TMetisClientComponents[TType] | null>(null),
     draggedItem: useState<TTimelineDragDropItem<TType> | null>(null),
-    draggedItemStartY: useState<number>(0),
     targetedItem: useState<TTimelineDragDropItem<TType> | null>(null),
     hoverOver: useState<TTimelineItemHoverOver>('nothing'),
     itemOrderUpdateId: useState<string>(StringToolbox.generateRandomId()),
@@ -174,11 +173,6 @@ export type TEffectTimeline_S<TType extends TEffectType> = {
    * The currently dragged item.
    */
   draggedItem: TReactState<TTimelineDragDropItem<TType> | null>
-
-  /**
-   * The starting Y position of the dragged item.
-   */
-  draggedItemStartY: TReactState<number>
   /**
    * The current item being hovered over by the
    * dragged item.
