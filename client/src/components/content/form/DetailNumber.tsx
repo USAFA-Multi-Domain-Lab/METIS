@@ -98,9 +98,14 @@ export function DetailNumber({
   useEffect(() => {
     const stateAsString = stateValue?.toString() ?? ''
     // Don't overwrite if user is typing a decimal (preserve trailing ".")
-    // Check if current input is the state value + "." (e.g. "12.")
-    if (inputValue === stateAsString + '.') return
-    setInputValue(stateAsString)
+    // Use a functional update to avoid needing inputValue in dependencies
+    setInputValue((currentInput) => {
+      // Check if current input is the state value + "." (e.g. "12.")
+      if (currentInput === stateAsString + '.') {
+        return currentInput
+      }
+      return stateAsString
+    })
   }, [stateValue])
 
   /* -- RENDER -- */
