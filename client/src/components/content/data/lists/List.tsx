@@ -88,6 +88,7 @@ export function createDefaultListProps<
     deselectionBlacklist: [],
     uploads: [],
     elementAccess: null,
+    searchBlacklist: [],
     getColumnLabel: (x) => StringToolbox.toTitleCase(x.toString()),
     getCellText: (item, column) => (item[column] as any).toString(),
     getItemTooltip: () => '',
@@ -671,6 +672,11 @@ export type TList_P<TItem extends MetisComponent> = {
    * by the list.
    */
   elementAccess?: React.MutableRefObject<TList_E | null> | null
+  /**
+   * The columns that cannot be searched within the list.
+   * @default []
+   */
+  searchBlacklist?: TListColumnType<TItem>[]
   /**
    * Gets the tooltip description for the item.
    * @param item The item for which to get the tooltip.

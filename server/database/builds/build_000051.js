@@ -52,4 +52,4 @@ while (cursor_missions.hasNext()) {
 
 print('Updating schema build number...')
 
-db.infos.updateOne({}, { $set: { schemaBuildNumber: 50 } })
+db.infos.updateOne({}, { $set: { schemaBuildNumber: 51 } })

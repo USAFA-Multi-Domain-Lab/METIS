@@ -18,8 +18,7 @@ export default function ListProcessor(): JSX.Element | null {
   /* -- STATE -- */
 
   const listContext = useListContext()
-  const { items, elements } = listContext
-  const { getCellText } = listContext
+  const { items, columns, elements, searchBlacklist, getCellText } = listContext
   const [, setProcessedItems] = listContext.state.processedItems
   const [sorting] = listContext.state.sorting
   const [searchActive, activateSearch] = listContext.state.searchActive
@@ -83,6 +82,11 @@ export default function ListProcessor(): JSX.Element | null {
     let filterTermRaw: string = ''
     let filterTerm: string = ''
     let searchHintFound = false
+    let searchableColumns: (keyof MetisComponent)[] = ['name', ...columns]
+
+    searchableColumns = searchableColumns.filter((column) => {
+      return !searchBlacklist.includes(column)
+    })
 
     // If there is a search field element, get the
     // current search term from it, otherwise default
@@ -99,25 +103,43 @@ export default function ListProcessor(): JSX.Element | null {
     // Else, filter the items based on the search term.
     else {
       result = items.filter((item) => {
-        // If it doesn't match the condition, return false.
-        if (!item.name.toLowerCase().includes(filterTerm)) return false
+        let matchFound: string | null = null
+
+        // Check each searchable column for a match,
+        // break early if found.
+        for (let i = 0; i < searchableColumns.length && !matchFound; i++) {
+          let column = searchableColumns[i]
+          let cellText =
+            column === 'name' ? item.name : getCellText(item, column)
+
+          // Normalize the cell text for comparison.
+          cellText = cellText.toLowerCase()
+
+          // Get the cell text for the column
+          // and check if it includes the filter
+          // term.
+          if (cellText.includes(filterTerm)) {
+            matchFound = cellText
+          }
+        }
 
         // Set search hint if the item name starts with
         // the search team and a hint is not already
         // found.
         if (
+          matchFound !== null &&
           !searchHintFound &&
-          item.name.toLowerCase().startsWith(filterTerm) &&
-          item.name.length > filterTerm.length
+          matchFound.startsWith(filterTerm) &&
+          matchFound.length > filterTerm.length
         ) {
           setSearchHint(
-            filterTermRaw + item.name.substring(filterTermRaw.length),
+            filterTermRaw + matchFound.substring(filterTermRaw.length),
           )
           searchHintFound = true
         }
 
-        // Return true since the condition was met.
-        return true
+        // Return whether a match was found.
+        return matchFound !== null
       })
     }
 
