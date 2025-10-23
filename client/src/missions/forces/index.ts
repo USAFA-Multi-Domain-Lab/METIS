@@ -258,7 +258,9 @@ export default class ClientMissionForce
           : parent.lastRelativeChildNode
       const childCount: number = children.length
       const blurred: boolean =
-        nonRevealedDisplayMode === 'blur' && !parent.opened
+        nonRevealedDisplayMode === 'blur' &&
+        !parent.opened &&
+        !this.revealAllNodes
 
       // If the parent is not opened, and the non-revealed
       // display mode is set to hide, then prevent the algorithm
