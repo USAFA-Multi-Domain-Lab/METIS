@@ -44,15 +44,28 @@ export default class ServerMissionNode extends MissionNode<TMetisServerComponent
   }
 
   /**
-   * Opens the node.
+   * Sets the open state of the node, opening or closing it as specified.
+   * @param open True to open the node, false to close it.
+   * @note If the node is not openable/closable, this method will silently return without making changes.
+   * @note When opening: If the node is currently executing an action, that execution will be aborted.
+   * @note When closing: All descendant nodes' executions will also be aborted to prevent orphaned executions.
    */
-  public open(): void {
-    if (!this.openable) {
-      throw new Error('Node is not openable.')
+  public openState(open: boolean): void {
+    if (open) {
+      // Abort any in-progress execution on this node before opening.
+      if (this.executing && this.latestExecution) {
+        this.latestExecution.abort()
+      }
+      this.open()
+    } else {
+      // Abort any in-progress executions on descendants before closing.
+      this.descendants.forEach((descendant) => {
+        if (descendant.executing && descendant.latestExecution) {
+          descendant.latestExecution.abort()
+        }
+      })
+      this.close()
     }
-    // Abort execution, if executing.
-    if (this.executing) this.latestExecution!.abort()
-    this._opened = true
   }
 
   // Implemented

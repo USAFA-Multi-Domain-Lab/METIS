@@ -2,7 +2,7 @@ import { TFileMetadata } from 'metis/target-environments/args/mission-component/
 import { TForceMetadata } from 'metis/target-environments/args/mission-component/force-arg'
 import Dependency from 'metis/target-environments/dependencies'
 import TargetMigrationRegistry from 'metis/target-environments/targets/migrations/registry'
-import TargetSchema from '../../../../library/target-env-classes/targets'
+import TargetSchema from '../../../../../library/target-env-classes/targets'
 
 /**
  * Migrations for the File Access target.

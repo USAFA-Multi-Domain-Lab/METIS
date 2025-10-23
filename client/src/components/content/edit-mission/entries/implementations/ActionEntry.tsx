@@ -136,9 +136,10 @@ export default function ActionEntry({
         key: 'open',
         type: 'button',
         icon: 'door',
-        label: 'Open Status',
+        label: 'Open State',
         permissions: ['missions_write'],
-        onClick: () => onCreateEffect(ClientTarget.METIS_TARGET_IDS.OPEN_NODE),
+        onClick: () =>
+          onCreateEffect(ClientTarget.METIS_TARGET_IDS.OPEN_NODE_STATE),
       },
       {
         key: 'add',
@@ -313,7 +314,8 @@ export default function ActionEntry({
         setValue={setHours}
         minimum={0}
         maximum={1}
-        unit='hours'
+        integersOnly={true}
+        unit='hour(s)'
         key={`${action._id}_processTimeHours`}
       />
       <DetailNumber
@@ -323,7 +325,8 @@ export default function ActionEntry({
         setValue={setMinutes}
         minimum={0}
         maximum={59}
-        unit='minutes'
+        integersOnly={true}
+        unit='minute(s)'
         key={`${action._id}_processTimeMinutes`}
       />
       <DetailNumber
@@ -333,7 +336,8 @@ export default function ActionEntry({
         setValue={setSeconds}
         minimum={0}
         maximum={59}
-        unit='seconds'
+        integersOnly={true}
+        unit='second(s)'
         key={`${action._id}_processTimeSeconds`}
       />
       <DetailToggle

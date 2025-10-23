@@ -91,7 +91,7 @@ export default abstract class Target<
     AWARD: 'award',
     BLOCK_STATUS: 'block-status',
     FILE_ACCESS: 'file-access',
-    OPEN_NODE: 'open-node',
+    OPEN_NODE_STATE: 'open-state',
     OUTPUT: 'output',
     PROCESS_TIME_MOD: 'process-time-mod',
     RESOURCE_COST_MOD: 'resource-cost-mod',

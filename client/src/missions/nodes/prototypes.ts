@@ -19,6 +19,7 @@ import MissionPrototype, {
 } from '../../../../shared/missions/nodes/prototypes'
 import { AnyObject } from '../../../../shared/toolbox/objects'
 import { Vector2D } from '../../../../shared/toolbox/space'
+import ClientSessionMember from '../../sessions/members'
 import ClientActionExecution from '../actions/executions'
 
 /**
@@ -405,8 +406,7 @@ export default class ClientMissionPrototype
     // Gather details.
     let { mission } = parent
 
-    // Arrange each prototypes children based on the
-    // structure object.
+    // Arrange each prototype's children based on the structure object.
     for (let key of Object.keys(cursor)) {
       let childStructure = cursor[key]
       let prototype = descendants.find(
@@ -422,11 +422,16 @@ export default class ClientMissionPrototype
         continue
       }
 
-      // Handle creating the prototype.
-      let child = new ClientMissionPrototype(mission, prototype)
-      mission.prototypes.push(child)
-      child.parent = parent
-      parent.children.push(child)
+      // Check if this child already exists.
+      let child = parent.children.find((c) => c.structureKey === key)
+
+      // Only create the prototype if it doesn't already exist.
+      if (!child) {
+        child = new ClientMissionPrototype(mission, prototype)
+        mission.prototypes.push(child)
+        child.parent = parent
+        parent.children.push(child)
+      }
 
       // Continue mapping the remaining descendants.
       this.mapDescendantRelationships(descendants, childStructure, child)
@@ -434,24 +439,44 @@ export default class ClientMissionPrototype
   }
 
   /**
-   * Callback for when the server emits a node open
-   * event, processing the event here at the prototype
-   * level.
-   * @param revealedDescendantPrototypes The prototypes revealed by
-   * the open event, if any.
-   * @param structure The structure referenced for the relationships between
-   * the prototypes.
+   * Handles a prototype-opened event from the server by mapping descendant prototype relationships.
+   * @param revealedDescendantPrototypes The descendant prototypes that should now be visible.
+   * @param structure The hierarchical structure data describing prototype parent-child relationships.
+   * @note This establishes the prototype tree structure that mirrors the node tree.
    */
   public onOpen(
     revealedDescendantPrototypes: TMissionPrototypeJson[] | undefined,
     structure: AnyObject | undefined,
   ): void {
-    if (revealedDescendantPrototypes && structure) {
-      // If the descendants are already set,
-      // don't set them again.
-      if (this.descendants.length > 0) return
-      // Map the relationships.
-      this.mapDescendantRelationships(revealedDescendantPrototypes, structure)
+    if (!revealedDescendantPrototypes || !structure) return
+    this.mapDescendantRelationships(revealedDescendantPrototypes, structure)
+  }
+
+  /**
+   * Handles a prototype-closed event from the server by removing descendant prototypes from view.
+   * @param member The session member for whom the prototype is being closed (used for authorization).
+   * @note Members with complete visibility will keep all prototypes visible (structure remains intact).
+   * @note Regular members will have descendant prototypes removed from the mission tree.
+   */
+  public onClose(member: ClientSessionMember): void {
+    // Only remove descendants if the member doesn't have complete visibility.
+    // Managers with complete visibility keep the full prototype tree visible.
+    if (!member.isAuthorized('completeVisibility')) {
+      // Collect all descendant prototypes that need to be removed.
+      const descendantsToRemove = [...this.descendants]
+
+      if (descendantsToRemove.length > 0) {
+        // Build a set of prototype IDs to remove for efficient filtering.
+        const idsToRemove = new Set(descendantsToRemove.map((d) => d._id))
+
+        // Remove descendant prototypes from the mission's prototype list.
+        this.mission.prototypes = this.mission.prototypes.filter(
+          (p) => !idsToRemove.has(p._id),
+        )
+
+        // Clear this prototype's children array to break parent-child relationships.
+        this.children = []
+      }
     }
   }
 

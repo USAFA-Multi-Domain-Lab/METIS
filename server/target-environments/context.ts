@@ -221,6 +221,7 @@ export default class TargetEnvContext {
       blockNode: this.blockNode,
       unblockNode: this.unblockNode,
       openNode: this.openNode,
+      closeNode: this.closeNode,
       modifySuccessChance: this.modifySuccessChance,
       modifyProcessTime: this.modifyProcessTime,
       modifyResourceCost: this.modifyResourceCost,
@@ -399,7 +400,15 @@ export default class TargetEnvContext {
    */
   private openNode = ({ forceKey, nodeKey }: TManipulateNodeOptions = {}) => {
     const targetNode = this.determineTargetNode(forceKey, nodeKey)
-    this.session.openNode(targetNode, this.userId)
+    this.session.updateNodeOpenState(targetNode, true, this.userId)
+  }
+
+  /**
+   * @inheritdoc TTargetEnvExposedContext.closeNode
+   */
+  private closeNode = ({ forceKey, nodeKey }: TManipulateNodeOptions = {}) => {
+    const targetNode = this.determineTargetNode(forceKey, nodeKey)
+    this.session.updateNodeOpenState(targetNode, false, this.userId)
   }
 
   /**
@@ -556,6 +565,13 @@ export type TTargetEnvExposedContext = {
    * effect belongs, unless configured otherwise.
    */
   openNode: TargetEnvContext['openNode']
+  /**
+   * Closes the node to hide the next set of nodes in the structure.
+   * @param options Additional options for closing the node.
+   * @note By default, this will close the node to which the current
+   * effect belongs, unless configured otherwise.
+   */
+  closeNode: TargetEnvContext['closeNode']
   /**
    * Modifies an action's chance of success.
    * @param operand The number used to modify the chance of success.

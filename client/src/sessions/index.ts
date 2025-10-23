@@ -12,7 +12,7 @@ import ClientUser from 'src/users'
 import {
   TFileAccessModifierData,
   TGenericServerEvents,
-  TOpenNodeData,
+  TNodeOpenStateData,
   TResponseEvents,
   TServerEvents,
   TServerMethod,
@@ -1129,12 +1129,13 @@ export default class SessionClient extends Session<TMetisClientComponents> {
     const { data } = event
     // Handle the data.
     switch (data.key) {
-      case 'node-update-block':
+      case 'node-update-block-status':
         this.updateNodeBlockStatus(data.nodeId, data.blocked)
         break
-      case 'node-open':
-        this.onNodeOpened({
+      case 'node-update-open-state':
+        this.onChangeNodeOpenState({
           nodeId: data.nodeId,
+          opened: data.opened,
           structure: data.structure,
           revealedDescendants: data.revealedDescendants,
           revealedDescendantPrototypes: data.revealedDescendantPrototypes,
@@ -1211,16 +1212,17 @@ export default class SessionClient extends Session<TMetisClientComponents> {
   private onNodeOpenedResponse = (
     event: TServerEvents['node-opened'],
   ): void => {
-    // Gather data.
     const {
       nodeId,
+      opened,
       structure,
       revealedDescendants,
       revealedDescendantPrototypes,
     } = event.data
-    // Handle the node opening.
-    return this.onNodeOpened({
+
+    return this.onChangeNodeOpenState({
       nodeId,
+      opened,
       structure,
       revealedDescendants,
       revealedDescendantPrototypes,
@@ -1310,17 +1312,22 @@ export default class SessionClient extends Session<TMetisClientComponents> {
   }
 
   /**
-   * Handles when a node has been opened.
-   * @param data The data needed to open the node.
+   * Handles node open/close state change events from the server.
+   * @param data The event data containing the node ID, new state, and revealed descendants.
+   * @note This coordinates updates at both the prototype (template) and node (instance) levels.
+   * @note If the node hasn't been revealed to this member yet, the event is ignored with a warning.
    */
-  private onNodeOpened = (data: TOpenNodeData): void => {
-    // Gather data.
+  private onChangeNodeOpenState = (data: TNodeOpenStateData): void => {
+    // Extract the event data.
     const {
       nodeId,
+      opened,
       structure,
       revealedDescendants,
       revealedDescendantPrototypes,
     } = data
+
+    // Find the target node in the mission.
     const node = this.mission.getNodeById(nodeId)
     if (!node) {
       return console.warn(
@@ -1329,11 +1336,18 @@ export default class SessionClient extends Session<TMetisClientComponents> {
     }
     const { prototype } = node
 
-    // Handle opening at different levels.
-    prototype.onOpen(revealedDescendantPrototypes, structure)
-    node.onOpen(revealedDescendants)
+    // Update both the prototype (template level) and node (instance level).
+    if (opened) {
+      // Opening: Reveal descendants and establish structure relationships.
+      prototype.onOpen(revealedDescendantPrototypes, structure)
+      node.onOpen(revealedDescendants)
+    } else {
+      // Closing: Hide descendants (unless member has complete visibility).
+      prototype.onClose(this.member)
+      node.onClose(this.member)
+    }
 
-    // Remap actions, if new nodes have been revealed.
+    // Rebuild the action map if new nodes were revealed during opening.
     if (revealedDescendants) this.mapActions()
   }
 

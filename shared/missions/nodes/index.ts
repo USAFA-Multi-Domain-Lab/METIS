@@ -193,6 +193,13 @@ export default abstract class MissionNode<
   }
 
   /**
+   * Whether or not this node was manually closed.
+   */
+  public get closed(): boolean {
+    return !this.opened
+  }
+
+  /**
    * Whether the node is blocked by default
    * when the mission starts.
    */
@@ -458,6 +465,13 @@ export default abstract class MissionNode<
    */
   public get openable(): boolean {
     return !this.opened && !this.force.revealAllNodes
+  }
+
+  /**
+   * Whether or not this node can be closed.
+   */
+  public get closable(): boolean {
+    return this.opened && !this.force.revealAllNodes
   }
 
   /**
@@ -755,6 +769,25 @@ export default abstract class MissionNode<
       )
     }
     this._executions.push(execution)
+  }
+
+  /**
+   * Opens the node by setting its `_opened` property to true.
+   * @note This is a no-op if the node is not openable (already opened or revealAllNodes is enabled).
+   */
+  protected open(): void {
+    if (!this.openable) return
+    this._opened = true
+  }
+
+  /**
+   * Closes the node and all of its descendants by setting their `_opened` properties to false.
+   * @note This is a no-op if the node is not closable (already closed or revealAllNodes is enabled).
+   */
+  protected close(): void {
+    if (!this.closable) return
+    this._opened = false
+    this.descendants.forEach((n) => (n._opened = false))
   }
 
   /**

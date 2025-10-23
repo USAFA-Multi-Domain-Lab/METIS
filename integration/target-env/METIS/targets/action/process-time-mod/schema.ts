@@ -1,6 +1,6 @@
 import { TActionMetadata } from 'metis/target-environments/args/mission-component/action-arg'
 import Dependency from 'metis/target-environments/dependencies'
-import TargetSchema from '../../../../library/target-env-classes/targets'
+import TargetSchema from '../../../../../library/target-env-classes/targets'
 
 // Argument IDs for the process time modifier target.
 const actionArgId = 'actionMetadata'

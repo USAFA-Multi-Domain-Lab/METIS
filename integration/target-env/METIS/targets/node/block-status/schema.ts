@@ -1,6 +1,6 @@
 import { TNodeMetadata } from 'metis/target-environments/args/mission-component/node-arg'
 import Dependency from 'metis/target-environments/dependencies'
-import TargetSchema from '../../../../library/target-env-classes/targets'
+import TargetSchema from '../../../../../library/target-env-classes/targets'
 
 /**
  * A target available in the METIS target environment that enables a user

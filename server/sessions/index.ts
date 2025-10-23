@@ -1277,7 +1277,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     }
 
     try {
-      node.open()
+      node.openState(true)
 
       // Extract data from the node.
       const {
@@ -1291,6 +1291,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
         method: 'node-opened',
         data: {
           nodeId,
+          opened: true,
           structure: structure,
           revealedDescendants: descendants.map((n) => n.toJson()),
           revealedDescendantPrototypes: prototypes.map((p) => p.toJson()),
@@ -1778,32 +1779,57 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     this.confirmComponentInMission(node)
     node.blocked = blocked
     this.emitModifierEnacted(node.force, {
-      key: 'node-update-block',
+      key: 'node-update-block-status',
       nodeId: node._id,
       blocked,
     })
   }
 
   /**
-   * Handles the opening of a node during a session.
-   * @param nodeId The node to open.
+   * Updates a node's open/closed state during an active session and notifies all force members.
+   * @param node The node whose open state should be changed.
+   * @param open True to open the node (revealing descendants), false to close it (hiding descendants).
+   * @param userId The ID of the user who triggered this change (used for session-specific data exposure).
+   * @note This method is idempotent - calling it when the node is already in the desired state is a no-op.
+   * @note If the node has `revealAllNodes` enabled, open/close operations are not allowed and will be skipped.
    */
-  public openNode = (node: ServerMissionNode, userId: User['_id']) => {
-    // Confirm the node exists then open it.
+  public updateNodeOpenState = (
+    node: ServerMissionNode,
+    open: boolean,
+    userId: User['_id'],
+  ) => {
+    // Confirm the node belongs to this session's mission.
     this.confirmComponentInMission(node)
-    node.open()
 
-    // Extract data from the node.
+    // Validate the operation is permitted (idempotent check).
+    if (open && !node.openable) {
+      plcApiLogger.warn(
+        `Skipping open on node "${node.name}" (${node._id}): already opened or revealAllNodes enabled`,
+      )
+      return
+    } else if (!open && !node.closable) {
+      plcApiLogger.warn(
+        `Skipping close on node "${node.name}" (${node._id}): already closed or revealAllNodes enabled`,
+      )
+      return
+    }
+
+    // Perform the open/close operation (may abort executing actions).
+    node.openState(open)
+
+    // Extract the revealed structure and descendants from the node.
+    // These properties reflect what should be visible to clients based on the new state.
     const {
       revealedStructure: structure,
       revealedDescendants: descendants,
       revealedDescendantPrototypes: prototypes,
     } = node
 
-    // Construct payload for node opened event.
+    // Construct the payload containing the node's new state and revealed data.
     let payload: TServerEvents['modifier-enacted']['data'] = {
-      key: 'node-open',
+      key: 'node-update-open-state',
       nodeId: node._id,
+      opened: open,
       structure: structure,
       revealedDescendants: descendants.map((n) =>
         n.toJson({
@@ -1816,7 +1842,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       revealedDescendantPrototypes: prototypes.map((p) => p.toJson()),
     }
 
-    // Emit node opened event to each member.
+    // Notify all members of this force about the node's state change.
     this.emitModifierEnacted(node.force, payload)
   }
 
