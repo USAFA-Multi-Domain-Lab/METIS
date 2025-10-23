@@ -321,9 +321,13 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
    * @rejects If setup of any target environment fails.
    */
   public static async setUp(session: SessionServer): Promise<void> {
+    // Get the target environments that the
+    // mission of the given session uses.
+    let environments = session.mission.targetEnvironments
+
     // For each target environment in the registry, set it up.
-    for (let targetEnv of ServerTargetEnvironment.REGISTRY.getAll()) {
-      await targetEnv.setUp(session)
+    for (let environment of environments) {
+      await environment.setUp(session)
     }
 
     await session.applyMissionEffects('session-setup')
@@ -337,9 +341,13 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
    * @rejects If teardown of any target environment fails.
    */
   public static async tearDown(session: SessionServer): Promise<void> {
+    // Get the target environments that the
+    // mission of the given session uses.
+    let environments = session.mission.targetEnvironments
+
     // For each target environment in the registry, tear it down.
-    for (let targetEnv of ServerTargetEnvironment.REGISTRY.getAll()) {
-      await targetEnv.tearDown(session)
+    for (let environment of environments) {
+      await environment.tearDown(session)
     }
 
     await session.applyMissionEffects('session-teardown')

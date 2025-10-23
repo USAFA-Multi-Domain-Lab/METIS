@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react'
 import { ClientEffect } from 'src/missions/effects'
 import { compute } from 'src/toolbox'
-import { TTargetArg } from '../../../../../../shared/target-environments/args'
+import { TTargetArg } from '../../../../../../../shared/target-environments/args'
+import ArgMissionComponent from '../mission-component'
 import './Arg.scss'
 import ArgBoolean from './ArgBoolean'
 import ArgDropdown from './ArgDropdown'
 import ArgLargeString from './ArgLargeString'
 import ArgNumber from './ArgNumber'
 import ArgString from './ArgString'
-import ArgMissionComponent from './mission-component'
 
 export default function ({
   effect,

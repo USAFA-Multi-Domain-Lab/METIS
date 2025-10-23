@@ -5,8 +5,8 @@ import { usePostInitEffect } from 'src/toolbox/hooks'
 import {
   TDropdownArg,
   TDropdownArgOption,
-} from '../../../../../../shared/target-environments/args/dropdown-arg'
-import DetailDropdown from '../../../content/form/dropdown/DetailDropdown'
+} from '../../../../../../../shared/target-environments/args/dropdown-arg'
+import DetailDropdown from '../../../../content/form/dropdown/DetailDropdown'
 
 /**
  * Renders a dropdown for the argument whose type is `"dropdown"`.

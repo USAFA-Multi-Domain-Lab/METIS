@@ -1,8 +1,8 @@
 import { ClientEffect } from 'src/missions/effects'
 import { compute } from 'src/toolbox'
 
-import { TTargetArg } from '../../../../../../shared/target-environments/args'
-import Divider from '../../../content/form/Divider'
+import { TTargetArg } from '../../../../../../../shared/target-environments/args'
+import Divider from '../../../../content/form/Divider'
 import Arg from './Arg'
 import './ArgGrouping.scss'
 

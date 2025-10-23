@@ -1,18 +1,18 @@
 import { useEffect, useState } from 'react'
 import { ClientEffect } from 'src/missions/effects'
 import { usePostInitEffect } from 'src/toolbox/hooks'
-import { TLargeStringArg } from '../../../../../../shared/target-environments/args/large-string-arg'
-import { DetailLargeString } from '../../../content/form/DetailLargeString'
+import { TStringArg } from '../../../../../../../shared/target-environments/args/string-arg'
+import { DetailString } from '../../../../content/form/DetailString'
 
 /**
- * Renders a large string input box for the argument whose type is `"large-string"`.
+ * Renders a string input box for the argument whose type is `"string"`.
  */
-export default function ArgLargeString({
+export default function ArgString({
   arg,
   initialize,
   effectArgs,
   setEffectArgs,
-}: TLargeStringArg_P): JSX.Element | null {
+}: TStringArg_P): JSX.Element | null {
   /* -- STATE -- */
   const [defaultValue] = useState<''>('')
   const [value, setValue] = useState<string>(
@@ -31,8 +31,8 @@ export default function ArgLargeString({
   // *** Note: this doesn't execute on the first render. ***
   usePostInitEffect(() => {
     // If the argument's value is not in a default state
-    // then update the large string argument's value in
-    // the effect's arguments.
+    // then update the string argument's value in the effect's
+    // arguments.
     if (value !== defaultValue) {
       setEffectArgs((prev) => ({ ...prev, [arg._id]: value }))
     }
@@ -85,7 +85,7 @@ export default function ArgLargeString({
 
   /* -- RENDER -- */
   return (
-    <DetailLargeString
+    <DetailString
       fieldType={arg.required ? 'required' : 'optional'}
       handleOnBlur={arg.required ? 'repopulateValue' : 'none'}
       label={arg.name}
@@ -100,16 +100,16 @@ export default function ArgLargeString({
   )
 }
 
-/* ---------------------------- TYPES FOR LARGE STRING ARG ---------------------------- */
+/* ---------------------------- TYPES FOR STRING ARG ---------------------------- */
 
 /**
- * The props for the `LargeStringArg` component.
+ * The props for the `StringArg` component.
  */
-type TLargeStringArg_P = {
+type TStringArg_P = {
   /**
-   * The large string argument to render.
+   * The string argument to render.
    */
-  arg: TLargeStringArg
+  arg: TStringArg
   /**
    * Determines if the argument needs to be initialized.
    */

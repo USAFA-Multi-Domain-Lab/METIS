@@ -58,6 +58,37 @@ export default abstract class Mission<
     return this.nodes.flatMap((node) => Array.from(node.actions.values()))
   }
 
+  /**
+   * A combined list of all effects that exist
+   * in the mission, including both session-triggered
+   * and execution-triggered effects.
+   */
+  public get allEffects(): Array<
+    T['sessionTriggeredEffect'] | T['executionTriggeredEffect']
+  > {
+    return [
+      ...this.effects,
+      ...this.actions.flatMap((action) => action.effects),
+    ]
+  }
+
+  /**
+   * Target environments that are used in effects
+   * throughout the entire mission. If no effects
+   * exist in the mission that target a specific
+   * target environment, it will not be included
+   * in this list.
+   */
+  public get targetEnvironments(): Array<T['targetEnv']> {
+    let effects = this.allEffects
+    let effectsWithEnvironment = effects.filter(
+      (effect) => effect.environment !== null,
+    )
+    return Array.from(
+      new Set(effectsWithEnvironment.map((effect) => effect.environment!)),
+    )
+  }
+
   // Implemented
   public get path(): [...MissionComponent<any, any>[], this] {
     return [this]
