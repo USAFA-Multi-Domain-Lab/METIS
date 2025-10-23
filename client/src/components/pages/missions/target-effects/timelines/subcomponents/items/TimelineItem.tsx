@@ -5,6 +5,7 @@ import { useButtonMenuEngine } from 'src/components/content/user-controls/button
 import ButtonMenuController from 'src/components/content/user-controls/buttons/ButtonMenuController'
 import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
+import { useMissionPageContext } from 'src/components/pages/missions/context'
 import useEffectItemButtonCallbacks from 'src/components/pages/missions/hooks/mission-components/effects'
 import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
@@ -19,6 +20,7 @@ import { TTimelineDragDropItem } from '../../EffectTimeline'
 import { useTimelineContext } from '../../context'
 import './TimelineItem.scss'
 import { NO_TIMELINE_ITEMS_ID } from './TimelineNoItems'
+import TimelineDefectiveCell from './cells/TimelineDefectiveCell'
 import TimelineDragHandle from './cells/TimelineDragHandle'
 import { TimelineItemCell } from './cells/TimelineItemCell'
 
@@ -45,6 +47,9 @@ export function TimelineItem<TType extends TEffectType>({
 
   const { isAuthorized } = useRequireLogin()
   const globalContext = useGlobalContext()
+  const pageContext = useMissionPageContext()
+  const { state: pageState } = pageContext
+  const [missionDefects] = pageState.defects
   const { showButtonMenu } = globalContext.actions
   const timelineContext = useTimelineContext<TType>()
   const { host, state, elements } = timelineContext
@@ -119,6 +124,26 @@ export function TimelineItem<TType extends TEffectType>({
   /* -- COMPUTED -- */
 
   /**
+   * The defects applicable to the given item.
+   * @note This could be easily accessed via item.defects.
+   * However, that has performance implications as it
+   * creates a new array each time it is accessed via
+   * a potentially expensive algorithm.
+   */
+  const defects = compute(() => {
+    return missionDefects.filter((defect) => {
+      return defect.component._id === item._id
+    })
+  })
+
+  /**
+   * Whether or not this item is defective.
+   */
+  const defective = compute<boolean>(() => {
+    return Boolean(defects.length)
+  })
+
+  /**
    * Whether this item is currently being dragged.
    */
   const isDragged = compute<boolean>(() => item._id === draggedItem?._id)
@@ -134,6 +159,7 @@ export function TimelineItem<TType extends TEffectType>({
    */
   const rootClass = compute<ClassList>(() =>
     new ClassList('TimelineItem', 'TimelineItemLike')
+      .set('Defective', defective)
       .set('Selected', selection?._id === item._id)
       .set('Dragged', item._id === draggedItem?._id)
       .set('HoverTop', isTargeted && hoverOver === 'top')
@@ -395,6 +421,7 @@ export function TimelineItem<TType extends TEffectType>({
         {item.name}
         <Tooltip description={tooltipDescription} />
       </TimelineItemCell>
+      <TimelineDefectiveCell defects={defects} />
       <TimelineItemCell className='TimelineItemOptions'>
         <ButtonSvgPanel engine={viewOptionsButtonEngine} />
       </TimelineItemCell>

@@ -69,6 +69,7 @@ export default abstract class Mission<
       ...this.prototypes,
       ...this.forces,
       ...this.files,
+      ...this.effects,
     )
   }
 

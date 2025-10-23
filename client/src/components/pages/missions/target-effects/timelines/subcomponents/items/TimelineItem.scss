@@ -16,6 +16,10 @@
     @include background-mask($opacity: 0.05);
   }
 
+  &.Defective {
+    grid-template-columns: auto 1fr auto auto;
+  }
+
   &.Selected {
     @include background-mask($opacity: 0.15);
   }
