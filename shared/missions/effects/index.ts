@@ -172,7 +172,7 @@ export default abstract class Effect<
         // Check if the argument is a dropdown and the selected option is valid.
         if (
           arg.type === 'dropdown' &&
-          !arg.options.find((option) => option._id === this.args[argId])
+          !arg.options.find((option) => option.value === this.args[argId])
         ) {
           return constructDefects(
             `The effect, "${this.name}", has an invalid option selected. ` +
