@@ -46,7 +46,7 @@ function calculateInitialProgress(node: TMapCompatibleNode): number {
 /**
  * An object representing a node on the mission map.
  */
-export default function <TNode extends TMapCompatibleNode>({
+export default function MapNode<TNode extends TMapCompatibleNode>({
   node,
   cameraZoom,
   onSelect,
@@ -158,6 +158,9 @@ export default function <TNode extends TMapCompatibleNode>({
   const { mission } = node
   const blocked: boolean = compute(() => blockStatus === 'blocked')
   const cutOff: boolean = compute(() => blockStatus === 'cut-off')
+  const blurred: boolean = compute(
+    () => mission.nonRevealedDisplayMode === 'blur' && !node.revealed,
+  )
 
   /**
    * Determines the context in which the node is being rendered.
@@ -299,10 +302,7 @@ export default function <TNode extends TMapCompatibleNode>({
         'Hidden',
         mission.nonRevealedDisplayMode === 'hide' && !node.revealed,
       )
-      .set(
-        'Blurred',
-        mission.nonRevealedDisplayMode === 'blur' && !node.revealed,
-      )
+      .set('Blurred', blurred)
       .set('Excluded', excluded)
       .set('Executing', executionState.status === 'executing')
       .set('Success', executionState.status === 'success')
@@ -353,6 +353,11 @@ export default function <TNode extends TMapCompatibleNode>({
 
     return classList.join(' ')
   })
+
+  /**
+   * Whether the node can be selected.
+   */
+  const isSelectable = compute<boolean>(() => !excluded && !blurred)
 
   /* -- RENDER -- */
 
@@ -408,7 +413,7 @@ export default function <TNode extends TMapCompatibleNode>({
         style={primaryContentStyle}
         // Moved this from root element due to
         // selection issues when clicking buttons.
-        onClick={!excluded ? () => onSelect!(node) : () => {}}
+        onClick={isSelectable ? () => onSelect!(node) : () => {}}
       >
         <div className={nameClassName} style={nameStyle}>
           {name}
