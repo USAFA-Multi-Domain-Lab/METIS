@@ -3,6 +3,7 @@ import Tooltip from 'src/components/content/communication/Tooltip'
 import ClientMissionAction from 'src/missions/actions'
 import { compute } from 'src/toolbox'
 import { useEventListener } from 'src/toolbox/hooks'
+import { getIconPath } from 'src/toolbox/icons'
 import StringToolbox from '../../../../../../../../../../shared/toolbox/strings'
 import './ActionProperty.scss'
 
@@ -79,7 +80,8 @@ export default function ActionProperty<TKey extends keyof ClientMissionAction>({
     }
 
     if (icon !== '_blank') {
-      result.backgroundImage = `url(${require(`../../../../../../../../assets/images/icons/${icon}.svg`)})`
+      const url = getIconPath(icon)
+      if (url) result.backgroundImage = `url(${url})`
     }
 
     // Return the style for the icon.

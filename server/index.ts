@@ -11,6 +11,7 @@ import MetisRouter from 'metis/server/http/router'
 import { expressLogger, expressLoggingHandler } from 'metis/server/logging'
 import mongoose from 'mongoose'
 import path from 'path'
+// no import.meta usage to keep compatibility with CJS test runner
 import { sys } from 'typescript'
 import MetisWsServer from './connect'
 import MetisFileStore from './files'
@@ -32,10 +33,13 @@ import ServerTargetEnvironment from './target-environments'
 import ServerTarget from './target-environments/targets'
 import ServerUser from './users'
 
-const dotenv = require('dotenv')
-const cookieParser = require('cookie-parser')
-const cors = require('cors')
-const packageJson = require('../package.json')
+import dotenv from 'dotenv'
+import cookieParser from 'cookie-parser'
+import cors from 'cors'
+import packageJson from '../package.json' assert { type: 'json' }
+
+// Use current working directory for server root in both dev and tests
+const __DIRNAME = process.cwd()
 
 /**
  * Manages an Express web server for METIS.
@@ -367,7 +371,7 @@ export default class MetisServer {
       let { expressApp, database, fileStore, wsServer } = this
 
       // Register target environments.
-      ServerTargetEnvironment.scan()
+      await ServerTargetEnvironment.scan()
       // Validate target IDs.
       ServerTarget.validateTargetIds(
         ServerTargetEnvironment.METIS_TARGET_ENV_ID,
@@ -406,7 +410,7 @@ export default class MetisServer {
 
       // sets up pug as the view engine
       expressApp.set('view engine', 'pug')
-      expressApp.set('views', path.join(__dirname, '/views'))
+      expressApp.set('views', path.join(__DIRNAME, '/views'))
 
       // set the port
       expressApp.set('port', this.port)
@@ -422,7 +426,8 @@ export default class MetisServer {
       expressApp.use(this.limiter)
 
       // links the file path to css and resource files
-      expressApp.use(express.static(path.resolve(__dirname, '../client/build')))
+      // Serve built client (Vite outputs to dist)
+      expressApp.use(express.static(path.resolve(__DIRNAME, '../client/dist')))
 
       // This will do clean up when the application
       // terminates.
@@ -513,7 +518,7 @@ export default class MetisServer {
   /**
    * The root directory for the METIS server.
    */
-  public static readonly APP_DIR = path.join(__dirname)
+  public static readonly APP_DIR = path.join(__DIRNAME)
   /**
    * The path to the environment file.
    */

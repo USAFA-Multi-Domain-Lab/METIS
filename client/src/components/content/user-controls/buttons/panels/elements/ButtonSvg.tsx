@@ -1,6 +1,7 @@
 import React from 'react'
 import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
+import { getIconPath } from 'src/toolbox/icons'
 import ClassList from '../../../../../../../../shared/toolbox/html/class-lists'
 import Tooltip from '../../../../communication/Tooltip'
 import ButtonSvgEngine from '../engines'
@@ -87,7 +88,8 @@ export default function ({
     // If the type is not '_blank', import the SVG
     // and set it as the background image.
     if (icon !== '_blank') {
-      result.backgroundImage = `url(${require(`../../../../../../assets/images/icons/${icon}.svg`)})`
+      const url = getIconPath(icon)
+      if (url) result.backgroundImage = `url(${url})`
     }
 
     return result

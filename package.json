@@ -8,7 +8,7 @@
     "server-install": "cd ./server && npm install",
     "shared-install": "cd ./shared && npm install",
     "integration-install": "cd ./integration/library && npm install",
-    "react": "cd ./client && npm start",
+    "react": "cd ./client && npm run dev",
     "dev": "cd ./server && npm run dev",
     "prod": "cd ./server && npm start",
     "install": "npm run client-install && npm run server-install && npm run shared-install && npm run integration-install",

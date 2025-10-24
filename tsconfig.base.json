@@ -1,17 +1,19 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
-    "module": "commonjs",
+    // Modern baseline
+    "target": "ES2022",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": false,
     "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
-    "moduleResolution": "node",
     "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    // Do not force a module system here; projects override per-environment
+    // "module": undefined,
+    // "moduleResolution": undefined,
     "isolatedModules": false,
     "noEmit": true
   }

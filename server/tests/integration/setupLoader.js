@@ -10,7 +10,7 @@ const tsconfigPath = path.resolve(__dirname, '../../tsconfig.json')
 tsNode.register({
   transpileOnly: true,
   project: tsconfigPath,
-  compilerOptions: { module: 'commonjs' },
+  compilerOptions: { module: 'NodeNext', moduleResolution: 'NodeNext' },
   ignore: [
     // do NOT touch anything in node_modules
     /node_modules/,

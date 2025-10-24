@@ -63,7 +63,7 @@
         transparent 0% 70%,
         rgba(#fff, 0.1) 100%
       ),
-      url('/assets/images/landing-page-img-small.webp');
+      url('../images/landing-page-img-small.webp');
   }
 
   &.BackgroundImageLarge {
@@ -72,7 +72,7 @@
         transparent 0% 70%,
         rgba(#fff, 0.1) 100%
       ),
-      url('/assets/images/landing-page-img.webp');
+      url('../images/landing-page-img.webp');
   }
 
   background-size: 100% 47.34%;

@@ -38,19 +38,25 @@
           }
 
           .ColumnLabelSort {
-            @include sortBackground('/assets/images/icons/up.svg');
+            @include sortBackground(
+              '../../../../../assets/images/icons/up.svg'
+            );
           }
         }
 
         &.SortAscending {
           .ColumnLabelSort {
-            @include sortBackground('/assets/images/icons/up.svg');
+            @include sortBackground(
+              '../../../../../assets/images/icons/up.svg'
+            );
           }
         }
 
         &.SortDescending {
           .ColumnLabelSort {
-            @include sortBackground('/assets/images/icons/down.svg');
+            @include sortBackground(
+              '../../../../../assets/images/icons/down.svg'
+            );
           }
         }
       }

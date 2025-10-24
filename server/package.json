@@ -3,8 +3,8 @@
   "description": "",
   "main": "start.ts",
   "scripts": {
-    "start": "./node_modules/.bin/ts-node -r tsconfig-paths/register start.ts",
-    "dev": "export METIS_ENV_TYPE=dev && ./node_modules/.bin/nodemon --exec './node_modules/.bin/ts-node' -r tsconfig-paths/register start",
+    "start": "METIS_ENV_TYPE=prod tsx start.ts",
+    "dev": "METIS_ENV_TYPE=dev tsx watch start.ts",
     "test": "export METIS_ENV_TYPE=test && jest",
     "test:api": "export METIS_ENV_TYPE=test && jest --selectProjects api-integration",
     "test:unit": "export METIS_ENV_TYPE=test && jest --selectProjects unit",
@@ -66,6 +66,7 @@
   "devDependencies": {
     "jest": "^29.5.0",
     "nodemon": "^3.1.7",
-    "ts-jest": "^29.1.0"
+    "ts-jest": "^29.1.0",
+    "tsx": "^4.19.1"
   }
 }
