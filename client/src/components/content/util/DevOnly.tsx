@@ -5,7 +5,7 @@ import If from './If'
  * is in a development environment.
  */
 export default function ({ children }: TDevOnly_P): JSX.Element | null {
-  return <If condition={process.env.NODE_ENV === 'development'}>{children}</If>
+  return <If condition={import.meta.env.DEV}>{children}</If>
 }
 
 /**

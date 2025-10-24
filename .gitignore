@@ -12,6 +12,7 @@ npm-debug.log*
 
 # react
 /client/build
+/client/dist
 
 # env
 .DS_Store

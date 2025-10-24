@@ -18,8 +18,20 @@ const METIS_SERVER_PORT = process.env.PORT || '8080'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
+  const allowedPrefixes = ['VITE_']
+  const defineEnv = Object.fromEntries(
+    Object.keys(process.env)
+      .filter((k) => allowedPrefixes.some((p) => k.startsWith(p)))
+      .map((k) => [`process.env.${k}`, JSON.stringify(process.env[k] ?? '')]),
+  ) as Record<string, string>
+
+  const envDir = path.resolve(__dirname, '../config')
+  const envPrefix = ['VITE_']
+
   return {
     plugins: [react(), tsconfigPaths()],
+    envDir,
+    envPrefix,
     resolve: {
       alias: {
         src: path.resolve(__dirname, 'src'),
@@ -45,7 +57,7 @@ export default defineConfig(({ mode }) => {
       sourcemap: true,
     },
     define: {
-      'process.env': env,
+      ...defineEnv,
     },
   }
 })
