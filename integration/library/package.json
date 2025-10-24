@@ -5,11 +5,11 @@
   "scripts": {},
   "author": "Jordan M. Stokes",
   "license": "ISC",
-  "devDependencies": {
-    "@types/node": "^20.10.4"
-  },
   "dependencies": {
     "axios": "^1.6.2",
     "https": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.4"
   }
 }

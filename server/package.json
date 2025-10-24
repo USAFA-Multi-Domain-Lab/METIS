@@ -15,8 +15,8 @@
   "author": "Jordan M. Stokes",
   "license": "ISC",
   "dependencies": {
+    "@types/archiver": "^6.0.3",
     "@types/bcryptjs": "^2.4.2",
-    "@types/chai": "^4.3.4",
     "@types/cookie-parser": "^1.4.3",
     "@types/cors": "^2.8.13",
     "@types/dateformat": "^3.0.1",
@@ -24,7 +24,6 @@
     "@types/express-session": "^1.17.7",
     "@types/express-winston": "^4.0.0",
     "@types/mime-types": "^3.0.1",
-    "@types/mocha": "^10.0.1",
     "@types/multer": "^1.4.7",
     "@types/node": "^20.5.7",
     "@types/seedrandom": "^3.0.5",
@@ -34,8 +33,6 @@
     "@types/winston": "^2.4.4",
     "archiver": "^7.0.1",
     "bcryptjs": "^2.4.3",
-    "chai": "^4.3.7",
-    "chai-http": "4.3.0",
     "connect-mongo": "^4.6.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
@@ -47,16 +44,14 @@
     "express-winston": "^4.2.0",
     "isomorphic-dompurify": "^1.9.0",
     "mime-types": "^3.0.1",
-    "mocha": "^10.2.0",
     "mongoose": "^6.11.2",
     "multer": "^1.4.5-lts.1",
-    "nodemon": "^3.1.7",
-    "nyc": "^15.1.0",
     "pug": "^3.0.2",
     "rate-limiter-flexible": "^5.0.5",
     "seedrandom": "^3.0.5",
     "socket.io": "^4.8.0",
     "socket.io-client": "^4.8.1",
+    "ts-node": "^10.9.1",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.2.2",
     "unzipper": "^0.12.3",
@@ -65,7 +60,12 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@types/archiver": "^6.0.3",
-    "ts-node": "^10.9.1"
+    "@types/chai": "^4.3.4",
+    "@types/mocha": "^10.0.1",
+    "chai": "^4.3.7",
+    "chai-http": "4.3.0",
+    "mocha": "^10.2.0",
+    "nodemon": "^3.1.7",
+    "nyc": "^15.1.0"
   }
 }

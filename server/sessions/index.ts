@@ -441,9 +441,15 @@ export default class SessionServer extends Session<TMetisServerComponents> {
         this._members.splice(index, 1)
         // Remove session-specific listeners.
         this.removeListeners(member)
-        // If the session is for testing, then destroy
-        // the session.
-        if (this.config.accessibility === 'testing') this.destroy()
+        // If the session is for testing, then tear it
+        // down and destroy it.
+        if (this.config.accessibility === 'testing') {
+          this._state = 'ending'
+          ServerTargetEnvironment.tearDown(this).then(() => {
+            this._state = 'ended'
+            this.destroy()
+          })
+        }
         // Handle quitting the session for the member.
         member.connection.login.onMetisSessionQuit()
       }
