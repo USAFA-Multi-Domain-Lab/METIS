@@ -28,20 +28,34 @@ export default function ({
   /* -- FUNCTIONS -- */
 
   /**
+   * Removes the `key` property from the given element.
+   * @param element The element from which to remove the key.
+   * @returns The element without the key property.
+   */
+  const removeKey = <T extends TSvgPanelElement>(
+    element: T,
+  ): Omit<T, 'key'> => {
+    const { key, ...rest } = element
+    return rest
+  }
+
+  /**
    * Renders a panel element based on its type.
    * @param element The element to render.
    * @returns The rendered JSX element or null if not recognized.
    */
   const renderElement = (element: TSvgPanelElement): JSX.Element | null => {
+    let key = element.key
+
     switch (element.type) {
       case 'button':
-        return <ButtonSvg {...element} />
+        return <ButtonSvg key={key} {...removeKey(element)} />
       case 'text':
-        return <TextSvg {...element} />
+        return <TextSvg key={key} {...removeKey(element)} />
       case 'stepper':
-        return <StepperSvg {...element} />
+        return <StepperSvg key={key} {...removeKey(element)} />
       case 'divider':
-        return <DividerSvg {...element} />
+        return <DividerSvg key={key} {...removeKey(element)} />
       default:
         // If the type is not recognized, return null
         console.warn(

@@ -50,7 +50,7 @@ export default function Setup(): void {
       }
 
       // Starts the test server
-      await testServer.serve()
+      await testServer.start()
       // Seed the database with test data.
       await seedDatabase()
       // Creates a session with a user because

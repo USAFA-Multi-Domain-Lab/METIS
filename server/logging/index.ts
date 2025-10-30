@@ -29,7 +29,7 @@ export const databaseLogger = winston.createLogger({
   defaultMeta: { service: 'user-service' },
   transports: [
     createMetisTransport({
-      filename: './logs/database-error.log',
+      filename: 'server/logs/database-error.log',
       level: 'error',
       format: winston.format.combine(
         winston.format.json(),
@@ -38,7 +38,7 @@ export const databaseLogger = winston.createLogger({
         winston.format.prettyPrint(),
       ),
     }),
-    createMetisTransport({ filename: './logs/database.log' }),
+    createMetisTransport({ filename: 'server/logs/database.log' }),
   ],
 })
 
@@ -52,7 +52,7 @@ export const sessionLogger = winston.createLogger({
   defaultMeta: { service: 'user-service' },
   transports: [
     createMetisTransport({
-      filename: './logs/session-error.log',
+      filename: 'server/logs/session-error.log',
       level: 'error',
       format: winston.format.combine(
         winston.format.json(),
@@ -61,7 +61,7 @@ export const sessionLogger = winston.createLogger({
         winston.format.prettyPrint(),
       ),
     }),
-    createMetisTransport({ filename: './logs/session.log' }),
+    createMetisTransport({ filename: 'server/logs/session.log' }),
   ],
 })
 
@@ -75,7 +75,7 @@ export const expressLogger = winston.createLogger({
   defaultMeta: { service: 'user-service' },
   transports: [
     createMetisTransport({
-      filename: './logs/express-error.log',
+      filename: 'server/logs/express-error.log',
       level: 'error',
       format: winston.format.combine(
         winston.format.json(),
@@ -84,14 +84,14 @@ export const expressLogger = winston.createLogger({
         winston.format.prettyPrint(),
       ),
     }),
-    createMetisTransport({ filename: './logs/express.log' }),
+    createMetisTransport({ filename: 'server/logs/express.log' }),
   ],
 })
 
 export const expressLoggingHandler = expressWinston.logger({
   transports: [
     createMetisTransport({
-      filename: './logs/express-error.log',
+      filename: 'server/logs/express-error.log',
       level: 'error',
       format: winston.format.combine(
         winston.format.json(),
@@ -100,7 +100,7 @@ export const expressLoggingHandler = expressWinston.logger({
         winston.format.prettyPrint(),
       ),
     }),
-    createMetisTransport({ filename: './logs/express.log' }),
+    createMetisTransport({ filename: 'server/logs/express.log' }),
   ],
   format: winston.format.combine(
     winston.format.json(),
@@ -125,7 +125,7 @@ export const plcApiLogger = winston.createLogger({
   defaultMeta: { service: 'user-service' },
   transports: [
     createMetisTransport({
-      filename: './logs/plc-api-error.log',
+      filename: 'server/logs/plc-api-error.log',
       level: 'error',
       format: winston.format.combine(
         winston.format.json(),
@@ -134,7 +134,7 @@ export const plcApiLogger = winston.createLogger({
         winston.format.prettyPrint(),
       ),
     }),
-    createMetisTransport({ filename: './logs/plc-api.log' }),
+    createMetisTransport({ filename: 'server/logs/plc-api.log' }),
   ],
 })
 
@@ -148,7 +148,7 @@ export const testLogger = winston.createLogger({
   defaultMeta: { service: 'user-service' },
   transports: [
     createMetisTransport({
-      filename: './logs/test-error.log',
+      filename: 'server/logs/test-error.log',
       level: 'error',
       format: winston.format.combine(
         winston.format.json(),
@@ -157,7 +157,7 @@ export const testLogger = winston.createLogger({
         winston.format.prettyPrint(),
       ),
     }),
-    createMetisTransport({ filename: './logs/test.log' }),
+    createMetisTransport({ filename: 'server/logs/test.log' }),
   ],
 })
 

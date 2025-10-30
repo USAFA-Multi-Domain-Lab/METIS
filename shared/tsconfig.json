@@ -3,8 +3,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "rootDirs": ["."],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "paths": {
-      "*": ["./node_modules/*"],
       "metis/*": ["*"]
     }
   }

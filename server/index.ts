@@ -1,18 +1,21 @@
 import MongoStore from 'connect-mongo'
+import cookieParser from 'cookie-parser'
+import cors from 'cors'
+import dotenv from 'dotenv'
 import express, { Express, RequestHandler } from 'express'
 import rateLimit, { RateLimitRequestHandler } from 'express-rate-limit'
-import session, { Session, SessionData } from 'express-session'
+import session, { Session } from 'express-session'
 import fs from 'fs'
-import http, { Server as HttpServer } from 'http'
-import https from 'https'
 import { TEffectType } from 'metis/missions/effects'
 import MetisDatabase from 'metis/server/database'
 import MetisRouter from 'metis/server/http/router'
 import { expressLogger, expressLoggingHandler } from 'metis/server/logging'
 import mongoose from 'mongoose'
+import http, { Server as HttpServer } from 'node:http'
+import https from 'node:https'
 import path from 'path'
-// no import.meta usage to keep compatibility with CJS test runner
 import { sys } from 'typescript'
+import packageJson from '../package.json'
 import MetisWsServer from './connect'
 import MetisFileStore from './files'
 import ServerFileReference from './files/references'
@@ -32,11 +35,6 @@ import ServerSessionMember from './sessions/members'
 import ServerTargetEnvironment from './target-environments'
 import ServerTarget from './target-environments/targets'
 import ServerUser from './users'
-
-import dotenv from 'dotenv'
-import cookieParser from 'cookie-parser'
-import cors from 'cors'
-import packageJson from '../package.json' assert { type: 'json' }
 
 // Use current working directory for server root in both dev and tests
 const __DIRNAME = process.cwd()
@@ -336,11 +334,11 @@ export default class MetisServer {
   }
 
   /**
-   * Serves the Express server.
+   * Initializes and starts web server.
    * @resolves when the server is open on the configured port.
    * @rejects if the server fails to start.
    */
-  public async serve(): Promise<void> {
+  public async start(): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
       try {
         let httpServer: HttpServer = this.httpServer
@@ -356,6 +354,26 @@ export default class MetisServer {
         })
       } catch (error) {
         console.error('START UP FAILED SHUTTING DOWN')
+        reject(error)
+      }
+    })
+  }
+
+  /**
+   * Stops the HTTP server
+   * @returns
+   */
+  public async close(): Promise<void> {
+    return new Promise<void>(async (resolve, reject) => {
+      try {
+        await this.database.close()
+        this.httpServer.close((err) => {
+          if (err) throw err
+          console.log('HTTP server closed successfully.')
+          resolve()
+        })
+      } catch (error) {
+        console.error('Error during server shutdown:', error)
         reject(error)
       }
     })
@@ -410,7 +428,7 @@ export default class MetisServer {
 
       // sets up pug as the view engine
       expressApp.set('view engine', 'pug')
-      expressApp.set('views', path.join(__DIRNAME, '/views'))
+      expressApp.set('views', path.join(__DIRNAME, 'server/views'))
 
       // set the port
       expressApp.set('port', this.port)
@@ -427,7 +445,7 @@ export default class MetisServer {
 
       // links the file path to css and resource files
       // Serve built client (Vite outputs to dist)
-      expressApp.use(express.static(path.resolve(__DIRNAME, '../client/dist')))
+      expressApp.use(express.static(path.resolve(__DIRNAME, 'client/dist')))
 
       // This will do clean up when the application
       // terminates.
@@ -503,22 +521,27 @@ export default class MetisServer {
    * The name of the METIS project.
    */
   public static readonly PROJECT_NAME: string = packageJson.name
+
   /**
    * The description of the METIS project.
    */
   public static readonly PROJECT_DESCRIPTION: string = packageJson.description
+
   /**
    * The current version of METIS.
    */
   public static readonly PROJECT_VERSION: string = packageJson.version
+
   /**
    * The current build number for the database.
    */
   public static readonly SCHEMA_BUILD_NUMBER: number = 51
+
   /**
    * The root directory for the METIS server.
    */
   public static readonly APP_DIR = path.join(__DIRNAME)
+
   /**
    * The path to the environment file.
    */
@@ -537,21 +560,21 @@ export default class MetisServer {
   private static createOptionsFromEnvironment(): TMetisServerOptions {
     switch (process.env.METIS_ENV_TYPE) {
       case 'docker':
-        dotenv.config({ path: '../config/docker.defaults.env', override: true })
-        dotenv.config({ path: '../config/docker.env', override: true })
+        dotenv.config({ path: 'config/docker.defaults.env', override: true })
+        dotenv.config({ path: 'config/docker.env', override: true })
         break
       case 'dev':
-        dotenv.config({ path: '../config/dev.defaults.env', override: true })
-        dotenv.config({ path: '../config/dev.env', override: true })
+        dotenv.config({ path: 'config/dev.defaults.env', override: true })
+        dotenv.config({ path: 'config/dev.env', override: true })
         break
       case 'test':
-        dotenv.config({ path: '../config/test.defaults.env', override: true })
-        dotenv.config({ path: '../config/test.env', override: true })
+        dotenv.config({ path: 'config/test.defaults.env', override: true })
+        dotenv.config({ path: 'config/test.env', override: true })
         break
       case 'prod':
       default:
-        dotenv.config({ path: '../config/prod.defaults.env', override: true })
-        dotenv.config({ path: '../config/prod.env', override: true })
+        dotenv.config({ path: 'config/prod.defaults.env', override: true })
+        dotenv.config({ path: 'config/prod.env', override: true })
         break
     }
 
@@ -602,14 +625,11 @@ export default class MetisServer {
 /* -- TYPES -- */
 
 declare module 'http' {
-  export interface IncomingMessage {
-    session: Session & Partial<SessionData>
-  }
-}
-
-declare module 'express-session' {
   export interface SessionData {
     userId: string
+  }
+  export interface IncomingMessage {
+    session: Session & Partial<SessionData>
   }
 }
 

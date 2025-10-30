@@ -41,6 +41,7 @@ environment-test.json
 
 # temp
 /server/temp
+/tests/**/temp/
 
 # backup
 /server/database/backups

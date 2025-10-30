@@ -106,8 +106,8 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
    * The default directory to scan for target environments.
    */
   private static readonly DEFAULT_DIRECTORY: string = path.join(
-    process.cwd(), // "metis/server/"
-    '../integration/target-env',
+    process.cwd(),
+    'integration/target-env',
   )
 
   /**
