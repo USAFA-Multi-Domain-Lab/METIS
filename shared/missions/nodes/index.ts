@@ -676,7 +676,7 @@ export default abstract class MissionNode<
     // Include session-specific data based on exposure level.
     switch (sessionDataExposure.expose) {
       case 'all':
-      case 'user-specific':
+      case 'member-specific':
         // Construct execution JSON.
         let executionJson = this.executions.map((execution) =>
           execution.toJson(),

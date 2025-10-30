@@ -36,11 +36,18 @@ export default class MetisDatabase {
   }
 
   /**
+   * The interval ID for scheduled backups.
+   * Can be used to clear it with {@link clearInterval}.
+   */
+  private backupIntervalId: NodeJS.Timeout | null
+
+  /**
    * @param server The Metis server instance.
    */
   public constructor(server: MetisServer) {
     this._mongooseConnection = null
     this._server = server
+    this.backupIntervalId = null
   }
 
   /**
@@ -91,7 +98,10 @@ export default class MetisDatabase {
           try {
             // Schedule a backup every 24 hours
             // while server is running.
-            setInterval(() => this.createBackup(), 1000 * 60 * 60 * 24)
+            this.backupIntervalId = setInterval(
+              () => this.createBackup(),
+              1000 * 60 * 60 * 24,
+            )
           } catch (error) {
             databaseLogger.error('Failed to perform scheduled database backup:')
             databaseLogger.error(error)
@@ -122,7 +132,7 @@ export default class MetisDatabase {
       const { mongoHost, mongoPort, mongoDB, mongoUsername, mongoPassword } =
         server
 
-      let command: string = `mongodump --host ${mongoHost} --port ${mongoPort} --db ${mongoDB} --out ./database/backups/${DateToolbox.fileName}`
+      let command: string = `mongodump --host ${mongoHost} --port ${mongoPort} --db ${mongoDB} --out server/database/backups/${DateToolbox.fileName}`
 
       if (mongoUsername !== undefined && mongoPassword !== undefined) {
         command += ` --username ${mongoUsername} --password ${mongoPassword} --authenticationDatabase ${mongoDB}`
@@ -131,7 +141,7 @@ export default class MetisDatabase {
       exec(command, (error, stdout, stderr) => {
         if (!error) {
           let stdoutSplit: Array<string> = stdout.split(
-            `Loading file: ./database/backup.js`,
+            `Loading file: server/database/backup.js`,
           )
 
           if (stdoutSplit.length > 1) {
@@ -265,7 +275,7 @@ export default class MetisDatabase {
             {
               name: 'default.metis',
               originalName: 'default.metis',
-              path: './database/seeding/default.metis',
+              path: 'server/database/seeding/default.metis',
             },
             this.server.fileStore,
           )
@@ -414,6 +424,18 @@ export default class MetisDatabase {
   }
 
   /**
+   * Closes out database connection and stops any
+   * DB-related daemons.
+   */
+  public async close(): Promise<void> {
+    if (this.backupIntervalId) {
+      clearInterval(this.backupIntervalId)
+      this.backupIntervalId = null
+    }
+    await this.mongooseConnection?.close()
+  }
+
+  /**
    * Identifier for an error thrown due to bad data.
    */
   public static readonly ERROR_BAD_DATA: string = 'BadDataError'
@@ -421,7 +443,7 @@ export default class MetisDatabase {
   /**
    * Location of the database build files.
    */
-  public static readonly BUILD_DIR: string = './database/builds/'
+  public static readonly BUILD_DIR: string = 'server/database/builds/'
 
   /**
    * This will generate the file path for the given build number.

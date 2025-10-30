@@ -25,6 +25,6 @@ server.addRouter(
 server.addRouter(new MetisRouter('/api/v1/logins/', routerMap_logins))
 
 // Start server.
-server.serve()
+server.start()
 
 export default { server }

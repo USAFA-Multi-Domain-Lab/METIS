@@ -11,7 +11,6 @@
         background-position: center 0.075em;
       }
 
-      cursor: pointer;
       user-select: none;
       display: grid;
       grid-template-columns: auto 1fr;
@@ -28,27 +27,37 @@
         width: 1em;
       }
 
-      &:hover {
-        @include background-mask;
+      &:not(.SortLocked) {
+        cursor: pointer;
 
-        .ColumnLabelText {
-          color: $color-accent;
+        &:hover {
+          @include background-mask;
+
+          .ColumnLabelText {
+            color: $color-accent;
+          }
+
+          .ColumnLabelSort {
+            @include sortBackground(
+              '../../../../../assets/images/icons/up.svg'
+            );
+          }
         }
 
-        .ColumnLabelSort {
-          @include sortBackground('/assets/images/icons/up.svg');
+        &.SortAscending {
+          .ColumnLabelSort {
+            @include sortBackground(
+              '../../../../../assets/images/icons/up.svg'
+            );
+          }
         }
-      }
 
-      &.SortAscending {
-        .ColumnLabelSort {
-          @include sortBackground('/assets/images/icons/up.svg');
-        }
-      }
-
-      &.SortDescending {
-        .ColumnLabelSort {
-          @include sortBackground('/assets/images/icons/down.svg');
+        &.SortDescending {
+          .ColumnLabelSort {
+            @include sortBackground(
+              '../../../../../assets/images/icons/down.svg'
+            );
+          }
         }
       }
     }

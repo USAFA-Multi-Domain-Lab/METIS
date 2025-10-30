@@ -1,6 +1,7 @@
 import Tooltip from 'src/components/content/communication/Tooltip'
 import { compute } from 'src/toolbox'
 import { MetisComponent } from '../../../../../../../shared'
+import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
 import { TListColumnType, useListContext } from '../List'
 import './ListColumnLabel.scss'
 
@@ -21,39 +22,41 @@ export default function ListColumnLabel<TItem extends MetisComponent>({
   /**
    * Root class name for the component.
    */
-  const rootClass = compute<string>(() => {
-    const classList = [
+  const rootClass = compute<ClassList>(() => {
+    let result = new ClassList(
       'ListColumnLabel',
       'ItemCellLike',
       `ListColumnLabel_${column.toString()}`,
-    ]
+    ).set('SortLocked', sorting.fixedConfig)
 
     // If this column is the sorting column, add the
     // appropriate sorting class based on the sorting
     // method.
-    if (sorting.column === column) {
-      switch (sorting.method) {
-        case 'ascending':
-          classList.push('SortAscending')
-          break
-        case 'descending':
-          classList.push('SortDescending')
-          break
-      }
+    if (sorting.method === 'column-based' && sorting.column === column) {
+      result.switch(
+        {
+          ascending: 'SortAscending',
+          descending: 'SortDescending',
+        },
+        sorting.direction,
+      )
     }
 
-    return classList.join(' ')
+    return result
   })
 
   /**
    * The description for the tooltip.
    */
   const tooltipDescription = compute<string>(() => {
+    // If sorting is locked, return an empty string.
+    if (sorting.fixedConfig) return ''
+
     // If this column is the sorting column, return
     // the appropriate description based on the sorting
     // method.
-    if (sorting.column === column) {
-      switch (sorting.method) {
+    if (sorting.method === 'column-based' && sorting.column === column) {
+      switch (sorting.direction) {
         case 'ascending':
           return 'Sort descending'
         case 'descending':
@@ -72,18 +75,23 @@ export default function ListColumnLabel<TItem extends MetisComponent>({
    * Handles a click on the column label.
    */
   const onClick = () => {
+    // If sorting is locked, do nothing.
+    if (sorting.fixedConfig) return
+
     // If this column is the sorting column, toggle
     // the sorting method.
-    if (sorting.column === column) {
+    if (sorting.method === 'column-based' && sorting.column === column) {
       setSorting({
+        method: 'column-based',
         column,
-        method: sorting.method === 'ascending' ? 'descending' : 'ascending',
+        direction:
+          sorting.direction === 'ascending' ? 'descending' : 'ascending',
       })
     }
     // Otherwise, set this column as the sorting column
     // and set the sorting method to ascending.
     else {
-      setSorting({ column, method: 'ascending' })
+      setSorting({ method: 'column-based', column, direction: 'ascending' })
     }
   }
 
@@ -91,7 +99,7 @@ export default function ListColumnLabel<TItem extends MetisComponent>({
 
   // Render the column label.
   return (
-    <div className={rootClass} onClick={onClick}>
+    <div className={rootClass.value} onClick={onClick}>
       <div className='ColumnLabelText'>{text}</div>
       <div className='ColumnLabelSort'></div>
       <Tooltip description={tooltipDescription} />

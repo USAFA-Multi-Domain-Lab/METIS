@@ -248,6 +248,16 @@ export default class ClientConnection {
         )
       }
 
+      // If session is ending or has ended, emit
+      // session closed error.
+      if (session.state === 'ending' || session.state === 'ended') {
+        return this.emitError(
+          new ServerEmittedError(ServerEmittedError.CODE_SESSION_CLOSED, {
+            request: this.buildResponseReqData(event),
+          }),
+        )
+      }
+
       try {
         // Join the session.
         let member = session.join(this)

@@ -7,7 +7,6 @@ import { TMissionNodeJson } from 'metis/missions/nodes'
 import { TMetisServerComponents } from 'metis/server'
 import MetisDatabase from 'metis/server/database'
 import { TTargetEnvExposedForce } from 'metis/server/target-environments/context'
-import ServerUser from 'metis/server/users'
 import NumberToolbox from 'metis/toolbox/numbers'
 import { HEX_COLOR_REGEX } from 'metis/toolbox/strings'
 import ServerMission from '..'
@@ -108,12 +107,11 @@ export default class ServerMissionForce extends MissionForce<TMetisServerCompone
   }
 
   // Implemented
-  public filterOutputs(userId?: ServerUser['_id']): ServerOutput[] {
-    return this.outputs.filter(
-      (output) =>
-        output.broadcastType === 'force' ||
-        (output.broadcastType === 'user' && output.userId === userId),
-    )
+  public filterOutputs(memberId?: string): ServerOutput[] {
+    if (!memberId) return this.outputs
+    return this.outputs.filter((output) => {
+      return !output.memberId || output.memberId === memberId
+    })
   }
 
   // Implemented

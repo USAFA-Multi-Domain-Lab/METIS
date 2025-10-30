@@ -10,7 +10,7 @@ import {
   populateCreatedByIfFlagged,
 } from '.'
 import { FileReferenceSchema } from './classes'
-import {
+import type {
   TFileReference,
   TFileReferenceDoc,
   TFileReferenceModel,

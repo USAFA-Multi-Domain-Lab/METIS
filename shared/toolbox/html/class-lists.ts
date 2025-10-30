@@ -12,7 +12,7 @@ export default class ClassList {
    * The list of classes, as an array.
    */
   public get classes(): string[] {
-    return this._classes.values().toArray()
+    return Array.from(this._classes.values())
   }
 
   /**
@@ -225,7 +225,7 @@ export default class ClassList {
    * @returns The string of classes.
    */
   public toString(): string {
-    return this._classes.values().toArray().join(' ')
+    return Array.from(this._classes.values()).join(' ')
   }
 
   /**

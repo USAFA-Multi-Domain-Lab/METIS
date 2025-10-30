@@ -84,7 +84,7 @@
     border-radius: 5px;
     padding: 0 6px 0.5px 7px;
     background-color: rgba(
-      adjust-color($color-accent, $saturation: -15%, $hue: -15%),
+      adjust-color($color-accent, $saturation: -15%, $hue: -15deg),
       0.9
     );
     color: $color-primary-dark;

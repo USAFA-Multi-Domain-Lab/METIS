@@ -3,7 +3,6 @@ import MissionOutput, {
   TOutputJson,
 } from 'metis/missions/forces/output'
 import { TMetisServerComponents } from 'metis/server'
-import ServerUser from 'metis/server/users'
 import StringToolbox from 'metis/toolbox/strings'
 import ServerMissionForce from '.'
 
@@ -12,30 +11,12 @@ import ServerMissionForce from '.'
  */
 export default class ServerOutput extends MissionOutput<TMetisServerComponents> {
   /**
-   * The ID of the user who triggered the output.
-   */
-  public readonly userId: ServerUser['_id'] | null
-  /**
-   * Determines who the output is broadcasted to.
-   */
-  public readonly broadcastType: TOutputBroadcast
-
-  /**
    * @param force The force where the output panel belongs.
    * @param data The data for the output.
    * @param options The options for the output.
    */
-  public constructor(
-    force: ServerMissionForce,
-    data: TOutputJson,
-    options: Partial<TServerOutputOptions> = {},
-  ) {
+  public constructor(force: ServerMissionForce, data: TOutputJson) {
     super(force, data)
-
-    let { userId = null, broadcastType = 'force' } = options
-
-    this.broadcastType = broadcastType
-    this.userId = userId
   }
 
   public static generate(
@@ -43,20 +24,17 @@ export default class ServerOutput extends MissionOutput<TMetisServerComponents> 
     prefix: string,
     message: string,
     context: TOutputContext,
-    options: Partial<TServerOutputOptions> = {},
+    memberId: string | undefined = undefined,
   ): ServerOutput {
-    return new ServerOutput(
-      force,
-      {
-        _id: StringToolbox.generateRandomId(),
-        forceId: force._id,
-        prefix,
-        message,
-        time: Date.now(),
-        context,
-      },
-      options,
-    )
+    return new ServerOutput(force, {
+      _id: StringToolbox.generateRandomId(),
+      forceId: force._id,
+      prefix,
+      message,
+      time: Date.now(),
+      context,
+      memberId,
+    })
   }
 }
 
@@ -65,15 +43,10 @@ export default class ServerOutput extends MissionOutput<TMetisServerComponents> 
  */
 export type TServerOutputOptions = {
   /**
-   * The ID of the user who triggered the output.
-   * @default null
+   * Restricts the output to a specific member only,
+   * if defined.
    */
-  userId?: ServerUser['_id'] | null
-  /**
-   * Determines who the output is broadcasted to.
-   * @default 'force'
-   */
-  broadcastType?: TOutputBroadcast
+  memberId?: string
 }
 
 /**

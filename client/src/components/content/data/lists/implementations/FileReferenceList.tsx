@@ -89,7 +89,11 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
     ],
     listButtonIcons: ['upload'],
     itemButtonIcons: ['download', 'remove'],
-    initialSorting: { column: 'createdAt', method: 'descending' },
+    initialSorting: {
+      method: 'column-based',
+      column: 'createdAt',
+      direction: 'descending',
+    },
     uploads,
     getListButtonPermissions: (button) => {
       switch (button) {

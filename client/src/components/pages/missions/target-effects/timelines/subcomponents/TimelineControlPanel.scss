@@ -1,0 +1,18 @@
+@import 'src/assets/styles/config.scss';
+
+.TimelineControlPanel {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  flex-direction: row;
+  align-items: center;
+  position: sticky;
+  z-index: 1;
+  top: 0;
+  transition: opacity 175ms;
+  padding: 0 0.8em 1.5em;
+  background-color: $color-primary;
+
+  .TimelineHeading {
+    font-size: 1.1em;
+  }
+}

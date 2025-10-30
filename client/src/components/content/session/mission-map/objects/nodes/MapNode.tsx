@@ -5,6 +5,7 @@ import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
 import { useEventListener, useInlineStyling } from 'src/toolbox/hooks'
+import { getIconPath } from 'src/toolbox/icons'
 import { TMapCompatibleNode, TMapNode_P, TNodeButton } from '.'
 import {
   TNodeBlockStatus,
@@ -222,13 +223,15 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
    */
   const iconStyle: React.CSSProperties = compute(() => {
     if (icon === '_blank') return {}
-
-    return {
-      backgroundImage: `url(${require(`../../../../../../assets/images/icons/${icon}.svg`)})`,
-      backgroundSize: 'contain',
-      backgroundPosition: 'center',
-      backgroundRepeat: 'no-repeat',
-    }
+    const url = getIconPath(icon)
+    return url
+      ? {
+          backgroundImage: `url(${url})`,
+          backgroundSize: 'contain',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }
+      : {}
   })
 
   /**

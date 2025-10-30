@@ -74,5 +74,13 @@
         height: 100%;
       }
     }
+
+    .LoadingButtons {
+      margin: 25px 0 0;
+
+      .ButtonText {
+        margin: 4px;
+      }
+    }
   }
 }

@@ -63,7 +63,7 @@
         transparent 0% 70%,
         rgba(#fff, 0.1) 100%
       ),
-      url('/assets/images/landing-page-img-small.webp');
+      url('../images/landing-page-img-small.webp');
   }
 
   &.BackgroundImageLarge {
@@ -72,10 +72,34 @@
         transparent 0% 70%,
         rgba(#fff, 0.1) 100%
       ),
-      url('/assets/images/landing-page-img.webp');
+      url('../images/landing-page-img.webp');
   }
 
   background-size: 100% 47.34%;
   background-position: center;
   background-repeat: repeat;
+}
+
+// An animation which will make the opacity
+// of an element pulse to draw attention to it.
+@mixin pulse {
+  @keyframes pulse {
+    0% {
+      opacity: 1;
+    }
+    18% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.55;
+    }
+    82% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  animation: pulse 3s infinite;
 }

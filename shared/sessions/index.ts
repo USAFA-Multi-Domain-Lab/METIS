@@ -484,7 +484,13 @@ export type TSession<T extends TMetisBaseComponents> = T['session']
 /**
  * The state of a session.
  */
-export type TSessionState = 'unstarted' | 'started' | 'ended'
+export type TSessionState =
+  | 'unstarted'
+  | 'starting'
+  | 'started'
+  | 'ending'
+  | 'ended'
+  | 'resetting'
 
 /**
  * The role of a user in a session.

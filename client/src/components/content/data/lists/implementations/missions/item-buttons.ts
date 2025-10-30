@@ -6,7 +6,7 @@ import SessionClient from 'src/sessions'
 import { useRequireLogin } from 'src/toolbox/hooks'
 
 /**
- * Yields callback functions which can be used for
+ * Yields mission-related callback functions which can be used for
  * the {@link ButtonSvg.onClick} callback for a button.
  */
 export function useMissionItemButtonCallbacks(
@@ -49,7 +49,9 @@ export function useMissionItemButtonCallbacks(
         let session = await server.$joinSession(sessionId)
         // If the session is not found, abort.
         if (!session) throw new Error('Failed to join test session.')
-        await session.$start()
+        await session.$start({
+          onInit: () => beginLoading('Setting up play-test...'),
+        })
 
         // Navigate to the session page.
         navigateTo(

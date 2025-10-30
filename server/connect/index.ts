@@ -6,7 +6,6 @@ import MetisServer from '../index'
 import SessionServer from '../sessions'
 import ClientConnection from './clients'
 import authMiddleware from './middleware/auth'
-const createSocketIoServer = require('socket.io')
 
 /* -- CLASSES -- */
 
@@ -31,7 +30,7 @@ export default class MetisWsServer {
    */
   public constructor(metis: MetisServer) {
     this.metis = metis
-    this.socketIo = createSocketIoServer(metis.httpServer)
+    this.socketIo = new SocketIoServer(metis.httpServer)
   }
 
   /**

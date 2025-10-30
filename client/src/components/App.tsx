@@ -161,7 +161,7 @@ export default function (props: {}): JSX.Element | null {
       try {
         // Display default loading message to
         // the user.
-        beginLoading()
+        beginLoading('Initializing application...')
 
         // Preload the large background image.
         // A smaller version is used initially
@@ -220,11 +220,14 @@ export default function (props: {}): JSX.Element | null {
             // Navigate based on the session state.
             switch (session.state) {
               case 'unstarted':
+              case 'starting':
                 navigateTo('LobbyPage', { session })
                 break
               case 'started':
+              case 'resetting':
                 navigateTo('SessionPage', { session, returnPage: 'HomePage' })
                 break
+              case 'ending':
               case 'ended':
                 navigateTo('HomePage', {})
                 break

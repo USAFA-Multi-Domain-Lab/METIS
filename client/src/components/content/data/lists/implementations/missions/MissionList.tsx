@@ -58,7 +58,11 @@ export default function MissionList(props: TMissionList_P): JSX.Element | null {
 
       return results
     }),
-    initialSorting: { column: 'updatedAt', method: 'descending' },
+    initialSorting: {
+      method: 'column-based',
+      column: 'updatedAt',
+      direction: 'descending',
+    },
     getColumnLabel: (column: keyof ClientMission): string => {
       switch (column) {
         case 'createdAt':

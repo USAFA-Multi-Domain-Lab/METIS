@@ -48,7 +48,7 @@ export const useUserPageContext = () => {
 /**
  * Renders a page for managing users.
  */
-export default function (props: TUserPage_P): JSX.Element | null {
+export default function UserPage(props: TUserPage_P): JSX.Element | null {
   const Provider =
     UserPageContext.Provider as React.Provider<TUserPageContextData>
 

@@ -6,12 +6,19 @@
 .ListItem {
   cursor: pointer;
 
-  &:hover:not(.Selected):not(.PartiallyDisabled) {
+  &:hover:not(.Selected):not(.PartiallyDisabled):not(.Dragged) {
     @include background-mask($opacity: 0.05);
   }
 
   &.Selected {
     @include background-mask($opacity: 0.15);
+  }
+
+  &.Dragged {
+    @include background-mask($opacity: 0.25);
+
+    position: relative;
+    z-index: 1;
   }
 
   .ItemOptions {

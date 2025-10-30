@@ -90,6 +90,7 @@ export default abstract class Target<
   public static METIS_TARGET_IDS = {
     AWARD: 'award',
     BLOCK_STATUS: 'block-status',
+    DELAY: 'delay',
     FILE_ACCESS: 'file-access',
     OPEN_NODE_STATE: 'open-state',
     OUTPUT: 'output',

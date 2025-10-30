@@ -5,6 +5,7 @@ import {
   TDefaultProps,
   useDefaultProps,
   useEventListener,
+  usePostInitEffect,
 } from 'src/toolbox/hooks'
 import { MetisComponent } from '../../../../../../shared'
 import StringToolbox from '../../../../../../shared/toolbox/strings'
@@ -76,9 +77,18 @@ export function createDefaultListProps<
     minNameColumnWidth: '14em',
     listButtonIcons: [],
     itemButtonIcons: [],
-    initialSorting: { column: 'name', method: 'ascending' },
+    initialSorting: {
+      method: 'column-based',
+      column: 'name',
+      direction: 'ascending',
+    },
+    ordering: {
+      mode: 'static',
+    },
     deselectionBlacklist: [],
     uploads: [],
+    elementAccess: null,
+    searchBlacklist: [],
     getColumnLabel: (x) => StringToolbox.toTitleCase(x.toString()),
     getCellText: (item, column) => (item[column] as any).toString(),
     getItemTooltip: () => '',
@@ -94,6 +104,7 @@ export function createDefaultListProps<
     onListButtonClick: () => {},
     onItemButtonClick: () => {},
     onFileDrop: null,
+    onReorder: () => {},
   }
 }
 
@@ -117,9 +128,9 @@ export default function List<TItem extends MetisComponent>(
   // Parse props needed by the main list
   // component.
   const {
-    name,
     items,
     itemsPerPageMin,
+    ordering,
     listButtonIcons,
     itemButtonIcons,
     deselectionBlacklist,
@@ -133,6 +144,7 @@ export default function List<TItem extends MetisComponent>(
     onItemButtonClick,
     onSelect,
     onFileDrop,
+    onReorder,
   } = defaultedProps
 
   /* -- STATE -- */
@@ -149,11 +161,15 @@ export default function List<TItem extends MetisComponent>(
     selection: useState<TItem | null>(null),
     buttonOverflowCount: useState<number>(0),
     overflowActive: useState<boolean>(false),
+    draggedItem: useState<TItem | null>(null),
+    draggedItemStartY: useState<number>(0),
+    itemOrderUpdateId: useState<string>(StringToolbox.generateRandomId()),
   }
-  const [pageNumber] = state.pageNumber
+  const [pageNumber, setPageNumber] = state.pageNumber
   const [processedItems] = state.processedItems
   const [itemsPerPage] = state.itemsPerPage
   const [selection, setSelection] = state.selection
+  const [itemOrderUpdateId] = state.itemOrderUpdateId
   const elements: TList_E = {
     root: useRef<HTMLDivElement>(null),
     nav: useRef<HTMLDivElement>(null),
@@ -169,6 +185,9 @@ export default function List<TItem extends MetisComponent>(
    * The computed pages of items in the list
    * based on the items passed and the number
    * of items per page configured.
+   * @note When ordering mode is 'maleable', pagination is disabled
+   * and all items are displayed on a single page to allow for proper
+   * drag-and-drop reordering.
    */
   const pages = compute<TListPage_P<TItem>[]>(() => {
     const results: Required<TListPage_P<TItem>>[] = []
@@ -176,6 +195,23 @@ export default function List<TItem extends MetisComponent>(
       items: [],
     }
 
+    // If ordering mode is 'maleable', disable pagination
+    // by setting all items to a single page
+    if (defaultedProps.ordering.mode === 'maleable') {
+      // Add all uploads first
+      for (let upload of uploads) {
+        pageCursor.items.push(upload)
+      }
+      // Add all regular items
+      for (let item of processedItems) {
+        pageCursor.items.push(item)
+      }
+      // Push the single page with all items
+      results.push(pageCursor)
+      return results
+    }
+
+    // Regular pagination logic for non-maleable ordering
     // Ensures that each page has the correct number
     // of items, and that when it reaches the correct
     // number, the page will be pushed to the results.
@@ -263,12 +299,16 @@ export default function List<TItem extends MetisComponent>(
   const listButtons = compute<TListContextData<TItem>['listButtons']>(() => {
     let buttons: TSvgPanelElement_Input[] = []
 
-    buttons.push({
-      key: 'stepper-page',
-      type: 'stepper',
-      maximum: pageCount,
-      value: state.pageNumber,
-    })
+    // Only add pagination stepper when ordering mode is not 'maleable'
+    // since maleable lists display all items on a single page
+    if (defaultedProps.ordering.mode !== 'maleable') {
+      buttons.push({
+        key: 'stepper-page',
+        type: 'stepper',
+        maximum: pageCount,
+        value: state.pageNumber,
+      })
+    }
 
     filteredListIcons.forEach((icon) => {
       buttons.push({
@@ -421,6 +461,14 @@ export default function List<TItem extends MetisComponent>(
 
   /* -- EFFECTS -- */
 
+  // Reset page number when switching to maleable mode or ensure valid page when switching back
+  useEffect(() => {
+    // When switching to maleable mode, always show the first (and only) page
+    if (ordering.mode === 'maleable') {
+      setPageNumber(0)
+    }
+  }, [ordering.mode, pageCount])
+
   // Call `onSelect` callback whenever selection-state
   // changes.
   useEffect(() => onSelect(selection), [selection])
@@ -462,6 +510,20 @@ export default function List<TItem extends MetisComponent>(
     // deselect the item.
     if (!rootElement?.contains(target)) setSelection(null)
   })
+
+  // Give parent access to the list's elements, if
+  // requested.
+  useEffect(() => {
+    if (defaultedProps.elementAccess) {
+      defaultedProps.elementAccess.current = elements
+    }
+  }, [defaultedProps.elementAccess])
+
+  // Call reorder callback function when item order
+  // update ID changes.
+  usePostInitEffect(() => {
+    onReorder()
+  }, [itemOrderUpdateId])
 
   /* -- RENDER -- */
 
@@ -581,9 +643,13 @@ export type TList_P<TItem extends MetisComponent> = {
   itemButtonIcons?: TMetisIcon[]
   /**
    * The initial sorting state for the list.
-   * @default { column: 'name', method: 'descending' }
+   * @default { mode: 'automatic', column: 'name', method: 'descending' }
    */
   initialSorting?: TListSorting<TItem>
+  /**
+   * @see {@link TListOrdering}
+   */
+  ordering?: TListOrdering<TItem>
   /**
    * A list of HTML element css selectors used within a
    * JavaScript query selector which, if clicked, will not
@@ -601,6 +667,16 @@ export type TList_P<TItem extends MetisComponent> = {
    * @default []
    */
   uploads?: ListUpload[]
+  /**
+   * Grants parent access to the refs used internally
+   * by the list.
+   */
+  elementAccess?: React.MutableRefObject<TList_E | null> | null
+  /**
+   * The columns that cannot be searched within the list.
+   * @default []
+   */
+  searchBlacklist?: TListColumnType<TItem>[]
   /**
    * Gets the tooltip description for the item.
    * @param item The item for which to get the tooltip.
@@ -702,6 +778,13 @@ export type TList_P<TItem extends MetisComponent> = {
    * accept dropped files.
    */
   onFileDrop?: TNullable<(files: FileList) => void>
+  /**
+   * Callback for when the order of items in the list
+   * is changed by drag-and-drop.
+   * @default () => {}
+   * @note Only relevant if ordering mode is 'maleable'.
+   */
+  onReorder?: () => void
 }
 
 /**
@@ -746,6 +829,24 @@ export type TList_S<TItem extends MetisComponent> = {
    * and displaying the overflow menu.
    */
   overflowActive: TReactState<boolean>
+  /**
+   * The item which is currently being dragged,
+   * if any.
+   */
+  draggedItem: TReactState<TItem | null>
+  /**
+   * The y-position of the mouse when dragging
+   * started for the currently dragged item, or the
+   * last dragged item if no item is currently
+   * being dragged.
+   */
+  draggedItemStartY: TReactState<number>
+  /**
+   * Represents an update to the order of items
+   * in the list, which can be used to trigger
+   * effects when the order changes.
+   */
+  itemOrderUpdateId: TReactState<string>
 }
 
 /**
@@ -776,7 +877,6 @@ export type TListContextData<TItem extends MetisComponent> = Required<
    * item button icons.
    */
   aggregatedButtonIcons: string[]
-  // aggregatedButtonIcons: TSvgPanelElement['icon'][]
   /**
    * Aggregated buttons, including list and
    * item buttons.
@@ -863,22 +963,120 @@ export type TGetListButtonDisabled = (
 export type TListColumnType<TItem> = keyof TItem
 
 /**
- * Data that defines how items in a list should
- * be sorted.
+ * Base options for sorting items in a list, which
+ * are shared between all sorting methods.
  */
-export type TListSorting<TItem extends MetisComponent> = {
+export type TListSortingBase = {
+  /**
+   * Prevents the sorting method, column, and
+   * direction from being changed by the user.
+   * @default false
+   */
+  fixedConfig?: boolean
+}
+
+/**
+ * Options for column-based sorting items in a list.
+ * @see {@link TListSortingMethod}
+ */
+export type TListSortingColumnBased<TItem extends MetisComponent> = {
+  /**
+   * @see {@link TListSortingMethod}
+   */
+  method: 'column-based'
   /**
    * The column by which to sort.
    */
   column: TListColumnType<TItem>
   /**
-   * The method (direction) by which to sort.
+   * The direction by which to sort.
    */
-  method: TListSortMethod
+  direction: TListSortDirection
 }
 
 /**
- * The method (direction) by which to sort items
+ * Options for leaving items in a list unsorted.
+ * @see {@link TListSortingMethod}
+ */
+export type TListSortingUnsorted = {
+  /**
+   * @see {@link TListSortingMethod}
+   */
+  method: 'unsorted'
+}
+
+/**
+ * Data that defines how items in a list should
+ * be sorted.
+ */
+export type TListSorting<TItem extends MetisComponent> = (
+  | TListSortingColumnBased<TItem>
+  | TListSortingUnsorted
+) &
+  TListSortingBase
+
+/**
+ * Configurable values for a list with static
+ * ordering, meaning the order doesn't change.
+ */
+export type TListOrderingStatic = {
+  /**
+   * Disables reordering of items in the list by
+   * the user.
+   * @note Use 'maleable' to enable ordering changes.
+   */
+  mode: 'static'
+}
+
+/**
+ * Configurable values for a list with maleable
+ * ordering, meaning the order can be changed
+ * by the user.
+ */
+export type TListOrderingMaleable<TItem extends MetisComponent> = {
+  /**
+   * Enables ordering of items in the list.
+   * @note This will disable pagination to ensure
+   * all items are visible for reordering.
+   * @note Use 'static' to prevent user from
+   * reordering list.
+   */
+  mode: 'maleable'
+  /**
+   * A callback for when the order of items in the list
+   * has changed.
+   * @param items The items in their new order. This will
+   * be the same array instance as the `items` prop passed
+   * to the list with the order mutated.
+   */
+  onReorder?: (items: TItem[]) => void
+}
+
+/**
+ * Configuration for ordering items in the list.
+ * This is different from sorting, as sorting simply
+ * rearranges the items in the view, while ordering
+ * actually changes the order of the items of the input
+ * data.
+ */
+export type TListOrdering<TItem extends MetisComponent> =
+  | TListOrderingStatic
+  | TListOrderingMaleable<TItem>
+
+/**
+ * The method for sorting, whether automatic through the
+ * selection of direction by column, or manual sorting
+ * via drag-and-drop.
+ */
+export type TListSortingMethod = TListSorting<any>['method']
+
+/**
+ * The direction in which to sort items
  * in a list.
  */
-export type TListSortMethod = 'ascending' | 'descending'
+export type TListSortDirection = 'ascending' | 'descending'
+
+/**
+ * Whether ordering of items in the list is enabled or disabled.
+ */
+export type TListOrderingMode = TListOrdering<any>['mode']

@@ -1,10 +1,26 @@
 import { TTargetEnvJson } from 'metis/target-environments'
+import TargetEnvironmentHook, {
+  TTargetEnvMethods,
+} from '../../../server/target-environments/hooks'
 import { getCallerFolder } from '../toolbox/files'
 
 /**
  * Defines a target environment.
  */
 export default class TargetEnvSchema {
+  /**
+   * A registry of hooks associated with the target environment.
+   */
+  private _hooks: TargetEnvironmentHook[]
+
+  /**
+   * @see {@link TargetEnvSchema._hooks}
+   * @note Returns the copy, not the original array.
+   */
+  public get hooks(): TargetEnvironmentHook[] {
+    return [...this._hooks]
+  }
+
   /**
    * The ID of the target environment.
    */
@@ -51,6 +67,17 @@ export default class TargetEnvSchema {
     this._description = options.description
     this._version = options.version
     this._targets = []
+    this._hooks = []
+  }
+
+  /**
+   * Adds a hook to the target environment which will call
+   * the provided callback when the specified method is invoked.
+   * @param method The method for which the callback should be called.
+   * @param callback The handler function to call when the method is invoked.
+   */
+  public on(method: TTargetEnvMethods, callback: () => void | Promise<void>) {
+    this._hooks.push(new TargetEnvironmentHook(method, callback))
   }
 
   /**

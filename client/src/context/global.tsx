@@ -6,6 +6,7 @@ import {
   TPromptResult,
 } from 'src/components/content/communication/Prompt'
 import { TButtonMenu_P } from 'src/components/content/user-controls/buttons/ButtonMenu'
+import { TButtonText_P } from 'src/components/content/user-controls/buttons/ButtonText'
 import ButtonSvgEngine from 'src/components/content/user-controls/buttons/panels/engines'
 import { PAGE_REGISTRY, TPage_P, TPageKey } from 'src/components/pages'
 import ServerConnection, { IServerConnectionOptions } from 'src/connect/servers'
@@ -46,10 +47,11 @@ const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
   currentPageProps: {},
   appMountHandled: false,
   loading: true,
-  loadingMessage: 'Initializing application...',
+  loadingMessage: 'Loading...',
   loadingMinTimeReached: false,
   loadingProgress: 0,
   loadingPageId: StringToolbox.generateRandomId(),
+  loadingButtons: [],
   pageSwitchMinTimeReached: true,
   backgroundLoaded: false,
   error: null,
@@ -132,6 +134,7 @@ const initializeActions = (
   const setPageSwitchMinTimeReached = initialState.pageSwitchMinTimeReached[1]
   const setLoadingProgress = initialState.loadingProgress[1]
   const setLoadingPageId = initialState.loadingPageId[1]
+  const setLoadingButtons = initialState.loadingButtons[1]
   const setError = initialState.error[1]
   const setButtonMenu = initialState.buttonMenu[1]
   const setNotifications = initialState.notifications[1]
@@ -225,7 +228,9 @@ const initializeActions = (
         realizePageSwitch()
       }
     },
-    beginLoading: (loadingMessage?: string) => {
+    beginLoading: (loadingMessage: string, options: TLoadingOptions = {}) => {
+      const { buttons = [] } = options
+
       // Set loading state to display loading page.
       setLoading(true)
       setLoadingMessage(
@@ -234,6 +239,7 @@ const initializeActions = (
       setLoadingMinTimeReached(false)
       setLoadingProgress(0)
       setLoadingPageId(StringToolbox.generateRandomId())
+      setLoadingButtons(buttons)
 
       setTimeout(() => {
         const { loading, pageSwitchMinTimeReached } = refs.current
@@ -751,6 +757,10 @@ export type TGlobalContextValues = {
   currentPageProps: AnyObject
   appMountHandled: boolean
   loading: boolean
+  /**
+   * The message to display on the loading page
+   * when {@link TGlobalContextValues.loading} is set to true.
+   */
   loadingMessage: string
   loadingMinTimeReached: boolean
   /**
@@ -764,6 +774,11 @@ export type TGlobalContextValues = {
    * is started.
    */
   loadingPageId: string
+  /**
+   * The buttons to display on the loading page
+   * when {@link TGlobalContextValues.loading} is set to true.
+   */
+  loadingButtons: TButtonText_P[]
   pageSwitchMinTimeReached: boolean
   /**
    * Tracks whether the large background image
@@ -835,7 +850,7 @@ export type TGlobalContextActions = {
    * @param {string | undefined} loadingMessage The message to display until
    * "finishLoading" is called. Defaults to "Initializing application...".
    */
-  beginLoading: (loadingMessage?: string) => void
+  beginLoading: (loadingMessage: string, options?: TLoadingOptions) => void
   /**
    * This will end the loading process started by the
    * beginLoading function, bringing the user to the
@@ -940,6 +955,20 @@ export type TNavigateOptions = {
    * @default false
    */
   bypassMiddleware?: boolean
+}
+
+/**
+ * Options available when beginning a loading sequence
+ * using the beginLoading method in the global context
+ * actions.
+ */
+export type TLoadingOptions = {
+  /**
+   * Buttons to display on the loading page. This gives the
+   * user interactable options while waiting for the loading
+   * to conclude.
+   */
+  buttons?: TButtonText_P[]
 }
 
 /**
