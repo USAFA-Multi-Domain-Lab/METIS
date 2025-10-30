@@ -507,7 +507,7 @@ export default class MissionImport {
   /**
    * The directory where the files will be uploaded.
    */
-  public static UPLOADS_DIRECTORY: string = 'temp/missions/imports/'
+  public static UPLOADS_DIRECTORY: string = 'server/temp/missions/imports/'
 
   /**
    * Creates a new `MissionImport` object from an array
