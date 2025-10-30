@@ -9,7 +9,7 @@ import fs from 'fs'
 import { TEffectType } from 'metis/missions/effects'
 import MetisDatabase from 'metis/server/database'
 import MetisRouter from 'metis/server/http/router'
-import { expressLogger, expressLoggingHandler } from 'metis/server/logging'
+import { expressLogger, initializeLoggers } from 'metis/server/logging'
 import mongoose from 'mongoose'
 import http, { Server as HttpServer } from 'node:http'
 import https from 'node:https'
@@ -381,9 +381,12 @@ export default class MetisServer {
    * @returns A promise that resolves once the server is initialized and ready to be served.
    */
   private initialize(): Promise<void> {
-    return new Promise<void>(async (resolve, reject) => {
+    return new Promise<void>(async (resolve) => {
       let mongooseConnection: mongoose.Connection | null
-      let { expressApp, database, fileStore, wsServer } = this
+      let { expressApp, database, wsServer } = this
+
+      // Logger setup.
+      initializeLoggers(expressApp)
 
       // Register target environments.
       await ServerTargetEnvironment.scan()
@@ -391,9 +394,6 @@ export default class MetisServer {
       ServerTarget.validateTargetIds(
         ServerTargetEnvironment.METIS_TARGET_ENV_ID,
       )
-
-      // Logger setup.
-      expressApp.use(expressLoggingHandler)
 
       // Database setup.
       await database.connect()
@@ -442,15 +442,13 @@ export default class MetisServer {
 
       // links the file path to css and resource files
       // Serve built client (Vite outputs to dist)
-      expressApp.use(
-        express.static(path.resolve(MetisServer.APP_DIR, '../client/dist')),
-      )
+      expressApp.use(express.static(MetisServer.resolvePath('../client/dist')))
 
       // This will do clean up when the application
       // terminates.
       process.on('SIGINT', () => {
         // Deletes temp folder.
-        fs.rmdirSync(path.join(MetisServer.APP_DIR, 'temp'), {
+        fs.rmdirSync(MetisServer.resolvePath('temp'), {
           recursive: true,
         })
         process.exit()
@@ -539,15 +537,14 @@ export default class MetisServer {
   /**
    * The root directory for the METIS server.
    */
-  public static readonly APP_DIR = __dirname
+  public static readonly APP_DIR: string = __dirname
 
   /**
    * The path to the environment file.
    */
-  public static readonly ENVIRONMENT_FILE_PATH: string = path.resolve(
-    MetisServer.APP_DIR,
-    '../environment.json',
-  )
+  public static get ENVIRONMENT_FILE_PATH(): string {
+    return MetisServer.resolvePath('../environment.json')
+  }
 
   /**
    * The name of the cookie used to store the web session ID.
@@ -555,30 +552,38 @@ export default class MetisServer {
   public static readonly WEB_SESSION_COOKIE_NAME = 'connect.sid'
 
   /**
+   * Resolves the given paths with {@link path.resolve} relative
+   * to the METIS server app directory ({@link MetisServer.APP_DIR}).
+   * @param paths The paths to resolve.
+   * @returns The resolved path.
+   */
+  public static resolvePath(...paths: string[]): string {
+    return path.resolve(MetisServer.APP_DIR, ...paths)
+  }
+
+  /**
+   * Loads environment variables from a .env file in
+   * the config directory.
+   * @param fileName The name of the .env file to load,
+   * not including the extension.
+   */
+  private static loadEnv(fileName: string): void {
+    dotenv.config({
+      path: MetisServer.resolvePath(`../config/${fileName}.env`),
+      override: true,
+    })
+  }
+
+  /**
    * Creates METIS options from the environment.
    * @returns The METIS options created from the environment.
    * @throws If environment variables are missing are invalid.
    */
   private static createOptionsFromEnvironment(): TMetisServerOptions {
-    switch (process.env.METIS_ENV_TYPE) {
-      case 'docker':
-        dotenv.config({ path: 'config/docker.defaults.env', override: true })
-        dotenv.config({ path: 'config/docker.env', override: true })
-        break
-      case 'dev':
-        dotenv.config({ path: 'config/dev.defaults.env', override: true })
-        dotenv.config({ path: 'config/dev.env', override: true })
-        break
-      case 'test':
-        dotenv.config({ path: 'config/test.defaults.env', override: true })
-        dotenv.config({ path: 'config/test.env', override: true })
-        break
-      case 'prod':
-      default:
-        dotenv.config({ path: 'config/prod.defaults.env', override: true })
-        dotenv.config({ path: 'config/prod.env', override: true })
-        break
-    }
+    let envType: string = process.env.METIS_ENV_TYPE ?? 'prod'
+
+    MetisServer.loadEnv(`${process.env.METIS_ENV_TYPE}.defaults`)
+    MetisServer.loadEnv(`${process.env.METIS_ENV_TYPE}`)
 
     const requiredKeys = [
       'PORT',
@@ -602,7 +607,7 @@ export default class MetisServer {
 
     try {
       return {
-        envType: process.env.METIS_ENV_TYPE ?? 'prod',
+        envType,
         port: parseInt(process.env.PORT!),
         mongoDB: process.env.MONGO_DB!,
         mongoHost: process.env.MONGO_HOST!,

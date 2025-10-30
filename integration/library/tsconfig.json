@@ -8,6 +8,8 @@
       "metis/toolbox/numbers": ["../../shared/toolbox/numbers"],
       "metis/toolbox/versions": ["../../shared/toolbox/versions"],
       "metis/toolbox/booleans": ["../../shared/toolbox/booleans"]
-    }
+    },
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext"
   }
 }

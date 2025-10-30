@@ -1,6 +1,6 @@
 import React, { ReactNode, useEffect, useRef, useState } from 'react'
 import { TAppError, TAppErrorNotifyMethod } from 'src/components/App'
-import { message as connectionStatusMessage } from 'src/components/content/communication/ConnectionStatus'
+import { TConnectionStatusMessage } from 'src/components/content/communication/ConnectionStatus'
 import {
   TPrompt_P,
   TPromptResult,
@@ -60,6 +60,7 @@ const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
   tooltipDescription: '',
   notifications: [],
   promptData: null,
+  connectionStatusMessage: null,
   cheats: {
     zeroCost: true,
     instantaneous: false,
@@ -139,6 +140,7 @@ const initializeActions = (
   const setButtonMenu = initialState.buttonMenu[1]
   const setNotifications = initialState.notifications[1]
   const setPromptData = initialState.promptData[1]
+  const setConnectionStatusMessage = initialState.connectionStatusMessage[1]
 
   /* -- CALLBACKS -- */
 
@@ -301,18 +303,19 @@ const initializeActions = (
               // If a message was displayed to the user notifying
               // of connection loss, then show a message notifying
               // of reconnection.
-              if (connectionStatusMessage.value?.color === 'Red') {
+              const { connectionStatusMessage } = refs.current
+              if (connectionStatusMessage?.color === 'Red') {
                 // Update status message.
-                connectionStatusMessage.value = {
+                setConnectionStatusMessage({
                   message: 'Connection reestablished.',
                   color: 'Green',
-                }
+                })
                 // Set a timeout to clear the message.
                 setTimeout(() => {
                   // If the connection status is open, then
                   // clear the message.
                   if (server.status === 'open') {
-                    connectionStatusMessage.value = null
+                    setConnectionStatusMessage(null)
                   }
                 }, CONNECT_MESSAGE_CLEAR_DELAY)
               }
@@ -331,10 +334,10 @@ const initializeActions = (
                 // then display a connection loss message.
                 if (server.status !== 'open') {
                   // Update status message.
-                  connectionStatusMessage.value = {
+                  setConnectionStatusMessage({
                     message: 'Connection dropped. Attempting to reconnect...',
                     color: 'Red',
-                  }
+                  })
                 }
               }, 3000)
             },
@@ -365,7 +368,7 @@ const initializeActions = (
                 case ServerEmittedError.CODE_UNAUTHENTICATED:
                   if (login !== null) {
                     setLogin(null)
-                    connectionStatusMessage.value = null
+                    setConnectionStatusMessage(null)
                   }
                   break
                 case ServerEmittedError.CODE_SWITCHED_CLIENT:
@@ -799,6 +802,11 @@ export type TGlobalContextValues = {
    * Current prompt to display to the user.
    */
   promptData: TWithKey<TPrompt_P<any, any>> | null
+  /**
+   * The connection status message to display to a user
+   * regarding their current connection to the server.
+   */
+  connectionStatusMessage: TConnectionStatusMessage | null
   /**
    * Global settings for cheats when executing actions.
    * This will ensure that when the user executes an action,

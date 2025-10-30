@@ -1,4 +1,5 @@
 import { compute } from 'src/toolbox'
+import { removeKey } from 'src/toolbox/components'
 import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
 import './ButtonSvgPanel.scss'
 import ButtonSvg from './elements/ButtonSvg'
@@ -26,18 +27,6 @@ export default function ({
   )
 
   /* -- FUNCTIONS -- */
-
-  /**
-   * Removes the `key` property from the given element.
-   * @param element The element from which to remove the key.
-   * @returns The element without the key property.
-   */
-  const removeKey = <T extends TSvgPanelElement>(
-    element: T,
-  ): Omit<T, 'key'> => {
-    const { key, ...rest } = element
-    return rest
-  }
 
   /**
    * Renders a panel element based on its type.

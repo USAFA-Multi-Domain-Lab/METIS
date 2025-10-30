@@ -28,7 +28,7 @@ import User from 'metis/users'
 import { v4 as generateHash } from 'uuid'
 import ClientConnection from '../connect/clients'
 import { TMetisServerComponents } from '../index'
-import { plcApiLogger } from '../logging'
+import { targetEnvLogger } from '../logging'
 import ServerActionExecution from '../missions/actions/executions'
 import ServerExecutionOutcome from '../missions/actions/outcomes'
 import ServerEffect from '../missions/effects'
@@ -1742,7 +1742,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
         `The effect - "${effect.name}" - can be found here:\n` +
         `mission - "${this.mission.name}" - effect - "${effect.name}".\n`
       // Log the error.
-      plcApiLogger.error(message, error)
+      targetEnvLogger.error(message, error)
     }
   }
 
@@ -1766,7 +1766,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
           await this.applyMissionEffect(effect)
         } catch (error: any) {
           // Log the error.
-          plcApiLogger.error(error)
+          targetEnvLogger.error(error)
         }
       }
     }
@@ -1819,7 +1819,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
         `The effect - "${effect.name}" - can be found here:\n` +
         `force - "${effect.sourceForce.name}" - node - "${effect.sourceNode.name}" - action - "${effect.sourceAction.name}" - effect - "${effect.name}".\n`
       // Log the error.
-      plcApiLogger.error(message, error)
+      targetEnvLogger.error(message, error)
     }
   }
 
@@ -1854,7 +1854,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
           // })
         } catch (error: any) {
           // Log the error.
-          plcApiLogger.error(error)
+          targetEnvLogger.error(error)
 
           // todo: implement feedback for modifiers
           // participant.emitError(
@@ -1929,12 +1929,12 @@ export default class SessionServer extends Session<TMetisServerComponents> {
 
     // Validate the operation is permitted (idempotent check).
     if (open && !node.openable) {
-      plcApiLogger.warn(
+      targetEnvLogger.warn(
         `Skipping open on node "${node.name}" (${node._id}): already opened or revealAllNodes enabled`,
       )
       return
     } else if (!open && !node.closable) {
-      plcApiLogger.warn(
+      targetEnvLogger.warn(
         `Skipping close on node "${node.name}" (${node._id}): already closed or revealAllNodes enabled`,
       )
       return
@@ -1954,7 +1954,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     const member = this.getMembersForForce(node.force._id)[0]
 
     if (!member) {
-      plcApiLogger.warn(
+      targetEnvLogger.warn(
         `No members found for force "${node.force.name}" (${node.force._id}) when updating open state of node "${node.name}" (${node._id})`,
       )
       return

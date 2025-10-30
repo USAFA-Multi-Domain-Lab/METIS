@@ -6,6 +6,7 @@ import MetisInfo from 'src/info'
 import SessionClient from 'src/sessions'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
+import { removeKey } from 'src/toolbox/components'
 import { LoginRequiredError, useEventListener } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import { TLogin } from '../../../shared/logins'
@@ -314,7 +315,7 @@ export default function (props: {}): JSX.Element | null {
     // Render nothing, if there is no button menu.
     if (!buttonMenu) return null
 
-    return <ButtonMenu {...buttonMenu} />
+    return <ButtonMenu key={buttonMenu.key} {...removeKey(buttonMenu)} />
   })
 
   // Render METIS.

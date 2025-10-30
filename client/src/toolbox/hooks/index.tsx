@@ -49,22 +49,19 @@ export function useListComponent<
   propsList: Array<TProps>,
   keyFrom: TPropKeys | ((props: TProps) => string),
 ): () => JSX.Element | null {
-  return useCallback(
-    () => (
-      <>
-        {propsList.map((props) => (
-          <Component
-            {...props}
-            key={
-              typeof keyFrom === 'function'
-                ? keyFrom(props)
-                : (props[keyFrom] as string)
-            }
-          />
-        ))}
-      </>
-    ),
-    [Component, propsList, keyFrom],
+  return () => (
+    <>
+      {propsList.map((props) => (
+        <Component
+          {...props}
+          key={
+            typeof keyFrom === 'function'
+              ? keyFrom(props)
+              : (props[keyFrom] as string)
+          }
+        />
+      ))}
+    </>
   )
 }
 

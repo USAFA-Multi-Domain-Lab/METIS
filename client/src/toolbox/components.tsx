@@ -1,3 +1,4 @@
+import { TWithKey } from 'shared/toolbox/objects'
 import ClientUser from 'src/users'
 import { TLogin } from '../../../shared/logins'
 
@@ -43,4 +44,14 @@ export function render(
   else {
     return null
   }
+}
+
+/**
+ * Removes the `key` property from the given props.
+ * @param props The props from which to remove the key.
+ * @returns The props without the key property.
+ */
+export function removeKey<T extends TWithKey<{}>>(props: T): Omit<T, 'key'> {
+  const { key, ...rest } = props
+  return rest
 }
