@@ -1,5 +1,5 @@
 import { compute } from 'src/toolbox'
-import ClassList from '../../../../../../shared/toolbox/html/class-lists'
+import ClassList from '../../../../../../shared/toolbox/html/ClassList'
 import { usePanelContext } from './Panel'
 import './PanelView.scss'
 

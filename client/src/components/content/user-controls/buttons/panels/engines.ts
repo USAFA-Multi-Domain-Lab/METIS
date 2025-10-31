@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { compute } from 'src/toolbox'
 import { useForcedUpdates, usePostInitEffect } from 'src/toolbox/hooks'
-import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
+import ClassList from '../../../../../../../shared/toolbox/html/ClassList'
 import StringToolbox from '../../../../../../../shared/toolbox/strings'
 import { createButtonDefaults } from './elements/ButtonSvg'
 import { createDividerDefaults } from './elements/DividerSvg'

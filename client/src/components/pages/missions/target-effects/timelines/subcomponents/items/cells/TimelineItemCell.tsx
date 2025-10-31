@@ -1,6 +1,6 @@
 import React from 'react'
 import { compute } from 'src/toolbox'
-import ClassList from '../../../../../../../../../../shared/toolbox/html/class-lists'
+import ClassList from '../../../../../../../../../../shared/toolbox/html/ClassList'
 import './TimelineItemCell.scss'
 
 /**

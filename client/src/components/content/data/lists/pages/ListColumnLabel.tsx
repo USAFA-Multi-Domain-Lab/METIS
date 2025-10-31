@@ -1,7 +1,7 @@
 import Tooltip from 'src/components/content/communication/Tooltip'
 import { compute } from 'src/toolbox'
 import { MetisComponent } from '../../../../../../../shared'
-import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
+import ClassList from '../../../../../../../shared/toolbox/html/ClassList'
 import { TListColumnType, useListContext } from '../List'
 import './ListColumnLabel.scss'
 

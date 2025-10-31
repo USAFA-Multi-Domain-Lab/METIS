@@ -3,7 +3,7 @@ import { v4 as generateHash } from 'uuid'
 import Mission, { TMission } from '..'
 import { TMetisBaseComponents } from '../../'
 import { Vector2D } from '../../../shared/toolbox/space'
-import ArrayToolbox from '../../toolbox/arrays'
+import ArrayToolbox from '../../toolbox/ArrayToolbox'
 import MapToolbox from '../../toolbox/maps'
 import { TAction, TMissionActionJson } from '../actions'
 import {

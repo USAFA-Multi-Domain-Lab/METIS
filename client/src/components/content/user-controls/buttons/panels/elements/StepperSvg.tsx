@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import Tooltip from 'src/components/content/communication/Tooltip'
 import { compute } from 'src/toolbox'
-import ClassList from '../../../../../../../../shared/toolbox/html/class-lists'
+import ClassList from '../../../../../../../../shared/toolbox/html/ClassList'
 import ButtonSvgEngine from '../engines'
 import { TStepperSvg_PK } from '../types'
 import './StepperSvg.scss'

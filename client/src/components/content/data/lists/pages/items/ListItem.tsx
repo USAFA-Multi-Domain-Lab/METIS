@@ -7,7 +7,7 @@ import WarningIndicator from 'src/components/content/user-controls/WarningIndica
 import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
 import { MetisComponent } from '../../../../../../../../shared'
-import ClassList from '../../../../../../../../shared/toolbox/html/class-lists'
+import ClassList from '../../../../../../../../shared/toolbox/html/ClassList'
 import StringToolbox from '../../../../../../../../shared/toolbox/strings'
 import { TUserPermissionId } from '../../../../../../../../shared/users/permissions'
 import {

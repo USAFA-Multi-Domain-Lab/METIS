@@ -337,6 +337,12 @@ Names given should also avoid non-conventional abbreviations. Terms that are com
 
 Names given should also not be overly long. Names should be limited to 3-4 words max, if possible. If a name is too long, and a suitable term cannot be given to shorten it, abbreviations are, in this case, encouraged, to shorten the variable, so long as the term used is easy to understand.
 
+### Files
+
+The following conventions should be used when naming files:
+
+- Files housing a single, default-exported class should be named after that class (e.g. `ClientMission.ts` for a `ClientMission` class).
+
 ### Types
 
 Types and interfaces both should be prefixed with the letter "T” when assigned a name. In general, types are preferred over interfaces. However, interfaces can be used also,

@@ -1,4 +1,4 @@
-import { TNonEmptyArray } from 'metis/toolbox/arrays'
+import { TNonEmptyArray } from 'metis/toolbox/ArrayToolbox'
 import { TSessionAuthParam } from '.'
 import MemberPermission from './permissions'
 

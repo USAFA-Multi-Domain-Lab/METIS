@@ -1,5 +1,5 @@
 import { compute } from 'src/toolbox'
-import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
+import ClassList from '../../../../../../../shared/toolbox/html/ClassList'
 import DetailDropdown from '../DetailDropdown'
 import { TDropdownOption_P } from '../types'
 

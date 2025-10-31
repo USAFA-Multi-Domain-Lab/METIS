@@ -15,7 +15,7 @@ import {
   TEffectType,
 } from '../../../../../../../../../shared/missions/effects'
 import { ifNonNullable } from '../../../../../../../../../shared/toolbox/calls'
-import ClassList from '../../../../../../../../../shared/toolbox/html/class-lists'
+import ClassList from '../../../../../../../../../shared/toolbox/html/ClassList'
 import { TTimelineDragDropItem } from '../../EffectTimeline'
 import { useTimelineContext } from '../../context'
 import './TimelineItem.scss'

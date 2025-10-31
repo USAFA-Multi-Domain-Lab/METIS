@@ -11,7 +11,7 @@ import {
   withPreprocessor,
 } from 'src/toolbox/hooks'
 import { v4 as generateHash } from 'uuid'
-import ClassList from '../../../../../../shared/toolbox/html/class-lists'
+import ClassList from '../../../../../../shared/toolbox/html/ClassList'
 import { Vector1D, Vector2D } from '../../../../../../shared/toolbox/space'
 import ButtonSvgEngine from '../../user-controls/buttons/panels/engines'
 import {

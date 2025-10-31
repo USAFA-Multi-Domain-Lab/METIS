@@ -30,7 +30,7 @@ import {
   TMissionPrototypeJson,
   TMissionPrototypeOptions,
 } from '../../../shared/missions/nodes/prototypes'
-import { TNonEmptyArray } from '../../../shared/toolbox/arrays'
+import { TNonEmptyArray } from '../../../shared/toolbox/ArrayToolbox'
 import { DateToolbox } from '../../../shared/toolbox/dates'
 import { Counter } from '../../../shared/toolbox/numbers'
 import { AnyObject, TWithKey } from '../../../shared/toolbox/objects'

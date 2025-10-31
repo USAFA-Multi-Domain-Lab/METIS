@@ -26,7 +26,7 @@ import {
   TEffectTrigger,
   TEffectType,
 } from '../../../../../shared/missions/effects'
-import { TNonEmptyArray } from '../../../../../shared/toolbox/arrays'
+import { TNonEmptyArray } from '../../../../../shared/toolbox/ArrayToolbox'
 import Prompt from '../../content/communication/Prompt'
 import FileReferenceList, {
   TFileReferenceList_P,

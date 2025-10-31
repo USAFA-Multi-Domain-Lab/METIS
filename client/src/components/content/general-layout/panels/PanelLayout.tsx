@@ -8,7 +8,7 @@ import React, {
 } from 'react'
 import { compute } from 'src/toolbox'
 import { useMountHandler, useUnmountHandler } from 'src/toolbox/hooks'
-import ClassList from '../../../../../../shared/toolbox/html/class-lists'
+import ClassList from '../../../../../../shared/toolbox/html/ClassList'
 import Panel from './Panel'
 import './PanelLayout.scss'
 

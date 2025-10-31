@@ -3,7 +3,7 @@ import { useButtonMenuEngine } from 'src/components/content/user-controls/button
 import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
 import { useGlobalContext } from 'src/context/global'
-import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
+import ClassList from '../../../../../../../shared/toolbox/html/ClassList'
 import { useListContext } from '../List'
 
 /**

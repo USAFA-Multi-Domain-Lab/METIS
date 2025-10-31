@@ -1,5 +1,3 @@
-import { TOs } from './index.d'
-
 /**
  * Immediately returns the computed value of the function
  * that is passed to it.
@@ -22,4 +20,9 @@ export function getOs(): TOs {
   return 'unknown'
 }
 
-export * from './index.d'
+/* -- TYPES -- */
+
+/**
+ * Different recognized operating systems by METIS.
+ */
+export type TOs = 'windows' | 'mac-os' | 'unix' | 'linux' | 'unknown'

@@ -6,7 +6,7 @@ import {
 } from 'metis/connect/data'
 import { TSessionAccessibility } from 'metis/sessions'
 import MemberRole from 'metis/sessions/members/roles'
-import { TNonEmptyArray } from 'metis/toolbox/arrays'
+import { TNonEmptyArray } from 'metis/toolbox/ArrayToolbox'
 import { z as zod, ZodObject, ZodOptional, ZodType } from 'zod'
 
 /* -- ZOD-SCHEMAS -- */

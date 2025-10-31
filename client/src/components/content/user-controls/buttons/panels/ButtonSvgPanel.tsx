@@ -1,6 +1,6 @@
 import { compute } from 'src/toolbox'
 import { removeKey } from 'src/toolbox/components'
-import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
+import ClassList from '../../../../../../../shared/toolbox/html/ClassList'
 import './ButtonSvgPanel.scss'
 import ButtonSvg from './elements/ButtonSvg'
 import DividerSvg from './elements/DividerSvg'

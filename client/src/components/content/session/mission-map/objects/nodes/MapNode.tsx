@@ -11,7 +11,7 @@ import {
   TNodeBlockStatus,
   TNodeExecutionState,
 } from '../../../../../../../../shared/missions/nodes'
-import ClassList from '../../../../../../../../shared/toolbox/html/class-lists'
+import ClassList from '../../../../../../../../shared/toolbox/html/ClassList'
 import { useMapContext } from '../../MissionMap'
 import './MapNode.scss'
 

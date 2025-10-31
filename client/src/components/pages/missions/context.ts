@@ -6,7 +6,7 @@ import {
   TEffectTrigger,
   TEffectType,
 } from '../../../../../shared/missions/effects'
-import { TNonEmptyArray } from '../../../../../shared/toolbox/arrays'
+import { TNonEmptyArray } from '../../../../../shared/toolbox/ArrayToolbox'
 import { TMissionPage_P, TMissionPage_S } from './MissionPage'
 
 /**

@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { compute } from 'src/toolbox'
-import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
+import ClassList from '../../../../../../../shared/toolbox/html/ClassList'
 import { useListContext } from '../List'
 import ListButtons from './ListButtons'
 import './ListNav.scss'
