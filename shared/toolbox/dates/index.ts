@@ -1,5 +1,5 @@
 import DateToolbox from './DateToolbox'
-import StopWatch from './StopWatch'
+import StopWatch from './StopWatchh'
 
 export default {
   DateToolbox,
