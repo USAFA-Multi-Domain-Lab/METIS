@@ -1472,7 +1472,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       },
       request: {
         event: request.event,
-        requesterId: member.userId,
+        requesterId: member._id,
         fulfilled: false,
       },
     }
@@ -2166,7 +2166,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     // Find the member with the member ID,
     // if provided.
     if (to?.memberId) {
-      member = this.getMemberByUserId(to.memberId)
+      member = this.getMember(to.memberId)
       // If the member is not found, then throw an error.
       if (!member) {
         throw new Error(
@@ -2332,7 +2332,7 @@ export type TOutputTo = {
    */
   forceKey: string
   /**
-   * The ID of the member to whom the output is sent.
+   * The session member ID of the member to whom the output is sent.
    */
   memberId?: string
 }
