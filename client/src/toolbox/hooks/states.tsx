@@ -158,7 +158,7 @@ export function usePeriodicRerender(interval: number) {
  */
 export function useCallbackRef<T extends (...args: any[]) => any>(
   callback: T,
-): React.MutableRefObject<T> {
+): React.RefObject<T> {
   const ref = useRef(callback)
   ref.current = callback
   return ref

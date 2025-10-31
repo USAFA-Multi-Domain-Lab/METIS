@@ -25,7 +25,7 @@ enum ENodeDropLocation {
 export default function NodeStructuring(props: {
   mission: ClientMission
   onChange: (...prototypes: ClientMissionPrototype[]) => void
-}): JSX.Element | null {
+}): TReactElement | null {
   /* -- PROPS -- */
 
   let mission: ClientMission = props.mission
@@ -49,7 +49,9 @@ export default function NodeStructuring(props: {
 
   /* -- RENDER -- */
 
-  const Padding = (props: { uniqueClassName?: string }): JSX.Element | null => {
+  const Padding = (props: {
+    uniqueClassName?: string
+  }): TReactElement | null => {
     const [dropPendingHere, setDropPendingHere] = useState<boolean>(false)
 
     let uniqueClassName: string | undefined = props.uniqueClassName
@@ -113,7 +115,7 @@ export default function NodeStructuring(props: {
   const Node = (props: {
     node: ClientMissionPrototype
     disableDropPending?: boolean
-  }): JSX.Element | null => {
+  }): TReactElement | null => {
     let node: ClientMissionPrototype = props.node
     let disableDropPending: boolean = props.disableDropPending === true
 
@@ -275,8 +277,8 @@ export default function NodeStructuring(props: {
 
   // This will render the nodes in the
   // node structuring.
-  const renderNodes = (): JSX.Element | null => {
-    let nodeElements: Array<JSX.Element | null> = root.children.map(
+  const renderNodes = (): TReactElement | null => {
+    let nodeElements: Array<TReactElement | null> = root.children.map(
       (childNode: ClientMissionPrototype) => (
         <Node node={childNode} key={childNode._id} />
       ),

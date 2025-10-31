@@ -1,4 +1,4 @@
-@import 'src/assets/styles/config.scss';
+@use 'src/assets/styles/config.scss' as *;
 
 .ArgEntry {
   margin: 1.25rem 0 0;

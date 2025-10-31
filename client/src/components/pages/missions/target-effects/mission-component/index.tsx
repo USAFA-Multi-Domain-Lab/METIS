@@ -39,7 +39,7 @@ export default function ArgMissionComponent({
   initialize,
   effectArgs,
   setEffectArgs,
-}: TArgMissionComponent_P): JSX.Element | null {
+}: TArgMissionComponent_P): TReactElement | null {
   /* -- CONSTANTS -- */
 
   /**

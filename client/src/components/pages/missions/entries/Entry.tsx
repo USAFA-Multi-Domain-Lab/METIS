@@ -18,7 +18,7 @@ export default function <
   missionComponent: component,
   children,
   svgEngines = [],
-}: TEntry_P<TComponent>): JSX.Element | null {
+}: TEntry_P<TComponent>): TReactElement | null {
   const [login] = useGlobalContext().login
   const isAuthorized = login?.user.isAuthorized ?? (() => false)
 

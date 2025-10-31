@@ -32,7 +32,7 @@ const DEFECT_INTERVAL_TIME = 1000 // ms
  */
 export default function MissionEntry({
   mission,
-}: TMissionEntry_P): JSX.Element | null {
+}: TMissionEntry_P): TReactElement | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()

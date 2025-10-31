@@ -25,7 +25,7 @@ export default function TabBar({
   index,
   autoSelectNewTabs = true,
   setIndex,
-}: TTabBar_P): JSX.Element | null {
+}: TTabBar_P): TReactElement | null {
   /* -- STATE -- */
 
   const mapContext = useMapContext()
@@ -401,7 +401,7 @@ export default function TabBar({
   /**
    * JSX for the add button.
    */
-  const addJsx = compute<JSX.Element | null>(() => {
+  const addJsx = compute<TReactElement | null>(() => {
     // Return null if no callback for `onAdd`
     // is provided.
     if (!onTabAdd) return null

@@ -7,7 +7,7 @@ import './LoadingPage.scss'
 
 // This will render a loading page while the app
 // is loading.
-export default function LoadingPage(): JSX.Element | null {
+export default function LoadingPage(): TReactElement | null {
   /* -- GLOBAL CONTEXT -- */
 
   const globalContext = useGlobalContext()

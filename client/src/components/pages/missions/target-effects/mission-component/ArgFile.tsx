@@ -14,7 +14,7 @@ export default function ArgFile({
   fileIsActive,
   fileValue: [fileValue, setFileValue],
   optionalFileValue: [optionalFileValue, setOptionalFileValue],
-}: TArgFile_P): JSX.Element | null {
+}: TArgFile_P): TReactElement | null {
   /* -- COMPUTED -- */
 
   /**

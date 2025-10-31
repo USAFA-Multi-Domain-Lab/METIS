@@ -20,7 +20,7 @@ import './UserResetPage.scss'
 /**
  * This page allows the user to reset their password.
  */
-export default function UserResetPage(): JSX.Element | null {
+export default function UserResetPage(): TReactElement | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()

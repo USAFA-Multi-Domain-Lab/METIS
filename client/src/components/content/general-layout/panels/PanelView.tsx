@@ -12,7 +12,7 @@ import './PanelView.scss'
 export default function ({
   children,
   title,
-}: TPanelView_P): JSX.Element | null {
+}: TPanelView_P): TReactElement | null {
   /* -- STATE -- */
 
   const { state } = usePanelContext()

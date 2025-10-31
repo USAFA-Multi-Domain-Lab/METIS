@@ -21,7 +21,7 @@ import MissionPage from '../MissionPage'
 /**
  * Implementation of {@link MissionMap} for the {@link MissionPage}.
  */
-export default function MissionPageMap(): JSX.Element {
+export default function MissionPageMap(): TReactElement {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
@@ -283,7 +283,7 @@ export default function MissionPageMap(): JSX.Element {
   /**
    * Computed JSX for the mission map modal.
    */
-  const modalJsx = compute((): JSX.Element | null => {
+  const modalJsx = compute((): TReactElement | null => {
     // If the selection is an action and the user has
     // requested to create a new effect, then display
     // the create effect modal.

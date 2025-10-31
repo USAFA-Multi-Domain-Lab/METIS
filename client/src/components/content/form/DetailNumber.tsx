@@ -25,7 +25,7 @@ export function DetailNumber({
   uniqueFieldClassName = undefined,
   disabled = false,
   tooltipDescription = '',
-}: TDetailNumber_P): JSX.Element | null {
+}: TDetailNumber_P): TReactElement | null {
   /* -- STATE -- */
   const [inputValue, setInputValue] = useState<string>(
     stateValue?.toString() ?? '',

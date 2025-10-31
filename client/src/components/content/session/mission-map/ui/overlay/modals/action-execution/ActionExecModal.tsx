@@ -270,7 +270,7 @@ export default function ActionExecModal({
   /**
    * JSX for the drop down.
    */
-  const dropDownJsx = compute<JSX.Element | null>(() => {
+  const dropDownJsx = compute<TReactElement | null>(() => {
     // If showing cheats, return null.
     if (showCheats) return null
 
@@ -291,7 +291,7 @@ export default function ActionExecModal({
   /**
    * JSX for the heading.
    */
-  const headingJsx = compute<JSX.Element | null>(() => {
+  const headingJsx = compute<TReactElement | null>(() => {
     // Render JSX.
     return (
       <div className='Heading'>
@@ -306,7 +306,7 @@ export default function ActionExecModal({
   /**
    * JSX for the close button.
    */
-  const closeJsx = compute<JSX.Element | null>(() => {
+  const closeJsx = compute<TReactElement | null>(() => {
     // Render JSX.
     return (
       <div className='Close'>
@@ -321,7 +321,7 @@ export default function ActionExecModal({
   /**
    * JSX for the cheats.
    */
-  const cheatsJsx = compute<JSX.Element | null>(() => {
+  const cheatsJsx = compute<TReactElement | null>(() => {
     // If `showCheats` is false, return null.
     if (!showCheats) return null
 
@@ -332,7 +332,7 @@ export default function ActionExecModal({
   /**
    * JSX for the action properties.
    */
-  const actionPropertiesJsx = compute<JSX.Element | null>(() => {
+  const actionPropertiesJsx = compute<TReactElement | null>(() => {
     // Gather details.
     let authorizedCheats = session.member.isAuthorized('cheats')
       ? cheats
@@ -360,7 +360,7 @@ export default function ActionExecModal({
   /**
    * JSX for the buttons.
    */
-  const buttonsJsx = compute<JSX.Element | null>(() => {
+  const buttonsJsx = compute<TReactElement | null>(() => {
     // If the modal is not ready, return null.
     if (!ready) return null
 

@@ -28,7 +28,7 @@ import MetisSpan from './extensions/span'
 export default function RichText({
   options,
   deps,
-}: TRichText_P): JSX.Element | null {
+}: TRichText_P): TReactElement | null {
   // Extract the options from the props.
   const {
     content,

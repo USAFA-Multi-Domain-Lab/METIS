@@ -14,7 +14,7 @@ import Entry from '../Entry'
 export default function PrototypeEntry({
   prototype,
   prototype: { mission },
-}: TPrototypeEntry): JSX.Element | null {
+}: TPrototypeEntry): TReactElement | null {
   /* -- STATE -- */
 
   const { onChange } = useMissionPageContext()

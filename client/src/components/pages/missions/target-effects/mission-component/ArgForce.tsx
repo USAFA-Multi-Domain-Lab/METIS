@@ -14,7 +14,7 @@ export default function ArgForce({
   forceIsActive,
   forceValue: [forceValue, setForceValue],
   optionalForceValue: [optionalForceValue, setOptionalForceValue],
-}: TArgForce_P): JSX.Element | null {
+}: TArgForce_P): TReactElement | null {
   /* -- COMPUTED -- */
 
   /**

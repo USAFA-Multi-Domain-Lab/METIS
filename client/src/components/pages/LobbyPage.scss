@@ -1,5 +1,5 @@
-@import '../../assets/styles/config.scss';
-@import 'src/assets/styles/util.scss';
+@use '../../assets/styles/config.scss' as *;
+@use 'src/assets/styles/util.scss' as *;
 
 .Page.LobbyPage {
   .Content {

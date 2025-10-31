@@ -24,7 +24,7 @@ import './ListItem.scss'
  */
 export default function ListItem<T extends MetisComponent>({
   item,
-}: TListItem_P<T>): JSX.Element | null {
+}: TListItem_P<T>): TReactElement | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()

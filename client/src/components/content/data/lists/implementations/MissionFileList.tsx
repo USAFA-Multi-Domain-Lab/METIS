@@ -7,7 +7,7 @@ import List, { createDefaultListProps, TList_P } from '../List'
  * A component for displaying a list of mission files.
  * @note Uses the `List` component.
  */
-export default function (props: TMissionFileList_P): JSX.Element | null {
+export default function (props: TMissionFileList_P): TReactElement | null {
   const login = useRequireLogin()
 
   const defaultedProps = useDefaultProps(props, {

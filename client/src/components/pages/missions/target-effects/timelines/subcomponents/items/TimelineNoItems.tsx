@@ -18,7 +18,9 @@ export const NO_TIMELINE_ITEMS_ID = 'no-items'
  * to a given section. Also acts as a drop target for
  * dragged items to enable dropping into empty sections.
  */
-export function TimelineNoItems({ trigger }: TTimelineNoItems_P): JSX.Element {
+export function TimelineNoItems({
+  trigger,
+}: TTimelineNoItems_P): TReactElement {
   /* -- STATE -- */
 
   const timelineContext = useTimelineContext()

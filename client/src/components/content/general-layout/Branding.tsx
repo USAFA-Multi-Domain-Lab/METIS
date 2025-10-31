@@ -7,7 +7,7 @@ import './Branding.scss'
 
 // This will brand the app with the
 // logo.
-const Branding = ({ linksHome = true }: TBranding): JSX.Element | null => {
+const Branding = ({ linksHome = true }: TBranding): TReactElement | null => {
   // Gather details.
   const globalContext = useGlobalContext()
   const { navigateTo } = globalContext.actions

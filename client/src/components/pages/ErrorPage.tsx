@@ -11,7 +11,7 @@ export interface IErrorPage extends TPage_P {}
 
 // This will render a page that displays a
 // error that has occured.
-export default function ErrorPage({}: IErrorPage): JSX.Element | null {
+export default function ErrorPage({}: IErrorPage): TReactElement | null {
   /* -- GLOBAL CONTEXT -- */
 
   const globalContext = useGlobalContext()

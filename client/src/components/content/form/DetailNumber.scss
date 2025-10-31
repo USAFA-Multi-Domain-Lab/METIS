@@ -1,5 +1,5 @@
-@import 'src/assets/styles/config.scss';
-@import '../form/index.scss';
+@use 'src/assets/styles/config.scss' as *;
+@use '../form/index.scss' as *;
 
 .Detail.DetailNumber {
   .Unit {

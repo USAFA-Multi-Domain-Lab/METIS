@@ -31,7 +31,7 @@ export const useOutputContext = () => {
  * Renders an output with the given content for
  * an output panel.
  */
-export default function (props: TOutput_P): JSX.Element | null {
+export default function (props: TOutput_P): TReactElement | null {
   /* -- PROPS -- */
 
   const defaultedProps = useDefaultProps(props, {})

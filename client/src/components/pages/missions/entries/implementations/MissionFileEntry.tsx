@@ -17,7 +17,7 @@ import Entry from '../Entry'
  */
 export default function MissionFileEntry({
   file,
-}: TMissionFileEntry_P): JSX.Element | null {
+}: TMissionFileEntry_P): TReactElement | null {
   /* -- PROPS -- */
 
   const { mission } = file

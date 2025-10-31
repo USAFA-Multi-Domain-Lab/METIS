@@ -12,7 +12,7 @@ import './SessionMembers.scss'
  */
 export default function SessionMembers({
   session,
-}: TSessionUsers_P): JSX.Element | null {
+}: TSessionUsers_P): TReactElement | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
@@ -39,7 +39,7 @@ export default function SessionMembers({
    */
   const rowsJsx = compute(() => {
     return members.map((member, index) => {
-      let result: JSX.Element[] = []
+      let result: TReactElement[] = []
 
       // Get the next member that will be mapped,
       // if any.

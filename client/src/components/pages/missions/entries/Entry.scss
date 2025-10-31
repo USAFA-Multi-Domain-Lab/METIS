@@ -1,4 +1,4 @@
-@import 'src/components/content/form/index.scss';
+@use 'src/components/content/form/index.scss' as *;
 
 .Entry {
   display: grid;

@@ -153,7 +153,7 @@ export const useMapContext = mapContext.getHook()
  * The heart of METIS, a 2D map of the mission displaying nodes
  * in relation to each other.
  */
-export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
+export default function MissionMap(props: TMissionMap_P): TReactElement | null {
   /* -- PROPS -- */
 
   const defaultedProps = useDefaultProps(props, {
@@ -745,7 +745,7 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
    * The JSX for the relationship lines drawn between nodes.
    * @memoized
    */
-  const linesJsx = useMemo((): JSX.Element[] => {
+  const linesJsx = useMemo((): TReactElement[] => {
     if (selectedForce === null) {
       return mission.relationshipLines.map((lineData) => {
         return <Line {...lineData} />
@@ -770,7 +770,7 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
    * The JSX for the node objects rendered in the scene.
    * @memoized
    */
-  const nodesJsx = useMemo((): JSX.Element[] => {
+  const nodesJsx = useMemo((): TReactElement[] => {
     /**
      * Renders the given nodes into JSX.
      * @param nodes The nodes to render.
@@ -781,7 +781,7 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
       nodes: TNode[],
       onSelect: ((node: TNode) => void) | null,
       applyTooltip: ((node: TNode) => string) | null,
-    ): JSX.Element[] => {
+    ): TReactElement[] => {
       return nodes.map((node) => {
         return (
           <MapNode
@@ -820,7 +820,7 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
    * The JSX for the prototype slot objects rendered in the scene.
    * @memoized
    */
-  const slotsJsx = useMemo((): JSX.Element[] => {
+  const slotsJsx = useMemo((): TReactElement[] => {
     return mission.prototypeSlots.map((slot) => (
       <PrototypeSlot key={`${slot.relative._id}${slot.relation}`} {...slot} />
     ))
@@ -840,7 +840,7 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
    * JSX for an overlay that is displayed only if content is
    * passed in the props for the map.
    */
-  const overlayJsx = compute((): JSX.Element | null => {
+  const overlayJsx = compute((): TReactElement | null => {
     // If there is no overlay content, return null.
     if (!overlayContent && !mapPreferencesVisible) return null
 
@@ -938,11 +938,11 @@ export type TMissionMap_E = {
   /**
    * The root element of the map.
    */
-  root: React.RefObject<HTMLDivElement>
+  root: React.RefObject<HTMLDivElement | null>
   /**
    * The scene element of the map.
    */
-  scene: React.RefObject<HTMLDivElement>
+  scene: React.RefObject<HTMLDivElement | null>
 }
 
 /**

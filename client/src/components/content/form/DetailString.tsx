@@ -25,7 +25,7 @@ export function DetailString({
   placeholder = 'Enter text here...',
   tooltipDescription = '',
   maxLength = undefined,
-}: TDetailString_P): JSX.Element {
+}: TDetailString_P): TReactElement {
   /* -- STATE -- */
   const [leftField, setLeftField] = useState<boolean>(false)
   const [currentInputType, setCurrentInputType] = useState<TInput>(inputType)

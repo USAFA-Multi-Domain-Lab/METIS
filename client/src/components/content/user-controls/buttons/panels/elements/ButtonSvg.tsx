@@ -26,7 +26,7 @@ export default function ({
   cursor,
   permissions,
   onClick,
-}: TButtonSvg_PK): JSX.Element | null {
+}: TButtonSvg_PK): TReactElement | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()

@@ -1,5 +1,6 @@
-@import 'src/assets/styles/config.scss';
-@import 'src/assets/styles/util.scss';
+@use 'sass:color';
+@use 'src/assets/styles/config.scss' as *;
+@use 'src/assets/styles/util.scss' as *;
 
 .ListOld {
   display: inline-block;
@@ -487,8 +488,6 @@
           &.Select:hover {
             cursor: pointer;
 
-            @import 'src/assets/styles/util.scss';
-
             color: $color-accent;
           }
 
@@ -643,7 +642,7 @@
   }
 
   .item:not(.item-markdown) {
-    background-color: adjust-color(
+    background-color: color.adjust(
       $color-primary-light,
       $saturation: -75%,
       $lightness: 25%
@@ -651,7 +650,7 @@
   }
 
   .page-number {
-    background-color: adjust-color(
+    background-color: color.adjust(
       $color-primary-light,
       $saturation: -75%,
       $lightness: 25%
@@ -681,7 +680,7 @@
 
     .properties {
       background-color: rgba(
-        adjust-color($color-secondary, $saturation: -65%),
+        color.adjust($color-secondary, $saturation: -65%),
         0.35
       );
     }

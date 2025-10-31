@@ -11,7 +11,7 @@ import './EntryNavigation.scss'
  */
 export default function EntryNavigation({
   component,
-}: TEntryNavigation_P): JSX.Element | null {
+}: TEntryNavigation_P): TReactElement | null {
   const backButtonEngine = useButtonSvgEngine({
     elements: [
       {

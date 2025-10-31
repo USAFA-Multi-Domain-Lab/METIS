@@ -22,7 +22,7 @@ import Entry from '../Entry'
 export default function ActionEntry({
   action,
   action: { node },
-}: TActionEntry_P): JSX.Element | null {
+}: TActionEntry_P): TReactElement | null {
   /* -- STATE -- */
 
   const { onChange } = useMissionPageContext()

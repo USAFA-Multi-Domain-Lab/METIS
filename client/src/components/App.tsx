@@ -32,7 +32,7 @@ import ReactErrorBoundary from './ReactErrorBoundary'
 /**
  * Component of all components, renders all of METIS.
  */
-export default function (props: {}): JSX.Element | null {
+export default function (props: {}): TReactElement | null {
   /* -- REFS -- */
   const app = useRef<HTMLDivElement>(null)
 

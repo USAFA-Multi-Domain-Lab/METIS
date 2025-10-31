@@ -14,7 +14,7 @@ import ListUpload from '../uploads'
  * A component for displaying a list of file references.
  * @note Uses the `List` component.
  */
-export default function (props: TFileReferenceList_P): JSX.Element | null {
+export default function (props: TFileReferenceList_P): TReactElement | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()

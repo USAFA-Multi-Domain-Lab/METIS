@@ -52,7 +52,7 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
   cameraZoom,
   onSelect,
   applyTooltip = () => '',
-}: TMapNode_P<TNode>): JSX.Element | null {
+}: TMapNode_P<TNode>): TReactElement | null {
   /* -- STATE -- */
 
   const localContext = useMapContext()
@@ -370,7 +370,7 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
   /**
    * The JSX for the toopltip.
    */
-  const tooltipJsx: JSX.Element | null = compute(() => {
+  const tooltipJsx: TReactElement | null = compute(() => {
     // If there are no buttons, add a tooltip
     // to the node.
     if (buttons.length === 0) {
@@ -393,7 +393,7 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
   /**
    * The JSX for the reveal node button.
    */
-  const revealNodeButton: JSX.Element | null = compute(() => {
+  const revealNodeButton: TReactElement | null = compute(() => {
     if (context !== 'edit' || !excluded) return null
 
     return (

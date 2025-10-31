@@ -20,7 +20,7 @@ export default function CreateEffect<
   trigger,
   onCloseRequest,
   onChange,
-}: TCreateEffect_P<TType>): JSX.Element | null {
+}: TCreateEffect_P<TType>): TReactElement | null {
   /* -- STATE -- */
 
   const [targetEnvironments] = useState<ClientTargetEnvironment[]>(

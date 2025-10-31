@@ -19,7 +19,7 @@ export const TIMELINE_DRAG_HANDLE_CLASS = 'TimelineDragHandle'
  */
 export default function TimelineDragHandle<TType extends TEffectType>({
   item,
-}: TTimelineDragHandle_P<TType>): JSX.Element | null {
+}: TTimelineDragHandle_P<TType>): TReactElement | null {
   /* -- STATE -- */
 
   const timelineContext = useTimelineContext<TType>()

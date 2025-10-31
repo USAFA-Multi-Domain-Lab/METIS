@@ -10,7 +10,7 @@ import { TServerConnectionStatus } from '../../../../../shared/connect/data'
  * A status bar that displays the status of a server connection
  * and any pending tasks.
  */
-export default function StatusBar({}: TStatusBar_P): JSX.Element | null {
+export default function StatusBar({}: TStatusBar_P): TReactElement | null {
   /* -- variables -- */
 
   let statusMessage: string = ''

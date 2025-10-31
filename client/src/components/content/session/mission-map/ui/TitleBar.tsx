@@ -5,7 +5,7 @@ import './TitleBar.scss'
 /**
  * A bar with tabs that can be clicked to change the view.
  */
-export default function TabBar(): JSX.Element | null {
+export default function TabBar(): TReactElement | null {
   /* -- STATE -- */
 
   const mapContext = useMapContext()

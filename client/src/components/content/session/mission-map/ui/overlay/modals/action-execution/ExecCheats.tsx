@@ -12,7 +12,7 @@ import './ExecCheats.scss'
 export default function ExecCheats({
   cheats,
   setCheats,
-}: TExecCheats_P): JSX.Element | null {
+}: TExecCheats_P): TReactElement | null {
   /* -- STATE -- */
 
   const [zeroCost, setZeroCost] = useState<boolean>(cheats.zeroCost)

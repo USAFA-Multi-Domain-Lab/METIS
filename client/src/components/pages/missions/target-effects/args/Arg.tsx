@@ -15,7 +15,7 @@ export default function ({
   arg,
   effectArgs,
   setEffectArgs,
-}: TArg_P): JSX.Element | null {
+}: TArg_P): TReactElement | null {
   /* -- STATE -- */
   const [initializeArg, setInitializeArg] = useState<boolean>(false)
 

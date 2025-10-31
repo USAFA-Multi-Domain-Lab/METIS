@@ -1,4 +1,4 @@
-@import '../../../../../assets/styles/config.scss';
+@use '../../../../../assets/styles/config.scss' as *;
 
 .ListProcessor {
   display: flex;

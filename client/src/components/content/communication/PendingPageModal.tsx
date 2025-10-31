@@ -9,7 +9,7 @@ import './PendingPageModal.scss'
 export default function PendingPageModal({
   message,
   active = true,
-}: TPendingPageModal_P): JSX.Element {
+}: TPendingPageModal_P): TReactElement {
   /**
    * Classes for the root element.
    */

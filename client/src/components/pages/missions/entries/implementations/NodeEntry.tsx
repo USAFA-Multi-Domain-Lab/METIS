@@ -27,7 +27,7 @@ import Entry from '../Entry'
 export default function NodeEntry({
   node,
   node: { mission },
-}: TNodeEntry_P): JSX.Element | null {
+}: TNodeEntry_P): TReactElement | null {
   /* -- GLOBAL CONTEXT -- */
   const globalContext = useGlobalContext()
   const { notify, prompt } = globalContext.actions

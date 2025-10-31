@@ -24,7 +24,7 @@ import './LobbyPage.scss'
 export default function LobbyPage({
   session,
   session: { mission },
-}: TLobbyPage_P): JSX.Element | null {
+}: TLobbyPage_P): TReactElement | null {
   /* -- STATE -- */
 
   const {} = useRequireLogin()
@@ -154,9 +154,9 @@ export default function LobbyPage({
   /**
    * JSX for the button section.
    */
-  const buttonSectionJsx = compute<JSX.Element>(() => {
+  const buttonSectionJsx = compute<TReactElement>(() => {
     // Gather details.
-    let buttonsJsx: JSX.Element[] = []
+    let buttonsJsx: TReactElement[] = []
 
     // If the current member can start and end sessions,
     // add the start session button.

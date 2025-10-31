@@ -12,7 +12,7 @@ export default function ArgNumber({
   initialize,
   effectArgs,
   setEffectArgs,
-}: TNumberArg_P): JSX.Element | null {
+}: TNumberArg_P): TReactElement | null {
   /* -- STATE -- */
   const [requiredValue, setRequiredValue] = useState<number>(() => {
     // If the argument is a number and the argument's value

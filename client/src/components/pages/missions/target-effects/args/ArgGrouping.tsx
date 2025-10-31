@@ -14,7 +14,7 @@ export default function ArgGrouping({
   grouping,
   effectArgs,
   setEffectArgs,
-}: TArgGrouping_P): JSX.Element | null {
+}: TArgGrouping_P): TReactElement | null {
   /* -- COMPUTED -- */
 
   /**

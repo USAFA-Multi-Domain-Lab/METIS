@@ -27,7 +27,7 @@ export default function ({
   cursor,
   permissions,
   onChange,
-}: TToggleSvg_PK): JSX.Element | null {
+}: TToggleSvg_PK): TReactElement | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()

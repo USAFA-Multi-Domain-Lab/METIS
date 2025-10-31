@@ -1,5 +1,5 @@
-@import 'src/assets/styles/config.scss';
-@import 'src/components/content/form/index.scss';
+@use 'src/assets/styles/config.scss' as *;
+@use 'src/components/content/form/index.scss' as *;
 
 .ArgGrouping {
   @include form-container;

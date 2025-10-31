@@ -14,7 +14,7 @@ import './ListProcessor.scss'
  * Processes the items available in a list by applying
  * any filtering and sorting inputs made by the user.
  */
-export default function ListProcessor(): JSX.Element | null {
+export default function ListProcessor(): TReactElement | null {
   /* -- STATE -- */
 
   const listContext = useListContext()

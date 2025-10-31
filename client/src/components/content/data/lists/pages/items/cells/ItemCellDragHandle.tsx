@@ -5,7 +5,7 @@ import { useListContext } from '../../../List'
 
 export default function ItemCellDragHandle<TItem extends MetisComponent>({
   item,
-}: TItemCellDragHandle_P<TItem>): JSX.Element | null {
+}: TItemCellDragHandle_P<TItem>): TReactElement | null {
   /* -- STATE -- */
 
   const listContext = useListContext<TItem>()

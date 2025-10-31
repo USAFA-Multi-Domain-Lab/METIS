@@ -17,7 +17,7 @@ export interface IAuthPage extends TPage_P {}
 /**
  * This will render a page where a user can login.
  */
-export default function AuthPage(): JSX.Element | null {
+export default function AuthPage(): TReactElement | null {
   const globalContext = useGlobalContext()
   const { beginLoading, finishLoading, navigateTo, connectToServer, prompt } =
     globalContext.actions

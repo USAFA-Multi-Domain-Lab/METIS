@@ -10,7 +10,7 @@ import List, { createDefaultListProps, TList_P } from '../List'
  */
 export default function EffectList<TType extends TEffectType>(
   props: TEffectList_P<TType>,
-): JSX.Element | null {
+): TReactElement | null {
   /* -- PROPS -- */
 
   const defaultedProps = useDefaultProps(props, {

@@ -7,7 +7,7 @@ import './ListDropBox.scss'
  * callback for dropping files is provided to
  * the list.
  */
-export default function (): JSX.Element | null {
+export default function (): TReactElement | null {
   /* -- STATE -- */
 
   const listContext = useListContext()

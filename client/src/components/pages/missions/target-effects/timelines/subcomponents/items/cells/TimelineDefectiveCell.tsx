@@ -10,7 +10,7 @@ import { TimelineItemCell } from './TimelineItemCell'
  */
 export default function TimelineDefectiveCell<TType extends TEffectType>({
   defects,
-}: TTimelineDefectiveCell_P<TType>): JSX.Element | null {
+}: TTimelineDefectiveCell_P<TType>): TReactElement | null {
   /* -- COMPUTED -- */
 
   /**

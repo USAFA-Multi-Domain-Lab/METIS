@@ -1,5 +1,5 @@
-@import 'src/assets/styles/config.scss';
-@import './mixins.scss';
+@use 'src/assets/styles/config.scss' as *;
+@use './mixins.scss' as *;
 
 .SessionMembers {
   min-width: fit-content;

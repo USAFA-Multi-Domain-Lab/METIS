@@ -88,7 +88,7 @@ export type TButtonMenuController_P = {
    * The target element ref that will activate the button menu
    * when right-clicked.
    */
-  target: RefObject<HTMLElement>
+  target: RefObject<HTMLElement | null>
   /**
    * The target element to highlight when the button menu is
    * shown.

@@ -13,7 +13,7 @@ import { TButtonSvgPanel_P, TSvgPanelElement } from './types'
  */
 export default function ({
   engine: { panelElements, flow, labelsRevealed },
-}: TButtonSvgPanel_P): JSX.Element | null {
+}: TButtonSvgPanel_P): TReactElement | null {
   /* -- COMPUTED -- */
 
   /**
@@ -33,7 +33,7 @@ export default function ({
    * @param element The element to render.
    * @returns The rendered JSX element or null if not recognized.
    */
-  const renderElement = (element: TSvgPanelElement): JSX.Element | null => {
+  const renderElement = (element: TSvgPanelElement): TReactElement | null => {
     let key = element.key
 
     switch (element.type) {

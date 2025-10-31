@@ -12,7 +12,7 @@ import './ListButtons.scss'
  */
 export default function ListButtons<
   TItem extends MetisComponent,
->(): JSX.Element | null {
+>(): TReactElement | null {
   /* -- STATE -- */
 
   const listContext = useListContext<TItem>()

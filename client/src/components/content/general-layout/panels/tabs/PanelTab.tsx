@@ -9,7 +9,7 @@ import './PanelTab.scss'
  * A tab that, when toggled, will display a view
  * in a panel, hiding the previous view.
  */
-export default function ({ view }: TPanelTab_P): JSX.Element | null {
+export default function ({ view }: TPanelTab_P): TReactElement | null {
   /* -- STATE -- */
 
   const { state } = usePanelContext()

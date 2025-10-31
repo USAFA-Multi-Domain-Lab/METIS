@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { useBeforeunload } from 'react-beforeunload'
 import { TMetisClientComponents } from 'src'
 import { useMissionItemButtonCallbacks } from 'src/components/content/data/lists/implementations/missions/item-buttons'
 import { TCreateEffect_P } from 'src/components/content/session/mission-map/ui/overlay/modals/CreateEffect'
@@ -14,6 +13,7 @@ import ClientMissionNode from 'src/missions/nodes'
 import ClientMissionPrototype from 'src/missions/nodes/prototypes'
 import { compute } from 'src/toolbox'
 import {
+  useBeforeunload,
   useEventListener,
   useMountHandler,
   useRequireLogin,
@@ -66,7 +66,9 @@ const STRUCTURE_DESCRIPTION =
  * This will render page that allows the user to
  * edit a mission.
  */
-export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
+export default function MissionPage(
+  props: TMissionPage_P,
+): TReactElement | null {
   const Provider =
     MissionPageContext.Provider as React.Provider<TMissionPageContextData>
 
@@ -569,7 +571,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
    * Renders JSX for the inspector view of the
    * mission page.
    */
-  const renderInspector = (): JSX.Element | null => {
+  const renderInspector = (): TReactElement | null => {
     if (selection instanceof ClientMission) {
       return <MissionEntry key={selection._id} mission={selection} />
     } else if (selection instanceof ClientMissionFile) {

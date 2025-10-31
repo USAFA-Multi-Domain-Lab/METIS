@@ -12,7 +12,7 @@ export default function ArgLargeString({
   initialize,
   effectArgs,
   setEffectArgs,
-}: TLargeStringArg_P): JSX.Element | null {
+}: TLargeStringArg_P): TReactElement | null {
   /* -- STATE -- */
   const [defaultValue] = useState<''>('')
   const [value, setValue] = useState<string>(

@@ -6,7 +6,7 @@ import './PendingModal.scss'
  */
 export default function PendingModal({
   message,
-}: TPendingModal_P): JSX.Element {
+}: TPendingModal_P): TReactElement {
   return (
     <div className='PendingModal MapModal'>
       <div className='PendingModalMessage'>{message}</div>

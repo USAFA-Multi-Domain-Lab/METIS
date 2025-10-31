@@ -12,7 +12,7 @@ export default function ArgString({
   initialize,
   effectArgs,
   setEffectArgs,
-}: TStringArg_P): JSX.Element | null {
+}: TStringArg_P): TReactElement | null {
   /* -- STATE -- */
   const [defaultValue] = useState<''>('')
   const [value, setValue] = useState<string>(

@@ -19,7 +19,7 @@ export default function PrototypeSlot({
   position,
   tooltipDescription = 'Create a prototype here.',
   onClick = () => {},
-}: TPrototypeSlot_P): JSX.Element | null {
+}: TPrototypeSlot_P): TReactElement | null {
   /* -- computed -- */
 
   /**

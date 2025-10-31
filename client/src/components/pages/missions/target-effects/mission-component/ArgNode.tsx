@@ -23,7 +23,7 @@ export default function ArgNode({
   optionalForceValue: [optionalForceValue],
   nodeValue: [nodeValue, setNodeValue],
   optionalNodeValue: [optionalNodeValue, setOptionalNodeValue],
-}: TArgNode_P): JSX.Element | null {
+}: TArgNode_P): TReactElement | null {
   /* -- STATE -- */
 
   /**

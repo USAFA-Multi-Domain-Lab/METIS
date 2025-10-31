@@ -12,7 +12,7 @@ export const tooltipsOffsetY = 35 /*px*/
  * This is a tooltip component that can be rendered in the child of an element so that when that element
  * is hovered over, a tooltip is displayed with a given description.
  * @param props.description The description to display in the tooltip.
- * @returns {JSX.Element} The tooltip component.
+ * @returns {TReactElement} The tooltip component.
  */
 export default function Tooltip({
   description,
@@ -20,7 +20,7 @@ export default function Tooltip({
 }: {
   description: string
   delay?: number
-}): JSX.Element {
+}): TReactElement {
   /* -- GLOBAL CONTEXT -- */
 
   const globalContext = useGlobalContext()

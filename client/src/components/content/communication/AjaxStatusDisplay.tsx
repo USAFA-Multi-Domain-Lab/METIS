@@ -30,7 +30,7 @@ export default class AjaxStatusDisplay extends React.Component<IProps, IState> {
   render() {
     let status: TAjaxStatus = this.props.status
     let pendingMessage: string = this.props.pendingMessage
-    let content: JSX.Element = <div></div>
+    let content: TReactElement = <div></div>
     let className: string = 'AjaxStatusDisplay'
     let style: React.CSSProperties = this.props.style
     className += !this.props.inline ? '' : ' inline'

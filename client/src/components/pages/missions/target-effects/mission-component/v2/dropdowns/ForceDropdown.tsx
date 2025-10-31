@@ -2,7 +2,7 @@ import { DetailDropdown } from 'src/components/content/form/dropdown/'
 import ClientMissionForce from 'src/missions/forces'
 import { TForceDropdown_P } from '../types'
 
-export default function (props: TForceDropdown_P): JSX.Element {
+export default function (props: TForceDropdown_P): TReactElement {
   const { active } = props
 
   if (!active) return <></>

@@ -42,7 +42,7 @@ export type TMissionPageContextData = {
   /**
    * The ref for the root element of the mission page.
    */
-  root: React.RefObject<HTMLDivElement>
+  root: React.RefObject<HTMLDivElement | null>
 } & Required<TMissionPage_P> & {
     /**
      * The state for the mission page.

@@ -14,7 +14,7 @@ import './ListColumnLabels.scss'
  */
 export default function ListColumnLabels<
   TItem extends MetisComponent,
->(): JSX.Element | null {
+>(): TReactElement | null {
   /* -- STATE -- */
 
   const listContext = useListContext<TItem>()

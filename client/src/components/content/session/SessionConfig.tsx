@@ -20,7 +20,7 @@ export default function SessionConfig({
   onChange = () => {},
   onSave,
   onCancel,
-}: TSessionConfig_P): JSX.Element | null {
+}: TSessionConfig_P): TReactElement | null {
   /* -- STATE -- */
   const [accessibility, setAccessibility] = useState<TSessionAccessibility>(
     sessionConfig.accessibility,

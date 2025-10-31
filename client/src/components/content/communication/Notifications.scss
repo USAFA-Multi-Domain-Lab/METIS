@@ -1,4 +1,4 @@
-@import 'src/assets/styles/config.scss';
+@use 'src/assets/styles/config.scss' as *;
 
 .Notifications {
   position: fixed;
@@ -8,5 +8,4 @@
   left: 50%;
   transform: translateX(-50%);
   width: 600px;
-  background-image: url('../../../assets/images/icons/add.svg');
 }

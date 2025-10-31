@@ -14,7 +14,7 @@ import './SessionConfigPage.scss'
 export default function SessionConfigPage({
   session,
   session: { mission },
-}: TSessionConfigPage_P): JSX.Element | null {
+}: TSessionConfigPage_P): TReactElement | null {
   /* -- state -- */
 
   const globalContext = useGlobalContext()

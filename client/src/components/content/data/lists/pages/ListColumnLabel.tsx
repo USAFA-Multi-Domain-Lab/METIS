@@ -11,7 +11,7 @@ import './ListColumnLabel.scss'
 export default function ListColumnLabel<TItem extends MetisComponent>({
   column,
   text,
-}: TListColumnLabel<TItem>): JSX.Element | null {
+}: TListColumnLabel<TItem>): TReactElement | null {
   /* -- STATE -- */
 
   const listContext = useListContext<TItem>()

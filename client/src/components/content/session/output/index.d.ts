@@ -24,7 +24,7 @@ export type TOutputContextData = {
   /**
    * The ref for the root element of the output.
    */
-  root: React.RefObject<HTMLDivElement>
+  root: React.RefObject<HTMLDivElement | null>
 } & Required<TOutput_P> & {
     /**
      * The state for the output.

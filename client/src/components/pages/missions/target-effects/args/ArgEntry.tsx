@@ -13,7 +13,7 @@ export default function ArgEntry({
   effect: { target },
   effectArgs,
   setEffectArgs,
-}: TArgEntry_P): JSX.Element | null {
+}: TArgEntry_P): TReactElement | null {
   /* -- COMPUTED -- */
   /**
    * The selected target's arguments.

@@ -13,7 +13,7 @@ export function TimelineItemCell({
   onClick,
   onDoubleClick,
   onMouseDown,
-}: TTimelineItemCell_P): JSX.Element {
+}: TTimelineItemCell_P): TReactElement {
   /* -- COMPUTED -- */
 
   /**

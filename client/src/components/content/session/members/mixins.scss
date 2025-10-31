@@ -1,3 +1,6 @@
+@use '../../../../assets/styles/config.scss' as *;
+@forward '../../../../assets/styles/config.scss';
+
 @mixin member-row-like {
   display: grid;
   grid-template-columns: 1fr 14.5em 14.5em 5em;

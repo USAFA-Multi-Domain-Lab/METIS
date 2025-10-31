@@ -115,7 +115,7 @@ const navigationMiddleware: Map<string, TNavigationMiddleware> = new Map<
  */
 const initializeActions = (
   initialState: TGlobalContext,
-  refs: React.MutableRefObject<TGlobalContextValues>,
+  refs: React.RefObject<TGlobalContextValues>,
 ) => {
   /* -- CONSTANTS -- */
 
@@ -657,7 +657,7 @@ const useGlobalContextDefinition = (): TGlobalContext => {
  * @param props Props containing the children to wrap in the provider.
  * @returns The JSX of the provider wrapping the children passed.
  */
-function GlobalContextProvider(props: { children: ReactNode }): JSX.Element {
+function GlobalContextProvider(props: { children: ReactNode }): TReactElement {
   // Extract props.
   const { children } = props
 
@@ -795,7 +795,7 @@ export type TGlobalContextValues = {
    * @note If null, no button menu will be displayed.
    */
   buttonMenu: TWithKey<TButtonMenu_P> | null
-  tooltips: React.RefObject<HTMLDivElement>
+  tooltips: React.RefObject<HTMLDivElement | null>
   tooltipDescription: string
   notifications: Notification[]
   /**

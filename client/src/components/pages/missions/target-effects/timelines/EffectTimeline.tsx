@@ -25,7 +25,7 @@ import { TimelineSection } from './subcomponents/TimelineSection'
  */
 export function EffectTimeline<TType extends TEffectType>(
   props: TEffectTimeline_P<TType>,
-): JSX.Element | null {
+): TReactElement | null {
   /* -- PROPS -- */
 
   const { host } = props
@@ -45,7 +45,7 @@ export function EffectTimeline<TType extends TEffectType>(
   const [, setSelection] = state.selection
   const elements: TEffectTimeline_E = {
     root: useRef<HTMLDivElement>(null),
-    scrollContainer: useRef<Element | null>(null),
+    scrollContainer: useRef<Element>(null),
     controlPanel: useRef<HTMLDivElement>(null),
   }
 
@@ -122,7 +122,7 @@ export function EffectTimeline<TType extends TEffectType>(
   /**
    * The JSX elements for all effects across all valid triggers.
    */
-  const effectsSectionsJsx = compute<JSX.Element[]>(() => {
+  const effectsSectionsJsx = compute<TReactElement[]>(() => {
     return host.validTriggers
       .map((trigger: ClientEffect<TType>['trigger']) => (
         <TimelineSection
@@ -131,7 +131,7 @@ export function EffectTimeline<TType extends TEffectType>(
           effects={effectsMap[trigger]}
         />
       ))
-      .filter(Boolean) as JSX.Element[]
+      .filter(Boolean) as TReactElement[]
   })
 
   return (
@@ -199,16 +199,16 @@ export type TEffectTimeline_E = {
   /**
    * The root element of the list.
    */
-  root: React.RefObject<HTMLDivElement>
+  root: React.RefObject<HTMLDivElement | null>
   /**
    * The scrollable ancestor of the root element.
    */
-  scrollContainer: React.MutableRefObject<Element | null>
+  scrollContainer: React.RefObject<Element | null>
   /**
    * The root element of the {@link TimelineControlPanel}
    * component instance used.
    */
-  controlPanel: React.RefObject<HTMLDivElement>
+  controlPanel: React.RefObject<HTMLDivElement | null>
 }
 
 /**

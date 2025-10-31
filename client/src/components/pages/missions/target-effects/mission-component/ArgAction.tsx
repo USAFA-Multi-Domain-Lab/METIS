@@ -26,7 +26,7 @@ export default function ArgAction({
   optionalNodeValue: [optionalNodeValue],
   actionValue: [actionValue, setActionValue],
   optionalActionValue: [optionalActionValue, setOptionalActionValue],
-}: TArgAction_P): JSX.Element | null {
+}: TArgAction_P): TReactElement | null {
   /* -- STATE -- */
 
   /**

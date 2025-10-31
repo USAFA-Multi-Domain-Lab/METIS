@@ -3,7 +3,7 @@ import { ClientEffect } from 'src/missions/effects'
 import ClientMissionForce from 'src/missions/forces'
 import { TArgMissionComponent_P } from './types'
 
-export default function (props: TArgMissionComponent_P): JSX.Element {
+export default function (props: TArgMissionComponent_P): TReactElement {
   const effect: ClientEffect = props.effect
 
   const [forces, setForces] = useState<ClientMissionForce[]>(

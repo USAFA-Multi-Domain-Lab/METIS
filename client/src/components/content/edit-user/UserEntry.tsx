@@ -17,7 +17,7 @@ import './UserEntry.scss'
 export default function ({
   user,
   handleChange,
-}: TUserEntry_P): JSX.Element | null {
+}: TUserEntry_P): TReactElement | null {
   const { state } = useUserPageContext()
   const { forceUpdate } = useGlobalContext().actions
   const { isAuthorized } = useRequireLogin()

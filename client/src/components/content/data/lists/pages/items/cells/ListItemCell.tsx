@@ -12,7 +12,7 @@ export default function ListItemCell<TItem extends MetisComponent>({
   item,
   column,
   children,
-}: TListItemCell<TItem>): JSX.Element | null {
+}: TListItemCell<TItem>): TReactElement | null {
   /* -- STATE -- */
 
   const listContext = useListContext<TItem>()

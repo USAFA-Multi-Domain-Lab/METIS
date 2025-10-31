@@ -14,7 +14,7 @@ import './TimelineControlPanel.scss'
  * such as viewing, adding duplicating, and deleting
  * effects.
  */
-export default function TimelineControlPanel({}: TTimelineControlPanel_P): JSX.Element | null {
+export default function TimelineControlPanel({}: TTimelineControlPanel_P): TReactElement | null {
   /* -- STATE -- */
 
   const { isAuthorized } = useRequireLogin()

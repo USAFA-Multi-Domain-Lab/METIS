@@ -8,7 +8,7 @@ import './ConnectionStatus.scss'
  * component will display a message saying that the connection has dropped
  * and is trying to reconnect.
  */
-export default function ConnectionStatus(props: {}): JSX.Element | null {
+export default function ConnectionStatus(props: {}): TReactElement | null {
   /* -- context -- */
   const globalContext = useGlobalContext()
   const [connectionStatusMessage] = globalContext.connectionStatusMessage

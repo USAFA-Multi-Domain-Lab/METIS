@@ -20,7 +20,7 @@ import {
 export default function SessionList({
   sessions,
   refresh,
-}: TSessionList_P): JSX.Element | null {
+}: TSessionList_P): TReactElement | null {
   const globalContext = useGlobalContext()
   const [server] = globalContext.server
   const { login } = useRequireLogin()

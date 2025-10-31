@@ -27,7 +27,7 @@ export function DetailLargeString({
   uniqueFieldClassName = undefined,
   placeholder = 'Enter text here...',
   tooltipDescription = '',
-}: TDetailLargeString_P): JSX.Element | null {
+}: TDetailLargeString_P): TReactElement | null {
   /* -- STATE -- */
   const [leftField, setLeftField] = useState<boolean>(false)
   const buttonEngine = useButtonSvgEngine({

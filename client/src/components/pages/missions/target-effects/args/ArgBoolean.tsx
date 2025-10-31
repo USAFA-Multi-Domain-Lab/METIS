@@ -12,7 +12,7 @@ export default function ArgBoolean({
   initialize,
   effectArgs,
   setEffectArgs,
-}: TBooleanArg_P): JSX.Element | null {
+}: TBooleanArg_P): TReactElement | null {
   /* -- STATE -- */
   const [value, setValue] = useState<boolean>(effectArgs[arg._id] ?? false)
 

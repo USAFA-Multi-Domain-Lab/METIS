@@ -13,7 +13,7 @@ import './ListPage.scss'
  */
 export default function ListPage<TItem extends MetisComponent>({
   items,
-}: TListPage_P<TItem>): JSX.Element | null {
+}: TListPage_P<TItem>): TReactElement | null {
   /* -- STATE -- */
 
   const listContext = useListContext<TItem>()

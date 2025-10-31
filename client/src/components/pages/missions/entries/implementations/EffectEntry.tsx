@@ -22,7 +22,7 @@ import Entry from '../Entry'
 export default function EffectEntry<TType extends TEffectType>({
   effect,
   effect: { target, environment },
-}: TEffectEntry_P<TType>): JSX.Element | null {
+}: TEffectEntry_P<TType>): TReactElement | null {
   /* -- STATE -- */
 
   const { onChange } = useMissionPageContext()

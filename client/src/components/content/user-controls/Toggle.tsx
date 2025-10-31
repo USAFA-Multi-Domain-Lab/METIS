@@ -9,7 +9,7 @@ export default function Toggle({
   setState,
   // Optional Properties
   lockState = 'unlocked',
-}: TToggle_P): JSX.Element {
+}: TToggle_P): TReactElement {
   /* -- COMPUTED -- */
   /**
    * The class name for the toggle.

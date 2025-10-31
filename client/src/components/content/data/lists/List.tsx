@@ -115,7 +115,7 @@ export function createDefaultListProps<
  */
 export default function List<TItem extends MetisComponent>(
   props: TList_P<TItem>,
-): JSX.Element | null {
+): TReactElement | null {
   const Provider = ListContext.Provider as React.Provider<
     TListContextData<TItem>
   >
@@ -245,7 +245,7 @@ export default function List<TItem extends MetisComponent>(
   /**
    * The current page of items to display.
    */
-  const currentPageJsx = compute<JSX.Element | null>(() => {
+  const currentPageJsx = compute<TReactElement | null>(() => {
     // Get the current page's props.
     let currentPage: TListPage_P<TItem> | undefined = pages[pageNumber]
 
@@ -575,29 +575,29 @@ export type TList_E = {
   /**
    * The root element of the list.
    */
-  root: React.RefObject<HTMLDivElement>
+  root: React.RefObject<HTMLDivElement | null>
   /**
    * The element that contains the list navigation.
    */
-  nav: React.RefObject<HTMLDivElement>
+  nav: React.RefObject<HTMLDivElement | null>
   /**
    * The element representing the header of the
    * list navigation.
    */
-  navHeader: React.RefObject<HTMLDivElement>
+  navHeader: React.RefObject<HTMLDivElement | null>
   /**
    * The element that contains the heading of the
    * list navigation, which exists inside the header.
    */
-  navHeading: React.RefObject<HTMLDivElement>
+  navHeading: React.RefObject<HTMLDivElement | null>
   /**
    * The element that contains the list buttons.
    */
-  buttons: React.RefObject<HTMLDivElement>
+  buttons: React.RefObject<HTMLDivElement | null>
   /**
    * The element that contains the overflow button.
    */
-  overflow: React.RefObject<HTMLDivElement>
+  overflow: React.RefObject<HTMLDivElement | null>
 }
 
 /**

@@ -25,7 +25,7 @@ import Entry from '../Entry'
 export default function ForceEntry({
   force,
   force: { mission },
-}: TForceEntry): JSX.Element | null {
+}: TForceEntry): TReactElement | null {
   /* -- STATE -- */
 
   const { prompt } = useGlobalContext().actions

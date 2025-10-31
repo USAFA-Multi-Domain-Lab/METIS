@@ -19,7 +19,7 @@ export default function Tab({
   description = '',
   engineProps = {},
   onClick = () => {},
-}: TTab_P): JSX.Element | null {
+}: TTab_P): TReactElement | null {
   const buttonMenuEngine = useButtonMenuEngine(engineProps)
 
   /* -- REFS -- */

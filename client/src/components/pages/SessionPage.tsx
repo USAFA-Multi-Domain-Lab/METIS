@@ -36,7 +36,7 @@ export default function SessionPage({
   session,
   session: { mission },
   returnPage,
-}: TSessionPage_P): JSX.Element | null {
+}: TSessionPage_P): TReactElement | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
@@ -481,7 +481,7 @@ export default function SessionPage({
   /**
    * JSX for the top bar element.
    */
-  const topBarJsx = compute((): JSX.Element | null => {
+  const topBarJsx = compute((): TReactElement | null => {
     let resourceDisplay: string = session.config.infiniteResources
       ? 'ထ'
       : resourcesRemaining.toString()
@@ -504,7 +504,7 @@ export default function SessionPage({
   /**
    * JSX for the overlay content.
    */
-  const overlayContentJsx = compute((): JSX.Element | undefined => {
+  const overlayContentJsx = compute((): TReactElement | undefined => {
     // If there is a selected node and not
     // a selected action, render a prompt to
     // select an action for the node.

@@ -17,7 +17,7 @@ export default function ArgDropdown({
   initialize,
   effectArgs,
   setEffectArgs,
-}: TDropdownArg_P): JSX.Element | null {
+}: TDropdownArg_P): TReactElement | null {
   /* -- STATE -- */
   const [requiredValue, setRequiredValue] = useState<TDropdownArgOption>(() => {
     // If the argument is a dropdown and the argument's value

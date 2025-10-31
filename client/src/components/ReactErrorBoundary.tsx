@@ -10,7 +10,7 @@ export default function ReactErrorBoundary({
   resetKeys,
   children,
   onError,
-}: TReactErrorBoundary_P): JSX.Element | null {
+}: TReactErrorBoundary_P): TReactElement | null {
   return (
     <ErrorBoundary
       FallbackComponent={FallbackComponent}
