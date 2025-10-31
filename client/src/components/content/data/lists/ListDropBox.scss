@@ -1,4 +1,4 @@
-@import 'src/assets/styles/config.scss';
+@use 'src/assets/styles/config.scss' as *;
 
 .ListDropBox {
   display: grid;
@@ -15,7 +15,7 @@
     transition: transform 175ms;
     width: 15em;
     height: 15em;
-    background: url('/assets/images/icons/upload.svg');
+    background: url('../../../../assets/images/icons/upload.svg');
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;

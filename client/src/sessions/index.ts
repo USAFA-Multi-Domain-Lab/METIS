@@ -12,7 +12,7 @@ import ClientUser from 'src/users'
 import {
   TFileAccessModifierData,
   TGenericServerEvents,
-  TOpenNodeData,
+  TNodeOpenStateData,
   TResponseEvents,
   TServerEvents,
   TServerMethod,
@@ -127,7 +127,9 @@ export default class SessionClient extends Session<TMetisClientComponents> {
     this._state = state
 
     this.listeners = [
+      ['session-starting', this.onStarting],
       ['session-started', this.onStart],
+      ['session-ending', this.onEnding],
       ['session-ended', this.onEnd],
       ['session-reset', this.onReset],
       ['session-config-updated', this.onConfigUpdate],
@@ -217,9 +219,10 @@ export default class SessionClient extends Session<TMetisClientComponents> {
         forceExposure: { expose: 'none' },
         fileExposure: { expose: 'none' },
         sessionDataExposure: {
-          expose: 'user-specific',
-          userId: this.member.userId,
+          expose: 'member-specific',
+          memberId: this.member._id,
         },
+        rootEffectsExposure: { expose: 'none' },
       }),
       members: this.members.map((member) => member.toJson()),
       banList: this.banList,
@@ -456,8 +459,10 @@ export default class SessionClient extends Session<TMetisClientComponents> {
    * @rejects If the session failed to start, or if the session has already
    * started or ended.
    */
-  public async $start(): Promise<void> {
+  public async $start(options: TSessionLifecycleOptions = {}): Promise<void> {
     return new Promise<void>((resolve, reject) => {
+      const { onInit = () => {} } = options
+
       // Callback for errors.
       const onError = (message: string) => {
         let error: Error = new Error(message)
@@ -479,6 +484,10 @@ export default class SessionClient extends Session<TMetisClientComponents> {
       this.server.request('request-start-session', {}, 'Starting session.', {
         onResponse: (event) => {
           switch (event.method) {
+            case 'session-starting':
+              this._state = 'starting'
+              onInit()
+              break
             case 'session-started':
               this._state = 'started'
               return resolve()
@@ -500,8 +509,10 @@ export default class SessionClient extends Session<TMetisClientComponents> {
    * @rejects If the session failed to end, or if the session has already
    * ended or has not yet started.
    */
-  public async $end(): Promise<void> {
+  public async $end(options: TSessionLifecycleOptions = {}): Promise<void> {
     return new Promise<void>((resolve, reject) => {
+      const { onInit = () => {} } = options
+
       // Callback for errors.
       const onError = (message: string) => {
         let error: Error = new Error(message)
@@ -523,6 +534,10 @@ export default class SessionClient extends Session<TMetisClientComponents> {
       this.server.request('request-end-session', {}, 'Ending session.', {
         onResponse: (event) => {
           switch (event.method) {
+            case 'session-ending':
+              this._state = 'ending'
+              onInit()
+              break
             case 'session-ended':
               this._state = 'ended'
               return resolve()
@@ -544,8 +559,10 @@ export default class SessionClient extends Session<TMetisClientComponents> {
    * @rejects If the session failed to reset, or if the session
    * has not yet started.
    */
-  public async $reset(): Promise<void> {
+  public async $reset(options: TSessionLifecycleOptions = {}): Promise<void> {
     return new Promise<void>((resolve, reject) => {
+      const { onInit = () => {} } = options
+
       // Callback for errors.
       const onError = (message: string) => {
         let error: Error = new Error(message)
@@ -563,6 +580,10 @@ export default class SessionClient extends Session<TMetisClientComponents> {
       this.server.request('request-reset-session', {}, 'Resetting session.', {
         onResponse: (event) => {
           switch (event.method) {
+            case 'session-resetting':
+              this._state = 'resetting'
+              onInit()
+              break
             case 'session-reset':
               this._state = 'started'
               return resolve()
@@ -992,11 +1013,27 @@ export default class SessionClient extends Session<TMetisClientComponents> {
   }
 
   /**
+   * Handles when the session is starting.
+   * @param event The event emitted by the server.
+   */
+  private onStarting = (event: TResponseEvents['session-starting']): void => {
+    this._state = 'starting'
+  }
+
+  /**
    * Handles when the session is started.
    * @param event The event emitted by the server.
    */
   private onStart = (event: TResponseEvents['session-started']): void => {
     this.importStartData(event)
+  }
+
+  /**
+   * Handles when the session is ending.
+   * @param event The event emitted by the server.
+   */
+  private onEnding = (event: TResponseEvents['session-ending']): void => {
+    this._state = 'ending'
   }
 
   /**
@@ -1129,12 +1166,13 @@ export default class SessionClient extends Session<TMetisClientComponents> {
     const { data } = event
     // Handle the data.
     switch (data.key) {
-      case 'node-update-block':
+      case 'node-update-block-status':
         this.updateNodeBlockStatus(data.nodeId, data.blocked)
         break
-      case 'node-open':
-        this.onNodeOpened({
+      case 'node-update-open-state':
+        this.onChangeNodeOpenState({
           nodeId: data.nodeId,
+          opened: data.opened,
           structure: data.structure,
           revealedDescendants: data.revealedDescendants,
           revealedDescendantPrototypes: data.revealedDescendantPrototypes,
@@ -1211,16 +1249,17 @@ export default class SessionClient extends Session<TMetisClientComponents> {
   private onNodeOpenedResponse = (
     event: TServerEvents['node-opened'],
   ): void => {
-    // Gather data.
     const {
       nodeId,
+      opened,
       structure,
       revealedDescendants,
       revealedDescendantPrototypes,
     } = event.data
-    // Handle the node opening.
-    return this.onNodeOpened({
+
+    return this.onChangeNodeOpenState({
       nodeId,
+      opened,
       structure,
       revealedDescendants,
       revealedDescendantPrototypes,
@@ -1310,17 +1349,22 @@ export default class SessionClient extends Session<TMetisClientComponents> {
   }
 
   /**
-   * Handles when a node has been opened.
-   * @param data The data needed to open the node.
+   * Handles node open/close state change events from the server.
+   * @param data The event data containing the node ID, new state, and revealed descendants.
+   * @note This coordinates updates at both the prototype (template) and node (instance) levels.
+   * @note If the node hasn't been revealed to this member yet, the event is ignored with a warning.
    */
-  private onNodeOpened = (data: TOpenNodeData): void => {
-    // Gather data.
+  private onChangeNodeOpenState = (data: TNodeOpenStateData): void => {
+    // Extract the event data.
     const {
       nodeId,
+      opened,
       structure,
       revealedDescendants,
       revealedDescendantPrototypes,
     } = data
+
+    // Find the target node in the mission.
     const node = this.mission.getNodeById(nodeId)
     if (!node) {
       return console.warn(
@@ -1329,11 +1373,18 @@ export default class SessionClient extends Session<TMetisClientComponents> {
     }
     const { prototype } = node
 
-    // Handle opening at different levels.
-    prototype.onOpen(revealedDescendantPrototypes, structure)
-    node.onOpen(revealedDescendants)
+    // Update both the prototype (template level) and node (instance level).
+    if (opened) {
+      // Opening: Reveal descendants and establish structure relationships.
+      prototype.onOpen(revealedDescendantPrototypes, structure)
+      node.onOpen(revealedDescendants)
+    } else {
+      // Closing: Hide descendants (unless member has complete visibility).
+      prototype.onClose(this.member)
+      node.onClose(this.member)
+    }
 
-    // Remap actions, if new nodes have been revealed.
+    // Rebuild the action map if new nodes were revealed during opening.
     if (revealedDescendants) this.mapActions()
   }
 
@@ -1434,6 +1485,20 @@ type TSessionRequestOptions = {
    * @param message The error message.
    */
   onError?: (message: string) => void
+}
+
+/**
+ * Options to pass to {@link SessionClient.$start},
+ * {@link SessionClient.$end} and {@link SessionClient.$reset}
+ * methods.
+ */
+type TSessionLifecycleOptions = {
+  /**
+   * Callback for when the server acknowledges
+   * the request to start the session and has
+   * marked the session as 'starting'.
+   */
+  onInit?: () => void
 }
 
 /**

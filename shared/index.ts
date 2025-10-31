@@ -3,7 +3,7 @@ import Mission from './missions'
 import MissionAction from './missions/actions'
 import ActionExecution from './missions/actions/executions'
 import ExecutionOutcome from './missions/actions/outcomes'
-import Effect from './missions/effects'
+import Effect, { TEffectType } from './missions/effects'
 import MissionFile from './missions/files'
 import { MissionForce } from './missions/forces'
 import MissionOutput from './missions/forces/output'
@@ -179,7 +179,8 @@ export type TMetisBaseComponents = {
   action: MissionAction
   execution: ActionExecution
   outcome: ExecutionOutcome
-  effect: Effect
+} & {
+  [TType in TEffectType]: Effect<TMetisBaseComponents, TType>
 }
 
 /**

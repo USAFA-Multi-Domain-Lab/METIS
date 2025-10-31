@@ -1,5 +1,5 @@
-@import 'src/assets/styles/config.scss';
-@import 'src/assets/styles/util.scss';
+@use 'src/assets/styles/config.scss' as *;
+@use 'src/assets/styles/util.scss' as *;
 
 .MapPreferences {
   border: 2px solid $color-primary-light;

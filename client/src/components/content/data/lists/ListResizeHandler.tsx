@@ -10,7 +10,7 @@ import { TListPage_P } from './pages/ListPage'
  */
 export default function ListResizeHandler<
   TItem extends MetisComponent,
->(): JSX.Element | null {
+>(): TReactElement | null {
   /* -- STATE -- */
 
   const listContext = useListContext<TItem>()

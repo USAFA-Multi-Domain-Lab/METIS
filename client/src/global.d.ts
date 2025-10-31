@@ -1,6 +1,11 @@
-import React from 'react'
+import React, { JSX } from 'react'
 
 declare global {
+  /**
+   * Represents an element written in React JSX.
+   */
+  export type TReactElement = JSX.Element
+
   /**
    * What useState returns.
    */

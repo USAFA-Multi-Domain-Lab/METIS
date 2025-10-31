@@ -8,8 +8,8 @@ import { MetisComponent, TMetisBaseComponents } from '..'
  * @note Implement this to make a class compatible.
  */
 export default abstract class MissionComponent<
-  T extends TMetisBaseComponents,
-  Self extends MissionComponent<T, Self>,
+  T extends TMetisBaseComponents = TMetisBaseComponents,
+  Self extends MissionComponent<T, Self> = MissionComponent<T, any>,
 > extends MetisComponent {
   /**
    * The mission associated with the component.

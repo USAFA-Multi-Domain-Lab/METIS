@@ -339,10 +339,17 @@ Names given should also not be overly long. Names should be limited to 3-4 words
 
 ### Types
 
-Types should be prefixed with the letter "T” when assigned a name:
+Types and interfaces both should be prefixed with the letter "T” when assigned a name. In general, types are preferred over interfaces. However, interfaces can be used also,
+especially if doing so improves readability.
 
 ```tsx
 type TMissionImportResult = // Type definition here...
+```
+
+```tsx
+interface TUserJson extends TMetisComponentJson {
+  // Interface definition here...
+}
 ```
 
 If a string literal type is needed, the strings should be written in kebab case, unless its use case requires another format.
@@ -352,16 +359,6 @@ If a string literal type is needed, the strings should be written in kebab case,
  * The status of an AJAX request.
  */
 export type TAjaxStatus = 'not-loaded' | 'loading' | 'loaded' | 'failed'
-```
-
-### Interfaces
-
-Interfaces are discouraged in favor of regular types. However, if an interface is needed, the interface should be prefixed with the letter I.
-
-```tsx
-interface IMissionImportResult {
-  // Interface definition here...
-}
 ```
 
 ### Class Properties

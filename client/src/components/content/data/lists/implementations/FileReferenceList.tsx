@@ -14,7 +14,7 @@ import ListUpload from '../uploads'
  * A component for displaying a list of file references.
  * @note Uses the `List` component.
  */
-export default function (props: TFileReferenceList_P): JSX.Element | null {
+export default function (props: TFileReferenceList_P): TReactElement | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
@@ -89,7 +89,11 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
     ],
     listButtonIcons: ['upload'],
     itemButtonIcons: ['download', 'remove'],
-    initialSorting: { column: 'createdAt', method: 'descending' },
+    initialSorting: {
+      method: 'column-based',
+      column: 'createdAt',
+      direction: 'descending',
+    },
     uploads,
     getListButtonPermissions: (button) => {
       switch (button) {

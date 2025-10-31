@@ -48,23 +48,20 @@ export function useListComponent<
   Component: React.FunctionComponent<TProps>,
   propsList: Array<TProps>,
   keyFrom: TPropKeys | ((props: TProps) => string),
-): () => JSX.Element | null {
-  return useCallback(
-    () => (
-      <>
-        {propsList.map((props) => (
-          <Component
-            {...props}
-            key={
-              typeof keyFrom === 'function'
-                ? keyFrom(props)
-                : (props[keyFrom] as string)
-            }
-          />
-        ))}
-      </>
-    ),
-    [Component, propsList, keyFrom],
+): () => TReactElement | null {
+  return () => (
+    <>
+      {propsList.map((props) => (
+        <Component
+          {...props}
+          key={
+            typeof keyFrom === 'function'
+              ? keyFrom(props)
+              : (props[keyFrom] as string)
+          }
+        />
+      ))}
+    </>
   )
 }
 
@@ -152,7 +149,7 @@ export function useInlineStyling(
  * when the dependencies change. This will not recreate the observer.
  */
 export function useResizeObserver(
-  ref: React.RefObject<HTMLElement>,
+  ref: React.RefObject<HTMLElement | null>,
   callback: (clientWidth: number, clientHeight: number) => void,
   dependencies: React.DependencyList = [],
   options: TResizeObserverOptions = {},
@@ -181,6 +178,35 @@ export function useResizeObserver(
       }
     }
   }, [ref.current])
+}
+
+/**
+ * Adds a beforeunload listener and invokes the provided handler.
+ * Call event.preventDefault() inside handler to show the browser prompt.
+ * @example
+ * useBeforeunload((e) => { if (dirty) e.preventDefault() })
+ */
+export function useBeforeunload(
+  handler: (event: BeforeUnloadEvent) => void,
+  dependencies: React.DependencyList = [],
+): void {
+  // Keep latest handler in a ref to avoid re-binding on every render
+  const handlerRef = useRef(handler)
+  useEffect(() => {
+    handlerRef.current = handler
+  }, [handler, ...dependencies])
+
+  useEffect(() => {
+    const listener = (event: BeforeUnloadEvent) => {
+      handlerRef.current(event)
+      // If default is prevented by handler, set returnValue for compatibility
+      if (event.defaultPrevented) {
+        event.returnValue = ''
+      }
+    }
+    window.addEventListener('beforeunload', listener)
+    return () => window.removeEventListener('beforeunload', listener)
+  }, [])
 }
 /**
  * Takes in a components props and an object defining default props. If any property of default props is undefined for the corresponding value in props, the default value will be assigned in props.

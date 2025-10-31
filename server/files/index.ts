@@ -72,7 +72,7 @@ export default class MetisFileStore {
    */
   public constructor(server: MetisServer, config: TMetisFileStoreConfig = {}) {
     // Parse config.
-    const { directory = './files/store' } = config
+    const { directory = 'server/files/store' } = config
 
     // Set properties.
     this._server = server
@@ -204,7 +204,7 @@ export default class MetisFileStore {
 export type TMetisFileStoreConfig = {
   /**
    * The directory to store files in.
-   * @default './files/store'
+   * @default 'server/files/store'
    */
   directory?: string
 }

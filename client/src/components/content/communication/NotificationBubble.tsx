@@ -46,7 +46,7 @@ export default function NotificationBubble({
   /**
    * JSX for the buttons in the notification bubble.
    */
-  const ButtonJsx = compute<JSX.Element | null>(
+  const ButtonJsx = compute<TReactElement | null>(
     useListComponent(ButtonText, buttons, 'text'),
   )
 

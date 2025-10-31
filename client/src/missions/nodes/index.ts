@@ -5,6 +5,7 @@ import {
   TMapCompatibleNodeEvent,
   TNodeButton,
 } from 'src/components/content/session/mission-map/objects/nodes'
+import ClientSessionMember from 'src/sessions/members'
 import { TRequestMethod } from '../../../../shared/connect/data'
 import {
   EventManager,
@@ -424,27 +425,53 @@ export default class ClientMissionNode
   }
 
   /**
-   * Processses an open event emitted by the server.
-   * @param revealedDescendants The nodes revealed by the opening of the node.
+   * Handles a node-opened event from the server by updating local state and revealing descendants.
+   * @param revealedDescendants The descendant nodes that should now be visible to the client.
+   * @note This method updates the mission structure and triggers UI re-renders.
    */
   public onOpen(revealedDescendants: TMissionNodeJson[] | undefined): void {
-    if (revealedDescendants) {
-      if (!this.openable && !this.executed) {
-        console.error(`Node ${this._id} is not openable.`)
-      }
-      // Set the node to open.
-      this._opened = true
-      // Update last opened node cache.
-      this.mission.lastOpenedNode = this
-      // Reveal nodes, if any.
-      this.populateDescendants(revealedDescendants)
-      // Handle structure change.
-      this.mission.handleStructureChange()
-      // Set pending open to false.
-      this.pendingOpen = false
-      // Emit event.
-      this.emitEvent('open')
+    if (!revealedDescendants) return
+
+    // Log warning if trying to open a non-openable node (shouldn't happen due to server validation).
+    if (!this.openable && !this.executed) {
+      console.error(`Node ${this._id} is not openable.`)
     }
+
+    // Mark this node as opened and track it as the most recently opened node.
+    this._opened = true
+    this.mission.lastOpenedNode = this
+
+    // Add the revealed descendant nodes to the force.
+    this.populateDescendants(revealedDescendants)
+
+    // Clear the pending state and update UI.
+    this.pendingOpen = false
+    this.mission.handleStructureChange()
+    this.emitEvent('opened')
+  }
+
+  /**
+   * Handles a node-closed event from the server by updating local state and hiding descendants.
+   * @param member The session member for whom the node is being closed (used for authorization).
+   * @note Members with complete visibility will still see closed nodes (but greyed out).
+   * @note This method updates the mission structure and triggers UI re-renders.
+   */
+  public onClose(member: ClientSessionMember): void {
+    // Mark this node and all descendants as closed.
+    this.close()
+
+    // Remove descendants from view only if the member doesn't have complete visibility.
+    // Managers with complete visibility keep the full tree visible (just greyed out).
+    if (!member.isAuthorized('completeVisibility')) {
+      const descendantIds = new Set(this.revealedDescendants.map((d) => d._id))
+      this.force.nodes = this.force.nodes.filter(
+        (node) => !descendantIds.has(node._id),
+      )
+    }
+
+    // Update UI to reflect the structure change.
+    this.mission.handleStructureChange()
+    this.emitEvent('closed')
   }
 
   // Overridden
@@ -549,11 +576,8 @@ export default class ClientMissionNode
     // don't set them again.
     if (this.descendants.length > 0) return
 
-    // Generate descendants.
     data.forEach((datum) => {
-      // Create a new node.
       let descendant = new ClientMissionNode(this.force, datum)
-      // Add the node into the force.
       this.force.nodes.push(descendant)
     })
   }
@@ -685,8 +709,10 @@ export default class ClientMissionNode
  * Triggered when the following occurs:
  * - A node is requested to be opened by the client and the server fails to open the node.
  * - An action is requested to be executed by the client and the server fails to execute the action.
- * @option 'open'
+ * @option 'opened'
  * Triggered when the node is opened.
+ * @option 'closed'
+ * Triggered when the node is closed.
  * @option 'modify-actions'
  * Triggered when the following occurs:
  * - The success chance of the node's actions are modified.
@@ -697,11 +723,12 @@ export default class ClientMissionNode
  */
 export type TNodeEventMethod =
   | TMapCompatibleNodeEvent
+  | 'closed'
+  | 'modify-actions'
+  | 'opened'
+  | 'output-sent'
   | 'request-made'
   | 'request-failed'
-  | 'open'
-  | 'modify-actions'
-  | 'output-sent'
 
 /**
  * The options for duplicating a node.

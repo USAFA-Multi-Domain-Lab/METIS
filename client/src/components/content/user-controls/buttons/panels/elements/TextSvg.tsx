@@ -17,7 +17,7 @@ export default function ({
   uniqueClassList,
   disabled,
   hidden,
-}: TTextSvg_PK): JSX.Element | null {
+}: TTextSvg_PK): TReactElement | null {
   /**
    * The classes used for the root element.
    */

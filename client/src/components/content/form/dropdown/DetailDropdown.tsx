@@ -39,7 +39,7 @@ export const useDropdownContext = <TOption extends any>() => {
  */
 export default function DetailDropdown<TOption>(
   props: TDetailDropdown_P<TOption>,
-): JSX.Element | null {
+): TReactElement | null {
   /* -- PROPS -- */
 
   // Assign default values to props.
@@ -292,7 +292,7 @@ export default function DetailDropdown<TOption>(
 
   /* -- PRE-RENDER PROCESSING -- */
 
-  const optionsJsx: JSX.Element[] = compute(() => {
+  const optionsJsx: TReactElement[] = compute(() => {
     let processedOptions = [...options]
 
     // If the list of options is empty, then

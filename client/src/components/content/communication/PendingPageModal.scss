@@ -1,0 +1,38 @@
+@use 'src/assets/styles/config.scss' as *;
+@use 'src/assets/styles/util.scss' as *;
+
+.PendingPageModal {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  position: fixed;
+  z-index: $z-index-pending-modal;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  padding: 3em;
+  transition: opacity 300ms;
+
+  @include background-mask($color: $color-secondary, $opacity: 0.8);
+
+  .ModalMessage {
+    max-width: 40em;
+    line-height: 1.8rem;
+    text-align: center;
+    color: $color-accent-light;
+
+    @include pulse;
+  }
+
+  &.ModalActive {
+    pointer-events: all;
+    opacity: 1;
+  }
+
+  &.ModalInactive {
+    pointer-events: none;
+    opacity: 0;
+  }
+}

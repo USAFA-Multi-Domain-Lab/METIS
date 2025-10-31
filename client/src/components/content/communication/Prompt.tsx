@@ -58,7 +58,7 @@ export default class Prompt<
   /**
    * @returns The JSX for the confirmation message.
    */
-  protected get messageJsx(): JSX.Element | null {
+  protected get messageJsx(): TReactElement | null {
     // Gather details.
     const { message } = this.props
 
@@ -77,7 +77,7 @@ export default class Prompt<
   /**
    * @returns The JSX for the list.
    */
-  protected get listJsx(): JSX.Element | null {
+  protected get listJsx(): TReactElement | null {
     if (!this.props.list) return null
 
     // Gather details.
@@ -113,7 +113,7 @@ export default class Prompt<
   /**
    * @returns The JSX for the text field.
    */
-  protected get textFieldJsx(): JSX.Element | null {
+  protected get textFieldJsx(): TReactElement | null {
     // If there is a text field, render it.
     if (this.props.textField) {
       // Gather details.
@@ -159,7 +159,7 @@ export default class Prompt<
   /**
    * @returns The JSX for the confirmation actions.
    */
-  protected get actionsJsx(): JSX.Element | null {
+  protected get actionsJsx(): TReactElement | null {
     // Gather details.
     const { choices, resolve, capitalizeChoices } = this.props
 
@@ -214,7 +214,7 @@ export default class Prompt<
   }
 
   // Implemented
-  public render(): JSX.Element | null {
+  public render(): TReactElement | null {
     // Gather details.
     let rootClassList: string[] = ['Prompt']
 
@@ -464,5 +464,5 @@ type TPromptList<TList extends object = {}> = {
   /**
    * The JSX to render for each item.
    */
-  renderObjectListItem: (object: TList) => string | JSX.Element
+  renderObjectListItem: (object: TList) => string | TReactElement
 }

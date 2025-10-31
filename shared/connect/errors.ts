@@ -162,6 +162,11 @@ export class ServerEmittedError extends WSEmittedError {
    */
   public static readonly CODE_SESSION_LATE_JOIN: number = 20006
   /**
+   * Code for a client requesting to join a session that has been
+   * closed, due to it ending.
+   */
+  public static readonly CODE_SESSION_CLOSED: number = 20007
+  /**
    * Code for a client requesting to open a node that cannot be found.
    */
   public static readonly CODE_NODE_NOT_FOUND: number = 20100
@@ -226,6 +231,8 @@ export class ServerEmittedError extends WSEmittedError {
       'You are not authorized to perform this operation.',
     [ServerEmittedError.CODE_SESSION_LATE_JOIN]:
       'The session has already started, and you have not been assigned to a force.',
+    [ServerEmittedError.CODE_SESSION_CLOSED]:
+      'The session has been closed and can no longer be joined.',
     [ServerEmittedError.CODE_NODE_NOT_FOUND]: 'Node not found.',
     [ServerEmittedError.CODE_NODE_NOT_OPENABLE]: 'Node not openable.',
     [ServerEmittedError.CODE_NODE_NOT_EXECUTABLE]: 'Node not executable.',

@@ -11,7 +11,7 @@ export default function Line({
   start,
   length,
   blurred = false,
-}: TLine_P): JSX.Element | null {
+}: TLine_P): TReactElement | null {
   /* -- computed -- */
 
   /**

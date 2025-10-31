@@ -8,7 +8,7 @@ import './MapPreferences.scss'
 /**
  * Provides options to the user for customizing the mission map.
  */
-export default function MapPreferences(): JSX.Element | null {
+export default function MapPreferences(): TReactElement | null {
   /* -- STATE -- */
 
   const mapContext = useMapContext()

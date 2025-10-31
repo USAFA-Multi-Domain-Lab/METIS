@@ -6,17 +6,83 @@ import TargetEnvRegistry from 'metis/target-environments/registry'
 import StringToolbox from 'metis/toolbox/strings'
 import path from 'path'
 import { TMetisServerComponents } from '../index'
+import SessionServer from '../sessions'
 import ServerFileToolbox from '../toolbox/files'
+import TargetEnvironmentHook, { TTargetEnvMethods } from './hooks'
 import ServerTarget from './targets'
 
 /**
  * A class for managing target environments on the server.
  */
 export default class ServerTargetEnvironment extends TargetEnvironment<TMetisServerComponents> {
+  /**
+   * A registry of hooks and their associated callbacks.
+   * Callbacks will be called when the associated method
+   * is invoked.
+   */
+  private hooks: TargetEnvironmentHook[]
+
+  /**
+   * @param id @see {@link ServerTargetEnvironment._id}
+   * @param name @see {@link ServerTargetEnvironment.name}
+   * @param description @see {@link ServerTargetEnvironment.description}
+   * @param version @see {@link ServerTargetEnvironment.version}
+   * @param targets @see {@link ServerTargetEnvironment.targets}
+   * @param hooks Hooks to register with the target environment which will
+   * be invoked at various points when used in a session.
+   */
+  public constructor(
+    id: string,
+    name: string,
+    description: string,
+    version: string,
+    targets: ServerTarget[],
+    hooks: TargetEnvironmentHook[],
+  ) {
+    super(id, name, description, version, targets)
+
+    this.hooks = hooks
+  }
+
   // Implemented
   public register(): ServerTargetEnvironment {
     ServerTargetEnvironment.REGISTRY.register(this)
     return this
+  }
+
+  /**
+   * Invokes the given method, by calling all registered
+   * hook callbacks for that method.
+   * @param method The method to invoke.
+   * @resolves When all callbacks have been invoked and resolved.
+   * @rejects If any callback throws an error.
+   */
+  private async invoke(method: TTargetEnvMethods): Promise<void> {
+    for (let hook of this.hooks) {
+      if (hook.method === method) {
+        await hook.invoke()
+      }
+    }
+  }
+
+  /**
+   * Sets up the target environment for the given session.
+   * @param session The session used for setup.
+   * @resolves When setup is complete.
+   * @rejects If setup fails.
+   */
+  public setUp(session: SessionServer): Promise<void> {
+    return this.invoke('environment-setup')
+  }
+
+  /**
+   * Tears down the target environment for the given session.
+   * @param session The session used for teardown.
+   * @resolves When teardown is complete.
+   * @rejects If teardown fails.
+   */
+  public tearDown(session: SessionServer): Promise<void> {
+    return this.invoke('environment-teardown')
   }
 
   /**
@@ -40,8 +106,8 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
    * The default directory to scan for target environments.
    */
   private static readonly DEFAULT_DIRECTORY: string = path.join(
-    process.cwd(), // "metis/server/"
-    '../integration/target-env',
+    process.cwd(),
+    'integration/target-env',
   )
 
   /**
@@ -85,6 +151,7 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
       schema.description,
       schema.version,
       [],
+      schema.hooks,
     )
   }
 
@@ -244,6 +311,46 @@ export default class ServerTargetEnvironment extends TargetEnvironment<TMetisSer
     // the default METIS target environment is
     // always the first one in the list.
     ServerTargetEnvironment.REGISTRY.sort()
+  }
+
+  /**
+   * Sets up all registered target environments for the given
+   * session.
+   * @param session The session used for setup.
+   * @resolves When all target environments are set up.
+   * @rejects If setup of any target environment fails.
+   */
+  public static async setUp(session: SessionServer): Promise<void> {
+    // Get the target environments that the
+    // mission of the given session uses.
+    let environments = session.mission.targetEnvironments
+
+    // For each target environment in the registry, set it up.
+    for (let environment of environments) {
+      await environment.setUp(session)
+    }
+
+    await session.applyMissionEffects('session-setup')
+  }
+
+  /**
+   * Tears down all registered target environments for the given
+   * session.
+   * @param session The session used for teardown.
+   * @resolves When all target environments are torn down.
+   * @rejects If teardown of any target environment fails.
+   */
+  public static async tearDown(session: SessionServer): Promise<void> {
+    // Get the target environments that the
+    // mission of the given session uses.
+    let environments = session.mission.targetEnvironments
+
+    // For each target environment in the registry, tear it down.
+    for (let environment of environments) {
+      await environment.tearDown(session)
+    }
+
+    await session.applyMissionEffects('session-teardown')
   }
 }
 

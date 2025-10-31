@@ -28,7 +28,7 @@ export default function ButtonMenu({
   positioningTarget,
   highlightTarget,
   onCloseRequest,
-}: TButtonMenu_P): JSX.Element | null {
+}: TButtonMenu_P): TReactElement | null {
   /* -- STATE -- */
 
   const [_, setForcedUpdateId] = useState<string>(

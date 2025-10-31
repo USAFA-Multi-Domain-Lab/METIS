@@ -111,7 +111,7 @@ export default class Markdown extends React.Component<
   // -- properties --
 
   state: IMarkdown_S
-  root: React.RefObject<HTMLDivElement>
+  root: React.RefObject<HTMLDivElement | null>
 
   /* -- initialization -- */
 

@@ -41,7 +41,7 @@ const SESSIONS_SYNC_RATE: number = 1000
  * It will also display a list of users that the user can
  * select from to edit if they have proper permissions.
  */
-export default function HomePage(): JSX.Element | null {
+export default function HomePage(): TReactElement | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()

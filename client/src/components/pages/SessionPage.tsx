@@ -1,9 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
-import {
-  TNavigateOptions,
-  useGlobalContext,
-  useNavigationMiddleware,
-} from 'src/context/global'
+import { useEffect, useState } from 'react'
+import { useGlobalContext, useNavigationMiddleware } from 'src/context/global'
 import ClientMissionFile from 'src/missions/files'
 import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
@@ -14,7 +10,9 @@ import {
   useMountHandler,
   useRequireLogin,
 } from 'src/toolbox/hooks'
+import { useSessionRedirects } from 'src/toolbox/hooks/sessions'
 import { DefaultPageLayout, TPage_P } from '.'
+import PendingPageModal from '../content/communication/PendingPageModal'
 import Prompt from '../content/communication/Prompt'
 import MissionFileList from '../content/data/lists/implementations/MissionFileList'
 import { TNavigation_P } from '../content/general-layout/Navigation'
@@ -38,7 +36,7 @@ export default function SessionPage({
   session,
   session: { mission },
   returnPage,
-}: TSessionPage_P): JSX.Element | null {
+}: TSessionPage_P): TReactElement | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
@@ -63,6 +61,13 @@ export default function SessionPage({
   const mapButtonEngine = useButtonSvgEngine({})
   const [localFiles, setLocalFiles] = useState<ClientMissionFile[]>(
     mission.files,
+  )
+  const { verifyNavigation, navigateToReturnPage } = useSessionRedirects(
+    session,
+    { returnPage },
+  )
+  const [resetInitiated, setResetInitiated] = useState<boolean>(
+    session.state === 'resetting',
   )
 
   /* -- VARIABLES -- */
@@ -220,10 +225,18 @@ export default function SessionPage({
       verifyNavigation.current = () => {}
       // Begin loading.
       beginLoading('Ending session...')
-      // Start the session.
-      await session.$end()
-      // Go to return page.
-      navigateToReturnPage({ bypassMiddleware: true })
+      // End the session.
+      await session.$end({
+        onInit: () => {
+          // Go to return page once the session
+          // end has been initiated. Tear down
+          // does not need to hold up navigation.
+          navigateToReturnPage({ bypassMiddleware: true })
+        },
+      })
+      notify(
+        `"${session.name}" teardown complete. Session will now be deleted.`,
+      )
     } catch (error) {
       handleError({
         message: 'Failed to end session.',
@@ -257,8 +270,6 @@ export default function SessionPage({
       // Clear verify navigation function to prevent double
       // redirect.
       verifyNavigation.current = () => {}
-      // Begin loading.
-      beginLoading('Resetting session...')
       // Start the session.
       await session.$reset()
       // Refresh page.
@@ -278,40 +289,11 @@ export default function SessionPage({
   }
 
   /**
-   * Redirects to the correct page based on
-   * the session state. Stays on the same page
-   * if the session is started and not ended.
-   */
-  const verifyNavigation = useRef(() => {
-    // If the session is unstarted, navigate to the lobby page.
-    if (session.state === 'unstarted') {
-      navigateTo('LobbyPage', { session }, { bypassMiddleware: true })
-    }
-    // If the session is ended, navigate to the home page.
-    if (session.state === 'ended') {
-      notify('Session has ended.')
-      navigateToReturnPage({ bypassMiddleware: true })
-    }
-  })
-
-  /**
    * Syncs the resources remaining state with
    * the selected force.
    */
   const syncResources = () => {
     setResourcesRemaining(selectedForce?.resourcesRemaining ?? 0)
-  }
-
-  /**
-   * Navigates to the return page based on the
-   * `returnPage` prop.
-   */
-  const navigateToReturnPage = (options: TNavigateOptions = {}) => {
-    if (returnPage === 'HomePage') {
-      navigateTo('HomePage', {}, options)
-    } else if (returnPage === 'MissionPage') {
-      navigateTo('MissionPage', { missionId: mission._id }, options)
-    }
   }
 
   /* -- COMPUTED -- */
@@ -403,24 +385,13 @@ export default function SessionPage({
   /* -- EFFECTS -- */
 
   useMountHandler((done) => {
-    finishLoading()
-
-    // Verify the user is on the right page.
-    verifyNavigation.current()
     // Initialize the navigation bar.
     initializeNavigation()
     // Hide preferences button on the map.
     mapButtonEngine.hide('preferences')
-
+    finishLoading()
     done()
   })
-
-  // Verify navigation if the session is ended or destroyed.
-  useEventListener(
-    server,
-    ['session-started', 'session-ended', 'session-destroyed'],
-    () => verifyNavigation.current(),
-  )
 
   // On session reset, reselect the force in
   // the mission, since a new force object
@@ -467,15 +438,20 @@ export default function SessionPage({
     [selectedForce],
   )
 
+  useEventListener(server, 'session-resetting', () => {
+    setResetInitiated(true)
+    navButtonEngine.disable('stop').disable('reset')
+  })
+
   useEventListener(server, 'session-reset', () => {
-    beginLoading('Resetting session...')
+    beginLoading('Refreshing page...')
     navigateTo(
       'SessionPage',
       { session, returnPage },
       { bypassMiddleware: true },
     )
     finishLoading()
-    notify('A manager has reset the session.')
+    notify('All progress has been reset by a manager.')
   })
 
   // Update the list of local files when file access
@@ -505,7 +481,7 @@ export default function SessionPage({
   /**
    * JSX for the top bar element.
    */
-  const topBarJsx = compute((): JSX.Element | null => {
+  const topBarJsx = compute((): TReactElement | null => {
     let resourceDisplay: string = session.config.infiniteResources
       ? 'ထ'
       : resourcesRemaining.toString()
@@ -528,7 +504,7 @@ export default function SessionPage({
   /**
    * JSX for the overlay content.
    */
-  const overlayContentJsx = compute((): JSX.Element | undefined => {
+  const overlayContentJsx = compute((): TReactElement | undefined => {
     // If there is a selected node and not
     // a selected action, render a prompt to
     // select an action for the node.
@@ -606,6 +582,12 @@ export default function SessionPage({
             </PanelView>
           </Panel>
         </PanelLayout>
+        <PendingPageModal
+          message={
+            'Session reset initiated by a manager. Once teardown and setup are complete, the page will refresh...'
+          }
+          active={resetInitiated}
+        />
       </DefaultPageLayout>
     </div>
   )

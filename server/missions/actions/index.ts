@@ -2,10 +2,13 @@ import MissionAction, { TMissionActionJson } from 'metis/missions/actions'
 import TCommonActionExecution, {
   TExecutionCheats,
 } from 'metis/missions/actions/executions'
-import Effect, { TEffectJson } from 'metis/missions/effects'
+import {
+  TEffectExecutionTriggered,
+  TEffectExecutionTriggeredJson,
+} from 'metis/missions/effects'
 import { TMetisServerComponents } from 'metis/server'
-import MetisDatabase from 'metis/server/database'
 import { TTargetEnvExposedAction } from 'metis/server/target-environments/context'
+import ServerTarget from 'metis/server/target-environments/targets'
 import { TSessionConfig } from 'metis/sessions'
 import seedrandom, { PRNG } from 'seedrandom'
 import ServerEffect from '../effects'
@@ -35,10 +38,22 @@ export default class ServerMissionAction extends MissionAction<TMetisServerCompo
   }
 
   // Implemented
-  protected parseEffects(data: TEffectJson[]): ServerEffect[] {
-    return data.map((datum: TEffectJson) => {
-      return new ServerEffect(this, datum)
+  protected parseEffects(
+    data: TEffectExecutionTriggeredJson[],
+  ): ServerEffect<'executionTriggeredEffect'>[] {
+    return data.map((datum: TEffectExecutionTriggeredJson) => {
+      return ServerEffect.fromExecutionTriggeredJson(datum, this)
     })
+  }
+
+  // Implemented
+  public createEffect(
+    target: ServerTarget,
+    trigger: TEffectExecutionTriggered,
+  ): ServerEffect<'executionTriggeredEffect'> {
+    let effect = ServerEffect.createBlankExecutionEffect(target, this, trigger)
+    this.effects.push(effect)
+    return effect
   }
 
   /**
@@ -118,32 +133,6 @@ export default class ServerMissionAction extends MissionAction<TMetisServerCompo
       processTime: this.processTime,
       resourceCost: this.resourceCost,
       effects: this.effects.map((effect) => effect.toTargetEnvContext()),
-    }
-  }
-
-  /**
-   * Validates the effects of the action.
-   * @param effects The effects to validate.
-   * @returns True if the effects are valid, false otherwise.
-   */
-  public static validateEffects(effects: TMissionActionJson['effects']): void {
-    let effectKeys: TEffectJson['localKey'][] = []
-
-    for (const effect of effects) {
-      const validTrigger = Effect.isValidTrigger(effect.trigger)
-      if (!validTrigger) {
-        throw MetisDatabase.generateValidationError(
-          `The effect "{ _id: ${effect._id}, name: ${effect.name} }" has an invalid trigger "${effect.trigger}".`,
-        )
-      }
-
-      // Check for duplicate local keys.
-      if (effectKeys.includes(effect.localKey)) {
-        throw MetisDatabase.generateValidationError(
-          `The effect "{ _id: ${effect._id}, name: ${effect.name} }" has a duplicate local key "${effect.localKey}".`,
-        )
-      }
-      effectKeys.push(effect.localKey)
     }
   }
 

@@ -1,0 +1,26 @@
+@use 'src/assets/styles/config.scss' as *;
+
+.Arg {
+  &:last-child {
+    padding-bottom: 31px;
+  }
+
+  &.Boolean:only-child {
+    padding-bottom: 20px;
+  }
+
+  &.Node,
+  &.Action {
+    display: grid;
+    row-gap: 1.5em;
+  }
+
+  .Detail {
+    min-width: 0.83em;
+
+    &.DetailToggle {
+      border: none;
+      padding: 11px 0;
+    }
+  }
+}

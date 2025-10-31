@@ -1,20 +1,20 @@
 import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
-import { TPage_P } from '.'
+import { useListComponent } from 'src/toolbox/hooks'
 import ClassList from '../../../../shared/toolbox/html/class-lists'
+import { ButtonText } from '../content/user-controls/buttons/ButtonText'
 import './LoadingPage.scss'
-
-export interface ILoadingPage extends TPage_P {}
 
 // This will render a loading page while the app
 // is loading.
-export default function LoadingPage(props: ILoadingPage): JSX.Element | null {
+export default function LoadingPage(): TReactElement | null {
   /* -- GLOBAL CONTEXT -- */
 
   const globalContext = useGlobalContext()
 
   const [loadingMessage] = globalContext.loadingMessage
   const [loadingProgress] = globalContext.loadingProgress
+  const [loadingButtons] = globalContext.loadingButtons
   const [backgroundLoaded] = globalContext.backgroundLoaded
 
   /* -- COMPUTED -- */
@@ -41,12 +41,19 @@ export default function LoadingPage(props: ILoadingPage): JSX.Element | null {
 
   /* -- RENDER -- */
 
+  // Create a list component to render
+  // the loading buttons.
+  const LoadingButtons = useListComponent(ButtonText, loadingButtons, 'text')
+
   return (
     <div className={rootClasses.value}>
       <div className='LoadingPageContent'>
         <div className='Message'>{loadingMessage}</div>
         <div className='LoadingProgress'>
           <div className='LoadingProgressBar' style={barStyle}></div>
+        </div>
+        <div className='LoadingButtons'>
+          <LoadingButtons />
         </div>
       </div>
     </div>

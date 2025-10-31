@@ -26,7 +26,7 @@ export const usePanelContext = () => {
  * A general container component in METIS, with the potential
  * for resizing and tabbed views.
  */
-export default function ({ children }: TPanel_P): JSX.Element | null {
+export default function ({ children }: TPanel_P): TReactElement | null {
   /* -- STATE -- */
 
   const Provider = PanelContext.Provider as React.Provider<TPanelContextData>

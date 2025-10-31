@@ -9,7 +9,7 @@ export default function Hud({
   tabs = [],
   tabIndex = 0,
   setTabIndex = () => {},
-}: THud): JSX.Element | null {
+}: THud): TReactElement | null {
   /* -- RENDER -- */
 
   // Render root element.

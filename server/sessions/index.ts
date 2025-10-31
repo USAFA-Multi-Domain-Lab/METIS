@@ -7,7 +7,11 @@ import {
 import { ServerEmittedError } from 'metis/connect/errors'
 import { TMissionJson, TMissionJsonOptions } from 'metis/missions'
 import MissionComponent from 'metis/missions/component'
-import { TEffectTrigger } from 'metis/missions/effects'
+import {
+  TEffectExecutionTriggered,
+  TEffectSessionTriggered,
+  TEffectTrigger,
+} from 'metis/missions/effects'
 import { TOutputContext } from 'metis/missions/forces/output'
 import ServerMission from 'metis/server/missions'
 import ServerMissionAction from 'metis/server/missions/actions'
@@ -24,13 +28,14 @@ import User from 'metis/users'
 import { v4 as generateHash } from 'uuid'
 import ClientConnection from '../connect/clients'
 import { TMetisServerComponents } from '../index'
-import { plcApiLogger } from '../logging'
+import { targetEnvLogger } from '../logging'
 import ServerActionExecution from '../missions/actions/executions'
 import ServerExecutionOutcome from '../missions/actions/outcomes'
 import ServerEffect from '../missions/effects'
 import ServerMissionFile from '../missions/files'
 import ServerMissionForce from '../missions/forces'
-import ServerOutput, { TServerOutputOptions } from '../missions/forces/output'
+import ServerOutput from '../missions/forces/output'
+import ServerTargetEnvironment from '../target-environments'
 import TargetEnvContext from '../target-environments/context'
 import ServerUser from '../users'
 import ServerSessionMember from './members'
@@ -126,6 +131,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       forceExposure: { expose: 'none' },
       fileExposure: { expose: 'none' },
       sessionDataExposure: { expose: 'all' },
+      rootEffectsExposure: { expose: 'none' },
     }
     let banList: string[] = []
 
@@ -137,8 +143,8 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       // Update the session-data exposure to be user
       // specific to the requester.
       missionOptions.sessionDataExposure = {
-        expose: 'user-specific',
-        userId: requester.userId,
+        expose: 'member-specific',
+        memberId: requester._id,
       }
 
       // If the requester is assigned to a force,
@@ -365,7 +371,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     let hasCompleteVisibility = role.isAuthorized('completeVisibility')
     let isAssigned = forceId !== null
 
-    // If the session is already started, ensure that
+    // If the session is already starting/started, ensure that
     // the member has visibility to at least one force.
     if (!isUnstarted && !hasCompleteVisibility && !isAssigned) {
       throw ServerEmittedError.CODE_SESSION_LATE_JOIN
@@ -435,9 +441,15 @@ export default class SessionServer extends Session<TMetisServerComponents> {
         this._members.splice(index, 1)
         // Remove session-specific listeners.
         this.removeListeners(member)
-        // If the session is for testing, then destroy
-        // the session.
-        if (this.config.accessibility === 'testing') this.destroy()
+        // If the session is for testing, then tear it
+        // down and destroy it.
+        if (this.config.accessibility === 'testing') {
+          this._state = 'ending'
+          ServerTargetEnvironment.tearDown(this).then(() => {
+            this._state = 'ended'
+            this.destroy()
+          })
+        }
         // Handle quitting the session for the member.
         member.connection.login.onMetisSessionQuit()
       }
@@ -606,7 +618,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
 
         // Filter the outputs not relevant to the member.
         forces.forEach(({ filterOutputs }) => {
-          if (filterOutputs) filterOutputs(member.userId)
+          if (filterOutputs) filterOutputs(member._id)
         })
 
         // Emit the event to the member.
@@ -621,7 +633,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       else if (hasCompleteVisibility) {
         // Filter the outputs not relevant to the member.
         completeVisibilityCache.forces.forEach(({ filterOutputs }) => {
-          if (filterOutputs) filterOutputs(member.userId)
+          if (filterOutputs) filterOutputs(member._id)
         })
 
         // Emit the event to the member.
@@ -654,48 +666,6 @@ export default class SessionServer extends Session<TMetisServerComponents> {
   }
 
   /**
-   * Processes the effects of the given action, enacting
-   * those of the given trigger.
-   * @param member The member to apply the effects to.
-   * @param action The action to process.
-   * @param trigger The trigger to look for in the effects.
-   * @param execution The action execution that is being processed.
-   */
-  private applyEffects(
-    member: ServerSessionMember,
-    action: ServerMissionAction,
-    trigger: TEffectTrigger,
-    execution: ServerActionExecution,
-  ): void {
-    // If the effects are enabled...
-    if (this.config.effectsEnabled) {
-      // Get the effects for the given trigger.
-      let effects = action.effects.filter(
-        (effect) => effect.trigger === trigger,
-      )
-      // Iterate through each effect and apply it.
-      effects.forEach(async (effect) => {
-        try {
-          await this.applyEffect(effect, member, execution)
-
-          // todo: implement feedback for modifiers
-          // participant.emit('effect-successful', {
-          //   message: 'The effect was successfully applied to its target.',
-          // })
-        } catch (error: any) {
-          // Log the error.
-          plcApiLogger.error(error)
-
-          // todo: implement feedback for modifiers
-          // participant.emitError(
-          //   new ServerEmittedError(ServerEmittedError.CODE_EFFECT_FAILED),
-          // )
-        }
-      })
-    }
-  }
-
-  /**
    * Called when a member requests to start the session.
    * @param member The member requesting to start the session.
    * @param event The event emitted by the member.
@@ -705,14 +675,20 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     event: TClientEvents['request-start-session'],
   ): void => {
     // Build request for response data.
-    let request = member.connection.buildResponseReqData(event)
+    let fulfilledRequest = member.connection.buildResponseReqData(event, {
+      fulfilled: true,
+    })
+    let unfulfilledRequest = member.connection.buildResponseReqData(event, {
+      fulfilled: false,
+    })
+
     // If the member does not have the correct permissions
     // to start the session, then emit an error.
     if (!member.isAuthorized('startEndSessions')) {
       return member.emitError(
         new ServerEmittedError(
           ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
-          { request },
+          { request: fulfilledRequest },
         ),
       )
     }
@@ -722,13 +698,10 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       return member.emitError(
         new ServerEmittedError(
           ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
-          { request },
+          { request: fulfilledRequest },
         ),
       )
     }
-
-    // Mark the session as started.
-    this._state = 'started'
 
     // Loop through all members and find any
     // that have no force availability, and
@@ -761,8 +734,18 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       },
     })
 
-    // Emit responses to all members.
-    this.emitStartResponses(event, member, 'session-started')
+    // Emit starting event. Then, once set up is complete,
+    // emit started event.
+    this._state = 'starting'
+    this.emitToAll('session-starting', {
+      data: {},
+      request: unfulfilledRequest,
+    })
+    ServerTargetEnvironment.setUp(this).then(() => {
+      this._state = 'started'
+      this.emitStartResponses(event, member, 'session-started')
+      this.applyMissionEffects('session-start')
+    })
   }
 
   /**
@@ -775,7 +758,12 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     event: TClientEvents['request-end-session'],
   ): void => {
     // Build request for response data.
-    let request = member.connection.buildResponseReqData(event)
+    let fulfilledRequest = member.connection.buildResponseReqData(event, {
+      fulfilled: true,
+    })
+    let unfulfilledRequest = member.connection.buildResponseReqData(event, {
+      fulfilled: false,
+    })
 
     // If the member does not have the correct permissions
     // to start the session, then emit an error.
@@ -783,7 +771,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       return member.emitError(
         new ServerEmittedError(
           ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
-          { request },
+          { request: fulfilledRequest },
         ),
       )
     }
@@ -793,18 +781,28 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       return member.emitError(
         new ServerEmittedError(
           ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
-          { request },
+          { request: fulfilledRequest },
         ),
       )
     }
 
-    // Mark the session as ended.
-    this._state = 'ended'
-    // Emit an event to all users that the session has ended.
-    this.emitToAll('session-ended', { data: {}, request })
+    // Emit ending event. Then, once tear down is complete,
+    // emit ended event.
+    this._state = 'ending'
+    this.emitToAll('session-ending', {
+      data: {},
+      request: unfulfilledRequest,
+    })
+    this.clearMembers()
 
-    // Perform clean up.
-    this.destroy()
+    ServerTargetEnvironment.tearDown(this).then(() => {
+      this._state = 'ended'
+      member.emit('session-ended', {
+        data: { sessionId: this._id },
+        request: fulfilledRequest,
+      })
+      this.destroy()
+    })
   }
 
   /**
@@ -817,7 +815,12 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     event: TClientEvents['request-reset-session'],
     // Build request for response data.
   ): Promise<void> => {
-    let request = member.connection.buildResponseReqData(event)
+    let fulfilledRequest = member.connection.buildResponseReqData(event, {
+      fulfilled: true,
+    })
+    let unfulfilledRequest = member.connection.buildResponseReqData(event, {
+      fulfilled: false,
+    })
 
     // If the member does not have the correct permissions
     // to start the session, then emit an error.
@@ -825,7 +828,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       return member.emitError(
         new ServerEmittedError(
           ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
-          { request },
+          { request: fulfilledRequest },
         ),
       )
     }
@@ -835,24 +838,37 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       return member.emitError(
         new ServerEmittedError(
           ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
-          { request },
+          { request: fulfilledRequest },
         ),
       )
     }
 
+    this._state = 'resetting'
+    this.emitToAll('session-resetting', {
+      data: {},
+      request: unfulfilledRequest,
+    })
+
     // Handle any action executions that are executing.
     await this.handleExecutions()
 
-    // Mark the session as unstarted.
-    this._state = 'started'
+    // Tear down the target environments.
+    await ServerTargetEnvironment.tearDown(this)
+
     // Recreate the new mission from the JSON of
     // the current mission.
     this._mission = ServerMission.fromSaveJson(this.mission.toSaveJson())
     this.initializeMission()
     this.mapActions()
 
-    // Emit responses to all members.
+    // Set up the target environments.
+    await ServerTargetEnvironment.setUp(this)
+
+    // Mark as started and emit the response to
+    // all members.
+    this._state = 'started'
     this.emitStartResponses(event, member, 'session-reset')
+    this.applyMissionEffects('session-start')
   }
 
   /**
@@ -1277,7 +1293,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     }
 
     try {
-      node.open()
+      node.openState(true)
 
       // Extract data from the node.
       const {
@@ -1291,6 +1307,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
         method: 'node-opened',
         data: {
           nodeId,
+          opened: true,
           structure: structure,
           revealedDescendants: descendants.map((n) => n.toJson()),
           revealedDescendantPrototypes: prototypes.map((p) => p.toJson()),
@@ -1455,7 +1472,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
       },
       request: {
         event: request.event,
-        requesterId: member.userId,
+        requesterId: member._id,
         fulfilled: false,
       },
     }
@@ -1499,15 +1516,14 @@ export default class SessionServer extends Session<TMetisServerComponents> {
 
     // Send the output JSON to the force.
     this.sendOutput(
-      action.forceId,
       member.outputPrefix,
       message,
-      { type: 'execution-started', sourceExecutionId: execution._id },
-      { userId: member.userId },
+      { type: 'execution-initiation', sourceExecutionId: execution._id },
+      { forceKey: action.force.localKey, memberId: member._id },
     )
     // Apply the effects for the action that are triggered
     // immediately.
-    this.applyEffects(member, action, 'immediate', execution)
+    this.applyActionEffects(member, action, 'execution-initiation', execution)
   }
 
   /**
@@ -1548,8 +1564,8 @@ export default class SessionServer extends Session<TMetisServerComponents> {
         revealedDescendants: descendants.map((n) =>
           n.toJson({
             sessionDataExposure: {
-              expose: 'user-specific',
-              userId: member.userId,
+              expose: 'member-specific',
+              memberId: member._id,
             },
           }),
         ),
@@ -1561,10 +1577,10 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     let effectTrigger: TEffectTrigger | null = null
     switch (outcome.status) {
       case 'success':
-        effectTrigger = 'success'
+        effectTrigger = 'execution-success'
         break
       case 'failure':
-        effectTrigger = 'failure'
+        effectTrigger = 'execution-failure'
         break
     }
 
@@ -1576,7 +1592,7 @@ export default class SessionServer extends Session<TMetisServerComponents> {
 
     // Apply effects, if the outcome calls for it.
     if (effectTrigger)
-      this.applyEffects(member, action, effectTrigger, outcome.execution)
+      this.applyActionEffects(member, action, effectTrigger, outcome.execution)
   }
 
   /**
@@ -1654,13 +1670,12 @@ export default class SessionServer extends Session<TMetisServerComponents> {
 
           // Send an output to the force.
           this.sendOutput(
-            node.forceId,
             member.outputPrefix,
             node.preExecutionText,
             { type: 'pre-execution', sourceNodeId: node._id },
             {
-              userId: member.userId,
-              broadcastType: 'user',
+              forceKey: node.force.localKey,
+              memberId: member._id,
             },
           )
 
@@ -1690,13 +1705,81 @@ export default class SessionServer extends Session<TMetisServerComponents> {
   }
 
   /**
-   * Applies an effect to a target environment.
+   * Applies a session-triggered effect to the session.
+   * @param effect The effect to apply.
+   */
+  private async applyMissionEffect(
+    effect: ServerEffect<'sessionTriggeredEffect'>,
+  ): Promise<void> {
+    // If the effect doesn't have a target environment,
+    // log an error.
+    if (effect.environment === null) {
+      throw new Error(
+        `"${effect.name}" doesn't have a target environment or the target environment doesn't exist.`,
+      )
+    }
+    // If the effect doesn't have a target,
+    // log an error.
+    if (effect.target === null) {
+      throw new Error(
+        `"${effect.name}" doesn't have a target or the target doesn't exist.`,
+      )
+    }
+
+    // Create and expose a new context for the target
+    // environment.
+    let context = TargetEnvContext.createSessionContext(effect, this).expose()
+
+    // Apply the effect to the target.
+    try {
+      if (!effect.defective) {
+        await effect.target.script(context)
+      }
+    } catch (error: any) {
+      // Give additional information about the error.
+      let message =
+        `Failed to apply effect - "${effect.name}" - to target - "${effect.target.name}" - found in the environment - "${effect.environment.name}".\n` +
+        `The effect - "${effect.name}" - can be found here:\n` +
+        `mission - "${this.mission.name}" - effect - "${effect.name}".\n`
+      // Log the error.
+      targetEnvLogger.error(message, error)
+    }
+  }
+
+  /**
+   * Processes the effects of the mission, enacting
+   * those of the given trigger.
+   * @param trigger The trigger to look for in the effects.
+   */
+  public async applyMissionEffects(
+    trigger: TEffectSessionTriggered,
+  ): Promise<void> {
+    // If the effects are enabled...
+    if (this.config.effectsEnabled) {
+      // Get the effects for the given trigger.
+      let effects = this.mission.effects.filter(
+        (effect) => effect.trigger === trigger,
+      )
+      // Iterate through each effect and apply it.
+      for (let effect of effects) {
+        try {
+          await this.applyMissionEffect(effect)
+        } catch (error: any) {
+          // Log the error.
+          targetEnvLogger.error(error)
+        }
+      }
+    }
+  }
+
+  /**
+   * Applies an execution-triggered effect to a target environment.
    * @param effect The effect to apply.
    * @param member The member applying the effect.
    * @param execution The action execution that triggered the effect.
    */
-  public async applyEffect(
-    effect: ServerEffect,
+  private async applyActionEffect(
+    effect: ServerEffect<'executionTriggeredEffect'>,
     member: ServerSessionMember,
     execution: ServerActionExecution,
   ): Promise<void> {
@@ -1704,32 +1787,81 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     // log an error.
     if (effect.environment === null) {
       throw new Error(
-        `The force - "${effect.force.name}" - has a node - "${effect.node.name}" - has an action - "${effect.action.name}" - with an effect - "${effect.name}" - that doesn't have a target environment or the target environment doesn't exist.`,
+        `The force - "${effect.sourceForce.name}" - has a node - "${effect.sourceNode.name}" - has an action - "${effect.sourceAction.name}" - with an effect - "${effect.name}" - that doesn't have a target environment or the target environment doesn't exist.`,
       )
     }
     // If the effect doesn't have a target,
     // log an error.
     if (effect.target === null) {
       throw new Error(
-        `The force - "${effect.force.name}" - has a node - "${effect.node.name}" - has an action - "${effect.action.name}" - with an effect - "${effect.name}" - that doesn't have a target or the target doesn't exist.`,
+        `The force - "${effect.sourceForce.name}" - has a node - "${effect.sourceNode.name}" - has an action - "${effect.sourceAction.name}" - with an effect - "${effect.name}" - that doesn't have a target or the target doesn't exist.`,
       )
     }
 
     // Create and expose a new context for the target
     // environment.
-    let context = new TargetEnvContext(effect, member, this, execution).expose()
+    let context = TargetEnvContext.createExecutionContext(
+      effect,
+      this,
+      member,
+      execution,
+    ).expose()
 
     // Apply the effect to the target.
     try {
-      if (!effect.defective) await effect.target.script(context)
+      if (!effect.defective) {
+        await effect.target.script(context)
+      }
     } catch (error: any) {
       // Give additional information about the error.
       let message =
         `Failed to apply effect - "${effect.name}" - to target - "${effect.target.name}" - found in the environment - "${effect.environment.name}".\n` +
         `The effect - "${effect.name}" - can be found here:\n` +
-        `force - "${effect.force.name}" - node - "${effect.node.name}" - action - "${effect.action.name}" - effect - "${effect.name}".\n`
+        `force - "${effect.sourceForce.name}" - node - "${effect.sourceNode.name}" - action - "${effect.sourceAction.name}" - effect - "${effect.name}".\n`
       // Log the error.
-      plcApiLogger.error(message, error)
+      targetEnvLogger.error(message, error)
+    }
+  }
+
+  /**
+   * Processes the effects of the given action, enacting
+   * those of the given trigger.
+   * @param member The member to apply the effects to.
+   * @param action The action to process.
+   * @param trigger The trigger to look for in the effects.
+   * @param execution The action execution that is being processed.
+   */
+  private async applyActionEffects(
+    member: ServerSessionMember,
+    action: ServerMissionAction,
+    trigger: TEffectExecutionTriggered,
+    execution: ServerActionExecution,
+  ): Promise<void> {
+    // If the effects are enabled...
+    if (this.config.effectsEnabled) {
+      // Get the effects for the given trigger.
+      let effects = action.effects.filter(
+        (effect) => effect.trigger === trigger,
+      )
+      // Iterate through each effect and apply it.
+      for (let effect of effects) {
+        try {
+          await this.applyActionEffect(effect, member, execution)
+
+          // todo: implement feedback for modifiers
+          // participant.emit('effect-successful', {
+          //   message: 'The effect was successfully applied to its target.',
+          // })
+        } catch (error: any) {
+          // Log the error.
+          targetEnvLogger.error(error)
+
+          // todo: implement feedback for modifiers
+          // participant.emitError(
+          //   new ServerEmittedError(ServerEmittedError.CODE_EFFECT_FAILED),
+          // )
+        }
+      }
     }
   }
 
@@ -1778,45 +1910,74 @@ export default class SessionServer extends Session<TMetisServerComponents> {
     this.confirmComponentInMission(node)
     node.blocked = blocked
     this.emitModifierEnacted(node.force, {
-      key: 'node-update-block',
+      key: 'node-update-block-status',
       nodeId: node._id,
       blocked,
     })
   }
 
   /**
-   * Handles the opening of a node during a session.
-   * @param nodeId The node to open.
+   * Updates a node's open/closed state during an active session and notifies all force members.
+   * @param node The node whose open state should be changed.
+   * @param open True to open the node (revealing descendants), false to close it (hiding descendants).
+   * @note This method is idempotent - calling it when the node is already in the desired state is a no-op.
+   * @note If the node has `revealAllNodes` enabled, open/close operations are not allowed and will be skipped.
    */
-  public openNode = (node: ServerMissionNode, userId: User['_id']) => {
-    // Confirm the node exists then open it.
+  public updateNodeOpenState = (node: ServerMissionNode, open: boolean) => {
+    // Confirm the node belongs to this session's mission.
     this.confirmComponentInMission(node)
-    node.open()
 
-    // Extract data from the node.
+    // Validate the operation is permitted (idempotent check).
+    if (open && !node.openable) {
+      targetEnvLogger.warn(
+        `Skipping open on node "${node.name}" (${node._id}): already opened or revealAllNodes enabled`,
+      )
+      return
+    } else if (!open && !node.closable) {
+      targetEnvLogger.warn(
+        `Skipping close on node "${node.name}" (${node._id}): already closed or revealAllNodes enabled`,
+      )
+      return
+    }
+
+    // Perform the open/close operation (may abort executing actions).
+    node.openState(open)
+
+    // Extract the revealed structure and descendants from the node.
+    // These properties reflect what should be visible to clients based on the new state.
     const {
       revealedStructure: structure,
       revealedDescendants: descendants,
       revealedDescendantPrototypes: prototypes,
     } = node
 
-    // Construct payload for node opened event.
+    const member = this.getMembersForForce(node.force._id)[0]
+
+    if (!member) {
+      targetEnvLogger.warn(
+        `No members found for force "${node.force.name}" (${node.force._id}) when updating open state of node "${node.name}" (${node._id})`,
+      )
+      return
+    }
+
+    // Construct the payload containing the node's new state and revealed data.
     let payload: TServerEvents['modifier-enacted']['data'] = {
-      key: 'node-open',
+      key: 'node-update-open-state',
       nodeId: node._id,
+      opened: open,
       structure: structure,
       revealedDescendants: descendants.map((n) =>
         n.toJson({
           sessionDataExposure: {
-            expose: 'user-specific',
-            userId,
+            expose: 'member-specific',
+            memberId: member._id,
           },
         }),
       ),
       revealedDescendantPrototypes: prototypes.map((p) => p.toJson()),
     }
 
-    // Emit node opened event to each member.
+    // Notify all members of this force about the node's state change.
     this.emitModifierEnacted(node.force, payload)
   }
 
@@ -1992,32 +2153,74 @@ export default class SessionServer extends Session<TMetisServerComponents> {
    * @param options Options for sending the output.
    */
   public sendOutput = (
-    forceId: string,
     prefix: string,
     message: string,
     context: TOutputContext,
-    options: TServerOutputOptions = {},
+    to?: TOutputTo,
   ) => {
     // Extract data.
     const { type } = context
+    let forceRecipients: ServerMissionForce[] = []
+    let member: ServerSessionMember | undefined = undefined
 
-    // Find the force given the ID.
-    let force = this.mission.getForceById(forceId)
-
-    // If the force is undefined, throw an error.
-    if (!force) {
-      throw new Error(
-        `Could not send output of type "${type}" to the force with ID "${forceId}" because the force was not found.`,
-      )
+    // Find the member with the member ID,
+    // if provided.
+    if (to?.memberId) {
+      member = this.getMember(to.memberId)
+      // If the member is not found, then throw an error.
+      if (!member) {
+        throw new Error(
+          `Could not send output with key "${type}" to the member with ID "${to.memberId}" because the member was not found in the session.`,
+        )
+      }
     }
 
-    // Create a new output object.
-    let output = ServerOutput.generate(force, prefix, message, context, options)
-    // Store the output in the force.
-    force.storeOutput(output)
+    // Mark all forces as recipients if
+    // no recipient is specified.
+    if (!to) {
+      forceRecipients = this.mission.forces
+    }
+    // Mark only specified force as recipient,
+    // otherwise.
+    else {
+      // Send to a specific force.
+      let force = this.mission.getForceByLocalKey(to.forceKey)
+      // If the force is undefined, throw an error.
+      if (!force) {
+        throw new Error(
+          `Could not send output of type "${type}" to the force with ID "${to.forceKey}" because the force was not found.`,
+        )
+      }
+      forceRecipients = [force]
+    }
 
-    // If the broadcast type is "force', then send the output to all members in the force.
-    if (output.broadcastType === 'force') {
+    // Loop through any forceRecipients and send the
+    // output to each.
+    for (let force of forceRecipients) {
+      // Create a new output object.
+      let output = ServerOutput.generate(
+        force,
+        prefix,
+        message,
+        context,
+        to?.memberId,
+      )
+
+      // Store the output in the force.
+      force.storeOutput(output)
+
+      // If a member is specified, only send the output to that member.
+      if (member) {
+        member.emit('send-output', {
+          data: {
+            outputData: output.toJson(),
+          },
+        })
+        continue
+      }
+
+      // Otherwise, send the output to all members
+      // of the force.
       for (let member of this.getMembersForForce(force._id)) {
         member.emit('send-output', {
           data: {
@@ -2025,32 +2228,6 @@ export default class SessionServer extends Session<TMetisServerComponents> {
           },
         })
       }
-    }
-
-    // If the broadcast type is "user", then send the output to the user.
-    if (output.broadcastType === 'user') {
-      // If the user ID is not provided, then throw an error.
-      if (!output.userId) {
-        throw new Error(
-          `Could not send output with key "${type}" to the user with ID "${output.userId}" because the user ID was not provided.`,
-        )
-      }
-
-      // Find the member with the user ID.
-      let member = this.getMemberByUserId(output.userId)
-      // If the member is not found, then throw an error.
-      if (!member) {
-        throw new Error(
-          `Could not send output with key "${type}" to the user with ID "${output.userId}" because the user was not found in the session.`,
-        )
-      }
-
-      // Send the output to the member.
-      member.emit('send-output', {
-        data: {
-          outputData: output.toJson(),
-        },
-      })
     }
   }
 
@@ -2140,4 +2317,22 @@ export type TSessionServerJsonOptions = {
    * @note If defined, then only the data accessible by the user will be included.
    */
   requester?: ServerSessionMember
+}
+
+/**
+ * Defines who will receive the output.
+ * @default {}
+ * @note To broadcast to the entire session, pass nothing.
+ * @note To broadcast to a specific force, pass `forceKey`.
+ * @note To broadcast to a specific member in the force, pass `memberId`.
+ */
+export type TOutputTo = {
+  /**
+   * The key of the force to which the output is sent.
+   */
+  forceKey: string
+  /**
+   * The session member ID of the member to whom the output is sent.
+   */
+  memberId?: string
 }

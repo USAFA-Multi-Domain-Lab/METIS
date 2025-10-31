@@ -20,7 +20,7 @@ import {
 export default function SessionList({
   sessions,
   refresh,
-}: TSessionList_P): JSX.Element | null {
+}: TSessionList_P): TReactElement | null {
   const globalContext = useGlobalContext()
   const [server] = globalContext.server
   const { login } = useRequireLogin()
@@ -304,7 +304,11 @@ export default function SessionList({
       ]}
       listButtonIcons={['key']}
       itemButtonIcons={sessionItemButtons}
-      initialSorting={{ column: 'launchedAt', method: 'descending' }}
+      initialSorting={{
+        method: 'column-based',
+        column: 'launchedAt',
+        direction: 'descending',
+      }}
       getItemButtonDisabled={(button, session) => {
         switch (button) {
           case 'remove':

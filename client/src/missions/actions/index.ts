@@ -1,11 +1,15 @@
 import { TMetisClientComponents } from 'src'
+import ClientTarget from 'src/target-environments/targets'
 import { TCreateJsonType } from '../../../../shared'
 import MissionAction, {
   TMissionActionJson,
   TMissionActionJsonDirect,
   TMissionActionJsonIndirect,
 } from '../../../../shared/missions/actions'
-import { TEffectJson } from '../../../../shared/missions/effects'
+import {
+  TEffectExecutionTriggered,
+  TEffectExecutionTriggeredJson,
+} from '../../../../shared/missions/effects'
 import { ClientEffect } from '../effects'
 import ClientMissionNode from '../nodes'
 
@@ -99,8 +103,22 @@ export default class ClientMissionAction extends MissionAction<TMetisClientCompo
   }
 
   // Implemented
-  protected parseEffects(data: TEffectJson[]): ClientEffect[] {
-    return data.map((datum: TEffectJson) => new ClientEffect(this, datum))
+  protected parseEffects(
+    data: TEffectExecutionTriggeredJson[],
+  ): ClientEffect<'executionTriggeredEffect'>[] {
+    return data.map((datum) =>
+      ClientEffect.fromExecutionTriggeredJson(datum, this),
+    )
+  }
+
+  // Implemented
+  public createEffect(
+    target: ClientTarget,
+    trigger: TEffectExecutionTriggered,
+  ): ClientEffect<'executionTriggeredEffect'> {
+    let effect = ClientEffect.createBlankExecutionEffect(target, this, trigger)
+    this.effects.push(effect)
+    return effect
   }
 
   /**
@@ -133,9 +151,27 @@ export default class ClientMissionAction extends MissionAction<TMetisClientCompo
     let duplicatedAction = new ClientMissionAction(node, data)
 
     // Duplicate the effects.
-    duplicatedAction.effects = this.effects.map((effect) =>
-      effect.duplicate({ action: duplicatedAction }),
-    )
+    duplicatedAction.effects = this.effects.map((effect) => {
+      return effect.duplicate({
+        context: {
+          type: 'executionTriggeredEffect',
+          trigger: effect.trigger,
+          sourceAction: duplicatedAction,
+          get sourceNode() {
+            return this.sourceAction.node
+          },
+          get sourceForce() {
+            return this.sourceAction.force
+          },
+          get sourceMission() {
+            return this.sourceAction.mission
+          },
+          get host() {
+            return this.sourceAction
+          },
+        },
+      })
+    })
 
     return duplicatedAction
   }
@@ -151,6 +187,22 @@ export default class ClientMissionAction extends MissionAction<TMetisClientCompo
     data: Partial<TClientMissionActionJson> = ClientMissionAction.DEFAULT_PROPERTIES,
   ): ClientMissionAction {
     return new ClientMissionAction(node, data)
+  }
+
+  /**
+   * @returns A new `ClientMissionFile` instance that
+   * represents a file that is referenced in a effect
+   * but not currently found in the mission files.
+   */
+  public static createDetached(
+    _id: string,
+    name: string,
+    node: ClientMissionNode,
+  ): ClientMissionAction {
+    return new ClientMissionAction(node, {
+      _id,
+      name,
+    })
   }
 
   /**

@@ -3,6 +3,7 @@ import Mission from 'metis/missions'
 import { TExecution } from 'metis/missions/actions/executions'
 import { TForce, TMissionForceSaveJson } from '.'
 import { MetisComponent, TMetisBaseComponents } from '../../'
+import { TEffectExecutionTriggered, TEffectSessionTriggered } from '../effects'
 
 /**
  * An output that's displayed in a force's output panel.
@@ -85,6 +86,9 @@ export default abstract class MissionOutput<
 
     switch (context.type) {
       case 'intro':
+      case 'session-setup':
+      case 'session-teardown':
+      case 'session-start':
         return null
       case 'pre-execution':
         return this.sourceNodeMemo(context.sourceNodeId)
@@ -107,6 +111,9 @@ export default abstract class MissionOutput<
 
     switch (context.type) {
       case 'intro':
+      case 'session-setup':
+      case 'session-start':
+      case 'session-teardown':
       case 'pre-execution':
         return null
       // Default is necessary here, instaed of case statements.
@@ -129,6 +136,9 @@ export default abstract class MissionOutput<
 
     switch (context.type) {
       case 'intro':
+      case 'session-setup':
+      case 'session-start':
+      case 'session-teardown':
       case 'pre-execution':
         return null
       // Default is necessary here, instaed of case statements.
@@ -163,6 +173,12 @@ export default abstract class MissionOutput<
   }
 
   /**
+   * Limits the output to be accessed by a specific member only,
+   * if defined.
+   */
+  public memberId?: string
+
+  /**
    * @param force The force where the output panel belongs.
    * @param data The output data from which to create the output.
    * @param options The options for creating the output.
@@ -195,6 +211,7 @@ export default abstract class MissionOutput<
       prefix: this.prefix,
       message: this.message,
       time: this.time,
+      memberId: this.memberId,
     }
   }
 
@@ -215,7 +232,7 @@ export default abstract class MissionOutput<
  * Output types where the output is not specific
  * to a node or execution.
  */
-export type TOutputTypeSimple = 'intro'
+export type TOutputTypeSimple = 'intro' | TEffectSessionTriggered
 
 /**
  * Output types where the output is specific to a node.
@@ -225,10 +242,7 @@ export type TOutputTypeNode = 'pre-execution'
 /**
  * Output types where the output is specific to an execution.
  */
-export type TOutputTypeExecution =
-  | 'execution-failed'
-  | 'execution-started'
-  | 'execution-succeeded'
+export type TOutputTypeExecution = TEffectExecutionTriggered
 
 /**
  * Differentiates the purpose/source of the outputs being used.
@@ -315,6 +329,11 @@ export type TOutputJson = {
    * The time the output was sent.
    */
   time: number
+  /**
+   * Limits the output to be accessed by a specific member only,
+   * if defined.
+   */
+  memberId?: string
 }
 
 /**

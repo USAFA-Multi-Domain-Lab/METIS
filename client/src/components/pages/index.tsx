@@ -40,7 +40,7 @@ export function DefaultPageLayout({
   children,
   navigation,
   includeFooter = true,
-}: TDefaultLayout_P): JSX.Element | null {
+}: TDefaultLayout_P): TReactElement | null {
   // Render.
   return (
     <>

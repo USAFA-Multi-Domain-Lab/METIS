@@ -1,9 +1,9 @@
 import { AxiosError } from 'axios'
 import React, { useContext, useRef, useState } from 'react'
-import { useBeforeunload } from 'react-beforeunload'
 import { useGlobalContext, useNavigationMiddleware } from 'src/context/global'
 import { compute } from 'src/toolbox'
 import {
+  useBeforeunload,
   useEventListener,
   useMountHandler,
   useRequireLogin,
@@ -48,7 +48,7 @@ export const useUserPageContext = () => {
 /**
  * Renders a page for managing users.
  */
-export default function (props: TUserPage_P): JSX.Element | null {
+export default function UserPage(props: TUserPage_P): TReactElement | null {
   const Provider =
     UserPageContext.Provider as React.Provider<TUserPageContextData>
 
@@ -356,7 +356,7 @@ export type TUserPageContextData = {
   /**
    * The ref for the root element of the user page.
    */
-  root: React.RefObject<HTMLDivElement>
+  root: React.RefObject<HTMLDivElement | null>
 } & Required<TUserPage_P> & {
     /**
      * The state for the user page.

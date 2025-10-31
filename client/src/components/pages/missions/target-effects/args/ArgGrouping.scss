@@ -1,0 +1,7 @@
+@use 'src/assets/styles/config.scss' as *;
+@use 'src/components/content/form/index.scss' as *;
+
+.ArgGrouping {
+  @include form-container;
+  margin: 1em 0;
+}

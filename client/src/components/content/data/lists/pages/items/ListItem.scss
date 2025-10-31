@@ -1,17 +1,24 @@
-@import 'src/assets/styles/config.scss';
-@import 'src/assets/styles/util.scss';
+@use 'src/assets/styles/config.scss' as *;
+@use 'src/assets/styles/util.scss' as *;
 
 // For more styling rules of the `ListItem` component,
 // see the `.ListItemLike` styling rules in `ListPage.scss`.
 .ListItem {
   cursor: pointer;
 
-  &:hover:not(.Selected):not(.PartiallyDisabled) {
+  &:hover:not(.Selected):not(.PartiallyDisabled):not(.Dragged) {
     @include background-mask($opacity: 0.05);
   }
 
   &.Selected {
     @include background-mask($opacity: 0.15);
+  }
+
+  &.Dragged {
+    @include background-mask($opacity: 0.25);
+
+    position: relative;
+    z-index: 1;
   }
 
   .ItemOptions {

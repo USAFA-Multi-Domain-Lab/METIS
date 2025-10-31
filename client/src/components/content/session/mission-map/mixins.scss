@@ -1,3 +1,6 @@
+@use '../../../../assets/styles/config.scss' as *;
+@forward '../../../../assets/styles/config.scss';
+
 // Makes object in the scene have a
 // origin with a centered x. This helps center
 // positioning along the x-axis

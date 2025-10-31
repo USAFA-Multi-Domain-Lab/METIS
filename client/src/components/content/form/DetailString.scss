@@ -1,4 +1,4 @@
-@import '../form/index.scss';
+@use '../form/index.scss' as *;
 
 .Detail.DetailString {
   .Field {

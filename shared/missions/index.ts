@@ -7,7 +7,11 @@ import User, { TCreatedByJson } from '../users'
 import { TAction, TMissionActionJson } from './actions'
 import { TExecution } from './actions/executions'
 import MissionComponent, { TMissionComponentDefect } from './component'
-import { TEffect } from './effects'
+import {
+  TEffectHost,
+  TEffectSessionTriggered,
+  TEffectSessionTriggeredJson,
+} from './effects'
 import { TMissionFileJson } from './files'
 import {
   MissionForce,
@@ -26,8 +30,11 @@ import MissionPrototype, {
  * This represents a mission for a student to complete.
  */
 export default abstract class Mission<
-  T extends TMetisBaseComponents = TMetisBaseComponents,
-> extends MissionComponent<T, Mission<T>> {
+    T extends TMetisBaseComponents = TMetisBaseComponents,
+  >
+  extends MissionComponent<T, Mission<T>>
+  implements TEffectHost<T, 'sessionTriggeredEffect'>
+{
   /**
    * The mission associated with the component.
    * @note This is only used to properly implement `TMissionComponent`.
@@ -47,23 +54,39 @@ export default abstract class Mission<
   /**
    * All actions that exist in the mission.
    */
-  public get actions(): Map<string, TAction<T>> {
-    let actions = new Map<string, TAction<T>>()
-
-    for (let node of this.nodes) {
-      for (let action of node.actions.values()) {
-        actions.set(action._id, action)
-      }
-    }
-
-    return actions
+  public get actions(): T['action'][] {
+    return this.nodes.flatMap((node) => Array.from(node.actions.values()))
   }
 
   /**
-   * All effects that exist in the mission.
+   * A combined list of all effects that exist
+   * in the mission, including both session-triggered
+   * and execution-triggered effects.
    */
-  public get effects(): TEffect<T>[] {
-    return Array.from(this.actions.values()).flatMap((action) => action.effects)
+  public get allEffects(): Array<
+    T['sessionTriggeredEffect'] | T['executionTriggeredEffect']
+  > {
+    return [
+      ...this.effects,
+      ...this.actions.flatMap((action) => action.effects),
+    ]
+  }
+
+  /**
+   * Target environments that are used in effects
+   * throughout the entire mission. If no effects
+   * exist in the mission that target a specific
+   * target environment, it will not be included
+   * in this list.
+   */
+  public get targetEnvironments(): Array<T['targetEnv']> {
+    let effects = this.allEffects
+    let effectsWithEnvironment = effects.filter(
+      (effect) => effect.environment !== null,
+    )
+    return Array.from(
+      new Set(effectsWithEnvironment.map((effect) => effect.environment!)),
+    )
   }
 
   // Implemented
@@ -77,6 +100,7 @@ export default abstract class Mission<
       ...this.prototypes,
       ...this.forces,
       ...this.files,
+      ...this.effects,
     )
   }
 
@@ -148,6 +172,17 @@ export default abstract class Mission<
    */
   public files: T['missionFile'][]
 
+  // Implemented
+  public effects: T['sessionTriggeredEffect'][]
+
+  // Implemented
+  public effectType: 'sessionTriggeredEffect' = 'sessionTriggeredEffect'
+
+  // Implemented
+  public get validTriggers(): TEffectSessionTriggered[] {
+    return Mission.EFFECT_TRIGGERS
+  }
+
   /**
    * The root prototype of the mission.
    */
@@ -176,6 +211,7 @@ export default abstract class Mission<
     prototypeData: TMissionPrototypeJson[],
     forceData: TMissionForceJson[],
     fileData: TMissionFileJson[],
+    effectData: TEffectSessionTriggeredJson[],
   ) {
     super(_id, name, false)
 
@@ -191,11 +227,13 @@ export default abstract class Mission<
     this.prototypes = []
     this.forces = []
     this.files = []
+    this.effects = []
     this.root = this.initializeRoot()
 
     this.importStructure(structure, prototypeData)
     this.importForces(forceData)
     this.importFiles(fileData)
+    this.importEffects(effectData)
   }
 
   /**
@@ -217,6 +255,7 @@ export default abstract class Mission<
       idExposure = true,
       forceExposure = Mission.DEFAULT_FORCE_EXPOSURE,
       fileExposure = Mission.DEFAULT_FILE_EXPOSURE,
+      rootEffectsExposure = Mission.DEFAULT_ROOT_EFFECTS_EXPOSURE,
     } = options
     let force: TForce<T> | undefined
     // Predefine limited JSON.
@@ -234,6 +273,7 @@ export default abstract class Mission<
       forces: [],
       files: [],
       prototypes: [],
+      effects: [],
     }
 
     /**
@@ -302,6 +342,15 @@ export default abstract class Mission<
       json.files = filesToAdd.map((file) => file.toJson())
     }
 
+    /**
+     * Adds root effects to the JSON.
+     */
+    const addRootEffects = () => {
+      json.effects = this.effects.map((effect) =>
+        effect.toSessionTriggeredJson(),
+      )
+    }
+
     // Add createdBy and createdByUsername to the JSON,
     // if not null.
     if (this.createdBy) json.createdBy = this.createdBy.toCreatedByJson()
@@ -339,6 +388,16 @@ export default abstract class Mission<
       case 'accessible':
         force = determineForce(fileExposure.forceId)
         addFiles(force)
+        break
+      case 'none':
+      default:
+        break
+    }
+
+    // Expose root effects in the JSON.
+    switch (rootEffectsExposure.expose) {
+      case 'all':
+        addRootEffects()
         break
       case 'none':
       default:
@@ -387,6 +446,37 @@ export default abstract class Mission<
     // Increment the new key by 1 and return it as a string.
     newKey++
     return String(newKey)
+  }
+
+  // Implemented
+  public generateEffectKey(): string {
+    // Initialize
+    let newKey: number = 0
+
+    for (let effect of this.effects) {
+      let effectKey: number = Number(effect.localKey)
+      // If the effect has a key, and it is greater than the current
+      // new key, set the new key to the effect's key.
+      if (effectKey > newKey) newKey = Math.max(newKey, effectKey)
+    }
+
+    // Increment the new key by 1 and return it as a string.
+    newKey++
+    return String(newKey)
+  }
+
+  // Implemented
+  public generateEffectOrder(trigger: TEffectSessionTriggered): number {
+    // Find the highest existing order number for the given trigger.
+    let highestOrder = 0
+    for (let effect of this.effects) {
+      if (effect.trigger === trigger) {
+        highestOrder = Math.max(highestOrder, effect.order)
+      }
+    }
+    // Return the new order number, which is the highest existing order
+    // plus one.
+    return highestOrder + 1
   }
 
   /**
@@ -474,6 +564,18 @@ export default abstract class Mission<
    * @param data The file data to parse.
    */
   protected abstract importFiles(data: TMissionFileJson[]): void
+
+  /**
+   * Imports the effect data into the mission.
+   * @param data The effect data to parse.
+   */
+  protected abstract importEffects(data: TEffectSessionTriggeredJson[]): void
+
+  // Implemented
+  public abstract createEffect(
+    target: T['target'],
+    trigger: TEffectSessionTriggered,
+  ): T['sessionTriggeredEffect']
 
   /**
    * @param prototypeId The ID of the prototype to get.
@@ -591,13 +693,6 @@ export default abstract class Mission<
   public static readonly MAX_NAME_LENGTH: number = 175
 
   /**
-   * The maximum length allowed for an alias in a file mission.
-   * todo: Add this to a MissionFile class when and if it is
-   * todo: created.
-   */
-  public static readonly MAX_FILE_ALIAS_LENGTH: number = 175
-
-  /**
    * The maximum length allowed for a mission resource
    * label.
    */
@@ -669,6 +764,14 @@ export default abstract class Mission<
   ]
 
   /**
+   * Triggers that can cause effects at a high-level in
+   * the mission.
+   */
+  public static get EFFECT_TRIGGERS(): TEffectSessionTriggered[] {
+    return ['session-setup', 'session-start', 'session-teardown']
+  }
+
+  /**
    * The default session data exposure options when
    * exporting a mission with the `toJson` method.
    */
@@ -699,6 +802,16 @@ export default abstract class Mission<
   }
 
   /**
+   * The default root exposure options when exporting
+   * a mission with the `toJson` method.
+   */
+  public static get DEFAULT_ROOT_EFFECTS_EXPOSURE(): TRootEffectsExposure {
+    return {
+      expose: 'all',
+    }
+  }
+
+  /**
    * The default properties for a Mission object.
    */
   public static get DEFAULT_PROPERTIES(): Required<TMissionDefaultJson> {
@@ -717,6 +830,7 @@ export default abstract class Mission<
       forces: [MissionForce.DEFAULT_FORCES[0]],
       prototypes: [MissionPrototype.DEFAULT_PROPERTIES],
       files: [],
+      effects: [],
     }
   }
 
@@ -942,21 +1056,6 @@ export default abstract class Mission<
 /* ------------------------------ MISSION TYPES ------------------------------ */
 
 /**
- * Type registry for base mission component classes.
- */
-export type TBaseMissionComponents = Pick<
-  TMetisBaseComponents,
-  | 'mission'
-  | 'prototype'
-  | 'missionFile'
-  | 'force'
-  | 'output'
-  | 'node'
-  | 'action'
-  | 'effect'
->
-
-/**
  * Extracts the mission type from a registry of METIS
  * components type that extends `TMetisBaseComponents`.
  * @param T The type registry.
@@ -981,6 +1080,7 @@ export type TMissionJson = TCreateJsonType<
     prototypes: TMissionPrototypeJson[]
     structure: AnyObject
     files: TMissionFileJson[]
+    effects: TEffectSessionTriggeredJson[]
   }
 >
 
@@ -1052,20 +1152,27 @@ export type TMissionJsonOptions = {
    * @default { expose: 'all' }
    */
   fileExposure?: TFileExposure
+  /**
+   * Whether or not to expose the effects that are stored
+   * at the root level of the mission, responsible for
+   * handling session-life-cycle events.
+   * @default { expose: 'all' }
+   */
+  rootEffectsExposure?: TRootEffectsExposure
 }
 
 /**
  * Options for `TMissionJsonOptions.sessionDataExposure`.
  * @option 'all'
  * All session data is exposed.
- * @option 'user-specific'
- * Only session data relevant to the user is exposed.
+ * @option 'member-specific'
+ * Only session data relevant to the member is exposed.
  * @option 'none'
  * No session data is exposed.
  */
 export type TSessionDataExposure =
   | { expose: 'all' }
-  | { expose: 'user-specific'; userId: User['_id'] }
+  | { expose: 'member-specific'; memberId: string }
   | { expose: 'none' }
 
 /**
@@ -1101,6 +1208,15 @@ export type TFileExposure =
   | { expose: 'all' }
   | { expose: 'accessible'; forceId: string }
   | { expose: 'none' }
+
+/**
+ * Options for `TMissionJsonOptions.rootEffectsExposure`.
+ * @option 'all'
+ * All root-level effects are exposed.
+ * @option 'none'
+ * No root-level effects are exposed.
+ */
+export type TRootEffectsExposure = { expose: 'all' } | { expose: 'none' }
 
 /**
  * Defines the type for the `path` property

@@ -1,14 +1,17 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["./src/global.d.ts"],
+    "types": ["vite/client"],
     "jsx": "react-jsx",
-    "baseUrl": "."
-    // "paths": {
-    //   "*": ["../node_modules/*"],
-    //   "src/*": ["*"],
-    //   "metis/*": ["../../shared/*"]
-    // }
+    "baseUrl": ".",
+    // Vite/browser ESM settings
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "paths": {
+      "src/*": ["src/*"],
+      "shared/*": ["../shared/*"],
+      "metis/*": ["../shared/*", "src/*"]
+    }
   },
-  "include": ["src", "src/setupProxy.js", "src/global.d.ts", "../shared/events"]
+  "include": ["src", "src/global.d.ts", "index.html", "../shared/events"]
 }

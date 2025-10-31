@@ -1,7 +1,7 @@
-import './PanController.scss'
 import { useState } from 'react'
-import { Vector1D, Vector2D } from '../../../../../../../shared/toolbox/space'
 import { compute } from 'src/toolbox/'
+import { Vector1D, Vector2D } from '../../../../../../../shared/toolbox/space'
+import './PanController.scss'
 
 /**
  * Controls panning of the `MissionMap` component.
@@ -10,7 +10,7 @@ export default function PanController({
   cameraPosition,
   cameraZoom,
   onPan,
-}: TPanController): JSX.Element | null {
+}: TPanController): TReactElement | null {
   /* -- state -- */
 
   const [panningIsActive, setPanningIsActive] = useState<boolean>(false)

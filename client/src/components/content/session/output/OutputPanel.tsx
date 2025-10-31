@@ -19,7 +19,7 @@ const AUTO_SCROLL_LOCK_DISTANCE = 100
 /**
  * A panel for displaying messages in the session.
  */
-export default function OutputPanel({ force }: TOutputPanel_P): JSX.Element {
+export default function OutputPanel({ force }: TOutputPanel_P): TReactElement {
   /* -- STATE -- */
 
   const [outputs, setOutputs] = useState<ClientMissionForce['outputs']>([])

@@ -1,5 +1,5 @@
-@import '../../assets/styles/config.scss';
-@import '../../assets/styles/util.scss';
+@use '../../assets/styles/config.scss' as *;
+@use '../../assets/styles/util.scss' as *;
 
 .Page {
   display: grid;

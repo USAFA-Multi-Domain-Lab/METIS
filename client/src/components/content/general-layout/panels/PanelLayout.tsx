@@ -27,7 +27,7 @@ export default function ({
   children,
   initialSizes,
   minSizes = [330, 330],
-}: TPanelLayout_P): JSX.Element | null {
+}: TPanelLayout_P): TReactElement | null {
   /* -- STATE -- */
 
   const sizingMode = useMemo<TPanelSizingMode>(() => {

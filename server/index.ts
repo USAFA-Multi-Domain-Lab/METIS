@@ -1,17 +1,21 @@
 import MongoStore from 'connect-mongo'
+import cookieParser from 'cookie-parser'
+import cors from 'cors'
+import dotenv from 'dotenv'
 import express, { Express, RequestHandler } from 'express'
 import rateLimit, { RateLimitRequestHandler } from 'express-rate-limit'
-import session, { Session, SessionData } from 'express-session'
+import session, { Session } from 'express-session'
 import fs from 'fs'
-import http, { Server as HttpServer } from 'http'
-import https from 'https'
-import { TMetisBaseComponents } from 'metis/index'
+import { TEffectType } from 'metis/missions/effects'
 import MetisDatabase from 'metis/server/database'
 import MetisRouter from 'metis/server/http/router'
-import { expressLogger, expressLoggingHandler } from 'metis/server/logging'
+import { expressLogger, initializeLoggers } from 'metis/server/logging'
 import mongoose from 'mongoose'
+import http, { Server as HttpServer } from 'node:http'
+import https from 'node:https'
 import path from 'path'
 import { sys } from 'typescript'
+import packageJson from '../package.json'
 import MetisWsServer from './connect'
 import MetisFileStore from './files'
 import ServerFileReference from './files/references'
@@ -31,11 +35,6 @@ import ServerSessionMember from './sessions/members'
 import ServerTargetEnvironment from './target-environments'
 import ServerTarget from './target-environments/targets'
 import ServerUser from './users'
-
-const dotenv = require('dotenv')
-const cookieParser = require('cookie-parser')
-const cors = require('cors')
-const packageJson = require('../package.json')
 
 /**
  * Manages an Express web server for METIS.
@@ -332,11 +331,11 @@ export default class MetisServer {
   }
 
   /**
-   * Serves the Express server.
+   * Initializes and starts web server.
    * @resolves when the server is open on the configured port.
    * @rejects if the server fails to start.
    */
-  public async serve(): Promise<void> {
+  public async start(): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
       try {
         let httpServer: HttpServer = this.httpServer
@@ -358,23 +357,43 @@ export default class MetisServer {
   }
 
   /**
+   * Stops the HTTP server
+   * @returns
+   */
+  public async close(): Promise<void> {
+    return new Promise<void>(async (resolve, reject) => {
+      try {
+        await this.database.close()
+        this.httpServer.close((err) => {
+          if (err) throw err
+          console.log('HTTP server closed successfully.')
+          resolve()
+        })
+      } catch (error) {
+        console.error('Error during server shutdown:', error)
+        reject(error)
+      }
+    })
+  }
+
+  /**
    * Initializes the server for use.
    * @returns A promise that resolves once the server is initialized and ready to be served.
    */
   private initialize(): Promise<void> {
-    return new Promise<void>(async (resolve, reject) => {
+    return new Promise<void>(async (resolve) => {
       let mongooseConnection: mongoose.Connection | null
-      let { expressApp, database, fileStore, wsServer } = this
+      let { expressApp, database, wsServer } = this
+
+      // Logger setup.
+      initializeLoggers(expressApp)
 
       // Register target environments.
-      ServerTargetEnvironment.scan()
+      await ServerTargetEnvironment.scan()
       // Validate target IDs.
       ServerTarget.validateTargetIds(
         ServerTargetEnvironment.METIS_TARGET_ENV_ID,
       )
-
-      // Logger setup.
-      expressApp.use(expressLoggingHandler)
 
       // Database setup.
       await database.connect()
@@ -406,7 +425,7 @@ export default class MetisServer {
 
       // sets up pug as the view engine
       expressApp.set('view engine', 'pug')
-      expressApp.set('views', path.join(__dirname, '/views'))
+      expressApp.set('views', path.join(MetisServer.APP_DIR, 'views'))
 
       // set the port
       expressApp.set('port', this.port)
@@ -422,13 +441,14 @@ export default class MetisServer {
       expressApp.use(this.limiter)
 
       // links the file path to css and resource files
-      expressApp.use(express.static(path.resolve(__dirname, '../client/build')))
+      // Serve built client (Vite outputs to dist)
+      expressApp.use(express.static(MetisServer.resolvePath('../client/dist')))
 
       // This will do clean up when the application
       // terminates.
       process.on('SIGINT', () => {
         // Deletes temp folder.
-        fs.rmdirSync(path.join(MetisServer.APP_DIR, 'temp'), {
+        fs.rmdirSync(MetisServer.resolvePath('temp'), {
           recursive: true,
         })
         process.exit()
@@ -498,26 +518,33 @@ export default class MetisServer {
    * The name of the METIS project.
    */
   public static readonly PROJECT_NAME: string = packageJson.name
+
   /**
    * The description of the METIS project.
    */
   public static readonly PROJECT_DESCRIPTION: string = packageJson.description
+
   /**
    * The current version of METIS.
    */
   public static readonly PROJECT_VERSION: string = packageJson.version
+
   /**
    * The current build number for the database.
    */
-  public static readonly SCHEMA_BUILD_NUMBER: number = 49
+  public static readonly SCHEMA_BUILD_NUMBER: number = 52
+
   /**
    * The root directory for the METIS server.
    */
-  public static readonly APP_DIR = path.join(__dirname)
+  public static readonly APP_DIR: string = __dirname
+
   /**
    * The path to the environment file.
    */
-  public static readonly ENVIRONMENT_FILE_PATH: string = '../environment.json'
+  public static get ENVIRONMENT_FILE_PATH(): string {
+    return MetisServer.resolvePath('../environment.json')
+  }
 
   /**
    * The name of the cookie used to store the web session ID.
@@ -525,30 +552,38 @@ export default class MetisServer {
   public static readonly WEB_SESSION_COOKIE_NAME = 'connect.sid'
 
   /**
+   * Resolves the given paths with {@link path.resolve} relative
+   * to the METIS server app directory ({@link MetisServer.APP_DIR}).
+   * @param paths The paths to resolve.
+   * @returns The resolved path.
+   */
+  public static resolvePath(...paths: string[]): string {
+    return path.resolve(MetisServer.APP_DIR, ...paths)
+  }
+
+  /**
+   * Loads environment variables from a .env file in
+   * the config directory.
+   * @param fileName The name of the .env file to load,
+   * not including the extension.
+   */
+  private static loadEnv(fileName: string): void {
+    dotenv.config({
+      path: MetisServer.resolvePath(`../config/${fileName}.env`),
+      override: true,
+    })
+  }
+
+  /**
    * Creates METIS options from the environment.
    * @returns The METIS options created from the environment.
    * @throws If environment variables are missing are invalid.
    */
   private static createOptionsFromEnvironment(): TMetisServerOptions {
-    switch (process.env.METIS_ENV_TYPE) {
-      case 'docker':
-        dotenv.config({ path: '../config/docker.defaults.env', override: true })
-        dotenv.config({ path: '../config/docker.env', override: true })
-        break
-      case 'dev':
-        dotenv.config({ path: '../config/dev.defaults.env', override: true })
-        dotenv.config({ path: '../config/dev.env', override: true })
-        break
-      case 'test':
-        dotenv.config({ path: '../config/test.defaults.env', override: true })
-        dotenv.config({ path: '../config/test.env', override: true })
-        break
-      case 'prod':
-      default:
-        dotenv.config({ path: '../config/prod.defaults.env', override: true })
-        dotenv.config({ path: '../config/prod.env', override: true })
-        break
-    }
+    let envType: string = process.env.METIS_ENV_TYPE ?? 'prod'
+
+    MetisServer.loadEnv(`${process.env.METIS_ENV_TYPE}.defaults`)
+    MetisServer.loadEnv(`${process.env.METIS_ENV_TYPE}`)
 
     const requiredKeys = [
       'PORT',
@@ -572,7 +607,7 @@ export default class MetisServer {
 
     try {
       return {
-        envType: process.env.METIS_ENV_TYPE ?? 'prod',
+        envType,
         port: parseInt(process.env.PORT!),
         mongoDB: process.env.MONGO_DB!,
         mongoHost: process.env.MONGO_HOST!,
@@ -597,14 +632,11 @@ export default class MetisServer {
 /* -- TYPES -- */
 
 declare module 'http' {
-  export interface IncomingMessage {
-    session: Session & Partial<SessionData>
-  }
-}
-
-declare module 'express-session' {
   export interface SessionData {
     userId: string
+  }
+  export interface IncomingMessage {
+    session: Session & Partial<SessionData>
   }
 }
 
@@ -613,7 +645,7 @@ declare module 'express-session' {
  * @note This is used for all server-side METIS
  * component classes.
  */
-export interface TMetisServerComponents extends TMetisBaseComponents {
+export type TMetisServerComponents = {
   session: SessionServer
   member: ServerSessionMember
   user: ServerUser
@@ -629,7 +661,8 @@ export interface TMetisServerComponents extends TMetisBaseComponents {
   action: ServerMissionAction
   execution: ServerActionExecution
   outcome: ServerExecutionOutcome
-  effect: ServerEffect
+} & {
+  [TType in TEffectType]: ServerEffect<TType>
 }
 
 /**

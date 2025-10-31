@@ -13,7 +13,7 @@ export default function ActionProperties({
   action,
   cheats,
   config,
-}: TActionProperties_P): JSX.Element | null {
+}: TActionProperties_P): TReactElement | null {
   /* -- COMPUTED -- */
 
   /**

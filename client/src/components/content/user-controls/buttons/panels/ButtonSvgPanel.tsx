@@ -1,4 +1,5 @@
 import { compute } from 'src/toolbox'
+import { removeKey } from 'src/toolbox/components'
 import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
 import './ButtonSvgPanel.scss'
 import ButtonSvg from './elements/ButtonSvg'
@@ -12,7 +13,7 @@ import { TButtonSvgPanel_P, TSvgPanelElement } from './types'
  */
 export default function ({
   engine: { panelElements, flow, labelsRevealed },
-}: TButtonSvgPanel_P): JSX.Element | null {
+}: TButtonSvgPanel_P): TReactElement | null {
   /* -- COMPUTED -- */
 
   /**
@@ -32,16 +33,18 @@ export default function ({
    * @param element The element to render.
    * @returns The rendered JSX element or null if not recognized.
    */
-  const renderElement = (element: TSvgPanelElement): JSX.Element | null => {
+  const renderElement = (element: TSvgPanelElement): TReactElement | null => {
+    let key = element.key
+
     switch (element.type) {
       case 'button':
-        return <ButtonSvg {...element} />
+        return <ButtonSvg key={key} {...removeKey(element)} />
       case 'text':
-        return <TextSvg {...element} />
+        return <TextSvg key={key} {...removeKey(element)} />
       case 'stepper':
-        return <StepperSvg {...element} />
+        return <StepperSvg key={key} {...removeKey(element)} />
       case 'divider':
-        return <DividerSvg {...element} />
+        return <DividerSvg key={key} {...removeKey(element)} />
       default:
         // If the type is not recognized, return null
         console.warn(

@@ -1,6 +1,7 @@
-@import 'src/assets/styles/config.scss';
-@import 'src/assets/styles/util.scss';
-@import '../../mixins.scss';
+@use 'sass:color';
+@use 'src/assets/styles/config.scss' as *;
+@use 'src/assets/styles/util.scss' as *;
+@use '../../mixins.scss' as *;
 
 .Scene {
   .MapNode {
@@ -150,7 +151,7 @@
       display: none;
 
       $color-1: $color-neutral-dark;
-      $color-2: lighten($color-neutral-dark, 5%);
+      $color-2: color.adjust($color-neutral-dark, $lightness: 5%);
 
       background-image: linear-gradient(
         -45deg,

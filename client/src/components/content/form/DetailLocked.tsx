@@ -17,7 +17,7 @@ export function DetailLocked({
   uniqueFieldClassName = undefined,
   errorMessage = undefined,
   tooltipDescription = '',
-}: TDetailLocked_P): JSX.Element | null {
+}: TDetailLocked_P): TReactElement | null {
   /* -- COMPUTED -- */
 
   /**

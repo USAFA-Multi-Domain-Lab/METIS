@@ -22,7 +22,7 @@ import './Navigation.scss'
 export default function Navigation({
   buttonEngine,
   logoLinksHome = true,
-}: TNavigation_P): JSX.Element | null {
+}: TNavigation_P): TReactElement | null {
   const globalContext = useGlobalContext()
   const [devOptionsActive, setDevOptionsActive] = globalContext.devOptionsActive
 

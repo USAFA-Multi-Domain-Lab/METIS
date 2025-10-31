@@ -18,7 +18,7 @@ import {
 export default function UserList({
   users,
   onSuccessfulDeletion,
-}: TUserList_P): JSX.Element | null {
+}: TUserList_P): TReactElement | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()

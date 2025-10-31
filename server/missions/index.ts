@@ -1,4 +1,10 @@
 import Mission, { TMissionSaveJson } from 'metis/missions'
+import {
+  TEffectJson,
+  TEffectSessionTriggered,
+  TEffectSessionTriggeredJson,
+  TEffectTrigger,
+} from 'metis/missions/effects'
 import { TMissionFileJson } from 'metis/missions/files'
 import { TMissionForceSaveJson } from 'metis/missions/forces'
 import {
@@ -17,7 +23,9 @@ import MetisDatabase from '../database'
 import { TMetisServerComponents } from '../index'
 import { databaseLogger } from '../logging'
 import { TTargetEnvExposedMission } from '../target-environments/context'
+import ServerTarget from '../target-environments/targets'
 import ServerUser from '../users'
+import ServerEffect from './effects'
 import ServerMissionFile from './files'
 import ServerMissionForce from './forces'
 import ServerMissionPrototype from './nodes/prototypes'
@@ -96,6 +104,24 @@ export default class ServerMission extends Mission<TMetisServerComponents> {
     this.files.push(...files)
   }
 
+  // Implemented
+  protected importEffects(data: TEffectSessionTriggeredJson[]): void {
+    let effects = data.map((datum) =>
+      ServerEffect.fromSessionTriggeredJson(datum, this),
+    )
+    this.effects.push(...effects)
+  }
+
+  // Implemented
+  public createEffect(
+    target: ServerTarget,
+    trigger: TEffectSessionTriggered,
+  ): ServerEffect<'sessionTriggeredEffect'> {
+    let effect = ServerEffect.createBlankSessionEffect(target, this, trigger)
+    this.effects.push(effect)
+    return effect
+  }
+
   /**
    * Extracts the necessary properties from the mission to be used as a reference
    * in a target environment.
@@ -146,6 +172,7 @@ export default class ServerMission extends Mission<TMetisServerComponents> {
       json.prototypes,
       json.forces,
       json.files,
+      json.effects,
     )
 
     // Return the mission.
@@ -460,6 +487,37 @@ export default class ServerMission extends Mission<TMetisServerComponents> {
   }
 
   /**
+   * Creates a validator function for effects in a mission.
+   * @param validTriggers The triggers valid for this particular
+   * validator. This is important because different places in the
+   * mission schema permit different triggers.
+   * @returns The validator function to pass to the schema.
+   */
+  public static createEffectsValidator = (validTriggers: TEffectTrigger[]) => {
+    return (effects: TEffectJson[]): void => {
+      let effectKeys: TEffectJson['localKey'][] = []
+
+      for (const effect of effects) {
+        const validTrigger = validTriggers.includes(effect.trigger)
+
+        if (!validTrigger) {
+          throw MetisDatabase.generateValidationError(
+            `The effect "{ _id: ${effect._id}, name: ${effect.name} }" has an invalid trigger "${effect.trigger}".`,
+          )
+        }
+
+        // Check for duplicate local keys.
+        if (effectKeys.includes(effect.localKey)) {
+          throw MetisDatabase.generateValidationError(
+            `The effect "{ _id: ${effect._id}, name: ${effect.name} }" has a duplicate local key "${effect.localKey}".`,
+          )
+        }
+        effectKeys.push(effect.localKey)
+      }
+    }
+  }
+
+  /**
    * Validates the mission data.
    * @param missionJson The mission data to validate.
    * @param next The callback to call with the results.
@@ -510,7 +568,14 @@ export default class ServerMission extends Mission<TMetisServerComponents> {
  */
 export type TServerMissionComponents = Pick<
   TMetisServerComponents,
-  'mission' | 'force' | 'output' | 'prototype' | 'node' | 'action' | 'effect'
+  | 'mission'
+  | 'force'
+  | 'output'
+  | 'prototype'
+  | 'node'
+  | 'action'
+  | 'sessionTriggeredEffect'
+  | 'executionTriggeredEffect'
 >
 
 /**

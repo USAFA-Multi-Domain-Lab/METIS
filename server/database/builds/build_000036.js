@@ -28,8 +28,8 @@ while (cursor_missions.hasNext()) {
         // Loop through effects.
         for (let effect of action.effects) {
           // If the effect doesn't have the `trigger` property,
-          // initialize it as "success".
-          if (!effect.trigger) effect.trigger = 'success'
+          // initialize it as "execution-success".
+          if (!effect.trigger) effect.trigger = 'execution-success'
         }
       }
     }

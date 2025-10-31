@@ -12,7 +12,7 @@ import './ListItemUpload.scss'
  */
 export default function ListItemUpload({
   upload,
-}: TListItemUpload_P): JSX.Element {
+}: TListItemUpload_P): TReactElement {
   /* -- STATE -- */
 
   const listContext = useListContext()

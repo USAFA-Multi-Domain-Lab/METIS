@@ -14,19 +14,18 @@ import './ListProcessor.scss'
  * Processes the items available in a list by applying
  * any filtering and sorting inputs made by the user.
  */
-export default function ListProcessor(): JSX.Element | null {
+export default function ListProcessor(): TReactElement | null {
   /* -- STATE -- */
 
   const listContext = useListContext()
-  const { items, elements } = listContext
-  const { getCellText } = listContext
+  const { items, columns, elements, searchBlacklist, getCellText } = listContext
   const [, setProcessedItems] = listContext.state.processedItems
   const [sorting] = listContext.state.sorting
   const [searchActive, activateSearch] = listContext.state.searchActive
+  const [itemOrderUpdateId] = listContext.state.itemOrderUpdateId
   const [searchHint, setSearchHint] = useState<string>('')
   const [hideSearchTooltip, showSearchTooltip] = useState<boolean>(false)
   const searchField = createRef<HTMLInputElement>()
-  const { column: sortingColumn, method: sortingMethod } = sorting
   const searchButtonEngine = useButtonSvgEngine({
     elements: [
       {
@@ -83,6 +82,11 @@ export default function ListProcessor(): JSX.Element | null {
     let filterTermRaw: string = ''
     let filterTerm: string = ''
     let searchHintFound = false
+    let searchableColumns: (keyof MetisComponent)[] = ['name', ...columns]
+
+    searchableColumns = searchableColumns.filter((column) => {
+      return !searchBlacklist.includes(column)
+    })
 
     // If there is a search field element, get the
     // current search term from it, otherwise default
@@ -99,58 +103,80 @@ export default function ListProcessor(): JSX.Element | null {
     // Else, filter the items based on the search term.
     else {
       result = items.filter((item) => {
-        // If it doesn't match the condition, return false.
-        if (!item.name.toLowerCase().includes(filterTerm)) return false
+        let matchFound: string | null = null
+
+        // Check each searchable column for a match,
+        // break early if found.
+        for (let i = 0; i < searchableColumns.length && !matchFound; i++) {
+          let column = searchableColumns[i]
+          let cellText =
+            column === 'name' ? item.name : getCellText(item, column)
+
+          // Normalize the cell text for comparison.
+          cellText = cellText.toLowerCase()
+
+          // Get the cell text for the column
+          // and check if it includes the filter
+          // term.
+          if (cellText.includes(filterTerm)) {
+            matchFound = cellText
+          }
+        }
 
         // Set search hint if the item name starts with
         // the search team and a hint is not already
         // found.
         if (
+          matchFound !== null &&
           !searchHintFound &&
-          item.name.toLowerCase().startsWith(filterTerm) &&
-          item.name.length > filterTerm.length
+          matchFound.startsWith(filterTerm) &&
+          matchFound.length > filterTerm.length
         ) {
           setSearchHint(
-            filterTermRaw + item.name.substring(filterTermRaw.length),
+            filterTermRaw + matchFound.substring(filterTermRaw.length),
           )
           searchHintFound = true
         }
 
-        // Return true since the condition was met.
-        return true
+        // Return whether a match was found.
+        return matchFound !== null
       })
     }
 
-    // Apply the sorting state to the result using
-    // a Schwartzian transform, starting by creating
-    // a temporary sorting array.
-    const sortingArray =
-      sortingColumn === 'name'
-        ? result.map((item) => ({
-            item,
-            sortKey: item.name,
-          }))
-        : result.map((item) => ({
-            item,
-            sortKey: getCellText(item, sortingColumn),
-          }))
+    // If there is automatic sorting enabled,
+    // apply it to the result.
+    if (sorting.method === 'column-based') {
+      // Apply the sorting state to the result using
+      // a Schwartzian transform, starting by creating
+      // a temporary sorting array.
+      const sortingArray =
+        sorting.column === 'name'
+          ? result.map((item) => ({
+              item,
+              sortKey: item.name,
+            }))
+          : result.map((item) => ({
+              item,
+              sortKey: getCellText(item, sorting.column),
+            }))
 
-    // Sort the sorting array based on the sorting
-    // method.
-    switch (sortingMethod) {
-      case 'ascending': {
-        sortingArray.sort((a, b) => a.sortKey.localeCompare(b.sortKey))
-        break
+      // Sort the sorting array based on the sorting
+      // method.
+      switch (sorting.direction) {
+        case 'ascending': {
+          sortingArray.sort((a, b) => a.sortKey.localeCompare(b.sortKey))
+          break
+        }
+        case 'descending': {
+          sortingArray.sort((a, b) => b.sortKey.localeCompare(a.sortKey))
+          break
+        }
       }
-      case 'descending': {
-        sortingArray.sort((a, b) => b.sortKey.localeCompare(a.sortKey))
-        break
-      }
+
+      // Convert the sorting array back and store it
+      // in the result.
+      result = sortingArray.map((entry) => entry.item)
     }
-
-    // Convert the sorting array back and store it
-    // in the result.
-    result = sortingArray.map((entry) => entry.item)
 
     // If no search hint was found, clear the hint.
     if (!searchHintFound) setSearchHint('')
@@ -218,7 +244,7 @@ export default function ListProcessor(): JSX.Element | null {
   // change or if the sorting state changes.
   useEffect(() => {
     process()
-  }, [items, items.length, sorting])
+  }, [items, items.length, sorting, itemOrderUpdateId])
 
   // Focus the search field when the search is
   // activated.

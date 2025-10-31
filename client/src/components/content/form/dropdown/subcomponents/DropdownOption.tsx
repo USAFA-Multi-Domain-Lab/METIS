@@ -11,7 +11,7 @@ export default function ({
   children,
   selected = false,
   onClick,
-}: TDropdownOption_P): JSX.Element {
+}: TDropdownOption_P): TReactElement {
   /**
    * The classes used for the root element
    * of the dropdown option.

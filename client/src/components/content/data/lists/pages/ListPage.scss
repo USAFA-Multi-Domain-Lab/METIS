@@ -1,4 +1,4 @@
-@import 'src/assets/styles/config.scss';
+@use 'src/assets/styles/config.scss' as *;
 
 .ListPage {
   $item-non-padded-height: 1.4em;
@@ -35,6 +35,12 @@
     height: $item-non-padded-height + $item-cell-padding-vertical * 2;
     padding: 0 1em 0 0;
 
+    // Set the width for any reorder handle
+    // to the left padding of the item cells.
+    .ReorderHandle {
+      width: $item-cell-padding-left;
+    }
+
     // Styles all list item cells, as well as anything that
     // could be added as a substitute for a list item cell,
     // such as a column label.
@@ -54,6 +60,43 @@
         display: flex;
         flex-direction: row;
         align-items: center;
+      }
+
+      &.ColumnLabelDragHandle {
+        .DragHandleLabelIcon {
+          opacity: 0.5;
+          height: 100%;
+          background-image: url('../../../../../assets/images/icons/reorder.svg');
+          background-size: 1.15em 1.15em;
+          background-repeat: no-repeat;
+          background-position: top center;
+        }
+      }
+
+      &.ItemCellDragHandle {
+        cursor: grab;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 175ms;
+
+        .DragIcon {
+          width: 1em;
+          height: 1em;
+
+          background: radial-gradient(
+            circle,
+            $color-primary-light 15%,
+            transparent calc(15% + 1px)
+          );
+          background-size: 50% 50%;
+        }
+
+        &:hover {
+          .DragIcon {
+            transform: scale(1.35);
+          }
+        }
       }
 
       &.ItemOptions {

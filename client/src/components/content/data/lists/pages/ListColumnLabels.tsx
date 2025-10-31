@@ -14,12 +14,13 @@ import './ListColumnLabels.scss'
  */
 export default function ListColumnLabels<
   TItem extends MetisComponent,
->(): JSX.Element | null {
+>(): TReactElement | null {
   /* -- STATE -- */
 
   const listContext = useListContext<TItem>()
   const {
     columns,
+    ordering,
     itemButtonIcons,
     minNameColumnWidth,
     showingDeletedItems,
@@ -44,6 +45,12 @@ export default function ListColumnLabels<
   const rootStyle = compute<React.CSSProperties>(() => {
     // Initialize the column widths.
     let columnWidths: string[] = []
+
+    // If the list order is maleable, add the drag
+    // handle column width.
+    if (ordering.mode === 'maleable') {
+      columnWidths.push('2em')
+    }
 
     // Add the name column width.
     columnWidths.push(`minmax(${minNameColumnWidth}, 1fr)`)
@@ -79,6 +86,19 @@ export default function ListColumnLabels<
   const cellsJsx = compute<ReactNode>(() => {
     // Initialize the result.
     let result: ReactNode[] = []
+
+    // If the list order is maleable, add the drag
+    // handle label.
+    if (ordering.mode === 'maleable') {
+      result.push(
+        <div
+          key={'ItemDragHandleLabel'}
+          className='ItemCellLike ColumnLabelDragHandle'
+        >
+          <div className='DragHandleLabelIcon'></div>
+        </div>,
+      )
+    }
 
     // Add the name cell.
     result.push(<ListColumnLabel key={'name'} column={'name'} text={'Name'} />)

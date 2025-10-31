@@ -1,4 +1,4 @@
-@import '../../../../../assets/styles/config.scss';
+@use '../../../../../assets/styles/config.scss' as *;
 
 .Grid {
   $grid-color: rgba($color-primary-light, 0.16);

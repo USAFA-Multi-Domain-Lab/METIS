@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { useGlobalContext, useNavigationMiddleware } from 'src/context/global'
 import SessionClient from 'src/sessions'
 import { compute } from 'src/toolbox'
-import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
+import { useMountHandler } from 'src/toolbox/hooks'
+import { useSessionRedirects } from 'src/toolbox/hooks/sessions'
 import { DefaultPageLayout } from '.'
 import Prompt from '../content/communication/Prompt'
 import { TNavigation_P } from '../content/general-layout/Navigation'
@@ -13,19 +14,12 @@ import './SessionConfigPage.scss'
 export default function SessionConfigPage({
   session,
   session: { mission },
-}: TSessionConfigPage_P): JSX.Element | null {
+}: TSessionConfigPage_P): TReactElement | null {
   /* -- state -- */
 
   const globalContext = useGlobalContext()
-  const [server] = globalContext.server
-  const {
-    navigateTo,
-    beginLoading,
-    finishLoading,
-    prompt,
-    handleError,
-    notify,
-  } = globalContext.actions
+  const { navigateTo, beginLoading, finishLoading, prompt, handleError } =
+    globalContext.actions
   const [config] = useState(session.config)
   const navButtonEngine = useButtonSvgEngine({
     elements: [
@@ -38,29 +32,9 @@ export default function SessionConfigPage({
       },
     ],
   })
+  const { verifyNavigation } = useSessionRedirects(session)
 
-  /* -- functions -- */
-
-  /**
-   * Redirects to the correct page based on
-   * the session state. Stays on the same page
-   * if the session has not yet started.
-   */
-  const verifyNavigation = useRef(() => {
-    // If the session is started, navigate to the session page.
-    if (session.state === 'started') {
-      navigateTo(
-        'SessionPage',
-        { session, returnPage: 'HomePage' },
-        { bypassMiddleware: true },
-      )
-    }
-    // If the session is ended, navigate to the home page.
-    if (session.state === 'ended') {
-      notify('Session has ended.')
-      navigateTo('HomePage', {}, { bypassMiddleware: true })
-    }
-  })
+  /* -- FUNCTIONS -- */
 
   /**
    * Saves the session configuration.
@@ -89,20 +63,12 @@ export default function SessionConfigPage({
     navigateTo('LobbyPage', { session })
   }
 
-  /* -- effects -- */
+  /* -- EFFECTS -- */
 
-  // Verify navigation on mount.
   useMountHandler((done) => {
     finishLoading()
-    verifyNavigation.current()
     done()
   })
-  // Verify navigation if the session is ended or destroyed.
-  useEventListener(
-    server,
-    ['session-started', 'session-ended', 'session-destroyed'],
-    () => verifyNavigation.current(),
-  )
 
   // Add navigation middleware to properly
   // quit the session before the user navigates

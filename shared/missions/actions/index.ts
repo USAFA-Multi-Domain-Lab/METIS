@@ -2,7 +2,11 @@ import Mission, { TMission } from '..'
 import { TCreateJsonType, TMetisBaseComponents } from '../../'
 import StringToolbox from '../../toolbox/strings'
 import MissionComponent, { TMissionComponentDefect } from '../component'
-import { TEffect, TEffectJson } from '../effects'
+import {
+  TEffectExecutionTriggered,
+  TEffectExecutionTriggeredJson,
+  TEffectHost,
+} from '../effects'
 import { TForce } from '../forces'
 import { TNode, TNodeJsonOptions } from '../nodes'
 
@@ -10,8 +14,11 @@ import { TNode, TNodeJsonOptions } from '../nodes'
  * An action that can be executed on a mission node, causing a certain effect.
  */
 export default abstract class MissionAction<
-  T extends TMetisBaseComponents = TMetisBaseComponents,
-> extends MissionComponent<T, MissionAction<T>> {
+    T extends TMetisBaseComponents = TMetisBaseComponents,
+  >
+  extends MissionComponent<T, MissionAction<T>>
+  implements TEffectHost<T, 'executionTriggeredEffect'>
+{
   // Implemented
   public get mission(): TMission<T> {
     return this.node.mission
@@ -47,10 +54,16 @@ export default abstract class MissionAction<
    */
   public localKey: string
 
-  /**
-   * The effects that can be applied to the targets.
-   */
-  public effects: TEffect<T>[]
+  // Implemented
+  public effectType: 'executionTriggeredEffect' = 'executionTriggeredEffect'
+
+  // Implemented
+  public effects: T['executionTriggeredEffect'][]
+
+  // Implemented
+  public get validTriggers(): TEffectExecutionTriggered[] {
+    return MissionAction.EFFECT_TRIGGERS
+  }
 
   /**
    * The amount of time it takes to execute the action.
@@ -309,7 +322,15 @@ export default abstract class MissionAction<
    * @param options The options for parsing the effect data.
    * @returns An array of Effect Objects.
    */
-  protected abstract parseEffects(data: TEffectJson[]): TEffect<T>[]
+  protected abstract parseEffects(
+    data: TEffectExecutionTriggeredJson[],
+  ): T['executionTriggeredEffect'][]
+
+  // Implemented
+  public abstract createEffect(
+    target: T['target'],
+    trigger: TEffectExecutionTriggered,
+  ): T['executionTriggeredEffect']
 
   /**
    * Converts the action to JSON.
@@ -334,12 +355,12 @@ export default abstract class MissionAction<
       opensNode: this.opensNode,
       opensNodeHidden: this.opensNodeHidden,
       localKey: this.localKey,
-      effects: this.effects.map((effect) => effect.toJson()),
+      effects: this.effects.map((effect) => effect.toExecutionTriggeredJson()),
     }
 
     switch (sessionDataExposure.expose) {
       case 'all':
-      case 'user-specific':
+      case 'member-specific':
         // Obfuscate any hidden properties within the exported JSON,
         // preventing the students from seeing them.
         if (json.processTimeHidden) json.processTime = -1
@@ -384,10 +405,7 @@ export default abstract class MissionAction<
     this._resourceCostOperand = resourceCostOperand
   }
 
-  /**
-   * Generates a new key for an effect.
-   * @returns The new key for an effect.
-   */
+  // Implemented
   public generateEffectKey(): string {
     // Initialize
     let newKey: number = 0
@@ -402,6 +420,20 @@ export default abstract class MissionAction<
     // Increment the new key by 1 and return it as a string.
     newKey++
     return String(newKey)
+  }
+
+  // Implemented
+  public generateEffectOrder(trigger: TEffectExecutionTriggered): number {
+    // Find the highest existing order number for the given trigger.
+    let highestOrder = 0
+    for (let effect of this.effects) {
+      if (effect.trigger === trigger) {
+        highestOrder = Math.max(highestOrder, effect.order)
+      }
+    }
+    // Return the new order number, which is the highest existing order
+    // plus one.
+    return highestOrder + 1
   }
 
   /**
@@ -483,6 +515,14 @@ export default abstract class MissionAction<
    * The maximum length allowed for an action's name.
    */
   public static readonly MAX_NAME_LENGTH: number = 175
+
+  /**
+   * Triggers that can cause effects during the action-execution
+   * lifecycle.
+   */
+  public static get EFFECT_TRIGGERS(): TEffectExecutionTriggered[] {
+    return ['execution-initiation', 'execution-success', 'execution-failure']
+  }
 
   /**
    * Default properties set when creating a new MissionAction object.
@@ -577,7 +617,7 @@ const JSON_PROPERTIES_RAW = {
       /**
        * The effects that can be applied to the targets.
        */
-      effects: [] as TEffectJson[],
+      effects: [] as TEffectExecutionTriggeredJson[],
     },
   ],
 } as const

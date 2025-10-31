@@ -7,7 +7,7 @@ import './SessionMembersPanel.scss'
  */
 export default function SessionMembersPanel({
   session,
-}: TSessionMembersPanel_P): JSX.Element | null {
+}: TSessionMembersPanel_P): TReactElement | null {
   /* -- RENDER -- */
 
   return (

@@ -1,25 +1,27 @@
+@use 'sass:color';
+
 /* -- COLORS -- */
 
 $color-primary: #0c1928;
-$color-primary-dark: darken($color-primary, 4%);
-$color-primary-light: lighten($color-primary, 80%);
+$color-primary-dark: color.adjust($color-primary, $lightness: -4%);
+$color-primary-light: color.adjust($color-primary, $lightness: 80%);
 
 $color-secondary: #1b2937;
-$color-secondary-light: lighten($color-secondary, 40%);
+$color-secondary-light: color.adjust($color-secondary, $lightness: 40%);
 
 $color-accent: #3bfce8;
-$color-accent-light: lighten($color-accent, 30%);
-$color-accent-dark: darken($color-accent, 54.5%);
+$color-accent-light: color.adjust($color-accent, $lightness: 30%);
+$color-accent-dark: color.adjust($color-accent, $lightness: -54.5%);
 
 $color-success: #65eb59;
-$color-success-dark: darken($color-success, 53%);
+$color-success-dark: color.adjust($color-success, $lightness: -53%);
 
 $color-failure: #ff4359;
-$color-failure-light: lighten($color-failure, 18%);
-$color-failure-dark: darken($color-failure, 49%);
+$color-failure-light: color.adjust($color-failure, $lightness: 18%);
+$color-failure-dark: color.adjust($color-failure, $lightness: -49%);
 
 $color-neutral: #ecff43;
-$color-neutral-dark: darken($color-neutral, 47%);
+$color-neutral-dark: color.adjust($color-neutral, $lightness: -47%);
 
 $color-faded: rgba($color-primary-light, 0.5);
 
@@ -37,6 +39,7 @@ $z-map-hud: 4;
 $z-map-pan-ctrl-active: 5;
 $z-map-overlay: 6;
 
+$z-index-pending-modal: 45;
 $z-index-navigation: 50;
 $z-index-file-drop-box: 60;
 $z-index-connection-status: 65;

@@ -7,7 +7,7 @@ import './ListNav.scss'
 import ListOverflow from './ListOverflow'
 import ListProcessor from './ListProcessor'
 
-export default function ListNav(): JSX.Element | null {
+export default function ListNav(): TReactElement | null {
   /* -- STATE -- */
 
   const listContext = useListContext()

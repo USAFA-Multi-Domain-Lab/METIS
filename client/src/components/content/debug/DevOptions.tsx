@@ -1,7 +1,7 @@
 import { useGlobalContext } from 'src/context/global'
 import './DevOptions.scss'
 
-export function DevOptions(): JSX.Element | null {
+export function DevOptions(): TReactElement | null {
   const globalContext = useGlobalContext()
   const [devOptionsActive, setDevOptionsActive] = globalContext.devOptionsActive
 

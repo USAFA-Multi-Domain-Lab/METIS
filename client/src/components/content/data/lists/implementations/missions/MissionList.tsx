@@ -12,7 +12,9 @@ import { useMissionItemButtonCallbacks } from './item-buttons'
  * A component for displaying a list of missions.
  * @note Uses the `List` component.
  */
-export default function MissionList(props: TMissionList_P): JSX.Element | null {
+export default function MissionList(
+  props: TMissionList_P,
+): TReactElement | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
@@ -58,7 +60,11 @@ export default function MissionList(props: TMissionList_P): JSX.Element | null {
 
       return results
     }),
-    initialSorting: { column: 'updatedAt', method: 'descending' },
+    initialSorting: {
+      method: 'column-based',
+      column: 'updatedAt',
+      direction: 'descending',
+    },
     getColumnLabel: (column: keyof ClientMission): string => {
       switch (column) {
         case 'createdAt':

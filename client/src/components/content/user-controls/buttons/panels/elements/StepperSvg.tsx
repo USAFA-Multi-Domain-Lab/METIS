@@ -18,7 +18,7 @@ export default function ({
   hidden,
   maximum,
   value,
-}: TStepperSvg_PK): JSX.Element | null {
+}: TStepperSvg_PK): TReactElement | null {
   /* -- STATE -- */
 
   const [currentValue, setCurrentValue] = value

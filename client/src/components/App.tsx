@@ -6,6 +6,7 @@ import MetisInfo from 'src/info'
 import SessionClient from 'src/sessions'
 import { ClientTargetEnvironment } from 'src/target-environments'
 import { compute } from 'src/toolbox'
+import { removeKey } from 'src/toolbox/components'
 import { LoginRequiredError, useEventListener } from 'src/toolbox/hooks'
 import ClientUser from 'src/users'
 import { TLogin } from '../../../shared/logins'
@@ -31,7 +32,7 @@ import ReactErrorBoundary from './ReactErrorBoundary'
 /**
  * Component of all components, renders all of METIS.
  */
-export default function (props: {}): JSX.Element | null {
+export default function (props: {}): TReactElement | null {
   /* -- REFS -- */
   const app = useRef<HTMLDivElement>(null)
 
@@ -161,7 +162,7 @@ export default function (props: {}): JSX.Element | null {
       try {
         // Display default loading message to
         // the user.
-        beginLoading()
+        beginLoading('Initializing application...')
 
         // Preload the large background image.
         // A smaller version is used initially
@@ -220,11 +221,14 @@ export default function (props: {}): JSX.Element | null {
             // Navigate based on the session state.
             switch (session.state) {
               case 'unstarted':
+              case 'starting':
                 navigateTo('LobbyPage', { session })
                 break
               case 'started':
+              case 'resetting':
                 navigateTo('SessionPage', { session, returnPage: 'HomePage' })
                 break
+              case 'ending':
               case 'ended':
                 navigateTo('HomePage', {})
                 break
@@ -311,7 +315,7 @@ export default function (props: {}): JSX.Element | null {
     // Render nothing, if there is no button menu.
     if (!buttonMenu) return null
 
-    return <ButtonMenu {...buttonMenu} />
+    return <ButtonMenu key={buttonMenu.key} {...removeKey(buttonMenu)} />
   })
 
   // Render METIS.

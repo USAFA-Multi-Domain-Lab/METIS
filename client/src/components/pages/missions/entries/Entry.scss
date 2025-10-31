@@ -1,0 +1,61 @@
+@use 'src/components/content/form/index.scss' as *;
+
+.Entry {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+
+  .EntryTop {
+    padding: 1.5em;
+  }
+
+  .ScrollBox {
+    overflow-y: auto;
+    padding: 0 1.5em 1.5em;
+
+    .EntryContent {
+      @include form-container();
+      height: max-content;
+      padding-bottom: 3.5em;
+
+      .ButtonContainer {
+        display: flex;
+        justify-content: flex-end;
+        flex-flow: row wrap;
+        min-width: 225px;
+        margin: 0 0;
+
+        .ButtonText {
+          margin: 1.25em 0 0;
+        }
+      }
+
+      .ButtonText {
+        font-size: 0.78em;
+      }
+    }
+  }
+
+  .List {
+    $border: 0.2em solid $color-secondary !important;
+
+    height: max-content;
+    border-top: $border;
+    border-bottom: $border;
+    border-radius: unset;
+
+    .ListItems .ListItem {
+      border-top: unset;
+    }
+  }
+
+  .EntryBottom {
+    border-top: 2px solid $color-secondary;
+    padding: 0.25em;
+    display: flex;
+    justify-content: end;
+    flex-flow: row wrap;
+  }
+}

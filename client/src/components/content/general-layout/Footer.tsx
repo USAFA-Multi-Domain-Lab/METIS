@@ -12,7 +12,7 @@ import './Footer.scss'
 /**
  * A basic footer display on pages.
  */
-export default function Footer({}: TFooter): JSX.Element | null {
+export default function Footer({}: TFooter): TReactElement | null {
   // Gather details.
   const globalContext = useGlobalContext()
   const { navigateTo } = globalContext.actions

@@ -1,5 +1,5 @@
-@import '../../assets/styles/config.scss';
-@import 'src/assets/styles/util.scss';
+@use '../../assets/styles/config.scss' as *;
+@use 'src/assets/styles/util.scss' as *;
 
 .Page.LobbyPage {
   .Content {
@@ -22,6 +22,16 @@
     .Section {
       margin: 0 0 1.75em;
 
+      &.StatusSection {
+        .StartStatus {
+          font-size: 0.85rem;
+          font-style: italic;
+          color: $color-accent-light;
+
+          @include pulse;
+        }
+      }
+
       &.MembersSection {
         max-width: calc(100vw - 2 * #{$content-padding});
         overflow: auto;
@@ -42,7 +52,6 @@
     .Title,
     .Section {
       width: 100%;
-      // max-width: 25rem;
     }
 
     .StaticDetail {

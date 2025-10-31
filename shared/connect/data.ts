@@ -122,8 +122,8 @@ export type TServerEvent = TServerEvents[TServerMethod]
 
 /**
  * Used to identify the data structure.
- * @option `"node-update-block":` The data needed to block or unblock a node.
- * @option `"node-open":` The data needed to open a node and reveal its descendants.
+ * @option `"node-update-block-status":` The data needed to block or unblock a node.
+ * @option `"node-update-open-state":` The data needed to open or close a node determining if its descendants are revealed.
  * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
  * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
  * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
@@ -131,8 +131,8 @@ export type TServerEvent = TServerEvents[TServerMethod]
  * @option `"file-update-access":` The data needed to modify the access of a file for a force.
  */
 type TModifierDataKey =
-  | 'node-update-block'
-  | 'node-open'
+  | 'node-update-block-status'
+  | 'node-update-open-state'
   | 'node-action-success-chance'
   | 'node-action-process-time'
   | 'node-action-resource-cost'
@@ -147,7 +147,7 @@ type TModifierData = [
     /**
      * @see {@link TModifierDataKey}
      */
-    key: 'node-update-block'
+    key: 'node-update-block-status'
     /**
      * The ID of the node to modify.
      */
@@ -161,8 +161,8 @@ type TModifierData = [
     /**
      * @see {@link TModifierDataKey}
      */
-    key: 'node-open'
-  } & TOpenNodeData,
+    key: 'node-update-open-state'
+  } & TNodeOpenStateData,
   {
     /**
      * @see {@link TModifierDataKey}
@@ -313,13 +313,17 @@ type TOutputData = [
 export type TOutputDatum = TOutputData[number]
 
 /**
- * The data needed to open a node and reveal its descendants.
+ * The data needed to open or close a node, determining if its descendants are revealed.
  */
-export type TOpenNodeData = {
+export type TNodeOpenStateData = {
   /**
    * The ID of the node to modify.
    */
   nodeId: string
+  /**
+   * Whether the node is open or closed.
+   */
+  opened: boolean
   /**
    * The structure of the nodes that were revealed as a result of opening the node.
    */
@@ -458,6 +462,14 @@ export type TGenericServerEvents = {
  */
 export type TResponseEvents = {
   /**
+   * Occurs when the session is starting (transitionary state).
+   */
+  'session-starting': TResponseEvent<
+    'session-starting',
+    {},
+    TClientEvents['request-start-session']
+  >
+  /**
    * Occurs when the session starts while the client is joined.
    */
   'session-started': TResponseEvent<
@@ -483,12 +495,28 @@ export type TResponseEvents = {
     TClientEvents['request-start-session']
   >
   /**
+   * Occurs when the session is ending (transitionary state).
+   */
+  'session-ending': TResponseEvent<
+    'session-ending',
+    {},
+    TClientEvents['request-end-session']
+  >
+  /**
    * Occurs when the session ends while the client is joined.
    */
   'session-ended': TResponseEvent<
     'session-ended',
     {},
     TClientEvents['request-end-session']
+  >
+  /**
+   * Occurs when the session is resetting (transitionary state).
+   */
+  'session-resetting': TResponseEvent<
+    'session-resetting',
+    {},
+    TClientEvents['request-reset-session']
   >
   /**
    * Occurs when the session has been reset.
@@ -610,7 +638,7 @@ export type TResponseEvents = {
    */
   'node-opened': TResponseEvent<
     'node-opened',
-    TOpenNodeData,
+    TNodeOpenStateData,
     TClientEvents['request-open-node']
   >
   /**
@@ -641,7 +669,7 @@ export type TResponseEvents = {
        * The outcome of the action being executed.
        */
       outcome: TExecutionOutcomeJson
-    } & Partial<TOpenNodeData>,
+    } & Partial<TNodeOpenStateData>,
     TClientEvents['request-execute-action']
   >
   /**

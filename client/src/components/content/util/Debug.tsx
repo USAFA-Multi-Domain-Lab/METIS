@@ -5,7 +5,7 @@ import If from './If'
  * Only renders the provided children if the client
  * is set to debug mode.
  */
-export default function ({ children }: TDevOnly_P): JSX.Element | null {
+export default function ({ children }: TDevOnly_P): TReactElement | null {
   const globalContext = useGlobalContext()
   const [debugMode] = globalContext.debugMode
   return <If condition={debugMode}>{children}</If>

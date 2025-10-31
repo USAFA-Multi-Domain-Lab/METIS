@@ -21,7 +21,7 @@ import './LaunchPage.scss'
 export default function LaunchPage({
   missionId,
   returnPage,
-}: TLaunchPage_P): JSX.Element | null {
+}: TLaunchPage_P): TReactElement | null {
   /* -- GLOBAL CONTEXT -- */
 
   const globalContext = useGlobalContext()

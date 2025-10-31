@@ -25,7 +25,7 @@ export function DetailColorSelector({
   uniqueFieldClassName = '',
   disabled = false,
   tooltipDescription = '',
-}: TDetailColorSelector_P): JSX.Element {
+}: TDetailColorSelector_P): TReactElement {
   /* -- STATE -- */
   const [expanded, setExpanded] = useState<boolean>(isExpanded)
 

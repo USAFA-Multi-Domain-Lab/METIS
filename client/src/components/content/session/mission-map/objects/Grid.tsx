@@ -1,6 +1,6 @@
-import './Grid.scss'
 import ClientMissionNode from 'src/missions/nodes'
 import { compute } from 'src/toolbox'
+import './Grid.scss'
 
 /**
  * A mission map scene object that displays a grid outlining the
@@ -9,7 +9,7 @@ import { compute } from 'src/toolbox'
 export default function Grid({
   type,
   enabled = true,
-}: TGrid): JSX.Element | null {
+}: TGrid): TReactElement | null {
   /* -- computed -- */
 
   /**

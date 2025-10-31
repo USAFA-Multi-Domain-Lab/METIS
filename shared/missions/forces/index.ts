@@ -3,7 +3,6 @@ import { TMetisBaseComponents } from '../../'
 import { AnyObject } from '../..//toolbox/objects'
 import context from '../../context'
 import StringToolbox from '../../toolbox/strings'
-import User from '../../users'
 import MissionComponent, { TMissionComponentDefect } from '../component'
 import { TMissionNodeJson, TNode } from '../nodes'
 import { TPrototype } from '../nodes/prototypes'
@@ -175,8 +174,8 @@ export abstract class MissionForce<
       revealAllNodes: this.revealAllNodes,
       localKey: this.localKey,
       nodes: this.exportNodes(options),
-      filterOutputs: (userId) => {
-        json.outputs = this.filterOutputs(userId).map((output) =>
+      filterOutputs: (memberId) => {
+        json.outputs = this.filterOutputs(memberId).map((output) =>
           output.toJson(),
         )
       },
@@ -191,10 +190,11 @@ export abstract class MissionForce<
 
     /**
      * Adds the outputs to the JSON.
+     * @param memberId The ID of the member for which to filter the outputs.
      */
-    const addOutputs = (userId?: User['_id']) => {
-      if (userId) {
-        json.outputs = this.filterOutputs(userId).map((output) =>
+    const addOutputs = (memberId?: string) => {
+      if (memberId) {
+        json.outputs = this.filterOutputs(memberId).map((output) =>
           output.toJson(),
         )
       } else {
@@ -209,9 +209,9 @@ export abstract class MissionForce<
         addResourcesRemaining()
         addOutputs()
         break
-      case 'user-specific':
+      case 'member-specific':
         addResourcesRemaining()
-        addOutputs(sessionDataExposure.userId)
+        addOutputs(sessionDataExposure.memberId)
         break
       case 'none':
         break
@@ -279,11 +279,11 @@ export abstract class MissionForce<
   protected abstract createNode(data: Partial<TMissionNodeJson>): TNode<T>
 
   /**
-   * Filter the outputs based on the conditions of the output and the current user.
-   * @param userId The ID of the user for which to filter the outputs.
+   * Filter the outputs based on the conditions of the output and the current member.
+   * @param memberId The ID of the member for which to filter the outputs.
    * @returns The filtered outputs.
    */
-  public abstract filterOutputs(userId?: User['_id']): TOutput<T>[]
+  public abstract filterOutputs(memberId?: string): TOutput<T>[]
 
   /**
    * Stores an output in the force which is then displayed
@@ -358,7 +358,7 @@ export abstract class MissionForce<
       let currentOutput = this._outputs[mid]
 
       // Compare the time of the current output to the new output.
-      if (currentOutput.time < newOutput.time) {
+      if (currentOutput.time <= newOutput.time) {
         // If the time of the current output is less than the new output,
         // set the low bound to the middle index plus one.
         low = mid + 1
@@ -529,10 +529,10 @@ export interface TMissionForceSessionJson {
   outputs: TOutputJson[]
   /**
    * Updates the outputs in the JSON, only including
-   * the outputs that are relevant to the given user.
-   * @param userId The ID of the user for which to filter the outputs.
+   * the outputs that are relevant to the given member.
+   * @param memberId The ID of the member for which to filter the outputs.
    */
-  filterOutputs: (userId?: User['_id']) => void
+  filterOutputs: (memberId?: string) => void
 }
 
 /**

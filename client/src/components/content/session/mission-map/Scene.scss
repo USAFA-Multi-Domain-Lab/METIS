@@ -1,5 +1,5 @@
-@import '../../../../assets/styles/config.scss';
-@import './mixins.scss';
+@use '../../../../assets/styles/config.scss' as *;
+@use './mixins.scss' as *;
 
 .Scene {
   // Disable pointer events for root element

@@ -21,7 +21,7 @@ export function DetailToggle({
   uniqueFieldClassName = undefined,
   errorMessage = undefined,
   disabled = false,
-}: TDetailToggle_P): JSX.Element | null {
+}: TDetailToggle_P): TReactElement | null {
   /* -- COMPUTED -- */
   /**
    * The class name for the detail.
