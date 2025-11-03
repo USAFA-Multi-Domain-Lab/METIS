@@ -5,8 +5,8 @@
   "private": true,
   "main": "server/start.ts",
   "scripts": {
-    "start": "METIS_ENV_TYPE=prod tsx --tsconfig server/tsconfig.json server/start.ts",
-    "dev": "METIS_ENV_TYPE=dev tsx watch --tsconfig server/tsconfig.json server/start.ts",
+    "start": "cross-env METIS_ENV_TYPE=prod tsx --tsconfig server/tsconfig.json server/start.ts",
+    "dev": "cross-env METIS_ENV_TYPE=dev tsx watch --tsconfig server/tsconfig.json server/start.ts",
     "react": "cd client && vite --config vite.config.ts",
     "build": "cd client && vite build --config vite.config.ts",
     "preview": "cd client && vite preview --config vite.config.ts",
@@ -14,9 +14,9 @@
     "restore-users": "ts-node -r tsconfig-paths/register server/database/scripts/metis-users/manage-users --restore",
     "delete-users": "ts-node -r tsconfig-paths/register server/database/scripts/metis-users/manage-users --delete",
     "archive-users": "ts-node -r tsconfig-paths/register server/database/scripts/metis-users/manage-users --archive",
-    "test": "export METIS_ENV_TYPE=test && jest --config tests/jest.config.js",
-    "test:e2e": "export METIS_ENV_TYPE=test && jest --config tests/jest.config.js --selectProjects=e2e",
-    "test:integration:api": "export METIS_ENV_TYPE=test && jest --config tests/jest.config.js --selectProjects=integration:api"
+    "test": "cross-env METIS_ENV_TYPE=test jest --config tests/jest.config.js",
+    "test:e2e": "cross-env METIS_ENV_TYPE=test jest --config tests/jest.config.js --selectProjects=e2e",
+    "test:integration:api": "cross-env METIS_ENV_TYPE=test jest --config tests/jest.config.js --selectProjects=integration:api"
   },
   "dependencies": {
     "@tiptap/extension-code-block-lowlight": "^2.11.5",
@@ -92,6 +92,7 @@
     "@types/uuid": "^9.0.8",
     "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "^5.1.0",
+    "cross-env": "^10.1.0",
     "jest": "^29.7.0",
     "nodemon": "^3.1.7",
     "ts-jest": "^29.4.5",
