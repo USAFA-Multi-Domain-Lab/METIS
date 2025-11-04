@@ -295,6 +295,10 @@ export default class TargetEnvContext<TType extends TEffectType = TEffectType> {
     } else {
       let targetForce = this.determineTargetForce(to.forceKey)
       prefix = targetForce.outputPrefix
+      // Ensure the forceKey is correct.
+      if (to.forceKey !== targetForce.localKey) {
+        to.forceKey = targetForce.localKey
+      }
     }
 
     // Determine the output context based on the effect type.
