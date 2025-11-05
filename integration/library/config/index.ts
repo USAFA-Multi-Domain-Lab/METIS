@@ -1,3 +1,5 @@
+import fs from 'fs'
+import MetisServer from '../../../server'
 import { getCallerTargetEnv } from '../toolbox/files'
 
 /**
@@ -5,32 +7,34 @@ import { getCallerTargetEnv } from '../toolbox/files'
  * environment.
  */
 export function loadConfig() {
-  let environment = getCallerTargetEnv()
-  let { _id } = environment
-  let variablePrefix = _id.toUpperCase().replace(/-/g, '_') + '_'
-  let config: Record<string, string> = {}
+  try {
+    let environment = getCallerTargetEnv()
+    let { _id } = environment
+    let config: Record<string, string> = {}
+    let data = fs.readFileSync(MetisServer.ENVIRONMENT_FILE_PATH, 'utf-8')
 
-  for (let originalKey in process.env) {
-    if (
-      originalKey.startsWith(variablePrefix) &&
-      process.env[originalKey] !== undefined
-    ) {
-      let segments = originalKey.replace(variablePrefix, '').split('_')
-      let newKey = ''
+    if (data === undefined) {
+      throw new Error(`Environment variable METIS_ENV_JSON is not defined.`)
+    }
 
-      for (let i = 0; i < segments.length; i++) {
-        if (i === 0) {
-          newKey += segments[i].toLowerCase()
-        } else {
-          newKey +=
-            segments[i].charAt(0).toUpperCase() +
-            segments[i].slice(1).toLowerCase()
-        }
-      }
+    let allEnvironments = JSON.parse(data)
 
-      config[newKey] = process.env[originalKey].toString()
+    if (allEnvironments[_id] === undefined) {
+      throw new Error(
+        `No configuration found for target environment with ID '${_id}'.`,
+      )
+    }
+
+    config = allEnvironments[_id]
+
+    return config
+  } catch (error: any) {
+    if (error instanceof SyntaxError) {
+      throw new Error(
+        `Environment variable METIS_ENV_JSON contains invalid JSON: ${error.message}`,
+      )
+    } else {
+      throw error
     }
   }
-
-  return config
 }

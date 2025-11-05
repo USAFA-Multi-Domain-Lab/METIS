@@ -5,6 +5,7 @@ import ClientMissionForce from 'src/missions/forces'
 import ClientMissionNode from 'src/missions/nodes'
 import ClientMissionPrototype from 'src/missions/nodes/prototypes'
 import { compute } from 'src/toolbox'
+import { removeKey } from 'src/toolbox/components'
 import {
   useDefaultProps,
   useEventListener,
@@ -748,11 +749,11 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
   const linesJsx = useMemo((): TReactElement[] => {
     if (selectedForce === null) {
       return mission.relationshipLines.map((lineData) => {
-        return <Line {...lineData} />
+        return <Line key={lineData.key} {...removeKey(lineData)} />
       })
     } else {
       return selectedForce.relationshipLines.map((lineData) => {
-        return <Line {...lineData} />
+        return <Line key={lineData.key} {...removeKey(lineData)} />
       })
     }
   }, [

@@ -389,7 +389,7 @@ export default class MetisServer {
       initializeLoggers(expressApp)
 
       // Register target environments.
-      await ServerTargetEnvironment.scan()
+      ServerTargetEnvironment.scan()
       // Validate target IDs.
       ServerTarget.validateTargetIds(
         ServerTargetEnvironment.METIS_TARGET_ENV_ID,

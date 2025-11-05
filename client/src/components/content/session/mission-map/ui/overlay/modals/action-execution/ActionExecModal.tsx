@@ -8,6 +8,7 @@ import ClientMissionAction from 'src/missions/actions'
 import ClientMissionNode from 'src/missions/nodes'
 import SessionClient from 'src/sessions'
 import { compute } from 'src/toolbox'
+import { removeKey } from 'src/toolbox/components'
 import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
 import { TNodeBlockStatus } from '../../../../../../../../../../shared/missions/nodes'
 import MapToolbox from '../../../../../../../../../../shared/toolbox/maps'
@@ -104,7 +105,7 @@ export default function ActionExecModal({
   /**
    * The buttons to display in the modal.
    */
-  const buttons = compute<TButtonText_P[]>(() => {
+  const buttons = compute<TWithKey<TButtonText_P>[]>(() => {
     let buttons: TWithKey<TButtonText_P>[] = []
 
     // Determine buttons based on whether cheats
@@ -368,7 +369,7 @@ export default function ActionExecModal({
     return (
       <div className='Buttons'>
         {buttons.map((props) => (
-          <ButtonText {...props} />
+          <ButtonText key={props.key} {...removeKey(props)} />
         ))}
       </div>
     )

@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import backgroundImage from 'src/assets/images/landing-page-img.webp'
 import ServerConnection from 'src/connect/servers'
 import { useGlobalContext } from 'src/context/global'
@@ -301,6 +301,24 @@ export default function (props: {}): TReactElement | null {
       .switch('BackgroundImageLarge', 'BackgroundImageSmall', backgroundLoaded),
   )
 
+  /**
+   * The JSX for the button menu.
+   */
+  const buttonMenuJsx = compute<TReactElement | null>(() => {
+    // Render nothing, if there is no button menu.
+    if (!buttonMenu) return null
+
+    return <ButtonMenu key={buttonMenu.key} {...removeKey(buttonMenu)} />
+  })
+
+  /**
+   * The JSX for the prompt.
+   */
+  const promptJsx = compute<TReactElement | null>(() => {
+    if (promptData === null) return null
+    return <Prompt key={promptData.key} {...removeKey(promptData)} />
+  })
+
   let CurrentPage = PAGE_REGISTRY[currentPageKey]
   let pageProps: any = {
     ...currentPageProps,
@@ -308,17 +326,6 @@ export default function (props: {}): TReactElement | null {
 
   /* -- RENDER -- */
 
-  /**
-   * The JSX for the button menu.
-   */
-  const buttonMenuJsx = compute<ReactNode>(() => {
-    // Render nothing, if there is no button menu.
-    if (!buttonMenu) return null
-
-    return <ButtonMenu key={buttonMenu.key} {...removeKey(buttonMenu)} />
-  })
-
-  // Render METIS.
   return (
     <ReactErrorBoundary
       FallbackComponent={ErrorPage}
@@ -336,7 +343,7 @@ export default function (props: {}): TReactElement | null {
         </div>
         <Notifications />
         <DevOptions />
-        {promptData !== null ? <Prompt {...promptData} /> : null}
+        {promptJsx}
         <ErrorPage {...pageProps} key='error-page' />
         <LoadingPage {...pageProps} key={loadingPageId} />
         <ConnectionStatus />

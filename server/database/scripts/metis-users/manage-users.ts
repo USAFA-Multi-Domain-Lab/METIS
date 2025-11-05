@@ -3,6 +3,7 @@ import MetisServer from 'metis/server'
 import ServerUser from 'metis/server/users'
 import { TUserJson } from 'metis/users'
 import { accessIds, TUserAccessId } from 'metis/users/accesses'
+import { CompleterResult } from 'readline'
 import { createInterface } from 'readline/promises'
 import UserModel, { hashPassword } from '../../models/users'
 
@@ -91,7 +92,7 @@ const commandLinePrompt = async (
   autocompleteOptions: string[] = [],
 ): Promise<string> => {
   // Create a completer function for tab completion.
-  const completer = (line: string) => {
+  const completer = (line: string): CompleterResult => {
     const hits = autocompleteOptions.filter((c) => c.startsWith(line))
     return [hits.length ? hits : autocompleteOptions, line]
   }

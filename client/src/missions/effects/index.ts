@@ -84,7 +84,7 @@ export class ClientEffect<
   ): ClientEffect<'sessionTriggeredEffect'> {
     return new ClientEffect(
       ClientEffect.DEFAULT_SESSION_PROPERTIES._id,
-      ClientEffect.DEFAULT_SESSION_PROPERTIES.name,
+      target.name,
       target._id,
       target.environment._id,
       target.environment.version,
@@ -128,7 +128,7 @@ export class ClientEffect<
   ): ClientEffect<'executionTriggeredEffect'> {
     return new ClientEffect(
       ClientEffect.DEFAULT_EXEC_PROPERTIES._id,
-      ClientEffect.DEFAULT_EXEC_PROPERTIES.name,
+      target.name,
       target._id,
       target.environment._id,
       target.environment.version,

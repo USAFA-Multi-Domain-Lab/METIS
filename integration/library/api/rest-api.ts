@@ -1,6 +1,5 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios'
 import https from 'https'
-import BooleanToolbox from 'metis/toolbox/booleans'
 import z from 'zod'
 import { Api, apiOptionsSchema } from '.'
 import { AnyObject } from '../toolbox'
@@ -287,14 +286,7 @@ export default class RestApi extends Api {
     envConfig: Record<string, string | undefined>,
   ): RestApi {
     try {
-      let rejectUnauthorized: boolean | undefined = undefined
-      if (envConfig.rejectUnauthorized !== undefined) {
-        rejectUnauthorized = BooleanToolbox.parse(envConfig.rejectUnauthorized)
-      }
-      const apiOptions: TApiOptions = restApiOptionsSchema.parse({
-        ...envConfig,
-        rejectUnauthorized,
-      })
+      const apiOptions: TApiOptions = restApiOptionsSchema.parse(envConfig)
       return new RestApi(apiOptions)
     } catch (error: any) {
       throw new Error(`Invalid REST API configuration: ${error.message}`)
