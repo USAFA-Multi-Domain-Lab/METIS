@@ -24,7 +24,6 @@ npm-debug.log*
 .env.production.local
 environment.json
 environment-test.json
-.vscode
 .github
 /integration/target-env/**
 !/integration/target-env/.gitkeep
