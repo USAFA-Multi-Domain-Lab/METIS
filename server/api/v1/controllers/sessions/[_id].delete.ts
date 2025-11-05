@@ -1,9 +1,8 @@
-import { Request, Response } from 'express-serve-static-core'
-import { StatusError } from 'metis/server/http'
-import { expressLogger } from 'metis/server/logging'
-import SessionServer from 'metis/server/sessions'
-import ApiResponse from '../../library/response'
-import ServerUser from 'metis/server/users'
+import type { Request, Response } from 'express-serve-static-core'
+import { expressLogger } from '../../../../logging'
+import { SessionServer } from '../../../../sessions'
+import type { ServerUser } from '../../../../users'
+import { ApiResponse, StatusError } from '../../library'
 /**
  * This will delete a session.
  * @param request The express request.

@@ -1,29 +1,27 @@
 import memoizeOne from 'memoize-one'
-import { TMetisClientComponents } from 'src'
+import { TMetisClientComponents } from 'metis/client'
 import {
   TMapCompatibleNode,
   TMapCompatibleNodeEvent,
   TNodeButton,
-} from 'src/components/content/session/mission-map/objects/nodes'
-import ClientSessionMember from 'src/sessions/members'
-import { TRequestMethod } from '../../../../shared/connect/data'
+} from 'metis/client/components/content/session/mission-map/objects/nodes'
+import ClientMissionAction from 'metis/client/missions/actions'
+import ClientActionExecution from 'metis/client/missions/actions/executions'
+import ClientMissionForce from 'metis/client/missions/forces'
+import ClientSessionMember from 'metis/client/sessions/members'
+import { TRequestMethod } from 'metis/connect'
+import { EventManager, TListenerTargetEmittable } from 'metis/events'
 import {
-  EventManager,
-  TListenerTargetEmittable,
-} from '../../../../shared/events'
-import { TMissionActionJson } from '../../../../shared/missions/actions'
-import { TActionExecutionJson } from '../../../../shared/missions/actions/executions'
-import MissionNode, {
+  MissionNode,
+  TActionExecutionJson,
+  TMissionActionJson,
   TMissionNodeJson,
-} from '../../../../shared/missions/nodes'
-import ClientMissionAction from '../actions'
-import ClientActionExecution from '../actions/executions'
-import ClientMissionForce from '../forces'
+} from 'metis/missions'
 
 /**
  * Class for managing mission nodes on the client.
  */
-export default class ClientMissionNode
+export class ClientMissionNode
   extends MissionNode<TMetisClientComponents>
   implements TListenerTargetEmittable<TNodeEventMethod>, TMapCompatibleNode
 {

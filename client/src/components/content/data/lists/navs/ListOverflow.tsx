@@ -1,9 +1,9 @@
+import { useButtonMenuEngine } from 'metis/client/components/content/user-controls/buttons/ButtonMenu'
+import ButtonSvgPanel from 'metis/client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from 'metis/client/components/content/user-controls/buttons/panels/hooks'
+import { useGlobalContext } from 'metis/client/context/global'
+import { ClassList } from 'metis/toolbox'
 import { useEffect } from 'react'
-import { useButtonMenuEngine } from 'src/components/content/user-controls/buttons/ButtonMenu'
-import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
-import { useGlobalContext } from 'src/context/global'
-import ClassList from '../../../../../../../shared/toolbox/html/ClassList'
 import { useListContext } from '../List'
 
 /**

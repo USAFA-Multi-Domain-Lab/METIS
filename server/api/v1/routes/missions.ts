@@ -1,6 +1,5 @@
-import { Router } from 'express'
-import MetisServer from 'metis/server'
-import { TMetisRouterMap } from 'metis/server/http/router'
+import type { Router } from 'express'
+import type { MetisServer } from '../../..'
 import {
   RequestBodyFilters,
   defineRequests,
@@ -15,6 +14,7 @@ import exportMission from '../controllers/missions/export.get'
 import importMission from '../controllers/missions/import.post'
 import getMissions from '../controllers/missions/index.get'
 import createMission from '../controllers/missions/index.post'
+import type { TMetisRouterMap } from '../library/MetisRouter'
 
 export const routerMap: TMetisRouterMap = async (
   router: Router,

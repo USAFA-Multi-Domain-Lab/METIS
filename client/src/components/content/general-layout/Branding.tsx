@@ -1,5 +1,5 @@
-import { useGlobalContext } from 'src/context/global'
-import { compute } from 'src/toolbox'
+import { useGlobalContext } from 'metis/client/context/global'
+import { compute } from 'metis/client/toolbox'
 import Tooltip from '../communication/Tooltip'
 import './Branding.scss'
 

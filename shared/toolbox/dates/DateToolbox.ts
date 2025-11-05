@@ -168,7 +168,7 @@ var dateFormat = (function () {
 /**
  * A toolbox for working with dates.
  */
-export default class DateToolbox {
+export class DateToolbox {
   /**
    * Formats a date in a human-readable format.
    * @param date The date to format. Defaults to the current date.

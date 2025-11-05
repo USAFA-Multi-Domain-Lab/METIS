@@ -1,28 +1,23 @@
-import { TMetisClientComponents } from 'src'
-import { TLine_P } from 'src/components/content/session/mission-map/objects/Line'
-import ClientMission from '..'
+import { TMetisClientComponents } from 'metis/client'
+import { TLine_P } from 'metis/client/components/content/session/mission-map/objects/Line'
+import ClientMission from 'metis/client/missions'
+import ClientMissionAction from 'metis/client/missions/actions'
+import ClientOutput from 'metis/client/missions/forces/outputs'
+import ClientMissionNode from 'metis/client/missions/nodes'
+import { EventManager, TListenerTargetEmittable } from 'metis/events'
 import {
-  EventManager,
-  TListenerTargetEmittable,
-} from '../../../../shared/events'
-import MissionComponent from '../../../../shared/missions/component'
-import {
+  MissionComponent,
   MissionForce,
   TMissionForceJson,
-} from '../../../../shared/missions/forces'
-import { TOutputJson } from '../../../../shared/missions/forces/output'
-import { TMissionNodeJson } from '../../../../shared/missions/nodes'
-import NumberToolbox, { Counter } from '../../../../shared/toolbox/numbers'
-import { TWithKey } from '../../../../shared/toolbox/objects'
-import { Vector2D } from '../../../../shared/toolbox/space'
-import ClientMissionAction from '../actions'
-import ClientMissionNode from '../nodes'
-import ClientOutput from './outputs'
+  TMissionNodeJson,
+  TOutputJson,
+} from 'metis/missions'
+import { Counter, NumberToolbox, TWithKey, Vector2D } from 'metis/toolbox'
 
 /**
  * Class for managing mission prototypes on the client.
  */
-export default class ClientMissionForce
+export class ClientMissionForce
   extends MissionForce<TMetisClientComponents>
   implements TListenerTargetEmittable<TForceEventMethods, TForceEventArgs>
 {

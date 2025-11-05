@@ -1,10 +1,10 @@
-import Tooltip from 'src/components/content/communication/Tooltip'
-import ClientMissionNode from 'src/missions/nodes'
+import Tooltip from 'metis/client/components/content/communication/Tooltip'
+import ClientMissionNode from 'metis/client/missions/nodes'
 import ClientMissionPrototype, {
   TPrototypeRelation,
-} from 'src/missions/nodes/prototypes'
-import { compute } from 'src/toolbox'
-import { Vector2D } from '../../../../../../../shared/toolbox/space'
+} from 'metis/client/missions/nodes/prototypes'
+import { compute } from 'metis/client/toolbox'
+import { Vector2D } from 'metis/toolbox'
 import './PrototypeSlot.scss'
 
 /* -- components -- */

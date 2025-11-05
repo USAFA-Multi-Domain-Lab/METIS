@@ -1,11 +1,11 @@
-import { MetisComponent } from '../../../shared'
 import {
   TSessionAccessibility,
   TSessionBasicJson,
   TSessionConfig,
   TSessionState,
-} from '../../../shared/sessions/index'
-import User from '../../../shared/users'
+} from 'metis/sessions/index'
+import User from 'metis/users'
+import { MetisComponent } from '../../../shared'
 
 /**
  * More basic representation of a session.

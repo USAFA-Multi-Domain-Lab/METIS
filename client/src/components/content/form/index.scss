@@ -1,7 +1,7 @@
-@use 'src/assets/styles/config.scss' as *;
-@use 'src/assets/styles/util.scss' as *;
-@forward 'src/assets/styles/config.scss';
-@forward 'src/assets/styles/util.scss';
+@use 'metis/client/assets/styles/config.scss' as *;
+@use 'metis/client/assets/styles/util.scss' as *;
+@forward 'metis/client/assets/styles/config.scss';
+@forward 'metis/client/assets/styles/util.scss';
 
 $detail-field-text-color: $color-accent-light;
 $detail-field-border: none;

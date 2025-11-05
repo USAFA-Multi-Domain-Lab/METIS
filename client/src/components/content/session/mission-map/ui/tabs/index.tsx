@@ -1,11 +1,11 @@
-import { useRef } from 'react'
-import Tooltip from 'src/components/content/communication/Tooltip'
+import Tooltip from 'metis/client/components/content/communication/Tooltip'
 import {
   TButtonMenuEngine_P,
   useButtonMenuEngine,
-} from 'src/components/content/user-controls/buttons/ButtonMenu'
-import ButtonMenuController from 'src/components/content/user-controls/buttons/ButtonMenuController'
-import { compute } from 'src/toolbox'
+} from 'metis/client/components/content/user-controls/buttons/ButtonMenu'
+import ButtonMenuController from 'metis/client/components/content/user-controls/buttons/ButtonMenuController'
+import { compute } from 'metis/client/toolbox'
+import { useRef } from 'react'
 import './index.scss'
 
 /**

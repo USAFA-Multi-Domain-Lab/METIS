@@ -1,14 +1,10 @@
-import { TButtonSvg_Input } from 'src/components/content/user-controls/buttons/panels/types'
-import ClientMission from 'src/missions'
-import ClientActionExecution from 'src/missions/actions/executions'
-import { MetisComponent } from '../../../../../../../../shared/'
-import { TListenerTarget } from '../../../../../../../../shared/events'
-import { TNodeBlockStatus } from '../../../../../../../../shared/missions/nodes'
-import { TWithKey } from '../../../../../../../../shared/toolbox/objects'
-import {
-  Vector1D,
-  Vector2D,
-} from '../../../../../../../../shared/toolbox/space'
+import { MetisComponent } from 'metis'
+import { TButtonSvg_Input } from 'metis/client/components/content/user-controls/buttons/panels/types'
+import ClientMission from 'metis/client/missions'
+import ClientActionExecution from 'metis/client/missions/actions/executions'
+import { TListenerTarget } from 'metis/events'
+import { TNodeBlockStatus } from 'metis/missions'
+import { TWithKey, Vector1D, Vector2D } from 'metis/toolbox'
 import MissionMap from '../../MissionMap'
 
 /**

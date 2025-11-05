@@ -1,14 +1,16 @@
 import axios from 'axios'
-import { TMetisClientComponents } from 'src'
-import ServerConnection, { TServerHandler } from 'src/connect/servers'
-import ClientMission from 'src/missions'
-import ClientMissionAction from 'src/missions/actions'
-import ClientActionExecution from 'src/missions/actions/executions'
-import ClientExecutionOutcome from 'src/missions/actions/outcomes'
-import ClientMissionFile from 'src/missions/files'
-import ClientOutput from 'src/missions/forces/outputs'
-import ClientMissionNode from 'src/missions/nodes'
-import ClientUser from 'src/users'
+import { TMetisClientComponents } from 'metis/client'
+import ServerConnection, { TServerHandler } from 'metis/client/connect/servers'
+import ClientMission from 'metis/client/missions'
+import ClientMissionAction from 'metis/client/missions/actions'
+import ClientActionExecution from 'metis/client/missions/actions/executions'
+import ClientExecutionOutcome from 'metis/client/missions/actions/outcomes'
+import ClientMissionFile from 'metis/client/missions/files'
+import ClientOutput from 'metis/client/missions/forces/outputs'
+import ClientMissionNode from 'metis/client/missions/nodes'
+import { SessionBasic } from 'metis/client/sessions/basic'
+import ClientSessionMember from 'metis/client/sessions/members'
+import ClientUser from 'metis/client/users'
 import {
   TFileAccessModifierData,
   TGenericServerEvents,
@@ -16,28 +18,24 @@ import {
   TResponseEvents,
   TServerEvents,
   TServerMethod,
-} from '../../../shared/connect/data'
+} from 'metis/connect'
 import {
   TActionExecutionJson,
   TExecutionCheats,
-} from '../../../shared/missions/actions/executions'
-import { TExecutionOutcomeJson } from '../../../shared/missions/actions/outcomes'
+  TExecutionOutcomeJson,
+} from 'metis/missions'
 import Session, {
   TSessionBasicJson,
   TSessionConfig,
   TSessionJson,
-} from '../../../shared/sessions'
-import { TSessionMemberJson } from '../../../shared/sessions/members'
-import MemberRole, {
-  TMemberRoleId,
-} from '../../../shared/sessions/members/roles'
-import { SessionBasic } from './basic'
-import ClientSessionMember from './members'
+} from 'metis/sessions'
+import { TSessionMemberJson } from 'metis/sessions/members'
+import MemberRole, { TMemberRoleId } from 'metis/sessions/members/roles'
 
 /**
  * Client instance for sessions. Handles client-side logic for sessions. Communicates with server to conduct a session.
  */
-export default class SessionClient extends Session<TMetisClientComponents> {
+export class SessionClient extends Session<TMetisClientComponents> {
   /**
    * The server connection used to communicate with the server.
    */

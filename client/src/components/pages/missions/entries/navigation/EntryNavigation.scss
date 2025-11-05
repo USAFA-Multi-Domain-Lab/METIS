@@ -1,4 +1,4 @@
-@use 'src/assets/styles/config.scss' as *;
+@use 'metis/client/assets/styles/config.scss' as *;
 
 .EntryNavigation {
   display: grid;
@@ -24,10 +24,10 @@
     font-size: 0.75em;
     width: 97%;
     max-height: 50px;
-    display: block;
     display: -webkit-box;
-    line-clamp: 3;
+    display: block;
     -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;

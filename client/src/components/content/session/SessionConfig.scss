@@ -1,5 +1,5 @@
 @use '../../../assets/styles/config.scss' as *;
-@use 'src/components/content/form/index.scss' as *;
+@use 'metis/client/components/content/form/index.scss' as *;
 
 .SessionConfig {
   @include form-container;

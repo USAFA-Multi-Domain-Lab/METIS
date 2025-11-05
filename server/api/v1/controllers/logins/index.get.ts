@@ -1,6 +1,6 @@
-import { Request, Response } from 'express-serve-static-core'
-import ServerLogin from 'metis/server/logins'
-import ApiResponse from '../../library/response'
+import type { Request, Response } from 'express-serve-static-core'
+import { ServerLogin } from '../../../../logins'
+import { ApiResponse } from '../../library'
 /**
  * This will return the login information for the user making the request.
  * @param request The express request.

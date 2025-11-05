@@ -1,6 +1,6 @@
+import { StringToolbox } from 'metis/toolbox'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { TObjectFormSyncOptions, usePostInitEffect } from '.'
-import StringToolbox from '../../../../shared/toolbox/strings'
 
 /**
  * Maintains states for all provided keys of a provided object,

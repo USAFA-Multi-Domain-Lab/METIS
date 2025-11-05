@@ -1,6 +1,6 @@
 @use 'sass:color';
-@use 'src/assets/styles/config.scss' as *;
-@use 'src/assets/styles/util.scss' as *;
+@use 'metis/client/assets/styles/config.scss' as *;
+@use 'metis/client/assets/styles/util.scss' as *;
 @use '../../mixins.scss' as *;
 
 .Scene {

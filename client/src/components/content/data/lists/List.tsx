@@ -1,15 +1,15 @@
-import React, { useContext, useEffect, useRef, useState } from 'react'
-import { useGlobalContext } from 'src/context/global'
-import { compute } from 'src/toolbox'
+import { MetisComponent } from 'metis'
+import { useGlobalContext } from 'metis/client/context/global'
+import { compute } from 'metis/client/toolbox'
 import {
   TDefaultProps,
   useDefaultProps,
   useEventListener,
   usePostInitEffect,
-} from 'src/toolbox/hooks'
-import { MetisComponent } from '../../../../../../shared'
-import StringToolbox from '../../../../../../shared/toolbox/strings'
-import { TUserPermissionId } from '../../../../../../shared/users/permissions'
+} from 'metis/client/toolbox/hooks'
+import { StringToolbox } from 'metis/toolbox'
+import { TUserPermissionId } from 'metis/users'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import {
   TButtonSvgEngine,
   TSvgLayout,

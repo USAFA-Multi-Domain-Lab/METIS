@@ -1,17 +1,17 @@
-import React, { useMemo, useRef, useState } from 'react'
-import { TMetisClientComponents } from 'src'
-import { useMissionPageContext } from 'src/components/pages/missions/context'
-import { LocalContextProvider } from 'src/context/local'
-import { ClientEffect, TClientEffectHost } from 'src/missions/effects'
-import { compute } from 'src/toolbox'
-import { getScrollableAncestor } from 'src/toolbox/dom'
+import { useMissionPageContext } from 'metis/client/components/pages/missions/context'
+import { LocalContextProvider } from 'metis/client/context/local'
+import { ClientEffect, TClientEffectHost } from 'metis/client/missions/effects'
+import { compute } from 'metis/client/toolbox'
+import { getScrollableAncestor } from 'metis/client/toolbox/dom'
 import {
   useEventListener,
   useMountHandler,
   usePostInitEffect,
-} from 'src/toolbox/hooks'
-import { TEffectType } from '../../../../../../../shared/missions/effects'
-import StringToolbox from '../../../../../../../shared/toolbox/strings'
+} from 'metis/client/toolbox/hooks'
+import { TEffectType } from 'metis/missions'
+import { StringToolbox } from 'metis/toolbox'
+import React, { useMemo, useRef, useState } from 'react'
+import { TMetisClientComponents } from 'src'
 import { timelineContext } from './context'
 import './EffectTimeline.scss'
 import { NO_TIMELINE_ITEMS_ID } from './subcomponents/items/TimelineNoItems'

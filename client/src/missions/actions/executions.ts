@@ -1,17 +1,13 @@
+import { EventManager, TListenerTargetEmittable } from 'metis/events'
+import { ActionExecution, TExecutionOutcomeJson } from 'metis/missions'
 import { TMetisClientComponents } from 'src'
 import ClientMissionAction from '.'
-import {
-  EventManager,
-  TListenerTargetEmittable,
-} from '../../../../shared/events'
-import ActionExecution from '../../../../shared/missions/actions/executions'
-import { TExecutionOutcomeJson } from '../../../../shared/missions/actions/outcomes'
 import ClientExecutionOutcome from './outcomes'
 
 /**
  * The execution of an action on the client.
  */
-export default class ClientActionExecution
+export class ClientActionExecution
   extends ActionExecution<TMetisClientComponents>
   implements TListenerTargetEmittable<TExecutionEvent>
 {

@@ -1,4 +1,4 @@
-import { compute } from 'src/toolbox'
+import { compute } from 'metis/client/toolbox'
 import { TDetailBase_P } from '.'
 import Tooltip from '../communication/Tooltip'
 import './DetailLocked.scss'

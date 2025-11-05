@@ -1,14 +1,11 @@
+import { useButtonSvgEngine } from 'metis/client/components/content/user-controls/buttons/panels/hooks'
+import { useMissionPageContext } from 'metis/client/components/pages/missions/context'
+import useEffectItemButtonCallbacks from 'metis/client/components/pages/missions/hooks/mission-components/effects'
+import { ClientEffect } from 'metis/client/missions/effects'
+import { useObjectFormSync } from 'metis/client/toolbox/hooks'
+import { TEffectType, TSelectEffectContext } from 'metis/missions'
+import { StringToolbox } from 'metis/toolbox'
 import { TMetisClientComponents } from 'src'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
-import { useMissionPageContext } from 'src/components/pages/missions/context'
-import useEffectItemButtonCallbacks from 'src/components/pages/missions/hooks/mission-components/effects'
-import { ClientEffect } from 'src/missions/effects'
-import { useObjectFormSync } from 'src/toolbox/hooks'
-import {
-  TEffectType,
-  TSelectEffectContext,
-} from '../../../../../../../shared/missions/effects'
-import StringToolbox from '../../../../../../../shared/toolbox/strings'
 import { DetailLargeString } from '../../../../content/form/DetailLargeString'
 import { DetailLocked } from '../../../../content/form/DetailLocked'
 import { DetailString } from '../../../../content/form/DetailString'

@@ -1,5 +1,5 @@
-@use 'src/assets/styles/config.scss' as *;
-@use 'src/components/content/form/index.scss' as *;
+@use 'metis/client/assets/styles/config.scss' as *;
+@use 'metis/client/components/content/form/index.scss' as *;
 
 .ArgGrouping {
   @include form-container;

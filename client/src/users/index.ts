@@ -1,23 +1,23 @@
 import axios from 'axios'
-import { TMetisClientComponents } from 'src'
-import { MetisComponent } from '../../../shared'
-import PromiseToolbox from '../../../shared/toolbox/promises'
+import { PromiseToolbox } from 'metis/toolbox'
 import User, {
   TCreatedByJson,
   TUserExistingJson,
   TUserJson,
   TUserJsonOptions,
   TUserOptions,
-} from '../../../shared/users'
-import UserAccess from '../../../shared/users/accesses'
-import UserPermission from '../../../shared/users/permissions'
-import TUserPreferencesJson from '../../../shared/users/preferences'
+} from 'metis/users'
+import UserAccess from 'metis/users/accesses'
+import UserPermission from 'metis/users/permissions'
+import TUserPreferencesJson from 'metis/users/preferences'
+import { TMetisClientComponents } from 'src'
+import { MetisComponent } from '../../../shared'
 
 /**
  * Class for managing users on the client.
  * @extends {User}
  */
-export default class ClientUser
+export class ClientUser
   extends User<TMetisClientComponents>
   implements MetisComponent
 {

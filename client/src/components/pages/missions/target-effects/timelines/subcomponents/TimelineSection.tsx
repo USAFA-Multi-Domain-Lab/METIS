@@ -1,15 +1,12 @@
+import ButtonSvgPanel from 'metis/client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from 'metis/client/components/content/user-controls/buttons/panels/hooks'
+import If from 'metis/client/components/content/util/If'
+import { useGlobalContext } from 'metis/client/context/global'
+import { ClientTargetEnvironment } from 'metis/client/target-environments'
+import ClientTarget from 'metis/client/target-environments/targets'
+import { TEffectTrigger, TEffectType } from 'metis/missions'
+import { StringToolbox } from 'metis/toolbox'
 import { TMetisClientComponents } from 'src'
-import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
-import If from 'src/components/content/util/If'
-import { useGlobalContext } from 'src/context/global'
-import { ClientTargetEnvironment } from 'src/target-environments'
-import ClientTarget from 'src/target-environments/targets'
-import {
-  TEffectTrigger,
-  TEffectType,
-} from '../../../../../../../../shared/missions/effects'
-import StringToolbox from '../../../../../../../../shared/toolbox/strings'
 import { useMissionPageContext } from '../../../context'
 import { useTimelineContext } from '../context'
 import { TimelineItem } from './items/TimelineItem'

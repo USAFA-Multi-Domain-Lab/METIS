@@ -1,10 +1,9 @@
-import { NextFunction, Request, Response } from 'express-serve-static-core'
-import { TUserJson } from 'metis/users'
-import { TUserPermissionId } from 'metis/users/permissions'
-import UserModel from '../database/models/users'
-import ServerLogin from '../logins'
-import SessionServer from '../sessions'
-import ServerSessionMember from '../sessions/members'
+import type { NextFunction, Request, Response } from 'express-serve-static-core'
+import type { TUserJson, TUserPermissionId } from 'metis/users'
+import { UserModel } from '../database/models/users'
+import { ServerLogin } from '../logins/ServerLogin'
+import type { ServerSessionMember } from '../sessions/ServerSessionMember'
+import { SessionServer } from '../sessions/SessionServer'
 
 /**
  * Middleware used to enforce authorization for a given route.

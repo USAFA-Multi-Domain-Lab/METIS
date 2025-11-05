@@ -1,5 +1,5 @@
-import ClientMissionNode from 'src/missions/nodes'
-import { compute } from 'src/toolbox'
+import ClientMissionNode from 'metis/client/missions/nodes'
+import { compute } from 'metis/client/toolbox'
 import './Grid.scss'
 
 /**

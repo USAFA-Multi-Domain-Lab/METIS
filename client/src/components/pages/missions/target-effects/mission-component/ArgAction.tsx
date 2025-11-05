@@ -1,15 +1,15 @@
-import { useState } from 'react'
 import {
   DetailDropdown,
   TOptionalHandleInvalidOption,
   TRequiredHandleInvalidOption,
-} from 'src/components/content/form/dropdown/'
-import ClientMissionAction from 'src/missions/actions'
-import ClientMissionForce from 'src/missions/forces'
-import ClientMissionNode from 'src/missions/nodes'
-import { compute } from 'src/toolbox'
-import { usePostInitEffect } from 'src/toolbox/hooks/lifecycles'
-import { TMissionComponentArg } from '../../../../../../../shared/target-environments/args/mission-component'
+} from 'metis/client/components/content/form/dropdown/'
+import ClientMissionAction from 'metis/client/missions/actions'
+import ClientMissionForce from 'metis/client/missions/forces'
+import ClientMissionNode from 'metis/client/missions/nodes'
+import { compute } from 'metis/client/toolbox'
+import { usePostInitEffect } from 'metis/client/toolbox/hooks/lifecycles'
+import { TMissionComponentArg } from 'metis/target-environments/args/mission-component'
+import { useState } from 'react'
 
 /**
  * Renders a dropdown for the argument whose type is `"action"`.

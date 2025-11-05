@@ -8,7 +8,7 @@ import { AnyObject } from '../toolbox'
 /**
  * The RESTful API class is used to make HTTP requests to target environments.
  */
-export default class RestApi extends Api {
+export class RestApi extends Api {
   /**
    * The base URL where the API can be reached at.
    */

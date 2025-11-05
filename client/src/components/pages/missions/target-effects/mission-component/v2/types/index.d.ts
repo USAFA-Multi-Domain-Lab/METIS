@@ -1,4 +1,4 @@
-import ClientMissionForce from 'src/missions/forces'
+import ClientMissionForce from 'metis/client/missions/forces'
 import type ArgMissionComponent from '../ArgMissionComponent'
 import type ForceDropdown from '../dropdowns/ForceDropdown'
 

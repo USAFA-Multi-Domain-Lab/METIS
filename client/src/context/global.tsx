@@ -1,31 +1,34 @@
-import React, { ReactNode, useEffect, useRef, useState } from 'react'
-import { TAppError, TAppErrorNotifyMethod } from 'src/components/App'
-import { TConnectionStatusMessage } from 'src/components/content/communication/ConnectionStatus'
+import { TAppError, TAppErrorNotifyMethod } from 'metis/client/components/App'
+import { TConnectionStatusMessage } from 'metis/client/components/content/communication/ConnectionStatus'
 import {
   TPrompt_P,
   TPromptResult,
-} from 'src/components/content/communication/Prompt'
-import { TButtonMenu_P } from 'src/components/content/user-controls/buttons/ButtonMenu'
-import { TButtonText_P } from 'src/components/content/user-controls/buttons/ButtonText'
-import ButtonSvgEngine from 'src/components/content/user-controls/buttons/panels/engines'
-import { PAGE_REGISTRY, TPage_P, TPageKey } from 'src/components/pages'
-import ServerConnection, { IServerConnectionOptions } from 'src/connect/servers'
-import MetisInfo from 'src/info'
-import ClientLogin from 'src/logins'
-import Notification, { TNotificationOptions } from 'src/notifications'
-import { useInitRenderHandler } from 'src/toolbox/hooks'
-import Logging from 'src/toolbox/logging'
-import ClientUser from 'src/users'
-import { v4 as generateHash } from 'uuid'
-import { ServerEmittedError } from '../../../shared/connect/errors'
-import { TLogin } from '../../../shared/logins'
-import { TExecutionCheats } from '../../../shared/missions/actions/executions'
-import ObjectToolbox, {
-  AnyObject,
+} from 'metis/client/components/content/communication/Prompt'
+import { TButtonMenu_P } from 'metis/client/components/content/user-controls/buttons/ButtonMenu'
+import { TButtonText_P } from 'metis/client/components/content/user-controls/buttons/ButtonText'
+import ButtonSvgEngine from 'metis/client/components/content/user-controls/buttons/panels/engines'
+import { PAGE_REGISTRY, TPage_P, TPageKey } from 'metis/client/components/pages'
+import ServerConnection, {
+  IServerConnectionOptions,
+} from 'metis/client/connect/servers'
+import MetisInfo from 'metis/client/info'
+import ClientLogin from 'metis/client/logins'
+import Notification, { TNotificationOptions } from 'metis/client/notifications'
+import { useInitRenderHandler } from 'metis/client/toolbox/hooks'
+import Logging from 'metis/client/toolbox/logging'
+import ClientUser from 'metis/client/users'
+import { ServerEmittedError } from 'metis/connect/errors'
+import { TLogin } from 'metis/logins'
+import { TExecutionCheats } from 'metis/missions'
+import {
+  ObjectToolbox,
+  StringToolbox,
+  TAnyObject,
   TWithKey,
-} from '../../../shared/toolbox/objects'
-import { Vector2D } from '../../../shared/toolbox/space'
-import StringToolbox from '../../../shared/toolbox/strings'
+  Vector2D,
+} from 'metis/toolbox'
+import React, { ReactNode, useEffect, useRef, useState } from 'react'
+import { v4 as generateHash } from 'uuid'
 
 /* -- constants -- */
 
@@ -757,7 +760,7 @@ export type TGlobalContextValues = {
   server: ServerConnection | null
   login: TLogin<ClientUser>
   currentPageKey: TPageKey
-  currentPageProps: AnyObject
+  currentPageProps: TAnyObject
   appMountHandled: boolean
   loading: boolean
   /**

@@ -1,12 +1,8 @@
+import { TClientEffectHost } from 'metis/client/missions/effects'
+import { MissionComponent, TEffectTrigger, TEffectType } from 'metis/missions'
+import { TNonEmptyArray } from 'metis/toolbox'
 import React, { useContext } from 'react'
 import { TMetisClientComponents } from 'src'
-import { TClientEffectHost } from 'src/missions/effects'
-import MissionComponent from '../../../../../shared/missions/component'
-import {
-  TEffectTrigger,
-  TEffectType,
-} from '../../../../../shared/missions/effects'
-import { TNonEmptyArray } from '../../../../../shared/toolbox/ArrayToolbox'
 import { TMissionPage_P, TMissionPage_S } from './MissionPage'
 
 /**

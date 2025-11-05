@@ -1,8 +1,8 @@
-import { DetailDropdown } from 'src/components/content/form/dropdown/'
-import { ClientEffect } from 'src/missions/effects'
-import ClientMissionForce from 'src/missions/forces'
-import { compute } from 'src/toolbox'
-import { TMissionComponentArg } from '../../../../../../../shared/target-environments/args/mission-component'
+import { DetailDropdown } from 'metis/client/components/content/form/dropdown/'
+import { ClientEffect } from 'metis/client/missions/effects'
+import ClientMissionForce from 'metis/client/missions/forces'
+import { compute } from 'metis/client/toolbox'
+import { TMissionComponentArg } from 'metis/target-environments/args/mission-component'
 
 /**
  * Renders a dropdown for the argument whose type is `"force"`.

@@ -1,4 +1,4 @@
-import SessionClient from 'src/sessions'
+import SessionClient from 'metis/client/sessions'
 import SessionMembers from './SessionMembers'
 import './SessionMembersPanel.scss'
 

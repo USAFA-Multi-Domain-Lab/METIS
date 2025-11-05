@@ -1,10 +1,10 @@
-import ClientMission from '..'
+import { ClientMission } from '..'
 
 /**
  * Represents a transformation that can be applied to a mission,
  * changing its structure.
  */
-export default abstract class MissionTransformation {
+export abstract class MissionTransformation {
   /**
    * The mission that the transformation is applied to.
    */

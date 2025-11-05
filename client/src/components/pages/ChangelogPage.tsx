@@ -1,8 +1,8 @@
+import { useGlobalContext } from 'metis/client/context/global'
+import MetisInfo from 'metis/client/info'
+import { compute } from 'metis/client/toolbox'
+import { useMountHandler } from 'metis/client/toolbox/hooks'
 import { useState } from 'react'
-import { useGlobalContext } from 'src/context/global'
-import MetisInfo from 'src/info'
-import { compute } from 'src/toolbox'
-import { useMountHandler } from 'src/toolbox/hooks'
 import { DefaultPageLayout, TPage_P } from '.'
 import Markdown, {
   MarkdownTheme as EMarkdownTheme,

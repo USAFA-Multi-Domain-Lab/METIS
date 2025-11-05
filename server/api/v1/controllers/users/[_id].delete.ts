@@ -1,8 +1,7 @@
-import { Request, Response } from 'express-serve-static-core'
-import UserModel from 'metis/server/database/models/users'
-import { StatusError } from 'metis/server/http'
-import { databaseLogger } from 'metis/server/logging'
-import ApiResponse from '../../library/response'
+import type { Request, Response } from 'express-serve-static-core'
+import { UserModel } from '../../../../database'
+import { databaseLogger } from '../../../../logging'
+import { ApiResponse, StatusError } from '../../library'
 import { preventSystemUserWrite } from '../../library/users'
 
 /**

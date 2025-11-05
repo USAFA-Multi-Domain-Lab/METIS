@@ -1,5 +1,4 @@
-import { TMissionJson } from 'metis/missions'
-import { TMissionImportBuild } from '..'
+import type { TMissionImportBuild } from '../MissionImport'
 
 // -- BUILD 33 --
 // This migration script is responsible

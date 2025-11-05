@@ -1,7 +1,7 @@
-import Tooltip from 'src/components/content/communication/Tooltip'
-import { DetailToggle } from 'src/components/content/form/DetailToggle'
-import { useGlobalContext } from 'src/context/global'
-import { useObjectFormSync, useRequireLogin } from 'src/toolbox/hooks'
+import Tooltip from 'metis/client/components/content/communication/Tooltip'
+import { DetailToggle } from 'metis/client/components/content/form/DetailToggle'
+import { useGlobalContext } from 'metis/client/context/global'
+import { useObjectFormSync, useRequireLogin } from 'metis/client/toolbox/hooks'
 import { useMapContext } from '../../../MissionMap'
 import './MapPreferences.scss'
 

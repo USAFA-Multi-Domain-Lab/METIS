@@ -1,5 +1,5 @@
-import { useGlobalContext } from 'src/context/global'
-import { TUserPermissionId } from '../../../../../shared/users/permissions'
+import { useGlobalContext } from 'metis/client/context/global'
+import { TUserPermissionId } from 'metis/users/permissions'
 import If from './If'
 
 /**

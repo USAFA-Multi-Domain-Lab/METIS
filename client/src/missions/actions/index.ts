@@ -1,22 +1,23 @@
-import { TMetisClientComponents } from 'src'
-import ClientTarget from 'src/target-environments/targets'
-import { TCreateJsonType } from '../../../../shared'
-import MissionAction, {
+import { TCreateJsonType } from 'metis'
+import { TMetisClientComponents } from 'metis/client'
+import { ClientEffect } from 'metis/client/missions/effects'
+import ClientMissionNode from 'metis/client/missions/nodes'
+import ClientTarget from 'metis/client/target-environments/targets'
+import {
+  MissionAction,
   TMissionActionJson,
   TMissionActionJsonDirect,
   TMissionActionJsonIndirect,
-} from '../../../../shared/missions/actions'
+} from 'metis/missions'
 import {
   TEffectExecutionTriggered,
   TEffectExecutionTriggeredJson,
-} from '../../../../shared/missions/effects'
-import { ClientEffect } from '../effects'
-import ClientMissionNode from '../nodes'
+} from 'metis/missions/effects'
 
 /**
  * Class representing a mission action on the client-side.
  */
-export default class ClientMissionAction extends MissionAction<TMetisClientComponents> {
+export class ClientMissionAction extends MissionAction<TMetisClientComponents> {
   /**
    * The formatted success chance to display to a session
    * member.

@@ -1,8 +1,8 @@
-import RichText from 'src/components/content/general-layout/rich-text/RichText'
-import ClientMissionAction from 'src/missions/actions'
-import { compute } from 'src/toolbox'
-import { TExecutionCheats } from '../../../../../../../../../../shared/missions/actions/executions'
-import { TSessionConfig } from '../../../../../../../../../../shared/sessions'
+import RichText from 'metis/client/components/content/general-layout/rich-text/RichText'
+import ClientMissionAction from 'metis/client/missions/actions'
+import { compute } from 'metis/client/toolbox'
+import { TExecutionCheats } from 'metis/missions'
+import { TSessionConfig } from 'metis/sessions'
 import './ActionProperties.scss'
 import ActionProperty from './ActionProperty'
 

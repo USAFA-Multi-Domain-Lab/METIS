@@ -1,12 +1,12 @@
-import { TMissionSaveJson } from 'metis/missions'
-import {
+import type { TMissionSaveJson } from 'metis/missions'
+import type {
   HydratedDocument,
   Model,
   ProjectionType,
   Query,
   QueryOptions,
 } from 'mongoose'
-import { TMetisDoc } from '..'
+import type { TMetisDoc } from '..'
 
 /**
  * Represents a mission in the database.
@@ -84,5 +84,4 @@ export type TPreMissionQuery = Query<TMission, TMission>
 /**
  * The type for a post-query middleware for a `MissionModel`.
  */
-export type TPostMissionQuery = Query<TMissionDoc, TMissionDoc>
 export type TPostMissionQuery = Query<TMissionDoc, TMissionDoc>

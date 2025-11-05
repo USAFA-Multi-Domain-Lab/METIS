@@ -1,13 +1,12 @@
+import { useEventListener } from 'metis/client/toolbox/hooks'
+import { StringToolbox, TSingleTypeMapped } from 'metis/toolbox'
 import { useEffect, useState } from 'react'
-import { useEventListener } from 'src/toolbox/hooks'
 import {
   TOutputRendererResults,
   TOutputTag,
   TOutputTagRenderer,
   useOutputContext,
 } from '..'
-import { TSingleTypeMapped } from '../../../../../../../shared/toolbox/objects'
-import StringToolbox from '../../../../../../../shared/toolbox/strings'
 
 /**
  * Defaults a value if it or its parent is null, undefined, or an empty string.

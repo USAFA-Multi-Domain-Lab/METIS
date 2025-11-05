@@ -1,8 +1,8 @@
 import axios, { AxiosError, AxiosResponse } from 'axios'
-import ClientUser from 'src/users'
-import { TLogin, TLoginJson } from '../../../shared/logins'
+import ClientUser from 'metis/client/users'
+import { TLogin, TLoginJson } from 'metis/logins'
 
-export default class ClientLogin {
+export class ClientLogin {
   /**
    * Fetches the current information of the logged in user from the server.
    * @resolves The information of the logged in user.

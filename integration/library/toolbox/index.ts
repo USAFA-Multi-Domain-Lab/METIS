@@ -1,14 +1,15 @@
 import * as BSON from 'bson'
-import BooleanToolbox from 'metis/toolbox/booleans'
-import NumberToolbox from 'metis/toolbox/numbers'
-import ObjectToolbox, { AnyObject } from 'metis/toolbox/objects'
-import VersionToolbox from 'metis/toolbox/versions'
+import { BooleanToolbox } from 'metis/toolbox/BooleanToolbox'
+import { NumberToolbox } from 'metis/toolbox/numbers/NumberToolbox'
+import { ObjectToolbox } from 'metis/toolbox/ObjectToolbox'
+import { VersionToolbox } from 'metis/toolbox/VersionToolbox'
+import { TAnyObject } from '../../../shared/toolbox'
 
 export {
-  AnyObject,
   BooleanToolbox,
   BSON,
   NumberToolbox,
   ObjectToolbox,
+  TAnyObject,
   VersionToolbox,
 }

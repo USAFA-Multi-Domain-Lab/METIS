@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react'
-import { ClientEffect } from 'src/missions/effects'
-import { compute } from 'src/toolbox'
-import { usePostInitEffect } from 'src/toolbox/hooks'
+import { ClientEffect } from 'metis/client/missions/effects'
+import { compute } from 'metis/client/toolbox'
+import { usePostInitEffect } from 'metis/client/toolbox/hooks'
 import {
   TDropdownArg,
   TDropdownArgOption,
-} from '../../../../../../../shared/target-environments/args/dropdown-arg'
+} from 'metis/target-environments/args/dropdown-arg'
+import { useEffect, useState } from 'react'
 import DetailDropdown from '../../../../content/form/dropdown/DetailDropdown'
 
 /**

@@ -1,6 +1,6 @@
+import type { ClassList } from 'metis/toolbox'
+import { type TUserPermissionId } from 'metis/users/permissions'
 import React from 'react'
-import type ClassList from '../../../../../../../shared/toolbox/html/ClassList'
-import { type TUserPermissionId } from '../../../../../../../shared/users/permissions'
 import { defaultButtonSvgProps } from './elements/ButtonSvg'
 import StepperSvg from './elements/StepperSvg'
 import TextSvg from './elements/TextSvg'

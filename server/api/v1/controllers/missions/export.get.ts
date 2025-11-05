@@ -1,16 +1,14 @@
-import { Request, Response } from 'express-serve-static-core'
+import type { Request, Response } from 'express-serve-static-core'
 import fs from 'fs'
-import Mission, { TMissionSaveJson } from 'metis/missions'
-import MetisServer from 'metis/server'
-import InfoModel from 'metis/server/database/models/info'
-import MissionModel from 'metis/server/database/models/missions'
-import MetisFileStore from 'metis/server/files'
-import { StatusError } from 'metis/server/http'
-import { databaseLogger, expressLogger } from 'metis/server/logging'
-import ServerFileToolbox from 'metis/server/toolbox/files'
+import { Mission, type TMissionSaveJson } from 'metis/missions'
+import { StringToolbox } from 'metis/toolbox'
 import path from 'path'
-import { v4 as generateHash } from 'uuid'
-import ApiResponse from '../../library/response'
+import { MetisServer } from '../../../..'
+import { InfoModel, MissionModel } from '../../../../database'
+import type { MetisFileStore } from '../../../../files'
+import { databaseLogger, expressLogger } from '../../../../logging'
+import { ServerFileToolbox } from '../../../../toolbox/files'
+import { ApiResponse, StatusError } from '../../library'
 
 /**
  * This will export a mission to a file.
@@ -76,7 +74,7 @@ async function createMissionExport(
     MetisServer.APP_DIR,
     '/temp/missions/exports/',
   )
-  let exportId: string = generateHash()
+  let exportId: string = StringToolbox.generateRandomId()
   let exportDir: string = path.join(exportsRootDir, exportId)
   let exportFilesDir: string = path.join(exportDir, 'files')
   let exportZipName: string = Mission.determineFileName(missionJson.name)

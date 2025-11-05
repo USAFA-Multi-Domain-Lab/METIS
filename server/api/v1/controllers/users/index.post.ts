@@ -1,9 +1,10 @@
-import { Request, Response } from 'express-serve-static-core'
-import UserModel, { hashPassword } from 'metis/server/database/models/users'
-import { databaseLogger } from 'metis/server/logging'
-import ServerUser from 'metis/server/users'
-import { TUserJson } from 'metis/users'
-import ApiResponse from '../../library/response'
+import type { Request, Response } from 'express-serve-static-core'
+import type { TUserJson } from 'metis/users'
+import { UserModel } from '../../../../database'
+import { hashPassword } from '../../../../database/models/users'
+import { databaseLogger } from '../../../../logging'
+import type { ServerUser } from '../../../../users'
+import { ApiResponse } from '../../library'
 import { preventSystemUserWrite } from '../../library/users'
 /**
  * This will create a new user.

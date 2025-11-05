@@ -1,8 +1,8 @@
-import { useGlobalContext } from 'src/context/global'
+import { useGlobalContext } from 'metis/client/context/global'
 import ClientMissionPrototype, {
   TPrototypeDeleteMethod,
-} from 'src/missions/nodes/prototypes'
-import PrototypeCreation from 'src/missions/transformations/creations'
+} from 'metis/client/missions/nodes/prototypes'
+import PrototypeCreation from 'metis/client/missions/transformations/creations'
 import { useMissionPageContext } from '../../context'
 
 /**

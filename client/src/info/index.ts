@@ -1,10 +1,9 @@
 import axios, { AxiosError } from 'axios'
-import { TMetisInfo } from '../../../shared/info/'
 
 /**
  * This class is used to get information about the application.
  */
-export default class MetisInfo implements TMetisInfo {
+export class MetisInfo implements TMetisInfo {
   // Implemented
   public name: string
 

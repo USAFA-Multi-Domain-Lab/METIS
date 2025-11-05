@@ -1,56 +1,53 @@
 import axios, { AxiosProgressEvent, AxiosResponse } from 'axios'
-import { TMetisClientComponents } from 'src'
-import { TLine_P } from 'src/components/content/session/mission-map/objects/Line'
+import { TMetisClientComponents } from 'metis/client'
+import { TLine_P } from 'metis/client/components/content/session/mission-map/objects/Line'
+import { TMapCompatibleNode } from 'metis/client/components/content/session/mission-map/objects/nodes'
+import { TPrototypeSlot_P } from 'metis/client/components/content/session/mission-map/objects/PrototypeSlot'
+import ClientMissionAction from 'metis/client/missions/actions'
+import { ClientEffect } from 'metis/client/missions/effects'
+import ClientMissionFile from 'metis/client/missions/files'
+import ClientMissionForce from 'metis/client/missions/forces'
+import ClientMissionNode from 'metis/client/missions/nodes'
+import ClientMissionPrototype, {
+  TPrototypeRelation,
+} from 'metis/client/missions/nodes/prototypes'
+import MissionTransformation from 'metis/client/missions/transformations'
+import PrototypeCreation from 'metis/client/missions/transformations/creations'
+import PrototypeTranslation from 'metis/client/missions/transformations/translations'
+import ClientTarget from 'metis/client/target-environments/targets'
+import ClientUser from 'metis/client/users'
+import { EventManager, TListenerTargetEmittable } from 'metis/events'
 import {
-  TMapCompatibleNode,
-  TMapCompatibleNodeEvent,
-} from 'src/components/content/session/mission-map/objects/nodes'
-import { TPrototypeSlot_P } from 'src/components/content/session/mission-map/objects/PrototypeSlot'
-import ClientTarget from 'src/target-environments/targets'
-import ClientUser from 'src/users'
-import { v4 as generateHash } from 'uuid'
-import { EventManager, TListenerTargetEmittable } from '../../../shared/events'
-import Mission, {
-  TMissionExistingJson,
-  TMissionJson,
-  TMissionShallowExistingJson,
-} from '../../../shared/missions'
-import MissionComponent from '../../../shared/missions/component'
-import {
+  Mission,
+  MissionComponent,
+  MissionForce,
   TEffectSessionTriggered,
   TEffectSessionTriggeredJson,
-} from '../../../shared/missions/effects'
-import { TMissionFileJson } from '../../../shared/missions/files'
-import {
-  MissionForce,
+  TMissionExistingJson,
+  TMissionFileJson,
   TMissionForceJson,
   TMissionForceSaveJson,
-} from '../../../shared/missions/forces'
-import {
+  TMissionJson,
   TMissionPrototypeJson,
   TMissionPrototypeOptions,
-} from '../../../shared/missions/nodes/prototypes'
-import { TNonEmptyArray } from '../../../shared/toolbox/ArrayToolbox'
-import { DateToolbox } from '../../../shared/toolbox/dates'
-import { Counter } from '../../../shared/toolbox/numbers'
-import { AnyObject, TWithKey } from '../../../shared/toolbox/objects'
-import { Vector2D } from '../../../shared/toolbox/space'
-import User from '../../../shared/users'
-import ClientMissionAction from './actions'
-import { ClientEffect } from './effects'
-import ClientMissionFile from './files'
-import ClientMissionForce from './forces'
-import ClientMissionNode from './nodes'
-import ClientMissionPrototype, { TPrototypeRelation } from './nodes/prototypes'
-import MissionTransformation from './transformations'
-import PrototypeCreation from './transformations/creations'
-import PrototypeTranslation from './transformations/translations'
+  TMissionShallowExistingJson,
+} from 'metis/missions'
+import {
+  Counter,
+  DateToolbox,
+  StringToolbox,
+  TWithKey,
+  Vector2D,
+} from 'metis/toolbox'
+import { TNonEmptyArray } from 'metis/toolbox/ArrayToolbox'
+import User from 'metis/users'
+import { AnyObject } from 'mongoose'
 
 /**
  * Class for managing missions on the client.
  * @extends {Mission<ClientMissionNode>}
  */
-export default class ClientMission
+export class ClientMission
   extends Mission<TMetisClientComponents>
   implements TListenerTargetEmittable<TMissionEventMethods, TMissionEventArgs>
 {
@@ -283,7 +280,7 @@ export default class ClientMission
     // Initialize client-specific properties.
     this._existsOnServer = existsOnServer
     this._depth = -1
-    this._structureChangeKey = generateHash()
+    this._structureChangeKey = StringToolbox.generateRandomId()
     this._selection = this
     this._transformation = null
     this.relationshipLines = []
@@ -516,7 +513,7 @@ export default class ClientMission
 
     // Update the key for tracking
     // changes.
-    this._structureChangeKey = generateHash()
+    this._structureChangeKey = StringToolbox.generateRandomId()
 
     // Re-position the prototypes to ensure
     // their current positions reflect
@@ -1281,7 +1278,7 @@ export default class ClientMission
 
     // Create a new mission.
     let mission: ClientMission = new ClientMission(
-      json._id || generateHash(),
+      json._id || StringToolbox.generateRandomId(),
       json.name,
       json.versionNumber,
       json.seed,

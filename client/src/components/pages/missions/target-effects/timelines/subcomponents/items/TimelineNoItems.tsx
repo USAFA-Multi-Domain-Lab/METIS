@@ -1,6 +1,6 @@
-import { compute } from 'src/toolbox'
-import { TEffectTrigger } from '../../../../../../../../../shared/missions/effects'
-import ClassList from '../../../../../../../../../shared/toolbox/html/ClassList'
+import { compute } from 'metis/client/toolbox'
+import { TEffectTrigger } from 'metis/missions'
+import { ClassList } from 'metis/toolbox'
 import { useTimelineContext } from '../../context'
 import './TimelineNoItems.scss'
 

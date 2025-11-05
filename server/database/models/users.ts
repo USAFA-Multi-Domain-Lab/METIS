@@ -1,17 +1,18 @@
 import bcryptjs from 'bcryptjs'
-import { Request } from 'express'
-import ServerUser from 'metis/server/users'
-import StringToolbox from 'metis/toolbox/strings'
-import { TUserJson } from 'metis/users'
-import { model, ProjectionType, Schema } from 'mongoose'
+import type { Request } from 'express'
+import { StringToolbox } from 'metis/toolbox'
+import type { TUserJson } from 'metis/users'
+import type { ProjectionType } from 'mongoose'
+import { Schema, model } from 'mongoose'
 import {
   ensureNoNullCreatedBy,
   excludeDeletedForFinds,
   excludeSensitiveForFinds,
   populateCreatedByIfFlagged,
 } from '.'
-import { StatusError } from '../../http'
+import { StatusError } from '../../api/v1/library'
 import { databaseLogger } from '../../logging'
+import { ServerUser } from '../../users'
 import { UserSchema } from './classes'
 import type {
   TPostUserQuery,
@@ -324,8 +325,7 @@ userSchema.post<TUserDoc>('save', function () {
 /**
  * The mongoose model for a user in the database.
  */
-const UserModel = model<TUser, TUserModel & TUserStaticMethods>(
+export const UserModel = model<TUser, TUserModel & TUserStaticMethods>(
   'User',
   userSchema,
 )
-export default UserModel

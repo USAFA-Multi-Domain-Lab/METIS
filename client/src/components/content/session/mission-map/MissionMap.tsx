@@ -1,18 +1,17 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { LocalContext, LocalContextProvider } from 'src/context/local'
-import ClientMission from 'src/missions'
-import ClientMissionForce from 'src/missions/forces'
-import ClientMissionNode from 'src/missions/nodes'
-import ClientMissionPrototype from 'src/missions/nodes/prototypes'
-import { compute } from 'src/toolbox'
+import { LocalContext, LocalContextProvider } from 'metis/client/context/local'
+import ClientMission from 'metis/client/missions'
+import ClientMissionForce from 'metis/client/missions/forces'
+import ClientMissionNode from 'metis/client/missions/nodes'
+import ClientMissionPrototype from 'metis/client/missions/nodes/prototypes'
+import { compute } from 'metis/client/toolbox'
 import {
   useDefaultProps,
   useEventListener,
   withPreprocessor,
-} from 'src/toolbox/hooks'
+} from 'metis/client/toolbox/hooks'
+import { ClassList, Vector1D, Vector2D } from 'metis/toolbox'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { v4 as generateHash } from 'uuid'
-import ClassList from '../../../../../../shared/toolbox/html/ClassList'
-import { Vector1D, Vector2D } from '../../../../../../shared/toolbox/space'
 import ButtonSvgEngine from '../../user-controls/buttons/panels/engines'
 import {
   useButtonSvgLayout,

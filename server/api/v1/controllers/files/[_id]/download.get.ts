@@ -1,9 +1,8 @@
-import { Request, Response } from 'express-serve-static-core'
-import FileReferenceModel from 'metis/server/database/models/file-references'
-import MetisFileStore from 'metis/server/files'
-import ServerFileReference from 'metis/server/files/references'
-import { StatusError } from 'metis/server/http'
-import ApiResponse from '../../../library/response'
+import type { Request, Response } from 'express-serve-static-core'
+import { FileReferenceModel } from '../../../../../database'
+import type { MetisFileStore } from '../../../../../files'
+import { ServerFileReference } from '../../../../../files'
+import { ApiResponse, StatusError } from '../../../library'
 
 /**
  * Retrieves a file reference from the database

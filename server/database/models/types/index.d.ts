@@ -1,5 +1,5 @@
-import { TUserJson } from 'metis/users'
-import mongoose from 'mongoose'
+import type { TUserJson } from 'metis/users'
+import type mongoose from 'mongoose'
 
 /**
  * A document that can be recovered, if need be,

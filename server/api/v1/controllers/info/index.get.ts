@@ -1,6 +1,6 @@
-import { Request, Response } from 'express-serve-static-core'
-import MetisServer from 'metis/server'
-import ApiResponse from '../../library/response'
+import type { Request, Response } from 'express-serve-static-core'
+import { MetisServer } from '../../../..'
+import { ApiResponse } from '../../library'
 
 /**
  * This will retrieve the info about METIS.

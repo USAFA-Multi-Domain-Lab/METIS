@@ -1,3 +1,6 @@
+import { compute } from 'metis/client/toolbox'
+import { useMountHandler, useUnmountHandler } from 'metis/client/toolbox/hooks'
+import { ClassList } from 'metis/toolbox'
 import React, {
   Children,
   isValidElement,
@@ -6,9 +9,6 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import { compute } from 'src/toolbox'
-import { useMountHandler, useUnmountHandler } from 'src/toolbox/hooks'
-import ClassList from '../../../../../../shared/toolbox/html/ClassList'
 import Panel from './Panel'
 import './PanelLayout.scss'
 

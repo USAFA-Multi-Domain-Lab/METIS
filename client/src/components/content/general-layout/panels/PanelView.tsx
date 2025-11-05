@@ -1,5 +1,5 @@
-import { compute } from 'src/toolbox'
-import ClassList from '../../../../../../shared/toolbox/html/ClassList'
+import { compute } from 'metis/client/toolbox'
+import { ClassList } from 'metis/toolbox'
 import { usePanelContext } from './Panel'
 import './PanelView.scss'
 

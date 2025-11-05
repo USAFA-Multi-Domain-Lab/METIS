@@ -1,8 +1,7 @@
-import { TMetisClientComponents } from 'src'
-import { ClientTargetEnvironment } from 'src/target-environments'
-import ClientTarget from 'src/target-environments/targets'
-import ClientMission from '..'
-import Effect, {
+import { ClientTargetEnvironment } from 'metis/client/target-environments'
+import ClientTarget from 'metis/client/target-environments/targets'
+import {
+  Effect,
   TEffectContextExecution,
   TEffectContextSession,
   TEffectExecutionTriggered,
@@ -12,7 +11,9 @@ import Effect, {
   TEffectSessionTriggeredJson,
   TEffectType,
   TSelectEffectContext,
-} from '../../../../shared/missions/effects'
+} from 'metis/missions'
+import { TMetisClientComponents } from 'src'
+import ClientMission from '..'
 import ClientMissionAction from '../actions'
 
 /**

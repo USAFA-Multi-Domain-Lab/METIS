@@ -1,13 +1,11 @@
-import { TMetisClientComponents } from 'src'
-import ExecutionOutcome, {
-  TOutcomeState,
-} from '../../../../shared/missions/actions/outcomes'
+import { TMetisClientComponents } from 'metis/client'
+import { ExecutionOutcome, TOutcomeState } from 'metis/missions'
 import ClientActionExecution from './executions'
 
 /**
  * An outcome for the execution of an action via the MissionNode.prototype.execute method.
  */
-export default class ClientExecutionOutcome extends ExecutionOutcome<TMetisClientComponents> {
+export class ClientExecutionOutcome extends ExecutionOutcome<TMetisClientComponents> {
   /**
    * @param _id Unique identifier for the outcome.
    * @param state The state of the outcome.

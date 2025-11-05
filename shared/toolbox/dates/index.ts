@@ -1,7 +1,2 @@
-import DateToolbox from './DateToolbox'
-import StopWatch from './StopWatchh'
-
-export default {
-  DateToolbox,
-  StopWatch,
-}
+export { DateToolbox } from './DateToolbox'
+export { StopWatch } from './StopWatch'

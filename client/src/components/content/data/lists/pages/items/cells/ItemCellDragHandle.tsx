@@ -1,5 +1,5 @@
+import Tooltip from 'metis/client/components/content/communication/Tooltip'
 import { useRef } from 'react'
-import Tooltip from 'src/components/content/communication/Tooltip'
 import { MetisComponent } from '../../../../../../../../../shared'
 import { useListContext } from '../../../List'
 

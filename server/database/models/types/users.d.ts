@@ -1,6 +1,6 @@
-import { Request } from 'express'
-import { TUserExistingJson } from 'metis/users'
-import {
+import type { Request } from 'express'
+import type { TUserExistingJson, TUserJson } from 'metis/users'
+import type {
   HydratedDocument,
   Model,
   ProjectionType,

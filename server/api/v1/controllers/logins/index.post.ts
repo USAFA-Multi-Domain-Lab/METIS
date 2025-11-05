@@ -1,10 +1,9 @@
-import { Request, Response } from 'express-serve-static-core'
-import UserModel from 'metis/server/database/models/users'
-import { StatusError } from 'metis/server/http'
-import { expressLogger } from 'metis/server/logging'
-import ServerLogin from 'metis/server/logins'
-import ServerUser from 'metis/server/users'
-import ApiResponse from '../../library/response'
+import type { Request, Response } from 'express-serve-static-core'
+import { UserModel } from '../../../../database'
+import { expressLogger } from '../../../../logging'
+import { ServerLogin } from '../../../../logins'
+import { ServerUser } from '../../../../users'
+import { ApiResponse, StatusError } from '../../library'
 /**
  * This will log the user in.
  * @param request The express request.

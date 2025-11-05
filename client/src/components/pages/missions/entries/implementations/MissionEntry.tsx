@@ -1,20 +1,20 @@
-import { useRef, useState } from 'react'
-import Divider from 'src/components/content/form/Divider'
-import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
-import If from 'src/components/content/util/If'
-import { useMissionPageContext } from 'src/components/pages/missions/context'
-import { useGlobalContext } from 'src/context/global'
-import ClientMission from 'src/missions'
-import { ClientEffect } from 'src/missions/effects'
-import { ClientTargetEnvironment } from 'src/target-environments'
+import Divider from 'metis/client/components/content/form/Divider'
+import ButtonSvgPanel from 'metis/client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from 'metis/client/components/content/user-controls/buttons/panels/hooks'
+import If from 'metis/client/components/content/util/If'
+import { useMissionPageContext } from 'metis/client/components/pages/missions/context'
+import { useGlobalContext } from 'metis/client/context/global'
+import ClientMission from 'metis/client/missions'
+import { ClientEffect } from 'metis/client/missions/effects'
+import { ClientTargetEnvironment } from 'metis/client/target-environments'
 import {
   useMountHandler,
   usePostInitEffect,
   useRequireLogin,
   useUnmountHandler,
-} from 'src/toolbox/hooks'
-import { TMissionComponentDefect } from '../../../../../../../shared/missions/component'
+} from 'metis/client/toolbox/hooks'
+import { TMissionComponentDefect } from 'metis/missions'
+import { useRef, useState } from 'react'
 import Tooltip from '../../../../content/communication/Tooltip'
 import { DetailString } from '../../../../content/form/DetailString'
 import ListOld from '../../../../content/general-layout/ListOld'

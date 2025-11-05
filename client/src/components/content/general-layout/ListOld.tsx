@@ -1,8 +1,8 @@
 /* -- imports -- */
 
 import lodash from 'lodash'
+import { TAjaxStatus } from 'metis/toolbox'
 import React from 'react'
-import { TAjaxStatus } from '../../../../../shared/toolbox/ajax'
 import Tooltip from '../communication/Tooltip'
 import './ListOld.scss'
 

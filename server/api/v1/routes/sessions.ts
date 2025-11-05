@@ -1,9 +1,10 @@
-import { Router } from 'express'
-import MetisServer from 'metis/server'
+import type { Router } from 'express'
+import type { TSessionConfig } from 'metis/sessions'
+import { Session } from 'metis/sessions'
+import type { MetisServer } from '../../..'
 import defineRequests, {
   RequestBodyFilters,
-} from 'metis/server/middleware/requests'
-import Session, { TSessionConfig } from 'metis/sessions'
+} from '../../../middleware/requests'
 import { auth } from '../../../middleware/users'
 import deleteSession from '../controllers/sessions/[_id].delete'
 import downloadMissionFile from '../controllers/sessions/files/[_id]/download.get'

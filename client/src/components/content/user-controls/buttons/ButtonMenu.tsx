@@ -1,15 +1,14 @@
 /* -- COMPONENT -- */
 
-import { useRef, useState } from 'react'
-import { compute } from 'src/toolbox'
+import { compute } from 'metis/client/toolbox'
 import {
   useEventListener,
   useMountHandler,
   useResizeObserver,
   useUnmountHandler,
-} from 'src/toolbox/hooks'
-import { Vector2D } from '../../../../../../shared/toolbox/space'
-import StringToolbox from '../../../../../../shared/toolbox/strings'
+} from 'metis/client/toolbox/hooks'
+import { StringToolbox, Vector2D } from 'metis/toolbox'
+import { useRef, useState } from 'react'
 import './ButtonMenu.scss'
 import ButtonSvgPanel from './panels/ButtonSvgPanel'
 import ButtonSvgEngine from './panels/engines'

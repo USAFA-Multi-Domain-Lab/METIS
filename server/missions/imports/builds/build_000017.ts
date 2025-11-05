@@ -1,4 +1,4 @@
-import { TMissionImportBuild } from '..'
+import type { TMissionImportBuild } from '../MissionImport'
 
 // -- BUILD 17 --
 // This migration script is responsible

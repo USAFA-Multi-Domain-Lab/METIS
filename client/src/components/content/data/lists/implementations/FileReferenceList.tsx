@@ -1,12 +1,11 @@
+import Prompt from 'metis/client/components/content/communication/Prompt'
 import { useEffect, useRef, useState } from 'react'
-import Prompt from 'src/components/content/communication/Prompt'
 
-import If from 'src/components/content/util/If'
-import { useGlobalContext } from 'src/context/global'
-import ClientFileReference from 'src/files/references'
-import { useDefaultProps } from 'src/toolbox/hooks'
-import { DateToolbox } from '../../../../../../../shared/toolbox/dates'
-import FileToolbox from '../../../../../../../shared/toolbox/files'
+import If from 'metis/client/components/content/util/If'
+import { useGlobalContext } from 'metis/client/context/global'
+import ClientFileReference from 'metis/client/files/references'
+import { useDefaultProps } from 'metis/client/toolbox/hooks'
+import { DateToolbox, FileToolbox } from 'metis/toolbox'
 import List, { createDefaultListProps, TList_P } from '../List'
 import ListUpload from '../uploads'
 

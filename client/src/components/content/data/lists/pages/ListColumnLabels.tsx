@@ -1,5 +1,5 @@
+import { compute } from 'metis/client/toolbox'
 import { ReactNode } from 'react'
-import { compute } from 'src/toolbox'
 import { MetisComponent } from '../../../../../../../shared'
 import {
   OPTIONS_COLUMN_WIDTH,

@@ -1,7 +1,7 @@
+import { ClientEffect } from 'metis/client/missions/effects'
+import { usePostInitEffect } from 'metis/client/toolbox/hooks'
+import { TBooleanArg } from 'metis/target-environments/args/boolean-arg'
 import { useEffect, useState } from 'react'
-import { ClientEffect } from 'src/missions/effects'
-import { usePostInitEffect } from 'src/toolbox/hooks'
-import { TBooleanArg } from '../../../../../../../shared/target-environments/args/boolean-arg'
 import { DetailToggle } from '../../../../content/form/DetailToggle'
 
 /**

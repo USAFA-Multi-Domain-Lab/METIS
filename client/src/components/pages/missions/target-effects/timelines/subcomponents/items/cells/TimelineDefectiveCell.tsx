@@ -1,7 +1,6 @@
-import WarningIndicator from 'src/components/content/user-controls/WarningIndicator'
-import { compute } from 'src/toolbox'
-import { TMissionComponentDefect } from '../../../../../../../../../../shared/missions/component'
-import { TEffectType } from '../../../../../../../../../../shared/missions/effects'
+import WarningIndicator from 'metis/client/components/content/user-controls/WarningIndicator'
+import { compute } from 'metis/client/toolbox'
+import { TEffectType, TMissionComponentDefect } from 'metis/missions'
 import { TimelineItemCell } from './TimelineItemCell'
 
 /**

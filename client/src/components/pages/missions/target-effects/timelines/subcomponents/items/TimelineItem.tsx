@@ -1,21 +1,17 @@
+import Tooltip from 'metis/client/components/content/communication/Tooltip'
+import { useButtonMenuEngine } from 'metis/client/components/content/user-controls/buttons/ButtonMenu'
+import ButtonMenuController from 'metis/client/components/content/user-controls/buttons/ButtonMenuController'
+import ButtonSvgPanel from 'metis/client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from 'metis/client/components/content/user-controls/buttons/panels/hooks'
+import { useMissionPageContext } from 'metis/client/components/pages/missions/context'
+import useEffectItemButtonCallbacks from 'metis/client/components/pages/missions/hooks/mission-components/effects'
+import { useGlobalContext } from 'metis/client/context/global'
+import { compute } from 'metis/client/toolbox'
+import { useRequireLogin } from 'metis/client/toolbox/hooks'
+import { TEffectTrigger, TEffectType } from 'metis/missions'
+import { CallToolbox, ClassList } from 'metis/toolbox'
 import { useEffect, useRef } from 'react'
 import { TMetisClientComponents } from 'src'
-import Tooltip from 'src/components/content/communication/Tooltip'
-import { useButtonMenuEngine } from 'src/components/content/user-controls/buttons/ButtonMenu'
-import ButtonMenuController from 'src/components/content/user-controls/buttons/ButtonMenuController'
-import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
-import { useMissionPageContext } from 'src/components/pages/missions/context'
-import useEffectItemButtonCallbacks from 'src/components/pages/missions/hooks/mission-components/effects'
-import { useGlobalContext } from 'src/context/global'
-import { compute } from 'src/toolbox'
-import { useRequireLogin } from 'src/toolbox/hooks'
-import {
-  TEffectTrigger,
-  TEffectType,
-} from '../../../../../../../../../shared/missions/effects'
-import { ifNonNullable } from '../../../../../../../../../shared/toolbox/calls'
-import ClassList from '../../../../../../../../../shared/toolbox/html/ClassList'
 import { TTimelineDragDropItem } from '../../EffectTimeline'
 import { useTimelineContext } from '../../context'
 import './TimelineItem.scss'
@@ -107,7 +103,7 @@ export function TimelineItem<TType extends TEffectType>({
         label: 'Duplicate',
         description: 'Duplicate the selected effect.',
         permissions: ['missions_write'],
-        onClick: () => ifNonNullable(onDuplicateRequest, selection),
+        onClick: () => CallToolbox.ifNonNullable(onDuplicateRequest, selection),
       },
       {
         key: 'delete',
@@ -116,7 +112,7 @@ export function TimelineItem<TType extends TEffectType>({
         label: 'Delete',
         description: 'Delete the selected effect.',
         permissions: ['missions_write'],
-        onClick: () => ifNonNullable(onDeleteRequest, selection),
+        onClick: () => CallToolbox.ifNonNullable(onDeleteRequest, selection),
       },
     ],
   })

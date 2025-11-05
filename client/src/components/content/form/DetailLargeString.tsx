@@ -1,6 +1,6 @@
 import { EditorEvents } from '@tiptap/react'
+import { compute } from 'metis/client/toolbox'
 import { useState } from 'react'
-import { compute } from 'src/toolbox'
 import { TDetailWithInput_P } from '.'
 import Tooltip from '../communication/Tooltip'
 import RichText from '../general-layout/rich-text/RichText'

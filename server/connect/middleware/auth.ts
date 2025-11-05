@@ -1,12 +1,12 @@
-import { ServerEmittedError } from 'metis/connect/errors'
-import { TMetisWsMiddleware } from '..'
-import ServerLogin from '../../logins'
+import { ServerEmittedError } from 'metis/connect'
+import { ServerLogin } from '../../logins/ServerLogin'
+import type { TMetisWsMiddleware } from '../MetisWsServer'
 
 /**
  * Middleware that authenticates the user attempting
  * to connect to the WS server.
  */
-const authMiddleware: TMetisWsMiddleware = (metis, socket, next) => {
+export const authMiddleware: TMetisWsMiddleware = (metis, socket, next) => {
   const { 'disconnect-existing': disconnectExisting } = socket.request.headers
   let { session } = socket.request
   let result: ServerEmittedError | undefined
@@ -27,5 +27,3 @@ const authMiddleware: TMetisWsMiddleware = (metis, socket, next) => {
   // Pass the result to the next middleware.
   next(result)
 }
-
-export default authMiddleware

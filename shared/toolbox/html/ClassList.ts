@@ -3,7 +3,7 @@
  * then joined into one string, which can be used
  * as the `class` attribute of an HTML element.
  */
-export default class ClassList {
+export class ClassList {
   /**
    * The list of classes.
    */

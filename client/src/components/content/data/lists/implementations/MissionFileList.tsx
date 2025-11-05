@@ -1,6 +1,6 @@
-import ClientMissionFile from 'src/missions/files'
-import { useDefaultProps, useRequireLogin } from 'src/toolbox/hooks'
-import FileToolbox from '../../../../../../../shared/toolbox/files'
+import ClientMissionFile from 'metis/client/missions/files'
+import { useDefaultProps, useRequireLogin } from 'metis/client/toolbox/hooks'
+import { FileToolbox } from 'metis/toolbox'
 import List, { createDefaultListProps, TList_P } from '../List'
 
 /**

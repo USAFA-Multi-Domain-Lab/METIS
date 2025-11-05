@@ -1,16 +1,19 @@
-import { useEffect, useState } from 'react'
-import { useGlobalContext, useNavigationMiddleware } from 'src/context/global'
-import ClientMissionFile from 'src/missions/files'
-import ClientMissionForce from 'src/missions/forces'
-import ClientMissionNode from 'src/missions/nodes'
-import SessionClient from 'src/sessions'
-import { compute } from 'src/toolbox'
+import {
+  useGlobalContext,
+  useNavigationMiddleware,
+} from 'metis/client/context/global'
+import ClientMissionFile from 'metis/client/missions/files'
+import ClientMissionForce from 'metis/client/missions/forces'
+import ClientMissionNode from 'metis/client/missions/nodes'
+import SessionClient from 'metis/client/sessions'
+import { compute } from 'metis/client/toolbox'
 import {
   useEventListener,
   useMountHandler,
   useRequireLogin,
-} from 'src/toolbox/hooks'
-import { useSessionRedirects } from 'src/toolbox/hooks/sessions'
+} from 'metis/client/toolbox/hooks'
+import { useSessionRedirects } from 'metis/client/toolbox/hooks/sessions'
+import { useEffect, useState } from 'react'
 import { DefaultPageLayout, TPage_P } from '.'
 import PendingPageModal from '../content/communication/PendingPageModal'
 import Prompt from '../content/communication/Prompt'

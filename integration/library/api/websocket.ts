@@ -7,7 +7,7 @@ import { AnyObject } from '../toolbox'
 /**
  * The WebSocket API class is used to establish real-time communication with target environments.
  */
-export default class WebSocketApi extends Api {
+export class WebSocketApi extends Api {
   /**
    * The WebSocket URL where the connection can be established.
    */

@@ -1,11 +1,11 @@
-import { EventManager, TListenerTargetEmittable } from '../../../shared/events'
-import StringToolbox from '../../../shared/toolbox/strings'
+import { EventManager, TListenerTargetEmittable } from 'metis/events'
+import { StringToolbox } from 'metis/toolbox'
 import { TButtonText_P } from '../components/content/user-controls/buttons/ButtonText'
 
 /**
  * Notifies a user of an event or message.
  */
-export default class Notification
+export class Notification
   implements TNotification, TListenerTargetEmittable<TNotificationEventMethods>
 {
   // Implemented

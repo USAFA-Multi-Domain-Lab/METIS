@@ -1,7 +1,5 @@
-import { io, Socket } from 'socket.io-client'
-import SessionClient from 'src/sessions'
-import Logging from 'src/toolbox/logging'
-import { v4 as generateHash } from 'uuid'
+import SessionClient from 'metis/client/sessions'
+import Logging from 'metis/client/toolbox/logging'
 import {
   TAnyResponseEvent,
   TClientEvent,
@@ -16,17 +14,17 @@ import {
   TServerEvent,
   TServerEvents,
   TServerMethod,
-} from '../../../shared/connect/data'
-import { ServerEmittedError } from '../../../shared/connect/errors'
-import { TListenerTarget } from '../../../shared/events'
-import { TSingleTypeObject } from '../../../shared/toolbox/objects'
+} from 'metis/connect'
+import { ServerEmittedError } from 'metis/connect/errors'
+import { TListenerTarget } from 'metis/events'
+import { TSingleTypeObject } from 'metis/toolbox'
+import { io, Socket } from 'socket.io-client'
+import { v4 as generateHash } from 'uuid'
 
 /**
  * METIS web-socket-based, server connection.
  */
-export default class ServerConnection
-  implements TListenerTarget<TServerMethod>
-{
+export class ServerConnection implements TListenerTarget<TServerMethod> {
   /**
    * The web socket connection itself.
    */

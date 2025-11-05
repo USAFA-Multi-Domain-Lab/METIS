@@ -1,6 +1,6 @@
+import { LocalContext, LocalContextProvider } from 'metis/client/context/local'
+import { compute } from 'metis/client/toolbox'
 import { ReactNode, useEffect, useState } from 'react'
-import { LocalContext, LocalContextProvider } from 'src/context/local'
-import { compute } from 'src/toolbox'
 import Tooltip from '../../communication/Tooltip'
 import './DetailDropdown.scss'
 import DropdownOption from './subcomponents/DropdownOption'

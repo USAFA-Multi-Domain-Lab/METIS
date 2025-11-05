@@ -1,16 +1,15 @@
-// ------- IMPORTS ------- //
-import { NextFunction, Request, Response } from 'express-serve-static-core'
-import BooleanToolbox from 'metis/toolbox/booleans'
-import { AnyObject } from 'metis/toolbox/objects'
-import VersionToolbox from 'metis/toolbox/versions'
-import User from 'metis/users'
-import UserAccess, { TUserAccess } from 'metis/users/accesses'
-import TUserPreferencesJson, {
+import type { NextFunction, Request, Response } from 'express-serve-static-core'
+import type { TAnyObject } from 'metis/toolbox'
+import { BooleanToolbox, VersionToolbox } from 'metis/toolbox'
+import type {
   TExistingUserPreferencesJson,
-} from 'metis/users/preferences'
+  TUserAccess,
+  TUserPreferencesJson,
+} from 'metis/users'
+import { User, UserAccess } from 'metis/users'
 import { isObjectIdOrHexString } from 'mongoose'
 import { z as zod } from 'zod'
-import { TZodify } from '../connect/middleware/validate'
+import type { TZodify } from '../connect/middleware/validate'
 
 // ------- ENUMERATIONS ------- //
 
@@ -380,7 +379,7 @@ const invalidRequestBodyPropertyException = (
  * @returns An error message or null
  */
 const validateTypeOfQueryKey = (
-  query: AnyObject,
+  query: TAnyObject,
   key: string,
   type: TQueryValue,
 ): null | Error => {
@@ -457,7 +456,7 @@ const validateTypeOfQueryKey = (
  * @returns An error message or null
  */
 const validateTypeOfParamsKey = (
-  params: AnyObject,
+  params: TAnyObject,
   key: string,
   type: TParamValue,
 ): null | Error => {
@@ -519,12 +518,12 @@ const validateTypeOfParamsKey = (
  * @returns A sanitized object with the correct keys and their values or an error
  */
 const validateBodyKeys = (
-  body: AnyObject,
+  body: TAnyObject,
   requiredBodyKeys: {},
   optionalBodyKeys: {},
   recursiveParentKey?: string,
-  sanitizedObject: AnyObject = {},
-): AnyObject | Error => {
+  sanitizedObject: TAnyObject = {},
+): TAnyObject | Error => {
   // This loop checks to see if the required keys
   // are in the request body of the current express
   // request and if the required keys are the correct
@@ -575,7 +574,7 @@ const validateBodyKeys = (
 
       sanitizedObject[requiredKey] = validateBodyKeys(
         bodyValue,
-        requiredValue as AnyObject,
+        requiredValue as TAnyObject,
         {},
         nextRecursiveParentKey,
       )
@@ -623,7 +622,7 @@ const validateBodyKeys = (
         sanitizedObject[optionalKey] = validateBodyKeys(
           bodyValue,
           {},
-          optionalValue as AnyObject,
+          optionalValue as TAnyObject,
           undefined,
           sanitizedObject[optionalKey],
         )
@@ -651,11 +650,11 @@ const validateBodyKeys = (
  * @returns A sanitized object with the correct keys and their values or an error
  */
 const validateQueryKeys = (
-  query: AnyObject,
+  query: TAnyObject,
   requiredQueryKeys: {},
   optionalQueryKeys?: {},
-): AnyObject | Error => {
-  let sanitizedObject: AnyObject = {}
+): TAnyObject | Error => {
+  let sanitizedObject: TAnyObject = {}
 
   // This loop checks to see if the required keys
   // are in the query of the current express
@@ -738,10 +737,10 @@ const validateQueryKeys = (
  * @returns A sanitized object with the correct keys and their values or an error
  */
 const validateParamKeys = (
-  params: AnyObject,
+  params: TAnyObject,
   requiredParamsKeys: {},
-): AnyObject | Error => {
-  let sanitizedObject: AnyObject = {}
+): TAnyObject | Error => {
+  let sanitizedObject: TAnyObject = {}
 
   // This loop checks to see if the required keys
   // are in the params of the current express
@@ -822,7 +821,7 @@ export const defineRequests = (
         // If an API route has a defined query with required
         // or optional keys, then validate the query keys and
         // their values
-        let sanitizedQuery: AnyObject = validateQueryKeys(
+        let sanitizedQuery: TAnyObject = validateQueryKeys(
           request.query,
           requiredStructures?.query ?? {},
           optionalStructures?.query ?? {},
@@ -836,7 +835,7 @@ export const defineRequests = (
         // If an API route has a defined params with required
         // or optional keys, then validate the params keys and
         // their values
-        let sanitizedParams: AnyObject = validateParamKeys(
+        let sanitizedParams: TAnyObject = validateParamKeys(
           request.params,
           requiredStructures.params,
         )
@@ -849,7 +848,7 @@ export const defineRequests = (
         // If an API route has a defined body with required
         // or optional keys, then validate the body keys and
         // their values
-        let sanitizedBody: AnyObject = validateBodyKeys(
+        let sanitizedBody: TAnyObject = validateBodyKeys(
           request.body,
           requiredStructures?.body ?? {},
           optionalStructures?.body ?? {},

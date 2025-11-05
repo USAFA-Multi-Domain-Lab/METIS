@@ -1,17 +1,16 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["vite/client"],
-    "jsx": "react-jsx",
     "baseUrl": ".",
-    // Vite/browser ESM settings
+    "jsx": "react-jsx",
+    "paths": {
+      "metis": ["../shared/index.ts"],
+      "metis/*": ["../shared/*"],
+      "metis/client": ["src/index.tsx"],
+      "metis/client/*": ["src/*"]
+    },
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "paths": {
-      "src/*": ["src/*"],
-      "shared/*": ["../shared/*"],
-      "metis/*": ["../shared/*", "src/*"]
-    }
-  },
-  "include": ["src", "src/global.d.ts", "index.html", "../shared/events"]
+    "types": ["vite/client"]
+  }
 }

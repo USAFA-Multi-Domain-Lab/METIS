@@ -1,28 +1,28 @@
-import { useEffect, useState } from 'react'
-import ClientMissionAction from 'src/missions/actions'
-import { ClientEffect } from 'src/missions/effects'
-import ClientMissionFile from 'src/missions/files'
-import ClientMissionForce from 'src/missions/forces'
-import ClientMissionNode from 'src/missions/nodes'
-import { compute } from 'src/toolbox'
-import { usePostInitEffect } from 'src/toolbox/hooks'
+import ClientMissionAction from 'metis/client/missions/actions'
+import { ClientEffect } from 'metis/client/missions/effects'
+import ClientMissionFile from 'metis/client/missions/files'
+import ClientMissionForce from 'metis/client/missions/forces'
+import ClientMissionNode from 'metis/client/missions/nodes'
+import { compute } from 'metis/client/toolbox'
+import { usePostInitEffect } from 'metis/client/toolbox/hooks'
 import {
   TMissionComponentArg,
   TMissionComponentMetadata,
-} from '../../../../../../../shared/target-environments/args/mission-component'
+} from 'metis/target-environments/args/mission-component'
 import ActionArg, {
   TActionMetadata,
-} from '../../../../../../../shared/target-environments/args/mission-component/action-arg'
+} from 'metis/target-environments/args/mission-component/action-arg'
 import FileArg, {
   TFileMetadata,
-} from '../../../../../../../shared/target-environments/args/mission-component/file-arg'
+} from 'metis/target-environments/args/mission-component/file-arg'
 import ForceArg, {
   TForceMetadata,
-} from '../../../../../../../shared/target-environments/args/mission-component/force-arg'
+} from 'metis/target-environments/args/mission-component/force-arg'
 import NodeArg, {
   TNodeMetadata,
-} from '../../../../../../../shared/target-environments/args/mission-component/node-arg'
-import StringToolbox from '../../../../../../../shared/toolbox/strings'
+} from 'metis/target-environments/args/mission-component/node-arg'
+import { StringToolbox } from 'metis/toolbox'
+import { useEffect, useState } from 'react'
 import ArgAction from './ArgAction'
 import ArgFile from './ArgFile'
 import ArgForce from './ArgForce'

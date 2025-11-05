@@ -10,6 +10,8 @@
     "react": "cd client && vite --config vite.config.ts",
     "build": "cd client && vite build --config vite.config.ts",
     "preview": "cd client && vite preview --config vite.config.ts",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "create-users": "ts-node -r tsconfig-paths/register server/database/scripts/metis-users/manage-users --create",
     "restore-users": "ts-node -r tsconfig-paths/register server/database/scripts/metis-users/manage-users --restore",
     "delete-users": "ts-node -r tsconfig-paths/register server/database/scripts/metis-users/manage-users --delete",
@@ -91,6 +93,8 @@
     "@types/unzipper": "^0.10.11",
     "@types/uuid": "^9.0.8",
     "@types/ws": "^8.18.1",
+    "@typescript-eslint/eslint-plugin": "^8.46.3",
+    "@typescript-eslint/parser": "^8.46.3",
     "@vitejs/plugin-react": "^5.1.0",
     "jest": "^29.7.0",
     "nodemon": "^3.1.7",
@@ -107,12 +111,6 @@
     "semi": false,
     "trailingComma": "all",
     "quoteProps": "consistent"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
   },
   "browserslist": {
     "production": [

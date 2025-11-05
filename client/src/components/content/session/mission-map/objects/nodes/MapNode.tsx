@@ -1,17 +1,14 @@
+import Tooltip from 'metis/client/components/content/communication/Tooltip'
+import ButtonSvgPanel from 'metis/client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from 'metis/client/components/content/user-controls/buttons/panels/hooks'
+import ClientMissionNode from 'metis/client/missions/nodes'
+import { compute } from 'metis/client/toolbox'
+import { useEventListener, useInlineStyling } from 'metis/client/toolbox/hooks'
+import { getIconPath } from 'metis/client/toolbox/icons'
+import { TNodeBlockStatus, TNodeExecutionState } from 'metis/missions'
+import { ClassList } from 'metis/toolbox'
 import { useState } from 'react'
-import Tooltip from 'src/components/content/communication/Tooltip'
-import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
-import ClientMissionNode from 'src/missions/nodes'
-import { compute } from 'src/toolbox'
-import { useEventListener, useInlineStyling } from 'src/toolbox/hooks'
-import { getIconPath } from 'src/toolbox/icons'
 import { TMapCompatibleNode, TMapNode_P, TNodeButton } from '.'
-import {
-  TNodeBlockStatus,
-  TNodeExecutionState,
-} from '../../../../../../../../shared/missions/nodes'
-import ClassList from '../../../../../../../../shared/toolbox/html/ClassList'
 import { useMapContext } from '../../MissionMap'
 import './MapNode.scss'
 

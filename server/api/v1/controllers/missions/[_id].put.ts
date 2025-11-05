@@ -1,9 +1,8 @@
-import { Request, Response } from 'express-serve-static-core'
-import { TMissionSaveJson } from 'metis/missions'
-import MissionModel from 'metis/server/database/models/missions'
-import { StatusError } from 'metis/server/http'
-import { databaseLogger } from 'metis/server/logging'
-import ApiResponse from '../../library/response'
+import type { Request, Response } from 'express-serve-static-core'
+import type { TMissionSaveJson } from 'metis/missions'
+import { MissionModel } from '../../../../database'
+import { databaseLogger } from '../../../../logging'
+import { ApiResponse, StatusError } from '../../library'
 
 /**
  * This will update a mission.

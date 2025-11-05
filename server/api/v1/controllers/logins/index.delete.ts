@@ -1,11 +1,9 @@
-import { Request, Response } from 'express-serve-static-core'
-import { ServerEmittedError } from 'metis/connect/errors'
-import { StatusError } from 'metis/server/http'
-import { databaseLogger } from 'metis/server/logging'
-import ServerLogin from 'metis/server/logins'
-import ServerWebSession from 'metis/server/logins/web-sessions'
-import SessionServer from 'metis/server/sessions'
-import ApiResponse from '../../library/response'
+import type { Request, Response } from 'express-serve-static-core'
+import { ServerEmittedError } from 'metis/connect'
+import { databaseLogger } from '../../../../logging'
+import { ServerLogin, ServerWebSession } from '../../../../logins'
+import { SessionServer } from '../../../../sessions'
+import { ApiResponse, StatusError } from '../../library'
 
 /**
  * This will log the user out.

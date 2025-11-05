@@ -1,11 +1,9 @@
-import { Request, Response } from 'express-serve-static-core'
-import UserModel from 'metis/server/database/models/users'
-import { StatusError } from 'metis/server/http'
-import { databaseLogger } from 'metis/server/logging'
-import ServerLogin from 'metis/server/logins'
-import { TUserExistingJson } from 'metis/users'
-import TUserPreferencesJson from 'metis/users/preferences'
-import ApiResponse from '../../library/response'
+import type { Request, Response } from 'express-serve-static-core'
+import type { TUserExistingJson, TUserPreferencesJson } from 'metis/users'
+import { UserModel } from '../../../../database'
+import { databaseLogger } from '../../../../logging'
+import type { ServerLogin } from '../../../../logins'
+import { ApiResponse, StatusError } from '../../library'
 import { preventSystemUserWrite } from '../../library/users'
 
 /**

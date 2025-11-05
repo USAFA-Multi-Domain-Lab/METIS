@@ -1,4 +1,4 @@
-import { useGlobalContext } from 'src/context/global'
+import { useGlobalContext } from 'metis/client/context/global'
 import './DevOptions.scss'
 
 export function DevOptions(): TReactElement | null {

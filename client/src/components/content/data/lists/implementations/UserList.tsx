@@ -1,9 +1,9 @@
-import Prompt from 'src/components/content/communication/Prompt'
-import { useGlobalContext } from 'src/context/global'
-import { compute } from 'src/toolbox'
-import { useRequireLogin } from 'src/toolbox/hooks'
-import ClientUser from 'src/users'
-import { DateToolbox } from '../../../../../../../shared/toolbox/dates'
+import Prompt from 'metis/client/components/content/communication/Prompt'
+import { useGlobalContext } from 'metis/client/context/global'
+import { compute } from 'metis/client/toolbox'
+import { useRequireLogin } from 'metis/client/toolbox/hooks'
+import ClientUser from 'metis/client/users'
+import { DateToolbox } from 'metis/toolbox'
 import List, { TGetListButtonLabel, TOnListButtonClick } from '../List'
 import {
   TGetItemButtonLabel,

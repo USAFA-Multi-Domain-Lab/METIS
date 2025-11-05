@@ -1,6 +1,6 @@
+import GlobalContext from 'metis/client/context/global'
+import { TEffectType } from 'metis/missions'
 import ReactDOM from 'react-dom/client'
-import GlobalContext from 'src/context/global'
-import { TEffectType } from '../../shared/missions/effects'
 import App from './components/App'
 import ErrorPage from './components/pages/ErrorPage'
 import ClientFileReference from './files/references'

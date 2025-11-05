@@ -5,7 +5,7 @@ import ClientMissionPrototype, { TPrototypeRelation } from '../nodes/prototypes'
  * A transformation within a mission where an existing prototype
  * is translated and placed adjacent to a given destination prototype.
  */
-export default class PrototypeTranslation extends MissionTransformation {
+export class PrototypeTranslation extends MissionTransformation {
   // Implemented
   public get _readyToApply(): boolean {
     return this._relation !== null && this._destination !== null

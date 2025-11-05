@@ -1,15 +1,13 @@
+import Arg, { TTargetArg } from 'metis/target-environments/args'
+import Target, { TTargetJson } from 'metis/target-environments/targets'
 import { TMetisClientComponents } from 'src'
 import { ClientTargetEnvironment } from '.'
-import Arg, { TTargetArg } from '../../../shared/target-environments/args'
-import Target, {
-  TTargetJson,
-} from '../../../shared/target-environments/targets'
 
 /**
  * Class representing a target within a target environment
  * on the client-side.
  */
-export default class ClientTarget extends Target<TMetisClientComponents> {
+export class ClientTarget extends Target<TMetisClientComponents> {
   /**
    * @see {@link Target.migrationVersions}
    */

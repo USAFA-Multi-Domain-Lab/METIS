@@ -1,30 +1,27 @@
 import DOMPurify from 'isomorphic-dompurify'
-import { TMissionSaveJson } from 'metis/missions'
-import MissionFile from 'metis/missions/files'
-import { databaseLogger } from 'metis/server/logging'
-import ServerMission from 'metis/server/missions'
-import ServerMissionAction from 'metis/server/missions/actions'
-import ServerEffect from 'metis/server/missions/effects'
-import ServerMissionForce from 'metis/server/missions/forces'
-import ServerMissionNode from 'metis/server/missions/nodes'
-import StringToolbox from 'metis/toolbox/strings'
-import mongoose, {
-  AnyObject,
-  model,
-  ProjectionType,
-  QueryOptions,
-  Schema,
-} from 'mongoose'
+import type { TMissionSaveJson } from 'metis/missions'
+import { MissionFile } from 'metis/missions'
+import { StringToolbox } from 'metis/toolbox'
+import type { AnyObject, ProjectionType, QueryOptions } from 'mongoose'
+import mongoose, { model, Schema } from 'mongoose'
 import {
   ensureNoNullCreatedBy,
   excludeDeletedForFinds,
   excludeSensitiveForFinds,
   populateCreatedByIfFlagged,
 } from '.'
-import MetisDatabase from '..'
-import { MissionSchema } from './classes'
+import { databaseLogger } from '../../logging'
 import {
-  TMissionStaticMethods,
+  ServerEffect,
+  ServerMission,
+  ServerMissionAction,
+  ServerMissionForce,
+  ServerMissionNode,
+} from '../../missions'
+import { MetisDatabase } from '../MetisDatabase'
+import { MissionSchema } from './classes'
+import type { TMissionStaticMethods } from './types'
+import {
   type TMission,
   type TMissionDoc,
   type TMissionModel,
@@ -584,8 +581,7 @@ missionSchema.post<TMissionDoc>('save', function () {
 /**
  * The mongoose model for a mission in the database.
  */
-const MissionModel = model<TMission, TMissionModel & TMissionStaticMethods>(
-  'Mission',
-  missionSchema,
-)
-export default MissionModel
+export const MissionModel = model<
+  TMission,
+  TMissionModel & TMissionStaticMethods
+>('Mission', missionSchema)

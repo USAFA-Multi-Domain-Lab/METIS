@@ -1,6 +1,6 @@
+import { compute } from 'metis/client/toolbox'
+import inputs from 'metis/client/toolbox/inputs'
 import { useEffect, useState } from 'react'
-import { compute } from 'src/toolbox'
-import inputs from 'src/toolbox/inputs'
 import { TDetail_P } from '.'
 import Tooltip from '../communication/Tooltip'
 import './DetailNumber.scss'

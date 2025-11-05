@@ -1,11 +1,14 @@
-import Prompt from 'src/components/content/communication/Prompt'
-import { useGlobalContext } from 'src/context/global'
-import SessionClient from 'src/sessions'
-import { SessionBasic } from 'src/sessions/basic'
-import { compute } from 'src/toolbox'
-import { usePeriodicRerender, useRequireLogin } from 'src/toolbox/hooks'
+import Prompt from 'metis/client/components/content/communication/Prompt'
+import { useGlobalContext } from 'metis/client/context/global'
+import SessionClient from 'metis/client/sessions'
+import { SessionBasic } from 'metis/client/sessions/basic'
+import { compute } from 'metis/client/toolbox'
+import {
+  usePeriodicRerender,
+  useRequireLogin,
+} from 'metis/client/toolbox/hooks'
+import { DateToolbox } from 'metis/toolbox'
 import { MetisComponent } from '../../../../../../../shared'
-import { DateToolbox } from '../../../../../../../shared/toolbox/dates'
 import List, { TGetListButtonLabel, TOnListButtonClick } from '../List'
 import {
   TGetItemButtonLabel,

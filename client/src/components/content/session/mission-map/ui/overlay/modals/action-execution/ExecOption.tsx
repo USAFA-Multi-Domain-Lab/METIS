@@ -1,11 +1,11 @@
+import Tooltip from 'metis/client/components/content/communication/Tooltip'
+import { useGlobalContext } from 'metis/client/context/global'
+import ClientMissionAction from 'metis/client/missions/actions'
+import SessionClient from 'metis/client/sessions'
+import { compute } from 'metis/client/toolbox'
+import { useEventListener } from 'metis/client/toolbox/hooks'
+import { StringToolbox } from 'metis/toolbox'
 import { useState } from 'react'
-import Tooltip from 'src/components/content/communication/Tooltip'
-import { useGlobalContext } from 'src/context/global'
-import ClientMissionAction from 'src/missions/actions'
-import SessionClient from 'src/sessions'
-import { compute } from 'src/toolbox'
-import { useEventListener } from 'src/toolbox/hooks'
-import StringToolbox from '../../../../../../../../../../shared/toolbox/strings'
 import './ExecOption.scss'
 
 /* -- COMPONENT -- */

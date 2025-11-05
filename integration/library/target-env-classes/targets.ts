@@ -1,13 +1,16 @@
 import fs from 'fs'
-import { TTargetArgJson } from 'metis/target-environments/args'
-import { TTargetJson, TTargetScript } from 'metis/target-environments/targets'
-import TargetMigrationRegistry from 'metis/target-environments/targets/migrations/registry'
+import type {
+  TTargetArgJson,
+  TTargetJson,
+  TTargetScript,
+} from 'metis/target-environments'
+import { TargetMigrationRegistry } from 'metis/target-environments'
 import path from 'path'
 
 /**
  * Defines a target.
  */
-export default class TargetSchema {
+export class TargetSchema {
   /**
    * The ID of the target.
    */

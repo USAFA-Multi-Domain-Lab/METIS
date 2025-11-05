@@ -1,5 +1,4 @@
-import { TFileReferenceJson } from 'metis/files/references'
-import ServerFileReference from 'metis/server/files/references'
+import type { TFileReferenceJson } from 'metis/files'
 import { model, Schema } from 'mongoose'
 import path from 'path'
 import {
@@ -9,6 +8,7 @@ import {
   excludeSensitiveForFinds,
   populateCreatedByIfFlagged,
 } from '.'
+import { ServerFileReference } from '../../files/ServerFileReference'
 import { FileReferenceSchema } from './classes'
 import type {
   TFileReference,
@@ -166,9 +166,7 @@ fileReferenceSchema.post<TPostReferenceQuery>(
 /**
  * The mongoose model for a file reference in the database.
  */
-const FileReferenceModel = model<TFileReference, TFileReferenceModel>(
+export const FileReferenceModel = model<TFileReference, TFileReferenceModel>(
   'FileReference',
   fileReferenceSchema,
 )
-
-export default FileReferenceModel

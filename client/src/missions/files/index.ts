@@ -1,21 +1,16 @@
-import { TMetisClientComponents } from 'src'
-import ClientFileReference from 'src/files/references'
-import SessionClient from 'src/sessions'
-import ClientMission from '..'
-import {
-  EventManager,
-  TListenerTargetEmittable,
-} from '../../../../shared/events'
-import MissionFile, {
-  TMissionFileJson,
-} from '../../../../shared/missions/files/'
-import StringToolbox from '../../../../shared/toolbox/strings'
-import ClientMissionForce from '../forces'
+import { TMetisClientComponents } from 'metis/client'
+import ClientFileReference from 'metis/client/files/references'
+import ClientMission from 'metis/client/missions'
+import ClientMissionForce from 'metis/client/missions/forces'
+import SessionClient from 'metis/client/sessions'
+import { EventManager, TListenerTargetEmittable } from 'metis/events'
+import { MissionFile, TMissionFileJson } from 'metis/missions'
+import { StringToolbox } from 'metis/toolbox'
 
 /**
  * Client implementation of `MissionFile` class.
  */
-export default class ClientMissionFile
+export class ClientMissionFile
   extends MissionFile<TMetisClientComponents>
   implements TListenerTargetEmittable<TFileEventMethods>
 {

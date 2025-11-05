@@ -1,7 +1,7 @@
+import ClientUser from 'metis/client/users'
+import { TLogin } from 'metis/logins'
+import User from 'metis/users'
 import { useEffect } from 'react'
-import ClientUser from 'src/users'
-import { TLogin } from '../../../../shared/logins'
-import User from '../../../../shared/users'
 
 /**
  * Options for `useResizeObserver` hook.

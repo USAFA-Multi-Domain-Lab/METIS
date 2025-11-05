@@ -1,7 +1,7 @@
-import { Request, Response } from 'express-serve-static-core'
+import type { Request, Response } from 'express-serve-static-core'
 import fs from 'fs'
 import path from 'path'
-import ApiResponse from '../../library/response'
+import { ApiResponse } from '../../library'
 /**
  * This will retrieve the changelog.
  * @param request The express request.

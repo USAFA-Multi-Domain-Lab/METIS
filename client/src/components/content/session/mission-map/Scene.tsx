@@ -1,6 +1,6 @@
+import { compute } from 'metis/client/toolbox'
+import { Vector1D, Vector2D } from 'metis/toolbox'
 import React from 'react'
-import { compute } from 'src/toolbox'
-import { Vector1D, Vector2D } from '../../../../../../shared/toolbox/space'
 import './Scene.scss'
 
 /**

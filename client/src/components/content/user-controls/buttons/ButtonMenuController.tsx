@@ -1,8 +1,8 @@
+import { useGlobalContext } from 'metis/client/context/global'
+import { compute } from 'metis/client/toolbox'
+import { useEventListener } from 'metis/client/toolbox/hooks'
+import { Vector2D } from 'metis/toolbox'
 import { RefObject } from 'react'
-import { useGlobalContext } from 'src/context/global'
-import { compute } from 'src/toolbox'
-import { useEventListener } from 'src/toolbox/hooks'
-import { Vector2D } from '../../../../../../shared/toolbox/space'
 import { TButtonMenu_P } from './ButtonMenu'
 import ButtonSvgEngine from './panels/engines'
 

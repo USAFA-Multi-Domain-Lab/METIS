@@ -1,7 +1,7 @@
-import { Request, Response } from 'express-serve-static-core'
-import FileReferenceModel from 'metis/server/database/models/file-references'
-import { databaseLogger } from 'metis/server/logging'
-import ApiResponse from '../../../library/response'
+import type { Request, Response } from 'express-serve-static-core'
+import { FileReferenceModel } from '../../../../../database'
+import { databaseLogger } from '../../../../../logging'
+import { ApiResponse } from '../../../library'
 
 /**
  * Marks a file as deleted in the database,

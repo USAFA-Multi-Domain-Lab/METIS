@@ -1,9 +1,8 @@
-import { Request, Response } from 'express-serve-static-core'
-import MetisFileStore from 'metis/server/files'
-import { StatusError } from 'metis/server/http'
-import MissionImport from 'metis/server/missions/imports'
-import ServerUser from 'metis/server/users'
-import ApiResponse from '../../library/response'
+import type { Request, Response } from 'express-serve-static-core'
+import type { MetisFileStore } from '../../../../files'
+import { MissionImport } from '../../../../missions'
+import type { ServerUser } from '../../../../users'
+import { ApiResponse, StatusError } from '../../library'
 
 /**
  * This will import a mission from a file.

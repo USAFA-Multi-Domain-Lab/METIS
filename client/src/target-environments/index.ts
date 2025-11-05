@@ -1,12 +1,10 @@
 import axios from 'axios'
+import { ClientEffect } from 'metis/client/missions/effects'
+import TargetEnvironment, { TTargetEnvJson } from 'metis/target-environments'
+import TargetEnvRegistry from 'metis/target-environments/registry'
+import { TTargetJson } from 'metis/target-environments/targets'
+import { AnyObject } from 'metis/toolbox'
 import { TMetisClientComponents } from 'src'
-import { ClientEffect } from 'src/missions/effects'
-import TargetEnvironment, {
-  TTargetEnvJson,
-} from '../../../shared/target-environments'
-import TargetEnvRegistry from '../../../shared/target-environments/registry'
-import { TTargetJson } from '../../../shared/target-environments/targets'
-import { AnyObject } from '../../../shared/toolbox/objects'
 import ClientTarget from './targets'
 
 /**

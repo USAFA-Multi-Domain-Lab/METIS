@@ -1,6 +1,9 @@
+import { compute } from 'metis/client/toolbox'
+import {
+  useForcedUpdates,
+  usePostRenderEffect,
+} from 'metis/client/toolbox/hooks'
 import { useEffect, useRef, useState } from 'react'
-import { compute } from 'src/toolbox'
-import { useForcedUpdates, usePostRenderEffect } from 'src/toolbox/hooks'
 import Tab, { TTab_P } from '.'
 import { useMapContext } from '../../MissionMap'
 import './TabBar.scss'

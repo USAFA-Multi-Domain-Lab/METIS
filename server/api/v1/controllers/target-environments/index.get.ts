@@ -1,6 +1,6 @@
-import { Request, Response } from 'express-serve-static-core'
-import ServerTargetEnvironment from 'metis/server/target-environments'
-import ApiResponse from '../../library/response'
+import type { Request, Response } from 'express-serve-static-core'
+import { ServerTargetEnvironment } from '../../../../target-environments'
+import { ApiResponse } from '../../library'
 /**
  * This will retrieve all target environments.
  * @param request The express request.

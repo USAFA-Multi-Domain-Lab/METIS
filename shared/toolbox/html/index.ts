@@ -1,7 +1,2 @@
-import ClassList from './ClassList'
-import CssColorUtils from './CssColorUtils'
-
-export default {
-  CssColorUtils,
-  ClassList,
-}
+export { ClassList } from './ClassList'
+export { ColorToolbox } from './ColorToolbox'

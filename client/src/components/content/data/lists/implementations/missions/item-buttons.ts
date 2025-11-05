@@ -1,9 +1,9 @@
-import Prompt from 'src/components/content/communication/Prompt'
-import ButtonSvg from 'src/components/content/user-controls/buttons/panels/elements/ButtonSvg'
-import { useGlobalContext } from 'src/context/global'
-import ClientMission from 'src/missions'
-import SessionClient from 'src/sessions'
-import { useRequireLogin } from 'src/toolbox/hooks'
+import Prompt from 'metis/client/components/content/communication/Prompt'
+import ButtonSvg from 'metis/client/components/content/user-controls/buttons/panels/elements/ButtonSvg'
+import { useGlobalContext } from 'metis/client/context/global'
+import ClientMission from 'metis/client/missions'
+import SessionClient from 'metis/client/sessions'
+import { useRequireLogin } from 'metis/client/toolbox/hooks'
 
 /**
  * Yields mission-related callback functions which can be used for

@@ -1,6 +1,6 @@
+import { StringToolbox } from 'metis/toolbox'
 import mongoose from 'mongoose'
-import { TMissionImportBuild } from '..'
-import StringToolbox from 'metis/toolbox/strings'
+import type { TMissionImportBuild } from '../MissionImport'
 
 // -- BUILD 26 --
 // This migration script is responsible

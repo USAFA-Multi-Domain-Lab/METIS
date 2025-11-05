@@ -1,5 +1,5 @@
+import { useCallbackRef, useResizeObserver } from 'metis/client/toolbox/hooks'
 import { useEffect, useRef, useState } from 'react'
-import { useCallbackRef, useResizeObserver } from 'src/toolbox/hooks'
 import { MetisComponent } from '../../../../../../shared'
 import { useListContext } from './List'
 import { TListPage_P } from './pages/ListPage'

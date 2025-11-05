@@ -1,32 +1,34 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { TMetisClientComponents } from 'src'
-import { useMissionItemButtonCallbacks } from 'src/components/content/data/lists/implementations/missions/item-buttons'
-import { TCreateEffect_P } from 'src/components/content/session/mission-map/ui/overlay/modals/CreateEffect'
-import { useGlobalContext, useNavigationMiddleware } from 'src/context/global'
-import ClientFileReference from 'src/files/references'
-import ClientMission from 'src/missions'
-import ClientMissionAction from 'src/missions/actions'
-import { ClientEffect, TClientEffectHost } from 'src/missions/effects'
-import ClientMissionFile from 'src/missions/files'
-import ClientMissionForce from 'src/missions/forces'
-import ClientMissionNode from 'src/missions/nodes'
-import ClientMissionPrototype from 'src/missions/nodes/prototypes'
-import { compute } from 'src/toolbox'
+import { useMissionItemButtonCallbacks } from 'metis/client/components/content/data/lists/implementations/missions/item-buttons'
+import { TCreateEffect_P } from 'metis/client/components/content/session/mission-map/ui/overlay/modals/CreateEffect'
+import {
+  useGlobalContext,
+  useNavigationMiddleware,
+} from 'metis/client/context/global'
+import ClientFileReference from 'metis/client/files/references'
+import ClientMission from 'metis/client/missions'
+import ClientMissionAction from 'metis/client/missions/actions'
+import { ClientEffect, TClientEffectHost } from 'metis/client/missions/effects'
+import ClientMissionFile from 'metis/client/missions/files'
+import ClientMissionForce from 'metis/client/missions/forces'
+import ClientMissionNode from 'metis/client/missions/nodes'
+import ClientMissionPrototype from 'metis/client/missions/nodes/prototypes'
+import { compute } from 'metis/client/toolbox'
 import {
   useBeforeunload,
   useEventListener,
   useMountHandler,
   useRequireLogin,
-} from 'src/toolbox/hooks'
-import { DefaultPageLayout, TPage_P } from '..'
-import MissionComponent, {
-  TMissionComponentDefect,
-} from '../../../../../shared/missions/component'
+} from 'metis/client/toolbox/hooks'
 import {
+  MissionComponent,
   TEffectTrigger,
   TEffectType,
-} from '../../../../../shared/missions/effects'
-import { TNonEmptyArray } from '../../../../../shared/toolbox/ArrayToolbox'
+  TMissionComponentDefect,
+} from 'metis/missions'
+import { TNonEmptyArray } from 'metis/toolbox'
+import React, { useEffect, useRef, useState } from 'react'
+import { TMetisClientComponents } from 'src'
+import { DefaultPageLayout, TPage_P } from '..'
 import Prompt from '../../content/communication/Prompt'
 import FileReferenceList, {
   TFileReferenceList_P,

@@ -1,7 +1,7 @@
-import Prompt from 'src/components/content/communication/Prompt'
-import { useGlobalContext } from 'src/context/global'
-import ClientMissionAction from 'src/missions/actions'
-import ClientMissionNode from 'src/missions/nodes'
+import Prompt from 'metis/client/components/content/communication/Prompt'
+import { useGlobalContext } from 'metis/client/context/global'
+import ClientMissionAction from 'metis/client/missions/actions'
+import ClientMissionNode from 'metis/client/missions/nodes'
 import { useMissionPageContext } from '../../context'
 
 /**

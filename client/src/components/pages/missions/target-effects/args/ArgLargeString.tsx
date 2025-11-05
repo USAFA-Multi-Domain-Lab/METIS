@@ -1,7 +1,7 @@
+import { ClientEffect } from 'metis/client/missions/effects'
+import { usePostInitEffect } from 'metis/client/toolbox/hooks'
+import { TLargeStringArg } from 'metis/target-environments/args/large-string-arg'
 import { useEffect, useState } from 'react'
-import { ClientEffect } from 'src/missions/effects'
-import { usePostInitEffect } from 'src/toolbox/hooks'
-import { TLargeStringArg } from '../../../../../../../shared/target-environments/args/large-string-arg'
 import { DetailLargeString } from '../../../../content/form/DetailLargeString'
 
 /**

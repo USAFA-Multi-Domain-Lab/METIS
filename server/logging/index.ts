@@ -1,8 +1,9 @@
-import { Express, Handler as ExpressHandler } from 'express'
+import type { Express, Handler as ExpressHandler } from 'express'
 import expressWinston from 'express-winston'
-import winston, { Logger } from 'winston'
+import type { Logger } from 'winston'
+import winston from 'winston'
 import { Console as ConsoleTransport } from 'winston/lib/winston/transports'
-import MetisServer from '..'
+import { MetisServer } from '..'
 
 /**
  * A logger used by all loggers before they

@@ -1,4 +1,4 @@
-import { Model } from 'mongoose'
+import type { Document, Model } from 'mongoose'
 
 /**
  * Represents an info object in the database.

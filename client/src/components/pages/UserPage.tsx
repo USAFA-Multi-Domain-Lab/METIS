@@ -1,16 +1,19 @@
 import { AxiosError } from 'axios'
-import React, { useContext, useRef, useState } from 'react'
-import { useGlobalContext, useNavigationMiddleware } from 'src/context/global'
-import { compute } from 'src/toolbox'
+import {
+  useGlobalContext,
+  useNavigationMiddleware,
+} from 'metis/client/context/global'
+import { compute } from 'metis/client/toolbox'
 import {
   useBeforeunload,
   useEventListener,
   useMountHandler,
   useRequireLogin,
-} from 'src/toolbox/hooks'
-import ClientUser from 'src/users'
+} from 'metis/client/toolbox/hooks'
+import ClientUser from 'metis/client/users'
+import { StringToolbox } from 'metis/toolbox'
+import React, { useContext, useRef, useState } from 'react'
 import { DefaultPageLayout, TPage_P } from '.'
-import StringToolbox from '../../../../shared/toolbox/strings'
 import UserEntry from '../content/edit-user/UserEntry'
 import {
   HomeButton,

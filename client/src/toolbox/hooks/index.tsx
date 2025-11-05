@@ -1,8 +1,8 @@
+import { useGlobalContext } from 'metis/client/context/global'
+import ClientUser from 'metis/client/users'
+import { TListenerTarget } from 'metis/events'
+import { TLogin } from 'metis/logins'
 import React, { useCallback, useEffect, useRef } from 'react'
-import { useGlobalContext } from 'src/context/global'
-import ClientUser from 'src/users'
-import { TListenerTarget } from '../../../../shared/events'
-import { TLogin } from '../../../../shared/logins'
 import {
   TDefaultProps,
   TRequireLoginReturn,

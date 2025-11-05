@@ -1,6 +1,6 @@
-import { Request, Response } from 'express-serve-static-core'
-import FileReferenceModel from 'metis/server/database/models/file-references'
-import ApiResponse from '../../library/response'
+import type { Request, Response } from 'express-serve-static-core'
+import { FileReferenceModel } from '../../../../database/models/file-references'
+import { ApiResponse } from '../../library'
 
 /**
  * Retrieves all file references from the database.

@@ -1,13 +1,16 @@
-import { useState } from 'react'
-import { useGlobalContext, useNavigationMiddleware } from 'src/context/global'
-import SessionClient from 'src/sessions'
-import { compute } from 'src/toolbox'
+import {
+  useGlobalContext,
+  useNavigationMiddleware,
+} from 'metis/client/context/global'
+import SessionClient from 'metis/client/sessions'
+import { compute } from 'metis/client/toolbox'
 import {
   useEventListener,
   useMountHandler,
   useRequireLogin,
-} from 'src/toolbox/hooks'
-import { useSessionRedirects } from 'src/toolbox/hooks/sessions'
+} from 'metis/client/toolbox/hooks'
+import { useSessionRedirects } from 'metis/client/toolbox/hooks/sessions'
+import { useState } from 'react'
 import { DefaultPageLayout } from '.'
 import Prompt from '../content/communication/Prompt'
 import { HomeButton, TNavigation_P } from '../content/general-layout/Navigation'

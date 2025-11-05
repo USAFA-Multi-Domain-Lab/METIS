@@ -1,10 +1,7 @@
+import Prompt from 'metis/client/components/content/communication/Prompt'
+import { useGlobalContext } from 'metis/client/context/global'
+import { TEffectHost, TEffectType } from 'metis/missions'
 import { TMetisClientComponents } from 'src'
-import Prompt from 'src/components/content/communication/Prompt'
-import { useGlobalContext } from 'src/context/global'
-import {
-  TEffectHost,
-  TEffectType,
-} from '../../../../../../../shared/missions/effects'
 import { useMissionPageContext } from '../../context'
 
 /**

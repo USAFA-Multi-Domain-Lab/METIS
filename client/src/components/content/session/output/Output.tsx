@@ -1,7 +1,7 @@
 /* -- CONTEXT -- */
 
+import { useDefaultProps } from 'metis/client/toolbox/hooks'
 import React, { useContext, useRef } from 'react'
-import { useDefaultProps } from 'src/toolbox/hooks'
 import { TOutput_P, TOutput_S, TOutputContextData } from '.'
 import OutputInfo from './info/OutputInfo'
 import OutputMessage from './messages/OutputMessage'

@@ -1,4 +1,4 @@
-import { TFileReferenceJson } from 'metis/files/references'
+import { TFileReferenceJson } from 'metis/files'
 import { HydratedDocument, Model, Query } from 'mongoose'
 import { TMetisDoc } from '.'
 

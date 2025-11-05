@@ -1,6 +1,6 @@
+import { ClientEffect } from 'metis/client/missions/effects'
+import ClientMissionForce from 'metis/client/missions/forces'
 import { useState } from 'react'
-import { ClientEffect } from 'src/missions/effects'
-import ClientMissionForce from 'src/missions/forces'
 import { TArgMissionComponent_P } from './types'
 
 export default function (props: TArgMissionComponent_P): TReactElement {

@@ -1,31 +1,26 @@
-import { TMetisClientComponents } from 'src'
+import { TMetisClientComponents } from 'metis/client'
 import {
   TMapCompatibleNode,
   TMapCompatibleNodeEvent,
   TNodeButton,
-} from 'src/components/content/session/mission-map/objects/nodes'
-import ClientMission from '..'
+} from 'metis/client/components/content/session/mission-map/objects/nodes'
+import ClientMission from 'metis/client/missions'
+import ClientActionExecution from 'metis/client/missions/actions/executions'
+import ClientSessionMember from 'metis/client/sessions/members'
+import { EventManager, TListenerTargetEmittable } from 'metis/events'
 import {
-  EventManager,
-  TListenerTargetEmittable,
-} from '../../../../shared/events'
-import {
-  TNodeBlockStatus,
-  TNodeExecutionState,
-} from '../../../../shared/missions/nodes'
-import MissionPrototype, {
+  MissionPrototype,
   TMissionPrototypeJson,
   TMissionPrototypeOptions,
-} from '../../../../shared/missions/nodes/prototypes'
-import { AnyObject } from '../../../../shared/toolbox/objects'
-import { Vector2D } from '../../../../shared/toolbox/space'
-import ClientSessionMember from '../../sessions/members'
-import ClientActionExecution from '../actions/executions'
+  TNodeBlockStatus,
+  TNodeExecutionState,
+} from 'metis/missions'
+import { TAnyObject, Vector2D } from 'metis/toolbox'
 
 /**
  * Class for managing mission prototypes on the client.
  */
-export default class ClientMissionPrototype
+export class ClientMissionPrototype
   extends MissionPrototype<TMetisClientComponents>
   implements
     TListenerTargetEmittable<TPrototypeEventMethod>,
@@ -400,7 +395,7 @@ export default class ClientMissionPrototype
    */
   protected mapDescendantRelationships(
     descendants: TMissionPrototypeJson[],
-    cursor: AnyObject,
+    cursor: TAnyObject,
     parent: ClientMissionPrototype = this,
   ): void {
     // Gather details.
@@ -446,7 +441,7 @@ export default class ClientMissionPrototype
    */
   public onOpen(
     revealedDescendantPrototypes: TMissionPrototypeJson[] | undefined,
-    structure: AnyObject | undefined,
+    structure: TAnyObject | undefined,
   ): void {
     if (!revealedDescendantPrototypes || !structure) return
     this.mapDescendantRelationships(revealedDescendantPrototypes, structure)

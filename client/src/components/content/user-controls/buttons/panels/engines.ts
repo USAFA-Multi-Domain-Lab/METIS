@@ -1,8 +1,7 @@
+import { compute } from 'metis/client/toolbox'
+import { useForcedUpdates, usePostInitEffect } from 'metis/client/toolbox/hooks'
+import { ClassList, StringToolbox } from 'metis/toolbox'
 import { useState } from 'react'
-import { compute } from 'src/toolbox'
-import { useForcedUpdates, usePostInitEffect } from 'src/toolbox/hooks'
-import ClassList from '../../../../../../../shared/toolbox/html/ClassList'
-import StringToolbox from '../../../../../../../shared/toolbox/strings'
 import { createButtonDefaults } from './elements/ButtonSvg'
 import { createDividerDefaults } from './elements/DividerSvg'
 import { createStepperDefaults } from './elements/StepperSvg'
@@ -25,7 +24,7 @@ import {
  * An engine used to power a `ButtonSvgPanel`
  * component.
  */
-export default class ButtonSvgEngine {
+export class ButtonSvgEngine {
   /**
    * The panel elements (buttons and related components)
    * powered by the engine.

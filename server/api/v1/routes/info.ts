@@ -1,9 +1,9 @@
-import { Router } from 'express'
-import MetisServer from 'metis/server'
-import { TMetisRouterMap } from 'metis/server/http/router'
-import { auth } from 'metis/server/middleware/users'
+import type { Router } from 'express'
+import type { MetisServer } from '../../..'
+import { auth } from '../../../middleware/users'
 import getChangelog from '../controllers/info/changelog.get'
 import getInfo from '../controllers/info/index.get'
+import type { TMetisRouterMap } from '../library/MetisRouter'
 
 const routerMap: TMetisRouterMap = (
   router: Router,

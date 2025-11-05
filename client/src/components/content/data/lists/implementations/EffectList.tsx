@@ -1,7 +1,7 @@
+import { compute } from 'metis/client/toolbox'
+import { useDefaultProps } from 'metis/client/toolbox/hooks'
+import { TEffectType } from 'metis/missions'
 import { TMetisClientComponents } from 'src'
-import { compute } from 'src/toolbox'
-import { useDefaultProps } from 'src/toolbox/hooks'
-import { TEffectType } from '../../../../../../../shared/missions/effects'
 import List, { createDefaultListProps, TList_P } from '../List'
 
 /**

@@ -1,16 +1,14 @@
 import axios, { AxiosProgressEvent, AxiosResponse } from 'axios'
+import ClientUser from 'metis/client/users'
+import { EventManager, TListenerTargetEmittable } from 'metis/events'
+import FileReference, { TFileReferenceJson } from 'metis/files/references'
+import { StringToolbox } from 'metis/toolbox'
 import { TMetisClientComponents } from 'src'
-import ClientUser from 'src/users'
-import { EventManager, TListenerTargetEmittable } from '../../../shared/events'
-import FileReference, {
-  TFileReferenceJson,
-} from '../../../shared/files/references'
-import StringToolbox from '../../../shared/toolbox/strings'
 
 /**
  * Client implementation of `FileReference` class.
  */
-export default class ClientFileReference
+export class ClientFileReference
   extends FileReference<TMetisClientComponents>
   implements TListenerTargetEmittable<TFileReferenceEventMethods>
 {
