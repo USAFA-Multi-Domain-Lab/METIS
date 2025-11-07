@@ -25,7 +25,7 @@ export default function EffectEntry<TType extends TEffectType>({
 }: TEffectEntry_P<TType>): TReactElement | null {
   /* -- STATE -- */
 
-  const { onChange } = useMissionPageContext()
+  const { onChange, viewMode } = useMissionPageContext()
   const { onDuplicateRequest, onDeleteRequest } = useEffectItemButtonCallbacks(
     effect.host,
   )
@@ -72,6 +72,7 @@ export default function EffectEntry<TType extends TEffectType>({
         defaultValue={ClientEffect.DEFAULT_EXEC_PROPERTIES.name}
         maxLength={ClientEffect.MAX_NAME_LENGTH}
         placeholder='Enter name...'
+        disabled={viewMode === 'preview'}
       />
       <DetailDropdown<TSelectEffectContext<any>[TType]['trigger']>
         fieldType='required'
@@ -86,6 +87,7 @@ export default function EffectEntry<TType extends TEffectType>({
           method: 'setToDefault',
           defaultValue: 'execution-success',
         }}
+        disabled={viewMode === 'preview'}
       />
       <DetailLargeString
         fieldType='optional'
@@ -94,14 +96,17 @@ export default function EffectEntry<TType extends TEffectType>({
         value={description}
         setValue={setDescription}
         placeholder='Enter description...'
+        disabled={viewMode === 'preview'}
       />
       <DetailLocked
         label='Target Environment'
         stateValue={environment?.name ?? 'No target environment selected.'}
+        disabled={viewMode === 'preview'}
       />
       <DetailLocked
         label='Target'
         stateValue={target?.name ?? 'No target selected.'}
+        disabled={viewMode === 'preview'}
       />
       <ArgEntry
         effect={effect}

@@ -231,6 +231,7 @@ export function DetailString({
           value={stateValue}
           placeholder={placeholderDisplayed}
           maxLength={maxLength}
+          disabled={disabled}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
             let target: HTMLInputElement = event.target as HTMLInputElement
             let value: string = target.value

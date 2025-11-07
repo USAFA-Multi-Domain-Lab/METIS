@@ -17,7 +17,7 @@ export default function PrototypeEntry({
 }: TPrototypeEntry): TReactElement | null {
   /* -- STATE -- */
 
-  const { onChange } = useMissionPageContext()
+  const { onChange, viewMode } = useMissionPageContext()
   const { onAddRequest, onDeleteRequest } = usePrototypeItemButtonCallbacks()
   const [depthPadding, setDepthPadding] = useState<number>(
     prototype.depthPadding,
@@ -61,6 +61,7 @@ export default function PrototypeEntry({
       <DetailLocked
         label='ID'
         stateValue={prototype._id}
+        disabled={viewMode === 'preview'}
         key={`${prototype._id}_name`}
       />
       <DetailNumber
@@ -69,6 +70,7 @@ export default function PrototypeEntry({
         value={depthPadding}
         setValue={setDepthPadding}
         integersOnly={true}
+        disabled={viewMode === 'preview'}
         key={`${prototype._id}_depthPadding`}
       />
     </Entry>

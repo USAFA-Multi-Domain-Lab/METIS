@@ -104,7 +104,7 @@
                   cursor: grab;
                 }
 
-                &:hover {
+                &:hover:is(.Enabled) {
                   background-color: $color-secondary;
                 }
               }

@@ -254,6 +254,7 @@ export function DetailLargeString({
           placeholder,
           onUpdate,
           onBlur,
+          editable: !disabled,
         }}
       />
       <div className={fieldErrorClassName}>{errorMessage}</div>

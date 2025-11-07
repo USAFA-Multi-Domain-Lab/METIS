@@ -29,7 +29,7 @@ export default function ForceEntry({
   /* -- STATE -- */
 
   const { prompt } = useGlobalContext().actions
-  const { onChange } = useMissionPageContext()
+  const { onChange, viewMode } = useMissionPageContext()
   const { onDuplicateRequest, onDeleteRequest } = useForceItemButtonCallbacks()
   const [introMessage, setIntroMessage] = useState<string>(force.introMessage)
   const [name, setName] = useState<string>(force.name)
@@ -79,6 +79,7 @@ export default function ForceEntry({
     // in the force with the selected color.
     let fillButton: TButtonText_P = {
       text: 'Apply to nodes',
+      disabled: viewMode === 'preview' ? 'full' : 'none',
       onClick: async () => {
         // Prompt the user to confirm the action.
         let { choice } = await prompt(
@@ -141,6 +142,7 @@ export default function ForceEntry({
         setValue={setName}
         defaultValue={ClientMissionForce.DEFAULT_PROPERTIES.name}
         maxLength={ClientMissionForce.MAX_NAME_LENGTH}
+        disabled={viewMode === 'preview'}
         key={`${force._id}_name`}
       />
       <DetailNumber
@@ -149,6 +151,7 @@ export default function ForceEntry({
         value={initialResources}
         setValue={setInitialResources}
         integersOnly={true}
+        disabled={viewMode === 'preview'}
         key={`${force._id}_initialResources`}
       />
       <DetailToggle
@@ -156,6 +159,7 @@ export default function ForceEntry({
         value={allowNegativeResources}
         setValue={setAllowNegativeResources}
         tooltipDescription="If enabled, the force's resource pool can go below zero."
+        disabled={viewMode === 'preview'}
         key={`${force._id}_allowNegativeResources`}
       />
       <DetailToggle
@@ -163,6 +167,7 @@ export default function ForceEntry({
         value={revealAllNodes}
         setValue={setRevealAllNodes}
         tooltipDescription='If enabled, all nodes in the force will be revealed to the player at the start of the session.'
+        disabled={viewMode === 'preview'}
         key={`${force._id}_revealAllNodes`}
       />
       <DetailColorSelector
@@ -173,6 +178,7 @@ export default function ForceEntry({
         value={color}
         setValue={setColor}
         buttons={colorButtons}
+        disabled={viewMode === 'preview'}
         key={`${force._id}_color`}
       />
       <DetailLargeString
@@ -182,6 +188,7 @@ export default function ForceEntry({
         value={introMessage}
         setValue={setIntroMessage}
         defaultValue={ClientMissionForce.DEFAULT_PROPERTIES.introMessage}
+        disabled={viewMode === 'preview'}
         key={`${force._id}_introMessage`}
       />
     </Entry>

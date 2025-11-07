@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+import ClassList from 'shared/toolbox/html/class-lists'
 import { TMetisClientComponents } from 'src'
 import { useMissionItemButtonCallbacks } from 'src/components/content/data/lists/implementations/missions/item-buttons'
 import { TCreateEffect_P } from 'src/components/content/session/mission-map/ui/overlay/modals/CreateEffect'
@@ -214,16 +215,10 @@ export default function MissionPage(
    */
   const rootClassName: string = compute(() => {
     // Default class names
-    let classList: string[] = ['MissionPage', 'Page']
-
-    // If disabled is true then add the
-    // disabled class name.
-    if (!isAuthorized('missions_write')) {
-      classList.push('ReadOnly')
-    }
+    let classList = new ClassList('MissionPage', 'Page')
 
     // Return the list of class names as one string.
-    return classList.join(' ')
+    return classList.value
   })
 
   /**
@@ -237,10 +232,12 @@ export default function MissionPage(
     getListButtonPermissions: () => ['missions_write'],
     getItemButtonPermissions: () => ['missions_write'],
     onSelect: (file) => {
+      if (viewMode === 'preview') return
       if (file) mission.select(file)
       else mission.deselect()
     },
     onDetachRequest: (file) => {
+      if (viewMode === 'preview') return
       // Remove the file from the mission.
       setLocalFiles(localFiles.filter((f) => f._id !== file._id))
       // Re-enable the file-reference in the global files list.
@@ -269,6 +266,7 @@ export default function MissionPage(
     onItemDblClick: (reference) => onAttachFileRequest(reference),
     onItemButtonClick: (button, reference) => {
       if (button !== 'link') return
+      if (viewMode === 'preview') return
       onAttachFileRequest(reference)
     },
   }
@@ -279,6 +277,15 @@ export default function MissionPage(
   const navigation = compute<TNavigation_P>(() => {
     return { buttonEngine: navButtonEngine }
   })
+
+  /**
+   * The current viewing mode of the mission page.
+   */
+  const viewMode: 'edit' | 'preview' = compute(() =>
+    isAuthorized('missions_write') ? 'edit' : 'preview',
+  )
+  /* -- HANDLERS --
+   */
 
   /* -- EFFECTS -- */
 
@@ -299,6 +306,20 @@ export default function MissionPage(
         let mission = await ClientMission.$fetchOne(props.missionId, {
           nonRevealedDisplayMode: 'show',
         })
+
+        mission.forces.forEach((force) => {
+          force.nodes.forEach((node) => {
+            if (viewMode === 'preview') {
+              node.disable()
+            }
+          })
+        })
+        mission.files.forEach((file) => {
+          if (viewMode === 'preview') {
+            file.disable()
+          }
+        })
+
         setMission(mission)
         setLocalFiles(mission.files)
         setSelection(mission)
@@ -482,10 +503,14 @@ export default function MissionPage(
         // Disable any files that are already in
         // the mission.
         globalFiles.forEach((file) => {
-          file.setDisabled(
-            mission.files.some((f) => f.reference._id === file._id),
-            'File is already attached.',
-          )
+          if (viewMode === 'preview') {
+            file.disable()
+          } else {
+            file.setDisabled(
+              mission.files.some((f) => f.reference._id === file._id),
+              'File is already attached.',
+            )
+          }
         })
         setGlobalFiles(globalFiles)
         // Finish loading and resolve.
@@ -555,6 +580,7 @@ export default function MissionPage(
    * @param reference The file reference to attach.
    */
   const onAttachFileRequest = (reference: ClientFileReference): void => {
+    if (viewMode === 'preview') return
     if (mission.files.some((f) => f.reference._id === reference._id)) return
     // Add new file to the mission.
     let file = ClientMissionFile.fromFileReference(reference, mission)
@@ -598,6 +624,7 @@ export default function MissionPage(
     root,
     ...props,
     state,
+    viewMode,
     onChange,
     activateEffectModal,
   }

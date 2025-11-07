@@ -104,7 +104,7 @@ export function DetailToggle({
           <div className={fieldClassName}>
             <Toggle
               stateValue={stateValue}
-              setState={setState}
+              setState={!disabled ? setState : () => {}}
               lockState={lockState}
             />
           </div>

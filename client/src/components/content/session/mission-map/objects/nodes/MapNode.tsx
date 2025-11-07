@@ -88,6 +88,7 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
         type: 'button',
         icon: 'add',
         description: `Include this node ("${node.name}") in the force.`,
+        disabled: node.disabled,
         onClick: () => {
           if (node instanceof ClientMissionNode) {
             onSelect!(node)

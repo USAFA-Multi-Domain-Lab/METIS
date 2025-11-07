@@ -2,6 +2,11 @@
 @use '../form/index.scss' as *;
 
 .Detail.DetailLargeString {
+  &.Disabled {
+    user-select: unset !important;
+    pointer-events: unset !important;
+  }
+
   .TitleRow .TitleColumnOne .Shortcuts {
     .ButtonSvg {
       margin: 0;

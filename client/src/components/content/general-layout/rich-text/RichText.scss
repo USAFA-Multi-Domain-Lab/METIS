@@ -10,18 +10,6 @@
 }
 
 .RichText {
-  &.ReadOnly {
-    display: inline;
-
-    div {
-      display: inline;
-    }
-
-    .Editor p:first-of-type {
-      display: inline;
-    }
-  }
-
   .Editor {
     &:focus-visible {
       outline: none;
@@ -29,6 +17,10 @@
 
     p {
       line-height: 1.65;
+
+      &:has(> code) {
+        line-height: 2.15;
+      }
 
       &.is-editor-empty::before {
         color: #adb5bd;

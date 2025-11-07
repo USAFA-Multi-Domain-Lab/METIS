@@ -34,7 +34,7 @@ export default function NodeEntry({
 
   /* -- STATE -- */
 
-  const { onChange } = useMissionPageContext()
+  const { onChange, viewMode } = useMissionPageContext()
   const {
     onDuplicateRequest: onDuplicateActionRequest,
     onDeleteRequest: onDeleteActionRequest,
@@ -129,6 +129,7 @@ export default function NodeEntry({
     // of the current node with the selected color.
     let fillButton: TButtonText_P = {
       text: 'Fill',
+      disabled: viewMode === 'preview' ? 'full' : 'none',
       onClick: () => setApplyColorFill(true),
       tooltipDescription: `Applies the selected color to all of the node's descendants.`,
     }
@@ -263,6 +264,7 @@ export default function NodeEntry({
         defaultValue={ClientMissionNode.DEFAULT_PROPERTIES.name}
         maxLength={ClientMissionNode.MAX_NAME_LENGTH}
         tooltipDescription='General title for the node, which will be displayed on the node itself in the mission map.'
+        disabled={viewMode === 'preview'}
         key={`${node._id}_name`}
       />
       <DetailColorSelector
@@ -274,6 +276,7 @@ export default function NodeEntry({
         setValue={setColor}
         buttons={colorButtons}
         tooltipDescription='This applies a border color to the node, which can be used to visually distinguish it from other nodes.'
+        disabled={viewMode === 'preview'}
         key={`${node._id}_color`}
       />
       <DetailLargeString
@@ -284,6 +287,7 @@ export default function NodeEntry({
         setValue={setDescription}
         placeholder='Enter description...'
         tooltipDescription='This is general text used to describe this node and provide additional context to the user.'
+        disabled={viewMode === 'preview'}
         key={`${node._id}_description`}
       />
       <DetailLargeString
@@ -294,6 +298,7 @@ export default function NodeEntry({
         setValue={setPreExecutionText}
         placeholder='Enter text...'
         tooltipDescription='This text that will be outputted to the force whenever the node is clicked.'
+        disabled={viewMode === 'preview'}
         key={`${node._id}_preExecutionText`}
       />
       <DetailToggle
@@ -302,6 +307,7 @@ export default function NodeEntry({
         value={executable}
         setValue={setExecutable}
         tooltipDescription='If enabled, this node can host actions which can be executed on the node. This will disable the default click to open behavior of the node.'
+        disabled={viewMode === 'preview'}
         key={`${node._id}_executable`}
       />
       <DetailToggle
@@ -313,6 +319,7 @@ export default function NodeEntry({
         tooltipDescription={
           'Purely visual. If enabled, a device icon will be shown on the node instead of a lightning bolt.'
         }
+        disabled={viewMode === 'preview'}
         key={`${node._id}_device`}
       />
       <DetailToggle
@@ -321,6 +328,7 @@ export default function NodeEntry({
         value={initiallyBlocked}
         setValue={setInitiallyBlocked}
         tooltipDescription='If enabled, this node will be blocked by default when the mission starts. It can only then be unblocked by an effect targeting this node.'
+        disabled={viewMode === 'preview'}
         key={`${node._id}_initiallyBlocked`}
       />
       {/* -- ACTIONS -- */}

@@ -20,6 +20,16 @@
   width: $page-width;
   height: $page-height;
 
+  .Disabled {
+    opacity: 0.65 !important;
+
+    input,
+    select,
+    textarea {
+      opacity: 1 !important;
+    }
+  }
+
   .Content {
     $content-vertical-padding: 35px;
     $content-horizontal-padding: 30px;
@@ -68,45 +78,6 @@
 
     > * {
       padding-top: 0;
-    }
-  }
-
-  &.ReadOnly .Content .PanelLayout .Panel .PanelView {
-    &:not(.PanelView_Map) {
-      .EntryContent {
-        > :not(.List):not(.ListWrapper) * {
-          @include disabled();
-          opacity: 0.75 !important;
-        }
-
-        pre {
-          pointer-events: all;
-
-          code {
-            pointer-events: none;
-          }
-        }
-      }
-    }
-
-    &.PanelView_Files {
-      .List .ListPage .ListItems {
-        @include disabled();
-        opacity: 0.65 !important;
-      }
-    }
-
-    &.PanelView_Structure {
-      .ParentNode .Center {
-        &:hover {
-          background-color: $color-primary !important;
-        }
-
-        .Name {
-          @include disabled();
-          opacity: 0.65 !important;
-        }
-      }
     }
   }
 }

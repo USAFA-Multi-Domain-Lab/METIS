@@ -49,6 +49,10 @@ export type TMissionPageContextData = {
      */
     state: TMissionPage_S
     /**
+     * The current viewing mode of the mission page.
+     */
+    viewMode: 'edit' | 'preview'
+    /**
      * Callback for when a change has been made on the
      * page that would require saving.
      * @param components The components that have been changed.

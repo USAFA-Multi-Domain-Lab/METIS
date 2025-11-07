@@ -1,8 +1,10 @@
 import { ClientEffect } from 'src/missions/effects'
 import { compute } from 'src/toolbox'
 
+import ClassList from 'shared/toolbox/html/class-lists'
 import { TTargetArg } from '../../../../../../../shared/target-environments/args'
 import Divider from '../../../../content/form/Divider'
+import { useMissionPageContext } from '../../context'
 import Arg from './Arg'
 import './ArgGrouping.scss'
 
@@ -15,6 +17,8 @@ export default function ArgGrouping({
   effectArgs,
   setEffectArgs,
 }: TArgGrouping_P): TReactElement | null {
+  const { viewMode } = useMissionPageContext()
+
   /* -- COMPUTED -- */
 
   /**
@@ -46,15 +50,18 @@ export default function ArgGrouping({
    */
   const rootClassName: string = compute(() => {
     // Create a default list of class names.
-    let classList: string[] = ['ArgGrouping']
+    let classList = new ClassList('ArgGrouping')
 
     // If no arguments in the grouping are displayed
     // then hide the grouping.
-    if (hidden) {
-      classList.push('Hidden')
-    }
+    if (hidden) classList.add('Hidden')
 
-    return classList.join(' ')
+    // If the view mode is preview then
+    // disable it so that the user cannot
+    // edit the arguments.
+    if (viewMode === 'preview') classList.add('Disabled')
+
+    return classList.value
   })
 
   /* -- RENDER -- */

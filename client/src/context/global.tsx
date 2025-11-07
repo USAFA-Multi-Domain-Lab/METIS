@@ -532,9 +532,7 @@ const initializeActions = (
         position,
         positioningTarget,
         highlightTarget,
-        onCloseRequest: () => {
-          setButtonMenu(null)
-        },
+        onCloseRequest: () => setButtonMenu(null),
       }
 
       // Update the state.

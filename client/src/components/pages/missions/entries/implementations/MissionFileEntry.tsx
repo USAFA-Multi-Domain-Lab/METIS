@@ -24,7 +24,7 @@ export default function MissionFileEntry({
 
   /* -- STATE -- */
 
-  const { onChange } = useMissionPageContext()
+  const { onChange, viewMode } = useMissionPageContext()
   const initialAccessTracker = useRef(
     compute(() => {
       let result = new Map<string, boolean>()
@@ -85,6 +85,7 @@ export default function MissionFileEntry({
       <DetailLocked
         label='Original Name'
         stateValue={file.originalName}
+        disabled={viewMode === 'preview'}
         key={`${file._id}_originalName`}
       />
       <DetailString
@@ -95,6 +96,7 @@ export default function MissionFileEntry({
         setValue={setAlias}
         defaultValue={ClientMissionFile.DEFAULT_PROPERTIES.alias}
         maxLength={ClientMission.MAX_NAME_LENGTH}
+        disabled={viewMode === 'preview'}
         key={`${file._id}_alias`}
       />
       <Divider />
@@ -106,6 +108,7 @@ export default function MissionFileEntry({
             key={`${file._id}_initialAccess_${force._id}`}
             value={initialAccess.includes(force._id)}
             setValue={(value) => onToggleForce(force._id, value)}
+            disabled={viewMode === 'preview'}
           />
         )
       })}

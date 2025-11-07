@@ -25,7 +25,7 @@ export default function ActionEntry({
 }: TActionEntry_P): TReactElement | null {
   /* -- STATE -- */
 
-  const { onChange } = useMissionPageContext()
+  const { onChange, viewMode } = useMissionPageContext()
   const {
     onDuplicateRequest: onDuplicateActionRequest,
     onDeleteRequest: onDeleteActionRequest,
@@ -124,6 +124,7 @@ export default function ActionEntry({
         defaultValue={ClientMissionAction.DEFAULT_PROPERTIES.name}
         maxLength={ClientMissionAction.MAX_NAME_LENGTH}
         placeholder='Enter name...'
+        disabled={viewMode === 'preview'}
         key={`${action._id}_name`}
       />
       <DetailLargeString
@@ -133,6 +134,7 @@ export default function ActionEntry({
         value={description}
         setValue={setDescription}
         placeholder='Enter description...'
+        disabled={viewMode === 'preview'}
         key={`${action._id}_description`}
       />
       <DetailDropdown<TActionType>
@@ -148,6 +150,8 @@ export default function ActionEntry({
           method: 'setToDefault',
           defaultValue: ClientMissionAction.DEFAULT_PROPERTIES.type,
         }}
+        disabled={viewMode === 'preview'}
+        key={`${action._id}_type`}
       />
       <Divider />
       <DetailNumber
@@ -161,6 +165,7 @@ export default function ActionEntry({
         maximum={ClientMissionAction.SUCCESS_CHANCE_MAX * 100}
         integersOnly={true}
         unit='%'
+        disabled={viewMode === 'preview'}
         key={`${action._id}_successChance`}
       />
       <DetailToggle
@@ -169,6 +174,7 @@ export default function ActionEntry({
         tooltipDescription='If enabled, the success chance will be hidden from the executor.'
         value={successChanceHidden}
         setValue={hideSuccessChance}
+        disabled={viewMode === 'preview'}
         key={`${action._id}_successChanceHidden`}
       />
       <Divider />
@@ -182,6 +188,7 @@ export default function ActionEntry({
         maximum={1}
         integersOnly={true}
         unit='hour(s)'
+        disabled={viewMode === 'preview'}
         key={`${action._id}_processTimeHours`}
       />
       <DetailNumber
@@ -193,6 +200,7 @@ export default function ActionEntry({
         maximum={59}
         integersOnly={true}
         unit='minute(s)'
+        disabled={viewMode === 'preview'}
         key={`${action._id}_processTimeMinutes`}
       />
       <DetailNumber
@@ -204,6 +212,7 @@ export default function ActionEntry({
         maximum={59}
         integersOnly={true}
         unit='second(s)'
+        disabled={viewMode === 'preview'}
         key={`${action._id}_processTimeSeconds`}
       />
       <DetailToggle
@@ -212,6 +221,7 @@ export default function ActionEntry({
         tooltipDescription='If enabled, the process time will be hidden from the executor.'
         value={processTimeHidden}
         setValue={hideProcessTime}
+        disabled={viewMode === 'preview'}
         key={`${action._id}_processTimeHidden`}
       />
       <Divider />
@@ -222,6 +232,7 @@ export default function ActionEntry({
         setValue={setResourceCost}
         minimum={ClientMissionAction.RESOURCE_COST_MIN}
         integersOnly={true}
+        disabled={viewMode === 'preview'}
         key={`${action._id}_resourceCost`}
       />
       <DetailToggle
@@ -230,6 +241,7 @@ export default function ActionEntry({
         tooltipDescription='If enabled, the resource cost will be hidden from the executor.'
         value={resourceCostHidden}
         setValue={hideResourceCost}
+        disabled={viewMode === 'preview'}
         key={`${action._id}_resourceCostHidden`}
       />
       <Divider />
@@ -239,6 +251,7 @@ export default function ActionEntry({
         tooltipDescription='If enabled, this action will open the node if successfully executed.'
         value={opensNode}
         setValue={setOpensNode}
+        disabled={viewMode === 'preview'}
         key={`${action._id}_opensNode`}
       />
       <DetailToggle
@@ -247,6 +260,7 @@ export default function ActionEntry({
         tooltipDescription='If enabled, the opens node option will be hidden from the executor.'
         value={opensNodeHidden}
         setValue={hideOpensNode}
+        disabled={viewMode === 'preview'}
         key={`${action._id}_opensNodeHidden`}
       />
       <Divider />

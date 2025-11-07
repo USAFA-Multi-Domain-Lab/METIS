@@ -45,14 +45,14 @@ export default function DetailDropdown<TOption>(
   // Assign default values to props.
   const defaultedProps: Required<TDetailDropdown_P<TOption>> = {
     ...props,
-    uniqueClassName: '',
-    uniqueLabelClassName: '',
-    uniqueFieldClassName: '',
-    uniqueStateValueClassName: '',
-    disabled: false,
-    tooltipDescription: '',
-    emptyText: 'Select an option',
-    errorMessage: '',
+    uniqueClassName: props.uniqueClassName ?? '',
+    uniqueLabelClassName: props.uniqueLabelClassName ?? '',
+    uniqueFieldClassName: props.uniqueFieldClassName ?? '',
+    uniqueStateValueClassName: props.uniqueStateValueClassName ?? '',
+    disabled: props.disabled ?? false,
+    tooltipDescription: props.tooltipDescription ?? '',
+    emptyText: props.emptyText ?? 'Select an option',
+    errorMessage: props.errorMessage ?? '',
   }
   // Extract props.
   const {
@@ -330,7 +330,10 @@ export default function DetailDropdown<TOption>(
       }
 
       return (
-        <DropdownOption key={key} onClick={() => onSelectOption(option)}>
+        <DropdownOption
+          key={key}
+          onClick={() => (!disabled ? onSelectOption(option) : null)}
+        >
           {optionContent}
         </DropdownOption>
       )
@@ -367,7 +370,10 @@ export default function DetailDropdown<TOption>(
           </div>
         </div>
         <div className={fieldClassName}>
-          <DropdownOption selected onClick={() => setExpanded(!expanded)}>
+          <DropdownOption
+            selected
+            onClick={() => (!disabled ? setExpanded(!expanded) : null)}
+          >
             <div className={stateValueClassName}>{valueDisplayed}</div>
             <div className='Indicator'>v</div>
           </DropdownOption>

@@ -4,8 +4,10 @@ import ClientMission from 'src/missions'
 import ClientMissionPrototype, {
   TPrototypeRelation,
 } from 'src/missions/nodes/prototypes'
+import { compute } from 'src/toolbox'
 import { useRequireLogin } from 'src/toolbox/hooks'
 import If from '../../../content/util/If'
+import { useMissionPageContext } from '../context'
 import './NodeStructuring.scss'
 
 // This is a enum used to describe
@@ -36,6 +38,7 @@ export default function NodeStructuring(props: {
 
   const globalContext = useGlobalContext()
   const { forceUpdate } = globalContext.actions
+  const { viewMode } = useMissionPageContext()
   const [nodeGrabbed, grabNode] = useState<ClientMissionPrototype | null>(null)
   const [nodePendingDrop, pendDrop] = useState<ClientMissionPrototype | null>(
     null,
@@ -45,7 +48,12 @@ export default function NodeStructuring(props: {
   )
   const { isAuthorized } = useRequireLogin()
 
-  /* -- FUNCTIONS -- */
+  /* -- COMPUTED -- */
+
+  /**
+   * Whether the node structuring is enabled.
+   */
+  const enabled = compute<boolean>(() => viewMode === 'edit')
 
   /* -- RENDER -- */
 
@@ -161,7 +169,7 @@ export default function NodeStructuring(props: {
           className='ParentNode'
           draggable={isAuthorized('missions_write')}
           onDragCapture={() => {
-            grabNode(node)
+            if (viewMode === 'edit') grabNode(node)
           }}
           onDrop={(event: React.DragEvent) => {
             if (nodePendingDrop !== null) {
@@ -211,7 +219,7 @@ export default function NodeStructuring(props: {
           ></div>
 
           <div
-            className='Center'
+            className={enabled ? 'Center Enabled' : 'Center'}
             onDragOver={(event: React.DragEvent) => {
               event.preventDefault()
             }}
@@ -240,7 +248,7 @@ export default function NodeStructuring(props: {
                 />
               </svg>
             </If>
-            <div className='Name'>{node.name}</div>
+            <div className={enabled ? 'Name' : 'Disabled'}>{node.name}</div>
           </div>
           <div
             className='Bottom'

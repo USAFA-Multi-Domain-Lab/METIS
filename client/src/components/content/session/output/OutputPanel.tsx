@@ -27,7 +27,7 @@ export default function OutputPanel({ force }: TOutputPanel_P): TReactElement {
   const smoothScrollInProgress = useRef<boolean>(false)
   const smoothScrollTimeout = useRef<
     NodeJS.Timeout | string | number | undefined
-  >()
+  >(undefined)
   const [autoScrollLock, lockAutoScroll] = useState<boolean>(false)
   const [areUnseenOutputs, setAreUnseenOutputs] = useState<boolean>(false)
 

@@ -39,7 +39,7 @@ export default function MissionEntry({
   const { prompt } = globalContext.actions
   const { login } = useRequireLogin()
   const { user } = login
-  const { state, onChange } = useMissionPageContext()
+  const { state, onChange, viewMode } = useMissionPageContext()
   const [checkForDefects, setCheckForDefects] = state.checkForDefects
   const [defects, setDefects] = state.defects
   const [name, setName] = useState<string>(mission.name)
@@ -160,6 +160,7 @@ export default function MissionEntry({
         setValue={setName}
         defaultValue={ClientMission.DEFAULT_PROPERTIES.name}
         maxLength={ClientMission.MAX_NAME_LENGTH}
+        disabled={viewMode === 'preview'}
         key={`${mission._id}_name`}
       />
       <DetailString
@@ -170,6 +171,7 @@ export default function MissionEntry({
         setValue={setResourceLabel}
         defaultValue={ClientMission.DEFAULT_PROPERTIES.resourceLabel}
         maxLength={ClientMission.MAX_RESOURCE_LABEL_LENGTH}
+        disabled={viewMode === 'preview'}
         key={`${mission._id}_resourceLabel`}
       />
       <Divider />

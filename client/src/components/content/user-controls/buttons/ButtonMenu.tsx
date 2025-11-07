@@ -1,6 +1,7 @@
 /* -- COMPONENT -- */
 
 import { useRef, useState } from 'react'
+import { useGlobalContext } from 'src/context/global'
 import { compute } from 'src/toolbox'
 import {
   useEventListener,
@@ -10,6 +11,7 @@ import {
 } from 'src/toolbox/hooks'
 import { Vector2D } from '../../../../../../shared/toolbox/space'
 import StringToolbox from '../../../../../../shared/toolbox/strings'
+import If from '../../util/If'
 import './ButtonMenu.scss'
 import ButtonSvgPanel from './panels/ButtonSvgPanel'
 import ButtonSvgEngine from './panels/engines'
@@ -31,6 +33,8 @@ export default function ButtonMenu({
 }: TButtonMenu_P): TReactElement | null {
   /* -- STATE -- */
 
+  const globalContext = useGlobalContext()
+  const [login] = globalContext.login
   const [_, setForcedUpdateId] = useState<string>(
     StringToolbox.generateRandomId(),
   )
@@ -102,6 +106,16 @@ export default function ButtonMenu({
   })
 
   /**
+   * Whether the button menu has at least one button based on the
+   * current user's permissions.
+   */
+  const oneAuthButton = compute<boolean>(() => {
+    return engine.buttons.some((button) => {
+      return login?.user.isAuthorized(button.permissions)
+    })
+  })
+
+  /**
    * The style for the button menu pop up.
    */
   const popUpStyle = {
@@ -156,12 +170,14 @@ export default function ButtonMenu({
 
   // Render the button menu.
   return (
-    <div className='ButtonMenu'>
-      <div className='InputBlocker' onMouseDown={onCloseRequest}></div>
-      <div className='PopUp' style={popUpStyle} ref={popUp}>
-        <ButtonSvgPanel engine={engine} />
+    <If condition={oneAuthButton}>
+      <div className='ButtonMenu'>
+        <div className='InputBlocker' onMouseDown={onCloseRequest}></div>
+        <div className='PopUp' style={popUpStyle} ref={popUp}>
+          <ButtonSvgPanel engine={engine} />
+        </div>
       </div>
-    </div>
+    </If>
   )
 }
 

@@ -52,6 +52,9 @@ export default function ButtonMenuController({
       // Abort if not listening.
       if (!listen) return
 
+      // Abort if there are no buttons in the engine.
+      if (!engine.buttons.length) return
+
       // Prevent the default context menu.
       event.preventDefault()
 

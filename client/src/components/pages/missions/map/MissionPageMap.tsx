@@ -26,7 +26,11 @@ export default function MissionPageMap(): TReactElement {
 
   const globalContext = useGlobalContext()
   const { notify } = globalContext.actions
-  const { state: missionPageState, onChange } = useMissionPageContext()
+  const {
+    state: missionPageState,
+    onChange,
+    viewMode,
+  } = useMissionPageContext()
   const [mission] = missionPageState.mission
   const [selection, setSelection] = missionPageState.selection
   const [effectModalActive, setEffectModalActive] =
@@ -81,11 +85,16 @@ export default function MissionPageMap(): TReactElement {
         },
       ]
 
+      const tabDescription = compute<string>(() => {
+        if (viewMode === 'preview') return 'Select force'
+        return `Select force` + `\n\t\n\`R-Click\` for more options`
+      })
+
       const tab: TTabBarTab = {
         _id: force._id,
         text: force.name,
         color: force.color,
-        description: `Select force` + `\n\t\n\`R-Click\` for more options`,
+        description: tabDescription,
         engineProps: { elements: buttons },
       }
 
