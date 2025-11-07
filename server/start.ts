@@ -1,4 +1,4 @@
-import { MetisServer } from '.'
+import { MetisServer } from './MetisServer'
 import { MetisRouter } from './api/v1/library/MetisRouter'
 import routerMap_files from './api/v1/routes/files'
 import routerMap_info from './api/v1/routes/info'

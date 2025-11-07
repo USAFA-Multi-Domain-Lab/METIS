@@ -7,6 +7,7 @@ import fs from 'fs'
 import { CompleterResult } from 'readline'
 import { createInterface } from 'readline/promises'
 import { hashPassword, UserModel } from '../../models/users'
+import type { ComplterResult } from 'readline'
 
 /**
  * Parses the data into an array of users JSON.
@@ -95,7 +96,7 @@ const commandLinePrompt = async (
   autocompleteOptions: string[] = [],
 ): Promise<string> => {
   // Create a completer function for tab completion.
-  const completer = (line: string): CompleterResult => {
+  const completer = (line: string): ComplterResult => {
     const hits = autocompleteOptions.filter((c) => c.startsWith(line))
     return [hits.length ? hits : autocompleteOptions, line]
   }

@@ -3,7 +3,7 @@ import expressWinston from 'express-winston'
 import type { Logger } from 'winston'
 import winston from 'winston'
 import { Console as ConsoleTransport } from 'winston/lib/winston/transports'
-import { MetisServer } from '..'
+import { MetisServer } from '../MetisServer'
 
 /**
  * A logger used by all loggers before they
