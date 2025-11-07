@@ -1,26 +1,25 @@
-import { AxiosError } from 'axios'
-import React, { useContext, useRef, useState } from 'react'
-import { useGlobalContext, useNavigationMiddleware } from 'src/context/global'
-import { compute } from 'src/toolbox'
+import {
+  useGlobalContext,
+  useNavigationMiddleware,
+} from '@client/context/global'
+import { compute } from '@client/toolbox'
 import {
   useBeforeunload,
   useEventListener,
   useMountHandler,
   useRequireLogin,
-} from 'src/toolbox/hooks'
-import ClientUser from 'src/users'
-import { DefaultPageLayout, TPage_P } from '.'
-import StringToolbox from '../../../../shared/toolbox/strings'
+} from '@client/toolbox/hooks'
+import { ClientUser } from '@client/users/ClientUser'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import { AxiosError } from 'axios'
+import React, { useContext, useRef, useState } from 'react'
+import type { TPage_P } from '.'
+import { DefaultPageLayout } from '.'
 import UserEntry from '../content/edit-user/UserEntry'
-import {
-  HomeButton,
-  ProfileButton,
-  TNavigation_P,
-} from '../content/general-layout/Navigation'
-import {
-  ButtonText,
-  TButtonTextDisabled,
-} from '../content/user-controls/buttons/ButtonText'
+import type { TNavigation_P } from '../content/general-layout/Navigation'
+import { HomeButton, ProfileButton } from '../content/general-layout/Navigation'
+import type { TButtonTextDisabled } from '../content/user-controls/buttons/ButtonText'
+import { ButtonText } from '../content/user-controls/buttons/ButtonText'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
 import If from '../content/util/If'
 import './UserPage.scss'

@@ -1,7 +1,7 @@
-import { useGlobalContext } from 'src/context/global'
-import { compute } from 'src/toolbox'
-import { useListComponent } from 'src/toolbox/hooks'
-import ClassList from '../../../../shared/toolbox/html/class-lists'
+import { useGlobalContext } from '@client/context/global'
+import { compute } from '@client/toolbox'
+import { useListComponent } from '@client/toolbox/hooks'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import { ButtonText } from '../content/user-controls/buttons/ButtonText'
 import './LoadingPage.scss'
 

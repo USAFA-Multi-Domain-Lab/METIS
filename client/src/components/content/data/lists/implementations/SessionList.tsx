@@ -1,13 +1,14 @@
-import Prompt from 'src/components/content/communication/Prompt'
-import { useGlobalContext } from 'src/context/global'
-import SessionClient from 'src/sessions'
-import { SessionBasic } from 'src/sessions/basic'
-import { compute } from 'src/toolbox'
-import { usePeriodicRerender, useRequireLogin } from 'src/toolbox/hooks'
-import { MetisComponent } from '../../../../../../../shared'
-import { DateToolbox } from '../../../../../../../shared/toolbox/dates'
-import List, { TGetListButtonLabel, TOnListButtonClick } from '../List'
-import {
+import Prompt from '@client/components/content/communication/Prompt'
+import { useGlobalContext } from '@client/context/global'
+import { SessionBasic } from '@client/sessions/SessionBasic'
+import { SessionClient } from '@client/sessions/SessionClient'
+import { compute } from '@client/toolbox'
+import { usePeriodicRerender, useRequireLogin } from '@client/toolbox/hooks'
+import type { MetisComponent } from '@shared/MetisComponent'
+import { DateToolbox } from '@shared/toolbox/dates/DateToolbox'
+import type { TGetListButtonLabel, TOnListButtonClick } from '../List'
+import List from '../List'
+import type {
   TGetItemButtonLabel,
   TOnItemButtonClick,
   TOnItemSelection,

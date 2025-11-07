@@ -1,20 +1,20 @@
-import { useRef, useState } from 'react'
-import Divider from 'src/components/content/form/Divider'
-import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
-import If from 'src/components/content/util/If'
-import { useMissionPageContext } from 'src/components/pages/missions/context'
-import { useGlobalContext } from 'src/context/global'
-import ClientMission from 'src/missions'
-import { ClientEffect } from 'src/missions/effects'
-import { ClientTargetEnvironment } from 'src/target-environments'
+import Divider from '@client/components/content/form/Divider'
+import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
+import If from '@client/components/content/util/If'
+import { useMissionPageContext } from '@client/components/pages/missions/context'
+import { useGlobalContext } from '@client/context/global'
+import { ClientMission } from '@client/missions/ClientMission'
+import { ClientEffect } from '@client/missions/effects/ClientEffect'
+import { ClientTargetEnvironment } from '@client/target-environments/ClientTargetEnvironment'
 import {
   useMountHandler,
   usePostInitEffect,
   useRequireLogin,
   useUnmountHandler,
-} from 'src/toolbox/hooks'
-import { TMissionComponentDefect } from '../../../../../../../shared/missions/component'
+} from '@client/toolbox/hooks'
+import type { TMissionComponentDefect } from '@shared/missions/MissionComponent'
+import { useRef, useState } from 'react'
 import Tooltip from '../../../../content/communication/Tooltip'
 import { DetailString } from '../../../../content/form/DetailString'
 import ListOld from '../../../../content/general-layout/ListOld'

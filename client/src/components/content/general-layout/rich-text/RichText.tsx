@@ -1,10 +1,13 @@
+import { useGlobalContext } from '@client/context/global'
+import { compute } from '@client/toolbox'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
 import Underline from '@tiptap/extension-underline'
+import type { Editor } from '@tiptap/react'
 import {
   BubbleMenu,
-  Editor,
   EditorContent,
   FloatingMenu,
   useEditor,
@@ -12,9 +15,6 @@ import {
 import StarterKit from '@tiptap/starter-kit'
 import { all, createLowlight } from 'lowlight'
 import { useEffect } from 'react'
-import ClassList from 'shared/toolbox/html/class-lists'
-import { useGlobalContext } from 'src/context/global'
-import { compute } from 'src/toolbox'
 import { TRichText_P } from '.'
 import ButtonSvgPanel from '../../user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from '../../user-controls/buttons/panels/hooks'

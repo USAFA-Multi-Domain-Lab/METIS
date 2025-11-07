@@ -1,6 +1,6 @@
+import Tooltip from '@client/components/content/communication/Tooltip'
+import type { MetisComponent } from '@shared/MetisComponent'
 import { useRef } from 'react'
-import Tooltip from 'src/components/content/communication/Tooltip'
-import { MetisComponent } from '../../../../../../../../../shared'
 import { useListContext } from '../../../List'
 
 export default function ItemCellDragHandle<TItem extends MetisComponent>({

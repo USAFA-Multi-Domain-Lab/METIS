@@ -1,6 +1,6 @@
+import { DetailToggle } from '@client/components/content/form/DetailToggle'
+import type { TExecutionCheats } from '@shared/missions/actions/ActionExecution'
 import { useEffect, useState } from 'react'
-import { DetailToggle } from 'src/components/content/form/DetailToggle'
-import { TExecutionCheats } from '../../../../../../../../../../shared/missions/actions/executions'
 import './ExecCheats.scss'
 
 /* -- COMPONENT -- */

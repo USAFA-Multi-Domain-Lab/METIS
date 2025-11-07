@@ -1,5 +1,3 @@
-import React from 'react'
-
 // handles KEYBOARD EVENTS for
 // TEXTAREA elements, adding
 // indentation to the value rather

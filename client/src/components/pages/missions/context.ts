@@ -1,13 +1,13 @@
-import React, { useContext } from 'react'
-import { TMetisClientComponents } from 'src'
-import { TClientEffectHost } from 'src/missions/effects'
-import MissionComponent from '../../../../../shared/missions/component'
-import {
+import type { TMetisClientComponents } from '@client/index'
+import type { TClientEffectHost } from '@client/missions/effects/ClientEffect'
+import type {
   TEffectTrigger,
   TEffectType,
-} from '../../../../../shared/missions/effects'
-import { TNonEmptyArray } from '../../../../../shared/toolbox/arrays'
-import { TMissionPage_P, TMissionPage_S } from './MissionPage'
+} from '@shared/missions/effects/Effect'
+import type { MissionComponent } from '@shared/missions/MissionComponent'
+import type { TNonEmptyArray } from '@shared/toolbox/arrays/ArrayToolbox'
+import React, { useContext } from 'react'
+import type { TMissionPage_P, TMissionPage_S } from './MissionPage'
 
 /**
  * Context for the mission page, which will help distribute

@@ -1,16 +1,17 @@
+import { StatusError } from '@server/api/v1/library/StatusError'
+import { ServerUser } from '@server/users/ServerUser'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import type { TUserJson } from '@shared/users/User'
 import bcryptjs from 'bcryptjs'
-import { Request } from 'express'
-import ServerUser from 'metis/server/users'
-import StringToolbox from 'metis/toolbox/strings'
-import { TUserJson } from 'metis/users'
-import { model, ProjectionType, Schema } from 'mongoose'
+import type { Request } from 'express'
+import type { ProjectionType } from 'mongoose'
+import { Schema, model } from 'mongoose'
 import {
   ensureNoNullCreatedBy,
   excludeDeletedForFinds,
   excludeSensitiveForFinds,
   populateCreatedByIfFlagged,
 } from '.'
-import { StatusError } from '../../http'
 import { databaseLogger } from '../../logging'
 import { UserSchema } from './classes'
 import type {
@@ -324,8 +325,7 @@ userSchema.post<TUserDoc>('save', function () {
 /**
  * The mongoose model for a user in the database.
  */
-const UserModel = model<TUser, TUserModel & TUserStaticMethods>(
+export const UserModel = model<TUser, TUserModel & TUserStaticMethods>(
   'User',
   userSchema,
 )
-export default UserModel

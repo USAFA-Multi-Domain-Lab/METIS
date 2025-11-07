@@ -1,8 +1,9 @@
-import Tooltip from 'src/components/content/communication/Tooltip'
-import { compute } from 'src/toolbox'
-import { MetisComponent } from '../../../../../../../shared'
-import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
-import { TListColumnType, useListContext } from '../List'
+import Tooltip from '@client/components/content/communication/Tooltip'
+import { compute } from '@client/toolbox'
+import type { MetisComponent } from '@shared/MetisComponent'
+import { ClassList } from '@shared/toolbox/html/ClassList'
+import type { TListColumnType } from '../List'
+import { useListContext } from '../List'
 import './ListColumnLabel.scss'
 
 /**

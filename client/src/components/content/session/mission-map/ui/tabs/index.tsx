@@ -1,11 +1,9 @@
+import Tooltip from '@client/components/content/communication/Tooltip'
+import type { TButtonMenuEngine_P } from '@client/components/content/user-controls/buttons/ButtonMenu'
+import { useButtonMenuEngine } from '@client/components/content/user-controls/buttons/ButtonMenu'
+import ButtonMenuController from '@client/components/content/user-controls/buttons/ButtonMenuController'
+import { compute } from '@client/toolbox'
 import { useRef } from 'react'
-import Tooltip from 'src/components/content/communication/Tooltip'
-import {
-  TButtonMenuEngine_P,
-  useButtonMenuEngine,
-} from 'src/components/content/user-controls/buttons/ButtonMenu'
-import ButtonMenuController from 'src/components/content/user-controls/buttons/ButtonMenuController'
-import { compute } from 'src/toolbox'
 import './index.scss'
 
 /**

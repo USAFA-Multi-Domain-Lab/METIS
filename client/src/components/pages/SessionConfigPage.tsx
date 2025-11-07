@@ -1,12 +1,16 @@
+import {
+  useGlobalContext,
+  useNavigationMiddleware,
+} from '@client/context/global'
+
+import type { SessionClient } from '@client/sessions/SessionClient'
+import { compute } from '@client/toolbox'
+import { useMountHandler } from '@client/toolbox/hooks'
+import { useSessionRedirects } from '@client/toolbox/hooks/sessions'
 import { useState } from 'react'
-import { useGlobalContext, useNavigationMiddleware } from 'src/context/global'
-import SessionClient from 'src/sessions'
-import { compute } from 'src/toolbox'
-import { useMountHandler } from 'src/toolbox/hooks'
-import { useSessionRedirects } from 'src/toolbox/hooks/sessions'
 import { DefaultPageLayout } from '.'
 import Prompt from '../content/communication/Prompt'
-import { TNavigation_P } from '../content/general-layout/Navigation'
+import type { TNavigation_P } from '../content/general-layout/Navigation'
 import SessionConfig from '../content/session/SessionConfig'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
 import './SessionConfigPage.scss'

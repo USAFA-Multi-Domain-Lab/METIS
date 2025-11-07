@@ -1,5 +1,5 @@
-import { compute } from 'src/toolbox'
-import { TDetailBase_P } from '.'
+import { compute } from '@client/toolbox'
+import type { TDetailBase_P } from '.'
 import Tooltip from '../communication/Tooltip'
 import './DetailLocked.scss'
 

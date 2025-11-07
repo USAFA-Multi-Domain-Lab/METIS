@@ -1,12 +1,12 @@
-import { compute } from 'src/toolbox'
-import { removeKey } from 'src/toolbox/components'
-import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
+import { compute } from '@client/toolbox'
+import { removeKey } from '@client/toolbox/components'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import './ButtonSvgPanel.scss'
 import ButtonSvg from './elements/ButtonSvg'
 import DividerSvg from './elements/DividerSvg'
 import StepperSvg from './elements/StepperSvg'
 import TextSvg from './elements/TextSvg'
-import { TButtonSvgPanel_P, TSvgPanelElement } from './types'
+import type { TButtonSvgPanel_P, TSvgPanelElement } from './types'
 
 /**
  * A panel for displaying buttons with SVG icons.

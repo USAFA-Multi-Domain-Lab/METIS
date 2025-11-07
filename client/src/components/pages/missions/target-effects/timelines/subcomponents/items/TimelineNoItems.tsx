@@ -1,6 +1,6 @@
-import { compute } from 'src/toolbox'
-import { TEffectTrigger } from '../../../../../../../../../shared/missions/effects'
-import ClassList from '../../../../../../../../../shared/toolbox/html/class-lists'
+import { compute } from '@client/toolbox'
+import type { TEffectTrigger } from '@shared/missions/effects/Effect'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import { useTimelineContext } from '../../context'
 import './TimelineNoItems.scss'
 

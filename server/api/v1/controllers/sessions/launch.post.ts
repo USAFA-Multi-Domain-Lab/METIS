@@ -1,30 +1,31 @@
-import { Request, Response } from 'express-serve-static-core'
-import MissionModel from 'metis/server/database/models/missions'
-import { StatusError } from 'metis/server/http'
-import { databaseLogger, sessionLogger } from 'metis/server/logging'
-import ServerMission from 'metis/server/missions'
-import SessionServer from 'metis/server/sessions'
-import ServerUser from 'metis/server/users'
-import Session, { TSessionConfig } from 'metis/sessions'
-import ApiResponse from '../../library/response'
+import { MissionModel } from '@server/database/models/missions'
+import { ServerMission } from '@server/missions/ServerMission'
+import { SessionServer } from '@server/sessions/SessionServer'
+import type { ServerUser } from '@server/users/ServerUser'
+import type { TSessionConfig } from '@shared/sessions/Session'
+import { databaseLogger, sessionLogger } from '../../../../logging'
+import { ApiResponse } from '../../library/ApiResponse'
+import { StatusError } from '../../library/StatusError'
+
 /**
  * This will launch a session for a user to execute a mission.
  * @param request The express request.
  * @param response The express response.
  * @returns The ID of the newly launched session in JSON format.
  */
-const launchSession = async (request: Request, response: Response) => {
+export const launchSession: TExpressHandler = async (request, response) => {
   // Get data from the request body.
   let { missionId, name, accessibility, infiniteResources, effectsEnabled } =
     request.body
 
   // Define the session configuration.
   let sessionConfig: TSessionConfig = {
-    name: name ?? Session.DEFAULT_CONFIG.name,
-    accessibility: accessibility ?? Session.DEFAULT_CONFIG.accessibility,
+    name: name ?? SessionServer.DEFAULT_CONFIG.name,
+    accessibility: accessibility ?? SessionServer.DEFAULT_CONFIG.accessibility,
     infiniteResources:
-      infiniteResources ?? Session.DEFAULT_CONFIG.infiniteResources,
-    effectsEnabled: effectsEnabled ?? Session.DEFAULT_CONFIG.effectsEnabled,
+      infiniteResources ?? SessionServer.DEFAULT_CONFIG.infiniteResources,
+    effectsEnabled:
+      effectsEnabled ?? SessionServer.DEFAULT_CONFIG.effectsEnabled,
   }
 
   // Get the user who is launching the session.
@@ -70,5 +71,3 @@ const launchSession = async (request: Request, response: Response) => {
     return ApiResponse.error(error, response)
   }
 }
-
-export default launchSession

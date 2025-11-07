@@ -1,15 +1,32 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "baseUrl": ".",
     "paths": {
-      "metis/target-environments": ["../../shared/target-environments"],
-      "metis/target-environments/*": ["../../shared/target-environments/*"],
-      "metis/toolbox/objects": ["../../shared/toolbox/objects"],
-      "metis/toolbox/numbers": ["../../shared/toolbox/numbers"],
-      "metis/toolbox/versions": ["../../shared/toolbox/versions"],
-      "metis/toolbox/booleans": ["../../shared/toolbox/booleans"]
+      "@shared/target-environments": ["../../shared/target-environments"],
+      "@shared/target-environments/*": ["../../shared/target-environments/*"],
+      "@shared/toolbox/objects/ObjectToolbox": [
+        "../../shared/toolbox/objects/ObjectToolbox"
+      ],
+      "@shared/toolbox/numbers/NumberToolbox": [
+        "../../shared/toolbox/numbers/NumberToolbox"
+      ],
+      "@shared/toolbox/strings/VersionToolbox": [
+        "../../shared/toolbox/strings/VersionToolbox"
+      ],
+      "@shared/toolbox/booleans/BooleanToolbox": [
+        "../../shared/toolbox/booleans/BooleanToolbox"
+      ]
     },
     "module": "NodeNext",
     "moduleResolution": "NodeNext"
-  }
+  },
+  "include": [
+    "./**/*",
+    "../../shared/target-environments/*",
+    "../../shared/toolbox/objects/ObjectToolbox.ts",
+    "../../shared/toolbox/numbers/NumberToolbox.ts",
+    "../../shared/toolbox/strings/VersionToolbox.ts",
+    "../../shared/toolbox/booleans/BooleanToolbox.ts"
+  ]
 }

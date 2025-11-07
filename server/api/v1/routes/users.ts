@@ -1,21 +1,21 @@
-import { Router } from 'express'
-import MetisServer from 'metis/server'
-import { TMetisRouterMap } from 'metis/server/http/router'
+import type { Router } from 'express'
+import type { MetisServer } from '../../..'
 import defineRequests, {
   RequestBodyFilters,
-} from 'metis/server/middleware/requests'
+} from '../../../middleware/requests'
 import {
   auth,
   restrictPasswordReset,
   restrictUserManagement,
-} from 'metis/server/middleware/users'
-import deleteUser from '../controllers/users/[_id].delete'
-import getUser from '../controllers/users/[_id].get'
-import updateUser from '../controllers/users/[_id].put'
-import getUsers from '../controllers/users/index.get'
-import createNewUser from '../controllers/users/index.post'
-import updateUserPreferences from '../controllers/users/preferences.put'
-import resetPassword from '../controllers/users/reset-password.put'
+} from '../../../middleware/users'
+import { deleteUser } from '../controllers/users/[_id].delete'
+import { getUser } from '../controllers/users/[_id].get'
+import { updateUser } from '../controllers/users/[_id].put'
+import { getUsers } from '../controllers/users/index.get'
+import { createNewUser } from '../controllers/users/index.post'
+import { updateUserPreferences } from '../controllers/users/preferences.put'
+import { resetPassword } from '../controllers/users/reset-password.put'
+import type { TMetisRouterMap } from '../library/MetisRouter'
 
 const routerMap: TMetisRouterMap = (
   router: Router,

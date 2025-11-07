@@ -1,6 +1,6 @@
-import Prompt from 'src/components/content/communication/Prompt'
-import { useGlobalContext } from 'src/context/global'
-import ClientMissionForce from 'src/missions/forces'
+import Prompt from '@client/components/content/communication/Prompt'
+import { useGlobalContext } from '@client/context/global'
+import type { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
 import { useMissionPageContext } from '../../context'
 
 /**

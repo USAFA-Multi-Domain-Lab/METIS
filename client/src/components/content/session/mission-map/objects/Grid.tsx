@@ -1,5 +1,5 @@
-import ClientMissionNode from 'src/missions/nodes'
-import { compute } from 'src/toolbox'
+import { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
+import { compute } from '@client/toolbox'
 import './Grid.scss'
 
 /**

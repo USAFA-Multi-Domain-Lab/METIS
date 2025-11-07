@@ -1,3 +1,6 @@
+import { compute } from '@client/toolbox'
+import { useMountHandler, useUnmountHandler } from '@client/toolbox/hooks'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import React, {
   Children,
   isValidElement,
@@ -6,9 +9,6 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import { compute } from 'src/toolbox'
-import { useMountHandler, useUnmountHandler } from 'src/toolbox/hooks'
-import ClassList from '../../../../../../shared/toolbox/html/class-lists'
 import Panel from './Panel'
 import './PanelLayout.scss'
 

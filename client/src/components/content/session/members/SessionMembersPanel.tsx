@@ -1,4 +1,4 @@
-import SessionClient from 'src/sessions'
+import type { SessionClient } from '@client/sessions/SessionClient'
 import SessionMembers from './SessionMembers'
 import './SessionMembersPanel.scss'
 

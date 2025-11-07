@@ -1,6 +1,6 @@
-import { TActionMetadata } from 'metis/target-environments/args/mission-component/action-arg'
-import Dependency from 'metis/target-environments/dependencies'
-import TargetSchema from '../../../../../library/target-env-classes/targets'
+import { TargetDependency } from '@shared/target-environments/targets/TargetDependency'
+import type { TActionMetadata } from '@shared/target-environments/types'
+import { TargetSchema } from '../../../../../library/target-env-classes/targets'
 
 // Argument IDs for the process time modifier target.
 const actionArgId = 'actionMetadata'
@@ -66,7 +66,7 @@ const ProcessTimeMod = new TargetSchema({
       min: -1,
       max: 1,
       groupingId,
-      dependencies: [Dependency.ACTION(actionArgId)],
+      dependencies: [TargetDependency.ACTION(actionArgId)],
       default: 0,
       integersOnly: true,
       tooltipDescription:
@@ -84,7 +84,7 @@ const ProcessTimeMod = new TargetSchema({
       min: -59,
       max: 59,
       groupingId,
-      dependencies: [Dependency.ACTION(actionArgId)],
+      dependencies: [TargetDependency.ACTION(actionArgId)],
       default: 0,
       integersOnly: true,
       tooltipDescription:
@@ -102,7 +102,7 @@ const ProcessTimeMod = new TargetSchema({
       min: -59,
       max: 59,
       groupingId,
-      dependencies: [Dependency.ACTION(actionArgId)],
+      dependencies: [TargetDependency.ACTION(actionArgId)],
       default: 0,
       integersOnly: true,
       tooltipDescription:

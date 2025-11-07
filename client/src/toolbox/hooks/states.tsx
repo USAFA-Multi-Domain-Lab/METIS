@@ -1,6 +1,7 @@
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { TObjectFormSyncOptions, usePostInitEffect } from '.'
-import StringToolbox from '../../../../shared/toolbox/strings'
+import type { TObjectFormSyncOptions } from '.'
+import { usePostInitEffect } from './lifecycles'
 
 /**
  * Maintains states for all provided keys of a provided object,

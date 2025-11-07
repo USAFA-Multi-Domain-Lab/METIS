@@ -1,7 +1,7 @@
+import type { ClientEffect } from '@client/missions/effects/ClientEffect'
+import { usePostInitEffect } from '@client/toolbox/hooks'
+import type { TBooleanArg } from '@shared/target-environments/args/BooleanArg'
 import { useEffect, useState } from 'react'
-import { ClientEffect } from 'src/missions/effects'
-import { usePostInitEffect } from 'src/toolbox/hooks'
-import { TBooleanArg } from '../../../../../../../shared/target-environments/args/boolean-arg'
 import { DetailToggle } from '../../../../content/form/DetailToggle'
 
 /**

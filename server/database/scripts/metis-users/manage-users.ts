@@ -1,11 +1,12 @@
+import { MetisServer } from '@server/MetisServer'
+import { ServerUser } from '@server/users/ServerUser'
+import type { TUserJson } from '@shared/users/User'
+import type { TUserAccessId } from '@shared/users/UserAccess'
+import { UserAccess } from '@shared/users/UserAccess'
 import fs from 'fs'
-import MetisServer from 'metis/server'
-import ServerUser from 'metis/server/users'
-import { TUserJson } from 'metis/users'
-import { accessIds, TUserAccessId } from 'metis/users/accesses'
 import { CompleterResult } from 'readline'
 import { createInterface } from 'readline/promises'
-import UserModel, { hashPassword } from '../../models/users'
+import { hashPassword, UserModel } from '../../models/users'
 
 /**
  * Parses the data into an array of users JSON.
@@ -29,7 +30,9 @@ const parseUsers = async (data: string) => {
     ] = line.split(',').map((value) => value.trim())
 
     // Skip invalid access IDs.
-    if (!accessIds.includes(accessId as TUserAccessId)) {
+    if (
+      !UserAccess.AVAILABLE_ACCESSES_IDS.includes(accessId as TUserAccessId)
+    ) {
       throw new Error(`Invalid access ID: ${accessId}`)
     }
 

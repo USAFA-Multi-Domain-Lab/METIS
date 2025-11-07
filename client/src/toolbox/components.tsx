@@ -1,6 +1,6 @@
-import { TWithKey } from 'shared/toolbox/objects'
-import ClientUser from 'src/users'
-import { TLogin } from '../../../shared/logins'
+import type { ClientUser } from '@client/users/ClientUser'
+import type { TLogin } from '@shared/logins'
+import type { TWithKey } from '@shared/toolbox/objects/ObjectToolbox'
 
 /**
  * Options that can be passed to the render function.

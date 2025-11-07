@@ -1,8 +1,7 @@
-import { ClientEffect } from 'src/missions/effects'
-import { compute } from 'src/toolbox'
-
-import ClassList from 'shared/toolbox/html/class-lists'
-import { TTargetArg } from '../../../../../../../shared/target-environments/args'
+import type { ClientEffect } from '@client/missions/effects/ClientEffect'
+import { compute } from '@client/toolbox'
+import type { TTargetArg } from '@shared/target-environments/args/Arg'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import Divider from '../../../../content/form/Divider'
 import { useMissionPageContext } from '../../context'
 import Arg from './Arg'

@@ -1,16 +1,16 @@
-import React, { useContext, useEffect, useRef, useState } from 'react'
-import { useGlobalContext } from 'src/context/global'
-import { compute } from 'src/toolbox'
+import { useGlobalContext } from '@client/context/global'
+import { compute } from '@client/toolbox'
+import type { TDefaultProps } from '@client/toolbox/hooks'
 import {
-  TDefaultProps,
   useDefaultProps,
   useEventListener,
   usePostInitEffect,
-} from 'src/toolbox/hooks'
-import { MetisComponent } from '../../../../../../shared'
-import StringToolbox from '../../../../../../shared/toolbox/strings'
-import { TUserPermissionId } from '../../../../../../shared/users/permissions'
-import {
+} from '@client/toolbox/hooks'
+import type { MetisComponent } from '@shared/MetisComponent'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import type { TUserPermissionId } from '@shared/users/UserPermission'
+import React, { useContext, useEffect, useRef, useState } from 'react'
+import type {
   TButtonSvgEngine,
   TSvgLayout,
   TSvgPanelElement_Input,
@@ -20,15 +20,16 @@ import ListDropBox from './ListDropBox'
 import ListResizeHandler from './ListResizeHandler'
 import ListValidator from './ListValidator'
 import ListNav from './navs/ListNav'
-import {
+import type {
   TGetItemButtonDisabled,
   TGetItemButtonLabel,
   TGetItemButtonPermission,
   TGetItemTooltip,
   TOnItemButtonClick,
 } from './pages/items/ListItem'
-import ListPage, { TListPage_P } from './pages/ListPage'
-import ListUpload from './uploads'
+import type { TListPage_P } from './pages/ListPage'
+import ListPage from './pages/ListPage'
+import type { ListUpload } from './uploads'
 
 /* -- CONSTANTS -- */
 

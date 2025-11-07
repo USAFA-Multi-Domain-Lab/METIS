@@ -1,13 +1,16 @@
+import Tooltip from '@client/components/content/communication/Tooltip'
+import { DetailDropdown } from '@client/components/content/form/dropdown/'
+import { ButtonText } from '@client/components/content/user-controls/buttons/ButtonText'
+import type {
+  ClientEffect,
+  TClientEffectHost,
+} from '@client/missions/effects/ClientEffect'
+import { ClientTarget } from '@client/target-environments/ClientTarget'
+import { ClientTargetEnvironment } from '@client/target-environments/ClientTargetEnvironment'
+import { compute } from '@client/toolbox'
+import { usePostInitEffect } from '@client/toolbox/hooks'
+import type { TEffectType } from '@shared/missions/effects/Effect'
 import { useState } from 'react'
-import Tooltip from 'src/components/content/communication/Tooltip'
-import { DetailDropdown } from 'src/components/content/form/dropdown/'
-import { ButtonText } from 'src/components/content/user-controls/buttons/ButtonText'
-import { ClientEffect, TClientEffectHost } from 'src/missions/effects'
-import { ClientTargetEnvironment } from 'src/target-environments'
-import ClientTarget from 'src/target-environments/targets'
-import { compute } from 'src/toolbox'
-import { usePostInitEffect } from 'src/toolbox/hooks'
-import { TEffectType } from '../../../../../../../../../shared/missions/effects'
 import './CreateEffect.scss'
 
 /**

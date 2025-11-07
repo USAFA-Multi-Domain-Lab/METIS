@@ -1,15 +1,15 @@
-import { TMetisClientComponents } from 'src'
-import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
-import If from 'src/components/content/util/If'
-import { useGlobalContext } from 'src/context/global'
-import { ClientTargetEnvironment } from 'src/target-environments'
-import ClientTarget from 'src/target-environments/targets'
-import {
+import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
+import If from '@client/components/content/util/If'
+import { useGlobalContext } from '@client/context/global'
+import type { TMetisClientComponents } from '@client/index'
+import { ClientTarget } from '@client/target-environments/ClientTarget'
+import { ClientTargetEnvironment } from '@client/target-environments/ClientTargetEnvironment'
+import type {
   TEffectTrigger,
   TEffectType,
-} from '../../../../../../../../shared/missions/effects'
-import StringToolbox from '../../../../../../../../shared/toolbox/strings'
+} from '@shared/missions/effects/Effect'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { useMissionPageContext } from '../../../context'
 import { useTimelineContext } from '../context'
 import { TimelineItem } from './items/TimelineItem'

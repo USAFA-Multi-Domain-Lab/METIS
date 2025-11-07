@@ -1,10 +1,7 @@
+import type { TNavigateOptions } from '@client/context/global'
+import { useGlobalContext } from '@client/context/global'
+import type { SessionClient } from '@client/sessions/SessionClient'
 import { useRef } from 'react'
-import {
-  TGlobalContextActions,
-  TNavigateOptions,
-  useGlobalContext,
-} from 'src/context/global'
-import SessionClient from 'src/sessions'
 import { useEventListener, useMountHandler } from '.'
 
 /**

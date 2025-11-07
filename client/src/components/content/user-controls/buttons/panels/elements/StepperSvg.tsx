@@ -1,9 +1,9 @@
+import Tooltip from '@client/components/content/communication/Tooltip'
+import { compute } from '@client/toolbox'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import { useEffect } from 'react'
-import Tooltip from 'src/components/content/communication/Tooltip'
-import { compute } from 'src/toolbox'
-import ClassList from '../../../../../../../../shared/toolbox/html/class-lists'
-import ButtonSvgEngine from '../engines'
-import { TStepperSvg_PK } from '../types'
+import { ButtonSvgEngine } from '../engines'
+import type { TStepperSvg_PK } from '../types'
 import './StepperSvg.scss'
 
 /**

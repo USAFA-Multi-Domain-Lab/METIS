@@ -1,7 +1,7 @@
+import type { ClientEffect } from '@client/missions/effects/ClientEffect'
+import { usePostInitEffect } from '@client/toolbox/hooks'
+import type { TNumberArg } from '@shared/target-environments/args/NumberArg'
 import { useEffect, useState } from 'react'
-import { ClientEffect } from 'src/missions/effects'
-import { usePostInitEffect } from 'src/toolbox/hooks'
-import { TNumberArg } from '../../../../../../../shared/target-environments/args/number-arg'
 import { DetailNumber } from '../../../../content/form/DetailNumber'
 
 /**

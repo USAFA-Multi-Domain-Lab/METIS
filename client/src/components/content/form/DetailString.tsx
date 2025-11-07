@@ -1,6 +1,6 @@
+import { compute } from '@client/toolbox'
 import { useState } from 'react'
-import { compute } from 'src/toolbox'
-import { TDetailWithInput_P } from '.'
+import type { TDetailWithInput_P } from '.'
 import Tooltip from '../communication/Tooltip'
 import './DetailString.scss'
 

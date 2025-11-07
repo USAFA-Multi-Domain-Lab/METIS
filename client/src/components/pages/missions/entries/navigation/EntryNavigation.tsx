@@ -1,9 +1,9 @@
-import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
-import If from 'src/components/content/util/If'
-import ClientMission from 'src/missions'
-import { compute } from 'src/toolbox'
-import MissionComponent from '../../../../../../../shared/missions/component'
+import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
+import If from '@client/components/content/util/If'
+import { ClientMission } from '@client/missions/ClientMission'
+import { compute } from '@client/toolbox'
+import type { MissionComponent } from '@shared/missions/MissionComponent'
 import './EntryNavigation.scss'
 
 /**

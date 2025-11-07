@@ -1,14 +1,15 @@
+import Prompt from '@client/components/content/communication/Prompt'
 import { useEffect, useRef, useState } from 'react'
-import Prompt from 'src/components/content/communication/Prompt'
 
-import If from 'src/components/content/util/If'
-import { useGlobalContext } from 'src/context/global'
-import ClientFileReference from 'src/files/references'
-import { useDefaultProps } from 'src/toolbox/hooks'
-import { DateToolbox } from '../../../../../../../shared/toolbox/dates'
-import FileToolbox from '../../../../../../../shared/toolbox/files'
-import List, { createDefaultListProps, TList_P } from '../List'
-import ListUpload from '../uploads'
+import If from '@client/components/content/util/If'
+import { useGlobalContext } from '@client/context/global'
+import { ClientFileReference } from '@client/files/ClientFileReference'
+import { useDefaultProps } from '@client/toolbox/hooks'
+import { DateToolbox } from '@shared/toolbox/dates/DateToolbox'
+import { FileToolbox } from '@shared/toolbox/files/FileToolbox'
+import type { TList_P } from '../List'
+import List, { createDefaultListProps } from '../List'
+import { ListUpload } from '../uploads'
 
 /**
  * A component for displaying a list of file references.

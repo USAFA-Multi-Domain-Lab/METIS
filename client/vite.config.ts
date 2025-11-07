@@ -52,8 +52,8 @@ export default defineConfig(({ mode }) => {
     plugins: [react(), tsconfigPaths()],
     resolve: {
       alias: {
-        'src': path.resolve(__dirname, 'src'),
-        'shared': path.resolve(__dirname, '../shared'),
+        '@client': path.resolve(__dirname, 'src'),
+        '@shared': path.resolve(__dirname, '../shared'),
         'react': path.resolve(__dirname, '../node_modules/react'),
         'react-dom': path.resolve(__dirname, '../node_modules/react-dom'),
       },

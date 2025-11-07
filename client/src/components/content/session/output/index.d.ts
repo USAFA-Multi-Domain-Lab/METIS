@@ -1,5 +1,4 @@
-import React from 'react'
-import ClientOutput from '../../../../missions/forces/outputs'
+import type { ClientOutput } from '@client/missions/forces/ClientOutput'
 
 /**
  * Prop type for `Output`.

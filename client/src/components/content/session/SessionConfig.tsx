@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
-import ClientMission from 'src/missions'
-import {
+import type { ClientMission } from '@client/missions/ClientMission'
+import type {
   TSessionAccessibility,
   TSessionConfig,
-} from '../../../../../shared/sessions'
+} from '@shared/sessions/Session'
+import { useEffect, useState } from 'react'
 import { DetailString } from '../form/DetailString'
 import { DetailToggle } from '../form/DetailToggle'
 import { DetailDropdown } from '../form/dropdown/'

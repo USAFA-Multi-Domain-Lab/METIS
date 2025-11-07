@@ -18,5 +18,5 @@ const Schema = new InfoSchema(
 )
 
 /* -- MODEL -- */
-const InfoModel = model<TInfo, TInfoModel>('Info', Schema)
-export default InfoModel
+
+export const InfoModel = model<TInfo, TInfoModel>('Info', Schema)

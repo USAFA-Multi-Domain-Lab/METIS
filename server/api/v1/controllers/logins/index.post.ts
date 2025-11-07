@@ -1,17 +1,16 @@
-import { Request, Response } from 'express-serve-static-core'
-import UserModel from 'metis/server/database/models/users'
-import { StatusError } from 'metis/server/http'
-import { expressLogger } from 'metis/server/logging'
-import ServerLogin from 'metis/server/logins'
-import ServerUser from 'metis/server/users'
-import ApiResponse from '../../library/response'
+import { UserModel } from '@server/database/models/users'
+import { expressLogger } from '@server/logging'
+import { ServerLogin } from '@server/logins/ServerLogin'
+import { ServerUser } from '@server/users/ServerUser'
+import { ApiResponse } from '../../library/ApiResponse'
+import { StatusError } from '../../library/StatusError'
 /**
  * This will log the user in.
  * @param request The express request.
  * @param response The express response.
  * @returns The login information in JSON format.
  */
-const login = async (request: Request, response: Response) => {
+export const login: TExpressHandler = async (request, response) => {
   let forceful: boolean = request.headers.forceful === 'true'
 
   try {
@@ -51,5 +50,3 @@ const login = async (request: Request, response: Response) => {
     return ApiResponse.error(error, response)
   }
 }
-
-export default login

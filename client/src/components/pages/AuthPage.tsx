@@ -1,14 +1,12 @@
+import { useGlobalContext } from '@client/context/global'
+import { ClientLogin } from '@client/logins/ClientLogin'
+import { compute } from '@client/toolbox'
 import React, { useEffect, useRef, useState } from 'react'
-import { useGlobalContext } from 'src/context/global'
-import ClientLogin from 'src/logins'
-import { compute } from 'src/toolbox'
-import { TPage_P } from '.'
+import type { TPage_P } from '.'
 import { DetailString } from '../content/form/DetailString'
 import Branding from '../content/general-layout/Branding'
-import {
-  ButtonText,
-  TButtonTextDisabled,
-} from '../content/user-controls/buttons/ButtonText'
+import type { TButtonTextDisabled } from '../content/user-controls/buttons/ButtonText'
+import { ButtonText } from '../content/user-controls/buttons/ButtonText'
 import DevOnly from '../content/util/DevOnly'
 import './AuthPage.scss'
 

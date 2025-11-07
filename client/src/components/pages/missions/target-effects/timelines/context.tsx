@@ -1,6 +1,6 @@
-import { LocalContext } from 'src/context/local'
-import { TEffectType } from '../../../../../../../shared/missions/effects'
-import {
+import { LocalContext } from '@client/context/local'
+import type { TEffectType } from '@shared/missions/effects/Effect'
+import type {
   TEffectTimeline_E,
   TEffectTimeline_P,
   TEffectTimeline_S,

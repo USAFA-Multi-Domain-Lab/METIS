@@ -1,7 +1,7 @@
-import WarningIndicator from 'src/components/content/user-controls/WarningIndicator'
-import { compute } from 'src/toolbox'
-import { TMissionComponentDefect } from '../../../../../../../../../../shared/missions/component'
-import { TEffectType } from '../../../../../../../../../../shared/missions/effects'
+import WarningIndicator from '@client/components/content/user-controls/WarningIndicator'
+import { compute } from '@client/toolbox'
+import type { TEffectType } from '@shared/missions/effects/Effect'
+import type { TMissionComponentDefect } from '@shared/missions/MissionComponent'
 import { TimelineItemCell } from './TimelineItemCell'
 
 /**

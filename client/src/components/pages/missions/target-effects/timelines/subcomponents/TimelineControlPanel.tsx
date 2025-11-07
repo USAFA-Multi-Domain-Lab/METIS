@@ -1,9 +1,9 @@
+import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
+import { compute } from '@client/toolbox'
+import { useRequireLogin } from '@client/toolbox/hooks'
+import { CallToolbox } from '@shared/toolbox/calls/CallToolbox'
 import { useEffect } from 'react'
-import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
-import { compute } from 'src/toolbox'
-import { useRequireLogin } from 'src/toolbox/hooks'
-import { ifNonNullable } from '../../../../../../../../shared/toolbox/calls'
 import useEffectItemButtonCallbacks from '../../../hooks/mission-components/effects'
 import { useTimelineContext } from '../context'
 import './TimelineControlPanel.scss'
@@ -41,7 +41,7 @@ export default function TimelineControlPanel({}: TTimelineControlPanel_P): TReac
         type: 'button',
         label: 'Duplicate the selected effect.',
         permissions: ['missions_write'],
-        onClick: () => ifNonNullable(onDuplicateRequest, selection),
+        onClick: () => CallToolbox.ifNonNullable(onDuplicateRequest, selection),
       },
       {
         key: 'delete',
@@ -49,7 +49,7 @@ export default function TimelineControlPanel({}: TTimelineControlPanel_P): TReac
         type: 'button',
         label: 'Delete the selected effect.',
         permissions: ['missions_write'],
-        onClick: () => ifNonNullable(onDeleteRequest, selection),
+        onClick: () => CallToolbox.ifNonNullable(onDeleteRequest, selection),
       },
     ],
   })

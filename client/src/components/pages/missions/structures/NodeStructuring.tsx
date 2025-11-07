@@ -1,19 +1,21 @@
-import { useState } from 'react'
-import { useGlobalContext } from 'src/context/global'
-import ClientMission from 'src/missions'
-import ClientMissionPrototype, {
-  TPrototypeRelation,
-} from 'src/missions/nodes/prototypes'
-import { compute } from 'src/toolbox'
-import { useRequireLogin } from 'src/toolbox/hooks'
-import If from '../../../content/util/If'
-import { useMissionPageContext } from '../context'
-import './NodeStructuring.scss'
+
 
 // This is a enum used to describe
 // the locations that one node can
 // be dragged and dropped on another
 // node, whether that's the top, center,
+
+import If from "@client/components/content/util/If"
+import { useGlobalContext } from "@client/context/global"
+import { ClientMission } from "@client/missions/ClientMission"
+import { ClientMissionPrototype, TPrototypeRelation } from "@client/missions/nodes/ClientMissionPrototype"
+import { compute } from "@client/toolbox"
+import { useRequireLogin } from "@client/toolbox/hooks"
+import { useState } from "react"
+import { useMissionPageContext } from "../context"
+import './NodeStructuring.scss'
+
+
 // or bottom of the drop zone.
 enum ENodeDropLocation {
   Top,

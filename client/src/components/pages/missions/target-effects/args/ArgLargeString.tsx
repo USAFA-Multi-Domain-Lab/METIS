@@ -1,7 +1,7 @@
+import type { ClientEffect } from '@client/missions/effects/ClientEffect'
+import { usePostInitEffect } from '@client/toolbox/hooks'
+import type { TLargeStringArg } from '@shared/target-environments/args/LargeStringArg'
 import { useEffect, useState } from 'react'
-import { ClientEffect } from 'src/missions/effects'
-import { usePostInitEffect } from 'src/toolbox/hooks'
-import { TLargeStringArg } from '../../../../../../../shared/target-environments/args/large-string-arg'
 import { DetailLargeString } from '../../../../content/form/DetailLargeString'
 
 /**

@@ -1,14 +1,13 @@
-import { Request, Response } from 'express-serve-static-core'
 import fs from 'fs'
 import path from 'path'
-import ApiResponse from '../../library/response'
+import { ApiResponse } from '../../library/ApiResponse'
 /**
  * This will retrieve the changelog.
  * @param request The express request.
  * @param response The express response.
  * @returns The changelog in JSON format.
  */
-const getChangelog = (request: Request, response: Response) => {
+export const getChangelog: TExpressHandler = (request, response) => {
   try {
     // This is the path to the root of the project.
     let __dirname = '../'
@@ -28,5 +27,3 @@ const getChangelog = (request: Request, response: Response) => {
     return ApiResponse.error(error, response)
   }
 }
-
-export default getChangelog

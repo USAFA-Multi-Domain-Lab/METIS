@@ -1,9 +1,9 @@
-import { Request, Response } from 'express-serve-static-core'
-import MetisFileStore from 'metis/server/files'
-import { StatusError } from 'metis/server/http'
-import MissionImport from 'metis/server/missions/imports'
-import ServerUser from 'metis/server/users'
-import ApiResponse from '../../library/response'
+import type { MetisFileStore } from '@server/files/MetisFileStore'
+import { MissionImport } from '@server/missions/imports/MissionImport'
+import type { ServerUser } from '@server/users/ServerUser'
+import type { Request, Response } from 'express-serve-static-core'
+import { ApiResponse } from '../../library/ApiResponse'
+import { StatusError } from '../../library/StatusError'
 
 /**
  * This will import a mission from a file.
@@ -11,7 +11,7 @@ import ApiResponse from '../../library/response'
  * @param response The express response.
  * @returns The response to send to the client.
  */
-const importMission = async (
+export const importMission = async (
   request: Request,
   response: Response,
   fileStore: MetisFileStore,
@@ -43,5 +43,3 @@ const importMission = async (
   // Send a response.
   return ApiResponse.sendJson(response, missionImport.results)
 }
-
-export default importMission

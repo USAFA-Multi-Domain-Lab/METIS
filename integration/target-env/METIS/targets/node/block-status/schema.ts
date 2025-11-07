@@ -1,6 +1,6 @@
-import { TNodeMetadata } from 'metis/target-environments/args/mission-component/node-arg'
-import Dependency from 'metis/target-environments/dependencies'
-import TargetSchema from '../../../../../library/target-env-classes/targets'
+import { TargetDependency } from '@shared/target-environments/targets/TargetDependency'
+import type { TNodeMetadata } from '@shared/target-environments/types'
+import { TargetSchema } from '../../../../../library/target-env-classes/targets'
 
 /**
  * A target available in the METIS target environment that enables a user
@@ -51,7 +51,7 @@ const BlockStatus = new TargetSchema({
       name: 'Block Status',
       required: true,
       groupingId: 'node',
-      dependencies: [Dependency.NODE('nodeMetadata')],
+      dependencies: [TargetDependency.NODE('nodeMetadata')],
       options: [
         {
           _id: 'no-change',

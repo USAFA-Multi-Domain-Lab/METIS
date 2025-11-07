@@ -1,14 +1,14 @@
-import { TMetisClientComponents } from 'src'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
-import { useMissionPageContext } from 'src/components/pages/missions/context'
-import useEffectItemButtonCallbacks from 'src/components/pages/missions/hooks/mission-components/effects'
-import { ClientEffect } from 'src/missions/effects'
-import { useObjectFormSync } from 'src/toolbox/hooks'
-import {
+import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
+import { useMissionPageContext } from '@client/components/pages/missions/context'
+import useEffectItemButtonCallbacks from '@client/components/pages/missions/hooks/mission-components/effects'
+import type { TMetisClientComponents } from '@client/index'
+import { ClientEffect } from '@client/missions/effects/ClientEffect'
+import { useObjectFormSync } from '@client/toolbox/hooks'
+import type {
   TEffectType,
   TSelectEffectContext,
-} from '../../../../../../../shared/missions/effects'
-import StringToolbox from '../../../../../../../shared/toolbox/strings'
+} from '@shared/missions/effects/Effect'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { DetailLargeString } from '../../../../content/form/DetailLargeString'
 import { DetailLocked } from '../../../../content/form/DetailLocked'
 import { DetailString } from '../../../../content/form/DetailString'

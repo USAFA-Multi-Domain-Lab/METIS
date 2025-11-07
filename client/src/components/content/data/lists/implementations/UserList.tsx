@@ -1,11 +1,12 @@
-import Prompt from 'src/components/content/communication/Prompt'
-import { useGlobalContext } from 'src/context/global'
-import { compute } from 'src/toolbox'
-import { useRequireLogin } from 'src/toolbox/hooks'
-import ClientUser from 'src/users'
-import { DateToolbox } from '../../../../../../../shared/toolbox/dates'
-import List, { TGetListButtonLabel, TOnListButtonClick } from '../List'
-import {
+import Prompt from '@client/components/content/communication/Prompt'
+import { useGlobalContext } from '@client/context/global'
+import { compute } from '@client/toolbox'
+import { useRequireLogin } from '@client/toolbox/hooks'
+import { ClientUser } from '@client/users/ClientUser'
+import { DateToolbox } from '@shared/toolbox/dates/DateToolbox'
+import type { TGetListButtonLabel, TOnListButtonClick } from '../List'
+import List from '../List'
+import type {
   TGetItemButtonLabel,
   TOnItemButtonClick,
   TOnItemSelection,

@@ -1,4 +1,5 @@
-import React, { JSX } from 'react'
+import type React from 'react'
+import type { JSX } from 'react'
 
 declare global {
   /**

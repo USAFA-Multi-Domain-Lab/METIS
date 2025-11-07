@@ -1,6 +1,5 @@
-import { TMetisComponentJson } from 'metis/index'
-import { HydratedDocument, Model, Query, Schema } from 'mongoose'
-import MetisDatabase from '..'
+import type { HydratedDocument, Model, Query, Schema } from 'mongoose'
+import { MetisDatabase } from '../MetisDatabase'
 import type { TMetisDoc } from './types'
 
 /**

@@ -1,28 +1,26 @@
-import { useEffect, useState } from 'react'
-import ClientMissionAction from 'src/missions/actions'
-import { ClientEffect } from 'src/missions/effects'
-import ClientMissionFile from 'src/missions/files'
-import ClientMissionForce from 'src/missions/forces'
-import ClientMissionNode from 'src/missions/nodes'
-import { compute } from 'src/toolbox'
-import { usePostInitEffect } from 'src/toolbox/hooks'
-import {
+import { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
+import type { ClientEffect } from '@client/missions/effects/ClientEffect'
+import { ClientMissionFile } from '@client/missions/files/ClientMissionFile'
+import { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
+import { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
+import { compute } from '@client/toolbox'
+import { usePostInitEffect } from '@client/toolbox/hooks'
+import { ActionArg } from '@shared/target-environments/args/mission-component/ActionArg'
+import { FileArg } from '@shared/target-environments/args/mission-component/FileArg'
+import { ForceArg } from '@shared/target-environments/args/mission-component/ForceArg'
+import type {
   TMissionComponentArg,
   TMissionComponentMetadata,
-} from '../../../../../../../shared/target-environments/args/mission-component'
-import ActionArg, {
+} from '@shared/target-environments/args/mission-component/MissionComponentArg'
+import { NodeArg } from '@shared/target-environments/args/mission-component/NodeArg'
+import type {
   TActionMetadata,
-} from '../../../../../../../shared/target-environments/args/mission-component/action-arg'
-import FileArg, {
   TFileMetadata,
-} from '../../../../../../../shared/target-environments/args/mission-component/file-arg'
-import ForceArg, {
   TForceMetadata,
-} from '../../../../../../../shared/target-environments/args/mission-component/force-arg'
-import NodeArg, {
   TNodeMetadata,
-} from '../../../../../../../shared/target-environments/args/mission-component/node-arg'
-import StringToolbox from '../../../../../../../shared/toolbox/strings'
+} from '@shared/target-environments/types'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import { useEffect, useState } from 'react'
 import ArgAction from './ArgAction'
 import ArgFile from './ArgFile'
 import ArgForce from './ArgForce'

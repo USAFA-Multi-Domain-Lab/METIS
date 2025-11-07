@@ -1,6 +1,6 @@
+import { compute } from '@client/toolbox'
+import type { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
 import { useMemo } from 'react'
-import { compute } from 'src/toolbox'
-import { Vector2D } from '../../../../../../../shared/toolbox/space'
 import './Line.scss'
 
 /**

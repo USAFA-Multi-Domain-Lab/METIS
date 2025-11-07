@@ -1,6 +1,5 @@
-import { Request, Response } from 'express-serve-static-core'
-import FileReferenceModel from 'metis/server/database/models/file-references'
-import ApiResponse from '../../library/response'
+import { FileReferenceModel } from '@server/database/models/file-references'
+import { ApiResponse } from '../../library/ApiResponse'
 
 /**
  * Retrieves all file references from the database.
@@ -9,9 +8,7 @@ import ApiResponse from '../../library/response'
  * @resolves With the response to send to the client.
  * @rejects If an error occurs.
  */
-const getFiles = async (request: Request, response: Response) => {
+export const getFiles: TExpressHandler = async (_, response) => {
   const referenceJson = await FileReferenceModel.find().exec()
   return ApiResponse.sendJson(response, referenceJson)
 }
-
-export default getFiles

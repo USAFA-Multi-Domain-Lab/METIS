@@ -1,10 +1,10 @@
-import { DateToolbox } from '../../../shared/toolbox/dates'
+import { DateToolbox } from '@shared/toolbox/dates/DateToolbox'
 
 /**
  * Creates a universal standard for logging to
  * the console for the METIS client.
  */
-export default class Logging {
+export class Logging {
   /**
    * Whether the app is in debug mode of not.
    * @note This is set by the global context.

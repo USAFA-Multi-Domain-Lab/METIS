@@ -1,7 +1,8 @@
+import { compute } from '@client/toolbox'
+import { useForcedUpdates, usePostRenderEffect } from '@client/toolbox/hooks'
 import { useEffect, useRef, useState } from 'react'
-import { compute } from 'src/toolbox'
-import { useForcedUpdates, usePostRenderEffect } from 'src/toolbox/hooks'
-import Tab, { TTab_P } from '.'
+import type { TTab_P } from '.'
+import Tab from '.'
 import { useMapContext } from '../../MissionMap'
 import './TabBar.scss'
 

@@ -1,9 +1,9 @@
+import { useGlobalContext } from '@client/context/global'
+import type { ClientUser } from '@client/users/ClientUser'
+import type { TListenerTarget } from '@shared/events/EventManager'
+import type { TLogin } from '@shared/logins'
 import React, { useCallback, useEffect, useRef } from 'react'
-import { useGlobalContext } from 'src/context/global'
-import ClientUser from 'src/users'
-import { TListenerTarget } from '../../../../shared/events'
-import { TLogin } from '../../../../shared/logins'
-import {
+import type {
   TDefaultProps,
   TRequireLoginReturn,
   TResizeObserverOptions,

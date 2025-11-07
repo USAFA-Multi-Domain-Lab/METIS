@@ -1,7 +1,7 @@
+import type { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
+import { compute } from '@client/toolbox'
+import { useEventListener, usePostRenderEffect } from '@client/toolbox/hooks'
 import { useEffect, useRef, useState } from 'react'
-import ClientMissionForce from 'src/missions/forces'
-import { compute } from 'src/toolbox'
-import { useEventListener, usePostRenderEffect } from 'src/toolbox/hooks'
 import { Output } from '.'
 import './OutputPanel.scss'
 

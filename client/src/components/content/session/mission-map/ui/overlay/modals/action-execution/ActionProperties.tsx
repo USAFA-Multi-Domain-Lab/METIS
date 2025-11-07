@@ -1,8 +1,8 @@
-import RichText from 'src/components/content/general-layout/rich-text/RichText'
-import ClientMissionAction from 'src/missions/actions'
-import { compute } from 'src/toolbox'
-import { TExecutionCheats } from '../../../../../../../../../../shared/missions/actions/executions'
-import { TSessionConfig } from '../../../../../../../../../../shared/sessions'
+import RichText from '@client/components/content/general-layout/rich-text/RichText'
+import type { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
+import { compute } from '@client/toolbox'
+import type { TExecutionCheats } from '@shared/missions/actions/ActionExecution'
+import type { TSessionConfig } from '@shared/sessions/Session'
 import './ActionProperties.scss'
 import ActionProperty from './ActionProperty'
 

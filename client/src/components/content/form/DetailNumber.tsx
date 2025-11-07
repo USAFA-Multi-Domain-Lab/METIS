@@ -1,7 +1,7 @@
+import { compute } from '@client/toolbox'
+import inputs from '@client/toolbox/inputs'
 import { useEffect, useState } from 'react'
-import { compute } from 'src/toolbox'
-import inputs from 'src/toolbox/inputs'
-import { TDetail_P } from '.'
+import type { TDetail_P } from '.'
 import Tooltip from '../communication/Tooltip'
 import './DetailNumber.scss'
 

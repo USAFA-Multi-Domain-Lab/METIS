@@ -1,3 +1,4 @@
 {
-  "name": "metis-server"
+  "name": "@metis/server",
+  "private": true
 }

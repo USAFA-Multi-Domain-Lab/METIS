@@ -1,7 +1,7 @@
+import type { ClientEffect } from '@client/missions/effects/ClientEffect'
+import { usePostInitEffect } from '@client/toolbox/hooks'
+import type { TStringArg } from '@shared/target-environments/args/StringArg'
 import { useEffect, useState } from 'react'
-import { ClientEffect } from 'src/missions/effects'
-import { usePostInitEffect } from 'src/toolbox/hooks'
-import { TStringArg } from '../../../../../../../shared/target-environments/args/string-arg'
 import { DetailString } from '../../../../content/form/DetailString'
 
 /**

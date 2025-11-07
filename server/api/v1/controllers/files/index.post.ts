@@ -1,8 +1,7 @@
-import { Request, Response } from 'express-serve-static-core'
-import MetisFileStore from 'metis/server/files'
-import { StatusError } from 'metis/server/http'
-import ServerUser from 'metis/server/users'
-import ApiResponse from '../../library/response'
+import type { MetisFileStore } from '@server/files/MetisFileStore'
+import type { ServerUser } from '@server/users/ServerUser'
+import { ApiResponse } from '../../library/ApiResponse'
+import { StatusError } from '../../library/StatusError'
 
 /**
  * This will handle file uploads.
@@ -10,9 +9,9 @@ import ApiResponse from '../../library/response'
  * @param response The express response.
  * @returns The response to send to the client.
  */
-const uploadFiles = async (
-  request: Request,
-  response: Response,
+export const uploadFiles = async (
+  request: TExpressRequest,
+  response: TExpressResponse,
   fileStore: MetisFileStore,
 ) => {
   let currentUser: ServerUser = response.locals.user
@@ -37,5 +36,3 @@ const uploadFiles = async (
   // for the newly uploaded files.
   return response.json(uploadedFiles)
 }
-
-export default uploadFiles

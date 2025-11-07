@@ -1,10 +1,11 @@
-import { ReactNode, useState } from 'react'
-import Tooltip from 'src/components/content/communication/Tooltip'
-import ClientMissionAction from 'src/missions/actions'
-import { compute } from 'src/toolbox'
-import { useEventListener } from 'src/toolbox/hooks'
-import { getIconPath } from 'src/toolbox/icons'
-import StringToolbox from '../../../../../../../../../../shared/toolbox/strings'
+import Tooltip from '@client/components/content/communication/Tooltip'
+import type { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
+import { compute } from '@client/toolbox'
+import { useEventListener } from '@client/toolbox/hooks'
+import { getIconPath } from '@client/toolbox/icons'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import type { ReactNode } from 'react'
+import { useState } from 'react'
 import './ActionProperty.scss'
 
 /**

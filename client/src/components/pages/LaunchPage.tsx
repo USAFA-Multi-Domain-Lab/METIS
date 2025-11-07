@@ -1,14 +1,13 @@
+import { useGlobalContext } from '@client/context/global'
+import { ClientMission } from '@client/missions/ClientMission'
+import { SessionClient } from '@client/sessions/SessionClient'
+import { compute } from '@client/toolbox'
+import { useMountHandler, useRequireLogin } from '@client/toolbox/hooks'
+import type { TMissionComponentDefect } from '@shared/missions/MissionComponent'
 import { useState } from 'react'
-import { useGlobalContext } from 'src/context/global'
-import ClientMission from 'src/missions'
-import SessionClient from 'src/sessions'
-import { compute } from 'src/toolbox'
-import { useMountHandler, useRequireLogin } from 'src/toolbox/hooks'
 import { DefaultPageLayout } from '.'
-import { TMissionComponentDefect } from '../../../../shared/missions/component'
-import Session from '../../../../shared/sessions'
 import { ESortByMethod } from '../content/general-layout/ListOld'
-import { TNavigation_P } from '../content/general-layout/Navigation'
+import type { TNavigation_P } from '../content/general-layout/Navigation'
 import SessionConfig from '../content/session/SessionConfig'
 import ButtonSvgPanel from '../content/user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
@@ -40,7 +39,7 @@ export default function LaunchPage({
   const [mission, setMission] = useState<ClientMission>(
     ClientMission.createNew(),
   )
-  const [sessionConfig] = useState(Session.DEFAULT_CONFIG)
+  const [sessionConfig] = useState(SessionClient.DEFAULT_CONFIG)
   const defectiveComponentButtonEngine = useButtonSvgEngine({
     elements: [
       {

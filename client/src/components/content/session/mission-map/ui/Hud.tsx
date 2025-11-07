@@ -1,6 +1,7 @@
 import './Hud.scss'
+import type { TTabBarTab } from './tabs/TabBar'
+import TabBar from './tabs/TabBar'
 import TitleBar from './TitleBar'
-import TabBar, { TTabBarTab } from './tabs/TabBar'
 
 /**
  * HUD for the mission map.

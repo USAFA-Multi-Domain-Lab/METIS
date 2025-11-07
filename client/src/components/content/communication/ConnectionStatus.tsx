@@ -1,5 +1,5 @@
+import { useGlobalContext } from '@client/context/global'
 import { useEffect, useMemo, useState } from 'react'
-import { useGlobalContext } from 'src/context/global'
 import './ConnectionStatus.scss'
 
 /**

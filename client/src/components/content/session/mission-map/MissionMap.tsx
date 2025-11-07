@@ -1,20 +1,21 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { LocalContext, LocalContextProvider } from 'src/context/local'
-import ClientMission from 'src/missions'
-import ClientMissionForce from 'src/missions/forces'
-import ClientMissionNode from 'src/missions/nodes'
-import ClientMissionPrototype from 'src/missions/nodes/prototypes'
-import { compute } from 'src/toolbox'
-import { removeKey } from 'src/toolbox/components'
+import { LocalContext, LocalContextProvider } from '@client/context/local'
+import { ClientMission } from '@client/missions/ClientMission'
+import { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
+import { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
+import { ClientMissionPrototype } from '@client/missions/nodes/ClientMissionPrototype'
+import { compute } from '@client/toolbox'
+import { removeKey } from '@client/toolbox/components'
 import {
   useDefaultProps,
   useEventListener,
   withPreprocessor,
-} from 'src/toolbox/hooks'
+} from '@client/toolbox/hooks'
+import { ClassList } from '@shared/toolbox/html/ClassList'
+import { Vector1D } from '@shared/toolbox/numbers/vectors/Vector1D'
+import { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { v4 as generateHash } from 'uuid'
-import ClassList from '../../../../../../shared/toolbox/html/class-lists'
-import { Vector1D, Vector2D } from '../../../../../../shared/toolbox/space'
-import ButtonSvgEngine from '../../user-controls/buttons/panels/engines'
+import { ButtonSvgEngine } from '../../user-controls/buttons/panels/engines'
 import {
   useButtonSvgLayout,
   useButtonSvgs,
@@ -24,16 +25,13 @@ import Scene from './Scene'
 import Grid from './objects/Grid'
 import Line from './objects/Line'
 import PrototypeSlot from './objects/PrototypeSlot'
-import {
-  MAX_NODE_CONTENT_ZOOM,
-  MapNode,
-  TMapCompatibleNode,
-} from './objects/nodes'
+import type { TMapCompatibleNode } from './objects/nodes'
+import { MapNode, MAX_NODE_CONTENT_ZOOM } from './objects/nodes'
 import Hud from './ui/Hud'
 import PanController from './ui/PanController'
 import Overlay from './ui/overlay'
 import MapPreferences from './ui/overlay/modals/MapPreferences'
-import { TTabBarTab } from './ui/tabs/TabBar'
+import type { TTabBarTab } from './ui/tabs/TabBar'
 
 /* -- CONSTANTS -- */
 

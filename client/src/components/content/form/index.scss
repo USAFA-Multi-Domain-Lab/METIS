@@ -1,7 +1,7 @@
-@use 'src/assets/styles/config.scss' as *;
-@use 'src/assets/styles/util.scss' as *;
-@forward 'src/assets/styles/config.scss';
-@forward 'src/assets/styles/util.scss';
+@use '@client/assets/styles/config.scss' as *;
+@use '@client/assets/styles/util.scss' as *;
+@forward '@client/assets/styles/config.scss';
+@forward '@client/assets/styles/util.scss';
 
 $detail-field-text-color: $color-accent-light;
 $detail-field-border: none;

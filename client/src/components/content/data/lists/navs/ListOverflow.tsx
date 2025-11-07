@@ -1,9 +1,9 @@
+import { useButtonMenuEngine } from '@client/components/content/user-controls/buttons/ButtonMenu'
+import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
+import { useGlobalContext } from '@client/context/global'
+import type { ClassList } from '@shared/toolbox/html/ClassList'
 import { useEffect } from 'react'
-import { useButtonMenuEngine } from 'src/components/content/user-controls/buttons/ButtonMenu'
-import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
-import { useGlobalContext } from 'src/context/global'
-import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
 import { useListContext } from '../List'
 
 /**

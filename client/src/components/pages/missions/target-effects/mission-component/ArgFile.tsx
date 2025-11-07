@@ -1,8 +1,8 @@
-import { DetailDropdown } from 'src/components/content/form/dropdown/'
-import { ClientEffect } from 'src/missions/effects'
-import ClientMissionFile from 'src/missions/files'
-import { compute } from 'src/toolbox'
-import { TMissionComponentArg } from '../../../../../../../shared/target-environments/args/mission-component'
+import { DetailDropdown } from '@client/components/content/form/dropdown/'
+import type { ClientEffect } from '@client/missions/effects/ClientEffect'
+import type { ClientMissionFile } from '@client/missions/files/ClientMissionFile'
+import { compute } from '@client/toolbox'
+import type { TMissionComponentArg } from '@shared/target-environments/args/mission-component/MissionComponentArg'
 
 /**
  * Renders a dropdown for the argument whose type is `"file"`.

@@ -1,17 +1,17 @@
-import { useState } from 'react'
-import Tooltip from 'src/components/content/communication/Tooltip'
-import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
-import ClientMissionNode from 'src/missions/nodes'
-import { compute } from 'src/toolbox'
-import { useEventListener, useInlineStyling } from 'src/toolbox/hooks'
-import { getIconPath } from 'src/toolbox/icons'
-import { TMapCompatibleNode, TMapNode_P, TNodeButton } from '.'
-import {
+import Tooltip from '@client/components/content/communication/Tooltip'
+import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
+import { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
+import { compute } from '@client/toolbox'
+import { useEventListener, useInlineStyling } from '@client/toolbox/hooks'
+import { getIconPath } from '@client/toolbox/icons'
+import type {
   TNodeBlockStatus,
   TNodeExecutionState,
-} from '../../../../../../../../shared/missions/nodes'
-import ClassList from '../../../../../../../../shared/toolbox/html/class-lists'
+} from '@shared/missions/nodes/MissionNode'
+import { ClassList } from '@shared/toolbox/html/ClassList'
+import { useState } from 'react'
+import type { TMapCompatibleNode, TMapNode_P, TNodeButton } from '.'
 import { useMapContext } from '../../MissionMap'
 import './MapNode.scss'
 
@@ -64,7 +64,7 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
   const [executionState, setExecutionState] = useState<TNodeExecutionState>(
     node.executionState,
   )
-  const [buttons, setButtons] = useState<TNodeButton<TNode>[]>(node.buttons)
+  const [buttons, setButtons] = useState<TNodeButton[]>(node.buttons)
   const [pending, setPending] = useState<boolean>(node.pending)
   /**
    * The initial progress shown on the progress bar,

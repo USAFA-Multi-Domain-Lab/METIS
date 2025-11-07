@@ -1,6 +1,6 @@
-import { TForceMetadata } from 'metis/target-environments/args/mission-component/force-arg'
-import Dependency from 'metis/target-environments/dependencies'
-import TargetSchema from '../../../../../library/target-env-classes/targets'
+import { TargetDependency } from '@shared/target-environments/targets/TargetDependency'
+import type { TForceMetadata } from '@shared/target-environments/types'
+import { TargetSchema } from '../../../../../library/target-env-classes/targets'
 import { NumberToolbox } from '../../../../../library/toolbox'
 
 /**
@@ -45,7 +45,7 @@ const Award = new TargetSchema({
       required: true,
       default: 0,
       min: 0,
-      dependencies: [Dependency.FORCE('forceMetadata')],
+      dependencies: [TargetDependency.FORCE('forceMetadata')],
       tooltipDescription: 'The amount to add to the resource pool.',
     },
   ],

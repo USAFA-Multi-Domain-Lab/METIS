@@ -1,6 +1,6 @@
+import { compute } from '@client/toolbox'
+import { useDefaultProps } from '@client/toolbox/hooks'
 import React from 'react'
-import { compute } from 'src/toolbox'
-import { useDefaultProps } from 'src/toolbox/hooks'
 import Tooltip from '../../communication/Tooltip'
 import './ButtonText.scss'
 

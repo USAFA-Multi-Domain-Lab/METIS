@@ -1,9 +1,9 @@
-import { useGlobalContext } from 'src/context/global'
-import { compute } from 'src/toolbox'
-import { TWithKey } from '../../../../../shared/toolbox/objects'
+import { useGlobalContext } from '@client/context/global'
+import { compute } from '@client/toolbox'
+import type { TWithKey } from '@shared/toolbox/objects/ObjectToolbox'
 import Tooltip from '../communication/Tooltip'
 import { DetailToggle } from '../form/DetailToggle'
-import { TButtonText_P } from '../user-controls/buttons/ButtonText'
+import type { TButtonText_P } from '../user-controls/buttons/ButtonText'
 import DevOnly from '../util/DevOnly'
 import './Footer.scss'
 

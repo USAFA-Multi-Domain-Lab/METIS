@@ -1,8 +1,7 @@
-import { Request, Response } from 'express-serve-static-core'
-import UserModel from 'metis/server/database/models/users'
-import { StatusError } from 'metis/server/http'
-import { databaseLogger } from 'metis/server/logging'
-import ApiResponse from '../../library/response'
+import { UserModel } from '@server/database/models/users'
+import { databaseLogger } from '../../../../logging'
+import { ApiResponse } from '../../library/ApiResponse'
+import { StatusError } from '../../library/StatusError'
 
 /**
  * This will retrieve a specific user.
@@ -10,7 +9,7 @@ import ApiResponse from '../../library/response'
  * @param response The express response.
  * @returns The user in JSON format.
  */
-const getUser = async (request: Request, response: Response) => {
+export const getUser: TExpressHandler = async (request, response) => {
   // Extract the user ID from the request parameters.
   let { _id: userId } = request.params
 
@@ -35,5 +34,3 @@ const getUser = async (request: Request, response: Response) => {
     return ApiResponse.error(error, response)
   }
 }
-
-export default getUser

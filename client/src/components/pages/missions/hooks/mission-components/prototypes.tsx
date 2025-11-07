@@ -1,8 +1,9 @@
-import { useGlobalContext } from 'src/context/global'
-import ClientMissionPrototype, {
+import { useGlobalContext } from '@client/context/global'
+import type {
+  ClientMissionPrototype,
   TPrototypeDeleteMethod,
-} from 'src/missions/nodes/prototypes'
-import PrototypeCreation from 'src/missions/transformations/creations'
+} from '@client/missions/nodes/ClientMissionPrototype'
+import { PrototypeCreation } from '@client/missions/transformations/PrototypeCreation'
 import { useMissionPageContext } from '../../context'
 
 /**

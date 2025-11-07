@@ -3,14 +3,17 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "metis/server": ["index.ts"],
-      "metis/server/*": ["*"],
-      "metis/*": ["../shared/*"],
-      "integration/library/*": ["../integration/library/*"]
+      "@shared/*": ["../shared/*"],
+      "@server/*": ["*"],
+      "@integrations/target-env-classes/*": [
+        "../integration/library/target-env-classes/*"
+      ]
     },
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "target": "ES2022",
-    "types": ["node"]
-  }
+    "types": ["node", "./global.d.ts", "../shared/global.d.ts"]
+  },
+  "include": [".", "../shared/", "../integration/library/"],
+  "exclude": ["../integration/library/toolbox/"]
 }

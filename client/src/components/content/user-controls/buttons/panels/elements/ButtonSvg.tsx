@@ -1,11 +1,11 @@
+import { useGlobalContext } from '@client/context/global'
+import { compute } from '@client/toolbox'
+import { getIconPath } from '@client/toolbox/icons'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import React from 'react'
-import { useGlobalContext } from 'src/context/global'
-import { compute } from 'src/toolbox'
-import { getIconPath } from 'src/toolbox/icons'
-import ClassList from '../../../../../../../../shared/toolbox/html/class-lists'
 import Tooltip from '../../../../communication/Tooltip'
-import ButtonSvgEngine from '../engines'
-import { TButtonSvg_PK } from '../types'
+import { ButtonSvgEngine } from '../engines'
+import type { TButtonSvg_PK } from '../types'
 import './ButtonSvg.scss'
 
 /* -- CONSTANTS -- */

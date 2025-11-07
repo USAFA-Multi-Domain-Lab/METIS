@@ -1,12 +1,12 @@
-import { PAGE_REGISTRY, TPageKey } from 'src/components/pages'
-import { useGlobalContext } from 'src/context/global'
-import { compute } from 'src/toolbox'
-import { useRequireLogin } from 'src/toolbox/hooks'
+import type { PAGE_REGISTRY, TPageKey } from '@client/components/pages'
+import { useGlobalContext } from '@client/context/global'
+import { compute } from '@client/toolbox'
+import { useRequireLogin } from '@client/toolbox/hooks'
 import { useButtonMenuEngine } from '../user-controls/buttons/ButtonMenu'
 import ButtonSvgPanel from '../user-controls/buttons/panels/ButtonSvgPanel'
-import ButtonSvgEngine from '../user-controls/buttons/panels/engines'
+import type { ButtonSvgEngine } from '../user-controls/buttons/panels/engines'
 import { useButtonSvgs } from '../user-controls/buttons/panels/hooks'
-import {
+import type {
   TButtonPanelInput,
   TButtonSvg_PK,
 } from '../user-controls/buttons/panels/types'

@@ -1,6 +1,6 @@
-import { TActionMetadata } from 'metis/target-environments/args/mission-component/action-arg'
-import Dependency from 'metis/target-environments/dependencies'
-import TargetSchema from '../../../../../library/target-env-classes/targets'
+import { TargetDependency } from '@shared/target-environments/targets/TargetDependency'
+import type { TActionMetadata } from '@shared/target-environments/types'
+import { TargetSchema } from '../../../../../library/target-env-classes/targets'
 
 /**
  * A target available in the METIS target environment that enables a user
@@ -46,7 +46,7 @@ const ResourceCostMod = new TargetSchema({
       name: 'Resource Cost',
       required: true,
       groupingId: 'action',
-      dependencies: [Dependency.ACTION('actionMetadata')],
+      dependencies: [TargetDependency.ACTION('actionMetadata')],
       default: 0,
       tooltipDescription:
         `This allows you to positively or negatively affect the resource cost for all actions within the node. A positive value increases the resource cost, while a negative value decreases the resource cost.\n` +

@@ -1,7 +1,7 @@
-import { useEffect } from 'react'
-import ClientUser from 'src/users'
-import { TLogin } from '../../../../shared/logins'
-import User from '../../../../shared/users'
+import type { ClientUser } from '@client/users/ClientUser'
+import type { TLogin } from '@shared/logins'
+import type { User } from '@shared/users/User'
+import type { useEffect } from 'react'
 
 /**
  * Options for `useResizeObserver` hook.

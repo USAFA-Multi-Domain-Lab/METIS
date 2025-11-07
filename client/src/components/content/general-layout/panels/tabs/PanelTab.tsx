@@ -1,8 +1,8 @@
-import Tooltip from 'src/components/content/communication/Tooltip'
-import { compute } from 'src/toolbox'
-import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
+import Tooltip from '@client/components/content/communication/Tooltip'
+import { compute } from '@client/toolbox'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import { usePanelContext } from '../Panel'
-import { TPanelView_P } from '../PanelView'
+import type { TPanelView_P } from '../PanelView'
 import './PanelTab.scss'
 
 /**

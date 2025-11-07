@@ -1,7 +1,7 @@
+import type { ClientEffect } from '@client/missions/effects/ClientEffect'
+import type { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
 import { useState } from 'react'
-import { ClientEffect } from 'src/missions/effects'
-import ClientMissionForce from 'src/missions/forces'
-import { TArgMissionComponent_P } from './types'
+import type { TArgMissionComponent_P } from './types'
 
 export default function (props: TArgMissionComponent_P): TReactElement {
   const effect: ClientEffect = props.effect

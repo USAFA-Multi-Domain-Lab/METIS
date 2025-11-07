@@ -1,5 +1,6 @@
 import Footer from '../content/general-layout/Footer'
-import Navigation, { TNavigation_P } from '../content/general-layout/Navigation'
+import type { TNavigation_P } from '../content/general-layout/Navigation'
+import Navigation from '../content/general-layout/Navigation'
 import AuthPage from './AuthPage'
 import ChangelogPage from './ChangelogPage'
 import HomePage from './HomePage'

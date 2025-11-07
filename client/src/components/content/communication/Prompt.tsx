@@ -1,5 +1,6 @@
 import React from 'react'
-import ListOld, { ESortByMethod } from '../general-layout/ListOld'
+import type { ESortByMethod } from '../general-layout/ListOld'
+import ListOld from '../general-layout/ListOld'
 import Markdown, { MarkdownTheme } from '../general-layout/Markdown'
 import { ButtonText } from '../user-controls/buttons/ButtonText'
 import './Prompt.scss'

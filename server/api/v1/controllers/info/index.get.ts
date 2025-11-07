@@ -1,6 +1,5 @@
-import { Request, Response } from 'express-serve-static-core'
-import MetisServer from 'metis/server'
-import ApiResponse from '../../library/response'
+import { MetisServer } from '../../../..'
+import { ApiResponse } from '../../library/ApiResponse'
 
 /**
  * This will retrieve the info about METIS.
@@ -8,11 +7,9 @@ import ApiResponse from '../../library/response'
  * @param response The express response.
  * @returns The info in JSON format.
  */
-const getInfo = (request: Request, response: Response) =>
+export const getInfo: TExpressHandler = (request, response) =>
   ApiResponse.sendJson(response, {
     name: MetisServer.PROJECT_NAME,
     description: MetisServer.PROJECT_DESCRIPTION,
     version: MetisServer.PROJECT_VERSION,
   })
-
-export default getInfo

@@ -1,7 +1,7 @@
-import Prompt from 'src/components/content/communication/Prompt'
-import { useGlobalContext } from 'src/context/global'
-import ClientMissionAction from 'src/missions/actions'
-import ClientMissionNode from 'src/missions/nodes'
+import Prompt from '@client/components/content/communication/Prompt'
+import { useGlobalContext } from '@client/context/global'
+import type { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
+import type { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
 import { useMissionPageContext } from '../../context'
 
 /**

@@ -1,12 +1,12 @@
-import MetisServer from 'metis/server'
-import routerMap_files from 'metis/server/api/v1/routes/files'
-import routerMap_info from 'metis/server/api/v1/routes/info'
-import routerMap_logins from 'metis/server/api/v1/routes/logins'
-import routerMap_missions from 'metis/server/api/v1/routes/missions'
-import routerMap_sessions from 'metis/server/api/v1/routes/sessions'
-import routerMap_targetEnvironments from 'metis/server/api/v1/routes/target-environments'
-import routerMap_users from 'metis/server/api/v1/routes/users'
-import MetisRouter from 'metis/server/http/router'
+import { MetisServer } from '.'
+import { MetisRouter } from './api/v1/library/MetisRouter'
+import routerMap_files from './api/v1/routes/files'
+import routerMap_info from './api/v1/routes/info'
+import routerMap_logins from './api/v1/routes/logins'
+import routerMap_missions from './api/v1/routes/missions'
+import routerMap_sessions from './api/v1/routes/sessions'
+import routerMap_targetEnvironments from './api/v1/routes/target-environments'
+import routerMap_users from './api/v1/routes/users'
 
 console.log('Starting METIS...')
 

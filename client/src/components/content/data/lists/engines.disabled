@@ -1,5 +1,5 @@
-import ClientFileReference from 'src/files/references'
-import StringToolbox from '../../../../../../shared/toolbox/strings'
+import ClientFileReference from 'metis/client/files/references'
+import { StringToolbox } from 'metis/toolbox'
 import { TButtonSvgType } from '../../user-controls/buttons/ButtonSvg'
 import { TSvgPanelOnClick } from '../../user-controls/buttons/ButtonSvgPanel_v2'
 import standardFileListConfig from './engines/file-lists'

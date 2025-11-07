@@ -1,9 +1,9 @@
-import Prompt from 'src/components/content/communication/Prompt'
-import ButtonSvg from 'src/components/content/user-controls/buttons/panels/elements/ButtonSvg'
-import { useGlobalContext } from 'src/context/global'
-import ClientMission from 'src/missions'
-import SessionClient from 'src/sessions'
-import { useRequireLogin } from 'src/toolbox/hooks'
+import Prompt from '@client/components/content/communication/Prompt'
+import ButtonSvg from '@client/components/content/user-controls/buttons/panels/elements/ButtonSvg'
+import { useGlobalContext } from '@client/context/global'
+import { ClientMission } from '@client/missions/ClientMission'
+import { SessionClient } from '@client/sessions/SessionClient'
+import { useRequireLogin } from '@client/toolbox/hooks'
 
 /**
  * Yields mission-related callback functions which can be used for

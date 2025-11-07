@@ -1,10 +1,11 @@
-import Tooltip from 'src/components/content/communication/Tooltip'
-import ClientMissionNode from 'src/missions/nodes'
-import ClientMissionPrototype, {
+import Tooltip from '@client/components/content/communication/Tooltip'
+import { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
+import type {
+  ClientMissionPrototype,
   TPrototypeRelation,
-} from 'src/missions/nodes/prototypes'
-import { compute } from 'src/toolbox'
-import { Vector2D } from '../../../../../../../shared/toolbox/space'
+} from '@client/missions/nodes/ClientMissionPrototype'
+import { compute } from '@client/toolbox'
+import type { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
 import './PrototypeSlot.scss'
 
 /* -- components -- */

@@ -1,8 +1,8 @@
-import { DetailDropdown } from 'src/components/content/form/dropdown/'
-import { ClientEffect } from 'src/missions/effects'
-import ClientMissionForce from 'src/missions/forces'
-import { compute } from 'src/toolbox'
-import { TMissionComponentArg } from '../../../../../../../shared/target-environments/args/mission-component'
+import { DetailDropdown } from '@client/components/content/form/dropdown/'
+import type { ClientEffect } from '@client/missions/effects/ClientEffect'
+import type { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
+import { compute } from '@client/toolbox'
+import type { TMissionComponentArg } from '@shared/target-environments/args/mission-component/MissionComponentArg'
 
 /**
  * Renders a dropdown for the argument whose type is `"force"`.

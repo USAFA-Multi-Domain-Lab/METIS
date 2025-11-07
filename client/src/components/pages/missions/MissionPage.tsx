@@ -1,50 +1,55 @@
-import React, { useEffect, useRef, useState } from 'react'
-import ClassList from 'shared/toolbox/html/class-lists'
-import { TMetisClientComponents } from 'src'
-import { useMissionItemButtonCallbacks } from 'src/components/content/data/lists/implementations/missions/item-buttons'
-import { TCreateEffect_P } from 'src/components/content/session/mission-map/ui/overlay/modals/CreateEffect'
-import { useGlobalContext, useNavigationMiddleware } from 'src/context/global'
-import ClientFileReference from 'src/files/references'
-import ClientMission from 'src/missions'
-import ClientMissionAction from 'src/missions/actions'
-import { ClientEffect, TClientEffectHost } from 'src/missions/effects'
-import ClientMissionFile from 'src/missions/files'
-import ClientMissionForce from 'src/missions/forces'
-import ClientMissionNode from 'src/missions/nodes'
-import ClientMissionPrototype from 'src/missions/nodes/prototypes'
-import { compute } from 'src/toolbox'
+import Prompt from '@client/components/content/communication/Prompt'
+import type { TFileReferenceList_P } from '@client/components/content/data/lists/implementations/FileReferenceList'
+import FileReferenceList from '@client/components/content/data/lists/implementations/FileReferenceList'
+import type { TMissionFileList_P } from '@client/components/content/data/lists/implementations/MissionFileList'
+import MissionFileList from '@client/components/content/data/lists/implementations/MissionFileList'
+import { useMissionItemButtonCallbacks } from '@client/components/content/data/lists/implementations/missions/item-buttons'
+import type { TNavigation_P } from '@client/components/content/general-layout/Navigation'
+import {
+  HomeButton,
+  ProfileButton,
+} from '@client/components/content/general-layout/Navigation'
+import Panel from '@client/components/content/general-layout/panels/Panel'
+import PanelLayout from '@client/components/content/general-layout/panels/PanelLayout'
+import PanelView from '@client/components/content/general-layout/panels/PanelView'
+import type { TCreateEffect_P } from '@client/components/content/session/mission-map/ui/overlay/modals/CreateEffect'
+import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
+import {
+  useGlobalContext,
+  useNavigationMiddleware,
+} from '@client/context/global'
+import { ClientFileReference } from '@client/files/ClientFileReference'
+import type { TMetisClientComponents } from '@client/index'
+import { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
+import { ClientMission } from '@client/missions/ClientMission'
+import type { TClientEffectHost } from '@client/missions/effects/ClientEffect'
+import { ClientEffect } from '@client/missions/effects/ClientEffect'
+import { ClientMissionFile } from '@client/missions/files/ClientMissionFile'
+import { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
+import { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
+import { ClientMissionPrototype } from '@client/missions/nodes/ClientMissionPrototype'
+import { compute } from '@client/toolbox'
 import {
   useBeforeunload,
   useEventListener,
   useMountHandler,
   useRequireLogin,
-} from 'src/toolbox/hooks'
-import { DefaultPageLayout, TPage_P } from '..'
-import MissionComponent, {
-  TMissionComponentDefect,
-} from '../../../../../shared/missions/component'
-import {
+} from '@client/toolbox/hooks'
+import type {
   TEffectTrigger,
   TEffectType,
-} from '../../../../../shared/missions/effects'
-import { TNonEmptyArray } from '../../../../../shared/toolbox/arrays'
-import Prompt from '../../content/communication/Prompt'
-import FileReferenceList, {
-  TFileReferenceList_P,
-} from '../../content/data/lists/implementations/FileReferenceList'
-import MissionFileList, {
-  TMissionFileList_P,
-} from '../../content/data/lists/implementations/MissionFileList'
-import {
-  HomeButton,
-  ProfileButton,
-  TNavigation_P,
-} from '../../content/general-layout/Navigation'
-import Panel from '../../content/general-layout/panels/Panel'
-import PanelLayout from '../../content/general-layout/panels/PanelLayout'
-import PanelView from '../../content/general-layout/panels/PanelView'
-import { useButtonSvgEngine } from '../../content/user-controls/buttons/panels/hooks'
-import { MissionPageContext, TMissionPageContextData } from './context'
+} from '@shared/missions/effects/Effect'
+import type {
+  MissionComponent,
+  TMissionComponentDefect,
+} from '@shared/missions/MissionComponent'
+import type { TNonEmptyArray } from '@shared/toolbox/arrays/ArrayToolbox'
+import { ClassList } from '@shared/toolbox/html/ClassList'
+import { useEffect, useRef, useState } from 'react'
+import type { TPage_P } from '..'
+import { DefaultPageLayout } from '..'
+import type { TMissionPageContextData } from './context'
+import { MissionPageContext } from './context'
 import ActionEntry from './entries/implementations/ActionEntry'
 import EffectEntry from './entries/implementations/EffectEntry'
 import ForceEntry from './entries/implementations/ForceEntry'

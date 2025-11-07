@@ -1,22 +1,22 @@
-import { useEffect, useRef } from 'react'
-import { TMetisClientComponents } from 'src'
-import Tooltip from 'src/components/content/communication/Tooltip'
-import { useButtonMenuEngine } from 'src/components/content/user-controls/buttons/ButtonMenu'
-import ButtonMenuController from 'src/components/content/user-controls/buttons/ButtonMenuController'
-import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
-import { useMissionPageContext } from 'src/components/pages/missions/context'
-import useEffectItemButtonCallbacks from 'src/components/pages/missions/hooks/mission-components/effects'
-import { useGlobalContext } from 'src/context/global'
-import { compute } from 'src/toolbox'
-import { useRequireLogin } from 'src/toolbox/hooks'
-import {
+import Tooltip from '@client/components/content/communication/Tooltip'
+import { useButtonMenuEngine } from '@client/components/content/user-controls/buttons/ButtonMenu'
+import ButtonMenuController from '@client/components/content/user-controls/buttons/ButtonMenuController'
+import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
+import { useMissionPageContext } from '@client/components/pages/missions/context'
+import useEffectItemButtonCallbacks from '@client/components/pages/missions/hooks/mission-components/effects'
+import { useGlobalContext } from '@client/context/global'
+import type { TMetisClientComponents } from '@client/index'
+import { compute } from '@client/toolbox'
+import { useRequireLogin } from '@client/toolbox/hooks'
+import type {
   TEffectTrigger,
   TEffectType,
-} from '../../../../../../../../../shared/missions/effects'
-import { ifNonNullable } from '../../../../../../../../../shared/toolbox/calls'
-import ClassList from '../../../../../../../../../shared/toolbox/html/class-lists'
-import { TTimelineDragDropItem } from '../../EffectTimeline'
+} from '@shared/missions/effects/Effect'
+import { CallToolbox } from '@shared/toolbox/calls/CallToolbox'
+import { ClassList } from '@shared/toolbox/html/ClassList'
+import { useEffect, useRef } from 'react'
+import type { TTimelineDragDropItem } from '../../EffectTimeline'
 import { useTimelineContext } from '../../context'
 import './TimelineItem.scss'
 import { NO_TIMELINE_ITEMS_ID } from './TimelineNoItems'
@@ -107,7 +107,7 @@ export function TimelineItem<TType extends TEffectType>({
         label: 'Duplicate',
         description: 'Duplicate the selected effect.',
         permissions: ['missions_write'],
-        onClick: () => ifNonNullable(onDuplicateRequest, selection),
+        onClick: () => CallToolbox.ifNonNullable(onDuplicateRequest, selection),
       },
       {
         key: 'delete',
@@ -116,7 +116,7 @@ export function TimelineItem<TType extends TEffectType>({
         label: 'Delete',
         description: 'Delete the selected effect.',
         permissions: ['missions_write'],
-        onClick: () => ifNonNullable(onDeleteRequest, selection),
+        onClick: () => CallToolbox.ifNonNullable(onDeleteRequest, selection),
       },
     ],
   })

@@ -1,30 +1,26 @@
+import { ServerMissionAction } from '@server/missions/actions/ServerMissionAction'
+import { ServerEffect } from '@server/missions/effects/ServerEffect'
+import { ServerMissionForce } from '@server/missions/forces/ServerMissionForce'
+import { ServerMissionNode } from '@server/missions/nodes/ServerMissionNode'
+import { ServerMission } from '@server/missions/ServerMission'
+import { MissionFile } from '@shared/missions/files/MissionFile'
+import { Mission, type TMissionSaveJson } from '@shared/missions/Mission'
+import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import DOMPurify from 'isomorphic-dompurify'
-import { TMissionSaveJson } from 'metis/missions'
-import MissionFile from 'metis/missions/files'
-import { databaseLogger } from 'metis/server/logging'
-import ServerMission from 'metis/server/missions'
-import ServerMissionAction from 'metis/server/missions/actions'
-import ServerEffect from 'metis/server/missions/effects'
-import ServerMissionForce from 'metis/server/missions/forces'
-import ServerMissionNode from 'metis/server/missions/nodes'
-import StringToolbox from 'metis/toolbox/strings'
-import mongoose, {
-  AnyObject,
-  model,
-  ProjectionType,
-  QueryOptions,
-  Schema,
-} from 'mongoose'
+import type { ProjectionType, QueryOptions } from 'mongoose'
+import mongoose, { model, Schema } from 'mongoose'
 import {
   ensureNoNullCreatedBy,
   excludeDeletedForFinds,
   excludeSensitiveForFinds,
   populateCreatedByIfFlagged,
 } from '.'
-import MetisDatabase from '..'
+import { databaseLogger } from '../../logging'
+import { MetisDatabase } from '../MetisDatabase'
 import { MissionSchema } from './classes'
+import type { TMissionStaticMethods } from './types'
 import {
-  TMissionStaticMethods,
   type TMission,
   type TMissionDoc,
   type TMissionModel,
@@ -39,7 +35,7 @@ import {
  * to strings.
  * @param object The object to process.
  */
-const objectIdsToStrings = (object: AnyObject): void => {
+const objectIdsToStrings = (object: TAnyObject): void => {
   // The algorithm used to recursively process
   // the object.
   const algorithm = (cursor: any): any => {
@@ -268,7 +264,7 @@ export const missionSchema = new MissionSchema(
       type: String,
       required: true,
       trim: true,
-      maxLength: ServerMission.MAX_NAME_LENGTH,
+      maxLength: Mission.MAX_NAME_LENGTH,
     },
     versionNumber: { type: Number, required: true },
     seed: {
@@ -280,7 +276,7 @@ export const missionSchema = new MissionSchema(
       type: String,
       required: true,
       default: 'Resources',
-      maxlength: ServerMission.MAX_RESOURCE_LABEL_LENGTH,
+      maxlength: Mission.MAX_RESOURCE_LABEL_LENGTH,
     },
     launchedAt: { type: Date, default: null },
     createdBy: {
@@ -584,8 +580,7 @@ missionSchema.post<TMissionDoc>('save', function () {
 /**
  * The mongoose model for a mission in the database.
  */
-const MissionModel = model<TMission, TMissionModel & TMissionStaticMethods>(
-  'Mission',
-  missionSchema,
-)
-export default MissionModel
+export const MissionModel = model<
+  TMission,
+  TMissionModel & TMissionStaticMethods
+>('Mission', missionSchema)

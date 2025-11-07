@@ -1,7 +1,8 @@
-import ClientMissionFile from 'src/missions/files'
-import { useDefaultProps, useRequireLogin } from 'src/toolbox/hooks'
-import FileToolbox from '../../../../../../../shared/toolbox/files'
-import List, { createDefaultListProps, TList_P } from '../List'
+import type { ClientMissionFile } from '@client/missions/files/ClientMissionFile'
+import { useDefaultProps, useRequireLogin } from '@client/toolbox/hooks'
+import { FileToolbox } from '@shared/toolbox/files/FileToolbox'
+import type { TList_P } from '../List'
+import List, { createDefaultListProps } from '../List'
 
 /**
  * A component for displaying a list of mission files.

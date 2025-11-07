@@ -1,6 +1,6 @@
-import { TForceMetadata } from 'metis/target-environments/args/mission-component/force-arg'
-import Dependency from 'metis/target-environments/dependencies'
-import TargetSchema from '../../../../../library/target-env-classes/targets'
+import { TargetDependency } from '@shared/target-environments/targets/TargetDependency'
+import type { TForceMetadata } from '@shared/target-environments/types'
+import { TargetSchema } from '../../../../../library/target-env-classes/targets'
 
 /**
  * A target available in the METIS target environment that enables a user
@@ -33,7 +33,7 @@ const Output = new TargetSchema({
       name: 'Message',
       required: false,
       groupingId: 'output',
-      dependencies: [Dependency.FORCE('forceMetadata')],
+      dependencies: [TargetDependency.FORCE('forceMetadata')],
       tooltipDescription:
         `This is the message that will be displayed in the output panel for the force selected above.\n` +
         `\t\n` +

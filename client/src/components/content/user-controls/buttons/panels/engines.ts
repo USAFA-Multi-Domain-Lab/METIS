@@ -1,14 +1,14 @@
+import { compute } from '@client/toolbox'
+import { useForcedUpdates, usePostInitEffect } from '@client/toolbox/hooks'
+import { ClassList } from '@shared/toolbox/html/ClassList'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { useState } from 'react'
-import { compute } from 'src/toolbox'
-import { useForcedUpdates, usePostInitEffect } from 'src/toolbox/hooks'
-import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
-import StringToolbox from '../../../../../../../shared/toolbox/strings'
 import { createButtonDefaults } from './elements/ButtonSvg'
 import { createDividerDefaults } from './elements/DividerSvg'
 import { createStepperDefaults } from './elements/StepperSvg'
 import { createTextDefaults } from './elements/TextSvg'
 import { useButtonSvgEngine, useButtonSvgs } from './hooks'
-import {
+import type {
   TButtonSvg_PK,
   TButtonSvgEngine,
   TButtonSvgFlow,
@@ -25,7 +25,7 @@ import {
  * An engine used to power a `ButtonSvgPanel`
  * component.
  */
-export default class ButtonSvgEngine {
+export class ButtonSvgEngine {
   /**
    * The panel elements (buttons and related components)
    * powered by the engine.

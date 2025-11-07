@@ -1,14 +1,14 @@
-import { useState } from 'react'
-import {
-  DetailDropdown,
+import type {
   TOptionalHandleInvalidOption,
   TRequiredHandleInvalidOption,
-} from 'src/components/content/form/dropdown/'
-import ClientMissionForce from 'src/missions/forces'
-import ClientMissionNode from 'src/missions/nodes'
-import { compute } from 'src/toolbox'
-import { usePostInitEffect } from 'src/toolbox/hooks/lifecycles'
-import { TMissionComponentArg } from '../../../../../../../shared/target-environments/args/mission-component'
+} from '@client/components/content/form/dropdown'
+import { DetailDropdown } from '@client/components/content/form/dropdown'
+import type { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
+import type { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
+import { compute } from '@client/toolbox'
+import { usePostInitEffect } from '@client/toolbox/hooks/lifecycles'
+import type { TMissionComponentArg } from '@shared/target-environments/args/mission-component/MissionComponentArg'
+import { useState } from 'react'
 
 /**
  * Renders a dropdown for the argument whose type is `"node"`.

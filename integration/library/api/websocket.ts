@@ -1,13 +1,13 @@
-import BooleanToolbox from 'metis/toolbox/booleans'
-import WebSocket, { ClientOptions } from 'ws'
+import type { TAnyObject } from 'toolbox'
+import { BooleanToolbox } from 'toolbox'
+import WebSocket, { type ClientOptions } from 'ws'
 import z from 'zod'
 import { Api, apiOptionsSchema } from '.'
-import { AnyObject } from '../toolbox'
 
 /**
  * The WebSocket API class is used to establish real-time communication with target environments.
  */
-export default class WebSocketApi extends Api {
+export class WebSocketApi extends Api {
   /**
    * The WebSocket URL where the connection can be established.
    */
@@ -390,7 +390,7 @@ export default class WebSocketApi extends Api {
    * @param message The message object to send.
    * @returns A promise that resolves when the message is sent.
    */
-  public async sendMessage(message: AnyObject): Promise<void> {
+  public async sendMessage(message: TAnyObject): Promise<void> {
     return await this.send(message)
   }
 

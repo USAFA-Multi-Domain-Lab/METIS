@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import TargetEnvSchema from '../target-env-classes'
+import { TargetEnvSchema } from '../target-env-classes'
 
 /**
  * This function is used to help track where calls are made.
