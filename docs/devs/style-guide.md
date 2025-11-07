@@ -341,7 +341,11 @@ Names given should also not be overly long. Names should be limited to 3-4 words
 
 The following conventions should be used when naming files:
 
-- Files housing a single, default-exported class should be named after that class (e.g. `ClientMission.ts` for a `ClientMission` class).
+- Files for which the primary purpose is to house a class should be named in PascalCase, matching the name of that class (e.g. `ClientMission.ts` for a `ClientMission` class).
+- Files for which the primary purpose is to house a React component should be named in PascalCase, matching the name of that component (e.g. `MissionMap.tsx` for a `MissionMap` component).
+- SCSS files for which the primary purpose is to style a specific component should be named in PascalCase, matching the name of that component (e.g. `MissionMap.scss` for styling the `MissionMap` component).
+- General `.ts` files should be named using kebab case (e.g. `file-references.ts` for a file housing utility functions for file references).
+- Migration build files, which are either housed under `server/database/builds/` or `server/missions/imports/builds/`, should be named using the following format: `build_******.ts` for TS or `build_******.js` for JS, where `******` is a six-digit incrementing number starting from `000001` (e.g. `build_000001.ts`, `build_000002.ts`, etc…).
 
 ### Types
 
