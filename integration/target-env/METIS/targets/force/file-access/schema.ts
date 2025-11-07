@@ -4,7 +4,7 @@ import type {
   TFileMetadata,
   TForceMetadata,
 } from '@shared/target-environments/types'
-import { TargetSchema } from '../../../../../library/target-env-classes/targets'
+import { TargetSchema } from '../../../../../library/schema/TargetSchema'
 
 /**
  * Migrations for the File Access target.

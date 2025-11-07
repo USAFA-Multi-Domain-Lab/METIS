@@ -1,9 +1,9 @@
+import { MetisServer } from '@server/MetisServer'
 import type { Express, Handler as ExpressHandler } from 'express'
 import expressWinston from 'express-winston'
 import type { Logger } from 'winston'
 import winston from 'winston'
 import { Console as ConsoleTransport } from 'winston/lib/winston/transports'
-import { MetisServer } from '../MetisServer'
 
 /**
  * A logger used by all loggers before they

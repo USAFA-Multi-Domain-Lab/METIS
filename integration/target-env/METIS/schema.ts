@@ -1,4 +1,4 @@
-import { TargetEnvSchema } from '../../library/target-env-classes'
+import { TargetEnvSchema } from '../../library/schema/TargetEnvSchema'
 
 /**
  * Represents the `METIS` target environment.

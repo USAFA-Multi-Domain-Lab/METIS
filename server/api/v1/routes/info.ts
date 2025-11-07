@@ -1,5 +1,5 @@
+import type { MetisServer } from '@server/MetisServer'
 import type { Router } from 'express'
-import type { MetisServer } from '../../..'
 import { auth } from '../../../middleware/users'
 import { getChangelog } from '../controllers/info/changelog.get'
 import { getInfo } from '../controllers/info/index.get'

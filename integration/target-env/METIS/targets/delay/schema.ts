@@ -1,4 +1,4 @@
-import { TargetSchema } from '../../../../library/target-env-classes/targets'
+import { TargetSchema } from '../../../../library/schema/TargetSchema'
 
 // Argument IDs for the delay target.
 const hoursArgId = 'delayTimeHours'

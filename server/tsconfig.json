@@ -5,9 +5,7 @@
     "paths": {
       "@shared/*": ["../shared/*"],
       "@server/*": ["*"],
-      "@integrations/target-env-classes/*": [
-        "../integration/library/target-env-classes/*"
-      ]
+      "@integrations/schema/*": ["../integration/library/schema/*"]
     },
     "module": "NodeNext",
     "moduleResolution": "NodeNext",

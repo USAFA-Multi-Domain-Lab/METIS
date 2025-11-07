@@ -1,5 +1,5 @@
+import type { MetisServer } from '@server/MetisServer'
 import type { Router } from 'express'
-import type { MetisServer } from '../../..'
 import {
   RequestBodyFilters,
   defineRequests,

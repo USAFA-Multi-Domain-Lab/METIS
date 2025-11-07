@@ -1,7 +1,7 @@
+import type { MetisServer } from '@server/MetisServer'
 import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
 import type express from 'express'
 import { type Socket, Server as SocketIoServer } from 'socket.io'
-import type { MetisServer } from '..'
 import { ClientConnection } from '../connect/ClientConnection'
 import { ServerLogin } from '../logins/ServerLogin'
 import { SessionServer } from '../sessions/SessionServer'

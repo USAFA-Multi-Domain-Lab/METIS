@@ -1,6 +1,6 @@
 import { TargetDependency } from '@shared/target-environments/targets/TargetDependency'
 import type { TForceMetadata } from '@shared/target-environments/types'
-import { TargetSchema } from '../../../../../library/target-env-classes/targets'
+import { TargetSchema } from '../../../../../library/schema/TargetSchema'
 import { NumberToolbox } from '../../../../../library/toolbox'
 
 /**

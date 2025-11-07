@@ -1,5 +1,5 @@
-import { TargetEnvSchema } from '@integrations/target-env-classes/index'
-import { TargetSchema } from '@integrations/target-env-classes/targets'
+import { TargetEnvSchema } from '@integrations/schema/TargetEnvSchema'
+import { TargetSchema } from '@integrations/schema/TargetSchema'
 import { ServerFileToolbox } from '@server/toolbox/files/ServerFileToolbox'
 import { TargetEnvironment } from '@shared/target-environments/TargetEnvironment'
 import { TargetEnvRegistry } from '@shared/target-environments/TargetEnvRegistry'

@@ -1,4 +1,4 @@
-import { MetisServer } from '../../../..'
+import { MetisServer } from '@server/MetisServer'
 import { ApiResponse } from '../../library/ApiResponse'
 
 /**

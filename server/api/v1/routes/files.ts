@@ -1,5 +1,5 @@
+import type { MetisServer } from '@server/MetisServer'
 import type { Router } from 'express'
-import type { MetisServer } from '../../..'
 import defineRequests from '../../../middleware/requests'
 import { auth } from '../../../middleware/users'
 import { downloadFile } from '../controllers/files/[_id]/download.get'

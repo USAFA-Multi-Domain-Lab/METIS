@@ -1,4 +1,5 @@
 import { FileReferenceModel } from '@server/database/models/file-references'
+import type { MetisServer } from '@server/MetisServer'
 import type { ServerUser } from '@server/users/ServerUser'
 import type { TFileReferenceJson } from '@shared/files/FileReference'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
@@ -9,7 +10,6 @@ import fs from 'fs'
 import mime from 'mime-types'
 import multer from 'multer'
 import path from 'path'
-import type { MetisServer } from '..'
 import type { ServerFileReference } from './ServerFileReference'
 
 /* -- CLASSES -- */
