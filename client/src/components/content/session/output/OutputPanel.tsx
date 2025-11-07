@@ -1,9 +1,6 @@
-import ClientMissionForce from 'metis/client/missions/forces'
-import { compute } from 'metis/client/toolbox'
-import {
-  useEventListener,
-  usePostRenderEffect,
-} from 'metis/client/toolbox/hooks'
+import type { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
+import { compute } from '@client/toolbox'
+import { useEventListener, usePostRenderEffect } from '@client/toolbox/hooks'
 import { useEffect, useRef, useState } from 'react'
 import { Output } from '.'
 import './OutputPanel.scss'
@@ -30,7 +27,7 @@ export default function OutputPanel({ force }: TOutputPanel_P): TReactElement {
   const smoothScrollInProgress = useRef<boolean>(false)
   const smoothScrollTimeout = useRef<
     NodeJS.Timeout | string | number | undefined
-  >()
+  >(undefined)
   const [autoScrollLock, lockAutoScroll] = useState<boolean>(false)
   const [areUnseenOutputs, setAreUnseenOutputs] = useState<boolean>(false)
 

@@ -1,4 +1,4 @@
-export { MetisFileStore } from './MetisFileStore'
-export { ServerFileReference } from './ServerFileReference'
-
-export type * from './types'
+/**
+ * A file uploaded with Multer.
+ */
+export type TMulterFile = Express.Multer.File

@@ -1,3 +1,6 @@
+import type { ServerTarget } from '@server/target-environments/ServerTarget'
+import { ServerTargetEnvironment } from '@server/target-environments/ServerTargetEnvironment'
+import type { TTargetEnvExposedEffect } from '@server/target-environments/TargetEnvContext'
 import type {
   TEffectContextExecution,
   TEffectContextSession,
@@ -6,15 +9,11 @@ import type {
   TEffectSessionTriggered,
   TEffectSessionTriggeredJson,
   TEffectType,
-} from 'metis/missions'
-import { Effect } from 'metis/missions'
-import { ForceArg, NodeArg } from 'metis/target-environments'
-import type { TAnyObject } from 'metis/toolbox'
-import type {
-  ServerTarget,
-  TTargetEnvExposedEffect,
-} from '../../target-environments'
-import { ServerTargetEnvironment } from '../../target-environments'
+} from '@shared/missions/effects/Effect'
+import { Effect } from '@shared/missions/effects/Effect'
+import { ForceArg } from '@shared/target-environments/args/mission-component/ForceArg'
+import { NodeArg } from '@shared/target-environments/args/mission-component/NodeArg'
+import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
 import type { ServerMissionAction } from '../actions/ServerMissionAction'
 import type { ServerMission } from '../ServerMission'
 

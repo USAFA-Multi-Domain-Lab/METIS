@@ -1,7 +1,7 @@
-import type { Request, Response } from 'express-serve-static-core'
-import { MissionModel } from '../../../../database'
+import { MissionModel } from '@server/database/models/missions'
 import { databaseLogger } from '../../../../logging'
-import { ApiResponse, StatusError } from '../../library'
+import { ApiResponse } from '../../library/ApiResponse'
+import { StatusError } from '../../library/StatusError'
 
 /**
  * This will retrieve all missions.
@@ -9,7 +9,7 @@ import { ApiResponse, StatusError } from '../../library'
  * @param response The express response.
  * @returns All missions in JSON format.
  */
-const getMissions = async (request: Request, response: Response) => {
+export const getMissions: TExpressHandler = async (request, response) => {
   try {
     // Retrieve all missions.
     let missions = await MissionModel.find(
@@ -30,5 +30,3 @@ const getMissions = async (request: Request, response: Response) => {
     return ApiResponse.error(error, response)
   }
 }
-
-export default getMissions

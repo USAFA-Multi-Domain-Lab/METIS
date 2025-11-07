@@ -3,22 +3,17 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "metis": ["../shared/index.d.ts"],
-      "metis/connect": ["../shared/connect/index.ts"],
-      "metis/context": ["../shared/context/index.ts"],
-      "metis/events": ["../shared/events/index.ts"],
-      "metis/files": ["../shared/files/index.ts"],
-      "metis/logins": ["../shared/logins/index.ts"],
-      "metis/missions": ["../shared/missions/index.ts"],
-      "metis/sessions": ["../shared/sessions/index.ts"],
-      "metis/target-environments": ["../shared/target-environments/index.ts"],
-      "metis/toolbox": ["../shared/toolbox/index.ts"],
-      "metis/users": ["../shared/users/index.ts"],
-      "metis/integration/*": ["../integration/library/*"]
+      "@shared/*": ["../shared/*"],
+      "@server/*": ["*"],
+      "@integrations/target-env-classes/*": [
+        "../integration/library/target-env-classes/*"
+      ]
     },
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "target": "ES2022",
     "types": ["node", "./global.d.ts", "../shared/global.d.ts"]
-  }
+  },
+  "include": [".", "../shared/", "../integration/library/"],
+  "exclude": ["../integration/library/toolbox/"]
 }

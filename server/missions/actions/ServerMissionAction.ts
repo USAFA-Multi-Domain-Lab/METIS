@@ -1,15 +1,13 @@
+import type { ServerTarget } from '@server/target-environments/ServerTarget'
+import type { TTargetEnvExposedAction } from '@server/target-environments/TargetEnvContext'
+import type { TMissionActionJson } from '@shared/missions/actions/MissionAction'
+import { MissionAction } from '@shared/missions/actions/MissionAction'
 import type {
   TEffectExecutionTriggered,
   TEffectExecutionTriggeredJson,
-  TMissionActionJson,
-} from 'metis/missions'
-import { MissionAction } from 'metis/missions'
+} from '@shared/missions/effects/Effect'
 import type { PRNG } from 'seedrandom'
 import seedrandom from 'seedrandom'
-import type {
-  ServerTarget,
-  TTargetEnvExposedAction,
-} from '../../target-environments'
 import { ServerEffect } from '../effects/ServerEffect'
 import type { ServerMissionNode } from '../nodes/ServerMissionNode'
 import type { TExecuteOptions } from './ServerActionExecution'

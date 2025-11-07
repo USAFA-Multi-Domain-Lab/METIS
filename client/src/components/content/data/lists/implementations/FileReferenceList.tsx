@@ -1,13 +1,15 @@
-import Prompt from 'metis/client/components/content/communication/Prompt'
+import Prompt from '@client/components/content/communication/Prompt'
 import { useEffect, useRef, useState } from 'react'
 
-import If from 'metis/client/components/content/util/If'
-import { useGlobalContext } from 'metis/client/context/global'
-import ClientFileReference from 'metis/client/files/references'
-import { useDefaultProps } from 'metis/client/toolbox/hooks'
-import { DateToolbox, FileToolbox } from 'metis/toolbox'
-import List, { createDefaultListProps, TList_P } from '../List'
-import ListUpload from '../uploads'
+import If from '@client/components/content/util/If'
+import { useGlobalContext } from '@client/context/global'
+import { ClientFileReference } from '@client/files/ClientFileReference'
+import { useDefaultProps } from '@client/toolbox/hooks'
+import { DateToolbox } from '@shared/toolbox/dates/DateToolbox'
+import { FileToolbox } from '@shared/toolbox/files/FileToolbox'
+import type { TList_P } from '../List'
+import List, { createDefaultListProps } from '../List'
+import { ListUpload } from '../uploads'
 
 /**
  * A component for displaying a list of file references.

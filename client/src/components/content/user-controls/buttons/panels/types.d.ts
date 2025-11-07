@@ -1,10 +1,8 @@
-import type { ClassList } from 'metis/toolbox'
-import { type TUserPermissionId } from 'metis/users/permissions'
-import React from 'react'
-import { defaultButtonSvgProps } from './elements/ButtonSvg'
+import type { ClassList } from '@shared/toolbox/html/ClassList'
+import type { TUserPermissionId } from '@shared/users/UserPermission'
 import StepperSvg from './elements/StepperSvg'
 import TextSvg from './elements/TextSvg'
-import type ButtonSvgEngine from './engines'
+import type { ButtonSvgEngine } from './engines'
 
 /**
  * Props for `ButtonSvgPanel` component.
@@ -39,10 +37,10 @@ export interface TButtonSvgEngine {
  * Creates an input type for the given props type
  * that extends {@link TSvgPanelElementBase}.
  */
-export type TButtonPanelInput<TProps extends TSvgPanelElementBase> = Partial<
-  Omit<TProps, 'key' | 'type'>
-> &
-  Pick<TProps, 'key' | 'type'>
+export type TButtonPanelInput<
+  TProps extends TSvgPanelElementBase & { type: TValue },
+  TValue extends string = TProps['type'],
+> = Partial<Omit<TProps, 'key' | 'type'>> & Pick<TProps, 'key' | 'type'>
 
 /**
  * An element that can be rendered in a `ButtonSvgPanel`.

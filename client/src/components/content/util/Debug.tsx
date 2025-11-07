@@ -1,4 +1,4 @@
-import { useGlobalContext } from 'metis/client/context/global'
+import { useGlobalContext } from '@client/context/global'
 import If from './If'
 
 /**

@@ -1,7 +1,8 @@
-import { compute } from 'metis/client/toolbox'
-import { TDetailRequired_P } from '.'
+import { compute } from '@client/toolbox'
+import type { TDetailRequired_P } from '.'
 import Tooltip from '../communication/Tooltip'
-import Toggle, { TToggleLockState } from '../user-controls/Toggle'
+import type { TToggleLockState } from '../user-controls/Toggle'
+import Toggle from '../user-controls/Toggle'
 import './DetailToggle.scss'
 
 /**

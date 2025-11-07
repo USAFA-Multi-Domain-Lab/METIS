@@ -75,7 +75,7 @@ Provides access to the current effect and its arguments.
 interface TTargetEnvExposedEffect {
   readonly _id: string // Effect ID
   readonly name: string // Effect name
-  readonly args: AnyObject // Effect arguments from target schema
+  readonly args: TAnyObject // Effect arguments from target schema
 }
 ```
 
@@ -833,7 +833,7 @@ interface TTargetEnvExposedEffect {
   readonly _id: string
   readonly name: string
   readonly forceName: string
-  readonly args: AnyObject
+  readonly args: TAnyObject
 }
 ```
 

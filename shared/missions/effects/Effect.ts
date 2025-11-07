@@ -1,12 +1,14 @@
+import type { TTargetArg } from '../../target-environments/args/Arg'
+import type { TargetDependency } from '../../target-environments/targets/TargetDependency'
 import type {
   TActionMetadata,
-  TargetDependency,
   TFileMetadata,
   TForceMetadata,
   TNodeMetadata,
-  TTargetArg,
-} from '../../target-environments'
-import { StringToolbox, type TAnyObject, VersionToolbox } from '../../toolbox'
+} from '../../target-environments/types'
+import type { TAnyObject } from '../../toolbox/objects/ObjectToolbox'
+import { StringToolbox } from '../../toolbox/strings/StringToolbox'
+import { VersionToolbox } from '../../toolbox/strings/VersionToolbox'
 import { MissionAction } from '../actions/MissionAction'
 import {
   MissionComponent,

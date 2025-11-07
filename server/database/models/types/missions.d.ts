@@ -1,4 +1,4 @@
-import type { TMissionSaveJson } from 'metis/missions'
+import type { TMissionSaveJson } from '@shared/missions/Mission'
 import type {
   HydratedDocument,
   Model,

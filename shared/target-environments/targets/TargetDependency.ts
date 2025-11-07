@@ -1,9 +1,7 @@
-import {
-  MissionAction,
-  MissionFile,
-  MissionForce,
-  MissionNode,
-} from '../../missions'
+import { MissionAction } from '../../missions/actions/MissionAction'
+import { MissionFile } from '../../missions/files/MissionFile'
+import { MissionForce } from '../../missions/forces/MissionForce'
+import { MissionNode } from '../../missions/nodes/MissionNode'
 
 export const AVAILABLE_DEPENDENCIES_RAW = [
   {

@@ -1,0 +1,555 @@
+import type {
+  TMapCompatibleNode,
+  TMapCompatibleNodeEvent,
+} from '@client/components/content/session/mission-map/objects/nodes'
+import type { TButtonSvg_PK } from '@client/components/content/user-controls/buttons/panels/types'
+import type { TMetisClientComponents } from '@client/index'
+import type { ClientSessionMember } from '@client/sessions/ClientSessionMember'
+import type { TListenerTargetEmittable } from '@shared/events/EventManager'
+import { EventManager } from '@shared/events/EventManager'
+import type {
+  TNodeBlockStatus,
+  TNodeExecutionState,
+} from '@shared/missions/nodes/MissionNode'
+import type {
+  TMissionPrototypeJson,
+  TMissionPrototypeOptions,
+} from '@shared/missions/nodes/MissionPrototype'
+import { MissionPrototype } from '@shared/missions/nodes/MissionPrototype'
+import { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
+import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
+import type { ClientMission } from '../ClientMission'
+import type { ClientActionExecution } from '../actions/ClientActionExecution'
+
+/**
+ * Class for managing mission prototypes on the client.
+ */
+export class ClientMissionPrototype
+  extends MissionPrototype<TMetisClientComponents>
+  implements
+    TListenerTargetEmittable<TPrototypeEventMethod>,
+    TMapCompatibleNode
+{
+  /**
+   * The position of the prototype on a mission map.
+   */
+  public position: Vector2D
+
+  /**
+   * The depth of the prototype in the structure.
+   */
+  public depth: number
+
+  // Implemented
+  public get nameLineCount(): number {
+    // The line count for a prototype is
+    // always 1.
+    return 1
+  }
+
+  // Implemented
+  public color: string = '#ffffff'
+
+  /**
+   * Buttons to manage this specific prototype on a mission map.
+   */
+  private _buttons: TButtonSvg_PK[]
+  /**
+   * Buttons to manage this specific prototype on a mission map.
+   */
+  public get buttons(): TButtonSvg_PK[] {
+    return [...this._buttons]
+  }
+  public set buttons(value: TButtonSvg_PK[]) {
+    // Gather details.
+    let structureChange: boolean = false
+
+    // If button count changed from 0 to some
+    // or some to 0, mark to handle structure change.
+    if (
+      (this.buttons.length > 0 && value.length === 0) ||
+      (this.buttons.length === 0 && value.length > 0)
+    ) {
+      structureChange = true
+    }
+
+    // Set buttons.
+    this._buttons = value
+
+    // Emit event.
+    this.emitEvent('set-buttons')
+
+    // Handle structure change.
+    if (structureChange) {
+      this.mission.handleStructureChange()
+    }
+  }
+
+  // Implemented
+  public get icon(): TMetisIcon {
+    return '_blank'
+  }
+
+  /**
+   * Whether the prototype is selected in the mission.
+   */
+  public get selected(): boolean {
+    return this.mission.selection === this
+  }
+
+  // Implemented
+  public get pending(): boolean {
+    return false
+  }
+
+  // Implemented
+  public get revealed(): boolean {
+    return true
+  }
+
+  // Implemented
+  public get latestExecution(): ClientActionExecution | null {
+    return null
+  }
+
+  // Implemented
+  public get executionState(): TNodeExecutionState {
+    return { status: 'unexecuted' }
+  }
+
+  // Implemented
+  public get executing(): boolean {
+    return this.executionState.status === 'executing'
+  }
+
+  // Implemented
+  public blockStatus: TNodeBlockStatus = 'unblocked'
+
+  // Implemented
+  public exclude: boolean = false
+
+  /**
+   * Listeners for prototype events.
+   */
+  private listeners: Array<[TPrototypeEventMethod, () => void]> = []
+
+  /**
+   * Whether the prototype is expanded in the `NodeStructuring` component.
+   */
+  private _expandedInMenu: boolean = false
+  /**
+   * Whether the prototype is expanded in the `NodeStructuring` component.
+   */
+  public get expandedInMenu(): boolean {
+    return this._expandedInMenu
+  }
+
+  /**
+   * Whether the prototype is collapsed in the `NodeStructuring` component.
+   * @note Direct inverse of `expandedInMenu`.
+   */
+  public get collapsedInMenu(): boolean {
+    return !this._expandedInMenu
+  }
+
+  // Overridden
+  public get depthPadding(): number {
+    return this._depthPadding
+  }
+  // Overriden
+  public set depthPadding(value: number) {
+    // Set value.
+    this._depthPadding = value
+    // Handle structure change.
+    this.mission.handleStructureChange()
+  }
+
+  /**
+   * Manages the prototype's event listeners and events.
+   */
+  private eventManager: EventManager<TPrototypeEventMethod>
+
+  /**
+   * @param mission The mission of which the prototype is a part.
+   * @param data The prototype data from which to create the prototype node. Any ommitted values will be set to the default properties defined in MissionPrototype.DEFAULT_PROPERTIES.
+   * @param options The options for creating the prototype.
+   */
+  public constructor(
+    mission: ClientMission,
+    data: Partial<TMissionPrototypeJson> = ClientMissionPrototype.DEFAULT_PROPERTIES,
+    options: TMissionPrototypeOptions<ClientMissionPrototype> = {},
+  ) {
+    super(mission, data, options)
+
+    this.position = new Vector2D(0, 0)
+    this.depth = -1
+    this._buttons = []
+
+    // Initialize event manager.
+    this.eventManager = new EventManager(this)
+    this.addEventListener = this.eventManager.addEventListener
+    this.removeEventListener = this.eventManager.removeEventListener
+    this.emitEvent = this.eventManager.emitEvent
+  }
+
+  // Implemented
+  public emitEvent
+
+  // Implemented
+  public addEventListener
+
+  // Implemented
+  public removeEventListener
+
+  /**
+   * Moves the prototype to the given destination, placing it based on
+   * the relation passed.
+   * @param destination The destination of the prototype.
+   * @param relation Where in relation to the destination this prototype
+   * will be placed in the structure.
+   */
+  public move(
+    destination: ClientMissionPrototype,
+    relation: TPrototypeRelation,
+  ): void {
+    let root: ClientMissionPrototype = this.mission.root
+    let parent: ClientMissionPrototype | null = this.parent
+    let newParent: ClientMissionPrototype | null = destination.parent
+    let newChildrenOfParent: ClientMissionPrototype[] = []
+
+    // This makes sure that the target
+    // isn't being moved inside or beside
+    // itself.
+    let x: ClientMissionPrototype | null = destination
+
+    while (x !== null && x._id !== root._id) {
+      if (this._id === x._id) {
+        return
+      }
+
+      x = x.parent
+    }
+
+    // This will remove the prototypes
+    // current position in the structure.
+    if (parent !== null) {
+      let siblings: ClientMissionPrototype[] = parent.children
+
+      for (let index: number = 0; index < siblings.length; index++) {
+        let sibling = siblings[index]
+
+        if (this._id === sibling._id) {
+          siblings.splice(index, 1)
+        }
+      }
+    }
+
+    // This will move the target based on
+    // its relation to this prototype.
+    switch (relation) {
+      case 'parent-of-target-only':
+        this.parent = destination.parent
+        let targetAndTargetSiblings: ClientMissionPrototype[] =
+          destination.childrenOfParent
+
+        if (destination.parent !== null) {
+          for (
+            let index: number = 0;
+            index < targetAndTargetSiblings.length;
+            index++
+          ) {
+            let sibling = targetAndTargetSiblings[index]
+
+            if (destination._id === sibling._id) {
+              targetAndTargetSiblings[index] = this
+            }
+          }
+
+          destination.parent.children = targetAndTargetSiblings
+        }
+
+        this.children = [destination]
+        destination.parent = this
+        break
+      case 'between-target-and-children':
+        let children: ClientMissionPrototype[] = destination.children
+
+        destination.children = [this]
+        this.parent = destination
+
+        for (let child of children) {
+          child.parent = this
+        }
+        this.children = children
+        break
+      case 'child-of-target':
+        destination.children.push(this)
+        this.parent = destination
+        break
+      case 'previous-sibling-of-target':
+        if (newParent !== null) {
+          newParent.children.forEach((child: ClientMissionPrototype) => {
+            if (child._id === destination._id) {
+              newChildrenOfParent.push(this)
+              this.parent = newParent
+            }
+
+            newChildrenOfParent.push(child)
+          })
+
+          newParent.children = newChildrenOfParent
+        }
+        break
+      case 'following-sibling-of-target':
+        if (newParent !== null) {
+          newParent.children.forEach((child: ClientMissionPrototype) => {
+            newChildrenOfParent.push(child)
+
+            if (child._id === destination._id) {
+              newChildrenOfParent.push(this)
+              this.parent = newParent
+            }
+          })
+
+          newParent.children = newChildrenOfParent
+        }
+        break
+    }
+
+    this.mission.handleStructureChange()
+  }
+
+  /**
+   * Delete a prototype from the mission.
+   * @param options Options for how the prototype should be deleted.
+   */
+  public delete(options: TPrototypeDeleteOptions = {}): void {
+    const { calledByParentDelete = false, deleteMethod = 'delete-children' } =
+      options
+
+    switch (deleteMethod) {
+      case 'delete-children':
+        let children: ClientMissionPrototype[] = [...this.children]
+
+        for (let child of children) {
+          let childOptions: TPrototypeDeleteOptions = {
+            ...options,
+            calledByParentDelete: true,
+          }
+          child.delete(childOptions)
+        }
+
+        this.childrenOfParent.splice(this.childrenOfParent.indexOf(this), 1)
+        this.mission.prototypes = this.mission.prototypes.filter(
+          (prototype) => prototype._id !== this._id,
+        )
+        break
+      case 'shift-children':
+        let parentOfThis: ClientMissionPrototype | null = this.parent
+        let childrenofThis: ClientMissionPrototype[] = [...this.children]
+
+        childrenofThis.forEach((child: ClientMissionPrototype) => {
+          if (parentOfThis !== null) {
+            parentOfThis.children.splice(
+              parentOfThis.children.indexOf(this),
+              0,
+              child,
+            )
+            child.parent = parentOfThis
+          }
+        })
+
+        if (parentOfThis !== null) {
+          parentOfThis.children.splice(parentOfThis.children.indexOf(this), 1)
+          this.mission.prototypes = this.mission.prototypes.filter(
+            (prototype) => prototype._id !== this._id,
+          )
+          this.mission.handleStructureChange()
+        }
+        break
+    }
+
+    if (calledByParentDelete !== true) {
+      // Structure change is handled as long
+      // as one prototype exists. If not, a new
+      // prototype is created. Creating this prototype
+      // will handle the structure change for
+      // us.
+      if (this.mission.prototypes.length > 0) {
+        this.mission.handleStructureChange()
+      } else {
+        this.mission.createPrototype()
+      }
+    }
+  }
+
+  /**
+   * Toggle the expandedInMenu property between true and false.
+   */
+  public toggleMenuExpansion(): void {
+    this._expandedInMenu = !this._expandedInMenu
+  }
+
+  /**
+   * Maps the relationships between the prototypes
+   * based on the structure object.
+   * @param descendants The descendant prototypes to map the relationships for.
+   * @param cursor The current location in the structure object.
+   * @param parent **THIS IS FOR RECURSION ONLY. DO NOT SET!!**
+   */
+  protected mapDescendantRelationships(
+    descendants: TMissionPrototypeJson[],
+    cursor: TAnyObject,
+    parent: ClientMissionPrototype = this,
+  ): void {
+    // Gather details.
+    let { mission } = parent
+
+    // Arrange each prototype's children based on the structure object.
+    for (let key of Object.keys(cursor)) {
+      let childStructure = cursor[key]
+      let prototype = descendants.find(
+        ({ structureKey }) => structureKey === key,
+      )
+
+      // If the prototype is not found, skip it.
+      // *** Note: The first key in the structure object
+      // *** is always the prototype itself. This is why
+      // *** we continue on if the prototype is not found.
+      if (!prototype && childStructure !== undefined) {
+        this.mapDescendantRelationships(descendants, childStructure, parent)
+        continue
+      }
+
+      // Check if this child already exists.
+      let child = parent.children.find((c) => c.structureKey === key)
+
+      // Only create the prototype if it doesn't already exist.
+      if (!child) {
+        child = new ClientMissionPrototype(mission, prototype)
+        mission.prototypes.push(child)
+        child.parent = parent
+        parent.children.push(child)
+      }
+
+      // Continue mapping the remaining descendants.
+      this.mapDescendantRelationships(descendants, childStructure, child)
+    }
+  }
+
+  /**
+   * Handles a prototype-opened event from the server by mapping descendant prototype relationships.
+   * @param revealedDescendantPrototypes The descendant prototypes that should now be visible.
+   * @param structure The hierarchical structure data describing prototype parent-child relationships.
+   * @note This establishes the prototype tree structure that mirrors the node tree.
+   */
+  public onOpen(
+    revealedDescendantPrototypes: TMissionPrototypeJson[] | undefined,
+    structure: TAnyObject | undefined,
+  ): void {
+    if (!revealedDescendantPrototypes || !structure) return
+    this.mapDescendantRelationships(revealedDescendantPrototypes, structure)
+  }
+
+  /**
+   * Handles a prototype-closed event from the server by removing descendant prototypes from view.
+   * @param member The session member for whom the prototype is being closed (used for authorization).
+   * @note Members with complete visibility will keep all prototypes visible (structure remains intact).
+   * @note Regular members will have descendant prototypes removed from the mission tree.
+   */
+  public onClose(member: ClientSessionMember): void {
+    // Only remove descendants if the member doesn't have complete visibility.
+    // Managers with complete visibility keep the full prototype tree visible.
+    if (!member.isAuthorized('completeVisibility')) {
+      // Collect all descendant prototypes that need to be removed.
+      const descendantsToRemove = [...this.descendants]
+
+      if (descendantsToRemove.length > 0) {
+        // Build a set of prototype IDs to remove for efficient filtering.
+        const idsToRemove = new Set(descendantsToRemove.map((d) => d._id))
+
+        // Remove descendant prototypes from the mission's prototype list.
+        this.mission.prototypes = this.mission.prototypes.filter(
+          (p) => !idsToRemove.has(p._id),
+        )
+
+        // Clear this prototype's children array to break parent-child relationships.
+        this.children = []
+      }
+    }
+  }
+
+  /**
+   * Duplicates the prototype, creating a new prototype with the same properties
+   * as this one or with the provided properties.
+   * @param options The options for duplicating the prototype.
+   * @param options.mission The mission to which the duplicated prototype belongs.
+   * @returns A new prototype with the same properties as this one or with the
+   * provided properties.
+   */
+  public duplicate(
+    options: TPrototypeDuplicateOptions = {},
+  ): ClientMissionPrototype {
+    // Gather details.
+    const { mission = this.mission } = options
+
+    return new ClientMissionPrototype(mission, {
+      _id: ClientMissionPrototype.DEFAULT_PROPERTIES._id,
+      structureKey: this.structureKey,
+      depthPadding: this.depthPadding,
+    })
+  }
+
+  // Implemented
+  public requestCenterOnMap(): void {
+    this.emitEvent('center-on-map')
+    this.mission.emitEvent('center-node-on-map', this)
+  }
+}
+
+/**
+ * An event that occurs on a prototype, which can be listened for.
+ * @option 'activity'
+ * Triggered when any other event occurs.
+ * @option 'set-buttons'
+ * Triggered when the buttons for the prototype are set.
+ */
+export type TPrototypeEventMethod = TMapCompatibleNodeEvent
+
+/**
+ * The relation of prototype to another prototype.
+ */
+export type TPrototypeRelation =
+  | 'parent-of-target-only'
+  | 'child-of-target'
+  | 'between-target-and-children'
+  | 'previous-sibling-of-target'
+  | 'following-sibling-of-target'
+
+/**
+ * Method for deleting a prototype.
+ * @option 'delete-children'
+ * Deletes the prototype and all of its children.
+ * @option 'shift-children'
+ * Deletes the prototype and transfers its children to the prototype's parent.
+ */
+export type TPrototypeDeleteMethod = 'delete-children' | 'shift-children'
+
+/**
+ * Options for `ClientMissionPrototype.delete`.
+ */
+export interface TPrototypeDeleteOptions {
+  calledByParentDelete?: boolean // Default "false"
+  deleteMethod?: TPrototypeDeleteMethod // Default 'delete-children'
+}
+
+/**
+ * The options for duplicating a prototype.
+ * @see {@link ClientMissionPrototype.duplicate}
+ */
+type TPrototypeDuplicateOptions = {
+  /**
+   * The mission to which the duplicated prototype belongs.
+   */
+  mission?: ClientMission
+}

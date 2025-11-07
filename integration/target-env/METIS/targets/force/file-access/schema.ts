@@ -1,8 +1,10 @@
-import { TFileMetadata } from 'metis/target-environments/args/mission-component/file-arg'
-import { TForceMetadata } from 'metis/target-environments/args/mission-component/force-arg'
-import Dependency from 'metis/target-environments/dependencies'
-import TargetMigrationRegistry from 'metis/target-environments/targets/migrations/registry'
-import TargetSchema from '../../../../../library/target-env-classes/targets'
+import { TargetMigrationRegistry } from '@shared/target-environments/targets/migrations/TargetMigrationRegistry'
+import { TargetDependency } from '@shared/target-environments/targets/TargetDependency'
+import type {
+  TFileMetadata,
+  TForceMetadata,
+} from '@shared/target-environments/types'
+import { TargetSchema } from '../../../../../library/target-env-classes/targets'
 
 /**
  * Migrations for the File Access target.
@@ -67,8 +69,8 @@ const FileAccess = new TargetSchema({
       name: 'Access',
       required: true,
       dependencies: [
-        Dependency.FORCE('forceMetadata'),
-        Dependency.FILE('fileMetadata'),
+        TargetDependency.FORCE('forceMetadata'),
+        TargetDependency.FILE('fileMetadata'),
       ],
       options: [
         {

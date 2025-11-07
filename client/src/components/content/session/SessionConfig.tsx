@@ -1,5 +1,8 @@
-import ClientMission from 'metis/client/missions'
-import { TSessionAccessibility, TSessionConfig } from 'metis/sessions'
+import type { ClientMission } from '@client/missions/ClientMission'
+import type {
+  TSessionAccessibility,
+  TSessionConfig,
+} from '@shared/sessions/Session'
 import { useEffect, useState } from 'react'
 import { DetailString } from '../form/DetailString'
 import { DetailToggle } from '../form/DetailToggle'

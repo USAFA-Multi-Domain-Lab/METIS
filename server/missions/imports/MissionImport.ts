@@ -1,13 +1,15 @@
+import { FileReferenceModel } from '@server/database/models/file-references'
+import { MissionModel } from '@server/database/models/missions'
+import type { TMulterFile } from '@server/files'
+import type { MetisFileStore } from '@server/files/MetisFileStore'
+import { ServerFileToolbox } from '@server/toolbox/files/ServerFileToolbox'
+import type { TMissionFileJson } from '@shared/missions/files/MissionFile'
+import { NumberToolbox } from '@shared/toolbox/numbers/NumberToolbox'
+import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
+import type { TCreatedByJson } from '@shared/users/User'
 import fs from 'fs'
-import type { TMissionFileJson } from 'metis/missions'
-import { NumberToolbox } from 'metis/toolbox'
-import type { TCreatedByJson } from 'metis/users'
-import type { AnyObject } from 'mongoose'
 import path from 'path'
-import { FileReferenceModel, MissionModel } from '../../database'
-import type { MetisFileStore, TMulterFile } from '../../files'
 import { databaseLogger, expressLogger } from '../../logging'
-import { ServerFileToolbox } from '../../toolbox/files'
 import build_000005 from './builds/build_000005'
 import build_000009 from './builds/build_000009'
 import build_000010 from './builds/build_000010'
@@ -142,9 +144,9 @@ export class MissionImport {
    * @param contents_string The contents of the file as a `string`.
    * @returns The contents of the file as a `JSON` object.
    */
-  private toJson = (contents_string: string): AnyObject => {
+  private toJson = (contents_string: string): TAnyObject => {
     // The JSON object that will be returned.
-    let contents_JSON: AnyObject
+    let contents_JSON: TAnyObject
 
     // Converts to JSON.
     try {
@@ -202,7 +204,7 @@ export class MissionImport {
    */
   private validateFileContents = (
     file: TFileImportData,
-    contents_JSON: AnyObject,
+    contents_JSON: TAnyObject,
   ): void => {
     // If the JSON is not an object,
     // handle the error.
@@ -324,7 +326,7 @@ export class MissionImport {
    */
   private async importFiles(
     importDir: string,
-    mission: AnyObject,
+    mission: TAnyObject,
     sourceFile: TFileImportData,
   ): Promise<void> {
     // Import the files.
@@ -404,7 +406,7 @@ export class MissionImport {
       let importDataPath = path.join(importDir, 'data.json')
       let isZipFile: boolean = /^.*\.metis\.zip$/.test(file.originalName)
       let dataAsStr: string
-      let dataAsJson: AnyObject
+      let dataAsJson: TAnyObject
 
       try {
         // Create a temporary directory to manage the

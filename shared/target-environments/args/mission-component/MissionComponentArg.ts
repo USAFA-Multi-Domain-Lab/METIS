@@ -1,4 +1,11 @@
-import type { TBaseArg, TBaseArgJson } from '../../types'
+import type {
+  TActionMetadata,
+  TBaseArg,
+  TBaseArgJson,
+  TFileMetadata,
+  TForceMetadata,
+  TNodeMetadata,
+} from '../../types'
 import { Arg } from '../Arg'
 
 /**
@@ -90,3 +97,13 @@ export type TMissionComponentArgJson = TBaseArgJson & {
    */
   required: boolean
 }
+
+/**
+ * The possible metadata schema for a mission component target-argument
+ * that is present in an effect's arguments.
+ */
+export type TMissionComponentMetadata =
+  | TForceMetadata
+  | TNodeMetadata
+  | TActionMetadata
+  | TFileMetadata

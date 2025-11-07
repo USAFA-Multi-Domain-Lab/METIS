@@ -1,5 +1,5 @@
-import { DetailToggle } from 'metis/client/components/content/form/DetailToggle'
-import { TExecutionCheats } from 'metis/missions'
+import { DetailToggle } from '@client/components/content/form/DetailToggle'
+import type { TExecutionCheats } from '@shared/missions/actions/ActionExecution'
 import { useEffect, useState } from 'react'
 import './ExecCheats.scss'
 

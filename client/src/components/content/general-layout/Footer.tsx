@@ -1,9 +1,9 @@
-import { useGlobalContext } from 'metis/client/context/global'
-import { compute } from 'metis/client/toolbox'
-import { TWithKey } from 'metis/toolbox'
+import { useGlobalContext } from '@client/context/global'
+import { compute } from '@client/toolbox'
+import type { TWithKey } from '@shared/toolbox/objects/ObjectToolbox'
 import Tooltip from '../communication/Tooltip'
 import { DetailToggle } from '../form/DetailToggle'
-import { TButtonText_P } from '../user-controls/buttons/ButtonText'
+import type { TButtonText_P } from '../user-controls/buttons/ButtonText'
 import DevOnly from '../util/DevOnly'
 import './Footer.scss'
 

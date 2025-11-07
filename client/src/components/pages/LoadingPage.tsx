@@ -1,7 +1,7 @@
-import { useGlobalContext } from 'metis/client/context/global'
-import { compute } from 'metis/client/toolbox'
-import { useListComponent } from 'metis/client/toolbox/hooks'
-import { ClassList } from 'metis/toolbox'
+import { useGlobalContext } from '@client/context/global'
+import { compute } from '@client/toolbox'
+import { useListComponent } from '@client/toolbox/hooks'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import { ButtonText } from '../content/user-controls/buttons/ButtonText'
 import './LoadingPage.scss'
 

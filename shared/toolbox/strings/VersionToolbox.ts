@@ -1,5 +1,3 @@
-import type { TVersionComparisonResult } from '../'
-
 export class VersionToolbox {
   /**
    * @param value The string to validate.
@@ -67,3 +65,13 @@ export class VersionToolbox {
     return this.compareVersions(versionA, versionB) === 'earlier'
   }
 }
+
+/* -- TYPES -- */
+
+/**
+ * The result of comparing two semantic versions.
+ * @option 'later' - versionA is later than versionB
+ * @option 'earlier' - versionA is earlier than versionB
+ * @option 'equal' - versionA is equal to versionB
+ */
+export type TVersionComparisonResult = 'later' | 'earlier' | 'equal'

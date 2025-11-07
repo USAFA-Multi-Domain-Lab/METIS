@@ -1,4 +1,4 @@
-import { StringToolbox } from 'metis/toolbox'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { TMissionImportBuild } from '../MissionImport'
 
 // -- BUILD 49 --

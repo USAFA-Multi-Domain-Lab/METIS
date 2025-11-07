@@ -1,5 +1,5 @@
-import type { TAnyObject } from '../../../toolbox'
-import { VersionToolbox } from '../../../toolbox'
+import type { TAnyObject } from '../../../toolbox/objects/ObjectToolbox'
+import { VersionToolbox } from '../../../toolbox/strings/VersionToolbox'
 
 /**
  * A migration which will update an effect to be

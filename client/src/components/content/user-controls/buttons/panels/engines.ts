@@ -1,13 +1,14 @@
-import { compute } from 'metis/client/toolbox'
-import { useForcedUpdates, usePostInitEffect } from 'metis/client/toolbox/hooks'
-import { ClassList, StringToolbox } from 'metis/toolbox'
+import { compute } from '@client/toolbox'
+import { useForcedUpdates, usePostInitEffect } from '@client/toolbox/hooks'
+import { ClassList } from '@shared/toolbox/html/ClassList'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { useState } from 'react'
 import { createButtonDefaults } from './elements/ButtonSvg'
 import { createDividerDefaults } from './elements/DividerSvg'
 import { createStepperDefaults } from './elements/StepperSvg'
 import { createTextDefaults } from './elements/TextSvg'
 import { useButtonSvgEngine, useButtonSvgs } from './hooks'
-import {
+import type {
   TButtonSvg_PK,
   TButtonSvgEngine,
   TButtonSvgFlow,

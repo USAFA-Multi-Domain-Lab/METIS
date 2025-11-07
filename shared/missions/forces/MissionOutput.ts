@@ -1,13 +1,12 @@
+import { MetisComponent } from '@shared/MetisComponent'
 import memoizeOne from 'memoize-one/dist/memoize-one'
-import { MetisComponent } from '../../'
+import type { TExecution } from '../actions/ActionExecution'
 import type {
-  Mission,
   TEffectExecutionTriggered,
   TEffectSessionTriggered,
-  TExecution,
-  TForce,
-  TMissionForceSaveJson,
-} from '../../missions'
+} from '../effects/Effect'
+import type { Mission } from '../Mission'
+import type { TForce, TMissionForceSaveJson } from './MissionForce'
 
 /**
  * An output that's displayed in a force's output panel.

@@ -1,8 +1,14 @@
+import { ServerMissionAction } from '@server/missions/actions/ServerMissionAction'
+import { ServerEffect } from '@server/missions/effects/ServerEffect'
+import { ServerMissionForce } from '@server/missions/forces/ServerMissionForce'
+import { ServerMissionNode } from '@server/missions/nodes/ServerMissionNode'
+import { ServerMission } from '@server/missions/ServerMission'
+import { MissionFile } from '@shared/missions/files/MissionFile'
+import { Mission, type TMissionSaveJson } from '@shared/missions/Mission'
+import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import DOMPurify from 'isomorphic-dompurify'
-import type { TMissionSaveJson } from 'metis/missions'
-import { MissionFile } from 'metis/missions'
-import { StringToolbox } from 'metis/toolbox'
-import type { AnyObject, ProjectionType, QueryOptions } from 'mongoose'
+import type { ProjectionType, QueryOptions } from 'mongoose'
 import mongoose, { model, Schema } from 'mongoose'
 import {
   ensureNoNullCreatedBy,
@@ -11,13 +17,6 @@ import {
   populateCreatedByIfFlagged,
 } from '.'
 import { databaseLogger } from '../../logging'
-import {
-  ServerEffect,
-  ServerMission,
-  ServerMissionAction,
-  ServerMissionForce,
-  ServerMissionNode,
-} from '../../missions'
 import { MetisDatabase } from '../MetisDatabase'
 import { MissionSchema } from './classes'
 import type { TMissionStaticMethods } from './types'
@@ -36,7 +35,7 @@ import {
  * to strings.
  * @param object The object to process.
  */
-const objectIdsToStrings = (object: AnyObject): void => {
+const objectIdsToStrings = (object: TAnyObject): void => {
   // The algorithm used to recursively process
   // the object.
   const algorithm = (cursor: any): any => {
@@ -265,7 +264,7 @@ export const missionSchema = new MissionSchema(
       type: String,
       required: true,
       trim: true,
-      maxLength: ServerMission.MAX_NAME_LENGTH,
+      maxLength: Mission.MAX_NAME_LENGTH,
     },
     versionNumber: { type: Number, required: true },
     seed: {
@@ -277,7 +276,7 @@ export const missionSchema = new MissionSchema(
       type: String,
       required: true,
       default: 'Resources',
-      maxlength: ServerMission.MAX_RESOURCE_LABEL_LENGTH,
+      maxlength: Mission.MAX_RESOURCE_LABEL_LENGTH,
     },
     launchedAt: { type: Date, default: null },
     createdBy: {

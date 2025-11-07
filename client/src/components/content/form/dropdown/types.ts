@@ -1,5 +1,5 @@
-import { ReactNode } from 'react'
-import { TDetailBase_P, TDetailOptional_P, TDetailRequired_P } from '../'
+import type { ReactNode } from 'react'
+import type { TDetailBase_P, TDetailOptional_P, TDetailRequired_P } from '../'
 
 /**
  * The base properties for the Detail Dropdown component.

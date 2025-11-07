@@ -1,16 +1,15 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": ".",
-    "jsx": "react-jsx",
+    "baseUrl": "./src",
     "paths": {
-      "metis": ["../shared/index.ts"],
-      "metis/*": ["../shared/*"],
-      "metis/client": ["src/index.tsx"],
-      "metis/client/*": ["src/*"]
+      "@client/*": ["*"],
+      "@shared/*": ["../../shared/*"]
     },
+    "jsx": "react-jsx",
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "types": ["vite/client"]
-  }
+  },
+  "include": ["src", "../shared", "vite.config.ts"]
 }

@@ -1,6 +1,9 @@
-import type { TExecutionOutcomeJson, TOutcomeState } from 'metis/missions'
-import { ExecutionOutcome } from 'metis/missions'
-import { StringToolbox } from 'metis/toolbox'
+import type {
+  TExecutionOutcomeJson,
+  TOutcomeState,
+} from '@shared/missions/actions/ExecutionOutcome'
+import { ExecutionOutcome } from '@shared/missions/actions/ExecutionOutcome'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { PRNG } from 'seedrandom'
 import type { ServerActionExecution } from './ServerActionExecution'
 

@@ -1,12 +1,15 @@
-import Tooltip from 'metis/client/components/content/communication/Tooltip'
-import { DetailDropdown } from 'metis/client/components/content/form/dropdown/'
-import { ButtonText } from 'metis/client/components/content/user-controls/buttons/ButtonText'
-import { ClientEffect, TClientEffectHost } from 'metis/client/missions/effects'
-import { ClientTargetEnvironment } from 'metis/client/target-environments'
-import ClientTarget from 'metis/client/target-environments/targets'
-import { compute } from 'metis/client/toolbox'
-import { usePostInitEffect } from 'metis/client/toolbox/hooks'
-import { TEffectType } from 'metis/missions'
+import Tooltip from '@client/components/content/communication/Tooltip'
+import { DetailDropdown } from '@client/components/content/form/dropdown/'
+import { ButtonText } from '@client/components/content/user-controls/buttons/ButtonText'
+import type {
+  ClientEffect,
+  TClientEffectHost,
+} from '@client/missions/effects/ClientEffect'
+import { ClientTarget } from '@client/target-environments/ClientTarget'
+import { ClientTargetEnvironment } from '@client/target-environments/ClientTargetEnvironment'
+import { compute } from '@client/toolbox'
+import { usePostInitEffect } from '@client/toolbox/hooks'
+import type { TEffectType } from '@shared/missions/effects/Effect'
 import { useState } from 'react'
 import './CreateEffect.scss'
 

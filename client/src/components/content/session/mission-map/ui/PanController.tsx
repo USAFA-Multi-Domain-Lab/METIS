@@ -1,5 +1,6 @@
-import { compute } from 'metis/client/toolbox/'
-import { Vector1D, Vector2D } from 'metis/toolbox'
+import { compute } from '@client/toolbox/'
+import type { Vector1D } from '@shared/toolbox/numbers/vectors/Vector1D'
+import { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
 import { useState } from 'react'
 import './PanController.scss'
 

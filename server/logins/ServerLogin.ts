@@ -1,10 +1,9 @@
+import type { ClientConnection } from '@server/connect/ClientConnection'
+import type { ServerUser } from '@server/users/ServerUser'
+import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
+import { type TLoginJson } from '@shared/logins'
 import type { Request } from 'express-serve-static-core'
-import { ServerEmittedError } from 'metis/connect'
-import type { TLoginJson } from 'metis/logins'
-import { Session } from 'metis/sessions'
-import type { ClientConnection } from '../connect'
 import { SessionServer } from '../sessions/SessionServer'
-import type { ServerUser } from '../users'
 import { ServerWebSession } from './ServerWebSession'
 
 /**

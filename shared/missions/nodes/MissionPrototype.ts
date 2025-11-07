@@ -1,4 +1,4 @@
-import { StringToolbox } from '../../toolbox'
+import { StringToolbox } from '../../toolbox/strings/StringToolbox'
 import type { TMission } from '../Mission'
 import {
   MissionComponent,

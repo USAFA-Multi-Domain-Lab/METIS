@@ -1,8 +1,8 @@
-import { useGlobalContext } from 'metis/client/context/global'
-import ClientSession from 'metis/client/sessions'
-import ClientSessionMember from 'metis/client/sessions/members'
-import { compute } from 'metis/client/toolbox'
-import { useEventListener, useRequireLogin } from 'metis/client/toolbox/hooks'
+import { useGlobalContext } from '@client/context/global'
+import type { ClientSessionMember } from '@client/sessions/ClientSessionMember'
+import type { SessionClient } from '@client/sessions/SessionClient'
+import { compute } from '@client/toolbox'
+import { useEventListener, useRequireLogin } from '@client/toolbox/hooks'
 import { useState } from 'react'
 import SessionMemberRow from './SessionMemberRow'
 import './SessionMembers.scss'
@@ -81,5 +81,5 @@ export type TSessionUsers_P = {
   /**
    * The session client with the users to display.
    */
-  session: ClientSession
+  session: SessionClient
 }

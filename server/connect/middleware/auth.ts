@@ -1,4 +1,4 @@
-import { ServerEmittedError } from 'metis/connect'
+import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
 import { ServerLogin } from '../../logins/ServerLogin'
 import type { TMetisWsMiddleware } from '../MetisWsServer'
 

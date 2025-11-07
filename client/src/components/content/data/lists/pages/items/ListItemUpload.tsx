@@ -1,9 +1,9 @@
-import ButtonSvgPanel from 'metis/client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
-import { useButtonSvgEngine } from 'metis/client/components/content/user-controls/buttons/panels/hooks'
-import { useEventListener, useInlineStyling } from 'metis/client/toolbox/hooks'
+import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
+import { useEventListener, useInlineStyling } from '@client/toolbox/hooks'
 import { useEffect, useState } from 'react'
 import { useListContext } from '../../List'
-import ListUpload from '../../uploads'
+import type { ListUpload } from '../../uploads'
 import './ListItemUpload.scss'
 
 /**

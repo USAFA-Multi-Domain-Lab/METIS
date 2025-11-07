@@ -1,7 +1,7 @@
-import { compute } from 'metis/client/toolbox'
-import { ClassList } from 'metis/toolbox'
+import { compute } from '@client/toolbox'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import DetailDropdown from '../DetailDropdown'
-import { TDropdownOption_P } from '../types'
+import type { TDropdownOption_P } from '../types'
 
 /**
  * Subcomponent of {@link DetailDropdown} which represents

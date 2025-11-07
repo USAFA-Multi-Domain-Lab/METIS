@@ -1,29 +1,25 @@
-import { AxiosError } from 'axios'
 import {
   useGlobalContext,
   useNavigationMiddleware,
-} from 'metis/client/context/global'
-import { compute } from 'metis/client/toolbox'
+} from '@client/context/global'
+import { compute } from '@client/toolbox'
 import {
   useBeforeunload,
   useEventListener,
   useMountHandler,
   useRequireLogin,
-} from 'metis/client/toolbox/hooks'
-import ClientUser from 'metis/client/users'
-import { StringToolbox } from 'metis/toolbox'
+} from '@client/toolbox/hooks'
+import { ClientUser } from '@client/users/ClientUser'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import { AxiosError } from 'axios'
 import React, { useContext, useRef, useState } from 'react'
-import { DefaultPageLayout, TPage_P } from '.'
+import type { TPage_P } from '.'
+import { DefaultPageLayout } from '.'
 import UserEntry from '../content/edit-user/UserEntry'
-import {
-  HomeButton,
-  ProfileButton,
-  TNavigation_P,
-} from '../content/general-layout/Navigation'
-import {
-  ButtonText,
-  TButtonTextDisabled,
-} from '../content/user-controls/buttons/ButtonText'
+import type { TNavigation_P } from '../content/general-layout/Navigation'
+import { HomeButton, ProfileButton } from '../content/general-layout/Navigation'
+import type { TButtonTextDisabled } from '../content/user-controls/buttons/ButtonText'
+import { ButtonText } from '../content/user-controls/buttons/ButtonText'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
 import If from '../content/util/If'
 import './UserPage.scss'

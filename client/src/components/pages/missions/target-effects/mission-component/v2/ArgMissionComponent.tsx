@@ -1,7 +1,7 @@
-import { ClientEffect } from 'metis/client/missions/effects'
-import ClientMissionForce from 'metis/client/missions/forces'
+import type { ClientEffect } from '@client/missions/effects/ClientEffect'
+import type { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
 import { useState } from 'react'
-import { TArgMissionComponent_P } from './types'
+import type { TArgMissionComponent_P } from './types'
 
 export default function (props: TArgMissionComponent_P): TReactElement {
   const effect: ClientEffect = props.effect

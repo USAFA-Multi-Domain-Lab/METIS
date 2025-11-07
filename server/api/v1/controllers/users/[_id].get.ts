@@ -1,7 +1,7 @@
-import type { Request, Response } from 'express-serve-static-core'
-import { UserModel } from '../../../../database'
+import { UserModel } from '@server/database/models/users'
 import { databaseLogger } from '../../../../logging'
-import { ApiResponse, StatusError } from '../../library'
+import { ApiResponse } from '../../library/ApiResponse'
+import { StatusError } from '../../library/StatusError'
 
 /**
  * This will retrieve a specific user.
@@ -9,7 +9,7 @@ import { ApiResponse, StatusError } from '../../library'
  * @param response The express response.
  * @returns The user in JSON format.
  */
-const getUser = async (request: Request, response: Response) => {
+export const getUser: TExpressHandler = async (request, response) => {
   // Extract the user ID from the request parameters.
   let { _id: userId } = request.params
 
@@ -34,5 +34,3 @@ const getUser = async (request: Request, response: Response) => {
     return ApiResponse.error(error, response)
   }
 }
-
-export default getUser

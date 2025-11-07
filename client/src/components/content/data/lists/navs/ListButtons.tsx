@@ -1,7 +1,7 @@
-import ButtonSvgPanel from 'metis/client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
-import { useButtonSvgEngine } from 'metis/client/components/content/user-controls/buttons/panels/hooks'
+import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
+import type { MetisComponent } from '@shared/MetisComponent'
 import { useEffect } from 'react'
-import { MetisComponent } from '../../../../../../../shared'
 import { useListContext } from '../List'
 import './ListButtons.scss'
 

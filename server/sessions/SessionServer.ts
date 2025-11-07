@@ -1,53 +1,53 @@
+import type { ClientConnection } from '@server/connect/ClientConnection'
+import type { ServerActionExecution } from '@server/missions/actions/ServerActionExecution'
+import type { ServerExecutionOutcome } from '@server/missions/actions/ServerExecutionOutcome'
+import type { ServerMissionAction } from '@server/missions/actions/ServerMissionAction'
+import type { ServerEffect } from '@server/missions/effects/ServerEffect'
+import type { ServerMissionFile } from '@server/missions/files/ServerMissionFile'
+import type { ServerMissionForce } from '@server/missions/forces/ServerMissionForce'
+import { ServerOutput } from '@server/missions/forces/ServerOutput'
+import type { ServerMissionNode } from '@server/missions/nodes/ServerMissionNode'
+import { ServerMission } from '@server/missions/ServerMission'
+import { ServerTargetEnvironment } from '@server/target-environments/ServerTargetEnvironment'
+import { TargetEnvContext } from '@server/target-environments/TargetEnvContext'
+import type { ServerUser } from '@server/users/ServerUser'
 import type {
   TClientEvents,
   TRequestOfResponse,
   TServerEvents,
   TServerMethod,
-} from 'metis/connect'
-import { ServerEmittedError } from 'metis/connect'
+} from '@shared/connect'
+import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
 import type {
-  MissionComponent,
   TEffectExecutionTriggered,
   TEffectSessionTriggered,
   TEffectTrigger,
+} from '@shared/missions/effects/Effect'
+import type { TOutputContext } from '@shared/missions/forces/MissionOutput'
+import type {
   TMissionJson,
   TMissionJsonOptions,
-  TOutputContext,
-} from 'metis/missions'
+} from '@shared/missions/Mission'
+import type { MissionComponent } from '@shared/missions/MissionComponent'
+import type { TMemberRoleId } from '@shared/sessions/members/MemberRole'
+import { MemberRole } from '@shared/sessions/members/MemberRole'
+import type { TSessionMemberJson } from '@shared/sessions/members/SessionMember'
 import type {
-  TMemberRoleId,
   TSessionBasicJson,
   TSessionConfig,
   TSessionJson,
-  TSessionMemberJson,
-} from 'metis/sessions'
-import { MemberRole, Session } from 'metis/sessions'
-import type { TSingleTypeObject } from 'metis/toolbox'
-import type { User } from 'metis/users'
-import { v4 as generateHash } from 'uuid'
-import type { ClientConnection } from '../connect'
+} from '@shared/sessions/Session'
+import { MissionSession } from '@shared/sessions/Session'
+import type { TSingleTypeObject } from '@shared/toolbox/objects/ObjectToolbox'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import type { User } from '@shared/users/User'
 import { targetEnvLogger } from '../logging'
-import type {
-  ServerActionExecution,
-  ServerEffect,
-  ServerExecutionOutcome,
-  ServerMissionAction,
-  ServerMissionFile,
-  ServerMissionForce,
-  ServerMissionNode,
-} from '../missions'
-import { ServerMission, ServerOutput } from '../missions'
-import {
-  ServerTargetEnvironment,
-  TargetEnvContext,
-} from '../target-environments'
-import type { ServerUser } from '../users'
 import { ServerSessionMember } from './ServerSessionMember'
 
 /**
  * Server instance for sessions. Handles server-side logic for a session with participating clients. Communicates with clients to conduct the session.
  */
-export class SessionServer extends Session<TMetisServerComponents> {
+export class SessionServer extends MissionSession<TMetisServerComponents> {
   // Overridden.
   public get state() {
     return this._state
@@ -2256,7 +2256,7 @@ export class SessionServer extends Session<TMetisServerComponents> {
     owner: ServerUser,
   ): SessionServer {
     return new SessionServer(
-      generateHash().substring(0, 8),
+      StringToolbox.generateRandomId().substring(0, 8),
       config.name ?? mission.name,
       owner,
       config,

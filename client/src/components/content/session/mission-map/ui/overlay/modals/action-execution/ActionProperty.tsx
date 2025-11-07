@@ -1,10 +1,11 @@
-import Tooltip from 'metis/client/components/content/communication/Tooltip'
-import ClientMissionAction from 'metis/client/missions/actions'
-import { compute } from 'metis/client/toolbox'
-import { useEventListener } from 'metis/client/toolbox/hooks'
-import { getIconPath } from 'metis/client/toolbox/icons'
-import { StringToolbox } from 'metis/toolbox'
-import { ReactNode, useState } from 'react'
+import Tooltip from '@client/components/content/communication/Tooltip'
+import type { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
+import { compute } from '@client/toolbox'
+import { useEventListener } from '@client/toolbox/hooks'
+import { getIconPath } from '@client/toolbox/icons'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import type { ReactNode } from 'react'
+import { useState } from 'react'
 import './ActionProperty.scss'
 
 /**

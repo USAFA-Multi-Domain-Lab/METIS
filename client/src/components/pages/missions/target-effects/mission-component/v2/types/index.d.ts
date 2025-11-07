@@ -1,4 +1,6 @@
-import ClientMissionForce from 'metis/client/missions/forces'
+import type { ClientEffect } from '@client/missions/effects/ClientEffect'
+import type { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
+import type { TMissionComponentArg } from '@shared/target-environments/args/mission-component/MissionComponentArg'
 import type ArgMissionComponent from '../ArgMissionComponent'
 import type ForceDropdown from '../dropdowns/ForceDropdown'
 
@@ -45,11 +47,11 @@ export interface TForceDropdown_P_Base {
   /**
    * The currently selected force.
    */
-  force: ClientMissionForce | null
+  force: ClientMissionForce
   /**
    * Selects a new force.
    */
-  selectForce: TReactSetter<ClientMissionForce | null>
+  selectForce: TReactSetter<ClientMissionForce>
 }
 
 /**

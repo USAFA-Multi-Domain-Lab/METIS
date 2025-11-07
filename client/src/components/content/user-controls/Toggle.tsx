@@ -1,4 +1,4 @@
-import { compute } from 'metis/client/toolbox'
+import { compute } from '@client/toolbox'
 import './Toggle.scss'
 
 /**

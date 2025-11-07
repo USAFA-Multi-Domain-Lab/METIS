@@ -1,9 +1,9 @@
 import type { TTargetEnvExposedContext } from '../../../server/target-environments/TargetEnvContext'
 import { MetisComponent } from '../../MetisComponent'
-import type { TAnyObject } from '../../toolbox'
+import type { TAnyObject } from '../../toolbox/objects/ObjectToolbox'
+import type { TTargetArg, TTargetArgJson } from '../args/Arg'
 import { Arg } from '../args/Arg'
 import type { TTargetEnv } from '../TargetEnvironment'
-import type { TTargetArg, TTargetArgJson } from '../types'
 
 /**
  * This is an entity that can be found in a target environment.

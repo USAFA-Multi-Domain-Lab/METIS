@@ -1,6 +1,6 @@
-import type { TTargetEnvJson } from 'metis/target-environments'
-import type { TTargetEnvMethods } from '../../../server/target-environments'
-import { TargetEnvironmentHook } from '../../../server/target-environments'
+import type { TTargetEnvJson } from '@shared/target-environments/TargetEnvironment'
+import type { TTargetEnvMethods } from '../../../server/target-environments/TargetEnvironmentHook'
+import { TargetEnvironmentHook } from '../../../server/target-environments/TargetEnvironmentHook'
 import { getCallerFolder } from '../toolbox/files'
 
 /**

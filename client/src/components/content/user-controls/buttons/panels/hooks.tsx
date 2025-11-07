@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { createStepperDefaults } from './elements/StepperSvg'
-import ButtonSvgEngine from './engines'
-import { TButtonSvgEngine, TButtonSvgFlow, TSvgLayout } from './types'
+import { ButtonSvgEngine } from './engines'
+import type { TButtonSvgEngine, TButtonSvgFlow, TSvgLayout } from './types'
 
 /**
  * Hook which creates a new button engine for use

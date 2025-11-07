@@ -1,4 +1,4 @@
-import type { TTargetEnvJson } from '.'
+import type { TTargetEnvJson } from './TargetEnvironment'
 
 /**
  * A registry of all target environments installed in the

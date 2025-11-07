@@ -1,8 +1,9 @@
-import { compute } from 'metis/client/toolbox'
-import { useDefaultProps } from 'metis/client/toolbox/hooks'
-import { TEffectType } from 'metis/missions'
-import { TMetisClientComponents } from 'src'
-import List, { createDefaultListProps, TList_P } from '../List'
+import type { TMetisClientComponents } from '@client/index'
+import { compute } from '@client/toolbox'
+import { useDefaultProps } from '@client/toolbox/hooks'
+import type { TEffectType } from '@shared/missions/effects/Effect'
+import type { TList_P } from '../List'
+import List, { createDefaultListProps } from '../List'
 
 /**
  * A component for displaying a list of effects.

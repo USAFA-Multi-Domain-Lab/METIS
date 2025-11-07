@@ -1,6 +1,7 @@
 // ErrorBoundary.tsx
-import { LoginRequiredError } from 'metis/client/toolbox/hooks'
-import { ErrorBoundary, FallbackProps } from 'react-error-boundary'
+import type { LoginRequiredError } from '@client/toolbox/hooks'
+import type { FallbackProps } from 'react-error-boundary'
+import { ErrorBoundary } from 'react-error-boundary'
 
 /**
  * Catches errors in the component tree and renders a fallback UI.

@@ -1,8 +1,8 @@
-import type { Request, Response } from 'express-serve-static-core'
-import { MissionModel } from '../../../../database'
-import { databaseLogger } from '../../../../logging'
-import type { ServerUser } from '../../../../users'
-import { ApiResponse, StatusError } from '../../library'
+import { MissionModel } from '@server/database/models/missions'
+import { databaseLogger } from '@server/logging'
+import type { ServerUser } from '@server/users/ServerUser'
+import { ApiResponse } from '../../library/ApiResponse'
+import { StatusError } from '../../library/StatusError'
 
 /**
  * This will copy a mission.
@@ -10,7 +10,7 @@ import { ApiResponse, StatusError } from '../../library'
  * @param response The express response.
  * @returns The copied mission in JSON format.
  */
-const copyMission = async (request: Request, response: Response) => {
+export const copyMission: TExpressHandler = async (request, response) => {
   // Extract the necessary data from the request.
   let body = request.body
   let { originalId, copyName } = body
@@ -49,5 +49,3 @@ const copyMission = async (request: Request, response: Response) => {
     return ApiResponse.error(error, response)
   }
 }
-
-export default copyMission

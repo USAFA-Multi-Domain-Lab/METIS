@@ -1,5 +1,5 @@
-import { compute } from 'metis/client/toolbox'
-import { Vector2D } from 'metis/toolbox'
+import { compute } from '@client/toolbox'
+import type { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
 import { useMemo } from 'react'
 import './Line.scss'
 

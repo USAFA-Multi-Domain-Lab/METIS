@@ -1,9 +1,10 @@
-import type { Request, Response } from 'express-serve-static-core'
-import { ServerEmittedError } from 'metis/connect'
+import { ServerLogin } from '@server/logins/ServerLogin'
+import { ServerWebSession } from '@server/logins/ServerWebSession'
+import { SessionServer } from '@server/sessions/SessionServer'
+import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
 import { databaseLogger } from '../../../../logging'
-import { ServerLogin, ServerWebSession } from '../../../../logins'
-import { SessionServer } from '../../../../sessions'
-import { ApiResponse, StatusError } from '../../library'
+import { ApiResponse } from '../../library/ApiResponse'
+import { StatusError } from '../../library/StatusError'
 
 /**
  * This will log the user out.
@@ -11,7 +12,7 @@ import { ApiResponse, StatusError } from '../../library'
  * @param response The express response.
  * @returns 200 response if the user was logged out successfully.
  */
-const logout = async (request: Request, response: Response) => {
+export const logout: TExpressHandler = async (request, response) => {
   try {
     let forceful: boolean = request.headers.forceful === 'true'
     // Grab the current login info from the session.
@@ -50,5 +51,3 @@ const logout = async (request: Request, response: Response) => {
     return ApiResponse.error(error, response)
   }
 }
-
-export default logout

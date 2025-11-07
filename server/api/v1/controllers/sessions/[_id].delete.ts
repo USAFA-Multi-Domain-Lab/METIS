@@ -1,15 +1,15 @@
-import type { Request, Response } from 'express-serve-static-core'
+import { SessionServer } from '@server/sessions/SessionServer'
+import type { ServerUser } from '@server/users/ServerUser'
 import { expressLogger } from '../../../../logging'
-import { SessionServer } from '../../../../sessions'
-import type { ServerUser } from '../../../../users'
-import { ApiResponse, StatusError } from '../../library'
+import { ApiResponse } from '../../library/ApiResponse'
+import { StatusError } from '../../library/StatusError'
 /**
  * This will delete a session.
  * @param request The express request.
  * @param response The express response.
  * @returns HTTP status code.
  */
-const deleteSession = (request: Request, response: Response) => {
+export const deleteSession: TExpressHandler = (request, response) => {
   try {
     let _id: string = request.params._id
     let session: SessionServer | undefined = SessionServer.get(_id)
@@ -49,5 +49,3 @@ const deleteSession = (request: Request, response: Response) => {
     return ApiResponse.error(error, response)
   }
 }
-
-export default deleteSession

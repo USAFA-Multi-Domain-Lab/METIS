@@ -1,9 +1,8 @@
-import type { Request, Response } from 'express-serve-static-core'
-import type { TMissionSaveJson } from 'metis/missions'
-import { MissionModel } from '../../../../database'
+import { MissionModel } from '@server/database/models/missions'
+import type { ServerUser } from '@server/users/ServerUser'
+import type { TMissionSaveJson } from '@shared/missions/Mission'
 import { databaseLogger } from '../../../../logging'
-import type { ServerUser } from '../../../../users'
-import { ApiResponse } from '../../library'
+import { ApiResponse } from '../../library/ApiResponse'
 
 /**
  * Creates a new mission.
@@ -11,7 +10,7 @@ import { ApiResponse } from '../../library'
  * @param response The express response.
  * @returns The new mission.
  */
-const createMission = async (request: Request, response: Response) => {
+export const createMission: TExpressHandler = async (request, response) => {
   let {
     name,
     versionNumber,
@@ -51,5 +50,3 @@ const createMission = async (request: Request, response: Response) => {
     return ApiResponse.error(error, response)
   }
 }
-
-export default createMission

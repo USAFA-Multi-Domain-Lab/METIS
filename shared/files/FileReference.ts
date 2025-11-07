@@ -1,6 +1,6 @@
+import { FileToolbox } from '@shared/toolbox/files/FileToolbox'
+import type { TCreatedByJson } from '@shared/users/User'
 import { MetisComponent } from '../MetisComponent'
-import { FileToolbox } from '../toolbox'
-import type { TCreatedByJson } from '../users'
 
 /**
  * A reference to a file stored in the METIS file store.

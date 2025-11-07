@@ -1,7 +1,9 @@
+import { StatusError } from '@server/api/v1/library/StatusError'
+import { ServerUser } from '@server/users/ServerUser'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import type { TUserJson } from '@shared/users/User'
 import bcryptjs from 'bcryptjs'
 import type { Request } from 'express'
-import { StringToolbox } from 'metis/toolbox'
-import type { TUserJson } from 'metis/users'
 import type { ProjectionType } from 'mongoose'
 import { Schema, model } from 'mongoose'
 import {
@@ -10,9 +12,7 @@ import {
   excludeSensitiveForFinds,
   populateCreatedByIfFlagged,
 } from '.'
-import { StatusError } from '../../api/v1/library'
 import { databaseLogger } from '../../logging'
-import { ServerUser } from '../../users'
 import { UserSchema } from './classes'
 import type {
   TPostUserQuery,

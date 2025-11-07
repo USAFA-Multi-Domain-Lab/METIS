@@ -1,4 +1,4 @@
-import type { TClientEvents } from '../types'
+import type { TClientEvents } from '..'
 import { WsEmittedError } from './WsEmittedError'
 
 /**

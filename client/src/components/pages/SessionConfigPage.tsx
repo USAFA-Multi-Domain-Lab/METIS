@@ -1,15 +1,16 @@
 import {
   useGlobalContext,
   useNavigationMiddleware,
-} from 'metis/client/context/global'
-import SessionClient from 'metis/client/sessions'
-import { compute } from 'metis/client/toolbox'
-import { useMountHandler } from 'metis/client/toolbox/hooks'
-import { useSessionRedirects } from 'metis/client/toolbox/hooks/sessions'
+} from '@client/context/global'
+
+import type { SessionClient } from '@client/sessions/SessionClient'
+import { compute } from '@client/toolbox'
+import { useMountHandler } from '@client/toolbox/hooks'
+import { useSessionRedirects } from '@client/toolbox/hooks/sessions'
 import { useState } from 'react'
 import { DefaultPageLayout } from '.'
 import Prompt from '../content/communication/Prompt'
-import { TNavigation_P } from '../content/general-layout/Navigation'
+import type { TNavigation_P } from '../content/general-layout/Navigation'
 import SessionConfig from '../content/session/SessionConfig'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
 import './SessionConfigPage.scss'

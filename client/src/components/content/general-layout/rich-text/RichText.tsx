@@ -1,20 +1,20 @@
+import { useGlobalContext } from '@client/context/global'
+import { compute } from '@client/toolbox'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
 import Underline from '@tiptap/extension-underline'
+import type { Editor } from '@tiptap/react'
 import {
   BubbleMenu,
-  Editor,
   EditorContent,
   FloatingMenu,
   useEditor,
 } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { all, createLowlight } from 'lowlight'
-import { useGlobalContext } from 'metis/client/context/global'
-import { compute } from 'metis/client/toolbox'
 import { useEffect } from 'react'
-import { TRichText_P } from '.'
+import type { TRichText_P } from '.'
 import ButtonSvgPanel from '../../user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from '../../user-controls/buttons/panels/hooks'
 import If from '../../util/If'

@@ -1,5 +1,9 @@
+import type {
+  TUserExistingJson,
+  TUserJson,
+  TUserSaveJson,
+} from '@shared/users/User'
 import type { Request } from 'express'
-import type { TUserExistingJson, TUserJson } from 'metis/users'
 import type {
   HydratedDocument,
   Model,
@@ -7,17 +11,13 @@ import type {
   Query,
   QueryOptions,
 } from 'mongoose'
+import type { TMetisDoc } from '.'
 
 /**
  * Represents a user in the database.
  * @see https://mongoosejs.com/docs/typescript/schemas.html#generic-parameters
  */
-export type TUser = TUserJson & {
-  /**
-   * Determines if the user is deleted.
-   */
-  deleted: boolean
-}
+export type TUser = TMetisDoc<TUserSaveJson>
 
 /**
  * Represents the methods available for a `UserModel`.

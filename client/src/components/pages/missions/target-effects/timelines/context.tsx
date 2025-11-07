@@ -1,6 +1,6 @@
-import { LocalContext } from 'metis/client/context/local'
-import { TEffectType } from 'metis/missions'
-import {
+import { LocalContext } from '@client/context/local'
+import type { TEffectType } from '@shared/missions/effects/Effect'
+import type {
   TEffectTimeline_E,
   TEffectTimeline_P,
   TEffectTimeline_S,

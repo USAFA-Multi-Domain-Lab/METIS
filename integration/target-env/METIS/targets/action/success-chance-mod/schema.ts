@@ -1,6 +1,6 @@
-import { TActionMetadata } from 'metis/target-environments/args/mission-component/action-arg'
-import Dependency from 'metis/target-environments/dependencies'
-import TargetSchema from '../../../../../library/target-env-classes/targets'
+import { TargetDependency } from '@shared/target-environments/targets/TargetDependency'
+import type { TActionMetadata } from '@shared/target-environments/types'
+import { TargetSchema } from '../../../../../library/target-env-classes/targets'
 
 /**
  * A target available in the METIS target environment that enables a user
@@ -53,7 +53,7 @@ const SuccessChanceMod = new TargetSchema({
       max: 100,
       unit: '%',
       groupingId: 'action',
-      dependencies: [Dependency.ACTION('actionMetadata')],
+      dependencies: [TargetDependency.ACTION('actionMetadata')],
       default: 0,
       tooltipDescription:
         `This allows you to positively or negatively affect the chance of success for all actions within the node. A positive value increases the chance of success, while a negative value decreases the chance of success.\n` +

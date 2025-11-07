@@ -1,8 +1,8 @@
-import { DetailDropdown } from 'metis/client/components/content/form/dropdown/'
-import { ClientEffect } from 'metis/client/missions/effects'
-import ClientMissionFile from 'metis/client/missions/files'
-import { compute } from 'metis/client/toolbox'
-import { TMissionComponentArg } from 'metis/target-environments/args/mission-component'
+import { DetailDropdown } from '@client/components/content/form/dropdown/'
+import type { ClientEffect } from '@client/missions/effects/ClientEffect'
+import type { ClientMissionFile } from '@client/missions/files/ClientMissionFile'
+import { compute } from '@client/toolbox'
+import type { TMissionComponentArg } from '@shared/target-environments/args/mission-component/MissionComponentArg'
 
 /**
  * Renders a dropdown for the argument whose type is `"file"`.

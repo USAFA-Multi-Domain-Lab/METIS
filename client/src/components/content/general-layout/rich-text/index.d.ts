@@ -1,5 +1,4 @@
-import React from 'react'
-import { EditorEvents } from '@tiptap/react'
+import type { EditorEvents } from '@tiptap/react'
 
 /**
  * Props for `RichText` component.

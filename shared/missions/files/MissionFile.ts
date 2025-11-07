@@ -1,4 +1,4 @@
-import type { TFileReferenceJson } from '../../files'
+import type { TFileReferenceJson } from '@shared/files/FileReference'
 import { MissionForce } from '../forces/MissionForce'
 import {
   MissionComponent,

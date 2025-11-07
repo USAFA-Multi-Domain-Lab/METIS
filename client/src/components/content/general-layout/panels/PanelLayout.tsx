@@ -1,6 +1,6 @@
-import { compute } from 'metis/client/toolbox'
-import { useMountHandler, useUnmountHandler } from 'metis/client/toolbox/hooks'
-import { ClassList } from 'metis/toolbox'
+import { compute } from '@client/toolbox'
+import { useMountHandler, useUnmountHandler } from '@client/toolbox/hooks'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import React, {
   Children,
   isValidElement,

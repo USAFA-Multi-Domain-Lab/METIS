@@ -1,4 +1,4 @@
-import { UserModel } from '../../../database'
+import { UserModel } from '@server/database/models/users'
 import { StatusError } from './StatusError'
 
 /**

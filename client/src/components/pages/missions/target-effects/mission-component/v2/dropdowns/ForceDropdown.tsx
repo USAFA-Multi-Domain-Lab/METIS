@@ -1,6 +1,6 @@
-import { DetailDropdown } from 'metis/client/components/content/form/dropdown/'
-import ClientMissionForce from 'metis/client/missions/forces'
-import { TForceDropdown_P } from '../types'
+import { DetailDropdown } from '@client/components/content/form/dropdown/'
+import type { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
+import type { TForceDropdown_P } from '..'
 
 export default function (props: TForceDropdown_P): TReactElement {
   const { active } = props

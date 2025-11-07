@@ -1,8 +1,8 @@
-import type { Request, Response } from 'express-serve-static-core'
-import type { TMissionSaveJson } from 'metis/missions'
-import { MissionModel } from '../../../../database'
+import { MissionModel } from '@server/database/models/missions'
+import type { TMissionSaveJson } from '@shared/missions/Mission'
 import { databaseLogger } from '../../../../logging'
-import { ApiResponse, StatusError } from '../../library'
+import { ApiResponse } from '../../library/ApiResponse'
+import { StatusError } from '../../library/StatusError'
 
 /**
  * This will update a mission.
@@ -10,7 +10,7 @@ import { ApiResponse, StatusError } from '../../library'
  * @param response The express response.
  * @returns The updated mission in JSON format.
  */
-const updateMission = async (request: Request, response: Response) => {
+export const updateMission: TExpressHandler = async (request, response) => {
   // Extract the necessary data from the request.
   let missionUpdates = request.body as Partial<TMissionSaveJson>
   let { _id: missionId, name } = missionUpdates
@@ -43,5 +43,3 @@ const updateMission = async (request: Request, response: Response) => {
     return ApiResponse.error(error, response)
   }
 }
-
-export default updateMission

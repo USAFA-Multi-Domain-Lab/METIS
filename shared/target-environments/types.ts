@@ -1,44 +1,4 @@
-import type { TargetDependency } from '.'
-
-export type { TTargetEnv, TTargetEnvJson } from './TargetEnvironment'
-
-export type {
-  TMissionComponentArg,
-  TMissionComponentArgJson,
-} from './args/mission-component/MissionComponentArg'
-
-export type { TTargetArg, TTargetArgJson } from './args/Arg'
-export type { TBooleanArg, TBooleanArgJson } from './args/BooleanArg'
-export type {
-  TDropdownArg,
-  TDropdownArgJson,
-  TDropdownArgOption,
-  TDropdownArgOptionJson,
-  TDropdownArgOptionVal,
-  TOptDropdownArgOptionVal,
-  TReqDropdownArgOptionVal,
-} from './args/DropdownArg'
-export type {
-  TLargeStringArg,
-  TLargeStringArgJson,
-} from './args/LargeStringArg'
-export type { TNumberArg, TNumberArgJson } from './args/NumberArg'
-export type { TStringArg, TStringArgJson } from './args/StringArg'
-
-export type {
-  TTarget,
-  TTargetJson,
-  TTargetJsonOptions,
-  TTargetOptions,
-  TTargetScript,
-} from './targets/Target'
-export type {
-  TDependency,
-  TDependencyArg,
-  TDependencyBase,
-  TDependencyCondition,
-  TDependencyName,
-} from './targets/TargetDependency'
+import type { TargetDependency } from './targets/TargetDependency'
 
 /**
  * The possible metadata schema for a node target-argument

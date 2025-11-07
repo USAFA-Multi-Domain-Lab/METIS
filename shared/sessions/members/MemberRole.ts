@@ -1,6 +1,6 @@
-import type { TNonEmptyArray } from '../../toolbox'
+import type { TNonEmptyArray } from '@shared/toolbox/arrays/ArrayToolbox'
+import type { TSessionAuthParam } from './MemberPermission'
 import { MemberPermission } from './MemberPermission'
-import type { TSessionAuthParam } from './types'
 
 /* -- CONSTANTS -- */
 

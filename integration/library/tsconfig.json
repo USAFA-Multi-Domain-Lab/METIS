@@ -3,18 +3,18 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "metis/target-environments": ["../../shared/target-environments"],
-      "metis/target-environments/*": ["../../shared/target-environments/*"],
-      "metis/toolbox/ObjectToolbox": [
+      "@shared/target-environments": ["../../shared/target-environments"],
+      "@shared/target-environments/*": ["../../shared/target-environments/*"],
+      "@shared/toolbox/objects/ObjectToolbox": [
         "../../shared/toolbox/objects/ObjectToolbox"
       ],
-      "metis/toolbox/numbers/NumberToolbox": [
+      "@shared/toolbox/numbers/NumberToolbox": [
         "../../shared/toolbox/numbers/NumberToolbox"
       ],
-      "metis/toolbox/VersionToolbox": [
+      "@shared/toolbox/strings/VersionToolbox": [
         "../../shared/toolbox/strings/VersionToolbox"
       ],
-      "metis/toolbox/BooleanToolbox": [
+      "@shared/toolbox/booleans/BooleanToolbox": [
         "../../shared/toolbox/booleans/BooleanToolbox"
       ]
     },

@@ -1,6 +1,5 @@
-import type { Request, Response } from 'express-serve-static-core'
-import { FileReferenceModel } from '../../../../database/models/file-references'
-import { ApiResponse } from '../../library'
+import { FileReferenceModel } from '@server/database/models/file-references'
+import { ApiResponse } from '../../library/ApiResponse'
 
 /**
  * Retrieves all file references from the database.
@@ -9,9 +8,7 @@ import { ApiResponse } from '../../library'
  * @resolves With the response to send to the client.
  * @rejects If an error occurs.
  */
-const getFiles = async (request: Request, response: Response) => {
+export const getFiles: TExpressHandler = async (_, response) => {
   const referenceJson = await FileReferenceModel.find().exec()
   return ApiResponse.sendJson(response, referenceJson)
 }
-
-export default getFiles

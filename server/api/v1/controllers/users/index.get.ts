@@ -1,9 +1,9 @@
-import type { Request, Response } from 'express-serve-static-core'
-import { UserModel } from '../../../../database'
-import { databaseLogger } from '../../../../logging'
-import { ServerLogin } from '../../../../logins'
-import { ServerUser } from '../../../../users'
-import { ApiResponse, StatusError } from '../../library'
+import { UserModel } from '@server/database/models/users'
+import { databaseLogger } from '@server/logging'
+import { ServerLogin } from '@server/logins/ServerLogin'
+import { ServerUser } from '@server/users/ServerUser'
+import { ApiResponse } from '../../library/ApiResponse'
+import { StatusError } from '../../library/StatusError'
 
 /**
  * This will retrieve all users.
@@ -11,7 +11,7 @@ import { ApiResponse, StatusError } from '../../library'
  * @param response The express response.
  * @returns The users in JSON format.
  */
-const getUsers = async (request: Request, response: Response) => {
+export const getUsers: TExpressHandler = async (request, response) => {
   // Get the user that is logged in.
   let login: ServerLogin | undefined = ServerLogin.get(request.session.userId)
   if (!login) throw new StatusError('User is not logged in.', 401)
@@ -48,5 +48,3 @@ const getUsers = async (request: Request, response: Response) => {
     return ApiResponse.error(error, response)
   }
 }
-
-export default getUsers

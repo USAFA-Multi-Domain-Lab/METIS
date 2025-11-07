@@ -1,8 +1,8 @@
-import Tooltip from 'metis/client/components/content/communication/Tooltip'
-import { compute } from 'metis/client/toolbox'
-import { ClassList } from 'metis/toolbox'
-import ButtonSvgEngine from '../engines'
-import { TTextSvg_PK } from '../types'
+import Tooltip from '@client/components/content/communication/Tooltip'
+import { compute } from '@client/toolbox'
+import { ClassList } from '@shared/toolbox/html/ClassList'
+import { ButtonSvgEngine } from '../engines'
+import type { TTextSvg_PK } from '../types'
 import './TextSvg.scss'
 
 /**

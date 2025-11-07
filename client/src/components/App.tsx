@@ -1,19 +1,17 @@
-import backgroundImage from 'metis/client/assets/images/landing-page-img.webp'
-import ServerConnection from 'metis/client/connect/servers'
-import { useGlobalContext } from 'metis/client/context/global'
-import MetisInfo from 'metis/client/info'
-import SessionClient from 'metis/client/sessions'
-import { ClientTargetEnvironment } from 'metis/client/target-environments'
-import { compute } from 'metis/client/toolbox'
-import { removeKey } from 'metis/client/toolbox/components'
-import {
-  LoginRequiredError,
-  useEventListener,
-} from 'metis/client/toolbox/hooks'
-import ClientUser from 'metis/client/users'
-import { TLogin } from 'metis/logins'
-import { ClassList } from 'metis/toolbox'
-import { ReactNode, useEffect, useRef } from 'react'
+import backgroundImage from '@client/assets/images/landing-page-img.webp'
+import type { ServerConnection } from '@client/connect/ServerConnection'
+import { useGlobalContext } from '@client/context/global'
+import { MetisInfo } from '@client/info/MetisInfo'
+import type { SessionClient } from '@client/sessions/SessionClient'
+import { ClientTargetEnvironment } from '@client/target-environments/ClientTargetEnvironment'
+import { compute } from '@client/toolbox'
+import { removeKey } from '@client/toolbox/components'
+import { LoginRequiredError, useEventListener } from '@client/toolbox/hooks'
+import type { ClientUser } from '@client/users/ClientUser'
+import type { TLogin } from '@shared/logins'
+import { ClassList } from '@shared/toolbox/html/ClassList'
+import type { ReactNode } from 'react'
+import { useEffect, useRef } from 'react'
 import './App.scss'
 import ConnectionStatus from './content/communication/ConnectionStatus'
 import Notifications from './content/communication/Notifications'
@@ -25,7 +23,7 @@ import {
 import { DevOptions } from './content/debug/DevOptions'
 import Markdown, { MarkdownTheme } from './content/general-layout/Markdown'
 import ButtonMenu from './content/user-controls/buttons/ButtonMenu'
-import { TButtonText_P } from './content/user-controls/buttons/ButtonText'
+import type { TButtonText_P } from './content/user-controls/buttons/ButtonText'
 import { PAGE_REGISTRY } from './pages'
 import AuthPage from './pages/AuthPage'
 import ErrorPage from './pages/ErrorPage'
@@ -220,7 +218,14 @@ export default function (props: {}): TReactElement | null {
           // Or, if the logged in user is in a session,
           // then switch to the session page.
           else if (login.sessionId !== null) {
-            let session: SessionClient = await server.$fetchCurrentSession()
+            let session: SessionClient | null =
+              await server.$fetchCurrentSession()
+
+            // Handle case where session could not be found.
+            if (session === null) {
+              throw new Error('Session state is out of sync with the server.')
+            }
+
             // Navigate based on the session state.
             switch (session.state) {
               case 'unstarted':

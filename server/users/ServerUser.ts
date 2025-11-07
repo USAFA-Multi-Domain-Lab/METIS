@@ -1,17 +1,19 @@
+import { StatusError } from '@server/api/v1/library/StatusError'
+import { generateValidationError } from '@server/database/validation'
+import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
 import type {
   TCreatedByJson,
-  TUserAccess,
-  TUserAccessId,
   TUserExistingJson,
   TUserJson,
   TUserOptions,
-  TUserPermission,
-} from 'metis/users'
-import { User, UserAccess, UserPermission } from 'metis/users'
-import type { AnyObject, CallbackWithoutResultAndOptionalError } from 'mongoose'
+} from '@shared/users/User'
+import { User } from '@shared/users/User'
+import type { TUserAccess, TUserAccessId } from '@shared/users/UserAccess'
+import { UserAccess } from '@shared/users/UserAccess'
+import type { TUserPermission } from '@shared/users/UserPermission'
+import { UserPermission } from '@shared/users/UserPermission'
+import type { CallbackWithoutResultAndOptionalError } from 'mongoose'
 import mongoose from 'mongoose'
-import { StatusError } from '../api/v1/library'
-import { MetisDatabase } from '../database'
 import type { TUserModel } from '../database/models/types'
 import type { TTargetEnvExposedUser } from '../target-environments/TargetEnvContext'
 
@@ -58,8 +60,8 @@ export class ServerUser extends User<TMetisServerComponents> {
    * @returns Any errors that are found.
    */
   private static validateAllIds = (
-    cursor: AnyObject | AnyObject[],
-    existingIds: AnyObject = {},
+    cursor: TAnyObject | TAnyObject[],
+    existingIds: TAnyObject = {},
   ): TUserValidationResults => {
     // If the cursor is an object, not an array, and not an ObjectId...
     if (
@@ -70,7 +72,7 @@ export class ServerUser extends User<TMetisServerComponents> {
       // ...and it has an _id property and the _id already exists...
       if (cursor._id && cursor._id in existingIds) {
         // ...then set the error and return.
-        let error = MetisDatabase.generateValidationError(
+        let error = generateValidationError(
           `Error in user:\nDuplicate _id used (${cursor._id}).`,
         )
         return { error }
@@ -81,7 +83,7 @@ export class ServerUser extends User<TMetisServerComponents> {
         !mongoose.isObjectIdOrHexString(cursor._id)
       ) {
         // ...then set the error and return.
-        let error = MetisDatabase.generateValidationError(
+        let error = generateValidationError(
           `Error in user:\nInvalid _id used (${cursor._id}).`,
         )
         return { error }
@@ -174,7 +176,7 @@ export class ServerUser extends User<TMetisServerComponents> {
     //  the password is not set.
     if (userJson.accessId === 'system' && userJson.password) {
       return {
-        error: MetisDatabase.generateValidationError(
+        error: generateValidationError(
           `Error in user:\nSystem users cannot have passwords.`,
         ),
       }
@@ -183,7 +185,7 @@ export class ServerUser extends User<TMetisServerComponents> {
     // that the password is set, if the user is new.
     else if (userJson.accessId !== 'system' && !userJson.password && isNew) {
       return {
-        error: MetisDatabase.generateValidationError(
+        error: generateValidationError(
           `Error in user:\nNon-system users must have passwords.`,
         ),
       }
@@ -238,7 +240,7 @@ export class ServerUser extends User<TMetisServerComponents> {
    */
   public static validateUsername(username: TUserJson['username']): void {
     if (!ServerUser.isValidUsername(username)) {
-      throw MetisDatabase.generateValidationError(
+      throw generateValidationError(
         `Error in user:\nUsername "${username}" is not valid.`,
       )
     }
@@ -250,7 +252,7 @@ export class ServerUser extends User<TMetisServerComponents> {
    */
   public static validateAccessId(accessId: TUserAccess['_id']): void {
     if (!UserAccess.isValidAccessId(accessId)) {
-      throw MetisDatabase.generateValidationError(
+      throw generateValidationError(
         `Error in user:\nAccess ID "${accessId}" is not valid.`,
       )
     }
@@ -264,7 +266,7 @@ export class ServerUser extends User<TMetisServerComponents> {
     expressPermissionId: TUserPermission['_id'],
   ): void {
     if (!UserPermission.isValidPermissionId(expressPermissionId)) {
-      throw MetisDatabase.generateValidationError(
+      throw generateValidationError(
         `Error in user:\nExpress permission ID "${expressPermissionId}" is not valid.`,
       )
     }
@@ -278,7 +280,7 @@ export class ServerUser extends User<TMetisServerComponents> {
     name: TUserJson['firstName'] | TUserJson['lastName'],
   ): void {
     if (!ServerUser.isValidName(name)) {
-      throw MetisDatabase.generateValidationError(
+      throw generateValidationError(
         `Error in user:\nName "${name}" is not valid.`,
       )
     }
@@ -292,7 +294,7 @@ export class ServerUser extends User<TMetisServerComponents> {
     password: NonNullable<TUserJson['password']>,
   ): void {
     if (!ServerUser.isValidHashedPassword(password)) {
-      throw MetisDatabase.generateValidationError(
+      throw generateValidationError(
         `Error in user:\nPassword "${password}" is not valid.`,
       )
     }

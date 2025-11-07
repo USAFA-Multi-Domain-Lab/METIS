@@ -1,10 +1,9 @@
-import type { Request, Response } from 'express-serve-static-core'
-import type { TUserJson } from 'metis/users'
-import { UserModel } from '../../../../database'
-import { hashPassword } from '../../../../database/models/users'
-import { databaseLogger } from '../../../../logging'
-import type { ServerLogin } from '../../../../logins'
-import { ApiResponse, StatusError } from '../../library'
+import { hashPassword, UserModel } from '@server/database/models/users'
+import { databaseLogger } from '@server/logging'
+import type { ServerLogin } from '@server/logins/ServerLogin'
+import type { TUserJson } from '@shared/users/User'
+import { ApiResponse } from '../../library/ApiResponse'
+import { StatusError } from '../../library/StatusError'
 import { preventSystemUserWrite } from '../../library/users'
 
 /**
@@ -13,7 +12,7 @@ import { preventSystemUserWrite } from '../../library/users'
  * @param response The express response.
  * @returns The updated user in JSON format.
  */
-const resetPassword = async (request: Request, response: Response) => {
+export const resetPassword: TExpressHandler = async (request, response) => {
   // Extract the user updates from the request body.
   let userUpdates = request.body
   let { password } = userUpdates as Partial<TUserJson>
@@ -57,5 +56,3 @@ const resetPassword = async (request: Request, response: Response) => {
     return ApiResponse.error(error, response)
   }
 }
-
-export default resetPassword

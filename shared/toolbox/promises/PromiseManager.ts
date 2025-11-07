@@ -1,5 +1,5 @@
-import type { TUserPermissionId, User } from '../../users'
-import type { TPromiseManagerOptions } from './types'
+import type { User } from '../../users/User'
+import type { TUserPermissionId } from '../../users/UserPermission'
 
 /**
  * Manages multiple promises at once in an efficient way.
@@ -76,4 +76,20 @@ export class PromiseManager<T = any> {
   public async all(): Promise<T[]> {
     return Promise.all(this._promises)
   }
+}
+
+/* -- TYPES -- */
+
+/**
+ * Options for `PromiseManager` constructor.
+ */
+export interface TPromiseManagerOptions {
+  /**
+   * A user object that will allow for promises to
+   * be added conditionally based on this user's
+   * authorization.
+   * @see `PromiseManager.authorize` method.
+   * @default null
+   */
+  authUser?: User | null
 }

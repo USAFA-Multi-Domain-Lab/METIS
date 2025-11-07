@@ -1,11 +1,12 @@
+import { TargetEnvSchema } from '@integrations/target-env-classes/index'
+import { TargetSchema } from '@integrations/target-env-classes/targets'
+import { ServerFileToolbox } from '@server/toolbox/files/ServerFileToolbox'
+import { TargetEnvironment } from '@shared/target-environments/TargetEnvironment'
+import { TargetEnvRegistry } from '@shared/target-environments/TargetEnvRegistry'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import fs from 'fs'
-import { TargetEnvSchema } from 'metis/integration/target-env-classes'
-import { TargetSchema } from 'metis/integration/target-env-classes/targets'
-import { TargetEnvironment, TargetEnvRegistry } from 'metis/target-environments'
-import { StringToolbox } from 'metis/toolbox'
 import path from 'path'
 import type { SessionServer } from '../sessions/SessionServer'
-import { ServerFileToolbox } from '../toolbox/files'
 import { ServerTarget } from './ServerTarget'
 import type {
   TargetEnvironmentHook,

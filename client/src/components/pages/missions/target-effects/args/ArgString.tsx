@@ -1,6 +1,6 @@
-import { ClientEffect } from 'metis/client/missions/effects'
-import { usePostInitEffect } from 'metis/client/toolbox/hooks'
-import { TStringArg } from 'metis/target-environments/args/string-arg'
+import type { ClientEffect } from '@client/missions/effects/ClientEffect'
+import { usePostInitEffect } from '@client/toolbox/hooks'
+import type { TStringArg } from '@shared/target-environments/args/StringArg'
 import { useEffect, useState } from 'react'
 import { DetailString } from '../../../../content/form/DetailString'
 

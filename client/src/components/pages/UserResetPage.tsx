@@ -1,19 +1,16 @@
-import { useGlobalContext } from 'metis/client/context/global'
-import { compute } from 'metis/client/toolbox'
-import { useMountHandler, usePostInitEffect } from 'metis/client/toolbox/hooks'
-import ClientUser from 'metis/client/users'
+import { useGlobalContext } from '@client/context/global'
+import { compute } from '@client/toolbox'
+import { useMountHandler, usePostInitEffect } from '@client/toolbox/hooks'
+import { ClientUser } from '@client/users/ClientUser'
 import { useState } from 'react'
-import { DefaultPageLayout, TPage_P } from '.'
+import type { TPage_P } from '.'
+import { DefaultPageLayout } from '.'
 import { DetailLocked } from '../content/form/DetailLocked'
 import { DetailString } from '../content/form/DetailString'
-import {
-  ProfileButton,
-  TNavigation_P,
-} from '../content/general-layout/Navigation'
-import {
-  ButtonText,
-  TButtonTextDisabled,
-} from '../content/user-controls/buttons/ButtonText'
+import type { TNavigation_P } from '../content/general-layout/Navigation'
+import { ProfileButton } from '../content/general-layout/Navigation'
+import type { TButtonTextDisabled } from '../content/user-controls/buttons/ButtonText'
+import { ButtonText } from '../content/user-controls/buttons/ButtonText'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
 import './UserResetPage.scss'
 

@@ -1,8 +1,9 @@
-import { compute } from 'metis/client/toolbox'
-import { ClassList } from 'metis/toolbox'
+import { compute } from '@client/toolbox'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import React, { Children, isValidElement, useContext, useState } from 'react'
 import './Panel.scss'
-import PanelView, { TPanelView_P } from './PanelView'
+import type { TPanelView_P } from './PanelView'
+import PanelView from './PanelView'
 import PanelTabBar from './tabs/PanelTabBar'
 
 /**

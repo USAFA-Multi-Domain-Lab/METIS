@@ -1,10 +1,10 @@
-import fs from 'fs'
+import type { TTargetArgJson } from '@shared/target-environments/args/Arg'
+import { TargetMigrationRegistry } from '@shared/target-environments/targets/migrations/TargetMigrationRegistry'
 import type {
-  TTargetArgJson,
   TTargetJson,
   TTargetScript,
-} from 'metis/target-environments'
-import { TargetMigrationRegistry } from 'metis/target-environments'
+} from '@shared/target-environments/targets/Target'
+import fs from 'fs'
 import path from 'path'
 
 /**

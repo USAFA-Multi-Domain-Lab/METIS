@@ -1,12 +1,13 @@
+import { generateValidationError } from '@server/database/validation'
+import type { TTargetEnvExposedForce } from '@server/target-environments/TargetEnvContext'
 import type {
   TMissionForceJson,
   TMissionForceSaveJson,
-  TMissionNodeJson,
-} from 'metis/missions'
-import { MissionForce } from 'metis/missions'
-import { NumberToolbox, StringToolbox } from 'metis/toolbox'
-import { MetisDatabase } from '../../database'
-import type { TTargetEnvExposedForce } from '../../target-environments'
+} from '@shared/missions/forces/MissionForce'
+import { MissionForce } from '@shared/missions/forces/MissionForce'
+import type { TMissionNodeJson } from '@shared/missions/nodes/MissionNode'
+import { NumberToolbox } from '@shared/toolbox/numbers/NumberToolbox'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { ServerMissionNode } from '../nodes/ServerMissionNode'
 import type { ServerMission } from '../ServerMission'
 import { ServerOutput } from './ServerOutput'
@@ -130,7 +131,7 @@ export class ServerMissionForce extends MissionForce<TMetisServerComponents> {
 
     // Make sure the nodes are not empty.
     if (nodes.length < this.NODE_DATA_MIN_LENGTH) {
-      throw MetisDatabase.generateValidationError(
+      throw generateValidationError(
         `There must be at least ${this.NODE_DATA_MIN_LENGTH} node(s) within the force.`,
       )
     }
@@ -141,7 +142,7 @@ export class ServerMissionForce extends MissionForce<TMetisServerComponents> {
         node.executable &&
         node.actions.length < ServerMissionNode.ACTIONS_MIN_LENGTH
       ) {
-        throw MetisDatabase.generateValidationError(
+        throw generateValidationError(
           `The node "{ _id: ${node._id}, name: ${node.name} }" must have at least ${ServerMissionNode.ACTIONS_MIN_LENGTH} action(s).`,
         )
       }
@@ -149,14 +150,14 @@ export class ServerMissionForce extends MissionForce<TMetisServerComponents> {
       // Make sure the node's color is a valid hex color.
       let isValidColor = StringToolbox.HEX_COLOR_REGEX.test(node.color)
       if (!isValidColor) {
-        throw MetisDatabase.generateValidationError(
+        throw generateValidationError(
           `The node "{ _id: ${node._id}, name: ${node.name} }" has an invalid color "${node.color}".`,
         )
       }
 
       // Make sure the node's local key is unique within the force.
       if (nodeKeys.includes(node.localKey)) {
-        throw MetisDatabase.generateValidationError(
+        throw generateValidationError(
           `The node "{ _id: ${node._id}, name: ${node.name} }" has a duplicate local key "${node.localKey}".`,
         )
       }

@@ -1,6 +1,6 @@
+import { FileToolbox } from '@shared/toolbox/files/FileToolbox'
 import archiver from 'archiver'
 import fs from 'fs'
-import { FileToolbox } from 'metis/toolbox'
 import path from 'path'
 import unzipper from 'unzipper'
 

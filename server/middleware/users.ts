@@ -1,5 +1,6 @@
+import type { TUserJson } from '@shared/users/User'
+import type { TUserPermissionId } from '@shared/users/UserPermission'
 import type { NextFunction, Request, Response } from 'express-serve-static-core'
-import type { TUserJson, TUserPermissionId } from 'metis/users'
 import { UserModel } from '../database/models/users'
 import { ServerLogin } from '../logins/ServerLogin'
 import type { ServerSessionMember } from '../sessions/ServerSessionMember'

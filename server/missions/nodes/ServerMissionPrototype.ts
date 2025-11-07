@@ -1,4 +1,4 @@
-import { MissionPrototype } from 'metis/missions'
+import { MissionPrototype } from '@shared/missions/nodes/MissionPrototype'
 
 /**
  * Class for managing mission prototypes on the server.

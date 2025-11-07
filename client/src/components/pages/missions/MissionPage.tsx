@@ -1,51 +1,54 @@
-import { useMissionItemButtonCallbacks } from 'metis/client/components/content/data/lists/implementations/missions/item-buttons'
-import { TCreateEffect_P } from 'metis/client/components/content/session/mission-map/ui/overlay/modals/CreateEffect'
+import Prompt from '@client/components/content/communication/Prompt'
+import type { TFileReferenceList_P } from '@client/components/content/data/lists/implementations/FileReferenceList'
+import FileReferenceList from '@client/components/content/data/lists/implementations/FileReferenceList'
+import type { TMissionFileList_P } from '@client/components/content/data/lists/implementations/MissionFileList'
+import MissionFileList from '@client/components/content/data/lists/implementations/MissionFileList'
+import { useMissionItemButtonCallbacks } from '@client/components/content/data/lists/implementations/missions/item-buttons'
+import type { TNavigation_P } from '@client/components/content/general-layout/Navigation'
+import {
+  HomeButton,
+  ProfileButton,
+} from '@client/components/content/general-layout/Navigation'
+import Panel from '@client/components/content/general-layout/panels/Panel'
+import PanelLayout from '@client/components/content/general-layout/panels/PanelLayout'
+import PanelView from '@client/components/content/general-layout/panels/PanelView'
+import type { TCreateEffect_P } from '@client/components/content/session/mission-map/ui/overlay/modals/CreateEffect'
+import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
 import {
   useGlobalContext,
   useNavigationMiddleware,
-} from 'metis/client/context/global'
-import ClientFileReference from 'metis/client/files/references'
-import ClientMission from 'metis/client/missions'
-import ClientMissionAction from 'metis/client/missions/actions'
-import { ClientEffect, TClientEffectHost } from 'metis/client/missions/effects'
-import ClientMissionFile from 'metis/client/missions/files'
-import ClientMissionForce from 'metis/client/missions/forces'
-import ClientMissionNode from 'metis/client/missions/nodes'
-import ClientMissionPrototype from 'metis/client/missions/nodes/prototypes'
-import { compute } from 'metis/client/toolbox'
+} from '@client/context/global'
+import { ClientFileReference } from '@client/files/ClientFileReference'
+import type { TMetisClientComponents } from '@client/index'
+import { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
+import { ClientMission } from '@client/missions/ClientMission'
+import type { TClientEffectHost } from '@client/missions/effects/ClientEffect'
+import { ClientEffect } from '@client/missions/effects/ClientEffect'
+import { ClientMissionFile } from '@client/missions/files/ClientMissionFile'
+import { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
+import { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
+import { ClientMissionPrototype } from '@client/missions/nodes/ClientMissionPrototype'
+import { compute } from '@client/toolbox'
 import {
   useBeforeunload,
   useEventListener,
   useMountHandler,
   useRequireLogin,
-} from 'metis/client/toolbox/hooks'
-import {
-  MissionComponent,
+} from '@client/toolbox/hooks'
+import type {
   TEffectTrigger,
   TEffectType,
+} from '@shared/missions/effects/Effect'
+import type {
+  MissionComponent,
   TMissionComponentDefect,
-} from 'metis/missions'
-import { TNonEmptyArray } from 'metis/toolbox'
-import React, { useEffect, useRef, useState } from 'react'
-import { TMetisClientComponents } from 'src'
-import { DefaultPageLayout, TPage_P } from '..'
-import Prompt from '../../content/communication/Prompt'
-import FileReferenceList, {
-  TFileReferenceList_P,
-} from '../../content/data/lists/implementations/FileReferenceList'
-import MissionFileList, {
-  TMissionFileList_P,
-} from '../../content/data/lists/implementations/MissionFileList'
-import {
-  HomeButton,
-  ProfileButton,
-  TNavigation_P,
-} from '../../content/general-layout/Navigation'
-import Panel from '../../content/general-layout/panels/Panel'
-import PanelLayout from '../../content/general-layout/panels/PanelLayout'
-import PanelView from '../../content/general-layout/panels/PanelView'
-import { useButtonSvgEngine } from '../../content/user-controls/buttons/panels/hooks'
-import { MissionPageContext, TMissionPageContextData } from './context'
+} from '@shared/missions/MissionComponent'
+import type { TNonEmptyArray } from '@shared/toolbox/arrays/ArrayToolbox'
+import { useEffect, useRef, useState } from 'react'
+import type { TPage_P } from '..'
+import { DefaultPageLayout } from '..'
+import type { TMissionPageContextData } from './context'
+import { MissionPageContext } from './context'
 import ActionEntry from './entries/implementations/ActionEntry'
 import EffectEntry from './entries/implementations/EffectEntry'
 import ForceEntry from './entries/implementations/ForceEntry'

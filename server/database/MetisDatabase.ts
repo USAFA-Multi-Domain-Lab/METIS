@@ -1,15 +1,16 @@
+import { MissionImport } from '@server/missions/imports/MissionImport'
+import { DateToolbox } from '@shared/toolbox/dates/DateToolbox'
+import type { TUserJson } from '@shared/users/User'
+import { User } from '@shared/users/User'
 import { exec } from 'child_process'
-import { DateToolbox } from 'metis/toolbox'
-import type { TUserJson } from 'metis/users'
-import { User } from 'metis/users'
 import type { ConnectOptions } from 'mongoose'
 import mongoose from 'mongoose'
 import { MetisServer } from '..'
 import { databaseLogger } from '../logging'
-import { MissionImport } from '../missions'
 import { InfoModel } from './models/info'
 import { MissionModel } from './models/missions'
 import { UserModel, hashPassword } from './models/users'
+import { ERROR_BAD_DATA, generateValidationError } from './validation'
 
 /**
  * Represents a connection to the Metis database.
@@ -440,7 +441,7 @@ export class MetisDatabase {
   /**
    * Identifier for an error thrown due to bad data.
    */
-  public static readonly ERROR_BAD_DATA: string = 'BadDataError'
+  public static readonly ERROR_BAD_DATA: string = ERROR_BAD_DATA
 
   /**
    * Location of the database build files.
@@ -468,8 +469,6 @@ export class MetisDatabase {
    * @returns The validation error.
    */
   public static generateValidationError(message: string): Error {
-    let error = new Error(message)
-    error.name = this.ERROR_BAD_DATA
-    return error
+    return generateValidationError(message)
   }
 }

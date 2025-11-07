@@ -4,8 +4,8 @@ import defineRequests, {
   RequestBodyFilters,
 } from '../../../middleware/requests'
 import { auth } from '../../../middleware/users'
-import getTargetEnvironments from '../controllers/target-environments/index.get'
-import migrateEffectArgs from '../controllers/target-environments/migrate/effect-args.post'
+import { getTargetEnvironments } from '../controllers/target-environments/index.get'
+import { migrateEffectArgs } from '../controllers/target-environments/migrate/effect-args.post'
 import type { TMetisRouterMap } from '../library/MetisRouter'
 
 export const routerMap: TMetisRouterMap = (

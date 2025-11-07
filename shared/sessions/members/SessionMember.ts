@@ -1,10 +1,9 @@
 import { MetisComponent } from '../../MetisComponent'
-import type { MissionForce, TForce } from '../../missions'
-import type { TUser, TUserExistingJson } from '../../users'
+import type { MissionForce, TForce } from '../../missions/forces/MissionForce'
+import type { TUser, TUserExistingJson } from '../../users/User'
 import type { TSession } from '../Session'
 import type { TSessionAuthParam } from './MemberPermission'
-import type { MemberRole } from './MemberRole'
-import type { TMemberRoleId } from './types'
+import type { MemberRole, TMemberRoleId } from './MemberRole'
 
 /**
  * Represents a user using METIS.

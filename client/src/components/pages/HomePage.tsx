@@ -1,17 +1,17 @@
-import { AxiosError } from 'axios'
-import { useGlobalContext } from 'metis/client/context/global'
-import ClientFileReference from 'metis/client/files/references'
-import ClientMission from 'metis/client/missions'
-import SessionClient from 'metis/client/sessions'
-import { SessionBasic } from 'metis/client/sessions/basic'
-import { compute } from 'metis/client/toolbox'
+import { useGlobalContext } from '@client/context/global'
+import { ClientFileReference } from '@client/files/ClientFileReference'
+import { ClientMission } from '@client/missions/ClientMission'
+import type { SessionBasic } from '@client/sessions/SessionBasic'
+import { SessionClient } from '@client/sessions/SessionClient'
+import { compute } from '@client/toolbox'
 import {
   useMountHandler,
   useRequireLogin,
   useUnmountHandler,
-} from 'metis/client/toolbox/hooks'
-import ClientUser from 'metis/client/users'
-import { PromiseManager } from 'metis/toolbox'
+} from '@client/toolbox/hooks'
+import { ClientUser } from '@client/users/ClientUser'
+import { PromiseManager } from '@shared/toolbox/promises/PromiseManager'
+import { AxiosError } from 'axios'
 import { useRef, useState } from 'react'
 import { DefaultPageLayout } from '.'
 import Prompt from '../content/communication/Prompt'
@@ -19,10 +19,8 @@ import FileReferenceList from '../content/data/lists/implementations/FileReferen
 import MissionList from '../content/data/lists/implementations/missions/MissionList'
 import SessionList from '../content/data/lists/implementations/SessionList'
 import UserList from '../content/data/lists/implementations/UserList'
-import {
-  ProfileButton,
-  TNavigation_P,
-} from '../content/general-layout/Navigation'
+import type { TNavigation_P } from '../content/general-layout/Navigation'
+import { ProfileButton } from '../content/general-layout/Navigation'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
 import Auth from '../content/util/Auth'
 import './HomePage.scss'

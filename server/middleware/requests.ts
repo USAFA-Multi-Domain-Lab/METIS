@@ -1,12 +1,14 @@
-import type { NextFunction, Request, Response } from 'express-serve-static-core'
-import type { TAnyObject } from 'metis/toolbox'
-import { BooleanToolbox, VersionToolbox } from 'metis/toolbox'
+import { BooleanToolbox } from '@shared/toolbox/booleans/BooleanToolbox'
+import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
+import { VersionToolbox } from '@shared/toolbox/strings/VersionToolbox'
 import type {
   TExistingUserPreferencesJson,
-  TUserAccess,
   TUserPreferencesJson,
-} from 'metis/users'
-import { User, UserAccess } from 'metis/users'
+} from '@shared/users/User'
+import { User } from '@shared/users/User'
+import type { TUserAccess } from '@shared/users/UserAccess'
+import { UserAccess } from '@shared/users/UserAccess'
+import type { NextFunction, Request, Response } from 'express-serve-static-core'
 import { isObjectIdOrHexString } from 'mongoose'
 import { z as zod } from 'zod'
 import type { TZodify } from '../connect/middleware/validate'

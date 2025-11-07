@@ -1,9 +1,13 @@
 import { MetisComponent } from '../MetisComponent'
-import { DateToolbox, StringToolbox } from '../toolbox'
+import { DateToolbox } from '../toolbox/dates/DateToolbox'
+import { StringToolbox } from '../toolbox/strings/StringToolbox'
 import type { TUserAccess } from './UserAccess'
 import { UserAccess } from './UserAccess'
-import type { TUserPermission, TUserPermissionId } from './UserPermission'
-import { UserPermission } from './UserPermission'
+import {
+  UserPermission,
+  type TUserPermission,
+  type TUserPermissionId,
+} from './UserPermission'
 
 /**
  * Represents a user using METIS.
@@ -535,6 +539,18 @@ export interface TUserJson {
    * username will then be displayed in the UI for the user.
    */
   createdByUsername: string | null
+}
+
+/**
+ * JSON representation of a {@link User} object
+ * which can be safely saved to a database.
+ */
+export type TUserSaveJson = Omit<
+  TUserJson,
+  'createdBy' | 'createdByUsername'
+> & {
+  createdBy: TCreatedByJson | string
+  createdByUsername: string
 }
 
 /**

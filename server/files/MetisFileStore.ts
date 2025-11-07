@@ -1,15 +1,15 @@
+import { FileReferenceModel } from '@server/database/models/file-references'
+import type { ServerUser } from '@server/users/ServerUser'
+import type { TFileReferenceJson } from '@shared/files/FileReference'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import crypto from 'crypto'
 import type { RequestHandler } from 'express'
 import type { Response } from 'express-serve-static-core'
 import fs from 'fs'
-import type { FileReference, TFileReferenceJson } from 'metis/files'
-import { StringToolbox } from 'metis/toolbox'
 import mime from 'mime-types'
 import multer from 'multer'
 import path from 'path'
 import type { MetisServer } from '..'
-import { FileReferenceModel } from '../database'
-import type { ServerUser } from '../users'
 import type { ServerFileReference } from './ServerFileReference'
 
 /* -- CLASSES -- */
@@ -123,7 +123,9 @@ export class MetisFileStore {
    * @param reference The reference to the file.
    * @returns The full path to the file.
    */
-  public getFullPath(reference: FileReference | TFileReferenceJson): string {
+  public getFullPath(
+    reference: ServerFileReference | TFileReferenceJson,
+  ): string {
     return StringToolbox.joinPaths(this.directory, reference.path)
   }
 

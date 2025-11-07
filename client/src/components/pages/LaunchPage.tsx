@@ -1,14 +1,13 @@
-import { useGlobalContext } from 'metis/client/context/global'
-import ClientMission from 'metis/client/missions'
-import SessionClient from 'metis/client/sessions'
-import { compute } from 'metis/client/toolbox'
-import { useMountHandler, useRequireLogin } from 'metis/client/toolbox/hooks'
-import { TMissionComponentDefect } from 'metis/missions'
-import Session from 'metis/sessions'
+import { useGlobalContext } from '@client/context/global'
+import { ClientMission } from '@client/missions/ClientMission'
+import { SessionClient } from '@client/sessions/SessionClient'
+import { compute } from '@client/toolbox'
+import { useMountHandler, useRequireLogin } from '@client/toolbox/hooks'
+import type { TMissionComponentDefect } from '@shared/missions/MissionComponent'
 import { useState } from 'react'
 import { DefaultPageLayout } from '.'
 import { ESortByMethod } from '../content/general-layout/ListOld'
-import { TNavigation_P } from '../content/general-layout/Navigation'
+import type { TNavigation_P } from '../content/general-layout/Navigation'
 import SessionConfig from '../content/session/SessionConfig'
 import ButtonSvgPanel from '../content/user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
@@ -40,7 +39,7 @@ export default function LaunchPage({
   const [mission, setMission] = useState<ClientMission>(
     ClientMission.createNew(),
   )
-  const [sessionConfig] = useState(Session.DEFAULT_CONFIG)
+  const [sessionConfig] = useState(SessionClient.DEFAULT_CONFIG)
   const defectiveComponentButtonEngine = useButtonSvgEngine({
     elements: [
       {

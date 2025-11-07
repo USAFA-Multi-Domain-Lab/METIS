@@ -8,13 +8,13 @@ import {
   restrictPasswordReset,
   restrictUserManagement,
 } from '../../../middleware/users'
-import deleteUser from '../controllers/users/[_id].delete'
-import getUser from '../controllers/users/[_id].get'
-import updateUser from '../controllers/users/[_id].put'
-import getUsers from '../controllers/users/index.get'
-import createNewUser from '../controllers/users/index.post'
-import updateUserPreferences from '../controllers/users/preferences.put'
-import resetPassword from '../controllers/users/reset-password.put'
+import { deleteUser } from '../controllers/users/[_id].delete'
+import { getUser } from '../controllers/users/[_id].get'
+import { updateUser } from '../controllers/users/[_id].put'
+import { getUsers } from '../controllers/users/index.get'
+import { createNewUser } from '../controllers/users/index.post'
+import { updateUserPreferences } from '../controllers/users/preferences.put'
+import { resetPassword } from '../controllers/users/reset-password.put'
 import type { TMetisRouterMap } from '../library/MetisRouter'
 
 const routerMap: TMetisRouterMap = (

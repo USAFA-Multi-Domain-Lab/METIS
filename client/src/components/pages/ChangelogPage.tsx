@@ -1,17 +1,15 @@
-import { useGlobalContext } from 'metis/client/context/global'
-import MetisInfo from 'metis/client/info'
-import { compute } from 'metis/client/toolbox'
-import { useMountHandler } from 'metis/client/toolbox/hooks'
+import { useGlobalContext } from '@client/context/global'
+import { MetisInfo } from '@client/info/MetisInfo'
+import { compute } from '@client/toolbox'
+import { useMountHandler } from '@client/toolbox/hooks'
 import { useState } from 'react'
-import { DefaultPageLayout, TPage_P } from '.'
+import type { TPage_P } from '.'
+import { DefaultPageLayout } from '.'
 import Markdown, {
   MarkdownTheme as EMarkdownTheme,
 } from '../content/general-layout/Markdown'
-import {
-  HomeButton,
-  ProfileButton,
-  TNavigation_P,
-} from '../content/general-layout/Navigation'
+import type { TNavigation_P } from '../content/general-layout/Navigation'
+import { HomeButton, ProfileButton } from '../content/general-layout/Navigation'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
 import './ChangelogPage.scss'
 

@@ -1,5 +1,5 @@
-@use 'metis/client/assets/styles/config.scss' as *;
-@use 'metis/client/components/content/form/index.scss' as *;
+@use '@client/assets/styles/config.scss' as *;
+@use '@client/components/content/form/index.scss' as *;
 
 .ExecCheats {
   @include form-container();

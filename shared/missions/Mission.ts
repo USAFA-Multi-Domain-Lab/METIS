@@ -1,29 +1,34 @@
+import { DateToolbox } from '@shared/toolbox/dates/DateToolbox'
+import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import type { TCreatedByJson, User } from '@shared/users/User'
 import { context } from '../context'
 import type { MetisComponent } from '../MetisComponent'
-import { DateToolbox, StringToolbox, type TAnyObject } from '../toolbox'
-import type { TCreatedByJson, User } from '../users'
+import type { TExecution } from './actions/ActionExecution'
+import type { TAction, TMissionActionJson } from './actions/MissionAction'
+import type {
+  TEffectHost,
+  TEffectSessionTriggered,
+  TEffectSessionTriggeredJson,
+} from './effects/Effect'
+import type { TMissionFileJson } from './files/MissionFile'
+import type {
+  TForce,
+  TMissionForceJson,
+  TMissionForceSaveJson,
+} from './forces/MissionForce'
 import { MissionForce } from './forces/MissionForce'
 import {
   MissionComponent,
   type TMissionComponentDefect,
 } from './MissionComponent'
-import { MissionPrototype } from './nodes/MissionPrototype'
+import type { TNode } from './nodes/MissionNode'
 import type {
-  TAction,
-  TEffectHost,
-  TEffectSessionTriggered,
-  TEffectSessionTriggeredJson,
-  TExecution,
-  TForce,
-  TMissionActionJson,
-  TMissionFileJson,
-  TMissionForceJson,
-  TMissionForceSaveJson,
   TMissionPrototypeJson,
   TMissionPrototypeOptions,
-  TNode,
   TPrototype,
-} from './types'
+} from './nodes/MissionPrototype'
+import { MissionPrototype } from './nodes/MissionPrototype'
 
 /**
  * This represents a mission for a student to complete.
@@ -424,6 +429,43 @@ export abstract class Mission<
       ...json,
       createdBy: json.createdBy,
       createdByUsername: json.createdByUsername,
+    }
+  }
+
+  /**
+   * Converts the {@link Mission} object to JSON representing
+   * a mission that is already saved in the database.
+   * @param options Options for converting the mission to JSON.
+   * @returns The JSON.
+   * @throws If the mission is not saved in the database.
+   */
+  public toExistingJson(
+    options: TMissionJsonOptions = {},
+  ): TMissionExistingJson {
+    if (
+      !this._id ||
+      !this.createdAt ||
+      !this.updatedAt ||
+      !this.createdBy ||
+      !this.createdByUsername
+    ) {
+      throw new Error(
+        "This mission has data that indicates it doesn't yet exist in the database. Existing mission fields represent missions that have been saved to the database.",
+      )
+    }
+
+    // Do regular json conversion.
+    let json: TMissionJson = this.toJson(options)
+
+    // Override fields that must not be
+    // null or undefined.
+    return {
+      ...json,
+      _id: this._id,
+      createdAt: this.createdAt.toISOString(),
+      updatedAt: this.updatedAt.toISOString(),
+      createdBy: this.createdBy.toCreatedByJson(),
+      createdByUsername: this.createdByUsername,
     }
   }
 
@@ -1123,7 +1165,10 @@ export type TMissionShallowExistingJson = Omit<
  * Session-agnostic JSON representation of a Mission object
  * which can be saved to a database.
  */
-export type TMissionSaveJson = Omit<TMissionJson, 'forces'> & {
+export type TMissionSaveJson = Omit<
+  TMissionJson,
+  'forces' | 'createdBy' | 'createdByUsername'
+> & {
   createdBy: TCreatedByJson | string
   createdByUsername: string
   forces: TMissionForceSaveJson[]

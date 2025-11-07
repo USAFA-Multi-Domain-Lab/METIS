@@ -1,12 +1,10 @@
-import type {
-  TActionExecutionJson,
-  TMissionActionJson,
-  TMissionNodeJson,
-} from 'metis/missions'
-import { MissionNode } from 'metis/missions'
-import { NumberToolbox } from 'metis/toolbox'
-import { MetisDatabase } from '../../database'
-import type { TTargetEnvExposedNode } from '../../target-environments'
+import { generateValidationError } from '@server/database/validation'
+import type { TTargetEnvExposedNode } from '@server/target-environments/TargetEnvContext'
+import type { TActionExecutionJson } from '@shared/missions/actions/ActionExecution'
+import type { TMissionActionJson } from '@shared/missions/actions/MissionAction'
+import type { TMissionNodeJson } from '@shared/missions/nodes/MissionNode'
+import { MissionNode } from '@shared/missions/nodes/MissionNode'
+import { NumberToolbox } from '@shared/toolbox/numbers/NumberToolbox'
 import { ServerActionExecution } from '../actions/ServerActionExecution'
 import type { ServerExecutionOutcome } from '../actions/ServerExecutionOutcome'
 import { ServerMissionAction } from '../actions/ServerMissionAction'
@@ -187,13 +185,13 @@ export class ServerMissionNode extends MissionNode<TMetisServerComponents> {
         processTime.toString(),
       )
       if (!isValidNumber) {
-        throw MetisDatabase.generateValidationError(
+        throw generateValidationError(
           `Process time "${processTime}" is not a valid number for action "{ _id: ${action._id}, name: ${action.name} }".`,
         )
       }
       let lessThanMax = processTime <= ServerMissionAction.PROCESS_TIME_MAX
       if (!lessThanMax) {
-        throw MetisDatabase.generateValidationError(
+        throw generateValidationError(
           `Process time "${processTime}" exceeds the maximum process time "${ServerMissionAction.PROCESS_TIME_MAX}" for action "{ _id: ${action._id}, name: ${action.name} }".`,
         )
       }
@@ -201,7 +199,7 @@ export class ServerMissionNode extends MissionNode<TMetisServerComponents> {
       // SUCCESS CHANCE
       let betweenZeroAndOne = successChance >= 0 && successChance <= 1
       if (!betweenZeroAndOne) {
-        throw MetisDatabase.generateValidationError(
+        throw generateValidationError(
           `Success chance "${successChance}" is not between 0 and 1 for action "{ _id: ${action._id}, name: ${action.name} }".`,
         )
       }
@@ -209,14 +207,14 @@ export class ServerMissionNode extends MissionNode<TMetisServerComponents> {
       // RESOURCE COST
       let nonNegativeInteger = NumberToolbox.isNonNegativeInteger(resourceCost)
       if (!nonNegativeInteger) {
-        throw MetisDatabase.generateValidationError(
+        throw generateValidationError(
           `Resource cost "${resourceCost}" is a negative integer for action "{ _id: ${action._id}, name: ${action.name} }".`,
         )
       }
 
       // Check for duplicate local keys.
       if (actionKeys.includes(action.localKey)) {
-        throw MetisDatabase.generateValidationError(
+        throw generateValidationError(
           `Duplicate local key "${action.localKey}" found for action "{ _id: ${action._id}, name: ${action.name} }".`,
         )
       }

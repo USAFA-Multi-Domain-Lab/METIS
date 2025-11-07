@@ -1,8 +1,9 @@
+import { ApiResponse } from '@server/api/v1/library/ApiResponse'
+import { StatusError } from '@server/api/v1/library/StatusError'
+import { FileReferenceModel } from '@server/database/models/file-references'
+import type { MetisFileStore } from '@server/files/MetisFileStore'
+import { ServerFileReference } from '@server/files/ServerFileReference'
 import type { Request, Response } from 'express-serve-static-core'
-import { FileReferenceModel } from '../../../../../database'
-import type { MetisFileStore } from '../../../../../files'
-import { ServerFileReference } from '../../../../../files'
-import { ApiResponse, StatusError } from '../../../library'
 
 /**
  * Retrieves a file reference from the database
@@ -15,7 +16,7 @@ import { ApiResponse, StatusError } from '../../../library'
  * @resolves With the response to send to the client.
  * @rejects If an error occurs.
  */
-const downloadFile = async (
+export const downloadFile = async (
   request: Request,
   response: Response,
   fileStore: MetisFileStore,
@@ -33,5 +34,3 @@ const downloadFile = async (
   // Provide the file in the response.
   fileStore.provideInResponse(response, reference)
 }
-
-export default downloadFile

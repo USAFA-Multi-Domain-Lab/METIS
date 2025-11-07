@@ -1,7 +1,8 @@
-import ClientMissionFile from 'metis/client/missions/files'
-import { useDefaultProps, useRequireLogin } from 'metis/client/toolbox/hooks'
-import { FileToolbox } from 'metis/toolbox'
-import List, { createDefaultListProps, TList_P } from '../List'
+import type { ClientMissionFile } from '@client/missions/files/ClientMissionFile'
+import { useDefaultProps, useRequireLogin } from '@client/toolbox/hooks'
+import { FileToolbox } from '@shared/toolbox/files/FileToolbox'
+import type { TList_P } from '../List'
+import List, { createDefaultListProps } from '../List'
 
 /**
  * A component for displaying a list of mission files.

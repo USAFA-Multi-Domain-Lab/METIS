@@ -1,17 +1,15 @@
 import { MetisComponent } from '../MetisComponent'
-import type {
-  TAction,
-  TExecutionCheats,
-  TMission,
-  TMissionJson,
-} from '../missions'
-import { type TUserJson, User } from '../users'
-import type { TMember, TSessionMemberJson } from './members'
+import type { TExecutionCheats } from '../missions/actions/ActionExecution'
+import type { TAction } from '../missions/actions/MissionAction'
+import type { TMission, TMissionExistingJson } from '../missions/Mission'
+import type { TUserJson } from '../users/User'
+import { User } from '../users/User'
+import type { TMember, TSessionMemberJson } from './members/SessionMember'
 
 /**
  * Base class for sessions. Represents a session of a mission being executed by users.
  */
-export abstract class Session<
+export abstract class MissionSession<
   T extends TMetisBaseComponents = TMetisBaseComponents,
 > extends MetisComponent {
   /**
@@ -228,7 +226,7 @@ export abstract class Session<
     this.ownerLastName = ownerLastName
     this.launchedAt = launchedAt
     this._config = {
-      ...Session.DEFAULT_CONFIG,
+      ...MissionSession.DEFAULT_CONFIG,
       ...config,
     }
     this._mission = mission
@@ -404,7 +402,7 @@ export type TSessionJson = {
   /**
    * The mission that is being executed in the session.
    */
-  mission: TMissionJson
+  mission: TMissionExistingJson
   /**
    * The members of the session in the mission.
    */

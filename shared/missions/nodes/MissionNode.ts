@@ -1,23 +1,19 @@
-import {
-  type TAnyObject,
-  ArrayToolbox,
-  MapToolbox,
-  StringToolbox,
-  Vector2D,
-} from '../../toolbox'
-import { type TMission, Mission } from '../Mission'
-import type { TMissionComponentDefect } from '../MissionComponent'
-import { MissionComponent } from '../MissionComponent'
+import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
+import { MapToolbox } from '@shared/toolbox/maps/MapToolbox'
+import { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
+import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type {
-  TAction,
   TActionExecutionJson,
   TActionExecutionState,
   TExecution,
-  TForce,
-  TForceJsonOptions,
-  TMissionActionJson,
-  TOutcome,
-} from '../types'
+} from '../actions/ActionExecution'
+import type { TOutcome } from '../actions/ExecutionOutcome'
+import type { TAction, TMissionActionJson } from '../actions/MissionAction'
+import type { TForce, TForceJsonOptions } from '../forces/MissionForce'
+import { type TMission, Mission } from '../Mission'
+import type { TMissionComponentDefect } from '../MissionComponent'
+import { MissionComponent } from '../MissionComponent'
 import { type TPrototype, MissionPrototype } from './MissionPrototype'
 
 /**

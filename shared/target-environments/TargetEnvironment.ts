@@ -1,6 +1,6 @@
 import { MetisComponent } from '../MetisComponent'
-import type { TAnyObject } from '../toolbox'
-import type { TTargetJson } from './types'
+import type { TAnyObject } from '../toolbox/objects/ObjectToolbox'
+import type { TTargetJson } from './targets/Target'
 
 /**
  * This is the environment in which the target(s) exist.

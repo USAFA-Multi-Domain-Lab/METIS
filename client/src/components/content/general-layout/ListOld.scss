@@ -1,6 +1,6 @@
 @use 'sass:color';
-@use 'metis/client/assets/styles/config.scss' as *;
-@use 'metis/client/assets/styles/util.scss' as *;
+@use '@client/assets/styles/config.scss' as *;
+@use '@client/assets/styles/util.scss' as *;
 
 .ListOld {
   display: inline-block;

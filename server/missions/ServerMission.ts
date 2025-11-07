@@ -1,27 +1,30 @@
+import { generateValidationError } from '@server/database/validation'
+import type { ServerTarget } from '@server/target-environments/ServerTarget'
+import type { TTargetEnvExposedMission } from '@server/target-environments/TargetEnvContext'
+import { ServerUser } from '@server/users/ServerUser'
+import { NumberToolbox } from '@shared/toolbox/numbers/NumberToolbox'
+import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
+import type { CallbackWithoutResultAndOptionalError } from 'mongoose'
+import mongoose from 'mongoose'
+import type { PRNG } from 'seedrandom'
+import seedrandom from 'seedrandom'
 import type {
   TEffectJson,
   TEffectSessionTriggered,
   TEffectSessionTriggeredJson,
   TEffectTrigger,
-  TMissionFileJson,
-  TMissionForceSaveJson,
+} from '../../shared/missions/effects/Effect'
+import type { TMissionFileJson } from '../../shared/missions/files/MissionFile'
+import type { TMissionForceSaveJson } from '../../shared/missions/forces/MissionForce'
+import type { TMissionSaveJson } from '../../shared/missions/Mission'
+import { Mission } from '../../shared/missions/Mission'
+import type {
   TMissionPrototypeJson,
   TMissionPrototypeOptions,
-  TMissionSaveJson,
-} from 'metis/missions'
-import { Mission } from 'metis/missions'
-import { DateToolbox, NumberToolbox, StringToolbox } from 'metis/toolbox'
-import type { AnyObject, CallbackWithoutResultAndOptionalError } from 'mongoose'
-import mongoose from 'mongoose'
-import type { PRNG } from 'seedrandom'
-import seedrandom from 'seedrandom'
-import { MetisDatabase } from '../database'
+} from '../../shared/missions/nodes/MissionPrototype'
+import { DateToolbox } from '../../shared/toolbox/dates/DateToolbox'
+import { StringToolbox } from '../../shared/toolbox/strings/StringToolbox'
 import { databaseLogger } from '../logging'
-import type {
-  ServerTarget,
-  TTargetEnvExposedMission,
-} from '../target-environments'
-import { ServerUser } from '../users'
 import { ServerEffect } from './effects/ServerEffect'
 import { ServerMissionFile } from './files/ServerMissionFile'
 import { ServerMissionForce } from './forces/ServerMissionForce'
@@ -190,7 +193,7 @@ export class ServerMission extends Mission<TMetisServerComponents> {
         force.initialResources,
       )
       if (!nonNegativeInteger) {
-        throw MetisDatabase.generateValidationError(
+        throw generateValidationError(
           `The initial resources must be a positive integer for the force "{ _id: ${force._id}, name: ${force.name} }".`,
         )
       }
@@ -198,14 +201,14 @@ export class ServerMission extends Mission<TMetisServerComponents> {
       // Check for valid color.
       const isValidColor = StringToolbox.HEX_COLOR_REGEX.test(force.color)
       if (!isValidColor) {
-        throw MetisDatabase.generateValidationError(
+        throw generateValidationError(
           `The color "${force.color}" is not a valid hex color for the force "{ _id: ${force._id}, name: ${force.name} }".`,
         )
       }
 
       // Check for duplicate local keys.
       if (forceKeys.includes(force.localKey)) {
-        throw MetisDatabase.generateValidationError(
+        throw generateValidationError(
           `Duplicate local key "${force.localKey}" found for force "{ _id: ${force._id}, name: ${force.name} }".`,
         )
       }
@@ -226,7 +229,7 @@ export class ServerMission extends Mission<TMetisServerComponents> {
         prototype.depthPadding,
       )
       if (!nonNegativeInteger) {
-        throw MetisDatabase.generateValidationError(
+        throw generateValidationError(
           `The depth padding must be a positive integer for the prototype "{ _id: ${prototype._id} }".`,
         )
       }
@@ -247,7 +250,7 @@ export class ServerMission extends Mission<TMetisServerComponents> {
   ): TMissionValidationResults => {
     // If the current structure isn't an object...
     if (!(currentStructure instanceof Object)) {
-      let error = MetisDatabase.generateValidationError(
+      let error = generateValidationError(
         `Error in the mission's structure:\n"${rootKey}" is set to ${currentStructure}, which is not an object.`,
       )
       return { error }
@@ -258,7 +261,7 @@ export class ServerMission extends Mission<TMetisServerComponents> {
       // If the key is already in the structureKeys,
       // then return an error.
       if (structureKeys.includes(key)) {
-        let error = MetisDatabase.generateValidationError(
+        let error = generateValidationError(
           `Error in the mission's structure:\nDuplicate structureKey used (${key}).`,
         )
         return { error }
@@ -294,8 +297,8 @@ export class ServerMission extends Mission<TMetisServerComponents> {
    * @returns Any errors that are found.
    */
   private static idCheckerAlgorithm = (
-    cursor: AnyObject | AnyObject[],
-    existingIds: AnyObject = {},
+    cursor: TAnyObject | TAnyObject[],
+    existingIds: TAnyObject = {},
   ): TMissionValidationResults => {
     // If the cursor is an object, not an array, and not an ObjectId...
     if (
@@ -306,7 +309,7 @@ export class ServerMission extends Mission<TMetisServerComponents> {
       // ...and it has an _id property and the _id already exists...
       if (cursor._id && cursor._id in existingIds) {
         // ...then set the error and return.
-        let error = MetisDatabase.generateValidationError(
+        let error = generateValidationError(
           `Error in mission:\nDuplicate _id used (${cursor._id}).`,
         )
         return { error }
@@ -317,7 +320,7 @@ export class ServerMission extends Mission<TMetisServerComponents> {
         !mongoose.isObjectIdOrHexString(cursor._id)
       ) {
         // ...then set the error and return.
-        let error = MetisDatabase.generateValidationError(
+        let error = generateValidationError(
           `Error in mission:\nInvalid _id used (${cursor._id}).`,
         )
         return { error }
@@ -382,13 +385,13 @@ export class ServerMission extends Mission<TMetisServerComponents> {
     // Ensure correct number of forces exist
     // the mission.
     if (missionJson.forces.length < 1) {
-      results.error = MetisDatabase.generateValidationError(
+      results.error = generateValidationError(
         `Error in mission:\nMission must have at least one force.`,
       )
       return results
     }
     if (missionJson.forces.length > 8) {
-      results.error = MetisDatabase.generateValidationError(
+      results.error = generateValidationError(
         `Error in mission:\nMission can have no more than eight forces.`,
       )
       return results
@@ -408,7 +411,7 @@ export class ServerMission extends Mission<TMetisServerComponents> {
 
         // Ensure the prototype ID exists.
         if (!prototype) {
-          results.error = MetisDatabase.generateValidationError(
+          results.error = generateValidationError(
             `Error in mission:\nPrototype ID "${prototypeId}" for "${node.name}" in "${force.name}" does not exist in the mission's prototypes.`,
           )
           return results
@@ -416,7 +419,7 @@ export class ServerMission extends Mission<TMetisServerComponents> {
 
         // Ensure the node has a unique prototype.
         if (prototypesRetrieved.includes(prototype._id)) {
-          results.error = MetisDatabase.generateValidationError(
+          results.error = generateValidationError(
             `Error in mission:\nPrototype ID "${prototypeId}" for "${node.name}" in "${force.name}" has already been used for another node.`,
           )
           return results
@@ -424,7 +427,7 @@ export class ServerMission extends Mission<TMetisServerComponents> {
 
         // Ensure the prototype has the correct structure key.
         if (!structureKeys.includes(prototype.structureKey)) {
-          results.error = MetisDatabase.generateValidationError(
+          results.error = generateValidationError(
             `Error in mission:\nStructure key "${prototype.structureKey}" is missing from "${force.name}".`,
           )
           return results
@@ -447,7 +450,7 @@ export class ServerMission extends Mission<TMetisServerComponents> {
         )
 
         // Send the error.
-        results.error = MetisDatabase.generateValidationError(
+        results.error = generateValidationError(
           `Error in mission:\nPrototype Node with ID "${missingPrototype?._id}" is missing from "${force.name}".`,
         )
         return results
@@ -473,7 +476,7 @@ export class ServerMission extends Mission<TMetisServerComponents> {
 
     for (const file of files) {
       if (typeof file.alias !== 'string' && file.alias !== null) {
-        results.error = MetisDatabase.generateValidationError(
+        results.error = generateValidationError(
           `Error in mission:\nAlias is neither a string or null for file with ID "${file._id}".`,
         )
         return results
@@ -498,14 +501,14 @@ export class ServerMission extends Mission<TMetisServerComponents> {
         const validTrigger = validTriggers.includes(effect.trigger)
 
         if (!validTrigger) {
-          throw MetisDatabase.generateValidationError(
+          throw generateValidationError(
             `The effect "{ _id: ${effect._id}, name: ${effect.name} }" has an invalid trigger "${effect.trigger}".`,
           )
         }
 
         // Check for duplicate local keys.
         if (effectKeys.includes(effect.localKey)) {
-          throw MetisDatabase.generateValidationError(
+          throw generateValidationError(
             `The effect "{ _id: ${effect._id}, name: ${effect.name} }" has a duplicate local key "${effect.localKey}".`,
           )
         }

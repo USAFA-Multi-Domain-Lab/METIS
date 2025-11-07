@@ -1,5 +1,3 @@
-
-
 /* -- CONSTANTS -- */
 
 export const AVAILABLE_PERMISSIONS_RAW = [
@@ -271,9 +269,7 @@ export class UserPermission implements TUserPermission {
     AVAILABLE_PERMISSIONS_RAW.map(({ _id }) => _id)
 }
 
-
 /* -- TYPES -- */
-
 
 /**
  * Type for a valid name for a user permission.

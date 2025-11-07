@@ -1,5 +1,5 @@
+import { MissionImport } from '@server/missions/imports/MissionImport'
 import multer from 'multer'
-import { MissionImport } from '../missions'
 
 const uploads = multer({ dest: MissionImport.UPLOADS_DIRECTORY })
 

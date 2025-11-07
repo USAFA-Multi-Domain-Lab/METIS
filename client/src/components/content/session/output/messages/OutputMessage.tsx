@@ -1,5 +1,5 @@
-import RichText from 'metis/client/components/content/general-layout/rich-text/RichText'
-import { compute } from 'metis/client/toolbox'
+import RichText from '@client/components/content/general-layout/rich-text/RichText'
+import { compute } from '@client/toolbox'
 import { useOutputContext } from '../Output'
 import './OutputMessage.scss'
 import { useOutputRenderer } from './renderers'

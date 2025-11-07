@@ -1,8 +1,8 @@
-import Tooltip from 'metis/client/components/content/communication/Tooltip'
-import { compute } from 'metis/client/toolbox'
-import { ClassList } from 'metis/toolbox'
+import Tooltip from '@client/components/content/communication/Tooltip'
+import { compute } from '@client/toolbox'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import { usePanelContext } from '../Panel'
-import { TPanelView_P } from '../PanelView'
+import type { TPanelView_P } from '../PanelView'
 import './PanelTab.scss'
 
 /**

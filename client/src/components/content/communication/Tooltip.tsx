@@ -1,5 +1,5 @@
-import { useGlobalContext } from 'metis/client/context/global'
-import { useMountHandler } from 'metis/client/toolbox/hooks'
+import { useGlobalContext } from '@client/context/global'
+import { useMountHandler } from '@client/toolbox/hooks'
 import { useEffect, useRef } from 'react'
 import './Tooltip.scss'
 

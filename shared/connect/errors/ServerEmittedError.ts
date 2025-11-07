@@ -1,4 +1,4 @@
-import type { TRequestOfResponse, TServerEvents } from '../types'
+import type { TRequestOfResponse, TServerEvents } from '..'
 import { WsEmittedError } from './WsEmittedError'
 
 /**

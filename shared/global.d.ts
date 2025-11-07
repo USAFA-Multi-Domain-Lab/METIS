@@ -1,21 +1,20 @@
-import type { MetisComponent } from '.'
-import type { FileReference } from './files'
-import type {
-  ActionExecution,
-  Effect,
-  ExecutionOutcome,
-  Mission,
-  MissionAction,
-  MissionFile,
-  MissionForce,
-  MissionNode,
-  MissionOutput,
-  MissionPrototype,
-  TEffectType,
-} from './missions'
-import type { Session, SessionMember } from './sessions'
-import type { Target, TargetEnvironment } from './target-environments'
-import type { User } from './users'
+import type { FileReference } from './files/FileReference'
+import type { MetisComponent } from './MetisComponent'
+import type { ActionExecution } from './missions/actions/ActionExecution'
+import type { ExecutionOutcome } from './missions/actions/ExecutionOutcome'
+import type { MissionAction } from './missions/actions/MissionAction'
+import type { Effect, TEffectType } from './missions/effects/Effect'
+import type { MissionFile } from './missions/files/MissionFile'
+import type { MissionForce } from './missions/forces/MissionForce'
+import type { MissionOutput } from './missions/forces/MissionOutput'
+import type { Mission } from './missions/Mission'
+import type { MissionNode } from './missions/nodes/MissionNode'
+import type { MissionPrototype } from './missions/nodes/MissionPrototype'
+import type { SessionMember } from './sessions/members/SessionMember'
+import type { MissionSession } from './sessions/Session'
+import type { TargetEnvironment } from './target-environments/TargetEnvironment'
+import type { Target } from './target-environments/targets/Target'
+import type { User } from './users/User'
 
 declare global {
   /**
@@ -24,7 +23,7 @@ declare global {
    * METIS component classes.
    */
   export type TMetisBaseComponents = {
-    session: Session
+    session: MissionSession
     member: SessionMember
     user: User
     targetEnv: TargetEnvironment

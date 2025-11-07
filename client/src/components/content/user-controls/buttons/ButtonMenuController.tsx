@@ -1,10 +1,10 @@
-import { useGlobalContext } from 'metis/client/context/global'
-import { compute } from 'metis/client/toolbox'
-import { useEventListener } from 'metis/client/toolbox/hooks'
-import { Vector2D } from 'metis/toolbox'
-import { RefObject } from 'react'
-import { TButtonMenu_P } from './ButtonMenu'
-import ButtonSvgEngine from './panels/engines'
+import { useGlobalContext } from '@client/context/global'
+import { compute } from '@client/toolbox'
+import { useEventListener } from '@client/toolbox/hooks'
+import { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
+import type { RefObject } from 'react'
+import type { TButtonMenu_P } from './ButtonMenu'
+import type { ButtonSvgEngine } from './panels/engines'
 
 /**
  * Activates a button menu when the target element

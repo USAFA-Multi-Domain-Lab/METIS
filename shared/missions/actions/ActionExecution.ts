@@ -1,4 +1,4 @@
-import { MetisComponent } from '../../'
+import { MetisComponent } from '@shared/MetisComponent'
 import type { TMission } from '../Mission'
 import type { TNode } from '../nodes/MissionNode'
 import type {

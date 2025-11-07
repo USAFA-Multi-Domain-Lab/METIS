@@ -1,6 +1,6 @@
-import { ClientEffect } from 'metis/client/missions/effects'
-import { usePostInitEffect } from 'metis/client/toolbox/hooks'
-import { TNumberArg } from 'metis/target-environments/args/number-arg'
+import type { ClientEffect } from '@client/missions/effects/ClientEffect'
+import { usePostInitEffect } from '@client/toolbox/hooks'
+import type { TNumberArg } from '@shared/target-environments/args/NumberArg'
 import { useEffect, useState } from 'react'
 import { DetailNumber } from '../../../../content/form/DetailNumber'
 

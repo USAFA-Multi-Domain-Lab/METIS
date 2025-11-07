@@ -1,31 +1,32 @@
 import {
   useGlobalContext,
   useNavigationMiddleware,
-} from 'metis/client/context/global'
-import ClientMissionFile from 'metis/client/missions/files'
-import ClientMissionForce from 'metis/client/missions/forces'
-import ClientMissionNode from 'metis/client/missions/nodes'
-import SessionClient from 'metis/client/sessions'
-import { compute } from 'metis/client/toolbox'
+} from '@client/context/global'
+import type { ClientMissionFile } from '@client/missions/files/ClientMissionFile'
+import type { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
+import type { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
+import type { SessionClient } from '@client/sessions/SessionClient'
+import { compute } from '@client/toolbox'
 import {
   useEventListener,
   useMountHandler,
   useRequireLogin,
-} from 'metis/client/toolbox/hooks'
-import { useSessionRedirects } from 'metis/client/toolbox/hooks/sessions'
+} from '@client/toolbox/hooks'
+import { useSessionRedirects } from '@client/toolbox/hooks/sessions'
 import { useEffect, useState } from 'react'
-import { DefaultPageLayout, TPage_P } from '.'
+import type { TPage_P } from '.'
+import { DefaultPageLayout } from '.'
 import PendingPageModal from '../content/communication/PendingPageModal'
 import Prompt from '../content/communication/Prompt'
 import MissionFileList from '../content/data/lists/implementations/MissionFileList'
-import { TNavigation_P } from '../content/general-layout/Navigation'
+import type { TNavigation_P } from '../content/general-layout/Navigation'
 import Panel from '../content/general-layout/panels/Panel'
 import PanelLayout from '../content/general-layout/panels/PanelLayout'
 import PanelView from '../content/general-layout/panels/PanelView'
 import SessionMembersPanel from '../content/session/members/SessionMembersPanel'
 import MissionMap from '../content/session/mission-map/MissionMap'
 import ActionExecModal from '../content/session/mission-map/ui/overlay/modals/action-execution/ActionExecModal'
-import { TTabBarTab } from '../content/session/mission-map/ui/tabs/TabBar'
+import type { TTabBarTab } from '../content/session/mission-map/ui/tabs/TabBar'
 import { OutputPanel } from '../content/session/output/'
 import StatusBar from '../content/session/StatusBar'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'

@@ -1,13 +1,13 @@
-import {
-  DetailDropdown,
+import type {
   TOptionalHandleInvalidOption,
   TRequiredHandleInvalidOption,
-} from 'metis/client/components/content/form/dropdown/'
-import ClientMissionForce from 'metis/client/missions/forces'
-import ClientMissionNode from 'metis/client/missions/nodes'
-import { compute } from 'metis/client/toolbox'
-import { usePostInitEffect } from 'metis/client/toolbox/hooks/lifecycles'
-import { TMissionComponentArg } from 'metis/target-environments/args/mission-component'
+} from '@client/components/content/form/dropdown'
+import { DetailDropdown } from '@client/components/content/form/dropdown'
+import type { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
+import type { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
+import { compute } from '@client/toolbox'
+import { usePostInitEffect } from '@client/toolbox/hooks/lifecycles'
+import type { TMissionComponentArg } from '@shared/target-environments/args/mission-component/MissionComponentArg'
 import { useState } from 'react'
 
 /**

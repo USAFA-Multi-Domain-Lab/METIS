@@ -1,4 +1,4 @@
-import type { TAnyObject } from '../../../toolbox'
+import type { TAnyObject } from '../../../toolbox/objects/ObjectToolbox'
 import { TargetMigration } from './TargetMigration'
 
 /**

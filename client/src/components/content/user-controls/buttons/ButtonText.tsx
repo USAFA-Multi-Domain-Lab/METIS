@@ -1,5 +1,5 @@
-import { compute } from 'metis/client/toolbox'
-import { useDefaultProps } from 'metis/client/toolbox/hooks'
+import { compute } from '@client/toolbox'
+import { useDefaultProps } from '@client/toolbox/hooks'
 import React from 'react'
 import Tooltip from '../../communication/Tooltip'
 import './ButtonText.scss'

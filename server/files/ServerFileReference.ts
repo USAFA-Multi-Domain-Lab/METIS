@@ -1,9 +1,9 @@
-import type { TFileReferenceJson } from 'metis/files'
-import { FileReference } from 'metis/files'
-import { StringToolbox } from 'metis/toolbox'
-import { MetisDatabase } from '../database'
-import { ServerFileToolbox } from '../toolbox/files'
-import { ServerUser } from '../users'
+import { generateValidationError } from '@server/database/validation'
+import { ServerFileToolbox } from '@server/toolbox/files/ServerFileToolbox'
+import { ServerUser } from '@server/users/ServerUser'
+import type { TFileReferenceJson } from '@shared/files/FileReference'
+import { FileReference } from '@shared/files/FileReference'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 
 export class ServerFileReference extends FileReference<TMetisServerComponents> {
   /**
@@ -70,7 +70,7 @@ export class ServerFileReference extends FileReference<TMetisServerComponents> {
    */
   public static validateMimetype(mimetype: string): void {
     if (!ServerFileToolbox.isValidMimetype(mimetype)) {
-      throw MetisDatabase.generateValidationError(
+      throw generateValidationError(
         `Error in file-reference:\nMimetype "${mimetype}" is not valid.`,
       )
     }

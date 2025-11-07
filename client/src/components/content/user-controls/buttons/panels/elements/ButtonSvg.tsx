@@ -1,11 +1,11 @@
-import { useGlobalContext } from 'metis/client/context/global'
-import { compute } from 'metis/client/toolbox'
-import { getIconPath } from 'metis/client/toolbox/icons'
-import { ClassList } from 'metis/toolbox'
+import { useGlobalContext } from '@client/context/global'
+import { compute } from '@client/toolbox'
+import { getIconPath } from '@client/toolbox/icons'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import React from 'react'
 import Tooltip from '../../../../communication/Tooltip'
-import ButtonSvgEngine from '../engines'
-import { TButtonSvg_PK } from '../types'
+import { ButtonSvgEngine } from '../engines'
+import type { TButtonSvg_PK } from '../types'
 import './ButtonSvg.scss'
 
 /* -- CONSTANTS -- */

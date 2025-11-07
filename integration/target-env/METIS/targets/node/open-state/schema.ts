@@ -1,6 +1,6 @@
-import { TNodeMetadata } from 'metis/target-environments/args/mission-component/node-arg'
-import Dependency from 'metis/target-environments/dependencies'
-import TargetSchema from '../../../../../library/target-env-classes/targets'
+import { TargetDependency } from '@shared/target-environments/targets/TargetDependency'
+import type { TNodeMetadata } from '@shared/target-environments/types'
+import { TargetSchema } from '../../../../../library/target-env-classes/targets'
 
 /**
  * The ID of the `openState` argument.
@@ -107,7 +107,7 @@ const NodeOpenState = new TargetSchema({
       name: openStateArg.name,
       required: true,
       groupingId: groupingId,
-      dependencies: [Dependency.NODE(nodeMetadataArg._id)],
+      dependencies: [TargetDependency.NODE(nodeMetadataArg._id)],
       options: [noChangeOption, openNodeOption, closeNodeOption],
       default: noChangeOption,
     },

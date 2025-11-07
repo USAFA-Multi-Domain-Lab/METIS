@@ -1,6 +1,6 @@
-import type { TMissionFileJson } from 'metis/missions'
-import { MissionFile } from 'metis/missions'
-import { ServerFileReference } from '../../files'
+import { ServerFileReference } from '@server/files/ServerFileReference'
+import type { TMissionFileJson } from '@shared/missions/files/MissionFile'
+import { MissionFile } from '@shared/missions/files/MissionFile'
 import type { ServerMission } from '../ServerMission'
 
 /**

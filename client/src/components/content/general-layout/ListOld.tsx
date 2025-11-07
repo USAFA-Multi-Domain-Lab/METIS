@@ -1,7 +1,6 @@
 /* -- imports -- */
 
 import lodash from 'lodash'
-import { TAjaxStatus } from 'metis/toolbox'
 import React from 'react'
 import Tooltip from '../communication/Tooltip'
 import './ListOld.scss'
@@ -85,7 +84,7 @@ interface IList_P<TList> {
   // from the back-end, the status for the
   // ajax call is passed here to display
   // "loading..." to the user
-  ajaxStatus: TAjaxStatus
+  ajaxStatus: 'NotLoaded' | 'Loading' | 'Loaded' | 'Error'
   // unique identifier for the list for CSS
   // purposes
   listSpecificItemClassName: string
@@ -587,7 +586,7 @@ export default class ListOld<TList extends object> extends React.Component<
     let itemElements: TReactElement[] = []
     let items: TList[] = this.props.items
     let itemsFiltered: TList[] = this.state.itemsFiltered
-    let ajaxStatus: TAjaxStatus = this.props.ajaxStatus
+    let ajaxStatus = this.props.ajaxStatus
     let itemsPerPage: number | null = this.props.itemsPerPage
     let availableProperties: IListItemProperty[] =
       this.props.availableProperties
@@ -772,7 +771,7 @@ export default class ListOld<TList extends object> extends React.Component<
     // let actions: IAction_P[] = this.props.actions
     let clickable: boolean = this.props.handleSelection !== null
     let grabbable: boolean = this.props.handleGrab !== null
-    let ajaxStatus: TAjaxStatus = this.props.ajaxStatus
+    let ajaxStatus = this.props.ajaxStatus
     let listStyling: React.CSSProperties = this.props.listStyling
     let listSpecificItemClassName: string | null =
       this.props.listSpecificItemClassName

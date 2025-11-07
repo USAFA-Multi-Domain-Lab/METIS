@@ -1,34 +1,34 @@
-import { TAppError, TAppErrorNotifyMethod } from 'metis/client/components/App'
-import { TConnectionStatusMessage } from 'metis/client/components/content/communication/ConnectionStatus'
-import {
-  TPrompt_P,
+import type { TAppError, TAppErrorNotifyMethod } from '@client/components/App'
+import type { TConnectionStatusMessage } from '@client/components/content/communication/ConnectionStatus'
+import type {
   TPromptResult,
-} from 'metis/client/components/content/communication/Prompt'
-import { TButtonMenu_P } from 'metis/client/components/content/user-controls/buttons/ButtonMenu'
-import { TButtonText_P } from 'metis/client/components/content/user-controls/buttons/ButtonText'
-import ButtonSvgEngine from 'metis/client/components/content/user-controls/buttons/panels/engines'
-import { PAGE_REGISTRY, TPage_P, TPageKey } from 'metis/client/components/pages'
-import ServerConnection, {
-  IServerConnectionOptions,
-} from 'metis/client/connect/servers'
-import MetisInfo from 'metis/client/info'
-import ClientLogin from 'metis/client/logins'
-import Notification, { TNotificationOptions } from 'metis/client/notifications'
-import { useInitRenderHandler } from 'metis/client/toolbox/hooks'
-import Logging from 'metis/client/toolbox/logging'
-import ClientUser from 'metis/client/users'
-import { ServerEmittedError } from 'metis/connect/errors'
-import { TLogin } from 'metis/logins'
-import { TExecutionCheats } from 'metis/missions'
-import {
-  ObjectToolbox,
-  StringToolbox,
+  TPrompt_P,
+} from '@client/components/content/communication/Prompt'
+import type { TButtonMenu_P } from '@client/components/content/user-controls/buttons/ButtonMenu'
+import type { TButtonText_P } from '@client/components/content/user-controls/buttons/ButtonText'
+import type { ButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/engines'
+import type { PAGE_REGISTRY, TPageKey, TPage_P } from '@client/components/pages'
+import type { IServerConnectionOptions } from '@client/connect/ServerConnection'
+import { ServerConnection } from '@client/connect/ServerConnection'
+import { MetisInfo } from '@client/info/MetisInfo'
+import { ClientLogin } from '@client/logins/ClientLogin'
+import type { TNotificationOptions } from '@client/notifications/Notification'
+import { Notification } from '@client/notifications/Notification'
+import { useInitRenderHandler } from '@client/toolbox/hooks'
+import { Logging } from '@client/toolbox/Logging'
+import type { ClientUser } from '@client/users/ClientUser'
+import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
+import type { TLogin } from '@shared/logins'
+import type { TExecutionCheats } from '@shared/missions/actions/ActionExecution'
+import { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
+import type {
   TAnyObject,
   TWithKey,
-  Vector2D,
-} from 'metis/toolbox'
-import React, { ReactNode, useEffect, useRef, useState } from 'react'
-import { v4 as generateHash } from 'uuid'
+} from '@shared/toolbox/objects/ObjectToolbox'
+import { ObjectToolbox } from '@shared/toolbox/objects/ObjectToolbox'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import type { ReactNode } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 /* -- constants -- */
 
@@ -180,7 +180,7 @@ const initializeActions = (
 
         // Set the current page props and path.
         setCurrentPageKey(pageKey)
-        setCurrentPageProps({ ...props, key: generateHash() })
+        setCurrentPageProps({ ...props, key: StringToolbox.generateRandomId() })
 
         // If the page switch takes less than
         // the minimum time, wait until the
@@ -513,7 +513,7 @@ const initializeActions = (
           capitalizeChoices,
           list,
           defaultChoice,
-          key: generateHash(),
+          key: StringToolbox.generateRandomId(),
         }
 
         // Store prompt in state.

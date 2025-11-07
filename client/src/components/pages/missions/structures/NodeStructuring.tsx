@@ -1,9 +1,10 @@
-import { useGlobalContext } from 'metis/client/context/global'
-import ClientMission from 'metis/client/missions'
-import ClientMissionPrototype, {
+import { useGlobalContext } from '@client/context/global'
+import type { ClientMission } from '@client/missions/ClientMission'
+import type {
+  ClientMissionPrototype,
   TPrototypeRelation,
-} from 'metis/client/missions/nodes/prototypes'
-import { useRequireLogin } from 'metis/client/toolbox/hooks'
+} from '@client/missions/nodes/ClientMissionPrototype'
+import { useRequireLogin } from '@client/toolbox/hooks'
 import { useState } from 'react'
 import If from '../../../content/util/If'
 import './NodeStructuring.scss'

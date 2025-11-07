@@ -1,6 +1,9 @@
-import type { TOutputContext, TOutputJson } from 'metis/missions'
-import { MissionOutput } from 'metis/missions'
-import { StringToolbox } from 'metis/toolbox'
+import type {
+  TOutputContext,
+  TOutputJson,
+} from '@shared/missions/forces/MissionOutput'
+import { MissionOutput } from '@shared/missions/forces/MissionOutput'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { ServerMissionForce } from './ServerMissionForce'
 
 /**

@@ -1,4 +1,4 @@
-import type { TFileReferenceJson } from 'metis/files'
+import type { TFileReferenceJson } from '@shared/files/FileReference'
 import { model, Schema } from 'mongoose'
 import path from 'path'
 import {

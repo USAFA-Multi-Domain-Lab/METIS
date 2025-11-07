@@ -1,17 +1,16 @@
-import { StringToolbox } from '../../toolbox'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import type {
+  TEffectExecutionTriggered,
+  TEffectExecutionTriggeredJson,
+  TEffectHost,
+} from '../effects/Effect'
+import type { TForce } from '../forces/MissionForce'
 import { Mission, type TMission } from '../Mission'
 import {
   MissionComponent,
   type TMissionComponentDefect,
 } from '../MissionComponent'
-import type {
-  TEffectExecutionTriggered,
-  TEffectExecutionTriggeredJson,
-  TEffectHost,
-  TForce,
-  TNode,
-  TNodeJsonOptions,
-} from '../types'
+import type { TNode, TNodeJsonOptions } from '../nodes/MissionNode'
 
 /* -- CONSTANTS -- */
 

@@ -1,4 +1,4 @@
-import { MetisComponent } from '../'
+import { MetisComponent } from '../MetisComponent'
 import type { Mission } from './Mission'
 
 /**

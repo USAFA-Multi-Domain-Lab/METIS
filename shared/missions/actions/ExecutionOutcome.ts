@@ -1,5 +1,6 @@
-import type { TForce, TNode } from '..'
 import { MetisComponent } from '../../MetisComponent'
+import type { TForce } from '../forces/MissionForce'
+import type { TNode } from '../nodes/MissionNode'
 import type { TExecution } from './ActionExecution'
 import type { TAction } from './MissionAction'
 

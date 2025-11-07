@@ -1,9 +1,9 @@
-import axios, { AxiosRequestConfig, AxiosResponse } from 'axios'
+import { Api, apiOptionsSchema } from 'api'
+import axios, { type AxiosRequestConfig, type AxiosResponse } from 'axios'
 import https from 'https'
-import BooleanToolbox from 'metis/toolbox/booleans'
+import type { TAnyObject } from 'toolbox'
+import { BooleanToolbox } from 'toolbox'
 import z from 'zod'
-import { Api, apiOptionsSchema } from '.'
-import { AnyObject } from '../toolbox'
 
 /**
  * The RESTful API class is used to make HTTP requests to target environments.
@@ -139,9 +139,9 @@ export class RestApi extends Api {
    */
   private buildRequestConfig(
     options: TApiOptions,
-  ): AxiosRequestConfig<AnyObject> {
+  ): AxiosRequestConfig<TAnyObject> {
     // Initialize the configuration.
-    let config: AxiosRequestConfig<AnyObject> = {}
+    let config: AxiosRequestConfig<TAnyObject> = {}
 
     // Determines if the server will reject any
     // connection which is not authorized with

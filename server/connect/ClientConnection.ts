@@ -1,3 +1,4 @@
+import type { ServerUser } from '@server/users/ServerUser'
 import type {
   TClientEvent,
   TClientEvents,
@@ -8,14 +9,13 @@ import type {
   TResponseEvent,
   TServerEvents,
   TServerMethod,
-} from 'metis/connect'
-import { ServerEmittedError } from 'metis/connect'
+} from '@shared/connect'
+import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
 import { RateLimiterMemory, RateLimiterRes } from 'rate-limiter-flexible'
 import type { Socket } from 'socket.io'
 import type { MetisServer } from '..'
 import type { ServerLogin } from '../logins/ServerLogin'
 import { SessionServer } from '../sessions/SessionServer'
-import type { ServerUser } from '../users'
 import { clientEventSchemas, looseEventSchema } from './middleware/validate'
 
 /* -- classes -- */

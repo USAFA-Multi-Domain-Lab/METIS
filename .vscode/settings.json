@@ -1,5 +1,5 @@
 {
-  "typescript.preferences.importModuleSpecifier": "project-relative",
+  "typescript.preferences.importModuleSpecifier": "shortest",
   "eslint.enable": true,
   "eslint.useFlatConfig": true,
   "eslint.validate": [

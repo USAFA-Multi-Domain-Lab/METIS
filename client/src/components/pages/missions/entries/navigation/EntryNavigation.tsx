@@ -1,9 +1,9 @@
-import ButtonSvgPanel from 'metis/client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
-import { useButtonSvgEngine } from 'metis/client/components/content/user-controls/buttons/panels/hooks'
-import If from 'metis/client/components/content/util/If'
-import ClientMission from 'metis/client/missions'
-import { compute } from 'metis/client/toolbox'
-import { MissionComponent } from 'metis/missions'
+import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
+import If from '@client/components/content/util/If'
+import { ClientMission } from '@client/missions/ClientMission'
+import { compute } from '@client/toolbox'
+import type { MissionComponent } from '@shared/missions/MissionComponent'
 import './EntryNavigation.scss'
 
 /**

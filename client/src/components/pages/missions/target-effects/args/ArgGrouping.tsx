@@ -1,7 +1,6 @@
-import { ClientEffect } from 'metis/client/missions/effects'
-import { compute } from 'metis/client/toolbox'
-
-import { TTargetArg } from 'metis/target-environments/args'
+import type { ClientEffect } from '@client/missions/effects/ClientEffect'
+import { compute } from '@client/toolbox'
+import type { TTargetArg } from '@shared/target-environments/args/Arg'
 import Divider from '../../../../content/form/Divider'
 import Arg from './Arg'
 import './ArgGrouping.scss'

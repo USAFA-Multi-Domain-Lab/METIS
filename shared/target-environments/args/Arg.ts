@@ -1,11 +1,14 @@
 import { TargetDependency } from '../targets/TargetDependency'
-import type { TMissionComponentArg, TMissionComponentArgJson } from '../types'
 import type { TBooleanArg, TBooleanArgJson } from './BooleanArg'
 import { BooleanArg } from './BooleanArg'
 import type { TDropdownArg, TDropdownArgJson } from './DropdownArg'
 import { DropdownArg } from './DropdownArg'
 import type { TLargeStringArg, TLargeStringArgJson } from './LargeStringArg'
 import { LargeStringArg } from './LargeStringArg'
+import type {
+  TMissionComponentArg,
+  TMissionComponentArgJson,
+} from './mission-component/MissionComponentArg'
 import { MissionComponentArg } from './mission-component/MissionComponentArg'
 import type { TNumberArg, TNumberArgJson } from './NumberArg'
 import { NumberArg } from './NumberArg'

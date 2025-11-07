@@ -1,6 +1,6 @@
-import { compute } from 'metis/client/toolbox'
-import { ReactNode } from 'react'
-import { MetisComponent } from '../../../../../../../shared'
+import { compute } from '@client/toolbox'
+import type { MetisComponent } from '@shared/MetisComponent'
+import type { ReactNode } from 'react'
 import {
   OPTIONS_COLUMN_WIDTH,
   OPTIONS_COLUMN_WIDTH_IF_LAST,

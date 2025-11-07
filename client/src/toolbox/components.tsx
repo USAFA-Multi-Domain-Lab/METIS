@@ -1,6 +1,6 @@
-import ClientUser from 'metis/client/users'
-import { TLogin } from 'metis/logins'
-import { TWithKey } from 'metis/toolbox'
+import type { ClientUser } from '@client/users/ClientUser'
+import type { TLogin } from '@shared/logins'
+import type { TWithKey } from '@shared/toolbox/objects/ObjectToolbox'
 
 /**
  * Options that can be passed to the render function.

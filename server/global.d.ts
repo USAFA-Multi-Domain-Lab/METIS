@@ -1,24 +1,23 @@
+import type { TEffectType } from '@shared/missions/effects/Effect'
+import type { RequestHandler } from 'express'
+import type { Request, Response } from 'express-serve-static-core'
 import type { Session as ExpressSession } from 'express-session'
-import type { TEffectType } from 'metis/missions'
-import type { ServerFileReference } from './files'
-import type {
-  ServerActionExecution,
-  ServerEffect,
-  ServerExecutionOutcome,
-  ServerMission,
-  ServerMissionAction,
-  ServerMissionFile,
-  ServerMissionForce,
-  ServerMissionNode,
-  ServerMissionPrototype,
-  ServerOutput,
-} from './missions'
-import type { ServerSessionMember, SessionServer } from './sessions'
-import type {
-  ServerTarget,
-  ServerTargetEnvironment,
-} from './target-environments'
-import type { ServerUser } from './users'
+import type { ServerFileReference } from './files/ServerFileReference'
+import type { ServerActionExecution } from './missions/actions/ServerActionExecution'
+import type { ServerExecutionOutcome } from './missions/actions/ServerExecutionOutcome'
+import type { ServerMissionAction } from './missions/actions/ServerMissionAction'
+import type { ServerEffect } from './missions/effects/ServerEffect'
+import type { ServerMissionFile } from './missions/files/ServerMissionFile'
+import type { ServerMissionForce } from './missions/forces/ServerMissionForce'
+import type { ServerOutput } from './missions/forces/ServerOutput'
+import type { ServerMissionNode } from './missions/nodes/ServerMissionNode'
+import type { ServerMissionPrototype } from './missions/nodes/ServerMissionPrototype'
+import type { ServerMission } from './missions/ServerMission'
+import type { ServerSessionMember } from './sessions/ServerSessionMember'
+import type { SessionServer } from './sessions/SessionServer'
+import type { ServerTarget } from './target-environments/ServerTarget'
+import type { ServerTargetEnvironment } from './target-environments/ServerTargetEnvironment'
+import type { ServerUser } from './users/ServerUser'
 
 declare module 'http' {
   export interface SessionData {
@@ -128,4 +127,19 @@ declare global {
      */
     sslCertPath?: string
   }
+
+  /**
+   * @see {@link Request}
+   */
+  export type TExpressRequest = Request
+
+  /**
+   * @see {@link Response}
+   */
+  export type TExpressResponse = Response
+
+  /**
+   * Handle which can be used in express routes.
+   */
+  export type TExpressHandler = RequestHandler
 }

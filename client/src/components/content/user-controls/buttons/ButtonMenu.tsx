@@ -1,19 +1,20 @@
 /* -- COMPONENT -- */
 
-import { compute } from 'metis/client/toolbox'
+import { compute } from '@client/toolbox'
 import {
   useEventListener,
   useMountHandler,
   useResizeObserver,
   useUnmountHandler,
-} from 'metis/client/toolbox/hooks'
-import { StringToolbox, Vector2D } from 'metis/toolbox'
+} from '@client/toolbox/hooks'
+import { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { useRef, useState } from 'react'
 import './ButtonMenu.scss'
 import ButtonSvgPanel from './panels/ButtonSvgPanel'
-import ButtonSvgEngine from './panels/engines'
+import type { ButtonSvgEngine } from './panels/engines'
 import { useButtonSvgEngine } from './panels/hooks'
-import { TButtonSvgEngine, TButtonSvgPanelOptions } from './panels/types'
+import type { TButtonSvgEngine, TButtonSvgPanelOptions } from './panels/types'
 
 /* -- COMPONENT -- */
 

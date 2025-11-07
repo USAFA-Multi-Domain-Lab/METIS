@@ -1,14 +1,17 @@
+import { InfoModel } from '@server/database/models/info'
+import { MissionModel } from '@server/database/models/missions'
+import type { MetisFileStore } from '@server/files/MetisFileStore'
+import { ServerFileToolbox } from '@server/toolbox/files/ServerFileToolbox'
+import type { TMissionSaveJson } from '@shared/missions/Mission'
+import { Mission } from '@shared/missions/Mission'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { Request, Response } from 'express-serve-static-core'
 import fs from 'fs'
-import { Mission, type TMissionSaveJson } from 'metis/missions'
-import { StringToolbox } from 'metis/toolbox'
 import path from 'path'
 import { MetisServer } from '../../../..'
-import { InfoModel, MissionModel } from '../../../../database'
-import type { MetisFileStore } from '../../../../files'
 import { databaseLogger, expressLogger } from '../../../../logging'
-import { ServerFileToolbox } from '../../../../toolbox/files'
-import { ApiResponse, StatusError } from '../../library'
+import { ApiResponse } from '../../library/ApiResponse'
+import { StatusError } from '../../library/StatusError'
 
 /**
  * This will export a mission to a file.
@@ -16,7 +19,7 @@ import { ApiResponse, StatusError } from '../../library'
  * @param response The express response.
  * @returns The mission file.
  */
-const exportMission = async (
+export const exportMission = async (
   request: Request,
   response: Response,
   fileStore: MetisFileStore,
@@ -172,8 +175,6 @@ function prepareCleanUp(response: Response, cleanUpDir: string) {
   response.on('finish', cleanUp)
   response.on('error', cleanUp)
 }
-
-export default exportMission
 
 /**
  * The result type for a mission export.

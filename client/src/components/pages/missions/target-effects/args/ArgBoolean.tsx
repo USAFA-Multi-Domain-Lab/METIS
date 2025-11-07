@@ -1,6 +1,6 @@
-import { ClientEffect } from 'metis/client/missions/effects'
-import { usePostInitEffect } from 'metis/client/toolbox/hooks'
-import { TBooleanArg } from 'metis/target-environments/args/boolean-arg'
+import type { ClientEffect } from '@client/missions/effects/ClientEffect'
+import { usePostInitEffect } from '@client/toolbox/hooks'
+import type { TBooleanArg } from '@shared/target-environments/args/BooleanArg'
 import { useEffect, useState } from 'react'
 import { DetailToggle } from '../../../../content/form/DetailToggle'
 

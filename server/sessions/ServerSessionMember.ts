@@ -1,12 +1,10 @@
-import type {
-  ServerEmittedError,
-  TServerEvents,
-  TServerMethod,
-} from 'metis/connect'
-import type { TMemberRoleId } from 'metis/sessions'
-import { MemberRole, SessionMember } from 'metis/sessions'
-import { StringToolbox } from 'metis/toolbox'
-import type { ClientConnection } from '../connect'
+import type { ClientConnection } from '@server/connect/ClientConnection'
+import type { TServerEvents, TServerMethod } from '@shared/connect'
+import type { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
+import type { TMemberRoleId } from '@shared/sessions/members/MemberRole'
+import { MemberRole } from '@shared/sessions/members/MemberRole'
+import { SessionMember } from '@shared/sessions/members/SessionMember'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { SessionServer } from './SessionServer'
 
 /**

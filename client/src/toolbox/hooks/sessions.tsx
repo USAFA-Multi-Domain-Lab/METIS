@@ -1,9 +1,6 @@
-import {
-  TGlobalContextActions,
-  TNavigateOptions,
-  useGlobalContext,
-} from 'metis/client/context/global'
-import SessionClient from 'metis/client/sessions'
+import type { TNavigateOptions } from '@client/context/global'
+import { useGlobalContext } from '@client/context/global'
+import type { SessionClient } from '@client/sessions/SessionClient'
 import { useRef } from 'react'
 import { useEventListener, useMountHandler } from '.'
 

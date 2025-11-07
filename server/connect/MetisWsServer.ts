@@ -1,11 +1,11 @@
+import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
 import type express from 'express'
-import { ServerEmittedError } from 'metis/connect'
 import { type Socket, Server as SocketIoServer } from 'socket.io'
 import type { MetisServer } from '..'
 import { ClientConnection } from '../connect/ClientConnection'
-import { authMiddleware } from '../connect/middleware'
 import { ServerLogin } from '../logins/ServerLogin'
 import { SessionServer } from '../sessions/SessionServer'
+import { authMiddleware } from './middleware/auth'
 
 /* -- CLASSES -- */
 
