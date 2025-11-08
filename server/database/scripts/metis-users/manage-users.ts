@@ -126,6 +126,7 @@ const connectToDatabase = async () => {
   // Connect to the database.
   console.log('Connecting to database...')
   await server.database.connect()
+  return server
 }
 
 /**
@@ -158,7 +159,7 @@ const manageUsers = async () => {
       // Parse the data.
       const users: TUserInsertData[] = await parseUsers(data)
       // Connect to the database.
-      await connectToDatabase()
+      const server = await connectToDatabase()
 
       switch (method) {
         case 'create':
@@ -182,12 +183,14 @@ const manageUsers = async () => {
           console.log('Users restored successfully.')
           break
       }
+
+      await server.database.close()
     } else if (method === 'delete' || method === 'archive') {
       // Parse the data.
       const usernames: TUserJson['_id'][] = parseUsernames(data)
 
       // Connect to the database.
-      await connectToDatabase()
+      const server = await connectToDatabase()
 
       switch (method) {
         case 'delete':
@@ -210,13 +213,16 @@ const manageUsers = async () => {
           console.log('Users archived successfully.')
           break
       }
+
+      await server.database.close()
     }
 
     // Exit the process.
     process.exit(0)
   } catch (error: any) {
     const method = process.argv[process.argv.length - 1].replace('--', '')
-    console.error(`Failed to ${method} users.\n`, error)
+    const errorMessage = error instanceof Error ? error.message : error
+    console.error(`Failed to ${method} users.\n`, errorMessage)
     process.exit(1)
   }
 }
