@@ -1,19 +1,22 @@
 /* -- COMPONENT -- */
 
-import { useGlobalContext } from "@client/context/global"
-import { compute } from "@client/toolbox"
-import { useEventListener, useMountHandler, useResizeObserver, useUnmountHandler } from "@client/toolbox/hooks"
-import { Vector2D } from "@shared/toolbox/numbers/vectors/Vector2D"
-import { StringToolbox } from "@shared/toolbox/strings/StringToolbox"
-import { useRef, useState } from "react"
-import If from "../../util/If"
+import { useGlobalContext } from '@client/context/global'
+import { compute } from '@client/toolbox'
+import {
+  useEventListener,
+  useMountHandler,
+  useResizeObserver,
+  useUnmountHandler,
+} from '@client/toolbox/hooks'
+import { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import { useRef, useState } from 'react'
+import If from '../../util/If'
 import './ButtonMenu.scss'
-import ButtonSvgPanel from "./panels/ButtonSvgPanel"
-import { ButtonSvgEngine } from "./panels/engines"
-import { useButtonSvgEngine } from "./panels/hooks"
-import { TButtonSvgEngine, TButtonSvgPanelOptions } from "./panels/types"
-
-
+import ButtonSvgPanel from './panels/ButtonSvgPanel'
+import type { ButtonSvgEngine } from './panels/engines'
+import { useButtonSvgEngine } from './panels/hooks'
+import type { TButtonSvgEngine, TButtonSvgPanelOptions } from './panels/types'
 
 /* -- COMPONENT -- */
 

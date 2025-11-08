@@ -570,8 +570,8 @@ export class MetisServer {
   private static createOptionsFromEnvironment(): TMetisServerOptions {
     let envType: string = process.env.METIS_ENV_TYPE ?? 'prod'
 
-    MetisServer.loadEnv(`${process.env.METIS_ENV_TYPE}.defaults`)
-    MetisServer.loadEnv(`${process.env.METIS_ENV_TYPE}`)
+    MetisServer.loadEnv(`${envType}.defaults`)
+    MetisServer.loadEnv(`${envType}`)
 
     const requiredKeys = [
       'PORT',

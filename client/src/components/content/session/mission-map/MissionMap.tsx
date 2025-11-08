@@ -1,6 +1,6 @@
 import { LocalContext, LocalContextProvider } from '@client/context/local'
 import { ClientMission } from '@client/missions/ClientMission'
-import { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
+import type { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
 import { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
 import { ClientMissionPrototype } from '@client/missions/nodes/ClientMissionPrototype'
 import { compute } from '@client/toolbox'
