@@ -253,7 +253,7 @@ export default function UserList({
       getColumnLabel={getUserColumnLabel}
       getCellText={getUserCellText}
       getColumnWidth={getUserColumnWidth}
-      getItemTooltip={() => 'Open user'}
+      getItemTooltip={(item) => `Open ${item.username}`}
       getListButtonLabel={getUserListButtonTooltip}
       getItemButtonLabel={getUserItemButtonTooltip}
       onItemDblClick={(user) => onUserSelection(user)}

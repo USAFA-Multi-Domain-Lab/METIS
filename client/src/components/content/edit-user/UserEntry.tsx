@@ -116,7 +116,7 @@ export default function ({
     if (username !== '' && !user.hasValidUsername) {
       setHandleUsernameError('deliverError')
       setUsernameErrorMessage(
-        'Usernames must be between 5 and 25 characters long and can only contain letters, numbers, and the following special characters: - _ .',
+        'Usernames must be between 5 and 50 characters long and can only contain letters, numbers, and the following special characters: - _ .',
       )
     }
 
@@ -150,7 +150,7 @@ export default function ({
     if (!user.hasValidFirstName && firstName !== '') {
       setHandleFirstNameError('deliverError')
       setFirstNameErrorMessage(
-        'First names must be between 1 and 50 characters long and can only contain letters.',
+        'First names must be between 1 and 50 characters long and can only contain letters and the following special characters: -',
       )
       setUserEmptyStringArray([...userEmptyStringArray, `field=firstName`])
     }
@@ -177,7 +177,7 @@ export default function ({
     if (!user.hasValidLastName && lastName !== '') {
       setHandleLastNameError('deliverError')
       setLastNameErrorMessage(
-        'Last names must be between 1 and 50 characters long and can only contain letters.',
+        'Last names must be between 1 and 50 characters long and can only contain letters and the following special characters: -',
       )
       setUserEmptyStringArray([...userEmptyStringArray, `field=lastName`])
     }
