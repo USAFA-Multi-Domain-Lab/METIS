@@ -31,4 +31,8 @@
   &.PreviewMode {
     grid-template-columns: 1fr auto;
   }
+
+  &.Defective.PreviewMode {
+    grid-template-columns: 1fr auto auto;
+  }
 }
