@@ -24,7 +24,6 @@ npm-debug.log*
 .env.production.local
 environment.json
 environment-test.json
-.github
 /integration/target-env/**
 !/integration/target-env/.gitkeep
 !/integration/target-env/tsconfig.json
@@ -52,3 +51,7 @@ environment-test.json
 
 # user data for importing
 /server/database/scripts/**/*.csv
+
+# GitHub Copilot (A.I. agent)
+.github/*
+!.github/copilot-instructions.md
