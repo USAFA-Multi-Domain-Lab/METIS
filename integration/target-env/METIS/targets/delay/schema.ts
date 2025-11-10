@@ -1,5 +1,3 @@
-import { TargetSchema } from '../../../../library/schema/TargetSchema'
-
 // Argument IDs for the delay target.
 const hoursArgId = 'delayTimeHours'
 const minutesArgId = 'delayTimeMinutes'

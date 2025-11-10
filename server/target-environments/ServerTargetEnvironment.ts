@@ -1,5 +1,5 @@
-import { TargetEnvSchema } from '@integrations/schema/TargetEnvSchema'
-import { TargetSchema } from '@integrations/schema/TargetSchema'
+// Migrated to @metis/ alias (legacy @integrations/ retained via tsconfig for backward compatibility)
+import { TargetEnvSchema } from '@server/target-environments/schema/TargetEnvSchema'
 import { ServerFileToolbox } from '@server/toolbox/files/ServerFileToolbox'
 import { TargetEnvironment } from '@shared/target-environments/TargetEnvironment'
 import { TargetEnvRegistry } from '@shared/target-environments/TargetEnvRegistry'
@@ -12,6 +12,7 @@ import type {
   TargetEnvironmentHook,
   TTargetEnvMethods,
 } from './TargetEnvironmentHook'
+import { TargetEnvSandbox } from './TargetEnvSandbox'
 
 /**
  * A class for managing target environments on the server.
@@ -167,6 +168,7 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
   private static scanTargetDirectory(
     directory: string,
     environment: ServerTargetEnvironment,
+    sandbox: TargetEnvSandbox,
   ): void {
     let schemaFilePath = path.join(
       directory,
@@ -183,17 +185,8 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
 
     // If the schema file exists, grab the default export.
     if (fs.existsSync(schemaFilePath)) {
-      let targetSchema: any = require(schemaFilePath).default
-
-      // If there is no default export or the default
-      // export is not a target schema.
-      if (!targetSchema || !(targetSchema instanceof TargetSchema)) {
-        console.warn(
-          `Invalid schema found at "${schemaFilePath}". Skipping target...`,
-        )
-      }
-      // Else, add the target to the environment.
-      else {
+      try {
+        let targetSchema = sandbox.loadTarget(schemaFilePath)
         // Set the target ID.
         targetSchema.setId(directory)
         // Set the target environment ID.
@@ -201,6 +194,11 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
         // Add the target JSON.
         environment.targets.push(
           ServerTarget.fromSchema(targetSchema, environment),
+        )
+      } catch (error: any) {
+        console.error(error.message)
+        console.warn(
+          `Invalid schema found at "${schemaFilePath}". Skipping target...`,
         )
       }
     }
@@ -212,7 +210,7 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
 
     for (let subdirectory of directoryContents) {
       if (ServerFileToolbox.isFolder(subdirectory)) {
-        this.scanTargetDirectory(subdirectory, environment)
+        this.scanTargetDirectory(subdirectory, environment, sandbox)
       }
     }
   }
@@ -224,6 +222,7 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
    */
   private static scanTargetEnvDirectory(directory: string): void {
     // Gather details.
+    let sandbox = new TargetEnvSandbox(directory)
     let schemaFilePath = path.join(
       directory,
       ServerTargetEnvironment.SCHEMA_FILE_NAME,
@@ -254,32 +253,29 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
       return
     }
 
-    // Grab the default export from the file.
-    let environmentSchema: any = require(schemaFilePath).default
+    try {
+      // Load and register the target environment.
+      let environmentSchema = sandbox.loadEnvironment()
+      let environment =
+        ServerTargetEnvironment.fromSchema(environmentSchema).register()
 
-    // If there is no default export or the default
-    // export is not a target-environment schema, abort.
-    if (!environmentSchema || !(environmentSchema instanceof TargetEnvSchema)) {
+      // If the target environment has a target folder,
+      // scan it for targets.
+      // Scan the directory for targets.
+      this.scanTargetDirectory(targetFolderPath, environment, sandbox)
+
+      // If no targets were found, log a warning message.
+      if (!environment.targets.length) {
+        console.warn(`No targets found in "${environment.name}".`)
+      }
+
+      // Log the success of the integration.
+      console.log(`Successfully integrated "${environment.name}" with METIS.`)
+    } catch (error: any) {
+      console.error(error.message)
       console.warn(invalidSchemaMessage)
       return
     }
-
-    // Create a new target environment.
-    let environment =
-      ServerTargetEnvironment.fromSchema(environmentSchema).register()
-
-    // If the target environment has a target folder,
-    // scan it for targets.
-    // Scan the directory for targets.
-    this.scanTargetDirectory(targetFolderPath, environment)
-
-    // If no targets were found, log a warning message.
-    if (!environment.targets.length) {
-      console.warn(`No targets found in "${environment.name}".`)
-    }
-
-    // Log the success of the integration.
-    console.log(`Successfully integrated "${environment.name}" with METIS.`)
   }
 
   /**
@@ -289,6 +285,9 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
    * @param recursiveOptions Ignore this parameter.
    */
   public static scan(directory: string = this.DEFAULT_DIRECTORY): void {
+    // Load runtime globals for plugins before scanning
+    require('../../integration/target-env/globals')
+
     // If the directory provided is not a folder,
     // throw an error.
     if (!ServerFileToolbox.isFolder(directory)) {
@@ -353,5 +352,47 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
     }
 
     await session.applyMissionEffects('session-teardown')
+  }
+
+  /**
+   * This function is used to help track where calls are made.
+   * A function or method can call this in order to determine
+   * from within which target environment the call was made.
+   * @returns The target environment schema.
+   * @throws If the target environment schema can not be determined.
+   */
+  public static getCallerTargetEnv(): TargetEnvSchema {
+    let filePath = ServerFileToolbox.getCallerFilePath()
+
+    const algorithm = (folder = path.dirname(filePath)): TargetEnvSchema => {
+      // If we have reached outside the target-env directory,
+      // throw an error.
+      if (
+        /(?:[/\\])integration[/\\]target-env$/.test(folder) ||
+        folder === path.dirname(folder)
+      ) {
+        throw new Error('No target environment schema file found in path.')
+      }
+
+      // If a schema file does not exist here,
+      // move up one folder and try again.
+      let schemaPath = path.join(folder, 'schema.ts')
+
+      if (!fs.existsSync(schemaPath)) {
+        return algorithm(path.dirname(folder))
+      }
+
+      // Determine if the schema file is valid.
+      let schema = require(schemaPath).default
+
+      if (!schema || !(schema instanceof TargetEnvSchema)) {
+        return algorithm(path.dirname(folder))
+      }
+
+      // If all checks pass, return the schema.
+      return schema
+    }
+
+    return algorithm()
   }
 }

@@ -1,7 +1,4 @@
-import { TargetDependency } from '@shared/target-environments/targets/TargetDependency'
-import type { TForceMetadata } from '@shared/target-environments/types'
-import { TargetSchema } from '../../../../../library/schema/TargetSchema'
-import { NumberToolbox } from '../../../../../library/toolbox'
+import { NumberToolbox } from '@metis/toolbox/numbers/NumberToolbox'
 
 /**
  * A target available in the METIS target environment that enables a user

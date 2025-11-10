@@ -3,30 +3,10 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@shared/target-environments": ["../../shared/target-environments"],
-      "@shared/target-environments/*": ["../../shared/target-environments/*"],
-      "@shared/toolbox/objects/ObjectToolbox": [
-        "../../shared/toolbox/objects/ObjectToolbox"
-      ],
-      "@shared/toolbox/numbers/NumberToolbox": [
-        "../../shared/toolbox/numbers/NumberToolbox"
-      ],
-      "@shared/toolbox/strings/VersionToolbox": [
-        "../../shared/toolbox/strings/VersionToolbox"
-      ],
-      "@shared/toolbox/booleans/BooleanToolbox": [
-        "../../shared/toolbox/booleans/BooleanToolbox"
-      ]
+      "@metis/*": ["*"]
     },
     "module": "NodeNext",
     "moduleResolution": "NodeNext"
   },
-  "include": [
-    "./**/*",
-    "../../shared/target-environments/*",
-    "../../shared/toolbox/objects/ObjectToolbox.ts",
-    "../../shared/toolbox/numbers/NumberToolbox.ts",
-    "../../shared/toolbox/strings/VersionToolbox.ts",
-    "../../shared/toolbox/booleans/BooleanToolbox.ts"
-  ]
+  "include": [".", "../../shared/", "../../server/"]
 }

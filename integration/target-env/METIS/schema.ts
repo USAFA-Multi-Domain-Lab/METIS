@@ -1,5 +1,3 @@
-import { TargetEnvSchema } from '../../library/schema/TargetEnvSchema'
-
 /**
  * Represents the `METIS` target environment.
  */

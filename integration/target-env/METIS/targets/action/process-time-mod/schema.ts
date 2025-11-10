@@ -1,7 +1,3 @@
-import { TargetDependency } from '@shared/target-environments/targets/TargetDependency'
-import type { TActionMetadata } from '@shared/target-environments/types'
-import { TargetSchema } from '../../../../../library/schema/TargetSchema'
-
 // Argument IDs for the process time modifier target.
 const actionArgId = 'actionMetadata'
 const hoursArgId = 'processTimeHours'

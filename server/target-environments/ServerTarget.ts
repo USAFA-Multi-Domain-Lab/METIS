@@ -1,4 +1,4 @@
-import type { TargetSchema } from '@integrations/target-env-classes/targets'
+import type { TargetSchema } from '@server/target-environments/schema/TargetSchema'
 import type { TTargetArg } from '@shared/target-environments/args/Arg'
 import { Arg } from '@shared/target-environments/args/Arg'
 import type { TTargetScript } from '@shared/target-environments/targets/Target'

@@ -1,10 +1,4 @@
-import { TargetMigrationRegistry } from '@shared/target-environments/targets/migrations/TargetMigrationRegistry'
-import { TargetDependency } from '@shared/target-environments/targets/TargetDependency'
-import type {
-  TFileMetadata,
-  TForceMetadata,
-} from '@shared/target-environments/types'
-import { TargetSchema } from '../../../../../library/schema/TargetSchema'
+import { TargetMigrationRegistry } from '@metis/schema/TargetMigrationRegistry'
 
 /**
  * Migrations for the File Access target.

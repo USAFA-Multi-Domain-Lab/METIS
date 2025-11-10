@@ -15,7 +15,7 @@ import {
 import StarterKit from '@tiptap/starter-kit'
 import { all, createLowlight } from 'lowlight'
 import { useEffect } from 'react'
-import { TRichText_P } from '.'
+import type { TRichText_P } from '.'
 import ButtonSvgPanel from '../../user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from '../../user-controls/buttons/panels/hooks'
 import If from '../../util/If'
