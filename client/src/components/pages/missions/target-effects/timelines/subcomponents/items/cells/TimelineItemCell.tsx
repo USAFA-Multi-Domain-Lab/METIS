@@ -8,7 +8,7 @@ import './TimelineItemCell.scss'
  */
 export function TimelineItemCell({
   children,
-  className = '',
+  classes = [],
   rootRef,
   onClick,
   onDoubleClick,
@@ -20,7 +20,12 @@ export function TimelineItemCell({
    * Classes for the root element of the component.
    */
   const rootClasses = compute<ClassList>(() => {
-    return new ClassList('TimelineItemCell').set(className, className)
+    if (!Array.isArray(classes)) classes = [classes]
+    let classList = new ClassList('TimelineItemCell').set(
+      classes,
+      classes.length,
+    )
+    return classList
   })
 
   /* -- RENDER -- */
@@ -49,7 +54,7 @@ export type TTimelineItemCell_P = {
   /**
    * Additional CSS classes to apply to the cell.
    */
-  className?: string
+  classes?: string | string[]
   /**
    * A ref to the root element of the cell.
    */

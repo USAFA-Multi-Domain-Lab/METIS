@@ -3,6 +3,7 @@ import { useButtonMenuEngine } from '@client/components/content/user-controls/bu
 import ButtonMenuController from '@client/components/content/user-controls/buttons/ButtonMenuController'
 import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
+import If from '@client/components/content/util/If'
 import { useMissionPageContext } from '@client/components/pages/missions/context'
 import useEffectItemButtonCallbacks from '@client/components/pages/missions/hooks/mission-components/effects'
 import { useGlobalContext } from '@client/context/global'
@@ -48,7 +49,7 @@ export function TimelineItem<TType extends TEffectType>({
   const { isAuthorized } = useRequireLogin()
   const globalContext = useGlobalContext()
   const pageContext = useMissionPageContext()
-  const { state: pageState } = pageContext
+  const { state: pageState, viewMode } = pageContext
   const [missionDefects] = pageState.defects
   const { showButtonMenu } = globalContext.actions
   const timelineContext = useTimelineContext<TType>()
@@ -163,7 +164,8 @@ export function TimelineItem<TType extends TEffectType>({
       .set('Selected', selection?._id === item._id)
       .set('Dragged', item._id === draggedItem?._id)
       .set('HoverTop', isTargeted && hoverOver === 'top')
-      .set('HoverBottom', isTargeted && hoverOver === 'bottom'),
+      .set('HoverBottom', isTargeted && hoverOver === 'bottom')
+      .set('PreviewMode', viewMode === 'preview'),
   )
 
   /**
@@ -196,6 +198,10 @@ export function TimelineItem<TType extends TEffectType>({
     ) {
       return
     }
+
+    // If the view mode is preview, do not
+    // highlight the target or scroll.
+    if (viewMode === 'preview') return
 
     let event = lastMouseMove.current
     let timeline = elements.root.current
@@ -413,7 +419,9 @@ export function TimelineItem<TType extends TEffectType>({
         trigger={'r-click'}
         onActivate={onButtonMenuActivate}
       />
-      <TimelineDragHandle item={item} />
+      <If condition={viewMode === 'edit'}>
+        <TimelineDragHandle item={item} />
+      </If>
       <TimelineItemCell
         onClick={onNameClick}
         onDoubleClick={() => host.mission.select(item)}
@@ -422,7 +430,7 @@ export function TimelineItem<TType extends TEffectType>({
         <Tooltip description={tooltipDescription} />
       </TimelineItemCell>
       <TimelineDefectiveCell defects={defects} />
-      <TimelineItemCell className='TimelineItemOptions'>
+      <TimelineItemCell classes='TimelineItemOptions'>
         <ButtonSvgPanel engine={viewOptionsButtonEngine} />
       </TimelineItemCell>
     </div>

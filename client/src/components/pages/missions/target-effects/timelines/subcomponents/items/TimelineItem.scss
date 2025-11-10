@@ -27,4 +27,8 @@
   &.Dragged:not(.HoverTop):not(.HoverBottom):hover {
     @include background-mask($opacity: 0.25);
   }
+
+  &.PreviewMode {
+    grid-template-columns: 1fr auto;
+  }
 }

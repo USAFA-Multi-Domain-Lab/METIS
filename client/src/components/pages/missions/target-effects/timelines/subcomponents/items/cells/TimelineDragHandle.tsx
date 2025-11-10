@@ -134,7 +134,7 @@ export default function TimelineDragHandle<TType extends TEffectType>({
 
   return (
     <TimelineItemCell
-      className='TimelineDragHandle'
+      classes='TimelineDragHandle'
       rootRef={rootRef}
       onMouseDown={onMouseDown}
     >

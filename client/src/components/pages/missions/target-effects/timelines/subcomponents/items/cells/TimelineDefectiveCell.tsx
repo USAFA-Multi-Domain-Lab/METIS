@@ -43,7 +43,7 @@ export default function TimelineDefectiveCell<TType extends TEffectType>({
   if (!defective) return null
 
   return (
-    <TimelineItemCell className='TimelineDefectiveCell'>
+    <TimelineItemCell classes='TimelineDefectiveCell'>
       <WarningIndicator active={defective} description={warningDescription} />
     </TimelineItemCell>
   )

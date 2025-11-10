@@ -237,7 +237,6 @@ export default function MissionPage(
     getListButtonPermissions: () => ['missions_write'],
     getItemButtonPermissions: () => ['missions_write'],
     onSelect: (file) => {
-      if (viewMode === 'preview') return
       if (file) mission.select(file)
       else mission.deselect()
     },
@@ -289,8 +288,6 @@ export default function MissionPage(
   const viewMode: 'edit' | 'preview' = compute(() =>
     isAuthorized('missions_write') ? 'edit' : 'preview',
   )
-  /* -- HANDLERS --
-   */
 
   /* -- EFFECTS -- */
 
@@ -312,17 +309,13 @@ export default function MissionPage(
           nonRevealedDisplayMode: 'show',
         })
 
-        mission.forces.forEach((force) => {
-          force.nodes.forEach((node) => {
-            if (viewMode === 'preview') {
-              node.disable()
-            }
-          })
-        })
-        mission.files.forEach((file) => {
-          if (viewMode === 'preview') {
-            file.disable()
-          }
+        // Prevents users from interacting with
+        // excluded nodes on the mission map while
+        // in preview mode. See "MapNode.tsx" for
+        // more info.
+        mission.nodes.forEach((node) => {
+          const disableNode = node.exclude && viewMode === 'preview'
+          if (disableNode) node.disable()
         })
 
         setMission(mission)
@@ -505,12 +498,15 @@ export default function MissionPage(
         // Fetch files from API and store
         // them in the state.
         const globalFiles = await ClientFileReference.$fetchAll()
-        // Disable any files that are already in
-        // the mission.
         globalFiles.forEach((file) => {
+          // Disable files if the user is only
+          // allowed to preview the mission.
           if (viewMode === 'preview') {
             file.disable()
-          } else {
+          }
+          // Disable any files that are already in
+          // the mission.
+          else {
             file.setDisabled(
               mission.files.some((f) => f.reference._id === file._id),
               'File is already attached.',
