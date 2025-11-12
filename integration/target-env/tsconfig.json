@@ -6,5 +6,5 @@
       "@metis/*": ["../library/*"]
     }
   },
-  "include": [".", "../library/", "./global.ts"]
+  "include": [".", "../library/"]
 }

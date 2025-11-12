@@ -135,8 +135,14 @@ export class ServerMission extends Mission<TMetisServerComponents> {
       get forces() {
         return self.forces.map((force) => force.toTargetEnvContext())
       },
-      get nodes() {
-        return self.nodes.map((node) => node.toTargetEnvContext())
+      get allNodes() {
+        return self.allNodes.map((node) => node.toTargetEnvContext())
+      },
+      get allActions() {
+        return self.allActions.map((action) => action.toTargetEnvContext())
+      },
+      get allEffects() {
+        return self.allEffects.map((effect) => effect.toTargetEnvContext())
       },
       get files() {
         return self.files.map((file) => file.toTargetEnvContext())

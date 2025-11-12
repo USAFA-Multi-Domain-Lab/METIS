@@ -771,9 +771,17 @@ export type TTargetEnvExposedMission = Readonly<
        */
       forces: TTargetEnvExposedForce[]
       /**
-       * @see {@link Mission.nodes}
+       * @see {@link Mission.allNodes}
        */
-      nodes: TTargetEnvExposedNode[]
+      allNodes: TTargetEnvExposedNode[]
+      /**
+       * @see {@link Mission.allActions}
+       */
+      allActions: TTargetEnvExposedAction[]
+      /**
+       * @see {@link Mission.allEffects}
+       */
+      allEffects: TTargetEnvExposedEffect[]
       /**
        * @see {@link Mission.files}
        */

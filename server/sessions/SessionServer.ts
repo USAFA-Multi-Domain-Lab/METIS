@@ -271,7 +271,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     return new Promise<void>(async (resolve) => {
       let allExecutions: Promise<void>[] = []
 
-      this.mission.nodes.forEach((node) => {
+      this.mission.allNodes.forEach((node) => {
         if (node.executing) {
           let execution = node.latestExecution!
           execution.abort()
