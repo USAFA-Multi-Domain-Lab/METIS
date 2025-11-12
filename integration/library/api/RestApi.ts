@@ -1,9 +1,8 @@
-import { Api, apiOptionsSchema } from 'api'
+import type { TAnyObject } from '@metis/toolbox/objects/ObjectToolbox'
 import axios, { type AxiosRequestConfig, type AxiosResponse } from 'axios'
 import https from 'https'
-import type { TAnyObject } from 'toolbox'
-import { BooleanToolbox } from 'toolbox'
 import z from 'zod'
+import { Api, apiOptionsSchema } from './Api'
 
 /**
  * The RESTful API class is used to make HTTP requests to target environments.
@@ -287,14 +286,7 @@ export class RestApi extends Api {
     envConfig: Record<string, string | undefined>,
   ): RestApi {
     try {
-      let rejectUnauthorized: boolean | undefined = undefined
-      if (envConfig.rejectUnauthorized !== undefined) {
-        rejectUnauthorized = BooleanToolbox.parse(envConfig.rejectUnauthorized)
-      }
-      const apiOptions: TApiOptions = restApiOptionsSchema.parse({
-        ...envConfig,
-        rejectUnauthorized,
-      })
+      const apiOptions: TApiOptions = restApiOptionsSchema.parse(envConfig)
       return new RestApi(apiOptions)
     } catch (error: any) {
       throw new Error(`Invalid REST API configuration: ${error.message}`)

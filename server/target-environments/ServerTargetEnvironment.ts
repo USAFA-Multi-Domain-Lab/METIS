@@ -284,7 +284,7 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
 
       // If no targets were found, log a warning message.
       if (!environment.targets.length) {
-        console.warn(`No targets found in "${environment.name}".`)
+        console.warn(`No valid targets found in "${environment.name}".`)
       }
 
       // Log the success of the integration.
