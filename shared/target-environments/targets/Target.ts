@@ -1,4 +1,3 @@
-import type { TTargetEnvExposedContext } from '../../../server/target-environments/TargetEnvContext'
 import { MetisComponent } from '../../MetisComponent'
 import type { TAnyObject } from '../../toolbox/objects/ObjectToolbox'
 import type { TTargetArg, TTargetArgJson } from '../args/Arg'
@@ -131,16 +130,6 @@ export type TTargetOptions = {}
  * Options for converting the TargetEnvironment to JSON.
  */
 export type TTargetJsonOptions = {}
-
-/**
- * A valid script that can be executed on a target.
- */
-export type TTargetScript = (
-  /**
-   * The context for the target environment.
-   */
-  context: TTargetEnvExposedContext,
-) => Promise<void>
 
 /**
  * Extracts the target type from a registry of METIS

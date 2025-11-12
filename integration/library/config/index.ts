@@ -1,14 +1,13 @@
 import fs from 'fs'
-import MetisServer from '../../../server'
-import { getCallerTargetEnv } from '../toolbox/files'
-
+import { MetisServer } from '../../../server/MetisServer'
+import { ServerTargetEnvironment } from '../../../server/target-environments/ServerTargetEnvironment'
 /**
  * @returns Environment variables for the current target
  * environment.
  */
 export function loadConfig() {
   try {
-    let environment = getCallerTargetEnv()
+    let environment = ServerTargetEnvironment.getCallerTargetEnv()
     let { _id } = environment
     let config: Record<string, string> = {}
     let data = fs.readFileSync(MetisServer.ENVIRONMENT_FILE_PATH, 'utf-8')

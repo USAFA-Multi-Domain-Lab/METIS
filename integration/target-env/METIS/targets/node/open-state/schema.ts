@@ -1,7 +1,3 @@
-import { TargetDependency } from '@shared/target-environments/targets/TargetDependency'
-import type { TNodeMetadata } from '@shared/target-environments/types'
-import { TargetSchema } from '../../../../../library/schema/TargetSchema'
-
 /**
  * The ID of the `openState` argument.
  */

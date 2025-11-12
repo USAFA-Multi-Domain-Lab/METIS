@@ -1,20 +1,13 @@
 
-# packages
-/node_modules
-/server/node_modules
-/server/tests/node_modules
-/client/node_modules
-/shared/node_modules
+# Node
+node_modules
 npm-debug.log*
-/coverage
-/server/.nyc_output
-/server/.nyc_output/processinfo
 
-# react
+# React
 /client/build
 /client/dist
 
-# env
+# Environment
 .DS_Store
 *.env
 !*.defaults.env
@@ -26,30 +19,30 @@ environment.json
 environment-test.json
 /integration/target-env/**
 !/integration/target-env/.gitkeep
+!/integration/target-env/globals.ts
 !/integration/target-env/tsconfig.json
 !/integration/target-env/METIS/
 !/integration/target-env/METIS/**
-/integration/library/node_modules
 
-# deployment
+# Deployment
 /deployment/docker/.out
 
-# log
+# Logging
 /server/logs
 *.log
 
-# temp
+# Temp
 /server/temp
 
-# backup
+# Backup
 /server/database/backups
 
-# file store
+# File stores
 /server/files/store
 /server/files/store-dev
 /server/files/store-test
 
-# user data for importing
+# Script IO data
 /server/database/scripts/**/*.csv
 
 # GitHub Copilot (A.I. agent)

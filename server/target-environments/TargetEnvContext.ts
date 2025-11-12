@@ -5,14 +5,21 @@ import type { ServerEffect } from '@server/missions/effects/ServerEffect'
 import type { ServerMissionFile } from '@server/missions/files/ServerMissionFile'
 import type { ServerMissionForce } from '@server/missions/forces/ServerMissionForce'
 import type { ServerMissionNode } from '@server/missions/nodes/ServerMissionNode'
+import type { Mission } from '@shared/missions/Mission'
+import type { MissionAction } from '@shared/missions/actions/MissionAction'
+import type { Effect } from '@shared/missions/effects/Effect'
+import type { MissionFile } from '@shared/missions/files/MissionFile'
+import type { MissionForce } from '@shared/missions/forces/MissionForce'
+import type { MissionNode } from '@shared/missions/nodes/MissionNode'
+import type { SessionMember } from '@shared/sessions/members/SessionMember'
+import type { TargetEnvironment } from '@shared/target-environments/TargetEnvironment'
+import type { Target } from '@shared/target-environments/targets/Target'
 import type {
   TEffectExecutionTriggered,
   TEffectSessionTriggered,
-  TEffectTrigger,
   TEffectType,
 } from '../../shared/missions/effects/Effect'
 import type { TOutputContext } from '../../shared/missions/forces/MissionOutput'
-import type { TAnyObject } from '../../shared/toolbox/objects/ObjectToolbox'
 import type { ServerSessionMember } from '../sessions/ServerSessionMember'
 import type { SessionServer, TOutputTo } from '../sessions/SessionServer'
 import { TargetEnvStore } from '../sessions/TargetEnvStore'
@@ -110,12 +117,12 @@ export class TargetEnvContext<TType extends TEffectType = TEffectType> {
       case 'sessionTriggeredEffect':
         return {
           ...commonContext,
-          user: null,
+          triggeredBy: null,
         }
       case 'executionTriggeredEffect':
         return {
           ...commonContext,
-          user: this.data.user.toTargetEnvContext(),
+          triggeredBy: this.data.member.toTargetEnvContext(),
         }
     }
   }
@@ -592,7 +599,7 @@ export class TargetEnvContext<TType extends TEffectType = TEffectType> {
  */
 interface TExposedContextSession {
   type: 'sessionTriggeredEffect'
-  readonly user: null
+  readonly triggeredBy: null
 }
 
 /**
@@ -601,7 +608,7 @@ interface TExposedContextSession {
  */
 interface TExposedContextExecution {
   type: 'executionTriggeredEffect'
-  readonly user: TTargetEnvExposedUser
+  readonly triggeredBy: TTargetEnvExposedMember
 }
 
 /**
@@ -630,9 +637,9 @@ export type TTargetEnvExposedContext<TType extends TEffectType = TEffectType> =
      */
     readonly mission: TTargetEnvExposedMission
     /**
-     * The user who triggered the effect.
+     * The member who triggered the effect.
      */
-    readonly user: TSelectExposedContext[TType]['user']
+    readonly triggeredBy: TSelectExposedContext[TType]['triggeredBy']
     /**
      * A store that is unique to the session and target environment.
      * This can be used to store and retrieve temporary, random-access
@@ -752,140 +759,274 @@ type TCommonExposedContext<TType extends TEffectType> = Omit<
 >
 
 /**
- * The context of the mission for the target environment.
+ * Data for a mission exposed in a target script.
  */
-export type TTargetEnvExposedMission = {
-  /**
-   * The ID for the mission.
-   */
-  readonly _id: string
-  /**
-   * The name for the mission.
-   */
-  readonly name: string
-  /**
-   * All forces that exist in the mission.
-   */
-  get forces(): TTargetEnvExposedForce[]
-  /**
-   * All nodes that exist in the mission.
-   */
-  get nodes(): TTargetEnvExposedNode[]
-}
+export type TTargetEnvExposedMission = Readonly<
+  TCreateJsonType<
+    Mission,
+    '_id' | 'name' | 'resourceLabel',
+    {
+      /**
+       * @see {@link Mission.forces}
+       */
+      forces: TTargetEnvExposedForce[]
+      /**
+       * @see {@link Mission.allNodes}
+       */
+      allNodes: TTargetEnvExposedNode[]
+      /**
+       * @see {@link Mission.allActions}
+       */
+      allActions: TTargetEnvExposedAction[]
+      /**
+       * @see {@link Mission.allEffects}
+       */
+      allEffects: TTargetEnvExposedEffect[]
+      /**
+       * @see {@link Mission.files}
+       */
+      files: TTargetEnvExposedFile[]
+      /**
+       * @see {@link Mission.effects}
+       */
+      effects: TTargetEnvExposedEffect<'sessionTriggeredEffect'>[]
+    }
+  >
+>
 
 /**
- * The context of the force for the target environment.
+ * Data for a force exposed in a target script.
  */
-export type TTargetEnvExposedForce = {
-  /**
-   * The ID for the force.
-   */
-  readonly _id: string
-  /**
-   * The name for the force.
-   */
-  readonly name: string
-  /**
-   * All nodes that exist in the force.
-   */
-  readonly nodes: TTargetEnvExposedNode[]
-}
+export type TTargetEnvExposedForce = Readonly<
+  TCreateJsonType<
+    MissionForce,
+    | '_id'
+    | 'localKey'
+    | 'name'
+    | 'color'
+    | 'initialResources'
+    | 'resourcesRemaining',
+    {
+      /**
+       * @see {@link MissionForce.mission}
+       */
+      mission: TTargetEnvExposedMission
+      /**
+       * @see {@link MissionForce.nodes}
+       */
+      nodes: TTargetEnvExposedNode[]
+    }
+  >
+>
 
 /**
- * The context of the node for the target environment.
+ * Data for a node exposed in a target script.
  */
-export type TTargetEnvExposedNode = {
-  /**
-   * The ID for the node.
-   */
-  readonly _id: string
-  /**
-   * The name for the node.
-   */
-  readonly name: string
-  /**
-   * The description for the node.
-   */
-  readonly description: string
-  /**
-   * The actions for the node.
-   */
-  readonly actions: TTargetEnvExposedAction[]
-}
+export type TTargetEnvExposedNode = Readonly<
+  TCreateJsonType<
+    MissionNode,
+    | '_id'
+    | 'localKey'
+    | 'name'
+    | 'description'
+    | 'color'
+    | 'opened'
+    | 'openable'
+    | 'closable'
+    | 'blocked'
+    | 'executing'
+    | 'executionStatus'
+    | 'executionState'
+    | 'executed'
+    | 'initiallyBlocked'
+    | 'device'
+    | 'revealed'
+    | 'position'
+    | 'hasChildren'
+    | 'hasSiblings',
+    {
+      /**
+       * @see {@link MissionForce.mission}
+       */
+      mission: TTargetEnvExposedMission
+      /**
+       * @see {@link MissionNode.force}
+       */
+      force: TTargetEnvExposedForce
+      /**
+       * @see {@link MissionNode.actions}
+       */
+      actions: TTargetEnvExposedAction[]
+      /**
+       * @see {@link MissionNode.parent}
+       */
+      parent: TTargetEnvExposedNode | null
+      /**
+       * @see {@link MissionNode.children}
+       */
+      children: TTargetEnvExposedNode[]
+      /**
+       * @see {@link MissionNode.siblings}
+       */
+      siblings: TTargetEnvExposedNode[]
+    }
+  >
+>
 
 /**
- * The context of the action for the target environment.
+ * Data for a file exposed in a target script.
  */
-export type TTargetEnvExposedAction = {
-  /**
-   * The ID for the action.
-   */
-  readonly _id: string
-  /**
-   * The name for the action.
-   */
-  readonly name: string
-  /**
-   * The description for the action.
-   */
-  readonly description: string
-  /**
-   * The chance that the action will succeed.
-   */
-  readonly successChance: number
-  /**
-   * The amount of time it takes to execute the action.
-   */
-  readonly processTime: number
-  /**
-   * The amount of resources the action will be subtracted from that available to the executor of the action.
-   */
-  readonly resourceCost: number
-  /**
-   * All effects that exist in the action.
-   */
-  readonly effects: TTargetEnvExposedEffect[]
-}
+export type TTargetEnvExposedFile = Readonly<
+  TCreateJsonType<
+    MissionFile,
+    | '_id'
+    | 'name'
+    | 'originalName'
+    | 'alias'
+    | 'extension'
+    | 'mimetype'
+    | 'initialAccess'
+    | 'size',
+    {
+      /**
+       * @see {@link MissionFile.mission}
+       */
+      mission: TTargetEnvExposedMission
+    }
+  >
+>
 
 /**
- * The context of the effect for the target environment.
+ * Data for an action exposed in a target script.
  */
-export type TTargetEnvExposedEffect = {
-  /**
-   * The ID for the effect.
-   */
-  readonly _id: string
-  /**
-   * The name for the effect.
-   */
-  readonly name: string
-  /**
-   * The type of effect being used.
-   */
-  readonly type: TEffectType
-  /**
-   * The trigger for the effect.
-   */
-  readonly trigger: TEffectTrigger
-  /**
-   * The arguments used to affect the target.
-   */
-  readonly args: TAnyObject
-}
+export type TTargetEnvExposedAction = Readonly<
+  TCreateJsonType<
+    MissionAction,
+    | '_id'
+    | 'localKey'
+    | 'name'
+    | 'type'
+    | 'description'
+    | 'successChance'
+    | 'failureChance'
+    | 'processTime'
+    | 'resourceCost'
+    | 'areEnoughResources'
+    | 'executing'
+    | 'executionCount'
+    | 'executionLimitReached',
+    {
+      /**
+       * @see {@link MissionAction.mission}
+       */
+      mission: TTargetEnvExposedMission
+      /**
+       * @see {@link MissionAction.force}
+       */
+      force: TTargetEnvExposedForce
+      /**
+       * @see {@link MissionAction.node}
+       */
+      node: TTargetEnvExposedNode
+      /**
+       * @see {@link MissionAction.effects}
+       */
+      effects: TTargetEnvExposedEffect[]
+    }
+  >
+>
 
 /**
- * The context of the user for the target environment.
+ * Data for an effect exposed in a target script.
  */
-export type TTargetEnvExposedUser = {
-  /**
-   * The ID for the user.
-   */
-  readonly _id: string
-  /**
-   * The username for the user.
-   */
-  readonly username: string
-}
+export type TTargetEnvExposedEffect<TType extends TEffectType = TEffectType> =
+  Readonly<
+    TCreateJsonType<
+      Effect<TMetisBaseComponents, TType>,
+      | '_id'
+      | 'localKey'
+      | 'name'
+      | 'type'
+      | 'description'
+      | 'trigger'
+      | 'args'
+      | 'order',
+      {
+        /**
+         * @see {@link Effect.mission}
+         */
+        mission: TTargetEnvExposedMission
+        /**
+         * @see {@link Effect.host}
+         */
+        host: TTargetEnvExposedMission | TTargetEnvExposedAction
+        /**
+         * @see {@link Effect.sourceForce}
+         */
+        sourceForce: TTargetEnvExposedForce | null
+        /**
+         * @see {@link Effect.node}
+         */
+        sourceNode: TTargetEnvExposedNode | null
+        /**
+         * @see {@link Effect.sourceAction}
+         */
+        sourceAction: TTargetEnvExposedAction | null
+        /**
+         * @see {@link Effect.target}
+         */
+        target: TTargetEnvExposedTarget | null
+        /**
+         * @see {@link Effect.environment}
+         */
+        environment: TTargetEnvExposedEnvironment | null
+      }
+    >
+  >
+
+/**
+ * Data for a target environment exposed in
+ * a target script.
+ */
+export type TTargetEnvExposedTarget = Readonly<
+  TCreateJsonType<
+    Target,
+    '_id' | 'name' | 'description',
+    {
+      /**
+       * @see {@link Target.environment}
+       */
+      environment: TTargetEnvExposedEnvironment
+    }
+  >
+>
+
+/**
+ * Data for a target exposed in a target script.
+ */
+export type TTargetEnvExposedEnvironment = Readonly<
+  TCreateJsonType<
+    TargetEnvironment,
+    '_id' | 'name' | 'description' | 'version',
+    {
+      /**
+       * @see {@link TargetEnvironment.targets}
+       */
+      targets: TTargetEnvExposedTarget[]
+    }
+  >
+>
+
+/**
+ * Data for a member exposed in a target script.
+ */
+export type TTargetEnvExposedMember = Readonly<
+  TCreateJsonType<
+    SessionMember,
+    '_id' | 'name' | 'username' | 'firstName' | 'lastName',
+    {}
+  >
+>
 
 /**
  * Options for methods that manipulate a node.

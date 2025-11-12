@@ -5,7 +5,12 @@
     "paths": {
       "@shared/*": ["../shared/*"],
       "@server/*": ["*"],
-      "@integrations/schema/*": ["../integration/library/schema/*"]
+      "@integrations/schema/*": ["../integration/library/schema/*"],
+      "@metis/*": ["../integration/library/*"],
+      "@metis/schema/*": ["../integration/library/schema/*"],
+      "@metis/config/*": ["../integration/library/config/*"],
+      "@metis/toolbox/*": ["../integration/library/toolbox/*"],
+      "@metis/api/*": ["../integration/library/api/*"]
     },
     "module": "NodeNext",
     "moduleResolution": "NodeNext",

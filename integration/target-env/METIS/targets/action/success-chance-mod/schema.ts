@@ -1,7 +1,3 @@
-import { TargetDependency } from '@shared/target-environments/targets/TargetDependency'
-import type { TActionMetadata } from '@shared/target-environments/types'
-import { TargetSchema } from '../../../../../library/schema/TargetSchema'
-
 /**
  * A target available in the METIS target environment that enables a user
  * to manipulate the success chance of a specific action within a node or

@@ -116,19 +116,56 @@ export class ServerMissionAction extends MissionAction<TMetisServerComponents> {
   }
 
   /**
-   * Extracts the necessary properties from the action to be used as a reference
-   * in a target environment.
-   * @returns The action's necessary properties.
+   * @returns The properties from the action that are
+   * safe to expose in a target script.
    */
   public toTargetEnvContext(): TTargetEnvExposedAction {
+    const self = this
     return {
-      _id: this._id,
-      name: this.name,
-      description: this.description,
-      successChance: this.successChance,
-      processTime: this.processTime,
-      resourceCost: this.resourceCost,
-      effects: this.effects.map((effect) => effect.toTargetEnvContext()),
+      _id: self._id,
+      localKey: self.localKey,
+      name: self.name,
+      type: self.type,
+      description: self.description,
+      // Use getters to provide live data.
+      get successChance() {
+        return self.successChance
+      },
+      get failureChance() {
+        return self.failureChance
+      },
+      get processTime() {
+        return self.processTime
+      },
+      get resourceCost() {
+        return self.resourceCost
+      },
+      get executing() {
+        return self.executing
+      },
+      get executionCount() {
+        return self.executionCount
+      },
+      get executionLimitReached() {
+        return self.executionLimitReached
+      },
+      get areEnoughResources() {
+        return self.areEnoughResources
+      },
+      // Use getters here to decrease load during
+      // serialization.
+      get mission() {
+        return self.mission.toTargetEnvContext()
+      },
+      get force() {
+        return self.force.toTargetEnvContext()
+      },
+      get node() {
+        return self.node.toTargetEnvContext()
+      },
+      get effects() {
+        return self.effects.map((effect) => effect.toTargetEnvContext())
+      },
     }
   }
 

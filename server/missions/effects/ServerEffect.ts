@@ -63,17 +63,43 @@ export class ServerEffect<
   }
 
   /**
-   * Extracts the necessary properties from the effect to be used as a reference
-   * in a target environment.
-   * @returns The effect's necessary properties.
+   * @returns The properties from the effect that are
+   * safe to expose in a target script.
    */
-  public toTargetEnvContext(): TTargetEnvExposedEffect {
+  public toTargetEnvContext(): TTargetEnvExposedEffect<TType> {
+    const self = this
     return {
-      _id: this._id,
-      name: this.name,
-      type: this.type,
-      trigger: this.trigger,
-      args: this.argsToTargetEnvContext(this.args),
+      _id: self._id,
+      localKey: self.localKey,
+      name: self.name,
+      type: self.type,
+      trigger: self.trigger,
+      description: self.description,
+      order: self.order,
+      get mission() {
+        return self.mission.toTargetEnvContext()
+      },
+      get host() {
+        return self.host.toTargetEnvContext()
+      },
+      get sourceForce() {
+        return self.sourceForce ? self.sourceForce.toTargetEnvContext() : null
+      },
+      get sourceNode() {
+        return self.sourceNode ? self.sourceNode.toTargetEnvContext() : null
+      },
+      get sourceAction() {
+        return self.sourceAction ? self.sourceAction.toTargetEnvContext() : null
+      },
+      get target() {
+        return self.target ? self.target.toTargetEnvContext() : null
+      },
+      get environment() {
+        return self.environment ? self.environment.toTargetEnvContext() : null
+      },
+      get args() {
+        return self.argsToTargetEnvContext(self.args)
+      },
     }
   }
 

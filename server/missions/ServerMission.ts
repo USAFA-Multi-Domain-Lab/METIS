@@ -123,16 +123,33 @@ export class ServerMission extends Mission<TMetisServerComponents> {
   }
 
   /**
-   * Extracts the necessary properties from the mission to be used as a reference
-   * in a target environment.
-   * @returns The mission's necessary properties.
+   * @returns The properties from the mission that are
+   * safe to expose in a target script.
    */
   public toTargetEnvContext(): TTargetEnvExposedMission {
+    const self = this
     return {
-      _id: this._id,
-      name: this.name,
-      forces: this.forces.map((force) => force.toTargetEnvContext()),
-      nodes: this.nodes.map((node) => node.toTargetEnvContext()),
+      _id: self._id,
+      name: self.name,
+      resourceLabel: self.resourceLabel,
+      get forces() {
+        return self.forces.map((force) => force.toTargetEnvContext())
+      },
+      get allNodes() {
+        return self.allNodes.map((node) => node.toTargetEnvContext())
+      },
+      get allActions() {
+        return self.allActions.map((action) => action.toTargetEnvContext())
+      },
+      get allEffects() {
+        return self.allEffects.map((effect) => effect.toTargetEnvContext())
+      },
+      get files() {
+        return self.files.map((file) => file.toTargetEnvContext())
+      },
+      get effects() {
+        return self.effects.map((effect) => effect.toTargetEnvContext())
+      },
     }
   }
 

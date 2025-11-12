@@ -1,4 +1,6 @@
+import path from 'path'
 import { context } from '../../context'
+
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
 let fs: typeof import('fs')
 
@@ -129,5 +131,49 @@ export class FileToolbox {
   public static isValidMimetype(mimetype: string): boolean {
     const regex = /^[a-zA-Z0-9!#$&^_.+-]+\/[a-zA-Z0-9!#$&^_.+-]+$/
     return regex.test(mimetype)
+  }
+
+  /**
+   * This function is used to help track where calls are made.
+   * A function or method can call this in order to determine
+   * the file path of the code that made the function call.
+   * @returns The file path of the caller.
+   * @throws If the caller file can not be determined.
+   */
+  public static getCallerFilePath() {
+    const origPrepare = Error.prepareStackTrace
+
+    try {
+      // Determine the file of the caller.
+      Error.prepareStackTrace = (_, stack) => stack
+      const err = new Error()
+      Error.captureStackTrace(err, FileToolbox.getCallerFilePath)
+      const stack = err.stack as unknown as NodeJS.CallSite[]
+      const caller = stack[2] // 0 = this function, 1 = called function, 2 = caller
+      const callerFilePath = caller?.getFileName()
+
+      // Handle missing caller file.
+      if (!callerFilePath) {
+        throw new Error('Could not determine caller file path.')
+      }
+
+      return callerFilePath
+    } finally {
+      Error.prepareStackTrace = origPrepare
+    }
+  }
+
+  /**
+   * This function is used to help track where calls are
+   * made. A function or method can call this in order to
+   * determine the containing folder of the code that made
+   * the function call.
+   * @returns The name of the folder.
+   * @throws If the folder can not be determined.
+   */
+  public static getCallerFolder() {
+    // Determine the folder based on the file path.
+    let filePath = FileToolbox.getCallerFilePath()
+    return path.basename(path.dirname(filePath))
   }
 }

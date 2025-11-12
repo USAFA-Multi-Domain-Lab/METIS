@@ -1,12 +1,15 @@
-import type { TargetSchema } from '@integrations/target-env-classes/targets'
+import type {
+  TargetSchema,
+  TTargetScript,
+} from '@server/target-environments/schema/TargetSchema'
 import type { TTargetArg } from '@shared/target-environments/args/Arg'
 import { Arg } from '@shared/target-environments/args/Arg'
-import type { TTargetScript } from '@shared/target-environments/targets/Target'
 import { Target } from '@shared/target-environments/targets/Target'
 import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
 import { VersionToolbox } from '@shared/toolbox/strings/VersionToolbox'
 import type { TargetMigrationRegistry } from '../../shared/target-environments/targets/migrations/TargetMigrationRegistry'
 import { ServerTargetEnvironment } from './ServerTargetEnvironment'
+import type { TTargetEnvExposedTarget } from './TargetEnvContext'
 
 /**
  * A class for managing targets on the server.
@@ -35,6 +38,22 @@ export class ServerTarget extends Target<TMetisServerComponents> {
     public migrationRegistry: TargetMigrationRegistry,
   ) {
     super(_id, name, description, args, environment)
+  }
+
+  /**
+   * @returns The properties from the target that are
+   * safe to expose in a target script.
+   */
+  public toTargetEnvContext(): TTargetEnvExposedTarget {
+    const self = this
+    return {
+      _id: self._id,
+      name: self.name,
+      description: self.description,
+      get environment() {
+        return self.environment.toTargetEnvContext()
+      },
+    }
   }
 
   /**

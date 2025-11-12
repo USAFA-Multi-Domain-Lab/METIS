@@ -142,7 +142,7 @@ export abstract class MissionNode<
     // Determine the execution state from
     // the value of the latest execution.
     if (latestExecution === null) return { status: 'unexecuted' }
-    else return latestExecution.state
+    else return { ...latestExecution.state }
   }
 
   /**

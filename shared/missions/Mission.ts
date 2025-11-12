@@ -49,17 +49,19 @@ export abstract class Mission<
   }
 
   /**
-   * All nodes that exist in the mission.
+   * All nodes that exist in the mission across
+   * every force.
    */
-  public get nodes(): T['node'][] {
+  public get allNodes(): T['node'][] {
     return this.forces.flatMap((force) => force.nodes)
   }
 
   /**
-   * All actions that exist in the mission.
+   * All actions that exist in the mission across
+   * every node in every force.
    */
-  public get actions(): T['action'][] {
-    return this.nodes.flatMap((node) => Array.from(node.actions.values()))
+  public get allActions(): T['action'][] {
+    return this.allNodes.flatMap((node) => Array.from(node.actions.values()))
   }
 
   /**
@@ -72,7 +74,7 @@ export abstract class Mission<
   > {
     return [
       ...this.effects,
-      ...this.actions.flatMap((action) => action.effects),
+      ...this.allActions.flatMap((action) => action.effects),
     ]
   }
 
@@ -721,7 +723,7 @@ export abstract class Mission<
   public getExecution(
     executionId: MetisComponent['_id'],
   ): TExecution<T> | undefined {
-    for (let node of this.nodes.values()) {
+    for (let node of this.allNodes.values()) {
       let execution = node.getExecution(executionId)
       if (execution) return execution
     }

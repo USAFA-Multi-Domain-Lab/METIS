@@ -3,9 +3,8 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@shared/target-environments": ["../../shared/target-environments"],
-      "@shared/target-environments/*": ["../../shared/target-environments/*"]
+      "@metis/*": ["../library/*"]
     }
   },
-  "include": [".", "../library/", "../../shared/target-environments/"]
+  "include": [".", "../library/"]
 }
