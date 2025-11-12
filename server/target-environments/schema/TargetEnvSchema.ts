@@ -85,6 +85,8 @@ export class TargetEnvSchema {
   public static readonly RESERVED_IDS = ['INFER']
 }
 
+/* -- TYPES -- */
+
 /**
  * Options passed to the TargetEnvSchema constructor.
  */

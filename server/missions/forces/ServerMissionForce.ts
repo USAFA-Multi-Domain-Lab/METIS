@@ -50,15 +50,24 @@ export class ServerMissionForce extends MissionForce<TMetisServerComponents> {
   }
 
   /**
-   * Extracts the necessary properties from the force to be used as a reference
-   * in a target environment.
-   * @returns The force's necessary properties.
+   * @returns The properties from the force that are
+   * safe to expose in a target script.
    */
   public toTargetEnvContext(): TTargetEnvExposedForce {
+    const self = this
     return {
-      _id: this._id,
-      name: this.name,
-      nodes: this.nodes.map((node) => node.toTargetEnvContext()),
+      _id: self._id,
+      localKey: self.localKey,
+      name: self.name,
+      color: self.color,
+      initialResources: self.initialResources,
+      resourcesRemaining: self.resourcesRemaining,
+      get mission() {
+        return self.mission.toTargetEnvContext()
+      },
+      get nodes() {
+        return self.nodes.map((node) => node.toTargetEnvContext())
+      },
     }
   }
 

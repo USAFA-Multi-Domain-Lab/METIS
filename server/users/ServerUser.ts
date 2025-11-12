@@ -15,7 +15,6 @@ import { UserPermission } from '@shared/users/UserPermission'
 import type { CallbackWithoutResultAndOptionalError } from 'mongoose'
 import mongoose from 'mongoose'
 import type { TUserModel } from '../database/models/types'
-import type { TTargetEnvExposedUser } from '../target-environments/TargetEnvContext'
 
 /**
  * Class for managing users on the server.
@@ -39,18 +38,6 @@ export class ServerUser extends User<TMetisServerComponents> {
     let isValidPassword: boolean = passwordExpression.test(password)
 
     return isValidPassword
-  }
-
-  /**
-   * Extracts the necessary properties from the user to be used as a reference
-   * in a target environment.
-   * @returns The user's necessary properties.
-   */
-  public toTargetEnvContext(): TTargetEnvExposedUser {
-    return {
-      _id: this._id,
-      username: this.username,
-    }
   }
 
   /**

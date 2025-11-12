@@ -8,6 +8,7 @@ import fs from 'fs'
 import path from 'path'
 import type { SessionServer } from '../sessions/SessionServer'
 import { ServerTarget } from './ServerTarget'
+import type { TTargetEnvExposedEnvironment } from './TargetEnvContext'
 import type {
   TargetEnvironmentHook,
   TTargetEnvMethods,
@@ -45,6 +46,23 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
     super(id, name, description, version, targets)
 
     this.hooks = hooks
+  }
+
+  /**
+   * @returns The properties from the target environment that are
+   * safe to expose in a target script.
+   */
+  public toTargetEnvContext(): TTargetEnvExposedEnvironment {
+    const self = this
+    return {
+      _id: self._id,
+      name: self.name,
+      description: self.description,
+      version: self.version,
+      get targets() {
+        return self.targets.map((target) => target.toTargetEnvContext())
+      },
+    }
   }
 
   // Implemented

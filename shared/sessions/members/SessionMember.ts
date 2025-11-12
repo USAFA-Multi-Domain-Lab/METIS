@@ -42,6 +42,20 @@ export abstract class SessionMember<
   }
 
   /**
+   * The first name of the user that is a member of the session.
+   */
+  public get firstName(): TUser<T>['firstName'] {
+    return this.user.firstName
+  }
+
+  /**
+   * The last name of the user that is a member of the session.
+   */
+  public get lastName(): TUser<T>['lastName'] {
+    return this.user.lastName
+  }
+
+  /**
    * The role of the member in the session.
    */
   public role: MemberRole

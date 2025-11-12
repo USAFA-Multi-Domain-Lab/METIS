@@ -116,18 +116,80 @@ export class ServerMissionNode extends MissionNode<TMetisServerComponents> {
   }
 
   /**
-   * Extracts the necessary properties from the node to be used as a reference
-   * in a target environment.
-   * @returns The node's necessary properties.
+   * @returns The properties from the node that are
+   * safe to expose in a target script.
    */
   public toTargetEnvContext(): TTargetEnvExposedNode {
+    const self = this
     return {
-      _id: this._id,
-      name: this.name,
-      description: this.description,
-      actions: Array.from(this.actions.values()).map((action) =>
-        action.toTargetEnvContext(),
-      ),
+      _id: self._id,
+      localKey: self.localKey,
+      name: self.name,
+      description: self.description,
+      color: self.color,
+      device: self.device,
+      initiallyBlocked: self.initiallyBlocked,
+      get position() {
+        // Clone to prevent external mutation.
+        return self.position.clone()
+      },
+      // These properties are getters so that if
+      // they update during a target scripts' execution,
+      // the latest values are always returned.
+      get openable() {
+        return self.openable
+      },
+      get closable() {
+        return self.closable
+      },
+      get opened() {
+        return self.opened
+      },
+      get revealed() {
+        return self.revealed
+      },
+      get blocked() {
+        return self.blocked
+      },
+      get executing() {
+        return self.executing
+      },
+      get executed() {
+        return self.executed
+      },
+      get executionState() {
+        return self.executionState
+      },
+      get executionStatus() {
+        return self.executionStatus
+      },
+      // Getters here are to save on serialization size.
+      get mission() {
+        return self.mission.toTargetEnvContext()
+      },
+      get force() {
+        return self.force.toTargetEnvContext()
+      },
+      get actions() {
+        return Array.from(self.actions.values()).map((action) =>
+          action.toTargetEnvContext(),
+        )
+      },
+      hasChildren: self.hasChildren,
+      hasSiblings: self.hasSiblings,
+      get parent() {
+        return self.parent ? self.parent.toTargetEnvContext() : null
+      },
+      get children() {
+        return Array.from(self.children.values()).map((child) =>
+          child.toTargetEnvContext(),
+        )
+      },
+      get siblings() {
+        return Array.from(self.siblings.values()).map((sibling) =>
+          sibling.toTargetEnvContext(),
+        )
+      },
     }
   }
 

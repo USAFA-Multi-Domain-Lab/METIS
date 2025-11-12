@@ -140,3 +140,22 @@ export abstract class MetisComponent {
     }
   }
 }
+
+/* -- TYPES -- */
+
+/**
+ * Creates a JSON representation type from a METIS component type.
+ * @param T The METIS component type (TCommonMission, TCommonMissionNode, etc.).
+ * @param TDirect The keys of T to translate directly to the JSON as the exact same type (string -> string, number -> number).
+ * @param TIndirect The keys of T to translate to the JSON as a different type (string -> string[], number -> string).
+ * @returns The JSON representation type.
+ */
+export type TCreateJsonType<
+  T extends MetisComponent,
+  TDirect extends keyof T,
+  TIndirect extends { [k in keyof T]?: any } = {},
+> = {
+  -readonly [k in TDirect]: T[k]
+} & {
+  [k in keyof TIndirect]: TIndirect[k]
+}
