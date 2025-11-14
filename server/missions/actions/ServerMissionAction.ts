@@ -1,5 +1,5 @@
 import type { ServerTarget } from '@server/target-environments/ServerTarget'
-import type { TTargetEnvExposedAction } from '@server/target-environments/TargetEnvContext'
+import type { TTargetEnvExposedAction } from '@server/target-environments/context/TargetEnvContext'
 import type { TMissionActionJson } from '@shared/missions/actions/MissionAction'
 import { MissionAction } from '@shared/missions/actions/MissionAction'
 import type {
@@ -117,7 +117,7 @@ export class ServerMissionAction extends MissionAction<TMetisServerComponents> {
 
   /**
    * @returns The properties from the action that are
-   * safe to expose in a target script.
+   * safe to expose in target-environment code.
    */
   public toTargetEnvContext(): TTargetEnvExposedAction {
     const self = this

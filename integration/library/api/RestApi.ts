@@ -1,9 +1,9 @@
-import { Api, apiOptionsSchema } from 'api'
+import { BooleanToolbox } from '@metis/toolbox/booleans/BooleanToolbox'
+import type { TAnyObject } from '@metis/toolbox/objects/ObjectToolbox'
 import axios, { type AxiosRequestConfig, type AxiosResponse } from 'axios'
 import https from 'https'
-import type { TAnyObject } from 'toolbox'
-import { BooleanToolbox } from 'toolbox'
 import z from 'zod'
+import { Api, apiOptionsSchema } from './Api'
 
 /**
  * The RESTful API class is used to make HTTP requests to target environments.

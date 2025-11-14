@@ -1,5 +1,7 @@
 import Module from 'node:module'
 import path from 'node:path'
+import * as tsconfigPaths from 'tsconfig-paths'
+import type { RegisterParams } from 'tsconfig-paths/lib/register'
 import { TargetEnvSchema } from './schema/TargetEnvSchema'
 import { TargetSchema } from './schema/TargetSchema'
 
@@ -23,6 +25,7 @@ export class TargetEnvSandbox {
     let InternalModule = Module as InternalModuleType
     let originalLoad = InternalModule._load
     let { rootDir } = this
+    let targetEnvId = path.basename(rootDir)
 
     InternalModule._load = function (
       request: string,
@@ -40,11 +43,16 @@ export class TargetEnvSandbox {
       ) {
         return resolve()
       }
+      // Resolve if the request is a non-relative import
+      // inside the target environment.
+      if (request === targetEnvId || request.startsWith(`${targetEnvId}/`)) {
+        return resolve()
+      }
 
-      // First, resolve the request to an absolute filename if possible
-      let resolved: string
+      // First, resolve the request to an absolute filename if possible.
+      let requestAbsolutePath: string
       try {
-        resolved = InternalModule._resolveFilename(
+        requestAbsolutePath = InternalModule._resolveFilename(
           request,
           parent ?? null,
           false,
@@ -55,57 +63,59 @@ export class TargetEnvSandbox {
         )
       }
 
-      if (!resolved || !path.isAbsolute(resolved)) {
-        return resolve()
-      }
-
       // Further determine details concerning the import
       // location.
       let parentFilename = parent?.filename
-      let isImportFromLibrary =
-        (parentFilename &&
-          TargetEnvSandbox.isPathInside(
-            parentFilename,
-            TargetEnvSandbox.LIBRARY_ROOT,
-          )) ||
-        TargetEnvSandbox.isPathInside(resolved, TargetEnvSandbox.LIBRARY_ROOT)
-      let isImportFromEnv = TargetEnvSandbox.isPathInside(resolved, rootDir)
+      let isParentInEnv =
+        parentFilename && TargetEnvSandbox.isPathInside(parentFilename, rootDir)
+      let isRequestInEnv = TargetEnvSandbox.isPathInside(
+        requestAbsolutePath,
+        rootDir,
+      )
+      let isRequestInLibrary = TargetEnvSandbox.isPathInside(
+        requestAbsolutePath,
+        TargetEnvSandbox.LIBRARY_ROOT,
+      )
 
       // If the import is not from allowed locations, throw an error.
-      if (!isImportFromLibrary && !isImportFromEnv) {
+      if (isParentInEnv && !isRequestInEnv && !isRequestInLibrary) {
         TargetEnvSandbox.throwIfInside(
-          resolved,
+          requestAbsolutePath,
           TargetEnvSandbox.NODE_MODULES_ROOT,
-          `NPM package import blocked: "${request}" -> "${resolved}". Plugins cannot directly import npm packages. Use @metis library exports instead.`,
+          `NPM package import blocked: "${request}" -> "${requestAbsolutePath}". Plugins cannot directly import npm packages. Use @metis library exports instead.`,
         )
         TargetEnvSandbox.throwIfInside(
-          resolved,
+          requestAbsolutePath,
           TargetEnvSandbox.SHARED_ROOT,
-          `Shared folder import blocked: "${resolved}". Plugins may not import from @shared; use @metis library exports instead.`,
+          `Shared folder import blocked: "${requestAbsolutePath}". Plugins may not import from @shared; use @metis library exports instead.`,
         )
         TargetEnvSandbox.throwIfInside(
-          resolved,
+          requestAbsolutePath,
           TargetEnvSandbox.SERVER_ROOT,
-          `Server folder import blocked: "${resolved}". Plugins may not import from @server; use @metis library exports instead.`,
+          `Server folder import blocked: "${requestAbsolutePath}". Plugins may not import from @server; use @metis library exports instead.`,
         )
         TargetEnvSandbox.throwIfInside(
-          resolved,
+          requestAbsolutePath,
           TargetEnvSandbox.TARGET_ENV_ROOT,
-          `Cross-plugin import blocked: "${resolved}". Plugins may only access their own files or integration/library.`,
+          `Cross-plugin import blocked: "${requestAbsolutePath}". Plugins may only access their own files or integration/library.`,
         )
         throw new Error(
-          `Unauthorized import blocked: "${request}" -> "${resolved}". Plugins may only import from their own files, integration/library (@metis/*), or Node.js built-in modules.`,
+          `Unauthorized import blocked: "${request}" -> "${requestAbsolutePath}". Plugins may only import from their own files, integration/library (@metis/*), or Node.js built-in modules.`,
         )
       }
 
-      // Resolve the module as normal.
       return resolve()
     }
+
+    const restoreTsConfig = tsconfigPaths.register(
+      TargetEnvSandbox.tsconfigPathArgs,
+    )
 
     try {
       return require(modulePath).default
     } finally {
       InternalModule._load = originalLoad
+      restoreTsConfig()
     }
   }
 
@@ -190,6 +200,71 @@ export class TargetEnvSandbox {
     process.cwd(),
     'node_modules',
   )
+
+  /**
+   * The absolute path to the tsconfig.json file used for
+   * target environment module loading.
+   */
+  public static readonly TSCONFIG_PATH = path.join(
+    TargetEnvSandbox.TARGET_ENV_ROOT,
+    'tsconfig.json',
+  )
+
+  /**
+   * The parsed tsconfig.json used for target environment
+   * module loading.
+   */
+  public static readonly TSCONFIG = require(TargetEnvSandbox.TSCONFIG_PATH)
+
+  /**
+   * Arguments used for tsconfig-paths registration
+   * during target-environment module loading.
+   */
+  public static tsconfigPathArgs: RegisterParams | undefined
+
+  /**
+   * Determines and sets the tsconfig path arguments
+   * for the {@link TargetEnvSandbox} class.
+   */
+  private static determineTsConfigPaths(): void {
+    // Load tsconfig-paths arguments.
+    const tsconfigPath = path.join(
+      TargetEnvSandbox.TARGET_ENV_ROOT,
+      'tsconfig.json',
+    )
+    const tsconfig = require(tsconfigPath)
+    const baseUrlResolved = path.resolve(
+      path.dirname(tsconfigPath),
+      tsconfig.compilerOptions.baseUrl,
+    )
+
+    TargetEnvSandbox.tsconfigPathArgs = {
+      baseUrl: baseUrlResolved,
+      paths: {
+        ...tsconfig.compilerOptions.paths,
+      },
+    }
+  }
+
+  /**
+   * Loads the globals used in the target-environment code.
+   */
+  private static loadGlobals(): void {
+    const restoreTsConfig = tsconfigPaths.register(
+      TargetEnvSandbox.tsconfigPathArgs,
+    )
+    require('../../integration/target-env/globals')
+    restoreTsConfig()
+  }
+
+  /**
+   * Initializes the {@link TargetEnvSandbox} class
+   * for use.
+   */
+  public static initialize() {
+    this.determineTsConfigPaths()
+    this.loadGlobals()
+  }
 
   /**
    * Throws an error with the given message if passing `child`

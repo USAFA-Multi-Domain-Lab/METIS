@@ -313,7 +313,7 @@ export default function MissionPage(
         // excluded nodes on the mission map while
         // in preview mode. See "MapNode.tsx" for
         // more info.
-        mission.nodes.forEach((node) => {
+        mission.allNodes.forEach((node) => {
           const disableNode = node.exclude && viewMode === 'preview'
           if (disableNode) node.disable()
         })

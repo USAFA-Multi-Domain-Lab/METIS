@@ -1,6 +1,6 @@
 import { generateValidationError } from '@server/database/validation'
+import type { TTargetEnvExposedMission } from '@server/target-environments/context/TargetEnvContext'
 import type { ServerTarget } from '@server/target-environments/ServerTarget'
-import type { TTargetEnvExposedMission } from '@server/target-environments/TargetEnvContext'
 import { ServerUser } from '@server/users/ServerUser'
 import { NumberToolbox } from '@shared/toolbox/numbers/NumberToolbox'
 import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
@@ -124,7 +124,7 @@ export class ServerMission extends Mission<TMetisServerComponents> {
 
   /**
    * @returns The properties from the mission that are
-   * safe to expose in a target script.
+   * safe to expose in target-environment code.
    */
   public toTargetEnvContext(): TTargetEnvExposedMission {
     const self = this

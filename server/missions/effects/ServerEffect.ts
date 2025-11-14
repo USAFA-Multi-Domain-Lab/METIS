@@ -1,6 +1,6 @@
+import type { TTargetEnvExposedEffect } from '@server/target-environments/context/TargetEnvContext'
 import type { ServerTarget } from '@server/target-environments/ServerTarget'
 import { ServerTargetEnvironment } from '@server/target-environments/ServerTargetEnvironment'
-import type { TTargetEnvExposedEffect } from '@server/target-environments/TargetEnvContext'
 import type {
   TEffectContextExecution,
   TEffectContextSession,
@@ -64,7 +64,7 @@ export class ServerEffect<
 
   /**
    * @returns The properties from the effect that are
-   * safe to expose in a target script.
+   * safe to expose in target-environment code.
    */
   public toTargetEnvContext(): TTargetEnvExposedEffect<TType> {
     const self = this

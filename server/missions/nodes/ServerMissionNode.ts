@@ -1,5 +1,5 @@
 import { generateValidationError } from '@server/database/validation'
-import type { TTargetEnvExposedNode } from '@server/target-environments/TargetEnvContext'
+import type { TTargetEnvExposedNode } from '@server/target-environments/context/TargetEnvContext'
 import type { TActionExecutionJson } from '@shared/missions/actions/ActionExecution'
 import type { TMissionActionJson } from '@shared/missions/actions/MissionAction'
 import type { TMissionNodeJson } from '@shared/missions/nodes/MissionNode'
@@ -117,7 +117,7 @@ export class ServerMissionNode extends MissionNode<TMetisServerComponents> {
 
   /**
    * @returns The properties from the node that are
-   * safe to expose in a target script.
+   * safe to expose in target-environment code.
    */
   public toTargetEnvContext(): TTargetEnvExposedNode {
     const self = this

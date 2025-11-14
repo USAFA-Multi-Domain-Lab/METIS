@@ -4,19 +4,13 @@
     "baseUrl": ".",
     "paths": {
       "@shared/*": ["../shared/*"],
-      "@server/*": ["*"],
-      "@integrations/schema/*": ["../integration/library/schema/*"],
-      "@metis/*": ["../integration/library/*"],
-      "@metis/schema/*": ["../integration/library/schema/*"],
-      "@metis/config/*": ["../integration/library/config/*"],
-      "@metis/toolbox/*": ["../integration/library/toolbox/*"],
-      "@metis/api/*": ["../integration/library/api/*"]
+      "@server/*": ["*"]
     },
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "target": "ES2022",
     "types": ["node", "./global.d.ts", "../shared/global.d.ts"]
   },
-  "include": [".", "../shared/", "../integration/library/"],
-  "exclude": ["../integration/library/toolbox/"]
+  "include": [".", "../shared/"],
+  "exclude": []
 }

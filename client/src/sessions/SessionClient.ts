@@ -30,8 +30,8 @@ import type {
   TSessionBasicJson,
   TSessionConfig,
   TSessionJson,
-} from '@shared/sessions/Session'
-import { MissionSession } from '@shared/sessions/Session'
+} from '@shared/sessions/MissionSession'
+import { MissionSession } from '@shared/sessions/MissionSession'
 import axios from 'axios'
 import type { TMetisClientComponents } from '..'
 import { ClientSessionMember } from './ClientSessionMember'

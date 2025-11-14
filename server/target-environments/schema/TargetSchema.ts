@@ -3,7 +3,7 @@ import { TargetMigrationRegistry } from '@shared/target-environments/targets/mig
 import type { TTargetJson } from '@shared/target-environments/targets/Target'
 import fs from 'fs'
 import path from 'path'
-import type { TTargetEnvExposedContext } from '../TargetEnvContext'
+import type { TTargetScriptExposedContext } from '../context/TargetScriptContext'
 
 /**
  * Defines a target.
@@ -147,7 +147,7 @@ export type TTargetScript = (
   /**
    * The context for the target environment.
    */
-  context: TTargetEnvExposedContext,
+  context: TTargetScriptExposedContext,
 ) => Promise<void>
 
 /**

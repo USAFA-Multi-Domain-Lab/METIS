@@ -1,6 +1,6 @@
 import { SessionServer } from '@server/sessions/SessionServer'
 import type { ServerUser } from '@server/users/ServerUser'
-import type { TSessionBasicJson } from '@shared/sessions/Session'
+import type { TSessionBasicJson } from '@shared/sessions/MissionSession'
 import { ApiResponse } from '../../library/ApiResponse'
 
 /**
