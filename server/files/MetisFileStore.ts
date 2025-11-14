@@ -1,8 +1,8 @@
 import { FileReferenceModel } from '@server/database/models/file-references'
 import type { MetisServer } from '@server/MetisServer'
-import type { ServerUser } from '@server/users/ServerUser'
 import type { TFileReferenceJson } from '@shared/files/FileReference'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import type { TCreatedByInfo } from '@shared/users/User'
 import crypto from 'crypto'
 import type { RequestHandler } from 'express'
 import type { Response } from 'express-serve-static-core'
@@ -136,7 +136,10 @@ export class MetisFileStore {
    * @param user The user uploading the file.
    * @returns The saved reference.
    */
-  public async createReference(file: Express.Multer.File, user: ServerUser) {
+  public async createReference(
+    file: Express.Multer.File,
+    createdBy: TCreatedByInfo,
+  ) {
     const { filename, originalname, mimetype, size } = file
 
     const doc = new FileReferenceModel({
@@ -144,8 +147,8 @@ export class MetisFileStore {
       path: filename,
       mimetype,
       size,
-      createdBy: user._id,
-      createdByUsername: user.username,
+      createdBy: createdBy._id,
+      createdByUsername: createdBy.username,
     })
 
     return await doc.save()
@@ -164,6 +167,7 @@ export class MetisFileStore {
    */
   public async import(
     sourcePath: string,
+    createdBy: TCreatedByInfo,
     options: TFileStoreImportOptions = {},
   ): Promise<TFileReferenceJson> {
     // 1. Get original info
@@ -190,6 +194,8 @@ export class MetisFileStore {
       path: hashedName,
       mimetype,
       size,
+      createdBy: createdBy._id,
+      createdByUsername: createdBy.username,
     })
 
     // 6. Return reference as JSON.
