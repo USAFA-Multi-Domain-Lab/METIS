@@ -1,7 +1,7 @@
 import { MetisComponent } from '../../MetisComponent'
 import type { MissionForce, TForce } from '../../missions/forces/MissionForce'
 import type { TUser, TUserExistingJson } from '../../users/User'
-import type { TSession } from '../Session'
+import type { TSession } from '../MissionSession'
 import type { TSessionAuthParam } from './MemberPermission'
 import type { MemberRole, TMemberRoleId } from './MemberRole'
 

@@ -1,5 +1,5 @@
 import { generateValidationError } from '@server/database/validation'
-import type { TTargetEnvExposedForce } from '@server/target-environments/TargetEnvContext'
+import type { TTargetEnvExposedForce } from '@server/target-environments/context/TargetEnvContext'
 import type {
   TMissionForceJson,
   TMissionForceSaveJson,
@@ -51,7 +51,7 @@ export class ServerMissionForce extends MissionForce<TMetisServerComponents> {
 
   /**
    * @returns The properties from the force that are
-   * safe to expose in a target script.
+   * safe to expose in target-environment code.
    */
   public toTargetEnvContext(): TTargetEnvExposedForce {
     const self = this

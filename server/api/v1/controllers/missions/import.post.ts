@@ -31,10 +31,8 @@ export const importMission = async (
 
   // Create a new mission-import instance.
   let missionImport = MissionImport.fromMulterFiles(request.files, fileStore, {
-    createdByInfo: {
-      createdBy: currentUser._id,
-      createdByUsername: currentUser.username,
-    },
+    _id: currentUser._id,
+    username: currentUser.username,
   })
 
   // Execute the mission import.

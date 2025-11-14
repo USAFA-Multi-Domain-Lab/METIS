@@ -4,7 +4,7 @@ import type {
   TSessionBasicJson,
   TSessionConfig,
   TSessionState,
-} from '@shared/sessions/Session'
+} from '@shared/sessions/MissionSession'
 import { User } from '@shared/users/User'
 
 /**

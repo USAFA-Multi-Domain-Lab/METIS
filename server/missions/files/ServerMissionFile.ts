@@ -1,5 +1,5 @@
 import { ServerFileReference } from '@server/files/ServerFileReference'
-import type { TTargetEnvExposedFile } from '@server/target-environments/TargetEnvContext'
+import type { TTargetEnvExposedFile } from '@server/target-environments/context/TargetEnvContext'
 import type { TMissionFileJson } from '@shared/missions/files/MissionFile'
 import { MissionFile } from '@shared/missions/files/MissionFile'
 import type { ServerMission } from '../ServerMission'
@@ -10,7 +10,7 @@ import type { ServerMission } from '../ServerMission'
 export class ServerMissionFile extends MissionFile<TMetisServerComponents> {
   /**
    * @returns The properties from the file that are
-   * safe to expose in a target script.
+   * safe to expose in target-environment code.
    */
   public toTargetEnvContext(): TTargetEnvExposedFile {
     const self = this

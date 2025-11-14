@@ -2,7 +2,7 @@ import RichText from '@client/components/content/general-layout/rich-text/RichTe
 import type { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
 import { compute } from '@client/toolbox'
 import type { TExecutionCheats } from '@shared/missions/actions/ActionExecution'
-import type { TSessionConfig } from '@shared/sessions/Session'
+import type { TSessionConfig } from '@shared/sessions/MissionSession'
 import './ActionProperties.scss'
 import ActionProperty from './ActionProperty'
 

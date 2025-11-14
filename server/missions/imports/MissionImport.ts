@@ -6,7 +6,7 @@ import { ServerFileToolbox } from '@server/toolbox/files/ServerFileToolbox'
 import type { TMissionFileJson } from '@shared/missions/files/MissionFile'
 import { NumberToolbox } from '@shared/toolbox/numbers/NumberToolbox'
 import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
-import type { TCreatedByJson } from '@shared/users/User'
+import type { TCreatedByInfo } from '@shared/users/User'
 import fs from 'fs'
 import path from 'path'
 import { databaseLogger, expressLogger } from '../../logging'
@@ -88,25 +88,25 @@ export class MissionImport {
   }
 
   /**
-   * The options for the import.
+   * The user who created the import.
    */
-  private options: TMissionImportOptions
+  public createdBy: TCreatedByInfo
 
   /**
    * @param files An array of files to import.
    * @param fileStore The file store where any supporting files
    * will be stored.
-   * @param options Additional options for the import.
+   * @param createdBy Data identifying who is importing the missions.
    */
   public constructor(
     files: TFileImportData | TFileImportData[],
     fileStore: MetisFileStore,
-    options: TMissionImportOptions = {},
+    createdBy: TCreatedByInfo,
   ) {
     if (!Array.isArray(files)) files = [files]
     this.files = files
     this.fileStore = fileStore
-    this.options = options
+    this.createdBy = createdBy
   }
 
   /**
@@ -360,7 +360,7 @@ export class MissionImport {
       // import it into the file store, which will
       // also create the reference.
       if (!referenceExists) {
-        await this.fileStore.import(filePath, {
+        await this.fileStore.import(filePath, this.createdBy, {
           referenceId,
         })
       }
@@ -449,16 +449,13 @@ export class MissionImport {
 
       // Model creation.
       try {
-        // Parse creator info from options.
-        const { createdByInfo } = this.options
-
         // Remove unnecessary fields.
         delete dataAsJson.schemaBuildNumber
 
         // Add creator info.
-        if (createdByInfo) {
-          dataAsJson.createdBy = createdByInfo.createdBy
-          dataAsJson.createdByUsername = createdByInfo.createdByUsername
+        if (this.createdBy) {
+          dataAsJson.createdBy = this.createdBy._id
+          dataAsJson.createdByUsername = this.createdBy.username
         }
 
         // Import any files needed for the mission.
@@ -522,31 +519,18 @@ export class MissionImport {
   public static fromMulterFiles = (
     multerFiles: TMulterFile[],
     fileStore: MetisFileStore,
-    options: TMissionImportOptions = {},
+    createdBy: TCreatedByInfo,
   ): MissionImport => {
     let files = multerFiles.map((file) => ({
       name: file.filename,
       originalName: file.originalname,
       path: file.path,
     }))
-    return new MissionImport(files, fileStore, options)
+    return new MissionImport(files, fileStore, createdBy)
   }
 }
 
 /* -- TYPES -- */
-
-/**
- * Options when creating a {@link MissionImport}
- * instance.
- */
-export type TMissionImportOptions = {
-  /**
-   * Used when creating missions from the import
-   * to set the user who created the mission.
-   * @note By default, the system user is used.
-   */
-  createdByInfo?: Pick<TCreatedByJson, 'createdBy' | 'createdByUsername'>
-}
 
 /**
  * File data needed to import a given file.

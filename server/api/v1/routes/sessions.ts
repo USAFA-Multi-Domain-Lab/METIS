@@ -1,6 +1,6 @@
 import type { MetisServer } from '@server/MetisServer'
 import { SessionServer } from '@server/sessions/SessionServer'
-import type { TSessionConfig } from '@shared/sessions/Session'
+import type { TSessionConfig } from '@shared/sessions/MissionSession'
 import type { Router } from 'express'
 import defineRequests, {
   RequestBodyFilters,

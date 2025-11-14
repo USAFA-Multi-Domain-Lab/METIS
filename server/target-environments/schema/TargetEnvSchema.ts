@@ -2,6 +2,7 @@ import type { TTargetEnvMethods } from '@server/target-environments/TargetEnviro
 import { TargetEnvironmentHook } from '@server/target-environments/TargetEnvironmentHook'
 import { ServerFileToolbox } from '@server/toolbox/files/ServerFileToolbox'
 import type { TTargetEnvJson } from '@shared/target-environments/TargetEnvironment'
+import type { TEnvHookExposedContext } from '../context/EnvHookContext'
 
 /**
  * Defines a target environment.
@@ -75,7 +76,10 @@ export class TargetEnvSchema {
    * @param method The method for which the callback should be called.
    * @param callback The handler function to call when the method is invoked.
    */
-  public on(method: TTargetEnvMethods, callback: () => void | Promise<void>) {
+  public on(
+    method: TTargetEnvMethods,
+    callback: (context: TEnvHookExposedContext) => void | Promise<void>,
+  ) {
     this._hooks.push(new TargetEnvironmentHook(method, callback))
   }
 

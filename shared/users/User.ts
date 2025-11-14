@@ -34,27 +34,6 @@ export abstract class User<
    */
   public password: string | undefined
 
-  //   /**
-  //    * @param data The user data from which to create the user. Any ommitted values will be set to the default properties defined in User.DEFAULT_PROPERTIES.
-  //    * @param options Options for creating the user.
-  //    */
-  //   public constructor(
-  //     data: Partial<TUserJson> = User.DEFAULT_PROPERTIES,
-  //     options: TUserOptions = {},
-  //   ) {
-  //     super(data._id ?? User.DEFAULT_PROPERTIES._id, '', false)
-  //
-  //     this.username = data.username ?? User.DEFAULT_PROPERTIES.username
-  //     this.access = UserAccess.get(data.accessId ?? UserAccess.DEFAULT_ID)
-  //     this.firstName = data.firstName ?? User.DEFAULT_PROPERTIES.firstName
-  //     this.lastName = data.lastName ?? User.DEFAULT_PROPERTIES.lastName
-  //     this.needsPasswordReset =
-  //       data.needsPasswordReset ?? User.DEFAULT_PROPERTIES.needsPasswordReset
-  //     this.expressPermissions = UserPermission.get(
-  //       data.expressPermissionIds ?? User.DEFAULT_PROPERTIES.expressPermissionIds,
-  //     )
-  //   }
-
   public constructor(
     /**
      * @see {@link MetisComponent._id}
@@ -641,3 +620,8 @@ export interface TUserPreferencesJson {
  * with IDs already assigned.
  */
 export type TExistingUserPreferencesJson = RequireIdDeep<TUserPreferencesJson>
+
+/**
+ * Data needed to identify the creator of a document.
+ */
+export type TCreatedByInfo = Pick<User, '_id' | 'username'>

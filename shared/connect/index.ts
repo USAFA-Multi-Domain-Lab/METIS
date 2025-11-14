@@ -14,7 +14,7 @@ import type {
   SessionMember,
   TSessionMemberJson,
 } from '../sessions/members/SessionMember'
-import type { TSessionConfig, TSessionJson } from '../sessions/Session'
+import type { TSessionConfig, TSessionJson } from '../sessions/MissionSession'
 import type { TAnyObject } from '../toolbox/objects/ObjectToolbox'
 
 /**

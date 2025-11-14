@@ -23,6 +23,7 @@ import { expressLogger, initializeLoggers } from './logging'
 import { ServerWebSession } from './logins/ServerWebSession'
 import { ServerTarget } from './target-environments/ServerTarget'
 import { ServerTargetEnvironment } from './target-environments/ServerTargetEnvironment'
+import { TargetEnvSandbox } from './target-environments/TargetEnvSandbox'
 
 /**
  * Manages an Express web server for METIS.
@@ -376,6 +377,8 @@ export class MetisServer {
       // Logger setup.
       initializeLoggers(expressApp)
 
+      // Initialize target-environment sandboxing.
+      TargetEnvSandbox.initialize()
       // Register target environments.
       ServerTargetEnvironment.scan()
       // Validate target IDs.

@@ -1,4 +1,3 @@
-// Migrated to @metis/ alias (legacy @integrations/ retained via tsconfig for backward compatibility)
 import { TargetEnvSchema } from '@server/target-environments/schema/TargetEnvSchema'
 import { ServerFileToolbox } from '@server/toolbox/files/ServerFileToolbox'
 import { TargetEnvironment } from '@shared/target-environments/TargetEnvironment'
@@ -7,8 +6,9 @@ import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import fs from 'fs'
 import path from 'path'
 import type { SessionServer } from '../sessions/SessionServer'
+import { EnvHookContext } from './context/EnvHookContext'
+import type { TTargetEnvExposedEnvironment } from './context/TargetEnvContext'
 import { ServerTarget } from './ServerTarget'
-import type { TTargetEnvExposedEnvironment } from './TargetEnvContext'
 import type {
   TargetEnvironmentHook,
   TTargetEnvMethods,
@@ -50,7 +50,7 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
 
   /**
    * @returns The properties from the target environment that are
-   * safe to expose in a target script.
+   * safe to expose in target-environment code.
    */
   public toTargetEnvContext(): TTargetEnvExposedEnvironment {
     const self = this
@@ -78,10 +78,14 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
    * @resolves When all callbacks have been invoked and resolved.
    * @rejects If any callback throws an error.
    */
-  private async invoke(method: TTargetEnvMethods): Promise<void> {
+  private async invoke(
+    method: TTargetEnvMethods,
+    session: SessionServer,
+  ): Promise<void> {
     for (let hook of this.hooks) {
       if (hook.method === method) {
-        await hook.invoke()
+        let context = new EnvHookContext(session, this).expose()
+        await hook.invoke(context)
       }
     }
   }
@@ -93,7 +97,7 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
    * @rejects If setup fails.
    */
   public setUp(session: SessionServer): Promise<void> {
-    return this.invoke('environment-setup')
+    return this.invoke('environment-setup', session)
   }
 
   /**
@@ -103,7 +107,7 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
    * @rejects If teardown fails.
    */
   public tearDown(session: SessionServer): Promise<void> {
-    return this.invoke('environment-teardown')
+    return this.invoke('environment-teardown', session)
   }
 
   /**
@@ -303,9 +307,6 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
    * @param recursiveOptions Ignore this parameter.
    */
   public static scan(directory: string = this.DEFAULT_DIRECTORY): void {
-    // Load runtime globals for plugins before scanning
-    require('../../integration/target-env/globals')
-
     // If the directory provided is not a folder,
     // throw an error.
     if (!ServerFileToolbox.isFolder(directory)) {

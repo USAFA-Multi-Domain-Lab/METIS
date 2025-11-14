@@ -4,16 +4,13 @@
     "target": "ES2022",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": false,
-    "skipLibCheck": false,
+    "skipLibCheck": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    // Do not force a module system here; projects override per-environment
-    // "module": undefined,
-    // "moduleResolution": undefined,
     "isolatedModules": false,
     "noEmit": true
   }

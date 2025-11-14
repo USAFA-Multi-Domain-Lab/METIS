@@ -8,8 +8,9 @@ import type { ServerMissionForce } from '@server/missions/forces/ServerMissionFo
 import { ServerOutput } from '@server/missions/forces/ServerOutput'
 import type { ServerMissionNode } from '@server/missions/nodes/ServerMissionNode'
 import { ServerMission } from '@server/missions/ServerMission'
+import type { TTargetEnvExposedSession } from '@server/target-environments/context/TargetEnvContext'
+import { TargetScriptContext } from '@server/target-environments/context/TargetScriptContext'
 import { ServerTargetEnvironment } from '@server/target-environments/ServerTargetEnvironment'
-import { TargetEnvContext } from '@server/target-environments/TargetEnvContext'
 import type { ServerUser } from '@server/users/ServerUser'
 import type {
   TClientEvents,
@@ -36,9 +37,9 @@ import type {
   TSessionBasicJson,
   TSessionConfig,
   TSessionJson,
-} from '@shared/sessions/Session'
-import { MissionSession } from '@shared/sessions/Session'
-import type { TSingleTypeObject } from '@shared/toolbox/objects/ObjectToolbox'
+} from '@shared/sessions/MissionSession'
+import { MissionSession } from '@shared/sessions/MissionSession'
+import { type TSingleTypeObject } from '@shared/toolbox/objects/ObjectToolbox'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { User } from '@shared/users/User'
 import { targetEnvLogger } from '../logging'
@@ -127,6 +128,33 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     ]
   }
 
+  /**
+   * @returns The properties from the mission that are
+   * safe to expose in target-environment code.
+   */
+  public toTargetEnvContext(): TTargetEnvExposedSession {
+    const self = this
+    return {
+      _id: self._id,
+      name: self.name,
+      state: self.state,
+      config: structuredClone(self.config),
+      launchedAt: structuredClone(self.launchedAt),
+      get members() {
+        return self.members.map((member) => member.toTargetEnvContext())
+      },
+      get participants() {
+        return self.participants.map((member) => member.toTargetEnvContext())
+      },
+      get observers() {
+        return self.observers.map((member) => member.toTargetEnvContext())
+      },
+      get managers() {
+        return self.managers.map((member) => member.toTargetEnvContext())
+      },
+    }
+  }
+
   // Implemented
   public toJson(options: TSessionServerJsonOptions = {}): TSessionJson {
     // Gather details.
@@ -188,7 +216,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       ownerFirstName: this.ownerFirstName,
       ownerLastName: this.ownerLastName,
       launchedAt: this.launchedAt.toISOString(),
-      mission: this.mission.toJson(missionOptions),
+      mission: this.mission.toExistingJson(missionOptions),
       members: this._members.map((member) => member.toJson()),
       banList,
       config: this.config,
@@ -1732,7 +1760,10 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
     // Create and expose a new context for the target
     // environment.
-    let context = TargetEnvContext.createSessionContext(effect, this).expose()
+    let context = TargetScriptContext.createSessionContext(
+      effect,
+      this,
+    ).expose()
 
     // Apply the effect to the target.
     try {
@@ -1804,7 +1835,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
     // Create and expose a new context for the target
     // environment.
-    let context = TargetEnvContext.createExecutionContext(
+    let context = TargetScriptContext.createExecutionContext(
       effect,
       this,
       member,

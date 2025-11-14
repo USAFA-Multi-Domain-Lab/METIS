@@ -1,3 +1,6 @@
+import { ServerTargetEnvironment } from './ServerTargetEnvironment'
+import type { TEnvHookExposedContext } from './context/EnvHookContext'
+
 export class TargetEnvironmentHook {
   /**
    * The method which defines when the hook
@@ -8,7 +11,9 @@ export class TargetEnvironmentHook {
   /**
    * The function to call when the hook is invoked.
    */
-  private readonly callback: () => void | Promise<void>
+  private readonly callback: (
+    context: TEnvHookExposedContext,
+  ) => void | Promise<void>
 
   /**
    * @param method @see {@link TargetEnvironmentHook.method}
@@ -16,7 +21,7 @@ export class TargetEnvironmentHook {
    */
   public constructor(
     method: TTargetEnvMethods,
-    callback: () => void | Promise<void>,
+    callback: (context: TEnvHookExposedContext) => void | Promise<void>,
   ) {
     this.method = method
     this.callback = callback
@@ -25,8 +30,8 @@ export class TargetEnvironmentHook {
   /**
    * Calls the hook's callback function.
    */
-  public invoke(): void | Promise<void> {
-    return this.callback()
+  public invoke(context: TEnvHookExposedContext): void | Promise<void> {
+    return this.callback(context)
   }
 }
 

@@ -2,7 +2,7 @@ import type { ClientMission } from '@client/missions/ClientMission'
 import type {
   TSessionAccessibility,
   TSessionConfig,
-} from '@shared/sessions/Session'
+} from '@shared/sessions/MissionSession'
 import { useEffect, useState } from 'react'
 import { DetailString } from '../form/DetailString'
 import { DetailToggle } from '../form/DetailToggle'

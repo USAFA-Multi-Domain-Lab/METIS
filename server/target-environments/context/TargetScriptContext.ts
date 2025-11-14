@@ -5,87 +5,49 @@ import type { ServerEffect } from '@server/missions/effects/ServerEffect'
 import type { ServerMissionFile } from '@server/missions/files/ServerMissionFile'
 import type { ServerMissionForce } from '@server/missions/forces/ServerMissionForce'
 import type { ServerMissionNode } from '@server/missions/nodes/ServerMissionNode'
-import type { Mission } from '@shared/missions/Mission'
-import type { MissionAction } from '@shared/missions/actions/MissionAction'
-import type { Effect } from '@shared/missions/effects/Effect'
-import type { MissionFile } from '@shared/missions/files/MissionFile'
-import type { MissionForce } from '@shared/missions/forces/MissionForce'
-import type { MissionNode } from '@shared/missions/nodes/MissionNode'
-import type { SessionMember } from '@shared/sessions/members/SessionMember'
-import type { TargetEnvironment } from '@shared/target-environments/TargetEnvironment'
-import type { Target } from '@shared/target-environments/targets/Target'
 import type {
   TEffectExecutionTriggered,
   TEffectSessionTriggered,
   TEffectType,
-} from '../../shared/missions/effects/Effect'
-import type { TOutputContext } from '../../shared/missions/forces/MissionOutput'
-import type { ServerSessionMember } from '../sessions/ServerSessionMember'
-import type { SessionServer, TOutputTo } from '../sessions/SessionServer'
-import { TargetEnvStore } from '../sessions/TargetEnvStore'
+} from '../../../shared/missions/effects/Effect'
+import type { TOutputContext } from '../../../shared/missions/forces/MissionOutput'
+import type { ServerSessionMember } from '../../sessions/ServerSessionMember'
+import type { SessionServer, TOutputTo } from '../../sessions/SessionServer'
+import type { TargetEnvStore } from '../../sessions/TargetEnvStore'
+import type { TTargetEnvExposedSession } from './TargetEnvContext'
+import {
+  TargetEnvContext,
+  type TTargetEnvExposedEffect,
+  type TTargetEnvExposedMember,
+  type TTargetEnvExposedMission,
+} from './TargetEnvContext'
 
-export class TargetEnvContext<TType extends TEffectType = TEffectType> {
+/**
+ * Context that is provided to target scripts when
+ * they are called during a session.
+ */
+export class TargetScriptContext<
+  TType extends TEffectType = TEffectType,
+> extends TargetEnvContext<TTargetScriptExposedContext<TType>> {
   /**
    * Context data that varies based on the type of effect.
    */
-  private readonly data: TSelectTargetEnvData[TType]
+  protected readonly data: TSelectTargetEnvData[TType]
 
-  // action/node/force details have been moved into the data object
-
-  /**
-   * The mission for the current context.
-   */
-  private get mission() {
-    return this.session.mission
-  }
-
-  /**
-   * The ID of the mission for the current context.
-   */
-  private get missionId() {
-    return this.mission._id
-  }
-
-  /**
-   * The session for the current context.
-   */
-  private readonly session: SessionServer
-
-  /**
-   * The ID of the session for the current context.
-   */
-  private get sessionId() {
-    return this.session._id
-  }
-
-  /**
-   * A store that is unique to the session and target environment.
-   */
-  private get localStore() {
-    return TargetEnvStore.getStore(
-      this.sessionId,
-      this.data.effect.environmentId,
-    )
-  }
-
-  /**
-   * A store that is unique to the session, but not to any particular
-   * target environment. This allows for data to be shared across different
-   * target environments within the same session.
-   */
-  private get globalStore() {
-    return TargetEnvStore.getStore(this.sessionId)
+  // Implemented
+  protected get environmentId(): string {
+    return this.data.effect.environmentId
   }
 
   /**
    * @param session The session for the current context.
    * @param variedContext The context data that varies based on the type of effect.
    */
-  private constructor(
+  protected constructor(
     session: SessionServer,
     variedContext: TSelectTargetEnvData[TType],
   ) {
-    this.session = session
+    super(session)
     this.data = variedContext
   }
 
@@ -93,10 +55,11 @@ export class TargetEnvContext<TType extends TEffectType = TEffectType> {
    * Creates a limited context to expose to the target
    * environment scripts.
    */
-  public expose(): TTargetEnvExposedContext<TType> {
-    let commonContext: TCommonExposedContext<TType> = {
+  public expose(): TTargetScriptExposedContext<TType> {
+    let commonContext: TCommonTargetScriptContext<TType> = {
       type: this.data.type as TType,
       effect: this.data.effect.toTargetEnvContext(),
+      session: this.session.toTargetEnvContext(),
       mission: this.mission.toTargetEnvContext(),
       localStore: this.localStore,
       globalStore: this.globalStore,
@@ -458,8 +421,8 @@ export class TargetEnvContext<TType extends TEffectType = TEffectType> {
   public static createSessionContext(
     effect: ServerEffect<'sessionTriggeredEffect'>,
     session: SessionServer,
-  ): TargetEnvContext<'sessionTriggeredEffect'> {
-    return new TargetEnvContext(session, {
+  ): TargetScriptContext<'sessionTriggeredEffect'> {
+    return new TargetScriptContext(session, {
       type: 'sessionTriggeredEffect',
       effect,
       get effectId() {
@@ -528,8 +491,8 @@ export class TargetEnvContext<TType extends TEffectType = TEffectType> {
     session: SessionServer,
     member: ServerSessionMember,
     execution: ServerActionExecution,
-  ): TargetEnvContext<'executionTriggeredEffect'> {
-    return new TargetEnvContext(session, {
+  ): TargetScriptContext<'executionTriggeredEffect'> {
+    return new TargetScriptContext(session, {
       type: 'executionTriggeredEffect',
       effect,
       get effectId() {
@@ -620,412 +583,148 @@ type TSelectExposedContext = {
 }
 
 /**
- * Object representing the context for the target environment.
+ * Data exposed to a target script as an object.
  */
-export type TTargetEnvExposedContext<TType extends TEffectType = TEffectType> =
-  {
-    /**
-     * The type of effect being applied.
-     */
-    readonly type: TType
-    /**
-     * An effect that is applied to its target.
-     */
-    readonly effect: TTargetEnvExposedEffect
-    /**
-     * The context of the mission for the target environment.
-     */
-    readonly mission: TTargetEnvExposedMission
-    /**
-     * The member who triggered the effect.
-     */
-    readonly triggeredBy: TSelectExposedContext[TType]['triggeredBy']
-    /**
-     * A store that is unique to the session and target environment.
-     * This can be used to store and retrieve temporary, random-access
-     * data.
-     */
-    readonly localStore: TargetEnvStore
-    /**
-     * A store that is unique to the session, but not to any particular
-     * target environment. This allows for data to be shared across different
-     * target environments within the same session.
-     */
-    readonly globalStore: TargetEnvStore
-    /**
-     * Sends the message to the output panel within a session.
-     * @param message The output's message.
-     * @param options Additional options for sending the output.
-     * @note By default, this will send output to the force to which
-     * the effect belongs, unless configured otherwise.
-     */
-    sendOutput: TargetEnvContext<TType>['sendOutput']
-    /**
-     * Blocks the node from further interaction.
-     * @param options Additional options for blocking the node.
-     * @note By default, this will block the node to which the current
-     * effect belongs, unless configured otherwise.
-     */
-    blockNode: TargetEnvContext<TType>['blockNode']
-    /**
-     * Unblocks the node allowing further interaction.
-     * @param options Additional options for unblocking the node.
-     * @note By default, this will unblock the node to which the current
-     * effect belongs, unless configured otherwise.
-     */
-    unblockNode: TargetEnvContext<TType>['unblockNode']
-    /**
-     * Opens the node to reveal the next set of nodes in the structure.
-     * @param options Additional options for opening the node.
-     * @note By default, this will open the node to which the current
-     * effect belongs, unless configured otherwise.
-     */
-    openNode: TargetEnvContext<TType>['openNode']
-    /**
-     * Closes the node to hide the next set of nodes in the structure.
-     * @param options Additional options for closing the node.
-     * @note By default, this will close the node to which the current
-     * effect belongs, unless configured otherwise.
-     */
-    closeNode: TargetEnvContext<TType>['closeNode']
-    /**
-     * Modifies an action's chance of success.
-     * @param operand The number used to modify the chance of success.
-     * @param options Additional options for modifying the chance of success.
-     * @note **If the result is less than 0%, the chance of success will be set to 0%.**
-     * @note **If the result is greater than 100%, the chance of success will be set to 100%.**
-     * @note This will modify the chance of success for all actions within the node.
-     * @note The operand can be positive or negative. It will either increase or decrease the chance of success.
-     * @note By default, this will modify the chance of success for the node to which the current effect belongs,
-     * unless configured otherwise.
-     */
-    modifySuccessChance: TargetEnvContext<TType>['modifySuccessChance']
-    /**
-     * Modifies an action's process time.
-     * @param operand The number used to modify the process time.
-     * @param options Additional options for modifying the process time.
-     * @note **If the result is less than 0, the process time will be set to 0.**
-     * @note **If the result is greater than 1 hour (3,600,000 milliseconds), the process time will be set to 1 hour.**
-     * @note This will modify the process time for all actions within the node.
-     * @note The operand can be positive or negative. It will either increase or decrease the process time.
-     * @note By default, this will modify the process time for the node to which the current effect belongs,
-     * unless configured otherwise.
-     */
-    modifyProcessTime: TargetEnvContext<TType>['modifyProcessTime']
-    /**
-     * Modifies an action's resource cost.
-     * @param operand The number used to modify the resource cost.
-     * @param options Additional options for modifying the resource cost.
-     * @note **If the result is less than 0, the resource cost will be set to 0.**
-     * @note This will modify the resource cost for all actions within the node.
-     * @note The operand can be positive or negative. It will either increase or decrease the resource cost.
-     * @note By default, this will modify the resource cost for the node to which the current effect belongs,
-     * unless configured otherwise.
-     */
-    modifyResourceCost: TargetEnvContext<TType>['modifyResourceCost']
-    /**
-     * Modifies resource pool by applying the given amount
-     * to the resource pool.
-     * @param operand The amount by which to modify the resource pool.
-     * @param options Additional options for modifying the resource pool.
-     * @note A negative value will subtract and a positive
-     * value will add to the resource pool.
-     * @note By default, this will modify the resource pool for the
-     * force to which the current effect belongs, unless configured
-     * otherwise.
-     */
-    modifyResourcePool: TargetEnvContext<TType>['modifyResourcePool']
-    /**
-     * Grants access to the file for the specified force.
-     * @param fileId The ID of the file to grant access to.
-     * @param forceKey The local key of the force to which to grant access.
-     */
-    grantFileAccess: TargetEnvContext<TType>['grantFileAccess']
-    /**
-     * Revokes access to the file for the specified force.
-     * @param fileId The ID of the file to revoke access from.
-     * @param forceKey The local key of the force from which to revoke access.
-     */
-    revokeFileAccess: TargetEnvContext<TType>['revokeFileAccess']
-  }
+export type TTargetScriptExposedContext<
+  TType extends TEffectType = TEffectType,
+> = {
+  /**
+   * The type of effect being applied.
+   */
+  readonly type: TType
+  /**
+   * An effect that is applied to its target.
+   */
+  readonly effect: TTargetEnvExposedEffect
+
+  /**
+   * The session that invoked the hook.
+   */
+  readonly session: TTargetEnvExposedSession
+  /**
+   * The mission associated with the session.
+   */
+  readonly mission: TTargetEnvExposedMission
+  /**
+   * The member who triggered the effect.
+   */
+  readonly triggeredBy: TSelectExposedContext[TType]['triggeredBy']
+  /**
+   * A store that is unique to the session and target environment.
+   * This can be used to store and retrieve temporary, random-access
+   * data.
+   */
+  readonly localStore: TargetEnvStore
+  /**
+   * A store that is unique to the session, but not to any particular
+   * target environment. This allows for data to be shared across different
+   * target environments within the same session.
+   */
+  readonly globalStore: TargetEnvStore
+  /**
+   * Sends the message to the output panel within a session.
+   * @param message The output's message.
+   * @param options Additional options for sending the output.
+   * @note By default, this will send output to the force to which
+   * the effect belongs, unless configured otherwise.
+   */
+  sendOutput: TargetScriptContext<TType>['sendOutput']
+  /**
+   * Blocks the node from further interaction.
+   * @param options Additional options for blocking the node.
+   * @note By default, this will block the node to which the current
+   * effect belongs, unless configured otherwise.
+   */
+  blockNode: TargetScriptContext<TType>['blockNode']
+  /**
+   * Unblocks the node allowing further interaction.
+   * @param options Additional options for unblocking the node.
+   * @note By default, this will unblock the node to which the current
+   * effect belongs, unless configured otherwise.
+   */
+  unblockNode: TargetScriptContext<TType>['unblockNode']
+  /**
+   * Opens the node to reveal the next set of nodes in the structure.
+   * @param options Additional options for opening the node.
+   * @note By default, this will open the node to which the current
+   * effect belongs, unless configured otherwise.
+   */
+  openNode: TargetScriptContext<TType>['openNode']
+  /**
+   * Closes the node to hide the next set of nodes in the structure.
+   * @param options Additional options for closing the node.
+   * @note By default, this will close the node to which the current
+   * effect belongs, unless configured otherwise.
+   */
+  closeNode: TargetScriptContext<TType>['closeNode']
+  /**
+   * Modifies an action's chance of success.
+   * @param operand The number used to modify the chance of success.
+   * @param options Additional options for modifying the chance of success.
+   * @note **If the result is less than 0%, the chance of success will be set to 0%.**
+   * @note **If the result is greater than 100%, the chance of success will be set to 100%.**
+   * @note This will modify the chance of success for all actions within the node.
+   * @note The operand can be positive or negative. It will either increase or decrease the chance of success.
+   * @note By default, this will modify the chance of success for the node to which the current effect belongs,
+   * unless configured otherwise.
+   */
+  modifySuccessChance: TargetScriptContext<TType>['modifySuccessChance']
+  /**
+   * Modifies an action's process time.
+   * @param operand The number used to modify the process time.
+   * @param options Additional options for modifying the process time.
+   * @note **If the result is less than 0, the process time will be set to 0.**
+   * @note **If the result is greater than 1 hour (3,600,000 milliseconds), the process time will be set to 1 hour.**
+   * @note This will modify the process time for all actions within the node.
+   * @note The operand can be positive or negative. It will either increase or decrease the process time.
+   * @note By default, this will modify the process time for the node to which the current effect belongs,
+   * unless configured otherwise.
+   */
+  modifyProcessTime: TargetScriptContext<TType>['modifyProcessTime']
+  /**
+   * Modifies an action's resource cost.
+   * @param operand The number used to modify the resource cost.
+   * @param options Additional options for modifying the resource cost.
+   * @note **If the result is less than 0, the resource cost will be set to 0.**
+   * @note This will modify the resource cost for all actions within the node.
+   * @note The operand can be positive or negative. It will either increase or decrease the resource cost.
+   * @note By default, this will modify the resource cost for the node to which the current effect belongs,
+   * unless configured otherwise.
+   */
+  modifyResourceCost: TargetScriptContext<TType>['modifyResourceCost']
+  /**
+   * Modifies resource pool by applying the given amount
+   * to the resource pool.
+   * @param operand The amount by which to modify the resource pool.
+   * @param options Additional options for modifying the resource pool.
+   * @note A negative value will subtract and a positive
+   * value will add to the resource pool.
+   * @note By default, this will modify the resource pool for the
+   * force to which the current effect belongs, unless configured
+   * otherwise.
+   */
+  modifyResourcePool: TargetScriptContext<TType>['modifyResourcePool']
+  /**
+   * Grants access to the file for the specified force.
+   * @param fileId The ID of the file to grant access to.
+   * @param forceKey The local key of the force to which to grant access.
+   */
+  grantFileAccess: TargetScriptContext<TType>['grantFileAccess']
+  /**
+   * Revokes access to the file for the specified force.
+   * @param fileId The ID of the file to revoke access from.
+   * @param forceKey The local key of the force from which to revoke access.
+   */
+  revokeFileAccess: TargetScriptContext<TType>['revokeFileAccess']
+}
 
 /**
  * Exposed context for an effect that is common between varied
  * effect types.
  */
-type TCommonExposedContext<TType extends TEffectType> = Omit<
-  TTargetEnvExposedContext<TType>,
+type TCommonTargetScriptContext<TType extends TEffectType> = Omit<
+  TTargetScriptExposedContext<TType>,
   Exclude<keyof TExposedContextSession | keyof TExposedContextExecution, 'type'>
->
-
-/**
- * Data for a mission exposed in a target script.
- */
-export type TTargetEnvExposedMission = Readonly<
-  TCreateJsonType<
-    Mission,
-    '_id' | 'name' | 'resourceLabel',
-    {
-      /**
-       * @see {@link Mission.forces}
-       */
-      forces: TTargetEnvExposedForce[]
-      /**
-       * @see {@link Mission.allNodes}
-       */
-      allNodes: TTargetEnvExposedNode[]
-      /**
-       * @see {@link Mission.allActions}
-       */
-      allActions: TTargetEnvExposedAction[]
-      /**
-       * @see {@link Mission.allEffects}
-       */
-      allEffects: TTargetEnvExposedEffect[]
-      /**
-       * @see {@link Mission.files}
-       */
-      files: TTargetEnvExposedFile[]
-      /**
-       * @see {@link Mission.effects}
-       */
-      effects: TTargetEnvExposedEffect<'sessionTriggeredEffect'>[]
-    }
-  >
->
-
-/**
- * Data for a force exposed in a target script.
- */
-export type TTargetEnvExposedForce = Readonly<
-  TCreateJsonType<
-    MissionForce,
-    | '_id'
-    | 'localKey'
-    | 'name'
-    | 'color'
-    | 'initialResources'
-    | 'resourcesRemaining',
-    {
-      /**
-       * @see {@link MissionForce.mission}
-       */
-      mission: TTargetEnvExposedMission
-      /**
-       * @see {@link MissionForce.nodes}
-       */
-      nodes: TTargetEnvExposedNode[]
-    }
-  >
->
-
-/**
- * Data for a node exposed in a target script.
- */
-export type TTargetEnvExposedNode = Readonly<
-  TCreateJsonType<
-    MissionNode,
-    | '_id'
-    | 'localKey'
-    | 'name'
-    | 'description'
-    | 'color'
-    | 'opened'
-    | 'openable'
-    | 'closable'
-    | 'blocked'
-    | 'executing'
-    | 'executionStatus'
-    | 'executionState'
-    | 'executed'
-    | 'initiallyBlocked'
-    | 'device'
-    | 'revealed'
-    | 'position'
-    | 'hasChildren'
-    | 'hasSiblings',
-    {
-      /**
-       * @see {@link MissionForce.mission}
-       */
-      mission: TTargetEnvExposedMission
-      /**
-       * @see {@link MissionNode.force}
-       */
-      force: TTargetEnvExposedForce
-      /**
-       * @see {@link MissionNode.actions}
-       */
-      actions: TTargetEnvExposedAction[]
-      /**
-       * @see {@link MissionNode.parent}
-       */
-      parent: TTargetEnvExposedNode | null
-      /**
-       * @see {@link MissionNode.children}
-       */
-      children: TTargetEnvExposedNode[]
-      /**
-       * @see {@link MissionNode.siblings}
-       */
-      siblings: TTargetEnvExposedNode[]
-    }
-  >
->
-
-/**
- * Data for a file exposed in a target script.
- */
-export type TTargetEnvExposedFile = Readonly<
-  TCreateJsonType<
-    MissionFile,
-    | '_id'
-    | 'name'
-    | 'originalName'
-    | 'alias'
-    | 'extension'
-    | 'mimetype'
-    | 'initialAccess'
-    | 'size',
-    {
-      /**
-       * @see {@link MissionFile.mission}
-       */
-      mission: TTargetEnvExposedMission
-    }
-  >
->
-
-/**
- * Data for an action exposed in a target script.
- */
-export type TTargetEnvExposedAction = Readonly<
-  TCreateJsonType<
-    MissionAction,
-    | '_id'
-    | 'localKey'
-    | 'name'
-    | 'type'
-    | 'description'
-    | 'successChance'
-    | 'failureChance'
-    | 'processTime'
-    | 'resourceCost'
-    | 'areEnoughResources'
-    | 'executing'
-    | 'executionCount'
-    | 'executionLimitReached',
-    {
-      /**
-       * @see {@link MissionAction.mission}
-       */
-      mission: TTargetEnvExposedMission
-      /**
-       * @see {@link MissionAction.force}
-       */
-      force: TTargetEnvExposedForce
-      /**
-       * @see {@link MissionAction.node}
-       */
-      node: TTargetEnvExposedNode
-      /**
-       * @see {@link MissionAction.effects}
-       */
-      effects: TTargetEnvExposedEffect[]
-    }
-  >
->
-
-/**
- * Data for an effect exposed in a target script.
- */
-export type TTargetEnvExposedEffect<TType extends TEffectType = TEffectType> =
-  Readonly<
-    TCreateJsonType<
-      Effect<TMetisBaseComponents, TType>,
-      | '_id'
-      | 'localKey'
-      | 'name'
-      | 'type'
-      | 'description'
-      | 'trigger'
-      | 'args'
-      | 'order',
-      {
-        /**
-         * @see {@link Effect.mission}
-         */
-        mission: TTargetEnvExposedMission
-        /**
-         * @see {@link Effect.host}
-         */
-        host: TTargetEnvExposedMission | TTargetEnvExposedAction
-        /**
-         * @see {@link Effect.sourceForce}
-         */
-        sourceForce: TTargetEnvExposedForce | null
-        /**
-         * @see {@link Effect.node}
-         */
-        sourceNode: TTargetEnvExposedNode | null
-        /**
-         * @see {@link Effect.sourceAction}
-         */
-        sourceAction: TTargetEnvExposedAction | null
-        /**
-         * @see {@link Effect.target}
-         */
-        target: TTargetEnvExposedTarget | null
-        /**
-         * @see {@link Effect.environment}
-         */
-        environment: TTargetEnvExposedEnvironment | null
-      }
-    >
-  >
-
-/**
- * Data for a target environment exposed in
- * a target script.
- */
-export type TTargetEnvExposedTarget = Readonly<
-  TCreateJsonType<
-    Target,
-    '_id' | 'name' | 'description',
-    {
-      /**
-       * @see {@link Target.environment}
-       */
-      environment: TTargetEnvExposedEnvironment
-    }
-  >
->
-
-/**
- * Data for a target exposed in a target script.
- */
-export type TTargetEnvExposedEnvironment = Readonly<
-  TCreateJsonType<
-    TargetEnvironment,
-    '_id' | 'name' | 'description' | 'version',
-    {
-      /**
-       * @see {@link TargetEnvironment.targets}
-       */
-      targets: TTargetEnvExposedTarget[]
-    }
-  >
->
-
-/**
- * Data for a member exposed in a target script.
- */
-export type TTargetEnvExposedMember = Readonly<
-  TCreateJsonType<
-    SessionMember,
-    '_id' | 'name' | 'username' | 'firstName' | 'lastName',
-    {}
-  >
 >
 
 /**

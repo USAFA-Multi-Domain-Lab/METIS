@@ -1,5 +1,7 @@
 import Module from 'node:module'
 import path from 'node:path'
+import * as tsconfigPaths from 'tsconfig-paths'
+import type { RegisterParams } from 'tsconfig-paths/lib/register'
 import { TargetEnvSchema } from './schema/TargetEnvSchema'
 import { TargetSchema } from './schema/TargetSchema'
 
@@ -23,6 +25,7 @@ export class TargetEnvSandbox {
     let InternalModule = Module as InternalModuleType
     let originalLoad = InternalModule._load
     let { rootDir } = this
+    let targetEnvId = path.basename(rootDir)
 
     InternalModule._load = function (
       request: string,
@@ -38,6 +41,11 @@ export class TargetEnvSandbox {
         Module.builtinModules.includes(request) ||
         request.startsWith('node:')
       ) {
+        return resolve()
+      }
+      // Resolve if the request is a non-relative import
+      // inside the target environment.
+      if (request === targetEnvId || request.startsWith(`${targetEnvId}/`)) {
         return resolve()
       }
 
@@ -99,10 +107,15 @@ export class TargetEnvSandbox {
       return resolve()
     }
 
+    const restoreTsConfig = tsconfigPaths.register(
+      TargetEnvSandbox.tsconfigPathArgs,
+    )
+
     try {
       return require(modulePath).default
     } finally {
       InternalModule._load = originalLoad
+      restoreTsConfig()
     }
   }
 
@@ -187,6 +200,71 @@ export class TargetEnvSandbox {
     process.cwd(),
     'node_modules',
   )
+
+  /**
+   * The absolute path to the tsconfig.json file used for
+   * target environment module loading.
+   */
+  public static readonly TSCONFIG_PATH = path.join(
+    TargetEnvSandbox.TARGET_ENV_ROOT,
+    'tsconfig.json',
+  )
+
+  /**
+   * The parsed tsconfig.json used for target environment
+   * module loading.
+   */
+  public static readonly TSCONFIG = require(TargetEnvSandbox.TSCONFIG_PATH)
+
+  /**
+   * Arguments used for tsconfig-paths registration
+   * during target-environment module loading.
+   */
+  public static tsconfigPathArgs: RegisterParams | undefined
+
+  /**
+   * Determines and sets the tsconfig path arguments
+   * for the {@link TargetEnvSandbox} class.
+   */
+  private static determineTsConfigPaths(): void {
+    // Load tsconfig-paths arguments.
+    const tsconfigPath = path.join(
+      TargetEnvSandbox.TARGET_ENV_ROOT,
+      'tsconfig.json',
+    )
+    const tsconfig = require(tsconfigPath)
+    const baseUrlResolved = path.resolve(
+      path.dirname(tsconfigPath),
+      tsconfig.compilerOptions.baseUrl,
+    )
+
+    TargetEnvSandbox.tsconfigPathArgs = {
+      baseUrl: baseUrlResolved,
+      paths: {
+        ...tsconfig.compilerOptions.paths,
+      },
+    }
+  }
+
+  /**
+   * Loads the globals used in the target-environment code.
+   */
+  private static loadGlobals(): void {
+    const restoreTsConfig = tsconfigPaths.register(
+      TargetEnvSandbox.tsconfigPathArgs,
+    )
+    require('../../integration/target-env/globals')
+    restoreTsConfig()
+  }
+
+  /**
+   * Initializes the {@link TargetEnvSandbox} class
+   * for use.
+   */
+  public static initialize() {
+    this.determineTsConfigPaths()
+    this.loadGlobals()
+  }
 
   /**
    * Throws an error with the given message if passing `child`

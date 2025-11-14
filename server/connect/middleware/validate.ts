@@ -5,7 +5,7 @@ import type {
   TRequestMethod,
 } from '@shared/connect'
 import { MemberRole } from '@shared/sessions/members/MemberRole'
-import type { TSessionAccessibility } from '@shared/sessions/Session'
+import type { TSessionAccessibility } from '@shared/sessions/MissionSession'
 import type { TNonEmptyArray } from '@shared/toolbox/arrays/ArrayToolbox'
 import type { ZodObject, ZodOptional, ZodType } from 'zod'
 import { z as zod } from 'zod'

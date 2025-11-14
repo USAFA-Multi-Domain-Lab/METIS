@@ -1,5 +1,5 @@
 import type { ClientConnection } from '@server/connect/ClientConnection'
-import type { TTargetEnvExposedMember } from '@server/target-environments/TargetEnvContext'
+import type { TTargetEnvExposedMember } from '@server/target-environments/context/TargetEnvContext'
 import type { TServerEvents, TServerMethod } from '@shared/connect'
 import type { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
 import type { TMemberRoleId } from '@shared/sessions/members/MemberRole'
@@ -35,7 +35,7 @@ export class ServerSessionMember extends SessionMember<TMetisServerComponents> {
 
   /**
    * @returns The properties from the user that are
-   * safe to expose in a target script.
+   * safe to expose in target-environment code.
    */
   public toTargetEnvContext(): TTargetEnvExposedMember {
     return {

@@ -9,7 +9,7 @@ import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
 import { VersionToolbox } from '@shared/toolbox/strings/VersionToolbox'
 import type { TargetMigrationRegistry } from '../../shared/target-environments/targets/migrations/TargetMigrationRegistry'
 import { ServerTargetEnvironment } from './ServerTargetEnvironment'
-import type { TTargetEnvExposedTarget } from './TargetEnvContext'
+import type { TTargetEnvExposedTarget } from './context/TargetEnvContext'
 
 /**
  * A class for managing targets on the server.
@@ -42,7 +42,7 @@ export class ServerTarget extends Target<TMetisServerComponents> {
 
   /**
    * @returns The properties from the target that are
-   * safe to expose in a target script.
+   * safe to expose in target-environment code.
    */
   public toTargetEnvContext(): TTargetEnvExposedTarget {
     const self = this
