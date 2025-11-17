@@ -1,7 +1,4 @@
-import type {
-  TargetSchema,
-  TTargetScript,
-} from '@server/target-environments/schema/TargetSchema'
+import type { TargetSchema } from '@server/target-environments/schema/TargetSchema'
 import type { TTargetArg } from '@shared/target-environments/args/Arg'
 import { Arg } from '@shared/target-environments/args/Arg'
 import { Target } from '@shared/target-environments/targets/Target'
@@ -20,6 +17,13 @@ export class ServerTarget extends Target<TMetisServerComponents> {
     return this.migrationRegistry.versions
   }
 
+  /**
+   * @see {@link ServerTargetEnvironment.sandbox}
+   */
+  public get sandbox() {
+    return this.environment.sandbox
+  }
+
   protected constructor(
     _id: string,
     name: string,
@@ -27,10 +31,9 @@ export class ServerTarget extends Target<TMetisServerComponents> {
     args: TTargetArg[] = [],
     environment: ServerTargetEnvironment,
     /**
-     * The function used to execute an effect on the target.
+     * The path to the schema which defines the target.
      */
-    public script: TTargetScript,
-
+    public schemaPath: string,
     /**
      * A registry of target-environment versions which have
      * a migration script for the target.
@@ -82,11 +85,13 @@ export class ServerTarget extends Target<TMetisServerComponents> {
   /**
    * @param schema The schema defining the target.
    * @param environment The environment in which the target exists.
+   * @param path The path to the schema file.
    * @returns A new {@link ServerTarget} instance created from the schema.
    */
   public static fromSchema(
     schema: TargetSchema,
     environment: ServerTargetEnvironment,
+    path: string,
   ) {
     const target = new ServerTarget(
       schema._id,
@@ -94,7 +99,7 @@ export class ServerTarget extends Target<TMetisServerComponents> {
       schema.description,
       Arg.fromJson(schema.args),
       environment,
-      schema.script,
+      path,
       schema.migrationRegistry,
     )
     return target
@@ -108,14 +113,14 @@ export class ServerTarget extends Target<TMetisServerComponents> {
    */
   public static validateTargetIds(environmentId: string): void {
     const metisTargetIds = Object.values(ServerTarget.METIS_TARGET_IDS)
-    const targetIds = ServerTargetEnvironment.REGISTRY.getTargets(environmentId)
-    const missingIds = targetIds.filter(
+    const targets = ServerTargetEnvironment.REGISTRY.getTargets(environmentId)
+    const missingTargets = targets.filter(
       ({ _id }) => !metisTargetIds.includes(_id),
     )
 
-    if (missingIds.length > 0) {
+    if (missingTargets.length > 0) {
       throw new Error(
-        `The following target IDs are missing in the METIS target environment: ${missingIds
+        `The following target IDs are missing in the METIS target environment: ${missingTargets
           .map(({ _id }) => _id)
           .join(', ')}`,
       )

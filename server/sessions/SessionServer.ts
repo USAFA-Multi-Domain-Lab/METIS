@@ -1760,15 +1760,15 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
     // Create and expose a new context for the target
     // environment.
-    let context = TargetScriptContext.createSessionContext(
-      effect,
-      this,
-    ).expose()
+    let context = TargetScriptContext.createSessionContext(effect, this)
 
     // Apply the effect to the target.
     try {
       if (!effect.defective) {
-        await effect.target.script(context)
+        await effect.environment.sandbox.executeTargetScript(
+          effect.target,
+          context,
+        )
       }
     } catch (error: any) {
       // Give additional information about the error.
@@ -1840,12 +1840,15 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       this,
       member,
       execution,
-    ).expose()
+    )
 
     // Apply the effect to the target.
     try {
       if (!effect.defective) {
-        await effect.target.script(context)
+        await effect.environment.sandbox.executeTargetScript(
+          effect.target,
+          context,
+        )
       }
     } catch (error: any) {
       // Give additional information about the error.

@@ -65,6 +65,7 @@ export abstract class MissionFile<
 
   // Implemented
   public get defects(): TMissionComponentDefect[] {
+    this.reference
     return []
   }
 

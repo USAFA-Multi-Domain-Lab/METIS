@@ -20,11 +20,25 @@ import { TargetEnvSandbox } from './TargetEnvSandbox'
  */
 export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerComponents> {
   /**
+   * The sandbox which can be used to execute code within
+   * the target environment safely, without interfering
+   * with the main server environment.
+   */
+  public sandbox: TargetEnvSandbox
+
+  /**
    * A registry of hooks and their associated callbacks.
    * Callbacks will be called when the associated method
    * is invoked.
    */
   private hooks: TargetEnvironmentHook[]
+
+  /**
+   * @see {@link TargetEnvSandbox.rootDir}
+   */
+  public get rootDir(): string {
+    return this.sandbox.rootDir
+  }
 
   /**
    * @param id @see {@link ServerTargetEnvironment._id}
@@ -42,10 +56,26 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
     version: string,
     targets: ServerTarget[],
     hooks: TargetEnvironmentHook[],
+    sandbox: TargetEnvSandbox,
   ) {
     super(id, name, description, version, targets)
 
     this.hooks = hooks
+    this.sandbox = sandbox
+  }
+
+  /**
+   * Loads a target from the given schema file path,
+   * creating a {@link ServerTarget} instance and adding
+   * it to the target environment.
+   * @param schemaFilePath The path to the target schema file.
+   */
+  private loadTarget(schemaFilePath: string) {
+    let targetSchema = this.sandbox.loadTargetSchema(schemaFilePath)
+    // Add the target JSON.
+    this.targets.push(
+      ServerTarget.fromSchema(targetSchema, this, schemaFilePath),
+    )
   }
 
   /**
@@ -169,7 +199,10 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
    * @returns A new {@link ServerTargetEnvironment} instance
    * created from the schema.
    */
-  public static fromSchema(schema: TargetEnvSchema): ServerTargetEnvironment {
+  public static fromSchema(
+    schema: TargetEnvSchema,
+    sandbox: TargetEnvSandbox,
+  ): ServerTargetEnvironment {
     return new ServerTargetEnvironment(
       schema._id,
       schema.name,
@@ -177,6 +210,7 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
       schema.version,
       [],
       schema.hooks,
+      sandbox,
     )
   }
 
@@ -190,7 +224,6 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
   private static scanTargetDirectory(
     directory: string,
     environment: ServerTargetEnvironment,
-    sandbox: TargetEnvSandbox,
   ): void {
     let schemaFilePath = path.join(
       directory,
@@ -208,15 +241,7 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
     // If the schema file exists, grab the default export.
     if (fs.existsSync(schemaFilePath)) {
       try {
-        let targetSchema = sandbox.loadTarget(schemaFilePath)
-        // Set the target ID.
-        targetSchema.setId(directory)
-        // Set the target environment ID.
-        targetSchema.targetEnvId = environment._id
-        // Add the target JSON.
-        environment.targets.push(
-          ServerTarget.fromSchema(targetSchema, environment),
-        )
+        environment.loadTarget(schemaFilePath)
       } catch (error: any) {
         console.error(error.message)
         console.warn(
@@ -232,7 +257,7 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
 
     for (let subdirectory of directoryContents) {
       if (ServerFileToolbox.isFolder(subdirectory)) {
-        this.scanTargetDirectory(subdirectory, environment, sandbox)
+        this.scanTargetDirectory(subdirectory, environment)
       }
     }
   }
@@ -277,14 +302,16 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
 
     try {
       // Load and register the target environment.
-      let environmentSchema = sandbox.loadEnvironment()
-      let environment =
-        ServerTargetEnvironment.fromSchema(environmentSchema).register()
+      let environmentSchema = sandbox.loadEnvironmentSchema()
+      let environment = ServerTargetEnvironment.fromSchema(
+        environmentSchema,
+        sandbox,
+      ).register()
 
       // If the target environment has a target folder,
       // scan it for targets.
       // Scan the directory for targets.
-      this.scanTargetDirectory(targetFolderPath, environment, sandbox)
+      this.scanTargetDirectory(targetFolderPath, environment)
 
       // If no targets were found, log a warning message.
       if (!environment.targets.length) {

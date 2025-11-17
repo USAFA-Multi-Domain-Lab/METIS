@@ -13,7 +13,7 @@ export abstract class Target<
   /**
    * The ID of the target environment.
    */
-  public environmentId(): string {
+  public get environmentId(): string {
     return this.environment._id
   }
 

@@ -261,7 +261,7 @@ export class TargetScriptContext<
     // Determine the prefix based on whether
     // a recipient force was specified.
     if (!to) {
-      prefix = 'Global'
+      prefix = 'Global:'
     } else {
       let targetForce = this.determineTargetForce(to.forceKey)
       prefix = targetForce.outputPrefix
@@ -596,7 +596,6 @@ export type TTargetScriptExposedContext<
    * An effect that is applied to its target.
    */
   readonly effect: TTargetEnvExposedEffect
-
   /**
    * The session that invoked the hook.
    */
@@ -716,6 +715,31 @@ export type TTargetScriptExposedContext<
    * @param forceKey The local key of the force from which to revoke access.
    */
   revokeFileAccess: TargetScriptContext<TType>['revokeFileAccess']
+}
+
+export type TTargetScriptSerializedContext<
+  TType extends TEffectType = TEffectType,
+> = {
+  /**
+   * The type of effect being applied.
+   */
+  readonly type: TType
+  /**
+   * An effect that is applied to its target.
+   */
+  readonly effect: TTargetEnvExposedEffect
+  /**
+   * The session that invoked the hook.
+   */
+  readonly session: TTargetEnvExposedSession
+  /**
+   * The mission associated with the session.
+   */
+  readonly mission: TTargetEnvExposedMission
+  /**
+   * The member who triggered the effect.
+   */
+  readonly triggeredBy: TSelectExposedContext[TType]['triggeredBy']
 }
 
 /**

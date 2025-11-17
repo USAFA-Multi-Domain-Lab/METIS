@@ -1,8 +1,6 @@
 import type { TTargetArgJson } from '@shared/target-environments/args/Arg'
 import { TargetMigrationRegistry } from '@shared/target-environments/targets/migrations/TargetMigrationRegistry'
 import type { TTargetJson } from '@shared/target-environments/targets/Target'
-import fs from 'fs'
-import path from 'path'
 import type { TTargetScriptExposedContext } from '../context/TargetScriptContext'
 
 /**
@@ -10,29 +8,39 @@ import type { TTargetScriptExposedContext } from '../context/TargetScriptContext
  */
 export class TargetSchema {
   /**
-   * The ID of the target.
+   * @see {@link Target._id}
    */
   private id: string
+  /**
+   * The ID of the target.
+   */
   public get _id(): string {
     return this.id
   }
+  public set _id(id: string) {
+    if (!this.canUpdateId) {
+      throw new Error('Target ID has already been set and cannot be updated.')
+    }
+    this.id = id
+  }
 
+  /**
+   * @see {@link Target.targetEnvId}
+   */
+  private _targetEnvId: string
   /**
    * The ID of the target environment.
    */
-  private _targetEnvId: string
   public get targetEnvId(): string {
     return this._targetEnvId
   }
   public set targetEnvId(targetEnvId: string) {
-    if (this.canUpdateTargetEnvId) {
-      this._targetEnvId = targetEnvId
-      this._canUpdateTargetEnvId = false
-    } else {
+    if (!this.canUpdateTargetEnvId) {
       throw new Error(
         'Target environment ID has already been set and cannot be updated.',
       )
     }
+    this._targetEnvId = targetEnvId
   }
 
   /**
@@ -79,25 +87,18 @@ export class TargetSchema {
   }
 
   /**
-   * Determines if the ID of the target can be updated.
-   */
-  private _canUpdateId: boolean
-  /**
-   * Determines if the ID of the target can be updated.
+   * Whether the target ID can be updated.
    */
   public get canUpdateId(): boolean {
-    return this._canUpdateId
+    return this.id === ''
   }
 
   /**
-   * Determines if the target environment ID can be updated.
-   */
-  private _canUpdateTargetEnvId: boolean
   /**
    * Determines if the target environment ID can be updated.
    */
   public get canUpdateTargetEnvId(): boolean {
-    return this._canUpdateTargetEnvId
+    return this._targetEnvId === ''
   }
 
   /**
@@ -110,31 +111,7 @@ export class TargetSchema {
     this._description = options.description
     this._script = options.script
     this._args = options.args
-    this._canUpdateId = true
-    this._canUpdateTargetEnvId = true
     this.migrationRegistry = options.migrations ?? new TargetMigrationRegistry()
-  }
-
-  /**
-   * Sets the ID of the target.
-   * @param filePath The path to the target file.
-   */
-  public setId(filePath: string) {
-    if (!this.canUpdateId) {
-      throw new Error(
-        "The target's ID has already been set and cannot be updated.",
-      )
-    }
-
-    const isValid =
-      fs.existsSync(filePath) && fs.lstatSync(filePath).isDirectory()
-
-    if (isValid) {
-      this.id = path.basename(filePath)
-      this._canUpdateId = false
-    } else {
-      throw new Error('Invalid path provided.')
-    }
   }
 }
 
