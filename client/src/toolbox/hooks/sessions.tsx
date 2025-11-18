@@ -47,22 +47,43 @@ export function useSessionRedirects(
       // is unstarted.
       case 'unstarted':
         if (!['LobbyPage', 'SessionConfigPage'].includes(currentPageKey)) {
-          navigateTo('LobbyPage', { session }, { bypassMiddleware: true })
+          // For testing sessions, redirect to SessionConfigPage
+          // For normal sessions, redirect to LobbyPage
+          if (session.config.accessibility === 'testing') {
+            navigateTo(
+              'SessionConfigPage',
+              { session },
+              { bypassMiddleware: true },
+            )
+          } else {
+            navigateTo('LobbyPage', { session }, { bypassMiddleware: true })
+          }
         }
         break
       // Once starting, ensure the user is on the
-      // lobby page.
+      // lobby page (or session config page for testing sessions).
       case 'starting':
-        if (currentPageKey !== 'LobbyPage') {
-          navigateTo('LobbyPage', { session }, { bypassMiddleware: true })
-
-          // In case one manager starts the session
-          // while another manager is configuring it,
-          // notify of why the configuration was aborted.
-          if (currentPageKey === 'SessionConfigPage') {
-            notify(
-              'Session configuration aborted. Session start was initiated by another manager.',
+        // For testing sessions, allow SessionConfigPage
+        if (session.config.accessibility === 'testing') {
+          if (!['LobbyPage', 'SessionConfigPage'].includes(currentPageKey)) {
+            navigateTo(
+              'SessionConfigPage',
+              { session },
+              { bypassMiddleware: true },
             )
+          }
+        } else {
+          if (currentPageKey !== 'LobbyPage') {
+            navigateTo('LobbyPage', { session }, { bypassMiddleware: true })
+
+            // In case one manager starts the session
+            // while another manager is configuring it,
+            // notify of why the configuration was aborted.
+            if (currentPageKey === 'SessionConfigPage') {
+              notify(
+                'Session configuration aborted. Session start was initiated by another manager.',
+              )
+            }
           }
         }
         break

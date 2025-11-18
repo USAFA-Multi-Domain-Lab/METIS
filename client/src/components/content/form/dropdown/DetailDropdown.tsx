@@ -54,6 +54,7 @@ export default function DetailDropdown<TOption>(
     tooltipDescription: props.tooltipDescription ?? '',
     emptyText: props.emptyText ?? 'Select an option',
     errorMessage: props.errorMessage ?? '',
+    isExpanded: props.isExpanded ?? false,
   }
   // Extract props.
   const {

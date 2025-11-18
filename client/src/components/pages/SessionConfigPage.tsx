@@ -11,7 +11,7 @@ import { useState } from 'react'
 import { DefaultPageLayout } from '.'
 import Prompt from '../content/communication/Prompt'
 import type { TNavigation_P } from '../content/general-layout/Navigation'
-import SessionConfig from '../content/session/SessionConfig'
+import SessionConfig from '../content/session/config/SessionConfig'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
 import './SessionConfigPage.scss'
 
@@ -49,8 +49,21 @@ export default function SessionConfigPage({
       beginLoading('Saving session configuration...')
       // Save the session configuration.
       await session.$updateConfig(config)
-      // Redirect to the lobby page.
-      navigateTo('LobbyPage', { session })
+
+      // If this is a testing session (play-test), auto-start it
+      if (session.config.accessibility === 'testing') {
+        beginLoading('Starting play-test...')
+        await session.$start()
+        // Navigate directly to the session page
+        navigateTo(
+          'SessionPage',
+          { session, returnPage: 'HomePage' },
+          { bypassMiddleware: true },
+        )
+      } else {
+        // Redirect to the lobby page for normal sessions
+        navigateTo('LobbyPage', { session })
+      }
     } catch (error) {
       handleError({
         message: 'Failed to save session configuration.',
@@ -63,6 +76,12 @@ export default function SessionConfigPage({
    * Cancels the configuration.
    */
   const cancel = (): void => {
+    if (session.config.accessibility === 'testing') {
+      // Navigate to the previous page
+      navigateTo('HomePage', {})
+      return
+    }
+
     // Navigate to the lobby page.
     navigateTo('LobbyPage', { session })
   }
@@ -113,6 +132,17 @@ export default function SessionConfigPage({
     return { buttonEngine: navButtonEngine }
   })
 
+  /**
+   * Text for the save button.
+   */
+  const saveButtonText = compute<string>(() => {
+    if (session.config.accessibility === 'testing') {
+      return 'Start Play-Test'
+    } else {
+      return 'Save'
+    }
+  })
+
   return (
     <div className='SessionConfigPage Page DarkPage'>
       <DefaultPageLayout navigation={navigation}>
@@ -130,7 +160,7 @@ export default function SessionConfigPage({
         <SessionConfig
           sessionConfig={config}
           mission={mission}
-          saveButtonText={'Save'}
+          saveButtonText={saveButtonText}
           onSave={save}
           onCancel={cancel}
         />

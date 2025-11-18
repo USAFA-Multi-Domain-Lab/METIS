@@ -3,6 +3,7 @@ import type { TTargetEnvJson } from '@shared/target-environments/TargetEnvironme
 import { TargetEnvironment } from '@shared/target-environments/TargetEnvironment'
 import { TargetEnvRegistry } from '@shared/target-environments/TargetEnvRegistry'
 import type { TTargetJson } from '@shared/target-environments/targets/Target'
+import type { TTargetEnvConfig } from '@shared/target-environments/types'
 import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
 import axios from 'axios'
 import type { TMetisClientComponents } from '..'
@@ -18,12 +19,15 @@ export class ClientTargetEnvironment extends TargetEnvironment<TMetisClientCompo
     description: string,
     version: string,
     targetData: TTargetJson[],
+    configs: TTargetEnvConfig[],
   ) {
     super(_id, name, description, version)
 
     this.targets = targetData.map((target) =>
       ClientTarget.fromJson(target, this),
     )
+
+    this._configs = configs
   }
 
   // Implemented
@@ -55,6 +59,7 @@ export class ClientTargetEnvironment extends TargetEnvironment<TMetisClientCompo
       ClientTargetEnvironment.DEFAULT_PROPERTIES.description,
       ClientTargetEnvironment.DEFAULT_PROPERTIES.version,
       ClientTargetEnvironment.DEFAULT_PROPERTIES.targets,
+      ClientTargetEnvironment.DEFAULT_PROPERTIES.configs,
     )
   }
 
@@ -70,6 +75,7 @@ export class ClientTargetEnvironment extends TargetEnvironment<TMetisClientCompo
       json.description,
       json.version,
       json.targets,
+      json.configs,
     )
   }
 

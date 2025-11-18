@@ -8,7 +8,7 @@ import { useState } from 'react'
 import { DefaultPageLayout } from '.'
 import { ESortByMethod } from '../content/general-layout/ListOld'
 import type { TNavigation_P } from '../content/general-layout/Navigation'
-import SessionConfig from '../content/session/SessionConfig'
+import SessionConfig from '../content/session/config/SessionConfig'
 import ButtonSvgPanel from '../content/user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
 import './LaunchPage.scss'
@@ -122,8 +122,12 @@ export default function LaunchPage({
   const launch = async () => {
     if (server !== null) {
       try {
-        // If there are invalid objects and effects are enabled...
-        if (sessionConfig.effectsEnabled && mission.defects.length > 0) {
+        // If there are invalid objects and effects are enabled for any target env...
+        if (
+          sessionConfig.disabledTargetEnvs.length <
+            mission.targetEnvironments.length &&
+          mission.defects.length > 0
+        ) {
           // Create a message for the user.
           let message =
             `**Warning:** The mission for this session is defective due to unresolved conflicts. If you proceed, the session may not function as expected.\n` +

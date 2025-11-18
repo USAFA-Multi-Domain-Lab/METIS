@@ -42,28 +42,24 @@ export function useMissionItemButtonCallbacks(
           throw new Error('Server connection is not available.')
         }
 
-        // Launch, join, and start the session.
-        let sessionId = await SessionClient.$launch(mission._id, {
+        // Launch the session with testing accessibility
+        beginLoading('Launching play-test session...')
+        const sessionId = await SessionClient.$launch(mission._id, {
           accessibility: 'testing',
         })
-        let session = await server.$joinSession(sessionId)
-        // If the session is not found, abort.
-        if (!session) throw new Error('Failed to join test session.')
-        await session.$start({
-          onInit: () => beginLoading('Setting up play-test...'),
-        })
 
-        // Navigate to the session page.
-        navigateTo(
-          'SessionPage',
-          { session, returnPage },
-          { bypassMiddleware: true },
-        )
+        // Join the session
+        const session = await server.$joinSession(sessionId)
+        if (!session) throw new Error('Failed to join test session.')
+
+        // Navigate to session config page to let user configure before starting
+        navigateTo('SessionConfigPage', { session })
+        finishLoading()
       } catch (error) {
-        console.error('Failed to play-test mission.')
+        console.error('Failed to launch play-test session.')
         console.error(error)
         handleError({
-          message: 'Failed to play-test mission.',
+          message: 'Failed to launch play-test session.',
           notifyMethod: 'bubble',
         })
       }

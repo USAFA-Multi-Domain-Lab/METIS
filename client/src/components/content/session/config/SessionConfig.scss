@@ -1,9 +1,7 @@
-@use '../../../assets/styles/config.scss' as *;
+@use '../../../../assets/styles/config.scss' as *;
 @use '@client/components/content/form/index.scss' as *;
 
 .SessionConfig {
-  @include form-container;
-
   display: flex;
   box-sizing: border-box;
   flex-direction: column;
@@ -12,8 +10,19 @@
   max-width: 800px;
   border: 2px solid $color-primary-light;
   border-radius: 10px;
-  padding: 2em 2em 1em;
   background-color: $color-primary;
+
+  .Panel {
+    border: none;
+    border-radius: 10px;
+
+    .PanelContent {
+      @include form-container;
+
+      margin: 1em auto;
+      padding: 2em 2em 1em;
+    }
+  }
 
   .Buttons {
     display: flex;

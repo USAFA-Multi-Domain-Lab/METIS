@@ -3,11 +3,14 @@
 .Page.LaunchPage {
   $width: 100vw;
   width: $width;
+  align-items: flex-start;
 
   .Content {
     display: flex;
     box-sizing: border-box;
     flex-direction: column;
+    margin-top: 5em;
+
     width: $width;
     padding: 0 2em;
 
