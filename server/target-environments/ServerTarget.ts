@@ -1,4 +1,7 @@
-import type { TargetSchema } from '@server/target-environments/schema/TargetSchema'
+import type {
+  TargetSchema,
+  TTargetScript,
+} from '@server/target-environments/schema/TargetSchema'
 import type { TTargetArg } from '@shared/target-environments/args/Arg'
 import { Arg } from '@shared/target-environments/args/Arg'
 import { Target } from '@shared/target-environments/targets/Target'
@@ -17,19 +20,17 @@ export class ServerTarget extends Target<TMetisServerComponents> {
     return this.migrationRegistry.versions
   }
 
-  /**
-   * @see {@link ServerTargetEnvironment.sandbox}
-   */
-  public get sandbox() {
-    return this.environment.sandbox
-  }
-
   protected constructor(
     _id: string,
     name: string,
     description: string,
     args: TTargetArg[] = [],
     environment: ServerTargetEnvironment,
+    /**
+     * The function used to execute an effect on the target.
+     * @note This is wrapped in a sandbox for security.
+     */
+    public script: TTargetScript,
     /**
      * The path to the schema which defines the target.
      */
@@ -99,6 +100,7 @@ export class ServerTarget extends Target<TMetisServerComponents> {
       schema.description,
       Arg.fromJson(schema.args),
       environment,
+      schema.script,
       path,
       schema.migrationRegistry,
     )

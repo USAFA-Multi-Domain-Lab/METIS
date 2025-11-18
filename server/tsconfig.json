@@ -11,6 +11,6 @@
     "target": "ES2022",
     "types": ["node", "./global.d.ts", "../shared/global.d.ts"]
   },
-  "include": [".", "../shared/", "../integration/workers/TargetEnvWorker.ts"],
+  "include": [".", "../shared/"],
   "exclude": []
 }

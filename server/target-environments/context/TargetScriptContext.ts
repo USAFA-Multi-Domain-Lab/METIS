@@ -717,31 +717,6 @@ export type TTargetScriptExposedContext<
   revokeFileAccess: TargetScriptContext<TType>['revokeFileAccess']
 }
 
-export type TTargetScriptSerializedContext<
-  TType extends TEffectType = TEffectType,
-> = {
-  /**
-   * The type of effect being applied.
-   */
-  readonly type: TType
-  /**
-   * An effect that is applied to its target.
-   */
-  readonly effect: TTargetEnvExposedEffect
-  /**
-   * The session that invoked the hook.
-   */
-  readonly session: TTargetEnvExposedSession
-  /**
-   * The mission associated with the session.
-   */
-  readonly mission: TTargetEnvExposedMission
-  /**
-   * The member who triggered the effect.
-   */
-  readonly triggeredBy: TSelectExposedContext[TType]['triggeredBy']
-}
-
 /**
  * Exposed context for an effect that is common between varied
  * effect types.

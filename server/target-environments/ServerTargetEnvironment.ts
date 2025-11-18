@@ -13,19 +13,12 @@ import type {
   TargetEnvironmentHook,
   TTargetEnvMethods,
 } from './TargetEnvironmentHook'
-import { TargetEnvSandbox } from './TargetEnvSandbox'
+import { TargetEnvSandboxing } from './TargetEnvSandboxing'
 
 /**
  * A class for managing target environments on the server.
  */
 export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerComponents> {
-  /**
-   * The sandbox which can be used to execute code within
-   * the target environment safely, without interfering
-   * with the main server environment.
-   */
-  public sandbox: TargetEnvSandbox
-
   /**
    * A registry of hooks and their associated callbacks.
    * Callbacks will be called when the associated method
@@ -34,11 +27,10 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
   private hooks: TargetEnvironmentHook[]
 
   /**
-   * @see {@link TargetEnvSandbox.rootDir}
+   * The root directory for the target environment on
+   * the file system.
    */
-  public get rootDir(): string {
-    return this.sandbox.rootDir
-  }
+  public readonly rootDir: string
 
   /**
    * @param id @see {@link ServerTargetEnvironment._id}
@@ -48,6 +40,8 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
    * @param targets @see {@link ServerTargetEnvironment.targets}
    * @param hooks Hooks to register with the target environment which will
    * be invoked at various points when used in a session.
+   * @param rootDir The root directory for the target environment on
+   * the file system.
    */
   public constructor(
     id: string,
@@ -56,12 +50,12 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
     version: string,
     targets: ServerTarget[],
     hooks: TargetEnvironmentHook[],
-    sandbox: TargetEnvSandbox,
+    rootDir: string,
   ) {
     super(id, name, description, version, targets)
 
     this.hooks = hooks
-    this.sandbox = sandbox
+    this.rootDir = rootDir
   }
 
   /**
@@ -71,7 +65,7 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
    * @param schemaFilePath The path to the target schema file.
    */
   private loadTarget(schemaFilePath: string) {
-    let targetSchema = this.sandbox.loadTargetSchema(schemaFilePath)
+    let targetSchema = TargetEnvSandboxing.loadTargetSchema(schemaFilePath)
     // Add the target JSON.
     this.targets.push(
       ServerTarget.fromSchema(targetSchema, this, schemaFilePath),
@@ -195,14 +189,17 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
   }
 
   /**
-   * @param schema The schema defining the target environment.
+   * @param directory The directory containing the target
+   * environment schema.
    * @returns A new {@link ServerTargetEnvironment} instance
-   * created from the schema.
+   * created from the schema found at the provided directory.
    */
-  public static fromSchema(
-    schema: TargetEnvSchema,
-    sandbox: TargetEnvSandbox,
-  ): ServerTargetEnvironment {
+  public static fromDirectory(directory: string): ServerTargetEnvironment {
+    let schemaPath = path.join(
+      directory,
+      ServerTargetEnvironment.SCHEMA_FILE_NAME,
+    )
+    let schema = TargetEnvSandboxing.loadEnvironmentSchema(schemaPath)
     return new ServerTargetEnvironment(
       schema._id,
       schema.name,
@@ -210,7 +207,7 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
       schema.version,
       [],
       schema.hooks,
-      sandbox,
+      directory,
     )
   }
 
@@ -269,7 +266,6 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
    */
   private static scanTargetEnvDirectory(directory: string): void {
     // Gather details.
-    let sandbox = new TargetEnvSandbox(directory)
     let schemaFilePath = path.join(
       directory,
       ServerTargetEnvironment.SCHEMA_FILE_NAME,
@@ -302,11 +298,8 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
 
     try {
       // Load and register the target environment.
-      let environmentSchema = sandbox.loadEnvironmentSchema()
-      let environment = ServerTargetEnvironment.fromSchema(
-        environmentSchema,
-        sandbox,
-      ).register()
+      let environment =
+        ServerTargetEnvironment.fromDirectory(directory).register()
 
       // If the target environment has a target folder,
       // scan it for targets.
