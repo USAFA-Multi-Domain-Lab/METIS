@@ -531,13 +531,6 @@ export class MetisServer {
   public static readonly APP_DIR: string = __dirname
 
   /**
-   * The path to the environment file.
-   */
-  public static get ENVIRONMENT_FILE_PATH(): string {
-    return MetisServer.resolvePath('../environment.json')
-  }
-
-  /**
    * The name of the cookie used to store the web session ID.
    */
   public static readonly WEB_SESSION_COOKIE_NAME = 'connect.sid'

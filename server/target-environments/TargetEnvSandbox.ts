@@ -1,7 +1,11 @@
+import { TargetEnvConfig } from '@shared/target-environments/TargetEnvConfig'
+import type { TTargetEnvConfig } from '@shared/target-environments/types'
+import fs from 'node:fs'
 import Module from 'node:module'
 import path from 'node:path'
 import * as tsconfigPaths from 'tsconfig-paths'
 import type { RegisterParams } from 'tsconfig-paths/lib/register'
+import { z as zod } from 'zod'
 import { TargetEnvSchema } from './schema/TargetEnvSchema'
 import { TargetSchema } from './schema/TargetSchema'
 
@@ -57,7 +61,20 @@ export class TargetEnvSandbox {
           parent ?? null,
           false,
         )
-      } catch {
+      } catch (error: any) {
+        const isModuleNotFoundError =
+          error.message.includes('Cannot find module') ||
+          error.code === 'MODULE_NOT_FOUND'
+
+        if (isModuleNotFoundError) {
+          let msg =
+            `Module resolution failed for "${path.dirname(request)}".` +
+            ` The module "${path.basename(request)}" could not be found.`
+
+          error.message = msg
+          throw error
+        }
+
         throw new Error(
           `Module resolution failed for "${request}". Plugins can only import from their own files, integration/library (@metis/*), or Node.js built-in modules.`,
         )
@@ -136,6 +153,73 @@ export class TargetEnvSandbox {
     }
 
     return environmentSchema
+  }
+
+  /**
+   * Loads the target environment configurations for the
+   * target-environment located at the given root directory.
+   * @param rootDir The root directory of the target environment.
+   * @returns The loaded configurations.
+   */
+  public static loadConfigs(rootDir: string): TTargetEnvConfig[] {
+    // Load environment configurations from JSON file.
+    let envConfigsPath = path.join(rootDir, 'configs.json')
+
+    try {
+      // Check if config file exists
+      if (!fs.existsSync(envConfigsPath)) return []
+
+      // Read and parse JSON file
+      const fileContent = fs.readFileSync(envConfigsPath, 'utf8')
+      let configsJson = JSON.parse(fileContent)
+
+      // Set targetEnvId for each config
+      configsJson = TargetEnvConfig.setTargetEnvIds(
+        configsJson,
+        path.basename(rootDir),
+      )
+
+      // Validate with Zod schema
+      const validatedConfigs = TargetEnvConfig.arraySchema.parse(configsJson)
+
+      // Convert validated JSON to TTargetEnvConfig format
+      const environmentConfigs: TTargetEnvConfig[] = validatedConfigs.map(
+        (configJson) => ({
+          _id: configJson._id,
+          name: configJson.name,
+          targetEnvId: configJson.targetEnvId,
+          description: configJson.description ?? '',
+          data: configJson.data,
+        }),
+      )
+
+      return environmentConfigs
+    } catch (error: any) {
+      // For Zod validation errors, provide detailed feedback
+      if (error instanceof zod.ZodError) {
+        const issues = error.issues.map((issue) => {
+          const path = issue.path.join('.')
+          return `  - ${path}: ${issue.message}`
+        })
+        console.warn(
+          `Invalid config.json structure at "${envConfigsPath}":\n${issues.join(
+            '\n',
+          )}`,
+        )
+        return []
+      }
+
+      // For JSON parse errors, throw with context
+      if (error instanceof SyntaxError) {
+        console.warn(
+          `Failed to parse config.json at "${envConfigsPath}": ${error.message}`,
+        )
+        return []
+      }
+
+      // Otherwise, throw the error upstream
+      throw error
+    }
   }
 
   /**

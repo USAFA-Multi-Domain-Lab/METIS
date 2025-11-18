@@ -1763,6 +1763,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     let context = TargetScriptContext.createSessionContext(
       effect,
       this,
+      effect.environment,
     ).expose()
 
     // Apply the effect to the target.
@@ -1789,20 +1790,24 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   public async applyMissionEffects(
     trigger: TEffectSessionTriggered,
   ): Promise<void> {
-    // If the effects are enabled...
-    if (this.config.effectsEnabled) {
-      // Get the effects for the given trigger.
-      let effects = this.mission.effects.filter(
-        (effect) => effect.trigger === trigger,
-      )
-      // Iterate through each effect and apply it.
-      for (let effect of effects) {
-        try {
-          await this.applyMissionEffect(effect)
-        } catch (error: any) {
-          // Log the error.
-          targetEnvLogger.error(error)
+    // Get the effects for the given trigger.
+    let effects = this.mission.effects.filter(
+      (effect) => effect.trigger === trigger,
+    )
+    // Iterate through each effect and apply it.
+    for (let effect of effects) {
+      try {
+        // Skip if the target environment is disabled
+        if (
+          effect.environment &&
+          this.config.disabledTargetEnvs.includes(effect.environmentId)
+        ) {
+          continue
         }
+        await this.applyMissionEffect(effect)
+      } catch (error: any) {
+        // Log the error.
+        targetEnvLogger.error(error)
       }
     }
   }
@@ -1838,6 +1843,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     let context = TargetScriptContext.createExecutionContext(
       effect,
       this,
+      effect.environment,
       member,
       execution,
     ).expose()
@@ -1872,30 +1878,32 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     trigger: TEffectExecutionTriggered,
     execution: ServerActionExecution,
   ): Promise<void> {
-    // If the effects are enabled...
-    if (this.config.effectsEnabled) {
-      // Get the effects for the given trigger.
-      let effects = action.effects.filter(
-        (effect) => effect.trigger === trigger,
-      )
-      // Iterate through each effect and apply it.
-      for (let effect of effects) {
-        try {
-          await this.applyActionEffect(effect, member, execution)
-
-          // todo: implement feedback for modifiers
-          // participant.emit('effect-successful', {
-          //   message: 'The effect was successfully applied to its target.',
-          // })
-        } catch (error: any) {
-          // Log the error.
-          targetEnvLogger.error(error)
-
-          // todo: implement feedback for modifiers
-          // participant.emitError(
-          //   new ServerEmittedError(ServerEmittedError.CODE_EFFECT_FAILED),
-          // )
+    // Get the effects for the given trigger.
+    let effects = action.effects.filter((effect) => effect.trigger === trigger)
+    // Iterate through each effect and apply it.
+    for (let effect of effects) {
+      try {
+        // Skip if the target environment is disabled
+        if (
+          effect.environment &&
+          this.config.disabledTargetEnvs.includes(effect.environmentId)
+        ) {
+          continue
         }
+        await this.applyActionEffect(effect, member, execution)
+
+        // todo: implement feedback for modifiers
+        // participant.emit('effect-successful', {
+        //   message: 'The effect was successfully applied to its target.',
+        // })
+      } catch (error: any) {
+        // Log the error.
+        targetEnvLogger.error(error)
+
+        // todo: implement feedback for modifiers
+        // participant.emitError(
+        //   new ServerEmittedError(ServerEmittedError.CODE_EFFECT_FAILED),
+        // )
       }
     }
   }

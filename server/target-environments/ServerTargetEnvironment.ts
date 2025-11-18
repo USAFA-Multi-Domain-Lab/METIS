@@ -2,6 +2,7 @@ import { TargetEnvSchema } from '@server/target-environments/schema/TargetEnvSch
 import { ServerFileToolbox } from '@server/toolbox/files/ServerFileToolbox'
 import { TargetEnvironment } from '@shared/target-environments/TargetEnvironment'
 import { TargetEnvRegistry } from '@shared/target-environments/TargetEnvRegistry'
+import type { TTargetEnvConfig } from '@shared/target-environments/types'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import fs from 'fs'
 import path from 'path'
@@ -27,11 +28,18 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
   private hooks: TargetEnvironmentHook[]
 
   /**
+   * The root directory path for this target environment.
+   * Used to dynamically load configs from disk.
+   */
+  private rootDir: string
+
+  /**
    * @param id @see {@link ServerTargetEnvironment._id}
    * @param name @see {@link ServerTargetEnvironment.name}
    * @param description @see {@link ServerTargetEnvironment.description}
    * @param version @see {@link ServerTargetEnvironment.version}
    * @param targets @see {@link ServerTargetEnvironment.targets}
+   * @param rootDir The root directory path for this target environment.
    * @param hooks Hooks to register with the target environment which will
    * be invoked at various points when used in a session.
    */
@@ -41,11 +49,22 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
     description: string,
     version: string,
     targets: ServerTarget[],
+    rootDir: string,
     hooks: TargetEnvironmentHook[],
   ) {
     super(id, name, description, version, targets)
 
     this.hooks = hooks
+    this.rootDir = rootDir
+  }
+
+  /**
+   * Override the configs getter to dynamically load from disk.
+   * This enables hot-reload: any changes to configs.json are
+   * immediately reflected without requiring a server restart.
+   */
+  public override get configs(): TTargetEnvConfig[] {
+    return TargetEnvSandbox.loadConfigs(this.rootDir)
   }
 
   /**
@@ -84,7 +103,7 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
   ): Promise<void> {
     for (let hook of this.hooks) {
       if (hook.method === method) {
-        let context = new EnvHookContext(session, this).expose()
+        let context = EnvHookContext.create(session, this).expose()
         await hook.invoke(context)
       }
     }
@@ -166,16 +185,21 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
 
   /**
    * @param schema The schema defining the target environment.
+   * @param rootDir The root directory path for this target environment.
    * @returns A new {@link ServerTargetEnvironment} instance
    * created from the schema.
    */
-  public static fromSchema(schema: TargetEnvSchema): ServerTargetEnvironment {
+  public static fromSchema(
+    schema: TargetEnvSchema,
+    rootDir: string,
+  ): ServerTargetEnvironment {
     return new ServerTargetEnvironment(
       schema._id,
       schema.name,
       schema.description,
       schema.version,
       [],
+      rootDir,
       schema.hooks,
     )
   }
@@ -277,9 +301,12 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
 
     try {
       // Load and register the target environment.
-      let environmentSchema = sandbox.loadEnvironment()
-      let environment =
-        ServerTargetEnvironment.fromSchema(environmentSchema).register()
+      // Configs are now loaded dynamically via the configs getter.
+      let envSchema = sandbox.loadEnvironment()
+      let environment = ServerTargetEnvironment.fromSchema(
+        envSchema,
+        directory,
+      ).register()
 
       // If the target environment has a target folder,
       // scan it for targets.

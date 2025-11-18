@@ -1,4 +1,3 @@
-import { loadConfig as loadConfig_source } from '@metis/config'
 import { TargetDependency as TargetDependency_source } from '@metis/schema/TargetDependency'
 import { TargetEnvSchema as TargetEnvSchema_source } from '@metis/schema/TargetEnvSchema'
 import { TargetSchema as TargetSchema_source } from '@metis/schema/TargetSchema'
@@ -21,11 +20,6 @@ Object.defineProperty(globalThis, 'TargetDependency', {
   writable: false,
   configurable: false,
 })
-Object.defineProperty(globalThis, 'loadConfig', {
-  value: loadConfig_source,
-  writable: false,
-  configurable: false,
-})
 
 /* -- TYPES -- */
 
@@ -41,9 +35,6 @@ declare global {
   const TargetDependency: typeof TargetDependency_source
   export type TargetDependency = TargetDependency_source
 
-  const loadConfig: typeof loadConfig_source
-  export type loadConfig = typeof loadConfig_source
-
   // Forward type exports:
 
   export type TBaseArg = TargetEnvTypes.TBaseArg
@@ -52,6 +43,7 @@ declare global {
   export type TNodeMetadata = TargetEnvTypes.TNodeMetadata
   export type TActionMetadata = TargetEnvTypes.TActionMetadata
   export type TFileMetadata = TargetEnvTypes.TFileMetadata
+  export type TTargetScriptContext = TargetEnvTypes.TTargetScriptExposedContext
 
   // These types aren't globally accessible, but they are
   // needed contextually in order to resolve other types

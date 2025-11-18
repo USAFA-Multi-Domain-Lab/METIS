@@ -59,7 +59,7 @@ export class TargetEnvSchema {
   }
 
   /**
-   * @param data The data used to define the target environment.
+   * @param options Options for creating the target environment.
    */
   public constructor(options: TTargetEnvOptions) {
     this._id = ServerFileToolbox.getCallerFolder()

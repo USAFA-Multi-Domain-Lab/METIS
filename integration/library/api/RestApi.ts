@@ -275,12 +275,6 @@ export class RestApi extends Api {
    * @param envConfig The environment configuration to use.
    * @returns A RESTful API instance.
    * @throws If the configuration is invalid.
-   * @example
-   * ```typescript
-   * import RestApi from './library/api/rest-api'
-   * import { loadConfig } from './library/config'
-   * const api = RestApi.fromConfig(loadConfig())
-   * ```
    */
   public static fromConfig(
     envConfig: Record<string, string | undefined>,

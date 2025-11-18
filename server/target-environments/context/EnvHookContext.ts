@@ -1,7 +1,10 @@
-import type { SessionServer } from '../../sessions/SessionServer'
+import type { SessionServer } from '@server/sessions/SessionServer'
 import type { TargetEnvStore } from '../../sessions/TargetEnvStore'
 import type { ServerTargetEnvironment } from '../ServerTargetEnvironment'
-import type { TTargetEnvExposedSession } from './TargetEnvContext'
+import type {
+  TTargetEnvExposedConfig,
+  TTargetEnvExposedSession,
+} from './TargetEnvContext'
 import {
   TargetEnvContext,
   type TTargetEnvExposedMission,
@@ -12,29 +15,6 @@ import {
  * they are called during a session.
  */
 export class EnvHookContext extends TargetEnvContext<TEnvHookExposedContext> {
-  // Implemented
-  protected get environmentId(): string {
-    return this.environment._id
-  }
-
-  /**
-   * The target environment for the registered hook
-   * that will receive this context.
-   */
-  protected readonly environment: ServerTargetEnvironment
-
-  /**
-   * @param session The session for the current context.
-   * @param environment The target environment for the current context.
-   */
-  public constructor(
-    session: SessionServer,
-    environment: ServerTargetEnvironment,
-  ) {
-    super(session)
-    this.environment = environment
-  }
-
   /**
    * Creates a limited context to expose to the target
    * environment scripts.
@@ -45,7 +25,22 @@ export class EnvHookContext extends TargetEnvContext<TEnvHookExposedContext> {
       mission: this.mission.toTargetEnvContext(),
       localStore: this.localStore,
       globalStore: this.globalStore,
+      targetEnvConfigs: this.targetEnvConfigs,
+      selectedTargetEnvConfig: this.selectedTargetEnvConfig,
     }
+  }
+
+  /**
+   * Creates a new `EnvHookContext`.
+   * @param session The session for the current context.
+   * @param environment The target environment for the current context.
+   * @returns The new `EnvHookContext`.
+   */
+  public static create(
+    session: SessionServer,
+    environment: ServerTargetEnvironment,
+  ): EnvHookContext {
+    return new EnvHookContext(session, environment)
   }
 }
 
@@ -75,4 +70,14 @@ export type TEnvHookExposedContext = {
    * target environments within the same session.
    */
   readonly globalStore: TargetEnvStore
+  /**
+   * This list of configurations for this context's target environment
+   * that's used within the current session.
+   */
+  readonly targetEnvConfigs: TTargetEnvExposedConfig[]
+  /**
+   * The configuration that's been selected for this context's target
+   * environment that's used within the current session.
+   */
+  readonly selectedTargetEnvConfig: TTargetEnvExposedConfig | null
 }

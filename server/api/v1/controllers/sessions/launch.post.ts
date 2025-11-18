@@ -15,8 +15,14 @@ import { StatusError } from '../../library/StatusError'
  */
 export const launchSession: TExpressHandler = async (request, response) => {
   // Get data from the request body.
-  let { missionId, name, accessibility, infiniteResources, effectsEnabled } =
-    request.body
+  let {
+    missionId,
+    name,
+    accessibility,
+    infiniteResources,
+    disabledTargetEnvs,
+    targetEnvConfigs,
+  } = request.body
 
   // Define the session configuration.
   let sessionConfig: TSessionConfig = {
@@ -24,8 +30,10 @@ export const launchSession: TExpressHandler = async (request, response) => {
     accessibility: accessibility ?? SessionServer.DEFAULT_CONFIG.accessibility,
     infiniteResources:
       infiniteResources ?? SessionServer.DEFAULT_CONFIG.infiniteResources,
-    effectsEnabled:
-      effectsEnabled ?? SessionServer.DEFAULT_CONFIG.effectsEnabled,
+    disabledTargetEnvs:
+      disabledTargetEnvs ?? SessionServer.DEFAULT_CONFIG.disabledTargetEnvs,
+    targetEnvConfigs:
+      targetEnvConfigs ?? SessionServer.DEFAULT_CONFIG.targetEnvConfigs,
   }
 
   // Get the user who is launching the session.

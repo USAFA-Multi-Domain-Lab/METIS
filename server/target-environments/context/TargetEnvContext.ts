@@ -8,9 +8,11 @@ import { MissionSession } from '@shared/sessions/MissionSession'
 import type { SessionMember } from '@shared/sessions/members/SessionMember'
 import type { TargetEnvironment } from '@shared/target-environments/TargetEnvironment'
 import type { Target } from '@shared/target-environments/targets/Target'
+import type { TTargetEnvConfig } from '@shared/target-environments/types'
 import type { TEffectType } from '../../../shared/missions/effects/Effect'
 import type { SessionServer } from '../../sessions/SessionServer'
 import { TargetEnvStore } from '../../sessions/TargetEnvStore'
+import type { ServerTargetEnvironment } from '../ServerTargetEnvironment'
 
 export abstract class TargetEnvContext<TExposedContext extends {}> {
   /**
@@ -40,9 +42,41 @@ export abstract class TargetEnvContext<TExposedContext extends {}> {
   }
 
   /**
+   * The target environment for the registered hook
+   * that will receive this context.
+   */
+  protected readonly environment: ServerTargetEnvironment
+
+  /**
    * The ID of the target environment for the current context.
    */
-  protected abstract get environmentId(): string
+  protected get environmentId(): string {
+    return this.environment._id
+  }
+
+  /**
+   * This list of configurations for this context's target environment
+   * that's used within the current session.
+   */
+  protected get targetEnvConfigs(): TTargetEnvConfig[] {
+    return this.environment.configs
+  }
+
+  /**
+   * The configuration that's been selected for this context's target
+   * environment that's used within the current session.
+   */
+  protected get selectedTargetEnvConfig(): TTargetEnvConfig | null {
+    const selectedConfigId =
+      this.session.config.targetEnvConfigs[this.environmentId]
+    if (!selectedConfigId) return null
+
+    return (
+      this.environment.configs.find(
+        (config) => config._id === selectedConfigId,
+      ) ?? null
+    )
+  }
 
   /**
    * A store that is unique to the session and target environment.
@@ -62,10 +96,14 @@ export abstract class TargetEnvContext<TExposedContext extends {}> {
 
   /**
    * @param session The session for the current context.
-   * @param variedContext The context data that varies based on the type of effect.
+   * @param environment The target environment for the current context.
    */
-  protected constructor(session: SessionServer) {
+  protected constructor(
+    session: SessionServer,
+    environment: ServerTargetEnvironment,
+  ) {
     this.session = session
+    this.environment = environment
   }
 
   /**
@@ -374,3 +412,9 @@ export type TTargetEnvExposedMember = Readonly<
     {}
   >
 >
+
+/**
+ * Data for a target environment configuration
+ * exposed in a target script.
+ */
+export type TTargetEnvExposedConfig = Readonly<TTargetEnvConfig>

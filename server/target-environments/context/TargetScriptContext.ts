@@ -14,7 +14,11 @@ import type { TOutputContext } from '../../../shared/missions/forces/MissionOutp
 import type { ServerSessionMember } from '../../sessions/ServerSessionMember'
 import type { SessionServer, TOutputTo } from '../../sessions/SessionServer'
 import type { TargetEnvStore } from '../../sessions/TargetEnvStore'
-import type { TTargetEnvExposedSession } from './TargetEnvContext'
+import type { ServerTargetEnvironment } from '../ServerTargetEnvironment'
+import type {
+  TTargetEnvExposedConfig,
+  TTargetEnvExposedSession,
+} from './TargetEnvContext'
 import {
   TargetEnvContext,
   type TTargetEnvExposedEffect,
@@ -34,20 +38,17 @@ export class TargetScriptContext<
    */
   protected readonly data: TSelectTargetEnvData[TType]
 
-  // Implemented
-  protected get environmentId(): string {
-    return this.data.effect.environmentId
-  }
-
   /**
    * @param session The session for the current context.
+   * @param environment The target environment for the current context.
    * @param variedContext The context data that varies based on the type of effect.
    */
   protected constructor(
     session: SessionServer,
+    environment: ServerTargetEnvironment,
     variedContext: TSelectTargetEnvData[TType],
   ) {
-    super(session)
+    super(session, environment)
     this.data = variedContext
   }
 
@@ -63,6 +64,8 @@ export class TargetScriptContext<
       mission: this.mission.toTargetEnvContext(),
       localStore: this.localStore,
       globalStore: this.globalStore,
+      targetEnvConfigs: this.targetEnvConfigs,
+      selectedTargetEnvConfig: this.selectedTargetEnvConfig,
       sendOutput: this.sendOutput,
       blockNode: this.blockNode,
       unblockNode: this.unblockNode,
@@ -416,13 +419,15 @@ export class TargetScriptContext<
    * Creates context for a session-triggered effect.
    * @param effect The effect for which the context is purposed.
    * @param session The session where the effect was triggered.
+   * @param environment The target environment where the effect was triggered.
    * @returns The new context.
    */
   public static createSessionContext(
     effect: ServerEffect<'sessionTriggeredEffect'>,
     session: SessionServer,
+    environment: ServerTargetEnvironment,
   ): TargetScriptContext<'sessionTriggeredEffect'> {
-    return new TargetScriptContext(session, {
+    return new TargetScriptContext(session, environment, {
       type: 'sessionTriggeredEffect',
       effect,
       get effectId() {
@@ -482,6 +487,7 @@ export class TargetScriptContext<
    * Creates context for a execution-triggered effect.
    * @param effect The effect for which the context is purposed.
    * @param session The session where the effect was triggered.
+   * @param environment The target environment where the effect was triggered.
    * @param member The member responsible for triggering the effect.
    * @param execution The execution responsible for triggering the effect.
    * @returns The new context.
@@ -489,10 +495,11 @@ export class TargetScriptContext<
   public static createExecutionContext(
     effect: ServerEffect<'executionTriggeredEffect'>,
     session: SessionServer,
+    environment: ServerTargetEnvironment,
     member: ServerSessionMember,
     execution: ServerActionExecution,
   ): TargetScriptContext<'executionTriggeredEffect'> {
-    return new TargetScriptContext(session, {
+    return new TargetScriptContext(session, environment, {
       type: 'executionTriggeredEffect',
       effect,
       get effectId() {
@@ -621,6 +628,16 @@ export type TTargetScriptExposedContext<
    * target environments within the same session.
    */
   readonly globalStore: TargetEnvStore
+  /**
+   * This list of configurations for this context's target environment
+   * that's used within the current session.
+   */
+  readonly targetEnvConfigs: TTargetEnvExposedConfig[]
+  /**
+   * The configuration that's been selected for this context's target
+   * environment that's used within the current session.
+   */
+  readonly selectedTargetEnvConfig: TTargetEnvExposedConfig | null
   /**
    * Sends the message to the output panel within a session.
    * @param message The output's message.

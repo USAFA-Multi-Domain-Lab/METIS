@@ -399,12 +399,6 @@ export class WebSocketApi extends Api {
    * @param envConfig The environment configuration to use.
    * @returns A WebSocket API instance.
    * @throws If the configuration is invalid.
-   * @example
-   * ```typescript
-   * import { WebSocketApi } from './library/api/websocket'
-   * import { loadConfig } from './library/config'
-   * const api = WebSocketApi.fromConfig(loadConfig())
-   * ```
    */
   public static fromConfig(
     envConfig: Record<string, string | undefined>,

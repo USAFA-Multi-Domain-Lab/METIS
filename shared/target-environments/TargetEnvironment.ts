@@ -1,6 +1,8 @@
 import { MetisComponent } from '../MetisComponent'
 import type { TAnyObject } from '../toolbox/objects/ObjectToolbox'
+import { TargetEnvConfig } from './TargetEnvConfig'
 import type { TTargetJson } from './targets/Target'
+import type { TTargetEnvConfig } from './types'
 
 /**
  * This is the environment in which the target(s) exist.
@@ -8,6 +10,17 @@ import type { TTargetJson } from './targets/Target'
 export abstract class TargetEnvironment<
   T extends TMetisBaseComponents = TMetisBaseComponents,
 > extends MetisComponent {
+  /**
+   * The configurations available for the target environment.
+   */
+  protected _configs: TTargetEnvConfig[]
+  /**
+   * The configurations available for the target environment.
+   */
+  public get configs(): TTargetEnvConfig[] {
+    return this._configs
+  }
+
   /**
    * Creates a new {@link TargetEnvironment} Object.
    */
@@ -32,6 +45,7 @@ export abstract class TargetEnvironment<
 
     this.description = description
     this.version = version
+    this._configs = []
   }
 
   /**
@@ -56,6 +70,7 @@ export abstract class TargetEnvironment<
       description: this.description,
       version: this.version,
       targets: this.targets.map((target) => target.toJson()),
+      configs: this.configs.map((config) => TargetEnvConfig.toJson(config)),
     }
   }
 
@@ -96,6 +111,7 @@ export abstract class TargetEnvironment<
     description: 'This is a default target environment.',
     version: '0.1',
     targets: [],
+    configs: [],
   }
 }
 
@@ -134,4 +150,9 @@ export interface TTargetEnvJson {
    * the environment.
    */
   targets: TTargetJson[]
+  /**
+   * The JSON representation of the configurations in
+   * the environment.
+   */
+  configs: TTargetEnvConfig[]
 }
