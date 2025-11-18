@@ -312,6 +312,11 @@ export abstract class TargetEnvSandboxing {
       writable: false,
       configurable: false,
     })
+    Object.defineProperty(globalThis, 'setInterval', {
+      value: TargetEnvSandboxing.sandboxedSetInterval,
+      writable: false,
+      configurable: false,
+    })
   }
 
   /**
@@ -352,7 +357,8 @@ export abstract class TargetEnvSandboxing {
   }
 
   /**
-   * The original global setTimeout function.
+   * The original global setTimeout function before
+   * sandboxing.
    */
   private static originalSetTimeout = globalThis.setTimeout.bind(globalThis)
 
@@ -372,10 +378,39 @@ export abstract class TargetEnvSandboxing {
       )
     ) {
       throw new Error(
-        `setTimeout is restricted in target-environment code. Use timing function provided in this instead.`,
+        `"setTimeout" is restricted in target-environment code. Use the "sleep" function provided in the context instead.`,
       )
     }
 
     return TargetEnvSandboxing.originalSetTimeout(...args)
+  }
+
+  /**
+   * The original global setInterval function before
+   * sandboxing.
+   */
+  private static originalSetInterval = globalThis.setInterval.bind(globalThis)
+
+  /**
+   * A sandboxed version of the global setInterval function
+   * which
+   */
+  public static sandboxedSetInterval = (
+    ...args: Parameters<typeof setInterval>
+  ) => {
+    let callerDirectory = path.dirname(ServerFileToolbox.getCallerFilePath())
+
+    if (
+      TargetEnvSandboxing.isPathInside(
+        callerDirectory,
+        TargetEnvSandboxing.TARGET_ENV_ROOT,
+      )
+    ) {
+      throw new Error(
+        `"setInterval" is restricted in target-environment code. Use the "sleep" function provided in the context instead.`,
+      )
+    }
+
+    return TargetEnvSandboxing.originalSetInterval(...args)
   }
 }
