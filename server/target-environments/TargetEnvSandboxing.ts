@@ -1,3 +1,5 @@
+import { ServerFileToolbox } from '@server/toolbox/files/ServerFileToolbox'
+import { ImportMiddleware } from '@server/toolbox/modules/ImportMiddleware'
 import Module from 'node:module'
 import path from 'node:path'
 import * as tsconfigPaths from 'tsconfig-paths'
@@ -148,13 +150,6 @@ export abstract class TargetEnvSandboxing {
   public static readonly TSCONFIG = require(TargetEnvSandboxing.TSCONFIG_PATH)
 
   /**
-   * Internal reference to native Node.js Module
-   * class which forcibly exposes private methods
-   * which are overridden during sandboxing.
-   */
-  private static Module = Module as InternalModuleType
-
-  /**
    * Arguments used for tsconfig-paths registration
    * during target-environment module loading.
    */
@@ -195,22 +190,15 @@ export abstract class TargetEnvSandboxing {
     restoreTsConfig()
   }
 
-  private static overrideLoad(): void {
-    const originalLoad = TargetEnvSandboxing.Module._load
-
-    TargetEnvSandboxing.Module._load = function (
-      request: string,
-      parent: NodeJS.Module | null,
-      isMain?: boolean,
-    ) {
-      const resolve = () => {
-        return originalLoad(request, parent, isMain)
-      }
-
-      // Immediately resolve if there is no parent module
-      // or we are in the main module.
-      if (!parent || isMain) {
-        return resolve()
+  /**
+   * Adds import middleware to control module loading
+   * within target environments.
+   */
+  private static addImportMiddleware(): void {
+    ImportMiddleware.add((request, parent, next) => {
+      // Immediately resolve if there is no parent module.
+      if (!parent) {
+        return next()
       }
 
       // If the parent module is not even in a target environment,
@@ -222,7 +210,7 @@ export abstract class TargetEnvSandboxing {
           TargetEnvSandboxing.TARGET_ENV_ROOT,
         )
       if (!isParentInEnv) {
-        return resolve()
+        return next()
       }
 
       // Find the name of the folder directly under
@@ -251,18 +239,18 @@ export abstract class TargetEnvSandboxing {
         Module.builtinModules.includes(request) ||
         request.startsWith('node:')
       ) {
-        return resolve()
+        return next()
       }
       // Resolve if the request is a non-relative import
       // inside the target environment.
       if (request === targetEnvId || request.startsWith(`${targetEnvId}/`)) {
-        return resolve()
+        return next()
       }
 
       // First, resolve the request to an absolute filename if possible.
       let requestAbsolutePath: string
       try {
-        requestAbsolutePath = TargetEnvSandboxing.Module._resolveFilename(
+        requestAbsolutePath = ImportMiddleware.MetisModule._resolveFilename(
           request,
           parent ?? null,
           false,
@@ -311,8 +299,19 @@ export abstract class TargetEnvSandboxing {
         )
       }
 
-      return resolve()
-    }
+      return next()
+    })
+  }
+
+  /**
+   * Overrides global timing functions to enforce sandboxing.
+   */
+  private static overrideTimingFunctions() {
+    Object.defineProperty(globalThis, 'setTimeout', {
+      value: TargetEnvSandboxing.sandboxedSetTimeout,
+      writable: false,
+      configurable: false,
+    })
   }
 
   /**
@@ -322,7 +321,8 @@ export abstract class TargetEnvSandboxing {
   public static initialize() {
     TargetEnvSandboxing.determineTsConfigPaths()
     TargetEnvSandboxing.loadGlobals()
-    TargetEnvSandboxing.overrideLoad()
+    TargetEnvSandboxing.addImportMiddleware()
+    TargetEnvSandboxing.overrideTimingFunctions()
   }
 
   /**
@@ -350,19 +350,32 @@ export abstract class TargetEnvSandboxing {
     const rel = path.relative(parent, child)
     return !!rel && !rel.startsWith('..') && !path.isAbsolute(rel)
   }
-}
 
-/* -- TYPES -- */
+  /**
+   * The original global setTimeout function.
+   */
+  private static originalSetTimeout = globalThis.setTimeout.bind(globalThis)
 
-/**
- * Internal module type for adding middleware
- * to Node.js module loading.
- */
-type InternalModuleType = typeof Module & {
-  _load(request: string, parent: NodeJS.Module | null, isMain?: boolean): any
-  _resolveFilename(
-    request: string,
-    parent: NodeJS.Module | null,
-    isMain?: boolean,
-  ): string
+  /**
+   * A sandboxed version of the global setTimeout function
+   * which
+   */
+  public static sandboxedSetTimeout = (
+    ...args: Parameters<typeof setTimeout>
+  ) => {
+    let callerDirectory = path.dirname(ServerFileToolbox.getCallerFilePath())
+
+    if (
+      TargetEnvSandboxing.isPathInside(
+        callerDirectory,
+        TargetEnvSandboxing.TARGET_ENV_ROOT,
+      )
+    ) {
+      throw new Error(
+        `setTimeout is restricted in target-environment code. Use timing function provided in this instead.`,
+      )
+    }
+
+    return TargetEnvSandboxing.originalSetTimeout(...args)
+  }
 }

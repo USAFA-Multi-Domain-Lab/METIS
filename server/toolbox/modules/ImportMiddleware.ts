@@ -10,7 +10,7 @@ export abstract class ImportMiddleware {
    * class which forcibly exposes private methods
    * which are used by middleware.
    */
-  private static MetisModule = Module as MetisModule
+  public static MetisModule = Module as MetisModule
 
   /**
    * Callbacks that will run when a module is imported.

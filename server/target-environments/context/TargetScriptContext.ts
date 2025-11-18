@@ -63,17 +63,48 @@ export class TargetScriptContext<
       mission: this.mission.toTargetEnvContext(),
       localStore: this.localStore,
       globalStore: this.globalStore,
-      sendOutput: this.sendOutput,
-      blockNode: this.blockNode,
-      unblockNode: this.unblockNode,
-      openNode: this.openNode,
-      closeNode: this.closeNode,
-      modifySuccessChance: this.modifySuccessChance,
-      modifyProcessTime: this.modifyProcessTime,
-      modifyResourceCost: this.modifyResourceCost,
-      modifyResourcePool: this.modifyResourcePool,
-      grantFileAccess: this.grantFileAccess,
-      revokeFileAccess: this.revokeFileAccess,
+      sendOutput: (...args: Parameters<typeof this.sendOutput>) => {
+        this.sendOutput(...args)
+      },
+      blockNode: (...args: Parameters<typeof this.blockNode>) => {
+        this.blockNode(...args)
+      },
+      unblockNode: (...args: Parameters<typeof this.unblockNode>) => {
+        this.unblockNode(...args)
+      },
+      openNode: (...args: Parameters<typeof this.openNode>) => {
+        this.openNode(...args)
+      },
+      closeNode: (...args: Parameters<typeof this.closeNode>) => {
+        this.closeNode(...args)
+      },
+      modifySuccessChance: (
+        ...args: Parameters<typeof this.modifySuccessChance>
+      ) => {
+        this.modifySuccessChance(...args)
+      },
+      modifyProcessTime: (
+        ...args: Parameters<typeof this.modifyProcessTime>
+      ) => {
+        this.modifyProcessTime(...args)
+      },
+      modifyResourceCost: (
+        ...args: Parameters<typeof this.modifyResourceCost>
+      ) => {
+        this.modifyResourceCost(...args)
+      },
+      modifyResourcePool: (
+        ...args: Parameters<typeof this.modifyResourcePool>
+      ) => {
+        this.modifyResourcePool(...args)
+      },
+      grantFileAccess: (...args: Parameters<typeof this.grantFileAccess>) => {
+        this.grantFileAccess(...args)
+      },
+      revokeFileAccess: (...args: Parameters<typeof this.revokeFileAccess>) => {
+        this.revokeFileAccess(...args)
+      },
+      sleep: (...args: Parameters<typeof this.sleep>) => this.sleep(...args),
     }
 
     switch (this.data.type) {
@@ -404,12 +435,24 @@ export class TargetScriptContext<
   }
 
   /**
-   * @inheritdoc TTargetEnvExposedContext.revokeFileAccess
+   * @see {@link TTargetEnvExposedContext.revokeFileAccess}
    */
   private revokeFileAccess = (fileId: string, forceKey: string) => {
     const targetFile = this.determineTargetFile(fileId)
     const targetForce = this.determineTargetForce(forceKey)
     this.session.updateFileAccess(targetFile, targetForce, false)
+  }
+
+  /**
+   * @see {@link TTargetEnvExposedContext.sleep}
+   */
+  private sleep(duration: number): Promise<void> {
+    return new Promise<void>((resolve) => {
+      let timeout = setTimeout(() => {
+        resolve()
+      }, duration)
+      this.session.onSleep(timeout)
+    })
   }
 
   /**
@@ -715,6 +758,14 @@ export type TTargetScriptExposedContext<
    * @param forceKey The local key of the force from which to revoke access.
    */
   revokeFileAccess: TargetScriptContext<TType>['revokeFileAccess']
+  /**
+   * Sleeps for the specified duration.
+   * @param duration The duration in milliseconds to sleep for.
+   * @resolves After the sleep duration has elapsed.
+   * @note This will abort early if the session ends before
+   * the duration has elapsed.
+   */
+  sleep(duration: number): Promise<void>
 }
 
 /**

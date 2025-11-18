@@ -11,37 +11,33 @@ const groupingId = 'delayTime'
 const Delay = new TargetSchema({
   name: 'Delay',
   description: '',
-  script: (context) => {
-    return new Promise<void>((resolve, reject) => {
-      let args = context.effect.args
-      let delayTimeSeconds = args[secondsArgId]
-      let delayTimeMinutes = args[minutesArgId]
-      let delayTimeHours = args[hoursArgId]
-      let delayTime: number = 0
+  script: async (context) => {
+    let args = context.effect.args
+    let delayTimeSeconds = args[secondsArgId]
+    let delayTimeMinutes = args[minutesArgId]
+    let delayTimeHours = args[hoursArgId]
+    let delayTime: number = 0
 
-      let errorMessage =
-        `Bad request. The arguments sent with the effect are invalid. Please check the arguments within the effect.\n` +
-        `Effect ID: "${context.effect._id}"\n` +
-        `Effect Name: "${context.effect.name}"`
+    let errorMessage =
+      `Bad request. The arguments sent with the effect are invalid. Please check the arguments within the effect.\n` +
+      `Effect ID: "${context.effect._id}"\n` +
+      `Effect Name: "${context.effect.name}"`
 
-      if (
-        typeof delayTimeHours !== 'number' ||
-        typeof delayTimeMinutes !== 'number' ||
-        typeof delayTimeSeconds !== 'number'
-      ) {
-        reject(errorMessage)
-      }
+    if (
+      typeof delayTimeHours !== 'number' ||
+      typeof delayTimeMinutes !== 'number' ||
+      typeof delayTimeSeconds !== 'number'
+    ) {
+      throw new Error(errorMessage)
+    }
 
-      // Update the delay time based on the provided values.
-      if (delayTimeHours) delayTime += delayTimeHours * 3600 * 1000 /*ms*/
-      if (delayTimeMinutes) delayTime += delayTimeMinutes * 60 * 1000 /*ms*/
-      if (delayTimeSeconds) delayTime += delayTimeSeconds * 1000 /*ms*/
+    // Update the delay time based on the provided values.
+    if (delayTimeHours) delayTime += delayTimeHours * 3600 * 1000 /*ms*/
+    if (delayTimeMinutes) delayTime += delayTimeMinutes * 60 * 1000 /*ms*/
+    if (delayTimeSeconds) delayTime += delayTimeSeconds * 1000 /*ms*/
 
-      // Only resolve after the delay time has passed.
-      setTimeout(() => {
-        resolve()
-      }, delayTime)
-    })
+    // Only resolve after the delay time has passed.
+    await context.sleep(delayTime)
   },
   args: [
     {

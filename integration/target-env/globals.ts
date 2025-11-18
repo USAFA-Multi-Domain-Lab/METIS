@@ -5,6 +5,9 @@ import { TargetSchema as TargetSchema_source } from '@metis/schema/TargetSchema'
 import type * as TargetEnvTypes from '@metis/schema/types'
 import type * as MetisComponentTypes from '../../shared/MetisComponent'
 
+// Preserve original globals of what's needed:
+const originalSetTimeout = globalThis.setTimeout.bind(globalThis)
+
 // Assignment of global values:
 Object.defineProperty(globalThis, 'TargetEnvSchema', {
   value: TargetEnvSchema_source,

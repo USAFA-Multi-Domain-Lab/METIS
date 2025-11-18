@@ -77,6 +77,11 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     roleId: TMemberRoleId
   }>
 
+  /**
+   * Timeouts created by the {@link TargetEnvContext.sleep} method.
+   */
+  private sleepTimeouts: Set<NodeJS.Timeout> = new Set()
+
   public constructor(
     _id: string,
     name: string,
@@ -497,6 +502,17 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   }
 
   /**
+   * Calls {@link clearTimeout} on each timeout
+   * stored in {@link sleepTimeouts} and clears the set.
+   */
+  private clearSleepTimeouts(): void {
+    this.sleepTimeouts.forEach((timeout) => {
+      clearTimeout(timeout)
+    })
+    this.sleepTimeouts.clear()
+  }
+
+  /**
    * Deletes all members from the session.
    */
   public clearMembers(): void {
@@ -825,6 +841,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       data: {},
       request: unfulfilledRequest,
     })
+    this.clearSleepTimeouts()
     this.clearMembers()
 
     ServerTargetEnvironment.tearDown(this).then(() => {
@@ -880,6 +897,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       data: {},
       request: unfulfilledRequest,
     })
+    this.clearSleepTimeouts()
 
     // Handle any action executions that are executing.
     await this.handleExecutions()
@@ -1737,6 +1755,16 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   }
 
   /**
+   * Callback from target-environment context when the
+   * {@link TargetEnvContext.sleep} method is called.
+   * The timeout is kept here and cleared when the session ends.
+   * @param timeout
+   */
+  public onSleep = (timeout: NodeJS.Timeout): void => {
+    this.sleepTimeouts.add(timeout)
+  }
+
+  /**
    * Applies a session-triggered effect to the session.
    * @param effect The effect to apply.
    */
@@ -1792,9 +1820,9 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // If the effects are enabled...
     if (this.config.effectsEnabled) {
       // Get the effects for the given trigger.
-      let effects = this.mission.effects.filter(
-        (effect) => effect.trigger === trigger,
-      )
+      let effects = this.mission.effects
+        .filter((effect) => effect.trigger === trigger)
+        .sort((a, b) => a.order - b.order)
       // Iterate through each effect and apply it.
       for (let effect of effects) {
         try {
@@ -1875,9 +1903,9 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // If the effects are enabled...
     if (this.config.effectsEnabled) {
       // Get the effects for the given trigger.
-      let effects = action.effects.filter(
-        (effect) => effect.trigger === trigger,
-      )
+      let effects = action.effects
+        .filter((effect) => effect.trigger === trigger)
+        .sort((a, b) => a.order - b.order)
       // Iterate through each effect and apply it.
       for (let effect of effects) {
         try {

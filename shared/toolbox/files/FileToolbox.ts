@@ -146,14 +146,27 @@ export class FileToolbox {
     try {
       // Determine the file of the caller.
       Error.prepareStackTrace = (_, stack) => stack
-      const err = new Error()
+      let err = new Error()
       Error.captureStackTrace(err, FileToolbox.getCallerFilePath)
-      const stack = err.stack as unknown as NodeJS.CallSite[]
-      const caller = stack[2] // 0 = this function, 1 = called function, 2 = caller
-      const callerFilePath = caller?.getFileName()
+
+      let rawStack = err.stack as unknown as NodeJS.CallSite[]
+      let filePath = rawStack
+        .map((frame) => frame.getFileName())
+        .filter((filePath) => {
+          let fileIsNull = filePath === null
+          let isThisFile =
+            path.normalize(__filename) === path.normalize(filePath ?? '')
+          return !fileIsNull && !isThisFile
+        })
+
+      const callerFilePath = filePath[1] // 0 = called function, 1= caller
 
       // Handle missing caller file.
       if (!callerFilePath) {
+        for (let frame of rawStack) {
+          console.log('frame', frame.getFileName())
+        }
+
         throw new Error('Could not determine caller file path.')
       }
 
@@ -161,6 +174,19 @@ export class FileToolbox {
     } finally {
       Error.prepareStackTrace = origPrepare
     }
+  }
+
+  /**
+   * This function is used to help track where calls are
+   * made. A function or method can call this in order to
+   * determine the directory path of the code that made
+   * the function call.
+   * @returns The directory path of the caller.
+   * @throws If the directory can not be determined.
+   */
+  public static getCallerDirectory() {
+    let filePath = FileToolbox.getCallerFilePath()
+    return path.dirname(filePath)
   }
 
   /**
