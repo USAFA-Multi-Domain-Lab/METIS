@@ -63,48 +63,28 @@ export class TargetScriptContext<
       mission: this.mission.toTargetEnvContext(),
       localStore: this.localStore,
       globalStore: this.globalStore,
-      sendOutput: (...args: Parameters<typeof this.sendOutput>) => {
-        this.sendOutput(...args)
-      },
-      blockNode: (...args: Parameters<typeof this.blockNode>) => {
-        this.blockNode(...args)
-      },
-      unblockNode: (...args: Parameters<typeof this.unblockNode>) => {
-        this.unblockNode(...args)
-      },
-      openNode: (...args: Parameters<typeof this.openNode>) => {
-        this.openNode(...args)
-      },
-      closeNode: (...args: Parameters<typeof this.closeNode>) => {
-        this.closeNode(...args)
-      },
-      modifySuccessChance: (
-        ...args: Parameters<typeof this.modifySuccessChance>
-      ) => {
-        this.modifySuccessChance(...args)
-      },
-      modifyProcessTime: (
-        ...args: Parameters<typeof this.modifyProcessTime>
-      ) => {
-        this.modifyProcessTime(...args)
-      },
-      modifyResourceCost: (
-        ...args: Parameters<typeof this.modifyResourceCost>
-      ) => {
-        this.modifyResourceCost(...args)
-      },
-      modifyResourcePool: (
-        ...args: Parameters<typeof this.modifyResourcePool>
-      ) => {
-        this.modifyResourcePool(...args)
-      },
-      grantFileAccess: (...args: Parameters<typeof this.grantFileAccess>) => {
-        this.grantFileAccess(...args)
-      },
-      revokeFileAccess: (...args: Parameters<typeof this.revokeFileAccess>) => {
-        this.revokeFileAccess(...args)
-      },
-      sleep: (...args: Parameters<typeof this.sleep>) => this.sleep(...args),
+      sendOutput: this.ifContextIsCurrent(this.sendOutput.bind(this)),
+      blockNode: this.ifContextIsCurrent(this.blockNode.bind(this)),
+      unblockNode: this.ifContextIsCurrent(this.unblockNode.bind(this)),
+      openNode: this.ifContextIsCurrent(this.openNode.bind(this)),
+      closeNode: this.ifContextIsCurrent(this.closeNode.bind(this)),
+      modifySuccessChance: this.ifContextIsCurrent(
+        this.modifySuccessChance,
+      ).bind(this),
+      modifyProcessTime: this.ifContextIsCurrent(
+        this.modifyProcessTime.bind(this),
+      ),
+      modifyResourceCost: this.ifContextIsCurrent(
+        this.modifyResourceCost.bind(this),
+      ),
+      modifyResourcePool: this.ifContextIsCurrent(
+        this.modifyResourcePool.bind(this),
+      ),
+      grantFileAccess: this.ifContextIsCurrent(this.grantFileAccess.bind(this)),
+      revokeFileAccess: this.ifContextIsCurrent(
+        this.revokeFileAccess.bind(this),
+      ),
+      sleep: this.ifContextIsCurrent(this.sleep.bind(this)),
     }
 
     switch (this.data.type) {

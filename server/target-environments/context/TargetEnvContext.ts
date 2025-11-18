@@ -1,3 +1,4 @@
+import { targetEnvLogger } from '@server/logging'
 import type { Mission } from '@shared/missions/Mission'
 import type { MissionAction } from '@shared/missions/actions/MissionAction'
 import type { Effect } from '@shared/missions/effects/Effect'
@@ -11,6 +12,7 @@ import type { Target } from '@shared/target-environments/targets/Target'
 import type { TEffectType } from '../../../shared/missions/effects/Effect'
 import type { SessionServer } from '../../sessions/SessionServer'
 import { TargetEnvStore } from '../../sessions/TargetEnvStore'
+import { OutdatedContextError } from './OutdatedContextError'
 
 export abstract class TargetEnvContext<TExposedContext extends {}> {
   /**
@@ -40,6 +42,20 @@ export abstract class TargetEnvContext<TExposedContext extends {}> {
   }
 
   /**
+   * @see {@link _instanceId}
+   */
+  protected readonly _instanceId: string
+
+  /**
+   * The instance ID for which the current context was
+   * generated. This is not necessarily the same as the
+   * current session instance ID.
+   */
+  protected get instanceId() {
+    return this._instanceId
+  }
+
+  /**
    * The ID of the target environment for the current context.
    */
   protected abstract get environmentId(): string
@@ -48,7 +64,11 @@ export abstract class TargetEnvContext<TExposedContext extends {}> {
    * A store that is unique to the session and target environment.
    */
   protected get localStore() {
-    return TargetEnvStore.getStore(this.sessionId, this.environmentId)
+    return TargetEnvStore.get(
+      this.sessionId,
+      this.instanceId,
+      this.environmentId,
+    )
   }
 
   /**
@@ -57,15 +77,15 @@ export abstract class TargetEnvContext<TExposedContext extends {}> {
    * target environments within the same session.
    */
   protected get globalStore() {
-    return TargetEnvStore.getStore(this.sessionId)
+    return TargetEnvStore.get(this.sessionId, this.instanceId)
   }
 
   /**
    * @param session The session for the current context.
-   * @param variedContext The context data that varies based on the type of effect.
    */
   protected constructor(session: SessionServer) {
     this.session = session
+    this._instanceId = session.instanceId
   }
 
   /**
@@ -73,6 +93,37 @@ export abstract class TargetEnvContext<TExposedContext extends {}> {
    * environment scripts.
    */
   public abstract expose(): TExposedContext
+
+  /**
+   * Executes the provided operation if the context is still current.
+   * This means the state is still "started" and the instance ID of
+   * the context matches that of the session.
+   * @param operation The operation to execute if the context is current.
+   * @returns A wrapper that executes the operation if the context is current.
+   */
+  protected ifContextIsCurrent<TArgs extends any[], TReturn>(
+    operation: (...args: TArgs) => TReturn,
+  ): (...args: TArgs) => TReturn {
+    return (...args: TArgs): TReturn => {
+      let errorFirstSentence = `Cannot perform target-environment callback operation.`
+      let errorThirdSentence = ` This is likely due to delayed asynchronous code execution from the previous session instance.`
+
+      // Abort if the context is no longer current.
+      if (this._instanceId !== this.session.instanceId) {
+        let message = `${errorFirstSentence} TargetEnvContext instance ID "${this._instanceId}" does not match current session instance ID "${this.session.instanceId}". ${errorThirdSentence}`
+        targetEnvLogger.warn(message)
+        throw new OutdatedContextError(message)
+      }
+      if (['unstarted', 'ended'].includes(this.session.state)) {
+        let message = `${errorFirstSentence} TargetEnvContext session "${this.sessionId}" is not in "started" state (current state: "${this.session.state}"). ${errorThirdSentence}`
+        targetEnvLogger.warn(message)
+        throw new OutdatedContextError(message)
+      }
+
+      // Execute the operation otherwise.
+      return operation(...args)
+    }
+  }
 }
 
 /* -- TYPES -- */

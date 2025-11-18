@@ -12,6 +12,7 @@ const Delay = new TargetSchema({
   name: 'Delay',
   description: '',
   script: async (context) => {
+    let count = context.localStore.use<number>('count', 0)
     let args = context.effect.args
     let delayTimeSeconds = args[secondsArgId]
     let delayTimeMinutes = args[minutesArgId]
@@ -36,8 +37,10 @@ const Delay = new TargetSchema({
     if (delayTimeMinutes) delayTime += delayTimeMinutes * 60 * 1000 /*ms*/
     if (delayTimeSeconds) delayTime += delayTimeSeconds * 1000 /*ms*/
 
+    count.value += 1
     // Only resolve after the delay time has passed.
     await context.sleep(delayTime)
+    console.log(count.value)
   },
   args: [
     {

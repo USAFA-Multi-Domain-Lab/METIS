@@ -43,6 +43,7 @@ export class TargetEnvStore {
   /**
    * Generates a unique key for a session and target environment pair.
    * @param sessionId The session identifier.
+   * @param sessionInstanceId The session instance identifier.
    * @param targetEnvId The target environment identifier. If not provided,
    * a global store key is generated. This will be a key specific to the
    * session, but not to any particular target environment.
@@ -50,25 +51,28 @@ export class TargetEnvStore {
    */
   private static generateKey(
     sessionId: string,
+    sessionInstanceId: string,
     targetEnvId: string = '<global>',
   ): string {
-    return `${sessionId}::${targetEnvId}`
+    return `${sessionId}::${sessionInstanceId}::${targetEnvId}`
   }
 
   /**
    * Retrieves the store for a given session and target environment.
    * If it does not exist, a new store is created.
    * @param sessionId The session identifier.
+   * @param sessionInstanceId The session instance identifier.
    * @param targetEnvId The target environment identifier. If not provided,
    * a global, non-environment-specific store is returned. This store will
    * still be specific to the session.
    * @returns The store Map for the session/targetEnv pair.
    */
-  public static getStore(
+  public static get(
     sessionId: string,
+    sessionInstanceId: string,
     targetEnvId: string = '<global>',
   ): TargetEnvStore {
-    const key = this.generateKey(sessionId, targetEnvId)
+    const key = this.generateKey(sessionId, sessionInstanceId, targetEnvId)
     if (!this.registry.has(key)) {
       this.registry.set(key, new TargetEnvStore())
     }
@@ -76,20 +80,33 @@ export class TargetEnvStore {
   }
 
   /**
-   * Removes and clears the store for a given session and target environment.
+   * Removes the store for a given session and target environment from
+   * the registry.
    * @param sessionId The session identifier.
+   * @param sessionInstanceId The session instance identifier.
    * @param targetEnvId The target environment identifier. If not provided,
    * a global store for the session is cleared.
    */
-  public static destroyStore(
+  public static deregister(
     sessionId: string,
+    sessionInstanceId: string,
     targetEnvId: string = '<global>',
   ): void {
-    const key = this.generateKey(sessionId, targetEnvId)
-    const storeInstance = this.registry.get(key)
-    if (storeInstance) {
-      storeInstance.clear()
-    }
+    const key = this.generateKey(sessionId, sessionInstanceId, targetEnvId)
     this.registry.delete(key)
+  }
+
+  // todo: This should be called during session tear down, at some point.
+  /**
+   * Cleans up all stores associated with a given session.
+   * @param sessionId The session identifier.
+   */
+  public static cleanUp(sessionId: string): void {
+    for (const key of this.registry.keys()) {
+      if (key.startsWith(`${sessionId}::`)) {
+        this.registry.get(key)?.clear()
+        this.registry.delete(key)
+      }
+    }
   }
 }

@@ -8,7 +8,12 @@ import type { ServerMissionForce } from '@server/missions/forces/ServerMissionFo
 import { ServerOutput } from '@server/missions/forces/ServerOutput'
 import type { ServerMissionNode } from '@server/missions/nodes/ServerMissionNode'
 import { ServerMission } from '@server/missions/ServerMission'
-import type { TTargetEnvExposedSession } from '@server/target-environments/context/TargetEnvContext'
+import { OutdatedContextError } from '@server/target-environments/context/OutdatedContextError'
+import type {
+  TargetEnvContext,
+  TTargetEnvExposedSession,
+} from '@server/target-environments/context/TargetEnvContext'
+import type { TTargetScriptExposedContext } from '@server/target-environments/context/TargetScriptContext'
 import { TargetScriptContext } from '@server/target-environments/context/TargetScriptContext'
 import { ServerTargetEnvironment } from '@server/target-environments/ServerTargetEnvironment'
 import type { ServerUser } from '@server/users/ServerUser'
@@ -23,6 +28,7 @@ import type {
   TEffectExecutionTriggered,
   TEffectSessionTriggered,
   TEffectTrigger,
+  TEffectType,
 } from '@shared/missions/effects/Effect'
 import type { TOutputContext } from '@shared/missions/forces/MissionOutput'
 import type {
@@ -49,6 +55,20 @@ import { ServerSessionMember } from './ServerSessionMember'
  * Server instance for sessions. Handles server-side logic for a session with participating clients. Communicates with clients to conduct the session.
  */
 export class SessionServer extends MissionSession<TMetisServerComponents> {
+  /**
+   * @see {@link instanceId}.
+   */
+  private _instanceId: string
+
+  /**
+   * An identifier with higher specifity in comparison to {@link _id}.
+   * This ID will be updated upon session reset. However, the {@link _id}
+   * remains constant until the session is destroyed.
+   */
+  public get instanceId(): string {
+    return this._instanceId
+  }
+
   // Overridden.
   public get state() {
     return this._state
@@ -102,6 +122,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       [],
       [],
     )
+    this._instanceId = StringToolbox.generateRandomId()
     this._state = 'unstarted'
     this._destroyed = false
     this.initializeMission()
@@ -904,6 +925,9 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
     // Tear down the target environments.
     await ServerTargetEnvironment.tearDown(this)
+
+    // Assign a new instance ID.
+    this._instanceId = StringToolbox.generateRandomId()
 
     // Recreate the new mission from the JSON of
     // the current mission.
@@ -1758,18 +1782,23 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * Callback from target-environment context when the
    * {@link TargetEnvContext.sleep} method is called.
    * The timeout is kept here and cleared when the session ends.
-   * @param timeout
+   * @param timeout The NodeJS timeout created from the sleep call.
    */
   public onSleep = (timeout: NodeJS.Timeout): void => {
-    this.sleepTimeouts.add(timeout)
+    // this.sleepTimeouts.add(timeout)
   }
 
   /**
-   * Applies a session-triggered effect to the session.
+   * Applies an effect to its target script with the given context.
    * @param effect The effect to apply.
+   * @param context The context for the target script.
+   * @param locationMessage A message indicating the location of
+   * the effect in the event there is an error.
    */
-  private async applyMissionEffect(
-    effect: ServerEffect<'sessionTriggeredEffect'>,
+  private async applyEffect<TType extends TEffectType>(
+    effect: ServerEffect<TType>,
+    context: TTargetScriptExposedContext<TType>,
+    locationMessage: string,
   ): Promise<void> {
     // If the effect doesn't have a target environment,
     // log an error.
@@ -1786,13 +1815,6 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       )
     }
 
-    // Create and expose a new context for the target
-    // environment.
-    let context = TargetScriptContext.createSessionContext(
-      effect,
-      this,
-    ).expose()
-
     // Apply the effect to the target.
     try {
       if (!effect.defective) {
@@ -1803,7 +1825,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       let message =
         `Failed to apply effect - "${effect.name}" - to target - "${effect.target.name}" - found in the environment - "${effect.environment.name}".\n` +
         `The effect - "${effect.name}" - can be found here:\n` +
-        `mission - "${this.mission.name}" - effect - "${effect.name}".\n`
+        `${locationMessage}\n`
       // Log the error.
       targetEnvLogger.error(message, error)
     }
@@ -1823,66 +1845,25 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       let effects = this.mission.effects
         .filter((effect) => effect.trigger === trigger)
         .sort((a, b) => a.order - b.order)
+
       // Iterate through each effect and apply it.
       for (let effect of effects) {
         try {
-          await this.applyMissionEffect(effect)
+          let context = TargetScriptContext.createSessionContext(
+            effect,
+            this,
+          ).expose()
+          await this.applyEffect(
+            effect,
+            context,
+            `mission - "${this.mission.name}" - effect - "${effect.name}".`,
+          )
         } catch (error: any) {
-          // Log the error.
-          targetEnvLogger.error(error)
+          if (!(error instanceof OutdatedContextError)) {
+            targetEnvLogger.error(error)
+          }
         }
       }
-    }
-  }
-
-  /**
-   * Applies an execution-triggered effect to a target environment.
-   * @param effect The effect to apply.
-   * @param member The member applying the effect.
-   * @param execution The action execution that triggered the effect.
-   */
-  private async applyActionEffect(
-    effect: ServerEffect<'executionTriggeredEffect'>,
-    member: ServerSessionMember,
-    execution: ServerActionExecution,
-  ): Promise<void> {
-    // If the effect doesn't have a target environment,
-    // log an error.
-    if (effect.environment === null) {
-      throw new Error(
-        `The force - "${effect.sourceForce.name}" - has a node - "${effect.sourceNode.name}" - has an action - "${effect.sourceAction.name}" - with an effect - "${effect.name}" - that doesn't have a target environment or the target environment doesn't exist.`,
-      )
-    }
-    // If the effect doesn't have a target,
-    // log an error.
-    if (effect.target === null) {
-      throw new Error(
-        `The force - "${effect.sourceForce.name}" - has a node - "${effect.sourceNode.name}" - has an action - "${effect.sourceAction.name}" - with an effect - "${effect.name}" - that doesn't have a target or the target doesn't exist.`,
-      )
-    }
-
-    // Create and expose a new context for the target
-    // environment.
-    let context = TargetScriptContext.createExecutionContext(
-      effect,
-      this,
-      member,
-      execution,
-    ).expose()
-
-    // Apply the effect to the target.
-    try {
-      if (!effect.defective) {
-        await effect.target.script(context)
-      }
-    } catch (error: any) {
-      // Give additional information about the error.
-      let message =
-        `Failed to apply effect - "${effect.name}" - to target - "${effect.target.name}" - found in the environment - "${effect.environment.name}".\n` +
-        `The effect - "${effect.name}" - can be found here:\n` +
-        `force - "${effect.sourceForce.name}" - node - "${effect.sourceNode.name}" - action - "${effect.sourceAction.name}" - effect - "${effect.name}".\n`
-      // Log the error.
-      targetEnvLogger.error(message, error)
     }
   }
 
@@ -1906,23 +1887,27 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       let effects = action.effects
         .filter((effect) => effect.trigger === trigger)
         .sort((a, b) => a.order - b.order)
+
       // Iterate through each effect and apply it.
       for (let effect of effects) {
         try {
-          await this.applyActionEffect(effect, member, execution)
-
-          // todo: implement feedback for modifiers
-          // participant.emit('effect-successful', {
-          //   message: 'The effect was successfully applied to its target.',
-          // })
+          // Create and expose a new context for the target
+          // environment.
+          let context = TargetScriptContext.createExecutionContext(
+            effect,
+            this,
+            member,
+            execution,
+          ).expose()
+          await this.applyEffect(
+            effect,
+            context,
+            `force - "${effect.sourceForce.name}" - node - "${effect.sourceNode.name}" - action - "${effect.sourceAction.name}" - effect - "${effect.name}".`,
+          )
         } catch (error: any) {
-          // Log the error.
-          targetEnvLogger.error(error)
-
-          // todo: implement feedback for modifiers
-          // participant.emitError(
-          //   new ServerEmittedError(ServerEmittedError.CODE_EFFECT_FAILED),
-          // )
+          if (!(error instanceof OutdatedContextError)) {
+            targetEnvLogger.error(error)
+          }
         }
       }
     }
