@@ -277,7 +277,7 @@ export class RestApi extends Api {
    * @throws If the configuration is invalid.
    */
   public static fromConfig(
-    envConfig: Record<string, string | undefined>,
+    envConfig: Record<string, unknown | undefined>,
   ): RestApi {
     try {
       const apiOptions: TApiOptions = restApiOptionsSchema.parse(envConfig)
