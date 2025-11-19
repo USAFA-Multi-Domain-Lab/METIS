@@ -66,13 +66,13 @@ export default function ArgMissionComponent({
       // action as a placeholder.
       if (effect.sourceAction) {
         return effect.sourceAction
-      } else if (mission.actions.length) {
-        return mission.actions[0]
+      } else if (mission.allActions.length) {
+        return mission.allActions[0]
       } else {
         return ClientMissionAction.createDetached(
           StringToolbox.generateRandomId(),
           'No actions available.',
-          effect.sourceNode ? effect.sourceNode : mission.nodes[0],
+          effect.sourceNode ? effect.sourceNode : mission.allNodes[0],
         )
       }
     },
@@ -152,8 +152,8 @@ export default function ArgMissionComponent({
       return effect.sourceNode
     } else if (type === 'action') {
       return defaultAction.node
-    } else if (mission.nodes.length) {
-      return mission.nodes[0]
+    } else if (mission.allNodes.length) {
+      return mission.allNodes[0]
     } else {
       throw new Error(
         'No valid node found. A mission must have at least one node.',
