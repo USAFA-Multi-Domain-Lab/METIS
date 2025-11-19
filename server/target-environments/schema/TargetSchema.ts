@@ -1,8 +1,6 @@
 import type { TTargetArgJson } from '@shared/target-environments/args/Arg'
 import { TargetMigrationRegistry } from '@shared/target-environments/targets/migrations/TargetMigrationRegistry'
 import type { TTargetJson } from '@shared/target-environments/targets/Target'
-import fs from 'fs'
-import path from 'path'
 import type { TTargetScriptExposedContext } from '../context/TargetScriptContext'
 
 /**
@@ -79,17 +77,6 @@ export class TargetSchema {
   }
 
   /**
-   * Determines if the ID of the target can be updated.
-   */
-  private _canUpdateId: boolean
-  /**
-   * Determines if the ID of the target can be updated.
-   */
-  public get canUpdateId(): boolean {
-    return this._canUpdateId
-  }
-
-  /**
    * Determines if the target environment ID can be updated.
    */
   private _canUpdateTargetEnvId: boolean
@@ -104,37 +91,14 @@ export class TargetSchema {
    * @param options The data used to define the target.
    */
   public constructor(options: TTargetSchemaOptions) {
-    this.id = ''
+    this.id = options._id
     this._targetEnvId = ''
     this._name = options.name
     this._description = options.description
     this._script = options.script
     this._args = options.args
-    this._canUpdateId = true
     this._canUpdateTargetEnvId = true
     this.migrationRegistry = options.migrations ?? new TargetMigrationRegistry()
-  }
-
-  /**
-   * Sets the ID of the target.
-   * @param filePath The path to the target file.
-   */
-  public setId(filePath: string) {
-    if (!this.canUpdateId) {
-      throw new Error(
-        "The target's ID has already been set and cannot be updated.",
-      )
-    }
-
-    const isValid =
-      fs.existsSync(filePath) && fs.lstatSync(filePath).isDirectory()
-
-    if (isValid) {
-      this.id = path.basename(filePath)
-      this._canUpdateId = false
-    } else {
-      throw new Error('Invalid path provided.')
-    }
   }
 }
 
@@ -153,8 +117,10 @@ export type TTargetScript = (
 /**
  * Defines the target data.
  */
-interface TTargetSchemaOptions
-  extends Omit<TTargetJson, '_id' | 'targetEnvId' | 'migrationVersions'> {
+export type TTargetSchemaOptions = Omit<
+  TTargetJson,
+  'targetEnvId' | 'migrationVersions'
+> & {
   /**
    * The script which will enact the effect on the target.
    */

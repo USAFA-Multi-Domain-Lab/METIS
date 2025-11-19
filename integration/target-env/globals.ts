@@ -44,6 +44,8 @@ declare global {
   export type TActionMetadata = TargetEnvTypes.TActionMetadata
   export type TFileMetadata = TargetEnvTypes.TFileMetadata
   export type TTargetScriptContext = TargetEnvTypes.TTargetScriptExposedContext
+  export type TTargetSchemaOptions = TargetEnvTypes.TTargetSchemaOptions
+  export type TTargetScript = TargetEnvTypes.TTargetScript
 
   // These types aren't globally accessible, but they are
   // needed contextually in order to resolve other types

@@ -3,7 +3,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@metis/*": ["../library/*"]
+      "@metis/*": ["../library/*"],
+      "@shared/*": ["../../shared/*"],
+      "@server/*": ["../../server/*"]
     },
     "module": "NodeNext",
     "moduleResolution": "NodeNext"

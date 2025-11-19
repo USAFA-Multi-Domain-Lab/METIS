@@ -94,4 +94,5 @@ export class TargetEnvSchema {
 /**
  * Options passed to the TargetEnvSchema constructor.
  */
-interface TTargetEnvOptions extends Omit<TTargetEnvJson, 'targets' | '_id'> {}
+interface TTargetEnvOptions
+  extends Omit<TTargetEnvJson, 'targets' | '_id' | 'configs'> {}
