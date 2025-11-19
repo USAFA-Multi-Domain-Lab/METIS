@@ -300,6 +300,9 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
     }
 
     try {
+      // Validate config permissions on startup (strict mode)
+      TargetEnvSandbox.validateConfigPermissions(directory)
+
       // Load and register the target environment.
       // Configs are now loaded dynamically via the configs getter.
       let envSchema = sandbox.loadEnvironment()
@@ -321,6 +324,12 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
       // Log the success of the integration.
       console.log(`Successfully integrated "${environment.name}" with METIS.`)
     } catch (error: any) {
+      // Rethrow permission errors to crash the server
+      if (error.name === 'ConfigPermissionError') {
+        throw error
+      }
+
+      // Log other errors and skip this target environment
       console.error(error.message)
       console.warn(invalidSchemaMessage)
       return

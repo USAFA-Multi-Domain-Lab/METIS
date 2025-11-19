@@ -1,3 +1,4 @@
+import { targetEnvLogger } from '@server/logging'
 import { TargetEnvConfig } from '@shared/target-environments/TargetEnvConfig'
 import type { TTargetEnvConfig } from '@shared/target-environments/types'
 import fs from 'node:fs'
@@ -6,6 +7,7 @@ import path from 'node:path'
 import * as tsconfigPaths from 'tsconfig-paths'
 import type { RegisterParams } from 'tsconfig-paths/lib/register'
 import { z as zod } from 'zod'
+import { ConfigPermissionError } from './ConfigPermissionError'
 import { TargetEnvSchema } from './schema/TargetEnvSchema'
 import { TargetSchema } from './schema/TargetSchema'
 
@@ -156,28 +158,62 @@ export class TargetEnvSandbox {
   }
 
   /**
+   * Validates that configs.json has proper read and write permissions.
+   * @param rootDir The root directory of the target environment.
+   * @throws ConfigPermissionError if configs.json exists but is not readable or writable.
+   */
+  public static validateConfigPermissions(rootDir: string): void {
+    let envConfigsPath = path.join(rootDir, 'configs.json')
+    let targetEnvId = path.basename(rootDir)
+
+    // If no config file exists, validation passes
+    if (!fs.existsSync(envConfigsPath)) return
+
+    // Check if file is readable and writable
+    try {
+      fs.accessSync(envConfigsPath, fs.constants.R_OK | fs.constants.W_OK)
+    } catch (permError: any) {
+      throw new ConfigPermissionError(
+        `Permission denied accessing configs.json for "${targetEnvId}" at "${envConfigsPath}". ` +
+          `Ensure the file has read and write permissions for the server process owner (chmod 600 recommended). ` +
+          `Original error: ${permError.message}`,
+      )
+    }
+  }
+
+  /**
    * Loads the target environment configurations for the
    * target-environment located at the given root directory.
    * @param rootDir The root directory of the target environment.
-   * @returns The loaded configurations.
+   * @returns The loaded configurations. Returns empty array on errors (logs to targetEnvLogger).
    */
   public static loadConfigs(rootDir: string): TTargetEnvConfig[] {
     // Load environment configurations from JSON file.
     let envConfigsPath = path.join(rootDir, 'configs.json')
+    let targetEnvId = path.basename(rootDir)
 
     try {
       // Check if config file exists
       if (!fs.existsSync(envConfigsPath)) return []
+
+      // Check file permissions
+      try {
+        fs.accessSync(envConfigsPath, fs.constants.R_OK)
+      } catch (permError: any) {
+        const errorMsg =
+          `Permission denied reading configs.json for "${targetEnvId}" at "${envConfigsPath}". ` +
+          `Ensure the file has read permissions for the server process owner (chmod 600 or 644). ` +
+          `Error: ${permError.message}`
+        targetEnvLogger.error(errorMsg)
+        return []
+      }
 
       // Read and parse JSON file
       const fileContent = fs.readFileSync(envConfigsPath, 'utf8')
       let configsJson = JSON.parse(fileContent)
 
       // Set targetEnvId for each config
-      configsJson = TargetEnvConfig.setTargetEnvIds(
-        configsJson,
-        path.basename(rootDir),
-      )
+      configsJson = TargetEnvConfig.setTargetEnvIds(configsJson, targetEnvId)
 
       // Validate with Zod schema
       const validatedConfigs = TargetEnvConfig.arraySchema.parse(configsJson)
@@ -201,24 +237,24 @@ export class TargetEnvSandbox {
           const path = issue.path.join('.')
           return `  - ${path}: ${issue.message}`
         })
-        console.warn(
-          `Invalid config.json structure at "${envConfigsPath}":\n${issues.join(
-            '\n',
-          )}`,
-        )
+        const errorMsg = `Invalid configs.json structure for "${targetEnvId}" at "${envConfigsPath}":\n${issues.join(
+          '\n',
+        )}`
+        targetEnvLogger.warn(errorMsg)
         return []
       }
 
-      // For JSON parse errors, throw with context
+      // For JSON parse errors
       if (error instanceof SyntaxError) {
-        console.warn(
-          `Failed to parse config.json at "${envConfigsPath}": ${error.message}`,
-        )
+        const errorMsg = `Failed to parse configs.json for "${targetEnvId}" at "${envConfigsPath}": ${error.message}`
+        targetEnvLogger.warn(errorMsg)
         return []
       }
 
-      // Otherwise, throw the error upstream
-      throw error
+      // For other errors, log and return empty
+      const errorMsg = `Unexpected error loading configs for "${targetEnvId}" at "${envConfigsPath}": ${error.message}`
+      targetEnvLogger.error(errorMsg, error)
+      return []
     }
   }
 
