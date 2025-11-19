@@ -3,6 +3,7 @@
  * to send a message to the output panel of a force.
  */
 const Output = new TargetSchema({
+  _id: 'output',
   name: 'Output Panel',
   description: '',
   script: async (context) => {

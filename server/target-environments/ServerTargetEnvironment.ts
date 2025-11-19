@@ -157,7 +157,7 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
   /**
    * The folder name for the METIS target environment.
    */
-  private static readonly METIS_TARGET_ENV_FOLDER_NAME: string = 'METIS'
+  private static readonly METIS_TARGET_ENV_FOLDER_NAME: string = 'metis'
 
   /**
    * The ID for the METIS target environment.
@@ -205,16 +205,18 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
   }
 
   /**
-   * Scans the given directory for targets, adding
-   * them to the given target environment.
+   * Scans the given directory for targets, adding them
+   * to the given target environment.
    * @param directory The directory to search.
    * @param environment The target environment to add the
    * targets to.
+   * @param seenTargetIds Optional set to track duplicate target IDs within this environment.
    */
   private static scanTargetDirectory(
     directory: string,
     environment: ServerTargetEnvironment,
     sandbox: TargetEnvSandbox,
+    seenTargetIds: Set<string> = new Set(),
   ): void {
     let schemaFilePath = path.join(
       directory,
@@ -233,8 +235,17 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
     if (fs.existsSync(schemaFilePath)) {
       try {
         let targetSchema = sandbox.loadTarget(schemaFilePath)
-        // Set the target ID.
-        targetSchema.setId(directory)
+
+        // Check for duplicate target ID within this environment
+        if (seenTargetIds.has(targetSchema._id)) {
+          throw new Error(
+            `Duplicate target ID "${targetSchema._id}" found in target environment "${environment.name}" at "${schemaFilePath}"`,
+          )
+        }
+
+        // Track this target ID
+        seenTargetIds.add(targetSchema._id)
+
         // Set the target environment ID.
         targetSchema.targetEnvId = environment._id
         // Add the target JSON.
@@ -242,9 +253,8 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
           ServerTarget.fromSchema(targetSchema, environment),
         )
       } catch (error: any) {
-        console.error(error.message)
-        console.warn(
-          `Invalid schema found at "${schemaFilePath}". Skipping target...`,
+        console.error(
+          `Failed to load target schema at "${schemaFilePath}":\n ${error.message}.\n Skipping target...`,
         )
       }
     }
@@ -256,7 +266,12 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
 
     for (let subdirectory of directoryContents) {
       if (ServerFileToolbox.isFolder(subdirectory)) {
-        this.scanTargetDirectory(subdirectory, environment, sandbox)
+        this.scanTargetDirectory(
+          subdirectory,
+          environment,
+          sandbox,
+          seenTargetIds,
+        )
       }
     }
   }
@@ -330,8 +345,9 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
       }
 
       // Log other errors and skip this target environment
-      console.error(error.message)
-      console.warn(invalidSchemaMessage)
+      console.error(
+        `Failed to load target environment at "${schemaFilePath}": ${error.message}. Skipping target environment...`,
+      )
       return
     }
   }

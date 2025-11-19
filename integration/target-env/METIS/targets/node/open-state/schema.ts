@@ -59,6 +59,7 @@ const groupingId = 'node'
  * node is a safe no-op that will be silently skipped.
  */
 const NodeOpenState = new TargetSchema({
+  _id: 'open-state',
   name: 'Node Open State',
   description: 'Opens or closes a node, revealing or hiding its descendants',
   script: async (context) => {

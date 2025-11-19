@@ -17,6 +17,7 @@ const migrations = new TargetMigrationRegistry().register(
  * allows a user to manage access to files from forces.
  */
 const FileAccess = new TargetSchema({
+  _id: 'file-access',
   name: 'File Access',
   description: '',
   script: async (context) => {

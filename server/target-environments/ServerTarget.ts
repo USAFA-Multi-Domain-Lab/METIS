@@ -108,16 +108,20 @@ export class ServerTarget extends Target<TMetisServerComponents> {
    */
   public static validateTargetIds(environmentId: string): void {
     const metisTargetIds = Object.values(ServerTarget.METIS_TARGET_IDS)
-    const targetIds = ServerTargetEnvironment.REGISTRY.getTargets(environmentId)
-    const missingIds = targetIds.filter(
-      ({ _id }) => !metisTargetIds.includes(_id),
-    )
+    const targets = ServerTargetEnvironment.REGISTRY.getTargets(environmentId)
+    const missingIds = metisTargetIds.filter((metisTargetId) => {
+      // Find the target that should exist in the metis target env
+      const target = targets.find(({ _id }) => _id === metisTargetId)
+      // If the target cannot be found then add the expected target ID
+      // to the list of missing target IDs in the metis target env
+      return target === undefined
+    })
 
-    if (missingIds.length > 0) {
+    if (missingIds.length) {
       throw new Error(
-        `The following target IDs are missing in the METIS target environment: ${missingIds
-          .map(({ _id }) => _id)
-          .join(', ')}`,
+        `The following target IDs are missing in the METIS target environment: [ ${missingIds.join(
+          ', ',
+        )} ]`,
       )
     }
   }

@@ -9,6 +9,7 @@ const groupingId = 'delayTime'
  * to add a delay in a series of effects being processed.
  */
 const Delay = new TargetSchema({
+  _id: 'delay',
   name: 'Delay',
   description: '',
   script: (context) => {
