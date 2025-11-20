@@ -78,7 +78,7 @@ export class TargetEnvSchema {
    */
   public on(
     method: TTargetEnvMethods,
-    callback: (context: TEnvHookExposedContext) => void | Promise<void>,
+    callback: (context: TEnvHookExposedContext) => Promise<void>,
   ) {
     this._hooks.push(new TargetEnvironmentHook(method, callback))
   }

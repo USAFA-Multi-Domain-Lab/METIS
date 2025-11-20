@@ -5,6 +5,7 @@ import type { Effect } from '@shared/missions/effects/Effect'
 import type { MissionFile } from '@shared/missions/files/MissionFile'
 import type { MissionForce } from '@shared/missions/forces/MissionForce'
 import type { MissionNode } from '@shared/missions/nodes/MissionNode'
+import type { TSessionState } from '@shared/sessions/MissionSession'
 import { MissionSession } from '@shared/sessions/MissionSession'
 import type { SessionMember } from '@shared/sessions/members/SessionMember'
 import type { TargetEnvironment } from '@shared/target-environments/TargetEnvironment'
@@ -14,7 +15,29 @@ import type { SessionServer } from '../../sessions/SessionServer'
 import { TargetEnvStore } from '../../sessions/TargetEnvStore'
 import { OutdatedContextError } from './OutdatedContextError'
 
-export abstract class TargetEnvContext<TExposedContext extends {}> {
+export abstract class TargetEnvContext<
+  TExposedContext extends TTargetEnvExposedContext,
+> {
+  /**
+   * A promise that represents the current operation
+   * being executed within the context. If null,
+   * no operation has been initiated yet.
+   */
+  protected operationPromise: Promise<void> | null = null
+
+  /**
+   * A function that resolves the current operation's promise.
+   * This is set when an operation is initiated, and called
+   * to resolve the promise when needed.
+   */
+  protected resolveOperation = () => {}
+
+  /**
+   * States that are permitted for operations executed
+   * within this context.
+   */
+  protected abstract readonly permittedStates: TSessionState[]
+
   /**
    * The mission for the current context.
    */
@@ -89,10 +112,77 @@ export abstract class TargetEnvContext<TExposedContext extends {}> {
   }
 
   /**
+   * Utility method to compile together the common exposed context
+   * that should be used by all implementations of the {@link expose}
+   * method in child classes.
+   * @returns The common exposed context.
+   */
+  protected exposeCommon(): TTargetEnvExposedContext {
+    return {
+      session: this.session.toTargetEnvContext(),
+      mission: this.mission.toTargetEnvContext(),
+      localStore: this.localStore,
+      globalStore: this.globalStore,
+      sleep: this.ifContextIsCurrent(this.sleep.bind(this)),
+    }
+  }
+
+  /**
    * Creates a limited context to expose to the target
    * environment scripts.
+   * @note If you are implementing this abstract method in
+   * a child class, it is recommended to utilize the
+   * {@link exposeCommon} method to help compile your exposed
+   * context.
+   * @returns The exposed context.
    */
-  public abstract expose(): TExposedContext
+  protected abstract expose(): TExposedContext
+
+  /**
+   * Executes the provided operation within the context.
+   * @param operation The operation to execute.
+   * @resolves After the operation has been executed.
+   * @rejects If the operation fails.
+   * @note This should only ever be called once per context
+   * instance.
+   */
+  public execute(
+    operation: (context: TExposedContext) => Promise<void>,
+  ): Promise<void> {
+    // Execute should only be called once.
+    if (this.operationPromise) {
+      throw new Error(
+        'Cannot execute operation: Another operation has already been initiated within this context.',
+      )
+    }
+
+    let promise = new Promise<void>((resolve, reject) => {
+      let settled = false
+
+      // Wrapper resolve and reject to ensure
+      // they are only called once.
+      const safeResolve = () => {
+        if (settled) return
+        settled = true
+        resolve()
+      }
+      const safeReject = (err: unknown) => {
+        if (settled) return
+        settled = true
+        reject(err)
+      }
+
+      // Make the safe resolve function available
+      // to be called by the session.
+      this.resolveOperation = safeResolve
+
+      // Execute the operation.
+      operation(this.expose()).then(safeResolve, safeReject)
+    })
+
+    this.operationPromise = promise
+    return promise
+  }
 
   /**
    * Executes the provided operation if the context is still current.
@@ -124,9 +214,63 @@ export abstract class TargetEnvContext<TExposedContext extends {}> {
       return operation(...args)
     }
   }
+
+  /**
+   * @see {@link TTargetEnvExposedContext.sleep}
+   */
+  protected sleep(duration: number): Promise<void> {
+    return new Promise<void>((resolve) => {
+      let timeout = setTimeout(() => {
+        resolve()
+      }, duration)
+      this.session.onSleep(() => {
+        // If session clean up occurs, abort the
+        // sleep early and resolve the operation
+        // early. This allows for the session to
+        // perform proper clean up without waiting
+        // for the script to conclude its work.
+        clearTimeout(timeout)
+        this.resolveOperation()
+      })
+    })
+  }
 }
 
 /* -- TYPES -- */
+
+/**
+ * Common context exposed to any target-environment code.
+ */
+export type TTargetEnvExposedContext = {
+  /**
+   * The session that invoked the target-environment code.
+   */
+  readonly session: TTargetEnvExposedSession
+  /**
+   * The mission associated with the session.
+   */
+  readonly mission: TTargetEnvExposedMission
+  /**
+   * A store that is unique to the session instance and the target environment.
+   * This can be used to store and retrieve temporary, random-access
+   * data.
+   */
+  readonly localStore: TargetEnvStore
+  /**
+   * A store that is unique to the session instance, but not to any particular
+   * target environment. This allows for data to be shared across different
+   * target environments within the same session instance.
+   */
+  readonly globalStore: TargetEnvStore
+  /**
+   * Sleeps for the specified duration.
+   * @param duration The duration in milliseconds to sleep for.
+   * @resolves After the sleep duration has elapsed.
+   * @note This will abort early if the session ends before
+   * the duration has elapsed.
+   */
+  sleep(duration: number): Promise<void>
+}
 
 /**
  * Data for a session exposed to target-environment code.

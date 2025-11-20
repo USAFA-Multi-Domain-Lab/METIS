@@ -5,6 +5,7 @@ import type { ServerEffect } from '@server/missions/effects/ServerEffect'
 import type { ServerMissionFile } from '@server/missions/files/ServerMissionFile'
 import type { ServerMissionForce } from '@server/missions/forces/ServerMissionForce'
 import type { ServerMissionNode } from '@server/missions/nodes/ServerMissionNode'
+import type { TSessionState } from '@shared/sessions/MissionSession'
 import type {
   TEffectExecutionTriggered,
   TEffectSessionTriggered,
@@ -13,13 +14,11 @@ import type {
 import type { TOutputContext } from '../../../shared/missions/forces/MissionOutput'
 import type { ServerSessionMember } from '../../sessions/ServerSessionMember'
 import type { SessionServer, TOutputTo } from '../../sessions/SessionServer'
-import type { TargetEnvStore } from '../../sessions/TargetEnvStore'
-import type { TTargetEnvExposedSession } from './TargetEnvContext'
+import type { TTargetEnvExposedContext } from './TargetEnvContext'
 import {
   TargetEnvContext,
   type TTargetEnvExposedEffect,
   type TTargetEnvExposedMember,
-  type TTargetEnvExposedMission,
 } from './TargetEnvContext'
 
 /**
@@ -29,6 +28,23 @@ import {
 export class TargetScriptContext<
   TType extends TEffectType = TEffectType,
 > extends TargetEnvContext<TTargetScriptExposedContext<TType>> {
+  // Implemented
+  protected get permittedStates(): TSessionState[] {
+    switch (this.data.type) {
+      case 'sessionTriggeredEffect':
+        switch (this.data.trigger) {
+          case 'session-setup':
+            return ['starting', 'resetting']
+          case 'session-start':
+            return ['started']
+          case 'session-teardown':
+            return ['ending', 'resetting']
+        }
+      case 'executionTriggeredEffect':
+        return ['started']
+    }
+  }
+
   /**
    * Context data that varies based on the type of effect.
    */
@@ -51,18 +67,12 @@ export class TargetScriptContext<
     this.data = variedContext
   }
 
-  /**
-   * Creates a limited context to expose to the target
-   * environment scripts.
-   */
-  public expose(): TTargetScriptExposedContext<TType> {
+  // Implemented
+  protected expose(): TTargetScriptExposedContext<TType> {
     let commonContext: TCommonTargetScriptContext<TType> = {
       type: this.data.type as TType,
       effect: this.data.effect.toTargetEnvContext(),
-      session: this.session.toTargetEnvContext(),
-      mission: this.mission.toTargetEnvContext(),
-      localStore: this.localStore,
-      globalStore: this.globalStore,
+      ...this.exposeCommon(),
       sendOutput: this.ifContextIsCurrent(this.sendOutput.bind(this)),
       blockNode: this.ifContextIsCurrent(this.blockNode.bind(this)),
       unblockNode: this.ifContextIsCurrent(this.unblockNode.bind(this)),
@@ -84,7 +94,6 @@ export class TargetScriptContext<
       revokeFileAccess: this.ifContextIsCurrent(
         this.revokeFileAccess.bind(this),
       ),
-      sleep: this.ifContextIsCurrent(this.sleep.bind(this)),
     }
 
     switch (this.data.type) {
@@ -262,7 +271,7 @@ export class TargetScriptContext<
   }
 
   /**
-   * @inheritdoc TTargetEnvExposedContext.sendOutput
+   * @see {@link TTargetScriptExposedContext.sendOutput}
    */
   private sendOutput = (message: string, to?: TOutputTo) => {
     const { data } = this
@@ -300,7 +309,7 @@ export class TargetScriptContext<
   }
 
   /**
-   * @inheritdoc TTargetEnvExposedContext.blockNode
+   * @see {@link TTargetScriptExposedContext.blockNode}
    */
   private blockNode = ({ forceKey, nodeKey }: TManipulateNodeOptions = {}) => {
     const targetNode = this.determineTargetNode(forceKey, nodeKey)
@@ -308,7 +317,7 @@ export class TargetScriptContext<
   }
 
   /**
-   * @inheritdoc TTargetEnvExposedContext.unblockNode
+   * @see {@link TTargetScriptExposedContext.unblockNode}
    */
   private unblockNode = ({ forceKey, nodeKey }: TManipulateNodeOptions) => {
     const targetNode = this.determineTargetNode(forceKey, nodeKey)
@@ -316,7 +325,7 @@ export class TargetScriptContext<
   }
 
   /**
-   * @inheritdoc TTargetEnvExposedContext.openNode
+   * @see {@link TTargetScriptExposedContext.openNode}
    */
   private openNode = ({ forceKey, nodeKey }: TManipulateNodeOptions = {}) => {
     const targetNode = this.determineTargetNode(forceKey, nodeKey)
@@ -324,7 +333,7 @@ export class TargetScriptContext<
   }
 
   /**
-   * @inheritdoc TTargetEnvExposedContext.closeNode
+   * @see {@link TTargetScriptExposedContext.closeNode}
    */
   private closeNode = ({ forceKey, nodeKey }: TManipulateNodeOptions = {}) => {
     const targetNode = this.determineTargetNode(forceKey, nodeKey)
@@ -332,7 +341,7 @@ export class TargetScriptContext<
   }
 
   /**
-   * @inheritdoc TTargetEnvExposedContext.modifySuccessChance
+   * @see {@link TTargetScriptExposedContext.modifySuccessChance}
    */
   private modifySuccessChance = (
     operand: number,
@@ -353,7 +362,7 @@ export class TargetScriptContext<
   }
 
   /**
-   * @inheritdoc TTargetEnvExposedContext.modifyProcessTime
+   * @see {@link TTargetScriptExposedContext.modifyProcessTime}
    */
   private modifyProcessTime = (
     operand: number,
@@ -374,7 +383,7 @@ export class TargetScriptContext<
   }
 
   /**
-   * @inheritdoc TTargetEnvExposedContext.modifyResourceCost
+   * @see {@link TTargetScriptExposedContext.modifyResourceCost}
    */
   private modifyResourceCost = (
     operand: number,
@@ -395,7 +404,7 @@ export class TargetScriptContext<
   }
 
   /**
-   * @inheritdoc TTargetEnvExposedContext.modifyResourcePool
+   * @see {@link TTargetScriptExposedContext.modifyResourcePool}
    */
   private modifyResourcePool = (
     operand: number,
@@ -406,7 +415,7 @@ export class TargetScriptContext<
   }
 
   /**
-   * @inheritdoc TTargetEnvExposedContext.grantFileAccess
+   * @see {@link TTargetScriptExposedContext.grantFileAccess}
    */
   private grantFileAccess = (fileId: string, forceKey: string) => {
     const targetFile = this.determineTargetFile(fileId)
@@ -415,24 +424,12 @@ export class TargetScriptContext<
   }
 
   /**
-   * @see {@link TTargetEnvExposedContext.revokeFileAccess}
+   * @see {@link TTargetScriptExposedContext.revokeFileAccess}
    */
   private revokeFileAccess = (fileId: string, forceKey: string) => {
     const targetFile = this.determineTargetFile(fileId)
     const targetForce = this.determineTargetForce(forceKey)
     this.session.updateFileAccess(targetFile, targetForce, false)
-  }
-
-  /**
-   * @see {@link TTargetEnvExposedContext.sleep}
-   */
-  private sleep(duration: number): Promise<void> {
-    return new Promise<void>((resolve) => {
-      let timeout = setTimeout(() => {
-        resolve()
-      }, duration)
-      this.session.onSleep(timeout)
-    })
   }
 
   /**
@@ -608,9 +605,9 @@ type TSelectExposedContext = {
 /**
  * Data exposed to a target script as an object.
  */
-export type TTargetScriptExposedContext<
+export interface TTargetScriptExposedContext<
   TType extends TEffectType = TEffectType,
-> = {
+> extends TTargetEnvExposedContext {
   /**
    * The type of effect being applied.
    */
@@ -620,29 +617,9 @@ export type TTargetScriptExposedContext<
    */
   readonly effect: TTargetEnvExposedEffect
   /**
-   * The session that invoked the hook.
-   */
-  readonly session: TTargetEnvExposedSession
-  /**
-   * The mission associated with the session.
-   */
-  readonly mission: TTargetEnvExposedMission
-  /**
    * The member who triggered the effect.
    */
   readonly triggeredBy: TSelectExposedContext[TType]['triggeredBy']
-  /**
-   * A store that is unique to the session and target environment.
-   * This can be used to store and retrieve temporary, random-access
-   * data.
-   */
-  readonly localStore: TargetEnvStore
-  /**
-   * A store that is unique to the session, but not to any particular
-   * target environment. This allows for data to be shared across different
-   * target environments within the same session.
-   */
-  readonly globalStore: TargetEnvStore
   /**
    * Sends the message to the output panel within a session.
    * @param message The output's message.
@@ -738,14 +715,6 @@ export type TTargetScriptExposedContext<
    * @param forceKey The local key of the force from which to revoke access.
    */
   revokeFileAccess: TargetScriptContext<TType>['revokeFileAccess']
-  /**
-   * Sleeps for the specified duration.
-   * @param duration The duration in milliseconds to sleep for.
-   * @resolves After the sleep duration has elapsed.
-   * @note This will abort early if the session ends before
-   * the duration has elapsed.
-   */
-  sleep(duration: number): Promise<void>
 }
 
 /**

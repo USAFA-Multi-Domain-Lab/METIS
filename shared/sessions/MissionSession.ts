@@ -310,6 +310,13 @@ export abstract class MissionSession<
   }
 
   /**
+   * Possible states in which a session can be found.
+   */
+  public static get AVAILABLE_STATES(): TSessionState[] {
+    return ['unstarted', 'starting', 'started', 'ending', 'ended', 'resetting']
+  }
+
+  /**
    * Options for the accessibility of the session.
    */
   public static get ACCESSIBILITY_OPTIONS(): TSessionAccessibility[] {
@@ -487,6 +494,9 @@ export type TSession<T extends TMetisBaseComponents> = T['session']
 /**
  * The state of a session.
  */
+// ! If you add a new session state, make sure to
+// ! update the AVAILABLE_STATES static getter in
+// ! the MissionSession class.
 export type TSessionState =
   | 'unstarted'
   | 'starting'

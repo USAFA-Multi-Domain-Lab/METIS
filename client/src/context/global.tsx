@@ -499,7 +499,14 @@ const initializeActions = (
       choices: TChoice[],
       options: TPromptOptions<TChoice, TList> = {},
     ): Promise<TPromptResult<TChoice, TList>> => {
-      const { textField, capitalizeChoices, list, defaultChoice } = options
+      const {
+        textField,
+        capitalizeChoices,
+        list,
+        defaultChoice,
+        dangerous,
+        dangerousChoices,
+      } = options
 
       // Return a promise that will be resolved once the
       // user makes a choice.
@@ -513,6 +520,8 @@ const initializeActions = (
           capitalizeChoices,
           list,
           defaultChoice,
+          dangerous,
+          dangerousChoices,
           key: StringToolbox.generateRandomId(),
         }
 

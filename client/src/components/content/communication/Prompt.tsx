@@ -1,3 +1,4 @@
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import React from 'react'
 import type { ESortByMethod } from '../general-layout/ListOld'
 import ListOld from '../general-layout/ListOld'
@@ -13,6 +14,8 @@ export default class Prompt<
   TChoice extends string,
   TList extends object = {},
 > extends React.Component<TPrompt_P<TChoice, TList>, TPrompt_S<TChoice>> {
+  /* -- STATE -- */
+
   /**
    * Ref for the text field form.
    */
@@ -25,7 +28,20 @@ export default class Prompt<
     resolving: false,
   }
 
-  /* -- callback -- */
+  /* -- COMPUTED -- */
+
+  /**
+   * Classes used for the root element of
+   * the component.
+   */
+  protected get rootClasses(): ClassList {
+    return new ClassList('Prompt')
+      .set('resolving', this.state.resolving)
+      .set('unresolved', !this.state.resolving)
+      .set('dangerous', this.props.dangerous)
+  }
+
+  /* -- FUNCTIONS -- */
 
   /**
    * Called on form submission of text field.
@@ -54,7 +70,7 @@ export default class Prompt<
     })
   }
 
-  /* -- render -- */
+  /* -- RENDER -- */
 
   /**
    * @returns The JSX for the confirmation message.
@@ -170,6 +186,10 @@ export default class Prompt<
         {choices.map((choice) => {
           // Gather details.
           let text: string = choice
+          let uniqueButtonClasses = new ClassList().set(
+            'dangerous',
+            this.props.dangerousChoices?.includes(choice),
+          )
 
           // Capitalize the first letter of the choice,
           // if specified.
@@ -181,6 +201,7 @@ export default class Prompt<
           return (
             <ButtonText
               key={choice}
+              uniqueClassName={uniqueButtonClasses.value}
               text={text}
               onClick={() => {
                 this.setState({ choice }, () => {
@@ -216,21 +237,9 @@ export default class Prompt<
 
   // Implemented
   public render(): TReactElement | null {
-    // Gather details.
-    let rootClassList: string[] = ['Prompt']
-
-    // Add 'resolving' class if resolving.
-    if (this.state.resolving) {
-      rootClassList.push('resolving')
-    }
-    // Else, add 'unresolved' class.
-    else {
-      rootClassList.push('unresolved')
-    }
-
     // Render JSX.
     return (
-      <div className={rootClassList.join(' ')}>
+      <div className={this.rootClasses.value}>
         <div className='backing'>
           <div className='alert-box'>
             {this.messageJsx}
@@ -246,6 +255,8 @@ export default class Prompt<
   // Overridden
   public static defaultProps() {
     return {
+      dangerous: false,
+      dangerousChoices: [],
       capitalizeChoices: false,
       defaultChoice: null,
     }
@@ -289,6 +300,26 @@ export type TPrompt_P<TChoice extends string, TList extends object = {}> = {
    * The choices that the user can make for the prompt.
    */
   choices: TChoice[]
+  /**
+   * Choices that are marked as dangerous. These choices will
+   * be styled with red text to indicate the user should click
+   * it with caution.
+   * @default []
+   * @note These choices should be a subset of the
+   * {@link TPrompt_P.choices} prop. Any entries not also included
+   * in the {@link TPrompt_P.choices} prop will be ignored.
+   */
+  dangerousChoices?: TChoice[]
+  /**
+   * Marks the prompt as dangerous. This will style the
+   * message text in red to indicate the user should proceed
+   * with caution.
+   * @default false
+   * @note This will not style the choices themselves, only the
+   * message text. To style specific choices, use the
+   * {@link TPrompt_P.dangerousChoices} prop.
+   */
+  dangerous?: boolean
   /**
    * A text field that the user can enter text into before making a choice.
    * @default undefined

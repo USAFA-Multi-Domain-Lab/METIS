@@ -143,16 +143,16 @@ export default function SessionList({
   }
 
   /**
-   * Gets the tooltip description for a session item button.
+   * Gets the label for a session item button.
    */
-  const getSessionItemButtonTooltip: TGetItemButtonLabel<SessionBasic> = (
+  const getSessionItemButtonLabel: TGetItemButtonLabel<SessionBasic> = (
     button,
   ) => {
     switch (button) {
       case 'open':
         return 'Join'
       case 'remove':
-        return 'Delete'
+        return 'Hard Delete'
       default:
         return ''
     }
@@ -219,8 +219,12 @@ export default function SessionList({
   const onSessionTearDown = async (session: SessionBasic) => {
     // Confirm tear down.
     let { choice } = await prompt(
-      `Are you sure you want to delete the "${session.name}" session?`,
+      `Are you sure you want to perform a hard delete for the "${session.name}" session? This will end the session, skipping typical shutdown procedures.`,
       Prompt.ConfirmationChoices,
+      {
+        dangerous: true,
+        dangerousChoices: ['Confirm'],
+      },
     )
 
     // If confirmed, delete session.
@@ -336,7 +340,7 @@ export default function SessionList({
       getColumnWidth={getSessionColumnWidth}
       getItemTooltip={() => 'Join session'}
       getListButtonLabel={getSessionListButtonTooltip}
-      getItemButtonLabel={getSessionItemButtonTooltip}
+      getItemButtonLabel={getSessionItemButtonLabel}
       onItemDblClick={(session) => onSessionSelection(session)}
       onListButtonClick={onSessionListButtonClick}
       onItemButtonClick={onSessionItemButtonClick}

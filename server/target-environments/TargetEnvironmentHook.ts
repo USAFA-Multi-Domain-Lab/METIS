@@ -11,9 +11,7 @@ export class TargetEnvironmentHook {
   /**
    * The function to call when the hook is invoked.
    */
-  private readonly callback: (
-    context: TEnvHookExposedContext,
-  ) => void | Promise<void>
+  private readonly callback: (context: TEnvHookExposedContext) => Promise<void>
 
   /**
    * @param method @see {@link TargetEnvironmentHook.method}
@@ -21,7 +19,7 @@ export class TargetEnvironmentHook {
    */
   public constructor(
     method: TTargetEnvMethods,
-    callback: (context: TEnvHookExposedContext) => void | Promise<void>,
+    callback: (context: TEnvHookExposedContext) => Promise<void>,
   ) {
     this.method = method
     this.callback = callback
@@ -30,7 +28,7 @@ export class TargetEnvironmentHook {
   /**
    * Calls the hook's callback function.
    */
-  public invoke(context: TEnvHookExposedContext): void | Promise<void> {
+  public invoke(context: TEnvHookExposedContext): Promise<void> {
     return this.callback(context)
   }
 }

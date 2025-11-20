@@ -1,17 +1,19 @@
-import type { SessionServer } from '../../sessions/SessionServer'
-import type { TargetEnvStore } from '../../sessions/TargetEnvStore'
+import type { TSessionState } from '@shared/sessions/MissionSession'
+import { SessionServer } from '../../sessions/SessionServer'
 import type { ServerTargetEnvironment } from '../ServerTargetEnvironment'
-import type { TTargetEnvExposedSession } from './TargetEnvContext'
-import {
-  TargetEnvContext,
-  type TTargetEnvExposedMission,
-} from './TargetEnvContext'
+import type { TTargetEnvExposedContext } from './TargetEnvContext'
+import { TargetEnvContext } from './TargetEnvContext'
 
 /**
  * Context that is provided to target scripts when
  * they are called during a session.
  */
 export class EnvHookContext extends TargetEnvContext<TEnvHookExposedContext> {
+  // Implemented
+  protected get permittedStates(): TSessionState[] {
+    return SessionServer.AVAILABLE_STATES
+  }
+
   // Implemented
   protected get environmentId(): string {
     return this.environment._id
@@ -35,16 +37,10 @@ export class EnvHookContext extends TargetEnvContext<TEnvHookExposedContext> {
     this.environment = environment
   }
 
-  /**
-   * Creates a limited context to expose to the target
-   * environment scripts.
-   */
-  public expose(): TEnvHookExposedContext {
+  // Implemented
+  protected expose(): TEnvHookExposedContext {
     return {
-      session: this.session.toTargetEnvContext(),
-      mission: this.mission.toTargetEnvContext(),
-      localStore: this.localStore,
-      globalStore: this.globalStore,
+      ...this.exposeCommon(),
     }
   }
 }
@@ -54,25 +50,4 @@ export class EnvHookContext extends TargetEnvContext<TEnvHookExposedContext> {
 /**
  * Data exposed to a target-environment hook as an object.
  */
-export type TEnvHookExposedContext = {
-  /**
-   * The session that invoked the hook.
-   */
-  readonly session: TTargetEnvExposedSession
-  /**
-   * The mission associated with the session.
-   */
-  readonly mission: TTargetEnvExposedMission
-  /**
-   * A store that is unique to the session and target environment.
-   * This can be used to store and retrieve temporary, random-access
-   * data.
-   */
-  readonly localStore: TargetEnvStore
-  /**
-   * A store that is unique to the session, but not to any particular
-   * target environment. This allows for data to be shared across different
-   * target environments within the same session.
-   */
-  readonly globalStore: TargetEnvStore
-}
+export interface TEnvHookExposedContext extends TTargetEnvExposedContext {}

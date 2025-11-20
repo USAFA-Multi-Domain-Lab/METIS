@@ -3,6 +3,7 @@ import type { ServerUser } from '@server/users/ServerUser'
 import { expressLogger } from '../../../../logging'
 import { ApiResponse } from '../../library/ApiResponse'
 import { StatusError } from '../../library/StatusError'
+
 /**
  * This will delete a session.
  * @param request The express request.

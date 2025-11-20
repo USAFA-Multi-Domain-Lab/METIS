@@ -1,3 +1,20 @@
+import type { FileReference } from './files/FileReference'
+import type { ActionExecution } from './missions/actions/ActionExecution'
+import type { ExecutionOutcome } from './missions/actions/ExecutionOutcome'
+import type { MissionAction } from './missions/actions/MissionAction'
+import type { Effect, TEffectType } from './missions/effects/Effect'
+import type { MissionFile } from './missions/files/MissionFile'
+import type { MissionForce } from './missions/forces/MissionForce'
+import type { MissionOutput } from './missions/forces/MissionOutput'
+import type { Mission } from './missions/Mission'
+import type { MissionNode } from './missions/nodes/MissionNode'
+import type { MissionPrototype } from './missions/nodes/MissionPrototype'
+import type { SessionMember } from './sessions/members/SessionMember'
+import type { MissionSession } from './sessions/MissionSession'
+import type { TargetEnvironment } from './target-environments/TargetEnvironment'
+import type { Target } from './target-environments/targets/Target'
+import type { User } from './users/User'
+
 /**
  * A fundamental concept used in the application.
  * (e.g. a user, a mission, a session, etc.)
@@ -142,6 +159,49 @@ export abstract class MetisComponent {
 }
 
 /* -- TYPES -- */
+
+/**
+ * Base, shared registry of METIS components types.
+ * @note Used as a generic argument for all base,
+ * METIS component classes.
+ */
+export type TMetisBaseComponents = {
+  session: MissionSession
+  member: SessionMember
+  user: User
+  targetEnv: TargetEnvironment
+  target: Target
+  fileReference: FileReference
+  mission: Mission
+  prototype: MissionPrototype
+  missionFile: MissionFile
+  force: MissionForce
+  output: MissionOutput
+  node: MissionNode
+  action: MissionAction
+  execution: ActionExecution
+  outcome: ExecutionOutcome
+} & {
+  [TType in TEffectType]: Effect<TMetisBaseComponents, TType>
+}
+
+/**
+ * JSON representation of {@link MetisComponent}.
+ */
+export interface TMetisComponentJson {
+  /**
+   * @see {@link MetisComponent._id}
+   */
+  _id: string
+  /**
+   * @see {@link MetisComponent.name}
+   */
+  name: string
+  /**
+   * @see {@link MetisComponent.deleted}
+   */
+  deleted: boolean
+}
 
 /**
  * Creates a JSON representation type from a METIS component type.

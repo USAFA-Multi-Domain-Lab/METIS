@@ -130,7 +130,7 @@ export type TTargetScript = (
 /**
  * Defines the target data.
  */
-interface TTargetSchemaOptions
+export interface TTargetSchemaOptions
   extends Omit<TTargetJson, '_id' | 'targetEnvId' | 'migrationVersions'> {
   /**
    * The script which will enact the effect on the target.
@@ -141,3 +141,5 @@ interface TTargetSchemaOptions
    */
   migrations?: TargetMigrationRegistry
 }
+
+let x: TTargetSchemaOptions

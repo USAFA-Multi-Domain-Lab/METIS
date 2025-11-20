@@ -108,8 +108,8 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
   ): Promise<void> {
     for (let hook of this.hooks) {
       if (hook.method === method) {
-        let context = new EnvHookContext(session, this).expose()
-        await hook.invoke(context)
+        let context = new EnvHookContext(session, this)
+        await context.execute((context) => hook.invoke(context))
       }
     }
   }
@@ -351,46 +351,6 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
     // the default METIS target environment is
     // always the first one in the list.
     ServerTargetEnvironment.REGISTRY.sort()
-  }
-
-  /**
-   * Sets up all registered target environments for the given
-   * session.
-   * @param session The session used for setup.
-   * @resolves When all target environments are set up.
-   * @rejects If setup of any target environment fails.
-   */
-  public static async setUp(session: SessionServer): Promise<void> {
-    // Get the target environments that the
-    // mission of the given session uses.
-    let environments = session.mission.targetEnvironments
-
-    // For each target environment in the registry, set it up.
-    for (let environment of environments) {
-      await environment.setUp(session)
-    }
-
-    await session.applyMissionEffects('session-setup')
-  }
-
-  /**
-   * Tears down all registered target environments for the given
-   * session.
-   * @param session The session used for teardown.
-   * @resolves When all target environments are torn down.
-   * @rejects If teardown of any target environment fails.
-   */
-  public static async tearDown(session: SessionServer): Promise<void> {
-    // Get the target environments that the
-    // mission of the given session uses.
-    let environments = session.mission.targetEnvironments
-
-    // For each target environment in the registry, tear it down.
-    for (let environment of environments) {
-      await environment.tearDown(session)
-    }
-
-    await session.applyMissionEffects('session-teardown')
   }
 
   /**

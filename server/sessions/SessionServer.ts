@@ -13,9 +13,7 @@ import type {
   TargetEnvContext,
   TTargetEnvExposedSession,
 } from '@server/target-environments/context/TargetEnvContext'
-import type { TTargetScriptExposedContext } from '@server/target-environments/context/TargetScriptContext'
 import { TargetScriptContext } from '@server/target-environments/context/TargetScriptContext'
-import { ServerTargetEnvironment } from '@server/target-environments/ServerTargetEnvironment'
 import type { ServerUser } from '@server/users/ServerUser'
 import type {
   TClientEvents,
@@ -43,6 +41,7 @@ import type {
   TSessionBasicJson,
   TSessionConfig,
   TSessionJson,
+  TSessionState,
 } from '@shared/sessions/MissionSession'
 import { MissionSession } from '@shared/sessions/MissionSession'
 import { type TSingleTypeObject } from '@shared/toolbox/objects/ObjectToolbox'
@@ -98,9 +97,17 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   }>
 
   /**
-   * Timeouts created by the {@link TargetEnvContext.sleep} method.
+   * Clean up functions created by the {@link TargetEnvContext.sleep} method.
    */
-  private sleepTimeouts: Set<NodeJS.Timeout> = new Set()
+  private sleepCleanUps: Set<() => void> = new Set()
+
+  /**
+   * A timeline of effect promises that have been
+   * applied in the session. This can be used during
+   * teardown to ensure all effects resolve before
+   * performing teardown operations.
+   */
+  private effectHistory: Promise<void>[] = []
 
   public constructor(
     _id: string,
@@ -321,7 +328,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   /**
    * Handles any actions that are executing on a node.
    */
-  private async handleExecutions(): Promise<void> {
+  private async abortExecutions(): Promise<void> {
     return new Promise<void>(async (resolve) => {
       let allExecutions: Promise<void>[] = []
 
@@ -364,6 +371,92 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     for (let { connection } of members) {
       connection.emit('session-destroyed', { data: { sessionId: this._id } })
     }
+  }
+
+  /**
+   * Sets up the session for use, including all registered
+   * target environments in the mission.
+   * @resolves When session setup is complete.
+   * @rejects If the setup fails.
+   */
+  public async setUp(): Promise<void> {
+    // ! For setup, hooks go first, then effects.
+    // ! The order matters here. The hooks sandwich
+    // ! the effects in terms of order of operations.
+
+    // Get the target environments that the
+    // mission of the given session uses.
+    let environments = this.mission.targetEnvironments
+
+    // For each target environment in the registry, set it up.
+    for (let environment of environments) {
+      await environment.setUp(this)
+    }
+
+    await this.applyMissionEffects('session-setup')
+  }
+
+  /**
+   * Tears down the session, including all registered
+   * target environments in the mission.
+   * @resolves When session teardown is complete.
+   * @rejects If the teardown fails.
+   */
+  public async tearDown(): Promise<void> {
+    // Perform standard cleanup
+    await this.abortExecutions()
+    this.cleanUpSleepCalls() // This must precede effect clean up.
+    await this.cleanUpEffects()
+
+    // ! For teardown, effects go first, then hooks.
+    // ! The order matters here. The hooks sandwich
+    // ! the effects in terms of order of operations.
+
+    // Apply mission effects purposed for session teardown.
+    await this.applyMissionEffects('session-teardown')
+
+    // Get the target environments that the
+    // mission of the given session uses.
+    let environments = this.mission.targetEnvironments
+
+    // For each target environment in the registry, tear it down.
+    for (let environment of environments) {
+      await environment.tearDown(this)
+    }
+  }
+
+  /**
+   * Calls clean up functions stored in {@link sleepCleanUps}
+   * and clears the set.
+   */
+  private cleanUpSleepCalls(): void {
+    this.sleepCleanUps.forEach((cleanUp) => cleanUp())
+    this.sleepCleanUps.clear()
+  }
+
+  /**
+   * Ensures all effect promises settle as a part
+   * of the clean up process. This ensures nothing
+   * resolves after the session is finished cleaning
+   * up.
+   */
+  private async cleanUpEffects(): Promise<void> {
+    await Promise.allSettled(this.effectHistory)
+    this.effectHistory = []
+  }
+
+  /**
+   * Deletes all members from the session.
+   */
+  public clearMembers(): void {
+    // Remove all members from the session by
+    // forcing each member to quit.
+    this.members.forEach(({ connection }) =>
+      connection.login.onMetisSessionQuit(),
+    )
+    this.members.forEach((member) => this.removeListeners(member))
+    // Clear member list.
+    this._members = []
   }
 
   /**
@@ -503,7 +596,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
         // down and destroy it.
         if (this.config.accessibility === 'testing') {
           this._state = 'ending'
-          ServerTargetEnvironment.tearDown(this).then(() => {
+          this.tearDown().then(() => {
             this._state = 'ended'
             this.destroy()
           })
@@ -520,31 +613,6 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
         members: this.members.map((member) => member.toJson()),
       },
     })
-  }
-
-  /**
-   * Calls {@link clearTimeout} on each timeout
-   * stored in {@link sleepTimeouts} and clears the set.
-   */
-  private clearSleepTimeouts(): void {
-    this.sleepTimeouts.forEach((timeout) => {
-      clearTimeout(timeout)
-    })
-    this.sleepTimeouts.clear()
-  }
-
-  /**
-   * Deletes all members from the session.
-   */
-  public clearMembers(): void {
-    // Remove all members from the session by
-    // forcing each member to quit.
-    this.members.forEach(({ connection }) =>
-      connection.login.onMetisSessionQuit(),
-    )
-    this.members.forEach((member) => this.removeListeners(member))
-    // Clear member list.
-    this._members = []
   }
 
   /**
@@ -739,10 +807,10 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * @param member The member requesting to start the session.
    * @param event The event emitted by the member.
    */
-  public onRequestStart = (
+  public onRequestStart = async (
     member: ServerSessionMember,
     event: TClientEvents['request-start-session'],
-  ): void => {
+  ): Promise<void> => {
     // Build request for response data.
     let fulfilledRequest = member.connection.buildResponseReqData(event, {
       fulfilled: true,
@@ -810,11 +878,16 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       data: {},
       request: unfulfilledRequest,
     })
-    ServerTargetEnvironment.setUp(this).then(() => {
-      this._state = 'started'
-      this.emitStartResponses(event, member, 'session-started')
-      this.applyMissionEffects('session-start')
-    })
+
+    // Perform setup.
+    await this.setUp()
+
+    // Mark the session as started.
+    this._state = 'started'
+    this.emitStartResponses(event, member, 'session-started')
+
+    // Perform any effect triggered by session start.
+    this.applyMissionEffects('session-start')
   }
 
   /**
@@ -822,10 +895,10 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * @param member The member requesting to end the session.
    * @param event The event emitted by the member.
    */
-  public onRequestEnd = (
+  public onRequestEnd = async (
     member: ServerSessionMember,
     event: TClientEvents['request-end-session'],
-  ): void => {
+  ): Promise<void> => {
     // Build request for response data.
     let fulfilledRequest = member.connection.buildResponseReqData(event, {
       fulfilled: true,
@@ -862,17 +935,16 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       data: {},
       request: unfulfilledRequest,
     })
-    this.clearSleepTimeouts()
     this.clearMembers()
+    await this.tearDown()
 
-    ServerTargetEnvironment.tearDown(this).then(() => {
-      this._state = 'ended'
-      member.emit('session-ended', {
-        data: { sessionId: this._id },
-        request: fulfilledRequest,
-      })
-      this.destroy()
+    // Mark the session as ended.
+    this._state = 'ended'
+    member.emit('session-ended', {
+      data: { sessionId: this._id },
+      request: fulfilledRequest,
     })
+    this.destroy()
   }
 
   /**
@@ -918,13 +990,9 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       data: {},
       request: unfulfilledRequest,
     })
-    this.clearSleepTimeouts()
 
-    // Handle any action executions that are executing.
-    await this.handleExecutions()
-
-    // Tear down the target environments.
-    await ServerTargetEnvironment.tearDown(this)
+    // Perform teardown.
+    await this.tearDown()
 
     // Assign a new instance ID.
     this._instanceId = StringToolbox.generateRandomId()
@@ -935,13 +1003,15 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     this.initializeMission()
     this.mapActions()
 
-    // Set up the target environments.
-    await ServerTargetEnvironment.setUp(this)
+    // Perform setup.
+    await this.setUp()
 
     // Mark as started and emit the response to
     // all members.
     this._state = 'started'
     this.emitStartResponses(event, member, 'session-reset')
+
+    // Perform any effect triggered by session start.
     this.applyMissionEffects('session-start')
   }
 
@@ -1781,11 +1851,13 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   /**
    * Callback from target-environment context when the
    * {@link TargetEnvContext.sleep} method is called.
-   * The timeout is kept here and cleared when the session ends.
-   * @param timeout The NodeJS timeout created from the sleep call.
+   * A callback is kept here to clean up the sleep calls when
+   * the session is requested to end or reset.
+   * @param cleanUp The clean up function to call when the session
+   * is ending or resetting.
    */
-  public onSleep = (timeout: NodeJS.Timeout): void => {
-    // this.sleepTimeouts.add(timeout)
+  public onSleep = (cleanUp: () => void): void => {
+    this.sleepCleanUps.add(cleanUp)
   }
 
   /**
@@ -1797,7 +1869,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    */
   private async applyEffect<TType extends TEffectType>(
     effect: ServerEffect<TType>,
-    context: TTargetScriptExposedContext<TType>,
+    context: TargetScriptContext<TType>,
     locationMessage: string,
   ): Promise<void> {
     // If the effect doesn't have a target environment,
@@ -1818,7 +1890,9 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // Apply the effect to the target.
     try {
       if (!effect.defective) {
-        await effect.target.script(context)
+        let promise = context.execute(effect.target.script)
+        this.effectHistory.push(promise)
+        await promise
       }
     } catch (error: any) {
       // Give additional information about the error.
@@ -1841,6 +1915,16 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   ): Promise<void> {
     // If the effects are enabled...
     if (this.config.effectsEnabled) {
+      // Map of triggers to valid session states.
+      const triggerToStateMap: Record<
+        TEffectSessionTriggered,
+        TSessionState[]
+      > = {
+        'session-start': ['started'],
+        'session-setup': ['starting', 'resetting'],
+        'session-teardown': ['ending', 'resetting'],
+      }
+
       // Get the effects for the given trigger.
       let effects = this.mission.effects
         .filter((effect) => effect.trigger === trigger)
@@ -1849,10 +1933,13 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       // Iterate through each effect and apply it.
       for (let effect of effects) {
         try {
-          let context = TargetScriptContext.createSessionContext(
-            effect,
-            this,
-          ).expose()
+          // Break if the session is no longer in the
+          // correct state for the trigger.
+          if (!triggerToStateMap[effect.trigger].includes(this.state)) {
+            break
+          }
+
+          let context = TargetScriptContext.createSessionContext(effect, this)
           await this.applyEffect(
             effect,
             context,
@@ -1891,6 +1978,11 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       // Iterate through each effect and apply it.
       for (let effect of effects) {
         try {
+          // These effects should only be applied while the
+          // session is in the 'started' state.
+          if (this.state !== 'started') {
+            break
+          }
           // Create and expose a new context for the target
           // environment.
           let context = TargetScriptContext.createExecutionContext(
@@ -1898,12 +1990,14 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
             this,
             member,
             execution,
-          ).expose()
-          await this.applyEffect(
+          )
+          let promise = this.applyEffect(
             effect,
             context,
             `force - "${effect.sourceForce.name}" - node - "${effect.sourceNode.name}" - action - "${effect.sourceAction.name}" - effect - "${effect.name}".`,
           )
+          this.effectHistory.push(promise)
+          await promise
         } catch (error: any) {
           if (!(error instanceof OutdatedContextError)) {
             targetEnvLogger.error(error)

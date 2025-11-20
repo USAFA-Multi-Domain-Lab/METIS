@@ -186,7 +186,7 @@ export abstract class TargetEnvSandboxing {
     const restoreTsConfig = tsconfigPaths.register(
       TargetEnvSandboxing.tsconfigPathArgs,
     )
-    require('../../integration/target-env/globals')
+    require('../../integration/target-env/global')
     restoreTsConfig()
   }
 
