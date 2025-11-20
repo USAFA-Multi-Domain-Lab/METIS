@@ -20,7 +20,7 @@ import type {
 import { MissionForce } from './forces/MissionForce'
 import {
   MissionComponent,
-  type TMissionComponentDefect,
+  type TMissionComponentIssue,
 } from './MissionComponent'
 import type { TNode } from './nodes/MissionNode'
 import type {
@@ -101,8 +101,8 @@ export abstract class Mission<
   }
 
   // Implemented
-  public get defects(): TMissionComponentDefect[] {
-    return Mission.consolidateDefects(
+  public get issues(): TMissionComponentIssue[] {
+    return Mission.consolidateIssues(
       ...this.prototypes,
       ...this.forces,
       ...this.files,

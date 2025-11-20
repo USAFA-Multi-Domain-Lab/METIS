@@ -3,7 +3,7 @@ import { ClientMission } from '@client/missions/ClientMission'
 import { SessionClient } from '@client/sessions/SessionClient'
 import { compute } from '@client/toolbox'
 import { useMountHandler, useRequireLogin } from '@client/toolbox/hooks'
-import type { TMissionComponentDefect } from '@shared/missions/MissionComponent'
+import type { TMissionComponentIssue } from '@shared/missions/MissionComponent'
 import { useState } from 'react'
 import { DefaultPageLayout } from '.'
 import { ESortByMethod } from '../content/general-layout/ListOld'
@@ -40,7 +40,7 @@ export default function LaunchPage({
     ClientMission.createNew(),
   )
   const [sessionConfig] = useState(SessionClient.DEFAULT_CONFIG)
-  const defectiveComponentButtonEngine = useButtonSvgEngine({
+  const componentWithIssuesButtonEngine = useButtonSvgEngine({
     elements: [
       {
         key: 'warning-transparent',
@@ -104,12 +104,12 @@ export default function LaunchPage({
   /**
    * Renders JSX for the effect list item.
    */
-  const renderObjectListItem = (defect: TMissionComponentDefect) => {
-    const { component, message } = defect
+  const renderObjectListItem = (issue: TMissionComponentIssue) => {
+    const { component, message } = issue
 
     return (
       <div className='Row' key={`object-row-${component._id}`}>
-        <ButtonSvgPanel engine={defectiveComponentButtonEngine} />
+        <ButtonSvgPanel engine={componentWithIssuesButtonEngine} />
         <div className='RowContent'>{message}</div>
       </div>
     )
@@ -126,11 +126,11 @@ export default function LaunchPage({
         if (
           sessionConfig.disabledTargetEnvs.length <
             mission.targetEnvironments.length &&
-          mission.defects.length > 0
+          mission.issues.length > 0
         ) {
           // Create a message for the user.
           let message =
-            `**Warning:** The mission for this session is defective due to unresolved conflicts. If you proceed, the session may not function as expected.\n` +
+            `**Warning:** The mission for this session has issues due to unresolved conflicts. If you proceed, the session may not function as expected.\n` +
             `**What would you like to do?**`
           // Create a list of choices for the user.
           let choices: string[] = []
@@ -147,8 +147,8 @@ export default function LaunchPage({
           // Prompt the user for a choice.
           let { choice } = await prompt(message, choices, {
             list: {
-              items: mission.defects,
-              headingText: 'Unresolved Defects',
+              items: mission.issues,
+              headingText: 'Issues',
               sortByMethods: [ESortByMethod.Name],
               searchableProperties: ['message'],
               renderObjectListItem,

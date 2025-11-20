@@ -12,7 +12,7 @@ import type { TOutcome } from '../actions/ExecutionOutcome'
 import type { TAction, TMissionActionJson } from '../actions/MissionAction'
 import type { TForce, TForceJsonOptions } from '../forces/MissionForce'
 import { type TMission, Mission } from '../Mission'
-import type { TMissionComponentDefect } from '../MissionComponent'
+import type { TMissionComponentIssue } from '../MissionComponent'
 import { MissionComponent } from '../MissionComponent'
 import { type TPrototype, MissionPrototype } from './MissionPrototype'
 
@@ -50,8 +50,8 @@ export abstract class MissionNode<
   }
 
   // Implemented
-  public get defects(): TMissionComponentDefect[] {
-    return MissionNode.consolidateDefects(...this.actions.values())
+  public get issues(): TMissionComponentIssue[] {
+    return MissionNode.consolidateIssues(...this.actions.values())
   }
 
   /**

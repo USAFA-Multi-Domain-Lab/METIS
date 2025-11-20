@@ -372,16 +372,16 @@ export class ServerMission extends Mission<TMetisServerComponents> {
   }
 
   /**
-   * Logs all defects found in a mission to the
+   * Logs all issues found in a mission to the
    * database logger.
    * @param missionJson The JSON of the mission
    * in question.
    */
-  private static logDefects = (missionJson: TMissionSaveJson): void => {
+  private static logIssues = (missionJson: TMissionSaveJson): void => {
     let mission = ServerMission.fromSaveJson(missionJson)
 
-    for (let defect of mission.defects) {
-      databaseLogger.warn(defect.message)
+    for (let issue of mission.issues) {
+      databaseLogger.warn(issue.message)
     }
   }
 
@@ -572,9 +572,9 @@ export class ServerMission extends Mission<TMetisServerComponents> {
     // Check for error.
     if (results.error) return next(results.error)
 
-    // Log any defects found in the mission
+    // Log any issues found in the mission
     // to the database logger.
-    this.logDefects(missionJson)
+    this.logIssues(missionJson)
   }
 }
 

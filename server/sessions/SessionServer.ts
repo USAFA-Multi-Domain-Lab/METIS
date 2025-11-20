@@ -1768,7 +1768,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
     // Apply the effect to the target.
     try {
-      if (!effect.defective) {
+      if (!effect.hasIssues) {
         await effect.target.script(context)
       }
     } catch (error: any) {
@@ -1850,7 +1850,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
     // Apply the effect to the target.
     try {
-      if (!effect.defective) {
+      if (!effect.hasIssues) {
         await effect.target.script(context)
       }
     } catch (error: any) {

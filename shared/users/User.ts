@@ -291,7 +291,7 @@ export abstract class User<
       expressPermissionIds: [],
       preferences: {
         missionMap: {
-          panOnDefectSelection: true,
+          panOnIssueSelection: true,
         },
       },
       createdAt: null,
@@ -608,10 +608,10 @@ export interface TUserPreferencesJson {
      */
     _id?: string
     /**
-     * Whether to pan to the relevant node when a defect is
+     * Whether to pan to the relevant node when an issue is
      * selected in the mission.
      */
-    panOnDefectSelection: boolean
+    panOnIssueSelection: boolean
   }
 }
 
