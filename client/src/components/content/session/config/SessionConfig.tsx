@@ -22,6 +22,7 @@ export default function SessionConfig({
   sessionConfig,
   mission,
   saveButtonText = 'Save',
+  disabled = false,
   onChange = () => {},
   onSave,
   onCancel,
@@ -118,8 +119,16 @@ export default function SessionConfig({
         </PanelView>
       </Panel>
       <div className='Buttons'>
-        <ButtonText text={saveButtonText} onClick={onSave} />
-        <ButtonText text={'Cancel'} onClick={onCancel} />
+        <ButtonText
+          text={saveButtonText}
+          onClick={onSave}
+          disabled={disabled ? 'full' : 'none'}
+        />
+        <ButtonText
+          text={'Cancel'}
+          onClick={onCancel}
+          disabled={disabled ? 'full' : 'none'}
+        />
       </div>
     </div>
   )
@@ -144,6 +153,11 @@ export type TSessionConfig_P = {
    * @default 'Save'
    */
   saveButtonText?: string
+  /**
+   * Whether the save/cancel buttons are disabled.
+   * @default false
+   */
+  disabled?: boolean
   /**
    * Callback for when the session config is changed.
    * @default () => {}

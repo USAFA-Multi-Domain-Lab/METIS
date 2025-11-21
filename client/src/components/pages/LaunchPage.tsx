@@ -40,6 +40,7 @@ export default function LaunchPage({
     ClientMission.createNew(),
   )
   const [sessionConfig] = useState(SessionClient.DEFAULT_CONFIG)
+  const [isLaunching, setIsLaunching] = useState<boolean>(false)
   const componentWithIssuesButtonEngine = useButtonSvgEngine({
     elements: [
       {
@@ -120,7 +121,15 @@ export default function LaunchPage({
    * launches the session.
    */
   const launch = async () => {
+    // Prevent multiple simultaneous launch attempts
+    if (isLaunching) {
+      console.warn('Launch already in progress, ignoring duplicate request.')
+      return
+    }
+
     if (server !== null) {
+      // Set launching state to prevent duplicate launches
+      setIsLaunching(true)
       try {
         // If there are invalid objects and effects are enabled for any target env...
         if (
@@ -170,6 +179,11 @@ export default function LaunchPage({
             navigateTo('HomePage', {})
             // Notify user of success.
             notify('Successfully launched session.')
+            // Reset launching state
+            setIsLaunching(false)
+          } else {
+            // User cancelled or chose to edit - reset launching state
+            setIsLaunching(false)
           }
         } else {
           // Notify user of session launch.
@@ -180,14 +194,20 @@ export default function LaunchPage({
           navigateTo('HomePage', {})
           // Notify user of success.
           notify('Successfully launched session.')
+          // Reset launching state
+          setIsLaunching(false)
         }
       } catch (error) {
+        // Reset launching state on error
+        setIsLaunching(false)
         handleError({
           message: 'Failed to launch session. Contact system administrator.',
           notifyMethod: 'bubble',
         })
       }
     } else {
+      // Reset launching state when no server
+      setIsLaunching(false)
       handleError({
         message: 'No server connection. Contact system administrator',
         notifyMethod: 'bubble',
@@ -221,6 +241,7 @@ export default function LaunchPage({
             sessionConfig={sessionConfig}
             mission={mission}
             saveButtonText={'Launch'}
+            disabled={isLaunching}
             onSave={launch}
             onCancel={cancel}
           />

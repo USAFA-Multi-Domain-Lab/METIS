@@ -26,6 +26,9 @@ export function useMissionItemButtonCallbacks(
     handleError,
   } = globalContext.actions
 
+  // Track if a play-test launch is in progress
+  let isLaunchingPlayTest = false
+
   return {
     onOpenRequest: (mission): void => {
       if (
@@ -36,11 +39,22 @@ export function useMissionItemButtonCallbacks(
       }
     },
     onPlayTestRequest: async (mission, returnPage) => {
+      // Prevent multiple simultaneous play-test launches
+      if (isLaunchingPlayTest) {
+        console.warn(
+          'Play-test launch already in progress, ignoring duplicate request.',
+        )
+        return
+      }
+
       try {
         // If the server connection is not available, abort.
         if (!server) {
           throw new Error('Server connection is not available.')
         }
+
+        // Set launching flag
+        isLaunchingPlayTest = true
 
         // Launch the session with testing accessibility
         beginLoading('Launching play-test session...')
@@ -55,7 +69,12 @@ export function useMissionItemButtonCallbacks(
         // Navigate to session config page to let user configure before starting
         navigateTo('SessionConfigPage', { session })
         finishLoading()
+
+        // Reset launching flag
+        isLaunchingPlayTest = false
       } catch (error) {
+        // Reset launching flag on error
+        isLaunchingPlayTest = false
         console.error('Failed to launch play-test session.')
         console.error(error)
         handleError({
