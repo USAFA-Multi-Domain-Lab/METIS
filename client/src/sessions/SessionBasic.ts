@@ -163,7 +163,8 @@ export class SessionBasic
       config: {
         accessibility: 'id-required',
         infiniteResources: false,
-        effectsEnabled: true,
+        disabledTargetEnvs: [],
+        targetEnvConfigs: {},
       },
     })
   }

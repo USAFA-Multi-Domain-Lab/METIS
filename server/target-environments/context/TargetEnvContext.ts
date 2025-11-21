@@ -5,14 +5,18 @@ import type { Effect } from '@shared/missions/effects/Effect'
 import type { MissionFile } from '@shared/missions/files/MissionFile'
 import type { MissionForce } from '@shared/missions/forces/MissionForce'
 import type { MissionNode } from '@shared/missions/nodes/MissionNode'
-import type { TSessionState } from '@shared/sessions/MissionSession'
-import { MissionSession } from '@shared/sessions/MissionSession'
+import type {
+  MissionSession,
+  TSessionState,
+} from '@shared/sessions/MissionSession'
 import type { SessionMember } from '@shared/sessions/members/SessionMember'
 import type { TargetEnvironment } from '@shared/target-environments/TargetEnvironment'
 import type { Target } from '@shared/target-environments/targets/Target'
+import type { TTargetEnvConfig } from '@shared/target-environments/types'
 import type { TEffectType } from '../../../shared/missions/effects/Effect'
 import type { SessionServer } from '../../sessions/SessionServer'
 import { TargetEnvStore } from '../../sessions/TargetEnvStore'
+import type { ServerTargetEnvironment } from '../ServerTargetEnvironment'
 import { OutdatedContextError } from './OutdatedContextError'
 
 export abstract class TargetEnvContext<
@@ -81,7 +85,14 @@ export abstract class TargetEnvContext<
   /**
    * The ID of the target environment for the current context.
    */
-  protected abstract get environmentId(): string
+  protected get environmentId(): string {
+    return this.environment._id
+  }
+
+  /**
+   * The target environment for the current context.
+   */
+  protected readonly environment: ServerTargetEnvironment
 
   /**
    * A store that is unique to the session and target environment.
@@ -106,9 +117,13 @@ export abstract class TargetEnvContext<
   /**
    * @param session The session for the current context.
    */
-  protected constructor(session: SessionServer) {
+  protected constructor(
+    session: SessionServer,
+    enviroment: ServerTargetEnvironment,
+  ) {
     this.session = session
     this._instanceId = session.instanceId
+    this.environment = enviroment
   }
 
   /**
@@ -118,9 +133,17 @@ export abstract class TargetEnvContext<
    * @returns The common exposed context.
    */
   protected exposeCommon(): TTargetEnvExposedContext {
+    const self = this
     return {
-      session: this.session.toTargetEnvContext(),
-      mission: this.mission.toTargetEnvContext(),
+      get session() {
+        return self.session.toTargetEnvContext(self.environment)
+      },
+      get config() {
+        return self.session.configToTargetEnvContext(self.environment)
+      },
+      get mission() {
+        return self.mission.toTargetEnvContext()
+      },
       localStore: this.localStore,
       globalStore: this.globalStore,
       sleep: this.ifContextIsCurrent(this.sleep.bind(this)),
@@ -247,6 +270,11 @@ export type TTargetEnvExposedContext = {
    */
   readonly session: TTargetEnvExposedSession
   /**
+   * The configuration that's been selected for this context's target
+   * environment that's used within the current session.
+   */
+  readonly config: TTargetEnvExposedSessionConfig
+  /**
    * The mission associated with the session.
    */
   readonly mission: TTargetEnvExposedMission
@@ -278,8 +306,12 @@ export type TTargetEnvExposedContext = {
 export type TTargetEnvExposedSession = Readonly<
   TCreateJsonType<
     SessionServer,
-    '_id' | 'name' | 'config' | 'launchedAt' | 'state',
+    '_id' | 'name' | 'launchedAt' | 'state',
     {
+      /**
+       * @see {@link TTargetEnvExposedSessionConfig}
+       */
+      config: TTargetEnvExposedSessionConfig
       /**
        * @see {@link MissionSession.members}
        */
@@ -299,6 +331,24 @@ export type TTargetEnvExposedSession = Readonly<
     }
   >
 >
+
+/**
+ * Data for a session config exposed to target-environment code.
+ */
+export interface TTargetEnvExposedSessionConfig
+  extends Readonly<
+    Pick<
+      MissionSession['config'],
+      'name' | 'accessibility' | 'infiniteResources'
+    >
+  > {
+  /**
+   * The configuration for this target environment.
+   * @note If null, no configuration has been selected
+   * for this target environment.
+   */
+  targetEnvConfig: TTargetEnvConfig | null
+}
 
 /**
  * Data for a mission exposed to target-environment code.

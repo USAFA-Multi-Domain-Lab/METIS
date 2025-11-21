@@ -41,7 +41,7 @@ import type {
 } from '@shared/missions/effects/Effect'
 import type {
   MissionComponent,
-  TMissionComponentDefect,
+  TMissionComponentIssue,
 } from '@shared/missions/MissionComponent'
 import type { TNonEmptyArray } from '@shared/toolbox/arrays/ArrayToolbox'
 import { ClassList } from '@shared/toolbox/html/ClassList'
@@ -57,9 +57,16 @@ import MissionEntry from './entries/implementations/MissionEntry'
 import MissionFileEntry from './entries/implementations/MissionFileEntry'
 import NodeEntry from './entries/implementations/NodeEntry'
 import PrototypeEntry from './entries/implementations/PrototypeEntry'
+import Issues from './issues/Issues'
 import MissionPageMap from './map/MissionPageMap'
 import './MissionPage.scss'
 import NodeStructuring from './structures/NodeStructuring'
+
+/**
+ * Debounce delay for issue checking to avoid
+ * excessive recomputation on rapid changes.
+ */
+const ISSUE_CHECK_DEBOUNCE_MS = 500
 
 /**
  * The description for the structure view in the
@@ -96,8 +103,8 @@ export default function MissionPage(
     selection: useState<MissionComponent<TMetisClientComponents>>(
       missionState[0].selection,
     ),
-    defects: useState<TMissionComponentDefect[]>([]),
-    checkForDefects: useState<boolean>(true),
+    issues: useState<TMissionComponentIssue[]>([]),
+    checkForIssues: useState<boolean>(true),
     globalFiles: useState<ClientFileReference[]>([]),
     localFiles: useState<ClientMissionFile[]>([]),
     effectModalActive: useState<boolean>(false),
@@ -115,9 +122,10 @@ export default function MissionPage(
   const [selection, setSelection] = state.selection
   const [, setEffectModalActive] = state.effectModalActive
   const [, setEffectModalArgs] = state.effectModalArgs
-  const [, setDefects] = state.defects
-  const [, setCheckForDefects] = state.checkForDefects
+  const [issues, setIssues] = state.issues
+  const [checkForIssues, setCheckForIssues] = state.checkForIssues
   const root = useRef<HTMLDivElement>(null)
+  const issueCheckTimeout = useRef<number | undefined>(undefined)
   const navButtonEngine = useButtonSvgEngine({
     elements: [
       {
@@ -289,6 +297,11 @@ export default function MissionPage(
     isAuthorized('missions_write') ? 'edit' : 'preview',
   )
 
+  /**
+   * Title for the inspector tab in the side panel.
+   */
+  const inspectorTabTitle = compute<string>(() => 'Inspector')
+
   /* -- EFFECTS -- */
 
   // componentDidMount
@@ -321,7 +334,8 @@ export default function MissionPage(
         setMission(mission)
         setLocalFiles(mission.files)
         setSelection(mission)
-        setDefects(mission.defects)
+        setIssues(mission.issues)
+        setCheckForIssues(false)
 
         beginLoading('Loading global files...')
 
@@ -358,6 +372,31 @@ export default function MissionPage(
   useEffect(() => {
     setEffectModalActive(false)
   }, [selection])
+
+  // Debounced issue checking to avoid excessive recomputation
+  // on rapid changes (e.g., resolving one issue in 800 issues)
+  useEffect(() => {
+    if (checkForIssues) {
+      // Clear any pending issue check
+      if (issueCheckTimeout.current) {
+        clearTimeout(issueCheckTimeout.current)
+      }
+
+      // Schedule a new issue check after debounce delay
+      issueCheckTimeout.current = window.setTimeout(() => {
+        setIssues(mission.issues)
+        setCheckForIssues(false)
+        issueCheckTimeout.current = undefined
+      }, ISSUE_CHECK_DEBOUNCE_MS)
+    }
+
+    // Cleanup timeout on unmount or when dependencies change
+    return () => {
+      if (issueCheckTimeout.current) {
+        clearTimeout(issueCheckTimeout.current)
+      }
+    }
+  }, [checkForIssues, mission])
 
   // Guards against refreshing or navigating away
   // with unsaved changes.
@@ -544,9 +583,9 @@ export default function MissionPage(
     // ? Is this still necessary?
     ...components: TNonEmptyArray<MissionComponent<TMetisClientComponents>>
   ): void => {
-    // Trigger a check for defects, now
+    // Trigger a check for issues, now
     // that a component has changed.
-    setCheckForDefects(true)
+    setCheckForIssues(true)
     setAreUnsavedChanges(true)
     forceUpdate()
   }
@@ -652,9 +691,26 @@ export default function MissionPage(
               </PanelView>
             </Panel>
             <Panel>
-              <PanelView title='Inspector'>{renderInspector()}</PanelView>
+              <PanelView title={inspectorTabTitle}>
+                {renderInspector()}
+              </PanelView>
               <PanelView title='Structure' description={STRUCTURE_DESCRIPTION}>
                 <NodeStructuring mission={mission} onChange={onChange} />
+              </PanelView>
+              <PanelView
+                title=''
+                icon='warning-transparent'
+                disabled={!issues.length}
+                highlighted={!!issues.length}
+                description={
+                  issues.length > 0
+                    ? `${issues.length} unresolved issue${
+                        issues.length === 1 ? '' : 's'
+                      } detected. Click to review.`
+                    : 'No issues detected in this mission.'
+                }
+              >
+                <Issues switchToPanel={inspectorTabTitle} />
               </PanelView>
             </Panel>
           </PanelLayout>
@@ -690,15 +746,15 @@ export type TMissionPage_S = {
    */
   selection: TReactState<MissionComponent<TMetisClientComponents>>
   /**
-   * The defects within mission components that must
+   * The issues within mission components that must
    * be addressed for the mission to function correctly.
    */
-  defects: TReactState<TMissionComponentDefect[]>
+  issues: TReactState<TMissionComponentIssue[]>
   /**
-   * Triggers a recomputation of the defective
-   * components, updating the state with the result.
+   * Triggers a recomputation of the components that have
+   * issues, updating the state with the result.
    */
-  checkForDefects: TReactState<boolean>
+  checkForIssues: TReactState<boolean>
   /**
    * The current list of files available in the store.
    */

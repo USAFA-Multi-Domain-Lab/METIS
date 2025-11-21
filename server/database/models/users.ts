@@ -232,7 +232,7 @@ const userSchema = new UserSchema(
       type: {
         missionMap: {
           type: {
-            panOnDefectSelection: {
+            panOnIssueSelection: {
               type: Boolean,
               required: true,
               default: true,

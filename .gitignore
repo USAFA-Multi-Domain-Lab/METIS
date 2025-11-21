@@ -19,10 +19,10 @@ environment.json
 environment-test.json
 /integration/target-env/**
 !/integration/target-env/.gitkeep
-!/integration/target-env/globals.ts
+!/integration/target-env/global.ts
 !/integration/target-env/tsconfig.json
-!/integration/target-env/METIS/
-!/integration/target-env/METIS/**
+!/integration/target-env/metis/
+!/integration/target-env/metis/**
 
 # Deployment
 /deployment/docker/.out

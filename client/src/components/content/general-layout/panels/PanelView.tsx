@@ -51,8 +51,24 @@ export interface TPanelView_P {
    */
   title: string
   /**
+   * An optional icon to display in the tab.
+   * Can be used alone or with the title.
+   */
+  icon?: TMetisIcon
+  /**
    * A description of the view to be used as a tooltip.
    * @note By default, no tooltip is shown.
    */
   description?: string
+  /**
+   * Whether the tab is disabled and cannot be selected.
+   * @default false
+   */
+  disabled?: boolean
+  /**
+   * Whether the tab should be visually highlighted
+   * to grab attention.
+   * @default false
+   */
+  highlighted?: boolean
 }

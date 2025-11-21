@@ -88,7 +88,6 @@ export abstract class Target<
    * The target IDs for the METIS target environment.
    */
   public static METIS_TARGET_IDS = {
-    AWARD: 'award',
     BLOCK_STATUS: 'block-status',
     DELAY: 'delay',
     FILE_ACCESS: 'file-access',
@@ -96,6 +95,7 @@ export abstract class Target<
     OUTPUT: 'output',
     PROCESS_TIME_MOD: 'process-time-mod',
     RESOURCE_COST_MOD: 'resource-cost-mod',
+    RESOURCE_POOL: 'resource-pool',
     SUCCESS_CHANCE_MOD: 'success-chance-mod',
   }
 

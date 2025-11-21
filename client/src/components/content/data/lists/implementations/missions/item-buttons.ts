@@ -26,6 +26,9 @@ export function useMissionItemButtonCallbacks(
     handleError,
   } = globalContext.actions
 
+  // Track if a play-test launch is in progress
+  let isLaunchingPlayTest = false
+
   return {
     onOpenRequest: (mission): void => {
       if (
@@ -36,34 +39,46 @@ export function useMissionItemButtonCallbacks(
       }
     },
     onPlayTestRequest: async (mission, returnPage) => {
+      // Prevent multiple simultaneous play-test launches
+      if (isLaunchingPlayTest) {
+        console.warn(
+          'Play-test launch already in progress, ignoring duplicate request.',
+        )
+        return
+      }
+
       try {
         // If the server connection is not available, abort.
         if (!server) {
           throw new Error('Server connection is not available.')
         }
 
-        // Launch, join, and start the session.
-        let sessionId = await SessionClient.$launch(mission._id, {
+        // Set launching flag
+        isLaunchingPlayTest = true
+
+        // Launch the session with testing accessibility
+        beginLoading('Launching play-test session...')
+        const sessionId = await SessionClient.$launch(mission._id, {
           accessibility: 'testing',
         })
-        let session = await server.$joinSession(sessionId)
-        // If the session is not found, abort.
-        if (!session) throw new Error('Failed to join test session.')
-        await session.$start({
-          onInit: () => beginLoading('Setting up play-test...'),
-        })
 
-        // Navigate to the session page.
-        navigateTo(
-          'SessionPage',
-          { session, returnPage },
-          { bypassMiddleware: true },
-        )
+        // Join the session
+        const session = await server.$joinSession(sessionId)
+        if (!session) throw new Error('Failed to join test session.')
+
+        // Navigate to session config page to let user configure before starting
+        navigateTo('SessionConfigPage', { session })
+        finishLoading()
+
+        // Reset launching flag
+        isLaunchingPlayTest = false
       } catch (error) {
-        console.error('Failed to play-test mission.')
+        // Reset launching flag on error
+        isLaunchingPlayTest = false
+        console.error('Failed to launch play-test session.')
         console.error(error)
         handleError({
-          message: 'Failed to play-test mission.',
+          message: 'Failed to launch play-test session.',
           notifyMethod: 'bubble',
         })
       }

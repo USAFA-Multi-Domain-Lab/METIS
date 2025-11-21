@@ -229,7 +229,13 @@ export default function (props: {}): TReactElement | null {
             switch (session.state) {
               case 'unstarted':
               case 'starting':
-                navigateTo('LobbyPage', { session })
+                // For testing sessions, go to SessionConfigPage
+                // For normal sessions, go to LobbyPage
+                if (session.config.accessibility === 'testing') {
+                  navigateTo('SessionConfigPage', { session })
+                } else {
+                  navigateTo('LobbyPage', { session })
+                }
                 break
               case 'started':
               case 'resetting':

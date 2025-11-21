@@ -1,3 +1,5 @@
+import type zod from 'zod'
+import type { TargetEnvConfig } from './TargetEnvConfig'
 import type { TargetDependency } from './targets/TargetDependency'
 
 /**
@@ -239,3 +241,8 @@ export type TBaseArgJson = {
    */
   tooltipDescription?: string
 }
+
+/**
+ * Represents the configuration for a target environment.
+ */
+export type TTargetEnvConfig = zod.infer<typeof TargetEnvConfig.schema>

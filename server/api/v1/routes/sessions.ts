@@ -1,4 +1,5 @@
 import type { MetisServer } from '@server/MetisServer'
+import { validateTargetEnvConfigs } from '@server/middleware/sessions'
 import { SessionServer } from '@server/sessions/SessionServer'
 import type { TSessionConfig } from '@shared/sessions/MissionSession'
 import type { Router } from 'express'
@@ -31,11 +32,13 @@ const routerMap = (router: Router, server: MetisServer, done: () => void) => {
             TSessionConfig['accessibility']
           >(SessionServer.ACCESSIBILITY_OPTIONS),
           infiniteResources: RequestBodyFilters.BOOLEAN,
-          effectsEnabled: RequestBodyFilters.BOOLEAN,
+          disabledTargetEnvs: RequestBodyFilters.ARRAY,
           name: RequestBodyFilters.STRING,
+          targetEnvConfigs: RequestBodyFilters.OBJECT,
         },
       },
     ),
+    validateTargetEnvConfigs,
     launchSession,
   )
 

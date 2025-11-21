@@ -523,19 +523,12 @@ export class MetisServer {
   /**
    * The current build number for the database.
    */
-  public static readonly SCHEMA_BUILD_NUMBER: number = 52
+  public static readonly SCHEMA_BUILD_NUMBER: number = 53
 
   /**
    * The root directory for the METIS server.
    */
   public static readonly APP_DIR: string = __dirname
-
-  /**
-   * The path to the environment file.
-   */
-  public static get ENVIRONMENT_FILE_PATH(): string {
-    return MetisServer.resolvePath('../environment.json')
-  }
 
   /**
    * The name of the cookie used to store the web session ID.

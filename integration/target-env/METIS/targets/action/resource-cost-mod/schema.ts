@@ -4,6 +4,7 @@
  * all actions within a node.
  */
 const ResourceCostMod = new TargetSchema({
+  _id: 'resource-cost-mod',
   name: 'Resource Cost Modifier',
   description: '',
   script: async (context) => {

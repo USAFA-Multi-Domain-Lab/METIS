@@ -11,6 +11,7 @@ const groupingId = 'processTimeModifier'
  * all actions within a node.
  */
 const ProcessTimeMod = new TargetSchema({
+  _id: 'process-time-mod',
   name: 'Process Time Modifier',
   description: '',
   script: async (context) => {

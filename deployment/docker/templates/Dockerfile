@@ -1,4 +1,4 @@
-FROM node:bookworm
+FROM node:trixie-slim
 
 # Install git, ssh client, and mongodb tools.
 RUN apt-get update && \
@@ -37,4 +37,4 @@ RUN printf "\nMONGO_PORT=27017" >> ./config/docker.env
 RUN npm install && \
     npm run build
 
-CMD ["npm", "run", "prod"]
+CMD ["npm", "run", "start"]

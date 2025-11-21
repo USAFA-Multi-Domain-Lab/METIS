@@ -2,7 +2,7 @@ import { StringToolbox } from '../../toolbox/strings/StringToolbox'
 import type { TMission } from '../Mission'
 import {
   MissionComponent,
-  type TMissionComponentDefect,
+  type TMissionComponentIssue,
 } from '../MissionComponent'
 
 /**
@@ -35,7 +35,7 @@ export abstract class MissionPrototype<
   }
 
   // Implemented
-  public get defects(): TMissionComponentDefect[] {
+  public get issues(): TMissionComponentIssue[] {
     return []
   }
 

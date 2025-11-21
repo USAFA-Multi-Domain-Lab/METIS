@@ -489,6 +489,18 @@ export class ClientUser
   public static $resetPassword(user: ClientUser): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
       try {
+        if (!user.hasValidPassword1) {
+          throw new Error("The user's first password entry is not valid.")
+        }
+
+        if (!user.hasValidPassword2) {
+          throw new Error("The user's second password entry is not valid.")
+        }
+
+        if (!user.passwordsMatch) {
+          throw new Error("The user's passwords do not match.")
+        }
+
         await axios.put(`${ClientUser.API_ENDPOINT}/reset-password`, {
           password: user.password1,
         })

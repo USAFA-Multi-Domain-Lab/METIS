@@ -1,4 +1,3 @@
-import { BooleanToolbox } from '@metis/toolbox/booleans/BooleanToolbox'
 import type { TAnyObject } from '@metis/toolbox/objects/ObjectToolbox'
 import axios, { type AxiosRequestConfig, type AxiosResponse } from 'axios'
 import https from 'https'
@@ -276,25 +275,12 @@ export class RestApi extends Api {
    * @param envConfig The environment configuration to use.
    * @returns A RESTful API instance.
    * @throws If the configuration is invalid.
-   * @example
-   * ```typescript
-   * import RestApi from './library/api/rest-api'
-   * import { loadConfig } from './library/config'
-   * const api = RestApi.fromConfig(loadConfig())
-   * ```
    */
   public static fromConfig(
-    envConfig: Record<string, string | undefined>,
+    envConfig: Record<string, unknown | undefined>,
   ): RestApi {
     try {
-      let rejectUnauthorized: boolean | undefined = undefined
-      if (envConfig.rejectUnauthorized !== undefined) {
-        rejectUnauthorized = BooleanToolbox.parse(envConfig.rejectUnauthorized)
-      }
-      const apiOptions: TApiOptions = restApiOptionsSchema.parse({
-        ...envConfig,
-        rejectUnauthorized,
-      })
+      const apiOptions: TApiOptions = restApiOptionsSchema.parse(envConfig)
       return new RestApi(apiOptions)
     } catch (error: any) {
       throw new Error(`Invalid REST API configuration: ${error.message}`)

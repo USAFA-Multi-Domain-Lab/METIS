@@ -8,7 +8,7 @@ import type { TForce } from '../forces/MissionForce'
 import { Mission, type TMission } from '../Mission'
 import {
   MissionComponent,
-  type TMissionComponentDefect,
+  type TMissionComponentIssue,
 } from '../MissionComponent'
 import type { TNode, TNodeJsonOptions } from '../nodes/MissionNode'
 
@@ -71,8 +71,8 @@ export abstract class MissionAction<
   }
 
   // Implemented
-  public get defects(): TMissionComponentDefect[] {
-    return MissionComponent.consolidateDefects(...this.effects)
+  public get issues(): TMissionComponentIssue[] {
+    return MissionComponent.consolidateIssues(...this.effects)
   }
 
   /**

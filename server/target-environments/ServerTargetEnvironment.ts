@@ -2,6 +2,7 @@ import { TargetEnvSchema } from '@server/target-environments/schema/TargetEnvSch
 import { ServerFileToolbox } from '@server/toolbox/files/ServerFileToolbox'
 import { TargetEnvironment } from '@shared/target-environments/TargetEnvironment'
 import { TargetEnvRegistry } from '@shared/target-environments/TargetEnvRegistry'
+import type { TTargetEnvConfig } from '@shared/target-environments/types'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import fs from 'fs'
 import path from 'path'
@@ -33,11 +34,21 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
   public readonly rootDir: string
 
   /**
+   * Override the configs getter to dynamically load from disk.
+   * This enables hot-reload: any changes to configs.json are
+   * immediately reflected without requiring a server restart.
+   */
+  public override get configs(): TTargetEnvConfig[] {
+    return TargetEnvSandboxing.loadConfigs(this.rootDir)
+  }
+
+  /**
    * @param id @see {@link ServerTargetEnvironment._id}
    * @param name @see {@link ServerTargetEnvironment.name}
    * @param description @see {@link ServerTargetEnvironment.description}
    * @param version @see {@link ServerTargetEnvironment.version}
    * @param targets @see {@link ServerTargetEnvironment.targets}
+   * @param rootDir The root directory path for this target environment.
    * @param hooks Hooks to register with the target environment which will
    * be invoked at various points when used in a session.
    * @param rootDir The root directory for the target environment on
@@ -66,6 +77,17 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
    */
   private loadTarget(schemaFilePath: string) {
     let targetSchema = TargetEnvSandboxing.loadTargetSchema(schemaFilePath)
+
+    // Ensure ID of the target being loaded isn't
+    // already in use within this target environment.
+    for (let { _id } of this.targets) {
+      if (targetSchema._id === _id) {
+        throw new Error(
+          `Duplicate target ID "${targetSchema._id}" found in target environment "${this.name}". Each target must have a unique ID.`,
+        )
+      }
+    }
+
     // Add the target JSON.
     this.targets.push(
       ServerTarget.fromSchema(targetSchema, this, schemaFilePath),
@@ -162,7 +184,7 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
   /**
    * The folder name for the METIS target environment.
    */
-  private static readonly METIS_TARGET_ENV_FOLDER_NAME: string = 'METIS'
+  private static readonly METIS_TARGET_ENV_FOLDER_NAME: string = 'metis'
 
   /**
    * The ID for the METIS target environment.
@@ -212,8 +234,8 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
   }
 
   /**
-   * Scans the given directory for targets, adding
-   * them to the given target environment.
+   * Scans the given directory for targets, adding them
+   * to the given target environment.
    * @param directory The directory to search.
    * @param environment The target environment to add the
    * targets to.
@@ -240,9 +262,8 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
       try {
         environment.loadTarget(schemaFilePath)
       } catch (error: any) {
-        console.error(error.message)
-        console.warn(
-          `Invalid schema found at "${schemaFilePath}". Skipping target...`,
+        console.error(
+          `Failed to load target schema at "${schemaFilePath}":\n ${error.message}.\n Skipping target...`,
         )
       }
     }
@@ -308,14 +329,21 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
 
       // If no targets were found, log a warning message.
       if (!environment.targets.length) {
-        console.warn(`No targets found in "${environment.name}".`)
+        console.warn(`No valid targets found in "${environment.name}".`)
       }
 
       // Log the success of the integration.
       console.log(`Successfully integrated "${environment.name}" with METIS.`)
     } catch (error: any) {
-      console.error(error.message)
-      console.warn(invalidSchemaMessage)
+      // Rethrow permission errors to crash the server
+      if (error.name === 'ConfigPermissionError') {
+        throw error
+      }
+
+      // Log other errors and skip this target environment
+      console.error(
+        `Failed to load target environment at "${schemaFilePath}": ${error.message}. Skipping target environment...`,
+      )
       return
     }
   }

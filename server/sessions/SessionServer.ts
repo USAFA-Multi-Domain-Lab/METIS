@@ -12,8 +12,10 @@ import { OutdatedContextError } from '@server/target-environments/context/Outdat
 import type {
   TargetEnvContext,
   TTargetEnvExposedSession,
+  TTargetEnvExposedSessionConfig,
 } from '@server/target-environments/context/TargetEnvContext'
 import { TargetScriptContext } from '@server/target-environments/context/TargetScriptContext'
+import type { ServerTargetEnvironment } from '@server/target-environments/ServerTargetEnvironment'
 import type { ServerUser } from '@server/users/ServerUser'
 import type {
   TClientEvents,
@@ -162,16 +164,18 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   }
 
   /**
-   * @returns The properties from the mission that are
+   * @returns The properties from the session that are
    * safe to expose in target-environment code.
    */
-  public toTargetEnvContext(): TTargetEnvExposedSession {
+  public toTargetEnvContext(
+    environment: ServerTargetEnvironment,
+  ): TTargetEnvExposedSession {
     const self = this
     return {
       _id: self._id,
       name: self.name,
       state: self.state,
-      config: structuredClone(self.config),
+      config: self.configToTargetEnvContext(environment),
       launchedAt: structuredClone(self.launchedAt),
       get members() {
         return self.members.map((member) => member.toTargetEnvContext())
@@ -184,6 +188,29 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       },
       get managers() {
         return self.managers.map((member) => member.toTargetEnvContext())
+      },
+    }
+  }
+
+  /**
+   * @param environment The config will be populated in an
+   * environment-specific manner, so this is needed.
+   * @returns The properties from the session config
+   * that are safe to expose in target-environment code.
+   */
+  public configToTargetEnvContext(
+    environment: ServerTargetEnvironment,
+  ): TTargetEnvExposedSessionConfig {
+    const self = this
+    return {
+      name: this.config.name,
+      accessibility: this.config.accessibility,
+      infiniteResources: this.config.infiniteResources,
+      get targetEnvConfig() {
+        let configId: string | undefined =
+          self.config.targetEnvConfigs[environment._id]
+        if (!configId) return null
+        return environment.configs.find(({ _id }) => _id === configId) ?? null
       },
     }
   }
@@ -1889,7 +1916,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
     // Apply the effect to the target.
     try {
-      if (!effect.defective) {
+      if (!effect.hasIssues) {
         let promise = context.execute(effect.target.script)
         this.effectHistory.push(promise)
         await promise
@@ -1913,42 +1940,44 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   public async applyMissionEffects(
     trigger: TEffectSessionTriggered,
   ): Promise<void> {
-    // If the effects are enabled...
-    if (this.config.effectsEnabled) {
-      // Map of triggers to valid session states.
-      const triggerToStateMap: Record<
-        TEffectSessionTriggered,
-        TSessionState[]
-      > = {
+    // Map of triggers to valid session states.
+    const triggerToStateMap: Record<TEffectSessionTriggered, TSessionState[]> =
+      {
         'session-start': ['started'],
         'session-setup': ['starting', 'resetting'],
         'session-teardown': ['ending', 'resetting'],
       }
 
-      // Get the effects for the given trigger.
-      let effects = this.mission.effects
-        .filter((effect) => effect.trigger === trigger)
-        .sort((a, b) => a.order - b.order)
+    // Get the effects for the given trigger.
+    let effects = this.mission.effects
+      .filter((effect) => effect.trigger === trigger)
+      .sort((a, b) => a.order - b.order)
 
-      // Iterate through each effect and apply it.
-      for (let effect of effects) {
-        try {
-          // Break if the session is no longer in the
-          // correct state for the trigger.
-          if (!triggerToStateMap[effect.trigger].includes(this.state)) {
-            break
-          }
+    // Iterate through each effect and apply it.
+    for (let effect of effects) {
+      try {
+        // Break if the session is no longer in the
+        // correct state for the trigger.
+        if (!triggerToStateMap[effect.trigger].includes(this.state)) {
+          break
+        }
+        // Skip if the target environment is disabled
+        if (
+          effect.environment &&
+          this.config.disabledTargetEnvs.includes(effect.environmentId)
+        ) {
+          continue
+        }
 
-          let context = TargetScriptContext.createSessionContext(effect, this)
-          await this.applyEffect(
-            effect,
-            context,
-            `mission - "${this.mission.name}" - effect - "${effect.name}".`,
-          )
-        } catch (error: any) {
-          if (!(error instanceof OutdatedContextError)) {
-            targetEnvLogger.error(error)
-          }
+        let context = TargetScriptContext.createSessionContext(effect, this)
+        await this.applyEffect(
+          effect,
+          context,
+          `mission - "${this.mission.name}" - effect - "${effect.name}".`,
+        )
+      } catch (error: any) {
+        if (!(error instanceof OutdatedContextError)) {
+          targetEnvLogger.error(error)
         }
       }
     }
@@ -1968,40 +1997,43 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     trigger: TEffectExecutionTriggered,
     execution: ServerActionExecution,
   ): Promise<void> {
-    // If the effects are enabled...
-    if (this.config.effectsEnabled) {
-      // Get the effects for the given trigger.
-      let effects = action.effects
-        .filter((effect) => effect.trigger === trigger)
-        .sort((a, b) => a.order - b.order)
+    // Get the effects for the given trigger.
+    let effects = action.effects
+      .filter((effect) => effect.trigger === trigger)
+      .sort((a, b) => a.order - b.order)
 
-      // Iterate through each effect and apply it.
-      for (let effect of effects) {
-        try {
-          // These effects should only be applied while the
-          // session is in the 'started' state.
-          if (this.state !== 'started') {
-            break
-          }
-          // Create and expose a new context for the target
-          // environment.
-          let context = TargetScriptContext.createExecutionContext(
-            effect,
-            this,
-            member,
-            execution,
-          )
-          let promise = this.applyEffect(
-            effect,
-            context,
-            `force - "${effect.sourceForce.name}" - node - "${effect.sourceNode.name}" - action - "${effect.sourceAction.name}" - effect - "${effect.name}".`,
-          )
-          this.effectHistory.push(promise)
-          await promise
-        } catch (error: any) {
-          if (!(error instanceof OutdatedContextError)) {
-            targetEnvLogger.error(error)
-          }
+    // Iterate through each effect and apply it.
+    for (let effect of effects) {
+      try {
+        // These effects should only be applied while the
+        // session is in the 'started' state.
+        if (this.state !== 'started') {
+          break
+        }
+        // Skip if the target environment is disabled
+        if (
+          effect.environment &&
+          this.config.disabledTargetEnvs.includes(effect.environmentId)
+        ) {
+          continue
+        }
+
+        // Create and expose a new context for the target
+        // environment.
+        let context = TargetScriptContext.createExecutionContext(
+          effect,
+          this,
+          member,
+          execution,
+        )
+        await this.applyEffect(
+          effect,
+          context,
+          `force - "${effect.sourceForce.name}" - node - "${effect.sourceNode.name}" - action - "${effect.sourceAction.name}" - effect - "${effect.name}".`,
+        )
+      } catch (error: any) {
+        if (!(error instanceof OutdatedContextError)) {
+          targetEnvLogger.error(error)
         }
       }
     }

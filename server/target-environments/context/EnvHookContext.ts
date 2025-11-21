@@ -1,5 +1,5 @@
+import { SessionServer } from '@server/sessions/SessionServer'
 import type { TSessionState } from '@shared/sessions/MissionSession'
-import { SessionServer } from '../../sessions/SessionServer'
 import type { ServerTargetEnvironment } from '../ServerTargetEnvironment'
 import type { TTargetEnvExposedContext } from './TargetEnvContext'
 import { TargetEnvContext } from './TargetEnvContext'
@@ -14,17 +14,6 @@ export class EnvHookContext extends TargetEnvContext<TEnvHookExposedContext> {
     return SessionServer.AVAILABLE_STATES
   }
 
-  // Implemented
-  protected get environmentId(): string {
-    return this.environment._id
-  }
-
-  /**
-   * The target environment for the registered hook
-   * that will receive this context.
-   */
-  protected readonly environment: ServerTargetEnvironment
-
   /**
    * @param session The session for the current context.
    * @param environment The target environment for the current context.
@@ -33,8 +22,7 @@ export class EnvHookContext extends TargetEnvContext<TEnvHookExposedContext> {
     session: SessionServer,
     environment: ServerTargetEnvironment,
   ) {
-    super(session)
-    this.environment = environment
+    super(session, environment)
   }
 
   // Implemented
@@ -42,6 +30,19 @@ export class EnvHookContext extends TargetEnvContext<TEnvHookExposedContext> {
     return {
       ...this.exposeCommon(),
     }
+  }
+
+  /**
+   * Creates a new `EnvHookContext`.
+   * @param session The session for the current context.
+   * @param environment The target environment for the current context.
+   * @returns The new `EnvHookContext`.
+   */
+  public static create(
+    session: SessionServer,
+    environment: ServerTargetEnvironment,
+  ): EnvHookContext {
+    return new EnvHookContext(session, environment)
   }
 }
 

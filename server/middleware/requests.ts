@@ -322,7 +322,7 @@ export class RequestBodyFilters {
           _id: zod.string().optional(),
           missionMap: zod.object({
             _id: zod.string().optional(),
-            panOnDefectSelection: zod.boolean(),
+            panOnIssueSelection: zod.boolean(),
           }),
         })
         .strict()
@@ -332,7 +332,7 @@ export class RequestBodyFilters {
             _id: zod.string(),
             missionMap: zod.object({
               _id: zod.string(),
-              panOnDefectSelection: zod.boolean(),
+              panOnIssueSelection: zod.boolean(),
             }),
           })
           .strict()

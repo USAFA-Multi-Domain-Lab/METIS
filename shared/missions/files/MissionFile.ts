@@ -2,7 +2,7 @@ import type { TFileReferenceJson } from '@shared/files/FileReference'
 import { MissionForce } from '../forces/MissionForce'
 import {
   MissionComponent,
-  type TMissionComponentDefect,
+  type TMissionComponentIssue,
 } from '../MissionComponent'
 
 /**
@@ -64,8 +64,7 @@ export abstract class MissionFile<
   }
 
   // Implemented
-  public get defects(): TMissionComponentDefect[] {
-    this.reference
+  public get issues(): TMissionComponentIssue[] {
     return []
   }
 

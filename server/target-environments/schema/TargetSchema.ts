@@ -8,21 +8,9 @@ import type { TTargetScriptExposedContext } from '../context/TargetScriptContext
  */
 export class TargetSchema {
   /**
-   * @see {@link Target._id}
-   */
-  private id: string
-  /**
    * The ID of the target.
    */
-  public get _id(): string {
-    return this.id
-  }
-  public set _id(id: string) {
-    if (!this.canUpdateId) {
-      throw new Error('Target ID has already been set and cannot be updated.')
-    }
-    this.id = id
-  }
+  public readonly _id: string
 
   /**
    * @see {@link Target.targetEnvId}
@@ -87,14 +75,6 @@ export class TargetSchema {
   }
 
   /**
-   * Whether the target ID can be updated.
-   */
-  public get canUpdateId(): boolean {
-    return this.id === ''
-  }
-
-  /**
-  /**
    * Determines if the target environment ID can be updated.
    */
   public get canUpdateTargetEnvId(): boolean {
@@ -105,7 +85,7 @@ export class TargetSchema {
    * @param options The data used to define the target.
    */
   public constructor(options: TTargetSchemaOptions) {
-    this.id = ''
+    this._id = options._id
     this._targetEnvId = ''
     this._name = options.name
     this._description = options.description
@@ -131,7 +111,7 @@ export type TTargetScript = (
  * Defines the target data.
  */
 export interface TTargetSchemaOptions
-  extends Omit<TTargetJson, '_id' | 'targetEnvId' | 'migrationVersions'> {
+  extends Omit<TTargetJson, 'targetEnvId' | 'migrationVersions'> {
   /**
    * The script which will enact the effect on the target.
    */
@@ -141,5 +121,3 @@ export interface TTargetSchemaOptions
    */
   migrations?: TargetMigrationRegistry
 }
-
-let x: TTargetSchemaOptions

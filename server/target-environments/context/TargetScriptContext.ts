@@ -50,11 +50,6 @@ export class TargetScriptContext<
    */
   protected readonly data: TSelectTargetEnvData[TType]
 
-  // Implemented
-  protected get environmentId(): string {
-    return this.data.effect.environmentId
-  }
-
   /**
    * @param session The session for the current context.
    * @param variedContext The context data that varies based on the type of effect.
@@ -63,7 +58,12 @@ export class TargetScriptContext<
     session: SessionServer,
     variedContext: TSelectTargetEnvData[TType],
   ) {
-    super(session)
+    if (!variedContext.effect.environment) {
+      throw new Error(
+        'Effect has no associated target environment. A target environment is necessary for context creation.',
+      )
+    }
+    super(session, variedContext.effect.environment)
     this.data = variedContext
   }
 
@@ -436,6 +436,7 @@ export class TargetScriptContext<
    * Creates context for a session-triggered effect.
    * @param effect The effect for which the context is purposed.
    * @param session The session where the effect was triggered.
+   * @param environment The target environment where the effect was triggered.
    * @returns The new context.
    */
   public static createSessionContext(
@@ -502,6 +503,7 @@ export class TargetScriptContext<
    * Creates context for a execution-triggered effect.
    * @param effect The effect for which the context is purposed.
    * @param session The session where the effect was triggered.
+   * @param environment The target environment where the effect was triggered.
    * @param member The member responsible for triggering the effect.
    * @param execution The execution responsible for triggering the effect.
    * @returns The new context.

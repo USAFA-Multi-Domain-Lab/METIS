@@ -4,6 +4,7 @@
  * all actions within a node.
  */
 const SuccessChanceMod = new TargetSchema({
+  _id: 'success-chance-mod',
   name: 'Success Chance Modifier',
   description: '',
   script: async (context) => {

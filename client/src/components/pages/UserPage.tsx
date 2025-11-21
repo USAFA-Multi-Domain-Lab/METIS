@@ -168,50 +168,50 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
    * This is called to save any changes made.
    */
   const save = async (): Promise<void> => {
-    if (areUnsavedChanges) {
-      setAreUnsavedChanges(false)
-      setUsernameAlreadyExists(false)
+    if (saveDisabled !== 'none') return
 
-      if (!existsInDatabase && isAuthorized('users_write_students')) {
-        try {
-          beginLoading('Creating user...')
-          await ClientUser.$create(user)
-          notify('User successfully saved.')
-          finishLoading()
-          setExistsInDatabase(true)
-          navigateTo('HomePage', {})
-        } catch (error: any) {
-          if (error instanceof AxiosError && error.response?.status === 409) {
-            notify('This user already exists. Try using a different username.')
-            setUsernameAlreadyExists(true)
-          } else {
-            notify('User failed to save.')
-          }
-          finishLoading()
-          setAreUnsavedChanges(true)
+    setAreUnsavedChanges(false)
+    setUsernameAlreadyExists(false)
+
+    if (!existsInDatabase && isAuthorized('users_write_students')) {
+      try {
+        beginLoading('Creating user...')
+        await ClientUser.$create(user)
+        notify('User successfully saved.')
+        finishLoading()
+        setExistsInDatabase(true)
+        navigateTo('HomePage', {})
+      } catch (error: any) {
+        if (error instanceof AxiosError && error.response?.status === 409) {
+          notify('This user already exists. Try using a different username.')
+          setUsernameAlreadyExists(true)
+        } else {
+          notify('User failed to save.')
         }
-      } else if (existsInDatabase && isAuthorized('users_write_students')) {
-        try {
-          beginLoading('Updating user...')
-          setUser(
-            await ClientUser.$update(user, {
-              passwordIsRequired: updatePassword,
-            }),
-          )
-          // Reset the user entry key to force re-render.
-          setUserEntryKey(StringToolbox.generateRandomId())
-          notify('User successfully saved.')
-          finishLoading()
-        } catch (error: any) {
-          if (error instanceof AxiosError && error.response?.status === 409) {
-            notify('This user already exists. Try using a different username.')
-            setUsernameAlreadyExists(true)
-          } else {
-            notify('User failed to save.')
-          }
-          finishLoading()
-          setAreUnsavedChanges(true)
+        finishLoading()
+        setAreUnsavedChanges(true)
+      }
+    } else if (existsInDatabase && isAuthorized('users_write_students')) {
+      try {
+        beginLoading('Updating user...')
+        setUser(
+          await ClientUser.$update(user, {
+            passwordIsRequired: updatePassword,
+          }),
+        )
+        // Reset the user entry key to force re-render.
+        setUserEntryKey(StringToolbox.generateRandomId())
+        notify('User successfully saved.')
+        finishLoading()
+      } catch (error: any) {
+        if (error instanceof AxiosError && error.response?.status === 409) {
+          notify('This user already exists. Try using a different username.')
+          setUsernameAlreadyExists(true)
+        } else {
+          notify('User failed to save.')
         }
+        finishLoading()
+        setAreUnsavedChanges(true)
       }
     }
   }

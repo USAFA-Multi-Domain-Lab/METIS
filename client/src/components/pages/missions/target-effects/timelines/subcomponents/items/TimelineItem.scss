@@ -16,7 +16,7 @@
     @include background-mask($opacity: 0.05);
   }
 
-  &.Defective {
+  &.HasIssues {
     grid-template-columns: auto 1fr auto auto;
   }
 
@@ -32,7 +32,7 @@
     grid-template-columns: 1fr auto;
   }
 
-  &.Defective.PreviewMode {
+  &.HasIssues.PreviewMode {
     grid-template-columns: 1fr auto auto;
   }
 }

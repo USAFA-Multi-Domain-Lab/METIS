@@ -22,31 +22,31 @@ export abstract class MissionComponent<
   public abstract get path(): [...MissionComponent<any, any>[], Self]
 
   /**
-   * The defects associated with the component that
+   * The issues associated with the component that
    * need to be resolved by the designer of the mission.
    */
-  public abstract get defects(): TMissionComponentDefect[]
+  public abstract get issues(): TMissionComponentIssue[]
 
   /**
    * Whether the component has some issue that needs to
    * be resolved by the designer of the mission. Added
-   * context for the defect of the component can be found
-   * by checking the `defects` field.
+   * context for the issue of the component can be found
+   * by checking the `issues` field.
    */
-  public get defective(): boolean {
-    return this.defects.length > 0
+  public get hasIssues(): boolean {
+    return this.issues.length > 0
   }
 
   /**
-   * Consolidates the defects from all components passed
+   * Consolidates the issues from all components passed
    * into a single array.
-   * @param components The components with potential defects.
-   * @returns The defects.
+   * @param components The components with potential issues.
+   * @returns The issues.
    */
-  public static consolidateDefects(
+  public static consolidateIssues(
     ...components: MissionComponent<any, any>[]
-  ): TMissionComponentDefect[] {
-    return components.flatMap((component) => component.defects)
+  ): TMissionComponentIssue[] {
+    return components.flatMap((component) => component.issues)
   }
 }
 
@@ -66,18 +66,18 @@ export type TMissionComponentPath<
  * that needs to be resolved by the designer in
  * order for the mission to function properly.
  */
-export interface TMissionComponentDefect {
+export interface TMissionComponentIssue {
   /**
-   * The component that is defective.
+   * The component that has the issue.
    */
   component: MissionComponent<any, any>
   /**
-   * The type of defect that is present.
-   * This affects how the defect is handled.
+   * The type of issue that is present.
+   * This affects how the issue is handled.
    */
   type: 'general' | 'outdated'
   /**
-   * The message describing the defect.
+   * The message describing the issue.
    */
   message: string
 }

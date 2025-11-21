@@ -21,8 +21,8 @@ import type { TTimelineDragDropItem } from '../../EffectTimeline'
 import { useTimelineContext } from '../../context'
 import './TimelineItem.scss'
 import { NO_TIMELINE_ITEMS_ID } from './TimelineNoItems'
-import TimelineDefectiveCell from './cells/TimelineDefectiveCell'
 import TimelineDragHandle from './cells/TimelineDragHandle'
+import TimelineIssueCell from './cells/TimelineIssueCell'
 import { TimelineItemCell } from './cells/TimelineItemCell'
 
 /**
@@ -50,7 +50,7 @@ export function TimelineItem<TType extends TEffectType>({
   const globalContext = useGlobalContext()
   const pageContext = useMissionPageContext()
   const { state: pageState, viewMode } = pageContext
-  const [missionDefects] = pageState.defects
+  const [missionIssues] = pageState.issues
   const { showButtonMenu } = globalContext.actions
   const timelineContext = useTimelineContext<TType>()
   const { host, state, elements } = timelineContext
@@ -125,23 +125,23 @@ export function TimelineItem<TType extends TEffectType>({
   /* -- COMPUTED -- */
 
   /**
-   * The defects applicable to the given item.
-   * @note This could be easily accessed via item.defects.
+   * The issues applicable to the given item.
+   * @note This could be easily accessed via item.issues.
    * However, that has performance implications as it
    * creates a new array each time it is accessed via
    * a potentially expensive algorithm.
    */
-  const defects = compute(() => {
-    return missionDefects.filter((defect) => {
-      return defect.component._id === item._id
+  const issues = compute(() => {
+    return missionIssues.filter((issue) => {
+      return issue.component._id === item._id
     })
   })
 
   /**
-   * Whether or not this item is defective.
+   * Whether or not this item has issues.
    */
-  const defective = compute<boolean>(() => {
-    return Boolean(defects.length)
+  const hasIssues = compute<boolean>(() => {
+    return Boolean(issues.length)
   })
 
   /**
@@ -160,7 +160,7 @@ export function TimelineItem<TType extends TEffectType>({
    */
   const rootClass = compute<ClassList>(() =>
     new ClassList('TimelineItem', 'TimelineItemLike')
-      .set('Defective', defective)
+      .set('HasIssues', hasIssues)
       .set('Selected', selection?._id === item._id)
       .set('Dragged', item._id === draggedItem?._id)
       .set('HoverTop', isTargeted && hoverOver === 'top')
@@ -429,7 +429,7 @@ export function TimelineItem<TType extends TEffectType>({
         {item.name}
         <Tooltip description={tooltipDescription} />
       </TimelineItemCell>
-      <TimelineDefectiveCell defects={defects} />
+      <TimelineIssueCell issues={issues} />
       <TimelineItemCell classes='TimelineItemOptions'>
         <ButtonSvgPanel engine={viewOptionsButtonEngine} />
       </TimelineItemCell>

@@ -20,7 +20,7 @@ export default function MapPreferences(): TReactElement | null {
     mapContext.state.mapPreferencesVisible
   const preferencesState = useObjectFormSync(
     user.preferences.missionMap,
-    ['panOnDefectSelection'],
+    ['panOnIssueSelection'],
     {
       onChange: async (prevState, revert) => {
         try {
@@ -35,8 +35,8 @@ export default function MapPreferences(): TReactElement | null {
       },
     },
   )
-  const [panOnDefectSelection, setPanOnDefectSelection] =
-    preferencesState.panOnDefectSelection
+  const [panOnIssueSelection, setPanOnIssueSelection] =
+    preferencesState.panOnIssueSelection
 
   /* -- FUNCTIONS -- */
 
@@ -65,10 +65,10 @@ export default function MapPreferences(): TReactElement | null {
         </div>
       </div>
       <DetailToggle
-        label={'Pan On Defect Selection'}
-        value={panOnDefectSelection}
-        setValue={setPanOnDefectSelection}
-        tooltipDescription='When enabled, any defect selected in the mission will cause the map to automatically pan to the associated node (Assuming there is an associated node).'
+        label={'Pan On Issue Selection'}
+        value={panOnIssueSelection}
+        setValue={setPanOnIssueSelection}
+        tooltipDescription='When enabled, any issue selected in the mission will cause the map to automatically pan to the associated node (Assuming there is an associated node).'
       />
     </div>
   )

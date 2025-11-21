@@ -12,7 +12,7 @@ import { VersionToolbox } from '../../toolbox/strings/VersionToolbox'
 import { MissionAction } from '../actions/MissionAction'
 import {
   MissionComponent,
-  type TMissionComponentDefect,
+  type TMissionComponentIssue,
 } from '../MissionComponent'
 
 /**
@@ -134,30 +134,28 @@ export abstract class Effect<
   }
 
   // Implemented
-  public get defects(): TMissionComponentDefect[] {
+  public get issues(): TMissionComponentIssue[] {
     const { environment, target } = this
 
-    // Construct defect objects for the given messages.
-    const constructDefects = (
-      ...messages: string[]
-    ): TMissionComponentDefect[] =>
+    // Construct issue objects for the given messages.
+    const constructIssues = (...messages: string[]): TMissionComponentIssue[] =>
       messages.map((message) => ({ type: 'general', component: this, message }))
 
-    // If the effect's target or target environment cannot be found, then the effect is defective.
+    // If the effect's target or target environment cannot be found, then the effect has issues.
     // *** Note: An effect grabs the target environment from the target after the
     // *** target is populated. So, if the target cannot be found, the target will
     // *** be set null which means the target environment will be null also.
     // *** Also, if a target-environment cannot be found, then obviously the target
     // *** within that environment cannot be found either.
     if (!environment || !target) {
-      return constructDefects(
+      return constructIssues(
         `The effect, "${this.name}", has a target or a target environment that couldn't be found. ` +
           `Please contact an administrator on how to resolve this conflict, or delete the effect and create a new one.`,
       )
     }
 
     // If the effect's target environment version doesn't match
-    // the current version, then the effect is defective.
+    // the current version, then the effect has issues.
     if (this.outdated) {
       return [
         {
@@ -176,9 +174,9 @@ export abstract class Effect<
     for (let argId in this.args) {
       // Find the argument in the target.
       let arg = target.args.find((arg) => arg._id === argId)
-      // If the argument cannot be found, then the effect is defective.
+      // If the argument cannot be found, then the effect has issues.
       if (!arg) {
-        return constructDefects(
+        return constructIssues(
           `The effect, "${this.name}", has an argument, "${argId}", that couldn't be found within the target, "${target.name}." ` +
             `Please delete the effect and create a new one.`,
         )
@@ -195,7 +193,7 @@ export abstract class Effect<
           this.args[argId] === undefined &&
           this.allDependenciesMet(arg.dependencies)
         ) {
-          return constructDefects(
+          return constructIssues(
             `The argument, "${arg.name}", within the effect, "${this.name}", is required, yet has no value. ` +
               `Please enter a value, or delete the effect and create a new one.`,
           )
@@ -206,7 +204,7 @@ export abstract class Effect<
           this.args[argId] === undefined &&
           this.allDependenciesMet(arg.dependencies)
         ) {
-          return constructDefects(
+          return constructIssues(
             `The argument, "${arg.name}", within the effect, "${this.name}", is required, yet has no value. ` +
               `Please update the value by clicking the toggle switch, or delete the effect and create a new one.`,
           )
@@ -216,7 +214,7 @@ export abstract class Effect<
           arg.type === 'dropdown' &&
           !arg.options.find((option) => option.value === this.args[argId])
         ) {
-          return constructDefects(
+          return constructIssues(
             `The effect, "${this.name}", has an invalid option selected. ` +
               `Please select a valid option, or delete the effect and create a new one.`,
           )
@@ -247,25 +245,25 @@ export abstract class Effect<
             !(actionInMission instanceof MissionAction) &&
             actionInMission !== undefined
 
-          // If the force cannot be found, then the effect is defective.
+          // If the force cannot be found, then the effect has issues.
           if (forceIsRequired) {
-            return constructDefects(
+            return constructIssues(
               forceInArgs
                 ? `The effect, "${this.name}", is targeting a force, "${forceInArgs.forceName}", which cannot be found.`
                 : `The effect, "${this.name}", targets a force which cannot be found.`,
             )
           }
-          // If the node cannot be found, then the effect is defective.
+          // If the node cannot be found, then the effect has issues.
           if (nodeIsRequired) {
-            return constructDefects(
+            return constructIssues(
               nodeInArgs
                 ? `The effect, "${this.name}", targets a node, "${nodeInArgs.nodeName}", which cannot be found.`
                 : `The effect, "${this.name}", targets a node which cannot be found.`,
             )
           }
-          // If the action cannot be found, then the effect is defective.
+          // If the action cannot be found, then the effect has issues.
           if (actionIsRequired) {
-            return constructDefects(
+            return constructIssues(
               actionInArgs
                 ? `The effect, "${this.name}", targets an action, "${actionInArgs?.actionName}", which cannot be found.`
                 : `The effect, "${this.name}", targets an action which cannot be found.`,
@@ -274,12 +272,12 @@ export abstract class Effect<
         }
 
         // If the argument exists within the effect even thought not all of its dependencies are met, then
-        // effect is defective.
+        // effect has issues.
         if (
           !this.allDependenciesMet(arg.dependencies) &&
           this.args[argId] !== undefined
         ) {
-          return constructDefects(
+          return constructIssues(
             `The effect, "${this.name}", has an argument, "${arg.name}", that doesn't belong. ` +
               `Please delete the effect and create a new one.`,
           )
@@ -291,18 +289,18 @@ export abstract class Effect<
     let missingArg = this.checkForMissingArg()
     // Ensure all of the required arguments are present in the effect.
     if (missingArg) {
-      return constructDefects(
+      return constructIssues(
         `The required argument ({ _id: "${missingArg._id}", name: "${missingArg.name}" }) within the effect ({ _id: "${this._id}", name: "${this.name}" }) is missing.`,
       )
     }
 
     if (this.environmentId === 'infer-for-build_000038') {
-      return constructDefects(
+      return constructIssues(
         `The effect, "${this.name}" has a reference to a target, but not to a target environment.`,
       )
     }
 
-    // If all checks pass, then the effect is not defective.
+    // If all checks pass, then the effect does not have issues.
     return []
   }
 

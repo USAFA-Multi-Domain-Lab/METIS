@@ -1,6 +1,10 @@
 import { useGlobalContext } from '@client/context/global'
 import { compute } from '@client/toolbox'
-import { useMountHandler, usePostInitEffect } from '@client/toolbox/hooks'
+import {
+  useEventListener,
+  useMountHandler,
+  usePostInitEffect,
+} from '@client/toolbox/hooks'
 import { ClientUser } from '@client/users/ClientUser'
 import { useState } from 'react'
 import type { TPage_P } from '.'
@@ -36,6 +40,37 @@ export default function UserResetPage(): TReactElement | null {
   const navButtonEngine = useButtonSvgEngine({
     elements: [ProfileButton()],
   })
+
+  /* -- LOGIN-SPECIFIC LOGIC -- */
+
+  // Require login for page.
+  if (login === null) {
+    return null
+  }
+
+  // Grab the user currently logged in.
+  const { user } = login
+
+  /* -- COMPUTED -- */
+
+  /**
+   * Config for the navigation on this page.
+   */
+  const navigation = compute<TNavigation_P>(() => {
+    return { buttonEngine: navButtonEngine, logoLinksHome: false }
+  })
+
+  /**
+   * Boolean to determine if there are any fields with empty strings.
+   */
+  const isEmptyString: boolean = compute(() => userEmptyStringArray.length > 0)
+
+  /**
+   * Whether the save button is disabled.
+   */
+  const saveDisabled: TButtonTextDisabled = compute(() =>
+    !areUnsavedChanges || isEmptyString || !user.canSave ? 'full' : 'none',
+  )
 
   /* -- EFFECTS -- */
 
@@ -113,35 +148,18 @@ export default function UserResetPage(): TReactElement | null {
     }
   }, [password2])
 
-  /* -- LOGIN-SPECIFIC LOGIC -- */
-
-  // Require login for page.
-  if (login === null) {
-    return null
-  }
-
-  // Grab the user currently logged in.
-  const { user } = login
-
-  /* -- COMPUTED -- */
-
-  /**
-   * Config for the navigation on this page.
-   */
-  const navigation = compute<TNavigation_P>(() => {
-    return { buttonEngine: navButtonEngine, logoLinksHome: false }
-  })
-
-  /**
-   * Boolean to determine if there are any fields with empty strings.
-   */
-  const isEmptyString: boolean = compute(() => userEmptyStringArray.length > 0)
-
-  /**
-   * Whether the save button is disabled.
-   */
-  const saveDisabled: TButtonTextDisabled = compute(() =>
-    !areUnsavedChanges || isEmptyString || !user.canSave ? 'full' : 'none',
+  // Add an event listener to listen for cmd+s/ctrl+s
+  // key presses to save the changes.
+  useEventListener(
+    document,
+    'keydown',
+    (event: KeyboardEvent) => {
+      if (event.key === 's' && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault()
+        save()
+      }
+    },
+    [saveDisabled],
   )
 
   /* -- FUNCTIONS -- */
@@ -150,17 +168,23 @@ export default function UserResetPage(): TReactElement | null {
    * This is called to save any changes made.
    */
   const save = async (): Promise<void> => {
-    if (areUnsavedChanges) {
-      setAreUnsavedChanges(false)
+    if (saveDisabled !== 'none') return
+    setAreUnsavedChanges(false)
 
-      try {
-        await ClientUser.$resetPassword(user)
-        notify('Password reset successfully.')
-        navigateTo('HomePage', {})
-      } catch (error: any) {
+    try {
+      await ClientUser.$resetPassword(user)
+      notify('Password reset successfully.')
+      navigateTo('HomePage', {})
+    } catch (error: any) {
+      if (error.status && error.status === 422) {
+        notify(
+          'Make sure the new password is different from the old password. Enter a different password and try again.',
+        )
+      } else {
         notify('Failed to reset password.')
-        setAreUnsavedChanges(true)
       }
+
+      setAreUnsavedChanges(true)
     }
   }
 

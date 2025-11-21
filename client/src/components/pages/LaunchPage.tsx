@@ -3,12 +3,12 @@ import { ClientMission } from '@client/missions/ClientMission'
 import { SessionClient } from '@client/sessions/SessionClient'
 import { compute } from '@client/toolbox'
 import { useMountHandler, useRequireLogin } from '@client/toolbox/hooks'
-import type { TMissionComponentDefect } from '@shared/missions/MissionComponent'
+import type { TMissionComponentIssue } from '@shared/missions/MissionComponent'
 import { useState } from 'react'
 import { DefaultPageLayout } from '.'
 import { ESortByMethod } from '../content/general-layout/ListOld'
 import type { TNavigation_P } from '../content/general-layout/Navigation'
-import SessionConfig from '../content/session/SessionConfig'
+import SessionConfig from '../content/session/config/SessionConfig'
 import ButtonSvgPanel from '../content/user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
 import './LaunchPage.scss'
@@ -40,7 +40,8 @@ export default function LaunchPage({
     ClientMission.createNew(),
   )
   const [sessionConfig] = useState(SessionClient.DEFAULT_CONFIG)
-  const defectiveComponentButtonEngine = useButtonSvgEngine({
+  const [isLaunching, setIsLaunching] = useState<boolean>(false)
+  const componentWithIssuesButtonEngine = useButtonSvgEngine({
     elements: [
       {
         key: 'warning-transparent',
@@ -104,12 +105,12 @@ export default function LaunchPage({
   /**
    * Renders JSX for the effect list item.
    */
-  const renderObjectListItem = (defect: TMissionComponentDefect) => {
-    const { component, message } = defect
+  const renderObjectListItem = (issue: TMissionComponentIssue) => {
+    const { component, message } = issue
 
     return (
       <div className='Row' key={`object-row-${component._id}`}>
-        <ButtonSvgPanel engine={defectiveComponentButtonEngine} />
+        <ButtonSvgPanel engine={componentWithIssuesButtonEngine} />
         <div className='RowContent'>{message}</div>
       </div>
     )
@@ -120,13 +121,25 @@ export default function LaunchPage({
    * launches the session.
    */
   const launch = async () => {
+    // Prevent multiple simultaneous launch attempts
+    if (isLaunching) {
+      console.warn('Launch already in progress, ignoring duplicate request.')
+      return
+    }
+
     if (server !== null) {
+      // Set launching state to prevent duplicate launches
+      setIsLaunching(true)
       try {
-        // If there are invalid objects and effects are enabled...
-        if (sessionConfig.effectsEnabled && mission.defects.length > 0) {
+        // If there are invalid objects and effects are enabled for any target env...
+        if (
+          sessionConfig.disabledTargetEnvs.length <
+            mission.targetEnvironments.length &&
+          mission.issues.length > 0
+        ) {
           // Create a message for the user.
           let message =
-            `**Warning:** The mission for this session is defective due to unresolved conflicts. If you proceed, the session may not function as expected.\n` +
+            `**Warning:** The mission for this session has issues due to unresolved conflicts. If you proceed, the session may not function as expected.\n` +
             `**What would you like to do?**`
           // Create a list of choices for the user.
           let choices: string[] = []
@@ -143,8 +156,8 @@ export default function LaunchPage({
           // Prompt the user for a choice.
           let { choice } = await prompt(message, choices, {
             list: {
-              items: mission.defects,
-              headingText: 'Unresolved Defects',
+              items: mission.issues,
+              headingText: 'Issues',
               sortByMethods: [ESortByMethod.Name],
               searchableProperties: ['message'],
               renderObjectListItem,
@@ -166,6 +179,11 @@ export default function LaunchPage({
             navigateTo('HomePage', {})
             // Notify user of success.
             notify('Successfully launched session.')
+            // Reset launching state
+            setIsLaunching(false)
+          } else {
+            // User cancelled or chose to edit - reset launching state
+            setIsLaunching(false)
           }
         } else {
           // Notify user of session launch.
@@ -176,14 +194,20 @@ export default function LaunchPage({
           navigateTo('HomePage', {})
           // Notify user of success.
           notify('Successfully launched session.')
+          // Reset launching state
+          setIsLaunching(false)
         }
       } catch (error) {
+        // Reset launching state on error
+        setIsLaunching(false)
         handleError({
           message: 'Failed to launch session. Contact system administrator.',
           notifyMethod: 'bubble',
         })
       }
     } else {
+      // Reset launching state when no server
+      setIsLaunching(false)
       handleError({
         message: 'No server connection. Contact system administrator',
         notifyMethod: 'bubble',
@@ -217,6 +241,7 @@ export default function LaunchPage({
             sessionConfig={sessionConfig}
             mission={mission}
             saveButtonText={'Launch'}
+            disabled={isLaunching}
             onSave={launch}
             onCancel={cancel}
           />

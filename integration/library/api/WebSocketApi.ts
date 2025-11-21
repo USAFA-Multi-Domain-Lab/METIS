@@ -1,8 +1,8 @@
-import type { TAnyObject } from 'toolbox'
-import { BooleanToolbox } from 'toolbox'
+import { BooleanToolbox } from '@metis/toolbox/booleans/BooleanToolbox'
+import type { TAnyObject } from '@metis/toolbox/objects/ObjectToolbox'
 import WebSocket, { type ClientOptions } from 'ws'
 import z from 'zod'
-import { Api, apiOptionsSchema } from '.'
+import { Api, apiOptionsSchema } from './Api'
 
 /**
  * The WebSocket API class is used to establish real-time communication with target environments.
@@ -399,12 +399,6 @@ export class WebSocketApi extends Api {
    * @param envConfig The environment configuration to use.
    * @returns A WebSocket API instance.
    * @throws If the configuration is invalid.
-   * @example
-   * ```typescript
-   * import { WebSocketApi } from './library/api/websocket'
-   * import { loadConfig } from './library/config'
-   * const api = WebSocketApi.fromConfig(loadConfig())
-   * ```
    */
   public static fromConfig(
     envConfig: Record<string, string | undefined>,

@@ -305,7 +305,8 @@ export abstract class MissionSession<
     return {
       accessibility: 'public',
       infiniteResources: false,
-      effectsEnabled: true,
+      disabledTargetEnvs: [],
+      targetEnvConfigs: {},
     }
   }
 
@@ -355,10 +356,19 @@ export type TSessionConfig = {
    */
   infiniteResources: boolean
   /**
-   * Whether effects will be enabled in the session.
-   * @default true
+   * Array of target environment IDs that are disabled.
+   * @note If a target environment ID is in this array, its effects will not execute
+   * during the session.
+   * @default []
+   * @example ['metis', 'metis-test-env']
    */
-  effectsEnabled: boolean
+  disabledTargetEnvs: string[]
+  /**
+   * Map of target environment IDs to selected config IDs.
+   * @note Tracks which configuration is selected for each target environment used in the session.
+   * @example { 'metis': 'metis-config-main' }
+   */
+  targetEnvConfigs: Record<string, string>
   /**
    * The name of the session.
    * @note If not provided, the name of the mission will be used.

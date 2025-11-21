@@ -3,6 +3,7 @@
  * to manipulate the block status of a node.
  */
 const BlockStatus = new TargetSchema({
+  _id: 'block-status',
   name: 'Block Status',
   description: '',
   script: async (context) => {

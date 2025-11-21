@@ -69,12 +69,14 @@ export const clientEventSchemas: TClientEventSchemas = {
             'public',
             'id-required',
             'invite-only',
+            'testing',
           ] as TNonEmptyArray<TSessionAccessibility>)
           .optional(),
         infiniteResources: zod.boolean().optional(),
-        effectsEnabled: zod.boolean().optional(),
+        disabledTargetEnvs: zod.array(zod.string()).optional(),
+        targetEnvConfigs: zod.record(zod.string(), zod.string()).optional(),
       }),
-    }),
+    }) as any,
   ),
   'request-kick': zodRequestEvent(
     'request-kick',
@@ -156,7 +158,7 @@ export const looseEventSchema = zod
     method: zod.enum(
       Object.keys(clientEventSchemas) as TNonEmptyArray<TClientMethod>,
     ),
-    data: zod.object({}).passthrough(),
+    data: zod.object({}).loose(),
     requestId: zod.string().optional(),
   })
   .loose()
