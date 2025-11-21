@@ -2,7 +2,7 @@ import type { TUnfulfilledReqData } from '@client/connect/ServerConnection'
 import { useGlobalContext } from '@client/context/global'
 import { useEventListener } from '@client/toolbox/hooks'
 import type { TServerConnectionStatus } from '@shared/connect'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './StatusBar.scss'
 
 /**
@@ -43,6 +43,14 @@ export default function StatusBar({}: TStatusBar_P): TReactElement | null {
       setUnfulfilledRequests(server.unfulfilledRequests)
     }
   })
+  // Update the status and the unfulfilled requests
+  // state if a new server connection is found.
+  useEffect(() => {
+    if (server) {
+      setStatus(server.status)
+      setUnfulfilledRequests(server.unfulfilledRequests)
+    }
+  }, [server])
 
   /* -- pre-processing -- */
 

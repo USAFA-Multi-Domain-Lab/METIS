@@ -187,6 +187,13 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
   private static readonly METIS_TARGET_ENV_FOLDER_NAME: string = 'metis'
 
   /**
+   * A regex used to validate the name of a target-environment
+   * folder.
+   */
+  public static readonly FOLDER_REGEX =
+    /(?!^.*--.*$)^[a-z0-9][a-z0-9-]+[a-z0-9]$/
+
+  /**
    * The ID for the METIS target environment.
    */
   public static get METIS_TARGET_ENV_ID(): string {
@@ -303,6 +310,14 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
       throw new Error(
         `Cannot scan target environment directory. "${directory}" is not a folder.`,
       )
+    }
+    if (!ServerTargetEnvironment.FOLDER_REGEX.test(path.basename(directory))) {
+      console.warn(
+        `Target environment folder name "${path.basename(
+          directory,
+        )}" is invalid. Folder names must only contain lowercase letters, numbers, and hyphens. The name also cannot begin or end with a hyphen or contain consecutive hyphens. Hyphens should only be used to separate words. Skipping target environment...`,
+      )
+      return
     }
     // If the index file does not exist, abort.
     if (!fs.existsSync(schemaFilePath)) {

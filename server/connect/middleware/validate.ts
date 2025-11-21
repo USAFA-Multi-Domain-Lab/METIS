@@ -76,7 +76,7 @@ export const clientEventSchemas: TClientEventSchemas = {
         disabledTargetEnvs: zod.array(zod.string()).optional(),
         targetEnvConfigs: zod.record(zod.string(), zod.string()).optional(),
       }),
-    }) as any,
+    }),
   ),
   'request-kick': zodRequestEvent(
     'request-kick',
@@ -179,12 +179,35 @@ type TClientEventSchemas = {
   [key in keyof TClientEvents]: TClientEventSchema<key>
 }
 
+// /**
+//  * Converts a regular interface to a Zod object type.
+//  */
+// export type TZodify<T extends object> = ZodObject<
+//   Required<{
+//     [K in keyof T]: Required<T>[K] extends object
+//       ? {} extends Pick<T, K>
+//         ? ZodOptional<TZodify<Required<T>[K]>>
+//         : TZodify<Required<T>[K]>
+//       : {} extends Pick<T, K>
+//       ? ZodOptional<ZodType<T[K]>>
+//       : ZodType<T[K]>
+//   }>
+// >
+
 /**
  * Converts a regular interface to a Zod object type.
  */
 export type TZodify<T extends object> = ZodObject<
   Required<{
-    [K in keyof T]: Required<T>[K] extends object
+    [K in keyof T]: Required<T>[K] extends Array<infer U>
+      ? {} extends Pick<T, K>
+        ? ZodOptional<ZodType<Required<T>[K]>>
+        : ZodType<Required<T>[K]>
+      : Required<T>[K] extends Record<string, any>
+      ? {} extends Pick<T, K>
+        ? ZodOptional<ZodType<Required<T>[K]>>
+        : ZodType<Required<T>[K]>
+      : Required<T>[K] extends object
       ? {} extends Pick<T, K>
         ? ZodOptional<TZodify<Required<T>[K]>>
         : TZodify<Required<T>[K]>
