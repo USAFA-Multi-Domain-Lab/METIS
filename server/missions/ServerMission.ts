@@ -3,7 +3,10 @@ import type { TTargetEnvExposedMission } from '@server/target-environments/conte
 import type { ServerTarget } from '@server/target-environments/ServerTarget'
 import { ServerUser } from '@server/users/ServerUser'
 import { NumberToolbox } from '@shared/toolbox/numbers/NumberToolbox'
-import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
+import {
+  ObjectToolbox,
+  type TAnyObject,
+} from '@shared/toolbox/objects/ObjectToolbox'
 import type { CallbackWithoutResultAndOptionalError } from 'mongoose'
 import mongoose from 'mongoose'
 import type { PRNG } from 'seedrandom'
@@ -269,6 +272,17 @@ export class ServerMission extends Mission<TMetisServerComponents> {
     if (!(currentStructure instanceof Object)) {
       let error = generateValidationError(
         `Error in the mission's structure:\n"${rootKey}" is set to ${currentStructure}, which is not an object.`,
+      )
+      return { error }
+    }
+    // If the current structure exceeds the maximum depth...
+    if (
+      rootKey === 'ROOT' &&
+      ObjectToolbox.calculateDepth(currentStructure) >
+        ServerMission.MAX_STRUCTURE_DEPTH
+    ) {
+      let error = generateValidationError(
+        `Error in the mission's structure:\nThe structure exceeds the maximum depth of ${ServerMission.MAX_STRUCTURE_DEPTH}.`,
       )
       return { error }
     }

@@ -89,7 +89,7 @@ export default function MissionList(
         case 'updatedAt':
         case 'launchedAt':
           let datetime = mission[column]
-          if (datetime === null) return 'N/A'
+          if (datetime === null) return '(N/A)'
           else return DateToolbox.format(datetime, 'yyyy-mm-dd HH:MM')
         case 'createdByUsername':
           return mission.createdByUsername || 'Unknown User'

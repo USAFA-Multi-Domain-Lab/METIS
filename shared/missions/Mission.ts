@@ -747,6 +747,12 @@ export abstract class Mission<
   public static readonly MAX_FORCE_COUNT: number = 8
 
   /**
+   * The maximum number of layers that can exist in
+   * a mission's node structure.
+   */
+  public static readonly MAX_STRUCTURE_DEPTH: number = 64
+
+  /**
    * The color white.
    */
   public static readonly WHITE: string = '#ffffff'

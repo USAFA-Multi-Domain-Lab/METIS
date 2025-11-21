@@ -17,6 +17,27 @@ export class ObjectToolbox {
       return result
     }, {})
   }
+
+  /**
+   * Calculates the depth of the provided object
+   * in terms of layers of nested objects.
+   * @param object The object of which to calculate depth.
+   * @return The depth of the object.
+   * @note that the parent object is counted as depth 1.
+   * This means an object with exactly one nested
+   * object will have a depth of 2, and so on.
+   */
+  public static calculateDepth(object: TAnyObject): number {
+    if (object === null || typeof object !== 'object') return 0
+
+    let max = 0
+
+    for (const key in object) {
+      max = Math.max(max, ObjectToolbox.calculateDepth(object[key]))
+    }
+
+    return max + 1
+  }
 }
 
 /* -- TYPES -- */
