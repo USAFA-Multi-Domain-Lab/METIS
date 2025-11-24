@@ -130,6 +130,7 @@ export default function LaunchPage({
     if (server !== null) {
       // Set launching state to prevent duplicate launches
       setIsLaunching(true)
+
       try {
         // If there are invalid objects and effects are enabled for any target env...
         if (
@@ -164,7 +165,10 @@ export default function LaunchPage({
             },
           })
           // If the user cancels then cancel the launch.
-          if (choice === 'Cancel') return
+          if (choice === 'Cancel') {
+            setIsLaunching(false)
+            return
+          }
           // If the user chooses to edit the mission then navigate to the mission page.
           if (choice === 'Edit Mission') {
             navigateTo('MissionPage', { missionId: mission._id })
@@ -179,11 +183,6 @@ export default function LaunchPage({
             navigateTo('HomePage', {})
             // Notify user of success.
             notify('Successfully launched session.')
-            // Reset launching state
-            setIsLaunching(false)
-          } else {
-            // User cancelled or chose to edit - reset launching state
-            setIsLaunching(false)
           }
         } else {
           // Notify user of session launch.
@@ -194,12 +193,13 @@ export default function LaunchPage({
           navigateTo('HomePage', {})
           // Notify user of success.
           notify('Successfully launched session.')
-          // Reset launching state
-          setIsLaunching(false)
         }
+
+        setIsLaunching(false)
       } catch (error) {
         // Reset launching state on error
         setIsLaunching(false)
+
         handleError({
           message: 'Failed to launch session. Contact system administrator.',
           notifyMethod: 'bubble',
@@ -208,6 +208,7 @@ export default function LaunchPage({
     } else {
       // Reset launching state when no server
       setIsLaunching(false)
+
       handleError({
         message: 'No server connection. Contact system administrator',
         notifyMethod: 'bubble',
@@ -236,7 +237,6 @@ export default function LaunchPage({
     return (
       <div className='LaunchPage Page'>
         <DefaultPageLayout navigation={navigation}>
-          <div className='MissionName'>{mission.name}</div>
           <SessionConfig
             sessionConfig={sessionConfig}
             mission={mission}
