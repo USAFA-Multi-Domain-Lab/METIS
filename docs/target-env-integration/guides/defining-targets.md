@@ -44,7 +44,6 @@ Each target lives in its own folder with a `schema.ts` file that exports a `Targ
 
 ```ts
 // integration/target-env/my-env/targets/ping/schema.ts
-import TargetSchema from '../../../../library/target-env-classes/targets'
 
 export default new TargetSchema({
   name: 'Ping Host',
@@ -193,7 +192,7 @@ Arguments can be shown/hidden based on other argument values using `dependencies
   type: 'string',
   required: true,
   groupingId: 'authentication',
-  dependencies: [Dependency.EQUALS('auth-method', 'token')],  // Only show if auth-method is 'token'
+  dependencies: [TargetDependency.EQUALS('auth-method', 'token')],  // Only show if auth-method is 'token'
 },
 
 // Priority and Encryption Level Form Grouping
@@ -215,7 +214,7 @@ Arguments can be shown/hidden based on other argument values using `dependencies
   name: 'Encryption Level',
   type: 'dropdown',
   required: true,
-  dependencies: [Dependency.EQUALS_SOME('priority', ['high', 'urgent'])],  // Show for high/urgent priority
+  dependencies: [TargetDependency.EQUALS_SOME('priority', ['high', 'urgent'])],  // Show for high/urgent priority
   options: [
     { _id: 'aes128', name: 'AES-128', value: 'aes128' },
     { _id: 'aes256', name: 'AES-256', value: 'aes256' },

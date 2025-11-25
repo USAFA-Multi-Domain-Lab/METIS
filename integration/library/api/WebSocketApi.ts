@@ -1,4 +1,3 @@
-import { BooleanToolbox } from '@metis/toolbox/booleans/BooleanToolbox'
 import type { TAnyObject } from '@metis/toolbox/objects/ObjectToolbox'
 import WebSocket, { type ClientOptions } from 'ws'
 import z from 'zod'
@@ -401,19 +400,11 @@ export class WebSocketApi extends Api {
    * @throws If the configuration is invalid.
    */
   public static fromConfig(
-    envConfig: Record<string, string | undefined>,
+    envConfig: Record<string, unknown | undefined>,
   ): WebSocketApi {
     try {
-      let rejectUnauthorized: boolean | undefined = undefined
-      if (envConfig.rejectUnauthorized !== undefined) {
-        rejectUnauthorized = BooleanToolbox.parse(envConfig.rejectUnauthorized)
-      }
-
       const webSocketOptions: TWebSocketApiOptions =
-        webSocketApiOptionsSchema.parse({
-          ...envConfig,
-          rejectUnauthorized,
-        })
+        webSocketApiOptionsSchema.parse(envConfig)
       return new WebSocketApi(webSocketOptions)
     } catch (error: any) {
       throw new Error(`Invalid WebSocket API configuration: ${error.message}`)

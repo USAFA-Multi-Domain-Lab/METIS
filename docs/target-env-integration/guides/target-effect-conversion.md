@@ -410,13 +410,13 @@ Arguments with dependencies follow the same required/optional rules and are only
   _id: 'apiToken',
   type: 'string',
   required: true,  // Required when dependency condition is met
-  dependencies: [Dependency.EQUALS('authMethod', 'token')],
+  dependencies: [TargetDependency.EQUALS('authMethod', 'token')],
 },
 {
   _id: 'tokenExpiry',
   type: 'number',
   required: false,  // Optional when dependency condition is met
-  dependencies: [Dependency.EQUALS('authMethod', 'token')],
+  dependencies: [TargetDependency.EQUALS('authMethod', 'token')],
 }
 
 // Script Access
@@ -660,4 +660,4 @@ const url = `http://localhost:${port}`
 ### 🔗 References
 
 - **[Context API Reference](../references/context-api.md)** - Complete context object documentation
-- **[Effect Schema Reference](../references/effect-schema.md)** - Effect object structure and properties
+- **[Schema Documentation](../references/schemas.md)** - Target and effect type definitions
