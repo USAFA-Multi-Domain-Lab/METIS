@@ -38,7 +38,7 @@ export abstract class MissionForce<
   }
 
   // Implemented
-  public get issues(): TMissionComponentIssue[] {
+  protected get additionalIssues(): TMissionComponentIssue[] {
     return MissionForce.consolidateIssues(...this.nodes)
   }
 

@@ -1,5 +1,9 @@
 import { TargetEnvSchema } from '@server/target-environments/schema/TargetEnvSchema'
 import { ServerFileToolbox } from '@server/toolbox/files/ServerFileToolbox'
+import {
+  EnvScriptResults,
+  type TTargetEnvMethods,
+} from '@shared/target-environments/EnvScriptResults'
 import { TargetEnvironment } from '@shared/target-environments/TargetEnvironment'
 import { TargetEnvRegistry } from '@shared/target-environments/TargetEnvRegistry'
 import type { TTargetEnvConfig } from '@shared/target-environments/types'
@@ -9,11 +13,8 @@ import path from 'path'
 import type { SessionServer } from '../sessions/SessionServer'
 import { EnvHookContext } from './context/EnvHookContext'
 import type { TTargetEnvExposedEnvironment } from './context/TargetEnvContext'
+import type { TargetEnvironmentHook } from './hooks/TargetEnvironmentHook'
 import { ServerTarget } from './ServerTarget'
-import type {
-  TargetEnvironmentHook,
-  TTargetEnvMethods,
-} from './TargetEnvironmentHook'
 import { TargetEnvSandboxing } from './TargetEnvSandboxing'
 
 /**
@@ -127,13 +128,33 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
   private async invoke(
     method: TTargetEnvMethods,
     session: SessionServer,
-  ): Promise<void> {
+  ): Promise<EnvScriptResults[]> {
+    let results: EnvScriptResults[] = []
+    let errorOccurred = false
+
     for (let hook of this.hooks) {
       if (hook.method === method) {
-        let context = new EnvHookContext(session, this)
-        await context.execute((context) => hook.invoke(context))
+        // Skip remaining hooks if an error
+        // has already occurred.
+        if (errorOccurred) {
+          results.push(EnvScriptResults.skipped(hook.environment))
+          continue
+        }
+
+        try {
+          let context = new EnvHookContext(session, this)
+          await context.execute((context) => hook.invoke(context))
+          results.push(EnvScriptResults.success(hook.environment))
+        } catch (error: any) {
+          if (!(error instanceof Error)) {
+            error = new Error(StringToolbox.limit(`${error}`, 128))
+          }
+          results.push(EnvScriptResults.failure(hook.environment, error))
+        }
       }
     }
+
+    return results
   }
 
   /**
@@ -142,7 +163,7 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
    * @resolves When setup is complete.
    * @rejects If setup fails.
    */
-  public setUp(session: SessionServer): Promise<void> {
+  public setUp(session: SessionServer): Promise<EnvScriptResults[]> {
     return this.invoke('environment-setup', session)
   }
 
@@ -152,7 +173,7 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
    * @resolves When teardown is complete.
    * @rejects If teardown fails.
    */
-  public tearDown(session: SessionServer): Promise<void> {
+  public tearDown(session: SessionServer): Promise<EnvScriptResults[]> {
     return this.invoke('environment-teardown', session)
   }
 

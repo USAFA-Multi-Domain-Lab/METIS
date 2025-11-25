@@ -9,6 +9,7 @@ import { ClientMission } from '@client/missions/ClientMission'
 import { ClientMissionFile } from '@client/missions/files/ClientMissionFile'
 import { ClientOutput } from '@client/missions/forces/ClientOutput'
 import type { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
+import { ClientTargetEnvironment } from '@client/target-environments/ClientTargetEnvironment'
 import { ClientUser } from '@client/users/ClientUser'
 import type {
   TFileAccessModifierData,
@@ -32,6 +33,7 @@ import type {
   TSessionJson,
 } from '@shared/sessions/MissionSession'
 import { MissionSession } from '@shared/sessions/MissionSession'
+import { EnvScriptResults } from '@shared/target-environments/EnvScriptResults'
 import axios from 'axios'
 import type { TMetisClientComponents } from '..'
 import { ClientSessionMember } from './ClientSessionMember'
@@ -107,7 +109,17 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       members: memberData,
       banList,
       config,
+      setupResults: setupResultData,
+      teardownResults: teardownResultData,
     } = data
+
+    // Parse setup and teardown results.
+    let setupResults = setupResultData.map((datum) =>
+      EnvScriptResults.fromJson(datum, ClientTargetEnvironment.REGISTRY),
+    )
+    let teardownResults = teardownResultData.map((datum) =>
+      EnvScriptResults.fromJson(datum, ClientTargetEnvironment.REGISTRY),
+    )
 
     // Call super constructor with base data.
     super(
@@ -122,6 +134,8 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       mission,
       memberData,
       banList,
+      setupResults,
+      teardownResults,
     )
 
     // Set the rest of the data.
@@ -136,7 +150,9 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       ['session-ended', this.onEnd],
       ['session-reset', this.onReset],
       ['session-config-updated', this.onConfigUpdate],
-      ['session-members-updated', this.onUsersUpdated],
+      ['session-members-updated', this.onMembersUpdate],
+      ['session-setup-update', this.onSetupUpdate],
+      ['session-teardown-update', this.onTeardownUpdate],
       ['force-assigned', this.onForceAssigned],
       ['role-assigned', this.onRoleAssigned],
       ['node-opened', this.onNodeOpenedResponse],
@@ -229,6 +245,8 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       }),
       members: this.members.map((member) => member.toJson()),
       banList: this.banList,
+      setupResults: this.setupResults.map((result) => result.toJson()),
+      teardownResults: this.teardownResults.map((result) => result.toJson()),
       config: this.config,
     }
   }
@@ -250,6 +268,8 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       banList: this.banList,
       observerIds: this.observers.map(({ _id: memberId }) => memberId),
       managerIds: this.managers.map(({ _id: memberId }) => memberId),
+      setupFailed: this.setupFailed,
+      teardownFailed: this.teardownFailed,
     }
   }
 
@@ -1107,11 +1127,11 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   }
 
   /**
-   * Handles when the lists of users joined in the session
+   * Handles when the lists of members joined in the session
    * changes, due to a join, quit, kick, or ban.
    * @param event The event emitted by the server.
    */
-  private onUsersUpdated = (
+  private onMembersUpdate = (
     event: TGenericServerEvents['session-members-updated'],
   ): void => {
     let { members } = event.data
@@ -1125,6 +1145,34 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
           this,
         ),
     )
+  }
+
+  /**
+   * Handles when new results from the session setup
+   * process are available.
+   * @param event The event emitted by the server.
+   */
+  private onSetupUpdate = (
+    event: TServerEvents['session-setup-update'],
+  ): void => {
+    let newResults = event.data.results.map((data) =>
+      EnvScriptResults.fromJson(data, ClientTargetEnvironment.REGISTRY),
+    )
+    this.setupResults.push(...newResults)
+  }
+
+  /**
+   * Handles when new results from the session teardown
+   * process are available.
+   * @param event The event emitted by the server.
+   */
+  private onTeardownUpdate = (
+    event: TServerEvents['session-teardown-update'],
+  ): void => {
+    let newResults = event.data.results.map((data) =>
+      EnvScriptResults.fromJson(data, ClientTargetEnvironment.REGISTRY),
+    )
+    this.teardownResults.push(...newResults)
   }
 
   /**

@@ -29,7 +29,7 @@ import type {
 } from './pages/items/ListItem'
 import type { TListPage_P } from './pages/ListPage'
 import ListPage from './pages/ListPage'
-import type { ListUpload } from './uploads'
+import { ListUpload } from './uploads'
 
 /* -- CONSTANTS -- */
 
@@ -90,6 +90,7 @@ export function createDefaultListProps<
     uploads: [],
     elementAccess: null,
     searchBlacklist: [],
+    selectionSync: useState<TItem | null>(null),
     getColumnLabel: (x) => StringToolbox.toTitleCase(x.toString()),
     getCellText: (item, column) => (item[column] as any).toString(),
     getItemTooltip: () => '',
@@ -100,6 +101,7 @@ export function createDefaultListProps<
     getItemButtonPermissions: () => [],
     getItemButtonDisabled: () => false,
     getColumnWidth: () => '10em',
+    getCustomWarningText: () => '',
     onSelect: () => {},
     onItemDblClick: () => {},
     onListButtonClick: () => {},
@@ -171,6 +173,7 @@ export default function List<TItem extends MetisComponent>(
   const [itemsPerPage] = state.itemsPerPage
   const [selection, setSelection] = state.selection
   const [itemOrderUpdateId] = state.itemOrderUpdateId
+  const [selectionSync, syncSelection] = defaultedProps.selectionSync
   const elements: TList_E = {
     root: useRef<HTMLDivElement>(null),
     nav: useRef<HTMLDivElement>(null),
@@ -381,13 +384,6 @@ export default function List<TItem extends MetisComponent>(
     return results
   })
 
-  /**
-   * @see {@link TListContextData.showingDeletedItems}
-   */
-  const showingDeletedItems = compute<boolean>(() =>
-    pages[pageNumber]?.items.some(({ deleted }) => deleted),
-  )
-
   /* -- FUNCTIONS -- */
 
   /**
@@ -460,6 +456,39 @@ export default function List<TItem extends MetisComponent>(
     else return next
   }
 
+  /**
+   * @see {@link TListContextData.getWarningText}
+   */
+  const getWarningText: TListContextData<TItem>['getWarningText'] = (item) => {
+    let warningText = defaultedProps.getCustomWarningText(item)
+
+    // Add deleted warning if applicable.
+    if (item.deleted) {
+      // Add a new line before the deleted warning if there
+      // is already existing warning text.
+      if (warningText) {
+        warningText += '\n'
+      }
+      warningText += 'This item has been marked as deleted.'
+    }
+
+    return warningText
+  }
+
+  /* -- COMPUTED (CONTINUED) -- */
+
+  /**
+   * @see {@link TListContextData.areIssues}
+   */
+  const areIssues = compute<boolean>(() => {
+    // There are issues if any item on the
+    // current page has warning text.
+    return pages[pageNumber]?.items.some((item) => {
+      if (item instanceof ListUpload) return false
+      else return Boolean(getWarningText(item))
+    })
+  })
+
   /* -- EFFECTS -- */
 
   // Reset page number when switching to maleable mode or ensure valid page when switching back
@@ -470,9 +499,21 @@ export default function List<TItem extends MetisComponent>(
     }
   }, [ordering.mode, pageCount])
 
-  // Call `onSelect` callback whenever selection-state
-  // changes.
-  useEffect(() => onSelect(selection), [selection])
+  // Handle selection changes.
+  useEffect(() => {
+    // Call `onSelect` callback whenever selection-state
+    // changes.
+    onSelect(selection)
+    // Sync selection with external state, if provided.
+    syncSelection(selection)
+  }, [selection])
+
+  // Handle external selection state changes.
+  useEffect(() => {
+    if (selectionSync !== selection) {
+      setSelection(selectionSync)
+    }
+  }, [selectionSync])
 
   // Deselect the item if it is not found in the
   // list of items.
@@ -539,8 +580,9 @@ export default function List<TItem extends MetisComponent>(
     aggregatedButtonIcons,
     aggregatedButtons,
     aggregateButtonLayout,
-    showingDeletedItems,
+    areIssues,
     requireEnabledOnly,
+    getWarningText,
     state,
     elements,
     pages,
@@ -679,6 +721,11 @@ export type TList_P<TItem extends MetisComponent> = {
    */
   searchBlacklist?: TListColumnType<TItem>[]
   /**
+   * A React state which should be kept in sync with the
+   * list's internal selection state.
+   */
+  selectionSync?: TReactState<TItem | null>
+  /**
    * Gets the tooltip description for the item.
    * @param item The item for which to get the tooltip.
    * @returns The tooltip description.
@@ -748,6 +795,20 @@ export type TList_P<TItem extends MetisComponent> = {
    * @default () => '10em'
    */
   getColumnWidth?: (column: TListColumnType<TItem>) => string
+  /**
+   * Displays custom warning text for the given item,
+   * marking it as an item with issues. By default,
+   * no warning text is displayed, unless the item is
+   * marked as deleted.
+   * @param item The item for which to get the warning text.
+   * @returns The warning text.
+   * @default () => ''
+   * @note If an item is marked as deleted, the warning
+   * text will concatenate with the custom warning text.
+   * @note Empty string should be returned for any items
+   * without issues.
+   */
+  getCustomWarningText?: (item: TItem) => string
   /**
    * Callback for when an item in the list is selected
    * or deselected.
@@ -889,10 +950,11 @@ export type TListContextData<TItem extends MetisComponent> = Required<
    */
   aggregateButtonLayout: TSvgLayout
   /**
-   * Whether there exists any deleted items on the
-   * current page being displayed.
+   * Whether there exists any items on the
+   * current page being displayed with issues,
+   * requiring a warning to be displayed.
    */
-  showingDeletedItems: boolean
+  areIssues: boolean
   /**
    * Middleware which will wrap a function in a requirement
    * for the given item to be enabled for the code to be
@@ -903,6 +965,12 @@ export type TListContextData<TItem extends MetisComponent> = Required<
     item: TItem,
     next: (...args: TArgs) => void,
   ) => (...args: TArgs) => void
+  /**
+   * Gets warning text for the given item, if any.
+   * @param item The item for which to get the warning text.
+   * @returns The warning text, if any.
+   */
+  getWarningText: (item: TItem) => string
   /**
    * The state for the list.
    */

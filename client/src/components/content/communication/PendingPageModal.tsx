@@ -9,16 +9,15 @@ import './PendingPageModal.scss'
 export default function PendingPageModal({
   message,
   active = true,
+  erroneous = false,
 }: TPendingPageModal_P): TReactElement {
   /**
    * Classes for the root element.
    */
   const rootClasses = compute<ClassList>(() =>
-    new ClassList('PendingPageModal').switch(
-      'ModalActive',
-      'ModalInactive',
-      active,
-    ),
+    new ClassList('PendingPageModal')
+      .switch('ModalActive', 'ModalInactive', active)
+      .set('ModalErroneous', erroneous),
   )
 
   return (
@@ -43,4 +42,9 @@ type TPendingPageModal_P = {
    * @default true
    */
   active?: boolean
+  /**
+   * Whether an error occurred during the pending operation.
+   * @default false
+   */
+  erroneous?: boolean
 }

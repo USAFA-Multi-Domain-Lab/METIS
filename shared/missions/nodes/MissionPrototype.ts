@@ -35,7 +35,7 @@ export abstract class MissionPrototype<
   }
 
   // Implemented
-  public get issues(): TMissionComponentIssue[] {
+  protected get additionalIssues(): TMissionComponentIssue[] {
     return []
   }
 

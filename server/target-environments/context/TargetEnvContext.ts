@@ -296,6 +296,9 @@ export type TTargetEnvExposedContext = {
    * @resolves After the sleep duration has elapsed.
    * @note This will abort early if the session ends before
    * the duration has elapsed.
+   * @NOTE IMPORTANT Use `await` in conjunction with this method
+   * to ensure the next lines of code are not executed until
+   * after the sleep has concluded.
    */
   sleep(duration: number): Promise<void>
 }

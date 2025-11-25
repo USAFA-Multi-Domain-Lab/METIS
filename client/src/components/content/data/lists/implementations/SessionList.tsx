@@ -159,6 +159,21 @@ export default function SessionList({
   }
 
   /**
+   * Gets the warning text for a session item.
+   * @param session The session for which to get the warning text.
+   * @returns The warning text for the session.
+   */
+  const getSessionWarningText = (session: SessionBasic): string => {
+    if (session.setupFailed) {
+      return 'The session encountered an error during setup. For details concerning the error, please reference the server logs. Please perform a hard delete and recreate this session.'
+    } else if (session.teardownFailed) {
+      return 'The session encountered an error during teardown. For details concerning the error, please reference the server logs. Please perform a hard delete for this session.'
+    }
+
+    return ''
+  }
+
+  /**
    * Handler for when a session is selected.
    */
   const onSessionSelection: TOnItemSelection<MetisComponent> = async ({
@@ -341,6 +356,7 @@ export default function SessionList({
       getItemTooltip={() => 'Join session'}
       getListButtonLabel={getSessionListButtonTooltip}
       getItemButtonLabel={getSessionItemButtonLabel}
+      getCustomWarningText={getSessionWarningText}
       onItemDblClick={(session) => onSessionSelection(session)}
       onListButtonClick={onSessionListButtonClick}
       onItemButtonClick={onSessionItemButtonClick}

@@ -71,7 +71,7 @@ export abstract class MissionAction<
   }
 
   // Implemented
-  public get issues(): TMissionComponentIssue[] {
+  protected get additionalIssues(): TMissionComponentIssue[] {
     return MissionComponent.consolidateIssues(...this.effects)
   }
 

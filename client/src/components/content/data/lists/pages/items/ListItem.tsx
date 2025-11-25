@@ -38,12 +38,13 @@ export default function ListItem<T extends MetisComponent>({
     itemButtonIcons,
     itemButtons,
     minNameColumnWidth,
-    showingDeletedItems,
+    areIssues,
     getCellText,
     getColumnWidth,
     requireEnabledOnly,
     onItemDblClick,
     getItemButtonDisabled,
+    getWarningText,
   } = listContext
   const { root: list } = listContext.elements
   const [selection, setSelection] = listContext.state.selection
@@ -105,8 +106,8 @@ export default function ListItem<T extends MetisComponent>({
     columnWidths.push(`minmax(${minNameColumnWidth}, 1fr)`)
 
     // Add the warning column width,
-    // if showing deleted items.
-    if (showingDeletedItems) {
+    // if there are items with issues.
+    if (areIssues) {
       columnWidths.push('2.5em')
     }
 
@@ -355,12 +356,14 @@ export default function ListItem<T extends MetisComponent>({
     )
 
     // Add the warning cell.
-    if (showingDeletedItems) {
+    if (areIssues) {
+      let warningText = getWarningText(item)
+
       result.push(
         <div className='ItemCellLike ItemCellWarning' key={'warning'}>
           <WarningIndicator
-            active={item.deleted}
-            description='This item has been marked as deleted.'
+            active={Boolean(warningText)}
+            description={warningText}
           />
         </div>,
       )

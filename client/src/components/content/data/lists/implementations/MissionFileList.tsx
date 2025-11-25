@@ -1,5 +1,5 @@
 import type { ClientMissionFile } from '@client/missions/files/ClientMissionFile'
-import { useDefaultProps, useRequireLogin } from '@client/toolbox/hooks'
+import { useDefaultProps } from '@client/toolbox/hooks'
 import { FileToolbox } from '@shared/toolbox/files/FileToolbox'
 import type { TList_P } from '../List'
 import List, { createDefaultListProps } from '../List'
@@ -9,8 +9,6 @@ import List, { createDefaultListProps } from '../List'
  * @note Uses the `List` component.
  */
 export default function (props: TMissionFileList_P): TReactElement | null {
-  const login = useRequireLogin()
-
   const defaultedProps = useDefaultProps(props, {
     ...createDefaultListProps<ClientMissionFile>(),
     itemsPerPageMin: 10,

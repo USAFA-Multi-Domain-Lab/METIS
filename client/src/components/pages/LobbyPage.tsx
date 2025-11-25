@@ -10,6 +10,7 @@ import {
   useRequireLogin,
 } from '@client/toolbox/hooks'
 import { useSessionRedirects } from '@client/toolbox/hooks/sessions'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import { useState } from 'react'
 import { DefaultPageLayout } from '.'
 import Prompt from '../content/communication/Prompt'
@@ -34,7 +35,7 @@ export default function LobbyPage({
   const {} = useRequireLogin()
   const globalContext = useGlobalContext()
   const [server] = globalContext.server
-  const { beginLoading, finishLoading, navigateTo, handleError, prompt } =
+  const { finishLoading, navigateTo, handleError, prompt } =
     globalContext.actions
   const navButtonEngine = useButtonSvgEngine({
     elements: [HomeButton({ icon: 'quit', description: 'Quit session' })],
@@ -43,6 +44,7 @@ export default function LobbyPage({
   const [startInitiated, setStartInitiated] = useState<boolean>(
     session.state === 'starting',
   )
+  const [setupFailed, setSetupFailed] = useState<boolean>(session.setupFailed)
 
   /* -- COMPUTED -- */
 
@@ -67,6 +69,23 @@ export default function LobbyPage({
    */
   const navigation = compute<TNavigation_P>(() => {
     return { buttonEngine: navButtonEngine }
+  })
+
+  /**
+   * Status message for when session start is initiated.
+   */
+  const startStatus = compute<string>(() => {
+    if (setupFailed) {
+      return ' The session encountered an error during setup. For details concerning the error, please reference the server logs. Please navigate home and perform a hard delete. Then, relaunch the session and try again.'
+    }
+    return 'Session start initiated by manager. Session will start once setup is complete...'
+  })
+
+  /**
+   * Classes for the start status element.
+   */
+  const startStatusClasses = compute<ClassList>(() => {
+    return new ClassList('StartStatus').set('StartStatusFailure', setupFailed)
   })
 
   /* -- FUNCTIONS -- */
@@ -121,6 +140,10 @@ export default function LobbyPage({
   // by a manager.
   useEventListener(server, 'session-starting', () => {
     setStartInitiated(true)
+  })
+
+  useEventListener(server, 'session-setup-update', () => {
+    setSetupFailed(session.setupFailed)
   })
 
   // Add navigation middleware to properly
@@ -215,10 +238,7 @@ export default function LobbyPage({
         </div>
         <If condition={startInitiated}>
           <div className='StatusSection Section'>
-            <div className='StartStatus'>
-              Session start initiated by manager. Session will start once setup
-              is complete...
-            </div>
+            <div className={startStatusClasses.value}>{startStatus}</div>
           </div>
         </If>
         <div className='MembersSection Section'>

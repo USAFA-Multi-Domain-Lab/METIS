@@ -22,8 +22,6 @@
     line-height: 1.8rem;
     text-align: center;
     color: $color-accent-light;
-
-    @include pulse;
   }
 
   &.ModalActive {
@@ -34,5 +32,19 @@
   &.ModalInactive {
     pointer-events: none;
     opacity: 0;
+  }
+
+  // Change the color to red when erroneous.
+  &.ModalErroneous {
+    .ModalMessage {
+      color: $color-failure-light;
+    }
+  }
+
+  // Only pulse the message if not erroneous.
+  &:not(.ModalErroneous) {
+    .ModalMessage {
+      @include pulse;
+    }
   }
 }

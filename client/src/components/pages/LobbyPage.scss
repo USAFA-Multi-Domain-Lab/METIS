@@ -23,12 +23,24 @@
       margin: 0 0 1.75em;
 
       &.StatusSection {
+        display: flex;
+        justify-content: start;
+
         .StartStatus {
+          max-width: 64em;
           font-size: 0.85rem;
           font-style: italic;
+          line-height: 1.6em;
           color: $color-accent-light;
 
-          @include pulse;
+          // Change color to red if setup failed.
+          &.StartStatusFailure {
+            color: $color-failure-light;
+          }
+          // Add pulse animation if setup is ongoing.
+          &:not(.StartStatusFailure) {
+            @include pulse;
+          }
         }
       }
 

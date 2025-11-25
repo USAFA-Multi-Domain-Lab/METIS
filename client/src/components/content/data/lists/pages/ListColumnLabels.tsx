@@ -23,7 +23,7 @@ export default function ListColumnLabels<
     ordering,
     itemButtonIcons,
     minNameColumnWidth,
-    showingDeletedItems,
+    areIssues,
     getColumnWidth,
     getColumnLabel,
   } = listContext
@@ -56,8 +56,8 @@ export default function ListColumnLabels<
     columnWidths.push(`minmax(${minNameColumnWidth}, 1fr)`)
 
     // Add the warning column width,
-    // if showing deleted items.
-    if (showingDeletedItems) {
+    // if there are items with issues.
+    if (areIssues) {
       columnWidths.push('2.5em')
     }
 
@@ -103,9 +103,9 @@ export default function ListColumnLabels<
     // Add the name cell.
     result.push(<ListColumnLabel key={'name'} column={'name'} text={'Name'} />)
 
-    // If there is a deleted item, add the warning
+    // If there is an item with issues, add the warning
     // cell.
-    if (showingDeletedItems) {
+    if (areIssues) {
       result.push(
         <div
           key={'ItemWarningLabel'}

@@ -101,7 +101,7 @@ export abstract class Mission<
   }
 
   // Implemented
-  public get issues(): TMissionComponentIssue[] {
+  public get additionalIssues(): TMissionComponentIssue[] {
     return Mission.consolidateIssues(
       ...this.prototypes,
       ...this.forces,

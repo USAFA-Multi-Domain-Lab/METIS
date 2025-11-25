@@ -27,7 +27,7 @@ export const getSessions: TExpressHandler = (request, response) => {
       hasAccess ||
       hasNativeAccess
     ) {
-      sessions.push(session.toBasicJson())
+      sessions.push(session.toBasicJson({ requester: user }))
     }
   }
 

@@ -50,7 +50,7 @@ export abstract class MissionNode<
   }
 
   // Implemented
-  public get issues(): TMissionComponentIssue[] {
+  protected get additionalIssues(): TMissionComponentIssue[] {
     return MissionNode.consolidateIssues(...this.actions.values())
   }
 

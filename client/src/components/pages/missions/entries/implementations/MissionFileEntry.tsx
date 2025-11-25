@@ -17,6 +17,7 @@ import Entry from '../Entry'
  */
 export default function MissionFileEntry({
   file,
+  onDetachRequest,
 }: TMissionFileEntry_P): TReactElement | null {
   /* -- PROPS -- */
 
@@ -40,7 +41,18 @@ export default function MissionFileEntry({
   } = useObjectFormSync(file, ['alias', 'initialAccess'], {
     onChange: () => onChange(file),
   })
-  const svgEngine = useButtonSvgEngine({})
+  const svgEngine = useButtonSvgEngine({
+    elements: [
+      {
+        key: 'unlink',
+        type: 'button',
+        icon: 'unlink',
+        description: 'Detach file from mission',
+        permissions: ['missions_write'],
+        onClick: async () => await onDetachRequest(file),
+      },
+    ],
+  })
 
   /* -- FUNCTIONS -- */
 
@@ -126,4 +138,13 @@ export type TMissionFileEntry_P = {
    * The mission file to be edited.
    */
   file: ClientMissionFile
+  /**
+   * Callback to the parent component, requesting to
+   * detach the given file from the mission.
+   * @param file The file to detach.
+   * @note If no callback is provided, this operation
+   * will not be available in the default item-button
+   * list.
+   */
+  onDetachRequest: (file: ClientMissionFile) => void
 }

@@ -1,3 +1,7 @@
+import type {
+  EnvScriptResults,
+  TEnvScriptResultJson,
+} from '@shared/target-environments/EnvScriptResults'
 import { MetisComponent } from '../MetisComponent'
 import type { TExecutionCheats } from '../missions/actions/ActionExecution'
 import type { TAction } from '../missions/actions/MissionAction'
@@ -149,6 +153,83 @@ export abstract class MissionSession<
   protected actions: Map<string, TAction<T>> = new Map<string, TAction<T>>()
 
   /**
+   * Outcome of operations performed during the setup process.
+   * @note This is per instance. Therefore, if the session is reset,
+   * this will be cleared during the reset process after teardown
+   * and before setup.
+   */
+  protected setupResults: EnvScriptResults[]
+
+  /**
+   * Outcome of operations performed during the teardown process.
+   * @note This is per instance. Therefore, if the session is reset,
+   * this will be cleared during the reset process after teardown
+   * and before setup.
+   */
+  protected teardownResults: EnvScriptResults[]
+
+  /**
+   * Based upon {@link MissionSession.setupResults}, indicates
+   * whether the setup process, if initiated, encountered any
+   * failures.
+   * @note This is per instance. Therefore, if the session is reset,
+   * this will change to false during the reset process after teardown
+   * and before setup.
+   */
+  public get setupFailed(): boolean {
+    return this.setupResults.some((result) => result.status === 'failure')
+  }
+  /**
+   * Based upon {@link MissionSession.teardownResults}, indicates
+   * whether the teardown process, if initiated, encountered any
+   * failures.
+   * @note This is per instance. Therefore, if the session is reset,
+   * this will change to false during the reset process after teardown
+   * and before setup.
+   */
+  public get teardownFailed(): boolean {
+    return this.teardownResults.some((result) => result.status === 'failure')
+  }
+
+  /**
+   * ** Note: Use the static method `launch` to create a new session with a new session ID. **
+   */
+  public constructor(
+    _id: string,
+    name: string,
+    ownerId: string,
+    ownerUsername: User['username'],
+    ownerFirstName: User['firstName'],
+    ownerLastName: User['firstName'],
+    launchedAt: Date,
+    config: Partial<TSessionConfig>,
+    mission: TMission<T>,
+    memberData: TSessionMemberJson[],
+    banList: string[],
+    setupResults: EnvScriptResults[],
+    teardownResults: EnvScriptResults[],
+  ) {
+    super(_id, name, false)
+
+    this.ownerId = ownerId
+    this.ownerUsername = ownerUsername
+    this.ownerFirstName = ownerFirstName
+    this.ownerLastName = ownerLastName
+    this.launchedAt = launchedAt
+    this._config = {
+      ...MissionSession.DEFAULT_CONFIG,
+      ...config,
+    }
+    this._mission = mission
+    this._state = 'unstarted'
+    this._members = this.parseMemberData(memberData)
+    this._banList = banList
+    this.setupResults = setupResults
+    this.teardownResults = teardownResults
+    this.mapActions()
+  }
+
+  /**
    * Checks if the given action has enough resources given the
    * session and any configured cheats.
    * @param action The action in question.
@@ -200,40 +281,6 @@ export abstract class MissionSession<
     // and there are enough resources for the action, given the session
     // and the cheats.
     return nodeReady && enoughResources && !executionLimitReached
-  }
-
-  /**
-   * ** Note: Use the static method `launch` to create a new session with a new session ID. **
-   */
-  public constructor(
-    _id: string,
-    name: string,
-    ownerId: string,
-    ownerUsername: User['username'],
-    ownerFirstName: User['firstName'],
-    ownerLastName: User['firstName'],
-    launchedAt: Date,
-    config: Partial<TSessionConfig>,
-    mission: TMission<T>,
-    memberData: TSessionMemberJson[],
-    banList: string[],
-  ) {
-    super(_id, name, false)
-
-    this.ownerId = ownerId
-    this.ownerUsername = ownerUsername
-    this.ownerFirstName = ownerFirstName
-    this.ownerLastName = ownerLastName
-    this.launchedAt = launchedAt
-    this._config = {
-      ...MissionSession.DEFAULT_CONFIG,
-      ...config,
-    }
-    this._mission = mission
-    this._state = 'unstarted'
-    this._members = this.parseMemberData(memberData)
-    this._banList = banList
-    this.mapActions()
   }
 
   /**
@@ -428,6 +475,14 @@ export type TSessionJson = {
    * The IDs of participants who have been banned from the session.
    */
   banList: string[]
+  /**
+   * @see {@link MissionSession.setupResults}
+   */
+  setupResults: TEnvScriptResultJson[]
+  /**
+   * @see {@link MissionSession.teardownResults}
+   */
+  teardownResults: TEnvScriptResultJson[]
 }
 
 /**
@@ -491,6 +546,14 @@ export type TSessionBasicJson = {
    * The IDs of the managers of the session.
    */
   managerIds: string[]
+  /**
+   * @see {@link MissionSession.setupFailed}
+   */
+  setupFailed: boolean
+  /**
+   * @see {@link MissionSession.teardownFailed}
+   */
+  teardownFailed: boolean
 }
 
 /**

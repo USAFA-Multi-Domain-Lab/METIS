@@ -27,7 +27,10 @@ export const usePanelContext = () => {
  * A general container component in METIS, with the potential
  * for resizing and tabbed views.
  */
-export default function ({ children }: TPanel_P): TReactElement | null {
+export default function ({
+  children,
+  selectView: externalSelectView,
+}: TPanel_P): TReactElement | null {
   /* -- STATE -- */
 
   const Provider = PanelContext.Provider as React.Provider<TPanelContextData>
@@ -88,6 +91,16 @@ export default function ({ children }: TPanel_P): TReactElement | null {
 
   /* -- RENDER -- */
 
+  // Sync the external select view ref if provided.
+  if (externalSelectView) {
+    externalSelectView.current = (title: string) => {
+      const [, select] = state.selectedView
+      // Find the view with the provided key.
+      let view = views.find((view) => view.title === title) || null
+      select(view)
+    }
+  }
+
   return (
     <Provider value={contextValue}>
       <div className={rootClasses.value}>
@@ -106,6 +119,11 @@ export interface TPanel_P {
    * The content of the panel.
    */
   children?: React.ReactNode
+  /**
+   * Optional ref to pass to externally set the panel view.
+   * @param title The title of the view to select.
+   */
+  selectView?: React.RefObject<(title: string) => void>
 }
 
 /**

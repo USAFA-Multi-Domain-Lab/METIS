@@ -46,6 +46,8 @@ import type {
   TSessionState,
 } from '@shared/sessions/MissionSession'
 import { MissionSession } from '@shared/sessions/MissionSession'
+import type { TEnvScriptResultJson } from '@shared/target-environments/EnvScriptResults'
+import { EnvScriptResults } from '@shared/target-environments/EnvScriptResults'
 import { type TSingleTypeObject } from '@shared/toolbox/objects/ObjectToolbox'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { User } from '@shared/users/User'
@@ -101,7 +103,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   /**
    * Clean up functions created by the {@link TargetEnvContext.sleep} method.
    */
-  private sleepCleanUps: Set<() => void> = new Set()
+  private sleepCleanUps: Set<() => void>
 
   /**
    * A timeline of effect promises that have been
@@ -109,7 +111,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * teardown to ensure all effects resolve before
    * performing teardown operations.
    */
-  private effectHistory: Promise<void>[] = []
+  private effectHistory: Promise<void>[]
 
   public constructor(
     _id: string,
@@ -130,6 +132,8 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       mission,
       [],
       [],
+      [],
+      [],
     )
     this._instanceId = StringToolbox.generateRandomId()
     this._state = 'unstarted'
@@ -137,6 +141,8 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     this.initializeMission()
     this.register()
     this.assignments = {}
+    this.sleepCleanUps = new Set<() => void>()
+    this.effectHistory = []
   }
 
   // Implemented
@@ -226,6 +232,8 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       rootEffectsExposure: { expose: 'none' },
     }
     let banList: string[] = []
+    let setupResults: TEnvScriptResultJson[] = []
+    let teardownResults: TEnvScriptResultJson[] = []
 
     // Handler a requester being passed.
     if (requester) {
@@ -264,6 +272,13 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       // If the requester is authorized to manager
       // users, then include the ban list.
       if (requester.isAuthorized('manageSessionMembers')) banList = this.banList
+
+      // If the requester is authorized to start/end sessions,
+      // then include the setup and teardown results.
+      if (requester.isAuthorized('startEndSessions')) {
+        setupResults = this.setupResults.map((result) => result.toJson())
+        teardownResults = this.teardownResults.map((result) => result.toJson())
+      }
     }
 
     // Construct JSON.
@@ -280,6 +295,8 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       members: this._members.map((member) => member.toJson()),
       banList,
       config: this.config,
+      setupResults,
+      teardownResults,
     }
 
     return json
@@ -287,16 +304,20 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
   // Implemented
   public toBasicJson(
-    options: TSessionServerJsonOptions = {},
+    options: TSessionServerBasicJsonOptions = {},
   ): TSessionBasicJson {
     // Gather details.
     const { requester } = options
     let banList: string[] = []
+    let setupFailed: boolean = false
+    let teardownFailed: boolean = false
 
     // If the requester is authorized to write
     // to sessions, include the ban list.
-    if (requester?.user.isAuthorized('sessions_write_native')) {
+    if (requester?.isAuthorized('sessions_write_native')) {
       banList = this.banList
+      setupFailed = this.setupFailed
+      teardownFailed = this.teardownFailed
     }
 
     // Construct and return JSON.
@@ -315,6 +336,8 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       banList,
       observerIds: this.observers.map(({ userId: userId }) => userId),
       managerIds: this.managers.map(({ userId: userId }) => userId),
+      setupFailed,
+      teardownFailed,
     }
   }
 
@@ -414,13 +437,28 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // Get the target environments that the
     // mission of the given session uses.
     let environments = this.mission.targetEnvironments
+    let setUpPromises: Promise<EnvScriptResults[]>[] = []
 
     // For each target environment in the registry, set it up.
     for (let environment of environments) {
-      await environment.setUp(this)
+      // Run the target-environment setup hooks.
+      let promise = environment.setUp(this)
+      // Handle resolution per environment.
+      promise.then((results) => {
+        this.onSetupScriptResolution(...results)
+      })
+      // Store the promise, for awaiting later.
+      setUpPromises.push(promise)
     }
 
-    await this.applyMissionEffects('session-setup')
+    // Await all environment setups.
+    await Promise.all(setUpPromises)
+
+    // If there were setup errors, do not proceed.
+    if (this.setupFailed) return
+
+    let results = await this.applyMissionEffects('session-setup')
+    this.onSetupScriptResolution(...results)
   }
 
   /**
@@ -440,16 +478,31 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // ! the effects in terms of order of operations.
 
     // Apply mission effects purposed for session teardown.
-    await this.applyMissionEffects('session-teardown')
+    let results = await this.applyMissionEffects('session-teardown')
+    this.onTeardownScriptResolution(...results)
+
+    // If there were teardown errors, do not proceed.
+    if (this.teardownFailed) return
 
     // Get the target environments that the
     // mission of the given session uses.
     let environments = this.mission.targetEnvironments
+    let tearDownPromises: Promise<EnvScriptResults[]>[] = []
 
     // For each target environment in the registry, tear it down.
     for (let environment of environments) {
-      await environment.tearDown(this)
+      // Run the target-environment teardown hooks.
+      let promise = environment.tearDown(this)
+      // Handle resolution per environment.
+      promise.then((results) => {
+        this.onTeardownScriptResolution(...results)
+      })
+      // Store the promise, for awaiting later.
+      tearDownPromises.push(promise)
     }
+
+    // Await all environment teardowns.
+    await Promise.all(tearDownPromises)
   }
 
   /**
@@ -624,6 +677,8 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
         if (this.config.accessibility === 'testing') {
           this._state = 'ending'
           this.tearDown().then(() => {
+            // If there were teardown errors, do not proceed.
+            if (this.teardownFailed) return
             this._state = 'ended'
             this.destroy()
           })
@@ -725,6 +780,21 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     TPayload extends Omit<TServerEvents[TMethod], 'method'>,
   >(method: TMethod, payload: TPayload): void {
     for (let member of this._members) member.emit(method, payload)
+  }
+
+  /**
+   * Emits an event to all members with the given role.
+   * @param roleId The ID of the role to emit to.
+   * @param method The method of the event to emit.
+   * @param payload The payload of the event to emit.
+   */
+  public emitToRole<
+    TMethod extends TServerMethod,
+    TPayload extends Omit<TServerEvents[TMethod], 'method'>,
+  >(roleId: TMemberRoleId, method: TMethod, payload: TPayload): void {
+    for (let member of this._members) {
+      if (member.role._id === roleId) member.emit(method, payload)
+    }
   }
 
   /**
@@ -908,11 +978,12 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
     // Perform setup.
     await this.setUp()
+    // If setup failed, do not proceed.
+    if (this.setupFailed) return
 
     // Mark the session as started.
     this._state = 'started'
     this.emitStartResponses(event, member, 'session-started')
-
     // Perform any effect triggered by session start.
     this.applyMissionEffects('session-start')
   }
@@ -964,6 +1035,9 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     })
     this.clearMembers()
     await this.tearDown()
+
+    // If teardown failed, do not proceed.
+    if (this.teardownFailed) return
 
     // Mark the session as ended.
     this._state = 'ended'
@@ -1020,6 +1094,8 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
     // Perform teardown.
     await this.tearDown()
+    // If teardown failed, do not proceed.
+    if (this.teardownFailed) return
 
     // Assign a new instance ID.
     this._instanceId = StringToolbox.generateRandomId()
@@ -1029,9 +1105,15 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     this._mission = ServerMission.fromSaveJson(this.mission.toSaveJson())
     this.initializeMission()
     this.mapActions()
+    // Reset setup and teardown results for the
+    // new instance.
+    this.setupResults = []
+    this.teardownResults = []
 
     // Perform setup.
     await this.setUp()
+    // If setup failed, do not proceed.
+    if (this.setupFailed) return
 
     // Mark as started and emit the response to
     // all members.
@@ -1888,6 +1970,72 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   }
 
   /**
+   * Helper method to consolidate the logic between {@link onSetupScriptResolution}
+   * and {@link onTeardownScriptResolution} methods.
+   * @param destination The array to which the new results will be added.
+   * @param eventMethod The event method to emit to session managers.
+   * @param newResults The new results to process.
+   */
+  private onScriptResolution = (
+    destination: EnvScriptResults[],
+    eventMethod: 'session-setup-update' | 'session-teardown-update',
+    ...newResults: EnvScriptResults[]
+  ): void => {
+    // Filter out non-erroneous results.
+    let erroneousResults = newResults.filter(
+      (result) => result.status === 'failure',
+    ) as EnvScriptResults<'failure'>[]
+
+    // If there are erroneous results...
+    if (erroneousResults.length > 0) {
+      for (let result of erroneousResults) {
+        // Log each erroneous result.
+        targetEnvLogger.error(
+          `Environment hook "${result.environment.name}" failed with error:`,
+          result.error,
+        )
+      }
+    }
+
+    // Store new hook results for later review.
+    destination.push(...newResults)
+    // Forward results to session managers.
+    this.emitToRole('manager', eventMethod, {
+      data: {
+        results: newResults.map((result) => result.toJson()),
+      },
+    })
+  }
+
+  /**
+   * Handler for when a target-environment setup script (hook or effect)
+   * has completed its execution.
+   * @param results The results of setup script executions.
+   */
+  private onSetupScriptResolution = (...results: EnvScriptResults[]): void => {
+    this.onScriptResolution(
+      this.setupResults,
+      'session-setup-update',
+      ...results,
+    )
+  }
+
+  /**
+   * Handler for when a target-environment teardown script (hook or effect)
+   * has completed its execution.
+   * @param results The results of teardown script executions.
+   */
+  private onTeardownScriptResolution = (
+    ...results: EnvScriptResults[]
+  ): void => {
+    this.onScriptResolution(
+      this.teardownResults,
+      'session-teardown-update',
+      ...results,
+    )
+  }
+
+  /**
    * Applies an effect to its target script with the given context.
    * @param effect The effect to apply.
    * @param context The context for the target script.
@@ -1898,7 +2046,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     effect: ServerEffect<TType>,
     context: TargetScriptContext<TType>,
     locationMessage: string,
-  ): Promise<void> {
+  ): Promise<EnvScriptResults> {
     // If the effect doesn't have a target environment,
     // log an error.
     if (effect.environment === null) {
@@ -1920,15 +2068,23 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
         let promise = context.execute(effect.target.script)
         this.effectHistory.push(promise)
         await promise
+        return EnvScriptResults.success(effect.environment)
+      } else {
+        return EnvScriptResults.skipped(effect.environment)
       }
     } catch (error: any) {
-      // Give additional information about the error.
-      let message =
-        `Failed to apply effect - "${effect.name}" - to target - "${effect.target.name}" - found in the environment - "${effect.environment.name}".\n` +
-        `The effect - "${effect.name}" - can be found here:\n` +
-        `${locationMessage}\n`
-      // Log the error.
-      targetEnvLogger.error(message, error)
+      if (!(error instanceof OutdatedContextError)) {
+        targetEnvLogger.error(error)
+      } else {
+        // Give additional information about the error.
+        let message =
+          `Failed to apply effect - "${effect.name}" - to target - "${effect.target.name}" - found in the environment - "${effect.environment.name}".\n` +
+          `The effect - "${effect.name}" - can be found here:\n` +
+          `${locationMessage}\n`
+        // Log the error.
+        targetEnvLogger.error(message, error)
+      }
+      return EnvScriptResults.failure(effect.environment, error)
     }
   }
 
@@ -1939,7 +2095,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    */
   public async applyMissionEffects(
     trigger: TEffectSessionTriggered,
-  ): Promise<void> {
+  ): Promise<EnvScriptResults[]> {
     // Map of triggers to valid session states.
     const triggerToStateMap: Record<TEffectSessionTriggered, TSessionState[]> =
       {
@@ -1951,36 +2107,36 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // Get the effects for the given trigger.
     let effects = this.mission.effects
       .filter((effect) => effect.trigger === trigger)
+      .filter((effect) => effect.environment)
       .sort((a, b) => a.order - b.order)
+    let results: EnvScriptResults[] = []
 
     // Iterate through each effect and apply it.
     for (let effect of effects) {
-      try {
-        // Break if the session is no longer in the
-        // correct state for the trigger.
-        if (!triggerToStateMap[effect.trigger].includes(this.state)) {
-          break
-        }
-        // Skip if the target environment is disabled
-        if (
-          effect.environment &&
-          this.config.disabledTargetEnvs.includes(effect.environmentId)
-        ) {
-          continue
-        }
+      // Environment is guaranteed to be non-null
+      // due to the filtering above.
+      let environment: ServerTargetEnvironment = effect.environment!
 
-        let context = TargetScriptContext.createSessionContext(effect, this)
-        await this.applyEffect(
-          effect,
-          context,
-          `mission - "${this.mission.name}" - effect - "${effect.name}".`,
-        )
-      } catch (error: any) {
-        if (!(error instanceof OutdatedContextError)) {
-          targetEnvLogger.error(error)
-        }
+      // Break if the session is no longer in the
+      // correct state for the trigger.
+      if (!triggerToStateMap[effect.trigger].includes(this.state)) {
+        break
       }
+      // Skip if the target environment is disabled
+      if (this.config.disabledTargetEnvs.includes(environment._id)) {
+        continue
+      }
+
+      let context = TargetScriptContext.createSessionContext(effect, this)
+      let result = await this.applyEffect(
+        effect,
+        context,
+        `mission - "${this.mission.name}" - effect - "${effect.name}".`,
+      )
+      results.push(result)
     }
+
+    return results
   }
 
   /**
@@ -2004,38 +2160,32 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
     // Iterate through each effect and apply it.
     for (let effect of effects) {
-      try {
-        // These effects should only be applied while the
-        // session is in the 'started' state.
-        if (this.state !== 'started') {
-          break
-        }
-        // Skip if the target environment is disabled
-        if (
-          effect.environment &&
-          this.config.disabledTargetEnvs.includes(effect.environmentId)
-        ) {
-          continue
-        }
-
-        // Create and expose a new context for the target
-        // environment.
-        let context = TargetScriptContext.createExecutionContext(
-          effect,
-          this,
-          member,
-          execution,
-        )
-        await this.applyEffect(
-          effect,
-          context,
-          `force - "${effect.sourceForce.name}" - node - "${effect.sourceNode.name}" - action - "${effect.sourceAction.name}" - effect - "${effect.name}".`,
-        )
-      } catch (error: any) {
-        if (!(error instanceof OutdatedContextError)) {
-          targetEnvLogger.error(error)
-        }
+      // These effects should only be applied while the
+      // session is in the 'started' state.
+      if (this.state !== 'started') {
+        break
       }
+      // Skip if the target environment is disabled
+      if (
+        effect.environment &&
+        this.config.disabledTargetEnvs.includes(effect.environmentId)
+      ) {
+        continue
+      }
+
+      // Create and expose a new context for the target
+      // environment.
+      let context = TargetScriptContext.createExecutionContext(
+        effect,
+        this,
+        member,
+        execution,
+      )
+      await this.applyEffect(
+        effect,
+        context,
+        `force - "${effect.sourceForce.name}" - node - "${effect.sourceNode.name}" - action - "${effect.sourceAction.name}" - effect - "${effect.name}".`,
+      )
     }
   }
 
@@ -2491,6 +2641,19 @@ export type TSessionServerJsonOptions = {
    * @note If defined, then only the data accessible by the user will be included.
    */
   requester?: ServerSessionMember
+}
+
+/**
+ * Options for {@link SessionServer.toBasicJson} method.
+ */
+export type TSessionServerBasicJsonOptions = {
+  /**
+   * The user requesting the JSON, used
+   * to determine what data can be exposed.
+   * @note If not passed, sensitive data will
+   * not be included.
+   */
+  requester?: ServerUser
 }
 
 /**

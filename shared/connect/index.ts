@@ -1,3 +1,4 @@
+import type { TEnvScriptResultJson } from '@shared/target-environments/EnvScriptResults'
 import type { MetisComponent } from '../MetisComponent'
 import type {
   TActionExecutionJson,
@@ -456,6 +457,34 @@ export type TGenericServerEvents = {
      */
     request?: TRequestOfResponse
   }
+  /**
+   * Provides feedback to managers of a session during
+   * the setup process.
+   */
+  'session-setup-update': TConnectEvent<
+    'session-setup-update',
+    {
+      /**
+       * A list of newly realized results for the setup process.
+       * @note This does not include any previously existing results.
+       */
+      results: TEnvScriptResultJson[]
+    }
+  >
+  /**
+   * Provides feedback to managers of a session during
+   * the teardown process.
+   */
+  'session-teardown-update': TConnectEvent<
+    'session-teardown-update',
+    {
+      /**
+       * A list of newly realized results for the teardown process.
+       * @note This does not include any previously existing results.
+       */
+      results: TEnvScriptResultJson[]
+    }
+  >
 }
 
 /**

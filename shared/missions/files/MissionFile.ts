@@ -64,7 +64,7 @@ export abstract class MissionFile<
   }
 
   // Implemented
-  public get issues(): TMissionComponentIssue[] {
+  protected get additionalIssues(): TMissionComponentIssue[] {
     return []
   }
 

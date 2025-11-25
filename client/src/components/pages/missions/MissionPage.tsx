@@ -242,22 +242,19 @@ export default function MissionPage(
     name: 'Attached to Mission',
     items: localFiles,
     itemsPerPageMin: 4,
+    selectionSync: [
+      compute(() =>
+        selection instanceof ClientMissionFile ? selection : null,
+      ),
+      () => {},
+    ],
     getListButtonPermissions: () => ['missions_write'],
     getItemButtonPermissions: () => ['missions_write'],
     onSelect: (file) => {
       if (file) mission.select(file)
       else mission.deselect()
     },
-    onDetachRequest: (file) => {
-      if (viewMode === 'preview') return
-      // Remove the file from the mission.
-      setLocalFiles(localFiles.filter((f) => f._id !== file._id))
-      // Re-enable the file-reference in the global files list.
-      const fileRefId = file.reference._id
-      const fileRef = globalFiles.find(({ _id }) => _id === fileRefId)
-      if (fileRef) fileRef.enable()
-      onChange(file)
-    },
+    onDetachRequest: (...args) => onDetachFileRequest(...args),
   }
 
   /**
@@ -368,9 +365,15 @@ export default function MissionPage(
     navButtonEngine.setDisabled('save', !areUnsavedChanges)
   }, [areUnsavedChanges])
 
-  // Cleanup when a new effect is created.
+  // Handle selection changes.
   useEffect(() => {
+    // Cleanup when a new effect is created.
     setEffectModalActive(false)
+    // Auto-switch to the files tab if a file
+    // is ever selected.
+    if (selection instanceof ClientMissionFile) {
+      selectPrimaryView.current('Files')
+    }
   }, [selection])
 
   // Debounced issue checking to avoid excessive recomputation
@@ -576,6 +579,13 @@ export default function MissionPage(
   }
 
   /**
+   * Selects the view for the primary panel in
+   * the panel layout.
+   * @param title The title of the view to select.
+   */
+  const selectPrimaryView = useRef((title: string) => {})
+
+  /**
    * Handles when a change is made that would require saving.
    * @param components The components that have been changed.
    */
@@ -631,6 +641,23 @@ export default function MissionPage(
     onChange(file)
   }
 
+  /**
+   * Handles the request to detach a file from the mission.
+   * This will remove the file from the mission's local files
+   * and enable the file-reference in the global files list.
+   * @param file The mission file to detach.
+   */
+  const onDetachFileRequest = (file: ClientMissionFile): void => {
+    if (viewMode === 'preview') return
+    // Remove the file from the mission.
+    setLocalFiles(localFiles.filter((f) => f._id !== file._id))
+    // Re-enable the file-reference in the global files list.
+    const fileRefId = file.reference._id
+    const fileRef = globalFiles.find(({ _id }) => _id === fileRefId)
+    if (fileRef) fileRef.enable()
+    onChange(file)
+  }
+
   /* -- RENDER -- */
 
   /**
@@ -641,7 +668,13 @@ export default function MissionPage(
     if (selection instanceof ClientMission) {
       return <MissionEntry key={selection._id} mission={selection} />
     } else if (selection instanceof ClientMissionFile) {
-      return <MissionFileEntry key={selection._id} file={selection} />
+      return (
+        <MissionFileEntry
+          key={selection._id}
+          file={selection}
+          onDetachRequest={onDetachFileRequest}
+        />
+      )
     } else if (selection instanceof ClientMissionPrototype) {
       return <PrototypeEntry key={selection._id} prototype={selection} />
     } else if (selection instanceof ClientMissionForce) {
@@ -677,7 +710,7 @@ export default function MissionPage(
       <div className={rootClassName} ref={root}>
         <DefaultPageLayout navigation={navigation}>
           <PanelLayout initialSizes={['fill', panel2DefaultSize]}>
-            <Panel>
+            <Panel selectView={selectPrimaryView}>
               <PanelView title='Map'>
                 <MissionPageMap />
               </PanelView>

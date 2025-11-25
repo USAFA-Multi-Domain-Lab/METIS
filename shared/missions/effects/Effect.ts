@@ -134,7 +134,7 @@ export abstract class Effect<
   }
 
   // Implemented
-  public get issues(): TMissionComponentIssue[] {
+  protected get additionalIssues(): TMissionComponentIssue[] {
     const { environment, target } = this
 
     // Construct issue objects for the given messages.

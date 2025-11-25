@@ -11,6 +11,10 @@
   padding: 0 0.75em;
 
   .TabIcon {
+    display: flex;
+    align-items: center;
+    height: 100%;
+
     .ButtonSvg_warning-transparent {
       &:hover {
         filter: none;

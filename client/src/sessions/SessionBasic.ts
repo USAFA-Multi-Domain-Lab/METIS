@@ -32,6 +32,12 @@ export class SessionBasic
   // Implemented
   public ownerLastName: string
 
+  // Implemented
+  public setupFailed: boolean
+
+  // Implemented
+  public teardownFailed: boolean
+
   /**
    * The full name of the session owner.
    */
@@ -135,6 +141,8 @@ export class SessionBasic
     this.banList = data.banList
     this.observerIds = data.observerIds
     this.managerIds = data.managerIds
+    this.setupFailed = data.setupFailed
+    this.teardownFailed = data.teardownFailed
   }
 
   /**
@@ -160,6 +168,8 @@ export class SessionBasic
       observerIds: [],
       managerIds: [],
       banList: [],
+      setupFailed: false,
+      teardownFailed: false,
       config: {
         accessibility: 'id-required',
         infiniteResources: false,

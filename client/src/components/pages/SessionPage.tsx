@@ -73,6 +73,12 @@ export default function SessionPage({
   const [resetInitiated, setResetInitiated] = useState<boolean>(
     session.state === 'resetting',
   )
+  const [resetSetupFailed, setResetSetupFailed] = useState<boolean>(
+    session.setupFailed,
+  )
+  const [resetTeardownFailed, setResetTeardownFailed] = useState<boolean>(
+    session.teardownFailed,
+  )
 
   /* -- VARIABLES -- */
 
@@ -386,6 +392,19 @@ export default function SessionPage({
     return tabs
   })
 
+  /**
+   * The message to display when the session is resetting.
+   */
+  const sessionResetMessage = compute((): string => {
+    if (resetSetupFailed) {
+      return 'The session encountered an error during setup. For details concerning the error, please reference the server logs. Please navigate home and perform a hard delete. Then, relaunch the session and try again.'
+    } else if (resetTeardownFailed) {
+      return 'The session encountered an error during teardown. For details concerning the error, please reference the server logs. Please navigate home and perform a hard delete. Then, relaunch the session and try again.'
+    } else {
+      return 'Session reset initiated by a manager. Once teardown and setup are complete, the page will refresh...'
+    }
+  })
+
   /* -- EFFECTS -- */
 
   useMountHandler((done) => {
@@ -458,6 +477,28 @@ export default function SessionPage({
     notify('All progress has been reset by a manager.')
   })
 
+  // On setup updates, detect whether the process has failed.
+  useEventListener(
+    server,
+    'session-setup-update',
+    () => {
+      console.log('Setup failed:', session.setupFailed)
+      setResetSetupFailed(session.setupFailed)
+    },
+    [session],
+  )
+
+  // On teardown updates, detect whether the process has failed.
+  useEventListener(
+    server,
+    'session-teardown-update',
+    () => {
+      console.log('session page')
+      setResetTeardownFailed(session.teardownFailed)
+    },
+    [session],
+  )
+
   // Update the list of local files when file access
   // is granted or revoked.
   useEventListener(
@@ -469,6 +510,12 @@ export default function SessionPage({
   // Update the resources remaining state whenever the
   // force changes.
   useEffect(() => syncResources(), [selectedForce])
+
+  useEffect(() => {
+    if (resetInitiated) {
+      navButtonEngine.disable('stop').disable('reset')
+    }
+  }, [resetInitiated])
 
   /* -- PRE-RENDER PROCESSING -- */
 
@@ -587,10 +634,9 @@ export default function SessionPage({
           </Panel>
         </PanelLayout>
         <PendingPageModal
-          message={
-            'Session reset initiated by a manager. Once teardown and setup are complete, the page will refresh...'
-          }
+          message={sessionResetMessage}
           active={resetInitiated}
+          erroneous={resetSetupFailed || resetTeardownFailed}
         />
       </DefaultPageLayout>
     </div>
