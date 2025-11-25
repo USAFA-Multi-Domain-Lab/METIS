@@ -12,11 +12,11 @@ export default function PanController({
   cameraZoom,
   onPan,
 }: TPanController): TReactElement | null {
-  /* -- state -- */
+  /* -- STATE -- */
 
   const [panningIsActive, setPanningIsActive] = useState<boolean>(false)
 
-  /* -- computed -- */
+  /* -- COMPUTED -- */
 
   /**
    * The inline class for the pan controller element.
@@ -34,7 +34,7 @@ export default function PanController({
     return classList.join(' ')
   })
 
-  /* -- functions -- */
+  /* -- FUNCTIONS -- */
 
   /**
    * Handles a mouse move event.
@@ -55,7 +55,7 @@ export default function PanController({
     }
   }
 
-  /* -- render -- */
+  /* -- RENDER -- */
 
   // Render root JSX.
   return (

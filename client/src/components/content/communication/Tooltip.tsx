@@ -110,7 +110,7 @@ export default function Tooltip({
 
     // If the tooltip element is found, then
     // show the tooltip.
-    if (tooltip_elm) {
+    if (tooltip_elm && tooltipDescription) {
       // This will set the tooltip element's opacity
       // to 1 so that it is visible.
       tooltip_elm.style.opacity = '1'
@@ -131,9 +131,10 @@ export default function Tooltip({
     // This will grab the current tooltip element that is being displayed.
     let tooltip_elm: HTMLDivElement | null | undefined = tooltips.current
 
-    // If the tooltip element is found, then
+    // If the tooltip element is found and
+    // the tooltip description is not empty, then
     // hide the tooltip.
-    if (tooltip_elm) {
+    if (tooltip_elm && tooltipDescription) {
       // This will set the tooltip element's opacity
       // to 0 so that it is not visible.
       tooltip_elm.style.opacity = '0'

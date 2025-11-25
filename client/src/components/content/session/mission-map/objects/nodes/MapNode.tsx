@@ -15,13 +15,6 @@ import type { TMapCompatibleNode, TMapNode_P, TNodeButton } from '.'
 import { useMapContext } from '../../MissionMap'
 import './MapNode.scss'
 
-/* -- CONSTANTS -- */
-
-/**
- * The maximum zoom level where the node's content will be displayed.
- */
-export const MAX_NODE_CONTENT_ZOOM = 1 / 30 // [numerator]em = [denominator]px
-
 /* -- FUNCTIONS -- */
 
 /**
@@ -49,7 +42,6 @@ function calculateInitialProgress(node: TMapCompatibleNode): number {
  */
 export default function MapNode<TNode extends TMapCompatibleNode>({
   node,
-  cameraZoom,
   onSelect,
   applyTooltip = () => '',
 }: TMapNode_P<TNode>): TReactElement | null {
@@ -57,6 +49,7 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
 
   const localContext = useMapContext()
   const { centerOnMap } = localContext
+  const [nodeContentVisible] = localContext.state.nodeContentVisible
   const [name, setName] = useState<string>(node.name)
   const [color, setColor] = useState<string>(node.color)
   const [excluded, setExcluded] = useState<boolean>(node.exclude)
@@ -198,7 +191,7 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
 
     // If the camera is zoomed out too far,
     // make the background color the node's color.
-    if (cameraZoom.x > MAX_NODE_CONTENT_ZOOM && !blocked && !cutOff) {
+    if (!nodeContentVisible && !blocked && !cutOff) {
       backgroundColor = color
     }
 
@@ -321,7 +314,7 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
 
     // Add the hidden class if the camera is
     // zoomed out too far.
-    if (cameraZoom.x > MAX_NODE_CONTENT_ZOOM) {
+    if (!nodeContentVisible) {
       classList.push('Hidden')
     }
 
@@ -336,7 +329,7 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
 
     // Add the hidden class if the camera is
     // zoomed out too far.
-    if (cameraZoom.x > MAX_NODE_CONTENT_ZOOM) {
+    if (!nodeContentVisible) {
       classList.push('Hidden')
     }
 

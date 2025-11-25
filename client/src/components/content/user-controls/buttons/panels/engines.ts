@@ -289,8 +289,13 @@ export class ButtonSvgEngine {
     propValue: TPropValue,
   ): ButtonSvgEngine {
     let element = this.get(key)
-    if (element) element[propKey] = propValue
-    this.onChange()
+    // Only set the property if the element exists
+    // and the new property value is different than
+    // the current value.
+    if (element && element[propKey] !== propValue) {
+      element[propKey] = propValue
+      this.onChange()
+    }
     return this
   }
 

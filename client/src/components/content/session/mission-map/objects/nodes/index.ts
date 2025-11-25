@@ -1,4 +1,4 @@
-import MapNode, { MAX_NODE_CONTENT_ZOOM } from './MapNode'
+import MapNode from './MapNode'
 
 export * from './index.d'
-export { MapNode, MAX_NODE_CONTENT_ZOOM }
+export { MapNode }

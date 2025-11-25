@@ -30,7 +30,7 @@ import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { ReactNode } from 'react'
 import React, { useEffect, useRef, useState } from 'react'
 
-/* -- constants -- */
+/* -- CONSTANTS -- */
 
 /**
  * The default values of the global context state.
@@ -683,6 +683,8 @@ function GlobalContextProvider(props: { children: ReactNode }): TReactElement {
   useEffect(() => {
     Logging.debugMode = debugMode
   }, [debugMode])
+
+  console.log('GlobalContextProvider rendered.', context)
 
   // Return JSX with the context provider
   // wrapping the children dependent on

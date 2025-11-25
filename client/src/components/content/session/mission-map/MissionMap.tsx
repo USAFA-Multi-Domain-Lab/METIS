@@ -13,8 +13,7 @@ import {
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import { Vector1D } from '@shared/toolbox/numbers/vectors/Vector1D'
 import { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { v4 as generateHash } from 'uuid'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { ButtonSvgEngine } from '../../user-controls/buttons/panels/engines'
 import {
   useButtonSvgLayout,
@@ -26,7 +25,7 @@ import Grid from './objects/Grid'
 import Line from './objects/Line'
 import PrototypeSlot from './objects/PrototypeSlot'
 import type { TMapCompatibleNode } from './objects/nodes'
-import { MapNode, MAX_NODE_CONTENT_ZOOM } from './objects/nodes'
+import { MapNode } from './objects/nodes'
 import Hud from './ui/Hud'
 import PanController from './ui/PanController'
 import Overlay from './ui/overlay'
@@ -110,6 +109,11 @@ export const MAP_EM_GRID_ENABLED = false
 export const MAP_NODE_GRID_ENABLED = true
 
 /**
+ * The maximum zoom level where the node's content will be displayed.
+ */
+export const MAX_NODE_CONTENT_ZOOM = 1 / 30 // [numerator]em = [denominator]px
+
+/**
  * The tab to display when no tabs exist.
  */
 const INVALID_TAB: TTabBarTab = {
@@ -184,6 +188,25 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
     scene: useRef<HTMLDivElement>(null),
   }
 
+  /**
+   * The position to display the camera at. Changed by panning.
+   */
+  const [cameraPosition] = useState<Vector2D>(
+    new Vector2D(DEFAULT_CAMERA_X, DEFAULT_CAMERA_Y),
+  )
+  /**
+   * The zoom level of the camera. Changed by zooming with a mouse or trackpad.
+   */
+  const [cameraZoom] = useState<Vector1D>(
+    new Vector1D(DEFAULT_CAMERA_ZOOM, {
+      onChange: () => {
+        buttonEngine.setDisabled('zoom-out', cameraZoom.x >= MAX_CAMERA_ZOOM)
+        buttonEngine.setDisabled('zoom-in', cameraZoom.x <= MIN_CAMERA_ZOOM)
+        setNodeContentVisible(cameraZoom.x <= MAX_NODE_CONTENT_ZOOM)
+      },
+    }),
+  )
+
   const state: TMissionMap_S = {
     selectedForce: defaultedProps.selectedForce,
     tabIndex: withPreprocessor(
@@ -196,19 +219,15 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
       },
     ),
     mapPreferencesVisible: useState<boolean>(false),
+    nodeContentVisible: useState<boolean>(
+      cameraZoom.x <= MAX_NODE_CONTENT_ZOOM,
+    ),
   }
 
   const [selectedForce, selectForce] = state.selectedForce
   const [tabIndex, setTabIndex] = state.tabIndex
   const [mapPreferencesVisible, setMapPreferencesVisible] =
     state.mapPreferencesVisible
-
-  /**
-   * Counter that is incremented whenever the component
-   * needs to be re-rendered.
-   */
-  const [_, setForcedUpdateTracker] = useState<string>('initial')
-
   /**
    * The current structure change key for the mission.
    */
@@ -222,32 +241,7 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
   const [nodeCenteringTarget, setNodeCenteringTarget] =
     useState<TMapCompatibleNode | null>(null)
 
-  /**
-   * Force the component to re-render.
-   */
-  const forceUpdate = useCallback(() => {
-    setForcedUpdateTracker(generateHash())
-  }, [])
-
-  /**
-   * The position to display the camera at. Changed by panning.
-   */
-  const [cameraPosition] = useState<Vector2D>(
-    new Vector2D(DEFAULT_CAMERA_X, DEFAULT_CAMERA_Y, {
-      onChange: () => forceUpdate(),
-    }),
-  )
-  /**
-   * The zoom level of the camera. Changed by zooming with a mouse or trackpad.
-   */
-  const [cameraZoom] = useState<Vector1D>(
-    new Vector1D(DEFAULT_CAMERA_ZOOM, {
-      onChange: () => {
-        buttonEngine.setDisabled('zoom-out', cameraZoom.x === MAX_CAMERA_ZOOM)
-        buttonEngine.setDisabled('zoom-in', cameraZoom.x === MIN_CAMERA_ZOOM)
-      },
-    }),
-  )
+  const [nodeContentVisible, setNodeContentVisible] = state.nodeContentVisible
 
   /* -- COMPUTED -- */
 
@@ -1046,6 +1040,10 @@ export type TMissionMap_S = {
    * displayed to the user.
    */
   mapPreferencesVisible: TReactState<boolean>
+  /**
+   * Whether the node content is currently visible.
+   */
+  nodeContentVisible: TReactState<boolean>
 }
 
 /**

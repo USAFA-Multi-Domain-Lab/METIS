@@ -20,7 +20,7 @@
   width: $page-width;
   height: $page-height;
 
-  .Disabled {
+  .Disabled:not(.ButtonSvg) {
     opacity: 0.65 !important;
 
     input,
