@@ -1,3 +1,4 @@
+import type { TSessionConfig } from '@shared/sessions/MissionSession'
 import { DateToolbox } from '@shared/toolbox/dates/DateToolbox'
 import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
@@ -6,10 +7,11 @@ import { context } from '../context'
 import type { MetisComponent } from '../MetisComponent'
 import type { TExecution } from './actions/ActionExecution'
 import type { TAction, TMissionActionJson } from './actions/MissionAction'
-import type {
-  TEffectHost,
-  TEffectSessionTriggered,
-  TEffectSessionTriggeredJson,
+import {
+  Effect,
+  type TEffectHost,
+  type TEffectSessionTriggered,
+  type TEffectSessionTriggeredJson,
 } from './effects/Effect'
 import type { TMissionFileJson } from './files/MissionFile'
 import type {
@@ -728,6 +730,26 @@ export abstract class Mission<
       if (execution) return execution
     }
     return undefined
+  }
+
+  /**
+   * @param config The session config for which to get relevant issues.
+   * @returns All issues in the mission relevant the session
+   * configuration passed. All issues related to target-environments
+   * which are disabled by this config will be filtered out.
+   */
+  public getIssuesForConfig(config: TSessionConfig): TMissionComponentIssue[] {
+    let { disabledTargetEnvs } = config
+    return this.issues.filter(({ component }) => {
+      if (
+        component instanceof Effect &&
+        disabledTargetEnvs.includes(component.environmentId)
+      ) {
+        return false
+      } else {
+        return true
+      }
+    })
   }
 
   /**

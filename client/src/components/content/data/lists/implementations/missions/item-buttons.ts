@@ -38,7 +38,7 @@ export function useMissionItemButtonCallbacks(
         navigateTo('MissionPage', { missionId: mission._id })
       }
     },
-    onPlayTestRequest: async (mission, returnPage) => {
+    onPlayTestRequest: async (mission, cancelPage) => {
       // Prevent multiple simultaneous play-test launches
       if (isLaunchingPlayTest) {
         console.warn(
@@ -67,20 +67,17 @@ export function useMissionItemButtonCallbacks(
         if (!session) throw new Error('Failed to join test session.')
 
         // Navigate to session config page to let user configure before starting
-        navigateTo('SessionConfigPage', { session })
+        navigateTo('SessionConfigPage', { session, cancelPage: cancelPage })
         finishLoading()
-
-        // Reset launching flag
-        isLaunchingPlayTest = false
       } catch (error) {
-        // Reset launching flag on error
-        isLaunchingPlayTest = false
         console.error('Failed to launch play-test session.')
         console.error(error)
         handleError({
           message: 'Failed to launch play-test session.',
           notifyMethod: 'bubble',
         })
+      } finally {
+        isLaunchingPlayTest = false
       }
     },
     onLaunchRequest: (mission, returnPage) => {
@@ -175,12 +172,12 @@ export type TMissionItemButtonCallbacks = {
   /**
    * Callback for when the user requests to play-test a mission.
    * @param mission The mission to play-test.
-   * @param returnPage The page to return to once the user quits
+   * @param cancelPage The page to return to once the user quits
    * from their play-test session.
    */
   onPlayTestRequest: (
     mission: ClientMission,
-    returnPage: 'HomePage' | 'MissionPage',
+    cancelPage: 'HomePage' | 'MissionPage',
   ) => Promise<void>
   /**
    * Callback for when the user requests to launch a mission.

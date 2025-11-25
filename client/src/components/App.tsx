@@ -232,7 +232,10 @@ export default function (props: {}): TReactElement | null {
                 // For testing sessions, go to SessionConfigPage
                 // For normal sessions, go to LobbyPage
                 if (session.config.accessibility === 'testing') {
-                  navigateTo('SessionConfigPage', { session })
+                  navigateTo('SessionConfigPage', {
+                    session,
+                    cancelPage: 'HomePage',
+                  })
                 } else {
                   navigateTo('LobbyPage', { session })
                 }

@@ -133,11 +133,7 @@ export default function LaunchPage({
 
       try {
         // If there are invalid objects and effects are enabled for any target env...
-        if (
-          sessionConfig.disabledTargetEnvs.length <
-            mission.targetEnvironments.length &&
-          mission.issues.length > 0
-        ) {
+        if (mission.getIssuesForConfig(sessionConfig).length) {
           // Create a message for the user.
           let message =
             `**Warning:** The mission for this session has issues due to unresolved conflicts. If you proceed, the session may not function as expected.\n` +

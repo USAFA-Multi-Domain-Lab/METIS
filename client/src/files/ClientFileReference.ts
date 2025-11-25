@@ -108,7 +108,7 @@ export class ClientFileReference
       new Date(json.updatedAt),
       createdBy,
       json.createdByUsername,
-      false,
+      json.deleted,
     )
   }
 

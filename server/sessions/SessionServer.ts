@@ -978,8 +978,17 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
     // Perform setup.
     await this.setUp()
-    // If setup failed, do not proceed.
-    if (this.setupFailed) return
+
+    // If the setup failed...
+    if (this.setupFailed) {
+      // ...and it is a test session, then destroy it.
+      if (this.config.accessibility === 'testing') {
+        this._state = 'ended'
+        this.destroy()
+      }
+      // ...do not proceed.
+      return
+    }
 
     // Mark the session as started.
     this._state = 'started'

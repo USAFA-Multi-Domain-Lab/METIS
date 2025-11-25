@@ -5,7 +5,11 @@ import {
 
 import type { SessionClient } from '@client/sessions/SessionClient'
 import { compute } from '@client/toolbox'
-import { useMountHandler, useRequireLogin } from '@client/toolbox/hooks'
+import {
+  useEventListener,
+  useMountHandler,
+  useRequireLogin,
+} from '@client/toolbox/hooks'
 import type { TMissionComponentIssue } from '@shared/missions/MissionComponent'
 import { useState } from 'react'
 import { DefaultPageLayout } from '.'
@@ -20,8 +24,9 @@ import './SessionConfigPage.scss'
 export default function SessionConfigPage({
   session,
   session: { mission },
+  cancelPage,
 }: TSessionConfigPage_P): TReactElement | null {
-  /* -- state -- */
+  /* -- STATE -- */
 
   const globalContext = useGlobalContext()
   const {
@@ -32,6 +37,7 @@ export default function SessionConfigPage({
     handleError,
     notify,
   } = globalContext.actions
+  const [server] = globalContext.server
   const [config] = useState(session.config)
   const [isStarting, setIsStarting] = useState<boolean>(false)
   const navButtonEngine = useButtonSvgEngine({
@@ -86,22 +92,26 @@ export default function SessionConfigPage({
       )
       return
     }
+    if (cancelPage === 'LobbyPage') {
+      throw new Error('Cannot start play test with LobbyPage as cancel page.')
+    }
 
     try {
+      let proceedToStart = true
+
       // Set starting state to prevent duplicate starts
       setIsStarting(true)
 
-      // If there are invalid objects and effects are enabled for any target env...
-      if (
-        config.disabledTargetEnvs.length < mission.targetEnvironments.length &&
-        mission.issues.length > 0
-      ) {
+      // If there are issues in the mission given the
+      // current state of the config, then prompt the
+      // user before proceeding.
+      if (mission.getIssuesForConfig(config).length) {
         // Create a message for the user.
         let message =
           `**Warning:** The mission for this session has issues due to unresolved conflicts. If you proceed, the session may not function as expected.\n` +
           `**What would you like to do?**`
         // Create a list of choices for the user.
-        let choices: string[] = []
+        let choices: Array<'Edit Mission' | 'Start Anyway' | 'Cancel'> = []
 
         // Generate choices based on the user's permissions.
         if (isAuthorized(['missions_write', 'sessions_write_native'])) {
@@ -122,58 +132,43 @@ export default function SessionConfigPage({
             renderObjectListItem: renderMissionComponent,
           },
         })
-        // If the user cancels then cancel the start of the session.
-        if (choice === 'Cancel') {
-          setIsStarting(false)
-          return
+        // If the user cancels or chooses to edit the mission,
+        // do not proceed with starting the session.
+        if (choice === 'Cancel' || choice === 'Edit Mission') {
+          proceedToStart = false
         }
-        // If the user chooses to edit the mission then navigate to the mission page.
+        // If the user chooses to edit the mission then navigate
+        // to the mission page.
         if (choice === 'Edit Mission') {
           navigateTo('MissionPage', { missionId: mission._id })
         }
-        // If the user chooses to start anyway then start the session.
-        if (choice === 'Start Anyway') {
-          beginLoading('Saving session configuration...')
-          await session.$updateConfig(config)
+      }
 
-          // Notify user of session start.
-          beginLoading('Starting play-test...')
-          await session.$start()
-          finishLoading()
-
-          // Navigate directly to the session page
-          navigateTo(
-            'SessionPage',
-            { session, returnPage: 'HomePage' },
-            { bypassMiddleware: true },
-          )
-
-          notify('Successfully started session.')
-        }
-      } else {
+      // Proceed to start the session if permitted.
+      if (proceedToStart) {
         beginLoading('Saving session configuration...')
         await session.$updateConfig(config)
+        // Notify user of session start.
         beginLoading('Starting play-test...')
         await session.$start()
         finishLoading()
-
         // Navigate directly to the session page
         navigateTo(
           'SessionPage',
-          { session, returnPage: 'HomePage' },
+          { session, returnPage: cancelPage },
           { bypassMiddleware: true },
         )
-
         notify('Successfully started session.')
       }
-
-      setIsStarting(false)
     } catch (error: any) {
+      console.error('Error starting play-test session:')
+      console.error(error)
       handleError({
-        message: 'Failed to start play-test session.',
+        message:
+          'Failed to start play-test session. Please contact system administrator.',
         notifyMethod: 'bubble',
       })
-      // Reset starting state after error
+    } finally {
       setIsStarting(false)
     }
   }
@@ -208,12 +203,22 @@ export default function SessionConfigPage({
   const cancel = async (): Promise<void> => {
     if (config.accessibility === 'testing') {
       await session.$quit()
-      navigateTo('HomePage', {})
-      return
     }
 
-    // Navigate to the lobby page.
-    navigateTo('LobbyPage', { session })
+    // Navigate to the specified cancel page.
+    switch (cancelPage) {
+      case 'HomePage':
+        // Navigate to the lobby page.
+        navigateTo(cancelPage, { session })
+        break
+      case 'MissionPage':
+        navigateTo(cancelPage, { missionId: mission._id })
+        break
+      case 'LobbyPage':
+      default:
+        navigateTo('LobbyPage', { session })
+        break
+    }
   }
 
   /* -- EFFECTS -- */
@@ -252,6 +257,23 @@ export default function SessionConfigPage({
       }
     }
   })
+
+  // Handle session setup failures.
+  useEventListener(
+    server,
+    'session-setup-update',
+    () => {
+      if (session.setupFailed) {
+        cancel()
+        handleError({
+          message:
+            'Play-test setup failed. Please contact system administrator.',
+          notifyMethod: 'bubble',
+        })
+      }
+    },
+    [server],
+  )
 
   /* -- COMPUTED -- */
 
@@ -298,4 +320,8 @@ export type TSessionConfigPage_P = {
    * The session to configure.
    */
   session: SessionClient
+  /**
+   * The page to navigate to if the configuration is cancelled.
+   */
+  cancelPage: 'HomePage' | 'MissionPage' | 'LobbyPage'
 }

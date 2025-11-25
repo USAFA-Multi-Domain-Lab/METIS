@@ -480,20 +480,9 @@ export default function SessionPage({
   // On setup updates, detect whether the process has failed.
   useEventListener(
     server,
-    'session-setup-update',
+    ['session-setup-update', 'session-teardown-update'],
     () => {
-      console.log('Setup failed:', session.setupFailed)
       setResetSetupFailed(session.setupFailed)
-    },
-    [session],
-  )
-
-  // On teardown updates, detect whether the process has failed.
-  useEventListener(
-    server,
-    'session-teardown-update',
-    () => {
-      console.log('session page')
       setResetTeardownFailed(session.teardownFailed)
     },
     [session],
