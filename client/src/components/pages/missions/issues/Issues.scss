@@ -38,8 +38,7 @@
           }
 
           &::placeholder {
-            color: unset;
-            opacity: 0.5;
+            color: $color-faded;
           }
         }
       }

@@ -12,6 +12,7 @@ import { DetailString } from '../../form/DetailString'
 import { DetailToggle } from '../../form/DetailToggle'
 import { DetailDropdown } from '../../form/dropdown'
 import { ButtonText } from '../../user-controls/buttons/ButtonText'
+import If from '../../util/If'
 import './SessionConfig.scss'
 import TargetEnvSettings from './TargetEnvSettings'
 
@@ -21,6 +22,7 @@ import TargetEnvSettings from './TargetEnvSettings'
 export default function SessionConfig({
   sessionConfig,
   mission,
+  sessionId = null,
   saveButtonText = 'Save',
   disabled = false,
   onChange = () => {},
@@ -89,11 +91,16 @@ export default function SessionConfig({
 
   return (
     <div className='SessionConfig'>
+      <div className='Title'>Session Configuration</div>
       <Panel>
-        <PanelView title='Settings'>
+        <PanelView title='Session'>
           <div className='PanelContent'>
+            <DetailLocked label='Mission Name' stateValue={mission.name} />
+            <If condition={sessionId !== null}>
+              <DetailLocked label='Session ID' stateValue={sessionId!} />
+            </If>
             <DetailString
-              label='Name'
+              label='Session Name'
               value={name}
               setValue={setName}
               fieldType='required'
@@ -148,6 +155,10 @@ export type TSessionConfig_P = {
    * The mission to which the session belongs.
    */
   mission: ClientMission
+  /**
+   * The ID of the session being configured, or null if creating a new session.
+   */
+  sessionId?: string | null
   /**
    * The text for the save button.
    * @default 'Save'
