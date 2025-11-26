@@ -2,6 +2,7 @@ import type { MetisServer } from '@server/MetisServer'
 import type { Router } from 'express'
 import { auth } from '../../../middleware/users'
 import { getChangelog } from '../controllers/info/changelog.get'
+import { getCredits } from '../controllers/info/credits.get'
 import { getInfo } from '../controllers/info/index.get'
 import type { TMetisRouterMap } from '../library/MetisRouter'
 
@@ -20,6 +21,7 @@ const routerMap: TMetisRouterMap = (
     }),
     getChangelog,
   )
+  router.get('/credits/', getCredits)
 
   done()
 }

@@ -3,7 +3,6 @@ import { MetisInfo } from '@client/info/MetisInfo'
 import { compute } from '@client/toolbox'
 import { useMountHandler } from '@client/toolbox/hooks'
 import { useState } from 'react'
-import type { TPage_P } from '.'
 import { DefaultPageLayout } from '.'
 import Markdown, {
   MarkdownTheme as EMarkdownTheme,
@@ -11,35 +10,42 @@ import Markdown, {
 import type { TNavigation_P } from '../content/general-layout/Navigation'
 import { HomeButton, ProfileButton } from '../content/general-layout/Navigation'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
-import './ChangelogPage.scss'
+import './DocPage.scss'
 
-export interface IChangelogPage extends TPage_P {}
-
-// This will render a page where a user can
-// view all the changes made to the application.
-export default function ChangelogPage({}: IChangelogPage): TReactElement | null {
+/**
+ * Displays documentation content such as credits
+ * or changelog.
+ */
+export default function DocPage({ source }: TDocPage_P): TReactElement | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
-  const [login] = globalContext.login
-  const { beginLoading, finishLoading, handleError, navigateTo, logout } =
-    globalContext.actions
-  const [changelog, setChangelog] = useState<string>('')
+  const { beginLoading, finishLoading, handleError } = globalContext.actions
+  const [doc, setDoc] = useState<string>('')
   const navButtonEngine = useButtonSvgEngine({
     elements: [HomeButton(), ProfileButton()],
   })
 
-  /* -- COMPONENT EFFECTS -- */
+  /* -- EFFECTS -- */
 
   useMountHandler(async (done) => {
     // Show loading page.
-    beginLoading('Retrieving changelog...')
+    beginLoading('Retrieving document...')
 
-    // Fetch changelog.
+    // Fetch doc.
     try {
-      setChangelog(await MetisInfo.$fetchChangelog())
+      switch (source) {
+        case 'changelog':
+          setDoc(await MetisInfo.$fetchChangelog())
+          break
+        case 'credits':
+          setDoc(await MetisInfo.$fetchCredits())
+          break
+        default:
+          throw new Error('Invalid document source specified.')
+      }
     } catch (error) {
-      handleError('Failed to retrieve changelog.')
+      handleError('Failed to retrieve document.')
     }
 
     // Complete loading/mounting process.
@@ -59,12 +65,24 @@ export default function ChangelogPage({}: IChangelogPage): TReactElement | null 
   /* -- RENDER -- */
 
   return (
-    <div className='ChangelogPage Page'>
+    <div className='DocPage Page'>
       <DefaultPageLayout navigation={navigation} includeFooter={false}>
-        <div className='Changelog'>
-          <Markdown markdown={changelog} theme={EMarkdownTheme.ThemePrimary} />
+        <div className='Doc'>
+          <Markdown markdown={doc} theme={EMarkdownTheme.ThemePrimary} />
         </div>
       </DefaultPageLayout>
     </div>
   )
+}
+
+/* -- TYPES -- */
+
+/**
+ * Props for {@link DocPage}.
+ */
+export type TDocPage_P = {
+  /**
+   * The document to load into the page.
+   */
+  source: 'changelog' | 'credits'
 }

@@ -1,3 +1,4 @@
+import { expressLogger } from '@server/logging'
 import type { Response } from 'express-serve-static-core'
 import { MetisDatabase } from '../../../database/MetisDatabase'
 import { StatusError } from './StatusError'
@@ -65,6 +66,7 @@ export abstract class ApiResponse {
     }
 
     // Otherwise, it's an internal server error, so return a 500.
+    expressLogger.error('Internal server error:', error)
     return response.sendStatus(500)
   }
 }

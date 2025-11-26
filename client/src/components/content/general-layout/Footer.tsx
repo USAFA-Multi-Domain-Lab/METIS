@@ -1,9 +1,10 @@
 import { useGlobalContext } from '@client/context/global'
 import { compute } from '@client/toolbox'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import type { TWithKey } from '@shared/toolbox/objects/ObjectToolbox'
 import Tooltip from '../communication/Tooltip'
 import { DetailToggle } from '../form/DetailToggle'
-import type { TButtonText_P } from '../user-controls/buttons/ButtonText'
+import { type TButtonText_P } from '../user-controls/buttons/ButtonText'
 import DevOnly from '../util/DevOnly'
 import './Footer.scss'
 
@@ -20,40 +21,45 @@ export default function Footer({}: TFooter): TReactElement | null {
   const [info] = globalContext.info
   const [debugMode, setDebugMode] = globalContext.debugMode
 
-  /* -- computed -- */
+  /* -- COMPUTED -- */
 
   /**
    * The class for the version display.
    */
   const versionClass = compute(() => {
-    // Gather details.
-    let classList: string[] = ['Version']
-
-    // Add 'Navigates' class if user is authorized.
-    if (login?.user.isAuthorized('changelog_read')) {
-      classList.push('Navigates')
-    }
-
-    // Join and return class list.
-    return classList.join(' ')
+    return new ClassList('Version').set(
+      'Navigates',
+      login?.user.isAuthorized('changelog_read'),
+    )
   })
 
-  /* -- functions -- */
+  /* -- FUNCTIONS -- */
 
   /**
    * Switches to the changelog page.
    */
   const viewChangelog = (): void => {
     if (login?.user.isAuthorized('changelog_read')) {
-      navigateTo('ChangelogPage', {})
+      navigateTo('DocPage', { source: 'changelog' })
     }
   }
 
-  /* -- render -- */
+  /**
+   * Switches to the credits page.
+   */
+  const viewCredits = (): void => {
+    navigateTo('DocPage', { source: 'credits' })
+  }
+
+  /* -- RENDER -- */
 
   return (
     <div className='Footer' draggable={false}>
-      <div className={versionClass} onClick={viewChangelog} draggable={false}>
+      <div
+        className={versionClass.value}
+        onClick={viewChangelog}
+        draggable={false}
+      >
         {info.versionFormatted}
         <Tooltip description={'View changelog.'} />
       </div>
@@ -66,13 +72,13 @@ export default function Footer({}: TFooter): TReactElement | null {
           />
         </DevOnly>
       </div>
-      <a
-        href='https://www.midjourney.com/'
-        className='Credit'
+      <div
+        className={'Credits Navigates'}
+        onClick={viewCredits}
         draggable={false}
       >
-        Photo by Midjourney
-      </a>
+        Credits
+      </div>
     </div>
   )
 }

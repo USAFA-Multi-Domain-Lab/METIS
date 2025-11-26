@@ -78,4 +78,26 @@ export class MetisInfo implements TMetisInfo {
       }
     })
   }
+
+  /**
+   * This will fetch the credits for the application.
+   * @resolves The credits for the application.
+   * @rejects The error that occurred while fetching the credits.
+   */
+  public static $fetchCredits(): Promise<string> {
+    return new Promise<string>(async (resolve, reject) => {
+      try {
+        let { data: credits } = await axios.get<string>('/api/v1/info/credits/')
+        resolve(credits)
+      } catch (error: any) {
+        if (error instanceof AxiosError && error.response !== undefined) {
+          console.error(`${error.response.status} Failed to get credits:`)
+        } else {
+          console.error('Failed to get credits:')
+        }
+        console.error(error)
+        reject(error)
+      }
+    })
+  }
 }

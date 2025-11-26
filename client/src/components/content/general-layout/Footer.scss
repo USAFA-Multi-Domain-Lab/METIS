@@ -5,33 +5,30 @@
   column-gap: 1em;
   margin: 30px 0 0;
   width: 100%;
-  padding: 0 1.25em;
+  padding: 0 2em;
   font-size: 0.6em;
 
-  & > * {
-    opacity: 0.7;
-  }
-
   .Version,
-  .Credit {
+  .Credits {
+    user-select: none;
     height: 2em;
+
+    &.Navigates {
+      cursor: pointer;
+      opacity: 0.7;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+
+    &:not(.Navigates) {
+      pointer-events: none;
+    }
   }
 
   .Version {
-    cursor: pointer;
     margin-right: auto;
-    -webkit-user-select: none;
-    -webkit-user-drag: none;
-    user-select: none;
-    pointer-events: none;
-
-    &.Navigates {
-      pointer-events: auto;
-    }
-
-    &:hover {
-      opacity: 1;
-    }
   }
 
   .FooterControls {
@@ -41,13 +38,11 @@
     }
   }
 
-  .Credit {
-    -webkit-user-select: none;
+  .Credits {
     user-select: none;
     margin-left: auto;
     text-align: right;
     text-decoration: none;
-    -webkit-user-drag: none;
 
     &:hover {
       opacity: 1;

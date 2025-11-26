@@ -1,3 +1,4 @@
+import { MetisServer } from '@server/MetisServer'
 import fs from 'fs'
 import path from 'path'
 import { ApiResponse } from '../../library/ApiResponse'
@@ -9,11 +10,8 @@ import { ApiResponse } from '../../library/ApiResponse'
  */
 export const getChangelog: TExpressHandler = (request, response) => {
   try {
-    // This is the path to the root of the project.
-    let __dirname = '../'
-
     // This is the path to the changelog.
-    let changelogPath: string = path.join(__dirname, 'docs', 'changelog.md')
+    let changelogPath = path.join(MetisServer.APP_DIR, '../docs/changelog.md')
 
     // This is the changelog.
     let changelog: string = fs.readFileSync(changelogPath, {
