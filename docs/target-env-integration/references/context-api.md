@@ -5,6 +5,7 @@ This reference documents the complete Context API available to target scripts, p
 ## Table of Contents
 
 - [Overview](#overview)
+- [Effect Types](#effect-types)
 - [🏗️ Context Structure](#️-context-structure)
 - [📋 Context Properties](#-context-properties)
 - [📤 Output Methods](#-output-methods)
@@ -24,12 +25,16 @@ The Context API provides target scripts with access to the METIS mission environ
 
 ```ts
 script: async (context) => {
-  // context: TTargetEnvExposedContext
+  // context: TTargetScriptExposedContext
 
   // Access properties
   const { arg1, arg2 } = context.effect.args
   const missionName = context.mission.name
   const username = context.user.username
+  const sessionId = context.session._id
+  const configData = context.config.targetEnvConfig?.data
+  const effectType = context.type  // 'sessionTriggeredEffect' | 'executionTriggeredEffect'
+  const triggeredBy = context.triggeredBy  // User who executed (execution-triggered only)
 
   // Call methods
   context.sendOutput('Operation starting...')
@@ -43,19 +48,25 @@ script: async (context) => {
 The context object exposes three main property categories and multiple method categories:
 
 ```ts
-interface TTargetEnvExposedContext {
-  // Properties
+interface TTargetScriptExposedContext<TType extends TEffectType> {
+  // Core Properties
+  readonly type: TType  // 'sessionTriggeredEffect' | 'executionTriggeredEffect'
   readonly effect: TTargetEnvExposedEffect
   readonly mission: TTargetEnvExposedMission
   readonly user: TTargetEnvExposedUser
+  readonly session: TTargetEnvExposedSession
+  readonly config: TTargetEnvExposedConfig
+  readonly triggeredBy: TTargetEnvExposedMember | null  // null for session-triggered
   readonly localStore: TTargetEnvStore
   readonly globalStore: TTargetEnvStore
 
   // Methods
   sendOutput: Function
+  sleep: Function
   blockNode: Function
   unblockNode: Function
   openNode: Function
+  closeNode: Function
   modifySuccessChance: Function
   modifyProcessTime: Function
   modifyResourceCost: Function
@@ -65,7 +76,181 @@ interface TTargetEnvExposedContext {
 }
 ```
 
+## Effect Types
+
+METIS supports two types of effects, each with different trigger conditions and available context properties:
+
+### Session-Triggered Effects
+
+Execute during session lifecycle events:
+- **session-setup** - When session starts (before mission starts)
+- **session-start** - When mission begins
+- **session-teardown** - When session ends
+
+**Key Characteristics:**
+- `context.type` = `'sessionTriggeredEffect'`
+- `context.triggeredBy` = `null` (no specific user triggered it)
+- No `'self'` defaults - must specify `forceKey`, `nodeKey`, `actionKey` explicitly
+- Run automatically based on session state changes
+
+### Execution-Triggered Effects
+
+Execute during action execution lifecycle:
+- **execution-initiation** - When action execution begins
+- **execution-success** - When action execution succeeds
+- **execution-failure** - When action execution fails
+
+**Key Characteristics:**
+- `context.type` = `'executionTriggeredEffect'`
+- `context.triggeredBy` = User who executed the action
+- `'self'` defaults available (current force/node/action)
+- Run in response to user actions
+
+**Example:**
+
+```ts
+script: async (context) => {
+  if (context.type === 'sessionTriggeredEffect') {
+    // Session-triggered: must specify targets explicitly
+    context.sendOutput('Session initializing...', { forceKey: 'blue-team' })
+    context.blockNode({ forceKey: 'red-team', nodeKey: 'server-room' })
+  } else {
+    // Execution-triggered: can use 'self' defaults
+    const executor = context.triggeredBy
+    context.sendOutput(`${executor.username} executed this action`)
+    context.blockNode()  // Blocks current node
+  }
+}
+```
+
 ## 📋 Context Properties
+
+### ctx.type
+
+Indicates the type of effect being executed.
+
+```ts
+readonly type: 'sessionTriggeredEffect' | 'executionTriggeredEffect'
+```
+
+**Usage Examples:**
+
+```ts
+script: async (ctx) => {
+  if (ctx.type === 'sessionTriggeredEffect') {
+    ctx.sendOutput('Running during session lifecycle')
+    // Must specify all keys explicitly
+  } else {
+    ctx.sendOutput('Running during action execution')
+    // Can use 'self' defaults
+  }
+}
+```
+
+### ctx.triggeredBy
+
+Provides information about the user who triggered the execution (execution-triggered effects only).
+
+```ts
+readonly triggeredBy: TTargetEnvExposedMember | null
+
+interface TTargetEnvExposedMember {
+  readonly _id: string
+  readonly username: string
+  readonly role: 'manager' | 'member'
+}
+```
+
+**Usage Examples:**
+
+```ts
+script: async (ctx) => {
+  if (ctx.triggeredBy) {
+    // Execution-triggered effect
+    const { username, role } = ctx.triggeredBy
+    ctx.sendOutput(`Action executed by ${username} (${role})`)
+    
+    // Audit logging
+    console.log(`User ${ctx.triggeredBy._id} executed effect ${ctx.effect._id}`)
+  } else {
+    // Session-triggered effect
+    ctx.sendOutput('Automated session lifecycle effect')
+  }
+}
+```
+
+### ctx.session
+
+Provides access to session information.
+
+```ts
+interface TTargetEnvExposedSession {
+  readonly _id: string
+  readonly name: string
+  readonly state: TSessionState
+  readonly instanceId: string
+}
+
+type TSessionState = 'unstarted' | 'starting' | 'started' | 'ending' | 'ended' | 'resetting'
+```
+
+**Usage Examples:**
+
+```ts
+script: async (ctx) => {
+  const sessionId = ctx.session._id
+  const sessionName = ctx.session.name
+  const sessionState = ctx.session.state
+  
+  ctx.sendOutput(`Session: ${sessionName} (State: ${sessionState})`)
+  
+  // Store session-specific data
+  ctx.globalStore.use('sessionMetadata', {
+    id: sessionId,
+    startedAt: Date.now(),
+  })
+}
+```
+
+### ctx.config
+
+Provides access to the target environment configuration selected for the session.
+
+```ts
+interface TTargetEnvExposedConfig {
+  readonly targetEnvConfig?: {
+    readonly _id: string
+    readonly name: string
+    readonly data: object  // Your configuration data from configs.json
+  }
+}
+```
+
+**Usage Examples:**
+
+```ts
+import { RestApi } from '@metis/api/RestApi'
+
+script: async (ctx) => {
+  // Check if configuration was selected
+  if (!ctx.config.targetEnvConfig) {
+    throw new Error('No configuration selected for this session.')
+  }
+  
+  // Access configuration metadata
+  const configId = ctx.config.targetEnvConfig._id
+  const configName = ctx.config.targetEnvConfig.name
+  
+  // Access configuration data
+  const { host, port, apiKey } = ctx.config.targetEnvConfig.data
+  
+  // Use with API clients
+  const api = RestApi.fromConfig(ctx.config.targetEnvConfig.data)
+  const response = await api.get('/endpoint')
+  
+  ctx.sendOutput(`Using config: ${configName}`)
+}
+```
 
 ### ctx.effect
 
@@ -249,6 +434,65 @@ script: async (ctx) => {
   ctx.sendOutput('Direct communication to blue team', {
     forceKey: 'blue-team',
   })
+}
+```
+
+### ctx.sleep()
+
+Pauses execution for a specified duration (session-safe alternative to setTimeout).
+
+```ts
+sleep(ms: number): Promise<void>
+```
+
+**Parameters:**
+
+- `ms` (number) - Milliseconds to sleep
+
+**Important:**
+- **Always use `context.sleep()` instead of `setTimeout()`** - setTimeout is disabled in target scripts
+- Automatically aborts if session resets, preventing stale callbacks
+- Safe for session lifecycle - won't leave dangling timers
+
+**Examples:**
+
+```ts
+script: async (ctx) => {
+  ctx.sendOutput('Starting operation...')
+  
+  // Wait 5 seconds
+  await ctx.sleep(5000)
+  
+  ctx.sendOutput('Operation complete after delay')
+  
+  // Use in loops for periodic operations
+  for (let i = 0; i < 10; i++) {
+    ctx.sendOutput(`Progress: ${i * 10}%`)
+    await ctx.sleep(1000)  // Wait 1 second between updates
+  }
+  
+  // Conditional delays
+  if (operationRequiresWarmup) {
+    ctx.sendOutput('Warming up system...')
+    await ctx.sleep(3000)
+  }
+}
+```
+
+**Why Not setTimeout?**
+
+```ts
+// ❌ WRONG - setTimeout is blocked and will throw an error
+script: async (ctx) => {
+  setTimeout(() => {
+    ctx.sendOutput('This will never execute')
+  }, 5000)
+}
+
+// ✅ CORRECT - Use context.sleep()
+script: async (ctx) => {
+  await ctx.sleep(5000)
+  ctx.sendOutput('This executes correctly')
 }
 ```
 
@@ -904,15 +1148,10 @@ args: [
 In your target script, extract the metadata objects from `ctx.effect.args`:
 
 ```ts
-import { TActionMetadata } from 'metis/target-environments/args/mission-component/action-arg'
-import { TFileMetadata } from 'metis/target-environments/args/mission-component/file-arg'
-import { TForceMetadata } from 'metis/target-environments/args/mission-component/force-arg'
-import { TNodeMetadata } from 'metis/target-environments/args/mission-component/node-arg'
-
 script: async (ctx) => {
   const { targetForce, targetNode, targetAction, configFile } = ctx.effect.args
 
-  // Type-safe access with imported types:
+  // Type-safe access with global types:
   const forceMetadata: TForceMetadata = targetForce
   const nodeMetadata: TNodeMetadata = targetNode
   const actionMetadata: TActionMetadata | undefined = targetAction
@@ -1057,6 +1296,8 @@ export default new TargetSchema({
 ### 📋 Essential Guides
 
 - **[Defining Targets](../guides/defining-targets.md)** - Target schema and script creation
+- **[Session Lifecycle & Instance Protection](../guides/session-lifecycle.md)** - Session resets and OutdatedContextError
+- **[Environment Hooks](../guides/environment-hooks.md)** - Lifecycle management for persistent connections
 - **[Data Stores](../guides/data-stores.md)** - Caching and sharing data between script executions
 - **[Target-Effect Conversion](../guides/target-effect-conversion.md)** - Argument handling and extraction
 - **[Argument Types](../guides/argument-types.md)** - Mission component argument usage
@@ -1068,5 +1309,4 @@ export default new TargetSchema({
 
 ### 🔗 References
 
-- **[Mission Structure](mission-structure.md)** - Mission hierarchy and relationships
-- **[Effect Schema](effect-schema.md)** - Effect object structure and properties
+- **[Schema Documentation](schemas.md)** - TypeScript types, interfaces, and effect object structure

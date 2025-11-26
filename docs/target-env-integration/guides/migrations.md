@@ -183,7 +183,6 @@ Integrate migrations into your target schema:
 ### Complete Target with Migrations
 
 ```ts
-import TargetSchema from '../../../../library/target-env-classes/targets'
 import TargetMigrationRegistry from 'metis/target-environments/targets/migrations/registry'
 
 // Define migrations
@@ -577,5 +576,5 @@ const migrations = new TargetMigrationRegistry().register(
 
 ### 🔗 References
 
-- **[TargetMigrationRegistry API](../references/migration-registry.md)** - Complete migration API reference
-- **[Version Management](../references/version-management.md)** - Versioning best practices
+- **[Schema Documentation](../references/schemas.md)** - Target schema and versioning patterns
+- **[Tips & Conventions](tips-and-conventions.md)** - Versioning best practices

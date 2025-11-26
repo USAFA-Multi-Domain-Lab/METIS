@@ -59,18 +59,16 @@ integration/target-env/
 
 ## 🛠️ Use the provided schema classes
 
-Import paths
+Global constructors are available without imports:
 
-```ts
-import TargetEnvSchema from '../../library/target-env-classes'
-import TargetSchema from '../../../../library/target-env-classes/targets'
-```
+- `TargetEnvSchema` - For defining target environments
+- `TargetSchema` - For defining individual targets
+- `TargetDependency` - For argument dependencies
 
 Minimal examples
 
 ```ts
 // integration/target-env/my-env/schema.ts
-import TargetEnvSchema from '../../library/target-env-classes'
 
 export default new TargetEnvSchema({
   name: 'My Environment',
@@ -81,7 +79,6 @@ export default new TargetEnvSchema({
 
 ```ts
 // integration/target-env/my-env/targets/output-panel/schema.ts
-import TargetSchema from '../../../../library/target-env-classes/targets'
 
 export default new TargetSchema({
   name: 'Output Panel',

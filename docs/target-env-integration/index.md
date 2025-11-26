@@ -21,19 +21,25 @@ The target-effect system is METIS's framework for creating reusable, configurabl
 3. **[Creating Target Environments](guides/creating-target-environments.md)** → Learn the structure
 4. **[Defining Targets](guides/defining-targets.md)** → Build your first targets
 5. **[Basic Example](examples/basic-target.md)** → See it in action
-6. **[Data Stores](guides/data-stores.md)** → Cache and share data between scripts
-7. **[Argument Types](guides/argument-types.md)** → Create better UIs
-8. **[Advanced Example](examples/complex-target.md)** → Learn advanced patterns
+6. **[Session Lifecycle](guides/session-lifecycle.md)** → Understand session resets and context protection
+7. **[Data Stores](guides/data-stores.md)** → Cache and share data between scripts
+8. **[Argument Types](guides/argument-types.md)** → Create better UIs
+9. **[Advanced Example](examples/complex-target.md)** → Learn advanced patterns
 
 ### Integrating External Systems?
 
 1. **[External API Integration](guides/external-api-integration.md)** → Master API connections
 2. **[REST API Reference](references/rest-api.md)** → HTTP patterns and authentication
-3. **[Environment Configuration](references/environment-configuration.md)** → Setup and deployment
+3. **[WebSocket API Reference](references/websocket-api.md)** → Real-time bidirectional communication
+4. **[Environment Hooks](guides/environment-hooks.md)** → Lifecycle management for persistent connections
+5. **[Environment Configuration](references/environment-configuration.md)** → Setup and deployment
 
 ### Need Reference Documentation?
 
 - **[Context API](references/context-api.md)** → Complete runtime API
+- **[REST API](references/rest-api.md)** → HTTP integration patterns
+- **[WebSocket API](references/websocket-api.md)** → Real-time WebSocket communication
+- **[Configs.json](references/configs-json.md)** → Configuration file format
 - **[Schema Documentation](references/schemas.md)** → TypeScript types and validation
 - **[Tips & Conventions](guides/tips-and-conventions.md)** → Best practices
 
@@ -43,6 +49,8 @@ The target-effect system is METIS's framework for creating reusable, configurabl
 
 - **[Creating Target Environments](guides/creating-target-environments.md)** - Project setup and structure
 - **[Defining Targets](guides/defining-targets.md)** - Creating operations and business logic
+- **[Session Lifecycle & Instance Protection](guides/session-lifecycle.md)** - Session resets and context validation
+- **[Environment Hooks](guides/environment-hooks.md)** - Lifecycle management and persistent connections
 - **[Data Stores](guides/data-stores.md)** - Caching and sharing data between script executions
 - **[External API Integration](guides/external-api-integration.md)** - Connecting to external systems
 - **[Argument Types](guides/argument-types.md)** - Building typed user interfaces
@@ -57,8 +65,10 @@ The target-effect system is METIS's framework for creating reusable, configurabl
 ### Technical References
 
 - **[Context API](references/context-api.md)** - Complete runtime API documentation
-- **[Schema Documentation](references/schemas.md)** - TypeScript types and validation
 - **[REST API](references/rest-api.md)** - HTTP endpoints and patterns
+- **[WebSocket API](references/websocket-api.md)** - Real-time WebSocket communication
+- **[Configs.json](references/configs-json.md)** - Configuration file reference
+- **[Schema Documentation](references/schemas.md)** - TypeScript types and validation
 - **[Environment Configuration](references/environment-configuration.md)** - Setup and deployment
 
 ## Related Documentation

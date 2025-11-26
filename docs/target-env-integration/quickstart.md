@@ -22,8 +22,6 @@ touch integration/target-env/my-alerts/schema.ts
 Define your environment in `schema.ts`:
 
 ```typescript
-import TargetEnvSchema from '../../library/target-env-classes'
-
 const alertEnvironment = new TargetEnvSchema({
   name: 'Alert System',
   description: 'Send alerts to external monitoring system',
@@ -46,9 +44,8 @@ touch integration/target-env/my-alerts/targets/send-alert/schema.ts
 Define your target in `targets/send-alert/schema.ts`:
 
 ```typescript
-import TargetSchema from '../../../../library/target-env-classes/targets'
-
 const sendAlert = new TargetSchema({
+  _id: 'send-alert',
   name: 'Send Alert',
   description: 'Send an alert message to external system',
   script: async (context) => {

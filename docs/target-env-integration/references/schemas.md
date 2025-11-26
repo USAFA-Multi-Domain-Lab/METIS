@@ -26,8 +26,6 @@ The `TargetEnvSchema` class represents a complete target environment - a collect
 ### Constructor
 
 ```typescript
-import TargetEnvSchema from '../../library/target-env-classes'
-
 const targetEnv = new TargetEnvSchema({
   name: 'My Target Environment',
   description: 'A collection of targets for system integration',
@@ -80,15 +78,13 @@ The `TargetSchema` class represents an individual target within a target environ
 ### Constructor
 
 ```typescript
-import TargetSchema from '../../../../library/target-env-classes/targets'
-
 const target = new TargetSchema({
   name: 'Create User',
   description: 'Creates a new user account in the system',
   migrations: new TargetMigrationRegistry(),
-  script: async (context, args) => {
+  script: async (context) => {
     // Target implementation
-    await createUser(args.username, args.email)
+    await createUser(context.effect.args.username, context.effect.args.email)
   },
   args: [
     {
@@ -142,7 +138,7 @@ The execution function that performs the target's action. This function receives
 
 ```typescript
 const target = new TargetSchema({
-  script: async (context, args) => {
+  script: async (context) => {
     // Access effect arguments
     const { username, email } = context.effect.args
 
@@ -150,7 +146,7 @@ const target = new TargetSchema({
     const userCache = context.localStore.use('userCache', new Map())
 
     // Your target logic here
-    await performAction(args)
+    await performAction({ username, email })
 
     // Send output to mission interface
     context.sendOutput('User created successfully')
@@ -239,7 +235,6 @@ Each target environment gets its own file with a single default export:
 
 ```typescript
 // File: integration/target-env/user-management/schema.ts
-import TargetEnvSchema from '../../library/target-env-classes'
 
 const userManagementEnv = new TargetEnvSchema({
   name: 'User Management System',
@@ -257,20 +252,25 @@ Each target gets its own file with a single default export:
 
 ```typescript
 // File: integration/target-env/user-management/targets/create-user/schema.ts
-import TargetSchema from '../../../../library/target-env-classes/targets'
-import { RestApi } from '../../../../library/api/rest-api'
-import { loadConfig } from '../../../../library/config'
+import { RestApi } from '@metis/api/RestApi'
 
 const createUserTarget = new TargetSchema({
   name: 'Create User',
   description: 'Creates a new user account with specified permissions',
-  script: async (context, args) => {
-    const api = RestApi.fromConfig(loadConfig())
+  script: async (context) => {
+    const { username, email, role } = context.effect.args
+    // Verify configuration is selected
+    if (!context.config.targetEnvConfig) {
+      throw new Error('No configuration selected.')
+    }
+
+    // Create API client from configuration
+    const api = RestApi.fromConfig(context.config.targetEnvConfig.data)
 
     await api.post('/users', {
-      username: args.username,
-      email: args.email,
-      role: args.role || 'user',
+      username: username,
+      email: email,
+      role: role || 'user',
     })
   },
   args: [
@@ -307,17 +307,19 @@ export default createUserTarget
 
 ```typescript
 // File: integration/target-env/user-management/targets/delete-user/schema.ts
-import TargetSchema from '../../../../library/target-env-classes/targets'
-import { RestApi } from '../../../../library/api/rest-api'
-import { loadConfig } from '../../../../library/config'
+import { RestApi } from '@metis/api/RestApi'
 
 const deleteUserTarget = new TargetSchema({
   name: 'Delete User',
   description: 'Removes a user account from the system',
-  script: async (context, args) => {
-    const api = RestApi.fromConfig(loadConfig())
+  script: async (context) => {
+    const { userId } = context.effect.args
+    if (!context.config.targetEnvConfig) {
+      throw new Error('No configuration selected.')
+    }
+    const api = RestApi.fromConfig(context.config.targetEnvConfig.data)
 
-    await api.delete(`/users/${args.userId}`)
+    await api.delete(`/users/${userId}`)
   },
   args: [
     {

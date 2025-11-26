@@ -26,8 +26,6 @@ We'll create a **"Hello World" target environment** that:
 First, create the target environment schema at `/integration/target-env/hello-world/schema.ts`:
 
 ```typescript
-import TargetEnvSchema from '../../library/target-env-classes'
-
 /**
  * A simple target environment for demonstration purposes.
  */
@@ -46,8 +44,6 @@ export default HelloWorld
 Create the target schema at `/integration/target-env/hello-world/targets/greeting/schema.ts`:
 
 ```typescript
-import TargetSchema from '../../../../library/target-env-classes/targets'
-
 /**
  * A target that creates a personalized greeting message.
  */
