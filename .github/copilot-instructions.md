@@ -39,6 +39,9 @@ METIS uses a **shared component type system** where both client and server defin
 # Root-level installation (runs all sub-packages)
 npm install
 
+# Production server start
+npm start
+
 # Development (auto-restart server with tsx watch)
 npm run dev
 
@@ -192,6 +195,10 @@ Refer to `/docs/devs/style-guide.md` for detailed conventions including docstrin
 - **Immutability**: Favor pure functions and immutable data where possible
 - **React**: Structure components for clarity and separation of concerns
 - **Formatting**: Follow Prettier rules (tab width, quotes, trailing commas)
+- **Variable Declarations**: Prefer `let` for most variables. Use `const` only for:
+  - Arrow functions that don't change
+  - True constants that should never vary at runtime (use ALL_CAPS_SNAKE_CASE naming)
+  - Example: `const MAX_RETRIES = 3` or `const handleClick = () => {}`
 
 ## Architecture Decision Records
 

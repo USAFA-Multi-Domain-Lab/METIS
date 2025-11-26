@@ -48,6 +48,9 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    */
   protected server: ServerConnection
 
+  /**
+   * The ID of the member for this client connection.
+   */
   private memberId: ClientSessionMember['_id']
 
   /**
@@ -80,6 +83,23 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   public get roleId(): TMemberRoleId {
     return this.member.roleId
   }
+
+  /**
+   * @see {@link activeExecutions}
+   */
+  private _activeExecutions: ClientActionExecution[]
+
+  /**
+   * Executions that are currently active in this session.
+   */
+  public get activeExecutions(): ClientActionExecution[] {
+    return [...this._activeExecutions]
+  }
+
+  /**
+   * Tracks the timeout which ticks active executions.
+   */
+  private activeExecutionTimeout: number | null = null
 
   /**
    * @param data Core data used to build the session object.
@@ -142,6 +162,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     this.server = server
     this.memberId = memberId
     this._state = state
+    this._activeExecutions = []
 
     this.listeners = [
       ['session-starting', this.onStarting],
@@ -446,6 +467,45 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
 
     // Handle request within node.
     node.handleRequestMade('request-send-output')
+  }
+
+  /**
+   * Periodically emits events on the mission for active
+   * executions for as long as there is time remaining for
+   * any active execution.
+   */
+  private tickActiveExecutions = (): void => {
+    // If there is already an active timeout, return.
+    if (this.activeExecutionTimeout !== null) return
+
+    // Internal recursive algorithm to isolate
+    // firstCall parameter.
+    const algorithm = (firstCall: boolean = true) => {
+      // Emit a 'tick' event.
+      if (!firstCall) this.mission.emitEvent('execution-tick')
+
+      // Set a timeout to call recursively until
+      // the time runs out on all active executions.
+      this.activeExecutionTimeout = setTimeout(() => {
+        // If there is time remaining on any active execution,
+        // call the algorithm again.
+        if (
+          this.activeExecutions.some(({ timeRemaining }) => timeRemaining > 0)
+        ) {
+          algorithm(false)
+        } else {
+          // Else, clear the timeout cache.
+          this.activeExecutionTimeout = null
+          // Emit a final tick event, assuming
+          // this isn't the first call.
+          if (!firstCall) {
+            this.mission.emitEvent('execution-tick')
+          }
+        }
+      }, 50) as any as number | null // Type casting for browser compatibility.
+    }
+
+    algorithm()
   }
 
   /**
@@ -1359,6 +1419,10 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     // Update the resources remaining for
     // the force.
     action.force.resourcesRemaining = resourcesRemaining
+
+    // Add execution to active executions.
+    this._activeExecutions.push(execution)
+    this.tickActiveExecutions()
   }
 
   /**
@@ -1397,6 +1461,11 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     // Remap actions if there are revealed nodes, since
     // those revealed nodes may contain new actions.
     if (revealedDescendants) this.mapActions()
+
+    // Remove execution from active executions.
+    this._activeExecutions = this._activeExecutions.filter(
+      ({ _id }) => executionId !== _id,
+    )
   }
 
   /**

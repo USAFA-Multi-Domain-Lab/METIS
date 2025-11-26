@@ -192,7 +192,16 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
    * The position to display the camera at. Changed by panning.
    */
   const [cameraPosition] = useState<Vector2D>(
-    new Vector2D(DEFAULT_CAMERA_X, DEFAULT_CAMERA_Y),
+    new Vector2D(DEFAULT_CAMERA_X, DEFAULT_CAMERA_Y, {
+      onChange: () => {
+        // If the scene element exists, pre translate it.
+        if (elements.scene.current) {
+          // Set the scene element's position to the
+          // negative of the camera position.
+          elements.scene.current.style.transform = `translate(${-cameraPosition.x}em, ${-cameraPosition.y}em)`
+        }
+      },
+    }),
   )
   /**
    * The zoom level of the camera. Changed by zooming with a mouse or trackpad.
@@ -241,7 +250,7 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
   const [nodeCenteringTarget, setNodeCenteringTarget] =
     useState<TMapCompatibleNode | null>(null)
 
-  const [nodeContentVisible, setNodeContentVisible] = state.nodeContentVisible
+  const [, setNodeContentVisible] = state.nodeContentVisible
 
   /* -- COMPUTED -- */
 
@@ -252,19 +261,6 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
   const disableZoom: boolean = !!overlayContent
 
   /* -- FUNCTIONS -- */
-
-  /**
-   * Pre-translates the scene to the camera position in the
-   * state. This makes the panning appear snappier.
-   */
-  const preTranslateScene = (): void => {
-    // If the scene element exists, pre translate it.
-    if (elements.scene.current) {
-      // Set the scene element's position to the
-      // negative of the camera position.
-      elements.scene.current.style.transform = `translate(${-cameraPosition.x}em, ${-cameraPosition.y}em)`
-    }
-  }
 
   /**
    * Pans the camera gradually to the given destination.
@@ -859,7 +855,6 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
         <PanController
           cameraPosition={cameraPosition}
           cameraZoom={cameraZoom}
-          onPan={preTranslateScene}
         />
         <Scene
           cameraPosition={cameraPosition}

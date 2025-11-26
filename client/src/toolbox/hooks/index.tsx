@@ -83,7 +83,7 @@ export function useEventListener<
   TEventMethod extends string,
   TCallbackArgs extends Array<any>,
 >(
-  target: TListenerTarget<TEventMethod, TCallbackArgs> | null,
+  target: TListenerTarget<TEventMethod, TCallbackArgs> | null | undefined,
   methods: TEventMethod | TEventMethod[],
   callback: (...args: TCallbackArgs) => any,
   dependencies: React.DependencyList = [],
@@ -103,6 +103,9 @@ export function useEventListener<
   // Register the event listener, reregistering
   // if the callback ever changes.
   useEffect(() => {
+    // If no target is provided, do nothing.
+    if (!target) return
+
     // Convert methods to an array, if
     // not already..
     methods = Array.isArray(methods) ? methods : [methods]

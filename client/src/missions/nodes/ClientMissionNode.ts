@@ -258,14 +258,14 @@ export class ClientMissionNode
   /**
    * Buttons to manage this specific node on a mission map.
    */
-  private _buttons: TNodeButton<ClientMissionNode>[]
+  private _buttons: TNodeButton[]
   /**
    * Buttons to manage this specific node on a mission map.
    */
-  public get buttons(): TNodeButton<ClientMissionNode>[] {
+  public get buttons(): TNodeButton[] {
     return [...this._buttons]
   }
-  public set buttons(value: TNodeButton<ClientMissionNode>[]) {
+  public set buttons(value: TNodeButton[]) {
     // Gather details.
     let structureChange: boolean = false
 

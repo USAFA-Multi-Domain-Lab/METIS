@@ -441,6 +441,36 @@ class MyClass {
 }
 ```
 
+### Variable Declarations
+
+Prefer `let` for variable declarations in almost all cases. Use `const` only in the following specific scenarios:
+
+1. **Arrow functions that don't change**: When declaring arrow functions that won't be reassigned.
+2. **True constants**: Values that are fixed at runtime and should never vary by design. These should use ALL_CAPS_SNAKE_CASE naming.
+
+```tsx
+// Prefer let for most variables
+let userId = getCurrentUserId()
+let results = await fetchData()
+let isValid = validateInput(input)
+
+// Use const for arrow functions
+const handleClick = () => {
+  console.log('clicked')
+}
+
+const processData = (data: string) => {
+  return data.toUpperCase()
+}
+
+// Use const for true constants (ALL_CAPS_SNAKE_CASE)
+const MAX_RETRY_ATTEMPTS = 3
+const DEFAULT_TIMEOUT_MS = 5000
+const API_VERSION = 'v1'
+```
+
+**Rationale**: The `let` keyword more accurately represents the mutable nature of most variables during execution, even if they aren't reassigned. Reserve `const` for functional definitions and truly immutable configuration values.
+
 ## Organization
 
 ### Order Within Files

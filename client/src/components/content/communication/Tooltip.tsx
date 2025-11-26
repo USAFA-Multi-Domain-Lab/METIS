@@ -45,7 +45,7 @@ export default function Tooltip({
     if (root_elm && parent) {
       // This will add the event listeners
       // to the parent element.
-      parent.addEventListener('mouseleave', hideTooltip)
+      parent.addEventListener('mouseleave', () => hideTooltip.current())
       parent.addEventListener('mousemove', confirmTooltipVisibility)
     }
 
@@ -58,7 +58,7 @@ export default function Tooltip({
     return () => {
       // When the component unmounts, hide
       // the tooltip if it is being displayed.
-      hideTooltip()
+      hideTooltip.current()
 
       // This will grab the current tooltip root element
       let root_elm: HTMLDivElement | null = rootElement.current
@@ -68,7 +68,7 @@ export default function Tooltip({
       // This will remove the event listeners
       // from the parent element.
       if (root_elm && parent) {
-        parent.removeEventListener('mouseleave', hideTooltip)
+        parent.removeEventListener('mouseleave', () => hideTooltip.current())
         parent.removeEventListener('mousemove', confirmTooltipVisibility)
       }
     }
@@ -85,12 +85,12 @@ export default function Tooltip({
     if (root_elm && parent) {
       // This will remove the event listeners
       // from the parent element.
-      parent.removeEventListener('mouseleave', hideTooltip)
+      parent.removeEventListener('mouseleave', () => hideTooltip.current())
       parent.removeEventListener('mousemove', confirmTooltipVisibility)
 
       // This will add the event listeners
       // to the parent element.
-      parent.addEventListener('mouseleave', hideTooltip)
+      parent.addEventListener('mouseleave', () => hideTooltip.current())
       parent.addEventListener('mousemove', confirmTooltipVisibility)
 
       // This will confirm whether the tooltip
@@ -110,7 +110,7 @@ export default function Tooltip({
 
     // If the tooltip element is found, then
     // show the tooltip.
-    if (tooltip_elm && tooltipDescription) {
+    if (tooltip_elm) {
       // This will set the tooltip element's opacity
       // to 1 so that it is visible.
       tooltip_elm.style.opacity = '1'
@@ -127,7 +127,8 @@ export default function Tooltip({
   /**
    * This will hide the tooltip.
    */
-  const hideTooltip = (): void => {
+  const hideTooltip = useRef(() => {})
+  hideTooltip.current = () => {
     // This will grab the current tooltip element that is being displayed.
     let tooltip_elm: HTMLDivElement | null | undefined = tooltips.current
 
@@ -171,7 +172,7 @@ export default function Tooltip({
       // If the parent is not being hovered over, then
       // hide the tooltip.
       else if (!parentIsHoveredOver) {
-        hideTooltip()
+        hideTooltip.current()
       }
     }
   }

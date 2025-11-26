@@ -1,3 +1,4 @@
+import type { ClientMission } from '@client/missions/ClientMission'
 import { useEventListener } from '@client/toolbox/hooks'
 import type { TSingleTypeMapped } from '@shared/toolbox/objects/ObjectToolbox'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
@@ -86,10 +87,15 @@ export function useOutputRenderer(): TOutputRendererResults {
   /* -- STATE -- */
 
   const [key, setKey] = useState<string>(() => StringToolbox.generateRandomId())
-  const [listenForCountdown, setListenForCountdown] = useState<boolean>(true)
   const [renderedMessage, setRenderedMessage] = useState<string>('')
   const { output } = useOutputContext()
   const { sourceExecution } = output
+  const [listenerTarget, setListenerTarget] = useState<ClientMission | null>(
+    sourceExecution?.mission ?? null,
+  )
+  const [tagRenders] = useState<string[]>(() => {
+    return Object.values(tagRenderers).map((renderer) => renderer(output))
+  })
 
   /* -- FUNCTIONS -- */
 
@@ -98,16 +104,17 @@ export function useOutputRenderer(): TOutputRendererResults {
    * Then, it selects all tags in the document and
    * replaces them with their respective values.
    */
-  const renderTags = () => {
+  const injectTags = () => {
     // Create a new HTML document from the message.
     const parse = new DOMParser()
     const doc = parse.parseFromString(output.message, 'text/html')
 
     // Render each tag.
-    for (let [tag, renderer] of Object.entries(tagRenderers)) {
+    Object.keys(tagRenderers).forEach((tag, index) => {
       const elms = doc.querySelectorAll(tag)
+
       for (const oldElm of elms) {
-        oldElm.innerHTML = renderer(output)
+        oldElm.innerHTML = tagRenders[index]
         oldElm.replaceWith(...oldElm.childNodes)
       }
 
@@ -115,8 +122,10 @@ export function useOutputRenderer(): TOutputRendererResults {
       // enable/disable listening for countdown
       // events based on whether the tag is present
       // in the message HTML.
-      if (tag === 'time-remaining') setListenForCountdown(!!elms.length)
-    }
+      if (tag === 'time-remaining') {
+        setListenerTarget(elms.length ? sourceExecution?.mission ?? null : null)
+      }
+    })
 
     // Set the key to a random string and the
     // rendered message to the resulting HTML
@@ -125,21 +134,41 @@ export function useOutputRenderer(): TOutputRendererResults {
     setRenderedMessage(doc.body.innerHTML)
   }
 
+  /**
+   * Renders the given tags.
+   * @param tags The tags to render.
+   */
+  const renderTags = (tags: TOutputTag[]) => {
+    Object.entries(tagRenderers).forEach(([tag, renderer], index) => {
+      // If the tag is in the list of tags to render,
+      // render it.
+      if (tags.includes(tag as TOutputTag)) {
+        tagRenders[index] = renderer(output)
+      }
+    })
+  }
+
   /* -- EFFECTS -- */
 
   // Re-render the tags when the output or the
   // output message changes.
-  useEffect(renderTags, [output, output.message])
+  useEffect(injectTags, [output, output.message])
 
   // Re-render the tags when there is a countdown
   // event.
   useEventListener(
-    sourceExecution,
-    'countdown',
+    listenerTarget,
+    'execution-tick',
     () => {
-      // Re-render the tags if the message contains
-      // at least one 'time-remaining' tag.
-      if (listenForCountdown) renderTags()
+      // Re-render the 'time-remaining' tag.
+      renderTags(['time-remaining'])
+      // Re-inject the tags into the message.
+      injectTags()
+      // If the source execution has completed,
+      // stop listening for countdown events.
+      if (sourceExecution?.timeRemaining === 0) {
+        setListenerTarget(null)
+      }
     },
     [output, output.message],
   )

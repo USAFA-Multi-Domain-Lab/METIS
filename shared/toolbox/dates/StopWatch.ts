@@ -1,19 +1,21 @@
 /**
- * A simple stopwatch class for measuring time elapsed.
+ * A simple stopwatch class for measuring time elapsed with high-resolution precision.
+ * Uses performance.now() for sub-millisecond accuracy.
  */
 export class StopWatch {
   /**
-   * The time the stopwatch was started.
+   * The time the stopwatch was started (high-resolution timestamp).
    */
-  private startTime: Date | null
+  private startTime: number | null
 
   /**
-   * The time the stopwatch was stopped.
+   * The time the stopwatch was stopped (high-resolution timestamp).
    */
-  private stopTime: Date | null
+  private stopTime: number | null
 
   /**
-   * The time elapsed between the start and stop times.
+   * The time elapsed between the start and stop times in milliseconds.
+   * Includes sub-millisecond precision (microseconds).
    */
   public get elapsedTime(): number {
     if (this.startTime === null) {
@@ -21,20 +23,17 @@ export class StopWatch {
     }
 
     if (this.stopTime === null) {
-      return new Date().getTime() - this.startTime.getTime()
+      return performance.now() - this.startTime
     }
 
-    return this.stopTime.getTime() - this.startTime.getTime()
+    return this.stopTime - this.startTime
   }
 
   /**
-   * Formats the elapsed time in non-rounded seconds.
+   * Formats the elapsed time in non-rounded seconds with microsecond precision.
    */
   public get formattedElapsedTime(): string {
-    const elapsed = this.elapsedTime
-    const seconds = Math.floor(elapsed / 1000)
-    const milliseconds = elapsed % 1000
-    return `${seconds}.${milliseconds.toString().padStart(3, '0')}s`
+    return `${(this.elapsedTime / 1000).toFixed(3)}s`
   }
 
   public constructor() {
@@ -47,7 +46,7 @@ export class StopWatch {
    * @returns The stopwatch instance.
    */
   public start(): StopWatch {
-    this.startTime = new Date()
+    this.startTime = performance.now()
     return this
   }
 
@@ -56,7 +55,7 @@ export class StopWatch {
    *  @returns The stopwatch instance.
    */
   public stop(): StopWatch {
-    this.stopTime = new Date()
+    this.stopTime = performance.now()
     return this
   }
 

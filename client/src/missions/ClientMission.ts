@@ -1686,6 +1686,9 @@ type TDuplicateForceInfo = {
  * - Triggered when a node is requested to be centered on the map.
  *   This shouldn't be directly emitted by the mission, rather is
  *   forwarded by a node `center-on-map` event. {@link TMapCompatibleNodeEvent}
+ * @option `execution-tick`
+ * - Triggered when a mission-execution update occurs, intending
+ * to update visuals for the mission-execution progress in the GUI.
  */
 type TMissionEventMethods =
   | 'activity'
@@ -1700,6 +1703,7 @@ type TMissionEventMethods =
   | 'file-access-granted'
   | 'file-access-revoked'
   | 'center-node-on-map'
+  | 'execution-tick'
 
 /**
  * The argument(s) used in the event handler for the mission's event manager.

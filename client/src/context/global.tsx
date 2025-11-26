@@ -684,8 +684,6 @@ function GlobalContextProvider(props: { children: ReactNode }): TReactElement {
     Logging.debugMode = debugMode
   }, [debugMode])
 
-  console.log('GlobalContextProvider rendered.', context)
-
   // Return JSX with the context provider
   // wrapping the children dependent on
   // the context.
