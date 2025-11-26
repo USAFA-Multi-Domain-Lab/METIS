@@ -1,4 +1,3 @@
-
 import { UserPermission } from './UserPermission'
 
 /**
@@ -70,7 +69,6 @@ export class UserAccess implements TUserAccess {
         UserPermission.AVAILABLE_PERMISSIONS.users_read_students,
         UserPermission.AVAILABLE_PERMISSIONS.users_write_students,
         UserPermission.AVAILABLE_PERMISSIONS.files_read,
-        UserPermission.AVAILABLE_PERMISSIONS.files_write,
         UserPermission.AVAILABLE_PERMISSIONS.changelog_read,
       ],
     ),
@@ -159,7 +157,6 @@ export class UserAccess implements TUserAccess {
 }
 
 /* -- TYPES -- */
-
 
 /**
  * Type used for the abstract UserAccess class.

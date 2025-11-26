@@ -43,6 +43,7 @@ export default function HomePage(): TReactElement | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
+  const { isAuthorized } = useRequireLogin()
   const {
     beginLoading,
     finishLoading,
@@ -405,7 +406,9 @@ export default function HomePage(): TReactElement | null {
             key={'missions-list'}
             name={'Missions'}
             items={missions}
-            onFileDrop={importMissionFiles}
+            onFileDrop={
+              isAuthorized(['missions_write']) ? importMissionFiles : null
+            }
             onSuccessfulCopy={onMissionCopy}
             onSuccessfulDeletion={onMissionDeletion}
           />
