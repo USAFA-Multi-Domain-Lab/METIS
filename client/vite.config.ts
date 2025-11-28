@@ -76,7 +76,7 @@ export default defineConfig(({ mode }) => {
     build: {
       // Prevents issues building SVG icons.
       assetsInlineLimit: 0,
-      sourcemap: true,
+      sourcemap: false,
     },
     define: {
       ...envDefinition,
