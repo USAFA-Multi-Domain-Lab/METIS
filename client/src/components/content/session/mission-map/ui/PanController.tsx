@@ -1,7 +1,8 @@
-import './PanController.scss'
+import { compute } from '@client/toolbox/'
+import type { Vector1D } from '@shared/toolbox/numbers/vectors/Vector1D'
+import { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
 import { useState } from 'react'
-import { Vector1D, Vector2D } from '../../../../../../../shared/toolbox/space'
-import { compute } from 'src/toolbox/'
+import './PanController.scss'
 
 /**
  * Controls panning of the `MissionMap` component.
@@ -10,12 +11,12 @@ export default function PanController({
   cameraPosition,
   cameraZoom,
   onPan,
-}: TPanController): JSX.Element | null {
-  /* -- state -- */
+}: TPanController): TReactElement | null {
+  /* -- STATE -- */
 
   const [panningIsActive, setPanningIsActive] = useState<boolean>(false)
 
-  /* -- computed -- */
+  /* -- COMPUTED -- */
 
   /**
    * The inline class for the pan controller element.
@@ -33,7 +34,7 @@ export default function PanController({
     return classList.join(' ')
   })
 
-  /* -- functions -- */
+  /* -- FUNCTIONS -- */
 
   /**
    * Handles a mouse move event.
@@ -54,7 +55,7 @@ export default function PanController({
     }
   }
 
-  /* -- render -- */
+  /* -- RENDER -- */
 
   // Render root JSX.
   return (

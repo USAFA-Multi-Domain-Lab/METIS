@@ -27,7 +27,7 @@ METIS is a real-time training system built with:
 - Client connection management
 - Integrated with session auth
 - Real-time state synchronization
-- [WebSocket Documentation](/docs/devs/websocket.md)
+- [WebSocket Documentation](websocket.md)
 
 #### Database
 
@@ -64,15 +64,17 @@ METIS is a real-time training system built with:
 ## 🔄 System Data Flow
 
 ### Request/Response Flow
+
 ```
 ┌─────────────┐    HTTP/REST     ┌─────────────┐    MongoDB     ┌─────────────┐
 │   Client    │ ────────────────▶│   Server    │ ──────────────▶│  Database   │
 │ (React SPA) │                  │ (Node.js)   │                │ (MongoDB)   │
 │             │ ◀────────────────│             │ ◀──────────────│             │
-└─────────────┘    JSON Data     └─────────────┘   Query Results └─────────────┘
+└─────────────┘    JSON Data     └─────────────┘  Query Results └─────────────┘
 ```
 
 ### Real-Time Updates Flow
+
 ```
 ┌─────────────┐                  ┌─────────────┐                ┌─────────────┐
 │  Client A   │                  │   Server    │                │  Client B   │
@@ -83,19 +85,20 @@ METIS is a real-time training system built with:
 ```
 
 ### Target-Effect System Flow
+
 ```
 ┌─────────────────────┐         ┌─────────────────────┐         ┌─────────────────────┐
 │   Development       │         │   Configuration     │         │    Execution        │
 │                     │         │                     │         │                     │
-│ 1. Define Target    │ ──────▶ │ 4. User Creates     │ ──────▶ │ 7. Effect Executes  │
-│    Environment      │         │    Effect from      │         │    During Mission   │
-│                     │         │    Target           │         │                     │
-│ 2. Create Targets   │         │                     │         │ 8. Real-time        │
-│    (Templates)      │         │ 5. Configure        │         │    Feedback via     │
-│                     │         │    Arguments        │         │    WebSocket        │
-│ 3. Server Auto-     │         │                     │         │                     │
-│    discovers &      │         │ 6. Save to Mission  │         │ 9. Update Mission   │
-│    Registers        │         │                     │         │    State            │
+│ 1. Define target    │ ──────▶ │ 4. User creates     │ ──────▶ │ 7. Effect executes  │
+│    environment      │         │    effect from      │         │    during mission   │
+│                     │         │    target           │         │                     │
+│ 2. Create targets   │         │                     │         │ 8. Real-time        │
+│    (templates)      │         │ 5. Configure        │         │    feedback via     │
+│                     │         │    arguments        │         │    WebSocket        │
+│ 3. Server auto-     │         │                     │         │                     │
+│    discovers &      │         │ 6. Save to mission  │         │ 9. Update mission   │
+│    registers        │         │                     │         │    state            │
 └─────────────────────┘         └─────────────────────┘         └─────────────────────┘
 ```
 
@@ -120,8 +123,8 @@ METIS is a real-time training system built with:
 ### Implementation Details
 
 - [RESTful API](/docs/api/overview.md) - REST endpoints, authentication, and data models
-- [WebSocket](/docs/devs/websocket.md) - Real-time communication protocols and events
-- [Target Environment Integration](/docs/devs/target-environment-integration.md) - How to create and register new target environments
+- [WebSocket](websocket.md) - Real-time communication protocols and events
+- [Target Environment Integration](/docs/target-env-integration/index.md) - How to create and register new target environments
 
 ### Development Guidelines
 

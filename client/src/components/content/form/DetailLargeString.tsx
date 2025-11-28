@@ -1,7 +1,7 @@
-import { EditorEvents } from '@tiptap/react'
+import { compute } from '@client/toolbox'
+import type { EditorEvents } from '@tiptap/react'
 import { useState } from 'react'
-import { compute } from 'src/toolbox'
-import { TDetailWithInput_P } from '.'
+import type { TDetailWithInput_P } from '.'
 import Tooltip from '../communication/Tooltip'
 import RichText from '../general-layout/rich-text/RichText'
 import ButtonSvgPanel from '../user-controls/buttons/panels/ButtonSvgPanel'
@@ -27,7 +27,7 @@ export function DetailLargeString({
   uniqueFieldClassName = undefined,
   placeholder = 'Enter text here...',
   tooltipDescription = '',
-}: TDetailLargeString_P): JSX.Element | null {
+}: TDetailLargeString_P): TReactElement | null {
   /* -- STATE -- */
   const [leftField, setLeftField] = useState<boolean>(false)
   const buttonEngine = useButtonSvgEngine({
@@ -254,6 +254,7 @@ export function DetailLargeString({
           placeholder,
           onUpdate,
           onBlur,
+          editable: !disabled,
         }}
       />
       <div className={fieldErrorClassName}>{errorMessage}</div>

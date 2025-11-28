@@ -1,6 +1,7 @@
-@import 'src/assets/styles/config.scss';
-@import 'src/assets/styles/util.scss';
-@import '../../mixins.scss';
+@use 'sass:color';
+@use '@client/assets/styles/config.scss' as *;
+@use '@client/assets/styles/util.scss' as *;
+@use '../../mixins.scss' as *;
 
 .Scene {
   .MapNode {
@@ -18,10 +19,6 @@
     // in JS.
     box-sizing: content-box;
 
-    // Enable pointer events for nodes,
-    // since they can be interacted with.
-    pointer-events: all;
-
     // Make the origin of the scene object the
     // top center of the node.
     transform: translate(-50%, -0%);
@@ -36,9 +33,11 @@
     background-color: $color-secondary;
 
     &.Selectable {
-      // Change the cursor to pointer if
-      // the node can be selected.
-      cursor: pointer;
+      .PrimaryContent {
+        // Change the cursor to pointer if
+        // the node can be selected.
+        cursor: pointer;
+      }
     }
 
     &.Selected {
@@ -152,7 +151,7 @@
       display: none;
 
       $color-1: $color-neutral-dark;
-      $color-2: lighten($color-neutral-dark, 5%);
+      $color-2: color.adjust($color-neutral-dark, $lightness: 5%);
 
       background-image: linear-gradient(
         -45deg,
@@ -168,31 +167,33 @@
       background-size: 40px 40px;
     }
 
-    .Name {
-      // Position the name.
-      @include center-origin-y;
-      top: 50%;
-      left: 5%;
+    .PrimaryContent {
+      .Name {
+        // Position the name.
+        @include center-origin-y;
+        top: 50%;
+        left: 5%;
 
-      // Let height be automatic.
-      height: unset;
+        // Let height be automatic.
+        height: unset;
 
-      text-align: left;
-      word-break: break-word;
-    }
+        text-align: left;
+        word-break: break-word;
+      }
 
-    .Icon {
-      // Position the icon.
-      @include center-origin-y;
-      top: 50%;
-      right: 6.5%;
+      .Icon {
+        // Position the icon.
+        @include center-origin-y;
+        top: 50%;
+        right: 6.5%;
 
-      // Let height be automatic.
-      height: 100%;
+        // Let height be automatic.
+        height: 100%;
 
-      // Make the icon 15% of the width of the
-      // node.
-      width: 12%;
+        // Make the icon 15% of the width of the
+        // node.
+        width: 12%;
+      }
     }
 
     .Buttons {
@@ -217,6 +218,13 @@
           border: min(1px, 0.075em) solid rgba($color-primary-light, 0.65);
         }
       }
+    }
+
+    // Enable pointer events for children with
+    // which can be interacted.
+    .PrimaryContent,
+    .ButtonSvgPanel {
+      pointer-events: all;
     }
   }
 }

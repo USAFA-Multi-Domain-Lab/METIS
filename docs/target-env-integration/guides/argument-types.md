@@ -12,8 +12,14 @@ This guide covers all available argument types in METIS target environments, the
 - [Numeric Types](#numeric-types)
 - [Boolean Types](#boolean-types)
 - [Mission Component Types](#mission-component-types)
-- [Advanced Features](#advanced-features)
-- [Best Practices](#best-practices)
+- [File Types](#file-types)
+- [Argument Dependencies](#argument-dependencies)
+- [Grouping and Organization](#grouping-and-organization)
+- [Validation and Error Handling](#validation-and-error-handling)
+- [Real-World Usage Examples](#real-world-usage-examples)
+- [Testing Your Arguments](#testing-your-arguments)
+- [Migration Considerations](#migration-considerations)
+- [Quick Reference](#quick-reference)
 - [Related Documentation](#related-documentation)
 
 ## Overview
@@ -277,16 +283,16 @@ Dependencies control when arguments are visible based on other argument values.
 
 ```typescript
 // Show when another argument equals a specific value
-dependencies: [Dependency.EQUALS('operation', 'upload')]
+dependencies: [TargetDependency.EQUALS('operation', 'upload')]
 
 // Show when argument equals one of several values
-dependencies: [Dependency.EQUALS_SOME('priority', ['high', 'urgent'])]
+dependencies: [TargetDependency.EQUALS_SOME('priority', ['high', 'urgent'])]
 
 // Show when boolean argument is checked
-dependencies: [Dependency.TRUTHY('encryptionEnabled')]
+dependencies: [TargetDependency.TRUTHY('encryptionEnabled')]
 
 // Show when argument does NOT equal a value
-dependencies: [Dependency.NOT_EQUALS('environment', 'development')]
+dependencies: [TargetDependency.NOT_EQUALS('environment', 'development')]
 ```
 
 ### **Dependency Best Practices**
@@ -385,7 +391,7 @@ args: [
     max: 23,
     integersOnly: true,
     default: 0,
-    dependencies: [Dependency.ACTION('actionMetadata')],
+    dependencies: [TargetDependency.ACTION('actionMetadata')],
   },
   {
     _id: 'processTimeMinutes',
@@ -397,7 +403,7 @@ args: [
     max: 59,
     integersOnly: true,
     default: 0,
-    dependencies: [Dependency.ACTION('actionMetadata')],
+    dependencies: [TargetDependency.ACTION('actionMetadata')],
   },
 ]
 ```
@@ -515,7 +521,7 @@ See the [Migrations Guide](migrations.md) for detailed migration patterns.
   type: 'string',
   required: false,
   groupingId: 'group',
-  dependencies: [Dependency.EQUALS('parentField', 'value')],
+  dependencies: [TargetDependency.EQUALS('parentField', 'value')],
   tooltipDescription: 'Help text',
 }
 ```

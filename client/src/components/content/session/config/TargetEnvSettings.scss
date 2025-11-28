@@ -1,0 +1,52 @@
+@use '../../../../assets/styles/config.scss' as *;
+@use '@client/components/content/form/index.scss' as *;
+
+.TargetEnvSettings {
+  .EnvTitle {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: $color-primary-light;
+    margin-bottom: 0.5em;
+  }
+
+  .EnvDescription {
+    font-size: 0.9em;
+    color: $color-secondary-light;
+    margin-bottom: 1em;
+    line-height: 1.4;
+  }
+
+  .EnvActions {
+    display: flex;
+    gap: 0.5em;
+    margin-bottom: 1.5em;
+
+    .ActionButton {
+      border: none;
+      padding: 0.5em 0.75em;
+      border-radius: 0.35em;
+      background-color: $color-secondary;
+      color: $color-accent-light;
+      cursor: pointer;
+
+      &:hover {
+        color: $color-accent;
+      }
+    }
+  }
+
+  .EnvConfig {
+    margin-bottom: 1.5em;
+    padding: 1em 1.5em;
+    background-color: rgba($color-primary-dark, 0.3);
+    border-radius: 0.35em;
+
+    .DetailToggle {
+      margin-bottom: 0.5em;
+    }
+
+    .DetailDropdown {
+      margin-top: 1em;
+    }
+  }
+}

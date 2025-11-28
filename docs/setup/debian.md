@@ -313,7 +313,7 @@ sudo touch /etc/authbind/byport/80
 sudo chmod 777 /etc/authbind/byport/80
 ```
 
-Now, assuming your `environment.json` is also configured to run using the port, start METIS with `authbind`, and unless any other firewall rules are in place, the server should now be hosted on the configured port. To run METIS with `authbind` simply preface the METIS start command with `authbind --deep` like this:
+Now, assuming your `.env` is also configured to run using the port, start METIS with `authbind`, and unless any other firewall rules are in place, the server should now be hosted on the configured port. To run METIS with `authbind` simply preface the METIS start command with `authbind --deep` like this:
 
 ```bash
 authbind --deep npm run prod

@@ -1,12 +1,12 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "baseUrl": ".",
     "paths": {
-      "metis/target-environments": ["../../shared/target-environments"],
-      "metis/target-environments/*": ["../../shared/target-environments/*"],
-      "metis/toolbox/objects": ["../../shared/toolbox/objects"],
-      "metis/toolbox/numbers": ["../../shared/toolbox/numbers"],
-      "metis/toolbox/versions": ["../../shared/toolbox/versions"]
-    }
-  }
+      "@metis/*": ["*"]
+    },
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext"
+  },
+  "include": ["."]
 }

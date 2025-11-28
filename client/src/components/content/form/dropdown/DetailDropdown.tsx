@@ -1,10 +1,11 @@
-import { ReactNode, useEffect, useState } from 'react'
-import { LocalContext, LocalContextProvider } from 'src/context/local'
-import { compute } from 'src/toolbox'
+import { LocalContext, LocalContextProvider } from '@client/context/local'
+import { compute } from '@client/toolbox'
+import type { ReactNode } from 'react'
+import { useEffect, useState } from 'react'
+import type { TDetailDropdown_P, TDetailDropdown_S } from '.'
 import Tooltip from '../../communication/Tooltip'
 import './DetailDropdown.scss'
 import DropdownOption from './subcomponents/DropdownOption'
-import { TDetailDropdown_P, TDetailDropdown_S } from './types'
 
 /**
  * Local context for the {@link DetailDropdown} component.
@@ -39,20 +40,21 @@ export const useDropdownContext = <TOption extends any>() => {
  */
 export default function DetailDropdown<TOption>(
   props: TDetailDropdown_P<TOption>,
-): JSX.Element | null {
+): TReactElement | null {
   /* -- PROPS -- */
 
   // Assign default values to props.
   const defaultedProps: Required<TDetailDropdown_P<TOption>> = {
     ...props,
-    uniqueClassName: '',
-    uniqueLabelClassName: '',
-    uniqueFieldClassName: '',
-    uniqueStateValueClassName: '',
-    disabled: false,
-    tooltipDescription: '',
-    emptyText: 'Select an option',
-    errorMessage: '',
+    uniqueClassName: props.uniqueClassName ?? '',
+    uniqueLabelClassName: props.uniqueLabelClassName ?? '',
+    uniqueFieldClassName: props.uniqueFieldClassName ?? '',
+    uniqueStateValueClassName: props.uniqueStateValueClassName ?? '',
+    disabled: props.disabled ?? false,
+    tooltipDescription: props.tooltipDescription ?? '',
+    emptyText: props.emptyText ?? 'Select an option',
+    errorMessage: props.errorMessage ?? '',
+    isExpanded: props.isExpanded ?? false,
   }
   // Extract props.
   const {
@@ -292,7 +294,7 @@ export default function DetailDropdown<TOption>(
 
   /* -- PRE-RENDER PROCESSING -- */
 
-  const optionsJsx: JSX.Element[] = compute(() => {
+  const optionsJsx: TReactElement[] = compute(() => {
     let processedOptions = [...options]
 
     // If the list of options is empty, then
@@ -330,7 +332,10 @@ export default function DetailDropdown<TOption>(
       }
 
       return (
-        <DropdownOption key={key} onClick={() => onSelectOption(option)}>
+        <DropdownOption
+          key={key}
+          onClick={() => (!disabled ? onSelectOption(option) : null)}
+        >
           {optionContent}
         </DropdownOption>
       )
@@ -367,7 +372,10 @@ export default function DetailDropdown<TOption>(
           </div>
         </div>
         <div className={fieldClassName}>
-          <DropdownOption selected onClick={() => setExpanded(!expanded)}>
+          <DropdownOption
+            selected
+            onClick={() => (!disabled ? setExpanded(!expanded) : null)}
+          >
             <div className={stateValueClassName}>{valueDisplayed}</div>
             <div className='Indicator'>v</div>
           </DropdownOption>

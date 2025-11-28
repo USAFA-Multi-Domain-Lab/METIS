@@ -1,7 +1,7 @@
-import ButtonSvgEngine from '../engines'
-import { TDividerSvg_PK } from '../types'
+import { ButtonSvgEngine } from '../engines'
+import type { TDividerSvg_PK } from '../types'
 
-export default function ({}: TDividerSvg_PK): JSX.Element {
+export default function ({}: TDividerSvg_PK): TReactElement {
   return <div className='SvgPanelElement DividerSvg'></div>
 }
 

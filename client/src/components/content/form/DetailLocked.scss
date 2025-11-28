@@ -1,5 +1,5 @@
-@import 'src/assets/styles/config.scss';
-@import '../form/index.scss';
+@use '@client/assets/styles/config.scss' as *;
+@use '../form/index.scss' as *;
 
 .Detail.DetailLocked {
   .Field {
@@ -17,7 +17,7 @@
       user-select: none;
       cursor: help;
 
-      background: url('/assets/images/icons/lock.svg');
+      background: url('../../../assets/images/icons/lock.svg');
       background-repeat: no-repeat;
       background-size: 0.65em;
       background-position: center;

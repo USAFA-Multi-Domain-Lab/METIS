@@ -1,21 +1,21 @@
-import { Router } from 'express'
-import MetisServer from 'metis/server'
-import { TMetisRouterMap } from 'metis/server/http/router'
+import type { MetisServer } from '@server/MetisServer'
+import type { Router } from 'express'
 import defineRequests, {
   RequestBodyFilters,
-} from 'metis/server/middleware/requests'
+} from '../../../middleware/requests'
 import {
   auth,
   restrictPasswordReset,
   restrictUserManagement,
-} from 'metis/server/middleware/users'
-import deleteUser from '../controllers/users/[_id].delete'
-import getUser from '../controllers/users/[_id].get'
-import updateUser from '../controllers/users/[_id].put'
-import getUsers from '../controllers/users/index.get'
-import createNewUser from '../controllers/users/index.post'
-import updateUserPreferences from '../controllers/users/preferences.put'
-import resetPassword from '../controllers/users/reset-password.put'
+} from '../../../middleware/users'
+import { deleteUser } from '../controllers/users/[_id].delete'
+import { getUser } from '../controllers/users/[_id].get'
+import { updateUser } from '../controllers/users/[_id].put'
+import { getUsers } from '../controllers/users/index.get'
+import { createNewUser } from '../controllers/users/index.post'
+import { updateUserPreferences } from '../controllers/users/preferences.put'
+import { resetPassword } from '../controllers/users/reset-password.put'
+import type { TMetisRouterMap } from '../library/MetisRouter'
 
 const routerMap: TMetisRouterMap = (
   router: Router,
@@ -46,14 +46,7 @@ const routerMap: TMetisRouterMap = (
   /* -- READ -- */
 
   // -- GET | /api/v1/users/ --
-  router.get(
-    '/',
-    auth({ permissions: ['users_read_students'] }),
-    // todo: implement a way to ensure that only the proper
-    // todo: users are returned based on the user's permissions.
-    // restrictUserManagement,
-    getUsers,
-  )
+  router.get('/', auth({ permissions: ['users_read_students'] }), getUsers)
 
   // -- GET | /api/v1/users/:_id/ --
   router.get(
@@ -65,6 +58,29 @@ const routerMap: TMetisRouterMap = (
   )
 
   /* -- UPDATE -- */
+
+  // -- PUT | /api/v1/users/preferences/ --
+  router.put(
+    '/preferences/',
+    auth({}),
+    defineRequests({
+      body: {
+        preferences: RequestBodyFilters.USER_PREFERENCES(true),
+      },
+    }),
+    updateUserPreferences,
+  )
+
+  // -- PUT | /api/v1/users/reset-password --
+  router.put(
+    '/reset-password/',
+    auth({}),
+    restrictPasswordReset,
+    defineRequests({
+      body: { password: RequestBodyFilters.PASSWORD },
+    }),
+    resetPassword,
+  )
 
   //  -- PUT | /api/v1/users/ --
   router.put(
@@ -90,29 +106,6 @@ const routerMap: TMetisRouterMap = (
       },
     ),
     updateUser,
-  )
-
-  // -- PUT | /api/v1/users/preferences/ --
-  router.put(
-    '/preferences/',
-    auth({}),
-    defineRequests({
-      body: {
-        preferences: RequestBodyFilters.USER_PREFERENCES(true),
-      },
-    }),
-    updateUserPreferences,
-  )
-
-  // -- PUT | /api/v1/users/reset-password --
-  router.put(
-    '/:_id/reset-password',
-    auth({}),
-    restrictPasswordReset,
-    defineRequests({
-      body: { password: RequestBodyFilters.PASSWORD },
-    }),
-    resetPassword,
   )
 
   /* -- DELETE -- */

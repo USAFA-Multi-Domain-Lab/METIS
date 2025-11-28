@@ -1,11 +1,12 @@
-@import '../../../../../../assets/styles/config.scss';
-@import '../../mixins.scss';
+@use 'sass:color';
+@use '../../../../../../assets/styles/config.scss' as *;
+@use '../../mixins.scss' as *;
 
 .TabBar {
   $fixed-controls-width: 4em;
   $tab-border-width: 2px;
   $tab-border: $tab-border-width solid
-    adjust-color($color-primary, $lightness: 7%, $saturation: -10%);
+    color.adjust($color-primary, $lightness: 7%, $saturation: -10%);
 
   overflow: hidden;
   border-bottom: 2px solid rgba(#fff, 0.1);

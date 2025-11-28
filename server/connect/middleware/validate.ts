@@ -1,13 +1,14 @@
-import {
+import type {
   TClientEvents,
   TClientMethod,
   TGenericClientMethod,
   TRequestMethod,
-} from 'metis/connect/data'
-import { TSessionAccessibility } from 'metis/sessions'
-import MemberRole from 'metis/sessions/members/roles'
-import { TNonEmptyArray } from 'metis/toolbox/arrays'
-import { z as zod, ZodObject, ZodOptional, ZodType } from 'zod'
+} from '@shared/connect'
+import { MemberRole } from '@shared/sessions/members/MemberRole'
+import type { TSessionAccessibility } from '@shared/sessions/MissionSession'
+import type { TNonEmptyArray } from '@shared/toolbox/arrays/ArrayToolbox'
+import type { ZodObject, ZodOptional, ZodType } from 'zod'
+import { z as zod } from 'zod'
 
 /* -- ZOD-SCHEMAS -- */
 
@@ -68,11 +69,12 @@ export const clientEventSchemas: TClientEventSchemas = {
             'public',
             'id-required',
             'invite-only',
+            'testing',
           ] as TNonEmptyArray<TSessionAccessibility>)
           .optional(),
-        autoAssign: zod.boolean().optional(),
         infiniteResources: zod.boolean().optional(),
-        effectsEnabled: zod.boolean().optional(),
+        disabledTargetEnvs: zod.array(zod.string()).optional(),
+        targetEnvConfigs: zod.record(zod.string(), zod.string()).optional(),
       }),
     }),
   ),
@@ -156,19 +158,56 @@ export const looseEventSchema = zod
     method: zod.enum(
       Object.keys(clientEventSchemas) as TNonEmptyArray<TClientMethod>,
     ),
-    data: zod.object({}).passthrough(),
+    data: zod.object({}).loose(),
     requestId: zod.string().optional(),
   })
-  .passthrough()
+  .loose()
 
 /* -- TYPES -- */
+
+/**
+ * Type that defines a Zod schemas for a client event.
+ */
+type TClientEventSchema<TEvent extends keyof TClientEvents> = TZodify<
+  TClientEvents[TEvent]
+>
+
+/**
+ * Type that defines all Zod schemas for client events.
+ */
+type TClientEventSchemas = {
+  [key in keyof TClientEvents]: TClientEventSchema<key>
+}
+
+// /**
+//  * Converts a regular interface to a Zod object type.
+//  */
+// export type TZodify<T extends object> = ZodObject<
+//   Required<{
+//     [K in keyof T]: Required<T>[K] extends object
+//       ? {} extends Pick<T, K>
+//         ? ZodOptional<TZodify<Required<T>[K]>>
+//         : TZodify<Required<T>[K]>
+//       : {} extends Pick<T, K>
+//       ? ZodOptional<ZodType<T[K]>>
+//       : ZodType<T[K]>
+//   }>
+// >
 
 /**
  * Converts a regular interface to a Zod object type.
  */
 export type TZodify<T extends object> = ZodObject<
   Required<{
-    [K in keyof T]: Required<T>[K] extends object
+    [K in keyof T]: Required<T>[K] extends Array<infer U>
+      ? {} extends Pick<T, K>
+        ? ZodOptional<ZodType<Required<T>[K]>>
+        : ZodType<Required<T>[K]>
+      : Required<T>[K] extends Record<string, any>
+      ? {} extends Pick<T, K>
+        ? ZodOptional<ZodType<Required<T>[K]>>
+        : ZodType<Required<T>[K]>
+      : Required<T>[K] extends object
       ? {} extends Pick<T, K>
         ? ZodOptional<TZodify<Required<T>[K]>>
         : TZodify<Required<T>[K]>
@@ -177,17 +216,3 @@ export type TZodify<T extends object> = ZodObject<
       : ZodType<T[K]>
   }>
 >
-
-/**
- * Type that defines a Zod schemas for a client event.
- */
-export type TClientEventSchema<TEvent extends keyof TClientEvents> = TZodify<
-  TClientEvents[TEvent]
->
-
-/**
- * Type that defines all Zod schemas for client events.
- */
-export type TClientEventSchemas = {
-  [key in keyof TClientEvents]: TClientEventSchema<key>
-}

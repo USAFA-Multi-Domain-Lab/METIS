@@ -1,11 +1,11 @@
-import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
 import { useMapContext } from '../MissionMap'
 import './TitleBar.scss'
 
 /**
  * A bar with tabs that can be clicked to change the view.
  */
-export default function TabBar(): JSX.Element | null {
+export default function TitleBar(): TReactElement | null {
   /* -- STATE -- */
 
   const mapContext = useMapContext()

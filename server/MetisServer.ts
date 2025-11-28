@@ -1,0 +1,614 @@
+import MongoStore from 'connect-mongo'
+import cookieParser from 'cookie-parser'
+import cors from 'cors'
+import dotenv from 'dotenv'
+import type { Express, RequestHandler } from 'express'
+import express from 'express'
+import type { RateLimitRequestHandler } from 'express-rate-limit'
+import rateLimit from 'express-rate-limit'
+import session from 'express-session'
+import fs from 'fs'
+import type mongoose from 'mongoose'
+import type { Server as HttpServer } from 'node:http'
+import http from 'node:http'
+import https from 'node:https'
+import path from 'path'
+import { sys } from 'typescript'
+import packageJson from '../package.json'
+import type { MetisRouter } from './api/v1/library/MetisRouter'
+import { MetisWsServer } from './connect/MetisWsServer'
+import { MetisDatabase } from './database/MetisDatabase'
+import { MetisFileStore } from './files/MetisFileStore'
+import { expressLogger, initializeLoggers } from './logging'
+import { ServerWebSession } from './logins/ServerWebSession'
+import { ServerTarget } from './target-environments/ServerTarget'
+import { ServerTargetEnvironment } from './target-environments/ServerTargetEnvironment'
+import { TargetEnvSandboxing } from './target-environments/TargetEnvSandboxing'
+
+/**
+ * Manages an Express web server for METIS.
+ */
+export class MetisServer {
+  /**
+   * The express app instance.
+   */
+  private _expressApp: Express
+  /**
+   * The express app instance.
+   */
+  public get expressApp(): Express {
+    return this._expressApp
+  }
+  /**
+   * The HTTP server instance.
+   */
+  private _httpServer: HttpServer
+  /**
+   * The HTTP server instance.
+   */
+  public get httpServer(): HttpServer {
+    return this._httpServer
+  }
+
+  /**
+   * The Socket IO instance.
+   */
+  private _wsServer: MetisWsServer
+  /**
+   * The Socket IO instance.
+   */
+  public get wsServer(): MetisWsServer {
+    return this._wsServer
+  }
+
+  /**
+   * The database instance.
+   */
+  private _database: MetisDatabase
+  /**
+   * The database instance.
+   */
+  public get database(): MetisDatabase {
+    return this._database
+  }
+
+  /**
+   * The file store instance.
+   */
+  private _fileStore: MetisFileStore
+  /**
+   * The file store instance.
+   */
+  public get fileStore(): MetisFileStore {
+    return this._fileStore
+  }
+
+  /**
+   * The environment type in which METIS is running.
+   */
+  private _envType: string
+  /**
+   * The environment type in which METIS is running.
+   */
+  public get envType(): string {
+    return this._envType
+  }
+
+  /**
+   * The port on which to run the server.
+   */
+  private _port: number
+  /**
+   * The port on which to run the server.
+   */
+  public get port(): number {
+    return this._port
+  }
+
+  /**
+   * The name of the MongoDB database to use.
+   */
+  private _mongoDB: string
+  /**
+   * The name of the MongoDB database to use.
+   */
+  public get mongoDB(): string {
+    return this._mongoDB
+  }
+
+  /**
+   * The host of the MongoDB database to use.
+   */
+  private _mongoHost: string
+  /**
+   * The host of the MongoDB database to use.
+   */
+  public get mongoHost(): string {
+    return this._mongoHost
+  }
+
+  /**
+   * The port of the MongoDB database to use.
+   */
+  private _mongoPort: number
+  /**
+   * The port of the MongoDB database to use.
+   */
+  public get mongoPort(): number {
+    return this._mongoPort
+  }
+
+  /**
+   * The username of the MongoDB database to use.
+   */
+  private _mongoUsername: string | undefined
+  /**
+   * The username of the MongoDB database to use.
+   */
+  public get mongoUsername(): string | undefined {
+    return this._mongoUsername
+  }
+
+  /**
+   * The password of the MongoDB database to use.
+   */
+  private _mongoPassword: string | undefined
+  /**
+   * The password of the MongoDB database to use.
+   */
+  public get mongoPassword(): string | undefined {
+    return this._mongoPassword
+  }
+
+  /**
+   * The maximum number of http requests allowed per second.
+   */
+  private _httpRateLimit: number
+  /**
+   * The maximum number of http requests allowed per second.
+   */
+  public get httpRateLimit(): number {
+    return this._httpRateLimit
+  }
+
+  /**
+   * The duration of the rate limit for the http server.
+   */
+  private _httpRateLimitDuration: number
+  /**
+   * The duration of the rate limit for the http server.
+   */
+  public get httpRateLimitDuration(): number {
+    return this._httpRateLimitDuration
+  }
+
+  /**
+   * The maximum number of websocket messages allowed per second.
+   */
+  private _wsRateLimit: number
+  /**
+   * The maximum number of websocket messages allowed per second.
+   */
+  public get wsRateLimit(): number {
+    return this._wsRateLimit
+  }
+
+  /**
+   * The duration of the rate limit for the web socket server.
+   */
+  private _wsRateLimitDuration: number
+  /**
+   * The duration of the rate limit for the web socket server.
+   */
+  public get wsRateLimitDuration(): number {
+    return this._wsRateLimitDuration
+  }
+
+  /**
+   * The location of the file store.
+   */
+  private _fileStoreDir: string
+  /**
+   * The location of the file store.
+   */
+  public get fileStoreDir(): string {
+    return this._fileStoreDir
+  }
+
+  /**
+   * The path to the SSL key file (if any).
+   */
+  private _sslKeyPath: string | undefined
+  /**
+   * The path to the SSL key file (if any).
+   */
+  public get sslKeyPath(): string | undefined {
+    return this._sslKeyPath
+  }
+
+  /**
+   * The path to the SSL cert file (if any).
+   */
+  private _sslCertPath: string | undefined
+  /**
+   * The path to the SSL cert file (if any).
+   */
+  public get sslCertPath(): string | undefined {
+    return this._sslCertPath
+  }
+
+  /**
+   * The session middleware for the server responsible
+   * for enabling and managing sessions.
+   */
+  private _sessionMiddleware: RequestHandler
+  /**
+   * The session middleware for the server responsible
+   * for enabling and managing sessions.
+   */
+  public get sessionMiddleware(): RequestHandler {
+    return this._sessionMiddleware
+  }
+
+  /**
+   * The routers for the server.
+   */
+  private routers: MetisRouter[] = []
+
+  /**
+   * The rate limiter for the express server.
+   */
+  private limiter: RateLimitRequestHandler
+
+  /**
+   * @param options Options for creating the METIS server.
+   */
+  public constructor(options: Partial<TMetisServerOptions> = {}) {
+    // Create a completed options object, which
+    // combines the options provided in the environment
+    // with the options provided in the constructor.
+    let completedOptions: TMetisServerOptions = {
+      ...MetisServer.createOptionsFromEnvironment(),
+      ...options,
+    }
+
+    // Parse the options and store them in the class.
+    this._envType = completedOptions.envType
+    this._port = completedOptions.port
+    this._mongoDB = completedOptions.mongoDB
+    this._mongoHost = completedOptions.mongoHost
+    this._mongoPort = completedOptions.mongoPort
+    this._mongoUsername = completedOptions.mongoUsername
+    this._mongoPassword = completedOptions.mongoPassword
+    this._httpRateLimit = completedOptions.httpRateLimit
+    this._httpRateLimitDuration = completedOptions.httpRateLimitDuration * 1000 // ms
+    this._wsRateLimit = completedOptions.wsRateLimit
+    this._wsRateLimitDuration = completedOptions.wsRateLimitDuration
+    this._fileStoreDir = completedOptions.fileStoreDir
+    this._sslKeyPath = completedOptions.sslKeyPath
+    this._sslCertPath = completedOptions.sslCertPath
+
+    // Create third-party server objects.
+    this._expressApp = express()
+    // HTTPS only in production if certs are provided
+    if (this.envType === 'prod' && this.sslKeyPath && this.sslCertPath) {
+      const key = fs.readFileSync(this.sslKeyPath)
+      const cert = fs.readFileSync(this.sslCertPath)
+      this._httpServer = https.createServer({ key, cert }, this.expressApp)
+      console.log('SSL certificates found, running with HTTPS protocol.')
+    } else {
+      this._httpServer = http.createServer(this.expressApp)
+      if (this.envType === 'prod') {
+        console.warn('SSL certificates not found, running with HTTP protocol.')
+      }
+    }
+    this._wsServer = new MetisWsServer(this)
+
+    // Create database and file store objects.
+    this._database = new MetisDatabase(this)
+    this._fileStore = new MetisFileStore(this, { directory: this.fileStoreDir })
+
+    // Temporary session middleware until configured
+    // with the database connection.
+    this._sessionMiddleware = () => {}
+
+    // Create the rate limiter.
+    this.limiter = rateLimit({
+      windowMs: this.httpRateLimitDuration,
+      limit: this.httpRateLimit,
+    })
+  }
+
+  /**
+   * Initializes and starts web server.
+   * @resolves when the server is open on the configured port.
+   * @rejects if the server fails to start.
+   */
+  public async start(): Promise<void> {
+    return new Promise<void>(async (resolve, reject) => {
+      try {
+        let httpServer: HttpServer = this.httpServer
+        let port: number = this.port
+
+        // Initialize express app.
+        await this.initialize()
+
+        // Serve express app.
+        httpServer.listen(port, () => {
+          console.log(`Started server on port ${port}.`)
+          resolve()
+        })
+      } catch (error) {
+        console.error('START UP FAILED SHUTTING DOWN')
+        reject(error)
+      }
+    })
+  }
+
+  /**
+   * Stops the HTTP server
+   * @returns
+   */
+  public async close(): Promise<void> {
+    return new Promise<void>(async (resolve, reject) => {
+      try {
+        await this.database.close()
+        this.httpServer.close((err) => {
+          if (err) throw err
+          console.log('HTTP server closed successfully.')
+          resolve()
+        })
+      } catch (error) {
+        console.error('Error during server shutdown:', error)
+        reject(error)
+      }
+    })
+  }
+
+  /**
+   * Initializes the server for use.
+   * @returns A promise that resolves once the server is initialized and ready to be served.
+   */
+  private initialize(): Promise<void> {
+    return new Promise<void>(async (resolve) => {
+      let mongooseConnection: mongoose.Connection | null
+      let { expressApp, database, wsServer } = this
+
+      // Logger setup.
+      initializeLoggers(expressApp)
+
+      // Initialize target-environment sandboxing.
+      TargetEnvSandboxing.initialize()
+      // Register target environments.
+      ServerTargetEnvironment.scan()
+      // Validate target IDs.
+      ServerTarget.validateTargetIds(
+        ServerTargetEnvironment.METIS_TARGET_ENV_ID,
+      )
+
+      // Database setup.
+      await database.connect()
+
+      // Grab and confirm mongoose connection.
+      mongooseConnection = database.mongooseConnection
+      if (mongooseConnection === null) {
+        console.error('Failed to connect to database.')
+        return sys.exit(1)
+      }
+
+      // Create the store that will be used for
+      // all (express) web sessions.
+      ServerWebSession.createSessionStore(
+        MongoStore.create({
+          client: mongooseConnection.getClient(),
+          touchAfter: 24 * 3600, // lazy update after 24 hours
+        }),
+      )
+
+      // Configure sessions.
+      this._sessionMiddleware = session({
+        name: MetisServer.WEB_SESSION_COOKIE_NAME,
+        secret: '3c8V3DoMuJxjoife0asdfasdf023asd9isfd',
+        resave: false,
+        saveUninitialized: false,
+        store: ServerWebSession.store,
+      })
+
+      // sets up pug as the view engine
+      expressApp.set('view engine', 'pug')
+      expressApp.set('views', path.join(MetisServer.APP_DIR, 'views'))
+
+      // set the port
+      expressApp.set('port', this.port)
+
+      // activates third-party middleware
+      expressApp.use(cors())
+      expressApp.use(cookieParser())
+      expressApp.use(this._sessionMiddleware)
+      expressApp.use(express.urlencoded({ limit: '10mb', extended: true }))
+      expressApp.use(express.json({ limit: '10mb' }))
+
+      // rate limiter
+      expressApp.use(this.limiter)
+
+      // links the file path to css and resource files
+      // Serve built client (Vite outputs to dist)
+      expressApp.use(express.static(MetisServer.resolvePath('../client/dist')))
+
+      // This will do clean up when the application
+      // terminates.
+      process.on('SIGINT', () => {
+        // Deletes temp folder.
+        fs.rmdirSync(MetisServer.resolvePath('temp'), {
+          recursive: true,
+        })
+        process.exit()
+      })
+
+      this.mapRouters()
+
+      expressApp.use('/api/v1/', (request, response) => {
+        response.status(404)
+        response.render('error/v-not-found')
+      })
+
+      // page not found handling
+      expressApp.use((request: any, response: any) => {
+        response.status(404)
+        return response.render('error/v-not-found')
+      })
+
+      // last line of defense error handling (generic server error)
+      expressApp.use((error: any, request: any, response: any, next: any) => {
+        if (!error.status) {
+          error.status = 500
+        }
+        expressLogger.error(error)
+
+        response.status(500)
+        response.locals.error = error
+        return response.render('error/v-server-error')
+      })
+
+      // Handle lower level errors.
+      process.on('uncaughtException', (err: any) => {
+        if ('code' in err && err.code === 'ERR_HTTP_HEADERS_SENT') {
+          expressLogger.warn('Suppressed uncaughtException:', err.message)
+        } else {
+          console.error('Unhandled exception:', err)
+          process.exit(1) // Optional: Exit for critical errors
+        }
+      })
+
+      // Initialize web socket server.
+      wsServer.initialize()
+
+      resolve()
+    })
+  }
+
+  /**
+   * Register a router to the server.
+   */
+  public addRouter(router: MetisRouter): void {
+    this.routers.push(router)
+  }
+
+  /**
+   * Maps the added routers to the server.
+   */
+  private mapRouters(): void {
+    const register = (router: MetisRouter) =>
+      this.expressApp.use(router.path, router.expressRouter)
+
+    for (let router of this.routers)
+      router.map(router.expressRouter, this, () => register(router))
+  }
+
+  /**
+   * The name of the METIS project.
+   */
+  public static readonly PROJECT_NAME: string = packageJson.name
+
+  /**
+   * The description of the METIS project.
+   */
+  public static readonly PROJECT_DESCRIPTION: string = packageJson.description
+
+  /**
+   * The current version of METIS.
+   */
+  public static readonly PROJECT_VERSION: string = packageJson.version
+
+  /**
+   * The current build number for the database.
+   */
+  public static readonly SCHEMA_BUILD_NUMBER: number = 53
+
+  /**
+   * The root directory for the METIS server.
+   */
+  public static readonly APP_DIR: string = __dirname
+
+  /**
+   * The name of the cookie used to store the web session ID.
+   */
+  public static readonly WEB_SESSION_COOKIE_NAME = 'connect.sid'
+
+  /**
+   * Resolves the given paths with {@link path.resolve} relative
+   * to the METIS server app directory ({@link MetisServer.APP_DIR}).
+   * @param paths The paths to resolve.
+   * @returns The resolved path.
+   */
+  public static resolvePath(...paths: string[]): string {
+    return path.resolve(MetisServer.APP_DIR, ...paths)
+  }
+
+  /**
+   * Loads environment variables from a .env file in
+   * the config directory.
+   * @param fileName The name of the .env file to load,
+   * not including the extension.
+   */
+  private static loadEnv(fileName: string): void {
+    dotenv.config({
+      path: MetisServer.resolvePath(`../config/${fileName}.env`),
+      override: true,
+    })
+  }
+
+  /**
+   * Creates METIS options from the environment.
+   * @returns The METIS options created from the environment.
+   * @throws If environment variables are missing are invalid.
+   */
+  private static createOptionsFromEnvironment(): TMetisServerOptions {
+    let envType: string = process.env.METIS_ENV_TYPE ?? 'prod'
+
+    MetisServer.loadEnv(`${envType}.defaults`)
+    MetisServer.loadEnv(`${envType}`)
+
+    const requiredKeys = [
+      'PORT',
+      'MONGO_DB',
+      'MONGO_HOST',
+      'MONGO_PORT',
+      'HTTP_RATE_LIMIT',
+      'HTTP_RATE_LIMIT_DURATION',
+      'WS_RATE_LIMIT',
+      'WS_RATE_LIMIT_DURATION',
+      'FILE_STORE_DIR',
+    ] as const
+
+    requiredKeys.forEach((key) => {
+      if (!process.env[key]) {
+        throw new Error(
+          `Missing required environment variable: "${key}"\nIf \`defaults.env\` was modified, please undo changes. This file should not be modified by non-developers.`,
+        )
+      }
+    })
+
+    try {
+      return {
+        envType,
+        port: parseInt(process.env.PORT!),
+        mongoDB: process.env.MONGO_DB!,
+        mongoHost: process.env.MONGO_HOST!,
+        mongoPort: parseInt(process.env.MONGO_PORT!),
+        mongoUsername: process.env.MONGO_USERNAME,
+        mongoPassword: process.env.MONGO_PASSWORD,
+        httpRateLimit: parseInt(process.env.HTTP_RATE_LIMIT!),
+        httpRateLimitDuration: parseInt(process.env.HTTP_RATE_LIMIT_DURATION!),
+        wsRateLimit: parseInt(process.env.WS_RATE_LIMIT!),
+        wsRateLimitDuration: parseInt(process.env.WS_RATE_LIMIT_DURATION!),
+        fileStoreDir: process.env.FILE_STORE_DIR!,
+        sslKeyPath: process.env.SSL_KEY_PATH,
+        sslCertPath: process.env.SSL_CERT_PATH,
+      }
+    } catch (error) {
+      console.error('Failed to load environment variables.')
+      throw error
+    }
+  }
+}

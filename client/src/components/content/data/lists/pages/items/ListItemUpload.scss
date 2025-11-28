@@ -1,4 +1,5 @@
-@import 'src/assets/styles/config.scss';
+@use 'sass:color';
+@use '@client/assets/styles/config.scss' as *;
 
 .List {
   .ListItemUpload.ListItemLike {
@@ -36,7 +37,7 @@
         // display: none;
 
         $color-1: $color-neutral-dark;
-        $color-2: lighten($color-neutral-dark, 5%);
+        $color-2: color.adjust($color-neutral-dark, $lightness: 5%);
 
         animation: upload-animation 1500ms linear 0ms infinite;
         transition: 300ms width ease-out;

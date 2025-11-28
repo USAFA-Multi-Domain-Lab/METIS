@@ -8,7 +8,7 @@ The METIS API enables you to **automate training scenarios**, **integrate with e
 
 **New to the METIS API?** Get up and running in minutes:
 
-1. **Authenticate** → Login via `/api/v1/logins/login` with username/password
+1. **Authenticate** → Login via `/api/v1/logins/` with username/password
 2. **Create a mission** → POST to `/api/v1/missions/` with mission data
 3. **Launch a session** → POST to `/api/v1/sessions/` to start the mission
 4. **Monitor progress** → Use WebSocket connection for real-time updates
@@ -87,7 +87,7 @@ The METIS API provides the following main routes. Each route has its own detaile
 ### Missions API
 
 **Route:** `/api/v1/missions/`  
-**Documentation:** [Missions API](/docs/api/missions.md)  
+**Documentation:** [Missions API](missions.md)  
 **Description:** Manages mission lifecycle and configurations
 
 **Key Operations:**
@@ -114,7 +114,7 @@ The METIS API provides the following main routes. Each route has its own detaile
 ### Users API
 
 **Route:** `/api/v1/users/`  
-**Documentation:** [Users API](/docs/api/users.md)  
+**Documentation:** [Users API](users.md)  
 **Description:** Handles user account management
 
 **Key Operations:**
@@ -132,7 +132,7 @@ The METIS API provides the following main routes. Each route has its own detaile
 ### Sessions API
 
 **Route:** `/api/v1/sessions/`  
-**Documentation:** [Sessions API](/docs/api/sessions.md)  
+**Documentation:** [Sessions API](sessions.md)  
 **Description:** Manages METIS mission sessions
 
 **Key Operations:**
@@ -156,7 +156,7 @@ The METIS API provides the following main routes. Each route has its own detaile
 ### Target Environments API
 
 **Route:** `/api/v1/target-environments/`  
-**Documentation:** [Target Environments API](/docs/api/target-environments.md)  
+**Documentation:** [Target Environments API](target-environments.md)  
 **Description:** Provides access to registered target environments and effect migration
 
 **Key Operations:**
@@ -173,7 +173,7 @@ The METIS API provides the following main routes. Each route has its own detaile
 ### Files API
 
 **Route:** `/api/v1/files/`  
-**Documentation:** [Files API](/docs/api/files.md)  
+**Documentation:** [Files API](files.md)  
 **Description:** Manages file operations
 
 **Key Operations:**
@@ -195,7 +195,7 @@ The METIS API provides the following main routes. Each route has its own detaile
 ### Logins API
 
 **Route:** `/api/v1/logins/`  
-**Documentation:** [Logins API](/docs/api/logins.md)  
+**Documentation:** [Logins API](logins.md)  
 **Description:** Handles authentication flows
 
 **Key Operations:**
@@ -214,7 +214,7 @@ The METIS API provides the following main routes. Each route has its own detaile
 ### Info API
 
 **Route:** `/api/v1/info/`  
-**Documentation:** [Info API](/docs/api/info.md)  
+**Documentation:** [Info API](info.md)  
 **Description:** Provides system information
 
 **Key Operations:**

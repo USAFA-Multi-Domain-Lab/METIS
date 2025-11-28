@@ -1,10 +1,10 @@
+import { useUserPageContext } from '@client/components/pages/UserPage'
+import { useGlobalContext } from '@client/context/global'
+import { compute } from '@client/toolbox'
+import { usePostInitEffect, useRequireLogin } from '@client/toolbox/hooks'
+import type { ClientUser } from '@client/users/ClientUser'
+import { UserAccess } from '@shared/users/UserAccess'
 import { useEffect, useState } from 'react'
-import { useUserPageContext } from 'src/components/pages/UserPage'
-import { useGlobalContext } from 'src/context/global'
-import { compute } from 'src/toolbox'
-import { usePostInitEffect, useRequireLogin } from 'src/toolbox/hooks'
-import ClientUser from 'src/users'
-import UserAccess from '../../../../../shared/users/accesses'
 import { DetailString } from '../form/DetailString'
 import { DetailToggle } from '../form/DetailToggle'
 import { DetailDropdown } from '../form/dropdown'
@@ -17,7 +17,7 @@ import './UserEntry.scss'
 export default function ({
   user,
   handleChange,
-}: TUserEntry_P): JSX.Element | null {
+}: TUserEntry_P): TReactElement | null {
   const { state } = useUserPageContext()
   const { forceUpdate } = useGlobalContext().actions
   const { isAuthorized } = useRequireLogin()

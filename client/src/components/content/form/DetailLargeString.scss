@@ -1,7 +1,12 @@
-@import 'src/assets/styles/config.scss';
-@import '../form/index.scss';
+@use '@client/assets/styles/config.scss' as *;
+@use '../form/index.scss' as *;
 
 .Detail.DetailLargeString {
+  &.Disabled {
+    user-select: unset !important;
+    pointer-events: unset !important;
+  }
+
   .TitleRow .TitleColumnOne .Shortcuts {
     .ButtonSvg {
       margin: 0;

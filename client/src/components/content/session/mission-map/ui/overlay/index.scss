@@ -1,5 +1,5 @@
-@import '../../mixins.scss';
-@import '../../../../../../assets/styles/config.scss';
+@use '../../mixins.scss' as *;
+@use '../../../../../../assets/styles/config.scss' as *;
 
 .MissionMap {
   .Overlay {

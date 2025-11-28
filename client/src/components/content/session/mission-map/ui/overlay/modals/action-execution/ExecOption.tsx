@@ -1,11 +1,11 @@
+import Tooltip from '@client/components/content/communication/Tooltip'
+import { useGlobalContext } from '@client/context/global'
+import type { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
+import type { SessionClient } from '@client/sessions/SessionClient'
+import { compute } from '@client/toolbox'
+import { useEventListener } from '@client/toolbox/hooks'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { useState } from 'react'
-import Tooltip from 'src/components/content/communication/Tooltip'
-import { useGlobalContext } from 'src/context/global'
-import ClientMissionAction from 'src/missions/actions'
-import SessionClient from 'src/sessions'
-import { compute } from 'src/toolbox'
-import { useEventListener } from 'src/toolbox/hooks'
-import StringToolbox from '../../../../../../../../../../shared/toolbox/strings'
 import './ExecOption.scss'
 
 /* -- COMPONENT -- */

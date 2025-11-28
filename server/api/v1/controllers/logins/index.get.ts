@@ -1,13 +1,12 @@
-import { Request, Response } from 'express-serve-static-core'
-import ServerLogin from 'metis/server/logins'
-import ApiResponse from '../../library/response'
+import { ServerLogin } from '@server/logins/ServerLogin'
+import { ApiResponse } from '../../library/ApiResponse'
 /**
  * This will return the login information for the user making the request.
  * @param request The express request.
  * @param response The express response.
  * @returns The login information in JSON format or null if the login information was not found.
  */
-const getLogin = (request: Request, response: Response) => {
+export const getLogin: TExpressHandler = (request, response) => {
   // Retrieve the login information with the user
   // ID stored in the request.
   let login: ServerLogin | undefined = ServerLogin.get(request.session.userId)
@@ -23,5 +22,3 @@ const getLogin = (request: Request, response: Response) => {
     return ApiResponse.sendJson(response, login.toJson())
   }
 }
-
-export default getLogin

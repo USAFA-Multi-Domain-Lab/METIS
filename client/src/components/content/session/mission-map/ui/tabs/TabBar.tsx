@@ -1,7 +1,8 @@
+import { compute } from '@client/toolbox'
+import { useForcedUpdates, usePostRenderEffect } from '@client/toolbox/hooks'
 import { useEffect, useRef, useState } from 'react'
-import { compute } from 'src/toolbox'
-import { useForcedUpdates, usePostRenderEffect } from 'src/toolbox/hooks'
-import Tab, { TTab_P } from '.'
+import type { TTab_P } from '.'
+import Tab from '.'
 import { useMapContext } from '../../MissionMap'
 import './TabBar.scss'
 
@@ -25,7 +26,7 @@ export default function TabBar({
   index,
   autoSelectNewTabs = true,
   setIndex,
-}: TTabBar_P): JSX.Element | null {
+}: TTabBar_P): TReactElement | null {
   /* -- STATE -- */
 
   const mapContext = useMapContext()
@@ -401,7 +402,7 @@ export default function TabBar({
   /**
    * JSX for the add button.
    */
-  const addJsx = compute<JSX.Element | null>(() => {
+  const addJsx = compute<TReactElement | null>(() => {
     // Return null if no callback for `onAdd`
     // is provided.
     if (!onTabAdd) return null

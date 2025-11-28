@@ -1,9 +1,9 @@
+import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
+import { useEventListener, useInlineStyling } from '@client/toolbox/hooks'
 import { useEffect, useState } from 'react'
-import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
-import { useEventListener, useInlineStyling } from 'src/toolbox/hooks'
 import { useListContext } from '../../List'
-import ListUpload from '../../uploads'
+import type { ListUpload } from '../../uploads'
 import './ListItemUpload.scss'
 
 /**
@@ -12,7 +12,7 @@ import './ListItemUpload.scss'
  */
 export default function ListItemUpload({
   upload,
-}: TListItemUpload_P): JSX.Element {
+}: TListItemUpload_P): TReactElement {
   /* -- STATE -- */
 
   const listContext = useListContext()

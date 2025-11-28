@@ -1,14 +1,16 @@
-import { Router } from 'express'
-import MetisServer from 'metis/server'
+import type { MetisServer } from '@server/MetisServer'
+import { validateTargetEnvConfigs } from '@server/middleware/sessions'
+import { SessionServer } from '@server/sessions/SessionServer'
+import type { TSessionConfig } from '@shared/sessions/MissionSession'
+import type { Router } from 'express'
 import defineRequests, {
   RequestBodyFilters,
-} from 'metis/server/middleware/requests'
-import Session, { TSessionConfig } from 'metis/sessions'
+} from '../../../middleware/requests'
 import { auth } from '../../../middleware/users'
-import deleteSession from '../controllers/sessions/[_id].delete'
-import downloadMissionFile from '../controllers/sessions/files/[_id]/download.get'
-import getSessions from '../controllers/sessions/index.get'
-import launchSession from '../controllers/sessions/launch.post'
+import { deleteSession } from '../controllers/sessions/[_id].delete'
+import { downloadMissionFile } from '../controllers/sessions/files/[_id]/download.get'
+import { getSessions } from '../controllers/sessions/index.get'
+import { launchSession } from '../controllers/sessions/launch.post'
 
 const routerMap = (router: Router, server: MetisServer, done: () => void) => {
   const { fileStore } = server
@@ -28,14 +30,15 @@ const routerMap = (router: Router, server: MetisServer, done: () => void) => {
         body: {
           accessibility: RequestBodyFilters.STRING_LITERAL<
             TSessionConfig['accessibility']
-          >(Session.ACCESSIBILITY_OPTIONS),
-          autoAssign: RequestBodyFilters.BOOLEAN,
+          >(SessionServer.ACCESSIBILITY_OPTIONS),
           infiniteResources: RequestBodyFilters.BOOLEAN,
-          effectsEnabled: RequestBodyFilters.BOOLEAN,
+          disabledTargetEnvs: RequestBodyFilters.ARRAY,
           name: RequestBodyFilters.STRING,
+          targetEnvConfigs: RequestBodyFilters.OBJECT,
         },
       },
     ),
+    validateTargetEnvConfigs,
     launchSession,
   )
 

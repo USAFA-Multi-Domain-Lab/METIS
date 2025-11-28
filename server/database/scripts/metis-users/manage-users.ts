@@ -1,11 +1,12 @@
+import { MetisServer } from '@server/MetisServer'
+import { ServerUser } from '@server/users/ServerUser'
+import type { TUserJson } from '@shared/users/User'
+import type { TUserAccessId } from '@shared/users/UserAccess'
+import { UserAccess } from '@shared/users/UserAccess'
 import fs from 'fs'
-import MetisServer from 'metis/server'
-import ServerUser from 'metis/server/users'
-import { TUserJson } from 'metis/users'
-import { accessIds, TUserAccessId } from 'metis/users/accesses'
-import { CompleterResult } from 'readline'
+import type { CompleterResult } from 'readline'
 import { createInterface } from 'readline/promises'
-import UserModel, { hashPassword } from '../../models/users'
+import { hashPassword, UserModel } from '../../models/users'
 
 /**
  * Parses the data into an array of users JSON.
@@ -29,7 +30,9 @@ const parseUsers = async (data: string) => {
     ] = line.split(',').map((value) => value.trim())
 
     // Skip invalid access IDs.
-    if (!accessIds.includes(accessId as TUserAccessId)) {
+    if (
+      !UserAccess.AVAILABLE_ACCESSES_IDS.includes(accessId as TUserAccessId)
+    ) {
       throw new Error(`Invalid access ID: ${accessId}`)
     }
 
@@ -123,6 +126,7 @@ const connectToDatabase = async () => {
   // Connect to the database.
   console.log('Connecting to database...')
   await server.database.connect()
+  return server
 }
 
 /**
@@ -155,7 +159,7 @@ const manageUsers = async () => {
       // Parse the data.
       const users: TUserInsertData[] = await parseUsers(data)
       // Connect to the database.
-      await connectToDatabase()
+      const server = await connectToDatabase()
 
       switch (method) {
         case 'create':
@@ -179,12 +183,14 @@ const manageUsers = async () => {
           console.log('Users restored successfully.')
           break
       }
+
+      await server.database.close()
     } else if (method === 'delete' || method === 'archive') {
       // Parse the data.
       const usernames: TUserJson['_id'][] = parseUsernames(data)
 
       // Connect to the database.
-      await connectToDatabase()
+      const server = await connectToDatabase()
 
       switch (method) {
         case 'delete':
@@ -207,13 +213,16 @@ const manageUsers = async () => {
           console.log('Users archived successfully.')
           break
       }
+
+      await server.database.close()
     }
 
     // Exit the process.
     process.exit(0)
   } catch (error: any) {
     const method = process.argv[process.argv.length - 1].replace('--', '')
-    console.error(`Failed to ${method} users.\n`, error)
+    const errorMessage = error instanceof Error ? error.message : error
+    console.error(`Failed to ${method} users.\n`, errorMessage)
     process.exit(1)
   }
 }

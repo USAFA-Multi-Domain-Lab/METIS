@@ -1,29 +1,26 @@
-import ClientMissionFile from 'src/missions/files'
-import { compute } from 'src/toolbox'
-import { useDefaultProps } from 'src/toolbox/hooks'
-import FileToolbox from '../../../../../../../shared/toolbox/files'
-import List, { createDefaultListProps, TList_P } from '../List'
+import type { ClientMissionFile } from '@client/missions/files/ClientMissionFile'
+import { useDefaultProps } from '@client/toolbox/hooks'
+import { FileToolbox } from '@shared/toolbox/files/FileToolbox'
+import type { TList_P } from '../List'
+import List, { createDefaultListProps } from '../List'
 
 /**
  * A component for displaying a list of mission files.
  * @note Uses the `List` component.
  */
-export default function (props: TMissionFileList_P): JSX.Element | null {
+export default function (props: TMissionFileList_P): TReactElement | null {
   const defaultedProps = useDefaultProps(props, {
     ...createDefaultListProps<ClientMissionFile>(),
     itemsPerPageMin: 10,
     columns: ['mimetype', 'size'],
     deselectionBlacklist: ['.ResizeBar', '.ScrollBox', '.EntryBottom'],
     listButtonIcons: [],
-    itemButtonIcons: compute<TMetisIcon[]>(() => {
-      let results: TMetisIcon[] = []
-
-      // todo: Add auth.
-      if (props.onDetachRequest) results.push('unlink')
-
-      return results
-    }),
-    initialSorting: { column: 'name', method: 'ascending' },
+    itemButtonIcons: ['unlink'],
+    initialSorting: {
+      method: 'column-based',
+      column: 'name',
+      direction: 'ascending',
+    },
     getCellText: (
       file: ClientMissionFile,
       column: keyof ClientMissionFile,
@@ -79,7 +76,7 @@ export default function (props: TMissionFileList_P): JSX.Element | null {
     getItemButtonPermissions: (button) => {
       switch (button) {
         case 'unlink':
-          return ['files_write']
+          return ['missions_write']
         default:
           return []
       }

@@ -1,7 +1,7 @@
-import { useEffect } from 'react'
-import ClientUser from 'src/users'
-import { TLogin } from '../../../../shared/logins'
-import User from '../../../../shared/users'
+import type { ClientUser } from '@client/users/ClientUser'
+import type { TLogin } from '@shared/logins'
+import type { User } from '@shared/users/User'
+import type { useEffect } from 'react'
 
 /**
  * Options for `useResizeObserver` hook.
@@ -15,9 +15,11 @@ export type TObjectFormSyncOptions<T extends {}> = {
   /**
    * Callback to call when the state updates for
    * one of the stateful properties in the object.
+   * @param prevState The previous state of the object.
+   * @param revert A function to call to revert the state to the previous value.
    * @default () => {}
    */
-  onChange?: (prevState: T) => void
+  onChange?: (prevState: T, revert: () => void) => void
 }
 
 /**

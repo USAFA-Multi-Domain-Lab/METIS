@@ -1,0 +1,21 @@
+@use '@client/assets/styles/config.scss' as *;
+@use '@client/assets/styles/util.scss' as *;
+
+.MissionMap .Overlay .PendingModal.MapModal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  max-width: unset;
+  max-height: unset;
+
+  @include background-mask($color: $color-secondary, $opacity: 0.65);
+
+  .PendingModalMessage {
+    color: $color-accent-light;
+
+    @include pulse;
+  }
+}

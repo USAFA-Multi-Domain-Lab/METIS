@@ -1,10 +1,10 @@
-import { Request, Response } from 'express-serve-static-core'
-import UserModel, { hashPassword } from 'metis/server/database/models/users'
-import { StatusError } from 'metis/server/http'
-import { databaseLogger } from 'metis/server/logging'
-import ServerLogin from 'metis/server/logins'
-import { TUserJson } from 'metis/users'
-import ApiResponse from '../../library/response'
+import { hashPassword, UserModel } from '@server/database/models/users'
+import { databaseLogger } from '@server/logging'
+import type { ServerLogin } from '@server/logins/ServerLogin'
+import type { TUserJson } from '@shared/users/User'
+import bcryptjs from 'bcryptjs'
+import { ApiResponse } from '../../library/ApiResponse'
+import { StatusError } from '../../library/StatusError'
 import { preventSystemUserWrite } from '../../library/users'
 
 /**
@@ -13,24 +13,51 @@ import { preventSystemUserWrite } from '../../library/users'
  * @param response The express response.
  * @returns The updated user in JSON format.
  */
-const resetPassword = async (request: Request, response: Response) => {
+export const resetPassword: TExpressHandler = async (request, response) => {
   // Extract the user updates from the request body.
   let userUpdates = request.body
-  let { password } = userUpdates as Partial<TUserJson>
+  let { password } = userUpdates as TResetPasswordRequestBody
   // Get the user that is logged in.
   let login: ServerLogin = response.locals.login
-
-  // Hash the password if it exists.
-  if (!!password) password = await hashPassword(password)
 
   try {
     // Disable system-user write operations.
     preventSystemUserWrite({ currentUserId: login.userId })
 
+    // Get the current user with their password
+    let currentUser = await UserModel.findById(
+      login.userId,
+      {},
+      { includeSensitive: true },
+    ).exec()
+
+    if (!currentUser) {
+      throw new StatusError(`User with ID "${login.userId}" not found.`, 404)
+    }
+
+    // Check if the current user has a password
+    if (currentUser.password) {
+      // Compare the new password with the old password
+      let isSamePassword = await bcryptjs.compare(
+        password,
+        currentUser.password,
+      )
+
+      if (isSamePassword) {
+        throw new StatusError(
+          'New password cannot be the same as the old password.',
+          422,
+        )
+      }
+    }
+
+    // Hash the password
+    let hashedPassword = await hashPassword(password)
+
     // Update the user.
     let userJson = await UserModel.findByIdAndUpdate(
       login.userId,
-      { password, needsPasswordReset: false },
+      { password: hashedPassword, needsPasswordReset: false },
       {
         returnOriginal: false,
         runValidators: true,
@@ -58,4 +85,12 @@ const resetPassword = async (request: Request, response: Response) => {
   }
 }
 
-export default resetPassword
+/**
+ * The request body for resetting a user's password.
+ */
+type TResetPasswordRequestBody = {
+  /**
+   * The new password for the user.
+   */
+  password: Required<TUserJson>['password']
+}

@@ -1,5 +1,5 @@
-import { compute } from 'src/toolbox'
-import ClassList from '../../../../../../shared/toolbox/html/class-lists'
+import { compute } from '@client/toolbox'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import { usePanelContext } from './Panel'
 import './PanelView.scss'
 
@@ -12,7 +12,7 @@ import './PanelView.scss'
 export default function ({
   children,
   title,
-}: TPanelView_P): JSX.Element | null {
+}: TPanelView_P): TReactElement | null {
   /* -- STATE -- */
 
   const { state } = usePanelContext()
@@ -51,8 +51,24 @@ export interface TPanelView_P {
    */
   title: string
   /**
+   * An optional icon to display in the tab.
+   * Can be used alone or with the title.
+   */
+  icon?: TMetisIcon
+  /**
    * A description of the view to be used as a tooltip.
    * @note By default, no tooltip is shown.
    */
   description?: string
+  /**
+   * Whether the tab is disabled and cannot be selected.
+   * @default false
+   */
+  disabled?: boolean
+  /**
+   * Whether the tab should be visually highlighted
+   * to grab attention.
+   * @default false
+   */
+  highlighted?: boolean
 }

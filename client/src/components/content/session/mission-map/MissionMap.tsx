@@ -1,19 +1,20 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { LocalContext, LocalContextProvider } from 'src/context/local'
-import ClientMission from 'src/missions'
-import ClientMissionForce from 'src/missions/forces'
-import ClientMissionNode from 'src/missions/nodes'
-import ClientMissionPrototype from 'src/missions/nodes/prototypes'
-import { compute } from 'src/toolbox'
+import { LocalContext, LocalContextProvider } from '@client/context/local'
+import { ClientMission } from '@client/missions/ClientMission'
+import type { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
+import { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
+import { ClientMissionPrototype } from '@client/missions/nodes/ClientMissionPrototype'
+import { compute } from '@client/toolbox'
+import { removeKey } from '@client/toolbox/components'
 import {
   useDefaultProps,
   useEventListener,
   withPreprocessor,
-} from 'src/toolbox/hooks'
-import { v4 as generateHash } from 'uuid'
-import ClassList from '../../../../../../shared/toolbox/html/class-lists'
-import { Vector1D, Vector2D } from '../../../../../../shared/toolbox/space'
-import ButtonSvgEngine from '../../user-controls/buttons/panels/engines'
+} from '@client/toolbox/hooks'
+import { ClassList } from '@shared/toolbox/html/ClassList'
+import { Vector1D } from '@shared/toolbox/numbers/vectors/Vector1D'
+import { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { ButtonSvgEngine } from '../../user-controls/buttons/panels/engines'
 import {
   useButtonSvgLayout,
   useButtonSvgs,
@@ -23,16 +24,13 @@ import Scene from './Scene'
 import Grid from './objects/Grid'
 import Line from './objects/Line'
 import PrototypeSlot from './objects/PrototypeSlot'
-import {
-  MAX_NODE_CONTENT_ZOOM,
-  MapNode,
-  TMapCompatibleNode,
-} from './objects/nodes'
+import type { TMapCompatibleNode } from './objects/nodes'
+import { MapNode } from './objects/nodes'
 import Hud from './ui/Hud'
 import PanController from './ui/PanController'
 import Overlay from './ui/overlay'
 import MapPreferences from './ui/overlay/modals/MapPreferences'
-import { TTabBarTab } from './ui/tabs/TabBar'
+import type { TTabBarTab } from './ui/tabs/TabBar'
 
 /* -- CONSTANTS -- */
 
@@ -111,6 +109,11 @@ export const MAP_EM_GRID_ENABLED = false
 export const MAP_NODE_GRID_ENABLED = true
 
 /**
+ * The maximum zoom level where the node's content will be displayed.
+ */
+export const MAX_NODE_CONTENT_ZOOM = 1 / 30 // [numerator]em = [denominator]px
+
+/**
  * The tab to display when no tabs exist.
  */
 const INVALID_TAB: TTabBarTab = {
@@ -153,7 +156,7 @@ export const useMapContext = mapContext.getHook()
  * The heart of METIS, a 2D map of the mission displaying nodes
  * in relation to each other.
  */
-export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
+export default function MissionMap(props: TMissionMap_P): TReactElement | null {
   /* -- PROPS -- */
 
   const defaultedProps = useDefaultProps(props, {
@@ -185,6 +188,34 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
     scene: useRef<HTMLDivElement>(null),
   }
 
+  /**
+   * The position to display the camera at. Changed by panning.
+   */
+  const [cameraPosition] = useState<Vector2D>(
+    new Vector2D(DEFAULT_CAMERA_X, DEFAULT_CAMERA_Y, {
+      onChange: () => {
+        // If the scene element exists, pre translate it.
+        if (elements.scene.current) {
+          // Set the scene element's position to the
+          // negative of the camera position.
+          elements.scene.current.style.transform = `translate(${-cameraPosition.x}em, ${-cameraPosition.y}em)`
+        }
+      },
+    }),
+  )
+  /**
+   * The zoom level of the camera. Changed by zooming with a mouse or trackpad.
+   */
+  const [cameraZoom] = useState<Vector1D>(
+    new Vector1D(DEFAULT_CAMERA_ZOOM, {
+      onChange: () => {
+        buttonEngine.setDisabled('zoom-out', cameraZoom.x >= MAX_CAMERA_ZOOM)
+        buttonEngine.setDisabled('zoom-in', cameraZoom.x <= MIN_CAMERA_ZOOM)
+        setNodeContentVisible(cameraZoom.x <= MAX_NODE_CONTENT_ZOOM)
+      },
+    }),
+  )
+
   const state: TMissionMap_S = {
     selectedForce: defaultedProps.selectedForce,
     tabIndex: withPreprocessor(
@@ -197,19 +228,15 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
       },
     ),
     mapPreferencesVisible: useState<boolean>(false),
+    nodeContentVisible: useState<boolean>(
+      cameraZoom.x <= MAX_NODE_CONTENT_ZOOM,
+    ),
   }
 
   const [selectedForce, selectForce] = state.selectedForce
   const [tabIndex, setTabIndex] = state.tabIndex
   const [mapPreferencesVisible, setMapPreferencesVisible] =
     state.mapPreferencesVisible
-
-  /**
-   * Counter that is incremented whenever the component
-   * needs to be re-rendered.
-   */
-  const [_, setForcedUpdateTracker] = useState<string>('initial')
-
   /**
    * The current structure change key for the mission.
    */
@@ -223,32 +250,7 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
   const [nodeCenteringTarget, setNodeCenteringTarget] =
     useState<TMapCompatibleNode | null>(null)
 
-  /**
-   * Force the component to re-render.
-   */
-  const forceUpdate = useCallback(() => {
-    setForcedUpdateTracker(generateHash())
-  }, [])
-
-  /**
-   * The position to display the camera at. Changed by panning.
-   */
-  const [cameraPosition] = useState<Vector2D>(
-    new Vector2D(DEFAULT_CAMERA_X, DEFAULT_CAMERA_Y, {
-      onChange: () => forceUpdate(),
-    }),
-  )
-  /**
-   * The zoom level of the camera. Changed by zooming with a mouse or trackpad.
-   */
-  const [cameraZoom] = useState<Vector1D>(
-    new Vector1D(DEFAULT_CAMERA_ZOOM, {
-      onChange: () => {
-        buttonEngine.setDisabled('zoom-out', cameraZoom.x === MAX_CAMERA_ZOOM)
-        buttonEngine.setDisabled('zoom-in', cameraZoom.x === MIN_CAMERA_ZOOM)
-      },
-    }),
-  )
+  const [, setNodeContentVisible] = state.nodeContentVisible
 
   /* -- COMPUTED -- */
 
@@ -259,19 +261,6 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
   const disableZoom: boolean = !!overlayContent
 
   /* -- FUNCTIONS -- */
-
-  /**
-   * Pre-translates the scene to the camera position in the
-   * state. This makes the panning appear snappier.
-   */
-  const preTranslateScene = (): void => {
-    // If the scene element exists, pre translate it.
-    if (elements.scene.current) {
-      // Set the scene element's position to the
-      // negative of the camera position.
-      elements.scene.current.style.transform = `translate(${-cameraPosition.x}em, ${-cameraPosition.y}em)`
-    }
-  }
 
   /**
    * Pans the camera gradually to the given destination.
@@ -745,14 +734,14 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
    * The JSX for the relationship lines drawn between nodes.
    * @memoized
    */
-  const linesJsx = useMemo((): JSX.Element[] => {
+  const linesJsx = useMemo((): TReactElement[] => {
     if (selectedForce === null) {
       return mission.relationshipLines.map((lineData) => {
-        return <Line {...lineData} />
+        return <Line key={lineData.key} {...removeKey(lineData)} />
       })
     } else {
       return selectedForce.relationshipLines.map((lineData) => {
-        return <Line {...lineData} />
+        return <Line key={lineData.key} {...removeKey(lineData)} />
       })
     }
   }, [
@@ -770,7 +759,7 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
    * The JSX for the node objects rendered in the scene.
    * @memoized
    */
-  const nodesJsx = useMemo((): JSX.Element[] => {
+  const nodesJsx = useMemo((): TReactElement[] => {
     /**
      * Renders the given nodes into JSX.
      * @param nodes The nodes to render.
@@ -781,7 +770,7 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
       nodes: TNode[],
       onSelect: ((node: TNode) => void) | null,
       applyTooltip: ((node: TNode) => string) | null,
-    ): JSX.Element[] => {
+    ): TReactElement[] => {
       return nodes.map((node) => {
         return (
           <MapNode
@@ -820,7 +809,7 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
    * The JSX for the prototype slot objects rendered in the scene.
    * @memoized
    */
-  const slotsJsx = useMemo((): JSX.Element[] => {
+  const slotsJsx = useMemo((): TReactElement[] => {
     return mission.prototypeSlots.map((slot) => (
       <PrototypeSlot key={`${slot.relative._id}${slot.relation}`} {...slot} />
     ))
@@ -840,7 +829,7 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
    * JSX for an overlay that is displayed only if content is
    * passed in the props for the map.
    */
-  const overlayJsx = compute((): JSX.Element | null => {
+  const overlayJsx = compute((): TReactElement | null => {
     // If there is no overlay content, return null.
     if (!overlayContent && !mapPreferencesVisible) return null
 
@@ -866,7 +855,6 @@ export default function MissionMap(props: TMissionMap_P): JSX.Element | null {
         <PanController
           cameraPosition={cameraPosition}
           cameraZoom={cameraZoom}
-          onPan={preTranslateScene}
         />
         <Scene
           cameraPosition={cameraPosition}
@@ -938,11 +926,11 @@ export type TMissionMap_E = {
   /**
    * The root element of the map.
    */
-  root: React.RefObject<HTMLDivElement>
+  root: React.RefObject<HTMLDivElement | null>
   /**
    * The scene element of the map.
    */
-  scene: React.RefObject<HTMLDivElement>
+  scene: React.RefObject<HTMLDivElement | null>
 }
 
 /**
@@ -1047,6 +1035,10 @@ export type TMissionMap_S = {
    * displayed to the user.
    */
   mapPreferencesVisible: TReactState<boolean>
+  /**
+   * Whether the node content is currently visible.
+   */
+  nodeContentVisible: TReactState<boolean>
 }
 
 /**

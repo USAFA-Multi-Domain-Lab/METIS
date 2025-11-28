@@ -1,8 +1,9 @@
+import { compute } from '@client/toolbox'
 import { useState } from 'react'
-import { compute } from 'src/toolbox'
-import { TDetail_P } from '.'
+import type { TDetail_P } from '.'
 import Tooltip from '../communication/Tooltip'
-import { ButtonText, TButtonText_P } from '../user-controls/buttons/ButtonText'
+import type { TButtonText_P } from '../user-controls/buttons/ButtonText'
+import { ButtonText } from '../user-controls/buttons/ButtonText'
 import If from '../util/If'
 import './DetailColorSelector.scss'
 
@@ -25,7 +26,7 @@ export function DetailColorSelector({
   uniqueFieldClassName = '',
   disabled = false,
   tooltipDescription = '',
-}: TDetailColorSelector_P): JSX.Element {
+}: TDetailColorSelector_P): TReactElement {
   /* -- STATE -- */
   const [expanded, setExpanded] = useState<boolean>(isExpanded)
 
@@ -113,7 +114,10 @@ export function DetailColorSelector({
       </div>
 
       <div className={fieldClassName}>
-        <div className='Dropdown' onClick={() => setExpanded(!expanded)}>
+        <div
+          className='Dropdown'
+          onClick={() => (!disabled ? setExpanded(!expanded) : null)}
+        >
           <div className='Text' style={{ color: stateValue }}>
             {stateValue}
           </div>
@@ -130,7 +134,7 @@ export function DetailColorSelector({
                   className={stateValue === color ? 'Color Selected' : 'Color'}
                   style={{ backgroundColor: color }}
                   key={`color_${color}_${index}`}
-                  onClick={() => setState(color)}
+                  onClick={() => (!disabled ? setState(color) : null)}
                 ></div>
               )
             })}
@@ -138,9 +142,18 @@ export function DetailColorSelector({
         </If>
 
         <div className='ButtonContainer'>
-          {buttons.map((button: TButtonText_P, index: number) => (
-            <ButtonText key={`button_${button.text}_${index}`} {...button} />
-          ))}
+          {buttons.map((button: TButtonText_P, index: number) => {
+            const buttonProps = {
+              ...button,
+              onClick: !disabled ? button.onClick : () => {},
+            }
+            return (
+              <ButtonText
+                key={`button_${button.text}_${index}`}
+                {...buttonProps}
+              />
+            )
+          })}
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
+import { compute } from '@client/toolbox'
+import type { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
 import { useMemo } from 'react'
-import { Vector2D } from '../../../../../../../shared/toolbox/space'
 import './Line.scss'
 
 /**
@@ -10,8 +11,18 @@ export default function Line({
   start,
   length,
   blurred = false,
-}: TLine_P): JSX.Element | null {
+}: TLine_P): TReactElement | null {
   /* -- computed -- */
+
+  /**
+   * The start position as a string for memoization.
+   * @note React recommends that complex objects not
+   * be used as dependencies.
+   * @note React recommended assigning `start.toString()`
+   * to a variable and using that variable as a dependency
+   * instead.
+   */
+  const startAsString = compute<string>(() => start.toString())
 
   /**
    * The inline styles for the root element.
@@ -67,9 +78,11 @@ export default function Line({
     // The direction changes.
     direction,
     // The starting position changes.
-    start.toString(),
+    startAsString,
     // The length changes.
     length,
+    // The blurred state changes.
+    blurred,
   ])
 
   /* -- render -- */

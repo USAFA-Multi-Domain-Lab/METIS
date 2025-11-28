@@ -1,5 +1,5 @@
-import { TUserJson } from 'metis/users'
-import mongoose from 'mongoose'
+import type { TCreatedByJson } from '@shared/users/User'
+import type mongoose from 'mongoose'
 
 /**
  * A document that can be recovered, if need be,
@@ -15,7 +15,7 @@ export type TMetisDoc<TJson extends {} = {}> = TJson & {
   /**
    * The creator of the document.
    */
-  createdBy?: TUserJson | mongoose.Types.ObjectId
+  createdBy?: TCreatedByJson | mongoose.Types.ObjectId
   /**
    * Whether the document has been deleted.
    */

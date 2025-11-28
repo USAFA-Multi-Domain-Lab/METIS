@@ -1,10 +1,10 @@
-import { RefObject } from 'react'
-import { useGlobalContext } from 'src/context/global'
-import { compute } from 'src/toolbox'
-import { useEventListener } from 'src/toolbox/hooks'
-import { Vector2D } from '../../../../../../shared/toolbox/space'
-import { TButtonMenu_P } from './ButtonMenu'
-import ButtonSvgEngine from './panels/engines'
+import { useGlobalContext } from '@client/context/global'
+import { compute } from '@client/toolbox'
+import { useEventListener } from '@client/toolbox/hooks'
+import { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
+import type { RefObject } from 'react'
+import type { TButtonMenu_P } from './ButtonMenu'
+import type { ButtonSvgEngine } from './panels/engines'
 
 /**
  * Activates a button menu when the target element
@@ -52,6 +52,9 @@ export default function ButtonMenuController({
       // Abort if not listening.
       if (!listen) return
 
+      // Abort if there are no buttons in the engine.
+      if (!engine.buttons.length) return
+
       // Prevent the default context menu.
       event.preventDefault()
 
@@ -88,7 +91,7 @@ export type TButtonMenuController_P = {
    * The target element ref that will activate the button menu
    * when right-clicked.
    */
-  target: RefObject<HTMLElement>
+  target: RefObject<HTMLElement | null>
   /**
    * The target element to highlight when the button menu is
    * shown.

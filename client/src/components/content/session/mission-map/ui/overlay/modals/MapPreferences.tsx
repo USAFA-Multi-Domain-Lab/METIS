@@ -1,36 +1,42 @@
-import Tooltip from 'src/components/content/communication/Tooltip'
-import { DetailToggle } from 'src/components/content/form/DetailToggle'
-import { useObjectFormSync, useRequireLogin } from 'src/toolbox/hooks'
+import Tooltip from '@client/components/content/communication/Tooltip'
+import { DetailToggle } from '@client/components/content/form/DetailToggle'
+import { useGlobalContext } from '@client/context/global'
+import { useObjectFormSync, useRequireLogin } from '@client/toolbox/hooks'
 import { useMapContext } from '../../../MissionMap'
 import './MapPreferences.scss'
 
 /**
  * Provides options to the user for customizing the mission map.
  */
-export default function MapPreferences(): JSX.Element | null {
+export default function MapPreferences(): TReactElement | null {
   /* -- STATE -- */
 
   const mapContext = useMapContext()
+  const globalContext = useGlobalContext()
+  const { handleError } = globalContext.actions
   const { login } = useRequireLogin()
   const { user } = login
   const [mapPreferencesVisible, setMapPreferencesVisible] =
     mapContext.state.mapPreferencesVisible
   const preferencesState = useObjectFormSync(
     user.preferences.missionMap,
-    ['panOnDefectSelection'],
+    ['panOnIssueSelection'],
     {
-      onChange: async () => {
+      onChange: async (prevState, revert) => {
         try {
           await user.$savePreferences()
         } catch (error) {
-          // todo: Notify the user of the error, keeping in
-          // todo: mind they shouldn't be spammed notifications.
+          revert()
+          handleError({
+            message: 'Failed to save map preference changes with server.',
+            notifyMethod: 'bubble',
+          })
         }
       },
     },
   )
-  const [panOnDefectSelection, setPanOnDefectSelection] =
-    preferencesState.panOnDefectSelection
+  const [panOnIssueSelection, setPanOnIssueSelection] =
+    preferencesState.panOnIssueSelection
 
   /* -- FUNCTIONS -- */
 
@@ -59,10 +65,10 @@ export default function MapPreferences(): JSX.Element | null {
         </div>
       </div>
       <DetailToggle
-        label={'Pan On Defect Selection'}
-        value={panOnDefectSelection}
-        setValue={setPanOnDefectSelection}
-        tooltipDescription='When enabled, any defect selected in the mission will cause the map to automatically pan to the associated node (Assuming there is an associated node).'
+        label={'Pan On Issue Selection'}
+        value={panOnIssueSelection}
+        setValue={setPanOnIssueSelection}
+        tooltipDescription='When enabled, any issue selected in the mission will cause the map to automatically pan to the associated node (Assuming there is an associated node).'
       />
     </div>
   )

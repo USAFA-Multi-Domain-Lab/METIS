@@ -1,13 +1,13 @@
-import { ReactNode, useEffect, useState } from 'react'
-import { useGlobalContext } from 'src/context/global'
-import ClientMissionForce from 'src/missions/forces'
-import SessionClient from 'src/sessions'
-import ClientSessionMember from 'src/sessions/members'
-import { compute } from 'src/toolbox'
-import { usePostInitEffect } from 'src/toolbox/hooks'
-import MemberRole, {
-  TMemberRoleId,
-} from '../../../../../../shared/sessions/members/roles'
+import { useGlobalContext } from '@client/context/global'
+import type { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
+import type { ClientSessionMember } from '@client/sessions/ClientSessionMember'
+import type { SessionClient } from '@client/sessions/SessionClient'
+import { compute } from '@client/toolbox'
+import { usePostInitEffect } from '@client/toolbox/hooks'
+import type { TMemberRoleId } from '@shared/sessions/members/MemberRole'
+import { MemberRole } from '@shared/sessions/members/MemberRole'
+import type { ReactNode } from 'react'
+import { useEffect, useState } from 'react'
 import Prompt from '../../communication/Prompt'
 import { DetailDropdown } from '../../form/dropdown/'
 import ButtonSvgPanel from '../../user-controls/buttons/panels/ButtonSvgPanel'
@@ -18,7 +18,7 @@ export default function SessionMemberRow({
   member,
   session,
   session: { member: currentMember },
-}: TSessionMember_P): JSX.Element | null {
+}: TSessionMember_P): TReactElement | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
@@ -271,7 +271,7 @@ export default function SessionMemberRow({
    * The JSX for the text to display when the
    * dropdown is not shown.
    */
-  const forceTextJsx = compute<JSX.Element>(() => {
+  const forceTextJsx = compute<TReactElement>(() => {
     let style: React.CSSProperties = { color: 'gray', fontStyle: 'italic' }
     let text: string = ''
 
@@ -295,7 +295,7 @@ export default function SessionMemberRow({
   /**
    * JSX for the force cell.
    */
-  const forceCell = compute<JSX.Element>(() => {
+  const forceCell = compute<TReactElement>(() => {
     let innerJsx: ReactNode = null
 
     // If the current member can manage session members
@@ -335,7 +335,7 @@ export default function SessionMemberRow({
   /**
    * JSX for the role cell.
    */
-  const roleCell = compute<JSX.Element>(() => {
+  const roleCell = compute<TReactElement>(() => {
     let innerJsx: ReactNode = null
 
     // If the current member can manage session members
@@ -373,7 +373,7 @@ export default function SessionMemberRow({
   /**
    * JSX for the controls cell.
    */
-  const controlsCell = compute<JSX.Element>(() => {
+  const controlsCell = compute<TReactElement>(() => {
     let buttonPanel: ReactNode = null
 
     // If the current member can manage session members,

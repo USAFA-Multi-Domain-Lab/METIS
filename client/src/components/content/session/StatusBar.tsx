@@ -1,16 +1,15 @@
+import type { TUnfulfilledReqData } from '@client/connect/ServerConnection'
+import { useGlobalContext } from '@client/context/global'
+import { useEventListener } from '@client/toolbox/hooks'
+import type { TServerConnectionStatus } from '@shared/connect'
+import { useEffect, useState } from 'react'
 import './StatusBar.scss'
-
-import { useState } from 'react'
-import { TUnfulfilledReqData } from 'src/connect/servers'
-import { useGlobalContext } from 'src/context/global'
-import { useEventListener } from 'src/toolbox/hooks'
-import { TServerConnectionStatus } from '../../../../../shared/connect/data'
 
 /**
  * A status bar that displays the status of a server connection
  * and any pending tasks.
  */
-export default function StatusBar({}: TStatusBar_P): JSX.Element | null {
+export default function StatusBar({}: TStatusBar_P): TReactElement | null {
   /* -- variables -- */
 
   let statusMessage: string = ''
@@ -44,6 +43,14 @@ export default function StatusBar({}: TStatusBar_P): JSX.Element | null {
       setUnfulfilledRequests(server.unfulfilledRequests)
     }
   })
+  // Update the status and the unfulfilled requests
+  // state if a new server connection is found.
+  useEffect(() => {
+    if (server) {
+      setStatus(server.status)
+      setUnfulfilledRequests(server.unfulfilledRequests)
+    }
+  }, [server])
 
   /* -- pre-processing -- */
 

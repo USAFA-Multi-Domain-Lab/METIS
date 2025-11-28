@@ -1,9 +1,9 @@
+import { useGlobalContext } from '@client/context/global'
+import type { ClientUser } from '@client/users/ClientUser'
+import type { TListenerTarget } from '@shared/events/EventManager'
+import type { TLogin } from '@shared/logins'
 import React, { useCallback, useEffect, useRef } from 'react'
-import { useGlobalContext } from 'src/context/global'
-import ClientUser from 'src/users'
-import { TListenerTarget } from '../../../../shared/events'
-import { TLogin } from '../../../../shared/logins'
-import {
+import type {
   TDefaultProps,
   TRequireLoginReturn,
   TResizeObserverOptions,
@@ -48,23 +48,20 @@ export function useListComponent<
   Component: React.FunctionComponent<TProps>,
   propsList: Array<TProps>,
   keyFrom: TPropKeys | ((props: TProps) => string),
-): () => JSX.Element | null {
-  return useCallback(
-    () => (
-      <>
-        {propsList.map((props) => (
-          <Component
-            {...props}
-            key={
-              typeof keyFrom === 'function'
-                ? keyFrom(props)
-                : (props[keyFrom] as string)
-            }
-          />
-        ))}
-      </>
-    ),
-    [Component, propsList, keyFrom],
+): () => TReactElement | null {
+  return () => (
+    <>
+      {propsList.map((props) => (
+        <Component
+          {...props}
+          key={
+            typeof keyFrom === 'function'
+              ? keyFrom(props)
+              : (props[keyFrom] as string)
+          }
+        />
+      ))}
+    </>
   )
 }
 
@@ -86,7 +83,7 @@ export function useEventListener<
   TEventMethod extends string,
   TCallbackArgs extends Array<any>,
 >(
-  target: TListenerTarget<TEventMethod, TCallbackArgs> | null,
+  target: TListenerTarget<TEventMethod, TCallbackArgs> | null | undefined,
   methods: TEventMethod | TEventMethod[],
   callback: (...args: TCallbackArgs) => any,
   dependencies: React.DependencyList = [],
@@ -106,6 +103,9 @@ export function useEventListener<
   // Register the event listener, reregistering
   // if the callback ever changes.
   useEffect(() => {
+    // If no target is provided, do nothing.
+    if (!target) return
+
     // Convert methods to an array, if
     // not already..
     methods = Array.isArray(methods) ? methods : [methods]
@@ -152,7 +152,7 @@ export function useInlineStyling(
  * when the dependencies change. This will not recreate the observer.
  */
 export function useResizeObserver(
-  ref: React.RefObject<HTMLElement>,
+  ref: React.RefObject<HTMLElement | null>,
   callback: (clientWidth: number, clientHeight: number) => void,
   dependencies: React.DependencyList = [],
   options: TResizeObserverOptions = {},
@@ -181,6 +181,35 @@ export function useResizeObserver(
       }
     }
   }, [ref.current])
+}
+
+/**
+ * Adds a beforeunload listener and invokes the provided handler.
+ * Call event.preventDefault() inside handler to show the browser prompt.
+ * @example
+ * useBeforeunload((e) => { if (dirty) e.preventDefault() })
+ */
+export function useBeforeunload(
+  handler: (event: BeforeUnloadEvent) => void,
+  dependencies: React.DependencyList = [],
+): void {
+  // Keep latest handler in a ref to avoid re-binding on every render
+  const handlerRef = useRef(handler)
+  useEffect(() => {
+    handlerRef.current = handler
+  }, [handler, ...dependencies])
+
+  useEffect(() => {
+    const listener = (event: BeforeUnloadEvent) => {
+      handlerRef.current(event)
+      // If default is prevented by handler, set returnValue for compatibility
+      if (event.defaultPrevented) {
+        event.returnValue = ''
+      }
+    }
+    window.addEventListener('beforeunload', listener)
+    return () => window.removeEventListener('beforeunload', listener)
+  }, [])
 }
 /**
  * Takes in a components props and an object defining default props. If any property of default props is undefined for the corresponding value in props, the default value will be assigned in props.

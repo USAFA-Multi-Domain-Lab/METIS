@@ -1,5 +1,5 @@
-@import '../../assets/styles/config.scss';
-@import 'src/assets/styles/util.scss';
+@use '../../assets/styles/config.scss' as *;
+@use '@client/assets/styles/util.scss' as *;
 
 .Page.LobbyPage {
   .Content {
@@ -22,6 +22,28 @@
     .Section {
       margin: 0 0 1.75em;
 
+      &.StatusSection {
+        display: flex;
+        justify-content: start;
+
+        .StartStatus {
+          max-width: 64em;
+          font-size: 0.85rem;
+          font-style: italic;
+          line-height: 1.6em;
+          color: $color-accent-light;
+
+          // Change color to red if setup failed.
+          &.StartStatusFailure {
+            color: $color-failure-light;
+          }
+          // Add pulse animation if setup is ongoing.
+          &:not(.StartStatusFailure) {
+            @include pulse;
+          }
+        }
+      }
+
       &.MembersSection {
         max-width: calc(100vw - 2 * #{$content-padding});
         overflow: auto;
@@ -42,7 +64,6 @@
     .Title,
     .Section {
       width: 100%;
-      // max-width: 25rem;
     }
 
     .StaticDetail {

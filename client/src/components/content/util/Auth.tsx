@@ -1,5 +1,5 @@
-import { useGlobalContext } from 'src/context/global'
-import { TUserPermissionId } from '../../../../../shared/users/permissions'
+import { useGlobalContext } from '@client/context/global'
+import type { TUserPermissionId } from '@shared/users/UserPermission'
 import If from './If'
 
 /**
@@ -10,7 +10,7 @@ import If from './If'
 export default function Auth({
   permissions,
   children,
-}: TAuth_P): JSX.Element | null {
+}: TAuth_P): TReactElement | null {
   const globalContext = useGlobalContext()
   const [login] = globalContext.login
   return <If condition={login?.user.isAuthorized(permissions)}>{children}</If>

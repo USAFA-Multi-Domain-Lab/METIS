@@ -1,12 +1,12 @@
-import { Router } from 'express'
-import MetisServer from 'metis/server'
-import { TMetisRouterMap } from 'metis/server/http/router'
+import type { MetisServer } from '@server/MetisServer'
+import type { Router } from 'express'
 import defineRequests, {
   RequestBodyFilters,
-} from 'metis/server/middleware/requests'
-import { auth } from 'metis/server/middleware/users'
-import getTargetEnvironments from '../controllers/target-environments/index.get'
-import migrateEffectArgs from '../controllers/target-environments/migrate/effect-args.post'
+} from '../../../middleware/requests'
+import { auth } from '../../../middleware/users'
+import { getTargetEnvironments } from '../controllers/target-environments/index.get'
+import { migrateEffectArgs } from '../controllers/target-environments/migrate/effect-args.post'
+import type { TMetisRouterMap } from '../library/MetisRouter'
 
 export const routerMap: TMetisRouterMap = (
   router: Router,

@@ -1,9 +1,9 @@
+import { useGlobalContext } from '@client/context/global'
+import { compute } from '@client/toolbox'
+import { useEventListener, useListComponent } from '@client/toolbox/hooks'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import { useState } from 'react'
-import { useGlobalContext } from 'src/context/global'
-import { compute } from 'src/toolbox'
-import { useEventListener, useListComponent } from 'src/toolbox/hooks'
-import ClassList from '../../../../../shared/toolbox/html/class-lists'
-import Notification from '../../../notifications'
+import { Notification } from '../../../notifications/Notification'
 import Markdown, { MarkdownTheme } from '../general-layout/Markdown'
 import { ButtonText } from '../user-controls/buttons/ButtonText'
 import If from '../util/If'
@@ -46,7 +46,7 @@ export default function NotificationBubble({
   /**
    * JSX for the buttons in the notification bubble.
    */
-  const ButtonJsx = compute<JSX.Element | null>(
+  const ButtonJsx = compute<TReactElement | null>(
     useListComponent(ButtonText, buttons, 'text'),
   )
 

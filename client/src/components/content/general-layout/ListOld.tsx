@@ -2,7 +2,6 @@
 
 import lodash from 'lodash'
 import React from 'react'
-import { TAjaxStatus } from '../../../../../shared/toolbox/ajax'
 import Tooltip from '../communication/Tooltip'
 import './ListOld.scss'
 
@@ -24,7 +23,7 @@ interface IList_P<TList> {
   availableProperties: IListItemProperty[]
   // returns what's rendered inside the
   // item's box
-  renderItemDisplay: (item: TList) => string | JSX.Element
+  renderItemDisplay: (item: TList) => string | TReactElement
   // items that are selected are marked differently
   // when displayed to the user
   isItemSelected: (item: TList) => boolean
@@ -60,7 +59,7 @@ interface IList_P<TList> {
   timeCreatedProperty: string | null
   // what's rendered when there are no items
   // in the list
-  noItemsDisplay: string | JSX.Element | null
+  noItemsDisplay: string | TReactElement | null
   // handles when the user clicks an item
   handleSelection: ((item: TList) => void) | null
   // handles when the user start a drag on an
@@ -73,7 +72,7 @@ interface IList_P<TList> {
   handleRelease: ((item: TList) => void) | null
   // renders any extra child elements that may be
   // needed
-  renderExtras: (item: TList) => JSX.Element | null
+  renderExtras: (item: TList) => TReactElement | null
   // what an item shows when it's hovered over
   renderTooltipDescription: (
     item: TList,
@@ -85,7 +84,7 @@ interface IList_P<TList> {
   // from the back-end, the status for the
   // ajax call is passed here to display
   // "loading..." to the user
-  ajaxStatus: TAjaxStatus
+  ajaxStatus: 'NotLoaded' | 'Loading' | 'Loaded' | 'Error'
   // unique identifier for the list for CSS
   // purposes
   listSpecificItemClassName: string
@@ -240,7 +239,7 @@ export default class ListOld<TList extends object> extends React.Component<
 
   state: IList_S<TList>
 
-  searchField: React.RefObject<HTMLInputElement>
+  searchField: React.RefObject<HTMLInputElement | null>
 
   constructor(props: IList_P<TList>) {
     super(props)
@@ -478,7 +477,7 @@ export default class ListOld<TList extends object> extends React.Component<
 
   // This will render the filtering/search
   // box at the top of the list.
-  renderFiltering(): JSX.Element | null {
+  renderFiltering(): TReactElement | null {
     let filterTerm: string = this.state.filterTerm
     let filterHint: string = this.state.filterHint
     let hideSearchTooltip: boolean = this.state.hideSearchTooltip
@@ -546,10 +545,10 @@ export default class ListOld<TList extends object> extends React.Component<
 
   // This will render the properties
   // that an item in the list may have.
-  renderProperties(item: TList): JSX.Element[] {
+  renderProperties(item: TList): TReactElement[] {
     let availableProperties: IListItemProperty[] =
       this.props.availableProperties
-    let propertyElements: JSX.Element[] = availableProperties.map(
+    let propertyElements: TReactElement[] = availableProperties.map(
       (property: IListItemProperty, index: number) => {
         let itemHasProperty: boolean = this.props.itemHasProperty(
           item,
@@ -583,18 +582,19 @@ export default class ListOld<TList extends object> extends React.Component<
   renderItems(
     page: number,
     rendersStatusAsItem: boolean = true,
-  ): JSX.Element[] {
-    let itemElements: JSX.Element[] = []
+  ): TReactElement[] {
+    let itemElements: TReactElement[] = []
     let items: TList[] = this.props.items
     let itemsFiltered: TList[] = this.state.itemsFiltered
-    let ajaxStatus: TAjaxStatus = this.props.ajaxStatus
+    let ajaxStatus = this.props.ajaxStatus
     let itemsPerPage: number | null = this.props.itemsPerPage
     let availableProperties: IListItemProperty[] =
       this.props.availableProperties
     let hoveredProperty: IListItemProperty | null = this.state.hoveredProperty
     let listSpecificItemClassName: string | null =
       this.props.listSpecificItemClassName
-    let noItemsDisplay: string | JSX.Element | null = this.props.noItemsDisplay
+    let noItemsDisplay: string | TReactElement | null =
+      this.props.noItemsDisplay
     let blanksAreEnabled: boolean = this.blanksAreEnabled
     let preventMarkdownStyling: boolean = this.props.preventMarkdownStyling
     let firstItemIndex: number = ListOld.getFirstItemIndex(page, itemsPerPage)
@@ -629,7 +629,7 @@ export default class ListOld<TList extends object> extends React.Component<
       } else {
         itemsFiltered.forEach((item: any, index: number) => {
           if (index >= firstItemIndex && index < cuttoffItemIndex) {
-            let propertyElements: JSX.Element[] = this.renderProperties(item)
+            let propertyElements: TReactElement[] = this.renderProperties(item)
             let propertyTooltipDescription: string =
               this.renderPropertyTooltipDescription(item)
             let tooltipDescription: string | null =
@@ -637,9 +637,9 @@ export default class ListOld<TList extends object> extends React.Component<
                 item,
                 propertyTooltipDescription,
               )
-            let display: string | JSX.Element =
+            let display: string | TReactElement =
               this.props.renderItemDisplay(item)
-            let renderedDisplay: string | JSX.Element = ''
+            let renderedDisplay: string | TReactElement = ''
             let selected: boolean = this.props.isItemSelected(item)
             let className = 'item'
             let classNameAddon = this.props.applyClassNameAddon(item)
@@ -764,14 +764,14 @@ export default class ListOld<TList extends object> extends React.Component<
   }
 
   // inherited
-  render(): JSX.Element | null {
+  render(): TReactElement | null {
     // -- variable-definition --
 
     let itemsFiltered: TList[] = this.state.itemsFiltered
     // let actions: IAction_P[] = this.props.actions
     let clickable: boolean = this.props.handleSelection !== null
     let grabbable: boolean = this.props.handleGrab !== null
-    let ajaxStatus: TAjaxStatus = this.props.ajaxStatus
+    let ajaxStatus = this.props.ajaxStatus
     let listStyling: React.CSSProperties = this.props.listStyling
     let listSpecificItemClassName: string | null =
       this.props.listSpecificItemClassName

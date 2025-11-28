@@ -1,4 +1,4 @@
-@import 'src/assets/styles/config.scss';
+@use '@client/assets/styles/config.scss' as *;
 
 @keyframes expand-in {
   from {
@@ -101,6 +101,14 @@
     }
   }
 
+  .ButtonText {
+    &.dangerous {
+      .Text {
+        color: $color-failure;
+      }
+    }
+  }
+
   &.pending {
     .alert-box {
       background-color: rgba($color-secondary, 1);
@@ -133,6 +141,18 @@
 
     .alert-box {
       animation: expand-out 250ms ease-in-out;
+    }
+  }
+
+  &.dangerous {
+    .backing {
+      .alert-box {
+        .message {
+          * {
+            color: $color-failure;
+          }
+        }
+      }
     }
   }
 }

@@ -1,14 +1,12 @@
+import { useGlobalContext } from '@client/context/global'
+import { ClientLogin } from '@client/logins/ClientLogin'
+import { compute } from '@client/toolbox'
 import React, { useEffect, useRef, useState } from 'react'
-import { useGlobalContext } from 'src/context/global'
-import ClientLogin from 'src/logins'
-import { compute } from 'src/toolbox'
-import { TPage_P } from '.'
+import type { TPage_P } from '.'
 import { DetailString } from '../content/form/DetailString'
 import Branding from '../content/general-layout/Branding'
-import {
-  ButtonText,
-  TButtonTextDisabled,
-} from '../content/user-controls/buttons/ButtonText'
+import type { TButtonTextDisabled } from '../content/user-controls/buttons/ButtonText'
+import { ButtonText } from '../content/user-controls/buttons/ButtonText'
 import DevOnly from '../content/util/DevOnly'
 import './AuthPage.scss'
 
@@ -17,7 +15,7 @@ export interface IAuthPage extends TPage_P {}
 /**
  * This will render a page where a user can login.
  */
-export default function AuthPage(): JSX.Element | null {
+export default function AuthPage(): TReactElement | null {
   const globalContext = useGlobalContext()
   const { beginLoading, finishLoading, navigateTo, connectToServer, prompt } =
     globalContext.actions

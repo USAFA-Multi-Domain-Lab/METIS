@@ -1,6 +1,6 @@
-@import 'src/assets/styles/config.scss';
-@import 'src/assets/styles/util.scss';
-@import 'src/components/content/form/index.scss';
+@use '@client/assets/styles/config.scss' as *;
+@use '@client/assets/styles/util.scss' as *;
+@use '@client/components/content/form/index.scss' as *;
 
 .Page.AuthPage {
   grid-template-rows: unset;

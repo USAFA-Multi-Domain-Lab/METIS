@@ -1,8 +1,8 @@
 /* -- CONTEXT -- */
 
+import { useDefaultProps } from '@client/toolbox/hooks'
 import React, { useContext, useRef } from 'react'
-import { useDefaultProps } from 'src/toolbox/hooks'
-import { TOutput_P, TOutput_S, TOutputContextData } from '.'
+import type { TOutputContextData, TOutput_P, TOutput_S } from '.'
 import OutputInfo from './info/OutputInfo'
 import OutputMessage from './messages/OutputMessage'
 import './Output.scss'
@@ -31,7 +31,7 @@ export const useOutputContext = () => {
  * Renders an output with the given content for
  * an output panel.
  */
-export default function (props: TOutput_P): JSX.Element | null {
+export default function (props: TOutput_P): TReactElement | null {
   /* -- PROPS -- */
 
   const defaultedProps = useDefaultProps(props, {})

@@ -1,7 +1,8 @@
-import { compute } from 'src/toolbox'
-import { TDetailRequired_P } from '.'
+import { compute } from '@client/toolbox'
+import type { TDetailRequired_P } from '.'
 import Tooltip from '../communication/Tooltip'
-import Toggle, { TToggleLockState } from '../user-controls/Toggle'
+import type { TToggleLockState } from '../user-controls/Toggle'
+import Toggle from '../user-controls/Toggle'
 import './DetailToggle.scss'
 
 /**
@@ -21,7 +22,7 @@ export function DetailToggle({
   uniqueFieldClassName = undefined,
   errorMessage = undefined,
   disabled = false,
-}: TDetailToggle_P): JSX.Element | null {
+}: TDetailToggle_P): TReactElement | null {
   /* -- COMPUTED -- */
   /**
    * The class name for the detail.
@@ -104,7 +105,7 @@ export function DetailToggle({
           <div className={fieldClassName}>
             <Toggle
               stateValue={stateValue}
-              setState={setState}
+              setState={!disabled ? setState : () => {}}
               lockState={lockState}
             />
           </div>

@@ -1,18 +1,25 @@
-import { useRef } from 'react'
-import { useGlobalContext, useNavigationMiddleware } from 'src/context/global'
-import SessionClient from 'src/sessions'
-import { compute } from 'src/toolbox'
+import {
+  useGlobalContext,
+  useNavigationMiddleware,
+} from '@client/context/global'
+import type { SessionClient } from '@client/sessions/SessionClient'
+import { compute } from '@client/toolbox'
 import {
   useEventListener,
   useMountHandler,
   useRequireLogin,
-} from 'src/toolbox/hooks'
+} from '@client/toolbox/hooks'
+import { useSessionRedirects } from '@client/toolbox/hooks/sessions'
+import { ClassList } from '@shared/toolbox/html/ClassList'
+import { useState } from 'react'
 import { DefaultPageLayout } from '.'
 import Prompt from '../content/communication/Prompt'
-import { HomeButton, TNavigation_P } from '../content/general-layout/Navigation'
+import type { TNavigation_P } from '../content/general-layout/Navigation'
+import { HomeButton } from '../content/general-layout/Navigation'
 import SessionMembers from '../content/session/members/SessionMembers'
 import { ButtonText } from '../content/user-controls/buttons/ButtonText'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
+import If from '../content/util/If'
 import './LobbyPage.scss'
 
 /**
@@ -22,23 +29,22 @@ import './LobbyPage.scss'
 export default function LobbyPage({
   session,
   session: { mission },
-}: TLobbyPage_P): JSX.Element | null {
-  /* -- state -- */
+}: TLobbyPage_P): TReactElement | null {
+  /* -- STATE -- */
 
   const {} = useRequireLogin()
   const globalContext = useGlobalContext()
   const [server] = globalContext.server
-  const {
-    beginLoading,
-    finishLoading,
-    navigateTo,
-    handleError,
-    prompt,
-    notify,
-  } = globalContext.actions
+  const { finishLoading, navigateTo, handleError, prompt } =
+    globalContext.actions
   const navButtonEngine = useButtonSvgEngine({
     elements: [HomeButton({ icon: 'quit', description: 'Quit session' })],
   })
+  const { verifyNavigation } = useSessionRedirects(session)
+  const [startInitiated, setStartInitiated] = useState<boolean>(
+    session.state === 'starting',
+  )
+  const [setupFailed, setSetupFailed] = useState<boolean>(session.setupFailed)
 
   /* -- COMPUTED -- */
 
@@ -65,28 +71,24 @@ export default function LobbyPage({
     return { buttonEngine: navButtonEngine }
   })
 
-  /* -- FUNCTIONS -- */
+  /**
+   * Status message for when session start is initiated.
+   */
+  const startStatus = compute<string>(() => {
+    if (setupFailed) {
+      return ' The session encountered an error during setup. For details concerning the error, please reference the server logs. Please navigate home and perform a hard delete. Then, relaunch the session and try again.'
+    }
+    return 'Session start initiated by manager. Session will start once setup is complete...'
+  })
 
   /**
-   * Redirects to the correct page based on
-   * the session state. Stays on the same page
-   * if the session has not yet started.
+   * Classes for the start status element.
    */
-  const verifyNavigation = useRef(() => {
-    // If the session is started, navigate to the session page.
-    if (session.state === 'started') {
-      navigateTo(
-        'SessionPage',
-        { session, returnPage: 'HomePage' },
-        { bypassMiddleware: true },
-      )
-    }
-    // If the session is ended, navigate to the home page.
-    if (session.state === 'ended') {
-      notify('Session has ended.')
-      navigateTo('HomePage', {}, { bypassMiddleware: true })
-    }
+  const startStatusClasses = compute<ClassList>(() => {
+    return new ClassList('StartStatus').set('StartStatusFailure', setupFailed)
   })
+
+  /* -- FUNCTIONS -- */
 
   /**
    * Callback for the start session button.
@@ -110,19 +112,8 @@ export default function LobbyPage({
     }
 
     try {
-      // Clear verify navigation function to prevent double
-      // redirect.
-      verifyNavigation.current = () => {}
-      // Begin loading.
-      beginLoading('Starting session...')
       // Start the session.
       await session.$start()
-      // Redirect to session page.
-      navigateTo(
-        'SessionPage',
-        { session, returnPage: 'HomePage' },
-        { bypassMiddleware: true },
-      )
     } catch (error) {
       handleError({
         message: 'Failed to start session.',
@@ -140,20 +131,20 @@ export default function LobbyPage({
 
   /* -- EFFECTS -- */
 
-  // Verify navigation on mount.
   useMountHandler((done) => {
     finishLoading()
-    verifyNavigation.current()
     done()
   })
 
-  // Verify navigation and update participant and
-  // observers lists on session state change.
-  useEventListener(
-    server,
-    ['session-started', 'session-ended', 'session-destroyed'],
-    () => verifyNavigation.current(),
-  )
+  // Listen for when session-start is initiated
+  // by a manager.
+  useEventListener(server, 'session-starting', () => {
+    setStartInitiated(true)
+  })
+
+  useEventListener(server, 'session-setup-update', () => {
+    setSetupFailed(session.setupFailed)
+  })
 
   // Add navigation middleware to properly
   // quit the session before the user navigates
@@ -190,9 +181,9 @@ export default function LobbyPage({
   /**
    * JSX for the button section.
    */
-  const buttonSectionJsx = compute<JSX.Element>(() => {
+  const buttonSectionJsx = compute<TReactElement>(() => {
     // Gather details.
-    let buttonsJsx: JSX.Element[] = []
+    let buttonsJsx: TReactElement[] = []
 
     // If the current member can start and end sessions,
     // add the start session button.
@@ -245,10 +236,15 @@ export default function LobbyPage({
             <div className='Value'>{mission.name}</div>
           </div>
         </div>
+        <If condition={startInitiated}>
+          <div className='StatusSection Section'>
+            <div className={startStatusClasses.value}>{startStatus}</div>
+          </div>
+        </If>
         <div className='MembersSection Section'>
           <SessionMembers session={session} />
         </div>
-        {buttonSectionJsx}
+        <If condition={!startInitiated}>{buttonSectionJsx}</If>
       </DefaultPageLayout>
     </div>
   )

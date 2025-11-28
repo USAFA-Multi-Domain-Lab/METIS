@@ -7,7 +7,7 @@ import './PanelTabBar.scss'
  * A bar in a panel that contains tabs which can be
  * clicked on to switch in between different views.
  */
-export default function ({}: TPanelTabBar_P): JSX.Element | null {
+export default function ({}: TPanelTabBar_P): TReactElement | null {
   /* -- STATE -- */
 
   const { state, views } = usePanelContext()

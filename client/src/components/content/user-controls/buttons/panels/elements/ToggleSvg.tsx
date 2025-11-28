@@ -1,10 +1,11 @@
+import { useGlobalContext } from '@client/context/global'
+import { compute } from '@client/toolbox'
+import { getIconPath } from '@client/toolbox/icons'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import React from 'react'
-import { useGlobalContext } from 'src/context/global'
-import { compute } from 'src/toolbox'
-import ClassList from '../../../../../../../../shared/toolbox/html/class-lists'
 import Tooltip from '../../../../communication/Tooltip'
-import ButtonSvgEngine from '../engines'
-import { TToggleSvg_PK } from '../types'
+import { ButtonSvgEngine } from '../engines'
+import type { TToggleSvg_PK } from '../types'
 import './ButtonSvg.scss'
 
 /* -- CONSTANTS -- */
@@ -26,7 +27,7 @@ export default function ({
   cursor,
   permissions,
   onChange,
-}: TToggleSvg_PK): JSX.Element | null {
+}: TToggleSvg_PK): TReactElement | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
@@ -89,7 +90,8 @@ export default function ({
     // If the type is not '_blank', import the SVG
     // and set it as the background image.
     if (icon !== '_blank') {
-      result.backgroundImage = `url(${require(`../../../../../../assets/images/icons/${icon}.svg`)})`
+      const url = getIconPath(icon)
+      if (url) result.backgroundImage = `url(${url})`
     }
 
     return result

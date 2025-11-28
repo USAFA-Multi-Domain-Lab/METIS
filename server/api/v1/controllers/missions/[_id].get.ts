@@ -1,8 +1,7 @@
-import { Request, Response } from 'express-serve-static-core'
-import MissionModel from 'metis/server/database/models/missions'
-import { StatusError } from 'metis/server/http'
-import { databaseLogger } from 'metis/server/logging'
-import ApiResponse from '../../library/response'
+import { MissionModel } from '@server/database/models/missions'
+import { databaseLogger } from '../../../../logging'
+import { ApiResponse } from '../../library/ApiResponse'
+import { StatusError } from '../../library/StatusError'
 
 /**
  * This will retrieve a specific mission.
@@ -10,7 +9,7 @@ import ApiResponse from '../../library/response'
  * @param response The express response.
  * @returns The mission in JSON format.
  */
-const getMission = async (request: Request, response: Response) => {
+export const getMission: TExpressHandler = async (request, response) => {
   // Extract the mission ID.
   let { _id: missionId } = request.params
 
@@ -34,5 +33,3 @@ const getMission = async (request: Request, response: Response) => {
     return ApiResponse.error(error, response)
   }
 }
-
-export default getMission

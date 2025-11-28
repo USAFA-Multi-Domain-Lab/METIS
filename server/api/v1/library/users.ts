@@ -1,5 +1,5 @@
-import UserModel from 'metis/server/database/models/users'
-import { StatusError } from 'metis/server/http'
+import { UserModel } from '@server/database/models/users'
+import { StatusError } from './StatusError'
 
 /**
  * Middleware which prevents system users from being modified
@@ -40,8 +40,6 @@ export async function preventSystemUserWrite({
     )
   }
 }
-
-export default { preventSystemUserWrite }
 
 /**
  * Options for {@link preventSystemUserWrite}.

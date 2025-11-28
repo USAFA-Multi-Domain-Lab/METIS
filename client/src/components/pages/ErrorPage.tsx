@@ -1,9 +1,9 @@
-import { useGlobalContext } from 'src/context/global'
-import { compute } from 'src/toolbox'
-import { useListComponent } from 'src/toolbox/hooks'
-import { TPage_P } from '.'
-import ClassList from '../../../../shared/toolbox/html/class-lists'
-import { TAppError } from '../App'
+import { useGlobalContext } from '@client/context/global'
+import { compute } from '@client/toolbox'
+import { useListComponent } from '@client/toolbox/hooks'
+import { ClassList } from '@shared/toolbox/html/ClassList'
+import type { TPage_P } from '.'
+import type { TAppError } from '../App'
 import { ButtonText } from '../content/user-controls/buttons/ButtonText'
 import './ErrorPage.scss'
 
@@ -11,7 +11,7 @@ export interface IErrorPage extends TPage_P {}
 
 // This will render a page that displays a
 // error that has occured.
-export default function ErrorPage({}: IErrorPage): JSX.Element | null {
+export default function ErrorPage({}: IErrorPage): TReactElement | null {
   /* -- GLOBAL CONTEXT -- */
 
   const globalContext = useGlobalContext()

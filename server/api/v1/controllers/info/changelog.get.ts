@@ -1,20 +1,18 @@
-import { Request, Response } from 'express-serve-static-core'
+import { MetisServer } from '@server/MetisServer'
 import fs from 'fs'
 import path from 'path'
-import ApiResponse from '../../library/response'
+import { ApiResponse } from '../../library/ApiResponse'
+
 /**
  * This will retrieve the changelog.
  * @param request The express request.
  * @param response The express response.
  * @returns The changelog in JSON format.
  */
-const getChangelog = (request: Request, response: Response) => {
+export const getChangelog: TExpressHandler = (request, response) => {
   try {
-    // This is the path to the root of the project.
-    let __dirname = '../'
-
     // This is the path to the changelog.
-    let changelogPath: string = path.join(__dirname, 'docs', 'changelog.md')
+    let changelogPath = path.join(MetisServer.APP_DIR, '../docs/changelog.md')
 
     // This is the changelog.
     let changelog: string = fs.readFileSync(changelogPath, {
@@ -28,5 +26,3 @@ const getChangelog = (request: Request, response: Response) => {
     return ApiResponse.error(error, response)
   }
 }
-
-export default getChangelog

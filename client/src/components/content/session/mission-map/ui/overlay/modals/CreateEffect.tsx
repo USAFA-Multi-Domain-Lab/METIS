@@ -1,23 +1,29 @@
+import Tooltip from '@client/components/content/communication/Tooltip'
+import { DetailDropdown } from '@client/components/content/form/dropdown/'
+import { ButtonText } from '@client/components/content/user-controls/buttons/ButtonText'
+import type {
+  ClientEffect,
+  TClientEffectHost,
+} from '@client/missions/effects/ClientEffect'
+import { ClientTarget } from '@client/target-environments/ClientTarget'
+import { ClientTargetEnvironment } from '@client/target-environments/ClientTargetEnvironment'
+import { compute } from '@client/toolbox'
+import { usePostInitEffect } from '@client/toolbox/hooks'
+import type { TEffectType } from '@shared/missions/effects/Effect'
 import { useState } from 'react'
-import Tooltip from 'src/components/content/communication/Tooltip'
-import { DetailDropdown } from 'src/components/content/form/dropdown/'
-import { ButtonText } from 'src/components/content/user-controls/buttons/ButtonText'
-import ClientMissionAction from 'src/missions/actions'
-import { ClientEffect } from 'src/missions/effects'
-import { ClientTargetEnvironment } from 'src/target-environments'
-import ClientTarget from 'src/target-environments/targets'
-import { compute } from 'src/toolbox'
-import { usePostInitEffect } from 'src/toolbox/hooks'
 import './CreateEffect.scss'
 
 /**
  * Prompt modal for creating an effect to apply to a target.
  */
-export default function CreateEffect({
-  action,
-  setIsNewEffect,
+export default function CreateEffect<
+  TType extends TEffectType = 'sessionTriggeredEffect',
+>({
+  host,
+  trigger,
+  onCloseRequest,
   onChange,
-}: TCreateEffect_P): JSX.Element | null {
+}: TCreateEffect_P<TType>): TReactElement | null {
   /* -- STATE -- */
 
   const [targetEnvironments] = useState<ClientTargetEnvironment[]>(
@@ -35,7 +41,7 @@ export default function CreateEffect({
   /**
    * The current mission.
    */
-  const mission = compute(() => action.mission)
+  const mission = compute(() => host.mission)
   /**
    * The class name for the target drop down.
    */
@@ -85,21 +91,11 @@ export default function CreateEffect({
    * Handles creating a new effect.
    */
   const createEffect = () => {
-    // Create a new effect.
-    let effect = ClientEffect.createBlankEffect(target, action)
-    // Push the new effect to the action.
-    action.effects.push(effect)
+    let effect = host.createEffect(target, trigger)
     // Select the new effect.
     mission.select(effect)
     // Allow the user to save the changes.
     onChange(effect)
-  }
-
-  /**
-   * Callback for when the modal is requested to be closed.
-   */
-  const onCloseRequest = () => {
-    setIsNewEffect(false)
   }
 
   /* -- RENDER -- */
@@ -167,15 +163,19 @@ export default function CreateEffect({
 /**
  * Props for CreateEffect component.
  */
-export type TCreateEffect_P = {
+export type TCreateEffect_P<TType extends TEffectType = any> = {
   /**
-   * The action to create the effect for.
+   * The host for which to create the effect.
    */
-  action: ClientMissionAction
+  host: TClientEffectHost<TType>
   /**
-   * Function that updates the isNewEffect state.
+   * The trigger for the new effect.
    */
-  setIsNewEffect: TReactSetter<boolean>
+  trigger: ClientEffect<TType>['trigger']
+  /**
+   * Callback to handle a request to close the modal.
+   */
+  onCloseRequest: () => void
   /**
    * Handles when a change is made that would require saving.
    * @param effect The effect that was changed.

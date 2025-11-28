@@ -1,6 +1,6 @@
+import { compute } from '@client/toolbox'
+import { useDefaultProps } from '@client/toolbox/hooks'
 import React from 'react'
-import { compute } from 'src/toolbox'
-import { useDefaultProps } from 'src/toolbox/hooks'
 import Tooltip from '../../communication/Tooltip'
 import './ButtonText.scss'
 
@@ -8,7 +8,7 @@ import './ButtonText.scss'
 
 // A button with normal text
 // that performs a given action.
-export function ButtonText(props: TButtonText_P): JSX.Element | null {
+export function ButtonText(props: TButtonText_P): TReactElement | null {
   // Extract props. Assign default props to
   // props passed as needed.
   let {

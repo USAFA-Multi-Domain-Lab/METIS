@@ -1,4 +1,4 @@
-import User, { TUserExistingJson } from 'metis/users'
+import type { TUserExistingJson, User } from '../users/User'
 
 /**
  * The JSON representation of a login object.

@@ -1,0 +1,12 @@
+@use '@client/assets/styles/config.scss' as *;
+
+.ArgEntry {
+  margin: 1.25rem 0 0;
+
+  .Title {
+    font-size: 0.85em;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin: 0 0 1.5em;
+  }
+}

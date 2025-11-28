@@ -1,10 +1,13 @@
+import { useGlobalContext } from '@client/context/global'
+import { compute } from '@client/toolbox'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
 import Underline from '@tiptap/extension-underline'
+import type { Editor } from '@tiptap/react'
 import {
   BubbleMenu,
-  Editor,
   EditorContent,
   FloatingMenu,
   useEditor,
@@ -12,9 +15,7 @@ import {
 import StarterKit from '@tiptap/starter-kit'
 import { all, createLowlight } from 'lowlight'
 import { useEffect } from 'react'
-import { useGlobalContext } from 'src/context/global'
-import { compute } from 'src/toolbox'
-import { TRichText_P } from '.'
+import type { TRichText_P } from '.'
 import ButtonSvgPanel from '../../user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from '../../user-controls/buttons/panels/hooks'
 import If from '../../util/If'
@@ -28,7 +29,7 @@ import MetisSpan from './extensions/span'
 export default function RichText({
   options,
   deps,
-}: TRichText_P): JSX.Element | null {
+}: TRichText_P): TReactElement | null {
   // Extract the options from the props.
   const {
     content,
@@ -153,11 +154,10 @@ export default function RichText({
   /**
    * The class name for the root element.
    */
-  const rootClassName = compute(() => {
-    let classList: string[] = ['RichText']
-    if (!editable) classList.push('ReadOnly')
-    if (className) classList.push(className)
-    return classList.join(' ')
+  const rootClassName = compute<string>(() => {
+    let classList = new ClassList('RichText')
+    if (className) classList.add(className)
+    return classList.value
   })
 
   /* -- FUNCTIONS -- */

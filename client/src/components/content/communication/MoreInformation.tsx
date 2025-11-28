@@ -1,7 +1,7 @@
 /* -- scripts -- */
 
-import './MoreInformation.scss'
 import React from 'react'
+import './MoreInformation.scss'
 import Tooltip from './Tooltip'
 // import Tooltip from './Tooltip'
 
@@ -22,7 +22,7 @@ export default class MoreInformation extends React.Component<Props, State> {
   static defaultProps = {}
 
   // inherited
-  render(): JSX.Element | null {
+  render(): TReactElement | null {
     let tooltipDescription: string = this.props.tooltipDescription
 
     return (

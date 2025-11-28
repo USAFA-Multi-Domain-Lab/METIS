@@ -1,13 +1,13 @@
+import { compute } from '@client/toolbox'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import { useEffect } from 'react'
-import { compute } from 'src/toolbox'
-import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
 import { useListContext } from '../List'
 import ListButtons from './ListButtons'
 import './ListNav.scss'
 import ListOverflow from './ListOverflow'
 import ListProcessor from './ListProcessor'
 
-export default function ListNav(): JSX.Element | null {
+export default function ListNav(): TReactElement | null {
   /* -- STATE -- */
 
   const listContext = useListContext()

@@ -1,17 +1,16 @@
+import type { TButtonText_P } from '@client/components/content/user-controls/buttons/ButtonText'
+import { ButtonText } from '@client/components/content/user-controls/buttons/ButtonText'
+import { useGlobalContext } from '@client/context/global'
+import type { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
+import type { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
+import type { SessionClient } from '@client/sessions/SessionClient'
+import { compute } from '@client/toolbox'
+import { removeKey } from '@client/toolbox/components'
+import { useEventListener, useMountHandler } from '@client/toolbox/hooks'
+import type { TNodeBlockStatus } from '@shared/missions/nodes/MissionNode'
+import { MapToolbox } from '@shared/toolbox/maps/MapToolbox'
+import type { TWithKey } from '@shared/toolbox/objects/ObjectToolbox'
 import { useEffect, useRef, useState } from 'react'
-import {
-  ButtonText,
-  TButtonText_P,
-} from 'src/components/content/user-controls/buttons/ButtonText'
-import { useGlobalContext } from 'src/context/global'
-import ClientMissionAction from 'src/missions/actions'
-import ClientMissionNode from 'src/missions/nodes'
-import SessionClient from 'src/sessions'
-import { compute } from 'src/toolbox'
-import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
-import { TNodeBlockStatus } from '../../../../../../../../../../shared/missions/nodes'
-import MapToolbox from '../../../../../../../../../../shared/toolbox/maps'
-import { TWithKey } from '../../../../../../../../../../shared/toolbox/objects'
 import Tooltip from '../../../../../../communication/Tooltip'
 import './ActionExecModal.scss'
 import ActionProperties from './ActionProperties'
@@ -104,7 +103,7 @@ export default function ActionExecModal({
   /**
    * The buttons to display in the modal.
    */
-  const buttons = compute<TButtonText_P[]>(() => {
+  const buttons = compute<TWithKey<TButtonText_P>[]>(() => {
     let buttons: TWithKey<TButtonText_P>[] = []
 
     // Determine buttons based on whether cheats
@@ -270,7 +269,7 @@ export default function ActionExecModal({
   /**
    * JSX for the drop down.
    */
-  const dropDownJsx = compute<JSX.Element | null>(() => {
+  const dropDownJsx = compute<TReactElement | null>(() => {
     // If showing cheats, return null.
     if (showCheats) return null
 
@@ -291,7 +290,7 @@ export default function ActionExecModal({
   /**
    * JSX for the heading.
    */
-  const headingJsx = compute<JSX.Element | null>(() => {
+  const headingJsx = compute<TReactElement | null>(() => {
     // Render JSX.
     return (
       <div className='Heading'>
@@ -306,7 +305,7 @@ export default function ActionExecModal({
   /**
    * JSX for the close button.
    */
-  const closeJsx = compute<JSX.Element | null>(() => {
+  const closeJsx = compute<TReactElement | null>(() => {
     // Render JSX.
     return (
       <div className='Close'>
@@ -321,7 +320,7 @@ export default function ActionExecModal({
   /**
    * JSX for the cheats.
    */
-  const cheatsJsx = compute<JSX.Element | null>(() => {
+  const cheatsJsx = compute<TReactElement | null>(() => {
     // If `showCheats` is false, return null.
     if (!showCheats) return null
 
@@ -332,7 +331,7 @@ export default function ActionExecModal({
   /**
    * JSX for the action properties.
    */
-  const actionPropertiesJsx = compute<JSX.Element | null>(() => {
+  const actionPropertiesJsx = compute<TReactElement | null>(() => {
     // Gather details.
     let authorizedCheats = session.member.isAuthorized('cheats')
       ? cheats
@@ -360,7 +359,7 @@ export default function ActionExecModal({
   /**
    * JSX for the buttons.
    */
-  const buttonsJsx = compute<JSX.Element | null>(() => {
+  const buttonsJsx = compute<TReactElement | null>(() => {
     // If the modal is not ready, return null.
     if (!ready) return null
 
@@ -368,7 +367,7 @@ export default function ActionExecModal({
     return (
       <div className='Buttons'>
         {buttons.map((props) => (
-          <ButtonText {...props} />
+          <ButtonText key={props.key} {...removeKey(props)} />
         ))}
       </div>
     )

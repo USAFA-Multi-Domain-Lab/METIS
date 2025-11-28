@@ -1,9 +1,11 @@
-import { ReactNode, useState } from 'react'
-import Tooltip from 'src/components/content/communication/Tooltip'
-import ClientMissionAction from 'src/missions/actions'
-import { compute } from 'src/toolbox'
-import { useEventListener } from 'src/toolbox/hooks'
-import StringToolbox from '../../../../../../../../../../shared/toolbox/strings'
+import Tooltip from '@client/components/content/communication/Tooltip'
+import type { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
+import { compute } from '@client/toolbox'
+import { useEventListener } from '@client/toolbox/hooks'
+import { getIconPath } from '@client/toolbox/icons'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import type { ReactNode } from 'react'
+import { useState } from 'react'
 import './ActionProperty.scss'
 
 /**
@@ -14,8 +16,8 @@ export default function ActionProperty<TKey extends keyof ClientMissionAction>({
   actionKey,
   cheatsApplied = false,
   infiniteResources = false,
-  renderValue = (value) => value.toString(),
-}: TActionProperty_P<TKey>): JSX.Element | null {
+  renderValue = (value) => value?.toString(),
+}: TActionProperty_P<TKey>): TReactElement | null {
   /* -- STATE -- */
 
   const [value, setValue] = useState<ClientMissionAction[TKey]>(
@@ -79,7 +81,8 @@ export default function ActionProperty<TKey extends keyof ClientMissionAction>({
     }
 
     if (icon !== '_blank') {
-      result.backgroundImage = `url(${require(`../../../../../../../../assets/images/icons/${icon}.svg`)})`
+      const url = getIconPath(icon)
+      if (url) result.backgroundImage = `url(${url})`
     }
 
     // Return the style for the icon.

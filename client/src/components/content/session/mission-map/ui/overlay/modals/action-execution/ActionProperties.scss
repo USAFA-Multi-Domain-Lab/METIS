@@ -1,4 +1,4 @@
-@import 'src/assets/styles/config.scss';
+@use '@client/assets/styles/config.scss' as *;
 
 @mixin ineffective-property($content) {
   .Value {

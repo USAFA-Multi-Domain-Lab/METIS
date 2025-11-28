@@ -1,0 +1,28 @@
+@use '@client/assets/styles/config.scss' as *;
+
+.TimelineDragHandle {
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 175ms;
+  padding-left: 0;
+  width: 1rem;
+
+  .DragIcon {
+    width: 1em;
+    height: 1em;
+    background: radial-gradient(
+      circle,
+      $color-primary-light 15%,
+      transparent calc(15% + 1px)
+    );
+    background-size: 50% 50%;
+  }
+
+  &:hover {
+    .DragIcon {
+      transform: scale(1.35);
+    }
+  }
+}

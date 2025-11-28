@@ -1,28 +1,26 @@
-import { AxiosError } from 'axios'
-import { useRef, useState } from 'react'
-import { useGlobalContext } from 'src/context/global'
-import ClientFileReference from 'src/files/references'
-import ClientMission from 'src/missions'
-import SessionClient from 'src/sessions'
-import { SessionBasic } from 'src/sessions/basic'
-import { compute } from 'src/toolbox'
+import { useGlobalContext } from '@client/context/global'
+import { ClientFileReference } from '@client/files/ClientFileReference'
+import { ClientMission } from '@client/missions/ClientMission'
+import type { SessionBasic } from '@client/sessions/SessionBasic'
+import { SessionClient } from '@client/sessions/SessionClient'
+import { compute } from '@client/toolbox'
 import {
   useMountHandler,
   useRequireLogin,
   useUnmountHandler,
-} from 'src/toolbox/hooks'
-import ClientUser from 'src/users'
+} from '@client/toolbox/hooks'
+import { ClientUser } from '@client/users/ClientUser'
+import { PromiseManager } from '@shared/toolbox/promises/PromiseManager'
+import { AxiosError } from 'axios'
+import { useRef, useState } from 'react'
 import { DefaultPageLayout } from '.'
-import { PromiseManager } from '../../../../shared/toolbox/promises'
 import Prompt from '../content/communication/Prompt'
 import FileReferenceList from '../content/data/lists/implementations/FileReferenceList'
 import MissionList from '../content/data/lists/implementations/missions/MissionList'
 import SessionList from '../content/data/lists/implementations/SessionList'
 import UserList from '../content/data/lists/implementations/UserList'
-import {
-  ProfileButton,
-  TNavigation_P,
-} from '../content/general-layout/Navigation'
+import type { TNavigation_P } from '../content/general-layout/Navigation'
+import { ProfileButton } from '../content/general-layout/Navigation'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
 import Auth from '../content/util/Auth'
 import './HomePage.scss'
@@ -41,10 +39,11 @@ const SESSIONS_SYNC_RATE: number = 1000
  * It will also display a list of users that the user can
  * select from to edit if they have proper permissions.
  */
-export default function HomePage(): JSX.Element | null {
+export default function HomePage(): TReactElement | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
+  const { isAuthorized } = useRequireLogin()
   const {
     beginLoading,
     finishLoading,
@@ -407,7 +406,9 @@ export default function HomePage(): JSX.Element | null {
             key={'missions-list'}
             name={'Missions'}
             items={missions}
-            onFileDrop={importMissionFiles}
+            onFileDrop={
+              isAuthorized(['missions_write']) ? importMissionFiles : null
+            }
             onSuccessfulCopy={onMissionCopy}
             onSuccessfulDeletion={onMissionDeletion}
           />

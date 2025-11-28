@@ -2,10 +2,11 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "rootDirs": ["."],
     "paths": {
-      "*": ["./node_modules/*"],
-      "metis/*": ["*"]
-    }
-  }
+      "@shared/*": ["*"]
+    },
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext"
+  },
+  "include": ["."]
 }

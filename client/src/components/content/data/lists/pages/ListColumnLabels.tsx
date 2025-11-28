@@ -1,6 +1,6 @@
-import { ReactNode } from 'react'
-import { compute } from 'src/toolbox'
-import { MetisComponent } from '../../../../../../../shared'
+import { compute } from '@client/toolbox'
+import type { MetisComponent } from '@shared/MetisComponent'
+import type { ReactNode } from 'react'
 import {
   OPTIONS_COLUMN_WIDTH,
   OPTIONS_COLUMN_WIDTH_IF_LAST,
@@ -14,15 +14,16 @@ import './ListColumnLabels.scss'
  */
 export default function ListColumnLabels<
   TItem extends MetisComponent,
->(): JSX.Element | null {
+>(): TReactElement | null {
   /* -- STATE -- */
 
   const listContext = useListContext<TItem>()
   const {
     columns,
+    ordering,
     itemButtonIcons,
     minNameColumnWidth,
-    showingDeletedItems,
+    areIssues,
     getColumnWidth,
     getColumnLabel,
   } = listContext
@@ -45,12 +46,18 @@ export default function ListColumnLabels<
     // Initialize the column widths.
     let columnWidths: string[] = []
 
+    // If the list order is maleable, add the drag
+    // handle column width.
+    if (ordering.mode === 'maleable') {
+      columnWidths.push('2em')
+    }
+
     // Add the name column width.
     columnWidths.push(`minmax(${minNameColumnWidth}, 1fr)`)
 
     // Add the warning column width,
-    // if showing deleted items.
-    if (showingDeletedItems) {
+    // if there are items with issues.
+    if (areIssues) {
       columnWidths.push('2.5em')
     }
 
@@ -80,12 +87,25 @@ export default function ListColumnLabels<
     // Initialize the result.
     let result: ReactNode[] = []
 
+    // If the list order is maleable, add the drag
+    // handle label.
+    if (ordering.mode === 'maleable') {
+      result.push(
+        <div
+          key={'ItemDragHandleLabel'}
+          className='ItemCellLike ColumnLabelDragHandle'
+        >
+          <div className='DragHandleLabelIcon'></div>
+        </div>,
+      )
+    }
+
     // Add the name cell.
     result.push(<ListColumnLabel key={'name'} column={'name'} text={'Name'} />)
 
-    // If there is a deleted item, add the warning
+    // If there is an item with issues, add the warning
     // cell.
-    if (showingDeletedItems) {
+    if (areIssues) {
       result.push(
         <div
           key={'ItemWarningLabel'}

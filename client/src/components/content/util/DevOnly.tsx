@@ -1,11 +1,12 @@
+import env from '../../../env'
 import If from './If'
 
 /**
  * Only renders the provided children if the client
  * is in a development environment.
  */
-export default function ({ children }: TDevOnly_P): JSX.Element | null {
-  return <If condition={process.env.NODE_ENV === 'development'}>{children}</If>
+export default function ({ children }: TDevOnly_P): TReactElement | null {
+  return <If condition={env.DEV}>{children}</If>
 }
 
 /**

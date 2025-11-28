@@ -1,27 +1,26 @@
+import If from '@client/components/content/util/If'
+import { useGlobalContext } from '@client/context/global'
+import type { ClientMission } from '@client/missions/ClientMission'
+import { compute } from '@client/toolbox'
+import { useDefaultProps, useRequireLogin } from '@client/toolbox/hooks'
+import { DateToolbox } from '@shared/toolbox/dates/DateToolbox'
 import { useRef } from 'react'
-import If from 'src/components/content/util/If'
-import { useGlobalContext } from 'src/context/global'
-import ClientMission from 'src/missions'
-import { compute } from 'src/toolbox'
-import { useDefaultProps, useRequireLogin } from 'src/toolbox/hooks'
-import { DateToolbox } from '../../../../../../../../shared/toolbox/dates'
-import List, { createDefaultListProps, TList_P } from '../../List'
+import type { TList_P } from '../../List'
+import List, { createDefaultListProps } from '../../List'
 import { useMissionItemButtonCallbacks } from './item-buttons'
 
-// todo: Convert this list to be organized
-// todo like `FileReferenceList`.
 /**
  * A component for displaying a list of missions.
  * @note Uses the `List` component.
  */
-export default function MissionList(props: TMissionList_P): JSX.Element | null {
+export default function MissionList(
+  props: TMissionList_P,
+): TReactElement | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
   const { login } = useRequireLogin()
-  const { navigateTo, beginLoading, finishLoading, notify, handleError } =
-    globalContext.actions
-  const [_, setLoadingProgress] = globalContext.loadingProgress
+  const { navigateTo } = globalContext.actions
   const importMissionTrigger = useRef<HTMLInputElement>(null)
 
   /* -- PROPS -- */
@@ -62,7 +61,11 @@ export default function MissionList(props: TMissionList_P): JSX.Element | null {
 
       return results
     }),
-    initialSorting: { column: 'updatedAt', method: 'descending' },
+    initialSorting: {
+      method: 'column-based',
+      column: 'updatedAt',
+      direction: 'descending',
+    },
     getColumnLabel: (column: keyof ClientMission): string => {
       switch (column) {
         case 'createdAt':
@@ -86,7 +89,7 @@ export default function MissionList(props: TMissionList_P): JSX.Element | null {
         case 'updatedAt':
         case 'launchedAt':
           let datetime = mission[column]
-          if (datetime === null) return 'N/A'
+          if (datetime === null) return '(N/A)'
           else return DateToolbox.format(datetime, 'yyyy-mm-dd HH:MM')
         case 'createdByUsername':
           return mission.createdByUsername || 'Unknown User'

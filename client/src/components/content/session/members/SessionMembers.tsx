@@ -1,9 +1,9 @@
+import { useGlobalContext } from '@client/context/global'
+import type { ClientSessionMember } from '@client/sessions/ClientSessionMember'
+import type { SessionClient } from '@client/sessions/SessionClient'
+import { compute } from '@client/toolbox'
+import { useEventListener, useRequireLogin } from '@client/toolbox/hooks'
 import { useState } from 'react'
-import { useGlobalContext } from 'src/context/global'
-import ClientSession from 'src/sessions'
-import ClientSessionMember from 'src/sessions/members'
-import { compute } from 'src/toolbox'
-import { useEventListener, useRequireLogin } from 'src/toolbox/hooks'
 import SessionMemberRow from './SessionMemberRow'
 import './SessionMembers.scss'
 
@@ -12,7 +12,7 @@ import './SessionMembers.scss'
  */
 export default function SessionMembers({
   session,
-}: TSessionUsers_P): JSX.Element | null {
+}: TSessionUsers_P): TReactElement | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
@@ -39,7 +39,7 @@ export default function SessionMembers({
    */
   const rowsJsx = compute(() => {
     return members.map((member, index) => {
-      let result: JSX.Element[] = []
+      let result: TReactElement[] = []
 
       // Get the next member that will be mapped,
       // if any.
@@ -81,5 +81,5 @@ export type TSessionUsers_P = {
   /**
    * The session client with the users to display.
    */
-  session: ClientSession
+  session: SessionClient
 }

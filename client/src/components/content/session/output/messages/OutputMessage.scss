@@ -1,6 +1,18 @@
-@import 'src/assets/styles/config.scss';
+@use '@client/assets/styles/config.scss' as *;
 
 .OutputMessage {
+  .RichText {
+    display: inline;
+
+    div {
+      display: inline;
+    }
+
+    .Editor p:first-of-type {
+      display: inline;
+    }
+  }
+
   &.OutputMessage_execution-succeeded * {
     // color: $color-success;
   }

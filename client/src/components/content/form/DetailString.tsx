@@ -1,6 +1,6 @@
+import { compute } from '@client/toolbox'
 import { useState } from 'react'
-import { compute } from 'src/toolbox'
-import { TDetailWithInput_P } from '.'
+import type { TDetailWithInput_P } from '.'
 import Tooltip from '../communication/Tooltip'
 import './DetailString.scss'
 
@@ -25,7 +25,7 @@ export function DetailString({
   placeholder = 'Enter text here...',
   tooltipDescription = '',
   maxLength = undefined,
-}: TDetailString_P): JSX.Element {
+}: TDetailString_P): TReactElement {
   /* -- STATE -- */
   const [leftField, setLeftField] = useState<boolean>(false)
   const [currentInputType, setCurrentInputType] = useState<TInput>(inputType)
@@ -231,6 +231,7 @@ export function DetailString({
           value={stateValue}
           placeholder={placeholderDisplayed}
           maxLength={maxLength}
+          disabled={disabled}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
             let target: HTMLInputElement = event.target as HTMLInputElement
             let value: string = target.value

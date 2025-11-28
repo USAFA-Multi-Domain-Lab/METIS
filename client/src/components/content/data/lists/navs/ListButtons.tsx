@@ -1,7 +1,7 @@
+import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
+import type { MetisComponent } from '@shared/MetisComponent'
 import { useEffect } from 'react'
-import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
-import { MetisComponent } from '../../../../../../../shared'
 import { useListContext } from '../List'
 import './ListButtons.scss'
 
@@ -12,7 +12,7 @@ import './ListButtons.scss'
  */
 export default function ListButtons<
   TItem extends MetisComponent,
->(): JSX.Element | null {
+>(): TReactElement | null {
   /* -- STATE -- */
 
   const listContext = useListContext<TItem>()

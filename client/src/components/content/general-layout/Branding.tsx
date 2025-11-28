@@ -1,5 +1,5 @@
-import { useGlobalContext } from 'src/context/global'
-import { compute } from 'src/toolbox'
+import { useGlobalContext } from '@client/context/global'
+import { compute } from '@client/toolbox'
 import Tooltip from '../communication/Tooltip'
 import './Branding.scss'
 
@@ -7,7 +7,7 @@ import './Branding.scss'
 
 // This will brand the app with the
 // logo.
-const Branding = ({ linksHome = true }: TBranding): JSX.Element | null => {
+const Branding = ({ linksHome = true }: TBranding): TReactElement | null => {
   // Gather details.
   const globalContext = useGlobalContext()
   const { navigateTo } = globalContext.actions

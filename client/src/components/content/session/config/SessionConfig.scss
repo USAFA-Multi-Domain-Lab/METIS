@@ -1,0 +1,53 @@
+@use '../../../../assets/styles/config.scss' as *;
+@use '@client/components/content/form/index.scss' as *;
+
+@mixin panel-content-style {
+  border: 2px solid $color-primary-light;
+  background-color: $color-primary;
+}
+
+.SessionConfig {
+  $panel-border-radius: 10px;
+
+  display: grid;
+  grid-template-rows: auto 1fr;
+  box-sizing: border-box;
+  margin: 0 auto;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+
+  .Title {
+    margin: 1em auto;
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+
+  .Panel {
+    @include panel-content-style;
+    border-top-left-radius: $panel-border-radius;
+    border-top-right-radius: $panel-border-radius;
+    border-bottom: none;
+
+    .PanelView {
+      overflow-y: auto;
+
+      .PanelContent {
+        @include form-container;
+
+        margin: 0 auto;
+        padding: 2em 2em 1em;
+      }
+    }
+  }
+
+  .Buttons {
+    @include panel-content-style();
+    display: flex;
+    justify-content: center;
+    padding: 1em 0;
+    border-top: none;
+    border-bottom-left-radius: $panel-border-radius;
+    border-bottom-right-radius: $panel-border-radius;
+  }
+}

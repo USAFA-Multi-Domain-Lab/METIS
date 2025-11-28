@@ -1,5 +1,24 @@
 # changelog
 
+# version-2.3.0 | 12-1-2025
+
+- Mission-level effects were implemented with setup/teardown triggers for session start and end, enabling mission-wide impacts beyond action execution.
+- Hooks can now be defined in target environments to run custom logic during session setup and teardown.
+- Effect timeline component was created with drag-and-drop reordering, visual organization by trigger type, and improved management workflow.
+- Session configuration now supports per-target-environment settings with validation and hot-reload, allowing selective environment enabling/disabling.
+- Target environment sandboxing was implemented to restrict module imports and prevent access to code outside intended scope.
+- Nodes can now be closed using effects.
+- Mission defects were renamed to "issues" with a dedicated component featuring search functionality, warning icons, and dynamic tooltips.
+- Effects now use the name of their target upon creation instead of generic "New Effect" placeholder.
+- Search functionality in lists now compares against all columns instead of just the name column.
+- Credits page was added to provide proper attribution to all contributors involved in METIS development.
+- All target schemas now require explicit `_id` properties and export types for
+- CLI can now generate target-environment configurations with proper permissions.third-party developers.
+- The METIS target environment was reorganized to match preferred conventions.
+- Project was updated to use Vite, ESM, React v19, and Node v22.
+- Project was reorganized to meet updated standards and conventions.
+- Various bug fixes, design improvements, and optimizations throughout the application.
+
 # version-2.2.3 | 11-7-2025
 
 - Enhanced user validation to support longer usernames (5-50 characters) and allow hyphens in first and last names.

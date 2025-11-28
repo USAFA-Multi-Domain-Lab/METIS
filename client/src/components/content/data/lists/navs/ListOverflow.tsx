@@ -1,9 +1,9 @@
+import { useButtonMenuEngine } from '@client/components/content/user-controls/buttons/ButtonMenu'
+import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
+import { useGlobalContext } from '@client/context/global'
+import type { ClassList } from '@shared/toolbox/html/ClassList'
 import { useEffect } from 'react'
-import { useButtonMenuEngine } from 'src/components/content/user-controls/buttons/ButtonMenu'
-import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
-import { useGlobalContext } from 'src/context/global'
-import ClassList from '../../../../../../../shared/toolbox/html/class-lists'
 import { useListContext } from '../List'
 
 /**
@@ -13,7 +13,7 @@ import { useListContext } from '../List'
  * in the navigation, this panel will allow the content
  * to still be accessible via a button menu.
  */
-export default function (): JSX.Element | null {
+export default function (): TReactElement | null {
   const globalContext = useGlobalContext()
   const listContext = useListContext()
   const { showButtonMenu } = globalContext.actions

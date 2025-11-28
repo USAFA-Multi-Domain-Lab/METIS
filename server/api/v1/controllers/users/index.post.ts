@@ -1,9 +1,8 @@
-import { Request, Response } from 'express-serve-static-core'
-import UserModel, { hashPassword } from 'metis/server/database/models/users'
-import { databaseLogger } from 'metis/server/logging'
-import ServerUser from 'metis/server/users'
-import { TUserJson } from 'metis/users'
-import ApiResponse from '../../library/response'
+import type { ServerUser } from '@server/users/ServerUser'
+import type { TUserJson } from '@shared/users/User'
+import { hashPassword, UserModel } from '../../../../database/models/users'
+import { databaseLogger } from '../../../../logging'
+import { ApiResponse } from '../../library/ApiResponse'
 import { preventSystemUserWrite } from '../../library/users'
 /**
  * This will create a new user.
@@ -11,7 +10,7 @@ import { preventSystemUserWrite } from '../../library/users'
  * @param response The express response.
  * @returns The newly created user in JSON format.
  */
-const createNewUser = async (request: Request, response: Response) => {
+export const createNewUser: TExpressHandler = async (request, response) => {
   // Extract data from the request body.
   let {
     username,
@@ -54,5 +53,3 @@ const createNewUser = async (request: Request, response: Response) => {
     return ApiResponse.error(error, response)
   }
 }
-
-export default createNewUser

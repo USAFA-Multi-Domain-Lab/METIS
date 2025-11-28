@@ -1,14 +1,15 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["./src/global.d.ts"],
+    "baseUrl": "./src",
+    "paths": {
+      "@client/*": ["*"],
+      "@shared/*": ["../../shared/*"]
+    },
     "jsx": "react-jsx",
-    "baseUrl": "."
-    // "paths": {
-    //   "*": ["../node_modules/*"],
-    //   "src/*": ["*"],
-    //   "metis/*": ["../../shared/*"]
-    // }
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": ["vite/client"]
   },
-  "include": ["src", "src/setupProxy.js", "src/global.d.ts", "../shared/events"]
+  "include": ["src", "../shared", "vite.config.ts"]
 }

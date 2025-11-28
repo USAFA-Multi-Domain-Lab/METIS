@@ -37,7 +37,6 @@ Create your environment folder and main schema file:
 
 ```ts
 // integration/target-env/acme-cloud/schema.ts
-import TargetEnvSchema from '../../library/target-env-classes'
 
 export default new TargetEnvSchema({
   name: 'ACME Cloud',
@@ -68,20 +67,13 @@ integration/target-env/
 If your targets need to communicate with external systems, METIS provides client libraries for various protocols. Currently supported:
 
 - **REST APIs (HTTP/HTTPS)** - For RESTful web services
-- **WebSockets** _(coming soon)_ - For real-time communication
-- **Additional protocols** _(planned)_ - More communication methods in development
 
 ### REST API Integration
 
-For HTTP/HTTPS REST API calls, add a REST client to your environment schema:
+For HTTP/HTTPS REST API calls, you'll create a REST client within your target scripts using the session's selected configuration. Configuration is managed through `configs.json` (see [configs.json Reference](../references/configs-json.md)).
 
 ```ts
 // integration/target-env/acme-cloud/schema.ts
-import TargetEnvSchema from '../../library/target-env-classes'
-import { RestApi } from '../../library/api/rest-api'
-
-// REST client using environment configuration
-export const AcmeCloudApi = new RestApi('acme-cloud')
 
 export default new TargetEnvSchema({
   name: 'ACME Cloud',
@@ -90,31 +82,53 @@ export default new TargetEnvSchema({
 })
 ```
 
-Then configure the REST API connection in your root `environment.json`:
+Then create a `configs.json` file for your connection settings:
 
 ```json
-{
-  "acme-cloud": {
-    "protocol": "https",
-    "address": "api.acme-cloud.example.com",
-    "port": 443,
-    "apiKey": "${ACME_CLOUD_API_KEY}",
-    "rejectUnauthorized": true
+// integration/target-env/acme-cloud/configs.json
+[
+  {
+    "_id": "acme-cloud-production",
+    "name": "ACME Cloud - Production",
+    "description": "Production API configuration",
+    "data": {
+      "protocol": "https",
+      "host": "api.acme-cloud.example.com",
+      "port": 443,
+      "apiKey": "your-api-key-here",
+      "rejectUnauthorized": true
+    }
   }
+]
+```
+
+**Using REST API in Target Scripts:**
+
+Within your target scripts, access the configuration through the context and create the API client:
+
+```ts
+import { RestApi } from '@metis/api/RestApi'
+
+script: async (context) => {
+  // Get the selected configuration for this session
+  const { config } = context
+  if (!config.targetEnvConfig) {
+    throw new Error('No target environment configuration selected.')
+  }
+
+  // Create REST API client with selected config
+  const api = RestApi.fromConfig(config.targetEnvConfig.data)
+
+  // Make API calls
+  const response = await api.get('/endpoint')
 }
 ```
 
-### Other Protocol Support
-
-As additional protocol support is added to METIS, you'll be able to configure other types of connections (WebSockets, message queues, etc.) using similar patterns with their respective client libraries.
-
 For detailed configuration options and best practices:
 
+- **[configs.json Reference](../references/configs-json.md)** - Configuration file structure and usage
 - **[REST API Reference](../references/rest-api.md)** - Complete `RestApi` class documentation
-- **[Environment Configuration](../references/environment-configuration.md)** - Configuration file reference
 - **[External API Integration](external-api-integration.md)** - Authentication patterns and API best practices
-- **[Rest API Reference](../references/rest-api.md)** - Complete REST API client documentation
-- **[Environment Configuration](../references/environment-config.md)** - Full config file reference
 
 ## Adding Your First Target
 
@@ -122,9 +136,9 @@ Create a target folder with its own schema file:
 
 ```ts
 // integration/target-env/acme-cloud/targets/health-check/schema.ts
-import TargetSchema from '../../../../library/target-env-classes/targets'
 
 export default new TargetSchema({
+  _id: 'health-check',
   name: 'Health Check',
   description: 'Verify system connectivity and status',
   args: [
@@ -218,14 +232,15 @@ No target folder found at "path/to/targets". Skipping...
 | Environment not discovered | Missing `schema.ts` or wrong export | Ensure default export of `TargetEnvSchema`         |
 | Environment skipped        | Missing `targets/` folder           | Create empty `targets/` directory                  |
 | Target not showing         | Wrong filename or export            | Use exactly `schema.ts` with `TargetSchema` export |
-| API calls failing          | Missing configuration               | Check `environment.json` and environment variables |
+| API calls failing          | Missing configuration               | Check `configs.json` and session configuration     |
 
 ## Next Steps
 
 1. **Build more targets** - Add functionality using [Defining Targets](defining-targets.md)
 2. **Add arguments** - Create conditional arguments using [Argument Types](argument-types.md)
-3. **Study examples** - Review [Basic](../examples/basic-target.md) and [Complex](../examples/complex-target.md) patterns
-4. **Production considerations** - Review [Tips & Conventions](tips-and-conventions.md) for best practices
+3. **Set up lifecycle hooks** - Manage resources with [Environment Hooks](environment-hooks.md)
+4. **Study examples** - Review [Basic](../examples/basic-target.md) and [Complex](../examples/complex-target.md) patterns
+5. **Production considerations** - Review [Tips & Conventions](tips-and-conventions.md) for best practices
 
 ## Related Documentation
 
@@ -239,7 +254,7 @@ No target folder found at "path/to/targets". Skipping...
 ### References
 
 - **[Rest API Reference](../references/rest-api.md)** - API client configuration and usage
-- **[Environment Configuration](../references/environment-config.md)** - Complete config file documentation
+- **[Environment Configuration](../references/environment-configuration.md)** - Complete config file documentation
 
 ### Examples
 

@@ -1,8 +1,7 @@
-import { Request, Response } from 'express-serve-static-core'
-import UserModel from 'metis/server/database/models/users'
-import { StatusError } from 'metis/server/http'
-import { databaseLogger } from 'metis/server/logging'
-import ApiResponse from '../../library/response'
+import { UserModel } from '@server/database/models/users'
+import { databaseLogger } from '../../../../logging'
+import { ApiResponse } from '../../library/ApiResponse'
+import { StatusError } from '../../library/StatusError'
 import { preventSystemUserWrite } from '../../library/users'
 
 /**
@@ -11,7 +10,7 @@ import { preventSystemUserWrite } from '../../library/users'
  * @param response The express response.
  * @returns 200 response if the user was deleted successfully.
  */
-const deleteUser = async (request: Request, response: Response) => {
+export const deleteUser: TExpressHandler = async (request, response) => {
   // Extract the user ID from the request parameters.
   let { _id: userId } = request.params
 
@@ -43,5 +42,3 @@ const deleteUser = async (request: Request, response: Response) => {
     return ApiResponse.error(error, response)
   }
 }
-
-export default deleteUser

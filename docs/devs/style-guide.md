@@ -337,12 +337,29 @@ Names given should also avoid non-conventional abbreviations. Terms that are com
 
 Names given should also not be overly long. Names should be limited to 3-4 words max, if possible. If a name is too long, and a suitable term cannot be given to shorten it, abbreviations are, in this case, encouraged, to shorten the variable, so long as the term used is easy to understand.
 
+### Files
+
+The following conventions should be used when naming files:
+
+- Files for which the primary purpose is to house a class should be named in PascalCase, matching the name of that class (e.g. `ClientMission.ts` for a `ClientMission` class).
+- Files for which the primary purpose is to house a React component should be named in PascalCase, matching the name of that component (e.g. `MissionMap.tsx` for a `MissionMap` component).
+- SCSS files for which the primary purpose is to style a specific component should be named in PascalCase, matching the name of that component (e.g. `MissionMap.scss` for styling the `MissionMap` component).
+- General `.ts` files should be named using kebab case (e.g. `file-references.ts` for a file housing utility functions for file references).
+- Migration build files, which are either housed under `server/database/builds/` or `server/missions/imports/builds/`, should be named using the following format: `build_******.ts` for TS or `build_******.js` for JS, where `******` is a six-digit incrementing number starting from `000001` (e.g. `build_000001.ts`, `build_000002.ts`, etc…).
+
 ### Types
 
-Types should be prefixed with the letter "T” when assigned a name:
+Types and interfaces both should be prefixed with the letter "T” when assigned a name. In general, types are preferred over interfaces. However, interfaces can be used also,
+especially if doing so improves readability.
 
 ```tsx
 type TMissionImportResult = // Type definition here...
+```
+
+```tsx
+interface TUserJson extends TMetisComponentJson {
+  // Interface definition here...
+}
 ```
 
 If a string literal type is needed, the strings should be written in kebab case, unless its use case requires another format.
@@ -352,16 +369,6 @@ If a string literal type is needed, the strings should be written in kebab case,
  * The status of an AJAX request.
  */
 export type TAjaxStatus = 'not-loaded' | 'loading' | 'loaded' | 'failed'
-```
-
-### Interfaces
-
-Interfaces are discouraged in favor of regular types. However, if an interface is needed, the interface should be prefixed with the letter I.
-
-```tsx
-interface IMissionImportResult {
-  // Interface definition here...
-}
 ```
 
 ### Class Properties
@@ -433,6 +440,36 @@ class MyClass {
   public static readonly MAX_COUNT = 30
 }
 ```
+
+### Variable Declarations
+
+Prefer `let` for variable declarations in almost all cases. Use `const` only in the following specific scenarios:
+
+1. **Arrow functions that don't change**: When declaring arrow functions that won't be reassigned.
+2. **True constants**: Values that are fixed at runtime and should never vary by design. These should use ALL_CAPS_SNAKE_CASE naming.
+
+```tsx
+// Prefer let for most variables
+let userId = getCurrentUserId()
+let results = await fetchData()
+let isValid = validateInput(input)
+
+// Use const for arrow functions
+const handleClick = () => {
+  console.log('clicked')
+}
+
+const processData = (data: string) => {
+  return data.toUpperCase()
+}
+
+// Use const for true constants (ALL_CAPS_SNAKE_CASE)
+const MAX_RETRY_ATTEMPTS = 3
+const DEFAULT_TIMEOUT_MS = 5000
+const API_VERSION = 'v1'
+```
+
+**Rationale**: The `let` keyword more accurately represents the mutable nature of most variables during execution, even if they aren't reassigned. Reserve `const` for functional definitions and truly immutable configuration values.
 
 ## Organization
 

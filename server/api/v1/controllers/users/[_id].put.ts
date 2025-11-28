@@ -1,12 +1,11 @@
-import { Request, Response } from 'express-serve-static-core'
-import UserModel, { hashPassword } from 'metis/server/database/models/users'
-import { StatusError } from 'metis/server/http'
-import { databaseLogger } from 'metis/server/logging'
-import ServerLogin from 'metis/server/logins'
-import ServerWebSession from 'metis/server/logins/web-sessions'
-import SessionServer from 'metis/server/sessions'
-import { TUserJson } from 'metis/users'
-import ApiResponse from '../../library/response'
+import { hashPassword, UserModel } from '@server/database/models/users'
+import { databaseLogger } from '@server/logging'
+import { ServerLogin } from '@server/logins/ServerLogin'
+import { ServerWebSession } from '@server/logins/ServerWebSession'
+import { SessionServer } from '@server/sessions/SessionServer'
+import type { TUserJson } from '@shared/users/User'
+import { ApiResponse } from '../../library/ApiResponse'
+import { StatusError } from '../../library/StatusError'
 import { preventSystemUserWrite } from '../../library/users'
 
 /**
@@ -15,7 +14,7 @@ import { preventSystemUserWrite } from '../../library/users'
  * @param response The express response.
  * @returns The updated user in JSON format.
  */
-const updateUser = async (request: Request, response: Response) => {
+export const updateUser: TExpressHandler = async (request, response) => {
   // Get userId from params and extract updates from the body.
   const userId = request.params._id
   let userUpdates = request.body as Partial<TUserJson>
@@ -107,5 +106,3 @@ const updateUser = async (request: Request, response: Response) => {
     return ApiResponse.error(error, response)
   }
 }
-
-export default updateUser

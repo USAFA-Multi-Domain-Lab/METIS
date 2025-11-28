@@ -1,7 +1,6 @@
-import { Request, Response } from 'express-serve-static-core'
-import ServerTargetEnvironment from 'metis/server/target-environments'
-import { AnyObject } from 'metis/toolbox/objects'
-import ApiResponse from '../../../library/response'
+import { ServerTargetEnvironment } from '@server/target-environments/ServerTargetEnvironment'
+import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
+import { ApiResponse } from '../../../library/ApiResponse'
 
 /**
  * This will run a migration script on the effect
@@ -9,11 +8,11 @@ import ApiResponse from '../../../library/response'
  * @param request The express request.
  * @param response The express response.
  */
-const migrateEffectArgs = async (request: Request, response: Response) => {
+export const migrateEffectArgs: TExpressHandler = async (request, response) => {
   // Extract the necessary data from the request.
   let body = request.body
   let { targetId, environmentId, effectEnvVersion, effectArgs } = body
-  let resultingArgs: AnyObject = effectArgs
+  let resultingArgs: TAnyObject = effectArgs
   let resultingVersion: string = effectEnvVersion
 
   // Get the target from the registry.
@@ -66,5 +65,3 @@ const migrateEffectArgs = async (request: Request, response: Response) => {
   //   return ApiResponse.error(error, response)
   // }
 }
-
-export default migrateEffectArgs

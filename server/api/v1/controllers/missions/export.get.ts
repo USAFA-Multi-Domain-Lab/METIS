@@ -1,16 +1,17 @@
-import { Request, Response } from 'express-serve-static-core'
+import { InfoModel } from '@server/database/models/info'
+import { MissionModel } from '@server/database/models/missions'
+import type { MetisFileStore } from '@server/files/MetisFileStore'
+import { MetisServer } from '@server/MetisServer'
+import { ServerFileToolbox } from '@server/toolbox/files/ServerFileToolbox'
+import type { TMissionSaveJson } from '@shared/missions/Mission'
+import { Mission } from '@shared/missions/Mission'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import type { Request, Response } from 'express-serve-static-core'
 import fs from 'fs'
-import Mission, { TMissionSaveJson } from 'metis/missions'
-import MetisServer from 'metis/server'
-import InfoModel from 'metis/server/database/models/info'
-import MissionModel from 'metis/server/database/models/missions'
-import MetisFileStore from 'metis/server/files'
-import { StatusError } from 'metis/server/http'
-import { databaseLogger, expressLogger } from 'metis/server/logging'
-import ServerFileToolbox from 'metis/server/toolbox/files'
 import path from 'path'
-import { v4 as generateHash } from 'uuid'
-import ApiResponse from '../../library/response'
+import { databaseLogger, expressLogger } from '../../../../logging'
+import { ApiResponse } from '../../library/ApiResponse'
+import { StatusError } from '../../library/StatusError'
 
 /**
  * This will export a mission to a file.
@@ -18,7 +19,7 @@ import ApiResponse from '../../library/response'
  * @param response The express response.
  * @returns The mission file.
  */
-const exportMission = async (
+export const exportMission = async (
   request: Request,
   response: Response,
   fileStore: MetisFileStore,
@@ -76,7 +77,7 @@ async function createMissionExport(
     MetisServer.APP_DIR,
     '/temp/missions/exports/',
   )
-  let exportId: string = generateHash()
+  let exportId: string = StringToolbox.generateRandomId()
   let exportDir: string = path.join(exportsRootDir, exportId)
   let exportFilesDir: string = path.join(exportDir, 'files')
   let exportZipName: string = Mission.determineFileName(missionJson.name)
@@ -174,8 +175,6 @@ function prepareCleanUp(response: Response, cleanUpDir: string) {
   response.on('finish', cleanUp)
   response.on('error', cleanUp)
 }
-
-export default exportMission
 
 /**
  * The result type for a mission export.

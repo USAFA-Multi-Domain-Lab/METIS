@@ -1,4 +1,4 @@
-@import 'src/assets/styles/config.scss';
+@use '@client/assets/styles/config.scss' as *;
 
 .PanelLayout {
   $ResizeBar-width: 10px;

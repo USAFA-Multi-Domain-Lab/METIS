@@ -1,5 +1,5 @@
-import StringToolbox from 'metis/toolbox/strings'
-import { TMissionImportBuild } from '..'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import type { TMissionImportBuild } from '../MissionImport'
 
 // -- BUILD 49 --
 // This migration script is responsible for moving

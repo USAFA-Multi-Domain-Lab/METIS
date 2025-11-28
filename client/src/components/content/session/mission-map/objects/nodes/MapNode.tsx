@@ -1,25 +1,19 @@
-import { useState } from 'react'
-import Tooltip from 'src/components/content/communication/Tooltip'
-import ButtonSvgPanel from 'src/components/content/user-controls/buttons/panels/ButtonSvgPanel'
-import { useButtonSvgEngine } from 'src/components/content/user-controls/buttons/panels/hooks'
-import ClientMissionNode from 'src/missions/nodes'
-import { compute } from 'src/toolbox'
-import { useEventListener, useInlineStyling } from 'src/toolbox/hooks'
-import { TMapCompatibleNode, TMapNode_P, TNodeButton } from '.'
-import {
+import Tooltip from '@client/components/content/communication/Tooltip'
+import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
+import { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
+import { compute } from '@client/toolbox'
+import { useEventListener, useInlineStyling } from '@client/toolbox/hooks'
+import { getIconPath } from '@client/toolbox/icons'
+import type {
   TNodeBlockStatus,
   TNodeExecutionState,
-} from '../../../../../../../../shared/missions/nodes'
-import ClassList from '../../../../../../../../shared/toolbox/html/class-lists'
+} from '@shared/missions/nodes/MissionNode'
+import { ClassList } from '@shared/toolbox/html/ClassList'
+import { useState } from 'react'
+import type { TMapCompatibleNode, TMapNode_P, TNodeButton } from '.'
 import { useMapContext } from '../../MissionMap'
 import './MapNode.scss'
-
-/* -- CONSTANTS -- */
-
-/**
- * The maximum zoom level where the node's content will be displayed.
- */
-export const MAX_NODE_CONTENT_ZOOM = 1 / 30 // [numerator]em = [denominator]px
 
 /* -- FUNCTIONS -- */
 
@@ -46,16 +40,16 @@ function calculateInitialProgress(node: TMapCompatibleNode): number {
 /**
  * An object representing a node on the mission map.
  */
-export default function <TNode extends TMapCompatibleNode>({
+export default function MapNode<TNode extends TMapCompatibleNode>({
   node,
-  cameraZoom,
   onSelect,
   applyTooltip = () => '',
-}: TMapNode_P<TNode>): JSX.Element | null {
+}: TMapNode_P<TNode>): TReactElement | null {
   /* -- STATE -- */
 
   const localContext = useMapContext()
   const { centerOnMap } = localContext
+  const [nodeContentVisible] = localContext.state.nodeContentVisible
   const [name, setName] = useState<string>(node.name)
   const [color, setColor] = useState<string>(node.color)
   const [excluded, setExcluded] = useState<boolean>(node.exclude)
@@ -63,7 +57,7 @@ export default function <TNode extends TMapCompatibleNode>({
   const [executionState, setExecutionState] = useState<TNodeExecutionState>(
     node.executionState,
   )
-  const [buttons, setButtons] = useState<TNodeButton<TNode>[]>(node.buttons)
+  const [buttons, setButtons] = useState<TNodeButton[]>(node.buttons)
   const [pending, setPending] = useState<boolean>(node.pending)
   /**
    * The initial progress shown on the progress bar,
@@ -87,6 +81,7 @@ export default function <TNode extends TMapCompatibleNode>({
         type: 'button',
         icon: 'add',
         description: `Include this node ("${node.name}") in the force.`,
+        disabled: node.disabled,
         onClick: () => {
           if (node instanceof ClientMissionNode) {
             onSelect!(node)
@@ -158,6 +153,9 @@ export default function <TNode extends TMapCompatibleNode>({
   const { mission } = node
   const blocked: boolean = compute(() => blockStatus === 'blocked')
   const cutOff: boolean = compute(() => blockStatus === 'cut-off')
+  const blurred: boolean = compute(
+    () => mission.nonRevealedDisplayMode === 'blur' && !node.revealed,
+  )
 
   /**
    * Determines the context in which the node is being rendered.
@@ -193,7 +191,7 @@ export default function <TNode extends TMapCompatibleNode>({
 
     // If the camera is zoomed out too far,
     // make the background color the node's color.
-    if (cameraZoom.x > MAX_NODE_CONTENT_ZOOM && !blocked && !cutOff) {
+    if (!nodeContentVisible && !blocked && !cutOff) {
       backgroundColor = color
     }
 
@@ -219,13 +217,15 @@ export default function <TNode extends TMapCompatibleNode>({
    */
   const iconStyle: React.CSSProperties = compute(() => {
     if (icon === '_blank') return {}
-
-    return {
-      backgroundImage: `url(${require(`../../../../../../assets/images/icons/${icon}.svg`)})`,
-      backgroundSize: 'contain',
-      backgroundPosition: 'center',
-      backgroundRepeat: 'no-repeat',
-    }
+    const url = getIconPath(icon)
+    return url
+      ? {
+          backgroundImage: `url(${url})`,
+          backgroundSize: 'contain',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }
+      : {}
   })
 
   /**
@@ -299,10 +299,7 @@ export default function <TNode extends TMapCompatibleNode>({
         'Hidden',
         mission.nonRevealedDisplayMode === 'hide' && !node.revealed,
       )
-      .set(
-        'Blurred',
-        mission.nonRevealedDisplayMode === 'blur' && !node.revealed,
-      )
+      .set('Blurred', blurred)
       .set('Excluded', excluded)
       .set('Executing', executionState.status === 'executing')
       .set('Success', executionState.status === 'success')
@@ -317,7 +314,7 @@ export default function <TNode extends TMapCompatibleNode>({
 
     // Add the hidden class if the camera is
     // zoomed out too far.
-    if (cameraZoom.x > MAX_NODE_CONTENT_ZOOM) {
+    if (!nodeContentVisible) {
       classList.push('Hidden')
     }
 
@@ -332,7 +329,7 @@ export default function <TNode extends TMapCompatibleNode>({
 
     // Add the hidden class if the camera is
     // zoomed out too far.
-    if (cameraZoom.x > MAX_NODE_CONTENT_ZOOM) {
+    if (!nodeContentVisible) {
       classList.push('Hidden')
     }
 
@@ -354,6 +351,11 @@ export default function <TNode extends TMapCompatibleNode>({
     return classList.join(' ')
   })
 
+  /**
+   * Whether the node can be selected.
+   */
+  const isSelectable = compute<boolean>(() => !excluded && !blurred)
+
   /* -- RENDER -- */
 
   // Ensure the node selection handler is defined.
@@ -362,7 +364,7 @@ export default function <TNode extends TMapCompatibleNode>({
   /**
    * The JSX for the toopltip.
    */
-  const tooltipJsx: JSX.Element | null = compute(() => {
+  const tooltipJsx: TReactElement | null = compute(() => {
     // If there are no buttons, add a tooltip
     // to the node.
     if (buttons.length === 0) {
@@ -385,7 +387,7 @@ export default function <TNode extends TMapCompatibleNode>({
   /**
    * The JSX for the reveal node button.
    */
-  const revealNodeButton: JSX.Element | null = compute(() => {
+  const revealNodeButton: TReactElement | null = compute(() => {
     if (context !== 'edit' || !excluded) return null
 
     return (
@@ -401,23 +403,24 @@ export default function <TNode extends TMapCompatibleNode>({
 
   // Render root JSX.
   return (
-    <div
-      key={node._id}
-      className={rootClasses.value}
-      style={rootStyle}
-      onClick={!excluded ? () => onSelect!(node) : () => {}}
-    >
+    <div key={node._id} className={rootClasses.value} style={rootStyle}>
       <div className='ProgressBar' style={progressBarStyle}></div>
-      <div className='PrimaryContent' style={primaryContentStyle}>
+      <div
+        className='PrimaryContent'
+        style={primaryContentStyle}
+        // Moved this from root element due to
+        // selection issues when clicking buttons.
+        onClick={isSelectable ? () => onSelect!(node) : () => {}}
+      >
         <div className={nameClassName} style={nameStyle}>
           {name}
         </div>
         <div className={iconClassName} style={iconStyle}></div>
+        {tooltipJsx}
       </div>
       <div className={buttonsClassName} style={buttonsStyle}>
         <ButtonSvgPanel engine={nodeButtonEngine} />
       </div>
-      {tooltipJsx}
       {revealNodeButton}
     </div>
   )

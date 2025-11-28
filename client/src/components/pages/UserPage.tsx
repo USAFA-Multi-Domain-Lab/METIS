@@ -1,26 +1,25 @@
-import { AxiosError } from 'axios'
-import React, { useContext, useRef, useState } from 'react'
-import { useBeforeunload } from 'react-beforeunload'
-import { useGlobalContext, useNavigationMiddleware } from 'src/context/global'
-import { compute } from 'src/toolbox'
 import {
+  useGlobalContext,
+  useNavigationMiddleware,
+} from '@client/context/global'
+import { compute } from '@client/toolbox'
+import {
+  useBeforeunload,
   useEventListener,
   useMountHandler,
   useRequireLogin,
-} from 'src/toolbox/hooks'
-import ClientUser from 'src/users'
-import { DefaultPageLayout, TPage_P } from '.'
-import StringToolbox from '../../../../shared/toolbox/strings'
+} from '@client/toolbox/hooks'
+import { ClientUser } from '@client/users/ClientUser'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import { AxiosError } from 'axios'
+import React, { useContext, useRef, useState } from 'react'
+import type { TPage_P } from '.'
+import { DefaultPageLayout } from '.'
 import UserEntry from '../content/edit-user/UserEntry'
-import {
-  HomeButton,
-  ProfileButton,
-  TNavigation_P,
-} from '../content/general-layout/Navigation'
-import {
-  ButtonText,
-  TButtonTextDisabled,
-} from '../content/user-controls/buttons/ButtonText'
+import type { TNavigation_P } from '../content/general-layout/Navigation'
+import { HomeButton, ProfileButton } from '../content/general-layout/Navigation'
+import type { TButtonTextDisabled } from '../content/user-controls/buttons/ButtonText'
+import { ButtonText } from '../content/user-controls/buttons/ButtonText'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
 import If from '../content/util/If'
 import './UserPage.scss'
@@ -48,7 +47,7 @@ export const useUserPageContext = () => {
 /**
  * Renders a page for managing users.
  */
-export default function (props: TUserPage_P): JSX.Element | null {
+export default function UserPage(props: TUserPage_P): TReactElement | null {
   const Provider =
     UserPageContext.Provider as React.Provider<TUserPageContextData>
 
@@ -169,50 +168,50 @@ export default function (props: TUserPage_P): JSX.Element | null {
    * This is called to save any changes made.
    */
   const save = async (): Promise<void> => {
-    if (areUnsavedChanges) {
-      setAreUnsavedChanges(false)
-      setUsernameAlreadyExists(false)
+    if (saveDisabled !== 'none') return
 
-      if (!existsInDatabase && isAuthorized('users_write_students')) {
-        try {
-          beginLoading('Creating user...')
-          await ClientUser.$create(user)
-          notify('User successfully saved.')
-          finishLoading()
-          setExistsInDatabase(true)
-          navigateTo('HomePage', {})
-        } catch (error: any) {
-          if (error instanceof AxiosError && error.response?.status === 409) {
-            notify('This user already exists. Try using a different username.')
-            setUsernameAlreadyExists(true)
-          } else {
-            notify('User failed to save.')
-          }
-          finishLoading()
-          setAreUnsavedChanges(true)
+    setAreUnsavedChanges(false)
+    setUsernameAlreadyExists(false)
+
+    if (!existsInDatabase && isAuthorized('users_write_students')) {
+      try {
+        beginLoading('Creating user...')
+        await ClientUser.$create(user)
+        notify('User successfully saved.')
+        finishLoading()
+        setExistsInDatabase(true)
+        navigateTo('HomePage', {})
+      } catch (error: any) {
+        if (error instanceof AxiosError && error.response?.status === 409) {
+          notify('This user already exists. Try using a different username.')
+          setUsernameAlreadyExists(true)
+        } else {
+          notify('User failed to save.')
         }
-      } else if (existsInDatabase && isAuthorized('users_write_students')) {
-        try {
-          beginLoading('Updating user...')
-          setUser(
-            await ClientUser.$update(user, {
-              passwordIsRequired: updatePassword,
-            }),
-          )
-          // Reset the user entry key to force re-render.
-          setUserEntryKey(StringToolbox.generateRandomId())
-          notify('User successfully saved.')
-          finishLoading()
-        } catch (error: any) {
-          if (error instanceof AxiosError && error.response?.status === 409) {
-            notify('This user already exists. Try using a different username.')
-            setUsernameAlreadyExists(true)
-          } else {
-            notify('User failed to save.')
-          }
-          finishLoading()
-          setAreUnsavedChanges(true)
+        finishLoading()
+        setAreUnsavedChanges(true)
+      }
+    } else if (existsInDatabase && isAuthorized('users_write_students')) {
+      try {
+        beginLoading('Updating user...')
+        setUser(
+          await ClientUser.$update(user, {
+            passwordIsRequired: updatePassword,
+          }),
+        )
+        // Reset the user entry key to force re-render.
+        setUserEntryKey(StringToolbox.generateRandomId())
+        notify('User successfully saved.')
+        finishLoading()
+      } catch (error: any) {
+        if (error instanceof AxiosError && error.response?.status === 409) {
+          notify('This user already exists. Try using a different username.')
+          setUsernameAlreadyExists(true)
+        } else {
+          notify('User failed to save.')
         }
+        finishLoading()
+        setAreUnsavedChanges(true)
       }
     }
   }
@@ -356,7 +355,7 @@ export type TUserPageContextData = {
   /**
    * The ref for the root element of the user page.
    */
-  root: React.RefObject<HTMLDivElement>
+  root: React.RefObject<HTMLDivElement | null>
 } & Required<TUserPage_P> & {
     /**
      * The state for the user page.

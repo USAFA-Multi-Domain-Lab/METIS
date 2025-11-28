@@ -1,11 +1,12 @@
-import { PAGE_REGISTRY, TPageKey } from 'src/components/pages'
-import { useGlobalContext } from 'src/context/global'
-import { compute } from 'src/toolbox'
-import { useRequireLogin } from 'src/toolbox/hooks'
+import type { PAGE_REGISTRY, TPageKey } from '@client/components/pages'
+import { useGlobalContext } from '@client/context/global'
+import { compute } from '@client/toolbox'
+import { useRequireLogin } from '@client/toolbox/hooks'
 import { useButtonMenuEngine } from '../user-controls/buttons/ButtonMenu'
 import ButtonSvgPanel from '../user-controls/buttons/panels/ButtonSvgPanel'
-import ButtonSvgEngine from '../user-controls/buttons/panels/engines'
-import {
+import type { ButtonSvgEngine } from '../user-controls/buttons/panels/engines'
+import { useButtonSvgs } from '../user-controls/buttons/panels/hooks'
+import type {
   TButtonPanelInput,
   TButtonSvg_PK,
 } from '../user-controls/buttons/panels/types'
@@ -21,7 +22,22 @@ import './Navigation.scss'
 export default function Navigation({
   buttonEngine,
   logoLinksHome = true,
-}: TNavigation_P): JSX.Element | null {
+}: TNavigation_P): TReactElement | null {
+  const globalContext = useGlobalContext()
+  const [devOptionsActive, setDevOptionsActive] = globalContext.devOptionsActive
+
+  useButtonSvgs(buttonEngine, {
+    key: 'dev-options',
+    type: 'button',
+    icon: 'code',
+    // todo: Finish building this feature.
+    hidden: true,
+    // hidden: process.env.NODE_ENV !== 'development',
+    onClick: () => {
+      setDevOptionsActive(true)
+    },
+  })
+
   /**
    * The class for the root element.
    */

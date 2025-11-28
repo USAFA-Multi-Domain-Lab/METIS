@@ -1,15 +1,15 @@
-import { Request, Response } from 'express-serve-static-core'
-import SessionServer from 'metis/server/sessions'
-import ServerUser from 'metis/server/users'
-import { TSessionBasicJson } from 'metis/sessions'
-import ApiResponse from '../../library/response'
+import { SessionServer } from '@server/sessions/SessionServer'
+import type { ServerUser } from '@server/users/ServerUser'
+import type { TSessionBasicJson } from '@shared/sessions/MissionSession'
+import { ApiResponse } from '../../library/ApiResponse'
+
 /**
  * This will retrieve all publicly accessible sessions.
  * @param request The express request.
  * @param response The express response.
  * @returns All publicly accessible sessions in JSON format.
  */
-const getSessions = (request: Request, response: Response) => {
+export const getSessions: TExpressHandler = (request, response) => {
   // Define an array to store the sessions.
   let sessions: TSessionBasicJson[] = []
   let user: ServerUser = response.locals.user
@@ -27,12 +27,10 @@ const getSessions = (request: Request, response: Response) => {
       hasAccess ||
       hasNativeAccess
     ) {
-      sessions.push(session.toBasicJson())
+      sessions.push(session.toBasicJson({ requester: user }))
     }
   }
 
   // Return the response as JSON.
   return ApiResponse.sendJson(response, sessions)
 }
-
-export default getSessions

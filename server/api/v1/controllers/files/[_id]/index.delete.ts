@@ -1,7 +1,6 @@
-import { Request, Response } from 'express-serve-static-core'
-import FileReferenceModel from 'metis/server/database/models/file-references'
-import { databaseLogger } from 'metis/server/logging'
-import ApiResponse from '../../../library/response'
+import { ApiResponse } from '@server/api/v1/library/ApiResponse'
+import { FileReferenceModel } from '@server/database/models/file-references'
+import { databaseLogger } from '../../../../../logging'
 
 /**
  * Marks a file as deleted in the database,
@@ -12,7 +11,7 @@ import ApiResponse from '../../../library/response'
  * @resolves With the response to send to the client.
  * @rejects If an error occurs.
  */
-const deleteFile = async (request: Request, response: Response) => {
+export const deleteFile: TExpressHandler = async (request, response) => {
   const { _id } = request.params
 
   // Delete the mission.
@@ -30,5 +29,3 @@ const deleteFile = async (request: Request, response: Response) => {
   // Return a successful response.
   return ApiResponse.sendStatus(response, 200)
 }
-
-export default deleteFile

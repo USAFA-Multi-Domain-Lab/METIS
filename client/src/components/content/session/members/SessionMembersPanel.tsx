@@ -1,4 +1,4 @@
-import SessionClient from 'src/sessions'
+import type { SessionClient } from '@client/sessions/SessionClient'
 import SessionMembers from './SessionMembers'
 import './SessionMembersPanel.scss'
 
@@ -7,7 +7,7 @@ import './SessionMembersPanel.scss'
  */
 export default function SessionMembersPanel({
   session,
-}: TSessionMembersPanel_P): JSX.Element | null {
+}: TSessionMembersPanel_P): TReactElement | null {
   /* -- RENDER -- */
 
   return (

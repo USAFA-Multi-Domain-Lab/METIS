@@ -1,20 +1,20 @@
-import { Router } from 'express'
-import MetisServer from 'metis/server'
-import { TMetisRouterMap } from 'metis/server/http/router'
+import type { MetisServer } from '@server/MetisServer'
+import type { Router } from 'express'
 import {
   RequestBodyFilters,
   defineRequests,
 } from '../../../middleware/requests'
 import uploads from '../../../middleware/uploads'
 import { auth } from '../../../middleware/users'
-import deleteMission from '../controllers/missions/[_id].delete'
-import getMission from '../controllers/missions/[_id].get'
-import updateMission from '../controllers/missions/[_id].put'
-import copyMission from '../controllers/missions/copy.post'
-import exportMission from '../controllers/missions/export.get'
-import importMission from '../controllers/missions/import.post'
-import getMissions from '../controllers/missions/index.get'
-import createMission from '../controllers/missions/index.post'
+import { deleteMission } from '../controllers/missions/[_id].delete'
+import { getMission } from '../controllers/missions/[_id].get'
+import { updateMission } from '../controllers/missions/[_id].put'
+import { copyMission } from '../controllers/missions/copy.post'
+import { exportMission } from '../controllers/missions/export.get'
+import { importMission } from '../controllers/missions/import.post'
+import { getMissions } from '../controllers/missions/index.get'
+import { createMission } from '../controllers/missions/index.post'
+import type { TMetisRouterMap } from '../library/MetisRouter'
 
 export const routerMap: TMetisRouterMap = async (
   router: Router,
@@ -35,6 +35,7 @@ export const routerMap: TMetisRouterMap = async (
         forces: RequestBodyFilters.ARRAY,
         prototypes: RequestBodyFilters.ARRAY,
         files: RequestBodyFilters.ARRAY,
+        effects: RequestBodyFilters.ARRAY,
       },
     }),
     createMission,
@@ -82,6 +83,7 @@ export const routerMap: TMetisRouterMap = async (
           forces: RequestBodyFilters.ARRAY,
           prototypes: RequestBodyFilters.ARRAY,
           files: RequestBodyFilters.ARRAY,
+          effects: RequestBodyFilters.ARRAY,
         },
       },
     ),

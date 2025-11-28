@@ -1,15 +1,16 @@
-import { ReactNode, useEffect, useRef } from 'react'
-import backgroundImage from 'src/assets/images/landing-page-img.webp'
-import ServerConnection from 'src/connect/servers'
-import { useGlobalContext } from 'src/context/global'
-import MetisInfo from 'src/info'
-import SessionClient from 'src/sessions'
-import { ClientTargetEnvironment } from 'src/target-environments'
-import { compute } from 'src/toolbox'
-import { LoginRequiredError, useEventListener } from 'src/toolbox/hooks'
-import ClientUser from 'src/users'
-import { TLogin } from '../../../shared/logins'
-import ClassList from '../../../shared/toolbox/html/class-lists'
+import backgroundImage from '@client/assets/images/landing-page-img.webp'
+import type { ServerConnection } from '@client/connect/ServerConnection'
+import { useGlobalContext } from '@client/context/global'
+import { MetisInfo } from '@client/info/MetisInfo'
+import type { SessionClient } from '@client/sessions/SessionClient'
+import { ClientTargetEnvironment } from '@client/target-environments/ClientTargetEnvironment'
+import { compute } from '@client/toolbox'
+import { removeKey } from '@client/toolbox/components'
+import { LoginRequiredError, useEventListener } from '@client/toolbox/hooks'
+import type { ClientUser } from '@client/users/ClientUser'
+import type { TLogin } from '@shared/logins'
+import { ClassList } from '@shared/toolbox/html/ClassList'
+import { useEffect, useRef } from 'react'
 import './App.scss'
 import ConnectionStatus from './content/communication/ConnectionStatus'
 import Notifications from './content/communication/Notifications'
@@ -18,9 +19,10 @@ import {
   tooltipsOffsetX,
   tooltipsOffsetY,
 } from './content/communication/Tooltip'
+import { DevOptions } from './content/debug/DevOptions'
 import Markdown, { MarkdownTheme } from './content/general-layout/Markdown'
 import ButtonMenu from './content/user-controls/buttons/ButtonMenu'
-import { TButtonText_P } from './content/user-controls/buttons/ButtonText'
+import type { TButtonText_P } from './content/user-controls/buttons/ButtonText'
 import { PAGE_REGISTRY } from './pages'
 import AuthPage from './pages/AuthPage'
 import ErrorPage from './pages/ErrorPage'
@@ -30,7 +32,7 @@ import ReactErrorBoundary from './ReactErrorBoundary'
 /**
  * Component of all components, renders all of METIS.
  */
-export default function (props: {}): JSX.Element | null {
+export default function (props: {}): TReactElement | null {
   /* -- REFS -- */
   const app = useRef<HTMLDivElement>(null)
 
@@ -44,6 +46,8 @@ export default function (props: {}): JSX.Element | null {
   const [tooltips] = globalContext.tooltips
   const [tooltipDescription, setTooltipDescription] =
     globalContext.tooltipDescription
+  const [debugOptionsActive, setDebugOptionsActive] =
+    globalContext.devOptionsActive
   const [buttonMenu] = globalContext.buttonMenu
   const [loading] = globalContext.loading
   const [loadingMinTimeReached] = globalContext.loadingMinTimeReached
@@ -158,7 +162,7 @@ export default function (props: {}): JSX.Element | null {
       try {
         // Display default loading message to
         // the user.
-        beginLoading()
+        beginLoading('Initializing application...')
 
         // Preload the large background image.
         // A smaller version is used initially
@@ -213,15 +217,34 @@ export default function (props: {}): JSX.Element | null {
           // Or, if the logged in user is in a session,
           // then switch to the session page.
           else if (login.sessionId !== null) {
-            let session: SessionClient = await server.$fetchCurrentSession()
+            let session: SessionClient | null =
+              await server.$fetchCurrentSession()
+
+            // Handle case where session could not be found.
+            if (session === null) {
+              throw new Error('Session state is out of sync with the server.')
+            }
+
             // Navigate based on the session state.
             switch (session.state) {
               case 'unstarted':
-                navigateTo('LobbyPage', { session })
+              case 'starting':
+                // For testing sessions, go to SessionConfigPage
+                // For normal sessions, go to LobbyPage
+                if (session.config.accessibility === 'testing') {
+                  navigateTo('SessionConfigPage', {
+                    session,
+                    cancelPage: 'HomePage',
+                  })
+                } else {
+                  navigateTo('LobbyPage', { session })
+                }
                 break
               case 'started':
+              case 'resetting':
                 navigateTo('SessionPage', { session, returnPage: 'HomePage' })
                 break
+              case 'ending':
               case 'ended':
                 navigateTo('HomePage', {})
                 break
@@ -294,6 +317,24 @@ export default function (props: {}): JSX.Element | null {
       .switch('BackgroundImageLarge', 'BackgroundImageSmall', backgroundLoaded),
   )
 
+  /**
+   * The JSX for the button menu.
+   */
+  const buttonMenuJsx = compute<TReactElement | null>(() => {
+    // Render nothing, if there is no button menu.
+    if (!buttonMenu) return null
+
+    return <ButtonMenu key={buttonMenu.key} {...removeKey(buttonMenu)} />
+  })
+
+  /**
+   * The JSX for the prompt.
+   */
+  const promptJsx = compute<TReactElement | null>(() => {
+    if (promptData === null) return null
+    return <Prompt key={promptData.key} {...removeKey(promptData)} />
+  })
+
   let CurrentPage = PAGE_REGISTRY[currentPageKey]
   let pageProps: any = {
     ...currentPageProps,
@@ -301,17 +342,6 @@ export default function (props: {}): JSX.Element | null {
 
   /* -- RENDER -- */
 
-  /**
-   * The JSX for the button menu.
-   */
-  const buttonMenuJsx = compute<ReactNode>(() => {
-    // Render nothing, if there is no button menu.
-    if (!buttonMenu) return null
-
-    return <ButtonMenu {...buttonMenu} />
-  })
-
-  // Render METIS.
   return (
     <ReactErrorBoundary
       FallbackComponent={ErrorPage}
@@ -328,7 +358,8 @@ export default function (props: {}): JSX.Element | null {
           />
         </div>
         <Notifications />
-        {promptData !== null ? <Prompt {...promptData} /> : null}
+        <DevOptions />
+        {promptJsx}
         <ErrorPage {...pageProps} key='error-page' />
         <LoadingPage {...pageProps} key={loadingPageId} />
         <ConnectionStatus />

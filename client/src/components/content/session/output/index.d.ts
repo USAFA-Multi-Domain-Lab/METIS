@@ -1,6 +1,4 @@
-import React from 'react'
-import ClientOutput from '../../../../missions/forces/outputs'
-import ClientMissionNode from '../../../../missions/nodes'
+import type { ClientOutput } from '@client/missions/forces/ClientOutput'
 
 /**
  * Prop type for `Output`.
@@ -10,11 +8,6 @@ export type TOutput_P = {
    * The output for the force's output panel.
    */
   output: ClientOutput
-  /**
-   * Selects a node.
-   * @param node The node to select.
-   */
-  selectNode: (node: ClientMissionNode | null) => void
 }
 
 /**
@@ -30,7 +23,7 @@ export type TOutputContextData = {
   /**
    * The ref for the root element of the output.
    */
-  root: React.RefObject<HTMLDivElement>
+  root: React.RefObject<HTMLDivElement | null>
 } & Required<TOutput_P> & {
     /**
      * The state for the output.

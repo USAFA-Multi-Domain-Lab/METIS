@@ -1,20 +1,22 @@
 /* -- COMPONENT -- */
 
-import { useRef, useState } from 'react'
-import { compute } from 'src/toolbox'
+import { useGlobalContext } from '@client/context/global'
+import { compute } from '@client/toolbox'
 import {
   useEventListener,
   useMountHandler,
   useResizeObserver,
   useUnmountHandler,
-} from 'src/toolbox/hooks'
-import { Vector2D } from '../../../../../../shared/toolbox/space'
-import StringToolbox from '../../../../../../shared/toolbox/strings'
+} from '@client/toolbox/hooks'
+import { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import { useRef, useState } from 'react'
+import If from '../../util/If'
 import './ButtonMenu.scss'
 import ButtonSvgPanel from './panels/ButtonSvgPanel'
-import ButtonSvgEngine from './panels/engines'
+import type { ButtonSvgEngine } from './panels/engines'
 import { useButtonSvgEngine } from './panels/hooks'
-import { TButtonSvgEngine, TButtonSvgPanelOptions } from './panels/types'
+import type { TButtonSvgEngine, TButtonSvgPanelOptions } from './panels/types'
 
 /* -- COMPONENT -- */
 
@@ -28,9 +30,11 @@ export default function ButtonMenu({
   positioningTarget,
   highlightTarget,
   onCloseRequest,
-}: TButtonMenu_P): JSX.Element | null {
+}: TButtonMenu_P): TReactElement | null {
   /* -- STATE -- */
 
+  const globalContext = useGlobalContext()
+  const [login] = globalContext.login
   const [_, setForcedUpdateId] = useState<string>(
     StringToolbox.generateRandomId(),
   )
@@ -102,6 +106,16 @@ export default function ButtonMenu({
   })
 
   /**
+   * Whether the button menu has at least one button based on the
+   * current user's permissions.
+   */
+  const oneAuthButton = compute<boolean>(() => {
+    return engine.buttons.some((button) => {
+      return login?.user.isAuthorized(button.permissions)
+    })
+  })
+
+  /**
    * The style for the button menu pop up.
    */
   const popUpStyle = {
@@ -156,12 +170,14 @@ export default function ButtonMenu({
 
   // Render the button menu.
   return (
-    <div className='ButtonMenu'>
-      <div className='InputBlocker' onMouseDown={onCloseRequest}></div>
-      <div className='PopUp' style={popUpStyle} ref={popUp}>
-        <ButtonSvgPanel engine={engine} />
+    <If condition={oneAuthButton}>
+      <div className='ButtonMenu'>
+        <div className='InputBlocker' onMouseDown={onCloseRequest}></div>
+        <div className='PopUp' style={popUpStyle} ref={popUp}>
+          <ButtonSvgPanel engine={engine} />
+        </div>
       </div>
-    </div>
+    </If>
   )
 }
 

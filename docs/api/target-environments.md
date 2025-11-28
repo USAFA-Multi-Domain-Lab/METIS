@@ -141,11 +141,11 @@ Available argument types:
 - `string`, `number`, `boolean`, `dropdown`
 - `force`, `node`, `action`, `file`
 
-For detailed implementation information, refer to the [Target Environment Integration Guide](../devs/target-environment-integration.md).
+For detailed implementation information, refer to the [Target Environment Integration Guide](/docs/target-env-integration/index.md).
 
 ## Notes
 
 - Required permission `environments_read` for all operations
 - Uses semantic versioning (MAJOR.MINOR.PATCH)
 - Migration system handles version compatibility
-- For target environment implementation details, see the [Target Environment Integration Guide](/docs/devs/target-environment-integration.md)
+- For target environment implementation details, see the [Target Environment Integration Guide](/docs/target-env-integration/index.md)

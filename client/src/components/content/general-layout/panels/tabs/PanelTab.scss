@@ -1,4 +1,4 @@
-@import 'src/assets/styles/config.scss';
+@use '@client/assets/styles/config.scss' as *;
 
 .PanelTab {
   $border-width: 2px;
@@ -10,6 +10,18 @@
   height: calc(2em - #{$border-width});
   padding: 0 0.75em;
 
+  .TabIcon {
+    display: flex;
+    align-items: center;
+    height: 100%;
+
+    .ButtonSvg_warning-transparent {
+      &:hover {
+        filter: none;
+      }
+    }
+  }
+
   .TabTitle {
     user-select: none;
     font-size: 0.75em;
@@ -18,7 +30,6 @@
   }
 
   &.Selected {
-    // background: $color-secondary;
     border-bottom: $border-width solid $color-primary-light;
   }
 
@@ -26,6 +37,24 @@
   &:hover {
     .TabTitle {
       color: $color-accent-light;
+    }
+  }
+
+  &.Highlighted {
+    .TabTitle {
+      color: rgba($color-neutral, 0.7);
+      font-weight: bold;
+    }
+
+    &.Selected,
+    &:hover {
+      .TabTitle {
+        color: $color-neutral;
+      }
+    }
+
+    &.Selected {
+      border-bottom: $border-width solid $color-neutral;
     }
   }
 }

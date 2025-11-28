@@ -1,8 +1,8 @@
-import { ReactNode } from 'react'
-import { compute } from 'src/toolbox'
-import { MetisComponent } from '../../../../../../../shared'
+import { compute } from '@client/toolbox'
+import type { MetisComponent } from '@shared/MetisComponent'
+import type { ReactNode } from 'react'
 import { useListContext } from '../List'
-import ListUpload from '../uploads'
+import { ListUpload } from '../uploads'
 import ListItem from './items/ListItem'
 import ListItemUpload from './items/ListItemUpload'
 import ListColumnLabels from './ListColumnLabels'
@@ -13,7 +13,7 @@ import './ListPage.scss'
  */
 export default function ListPage<TItem extends MetisComponent>({
   items,
-}: TListPage_P<TItem>): JSX.Element | null {
+}: TListPage_P<TItem>): TReactElement | null {
   /* -- STATE -- */
 
   const listContext = useListContext<TItem>()

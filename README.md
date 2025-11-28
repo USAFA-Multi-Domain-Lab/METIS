@@ -42,8 +42,8 @@ metis/
 ├── server/          # Node.js backend services
 ├── shared/          # Common TypeScript interfaces
 ├── integration/     # Target environment libraries
-├── docs/           # Documentation (setup, API, dev guides)
-└── config/         # Environment configurations
+├── docs/            # Documentation (setup, API, dev guides)
+└── config/          # Environment configurations
 ```
 
 **📚 [Complete Documentation](docs/index.md)** | **🎯 [Quick Setup](docs/setup/index.md)** | **🔌 [API Reference](docs/api/index.md)**

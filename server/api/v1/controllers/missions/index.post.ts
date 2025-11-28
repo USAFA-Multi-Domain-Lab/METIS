@@ -1,9 +1,8 @@
-import { Request, Response } from 'express-serve-static-core'
-import { TMissionSaveJson } from 'metis/missions'
-import MissionModel from 'metis/server/database/models/missions'
-import { databaseLogger } from 'metis/server/logging'
-import ServerUser from 'metis/server/users'
-import ApiResponse from '../../library/response'
+import { MissionModel } from '@server/database/models/missions'
+import type { ServerUser } from '@server/users/ServerUser'
+import type { TMissionSaveJson } from '@shared/missions/Mission'
+import { databaseLogger } from '../../../../logging'
+import { ApiResponse } from '../../library/ApiResponse'
 
 /**
  * Creates a new mission.
@@ -11,7 +10,7 @@ import ApiResponse from '../../library/response'
  * @param response The express response.
  * @returns The new mission.
  */
-const createMission = async (request: Request, response: Response) => {
+export const createMission: TExpressHandler = async (request, response) => {
   let {
     name,
     versionNumber,
@@ -20,6 +19,8 @@ const createMission = async (request: Request, response: Response) => {
     structure,
     forces,
     prototypes,
+    files,
+    effects,
   } = request.body as TMissionSaveJson
   let currentUser: ServerUser = response.locals.user
 
@@ -35,6 +36,8 @@ const createMission = async (request: Request, response: Response) => {
       prototypes,
       createdBy: currentUser._id,
       createdByUsername: currentUser.username,
+      files,
+      effects,
     })
     // Log the creation of the mission.
     databaseLogger.info(`New mission created named "${missionDoc.name}".`)
@@ -47,5 +50,3 @@ const createMission = async (request: Request, response: Response) => {
     return ApiResponse.error(error, response)
   }
 }
-
-export default createMission

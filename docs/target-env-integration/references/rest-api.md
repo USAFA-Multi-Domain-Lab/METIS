@@ -29,14 +29,27 @@ The `RestApi` class automatically reads your [environment configuration](./envir
 
 ### Import and Initialize
 
-```typescript
-import { RestApi } from '../../library/api/rest-api'
+The `RestApi` class is used within your target scripts. You create instances using the configuration selected for the session:
 
-// Initialize with your environment configuration key
-const api = new RestApi('myTargetEnvironment')
+```typescript
+import { RestApi } from '@metis/api/RestApi'
+
+script: async (context) => {
+  // Get the selected configuration from the session
+  const { config } = context
+  if (!config.targetEnvConfig) {
+    throw new Error('No target environment configuration selected.')
+  }
+
+  // Create REST API client with the selected config
+  const api = RestApi.fromConfig(config.targetEnvConfig.data)
+
+  // Use the API client
+  await api.get('/endpoint')
+}
 ```
 
-The environment key (`'myTargetEnvironment'`) must match a [configuration object](./environment-configuration.md#configuration-structure) in your `environment.json` file.
+Configuration is managed through `configs.json` files. See the [configs.json Reference](./configs-json.md) for complete configuration details.
 
 ### Basic Usage
 
@@ -53,12 +66,14 @@ await api.post('https://api.example.com/users', {
 
 ## Configuration
 
-The `RestApi` class automatically loads configuration from your `environment.json` file. See the [Environment Configuration Reference](./environment-configuration.md) for complete configuration details.
+The `RestApi` class is configured using data from your target environment's `configs.json` file. During a session, users select which configuration to use, and that configuration is available via `context.config.targetEnvConfig.data`.
+
+See the [configs.json Reference](./configs-json.md) for complete configuration details.
 
 ### Configuration Properties Used
 
 - **`protocol`** - HTTP or HTTPS
-- **`address`** - Server address or domain
+- **`host`** - Server host or domain
 - **`port`** - Connection port
 - **`username`/`password`** - Basic authentication
 - **`apiKey`** - API key authentication
@@ -67,13 +82,16 @@ The `RestApi` class automatically loads configuration from your `environment.jso
 ### Accessing Configuration
 
 ```typescript
-const api = new RestApi('myEnvironment')
+script: async (context) => {
+  // Get config from session context
+  const api = RestApi.fromConfig(context.config.targetEnvConfig.data)
 
-// Access the computed base URL
-console.log(api.baseUrl) // e.g., "https://api.example.com:443"
+  // Access the computed base URL
+  console.log(api.baseUrl) // e.g., "https://api.example.com:443"
 
-// Access the request configuration
-console.log(api.config) // Axios configuration object
+  // Access the request configuration
+  console.log(api.config) // Axios configuration object
+}
 ```
 
 ## HTTP Methods
@@ -176,11 +194,13 @@ await api.get('/endpoint', {
 
 ## Best Practices
 
-### Environment Configuration
+### Configuration Management
 
-- Store sensitive data (API keys, passwords) in `environment.json`
-- Use environment-specific configurations for dev/staging/production
-- Never commit `environment.json` to version control
+- Store sensitive data (API keys, passwords) in `configs.json` files
+- Use multiple configs for environments that run in parallel
+- Protect `configs.json` with proper file permissions (chmod 600)
+- Never commit `configs.json` files with real credentials to version control
+- Access configuration via `context.config.targetEnvConfig.data` in target scripts
 
 ### Error Handling
 
@@ -196,69 +216,117 @@ await api.get('/endpoint', {
 
 ## Examples
 
-### Complete Plugin Example
+### Complete Target Example
 
 ```typescript
-import { RestApi } from '../../library/api/rest-api'
+import { RestApi } from '@metis/api/RestApi'
 
-export class MyTargetEnvironment {
-  private api: RestApi
+export default new TargetSchema({
+  _id: 'manage-user',
+  name: 'Manage User',
+  description: 'Create or update user in external system',
+  script: async (context) => {
+    const { action, userId, userData } = context.effect.args
 
-  constructor() {
-    // Initialize with environment configuration
-    this.api = new RestApi('myTarget')
-  }
-
-  async fetchUserData(userId: string) {
     try {
-      const response = await this.api.get(`/users/${userId}`)
-      return response.data
-    } catch (error) {
-      console.error('Failed to fetch user data:', error.message)
-      throw error
-    }
-  }
-
-  async createUser(userData: any) {
-    try {
-      const response = await this.api.post('/users', userData)
-      return response.data
-    } catch (error) {
-      if (error.response?.status === 409) {
-        throw new Error('User already exists')
+      // Get configuration from session
+      if (!context.config.targetEnvConfig) {
+        throw new Error('No configuration selected for this session.')
       }
+
+      // Initialize API client with selected configuration
+      const api = RestApi.fromConfig(context.config.targetEnvConfig.data)
+
+      context.sendOutput(
+        `${action === 'create' ? 'Creating' : 'Updating'} user...`,
+      )
+
+      // Perform API operation based on action
+      let response
+      if (action === 'create') {
+        response = await api.post('/users', userData)
+        context.sendOutput(`✓ User created: ${response.data.username}`)
+      } else {
+        response = await api.put(`/users/${userId}`, userData)
+        context.sendOutput(`✓ User updated: ${response.data.username}`)
+      }
+
+      return response.data
+    } catch (error: any) {
+      const message = error.response?.data?.message || error.message
+      context.sendOutput(`✗ Operation failed: ${message}`)
       throw error
     }
-  }
-
-  async updateUserStatus(userId: string, status: string) {
-    try {
-      await this.api.patch(`/users/${userId}`, { status })
-      return true
-    } catch (error) {
-      console.error('Failed to update user status:', error.message)
-      return false
-    }
-  }
-}
+  },
+  args: [
+    {
+      _id: 'action',
+      name: 'Action',
+      type: 'dropdown',
+      required: true,
+      options: [
+        { _id: 'create', name: 'Create User', value: 'create' },
+        { _id: 'update', name: 'Update User', value: 'update' },
+      ],
+    },
+    {
+      _id: 'userId',
+      name: 'User ID',
+      type: 'string',
+      required: false,
+      dependencies: [{ type: 'equals', argId: 'action', value: 'update' }],
+    },
+    {
+      _id: 'userData',
+      name: 'User Data (JSON)',
+      type: 'largeString',
+      required: true,
+    },
+  ],
+})
 ```
 
-### Environment Configuration Example
+### Error Handling Example
 
-```json
-{
-  "myTarget": {
-    "protocol": "https",
-    "address": "api.myservice.com",
-    "port": 443,
-    "apiKey": "your-secret-api-key",
-    "rejectUnauthorized": true
+```typescript
+script: async (context) => {
+  const api = RestApi.fromConfig(context.config.targetEnvConfig.data)
+
+  try {
+    const response = await api.get('/api/data')
+    context.sendOutput('✓ Data retrieved successfully')
+    return response.data
+  } catch (error: any) {
+    if (error.response) {
+      // Server responded with error status
+      switch (error.response.status) {
+        case 401:
+          context.sendOutput('✗ Authentication failed')
+          break
+        case 404:
+          context.sendOutput('✗ Resource not found')
+          break
+        case 500:
+          context.sendOutput('✗ Server error')
+          break
+        default:
+          context.sendOutput(`✗ Request failed: ${error.response.status}`)
+      }
+    } else if (error.request) {
+      // Request made but no response received
+      context.sendOutput('✗ No response from server (network error)')
+    } else {
+      // Error setting up the request
+      context.sendOutput(`✗ Request setup error: ${error.message}`)
+    }
+    throw error
   }
 }
 ```
 
 ## Related Documentation
 
-- **[Environment Configuration](./environment-configuration.md)** - Complete configuration reference
-- **[Context API](./context-api.md)** - Target environment context and metadata
-- **[Creating Target Environments](../guides/creating-target-environments.md)** - Step-by-step plugin development guide
+- **[configs.json Reference](./configs-json.md)** - Configuration file structure and management
+- **[Context API Reference](./context-api.md)** - Complete context properties and methods
+- **[External API Integration Guide](../guides/external-api-integration.md)** - Best practices for API integration
+- **[Creating Target Environments](../guides/creating-target-environments.md)** - Setup guide for new integrations

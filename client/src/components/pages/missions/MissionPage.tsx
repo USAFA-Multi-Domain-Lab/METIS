@@ -1,60 +1,72 @@
-import React, { useContext, useEffect, useRef, useState } from 'react'
-import { useBeforeunload } from 'react-beforeunload'
-import { useMissionItemButtonCallbacks } from 'src/components/content/data/lists/implementations/missions/item-buttons'
-import { useGlobalContext, useNavigationMiddleware } from 'src/context/global'
-import ClientFileReference from 'src/files/references'
-import ClientMission from 'src/missions'
-import ClientMissionAction from 'src/missions/actions'
-import { ClientEffect } from 'src/missions/effects'
-import ClientMissionFile from 'src/missions/files'
-import ClientMissionForce from 'src/missions/forces'
-import ClientMissionNode from 'src/missions/nodes'
-import ClientMissionPrototype, {
-  TPrototypeDeleteMethod,
-} from 'src/missions/nodes/prototypes'
-import PrototypeCreation from 'src/missions/transformations/creations'
-import PrototypeTranslation from 'src/missions/transformations/translations'
-import { compute } from 'src/toolbox'
-import {
-  useEventListener,
-  useMountHandler,
-  useRequireLogin,
-} from 'src/toolbox/hooks'
-import { DefaultPageLayout, TPage_P } from '..'
-import Mission from '../../../../../shared/missions'
-import MissionComponent, {
-  TMissionComponentDefect,
-} from '../../../../../shared/missions/component'
-import { TNonEmptyArray } from '../../../../../shared/toolbox/arrays'
-import Prompt from '../../content/communication/Prompt'
-import FileReferenceList, {
-  TFileReferenceList_P,
-} from '../../content/data/lists/implementations/FileReferenceList'
-import MissionFileList, {
-  TMissionFileList_P,
-} from '../../content/data/lists/implementations/MissionFileList'
-import ActionEntry from '../../content/edit-mission/entries/implementations/ActionEntry'
-import EffectEntry from '../../content/edit-mission/entries/implementations/EffectEntry'
-import ForceEntry from '../../content/edit-mission/entries/implementations/ForceEntry'
-import MissionEntry from '../../content/edit-mission/entries/implementations/MissionEntry'
-import MissionFileEntry from '../../content/edit-mission/entries/implementations/MissionFileEntry'
-import NodeEntry from '../../content/edit-mission/entries/implementations/NodeEntry'
-import PrototypeEntry from '../../content/edit-mission/entries/implementations/PrototypeEntry'
-import NodeStructuring from '../../content/edit-mission/NodeStructuring'
+import Prompt from '@client/components/content/communication/Prompt'
+import type { TFileReferenceList_P } from '@client/components/content/data/lists/implementations/FileReferenceList'
+import FileReferenceList from '@client/components/content/data/lists/implementations/FileReferenceList'
+import type { TMissionFileList_P } from '@client/components/content/data/lists/implementations/MissionFileList'
+import MissionFileList from '@client/components/content/data/lists/implementations/MissionFileList'
+import { useMissionItemButtonCallbacks } from '@client/components/content/data/lists/implementations/missions/item-buttons'
+import type { TNavigation_P } from '@client/components/content/general-layout/Navigation'
 import {
   HomeButton,
   ProfileButton,
-  TNavigation_P,
-} from '../../content/general-layout/Navigation'
-import Panel from '../../content/general-layout/panels/Panel'
-import PanelLayout from '../../content/general-layout/panels/PanelLayout'
-import PanelView from '../../content/general-layout/panels/PanelView'
-import MissionMap from '../../content/session/mission-map/MissionMap'
-import CreateEffect from '../../content/session/mission-map/ui/overlay/modals/CreateEffect'
-import { TTabBarTab } from '../../content/session/mission-map/ui/tabs/TabBar'
-import { useButtonSvgEngine } from '../../content/user-controls/buttons/panels/hooks'
-import { TSvgPanelElement_Input } from '../../content/user-controls/buttons/panels/types'
+} from '@client/components/content/general-layout/Navigation'
+import Panel from '@client/components/content/general-layout/panels/Panel'
+import PanelLayout from '@client/components/content/general-layout/panels/PanelLayout'
+import PanelView from '@client/components/content/general-layout/panels/PanelView'
+import type { TCreateEffect_P } from '@client/components/content/session/mission-map/ui/overlay/modals/CreateEffect'
+import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
+import {
+  useGlobalContext,
+  useNavigationMiddleware,
+} from '@client/context/global'
+import { ClientFileReference } from '@client/files/ClientFileReference'
+import type { TMetisClientComponents } from '@client/index'
+import { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
+import { ClientMission } from '@client/missions/ClientMission'
+import type { TClientEffectHost } from '@client/missions/effects/ClientEffect'
+import { ClientEffect } from '@client/missions/effects/ClientEffect'
+import { ClientMissionFile } from '@client/missions/files/ClientMissionFile'
+import { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
+import { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
+import { ClientMissionPrototype } from '@client/missions/nodes/ClientMissionPrototype'
+import { compute } from '@client/toolbox'
+import {
+  useBeforeunload,
+  useEventListener,
+  useMountHandler,
+  useRequireLogin,
+} from '@client/toolbox/hooks'
+import type {
+  TEffectTrigger,
+  TEffectType,
+} from '@shared/missions/effects/Effect'
+import type {
+  MissionComponent,
+  TMissionComponentIssue,
+} from '@shared/missions/MissionComponent'
+import type { TNonEmptyArray } from '@shared/toolbox/arrays/ArrayToolbox'
+import { ClassList } from '@shared/toolbox/html/ClassList'
+import { useEffect, useRef, useState } from 'react'
+import type { TPage_P } from '..'
+import { DefaultPageLayout } from '..'
+import type { TMissionPageContextData } from './context'
+import { MissionPageContext } from './context'
+import ActionEntry from './entries/implementations/ActionEntry'
+import EffectEntry from './entries/implementations/EffectEntry'
+import ForceEntry from './entries/implementations/ForceEntry'
+import MissionEntry from './entries/implementations/MissionEntry'
+import MissionFileEntry from './entries/implementations/MissionFileEntry'
+import NodeEntry from './entries/implementations/NodeEntry'
+import PrototypeEntry from './entries/implementations/PrototypeEntry'
+import Issues from './issues/Issues'
+import MissionPageMap from './map/MissionPageMap'
 import './MissionPage.scss'
+import NodeStructuring from './structures/NodeStructuring'
+
+/**
+ * Debounce delay for issue checking to avoid
+ * excessive recomputation on rapid changes.
+ */
+const ISSUE_CHECK_DEBOUNCE_MS = 500
 
 /**
  * The description for the structure view in the
@@ -64,34 +76,12 @@ const STRUCTURE_DESCRIPTION =
   'Drag and drop the nodes below to reorder the structure of the mission. Nodes can be placed inside another node to nest nodes. Nodes can also be placed beside each other for more exact placement.'
 
 /**
- * Context for the mission page, which will help distribute
- * mission page properties to its children.
- */
-const MissionPageContext = React.createContext<TMissionPageContextData | null>(
-  null,
-)
-
-/**
- * Hook used by MissionPage-related components to access
- * the mission-page context.
- */
-export const useMissionPageContext = () => {
-  const context = useContext(
-    MissionPageContext,
-  ) as TMissionPageContextData | null
-  if (!context) {
-    throw new Error(
-      'useMissionPageContext must be used within an mission-page provider',
-    )
-  }
-  return context
-}
-
-/**
  * This will render page that allows the user to
  * edit a mission.
  */
-export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
+export default function MissionPage(
+  props: TMissionPage_P,
+): TReactElement | null {
   const Provider =
     MissionPageContext.Provider as React.Provider<TMissionPageContextData>
 
@@ -107,30 +97,35 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     prompt,
     forceUpdate,
   } = globalContext.actions
+  const missionState = useState<ClientMission>(() => ClientMission.createNew())
   const state: TMissionPage_S = {
-    defects: useState<TMissionComponentDefect[]>([]),
-    checkForDefects: useState<boolean>(true),
+    mission: missionState,
+    selection: useState<MissionComponent<TMetisClientComponents>>(
+      missionState[0].selection,
+    ),
+    issues: useState<TMissionComponentIssue[]>([]),
+    checkForIssues: useState<boolean>(true),
     globalFiles: useState<ClientFileReference[]>([]),
     localFiles: useState<ClientMissionFile[]>([]),
+    effectModalActive: useState<boolean>(false),
+    effectModalArgs: useState<Pick<TCreateEffect_P<any>, 'host' | 'trigger'>>({
+      host: missionState[0],
+      trigger: 'session-setup',
+    }),
   }
-  const [mission, setMission] = useState<ClientMission>(
-    ClientMission.createNew(),
-  )
+  const [mission, setMission] = state.mission
   const [globalFiles, setGlobalFiles] = state.globalFiles
   const [localFiles, setLocalFiles] = state.localFiles
-  const selectedForceState = useState<ClientMissionForce | null>(null)
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(
     props.missionId === null ? true : false,
   )
-  const [selection, setSelection] = useState<MissionComponent<any, any>>(
-    mission.selection,
-  )
-  const [isNewEffect, setIsNewEffect] = useState<boolean>(false)
-  const [, setDefects] = state.defects
-  const [, setCheckForDefects] = state.checkForDefects
+  const [selection, setSelection] = state.selection
+  const [, setEffectModalActive] = state.effectModalActive
+  const [, setEffectModalArgs] = state.effectModalArgs
+  const [issues, setIssues] = state.issues
+  const [checkForIssues, setCheckForIssues] = state.checkForIssues
   const root = useRef<HTMLDivElement>(null)
-  const nodeSvgEngine = useButtonSvgEngine({})
-  const prototypeSvgEngine = useButtonSvgEngine({})
+  const issueCheckTimeout = useRef<number | undefined>(undefined)
   const navButtonEngine = useButtonSvgEngine({
     elements: [
       {
@@ -229,30 +224,14 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   })
 
   /**
-   * Whether the add button for the tab bar
-   * is enabled (Enables/Disables force creation).
-   */
-  const tabAddEnabled: boolean = compute(
-    () =>
-      mission.forces.length < Mission.MAX_FORCE_COUNT &&
-      isAuthorized('missions_write'),
-  )
-
-  /**
    * The class name for the root element.
    */
   const rootClassName: string = compute(() => {
     // Default class names
-    let classList: string[] = ['MissionPage', 'Page']
-
-    // If disabled is true then add the
-    // disabled class name.
-    if (!isAuthorized('missions_write')) {
-      classList.push('ReadOnly')
-    }
+    let classList = new ClassList('MissionPage', 'Page')
 
     // Return the list of class names as one string.
-    return classList.join(' ')
+    return classList.value
   })
 
   /**
@@ -263,21 +242,19 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     name: 'Attached to Mission',
     items: localFiles,
     itemsPerPageMin: 4,
+    selectionSync: [
+      compute(() =>
+        selection instanceof ClientMissionFile ? selection : null,
+      ),
+      () => {},
+    ],
     getListButtonPermissions: () => ['missions_write'],
     getItemButtonPermissions: () => ['missions_write'],
     onSelect: (file) => {
       if (file) mission.select(file)
       else mission.deselect()
     },
-    onDetachRequest: (file) => {
-      // Remove the file from the mission.
-      setLocalFiles(localFiles.filter((f) => f._id !== file._id))
-      // Re-enable the file-reference in the global files list.
-      const fileRefId = file.reference._id
-      const fileRef = globalFiles.find(({ _id }) => _id === fileRefId)
-      if (fileRef) fileRef.enable()
-      onChange(file)
-    },
+    onDetachRequest: (...args) => onDetachFileRequest(...args),
   }
 
   /**
@@ -298,6 +275,7 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     onItemDblClick: (reference) => onAttachFileRequest(reference),
     onItemButtonClick: (button, reference) => {
       if (button !== 'link') return
+      if (viewMode === 'preview') return
       onAttachFileRequest(reference)
     },
   }
@@ -308,6 +286,18 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   const navigation = compute<TNavigation_P>(() => {
     return { buttonEngine: navButtonEngine }
   })
+
+  /**
+   * The current viewing mode of the mission page.
+   */
+  const viewMode: 'edit' | 'preview' = compute(() =>
+    isAuthorized('missions_write') ? 'edit' : 'preview',
+  )
+
+  /**
+   * Title for the inspector tab in the side panel.
+   */
+  const inspectorTabTitle = compute<string>(() => 'Inspector')
 
   /* -- EFFECTS -- */
 
@@ -328,10 +318,21 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
         let mission = await ClientMission.$fetchOne(props.missionId, {
           nonRevealedDisplayMode: 'show',
         })
+
+        // Prevents users from interacting with
+        // excluded nodes on the mission map while
+        // in preview mode. See "MapNode.tsx" for
+        // more info.
+        mission.allNodes.forEach((node) => {
+          const disableNode = node.exclude && viewMode === 'preview'
+          if (disableNode) node.disable()
+        })
+
         setMission(mission)
         setLocalFiles(mission.files)
         setSelection(mission)
-        setDefects(mission.defects)
+        setIssues(mission.issues)
+        setCheckForIssues(false)
 
         beginLoading('Loading global files...')
 
@@ -364,10 +365,41 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     navButtonEngine.setDisabled('save', !areUnsavedChanges)
   }, [areUnsavedChanges])
 
-  // Cleanup when a new effect is created.
+  // Handle selection changes.
   useEffect(() => {
-    if (isNewEffect) setIsNewEffect(false)
+    // Cleanup when a new effect is created.
+    setEffectModalActive(false)
+    // Auto-switch to the files tab if a file
+    // is ever selected.
+    if (selection instanceof ClientMissionFile) {
+      selectPrimaryView.current('Files')
+    }
   }, [selection])
+
+  // Debounced issue checking to avoid excessive recomputation
+  // on rapid changes (e.g., resolving one issue in 800 issues)
+  useEffect(() => {
+    if (checkForIssues) {
+      // Clear any pending issue check
+      if (issueCheckTimeout.current) {
+        clearTimeout(issueCheckTimeout.current)
+      }
+
+      // Schedule a new issue check after debounce delay
+      issueCheckTimeout.current = window.setTimeout(() => {
+        setIssues(mission.issues)
+        setCheckForIssues(false)
+        issueCheckTimeout.current = undefined
+      }, ISSUE_CHECK_DEBOUNCE_MS)
+    }
+
+    // Cleanup timeout on unmount or when dependencies change
+    return () => {
+      if (issueCheckTimeout.current) {
+        clearTimeout(issueCheckTimeout.current)
+      }
+    }
+  }, [checkForIssues, mission])
 
   // Guards against refreshing or navigating away
   // with unsaved changes.
@@ -396,121 +428,6 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
       }
     },
     [areUnsavedChanges],
-  )
-
-  // Add event listener to watch for node selection
-  // changes, updating the state accordingly.
-  useEventListener(
-    mission,
-    ['selection', 'set-transformation'],
-    () => {
-      // Get previous and next selections.
-      let prevSelection = selection
-      let nextSelection = mission.selection
-      let prevNode: ClientMissionNode | null =
-        ClientMission.getNodeFromSelection(prevSelection)
-      let nextNode: ClientMissionNode | null =
-        ClientMission.getNodeFromSelection(nextSelection)
-
-      // If there is a previous node, clear its buttons.
-      if (prevNode) {
-        nodeSvgEngine.removeAll()
-        prevNode.buttons = nodeSvgEngine.buttons
-      }
-
-      // If there is a next node, then add the buttons.
-      if (nextNode) {
-        nodeSvgEngine.add(
-          {
-            key: 'cancel',
-            type: 'button',
-            icon: 'cancel',
-            description: 'Deselect this node (Closes panel view also).',
-            onClick: () => mission.select(nextNode!.force),
-          },
-          {
-            key: 'divider',
-            type: 'button',
-            icon: 'divider',
-            description:
-              'Exclude this node from the force (Closes panel view also).',
-            permissions: ['missions_write'],
-            onClick: () => {
-              nextNode!.exclude = true
-              mission.select(nextNode!.force)
-            },
-          },
-        )
-
-        nextNode.buttons = nodeSvgEngine.buttons
-      }
-
-      // If there is a previous prototype, clear its buttons.
-      if (prevSelection instanceof ClientMissionPrototype) {
-        prototypeSvgEngine.removeAll()
-        prevSelection.buttons = prototypeSvgEngine.buttons
-      }
-
-      // If there is a next prototype, then add the buttons.
-      if (nextSelection instanceof ClientMissionPrototype) {
-        if (mission.transformation) {
-          prototypeSvgEngine.add({
-            key: 'cancel',
-            type: 'button',
-            icon: 'cancel',
-            description: 'Cancel action.',
-            permissions: ['missions_write'],
-            onClick: () => (mission.transformation = null),
-          })
-        } else {
-          prototypeSvgEngine.add(
-            {
-              key: 'cancel',
-              type: 'button',
-              icon: 'cancel',
-              description: 'Deselect this prototype (Closes panel view also).',
-              onClick: () => mission.deselect(),
-            },
-            {
-              key: 'add',
-              type: 'button',
-              icon: 'add',
-              description: 'Create an adjacent prototype on the map.',
-              permissions: ['missions_write'],
-              onClick: () =>
-                onPrototypeAddRequest(nextSelection as ClientMissionPrototype),
-            },
-            // todo: Reimplement this once node structure panel
-            // todo: is removed.
-            // {
-            //   type: 'button',
-            //   icon: 'reorder',
-            //   description: 'Move this prototype to another location.',
-            //   permissions: ['missions_write'],
-            //   onClick: () => onPrototypeMoveRequest(nextSelection),
-            // },
-            {
-              key: 'remove',
-              type: 'button',
-              icon: 'remove',
-              description: 'Delete this prototype.',
-              permissions: ['missions_write'],
-              disabled: mission.prototypes.length < 2,
-              onClick: () =>
-                onPrototypeDeleteRequest(
-                  nextSelection as ClientMissionPrototype,
-                ),
-            },
-          )
-        }
-
-        nextSelection.buttons = prototypeSvgEngine.buttons
-      }
-
-      // Update the selection state.
-      setSelection(mission.selection)
-    },
-    [selection],
   )
 
   // Add event listener to watch for when a new
@@ -608,31 +525,6 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   }
 
   /**
-   * Ensures that at least one action exists for the selected node
-   * if it is an executable node.
-   */
-  const ensureOneActionExistsIfExecutable = (): void => {
-    if (
-      selection instanceof ClientMissionNode &&
-      selection.executable &&
-      selection.actions.size === 0
-    ) {
-      // Checks to make sure the selected node has at least
-      // one action to choose from. If the selected node doesn't
-      // have at least one action then it will auto-generate one
-      // for that node.
-      let newAction = ClientMissionAction.create(selection)
-      selection.actions.set(newAction._id, newAction)
-
-      notify(
-        `Auto-generated an action for ${selection.name} because it is an executable node with no actions to execute.`,
-      )
-
-      onChange(newAction)
-    }
-  }
-
-  /**
    * This loads the global files into the state for
    * display and selection.
    * @param mission The current mission being viewed on
@@ -648,13 +540,20 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
         // Fetch files from API and store
         // them in the state.
         const globalFiles = await ClientFileReference.$fetchAll()
-        // Disable any files that are already in
-        // the mission.
         globalFiles.forEach((file) => {
-          file.setDisabled(
-            mission.files.some((f) => f.reference._id === file._id),
-            'File is already attached.',
-          )
+          // Disable files if the user is only
+          // allowed to preview the mission.
+          if (viewMode === 'preview') {
+            file.disable()
+          }
+          // Disable any files that are already in
+          // the mission.
+          else {
+            file.setDisabled(
+              mission.files.some((f) => f.reference._id === file._id),
+              'File is already attached.',
+            )
+          }
         })
         setGlobalFiles(globalFiles)
         // Finish loading and resolve.
@@ -669,37 +568,36 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   }
 
   /**
+   * @see {@link TMissionPageContextData.activateEffectModal}
+   */
+  const activateEffectModal = <TType extends TEffectType>(
+    host: TClientEffectHost<TType>,
+    trigger: TEffectTrigger,
+  ) => {
+    setEffectModalActive(true)
+    setEffectModalArgs({ host, trigger })
+  }
+
+  /**
+   * Selects the view for the primary panel in
+   * the panel layout.
+   * @param title The title of the view to select.
+   */
+  const selectPrimaryView = useRef((title: string) => {})
+
+  /**
    * Handles when a change is made that would require saving.
    * @param components The components that have been changed.
    */
   const onChange = (
     // ? Is this still necessary?
-    ...components: TNonEmptyArray<MissionComponent<any, any>>
+    ...components: TNonEmptyArray<MissionComponent<TMetisClientComponents>>
   ): void => {
-    // todo: Remove this, maybe??
-    // components.forEach((component) => {
-    //   // If the component was defective and is no
-    //   // longer defective, then remove it from the
-    //   // list.
-    //   if (defectiveComponents.includes(component) && !component.defective) {
-    //     updatedState = updatedState.filter((c) => c._id !== component._id)
-    //   }
-    // })
-
-    // Trigger a check for defects, now
+    // Trigger a check for issues, now
     // that a component has changed.
-    setCheckForDefects(true)
+    setCheckForIssues(true)
     setAreUnsavedChanges(true)
     forceUpdate()
-  }
-
-  /**
-   * Callback for when a request to add a new tab
-   * (force) is made.
-   */
-  const onTabAdd = () => {
-    let force = mission.createForce()
-    onChange(force)
   }
 
   const {
@@ -726,321 +624,13 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   })
 
   /**
-   * Callback for when a prototype is selected.
-   * @param prototype The selected prototype.
-   */
-  const onPrototypeSelect = (prototype: ClientMissionPrototype) => {
-    if (prototype !== selection) {
-      // Get the current transformation in the mission.
-      let transformation = mission.transformation
-      // If the transformation is a translation, set
-      // the destination to the prototype.
-      if (mission.transformation instanceof PrototypeTranslation) {
-        mission.transformation.destination = prototype
-        mission.handleStructureChange()
-      }
-      // Else, select the prototype in the mission.
-      else {
-        mission.select(prototype)
-      }
-    }
-  }
-
-  /**
-   * Callback for when a node is selected.
-   * @param node The selected node.
-   */
-  const onNodeSelect = (node: ClientMissionNode) => {
-    if (node !== selection) {
-      // Select the node.
-      mission.select(node)
-      // Create an action, if necessary.
-      ensureOneActionExistsIfExecutable()
-    }
-  }
-
-  /**
-   * Handler for when the user requests to delete a node.
-   * @param prototype The node to be deleted.
-   */
-  const onPrototypeDeleteRequest = async (
-    prototype: ClientMissionPrototype,
-  ): Promise<void> => {
-    // Gather details.
-    let deleteMethod: TPrototypeDeleteMethod = 'delete-children'
-    let message: string
-    let choices: ['Cancel', 'Keep Children', 'Delete Children', 'Confirm'] = [
-      'Cancel',
-      'Keep Children',
-      'Delete Children',
-      'Confirm',
-    ]
-
-    // Set the message and choices based on the prototype's children.
-    if (prototype.hasChildren) {
-      message = `What would you like to do with the children of "${prototype.name}"?`
-      choices.pop()
-    } else {
-      message = `Please confirm the deletion of "${prototype.name}".`
-      choices.splice(1, 2)
-    }
-
-    // Prompt the user for confirmation.
-    let { choice } = await prompt(message, choices)
-
-    // If the user selects node only, update the delete method.
-    if (choice === 'Keep Children') {
-      deleteMethod = 'shift-children'
-    }
-    // Return if the user cancels the deletion.
-    else if (choice === 'Cancel') {
-      return
-    }
-
-    // Delete the node.
-    prototype.delete({
-      deleteMethod,
-    })
-    // Handle the change.
-    onChange(prototype)
-    mission.deselect()
-  }
-
-  /**
-   * Handler for when the user requests to add a new prototype.
-   */
-  const onPrototypeAddRequest = (prototype: ClientMissionPrototype): void => {
-    mission.transformation = new PrototypeCreation(prototype)
-  }
-
-  /**
-   * Handles the request to duplicate a force in the mission.
-   * @param forceId The ID of the force to duplicate.
-   */
-  const onDuplicateForceRequest = async (
-    forceId: ClientMissionForce['_id'],
-  ) => {
-    // Get the force to duplicate.
-    let force = mission.getForceById(forceId)
-
-    // If the force is not found, notify the user.
-    if (!force) {
-      notify('Failed to duplicate force.')
-      return
-    }
-
-    // Prompt the user to enter the name of the new force.
-    let { choice, text } = await prompt(
-      'Enter the name of the new force:',
-      ['Cancel', 'Submit'],
-      {
-        textField: { boundChoices: ['Submit'], label: 'Name' },
-        defaultChoice: 'Submit',
-      },
-    )
-
-    // If the user confirms the duplication, proceed.
-    if (choice === 'Submit') {
-      try {
-        // Duplicate the force.
-        let newForces = mission.duplicateForces({
-          originalId: force._id,
-          duplicateName: text,
-        })
-        // Notify the user that the force was duplicated.
-        notify(`Successfully duplicated "${force.name}".`)
-        // Allow the user to save the changes.
-        onChange(...newForces)
-      } catch (error: any) {
-        notify(`Failed to duplicate "${force.name}".`)
-      }
-    }
-  }
-
-  /**
-   * Handles the request to delete a force.
-   * @param forceId The ID of the force to delete.
-   */
-  const onDeleteForceRequest = async (forceId: ClientMissionForce['_id']) => {
-    // Get the force to duplicate.
-    let force = mission.getForceById(forceId)
-
-    // If the force is not found, notify the user.
-    if (!force) {
-      notify('Failed to delete the selected force.')
-      return
-    }
-
-    // Prompt the user to confirm the deletion.
-    let { choice } = await prompt(
-      `Please confirm the deletion of this force.`,
-      Prompt.ConfirmationChoices,
-    )
-    // If the user cancels, abort.
-    if (choice === 'Cancel') return
-    // Delete the force.
-    let deletedForces = mission.deleteForces(forceId)
-
-    // Allow the user to save the changes.
-    if (deletedForces.length) {
-      onChange(...(deletedForces as TNonEmptyArray<ClientMissionForce>))
-    }
-  }
-
-  /**
-   * Handles the request to duplicate an action.
-   * @param action The action to duplicate.
-   * @param selectNewAction Whether to select the new action after duplication.
-   */
-  const onDuplicateActionRequest = async (
-    action: ClientMissionAction,
-    selectNewAction: boolean = false,
-  ) => {
-    // Prompt the user to enter the name of the new action.
-    let { choice, text } = await prompt(
-      'Enter the name of the new action:',
-      ['Cancel', 'Submit'],
-      {
-        textField: { boundChoices: ['Submit'], label: 'Name' },
-        defaultChoice: 'Submit',
-      },
-    )
-
-    // If the user confirms the duplication, proceed.
-    if (choice === 'Submit') {
-      try {
-        const { node } = action
-        // Duplicate the action.
-        let newAction = action.duplicate({
-          name: text,
-          localKey: node.generateActionKey(),
-        })
-        // Add the new action to the node.
-        node.actions.set(newAction._id, newAction)
-        // Select the new action if necessary.
-        if (selectNewAction) mission.select(newAction)
-        // Notify the user that the force was duplicated.
-        notify(`Successfully duplicated "${newAction.name}".`)
-        // Allow the user to save the changes.
-        onChange(newAction)
-      } catch (error: any) {
-        notify(`Failed to duplicate "${action.name}".`)
-      }
-    }
-  }
-
-  /**
-   * Handles the request to delete an action.
-   */
-  const onDeleteActionRequest = async (
-    action: ClientMissionAction,
-    navigateBack: boolean = false,
-  ) => {
-    // Extract the node from the action.
-    let { actions } = action.node
-
-    // Delete the action if the node has more than 2 actions.
-    if (actions.size > 1) {
-      // Prompt the user to confirm the deletion.
-      let { choice } = await prompt(
-        `Please confirm the deletion of this action.`,
-        Prompt.ConfirmationChoices,
-      )
-      // If the user cancels, abort.
-      if (choice === 'Cancel') return
-
-      // Go back to the previous selection.
-      if (navigateBack) mission.selectBack()
-
-      // Remove the action from the node.
-      actions.delete(action._id)
-
-      // Allow the user to save the changes.
-      onChange(action, action.node)
-    }
-  }
-
-  /**
-   * Handles the request to duplicate an effect.
-   * @param effect The effect to duplicate.
-   * @param selectNewEffect Whether to select the new effect after duplication.
-   */
-  const onDuplicateEffectRequest = async (
-    effect: ClientEffect,
-    selectNewEffect: boolean = false,
-  ) => {
-    // Prompt the user to enter the name of the new effect.
-    let { choice, text } = await prompt(
-      'Enter the name of the new effect:',
-      ['Cancel', 'Submit'],
-      {
-        textField: { boundChoices: ['Submit'], label: 'Name' },
-        defaultChoice: 'Submit',
-      },
-    )
-
-    // If the user confirms the duplication, proceed.
-    if (choice === 'Submit') {
-      try {
-        const { action } = effect
-        // Duplicate the effect.
-        let newEffect = effect.duplicate({
-          name: text,
-          localKey: action.generateEffectKey(),
-        })
-        // Add the new effect to the action.
-        action.effects.push(newEffect)
-        // Select the new effect if necessary.
-        if (selectNewEffect) mission.select(newEffect)
-        // Notify the user that the force was duplicated.
-        notify(`Successfully duplicated "${newEffect.name}".`)
-        // Allow the user to save the changes.
-        onChange(newEffect)
-      } catch (error: any) {
-        notify(`Failed to duplicate "${effect.name}".`)
-      }
-    }
-  }
-
-  /**
-   * Handles the request to delete an effect.
-   */
-  const onDeleteEffectRequest = async (
-    effect: ClientEffect,
-    navigateBack: boolean = false,
-  ) => {
-    // Prompt the user to confirm the deletion.
-    let { choice } = await prompt(
-      `Please confirm the deletion of this effect.`,
-      Prompt.ConfirmationChoices,
-    )
-
-    // If the user cancels, abort.
-    if (choice === 'Cancel') return
-
-    // Go back to the previous selection.
-    if (navigateBack) {
-      mission.selectBack()
-    }
-
-    // Extract the action from the effect.
-    let { action } = effect
-    // Filter out the effect from the action.
-    action.effects = action.effects.filter(
-      (actionEffect: ClientEffect) => actionEffect._id !== effect._id,
-    )
-
-    // Allow the user to save the changes.
-    onChange(effect)
-  }
-
-  /**
    * Handles the request to attach a file to the mission.
    * This will add the file to the mission's local files
    * and disable the file-reference in the global files list.
    * @param reference The file reference to attach.
    */
   const onAttachFileRequest = (reference: ClientFileReference): void => {
+    if (viewMode === 'preview') return
     if (mission.files.some((f) => f.reference._id === reference._id)) return
     // Add new file to the mission.
     let file = ClientMissionFile.fromFileReference(reference, mission)
@@ -1051,144 +641,50 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     onChange(file)
   }
 
-  /* -- COMPUTED  (CONTINUED) -- */
-
   /**
-   * Tabs for the mission map's tab bar.
+   * Handles the request to detach a file from the mission.
+   * This will remove the file from the mission's local files
+   * and enable the file-reference in the global files list.
+   * @param file The mission file to detach.
    */
-  const mapTabs: TTabBarTab[] = compute(() => {
-    return mission.forces.map((force) => {
-      const buttons: TSvgPanelElement_Input[] = [
-        {
-          key: 'copy',
-          type: 'button',
-          icon: 'copy',
-          label: 'Duplicate',
-          permissions: ['missions_write'],
-          onClick: () => onDuplicateForceRequest(force._id),
-        },
-        {
-          key: 'remove',
-          type: 'button',
-          icon: 'remove',
-          label: 'Delete',
-          permissions: ['missions_write'],
-          onClick: () => onDeleteForceRequest(force._id),
-        },
-      ]
-
-      const tab: TTabBarTab = {
-        _id: force._id,
-        text: force.name,
-        color: force.color,
-        description: `Select force` + `\n\t\n\`R-Click\` for more options`,
-        engineProps: { elements: buttons },
-      }
-
-      return tab
-    })
-  })
+  const onDetachFileRequest = (file: ClientMissionFile): void => {
+    if (viewMode === 'preview') return
+    // Remove the file from the mission.
+    setLocalFiles(localFiles.filter((f) => f._id !== file._id))
+    // Re-enable the file-reference in the global files list.
+    const fileRefId = file.reference._id
+    const fileRef = globalFiles.find(({ _id }) => _id === fileRefId)
+    if (fileRef) fileRef.enable()
+    onChange(file)
+  }
 
   /* -- RENDER -- */
-
-  /**
-   * Computed JSX for the mission map modal.
-   */
-  const modalJsx = compute((): JSX.Element | null => {
-    // If the selection is an action and the user has
-    // requested to create a new effect, then display
-    // the create effect modal.
-    if (selection instanceof ClientMissionAction && isNewEffect) {
-      return (
-        <CreateEffect
-          action={mission.selection as ClientMissionAction}
-          setIsNewEffect={setIsNewEffect}
-          onChange={onChange}
-        />
-      )
-    }
-    // Otherwise, return null.
-    else {
-      return null
-    }
-  })
 
   /**
    * Renders JSX for the inspector view of the
    * mission page.
    */
-  const renderInspector = (): JSX.Element | null => {
+  const renderInspector = (): TReactElement | null => {
     if (selection instanceof ClientMission) {
-      return (
-        <MissionEntry
-          key={selection._id}
-          mission={selection}
-          onChange={onChange}
-        />
-      )
+      return <MissionEntry key={selection._id} mission={selection} />
     } else if (selection instanceof ClientMissionFile) {
       return (
         <MissionFileEntry
           key={selection._id}
           file={selection}
-          onChange={onChange}
+          onDetachRequest={onDetachFileRequest}
         />
       )
     } else if (selection instanceof ClientMissionPrototype) {
-      return (
-        <PrototypeEntry
-          key={selection._id}
-          prototype={selection}
-          onChange={onChange}
-          onAddRequest={() => onPrototypeAddRequest(selection)}
-          onDeleteRequest={() => onPrototypeDeleteRequest(selection)}
-        />
-      )
+      return <PrototypeEntry key={selection._id} prototype={selection} />
     } else if (selection instanceof ClientMissionForce) {
-      return (
-        <ForceEntry
-          force={selection}
-          duplicateForce={async () =>
-            await onDuplicateForceRequest(selection._id)
-          }
-          deleteForce={async () => await onDeleteForceRequest(selection._id)}
-          onChange={onChange}
-          key={selection._id}
-        />
-      )
+      return <ForceEntry key={selection._id} force={selection} />
     } else if (selection instanceof ClientMissionNode) {
-      return (
-        <NodeEntry
-          key={selection._id}
-          node={selection}
-          onDeleteActionRequest={onDeleteActionRequest}
-          onDuplicateActionRequest={onDuplicateActionRequest}
-          onChange={onChange}
-        />
-      )
+      return <NodeEntry key={selection._id} node={selection} />
     } else if (selection instanceof ClientMissionAction) {
-      return (
-        <ActionEntry
-          action={selection}
-          setIsNewEffect={setIsNewEffect}
-          onDuplicateActionRequest={onDuplicateActionRequest}
-          onDeleteActionRequest={onDeleteActionRequest}
-          onDuplicateEffectRequest={onDuplicateEffectRequest}
-          onDeleteEffectRequest={onDeleteEffectRequest}
-          onChange={onChange}
-          key={selection._id}
-        />
-      )
+      return <ActionEntry action={selection} key={selection._id} />
     } else if (selection instanceof ClientEffect) {
-      return (
-        <EffectEntry
-          effect={selection}
-          onDuplicateEffectRequest={onDuplicateEffectRequest}
-          onDeleteEffectRequest={onDeleteEffectRequest}
-          onChange={onChange}
-          key={selection._id}
-        />
-      )
+      return <EffectEntry effect={selection} key={selection._id} />
     } else {
       return null
     }
@@ -1201,6 +697,9 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
     root,
     ...props,
     state,
+    viewMode,
+    onChange,
+    activateEffectModal,
   }
 
   // Don't render if the mount hasn't yet been handled.
@@ -1211,18 +710,9 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
       <div className={rootClassName} ref={root}>
         <DefaultPageLayout navigation={navigation}>
           <PanelLayout initialSizes={['fill', panel2DefaultSize]}>
-            <Panel>
+            <Panel selectView={selectPrimaryView}>
               <PanelView title='Map'>
-                <MissionMap
-                  mission={mission}
-                  tabs={mapTabs}
-                  tabAddEnabled={tabAddEnabled}
-                  onTabAdd={onTabAdd}
-                  onPrototypeSelect={onPrototypeSelect}
-                  onNodeSelect={onNodeSelect}
-                  overlayContent={modalJsx}
-                  selectedForce={selectedForceState}
-                />
+                <MissionPageMap />
               </PanelView>
               <PanelView title='Files'>
                 <div className='InMission'>
@@ -1234,9 +724,26 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
               </PanelView>
             </Panel>
             <Panel>
-              <PanelView title='Inspector'>{renderInspector()}</PanelView>
+              <PanelView title={inspectorTabTitle}>
+                {renderInspector()}
+              </PanelView>
               <PanelView title='Structure' description={STRUCTURE_DESCRIPTION}>
                 <NodeStructuring mission={mission} onChange={onChange} />
+              </PanelView>
+              <PanelView
+                title=''
+                icon='warning-transparent'
+                disabled={!issues.length}
+                highlighted={!!issues.length}
+                description={
+                  issues.length > 0
+                    ? `${issues.length} unresolved issue${
+                        issues.length === 1 ? '' : 's'
+                      } detected. Click to review.`
+                    : 'No issues detected in this mission.'
+                }
+              >
+                <Issues switchToPanel={inspectorTabTitle} />
               </PanelView>
             </Panel>
           </PanelLayout>
@@ -1246,8 +753,11 @@ export default function MissionPage(props: TMissionPage_P): JSX.Element | null {
   )
 }
 
-/* ---------------------------- TYPES FOR MISSION PAGE ---------------------------- */
+/* -- TYPES -- */
 
+/**
+ * Props for {@link MissionPage}.
+ */
 export interface TMissionPage_P extends TPage_P {
   /**
    * The ID of the mission to be edited. If null,
@@ -1257,20 +767,27 @@ export interface TMissionPage_P extends TPage_P {
 }
 
 /**
- * The state for `MissionPage`, provided
- * in the context.
+ * State for {@link MissionPage}.
  */
 export type TMissionPage_S = {
   /**
-   * The defects within mission components that must
+   * The current mission being viewed/edited.
+   */
+  mission: TReactState<ClientMission>
+  /**
+   * The current selection within the mission.
+   */
+  selection: TReactState<MissionComponent<TMetisClientComponents>>
+  /**
+   * The issues within mission components that must
    * be addressed for the mission to function correctly.
    */
-  defects: TReactState<TMissionComponentDefect[]>
+  issues: TReactState<TMissionComponentIssue[]>
   /**
-   * Triggers a recomputation of the defective
-   * components, updating the state with the result.
+   * Triggers a recomputation of the components that have
+   * issues, updating the state with the result.
    */
-  checkForDefects: TReactState<boolean>
+  checkForIssues: TReactState<boolean>
   /**
    * The current list of files available in the store.
    */
@@ -1279,20 +796,12 @@ export type TMissionPage_S = {
    * The current list of files attached to the mission.
    */
   localFiles: TReactState<ClientMissionFile[]>
-}
-
-/**
- * The mission-page context data provided to all children
- * of `MissionPage`.
- */
-export type TMissionPageContextData = {
   /**
-   * The ref for the root element of the mission page.
+   * Whether the effect modal is currently active.
    */
-  root: React.RefObject<HTMLDivElement>
-} & Required<TMissionPage_P> & {
-    /**
-     * The state for the mission page.
-     */
-    state: TMissionPage_S
-  }
+  effectModalActive: TReactState<boolean>
+  /**
+   * Arguments to pass to the effect modal when active.
+   */
+  effectModalArgs: TReactState<Pick<TCreateEffect_P, 'host' | 'trigger'>>
+}

@@ -1,7 +1,8 @@
-import { Vector1D, Vector2D } from '../../../../../../shared/toolbox/space'
-import './Scene.scss'
-import { compute } from 'src/toolbox'
+import { compute } from '@client/toolbox'
+import type { Vector1D } from '@shared/toolbox/numbers/vectors/Vector1D'
+import type { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
 import React from 'react'
+import './Scene.scss'
 
 /**
  * A scene/world containing scene objects that can
@@ -10,7 +11,7 @@ import React from 'react'
  * to navigate around the scene.
  */
 export default React.forwardRef<HTMLDivElement, TMapScene>(
-  ({ cameraPosition, cameraZoom, children }, ref): JSX.Element | null => {
+  ({ cameraPosition, cameraZoom, children }, ref): TReactElement | null => {
     /* -- computed -- */
 
     /**

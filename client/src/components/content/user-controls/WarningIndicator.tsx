@@ -8,7 +8,7 @@ import './WarningIndicator.scss'
 export default function WarningIndicator({
   active = false,
   description = '',
-}: TWarningIndicator_P): JSX.Element {
+}: TWarningIndicator_P): TReactElement {
   if (!active) return <></>
 
   return (

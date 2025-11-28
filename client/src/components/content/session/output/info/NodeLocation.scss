@@ -1,11 +1,11 @@
-@import 'src/assets/styles/config.scss';
+@use '@client/assets/styles/config.scss' as *;
 
 .NodeLocation {
   $content-size: 1.5em;
 
   display: inline-block;
   vertical-align: middle;
-  background: url('/assets/images/icons/locate-node.svg');
+  background: url('../../../../../assets/images/icons/locate-node.svg');
   background-size: $content-size;
   background-repeat: no-repeat;
   background-position: center;

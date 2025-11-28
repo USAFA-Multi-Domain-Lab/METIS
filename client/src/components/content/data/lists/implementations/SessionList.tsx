@@ -1,13 +1,14 @@
-import Prompt from 'src/components/content/communication/Prompt'
-import { useGlobalContext } from 'src/context/global'
-import SessionClient from 'src/sessions'
-import { SessionBasic } from 'src/sessions/basic'
-import { compute } from 'src/toolbox'
-import { usePeriodicRerender, useRequireLogin } from 'src/toolbox/hooks'
-import { MetisComponent } from '../../../../../../../shared'
-import { DateToolbox } from '../../../../../../../shared/toolbox/dates'
-import List, { TGetListButtonLabel, TOnListButtonClick } from '../List'
-import {
+import Prompt from '@client/components/content/communication/Prompt'
+import { useGlobalContext } from '@client/context/global'
+import { SessionBasic } from '@client/sessions/SessionBasic'
+import { SessionClient } from '@client/sessions/SessionClient'
+import { compute } from '@client/toolbox'
+import { usePeriodicRerender, useRequireLogin } from '@client/toolbox/hooks'
+import type { MetisComponent } from '@shared/MetisComponent'
+import { DateToolbox } from '@shared/toolbox/dates/DateToolbox'
+import type { TGetListButtonLabel, TOnListButtonClick } from '../List'
+import List from '../List'
+import type {
   TGetItemButtonLabel,
   TOnItemButtonClick,
   TOnItemSelection,
@@ -20,7 +21,7 @@ import {
 export default function SessionList({
   sessions,
   refresh,
-}: TSessionList_P): JSX.Element | null {
+}: TSessionList_P): TReactElement | null {
   const globalContext = useGlobalContext()
   const [server] = globalContext.server
   const { login } = useRequireLogin()
@@ -142,19 +143,34 @@ export default function SessionList({
   }
 
   /**
-   * Gets the tooltip description for a session item button.
+   * Gets the label for a session item button.
    */
-  const getSessionItemButtonTooltip: TGetItemButtonLabel<SessionBasic> = (
+  const getSessionItemButtonLabel: TGetItemButtonLabel<SessionBasic> = (
     button,
   ) => {
     switch (button) {
       case 'open':
         return 'Join'
       case 'remove':
-        return 'Delete'
+        return 'Hard Delete'
       default:
         return ''
     }
+  }
+
+  /**
+   * Gets the warning text for a session item.
+   * @param session The session for which to get the warning text.
+   * @returns The warning text for the session.
+   */
+  const getSessionWarningText = (session: SessionBasic): string => {
+    if (session.setupFailed) {
+      return 'The session encountered an error during setup. For details concerning the error, please reference the server logs. Please perform a hard delete and recreate this session.'
+    } else if (session.teardownFailed) {
+      return 'The session encountered an error during teardown. For details concerning the error, please reference the server logs. Please perform a hard delete for this session.'
+    }
+
+    return ''
   }
 
   /**
@@ -218,8 +234,12 @@ export default function SessionList({
   const onSessionTearDown = async (session: SessionBasic) => {
     // Confirm tear down.
     let { choice } = await prompt(
-      `Are you sure you want to delete the "${session.name}" session?`,
+      `Are you sure you want to perform a hard delete for the "${session.name}" session? This will end the session, skipping typical shutdown procedures.`,
       Prompt.ConfirmationChoices,
+      {
+        dangerous: true,
+        dangerousChoices: ['Confirm'],
+      },
     )
 
     // If confirmed, delete session.
@@ -304,7 +324,11 @@ export default function SessionList({
       ]}
       listButtonIcons={['key']}
       itemButtonIcons={sessionItemButtons}
-      initialSorting={{ column: 'launchedAt', method: 'descending' }}
+      initialSorting={{
+        method: 'column-based',
+        column: 'launchedAt',
+        direction: 'descending',
+      }}
       getItemButtonDisabled={(button, session) => {
         switch (button) {
           case 'remove':
@@ -331,7 +355,8 @@ export default function SessionList({
       getColumnWidth={getSessionColumnWidth}
       getItemTooltip={() => 'Join session'}
       getListButtonLabel={getSessionListButtonTooltip}
-      getItemButtonLabel={getSessionItemButtonTooltip}
+      getItemButtonLabel={getSessionItemButtonLabel}
+      getCustomWarningText={getSessionWarningText}
       onItemDblClick={(session) => onSessionSelection(session)}
       onListButtonClick={onSessionListButtonClick}
       onItemButtonClick={onSessionItemButtonClick}

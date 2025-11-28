@@ -1,15 +1,13 @@
-import { AxiosProgressEvent } from 'axios'
-import { MetisComponent } from '../../../../../../../shared'
-import {
-  EventManager,
-  TListenerTargetEmittable,
-} from '../../../../../../../shared/events'
-import StringToolbox from '../../../../../../../shared/toolbox/strings'
+import type { TListenerTargetEmittable } from '@shared/events/EventManager'
+import { EventManager } from '@shared/events/EventManager'
+import { MetisComponent } from '@shared/MetisComponent'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import type { AxiosProgressEvent } from 'axios'
 
 /**
  * Manages an upload for an item in a list.
  */
-export default class ListUpload
+export class ListUpload
   extends MetisComponent
   implements TListenerTargetEmittable<TListUploadEvent>
 {

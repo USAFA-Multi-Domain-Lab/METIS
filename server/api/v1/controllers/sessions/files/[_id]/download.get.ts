@@ -1,7 +1,6 @@
-import { Request, Response } from 'express-serve-static-core'
-import MetisFileStore from 'metis/server/files'
-import SessionServer from 'metis/server/sessions'
-import ServerSessionMember from 'metis/server/sessions/members'
+import type { MetisFileStore } from '@server/files/MetisFileStore'
+import type { ServerSessionMember } from '@server/sessions/ServerSessionMember'
+import type { SessionServer } from '@server/sessions/SessionServer'
 
 /**
  * Retrieves a mission file from the session, and
@@ -13,9 +12,9 @@ import ServerSessionMember from 'metis/server/sessions/members'
  * @resolves With the response to send to the client.
  * @rejects If an error occurs.
  */
-const downloadMissionFile = async (
-  request: Request,
-  response: Response,
+export const downloadMissionFile = async (
+  request: TExpressRequest,
+  response: TExpressResponse,
   fileStore: MetisFileStore,
 ) => {
   // Gather details.
@@ -46,5 +45,3 @@ const downloadMissionFile = async (
     return response.sendStatus(403)
   }
 }
-
-export default downloadMissionFile

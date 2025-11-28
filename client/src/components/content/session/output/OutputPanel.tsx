@@ -1,8 +1,7 @@
+import type { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
+import { compute } from '@client/toolbox'
+import { useEventListener, usePostRenderEffect } from '@client/toolbox/hooks'
 import { useEffect, useRef, useState } from 'react'
-import ClientMissionForce from 'src/missions/forces'
-import ClientMissionNode from 'src/missions/nodes'
-import { compute } from 'src/toolbox'
-import { useEventListener, usePostRenderEffect } from 'src/toolbox/hooks'
 import { Output } from '.'
 import './OutputPanel.scss'
 
@@ -20,10 +19,7 @@ const AUTO_SCROLL_LOCK_DISTANCE = 100
 /**
  * A panel for displaying messages in the session.
  */
-export default function OutputPanel({
-  force,
-  selectNode,
-}: TOutputPanel_P): JSX.Element {
+export default function OutputPanel({ force }: TOutputPanel_P): TReactElement {
   /* -- STATE -- */
 
   const [outputs, setOutputs] = useState<ClientMissionForce['outputs']>([])
@@ -31,7 +27,7 @@ export default function OutputPanel({
   const smoothScrollInProgress = useRef<boolean>(false)
   const smoothScrollTimeout = useRef<
     NodeJS.Timeout | string | number | undefined
-  >()
+  >(undefined)
   const [autoScrollLock, lockAutoScroll] = useState<boolean>(false)
   const [areUnseenOutputs, setAreUnseenOutputs] = useState<boolean>(false)
 
@@ -132,7 +128,6 @@ export default function OutputPanel({
           return (
             <Output
               output={output}
-              selectNode={selectNode}
               key={`output-${output._id}_time-${output.time}`}
             />
           )
@@ -158,9 +153,4 @@ type TOutputPanel_P = {
    * The force to render the message(s) for.
    */
   force: ClientMissionForce
-  /**
-   * Selects a node.
-   * @param node The node to select.
-   */
-  selectNode: (node: ClientMissionNode | null) => void
 }

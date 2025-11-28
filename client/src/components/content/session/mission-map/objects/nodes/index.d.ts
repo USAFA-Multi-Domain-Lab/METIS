@@ -1,14 +1,14 @@
-import { TButtonSvg_Input } from 'src/components/content/user-controls/buttons/panels/types'
-import ClientMission from 'src/missions'
-import ClientActionExecution from 'src/missions/actions/executions'
-import { MetisComponent } from '../../../../../../../../shared/'
-import { TListenerTarget } from '../../../../../../../../shared/events'
-import { TNodeBlockStatus } from '../../../../../../../../shared/missions/nodes'
-import { TWithKey } from '../../../../../../../../shared/toolbox/objects'
-import {
-  Vector1D,
-  Vector2D,
-} from '../../../../../../../../shared/toolbox/space'
+import type { TButtonSvg_PK } from '@client/components/content/user-controls/buttons/panels/types'
+import type { ClientActionExecution } from '@client/missions/actions/ClientActionExecution'
+import type { ClientMission } from '@client/missions/ClientMission'
+import type { TListenerTarget } from '@shared/events/EventManager'
+import type { MetisComponent } from '@shared/MetisComponent'
+import type {
+  TNodeBlockStatus,
+  TNodeExecutionState,
+} from '@shared/missions/nodes/MissionNode'
+import type { Vector1D } from '@shared/toolbox/numbers/vectors/Vector1D'
+import type { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
 import MissionMap from '../../MissionMap'
 
 /**
@@ -159,5 +159,4 @@ export type TMapNode_P<TNode extends TMapCompatibleNode> = {
 /**
  * Button SVG type for node-specific buttons.
  */
-export type TNodeButton<TNode extends TMapCompatibleNode> =
-  TWithKey<TButtonSvg_Input>
+export type TNodeButton = TButtonSvg_PK

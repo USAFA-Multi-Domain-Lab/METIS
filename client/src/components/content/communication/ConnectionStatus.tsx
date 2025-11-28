@@ -1,12 +1,6 @@
-import { signal } from '@preact/signals-react'
+import { useGlobalContext } from '@client/context/global'
 import { useEffect, useMemo, useState } from 'react'
 import './ConnectionStatus.scss'
-
-/**
- * A signal for controlling the message of all
- * {@link ConnectionStatus} components.
- */
-export const message = signal<TConnectionStatusMessage | null>(null)
 
 /**
  * Displays messages about the connection status of the client to the server.
@@ -14,20 +8,24 @@ export const message = signal<TConnectionStatusMessage | null>(null)
  * component will display a message saying that the connection has dropped
  * and is trying to reconnect.
  */
-export default function ConnectionStatus(props: {}): JSX.Element | null {
+export default function ConnectionStatus(props: {}): TReactElement | null {
+  /* -- context -- */
+  const globalContext = useGlobalContext()
+  const [connectionStatusMessage] = globalContext.connectionStatusMessage
+
   /* -- state -- */
   // The last non-null message that was received.
   const [lastMessage, setLastMessage] =
-    useState<TConnectionStatusMessage | null>(message.value)
+    useState<TConnectionStatusMessage | null>(connectionStatusMessage)
 
   /* -- effects -- */
 
   useEffect(() => {
     // Update the last message, if not null.
-    if (message.value !== null) {
-      setLastMessage(message.value)
+    if (connectionStatusMessage !== null) {
+      setLastMessage(connectionStatusMessage)
     }
-  }, [message.value])
+  }, [connectionStatusMessage])
 
   /* -- computed -- */
 
@@ -39,7 +37,7 @@ export default function ConnectionStatus(props: {}): JSX.Element | null {
 
     // If the message is not null, then add the
     // 'active' class name.
-    if (message.value !== null) {
+    if (connectionStatusMessage !== null) {
       classList.push('Active')
     } else {
       classList.push('Inactive')
@@ -53,7 +51,7 @@ export default function ConnectionStatus(props: {}): JSX.Element | null {
 
     // Join and return class names.
     return classList.join(' ')
-  }, [message.value, lastMessage])
+  }, [connectionStatusMessage, lastMessage])
 
   /* -- render -- */
 

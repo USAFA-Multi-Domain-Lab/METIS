@@ -1,23 +1,34 @@
-import { useRef, useState } from 'react'
-import { useGlobalContext, useNavigationMiddleware } from 'src/context/global'
-import SessionClient from 'src/sessions'
-import { compute } from 'src/toolbox'
-import { useEventListener, useMountHandler } from 'src/toolbox/hooks'
+import {
+  useGlobalContext,
+  useNavigationMiddleware,
+} from '@client/context/global'
+
+import type { SessionClient } from '@client/sessions/SessionClient'
+import { compute } from '@client/toolbox'
+import {
+  useEventListener,
+  useMountHandler,
+  useRequireLogin,
+} from '@client/toolbox/hooks'
+import type { TMissionComponentIssue } from '@shared/missions/MissionComponent'
+import { useState } from 'react'
 import { DefaultPageLayout } from '.'
 import Prompt from '../content/communication/Prompt'
-import { TNavigation_P } from '../content/general-layout/Navigation'
-import SessionConfig from '../content/session/SessionConfig'
+import { ESortByMethod } from '../content/general-layout/ListOld'
+import type { TNavigation_P } from '../content/general-layout/Navigation'
+import SessionConfig from '../content/session/config/SessionConfig'
+import ButtonSvgPanel from '../content/user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
 import './SessionConfigPage.scss'
 
 export default function SessionConfigPage({
   session,
   session: { mission },
-}: TSessionConfigPage_P): JSX.Element | null {
-  /* -- state -- */
+  cancelPage,
+}: TSessionConfigPage_P): TReactElement | null {
+  /* -- STATE -- */
 
   const globalContext = useGlobalContext()
-  const [server] = globalContext.server
   const {
     navigateTo,
     beginLoading,
@@ -26,7 +37,9 @@ export default function SessionConfigPage({
     handleError,
     notify,
   } = globalContext.actions
+  const [server] = globalContext.server
   const [config] = useState(session.config)
+  const [isStarting, setIsStarting] = useState<boolean>(false)
   const navButtonEngine = useButtonSvgEngine({
     elements: [
       {
@@ -38,41 +51,144 @@ export default function SessionConfigPage({
       },
     ],
   })
+  const componentWithIssuesButtonEngine = useButtonSvgEngine({
+    elements: [
+      {
+        key: 'warning-transparent',
+        type: 'button',
+        icon: 'warning-transparent',
+        cursor: 'help',
+        description:
+          'If this conflict is not resolved, this mission can still be used to start a session, but the session may not function as expected.',
+      },
+    ],
+  })
+  const { isAuthorized } = useRequireLogin()
 
-  /* -- functions -- */
+  /* -- FUNCTIONS -- */
 
   /**
-   * Redirects to the correct page based on
-   * the session state. Stays on the same page
-   * if the session has not yet started.
+   * Renders JSX for the issue list item.
    */
-  const verifyNavigation = useRef(() => {
-    // If the session is started, navigate to the session page.
-    if (session.state === 'started') {
-      navigateTo(
-        'SessionPage',
-        { session, returnPage: 'HomePage' },
-        { bypassMiddleware: true },
+  const renderMissionComponent = (issue: TMissionComponentIssue) => {
+    const { component, message } = issue
+
+    return (
+      <div className='Row' key={`object-row-${component._id}`}>
+        <ButtonSvgPanel engine={componentWithIssuesButtonEngine} />
+        <div className='RowContent'>{message}</div>
+      </div>
+    )
+  }
+
+  /**
+   * Starts the session for play-testing purposes.
+   */
+  const startTestPlay = async (): Promise<void> => {
+    // Prevent multiple simultaneous start attempts
+    if (isStarting) {
+      console.warn(
+        'Session-start already in progress, ignoring duplicate request.',
       )
+      return
     }
-    // If the session is ended, navigate to the home page.
-    if (session.state === 'ended') {
-      notify('Session has ended.')
-      navigateTo('HomePage', {}, { bypassMiddleware: true })
+    if (cancelPage === 'LobbyPage') {
+      throw new Error('Cannot start play test with LobbyPage as cancel page.')
     }
-  })
+
+    try {
+      let proceedToStart = true
+
+      // Set starting state to prevent duplicate starts
+      setIsStarting(true)
+
+      // If there are issues in the mission given the
+      // current state of the config, then prompt the
+      // user before proceeding.
+      if (mission.getIssuesForConfig(config).length) {
+        // Create a message for the user.
+        let message =
+          `**Warning:** The mission for this session has issues due to unresolved conflicts. If you proceed, the session may not function as expected.\n` +
+          `**What would you like to do?**`
+        // Create a list of choices for the user.
+        let choices: Array<'Edit Mission' | 'Start Anyway' | 'Cancel'> = []
+
+        // Generate choices based on the user's permissions.
+        if (isAuthorized(['missions_write', 'sessions_write_native'])) {
+          choices = ['Edit Mission', 'Start Anyway', 'Cancel']
+        } else if (isAuthorized('sessions_write_native')) {
+          choices = ['Start Anyway', 'Cancel']
+        } else {
+          choices = ['Cancel']
+        }
+
+        // Prompt the user for a choice.
+        let { choice } = await prompt(message, choices, {
+          list: {
+            items: mission.issues,
+            headingText: 'Issues',
+            sortByMethods: [ESortByMethod.Name],
+            searchableProperties: ['message'],
+            renderObjectListItem: renderMissionComponent,
+          },
+        })
+        // If the user cancels or chooses to edit the mission,
+        // do not proceed with starting the session.
+        if (choice === 'Cancel' || choice === 'Edit Mission') {
+          proceedToStart = false
+        }
+        // If the user chooses to edit the mission then navigate
+        // to the mission page.
+        if (choice === 'Edit Mission') {
+          navigateTo('MissionPage', { missionId: mission._id })
+        }
+      }
+
+      // Proceed to start the session if permitted.
+      if (proceedToStart) {
+        beginLoading('Saving session configuration...')
+        await session.$updateConfig(config)
+        // Notify user of session start.
+        beginLoading('Starting play-test...')
+        await session.$start()
+        finishLoading()
+        // Navigate directly to the session page
+        navigateTo(
+          'SessionPage',
+          { session, returnPage: cancelPage },
+          { bypassMiddleware: true },
+        )
+        notify('Successfully started session.')
+      }
+    } catch (error: any) {
+      console.error('Error starting play-test session:')
+      console.error(error)
+      handleError({
+        message:
+          'Failed to start play-test session. Please contact system administrator.',
+        notifyMethod: 'bubble',
+      })
+    } finally {
+      setIsStarting(false)
+    }
+  }
 
   /**
    * Saves the session configuration.
    */
   const save = async (): Promise<void> => {
     try {
-      // Begin loading.
-      beginLoading('Saving session configuration...')
-      // Save the session configuration.
-      await session.$updateConfig(config)
-      // Redirect to the lobby page.
-      navigateTo('LobbyPage', { session })
+      // If this is a testing session (play-test), auto-start it
+      if (config.accessibility === 'testing') {
+        startTestPlay()
+      } else {
+        beginLoading('Saving session configuration...')
+        await session.$updateConfig(config)
+        finishLoading()
+
+        // Redirect to the lobby page for normal sessions
+        navigateTo('LobbyPage', { session })
+      }
     } catch (error) {
       handleError({
         message: 'Failed to save session configuration.',
@@ -84,25 +200,33 @@ export default function SessionConfigPage({
   /**
    * Cancels the configuration.
    */
-  const cancel = (): void => {
-    // Navigate to the lobby page.
-    navigateTo('LobbyPage', { session })
+  const cancel = async (): Promise<void> => {
+    if (config.accessibility === 'testing') {
+      await session.$quit()
+    }
+
+    // Navigate to the specified cancel page.
+    switch (cancelPage) {
+      case 'HomePage':
+        // Navigate to the lobby page.
+        navigateTo(cancelPage, { session })
+        break
+      case 'MissionPage':
+        navigateTo(cancelPage, { missionId: mission._id })
+        break
+      case 'LobbyPage':
+      default:
+        navigateTo('LobbyPage', { session })
+        break
+    }
   }
 
-  /* -- effects -- */
+  /* -- EFFECTS -- */
 
-  // Verify navigation on mount.
   useMountHandler((done) => {
     finishLoading()
-    verifyNavigation.current()
     done()
   })
-  // Verify navigation if the session is ended or destroyed.
-  useEventListener(
-    server,
-    ['session-started', 'session-ended', 'session-destroyed'],
-    () => verifyNavigation.current(),
-  )
 
   // Add navigation middleware to properly
   // quit the session before the user navigates
@@ -110,7 +234,7 @@ export default function SessionConfigPage({
   useNavigationMiddleware(async (to, next) => {
     // If the user is navigating to the lobby page
     // page, permit navigation.
-    if (to === 'LobbyPage') {
+    if (to === 'LobbyPage' || config.accessibility === 'testing') {
       return next()
     }
 
@@ -134,6 +258,23 @@ export default function SessionConfigPage({
     }
   })
 
+  // Handle session setup failures.
+  useEventListener(
+    server,
+    'session-setup-update',
+    () => {
+      if (session.setupFailed) {
+        cancel()
+        handleError({
+          message:
+            'Play-test setup failed. Please contact system administrator.',
+          notifyMethod: 'bubble',
+        })
+      }
+    },
+    [server],
+  )
+
   /* -- COMPUTED -- */
 
   /**
@@ -143,24 +284,26 @@ export default function SessionConfigPage({
     return { buttonEngine: navButtonEngine }
   })
 
+  /**
+   * Text for the save button.
+   */
+  const saveButtonText = compute<string>(() => {
+    if (config.accessibility === 'testing') {
+      return 'Start Play-Test'
+    } else {
+      return 'Save'
+    }
+  })
+
   return (
     <div className='SessionConfigPage Page DarkPage'>
       <DefaultPageLayout navigation={navigation}>
-        <div className='Title'>Session Configuration</div>
-        <div className='DetailSection Section'>
-          <div className='SessionId StaticDetail'>
-            <div className='Label'>Session ID:</div>
-            <div className='Value'>{session._id}</div>
-          </div>
-          <div className='MissionName StaticDetail'>
-            <div className='Label'>Mission:</div>
-            <div className='Value'>{mission.name}</div>
-          </div>
-        </div>
         <SessionConfig
           sessionConfig={config}
           mission={mission}
-          saveButtonText={'Save'}
+          sessionId={session._id}
+          saveButtonText={saveButtonText}
+          disabled={isStarting}
           onSave={save}
           onCancel={cancel}
         />
@@ -177,4 +320,8 @@ export type TSessionConfigPage_P = {
    * The session to configure.
    */
   session: SessionClient
+  /**
+   * The page to navigate to if the configuration is cancelled.
+   */
+  cancelPage: 'HomePage' | 'MissionPage' | 'LobbyPage'
 }

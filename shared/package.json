@@ -1,19 +1,4 @@
 {
-  "name": "metis",
-  "description": "",
-  "main": "index.ts",
-  "scripts": {},
-  "author": "Jordan M. Stokes",
-  "license": "ISC",
-  "dependencies": {
-    "@types/axios": "^0.14.0",
-    "@types/dateformat": "^5.0.2",
-    "@types/seedrandom": "^3.0.2",
-    "@types/uuid": "^9.0.2",
-    "axios": "^1.5.0",
-    "dateformat": "^5.0.3",
-    "memoize-one": "^6.0.0",
-    "seedrandom": "^3.0.5",
-    "uuid": "^9.0.0"
-  }
+  "name": "@metis/shared",
+  "private": true
 }

@@ -1,11 +1,9 @@
-import { Request, Response } from 'express-serve-static-core'
-import UserModel from 'metis/server/database/models/users'
-import { StatusError } from 'metis/server/http'
-import { databaseLogger } from 'metis/server/logging'
-import ServerLogin from 'metis/server/logins'
-import { TUserExistingJson } from 'metis/users'
-import TUserPreferencesJson from 'metis/users/preferences'
-import ApiResponse from '../../library/response'
+import { UserModel } from '@server/database/models/users'
+import { databaseLogger } from '@server/logging'
+import type { ServerLogin } from '@server/logins/ServerLogin'
+import type { TUserPreferencesJson } from '@shared/users/User'
+import { ApiResponse } from '../../library/ApiResponse'
+import { StatusError } from '../../library/StatusError'
 import { preventSystemUserWrite } from '../../library/users'
 
 /**
@@ -15,7 +13,10 @@ import { preventSystemUserWrite } from '../../library/users'
  * @param response The express response.
  * @returns The express response to send to the client.
  */
-const updateUserPreferences = async (request: Request, response: Response) => {
+export const updateUserPreferences: TExpressHandler = async (
+  request,
+  response,
+) => {
   // Extract the updates from the request body.
   let preferences: TUserPreferencesJson = request.body.preferences
   // Get the user that is logged in.
@@ -26,7 +27,7 @@ const updateUserPreferences = async (request: Request, response: Response) => {
     preventSystemUserWrite({ currentUserId: login.userId })
 
     // Update the user preferences.
-    let userDoc: TUserExistingJson = await UserModel.findByIdAndModify(
+    let userDoc = await UserModel.findByIdAndModify(
       login.userId,
       {},
       {
@@ -62,5 +63,3 @@ const updateUserPreferences = async (request: Request, response: Response) => {
     return ApiResponse.error(error, response)
   }
 }
-
-export default updateUserPreferences

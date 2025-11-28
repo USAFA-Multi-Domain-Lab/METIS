@@ -1,7 +1,8 @@
 import Footer from '../content/general-layout/Footer'
-import Navigation, { TNavigation_P } from '../content/general-layout/Navigation'
+import type { TNavigation_P } from '../content/general-layout/Navigation'
+import Navigation from '../content/general-layout/Navigation'
 import AuthPage from './AuthPage'
-import ChangelogPage from './ChangelogPage'
+import DocPage from './DocPage'
 import HomePage from './HomePage'
 import './index.scss'
 import LaunchPage from './LaunchPage'
@@ -28,7 +29,7 @@ export const PAGE_REGISTRY = {
   UserResetPage,
   MissionPage,
   UserPage,
-  ChangelogPage,
+  DocPage,
 }
 
 /* -- components -- */
@@ -40,7 +41,7 @@ export function DefaultPageLayout({
   children,
   navigation,
   includeFooter = true,
-}: TDefaultLayout_P): JSX.Element | null {
+}: TDefaultLayout_P): TReactElement | null {
   // Render.
   return (
     <>

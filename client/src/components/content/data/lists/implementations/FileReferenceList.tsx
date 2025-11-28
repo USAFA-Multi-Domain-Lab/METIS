@@ -1,20 +1,21 @@
+import Prompt from '@client/components/content/communication/Prompt'
 import { useEffect, useRef, useState } from 'react'
-import Prompt from 'src/components/content/communication/Prompt'
 
-import If from 'src/components/content/util/If'
-import { useGlobalContext } from 'src/context/global'
-import ClientFileReference from 'src/files/references'
-import { useDefaultProps } from 'src/toolbox/hooks'
-import { DateToolbox } from '../../../../../../../shared/toolbox/dates'
-import FileToolbox from '../../../../../../../shared/toolbox/files'
-import List, { createDefaultListProps, TList_P } from '../List'
-import ListUpload from '../uploads'
+import If from '@client/components/content/util/If'
+import { useGlobalContext } from '@client/context/global'
+import { ClientFileReference } from '@client/files/ClientFileReference'
+import { useDefaultProps, useRequireLogin } from '@client/toolbox/hooks'
+import { DateToolbox } from '@shared/toolbox/dates/DateToolbox'
+import { FileToolbox } from '@shared/toolbox/files/FileToolbox'
+import type { TList_P } from '../List'
+import List, { createDefaultListProps } from '../List'
+import { ListUpload } from '../uploads'
 
 /**
  * A component for displaying a list of file references.
  * @note Uses the `List` component.
  */
-export default function (props: TFileReferenceList_P): JSX.Element | null {
+export default function (props: TFileReferenceList_P): TReactElement | null {
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
@@ -25,6 +26,7 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
   const importFileTrigger = useRef<HTMLInputElement>(null)
   const [files, setFiles] = props.files
   const [uploads, setUploads] = useState<ListUpload[]>([])
+  const { isAuthorized } = useRequireLogin()
 
   /* -- FUNCTIONS -- */
 
@@ -75,6 +77,71 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
     }
   }
 
+  /**
+   * Handles files being dropped onto the list.
+   * @param incomingFiles The files that were dropped.
+   */
+  const onFileDrop: TList_P<ClientFileReference>['onFileDrop'] = async (
+    incomingFiles,
+  ) => {
+    // Import the files.
+    try {
+      // Prepare uploads.
+      let incomingUploads: ListUpload[] = Array.from(incomingFiles).map(
+        (file) => {
+          let upload = new ListUpload(file.name, file.size, {
+            onCancel: () => {
+              setUploads((prevUploads) =>
+                prevUploads.filter((u) => u !== upload),
+              )
+              notify(`Cancelled upload of "${file.name}".`)
+            },
+          })
+          return upload
+        },
+      )
+
+      // Loop through files dropped and make calls to
+      // upload them.
+      for (let index in incomingUploads) {
+        // Gather file and upload information.
+        let file = incomingFiles[index]
+        let upload: ListUpload = incomingUploads[index]
+
+        // Make call to the API to upload the file.
+        ClientFileReference.$upload(file, {
+          onUploadProgress: (event) => {
+            upload.onProgress(event)
+            setLoadingProgress(
+              ListUpload.calculateTotalProgress(...incomingUploads),
+            )
+          },
+          abortController: upload.abortController,
+        }).then((reference) => {
+          // Once the upload is complete, remove the
+          // upload from the state, and add the reference
+          // returned by the server.
+          setUploads((prevUploads) => prevUploads.filter((u) => u !== upload))
+          setFiles((prevFiles) => [...prevFiles, reference])
+
+          // Notify of success.
+          notify(`Successfully imported "${reference.name}".`)
+        })
+      }
+
+      // Add the uploads to the state to
+      // track progress in the UI.
+      setUploads([...incomingUploads, ...uploads])
+    } catch (error: any) {
+      console.error(error)
+      finishLoading()
+      handleError({
+        message: `Failed to upload files to file store.`,
+        notifyMethod: 'bubble',
+      })
+    }
+  }
+
   /* -- PROPS -- */
 
   const defaultedProps = useDefaultProps(props, {
@@ -89,7 +156,11 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
     ],
     listButtonIcons: ['upload'],
     itemButtonIcons: ['download', 'remove'],
-    initialSorting: { column: 'createdAt', method: 'descending' },
+    initialSorting: {
+      method: 'column-based',
+      column: 'createdAt',
+      direction: 'descending',
+    },
     uploads,
     getListButtonPermissions: (button) => {
       switch (button) {
@@ -196,64 +267,7 @@ export default function (props: TFileReferenceList_P): JSX.Element | null {
       }
     },
     onSuccessfulDeletion: () => {},
-    onFileDrop: async (incomingFiles: FileList) => {
-      // Import the files.
-      try {
-        // Prepare uploads.
-        let incomingUploads: ListUpload[] = Array.from(incomingFiles).map(
-          (file) => {
-            let upload = new ListUpload(file.name, file.size, {
-              onCancel: () => {
-                setUploads((prevUploads) =>
-                  prevUploads.filter((u) => u !== upload),
-                )
-                notify(`Cancelled upload of "${file.name}".`)
-              },
-            })
-            return upload
-          },
-        )
-
-        // Loop through files dropped and make calls to
-        // upload them.
-        for (let index in incomingUploads) {
-          // Gather file and upload information.
-          let file = incomingFiles[index]
-          let upload: ListUpload = incomingUploads[index]
-
-          // Make call to the API to upload the file.
-          ClientFileReference.$upload(file, {
-            onUploadProgress: (event) => {
-              upload.onProgress(event)
-              setLoadingProgress(
-                ListUpload.calculateTotalProgress(...incomingUploads),
-              )
-            },
-            abortController: upload.abortController,
-          }).then((reference) => {
-            // Once the upload is complete, remove the
-            // upload from the state, and add the reference
-            // returned by the server.
-            setUploads((prevUploads) => prevUploads.filter((u) => u !== upload))
-            setFiles((prevFiles) => [...prevFiles, reference])
-
-            // Notify of success.
-            notify(`Successfully imported "${reference.name}".`)
-          })
-        }
-
-        // Add the uploads to the state to
-        // track progress in the UI.
-        setUploads([...incomingUploads, ...uploads])
-      } catch (error: any) {
-        console.error(error)
-        finishLoading()
-        handleError({
-          message: `Failed to upload files to file store.`,
-          notifyMethod: 'bubble',
-        })
-      }
-    },
+    onFileDrop: isAuthorized(['files_write']) ? onFileDrop : null,
   })
 
   /* -- EFFECTS -- */

@@ -1,32 +1,36 @@
-import React, { ReactNode, useEffect, useRef, useState } from 'react'
-import { TAppError, TAppErrorNotifyMethod } from 'src/components/App'
-import { message as connectionStatusMessage } from 'src/components/content/communication/ConnectionStatus'
-import {
-  TPrompt_P,
+import type { TAppError, TAppErrorNotifyMethod } from '@client/components/App'
+import type { TConnectionStatusMessage } from '@client/components/content/communication/ConnectionStatus'
+import type {
   TPromptResult,
-} from 'src/components/content/communication/Prompt'
-import { TButtonMenu_P } from 'src/components/content/user-controls/buttons/ButtonMenu'
-import ButtonSvgEngine from 'src/components/content/user-controls/buttons/panels/engines'
-import { PAGE_REGISTRY, TPage_P, TPageKey } from 'src/components/pages'
-import ServerConnection, { IServerConnectionOptions } from 'src/connect/servers'
-import MetisInfo from 'src/info'
-import ClientLogin from 'src/logins'
-import Notification, { TNotificationOptions } from 'src/notifications'
-import { useInitRenderHandler } from 'src/toolbox/hooks'
-import Logging from 'src/toolbox/logging'
-import ClientUser from 'src/users'
-import { v4 as generateHash } from 'uuid'
-import { ServerEmittedError } from '../../../shared/connect/errors'
-import { TLogin } from '../../../shared/logins'
-import { TExecutionCheats } from '../../../shared/missions/actions/executions'
-import ObjectToolbox, {
-  AnyObject,
+  TPrompt_P,
+} from '@client/components/content/communication/Prompt'
+import type { TButtonMenu_P } from '@client/components/content/user-controls/buttons/ButtonMenu'
+import type { TButtonText_P } from '@client/components/content/user-controls/buttons/ButtonText'
+import type { ButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/engines'
+import type { PAGE_REGISTRY, TPageKey, TPage_P } from '@client/components/pages'
+import type { IServerConnectionOptions } from '@client/connect/ServerConnection'
+import { ServerConnection } from '@client/connect/ServerConnection'
+import { MetisInfo } from '@client/info/MetisInfo'
+import { ClientLogin } from '@client/logins/ClientLogin'
+import type { TNotificationOptions } from '@client/notifications/Notification'
+import { Notification } from '@client/notifications/Notification'
+import { useInitRenderHandler } from '@client/toolbox/hooks'
+import { Logging } from '@client/toolbox/Logging'
+import type { ClientUser } from '@client/users/ClientUser'
+import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
+import type { TLogin } from '@shared/logins'
+import type { TExecutionCheats } from '@shared/missions/actions/ActionExecution'
+import { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
+import type {
+  TAnyObject,
   TWithKey,
-} from '../../../shared/toolbox/objects'
-import { Vector2D } from '../../../shared/toolbox/space'
-import StringToolbox from '../../../shared/toolbox/strings'
+} from '@shared/toolbox/objects/ObjectToolbox'
+import { ObjectToolbox } from '@shared/toolbox/objects/ObjectToolbox'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import type { ReactNode } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
-/* -- constants -- */
+/* -- CONSTANTS -- */
 
 /**
  * The default values of the global context state.
@@ -38,6 +42,7 @@ const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
     version: '',
   }),
   debugMode: false,
+  devOptionsActive: false,
   forcedUpdateCounter: 0,
   server: null,
   login: null,
@@ -45,10 +50,11 @@ const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
   currentPageProps: {},
   appMountHandled: false,
   loading: true,
-  loadingMessage: 'Initializing application...',
+  loadingMessage: 'Loading...',
   loadingMinTimeReached: false,
   loadingProgress: 0,
   loadingPageId: StringToolbox.generateRandomId(),
+  loadingButtons: [],
   pageSwitchMinTimeReached: true,
   backgroundLoaded: false,
   error: null,
@@ -57,6 +63,7 @@ const GLOBAL_CONTEXT_VALUES_DEFAULT: TGlobalContextValues = {
   tooltipDescription: '',
   notifications: [],
   promptData: null,
+  connectionStatusMessage: null,
   cheats: {
     zeroCost: true,
     instantaneous: false,
@@ -111,7 +118,7 @@ const navigationMiddleware: Map<string, TNavigationMiddleware> = new Map<
  */
 const initializeActions = (
   initialState: TGlobalContext,
-  refs: React.MutableRefObject<TGlobalContextValues>,
+  refs: React.RefObject<TGlobalContextValues>,
 ) => {
   /* -- CONSTANTS -- */
 
@@ -131,10 +138,12 @@ const initializeActions = (
   const setPageSwitchMinTimeReached = initialState.pageSwitchMinTimeReached[1]
   const setLoadingProgress = initialState.loadingProgress[1]
   const setLoadingPageId = initialState.loadingPageId[1]
+  const setLoadingButtons = initialState.loadingButtons[1]
   const setError = initialState.error[1]
   const setButtonMenu = initialState.buttonMenu[1]
   const setNotifications = initialState.notifications[1]
   const setPromptData = initialState.promptData[1]
+  const setConnectionStatusMessage = initialState.connectionStatusMessage[1]
 
   /* -- CALLBACKS -- */
 
@@ -171,7 +180,7 @@ const initializeActions = (
 
         // Set the current page props and path.
         setCurrentPageKey(pageKey)
-        setCurrentPageProps({ ...props, key: generateHash() })
+        setCurrentPageProps({ ...props, key: StringToolbox.generateRandomId() })
 
         // If the page switch takes less than
         // the minimum time, wait until the
@@ -224,7 +233,9 @@ const initializeActions = (
         realizePageSwitch()
       }
     },
-    beginLoading: (loadingMessage?: string) => {
+    beginLoading: (loadingMessage: string, options: TLoadingOptions = {}) => {
+      const { buttons = [] } = options
+
       // Set loading state to display loading page.
       setLoading(true)
       setLoadingMessage(
@@ -233,6 +244,7 @@ const initializeActions = (
       setLoadingMinTimeReached(false)
       setLoadingProgress(0)
       setLoadingPageId(StringToolbox.generateRandomId())
+      setLoadingButtons(buttons)
 
       setTimeout(() => {
         const { loading, pageSwitchMinTimeReached } = refs.current
@@ -294,18 +306,19 @@ const initializeActions = (
               // If a message was displayed to the user notifying
               // of connection loss, then show a message notifying
               // of reconnection.
-              if (connectionStatusMessage.value?.color === 'Red') {
+              const { connectionStatusMessage } = refs.current
+              if (connectionStatusMessage?.color === 'Red') {
                 // Update status message.
-                connectionStatusMessage.value = {
+                setConnectionStatusMessage({
                   message: 'Connection reestablished.',
                   color: 'Green',
-                }
+                })
                 // Set a timeout to clear the message.
                 setTimeout(() => {
                   // If the connection status is open, then
                   // clear the message.
                   if (server.status === 'open') {
-                    connectionStatusMessage.value = null
+                    setConnectionStatusMessage(null)
                   }
                 }, CONNECT_MESSAGE_CLEAR_DELAY)
               }
@@ -324,10 +337,10 @@ const initializeActions = (
                 // then display a connection loss message.
                 if (server.status !== 'open') {
                   // Update status message.
-                  connectionStatusMessage.value = {
+                  setConnectionStatusMessage({
                     message: 'Connection dropped. Attempting to reconnect...',
                     color: 'Red',
-                  }
+                  })
                 }
               }, 3000)
             },
@@ -358,7 +371,7 @@ const initializeActions = (
                 case ServerEmittedError.CODE_UNAUTHENTICATED:
                   if (login !== null) {
                     setLogin(null)
-                    connectionStatusMessage.value = null
+                    setConnectionStatusMessage(null)
                   }
                   break
                 case ServerEmittedError.CODE_SWITCHED_CLIENT:
@@ -486,7 +499,14 @@ const initializeActions = (
       choices: TChoice[],
       options: TPromptOptions<TChoice, TList> = {},
     ): Promise<TPromptResult<TChoice, TList>> => {
-      const { textField, capitalizeChoices, list, defaultChoice } = options
+      const {
+        textField,
+        capitalizeChoices,
+        list,
+        defaultChoice,
+        dangerous,
+        dangerousChoices,
+      } = options
 
       // Return a promise that will be resolved once the
       // user makes a choice.
@@ -500,7 +520,9 @@ const initializeActions = (
           capitalizeChoices,
           list,
           defaultChoice,
-          key: generateHash(),
+          dangerous,
+          dangerousChoices,
+          key: StringToolbox.generateRandomId(),
         }
 
         // Store prompt in state.
@@ -522,9 +544,7 @@ const initializeActions = (
         position,
         positioningTarget,
         highlightTarget,
-        onCloseRequest: () => {
-          setButtonMenu(null)
-        },
+        onCloseRequest: () => setButtonMenu(null),
       }
 
       // Update the state.
@@ -647,7 +667,7 @@ const useGlobalContextDefinition = (): TGlobalContext => {
  * @param props Props containing the children to wrap in the provider.
  * @returns The JSX of the provider wrapping the children passed.
  */
-function GlobalContextProvider(props: { children: ReactNode }): JSX.Element {
+function GlobalContextProvider(props: { children: ReactNode }): TReactElement {
   // Extract props.
   const { children } = props
 
@@ -738,13 +758,22 @@ export type TGlobalContextValues = {
    * @note This is only used in development environments.
    */
   debugMode: boolean
+  /**
+   * When active, the dev-options modal will be
+   * displayed.
+   */
+  devOptionsActive: boolean
   forcedUpdateCounter: number
   server: ServerConnection | null
   login: TLogin<ClientUser>
   currentPageKey: TPageKey
-  currentPageProps: AnyObject
+  currentPageProps: TAnyObject
   appMountHandled: boolean
   loading: boolean
+  /**
+   * The message to display on the loading page
+   * when {@link TGlobalContextValues.loading} is set to true.
+   */
   loadingMessage: string
   loadingMinTimeReached: boolean
   /**
@@ -758,6 +787,11 @@ export type TGlobalContextValues = {
    * is started.
    */
   loadingPageId: string
+  /**
+   * The buttons to display on the loading page
+   * when {@link TGlobalContextValues.loading} is set to true.
+   */
+  loadingButtons: TButtonText_P[]
   pageSwitchMinTimeReached: boolean
   /**
    * Tracks whether the large background image
@@ -771,13 +805,18 @@ export type TGlobalContextValues = {
    * @note If null, no button menu will be displayed.
    */
   buttonMenu: TWithKey<TButtonMenu_P> | null
-  tooltips: React.RefObject<HTMLDivElement>
+  tooltips: React.RefObject<HTMLDivElement | null>
   tooltipDescription: string
   notifications: Notification[]
   /**
    * Current prompt to display to the user.
    */
   promptData: TWithKey<TPrompt_P<any, any>> | null
+  /**
+   * The connection status message to display to a user
+   * regarding their current connection to the server.
+   */
+  connectionStatusMessage: TConnectionStatusMessage | null
   /**
    * Global settings for cheats when executing actions.
    * This will ensure that when the user executes an action,
@@ -829,7 +868,7 @@ export type TGlobalContextActions = {
    * @param {string | undefined} loadingMessage The message to display until
    * "finishLoading" is called. Defaults to "Initializing application...".
    */
-  beginLoading: (loadingMessage?: string) => void
+  beginLoading: (loadingMessage: string, options?: TLoadingOptions) => void
   /**
    * This will end the loading process started by the
    * beginLoading function, bringing the user to the
@@ -934,6 +973,20 @@ export type TNavigateOptions = {
    * @default false
    */
   bypassMiddleware?: boolean
+}
+
+/**
+ * Options available when beginning a loading sequence
+ * using the beginLoading method in the global context
+ * actions.
+ */
+export type TLoadingOptions = {
+  /**
+   * Buttons to display on the loading page. This gives the
+   * user interactable options while waiting for the loading
+   * to conclude.
+   */
+  buttons?: TButtonText_P[]
 }
 
 /**

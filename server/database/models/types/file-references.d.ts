@@ -1,6 +1,6 @@
-import { TFileReferenceJson } from 'metis/files/references'
-import { HydratedDocument, Model, Query } from 'mongoose'
-import { TMetisDoc } from '.'
+import type { TFileReferenceJson } from '@shared/files/FileReference'
+import type { HydratedDocument, Model, Query } from 'mongoose'
+import type { TMetisDoc } from '..'
 
 /**
  * A file reference stored in the database, which

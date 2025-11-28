@@ -1,8 +1,8 @@
+import { useCallbackRef, useResizeObserver } from '@client/toolbox/hooks'
+import type { MetisComponent } from '@shared/MetisComponent'
 import { useEffect, useRef, useState } from 'react'
-import { useCallbackRef, useResizeObserver } from 'src/toolbox/hooks'
-import { MetisComponent } from '../../../../../../shared'
 import { useListContext } from './List'
-import { TListPage_P } from './pages/ListPage'
+import type { TListPage_P } from './pages/ListPage'
 
 /**
  * Handles resizing of the list by recalculating
@@ -10,7 +10,7 @@ import { TListPage_P } from './pages/ListPage'
  */
 export default function ListResizeHandler<
   TItem extends MetisComponent,
->(): JSX.Element | null {
+>(): TReactElement | null {
   /* -- STATE -- */
 
   const listContext = useListContext<TItem>()

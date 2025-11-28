@@ -29,14 +29,7 @@ We'll create a **"Mission Control System"** that:
 Create `/integration/target-env/mission-control/schema.ts`:
 
 ```typescript
-import TargetEnvSchema from '../../library/target-env-classes'
-import { RestApi } from '../../library/api/rest-api'
-
-/**
- * Configured REST API client for the Mission Control environment.
- * Uses the 'mission-control' configuration from environment.json
- */
-export const MissionControlApi = new RestApi('mission-control')
+import { RestApi } from '@metis/api/RestApi'
 
 /**
  * Advanced target environment for mission control operations.
@@ -48,33 +41,82 @@ const MissionControl = new TargetEnvSchema({
   version: '2.1.0',
 })
 
+/**
+ * Shared REST API client instance initialized during environment setup.
+ * Available to all targets within this environment during the session.
+ */
+let MissionControlApi: RestApi | null = null
+
+/**
+ * Initialize API client when session starts.
+ */
+MissionControl.on('environment-setup', async (context) => {
+  if (!context.config.targetEnvConfig) {
+    throw new Error('No Mission Control configuration selected.')
+  }
+
+  // Initialize REST API client from selected configuration
+  MissionControlApi = RestApi.fromConfig(context.config.targetEnvConfig.data)
+  context.sendOutput('✅ Mission Control API client initialized')
+})
+
+/**
+ * Clean up API client when session ends or resets.
+ */
+MissionControl.on('environment-teardown', async (context) => {
+  MissionControlApi = null
+  context.sendOutput('✅ Mission Control API client cleaned up')
+})
+
 export default MissionControl
+export { MissionControlApi }
 ```
 
 ## Step 2: Environment Configuration
 
-Add to your `environment.json` file (or upcoming `.env` file):
+Configure connection details in `/integration/target-env/mission-control/configs.json`:
 
 ```json
 {
-  "mission-control": {
-    "protocol": "https",
-    "address": "api.mission-control.example.com",
-    "port": 443,
-    "apiKey": "your-api-key-here",
-    "rejectUnauthorized": true
-  }
+  "configs": [
+    {
+      "name": "Production Mission Control",
+      "data": {
+        "protocol": "https",
+        "host": "api.mission-control.example.com",
+        "port": 443,
+        "apiKey": "your-production-api-key",
+        "rejectUnauthorized": true
+      },
+      "permissions": ["update-environment-config"]
+    },
+    {
+      "name": "Development Mission Control",
+      "data": {
+        "protocol": "http",
+        "host": "localhost",
+        "port": 8080,
+        "apiKey": "dev-api-key",
+        "rejectUnauthorized": false
+      },
+      "permissions": ["update-environment-config"]
+    }
+  ]
 }
 ```
+
+**Configuration Selection:**
+
+- Managers select configurations in the session UI before starting
+- Different configurations for production, staging, and development
+- See [configs.json Reference](../references/configs-json.md) for details
 
 ## Step 3: Communication Target
 
 Create `/integration/target-env/mission-control/targets/communication/schema.ts`:
 
 ```typescript
-import TargetSchema from '../../../../library/target-env-classes/targets'
 import { MissionControlApi } from '../../schema'
-import Dependency from 'metis/target-environments/dependencies'
 
 /**
  * Secure communication target demonstrating API calls and dependency patterns.
@@ -85,6 +127,13 @@ const SecureCommunication = new TargetSchema({
   script: async (context) => {
     const { forceMetadata, recipientId, message, priority, encryptionLevel } =
       context.effect.args
+
+    // Verify API client is initialized
+    if (!MissionControlApi) {
+      throw new Error(
+        'Mission Control API not initialized. Check environment setup.',
+      )
+    }
 
     try {
       // Prepare message payload
@@ -108,10 +157,7 @@ const SecureCommunication = new TargetSchema({
       }
 
       // Send message using configured REST API client
-      const result = await MissionControlApi.post(
-        `${MissionControlApi.baseUrl}/v1/communications`,
-        payload,
-      )
+      const result = await MissionControlApi.post('/v1/communications', payload)
 
       if (!result.success) {
         throw new Error(`Failed to send message: ${result.error}`)
@@ -173,7 +219,7 @@ const SecureCommunication = new TargetSchema({
       type: 'dropdown',
       required: false,
       groupingId: 'security',
-      dependencies: [Dependency.EQUALS_SOME('priority', ['high', 'urgent'])],
+      dependencies: [TargetDependency.EQUALS_SOME('priority', ['high', 'urgent'])],
       options: [
         { _id: 'basic', name: 'Basic (AES-128)', value: 'aes128' },
         { _id: 'standard', name: 'Standard (AES-256)', value: 'aes256' },
@@ -192,9 +238,7 @@ export default SecureCommunication
 Create `/integration/target-env/mission-control/targets/file-transfer/schema.ts`:
 
 ```typescript
-import TargetSchema from '../../../../library/target-env-classes/targets'
 import { MissionControlApi } from '../../schema'
-import Dependency from 'metis/target-environments/dependencies'
 
 /**
  * File transfer target demonstrating file operations and boolean dependencies.
@@ -212,6 +256,13 @@ const FileTransfer = new TargetSchema({
       compressionLevel,
     } = context.effect.args
 
+    // Verify API client is initialized
+    if (!MissionControlApi) {
+      throw new Error(
+        'Mission Control API not initialized. Check environment setup.',
+      )
+    }
+
     try {
       if (operation === 'upload') {
         const encryptionInfo = encryptionEnabled ? '(encrypted)' : ''
@@ -226,16 +277,13 @@ const FileTransfer = new TargetSchema({
         )
 
         // Upload file using configured REST API client
-        const result = await MissionControlApi.post(
-          `${MissionControlApi.baseUrl}/v1/files`,
-          {
-            filePath: filePath,
-            operation: 'upload',
-            encrypted: encryptionEnabled || false,
-            compressionLevel: compressionLevel || 'none',
-            uploadedBy: 'METIS-System',
-          },
-        )
+        const result = await MissionControlApi.post('/v1/files', {
+          filePath: filePath,
+          operation: 'upload',
+          encrypted: encryptionEnabled || false,
+          compressionLevel: compressionLevel || 'none',
+          uploadedBy: 'METIS-System',
+        })
 
         if (!result.success) throw new Error(`Upload failed: ${result.error}`)
 
@@ -248,9 +296,7 @@ const FileTransfer = new TargetSchema({
           forceKey: forceMetadata.forceKey,
         })
 
-        const result = await MissionControlApi.get(
-          `${MissionControlApi.baseUrl}/v1/files/${filePath}`,
-        )
+        const result = await MissionControlApi.get(`/v1/files/${filePath}`)
 
         if (!result.success) throw new Error(`Download failed: ${result.error}`)
 
@@ -300,7 +346,7 @@ const FileTransfer = new TargetSchema({
       type: 'boolean',
       required: false,
       groupingId: 'operation',
-      dependencies: [Dependency.EQUALS('operation', 'upload')],
+      dependencies: [TargetDependency.EQUALS('operation', 'upload')],
       tooltipDescription: 'Encrypt file during upload',
     },
     {
@@ -309,7 +355,7 @@ const FileTransfer = new TargetSchema({
       type: 'dropdown',
       required: false,
       groupingId: 'operation',
-      dependencies: [Dependency.TRUTHY('encryptionEnabled')],
+      dependencies: [TargetDependency.TRUTHY('encryptionEnabled')],
       options: [
         { _id: 'none', name: 'No Compression', value: 'none' },
         { _id: 'low', name: 'Low Compression', value: 'low' },
@@ -367,13 +413,13 @@ This example demonstrates the most commonly used dependency types:
 
 ```typescript
 // Pattern 1: Multiple value matching
-dependencies: [Dependency.EQUALS_SOME('priority', ['high', 'urgent'])]
+dependencies: [TargetDependency.EQUALS_SOME('priority', ['high', 'urgent'])]
 
 // Pattern 2: Simple equality check
-dependencies: [Dependency.EQUALS('operation', 'upload')]
+dependencies: [TargetDependency.EQUALS('operation', 'upload')]
 
 // Pattern 3: Boolean state check
-dependencies: [Dependency.TRUTHY('encryptionEnabled')]
+dependencies: [TargetDependency.TRUTHY('encryptionEnabled')]
 ```
 
 ### **How Dependencies Work**
@@ -388,10 +434,13 @@ When implementing similar patterns in production:
 
 ### **API Configuration**
 
-- Store sensitive credentials in environment variables, not `environment.json`
-- Use proper SSL/TLS certificate validation
+- Store configurations in `configs.json` with appropriate permissions
+- Use proper SSL/TLS certificate validation (`rejectUnauthorized: true`)
+- Use environment hooks for API client initialization and cleanup
 - Implement retry logic for network failures
 - Add request timeout handling
+
+**Learn more:** See **[configs.json Reference](../references/configs-json.md)** and **[Environment Hooks Guide](../guides/environment-hooks.md)**
 
 ### **Error Handling**
 
@@ -413,18 +462,37 @@ When implementing similar patterns in production:
 - Use encryption for sensitive data transmission
 - Implement proper authentication for API calls
 
+### **State Management with Data Stores**
+
+For production scenarios requiring state persistence or cross-target coordination, utilize **data stores**:
+
+```typescript
+script: async (context) => {
+  // Store data for the current session
+  await context.localStore.set('lastMessageId', messageId)
+
+  // Retrieve previously stored data
+  const lastId = await context.localStore.get('lastMessageId')
+
+  // Share data across all sessions (global scope)
+  await context.globalStore.set('systemStatus', 'active')
+}
+```
+
+**Learn more:** See the **[Data Stores Guide](../guides/data-stores.md)** and **[Context API Reference](../references/context-api.md)** for complete usage patterns, caching strategies, and cross-target coordination examples.
+
 ## Extending This Example
 
 ### **Add More Dependency Types**
 
 ```typescript
 // Show argument only when another is NOT set
-dependencies: [Dependency.NOT_EQUALS('mode', 'simple')]
+dependencies: [TargetDependency.NOT_EQUALS('mode', 'simple')]
 
 // Multiple conditions (AND logic)
 dependencies: [
-  Dependency.EQUALS('operation', 'upload'),
-  Dependency.TRUTHY('advancedMode'),
+  TargetDependency.EQUALS('operation', 'upload'),
+  TargetDependency.TRUTHY('advancedMode'),
 ]
 ```
 
@@ -457,22 +525,20 @@ Start with this structure and customize:
 ### **Essential Imports**
 
 ```typescript
-import TargetSchema from '../../../../library/target-env-classes/targets'
-import { MissionControlApi } from '../../schema'
-import Dependency from 'metis/target-environments/dependencies'
+import { RestApi } from '@metis/api/RestApi'
 ```
 
 ### **Common Dependency Patterns**
 
 ```typescript
 // Show when value equals one of several options
-Dependency.EQUALS_SOME('field', ['option1', 'option2'])
+TargetDependency.EQUALS_SOME('field', ['option1', 'option2'])
 
 // Show when value equals specific option
-Dependency.EQUALS('field', 'value')
+TargetDependency.EQUALS('field', 'value')
 
 // Show when boolean field is checked
-Dependency.TRUTHY('booleanField')
+TargetDependency.TRUTHY('booleanField')
 ```
 
 ### **Script Structure**
@@ -498,5 +564,6 @@ script: async (context) => {
 ## Related Documentation
 
 - **[Basic Target Example](basic-target.md)** - Start here for foundation concepts
+- **[Data Stores Guide](../guides/data-stores.md)** - Session state management and caching
 - **[Defining Targets Guide](../guides/defining-targets.md)** - Target development patterns
 - **[Schema Documentation](../references/schemas.md)** - TypeScript interfaces and types

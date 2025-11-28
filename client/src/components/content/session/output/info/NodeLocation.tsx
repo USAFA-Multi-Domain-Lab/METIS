@@ -8,7 +8,7 @@ import './OutputInfo.scss'
  * that generated the output.
  */
 export default function () {
-  const { output, selectNode } = useOutputContext()
+  const { output } = useOutputContext()
   const { sourceNode } = output
 
   // Render nothing if there is no node.
@@ -18,7 +18,6 @@ export default function () {
     <div
       className='NodeLocation'
       onClick={() => {
-        selectNode(sourceNode)
         sourceNode.requestCenterOnMap()
       }}
     >

@@ -62,12 +62,10 @@ context.globalStore.use('scenarioState', {
 Stores are available through the context object passed to your target scripts:
 
 ```typescript
-import TargetSchema from '../../../library/target-env-classes/targets'
-
 export default new TargetSchema({
   name: 'Store Example',
   description: 'Demonstrates basic store usage',
-  script: async (context, args) => {
+  script: async (context) => {
     // Access local store (target environment specific)
     const localStore = context.localStore
 
@@ -85,7 +83,7 @@ export default new TargetSchema({
 Use the `use()` method to get or set data with a default value:
 
 ```typescript
-script: async (context, args) => {
+script: async (context) => {
   // Get or initialize a counter
   const counter = context.localStore.use('counter', 0)
 
@@ -124,7 +122,7 @@ const apiCache = context.localStore.use<Map<string, any>>('apiCache', new Map())
 Cache expensive API calls to avoid repeated requests:
 
 ```typescript
-script: async (context, args) => {
+script: async (context) => {
   const apiCache = context.localStore.use<Map<string, any>>(
     'apiCache',
     new Map(),
@@ -153,7 +151,7 @@ Track session-wide state across multiple target environments:
 
 ```typescript
 // Target Environment A
-script: async (context, args) => {
+script: async (context) => {
   const sessionState = context.globalStore.use('sessionState', {
     authenticated: false,
     currentUser: null,
@@ -166,7 +164,7 @@ script: async (context, args) => {
 }
 
 // Target Environment B (different target, same session)
-script: async (context, args) => {
+script: async (context) => {
   const sessionState = context.globalStore.use('sessionState', {})
 
   if (!sessionState.value.authenticated) {
@@ -183,7 +181,7 @@ script: async (context, args) => {
 Store target-specific configuration that persists across script runs:
 
 ```typescript
-script: async (context, args) => {
+script: async (context) => {
   const config = context.localStore.use('config', {
     retryAttempts: 3,
     timeout: 5000,
@@ -209,7 +207,7 @@ script: async (context, args) => {
 Track progress in multi-step operations:
 
 ```typescript
-script: async (context, args) => {
+script: async (context) => {
   const batchState = context.localStore.use('batchProcessing', {
     totalItems: 0,
     processedItems: 0,
@@ -277,7 +275,7 @@ const apiCache = context.localStore.use<Map<string, CacheEntry>>(
 - **Avoid storing large objects**: Consider external storage for large datasets
 
 ```typescript
-script: async (context, args) => {
+script: async (context) => {
   // Clean up old cache entries
   const cache = context.localStore.use<Map<string, any>>('cache', new Map())
 
@@ -297,7 +295,7 @@ script: async (context, args) => {
 - **Log store operations**: Help with debugging and monitoring
 
 ```typescript
-script: async (context, args) => {
+script: async (context) => {
   try {
     const config = context.localStore.use('config', {})
 
@@ -325,7 +323,7 @@ interface UserSession {
   permissions: string[]
 }
 
-script: async (context, args) => {
+script: async (context) => {
   // Type-safe store usage
   const session = context.globalStore.use<UserSession>('userSession', {
     userId: '',
@@ -346,13 +344,10 @@ script: async (context, args) => {
 Here's a complete example showing how to use stores for a multi-step deployment workflow:
 
 ```typescript
-// targets/deploy-start/schema.ts
-import TargetSchema from '../../../../library/target-env-classes/targets'
+// targets/deploy-finish/schema.ts
 
-export default new TargetSchema({
-  name: 'Start Deployment',
-  description: 'Initializes a new deployment workflow',
-  script: async (context, args) => {
+export default new TargetSchema({ deployment workflow',
+  script: async (context) => {
     const deployment = context.globalStore.use('deployment', {
       id: null,
       status: 'idle',
@@ -388,12 +383,11 @@ export default new TargetSchema({
 
 ```typescript
 // targets/deploy-step/schema.ts
-import TargetSchema from '../../../../library/target-env-classes/targets'
 
 export default new TargetSchema({
   name: 'Execute Deployment Step',
   description: 'Executes a single step in the deployment workflow',
-  script: async (context, args) => {
+  script: async (context) => {
     const deployment = context.globalStore.use('deployment', {})
 
     if (!deployment.value.id) {
@@ -440,12 +434,11 @@ export default new TargetSchema({
 
 ```typescript
 // targets/deploy-status/schema.ts
-import TargetSchema from '../../../../library/target-env-classes/targets'
 
 export default new TargetSchema({
   name: 'Deployment Status',
   description: 'Gets the current status of the active deployment',
-  script: async (context, args) => {
+  script: async (context) => {
     const deployment = context.globalStore.use('deployment', {})
 
     if (!deployment.value.id) {

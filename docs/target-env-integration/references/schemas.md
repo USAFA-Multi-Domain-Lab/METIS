@@ -26,8 +26,6 @@ The `TargetEnvSchema` class represents a complete target environment - a collect
 ### Constructor
 
 ```typescript
-import TargetEnvSchema from '../../library/target-env-classes'
-
 const targetEnv = new TargetEnvSchema({
   name: 'My Target Environment',
   description: 'A collection of targets for system integration',
@@ -80,15 +78,13 @@ The `TargetSchema` class represents an individual target within a target environ
 ### Constructor
 
 ```typescript
-import TargetSchema from '../../../../library/target-env-classes/targets'
-
 const target = new TargetSchema({
   name: 'Create User',
   description: 'Creates a new user account in the system',
   migrations: new TargetMigrationRegistry(),
-  script: async (context, args) => {
+  script: async (context) => {
     // Target implementation
-    await createUser(args.username, args.email)
+    await createUser(context.effect.args.username, context.effect.args.email)
   },
   args: [
     {
@@ -138,13 +134,22 @@ const target = new TargetSchema({
 
 #### `script` (function, required)
 
-The execution function that performs the target's action. This function receives context and arguments, and returns void.
+The execution function that performs the target's action. This function receives a context object with properties for accessing effect data, mission information, and methods for interacting with METIS. The context also provides data stores for caching and sharing data between script executions within a session.
 
 ```typescript
 const target = new TargetSchema({
-  script: async (context, args) => {
+  script: async (context) => {
+    // Access effect arguments
+    const { username, email } = context.effect.args
+
+    // Use data stores for caching or session state
+    const userCache = context.localStore.use('userCache', new Map())
+
     // Your target logic here
-    await performAction(args)
+    await performAction({ username, email })
+
+    // Send output to mission interface
+    context.sendOutput('User created successfully')
   },
   // ... other properties
 })
@@ -201,39 +206,6 @@ const target = new TargetSchema({
 })
 ```
 
-## Context API
-
-The `context` parameter in your target script provides access to METIS runtime services and session data. Here are the key properties available:
-
-### Core Properties
-
-- **`effect`** - Information about the current effect being executed
-- **`user`** - Details about the user who triggered the effect
-- **`mission`** - Information about the current mission
-- **`session`** - Session metadata and details
-
-### Data Stores
-
-METIS provides two types of stores for caching and sharing data between script executions:
-
-- **`localStore`** - Data specific to the current session and target environment
-- **`globalStore`** - Data shared across all target environments within the session
-
-### Communication & Control Methods
-
-The context object exposes several callback methods for manipulating the session and providing feedback to the members:
-
-- **`sendOutput(message, options)`** — Send messages to the output panel
-- **`blockNode(options)`** — Block the node from further interaction
-- **`unblockNode(options)`** — Unblock the node to allow further interaction
-- **`openNode(options)`** — Open the node to reveal the next set of nodes
-- **`modifySuccessChance(operand, options)`** — Modify an action's chance of success
-- **`modifyProcessTime(operand, options)`** — Modify an action's process time
-- **`modifyResourceCost(operand, options)`** — Modify an action's resource cost
-- **`modifyResourcePool(operand, options)`** — Modify the resource pool by a given amount
-- **`grantFileAccess(fileId, forceKey)`** — Grant access to a file for a specific force
-- **`revokeFileAccess(fileId, forceKey)`** — Revoke access to a file for a specific force
-
 ## Best Practices
 
 ### Environment Organization
@@ -263,7 +235,6 @@ Each target environment gets its own file with a single default export:
 
 ```typescript
 // File: integration/target-env/user-management/schema.ts
-import TargetEnvSchema from '../../library/target-env-classes'
 
 const userManagementEnv = new TargetEnvSchema({
   name: 'User Management System',
@@ -281,19 +252,25 @@ Each target gets its own file with a single default export:
 
 ```typescript
 // File: integration/target-env/user-management/targets/create-user/schema.ts
-import TargetSchema from '../../../../library/target-env-classes/targets'
-import { RestApi } from '../../../../library/api/rest-api'
+import { RestApi } from '@metis/api/RestApi'
 
 const createUserTarget = new TargetSchema({
   name: 'Create User',
   description: 'Creates a new user account with specified permissions',
-  script: async (context, args) => {
-    const api = new RestApi('userSystem')
+  script: async (context) => {
+    const { username, email, role } = context.effect.args
+    // Verify configuration is selected
+    if (!context.config.targetEnvConfig) {
+      throw new Error('No configuration selected.')
+    }
+
+    // Create API client from configuration
+    const api = RestApi.fromConfig(context.config.targetEnvConfig.data)
 
     await api.post('/users', {
-      username: args.username,
-      email: args.email,
-      role: args.role || 'user',
+      username: username,
+      email: email,
+      role: role || 'user',
     })
   },
   args: [
@@ -330,16 +307,19 @@ export default createUserTarget
 
 ```typescript
 // File: integration/target-env/user-management/targets/delete-user/schema.ts
-import TargetSchema from '../../../../library/target-env-classes/targets'
-import { RestApi } from '../../../../library/api/rest-api'
+import { RestApi } from '@metis/api/RestApi'
 
 const deleteUserTarget = new TargetSchema({
   name: 'Delete User',
   description: 'Removes a user account from the system',
-  script: async (context, args) => {
-    const api = new RestApi('userSystem')
+  script: async (context) => {
+    const { userId } = context.effect.args
+    if (!context.config.targetEnvConfig) {
+      throw new Error('No configuration selected.')
+    }
+    const api = RestApi.fromConfig(context.config.targetEnvConfig.data)
 
-    await api.delete(`/users/${args.userId}`)
+    await api.delete(`/users/${userId}`)
   },
   args: [
     {
@@ -360,5 +340,7 @@ export default deleteUserTarget
 
 - **[Creating Target Environments](../guides/creating-target-environments.md)** - Step-by-step guide for building environments
 - **[Defining Targets](../guides/defining-targets.md)** - Best practices for target definition
+- **[Data Stores](../guides/data-stores.md)** - Caching and sharing data between script executions
+- **[Context API](./context-api.md)** - Complete context object reference and data store API
 - **[Argument Types](../guides/argument-types.md)** - Working with target arguments
 - **[REST API](./rest-api.md)** - HTTP client for target implementations

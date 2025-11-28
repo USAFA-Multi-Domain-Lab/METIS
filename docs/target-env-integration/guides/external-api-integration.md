@@ -34,12 +34,6 @@ First, configure your REST client in your target environment schema:
 
 ```typescript
 // integration/target-env/my-service/schema.ts
-import TargetEnvSchema from '../../library/target-env-classes'
-import { RestApi } from '../../library/api/rest-api'
-
-// Create a REST client for your service
-export const MyServiceApi = new RestApi('my-service')
-
 export default new TargetEnvSchema({
   name: 'My Service Integration',
   description: 'Integration with My Service API',
@@ -49,21 +43,27 @@ export default new TargetEnvSchema({
 
 ### Environment Configuration
 
-Configure the connection details in your `environment.json`:
+Configure connection details in `configs.json`:
 
 ```json
-{
-  "my-service": {
-    "protocol": "https",
-    "address": "api.myservice.com",
-    "port": 443,
-    "apiKey": "${MY_SERVICE_API_KEY}",
-    "rejectUnauthorized": true
+// integration/target-env/my-service/configs.json
+[
+  {
+    "_id": "my-service-production",
+    "name": "Production API",
+    "description": "Production environment configuration",
+    "data": {
+      "protocol": "https",
+      "host": "api.myservice.com",
+      "port": 443,
+      "apiKey": "your-api-key-here",
+      "rejectUnauthorized": true
+    }
   }
-}
+]
 ```
 
-> 💡 **Tip**: Use environment variables for sensitive data like API keys.
+> 💡 **Tip**: Keep `configs.json` files secure with 600 permissions and never commit real credentials to version control. See [configs.json Reference](../references/configs-json.md) for details.
 
 ## Authentication Patterns
 
@@ -72,10 +72,20 @@ Configure the connection details in your `environment.json`:
 Most common pattern for service-to-service communication:
 
 ```typescript
+import { RestApi } from '@metis/api/RestApi'
+
 // In your target script
 script: async (context) => {
+  // Get configuration from session
+  if (!context.config.targetEnvConfig) {
+    throw new Error('No configuration selected for this session.')
+  }
+
+  // Create API client with selected config
+  const api = RestApi.fromConfig(context.config.targetEnvConfig.data)
+
   try {
-    const response = await MyServiceApi.get('/users')
+    const response = await api.get('/users')
 
     context.sendOutput(`Found ${response.data.length} users`)
     return response.data
@@ -91,10 +101,19 @@ script: async (context) => {
 For services requiring custom authentication:
 
 ```typescript
+import { RestApi } from '@metis/api/RestApi'
+
 script: async (context) => {
-  const response = await MyServiceApi.get('/endpoint', {
+  if (!context.config.targetEnvConfig) {
+    throw new Error('No configuration selected.')
+  }
+
+  const api = RestApi.fromConfig(context.config.targetEnvConfig.data)
+  const { apiKey } = context.config.targetEnvConfig.data
+
+  const response = await api.get('/endpoint', {
     headers: {
-      'X-API-Key': MyServiceApi.config.apiKey,
+      'X-API-Key': apiKey,
       'X-Client-Version': '1.0.0',
       'User-Agent': 'METIS/1.0',
     },
@@ -109,12 +128,20 @@ script: async (context) => {
 ### GET Requests (Data Retrieval)
 
 ```typescript
+import { RestApi } from '@metis/api/RestApi'
+
 script: async (context) => {
   const { userId } = context.effect.args
 
+  if (!context.config.targetEnvConfig) {
+    throw new Error('No configuration selected.')
+  }
+
+  const api = RestApi.fromConfig(context.config.targetEnvConfig.data)
+
   context.sendOutput(`Fetching user data for ID: ${userId}`)
 
-  const response = await MyServiceApi.get(`/users/${userId}`)
+  const response = await api.get(`/users/${userId}`)
 
   context.sendOutput(`User found: ${response.data.name}`)
 
@@ -128,8 +155,16 @@ script: async (context) => {
 ### POST Requests (Data Creation)
 
 ```typescript
+import { RestApi } from '@metis/api/RestApi'
+
 script: async (context) => {
   const { name, email, role } = context.effect.args
+
+  if (!context.config.targetEnvConfig) {
+    throw new Error('No configuration selected.')
+  }
+
+  const api = RestApi.fromConfig(context.config.targetEnvConfig.data)
 
   context.sendOutput(`Creating new user: ${name}`)
 
@@ -140,7 +175,7 @@ script: async (context) => {
     created_at: new Date().toISOString(),
   }
 
-  const response = await MyServiceApi.post('/users', newUser)
+  const response = await api.post('/users', newUser)
 
   context.sendOutput(`User created with ID: ${response.data.id}`)
 }
@@ -149,12 +184,20 @@ script: async (context) => {
 ### PUT/PATCH Requests (Data Updates)
 
 ```typescript
+import { RestApi } from '@metis/api/RestApi'
+
 script: async (context) => {
   const { userId, updates } = context.effect.args
 
+  if (!context.config.targetEnvConfig) {
+    throw new Error('No configuration selected.')
+  }
+
+  const api = RestApi.fromConfig(context.config.targetEnvConfig.data)
+
   context.sendOutput(`Updating user ${userId}`)
 
-  const response = await MyServiceApi.patch(`/users/${userId}`, updates)
+  const response = await api.patch(`/users/${userId}`, updates)
 
   context.sendOutput('User updated successfully')
 }
@@ -163,12 +206,20 @@ script: async (context) => {
 ### DELETE Requests (Data Removal)
 
 ```typescript
+import { RestApi } from '@metis/api/RestApi'
+
 script: async (context) => {
   const { userId } = context.effect.args
 
+  if (!context.config.targetEnvConfig) {
+    throw new Error('No configuration selected.')
+  }
+
+  const api = RestApi.fromConfig(context.config.targetEnvConfig.data)
+
   context.sendOutput(`Deleting user ${userId}`)
 
-  await MyServiceApi.delete(`/users/${userId}`)
+  await api.delete(`/users/${userId}`)
 
   context.sendOutput('User deleted successfully')
 }
@@ -179,13 +230,21 @@ script: async (context) => {
 ### Comprehensive Error Handling
 
 ```typescript
+import { RestApi } from '@metis/api/RestApi'
+
 script: async (context) => {
   const { userId } = context.effect.args
+
+  if (!context.config.targetEnvConfig) {
+    throw new Error('No configuration selected.')
+  }
+
+  const api = RestApi.fromConfig(context.config.targetEnvConfig.data)
 
   try {
     context.sendOutput(`Fetching user ${userId}...`)
 
-    const response = await MyServiceApi.get(`/users/${userId}`)
+    const response = await api.get(`/users/${userId}`)
 
     context.sendOutput(`Successfully retrieved user: ${response.data.name}`)
   } catch (error) {
@@ -225,8 +284,16 @@ script: async (context) => {
 ### Input Validation
 
 ```typescript
+import { RestApi } from '@metis/api/RestApi'
+
 script: async (context) => {
   const { email } = context.effect.args
+
+  if (!context.config.targetEnvConfig) {
+    throw new Error('No configuration selected.')
+  }
+
+  const api = RestApi.fromConfig(context.config.targetEnvConfig.data)
 
   // Validate email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -237,7 +304,7 @@ script: async (context) => {
   // Sanitize input for API
   const sanitizedEmail = email.toLowerCase().trim()
 
-  const response = await MyServiceApi.post('/users', {
+  const response = await api.post('/users', {
     email: sanitizedEmail,
   })
 
@@ -251,10 +318,10 @@ Here's a complete example showing a user management target with proper error han
 
 ```typescript
 // integration/target-env/user-service/targets/create-user/schema.ts
-import TargetSchema from '../../../../library/target-env-classes/targets'
-import { UserServiceApi } from '../../schema' // Import the API client
+import { RestApi } from '@metis/api/RestApi'
 
 export default new TargetSchema({
+  _id: 'create-user',
   name: 'Create User',
   description: 'Creates a new user account in the user service',
   args: [
@@ -289,7 +356,14 @@ export default new TargetSchema({
   ],
   script: async (context) => {
     const { name, email, role } = context.effect.args
-    const baseUrl = UserServiceApi.baseUrl
+
+    // Get configuration from session
+    if (!context.config.targetEnvConfig) {
+      throw new Error('No configuration selected for this session.')
+    }
+
+    // Create API client with selected config
+    const api = RestApi.fromConfig(context.config.targetEnvConfig.data)
 
     try {
       // Validate input
@@ -303,7 +377,7 @@ export default new TargetSchema({
       try {
         // Check if user already exists
         context.sendOutput('Checking for existing user...')
-        let user = await UserServiceApi.get(`${baseUrl}/users/${email}`)
+        let user = await api.get(`/users/${email}`)
         if (user) {
           throw new Error('User with this email already exists')
         }
@@ -326,7 +400,7 @@ export default new TargetSchema({
         created_by: context.user.username,
       }
 
-      const response = await UserServiceApi.post(`${baseUrl}/users`, newUser, {
+      const response = await api.post('/users', newUser, {
         headers: {
           'Content-Type': 'application/json',
           'X-Request-Source': 'METIS',
@@ -373,4 +447,3 @@ export default new TargetSchema({
 - **[Context API](../references/context-api.md)** - Complete context object reference
 - **[Defining Targets](defining-targets.md)** - Target creation fundamentals
 - **[Argument Types](argument-types.md)** - User input argument types
-- **[Error Handling Best Practices](/docs/devs/error-handling.md)** - System-wide error handling
