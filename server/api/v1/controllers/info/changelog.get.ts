@@ -2,6 +2,7 @@ import { MetisServer } from '@server/MetisServer'
 import fs from 'fs'
 import path from 'path'
 import { ApiResponse } from '../../library/ApiResponse'
+
 /**
  * This will retrieve the changelog.
  * @param request The express request.

@@ -222,6 +222,16 @@ Refer to `/docs/devs/style-guide.md` for detailed conventions including docstrin
 
 **Commit Scope**: Each commit should represent a single logical change or feature addition. Avoid bundling unrelated changes together.
 
+## Changelog Guidelines
+
+When updating `/docs/changelog.md`:
+
+- **Complete Sentences**: All bullet points must be complete, grammatically correct sentences (include subject and verb)
+- **Conciseness**: Keep entries brief while conveying the essential information
+- **Past Tense**: Write entries in past tense (e.g., "was added", "were improved", "has been implemented")
+- **User-Focused**: Focus on user-visible changes and their impact rather than implementation details
+- **Grouping**: Organize related changes together when possible (e.g., combining multiple fixes to the same system)
+
 ## Target-Environment Structure
 
 **Repository Boundaries**: Target-environments are treated as external systems with clear separation from core METIS.
