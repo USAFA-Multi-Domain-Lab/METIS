@@ -45,46 +45,6 @@ inject_in_compose() {
     fi
 }
 
-# Builds and runs the Docker containers.
-docker_up() {
-  # Create an output directory for deployment, deleting
-  # the existing one if it exists.
-  echo "Initializing deployment output directory."
-  rm -rf ${DEPLOYMENT_OUTPUT_DIR}
-  mkdir ${DEPLOYMENT_OUTPUT_DIR}
-
-  # Copy templates into output directory.
-  echo "Copying templates to deployment output directory."
-  cp -r ${TEMPLATES_DIR} ${DEPLOYMENT_OUTPUT_DIR}
-
-  # Copy config folder into output directory.
-  echo "Copying config folder to deployment output directory."
-  cp -r ${CONFIG_FOLDER_NAME} ${DEPLOYMENT_OUTPUT_DIR}
-
-  # Load environment variables from the defaults file
-  # and then from the user-defined file.
-  echo "Loading environment variables."
-  load_env "$DEFAULTS_ENV_FILE"
-  load_env "$ENV_FILE"
-
-  # Inject values into the docker-compose.yml file,
-  # if MONGO_PORT is defined.
-  if [[ -n "${MONGO_PORT}" ]]; then
-    echo "Injecting values into docker-compose.yml."
-    inject_in_compose "#\[DB_PORTS_LINE_1\]#" "ports:" 
-    inject_in_compose "#\[DB_PORTS_LINE_2\]#" "  - ${MONGO_PORT}:27017"
-  fi
-
-  # Build and run the Docker containers.
-  docker-compose -f ${DOCKER_COMPOSE_OUTPUT} --env-file ${DEFAULTS_ENV_FILE} --env-file ${ENV_FILE} up --build -d
-}
-
-# Tears down the Docker containers.
-docker_down() {
-  # Tear down the Docker containers.
-  docker-compose -f ${DOCKER_COMPOSE_OUTPUT} --env-file ${DEFAULTS_ENV_FILE} --env-file ${ENV_FILE} down -v
-}
-
 # Generates a configs.json file for a target environment
 # with proper permissions and .gitignore handling.
 config_generate() {
@@ -177,18 +137,6 @@ metis_cmd() {
       ;;
     status)
       sudo systemctl status metis.service
-      ;;
-    docker)
-      shift
-      # If the next arg is "up", then run the docker_up function.
-      if [[ "$1" == "up" ]]; then
-        docker_up
-      # If the next arg is "down", then run the docker_down function.
-      elif [[ "$1" == "down" ]]; then
-        docker_down
-      else
-        echo "❌ Error: Unrecognized docker command '$1'."
-      fi
       ;;
     config)
       shift

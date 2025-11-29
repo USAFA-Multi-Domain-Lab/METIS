@@ -1,4 +1,3 @@
-
 # Node
 node_modules
 npm-debug.log*
@@ -7,7 +6,7 @@ npm-debug.log*
 /client/build
 /client/dist
 
-# Environment
+# Environment (but keep defaults for Docker)
 .DS_Store
 *.env
 !*.defaults.env
@@ -18,7 +17,7 @@ npm-debug.log*
 environment.json
 environment-test.json
 
-# Target environments
+# Target environments (exclude external integrations)
 /integration/target-env/**
 !/integration/target-env/.gitkeep
 !/integration/target-env/global.ts
@@ -44,6 +43,17 @@ environment-test.json
 # Script IO data
 /server/database/scripts/**/*.csv
 
-# GitHub Copilot (A.I. agent)
-.github/*
-!.github/copilot-instructions.md
+# GitHub
+.github
+.git
+
+# Docker
+.dockerignore
+Dockerfile
+docker-compose.yml
+
+# Documentation (not needed in container)
+/docs
+
+# Tests (not needed in production container)
+/tests
