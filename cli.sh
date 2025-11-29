@@ -1,50 +1,5 @@
 #!/bin/bash
 
-# Define constants
-CONFIG_FOLDER_NAME="config"
-TEMPLATES_DIR="./deployment/docker/templates/"
-DEPLOYMENT_OUTPUT_DIR="./deployment/docker/.out/"
-DEFAULTS_ENV_FILE="${DEPLOYMENT_OUTPUT_DIR}${CONFIG_FOLDER_NAME}/docker.defaults.env"
-ENV_FILE="${DEPLOYMENT_OUTPUT_DIR}${CONFIG_FOLDER_NAME}/docker.env"
-DOCKER_COMPOSE_FILE="docker-compose.yml"
-DOCKERFILE="Dockerfile"
-DOCKER_COMPOSE_TEMPLATE="${TEMPLATES_DIR}${DOCKER_COMPOSE_FILE}"
-DOCKERFILE_TEMPLATE="${TEMPLATES_DIR}${DOCKERFILE}"
-DOCKER_COMPOSE_OUTPUT="${DEPLOYMENT_OUTPUT_DIR}${DOCKER_COMPOSE_FILE}"
-DOCKERFILE_OUTPUT="${DEPLOYMENT_OUTPUT_DIR}${DOCKERFILE}"
-
-# Load environment variables from the given
-# file, exiting with an error if the file is
-# not found.
-load_env() {
-  local file="$1"
-
-  # Check if the file exists before loading
-  if [[ -f "$file" ]]; then
-      set -a  # Enable auto-export
-      source "$file"
-      set +a  # Disable auto-export
-  else
-      echo "❌ Error: $file file not found!"
-      exit 1  # Exit with an error status
-  fi
-
-}
-
-# Injects a value into the docker-compose.yml file
-# using the given search and replace strings.
-inject_in_compose() {
-    local search="$1"
-    local replace="$2"
-
-    # macOS (BSD sed) requires -i '' while Linux (GNU sed) does not
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        sed -i '' "s|${search}|${replace}|g" "$DOCKER_COMPOSE_OUTPUT"
-    else
-        sed -i "s|${search}|${replace}|g" "$DOCKER_COMPOSE_OUTPUT"
-    fi
-}
-
 # Generates a configs.json file for a target environment
 # with proper permissions and .gitignore handling.
 config_generate() {
