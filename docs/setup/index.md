@@ -64,13 +64,15 @@ MONGO_PASSWORD='metispass'
 
 > Make sure to adjust the values as needed for your deployment. Whatever you set for the database credentials will be initialized when you build the containers. Therefore, you will need to recreate the containers if you wish to change the database credentials after the initial setup.
 
-4. Run the following command to build the METIS project with Docker Compose and start the services:
+4. If you did create a `.env` file, ensure it is secured by running `chmod 600 .env` to restrict access.
+
+5. Run the following command to build the METIS project with Docker Compose and start the services:
 
 ```bash
 docker compose up --build -d
 ```
 
-5. Confirm that the services are running:
+6. Confirm that the services are running:
 
 ```bash
 docker compose ps
@@ -84,9 +86,9 @@ metis-mongodb-1      mongo:8.0.4        "docker-entrypoint.s…"   mongodb      
 metis-web-server-1   metis-web-server   "docker-entrypoint.s…"   web-server   10 minutes ago   Up 10 minutes             0.0.0.0:8084->8084/tcp
 ```
 
-6. The METIS web app should now be accessible on your host machine at your configured port (default is `http://localhost:8083`).
+7. The METIS web app should now be accessible on your host machine at your configured port (default is `http://localhost:8083`).
 
-7. The following commands can be used to manage the containers:
+8. The following commands can be used to manage the containers:
 
 ```bash
 docker compose ps # Lists information about the containers that are currently running.
