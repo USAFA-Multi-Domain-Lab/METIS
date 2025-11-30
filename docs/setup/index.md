@@ -36,6 +36,8 @@ metis status
 
 > MongoDB users are auto-generated during installation. With the correct permissions, you can retrieve the credentials for these users from `/root/.metis-credentials.txt`.
 
+---
+
 ### **Docker Setup**
 
 For Docker installations, we provide a `docker-compose.yml` file to set up METIS along with its dependencies. This method is ideal for quick deployments and testing. Follow this step-by-step guide to get started:
@@ -94,10 +96,14 @@ docker compose restart # Restarts both containers.
 docker compose down # Stops and removes containers (Include -v to remove volumes also).
 ```
 
+---
+
 ### **Windows Setup**
 
 For Windows installations, we will soon provide both command-line and GUI installer options to simplify the setup process. For now, we have this
 detailed manual installation guide that you may follow [here](windows.md).
+
+---
 
 ## ✅ Post-Setup Validation
 
