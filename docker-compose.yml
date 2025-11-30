@@ -4,12 +4,12 @@ services:
   mongodb:
     image: mongo:8.0.4
     env_file:
-      - ../../config/docker.defaults.env
-      - ../../config/docker.env
+      - ./config/docker.defaults.env
+      - .env
     volumes:
       - mongodb_data:/data/db
       - mongodb_config:/data/configdb
-      - ../../server/database/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./server/database/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     healthcheck:
       test: mongosh --eval "db.adminCommand('ping')"
       interval: 30s
@@ -19,13 +19,13 @@ services:
 
   web-server:
     build:
-      context: ../../
-      dockerfile: ./deployment/docker/Dockerfile
+      context: ./
+      dockerfile: ./Dockerfile
     env_file:
-      - ../../config/docker.defaults.env
-      - ../../config/docker.env
+      - ./config/docker.defaults.env
+      - .env
     ports:
-      - '0.0.0.0:${PORT}:${PORT}' # The container port and the default host port should match the one defined in docker.defaults.env.
+      - '0.0.0.0:${PORT:-8083}:${PORT:-8083}' # The container port and the default host port should match the one defined in docker.defaults.env.
     volumes:
       - metis_data:/opt/metis/files/store
       - metis_backups:/opt/metis/database/backups

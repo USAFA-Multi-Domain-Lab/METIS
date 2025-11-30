@@ -186,8 +186,8 @@ Go into the `config` directory in your METIS project. You will find several file
 
 - `dev.env` and `dev.defaults.env`
 - `prod.env` and `prod.defaults.env`
-- `docker.env` and `docker.defaults.env`
 - `test.env` and `test.defaults.env`
+- `docker.defaults.env`
 
 To configure your environment, edit the appropriate `.env` file for your deployment (for example, `prod.env` for production, which is standard for this setup).  
 **Do not edit the `*.defaults.env` files directly.**  
@@ -216,11 +216,10 @@ WS_RATE_LIMIT_DURATION=1         # Default: 1 (second) (Optional)
 
 ### Step #4 - Run METIS
 
-To run METIS in a production environment, cd into the `server` directory in METIS and run the following command:
+To run METIS in a production environment, run the following command:
 
 ```bash
-node_modules/.bin/ts-node -r tsconfig-paths/register start
-
+npm start
 ```
 
 It should start up and be accessible at the configured port (8080 by default). You can now access the web app in the browser. To log in, a temporary user has been created with the following credentials:

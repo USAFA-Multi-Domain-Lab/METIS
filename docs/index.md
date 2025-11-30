@@ -49,6 +49,7 @@
 ### Additional Resources
 
 - **[Changelog](changelog.md)** - Version history and release notes
+- **[Credits](credits.md)** - Acknowledgments and contributors
 - **[Video Walkthrough](https://youtu.be/4rcTbKRUOEA?si=XPy1z3Y4KJ0Fg5E1)** - Visual tour of METIS features
 
 ## 🎯 Common Tasks

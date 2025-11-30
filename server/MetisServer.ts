@@ -552,10 +552,17 @@ export class MetisServer {
    * not including the extension.
    */
   private static loadEnv(fileName: string): void {
-    dotenv.config({
-      path: MetisServer.resolvePath(`../config/${fileName}.env`),
-      override: true,
-    })
+    if (fileName === 'docker') {
+      dotenv.config({
+        path: MetisServer.resolvePath(`../.env`),
+        override: true,
+      })
+    } else {
+      dotenv.config({
+        path: MetisServer.resolvePath(`../config/${fileName}.env`),
+        override: true,
+      })
+    }
   }
 
   /**

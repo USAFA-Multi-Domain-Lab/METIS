@@ -6,16 +6,8 @@ npm-debug.log*
 /client/build
 /client/dist
 
-# Environment (but keep defaults for Docker)
+# Environment
 .DS_Store
-*.env
-!*.defaults.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-environment.json
-environment-test.json
 
 # Target environments (exclude external integrations)
 /integration/target-env/**
