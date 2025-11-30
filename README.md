@@ -31,7 +31,7 @@ The open software design uses an Application Programming Interface (API) to serv
 ## 🛠️ Technology Stack
 
 - **Backend:** [Node.js](https://nodejs.org/en), [Express](https://expressjs.com/), [MongoDB](https://www.mongodb.com/), [Socket.IO](https://socket.io/), [Mongoose](https://mongoosejs.com/), [TypeScript](https://www.typescriptlang.org/)
-- **Frontend:** [React](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), [Sass](https://sass-lang.com/)
+- **Frontend:** [Vite](https://vitejs.dev/), [React](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), [Sass](https://sass-lang.com/), [Socket.IO](https://socket.io/)
 - **DevOps:** [Docker](https://www.docker.com/), [Git](https://git-scm.com/), [NPM](https://www.npmjs.com/), [GitHub](https://github.com/)
 
 ## 🏗️ Project Structure
