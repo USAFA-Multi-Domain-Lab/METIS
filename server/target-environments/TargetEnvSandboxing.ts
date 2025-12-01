@@ -9,7 +9,6 @@ import path from 'node:path'
 import * as tsconfigPaths from 'tsconfig-paths'
 import type { RegisterParams } from 'tsconfig-paths/lib/register'
 import { z as zod } from 'zod'
-import { ConfigPermissionError } from './ConfigPermissionError'
 import { TargetEnvSchema } from './schema/TargetEnvSchema'
 import { TargetSchema } from './schema/TargetSchema'
 
@@ -47,30 +46,6 @@ export abstract class TargetEnvSandboxing {
   }
 
   /**
-   * Validates that configs.json has proper read and write permissions.
-   * @param rootDir The root directory of the target environment.
-   * @throws ConfigPermissionError if configs.json exists but is not readable or writable.
-   */
-  private static validateConfigPermissions(rootDir: string): void {
-    let envConfigsPath = path.join(rootDir, 'configs.json')
-    let targetEnvId = path.basename(rootDir)
-
-    // If no config file exists, validation passes
-    if (!fs.existsSync(envConfigsPath)) return
-
-    // Check if file is readable and writable
-    try {
-      fs.accessSync(envConfigsPath, fs.constants.R_OK | fs.constants.W_OK)
-    } catch (permError: any) {
-      throw new ConfigPermissionError(
-        `Permission denied accessing configs.json for "${targetEnvId}" at "${envConfigsPath}". ` +
-          `Ensure the file has read and write permissions for the server process owner (chmod 600 recommended). ` +
-          `Original error: ${permError.message}`,
-      )
-    }
-  }
-
-  /**
    * Loads the target environment configurations for the
    * target-environment located at the given root directory.
    * @param rootDir The root directory of the target environment.
@@ -91,7 +66,7 @@ export abstract class TargetEnvSandboxing {
       } catch (permError: any) {
         const errorMsg =
           `Permission denied reading configs.json for "${targetEnvId}" at "${envConfigsPath}". ` +
-          `Ensure the file has read permissions for the server process owner (chmod 600 or 644). ` +
+          `Ensure the file has read permissions for the server process owner. ` +
           `Error: ${permError.message}`
         targetEnvLogger.error(errorMsg)
         return []
@@ -156,9 +131,6 @@ export abstract class TargetEnvSandboxing {
   public static loadEnvironmentSchema(
     environmentPath: string,
   ): TargetEnvSchema {
-    // Validate config permissions on startup (strict mode)
-    TargetEnvSandboxing.validateConfigPermissions(path.dirname(environmentPath))
-
     // Load the target environment schema with the tsconfig-paths
     // registration active.
     let environmentSchema = TargetEnvSandboxing.executeWithTsConfig(

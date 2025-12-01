@@ -1,4 +1,4 @@
-# METIS - Mission Effects Training and Integration System
+# METIS - Modular Effects-Based Transmitter for Integrated Simulations
 
 ## What is METIS?
 

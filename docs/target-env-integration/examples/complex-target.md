@@ -219,7 +219,9 @@ const SecureCommunication = new TargetSchema({
       type: 'dropdown',
       required: false,
       groupingId: 'security',
-      dependencies: [TargetDependency.EQUALS_SOME('priority', ['high', 'urgent'])],
+      dependencies: [
+        TargetDependency.EQUALS_SOME('priority', ['high', 'urgent']),
+      ],
       options: [
         { _id: 'basic', name: 'Basic (AES-128)', value: 'aes128' },
         { _id: 'standard', name: 'Standard (AES-256)', value: 'aes256' },

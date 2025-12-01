@@ -25,8 +25,7 @@ Each target environment can have multiple configurations (e.g., development, sta
 - **Multiple Configurations**: Define dev, staging, and production configs in one file
 - **Session-Scoped**: Each session can use a different configuration
 - **Runtime Selection**: Session managers choose configuration at session launch time
-
-- **Secure by Default**: File permissions enforced (600) to protect sensitive data
+- **Security Recommendations**: Guidance for protecting sensitive configuration data
 - **Type-Safe**: Schema validation ensures data integrity
 
 ## File Location
@@ -184,17 +183,24 @@ The `data` object is completely flexible - structure it based on your needs:
 
 ### File Permissions
 
-**Critical:** `configs.json` must have proper permissions to protect sensitive data.
+> **Security Recommendation:** Protect your `configs.json` files with appropriate file permissions to prevent unauthorized access to sensitive data. Ensure the METIS server process has read access.
+
+**Setting Restrictive Permissions:**
+
+Use your operating system's file permission tools to restrict access to the `configs.json` file:
 
 ```bash
-# Required permissions (read/write for owner only)
+# Example for Linux/macOS
 chmod 600 integration/target-env/my-environment/configs.json
 ```
 
-**What Happens Without Proper Permissions:**
+> _For Windows or other operating systems, consult your OS documentation for setting file permissions that restrict read/write access to the file owner only._
 
-- **Server startup**: METIS will crash with `ConfigPermissionError`
-- **Security risk**: Sensitive data exposed to other system users
+**Security Considerations:**
+
+- Restrictive permissions prevent unauthorized users from reading sensitive credentials
+- Protects API keys, passwords, and other confidential connection details
+- METIS server process must have read access to load configurations
 
 ### What Gets Exposed to Client
 
@@ -219,9 +225,10 @@ session.config.targetEnvConfig.data
 1. **Never commit real credentials** to version control
 2. **Use different configs** for each environment
 3. **Rotate API keys** regularly
-4. **Set file permissions** to 600
-5. **Document required fields** for your team
-6. **Use descriptive names** for each config
+4. **Secure file permissions** to protect sensitive data
+5. **Ensure METIS has read and write access** to the configuration file
+6. **Document required fields** for your team
+7. **Use descriptive names** for each config
 
 ## Using Configurations in Target Scripts
 
@@ -321,18 +328,31 @@ If no `configs.json` exists:
 
 ## CLI Generation
 
-METIS provides a CLI tool to generate `configs.json` files with proper permissions:
+METIS provides a CLI tool to generate `configs.json` files:
+
+**Linux/macOS/WSL:**
 
 ```bash
 # Generate new configs.json
-./cli.sh config create my-environment
+./cli.sh config generate my-environment
 
 # This will:
 # 1. Create integration/target-env/my-environment/configs.json
-# 2. Set permissions to 600 automatically
-# 3. Generate template configuration
-# 4. Prompt to add to .gitignore
+# 2. Generate template configuration
+# 3. Provide security recommendations
 ```
+
+**Windows (Git Bash/WSL recommended):**
+
+The CLI script requires a bash environment. Use WSL, Git Bash, or manually create the file:
+
+```powershell
+# Manual creation on Windows
+New-Item -Path "integration\target-env\my-environment\configs.json" -ItemType File
+# Then edit with your preferred editor
+```
+
+> **Tip:** After generation, consider setting restrictive file permissions (see Security & Permissions section for guidance).
 
 ### Generated Template
 
@@ -468,16 +488,6 @@ METIS provides a CLI tool to generate `configs.json` files with proper permissio
 2. Verify JSON is valid (no syntax errors)
 3. Ensure user selected a configuration when launching session
 4. Restart server to reload configurations
-
-### Permission Errors
-
-**Problem:** Server crashes with `ConfigPermissionError`
-
-**Solution:**
-
-```bash
-chmod 600 integration/target-env/my-environment/configs.json
-```
 
 ### Configuration Not Loading
 
