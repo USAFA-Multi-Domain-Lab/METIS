@@ -46,13 +46,16 @@ For Docker installations, we provide a `docker-compose.yml` file to set up METIS
 2. Clone the METIS repository and navigate to the root directory of the project.
 
 ```bash
-git clone https://github.com/USAFA-Multi-Domain-Lab/METIS-Modular-Effects-based-Transmitter-for-Integrated-Simulations.git
-cd METIS-Modular-Effects-based-Transmitter-for-Integrated-Simulations
+git clone https://github.com/USAFA-Multi-Domain-Lab/METIS
+cd METIS
 ```
 
 > If you don't have Git, you may also download the repository as a ZIP file, extract it, and navigate into the extracted folder.
 
-3. Optional, but recommended for production deployments. Create a `.env` file in the root directory to override default environment variables. Example contents:
+3. Create a `.env` file in the root directory.
+
+4. Optional, but recommended for production deployments. Add custom environment
+   variables to the `.env` file to override default settings:
 
 ```env
 PORT=8083
@@ -62,9 +65,7 @@ MONGO_USERNAME='metis-server'
 MONGO_PASSWORD='metispass'
 ```
 
-> Make sure to adjust the values as needed for your deployment. Whatever you set for the database credentials will be initialized when you build the containers. Therefore, you will need to recreate the containers if you wish to change the database credentials after the initial setup.
-
-4. If you did create a `.env` file, ensure it is secured by running `chmod 600 .env` to restrict access.
+> Whatever you set for the database credentials will be initialized when you build the containers. Therefore, you will need to recreate the containers if you wish to change the database credentials after the initial setup. Make sure to update the file permissions for your `.env` file to restrict access to authorized users only, as it contains sensitive information.
 
 5. Run the following command to build the METIS project with Docker Compose and start the services:
 

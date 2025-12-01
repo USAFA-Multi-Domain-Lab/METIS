@@ -7,7 +7,9 @@ npm-debug.log*
 /client/dist
 
 # Environment
-.DS_Store
+.DS_Store 
+.vscode
+.github
 
 # Target environments (exclude external integrations)
 /integration/target-env/**
@@ -43,9 +45,6 @@ npm-debug.log*
 .dockerignore
 Dockerfile
 docker-compose.yml
-
-# Documentation (not needed in container)
-/docs
 
 # Tests (not needed in production container)
 /tests

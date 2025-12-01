@@ -40,9 +40,6 @@ RUN mkdir -p ./files/store && \
     chmod -R 777 ./files/store && \
     chmod -R 777 ./database/backups
 
-# Force container port to 8083.
-RUN printf "\nPORT=8083" >> ./config/docker.env
-
 # Install dependencies and build
 RUN npm install && \
     npm run build

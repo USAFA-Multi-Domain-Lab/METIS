@@ -12,8 +12,9 @@
 - Effects now use the name of their target upon creation instead of generic "New Effect" placeholder.
 - Search functionality in lists now compares against all columns instead of just the name column.
 - Credits page was added to provide proper attribution to all contributors involved in METIS development.
-- All target schemas now require explicit `_id` properties and export types for
-- CLI can now generate target-environment configurations with proper permissions.third-party developers.
+- All target schemas now require explicit `_id` properties and export types for third-party developers.
+- CLI can now generate target-environment configurations with proper permissions.
+- Simplifed and finalized Docker setup process.
 - The METIS target environment was reorganized to match preferred conventions.
 - Project was updated to use Vite, ESM, React v19, and Node v22.
 - Project was reorganized to meet updated standards and conventions.
