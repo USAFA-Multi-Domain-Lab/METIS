@@ -10,13 +10,13 @@ The METIS platform was engineered and developed from the ground up by **GovCIO**
 
 ### Engineers
 
-**Jordan Stokes** - _Lead Software Engineer & Architect_
+[**Jordan Stokes**](https://www.linkedin.com/in/jordan-m-stokes) - _Lead Software Engineer & Architect_
 
 - System architecture and design
 - Full-stack development (backend, API, web application, database, integration)
 - Testing and deployment
 
-**Jacob Thomas** - _Software Engineer_
+[**Jacob Thomas**](https://www.linkedin.com/in/jacobthomasengineer) - _Software Engineer_
 
 - Full-stack development (backend, API, web application, database, integration)
 - Testing and deployment
