@@ -16,8 +16,6 @@
 ### 🛠️ **System Administrators**
 
 - **[Setup & Installation](setup/index.md)** - Platform-specific installation guides
-  - [Debian/Linux Setup](setup/debian.md) - Production server deployment
-  - [Windows Setup](setup/windows.md) - Development and testing setup
 - **[System Architecture](devs/architecture.md)** - Understanding METIS components
 
 ### 👨‍💻 **Developers & Integrators**

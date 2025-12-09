@@ -1,6 +1,6 @@
 # METIS Setup Instructions (Windows Environment With GUI)
 
-Note: These instructions assume the database server and the web server will be running on the same Windows instance.
+> **Note:** These instructions assume the database server and the web server will be running on the same _Windows_ instance. All commands should be run in an elevated _PowerShell_ (Run as Administrator). This is a temporary guide while we build a _Windows_ installer. For quicker setup on _Windows_, consider using the [Docker Setup Guide](/docs/setup/index.md#docker-setup) instead.
 
 ## Database
 
@@ -14,7 +14,7 @@ Once the installer completes, you can confirm it is running by opening Services.
 
 MongoSH is needed so that you can connect to the database via the command line and configure the database for use, as well as manage it as needed in the future. It is also used by the METIS server itself to run migration scripts in the event of any updates.
 
-You can download and run the installer [here](https://www.mongodb.com/try/download/shell), selecting `.msi` as the package. You can confirm its installation by opening up _Command Prompt_ and typing the following command, which should return the version number of MongoSH:
+You can download and run the installer [here](https://www.mongodb.com/try/download/shell), selecting `.msi` as the package. You can confirm its installation by opening up _PowerShell_ and typing the following command, which should return the version number of MongoSH:
 
 ```bash
 mongosh --version
@@ -158,16 +158,21 @@ After that, everything should be prepared for the web server. The user you creat
 
 ### Step #1 - Install NodeJS
 
-NodeJS must be installed in the web server environment for the web server to run properly. You can download and run the installer [here](https://nodejs.org/en/download/prebuilt-installer), making sure to download version 20. When running the installer, click to install necessary third-party tools when prompted.
+NodeJS must be installed in the web server environment for the web server to run properly. You can download and run the installer [here](https://nodejs.org/en/download/prebuilt-installer), making sure to download version 22. When running the installer, click to install necessary third-party tools when prompted.
 
 ### Step #2 - Install and Set Up METIS
 
-Clone METIS to your web server environment where NodeJS, MongoDB Shell, and MongoDB Command Line Database Tools are already installed. Navigate into the cloned project and install the required NPM packages that METIS needs to run.
+To install METIS, first choose a directory to store the METIS source code. This can be any directory you prefer. Then, either clone the repository to your system using [Git](https://git-scm.com/), or download the source code as a ZIP file from GitHub, and extract it to your chosen directory. If using [Git](https://git-scm.com/), run the following command to clone the project:
 
 ```bash
-cd ./metis
-npm install
+git clone https://github.com/USAFA-Multi-Domain-Lab/METIS.git
+```
 
+Then, navigate into the METIS project directory and install the required dependencies:
+
+```bash
+cd ./METIS
+npm install
 ```
 
 The front-end interface for METIS is a React App hosted by the web server. The React App must be built initially and after any updates (new releases) for the front-end interface to be accessible and up-to-date to web users. While in the METIS project directory, run the following command to build the React App:

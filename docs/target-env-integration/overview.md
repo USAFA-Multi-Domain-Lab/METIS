@@ -10,11 +10,11 @@ METIS missions need to interact with external systems - APIs, databases, traffic
 
 ### 🎯 **Target Environments**
 
-Groups of related functionality representing external systems:
+Groups of related functionality representing integrated systems:
 
-- **METIS** - Built-in operations (send messages, modify nodes)
-- **External Systems** - Third-party integrations (APIs, databases)
-- **Custom Environments** - Your own integrations
+- **Two-Way** - Bidirectional between METIS and your system
+- **Open-Ended** - Build it your way
+- **Distributable** - Take it and install anywhere
 
 ### 🔧 **Targets**
 
@@ -30,7 +30,7 @@ User-configured instances of targets ready for execution:
 
 - **Mission-Specific** - Created within the mission editor
 - **User-Friendly** - Configured through auto-generated forms
-- **Real-Time** - Execute during missions with immediate feedback
+- **Real-Time** - Execute during missions with customizable feedback
 
 ## How It Works
 
@@ -68,9 +68,9 @@ Target Environment
 
 **Example Flow:**
 
-- Developer creates "User Management" environment with "Create User" target
-- Mission planner configures "Create User" effect with specific username/email
-- During mission, effect executes and actually creates the user account
+- Developer creates "Drone Controller" environment with "Checkpoint" target
+- Mission planner configures "Navigate to Point of Interest" effect with specific coordinates
+- During mission, effect is enacted and actually invokes the drone to navigate to the specified location
 
 ## Key Benefits
 
@@ -83,9 +83,10 @@ Target Environment
 ## Quick Example
 
 ```typescript
-// 1. Developer defines a target for changing traffic lights
+// 1. Developer defines a target for manipulating traffic lights
 const changeLight = new TargetSchema({
-  name: 'Change Traffic Light',
+  _id: 'traffic-light'
+  name: 'Traffic Light',
   script: async (context) => {
     // Call traffic API with user's chosen color
     await fetch('/traffic-api', {
@@ -130,7 +131,7 @@ const changeLight = new TargetSchema({
 - **Mission Modification** - Change node states, costs, success rates
 - **Output Management** - Send messages to different displays
 - **File Operations** - Grant/revoke access to mission files
-- **Custom Logic** - Implement domain-specific business rules
+- **Custom Logic** - Tailor to domain-specific requirements
 
 ## Related Documentation
 
