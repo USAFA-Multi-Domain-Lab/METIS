@@ -67,6 +67,8 @@ MONGO_PASSWORD='metispass'
 
 > Whatever you set for the database credentials will be initialized when you build the containers. Therefore, you will need to recreate the containers if you wish to change the database credentials after the initial setup. Make sure to update the file permissions for your `.env` file to restrict access to authorized users only, as it contains sensitive information.
 
+> See the [Environment Configuration Guide](/docs/setup/environment.md#configuration-options) for additional settings which can be configured from this file.
+
 5. Run the following command to build the METIS project with Docker Compose and start the services:
 
 ```bash

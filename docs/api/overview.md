@@ -72,7 +72,7 @@ METIS implements rate limiting for both HTTP and WebSocket connections:
 
 - `HTTP API`: 20 requests/second per IP (default)
 - `WebSocket`: 10 messages/second per user (default)
-- [Configurable via environment variables](/docs/setup/debian.md#step-5---configure-environment)
+- [Configurable via environment variables](/docs/setup/environment.md)
 - Rate limit headers in HTTP responses:
   - `X-RateLimit-Limit`
   - `X-RateLimit-Remaining`
