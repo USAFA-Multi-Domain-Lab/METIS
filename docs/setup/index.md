@@ -43,7 +43,9 @@ Username: admin
 Password: temppass
 ```
 
-## From there you will be prompted to reset your password to something permanent and more secure. You can now begin using METIS!
+From there you will be prompted to reset your password to something permanent and more secure. You can now begin using METIS!
+
+---
 
 ### **Docker Setup**
 
