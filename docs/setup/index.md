@@ -36,14 +36,22 @@ metis status
 
 > MongoDB users are auto-generated during installation. With the correct permissions, you can retrieve the credentials for these users from `/root/.metis-credentials.txt`.
 
----
+The METIS web app should now be accessible on your host machine at your configured port (default is `http://localhost:8080`). You can now access the web app in the browser. To log in, a temporary user has been created with the following credentials:
+
+```
+Username: admin
+Password: temppass
+```
+
+## From there you will be prompted to reset your password to something permanent and more secure. You can now begin using METIS!
 
 ### **Docker Setup**
 
 For Docker installations, we provide a `docker-compose.yml` file to set up METIS along with its dependencies. This method is ideal for quick deployments and testing. Follow this step-by-step guide to get started:
 
-1. Ensure you have Docker and Docker Compose installed on your system.
-2. Clone the METIS repository and navigate to the root directory of the project.
+**Step 1:** Ensure you have Docker and Docker Compose installed on your system.
+
+**Step 2:** Clone the METIS repository and navigate to the root directory of the project.
 
 ```bash
 git clone https://github.com/USAFA-Multi-Domain-Lab/METIS
@@ -52,10 +60,10 @@ cd METIS
 
 > If you don't have Git, you may also download the repository as a ZIP file, extract it, and navigate into the extracted folder.
 
-3. Create a `.env` file in the root directory.
+**Step 3:** Create a `.env` file in the root directory.
 
-4. Optional, but recommended for production deployments. Add custom environment
-   variables to the `.env` file to override default settings:
+**Step 4:** Optional, but recommended for production deployments. Add custom environment
+variables to the `.env` file to override default settings:
 
 ```env
 PORT=8083
@@ -69,13 +77,13 @@ MONGO_PASSWORD='metispass'
 
 > See the [Environment Configuration Guide](/docs/setup/environment.md#configuration-options) for additional settings which can be configured from this file.
 
-5. Run the following command to build the METIS project with Docker Compose and start the services:
+**Step 5:** Run the following command to build the METIS project with Docker Compose and start the services:
 
 ```bash
 docker compose up --build -d
 ```
 
-6. Confirm that the services are running:
+**Step 6:** Confirm that the services are running:
 
 ```bash
 docker compose ps
@@ -89,9 +97,7 @@ metis-mongodb-1      mongo:8.0.4        "docker-entrypoint.s…"   mongodb      
 metis-web-server-1   metis-web-server   "docker-entrypoint.s…"   web-server   10 minutes ago   Up 10 minutes             0.0.0.0:8084->8084/tcp
 ```
 
-7. The METIS web app should now be accessible on your host machine at your configured port (default is `http://localhost:8083`).
-
-8. The following commands can be used to manage the containers:
+To manage the Docker containers, you can use the following commands:
 
 ```bash
 docker compose ps # Lists information about the containers that are currently running.
@@ -100,6 +106,15 @@ docker compose stop # Stops both containers.
 docker compose restart # Restarts both containers.
 docker compose down # Stops and removes containers (Include -v to remove volumes also).
 ```
+
+**Step 7:** The METIS web app should now be accessible on your host machine at your configured port (default is `http://localhost:8083`). You can now access the web app in the browser. To log in, a temporary user has been created with the following credentials. Afterwards, you will be prompted to reset your password to something permanent and more secure:
+
+```
+Username: admin
+Password: temppass
+```
+
+You can now begin using METIS!
 
 ---
 

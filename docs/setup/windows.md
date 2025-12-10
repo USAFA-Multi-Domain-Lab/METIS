@@ -233,3 +233,5 @@ It should start up and be accessible at the configured port (8080 by default). Y
 Username: admin
 Password: temppass
 ```
+
+From there you will be prompted to reset your password to something permanent and more secure. You can now begin using METIS!
