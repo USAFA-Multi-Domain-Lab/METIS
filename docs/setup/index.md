@@ -160,7 +160,8 @@ After completing setup, you can verify your installation with this checklist:
 
 ## Related Documentation
 
+- **[Environment Configuration](/docs/setup/environment.md)** - Configure server port, rate limiting, file-store location, and more
+
 - **[API Documentation](/docs/api/index.md)** - Integration and automation after setup
 - **[Developer Documentation](/docs/devs/index.md)** - Architecture and development info
 - **[Target Environment Integration](/docs/target-env-integration/index.md)** - Custom integrations
-- **[Changelog](/docs/changelog.md)** - Version history and updates
