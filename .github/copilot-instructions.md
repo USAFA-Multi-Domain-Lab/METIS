@@ -65,8 +65,7 @@ npm run test
 - `@shared/*` → `/shared/*` (used in client, server, and integration code)
 - `@client/*` → `/client/src/*` (client-side only)
 - `@server/*` → `/server/*` (server-side only)
-- `@integrations/schema/*` → `/integration/library/schema/*` (server-side only)
-- `metis/*` → `/shared/*` (used in test code)
+- `@metis/*` → `/integration/library/*` (target-environment integration library)
 
 **Component Hierarchy**: All entities follow this path pattern:
 

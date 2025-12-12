@@ -4,7 +4,7 @@ Get your first integration running in 5 minutes! This guide walks you through cr
 
 ## What You'll Build
 
-A "Send Alert" target that:
+An "Alert System" target that:
 
 - Accepts a message and priority level
 - Calls an external API
@@ -24,7 +24,7 @@ Define your environment in `schema.ts`:
 ```typescript
 const alertEnvironment = new TargetEnvSchema({
   name: 'Alert System',
-  description: 'Send alerts to external monitoring system',
+  description: 'Send alerts to external monitoring system.',
   version: '1.0.0',
 })
 
@@ -47,7 +47,7 @@ Define your target in `targets/send-alert/schema.ts`:
 const sendAlert = new TargetSchema({
   _id: 'send-alert',
   name: 'Send Alert',
-  description: 'Send an alert message to external system',
+  description: 'Send an alert message to external system.',
   script: async (context) => {
     const { message, priority } = context.effect.args
 
@@ -138,6 +138,6 @@ Congratulations! You've created your first target-effect integration. Here's wha
 
 **Effect not executing?**
 
-- Check browser console for errors
+- Check server logs for runtime errors
 - Verify target script syntax
 - Ensure external system is reachable
