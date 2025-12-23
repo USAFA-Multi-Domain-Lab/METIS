@@ -1,5 +1,7 @@
 # METIS - Modular Effects-Based Transmitter for Integrated Simulations
 
+For a quick index of all instruction sources, see [AGENTS.md](../AGENTS.md). Authoritative coding rules live in [.github/instructions/style-guide.instructions.md](instructions/style-guide.instructions.md).
+
 ## What is METIS?
 
 METIS is a **real-time cybersecurity training platform** designed for military and educational institutions. It enables instructors to create dynamic, hierarchical training scenarios (missions) where effects can target both simulated environments and live external systems. Trainees gain hands-on experience with multi-domain operations, learning to coordinate actions across cyberspace, network infrastructure, and integrated simulation environments.
@@ -185,7 +187,7 @@ const target = new TargetSchema({
 
 ## Coding Style & Best Practices
 
-Refer to `/docs/devs/style-guide.md` for detailed conventions including docstring requirements, naming patterns, and code organization. Key points:
+Refer to [.github/instructions/style-guide.instructions.md](instructions/style-guide.instructions.md) for authoritative conventions (docstrings, naming, ordering). See [docs/devs/style-guide.md](../docs/devs/style-guide.md) for supplemental guidance. Key points:
 
 - **Naming**: Use camelCase for variables/functions, PascalCase for classes/types
 - **Comments**: Write clear, descriptive comments for complex logic and public APIs
