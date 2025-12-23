@@ -166,6 +166,8 @@ export class ServerLogin {
           )
         }
 
+        // Destroy the session in the store.
+        ServerWebSession.destroy(conflictingLogin.webSessionId)
         // Destroy the old login.
         conflictingLogin.destroy()
       } else {
