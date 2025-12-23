@@ -1,5 +1,5 @@
 import type { Config as OriginalConfig } from '@jest/types'
-import MetisServer from 'metis/server'
+import type { MetisServer } from '@metis/server/MetisServer'
 
 /**
  * Global type declarations for test environment

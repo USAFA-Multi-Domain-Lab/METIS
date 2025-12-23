@@ -8,10 +8,8 @@ let setupCompleted = false
  * - Registers ts-node to transpile TS at runtime
  * - Registers tsconfig-paths using tests/tsconfig.json so aliases like 'metis/*' work
  */
-module.exports = async (...args) => {
-  let stage = setupCompleted ? 'teardown' : 'setup'
+module.exports = async () => {
   let tsConfigPath = path.resolve(__dirname, 'tsconfig.json')
-  let setupPathTs = path.resolve(__dirname, `${stage}.ts`)
   let raw = fs.readFileSync(tsConfigPath, 'utf8')
   let tsconfig = JSON.parse(raw)
   let { baseUrl, paths } = tsconfig.compilerOptions
@@ -28,13 +26,6 @@ module.exports = async (...args) => {
     baseUrl: baseUrlResolved,
     paths,
   })
-
-  // Import and run script.
-  let script = require(setupPathTs)
-  if (typeof script !== 'function') {
-    script = script.default
-  }
-  await script(...args)
 
   setupCompleted = true
 }
