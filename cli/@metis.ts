@@ -135,18 +135,37 @@ async function config_generate(targetEnvPath: string): Promise<void> {
 }
 
 /**
- * Executes systemctl commands for metis.service (Unix only).
- * @param action - The systemctl action (start|stop|restart|status)
+ * Executes commands to manage METIS as a system service in
+ * an OS-specific manner.
+ * @param command - The desired command to send to the service
+ * manager (start|stop|restart|status)
  */
-function metisSystemctl(action: string): void {
-  if (process.platform === 'win32') {
-    throw new Error('systemctl commands are not supported on Windows.')
+function manageMetisService(command: TServiceCommand): void {
+  const windowsCommandMap = {
+    start: 'Start-Service',
+    stop: 'Stop-Service',
+    restart: 'Restart-Service',
+    status: 'Get-Service',
   }
 
   try {
-    execSync(`sudo systemctl ${action} metis.service`, { stdio: 'inherit' })
+    let commandLineCode = ''
+
+    // Windows
+    if (process.platform === 'win32') {
+      commandLineCode = `powershell -NoProfile -Command "${windowsCommandMap[command]} METIS"`
+    }
+    // Unix
+    else {
+      commandLineCode = `sudo systemctl ${command} metis.service`
+      console.log(
+        'Executing command with sudo privileges. You may be prompted for your system password.',
+      )
+    }
+
+    execSync(commandLineCode, { stdio: 'inherit' })
   } catch (err) {
-    throw new Error(`Failed to execute systemctl ${action}`)
+    throw new Error(`Failed to execute service command "${command}".`)
   }
 }
 
@@ -169,7 +188,7 @@ async function metisCmd(args: string[]): Promise<void> {
     case 'stop':
     case 'restart':
     case 'status':
-      metisSystemctl(command)
+      manageMetisService(command)
       break
 
     case 'config':
@@ -239,3 +258,10 @@ async function main(...args: string[]): Promise<void> {
 
 // Execute main function.
 main(...process.argv)
+
+/* -- TYPES -- */
+
+/**
+ * Defines a valid command for managing METIS as a service.
+ */
+type TServiceCommand = 'start' | 'stop' | 'restart' | 'status'
