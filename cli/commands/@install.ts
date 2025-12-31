@@ -339,7 +339,9 @@ export const install = new Command(
 
     // Clean up and notify user.
     fs.unlinkSync(archive)
-    console.log(`${ICONS.success} "${targetEnvId}" was successfully installed!`)
+    console.log(
+      `${ICONS.success} "${targetEnvId}" was successfully installed! Restart METIS with 'metis restart' for changes to go into effect.`,
+    )
   },
 )
 

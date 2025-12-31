@@ -101,5 +101,7 @@ export async function uninstall(targetEnvId: string): Promise<void> {
   console.log(`${ICONS.pencil} Removing ${targetEnvId}...`)
   removeDirectory(installPath)
 
-  console.log(`${ICONS.success} "${targetEnvId}" was successfully uninstalled!`)
+  console.log(
+    `${ICONS.success} "${targetEnvId}" was successfully uninstalled! Restart METIS with 'metis restart' for changes to go into effect.`,
+  )
 }
