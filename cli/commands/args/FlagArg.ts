@@ -37,6 +37,12 @@ export class FlagArg<
      */
     public readonly options: TFlagArgOptions = {},
   ) {
+    if (FlagArg.ILLEGAL_FLAG_ACCESSORS.has(accessor)) {
+      throw new Error(
+        `The flag accessor '${accessor}' is reserved and cannot be used.`,
+      )
+    }
+
     super(accessor, description)
   }
 
@@ -79,6 +85,12 @@ export class FlagArg<
     }
     return undefined
   }
+
+  /**
+   * Forbidden flag accessors that cannot be used
+   * for {@link FlagArg} instances.
+   */
+  public static ILLEGAL_FLAG_ACCESSORS = new Set(['help'])
 }
 
 /* -- TYPES -- */

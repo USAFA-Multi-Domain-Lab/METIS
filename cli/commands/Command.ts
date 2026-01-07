@@ -1,44 +1,36 @@
-import type { CommandArg } from './args/CommandArg'
-import { FlagArg } from './args/FlagArg'
-import { PositionalArg } from './args/PositionalArg'
-
-/**
- * Maps subargs array to an object type.
- */
-type MapSubargs<TSubargs extends readonly PositionalArg<string>[]> = {
-  [K in TSubargs[number] as K['accessor']]: string
-}
-
-/**
- * Converts an array of CommandArg types to an object type
- * where keys are the arg accessors and values depend on arg type.
- */
-type MapArgs<TArgs extends readonly CommandArg<string>[]> = {
-  [K in TArgs[number] as K['accessor']]: K extends FlagArg<any, infer TSubargs>
-    ? MapSubargs<TSubargs> | undefined
-    : string
-}
-
 /**
  * Represents a command that can be executed from the CLI.
  */
-export class Command<const TArgs extends CommandArg<string>[]> {
+export abstract class Command {
   /**
-   * The arguments used by the command that are positional arguments.
+   * The short name of the command, if shortening is enabled.
+   * @example
+   * ```bash
+   * metis install <target-env-id>
+   * metis i <target-env-id>
+   * ```
+   * In this example, `i` is the short form of the `install` command.
    */
-  public get positionalArgs() {
-    return this.args.filter((arg) => {
-      return arg instanceof PositionalArg
-    })
+  public get shortName(): string | undefined {
+    if (this.options.shorten) {
+      return `${this.name[0].toLowerCase()}`
+    }
+    return undefined
   }
 
   /**
-   * The arguments used by the command that are flag arguments.
+   * Generates a help message for the command in a Docker-like format.
    */
-  public get flagArgs() {
-    return this.args.filter((arg) => {
-      return arg instanceof FlagArg
-    })
+  public get help(): string {
+    let usage = `Usage:  metis ${this.name}`
+
+    let output = `${usage}\n\n${this.description}\n`
+
+    if (this.shortName) {
+      output += `\nAliases:\n  metis ${this.shortName}, metis ${this.name}\n`
+    }
+
+    return output
   }
 
   public constructor(
@@ -53,125 +45,43 @@ export class Command<const TArgs extends CommandArg<string>[]> {
      */
     public readonly description: string,
     /**
-     * The arguments that the command accepts.
+     * Customizes the behavior of a command.
      */
-    public readonly args: TArgs,
-    /**
-     * The function that will be executed when
-     * the command is invoked.
-     */
-    private readonly _execute: (args: MapArgs<TArgs>) => Promise<void>,
-  ) {}
-
-  /**
-   * Gets the corresponding {@link FlagArg} for the
-   * raw string argument passed in {@link process.argv}.
-   * @param rawArg The raw string argument from the CLI.
-   */
-  private getFlagArg(rawArg: string) {
-    return this.args.find(
-      (arg) =>
-        [arg.name, arg.shortName].includes(rawArg) && arg instanceof FlagArg,
-    ) as FlagArg<string, PositionalArg<string>[]> | undefined
+    public readonly options: TCommandOptions = {},
+  ) {
+    if (!Command.nameRegex.test(name)) {
+      throw new Error(
+        `Invalid command name: ${name}\n` +
+          'Command names must be in kebab-case with all lowercase alphabetic characters and dashes only (Must match regex: "/^[a-z]+(-[a-z]+)*$/" ).',
+      )
+    }
   }
 
   /**
    * Executes the command with the arguments found
    * in the CLI process.
    */
-  public async execute(): Promise<void> {
-    let argMap: Record<string, string | Record<string, string>> = {}
-    let rawArgs = process.argv.slice(3) // Skip first 2 args (node, script, command)
-    let positionalArgs = this.positionalArgs
-    let argOverflowCount = 0
+  public abstract execute(): Promise<void>
 
-    for (let i = 0; i < rawArgs.length; i++) {
-      let cursor = rawArgs[i]
+  /**
+   * Regex used to validate command names (kebab case
+   * all lowercase with no leading or trailing dashes).
+   */
+  public static nameRegex = /^[a-z]+(-[a-z]+)*$/
+}
 
-      // If the cursor is a flag argument,
-      // then get the corresponding FlagArg
-      // instance and get its subargs.
-      if (cursor.startsWith('-')) {
-        let arg = this.getFlagArg(cursor)
-        let subargMap: Record<string, string> = {}
-
-        if (!arg) {
-          throw new Error(
-            `Unrecognized flag argument '${cursor}' for command '${this.name}'.\n`,
-          )
-        } else if (!(arg instanceof FlagArg)) {
-          throw new Error(
-            `Argument '${cursor}' is not a flag argument for command '${this.name}'. This error should never occur. Please contact support.\n`,
-          )
-        }
-
-        // Loop through subargs and collect their values.
-        for (let j = 0; j < arg.subargs.length; j++) {
-          let subarg = arg.subargs[j]
-
-          // Move to next raw arg for subarg value.
-          i++
-          cursor = rawArgs[i]
-
-          // Handle missing subarg value.
-          if (!cursor) {
-            let missingSubargCount = arg.subargs.length - j
-            throw new Error(
-              `${arg.name} flag is missing ${missingSubargCount} required sub-argument(s).\n` +
-                `Usage: metis ${this.name} ${positionalArgs
-                  .map((a) => a.name)
-                  .join(' ')} ${arg.name} ${arg.subargs
-                  .map((a: PositionalArg<string>) => a.name)
-                  .join(' ')}`,
-            )
-          }
-
-          // Capture subarg value.
-          subargMap[subarg.accessor] = cursor
-        }
-
-        // Assign subarg map in arg map.
-        argMap[arg.accessor] = subargMap
-      } else {
-        let arg = positionalArgs.shift()
-
-        // If no positional arg is available,
-        // increment overflow count and continue.
-        // Later an error will be thrown to show
-        // the exact number of excess arguments
-        // that were provided.
-        if (!arg) {
-          argOverflowCount++
-          continue
-        }
-
-        // Assign positional arg value in arg map.
-        argMap[arg.accessor] = cursor
-      }
-    }
-
-    if (argOverflowCount > 0) {
-      throw new Error(
-        `${this.name} command expects ${
-          this.positionalArgs.length
-        } positional argument(s) but received ${
-          this.positionalArgs.length + argOverflowCount
-        }.\n` +
-          `Usage: metis ${this.name} ${this.positionalArgs
-            .map((a) => a.name)
-            .join(' ')}`,
-      )
-    } else if (positionalArgs.length > 0) {
-      let missingArgCount = positionalArgs.length
-
-      throw new Error(
-        `${this.name} command is missing ${missingArgCount} required argument(s).\n` +
-          `Usage: metis ${this.name} ${this.positionalArgs
-            .map((a) => a.name)
-            .join(' ')}`,
-      )
-    }
-
-    return this._execute(argMap as MapArgs<TArgs>)
-  }
+/**
+ * Customizes the behavior of a command.
+ */
+export interface TCommandOptions {
+  /**
+   * Allows command name to be shortened to one character.
+   * @example
+   * ```bash
+   * metis install <target-env-id>
+   * metis i <target-env-id>
+   * ```
+   * In this example, `i` is the short form of the `install` command.
+   */
+  shorten?: boolean
 }

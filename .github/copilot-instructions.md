@@ -187,6 +187,9 @@ const target = new TargetSchema({
 Refer to `/docs/devs/style-guide.md` for detailed conventions including docstring requirements, naming patterns, and code organization. Key points:
 
 - **Naming**: Use camelCase for variables/functions, PascalCase for classes/types
+  - **CRITICAL**: NEVER use abbreviated variable names (e.g., `cmd`, `msg`, `req`, `res`, `err`, `ctx`)
+  - Always use full, descriptive names (e.g., `command`, `message`, `request`, `response`, `error`, `context`)
+  - Exception: Standard loop counters (`i`, `j`, `k`) and universally recognized abbreviations in their specific contexts
 - **Comments**: Write clear, descriptive comments for complex logic and public APIs
 - **TypeScript**: Prefer explicit types and interfaces for all data structures
 - **Imports**: Use path aliases (`@shared/*`, `@client/*`, `@server/*`) instead of relative paths

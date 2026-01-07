@@ -1,5 +1,3 @@
-import type { Command } from 'commands/Command'
-
 /**
  * An argument for a CLI command.
  */

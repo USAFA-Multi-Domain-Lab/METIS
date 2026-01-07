@@ -3,8 +3,12 @@ import type { IncomingMessage } from 'http'
 import https from 'https'
 import * as tar from 'tar'
 import { ICONS } from '../util/assets.js'
-import { ENV_ID_REGEX, getInstallPath } from '../util/pathing.js'
-import { Command } from './Command'
+import {
+  getInstallPath,
+  getPathIfInstalled,
+  verifyTargetEnvId,
+} from '../util/pathing.js'
+import { StandardCommand } from './StandardCommand.js'
 import { FlagArg } from './args/FlagArg.js'
 import { PositionalArg } from './args/PositionalArg.js'
 
@@ -28,18 +32,12 @@ const RECOGNIZED_AUTHORS = [
  * @throws Will throw an error if the install should not proceed.
  */
 function validateInstallRequest(targetEnvId: string): void {
-  // Validate target environment ID.
-  if (!ENV_ID_REGEX.test(targetEnvId)) {
-    throw new Error(
-      `Invalid target environment ID '${targetEnvId}'.\n` +
-        `A target-environment ID may only contain lowercase letters, numbers, and single hyphens (no consecutive hyphens), and must start and end with a letter or number.`,
-    )
-  }
+  verifyTargetEnvId(targetEnvId)
 
   // Check if target environment is already installed.
-  const installPath = getInstallPath(targetEnvId)
+  let installPath = getPathIfInstalled(targetEnvId)
 
-  if (fs.existsSync(installPath)) {
+  if (installPath) {
     throw new Error(`Target environment '${targetEnvId}' is already installed.`)
   }
 }
@@ -250,7 +248,7 @@ function download(url: string, dest: string): Promise<void> {
 
 const arg_targetEnvId = new PositionalArg(
   'targetEnvId',
-  'The target environment ID to install.',
+  'The target environment ID to uninstall.',
 )
 
 const arg_author = new FlagArg(
@@ -287,7 +285,7 @@ const arg_version = new FlagArg(
  * @resolves Once installation is complete and successful.
  * @rejects Due to any error during the installation process.
  */
-export const install = new Command(
+export const command_install = new StandardCommand(
   'install',
   'Installs a target environment available on GitHub.',
   [arg_targetEnvId, arg_author, arg_version],
@@ -343,6 +341,7 @@ export const install = new Command(
       `${ICONS.success} "${targetEnvId}" was successfully installed! Restart METIS with 'metis restart' for changes to go into effect.`,
     )
   },
+  { shorten: true },
 )
 
 /* -- TYPES -- */
