@@ -73,6 +73,15 @@ export abstract class Target<
   }
 
   /**
+   * Retrieves an argument by its ID.
+   * @param argId The ID of the argument to retrieve.
+   * @returns The argument with the specified ID, or undefined if not found.
+   */
+  public getArgById(argId: string): TTargetArg | undefined {
+    return this.args.find((arg) => arg._id === argId)
+  }
+
+  /**
    * Default properties set when creating a new Target object.
    */
   public static readonly DEFAULT_PROPERTIES: TTargetJson = {

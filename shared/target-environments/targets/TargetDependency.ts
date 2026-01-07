@@ -128,7 +128,7 @@ export class TargetDependency implements TDependency {
    * (e.g. 1, 'a', true, etc.).
    * @param dependentId The ID of the dependent argument.
    * @returns A new dependency that checks if the value is truthy.
-   * @example Dependency.TRUTHY('dependentId')
+   * @example TargetDependency.TRUTHY('dependentId')
    */
   public static TRUTHY = (dependentId: string) =>
     TargetDependency.SELECT('truthy', dependentId)
@@ -138,7 +138,7 @@ export class TargetDependency implements TDependency {
    * (e.g. null, undefined, 0, false, '', etc.).
    * @param dependentId The ID of the dependent argument.
    * @returns A new dependency that checks if the value is falsey.
-   * @example Dependency.FALSEY('dependentId')
+   * @example TargetDependency.FALSEY('dependentId')
    */
   public static FALSEY = (dependentId: string) =>
     TargetDependency.SELECT('falsey', dependentId)
@@ -148,7 +148,7 @@ export class TargetDependency implements TDependency {
    * @param dependentId The ID of the dependent argument.
    * @param expected The expected value.
    * @returns A new dependency that ensures the argument's value matches the expected value.
-   * @example Dependency.EQUALS('fruit', 'apple')
+   * @example TargetDependency.EQUALS('fruit', 'apple')
    */
   public static EQUALS = (dependentId: string, expected: TDependencyArg) =>
     TargetDependency.SELECT('equals', dependentId, expected)
@@ -158,7 +158,7 @@ export class TargetDependency implements TDependency {
    * @param dependentId The ID of the dependent argument.
    * @param expected The expected values.
    * @returns A new dependency that ensures the argument's value(s) match at least one of the expected values.
-   * @example Dependency.EQUALS_SOME('fruit', ['apple', 'grape', 'banana', 'orange'])
+   * @example TargetDependency.EQUALS_SOME('fruit', ['apple', 'grape', 'banana', 'orange'])
    */
   public static EQUALS_SOME = (
     dependentId: string,
@@ -170,7 +170,7 @@ export class TargetDependency implements TDependency {
    * @param dependentId The ID of the dependent argument.
    * @param expected The expected values.
    * @returns A new dependency that ensures the argument's value(s) match all of the expected values.
-   * @example Dependency.EQUALS_EVERY('fruit', ['apple', 'grape', 'banana', 'orange'])
+   * @example TargetDependency.EQUALS_EVERY('fruit', ['apple', 'grape', 'banana', 'orange'])
    */
   public static EQUALS_EVERY = (
     dependentId: string,
@@ -182,7 +182,7 @@ export class TargetDependency implements TDependency {
    * @param dependentId The ID of the dependent argument.
    * @param unexpected The unexpected value.
    * @returns A new dependency that ensures the argument's value doesn't match the unexpected value.
-   * @example Dependency.NOT_EQUALS('fruit', ['apple', 'grape', 'banana', 'orange'])
+   * @example TargetDependency.NOT_EQUALS('fruit', ['apple', 'grape', 'banana', 'orange'])
    */
   public static NOT_EQUALS = (
     dependentId: string,
@@ -194,7 +194,7 @@ export class TargetDependency implements TDependency {
    * @param dependentId The ID of the dependent argument.
    * @param unexpected The unexpected values.
    * @returns A new dependency that ensures the argument's value(s) don't match at least one of the unexpected values.
-   * @example Dependency.NOT_EQUALS_SOME('fruit', ['apple', 'grape', 'banana', 'orange'])
+   * @example TargetDependency.NOT_EQUALS_SOME('fruit', ['apple', 'grape', 'banana', 'orange'])
    */
   public static NOT_EQUALS_SOME = (
     dependentId: string,
@@ -206,7 +206,7 @@ export class TargetDependency implements TDependency {
    * @param dependentId The ID of the dependent argument.
    * @param unexpected The unexpected values.
    * @returns A new dependency that ensures the argument's value(s) don't match all of the unexpected values.
-   * @example Dependency.NOT_EQUALS_EVERY('fruit', ['apple', 'grape', 'banana', 'orange'])
+   * @example TargetDependency.NOT_EQUALS_EVERY('fruit', ['apple', 'grape', 'banana', 'orange'])
    */
   public static NOT_EQUALS_EVERY = (
     dependentId: string,
@@ -217,7 +217,7 @@ export class TargetDependency implements TDependency {
    * Checks if the argument's (*referenced by the argument's ID*) value is a force object.
    * @param dependentId The ID of the dependent argument.
    * @returns A new dependency that checks if the argument's value is a force object.
-   * @example Dependency.FORCE('dependentId')
+   * @example TargetDependency.FORCE('dependentId')
    */
   public static FORCE = (dependentId: string) =>
     TargetDependency.SELECT('force', dependentId)
@@ -226,7 +226,7 @@ export class TargetDependency implements TDependency {
    * Checks if the argument's (*referenced by the argument's ID*) value contains a force object and a node object.
    * @param dependentId The ID of the dependent argument.
    * @returns A new dependency that checks if the argument's value contains a force object and a node object.
-   * @example Dependency.NODE('dependentId')
+   * @example TargetDependency.NODE('dependentId')
    */
   public static NODE = (dependentId: string) =>
     TargetDependency.SELECT('node', dependentId)
@@ -235,7 +235,7 @@ export class TargetDependency implements TDependency {
    * Checks if the argument's (*referenced by the argument's ID*) value contains a force object, a node object, and an action object.
    * @param dependentId The ID of the dependent argument.
    * @returns A new dependency that checks if the argument's value contains a force object, a node object, and an action object.
-   * @example Dependency.ACTION('dependentId')
+   * @example TargetDependency.ACTION('dependentId')
    */
   public static ACTION = (dependentId: string) =>
     TargetDependency.SELECT('action', dependentId)
@@ -244,7 +244,7 @@ export class TargetDependency implements TDependency {
    * Checks if the argument's (*referenced by the argument's ID*) value is a file object.
    * @param dependentId The ID of the dependent argument.
    * @returns A new dependency that checks if the argument's value is a file object.
-   * @example Dependency.FILE('dependentId')
+   * @example TargetDependency.FILE('dependentId')
    */
   public static FILE = (dependentId: string) =>
     TargetDependency.SELECT('file', dependentId)
