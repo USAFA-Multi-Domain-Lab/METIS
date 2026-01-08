@@ -118,26 +118,39 @@ The `data` property can contain any structure your environment needs. Common pat
 **Using CLI (Recommended):**
 
 ```bash
-# Generate with proper permissions (600)
-./cli.sh config create your-environment
+# Linux/macOS/WSL
+./cli.sh config generate your-environment
 
 # Then edit the generated file
 vim integration/target-env/your-environment/configs.json
 ```
 
-**Manual Creation:**
+**Manual Creation (Linux/macOS):**
 
 ```bash
 # Create file
 touch integration/target-env/your-environment/configs.json
 
-# Set secure permissions (600)
-chmod 600 integration/target-env/your-environment/configs.json
-
 # Add your configuration data
+vim integration/target-env/your-environment/configs.json
+
+# Recommended: Set secure permissions
+chmod 600 integration/target-env/your-environment/configs.json
 ```
 
-> 🔒 **Security:** configs.json files must have 600 permissions. The METIS server will throw a `ConfigPermissionError` if permissions are too permissive.
+**Manual Creation (Windows):**
+
+```powershell
+# Create file
+New-Item -Path "integration\target-env\your-environment\configs.json" -ItemType File
+
+# Add your configuration data
+notepad integration\target-env\your-environment\configs.json
+
+# Recommended: Set secure permissions (see Security & Permissions section)
+```
+
+> 🔒 **Security Tip:** Consider setting restrictive file permissions to protect sensitive data in your configs.json file.
 
 ## Configuration Properties
 
@@ -353,37 +366,28 @@ script: async (context) => {
 }
 ```
 
-
-
 ## Security & Permissions
 
 ### File Permissions
 
-`configs.json` files **must** have `600` permissions (readable/writable by owner only):
+> **Security Recommendation:** When developing target environments, secure your `configs.json` files with appropriate file permissions to protect sensitive data. Ensure the METIS server process has read access to the file.
+
+**Setting Restrictive Permissions:**
+
+Use your operating system's file permission tools to restrict access to the `configs.json` file:
 
 ```bash
-# Check current permissions
-ls -l integration/target-env/your-environment/configs.json
-
-# Should show: -rw------- (600)
+# Example for Linux/macOS
+chmod 600 integration/target-env/your-environment/configs.json
 ```
+
+> _For Windows or other operating systems, consult your OS documentation for setting file permissions that restrict read/write access to the file owner only._
 
 **Why This Matters:**
 
-- Prevents other users from reading sensitive credentials
-- Required by METIS security model
-- Server will throw `ConfigPermissionError` if permissions are too permissive
-
-### Setting Permissions
-
-```bash
-# Set correct permissions
-chmod 600 integration/target-env/your-environment/configs.json
-
-# Verify
-ls -l integration/target-env/your-environment/configs.json
-# Output: -rw------- 1 user group 1234 Dec 25 10:00 configs.json
-```
+- Prevents unauthorized users from reading sensitive credentials
+- Protects API keys, passwords, and connection details
+- Follows security best practices for configuration files
 
 ### Client-Side Visibility
 
@@ -416,10 +420,12 @@ Configurations are visible in the METIS client UI, but sensitive data is **hidde
 ### Best Practices
 
 1. **Never commit sensitive data** to version control
-2. **Use environment-specific configs**: Create separate configs for dev/staging/prod
-3. **Rotate credentials regularly**: Update API keys and passwords periodically
-4. **Document required fields**: Add comments or README explaining expected configuration structure
-5. **Validate configuration**: Check for required fields in your target scripts
+2. **Secure file permissions**: Use restrictive permissions to protect sensitive data
+3. **Ensure METIS can read and write to the file**: Verify the server process has appropriate access
+4. **Use environment-specific configs**: Create separate configs for dev/staging/prod
+5. **Rotate credentials regularly**: Update API keys and passwords periodically
+6. **Document required fields**: Add comments or README explaining expected configuration structure
+7. **Validate configuration**: Check for required fields in your target scripts
 
 ## Configuration Examples
 
@@ -570,22 +576,7 @@ Configurations are visible in the METIS client UI, but sensitive data is **hidde
 
 1. **Check session creation** - Ensure instructor selected a configuration when creating the session
 2. **Verify configs.json exists** - File must be in target environment root directory
-3. **Check file permissions** - Must be exactly 600 (`-rw-------`)
-
-### Permission Errors
-
-**Problem:** `ConfigPermissionError: configs.json has insecure permissions`
-
-**Solution:**
-
-```bash
-# Set correct permissions
-chmod 600 integration/target-env/your-environment/configs.json
-
-# Verify
-ls -l integration/target-env/your-environment/configs.json
-# Should show: -rw-------
-```
+3. **Check file permissions** - Should be `-rw-------` or similar to allow METIS server read/write access
 
 ### Connection Failures
 

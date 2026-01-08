@@ -1,3 +1,4 @@
+import { BooleanToolbox } from '@shared/toolbox/booleans/BooleanToolbox'
 import MongoStore from 'connect-mongo'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
@@ -216,6 +217,17 @@ export class MetisServer {
   }
 
   /**
+   * Whether database backups should be created automatically on startup and on a schedule.
+   */
+  private _backupsEnabled: boolean
+  /**
+   * Whether database backups should be created automatically on startup and on a schedule.
+   */
+  public get backupsEnabled(): boolean {
+    return this._backupsEnabled
+  }
+
+  /**
    * The path to the SSL key file (if any).
    */
   private _sslKeyPath: string | undefined
@@ -285,6 +297,7 @@ export class MetisServer {
     this._wsRateLimit = completedOptions.wsRateLimit
     this._wsRateLimitDuration = completedOptions.wsRateLimitDuration
     this._fileStoreDir = completedOptions.fileStoreDir
+    this._backupsEnabled = completedOptions.backupsEnabled
     this._sslKeyPath = completedOptions.sslKeyPath
     this._sslCertPath = completedOptions.sslCertPath
 
@@ -586,6 +599,7 @@ export class MetisServer {
       'WS_RATE_LIMIT',
       'WS_RATE_LIMIT_DURATION',
       'FILE_STORE_DIR',
+      'DB_BACKUPS_ENABLED',
     ] as const
 
     requiredKeys.forEach((key) => {
@@ -610,6 +624,9 @@ export class MetisServer {
         wsRateLimit: parseInt(process.env.WS_RATE_LIMIT!),
         wsRateLimitDuration: parseInt(process.env.WS_RATE_LIMIT_DURATION!),
         fileStoreDir: process.env.FILE_STORE_DIR!,
+        backupsEnabled: BooleanToolbox.parse(
+          process.env.DB_BACKUPS_ENABLED!,
+        ),
         sslKeyPath: process.env.SSL_KEY_PATH,
         sslCertPath: process.env.SSL_CERT_PATH,
       }

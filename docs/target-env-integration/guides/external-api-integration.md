@@ -63,7 +63,7 @@ Configure connection details in `configs.json`:
 ]
 ```
 
-> 💡 **Tip**: Keep `configs.json` files secure with 600 permissions and never commit real credentials to version control. See [configs.json Reference](../references/configs-json.md) for details.
+> 💡 **Tip**: Keep `configs.json` files secure with appropriate file permissions and never commit real credentials to version control. See [configs.json Reference](../references/configs-json.md) for details.
 
 ## Authentication Patterns
 

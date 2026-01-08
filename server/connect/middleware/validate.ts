@@ -158,10 +158,10 @@ export const looseEventSchema = zod
     method: zod.enum(
       Object.keys(clientEventSchemas) as TNonEmptyArray<TClientMethod>,
     ),
-    data: zod.object({}).loose(),
+    data: zod.object({}).catchall(zod.unknown()),
     requestId: zod.string().optional(),
   })
-  .loose()
+  .catchall(zod.unknown())
 
 /* -- TYPES -- */
 

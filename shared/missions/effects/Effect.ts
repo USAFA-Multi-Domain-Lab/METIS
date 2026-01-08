@@ -170,131 +170,18 @@ export abstract class Effect<
     }
 
     // Check the effect's arguments against the target's arguments.
-    // Check each argument.
-    for (let argId in this.args) {
-      // Find the argument in the target.
-      let arg = target.args.find((arg) => arg._id === argId)
-      // If the argument cannot be found, then the effect has issues.
-      if (!arg) {
-        return constructIssues(
-          `The effect, "${this.name}", has an argument, "${argId}", that couldn't be found within the target, "${target.name}." ` +
-            `Please delete the effect and create a new one.`,
-        )
-      }
-      // Otherwise, check the argument's value.
-      else {
-        // Check if the argument is required and has a value.
-        // * Note: Boolean arguments are always required because
-        // * they always have a value (true or false). Therefore,
-        // * they don't contain the required property.
-        if (
-          arg.type !== 'boolean' &&
-          arg.required &&
-          this.args[argId] === undefined &&
-          this.allDependenciesMet(arg.dependencies)
-        ) {
-          return constructIssues(
-            `The argument, "${arg.name}", within the effect, "${this.name}", is required, yet has no value. ` +
-              `Please enter a value, or delete the effect and create a new one.`,
-          )
-        }
-        // Check if the argument is a boolean and has a value.
-        if (
-          arg.type === 'boolean' &&
-          this.args[argId] === undefined &&
-          this.allDependenciesMet(arg.dependencies)
-        ) {
-          return constructIssues(
-            `The argument, "${arg.name}", within the effect, "${this.name}", is required, yet has no value. ` +
-              `Please update the value by clicking the toggle switch, or delete the effect and create a new one.`,
-          )
-        }
-        // Check if the argument is a dropdown and the selected option is valid.
-        if (
-          arg.type === 'dropdown' &&
-          !arg.options.find((option) => option.value === this.args[argId])
-        ) {
-          return constructIssues(
-            `The effect, "${this.name}", has an invalid option selected. ` +
-              `Please select a valid option, or delete the effect and create a new one.`,
-          )
-        }
-
-        // Check if the argument is a mission component and has a value.
-        const isMissionComponentReference =
-          arg.type === 'force' || arg.type === 'node' || arg.type === 'action'
-
-        if (isMissionComponentReference && arg.required) {
-          // Get the force, node, and action from the mission via the
-          // data stored in the effect's arguments.
-          const forceInMission = this.getForceFromArgs(argId)
-          const nodeInMission = this.getNodeFromArgs(argId)
-          const actionInMission = this.getActionFromArgs(argId)
-          // Get the force, node, and action data from the effect's arguments.
-          const forceInArgs = this.getForceMetadataInArgs(argId)
-          const nodeInArgs = this.getNodeMetadataInArgs(argId)
-          const actionInArgs = this.getActionMetadataInArgs(argId)
-          // Check if the force is required to be in the arguments.
-          const forceIsRequired = !forceInMission
-          // Check if the node is required to be in the arguments.
-          const nodeIsRequired =
-            (arg.type === 'node' || arg.type === 'action') && !nodeInMission
-          // Check if the action is required to be in the arguments.
-          const actionIsRequired =
-            arg.type === 'action' &&
-            !(actionInMission instanceof MissionAction) &&
-            actionInMission !== undefined
-
-          // If the force cannot be found, then the effect has issues.
-          if (forceIsRequired) {
-            return constructIssues(
-              forceInArgs
-                ? `The effect, "${this.name}", is targeting a force, "${forceInArgs.forceName}", which cannot be found.`
-                : `The effect, "${this.name}", targets a force which cannot be found.`,
-            )
-          }
-          // If the node cannot be found, then the effect has issues.
-          if (nodeIsRequired) {
-            return constructIssues(
-              nodeInArgs
-                ? `The effect, "${this.name}", targets a node, "${nodeInArgs.nodeName}", which cannot be found.`
-                : `The effect, "${this.name}", targets a node which cannot be found.`,
-            )
-          }
-          // If the action cannot be found, then the effect has issues.
-          if (actionIsRequired) {
-            return constructIssues(
-              actionInArgs
-                ? `The effect, "${this.name}", targets an action, "${actionInArgs?.actionName}", which cannot be found.`
-                : `The effect, "${this.name}", targets an action which cannot be found.`,
-            )
-          }
-        }
-
-        // If the argument exists within the effect even thought not all of its dependencies are met, then
-        // effect has issues.
-        if (
-          !this.allDependenciesMet(arg.dependencies) &&
-          this.args[argId] !== undefined
-        ) {
-          return constructIssues(
-            `The effect, "${this.name}", has an argument, "${arg.name}", that doesn't belong. ` +
-              `Please delete the effect and create a new one.`,
-          )
-        }
-      }
-    }
+    let argIssues = this.checkEffectArgs(target)
+    if (argIssues.length) return constructIssues(...argIssues)
 
     // Check to see if there are any missing arguments.
     let missingArg = this.checkForMissingArg()
-    // Ensure all of the required arguments are present in the effect.
     if (missingArg) {
       return constructIssues(
         `The required argument ({ _id: "${missingArg._id}", name: "${missingArg.name}" }) within the effect ({ _id: "${this._id}", name: "${this.name}" }) is missing.`,
       )
     }
 
-    if (this.environmentId === 'infer-for-build_000038') {
+    if (this.environmentId === Effect.LEGACY_INFER_ENV_ID) {
       return constructIssues(
         `The effect, "${this.name}" has a reference to a target, but not to a target environment.`,
       )
@@ -406,6 +293,231 @@ export abstract class Effect<
     targetId: string,
     environmentId: string,
   ): T['target'] | null
+
+  /**
+   * Checks the effect's arguments against the target's arguments.
+   * @param target The target to check the effect's arguments against.
+   * @returns Any issues found with the effect's arguments.
+   */
+  private checkEffectArgs(target: T['target']): string[] {
+    let issues: string[] = []
+
+    for (let argId in this.args) {
+      const targetArg = target.getArgById(argId)
+      const effectArgValue = this.args[argId]
+      let issue: string | null = null
+
+      if (!targetArg) {
+        issues.push(
+          `The effect, "${this.name}", has an argument, "${argId}", that couldn't be found within the target, "${target.name}." ` +
+            `Please delete the effect and create a new one.`,
+        )
+        continue
+      }
+
+      issue =
+        this.checkArgWithDeps(targetArg, effectArgValue) ||
+        this.checkNonBooleanArg(targetArg, effectArgValue) ||
+        this.checkBooleanArg(targetArg, effectArgValue) ||
+        this.checkDropdownArg(targetArg, effectArgValue) ||
+        this.checkMissionComponentArg(targetArg)
+
+      if (issue) issues.push(issue)
+    }
+
+    return issues
+  }
+
+  /**
+   * Checks if a non-boolean argument is valid.
+   * @param targetArg The target argument to check.
+   * @param effectArgValue The value of the argument in the effect.
+   * @returns Whether the argument is valid.
+   */
+  private checkNonBooleanArg(
+    targetArg: TTargetArg,
+    effectArgValue: unknown,
+  ): string | null {
+    // * Note: Boolean arguments are always required because
+    // * they always have a value (true or false). Therefore,
+    // * they don't contain the required property.
+    if (
+      targetArg.type !== 'boolean' &&
+      targetArg.required &&
+      effectArgValue === undefined &&
+      this.allDependenciesMet(targetArg.dependencies)
+    ) {
+      return (
+        `The argument, "${targetArg.name}", within the effect, "${this.name}", is required, yet has no value. ` +
+        `Please enter a value, or delete the effect and create a new one.`
+      )
+    }
+
+    return null
+  }
+
+  /**
+   * Checks if an argument with dependencies is valid.
+   * @param targetArg The target argument to check.
+   * @param effectArgValue The value of the argument in the effect.
+   * @returns Whether the argument is valid.
+   */
+  private checkArgWithDeps(
+    targetArg: TTargetArg,
+    effectArgValue: unknown,
+  ): string | null {
+    if (
+      !this.allDependenciesMet(targetArg.dependencies) &&
+      effectArgValue !== undefined
+    ) {
+      return (
+        `The effect, "${this.name}", has an argument, "${targetArg.name}", that doesn't belong. ` +
+        `Please delete the effect and create a new one.`
+      )
+    }
+
+    return null
+  }
+
+  /**
+   * Checks if a boolean argument is valid.
+   * @param targetArg The target argument to check.
+   * @param effectArgValue The value of the argument in the effect.
+   * @returns Whether the argument is valid.
+   */
+  private checkBooleanArg(
+    targetArg: TTargetArg,
+    effectArgValue: unknown,
+  ): string | null {
+    // * Note: Boolean arguments should always have a value
+    // * (true or false). Therefore, if a boolean argument is
+    // * missing a value and all of its dependencies are met,
+    // * it is considered invalid.
+    if (
+      targetArg.type === 'boolean' &&
+      this.allDependenciesMet(targetArg.dependencies) &&
+      effectArgValue === undefined
+    ) {
+      return (
+        `The argument, "${targetArg.name}", within the effect, "${this.name}", is required, yet has no value. ` +
+        `Please update the value by clicking the toggle switch, or delete the effect and create a new one.`
+      )
+    }
+
+    return null
+  }
+
+  /**
+   * Checks if a dropdown argument is valid.
+   * @param targetArg The target argument to check.
+   * @param effectArgValue The value of the argument in the effect.
+   * @returns Whether the argument is valid.
+   */
+  private checkDropdownArg(
+    targetArg: TTargetArg,
+    effectArgValue: unknown,
+  ): string | null {
+    if (
+      targetArg.type === 'dropdown' &&
+      !targetArg.options.find((option) => option.value === effectArgValue)
+    ) {
+      return (
+        `The effect, "${this.name}", has an invalid option selected. ` +
+        `Please select a valid option, or delete the effect and create a new one.`
+      )
+    }
+
+    return null
+  }
+
+  /**
+   * Checks if a mission-component argument is valid.
+   * @param targetArg The target argument to check.
+   * @returns Whether the argument is valid.
+   */
+  private checkMissionComponentArg(targetArg: TTargetArg): string | null {
+    const { _id: argId, type } = targetArg
+
+    const isMissionComponentRef =
+      type === 'action' ||
+      type === 'node' ||
+      type === 'force' ||
+      type === 'file'
+
+    if (!isMissionComponentRef || !targetArg.required) {
+      return null
+    }
+
+    // Check force reference (required for force, node, and action types)
+    if (type === 'force' || type === 'node' || type === 'action') {
+      const forceInMission = this.getForceFromArgs(argId)
+      if (!forceInMission) {
+        const forceInArgs = this.getForceMetadataInArgs(argId)
+        return this.buildComponentNotFoundMessage(
+          'force',
+          forceInArgs?.forceName,
+        )
+      }
+    }
+
+    // Check node reference (required for node and action types)
+    if (type === 'node' || type === 'action') {
+      const nodeInMission = this.getNodeFromArgs(argId)
+      if (!nodeInMission) {
+        const nodeInArgs = this.getNodeMetadataInArgs(argId)
+        return this.buildComponentNotFoundMessage('node', nodeInArgs?.nodeName)
+      }
+    }
+
+    // Check action reference (required for action type)
+    if (type === 'action') {
+      const actionInMission = this.getActionFromArgs(argId)
+      if (
+        !(actionInMission instanceof MissionAction) &&
+        actionInMission !== undefined
+      ) {
+        const actionInArgs = this.getActionMetadataInArgs(argId)
+        return this.buildComponentNotFoundMessage(
+          'action',
+          actionInArgs?.actionName,
+        )
+      }
+    }
+
+    // Check file reference (required for file type)
+    if (type === 'file') {
+      const fileInMission = this.getFileFromArgs(argId)
+      if (!fileInMission) {
+        const fileInArgs = this.getFileMetadataInArgs(argId)
+        return this.buildComponentNotFoundMessage('file', fileInArgs?.fileName)
+      }
+    }
+
+    return null
+  }
+
+  /**
+   * Builds a standardized error message for a missing mission component.
+   * @param componentType The type of component that cannot be found.
+   * @param componentName The name of the component, if available.
+   * @returns The error message.
+   */
+  private buildComponentNotFoundMessage(
+    componentType: 'force' | 'node' | 'action' | 'file',
+    componentName?: string,
+  ): string {
+    let verb = 'targets'
+    if (componentType === 'force') {
+      verb = 'is targeting'
+    }
+
+    const actionGuidance = `Please select a valid ${componentType} or delete the effect and create a new one.`
+
+    if (componentName) {
+      return `The effect, "${this.name}", ${verb} a ${componentType}, "${componentName}", which cannot be found. ${actionGuidance}`
+    }
+    return `The effect, "${this.name}", ${verb} a ${componentType} which cannot be found. ${actionGuidance}`
+  }
 
   /**
    * Checks if there are any required target-arguments missing in the effect.
@@ -847,6 +959,12 @@ export abstract class Effect<
    * alone.
    */
   public static readonly ENVIRONMENT_ID_INFER: string = 'INFER'
+
+  /**
+   * Legacy environment ID used in build_000038 that
+   * indicates missing target environment reference.
+   */
+  private static readonly LEGACY_INFER_ENV_ID: string = 'infer-for-build_000038'
 
   /**
    * Default properties set when creating a new

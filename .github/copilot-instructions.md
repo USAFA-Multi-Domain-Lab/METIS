@@ -1,4 +1,6 @@
-# METIS - Mission Effects Training and Integration System
+# METIS - Modular Effects-Based Transmitter for Integrated Simulations
+
+For a quick index of all instruction sources, see [AGENTS.md](../AGENTS.md). Authoritative coding rules live in [.github/instructions/style-guide.instructions.md](instructions/style-guide.instructions.md).
 
 ## What is METIS?
 
@@ -184,7 +186,7 @@ const target = new TargetSchema({
 
 ## Coding Style & Best Practices
 
-Refer to `/docs/devs/style-guide.md` for detailed conventions including docstring requirements, naming patterns, and code organization. Key points:
+Refer to [.github/instructions/style-guide.instructions.md](instructions/style-guide.instructions.md) for authoritative conventions (docstrings, naming, ordering). See [docs/devs/style-guide.md](../docs/devs/style-guide.md) for supplemental guidance. Key points:
 
 - **Naming**: Use camelCase for variables/functions, PascalCase for classes/types
   - **CRITICAL**: NEVER use abbreviated variable names (e.g., `cmd`, `msg`, `req`, `res`, `err`, `ctx`)

@@ -198,7 +198,7 @@ await api.get('/endpoint', {
 
 - Store sensitive data (API keys, passwords) in `configs.json` files
 - Use multiple configs for environments that run in parallel
-- Protect `configs.json` with proper file permissions (chmod 600)
+- Secure `configs.json` files with appropriate file permissions for your OS
 - Never commit `configs.json` files with real credentials to version control
 - Access configuration via `context.config.targetEnvConfig.data` in target scripts
 

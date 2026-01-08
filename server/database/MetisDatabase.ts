@@ -87,8 +87,14 @@ export class MetisDatabase {
       mongooseConnection.once('open', async () => {
         try {
           databaseLogger.info('Connected to database.')
-          // Create backup of database before use.
-          await this.createBackup()
+          if (server.backupsEnabled) {
+            // Create backup of database before use.
+            await this.createBackup()
+          } else {
+            databaseLogger.info(
+              'Database backups disabled via the DB_BACKUPS_ENABLED environment variable.',
+            )
+          }
           // Ensure the info-collection exists.
           await this.ensureDefaultInfoExists()
           // Ensure that the schema build is correct.
@@ -98,16 +104,20 @@ export class MetisDatabase {
           await this.ensureDefaultUsersExists()
           await this.ensureDefaultMissionsExists()
 
-          try {
-            // Schedule a backup every 24 hours
-            // while server is running.
-            this.backupIntervalId = setInterval(
-              () => this.createBackup(),
-              1000 * 60 * 60 * 24,
-            )
-          } catch (error) {
-            databaseLogger.error('Failed to perform scheduled database backup:')
-            databaseLogger.error(error)
+          if (server.backupsEnabled) {
+            try {
+              // Schedule a backup every 24 hours
+              // while server is running.
+              this.backupIntervalId = setInterval(
+                () => this.createBackup(),
+                1000 * 60 * 60 * 24,
+              )
+            } catch (error) {
+              databaseLogger.error(
+                'Failed to perform scheduled database backup:',
+              )
+              databaseLogger.error(error)
+            }
           }
           // Resolve.
           resolve()
@@ -281,6 +291,10 @@ export class MetisDatabase {
               path: 'server/database/seeding/default.metis',
             },
             this.server.fileStore,
+            {
+              username: User.SYSTEM_USERNAME,
+              _id: User.SYSTEM_ID,
+            },
           )
           await missionImport.execute()
 

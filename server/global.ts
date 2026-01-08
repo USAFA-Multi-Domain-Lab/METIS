@@ -118,6 +118,12 @@ declare global {
     fileStoreDir: string
 
     /**
+     * Whether database backups should be created automatically on startup and on a schedule.
+     * @default true
+     */
+    backupsEnabled: boolean
+
+    /**
      * The path to the SSL key file (if any).
      */
     sslKeyPath?: string

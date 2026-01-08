@@ -37,5 +37,5 @@ Primary background imagery provided by **MidJourney** - https://www.midjourney.c
 
 ---
 
-_METIS - Mission Effects Training and Integration System_  
+_METIS - Modular Effects-Based Transmitter for Integrated Simulations_  
 _Developed for military cyber operations training and educational institutions_
