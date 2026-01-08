@@ -38,7 +38,7 @@ function validateConfigGenRequest(targetEnvId: string): string {
  */
 const arg_targetEnvId = new PositionalArg(
   'targetEnvId',
-  'The target environment identifier.',
+  'The target environment identifier. This should match the name of the folder hosting the target environment installation files.',
 )
 
 /**
@@ -82,58 +82,13 @@ const command_config_generate = new StandardCommand(
       'utf8',
     )
 
-    // Set permissions (read/write for owner only) - Unix only
-    if (process.platform !== 'win32') {
-      try {
-        fs.chmodSync(configFile, 0o600)
-        console.log(`${ICONS.success} Set file permissions to 600 (rw-------)`)
-      } catch (err) {
-        let errorMessage = err instanceof Error ? err.message : String(err)
-        console.log(
-          `${ICONS.warning} Could not set file permissions: ${errorMessage}`,
-        )
-      }
-    }
-
-    // Prompt for .gitignore
-    let addToGitignore = await promptYesNo(
-      `${ICONS.lock} Add configs.json to .gitignore? This is recommended for sensitive data`,
-      true,
-    )
-
-    if (addToGitignore) {
-      let gitignoreFile = path.join(targetEnvPath, '.gitignore')
-
-      // Create .gitignore if it doesn't exist
-      if (!fs.existsSync(gitignoreFile)) {
-        fs.writeFileSync(gitignoreFile, 'configs.json\n', 'utf8')
-        console.log(
-          `${ICONS.success} Created .gitignore and added configs.json`,
-        )
-      } else {
-        // Check if configs.json is already in .gitignore
-        let gitignoreContent = fs.readFileSync(gitignoreFile, 'utf8')
-        let lines = gitignoreContent.split('\n')
-        if (lines.includes('configs.json')) {
-          console.log(`${ICONS.info}  configs.json already in .gitignore`)
-        } else {
-          fs.appendFileSync(gitignoreFile, 'configs.json\n', 'utf8')
-          console.log(`${ICONS.success} Added configs.json to .gitignore`)
-        }
-      }
-    } else {
-      console.log(
-        `${ICONS.warning}  Skipped .gitignore update. Remember to handle sensitive data appropriately.`,
-      )
-    }
-
     console.log('')
     console.log(`${ICONS.success} Configuration file created successfully!`)
     console.log(`${ICONS.file} Location: ${configFile}`)
     console.log(`${ICONS.steps} Next steps:`)
-    console.log(`   1. Edit ${configFile} with your actual configuration data`)
-    console.log(`   2. Ensure the file is readable by the METIS server process`)
-    console.log(`   3. Restart the server to load the new configuration`)
+    console.log(`   1. Edit ${configFile} with your actual configuration data.`)
+    console.log(`   2. Update file permissions if storing sensitive data.`)
+    console.log(`   3. Restart the server to load the new configuration.`)
   },
 )
 
