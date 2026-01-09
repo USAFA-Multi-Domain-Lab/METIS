@@ -1,7 +1,7 @@
 {
-  "extends": "../../../../tsconfig.base.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": "../../../../",
+    "baseUrl": "../../../",
     "paths": {
       "@metis/server/*": ["server/*"],
       "@metis/client/*": ["client/src/*"],
@@ -16,5 +16,5 @@
     "types": ["node"],
     "isolatedModules": true
   },
-  "include": ["../../../global.d.ts"]
+  "include": ["../../global.d.ts"]
 }

@@ -271,7 +271,7 @@ export abstract class User<
   ): boolean => {
     if (this.isAuthorized(requiredPermissions)) {
       callback()
-      return false
+      return true
     } else {
       return false
     }

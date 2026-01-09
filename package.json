@@ -18,7 +18,9 @@
     "archive-users": "tsx --tsconfig server/tsconfig.json server/database/scripts/metis-users/manage-users --archive",
     "test": "jest --runInBand --config tests/jest.config.js",
     "test:e2e": "jest --runInBand --config tests/jest.config.js --selectProjects=e2e",
-    "test:integration:api": "jest --runInBand --config tests/jest.config.js --selectProjects=integration:api"
+    "test:integration:api": "jest --runInBand --config tests/jest.config.js --selectProjects=integration:api",
+    "test:integration:websocket": "jest --runInBand --config tests/jest.config.js --selectProjects=integration:websocket",
+    "test:unit": "jest --runInBand --config tests/jest.config.js --selectProjects=unit"
   },
   "dependencies": {
     "@tiptap/extension-code-block-lowlight": "^2.11.5",

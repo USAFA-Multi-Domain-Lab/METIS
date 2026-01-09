@@ -37,8 +37,12 @@ export abstract class TestSuiteTeardown {
   ): Promise<void> {
     let refs = await FileReferenceModel.find({ name: { $regex: `^${prefix}` } })
 
+    let storeDir = process.env.FILE_STORE_DIR
+      ? path.resolve(process.cwd(), process.env.FILE_STORE_DIR)
+      : path.join(process.cwd(), 'server', 'files', 'store-test')
+
     for (let ref of refs) {
-      let filePath = path.join('server/files/store', ref.path)
+      let filePath = path.join(storeDir, ref.path)
       try {
         if (fs.existsSync(filePath)) {
           fs.unlinkSync(filePath)

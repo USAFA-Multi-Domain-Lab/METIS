@@ -252,7 +252,6 @@ export abstract class Effect<
   }
 
   /**
-   * @param action The action that will trigger the effect.
    * @param data Additional information for the effect.
    */
   protected constructor(
@@ -472,10 +471,7 @@ export abstract class Effect<
     // Check action reference (required for action type)
     if (type === 'action') {
       const actionInMission = this.getActionFromArgs(argId)
-      if (
-        !(actionInMission instanceof MissionAction) &&
-        actionInMission !== undefined
-      ) {
+      if (!actionInMission) {
         const actionInArgs = this.getActionMetadataInArgs(argId)
         return this.buildComponentNotFoundMessage(
           'action',
@@ -511,12 +507,17 @@ export abstract class Effect<
       verb = 'is targeting'
     }
 
+    let article = 'a'
+    if (componentType === 'action') {
+      article = 'an'
+    }
+
     const actionGuidance = `Please select a valid ${componentType} or delete the effect and create a new one.`
 
     if (componentName) {
-      return `The effect, "${this.name}", ${verb} a ${componentType}, "${componentName}", which cannot be found. ${actionGuidance}`
+      return `The effect, "${this.name}", ${verb} ${article} ${componentType}, "${componentName}", which cannot be found. ${actionGuidance}`
     }
-    return `The effect, "${this.name}", ${verb} a ${componentType} which cannot be found. ${actionGuidance}`
+    return `The effect, "${this.name}", ${verb} ${article} ${componentType} which cannot be found. ${actionGuidance}`
   }
 
   /**
@@ -964,7 +965,7 @@ export abstract class Effect<
    * Legacy environment ID used in build_000038 that
    * indicates missing target environment reference.
    */
-  private static readonly LEGACY_INFER_ENV_ID: string = 'infer-for-build_000038'
+  public static readonly LEGACY_INFER_ENV_ID: string = 'infer-for-build_000038'
 
   /**
    * Default properties set when creating a new

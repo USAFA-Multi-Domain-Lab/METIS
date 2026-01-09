@@ -4,8 +4,9 @@ export class VersionToolbox {
    * @returns Whether the string is a valid semantic version.
    */
   public static isValidVersion(version: string): boolean {
-    // Regular expression to match semantic versioning (e.g., 1.0.0, 2.1.3, etc.)
-    const semverRegex = /^\d+\.\d+\.\d+$/
+    // Regular expression to match semantic versions in the form x.y.z.
+    // Leading zeros are not allowed unless the segment is exactly "0".
+    let semverRegex = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/
     return semverRegex.test(version)
   }
 

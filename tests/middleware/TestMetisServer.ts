@@ -7,6 +7,8 @@ import routerMap_missions from '@metis/server/api/v1/routes/missions'
 import routerMap_sessions from '@metis/server/api/v1/routes/sessions'
 import routerMap_targetEnvironments from '@metis/server/api/v1/routes/target-environments'
 import routerMap_users from '@metis/server/api/v1/routes/users'
+import fs from 'fs'
+import path from 'path'
 
 /**
  * Middleware class for managing a METIS server instance for tests.
@@ -24,6 +26,20 @@ export abstract class TestMetisServer {
    * @rejects if the server fails to start.
    */
   private static async create(): Promise<MetisServer> {
+    if (process.env.METIS_ENV_TYPE === 'test') {
+      let storeDir = path.resolve(
+        process.cwd(),
+        process.env.FILE_STORE_DIR ?? './server/files/store-test',
+      )
+      try {
+        fs.rmSync(storeDir, { recursive: true, force: true })
+        fs.mkdirSync(storeDir, { recursive: true })
+      } catch (error) {
+        console.warn('Failed to reset test file store directory.')
+        console.warn(error)
+      }
+    }
+
     // Create METIS server
     this.server = new MetisServer()
 
