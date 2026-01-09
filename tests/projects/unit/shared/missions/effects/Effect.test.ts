@@ -16,7 +16,7 @@ import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
 
 let ACTIVE_REGISTRY: TargetEnvRegistry
 
-describe('Effect.additionalIssues()', () => {
+describe('Effect.additionalIssues', () => {
   beforeEach(() => {
     ACTIVE_REGISTRY = new TargetEnvRegistry()
   })
