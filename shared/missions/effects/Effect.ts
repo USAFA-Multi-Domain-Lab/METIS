@@ -412,7 +412,7 @@ export abstract class Effect<
     if (shouldCheckType && actualType !== expectedType) {
       return (
         `The argument, "${targetArg.name}", within the effect, "${this.name}", is expected to be of type, "${expectedType}", ` +
-        `but received a value of type, "${actualType}". Please update the value, or delete the effect and create a new one.`
+        `but received a value of type, "${actualType}". Please update the value, or delete the effect and create a new one (ERR 30382).`
       )
     } else {
       return null
