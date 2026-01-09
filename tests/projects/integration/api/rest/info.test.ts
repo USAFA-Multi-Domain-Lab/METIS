@@ -2,7 +2,7 @@ import { afterAll, describe, expect, test } from '@jest/globals'
 import { TestSuiteSetup } from 'tests/middleware/TestSuiteSetup'
 import { TestSuiteTeardown } from 'tests/middleware/TestSuiteTeardown'
 import { TestToolbox } from 'tests/toolbox/TestToolbox'
-import packageJson from '../../../../package.json'
+import packageJson from '../../../../../package.json'
 
 describe('/api/v1/info', () => {
   // Extract commonly used utilities.

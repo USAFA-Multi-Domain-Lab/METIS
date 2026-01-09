@@ -120,4 +120,79 @@ export abstract class TestSocketClient {
       socket.once('connect_error', handleError)
     })
   }
+
+  /**
+   * Sends a JSON payload over the socket using the METIS wire format.
+   * @param socket Connected socket instance.
+   * @param payload JSON-serializable payload to send.
+   */
+  public static sendJson(socket: Socket, payload: unknown): void {
+    socket.send(JSON.stringify(payload))
+  }
+
+  /**
+   * Waits for the next socket message matching a predicate.
+   * @param socket Connected socket instance.
+   * @param predicate Predicate to identify the expected event.
+   * @param timeoutMs Timeout in milliseconds.
+   * @resolves with the matched event.
+   * @rejects if the timeout elapses or JSON parsing fails.
+   */
+  public static async waitForEvent<TEvent = any>(
+    socket: Socket,
+    predicate: (event: any) => boolean,
+    timeoutMs: number = 5000,
+  ): Promise<TEvent> {
+    return await new Promise<TEvent>((resolve, reject) => {
+      let cleanedUp = false
+      let cleanup = () => {
+        if (cleanedUp) return
+        cleanedUp = true
+        clearTimeout(timer)
+        socket.off('message', onMessage)
+      }
+
+      let timer = setTimeout(() => {
+        cleanup()
+        reject(new Error('socket event wait timeout'))
+      }, timeoutMs)
+
+      let onMessage = (raw: string | object) => {
+        try {
+          let event = typeof raw === 'string' ? JSON.parse(raw) : raw
+          if (predicate(event)) {
+            cleanup()
+            resolve(event as TEvent)
+          }
+        } catch (error) {
+          cleanup()
+          reject(error)
+        }
+      }
+
+      socket.on('message', onMessage)
+    })
+  }
+
+  /**
+   * Waits for a METIS error event.
+   * @param socket Connected socket instance.
+   * @param predicate Optional predicate for matching the error payload.
+   * @param timeoutMs Timeout in milliseconds.
+   * @resolves with the matched error event.
+   * @rejects if the timeout elapses or JSON parsing fails.
+   */
+  public static async waitForError(
+    socket: Socket,
+    predicate: ((event: any) => boolean) | undefined = undefined,
+    timeoutMs: number = 5000,
+  ): Promise<any> {
+    return await this.waitForEvent(
+      socket,
+      (event) =>
+        (event as any).method === 'error' &&
+        (predicate ? predicate(event) : true),
+      timeoutMs,
+    )
+  }
 }

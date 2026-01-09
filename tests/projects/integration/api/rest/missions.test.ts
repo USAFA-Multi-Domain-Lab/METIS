@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from '@jest/globals'
+import type { TMissionJson } from '@shared/missions/Mission'
 import type { TUserJson } from '@shared/users/User'
 import { Types } from 'mongoose'
 import type { TestHttpClient } from 'tests/middleware/TestHttpClient'
@@ -63,8 +64,11 @@ describe('/api/v1/missions', () => {
     return response.data
   }
 
-  async function createMissionViaApi(client: TestHttpClient, baseMission: any) {
-    let payload = {
+  async function createMissionViaApi(
+    client: TestHttpClient,
+    baseMission: TMissionJson,
+  ) {
+    let payload: TMissionJson = {
       name: `${namePrefix}_created_${generateRandomId()}`,
       versionNumber: baseMission.versionNumber ?? 1,
       seed: baseMission.seed ?? 'seed',
@@ -76,7 +80,7 @@ describe('/api/v1/missions', () => {
       effects: baseMission.effects ?? [],
     }
 
-    let response = await client.post('/api/v1/missions/', payload)
+    let response = await client.post<TMissionJson>('/api/v1/missions/', payload)
     expect(response.status).toBe(200)
     expect(response.data.name).toBe(payload.name)
     missionIdsToCleanup.push(response.data._id)
@@ -142,7 +146,10 @@ describe('/api/v1/missions', () => {
     await loginWithAccess(client, 'admin')
 
     let baseMission = await fetchMissionDetail(client, defaultMissionId)
-    let created = await createMissionViaApi(client, baseMission)
+    let created = await createMissionViaApi(client, {
+      ...baseMission,
+      files: [],
+    })
 
     let copyName = `${namePrefix}_copy_${generateRandomId()}`
     let copyResponse = await client.post('/api/v1/missions/copy/', {
@@ -202,8 +209,17 @@ describe('/api/v1/missions', () => {
     expect(instructorForbidden.status).toBe(403)
 
     await loginWithAccess(client, 'admin')
+
+    // Create a valid mission based on the seeded mission, but remove files so
+    // export does not depend on file-store state.
+    let baseMission = await fetchMissionDetail(client, defaultMissionId)
+    let mission = await createMissionViaApi(client, {
+      ...baseMission,
+      files: [],
+    })
+
     let exportResp = await client.get(
-      `/api/v1/missions/${defaultMissionId}/export/file`,
+      `/api/v1/missions/${mission._id}/export/file`,
     )
     expect(exportResp.status).toBe(200)
   })
