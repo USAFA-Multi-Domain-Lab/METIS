@@ -1,7 +1,7 @@
 import { compute } from '@client/toolbox'
 import { ClassList } from '@shared/toolbox/html/ClassList'
+import type { TDropdownOption_P } from '../DetailDropdown'
 import DetailDropdown from '../DetailDropdown'
-import type { TDropdownOption_P } from '../types'
 
 /**
  * Subcomponent of {@link DetailDropdown} which represents

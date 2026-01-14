@@ -1,4 +1,4 @@
-import { DetailDropdown } from '@client/components/content/form/dropdown'
+import { DetailDropdown } from '@client/components/content/form/dropdown/DetailDropdown'
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
 import { useMissionPageContext } from '@client/components/pages/missions/context'
 import useActionItemButtonCallbacks from '@client/components/pages/missions/hooks/mission-components/actions'

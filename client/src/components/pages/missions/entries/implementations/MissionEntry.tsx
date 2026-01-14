@@ -1,4 +1,5 @@
 import Divider from '@client/components/content/form/Divider'
+import DetailMultiSelect from '@client/components/content/form/multiselect/DetailMultiSelect'
 import { useMissionPageContext } from '@client/components/pages/missions/context'
 import { ClientMission } from '@client/missions/ClientMission'
 import { usePostInitEffect } from '@client/toolbox/hooks'
@@ -20,6 +21,9 @@ export default function MissionEntry({
   const [resourceLabel, setResourceLabel] = useState<string>(
     mission.resourceLabel,
   )
+
+  // todo: Remove after demo
+  const [colors, setColors] = useState<string[]>([])
 
   /* -- EFFECTS -- */
 
@@ -62,6 +66,20 @@ export default function MissionEntry({
       />
       <Divider />
       <EffectTimeline<'sessionTriggeredEffect'> host={mission} />
+      <Divider />
+      {/* todo: Remove after demo */}
+      <h3>Multiselect Demo</h3>
+      <DetailMultiSelect<string>
+        fieldType='required'
+        label='Select Colors'
+        options={['Red', 'Green', 'Blue', 'Yellow', 'Purple']}
+        value={colors}
+        setValue={(values: string[]) => setColors(values)}
+        render={(option: string) => option}
+        getKey={(option: string) => option}
+        disabled={viewMode === 'preview'}
+        key={`${mission._id}_colors`}
+      />
     </Entry>
   )
 }

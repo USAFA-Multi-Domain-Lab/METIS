@@ -7,7 +7,7 @@ import { UserAccess } from '@shared/users/UserAccess'
 import { useEffect, useState } from 'react'
 import { DetailString } from '../form/DetailString'
 import { DetailToggle } from '../form/DetailToggle'
-import { DetailDropdown } from '../form/dropdown'
+import { DetailDropdown } from '../form/dropdown/DetailDropdown'
 import If from '../util/If'
 import './UserEntry.scss'
 
