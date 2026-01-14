@@ -11,23 +11,8 @@ const ResourceCostMod = new TargetSchema({
     // Gather details.
     const { actionMetadata, resourceCost } = context.effect.args
     const { forceKey, nodeKey, actionKey } = actionMetadata as TActionMetadata
-    const errorMessage =
-      `Bad request. The arguments sent with the effect are invalid. Please check the arguments within the effect.\n` +
-      `Effect ID: "${context.effect._id}"\n` +
-      `Effect Name: "${context.effect.name}"`
 
-    if (typeof forceKey !== 'string' || typeof nodeKey !== 'string') {
-      throw new Error(errorMessage)
-    }
-
-    // If the resource cost is a number, then modify the resource cost.
-    if (resourceCost && typeof resourceCost === 'number') {
-      context.modifyResourceCost(resourceCost, { forceKey, nodeKey, actionKey })
-    }
-    // Otherwise, throw an error.
-    else if (resourceCost && typeof resourceCost !== 'number') {
-      throw new Error(errorMessage)
-    }
+    context.modifyResourceCost(resourceCost, { forceKey, nodeKey, actionKey })
   },
   args: [
     {

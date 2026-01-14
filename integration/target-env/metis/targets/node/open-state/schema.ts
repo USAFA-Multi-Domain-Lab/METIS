@@ -67,19 +67,6 @@ const NodeOpenState = new TargetSchema({
     const { nodeMetadata, openState } = context.effect.args
     const { forceKey, nodeKey } = nodeMetadata as TNodeMetadata
 
-    // Validate that all required arguments are present and correctly typed.
-    if (
-      typeof forceKey !== 'string' ||
-      typeof nodeKey !== 'string' ||
-      typeof openState !== 'string'
-    ) {
-      const errorMessage =
-        `Bad request. The arguments sent with the effect are invalid. Please check the arguments within the effect.\n` +
-        `Effect ID: "${context.effect._id}"\n` +
-        `Effect Name: "${context.effect.name}"`
-      throw new Error(errorMessage)
-    }
-
     // Execute the appropriate operation based on the configured open state.
     if (openState === openNodeOption.value) {
       // Open the node, revealing its descendants to players.

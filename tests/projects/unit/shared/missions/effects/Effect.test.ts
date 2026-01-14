@@ -4,8 +4,11 @@ import { Mission } from '@shared/missions/Mission'
 import { MissionPrototype } from '@shared/missions/nodes/MissionPrototype'
 import type { TBooleanArg } from '@shared/target-environments/args/BooleanArg'
 import type { TDropdownArg } from '@shared/target-environments/args/DropdownArg'
+import type { TLargeStringArg } from '@shared/target-environments/args/LargeStringArg'
+import { LargeStringArg } from '@shared/target-environments/args/LargeStringArg'
 import type { TMissionComponentArg } from '@shared/target-environments/args/mission-component/MissionComponentArg'
 import { MissionComponentArg } from '@shared/target-environments/args/mission-component/MissionComponentArg'
+import type { TNumberArg } from '@shared/target-environments/args/NumberArg'
 import type { TStringArg } from '@shared/target-environments/args/StringArg'
 import { StringArg } from '@shared/target-environments/args/StringArg'
 import { TargetEnvironment } from '@shared/target-environments/TargetEnvironment'
@@ -1367,6 +1370,366 @@ describe('Effect.additionalIssues()', () => {
       args: {
         toggle: false,
         dependent: undefined,
+      },
+    })
+
+    expect(effect.issues).toHaveLength(0)
+  })
+
+  test("returns a general issue when a number argument's value is not a number", () => {
+    let numberArg: TNumberArg = {
+      _id: 'numArg',
+      name: 'Number Arg',
+      groupingId: 'group-1',
+      type: 'number',
+      required: true,
+      default: 0,
+    }
+
+    let environment = new TestTargetEnvironment(
+      'env-1',
+      'Env 1',
+      'Test env',
+      '1.0.0',
+      [],
+    )
+
+    let target = new TestTarget(
+      'target-1',
+      'Target 1',
+      'Test target',
+      [numberArg],
+      environment,
+      [],
+    )
+
+    environment.targets = [target]
+
+    let effect = new TestEffect(new TestMission(), {
+      _id: 'effect-1',
+      name: 'Effect 1',
+      targetId: 'target-1',
+      environmentId: 'env-1',
+      targetEnvironmentVersion: '1.0.0',
+      args: {
+        numArg: 'not-a-number',
+      },
+    })
+
+    expect(effect.issues).toHaveLength(1)
+    expect(effect.issues[0].message).toContain(
+      'is expected to be of type, "number"',
+    )
+  })
+
+  test("does not return an issue when a number argument's value matches the expected number type", () => {
+    let numberArg: TNumberArg = {
+      _id: 'numArg',
+      name: 'Number Arg',
+      groupingId: 'group-1',
+      type: 'number',
+      required: true,
+      default: 0,
+    }
+
+    let environment = new TestTargetEnvironment(
+      'env-1',
+      'Env 1',
+      'Test env',
+      '1.0.0',
+      [],
+    )
+
+    let target = new TestTarget(
+      'target-1',
+      'Target 1',
+      'Test target',
+      [numberArg],
+      environment,
+      [],
+    )
+
+    environment.targets = [target]
+
+    let effect = new TestEffect(new TestMission(), {
+      _id: 'effect-1',
+      name: 'Effect 1',
+      targetId: 'target-1',
+      environmentId: 'env-1',
+      targetEnvironmentVersion: '1.0.0',
+      args: {
+        numArg: 42,
+      },
+    })
+
+    expect(effect.issues).toHaveLength(0)
+  })
+
+  test("returns a general issue when a boolean argument's value is not a boolean", () => {
+    let booleanArg: TBooleanArg = {
+      _id: 'boolArg',
+      name: 'Boolean Arg',
+      groupingId: 'group-1',
+      type: 'boolean',
+    }
+
+    let environment = new TestTargetEnvironment(
+      'env-1',
+      'Env 1',
+      'Test env',
+      '1.0.0',
+      [],
+    )
+
+    let target = new TestTarget(
+      'target-1',
+      'Target 1',
+      'Test target',
+      [booleanArg],
+      environment,
+      [],
+    )
+
+    environment.targets = [target]
+
+    let effect = new TestEffect(new TestMission(), {
+      _id: 'effect-1',
+      name: 'Effect 1',
+      targetId: 'target-1',
+      environmentId: 'env-1',
+      targetEnvironmentVersion: '1.0.0',
+      args: {
+        boolArg: 'not-a-boolean',
+      },
+    })
+
+    expect(effect.issues).toHaveLength(1)
+    expect(effect.issues[0].message).toContain(
+      'is expected to be of type, "boolean"',
+    )
+  })
+
+  test("does not return an issue when a boolean argument's value matches the expected boolean type", () => {
+    let booleanArg: TBooleanArg = {
+      _id: 'boolArg',
+      name: 'Boolean Arg',
+      groupingId: 'group-1',
+      type: 'boolean',
+    }
+
+    let environment = new TestTargetEnvironment(
+      'env-1',
+      'Env 1',
+      'Test env',
+      '1.0.0',
+      [],
+    )
+
+    let target = new TestTarget(
+      'target-1',
+      'Target 1',
+      'Test target',
+      [booleanArg],
+      environment,
+      [],
+    )
+
+    environment.targets = [target]
+
+    let effect = new TestEffect(new TestMission(), {
+      _id: 'effect-1',
+      name: 'Effect 1',
+      targetId: 'target-1',
+      environmentId: 'env-1',
+      targetEnvironmentVersion: '1.0.0',
+      args: {
+        boolArg: true,
+      },
+    })
+
+    expect(effect.issues).toHaveLength(0)
+  })
+
+  test("returns a general issue when a string argument's value is not a string", () => {
+    let stringArg: TStringArg = {
+      ...StringArg.fromJson({
+        _id: 'strArg',
+        name: 'String Arg',
+        groupingId: 'group-1',
+        type: 'string',
+        required: true,
+        default: '',
+      }),
+    }
+
+    let environment = new TestTargetEnvironment(
+      'env-1',
+      'Env 1',
+      'Test env',
+      '1.0.0',
+      [],
+    )
+
+    let target = new TestTarget(
+      'target-1',
+      'Target 1',
+      'Test target',
+      [stringArg],
+      environment,
+      [],
+    )
+
+    environment.targets = [target]
+
+    let effect = new TestEffect(new TestMission(), {
+      _id: 'effect-1',
+      name: 'Effect 1',
+      targetId: 'target-1',
+      environmentId: 'env-1',
+      targetEnvironmentVersion: '1.0.0',
+      args: {
+        strArg: 12345,
+      },
+    })
+
+    expect(effect.issues).toHaveLength(1)
+    expect(effect.issues[0].message).toContain(
+      'is expected to be of type, "string"',
+    )
+  })
+
+  test("does not return an issue when a string argument's value matches the expected string type", () => {
+    let stringArg: TStringArg = {
+      ...StringArg.fromJson({
+        _id: 'strArg',
+        name: 'String Arg',
+        groupingId: 'group-1',
+        type: 'string',
+        required: true,
+        default: '',
+      }),
+    }
+
+    let environment = new TestTargetEnvironment(
+      'env-1',
+      'Env 1',
+      'Test env',
+      '1.0.0',
+      [],
+    )
+
+    let target = new TestTarget(
+      'target-1',
+      'Target 1',
+      'Test target',
+      [stringArg],
+      environment,
+      [],
+    )
+
+    environment.targets = [target]
+
+    let effect = new TestEffect(new TestMission(), {
+      _id: 'effect-1',
+      name: 'Effect 1',
+      targetId: 'target-1',
+      environmentId: 'env-1',
+      targetEnvironmentVersion: '1.0.0',
+      args: {
+        strArg: 'This is a string',
+      },
+    })
+
+    expect(effect.issues).toHaveLength(0)
+  })
+
+  test("returns a general issue when a large-string argument's value is not a string", () => {
+    let largeStringArg: TLargeStringArg = {
+      ...LargeStringArg.fromJson({
+        _id: 'largeStrArg',
+        name: 'Large String Arg',
+        groupingId: 'group-1',
+        type: 'large-string',
+        required: true,
+        default: '',
+      }),
+    }
+
+    let environment = new TestTargetEnvironment(
+      'env-1',
+      'Env 1',
+      'Test env',
+      '1.0.0',
+      [],
+    )
+
+    let target = new TestTarget(
+      'target-1',
+      'Target 1',
+      'Test target',
+      [largeStringArg],
+      environment,
+      [],
+    )
+
+    environment.targets = [target]
+
+    let effect = new TestEffect(new TestMission(), {
+      _id: 'effect-1',
+      name: 'Effect 1',
+      targetId: 'target-1',
+      environmentId: 'env-1',
+      targetEnvironmentVersion: '1.0.0',
+      args: {
+        largeStrArg: 12345,
+      },
+    })
+
+    expect(effect.issues).toHaveLength(1)
+    expect(effect.issues[0].message).toContain(
+      'is expected to be of type, "string"',
+    )
+  })
+
+  test("does not return an issue when a large-string argument's value matches the expected string type", () => {
+    let largeStringArg: TLargeStringArg = {
+      ...LargeStringArg.fromJson({
+        _id: 'largeStrArg',
+        name: 'Large String Arg',
+        groupingId: 'group-1',
+        type: 'large-string',
+        required: true,
+        default: '',
+      }),
+    }
+
+    let environment = new TestTargetEnvironment(
+      'env-1',
+      'Env 1',
+      'Test env',
+      '1.0.0',
+      [],
+    )
+
+    let target = new TestTarget(
+      'target-1',
+      'Target 1',
+      'Test target',
+      [largeStringArg],
+      environment,
+      [],
+    )
+
+    environment.targets = [target]
+
+    let effect = new TestEffect(new TestMission(), {
+      _id: 'effect-1',
+      name: 'Effect 1',
+      targetId: 'target-1',
+      environmentId: 'env-1',
+      targetEnvironmentVersion: '1.0.0',
+      args: {
+        largeStrArg: 'This is a large string',
       },
     })
 
