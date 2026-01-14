@@ -1,6 +1,5 @@
 import { LocalContext, LocalContextProvider } from '@client/context/local'
 import { compute } from '@client/toolbox'
-import { ClassList } from '@shared/toolbox/html/ClassList'
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 import type { TDetailBase_P } from '../'
@@ -51,6 +50,7 @@ export default function DetailMultiSelect<TOption>(
     emptyText: props.emptyText ?? 'Select options',
     errorMessage: props.errorMessage ?? '',
     isExpanded: props.isExpanded ?? false,
+    variant: props.variant ?? 'default',
   }
 
   // Extract props.
@@ -66,9 +66,9 @@ export default function DetailMultiSelect<TOption>(
     uniqueLabelClassName,
     uniqueFieldClassName,
     disabled,
-    isExpanded,
     tooltipDescription,
     emptyText,
+    variant,
   } = defaultedProps
 
   /* -- STATE -- */
@@ -86,6 +86,13 @@ export default function DetailMultiSelect<TOption>(
   const rootClassName: string = compute(() => {
     // Default class names
     let classList: string[] = ['Detail', 'DetailMultiSelect']
+
+    // Add variant class name
+    if (variant === 'checkbox-only') {
+      classList.push('CheckboxOnly')
+    } else if (variant === 'pills-only') {
+      classList.push('PillsOnly')
+    }
 
     // If a unique class name is passed
     // then add it to the list of class names.
@@ -280,40 +287,52 @@ export default function DetailMultiSelect<TOption>(
       return (
         <div key={key} className='SelectedPill'>
           <span className='PillText'>{displayText}</span>
-          <button
-            className='RemoveButton'
-            onClick={(e) => {
-              e.stopPropagation()
-              onRemoveOption(selectedOption)
-            }}
-            disabled={disabled}
-          >
-            ✕
-          </button>
+          {variant !== 'checkbox-only' && (
+            <button
+              className='RemoveButton'
+              onClick={(e) => {
+                e.stopPropagation()
+                onRemoveOption(selectedOption)
+              }}
+              disabled={disabled}
+            >
+              ✕
+            </button>
+          )}
         </div>
       )
     })
   })
 
   const optionsJsx: TReactElement[] = compute(() => {
-    return options.map((option) => {
+    // Filter out selected options for pills-only variant
+    let availableOptions = options
+    if (variant === 'pills-only') {
+      availableOptions = options.filter((option) => !isOptionSelected(option))
+    }
+
+    return availableOptions.map((option) => {
       let key = getKey(option)
       let displayText = render(option)
       let selected = isOptionSelected(option)
 
       return (
-        <MultiSelectOption
-          key={key}
-          selected={selected}
-          onClick={() => onToggleOption(option)}
-        >
-          <div className='OptionContent'>
-            <input
-              type='checkbox'
-              checked={selected}
-              onChange={() => {}}
-              className='OptionCheckbox'
-            />
+        <MultiSelectOption key={key} selected={selected}>
+          <div
+            className='OptionContent'
+            onClick={(e) => {
+              e.stopPropagation()
+              onToggleOption(option)
+            }}
+          >
+            {variant !== 'pills-only' && (
+              <input
+                type='checkbox'
+                checked={selected}
+                onChange={() => {}}
+                className='OptionCheckbox'
+              />
+            )}
             <span className='OptionText'>{displayText}</span>
           </div>
         </MultiSelectOption>
@@ -383,6 +402,14 @@ type TDetailMultiSelectBase_P = TDetailBase_P & {
    * The text to display when no values are selected.
    */
   emptyText?: string
+  /**
+   * The variant of the multiselect component.
+   * @option 'default' - Shows both checkboxes and X buttons on pills.
+   * @option 'checkbox-only' - Shows only checkboxes, no X buttons on pills.
+   * @option 'pills-only' - Shows only X buttons on pills, no checkboxes. Selected items are hidden from options.
+   * @default 'default'
+   */
+  variant?: 'default' | 'checkbox-only' | 'pills-only'
 }
 
 /**

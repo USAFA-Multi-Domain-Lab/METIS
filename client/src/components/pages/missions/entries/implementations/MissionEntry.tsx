@@ -23,7 +23,9 @@ export default function MissionEntry({
   )
 
   // todo: Remove after demo
-  const [colors, setColors] = useState<string[]>([])
+  const [colorsDefault, setColorsDefault] = useState<string[]>([])
+  const [colorsCheckbox, setColorsCheckbox] = useState<string[]>([])
+  const [colorsPills, setColorsPills] = useState<string[]>([])
 
   /* -- EFFECTS -- */
 
@@ -71,14 +73,39 @@ export default function MissionEntry({
       <h3>Multiselect Demo</h3>
       <DetailMultiSelect<string>
         fieldType='required'
-        label='Select Colors'
+        label='Checkbox Only Variant'
         options={['Red', 'Green', 'Blue', 'Yellow', 'Purple']}
-        value={colors}
-        setValue={(values: string[]) => setColors(values)}
+        value={colorsCheckbox}
+        setValue={(values: string[]) => setColorsCheckbox(values)}
         render={(option: string) => option}
         getKey={(option: string) => option}
         disabled={viewMode === 'preview'}
-        key={`${mission._id}_colors`}
+        variant='checkbox-only'
+        key={`${mission._id}_colors_checkbox`}
+      />
+      <DetailMultiSelect<string>
+        fieldType='required'
+        label='Checkbox + X Buttons Variant'
+        options={['Red', 'Green', 'Blue', 'Yellow', 'Purple']}
+        value={colorsDefault}
+        setValue={(values: string[]) => setColorsDefault(values)}
+        render={(option: string) => option}
+        getKey={(option: string) => option}
+        disabled={viewMode === 'preview'}
+        variant='default'
+        key={`${mission._id}_colors_default`}
+      />
+      <DetailMultiSelect<string>
+        fieldType='required'
+        label='Swapping Variant'
+        options={['Red', 'Green', 'Blue', 'Yellow', 'Purple']}
+        value={colorsPills}
+        setValue={(values: string[]) => setColorsPills(values)}
+        render={(option: string) => option}
+        getKey={(option: string) => option}
+        disabled={viewMode === 'preview'}
+        variant='pills-only'
+        key={`${mission._id}_colors_pills`}
       />
     </Entry>
   )

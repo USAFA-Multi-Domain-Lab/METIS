@@ -6,12 +6,8 @@
     padding: 0;
 
     &.IsExpanded {
-      .SelectedContainer {
-        .ExpandIndicator {
-          .Indicator {
-            transform: scale(1, -0.75);
-          }
-        }
+      .SelectedContainer .ExpandIndicator .Indicator {
+        transform: scale(1, -0.75);
       }
     }
 
@@ -76,9 +72,11 @@
 
       .ExpandIndicator {
         .Indicator {
+          display: block;
           transform: scale(1, 0.75);
           font-size: 1.1rem;
           color: $detail-field-text-color;
+          transition: transform 0.2s ease;
         }
       }
     }
@@ -130,6 +128,38 @@
 
     .MultiSelectOption {
       cursor: not-allowed;
+    }
+  }
+
+  // Variant: Checkbox only - hide remove buttons on pills
+  &.CheckboxOnly {
+    .SelectedPill {
+      .RemoveButton {
+        display: none;
+      }
+    }
+  }
+
+  // Variant: Pills only - hide checkboxes and selection highlighting
+  &.PillsOnly {
+    .AllOptions {
+      .MultiSelectOption {
+        .OptionContent {
+          gap: 0;
+
+          .OptionCheckbox {
+            display: none;
+          }
+
+          .OptionText {
+            margin-left: 0;
+          }
+        }
+
+        &.Selected {
+          background-color: transparent;
+        }
+      }
     }
   }
 }
