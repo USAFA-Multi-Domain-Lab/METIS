@@ -89,8 +89,14 @@ export default function AuthPage(): TReactElement | null {
         }
       }
     } catch (error: any) {
-      // Handles duplicate logins.
-      if (error.response?.status === 409) {
+      let { status, message } = error.response?.data?.error ?? {
+        status: 500,
+        message: 'An unknown error occurred.',
+      }
+
+      // Special logic for handling 409 Conflict status,
+      // allowing the user to choose how to proceed.
+      if (status === 409) {
         let { choice } = await prompt(
           'Account is already logged in on another device or browser. How do you wish to proceed?',
           ['Logout and login here', 'Go back'],
@@ -103,23 +109,11 @@ export default function AuthPage(): TReactElement | null {
           setIsSubmitting(false)
           finishLoading()
         }
+        return
       }
-      // Handles incorrect username or password.
-      else if (error.response?.status === 401) {
-        handleLoginError('Incorrect username or password.')
-      }
-      // Handles account lockout.
-      else if (error.response?.status === 403) {
-        handleLoginError(
-          'The account has timed out likely due to too many requests being made. Please try again later.',
-        )
-      }
-      // Handles any other error.
-      else {
-        handleLoginError(
-          'Something went wrong on our end. Please try again later.',
-        )
-      }
+
+      // Generic error handling, otherwise.
+      handleLoginError(message)
     }
   }
 

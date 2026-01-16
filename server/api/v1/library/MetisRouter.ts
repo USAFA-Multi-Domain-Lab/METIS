@@ -50,6 +50,11 @@ export class MetisRouter {
   }
 }
 
+/* -- TYPES -- */
+
+/**
+ * A function that maps routes to a METIS router.
+ */
 export type TMetisRouterMap = (
   router: Router,
   server: MetisServer,
