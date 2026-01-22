@@ -1,17 +1,3 @@
-import { TargetMigrationRegistry } from '@metis/schema/TargetMigrationRegistry'
-
-/**
- * Migrations for the File Access target.
- */
-const migrations = new TargetMigrationRegistry().register(
-  '0.2.0',
-  (effectArgs) => {
-    console.log('Migrating File Access effect args to version 0.2.0.')
-    // effectArgs.test = 'This is a test value for the migration.'
-    return effectArgs
-  },
-)
-
 /**
  * A target available in the METIS target environment that
  * allows a user to manage access to files from forces.
@@ -81,7 +67,6 @@ const FileAccess = new TargetSchema({
         'Grants or revokes access to the file for the force. If no change is selected, then the access will be left unmodified.',
     },
   ],
-  migrations,
 })
 
 export default FileAccess

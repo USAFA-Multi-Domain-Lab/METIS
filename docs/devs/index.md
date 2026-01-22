@@ -14,11 +14,13 @@ Technical documentation for developers working on METIS core system, creating in
 ## 🏗️ System Architecture
 
 ### **[Architecture Overview](architecture.md)** - System Design
+
 - **Component relationships** - How frontend, backend, and database interact
-- **Target-Effect system** - Integration framework architecture
+- **Target-effect system** - Integration framework architecture
 - **Data flow patterns** - Request/response and real-time communication
 
-### **[WebSocket System](websocket.md)** - Real-Time Communication  
+### **[WebSocket System](websocket.md)** - Real-Time Communication
+
 - **Session management** - Authentication and connection handling
 - **Mission control** - Live updates and coordination
 - **Security model** - Rate limiting and access control
@@ -26,6 +28,7 @@ Technical documentation for developers working on METIS core system, creating in
 ## 📝 Development Standards
 
 ### **[Style Guide](style-guide.md)** - Code Standards
+
 - **Documentation patterns** - TSDoc standards and conventions
 - **Naming conventions** - Consistent naming across TypeScript/JavaScript
 - **Code organization** - File structure and import patterns
@@ -33,22 +36,26 @@ Technical documentation for developers working on METIS core system, creating in
 ## 🔌 Integration Development
 
 ### External System Integration
+
 - **[Target Environment Integration](/docs/target-env-integration/index.md)** - Complete integration guide
 - **[Target Environments API](/docs/api/target-environments.md)** - REST API for managing integrations
 - **[Context API](/docs/target-env-integration/references/context-api.md)** - Runtime API reference
 
 ### Core System APIs
+
 - **[API Documentation](/docs/api/index.md)** - Complete REST API reference
 - **[WebSocket Events](websocket.md)** - Real-time communication patterns
 
 ## Development Workflow
 
 ### 🛠️ Core Development
+
 1. **System changes** → Follow architecture patterns and style guide
-2. **API changes** → Update documentation and maintain compatibility  
+2. **API changes** → Update documentation and maintain compatibility
 3. **Frontend changes** → Coordinate with WebSocket and REST patterns
 
 ### 🔗 Integration Development
+
 1. **External integrations** → Use target-environment framework
 2. **Custom functionality** → Extend through target-effect system
 3. **Third-party APIs** → Follow security and error handling patterns

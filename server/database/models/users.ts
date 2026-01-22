@@ -1,7 +1,7 @@
 import { StatusError } from '@server/api/v1/library/StatusError'
 import { ServerUser } from '@server/users/ServerUser'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
-import type { TUserJson } from '@shared/users/User'
+import type { TUserExistingJson, TUserJson } from '@shared/users/User'
 import bcryptjs from 'bcryptjs'
 import type { Request } from 'express'
 import type { ProjectionType } from 'mongoose'
@@ -15,6 +15,7 @@ import {
 import { databaseLogger } from '../../logging'
 import { UserSchema } from './classes'
 import type {
+  TLoginLockoutInfo,
   TPostUserQuery,
   TPreUserQuery,
   TUser,
@@ -55,6 +56,101 @@ export const hashPassword = async (password: string): Promise<string> => {
 }
 
 /**
+ * Checks if the user account is currently locked due to failed login attempts.
+ * @param userId The ID of the user to check.
+ * @returns Whether the account is locked and when it will unlock.
+ */
+export const checkLoginLockout = async (
+  userId: string,
+): Promise<TLoginLockoutInfo> => {
+  let user = await UserModel.findById(
+    userId,
+    {},
+    { includeSensitive: true },
+  ).exec()
+
+  if (!user || !user.loginLockedUntil) {
+    return { isLocked: false, unlockTime: null }
+  }
+
+  let now = new Date()
+  let isLocked = user.loginLockedUntil > now
+
+  if (!isLocked) {
+    // Lock period expired, reset the lockout
+    await UserModel.findByIdAndUpdate(userId, {
+      loginLockedUntil: null,
+      failedLoginAttempts: 0,
+    }).exec()
+    return { isLocked: false, unlockTime: null }
+  }
+
+  return { isLocked: true, unlockTime: user.loginLockedUntil }
+}
+
+/**
+ * Records a failed login attempt and locks the account if necessary.
+ * @param userId The ID of the user.
+ * @param maxAttempts Maximum allowed attempts before lockout.
+ * @param lockoutDuration Duration of lockout in milliseconds.
+ * @param attemptWindow Time window in milliseconds to track attempts.
+ */
+export const recordFailedLoginAttempt = async (
+  userId: string,
+  maxAttempts: number,
+  lockoutDuration: number,
+  attemptWindow: number,
+): Promise<void> => {
+  let user = await UserModel.findById(
+    userId,
+    {},
+    { includeSensitive: true },
+  ).exec()
+  if (!user) return
+
+  let now = new Date()
+  let lastAttemptTime = user.lastFailedLoginAt
+  let currentAttempts = user.failedLoginAttempts || 0
+
+  // Reset attempt count if outside the tracking window
+  if (
+    lastAttemptTime &&
+    now.getTime() - lastAttemptTime.getTime() > attemptWindow
+  ) {
+    currentAttempts = 0
+  }
+
+  currentAttempts++
+
+  let updateData: any = {
+    failedLoginAttempts: currentAttempts,
+    lastFailedLoginAt: now,
+  }
+
+  // Lock account if max attempts exceeded
+  if (currentAttempts >= maxAttempts) {
+    updateData.loginLockedUntil = new Date(now.getTime() + lockoutDuration)
+    updateData.failedLoginAttempts = 0 // Reset for next cycle
+  }
+
+  await UserModel.findByIdAndUpdate(userId, updateData).exec()
+}
+
+/**
+ * Resets failed login attempts after successful login.
+ * @param userId The ID of the user.
+ */
+export const resetFailedLoginAttempts = async (
+  userId: string,
+): Promise<void> => {
+  await UserModel.findByIdAndUpdate(userId, {
+    failedLoginAttempts: 0,
+    lastFailedLoginAt: null,
+    loginLockedUntil: null,
+  }).exec()
+}
+
+/**
  * Transforms the user document to JSON.
  * @param doc The mongoose document which is being converted.
  * @param ret The plain object representation which has been converted.
@@ -75,11 +171,11 @@ const toJson = (doc: TUserDoc, ret: TUserJson, options: any): TUserJson => {
 /**
  * Authenticates a user based on the request.
  * @param request The request with the user data.
- * @resolves When the user has been authenticated.
+ * @resolves With the authenticated user.
  * @rejects When the user could not be authenticated.
  */
-const authenticate = async (request: Request): Promise<TUserJson> => {
-  return new Promise<TUserJson>(async (resolve, reject) => {
+const authenticate = async (request: Request): Promise<ServerUser> => {
+  return new Promise<ServerUser>(async (resolve, reject) => {
     try {
       // Extract user data from the request.
       let { username, password } = request.body
@@ -91,19 +187,19 @@ const authenticate = async (request: Request): Promise<TUserJson> => {
       ).exec()
       // If the user does not exist, throw an error.
       if (!userDoc) {
-        throw new StatusError('Incorrect username.', 401)
+        throw new StatusError('Incorrect username or password.', 401)
       }
       // If the user is a system user, throw an error.
       if (userDoc.accessId === 'system') {
         throw new StatusError(
-          `Failed to authenticate user because the user "{ username: ${username} }" is a system user. System users cannot log in.`,
+          `Failed to authenticate user because the user "${username}" is a system user. System users cannot log in.`,
           400,
         )
       }
       // If the user does not have a password, throw an error.
       if (!userDoc.password) {
         throw new StatusError(
-          `Failed to authenticate user because the user "{ username: ${username} }" does not have a password.`,
+          `Failed to authenticate user because the user "${username}" does not have a password.`,
           500,
         )
       }
@@ -111,12 +207,14 @@ const authenticate = async (request: Request): Promise<TUserJson> => {
       // Compare the password to the hashed password.
       let same: boolean = await bcryptjs.compare(password, userDoc.password)
       // If the password is incorrect, then return an error.
-      if (!same) throw new StatusError('Incorrect password.', 401)
+      if (!same) throw new StatusError('Incorrect username or password.', 401)
 
-      // Convert the user document to JSON.
-      let userJson: TUserJson = userDoc.toJSON()
+      // Convert the user document to a `ServerUser`
+      // instance.
+      let userJson: TUserExistingJson = userDoc.toJSON()
+      let user = ServerUser.fromExistingJson(userJson)
       // Return the user.
-      resolve(userJson)
+      resolve(user)
     } catch (error: any) {
       // Log the error.
       databaseLogger.error('Failed to authenticate user.\n', error)
@@ -245,6 +343,19 @@ const userSchema = new UserSchema(
       required: true,
       default: {},
     },
+    failedLoginAttempts: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+    lastFailedLoginAt: {
+      type: Date,
+      default: null,
+    },
+    loginLockedUntil: {
+      type: Date,
+      default: null,
+    },
     deleted: { type: Boolean, required: true, default: false },
   },
   {
@@ -288,7 +399,12 @@ userSchema.pre<TPreUserQuery>(
 
 // Exclude sensitive information by default from query
 // results.
-excludeSensitiveForFinds(userSchema, ['password'])
+excludeSensitiveForFinds(userSchema, [
+  'password',
+  'loginLockedUntil',
+  'failedLoginAttempts',
+  'lastFailedLoginAt',
+])
 // Prevent deleted users from being returned in queries,
 // unless explicitly requested.
 excludeDeletedForFinds(userSchema)

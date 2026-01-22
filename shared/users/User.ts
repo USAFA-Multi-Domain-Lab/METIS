@@ -298,6 +298,9 @@ export abstract class User<
       updatedAt: null,
       createdBy: null,
       createdByUsername: null,
+      lastFailedLoginAt: null,
+      failedLoginAttempts: 0,
+      loginLockedUntil: null,
     }
   }
 
@@ -499,6 +502,18 @@ export interface TUserJson {
    * Settings which customize the user's experience in METIS.
    */
   preferences: TUserPreferencesJson
+  /**
+   * Number of consecutive failed login attempts.
+   */
+  failedLoginAttempts?: number
+  /**
+   * Timestamp of the last failed login attempt.
+   */
+  lastFailedLoginAt?: Date | null
+  /**
+   * Timestamp when the login lock expires.
+   */
+  loginLockedUntil?: Date | null
   /**
    * The date/time the user was created.
    */

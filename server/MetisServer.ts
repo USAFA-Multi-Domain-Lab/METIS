@@ -250,6 +250,39 @@ export class MetisServer {
   }
 
   /**
+   * The maximum number of failed login attempts before lockout.
+   */
+  private _maxLoginAttempts: number
+  /**
+   * The maximum number of failed login attempts before lockout.
+   */
+  public get maxLoginAttempts(): number {
+    return this._maxLoginAttempts
+  }
+
+  /**
+   * The duration of login lockout in milliseconds.
+   */
+  private _loginLockoutDuration: number
+  /**
+   * The duration of login lockout in milliseconds.
+   */
+  public get loginLockoutDuration(): number {
+    return this._loginLockoutDuration
+  }
+
+  /**
+   * The time window in milliseconds to track failed attempts.
+   */
+  private _loginAttemptWindow: number
+  /**
+   * The time window in milliseconds to track failed attempts.
+   */
+  public get loginAttemptWindow(): number {
+    return this._loginAttemptWindow
+  }
+
+  /**
    * The session middleware for the server responsible
    * for enabling and managing sessions.
    */
@@ -300,6 +333,9 @@ export class MetisServer {
     this._backupsEnabled = completedOptions.backupsEnabled
     this._sslKeyPath = completedOptions.sslKeyPath
     this._sslCertPath = completedOptions.sslCertPath
+    this._maxLoginAttempts = completedOptions.maxLoginAttempts
+    this._loginLockoutDuration = completedOptions.loginLockoutDuration * 1000 // ms
+    this._loginAttemptWindow = completedOptions.loginAttemptWindow * 1000 // ms
 
     // Create third-party server objects.
     this._expressApp = express()
@@ -448,6 +484,12 @@ export class MetisServer {
       // Serve built client (Vite outputs to dist)
       expressApp.use(express.static(MetisServer.resolvePath('../client/dist')))
 
+      // Make the MetisServer instance accessible in request handlers.
+      expressApp.use((request, response, next) => {
+        response.locals.metis = this
+        next()
+      })
+
       // This will do clean up when the application
       // terminates.
       process.on('SIGINT', () => {
@@ -472,16 +514,46 @@ export class MetisServer {
       })
 
       // last line of defense error handling (generic server error)
-      expressApp.use((error: any, request: any, response: any, next: any) => {
-        if (!error.status) {
-          error.status = 500
-        }
-        expressLogger.error(error)
+      expressApp.use(
+        (
+          error: any,
+          request: TExpressRequest,
+          response: TExpressResponse,
+          next: any,
+        ) => {
+          expressLogger.error(
+            `Error encountered during request to ${request.path}:`,
+            error,
+          )
 
-        response.status(500)
-        response.locals.error = error
-        return response.render('error/v-server-error')
-      })
+          // Default the status to 500, if not set.
+          if (!error.status) {
+            error.status = 500
+          }
+          // All 500 errors should have a generic message
+          // to avoid leaking server details.
+          if (error.status === 500) {
+            error.message =
+              'Something went wrong on our end. Please try again later.'
+          }
+
+          // For API routes, send JSON response.
+          if (request.path.startsWith('/api/')) {
+            return response.status(error.status).json({
+              error: {
+                status: error.status,
+                message: error.message,
+              },
+            })
+          }
+          // For web routes, render error page.
+          else {
+            response.status(error.status)
+            response.locals.error = error
+            return response.render('error/v-server-error')
+          }
+        },
+      )
 
       // Handle lower level errors.
       process.on('uncaughtException', (err: any) => {
@@ -511,11 +583,13 @@ export class MetisServer {
    * Maps the added routers to the server.
    */
   private mapRouters(): void {
-    const register = (router: MetisRouter) =>
+    const register = (router: MetisRouter) => {
       this.expressApp.use(router.path, router.expressRouter)
+    }
 
-    for (let router of this.routers)
+    for (let router of this.routers) {
       router.map(router.expressRouter, this, () => register(router))
+    }
   }
 
   /**
@@ -536,7 +610,7 @@ export class MetisServer {
   /**
    * The current build number for the database.
    */
-  public static readonly SCHEMA_BUILD_NUMBER: number = 53
+  public static readonly SCHEMA_BUILD_NUMBER: number = 54
 
   /**
    * The root directory for the METIS server.
@@ -600,6 +674,9 @@ export class MetisServer {
       'WS_RATE_LIMIT_DURATION',
       'FILE_STORE_DIR',
       'DB_BACKUPS_ENABLED',
+      'MAX_LOGIN_ATTEMPTS',
+      'LOGIN_LOCKOUT_DURATION',
+      'LOGIN_ATTEMPT_WINDOW',
     ] as const
 
     requiredKeys.forEach((key) => {
@@ -624,11 +701,12 @@ export class MetisServer {
         wsRateLimit: parseInt(process.env.WS_RATE_LIMIT!),
         wsRateLimitDuration: parseInt(process.env.WS_RATE_LIMIT_DURATION!),
         fileStoreDir: process.env.FILE_STORE_DIR!,
-        backupsEnabled: BooleanToolbox.parse(
-          process.env.DB_BACKUPS_ENABLED!,
-        ),
+        backupsEnabled: BooleanToolbox.parse(process.env.DB_BACKUPS_ENABLED!),
         sslKeyPath: process.env.SSL_KEY_PATH,
         sslCertPath: process.env.SSL_CERT_PATH,
+        maxLoginAttempts: parseInt(process.env.MAX_LOGIN_ATTEMPTS!),
+        loginLockoutDuration: parseInt(process.env.LOGIN_LOCKOUT_DURATION!),
+        loginAttemptWindow: parseInt(process.env.LOGIN_ATTEMPT_WINDOW!),
       }
     } catch (error) {
       console.error('Failed to load environment variables.')

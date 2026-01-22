@@ -301,10 +301,17 @@ export abstract class Effect<
   private checkEffectArgs(target: T['target']): string[] {
     let issues: string[] = []
 
+    // Utility function to quickly process different
+    // issue checkers efficiently.
+    const pushIfNotNull = (issue: string | null) => {
+      if (issue) {
+        issues.push(issue)
+      }
+    }
+
     for (let argId in this.args) {
-      const targetArg = target.getArgById(argId)
-      const effectArgValue = this.args[argId]
-      let issue: string | null = null
+      let targetArg = target.getArgById(argId)
+      let effectArgValue = this.args[argId]
 
       if (!targetArg) {
         issues.push(
@@ -314,41 +321,57 @@ export abstract class Effect<
         continue
       }
 
-      issue =
-        this.checkArgWithDeps(targetArg, effectArgValue) ||
-        this.checkNonBooleanArg(targetArg, effectArgValue) ||
-        this.checkBooleanArg(targetArg, effectArgValue) ||
-        this.checkDropdownArg(targetArg, effectArgValue) ||
-        this.checkMissionComponentArg(targetArg)
+      let dependenciesMet = this.allDependenciesMet(targetArg.dependencies)
 
-      if (issue) issues.push(issue)
+      pushIfNotNull(
+        this.checkDependencyAlignment(
+          targetArg,
+          effectArgValue,
+          dependenciesMet,
+        ),
+      )
+      pushIfNotNull(
+        this.checkRequiredArgs(targetArg, effectArgValue, dependenciesMet),
+      )
+      pushIfNotNull(
+        this.checkValueMatchesType(targetArg, effectArgValue, dependenciesMet),
+      )
+      pushIfNotNull(this.checkValidDropdownOption(targetArg, effectArgValue))
+      pushIfNotNull(this.checkMissionComponentArg(targetArg))
     }
 
     return issues
   }
 
   /**
-   * Checks if a non-boolean argument is valid.
+   * Checks if an argument is required and, if so, is missing a value.
    * @param targetArg The target argument to check.
    * @param effectArgValue The value of the argument in the effect.
-   * @returns Whether the argument is valid.
+   * @returns An issue message if the argument is required and
+   * missing a value.
+   * @note Utility method of {@link checkEffectArgs}.
    */
-  private checkNonBooleanArg(
+  private checkRequiredArgs(
     targetArg: TTargetArg,
     effectArgValue: unknown,
+    dependenciesMet: boolean,
   ): string | null {
     // * Note: Boolean arguments are always required because
     // * they always have a value (true or false). Therefore,
     // * they don't contain the required property.
-    if (
-      targetArg.type !== 'boolean' &&
-      targetArg.required &&
-      effectArgValue === undefined &&
-      this.allDependenciesMet(targetArg.dependencies)
-    ) {
+    let isBoolean = targetArg.type === 'boolean'
+    let required = targetArg.type === 'boolean' || targetArg.required
+    let valueMissing = effectArgValue === undefined
+    let renterValueText: string = 'Please enter a value'
+
+    if (isBoolean) {
+      renterValueText = 'Please update the value by clicking the toggle switch'
+    }
+
+    if (required && valueMissing && dependenciesMet) {
       return (
         `The argument, "${targetArg.name}", within the effect, "${this.name}", is required, yet has no value. ` +
-        `Please enter a value, or delete the effect and create a new one.`
+        `${renterValueText}, or delete the effect and create a new one.`
       )
     }
 
@@ -356,19 +379,61 @@ export abstract class Effect<
   }
 
   /**
-   * Checks if an argument with dependencies is valid.
+   * Checks if an argument's value matches the type specified
+   * in the target argument.
    * @param targetArg The target argument to check.
    * @param effectArgValue The value of the argument in the effect.
-   * @returns Whether the argument is valid.
+   * @returns An issue message if the argument's value does not
+   * match the type specified in the target argument.
    */
-  private checkArgWithDeps(
+  private checkValueMatchesType(
     targetArg: TTargetArg,
     effectArgValue: unknown,
+    dependenciesMet: boolean,
   ): string | null {
-    if (
-      !this.allDependenciesMet(targetArg.dependencies) &&
-      effectArgValue !== undefined
-    ) {
+    if (!dependenciesMet || effectArgValue === undefined) {
+      return null
+    }
+
+    let typesToCheck = ['boolean', 'number', 'string']
+    let expectedType = targetArg.type
+    let actualType = typeof effectArgValue
+
+    // Consolidate similar types for checking.
+    if (expectedType === 'large-string') {
+      expectedType = 'string'
+    }
+
+    let shouldCheckType = typesToCheck.includes(expectedType)
+
+    // If we should check the type, but it isn't a match,
+    // return an issue.
+    if (shouldCheckType && actualType !== expectedType) {
+      return (
+        `The argument, "${targetArg.name}", within the effect, "${this.name}", is expected to be of type, "${expectedType}", ` +
+        `but received a value of type, "${actualType}". Please update the value, or delete the effect and create a new one (ERR 30382).`
+      )
+    } else {
+      return null
+    }
+  }
+
+  /**
+   * Checks if an arguments dependencies align with the current
+   * value in the effect. Specifically, if the dependencies are not met,
+   * the argument should not have a current value.
+   * @param targetArg The target argument to check.
+   * @param effectArgValue The value of the argument in the effect.
+   * @returns An issue message if the argument's dependencies do not align
+   * with the effect's argument value.
+   * @note Utility method of {@link checkEffectArgs}.
+   */
+  private checkDependencyAlignment(
+    targetArg: TTargetArg,
+    effectArgValue: unknown,
+    dependenciesMet: boolean,
+  ): string | null {
+    if (!dependenciesMet && effectArgValue !== undefined) {
       return (
         `The effect, "${this.name}", has an argument, "${targetArg.name}", that doesn't belong. ` +
         `Please delete the effect and create a new one.`
@@ -379,40 +444,15 @@ export abstract class Effect<
   }
 
   /**
-   * Checks if a boolean argument is valid.
+   * Checks if a dropdown argument is valid. Specifically,
+   * that the provided value is one of the available options
+   * in the dropdown.
    * @param targetArg The target argument to check.
    * @param effectArgValue The value of the argument in the effect.
-   * @returns Whether the argument is valid.
+   * @returns An issue message if the dropdown option is invalid.
+   * @note Utility method of {@link checkEffectArgs}.
    */
-  private checkBooleanArg(
-    targetArg: TTargetArg,
-    effectArgValue: unknown,
-  ): string | null {
-    // * Note: Boolean arguments should always have a value
-    // * (true or false). Therefore, if a boolean argument is
-    // * missing a value and all of its dependencies are met,
-    // * it is considered invalid.
-    if (
-      targetArg.type === 'boolean' &&
-      this.allDependenciesMet(targetArg.dependencies) &&
-      effectArgValue === undefined
-    ) {
-      return (
-        `The argument, "${targetArg.name}", within the effect, "${this.name}", is required, yet has no value. ` +
-        `Please update the value by clicking the toggle switch, or delete the effect and create a new one.`
-      )
-    }
-
-    return null
-  }
-
-  /**
-   * Checks if a dropdown argument is valid.
-   * @param targetArg The target argument to check.
-   * @param effectArgValue The value of the argument in the effect.
-   * @returns Whether the argument is valid.
-   */
-  private checkDropdownArg(
+  private checkValidDropdownOption(
     targetArg: TTargetArg,
     effectArgValue: unknown,
   ): string | null {
@@ -430,9 +470,12 @@ export abstract class Effect<
   }
 
   /**
-   * Checks if a mission-component argument is valid.
+   * Checks if a mission-component argument is valid. Specifically,
+   * it verifies the existence of referenced mission components.
    * @param targetArg The target argument to check.
-   * @returns Whether the argument is valid.
+   * @returns An issue message if the mission component reference
+   * is invalid.
+   * @note Utility method of {@link checkEffectArgs}.
    */
   private checkMissionComponentArg(targetArg: TTargetArg): string | null {
     const { _id: argId, type } = targetArg

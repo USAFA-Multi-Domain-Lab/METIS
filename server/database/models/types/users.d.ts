@@ -1,8 +1,5 @@
-import type {
-  TUserExistingJson,
-  TUserJson,
-  TUserSaveJson,
-} from '@shared/users/User'
+import type { ServerUser } from '@server/users/ServerUser'
+import type { TUserJson, TUserSaveJson } from '@shared/users/User'
 import type { Request } from 'express'
 import type {
   HydratedDocument,
@@ -36,7 +33,7 @@ export type TUserStaticMethods = {
    * @resolves When the user has been authenticated.
    * @rejects When the user could not be authenticated.
    */
-  authenticate: (request: Request) => Promise<TUserExistingJson>
+  authenticate: (request: Request) => Promise<ServerUser>
   /**
    * Finds a single document by its `_id` field. Then, if the
    * document is found, modifies the document with the given
@@ -96,4 +93,18 @@ export type TUserQueryOptions = QueryOptions<TUser> & {
    * Determines if deleted users should be included in the results.
    */
   includeDeleted?: boolean
+}
+
+/**
+ * Info returned by {@link checkLoginLockout} function.
+ */
+export type TLoginLockoutInfo = {
+  /**
+   * Whether the user is currently locked out.
+   */
+  isLocked: boolean
+  /**
+   * When the user will be unlocked, or null if not locked out.
+   */
+  unlockTime: Date | null
 }

@@ -22,20 +22,6 @@ const ProcessTimeMod = new TargetSchema({
     const processTimeHours = args[hoursArgId]
     const { forceKey, nodeKey, actionKey } = actionMetadata as TActionMetadata
     let processTime: number = 0
-    const errorMessage =
-      `Bad request. The arguments sent with the effect are invalid. Please check the arguments within the effect.\n` +
-      `Effect ID: "${context.effect._id}"\n` +
-      `Effect Name: "${context.effect.name}"`
-
-    if (
-      typeof forceKey !== 'string' ||
-      typeof nodeKey !== 'string' ||
-      typeof processTimeHours !== 'number' ||
-      typeof processTimeMinutes !== 'number' ||
-      typeof processTimeSeconds !== 'number'
-    ) {
-      throw new Error(errorMessage)
-    }
 
     // Update the process time based on the provided values.
     if (processTimeHours) processTime += processTimeHours * 3600 * 1000 /*ms*/

@@ -1,10 +1,10 @@
 # Target-Effect System Architecture
 
-This document provides a high-level overview of the Target-Effect system architecture and how it enables METIS to integrate with external systems.
+This document provides a high-level overview of the target-effect system architecture and how it enables METIS to integrate with external systems.
 
 ## System Overview
 
-The Target-Effect system allows METIS to interact with external systems through a three-layer architecture:
+The target-effect system allows METIS to interact with external systems through a three-layer architecture:
 
 1. **Integration Layer** - Define what external systems METIS can affect and how
 2. **Registry Layer** - Discover and manage available integrations
@@ -42,19 +42,19 @@ The Target-Effect system allows METIS to interact with external systems through 
 
 ## How It Works
 
-### Integration Layer (`/integration`)
+### Integration Layer (`/integration` directory)
 
 Developers define target environments (external systems) and targets (specific actions) using TypeScript schemas. These schemas specify what arguments are needed and what script should execute.
 
 **Key Benefit**: New integrations can be added without modifying core METIS code.
 
-### Registry Layer (`/shared` & `/server`)
+### Registry Layer (`/shared` & `/server` directories)
 
 At startup, METIS scans the integration folder and builds a registry of all available target environments and their targets. This registry is shared between client and server.
 
 **Key Benefit**: Automatic discovery means no manual registration required.
 
-### Execution Layer (`/server`)
+### Execution Layer (`/server` directory)
 
 When an effect executes during a session, METIS creates a secure context and runs the target's script with user-provided arguments.
 
@@ -62,10 +62,10 @@ When an effect executes during a session, METIS creates a secure context and run
 
 ## Key Concepts
 
-- **Target Environment**: An external system that METIS can integrate with (e.g., "Traffic Control System")
+- **Target Environment**: An external system with which METIS can integrate (e.g., "Traffic Control System")
 - **Target**: A specific action within an environment (e.g., "Change Traffic Light")
 - **Effect**: A configured target with user-provided arguments, ready to execute
-- **Context**: The secure execution environment that target scripts run within
+- **Context**: The secure execution environment within which the target scripts run
 
 ## Quick Example
 

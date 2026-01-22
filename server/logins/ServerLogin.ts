@@ -1,3 +1,4 @@
+import { StatusError } from '@server/api/v1/library/StatusError'
 import type { ClientConnection } from '@server/connect/ClientConnection'
 import type { ServerUser } from '@server/users/ServerUser'
 import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
@@ -120,6 +121,26 @@ export class ServerLogin {
   }
 
   /**
+   * The time remaining in the timeout, in milliseconds. If zero,
+   * the login is not in a timeout.
+   */
+  public get timeoutRemaining(): number {
+    if (!this.timeoutEnd) {
+      return 0
+    }
+    return Math.max(0, Math.floor(this.timeoutEnd - Date.now()))
+  }
+
+  /**
+   * The time remaining in the timeout, in minutes. If zero,
+   * the login is not in a timeout.
+   * @note This is rounded up to the nearest minute.
+   */
+  public get timeoutMinutesRemaining(): number {
+    return Math.ceil(this.timeoutRemaining / 60000)
+  }
+
+  /**
    * @param user The user to log in.
    * @param webSessionId The (express) web session ID associated with the login.
    * @param options Options for the login.
@@ -171,7 +192,10 @@ export class ServerLogin {
         // Destroy the old login.
         conflictingLogin.destroy()
       } else {
-        throw new Error('User is already logged in.')
+        throw new StatusError(
+          'Account is already logged in on another device or browser.',
+          409,
+        )
       }
     }
 

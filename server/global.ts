@@ -132,6 +132,24 @@ declare global {
      * The path to the SSL cert file (if any).
      */
     sslCertPath?: string
+
+    /**
+     * The maximum number of failed login attempts before lockout.
+     * @default 5
+     */
+    maxLoginAttempts: number
+
+    /**
+     * The duration of login lockout in seconds.
+     * @default 900
+     */
+    loginLockoutDuration: number
+
+    /**
+     * The time window in seconds to track failed attempts.
+     * @default 300
+     */
+    loginAttemptWindow: number
   }
 
   /**

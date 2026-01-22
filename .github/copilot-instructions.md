@@ -67,8 +67,7 @@ npm run test
 - `@shared/*` → `/shared/*` (used in client, server, and integration code)
 - `@client/*` → `/client/src/*` (client-side only)
 - `@server/*` → `/server/*` (server-side only)
-- `@integrations/schema/*` → `/integration/library/schema/*` (server-side only)
-- `metis/*` → `/shared/*` (used in test code)
+- `@metis/*` → `/integration/library/*` (target-environment integration library)
 
 **Component Hierarchy**: All entities follow this path pattern:
 
@@ -190,6 +189,9 @@ const target = new TargetSchema({
 Refer to [.github/instructions/style-guide.instructions.md](instructions/style-guide.instructions.md) for authoritative conventions (docstrings, naming, ordering). See [docs/devs/style-guide.md](../docs/devs/style-guide.md) for supplemental guidance. Key points:
 
 - **Naming**: Use camelCase for variables/functions, PascalCase for classes/types
+  - **CRITICAL**: NEVER use abbreviated variable names (e.g., `cmd`, `msg`, `req`, `res`, `err`, `ctx`)
+  - Always use full, descriptive names (e.g., `command`, `message`, `request`, `response`, `error`, `context`)
+  - Exception: Standard loop counters (`i`, `j`, `k`) and universally recognized abbreviations in their specific contexts
 - **Comments**: Write clear, descriptive comments for complex logic and public APIs
 - **TypeScript**: Prefer explicit types and interfaces for all data structures
 - **Imports**: Use path aliases (`@shared/*`, `@client/*`, `@server/*`) instead of relative paths

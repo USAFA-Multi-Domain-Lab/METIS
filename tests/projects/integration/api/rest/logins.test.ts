@@ -1,4 +1,5 @@
 import { afterAll, beforeEach, describe, expect, test } from '@jest/globals'
+import { UserModel } from '@metis/server/database/models/users'
 import { ServerLogin } from '@metis/server/logins/ServerLogin'
 import { TestSuiteSetup } from 'tests/middleware/TestSuiteSetup'
 import { TestSuiteTeardown } from 'tests/middleware/TestSuiteTeardown'
@@ -268,6 +269,235 @@ describe('/api/v1/logins', () => {
     let getResponse = await secondClient.get('/api/v1/logins/')
     expect(getResponse.status).toBe(200)
     expect(getResponse.data.user.username).toBe(username)
+  })
+
+  test('Locks account after maximum failed login attempts', async () => {
+    let { client } = await createTestContext()
+    let lockoutUsername = `${usernamePrefix}_lockout_${generateRandomId()}`
+    await createTestUser({ username: lockoutUsername, password })
+
+    // Make 4 failed login attempts
+    for (let i = 0; i < 4; i++) {
+      let response = await client.post('/api/v1/logins/', {
+        username: lockoutUsername,
+        password: 'wrongpassword',
+      })
+      expect(response.status).toBe(401)
+    }
+
+    // 5th attempt triggers lockout (MAX_LOGIN_ATTEMPTS=5)
+    let lockedResponse = await client.post('/api/v1/logins/', {
+      username: lockoutUsername,
+      password: 'wrongpassword',
+    })
+
+    expect(lockedResponse.status).toBe(403)
+    expect(lockedResponse.data.error.message).toContain(
+      'Too many failed login attempts',
+    )
+    expect(lockedResponse.data.error.message).toContain('locked')
+  })
+
+  test('Prevents login with correct password when account is locked', async () => {
+    let { client } = await createTestContext()
+    let lockoutUsername = `${usernamePrefix}_lockout_${generateRandomId()}`
+    await createTestUser({ username: lockoutUsername, password })
+
+    // Trigger lockout with failed attempts
+    for (let i = 0; i < 5; i++) {
+      await client.post('/api/v1/logins/', {
+        username: lockoutUsername,
+        password: 'wrongpassword',
+      })
+    }
+
+    // Try with correct password - should still be locked
+    let response = await client.post('/api/v1/logins/', {
+      username: lockoutUsername,
+      password,
+    })
+
+    expect(response.status).toBe(403)
+    expect(response.data.error.message).toContain('locked')
+  })
+
+  test('Returns remaining lockout time in error message', async () => {
+    let { client } = await createTestContext()
+    let lockoutUsername = `${usernamePrefix}_lockout_${generateRandomId()}`
+    await createTestUser({ username: lockoutUsername, password })
+
+    // Trigger lockout
+    for (let i = 0; i < 5; i++) {
+      await client.post('/api/v1/logins/', {
+        username: lockoutUsername,
+        password: 'wrongpassword',
+      })
+    }
+
+    let response = await client.post('/api/v1/logins/', {
+      username: lockoutUsername,
+      password,
+    })
+
+    expect(response.status).toBe(403)
+    expect(response.data.error.message).toMatch(/\d+ minute\(s\)/)
+  })
+
+  test('Resets failed attempts counter after successful login', async () => {
+    let { client } = await createTestContext()
+    let lockoutUsername = `${usernamePrefix}_lockout_${generateRandomId()}`
+    await createTestUser({ username: lockoutUsername, password })
+
+    // Make 3 failed attempts
+    for (let i = 0; i < 3; i++) {
+      let response = await client.post('/api/v1/logins/', {
+        username: lockoutUsername,
+        password: 'wrongpassword',
+      })
+      expect(response.status).toBe(401)
+    }
+
+    // Successful login should reset counter
+    let successResponse = await client.post('/api/v1/logins/', {
+      username: lockoutUsername,
+      password,
+    })
+    expect(successResponse.status).toBe(200)
+
+    // Logout
+    await client.delete('/api/v1/logins/')
+
+    // Should be able to make 4 more failed attempts before lockout
+    for (let i = 0; i < 4; i++) {
+      let response = await client.post('/api/v1/logins/', {
+        username: lockoutUsername,
+        password: 'wrongpassword',
+      })
+      expect(response.status).toBe(401)
+    }
+
+    // 5th attempt locks the account
+    let lockedResponse = await client.post('/api/v1/logins/', {
+      username: lockoutUsername,
+      password: 'wrongpassword',
+    })
+    expect(lockedResponse.status).toBe(403)
+  })
+
+  test('Different clients trigger same lockout for same user', async () => {
+    let { client: firstClient } = await createTestContext()
+    let { client: secondClient } = await createTestContext()
+    let lockoutUsername = `${usernamePrefix}_lockout_${generateRandomId()}`
+    await createTestUser({ username: lockoutUsername, password })
+
+    // First client makes 3 failed attempts
+    for (let i = 0; i < 3; i++) {
+      await firstClient.post('/api/v1/logins/', {
+        username: lockoutUsername,
+        password: 'wrongpassword',
+      })
+    }
+
+    // Second client makes 2 more failed attempts (5th triggers lockout)
+    for (let i = 0; i < 2; i++) {
+      await secondClient.post('/api/v1/logins/', {
+        username: lockoutUsername,
+        password: 'wrongpassword',
+      })
+    }
+
+    // Both clients should see lockout
+    let firstResponse = await firstClient.post('/api/v1/logins/', {
+      username: lockoutUsername,
+      password,
+    })
+    expect(firstResponse.status).toBe(403)
+
+    let secondResponse = await secondClient.post('/api/v1/logins/', {
+      username: lockoutUsername,
+      password,
+    })
+    expect(secondResponse.status).toBe(403)
+  })
+
+  test('Lockout only affects specific user account', async () => {
+    let { client } = await createTestContext()
+    let lockoutUsername = `${usernamePrefix}_lockout_${generateRandomId()}`
+    let secondUsername = `${usernamePrefix}_lockout_${generateRandomId()}`
+    await createTestUser({ username: lockoutUsername, password })
+    await createTestUser({ username: secondUsername, password })
+
+    // Lock first account (5 failed attempts)
+    for (let i = 0; i < 5; i++) {
+      await client.post('/api/v1/logins/', {
+        username: lockoutUsername,
+        password: 'wrongpassword',
+      })
+    }
+
+    // First account should be locked
+    let firstResponse = await client.post('/api/v1/logins/', {
+      username: lockoutUsername,
+      password,
+    })
+    expect(firstResponse.status).toBe(403)
+
+    // Second account should still work
+    let secondResponse = await client.post('/api/v1/logins/', {
+      username: secondUsername,
+      password,
+    })
+    expect(secondResponse.status).toBe(200)
+  })
+
+  test('Allows login after lockout period expires', async () => {
+    let { client } = await createTestContext()
+    let lockoutUsername = `${usernamePrefix}_lockout_${generateRandomId()}`
+    let { user } = await createTestUser({
+      username: lockoutUsername,
+      password,
+    })
+
+    // Trigger lockout with 5 failed attempts
+    for (let i = 0; i < 5; i++) {
+      await client.post('/api/v1/logins/', {
+        username: lockoutUsername,
+        password: 'wrongpassword',
+      })
+    }
+
+    // Verify account is locked
+    let lockedResponse = await client.post('/api/v1/logins/', {
+      username: lockoutUsername,
+      password,
+    })
+    expect(lockedResponse.status).toBe(403)
+
+    // Manually expire the lockout by setting loginLockedUntil to current time
+    await UserModel.findByIdAndUpdate(
+      user._id,
+      {
+        loginLockedUntil: new Date(),
+      },
+      { includeSensitive: true },
+    )
+
+    // Login with correct credentials should now succeed
+    let loginResponse = await client.post('/api/v1/logins/', {
+      username: lockoutUsername,
+      password,
+    })
+    expect(loginResponse.status).toBe(200)
+
+    // Verify lockout fields were reset
+    let userDoc = await UserModel.findById(
+      user._id,
+      {},
+      { includeSensitive: true },
+    )
+    expect(userDoc?.failedLoginAttempts).toBe(0)
+    expect(userDoc?.loginLockedUntil).toBeNull()
+    expect(userDoc?.lastFailedLoginAt).toBeNull()
   })
 
   afterAll(async () => {
