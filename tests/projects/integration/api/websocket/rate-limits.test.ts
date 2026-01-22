@@ -6,6 +6,7 @@ import {
   expect,
   test,
 } from '@jest/globals'
+import type { MetisServer } from '@server/MetisServer'
 import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
 import type { Socket } from 'socket.io-client'
 import { TestSocketClient } from 'tests/middleware/TestSocketClient'
@@ -16,6 +17,8 @@ import { TestToolbox } from 'tests/toolbox/TestToolbox'
 describe('Rate limiting', () => {
   const USERNAME_PREFIX = 'test_ws_rate_limit'
   let socket: Socket | null = null
+  let server: MetisServer
+  let cookieHeader: string = ''
 
   /**
    * Sleeps for the specified duration.
@@ -31,7 +34,9 @@ describe('Rate limiting', () => {
    * @rejects if the test user cannot be created, logged in, or connected.
    */
   const setupAuthenticatedSocket = async () => {
-    const { server, client } = await TestSuiteSetup.createTestContext()
+    const context = await TestSuiteSetup.createTestContext()
+    server = context.server
+    let client = context.client
 
     let { username, password } = await TestSuiteSetup.createTestUser({
       username: `${USERNAME_PREFIX}_${TestToolbox.generateRandomId()}`,
@@ -45,7 +50,7 @@ describe('Rate limiting', () => {
     })
     expect(loginResponse.status).toBe(200)
 
-    let cookieHeader = TestSocketClient.buildCookieHeader(
+    cookieHeader = TestSocketClient.buildCookieHeader(
       loginResponse.headers['set-cookie'],
     )
     expect(cookieHeader.length).toBeGreaterThan(0)
@@ -64,7 +69,7 @@ describe('Rate limiting', () => {
     }
   })
 
-  test('WebSocket: emits CODE_MESSAGE_RATE_LIMIT when user exceeds message rate (and resets after window)', async () => {
+  test('WebSocket: emits CODE_MESSAGE_RATE_LIMIT when user exceeds message rate (and resets the user web session)', async () => {
     if (!socket) {
       throw Error('Socket was not initialized by beforeEach.')
     }
@@ -100,23 +105,29 @@ describe('Rate limiting', () => {
 
     expect(rateLimitEvent.code).toBe(ServerEmittedError.CODE_MESSAGE_RATE_LIMIT)
 
-    // After the window resets, a request should not be rate-limited.
+    // After the window resets, the web session should have been destroyed
+    // and the user should no longer be authenticated.
     await sleep(windowMs + 250)
 
-    TestSocketClient.sendJson(socket, {
-      ...basePayload,
-      requestId: TestToolbox.generateRandomId(),
-    })
+    // The socket should be disconnected.
+    expect(socket.connected).toBe(false)
 
-    let postResetEvent = await TestSocketClient.waitForError(
-      socket,
-      undefined,
-      5000,
-    )
+    // The connection attempt should be rejected due to unauthenticated session.
+    try {
+      await TestSocketClient.connect(server, cookieHeader)
+      throw new Error(
+        'Expected socket reconnect to fail after rate-limit reset.',
+      )
+    } catch (error: any) {
+      let parsed: any
+      try {
+        parsed = JSON.parse(error?.message)
+      } catch {
+        throw error
+      }
 
-    expect(postResetEvent.code).not.toBe(
-      ServerEmittedError.CODE_MESSAGE_RATE_LIMIT,
-    )
+      expect(parsed?.code).toBe(ServerEmittedError.CODE_UNAUTHENTICATED)
+    }
   }, 20000)
 
   afterAll(async () => {

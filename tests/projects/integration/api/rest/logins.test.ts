@@ -235,10 +235,13 @@ describe('/api/v1/logins', () => {
     let { client } = await createTestContext()
     let { user } = await createTestUser({ username, password })
 
+    // The created user must have an _id to set the timeout.
+    if (!user._id) throw new Error('Created user has no _id')
+
     await client.post('/api/v1/logins/', { username, password })
 
     let timeoutEnd = Date.now() + 5000
-    ServerLogin.timeout(user._id, timeoutEnd)
+    ServerLogin.timeoutByUserId(user._id, timeoutEnd)
 
     await client.delete('/api/v1/logins/')
 
