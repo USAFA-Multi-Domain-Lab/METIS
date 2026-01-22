@@ -1,11 +1,12 @@
-import { StatusError } from '@server/api/v1/library/StatusError'
 import type { ClientConnection } from '@server/connect/ClientConnection'
+import { expressLogger } from '@server/logging'
+import { MetisServer } from '@server/MetisServer'
 import type { ServerUser } from '@server/users/ServerUser'
 import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
 import { type TLoginJson } from '@shared/logins'
+import { MissionSession } from '@shared/sessions/MissionSession'
 import type { Request } from 'express-serve-static-core'
 import { SessionServer } from '../sessions/SessionServer'
-import { ServerWebSession } from './ServerWebSession'
 
 /**
  * Express sessions are limited in what they can store. This class expands the functionality of logins in METIS.
@@ -64,9 +65,9 @@ export class ServerLogin {
    */
   private _metisSessionId: string | null
   /**
-   * The ID of the METIS session the user is currently in, if any.
+   * The ID of the METIS mission session the user is currently in, if any.
    * @note This is not the same as the session ID of the express session.
-   * @see {@link Session} class for more information.
+   * @see {@link MissionSession} class for more information.
    */
   public get metisSessionId(): string | null {
     return this._metisSessionId
@@ -141,6 +142,18 @@ export class ServerLogin {
   }
 
   /**
+   * Whether this login is a duplicate login that conflicts with an existing login.
+   */
+  private _isDuplicate: boolean
+  /**
+   * Whether this login is a duplicate login that conflicts with an existing login.
+   */
+  public get isDuplicate(): boolean {
+    if (this.destroyed) return false
+    return this._isDuplicate
+  }
+
+  /**
    * @param user The user to log in.
    * @param webSessionId The (express) web session ID associated with the login.
    * @param options Options for the login.
@@ -157,54 +170,35 @@ export class ServerLogin {
     this._client = null
     this._metisSessionId = null
     this._destroyed = false
-    this._timeoutEnd = ServerLogin.getTimeoutEnd(this.userId) ?? null
+    this._timeoutEnd = ServerLogin.getTimeoutEndByUserId(this.userId)
+    this._isDuplicate = false
 
-    // Get any current login registered, conflicting
-    // with the new login.
-    let conflictingLogin: ServerLogin | undefined = ServerLogin.registry.get(
-      this.userId,
-    )
+    // Check for duplicate logins.
+    let duplicateLogin = ServerLogin.getByUserId(this.userId)
 
     // Handle duplicate login.
-    if (conflictingLogin) {
-      // If the login is forceful, force a log out
-      // of the conflicting client.
-      if (forceful) {
-        // If the conflicting login has a client,
-        // emit an error to that client that the
-        // connection is switching.
-        if (conflictingLogin.client) {
-          conflictingLogin.client.emitError(
-            new ServerEmittedError(ServerEmittedError.CODE_SWITCHED_CLIENT),
-          )
-        }
+    if (duplicateLogin) {
+      this._isDuplicate = true
 
-        // Force quit the previous METIS session, if any.
-        if (conflictingLogin.metisSessionId) {
-          SessionServer.quit(
-            conflictingLogin.metisSessionId,
-            conflictingLogin.userId,
-          )
-        }
+      if (!forceful) return
 
-        // Destroy the session in the store.
-        ServerWebSession.destroy(conflictingLogin.webSessionId)
-        // Destroy the old login.
-        conflictingLogin.destroy()
-      } else {
-        throw new StatusError(
-          'Account is already logged in on another device or browser.',
-          409,
+      // If the duplicate login has a client,
+      // emit an error to that client that the
+      // connection is switching.
+      if (duplicateLogin.client) {
+        duplicateLogin.client.emitError(
+          new ServerEmittedError(ServerEmittedError.CODE_SWITCHED_CLIENT),
         )
       }
+
+      duplicateLogin.destroy()
     }
 
     // Store the login in the registry if the user
     // isn't in a timeout.
     if (!this.inTimeout) {
-      ServerLogin.registry.set(this.userId, this)
-      // Register the login with the session store.
-      ServerWebSession.registerLogin(this.webSessionId, this.userId)
+      ServerLogin.registryByUserId.set(this.userId, this)
+      ServerLogin.registryByWebSessionId.set(this.webSessionId, this)
     }
   }
 
@@ -223,8 +217,33 @@ export class ServerLogin {
    * Destroys the login information.
    */
   public destroy(): void {
-    ServerLogin.registry.delete(this.userId)
+    if (this.destroyed) return
+
+    // Remove from registries immediately so subsequent requests
+    // see the user as logged out, even if session-store cleanup
+    // completes asynchronously.
+    ServerLogin.registryByUserId.delete(this.userId)
+    ServerLogin.registryByWebSessionId.delete(this.webSessionId)
+    ServerLogin.timeoutRegistryByWebSessionId.delete(this.webSessionId)
+
+    // Quit METIS session if in one.
+    if (this.metisSessionId) {
+      SessionServer.quit(this.metisSessionId, this.userId)
+    }
+
+    // Disconnect the client's websocket connection if it exists.
+    this.client?.disconnect()
+
     this._destroyed = true
+
+    MetisServer.sessionStore.destroy(this.webSessionId, (error) => {
+      if (error) {
+        expressLogger.error(
+          'Session store destroy warning:',
+          error.message || error,
+        )
+      }
+    })
   }
 
   /**
@@ -233,7 +252,8 @@ export class ServerLogin {
    */
   public timeout(timeoutEnd: number): void {
     this._timeoutEnd = timeoutEnd
-    ServerLogin.timeoutRegistry.set(this.userId, timeoutEnd)
+    ServerLogin.timeoutRegistryByUserId.set(this.userId, timeoutEnd)
+    ServerLogin.timeoutRegistryByWebSessionId.set(this.webSessionId, timeoutEnd)
   }
 
   /**
@@ -254,66 +274,117 @@ export class ServerLogin {
   }
 
   /**
-   * A registry of all logins currently in use.
+   * A registry of all logins currently in use by user ID.
    */
-  private static registry: Map<string, ServerLogin> = new Map<
-    string,
+  private static registryByUserId: Map<ServerUser['_id'], ServerLogin> =
+    new Map<ServerUser['_id'], ServerLogin>()
+
+  /**
+   * A registry of all logins currently in use by web session ID.
+   */
+  private static registryByWebSessionId: Map<
+    Request['session']['id'],
     ServerLogin
-  >()
+  > = new Map<Request['session']['id'], ServerLogin>()
+
+  /**
+   * A registry of all logins that are in timeout by user ID.
+   */
+  private static timeoutRegistryByUserId: Map<ServerUser['_id'], number> =
+    new Map<ServerUser['_id'], number>()
+
+  /**
+   * A registry of all logins that are in timeout by web session ID.
+   */
+  private static timeoutRegistryByWebSessionId: Map<
+    Request['session']['id'],
+    number
+  > = new Map<Request['session']['id'], number>()
 
   /**
    * @returns the login information associated with the given user ID.
    */
-  public static get(
+  public static getByUserId(
     userId: ServerUser['_id'] | undefined,
   ): ServerLogin | undefined {
-    if (userId === undefined) {
-      return undefined
-    } else {
-      return ServerLogin.registry.get(userId)
-    }
+    if (!userId) return undefined
+    return ServerLogin.registryByUserId.get(userId)
+  }
+
+  /**
+   * @returns the login information associated with the given web session ID.
+   */
+  public static getByWebSessionId(
+    webSessionId: Request['session']['id'] | undefined,
+  ): ServerLogin | undefined {
+    if (!webSessionId) return undefined
+    return ServerLogin.registryByWebSessionId.get(webSessionId)
   }
 
   /**
    * Destroys the login information associated with the given user ID.
-   * @param userId The ID of the user to log out.
    */
-  public static destroy(userId: ServerUser['_id'] | undefined): void {
-    let login = ServerLogin.get(userId)
+  public static destroyByUserId(userId: ServerUser['_id']): void {
+    let login = ServerLogin.getByUserId(userId)
     login?.destroy()
   }
 
   /**
-   * A registry of all logins that are in timeout.
+   * Destroys the login information associated with the given web session ID.
    */
-  private static timeoutRegistry: Map<string, number> = new Map<
-    string,
-    number
-  >()
+  public static destroyByWebSessionId(
+    webSessionId: Request['session']['id'],
+  ): void {
+    let login = ServerLogin.getByWebSessionId(webSessionId)
+    login?.destroy()
+  }
 
   /**
    * @returns the login timeout end time associated with the given user ID.
    */
-  public static getTimeoutEnd(
+  public static getTimeoutEndByUserId(
     userId: ServerUser['_id'] | undefined,
-  ): number | undefined {
-    if (userId === undefined) {
-      return undefined
-    } else {
-      return ServerLogin.timeoutRegistry.get(userId)
-    }
+  ): number | null {
+    if (!userId) return null
+    const { timeoutRegistryByUserId } = ServerLogin
+    return timeoutRegistryByUserId.get(userId) ?? null
   }
 
   /**
-   * Sets a timeout for the user in the current web session.
+   * @returns the login timeout end time associated with the given web session ID.
+   */
+  public static getTimeoutEndByWebSessionId(
+    webSessionId: Request['session']['id'] | undefined,
+  ): number | null {
+    if (!webSessionId) return null
+    const { timeoutRegistryByWebSessionId } = ServerLogin
+    return timeoutRegistryByWebSessionId.get(webSessionId) ?? null
+  }
+
+  /**
+   * Sets a timeout for the user with the given user ID.
    * @param userId The ID of the user to set the timeout for.
    * @param timeoutEnd When the timeout ends.
    */
-  public static timeout(
-    userId: ServerUser['_id'] | undefined,
+  public static timeoutByUserId(
+    userId: ServerUser['_id'],
     timeoutEnd: number,
   ): void {
-    let login = ServerLogin.get(userId)
+    if (!userId) return
+    let login = ServerLogin.getByUserId(userId)
+    login?.timeout(timeoutEnd)
+  }
+
+  /**
+   * Sets a timeout for the user with the given web session ID.
+   * @param webSessionId The (express) web session ID associated with the login.
+   * @param timeoutEnd When the timeout ends.
+   */
+  public static timeoutByWebSessionId(
+    webSessionId: Request['session']['id'],
+    timeoutEnd: number,
+  ): void {
+    let login = ServerLogin.getByWebSessionId(webSessionId)
     login?.timeout(timeoutEnd)
   }
 }

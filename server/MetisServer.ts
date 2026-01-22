@@ -7,6 +7,7 @@ import type { Express, RequestHandler } from 'express'
 import express from 'express'
 import type { RateLimitRequestHandler } from 'express-rate-limit'
 import rateLimit from 'express-rate-limit'
+import type { Store } from 'express-session'
 import session from 'express-session'
 import fs from 'fs'
 import type mongoose from 'mongoose'
@@ -21,7 +22,7 @@ import { MetisWsServer } from './connect/MetisWsServer'
 import { MetisDatabase } from './database/MetisDatabase'
 import { MetisFileStore } from './files/MetisFileStore'
 import { expressLogger, initializeLoggers } from './logging'
-import { ServerWebSession } from './logins/ServerWebSession'
+import { ServerLogin } from './logins/ServerLogin'
 import { ServerTarget } from './target-environments/ServerTarget'
 import { ServerTargetEnvironment } from './target-environments/ServerTargetEnvironment'
 import { TargetEnvSandboxing } from './target-environments/TargetEnvSandboxing'
@@ -365,6 +366,13 @@ export class MetisServer {
     this.limiter = rateLimit({
       windowMs: this.httpRateLimitDuration,
       limit: this.httpRateLimit,
+      handler: async (request, response) => {
+        response.sendStatus(429)
+        expressLogger.error(
+          `Rate limit exceeded for session ID ${request.sessionID} from IP ${request.ip}`,
+        )
+        ServerLogin.destroyByWebSessionId(request.sessionID)
+      },
     })
   }
 
@@ -447,7 +455,7 @@ export class MetisServer {
 
       // Create the store that will be used for
       // all (express) web sessions.
-      ServerWebSession.createSessionStore(
+      MetisServer.createSessionStore(
         MongoStore.create({
           client: mongooseConnection.getClient(),
           touchAfter: 24 * 3600, // lazy update after 24 hours
@@ -460,7 +468,7 @@ export class MetisServer {
         secret: '3c8V3DoMuJxjoife0asdfasdf023asd9isfd',
         resave: false,
         saveUninitialized: false,
-        store: ServerWebSession.store,
+        store: MetisServer.sessionStore,
       })
 
       // sets up pug as the view engine
@@ -593,6 +601,23 @@ export class MetisServer {
   }
 
   /**
+   * Reference to the Express session store instance.
+   * Set once during server initialization.
+   */
+  private static _sessionStore: Store | null = null
+  /**
+   * Gets the Express session store instance.
+   */
+  public static get sessionStore(): Store {
+    if (!this._sessionStore) {
+      throw new Error(
+        'The express session store has not been initialized. Call MetisServer.createSessionStore() first.',
+      )
+    }
+    return this._sessionStore
+  }
+
+  /**
    * The name of the METIS project.
    */
   public static readonly PROJECT_NAME: string = packageJson.name
@@ -630,6 +655,15 @@ export class MetisServer {
    */
   public static resolvePath(...paths: string[]): string {
     return path.resolve(MetisServer.APP_DIR, ...paths)
+  }
+
+  /**
+   * Creates the session store for the {@link MetisServer}.
+   * @param store The Express session store instance.
+   * @note This should only be called once on server startup.
+   */
+  public static createSessionStore(store: Store): void {
+    this._sessionStore = store
   }
 
   /**

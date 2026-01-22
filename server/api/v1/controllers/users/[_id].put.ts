@@ -1,8 +1,6 @@
 import { hashPassword, UserModel } from '@server/database/models/users'
 import { databaseLogger } from '@server/logging'
 import { ServerLogin } from '@server/logins/ServerLogin'
-import { ServerWebSession } from '@server/logins/ServerWebSession'
-import { SessionServer } from '@server/sessions/SessionServer'
 import type { TUserJson } from '@shared/users/User'
 import { ApiResponse } from '../../library/ApiResponse'
 import { StatusError } from '../../library/StatusError'
@@ -21,7 +19,7 @@ export const updateUser: TExpressHandler = async (request, response) => {
   // Prevent clients from overriding the _id.
   if (userUpdates._id) delete userUpdates._id
   const { username, accessId } = userUpdates
-  const foreignUserLogin = ServerLogin.get(userId)
+  const foreignUserLogin = ServerLogin.getByUserId(userId)
 
   // Hash the password if it exists.
   if (!!userUpdates.password) {
@@ -77,17 +75,7 @@ export const updateUser: TExpressHandler = async (request, response) => {
     // If the user is required to be logged out, make sure the
     // client is notified so that the user is logged out.
     if (foreignUserLogin && requiresLogout) {
-      if (foreignUserLogin.metisSessionId) {
-        SessionServer.quit(
-          foreignUserLogin.metisSessionId,
-          foreignUserLogin.userId,
-        )
-      }
-      // Destroy the login.
-      ServerLogin.destroy(foreignUserLogin.userId)
-      // Destroy the session in the store.
-      await ServerWebSession.destroy(foreignUserLogin.webSessionId)
-      // Notify the client about the logout.
+      foreignUserLogin.destroy()
       foreignUserLogin.client?.emit('logout-user-update', { data: {} })
     }
     // Log the successful update of the user.

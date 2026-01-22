@@ -10,7 +10,7 @@ export const authMiddleware: TMetisWsMiddleware = (metis, socket, next) => {
   const { 'disconnect-existing': disconnectExisting } = socket.request.headers
   let { session } = socket.request
   let result: ServerEmittedError | undefined
-  let login = ServerLogin.get(session.userId)
+  let login = ServerLogin.getByUserId(session.userId)
 
   // If the user has a login registered,
   // set the result to an error.

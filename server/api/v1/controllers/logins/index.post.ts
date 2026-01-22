@@ -138,6 +138,13 @@ async function realizeLogin(
   let forceful: boolean = request.headers.forceful === 'true'
   let login = new ServerLogin(user, request.sessionID, { forceful })
 
+  if (login.isDuplicate && !forceful) {
+    throw new StatusError(
+      'Account is already logged in on another device or browser.',
+      409,
+    )
+  }
+
   if (login.inTimeout) {
     throw new StatusError(
       `The account has timed out likely due to too many requests being made. Account timed out for ${login.timeoutMinutesRemaining} minute(s).`,

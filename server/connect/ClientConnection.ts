@@ -407,6 +407,11 @@ export class ClientConnection {
             request,
           }),
         )
+
+        if (error.remainingPoints <= 0) {
+          this.login.destroy()
+        }
+
         return
       }
 
