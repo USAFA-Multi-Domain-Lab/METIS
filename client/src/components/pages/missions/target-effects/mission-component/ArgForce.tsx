@@ -20,12 +20,12 @@ export default function ArgForce({
   /**
    * The list of forces to display in the dropdown.
    */
-  const forces: ClientMissionForce[] = compute(() => mission.forces)
+  const forces = compute<ClientMissionForce[]>(() => mission.forces)
 
   /**
    * The warning message to display when the force is no longer available in the mission.
    */
-  const warningMessage: string = compute(() => {
+  const warningMessage = compute<string>(() => {
     if (existsInEffectArgs) {
       const forceName = required ? forceValue.name : optionalForceValue?.name
       return (
@@ -40,7 +40,7 @@ export default function ArgForce({
   /**
    * The tooltip description to display for a force argument.
    */
-  const forceTooltip: string = compute(() => {
+  const forceTooltip = compute<string>(() => {
     if (type === 'force' && tooltipDescription) {
       return tooltipDescription
     }
@@ -51,31 +51,18 @@ export default function ArgForce({
   /**
    * The label to display for the force dropdown.
    */
-  const label: string = compute(() => (type === 'force' ? name : 'Force'))
+  const label = compute<string>(() => (type === 'force' ? name : 'Force'))
+
+  /**
+   * Determines if the force dropdown should be hidden or not.
+   */
+  const hidden = compute<boolean>(() => !forceIsActive)
 
   /* -- RENDER -- */
 
-  if (!forceIsActive) return null
+  if (hidden) return null
 
-  if (required) {
-    return (
-      <DetailDropdown<ClientMissionForce>
-        fieldType={'required'}
-        label={label}
-        options={forces}
-        value={forceValue}
-        setValue={setForceValue}
-        tooltipDescription={forceTooltip}
-        isExpanded={false}
-        getKey={({ _id }) => _id}
-        render={({ name }) => name}
-        handleInvalidOption={{
-          method: 'warning',
-          message: warningMessage,
-        }}
-      />
-    )
-  } else {
+  if (!required) {
     return (
       <DetailDropdown<ClientMissionForce>
         fieldType={'optional'}
@@ -95,6 +82,24 @@ export default function ArgForce({
       />
     )
   }
+
+  return (
+    <DetailDropdown<ClientMissionForce>
+      fieldType={'required'}
+      label={label}
+      options={forces}
+      value={forceValue}
+      setValue={setForceValue}
+      tooltipDescription={forceTooltip}
+      isExpanded={false}
+      getKey={({ _id }) => _id}
+      render={({ name }) => name}
+      handleInvalidOption={{
+        method: 'warning',
+        message: warningMessage,
+      }}
+    />
+  )
 }
 
 /* ---------------------------- TYPES FOR FORCE ARG ---------------------------- */

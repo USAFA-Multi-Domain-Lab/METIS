@@ -145,8 +145,9 @@ $detail-field-font-size: 0.92rem;
     @include detail-field-styling();
     font-size: 0.92rem;
 
-    &::placeholder {
-      color: $color-primary-light;
+    &::placeholder,
+    input::placeholder {
+      color: $color-faded;
     }
   }
 }

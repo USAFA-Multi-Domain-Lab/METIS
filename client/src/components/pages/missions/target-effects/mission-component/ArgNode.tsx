@@ -81,7 +81,7 @@ export default function ArgNode({
    * @note **The first node should be selected if a previously selected node
    * is no longer available in the force selected above.**
    */
-  const selectFirstNode: boolean = compute(() => {
+  const selectFirstNode = compute<boolean>(() => {
     if (
       isRequired &&
       nodeIsActive &&
@@ -98,7 +98,7 @@ export default function ArgNode({
    * Determines if the node value should be set to the default value
    * in the effect's arguments.
    */
-  const selectDefaultNode: boolean = compute(() => {
+  const selectDefaultNode = compute<boolean>(() => {
     if (
       isOptional &&
       nodeIsActive &&
@@ -116,7 +116,7 @@ export default function ArgNode({
   /**
    * The list of nodes to display in the dropdown.
    */
-  const nodes: ClientMissionNode[] = compute(() => {
+  const nodes = compute<ClientMissionNode[]>(() => {
     if (isOptional) {
       return optionalForceValue ? optionalForceValue.nodes : []
     }
@@ -126,7 +126,7 @@ export default function ArgNode({
   /**
    * The tooltip description to display for a node argument.
    */
-  const nodeTooltip: string = compute(() => {
+  const nodeTooltip = compute<string>(() => {
     if (type === 'node' && tooltipDescription) {
       return tooltipDescription
     }
@@ -137,7 +137,12 @@ export default function ArgNode({
   /**
    * The label to display for a node dropdown.
    */
-  const label: string = compute(() => (type === 'node' ? name : 'Node'))
+  const label = compute<string>(() => (type === 'node' ? name : 'Node'))
+
+  /**
+   * Determines if the node dropdown should be hidden or not.
+   */
+  const hidden = compute<boolean>(() => !nodeIsActive || nodes.length === 0)
 
   /* -- EFFECTS -- */
 
@@ -166,24 +171,9 @@ export default function ArgNode({
 
   /* -- RENDER -- */
 
-  if (!nodeIsActive || nodes.length === 0) return null
+  if (hidden) return null
 
-  if (isRequired) {
-    return (
-      <DetailDropdown<ClientMissionNode>
-        fieldType={'required'}
-        label={label}
-        options={nodes}
-        value={nodeValue}
-        setValue={setNodeValue}
-        tooltipDescription={nodeTooltip}
-        isExpanded={false}
-        getKey={({ _id }) => _id}
-        render={({ name }) => name}
-        handleInvalidOption={handleInvalidRequiredNode}
-      />
-    )
-  } else {
+  if (isOptional) {
     return (
       <DetailDropdown<ClientMissionNode>
         fieldType={'optional'}
@@ -200,6 +190,21 @@ export default function ArgNode({
       />
     )
   }
+
+  return (
+    <DetailDropdown<ClientMissionNode>
+      fieldType={'required'}
+      label={label}
+      options={nodes}
+      value={nodeValue}
+      setValue={setNodeValue}
+      tooltipDescription={nodeTooltip}
+      isExpanded={false}
+      getKey={({ _id }) => _id}
+      render={({ name }) => name}
+      handleInvalidOption={handleInvalidRequiredNode}
+    />
+  )
 }
 
 /* ---------------------------- TYPES FOR NODE ARG ---------------------------- */

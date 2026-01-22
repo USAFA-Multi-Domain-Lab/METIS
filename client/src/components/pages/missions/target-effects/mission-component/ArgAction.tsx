@@ -78,7 +78,7 @@ export default function ArgAction({
   /**
    * The list of actions to display in the dropdown.
    */
-  const actions: ClientMissionAction[] = compute(() => {
+  const actions = compute<ClientMissionAction[]>(() => {
     if (isOptional) return Array.from(optionalNodeValue?.actions.values() ?? [])
     return Array.from(nodeValue.actions.values())
   })
@@ -89,7 +89,7 @@ export default function ArgAction({
    * is no longer available in the node selected above or if the node is no longer
    * available in the force selected above.**
    */
-  const selectFirstAction: boolean = compute(() => {
+  const selectFirstAction = compute<boolean>(() => {
     if (
       isRequired &&
       actionIsActive &&
@@ -108,7 +108,7 @@ export default function ArgAction({
    * Determines if the action value should be set to the default value
    * in the effect's arguments.
    */
-  const selectDefaultAction: boolean = compute(() => {
+  const selectDefaultAction = compute<boolean>(() => {
     if (
       isOptional &&
       actionIsActive &&
@@ -128,7 +128,7 @@ export default function ArgAction({
   /**
    * The tooltip description to display for an action argument.
    */
-  const actionTooltip: string = compute(() => {
+  const actionTooltip = compute<string>(() => {
     if (type === 'action' && tooltipDescription) {
       return tooltipDescription
     }
@@ -138,12 +138,12 @@ export default function ArgAction({
   /**
    * The label to display for the action dropdown.
    */
-  const label: string = compute(() => (type === 'action' ? name : 'Action'))
+  const label = compute<string>(() => (type === 'action' ? name : 'Action'))
 
   /**
-   * Determines if the action dropdown should be displayed or not.
+   * Determines if the action dropdown should be hidden or not.
    */
-  const hide: boolean = compute(() => {
+  const hidden = compute<boolean>(() => {
     if (!actionIsActive) return true
 
     // If the arg is required and the selected node is not in the
@@ -194,7 +194,7 @@ export default function ArgAction({
 
   /* -- RENDER -- */
 
-  if (hide) return null
+  if (hidden) return null
 
   if (isOptional) {
     return (
