@@ -29,6 +29,11 @@ describe('/api/v1/files', () => {
     return { username, password }
   }
 
+  async function logout(client: TestHttpClient): Promise<void> {
+    let response = await client.delete('/api/v1/logins/')
+    expect(response.status).toBe(200)
+  }
+
   async function uploadTestFile(
     client: TestHttpClient,
     uploaderAccess: 'admin',
@@ -111,11 +116,16 @@ describe('/api/v1/files', () => {
     let forbidden = await client.post('/api/v1/files/', {})
     expect(forbidden.status).toBe(403)
 
+    // Log out the student before logging in as admin.
+    await logout(client)
+
     await loginWithAccess(client, 'admin')
     let noFiles = await client.post('/api/v1/files/', {})
     expect(noFiles.status).toBe(400)
 
-    let fileRef = await uploadTestFile(client, 'admin')
+    // Use a fresh client for the upload test since uploadTestFile does its own login.
+    let { client: uploadClient } = await createTestContext()
+    let fileRef = await uploadTestFile(uploadClient, 'admin')
     expect(fileRef).toHaveProperty('_id')
   })
 

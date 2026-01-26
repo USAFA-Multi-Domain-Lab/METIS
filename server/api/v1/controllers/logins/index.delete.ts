@@ -13,9 +13,7 @@ import { StatusError } from '../../library/StatusError'
 export const logout: TExpressHandler = async (request, response) => {
   try {
     let forceful: boolean = request.headers.forceful === 'true'
-    // Grab the current login info from the session.
-    const { userId } = request.session
-    const login = ServerLogin.getByUserId(userId)
+    const login = ServerLogin.getByExpressRequest(request)
 
     // If there is no login, throw an error.
     if (!login) {

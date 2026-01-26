@@ -58,6 +58,11 @@ describe('/api/v1/missions', () => {
     return username
   }
 
+  async function logout(client: TestHttpClient): Promise<void> {
+    let response = await client.delete('/api/v1/logins/')
+    expect(response.status).toBe(200)
+  }
+
   async function fetchMissionDetail(client: TestHttpClient, missionId: string) {
     let response = await client.get(`/api/v1/missions/${missionId}/`)
     expect(response.status).toBe(200)
@@ -97,6 +102,9 @@ describe('/api/v1/missions', () => {
     let forbidden = await client.get('/api/v1/missions/')
     expect(forbidden.status).toBe(403)
 
+    // Log out the student before logging in as instructor.
+    await logout(client)
+
     // Ensure instructor can read despite lacking write permissions.
     await loginWithAccess(client, 'instructor')
     let authed = await client.get('/api/v1/missions/')
@@ -134,6 +142,9 @@ describe('/api/v1/missions', () => {
     await client.post('/api/v1/logins/', { username: studentUser, password })
     let forbidden = await client.post('/api/v1/missions/', {})
     expect(forbidden.status).toBe(403)
+
+    // Log out the student before logging in as instructor.
+    await logout(client)
 
     let username = `${namePrefix}_instructor_${generateRandomId()}`
     await loginWithAccess(client, 'instructor', username)
@@ -183,6 +194,9 @@ describe('/api/v1/missions', () => {
     let forbidden = await client.post('/api/v1/missions/import/', {})
     expect(forbidden.status).toBe(403)
 
+    // Log out the instructor before logging in as admin.
+    await logout(client)
+
     await loginWithAccess(client, 'admin')
     let noFiles = await client.post('/api/v1/missions/import/', {})
     expect(noFiles.status).toBe(400)
@@ -202,11 +216,17 @@ describe('/api/v1/missions', () => {
     )
     expect(forbidden.status).toBe(403)
 
+    // Log out the student before logging in as instructor.
+    await logout(client)
+
     await loginWithAccess(client, 'instructor')
     let instructorForbidden = await client.get(
       `/api/v1/missions/${defaultMissionId}/export/file`,
     )
     expect(instructorForbidden.status).toBe(403)
+
+    // Log out the instructor before logging in as admin.
+    await logout(client)
 
     await loginWithAccess(client, 'admin')
 

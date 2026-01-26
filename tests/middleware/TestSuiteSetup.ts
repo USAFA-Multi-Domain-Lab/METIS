@@ -18,8 +18,8 @@ export abstract class TestSuiteSetup {
     let address = server.httpServer.address()
     let port =
       typeof address === 'object' && address ? address.port : server.port
-    let baseURL = `http://127.0.0.1:${port}`
-    let client = new TestHttpClient(baseURL)
+    let baseUrl = `http://127.0.0.1:${port}`
+    let client = new TestHttpClient(baseUrl)
     return { server, client }
   }
 

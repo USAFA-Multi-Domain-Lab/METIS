@@ -6,6 +6,7 @@ import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
 import { type TLoginJson } from '@shared/logins'
 import { MissionSession } from '@shared/sessions/MissionSession'
 import type { Request } from 'express-serve-static-core'
+import type { Socket } from 'socket.io'
 import { SessionServer } from '../sessions/SessionServer'
 
 /**
@@ -31,15 +32,16 @@ export class ServerLogin {
   public get client(): ClientConnection | null {
     return this._client
   }
-
-  /**
-   * The client connection for the user currently logged in, if any.
-   */
   public set client(client: ClientConnection | null) {
     if (client !== null && client.login.userId !== this.userId) {
       throw new Error(
         'Cannot set client to a client connection with a different user ID.',
       )
+    }
+
+    // Register in socket registry.
+    if (client) {
+      ServerLogin.socketRegistry.set(client.socketId, this)
     }
 
     // Set client.
@@ -104,14 +106,14 @@ export class ServerLogin {
   }
 
   /**
-   * The (express) web session ID associated with the login.
+   * The express session ID associated with the login.
    */
-  private _webSessionId: Request['session']['id']
+  private _expressSessionId: Request['session']['id']
   /**
-   * The (express) web session ID associated with the login.
+   * The express session ID associated with the login.
    */
-  public get webSessionId(): Request['session']['id'] {
-    return this._webSessionId
+  public get expressSessionId(): Request['session']['id'] {
+    return this._expressSessionId
   }
 
   /**
@@ -155,26 +157,34 @@ export class ServerLogin {
 
   /**
    * @param user The user to log in.
-   * @param webSessionId The (express) web session ID associated with the login.
+   * @param expressRequest The express request associated with the attempted login.
    * @param options Options for the login.
    */
   public constructor(
     user: ServerUser,
-    webSessionId: Request['session']['id'],
+    expressRequest: Request,
     options: TServerLoginOptions = {},
   ) {
     const { forceful = false } = options
 
     this._user = user
-    this._webSessionId = webSessionId
+    this._expressSessionId = expressRequest.sessionID
     this._client = null
     this._metisSessionId = null
     this._destroyed = false
-    this._timeoutEnd = ServerLogin.getTimeoutEndByUserId(this.userId)
     this._isDuplicate = false
 
-    // Check for duplicate logins.
-    let duplicateLogin = ServerLogin.getByUserId(this.userId)
+    // Check timeout by user ID first (persists across sessions), then fall
+    // back to express request lookup for session-based timeouts.
+    this._timeoutEnd =
+      ServerLogin.timeoutRegistryByUserId.get(this.userId) ??
+      ServerLogin.getTimeoutEndByExpressRequest(expressRequest)
+
+    // Check for duplicate logins by user ID (another session for same user)
+    // or by express session (same session trying to login again).
+    let duplicateLogin =
+      ServerLogin.userIdRegistry.get(this.userId) ??
+      ServerLogin.getByExpressRequest(expressRequest)
 
     // Handle duplicate login.
     if (duplicateLogin) {
@@ -197,8 +207,8 @@ export class ServerLogin {
     // Store the login in the registry if the user
     // isn't in a timeout.
     if (!this.inTimeout) {
-      ServerLogin.registryByUserId.set(this.userId, this)
-      ServerLogin.registryByWebSessionId.set(this.webSessionId, this)
+      ServerLogin.userIdRegistry.set(this.userId, this)
+      ServerLogin.expressRegistry.set(this.expressSessionId, this)
     }
   }
 
@@ -219,24 +229,28 @@ export class ServerLogin {
   public destroy(): void {
     if (this.destroyed) return
 
-    // Remove from registries immediately so subsequent requests
-    // see the user as logged out, even if session-store cleanup
-    // completes asynchronously.
-    ServerLogin.registryByUserId.delete(this.userId)
-    ServerLogin.registryByWebSessionId.delete(this.webSessionId)
-    ServerLogin.timeoutRegistryByWebSessionId.delete(this.webSessionId)
+    // Remove from user ID registry.
+    ServerLogin.userIdRegistry.delete(this.userId)
 
-    // Quit METIS session if in one.
+    // Remove from express session ID registry.
+    ServerLogin.expressRegistry.delete(this.expressSessionId)
+
+    // Remove from METIS session registry, if any.
     if (this.metisSessionId) {
       SessionServer.quit(this.metisSessionId, this.userId)
     }
 
-    // Disconnect the client's websocket connection if it exists.
-    this.client?.disconnect()
+    // Handle the client connection.
+    if (this.client) {
+      ServerLogin.socketRegistry.delete(this.client.socketId)
+      this.client.disconnect()
+    }
 
+    // Mark as destroyed.
     this._destroyed = true
 
-    MetisServer.sessionStore.destroy(this.webSessionId, (error) => {
+    // Destroy the express session.
+    MetisServer.sessionStore.destroy(this.expressSessionId, (error) => {
       if (error) {
         expressLogger.error(
           'Session store destroy warning:',
@@ -251,9 +265,11 @@ export class ServerLogin {
    * @param timeoutEnd When the timeout ends.
    */
   public timeout(timeoutEnd: number): void {
+    // Set timeout end on the instance.
     this._timeoutEnd = timeoutEnd
+
+    // Update the single timeout registry by userId.
     ServerLogin.timeoutRegistryByUserId.set(this.userId, timeoutEnd)
-    ServerLogin.timeoutRegistryByWebSessionId.set(this.webSessionId, timeoutEnd)
   }
 
   /**
@@ -276,115 +292,127 @@ export class ServerLogin {
   /**
    * A registry of all logins currently in use by user ID.
    */
-  private static registryByUserId: Map<ServerUser['_id'], ServerLogin> =
+  protected static userIdRegistry: Map<ServerUser['_id'], ServerLogin> =
     new Map<ServerUser['_id'], ServerLogin>()
 
   /**
-   * A registry of all logins currently in use by web session ID.
+   * A registry of all logins currently in use by express session ID.
    */
-  private static registryByWebSessionId: Map<
-    Request['session']['id'],
+  protected static expressRegistry: Map<Request['session']['id'], ServerLogin> =
+    new Map<Request['session']['id'], ServerLogin>()
+
+  /**
+   * A registry of all logins currently in use by socket.io ID.
+   */
+  protected static socketRegistry: Map<Socket['id'], ServerLogin> = new Map<
+    Socket['id'],
     ServerLogin
-  > = new Map<Request['session']['id'], ServerLogin>()
+  >()
 
   /**
    * A registry of all logins that are in timeout by user ID.
+   * @note This is the single source of truth for timeouts. Timeout
+   * methods like {@link timeoutByExpressRequest} and {@link timeoutBySocket} lookup
+   * methods extract the userId and query this registry.
    */
-  private static timeoutRegistryByUserId: Map<ServerUser['_id'], number> =
+  protected static timeoutRegistryByUserId: Map<ServerUser['_id'], number> =
     new Map<ServerUser['_id'], number>()
 
   /**
-   * A registry of all logins that are in timeout by web session ID.
-   */
-  private static timeoutRegistryByWebSessionId: Map<
-    Request['session']['id'],
-    number
-  > = new Map<Request['session']['id'], number>()
-
-  /**
-   * @returns the login information associated with the given user ID.
+   * @returns the login information associated with the user ID.
    */
   public static getByUserId(
-    userId: ServerUser['_id'] | undefined,
+    userId: ServerUser['_id'],
   ): ServerLogin | undefined {
-    if (!userId) return undefined
-    return ServerLogin.registryByUserId.get(userId)
+    return ServerLogin.userIdRegistry.get(userId)
   }
 
   /**
-   * @returns the login information associated with the given web session ID.
+   * @returns the login information associated with the express request.
    */
-  public static getByWebSessionId(
-    webSessionId: Request['session']['id'] | undefined,
+  public static getByExpressRequest(
+    expressRequest: Request,
   ): ServerLogin | undefined {
-    if (!webSessionId) return undefined
-    return ServerLogin.registryByWebSessionId.get(webSessionId)
+    const { userId } = expressRequest.session
+
+    if (userId) {
+      return ServerLogin.userIdRegistry.get(userId)
+    }
+
+    let expressSessionId = expressRequest.sessionID
+    return ServerLogin.expressRegistry.get(expressSessionId)
   }
 
   /**
-   * Destroys the login information associated with the given user ID.
+   * @returns the login information associated with the socket request.
    */
-  public static destroyByUserId(userId: ServerUser['_id']): void {
-    let login = ServerLogin.getByUserId(userId)
+  public static getBySocket(socket: Socket): ServerLogin | undefined {
+    const { userId } = socket.request.session
+
+    if (userId) {
+      return ServerLogin.userIdRegistry.get(userId)
+    }
+
+    const { id: socketId } = socket
+    return ServerLogin.socketRegistry.get(socketId)
+  }
+
+  /**
+   * Destroys the login information associated with the express request.
+   */
+  public static destroyByExpressRequest(expressRequest: Request): void {
+    let login = ServerLogin.getByExpressRequest(expressRequest)
     login?.destroy()
   }
 
   /**
-   * Destroys the login information associated with the given web session ID.
+   * Destroys the login information associated with the socket.
    */
-  public static destroyByWebSessionId(
-    webSessionId: Request['session']['id'],
-  ): void {
-    let login = ServerLogin.getByWebSessionId(webSessionId)
+  public static destroyBySocket(socket: Socket): void {
+    let login = ServerLogin.getBySocket(socket)
     login?.destroy()
   }
 
   /**
-   * @returns the login timeout end time associated with the given user ID.
+   * @returns the login timeout end time associated with the express request.
    */
-  public static getTimeoutEndByUserId(
-    userId: ServerUser['_id'] | undefined,
+  public static getTimeoutEndByExpressRequest(
+    expressRequest: Request,
   ): number | null {
+    const { userId } = expressRequest.session
     if (!userId) return null
-    const { timeoutRegistryByUserId } = ServerLogin
-    return timeoutRegistryByUserId.get(userId) ?? null
+    return ServerLogin.timeoutRegistryByUserId.get(userId) ?? null
   }
 
   /**
-   * @returns the login timeout end time associated with the given web session ID.
+   * @returns the login timeout end time associated with the socket.
    */
-  public static getTimeoutEndByWebSessionId(
-    webSessionId: Request['session']['id'] | undefined,
-  ): number | null {
-    if (!webSessionId) return null
-    const { timeoutRegistryByWebSessionId } = ServerLogin
-    return timeoutRegistryByWebSessionId.get(webSessionId) ?? null
+  public static getTimeoutEndBySocket(socket: Socket): number | null {
+    const { userId } = socket.request.session
+    if (!userId) return null
+    return ServerLogin.timeoutRegistryByUserId.get(userId) ?? null
   }
 
   /**
-   * Sets a timeout for the user with the given user ID.
-   * @param userId The ID of the user to set the timeout for.
+   * Sets a timeout for the user associated with the express request.
+   * @param expressRequest The express request associated with the user to set the timeout for.
    * @param timeoutEnd When the timeout ends.
    */
-  public static timeoutByUserId(
-    userId: ServerUser['_id'],
+  public static timeoutByExpressRequest(
+    expressRequest: Request,
     timeoutEnd: number,
   ): void {
-    if (!userId) return
-    let login = ServerLogin.getByUserId(userId)
+    let login = ServerLogin.getByExpressRequest(expressRequest)
     login?.timeout(timeoutEnd)
   }
 
   /**
-   * Sets a timeout for the user with the given web session ID.
-   * @param webSessionId The (express) web session ID associated with the login.
+   * Sets a timeout for the user associated with the socket.
+   * @param socket The socket associated with the user to set the timeout for.
    * @param timeoutEnd When the timeout ends.
    */
-  public static timeoutByWebSessionId(
-    webSessionId: Request['session']['id'],
-    timeoutEnd: number,
-  ): void {
-    let login = ServerLogin.getByWebSessionId(webSessionId)
+  public static timeoutBySocket(socket: Socket, timeoutEnd: number): void {
+    let login = ServerLogin.getBySocket(socket)
     login?.timeout(timeoutEnd)
   }
 }

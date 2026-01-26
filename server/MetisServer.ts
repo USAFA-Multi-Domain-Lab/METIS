@@ -366,12 +366,12 @@ export class MetisServer {
     this.limiter = rateLimit({
       windowMs: this.httpRateLimitDuration,
       limit: this.httpRateLimit,
-      handler: async (request, response) => {
-        response.sendStatus(429)
+      handler: (request, response) => {
         expressLogger.error(
           `Rate limit exceeded for session ID ${request.sessionID} from IP ${request.ip}`,
         )
-        ServerLogin.destroyByWebSessionId(request.sessionID)
+        response.sendStatus(429)
+        ServerLogin.destroyByExpressRequest(request)
       },
     })
   }

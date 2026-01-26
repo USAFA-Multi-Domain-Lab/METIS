@@ -16,10 +16,13 @@ export const updateUser: TExpressHandler = async (request, response) => {
   // Get userId from params and extract updates from the body.
   const userId = request.params._id
   let userUpdates = request.body as Partial<TUserJson>
+
   // Prevent clients from overriding the _id.
   if (userUpdates._id) delete userUpdates._id
+
   const { username, accessId } = userUpdates
-  const foreignUserLogin = ServerLogin.getByUserId(userId)
+  // Get the login for the user being updated.
+  const updatedUserLogin = ServerLogin.getByUserId(userId)
 
   // Hash the password if it exists.
   if (!!userUpdates.password) {
@@ -40,14 +43,14 @@ export const updateUser: TExpressHandler = async (request, response) => {
       throw new StatusError(`User with ID "${userId}" not found.`, 404)
     }
     // Only compare fields actually submitted.
-    const fieldsToCheck = [
+    const fieldsToCheck: Partial<keyof TUserJson>[] = [
       'username',
       'accessId',
       'password',
       'needsPasswordReset',
       'firstName',
       'lastName',
-    ] as const
+    ]
     const requiresLogout = fieldsToCheck.some(
       (field) =>
         userUpdates[field] !== undefined &&
@@ -55,9 +58,9 @@ export const updateUser: TExpressHandler = async (request, response) => {
     )
 
     // Strip undefined values to avoid unintentional unsets.
-    const updates = Object.fromEntries(
+    const updates: Partial<TUserJson> = Object.fromEntries(
       Object.entries(userUpdates).filter(([, v]) => v !== undefined),
-    ) as Partial<TUserJson>
+    )
     // Update the user and return the new doc (using filtered updates).
     const userDoc = await UserModel.findByIdAndModify(
       userId,
@@ -72,11 +75,11 @@ export const updateUser: TExpressHandler = async (request, response) => {
     if (!userDoc) {
       throw new StatusError(`User with ID "${userId}" not found.`, 404)
     }
-    // If the user is required to be logged out, make sure the
-    // client is notified so that the user is logged out.
-    if (foreignUserLogin && requiresLogout) {
-      foreignUserLogin.destroy()
-      foreignUserLogin.client?.emit('logout-user-update', { data: {} })
+    // If the updated user is currently logged in and security-sensitive
+    // fields changed, log them out and notify them.
+    if (updatedUserLogin && requiresLogout) {
+      updatedUserLogin.destroy()
+      updatedUserLogin.client?.emit('logout-user-update', { data: {} })
     }
     // Log the successful update of the user.
     databaseLogger.info(`User with ID "${userId}" updated.`)
