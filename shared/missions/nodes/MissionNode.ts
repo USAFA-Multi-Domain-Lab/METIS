@@ -1,4 +1,5 @@
 import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
+import type { JsonSerializableArray } from '@shared/toolbox/arrays/JsonSerializableArray'
 import { MapToolbox } from '@shared/toolbox/maps/MapToolbox'
 import { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
 import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
@@ -15,6 +16,8 @@ import { type TMission, Mission } from '../Mission'
 import type { TMissionComponentIssue } from '../MissionComponent'
 import { MissionComponent } from '../MissionComponent'
 import { type TPrototype, MissionPrototype } from './MissionPrototype'
+import type { TNodeAlertJson } from './NodeAlert'
+import { NodeAlert } from './NodeAlert'
 
 /**
  * This represents an individual node in a mission.
@@ -266,12 +269,18 @@ export abstract class MissionNode<
   }
 
   /**
+   * Messages attached to this node to alert an operator
+   * of information with varying levels of severity.
+   */
+  public alerts: JsonSerializableArray<NodeAlert>
+
+  /**
    * The parent of this node in the tree structure.
    */
   public get parent(): TNode<T> | null {
     let parentPrototype = this.prototype.parent
     return parentPrototype
-      ? this.force.getNodeFromPrototype(parentPrototype._id) ?? null
+      ? (this.force.getNodeFromPrototype(parentPrototype._id) ?? null)
       : null
   }
 
@@ -615,6 +624,9 @@ export abstract class MissionNode<
       data.initiallyBlocked ?? MissionNode.DEFAULT_PROPERTIES.initiallyBlocked
     this._blocked = data.blocked ?? this.initiallyBlocked
     this.position = new Vector2D(0, 0)
+    this.alerts = NodeAlert.fromJson(
+      data.alerts ?? MissionNode.DEFAULT_PROPERTIES.alerts,
+    )
 
     // Attempt to get prototype from mission.
     let prototype = this.mission.getPrototype(data.prototypeId)
@@ -687,6 +699,7 @@ export abstract class MissionNode<
           opened: this.opened,
           executions: executionJson,
           blocked: this._blocked,
+          alerts: this.alerts.toJson(),
         }
 
         // Join session-specific JSON with base JSON.
@@ -814,6 +827,7 @@ export abstract class MissionNode<
       executions: [],
       exclude: false,
       initiallyBlocked: false,
+      alerts: [],
     }
   }
 }
@@ -892,6 +906,7 @@ export interface TMissionNodeSessionJson {
   opened: boolean
   executions: TActionExecutionJson[]
   blocked: boolean
+  alerts: TNodeAlertJson[]
 }
 
 /**
