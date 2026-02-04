@@ -5,6 +5,7 @@ import type { ServerEffect } from '@server/missions/effects/ServerEffect'
 import type { ServerMissionFile } from '@server/missions/files/ServerMissionFile'
 import type { ServerMissionForce } from '@server/missions/forces/ServerMissionForce'
 import type { ServerMissionNode } from '@server/missions/nodes/ServerMissionNode'
+import type { TNodeAlertSeverityLevel } from '@shared/missions/nodes/NodeAlert'
 import type { TSessionState } from '@shared/sessions/MissionSession'
 import type {
   TEffectExecutionTriggered,
@@ -78,6 +79,7 @@ export class TargetScriptContext<
       unblockNode: this.ifContextIsCurrent(this.unblockNode.bind(this)),
       openNode: this.ifContextIsCurrent(this.openNode.bind(this)),
       closeNode: this.ifContextIsCurrent(this.closeNode.bind(this)),
+      addNodeAlert: this.ifContextIsCurrent(this.addNodeAlert.bind(this)),
       modifySuccessChance: this.ifContextIsCurrent(
         this.modifySuccessChance,
       ).bind(this),
@@ -338,6 +340,18 @@ export class TargetScriptContext<
   private closeNode = ({ forceKey, nodeKey }: TManipulateNodeOptions = {}) => {
     const targetNode = this.determineTargetNode(forceKey, nodeKey)
     this.session.updateNodeOpenState(targetNode, false)
+  }
+
+  /**
+   * @see {@link TTargetScriptExposedContext.addNodeAlert}
+   */
+  private addNodeAlert = (
+    message: string,
+    severityLevel: TNodeAlertSeverityLevel,
+    { forceKey, nodeKey }: TManipulateNodeOptions = {},
+  ) => {
+    const targetNode = this.determineTargetNode(forceKey, nodeKey)
+    this.session.addNodeAlert(targetNode, message, severityLevel)
   }
 
   /**
@@ -658,6 +672,16 @@ export interface TTargetScriptExposedContext<
    * effect belongs, unless configured otherwise.
    */
   closeNode: TargetScriptContext<TType>['closeNode']
+  /**
+   * Adds an alert to the given node with the specified severity level.
+   * @param message The message to display when the alert is opened.
+   * @param severityLevel The severity level of the alert, indicating
+   * the importance/urgency of the alert.
+   * @param options Additional options for adding the alert.
+   * @note By default, this will add the alert to the node to which the current
+   * effect belongs, unless configured otherwise.
+   */
+  addNodeAlert: TargetScriptContext<TType>['addNodeAlert']
   /**
    * Modifies an action's chance of success.
    * @param operand The number used to modify the chance of success.

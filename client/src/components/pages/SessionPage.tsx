@@ -13,6 +13,7 @@ import {
   useRequireLogin,
 } from '@client/toolbox/hooks'
 import { useSessionRedirects } from '@client/toolbox/hooks/sessions'
+import type { NodeAlert } from '@shared/missions/nodes/NodeAlert'
 import { useEffect, useState } from 'react'
 import type { TPage_P } from '.'
 import { DefaultPageLayout } from '.'
@@ -27,6 +28,7 @@ import SessionMembersPanel from '../content/session/members/SessionMembersPanel'
 import MissionMap from '../content/session/mission-map/MissionMap'
 import ActionExecModal from '../content/session/mission-map/ui/overlay/modals/action-execution/ActionExecModal'
 import type { TTabBarTab } from '../content/session/mission-map/ui/tabs/TabBar'
+import NodeAlertBox from '../content/session/mission-map/ui/toasts/NodeAlertBox'
 import { OutputPanel } from '../content/session/output/'
 import StatusBar from '../content/session/StatusBar'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
@@ -79,6 +81,7 @@ export default function SessionPage({
   const [resetTeardownFailed, setResetTeardownFailed] = useState<boolean>(
     session.teardownFailed,
   )
+  const [activeAlert, setActiveAlert] = useState<NodeAlert | null>(null)
 
   /* -- VARIABLES -- */
 
@@ -165,12 +168,28 @@ export default function SessionPage({
         break
     }
   }
+  /**
+   * Syncs the resources remaining state with
+   * the selected force.
+   */
+  const syncResources = () => {
+    setResourcesRemaining(selectedForce?.resourcesRemaining ?? 0)
+  }
 
   /**
    * Handles the selection of a node in the mission map by the user.
    * @param node The node that was selected.
    */
   const onNodeSelect = async (node: ClientMissionNode): Promise<void> => {
+    // If the node has unacknowledged alerts,
+    // display the next one, overriding all other
+    // logic.
+    let nextAlert = node.nextUnacknowledgedAlert
+    if (nextAlert) {
+      setActiveAlert(nextAlert)
+      return
+    }
+
     // If the member is not authorized to manipulate nodes,
     // notify the user and return.
     if (!session.member.isAuthorized('manipulateNodes')) return
@@ -299,11 +318,29 @@ export default function SessionPage({
   }
 
   /**
-   * Syncs the resources remaining state with
-   * the selected force.
+   * Callback for when the user requests to see
+   * the next alert.
    */
-  const syncResources = () => {
-    setResourcesRemaining(selectedForce?.resourcesRemaining ?? 0)
+  const onNextAlert = () => {
+    // todo: This should actually dismiss the alert.
+  }
+
+  /**
+   * Callback for when the user requests to acknowledge
+   * the active alert, dismissing the animation and alert
+   * box.
+   */
+  const onAcknowledgeAlert = async () => {
+    try {
+      if (!activeAlert) return
+      setActiveAlert(null)
+      await session.$acknowledgeNodeAlert(activeAlert._id, activeAlert.nodeId)
+    } catch (error) {
+      handleError({
+        message: 'Failed to acknowledge node alert.',
+        notifyMethod: 'bubble',
+      })
+    }
   }
 
   /* -- COMPUTED -- */
@@ -541,28 +578,6 @@ export default function SessionPage({
     )
   })
 
-  /**
-   * JSX for the overlay content.
-   */
-  const overlayContentJsx = compute((): TReactElement | undefined => {
-    // If there is a selected node and not
-    // a selected action, render a prompt to
-    // select an action for the node.
-    if (nodeToExecute) {
-      return (
-        <ActionExecModal
-          node={nodeToExecute}
-          session={session}
-          close={() => setNodeToExecute(null)}
-        />
-      )
-    }
-    // Else, don't render any overlay content.
-    else {
-      return undefined
-    }
-  })
-
   // Return the rendered component.
   return (
     <div className={rootClass}>
@@ -573,13 +588,23 @@ export default function SessionPage({
             <PanelView title='Map'>
               <MissionMap
                 mission={mission}
-                overlayContent={overlayContentJsx}
                 buttonEngine={mapButtonEngine}
                 tabs={mapTabs}
                 showMasterTab={false}
                 onNodeSelect={onNodeSelect}
                 selectedForce={[selectedForce, selectForce]}
-              />
+              >
+                <ActionExecModal
+                  node={[nodeToExecute, setNodeToExecute]}
+                  session={session}
+                />
+                <NodeAlertBox
+                  alert={activeAlert}
+                  areMoreAlerts={false}
+                  next={onNextAlert}
+                  acknowledge={onAcknowledgeAlert}
+                />
+              </MissionMap>
             </PanelView>
           </Panel>
           <Panel>

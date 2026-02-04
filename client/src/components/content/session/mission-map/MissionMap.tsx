@@ -28,7 +28,7 @@ import type { TMapCompatibleNode } from './objects/nodes'
 import { MapNode } from './objects/nodes'
 import Hud from './ui/Hud'
 import PanController from './ui/PanController'
-import Overlay from './ui/overlay'
+import MapOverlay from './ui/overlay/MapOverlay'
 import MapPreferences from './ui/overlay/modals/MapPreferences'
 import type { TTabBarTab } from './ui/tabs/TabBar'
 
@@ -155,12 +155,23 @@ export const useMapContext = mapContext.getHook()
 /**
  * The heart of METIS, a 2D map of the mission displaying nodes
  * in relation to each other.
+ *
+ * ### Architectural Design Choices
+ * - The mission map takes a mission, interprets its structure and state,
+ * state, and displays it in a consistent way in a two-dimensional
+ * space.
+ * - The mission map is designed to be highly interactive, allowing
+ * users to pan, zoom, and interact with nodes directly on the map.
+ * - The mission map does not handle node interactions directly
+ * (such as clicking on nodes to open them); instead, it provides
+ * callbacks for these interactions, allowing parent components
+ * to define the behavior based on its intended use case (form builder
+ * vs live mission session).
  */
 export default function MissionMap(props: TMissionMap_P): TReactElement | null {
   /* -- PROPS -- */
 
   const defaultedProps = useDefaultProps(props, {
-    overlayContent: null,
     buttonEngine: ButtonSvgEngine.use(),
     tabs: [],
     showMasterTab: true,
@@ -169,16 +180,17 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
     onNodeSelect: null,
     onPrototypeSelect: null,
     applyNodeTooltip: null,
+    children: null,
   })
   const {
     mission,
-    overlayContent,
     tabs,
     buttonEngine,
     showMasterTab,
     onNodeSelect,
     onPrototypeSelect,
     applyNodeTooltip,
+    children,
   } = defaultedProps
 
   /* -- STATE -- */
@@ -227,16 +239,19 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
         return newValue
       },
     ),
-    mapPreferencesVisible: useState<boolean>(false),
+    mapPreferencesActive: useState<boolean>(false),
     nodeContentVisible: useState<boolean>(
       cameraZoom.x <= MAX_NODE_CONTENT_ZOOM,
     ),
+    modalCount: useState<number>(0),
   }
 
   const [selectedForce, selectForce] = state.selectedForce
   const [tabIndex, setTabIndex] = state.tabIndex
-  const [mapPreferencesVisible, setMapPreferencesVisible] =
-    state.mapPreferencesVisible
+  const [mapPreferencesActive, setMapPreferencesActive] =
+    state.mapPreferencesActive
+  const [modalCount] = state.modalCount
+
   /**
    * The current structure change key for the mission.
    */
@@ -255,10 +270,18 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
   /* -- COMPUTED -- */
 
   /**
+   * Whether the overlay is currently active. This will
+   * overlay the entire map with a semi-transparent
+   * layer to prevent interaction. Overlay should only
+   * be active when displaying a modal.
+   */
+  const overlayActive: boolean = modalCount > 0
+
+  /**
    * Whether to disable the zooming functionality of the map
    * via the mouse wheel or track pad.
    */
-  const disableZoom: boolean = !!overlayContent
+  const disableZoom: boolean = overlayActive
 
   /* -- FUNCTIONS -- */
 
@@ -434,7 +457,7 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
   const onClickPreferences = (
     event: React.MouseEvent<Element, MouseEvent>,
   ): void => {
-    setMapPreferencesVisible(!mapPreferencesVisible)
+    setMapPreferencesActive(!mapPreferencesActive)
   }
 
   /**
@@ -829,18 +852,18 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
    * JSX for an overlay that is displayed only if content is
    * passed in the props for the map.
    */
-  const overlayJsx = compute((): TReactElement | null => {
-    // If there is no overlay content, return null.
-    if (!overlayContent && !mapPreferencesVisible) return null
-
-    // Otherwise, render the overlay.
-    return (
-      <Overlay>
-        {overlayContent}
-        <MapPreferences />
-      </Overlay>
-    )
-  })
+  //   const overlayJsx = compute((): TReactElement | null => {
+  //     // If there is no overlay content, return null.
+  //     if (!overlayContent && !mapPreferencesVisible) return null
+  //
+  //     // Otherwise, render the overlay.
+  //     return (
+  //       <MapOverlay>
+  //         {overlayContent}
+  //         <MapPreferences />
+  //       </MapOverlay>
+  //     )
+  //   })
 
   // Render root JSX.
   return (
@@ -873,7 +896,9 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
           tabIndex={tabIndex}
           setTabIndex={setTabIndex}
         />
-        {overlayJsx}
+        <MapOverlay active={overlayActive} />
+        <MapPreferences active={state.mapPreferencesActive} />
+        {children}
       </div>
     </LocalContextProvider>
   )
@@ -952,11 +977,6 @@ export type TMissionMap_P = {
    */
   tabs?: TTabBarTab[]
   /**
-   * Content to display in the overlay.
-   * @default null
-   */
-  overlayContent?: React.ReactNode
-  /**
    * Whether to show the master tab.
    * @default true
    */
@@ -999,6 +1019,13 @@ export type TMissionMap_P = {
    * @default null
    */
   applyNodeTooltip?: ((node: ClientMissionNode) => string) | null
+  /**
+   * Additional JSX to render within the map. This
+   * will be included as a child of the root map
+   * element after all other children internally
+   * managed by this component.
+   */
+  children?: React.ReactNode
 }
 
 /**
@@ -1034,11 +1061,21 @@ export type TMissionMap_S = {
    * Whether the map preferences are currently being
    * displayed to the user.
    */
-  mapPreferencesVisible: TReactState<boolean>
+  mapPreferencesActive: TReactState<boolean>
   /**
    * Whether the node content is currently visible.
    */
   nodeContentVisible: TReactState<boolean>
+  /**
+   * The number of modals currently active in the
+   * map. This really should only be one, but for
+   * a transitionary period, where one is deactivated
+   * at the same time another is activated. If modal
+   * count is greater than zero, an overlay will be
+   * rendered on the map, which will prevent the user
+   * from performing normal interactions with the map.
+   */
+  modalCount: TReactState<number>
 }
 
 /**

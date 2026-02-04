@@ -1,21 +1,19 @@
 @use '@client/assets/styles/config.scss' as *;
 
 .MissionMap {
-  .Overlay {
-    .CreateEffect {
-      border: 2px solid $color-primary-light;
-      background-color: $color-primary;
+  .CreateEffect {
+    border: 2px solid $color-primary-light;
+    background-color: $color-primary;
 
-      .Detail {
-        grid-column: span 2;
-        margin: 0;
-      }
+    .Detail {
+      grid-column: span 2;
+      margin: 0;
+    }
 
-      .ButtonText {
-        width: fit-content;
-        margin: 20px 0 10px;
-        font-size: 0.9em;
-      }
+    .ButtonText {
+      width: fit-content;
+      margin: 20px 0 10px;
+      font-size: 0.9em;
     }
   }
 }

@@ -3,6 +3,7 @@ import {
   type TJsonSerializable,
 } from '@shared/toolbox/serialization/json'
 import { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSerializableArray'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 
 /**
  * Can be attached to a node to alert an operator of the
@@ -10,7 +11,15 @@ import { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSeriali
  * be set on the alert to convey the importance of the alert.
  */
 export class NodeAlert implements TJsonSerializable<TNodeAlertJson> {
-  public constructor(
+  private constructor(
+    /**
+     * Unique identifier for the alert.
+     */
+    public readonly _id: string,
+    /**
+     * The ID of the node with which the alert is associated.
+     */
+    public readonly nodeId: string,
     /**
      * The message to be displayed to an operator
      * of the node.
@@ -28,6 +37,8 @@ export class NodeAlert implements TJsonSerializable<TNodeAlertJson> {
     public acknowledged: boolean,
   ) {
     this.toJson = createToJsonMethod<NodeAlert, TNodeAlertJson>(this, [
+      '_id',
+      'nodeId',
       'message',
       'severityLevel',
       'acknowledged',
@@ -36,6 +47,39 @@ export class NodeAlert implements TJsonSerializable<TNodeAlertJson> {
 
   // Implemented
   public toJson: () => TNodeAlertJson
+
+  /**
+   * The possible severity levels for node alerts.
+   * @note IMPORTANT Consider the order here. The more
+   * severe levels should be listed last because
+   * the order is used to determine which animation
+   * to display on a map node. If multiple alerts are
+   * on a node, the animation for the most severe
+   * alert is shown.
+   */
+  public static get SEVERITY_LEVELS(): TNodeAlertSeverityLevel[] {
+    return ['suspicious', 'warning', 'danger']
+  }
+  /**
+   * Creates a brand new {@link NodeAlert} object.
+   * @param message The message to be displayed to an operator
+   * of the node.
+   * @param severityLevel Indicates the importance/urgency of the alert.
+   * @returns the new {@link NodeAlert} object.
+   */
+  public static createNew(
+    nodeId: string,
+    message: string,
+    severityLevel: TNodeAlertSeverityLevel = 'warning',
+  ): NodeAlert {
+    return new NodeAlert(
+      StringToolbox.generateRandomId(),
+      nodeId,
+      message,
+      severityLevel,
+      false,
+    )
+  }
 
   /**
    * @param json JSON data to deserialize.
@@ -58,11 +102,23 @@ export class NodeAlert implements TJsonSerializable<TNodeAlertJson> {
       return new JsonSerializableArray(
         ...json.map(
           (item) =>
-            new NodeAlert(item.message, item.severityLevel, item.acknowledged),
+            new NodeAlert(
+              item._id,
+              item.nodeId,
+              item.message,
+              item.severityLevel,
+              item.acknowledged,
+            ),
         ),
       )
     }
-    return new NodeAlert(json.message, json.severityLevel, json.acknowledged)
+    return new NodeAlert(
+      json._id,
+      json.nodeId,
+      json.message,
+      json.severityLevel,
+      json.acknowledged,
+    )
   }
 }
 
@@ -78,6 +134,14 @@ export type TNodeAlertSeverityLevel = 'suspicious' | 'warning' | 'danger'
  * The JSON representation of {@link NodeAlert}.
  */
 export type TNodeAlertJson = {
+  /**
+   * @see {@link NodeAlert._id}
+   */
+  _id: string
+  /**
+   * @see {@link NodeAlert.nodeId}
+   */
+  nodeId: string
   /**
    * @see {@link NodeAlert.message}
    */

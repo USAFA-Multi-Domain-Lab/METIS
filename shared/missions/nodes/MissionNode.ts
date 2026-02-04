@@ -1,5 +1,5 @@
 import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
-import type { JsonSerializableArray } from '@shared/toolbox/arrays/JsonSerializableArray'
+import { JsonSerializableArray } from '@shared/toolbox/arrays/JsonSerializableArray'
 import { MapToolbox } from '@shared/toolbox/maps/MapToolbox'
 import { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
 import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
@@ -269,10 +269,43 @@ export abstract class MissionNode<
   }
 
   /**
+   * @see {@link alerts}
+   */
+  protected _alerts: JsonSerializableArray<NodeAlert>
+  /**
    * Messages attached to this node to alert an operator
    * of information with varying levels of severity.
    */
-  public alerts: JsonSerializableArray<NodeAlert>
+  public get alerts(): JsonSerializableArray<NodeAlert> {
+    return new JsonSerializableArray<NodeAlert>(...this._alerts)
+  }
+
+  /**
+   * Whether there are an alerts not yet acknowledged
+   * by a member of the force hosting this node.
+   */
+  public get hasUnacknowledgedAlerts(): boolean {
+    return this.nextUnacknowledgedAlert !== null
+  }
+
+  /**
+   * The next unacknowledged alert on the node,
+   * or `null` if there are no unacknowledged alerts.
+   */
+  public get nextUnacknowledgedAlert(): NodeAlert | null {
+    // Sort first by severity level, that way the
+    // most severe unacknowledged alert is prioritized.
+    return (
+      this.alerts
+        .sort((a, b) => {
+          return (
+            NodeAlert.SEVERITY_LEVELS.indexOf(b.severityLevel) -
+            NodeAlert.SEVERITY_LEVELS.indexOf(a.severityLevel)
+          )
+        })
+        .find((alert) => !alert.acknowledged) ?? null
+    )
+  }
 
   /**
    * The parent of this node in the tree structure.
@@ -624,7 +657,7 @@ export abstract class MissionNode<
       data.initiallyBlocked ?? MissionNode.DEFAULT_PROPERTIES.initiallyBlocked
     this._blocked = data.blocked ?? this.initiallyBlocked
     this.position = new Vector2D(0, 0)
-    this.alerts = NodeAlert.fromJson(
+    this._alerts = NodeAlert.fromJson(
       data.alerts ?? MissionNode.DEFAULT_PROPERTIES.alerts,
     )
 
@@ -723,6 +756,15 @@ export abstract class MissionNode<
    */
   public getExecution(_id: string): TExecution<T> | undefined {
     return this.executions.find((execution) => execution._id === _id)
+  }
+
+  /**
+   * @param _id The ID of the alert to retrieve.
+   * @returns The alert with the given ID, or `undefined`
+   * if no alert with the given ID is found.
+   */
+  public getAlert(_id: string): NodeAlert | undefined {
+    return this.alerts.find((alert) => alert._id === _id)
   }
 
   /**

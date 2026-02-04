@@ -7,6 +7,7 @@ import type {
   TNodeBlockStatus,
   TNodeExecutionState,
 } from '@shared/missions/nodes/MissionNode'
+import type { NodeAlert } from '@shared/missions/nodes/NodeAlert'
 import type { Vector1D } from '@shared/toolbox/numbers/vectors/Vector1D'
 import type { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
 import MissionMap from '../../MissionMap'
@@ -86,6 +87,21 @@ export type TMapCompatibleNode = MetisComponent &
      */
     exclude: boolean
     /**
+     * Messages attached to this node to alert an operator
+     * of information with varying levels of severity.
+     */
+    alerts: NodeAlert[]
+    /**
+     * Whether there are an alerts not yet acknowledged
+     * by a member of the force hosting this node.
+     */
+    get hasUnacknowledgedAlerts(): boolean
+    /**
+     * The next unacknowledged alert on the node,
+     * or `null` if there are no unacknowledged alerts.
+     */
+    get nextUnacknowledgedAlert(): NodeAlert | null
+    /**
      * Requests to center the node on a mission map.
      * This is contigent, of course, on the node being
      * used on a mission map component.
@@ -125,10 +141,12 @@ export type TMapCompatibleNodeEvent =
   | 'set-buttons'
   | 'set-pending'
   | 'set-blocked'
+  | 'new-alert'
   | 'exec-state-change'
   | 'set-exclude'
   | 'set-color'
   | 'set-name'
+  | 'alert-acknowledged'
   | 'new-icon'
   | 'center-on-map'
 

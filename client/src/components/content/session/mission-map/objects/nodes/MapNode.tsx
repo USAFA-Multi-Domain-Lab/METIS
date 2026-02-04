@@ -9,6 +9,7 @@ import type {
   TNodeBlockStatus,
   TNodeExecutionState,
 } from '@shared/missions/nodes/MissionNode'
+import type { NodeAlert } from '@shared/missions/nodes/NodeAlert'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import { useState } from 'react'
 import type { TMapCompatibleNode, TMapNode_P, TNodeButton } from '.'
@@ -48,8 +49,8 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
   /* -- STATE -- */
 
   const localContext = useMapContext()
-  const { centerOnMap } = localContext
-  const [nodeContentVisible] = localContext.state.nodeContentVisible
+  const { centerOnMap, state } = localContext
+  const [nodeContentVisible] = state.nodeContentVisible
   const [name, setName] = useState<string>(node.name)
   const [color, setColor] = useState<string>(node.color)
   const [excluded, setExcluded] = useState<boolean>(node.exclude)
@@ -70,6 +71,8 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
     node.blockStatus,
   )
   const [blockResolved, setBlockResolved] = useState<boolean>(false)
+  const [nextUnacknowledgedAlert, setNextUnacknowledgedAlert] =
+    useState<NodeAlert | null>(node.nextUnacknowledgedAlert)
   const nodeButtonEngine = useButtonSvgEngine({
     elements: buttons,
     dependencies: [buttons],
@@ -118,6 +121,11 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
     setBlockStatus(node.blockStatus)
   })
 
+  // Handle new alerts for the node.
+  useEventListener(node, 'new-alert', () => {
+    setNextUnacknowledgedAlert(node.nextUnacknowledgedAlert)
+  })
+
   // Update the execution state when the node's
   // execution state changes.
   useEventListener(node, 'exec-state-change', () => {
@@ -137,6 +145,13 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
   // Update the name when the node's
   // name changes.
   useEventListener(node, 'set-name', () => setName(node.name))
+
+  // If any member of a force acknowledges an alert,
+  // update the alerts for the node to keep the graphics
+  // in sync with the node-alert state.
+  useEventListener(node, 'alert-acknowledged', () => {
+    setNextUnacknowledgedAlert(node.nextUnacknowledgedAlert)
+  })
 
   // Update the icon when the node's
   // icon changes.
@@ -295,6 +310,16 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
       .set('Blocked', blocked)
       .set('CutOff', cutOff)
       .set('BlockResolved', blockResolved)
+      .set('Alert', nextUnacknowledgedAlert)
+      .switch(
+        {
+          suspicious: 'Alert_Suspicious',
+          warning: 'Alert_Warning',
+          danger: 'Alert_Danger',
+          none: null,
+        },
+        nextUnacknowledgedAlert?.severityLevel ?? 'none',
+      )
       .set(
         'Hidden',
         mission.nonRevealedDisplayMode === 'hide' && !node.revealed,

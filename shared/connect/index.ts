@@ -1,3 +1,4 @@
+import type { TNodeAlertJson } from '@shared/missions/nodes/NodeAlert'
 import type { TEnvScriptResultJson } from '@shared/target-environments/EnvScriptResults'
 import type { MetisComponent } from '../MetisComponent'
 import type {
@@ -34,8 +35,10 @@ export interface TConnectEvent<TMethod extends string, TData extends {} = {}> {
 /**
  * Represents an event emitted by the client that expects a response by the server.
  */
-export interface TRequestEvent<TMethod extends string, TData extends {} = {}>
-  extends TConnectEvent<TMethod, TData> {
+export interface TRequestEvent<
+  TMethod extends string,
+  TData extends {} = {},
+> extends TConnectEvent<TMethod, TData> {
   requestId: string
 }
 
@@ -135,6 +138,7 @@ export type TServerEvent = TServerEvents[TServerMethod]
 type TModifierDataKey =
   | 'node-update-block-status'
   | 'node-update-open-state'
+  | 'node-new-alert'
   | 'node-action-success-chance'
   | 'node-action-process-time'
   | 'node-action-resource-cost'
@@ -165,6 +169,20 @@ type TModifierData = [
      */
     key: 'node-update-open-state'
   } & TNodeOpenStateData,
+  {
+    /**
+     * @see {@link TModifierDataKey}
+     */
+    key: 'node-new-alert'
+    /**
+     * The ID of the node to which the alert was added.
+     */
+    nodeId: string
+    /**
+     * The new alert that was added to the node.
+     */
+    alert: TNodeAlertJson
+  },
   {
     /**
      * @see {@link TModifierDataKey}
@@ -285,6 +303,14 @@ type TModifierData = [
 export type TFileAccessModifierData = Extract<
   TModifierData[number],
   { key: 'file-update-access' }
+>
+
+/**
+ * Modifier data for a new alert that was added to a node.
+ */
+export type TNodeNewAlertData = Extract<
+  TModifierData[number],
+  { key: 'node-new-alert' }
 >
 
 /**
@@ -711,6 +737,23 @@ export type TResponseEvents = {
     TClientEvents['request-send-output']
   >
   /**
+   * Occurs when a node alert has been acknowledged successfully on the server.
+   */
+  'node-alert-acknowledged': TResponseEvent<
+    'node-alert-acknowledged',
+    {
+      /**
+       * The ID of the node alert that was acknowledged.
+       */
+      alertId: string
+      /**
+       * The ID of the node to which the alert belongs.
+       */
+      nodeId: string
+    },
+    TClientEvents['request-acknowledge-node-alert']
+  >
+  /**
    * Occurs to send the requested, currently-joined session to the client.
    */
   'current-session': TResponseEvent<
@@ -905,6 +948,24 @@ export type TRequestEvents = {
    * Occurs when the client requests to send a pre-execution message to the output panel.
    */
   'request-send-output': TRequestEvent<'request-send-output', TOutputDatum>
+  /**
+   * Occurs when the client requests to mark a node alert as acknowledged,
+   * which will dismiss it from view.
+   */
+  'request-acknowledge-node-alert': TRequestEvent<
+    'request-acknowledge-node-alert',
+    {
+      /**
+       * The ID of the node alert to acknowledge.
+       */
+      alertId: string
+      /**
+       * The node to which the alert is tied (Helps speed up
+       * lookup).
+       */
+      nodeId: string
+    }
+  >
   /**
    * Occurs when the client requests to fetch the currently joined session.
    */

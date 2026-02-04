@@ -1,0 +1,93 @@
+@use '../../../../../../assets/styles/config.scss' as *;
+@use '../../../../../../assets/styles/util.scss' as *;
+
+.NodeAlertBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  row-gap: 0.8em;
+  position: absolute;
+  bottom: 3em;
+  right: 1em;
+  z-index: $z-map-toasts;
+  border: 2px solid $color-primary-light;
+  width: 15em;
+  padding: 1em 1em 0.5em;
+  background: $color-accent-dark;
+
+  .AlertIcon {
+    mask-image: url('../../../../../../assets/images/icons/warning-transparent.svg');
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+  }
+
+  &.Suspicious {
+    @include alert-pulse-animation($color-neutral);
+
+    .AlertIcon {
+      background-color: $color-neutral;
+    }
+  }
+  &.Warning {
+    @include alert-pulse-animation($color-warning);
+
+    .AlertIcon {
+      background-color: $color-warning;
+    }
+  }
+  &.Danger {
+    @include alert-pulse-animation($color-failure);
+
+    .AlertIcon {
+      background-color: $color-failure;
+    }
+  }
+
+  &,
+  * {
+    pointer-events: all;
+  }
+
+  .AlertHeader {
+    display: flex;
+    flex-direction: row;
+    margin-top: 0em;
+    gap: 0.5em;
+
+    .AlertIcon {
+      width: 1.35em;
+      height: 1.35em;
+    }
+
+    .AlertTitle {
+      font-weight: bold;
+      color: $color-neutral-light;
+    }
+  }
+
+  .AlertMessage {
+    box-sizing: border-box;
+    font-style: italic;
+    color: $color-neutral-light;
+    line-height: 1.4;
+    text-align: center;
+    font-size: 0.75em;
+  }
+
+  .AlertButtons {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25em;
+    width: 100%;
+    height: 1.5em;
+    padding: 0 0.5em;
+
+    .ButtonText {
+      margin: 0;
+    }
+  }
+}

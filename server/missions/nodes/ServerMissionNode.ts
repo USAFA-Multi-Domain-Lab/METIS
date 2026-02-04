@@ -4,6 +4,8 @@ import type { TActionExecutionJson } from '@shared/missions/actions/ActionExecut
 import type { TMissionActionJson } from '@shared/missions/actions/MissionAction'
 import type { TMissionNodeJson } from '@shared/missions/nodes/MissionNode'
 import { MissionNode } from '@shared/missions/nodes/MissionNode'
+import type { TNodeAlertSeverityLevel } from '@shared/missions/nodes/NodeAlert'
+import { NodeAlert } from '@shared/missions/nodes/NodeAlert'
 import { NumberToolbox } from '@shared/toolbox/numbers/NumberToolbox'
 import { ServerActionExecution } from '../actions/ServerActionExecution'
 import type { ServerExecutionOutcome } from '../actions/ServerExecutionOutcome'
@@ -229,6 +231,21 @@ export class ServerMissionNode extends MissionNode<TMetisServerComponents> {
       prototypeId: this.prototype._id,
       exclude: this.exclude,
     })
+  }
+
+  /**
+   * Creates a new alert and attaches it to the node.
+   * @param message The message to be displayed to an operator of the node.
+   * @param severityLevel Indicates the importance/urgency of the alert.
+   * @returns The newly created {@link NodeAlert} object.
+   */
+  public alert(
+    message: string,
+    severityLevel: TNodeAlertSeverityLevel,
+  ): NodeAlert {
+    let alert = NodeAlert.createNew(this._id, message, severityLevel)
+    this._alerts.push(alert)
+    return alert
   }
 
   /**

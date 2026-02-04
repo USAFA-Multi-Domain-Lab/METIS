@@ -289,29 +289,6 @@ export default function MissionPageMap(): TReactElement {
 
   /* -- RENDER -- */
 
-  /**
-   * Computed JSX for the mission map modal.
-   */
-  const modalJsx = compute((): TReactElement | null => {
-    // If the selection is an action and the user has
-    // requested to create a new effect, then display
-    // the create effect modal.
-    if (effectModalActive) {
-      return (
-        <CreateEffect
-          host={effectModalArgs.host}
-          trigger={effectModalArgs.trigger}
-          onCloseRequest={() => setEffectModalActive(false)}
-          onChange={onChange}
-        />
-      )
-    }
-    // Otherwise, return null.
-    else {
-      return null
-    }
-  })
-
   return (
     <MissionMap
       mission={mission}
@@ -320,8 +297,14 @@ export default function MissionPageMap(): TReactElement {
       onTabAdd={onTabAdd}
       onPrototypeSelect={onPrototypeSelect}
       onNodeSelect={onNodeSelect}
-      overlayContent={modalJsx}
       selectedForce={selectedForceState}
-    />
+    >
+      <CreateEffect
+        active={missionPageState.effectModalActive}
+        host={effectModalArgs.host}
+        trigger={effectModalArgs.trigger}
+        onChange={onChange}
+      />
+    </MissionMap>
   )
 }

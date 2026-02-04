@@ -1,6 +1,29 @@
 @use './config.scss' as *;
 @forward './config.scss';
 
+/* -- MIXINS -- */
+
+/**
+ * Creates an alert pulse animation using the specified color.
+ * @param {color} $color - The color to use for the alert pulse animation. Defaults to $color-neutral.
+ */
+@mixin alert-pulse-animation($color: $color-neutral) {
+  $animation-name: alert-pulse-#{unique-id()};
+
+  @keyframes #{$animation-name} {
+    0% {
+      border-color: $color;
+    }
+    50% {
+      border-color: $color-primary-light;
+    }
+    100% {
+      border-color: $color;
+    }
+  }
+  animation: $animation-name 2s infinite;
+}
+
 @mixin hide() {
   pointer-events: none !important;
   opacity: 0 !important;
@@ -43,7 +66,8 @@
 @mixin x-gradient {
   $opacity: 0.5;
   $gradient-color: rgba($color-accent-light, $opacity);
-  $fill: transparent 0% calc(50% - 1px),
+  $fill:
+    transparent 0% calc(50% - 1px),
     $gradient-color calc(50% - 1px) calc(50% + 1px),
     transparent calc(50% + 1px) 100%;
   $linear-grad1: linear-gradient(to bottom right, $fill);
@@ -61,7 +85,8 @@
  */
 @mixin background-image {
   &.BackgroundImageSmall {
-    background-image: linear-gradient(
+    background-image:
+      linear-gradient(
         to bottom right,
         transparent 0% 70%,
         rgba(#fff, 0.1) 100%
@@ -70,7 +95,8 @@
   }
 
   &.BackgroundImageLarge {
-    background-image: linear-gradient(
+    background-image:
+      linear-gradient(
         to bottom right,
         transparent 0% 70%,
         rgba(#fff, 0.1) 100%

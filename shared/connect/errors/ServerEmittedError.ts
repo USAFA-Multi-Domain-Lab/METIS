@@ -133,7 +133,7 @@ export class ServerEmittedError extends WsEmittedError {
    */
   public static readonly CODE_SESSION_CLOSED: number = 20007
   /**
-   * Code for a client requesting to open a node that cannot be found.
+   * Code for a client requesting to modify the state of a node that cannot be found.
    */
   public static readonly CODE_NODE_NOT_FOUND: number = 20100
   /**
@@ -148,6 +148,10 @@ export class ServerEmittedError extends WsEmittedError {
    * Code for a client requesting to execute an action on a node that is not yet revealed.
    */
   public static readonly CODE_NODE_NOT_REVEALED: number = 20103
+  /**
+   * Code for a client requesting to modify a node alert that cannot be found.
+   */
+  public static readonly CODE_NODE_ALERT_NOT_FOUND: number = 20104
   /**
    * Code for a client requesting to execute an action that cannot be found.
    */
