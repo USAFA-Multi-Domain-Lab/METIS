@@ -158,8 +158,7 @@ export const useMapContext = mapContext.getHook()
  *
  * ### Architectural Design Choices
  * - The mission map takes a mission, interprets its structure and state,
- * state, and displays it in a consistent way in a two-dimensional
- * space.
+ * and displays it in a consistent way in a two-dimensional space.
  * - The mission map is designed to be highly interactive, allowing
  * users to pan, zoom, and interact with nodes directly on the map.
  * - The mission map does not handle node interactions directly

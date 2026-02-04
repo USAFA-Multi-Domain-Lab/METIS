@@ -1,3 +1,13 @@
+/**
+ * Factory function to create a basic `toJson` method
+ * implementation for a class which implements the
+ * {@link TJsonSerializable} interface.
+ * @param object The object, which implements TJsonSerializable,
+ * for which to create the `toJson` method.
+ * @param directConversion The list of keys which can be directly
+ * copied from the object to the JSON representation.
+ * @returns a `toJson` method implementation.
+ */
 export function createToJsonMethod<
   T extends TJsonSerializable<TJson>,
   TJson extends Record<string, any>,

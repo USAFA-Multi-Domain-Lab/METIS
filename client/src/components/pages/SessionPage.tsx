@@ -334,6 +334,7 @@ export default function SessionPage({
     try {
       if (!activeAlert) return
       setActiveAlert(null)
+      if (activeAlert.acknowledged) return
       await session.$acknowledgeNodeAlert(activeAlert._id, activeAlert.nodeId)
     } catch (error) {
       handleError({
