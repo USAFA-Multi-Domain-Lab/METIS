@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="30"
+   height="30"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="info.svg"
+   inkscape:version="1.4 (e7c3feb1, 2024-10-09)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1">
+    <rect
+       x="0.3649635"
+       y="0.3649635"
+       width="28.686131"
+       height="28.978102"
+       id="rect2" />
+    <rect
+       x="0.3649635"
+       y="0.3649635"
+       width="29.270073"
+       height="28.759124"
+       id="rect1" />
+  </defs>
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#000000"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="9.9401163"
+     inkscape:cx="18.812657"
+     inkscape:cy="19.567175"
+     inkscape:window-width="1512"
+     inkscape:window-height="992"
+     inkscape:window-x="218"
+     inkscape:window-y="33"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg1"
+     showgrid="false" />
+  <circle
+     style="fill:none;stroke:#ffffff;stroke-width:2.5;stroke-linecap:square;stroke-miterlimit:80.4;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
+     id="path1"
+     cx="15"
+     cy="15"
+     r="13.75" />
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:18.6667px;font-family:Monospace;-inkscape-font-specification:'Monospace Bold';text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke-width:2.5;stroke-linecap:square"
+     x="14.916003"
+     y="21.636011"
+     id="text2"><tspan
+       sodipodi:role="line"
+       id="tspan2"
+       x="14.916003"
+       y="21.636011"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:18.6667px;font-family:'PT Mono';-inkscape-font-specification:'PT Mono Bold';text-align:center;text-anchor:middle">i</tspan></text>
+</svg>

@@ -67,7 +67,7 @@ export class NodeAlert implements TJsonSerializable<TNodeAlertJson> {
    * alert is shown.
    */
   public static get SEVERITY_LEVELS(): TNodeAlertSeverityLevel[] {
-    return ['suspicious', 'warning', 'danger']
+    return ['info', 'suspicious', 'warning', 'danger']
   }
   /**
    * Creates a brand new {@link NodeAlert} object.
@@ -137,7 +137,11 @@ export class NodeAlert implements TJsonSerializable<TNodeAlertJson> {
  * The severity level of a node alert, indicating
  * the importance of the alert.
  */
-export type TNodeAlertSeverityLevel = 'suspicious' | 'warning' | 'danger'
+export type TNodeAlertSeverityLevel =
+  | 'info' // Experimental, may not stay.
+  | 'suspicious'
+  | 'warning'
+  | 'danger'
 
 /**
  * The JSON representation of {@link NodeAlert}.

@@ -34,6 +34,7 @@ export default function NodeAlertBox({
    */
   const rootClasses = new ClassList('NodeAlertBox').switch(
     {
+      info: 'Info',
       suspicious: 'Suspicious',
       warning: 'Warning',
       danger: 'Danger',
@@ -48,7 +49,7 @@ export default function NodeAlertBox({
     <div className={rootClasses.value}>
       <div className='AlertHeader'>
         <div className='AlertIcon'></div>
-        <div className='AlertTitle'>WARNING</div>
+        <div className='AlertTitle'>ALERT</div>
       </div>
       <div className='AlertMessage'>{message}</div>
       <div className='AlertButtons'>

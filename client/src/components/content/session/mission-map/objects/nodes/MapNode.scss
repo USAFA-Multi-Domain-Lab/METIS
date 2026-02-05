@@ -85,11 +85,30 @@
     }
 
     &.Alert {
+      &.Alert_Info {
+        .Icon {
+          mask-image: url('../../../../../../assets/images/icons/info.svg');
+        }
+      }
+
+      &:not(.Alert_Info) {
+        .Icon {
+          mask-image: url('../../../../../../assets/images/icons/warning-transparent.svg');
+        }
+      }
+
       .Icon {
-        mask-image: url('../../../../../../assets/images/icons/warning-transparent.svg');
         mask-size: contain;
         mask-repeat: no-repeat;
         mask-position: center;
+      }
+
+      &.Alert_Info {
+        @include alert-pulse-animation($color-accent);
+
+        .Icon {
+          background-color: $color-accent;
+        }
       }
 
       &.Alert_Suspicious {

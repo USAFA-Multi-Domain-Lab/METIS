@@ -313,6 +313,7 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
       .set('Alert', nextUnacknowledgedAlert)
       .switch(
         {
+          info: 'Alert_Info',
           suspicious: 'Alert_Suspicious',
           warning: 'Alert_Warning',
           danger: 'Alert_Danger',

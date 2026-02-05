@@ -16,29 +16,62 @@
   padding: 1em 1em 0.5em;
   background: $color-accent-dark;
 
+  &.Info {
+    &,
+    * {
+      color: $color-accent-light;
+    }
+
+    .AlertIcon {
+      mask-image: url('../../../../../../assets/images/icons/info.svg');
+    }
+  }
+
+  &:not(.Info) {
+    &,
+    * {
+      color: $color-neutral-light;
+    }
+
+    .AlertIcon {
+      mask-image: url('../../../../../../assets/images/icons/warning-transparent.svg');
+    }
+  }
+
   .AlertIcon {
-    mask-image: url('../../../../../../assets/images/icons/warning-transparent.svg');
     mask-size: contain;
     mask-repeat: no-repeat;
     mask-position: center;
   }
 
+  &.Info {
+    border-color: $color-accent;
+    // @include alert-pulse-animation($color-accent);
+
+    .AlertIcon {
+      background-color: $color-accent;
+    }
+  }
+
   &.Suspicious {
-    @include alert-pulse-animation($color-neutral);
+    border-color: $color-neutral;
+    // @include alert-pulse-animation($color-neutral);
 
     .AlertIcon {
       background-color: $color-neutral;
     }
   }
   &.Warning {
-    @include alert-pulse-animation($color-warning);
+    border-color: $color-warning;
+    // @include alert-pulse-animation($color-warning);
 
     .AlertIcon {
       background-color: $color-warning;
     }
   }
   &.Danger {
-    @include alert-pulse-animation($color-failure);
+    border-color: $color-failure;
+    // @include alert-pulse-animation($color-failure);
 
     .AlertIcon {
       background-color: $color-failure;
@@ -63,14 +96,12 @@
 
     .AlertTitle {
       font-weight: bold;
-      color: $color-neutral-light;
     }
   }
 
   .AlertMessage {
     box-sizing: border-box;
     font-style: italic;
-    color: $color-neutral-light;
     line-height: 1.4;
     text-align: center;
     font-size: 0.75em;

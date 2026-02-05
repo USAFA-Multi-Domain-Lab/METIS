@@ -34,6 +34,19 @@ const messageArg: TTargetArgJson = {
 }
 
 /**
+ * EXPERIMENTAL
+ * A severity-level option that represents an alert
+ * that is meant to provide general information or
+ * guidance to the user, but does not necessarily
+ * indicate that there is an issue.
+ */
+const infoOption = {
+  _id: 'info',
+  name: 'Info',
+  value: 'info',
+}
+
+/**
  * A severity-level option that represents an alert
  * that has a lower-level of importance, but still
  * may warrant attention.
@@ -73,7 +86,7 @@ const severityLevelArg: TTargetArgJson = {
   name: 'Severity Level',
   required: true,
   groupingId: groupingId,
-  options: [suspiciousOption, warningOption, dangerOption],
+  options: [infoOption, suspiciousOption, warningOption, dangerOption],
   default: warningOption,
 }
 
@@ -85,8 +98,8 @@ const severityLevelArg: TTargetArgJson = {
  * in the mission-map interface for members operating that node to see.
  */
 const NodeAlert = new TargetSchema({
-  _id: 'alert',
-  name: 'Alert',
+  _id: 'node-alert',
+  name: 'Node Alert',
   description: 'Adds an alert to a node.',
   script: async (context) => {
     let nodeMetadata: TNodeMetadata = context.effect.args.nodeMetadata
