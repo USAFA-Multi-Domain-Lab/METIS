@@ -20,20 +20,6 @@ const nodeMetadataArg: TTargetArgJson = {
 }
 
 /**
- * Argument that specifies the message to be included
- * in the node alert, giving the user intel on what
- * happened and perhaps how they should respond.
- */
-const messageArg: TTargetArgJson = {
-  type: 'string',
-  _id: 'message',
-  name: 'Message',
-  required: true,
-  groupingId: groupingId,
-  default: 'Enter your warning message here.',
-}
-
-/**
  * EXPERIMENTAL
  * A severity-level option that represents an alert
  * that is meant to provide general information or
@@ -90,6 +76,20 @@ const severityLevelArg: TTargetArgJson = {
   default: warningOption,
 }
 
+/**
+ * Argument that specifies the message to be included
+ * in the node alert, giving the user intel on what
+ * happened and perhaps how they should respond.
+ */
+const messageArg: TTargetArgJson = {
+  type: 'large-string',
+  _id: 'message',
+  name: 'Message',
+  required: true,
+  groupingId: groupingId,
+  default: 'Enter your message here.',
+}
+
 /* -- TARGET -- */
 
 /**
@@ -108,7 +108,7 @@ const NodeAlert = new TargetSchema({
     let { forceKey, nodeKey } = nodeMetadata
     context.addNodeAlert(message, severityLevel, { forceKey, nodeKey })
   },
-  args: [nodeMetadataArg, messageArg, severityLevelArg],
+  args: [nodeMetadataArg, severityLevelArg, messageArg],
 })
 
 export default NodeAlert
