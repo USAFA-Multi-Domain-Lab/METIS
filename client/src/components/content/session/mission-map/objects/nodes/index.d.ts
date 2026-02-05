@@ -146,7 +146,7 @@ export type TMapCompatibleNodeEvent =
   | 'set-exclude'
   | 'set-color'
   | 'set-name'
-  | 'alert-acknowledged'
+  | 'alert-updated'
   | 'new-icon'
   | 'center-on-map'
 

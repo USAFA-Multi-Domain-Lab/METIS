@@ -527,8 +527,24 @@ export class ClientMissionNode
       )
       return
     }
-    alert.acknowledged = true
-    this.emitEvent('alert-acknowledged')
+    if (!alert.acknowledged) {
+      alert.acknowledged = true
+      this.emitEvent('alert-updated')
+    }
+  }
+
+  public onAlertAcknowledgementError(alertId: string): void {
+    let alert = this.getAlert(alertId)
+    if (!alert) {
+      console.warn(
+        `Attempted to revert acknowledgement of non-existent alert with ID "${alertId}" on node with ID "${this._id}".`,
+      )
+      return
+    }
+    if (alert.acknowledged) {
+      alert.acknowledged = false
+      this.emitEvent('alert-updated')
+    }
   }
 
   // Implemented

@@ -149,7 +149,7 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
   // If any member of a force acknowledges an alert,
   // update the alerts for the node to keep the graphics
   // in sync with the node-alert state.
-  useEventListener(node, 'alert-acknowledged', () => {
+  useEventListener(node, 'alert-updated', () => {
     setNextUnacknowledgedAlert(node.nextUnacknowledgedAlert)
   })
 

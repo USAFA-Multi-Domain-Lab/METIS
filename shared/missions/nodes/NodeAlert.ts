@@ -11,6 +11,15 @@ import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
  * be set on the alert to convey the importance of the alert.
  */
 export class NodeAlert implements TJsonSerializable<TNodeAlertJson> {
+  /**
+   * A numerical representation of the severity level,
+   * which can be used to compare two node alerts to
+   * see which one is of higher importance.
+   */
+  public get severityLevelNumber(): number {
+    return NodeAlert.SEVERITY_LEVELS.indexOf(this.severityLevel)
+  }
+
   private constructor(
     /**
      * Unique identifier for the alert.

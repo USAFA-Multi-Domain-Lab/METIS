@@ -32,6 +32,7 @@ import NodeAlertBox from '../content/session/mission-map/ui/toasts/NodeAlertBox'
 import { OutputPanel } from '../content/session/output/'
 import StatusBar from '../content/session/StatusBar'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
+import WarningIndicator from '../content/user-controls/WarningIndicator'
 import If from '../content/util/If'
 import './SessionPage.scss'
 
@@ -81,6 +82,8 @@ export default function SessionPage({
   const [resetTeardownFailed, setResetTeardownFailed] = useState<boolean>(
     session.teardownFailed,
   )
+  const [hasUnacknowledgedAlerts, setHasUnacknowledgedAlerts] =
+    useState<boolean>(selectedForce?.hasUnacknowledgedAlerts ?? false)
   const [activeAlert, setActiveAlert] = useState<NodeAlert | null>(null)
 
   /* -- VARIABLES -- */
@@ -174,6 +177,13 @@ export default function SessionPage({
    */
   const syncResources = () => {
     setResourcesRemaining(selectedForce?.resourcesRemaining ?? 0)
+  }
+
+  /**
+   * Rechecks the current state of the selected force's alerts.
+   */
+  const refreshAlerts = () => {
+    setHasUnacknowledgedAlerts(selectedForce?.hasUnacknowledgedAlerts ?? false)
   }
 
   /**
@@ -318,6 +328,27 @@ export default function SessionPage({
   }
 
   /**
+   * Callback for when the user clicks the alert indicator,
+   * requesting to see the next alert, starting with that
+   * of highest priority. In doing so, the map will center
+   * on the node with the alert.
+   */
+  const onClickAlertIndicator = () => {
+    let nextUnacknowledgedAlert = selectedForce?.nextUnacknowledgedAlert
+    let alertNode = selectedForce?.getNode(
+      nextUnacknowledgedAlert?.nodeId ?? 'no-alert-node',
+    )
+
+    if (!selectedForce || !nextUnacknowledgedAlert || !alertNode) {
+      console.warn('Cannot show alert; missing data.')
+      return
+    }
+
+    setActiveAlert(nextUnacknowledgedAlert)
+    alertNode.requestCenterOnMap()
+  }
+
+  /**
    * Callback for when the user requests to see
    * the next alert.
    */
@@ -331,12 +362,31 @@ export default function SessionPage({
    * box.
    */
   const onAcknowledgeAlert = async () => {
+    let alertNode = selectedForce?.getNode(
+      activeAlert?.nodeId ?? 'no-alert-node',
+    )
+
+    if (!selectedForce || !activeAlert || !alertNode) {
+      console.warn('Cannot acknowledge alert; missing data.')
+      return
+    }
+    if (!activeAlert) {
+      console.warn('Alert already acknowledged.')
+      return
+    }
+
     try {
-      if (!activeAlert) return
+      // Pre-update acknowledged to true for immediate
+      // responsivity. If an error is thrown, this will
+      // change back.
+      alertNode.onAlertAcknowledgement(activeAlert._id)
       setActiveAlert(null)
-      if (activeAlert.acknowledged) return
+      refreshAlerts()
+
       await session.$acknowledgeNodeAlert(activeAlert._id, activeAlert.nodeId)
     } catch (error) {
+      alertNode.onAlertAcknowledgementError(activeAlert._id)
+      refreshAlerts()
       handleError({
         message: 'Failed to acknowledge node alert.',
         notifyMethod: 'bubble',
@@ -534,9 +584,25 @@ export default function SessionPage({
     () => setLocalFiles([...mission.files]),
   )
 
+  // Recheck whether there are unacknowledged alerts
+  // whenever a new-alert event is received from
+  // the server.
+  useEventListener(
+    server,
+    ['modifier-enacted', 'node-alert-acknowledged'],
+    () => {
+      refreshAlerts()
+    },
+    [selectedForce],
+  )
+
   // Update the resources remaining state whenever the
-  // force changes.
-  useEffect(() => syncResources(), [selectedForce])
+  // force changes. Also check the new force if there
+  // are unacknowledged alerts.
+  useEffect(() => {
+    syncResources()
+    refreshAlerts()
+  }, [selectedForce])
 
   useEffect(() => {
     if (resetInitiated) {
@@ -598,6 +664,11 @@ export default function SessionPage({
                 <ActionExecModal
                   node={[nodeToExecute, setNodeToExecute]}
                   session={session}
+                />
+                <WarningIndicator
+                  active={hasUnacknowledgedAlerts && !activeAlert}
+                  description={'ALERT! Click to view.'}
+                  onClick={onClickAlertIndicator}
                 />
                 <NodeAlertBox
                   alert={activeAlert}
