@@ -12,7 +12,7 @@
   right: 1em;
   z-index: $z-map-toasts;
   border: 2px solid $color-primary-light;
-  width: 15em;
+  width: 20em;
   padding: 1em 1em 0.5em;
   background: $color-accent-dark;
 
@@ -26,7 +26,6 @@
       mask-image: url('../../../../../../assets/images/icons/info.svg');
     }
   }
-
   &:not(.Info) {
     &,
     * {
@@ -38,12 +37,6 @@
     }
   }
 
-  .AlertIcon {
-    mask-size: contain;
-    mask-repeat: no-repeat;
-    mask-position: center;
-  }
-
   &.Info {
     border-color: $color-accent;
     // @include alert-pulse-animation($color-accent);
@@ -52,7 +45,6 @@
       background-color: $color-accent;
     }
   }
-
   &.Suspicious {
     border-color: $color-neutral;
     // @include alert-pulse-animation($color-neutral);
@@ -86,25 +78,40 @@
   .AlertHeader {
     display: flex;
     flex-direction: row;
+    justify-content: center;
     margin-top: 0em;
     gap: 0.5em;
 
     .AlertIcon {
       width: 1.35em;
       height: 1.35em;
+      mask-size: contain;
+      mask-repeat: no-repeat;
+      mask-position: center;
     }
 
     .AlertTitle {
       font-weight: bold;
+      text-transform: uppercase;
+      line-height: 1.4em;
     }
   }
 
   .AlertMessage {
     box-sizing: border-box;
+    overflow-y: auto;
+    min-height: 0;
+    max-height: 10em;
     font-style: italic;
-    line-height: 1.4;
+    line-height: 1.4em;
     text-align: center;
-    font-size: 0.75em;
+    font-size: 0.85em;
+
+    .Markdown {
+      :first-child {
+        margin-top: 0;
+      }
+    }
   }
 
   .AlertButtons {

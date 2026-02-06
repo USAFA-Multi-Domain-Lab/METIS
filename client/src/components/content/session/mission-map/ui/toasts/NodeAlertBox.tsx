@@ -1,6 +1,8 @@
+import Markdown, {
+  MarkdownTheme,
+} from '@client/components/content/general-layout/Markdown'
 import { ButtonText } from '@client/components/content/user-controls/buttons/ButtonText'
 import If from '@client/components/content/util/If'
-import { compute } from '@client/toolbox'
 import type { NodeAlert } from '@shared/missions/nodes/NodeAlert'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import './NodeAlertBox.scss'
@@ -14,20 +16,22 @@ export default function NodeAlertBox({
   next,
   acknowledge,
 }: TNodeAlertBox_P): TReactElement | null {
-  /* -- STATE -- */
+  /* -- COMPUTED -- */
+
+  /**
+   * The severity level of the alert, which indicates the
+   * importance the alert has and may give the user an
+   * idea of how to respond.
+   * @note This will be 'none' if there is no alert. Normally,
+   * an alert can't have a severity level of 'none', so its
+   * really a component-specific state.
+   */
+  const severityLevel = alert?.severityLevel ?? 'none'
 
   /**
    * The message to display in the box.
    */
-  const message = compute<string>(() => {
-    if (alert) {
-      return alert.message
-    } else {
-      return ''
-    }
-  })
-
-  /* -- COMPUTED -- */
+  const message = alert?.message ?? ''
 
   /**
    * Classes to dynamically apply to the root element.
@@ -46,12 +50,19 @@ export default function NodeAlertBox({
   /* -- RENDER -- */
 
   return (
-    <div className={rootClasses.value}>
+    <div
+      className={rootClasses.value}
+      onWheel={(event) => {
+        event.stopPropagation()
+      }}
+    >
       <div className='AlertHeader'>
         <div className='AlertIcon'></div>
-        <div className='AlertTitle'>ALERT</div>
+        <div className='AlertTitle'>{severityLevel}</div>
       </div>
-      <div className='AlertMessage'>{message}</div>
+      <div className='AlertMessage'>
+        <Markdown markdown={message} theme={MarkdownTheme.ThemeSecondary} />
+      </div>
       <div className='AlertButtons'>
         <If condition={areMoreAlerts}>
           <ButtonText
