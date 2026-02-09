@@ -283,7 +283,7 @@ export abstract class MissionNode<
   /**
    * All alerts on the node that have not yet been acknowledged.
    */
-  public get unacknowledgedAlerts(): NodeAlert[] {
+  public get pendingAlerts(): NodeAlert[] {
     return this.alerts.filter((alert) => !alert.acknowledged)
   }
 
@@ -291,17 +291,17 @@ export abstract class MissionNode<
    * Whether there are an alerts not yet acknowledged
    * by a member of the force hosting this node.
    */
-  public get hasUnacknowledgedAlerts(): boolean {
-    return this.unacknowledgedAlerts.length > 0
+  public get hasPendingAlerts(): boolean {
+    return this.pendingAlerts.length > 0
   }
 
   /**
-   * The next unacknowledged alert on the node,
-   * or `null` if there are no unacknowledged alerts.
+   * The next pending alert on the node,
+   * or `null` if there are no pending alerts.
    */
-  public get nextUnacknowledgedAlert(): NodeAlert | null {
+  public get nextPendingAlert(): NodeAlert | null {
     // Sort first by severity level, that way the
-    // most severe unacknowledged alert is prioritized.
+    // most severe pending alert is prioritized.
     return (
       this.alerts
         .sort((a, b) => {

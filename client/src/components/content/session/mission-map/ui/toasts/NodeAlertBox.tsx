@@ -10,13 +10,13 @@ import { useMapContext } from '../../MissionMap'
 import './NodeAlertBox.scss'
 
 /**
- * Displays a node-alert message for a member to see.
+ * Displays a pending node alert message for a member to see.
  * @throws If this component is used outside of a
  * {@link MissionMap} context.
  */
 export default function NodeAlertBox({
   alert,
-  areMoreAlerts,
+  areMorePendingAlerts,
   next,
   acknowledge,
 }: TNodeAlertBox_P): TReactElement | null {
@@ -67,11 +67,11 @@ export default function NodeAlertBox({
         <Markdown markdown={message} theme={MarkdownTheme.ThemeSecondary} />
       </div>
       <div className='AlertButtons'>
-        <If condition={areMoreAlerts}>
+        <If condition={areMorePendingAlerts}>
           <ButtonText
             text={'Next alert'}
             onClick={() => {
-              if (!areMoreAlerts) return
+              if (!areMorePendingAlerts) return
               next()
             }}
           />
@@ -103,10 +103,10 @@ export type TNodeAlertBox_P = {
    */
   alert: NodeAlert | null
   /**
-   * Whether there are more alerts to show
+   * Whether there are more pending alerts to show
    * after this one.
    */
-  areMoreAlerts: boolean
+  areMorePendingAlerts: boolean
   /**
    * A callback for when the user requests
    * to see the next alert.

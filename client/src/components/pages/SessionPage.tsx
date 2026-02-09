@@ -92,10 +92,11 @@ export default function SessionPage({
   const [resetTeardownFailed, setResetTeardownFailed] = useState<boolean>(
     session.teardownFailed,
   )
-  const [unacknowledgedAlerts, setUnacknowledgedAlerts] = useState<NodeAlert[]>(
-    selectedForce?.unacknowledgedAlerts ?? [],
+  const [pendingAlerts, setPendingAlerts] = useState<NodeAlert[]>(
+    selectedForce?.pendingAlerts ?? [],
   )
-  const [activeAlert, setActiveAlert] = useState<NodeAlert | null>(null)
+  const [activePendingAlert, setActivePendingAlert] =
+    useState<NodeAlert | null>(null)
 
   /* -- FUNCTIONS -- */
 
@@ -184,10 +185,11 @@ export default function SessionPage({
   }
 
   /**
-   * Rechecks the current state of the selected force's alerts.
+   * Rechecks the current state of the selected force's
+   * pending alerts.
    */
   const refreshAlerts = () => {
-    setUnacknowledgedAlerts(selectedForce?.unacknowledgedAlerts ?? [])
+    setPendingAlerts(selectedForce?.pendingAlerts ?? [])
   }
 
   /**
@@ -195,12 +197,12 @@ export default function SessionPage({
    * @param node The node that was selected.
    */
   const onNodeSelect = async (node: ClientMissionNode): Promise<void> => {
-    // If the node has unacknowledged alerts,
+    // If the node has pending alerts,
     // display the next one, overriding all other
     // logic.
-    let nextAlert = node.nextUnacknowledgedAlert
+    let nextAlert = node.nextPendingAlert
     if (nextAlert) {
-      setActiveAlert(nextAlert)
+      setActivePendingAlert(nextAlert)
       return
     }
 
@@ -333,35 +335,35 @@ export default function SessionPage({
 
   /**
    * Callback for when the user clicks the alert indicator,
-   * requesting to see the next alert, starting with that
+   * requesting to see the next pending alert, starting with that
    * of highest priority. In doing so, the map will center
    * on the node with the alert.
    */
   const onClickAlertIndicator = () => {
-    let nextUnacknowledgedAlert = selectedForce?.nextUnacknowledgedAlert
+    let nextPendingAlert = selectedForce?.nextPendingAlert
     let alertNode = selectedForce?.getNode(
-      nextUnacknowledgedAlert?.nodeId ?? 'no-alert-node',
+      nextPendingAlert?.nodeId ?? 'no-alert-node',
     )
 
-    if (!selectedForce || !nextUnacknowledgedAlert || !alertNode) {
+    if (!selectedForce || !nextPendingAlert || !alertNode) {
       console.warn('Cannot show alert; missing data.')
       return
     }
 
-    setActiveAlert(nextUnacknowledgedAlert)
+    setActivePendingAlert(nextPendingAlert)
     alertNode.requestCenterOnMap()
   }
 
   /**
    * Callback for when the user requests to see
-   * the next alert.
+   * the next pending alert.
    */
-  const onNextAlert = async () => {
+  const onNextPendingAlert = async () => {
     let currentAlertNode = selectedForce?.getNode(
-      activeAlert?.nodeId ?? 'no-alert-node',
+      activePendingAlert?.nodeId ?? 'no-alert-node',
     )
 
-    if (!selectedForce || !activeAlert || !currentAlertNode) {
+    if (!selectedForce || !activePendingAlert || !currentAlertNode) {
       console.warn('Cannot acknowledge alert; missing data.')
       return
     }
@@ -370,25 +372,28 @@ export default function SessionPage({
       // Pre-update acknowledged to true for immediate
       // responsivity. If an error is thrown, this will
       // change back.
-      currentAlertNode.onAlertAcknowledgement(activeAlert._id)
+      currentAlertNode.onAlertAcknowledgement(activePendingAlert._id)
       refreshAlerts()
 
-      await session.$acknowledgeNodeAlert(activeAlert._id, activeAlert.nodeId)
-
-      // After acknowledging, get the next unacknowledged alert
-      let nextUnacknowledgedAlert = selectedForce.nextUnacknowledgedAlert
-      let nextAlertNode = selectedForce.getNode(
-        nextUnacknowledgedAlert?.nodeId ?? 'no-alert-node',
+      await session.$acknowledgeNodeAlert(
+        activePendingAlert._id,
+        activePendingAlert.nodeId,
       )
 
-      if (nextUnacknowledgedAlert && nextAlertNode) {
-        setActiveAlert(nextUnacknowledgedAlert)
+      // After acknowledging, get the next pending alert
+      let nextPendingAlert = selectedForce.nextPendingAlert
+      let nextAlertNode = selectedForce.getNode(
+        nextPendingAlert?.nodeId ?? 'no-alert-node',
+      )
+
+      if (nextPendingAlert && nextAlertNode) {
+        setActivePendingAlert(nextPendingAlert)
         nextAlertNode.requestCenterOnMap()
       } else {
-        setActiveAlert(null)
+        setActivePendingAlert(null)
       }
     } catch (error) {
-      currentAlertNode.onAlertAcknowledgementError(activeAlert._id)
+      currentAlertNode.onAlertAcknowledgementError(activePendingAlert._id)
       refreshAlerts()
       handleError({
         message: 'Failed to acknowledge node alert.',
@@ -399,15 +404,15 @@ export default function SessionPage({
 
   /**
    * Callback for when the user requests to acknowledge
-   * the active alert, dismissing the animation and alert
+   * the active pending alert, dismissing the animation and alert
    * box.
    */
-  const onAcknowledgeAlert = async () => {
+  const onAcknowledgePendingAlert = async () => {
     let alertNode = selectedForce?.getNode(
-      activeAlert?.nodeId ?? 'no-alert-node',
+      activePendingAlert?.nodeId ?? 'no-alert-node',
     )
 
-    if (!selectedForce || !activeAlert || !alertNode) {
+    if (!selectedForce || !activePendingAlert || !alertNode) {
       console.warn('Cannot acknowledge alert; missing data.')
       return
     }
@@ -416,13 +421,16 @@ export default function SessionPage({
       // Pre-update acknowledged to true for immediate
       // responsivity. If an error is thrown, this will
       // change back.
-      alertNode.onAlertAcknowledgement(activeAlert._id)
-      setActiveAlert(null)
+      alertNode.onAlertAcknowledgement(activePendingAlert._id)
+      setActivePendingAlert(null)
       refreshAlerts()
 
-      await session.$acknowledgeNodeAlert(activeAlert._id, activeAlert.nodeId)
+      await session.$acknowledgeNodeAlert(
+        activePendingAlert._id,
+        activePendingAlert.nodeId,
+      )
     } catch (error) {
-      alertNode.onAlertAcknowledgementError(activeAlert._id)
+      alertNode.onAlertAcknowledgementError(activePendingAlert._id)
       refreshAlerts()
       handleError({
         message: 'Failed to acknowledge node alert.',
@@ -547,11 +555,11 @@ export default function SessionPage({
   })
 
   /**
-   * The next unacknowledged alert for the selected
+   * The next pending alert for the selected
    * force, if it exists.
    */
   const nextPendingAlert = compute<NodeAlert | null>(() => {
-    return selectedForce?.nextUnacknowledgedAlert ?? null
+    return selectedForce?.nextPendingAlert ?? null
   })
 
   /* -- EFFECTS -- */
@@ -645,7 +653,7 @@ export default function SessionPage({
     () => setLocalFiles([...mission.files]),
   )
 
-  // Recheck whether there are unacknowledged alerts
+  // Recheck whether there are pending alerts
   // whenever a new-alert event is received from
   // the server.
   useEventListener(
@@ -659,7 +667,7 @@ export default function SessionPage({
 
   // Update the resources remaining state whenever the
   // force changes. Also check the new force if there
-  // are unacknowledged alerts.
+  // are pending alerts.
   useEffect(() => {
     syncResources()
     refreshAlerts()
@@ -721,10 +729,10 @@ export default function SessionPage({
                   onClick={onClickAlertIndicator}
                 />
                 <NodeAlertBox
-                  alert={activeAlert}
-                  areMoreAlerts={unacknowledgedAlerts.length > 1}
-                  next={onNextAlert}
-                  acknowledge={onAcknowledgeAlert}
+                  alert={activePendingAlert}
+                  areMorePendingAlerts={pendingAlerts.length > 1}
+                  next={onNextPendingAlert}
+                  acknowledge={onAcknowledgePendingAlert}
                 />
               </MissionMap>
             </PanelView>

@@ -120,33 +120,33 @@ export abstract class MissionForce<
   }
 
   /**
-   * The list of all unacknowledged alerts for nodes within the force.
+   * The list of all pending alerts for nodes within the force.
    */
-  public get unacknowledgedAlerts(): NodeAlert[] {
+  public get pendingAlerts(): NodeAlert[] {
     let alerts: NodeAlert[] = []
     for (let node of this.nodes) {
-      alerts.push(...node.unacknowledgedAlerts)
+      alerts.push(...node.pendingAlerts)
     }
     return alerts
   }
 
   /**
    * Whether there are any nodes within the force that have
-   * unacknowledged alerts.
+   * pending alerts.
    */
-  public get hasUnacknowledgedAlerts(): boolean {
-    return this.nodes.some((node) => node.hasUnacknowledgedAlerts)
+  public get hasPendingAlerts(): boolean {
+    return this.nodes.some((node) => node.hasPendingAlerts)
   }
 
   /**
-   * The next alert of highest priority in the force that
+   * The next pending alert of highest priority in the force that
    * has not yet been acknowledged.
    */
-  public get nextUnacknowledgedAlert(): NodeAlert | null {
+  public get nextPendingAlert(): NodeAlert | null {
     let result: NodeAlert | null = null
 
     for (let node of this.nodes) {
-      let alert = node.nextUnacknowledgedAlert
+      let alert = node.nextPendingAlert
       if (!alert) continue
 
       // Even if another alert has already been found,

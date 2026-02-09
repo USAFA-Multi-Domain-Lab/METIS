@@ -10,7 +10,7 @@ import './NodeAlertIndicator.scss'
  * {@link MissionMap} to capture the attention of
  * the user and make them aware of a pending alert
  * that exists on a node. The styling of this indicator
- * will depend on the severity level of the alert.
+ * will depend on the severity level of the pending alert.
  * @throws If this component is used outside of a
  * {@link MissionMap} context.
  */
@@ -56,7 +56,7 @@ export default function NodeAlertIndicator({
  */
 export type TNodeAlertIndicator_P = {
   /**
-   * The next alert pending acknowledgment by the user.
+   * The next pending alert awaiting acknowledgment by the user.
    * If this is null, then the indicator will not be
    * active and will not be rendered.
    * @default null

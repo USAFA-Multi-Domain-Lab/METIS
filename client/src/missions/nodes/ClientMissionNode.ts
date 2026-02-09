@@ -296,7 +296,7 @@ export class ClientMissionNode
 
   // Implemented
   public get icon(): TMetisIcon {
-    if (this.hasUnacknowledgedAlerts) {
+    if (this.hasPendingAlerts) {
       return '_blank' // Blank because warning icon is rendered via a mask-image rule instead.
     } else if (this.executable) {
       if (this.device) return 'device'
@@ -351,6 +351,12 @@ export class ClientMissionNode
     this.addEventListener = this.eventManager.addEventListener
     this.removeEventListener = this.eventManager.removeEventListener
     this.emitEvent = this.eventManager.emitEvent
+  }
+  get hasUnacknowledgedAlerts(): boolean {
+    throw new Error('Method not implemented.')
+  }
+  get nextUnacknowledgedAlert(): NodeAlert | null {
+    throw new Error('Method not implemented.')
   }
 
   // Implemented
