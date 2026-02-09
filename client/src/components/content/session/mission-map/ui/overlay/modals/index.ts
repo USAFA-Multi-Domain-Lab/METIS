@@ -12,6 +12,8 @@ import { useMapContext } from '../../../MissionMap'
  * element of the modal. This class list should applied
  * externally. The only thing this hook will do is add
  * the 'Hidden' class when the modal is inactive.
+ * @throws If this hook is used outside of a {@link MissionMap}
+ * context.
  */
 export function useModalDisplayLogic(
   active: boolean,

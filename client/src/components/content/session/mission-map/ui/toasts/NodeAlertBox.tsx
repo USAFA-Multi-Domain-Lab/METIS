@@ -5,10 +5,13 @@ import { ButtonText } from '@client/components/content/user-controls/buttons/But
 import If from '@client/components/content/util/If'
 import type { NodeAlert } from '@shared/missions/nodes/NodeAlert'
 import { ClassList } from '@shared/toolbox/html/ClassList'
+import { useMapContext } from '../../MissionMap'
 import './NodeAlertBox.scss'
 
 /**
  * Displays a node-alert message for a member to see.
+ * @throws If this component is used outside of a
+ * {@link MissionMap} context.
  */
 export default function NodeAlertBox({
   alert,
@@ -16,6 +19,10 @@ export default function NodeAlertBox({
   next,
   acknowledge,
 }: TNodeAlertBox_P): TReactElement | null {
+  /* -- STATE -- */
+
+  useMapContext() // Ensure that this component is used within a MissionMap context.
+
   /* -- COMPUTED -- */
 
   /**

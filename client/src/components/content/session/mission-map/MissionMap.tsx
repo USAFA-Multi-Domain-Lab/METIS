@@ -847,23 +847,6 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
     cameraZoom.x > MAX_NODE_CONTENT_ZOOM,
   ])
 
-  /**
-   * JSX for an overlay that is displayed only if content is
-   * passed in the props for the map.
-   */
-  //   const overlayJsx = compute((): TReactElement | null => {
-  //     // If there is no overlay content, return null.
-  //     if (!overlayContent && !mapPreferencesVisible) return null
-  //
-  //     // Otherwise, render the overlay.
-  //     return (
-  //       <MapOverlay>
-  //         {overlayContent}
-  //         <MapPreferences />
-  //       </MapOverlay>
-  //     )
-  //   })
-
   // Render root JSX.
   return (
     <LocalContextProvider

@@ -1,3 +1,4 @@
+import type { ClassList } from '@shared/toolbox/html/ClassList'
 import {
   createToJsonMethod,
   type TJsonSerializable,
@@ -52,6 +53,24 @@ export class NodeAlert implements TJsonSerializable<TNodeAlertJson> {
       'severityLevel',
       'acknowledged',
     ])
+  }
+
+  /**
+   * Adds CSS classes to a {@link ClassList} based on
+   * the severity level of the alert.
+   * @param classList The class list to which the severity
+   * level classes will be added.
+   */
+  public addSeverityLevelClasses(classList: ClassList): void {
+    classList.switch(
+      {
+        info: 'SeverityLevel_info',
+        suspicious: 'SeverityLevel_suspicious',
+        warning: 'SeverityLevel_warning',
+        danger: 'SeverityLevel_danger',
+      },
+      this.severityLevel,
+    )
   }
 
   // Implemented

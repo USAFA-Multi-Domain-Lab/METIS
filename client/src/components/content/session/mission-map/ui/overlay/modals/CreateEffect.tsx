@@ -18,6 +18,7 @@ import './CreateEffect.scss'
 
 /**
  * Prompt modal for creating an effect to apply to a target.
+ * @throws If this component is used outside of a {@link MissionMap} context.
  */
 export default function CreateEffect<
   TType extends TEffectType = 'sessionTriggeredEffect',

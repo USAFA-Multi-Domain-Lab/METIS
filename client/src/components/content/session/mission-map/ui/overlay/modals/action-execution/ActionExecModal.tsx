@@ -25,6 +25,7 @@ import ExecOption from './ExecOption'
 
 /**
  * Prompt for a session participant to select an action to execute on a node.
+ * @throws If this component is used outside of a {@link MissionMap} context.
  */
 export default function ActionExecModal(props: TActionExecModal_P) {
   /* -- PROPS -- */

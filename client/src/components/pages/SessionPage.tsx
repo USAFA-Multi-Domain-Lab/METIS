@@ -26,15 +26,25 @@ import PanelLayout from '../content/general-layout/panels/PanelLayout'
 import PanelView from '../content/general-layout/panels/PanelView'
 import SessionMembersPanel from '../content/session/members/SessionMembersPanel'
 import MissionMap from '../content/session/mission-map/MissionMap'
+import NodeAlertIndicator from '../content/session/mission-map/ui/indicators/NodeAlertIndicator'
 import ActionExecModal from '../content/session/mission-map/ui/overlay/modals/action-execution/ActionExecModal'
 import type { TTabBarTab } from '../content/session/mission-map/ui/tabs/TabBar'
 import NodeAlertBox from '../content/session/mission-map/ui/toasts/NodeAlertBox'
 import { OutputPanel } from '../content/session/output/'
 import StatusBar from '../content/session/StatusBar'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
-import WarningIndicator from '../content/user-controls/WarningIndicator'
 import If from '../content/util/If'
 import './SessionPage.scss'
+
+/* -- CONSTANTS -- */
+
+/**
+ * The default size of the output panel (right panel) on
+ * the session page, in pixels.
+ */
+const SECONDARY_PANEL_DEFAULT_SIZE: number = 400 //px
+
+/* -- COMPONENT -- */
 
 /**
  * Renders the session page.
@@ -86,13 +96,6 @@ export default function SessionPage({
     selectedForce?.unacknowledgedAlerts ?? [],
   )
   const [activeAlert, setActiveAlert] = useState<NodeAlert | null>(null)
-
-  /* -- COMPUTED -- */
-
-  // Dynamic (default) sizing of the output panel.
-  let panel2DefaultSize: number = 400
-  // The current aspect ratio of the window.
-  let currentAspectRatio: number = window.innerWidth / window.innerHeight
 
   /* -- FUNCTIONS -- */
 
@@ -428,7 +431,7 @@ export default function SessionPage({
     }
   }
 
-  /* -- COMPUTED (CONTINUED) -- */
+  /* -- COMPUTED  -- */
 
   /**
    * Props for navigation.
@@ -525,6 +528,30 @@ export default function SessionPage({
     } else {
       return 'Session reset initiated by a manager. Once teardown and setup are complete, the page will refresh...'
     }
+  })
+
+  /**
+   * The default size of the secondary panel (output panel) in
+   * pixels. This is responsive and will adjust based on the
+   * aspect ratio and width of the window.
+   */
+  const secondaryPanelDefaultSize = compute<number>(() => {
+    let result: number = SECONDARY_PANEL_DEFAULT_SIZE
+    let aspectRatio: number = window.innerWidth / window.innerHeight
+
+    if (aspectRatio >= 16 / 9 && window.innerWidth >= 1850) {
+      result = window.innerWidth * 0.4
+    }
+
+    return result
+  })
+
+  /**
+   * The next unacknowledged alert for the selected
+   * force, if it exists.
+   */
+  const nextPendingAlert = compute<NodeAlert | null>(() => {
+    return selectedForce?.nextUnacknowledgedAlert ?? null
   })
 
   /* -- EFFECTS -- */
@@ -644,16 +671,6 @@ export default function SessionPage({
     }
   }, [resetInitiated])
 
-  /* -- PRE-RENDER PROCESSING -- */
-
-  // If the aspect ratio is greater than or equal to 16:9,
-  // and the window width is greater than or equal to 1850px,
-  // then the default size of the output panel will be 40%
-  // of the width of the window.
-  if (currentAspectRatio >= 16 / 9 && window.innerWidth >= 1850) {
-    panel2DefaultSize = window.innerWidth * 0.4
-  }
-
   /* -- RENDER -- */
 
   /**
@@ -684,7 +701,7 @@ export default function SessionPage({
     <div className={rootClass}>
       <DefaultPageLayout navigation={navigation} includeFooter={false}>
         {topBarJsx}
-        <PanelLayout initialSizes={['fill', 400]}>
+        <PanelLayout initialSizes={['fill', secondaryPanelDefaultSize]}>
           <Panel>
             <PanelView title='Map'>
               <MissionMap
@@ -699,9 +716,8 @@ export default function SessionPage({
                   node={[nodeToExecute, setNodeToExecute]}
                   session={session}
                 />
-                <WarningIndicator
-                  active={unacknowledgedAlerts.length > 0 && !activeAlert}
-                  description={'ALERT! Click to view.'}
+                <NodeAlertIndicator
+                  nextPendingAlert={nextPendingAlert}
                   onClick={onClickAlertIndicator}
                 />
                 <NodeAlertBox
