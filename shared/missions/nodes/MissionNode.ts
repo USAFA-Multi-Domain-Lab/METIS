@@ -281,11 +281,18 @@ export abstract class MissionNode<
   }
 
   /**
+   * All alerts on the node that have not yet been acknowledged.
+   */
+  public get unacknowledgedAlerts(): NodeAlert[] {
+    return this.alerts.filter((alert) => !alert.acknowledged)
+  }
+
+  /**
    * Whether there are an alerts not yet acknowledged
    * by a member of the force hosting this node.
    */
   public get hasUnacknowledgedAlerts(): boolean {
-    return this.nextUnacknowledgedAlert !== null
+    return this.unacknowledgedAlerts.length > 0
   }
 
   /**

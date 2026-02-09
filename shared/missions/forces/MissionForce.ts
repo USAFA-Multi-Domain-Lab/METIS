@@ -120,6 +120,17 @@ export abstract class MissionForce<
   }
 
   /**
+   * The list of all unacknowledged alerts for nodes within the force.
+   */
+  public get unacknowledgedAlerts(): NodeAlert[] {
+    let alerts: NodeAlert[] = []
+    for (let node of this.nodes) {
+      alerts.push(...node.unacknowledgedAlerts)
+    }
+    return alerts
+  }
+
+  /**
    * Whether there are any nodes within the force that have
    * unacknowledged alerts.
    */

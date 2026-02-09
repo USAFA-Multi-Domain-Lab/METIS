@@ -922,6 +922,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     let fulfilledRequest = this.buildFullfilledRequest(member, event)
 
     if (this._state !== requiredState) {
+      console.log(this._state, requiredState)
       let error = new ServerEmittedError(
         ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
         { request: fulfilledRequest },

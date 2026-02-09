@@ -82,11 +82,12 @@ export default function SessionPage({
   const [resetTeardownFailed, setResetTeardownFailed] = useState<boolean>(
     session.teardownFailed,
   )
-  const [hasUnacknowledgedAlerts, setHasUnacknowledgedAlerts] =
-    useState<boolean>(selectedForce?.hasUnacknowledgedAlerts ?? false)
+  const [unacknowledgedAlerts, setUnacknowledgedAlerts] = useState<NodeAlert[]>(
+    selectedForce?.unacknowledgedAlerts ?? [],
+  )
   const [activeAlert, setActiveAlert] = useState<NodeAlert | null>(null)
 
-  /* -- VARIABLES -- */
+  /* -- COMPUTED -- */
 
   // Dynamic (default) sizing of the output panel.
   let panel2DefaultSize: number = 400
@@ -183,7 +184,7 @@ export default function SessionPage({
    * Rechecks the current state of the selected force's alerts.
    */
   const refreshAlerts = () => {
-    setHasUnacknowledgedAlerts(selectedForce?.hasUnacknowledgedAlerts ?? false)
+    setUnacknowledgedAlerts(selectedForce?.unacknowledgedAlerts ?? [])
   }
 
   /**
@@ -352,8 +353,45 @@ export default function SessionPage({
    * Callback for when the user requests to see
    * the next alert.
    */
-  const onNextAlert = () => {
-    // todo: This should actually dismiss the alert.
+  const onNextAlert = async () => {
+    let currentAlertNode = selectedForce?.getNode(
+      activeAlert?.nodeId ?? 'no-alert-node',
+    )
+
+    if (!selectedForce || !activeAlert || !currentAlertNode) {
+      console.warn('Cannot acknowledge alert; missing data.')
+      return
+    }
+
+    try {
+      // Pre-update acknowledged to true for immediate
+      // responsivity. If an error is thrown, this will
+      // change back.
+      currentAlertNode.onAlertAcknowledgement(activeAlert._id)
+      refreshAlerts()
+
+      await session.$acknowledgeNodeAlert(activeAlert._id, activeAlert.nodeId)
+
+      // After acknowledging, get the next unacknowledged alert
+      let nextUnacknowledgedAlert = selectedForce.nextUnacknowledgedAlert
+      let nextAlertNode = selectedForce.getNode(
+        nextUnacknowledgedAlert?.nodeId ?? 'no-alert-node',
+      )
+
+      if (nextUnacknowledgedAlert && nextAlertNode) {
+        setActiveAlert(nextUnacknowledgedAlert)
+        nextAlertNode.requestCenterOnMap()
+      } else {
+        setActiveAlert(null)
+      }
+    } catch (error) {
+      currentAlertNode.onAlertAcknowledgementError(activeAlert._id)
+      refreshAlerts()
+      handleError({
+        message: 'Failed to acknowledge node alert.',
+        notifyMethod: 'bubble',
+      })
+    }
   }
 
   /**
@@ -368,10 +406,6 @@ export default function SessionPage({
 
     if (!selectedForce || !activeAlert || !alertNode) {
       console.warn('Cannot acknowledge alert; missing data.')
-      return
-    }
-    if (!activeAlert) {
-      console.warn('Alert already acknowledged.')
       return
     }
 
@@ -394,7 +428,7 @@ export default function SessionPage({
     }
   }
 
-  /* -- COMPUTED -- */
+  /* -- COMPUTED (CONTINUED) -- */
 
   /**
    * Props for navigation.
@@ -666,13 +700,13 @@ export default function SessionPage({
                   session={session}
                 />
                 <WarningIndicator
-                  active={hasUnacknowledgedAlerts && !activeAlert}
+                  active={unacknowledgedAlerts.length > 0 && !activeAlert}
                   description={'ALERT! Click to view.'}
                   onClick={onClickAlertIndicator}
                 />
                 <NodeAlertBox
                   alert={activeAlert}
-                  areMoreAlerts={false}
+                  areMoreAlerts={unacknowledgedAlerts.length > 1}
                   next={onNextAlert}
                   acknowledge={onAcknowledgeAlert}
                 />

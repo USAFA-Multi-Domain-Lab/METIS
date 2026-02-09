@@ -70,19 +70,6 @@ export default function NodeAlertBox({
             onClick={() => {
               if (!areMoreAlerts) return
               next()
-              // todo: Move this out of this component.
-              //               if (!selectedNodeWithWarning) return
-              //
-              //               let { nextNodeWithWarning } = selectedNodeWithWarning
-              //
-              //               selectedNodeWithWarning.warningMessage = ''
-              //
-              //               if (nextNodeWithWarning) {
-              //                 nextNodeWithWarning.select()
-              //                 nextNodeWithWarning.requestCenterOnMap()
-              //               } else {
-              //                 mission.select(selectedNodeWithWarning.host)
-              //               }
             }}
           />
         </If>
