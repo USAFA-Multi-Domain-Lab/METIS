@@ -85,52 +85,13 @@
     }
 
     &.Alert {
-      &.Alert_Info {
-        .Icon {
-          mask-image: url('../../../../../../assets/images/icons/info.svg');
-        }
-      }
-
-      &:not(.Alert_Info) {
-        .Icon {
-          mask-image: url('../../../../../../assets/images/icons/warning-transparent.svg');
-        }
-      }
+      @include alert-border-variation($pulse: true);
+      @include alert-icon-style-variation;
 
       .Icon {
         mask-size: contain;
         mask-repeat: no-repeat;
         mask-position: center;
-      }
-
-      &.Alert_Info {
-        @include alert-pulse-animation($color-accent);
-
-        .Icon {
-          background-color: $color-accent;
-        }
-      }
-
-      &.Alert_Suspicious {
-        @include alert-pulse-animation($color-neutral);
-
-        .Icon {
-          background-color: $color-neutral;
-        }
-      }
-      &.Alert_Warning {
-        @include alert-pulse-animation($color-warning);
-
-        .Icon {
-          background-color: $color-warning;
-        }
-      }
-      &.Alert_Danger {
-        @include alert-pulse-animation($color-failure);
-
-        .Icon {
-          background-color: $color-failure;
-        }
       }
     }
 

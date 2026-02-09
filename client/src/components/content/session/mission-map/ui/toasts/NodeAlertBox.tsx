@@ -3,6 +3,7 @@ import Markdown, {
 } from '@client/components/content/general-layout/Markdown'
 import { ButtonText } from '@client/components/content/user-controls/buttons/ButtonText'
 import If from '@client/components/content/util/If'
+import { compute } from '@client/toolbox'
 import type { NodeAlert } from '@shared/missions/nodes/NodeAlert'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import { useMapContext } from '../../MissionMap'
@@ -43,16 +44,11 @@ export default function NodeAlertBox({
   /**
    * Classes to dynamically apply to the root element.
    */
-  const rootClasses = new ClassList('NodeAlertBox').switch(
-    {
-      info: 'Info',
-      suspicious: 'Suspicious',
-      warning: 'Warning',
-      danger: 'Danger',
-      none: 'Hidden',
-    },
-    alert?.severityLevel ?? 'none',
-  )
+  const rootClasses = compute<ClassList>(() => {
+    let results = new ClassList('NodeAlertBox').set('Hidden', !alert)
+    alert?.addSeverityLevelClasses(results)
+    return results
+  })
 
   /* -- RENDER -- */
 
@@ -64,7 +60,7 @@ export default function NodeAlertBox({
       }}
     >
       <div className='AlertHeader'>
-        <div className='AlertIcon'></div>
+        <div className='AlertIcon Icon'></div>
         <div className='AlertTitle'>{severityLevel}</div>
       </div>
       <div className='AlertMessage'>

@@ -16,17 +16,16 @@
   padding: 1.25em 1em 1em;
   background: $color-accent-dark;
 
-  &.Info {
+  @include alert-icon-style-variation;
+  @include alert-border-variation;
+
+  &.SeverityLevel_info {
     &,
     * {
       color: $color-accent-light;
     }
-
-    .AlertIcon {
-      mask-image: url('../../../../../../assets/images/icons/info.svg');
-    }
   }
-  &:not(.Info) {
+  &:not(.SeverityLevel_info) {
     &,
     * {
       color: $color-neutral-light;
@@ -34,39 +33,6 @@
 
     .AlertIcon {
       mask-image: url('../../../../../../assets/images/icons/warning-transparent.svg');
-    }
-  }
-
-  &.Info {
-    border-color: $color-accent;
-    // @include alert-pulse-animation($color-accent);
-
-    .AlertIcon {
-      background-color: $color-accent;
-    }
-  }
-  &.Suspicious {
-    border-color: $color-neutral;
-    // @include alert-pulse-animation($color-neutral);
-
-    .AlertIcon {
-      background-color: $color-neutral;
-    }
-  }
-  &.Warning {
-    border-color: $color-warning;
-    // @include alert-pulse-animation($color-warning);
-
-    .AlertIcon {
-      background-color: $color-warning;
-    }
-  }
-  &.Danger {
-    border-color: $color-failure;
-    // @include alert-pulse-animation($color-failure);
-
-    .AlertIcon {
-      background-color: $color-failure;
     }
   }
 

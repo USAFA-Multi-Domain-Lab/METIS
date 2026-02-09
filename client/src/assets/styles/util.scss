@@ -24,6 +24,37 @@
   animation: $animation-name 2s infinite;
 }
 
+@mixin alert-border-variation($pulse: false) {
+  &.SeverityLevel_info {
+    @if $pulse {
+      @include alert-pulse-animation($color-accent);
+    } @else {
+      border-color: $color-accent;
+    }
+  }
+  &.SeverityLevel_suspicious {
+    @if $pulse {
+      @include alert-pulse-animation($color-neutral);
+    } @else {
+      border-color: $color-neutral;
+    }
+  }
+  &.SeverityLevel_warning {
+    @if $pulse {
+      @include alert-pulse-animation($color-warning);
+    } @else {
+      border-color: $color-warning;
+    }
+  }
+  &.SeverityLevel_danger {
+    @if $pulse {
+      @include alert-pulse-animation($color-failure);
+    } @else {
+      border-color: $color-failure;
+    }
+  }
+}
+
 @mixin alert-icon-style-variation {
   .Icon {
     mask-size: contain;

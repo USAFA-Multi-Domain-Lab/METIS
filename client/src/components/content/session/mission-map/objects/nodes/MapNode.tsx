@@ -301,8 +301,8 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
   /**
    * The class for the root element.
    */
-  const rootClasses = compute<ClassList>(() =>
-    new ClassList('MapNode')
+  const rootClasses = compute<ClassList>(() => {
+    let result = new ClassList('MapNode')
       .add(`MapNode_${node._id}`)
       .set('Selectable', !!onSelect)
       .set('Selected', node.selected)
@@ -311,16 +311,6 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
       .set('CutOff', cutOff)
       .set('BlockResolved', blockResolved)
       .set('Alert', nextUnacknowledgedAlert)
-      .switch(
-        {
-          info: 'Alert_Info',
-          suspicious: 'Alert_Suspicious',
-          warning: 'Alert_Warning',
-          danger: 'Alert_Danger',
-          none: null,
-        },
-        nextUnacknowledgedAlert?.severityLevel ?? 'none',
-      )
       .set(
         'Hidden',
         mission.nonRevealedDisplayMode === 'hide' && !node.revealed,
@@ -329,8 +319,11 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
       .set('Excluded', excluded)
       .set('Executing', executionState.status === 'executing')
       .set('Success', executionState.status === 'success')
-      .set('Failure', executionState.status === 'failure'),
-  )
+      .set('Failure', executionState.status === 'failure')
+
+    node.nextUnacknowledgedAlert?.addSeverityLevelClasses(result)
+    return result
+  })
 
   /**
    * The class for the node's name.
