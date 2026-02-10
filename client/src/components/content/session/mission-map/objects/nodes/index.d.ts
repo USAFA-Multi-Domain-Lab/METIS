@@ -95,12 +95,12 @@ export type TMapCompatibleNode = MetisComponent &
      * Whether there are an alerts not yet acknowledged
      * by a member of the force hosting this node.
      */
-    get hasUnacknowledgedAlerts(): boolean
+    get hasPendingAlerts(): boolean
     /**
      * The next unacknowledged alert on the node,
      * or `null` if there are no unacknowledged alerts.
      */
-    get nextUnacknowledgedAlert(): NodeAlert | null
+    get nextPendingAlert(): NodeAlert | null
     /**
      * Requests to center the node on a mission map.
      * This is contigent, of course, on the node being

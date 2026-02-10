@@ -352,12 +352,6 @@ export class ClientMissionNode
     this.removeEventListener = this.eventManager.removeEventListener
     this.emitEvent = this.eventManager.emitEvent
   }
-  get hasUnacknowledgedAlerts(): boolean {
-    throw new Error('Method not implemented.')
-  }
-  get nextUnacknowledgedAlert(): NodeAlert | null {
-    throw new Error('Method not implemented.')
-  }
 
   // Implemented
   protected importActions(data: TMissionActionJson[]): void {
@@ -507,7 +501,7 @@ export class ClientMissionNode
    * @param alertJson The JSON-serialized alert data.
    */
   public onAlert(alertJson: TNodeAlertJson): void {
-    let newIcon = !this.hasUnacknowledgedAlerts
+    let newIcon = !this.hasPendingAlerts
     let alert = NodeAlert.fromJson(alertJson)
     this._alerts.push(alert)
     this.emitEvent('new-alert')

@@ -71,8 +71,9 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
     node.blockStatus,
   )
   const [blockResolved, setBlockResolved] = useState<boolean>(false)
-  const [nextUnacknowledgedAlert, setNextUnacknowledgedAlert] =
-    useState<NodeAlert | null>(node.nextUnacknowledgedAlert)
+  const [nextPendingAlert, setNextPendingAlert] = useState<NodeAlert | null>(
+    node.nextPendingAlert,
+  )
   const nodeButtonEngine = useButtonSvgEngine({
     elements: buttons,
     dependencies: [buttons],
@@ -123,7 +124,7 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
 
   // Handle new alerts for the node.
   useEventListener(node, 'new-alert', () => {
-    setNextUnacknowledgedAlert(node.nextUnacknowledgedAlert)
+    setNextPendingAlert(node.nextPendingAlert)
   })
 
   // Update the execution state when the node's
@@ -150,7 +151,7 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
   // update the alerts for the node to keep the graphics
   // in sync with the node-alert state.
   useEventListener(node, 'alert-updated', () => {
-    setNextUnacknowledgedAlert(node.nextUnacknowledgedAlert)
+    setNextPendingAlert(node.nextPendingAlert)
   })
 
   // Update the icon when the node's
@@ -310,7 +311,7 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
       .set('Blocked', blocked)
       .set('CutOff', cutOff)
       .set('BlockResolved', blockResolved)
-      .set('Alert', nextUnacknowledgedAlert)
+      .set('Alert', nextPendingAlert)
       .set(
         'Hidden',
         mission.nonRevealedDisplayMode === 'hide' && !node.revealed,
@@ -321,7 +322,7 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
       .set('Success', executionState.status === 'success')
       .set('Failure', executionState.status === 'failure')
 
-    node.nextUnacknowledgedAlert?.addSeverityLevelClasses(result)
+    node.nextPendingAlert?.addSeverityLevelClasses(result)
     return result
   })
 
