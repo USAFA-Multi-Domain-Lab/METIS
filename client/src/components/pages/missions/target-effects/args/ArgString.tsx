@@ -1,4 +1,5 @@
 import type { ClientEffect } from '@client/missions/effects/ClientEffect'
+import { compute } from '@client/toolbox'
 import { usePostInitEffect } from '@client/toolbox/hooks'
 import type { TStringArg } from '@shared/target-environments/args/StringArg'
 import { useEffect, useState } from 'react'
@@ -18,6 +19,9 @@ export default function ArgString({
   const [value, setValue] = useState<string>(
     effectArgs[arg._id] ?? defaultValue,
   )
+  const [patternErrorMessage, setPatternErrorMessage] = useState<
+    string | undefined
+  >(undefined)
 
   /* -- EFFECTS -- */
 
@@ -25,6 +29,11 @@ export default function ArgString({
   useEffect(() => {
     if (initialize) initializeArg()
   }, [initialize])
+
+  useEffect(() => {
+    let errorMessage = resolvePatternErrorMessage(value, arg)
+    setPatternErrorMessage(errorMessage)
+  }, [arg, value])
 
   // Update the argument's value in the effect's arguments
   // when the argument's value changes.
@@ -41,11 +50,13 @@ export default function ArgString({
     // arguments.
     if (value === defaultValue) {
       setEffectArgs((prev) => {
-        delete prev[arg._id]
-        return prev
+        let updatedArgs: ClientEffect['args'] = { ...prev }
+
+        delete updatedArgs[arg._id]
+        return updatedArgs
       })
     }
-  }, [value])
+  }, [patternErrorMessage, value])
 
   /* -- FUNCTIONS -- */
   /**
@@ -83,15 +94,59 @@ export default function ArgString({
     }
   }
 
+  /**
+   * Determines the validation error message for a string value.
+   * @param value The string value to validate.
+   * @param arg The string argument that contains the pattern and title for validation.
+   * @returns The error message if invalid, otherwise undefined.
+   */
+  const resolvePatternErrorMessage = (
+    value: string,
+    arg: TStringArg,
+  ): string | undefined => {
+    if (!(arg.pattern instanceof RegExp) || value === '') {
+      return undefined
+    }
+
+    let isValid: boolean = arg.pattern.test(value)
+
+    if (!isValid) {
+      return arg.title ?? 'The value does not match the required format.'
+    }
+
+    return undefined
+  }
+
+  /* -- COMPUTED -- */
+
+  const handleOnBlur = compute<'deliverError' | 'repopulateValue' | 'none'>(
+    () => {
+      if (patternErrorMessage && value !== '') {
+        return 'deliverError'
+      } else if (arg.required) {
+        return 'repopulateValue'
+      } else {
+        return 'none'
+      }
+    },
+  )
+
+  const highlightAllOnFocus = compute<boolean>(
+    () => arg.required && value === arg.default,
+  )
+
   /* -- RENDER -- */
   return (
     <DetailString
       fieldType={arg.required ? 'required' : 'optional'}
-      handleOnBlur={arg.required ? 'repopulateValue' : 'none'}
+      handleOnBlur={handleOnBlur}
       label={arg.name}
       value={value}
       setValue={setValue}
       defaultValue={arg.required ? arg.default : undefined}
+      highlightAllOnFocus={highlightAllOnFocus}
+      errorMessage={patternErrorMessage}
+      errorType='warning'
       tooltipDescription={arg.tooltipDescription}
       key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}_${
         arg.required ? 'required' : 'optional'

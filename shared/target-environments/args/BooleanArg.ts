@@ -57,9 +57,8 @@ export type TBooleanArg = TBaseArg & {
   type: 'boolean'
   /**
    * The default value for the argument.
-   * @note If not provided, the default value will be `false`.
    */
-  default?: true
+  default?: boolean
 }
 /**
  * The boolean argument type for a target.
@@ -72,7 +71,6 @@ export type TBooleanArgJson = TBaseArgJson & {
   type: 'boolean'
   /**
    * The default value for the argument.
-   * @note If not provided, the default value will be `false`.
    */
-  default?: true
+  default?: boolean
 }

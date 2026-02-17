@@ -1,8 +1,10 @@
 import { compute } from '@client/toolbox'
-import { useState } from 'react'
+import React, { useState } from 'react'
 import type { TDetailWithInput_P } from '.'
 import Tooltip from '../communication/Tooltip'
 import './DetailString.scss'
+
+const DEFAULT_ERROR_MESSAGE: string = 'At least one character is required here.'
 
 /**
  * This will render a detail for
@@ -17,7 +19,8 @@ export function DetailString({
   setValue: setState,
   // Optional Properties
   defaultValue = undefined,
-  errorMessage = 'At least one character is required here.',
+  errorMessage = DEFAULT_ERROR_MESSAGE,
+  errorType = 'default',
   disabled = false,
   uniqueLabelClassName = undefined,
   uniqueFieldClassName = undefined,
@@ -25,6 +28,7 @@ export function DetailString({
   placeholder = 'Enter text here...',
   tooltipDescription = '',
   maxLength = undefined,
+  highlightAllOnFocus = false,
 }: TDetailString_P): TReactElement {
   /* -- STATE -- */
   const [leftField, setLeftField] = useState<boolean>(false)
@@ -41,27 +45,34 @@ export function DetailString({
   const displayError: boolean = compute(() => {
     let display: boolean = false
 
-    // If the user has left the field and the
-    // field is required and the error message
-    // should be delivered, then display the error.
+    // Make sure the user has left the field and that
+    // the error message isn't in a default state before
+    // displaying the error message.
     if (
+      errorType === 'default' &&
       leftField &&
-      fieldType === 'required' &&
       handleOnBlur === 'deliverError' &&
-      errorMessage !== 'At least one character is required here.'
+      errorMessage !== DEFAULT_ERROR_MESSAGE
     ) {
       display = true
     }
 
-    // If the user has left the field and the
-    // field is required and the error message
-    // should be delivered and the field is empty,
-    // then display the default error message.
+    if (
+      errorType === 'warning' &&
+      handleOnBlur === 'deliverError' &&
+      errorMessage !== DEFAULT_ERROR_MESSAGE
+    ) {
+      display = true
+    }
+
+    // Lets the user know that the field cannot be left
+    // empty if the field is required and they have left
+    // the field without entering any information.
     if (
       leftField &&
       fieldType === 'required' &&
       handleOnBlur === 'deliverError' &&
-      errorMessage === 'At least one character is required here.' &&
+      errorMessage === DEFAULT_ERROR_MESSAGE &&
       stateValue === ''
     ) {
       display = true
@@ -99,6 +110,10 @@ export function DetailString({
       classList.push('Hidden')
     }
 
+    if (errorType === 'warning') {
+      classList.push('Warning')
+    }
+
     // Return the list of class names as one string.
     return classList.join(' ')
   })
@@ -118,7 +133,11 @@ export function DetailString({
     // If displayError is true then
     // add the error class name.
     if (displayError) {
-      classList.push('Error')
+      if (errorType === 'default') {
+        classList.push('Error')
+      } else if (errorType === 'warning') {
+        classList.push('Warning')
+      }
     }
 
     // Return the list of class names as one string.
@@ -146,13 +165,16 @@ export function DetailString({
     // If displayError is true then
     // add the error class name.
     if (displayError) {
-      classList.push('Error')
+      if (errorType === 'default') {
+        classList.push('Error')
+      } else if (errorType === 'warning') {
+        classList.push('Warning')
+      }
     }
 
     // Return the list of class names as one string.
     return classList.join(' ')
   })
-
   /**
    * Class name for the toggle password display container.
    * @note Appears as a button with the text "show" or "hide".
@@ -232,6 +254,11 @@ export function DetailString({
           placeholder={placeholderDisplayed}
           maxLength={maxLength}
           disabled={disabled}
+          onFocus={(event: React.FocusEvent<HTMLInputElement>) => {
+            if (highlightAllOnFocus) {
+              event.target.select()
+            }
+          }}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
             let target: HTMLInputElement = event.target as HTMLInputElement
             let value: string = target.value
@@ -302,4 +329,9 @@ type TDetailString_P = TDetailWithInput_P<string> & {
    * The maximum number of characters that can be entered.
    */
   maxLength?: number
+  /**
+   * Determines if the field highlights all of the text when the user focuses on the field.
+   * @default false
+   */
+  highlightAllOnFocus?: boolean
 }

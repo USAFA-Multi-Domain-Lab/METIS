@@ -54,6 +54,7 @@ export default function DetailDropdown<TOption>(
     tooltipDescription: props.tooltipDescription ?? '',
     emptyText: props.emptyText ?? 'Select an option',
     errorMessage: props.errorMessage ?? '',
+    errorType: props.errorType ?? 'default',
     isExpanded: props.isExpanded ?? false,
   }
   // Extract props.
@@ -367,9 +368,7 @@ export default function DetailDropdown<TOption>(
               <Tooltip description={warningTooltipDescription} />
             </div>
           </div>
-          <div className={'TitleColumnTwo'}>
-            <div className={optionalClassName}>optional</div>
-          </div>
+          <div className={`TitleColumnTwo ${optionalClassName}`}>optional</div>
         </div>
         <div className={fieldClassName}>
           <DropdownOption

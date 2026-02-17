@@ -16,9 +16,15 @@ export function DetailLocked({
   uniqueLabelClassName = undefined,
   uniqueFieldClassName = undefined,
   errorMessage = undefined,
+  errorType = 'default',
   tooltipDescription = '',
 }: TDetailLocked_P): TReactElement | null {
   /* -- COMPUTED -- */
+  /**
+   * The boolean that determines if the
+   * error message should be displayed.
+   */
+  const displayError: boolean = compute(() => errorMessage !== undefined)
 
   /**
    * The class name for the detail.
@@ -49,6 +55,14 @@ export function DetailLocked({
       classList.push(uniqueLabelClassName)
     }
 
+    if (displayError) {
+      if (errorType === 'default') {
+        classList.push('Error')
+      } else if (errorType === 'warning') {
+        classList.push('Warning')
+      }
+    }
+
     // Return the list of class names as one string.
     return classList.join(' ')
   })
@@ -65,6 +79,14 @@ export function DetailLocked({
       classList.push(uniqueFieldClassName)
     }
 
+    if (displayError) {
+      if (errorType === 'default') {
+        classList.push('Error')
+      } else if (errorType === 'warning') {
+        classList.push('Warning')
+      }
+    }
+
     // Return the list of class names as one string.
     return classList.join(' ')
   })
@@ -79,6 +101,10 @@ export function DetailLocked({
     // error message is not passed.
     if (errorMessage === undefined) {
       classList.push('Hidden')
+    }
+
+    if (errorType === 'warning') {
+      classList.push('Warning')
     }
 
     // Return the list of class names as one string.

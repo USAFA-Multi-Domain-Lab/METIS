@@ -26,6 +26,13 @@ export type TDetailBase_P = {
    */
   errorMessage?: string
   /**
+   * The type of error message to display if the detail has an error.
+   * @default 'default'
+   * @option 'default' will display the error message in a red error style.
+   * @option 'warning' will display the error message in a yellow warning style.
+   */
+  errorType?: 'default' | 'warning'
+  /**
    * The tooltip description for the detail.
    */
   tooltipDescription?: string

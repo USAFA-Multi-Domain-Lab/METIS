@@ -23,6 +23,8 @@ export function DetailNumber({
   placeholder = 'Enter a number here...',
   uniqueLabelClassName = undefined,
   uniqueFieldClassName = undefined,
+  errorMessage = undefined,
+  errorType = 'default',
   disabled = false,
   tooltipDescription = '',
 }: TDetailNumber_P): TReactElement | null {
@@ -32,6 +34,11 @@ export function DetailNumber({
   )
 
   /* -- COMPUTED -- */
+  /**
+   * The boolean that determines if the
+   * error message should be displayed.
+   */
+  const displayError: boolean = compute(() => errorMessage !== undefined)
   /**
    * The class name for the detail.
    */
@@ -61,6 +68,14 @@ export function DetailNumber({
       classList.push(uniqueLabelClassName)
     }
 
+    if (displayError) {
+      if (errorType === 'default') {
+        classList.push('Error')
+      } else if (errorType === 'warning') {
+        classList.push('Warning')
+      }
+    }
+
     // Return the list of class names as one string.
     return classList.join(' ')
   })
@@ -75,6 +90,34 @@ export function DetailNumber({
     // then add it to the list of class names.
     if (uniqueFieldClassName) {
       classList.push(uniqueFieldClassName)
+    }
+
+    if (displayError) {
+      if (errorType === 'default') {
+        classList.push('Error')
+      } else if (errorType === 'warning') {
+        classList.push('Warning')
+      }
+    }
+
+    // Return the list of class names as one string.
+    return classList.join(' ')
+  })
+  /**
+   * Class name for the error message field.
+   */
+  const fieldErrorClassName: string = compute(() => {
+    // Default class names
+    let classList: string[] = ['FieldErrorMessage']
+
+    // Hide the error message if the
+    // error message is not passed.
+    if (errorMessage === undefined) {
+      classList.push('Hidden')
+    }
+
+    if (errorType === 'warning') {
+      classList.push('Warning')
     }
 
     // Return the list of class names as one string.
@@ -255,6 +298,7 @@ export function DetailNumber({
         }}
       />
       <div className='Unit'>{unit}</div>
+      <div className={fieldErrorClassName}>{errorMessage}</div>
     </div>
   )
 }

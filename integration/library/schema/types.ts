@@ -6,3 +6,5 @@ export type {
   TTargetSchemaOptions,
   TTargetScript,
 } from '../../../server/target-environments/schema/TargetSchema'
+
+export type { TTargetArgJson } from '../../../shared/target-environments/args/Arg'
