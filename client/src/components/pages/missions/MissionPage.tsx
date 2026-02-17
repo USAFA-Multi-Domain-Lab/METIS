@@ -367,6 +367,9 @@ export default function MissionPage(
 
   // Handle selection changes.
   useEffect(() => {
+    // Trigger a check for issues, now
+    // that the user has made a new selection.
+    setCheckForIssues(true)
     // Cleanup when a new effect is created.
     setEffectModalActive(false)
     // Auto-switch to the files tab if a file
@@ -468,6 +471,10 @@ export default function MissionPage(
         // Save the mission and notify
         // the user.
         await mission.saveToServer()
+        // Trigger a check for issues, now
+        // that the user has decided to save
+        // the mission.
+        setCheckForIssues(true)
         notify('Mission successfully saved.')
       }
     } catch (error) {
@@ -593,9 +600,6 @@ export default function MissionPage(
     // ? Is this still necessary?
     ...components: TNonEmptyArray<MissionComponent<TMetisClientComponents>>
   ): void => {
-    // Trigger a check for issues, now
-    // that a component has changed.
-    setCheckForIssues(true)
     setAreUnsavedChanges(true)
     forceUpdate()
   }

@@ -40,22 +40,24 @@ export default function ArgMissionComponent({
 }: TArgMissionComponent_P): TReactElement | null {
   /* -- CONSTANTS -- */
 
-  /**
-   * Determines if the argument is required.
-   */
   const isRequired: boolean = required
-  /**
-   * Determines if the argument is optional.
-   */
   const isOptional: boolean = !required
-  /**
-   * Determines if the argument is already present in the effect's arguments.
-   */
   const existsInEffectArgs: boolean = effectArgs[_id] !== undefined
+
+  // Metadata keys used in the effect.args for
+  // the mission component argument types.
+  const forceKey = ForceArg.FORCE_KEY
+  const forceName = ForceArg.FORCE_NAME
+  const nodeKey = NodeArg.NODE_KEY
+  const nodeName = NodeArg.NODE_NAME
+  const actionKey = ActionArg.ACTION_KEY
+  const actionName = ActionArg.ACTION_NAME
+  const fileId = FileArg.FILE_ID
+  const fileName = FileArg.FILE_NAME
 
   /* -- STATE -- */
 
-  /* -- action -- */
+  /* -- DEFAULT STATE VALUES -- */
 
   const [defaultAction] = useState<ClientMissionAction>(
     (): ClientMissionAction => {
@@ -77,70 +79,6 @@ export default function ArgMissionComponent({
       }
     },
   )
-  const [actionKey] = useState<string>(ActionArg.ACTION_KEY)
-  const [actionName] = useState<string>(ActionArg.ACTION_NAME)
-  const [actionValue, setActionValue] = useState<ClientMissionAction>(() => {
-    // If the argument is required and the argument's value
-    // is in the effect's arguments...
-    if (isRequired && existsInEffectArgs) {
-      // Search for the action in the mission.
-      let actionInMission = effect.getActionFromArgs(_id)
-      // If the action is found then return the action.
-      if (actionInMission) return actionInMission
-      let actionInArgs = effect.getActionMetadataInArgs(_id)
-      // If the action is not found, but the effect's arguments
-      // contains the action's metadata then return an action
-      // object using the metadata from the effect's arguments.
-      // *** Note: This will display the user's previous selection
-      // *** in the dropdown even though it no longer exists in the
-      // *** mission.
-      if (actionInArgs) {
-        return ClientMissionAction.create(nodeValue, {
-          localKey: actionInArgs.actionKey,
-          name: actionInArgs.actionName,
-        })
-      }
-      // Otherwise, return the default action.
-      return defaultAction
-    }
-    // Otherwise, return the default action.
-    else {
-      return defaultAction
-    }
-  })
-  const [optionalActionValue, setOptionalActionValue] =
-    useState<ClientMissionAction | null>(() => {
-      // If the argument is optional and the argument's value
-      // is in the effect's arguments...
-      if (isOptional && existsInEffectArgs) {
-        // Search for the action in the mission.
-        let actionInMission = effect.getActionFromArgs(_id)
-        // If the action is found then return the action.
-        if (actionInMission) return actionInMission
-        let actionInArgs = effect.getActionMetadataInArgs(_id)
-        // If the action is not found, but the effect's arguments
-        // contains the action's metadata then return an action
-        // object using the metadata from the effect's arguments.
-        // *** Note: This will display the user's previous selection
-        // *** in the dropdown even though it no longer exists in the
-        // *** mission.
-        if (optionalNodeValue && actionInArgs) {
-          return ClientMissionAction.create(optionalNodeValue, {
-            localKey: actionInArgs.actionKey,
-            name: actionInArgs.actionName,
-          })
-        }
-        // Otherwise, return null.
-        return null
-      }
-      // Otherwise, return null.
-      else {
-        return null
-      }
-    })
-
-  /* -- node -- */
-
   const [defaultNode] = useState<ClientMissionNode>(() => {
     // First, default to the node associated with
     // the effect itself, if possible. Then, as a back
@@ -160,8 +98,110 @@ export default function ArgMissionComponent({
       )
     }
   })
-  const [nodeKey] = useState<string>(NodeArg.NODE_KEY)
-  const [nodeName] = useState<string>(NodeArg.NODE_NAME)
+  const [defaultForce] = useState<ClientMissionForce>(
+    (): ClientMissionForce => {
+      // First, default to the force associated with
+      // the effect itself, if possible. Then, as a backup,
+      // if the arg type is 'action' or 'node', use the
+      // force of the default node, if the default node
+      // exists. Then, use the first force available
+      // in the mission. If that's still not an option,
+      // throw an error because a mission should always
+      // have at least one force.
+      if (effect.sourceForce) {
+        return effect.sourceForce
+      } else if (type === 'action' || type === 'node') {
+        return defaultNode.force
+      } else if (mission.forces.length) {
+        return mission.forces[0]
+      } else {
+        throw new Error(
+          'No valid force found. A mission must have at least one force.',
+        )
+      }
+    },
+  )
+  const [defaultFile] = useState<ClientMissionFile>(() => {
+    // Return the first file in the mission. If
+    // there is no file in the mission, then return
+    // a detached file object.
+    if (mission.files.length) {
+      return mission.files[0]
+    } else {
+      return ClientMissionFile.createDetached(
+        StringToolbox.generateRandomId(),
+        'No files available.',
+        mission,
+      )
+    }
+  })
+
+  /* -- FORCE STATE VALUES -- */
+
+  const [optionalForceValue, setOptionalForceValue] =
+    useState<ClientMissionForce | null>(() => {
+      // If the argument is optional and the argument's value
+      // is in the effect's arguments...
+      if (isOptional && existsInEffectArgs) {
+        // Search for the force in the mission.
+        let forceInMission = effect.getForceFromArgs(_id)
+        // If the force is found then return the force.
+        if (forceInMission) return forceInMission
+        let forceInArgs = effect.getForceMetadataInArgs(_id)
+        // If the force is not found, but the effect's arguments
+        // contains the force's metadata then return a force
+        // object using the metadata from the effect's arguments.
+        // *** Note: This will display the user's previous selection
+        // *** in the dropdown even though it no longer exists in the
+        // *** mission.
+        if (!forceInMission && forceInArgs) {
+          return new ClientMissionForce(mission, {
+            localKey: forceInArgs.forceKey,
+            name: forceInArgs.forceName,
+          })
+        }
+
+        // Otherwise, return null.
+        return null
+      }
+      // Otherwise, return null.
+      else {
+        return null
+      }
+    })
+  const [forceValue, setForceValue] = useState<ClientMissionForce>(() => {
+    // If the argument is required and the argument's value
+    // is in the effect's arguments...
+    if (isRequired && existsInEffectArgs) {
+      // Search for the force in the mission.
+      let forceInMission = effect.getForceFromArgs(_id)
+      // If the force is found then return the force.
+      if (forceInMission) return forceInMission
+      let forceInArgs = effect.getForceMetadataInArgs(_id)
+      // If the force is not found, but the effect's arguments
+      // contains the force's metadata then return a force
+      // object using the metadata from the effect's arguments.
+      // *** Note: This will display the user's previous selection
+      // *** in the dropdown even though it no longer exists in the
+      // *** mission.
+      if (forceInArgs) {
+        return new ClientMissionForce(mission, {
+          localKey: forceInArgs.forceKey,
+          name: forceInArgs.forceName,
+        })
+      }
+
+      // Otherwise, return the default force.
+      return defaultForce
+    }
+    // Otherwise, return the default force.
+    else {
+      return defaultForce
+    }
+  })
+
+  /* -- NODE STATE VALUES -- */
+
   const [nodeValue, setNodeValue] = useState<ClientMissionNode>(() => {
     // If the argument is required and the argument's value
     // is in the effect's arguments...
@@ -224,86 +264,59 @@ export default function ArgMissionComponent({
       }
     })
 
-  /* -- force -- */
+  /* -- ACTION STATE VALUES -- */
 
-  const [defaultForce] = useState<ClientMissionForce>(
-    (): ClientMissionForce => {
-      // First, default to the force associated with
-      // the effect itself, if possible. Then, as a backup,
-      // if the arg type is 'action' or 'node', use the
-      // force of the default node, if the default node
-      // exists. Then, use the first force available
-      // in the mission. If that's still not an option,
-      // throw an error because a mission should always
-      // have at least one force.
-      if (effect.sourceForce) {
-        return effect.sourceForce
-      } else if (type === 'action' || type === 'node') {
-        return defaultNode.force
-      } else if (mission.forces.length) {
-        return mission.forces[0]
-      } else {
-        throw new Error(
-          'No valid force found. A mission must have at least one force.',
-        )
-      }
-    },
-  )
-  const [forceKey] = useState<string>(ForceArg.FORCE_KEY)
-  const [forceName] = useState<string>(ForceArg.FORCE_NAME)
-  const [forceValue, setForceValue] = useState<ClientMissionForce>(() => {
+  const [actionValue, setActionValue] = useState<ClientMissionAction>(() => {
     // If the argument is required and the argument's value
     // is in the effect's arguments...
     if (isRequired && existsInEffectArgs) {
-      // Search for the force in the mission.
-      let forceInMission = effect.getForceFromArgs(_id)
-      // If the force is found then return the force.
-      if (forceInMission) return forceInMission
-      let forceInArgs = effect.getForceMetadataInArgs(_id)
-      // If the force is not found, but the effect's arguments
-      // contains the force's metadata then return a force
+      // Search for the action in the mission.
+      let actionInMission = effect.getActionFromArgs(_id)
+      // If the action is found then return the action.
+      if (actionInMission) return actionInMission
+      let actionInArgs = effect.getActionMetadataInArgs(_id)
+      // If the action is not found, but the effect's arguments
+      // contains the action's metadata then return an action
       // object using the metadata from the effect's arguments.
       // *** Note: This will display the user's previous selection
       // *** in the dropdown even though it no longer exists in the
       // *** mission.
-      if (forceInArgs) {
-        return new ClientMissionForce(mission, {
-          localKey: forceInArgs.forceKey,
-          name: forceInArgs.forceName,
+      if (actionInArgs) {
+        return ClientMissionAction.create(nodeValue, {
+          localKey: actionInArgs.actionKey,
+          name: actionInArgs.actionName,
         })
       }
-
-      // Otherwise, return the default force.
-      return defaultForce
+      // Otherwise, return the default action.
+      return defaultAction
     }
-    // Otherwise, return the default force.
+    // Otherwise, return the default action.
     else {
-      return defaultForce
+      return defaultAction
     }
   })
-  const [optionalForceValue, setOptionalForceValue] =
-    useState<ClientMissionForce | null>(() => {
+  const [optionalActionValue, setOptionalActionValue] =
+    useState<ClientMissionAction | null>(() => {
       // If the argument is optional and the argument's value
       // is in the effect's arguments...
       if (isOptional && existsInEffectArgs) {
-        // Search for the force in the mission.
-        let forceInMission = effect.getForceFromArgs(_id)
-        // If the force is found then return the force.
-        if (forceInMission) return forceInMission
-        let forceInArgs = effect.getForceMetadataInArgs(_id)
-        // If the force is not found, but the effect's arguments
-        // contains the force's metadata then return a force
+        // Search for the action in the mission.
+        let actionInMission = effect.getActionFromArgs(_id)
+        // If the action is found then return the action.
+        if (actionInMission) return actionInMission
+        let actionInArgs = effect.getActionMetadataInArgs(_id)
+        // If the action is not found, but the effect's arguments
+        // contains the action's metadata then return an action
         // object using the metadata from the effect's arguments.
         // *** Note: This will display the user's previous selection
         // *** in the dropdown even though it no longer exists in the
         // *** mission.
-        if (!forceInMission && forceInArgs) {
-          return new ClientMissionForce(mission, {
-            localKey: forceInArgs.forceKey,
-            name: forceInArgs.forceName,
+        if (optionalNodeValue && actionInArgs) {
+          return ClientMissionAction.create(optionalNodeValue, {
+            localKey: actionInArgs.actionKey,
+            name: actionInArgs.actionName,
           })
         }
-
         // Otherwise, return null.
         return null
       }
@@ -312,24 +325,9 @@ export default function ArgMissionComponent({
         return null
       }
     })
-  /* -- file -- */
 
-  const [defaultFile] = useState<ClientMissionFile>(() => {
-    // Return the first file in the mission. If
-    // there is no file in the mission, then return
-    // a detached file object.
-    if (mission.files.length) {
-      return mission.files[0]
-    } else {
-      return ClientMissionFile.createDetached(
-        StringToolbox.generateRandomId(),
-        'No files available.',
-        mission,
-      )
-    }
-  })
-  const [fileId] = useState<string>(FileArg.FILE_ID)
-  const [fileName] = useState<string>(FileArg.FILE_NAME)
+  /* -- FILE STATE VALUES -- */
+
   const [fileValue, setFileValue] = useState<ClientMissionFile>(() => {
     // If the argument is required and the argument's value
     // is in the effect's arguments...

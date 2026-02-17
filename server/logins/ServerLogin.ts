@@ -6,7 +6,7 @@ import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
 import { type TLoginJson } from '@shared/logins'
 import { MissionSession } from '@shared/sessions/MissionSession'
 import type { Request } from 'express-serve-static-core'
-import type { Socket } from 'socket.io'
+import { Socket } from 'socket.io'
 import { SessionServer } from '../sessions/SessionServer'
 
 /**
@@ -355,6 +355,23 @@ export class ServerLogin {
 
     const { id: socketId } = socket
     return ServerLogin.socketRegistry.get(socketId)
+  }
+
+  /**
+   * Retrieves the login information based on the provided identifier.
+   * @param by The identifier to retrieve the login information by.
+   * @returns The login information associated with the identifier, or undefined if not found.
+   */
+  public static get(
+    by: ServerUser['_id'] | Request | Socket,
+  ): ServerLogin | undefined {
+    if (typeof by === 'string') {
+      return ServerLogin.getByUserId(by)
+    } else if (by instanceof Socket) {
+      return ServerLogin.getBySocket(by)
+    } else {
+      return ServerLogin.getByExpressRequest(by)
+    }
   }
 
   /**
