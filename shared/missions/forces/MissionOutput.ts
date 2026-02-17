@@ -5,7 +5,7 @@ import type {
   TEffectExecutionTriggered,
   TEffectSessionTriggered,
 } from '../effects/Effect'
-import type { Mission } from '../Mission'
+import type { TMission } from '../Mission'
 import type { TForce, TMissionForceSaveJson } from './MissionForce'
 
 /**
@@ -36,7 +36,7 @@ export abstract class MissionOutput<
   /**
    * The mission where the output belongs.
    */
-  public get mission(): Mission {
+  public get mission(): TMission<T> {
     return this.force.mission
   }
 

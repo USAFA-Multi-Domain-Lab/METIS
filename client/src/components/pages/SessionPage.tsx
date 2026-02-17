@@ -539,11 +539,11 @@ export default function SessionPage({
   })
 
   /**
-   * The default size of the secondary panel (output panel) in
+   * The initial size of the secondary panel (output panel) in
    * pixels. This is responsive and will adjust based on the
    * aspect ratio and width of the window.
    */
-  const secondaryPanelDefaultSize = compute<number>(() => {
+  const secondaryPanelInitialSize = compute<number>(() => {
     let result: number = SECONDARY_PANEL_DEFAULT_SIZE
     let aspectRatio: number = window.innerWidth / window.innerHeight
 
@@ -709,7 +709,7 @@ export default function SessionPage({
     <div className={rootClass}>
       <DefaultPageLayout navigation={navigation} includeFooter={false}>
         {topBarJsx}
-        <PanelLayout initialSizes={['fill', secondaryPanelDefaultSize]}>
+        <PanelLayout initialSizes={['fill', secondaryPanelInitialSize]}>
           <Panel>
             <PanelView title='Map'>
               <MissionMap

@@ -1821,31 +1821,6 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     let message = /*html*/ `
               <p>Executing <i><action-name></action-name></i> on <i><node-name></node-name></i>.</p>
               <i><action-description></action-description></i>
-              <p></p>
-              <p class="DetailDisplay">
-                <span class="Label">Success Chance</span>
-                <span class="Value">
-                  <success-chance></success-chance>
-                </span>
-              </p>
-              <p class="DetailDisplay">
-                <span class="Label">Time</span>
-                <span class="Value">
-                  <time-remaining></time-remaining> (<process-time></process-time>)
-                </span>
-              </p>
-              <p class="DetailDisplay">
-                <span class="Label">Cost</span>
-                <span class="Value">
-                  <resource-cost></resource-cost>
-                </span>
-              </p>
-              <p class="DetailDisplay">
-                <span class="Label">Opens Node</span>
-                <span class="Value">
-                  <opens-node></opens-node>
-                </span>
-              </p>
             `
 
     // Send the output JSON to the force.

@@ -167,10 +167,10 @@ export class ClientMissionPrototype
   public alerts: NodeAlert[] = [] // Alerts aren't used in prototypes, at this time.
 
   // Implemented
-  public readonly hasUnacknowledgedAlerts: boolean = false // Alerts aren't used in prototypes, at this time.
+  public readonly hasPendingAlerts: boolean = false // Alerts aren't used in prototypes, at this time.
 
   // Implemented
-  public readonly nextUnacknowledgedAlert: NodeAlert | null = null
+  public readonly nextPendingAlert: NodeAlert | null = null
 
   /**
    * Manages the prototype's event listeners and events.
