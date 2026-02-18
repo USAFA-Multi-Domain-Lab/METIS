@@ -12,7 +12,7 @@ import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { DetailLargeString } from '../../../../content/form/DetailLargeString'
 import { DetailLocked } from '../../../../content/form/DetailLocked'
 import { DetailString } from '../../../../content/form/DetailString'
-import DetailDropdown from '../../../../content/form/dropdown/DetailDropdown'
+import { DetailDropdown } from '../../../../content/form/dropdown/DetailDropdown'
 import ArgEntry from '../../target-effects/args/ArgEntry'
 import Entry from '../Entry'
 

@@ -1,9 +1,13 @@
 {
-  "extends": [
-    "development"
-  ],
+  "extends": ["development"],
   "hints": {
     "no-inline-styles": "off",
+    "axe/forms": [
+      "default",
+      {
+        "label": "off",
+      },
+    ],
     "compat-api/css": [
       "default",
       {
@@ -12,9 +16,9 @@
           "mask-image",
           "mask-size",
           "mask-repeat",
-          "mask-position"
-        ]
-      }
-    ]
-  }
+          "mask-position",
+        ],
+      },
+    ],
+  },
 }

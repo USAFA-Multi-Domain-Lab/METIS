@@ -1,5 +1,5 @@
 import Tooltip from '@client/components/content/communication/Tooltip'
-import { DetailDropdown } from '@client/components/content/form/dropdown/'
+import { DetailDropdown } from '@client/components/content/form/dropdown/DetailDropdown'
 import { ButtonText } from '@client/components/content/user-controls/buttons/ButtonText'
 import type {
   ClientEffect,

@@ -1,4 +1,4 @@
-import { DetailDropdown } from '@client/components/content/form/dropdown/'
+import { DetailDropdown } from '@client/components/content/form/dropdown/DetailDropdown'
 import type { ClientEffect } from '@client/missions/effects/ClientEffect'
 import type { ClientMissionFile } from '@client/missions/files/ClientMissionFile'
 import { compute } from '@client/toolbox'
