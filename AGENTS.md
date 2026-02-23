@@ -15,10 +15,14 @@ Quick index for AI agents working in this workspace.
 - [Architecture](docs/devs/architecture.md) — System design patterns
 - [WebSocket](docs/devs/websocket.md) — Real-time communication
 
-**Building integrations:**
+**Writing integrations:**
 
 - [Integration quickstart](docs/target-env-integration/quickstart.md)
 - [Integration architecture](docs/target-env-integration/architecture.md)
+
+**Writing migrations:**
+
+- [Migration guide](.github/instructions/MIGRATIONS.instructions.md) — Database builds, import builds, checklist
 
 **Understanding APIs:**
 

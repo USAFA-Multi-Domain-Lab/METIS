@@ -83,11 +83,13 @@ get path(): [...MissionComponent<any, any>[], this] {
 }
 ```
 
-**Database Migrations**: Two-layer system:
+**Database Migrations**: Two-layer system — for full details and a step-by-step checklist, see [MIGRATIONS.instructions.md](instructions/MIGRATIONS.instructions.md).
 
-- **Import builds** (`/server/missions/imports/builds/`) for legacy file imports (uses `.ts` files)
-- **Database builds** (`/server/database/builds/`) for schema migrations (uses `.js` files)
+- **Import builds** (`/server/missions/imports/builds/`) for mission file imports (`.ts` files) — **only needed for changes to the mission model**
+- **Database builds** (`/server/database/builds/`) for schema migrations (`.js` files) — needed for any schema change
 - All builds are numbered sequentially (e.g., `build_000001.js` or `build_000001.ts`) and auto-applied
+- After adding a database build, **always increment `MetisServer.SCHEMA_BUILD_NUMBER`** in `server/MetisServer.ts`
+- After adding an import build, register it in both the `import` list and `applyBuilds` method in `server/missions/imports/MissionImport.ts`
 - Migration scripts use MongoDB shell syntax and check for existing properties
 
 ### Target-Environment Integration System
