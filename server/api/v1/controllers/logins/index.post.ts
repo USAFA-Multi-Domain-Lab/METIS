@@ -136,7 +136,14 @@ async function realizeLogin(
   user: ServerUser,
 ): Promise<ServerLogin> {
   let forceful: boolean = request.headers.forceful === 'true'
-  let login = new ServerLogin(user, request.sessionID, { forceful })
+  let login = new ServerLogin(user, request, { forceful })
+
+  if (login.isDuplicate && !forceful) {
+    throw new StatusError(
+      'Account is already logged in on another device or browser.',
+      409,
+    )
+  }
 
   if (login.inTimeout) {
     throw new StatusError(

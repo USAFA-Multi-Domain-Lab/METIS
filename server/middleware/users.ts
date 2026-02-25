@@ -15,7 +15,8 @@ export const auth =
   ({ authentication = 'login', permissions = [] }: TAuthOptions) =>
   (request: Request, response: Response, next: NextFunction): void => {
     // Gather details.
-    let login: ServerLogin | undefined = ServerLogin.get(request.session.userId)
+    let login: ServerLogin | undefined =
+      ServerLogin.getByExpressRequest(request)
     let session: SessionServer | undefined = SessionServer.get(
       login?.metisSessionId,
     )
@@ -77,7 +78,7 @@ export const restrictUserManagement = async (
   next: NextFunction,
 ): Promise<void> => {
   // Gather details.
-  let login: ServerLogin | undefined = ServerLogin.get(request.session.userId)
+  let login: ServerLogin | undefined = ServerLogin.getByExpressRequest(request)
   let operation = request.method.toLowerCase()
 
   // If no login information is found, return 401.
@@ -167,7 +168,7 @@ export const restrictPasswordReset = (
   next: NextFunction,
 ): void => {
   // Gather details.
-  const login = ServerLogin.get(request.session.userId)
+  const login = ServerLogin.getByExpressRequest(request)
 
   // If no login information is found, return 401.
   if (!login || !login.user || !login.userId) {

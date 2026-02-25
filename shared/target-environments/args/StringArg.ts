@@ -6,6 +6,24 @@ import { Arg } from './Arg'
  */
 export class StringArg {
   /**
+   * Converts a regex pattern to JSON.
+   * @param pattern The pattern to encode.
+   * @returns The encoded pattern.
+   */
+  private static encodePattern = (pattern: RegExp): TRegexJson => ({
+    source: pattern.source,
+    flags: pattern.flags,
+  })
+
+  /**
+   * Converts a regex pattern from JSON.
+   * @param pattern The pattern to decode.
+   * @returns The decoded pattern.
+   */
+  private static decodePattern = (pattern: TRegexJson): RegExp =>
+    new RegExp(pattern.source, pattern.flags ?? '')
+
+  /**
    * Converts TStringArg to TStringArgJson.
    * @param arg The string argument to convert.
    * @returns The string argument as JSON.
@@ -25,7 +43,9 @@ export class StringArg {
           type: arg.type,
           required: arg.required,
           default: arg.default,
-          pattern: arg.pattern,
+          pattern: arg.pattern
+            ? StringArg.encodePattern(arg.pattern)
+            : undefined,
           title: arg.title,
         }
       : {
@@ -38,7 +58,9 @@ export class StringArg {
           tooltipDescription: arg.tooltipDescription,
           type: arg.type,
           required: arg.required,
-          pattern: arg.pattern,
+          pattern: arg.pattern
+            ? StringArg.encodePattern(arg.pattern)
+            : undefined,
           title: arg.title,
         }
   }
@@ -63,7 +85,9 @@ export class StringArg {
           type: arg.type,
           required: arg.required,
           default: arg.default,
-          pattern: arg.pattern,
+          pattern: arg.pattern
+            ? StringArg.decodePattern(arg.pattern)
+            : undefined,
           title: arg.title,
         }
       : {
@@ -76,7 +100,9 @@ export class StringArg {
           tooltipDescription: arg.tooltipDescription,
           type: arg.type,
           required: arg.required,
-          pattern: arg.pattern,
+          pattern: arg.pattern
+            ? StringArg.decodePattern(arg.pattern)
+            : undefined,
           title: arg.title,
         }
   }
@@ -141,12 +167,26 @@ export type TStringArgJson = TBaseArgJson &
     /**
      * The regular expression pattern that the input value must match.
      */
-    pattern?: RegExp
+    pattern?: TRegexJson
     /**
      * Used to display an error message when the input value doesn't match the pattern upon form submission.
      */
     title?: string
   }
+
+/**
+ * A JSON-safe representation of a regular expression.
+ */
+export type TRegexJson = {
+  /**
+   * The regex source.
+   */
+  source: string
+  /**
+   * The regex flags.
+   */
+  flags?: string
+}
 /**
  * The optional string argument type for a target.
  */

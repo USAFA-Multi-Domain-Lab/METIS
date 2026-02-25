@@ -49,6 +49,8 @@ export type TWithKey<T> = T & { key: string }
 
 export type TAnyObject = Record<string | number | symbol, any>
 
+export type TUnknownObject = Record<string | number | symbol, unknown>
+
 /**
  * An object that can have any key but every
  * value must be of the same type.

@@ -50,6 +50,7 @@
     "lowlight": "^3.3.0",
     "marked": "^15.0.7",
     "memoize-one": "^6.0.0",
+    "mgrs": "^2.1.0",
     "mime-types": "^3.0.1",
     "mongoose": "^6.11.2",
     "multer": "^2.0.2",

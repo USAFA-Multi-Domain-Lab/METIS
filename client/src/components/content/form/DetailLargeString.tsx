@@ -8,6 +8,8 @@ import ButtonSvgPanel from '../user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from '../user-controls/buttons/panels/hooks'
 import './DetailLargeString.scss'
 
+const DEFAULT_ERROR_MESSAGE: string = 'At least one character is required here.'
+
 /**
  * This will render a detail for
  * a form, with a label and a text
@@ -21,7 +23,8 @@ export function DetailLargeString({
   setValue: setState,
   // Optional Properties
   defaultValue = undefined,
-  errorMessage = 'At least one character is required here.',
+  errorMessage = DEFAULT_ERROR_MESSAGE,
+  errorType = 'default',
   disabled = false,
   uniqueLabelClassName = undefined,
   uniqueFieldClassName = undefined,
@@ -49,14 +52,19 @@ export function DetailLargeString({
   const displayError: boolean = compute(() => {
     let display: boolean = false
 
-    // If the user has left the field and the
-    // field is required and the error message
-    // should be delivered, then display the error.
     if (
+      errorType === 'default' &&
       leftField &&
-      fieldType === 'required' &&
       handleOnBlur === 'deliverError' &&
-      errorMessage !== 'At least one character is required here.'
+      errorMessage !== DEFAULT_ERROR_MESSAGE
+    ) {
+      display = true
+    }
+
+    if (
+      errorType === 'warning' &&
+      handleOnBlur === 'deliverError' &&
+      errorMessage !== DEFAULT_ERROR_MESSAGE
     ) {
       display = true
     }
@@ -69,7 +77,7 @@ export function DetailLargeString({
       leftField &&
       fieldType === 'required' &&
       handleOnBlur === 'deliverError' &&
-      errorMessage === 'At least one character is required here.' &&
+      errorMessage === DEFAULT_ERROR_MESSAGE &&
       !stateValue
     ) {
       display = true
@@ -110,7 +118,11 @@ export function DetailLargeString({
     // If displayError is true then
     // add the error class name.
     if (displayError) {
-      classList.push('Error')
+      if (errorType === 'default') {
+        classList.push('Error')
+      } else if (errorType === 'warning') {
+        classList.push('Warning')
+      }
     }
 
     // Return the list of class names as one string.
@@ -126,7 +138,11 @@ export function DetailLargeString({
     // If the error message is displayed
     // then add the error class name.
     if (displayError) {
-      classList.push('Error')
+      if (errorType === 'default') {
+        classList.push('Error')
+      } else if (errorType === 'warning') {
+        classList.push('Warning')
+      }
     }
 
     // If a unique class name is passed
@@ -149,6 +165,10 @@ export function DetailLargeString({
     // displayError is false.
     if (!displayError) {
       classList.push('Hidden')
+    }
+
+    if (errorType === 'warning') {
+      classList.push('Warning')
     }
 
     // Return the list of class names as one string.

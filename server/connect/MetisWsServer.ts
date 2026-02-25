@@ -91,9 +91,8 @@ export class MetisWsServer {
     this.socketIo.on('connection', (socket) => {
       const { 'disconnect-existing': disconnectExisting } =
         socket.request.headers
-      const { session } = socket.request
 
-      let login: ServerLogin | undefined = ServerLogin.get(session.userId)
+      let login = ServerLogin.getBySocket(socket)
 
       // If no login information is found,
       // close the connection.

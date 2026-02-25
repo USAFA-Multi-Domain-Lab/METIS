@@ -13,6 +13,15 @@ export const AVAILABLE_DEPENDENCIES_RAW = [
     condition: (value: any) => !value,
   } as const,
   {
+    name: 'regex',
+    condition: (value: any, expected: TDependencyArg[]) => {
+      if (typeof value !== 'string') return false
+      let regex = expected[0]
+      if (!(regex instanceof RegExp)) return false
+      return regex.test(value)
+    },
+  } as const,
+  {
     name: 'equals',
     condition: (value: any, expected: TDependencyArg[]) =>
       expected[0] === value,
@@ -96,7 +105,7 @@ export class TargetDependency implements TDependency {
     name: TDependencyName,
     dependentId: string,
     condition: TDependencyCondition,
-    args: TDependencyArg[] = [],
+    args: TDependencyArg[],
   ) {
     // If the name includes '/', throw an error.
     if (name.includes('/')) {
@@ -132,6 +141,16 @@ export class TargetDependency implements TDependency {
    */
   public static FALSEY = (dependentId: string) =>
     TargetDependency.SELECT('falsey', dependentId)
+
+  /**
+   * Checks if the value of the argument (*referenced by the argument's ID*) matches the provided regular expression.
+   * @param dependentId The ID of the dependent argument.
+   * @param regex The regular expression to match the argument's value against.
+   * @returns A new dependency that checks if the argument's value matches the provided regular expression.
+   * @example TargetDependency.REGEX('dependentId', /^[a-z]+$/)
+   */
+  public static REGEX = (dependentId: string, regex: RegExp) =>
+    TargetDependency.SELECT('regex', dependentId, regex)
 
   /**
    * Ensures the argument's (*referenced by the argument's ID*) value matches the expected value.
@@ -220,7 +239,10 @@ export class TargetDependency implements TDependency {
    * @returns The encoded dependency.
    */
   public encode = () =>
-    `${this.name}/${this.dependentId}/${JSON.stringify(this.args)}`
+    `${this.name}/${this.dependentId}/${JSON.stringify(
+      this.args,
+      TargetDependency.JSON_REPLACER,
+    )}`
 
   /**
    * Decodes the dependency.
@@ -234,6 +256,7 @@ export class TargetDependency implements TDependency {
       let dependentId: string = encoding.split('/')[1]
       let args: TDependencyArg[] = JSON.parse(
         encoding.replace(`${name}/${dependentId}/`, ''),
+        TargetDependency.JSON_REVIVER,
       )
       let condition = TargetDependency.GET_CONDITION(name)
       return new TargetDependency(name, dependentId, condition, args)
@@ -278,13 +301,50 @@ export class TargetDependency implements TDependency {
     args: TDependencyArg | TDependencyArg[] = [],
   ) {
     // Extract dependency details.
-    const { condition } = TargetDependency.GET(name)!
+    let { condition } = TargetDependency.GET(name)!
     // If the args are not an array, convert them to an array.
     if (!Array.isArray(args)) args = [args]
     // Create the dependency.
-    const dependency = new TargetDependency(name, dependentId, condition, args)
+    let dependency = new TargetDependency(name, dependentId, condition, args)
     // Return the encoded dependency.
     return dependency.encode()
+  }
+
+  /**
+   * JSON replacer for serializing dependencies, including `RegExp` values.
+   * @param key The JSON key being serialized.
+   * @param value The value being serialized.
+   * @returns The serialized value.
+   */
+  private static JSON_REPLACER = (key: string, value: unknown) => {
+    if (value instanceof RegExp) {
+      return {
+        type: 'regex',
+        source: value.source,
+        flags: value.flags,
+      }
+    }
+
+    return value
+  }
+
+  /**
+   * JSON reviver for deserializing dependencies, including `RegExp` values.
+   * @param key The JSON key being deserialized.
+   * @param value The value being deserialized.
+   * @returns The deserialized value.
+   */
+  private static JSON_REVIVER = (key: string, value: any) => {
+    if (
+      value &&
+      typeof value === 'object' &&
+      value.type === 'regex' &&
+      typeof value.source === 'string'
+    ) {
+      return new RegExp(value.source, value.flags ?? undefined)
+    }
+
+    return value
   }
 }
 
@@ -293,7 +353,7 @@ export class TargetDependency implements TDependency {
 /**
  * A dependency's argument.
  */
-export type TDependencyArg = string | number | boolean
+export type TDependencyArg = string | number | boolean | RegExp
 
 /**
  * Type for a valid name for a dependency.

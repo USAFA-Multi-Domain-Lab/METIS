@@ -177,7 +177,7 @@ export abstract class Effect<
     let missingArg = this.checkForMissingArg()
     if (missingArg) {
       return constructIssues(
-        `The required argument ({ _id: "${missingArg._id}", name: "${missingArg.name}" }) within the effect ({ _id: "${this._id}", name: "${this.name}" }) is missing.`,
+        `The required argument "${missingArg.name}" within the effect "${this.name}" is missing.`,
       )
     }
 
@@ -337,7 +337,10 @@ export abstract class Effect<
         this.checkValueMatchesType(targetArg, effectArgValue, dependenciesMet),
       )
       pushIfNotNull(this.checkValidDropdownOption(targetArg, effectArgValue))
-      pushIfNotNull(this.checkMissionComponentArg(targetArg))
+      pushIfNotNull(this.checkMissionComponentArg(targetArg, effectArgValue))
+      pushIfNotNull(
+        this.checkStringArgAgainstPattern(targetArg, effectArgValue),
+      )
     }
 
     return issues
@@ -473,12 +476,16 @@ export abstract class Effect<
    * Checks if a mission-component argument is valid. Specifically,
    * it verifies the existence of referenced mission components.
    * @param targetArg The target argument to check.
+   * @param effectArgValue The value of the argument in the effect.
    * @returns An issue message if the mission component reference
    * is invalid.
    * @note Utility method of {@link checkEffectArgs}.
    */
-  private checkMissionComponentArg(targetArg: TTargetArg): string | null {
-    const { _id: argId, type } = targetArg
+  private checkMissionComponentArg(
+    targetArg: TTargetArg,
+    effectArgValue: unknown,
+  ): string | null {
+    let { _id: argId, type } = targetArg
 
     const isMissionComponentRef =
       type === 'action' ||
@@ -486,7 +493,7 @@ export abstract class Effect<
       type === 'force' ||
       type === 'file'
 
-    if (!isMissionComponentRef || !targetArg.required) {
+    if (!isMissionComponentRef || effectArgValue === undefined) {
       return null
     }
 
@@ -530,6 +537,38 @@ export abstract class Effect<
         const fileInArgs = this.getFileMetadataInArgs(argId)
         return this.buildComponentNotFoundMessage('file', fileInArgs?.fileName)
       }
+    }
+
+    return null
+  }
+
+  /**
+   * Checks if a string argument's value matches the required pattern specified
+   * in the target argument.
+   * @param targetArg The target argument to check.
+   * @param effectArgValue The value of the argument in the effect.
+   * @returns An issue message if the string argument's value does not match
+   * the required pattern.
+   * @note Utility method of {@link checkEffectArgs}.
+   */
+  private checkStringArgAgainstPattern(
+    targetArg: TTargetArg,
+    effectArgValue: unknown,
+  ): string | null {
+    if (targetArg.type !== 'string' || typeof effectArgValue !== 'string') {
+      return null
+    }
+
+    if (!targetArg.required && effectArgValue === undefined) {
+      return null
+    }
+
+    const pattern = targetArg.pattern
+    if (pattern instanceof RegExp && !pattern.test(effectArgValue)) {
+      return (
+        `The argument, "${targetArg.name}", within the effect, "${this.name}", does not match the required format. ` +
+        `Please update the value, or delete the effect and create a new one.`
+      )
     }
 
     return null
@@ -1232,8 +1271,10 @@ export type TEffectJson = TCreateJsonType<
  * Plain JSON representation of an `Effect` object
  * that is triggered by a session-lifecycle event.
  */
-export interface TEffectExecutionTriggeredJson
-  extends Omit<TEffectJson, 'trigger'> {
+export interface TEffectExecutionTriggeredJson extends Omit<
+  TEffectJson,
+  'trigger'
+> {
   trigger: TEffectExecutionTriggered
 }
 
@@ -1241,8 +1282,10 @@ export interface TEffectExecutionTriggeredJson
  * Plain JSON representation of an `Effect` object
  * that is triggered by an action-execution-lifecycle event.
  */
-export interface TEffectSessionTriggeredJson
-  extends Omit<TEffectJson, 'trigger'> {
+export interface TEffectSessionTriggeredJson extends Omit<
+  TEffectJson,
+  'trigger'
+> {
   trigger: TEffectSessionTriggered
 }
 
@@ -1250,17 +1293,18 @@ export interface TEffectSessionTriggeredJson
  * The default properties for an `Effect` object.
  * @inheritdoc TEffectJson
  */
-export interface TEffectDefaultJson<TTrigger extends TEffectTrigger>
-  extends Required<
-    Omit<
-      TEffectJson,
-      | 'trigger'
-      | 'localKey'
-      | 'targetId'
-      | 'environmentId'
-      | 'targetEnvironmentVersion'
-    >
-  > {
+export interface TEffectDefaultJson<
+  TTrigger extends TEffectTrigger,
+> extends Required<
+  Omit<
+    TEffectJson,
+    | 'trigger'
+    | 'localKey'
+    | 'targetId'
+    | 'environmentId'
+    | 'targetEnvironmentVersion'
+  >
+> {
   trigger: TTrigger
 }
 

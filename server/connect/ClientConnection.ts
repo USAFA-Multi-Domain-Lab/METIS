@@ -62,6 +62,13 @@ export class ClientConnection {
   }
 
   /**
+   * The socket ID for the web socket connection.
+   */
+  public get socketId(): string {
+    return this.socket.id
+  }
+
+  /**
    * Storage for all listeners, in the order they get added.
    */
   protected listeners: [TClientMethod, TClientHandler<any>][] = []
@@ -407,6 +414,11 @@ export class ClientConnection {
             request,
           }),
         )
+
+        if (error.remainingPoints <= 0) {
+          this.login.destroy()
+        }
+
         return
       }
 
