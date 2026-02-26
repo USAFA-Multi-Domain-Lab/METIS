@@ -301,6 +301,21 @@ export default function RichText({
     })
   }, [content])
 
+  // Sync externally-provided content into the editor when it changes.
+  // This is necessary because Tiptap's useEditor only consumes `content`
+  // at creation time — subsequent prop changes have no effect on the
+  // editor's displayed value without an explicit setContent call.
+  // The equality guard prevents a feedback loop with user typing: when
+  // the user types, onUpdate sets stateValue to editor.getHTML(), so by
+  // the time this effect runs the editor's HTML already matches `content`
+  // and setContent is skipped.
+  useEffect(() => {
+    if (!editor || content === undefined) return
+    if (editor.getHTML() !== content) {
+      editor.commands.setContent(content)
+    }
+  }, [editor, content])
+
   /* -- RENDER -- */
   if (!editor) return null
 
@@ -314,11 +329,11 @@ export default function RichText({
         </If>
       </BubbleMenu>
       <FloatingMenu editor={editor} className='FloatingToolbar'>
-        <If condition={editor.isEditable}>
+        {editor.isEditable && (
           <div className='Toolbar'>
             <ButtonSvgPanel engine={floatingToolbarButtonEngine} />
           </div>
-        </If>
+        )}
       </FloatingMenu>
       <EditorContent editor={editor} />
     </div>
