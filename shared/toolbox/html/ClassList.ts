@@ -41,14 +41,19 @@ export class ClassList {
    */
   public add(...classes: string[]): ClassList {
     // Validate the classes before adding them.
-    classes.forEach((cls) => {
+    let processedClasses = classes.filter((cls) => {
+      // Remove empty classes passed.
+      if (cls.trim() === '') {
+        return false
+      }
       if (!ClassList.isValidClass(cls)) {
         throw new Error(`Invalid class: ${cls}`)
       }
+      return true
     })
 
     // Add the classes.
-    for (let cls of classes) this._classes.add(cls)
+    for (let cls of processedClasses) this._classes.add(cls)
 
     return this
   }

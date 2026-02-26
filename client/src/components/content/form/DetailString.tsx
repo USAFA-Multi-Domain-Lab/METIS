@@ -1,8 +1,10 @@
 import { compute } from '@client/toolbox'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import React, { useState } from 'react'
 import type { TDetailWithInput_P } from '.'
-import Tooltip from '../communication/Tooltip'
 import './DetailString.scss'
+import DetailTitleRow from './DetailTitleRow'
+import { useDetailClassNames } from './useDetailClassNames'
 
 const DEFAULT_ERROR_MESSAGE: string = 'At least one character is required here.'
 
@@ -59,6 +61,7 @@ export function DetailString({
 
     if (
       errorType === 'warning' &&
+      leftField &&
       handleOnBlur === 'deliverError' &&
       errorMessage !== DEFAULT_ERROR_MESSAGE
     ) {
@@ -81,117 +84,22 @@ export function DetailString({
     // Return the boolean.
     return display
   })
+  const { rootClasses, labelClasses, fieldClasses, fieldErrorClasses } =
+    useDetailClassNames({
+      componentName: 'DetailString',
+      disabled,
+      displayError,
+      errorType,
+      uniqueLabelClassName,
+      uniqueFieldClassName,
+    })
+  fieldClasses.set('Password', inputType === 'password')
   /**
-   * The class name for the detail.
-   */
-  const rootClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['Detail', 'DetailString']
-
-    // If disabled is true then add the
-    // disabled class name.
-    if (disabled) {
-      classList.push('Disabled')
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-  /**
-   * Class name for the error message field.
-   */
-  const fieldErrorClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['FieldErrorMessage']
-
-    // Hide the error message if the
-    // displayError is false.
-    if (!displayError) {
-      classList.push('Hidden')
-    }
-
-    if (errorType === 'warning') {
-      classList.push('Warning')
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-  /**
-   * Class name for the label.
-   */
-  const labelClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['Label']
-
-    // If a unique class name is passed
-    // then add it to the list of class names.
-    if (uniqueLabelClassName) {
-      classList.push(uniqueLabelClassName)
-    }
-
-    // If displayError is true then
-    // add the error class name.
-    if (displayError) {
-      if (errorType === 'default') {
-        classList.push('Error')
-      } else if (errorType === 'warning') {
-        classList.push('Warning')
-      }
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-  /**
-   * Class name for the input field.
-   */
-  const fieldClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['Field']
-
-    // If a unique class name is passed
-    // then add it to the list of class names.
-    if (uniqueFieldClassName) {
-      classList.push(uniqueFieldClassName)
-    }
-
-    // If the input type is password then
-    // add the password class name.
-    if (inputType === 'password') {
-      classList.push('Password')
-    }
-
-    // If displayError is true then
-    // add the error class name.
-    if (displayError) {
-      if (errorType === 'default') {
-        classList.push('Error')
-      } else if (errorType === 'warning') {
-        classList.push('Warning')
-      }
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-  /**
-   * Class name for the toggle password display container.
+   * Class names for the toggle password display container.
    * @note Appears as a button with the text "show" or "hide".
    */
-  const togglePasswordButtonClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['TogglePasswordButton']
-
-    // If the input type is not "password" then
-    // add the hidden class name.
-    if (inputType !== 'password') {
-      classList.push('Hidden')
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
+  const togglePasswordButtonClasses = new ClassList('TogglePasswordButton')
+    .set('Hidden', inputType !== 'password')
   /**
    * The placeholder text being displayed.
    */
@@ -204,19 +112,6 @@ export function DetailString({
 
     return placeholderText
   })
-  /**
-   * The class name for the optional text.
-   */
-  const optionalClassName: string = compute(() =>
-    fieldType === 'optional' ? 'Optional' : 'Hidden',
-  )
-  /**
-   * The class name for the info icon.
-   */
-  const infoClassName: string = compute(() =>
-    tooltipDescription ? 'DetailInfo' : 'Hidden',
-  )
-
   /* -- FUNCTIONS -- */
 
   /**
@@ -235,18 +130,14 @@ export function DetailString({
   /* -- RENDER -- */
 
   return (
-    <div className={rootClassName}>
-      <div className='TitleRow'>
-        <div className='TitleColumnOne'>
-          <div className={labelClassName}>{label}</div>
-          <sup className={infoClassName}>
-            i
-            <Tooltip description={tooltipDescription} />
-          </sup>
-        </div>
-        <div className={`TitleColumnTwo ${optionalClassName}`}>optional</div>
-      </div>
-      <div className={fieldClassName}>
+    <div className={rootClasses.value}>
+      <DetailTitleRow
+        label={label}
+        labelClassName={labelClasses.value}
+        tooltipDescription={tooltipDescription}
+        fieldType={fieldType}
+      />
+      <div className={fieldClasses.value}>
         <input
           className={'Input'}
           type={currentInputType}
@@ -292,7 +183,7 @@ export function DetailString({
           }}
         />
         <input
-          className={togglePasswordButtonClassName}
+          className={togglePasswordButtonClasses.value}
           onClick={togglePasswordDisplay}
           type='button'
           value={displayPasswordText}
@@ -304,7 +195,7 @@ export function DetailString({
           {stateValue.length}/{maxLength}
         </div>
       ) : null}
-      <div className={fieldErrorClassName}>{errorMessage}</div>
+      <div className={fieldErrorClasses.value}>{errorMessage}</div>
     </div>
   )
 }

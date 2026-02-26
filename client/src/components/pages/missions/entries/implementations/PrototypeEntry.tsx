@@ -60,7 +60,7 @@ export default function PrototypeEntry({
     <Entry missionComponent={prototype} svgEngines={[svgEngine]}>
       <DetailLocked
         label='ID'
-        stateValue={prototype._id}
+        value={prototype._id}
         disabled={viewMode === 'preview'}
         key={`${prototype._id}_name`}
       />

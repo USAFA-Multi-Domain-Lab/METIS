@@ -100,12 +100,12 @@ export default function EffectEntry<TType extends TEffectType>({
       />
       <DetailLocked
         label='Target Environment'
-        stateValue={environment?.name ?? 'No target environment selected.'}
+        value={environment?.name ?? 'No target environment selected.'}
         disabled={viewMode === 'preview'}
       />
       <DetailLocked
         label='Target'
-        stateValue={target?.name ?? 'No target selected.'}
+        value={target?.name ?? 'No target selected.'}
         disabled={viewMode === 'preview'}
       />
       <ArgEntry

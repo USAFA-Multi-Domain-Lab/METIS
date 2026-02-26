@@ -1,8 +1,11 @@
 import { LocalContext, LocalContextProvider } from '@client/context/local'
 import { compute } from '@client/toolbox'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 import type { TDetailBase_P } from '../'
+import DetailTitleRow from '../DetailTitleRow'
+import { useDetailClassNames } from '../useDetailClassNames'
 import './DetailMultiSelect.scss'
 import MultiSelectOption from './subcomponents/MultiSelectOption'
 
@@ -47,15 +50,16 @@ export default function DetailMultiSelect<TOption>(
     uniqueFieldClassName: props.uniqueFieldClassName ?? '',
     disabled: props.disabled ?? false,
     tooltipDescription: props.tooltipDescription ?? '',
+    fieldType: props.fieldType ?? 'required',
     emptyText: props.emptyText ?? 'Select options',
     errorMessage: props.errorMessage ?? '',
+    errorType: props.errorType ?? 'default',
     isExpanded: props.isExpanded ?? false,
   }
 
   // Extract props.
   const {
     label,
-    fieldType,
     options,
     value,
     setValue,
@@ -65,6 +69,7 @@ export default function DetailMultiSelect<TOption>(
     uniqueLabelClassName,
     uniqueFieldClassName,
     disabled,
+    isExpanded,
     tooltipDescription,
     emptyText,
   } = defaultedProps
@@ -72,123 +77,35 @@ export default function DetailMultiSelect<TOption>(
   /* -- STATE -- */
 
   const state: TDetailMultiSelect_S = {
-    expanded: useState<boolean>(false),
+    expanded: useState<boolean>(isExpanded),
   }
   const [expanded, setExpanded] = state.expanded
 
   /* -- COMPUTED -- */
 
-  /**
-   * The class name for the detail.
-   */
-  const rootClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['Detail', 'DetailMultiSelect']
-
-    // If a unique class name is passed
-    // then add it to the list of class names.
-    if (uniqueClassName) {
-      classList.push(uniqueClassName)
-    }
-
-    // If the detail is expanded then add
-    // the expanded class name
-    if (expanded) {
-      classList.push('IsExpanded')
-    }
-
-    // If disabled is true then add the
-    // disabled class name.
-    if (disabled) {
-      classList.push('Disabled')
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
+  const { rootClasses, labelClasses, fieldClasses } = useDetailClassNames({
+    componentName: 'DetailMultiSelect',
+    disabled,
+    displayError: false,
+    errorType: 'default',
+    uniqueClassName,
+    uniqueLabelClassName,
+    uniqueFieldClassName,
   })
+  rootClasses.set('IsExpanded', expanded)
+  fieldClasses.set('IsExpanded', expanded)
 
   /**
-   * The class name for the field.
+   * The class names for all options.
    */
-  const fieldClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['Field']
-
-    // If a unique class name is passed
-    // then add it to the list of class names.
-    if (uniqueFieldClassName) {
-      classList.push(uniqueFieldClassName)
-    }
-
-    // If the detail is expanded then add
-    // the expanded class name
-    if (expanded) {
-      classList.push('IsExpanded')
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-
-  /**
-   * The class name for all options.
-   */
-  const allOptionsClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['AllOptions']
-
-    // If the detail is collapsed
-    // then hide the options.
-    if (!expanded) {
-      classList.push('Hidden')
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-
-  /**
-   * The class name for the label.
-   */
-  const labelClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['Label']
-
-    // If a unique class name is passed
-    // then add it to the list of class names.
-    if (uniqueLabelClassName) {
-      classList.push(uniqueLabelClassName)
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-
-  /**
-   * The class name for the selected values container.
-   */
-  const selectedValuesClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['SelectedValues']
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
+  const allOptionsClasses = new ClassList('AllOptions')
+    .set('Hidden', !expanded)
 
   /**
    * The class name for the optional text.
+   * @note Always hidden — a multi-select always produces a defined array value,
+   * so there is no meaningful distinction between required and optional.
    */
-  const optionalClassName: string = compute(() => {
-    return fieldType === 'optional' ? 'Optional' : 'Hidden'
-  })
-
-  /**
-   * The class name for the info icon.
-   */
-  const infoClassName: string = compute(() => {
-    return tooltipDescription ? 'DetailInfo' : 'Hidden'
-  })
-
   /* -- EFFECTS -- */
 
   // Close multiselect when clicking outside.
@@ -334,18 +251,16 @@ export default function DetailMultiSelect<TOption>(
       state={state}
       elements={{}}
     >
-      <div className={rootClassName}>
-        <div className={labelClassName}>
-          <label>{label}</label>
-          <span className={optionalClassName}>(optional)</span>
-          <span
-            className={infoClassName}
-            data-tooltip={tooltipDescription}
-          ></span>
-        </div>
-        <div className={fieldClassName}>
+      <div className={rootClasses.value}>
+        <DetailTitleRow
+          label={label}
+          labelClassName={labelClasses.value}
+          tooltipDescription={tooltipDescription}
+          fieldType='required'
+        />
+        <div className={fieldClasses.value}>
           <div className='SelectedContainer' onClick={toggleExpanded}>
-            <div className={selectedValuesClassName}>
+            <div className='SelectedValues'>
               {selectedValuesJsx.length > 0 ? (
                 selectedValuesJsx
               ) : (
@@ -356,7 +271,7 @@ export default function DetailMultiSelect<TOption>(
               <span className='Indicator'>▼</span>
             </div>
           </div>
-          <div className={allOptionsClassName}>{optionsJsx}</div>
+          <div className={allOptionsClasses.value}>{optionsJsx}</div>
         </div>
       </div>
     </LocalContextProvider>
@@ -416,9 +331,11 @@ export type TDetailMultiSelect_P<TOption> = TDetailMultiSelectBase_P & {
   getKey: (option: TOption) => string
   /**
    * Field type for the detail.
-   * @note Determines if the field should display the optional text.
+   * @note Always treated as required — a multi-select always produces a defined
+   * array value, so there is no meaningful distinction between required and optional.
+   * @default 'required'
    */
-  fieldType: 'required' | 'optional'
+  fieldType?: 'required'
 }
 
 /**

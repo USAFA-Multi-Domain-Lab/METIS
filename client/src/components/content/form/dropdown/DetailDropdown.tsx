@@ -1,7 +1,10 @@
 import { LocalContext, LocalContextProvider } from '@client/context/local'
 import { compute } from '@client/toolbox'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import { useEffect, useState } from 'react'
 import Tooltip from '../../communication/Tooltip'
+import DetailTitleRow from '../DetailTitleRow'
+import { useDetailClassNames } from '../useDetailClassNames'
 import './DetailDropdown.scss'
 import DropdownOption from './subcomponents/DropdownOption'
 
@@ -84,98 +87,26 @@ export function DetailDropdown<TOption>(
 
   /* -- COMPUTED -- */
 
-  /**
-   * The class name for the detail.
-   */
-  const rootClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['Detail', 'DetailDropdown']
-
-    // If a unique class name is passed
-    // then add it to the list of class names.
-    if (uniqueClassName) {
-      classList.push(uniqueClassName)
-    }
-
-    // If disabled is true then add the
-    // disabled class name.
-    if (disabled) {
-      classList.push('Disabled')
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
+  const { rootClasses, labelClasses, fieldClasses } = useDetailClassNames({
+    componentName: 'DetailDropdown',
+    disabled,
+    displayError: false,
+    errorType: 'default',
+    uniqueClassName,
+    uniqueLabelClassName,
+    uniqueFieldClassName,
   })
+  fieldClasses.set('IsExpanded', expanded)
+
   /**
-   * The class name for the field.
+   * The class names for all options.
    */
-  const fieldClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['Field', 'FieldDropdown']
+  const allOptionsClasses = new ClassList('AllOptions').set('Hidden', !expanded)
 
-    // If a unique class name is passed
-    // then add it to the list of class names.
-    if (uniqueFieldClassName) {
-      classList.push(uniqueFieldClassName)
-    }
-
-    // If the detail is expanded then add
-    // the expanded class name
-    if (expanded) {
-      classList.push('IsExpanded')
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
   /**
-   * The class name for all options.
+   * The class names for the state value.
    */
-  const allOptionsClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['AllOptions']
-
-    // If the detail is collapsed
-    // then hide the options.
-    if (!expanded) {
-      classList.push('Hidden')
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-  /**
-   * The class name for the label.
-   */
-  const labelClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['Label']
-
-    // If a unique class name is passed
-    // then add it to the list of class names.
-    if (uniqueLabelClassName) {
-      classList.push(uniqueLabelClassName)
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-  /**
-   * The class name for the state value.
-   */
-  const stateValueClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['Text']
-
-    // If a unique class name is passed
-    // then add it to the list of class names.
-    if (uniqueStateValueClassName) {
-      classList.push(uniqueStateValueClassName)
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
+  const stateValueClasses = new ClassList('Text', uniqueStateValueClassName)
   /**
    * The value displayed.
    */
@@ -192,18 +123,6 @@ export function DetailDropdown<TOption>(
       return emptyText
     }
   })
-  /**
-   * The class name for the optional text.
-   */
-  const optionalClassName: string = compute(() => {
-    return fieldType === 'optional' ? 'Optional' : 'Hidden'
-  })
-  /**
-   * The class name for the info icon.
-   */
-  const infoClassName: string = compute(() =>
-    tooltipDescription ? 'DetailInfo' : 'Hidden',
-  )
   /**
    * Determines if the warning icon should be displayed.
    */
@@ -227,10 +146,12 @@ export function DetailDropdown<TOption>(
   })
 
   /**
-   * The class name for the warning icon.
+   * The class names for the warning icon.
    */
-  const warningClassName: string = compute(() =>
-    displayWarning ? 'Warning' : 'Hidden',
+  const warningClasses = new ClassList().switch(
+    'Warning',
+    'Hidden',
+    displayWarning,
   )
   /**
    * The tooltip description for the warning icon.
@@ -354,29 +275,26 @@ export function DetailDropdown<TOption>(
       state={state}
       elements={{}}
     >
-      <div className={rootClassName}>
-        <div className='TitleRow'>
-          <div className='TitleColumnOne'>
-            <div className={labelClassName}>{label}</div>
-            <sup className={infoClassName}>
-              i
-              <Tooltip description={tooltipDescription} />
-            </sup>
-            <div className={warningClassName}>
-              <Tooltip description={warningTooltipDescription} />
-            </div>
+      <div className={rootClasses.value}>
+        <DetailTitleRow
+          label={label}
+          labelClassName={labelClasses.value}
+          tooltipDescription={tooltipDescription}
+          fieldType={fieldType}
+        >
+          <div className={warningClasses.value}>
+            <Tooltip description={warningTooltipDescription} />
           </div>
-          <div className={`TitleColumnTwo ${optionalClassName}`}>optional</div>
-        </div>
-        <div className={fieldClassName}>
+        </DetailTitleRow>
+        <div className={fieldClasses.value}>
           <DropdownOption
             selected
             onClick={() => (!disabled ? setExpanded(!expanded) : null)}
           >
-            <div className={stateValueClassName}>{valueDisplayed}</div>
+            <div className={stateValueClasses.value}>{valueDisplayed}</div>
             <div className='Indicator'>v</div>
           </DropdownOption>
-          <div className={allOptionsClassName}>{optionsJsx}</div>
+          <div className={allOptionsClasses.value}>{optionsJsx}</div>
         </div>
       </div>
     </LocalContextProvider>

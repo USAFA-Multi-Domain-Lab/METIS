@@ -2,11 +2,12 @@ import { compute } from '@client/toolbox'
 import type { EditorEvents } from '@tiptap/react'
 import { useState } from 'react'
 import type { TDetailWithInput_P } from '.'
-import Tooltip from '../communication/Tooltip'
 import RichText from '../general-layout/rich-text/RichText'
 import ButtonSvgPanel from '../user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from '../user-controls/buttons/panels/hooks'
 import './DetailLargeString.scss'
+import DetailTitleRow from './DetailTitleRow'
+import { useDetailClassNames } from './useDetailClassNames'
 
 const DEFAULT_ERROR_MESSAGE: string = 'At least one character is required here.'
 
@@ -63,6 +64,7 @@ export function DetailLargeString({
 
     if (
       errorType === 'warning' &&
+      leftField &&
       handleOnBlur === 'deliverError' &&
       errorMessage !== DEFAULT_ERROR_MESSAGE
     ) {
@@ -86,106 +88,15 @@ export function DetailLargeString({
     // Return the boolean.
     return display
   })
-  /**
-   * The root class name for the detail.
-   */
-  const rootClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['Detail', 'DetailLargeString']
-
-    // If disabled is true then add the
-    // disabled class name.
-    if (disabled) {
-      classList.push('Disabled')
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-  /**
-   * The class name for the label.
-   */
-  const labelClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['Label']
-
-    // If a unique class name is passed
-    // then add it to the list of class names.
-    if (uniqueLabelClassName) {
-      classList.push(uniqueLabelClassName)
-    }
-
-    // If displayError is true then
-    // add the error class name.
-    if (displayError) {
-      if (errorType === 'default') {
-        classList.push('Error')
-      } else if (errorType === 'warning') {
-        classList.push('Warning')
-      }
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-  /**
-   * The class name for the input field.
-   */
-  const fieldClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['Field']
-
-    // If the error message is displayed
-    // then add the error class name.
-    if (displayError) {
-      if (errorType === 'default') {
-        classList.push('Error')
-      } else if (errorType === 'warning') {
-        classList.push('Warning')
-      }
-    }
-
-    // If a unique class name is passed
-    // then add it to the list of class names.
-    if (uniqueFieldClassName) {
-      classList.push(uniqueFieldClassName)
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-  /**
-   * Class name for the error message field.
-   */
-  const fieldErrorClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['FieldErrorMessage']
-
-    // Hide the error message if the
-    // displayError is false.
-    if (!displayError) {
-      classList.push('Hidden')
-    }
-
-    if (errorType === 'warning') {
-      classList.push('Warning')
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-  /**
-   * The class name for the optional text.
-   */
-  const optionalClassName: string = compute(() =>
-    fieldType === 'optional' ? 'Optional' : 'Hidden',
-  )
-  /**
-   * The class name for the info icon.
-   */
-  const infoClassName: string = compute(() =>
-    tooltipDescription ? 'DetailInfo' : 'Hidden',
-  )
+  const { rootClasses, labelClasses, fieldClasses, fieldErrorClasses } =
+    useDetailClassNames({
+      componentName: 'DetailLargeString',
+      disabled,
+      displayError,
+      errorType,
+      uniqueLabelClassName,
+      uniqueFieldClassName,
+    })
   /**
    * The boolean that determines if the field
    * should be repopulated with the default value.
@@ -253,31 +164,28 @@ export function DetailLargeString({
   /* -- RENDER -- */
 
   return (
-    <div className={rootClassName}>
-      <div className='TitleRow'>
-        <div className='TitleColumnOne'>
-          <div className={labelClassName}>{label}</div>
-          <sup className={infoClassName}>
-            i
-            <Tooltip description={tooltipDescription} />
-          </sup>
-          <a href='/files/shortcuts.pdf' target='_blank' className='Shortcuts'>
-            <ButtonSvgPanel engine={buttonEngine} />
-          </a>
-        </div>
-        <div className={`TitleColumnTwo ${optionalClassName}`}>optional</div>
-      </div>
+    <div className={rootClasses.value}>
+      <DetailTitleRow
+        label={label}
+        labelClassName={labelClasses.value}
+        tooltipDescription={tooltipDescription}
+        fieldType={fieldType}
+      >
+        <a href='/files/shortcuts.pdf' target='_blank' className='Shortcuts'>
+          <ButtonSvgPanel engine={buttonEngine} />
+        </a>
+      </DetailTitleRow>
       <RichText
         options={{
           content: stateValue,
-          className: fieldClassName,
+          className: fieldClasses.value,
           placeholder,
           onUpdate,
           onBlur,
           editable: !disabled,
         }}
       />
-      <div className={fieldErrorClassName}>{errorMessage}</div>
+      <div className={fieldErrorClasses.value}>{errorMessage}</div>
     </div>
   )
 }

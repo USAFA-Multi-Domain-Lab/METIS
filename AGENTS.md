@@ -12,6 +12,7 @@ Quick index for AI agents working in this workspace.
 **Writing code:**
 
 - Style guide (above) — Required conventions
+- [React class names guide](.github/instructions/CLASS-NAMES.instructions.md) — `ClassList` usage, naming, chaining
 - [Architecture](docs/devs/architecture.md) — System design patterns
 - [WebSocket](docs/devs/websocket.md) — Real-time communication
 
