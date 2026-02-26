@@ -2,6 +2,7 @@ import Prompt from '@client/components/content/communication/Prompt'
 import { DetailColorSelector } from '@client/components/content/form/DetailColorSelector'
 import { DetailLargeString } from '@client/components/content/form/DetailLargeString'
 import { DetailNumber } from '@client/components/content/form/DetailNumber'
+import { DetailSlider } from '@client/components/content/form/DetailSlider'
 import { DetailString } from '@client/components/content/form/DetailString'
 import { DetailToggle } from '@client/components/content/form/DetailToggle'
 import type { TButtonText_P } from '@client/components/content/user-controls/buttons/ButtonText'
@@ -65,6 +66,7 @@ export default function ForceEntry({
       },
     ],
   })
+  const [opacity, setOpacity] = useState<number>(50)
 
   /* -- COMPUTED -- */
 
@@ -190,6 +192,16 @@ export default function ForceEntry({
         defaultValue={ClientMissionForce.DEFAULT_PROPERTIES.introMessage}
         disabled={viewMode === 'preview'}
         key={`${force._id}_introMessage`}
+      />
+      <DetailSlider
+        fieldType='required'
+        label='Opacity'
+        value={opacity}
+        setValue={setOpacity}
+        minimum={0}
+        maximum={100}
+        step={1}
+        unit='%'
       />
     </Entry>
   )

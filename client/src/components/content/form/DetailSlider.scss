@@ -1,0 +1,125 @@
+@use '@client/assets/styles/config.scss' as *;
+@use '../form/index.scss' as *;
+
+$thumb-size: 14px;
+$track-height: 4px;
+
+.Detail.DetailSlider {
+  .SliderValue {
+    font-size: 0.78rem;
+    font-weight: bold;
+    color: $color-accent-light;
+    white-space: nowrap;
+  }
+
+  .Field {
+    // Reset native styling
+    appearance: none;
+    -webkit-appearance: none;
+    background: transparent;
+    border: none;
+    padding: 0;
+    height: $thumb-size;
+    cursor: pointer;
+
+    // Webkit track
+    &::-webkit-slider-runnable-track {
+      height: $track-height;
+      border-radius: $track-height;
+      background: linear-gradient(
+        to right,
+        $color-accent var(--slider-fill, 0%),
+        $color-secondary var(--slider-fill, 0%)
+      );
+    }
+
+    // Webkit thumb
+    &::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: $thumb-size;
+      height: $thumb-size;
+      border-radius: 50%;
+      background-color: $color-accent;
+      margin-top: calc(($track-height - $thumb-size) / 2);
+      transition: background-color 0.15s ease, transform 0.1s ease;
+
+      &:hover {
+        background-color: $color-accent-light;
+        transform: scale(1.15);
+      }
+    }
+
+    // Firefox track
+    &::-moz-range-track {
+      height: $track-height;
+      border-radius: $track-height;
+      background-color: $color-secondary;
+    }
+
+    // Firefox fill
+    &::-moz-range-progress {
+      height: $track-height;
+      border-radius: $track-height;
+      background-color: $color-accent;
+    }
+
+    // Firefox thumb
+    &::-moz-range-thumb {
+      border: none;
+      width: $thumb-size;
+      height: $thumb-size;
+      border-radius: 50%;
+      background-color: $color-accent;
+      transition: background-color 0.15s ease, transform 0.1s ease;
+
+      &:hover {
+        background-color: $color-accent-light;
+        transform: scale(1.15);
+      }
+    }
+
+    &.Error {
+      &::-webkit-slider-thumb {
+        background-color: $color-failure;
+      }
+      &::-moz-range-thumb {
+        background-color: $color-failure;
+      }
+      &::-webkit-slider-runnable-track {
+        background: linear-gradient(
+          to right,
+          $color-failure var(--slider-fill, 0%),
+          $color-secondary var(--slider-fill, 0%)
+        );
+      }
+      &::-moz-range-progress {
+        background-color: $color-failure;
+      }
+    }
+
+    &.Warning {
+      &::-webkit-slider-thumb {
+        background-color: $color-neutral;
+      }
+      &::-moz-range-thumb {
+        background-color: $color-neutral;
+      }
+      &::-webkit-slider-runnable-track {
+        background: linear-gradient(
+          to right,
+          $color-neutral var(--slider-fill, 0%),
+          $color-secondary var(--slider-fill, 0%)
+        );
+      }
+      &::-moz-range-progress {
+        background-color: $color-neutral;
+      }
+    }
+  }
+
+  &.Disabled .Field {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+}
