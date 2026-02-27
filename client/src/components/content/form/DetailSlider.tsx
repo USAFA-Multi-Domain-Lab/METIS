@@ -28,6 +28,7 @@ export function DetailSlider({
   tooltipDescription = '',
 }: TDetailSlider_P): TReactElement | null {
   /* -- COMPUTED -- */
+
   /**
    * The boolean that determines if the
    * error message should be displayed.
@@ -70,6 +71,7 @@ export function DetailSlider({
   })
 
   /* -- RENDER -- */
+
   return (
     <div className={rootClasses.value}>
       <DetailTitleRow
