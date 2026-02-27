@@ -92,7 +92,7 @@ export class MetisWsServer {
       const { 'disconnect-existing': disconnectExisting } =
         socket.request.headers
 
-      let login = ServerLogin.getBySocket(socket)
+      let login = ServerLogin.get(socket)
 
       // If no login information is found,
       // close the connection.

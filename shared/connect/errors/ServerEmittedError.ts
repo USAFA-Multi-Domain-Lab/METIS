@@ -94,6 +94,10 @@ export class ServerEmittedError extends WsEmittedError {
    */
   public static readonly CODE_FORCE_DISCONNECT_SELF: number = 10006
   /**
+   * Code for when a client is disconnected due to being in timeout.
+   */
+  public static readonly CODE_TIMEOUT: number = 10007
+  /**
    * Code for a client requesting to join a session that cannot be found.
    */
   public static readonly CODE_SESSION_NOT_FOUND: number = 20000
@@ -180,6 +184,8 @@ export class ServerEmittedError extends WsEmittedError {
     [ServerEmittedError.CODE_INVALID_DATA]: 'Data sent was invalid.',
     [ServerEmittedError.CODE_DUPLICATE_CLIENT]:
       'You are already connected via another tab.',
+    [ServerEmittedError.CODE_TIMEOUT]:
+      'You have timed out likely due to inactivity or too many requests. Please try again later.',
     [ServerEmittedError.CODE_MESSAGE_RATE_LIMIT]:
       'Message rate limit exceeded. Please try again later.',
     [ServerEmittedError.CODE_UNAUTHENTICATED]:

@@ -1,6 +1,6 @@
 import { afterAll, beforeEach, describe, expect, test } from '@jest/globals'
 import { UserModel } from '@metis/server/database/models/users'
-import { TestServerLogin } from 'tests/middleware/TestServerLogin'
+import { ServerLogin } from '@metis/server/logins/ServerLogin'
 import { TestSuiteSetup } from 'tests/middleware/TestSuiteSetup'
 import { TestSuiteTeardown } from 'tests/middleware/TestSuiteTeardown'
 import { TestToolbox } from 'tests/toolbox/TestToolbox'
@@ -243,10 +243,7 @@ describe('/api/v1/logins', () => {
       password,
     })
 
-    let timeoutEnd = Date.now() + 5000
-    TestServerLogin.timeoutByUserId(user._id, timeoutEnd)
-
-    await client.delete('/api/v1/logins/')
+    ServerLogin.timeout(user._id, 5000)
 
     let secondLogin = await client.post('/api/v1/logins/', {
       username,
@@ -254,6 +251,39 @@ describe('/api/v1/logins', () => {
     })
 
     expect(secondLogin.status).toBe(403)
+  })
+
+  test('Allows login after timeout duration expires', async () => {
+    let { client } = await createTestContext()
+    let { user } = await createTestUser({ username, password })
+
+    if (!user._id) throw new Error('Created user has no _id')
+
+    await client.post('/api/v1/logins/', {
+      username,
+      password,
+    })
+
+    // Set a short timeout (200ms) for testing.
+    ServerLogin.timeout(user._id, 200)
+
+    // Verify login is rejected while in timeout.
+    let duringTimeout = await client.post('/api/v1/logins/', {
+      username,
+      password,
+    })
+    expect(duringTimeout.status).toBe(403)
+
+    // Wait for timeout to expire (200ms + buffer).
+    await new Promise((resolve) => setTimeout(resolve, 250))
+
+    // Login should now succeed.
+    let afterTimeout = await client.post('/api/v1/logins/', {
+      username,
+      password,
+    })
+    expect(afterTimeout.status).toBe(200)
+    expect(afterTimeout.data.login.user.username).toBe(username)
   })
 
   test('Allows forceful login to replace existing session', async () => {
