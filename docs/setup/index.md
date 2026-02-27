@@ -136,7 +136,7 @@ A command-line installer is available to set up METIS on Windows dedicated insta
 To begin, connect to a fresh Windows 11 install and run PowerShell as Administrator. Then, run this command to set up METIS:
 
 ```PowerShell
-iwr -Uri "https://raw.githubusercontent.com/USAFA-Multi-Domain-Lab/METIS-Deployment-Tools/windows-installer-dev/windows-installer.ps1" -OutFile "$env:TEMP\metis-installer.ps1"; & "$env:TEMP\metis-installer.ps1"; rm "$env:TEMP\metis-installer.ps1" -Force
+iwr -Uri "https://raw.githubusercontent.com/USAFA-Multi-Domain-Lab/METIS-Deployment-Tools/windows-installer-dev/windows-installer.ps1?t=$(Get-Date -UFormat %s)" -OutFile "$env:TEMP\metis-installer.ps1"; & "$env:TEMP\metis-installer.ps1"; rm "$env:TEMP\metis-installer.ps1" -Force
 ```
 
 Once complete, METIS will be set up as a service and will start automatically on boot. You can control the METIS server using the following commands:
