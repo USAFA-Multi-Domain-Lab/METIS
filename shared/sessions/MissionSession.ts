@@ -358,6 +358,18 @@ export abstract class MissionSession<
   }
 
   /**
+   * Cheat options which essentially disables all cheats
+   * and allows for a normal session experience.
+   */
+  public static get NO_CHEATS(): TExecutionCheats {
+    return {
+      guaranteedSuccess: false,
+      zeroCost: false,
+      instantaneous: false,
+    }
+  }
+
+  /**
    * Possible states in which a session can be found.
    */
   public static get AVAILABLE_STATES(): TSessionState[] {

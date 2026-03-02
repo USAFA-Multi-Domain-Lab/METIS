@@ -8,9 +8,10 @@ import { compute } from '@client/toolbox'
 import { removeKey } from '@client/toolbox/components'
 import { useEventListener, useMountHandler } from '@client/toolbox/hooks'
 import type { TNodeBlockStatus } from '@shared/missions/nodes/MissionNode'
-import { MapToolbox } from '@shared/toolbox/maps/MapToolbox'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import type { TWithKey } from '@shared/toolbox/objects/ObjectToolbox'
 import { useEffect, useRef, useState } from 'react'
+import { useModalDisplayLogic } from '..'
 import Tooltip from '../../../../../../communication/Tooltip'
 import './ActionExecModal.scss'
 import ActionProperties from './ActionProperties'
@@ -24,12 +25,13 @@ import ExecOption from './ExecOption'
 
 /**
  * Prompt for a session participant to select an action to execute on a node.
+ * @throws If this component is used outside of a {@link MissionMap} context.
  */
-export default function ActionExecModal({
-  node,
-  session,
-  close,
-}: TActionExecModal_P) {
+export default function ActionExecModal(props: TActionExecModal_P) {
+  /* -- PROPS -- */
+
+  const { session } = props
+
   /* -- REFS -- */
 
   /**
@@ -39,39 +41,58 @@ export default function ActionExecModal({
 
   /* -- STATE -- */
 
+  const [node, setNode] = props.node
+  const [nodeName, setNodeName] = useState<string>('')
+  const [actions, setActions] = useState<ClientMissionAction[]>([])
+  const [blockStatus, setBlockStatus] = useState<TNodeBlockStatus>('unblocked')
+  const [pendingOutputSent, setPendingOutputSent] = useState<boolean>(false)
+  const globalContext = useGlobalContext()
+  const [cheats, setCheats] = globalContext.cheats
+  const [showCheats, setShowCheats] = useState<boolean>(false)
   // Whether the drop-down is expanded.
   const [dropDownExpanded, setDropDownExpanded] = useState<boolean>(false)
   // The action selected by the user from the
   // drop down.
   const [selectedAction, selectAction] = useState<ClientMissionAction | null>(
-    () => {
-      // If there is only one action, select it.
-      if (node.actions.size === 1) {
-        return node.actions.values().next().value!
-      }
-      // Otherwise, select nothing.
-      else {
-        return null
-      }
-    },
-  )
-  const [blockStatus, setBlockStatus] = useState<TNodeBlockStatus>(
-    node.blockStatus,
-  )
-  const globalContext = useGlobalContext()
-  const [cheats, setCheats] = globalContext.cheats
-  const [showCheats, setShowCheats] = useState<boolean>(false)
-  // Whether the output has been sent.
-  const [pendingOutputSent, setPendingOutputSent] = useState<boolean>(
-    node.pendingOutputSent,
+    null,
   )
   const { handleError } = globalContext.actions
 
   /* -- HOOKS -- */
 
+  // Reset node-dependent state values when node
+  // changes.
+  useEffect(() => {
+    if (node) {
+      let actions = Array.from(node.actions.values())
+      setNodeName(node.name)
+      setActions(actions)
+      setBlockStatus(node.blockStatus)
+      setPendingOutputSent(node.pendingOutputSent)
+      selectAction(() => {
+        // If there is only one action, select it.
+        if (actions.length === 1) {
+          return actions[0]
+        }
+        // Otherwise, select nothing.
+        else {
+          return null
+        }
+      })
+    } else {
+      setNodeName('')
+      setActions([])
+      setBlockStatus('unblocked')
+      setPendingOutputSent(false)
+      selectAction(null)
+    }
+  }, [node])
+
   useEventListener(node, ['set-blocked', 'output-sent'], () => {
-    setBlockStatus(node.blockStatus)
-    setPendingOutputSent(node.pendingOutputSent)
+    if (node) {
+      setBlockStatus(node.blockStatus)
+      setPendingOutputSent(node.pendingOutputSent)
+    }
   })
 
   /* -- COMPUTED -- */
@@ -150,16 +171,11 @@ export default function ActionExecModal({
   /**
    * Root class name for the component.
    */
-  const rootClass = compute<string>(() => {
-    let classes: string[] = ['ActionExecModal', 'MapModal']
-
-    // Add selection class based on whether
-    // an action is selected.
-    if (selectedAction) classes.push('ActionSelected')
-    else classes.push('ActionUnselected')
-
-    return classes.join(' ')
-  })
+  const rootClasses = new ClassList('ActionExecModal', 'MapModal').switch(
+    'ActionSelected',
+    'ActionUnselected',
+    selectedAction,
+  )
 
   /**
    * Drop down class name for the component.
@@ -168,7 +184,7 @@ export default function ActionExecModal({
     let classes: string[] = ['Dropdown']
 
     // Disable drop down if there is less than two actions.
-    if (node.actions.size < 2) classes.push('Disabled')
+    if (actions.length < 2) classes.push('Disabled')
     // Add expanded class based on whether the drop down
     // is expanded.
     if (dropDownExpanded) classes.push('Expanded')
@@ -177,7 +193,9 @@ export default function ActionExecModal({
     return classes.join(' ')
   })
 
-  /* -- EFFECTS -- */
+  /* -- EFFECTS CONTINUED -- */
+
+  useModalDisplayLogic(Boolean(node), rootClasses)
 
   // Handle component mount.
   useMountHandler((done) => {
@@ -190,25 +208,6 @@ export default function ActionExecModal({
     done()
   })
 
-  useEffect(() => {
-    // If there are ever no actions to choose from,
-    // close the modal.
-    if (node.actions.size === 0) {
-      close()
-    }
-    // If there is ever only one action to choose from,
-    // select it.
-    else if (node.actions.size === 1) {
-      // Get the action.
-      let action: ClientMissionAction = node.actions.values().next().value!
-
-      // Select the action if not already selected.
-      if (selectedAction?._id !== action._id) {
-        selectAction(node.actions.values().next().value!)
-      }
-    }
-  }, [node.actions.size])
-
   /* -- FUNCTIONS -- */
 
   /**
@@ -216,7 +215,7 @@ export default function ActionExecModal({
    */
   const onCloseClick = () => {
     setDropDownExpanded(false)
-    close()
+    setNode(null)
   }
 
   /**
@@ -240,7 +239,7 @@ export default function ActionExecModal({
         cheats,
         onError: (message) => handleError({ message, notifyMethod: 'bubble' }),
       })
-      close()
+      setNode(null)
     }
   }
 
@@ -249,22 +248,19 @@ export default function ActionExecModal({
   /**
    * JSX for the drop down options.
    */
-  const optionsJsx = MapToolbox.mapToArray(
-    node.actions,
-    (action: ClientMissionAction) => {
-      return (
-        <ExecOption
-          key={action._id}
-          session={session}
-          action={action}
-          select={() => {
-            selectAction(action)
-            setDropDownExpanded(false)
-          }}
-        />
-      )
-    },
-  )
+  const optionsJsx = actions.map((action: ClientMissionAction) => {
+    return (
+      <ExecOption
+        key={action._id}
+        session={session}
+        action={action}
+        select={() => {
+          selectAction(action)
+          setDropDownExpanded(false)
+        }}
+      />
+    )
+  })
 
   /**
    * JSX for the drop down.
@@ -294,7 +290,7 @@ export default function ActionExecModal({
     // Render JSX.
     return (
       <div className='Heading'>
-        <div className='NodeName'>{node.name}</div>
+        <div className='NodeName'>{nodeName}</div>
         {!showCheats ? (
           <div className='DropDownLabel'>{`Available actions:`}</div>
         ) : null}
@@ -375,7 +371,7 @@ export default function ActionExecModal({
 
   // Render root JSX.
   return (
-    <div className={rootClass}>
+    <div className={rootClasses.value}>
       {headingJsx}
       {closeJsx}
       {dropDownJsx}
@@ -387,20 +383,15 @@ export default function ActionExecModal({
 }
 
 /**
- * Props for `ActionExecModal` component.
+ * Props for {@link ActionExecModal} component.
  */
-export type TActionExecModal_P = {
+export interface TActionExecModal_P {
   /**
    * The node on which to execute an action.
    */
-  node: ClientMissionNode
+  node: TReactState<ClientMissionNode | null>
   /**
    * The session client of which the node is a part.
    */
   session: SessionClient
-  /**
-   * Closes the modal.
-   * @note This should stop the modal from rendering statefully.
-   */
-  close: () => void
 }

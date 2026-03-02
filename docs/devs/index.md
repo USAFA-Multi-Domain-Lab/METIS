@@ -65,4 +65,5 @@ Technical documentation for developers working on METIS core system, creating in
 - **[Setup Instructions](/docs/setup/index.md)** - Get your development environment running
 - **[API Reference](/docs/api/index.md)** - Complete REST API documentation
 - **[Target Environment Integration](/docs/target-env-integration/index.md)** - Integration development guide
+- **[Database Backups](backups.md)** - How backups work and how to restore them
 - **[Changelog](/docs/changelog.md)** - Release notes and version history

@@ -1,6 +1,93 @@
 @use './config.scss' as *;
 @forward './config.scss';
 
+/* -- MIXINS -- */
+
+/**
+ * Creates an alert pulse animation using the specified color.
+ * @param {color} $color - The color to use for the alert pulse animation. Defaults to $color-neutral.
+ */
+@mixin alert-pulse-animation($color: $color-neutral) {
+  $animation-name: alert-pulse-#{unique-id()};
+
+  @keyframes #{$animation-name} {
+    0% {
+      border-color: $color;
+    }
+    50% {
+      border-color: $color-primary-light;
+    }
+    100% {
+      border-color: $color;
+    }
+  }
+  animation: $animation-name 2s infinite;
+}
+
+@mixin alert-border-variation($pulse: false) {
+  &.SeverityLevel_info {
+    @if $pulse {
+      @include alert-pulse-animation($color-accent);
+    } @else {
+      border-color: $color-accent;
+    }
+  }
+  &.SeverityLevel_suspicious {
+    @if $pulse {
+      @include alert-pulse-animation($color-neutral);
+    } @else {
+      border-color: $color-neutral;
+    }
+  }
+  &.SeverityLevel_warning {
+    @if $pulse {
+      @include alert-pulse-animation($color-warning);
+    } @else {
+      border-color: $color-warning;
+    }
+  }
+  &.SeverityLevel_danger {
+    @if $pulse {
+      @include alert-pulse-animation($color-failure);
+    } @else {
+      border-color: $color-failure;
+    }
+  }
+}
+
+@mixin alert-icon-style-variation {
+  .Icon {
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+  }
+
+  &.SeverityLevel_info {
+    .Icon {
+      mask-image: url('../../assets/images/icons/info.svg');
+      background-color: $color-accent;
+    }
+  }
+  &.SeverityLevel_suspicious {
+    .Icon {
+      mask-image: url('../../assets/images/icons/warning-transparent.svg');
+      background-color: $color-neutral;
+    }
+  }
+  &.SeverityLevel_warning {
+    .Icon {
+      mask-image: url('../../assets/images/icons/warning-transparent.svg');
+      background-color: $color-warning;
+    }
+  }
+  &.SeverityLevel_danger {
+    .Icon {
+      mask-image: url('../../assets/images/icons/warning-transparent.svg');
+      background-color: $color-failure;
+    }
+  }
+}
+
 @mixin hide() {
   pointer-events: none !important;
   opacity: 0 !important;
@@ -43,7 +130,8 @@
 @mixin x-gradient {
   $opacity: 0.5;
   $gradient-color: rgba($color-accent-light, $opacity);
-  $fill: transparent 0% calc(50% - 1px),
+  $fill:
+    transparent 0% calc(50% - 1px),
     $gradient-color calc(50% - 1px) calc(50% + 1px),
     transparent calc(50% + 1px) 100%;
   $linear-grad1: linear-gradient(to bottom right, $fill);
@@ -61,7 +149,8 @@
  */
 @mixin background-image {
   &.BackgroundImageSmall {
-    background-image: linear-gradient(
+    background-image:
+      linear-gradient(
         to bottom right,
         transparent 0% 70%,
         rgba(#fff, 0.1) 100%
@@ -70,7 +159,8 @@
   }
 
   &.BackgroundImageLarge {
-    background-image: linear-gradient(
+    background-image:
+      linear-gradient(
         to bottom right,
         transparent 0% 70%,
         rgba(#fff, 0.1) 100%

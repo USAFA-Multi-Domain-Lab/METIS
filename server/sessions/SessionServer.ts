@@ -19,6 +19,7 @@ import type { ServerTargetEnvironment } from '@server/target-environments/Server
 import type { ServerUser } from '@server/users/ServerUser'
 import type {
   TClientEvents,
+  TRequestEvents,
   TRequestOfResponse,
   TServerEvents,
   TServerMethod,
@@ -36,6 +37,7 @@ import type {
   TMissionJsonOptions,
 } from '@shared/missions/Mission'
 import type { MissionComponent } from '@shared/missions/MissionComponent'
+import { type TNodeAlertSeverityLevel } from '@shared/missions/nodes/NodeAlert'
 import type { TMemberRoleId } from '@shared/sessions/members/MemberRole'
 import { MemberRole } from '@shared/sessions/members/MemberRole'
 import type { TSessionMemberJson } from '@shared/sessions/members/SessionMember'
@@ -749,6 +751,9 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     connection.addEventListener('request-send-output', (data) =>
       this.onRequestSendOutput(member, data),
     )
+    connection.addEventListener('request-acknowledge-node-alert', (data) =>
+      this.onRequestAcknowledgeNodeAlert(member, data),
+    )
   }
 
   /**
@@ -896,6 +901,34 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
           request,
         })
       }
+    }
+  }
+
+  private buildFullfilledRequest<TMethod extends keyof TRequestEvents>(
+    member: ServerSessionMember,
+    event: TClientEvents[TMethod],
+  ): TRequestOfResponse {
+    return member.connection.buildResponseReqData(event, {
+      fulfilled: true,
+    })
+  }
+
+  private requireSessionState = (
+    member: ServerSessionMember,
+    event: TClientEvents[keyof TRequestEvents],
+    requiredState: TSessionState,
+  ): void => {
+    // Build request for response data.
+    let fulfilledRequest = this.buildFullfilledRequest(member, event)
+
+    if (this._state !== requiredState) {
+      console.log(this._state, requiredState)
+      let error = new ServerEmittedError(
+        ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
+        { request: fulfilledRequest },
+      )
+      member.emitError(error)
+      throw error
     }
   }
 
@@ -1711,6 +1744,45 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   }
 
   /**
+   * Called when a member requests to acknowledge a node alert.
+   * @param member The member acknowledging the node alert.
+   * @param event The event emitted by the member.
+   */
+  private onRequestAcknowledgeNodeAlert = (
+    member: ServerSessionMember,
+    event: TClientEvents['request-acknowledge-node-alert'],
+  ): void => {
+    try {
+      this.requireSessionState(member, event, 'started')
+
+      let { nodeId, alertId } = event.data
+      let node = this.mission.getNodeById(nodeId)
+      let alert = node?.getAlert(alertId)
+      let request = this.buildFullfilledRequest(member, event)
+
+      if (!node || !alert) {
+        return member.emitError(
+          new ServerEmittedError(ServerEmittedError.CODE_NODE_ALERT_NOT_FOUND, {
+            request,
+          }),
+        )
+      }
+
+      alert.acknowledged = true
+
+      // Communicate with all members of the force
+      // that the alert has now been acknowledged.
+      for (let { connection } of this.getMembersForForce(node.forceId)) {
+        connection.emit('node-alert-acknowledged', {
+          method: 'node-alert-acknowledged',
+          data: event.data,
+          request,
+        })
+      }
+    } catch {}
+  }
+
+  /**
    * Sub-handler of `onRequestExecuteAction` which processes the
    * initiation of an action execution.
    * @param member The member provided to `onRequestExecuteAction`.
@@ -1749,31 +1821,6 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     let message = /*html*/ `
               <p>Executing <i><action-name></action-name></i> on <i><node-name></node-name></i>.</p>
               <i><action-description></action-description></i>
-              <p></p>
-              <p class="DetailDisplay">
-                <span class="Label">Success Chance</span>
-                <span class="Value">
-                  <success-chance></success-chance>
-                </span>
-              </p>
-              <p class="DetailDisplay">
-                <span class="Label">Time</span>
-                <span class="Value">
-                  <time-remaining></time-remaining> (<process-time></process-time>)
-                </span>
-              </p>
-              <p class="DetailDisplay">
-                <span class="Label">Cost</span>
-                <span class="Value">
-                  <resource-cost></resource-cost>
-                </span>
-              </p>
-              <p class="DetailDisplay">
-                <span class="Label">Opens Node</span>
-                <span class="Value">
-                  <opens-node></opens-node>
-                </span>
-              </p>
             `
 
     // Send the output JSON to the force.
@@ -2312,6 +2359,32 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
     // Notify all members of this force about the node's state change.
     this.emitModifierEnacted(node.force, payload)
+  }
+
+  /**
+   * Adds an alert to the given node with the specified severity level.
+   * @param node The node to which the alert will be added.
+   * @param message The message to display when the alert is opened.
+   * @param severityLevel The severity level of the alert, indicating
+   * the importance/urgency of the alert.
+   * @note By default, this will add the alert to the node to which the current
+   * effect belongs, unless configured otherwise.
+   */
+  public addNodeAlert = (
+    node: ServerMissionNode,
+    message: string,
+    severityLevel: TNodeAlertSeverityLevel,
+  ) => {
+    // Confirm the node exists.
+    this.confirmComponentInMission(node)
+
+    // Add the alert to the node.
+    let alert = node.alert(message, severityLevel)
+    this.emitModifierEnacted(node.force, {
+      key: 'node-new-alert',
+      nodeId: node._id,
+      alert: alert.toJson(),
+    })
   }
 
   /**

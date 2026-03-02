@@ -12,7 +12,7 @@ import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { DetailLargeString } from '../../../../content/form/DetailLargeString'
 import { DetailLocked } from '../../../../content/form/DetailLocked'
 import { DetailString } from '../../../../content/form/DetailString'
-import DetailDropdown from '../../../../content/form/dropdown/DetailDropdown'
+import { DetailDropdown } from '../../../../content/form/dropdown/DetailDropdown'
 import ArgEntry from '../../target-effects/args/ArgEntry'
 import Entry from '../Entry'
 
@@ -100,12 +100,12 @@ export default function EffectEntry<TType extends TEffectType>({
       />
       <DetailLocked
         label='Target Environment'
-        stateValue={environment?.name ?? 'No target environment selected.'}
+        value={environment?.name ?? 'No target environment selected.'}
         disabled={viewMode === 'preview'}
       />
       <DetailLocked
         label='Target'
-        stateValue={target?.name ?? 'No target selected.'}
+        value={target?.name ?? 'No target selected.'}
         disabled={viewMode === 'preview'}
       />
       <ArgEntry

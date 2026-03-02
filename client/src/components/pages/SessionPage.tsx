@@ -13,6 +13,7 @@ import {
   useRequireLogin,
 } from '@client/toolbox/hooks'
 import { useSessionRedirects } from '@client/toolbox/hooks/sessions'
+import type { NodeAlert } from '@shared/missions/nodes/NodeAlert'
 import { useEffect, useState } from 'react'
 import type { TPage_P } from '.'
 import { DefaultPageLayout } from '.'
@@ -25,13 +26,25 @@ import PanelLayout from '../content/general-layout/panels/PanelLayout'
 import PanelView from '../content/general-layout/panels/PanelView'
 import SessionMembersPanel from '../content/session/members/SessionMembersPanel'
 import MissionMap from '../content/session/mission-map/MissionMap'
+import NodeAlertIndicator from '../content/session/mission-map/ui/indicators/NodeAlertIndicator'
 import ActionExecModal from '../content/session/mission-map/ui/overlay/modals/action-execution/ActionExecModal'
 import type { TTabBarTab } from '../content/session/mission-map/ui/tabs/TabBar'
+import NodeAlertBox from '../content/session/mission-map/ui/toasts/NodeAlertBox'
 import { OutputPanel } from '../content/session/output/'
 import StatusBar from '../content/session/StatusBar'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
 import If from '../content/util/If'
 import './SessionPage.scss'
+
+/* -- CONSTANTS -- */
+
+/**
+ * The default size of the output panel (right panel) on
+ * the session page, in pixels.
+ */
+const SECONDARY_PANEL_DEFAULT_SIZE: number = 400 //px
+
+/* -- COMPONENT -- */
 
 /**
  * Renders the session page.
@@ -79,13 +92,11 @@ export default function SessionPage({
   const [resetTeardownFailed, setResetTeardownFailed] = useState<boolean>(
     session.teardownFailed,
   )
-
-  /* -- VARIABLES -- */
-
-  // Dynamic (default) sizing of the output panel.
-  let panel2DefaultSize: number = 400
-  // The current aspect ratio of the window.
-  let currentAspectRatio: number = window.innerWidth / window.innerHeight
+  const [pendingAlerts, setPendingAlerts] = useState<NodeAlert[]>(
+    selectedForce?.pendingAlerts ?? [],
+  )
+  const [activePendingAlert, setActivePendingAlert] =
+    useState<NodeAlert | null>(null)
 
   /* -- FUNCTIONS -- */
 
@@ -165,12 +176,36 @@ export default function SessionPage({
         break
     }
   }
+  /**
+   * Syncs the resources remaining state with
+   * the selected force.
+   */
+  const syncResources = () => {
+    setResourcesRemaining(selectedForce?.resourcesRemaining ?? 0)
+  }
+
+  /**
+   * Rechecks the current state of the selected force's
+   * pending alerts.
+   */
+  const refreshAlerts = () => {
+    setPendingAlerts(selectedForce?.pendingAlerts ?? [])
+  }
 
   /**
    * Handles the selection of a node in the mission map by the user.
    * @param node The node that was selected.
    */
   const onNodeSelect = async (node: ClientMissionNode): Promise<void> => {
+    // If the node has pending alerts,
+    // display the next one, overriding all other
+    // logic.
+    let nextAlert = node.nextPendingAlert
+    if (nextAlert) {
+      setActivePendingAlert(nextAlert)
+      return
+    }
+
     // If the member is not authorized to manipulate nodes,
     // notify the user and return.
     if (!session.member.isAuthorized('manipulateNodes')) return
@@ -299,14 +334,112 @@ export default function SessionPage({
   }
 
   /**
-   * Syncs the resources remaining state with
-   * the selected force.
+   * Callback for when the user clicks the alert indicator,
+   * requesting to see the next pending alert, starting with that
+   * of highest priority. In doing so, the map will center
+   * on the node with the alert.
    */
-  const syncResources = () => {
-    setResourcesRemaining(selectedForce?.resourcesRemaining ?? 0)
+  const onClickAlertIndicator = () => {
+    let nextPendingAlert = selectedForce?.nextPendingAlert
+    let alertNode = selectedForce?.getNode(
+      nextPendingAlert?.nodeId ?? 'no-alert-node',
+    )
+
+    if (!selectedForce || !nextPendingAlert || !alertNode) {
+      console.warn('Cannot show alert; missing data.')
+      return
+    }
+
+    setActivePendingAlert(nextPendingAlert)
+    alertNode.requestCenterOnMap()
   }
 
-  /* -- COMPUTED -- */
+  /**
+   * Callback for when the user requests to see
+   * the next pending alert.
+   */
+  const onNextPendingAlert = async () => {
+    let currentAlertNode = selectedForce?.getNode(
+      activePendingAlert?.nodeId ?? 'no-alert-node',
+    )
+
+    if (!selectedForce || !activePendingAlert || !currentAlertNode) {
+      console.warn('Cannot acknowledge alert; missing data.')
+      return
+    }
+
+    try {
+      // Pre-update acknowledged to true for immediate
+      // responsivity. If an error is thrown, this will
+      // change back.
+      currentAlertNode.onAlertAcknowledgement(activePendingAlert._id)
+      refreshAlerts()
+
+      await session.$acknowledgeNodeAlert(
+        activePendingAlert._id,
+        activePendingAlert.nodeId,
+      )
+
+      // After acknowledging, get the next pending alert
+      let nextPendingAlert = selectedForce.nextPendingAlert
+      let nextAlertNode = selectedForce.getNode(
+        nextPendingAlert?.nodeId ?? 'no-alert-node',
+      )
+
+      if (nextPendingAlert && nextAlertNode) {
+        setActivePendingAlert(nextPendingAlert)
+        nextAlertNode.requestCenterOnMap()
+      } else {
+        setActivePendingAlert(null)
+      }
+    } catch (error) {
+      currentAlertNode.onAlertAcknowledgementError(activePendingAlert._id)
+      refreshAlerts()
+      handleError({
+        message: 'Failed to acknowledge node alert.',
+        notifyMethod: 'bubble',
+      })
+    }
+  }
+
+  /**
+   * Callback for when the user requests to acknowledge
+   * the active pending alert, dismissing the animation and alert
+   * box.
+   */
+  const onAcknowledgePendingAlert = async () => {
+    let alertNode = selectedForce?.getNode(
+      activePendingAlert?.nodeId ?? 'no-alert-node',
+    )
+
+    if (!selectedForce || !activePendingAlert || !alertNode) {
+      console.warn('Cannot acknowledge alert; missing data.')
+      return
+    }
+
+    try {
+      // Pre-update acknowledged to true for immediate
+      // responsivity. If an error is thrown, this will
+      // change back.
+      alertNode.onAlertAcknowledgement(activePendingAlert._id)
+      setActivePendingAlert(null)
+      refreshAlerts()
+
+      await session.$acknowledgeNodeAlert(
+        activePendingAlert._id,
+        activePendingAlert.nodeId,
+      )
+    } catch (error) {
+      alertNode.onAlertAcknowledgementError(activePendingAlert._id)
+      refreshAlerts()
+      handleError({
+        message: 'Failed to acknowledge node alert.',
+        notifyMethod: 'bubble',
+      })
+    }
+  }
+
+  /* -- COMPUTED  -- */
 
   /**
    * Props for navigation.
@@ -405,6 +538,30 @@ export default function SessionPage({
     }
   })
 
+  /**
+   * The initial size of the secondary panel (output panel) in
+   * pixels. This is responsive and will adjust based on the
+   * aspect ratio and width of the window.
+   */
+  const secondaryPanelInitialSize = compute<number>(() => {
+    let result: number = SECONDARY_PANEL_DEFAULT_SIZE
+    let aspectRatio: number = window.innerWidth / window.innerHeight
+
+    if (aspectRatio >= 16 / 9 && window.innerWidth >= 1850) {
+      result = window.innerWidth * 0.4
+    }
+
+    return result
+  })
+
+  /**
+   * The next pending alert for the selected
+   * force, if it exists.
+   */
+  const nextPendingAlert = compute<NodeAlert | null>(() => {
+    return selectedForce?.nextPendingAlert ?? null
+  })
+
   /* -- EFFECTS -- */
 
   useMountHandler((done) => {
@@ -496,25 +653,31 @@ export default function SessionPage({
     () => setLocalFiles([...mission.files]),
   )
 
+  // Recheck whether there are pending alerts
+  // whenever a new-alert event is received from
+  // the server.
+  useEventListener(
+    server,
+    ['modifier-enacted', 'node-alert-acknowledged'],
+    () => {
+      refreshAlerts()
+    },
+    [selectedForce],
+  )
+
   // Update the resources remaining state whenever the
-  // force changes.
-  useEffect(() => syncResources(), [selectedForce])
+  // force changes. Also check the new force if there
+  // are pending alerts.
+  useEffect(() => {
+    syncResources()
+    refreshAlerts()
+  }, [selectedForce])
 
   useEffect(() => {
     if (resetInitiated) {
       navButtonEngine.disable('stop').disable('reset')
     }
   }, [resetInitiated])
-
-  /* -- PRE-RENDER PROCESSING -- */
-
-  // If the aspect ratio is greater than or equal to 16:9,
-  // and the window width is greater than or equal to 1850px,
-  // then the default size of the output panel will be 40%
-  // of the width of the window.
-  if (currentAspectRatio >= 16 / 9 && window.innerWidth >= 1850) {
-    panel2DefaultSize = window.innerWidth * 0.4
-  }
 
   /* -- RENDER -- */
 
@@ -541,45 +704,37 @@ export default function SessionPage({
     )
   })
 
-  /**
-   * JSX for the overlay content.
-   */
-  const overlayContentJsx = compute((): TReactElement | undefined => {
-    // If there is a selected node and not
-    // a selected action, render a prompt to
-    // select an action for the node.
-    if (nodeToExecute) {
-      return (
-        <ActionExecModal
-          node={nodeToExecute}
-          session={session}
-          close={() => setNodeToExecute(null)}
-        />
-      )
-    }
-    // Else, don't render any overlay content.
-    else {
-      return undefined
-    }
-  })
-
   // Return the rendered component.
   return (
     <div className={rootClass}>
       <DefaultPageLayout navigation={navigation} includeFooter={false}>
         {topBarJsx}
-        <PanelLayout initialSizes={['fill', 400]}>
+        <PanelLayout initialSizes={['fill', secondaryPanelInitialSize]}>
           <Panel>
             <PanelView title='Map'>
               <MissionMap
                 mission={mission}
-                overlayContent={overlayContentJsx}
                 buttonEngine={mapButtonEngine}
                 tabs={mapTabs}
                 showMasterTab={false}
                 onNodeSelect={onNodeSelect}
                 selectedForce={[selectedForce, selectForce]}
-              />
+              >
+                <ActionExecModal
+                  node={[nodeToExecute, setNodeToExecute]}
+                  session={session}
+                />
+                <NodeAlertIndicator
+                  nextPendingAlert={nextPendingAlert}
+                  onClick={onClickAlertIndicator}
+                />
+                <NodeAlertBox
+                  alert={activePendingAlert}
+                  areMorePendingAlerts={pendingAlerts.length > 1}
+                  next={onNextPendingAlert}
+                  acknowledge={onAcknowledgePendingAlert}
+                />
+              </MissionMap>
             </PanelView>
           </Panel>
           <Panel>

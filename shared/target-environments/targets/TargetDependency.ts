@@ -32,11 +32,6 @@ export const AVAILABLE_DEPENDENCIES_RAW = [
       expected.some((x) => x === value),
   } as const,
   {
-    name: 'equals-every',
-    condition: (value: any, expected: TDependencyArg[]) =>
-      expected.every((x) => x === value),
-  } as const,
-  {
     name: 'not-equals',
     condition: (value: any, unexpected: TDependencyArg[]) =>
       unexpected[0] !== value,
@@ -45,11 +40,6 @@ export const AVAILABLE_DEPENDENCIES_RAW = [
     name: 'not-equals-some',
     condition: (value: any, unexpected: TDependencyArg[]) =>
       unexpected.some((x) => x !== value),
-  } as const,
-  {
-    name: 'not-equals-every',
-    condition: (value: any, unexpected: TDependencyArg[]) =>
-      unexpected.every((x) => x !== value),
   } as const,
   {
     name: 'force',
@@ -185,18 +175,6 @@ export class TargetDependency implements TDependency {
   ) => TargetDependency.SELECT('equals-some', dependentId, expected)
 
   /**
-   * Ensures the argument's (*referenced by the argument's ID*) value(s) match all of the expected values.
-   * @param dependentId The ID of the dependent argument.
-   * @param expected The expected values.
-   * @returns A new dependency that ensures the argument's value(s) match all of the expected values.
-   * @example TargetDependency.EQUALS_EVERY('fruit', ['apple', 'grape', 'banana', 'orange'])
-   */
-  public static EQUALS_EVERY = (
-    dependentId: string,
-    expected: TDependencyArg[],
-  ) => TargetDependency.SELECT('equals-every', dependentId, expected)
-
-  /**
    * Ensures the argument's (*referenced by the argument's ID*) value doesn't match the unexpected value.
    * @param dependentId The ID of the dependent argument.
    * @param unexpected The unexpected value.
@@ -219,18 +197,6 @@ export class TargetDependency implements TDependency {
     dependentId: string,
     unexpected: TDependencyArg[],
   ) => TargetDependency.SELECT('not-equals-some', dependentId, unexpected)
-
-  /**
-   * Ensures the argument's (*referenced by the argument's ID*) value(s) don't match all of the unexpected values.
-   * @param dependentId The ID of the dependent argument.
-   * @param unexpected The unexpected values.
-   * @returns A new dependency that ensures the argument's value(s) don't match all of the unexpected values.
-   * @example TargetDependency.NOT_EQUALS_EVERY('fruit', ['apple', 'grape', 'banana', 'orange'])
-   */
-  public static NOT_EQUALS_EVERY = (
-    dependentId: string,
-    unexpected: TDependencyArg[],
-  ) => TargetDependency.SELECT('not-equals-every', dependentId, unexpected)
 
   /**
    * Checks if the argument's (*referenced by the argument's ID*) value is a force object.

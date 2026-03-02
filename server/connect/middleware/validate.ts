@@ -130,6 +130,13 @@ export const clientEventSchemas: TClientEventSchemas = {
       nodeId: zod.string(),
     }),
   ),
+  'request-acknowledge-node-alert': zodRequestEvent(
+    'request-acknowledge-node-alert',
+    zod.object({
+      alertId: zod.string(),
+      nodeId: zod.string(),
+    }),
+  ),
   'request-current-session': zodRequestEvent(
     'request-current-session',
     zod.object({}),
@@ -204,15 +211,15 @@ export type TZodify<T extends object> = ZodObject<
         ? ZodOptional<ZodType<Required<T>[K]>>
         : ZodType<Required<T>[K]>
       : Required<T>[K] extends Record<string, any>
-      ? {} extends Pick<T, K>
-        ? ZodOptional<ZodType<Required<T>[K]>>
-        : ZodType<Required<T>[K]>
-      : Required<T>[K] extends object
-      ? {} extends Pick<T, K>
-        ? ZodOptional<TZodify<Required<T>[K]>>
-        : TZodify<Required<T>[K]>
-      : {} extends Pick<T, K>
-      ? ZodOptional<ZodType<T[K]>>
-      : ZodType<T[K]>
+        ? {} extends Pick<T, K>
+          ? ZodOptional<ZodType<Required<T>[K]>>
+          : ZodType<Required<T>[K]>
+        : Required<T>[K] extends object
+          ? {} extends Pick<T, K>
+            ? ZodOptional<TZodify<Required<T>[K]>>
+            : TZodify<Required<T>[K]>
+          : {} extends Pick<T, K>
+            ? ZodOptional<ZodType<T[K]>>
+            : ZodType<T[K]>
   }>
 >

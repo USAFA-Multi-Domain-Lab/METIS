@@ -96,7 +96,7 @@ export default function MissionFileEntry({
     <Entry missionComponent={file} svgEngines={[svgEngine]}>
       <DetailLocked
         label='Original Name'
-        stateValue={file.originalName}
+        value={file.originalName}
         disabled={viewMode === 'preview'}
         key={`${file._id}_originalName`}
       />

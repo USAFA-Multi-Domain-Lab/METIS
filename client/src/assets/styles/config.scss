@@ -21,7 +21,10 @@ $color-failure-light: color.adjust($color-failure, $lightness: 18%);
 $color-failure-dark: color.adjust($color-failure, $lightness: -49%);
 
 $color-neutral: #ecff43;
+$color-neutral-light: color.adjust($color-neutral, $lightness: 26%);
 $color-neutral-dark: color.adjust($color-neutral, $lightness: -47%);
+
+$color-warning: #ffa200;
 
 $color-faded: rgba($color-primary-light, 0.5);
 
@@ -35,9 +38,11 @@ $font-family-primary: monospace, sans-serif;
 $z-map-tab-bar-controls: 1;
 $z-map-pan-ctrl-inactive: 2;
 $z-map-scene: 3;
-$z-map-hud: 4;
-$z-map-pan-ctrl-active: 5;
-$z-map-overlay: 6;
+$z-map-toasts: 4;
+$z-map-hud: 5;
+$z-map-pan-ctrl-active: 6;
+$z-map-overlay: 7;
+$z-map-modals: 8;
 
 $z-index-pending-modal: 45;
 $z-index-navigation: 50;

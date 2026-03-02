@@ -1,31 +1,13 @@
 @use '@client/assets/styles/config.scss' as *;
 
-@mixin ineffective-property($content) {
-  .Value {
-    text-decoration: line-through;
-    opacity: 0.5;
-  }
-
-  &::after {
-    content: $content;
-    color: $color-accent-light;
-    font-size: 0.9em;
-    font-style: italic;
-    font-weight: bold;
-  }
-}
-
 .ActionProperties {
-  display: flex;
-  align-items: center;
-  flex-flow: row wrap;
-  gap: 0.75em;
-  background-color: $color-secondary;
-  border-radius: 0.6em;
-  padding: 1.5em 2em;
-  font-size: 0.85em;
-
   .ActionDescription {
     width: 100%;
+  }
+
+  .PropertyBadge {
+    &.Strikethrough {
+      width: 100%;
+    }
   }
 }

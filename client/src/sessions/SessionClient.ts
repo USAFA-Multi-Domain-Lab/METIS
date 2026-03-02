@@ -14,6 +14,7 @@ import { ClientUser } from '@client/users/ClientUser'
 import type {
   TFileAccessModifierData,
   TGenericServerEvents,
+  TNodeNewAlertData,
   TNodeOpenStateData,
   TResponseEvents,
   TServerEvents,
@@ -182,6 +183,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       ['modifier-enacted', this.onModifierEnacted],
       ['send-output', this.onSendOutput],
       ['output-sent', this.onOutputSent],
+      ['node-alert-acknowledged', this.onNodeAlertAcknowledged],
       ['kicked', this.onKicked],
       ['banned', this.onBanned],
       ['dismissed', this.onDismissed],
@@ -894,10 +896,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    * @resolves When the role has been assigned.
    * @rejects If the role failed to be assigned.
    */
-  public async $assignRole(
-    memberId: string,
-    roleId: TMemberRoleId,
-  ): Promise<void> {
+  public $assignRole(memberId: string, roleId: TMemberRoleId): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       // Callback for errors.
       const onError = (message: string) => {
@@ -925,6 +924,47 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
           onResponse: (event) => {
             switch (event.method) {
               case 'role-assigned':
+                return resolve()
+              case 'error':
+                return onError(event.message)
+              default:
+                return onError(
+                  `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
+                )
+            }
+          },
+        },
+      )
+    })
+  }
+
+  /**
+   * Sends a request to the server to mark a node alert
+   * as acknowledged.
+   * @param alertId The ID of the alert.
+   * @param nodeId The ID of the node to which the alert belongs.
+   * @resolves When the alert has been acknowledged.
+   * @rejects If the alert failed to be acknowledged.
+   */
+  public $acknowledgeNodeAlert(alertId: string, nodeId: string): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      // Callback for errors.
+      const onError = (message: string) => {
+        let error: Error = new Error(message)
+        console.error(message)
+        console.error(error)
+        reject(error)
+      }
+
+      // Emit a request to acknowledge the node alert.
+      this.server.request(
+        'request-acknowledge-node-alert',
+        { alertId, nodeId },
+        `Acknowledging node alert "${alertId}" on node "${nodeId}".`,
+        {
+          onResponse: (event) => {
+            switch (event.method) {
+              case 'node-alert-acknowledged':
                 return resolve()
               case 'error':
                 return onError(event.message)
@@ -1289,6 +1329,9 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
           revealedDescendantPrototypes: data.revealedDescendantPrototypes,
         })
         break
+      case 'node-new-alert':
+        this.onNodeAlert(data)
+        break
       case 'node-action-success-chance':
         this.modifySuccessChance(
           data.successChanceOperand,
@@ -1469,6 +1512,22 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   }
 
   /**
+   * Handles an event from the server indicating that a
+   * node alert has been acknowledged.
+   * @param data The event data containing the alert details.
+   */
+  private onNodeAlertAcknowledged = (
+    event: TServerEvents['node-alert-acknowledged'],
+  ): void => {
+    const { nodeId, alertId } = event.data
+    const node = this.mission.getNodeById(nodeId)
+    if (!node) {
+      return console.warn(`Node "${nodeId}" was not found.`)
+    }
+    node.onAlertAcknowledgement(alertId)
+  }
+
+  /**
    * Handles node open/close state change events from the server.
    * @param data The event data containing the node ID, new state, and revealed descendants.
    * @note This coordinates updates at both the prototype (template) and node (instance) levels.
@@ -1506,6 +1565,22 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
 
     // Rebuild the action map if new nodes were revealed during opening.
     if (revealedDescendants) this.mapActions()
+  }
+
+  /**
+   * Handles an event from the server indicating a new alert
+   * was created for a node.
+   * @param data The event data containing the alert details.
+   */
+  private onNodeAlert = (data: TNodeNewAlertData): void => {
+    const { nodeId, alert } = data
+    const node = this.mission.getNodeById(nodeId)
+    if (!node) {
+      return console.warn(
+        `Node "${nodeId}" was not found. This is likely due to an effect being applied to a node that has not yet been revealed to the user.`,
+      )
+    }
+    node.onAlert(alert)
   }
 
   /**

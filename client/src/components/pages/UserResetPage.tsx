@@ -205,7 +205,7 @@ export default function UserResetPage(): TReactElement | null {
     <div className='UserResetPage Page'>
       <DefaultPageLayout navigation={navigation}>
         <div className='ResetUserEntry'>
-          <DetailLocked label='Username' stateValue={user.username} />
+          <DetailLocked label='Username' value={user.username} />
           <DetailString
             fieldType='required'
             handleOnBlur={handlePassword1Error}

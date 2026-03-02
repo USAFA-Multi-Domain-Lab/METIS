@@ -16,6 +16,7 @@ import type {
   TMissionPrototypeOptions,
 } from '@shared/missions/nodes/MissionPrototype'
 import { MissionPrototype } from '@shared/missions/nodes/MissionPrototype'
+import type { NodeAlert } from '@shared/missions/nodes/NodeAlert'
 import { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
 import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
 import type { ClientMission } from '../ClientMission'
@@ -26,9 +27,7 @@ import type { ClientActionExecution } from '../actions/ClientActionExecution'
  */
 export class ClientMissionPrototype
   extends MissionPrototype<TMetisClientComponents>
-  implements
-    TListenerTargetEmittable<TPrototypeEventMethod>,
-    TMapCompatibleNode
+  implements TListenerTargetEmittable<TPrototypeEventMethod>, TMapCompatibleNode
 {
   /**
    * The position of the prototype on a mission map.
@@ -163,6 +162,15 @@ export class ClientMissionPrototype
     // Handle structure change.
     this.mission.handleStructureChange()
   }
+
+  // Implemented
+  public alerts: NodeAlert[] = [] // Alerts aren't used in prototypes, at this time.
+
+  // Implemented
+  public readonly hasPendingAlerts: boolean = false // Alerts aren't used in prototypes, at this time.
+
+  // Implemented
+  public readonly nextPendingAlert: NodeAlert | null = null
 
   /**
    * Manages the prototype's event listeners and events.

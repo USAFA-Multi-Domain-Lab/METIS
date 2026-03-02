@@ -83,11 +83,13 @@ get path(): [...MissionComponent<any, any>[], this] {
 }
 ```
 
-**Database Migrations**: Two-layer system:
+**Database Migrations**: Two-layer system — for full details and a step-by-step checklist, see [MIGRATIONS.instructions.md](instructions/MIGRATIONS.instructions.md).
 
-- **Import builds** (`/server/missions/imports/builds/`) for legacy file imports (uses `.ts` files)
-- **Database builds** (`/server/database/builds/`) for schema migrations (uses `.js` files)
+- **Import builds** (`/server/missions/imports/builds/`) for mission file imports (`.ts` files) — **only needed for changes to the mission model**
+- **Database builds** (`/server/database/builds/`) for schema migrations (`.js` files) — needed for any schema change
 - All builds are numbered sequentially (e.g., `build_000001.js` or `build_000001.ts`) and auto-applied
+- After adding a database build, **always increment `MetisServer.SCHEMA_BUILD_NUMBER`** in `server/MetisServer.ts`
+- After adding an import build, register it in both the `import` list and `applyBuilds` method in `server/missions/imports/MissionImport.ts`
 - Migration scripts use MongoDB shell syntax and check for existing properties
 
 ### Target-Environment Integration System
@@ -189,9 +191,11 @@ const target = new TargetSchema({
 Refer to [.github/instructions/style-guide.instructions.md](instructions/style-guide.instructions.md) for authoritative conventions (docstrings, naming, ordering). See [docs/devs/style-guide.md](../docs/devs/style-guide.md) for supplemental guidance. Key points:
 
 - **Naming**: Use camelCase for variables/functions, PascalCase for classes/types
-  - **CRITICAL**: NEVER use abbreviated variable names (e.g., `cmd`, `msg`, `req`, `res`, `err`, `ctx`)
+  - **Standard**: If it would not be acceptable in a professional email, it is not acceptable in code. Write words out fully.
   - Always use full, descriptive names (e.g., `command`, `message`, `request`, `response`, `error`, `context`)
-  - Exception: Standard loop counters (`i`, `j`, `k`) and universally recognized abbreviations in their specific contexts
+  - **Permitted**: Industry-standard acronyms that appear unabbreviated in professional writing — `ID`, `API`, `URL`, `HTTP`, `JSON`, and similar
+  - **Not permitted**: Shortened words such as `req`, `res`, `env`, `conf`, `msg`, `cmd`, `ctx`, `ref`, `doc`, `err`, and similar contractions
+  - **Exception**: Standard loop counters (`i`, `j`, `k`)
 - **Comments**: Write clear, descriptive comments for complex logic and public APIs
 - **TypeScript**: Prefer explicit types and interfaces for all data structures
 - **Imports**: Use path aliases (`@shared/*`, `@client/*`, `@server/*`) instead of relative paths

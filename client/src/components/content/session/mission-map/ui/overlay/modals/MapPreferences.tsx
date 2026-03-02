@@ -2,22 +2,23 @@ import Tooltip from '@client/components/content/communication/Tooltip'
 import { DetailToggle } from '@client/components/content/form/DetailToggle'
 import { useGlobalContext } from '@client/context/global'
 import { useObjectFormSync, useRequireLogin } from '@client/toolbox/hooks'
-import { useMapContext } from '../../../MissionMap'
+import { ClassList } from '@shared/toolbox/html/ClassList'
+import { useModalDisplayLogic, type TModalBasic_P } from '.'
 import './MapPreferences.scss'
 
 /**
  * Provides options to the user for customizing the mission map.
  */
-export default function MapPreferences(): TReactElement | null {
+export default function MapPreferences(
+  props: TMapPreferences_P,
+): TReactElement | null {
   /* -- STATE -- */
 
-  const mapContext = useMapContext()
   const globalContext = useGlobalContext()
   const { handleError } = globalContext.actions
   const { login } = useRequireLogin()
   const { user } = login
-  const [mapPreferencesVisible, setMapPreferencesVisible] =
-    mapContext.state.mapPreferencesVisible
+  const [active, setActive] = props.active
   const preferencesState = useObjectFormSync(
     user.preferences.missionMap,
     ['panOnIssueSelection'],
@@ -38,25 +39,32 @@ export default function MapPreferences(): TReactElement | null {
   const [panOnIssueSelection, setPanOnIssueSelection] =
     preferencesState.panOnIssueSelection
 
+  /* -- COMPUTED -- */
+
+  const rootClasses = new ClassList('MapPreferences', 'MapModal')
+
   /* -- FUNCTIONS -- */
 
   /**
    * Closes the map preferences modal.
    */
   const onCloseRequest = (): void => {
-    // Set the map preferences visible state to false.
-    setMapPreferencesVisible(false)
+    setActive(false)
   }
+
+  /* -- EFFECTS -- */
+
+  useModalDisplayLogic(active, rootClasses)
 
   /* -- RENDER -- */
 
   // If the map preferences are not visible,
   // do not render.
-  if (!mapPreferencesVisible) return null
+  // if (!mapPreferencesVisible) return null
 
   // Render root element.
   return (
-    <div className='MapPreferences MapModal'>
+    <div className={rootClasses.value}>
       <div className='Heading'>Map Preferences</div>
       <div className='Close'>
         <div className='CloseButton' onClick={onCloseRequest}>
@@ -73,3 +81,10 @@ export default function MapPreferences(): TReactElement | null {
     </div>
   )
 }
+
+/* -- TYPES -- */
+
+/**
+ * Props for {@link MapPreferences} component.
+ */
+export interface TMapPreferences_P extends TModalBasic_P {}

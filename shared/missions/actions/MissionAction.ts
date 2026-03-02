@@ -50,8 +50,8 @@ const JSON_PROPERTIES_RAW = {
  * An action that can be executed on a mission node, causing a certain effect.
  */
 export abstract class MissionAction<
-    T extends TMetisBaseComponents = TMetisBaseComponents,
-  >
+  T extends TMetisBaseComponents = TMetisBaseComponents,
+>
   extends MissionComponent<T, MissionAction<T>>
   implements TEffectHost<T, 'executionTriggeredEffect'>
 {

@@ -8,6 +8,7 @@ import {
 } from '../MissionComponent'
 import type { TMissionNodeJson, TNode } from '../nodes/MissionNode'
 import type { TPrototype } from '../nodes/MissionPrototype'
+import type { NodeAlert } from '../nodes/NodeAlert'
 import type { TOutput, TOutputJson } from './MissionOutput'
 
 /**
@@ -116,6 +117,47 @@ export abstract class MissionForce<
    */
   public get outputPrefix(): string {
     return `${this.name.replaceAll(' ', '-')}:`
+  }
+
+  /**
+   * The list of all pending alerts for nodes within the force.
+   */
+  public get pendingAlerts(): NodeAlert[] {
+    let alerts: NodeAlert[] = []
+    for (let node of this.nodes) {
+      alerts.push(...node.pendingAlerts)
+    }
+    return alerts
+  }
+
+  /**
+   * Whether there are any nodes within the force that have
+   * pending alerts.
+   */
+  public get hasPendingAlerts(): boolean {
+    return this.nodes.some((node) => node.hasPendingAlerts)
+  }
+
+  /**
+   * The next pending alert of highest priority in the force that
+   * has not yet been acknowledged.
+   */
+  public get nextPendingAlert(): NodeAlert | null {
+    let result: NodeAlert | null = null
+
+    for (let node of this.nodes) {
+      let alert = node.nextPendingAlert
+      if (!alert) continue
+
+      // Even if another alert has already been found,
+      // if one of higher severity is found, it should
+      // be prioritized.
+      if (!result || alert.severityLevelNumber > result.severityLevelNumber) {
+        result = alert
+      }
+    }
+
+    return result
   }
 
   /**

@@ -1,11 +1,11 @@
-import { compute } from '@client/toolbox'
 import { useState } from 'react'
 import type { TDetail_P } from '.'
-import Tooltip from '../communication/Tooltip'
 import type { TButtonText_P } from '../user-controls/buttons/ButtonText'
 import { ButtonText } from '../user-controls/buttons/ButtonText'
 import If from '../util/If'
 import './DetailColorSelector.scss'
+import DetailTitleRow from './DetailTitleRow'
+import { useDetailClassNames } from './useDetailClassNames'
 
 /**
  * This will render a detail for
@@ -32,88 +32,27 @@ export function DetailColorSelector({
 
   /* -- COMPUTED -- */
 
-  /**
-   * The class name for the detail.
-   */
-  const rootClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['Detail', 'DetailColorSelector']
-
-    // If disabled is true then add the
-    // disabled class name.
-    if (disabled) {
-      classList.push('Disabled')
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
+  const { rootClasses, labelClasses, fieldClasses } = useDetailClassNames({
+    componentName: 'DetailColorSelector',
+    disabled,
+    displayError: false,
+    errorType: 'default',
+    uniqueLabelClassName,
+    uniqueFieldClassName,
   })
-  /**
-   * The class name for the field.
-   */
-  const fieldClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['Field', 'FieldColorSelector']
-
-    // If a unique class name is passed
-    // then add it to the list of class names.
-    if (uniqueFieldClassName) {
-      classList.push(uniqueFieldClassName)
-    }
-
-    // If the detail is expanded then add
-    // the expanded class name
-    if (expanded) {
-      classList.push('IsExpanded')
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-  /**
-   * The class name for the label.
-   */
-  const labelClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['Label']
-
-    // If a unique class name is passed
-    // then add it to the list of class names.
-    if (uniqueLabelClassName) {
-      classList.push(uniqueLabelClassName)
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-  /**
-   * The class name for the optional text.
-   */
-  const optionalClassName: string = compute(() => {
-    return fieldType === 'optional' ? 'Optional' : 'Optional Hidden'
-  })
-  /**
-   * The class name for the info icon.
-   */
-  const infoClassName: string = compute(() =>
-    tooltipDescription ? 'DetailInfo' : 'Hidden',
-  )
-
+  fieldClasses.add('FieldColorSelector')
+  fieldClasses.set('IsExpanded', expanded)
   /* -- RENDER -- */
   return (
-    <div className={rootClassName}>
-      <div className='TitleRow'>
-        <div className='TitleColumnOne'>
-          <div className={labelClassName}>{label}</div>
-          <sup className={infoClassName}>
-            i
-            <Tooltip description={tooltipDescription} />
-          </sup>
-        </div>
-        <div className={`TitleColumnTwo ${optionalClassName}`}>optional</div>
-      </div>
+    <div className={rootClasses.value}>
+      <DetailTitleRow
+        label={label}
+        labelClassName={labelClasses.value}
+        tooltipDescription={tooltipDescription}
+        fieldType={fieldType}
+      />
 
-      <div className={fieldClassName}>
+      <div className={fieldClasses.value}>
         <div
           className='Dropdown'
           onClick={() => (!disabled ? setExpanded(!expanded) : null)}

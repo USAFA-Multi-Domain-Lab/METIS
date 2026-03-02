@@ -1,0 +1,26 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": "../../../../",
+    "paths": {
+      "@metis/server/*": ["server/*"],
+      "@metis/client/*": ["client/src/*"],
+      "@shared/*": ["shared/*"],
+      "@server/*": ["server/*"],
+      "@client/*": ["client/src/*"],
+      "@integrations/schema/*": ["integration/library/schema/*"]
+    },
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",
+    "jsx": "react-jsx",
+    "types": ["node", "@testing-library/jest-dom"],
+    "isolatedModules": true
+  },
+  "include": [
+    "../../../global.d.ts",
+    "../../../../client/src/global.d.ts",
+    "./**/*.ts",
+    "./**/*.tsx"
+  ]
+}

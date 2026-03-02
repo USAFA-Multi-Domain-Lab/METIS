@@ -1,0 +1,53 @@
+@use '@client/assets/styles/config.scss' as *;
+@use '@client/assets/styles/util.scss' as *;
+
+.PropertyBadge {
+  display: flex;
+  column-gap: 0.2em;
+  color: $color-accent-light;
+  -webkit-user-select: none;
+  user-select: none;
+
+  .PropertyIcon {
+    width: 1em;
+    height: 0.65em;
+    font-size: $button-svg-size;
+    cursor: help;
+  }
+
+  .PropertyValue {
+    transform: scale(1);
+    transition:
+      color 250ms ease-in-out,
+      transform 250ms ease-in-out;
+    color: $color-accent-light;
+    cursor: help;
+  }
+
+  // todo: Figure out how to make this work here.
+  // &.Updated {
+  //   .PropertyValue {
+  //     transform: scale(1.1);
+  //     transition: color 250ms ease-in-out, transform 250ms ease-in-out;
+  //     color: $color-primary-light;
+  //   }
+  // }
+
+  &.Strikethrough {
+    // width: 100%; // todo: This should be included in the action properties specifically, not here.
+
+    .PropertyValue {
+      text-decoration: line-through;
+      color: $color-faded;
+    }
+
+    .StrikethroughReason {
+      margin-left: 0.5em;
+      color: $color-faded;
+      font-size: 0.8em;
+      font-style: italic;
+      font-weight: bold;
+      line-height: 1.8em;
+    }
+  }
+}

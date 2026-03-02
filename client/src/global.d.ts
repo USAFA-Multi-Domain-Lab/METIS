@@ -30,9 +30,8 @@ declare global {
   /**
    * Infers the type of the first generic argument.
    */
-  export type TGenericType<Type> = Type extends TWithGeneric<infer X>
-    ? X
-    : never
+  export type TGenericType<Type> =
+    Type extends TWithGeneric<infer X> ? X : never
 
   /**
    * Valid icons to use in the application.
@@ -78,6 +77,7 @@ declare global {
     | 'link'
     | 'lock'
     | 'logout'
+    | 'no-door'
     | 'no-repeat'
     | 'open'
     | 'options'

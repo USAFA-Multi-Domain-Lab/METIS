@@ -12,6 +12,8 @@ import type { TActionExecutionJson } from '@shared/missions/actions/ActionExecut
 import type { TMissionActionJson } from '@shared/missions/actions/MissionAction'
 import type { TMissionNodeJson } from '@shared/missions/nodes/MissionNode'
 import { MissionNode } from '@shared/missions/nodes/MissionNode'
+import type { TNodeAlertJson } from '@shared/missions/nodes/NodeAlert'
+import { NodeAlert } from '@shared/missions/nodes/NodeAlert'
 import memoizeOne from 'memoize-one'
 import { ClientActionExecution } from '../actions/ClientActionExecution'
 import { ClientMissionAction } from '../actions/ClientMissionAction'
@@ -47,6 +49,7 @@ export class ClientMissionNode
     return this._executable
   }
   public set executable(value: boolean) {
+    if (this._executable === value) return
     this._executable = value
     this.emitEvent('new-icon')
   }
@@ -56,6 +59,7 @@ export class ClientMissionNode
     return this._device
   }
   public set device(value: boolean) {
+    if (this._device === value) return
     this._device = value
     this.emitEvent('new-icon')
   }
@@ -292,7 +296,9 @@ export class ClientMissionNode
 
   // Implemented
   public get icon(): TMetisIcon {
-    if (this.executable) {
+    if (this.hasPendingAlerts) {
+      return '_blank' // Blank because warning icon is rendered via a mask-image rule instead.
+    } else if (this.executable) {
       if (this.device) return 'device'
       else return 'lightning'
     } else {
@@ -488,6 +494,57 @@ export class ClientMissionNode
 
     // Emit event.
     this.emitEvent('output-sent')
+  }
+
+  /**
+   * Handles a new alert for this node.
+   * @param alertJson The JSON-serialized alert data.
+   */
+  public onAlert(alertJson: TNodeAlertJson): void {
+    let newIcon = !this.hasPendingAlerts
+    let alert = NodeAlert.fromJson(alertJson)
+    this._alerts.push(alert)
+    this.emitEvent('new-alert')
+
+    if (newIcon) {
+      this.emitEvent('new-icon')
+    }
+  }
+
+  /**
+   * Handles the acknowledgement of an alert on the node.
+   * This will be called when the server notifies members
+   * of a force that another member of a force acknowledged
+   * an alert on a node, essentially synchronizing the state of
+   * the alert across all members of the force.
+   * @param alertId The ID of the alert that was acknowledged.
+   */
+  public onAlertAcknowledgement(alertId: string): void {
+    let alert = this.getAlert(alertId)
+    if (!alert) {
+      console.warn(
+        `Attempted to acknowledge non-existent alert with ID "${alertId}" on node with ID "${this._id}".`,
+      )
+      return
+    }
+    if (!alert.acknowledged) {
+      alert.acknowledged = true
+      this.emitEvent('alert-updated')
+    }
+  }
+
+  public onAlertAcknowledgementError(alertId: string): void {
+    let alert = this.getAlert(alertId)
+    if (!alert) {
+      console.warn(
+        `Attempted to revert acknowledgement of non-existent alert with ID "${alertId}" on node with ID "${this._id}".`,
+      )
+      return
+    }
+    if (alert.acknowledged) {
+      alert.acknowledged = false
+      this.emitEvent('alert-updated')
+    }
   }
 
   // Implemented

@@ -3,7 +3,6 @@ import type { ClientMissionAction } from '@client/missions/actions/ClientMission
 import { compute } from '@client/toolbox'
 import { useEventListener } from '@client/toolbox/hooks'
 import { getIconPath } from '@client/toolbox/icons'
-import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 import './ActionProperty.scss'
@@ -14,6 +13,8 @@ import './ActionProperty.scss'
 export default function ActionProperty<TKey extends keyof ClientMissionAction>({
   action,
   actionKey,
+  description,
+  icon,
   cheatsApplied = false,
   infiniteResources = false,
   renderValue = (value) => value?.toString(),
@@ -57,29 +58,6 @@ export default function ActionProperty<TKey extends keyof ClientMissionAction>({
       backgroundPosition: 'center',
     }
 
-    // Determine the icon based on the action key.
-    let icon: TMetisIcon
-    switch (actionKey) {
-      case 'successChanceFormatted':
-        icon = 'percent'
-        break
-      case 'processTimeFormatted':
-        icon = 'timer'
-        break
-      case 'resourceCostFormatted':
-        icon = 'coins'
-        break
-      case 'opensNodeFormatted':
-        icon = 'door'
-        break
-      case 'type':
-        icon = action.type === 'repeatable' ? 'repeat' : 'no-repeat'
-        break
-      default:
-        icon = '_blank'
-        break
-    }
-
     if (icon !== '_blank') {
       const url = getIconPath(icon)
       if (url) result.backgroundImage = `url(${url})`
@@ -87,26 +65,6 @@ export default function ActionProperty<TKey extends keyof ClientMissionAction>({
 
     // Return the style for the icon.
     return result
-  })
-
-  /**
-   * Describes the property being displayed.
-   */
-  const description: string = compute(() => {
-    switch (actionKey) {
-      case 'successChanceFormatted':
-        return 'Success Chance'
-      case 'processTimeFormatted':
-        return 'Process Time'
-      case 'resourceCostFormatted':
-        return 'Resource Cost'
-      case 'opensNodeFormatted':
-        return 'Opens Node'
-      case 'type':
-        return StringToolbox.toTitleCase(action.type)
-      default:
-        return ''
-    }
   })
 
   /**
@@ -162,6 +120,17 @@ export type TActionProperty_P<TKey extends keyof ClientMissionAction> = {
    * The key of the property to display.
    */
   actionKey: TKey
+  /**
+   * The icon used to visually represent the property.
+   * This will help user recognition of that property.
+   */
+  icon: TMetisIcon
+  /**
+   * A description that displays when hovering over the property.
+   * This should clarify the significance of the property, in case
+   * the icon doesn't sufficient communicate that on its own.
+   */
+  description: string
   /**
    * Whether the property is disabled by cheats.
    * @default false

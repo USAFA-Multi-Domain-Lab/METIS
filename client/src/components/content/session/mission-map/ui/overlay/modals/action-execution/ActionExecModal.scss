@@ -2,118 +2,116 @@
 @use '@client/assets/styles/util.scss' as *;
 
 .MissionMap {
-  .Overlay {
-    .ActionExecModal {
-      border: 2px solid $color-primary-light;
-      @include background-mask($color-primary, 0.9);
+  .ActionExecModal {
+    border: 2px solid $color-primary-light;
+    @include background-mask($color-primary, 0.9);
 
-      .Heading {
-        min-width: 16.5em;
-        user-select: none;
+    .Heading {
+      min-width: 16.5em;
+      user-select: none;
 
-        .NodeName {
-          line-height: 1.5em;
-          overflow: hidden;
-          white-space: nowrap;
-          text-overflow: ellipsis;
-          font-size: 1.2em;
-        }
-
-        .DropdownLabel {
-          margin: 1em 0 0;
-          font-size: 0.8em;
-        }
+      .NodeName {
+        line-height: 1.5em;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        font-size: 1.2em;
       }
 
-      .Close {
-        background: none;
-        padding: 0;
+      .DropdownLabel {
+        margin: 1em 0 0;
+        font-size: 0.8em;
       }
+    }
 
-      .NoActions {
-        display: none;
-        color: $color-failure;
-        margin: 0;
-        margin: 0 15px 25px 20px;
-      }
+    .Close {
+      background: none;
+      padding: 0;
+    }
 
-      .Dropdown {
-        $scrollbar-width: 1em;
+    .NoActions {
+      display: none;
+      color: $color-failure;
+      margin: 0;
+      margin: 0 15px 25px 20px;
+    }
 
-        min-width: 19em;
-        user-select: none;
+    .Dropdown {
+      $scrollbar-width: 1em;
 
-        // Hide options if the drop down is
-        // collapsed.
-        &.Collapsed {
-          .Selection {
-            border-radius: 0.6em;
+      min-width: 19em;
+      user-select: none;
 
-            .Arrow {
-              transform: rotate(180deg);
-            }
-          }
-          .Options {
-            display: none;
-          }
-        }
-
-        // Disable the drop down if there are
-        // less than two options.
-        &.Disabled {
-          pointer-events: none;
-          opacity: 0.5;
-        }
-
+      // Hide options if the drop down is
+      // collapsed.
+      &.Collapsed {
         .Selection {
-          cursor: pointer;
-          display: grid;
-          grid-template-columns: 1fr auto;
-          border-radius: 0.6em 0.6em 0 0;
-          padding: 0.7em 0.9em;
-          background: $color-secondary;
-          color: $color-accent;
-
-          &:hover {
-            @include background-mask;
-          }
-
-          .Text {
-            margin-right: $scrollbar-width;
-            color: $color-accent;
-          }
+          border-radius: 0.6em;
 
           .Arrow {
-            color: $color-accent;
-            font-size: 2em;
-            height: 0.5em;
-            line-height: 1em;
+            transform: rotate(180deg);
           }
         }
-
         .Options {
-          cursor: pointer;
-          background: $color-secondary;
-          border-radius: 0 0 0.6em 0.6em;
-          height: auto;
-          max-height: 140px;
-          overflow-y: auto;
-
-          &::-webkit-scrollbar {
-            width: $scrollbar-width;
-          }
+          display: none;
         }
       }
 
-      .Buttons {
-        .Button {
-          margin: 0;
+      // Disable the drop down if there are
+      // less than two options.
+      &.Disabled {
+        pointer-events: none;
+        opacity: 0.5;
+      }
+
+      .Selection {
+        cursor: pointer;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        border-radius: 0.6em 0.6em 0 0;
+        padding: 0.7em 0.9em;
+        background: $color-secondary;
+        color: $color-accent;
+
+        &:hover {
+          @include background-mask;
+        }
+
+        .Text {
+          margin-right: $scrollbar-width;
+          color: $color-accent;
+        }
+
+        .Arrow {
+          color: $color-accent;
+          font-size: 2em;
+          height: 0.5em;
+          line-height: 1em;
         }
       }
 
-      > :not(.Heading):not(.Close) {
-        grid-column: span 2;
+      .Options {
+        cursor: pointer;
+        background: $color-secondary;
+        border-radius: 0 0 0.6em 0.6em;
+        height: auto;
+        max-height: 140px;
+        overflow-y: auto;
+
+        &::-webkit-scrollbar {
+          width: $scrollbar-width;
+        }
       }
+    }
+
+    .Buttons {
+      .Button {
+        margin: 0;
+      }
+    }
+
+    > :not(.Heading):not(.Close) {
+      grid-column: span 2;
     }
   }
 }

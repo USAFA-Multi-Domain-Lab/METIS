@@ -312,9 +312,9 @@ When naming any piece of code, whether a variable, a class, or anything else, th
 
 For example, the Button component used to be called Action. However, this was changed because nodes contain actions that can be executed on a node. These are two very different things with the same term being used. If these concepts are used together, the code can quickly become difficult to understand. Therefore, the actions were renamed to buttons.
 
-Names given should also avoid non-conventional abbreviations. Terms that are commonly understood, such as “env”, “doc”, and “ref” are permitted. However, over-abbreviating can quickly make the code difficult to read.
+Names given should also avoid abbreviations and shortenings. The standard is simple: if it would not be acceptable in a professional email, it is not acceptable in code. There is no justification on modern hardware and screens for shortening words. Write them out fully.
 
-Names given should also not be overly long. Names should be limited to 3-4 words max, if possible. If a name is too long, and a suitable term cannot be given to shorten it, abbreviations are, in this case, encouraged, to shorten the variable, so long as the term used is easy to understand.
+Abbreviations that are standard in professional writing are permitted — for example, `ID`, `API`, `URL`, `HTTP`, `JSON`, and similar industry-standard acronyms that would appear unabbreviated in a professional context. Shortened words such as `req`, `res`, `env`, `conf`, `msg`, `cmd`, `ctx`, `ref`, `doc`, `err`, and similar contractions are not permitted.
 
 ### Files
 
