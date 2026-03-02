@@ -97,13 +97,6 @@ export class ServerLogin {
   }
 
   /**
-   * When the user that's logged in will no longer be in timeout.
-   */
-  public get timeoutEnd(): number | null {
-    return ServerLogin.timeoutRegistry.get(this.userId) ?? null
-  }
-
-  /**
    * The express session ID associated with the login.
    */
   private _expressSessionId: Request['session']['id']
@@ -112,31 +105,6 @@ export class ServerLogin {
    */
   public get expressSessionId(): Request['session']['id'] {
     return this._expressSessionId
-  }
-
-  /**
-   * Whether the user that's logged in is currently in a timeout.
-   */
-  public get inTimeout(): boolean {
-    return this.timeoutEnd !== null && this.timeoutEnd > Date.now()
-  }
-
-  /**
-   * How much longer the user that's logged in will be in timeout, in milliseconds.
-   * @note If zero, the user is not in a timeout.
-   */
-  public get timeoutRemaining(): number {
-    if (!this.timeoutEnd) return 0
-    return Math.max(0, Math.floor(this.timeoutEnd - Date.now()))
-  }
-
-  /**
-   * How much longer the user that's logged in will be in timeout, in minutes.
-   * @note If zero, the user is not in a timeout.
-   * @note This is rounded up to the nearest minute.
-   */
-  public get timeoutMinutesRemaining(): number {
-    return Math.ceil(this.timeoutRemaining / 60000)
   }
 
   /**
@@ -193,14 +161,6 @@ export class ServerLogin {
       duplicateLogin.destroy()
     }
 
-    // Block the user from logging in if their account is in timeout.
-    if (this.inTimeout) return
-
-    // Remove residual timeout entries if they exist.
-    if (this.timeoutRemaining === 0) {
-      ServerLogin.timeoutRegistry.delete(this.userId)
-    }
-
     // Register the login.
     ServerLogin.userIdRegistry.set(this.userId, this)
     ServerLogin.expressRegistry.set(this.expressSessionId, this)
@@ -255,27 +215,6 @@ export class ServerLogin {
   }
 
   /**
-   * Registers when a user's timeout will end.
-   * @param duration How long the user will be in timeout, in milliseconds.
-   * @note The default timeout duration is {@link ServerLogin.DEFAULT_TIMEOUT_DURATION}.
-   */
-  public timeout(
-    duration: number = ServerLogin.DEFAULT_TIMEOUT_DURATION,
-  ): void {
-    // Emit a timeout error to the client, if any.
-    this.client?.emitError(
-      new ServerEmittedError(ServerEmittedError.CODE_TIMEOUT),
-    )
-
-    // Destroy the login.
-    this.destroy()
-
-    // Activate the timer for the timeout.
-    let timeoutEnd = Date.now() + duration
-    ServerLogin.timeoutRegistry.set(this.userId, timeoutEnd)
-  }
-
-  /**
    * Handles when the user joins a METIS session.
    * @param metisSessionId The ID of the joined METIS session.
    * @see {@link Session} class for more information.
@@ -310,14 +249,6 @@ export class ServerLogin {
   protected static socketRegistry: Map<Socket['id'], ServerLogin> = new Map<
     Socket['id'],
     ServerLogin
-  >()
-
-  /**
-   * A registry of all logins that are in timeout by user ID.
-   */
-  protected static timeoutRegistry: Map<ServerUser['_id'], number> = new Map<
-    ServerUser['_id'],
-    number
   >()
 
   /**
@@ -372,21 +303,6 @@ export class ServerLogin {
   public static destroy(by: ServerUser['_id'] | Request | Socket): void {
     let login = ServerLogin.get(by)
     login?.destroy()
-  }
-
-  /**
-   * @param by The {@link ServerUser._id|UserId}, {@link Request}, or {@link Socket} used to put the user associated with
-   * the login in timeout.
-   * @param duration How long the user will be in timeout, in milliseconds.
-   * @note The default timeout duration is {@link ServerLogin.DEFAULT_TIMEOUT_DURATION}.
-   * @see {@link ServerLogin.timeout}
-   */
-  public static timeout(
-    by: ServerUser['_id'] | Request | Socket,
-    duration: number = ServerLogin.DEFAULT_TIMEOUT_DURATION,
-  ): void {
-    const login = ServerLogin.get(by)
-    login?.timeout(duration)
   }
 
   /**
