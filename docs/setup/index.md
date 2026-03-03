@@ -161,6 +161,16 @@ From there you will be prompted to reset your password to something permanent an
 
 ---
 
+### **Windows Uninstallation**
+
+To remove METIS from your Windows machine, an uninstaller script is available which will remove METIS entirely from the system. You will be prompted to optionally remove MongoDB and NodeJS as well, or keep them for other purposes. To uninstall METIS, run PowerShell as Administrator and execute the following command:
+
+```PowerShell
+iwr -Uri "https://raw.githubusercontent.com/USAFA-Multi-Domain-Lab/METIS-Deployment-Tools/windows-installer-dev/windows-uninstaller.ps1?t=$(Get-Date -UFormat %s)" -OutFile "$env:TEMP\metis-uninstaller.ps1"; & "$env:TEMP\metis-uninstaller.ps1"; Remove-Item "$env:TEMP\metis-uninstaller.ps1" -Force -ErrorAction SilentlyContinue
+```
+
+---
+
 ## ✅ Post-Setup Validation
 
 After completing setup, you can verify your installation with this checklist:

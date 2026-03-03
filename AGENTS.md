@@ -25,6 +25,10 @@ Quick index for AI agents working in this workspace.
 
 - [Migration guide](.github/instructions/MIGRATIONS.instructions.md) — Database builds, import builds, checklist
 
+**Writing code handoffs:**
+
+- [Handoff guide](.github/instructions/HANDOFFS.instructions.md) — Format, sections, and output location for code handoff documents
+
 **Writing documentation:**
 
 - [Documentation guide](.github/instructions/DOCUMENTATION.instructions.md) — Structure, naming, linking, and index registration
