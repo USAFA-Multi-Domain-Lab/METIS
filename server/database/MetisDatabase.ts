@@ -3,7 +3,7 @@ import { MissionImport } from '@server/missions/imports/MissionImport'
 import { DateToolbox } from '@shared/toolbox/dates/DateToolbox'
 import type { TUserJson } from '@shared/users/User'
 import { User } from '@shared/users/User'
-import { exec } from 'child_process'
+import { exec, execFile } from 'child_process'
 import type { ConnectOptions } from 'mongoose'
 import mongoose from 'mongoose'
 import { databaseLogger } from '../logging'
@@ -145,13 +145,20 @@ export class MetisDatabase {
       const { mongoHost, mongoPort, mongoDB, mongoUsername, mongoPassword } =
         server
 
-      let command: string = `mongodump --host ${mongoHost} --port ${mongoPort} --db ${mongoDB} --out server/database/backups/${DateToolbox.fileName}`
+      const args: string[] = []
+
+      args.push('--host', mongoHost)
+      args.push('--port', String(mongoPort))
+      args.push('--db', mongoDB)
+      args.push('--out', `server/database/backups/${DateToolbox.fileName}`)
 
       if (mongoUsername !== undefined && mongoPassword !== undefined) {
-        command += ` --username ${mongoUsername} --password ${mongoPassword} --authenticationDatabase ${mongoDB}`
+        args.push('--username', mongoUsername)
+        args.push('--password', mongoPassword)
+        args.push('--authenticationDatabase', mongoDB)
       }
 
-      exec(command, (error, stdout, stderr) => {
+      execFile('mongodump', args, (error, stdout, stderr) => {
         if (!error) {
           let stdoutSplit: Array<string> = stdout.split(
             `Loading file: server/database/backup.js`,
@@ -162,7 +169,6 @@ export class MetisDatabase {
           }
 
           databaseLogger.info(stdout)
-
           resolve()
         } else {
           databaseLogger.error('Failed to create database backup:')
