@@ -20,7 +20,9 @@
     "test:e2e": "jest --runInBand --config tests/jest.config.js --selectProjects=e2e",
     "test:integration:api": "jest --runInBand --config tests/jest.config.js --selectProjects=integration:api",
     "test:integration:websocket": "jest --runInBand --config tests/jest.config.js --selectProjects=integration:websocket",
-    "test:unit": "jest --runInBand --config tests/jest.config.js --selectProjects=unit",
+    "test:unit": "jest --runInBand --config tests/jest.config.js --selectProjects unit:server unit:shared unit:client",
+    "test:unit:server": "jest --runInBand --config tests/jest.config.js --selectProjects=unit:server",
+    "test:unit:shared": "jest --runInBand --config tests/jest.config.js --selectProjects=unit:shared",
     "test:unit:client": "jest --runInBand --config tests/jest.config.js --selectProjects=unit:client"
   },
   "dependencies": {
