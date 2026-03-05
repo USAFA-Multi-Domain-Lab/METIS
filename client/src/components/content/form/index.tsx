@@ -1,6 +1,15 @@
 /* ---------------------------- TYPES FOR FORMS ---------------------------- */
 
 /**
+ * Controls when a detail component shows its error or warning message.
+ * @option `'on-blur'` errors appear after the user leaves the field (default behaviour).
+ * @option `'immediate'` errors and warnings appear on mount or on change, without
+ * requiring user interaction. Use this when embedding details in a context where
+ * validation state should always be visible (e.g. the effect entry side panel).
+ */
+export type TErrorDisplay = 'on-blur' | 'immediate'
+
+/**
  * The base properties for the details.
  */
 export type TDetailBase_P = {
@@ -36,6 +45,12 @@ export type TDetailBase_P = {
    * The tooltip description for the detail.
    */
   tooltipDescription?: string
+  /**
+   * Controls when the error or warning message is shown.
+   * Overrides the mode set by a surrounding {@link DetailContextProvider}.
+   * @default 'on-blur' (or whatever the nearest provider specifies)
+   */
+  errorDisplay?: TErrorDisplay
 }
 
 /**
