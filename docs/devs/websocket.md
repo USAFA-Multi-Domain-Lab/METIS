@@ -42,7 +42,7 @@ METIS uses Socket.IO to enable real-time communication between clients and the s
 
 ### Rate limiting:
 
-- Default rate: 10 messages/second per user
+- Default rate: 100 messages/second per user
 - [Configurable via environment variables](/docs/setup/environment.md)
 - Applies to all WebSocket connections
 - Exceeding limits results in error events

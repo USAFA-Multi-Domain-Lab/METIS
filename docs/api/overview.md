@@ -70,8 +70,8 @@ Each endpoint may require specific permissions in addition to authentication. Fo
 
 METIS implements rate limiting for both HTTP and WebSocket connections:
 
-- `HTTP API`: 20 requests/second per IP (default)
-- `WebSocket`: 10 messages/second per user (default)
+- `HTTP API`: 100 requests/second per IP (default)
+- `WebSocket`: 100 messages/second per user (default)
 - [Configurable via environment variables](/docs/setup/environment.md)
 - Rate limit headers in HTTP responses:
   - `X-RateLimit-Limit`
@@ -235,13 +235,11 @@ The METIS API provides the following main routes. Each route has its own detaile
 The `defineRequests` middleware ensures data integrity for all API requests by validating:
 
 1. **Request Body**
-
    - JSON payload data validation
    - Type checking for all fields
    - Removal of unexpected fields
 
 2. **Query Parameters**
-
    - URL query string validation (e.g., ?key=value)
    - Type conversion and verification
    - Required parameter enforcement

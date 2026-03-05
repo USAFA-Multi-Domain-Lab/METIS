@@ -24,8 +24,8 @@ METIS provides API endpoints for managing missions. All operations require appro
 
 All missions API endpoints are subject to METIS's standard rate limits:
 
-- HTTP endpoints: 20 requests/second per IP address
-- WebSocket events: 10 messages/second per user
+- HTTP endpoints: 100 requests/second per IP address
+- WebSocket events: 100 messages/second per user
 
 Note that resource-intensive operations like mission import/export and bulk operations count toward these limits.
 

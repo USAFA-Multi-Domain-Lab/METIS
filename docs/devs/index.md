@@ -33,6 +33,14 @@ Technical documentation for developers working on METIS core system, creating in
 - **Naming conventions** - Consistent naming across TypeScript/JavaScript
 - **Code organization** - File structure and import patterns
 
+## 🗄️ Database Operations
+
+### **[Database Backups](backups.md)** - Backup & Recovery
+
+- **Backup schedule** - Automatic backups on startup and every 24 hours
+- **Storage location** - Where backups are written on disk
+- **Restoration** - How to restore from a backup using `mongorestore`
+
 ## 🔌 Integration Development
 
 ### External System Integration
@@ -65,5 +73,5 @@ Technical documentation for developers working on METIS core system, creating in
 - **[Setup Instructions](/docs/setup/index.md)** - Get your development environment running
 - **[API Reference](/docs/api/index.md)** - Complete REST API documentation
 - **[Target Environment Integration](/docs/target-env-integration/index.md)** - Integration development guide
-- **[Database Backups](backups.md)** - How backups work and how to restore them
+- **[Database Backups](backups.md)** - How automatic backups work and how to restore them
 - **[Changelog](/docs/changelog.md)** - Release notes and version history

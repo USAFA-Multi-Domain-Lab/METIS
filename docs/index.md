@@ -24,6 +24,7 @@
   - [Architecture Overview](devs/architecture.md) - System design and components
   - [WebSocket System](devs/websocket.md) - Real-time communication
   - [Style Guide](devs/style-guide.md) - Coding standards and conventions
+  - [Database Backups](devs/backups.md) - Automatic backups and restoration
 - **[Target Environment Integration](target-env-integration/index.md)** - Create custom integrations
 - **[API Reference](api/index.md)** - Complete REST API documentation
 

@@ -79,10 +79,46 @@ Basic text input for short strings.
 }
 ```
 
+**Validation Behavior:**
+
+METIS applies client-side validation to required string arguments based on the `pattern` and `title` properties you provide. A `—` means that condition is not relevant to that outcome.
+
+| `pattern` set | Value passes `pattern` | `title` set | `default` is `''` | Field is empty | Result                                                              |
+| :-----------: | :--------------------: | :---------: | :---------------: | :------------: | ------------------------------------------------------------------- |
+|       ✓       |           ✓            |      —      |         —         |       —        | No warning                                                          |
+|       ✓       |           ✗            |      ✓      |         —         |       —        | Warning: your `title` string                                        |
+|       ✓       |           ✗            |      ✗      |         —         |       —        | Warning: `"The value does not match the required format."`          |
+|       ✗       |           —            |      —      |         ✗         |       ✓        | No warning — field repopulates to `default` when the user leaves it |
+|       ✗       |           —            |      —      |         ✓         |       ✓        | Warning: `"This field cannot be left empty. Please enter a value."` |
+
+> **Important:** If you set `required: true` and `default: ''` (an empty string) without providing a `pattern`, METIS will display a generic fallback warning message when the field is left empty. To show a more descriptive message, add a `pattern` that rejects empty input and a `title` explaining the requirement.
+
+```typescript
+// ❌ Produces a generic fallback error message when left empty
+{
+  _id: 'targetHost',
+  name: 'Target Host',
+  type: 'string',
+  required: true,
+  default: '',
+}
+
+// ✅ Produces a descriptive error message when left empty
+{
+  _id: 'targetHost',
+  name: 'Target Host',
+  type: 'string',
+  required: true,
+  default: '',
+  pattern: /\S+/,
+  title: 'Target Host is required and cannot be blank.',
+}
+```
+
 **Best Practices:**
 
-- Provide meaningful default values
-- Use validation in your script for format checking
+- Provide meaningful non-empty default values where possible to help users and avoid the fallback validation message
+- Use `pattern` together with `title` for custom validation — `title` is only shown when a `pattern` is present and fails
 - Keep descriptions concise but helpful
 
 ### **large-string**
