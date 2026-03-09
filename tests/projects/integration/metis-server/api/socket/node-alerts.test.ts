@@ -15,8 +15,8 @@ import { TestSuiteSetup } from 'tests/middleware/TestSuiteSetup'
 import { TestSuiteTeardown } from 'tests/middleware/TestSuiteTeardown'
 import { TestToolbox } from 'tests/toolbox/TestToolbox'
 
-describe('Node alert websocket networking', () => {
-  const SUITE_PREFIX = 'test_ws_node_alert'
+describe('Node alert socket networking', () => {
+  const SUITE_PREFIX = 'test_socket_node_alert'
   let server: MetisServer
   let suiteMissionId: string
   let sessionIdsToCleanup: string[] = []

@@ -199,8 +199,8 @@ The title should name the feature concisely followed by `— Code Handoff`.
   - Shared class tests → `tests/projects/unit/shared/`
   - Client component tests (isolated) → `tests/projects/unit/client/`
   - Server class tests → `tests/projects/unit/server/`
-  - REST API integration tests → `tests/projects/integration/api/rest/`
-  - WebSocket integration tests → `tests/projects/integration/api/websocket/`
+  - METIS REST API integration tests → `tests/projects/integration/metis-server/api/rest/`
+  - METIS Socket.IO integration tests → `tests/projects/integration/metis-server/api/socket/`
   - Client-side component integration tests (multiple React components interacting as a system) → `tests/projects/integration/client/`
 - If the repository does not currently define a runnable Jest project for one of the ideal integration locations, place the test in the closest existing runnable project and document that decision in the handoff report.
 - If pathing isn't obvious for integration tests, explore current organization of tests and create directories that fit with the existing structure.
@@ -209,7 +209,7 @@ The title should name the feature concisely followed by `— Code Handoff`.
   - `client/src/components/content/session/mission-map/ui/toasts/NodeAlertBox.tsx` → `tests/projects/unit/client/components/content/session/mission-map/ui/toasts/NodeAlertBox.test.tsx`
 - Integration tests should be placed in the appropriate directory
   based on the type of integration, as described above. For example:
-  - WebSocket integration test for mission map alerts → `tests/projects/integration/api/websocket/mission-map-alerts.test.ts`
+  - Socket.IO integration test for mission map alerts → `tests/projects/integration/metis-server/api/socket/mission-map-alerts.test.ts`
   - Client-side integration test for mission map alert behavior → `tests/projects/integration/client/session/mission-map/MissionMap.test.tsx`
 
 ---

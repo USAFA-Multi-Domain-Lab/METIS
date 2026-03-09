@@ -15,7 +15,7 @@ import { TestSuiteTeardown } from 'tests/middleware/TestSuiteTeardown'
 import { TestToolbox } from 'tests/toolbox/TestToolbox'
 
 describe('Rate limiting', () => {
-  const USERNAME_PREFIX = 'test_ws_rate_limit'
+  const USERNAME_PREFIX = 'test_socket_rate_limit'
   let socket: Socket | null = null
   let server: MetisServer
   let cookieHeader: string = ''
@@ -69,7 +69,7 @@ describe('Rate limiting', () => {
     }
   })
 
-  test('WebSocket: emits CODE_MESSAGE_RATE_LIMIT when user exceeds message rate', async () => {
+  test('Socket: emits CODE_MESSAGE_RATE_LIMIT when user exceeds message rate', async () => {
     if (!socket) {
       throw Error('Socket was not initialized by beforeEach.')
     }
