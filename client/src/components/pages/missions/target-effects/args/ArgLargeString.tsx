@@ -18,7 +18,6 @@ export default function ArgLargeString({
   const [value, setValue] = useState<string>(
     effectArgs[arg._id] ?? defaultValue,
   )
-  console.log('ArgLargeString render: value =', value)
 
   /* -- EFFECTS -- */
 

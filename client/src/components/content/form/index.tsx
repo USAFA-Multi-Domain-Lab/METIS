@@ -42,15 +42,15 @@ export type TDetailBase_P = {
    */
   errorType?: 'default' | 'warning'
   /**
-   * The tooltip description for the detail.
-   */
-  tooltipDescription?: string
-  /**
    * Controls when the error or warning message is shown.
    * Overrides the mode set by a surrounding {@link DetailContextProvider}.
    * @default 'on-blur' (or whatever the nearest provider specifies)
    */
   errorDisplay?: TErrorDisplay
+  /**
+   * The tooltip description for the detail.
+   */
+  tooltipDescription?: string
 }
 
 /**
