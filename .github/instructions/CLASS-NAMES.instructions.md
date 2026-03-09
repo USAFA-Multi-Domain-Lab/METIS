@@ -1,7 +1,3 @@
----
-applyTo: '**'
----
-
 # METIS: React Class Name Guide
 
 > For a workspace-wide index of instruction files, see [AGENTS.md](../../AGENTS.md). This document is the authoritative reference for managing HTML class names in React components.
@@ -70,12 +66,14 @@ When component-specific classes must be appended after a shared hook produces th
 The `set(classes, condition)` method internally calls `Boolean(condition)`, so any truthy value can be passed directly as the condition. There is no need to coerce values to `boolean` first.
 
 ```ts
+let selection: Object | null = {}
+
 // ❌ Unnecessary coercion
-classList.set('UniqueClass', Boolean(usesUniqueClass))
-classList.set('UniqueClass', !!usesUniqueClass)
+classList.set('ItemSelected', !!selection)
+classList.set('ItemSelected', Boolean(selection))
 
 // ✅ Pass the value directly
-classList.set('UniqueClass', usesUniqueClass)
+classList.set('ItemSelected', selection)
 ```
 
 ## 5. Empty Strings Are Ignored — No Need for Conditional Logic to Avoid Them

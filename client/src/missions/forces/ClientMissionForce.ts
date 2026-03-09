@@ -1,4 +1,5 @@
 import type { TLine_P } from '@client/components/content/session/mission-map/objects/Line'
+import type { TMissionOutlineItem } from '@client/components/pages/missions/structures/MissionOutline'
 import type { TMetisClientComponents } from '@client/index'
 import type { TListenerTargetEmittable } from '@shared/events/EventManager'
 import { EventManager } from '@shared/events/EventManager'
@@ -21,7 +22,9 @@ import { ClientOutput } from './ClientOutput'
  */
 export class ClientMissionForce
   extends MissionForce<TMetisClientComponents>
-  implements TListenerTargetEmittable<TForceEventMethods, TForceEventArgs>
+  implements
+    TListenerTargetEmittable<TForceEventMethods, TForceEventArgs>,
+    TMissionOutlineItem
 {
   /**
    * The lines used to connect nodes on the mission map.
@@ -47,6 +50,22 @@ export class ClientMissionForce
    * Manages the force's event listeners and events.
    */
   private eventManager: EventManager<TForceEventMethods, TForceEventArgs>
+
+  // Implemented
+  public readonly outlineIcon: TMetisIcon = 'shield'
+
+  // Implemented
+  public expandedInOutline: boolean = false
+
+  // Implemented
+  public get outlineChildren(): TMissionOutlineItem[] {
+    return this.root.outlineChildren
+  }
+
+  // Implemented
+  public get outlineParent(): TMissionOutlineItem | null {
+    return this.mission as ClientMission
+  }
 
   /**
    * @param mission The mission to which the force belongs.

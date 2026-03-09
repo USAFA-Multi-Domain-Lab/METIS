@@ -1,6 +1,7 @@
 import type { TLine_P } from '@client/components/content/session/mission-map/objects/Line'
 import type { TMapCompatibleNode } from '@client/components/content/session/mission-map/objects/nodes'
 import type { TPrototypeSlot_P } from '@client/components/content/session/mission-map/objects/PrototypeSlot'
+import type { TMissionOutlineItem } from '@client/components/pages/missions/structures/MissionOutline'
 import type { ClientTarget } from '@client/target-environments/ClientTarget'
 import { ClientUser } from '@client/users/ClientUser'
 import type { TListenerTargetEmittable } from '@shared/events/EventManager'
@@ -56,7 +57,9 @@ import { PrototypeTranslation } from './transformations/PrototypeTranslation'
  */
 export class ClientMission
   extends Mission<TMetisClientComponents>
-  implements TListenerTargetEmittable<TMissionEventMethods, TMissionEventArgs>
+  implements
+    TListenerTargetEmittable<TMissionEventMethods, TMissionEventArgs>,
+    TMissionOutlineItem
 {
   /**
    * Whether the resource exists on the server.
@@ -244,6 +247,22 @@ export class ClientMission
    * Manages the mission's event listeners and events.
    */
   private eventManager: EventManager<TMissionEventMethods, TMissionEventArgs>
+
+  // Implemented
+  public readonly outlineIcon: TMetisIcon = 'flag'
+
+  // Implemented
+  public expandedInOutline: boolean = false
+
+  // Implemented
+  public get outlineChildren(): TMissionOutlineItem[] {
+    return [...this.root.outlineChildren, ...this.forces, ...this.effects]
+  }
+
+  // Implemented
+  public get outlineParent(): TMissionOutlineItem | null {
+    return null
+  }
 
   protected constructor(
     _id: string,

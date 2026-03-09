@@ -3,6 +3,7 @@ import type {
   TMapCompatibleNodeEvent,
   TNodeButton,
 } from '@client/components/content/session/mission-map/objects/nodes'
+import type { TMissionOutlineItem } from '@client/components/pages/missions/structures/MissionOutline'
 import type { TMetisClientComponents } from '@client/index'
 import type { ClientSessionMember } from '@client/sessions/ClientSessionMember'
 import type { TRequestMethod } from '@shared/connect'
@@ -24,7 +25,10 @@ import type { ClientMissionForce } from '../forces/ClientMissionForce'
  */
 export class ClientMissionNode
   extends MissionNode<TMetisClientComponents>
-  implements TListenerTargetEmittable<TNodeEventMethod>, TMapCompatibleNode
+  implements
+    TListenerTargetEmittable<TNodeEventMethod>,
+    TMapCompatibleNode,
+    TMissionOutlineItem
 {
   // Overridden
   public get name(): string {
@@ -333,6 +337,26 @@ export class ClientMissionNode
    * Manages the node's event listeners and events.
    */
   private eventManager: EventManager<TNodeEventMethod>
+
+  // Implemented
+  public readonly outlineIcon: TMetisIcon = 'node'
+
+  // Implemented
+  public expandedInOutline: boolean = false
+
+  // Implemented
+  public get outlineChildren(): TMissionOutlineItem[] {
+    return [...this.children, ...this.actions.values()]
+  }
+
+  // Implemented
+  public get outlineParent(): TMissionOutlineItem | null {
+    let parent = this.parent
+    if (parent === null || parent === this.force.root) {
+      return this.force
+    }
+    return parent
+  }
 
   /**
    * @param force The force of which the node is a part.
@@ -678,7 +702,6 @@ export class ClientMissionNode
     this.emitEvent('center-on-map')
     this.mission.emitEvent('center-node-on-map', this)
   }
-
   /* -- static -- */
 
   /**

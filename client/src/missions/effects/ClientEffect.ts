@@ -1,3 +1,4 @@
+import type { TMissionOutlineItem } from '@client/components/pages/missions/structures/MissionOutline'
 import type { TMetisClientComponents } from '@client/index'
 import type { ClientTarget } from '@client/target-environments/ClientTarget'
 import { ClientTargetEnvironment } from '@client/target-environments/ClientTargetEnvironment'
@@ -20,9 +21,26 @@ import type { ClientMissionAction } from '../actions/ClientMissionAction'
  * Class representing an effect on the client-side that can be
  * applied to a target.
  */
-export class ClientEffect<
-  TType extends TEffectType = TEffectType,
-> extends Effect<TMetisClientComponents, TType> {
+export class ClientEffect<TType extends TEffectType = TEffectType>
+  extends Effect<TMetisClientComponents, TType>
+  implements TMissionOutlineItem
+{
+  // Implemented
+  public readonly outlineIcon: TMetisIcon = 'waves'
+
+  // Implemented
+  public expandedInOutline: boolean = false
+
+  // Implemented
+  public get outlineChildren(): TMissionOutlineItem[] {
+    return []
+  }
+
+  // Implemented
+  public get outlineParent(): TMissionOutlineItem | null {
+    return this.context.host
+  }
+
   // Implemented
   protected determineTarget(
     targetId: string,
