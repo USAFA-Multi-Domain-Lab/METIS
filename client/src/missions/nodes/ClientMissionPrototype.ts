@@ -3,6 +3,7 @@ import type {
   TMapCompatibleNodeEvent,
 } from '@client/components/content/session/mission-map/objects/nodes'
 import type { TButtonSvg_PK } from '@client/components/content/user-controls/buttons/panels/types'
+import type { TMissionOutlineItem } from '@client/components/pages/missions/structures/MissionOutline'
 import type { TMetisClientComponents } from '@client/index'
 import type { ClientSessionMember } from '@client/sessions/ClientSessionMember'
 import type { TListenerTargetEmittable } from '@shared/events/EventManager'
@@ -27,7 +28,10 @@ import type { ClientActionExecution } from '../actions/ClientActionExecution'
  */
 export class ClientMissionPrototype
   extends MissionPrototype<TMetisClientComponents>
-  implements TListenerTargetEmittable<TPrototypeEventMethod>, TMapCompatibleNode
+  implements
+    TListenerTargetEmittable<TPrototypeEventMethod>,
+    TMapCompatibleNode,
+    TMissionOutlineItem
 {
   /**
    * The position of the prototype on a mission map.
@@ -176,6 +180,26 @@ export class ClientMissionPrototype
    * Manages the prototype's event listeners and events.
    */
   private eventManager: EventManager<TPrototypeEventMethod>
+
+  // Implemented
+  public readonly outlineIcon: TMetisIcon = 'node'
+
+  // Implemented
+  public expandedInOutline: boolean = false
+
+  // Implemented
+  public get outlineChildren(): TMissionOutlineItem[] {
+    return this.children
+  }
+
+  // Implemented
+  public get outlineParent(): TMissionOutlineItem | null {
+    let parent = this.parent
+    if (parent === null || parent === this.mission.root) {
+      return this.mission as ClientMission
+    }
+    return parent
+  }
 
   /**
    * @param mission The mission of which the prototype is a part.

@@ -1,7 +1,3 @@
----
-applyTo: 'client/src/**'
----
-
 # METIS: React Class Name Guide
 
 > For a workspace-wide index of instruction files, see [AGENTS.md](../../AGENTS.md). This document is the authoritative reference for managing HTML class names in React components.

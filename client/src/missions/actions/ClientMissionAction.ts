@@ -1,3 +1,4 @@
+import type { TMissionOutlineItem } from '@client/components/pages/missions/structures/MissionOutline'
 import type { TMetisClientComponents } from '@client/index'
 import type { ClientTarget } from '@client/target-environments/ClientTarget'
 import type {
@@ -15,7 +16,10 @@ import type { ClientMissionNode } from '../nodes/ClientMissionNode'
 /**
  * Class representing a mission action on the client-side.
  */
-export class ClientMissionAction extends MissionAction<TMetisClientComponents> {
+export class ClientMissionAction
+  extends MissionAction<TMetisClientComponents>
+  implements TMissionOutlineItem
+{
   /**
    * The formatted success chance to display to a session
    * member.
@@ -86,6 +90,22 @@ export class ClientMissionAction extends MissionAction<TMetisClientComponents> {
     if (this.opensNodeHidden) return ClientMissionAction.HIDDEN_VALUE
     // Return 'Yes' if the value is true, otherwise 'No'.
     return this.opensNode ? 'Yes' : 'No'
+  }
+
+  // Implemented
+  public readonly outlineIcon: TMetisIcon = 'lightning'
+
+  // Implemented
+  public expandedInOutline: boolean = false
+
+  // Implemented
+  public get outlineChildren(): TMissionOutlineItem[] {
+    return this.effects
+  }
+
+  // Implemented
+  public get outlineParent(): TMissionOutlineItem | null {
+    return this.node
   }
 
   /**

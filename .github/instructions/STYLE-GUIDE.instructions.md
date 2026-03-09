@@ -264,18 +264,17 @@ export function useDefaultProps<
 
 ### Code References
 
-If a docstring includes a direct reference to another piece of code, this reference can be wrapped in ```` so that the reference is highlighted in VSCode. This is done to highlight the relationship of code throughout the application.
+When a docstring references a named symbol — such as a class, interface, component, or type — use `{@link SymbolName}` to create a clickable hyperlink in VSCode, enabling quick navigation from the docstring to the definition.
 
-```jsx
+```tsx
 /**
- * The instructor that is in charge of this course.
- * @note This will be a `User` object if the instructor has been loaded, or it
- * will be a string (user ID) if the instructor has not been loaded
+ * Describes an object that can be displayed as an item within the
+ * {@link MissionOutline} component.
+ * @note Implement this interface in classes that should be compatible
+ * with {@link MissionOutline}.
  */
-protected _instructor: User | string
+export interface TMissionOutlineItem {
 ```
-
-User is wrapped in ```` because the comment is reference the User class explicitly.
 
 ### Inherited Docs
 
@@ -458,7 +457,7 @@ Files should list classes, constants, functions, etc… first, with all types en
 
 ### Class Properties
 
-Related class properties are grouped together in a class for ease-of-access. No space is given between the related properties, while space is given between the groups themselves. This is done to make the groups stand out.
+A private backing field and its corresponding public getter and/or setter are grouped together — no blank line between them — because they collectively represent a single logical property. Blank lines separate each such group from the next. Properties that happen to serve the same interface, or that are thematically similar but are each independently meaningful, are **not** grouped; they each stand on their own with a blank line in between.
 
 ```jsx
 // ! Note the space between the ajax status properties and the ID property.

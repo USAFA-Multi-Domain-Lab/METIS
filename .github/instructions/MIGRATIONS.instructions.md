@@ -1,7 +1,3 @@
----
-applyTo: '**'
----
-
 # METIS: Migration Guide
 
 > For a workspace-wide index of instruction files, see [AGENTS.md](../../AGENTS.md). This document is the authoritative reference for writing and registering database and import migrations in METIS.

@@ -47,5 +47,4 @@ environment-test.json
 # GitHub Copilot (A.I. agent)
 .github/*
 !.github/instructions
-!.github/copilot-instructions.md
 handoffs

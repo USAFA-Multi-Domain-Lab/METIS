@@ -60,6 +60,7 @@ import PrototypeEntry from './entries/implementations/PrototypeEntry'
 import Issues from './issues/Issues'
 import MissionPageMap from './map/MissionPageMap'
 import './MissionPage.scss'
+import MissionOutline from './structures/MissionOutline'
 import NodeStructuring from './structures/NodeStructuring'
 
 /**
@@ -74,6 +75,13 @@ const ISSUE_CHECK_DEBOUNCE_MS = 500
  */
 const STRUCTURE_DESCRIPTION =
   'Drag and drop the nodes below to reorder the structure of the mission. Nodes can be placed inside another node to nest nodes. Nodes can also be placed beside each other for more exact placement.'
+
+/**
+ * The description for the outline view in the
+ * secondary panel of the mission page.
+ */
+const OUTLINE_DESCRIPTION =
+  'A read-only overview of the full mission structure, including prototypes, forces, nodes, and actions.'
 
 /**
  * This will render page that allows the user to
@@ -733,6 +741,25 @@ export default function MissionPage(
               </PanelView>
               <PanelView title='Structure' description={STRUCTURE_DESCRIPTION}>
                 <NodeStructuring mission={mission} onChange={onChange} />
+              </PanelView>
+              <PanelView title='Outline' description={OUTLINE_DESCRIPTION}>
+                <MissionOutline
+                  root={mission}
+                  filter={(item) => {
+                    let isPrototype = item instanceof ClientMissionPrototype
+                    let isEffect = item instanceof ClientEffect
+                    return !isPrototype && !isEffect
+                  }}
+                  isSelectable={(item) => {
+                    let isMission = item instanceof ClientMission
+                    return !isMission
+                  }}
+                  isIndirectlySelectable={(item, parent) => {
+                    let isNode = item instanceof ClientMissionNode
+                    let parentIsNode = parent instanceof ClientMissionNode
+                    return !isNode || !parentIsNode
+                  }}
+                />
               </PanelView>
               <PanelView
                 title=''

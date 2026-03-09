@@ -1,0 +1,127 @@
+@use '@client/assets/styles/config.scss' as *;
+@use '@client/assets/styles/util.scss' as *;
+
+.MissionOutline {
+  &.SidePanel {
+    .BorderBox {
+      display: flex;
+      flex-direction: column;
+      overflow-y: hidden;
+
+      .OutlineTree {
+        overflow-x: auto;
+        overflow-y: auto;
+        height: calc(100% - 70px);
+        padding: 1em;
+        font-size: 0.75rem;
+        white-space: nowrap;
+
+        // -- Row patterns --
+
+        .OutlineItem {
+          &.Selectable {
+            .OutlineItemContent > .SelectionZone {
+              cursor: pointer;
+            }
+
+            &:not(.Selected) > .OutlineItemContent .SelectionZone:hover {
+              @include background-mask($opacity: 0.05);
+            }
+
+            &:not(.Selected):has(> .OutlineItemContent > .SelectionZone:hover) {
+              & > .MissionOutlineChildren > .IndirectlySelectable {
+                @include background-mask($opacity: 0.05);
+              }
+            }
+          }
+
+          &.Selected {
+            & > .OutlineItemContent > .SelectionZone {
+              @include background-mask($opacity: 0.15);
+            }
+
+            & > .MissionOutlineChildren > .IndirectlySelectable {
+              @include background-mask($opacity: 0.05);
+            }
+          }
+
+          &.Childless {
+            .OutlineItemContent {
+              cursor: default;
+
+              .Indicator {
+                opacity: 0;
+                pointer-events: none;
+              }
+
+              .MissionOutlineChildren {
+                display: none;
+              }
+            }
+          }
+
+          .OutlineItemContent {
+            display: grid;
+            grid-template-columns: 1.8em 1fr;
+            cursor: default;
+            user-select: none;
+
+            .Indicator {
+              cursor: pointer;
+              grid-column: 1 / 2;
+              width: 1.8em;
+              height: 1.8em;
+              background-image: url('../../../../assets/images/icons/indicator.svg');
+              background-size: contain;
+              background-position: center;
+              background-repeat: no-repeat;
+
+              &:hover {
+                @include background-mask($opacity: 0.05);
+              }
+
+              &.isCollapsed {
+                transform: rotate(-90deg);
+              }
+            }
+
+            .SelectionZone {
+              display: grid;
+              grid-template-columns: 1em 1fr;
+              column-gap: 0.333em;
+              padding-left: 0.333em;
+
+              .Icon {
+                width: 1em;
+                height: 1.8em;
+                background-size: contain;
+                background-position: center;
+                background-repeat: no-repeat;
+                opacity: 0.4;
+              }
+
+              .Name {
+                height: 1.8em;
+                line-height: 1.733em;
+              }
+            }
+          }
+
+          .MissionOutlineChildren {
+            padding-left: 1.8em;
+          }
+        }
+      }
+
+      .SelectionCount {
+        user-select: none;
+        display: flex;
+        justify-self: end;
+        align-self: end;
+        padding: 0.5em 2em;
+        font-size: 0.75rem;
+        color: $color-faded;
+      }
+    }
+  }
+}
