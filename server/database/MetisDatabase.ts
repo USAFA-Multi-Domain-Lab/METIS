@@ -309,19 +309,19 @@ export class MetisDatabase {
             throw new Error(`Failed to create default mission(s).`)
           }
 
-          let missionDoc = await MissionModel.findOne({
-            name: 'METIS > ASCOT 7 DEMO',
-          }).exec()
+          missionDocs = await MissionModel.find().exec()
 
-          if (!missionDoc) {
+          if (missionDocs.length === 0) {
             throw new Error(
-              `Failed to find the default mission in the database.`,
+              'Failed to find the default mission(s) in the database after import.',
             )
           }
 
-          databaseLogger.info(
-            `Default mission created: { _id: ${missionDoc._id}, name: ${missionDoc.name} }`,
-          )
+          for (let missionDoc of missionDocs) {
+            databaseLogger.info(
+              `Default mission created: { _id: ${missionDoc._id}, name: ${missionDoc.name} }`,
+            )
+          }
         }
 
         resolve()
