@@ -49,21 +49,17 @@ export abstract class MissionForce<
   public color: string
 
   /**
-   * The amount of resources available to the force at
-   * the start of the session.
+   * The resource pools for this force, each corresponding to
+   * a resource defined in the parent mission.
    */
-  public initialResources: number
-
+  protected _resourcePools: TForceResourcePool[]
   /**
-   * Determines whether or not the force's resource pools can be negative.
+   * The resource pools for this force, each corresponding to
+   * a resource defined in the parent mission.
    */
-  public allowNegativeResources: boolean
-
-  /**
-   * The current amount of resources available to the force.
-   * @note Only relevant when in a session.
-   */
-  public resourcesRemaining: number
+  public get resourcePools(): TForceResourcePool[] {
+    return this._resourcePools
+  }
 
   /**
    * Whether or not to reveal all nodes in the force.
@@ -181,15 +177,15 @@ export abstract class MissionForce<
     this.introMessage =
       data.introMessage ?? MissionForce.DEFAULT_PROPERTIES.introMessage
     this.color = data.color ?? MissionForce.DEFAULT_PROPERTIES.color
-    this.initialResources =
-      data.initialResources ?? MissionForce.DEFAULT_PROPERTIES.initialResources
-    this.allowNegativeResources =
-      data.allowNegativeResources ??
-      MissionForce.DEFAULT_PROPERTIES.allowNegativeResources
     this.revealAllNodes =
       data.revealAllNodes ?? MissionForce.DEFAULT_PROPERTIES.revealAllNodes
     this.localKey = data.localKey ?? mission.generateForceKey()
-    this.resourcesRemaining = data.resourcesRemaining ?? this.initialResources
+    this._resourcePools = (
+      data.resourcePools ?? MissionForce.DEFAULT_PROPERTIES.resourcePools
+    ).map((instance) => ({
+      ...instance,
+      resourcesRemaining: instance.resourcesRemaining ?? instance.initialAmount,
+    }))
     this.nodes = []
     this._outputs = []
     this.root = this.createNode(MissionForce.ROOT_NODE_PROPERTIES)
@@ -211,11 +207,16 @@ export abstract class MissionForce<
       introMessage: this.introMessage,
       name: this.name,
       color: this.color,
-      initialResources: this.initialResources,
-      allowNegativeResources: this.allowNegativeResources,
       revealAllNodes: this.revealAllNodes,
       localKey: this.localKey,
       nodes: this.exportNodes(options),
+      resourcePools: this._resourcePools.map(
+        ({ poolId, initialAmount, allowNegative }) => ({
+          poolId,
+          initialAmount,
+          allowNegative,
+        }),
+      ),
       filterOutputs: (memberId) => {
         json.outputs = this.filterOutputs(memberId).map((output) =>
           output.toJson(),
@@ -224,10 +225,12 @@ export abstract class MissionForce<
     }
 
     /**
-     * Includes `resourcesRemaining` in the JSON.
+     * Includes `resourcesRemaining` on each resource pool instance in the JSON.
      */
     const addResourcesRemaining = () => {
-      json.resourcesRemaining = this.resourcesRemaining
+      json.resourcePools = this._resourcePools.map(
+        (instance) => ({ ...instance }),
+      )
     }
 
     /**
@@ -335,10 +338,20 @@ export abstract class MissionForce<
   public abstract storeOutput(output: TOutput<T>): void
 
   /**
-   * Modifies the resource pool.
+   * Modifies the resource pool for the given pool ID.
    * @param operand The amount by which to modify the resource pool.
+   * @param poolId The ID of the resource pool to modify.
    */
-  public abstract modifyResourcePool(operand: number): void
+  public abstract modifyResourcePool(operand: number, poolId: string): void
+
+  /**
+   * Gets the resource pool instance with the given pool ID.
+   * @param poolId The ID of the pool to retrieve.
+   * @returns The resource pool instance, or undefined if not found.
+   */
+  public getResourcePool(poolId: string): TForceResourcePool | undefined {
+    return this._resourcePools.find((instance) => instance.poolId === poolId)
+  }
 
   /**
    * @param nodeId The ID of the node to retrieve.
@@ -423,8 +436,7 @@ export abstract class MissionForce<
       introMessage: '<p>Welcome to your force!</p>',
       name: 'New Force',
       color: '#ffffff',
-      initialResources: 100,
-      allowNegativeResources: false,
+      resourcePools: [],
       revealAllNodes: false,
       nodes: [],
     }
@@ -536,13 +548,10 @@ export interface TMissionForceSaveJson {
    */
   color: string
   /**
-   * The amount of resources available to the student at the start of the mission.
+   * The resource pools for this force, each corresponding to a
+   * resource defined in the parent mission.
    */
-  initialResources: number
-  /**
-   * Determines whether or not the force's resource pools can be negative.
-   */
-  allowNegativeResources: boolean
+  resourcePools: TForceResourcePool[]
   /**
    * Whether or not to reveal all nodes in the force.
    */
@@ -561,10 +570,6 @@ export interface TMissionForceSaveJson {
  * Session-specific JSON data for a MissionForce object.
  */
 export interface TMissionForceSessionJson {
-  /**
-   * The resources remaining for the force.
-   */
-  resourcesRemaining: number
   /**
    * The outputs for a force's output panel.
    */
@@ -614,3 +619,27 @@ export type TMissionForceDefaultJson = Required<
  * @returns The force type.
  */
 export type TForce<T extends TMetisBaseComponents> = T['force']
+
+/**
+ * A resource pool for a force, tracking a single resource's configuration
+ * and optional runtime state.
+ */
+export type TForceResourcePool = {
+  /**
+   * The ID of the resource pool this instance corresponds to.
+   */
+  poolId: string
+  /**
+   * The amount of resources available at the start of the session.
+   */
+  initialAmount: number
+  /**
+   * Whether the pool can go below zero.
+   */
+  allowNegative: boolean
+  /**
+   * The current amount of resources remaining.
+   * @note This is a session-only value and is never persisted to the database.
+   */
+  resourcesRemaining?: number
+}

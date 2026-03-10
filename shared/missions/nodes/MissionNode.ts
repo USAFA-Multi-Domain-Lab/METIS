@@ -813,10 +813,11 @@ export abstract class MissionNode<
   /**
    * Modifies the resource cost for all the node's
    * actions.
+   * @param poolId The ID of the pool whose cost to modify.
    * @param resourceCostOperand The operand to modify
    * the resource cost by.
    */
-  public abstract modifyResourceCost(resourceCostOperand: number): void
+  public abstract modifyResourceCost(poolId: string, resourceCostOperand: number): void
 
   /**
    * Processes an incoming execution that is being performed

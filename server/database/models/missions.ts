@@ -272,11 +272,19 @@ export const missionSchema = new MissionSchema(
       required: true,
       default: StringToolbox.generateRandomId,
     },
-    resourceLabel: {
-      type: String,
+    resources: {
       required: true,
-      default: 'Resources',
-      maxlength: Mission.MAX_RESOURCE_LABEL_LENGTH,
+      type: [
+        {
+          _id: { type: String, required: true },
+          label: {
+            type: String,
+            required: true,
+            maxlength: Mission.MAX_POOL_LABEL_LENGTH,
+          },
+          order: { type: Number, required: true },
+        },
+      ],
     },
     launchedAt: { type: Date, default: null },
     createdBy: {
@@ -326,9 +334,15 @@ export const missionSchema = new MissionSchema(
             type: String,
             required: true,
           },
-          initialResources: {
-            type: Number,
+          resourcePools: {
             required: true,
+            type: [
+              {
+                poolId: { type: String, required: true },
+                initialAmount: { type: Number, required: true },
+                allowNegative: { type: Boolean, required: true },
+              },
+            ],
           },
           revealAllNodes: {
             type: Boolean,
@@ -336,10 +350,6 @@ export const missionSchema = new MissionSchema(
           },
           localKey: {
             type: String,
-            required: true,
-          },
-          allowNegativeResources: {
-            type: Boolean,
             required: true,
           },
           nodes: {
@@ -417,13 +427,15 @@ export const missionSchema = new MissionSchema(
                         type: Boolean,
                         required: true,
                       },
-                      resourceCost: {
-                        type: Number,
+                      resourceCosts: {
                         required: true,
-                      },
-                      resourceCostHidden: {
-                        type: Boolean,
-                        required: true,
+                        type: [
+                          {
+                            poolId: { type: String, required: true },
+                            amount: { type: Number, required: true },
+                            hidden: { type: Boolean, required: true },
+                          },
+                        ],
                       },
                       opensNode: {
                         type: Boolean,

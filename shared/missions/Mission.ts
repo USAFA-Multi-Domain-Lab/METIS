@@ -130,9 +130,10 @@ export abstract class Mission<
   public seed: string
 
   /**
-   * A label given to resources that defines the currency used in the mission.
+   * A collection of resource definitions which define the currencies
+   * used within the mission.
    */
-  public resourceLabel: string
+  public resources: TResource[]
 
   /**
    * The date/time the mission was created.
@@ -209,7 +210,7 @@ export abstract class Mission<
     name: string,
     versionNumber: number,
     seed: string,
-    resourceLabel: string,
+    resources: TResource[],
     createdAt: Date | null,
     updatedAt: Date | null,
     launchedAt: Date | null,
@@ -225,7 +226,7 @@ export abstract class Mission<
 
     this.versionNumber = versionNumber
     this.seed = seed
-    this.resourceLabel = resourceLabel
+    this.resources = resources
     this.createdAt = createdAt
     this.updatedAt = updatedAt
     this.launchedAt = launchedAt
@@ -271,7 +272,7 @@ export abstract class Mission<
       name: this.name,
       versionNumber: this.versionNumber,
       seed: this.seed,
-      resourceLabel: this.resourceLabel,
+      resources: this.resources,
       createdAt: DateToolbox.toNullableISOString(this.createdAt),
       updatedAt: DateToolbox.toNullableISOString(this.updatedAt),
       launchedAt: DateToolbox.toNullableISOString(this.launchedAt),
@@ -758,10 +759,14 @@ export abstract class Mission<
   public static readonly MAX_NAME_LENGTH: number = 175
 
   /**
-   * The maximum length allowed for a mission resource
-   * label.
+   * The maximum number of resource pools allowed in a mission.
    */
-  public static readonly MAX_RESOURCE_LABEL_LENGTH: number = 16
+  public static readonly MAX_POOL_COUNT: number = 8
+
+  /**
+   * The maximum length allowed for a resource pool label.
+   */
+  public static readonly MAX_POOL_LABEL_LENGTH: number = 16
 
   /**
    * The maximum number of forces allowed in a mission.
@@ -891,7 +896,7 @@ export abstract class Mission<
       name: 'New Mission',
       versionNumber: 1,
       seed: StringToolbox.generateRandomId(),
-      resourceLabel: 'Resources',
+      resources: [{ _id: StringToolbox.generateRandomId(), label: 'Resources', order: 0 }],
       createdAt: null,
       updatedAt: null,
       launchedAt: null,
@@ -1139,7 +1144,7 @@ export type TMission<T extends TMetisBaseComponents> = T['mission']
  */
 export type TMissionJson = TCreateJsonType<
   Mission,
-  'name' | 'versionNumber' | 'seed' | 'resourceLabel',
+  'name' | 'versionNumber' | 'seed' | 'resources',
   {
     _id?: string
     createdAt: string | null
@@ -1291,3 +1296,28 @@ export type TFileExposure =
  * No root-level effects are exposed.
  */
 export type TRootEffectsExposure = { expose: 'all' } | { expose: 'none' }
+
+/**
+ * A named resource defined at the mission level. Each resource represents
+ * a distinct currency that forces can hold and spend when executing actions.
+ * Forces reference resources by `_id` via their `resourcePools`, and
+ * actions deduct from one or more resources via their `resourceCosts`.
+ */
+export type TResource = {
+  /**
+   * Used by forces and actions to reference this pool without relying on
+   * the label, which may change.
+   */
+  _id: string
+  /**
+   * The name shown to participants in the session UI to identify this
+   * currency (e.g. "Funds", "Bandwidth", "Actions"). Must be at most
+   * {@link Mission.MAX_POOL_LABEL_LENGTH} characters.
+   */
+  label: string
+  /**
+   * Controls the left-to-right rendering order of pools in the UI.
+   * Lower values appear first.
+   */
+  order: number
+}

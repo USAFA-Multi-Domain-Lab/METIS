@@ -1802,7 +1802,9 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       method: 'action-execution-initiated',
       data: {
         execution: execution.toJson(),
-        resourcesRemaining: action!.force.resourcesRemaining,
+        resourcePools: action!.force.toJson({
+          sessionDataExposure: { expose: 'all' },
+        }).resourcePools,
       },
       request: {
         event: request.event,
@@ -2461,6 +2463,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * Modifies the resource cost of a specific action within a node or
    * all actions within a node.
    * @param data The data for the modification.
+   * @param data.poolId The ID of the resource pool to modify the cost for.
    * @param data.operand The operand to modify the resource cost by.
    * @param data.node The node containing the action to modify.
    * @param data.action The action to modify.
@@ -2468,11 +2471,12 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * within the node will be modified.
    */
   public modifyResourceCost = (data: {
+    poolId: string
     operand: number
     node: ServerMissionNode
     action?: ServerMissionAction
   }) => {
-    const { operand, node, action } = data
+    const { poolId, operand, node, action } = data
 
     // Confirm the node exists.
     this.confirmComponentInMission(node)
@@ -2483,7 +2487,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
     // Modify the resource cost of the action or
     // all actions within the node.
-    node.modifyResourceCost(operand, action?._id)
+    node.modifyResourceCost(poolId, operand, action?._id)
     this.emitModifierEnacted(node.force, {
       key: 'node-action-resource-cost',
       resourceCostOperand: operand,
@@ -2493,18 +2497,23 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   }
 
   /**
-   * Modifies resource pool by applying the given amount
-   * to the resource pool.
+   * Modifies a resource pool by applying the given amount
+   * to the pool with the given ID.
    * @param force The force containing the resource pool.
+   * @param poolId The ID of the resource pool to modify.
    * @param operand The amount by which to modify the resource pool.
    * @note A negative value will subtract and a positive
    * value will add to the resource pool.
    */
-  public modifyResourcePool = (force: ServerMissionForce, operand: number) => {
+  public modifyResourcePool = (
+    force: ServerMissionForce,
+    poolId: string,
+    operand: number,
+  ) => {
     // Confirm the force exists, modify the resource pool,
     // then emit an event to the members.
     this.confirmComponentInMission(force)
-    force.modifyResourcePool(operand)
+    force.modifyResourcePool(operand, poolId)
     this.emitModifierEnacted(force, {
       key: 'force-resource-pool',
       forceId: force._id,

@@ -28,8 +28,7 @@ const JSON_PROPERTIES_RAW = {
     'processTimeHidden',
     'successChance',
     'successChanceHidden',
-    'resourceCost',
-    'resourceCostHidden',
+    'resourceCosts',
     'opensNode',
     'opensNodeHidden',
     'localKey',
@@ -158,31 +157,25 @@ export abstract class MissionAction<
   public successChanceHidden: boolean
 
   /**
-   * The amount of resources the action will be subtracted
-   * from that available to the executor of the action.
+   * The resource costs of this action, one per pool.
    */
-  protected _resourceCost: number
+  protected _resourceCosts: TActionResourceCost[]
   /**
-   * The amount of resources the action will be subtracted
-   * from that available to the executor of the action.
+   * The resource costs of this action. Each entry's amount reflects
+   * the base amount plus any active operand for that pool.
    */
-  public get resourceCost(): number {
-    // Return the resource cost within the correct range.
-    // ***Note: This ensures the resource cost is never less than 0.
-    return Math.max(
-      this._resourceCost + this._resourceCostOperand,
-      MissionAction.RESOURCE_COST_MIN,
-    )
+  public get resourceCosts(): TActionResourceCost[] {
+    return this._resourceCosts.map((cost) => ({
+      ...cost,
+      amount: Math.max(
+        cost.amount + (this._resourceCostOperands[cost.poolId] ?? 0),
+        MissionAction.RESOURCE_COST_MIN,
+      ),
+    }))
   }
-  public set resourceCost(value: number) {
-    this._resourceCost = value
+  public set resourceCosts(value: TActionResourceCost[]) {
+    this._resourceCosts = value
   }
-
-  /**
-   * Hides the resource cost from students.
-   * @default false
-   */
-  public resourceCostHidden: boolean
 
   /**
    * Whether the successful completion of this action will
@@ -248,10 +241,10 @@ export abstract class MissionAction<
    */
   private _successChanceOperand: number
   /**
-   * Used to modify the amount of resources the action costs to execute.
-   * @note The operand can be positive or negative. It will either increase or decrease the resource cost.
+   * Per-pool operands used to modify each pool's resource cost.
+   * @note Each operand can be positive or negative, increasing or decreasing the cost.
    */
-  private _resourceCostOperand: number
+  private _resourceCostOperands: TResourceCostOperands
 
   /**
    * The number of times the action has been
@@ -273,10 +266,14 @@ export abstract class MissionAction<
    * configuration or any cheats that may be applied.
    */
   public get areEnoughResources(): boolean {
-    return (
-      this.resourceCost <= Math.max(this.force.resourcesRemaining, 0) ||
-      this.force.allowNegativeResources
-    )
+    return this.resourceCosts.every((cost) => {
+      let pool = this.force.getResourcePool(cost.poolId)
+      if (!pool) return true
+      return (
+        cost.amount <= Math.max(pool.resourcesRemaining ?? 0, 0) ||
+        pool.allowNegative
+      )
+    })
   }
 
   /**
@@ -333,11 +330,8 @@ export abstract class MissionAction<
     this.successChanceHidden =
       data.successChanceHidden ??
       MissionAction.DEFAULT_PROPERTIES.successChanceHidden
-    this._resourceCost =
-      data.resourceCost ?? MissionAction.DEFAULT_PROPERTIES.resourceCost
-    this.resourceCostHidden =
-      data.resourceCostHidden ??
-      MissionAction.DEFAULT_PROPERTIES.resourceCostHidden
+    this._resourceCosts =
+      data.resourceCosts ?? MissionAction.DEFAULT_PROPERTIES.resourceCosts
     this.opensNode =
       data.opensNode ?? MissionAction.DEFAULT_PROPERTIES.opensNode
     this.opensNodeHidden =
@@ -349,7 +343,7 @@ export abstract class MissionAction<
 
     this._processTimeOperand = 0
     this._successChanceOperand = 0
-    this._resourceCostOperand = 0
+    this._resourceCostOperands = {}
   }
 
   /**
@@ -386,8 +380,7 @@ export abstract class MissionAction<
       processTimeHidden: this.processTimeHidden,
       successChance: this._successChance,
       successChanceHidden: this.successChanceHidden,
-      resourceCost: this._resourceCost,
-      resourceCostHidden: this.resourceCostHidden,
+      resourceCosts: this._resourceCosts.map((cost) => ({ ...cost })),
       opensNode: this.opensNode,
       opensNodeHidden: this.opensNodeHidden,
       localKey: this.localKey,
@@ -401,7 +394,9 @@ export abstract class MissionAction<
         // preventing the students from seeing them.
         if (json.processTimeHidden) json.processTime = -1
         if (json.successChanceHidden) json.successChance = -1
-        if (json.resourceCostHidden) json.resourceCost = -1
+        json.resourceCosts = json.resourceCosts.map((cost) =>
+          cost.hidden ? { ...cost, amount: -1 } : cost,
+        )
         if (json.opensNodeHidden) json.opensNode = false
         break
       case 'none':
@@ -432,13 +427,13 @@ export abstract class MissionAction<
   }
 
   /**
-   * Modifies the amount of resources the action costs to execute.
-   * @param resourceCostOperand The operand to modify the resource
-   * cost by.
+   * Modifies the resource cost for a specific pool.
+   * @param poolId The ID of the pool whose cost to modify.
+   * @param resourceCostOperand The operand to modify the resource cost by.
    */
-  public modifyResourceCost(resourceCostOperand: number): void {
-    this._resourceCost = this.resourceCost
-    this._resourceCostOperand = resourceCostOperand
+  public modifyResourceCost(poolId: string, resourceCostOperand: number): void {
+    this._resourceCostOperands[poolId] =
+      (this._resourceCostOperands[poolId] ?? 0) + resourceCostOperand
   }
 
   // Implemented
@@ -573,8 +568,7 @@ export abstract class MissionAction<
       processTimeHidden: false,
       successChance: 0.5,
       successChanceHidden: false,
-      resourceCost: 1,
-      resourceCostHidden: false,
+      resourceCosts: [],
       opensNode: true,
       opensNodeHidden: false,
       effects: [],
@@ -669,3 +663,27 @@ export type TMissionActionDefaultJson = Required<
  * @option 'single-use' - The action can only be executed once.
  */
 export type TActionType = 'repeatable' | 'single-use'
+
+/**
+ * A map of pool IDs to their active session operands, used to temporarily
+ * adjust the base resource cost of an action without permanently altering it.
+ */
+export type TResourceCostOperands = { [poolId: string]: number }
+
+/**
+ * Defines the resource cost for a single pool on a mission action.
+ */
+export type TActionResourceCost = {
+  /**
+   * The ID of the resource pool this cost is applied to.
+   */
+  poolId: string
+  /**
+   * The amount of resources to subtract from the pool when this action is executed.
+   */
+  amount: number
+  /**
+   * Whether the cost is hidden from session participants.
+   */
+  hidden: boolean
+}

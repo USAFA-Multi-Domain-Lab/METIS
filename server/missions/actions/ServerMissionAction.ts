@@ -78,9 +78,11 @@ export class ServerMissionAction extends MissionAction<TMetisServerComponents> {
       })
 
       // If the "Zero Resource Cost" cheat is not enabled,
-      // deduct the resource cost from the force's resources.
+      // deduct each resource cost from the corresponding pool.
       if (!zeroCost && !infiniteResources) {
-        this.force.resourcesRemaining -= this.resourceCost
+        for (let cost of this.resourceCosts) {
+          this.force.modifyResourcePool(-cost.amount, cost.poolId)
+        }
       }
 
       // Set timeout for when the execution is completed.
@@ -137,8 +139,8 @@ export class ServerMissionAction extends MissionAction<TMetisServerComponents> {
       get processTime() {
         return self.processTime
       },
-      get resourceCost() {
-        return self.resourceCost
+      get resourceCosts() {
+        return self.resourceCosts
       },
       get executing() {
         return self.executing
