@@ -1577,6 +1577,21 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
         }),
       )
     }
+    // If the member doesn't belong to the node's force and doesn't
+    // have complete visibility, then emit an error.
+    if (
+      !member.isAuthorized('completeVisibility') &&
+      member.forceId !== node.forceId
+    ) {
+      return connection.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
+          {
+            request: connection.buildResponseReqData(event),
+          },
+        ),
+      )
+    }
     // If the node is executable, then emit
     // an error.
     if (!node.openable) {
@@ -1680,6 +1695,21 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
         }),
       )
     }
+    // If the member doesn't belong to the action's force and doesn't
+    // have complete visibility, then emit an error.
+    if (
+      !member.isAuthorized('completeVisibility') &&
+      member.forceId !== action.force._id
+    ) {
+      return connection.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
+          {
+            request,
+          },
+        ),
+      )
+    }
     // If the action is not executable, then
     // emit an error.
     if (!action.node.executable) {
@@ -1768,6 +1798,20 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
         )
       }
 
+      // Ensure the member belongs to the node's force or has complete
+      // visibility before allowing the acknowledgement.
+      if (
+        !member.isAuthorized('completeVisibility') &&
+        member.forceId !== node.forceId
+      ) {
+        return member.emitError(
+          new ServerEmittedError(
+            ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
+            { request },
+          ),
+        )
+      }
+
       alert.acknowledged = true
 
       // Communicate with all members of the force
@@ -1779,7 +1823,15 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
           request,
         })
       }
-    } catch {}
+    } catch (error) {
+      // Emit an error if the action could not be executed.
+      member.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR, {
+          request: member.connection.buildResponseReqData(event),
+          message: 'Failed to acknowledge node alert.',
+        }),
+      )
+    }
   }
 
   /**
@@ -1946,6 +1998,22 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
             new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_FOUND, {
               request,
             }),
+          )
+        }
+
+        // If the member doesn't belong to the node's force and doesn't
+        // have complete visibility, then emit an error.
+        if (
+          !member.isAuthorized('completeVisibility') &&
+          member.forceId !== node.forceId
+        ) {
+          return member.emitError(
+            new ServerEmittedError(
+              ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
+              {
+                request,
+              },
+            ),
           )
         }
 

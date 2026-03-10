@@ -207,6 +207,7 @@ export class ServerEmittedError extends WsEmittedError {
     [ServerEmittedError.CODE_NODE_NOT_OPENABLE]: 'Node not openable.',
     [ServerEmittedError.CODE_NODE_NOT_EXECUTABLE]: 'Node not executable.',
     [ServerEmittedError.CODE_NODE_NOT_REVEALED]: 'Node not revealed.',
+    [ServerEmittedError.CODE_NODE_ALERT_NOT_FOUND]: 'Node alert not found.',
     [ServerEmittedError.CODE_ACTION_NOT_FOUND]: 'Action not found.',
     [ServerEmittedError.CODE_ACTION_INSUFFICIENT_RESOURCES]:
       'Insufficient resources available to execute action.',

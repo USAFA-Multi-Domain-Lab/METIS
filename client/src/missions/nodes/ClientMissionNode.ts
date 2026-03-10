@@ -555,6 +555,9 @@ export class ClientMissionNode
       alert.acknowledged = true
       this.emitEvent('alert-updated')
     }
+    if (!this.hasPendingAlerts) {
+      this.emitEvent('new-icon') // Icon changes once there are no more pending alerts.
+    }
   }
 
   public onAlertAcknowledgementError(alertId: string): void {
