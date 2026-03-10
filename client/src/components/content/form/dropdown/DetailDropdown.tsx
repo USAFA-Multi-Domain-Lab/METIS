@@ -56,6 +56,7 @@ export function DetailDropdown<TOption>(
     emptyText: props.emptyText ?? 'Select an option',
     errorMessage: props.errorMessage ?? '',
     errorType: props.errorType ?? 'default',
+    errorDisplay: props.errorDisplay ?? 'on-blur',
     isExpanded: props.isExpanded ?? false,
   }
   // Extract props.

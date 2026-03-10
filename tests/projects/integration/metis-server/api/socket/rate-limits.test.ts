@@ -15,7 +15,7 @@ import { TestSuiteTeardown } from 'tests/middleware/TestSuiteTeardown'
 import { TestToolbox } from 'tests/toolbox/TestToolbox'
 
 describe('Rate limiting', () => {
-  const USERNAME_PREFIX = 'test_ws_rate_limit'
+  const USERNAME_PREFIX = 'test_socket_rate_limit'
   let socket: Socket | null = null
   let server: MetisServer
   let cookieHeader: string = ''
@@ -69,7 +69,7 @@ describe('Rate limiting', () => {
     }
   })
 
-  test('WebSocket: emits CODE_MESSAGE_RATE_LIMIT when user exceeds message rate (and resets the user web session)', async () => {
+  test('Socket: emits CODE_MESSAGE_RATE_LIMIT when user exceeds message rate', async () => {
     if (!socket) {
       throw Error('Socket was not initialized by beforeEach.')
     }
@@ -104,30 +104,6 @@ describe('Rate limiting', () => {
     )
 
     expect(rateLimitEvent.code).toBe(ServerEmittedError.CODE_MESSAGE_RATE_LIMIT)
-
-    // After the window resets, the web session should have been destroyed
-    // and the user should no longer be authenticated.
-    await sleep(windowMs + 250)
-
-    // The socket should be disconnected.
-    expect(socket.connected).toBe(false)
-
-    // The connection attempt should be rejected due to unauthenticated session.
-    try {
-      await TestSocketClient.connect(server, cookieHeader)
-      throw new Error(
-        'Expected socket reconnect to fail after rate-limit reset.',
-      )
-    } catch (error: any) {
-      let parsed: any
-      try {
-        parsed = JSON.parse(error?.message)
-      } catch {
-        throw error
-      }
-
-      expect(parsed?.code).toBe(ServerEmittedError.CODE_UNAUTHENTICATED)
-    }
   }, 20000)
 
   afterAll(async () => {

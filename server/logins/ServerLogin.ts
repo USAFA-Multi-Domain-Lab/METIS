@@ -10,7 +10,9 @@ import { Socket } from 'socket.io'
 import { SessionServer } from '../sessions/SessionServer'
 
 /**
- * Express sessions are limited in what they can store. This class expands the functionality of logins in METIS.
+ * Express sessions are limited in what they can store. This class expands the functionality of user logins in METIS.
+ * @note This class is meant to work in conjunction with {@link ServerUser} because user's shouldn't be able to use
+ * METIS without logging in first.
  */
 export class ServerLogin {
   /**
@@ -95,17 +97,6 @@ export class ServerLogin {
   }
 
   /**
-   * When the login timeout ends.
-   */
-  private _timeoutEnd: number | null
-  /**
-   * When the login timeout ends.
-   */
-  public get timeoutEnd(): number | null {
-    return this._timeoutEnd
-  }
-
-  /**
    * The express session ID associated with the login.
    */
   private _expressSessionId: Request['session']['id']
@@ -114,33 +105,6 @@ export class ServerLogin {
    */
   public get expressSessionId(): Request['session']['id'] {
     return this._expressSessionId
-  }
-
-  /**
-   * Whether the login is in a timeout.
-   */
-  public get inTimeout(): boolean {
-    return this.timeoutEnd !== null && this.timeoutEnd > Date.now()
-  }
-
-  /**
-   * The time remaining in the timeout, in milliseconds. If zero,
-   * the login is not in a timeout.
-   */
-  public get timeoutRemaining(): number {
-    if (!this.timeoutEnd) {
-      return 0
-    }
-    return Math.max(0, Math.floor(this.timeoutEnd - Date.now()))
-  }
-
-  /**
-   * The time remaining in the timeout, in minutes. If zero,
-   * the login is not in a timeout.
-   * @note This is rounded up to the nearest minute.
-   */
-  public get timeoutMinutesRemaining(): number {
-    return Math.ceil(this.timeoutRemaining / 60000)
   }
 
   /**
@@ -174,19 +138,12 @@ export class ServerLogin {
     this._destroyed = false
     this._isDuplicate = false
 
-    // Check timeout by user ID first (persists across sessions), then fall
-    // back to express request lookup for session-based timeouts.
-    this._timeoutEnd =
-      ServerLogin.timeoutRegistryByUserId.get(this.userId) ??
-      ServerLogin.getTimeoutEndByExpressRequest(expressRequest)
-
     // Check for duplicate logins by user ID (another session for same user)
     // or by express session (same session trying to login again).
     let duplicateLogin =
       ServerLogin.userIdRegistry.get(this.userId) ??
-      ServerLogin.getByExpressRequest(expressRequest)
+      ServerLogin.get(expressRequest)
 
-    // Handle duplicate login.
     if (duplicateLogin) {
       this._isDuplicate = true
 
@@ -204,12 +161,9 @@ export class ServerLogin {
       duplicateLogin.destroy()
     }
 
-    // Store the login in the registry if the user
-    // isn't in a timeout.
-    if (!this.inTimeout) {
-      ServerLogin.userIdRegistry.set(this.userId, this)
-      ServerLogin.expressRegistry.set(this.expressSessionId, this)
-    }
+    // Register the login.
+    ServerLogin.userIdRegistry.set(this.userId, this)
+    ServerLogin.expressRegistry.set(this.expressSessionId, this)
   }
 
   /**
@@ -261,18 +215,6 @@ export class ServerLogin {
   }
 
   /**
-   * Sets the timeout information for the user logged in.
-   * @param timeoutEnd When the timeout ends.
-   */
-  public timeout(timeoutEnd: number): void {
-    // Set timeout end on the instance.
-    this._timeoutEnd = timeoutEnd
-
-    // Update the single timeout registry by userId.
-    ServerLogin.timeoutRegistryByUserId.set(this.userId, timeoutEnd)
-  }
-
-  /**
    * Handles when the user joins a METIS session.
    * @param metisSessionId The ID of the joined METIS session.
    * @see {@link Session} class for more information.
@@ -310,27 +252,9 @@ export class ServerLogin {
   >()
 
   /**
-   * A registry of all logins that are in timeout by user ID.
-   * @note This is the single source of truth for timeouts. Timeout
-   * methods like {@link timeoutByExpressRequest} and {@link timeoutBySocket} lookup
-   * methods extract the userId and query this registry.
-   */
-  protected static timeoutRegistryByUserId: Map<ServerUser['_id'], number> =
-    new Map<ServerUser['_id'], number>()
-
-  /**
-   * @returns the login information associated with the user ID.
-   */
-  public static getByUserId(
-    userId: ServerUser['_id'],
-  ): ServerLogin | undefined {
-    return ServerLogin.userIdRegistry.get(userId)
-  }
-
-  /**
    * @returns the login information associated with the express request.
    */
-  public static getByExpressRequest(
+  private static getByExpressRequest(
     expressRequest: Request,
   ): ServerLogin | undefined {
     const { userId } = expressRequest.session
@@ -346,7 +270,7 @@ export class ServerLogin {
   /**
    * @returns the login information associated with the socket request.
    */
-  public static getBySocket(socket: Socket): ServerLogin | undefined {
+  private static getBySocket(socket: Socket): ServerLogin | undefined {
     const { userId } = socket.request.session
 
     if (userId) {
@@ -358,15 +282,13 @@ export class ServerLogin {
   }
 
   /**
-   * Retrieves the login information based on the provided identifier.
-   * @param by The identifier to retrieve the login information by.
-   * @returns The login information associated with the identifier, or undefined if not found.
+   * @param by The {@link ServerUser._id|UserId}, {@link Request}, or {@link Socket} to retrieve the login information by.
    */
   public static get(
     by: ServerUser['_id'] | Request | Socket,
   ): ServerLogin | undefined {
     if (typeof by === 'string') {
-      return ServerLogin.getByUserId(by)
+      return ServerLogin.userIdRegistry.get(by)
     } else if (by instanceof Socket) {
       return ServerLogin.getBySocket(by)
     } else {
@@ -375,63 +297,18 @@ export class ServerLogin {
   }
 
   /**
-   * Destroys the login information associated with the express request.
+   * @param by The {@link ServerUser._id|UserId}, {@link Request}, or {@link Socket} used to destroy the login information by.
+   * @see {@link ServerLogin.destroy}
    */
-  public static destroyByExpressRequest(expressRequest: Request): void {
-    let login = ServerLogin.getByExpressRequest(expressRequest)
+  public static destroy(by: ServerUser['_id'] | Request | Socket): void {
+    let login = ServerLogin.get(by)
     login?.destroy()
   }
 
   /**
-   * Destroys the login information associated with the socket.
+   * The default duration for a user timeout, in milliseconds.
    */
-  public static destroyBySocket(socket: Socket): void {
-    let login = ServerLogin.getBySocket(socket)
-    login?.destroy()
-  }
-
-  /**
-   * @returns the login timeout end time associated with the express request.
-   */
-  public static getTimeoutEndByExpressRequest(
-    expressRequest: Request,
-  ): number | null {
-    const { userId } = expressRequest.session
-    if (!userId) return null
-    return ServerLogin.timeoutRegistryByUserId.get(userId) ?? null
-  }
-
-  /**
-   * @returns the login timeout end time associated with the socket.
-   */
-  public static getTimeoutEndBySocket(socket: Socket): number | null {
-    const { userId } = socket.request.session
-    if (!userId) return null
-    return ServerLogin.timeoutRegistryByUserId.get(userId) ?? null
-  }
-
-  /**
-   * Sets a timeout for the user associated with the express request.
-   * @param expressRequest The express request associated with the user to set the timeout for.
-   * @param timeoutEnd When the timeout ends.
-   */
-  public static timeoutByExpressRequest(
-    expressRequest: Request,
-    timeoutEnd: number,
-  ): void {
-    let login = ServerLogin.getByExpressRequest(expressRequest)
-    login?.timeout(timeoutEnd)
-  }
-
-  /**
-   * Sets a timeout for the user associated with the socket.
-   * @param socket The socket associated with the user to set the timeout for.
-   * @param timeoutEnd When the timeout ends.
-   */
-  public static timeoutBySocket(socket: Socket, timeoutEnd: number): void {
-    let login = ServerLogin.getBySocket(socket)
-    login?.timeout(timeoutEnd)
-  }
+  public static readonly DEFAULT_TIMEOUT_DURATION = 15 * 60 * 1000 // 15 minutes
 }
 
 /* -- TYPES -- */

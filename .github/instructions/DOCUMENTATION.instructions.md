@@ -84,6 +84,26 @@ Brief intro paragraph (1–4 sentences). No subheading above it — this sits di
 - **Tables** — use for structured comparisons or reference data
 - **Placeholders in examples** — use `<angle-bracket-kebab-case>` (e.g., `<database-name>`)
 
+### Table of Contents
+
+Include a `## Table of Contents` section when a content page has **3 or more `##` H2 sections**. This applies to guides, references, and API docs — pages that readers look things up in. It does not apply to index files (which are already navigation hubs), example walkthroughs meant to be read top-to-bottom, or short pages with fewer than 3 H2 sections.
+
+**Placement:** Immediately after the intro paragraph, before the first `##` section.
+
+**Format:** List each H2 as a top-level item. If an H2 has H3 subsections, list them as indented sub-items (2 spaces). Use standard Markdown anchor links: lowercase, spaces replaced with hyphens, punctuation removed.
+
+```markdown
+## Table of Contents
+
+- [Section One](#section-one)
+- [Section Two](#section-two)
+  - [Subsection A](#subsection-a)
+  - [Subsection B](#subsection-b)
+- [Section Three](#section-three)
+```
+
+**Do not** add a colon after "Table of Contents" — use `## Table of Contents`, not `## Table of Contents:`.
+
 ### Emoji in Headers
 
 Emoji are used selectively:
@@ -154,6 +174,7 @@ When you create a new content page:
 - [ ] Place the file in the correct section folder with a lowercase kebab-case name.
 - [ ] Start with an `#` H1 title.
 - [ ] Write a brief intro paragraph immediately after the title (no subheading).
+- [ ] If the page has 3 or more `##` H2 sections, add a `## Table of Contents` immediately after the intro paragraph.
 - [ ] Use `##` / `###` for sections and subsections — no deeper.
 - [ ] Include a language identifier on all code blocks.
 - [ ] Use relative paths for all internal links.

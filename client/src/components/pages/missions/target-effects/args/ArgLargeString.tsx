@@ -18,7 +18,6 @@ export default function ArgLargeString({
   const [value, setValue] = useState<string>(
     effectArgs[arg._id] ?? defaultValue,
   )
-  console.log('ArgLargeString render: value =', value)
 
   /* -- EFFECTS -- */
 
@@ -93,6 +92,7 @@ export default function ArgLargeString({
       value={value}
       setValue={setValue}
       defaultValue={arg.required ? arg.default : undefined}
+      errorDisplay={'immediate'}
       tooltipDescription={arg.tooltipDescription}
       key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}_${
         arg.required ? 'required' : 'optional'

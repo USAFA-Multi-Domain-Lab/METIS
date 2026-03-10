@@ -22,7 +22,6 @@ import { MetisWsServer } from './connect/MetisWsServer'
 import { MetisDatabase } from './database/MetisDatabase'
 import { MetisFileStore } from './files/MetisFileStore'
 import { expressLogger, initializeLoggers } from './logging'
-import { ServerLogin } from './logins/ServerLogin'
 import { ServerTarget } from './target-environments/ServerTarget'
 import { ServerTargetEnvironment } from './target-environments/ServerTargetEnvironment'
 import { TargetEnvSandboxing } from './target-environments/TargetEnvSandboxing'
@@ -371,7 +370,6 @@ export class MetisServer {
           `Rate limit exceeded for session ID ${request.sessionID} from IP ${request.ip}`,
         )
         response.sendStatus(429)
-        ServerLogin.destroyByExpressRequest(request)
       },
     })
   }

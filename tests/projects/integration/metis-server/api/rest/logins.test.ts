@@ -1,6 +1,13 @@
-import { afterAll, beforeEach, describe, expect, test } from '@jest/globals'
+import type { jest } from '@jest/globals'
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  test,
+} from '@jest/globals'
 import { UserModel } from '@metis/server/database/models/users'
-import { TestServerLogin } from 'tests/middleware/TestServerLogin'
 import { TestSuiteSetup } from 'tests/middleware/TestSuiteSetup'
 import { TestSuiteTeardown } from 'tests/middleware/TestSuiteTeardown'
 import { TestToolbox } from 'tests/toolbox/TestToolbox'
@@ -19,9 +26,23 @@ describe('/api/v1/logins', () => {
   let password: string = defaultPassword
   const usernamePrefix = 'test_logins'
 
+  /**
+   * Spy for `Date.now` used to mock time in timeout-related tests.
+   * Restored automatically in `afterEach`.
+   */
+  let dateNowSpy: jest.SpiedFunction<typeof Date.now> | null = null
+
   beforeEach(() => {
     // Unique username per test to avoid cross-test contamination.
     username = `${usernamePrefix}_${generateRandomId()}`
+  })
+
+  afterEach(() => {
+    // Restore Date.now if it was mocked during the test.
+    if (dateNowSpy) {
+      dateNowSpy.mockRestore()
+      dateNowSpy = null
+    }
   })
 
   test('Rejects login when username is missing', async () => {
@@ -229,31 +250,6 @@ describe('/api/v1/logins', () => {
     })
 
     expect(response.status).toBe(400)
-  })
-
-  test('Rejects login when user is in timeout', async () => {
-    let { client } = await createTestContext()
-    let { user } = await createTestUser({ username, password })
-
-    // The created user must have an _id to set the timeout.
-    if (!user._id) throw new Error('Created user has no _id')
-
-    await client.post('/api/v1/logins/', {
-      username,
-      password,
-    })
-
-    let timeoutEnd = Date.now() + 5000
-    TestServerLogin.timeoutByUserId(user._id, timeoutEnd)
-
-    await client.delete('/api/v1/logins/')
-
-    let secondLogin = await client.post('/api/v1/logins/', {
-      username,
-      password,
-    })
-
-    expect(secondLogin.status).toBe(403)
   })
 
   test('Allows forceful login to replace existing session', async () => {

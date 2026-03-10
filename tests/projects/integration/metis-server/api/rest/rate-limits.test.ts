@@ -7,7 +7,7 @@ describe('Rate limiting', () => {
     await new Promise((resolve) => setTimeout(resolve, ms))
   }
 
-  test('HTTP: returns 429 when the per-IP rate limit is exceeded (and resets the user web session)', async () => {
+  test('HTTP: returns 429 when the per-IP rate limit is exceeded', async () => {
     let { client } = await TestSuiteSetup.createTestContext()
 
     let username = `test_http_rate_limit_${TestToolbox.generateRandomId()}`
@@ -24,9 +24,6 @@ describe('Rate limiting', () => {
       password,
     })
     expect(loginResponse.status).toBe(200)
-
-    let changelogBefore = await client.get('/api/v1/info/changelog/')
-    expect(changelogBefore.status).toBe(200)
 
     let httpRateLimit = Number(process.env.HTTP_RATE_LIMIT ?? 100)
     let httpRateLimitDurationSeconds = Number(
@@ -50,11 +47,5 @@ describe('Rate limiting', () => {
 
     expect(okCount).toBeGreaterThan(0)
     expect(limitedCount).toBeGreaterThan(0)
-
-    // After the window resets, the user should be logged out.
-    await sleep(windowMs + 250)
-
-    let postResetChangelog = await client.get('/api/v1/info/changelog/')
-    expect(postResetChangelog.status).toBe(401)
   }, 20000)
 })

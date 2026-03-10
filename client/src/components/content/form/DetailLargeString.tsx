@@ -26,6 +26,7 @@ export function DetailLargeString({
   defaultValue = undefined,
   errorMessage = DEFAULT_ERROR_MESSAGE,
   errorType = 'default',
+  errorDisplay = 'on-blur',
   disabled = false,
   uniqueLabelClassName = undefined,
   uniqueFieldClassName = undefined,
@@ -53,18 +54,16 @@ export function DetailLargeString({
   const displayError: boolean = compute(() => {
     let display: boolean = false
 
-    if (
-      errorType === 'default' &&
-      leftField &&
-      handleOnBlur === 'deliverError' &&
-      errorMessage !== DEFAULT_ERROR_MESSAGE
-    ) {
-      display = true
-    }
+    // Whether the user has satisfied the interaction requirement.
+    // In 'immediate' mode this is always true; in 'on-blur' mode
+    // the user must have left the field at least once.
+    let interactionSatisfied: boolean =
+      errorDisplay === 'immediate' || leftField
 
+    // Show a non-default error message (covers both 'default' and 'warning'
+    // errorType) once the interaction requirement is satisfied.
     if (
-      errorType === 'warning' &&
-      leftField &&
+      interactionSatisfied &&
       handleOnBlur === 'deliverError' &&
       errorMessage !== DEFAULT_ERROR_MESSAGE
     ) {
@@ -76,7 +75,7 @@ export function DetailLargeString({
     // should be delivered and the field is empty,
     // then display the default error message.
     if (
-      leftField &&
+      interactionSatisfied &&
       fieldType === 'required' &&
       handleOnBlur === 'deliverError' &&
       errorMessage === DEFAULT_ERROR_MESSAGE &&

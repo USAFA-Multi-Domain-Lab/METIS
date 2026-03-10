@@ -22,7 +22,7 @@ export const updateUser: TExpressHandler = async (request, response) => {
 
   const { username, accessId } = userUpdates
   // Get the login for the user being updated.
-  const updatedUserLogin = ServerLogin.getByUserId(userId)
+  const updatedUserLogin = ServerLogin.get(userId)
 
   // Hash the password if it exists.
   if (!!userUpdates.password) {

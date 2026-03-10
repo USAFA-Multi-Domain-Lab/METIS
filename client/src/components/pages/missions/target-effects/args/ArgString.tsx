@@ -104,13 +104,31 @@ export default function ArgString({
     value: string,
     arg: TStringArg,
   ): string | undefined => {
-    if (!(arg.pattern instanceof RegExp) || value === '') {
+    const defaultMessage =
+      'This field cannot be left empty. Please enter a value.'
+    const emptyStringPattern = /^\s*$/
+    const valueIsEmptyString = emptyStringPattern.test(value)
+    const defaultValueIsEmptyString = arg.required
+      ? emptyStringPattern.test(arg.default)
+      : false
+
+    // Skip validation for optional args with empty values.
+    if (!arg.required && valueIsEmptyString) return undefined
+
+    // If no pattern is provided, fall back to a generic
+    // required-field check only when the default value is
+    // also empty. Fields with a non-empty default will
+    // repopulate on blur instead.
+    if (!(arg.pattern instanceof RegExp)) {
+      if (valueIsEmptyString && defaultValueIsEmptyString) {
+        return defaultMessage
+      }
+
       return undefined
     }
 
-    let isValid: boolean = arg.pattern.test(value)
-
-    if (!isValid) {
+    // Validate the value against the pattern.
+    if (!arg.pattern.test(value)) {
       return arg.title ?? 'The value does not match the required format.'
     }
 
@@ -121,7 +139,7 @@ export default function ArgString({
 
   const handleOnBlur = compute<'deliverError' | 'repopulateValue' | 'none'>(
     () => {
-      if (patternErrorMessage && value !== '') {
+      if (patternErrorMessage) {
         return 'deliverError'
       } else if (arg.required) {
         return 'repopulateValue'
@@ -147,6 +165,7 @@ export default function ArgString({
       highlightAllOnFocus={highlightAllOnFocus}
       errorMessage={patternErrorMessage}
       errorType='warning'
+      errorDisplay={'immediate'}
       tooltipDescription={arg.tooltipDescription}
       key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}_${
         arg.required ? 'required' : 'optional'

@@ -55,9 +55,79 @@ export class WebSocketApi extends Api {
   }
 
   /**
+   * Whether the client is configured to automatically reconnect.
+   */
+  public get autoReconnect(): boolean {
+    return this._autoReconnect
+  }
+
+  /**
+   * The number of reconnect attempts made since the last successful open.
+   */
+  public get reconnectAttemptCount(): number {
+    return this._reconnectAttemptCount
+  }
+
+  /**
    * Storage for all event listeners, in the order they get added.
    */
   protected listeners: [TWebSocketEventType, TWebSocketEventHandler<any>][] = []
+
+  /**
+   * Whether the socket should attempt to reconnect after an unexpected close.
+   */
+  private _autoReconnect: boolean
+
+  /**
+   * Whether the connection has successfully opened at least once.
+   * @note Used to avoid background reconnect loops on initial startup failure.
+   */
+  private _hasConnectedOnce: boolean = false
+
+  /**
+   * Whether the most recent disconnect was user initiated.
+   */
+  private _manualDisconnect: boolean = false
+
+  /**
+   * The number of reconnect attempts made since the last successful open.
+   */
+  private _reconnectAttemptCount: number = 0
+
+  /**
+   * A scheduled reconnect timer.
+   */
+  private _reconnectTimer: NodeJS.Timeout | null = null
+
+  /**
+   * Interval (ms) for WebSocket keepalive pings.
+   */
+  private _keepAliveIntervalMs: number
+
+  /**
+   * Timeout (ms) to wait for a pong after pinging before terminating.
+   */
+  private _keepAliveTimeoutMs: number
+
+  /**
+   * A scheduled keepalive ping interval.
+   */
+  private _keepAliveInterval: NodeJS.Timeout | null = null
+
+  /**
+   * A scheduled pong timeout timer.
+   */
+  private _keepAlivePongTimeout: NodeJS.Timeout | null = null
+
+  /**
+   * Base reconnect delay in milliseconds.
+   */
+  private _reconnectDelayMs: number
+
+  /**
+   * Max reconnect delay in milliseconds.
+   */
+  private _maxReconnectDelayMs: number
 
   /**
    * Controls whether TLS client verifies the server's certificate against
@@ -92,6 +162,143 @@ export class WebSocketApi extends Api {
 
     // Build the connection options.
     this._options = this.buildConnectionOptions(options)
+
+    // Reconnect + keepalive options.
+    this._autoReconnect = options.autoReconnect ?? true
+    this._keepAliveIntervalMs =
+      options.keepAliveInterval ?? WebSocketApi.DEFAULT_KEEP_ALIVE_INTERVAL
+    this._keepAliveTimeoutMs =
+      options.keepAliveTimeout ?? WebSocketApi.DEFAULT_KEEP_ALIVE_TIMEOUT
+    this._reconnectDelayMs =
+      options.reconnectDelay ?? WebSocketApi.DEFAULT_RECONNECT_DELAY
+    this._maxReconnectDelayMs =
+      options.maxReconnectDelay ?? WebSocketApi.DEFAULT_MAX_RECONNECT_DELAY
+  }
+
+  /**
+   * Clears any active keepalive timers.
+   */
+  private clearKeepAliveTimers(): void {
+    if (this._keepAliveInterval) {
+      clearInterval(this._keepAliveInterval)
+      this._keepAliveInterval = null
+    }
+
+    if (this._keepAlivePongTimeout) {
+      clearTimeout(this._keepAlivePongTimeout)
+      this._keepAlivePongTimeout = null
+    }
+  }
+
+  /**
+   * Clears any scheduled reconnect timer.
+   */
+  private clearReconnectTimer(): void {
+    if (this._reconnectTimer) {
+      clearTimeout(this._reconnectTimer)
+      this._reconnectTimer = null
+    }
+  }
+
+  /**
+   * Schedules a reconnect attempt with exponential backoff and jitter.
+   */
+  private scheduleReconnect(): void {
+    this.clearReconnectTimer()
+
+    if (!this._autoReconnect) {
+      return
+    }
+
+    // Never reconnect if the user explicitly disconnected.
+    if (this._manualDisconnect) {
+      return
+    }
+
+    // Avoid reconnect loops on startup if the initial connect fails.
+    if (!this._hasConnectedOnce) {
+      return
+    }
+
+    this._reconnectAttemptCount += 1
+
+    let baseDelay = this._reconnectDelayMs
+    let exponentialDelay =
+      baseDelay * Math.pow(2, this._reconnectAttemptCount - 1)
+    let delay = Math.min(this._maxReconnectDelayMs, exponentialDelay)
+
+    // Add +/- 20% jitter.
+    let jitterFactor = 0.8 + Math.random() * 0.4
+    delay = Math.floor(delay * jitterFactor)
+
+    this._reconnectTimer = setTimeout(() => {
+      // If a manual disconnect happened after scheduling, stop.
+      if (this._manualDisconnect) {
+        return
+      }
+
+      // Fire and forget; events surface via listeners.
+      this.connect().catch(() => {
+        // If the reconnect attempt fails, try again after another backoff.
+        this.scheduleReconnect()
+      })
+    }, delay)
+  }
+
+  /**
+   * Starts the keepalive loop on the current connection.
+   * @note Uses WebSocket ping/pong frames to detect half-open connections.
+   */
+  private startKeepAlive(): void {
+    this.clearKeepAliveTimers()
+
+    if (!this._connection || this._connection.readyState !== WebSocket.OPEN) {
+      return
+    }
+
+    if (this._keepAliveIntervalMs <= 0) {
+      return
+    }
+
+    let connection = this._connection
+
+    this._keepAliveInterval = setInterval(() => {
+      if (this._connection !== connection) {
+        return
+      }
+
+      if (connection.readyState !== WebSocket.OPEN) {
+        return
+      }
+
+      // Reset pong timeout for this ping.
+      if (this._keepAlivePongTimeout) {
+        clearTimeout(this._keepAlivePongTimeout)
+        this._keepAlivePongTimeout = null
+      }
+
+      if (this._keepAliveTimeoutMs > 0) {
+        this._keepAlivePongTimeout = setTimeout(() => {
+          // If we didn't receive a pong in time, terminate.
+          if (this._connection !== connection) {
+            return
+          }
+          if (connection.readyState === WebSocket.OPEN) {
+            try {
+              connection.terminate()
+            } catch {
+              // ignore
+            }
+          }
+        }, this._keepAliveTimeoutMs)
+      }
+
+      try {
+        connection.ping()
+      } catch {
+        // If ping fails, let the socket error/close handlers drive reconnect.
+      }
+    }, this._keepAliveIntervalMs)
   }
 
   /**
@@ -264,30 +471,53 @@ export class WebSocketApi extends Api {
           return
         }
 
-        // Close existing connection if any and wait for it to close.
+        // We are explicitly attempting to connect.
+        this._manualDisconnect = false
+        this.clearReconnectTimer()
+
+        // Close existing connection if any.
         if (
           this._connection &&
           this._connection.readyState !== WebSocket.CLOSED
         ) {
-          this._connection.close()
-          this._connection = null
+          try {
+            this._connection.close()
+          } catch {
+            // ignore
+          }
         }
+
+        // Ensure we don't keep timers alive from prior sockets.
+        this.clearKeepAliveTimers()
 
         // Create new WebSocket connection with options.
         this._connection = new WebSocket(this._url, this._options)
+        let connection = this._connection
 
         // Handle connection opened.
-        this._connection.on('open', () => {
+        connection.on('open', () => {
+          if (this._connection !== connection) {
+            return
+          }
+
+          this._hasConnectedOnce = true
+          this._reconnectAttemptCount = 0
+
           this.emitEvent({ method: 'open' })
           this.emitEvent({
             method: 'connection-change',
             isConnected: true,
           })
+
+          this.startKeepAlive()
           resolve()
         })
 
         // Handle messages.
-        this._connection.on('message', (data: WebSocket.Data) => {
+        connection.on('message', (data: WebSocket.Data) => {
+          if (this._connection !== connection) {
+            return
+          }
           try {
             let parsedData: any = data
             // Try to parse JSON if data is a string or buffer.
@@ -312,22 +542,42 @@ export class WebSocketApi extends Api {
               data: parsedData,
               raw: data,
             })
-          } catch (error) {
+          } catch (error: any) {
             this.emitEvent({
               method: 'error',
-              error: error as Error,
+              error,
             })
           }
         })
 
+        // Keepalive: clear pong timeout on pong.
+        connection.on('pong', () => {
+          if (this._connection !== connection) {
+            return
+          }
+          if (this._keepAlivePongTimeout) {
+            clearTimeout(this._keepAlivePongTimeout)
+            this._keepAlivePongTimeout = null
+          }
+        })
+
         // Handle errors.
-        this._connection.on('error', (error: Error) => {
+        connection.on('error', (error: Error) => {
+          if (this._connection !== connection) {
+            return
+          }
           this.emitEvent({ method: 'error', error })
           reject(error)
         })
 
         // Handle connection closed.
-        this._connection.on('close', (code: number, reason: Buffer) => {
+        connection.on('close', (code: number, reason: Buffer) => {
+          if (this._connection !== connection) {
+            return
+          }
+
+          this.clearKeepAliveTimers()
+
           this.emitEvent({
             method: 'close',
             code,
@@ -338,6 +588,9 @@ export class WebSocketApi extends Api {
             isConnected: false,
           })
           this._connection = null
+
+          // Attempt auto-reconnect for long-lived sessions.
+          this.scheduleReconnect()
         })
       } catch (error) {
         reject(error)
@@ -350,10 +603,45 @@ export class WebSocketApi extends Api {
    * @param code The close code to send.
    * @param reason The reason for closing.
    */
-  public disconnect(code?: number, reason?: string): void {
-    if (this._connection && this.state !== WebSocket.CLOSED) {
-      this._connection.close(code, reason)
-    }
+  public disconnect(code?: number, reason?: string): Promise<void> {
+    return new Promise((resolve) => {
+      this._manualDisconnect = true
+      this.clearReconnectTimer()
+      this.clearKeepAliveTimers()
+
+      // Reset reconnect attempt count on manual disconnect.
+      this._reconnectAttemptCount = 0
+
+      if (!this._connection || this.state === WebSocket.CLOSED) {
+        this._connection = null
+        resolve()
+        return
+      }
+
+      let connection = this._connection
+
+      // Resolve on close (or immediately if already closed).
+      if (connection.readyState === WebSocket.CLOSED) {
+        this._connection = null
+        resolve()
+        return
+      }
+
+      connection.once('close', () => {
+        if (this._connection === connection) {
+          this._connection = null
+        }
+        resolve()
+      })
+
+      try {
+        connection.close(code, reason)
+      } catch {
+        // If close throws, we still want the caller to proceed.
+        this._connection = null
+        resolve()
+      }
+    })
   }
 
   /**
@@ -415,6 +703,26 @@ export class WebSocketApi extends Api {
    * The default connection timeout in milliseconds.
    */
   private static readonly DEFAULT_CONNECT_TIMEOUT = 10000 // 10 seconds
+
+  /**
+   * The default keepalive interval in milliseconds.
+   */
+  private static readonly DEFAULT_KEEP_ALIVE_INTERVAL = 30000 // 30 seconds
+
+  /**
+   * The default keepalive pong timeout in milliseconds.
+   */
+  private static readonly DEFAULT_KEEP_ALIVE_TIMEOUT = 10000 // 10 seconds
+
+  /**
+   * The default base reconnect delay in milliseconds.
+   */
+  private static readonly DEFAULT_RECONNECT_DELAY = 1000 // 1 second
+
+  /**
+   * The default max reconnect delay in milliseconds.
+   */
+  private static readonly DEFAULT_MAX_RECONNECT_DELAY = 30000 // 30 seconds
 }
 
 /**
@@ -437,6 +745,37 @@ const webSocketApiOptionsSchema = apiOptionsSchema.extend({
    * @max 60000 (60 seconds)
    */
   connectTimeout: z.number().int().min(1000).max(60000).optional(),
+
+  /**
+   * Whether the client should attempt to reconnect after an unexpected close.
+   * @default true
+   */
+  autoReconnect: z.boolean().optional(),
+
+  /**
+   * Keepalive ping interval (ms). Set to 0 to disable keepalive.
+   * @default 30000 (30 seconds)
+   */
+  keepAliveInterval: z.number().int().min(0).max(300000).optional(),
+
+  /**
+   * Keepalive pong timeout (ms). If no pong is received within this window,
+   * the socket will be terminated.
+   * @default 10000 (10 seconds)
+   */
+  keepAliveTimeout: z.number().int().min(0).max(60000).optional(),
+
+  /**
+   * Base reconnect delay in milliseconds.
+   * @default 1000 (1 second)
+   */
+  reconnectDelay: z.number().int().min(250).max(60000).optional(),
+
+  /**
+   * Max reconnect delay in milliseconds.
+   * @default 30000 (30 seconds)
+   */
+  maxReconnectDelay: z.number().int().min(1000).max(300000).optional(),
 })
 
 /**

@@ -379,6 +379,10 @@ export class ClientConnection {
     }
 
     try {
+      // Consume a rate limit point on every message attempt,
+      // regardless of whether the data is valid.
+      await this.limiter.consume(this.userId)
+
       // Parse the data from a string into a
       // JSON object.
       let rawEventData = JSON.parse(data)
@@ -393,9 +397,6 @@ export class ClientConnection {
 
       // Validate/sanitize the data.
       event = zodSchema.parse(looseEventData)
-
-      // Update the rate limiter.
-      await this.limiter.consume(this.userId)
     } catch (error) {
       let request: TRequestOfResponse | undefined
 
@@ -414,10 +415,6 @@ export class ClientConnection {
             request,
           }),
         )
-
-        if (error.remainingPoints <= 0) {
-          this.login.destroy()
-        }
 
         return
       }

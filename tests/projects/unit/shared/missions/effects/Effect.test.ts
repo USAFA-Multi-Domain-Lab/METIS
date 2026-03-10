@@ -247,7 +247,7 @@ describe('Effect.additionalIssues', () => {
     expect(effect.issues).toHaveLength(1)
     expect(effect.issues[0].type).toBe('general')
     expect(effect.issues[0].message).toContain('is missing')
-    expect(effect.issues[0].message).toContain('_id: "toggle"')
+    expect(effect.issues[0].message).toContain(toggleArg.name)
   })
 
   test('returns a general issue when a required target argument is missing from effect args', () => {
@@ -290,6 +290,7 @@ describe('Effect.additionalIssues', () => {
 
     expect(effect.issues).toHaveLength(1)
     expect(effect.issues[0].message).toContain('is missing')
+    expect(effect.issues[0].message).toContain(requiredArg.name)
   })
 
   test('returns a general issue when the effect references a target but not a target environment (legacy infer env id)', () => {
@@ -1209,7 +1210,7 @@ describe('Effect.additionalIssues', () => {
     expect(effect.issues).toHaveLength(1)
     expect(effect.issues[0].type).toBe('general')
     expect(effect.issues[0].message).toContain('is missing')
-    expect(effect.issues[0].message).toContain('_id: "dependent"')
+    expect(effect.issues[0].message).toContain(dependentArg.name)
   })
 
   test("returns a general issue when an argument's dependencies are not met but the argument has a value", () => {
