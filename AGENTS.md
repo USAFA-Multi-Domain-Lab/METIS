@@ -89,6 +89,10 @@ npm run test
 - [Integration quickstart](docs/target-env-integration/quickstart.md)
 - [Integration architecture](docs/target-env-integration/architecture.md)
 
+**Authoring mission files by hand:**
+
+- [Mission file guide](.github/instructions/MISSION-FILE.instructions.md) — Use when creating or editing a raw mission JSON/zip file for import; covers the `.metis.zip` format, prototype and structure requirements, required schema fields, and common import errors
+
 **Writing migrations:**
 
 - [Migration guide](.github/instructions/MIGRATIONS.instructions.md) — Database builds, import builds, checklist
