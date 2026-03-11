@@ -227,6 +227,10 @@ type TModifierData = [
      */
     key: 'node-action-resource-cost'
     /**
+     * The ID of the resource pool being modified.
+     */
+    poolId: string
+    /**
      * The operand used to modify the resource cost for all the node's actions.
      */
     resourceCostOperand: number
@@ -249,6 +253,10 @@ type TModifierData = [
      * The ID of the force to modify.
      */
     forceId: string
+    /**
+     * The ID of the resource pool to modify.
+     */
+    poolId: string
     /**
      * The operand used to modify the resource pool of the force.
      */

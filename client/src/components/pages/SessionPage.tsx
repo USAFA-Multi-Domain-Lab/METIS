@@ -13,6 +13,7 @@ import {
   useRequireLogin,
 } from '@client/toolbox/hooks'
 import { useSessionRedirects } from '@client/toolbox/hooks/sessions'
+import type { TForceResourcePool } from '@shared/missions/forces/MissionForce'
 import type { NodeAlert } from '@shared/missions/nodes/NodeAlert'
 import { useEffect, useState } from 'react'
 import type { TPage_P } from '.'
@@ -70,7 +71,7 @@ export default function SessionPage({
     null,
   )
   const [selectedForce, selectForce] = useState<ClientMissionForce | null>(null)
-  const [resourcesRemaining, setResourcesRemaining] = useState<number>(0)
+  const [resourcePools, setResourcePools] = useState<TForceResourcePool[]>([])
   const {} = useRequireLogin()
   const navButtonEngine = useButtonSvgEngine({
     elements: [],
@@ -181,7 +182,7 @@ export default function SessionPage({
    * the selected force.
    */
   const syncResources = () => {
-    setResourcesRemaining(selectedForce?.resourcesRemaining ?? 0)
+    setResourcePools(selectedForce?.resourcePools ?? [])
   }
 
   /**
@@ -480,7 +481,13 @@ export default function SessionPage({
     // If resources are not infinite, and the mission
     // has no resources left, add the red alert
     // class to the resources.
-    if (!session.config.infiniteResources && resourcesRemaining <= 0) {
+    // todo: RedAlert should be per resource pool, not the entire resources element.
+    if (
+      !session.config.infiniteResources &&
+      resourcePools.some(
+        (pool) => (pool.resourcesRemaining ?? pool.initialAmount) <= 0,
+      )
+    ) {
       resourcesClassList.push('RedAlert')
     }
 
@@ -685,9 +692,10 @@ export default function SessionPage({
    * JSX for the top bar element.
    */
   const topBarJsx = compute((): TReactElement | null => {
-    let resourceDisplay: string = session.config.infiniteResources
-      ? 'ထ'
-      : resourcesRemaining.toString()
+    // todo: Code kept for reference, remove in the future.
+    // let resourceDisplay: string = session.config.infiniteResources
+    //   ? 'ထ'
+    //   : resourcesRemaining.toString()
 
     return (
       <div className='TopBar'>
@@ -695,10 +703,24 @@ export default function SessionPage({
           Session: <span className='SessionName'>{session.name} </span>
           <b>&bull;</b>
         </div>
-        <div className={resourcesClass}>
-          {mission.resourceLabel}:{' '}
-          <span className={resourceCountClass}>{resourceDisplay}</span>
-        </div>
+        {resourcePools.map((pool) => {
+          let resourceDef = mission.resources.find((r) => r._id === pool.poolId)
+          let label = resourceDef?.label ?? pool.poolId
+          let remaining = pool.resourcesRemaining ?? pool.initialAmount
+          let display = session.config.infiniteResources
+            ? 'ထ'
+            : remaining.toString()
+          let poolClass = ['Resources']
+          if (!selectedForce) poolClass.push('Hidden')
+          if (!session.config.infiniteResources && remaining <= 0) {
+            poolClass.push('RedAlert')
+          }
+          return (
+            <div key={pool.poolId} className={poolClass.join(' ')}>
+              {label}: <span className={resourceCountClass}>{display}</span>
+            </div>
+          )
+        })}
         <StatusBar />
       </div>
     )

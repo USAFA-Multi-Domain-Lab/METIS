@@ -7,7 +7,7 @@ import { compute } from '@client/toolbox'
 import { useObjectFormSync, usePostInitEffect } from '@client/toolbox/hooks'
 import type { TActionType } from '@shared/missions/actions/MissionAction'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { DetailLargeString } from '../../../../content/form/DetailLargeString'
 import { DetailNumber } from '../../../../content/form/DetailNumber'
 import { DetailString } from '../../../../content/form/DetailString'
@@ -38,8 +38,7 @@ export default function ActionEntry({
       'type',
       'successChanceHidden',
       'processTimeHidden',
-      'resourceCost',
-      'resourceCostHidden',
+      'resourceCosts',
       'opensNode',
       'opensNodeHidden',
     ],
@@ -54,8 +53,7 @@ export default function ActionEntry({
   const [successChanceHidden, hideSuccessChance] =
     actionState.successChanceHidden
   const [processTimeHidden, hideProcessTime] = actionState.processTimeHidden
-  const [resourceCost, setResourceCost] = actionState.resourceCost
-  const [resourceCostHidden, hideResourceCost] = actionState.resourceCostHidden
+  const [resourceCosts, setResourceCosts] = actionState.resourceCosts
   const [opensNode, setOpensNode] = actionState.opensNode
   const [opensNodeHidden, hideOpensNode] = actionState.opensNodeHidden
   const [hours, setHours] = useState<number>(action.processTimeHours)
@@ -225,25 +223,51 @@ export default function ActionEntry({
         key={`${action._id}_processTimeHidden`}
       />
       <Divider />
-      <DetailNumber
-        fieldType='required'
-        label='Resource Cost'
-        value={resourceCost}
-        setValue={setResourceCost}
-        minimum={ClientMissionAction.RESOURCE_COST_MIN}
-        integersOnly={true}
-        disabled={viewMode === 'preview'}
-        key={`${action._id}_resourceCost`}
-      />
-      <DetailToggle
-        fieldType='required'
-        label='Hide'
-        tooltipDescription='If enabled, the resource cost will be hidden from the executor.'
-        value={resourceCostHidden}
-        setValue={hideResourceCost}
-        disabled={viewMode === 'preview'}
-        key={`${action._id}_resourceCostHidden`}
-      />
+      {
+      // todo: Move this into its own component.
+      resourceCosts.map((cost, index) => {
+        let resource = node.force.mission.resources.find(
+          (r) => r._id === cost.poolId,
+        )
+        let label = resource?.label ?? 'Resources'
+        return (
+          <Fragment key={cost.poolId}>
+            <DetailNumber
+              fieldType='required'
+              label={`${label} Cost`}
+              value={cost.amount}
+              setValue={(arg) => {
+                setResourceCosts((prev) => {
+                  let amount =
+                    typeof arg === 'function' ? arg(prev[index].amount) : arg
+                  return prev.map((c, i) =>
+                    i === index ? { ...c, amount } : c,
+                  )
+                })
+              }}
+              minimum={ClientMissionAction.RESOURCE_COST_MIN}
+              integersOnly={true}
+              disabled={viewMode === 'preview'}
+            />
+            <DetailToggle
+              fieldType='required'
+              label='Hide'
+              tooltipDescription={`If enabled, the ${label} resource cost will be hidden from the executor.`}
+              value={cost.hidden}
+              setValue={(arg) => {
+                setResourceCosts((prev) => {
+                  let hidden =
+                    typeof arg === 'function' ? arg(prev[index].hidden) : arg
+                  return prev.map((c, i) =>
+                    i === index ? { ...c, hidden } : c,
+                  )
+                })
+              }}
+              disabled={viewMode === 'preview'}
+            />
+          </Fragment>
+        )
+      })}
       <Divider />
       <DetailToggle
         fieldType='required'

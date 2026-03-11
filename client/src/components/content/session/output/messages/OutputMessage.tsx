@@ -80,8 +80,8 @@ export default function () {
           />
           <PropertyBadge
             icon={'coins'}
-            value={`-${output.sourceAction?.resourceCost}`}
-            description={`Resource Cost (${output.mission.resourceLabel})`}
+            value={output.sourceAction?.resourceCostFormatted}
+            description={'Resource Cost'}
           />
           <PropertyBadge
             active={output.sourceAction?.opensNode}

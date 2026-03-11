@@ -9,7 +9,6 @@ import type { TOutputJson } from '@shared/missions/forces/MissionOutput'
 import type { MissionComponent } from '@shared/missions/MissionComponent'
 import type { TMissionNodeJson } from '@shared/missions/nodes/MissionNode'
 import { Counter } from '@shared/toolbox/numbers/Counter'
-import { NumberToolbox } from '@shared/toolbox/numbers/NumberToolbox'
 import type { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
 import type { TWithKey } from '@shared/toolbox/objects/ObjectToolbox'
 import type { ClientMissionAction } from '../actions/ClientMissionAction'
@@ -496,13 +495,15 @@ export class ClientMissionForce
   }
 
   // Implemented
-  public modifyResourcePool(operand: number): void {
-    if (!NumberToolbox.isNonNegative(operand)) {
-      throw new Error('The operand must be a positive number.')
+  public modifyResourcePool(operand: number, poolId: string): void {
+    // Find the pool by poolId.
+    let pool = this.getResourcePool(poolId)
+    if (!pool) {
+      return console.error(`Resource pool "${poolId}" not found.`)
     }
 
     // Modify the resource pool by the operand.
-    this.resourcesRemaining += operand
+    pool.resourcesRemaining = (pool.resourcesRemaining ?? pool.initialAmount) + operand
 
     // Emit event.
     this.emitEvent('modify-forces')

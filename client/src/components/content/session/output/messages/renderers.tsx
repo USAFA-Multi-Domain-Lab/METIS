@@ -38,9 +38,6 @@ function defaultTo<T extends Object>(
  * their respective values.
  */
 const tagRenderers: TSingleTypeMapped<TOutputTag, TOutputTagRenderer> = {
-  'resource-label': ({ mission }) => {
-    return mission.resourceLabel
-  },
   'node-name': ({ sourceNode }) => {
     return defaultTo(sourceNode, 'name')
   },

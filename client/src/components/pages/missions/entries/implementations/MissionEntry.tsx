@@ -2,6 +2,7 @@ import Divider from '@client/components/content/form/Divider'
 import { useMissionPageContext } from '@client/components/pages/missions/context'
 import { ClientMission } from '@client/missions/ClientMission'
 import { usePostInitEffect } from '@client/toolbox/hooks'
+import type { TResource } from '@shared/missions/Mission'
 import { useState } from 'react'
 import { DetailString } from '../../../../content/form/DetailString'
 import { EffectTimeline } from '../../target-effects/timelines'
@@ -17,23 +18,20 @@ export default function MissionEntry({
 
   const { onChange, viewMode } = useMissionPageContext()
   const [name, setName] = useState<string>(mission.name)
-  const [resourceLabel, setResourceLabel] = useState<string>(
-    mission.resourceLabel,
-  )
+  const [resources, setResources] = useState<TResource[]>(mission.resources)
 
   /* -- EFFECTS -- */
 
-  // Sync the component state with the mission introduction message
-  // and initial resources.
+  // Sync the component state with the mission.
   usePostInitEffect(() => {
     // Update the mission name.
     mission.name = name
-    // Update the mission resource label.
-    mission.resourceLabel = resourceLabel
+    // Update the mission resources.
+    mission.resources = resources
 
     // Allow the user to save the changes.
     onChange(mission)
-  }, [name, resourceLabel])
+  }, [name, resources])
 
   /* -- RENDER -- */
   return (
@@ -49,17 +47,29 @@ export default function MissionEntry({
         disabled={viewMode === 'preview'}
         key={`${mission._id}_name`}
       />
-      <DetailString
-        fieldType='required'
-        handleOnBlur='repopulateValue'
-        label='Resource Label'
-        value={resourceLabel}
-        setValue={setResourceLabel}
-        defaultValue={ClientMission.DEFAULT_PROPERTIES.resourceLabel}
-        maxLength={ClientMission.MAX_RESOURCE_LABEL_LENGTH}
-        disabled={viewMode === 'preview'}
-        key={`${mission._id}_resourceLabel`}
-      />
+      {/* todo: Put in separate component. */}
+      {resources.map((resource, index) => (
+        <DetailString
+          fieldType='required'
+          handleOnBlur='repopulateValue'
+          label={
+            resources.length > 1
+              ? `Resource ${index + 1} Label`
+              : 'Resource Label'
+          }
+          value={resource.label}
+          setValue={(arg) => {
+            setResources((prev) => {
+              let label = typeof arg === 'function' ? arg(prev[index].label) : arg
+              return prev.map((r, i) => (i === index ? { ...r, label } : r))
+            })
+          }}
+          defaultValue='Resources'
+          maxLength={ClientMission.MAX_POOL_LABEL_LENGTH}
+          disabled={viewMode === 'preview'}
+          key={`${mission._id}_resource_${resource._id}`}
+        />
+      ))}
       <Divider />
       <EffectTimeline<'sessionTriggeredEffect'> host={mission} />
     </Entry>

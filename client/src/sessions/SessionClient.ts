@@ -1052,6 +1052,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   /**
    * Modifies the resource cost of a specific action within a node or
    * all actions within a node.
+   * @param poolId The ID of the resource pool being modified.
    * @param resourceCostOperand The operand to modify the resource cost by.
    * @param nodeId The ID of the node.
    * @param actionId The ID of the action.
@@ -1059,6 +1060,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    * within the node will be modified.
    */
   private modifyResourceCost = (
+    poolId: string,
     resourceCostOperand: number,
     nodeId: string,
     actionId?: string,
@@ -1066,19 +1068,20 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     // Find the node, given the ID.
     let node = this.mission.getNodeById(nodeId)
     // Modify the resource cost for all the node's actions.
-    node?.modifyResourceCost(resourceCostOperand, actionId)
+    node?.modifyResourceCost(poolId, resourceCostOperand, actionId)
   }
 
   /**
    * Modifies the resource pool of a force.
    * @param forceId The ID of the force.
+   * @param poolId The ID of the resource pool.
    * @param operand The operand to modify the resource pool by.
    */
-  private modifyResourcePool = (forceId: string, operand: number): void => {
+  private modifyResourcePool = (forceId: string, poolId: string, operand: number): void => {
     // Find the force, given the ID.
     let force = this.mission.getForceById(forceId)
     // Modify the resource pool for the force.
-    force?.modifyResourcePool(operand)
+    force?.modifyResourcePool(operand, poolId)
   }
 
   /**
@@ -1348,13 +1351,14 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
         break
       case 'node-action-resource-cost':
         this.modifyResourceCost(
+          data.poolId,
           data.resourceCostOperand,
           data.nodeId,
           data.actionId,
         )
         break
       case 'force-resource-pool':
-        this.modifyResourcePool(data.forceId, data.operand)
+        this.modifyResourcePool(data.forceId, data.poolId, data.operand)
         break
       case 'file-update-access':
         this.updateFileAccess(data)
@@ -1428,7 +1432,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     event: TServerEvents['action-execution-initiated'],
   ): void => {
     // Extract data.
-    const { resourcesRemaining } = event.data
+    const { resourcePools } = event.data
     // Type is defined here below because for some reason
     // there are type issues when I extract it using
     // the destructuring syntax above.
@@ -1459,9 +1463,12 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     // Handle execution on the node.
     node.onExecution(execution)
 
-    // Update the resources remaining for
-    // the force.
-    action.force.resourcesRemaining = resourcesRemaining
+    // Update the resource pools for the force.
+    for (let updatedPool of resourcePools) {
+      let pool = action.force.getResourcePool(updatedPool.poolId)
+      if (pool) pool.resourcesRemaining = updatedPool.resourcesRemaining
+    }
+    action.force.emitEvent('modify-forces')
 
     // Add execution to active executions.
     this._activeExecutions.push(execution)

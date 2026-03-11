@@ -2490,6 +2490,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     node.modifyResourceCost(poolId, operand, action?._id)
     this.emitModifierEnacted(node.force, {
       key: 'node-action-resource-cost',
+      poolId,
       resourceCostOperand: operand,
       nodeId: node._id,
       actionId: action?._id,
@@ -2517,6 +2518,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     this.emitModifierEnacted(force, {
       key: 'force-resource-pool',
       forceId: force._id,
+      poolId,
       operand,
     })
   }

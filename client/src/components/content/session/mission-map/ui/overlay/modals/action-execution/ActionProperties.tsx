@@ -75,8 +75,8 @@ export default function ActionProperties({
         />
         <PropertyBadge
           icon={'coins'}
-          value={`-${action.resourceCost}`}
-          description={`Resource Cost (${action.mission.resourceLabel})`}
+          value={action.resourceCostFormatted}
+          description={'Resource Cost'}
           strikethrough={cheats.zeroCost || config.infiniteResources}
           strikethroughReason={resourceCostStrikethroughReason}
         />

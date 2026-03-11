@@ -16,8 +16,9 @@ import type { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode
 import { compute } from '@client/toolbox'
 import { usePostInitEffect } from '@client/toolbox/hooks'
 import { Mission } from '@shared/missions/Mission'
+import type { TForceResourcePool } from '@shared/missions/forces/MissionForce'
 import type { TNonEmptyArray } from '@shared/toolbox/arrays/ArrayToolbox'
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 
 /**
  * This will render the basic editable details of a mission force.
@@ -34,11 +35,8 @@ export default function ForceEntry({
   const [introMessage, setIntroMessage] = useState<string>(force.introMessage)
   const [name, setName] = useState<string>(force.name)
   const [color, setColor] = useState<string>(force.color)
-  const [initialResources, setInitialResources] = useState<number>(
-    force.initialResources,
-  )
-  const [allowNegativeResources, setAllowNegativeResources] = useState<boolean>(
-    force.allowNegativeResources,
+  const [resourcePools, setResourcePools] = useState<TForceResourcePool[]>(
+    force.resourcePools.map((pool) => ({ ...pool })),
   )
   const [revealAllNodes, setRevealAllNodes] = useState<
     ClientMissionForce['revealAllNodes']
@@ -114,8 +112,14 @@ export default function ForceEntry({
     force.introMessage = introMessage
     force.name = name
     force.color = color
-    force.initialResources = initialResources
-    force.allowNegativeResources = allowNegativeResources
+    // Sync resource pool edits back to the force's internal pool objects.
+    resourcePools.forEach((updatedPool) => {
+      let pool = force.getResourcePool(updatedPool.poolId)
+      if (pool) {
+        pool.initialAmount = updatedPool.initialAmount
+        pool.allowNegative = updatedPool.allowNegative
+      }
+    })
     force.revealAllNodes = revealAllNodes
 
     // Allow the user to save the changes.
@@ -124,8 +128,7 @@ export default function ForceEntry({
     introMessage,
     name,
     color,
-    initialResources,
-    allowNegativeResources,
+    resourcePools,
     revealAllNodes,
   ])
 
@@ -144,23 +147,49 @@ export default function ForceEntry({
         disabled={viewMode === 'preview'}
         key={`${force._id}_name`}
       />
-      <DetailNumber
-        fieldType='required'
-        label='Initial Resources'
-        value={initialResources}
-        setValue={setInitialResources}
-        integersOnly={true}
-        disabled={viewMode === 'preview'}
-        key={`${force._id}_initialResources`}
-      />
-      <DetailToggle
-        label='Negative Resource Pool'
-        value={allowNegativeResources}
-        setValue={setAllowNegativeResources}
-        tooltipDescription="If enabled, the force's resource pool can go below zero."
-        disabled={viewMode === 'preview'}
-        key={`${force._id}_allowNegativeResources`}
-      />
+      {resourcePools.map((pool, index) => {
+        let resource = mission.resources.find((r) => r._id === pool.poolId)
+        let label = resource?.label ?? 'Resources'
+        return (
+          <Fragment key={pool.poolId}>
+            <DetailNumber
+              fieldType='required'
+              label={`${label} Initial Amount`}
+              value={pool.initialAmount}
+              setValue={(arg) => {
+                setResourcePools((prev) => {
+                  let initialAmount =
+                    typeof arg === 'function'
+                      ? arg(prev[index].initialAmount)
+                      : arg
+                  return prev.map((p, i) =>
+                    i === index ? { ...p, initialAmount } : p,
+                  )
+                })
+              }}
+              integersOnly={true}
+              disabled={viewMode === 'preview'}
+            />
+            <DetailToggle
+              label={`Allow Negative ${label}`}
+              value={pool.allowNegative}
+              setValue={(arg) => {
+                setResourcePools((prev) => {
+                  let allowNegative =
+                    typeof arg === 'function'
+                      ? arg(prev[index].allowNegative)
+                      : arg
+                  return prev.map((p, i) =>
+                    i === index ? { ...p, allowNegative } : p,
+                  )
+                })
+              }}
+              tooltipDescription={`If enabled, the ${label} resource pool can go below zero.`}
+              disabled={viewMode === 'preview'}
+            />
+          </Fragment>
+        )
+      })}
       <DetailToggle
         label='Reveal All Nodes'
         value={revealAllNodes}

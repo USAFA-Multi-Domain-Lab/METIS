@@ -20,6 +20,7 @@ import type {
   TMissionExistingJson,
   TMissionJson,
   TMissionShallowExistingJson,
+  TResource,
 } from '@shared/missions/Mission'
 import { Mission } from '@shared/missions/Mission'
 import type { MissionComponent } from '@shared/missions/MissionComponent'
@@ -269,7 +270,7 @@ export class ClientMission
     name: string,
     versionNumber: number,
     seed: string,
-    resourceLabel: string,
+    resources: TResource[],
     createdAt: Date | null,
     updatedAt: Date | null,
     launchedAt: Date | null,
@@ -287,7 +288,7 @@ export class ClientMission
       name,
       versionNumber,
       seed,
-      resourceLabel,
+      resources,
       createdAt,
       updatedAt,
       launchedAt,
@@ -1258,7 +1259,7 @@ export class ClientMission
       ClientMission.DEFAULT_PROPERTIES.name,
       ClientMission.DEFAULT_PROPERTIES.versionNumber,
       ClientMission.DEFAULT_PROPERTIES.seed,
-      ClientMission.DEFAULT_PROPERTIES.resourceLabel,
+      ClientMission.DEFAULT_PROPERTIES.resources,
       ClientMission.DEFAULT_PROPERTIES.createdAt,
       ClientMission.DEFAULT_PROPERTIES.updatedAt,
       ClientMission.DEFAULT_PROPERTIES.launchedAt,
@@ -1308,7 +1309,7 @@ export class ClientMission
       json.name,
       json.versionNumber,
       json.seed,
-      json.resourceLabel,
+      json.resources,
       DateToolbox.fromNullableISOString(json.createdAt),
       DateToolbox.fromNullableISOString(json.updatedAt),
       DateToolbox.fromNullableISOString(json.launchedAt),
