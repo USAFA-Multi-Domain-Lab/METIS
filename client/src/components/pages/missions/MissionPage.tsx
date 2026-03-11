@@ -60,7 +60,6 @@ import PrototypeEntry from './entries/implementations/PrototypeEntry'
 import Issues from './issues/Issues'
 import MissionPageMap from './map/MissionPageMap'
 import './MissionPage.scss'
-import MissionOutline from './structures/MissionOutline'
 import NodeStructuring from './structures/NodeStructuring'
 
 /**
@@ -734,15 +733,7 @@ export default function MissionPage(
                   <FileReferenceList {...inStoreListProps} />
                 </div>
               </PanelView>
-            </Panel>
-            <Panel>
-              <PanelView title={inspectorTabTitle}>
-                {renderInspector()}
-              </PanelView>
-              <PanelView title='Structure' description={STRUCTURE_DESCRIPTION}>
-                <NodeStructuring mission={mission} onChange={onChange} />
-              </PanelView>
-              <PanelView title='Outline' description={OUTLINE_DESCRIPTION}>
+              {/* <PanelView title='Outline' description={OUTLINE_DESCRIPTION}>
                 <MissionOutline
                   root={mission}
                   filter={(item) => {
@@ -760,6 +751,14 @@ export default function MissionPage(
                     return !isNode || !parentIsNode
                   }}
                 />
+              </PanelView> */}
+            </Panel>
+            <Panel>
+              <PanelView title={inspectorTabTitle}>
+                {renderInspector()}
+              </PanelView>
+              <PanelView title='Structure' description={STRUCTURE_DESCRIPTION}>
+                <NodeStructuring mission={mission} onChange={onChange} />
               </PanelView>
               <PanelView
                 title=''

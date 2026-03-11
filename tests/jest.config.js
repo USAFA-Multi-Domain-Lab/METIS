@@ -194,8 +194,7 @@ export default {
         '^@server/(.+)$': '<rootDir>/server/$1',
         '^@client/(.+)$': '<rootDir>/client/src/$1',
         '^@metis/(.+)$': '<rootDir>/integration/library/$1',
-        '^@integrations/schema/(.+)$':
-          '<rootDir>/integration/library/schema/$1',
+        '^@integrations/(.+)$': '<rootDir>/integration/library/$1',
         '^metis/server$': '<rootDir>/server/MetisServer.ts',
         '^metis/server/(.+)$': '<rootDir>/server/$1',
         '^metis$': '<rootDir>/shared/index.ts',
