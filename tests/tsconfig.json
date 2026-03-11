@@ -8,7 +8,7 @@
       "@shared/*": ["shared/*"],
       "@server/*": ["server/*"],
       "@client/*": ["client/src/*"],
-      "@integrations/schema/*": ["integration/library/schema/*"]
+      "@integrations/*": ["integration/library/*"]
     },
     "module": "NodeNext",
     "moduleResolution": "NodeNext",

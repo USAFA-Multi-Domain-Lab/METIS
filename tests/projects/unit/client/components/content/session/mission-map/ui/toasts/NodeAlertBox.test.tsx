@@ -44,10 +44,9 @@ describe('NodeAlertBox', () => {
     )
   }
 
-  test('renders null when alert is null', () => {
+  test('has .Hidden class when alert is null', () => {
     let { container } = renderNodeAlertBox(null)
-
-    expect(container.firstChild).toBeNull()
+    expect(container.firstChild).toHaveClass('Hidden')
   })
 
   test('displays the correct severity level heading when an alert is provided', () => {

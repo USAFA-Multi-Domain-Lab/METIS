@@ -733,6 +733,25 @@ export default function MissionPage(
                   <FileReferenceList {...inStoreListProps} />
                 </div>
               </PanelView>
+              {/* <PanelView title='Outline' description={OUTLINE_DESCRIPTION}>
+                <MissionOutline
+                  root={mission}
+                  filter={(item) => {
+                    let isPrototype = item instanceof ClientMissionPrototype
+                    let isEffect = item instanceof ClientEffect
+                    return !isPrototype && !isEffect
+                  }}
+                  isSelectable={(item) => {
+                    let isMission = item instanceof ClientMission
+                    return !isMission
+                  }}
+                  isIndirectlySelectable={(item, parent) => {
+                    let isNode = item instanceof ClientMissionNode
+                    let parentIsNode = parent instanceof ClientMissionNode
+                    return !isNode || !parentIsNode
+                  }}
+                />
+              </PanelView> */}
             </Panel>
             <Panel>
               <PanelView title={inspectorTabTitle}>
@@ -741,26 +760,6 @@ export default function MissionPage(
               <PanelView title='Structure' description={STRUCTURE_DESCRIPTION}>
                 <NodeStructuring mission={mission} onChange={onChange} />
               </PanelView>
-              {/* <PanelView title='Outline' description={OUTLINE_DESCRIPTION}> */}
-              {/* todo: Remove or implement
-                 <MissionOutline
-                    root={mission}
-                    filter={(item) => {
-                      let isPrototype = item instanceof ClientMissionPrototype
-                      let isEffect = item instanceof ClientEffect
-                      return !isPrototype && !isEffect
-                    }}
-                    isSelectable={(item) => {
-                      let isMission = item instanceof ClientMission
-                      return !isMission
-                    }}
-                    isIndirectlySelectable={(item, parent) => {
-                      let isNode = item instanceof ClientMissionNode
-                      let parentIsNode = parent instanceof ClientMissionNode
-                      return !isNode || !parentIsNode
-                    }}
-                  /> */}
-              {/* </PanelView> */}
               <PanelView
                 title=''
                 icon='warning-transparent'

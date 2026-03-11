@@ -80,10 +80,6 @@ export default function NodeAlertBox({
           text={'Close'}
           onClick={() => {
             acknowledge()
-            // todo: Move this out of this component.
-            // if (!selectedNodeWithWarning) return
-            // selectedNodeWithWarning.warningMessage = ''
-            // mission.select(selectedNodeWithWarning?.host)
           }}
         />
       </div>
