@@ -116,9 +116,9 @@ The following findings are limited to code review and automated test review. Man
 
 ## Manual Tests
 
-This section is intentionally reserved for manual UI validation findings. It has not been populated in this report.
+{If the original handoff required manual testing but it has not yet been performed, write: "This section is intentionally reserved for manual UI validation findings. It has not been populated in this report." followed by the recommended use note below. If the original handoff explicitly stated that no manual testing was required, write a single sentence such as: "No manual testing was required for this handoff."}
 
-Recommended use:
+Recommended use (when manual testing was requested but not yet completed):
 
 - Copy the manual checklist from the original handoff.
 - Record pass/fail status per scenario.
@@ -178,6 +178,7 @@ The title should name the feature concisely followed by `— Code Handoff`.
 - If the original handoff requested a test location that does not map cleanly to the repository's runnable Jest configuration, keep the intent but document the implemented equivalent path that actually runs in the current test setup.
 - Do not silently convert product defects into "coverage gaps" once the test exists. At that point it is a failing implementation against a covered requirement.
 - Manual-test sections may remain intentionally unfilled if the reviewer did not perform manual validation. State that explicitly rather than implying the tests passed.
+- If the original handoff explicitly stated that no manual testing was required (e.g. "Manual UI validation is intentionally skipped for this feature"), the report's Manual Tests section must reflect that directly with a single sentence such as "No manual testing was required for this handoff." Do not use the generic reserved-section boilerplate in that case.
 - The report should be updated as work progresses. It does not need to be written only once at the end.
 - If both documents exist, the handoff remains the request for review work, and the handoff report becomes the record of completed review work.
 
