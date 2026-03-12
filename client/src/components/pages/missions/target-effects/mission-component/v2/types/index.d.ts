@@ -71,7 +71,7 @@ export interface TForceDropdown_P_Required extends TForceDropdown_P_Base {
 export interface TForceDropdown_P_Optional extends TForceDropdown_P_Base {
   required: false
   selection: ClientMissionForce | null
-  select: TReactSetter<ClientMissionForce | null>
+  selectForce: TReactSetter<ClientMissionForce | null>
 }
 
 /**

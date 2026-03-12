@@ -400,7 +400,7 @@ export class TargetScriptContext<
    * @see {@link TTargetScriptExposedContext.modifyResourceCost}
    */
   private modifyResourceCost = (
-    poolId: string,
+    resourceId: string,
     operand: number,
     { forceKey, nodeKey, actionKey }: TManipulateActionOptions = {},
   ) => {
@@ -412,7 +412,7 @@ export class TargetScriptContext<
     const targetNode = this.determineTargetNode(forceKey, nodeKey)
 
     this.session.modifyResourceCost({
-      poolId,
+      resourceId,
       operand,
       node: targetNode,
       action: targetAction,
@@ -423,12 +423,12 @@ export class TargetScriptContext<
    * @see {@link TTargetScriptExposedContext.modifyResourcePool}
    */
   private modifyResourcePool = (
-    poolId: string,
+    resourceId: string,
     operand: number,
     { forceKey }: TManipulateForceOptions = {},
   ) => {
     const targetForce = this.determineTargetForce(forceKey)
-    this.session.modifyResourcePool(targetForce, poolId, operand)
+    this.session.modifyResourcePool(targetForce, resourceId, operand)
   }
 
   /**
@@ -710,8 +710,8 @@ export interface TTargetScriptExposedContext<
    */
   modifyProcessTime: TargetScriptContext<TType>['modifyProcessTime']
   /**
-   * Modifies an action's resource cost for a specific resource pool.
-   * @param poolId The ID of the resource pool whose cost to modify.
+   * Modifies an action's resource cost for a specific resource.
+   * @param resourceId The ID of the resource whose cost to modify.
    * @param operand The number used to modify the resource cost.
    * @param options Additional options for modifying the resource cost.
    * @note This will modify the resource cost for all actions within the node.
@@ -721,8 +721,8 @@ export interface TTargetScriptExposedContext<
    */
   modifyResourceCost: TargetScriptContext<TType>['modifyResourceCost']
   /**
-   * Modifies a resource pool by applying the given amount to the pool with the given ID.
-   * @param poolId The ID of the resource pool to modify.
+   * Modifies a resource pool by applying the given amount to the pool for the given resource.
+   * @param resourceId The ID of the resource whose pool to modify.
    * @param operand The amount by which to modify the resource pool.
    * @param options Additional options for modifying the resource pool.
    * @note A negative value will subtract and a positive

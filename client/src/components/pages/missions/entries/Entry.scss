@@ -51,6 +51,22 @@
     }
   }
 
+  .EntryControlPanel {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+
+    .EntryControlPanelHeading {
+      font-size: 1.1em;
+    }
+  }
+
+  .ResourceSubentry {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    column-gap: 1em;
+  }
+
   .EntryBottom {
     border-top: 2px solid $color-secondary;
     padding: 0.25em;

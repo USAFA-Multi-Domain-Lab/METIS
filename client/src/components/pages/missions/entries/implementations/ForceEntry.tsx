@@ -1,13 +1,13 @@
 import Prompt from '@client/components/content/communication/Prompt'
 import { DetailColorSelector } from '@client/components/content/form/DetailColorSelector'
 import { DetailLargeString } from '@client/components/content/form/DetailLargeString'
-import { DetailNumber } from '@client/components/content/form/DetailNumber'
 import { DetailString } from '@client/components/content/form/DetailString'
 import { DetailToggle } from '@client/components/content/form/DetailToggle'
 import type { TButtonText_P } from '@client/components/content/user-controls/buttons/ButtonText'
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
 import { useMissionPageContext } from '@client/components/pages/missions/context'
 import Entry from '@client/components/pages/missions/entries/Entry'
+import ResourcePoolSubentry from '@client/components/pages/missions/entries/implementations/ResourcePoolSubentry'
 import useForceItemButtonCallbacks from '@client/components/pages/missions/hooks/mission-components/forces'
 import { useGlobalContext } from '@client/context/global'
 import { ClientMission } from '@client/missions/ClientMission'
@@ -16,9 +16,8 @@ import type { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode
 import { compute } from '@client/toolbox'
 import { usePostInitEffect } from '@client/toolbox/hooks'
 import { Mission } from '@shared/missions/Mission'
-import type { TForceResourcePool } from '@shared/missions/forces/MissionForce'
 import type { TNonEmptyArray } from '@shared/toolbox/arrays/ArrayToolbox'
-import { Fragment, useState } from 'react'
+import { useState } from 'react'
 
 /**
  * This will render the basic editable details of a mission force.
@@ -35,9 +34,6 @@ export default function ForceEntry({
   const [introMessage, setIntroMessage] = useState<string>(force.introMessage)
   const [name, setName] = useState<string>(force.name)
   const [color, setColor] = useState<string>(force.color)
-  const [resourcePools, setResourcePools] = useState<TForceResourcePool[]>(
-    force.resourcePools.map((pool) => ({ ...pool })),
-  )
   const [revealAllNodes, setRevealAllNodes] = useState<
     ClientMissionForce['revealAllNodes']
   >(force.revealAllNodes)
@@ -108,29 +104,12 @@ export default function ForceEntry({
   /* -- EFFECTS -- */
 
   usePostInitEffect(() => {
-    // Update the force properties.
     force.introMessage = introMessage
     force.name = name
     force.color = color
-    // Sync resource pool edits back to the force's internal pool objects.
-    resourcePools.forEach((updatedPool) => {
-      let pool = force.getResourcePool(updatedPool.poolId)
-      if (pool) {
-        pool.initialAmount = updatedPool.initialAmount
-        pool.allowNegative = updatedPool.allowNegative
-      }
-    })
     force.revealAllNodes = revealAllNodes
-
-    // Allow the user to save the changes.
     onChange(force)
-  }, [
-    introMessage,
-    name,
-    color,
-    resourcePools,
-    revealAllNodes,
-  ])
+  }, [introMessage, name, color, revealAllNodes])
 
   /* -- RENDER -- */
 
@@ -147,49 +126,9 @@ export default function ForceEntry({
         disabled={viewMode === 'preview'}
         key={`${force._id}_name`}
       />
-      {resourcePools.map((pool, index) => {
-        let resource = mission.resources.find((r) => r._id === pool.poolId)
-        let label = resource?.label ?? 'Resources'
-        return (
-          <Fragment key={pool.poolId}>
-            <DetailNumber
-              fieldType='required'
-              label={`${label} Initial Amount`}
-              value={pool.initialAmount}
-              setValue={(arg) => {
-                setResourcePools((prev) => {
-                  let initialAmount =
-                    typeof arg === 'function'
-                      ? arg(prev[index].initialAmount)
-                      : arg
-                  return prev.map((p, i) =>
-                    i === index ? { ...p, initialAmount } : p,
-                  )
-                })
-              }}
-              integersOnly={true}
-              disabled={viewMode === 'preview'}
-            />
-            <DetailToggle
-              label={`Allow Negative ${label}`}
-              value={pool.allowNegative}
-              setValue={(arg) => {
-                setResourcePools((prev) => {
-                  let allowNegative =
-                    typeof arg === 'function'
-                      ? arg(prev[index].allowNegative)
-                      : arg
-                  return prev.map((p, i) =>
-                    i === index ? { ...p, allowNegative } : p,
-                  )
-                })
-              }}
-              tooltipDescription={`If enabled, the ${label} resource pool can go below zero.`}
-              disabled={viewMode === 'preview'}
-            />
-          </Fragment>
-        )
-      })}
+      {force.resourcePools.map((pool) => (
+        <ResourcePoolSubentry key={pool._id} pool={pool} />
+      ))}
       <DetailToggle
         label='Reveal All Nodes'
         value={revealAllNodes}

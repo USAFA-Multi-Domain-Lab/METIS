@@ -81,6 +81,7 @@ npm run test
 - [React class names guide](.github/instructions/CLASS-NAMES.instructions.md) — Use when constructing or conditionally applying CSS class names on React elements; covers the `ClassList` API, chaining, and naming conventions
 - [LocalContext guide](.github/instructions/LOCAL-CONTEXT.instructions.md) — Use when a component owns subcomponents that need access to its props, state, or computed values; covers the `LocalContext` pattern, provider setup, and the `T{Name}_P/C/S/E` type convention
 - [Tooltip guide](.github/instructions/TOOLTIP.instructions.md) — Use when displaying hover-triggered descriptive text on an interactive element; covers the `Tooltip` component API, placement rules, dynamic and conditional descriptions, and nesting conflicts
+- [Buttons guide](.github/instructions/BUTTONS.instructions.md) — Use when adding interactive buttons; covers `ButtonText` vs `ButtonSvg`, the `ButtonSvgEngine`/`ButtonSvgPanel` pattern, simple and cross-component usage, layout, and pre-built button factories
 - [Architecture](docs/devs/architecture.md) — System design patterns
 - [WebSocket](docs/devs/websocket.md) — Real-time communication
 

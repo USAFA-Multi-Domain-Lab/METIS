@@ -1,4 +1,4 @@
-import { DetailDropdown } from '@client/components/content/form/dropdown/'
+import { DetailDropdown } from '@client/components/content/form/dropdown/DetailDropdown'
 import type { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
 import type { TForceDropdown_P } from '..'
 

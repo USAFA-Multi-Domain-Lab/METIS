@@ -77,14 +77,17 @@ export class ClientMissionAction
   public get resourceCostFormatted(): string {
     let costs = this.resourceCosts
     // If any cost is hidden, return `HIDDEN_VALUE`.
-    if (costs.some((cost) => cost.hidden)) return ClientMissionAction.HIDDEN_VALUE
+    if (costs.some((cost) => cost.hidden))
+      return ClientMissionAction.HIDDEN_VALUE
     if (costs.length === 0) return '0'
     // Format each cost as "-amount Label".
     return costs
       .map((cost) => {
-        let resource = this.mission.resources.find((r) => r._id === cost.poolId)
-        let label = resource?.label ?? cost.poolId
-        return `-${cost.amount} ${label}`
+        let resource = this.mission.resources.find(
+          (resource) => resource._id === cost.resourceId,
+        )
+        let name = resource?.name ?? cost.resourceId
+        return `-${cost.amount} ${name}`
       })
       .join(', ')
   }

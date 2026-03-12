@@ -13,7 +13,7 @@ import {
   useRequireLogin,
 } from '@client/toolbox/hooks'
 import { useSessionRedirects } from '@client/toolbox/hooks/sessions'
-import type { TForceResourcePool } from '@shared/missions/forces/MissionForce'
+import type { TResourcePoolJson } from '@shared/missions/forces/ResourcePool'
 import type { NodeAlert } from '@shared/missions/nodes/NodeAlert'
 import { useEffect, useState } from 'react'
 import type { TPage_P } from '.'
@@ -25,6 +25,8 @@ import type { TNavigation_P } from '../content/general-layout/Navigation'
 import Panel from '../content/general-layout/panels/Panel'
 import PanelLayout from '../content/general-layout/panels/PanelLayout'
 import PanelView from '../content/general-layout/panels/PanelView'
+import PropertyBadge from '../content/general-layout/property-badges/PropertyBadge'
+import PropertyBadges from '../content/general-layout/property-badges/PropertyBadges'
 import SessionMembersPanel from '../content/session/members/SessionMembersPanel'
 import MissionMap from '../content/session/mission-map/MissionMap'
 import NodeAlertIndicator from '../content/session/mission-map/ui/indicators/NodeAlertIndicator'
@@ -71,7 +73,7 @@ export default function SessionPage({
     null,
   )
   const [selectedForce, selectForce] = useState<ClientMissionForce | null>(null)
-  const [resourcePools, setResourcePools] = useState<TForceResourcePool[]>([])
+  const [resourcePools, setResourcePools] = useState<TResourcePoolJson[]>([])
   const {} = useRequireLogin()
   const navButtonEngine = useButtonSvgEngine({
     elements: [],
@@ -182,7 +184,9 @@ export default function SessionPage({
    * the selected force.
    */
   const syncResources = () => {
-    setResourcePools(selectedForce?.resourcePools ?? [])
+    setResourcePools(
+      selectedForce?.resourcePools.map((pool) => pool.toJson()) ?? [],
+    )
   }
 
   /**
@@ -485,7 +489,7 @@ export default function SessionPage({
     if (
       !session.config.infiniteResources &&
       resourcePools.some(
-        (pool) => (pool.resourcesRemaining ?? pool.initialAmount) <= 0,
+        (pool) => (pool.remainingAmount ?? pool.initialAmount) <= 0,
       )
     ) {
       resourcesClassList.push('RedAlert')
@@ -691,36 +695,39 @@ export default function SessionPage({
   /**
    * JSX for the top bar element.
    */
-  const topBarJsx = compute((): TReactElement | null => {
-    // todo: Code kept for reference, remove in the future.
-    // let resourceDisplay: string = session.config.infiniteResources
-    //   ? 'ထ'
-    //   : resourcesRemaining.toString()
-
+  const topBarJsx = compute<TReactElement>(() => {
     return (
       <div className='TopBar'>
         <div className='Title'>
           Session: <span className='SessionName'>{session.name} </span>
           <b>&bull;</b>
         </div>
-        {resourcePools.map((pool) => {
-          let resourceDef = mission.resources.find((r) => r._id === pool.poolId)
-          let label = resourceDef?.label ?? pool.poolId
-          let remaining = pool.resourcesRemaining ?? pool.initialAmount
-          let display = session.config.infiniteResources
-            ? 'ထ'
-            : remaining.toString()
-          let poolClass = ['Resources']
-          if (!selectedForce) poolClass.push('Hidden')
-          if (!session.config.infiniteResources && remaining <= 0) {
-            poolClass.push('RedAlert')
-          }
-          return (
-            <div key={pool.poolId} className={poolClass.join(' ')}>
-              {label}: <span className={resourceCountClass}>{display}</span>
-            </div>
-          )
-        })}
+        <PropertyBadges>
+          {resourcePools.map((pool) => {
+            // Find resource, skipping pool if not found.
+            let resource = mission.getResourceById(pool.resourceId)
+            if (!resource) return null
+
+            // Prepare display properties.
+            let remaining = pool.remainingAmount ?? pool.initialAmount
+            let value = remaining.toString()
+            // Update value to infinity symbol if resources
+            // are configured to be infinite.
+            if (session.config.infiniteResources) {
+              value = 'ထ'
+            }
+
+            // Create a badge for each pool.
+            return (
+              <PropertyBadge
+                key={pool._id}
+                icon='coins'
+                value={value}
+                description={resource.name}
+              />
+            )
+          })}
+        </PropertyBadges>
         <StatusBar />
       </div>
     )

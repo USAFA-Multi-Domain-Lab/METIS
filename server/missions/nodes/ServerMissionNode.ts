@@ -103,18 +103,18 @@ export class ServerMissionNode extends MissionNode<TMetisServerComponents> {
 
   // Implemented
   public modifyResourceCost(
-    poolId: string,
+    resourceId: string,
     resourceCostOperand: number,
     actionId?: string,
   ): void {
     if (!actionId) {
       this.actions.forEach((action) => {
-        action.modifyResourceCost(poolId, resourceCostOperand)
+        action.modifyResourceCost(resourceId, resourceCostOperand)
       })
     } else {
       const action = this.actions.get(actionId)
       if (!action) throw new Error(`Action "${actionId}" not found.`)
-      action.modifyResourceCost(poolId, resourceCostOperand)
+      action.modifyResourceCost(resourceId, resourceCostOperand)
     }
   }
 
@@ -289,7 +289,7 @@ export class ServerMissionNode extends MissionNode<TMetisServerComponents> {
         let nonNegativeInteger = NumberToolbox.isNonNegativeInteger(cost.amount)
         if (!nonNegativeInteger) {
           throw generateValidationError(
-            `Resource cost amount "${cost.amount}" is a negative integer for pool "${cost.poolId}" in action "{ _id: ${action._id}, name: ${action.name} }".`,
+            `Resource cost amount "${cost.amount}" is a negative integer for resource "${cost.resourceId}" in action "{ _id: ${action._id}, name: ${action.name} }".`,
           )
         }
       }

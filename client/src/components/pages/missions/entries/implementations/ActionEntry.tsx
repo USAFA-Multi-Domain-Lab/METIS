@@ -224,50 +224,56 @@ export default function ActionEntry({
       />
       <Divider />
       {
-      // todo: Move this into its own component.
-      resourceCosts.map((cost, index) => {
-        let resource = node.force.mission.resources.find(
-          (r) => r._id === cost.poolId,
-        )
-        let label = resource?.label ?? 'Resources'
-        return (
-          <Fragment key={cost.poolId}>
-            <DetailNumber
-              fieldType='required'
-              label={`${label} Cost`}
-              value={cost.amount}
-              setValue={(arg) => {
-                setResourceCosts((prev) => {
-                  let amount =
-                    typeof arg === 'function' ? arg(prev[index].amount) : arg
-                  return prev.map((c, i) =>
-                    i === index ? { ...c, amount } : c,
-                  )
-                })
-              }}
-              minimum={ClientMissionAction.RESOURCE_COST_MIN}
-              integersOnly={true}
-              disabled={viewMode === 'preview'}
-            />
-            <DetailToggle
-              fieldType='required'
-              label='Hide'
-              tooltipDescription={`If enabled, the ${label} resource cost will be hidden from the executor.`}
-              value={cost.hidden}
-              setValue={(arg) => {
-                setResourceCosts((prev) => {
-                  let hidden =
-                    typeof arg === 'function' ? arg(prev[index].hidden) : arg
-                  return prev.map((c, i) =>
-                    i === index ? { ...c, hidden } : c,
-                  )
-                })
-              }}
-              disabled={viewMode === 'preview'}
-            />
-          </Fragment>
-        )
-      })}
+        // todo: Move this into its own component.
+        resourceCosts.map((cost, index) => {
+          let resource = node.force.mission.resources.find(
+            (resource) => resource._id === cost.resourceId,
+          )
+          let label = resource?.name ?? 'Resources'
+          return (
+            <Fragment key={cost._id}>
+              <DetailNumber
+                fieldType='required'
+                label={`${label} Cost`}
+                value={cost.amount}
+                setValue={(arg) => {
+                  // todo: Review this.
+                  setResourceCosts((prev) => {
+                    let amount =
+                      typeof arg === 'function' ? arg(prev[index].amount) : arg
+                    return prev.map((existingCost, costIndex) =>
+                      costIndex === index
+                        ? { ...existingCost, amount }
+                        : existingCost,
+                    )
+                  })
+                }}
+                minimum={ClientMissionAction.RESOURCE_COST_MIN}
+                integersOnly={true}
+                disabled={viewMode === 'preview'}
+              />
+              <DetailToggle
+                fieldType='required'
+                label='Hide'
+                tooltipDescription={`If enabled, the ${label} resource cost will be hidden from the executor.`}
+                value={cost.hidden}
+                setValue={(arg) => {
+                  setResourceCosts((prev) => {
+                    let hidden =
+                      typeof arg === 'function' ? arg(prev[index].hidden) : arg
+                    return prev.map((existingCost, costIndex) =>
+                      costIndex === index
+                        ? { ...existingCost, hidden }
+                        : existingCost,
+                    )
+                  })
+                }}
+                disabled={viewMode === 'preview'}
+              />
+            </Fragment>
+          )
+        })
+      }
       <Divider />
       <DetailToggle
         fieldType='required'

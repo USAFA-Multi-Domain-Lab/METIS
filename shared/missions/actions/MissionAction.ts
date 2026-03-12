@@ -168,7 +168,7 @@ export abstract class MissionAction<
     return this._resourceCosts.map((cost) => ({
       ...cost,
       amount: Math.max(
-        cost.amount + (this._resourceCostOperands[cost.poolId] ?? 0),
+        cost.amount + (this._resourceCostOperands[cost.resourceId] ?? 0),
         MissionAction.RESOURCE_COST_MIN,
       ),
     }))
@@ -267,10 +267,10 @@ export abstract class MissionAction<
    */
   public get areEnoughResources(): boolean {
     return this.resourceCosts.every((cost) => {
-      let pool = this.force.getResourcePool(cost.poolId)
+      let pool = this.force.getResourcePool(cost.resourceId)
       if (!pool) return true
       return (
-        cost.amount <= Math.max(pool.resourcesRemaining ?? 0, 0) ||
+        cost.amount <= Math.max(pool.remainingAmount, 0) ||
         pool.allowNegative
       )
     })
@@ -428,12 +428,15 @@ export abstract class MissionAction<
 
   /**
    * Modifies the resource cost for a specific pool.
-   * @param poolId The ID of the pool whose cost to modify.
+   * @param resourceId The ID of the {@link TResource} whose cost to modify.
    * @param resourceCostOperand The operand to modify the resource cost by.
    */
-  public modifyResourceCost(poolId: string, resourceCostOperand: number): void {
-    this._resourceCostOperands[poolId] =
-      (this._resourceCostOperands[poolId] ?? 0) + resourceCostOperand
+  public modifyResourceCost(
+    resourceId: string,
+    resourceCostOperand: number,
+  ): void {
+    this._resourceCostOperands[resourceId] =
+      (this._resourceCostOperands[resourceId] ?? 0) + resourceCostOperand
   }
 
   // Implemented
@@ -665,19 +668,23 @@ export type TMissionActionDefaultJson = Required<
 export type TActionType = 'repeatable' | 'single-use'
 
 /**
- * A map of pool IDs to their active session operands, used to temporarily
+ * A map of resource IDs to their active session operands, used to temporarily
  * adjust the base resource cost of an action without permanently altering it.
  */
-export type TResourceCostOperands = { [poolId: string]: number }
+export type TResourceCostOperands = { [resourceId: string]: number }
 
 /**
  * Defines the resource cost for a single pool on a mission action.
  */
 export type TActionResourceCost = {
   /**
-   * The ID of the resource pool this cost is applied to.
+   * The unique identifier for this resource cost entry.
    */
-  poolId: string
+  _id: string
+  /**
+   * The ID of the {@link TResource} this cost is applied to.
+   */
+  resourceId: string
   /**
    * The amount of resources to subtract from the pool when this action is executed.
    */

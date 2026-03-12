@@ -10,6 +10,7 @@ import type { ClientEffect } from '@client/missions/effects/ClientEffect'
 import type { ClientMissionFile } from '@client/missions/files/ClientMissionFile'
 import type { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
 import type { ClientOutput } from '@client/missions/forces/ClientOutput'
+import type { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import type { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
 import type { ClientMissionPrototype } from '@client/missions/nodes/ClientMissionPrototype'
 import type { ClientSessionMember } from '@client/sessions/ClientSessionMember'
@@ -68,6 +69,7 @@ export type TMetisClientComponents = {
   missionFile: ClientMissionFile
   force: ClientMissionForce
   output: ClientOutput
+  resourcePool: ResourcePool<TMetisClientComponents>
   node: ClientMissionNode
   action: ClientMissionAction
   execution: ClientActionExecution

@@ -36,8 +36,8 @@ import { MissionPrototype } from './nodes/MissionPrototype'
  * This represents a mission for a student to complete.
  */
 export abstract class Mission<
-    T extends TMetisBaseComponents = TMetisBaseComponents,
-  >
+  T extends TMetisBaseComponents = TMetisBaseComponents,
+>
   extends MissionComponent<T, Mission<T>>
   implements TEffectHost<T, 'sessionTriggeredEffect'>
 {
@@ -658,6 +658,17 @@ export abstract class Mission<
   }
 
   /**
+   * @param resourceId The ID of the resource to get.
+   * @returns The resource with the given ID, or undefined
+   * if no resource is found.
+   */
+  public getResourceById(
+    resourceId: string | null | undefined,
+  ): TResource | undefined {
+    return Mission.getResource(this, resourceId)
+  }
+
+  /**
    * @param nodeId The ID of the node to get.
    * @returns The node with the given ID, or undefined
    * if no node is found.
@@ -759,14 +770,14 @@ export abstract class Mission<
   public static readonly MAX_NAME_LENGTH: number = 175
 
   /**
-   * The maximum number of resource pools allowed in a mission.
+   * The maximum number of resource types allowed in a mission.
    */
-  public static readonly MAX_POOL_COUNT: number = 8
+  public static readonly MAX_RESOURCE_TYPES: number = 8
 
   /**
-   * The maximum length allowed for a resource pool label.
+   * The maximum length allowed for a resource name.
    */
-  public static readonly MAX_POOL_LABEL_LENGTH: number = 16
+  public static readonly MAX_RESOURCE_NAME_LENGTH: number = 16
 
   /**
    * The maximum number of forces allowed in a mission.
@@ -896,7 +907,9 @@ export abstract class Mission<
       name: 'New Mission',
       versionNumber: 1,
       seed: StringToolbox.generateRandomId(),
-      resources: [{ _id: StringToolbox.generateRandomId(), label: 'Resources', order: 0 }],
+      resources: [
+        { _id: StringToolbox.generateRandomId(), name: 'Resources', order: 0 },
+      ],
       createdAt: null,
       updatedAt: null,
       launchedAt: null,
@@ -1010,6 +1023,19 @@ export abstract class Mission<
     forceKey: string | null | undefined,
   ): TMission['forces'][0] | undefined {
     return mission.forces.find((force) => force.localKey === forceKey)
+  }
+
+  /**
+   * Gets a resource from the mission by its ID.
+   * @param mission The mission to get the resource from.
+   * @param resourceId The ID of the resource to get.
+   * @returns The resource with the given ID, or undefined if no resource is found.
+   */
+  public static getResource<TMission extends TMissionJson | Mission>(
+    mission: TMission,
+    resourceId: string | null | undefined,
+  ): TResource | undefined {
+    return mission.resources.find((resource) => resource._id === resourceId)
   }
 
   /**
@@ -1306,15 +1332,15 @@ export type TRootEffectsExposure = { expose: 'all' } | { expose: 'none' }
 export type TResource = {
   /**
    * Used by forces and actions to reference this pool without relying on
-   * the label, which may change.
+   * the name, which may change.
    */
   _id: string
   /**
    * The name shown to participants in the session UI to identify this
    * currency (e.g. "Funds", "Bandwidth", "Actions"). Must be at most
-   * {@link Mission.MAX_POOL_LABEL_LENGTH} characters.
+   * {@link Mission.MAX_RESOURCE_NAME_LENGTH} characters.
    */
-  label: string
+  name: string
   /**
    * Controls the left-to-right rendering order of pools in the UI.
    * Lower values appear first.

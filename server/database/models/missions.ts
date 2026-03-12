@@ -277,10 +277,10 @@ export const missionSchema = new MissionSchema(
       type: [
         {
           _id: { type: String, required: true },
-          label: {
+          name: {
             type: String,
             required: true,
-            maxlength: Mission.MAX_POOL_LABEL_LENGTH,
+            maxlength: Mission.MAX_RESOURCE_NAME_LENGTH,
           },
           order: { type: Number, required: true },
         },
@@ -338,7 +338,8 @@ export const missionSchema = new MissionSchema(
             required: true,
             type: [
               {
-                poolId: { type: String, required: true },
+                _id: { type: String, required: true },
+                resourceId: { type: String, required: true },
                 initialAmount: { type: Number, required: true },
                 allowNegative: { type: Boolean, required: true },
               },
@@ -431,7 +432,8 @@ export const missionSchema = new MissionSchema(
                         required: true,
                         type: [
                           {
-                            poolId: { type: String, required: true },
+                            _id: { type: String, required: true },
+                            resourceId: { type: String, required: true },
                             amount: { type: Number, required: true },
                             hidden: { type: Boolean, required: true },
                           },

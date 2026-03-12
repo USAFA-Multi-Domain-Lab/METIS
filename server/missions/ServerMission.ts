@@ -216,15 +216,15 @@ export class ServerMission extends Mission<TMetisServerComponents> {
         )
         if (!nonNegativeInteger) {
           throw generateValidationError(
-            `The initial amount must be a non-negative integer for pool "${instance.poolId}" in force "{ _id: ${force._id}, name: ${force.name} }".`,
+            `The initial amount must be a non-negative integer for pool "${instance.resourceId}" in force "{ _id: ${force._id}, name: ${force.name} }".`,
           )
         }
-        if (poolIds.includes(instance.poolId)) {
+        if (poolIds.includes(instance.resourceId)) {
           throw generateValidationError(
-            `Duplicate pool ID "${instance.poolId}" found in force "{ _id: ${force._id}, name: ${force.name} }".`,
+            `Duplicate resource ID "${instance.resourceId}" found in force "{ _id: ${force._id}, name: ${force.name} }".`,
           )
         }
-        poolIds.push(instance.poolId)
+        poolIds.push(instance.resourceId)
       }
 
       // Check for valid color.

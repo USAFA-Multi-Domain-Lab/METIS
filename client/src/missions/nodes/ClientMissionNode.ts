@@ -615,20 +615,20 @@ export class ClientMissionNode
 
   // Implemented
   public modifyResourceCost(
-    poolId: string,
+    resourceId: string,
     resourceCostOperand: number,
     actionId?: string,
   ): void {
     if (!actionId) {
       this.actions.forEach((action) => {
-        action.modifyResourceCost(poolId, resourceCostOperand)
+        action.modifyResourceCost(resourceId, resourceCostOperand)
       })
     } else {
       const action = this.actions.get(actionId)
       if (!action) {
         return console.error(`Action "${actionId}" not found.`)
       }
-      action.modifyResourceCost(poolId, resourceCostOperand)
+      action.modifyResourceCost(resourceId, resourceCostOperand)
     }
 
     // Emit event.

@@ -121,14 +121,10 @@ export class ServerMissionForce extends MissionForce<TMetisServerComponents> {
   }
 
   // Implemented
-  public modifyResourcePool(operand: number, poolId: string): void {
-    let pool = this.getResourcePool(poolId)
-    if (!pool) throw new Error(`Resource pool "${poolId}" not found.`)
-    if (!pool.resourcesRemaining)
-      throw new Error(
-        `Resource pool "${poolId}" does not have its resources initialized.`,
-      )
-    pool.resourcesRemaining += operand
+  public modifyResourcePool(operand: number, resourceId: string): void {
+    let pool = this.getResourcePool(resourceId)
+    if (!pool) throw new Error(`Resource pool "${resourceId}" not found.`)
+    pool.remainingAmount += operand
   }
 
   /**

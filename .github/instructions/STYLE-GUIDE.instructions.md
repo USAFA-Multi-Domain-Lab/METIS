@@ -313,7 +313,21 @@ For example, the Button component used to be called Action. However, this was ch
 
 Names given should also avoid abbreviations and shortenings. The standard is simple: if it would not be acceptable in a professional email, it is not acceptable in code. There is no justification on modern hardware and screens for shortening words. Write them out fully.
 
-Abbreviations that are standard in professional writing are permitted — for example, `ID`, `API`, `URL`, `HTTP`, `JSON`, and similar industry-standard acronyms that would appear unabbreviated in a professional context. Shortened words such as `req`, `res`, `env`, `conf`, `msg`, `cmd`, `ctx`, `ref`, `doc`, `err`, and similar contractions are not permitted.
+**CRITICAL - Abbreviations that are standard in professional writing are permitted** — for example, `ID`, `API`, `URL`, `HTTP`, `JSON`, and similar industry-standard acronyms that would appear unabbreviated in a professional context. Shortened words such as `req`, `res`, `env`, `conf`, `msg`, `cmd`, `ctx`, `ref`, `doc`, `err`, and similar contractions are not permitted.
+
+This rule applies universally — including to callback and lambda parameters. Single-letter or abbreviated names such as `r`, `i`, `c`, `p`, `e`, `v`, `n`, `el`, `fn`, `cb`, and `idx` are never acceptable, even in short inline callbacks. For example:
+
+```ts
+// ❌ Forbidden — abbreviated callback parameters
+items.find((r) => r._id === id)
+items.map((c, i) => ({ ...c, amount: i }))
+pools.map((p, i) => (i === index ? { ...p } : p))
+
+// ✅ Required — full descriptive names
+items.find((resource) => resource._id === id)
+items.map((cost, costIndex) => ({ ...cost, amount: costIndex }))
+pools.map((pool, poolIndex) => (poolIndex === index ? { ...pool } : pool))
+```
 
 ### Files
 

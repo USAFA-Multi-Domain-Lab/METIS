@@ -10,6 +10,7 @@ import type { ServerEffect } from './missions/effects/ServerEffect'
 import type { ServerMissionFile } from './missions/files/ServerMissionFile'
 import type { ServerMissionForce } from './missions/forces/ServerMissionForce'
 import type { ServerOutput } from './missions/forces/ServerOutput'
+import type { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import type { ServerMissionNode } from './missions/nodes/ServerMissionNode'
 import type { ServerMissionPrototype } from './missions/nodes/ServerMissionPrototype'
 import type { ServerMission } from './missions/ServerMission'
@@ -46,6 +47,7 @@ declare global {
     missionFile: ServerMissionFile
     force: ServerMissionForce
     output: ServerOutput
+    resourcePool: ResourcePool<TMetisServerComponents>
     node: ServerMissionNode
     action: ServerMissionAction
     execution: ServerActionExecution

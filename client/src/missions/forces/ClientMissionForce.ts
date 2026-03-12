@@ -495,15 +495,15 @@ export class ClientMissionForce
   }
 
   // Implemented
-  public modifyResourcePool(operand: number, poolId: string): void {
-    // Find the pool by poolId.
-    let pool = this.getResourcePool(poolId)
+  public modifyResourcePool(operand: number, resourceId: string): void {
+    // Find the pool by resourceId.
+    let pool = this.getResourcePool(resourceId)
     if (!pool) {
-      return console.error(`Resource pool "${poolId}" not found.`)
+      return console.error(`Resource pool "${resourceId}" not found.`)
     }
 
     // Modify the resource pool by the operand.
-    pool.resourcesRemaining = (pool.resourcesRemaining ?? pool.initialAmount) + operand
+    pool.remainingAmount += operand
 
     // Emit event.
     this.emitEvent('modify-forces')
