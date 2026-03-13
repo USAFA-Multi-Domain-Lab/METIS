@@ -304,11 +304,6 @@ export class ServerLogin {
     let login = ServerLogin.get(by)
     login?.destroy()
   }
-
-  /**
-   * The default duration for a user timeout, in milliseconds.
-   */
-  public static readonly DEFAULT_TIMEOUT_DURATION = 15 * 60 * 1000 // 15 minutes
 }
 
 /* -- TYPES -- */

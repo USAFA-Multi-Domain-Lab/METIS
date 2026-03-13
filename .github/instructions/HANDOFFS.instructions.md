@@ -116,13 +116,10 @@ The following findings are limited to code review and automated test review. Man
 
 ## Manual Tests
 
-{If the original handoff required manual testing but it has not yet been performed, write: "This section is intentionally reserved for manual UI validation findings. It has not been populated in this report." followed by the recommended use note below. If the original handoff explicitly stated that no manual testing was required, write a single sentence such as: "No manual testing was required for this handoff."}
+{Copy the manual test checklist from the original handoff verbatim, preserving each item as an unchecked checkbox for the reviewing engineer to perform. If the original handoff explicitly stated that no manual testing was required, write a single sentence such as: "No manual testing was required for this handoff."}
 
-Recommended use (when manual testing was requested but not yet completed):
-
-- Copy the manual checklist from the original handoff.
-- Record pass/fail status per scenario.
-- Add reproduction notes only for failed scenarios.
+- [ ] Manual test item copied from the original handoff.
+- [ ] Another manual test item.
 
 ## Automatic Tests
 
@@ -177,7 +174,7 @@ The title should name the feature concisely followed by `— Code Handoff`.
 - If a requested test was written but currently fails because it exposes a real product mismatch, record it as implemented coverage and describe the failing status explicitly in the execution result or open gaps section.
 - If the original handoff requested a test location that does not map cleanly to the repository's runnable Jest configuration, keep the intent but document the implemented equivalent path that actually runs in the current test setup.
 - Do not silently convert product defects into "coverage gaps" once the test exists. At that point it is a failing implementation against a covered requirement.
-- Manual-test sections may remain intentionally unfilled if the reviewer did not perform manual validation. State that explicitly rather than implying the tests passed.
+- The Manual Tests section of a handoff report must copy the manual test checklist from the original handoff verbatim, with each item preserved as an unchecked checkbox for the reviewing engineer to work through. Do not replace the list with placeholder prose or a "reserved" note.
 - If the original handoff explicitly stated that no manual testing was required (e.g. "Manual UI validation is intentionally skipped for this feature"), the report's Manual Tests section must reflect that directly with a single sentence such as "No manual testing was required for this handoff." Do not use the generic reserved-section boilerplate in that case.
 - The report should be updated as work progresses. It does not need to be written only once at the end.
 - If both documents exist, the handoff remains the request for review work, and the handoff report becomes the record of completed review work.
