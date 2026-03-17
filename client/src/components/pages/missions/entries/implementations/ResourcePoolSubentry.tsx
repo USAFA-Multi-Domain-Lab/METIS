@@ -1,10 +1,12 @@
+import { DetailLocked } from '@client/components/content/form/DetailLocked'
 import { DetailNumber } from '@client/components/content/form/DetailNumber'
 import { DetailToggle } from '@client/components/content/form/DetailToggle'
-import './ResourcePoolSubentry.scss'
 import { useMissionPageContext } from '@client/components/pages/missions/context'
-import { useObjectFormSync } from '@client/toolbox/hooks'
 import type { TMetisClientComponents } from '@client/index'
+import { useObjectFormSync } from '@client/toolbox/hooks'
 import type { ResourcePool } from '@shared/missions/forces/ResourcePool'
+
+// ! Styling in Entry.scss.
 
 /**
  * This will render the editable fields for a single resource pool, embedded
@@ -26,18 +28,18 @@ export default function ResourcePoolSubentry({
   /* -- RENDER -- */
 
   return (
-    <div className='ResourcePoolSubentry'>
-      <h3 className='ResourcePoolSubentryHeading'>{pool.name}</h3>
+    <div className='ResourcePoolSubentry Subentry'>
+      <DetailLocked label={'Resource'} value={pool.resource.name} />
       <DetailNumber
         fieldType='required'
-        label={`${pool.name} Initial Amount`}
+        label={'Initial Amount'}
         value={initialAmount}
         setValue={setInitialAmount}
         integersOnly={true}
         disabled={viewMode === 'preview'}
       />
       <DetailToggle
-        label={`Allow Negative ${pool.name}`}
+        label={'Allow Negative'}
         value={allowNegative}
         setValue={setAllowNegative}
         tooltipDescription={`If enabled, the ${pool.name} resource pool can go below zero.`}

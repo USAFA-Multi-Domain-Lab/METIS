@@ -1,5 +1,6 @@
 import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
 import type { ButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/engines'
+import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
 
 // ! Styling in Entry.scss.
 
@@ -7,13 +8,13 @@ import type { ButtonSvgEngine } from '@client/components/content/user-controls/b
  * A shared header panel for mission entry sections, displaying a heading
  * alongside a panel of SVG action buttons.
  */
-export default function EntryControlPanel({
+export default function EntryHeader({
   heading,
-  engine,
-}: TEntryControlPanel_P): TReactElement {
+  engine = useButtonSvgEngine({ elements: [] }),
+}: TEntryHeader_P): TReactElement {
   return (
-    <div className='EntryControlPanel'>
-      <div className='EntryControlPanelHeading'>{heading}</div>
+    <div className='EntryHeader'>
+      <div className='EntryHeading'>{heading}</div>
       <ButtonSvgPanel engine={engine} />
     </div>
   )
@@ -22,15 +23,16 @@ export default function EntryControlPanel({
 /* -- TYPES -- */
 
 /**
- * Props for {@link EntryControlPanel}.
+ * Props for {@link EntryHeader}.
  */
-type TEntryControlPanel_P = {
+type TEntryHeader_P = {
   /**
    * The heading text displayed on the left side of the panel.
    */
   heading: string
   /**
    * The button engine powering the SVG buttons on the right.
+   * If none is provided, an empty button panel will be displayed.
    */
-  engine: ButtonSvgEngine
+  engine?: ButtonSvgEngine
 }

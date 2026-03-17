@@ -3,6 +3,7 @@ import { DetailColorSelector } from '@client/components/content/form/DetailColor
 import { DetailLargeString } from '@client/components/content/form/DetailLargeString'
 import { DetailString } from '@client/components/content/form/DetailString'
 import { DetailToggle } from '@client/components/content/form/DetailToggle'
+import Divider from '@client/components/content/form/Divider'
 import type { TButtonText_P } from '@client/components/content/user-controls/buttons/ButtonText'
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
 import { useMissionPageContext } from '@client/components/pages/missions/context'
@@ -17,7 +18,8 @@ import { compute } from '@client/toolbox'
 import { usePostInitEffect } from '@client/toolbox/hooks'
 import { Mission } from '@shared/missions/Mission'
 import type { TNonEmptyArray } from '@shared/toolbox/arrays/ArrayToolbox'
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
+import EntryHeader from '../EntryHeader'
 
 /**
  * This will render the basic editable details of a mission force.
@@ -126,9 +128,6 @@ export default function ForceEntry({
         disabled={viewMode === 'preview'}
         key={`${force._id}_name`}
       />
-      {force.resourcePools.map((pool) => (
-        <ResourcePoolSubentry key={pool._id} pool={pool} />
-      ))}
       <DetailToggle
         label='Reveal All Nodes'
         value={revealAllNodes}
@@ -158,6 +157,14 @@ export default function ForceEntry({
         disabled={viewMode === 'preview'}
         key={`${force._id}_introMessage`}
       />
+      <Divider />
+      <EntryHeader heading='Resource Pools' />
+      {force.resourcePools.map((pool) => (
+        <Fragment key={`${force._id}_pool_${pool._id}`}>
+          <ResourcePoolSubentry pool={pool} />
+          <Divider />
+        </Fragment>
+      ))}
     </Entry>
   )
 }

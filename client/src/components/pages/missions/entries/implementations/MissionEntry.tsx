@@ -1,7 +1,7 @@
 import Divider from '@client/components/content/form/Divider'
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
 import { useMissionPageContext } from '@client/components/pages/missions/context'
-import EntryControlPanel from '@client/components/pages/missions/entries/EntryControlPanel'
+import EntryHeader from '@client/components/pages/missions/entries/EntryHeader'
 import type { TMetisClientComponents } from '@client/index'
 import { ClientMission } from '@client/missions/ClientMission'
 import { useEventListener, useObjectFormSync } from '@client/toolbox/hooks'
@@ -90,7 +90,7 @@ export default function MissionEntry({
         key={`${mission._id}_name`}
       />
       <Divider />
-      <EntryControlPanel heading='Resources' engine={addResourceEngine} />
+      <EntryHeader heading='Resources' engine={addResourceEngine} />
       {resources.map((resource) => (
         <Fragment key={`${mission._id}_resource_${resource._id}`}>
           <ResourceSubentry

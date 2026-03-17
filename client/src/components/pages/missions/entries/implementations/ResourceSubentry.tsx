@@ -51,7 +51,7 @@ export default function ResourceSubentry({
   /* -- RENDER -- */
 
   return (
-    <div className='ResourceSubentry'>
+    <div className='ResourceSubentry Subentry'>
       <DetailString
         fieldType='required'
         handleOnBlur='repopulateValue'

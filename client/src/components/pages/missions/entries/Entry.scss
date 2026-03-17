@@ -38,6 +38,10 @@
     }
   }
 
+  .Subentry {
+    @include form-container();
+  }
+
   .List {
     $border: 0.2em solid $color-secondary !important;
 
@@ -51,12 +55,12 @@
     }
   }
 
-  .EntryControlPanel {
+  .EntryHeader {
     display: grid;
     grid-template-columns: 1fr auto;
     align-items: center;
 
-    .EntryControlPanelHeading {
+    .EntryHeading {
       font-size: 1.1em;
     }
   }

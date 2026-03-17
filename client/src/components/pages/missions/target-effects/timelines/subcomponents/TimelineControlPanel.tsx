@@ -1,5 +1,5 @@
-import EntryControlPanel from '@client/components/pages/missions/entries/EntryControlPanel'
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
+import EntryHeader from '@client/components/pages/missions/entries/EntryHeader'
 import { compute } from '@client/toolbox'
 import { useRequireLogin } from '@client/toolbox/hooks'
 import { CallToolbox } from '@shared/toolbox/calls/CallToolbox'
@@ -89,7 +89,7 @@ export default function TimelineControlPanel({}: TTimelineControlPanel_P): TReac
 
   return (
     <div className={'TimelineControlPanel'} ref={elements.controlPanel}>
-      <EntryControlPanel heading='Effects' engine={engine} />
+      <EntryHeader heading='Effects' engine={engine} />
     </div>
   )
 }
