@@ -81,7 +81,7 @@ export class ServerMissionAction extends MissionAction<TMetisServerComponents> {
       // deduct each resource cost from the corresponding pool.
       if (!zeroCost && !infiniteResources) {
         for (let cost of this.resourceCosts) {
-          this.force.modifyResourcePool(-cost.amount, cost.resourceId)
+          this.force.onModifyPool(-cost.amount, cost.resourceId)
         }
       }
 

@@ -1,4 +1,6 @@
 import type { TEffectType } from '@shared/missions/effects/Effect'
+import type { ResourcePool } from '@shared/missions/forces/ResourcePool'
+import type { MissionResource } from '@shared/missions/MissionResource'
 import type { RequestHandler } from 'express'
 import type { Request, Response } from 'express-serve-static-core'
 import type { Session as ExpressSession } from 'express-session'
@@ -10,7 +12,6 @@ import type { ServerEffect } from './missions/effects/ServerEffect'
 import type { ServerMissionFile } from './missions/files/ServerMissionFile'
 import type { ServerMissionForce } from './missions/forces/ServerMissionForce'
 import type { ServerOutput } from './missions/forces/ServerOutput'
-import type { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import type { ServerMissionNode } from './missions/nodes/ServerMissionNode'
 import type { ServerMissionPrototype } from './missions/nodes/ServerMissionPrototype'
 import type { ServerMission } from './missions/ServerMission'
@@ -43,6 +44,7 @@ declare global {
     target: ServerTarget
     fileReference: ServerFileReference
     mission: ServerMission
+    resource: MissionResource<TMetisServerComponents>
     prototype: ServerMissionPrototype
     missionFile: ServerMissionFile
     force: ServerMissionForce

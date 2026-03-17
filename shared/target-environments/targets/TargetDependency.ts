@@ -1,3 +1,4 @@
+import { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import { MissionAction } from '../../missions/actions/MissionAction'
 import { MissionFile } from '../../missions/files/MissionFile'
 import { MissionForce } from '../../missions/forces/MissionForce'
@@ -43,28 +44,33 @@ export const AVAILABLE_DEPENDENCIES_RAW = [
   } as const,
   {
     name: 'force',
-    condition: (value: { force: MissionForce }) =>
-      value.force instanceof MissionForce,
+    condition: (value: any) => value && value.force instanceof MissionForce,
+  } as const,
+  {
+    name: 'pool',
+    condition: (value: any) =>
+      value &&
+      value.force instanceof MissionForce &&
+      value.pool instanceof ResourcePool,
   } as const,
   {
     name: 'node',
-    condition: (value: { force: MissionForce; node: MissionNode }) =>
-      value.force instanceof MissionForce && value.node instanceof MissionNode,
+    condition: (value: any) =>
+      value &&
+      value.force instanceof MissionForce &&
+      value.node instanceof MissionNode,
   } as const,
   {
     name: 'action',
-    condition: (value: {
-      force: MissionForce
-      node: MissionNode
-      action: MissionAction | undefined
-    }) =>
+    condition: (value: any) =>
+      value &&
       value.force instanceof MissionForce &&
       value.node instanceof MissionNode &&
       (value.action instanceof MissionAction || value.action === undefined),
   } as const,
   {
     name: 'file',
-    condition: (value: { file: any }) => value.file instanceof MissionFile,
+    condition: (value: any) => value && value.file instanceof MissionFile,
   } as const,
 ] as const
 
@@ -208,6 +214,17 @@ export class TargetDependency implements TDependency {
     TargetDependency.SELECT('force', dependentId)
 
   /**
+   * Checks if the argument's (*referenced by the argument's ID*) value contains a
+   * resource pool object.
+   * @param dependentId The ID of the dependent argument.
+   * @returns A new dependency that checks if the argument's value contains
+   * a resource pool object.
+   * @example TargetDependency.POOL('dependentId')
+   */
+  public static POOL = (dependentId: string) =>
+    TargetDependency.SELECT('pool', dependentId)
+
+  /**
    * Checks if the argument's (*referenced by the argument's ID*) value contains a force object and a node object.
    * @param dependentId The ID of the dependent argument.
    * @returns A new dependency that checks if the argument's value contains a force object and a node object.
@@ -306,6 +323,7 @@ export class TargetDependency implements TDependency {
     if (!Array.isArray(args)) args = [args]
     // Create the dependency.
     let dependency = new TargetDependency(name, dependentId, condition, args)
+    console.log(dependency, dependency.encode())
     // Return the encoded dependency.
     return dependency.encode()
   }

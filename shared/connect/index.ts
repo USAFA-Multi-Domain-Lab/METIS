@@ -7,11 +7,9 @@ import type {
 } from '../missions/actions/ActionExecution'
 import type { TExecutionOutcomeJson } from '../missions/actions/ExecutionOutcome'
 import type { TMissionFileJson } from '../missions/files/MissionFile'
-import type {
-  TMissionForceSaveJson,
-} from '../missions/forces/MissionForce'
-import type { TResourcePoolJson } from '../missions/forces/ResourcePool'
+import type { TMissionForceSaveJson } from '../missions/forces/MissionForce'
 import type { TOutputJson } from '../missions/forces/MissionOutput'
+import type { TResourcePoolJson } from '../missions/forces/ResourcePool'
 import type { TMissionNodeJson } from '../missions/nodes/MissionNode'
 import type { TMissionPrototypeJson } from '../missions/nodes/MissionPrototype'
 import type { MemberRole } from '../sessions/members/MemberRole'
@@ -230,7 +228,7 @@ type TModifierData = [
      */
     key: 'node-action-resource-cost'
     /**
-     * The ID of the {@link TResource} being modified.
+     * The ID of the {@link MissionResource} being modified.
      */
     resourceId: string
     /**
@@ -253,13 +251,9 @@ type TModifierData = [
      */
     key: 'force-resource-pool'
     /**
-     * The ID of the force to modify.
+     * The ID of the resource pool to modify.
      */
-    forceId: string
-    /**
-     * The ID of the {@link TResource} whose pool to modify.
-     */
-    resourceId: string
+    poolId: string
     /**
      * The operand used to modify the resource pool of the force.
      */

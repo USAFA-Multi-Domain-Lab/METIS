@@ -32,6 +32,7 @@ import type {
   TEffectType,
 } from '@shared/missions/effects/Effect'
 import type { TOutputContext } from '@shared/missions/forces/MissionOutput'
+import type { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import type {
   TMissionJson,
   TMissionJsonOptions,
@@ -2385,7 +2386,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     this.emitModifierEnacted(node.force, {
       key: 'node-new-alert',
       nodeId: node._id,
-      alert: alert.toJson(),
+      alert: alert.json,
     })
   }
 
@@ -2499,26 +2500,23 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
   /**
    * Modifies a resource pool by applying the given amount
-   * to the pool with the given ID.
-   * @param force The force containing the resource pool.
-   * @param resourceId The ID of the resource whose pool to modify.
+   * to the pool.
+   * @param pool The resource pool to modify.
    * @param operand The amount by which to modify the resource pool.
    * @note A negative value will subtract and a positive
    * value will add to the resource pool.
    */
   public modifyResourcePool = (
-    force: ServerMissionForce,
-    resourceId: string,
+    pool: ResourcePool<TMetisServerComponents>,
     operand: number,
   ) => {
-    // Confirm the force exists, modify the resource pool,
+    // Confirm the pool exists in the mission, modify the resource pool,
     // then emit an event to the members.
-    this.confirmComponentInMission(force)
-    force.modifyResourcePool(operand, resourceId)
-    this.emitModifierEnacted(force, {
+    this.confirmComponentInMission(pool)
+    pool.onModify(operand)
+    this.emitModifierEnacted(pool.force, {
       key: 'force-resource-pool',
-      forceId: force._id,
-      resourceId,
+      poolId: pool._id,
       operand,
     })
   }

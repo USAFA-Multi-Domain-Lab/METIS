@@ -267,11 +267,10 @@ export abstract class MissionAction<
    */
   public get areEnoughResources(): boolean {
     return this.resourceCosts.every((cost) => {
-      let pool = this.force.getResourcePool(cost.resourceId)
+      let pool = this.force.getPoolByResourceId(cost.resourceId)
       if (!pool) return true
       return (
-        cost.amount <= Math.max(pool.remainingAmount, 0) ||
-        pool.allowNegative
+        cost.amount <= Math.max(pool.remainingAmount, 0) || pool.allowNegative
       )
     })
   }

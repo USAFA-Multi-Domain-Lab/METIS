@@ -1,3 +1,4 @@
+import type { TMissionComponentArg } from '@shared/target-environments/args/mission-component/MissionComponentArg'
 import type { TTargetArg } from '../../target-environments/args/Arg'
 import type { TargetDependency } from '../../target-environments/targets/TargetDependency'
 import type {
@@ -5,11 +6,13 @@ import type {
   TFileMetadata,
   TForceMetadata,
   TNodeMetadata,
+  TPoolMetadata,
 } from '../../target-environments/types'
 import type { TAnyObject } from '../../toolbox/objects/ObjectToolbox'
 import { StringToolbox } from '../../toolbox/strings/StringToolbox'
 import { VersionToolbox } from '../../toolbox/strings/VersionToolbox'
 import { MissionAction } from '../actions/MissionAction'
+import type { ResourcePool } from '../forces/ResourcePool'
 import {
   MissionComponent,
   type TMissionComponentIssue,
@@ -489,6 +492,7 @@ export abstract class Effect<
 
     const isMissionComponentRef =
       type === 'action' ||
+      type === 'pool' ||
       type === 'node' ||
       type === 'force' ||
       type === 'file'
@@ -497,8 +501,13 @@ export abstract class Effect<
       return null
     }
 
-    // Check force reference (required for force, node, and action types)
-    if (type === 'force' || type === 'node' || type === 'action') {
+    // Check force reference (required for force, pool, node, and action types)
+    if (
+      type === 'force' ||
+      type === 'pool' ||
+      type === 'node' ||
+      type === 'action'
+    ) {
       const forceInMission = this.getForceFromArgs(argId)
       if (!forceInMission) {
         const forceInArgs = this.getForceMetadataInArgs(argId)
@@ -506,6 +515,15 @@ export abstract class Effect<
           'force',
           forceInArgs?.forceName,
         )
+      }
+    }
+
+    // Check pool reference (required for pool type)
+    if (type === 'pool') {
+      let poolInMission = this.getPoolFromArgs(argId)
+      if (!poolInMission) {
+        let poolInArgs = this.getPoolMetadataInArgs(argId)
+        return this.buildComponentNotFoundMessage('pool', poolInArgs?.poolName)
       }
     }
 
@@ -581,7 +599,7 @@ export abstract class Effect<
    * @returns The error message.
    */
   private buildComponentNotFoundMessage(
-    componentType: 'force' | 'node' | 'action' | 'file',
+    componentType: TMissionComponentArg['type'],
     componentName?: string,
   ): string {
     let verb = 'targets'
@@ -742,6 +760,14 @@ export abstract class Effect<
         if (dependency.name === 'force') {
           const force = this.getForceFromArgs(dependency.dependentId)
           const value = { force }
+          dependencyMet = dependency.condition(value)
+        }
+        // If the dependency is a node dependency then check
+        // if the node exists and if the condition is met.
+        else if (dependency.name === 'pool') {
+          const force = this.getForceFromArgs(dependency.dependentId)
+          const pool = this.getPoolFromArgs(dependency.dependentId)
+          const value = { force, pool }
           dependencyMet = dependency.condition(value)
         }
         // If the dependency is a node dependency then check
@@ -914,6 +940,38 @@ export abstract class Effect<
   }
 
   /**
+   * Gets the pool metadata stored in the effect's arguments.
+   * @param argId The ID of the argument to get the pool from.
+   * @returns The pool metadata if found, otherwise undefined.
+   */
+  public getPoolMetadataInArgs = (
+    argId: string,
+  ): Required<TPoolMetadata> | undefined => {
+    const poolInArgs: TPoolMetadata | undefined = this.args[argId]
+
+    // If the pool argument is not found, then return undefined.
+    if (!poolInArgs) return undefined
+    // Otherwise, extract the metadata.
+    let forceKey = poolInArgs.forceKey
+    let forceName = poolInArgs.forceName
+    let poolKey = poolInArgs.poolKey
+    let poolName = poolInArgs.poolName
+
+    // If any metadata is missing, then return undefined.
+    if (!forceKey || !forceName || !poolKey || !poolName) return undefined
+
+    // Handle force keys that are set to 'self'.
+    if (forceKey === 'self') {
+      if (!this.sourceForce) return undefined
+      forceKey = this.sourceForce.localKey
+      forceName = this.sourceForce.name
+    }
+
+    // Return the pool metadata.
+    return { forceKey, forceName, poolKey, poolName }
+  }
+
+  /**
    * Gets the file metadata that's stored in the effect's arguments.
    * @param argId The ID of the argument from which to get the file.
    * @returns The file metadata if found, otherwise undefined.
@@ -1014,6 +1072,25 @@ export abstract class Effect<
     if (!(action instanceof MissionAction)) return undefined
     // Otherwise, return the action.
     return action
+  }
+
+  /**
+   * Gets the pool stored in the effect's arguments.
+   * @param argId The ID of the argument from which to get the pool.
+   * @returns The pool if found, otherwise undefined.
+   */
+  public getPoolFromArgs = (argId: string): ResourcePool<T> | undefined => {
+    const poolInArgs: TPoolMetadata | undefined = this.args[argId]
+    let forceKey = poolInArgs?.forceKey
+    let poolKey = poolInArgs?.poolKey
+    // Handle force keys that are set to 'self'.
+    if (forceKey === 'self') {
+      if (!this.sourceForce) return undefined
+      forceKey = this.sourceForce.localKey
+    }
+    return this.mission.getPoolByLocalKey(forceKey, poolKey) as
+      | ResourcePool<T>
+      | undefined
   }
 
   /**

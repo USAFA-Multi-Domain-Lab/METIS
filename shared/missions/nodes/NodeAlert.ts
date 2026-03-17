@@ -1,6 +1,6 @@
 import type { ClassList } from '@shared/toolbox/html/ClassList'
 import {
-  createToJsonMethod,
+  serializeJson,
   type TJsonSerializable,
 } from '@shared/toolbox/serialization/json'
 import { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSerializableArray'
@@ -19,6 +19,17 @@ export class NodeAlert implements TJsonSerializable<TNodeAlertJson> {
    */
   public get severityLevelNumber(): number {
     return NodeAlert.SEVERITY_LEVELS.indexOf(this.severityLevel)
+  }
+
+  // Implemented
+  public get json(): TNodeAlertJson {
+    return serializeJson(this, [
+      '_id',
+      'nodeId',
+      'message',
+      'severityLevel',
+      'acknowledged',
+    ])
   }
 
   private constructor(
@@ -45,17 +56,12 @@ export class NodeAlert implements TJsonSerializable<TNodeAlertJson> {
      * closed, this should be set to true.
      */
     public acknowledged: boolean,
-  ) {
-    this.toJson = createToJsonMethod<NodeAlert, TNodeAlertJson>(this, [
-      '_id',
-      'nodeId',
-      'message',
-      'severityLevel',
-      'acknowledged',
-    ])
-  }
+  ) {}
 
   /**
+  get json(): TNodeAlertJson {
+    throw new Error('Method not implemented.')
+  }
    * Adds CSS classes to a {@link ClassList} based on
    * the severity level of the alert.
    * @param classList The class list to which the severity
@@ -73,9 +79,6 @@ export class NodeAlert implements TJsonSerializable<TNodeAlertJson> {
     )
   }
 
-  // Implemented
-  public toJson: () => TNodeAlertJson
-
   /**
    * The possible severity levels for node alerts.
    * @note IMPORTANT Consider the order here. The more
@@ -88,6 +91,7 @@ export class NodeAlert implements TJsonSerializable<TNodeAlertJson> {
   public static get SEVERITY_LEVELS(): TNodeAlertSeverityLevel[] {
     return ['info', 'suspicious', 'warning', 'danger']
   }
+
   /**
    * Creates a brand new {@link NodeAlert} object.
    * @param message The message to be displayed to an operator

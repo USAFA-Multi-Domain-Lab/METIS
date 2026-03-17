@@ -6,11 +6,13 @@ import { EventManager } from '@shared/events/EventManager'
 import type { TMissionForceJson } from '@shared/missions/forces/MissionForce'
 import { MissionForce } from '@shared/missions/forces/MissionForce'
 import type { TOutputJson } from '@shared/missions/forces/MissionOutput'
+import { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import type { MissionComponent } from '@shared/missions/MissionComponent'
 import type { TMissionNodeJson } from '@shared/missions/nodes/MissionNode'
 import { Counter } from '@shared/toolbox/numbers/Counter'
 import type { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
 import type { TWithKey } from '@shared/toolbox/objects/ObjectToolbox'
+import { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSerializableArray'
 import type { ClientMissionAction } from '../actions/ClientMissionAction'
 import type { ClientMission } from '../ClientMission'
 import { ClientMissionNode } from '../nodes/ClientMissionNode'
@@ -494,19 +496,34 @@ export class ClientMissionForce
     return this.outputs
   }
 
-  // Implemented
-  public modifyResourcePool(operand: number, resourceId: string): void {
-    // Find the pool by resourceId.
-    let pool = this.getResourcePool(resourceId)
-    if (!pool) {
-      return console.error(`Resource pool "${resourceId}" not found.`)
-    }
-
-    // Modify the resource pool by the operand.
-    pool.remainingAmount += operand
-
-    // Emit event.
+  // Overridden
+  public onModifyPool(): void {
     this.emitEvent('modify-forces')
+  }
+
+  /**
+   * Callback for when a mission's resource list change,
+   * allowing the force to confirm that the force's list
+   * of pools still corresponds with the available resources
+   * in the mission.
+   */
+  public onResourceListChange(): void {
+    // Map resources to pools, this will result in
+    // pools that no longer have a corresponding resource
+    // in the mission being filtered out indirectly. New
+    // pools are returned in the map for any resource that
+    // doesn't have a corresponding pool. Because map is over
+    // resources, the list of pools will end up in the same
+    // order as the resources, which will be user friendly in
+    // the UI.
+    let updatedPools: ResourcePool<TMetisClientComponents>[] =
+      this.mission.resources.map((resource) => {
+        let existingPool = this.resourcePools.find(
+          (pool) => pool.resourceId === resource._id,
+        )
+        return existingPool ?? ResourcePool.createNew(this, resource)
+      })
+    this.resourcePools = new JsonSerializableArray(...updatedPools)
   }
 
   /**

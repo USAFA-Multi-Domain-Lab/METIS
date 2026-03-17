@@ -54,14 +54,7 @@ export abstract class MissionForce<
    * The resource pools for this force, each corresponding to
    * a resource defined in the parent mission.
    */
-  protected _resourcePools: JsonSerializableArray<ResourcePool<T>>
-  /**
-   * The resource pools for this force, each corresponding to
-   * a resource defined in the parent mission.
-   */
-  public get resourcePools(): ResourcePool<T>[] {
-    return this._resourcePools
-  }
+  public resourcePools: JsonSerializableArray<T['resourcePool']>
 
   /**
    * Whether or not to reveal all nodes in the force.
@@ -182,15 +175,16 @@ export abstract class MissionForce<
     this.revealAllNodes =
       data.revealAllNodes ?? MissionForce.DEFAULT_PROPERTIES.revealAllNodes
     this.localKey = data.localKey ?? mission.generateForceKey()
-    this._resourcePools = JsonSerializableArray.fromJson(
-      data.resourcePools ?? MissionForce.DEFAULT_PROPERTIES.resourcePools,
-      (poolJson) => new ResourcePool(this, poolJson),
-    )
+    this.resourcePools = new JsonSerializableArray()
     this.nodes = []
     this._outputs = []
     this.root = this.createNode(MissionForce.ROOT_NODE_PROPERTIES)
 
-    // Import nodes into the force.
+    // Import resource pools and nodes into the force.
+
+    this.importPools(
+      data.resourcePools ?? MissionForce.DEFAULT_PROPERTIES.resourcePools,
+    )
     this.importNodes(data.nodes ?? MissionForce.DEFAULT_PROPERTIES.nodes)
   }
 
@@ -210,9 +204,10 @@ export abstract class MissionForce<
       revealAllNodes: this.revealAllNodes,
       localKey: this.localKey,
       nodes: this.exportNodes(options),
-      resourcePools: this._resourcePools.map(
-        ({ _id, resourceId, initialAmount, allowNegative }) => ({
+      resourcePools: this.resourcePools.map(
+        ({ _id, localKey, resourceId, initialAmount, allowNegative }) => ({
           _id,
+          localKey,
           resourceId,
           initialAmount,
           allowNegative,
@@ -229,7 +224,7 @@ export abstract class MissionForce<
      * Includes the current {@link ResourcePool.remainingAmount} on each pool in the JSON.
      */
     const addResourcesRemaining = () => {
-      json.resourcePools = this._resourcePools.toJson()
+      json.resourcePools = this.resourcePools.json
     }
 
     /**
@@ -295,6 +290,22 @@ export abstract class MissionForce<
   }
 
   /**
+   * Generates a new key for a resource pool.
+   * @returns The new key for the pool.
+   */
+  public generatePoolKey(): string {
+    let newKey: number = 0
+
+    for (let pool of this.resourcePools) {
+      let poolKey: number = Number(pool.localKey)
+      if (poolKey > newKey) newKey = Math.max(newKey, poolKey)
+    }
+
+    newKey++
+    return String(newKey)
+  }
+
+  /**
    * Generates a new key for the node.
    * @returns The new key for the node.
    */
@@ -337,19 +348,22 @@ export abstract class MissionForce<
   public abstract storeOutput(output: TOutput<T>): void
 
   /**
-   * Modifies the resource pool for the given resource ID.
-   * @param operand The amount by which to modify the resource pool.
-   * @param resourceId The ID of the {@link TResource} whose pool to modify.
+   * Callback for when a resource pool in the force is modified by
+   * an effect. This will be called from a pool.
+   * @note Override this to add callback logic. By default, this has
+   * no logic.
    */
-  public abstract modifyResourcePool(operand: number, resourceId: string): void
+  public onModifyPool(pool: T['resourcePool']): void {}
 
   /**
    * Gets the resource pool instance for the given resource ID.
    * @param resourceId The ID of the {@link TResource} to retrieve the pool for.
    * @returns The resource pool instance, or undefined if not found.
    */
-  public getResourcePool(resourceId: string): ResourcePool<T> | undefined {
-    return this._resourcePools.find(
+  public getPoolByResourceId(
+    resourceId: string,
+  ): T['resourcePool'] | undefined {
+    return this.resourcePools.find(
       (instance) => instance.resourceId === resourceId,
     )
   }
@@ -372,6 +386,21 @@ export abstract class MissionForce<
   public getNodeFromPrototype(prototypeId: string): TNode<T> | undefined {
     if (prototypeId === this.mission.root._id) return this.root
     else return this.nodes.find((node) => node.prototype._id === prototypeId)
+  }
+
+  /**
+   * Imports resource pool data into the force, creating {@link ResourcePool} objects from it.
+   * @param data The raw resource pool data to import.
+   */
+  protected importPools(data: TResourcePoolJson[]): void {
+    try {
+      this.resourcePools.push(...ResourcePool.fromJson(this, data))
+    } catch (error) {
+      if (context === 'react') {
+        console.error('Resource pool data passed is invalid.')
+      }
+      throw error
+    }
   }
 
   /**

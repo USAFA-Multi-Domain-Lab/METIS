@@ -120,13 +120,6 @@ export class ServerMissionForce extends MissionForce<TMetisServerComponents> {
     })
   }
 
-  // Implemented
-  public modifyResourcePool(operand: number, resourceId: string): void {
-    let pool = this.getResourcePool(resourceId)
-    if (!pool) throw new Error(`Resource pool "${resourceId}" not found.`)
-    pool.remainingAmount += operand
-  }
-
   /**
    * Validates the nodes of the force.
    * @param nodes The nodes to validate.

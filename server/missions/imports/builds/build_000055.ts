@@ -32,6 +32,7 @@ const build: TMissionImportBuild = async (missionData) => {
     force.resourcePools = [
       {
         _id: StringToolbox.generateRandomId(),
+        localKey: '1',
         resourceId: resourceId,
         initialAmount: force.initialResources,
         allowNegative: force.allowNegativeResources,

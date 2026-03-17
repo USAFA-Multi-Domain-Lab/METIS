@@ -8,6 +8,7 @@ import type { MissionForce } from './missions/forces/MissionForce'
 import type { MissionOutput } from './missions/forces/MissionOutput'
 import type { ResourcePool } from './missions/forces/ResourcePool'
 import type { Mission } from './missions/Mission'
+import type { MissionResource } from './missions/MissionResource'
 import type { MissionNode } from './missions/nodes/MissionNode'
 import type { MissionPrototype } from './missions/nodes/MissionPrototype'
 import type { SessionMember } from './sessions/members/SessionMember'
@@ -174,6 +175,7 @@ export type TMetisBaseComponents = {
   target: Target
   fileReference: FileReference
   mission: Mission
+  resource: MissionResource
   prototype: MissionPrototype
   missionFile: MissionFile
   force: MissionForce

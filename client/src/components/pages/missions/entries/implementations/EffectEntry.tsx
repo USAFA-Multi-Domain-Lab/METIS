@@ -25,6 +25,8 @@ export default function EffectEntry<TType extends TEffectType>({
 }: TEffectEntry_P<TType>): TReactElement | null {
   /* -- STATE -- */
 
+  console.log(effect.args)
+
   const { onChange, viewMode } = useMissionPageContext()
   const { onDuplicateRequest, onDeleteRequest } = useEffectItemButtonCallbacks(
     effect.host,

@@ -4,23 +4,28 @@ import type { TJsonSerializable } from '../serialization/json'
  * An array that can be serialized to JSON
  * via `toJson()`.
  */
-export class JsonSerializableArray<
-  T extends TJsonSerializable<ReturnType<T['toJson']>>,
->
+export class JsonSerializableArray<T extends TJsonSerializable<T['json']>>
   extends Array<T>
-  implements TJsonSerializable<Array<ReturnType<T['toJson']>>>
+  implements TJsonSerializable<Array<T['json']>>
 {
+  /**
+   * A serialized-JSON version of this array.
+   */
+  public get json(): Array<T['json']> {
+    return this.map((item: T) => item.json)
+  }
+
   public constructor(...items: Array<T>) {
     super(...items)
     Object.setPrototypeOf(this, JsonSerializableArray.prototype)
   }
 
-  /**
-   * @returns a serialized-JSON version of
-   * this array.
-   */
-  public toJson(): Array<ReturnType<T['toJson']>> {
-    return this.map((item: T) => item.toJson())
+  // Overridden
+  public filter(
+    ...args: Parameters<Array<T>['filter']>
+  ): JsonSerializableArray<T> {
+    let filtered = super.filter(...args)
+    return new JsonSerializableArray(...filtered)
   }
 
   /**
@@ -31,9 +36,9 @@ export class JsonSerializableArray<
    * @returns A {@link JsonSerializableArray} containing the deserialized items.
    * @note If `jsonArray` is null or undefined, this method will return an empty `JsonSerializableArray`.
    */
-  public static fromJson<T extends TJsonSerializable<ReturnType<T['toJson']>>>(
-    jsonArray: ReturnType<T['toJson']>[] | null | undefined,
-    fromJsonCallback: (json: ReturnType<T['toJson']>) => T,
+  public static fromJson<T extends TJsonSerializable<T['json']>>(
+    jsonArray: T['json'][] | null | undefined,
+    fromJsonCallback: (json: T['json']) => T,
   ): JsonSerializableArray<T> {
     let items: T[] = []
     if (jsonArray) {

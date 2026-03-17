@@ -2,6 +2,7 @@ import type { TMissionOutlineItem } from '@client/components/pages/missions/stru
 import type { TMetisClientComponents } from '@client/index'
 import type { ClientTarget } from '@client/target-environments/ClientTarget'
 import type {
+  TActionResourceCost,
   TMissionActionJsonDirect,
   TMissionActionJsonIndirect,
 } from '@shared/missions/actions/MissionAction'
@@ -10,6 +11,7 @@ import type {
   TEffectExecutionTriggered,
   TEffectExecutionTriggeredJson,
 } from '@shared/missions/effects/Effect'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { ClientEffect } from '../effects/ClientEffect'
 import type { ClientMissionNode } from '../nodes/ClientMissionNode'
 
@@ -233,6 +235,39 @@ export class ClientMissionAction
       _id,
       name,
     })
+  }
+
+  /**
+   * Callback for when a mission's resource list change,
+   * allowing the action to confirm that the action's list
+   * of resource costs still corresponds with the available
+   * resources in the mission.
+   */
+  public onResourceListChange(): void {
+    // Map resources to costs, this will result in
+    // costs that no longer have a corresponding resource
+    // in the mission being filtered out indirectly. New
+    // costs are returned in the map for any resource that
+    // doesn't have a corresponding cost. Because map is over
+    // resources, the list of costs will end up in the same
+    // order as the resources, which will be user friendly in
+    // the UI.
+    let updatedCosts: TActionResourceCost[] = this.mission.resources.map(
+      (resource) => {
+        let existingCost = this.resourceCosts.find(
+          (cost) => cost.resourceId === resource._id,
+        )
+        return (
+          existingCost ?? {
+            _id: StringToolbox.generateRandomId(),
+            resourceId: resource._id,
+            amount: 0,
+            hidden: false,
+          }
+        )
+      },
+    )
+    this._resourceCosts = updatedCosts
   }
 
   /**

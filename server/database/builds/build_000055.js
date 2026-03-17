@@ -47,6 +47,7 @@ while (cursorMissions.hasNext()) {
     force.resourcePools = [
       {
         _id: generateHash(),
+        localKey: '1',
         resourceId: resourceId,
         initialAmount: force.initialResources,
         allowNegative: force.allowNegativeResources,

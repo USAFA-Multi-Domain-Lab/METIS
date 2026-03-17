@@ -2,9 +2,10 @@ import { DetailString } from '@client/components/content/form/DetailString'
 import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
 import { useMissionPageContext } from '@client/components/pages/missions/context'
+import type { TMetisClientComponents } from '@client/index'
 import { ClientMission } from '@client/missions/ClientMission'
 import { useObjectFormSync } from '@client/toolbox/hooks'
-import type { TResource } from '@shared/missions/Mission'
+import type { MissionResource } from '@shared/missions/MissionResource'
 
 // ! Styling in Entry.scss.
 
@@ -75,7 +76,7 @@ type TResourceSubentry_P = {
   /**
    * The resource whose label is being edited.
    */
-  resource: TResource
+  resource: MissionResource<TMetisClientComponents>
   /**
    * The mission that owns the resource.
    */
@@ -83,5 +84,5 @@ type TResourceSubentry_P = {
   /**
    * Called when the user requests to remove this resource.
    */
-  onClickDelete: (resource: TResource) => void
+  onClickDelete: (resource: MissionResource<TMetisClientComponents>) => void
 }

@@ -10,7 +10,6 @@ import type { ClientEffect } from '@client/missions/effects/ClientEffect'
 import type { ClientMissionFile } from '@client/missions/files/ClientMissionFile'
 import type { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
 import type { ClientOutput } from '@client/missions/forces/ClientOutput'
-import type { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import type { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
 import type { ClientMissionPrototype } from '@client/missions/nodes/ClientMissionPrototype'
 import type { ClientSessionMember } from '@client/sessions/ClientSessionMember'
@@ -18,7 +17,9 @@ import type { SessionClient } from '@client/sessions/SessionClient'
 import type { ClientTarget } from '@client/target-environments/ClientTarget'
 import type { ClientTargetEnvironment } from '@client/target-environments/ClientTargetEnvironment'
 import type { ClientUser } from '@client/users/ClientUser'
+import type { MissionResource } from '@shared/missions/MissionResource'
 import type { TEffectType } from '@shared/missions/effects/Effect'
+import type { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import ReactDOM from 'react-dom/client'
 import './index.scss'
 
@@ -65,6 +66,7 @@ export type TMetisClientComponents = {
   target: ClientTarget
   fileReference: ClientFileReference
   mission: ClientMission
+  resource: MissionResource<TMetisClientComponents>
   prototype: ClientMissionPrototype
   missionFile: ClientMissionFile
   force: ClientMissionForce

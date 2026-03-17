@@ -1073,19 +1073,14 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
 
   /**
    * Modifies the resource pool of a force.
-   * @param forceId The ID of the force.
-   * @param resourceId The ID of the resource whose pool to modify.
+   * @param poolId The ID of the resource pool to be modified.
    * @param operand The operand to modify the resource pool by.
    */
-  private modifyResourcePool = (
-    forceId: string,
-    resourceId: string,
-    operand: number,
-  ): void => {
-    // Find the force, given the ID.
-    let force = this.mission.getForceById(forceId)
+  private modifyResourcePool = (poolId: string, operand: number): void => {
+    // Find the pool, given the ID.
+    let pool = this.mission.getPoolById(poolId)
     // Modify the resource pool for the force.
-    force?.modifyResourcePool(operand, resourceId)
+    pool?.onModify(operand)
   }
 
   /**
@@ -1362,7 +1357,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
         )
         break
       case 'force-resource-pool':
-        this.modifyResourcePool(data.forceId, data.resourceId, data.operand)
+        this.modifyResourcePool(data.poolId, data.operand)
         break
       case 'file-update-access':
         this.updateFileAccess(data)
@@ -1469,7 +1464,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
 
     // Update the resource pools for the force.
     for (let updatedPool of resourcePools) {
-      let pool = action.force.getResourcePool(updatedPool.resourceId)
+      let pool = action.force.getPoolByResourceId(updatedPool.resourceId)
       if (pool && updatedPool.remainingAmount !== undefined) {
         pool.remainingAmount = updatedPool.remainingAmount
       }

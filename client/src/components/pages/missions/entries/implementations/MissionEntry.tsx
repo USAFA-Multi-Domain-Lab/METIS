@@ -2,11 +2,11 @@ import Divider from '@client/components/content/form/Divider'
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
 import { useMissionPageContext } from '@client/components/pages/missions/context'
 import EntryControlPanel from '@client/components/pages/missions/entries/EntryControlPanel'
+import type { TMetisClientComponents } from '@client/index'
 import { ClientMission } from '@client/missions/ClientMission'
-import { usePostInitEffect } from '@client/toolbox/hooks'
-import type { TResource } from '@shared/missions/Mission'
+import { useEventListener, useObjectFormSync } from '@client/toolbox/hooks'
 import { Mission } from '@shared/missions/Mission'
-import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import type { MissionResource } from '@shared/missions/MissionResource'
 import { Fragment, useState } from 'react'
 import { DetailString } from '../../../../content/form/DetailString'
 import { EffectTimeline } from '../../target-effects/timelines'
@@ -22,8 +22,14 @@ export default function MissionEntry({
   /* -- STATE -- */
 
   const { onChange, viewMode } = useMissionPageContext()
-  const [name, setName] = useState<string>(mission.name)
-  const [resources, setResources] = useState<TResource[]>(mission.resources)
+  const [resources, setResources] = useState<
+    MissionResource<TMetisClientComponents>[]
+  >([...mission.resources])
+  const {
+    name: [name, setName],
+  } = useObjectFormSync(mission, ['name'], {
+    onChange: () => onChange(mission),
+  })
 
   const addResourceEngine = useButtonSvgEngine({
     elements: [
@@ -47,14 +53,7 @@ export default function MissionEntry({
    * resource to the mission.
    */
   function onClickAdd(): void {
-    setResources((previous) => [
-      ...previous,
-      {
-        _id: StringToolbox.generateRandomId(),
-        name: 'Resources',
-        order: Math.max(...previous.map((resource) => resource.order)) + 1,
-      },
-    ])
+    mission.addResource()
   }
 
   /**
@@ -62,24 +61,19 @@ export default function MissionEntry({
    * removing it from the mission.
    * @param resource The resource to remove.
    */
-  function onClickDelete(resource: TResource): void {
-    setResources((previous) =>
-      previous.filter((existingResource) => existingResource !== resource),
-    )
+  function onClickDelete(
+    resource: MissionResource<TMetisClientComponents>,
+  ): void {
+    resource.remove()
   }
 
   /* -- EFFECTS -- */
 
-  // Sync the component state with the mission.
-  usePostInitEffect(() => {
-    // Update the mission name.
-    mission.name = name
-    // Update the mission resources.
-    mission.resources = resources
-
-    // Allow the user to save the changes.
-    onChange(mission)
-  }, [name, resources])
+  // On resource list change, update the state of this
+  // component to reflect changes.
+  useEventListener(mission, ['resource-list-change'], () => {
+    setResources(mission.resources) // Getter returns new object every time.
+  })
 
   /* -- RENDER -- */
   return (
