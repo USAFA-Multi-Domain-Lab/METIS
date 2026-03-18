@@ -1,3 +1,4 @@
+import { sessionLogger } from '@server/logging'
 import type { ServerTarget } from '@server/target-environments/ServerTarget'
 import type { TTargetEnvExposedAction } from '@server/target-environments/context/TargetEnvContext'
 import type { TMissionActionJson } from '@shared/missions/actions/MissionAction'
@@ -81,7 +82,14 @@ export class ServerMissionAction extends MissionAction<TMetisServerComponents> {
       // deduct each resource cost from the corresponding pool.
       if (!zeroCost && !infiniteResources) {
         for (let cost of this.resourceCosts) {
-          this.force.onModifyPool(-cost.amount, cost.resourceId)
+          let pool = this.force.getPoolByResourceId(cost.resourceId)
+          if (pool) {
+            pool.applyCost(cost)
+          } else {
+            sessionLogger.error(
+              'Failed to find pool for resource cost during action execution.',
+            )
+          }
         }
       }
 

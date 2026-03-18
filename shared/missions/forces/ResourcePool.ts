@@ -4,6 +4,7 @@ import {
 } from '@shared/toolbox/serialization/json'
 import { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSerializableArray'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import type { TActionResourceCost } from '../actions/MissionAction'
 import { Mission, type TMission } from '../Mission'
 import {
   MissionComponent,
@@ -130,6 +131,21 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
     this.initialAmount = initialAmount
     this.allowNegative = allowNegative
     this.remainingAmount = remainingAmount
+  }
+
+  /**
+   * Applies the given resource cost to this pool by
+   * reducing the remaining amount by the cost's
+   * specified amount.
+   * @param cost The resource cost to apply to this pool.
+   * @throws Error if the cost's resource ID does not
+   * match this pool's resource ID.
+   */
+  public applyCost(cost: TActionResourceCost): void {
+    if (cost.resourceId !== this.resourceId) {
+      throw new Error('Resource ID mismatch.')
+    }
+    this.remainingAmount -= cost.amount
   }
 
   /**
