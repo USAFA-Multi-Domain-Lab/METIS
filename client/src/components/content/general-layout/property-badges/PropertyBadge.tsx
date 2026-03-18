@@ -60,7 +60,7 @@ export default function PropertyBadge({
   const iconStyle: React.CSSProperties = compute(() => {
     let result: React.CSSProperties = {
       backgroundImage: 'linear-gradient(transparent, transparent)',
-      backgroundSize: '0.65em',
+      backgroundSize: 'contain',
       backgroundRepeat: 'no-repeat',
       backgroundPosition: 'center',
     }

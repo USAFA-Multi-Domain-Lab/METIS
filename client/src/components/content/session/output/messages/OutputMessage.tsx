@@ -1,3 +1,4 @@
+import ResourceCostBadges from '@client/components/content/general-layout/property-badges/implementations/ResourceCostBadges'
 import PropertyBadge from '@client/components/content/general-layout/property-badges/PropertyBadge'
 import PropertyBadges from '@client/components/content/general-layout/property-badges/PropertyBadges'
 import RichText from '@client/components/content/general-layout/rich-text/RichText'
@@ -66,31 +67,27 @@ export default function () {
         key={key}
         options={{ content: renderedMessage, editable: false }}
       />
-      {output.type === 'execution-initiation' && (
+      {output.type === 'execution-initiation' && output.sourceAction && (
         <PropertyBadges>
           <PropertyBadge
             icon={'percent'}
-            value={output.sourceAction?.successChanceFormatted}
+            value={output.sourceAction.successChanceFormatted}
             description={'Success Chance'}
           />
           <PropertyBadge
             icon={'timer'}
-            value={`${timeRemainingFormatted} (${output.sourceAction?.processTimeFormatted})`}
+            value={`${timeRemainingFormatted} (${output.sourceAction.processTimeFormatted})`}
             description={'Execution Time Remaining'}
           />
+          <ResourceCostBadges action={output.sourceAction} />
           <PropertyBadge
-            icon={'coins'}
-            value={output.sourceAction?.resourceCostFormatted}
-            description={'Resource Cost'}
-          />
-          <PropertyBadge
-            active={output.sourceAction?.opensNode}
+            active={output.sourceAction.opensNode}
             icon={'door'}
             value={null}
             description={'Opens Node'}
           />
           <PropertyBadge
-            active={output.sourceAction?.type === 'repeatable'}
+            active={output.sourceAction.type === 'repeatable'}
             icon={'repeat'}
             value={null}
             description={'Repeatable'}

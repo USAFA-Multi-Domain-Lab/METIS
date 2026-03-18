@@ -37,15 +37,23 @@
     height: $page-row-2-height;
     padding: $content-vertical-padding $content-horizontal-padding;
 
-    .TopBar {
-      display: flex;
+    .SessionTopBar {
       box-sizing: border-box;
-      justify-content: space-between;
-      padding-top: 0.65em;
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      column-gap: 1em;
+      padding: 0.65em 0 0;
       font-size: 0.8em;
 
+      .Title,
+      .PropertyBadges,
+      .StatusBar {
+        margin-top: 0.6em;
+        height: 2.25em;
+      }
+
       .Title {
-        padding: 10px 10px 0 0;
+        line-height: 1.6em;
       }
 
       .Title .SessionName {
@@ -63,6 +71,7 @@
         overflow: hidden;
         text-overflow: ellipsis;
 
+        // todo: Does red alert still work?
         &.RedAlert {
           color: $color-failure;
         }
