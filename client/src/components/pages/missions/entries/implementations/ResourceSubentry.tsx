@@ -1,4 +1,6 @@
 import { DetailString } from '@client/components/content/form/DetailString'
+import type { TSelectableIcon } from '@client/components/content/form/dropdowns/icons/DetailIconSelector'
+import { DetailIconSelector } from '@client/components/content/form/dropdowns/icons/DetailIconSelector'
 import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
 import { useMissionPageContext } from '@client/components/pages/missions/context'
@@ -6,6 +8,7 @@ import type { TMetisClientComponents } from '@client/index'
 import { ClientMission } from '@client/missions/ClientMission'
 import { useObjectFormSync } from '@client/toolbox/hooks'
 import type { MissionResource } from '@shared/missions/MissionResource'
+import { useState } from 'react'
 
 // ! Styling in Entry.scss.
 
@@ -21,6 +24,7 @@ export default function ResourceSubentry({
   /* -- STATE -- */
 
   const { onChange, viewMode } = useMissionPageContext()
+  const [icon, setIcon] = useState<TSelectableIcon>('coins')
   const {
     name: [name, setName],
   } = useObjectFormSync(resource, ['name'], {
@@ -63,6 +67,22 @@ export default function ResourceSubentry({
         disabled={viewMode === 'preview'}
       />
       <ButtonSvgPanel engine={buttonEngine} />
+      <DetailIconSelector
+        label='Icon'
+        value={icon}
+        setValue={setIcon}
+        icons={[
+          'coins',
+          'flag',
+          'gear',
+          'key',
+          'lightning',
+          'node',
+          'shield',
+          'waves',
+        ]}
+        disabled={viewMode === 'preview'}
+      />
     </div>
   )
 }

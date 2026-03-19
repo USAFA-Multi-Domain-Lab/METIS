@@ -1,12 +1,14 @@
+import Tooltip from '@client/components/content/communication/Tooltip'
 import { LocalContext, LocalContextProvider } from '@client/context/local'
 import { compute } from '@client/toolbox'
 import { ClassList } from '@shared/toolbox/html/ClassList'
+import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
-import Tooltip from '../../communication/Tooltip'
-import DetailTitleRow from '../DetailTitleRow'
-import { useDetailClassNames } from '../useDetailClassNames'
+import type { TDetailBase_P, TDetailOptional_P, TDetailRequired_P } from '../..'
+import DetailTitleRow from '../../DetailTitleRow'
+import { useDetailClassNames } from '../../useDetailClassNames'
+import DropdownOption from '../subcomponents/DropdownOption'
 import './DetailDropdown.scss'
-import DropdownOption from './subcomponents/DropdownOption'
 
 /**
  * Local context for the {@link DetailDropdown} component.
@@ -96,17 +98,22 @@ export function DetailDropdown<TOption>(
     uniqueLabelClassName,
     uniqueFieldClassName,
   })
-  fieldClasses.set('IsExpanded', expanded)
+  rootClasses.add('DetailDropdownCommon')
+  fieldClasses.switch('Expanded', 'Collapsed', expanded)
 
   /**
-   * The class names for all options.
+   * The class names for the element displaying all
+   * available options.
    */
-  const allOptionsClasses = new ClassList('AllOptions').set('Hidden', !expanded)
+  const availableOptionsClasses = new ClassList('AvailableOptions').set(
+    'Hidden',
+    !expanded,
+  )
 
   /**
    * The class names for the state value.
    */
-  const stateValueClasses = new ClassList('Text', uniqueStateValueClassName)
+  const stateValueClasses = new ClassList('Value', uniqueStateValueClassName)
   /**
    * The value displayed.
    */
@@ -256,7 +263,7 @@ export function DetailDropdown<TOption>(
           key={key}
           onClick={() => (!disabled ? onSelectOption(option) : null)}
         >
-          {optionContent}
+          <div className='Value'>{optionContent}</div>
         </DropdownOption>
       )
     })
@@ -294,7 +301,7 @@ export function DetailDropdown<TOption>(
             <div className={stateValueClasses.value}>{valueDisplayed}</div>
             <div className='Indicator'>v</div>
           </DropdownOption>
-          <div className={allOptionsClasses.value}>{optionsJsx}</div>
+          <div className={availableOptionsClasses.value}>{optionsJsx}</div>
         </div>
       </div>
     </LocalContextProvider>
@@ -302,9 +309,6 @@ export function DetailDropdown<TOption>(
 }
 
 /* -- TYPES -- */
-
-import type { ReactNode } from 'react'
-import type { TDetailBase_P, TDetailOptional_P, TDetailRequired_P } from '../'
 
 /**
  * The base properties for the Detail Dropdown component.
@@ -599,25 +603,4 @@ export interface TDetailDropdown_S {
    * Whether the dropdown is expanded or not.
    */
   expanded: TReactState<boolean>
-}
-
-/**
- * Props for the {@link DropdownOption} component.
- */
-export type TDropdownOption_P = {
-  /**
-   * The React children to be displayed inside the dropdown option.
-   * @note Typically this will be plain text.
-   */
-  children?: ReactNode
-  /**
-   * Whether the option is selected or not.
-   * @note Applies special styling to the option.
-   * @default false
-   */
-  selected?: boolean
-  /**
-   * Callback for when the option is clicked.
-   */
-  onClick?: () => void
 }

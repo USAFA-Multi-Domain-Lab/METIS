@@ -98,7 +98,7 @@ export default function MissionEntry({
             mission={mission}
             onClickDelete={onClickDelete}
           />
-          <Divider />
+          <Divider key={`${mission._id}_divider_${resource._id}`} />
         </Fragment>
       ))}
       <EffectTimeline<'sessionTriggeredEffect'> host={mission} />

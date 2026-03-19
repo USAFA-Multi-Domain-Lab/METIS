@@ -1,0 +1,24 @@
+@use '@client/assets/styles/config.scss' as *;
+@use '../../index.scss' as *;
+@use '../index.scss' as *;
+
+.Detail.DetailDropdown {
+  .Field {
+    padding: 0;
+
+    .DropdownOption {
+      .Value {
+        color: $detail-field-text-color;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+
+      &.Selected {
+        .Value {
+          color: $detail-field-text-color;
+        }
+      }
+    }
+  }
+}

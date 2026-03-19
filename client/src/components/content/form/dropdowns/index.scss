@@ -1,0 +1,67 @@
+@use '@client/assets/styles/config.scss' as *;
+@use '../index.scss' as *;
+
+// Currently only used by the following components:
+// - DetailDropdown
+// - DetailIconSelector
+// In the future, the following components should be supported:
+// - DetailColorSelector
+// - DetailMultiSelect
+.Detail.DetailDropdownCommon {
+  .Field {
+    @include detail-field-styling();
+
+    &.Expanded {
+      .DropdownOption.Selected {
+        .Indicator {
+          transform: scale(1.25, -1);
+        }
+      }
+    }
+
+    &.Collapsed {
+      .DropdownOption.Selected {
+        .Indicator {
+          transform: scale(1.25, 1);
+        }
+      }
+    }
+
+    .DropdownOption {
+      &.Selected {
+        cursor: pointer;
+        user-select: none;
+        display: grid;
+        align-items: center;
+        grid-template-columns: 1fr auto;
+        padding: $detail-field-padding;
+
+        .Indicator {
+          width: 1em;
+          text-align: center;
+        }
+
+        .Text {
+          color: $detail-field-text-color;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          overflow: hidden;
+          margin-right: 1em;
+        }
+      }
+    }
+
+    .AvailableOptions {
+      .DropdownOption {
+        cursor: pointer;
+        user-select: none;
+        margin-right: 1em;
+        padding: 0.375em $detail-field-horizontal-padding;
+
+        &:last-child {
+          margin: 0 1em 0.6em 0;
+        }
+      }
+    }
+  }
+}

@@ -1,3 +1,4 @@
+import { DetailDropdown } from '@client/components/content/form/dropdowns/standard/DetailDropdown'
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
 import { useMissionPageContext } from '@client/components/pages/missions/context'
 import useEffectItemButtonCallbacks from '@client/components/pages/missions/hooks/mission-components/effects'
@@ -12,7 +13,6 @@ import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { DetailLargeString } from '../../../../content/form/DetailLargeString'
 import { DetailLocked } from '../../../../content/form/DetailLocked'
 import { DetailString } from '../../../../content/form/DetailString'
-import { DetailDropdown } from '../../../../content/form/dropdown/DetailDropdown'
 import ArgEntry from '../../target-effects/args/ArgEntry'
 import Entry from '../Entry'
 

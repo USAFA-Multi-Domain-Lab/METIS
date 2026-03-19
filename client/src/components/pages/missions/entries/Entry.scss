@@ -67,8 +67,13 @@
 
   .ResourceSubentry {
     display: grid;
+    align-content: center;
     grid-template-columns: 1fr auto;
     column-gap: 1em;
+
+    .ButtonSvgPanel {
+      grid-row: span 2;
+    }
   }
 
   .EntryBottom {

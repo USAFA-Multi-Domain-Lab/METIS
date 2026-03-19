@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import type { TDetail_P } from '.'
-import type { TButtonText_P } from '../user-controls/buttons/ButtonText'
-import { ButtonText } from '../user-controls/buttons/ButtonText'
-import If from '../util/If'
+import type { TDetail_P } from '../..'
+import type { TButtonText_P } from '../../../user-controls/buttons/ButtonText'
+import { ButtonText } from '../../../user-controls/buttons/ButtonText'
+import If from '../../../util/If'
+import DetailTitleRow from '../../DetailTitleRow'
+import { useDetailClassNames } from '../../useDetailClassNames'
 import './DetailColorSelector.scss'
-import DetailTitleRow from './DetailTitleRow'
-import { useDetailClassNames } from './useDetailClassNames'
 
 /**
  * This will render a detail for

@@ -14,10 +14,10 @@ import { useObjectFormSync, usePostInitEffect } from '@client/toolbox/hooks'
 import type { TNonEmptyArray } from '@shared/toolbox/arrays/ArrayToolbox'
 import { useState } from 'react'
 import Prompt from '../../../../content/communication/Prompt'
-import { DetailColorSelector } from '../../../../content/form/DetailColorSelector'
 import { DetailLargeString } from '../../../../content/form/DetailLargeString'
 import { DetailString } from '../../../../content/form/DetailString'
 import { DetailToggle } from '../../../../content/form/DetailToggle'
+import { DetailColorSelector } from '../../../../content/form/dropdowns/colors/DetailColorSelector'
 import Entry from '../Entry'
 
 /**
