@@ -1,6 +1,6 @@
 import { DetailString } from '@client/components/content/form/DetailString'
-import type { TSelectableIcon } from '@client/components/content/form/dropdowns/icons/DetailIconSelector'
-import { DetailIconSelector } from '@client/components/content/form/dropdowns/icons/DetailIconSelector'
+import type { TSelectableIcon } from '@client/components/content/form/icon-selectors/DetailIconSelector'
+import { DetailIconSelector } from '@client/components/content/form/icon-selectors/DetailIconSelector'
 import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
 import { useMissionPageContext } from '@client/components/pages/missions/context'
@@ -80,6 +80,8 @@ export default function ResourceSubentry({
           'node',
           'shield',
           'waves',
+          'launch',
+          'user',
         ]}
         disabled={viewMode === 'preview'}
       />

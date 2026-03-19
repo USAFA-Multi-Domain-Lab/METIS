@@ -72,7 +72,11 @@
     column-gap: 1em;
 
     .ButtonSvgPanel {
-      grid-row: span 2;
+      grid-row: span 1;
+    }
+
+    .DetailIconSelector {
+      grid-column: span 2;
     }
   }
 
