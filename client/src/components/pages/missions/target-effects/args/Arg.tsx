@@ -124,6 +124,7 @@ export default function Arg({
         </div>
       )
     case 'force':
+    case 'pool':
     case 'node':
     case 'action':
     case 'file':

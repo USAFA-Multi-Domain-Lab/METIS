@@ -2,39 +2,43 @@ import {
   useGlobalContext,
   useNavigationMiddleware,
 } from '@client/context/global'
+import { LocalContextProvider } from '@client/context/local'
 import type { ClientMissionFile } from '@client/missions/files/ClientMissionFile'
 import type { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
 import type { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
 import type { SessionClient } from '@client/sessions/SessionClient'
 import { compute } from '@client/toolbox'
 import {
+  useDefaultProps,
   useEventListener,
   useMountHandler,
   useRequireLogin,
 } from '@client/toolbox/hooks'
 import { useSessionRedirects } from '@client/toolbox/hooks/sessions'
+import type { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import type { NodeAlert } from '@shared/missions/nodes/NodeAlert'
 import { useEffect, useState } from 'react'
-import type { TPage_P } from '.'
-import { DefaultPageLayout } from '.'
-import PendingPageModal from '../content/communication/PendingPageModal'
-import Prompt from '../content/communication/Prompt'
-import MissionFileList from '../content/data/lists/implementations/MissionFileList'
-import type { TNavigation_P } from '../content/general-layout/Navigation'
-import Panel from '../content/general-layout/panels/Panel'
-import PanelLayout from '../content/general-layout/panels/PanelLayout'
-import PanelView from '../content/general-layout/panels/PanelView'
-import SessionMembersPanel from '../content/session/members/SessionMembersPanel'
-import MissionMap from '../content/session/mission-map/MissionMap'
-import NodeAlertIndicator from '../content/session/mission-map/ui/indicators/NodeAlertIndicator'
-import ActionExecModal from '../content/session/mission-map/ui/overlay/modals/action-execution/ActionExecModal'
-import type { TTabBarTab } from '../content/session/mission-map/ui/tabs/TabBar'
-import NodeAlertBox from '../content/session/mission-map/ui/toasts/NodeAlertBox'
-import { OutputPanel } from '../content/session/output/'
-import StatusBar from '../content/session/StatusBar'
-import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
-import If from '../content/util/If'
+import type { TPage_P } from '..'
+import { DefaultPageLayout } from '..'
+import PendingPageModal from '../../content/communication/PendingPageModal'
+import Prompt from '../../content/communication/Prompt'
+import MissionFileList from '../../content/data/lists/implementations/MissionFileList'
+import type { TNavigation_P } from '../../content/general-layout/Navigation'
+import Panel from '../../content/general-layout/panels/Panel'
+import PanelLayout from '../../content/general-layout/panels/PanelLayout'
+import PanelView from '../../content/general-layout/panels/PanelView'
+import SessionMembersPanel from '../../content/session/members/SessionMembersPanel'
+import MissionMap from '../../content/session/mission-map/MissionMap'
+import NodeAlertIndicator from '../../content/session/mission-map/ui/indicators/NodeAlertIndicator'
+import ActionExecModal from '../../content/session/mission-map/ui/overlay/modals/action-execution/ActionExecModal'
+import type { TTabBarTab } from '../../content/session/mission-map/ui/tabs/TabBar'
+import NodeAlertBox from '../../content/session/mission-map/ui/toasts/NodeAlertBox'
+import { OutputPanel } from '../../content/session/output'
+import { useButtonSvgEngine } from '../../content/user-controls/buttons/panels/hooks'
+import If from '../../content/util/If'
+import { sessionPageContext } from './context'
 import './SessionPage.scss'
+import SessionTopBar from './subcomponents/SessionTopBar'
 
 /* -- CONSTANTS -- */
 
@@ -49,14 +53,21 @@ const SECONDARY_PANEL_DEFAULT_SIZE: number = 400 //px
 /**
  * Renders the session page.
  */
-export default function SessionPage({
-  session,
-  session: { mission },
-  returnPage,
-}: TSessionPage_P): TReactElement | null {
+export default function SessionPage(
+  props: TSessionPage_P,
+): TReactElement | null {
+  /* -- PROPS -- */
+
+  const defaultedProps = useDefaultProps(props, {})
+  const { session, returnPage } = defaultedProps
+  const { mission } = session
+
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
+  const state: TSessionPage_S = {
+    resourcePools: useState<ResourcePool[]>([]),
+  }
   const [server] = globalContext.server
   const {
     navigateTo,
@@ -70,7 +81,7 @@ export default function SessionPage({
     null,
   )
   const [selectedForce, selectForce] = useState<ClientMissionForce | null>(null)
-  const [resourcesRemaining, setResourcesRemaining] = useState<number>(0)
+  const [resourcePools, setResourcePools] = state.resourcePools
   const {} = useRequireLogin()
   const navButtonEngine = useButtonSvgEngine({
     elements: [],
@@ -176,12 +187,13 @@ export default function SessionPage({
         break
     }
   }
+
   /**
    * Syncs the resources remaining state with
    * the selected force.
    */
   const syncResources = () => {
-    setResourcesRemaining(selectedForce?.resourcesRemaining ?? 0)
+    setResourcePools([...(selectedForce?.resourcePools ?? [])])
   }
 
   /**
@@ -480,7 +492,13 @@ export default function SessionPage({
     // If resources are not infinite, and the mission
     // has no resources left, add the red alert
     // class to the resources.
-    if (!session.config.infiniteResources && resourcesRemaining <= 0) {
+    // todo: RedAlert should be per resource pool, not the entire resources element.
+    if (
+      !session.config.infiniteResources &&
+      resourcePools.some(
+        (pool) => (pool.remainingAmount ?? pool.initialAmount) <= 0,
+      )
+    ) {
       resourcesClassList.push('RedAlert')
     }
 
@@ -681,109 +699,94 @@ export default function SessionPage({
 
   /* -- RENDER -- */
 
-  /**
-   * JSX for the top bar element.
-   */
-  const topBarJsx = compute((): TReactElement | null => {
-    let resourceDisplay: string = session.config.infiniteResources
-      ? 'ထ'
-      : resourcesRemaining.toString()
-
-    return (
-      <div className='TopBar'>
-        <div className='Title'>
-          Session: <span className='SessionName'>{session.name} </span>
-          <b>&bull;</b>
-        </div>
-        <div className={resourcesClass}>
-          {mission.resourceLabel}:{' '}
-          <span className={resourceCountClass}>{resourceDisplay}</span>
-        </div>
-        <StatusBar />
-      </div>
-    )
-  })
-
   // Return the rendered component.
   return (
-    <div className={rootClass}>
-      <DefaultPageLayout navigation={navigation} includeFooter={false}>
-        {topBarJsx}
-        <PanelLayout initialSizes={['fill', secondaryPanelInitialSize]}>
-          <Panel>
-            <PanelView title='Map'>
-              <MissionMap
-                mission={mission}
-                buttonEngine={mapButtonEngine}
-                tabs={mapTabs}
-                showMasterTab={false}
-                onNodeSelect={onNodeSelect}
-                selectedForce={[selectedForce, selectForce]}
-              >
-                <ActionExecModal
-                  node={[nodeToExecute, setNodeToExecute]}
-                  session={session}
-                />
-                <NodeAlertIndicator
-                  nextPendingAlert={nextPendingAlert}
-                  onClick={onClickAlertIndicator}
-                />
-                <NodeAlertBox
-                  alert={activePendingAlert}
-                  areMorePendingAlerts={pendingAlerts.length > 1}
-                  next={onNextPendingAlert}
-                  acknowledge={onAcknowledgePendingAlert}
-                />
-              </MissionMap>
-            </PanelView>
-          </Panel>
-          <Panel>
-            <PanelView title='Output'>
-              <If condition={!!selectedForce}>
-                <OutputPanel force={selectedForce!} />
-              </If>
-            </PanelView>
-            <PanelView title='Files'>
-              <MissionFileList
-                name={'Files'}
-                items={localFiles}
-                itemsPerPageMin={4}
-                columns={[]}
-                itemButtonIcons={['download']}
-                getItemButtonLabel={(button) => {
-                  switch (button) {
-                    case 'download':
-                      return 'Download'
-                    default:
-                      return ''
+    <LocalContextProvider
+      context={sessionPageContext}
+      defaultedProps={defaultedProps}
+      computed={{}}
+      state={state}
+      elements={{}}
+    >
+      <div className={rootClass}>
+        <DefaultPageLayout navigation={navigation} includeFooter={false}>
+          <SessionTopBar />
+          <PanelLayout initialSizes={['fill', secondaryPanelInitialSize]}>
+            <Panel>
+              <PanelView title='Map'>
+                <MissionMap
+                  mission={mission}
+                  buttonEngine={mapButtonEngine}
+                  tabs={mapTabs}
+                  showMasterTab={false}
+                  onNodeSelect={onNodeSelect}
+                  selectedForce={[selectedForce, selectForce]}
+                >
+                  <ActionExecModal
+                    node={[nodeToExecute, setNodeToExecute]}
+                    session={session}
+                  />
+                  <NodeAlertIndicator
+                    nextPendingAlert={nextPendingAlert}
+                    onClick={onClickAlertIndicator}
+                  />
+                  <NodeAlertBox
+                    alert={activePendingAlert}
+                    areMorePendingAlerts={pendingAlerts.length > 1}
+                    next={onNextPendingAlert}
+                    acknowledge={onAcknowledgePendingAlert}
+                  />
+                </MissionMap>
+              </PanelView>
+            </Panel>
+            <Panel>
+              <PanelView title='Output'>
+                <If condition={!!selectedForce}>
+                  <OutputPanel force={selectedForce!} />
+                </If>
+              </PanelView>
+              <PanelView title='Files'>
+                <MissionFileList
+                  name={'Files'}
+                  items={localFiles}
+                  itemsPerPageMin={4}
+                  columns={[]}
+                  itemButtonIcons={['download']}
+                  getItemButtonLabel={(button) => {
+                    switch (button) {
+                      case 'download':
+                        return 'Download'
+                      default:
+                        return ''
+                    }
+                  }}
+                  onItemDblClick={(item) =>
+                    item.download({ method: 'session-api' })
                   }
-                }}
-                onItemDblClick={(item) =>
-                  item.download({ method: 'session-api' })
-                }
-                onItemButtonClick={(button, item) => {
-                  switch (button) {
-                    case 'download':
-                      item.download({ method: 'session-api' })
-                      break
-                    default:
-                      break
-                  }
-                }}
-              />
-            </PanelView>
-            <PanelView title='Members'>
-              <SessionMembersPanel session={session} key={'members-panel'} />
-            </PanelView>
-          </Panel>
-        </PanelLayout>
-        <PendingPageModal
-          message={sessionResetMessage}
-          active={resetInitiated}
-          erroneous={resetSetupFailed || resetTeardownFailed}
-        />
-      </DefaultPageLayout>
-    </div>
+                  onItemButtonClick={(button, item) => {
+                    switch (button) {
+                      case 'download':
+                        item.download({ method: 'session-api' })
+                        break
+                      default:
+                        break
+                    }
+                  }}
+                />
+              </PanelView>
+              <PanelView title='Members'>
+                <SessionMembersPanel session={session} key={'members-panel'} />
+              </PanelView>
+            </Panel>
+          </PanelLayout>
+          <PendingPageModal
+            message={sessionResetMessage}
+            active={resetInitiated}
+            erroneous={resetSetupFailed || resetTeardownFailed}
+          />
+        </DefaultPageLayout>
+      </div>
+    </LocalContextProvider>
   )
 }
 
@@ -802,6 +805,27 @@ export interface TSessionPage_P extends TPage_P {
    */
   returnPage: 'HomePage' | 'MissionPage'
 }
+
+/**
+ * Computed values shared across the {@link SessionPage} tree.
+ */
+export type TSessionPage_C = {}
+
+/**
+ * State shared across the {@link SessionPage} tree.
+ */
+export type TSessionPage_S = {
+  /**
+   * Synchronized list of resource pools retrieved from the
+   * session state and updates when relevant events occur.
+   */
+  resourcePools: TReactState<ResourcePool[]>
+}
+
+/**
+ * Element refs shared across the {@link SessionPage} tree.
+ */
+export type TSessionPage_E = {}
 
 /**
  * Available tabs for the right panel on the session page.

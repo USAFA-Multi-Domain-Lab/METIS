@@ -739,7 +739,7 @@ export abstract class MissionNode<
           opened: this.opened,
           executions: executionJson,
           blocked: this._blocked,
-          alerts: this.alerts.toJson(),
+          alerts: this.alerts.json,
         }
 
         // Join session-specific JSON with base JSON.
@@ -813,10 +813,14 @@ export abstract class MissionNode<
   /**
    * Modifies the resource cost for all the node's
    * actions.
+   * @param resourceId The ID of the {@link TResource} whose cost to modify.
    * @param resourceCostOperand The operand to modify
    * the resource cost by.
    */
-  public abstract modifyResourceCost(resourceCostOperand: number): void
+  public abstract modifyResourceCost(
+    resourceId: string,
+    resourceCostOperand: number,
+  ): void
 
   /**
    * Processes an incoming execution that is being performed

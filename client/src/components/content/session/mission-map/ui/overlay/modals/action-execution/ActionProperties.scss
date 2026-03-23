@@ -5,9 +5,15 @@
     width: 100%;
   }
 
-  .PropertyBadge {
-    &.Strikethrough {
-      width: 100%;
+  .PropertyBadges {
+    background-color: $color-secondary;
+    border-radius: 0.6em;
+    padding: 1.5em 2em;
+
+    .PropertyBadge {
+      &.Strikethrough {
+        width: 100%;
+      }
     }
   }
 }

@@ -38,6 +38,10 @@
     }
   }
 
+  .Subentry {
+    @include form-container();
+  }
+
   .List {
     $border: 0.2em solid $color-secondary !important;
 
@@ -48,6 +52,31 @@
 
     .ListItems .ListItem {
       border-top: unset;
+    }
+  }
+
+  .EntryHeader {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+
+    .EntryHeading {
+      font-size: 1.1em;
+    }
+  }
+
+  .ResourceSubentry {
+    display: grid;
+    align-content: center;
+    grid-template-columns: 1fr auto;
+    column-gap: 1em;
+
+    .ButtonSvgPanel {
+      grid-row: span 1;
+    }
+
+    .DetailIconSelector {
+      grid-column: span 2;
     }
   }
 

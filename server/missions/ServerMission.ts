@@ -134,7 +134,7 @@ export class ServerMission extends Mission<TMetisServerComponents> {
     return {
       _id: self._id,
       name: self.name,
-      resourceLabel: self.resourceLabel,
+      resources: self.resources,
       get forces() {
         return self.forces.map((force) => force.toTargetEnvContext())
       },
@@ -182,13 +182,13 @@ export class ServerMission extends Mission<TMetisServerComponents> {
       json.name,
       json.versionNumber,
       json.seed,
-      json.resourceLabel,
       DateToolbox.fromNullableISOString(json.createdAt),
       DateToolbox.fromNullableISOString(json.updatedAt),
       DateToolbox.fromNullableISOString(json.launchedAt),
       createdBy,
       json.createdByUsername,
       json.structure,
+      json.resources,
       json.prototypes,
       json.forces,
       json.files,
@@ -208,14 +208,23 @@ export class ServerMission extends Mission<TMetisServerComponents> {
     let forceKeys: TMissionForceSaveJson['localKey'][] = []
 
     for (const force of forces) {
-      // Check for valid initial resources.
-      const nonNegativeInteger = NumberToolbox.isNonNegativeInteger(
-        force.initialResources,
-      )
-      if (!nonNegativeInteger) {
-        throw generateValidationError(
-          `The initial resources must be a positive integer for the force "{ _id: ${force._id}, name: ${force.name} }".`,
+      // Check for valid resource pool instances.
+      let poolIds: string[] = []
+      for (const instance of force.resourcePools) {
+        const nonNegativeInteger = NumberToolbox.isNonNegativeInteger(
+          instance.initialAmount,
         )
+        if (!nonNegativeInteger) {
+          throw generateValidationError(
+            `The initial amount must be a non-negative integer for pool "${instance.resourceId}" in force "{ _id: ${force._id}, name: ${force.name} }".`,
+          )
+        }
+        if (poolIds.includes(instance.resourceId)) {
+          throw generateValidationError(
+            `Duplicate resource ID "${instance.resourceId}" found in force "{ _id: ${force._id}, name: ${force.name} }".`,
+          )
+        }
+        poolIds.push(instance.resourceId)
       }
 
       // Check for valid color.

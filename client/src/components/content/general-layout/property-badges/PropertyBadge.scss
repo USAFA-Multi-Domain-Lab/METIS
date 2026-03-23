@@ -3,14 +3,14 @@
 
 .PropertyBadge {
   display: flex;
-  column-gap: 0.2em;
+  column-gap: 0.3em;
   color: $color-accent-light;
   -webkit-user-select: none;
   user-select: none;
 
   .PropertyIcon {
-    width: 1em;
-    height: 0.65em;
+    width: 0.6em;
+    height: 0.6em;
     font-size: $button-svg-size;
     cursor: help;
   }

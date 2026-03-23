@@ -1,6 +1,7 @@
 import type { TMissionOutlineItem } from '@client/components/pages/missions/structures/MissionOutline'
 import type { TMetisClientComponents } from '@client/index'
 import type { ClientTarget } from '@client/target-environments/ClientTarget'
+import { ActionResourceCost } from '@shared/missions/actions/ActionResourceCost'
 import type {
   TMissionActionJsonDirect,
   TMissionActionJsonIndirect,
@@ -10,6 +11,7 @@ import type {
   TEffectExecutionTriggered,
   TEffectExecutionTriggeredJson,
 } from '@shared/missions/effects/Effect'
+import { JsonSerializableArray } from '@shared/toolbox/arrays/JsonSerializableArray'
 import { ClientEffect } from '../effects/ClientEffect'
 import type { ClientMissionNode } from '../nodes/ClientMissionNode'
 
@@ -68,17 +70,6 @@ export class ClientMissionAction
       hours || processTimeMinutes > 0 ? `${processTimeMinutes}m` : ''
     const seconds = `${processTimeSeconds}s`
     return `${hours} ${minutes} ${seconds}`.trim()
-  }
-
-  /**
-   * The formatted resource cost to display to a session
-   * member.
-   */
-  public get resourceCostFormatted(): string {
-    // If the resource cost is hidden, return `HIDDEN_VALUE`.
-    if (this.resourceCostHidden) return ClientMissionAction.HIDDEN_VALUE
-    // Convert the value to a negative format.
-    return `${-this.resourceCost} ${this.mission.resourceLabel}`
   }
 
   /**
@@ -222,6 +213,34 @@ export class ClientMissionAction
       _id,
       name,
     })
+  }
+
+  /**
+   * Callback for when a mission's resource list change,
+   * allowing the action to confirm that the action's list
+   * of resource costs still corresponds with the available
+   * resources in the mission.
+   */
+  public onResourceListChange(): void {
+    // Map resources to costs, this will result in
+    // costs that no longer have a corresponding resource
+    // in the mission being filtered out indirectly. New
+    // costs are returned in the map for any resource that
+    // doesn't have a corresponding cost. Because map is over
+    // resources, the list of costs will end up in the same
+    // order as the resources, which will be user friendly in
+    // the UI.
+    this.resourceCosts = new JsonSerializableArray(
+      ...this.mission.resources.map((resource) => {
+        let existingCost = this.resourceCosts.find(
+          ({ resourceId }) => resourceId === resource._id,
+        )
+        return (
+          existingCost ??
+          ActionResourceCost.createNew<TMetisClientComponents>(this, resource)
+        )
+      }),
+    )
   }
 
   /**

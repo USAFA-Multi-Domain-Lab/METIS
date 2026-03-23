@@ -6,7 +6,7 @@ import type { TSessionConfig } from '@shared/sessions/MissionSession'
 import type { TTargetEnvConfig } from '@shared/target-environments/types'
 import { useEffect, useState } from 'react'
 import { DetailToggle } from '../../form/DetailToggle'
-import { DetailDropdown } from '../../form/dropdown/DetailDropdown'
+import { DetailDropdown } from '../../form/dropdowns/standard/DetailDropdown'
 import If from '../../util/If'
 import './TargetEnvSettings.scss'
 

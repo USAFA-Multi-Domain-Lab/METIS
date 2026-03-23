@@ -6,7 +6,6 @@ import type {
 } from '@shared/missions/forces/MissionForce'
 import { MissionForce } from '@shared/missions/forces/MissionForce'
 import type { TMissionNodeJson } from '@shared/missions/nodes/MissionNode'
-import { NumberToolbox } from '@shared/toolbox/numbers/NumberToolbox'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { ServerMissionNode } from '../nodes/ServerMissionNode'
 import type { ServerMission } from '../ServerMission'
@@ -60,8 +59,7 @@ export class ServerMissionForce extends MissionForce<TMetisServerComponents> {
       localKey: self.localKey,
       name: self.name,
       color: self.color,
-      initialResources: self.initialResources,
-      resourcesRemaining: self.resourcesRemaining,
+      resourcePools: self.resourcePools,
       get mission() {
         return self.mission.toTargetEnvContext()
       },
@@ -120,14 +118,6 @@ export class ServerMissionForce extends MissionForce<TMetisServerComponents> {
     return this.outputs.filter((output) => {
       return !output.memberId || output.memberId === memberId
     })
-  }
-
-  // Implemented
-  public modifyResourcePool(operand: number): void {
-    if (!NumberToolbox.isNonNegative(operand)) {
-      throw new Error('The operand must be a positive number.')
-    }
-    this.resourcesRemaining += operand
   }
 
   /**

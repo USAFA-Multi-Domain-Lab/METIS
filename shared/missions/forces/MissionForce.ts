@@ -1,4 +1,5 @@
 import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
+import { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSerializableArray'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { context } from '../../context'
 import { Mission, type TMission, type TMissionJsonOptions } from '../Mission'
@@ -10,6 +11,7 @@ import type { TMissionNodeJson, TNode } from '../nodes/MissionNode'
 import type { TPrototype } from '../nodes/MissionPrototype'
 import type { NodeAlert } from '../nodes/NodeAlert'
 import type { TOutput, TOutputJson } from './MissionOutput'
+import { ResourcePool, type TResourcePoolJson } from './ResourcePool'
 
 /**
  * Represents a force in a mission, which is a collection of nodes
@@ -49,21 +51,10 @@ export abstract class MissionForce<
   public color: string
 
   /**
-   * The amount of resources available to the force at
-   * the start of the session.
+   * The resource pools for this force, each corresponding to
+   * a resource defined in the parent mission.
    */
-  public initialResources: number
-
-  /**
-   * Determines whether or not the force's resource pools can be negative.
-   */
-  public allowNegativeResources: boolean
-
-  /**
-   * The current amount of resources available to the force.
-   * @note Only relevant when in a session.
-   */
-  public resourcesRemaining: number
+  public resourcePools: JsonSerializableArray<T['resourcePool']>
 
   /**
    * Whether or not to reveal all nodes in the force.
@@ -181,20 +172,19 @@ export abstract class MissionForce<
     this.introMessage =
       data.introMessage ?? MissionForce.DEFAULT_PROPERTIES.introMessage
     this.color = data.color ?? MissionForce.DEFAULT_PROPERTIES.color
-    this.initialResources =
-      data.initialResources ?? MissionForce.DEFAULT_PROPERTIES.initialResources
-    this.allowNegativeResources =
-      data.allowNegativeResources ??
-      MissionForce.DEFAULT_PROPERTIES.allowNegativeResources
     this.revealAllNodes =
       data.revealAllNodes ?? MissionForce.DEFAULT_PROPERTIES.revealAllNodes
     this.localKey = data.localKey ?? mission.generateForceKey()
-    this.resourcesRemaining = data.resourcesRemaining ?? this.initialResources
+    this.resourcePools = new JsonSerializableArray()
     this.nodes = []
     this._outputs = []
     this.root = this.createNode(MissionForce.ROOT_NODE_PROPERTIES)
 
-    // Import nodes into the force.
+    // Import resource pools and nodes into the force.
+
+    this.importPools(
+      data.resourcePools ?? MissionForce.DEFAULT_PROPERTIES.resourcePools,
+    )
     this.importNodes(data.nodes ?? MissionForce.DEFAULT_PROPERTIES.nodes)
   }
 
@@ -211,11 +201,18 @@ export abstract class MissionForce<
       introMessage: this.introMessage,
       name: this.name,
       color: this.color,
-      initialResources: this.initialResources,
-      allowNegativeResources: this.allowNegativeResources,
       revealAllNodes: this.revealAllNodes,
       localKey: this.localKey,
       nodes: this.exportNodes(options),
+      resourcePools: this.resourcePools.map(
+        ({ _id, localKey, resourceId, initialAmount, allowNegative }) => ({
+          _id,
+          localKey,
+          resourceId,
+          initialAmount,
+          allowNegative,
+        }),
+      ),
       filterOutputs: (memberId) => {
         json.outputs = this.filterOutputs(memberId).map((output) =>
           output.toJson(),
@@ -224,10 +221,10 @@ export abstract class MissionForce<
     }
 
     /**
-     * Includes `resourcesRemaining` in the JSON.
+     * Includes the current {@link ResourcePool.remainingAmount} on each pool in the JSON.
      */
     const addResourcesRemaining = () => {
-      json.resourcesRemaining = this.resourcesRemaining
+      json.resourcePools = this.resourcePools.json
     }
 
     /**
@@ -293,6 +290,22 @@ export abstract class MissionForce<
   }
 
   /**
+   * Generates a new key for a resource pool.
+   * @returns The new key for the pool.
+   */
+  public generatePoolKey(): string {
+    let newKey: number = 0
+
+    for (let pool of this.resourcePools) {
+      let poolKey: number = Number(pool.localKey)
+      if (poolKey > newKey) newKey = Math.max(newKey, poolKey)
+    }
+
+    newKey++
+    return String(newKey)
+  }
+
+  /**
    * Generates a new key for the node.
    * @returns The new key for the node.
    */
@@ -335,10 +348,25 @@ export abstract class MissionForce<
   public abstract storeOutput(output: TOutput<T>): void
 
   /**
-   * Modifies the resource pool.
-   * @param operand The amount by which to modify the resource pool.
+   * Callback for when a resource pool in the force is modified by
+   * an effect. This will be called from a pool.
+   * @note Override this to add callback logic. By default, this has
+   * no logic.
    */
-  public abstract modifyResourcePool(operand: number): void
+  public onModifyPool(pool: T['resourcePool']): void {}
+
+  /**
+   * Gets the resource pool instance for the given resource ID.
+   * @param resourceId The ID of the {@link TResource} to retrieve the pool for.
+   * @returns The resource pool instance, or undefined if not found.
+   */
+  public getPoolByResourceId(
+    resourceId: string,
+  ): T['resourcePool'] | undefined {
+    return this.resourcePools.find(
+      (instance) => instance.resourceId === resourceId,
+    )
+  }
 
   /**
    * @param nodeId The ID of the node to retrieve.
@@ -358,6 +386,21 @@ export abstract class MissionForce<
   public getNodeFromPrototype(prototypeId: string): TNode<T> | undefined {
     if (prototypeId === this.mission.root._id) return this.root
     else return this.nodes.find((node) => node.prototype._id === prototypeId)
+  }
+
+  /**
+   * Imports resource pool data into the force, creating {@link ResourcePool} objects from it.
+   * @param data The raw resource pool data to import.
+   */
+  protected importPools(data: TResourcePoolJson[]): void {
+    try {
+      this.resourcePools.push(...ResourcePool.fromJson(this, data))
+    } catch (error) {
+      if (context === 'react') {
+        console.error('Resource pool data passed is invalid.')
+      }
+      throw error
+    }
   }
 
   /**
@@ -423,8 +466,7 @@ export abstract class MissionForce<
       introMessage: '<p>Welcome to your force!</p>',
       name: 'New Force',
       color: '#ffffff',
-      initialResources: 100,
-      allowNegativeResources: false,
+      resourcePools: [],
       revealAllNodes: false,
       nodes: [],
     }
@@ -536,13 +578,10 @@ export interface TMissionForceSaveJson {
    */
   color: string
   /**
-   * The amount of resources available to the student at the start of the mission.
+   * The resource pools for this force, each corresponding to a
+   * resource defined in the parent mission.
    */
-  initialResources: number
-  /**
-   * Determines whether or not the force's resource pools can be negative.
-   */
-  allowNegativeResources: boolean
+  resourcePools: TResourcePoolJson[]
   /**
    * Whether or not to reveal all nodes in the force.
    */
@@ -561,10 +600,6 @@ export interface TMissionForceSaveJson {
  * Session-specific JSON data for a MissionForce object.
  */
 export interface TMissionForceSessionJson {
-  /**
-   * The resources remaining for the force.
-   */
-  resourcesRemaining: number
   /**
    * The outputs for a force's output panel.
    */

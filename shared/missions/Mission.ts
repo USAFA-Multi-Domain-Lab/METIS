@@ -1,6 +1,8 @@
 import type { TSessionConfig } from '@shared/sessions/MissionSession'
+import type { TOmitFirst } from '@shared/toolbox/arrays/ArrayToolbox'
 import { DateToolbox } from '@shared/toolbox/dates/DateToolbox'
 import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
+import { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSerializableArray'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { TCreatedByJson, User } from '@shared/users/User'
 import { context } from '../context'
@@ -24,6 +26,7 @@ import {
   MissionComponent,
   type TMissionComponentIssue,
 } from './MissionComponent'
+import { MissionResource, type TMissionResourceJson } from './MissionResource'
 import type { TNode } from './nodes/MissionNode'
 import type {
   TMissionPrototypeJson,
@@ -36,8 +39,8 @@ import { MissionPrototype } from './nodes/MissionPrototype'
  * This represents a mission for a student to complete.
  */
 export abstract class Mission<
-    T extends TMetisBaseComponents = TMetisBaseComponents,
-  >
+  T extends TMetisBaseComponents = TMetisBaseComponents,
+>
   extends MissionComponent<T, Mission<T>>
   implements TEffectHost<T, 'sessionTriggeredEffect'>
 {
@@ -130,9 +133,16 @@ export abstract class Mission<
   public seed: string
 
   /**
-   * A label given to resources that defines the currency used in the mission.
+   * @see {@link Mission.resources}
    */
-  public resourceLabel: string
+  protected _resources: JsonSerializableArray<T['resource']>
+  /**
+   * A collection of resource definitions which define the currencies
+   * used within the mission.
+   */
+  public get resources(): JsonSerializableArray<T['resource']> {
+    return new JsonSerializableArray(...this._resources)
+  }
 
   /**
    * The date/time the mission was created.
@@ -209,13 +219,13 @@ export abstract class Mission<
     name: string,
     versionNumber: number,
     seed: string,
-    resourceLabel: string,
     createdAt: Date | null,
     updatedAt: Date | null,
     launchedAt: Date | null,
     createdBy: User | null,
     createdByUsername: string | null,
     structure: TAnyObject,
+    resourceData: TMissionResourceJson[],
     prototypeData: TMissionPrototypeJson[],
     forceData: TMissionForceJson[],
     fileData: TMissionFileJson[],
@@ -225,7 +235,6 @@ export abstract class Mission<
 
     this.versionNumber = versionNumber
     this.seed = seed
-    this.resourceLabel = resourceLabel
     this.createdAt = createdAt
     this.updatedAt = updatedAt
     this.launchedAt = launchedAt
@@ -233,12 +242,14 @@ export abstract class Mission<
     this.createdByUsername = createdByUsername
 
     this.prototypes = []
+    this._resources = new JsonSerializableArray()
     this.forces = []
     this.files = []
     this.effects = []
     this.root = this.initializeRoot()
 
     this.importStructure(structure, prototypeData)
+    this.importResources(resourceData)
     this.importForces(forceData)
     this.importFiles(fileData)
     this.importEffects(effectData)
@@ -271,7 +282,7 @@ export abstract class Mission<
       name: this.name,
       versionNumber: this.versionNumber,
       seed: this.seed,
-      resourceLabel: this.resourceLabel,
+      resources: this.resources.json,
       createdAt: DateToolbox.toNullableISOString(this.createdAt),
       updatedAt: DateToolbox.toNullableISOString(this.updatedAt),
       launchedAt: DateToolbox.toNullableISOString(this.launchedAt),
@@ -597,6 +608,16 @@ export abstract class Mission<
   ): TPrototype<T>
 
   /**
+   * Imports the resource data into {@link MissionResource} objects and
+   * stores them in the {@link resources} array.
+   * @param data The resource data to import.
+   */
+  protected importResources(data: TMissionResourceJson[]): void {
+    let resources = MissionResource.fromJson<T>(this, data)
+    this._resources.push(...resources)
+  }
+
+  /**
    * Imports the force data into MissionForce objects and
    * stores it in the array of forces.
    * @param data The force data to parse.
@@ -621,6 +642,42 @@ export abstract class Mission<
     target: T['target'],
     trigger: TEffectSessionTriggered,
   ): T['sessionTriggeredEffect']
+
+  /**
+   * @param args The arguments to pass to the {@link MissionResource.createNew}
+   * method, excluding the first argument which is the mission, as it
+   * will be passed automatically.
+   */
+  public addResource(
+    ...args: TOmitFirst<Parameters<typeof MissionResource.createNew<T>>>
+  ): T['resource'] {
+    let resource = MissionResource.createNew<T>(this, ...args)
+
+    if (this.resources.length >= Mission.MAX_RESOURCE_TYPES) {
+      throw new Error(
+        `Cannot have more than ${Mission.MAX_RESOURCE_TYPES} resource types in a mission.`,
+      )
+    }
+    this._resources.push(resource)
+    return resource
+  }
+
+  /**
+   * Removes the given resource from the mission.
+   * @param resource The resource or the ID of the resource
+   * to remove.
+   */
+  public removeResource(resource: T['resource'] | string): void {
+    let resourceId = typeof resource === 'string' ? resource : resource._id
+    let index = this._resources.findIndex(({ _id }) => _id === resourceId)
+    if (index !== -1) {
+      this._resources.splice(index, 1)
+    } else {
+      console.warn(
+        'Attempted to remove a resource that does not exist in the mission.',
+      )
+    }
+  }
 
   /**
    * @param prototypeId The ID of the prototype to get.
@@ -654,6 +711,41 @@ export abstract class Mission<
     forceKey: TForce<T>['localKey'] | null | undefined,
   ): TForce<T> | undefined {
     return Mission.getForceByLocalKey(this, forceKey)
+  }
+
+  /**
+   * @param resourceId The ID of the resource to get.
+   * @returns The resource with the given ID, or undefined
+   * if no resource is found.
+   */
+  public getResourceById(
+    resourceId: string | null | undefined,
+  ): T['resource'] | undefined {
+    return Mission.getResourceById(this, resourceId)
+  }
+
+  /**
+   * @param poolId The ID of the pool to get.
+   * @returns The pool with the given ID, or undefined
+   * if no pool is found.
+   */
+  public getPoolById(
+    poolId: string | null | undefined,
+  ): T['resourcePool'] | undefined {
+    return Mission.getPoolById(this, poolId)
+  }
+
+  /**
+   * @param forceKey The local key of the force that the pool belongs to.
+   * @param poolKey The local key of the pool to get.
+   * @returns The pool with the given local key, or undefined
+   * if no pool is found.
+   */
+  public getPoolByLocalKey(
+    forceKey: TForce<T>['localKey'] | null | undefined,
+    poolKey: string | null | undefined,
+  ): T['resourcePool'] | undefined {
+    return Mission.getPoolByLocalKey(this, forceKey, poolKey)
   }
 
   /**
@@ -758,10 +850,14 @@ export abstract class Mission<
   public static readonly MAX_NAME_LENGTH: number = 175
 
   /**
-   * The maximum length allowed for a mission resource
-   * label.
+   * The maximum number of resource types allowed in a mission.
    */
-  public static readonly MAX_RESOURCE_LABEL_LENGTH: number = 16
+  public static readonly MAX_RESOURCE_TYPES: number = 8
+
+  /**
+   * The maximum length allowed for a resource name.
+   */
+  public static readonly MAX_RESOURCE_NAME_LENGTH: number = 16
 
   /**
    * The maximum number of forces allowed in a mission.
@@ -891,7 +987,7 @@ export abstract class Mission<
       name: 'New Mission',
       versionNumber: 1,
       seed: StringToolbox.generateRandomId(),
-      resourceLabel: 'Resources',
+      resources: [MissionResource.DEFAULT_PROPERTIES],
       createdAt: null,
       updatedAt: null,
       launchedAt: null,
@@ -1008,6 +1104,19 @@ export abstract class Mission<
   }
 
   /**
+   * Gets a resource from the mission by its ID.
+   * @param mission The mission to get the resource from.
+   * @param resourceId The ID of the resource to get.
+   * @returns The resource with the given ID, or undefined if no resource is found.
+   */
+  public static getResourceById<TMission extends TMissionJson | Mission>(
+    mission: TMission,
+    resourceId: string | null | undefined,
+  ): TMission['resources'][0] | undefined {
+    return mission.resources.find((resource) => resource._id === resourceId)
+  }
+
+  /**
    * Gets a node from the mission by its ID.
    * @param mission The mission to get the node from.
    * @param nodeId The ID of the node to get.
@@ -1040,6 +1149,41 @@ export abstract class Mission<
     let force = mission.forces.find((force) => force.localKey === forceKey)
     if (!force) return undefined
     return force.nodes.find((node) => node.localKey === nodeKey)
+  }
+
+  /**
+   * Gets a resource pool from the mission by its ID.
+   * @param mission The mission to get the pool from.
+   * @param poolId The ID of the pool to get.
+   * @returns The pool with the given ID, or undefined if no pool is found.
+   */
+  public static getPoolById<TMission extends TMissionJson | Mission>(
+    mission: TMission,
+    poolId: string | null | undefined,
+  ): TMission['forces'][0]['resourcePools'][0] | undefined {
+    for (let force of mission.forces) {
+      let pool = force.resourcePools.find((pool) => pool._id === poolId)
+      if (pool) return pool
+      continue
+    }
+    return undefined
+  }
+
+  /**
+   * Gets a resource pool from the mission by its local key.
+   * @param mission The mission to get the pool from.
+   * @param forceKey The local key of the force that the pool belongs to.
+   * @param poolKey The local key of the pool to get.
+   * @returns The pool with the given local key, or undefined if no pool is found.
+   */
+  public static getPoolByLocalKey<TMission extends TMissionJson | Mission>(
+    mission: TMission,
+    forceKey: string | null | undefined,
+    poolKey: string | null | undefined,
+  ): TMission['forces'][0]['resourcePools'][0] | undefined {
+    let force = mission.forces.find((force) => force.localKey === forceKey)
+    if (!force) return undefined
+    return force.resourcePools.find((pool) => pool.localKey === poolKey)
   }
 
   /**
@@ -1139,9 +1283,10 @@ export type TMission<T extends TMetisBaseComponents> = T['mission']
  */
 export type TMissionJson = TCreateJsonType<
   Mission,
-  'name' | 'versionNumber' | 'seed' | 'resourceLabel',
+  'name' | 'versionNumber' | 'seed',
   {
     _id?: string
+    resources: TMissionResourceJson[]
     createdAt: string | null
     updatedAt: string | null
     launchedAt: string | null

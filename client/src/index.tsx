@@ -17,7 +17,10 @@ import type { SessionClient } from '@client/sessions/SessionClient'
 import type { ClientTarget } from '@client/target-environments/ClientTarget'
 import type { ClientTargetEnvironment } from '@client/target-environments/ClientTargetEnvironment'
 import type { ClientUser } from '@client/users/ClientUser'
+import type { ActionResourceCost } from '@shared/missions/actions/ActionResourceCost'
+import type { MissionResource } from '@shared/missions/MissionResource'
 import type { TEffectType } from '@shared/missions/effects/Effect'
+import type { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import ReactDOM from 'react-dom/client'
 import './index.scss'
 
@@ -64,10 +67,13 @@ export type TMetisClientComponents = {
   target: ClientTarget
   fileReference: ClientFileReference
   mission: ClientMission
+  resource: MissionResource<TMetisClientComponents>
   prototype: ClientMissionPrototype
   missionFile: ClientMissionFile
   force: ClientMissionForce
   output: ClientOutput
+  resourcePool: ResourcePool<TMetisClientComponents>
+  resourceCost: ActionResourceCost<TMetisClientComponents>
   node: ClientMissionNode
   action: ClientMissionAction
   execution: ClientActionExecution

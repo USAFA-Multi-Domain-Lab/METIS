@@ -41,6 +41,29 @@ export type TForceMetadata = Partial<{
 }>
 
 /**
+ * The possible metadata schema for a pool target-argument
+ * that is present in an effect's arguments.
+ */
+export type TPoolMetadata = Partial<{
+  /**
+   * A force's local key.
+   */
+  forceKey: string
+  /**
+   * A force's name.
+   */
+  forceName: string
+  /**
+   * A pool's local key.
+   */
+  poolKey: string
+  /**
+   * A pool's name.
+   */
+  poolName: string
+}>
+
+/**
  * The possible metadata schema for a file target-argument
  * that is present in an effect's arguments.
  */

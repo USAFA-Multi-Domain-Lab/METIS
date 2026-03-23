@@ -127,20 +127,22 @@ export default function StatusBar({}: TStatusBar_P): TReactElement | null {
       </div>
       <div className='Indicator'></div>
       <div className={overflowClasses.join(' ')}>
-        <div className='Connection'>
-          <div className='Heading'>Connection Status:</div>
-          <div className='Status'>{status}</div>
-          <div className='Message'>{overflowConnectionMessage}</div>
-        </div>
-        <div className={pendingTasksClasses.join(' ')}>
-          <div className='Heading'>Pending Tasks:</div>
-          <ul className='Messages'>
-            {overflowStatusMessages.map((statusMessage) => (
-              <li key={statusMessage.key} className='Message'>
-                {statusMessage.text}
-              </li>
-            ))}
-          </ul>
+        <div className='OverflowContent'>
+          <div className='Connection'>
+            <div className='Heading'>Connection Status:</div>
+            <div className='Status'>{status}</div>
+            <div className='Message'>{overflowConnectionMessage}</div>
+          </div>
+          <div className={pendingTasksClasses.join(' ')}>
+            <div className='Heading'>Pending Tasks:</div>
+            <ul className='Messages'>
+              {overflowStatusMessages.map((statusMessage) => (
+                <li key={statusMessage.key} className='Message'>
+                  {statusMessage.text}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </div>

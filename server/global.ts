@@ -1,4 +1,7 @@
+import type { ActionResourceCost } from '@shared/missions/actions/ActionResourceCost'
 import type { TEffectType } from '@shared/missions/effects/Effect'
+import type { ResourcePool } from '@shared/missions/forces/ResourcePool'
+import type { MissionResource } from '@shared/missions/MissionResource'
 import type { RequestHandler } from 'express'
 import type { Request, Response } from 'express-serve-static-core'
 import type { Session as ExpressSession } from 'express-session'
@@ -42,10 +45,13 @@ declare global {
     target: ServerTarget
     fileReference: ServerFileReference
     mission: ServerMission
+    resource: MissionResource<TMetisServerComponents>
     prototype: ServerMissionPrototype
     missionFile: ServerMissionFile
     force: ServerMissionForce
     output: ServerOutput
+    resourcePool: ResourcePool<TMetisServerComponents>
+    resourceCost: ActionResourceCost<TMetisServerComponents>
     node: ServerMissionNode
     action: ServerMissionAction
     execution: ServerActionExecution

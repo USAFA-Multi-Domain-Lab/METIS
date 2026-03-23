@@ -1,3 +1,4 @@
+import ResourceCostBadges from '@client/components/content/general-layout/property-badges/implementations/ResourceCostBadges'
 import PropertyBadge from '@client/components/content/general-layout/property-badges/PropertyBadge'
 import PropertyBadges from '@client/components/content/general-layout/property-badges/PropertyBadges'
 import RichText from '@client/components/content/general-layout/rich-text/RichText'
@@ -36,16 +37,6 @@ export default function ActionProperties({
     return classList.join(' ')
   })
 
-  /**
-   * Text that is displayed next to the resource cost property
-   * in the event that a strikethrough is every applied to it.
-   */
-  const resourceCostStrikethroughReason = compute<string>(() => {
-    if (cheats.zeroCost) return 'Cheats Applied'
-    if (config.infiniteResources) return 'Infinite Resources Enabled'
-    return ''
-  })
-
   /* -- RENDER -- */
 
   // Render the root component.
@@ -73,13 +64,7 @@ export default function ActionProperties({
           strikethrough={cheats.instantaneous}
           strikethroughReason={'Cheats Applied'}
         />
-        <PropertyBadge
-          icon={'coins'}
-          value={`-${action.resourceCost}`}
-          description={`Resource Cost (${action.mission.resourceLabel})`}
-          strikethrough={cheats.zeroCost || config.infiniteResources}
-          strikethroughReason={resourceCostStrikethroughReason}
-        />
+        <ResourceCostBadges action={action} cheats={cheats} config={config} />
         <PropertyBadge
           active={action.opensNode}
           icon={'door'}

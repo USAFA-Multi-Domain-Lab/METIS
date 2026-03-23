@@ -139,4 +139,20 @@ export class StringToolbox {
       .filter(Boolean) // Remove empty segments
       .join('/')
   }
+
+  /**
+   * Takes in a value as a number and returns a formatted
+   * string with a plus sign if the number is positive, and
+   * a minus sign if the number is negative.
+   * @param value The number to format.
+   * @param invert If true, inverts the sign of the number (i.e.
+   * positive becomes negative and vice versa) before formatting.
+   * This is by default false.
+   * @returns The formatted string.
+   */
+  public static sign(value: number, invert: boolean = false): string {
+    if (invert) value = -value
+    if (value > 0) return `+${value}`
+    else return `${value}`
+  }
 }

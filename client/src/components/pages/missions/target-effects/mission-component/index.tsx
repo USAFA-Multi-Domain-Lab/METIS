@@ -1,3 +1,4 @@
+import type { TMetisClientComponents } from '@client/index'
 import { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
 import type { ClientEffect } from '@client/missions/effects/ClientEffect'
 import { ClientMissionFile } from '@client/missions/files/ClientMissionFile'
@@ -5,6 +6,7 @@ import { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
 import { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
 import { compute } from '@client/toolbox'
 import { usePostInitEffect } from '@client/toolbox/hooks'
+import { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import { ActionArg } from '@shared/target-environments/args/mission-component/ActionArg'
 import { FileArg } from '@shared/target-environments/args/mission-component/FileArg'
 import { ForceArg } from '@shared/target-environments/args/mission-component/ForceArg'
@@ -13,11 +15,13 @@ import type {
   TMissionComponentMetadata,
 } from '@shared/target-environments/args/mission-component/MissionComponentArg'
 import { NodeArg } from '@shared/target-environments/args/mission-component/NodeArg'
+import { PoolArg } from '@shared/target-environments/args/mission-component/PoolArg'
 import type {
   TActionMetadata,
   TFileMetadata,
   TForceMetadata,
   TNodeMetadata,
+  TPoolMetadata,
 } from '@shared/target-environments/types'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { useEffect, useState } from 'react'
@@ -25,9 +29,10 @@ import ArgAction from './ArgAction'
 import ArgFile from './ArgFile'
 import ArgForce from './ArgForce'
 import ArgNode from './ArgNode'
+import ArgPool from './ArgPool'
 
 /**
- * Renders dropdowns for the argument whose type is `"force"`, `"node"`, or `"action"`.
+ * Renders dropdowns for the argument whose type is `"force"`, `"node"`, `"action"`, `"file"`, or `"pool"`.
  */
 export default function ArgMissionComponent({
   effect,
@@ -54,6 +59,8 @@ export default function ArgMissionComponent({
   const actionName = ActionArg.ACTION_NAME
   const fileId = FileArg.FILE_ID
   const fileName = FileArg.FILE_NAME
+  const poolKey = PoolArg.POOL_KEY
+  const poolName = PoolArg.POOL_NAME
 
   /* -- STATE -- */
 
@@ -79,6 +86,7 @@ export default function ArgMissionComponent({
       }
     },
   )
+
   const [defaultNode] = useState<ClientMissionNode>(() => {
     // First, default to the node associated with
     // the effect itself, if possible. Then, as a back
@@ -98,6 +106,18 @@ export default function ArgMissionComponent({
       )
     }
   })
+
+  const [defaultPool] = useState<ResourcePool<TMetisClientComponents>>(() => {
+    let firstPool = mission.forces[0]?.resourcePools[0]
+
+    if (firstPool) {
+      return firstPool
+    } else {
+      throw new Error(
+        'No valid pool found. A mission must have at least one pool.',
+      )
+    }
+  })
   const [defaultForce] = useState<ClientMissionForce>(
     (): ClientMissionForce => {
       // First, default to the force associated with
@@ -112,6 +132,8 @@ export default function ArgMissionComponent({
         return effect.sourceForce
       } else if (type === 'action' || type === 'node') {
         return defaultNode.force
+      } else if (type === 'pool') {
+        return defaultPool.force
       } else if (mission.forces.length) {
         return mission.forces[0]
       } else {
@@ -121,6 +143,7 @@ export default function ArgMissionComponent({
       }
     },
   )
+
   const [defaultFile] = useState<ClientMissionFile>(() => {
     // Return the first file in the mission. If
     // there is no file in the mission, then return
@@ -199,6 +222,72 @@ export default function ArgMissionComponent({
       return defaultForce
     }
   })
+
+  /* -- POOL STATE VALUES -- */
+
+  const [poolValue, setPoolValue] = useState<
+    ResourcePool<TMetisClientComponents>
+  >(() => {
+    // If the argument is required and the argument's value
+    // is in the effect's arguments...
+    if (isRequired && existsInEffectArgs) {
+      // Search for the pool in the mission.
+      let poolInMission = effect.getPoolFromArgs(_id)
+      // If the pool is found then return the pool.
+      if (poolInMission) return poolInMission
+      let poolInArgs = effect.getPoolMetadataInArgs(_id)
+      // If the pool is not found, but the effect's arguments
+      // contains the pool's metadata then return a pool
+      // object using the metadata from the effect's arguments.
+      // *** Note: This will display the user's previous selection
+      // *** in the dropdown even though it no longer exists in the
+      // *** mission.
+      if (poolInArgs) {
+        return ResourcePool.createResourceDetachedFromKey<TMetisClientComponents>(
+          forceValue,
+          poolInArgs.poolKey,
+          poolInArgs.poolName,
+        )
+      }
+      // Otherwise, return the default pool.
+      return defaultPool
+    }
+    // Otherwise, return the default pool.
+    else {
+      return defaultPool
+    }
+  })
+  const [optionalPoolValue, setOptionalPoolValue] =
+    useState<ResourcePool<TMetisClientComponents> | null>(() => {
+      // If the argument is optional and the argument's value
+      // is in the effect's arguments...
+      if (isOptional && existsInEffectArgs) {
+        // Search for the pool in the mission.
+        let poolInMission = effect.getPoolFromArgs(_id)
+        // If the pool is found then return the pool.
+        if (poolInMission) return poolInMission
+        let poolInArgs = effect.getPoolMetadataInArgs(_id)
+        // If the pool is not found, but the effect's arguments
+        // contains the pool's metadata then return a pool
+        // object using the metadata from the effect's arguments.
+        // *** Note: This will display the user's previous selection
+        // *** in the dropdown even though it no longer exists in the
+        // *** mission.
+        if (optionalForceValue && poolInArgs) {
+          return ResourcePool.createResourceDetachedFromKey<TMetisClientComponents>(
+            optionalForceValue,
+            poolInArgs.poolKey,
+            poolInArgs.poolName,
+          )
+        }
+        // Otherwise, return null.
+        return null
+      }
+      // Otherwise, return null.
+      else {
+        return null
+      }
+    })
 
   /* -- NODE STATE VALUES -- */
 
@@ -392,7 +481,11 @@ export default function ArgMissionComponent({
    * and if the force dropdown should be displayed.
    */
   const forceIsActive: boolean = compute(
-    () => type === 'force' || type === 'node' || type === 'action',
+    () =>
+      type === 'force' ||
+      type === 'node' ||
+      type === 'action' ||
+      type === 'pool',
   )
 
   /**
@@ -489,6 +582,90 @@ export default function ArgMissionComponent({
     return {
       [forceKey]: forceValue.localKey,
       [forceName]: forceValue.name,
+    }
+  })
+
+  /* -- pool -- */
+
+  /**
+   * Determines if the pool should be present in the effect's arguments
+   * and if the pool dropdown should be displayed.
+   */
+  const poolIsActive: boolean = compute(() => type === 'pool')
+
+  /**
+   * Determines if the pool value should be inserted or updated in the
+   * effect's arguments.
+   */
+  const upsertPool: boolean = compute(() => {
+    if (!poolIsActive) return false
+
+    // If the argument is required and the pool exists in the
+    // force's resource pools then upsert the pool to the effect's arguments.
+    if (isRequired && forceValue.resourcePools.includes(poolValue)) {
+      return true
+    }
+
+    // If the argument is optional, a force has been selected,
+    // a pool has been selected, and the pool exists in the
+    // force's resource pools then upsert the pool to the effect's arguments.
+    if (
+      isOptional &&
+      optionalForceValue !== null &&
+      optionalPoolValue !== null &&
+      optionalForceValue.resourcePools.includes(optionalPoolValue)
+    ) {
+      return true
+    }
+
+    // Otherwise, return false.
+    return false
+  })
+
+  /**
+   * Determines if the pool value should be removed from the
+   * effect's arguments.
+   */
+  const removePool: boolean = compute(() => {
+    if (!poolIsActive) return true
+
+    // If the argument is optional, a force has been selected,
+    // a pool hasn't been selected, yet the argument exists
+    // in the effect's arguments then remove the pool value
+    // from the effect's arguments.
+    if (
+      isOptional &&
+      existsInEffectArgs &&
+      (!optionalForceValue || !optionalPoolValue)
+    ) {
+      return true
+    }
+
+    // Otherwise, return false.
+    return false
+  })
+
+  /**
+   * The metadata for the pool argument.
+   * @note This is the metadata that is passed to the effect's arguments.
+   */
+  const poolMetadata: TPoolMetadata = compute(() => {
+    if (!poolIsActive) return {}
+
+    if (isOptional && upsertPool) {
+      // *** Note: The "optionalPoolValue" is validated within
+      // *** the "upsertPool" computed property.
+      return {
+        ...forceMetadata,
+        [poolKey]: optionalPoolValue!.localKey,
+        [poolName]: optionalPoolValue!.name,
+      }
+    }
+
+    return {
+      ...forceMetadata,
+      [poolKey]: poolValue.localKey,
+      [poolName]: poolValue.name,
     }
   })
 
@@ -844,6 +1021,8 @@ export default function ArgMissionComponent({
     optionalNodeValue,
     optionalActionValue,
     optionalFileValue,
+    poolValue,
+    optionalPoolValue,
   ])
 
   /* -- FUNCTIONS -- */
@@ -946,6 +1125,28 @@ export default function ArgMissionComponent({
         // *** with the current value.
         setFileValue(defaultFile)
       }
+
+      // If the pool value stored in the state is the
+      // same as the default pool value, then manually update the
+      // effect's arguments by adding this argument and its
+      // value.
+      if (poolValue === defaultPool) {
+        // *** Note: An argument's value in the effect's
+        // *** arguments is automatically set if the value
+        // *** stored in this state changes. If the value
+        // *** in the state doesn't change then the value
+        // *** needs to be set manually.
+        upsert()
+      }
+      // Otherwise, set the pool value to the default pool value.
+      // *** Note: A default value is mandatory if the
+      // *** argument is required.
+      else {
+        // *** Note: When this value in the state changes,
+        // *** the effect's arguments automatically updates
+        // *** with the current value.
+        setPoolValue(defaultPool)
+      }
     }
   }
 
@@ -960,6 +1161,7 @@ export default function ArgMissionComponent({
     if (upsertNode) data = nodeMetadata
     if (upsertAction) data = actionMetadata
     if (upsertFile) data = fileMetadata
+    if (upsertPool) data = poolMetadata
 
     // Update the effect's arguments with the new data.
     setEffectArgs((prev) => ({
@@ -992,6 +1194,10 @@ export default function ArgMissionComponent({
         delete prev[_id][fileId]
         delete prev[_id][fileName]
       }
+      if (removePool) {
+        delete prev[_id][poolKey]
+        delete prev[_id][poolName]
+      }
 
       // If the argument is empty, then remove the argument
       // from the effect's arguments.
@@ -1000,7 +1206,8 @@ export default function ArgMissionComponent({
         prev[_id][forceKey] === undefined &&
         prev[_id][nodeKey] === undefined &&
         prev[_id][actionKey] === undefined &&
-        prev[_id][fileId] === undefined
+        prev[_id][fileId] === undefined &&
+        prev[_id][poolKey] === undefined
       ) {
         delete prev[_id]
       }
@@ -1011,6 +1218,12 @@ export default function ArgMissionComponent({
 
   /* -- RENDER -- */
 
+  console.log('forceIsActive', forceIsActive)
+  console.log('poolIsActive', poolIsActive)
+  console.log('nodeIsActive', nodeIsActive)
+  console.log('actionIsActive', actionIsActive)
+  console.log('fileIsActive', fileIsActive)
+
   return (
     <>
       <ArgForce
@@ -1020,6 +1233,17 @@ export default function ArgMissionComponent({
         forceIsActive={forceIsActive}
         forceValue={[forceValue, setForceValue]}
         optionalForceValue={[optionalForceValue, setOptionalForceValue]}
+      />
+      <ArgPool
+        arg={arg}
+        existsInEffectArgs={existsInEffectArgs}
+        poolIsActive={poolIsActive}
+        isRequired={isRequired}
+        isOptional={isOptional}
+        forceValue={[forceValue, setForceValue]}
+        optionalForceValue={[optionalForceValue, setOptionalForceValue]}
+        poolValue={[poolValue, setPoolValue]}
+        optionalPoolValue={[optionalPoolValue, setOptionalPoolValue]}
       />
       <ArgNode
         arg={arg}
