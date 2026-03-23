@@ -59,7 +59,7 @@ export function DetailIconSelector(
    * Callback for when an icon in the grid receives a click event.
    * @param icon The icon that was clicked.
    */
-  const onIconClick = (icon: TSelectableIcon): void => {
+  const onIconClick = (icon: TMetisIcon): void => {
     if (disabled) return
     setValue(icon)
   }
@@ -99,7 +99,7 @@ export function DetailIconSelector(
  * Props for the {@link DetailIconSelector} component.
  */
 export type TDetailIconSelector_P = Omit<
-  TDetailRequired_P<TSelectableIcon>,
+  TDetailRequired_P<TMetisIcon>,
   'fieldType' | 'errorMessage' | 'errorType'
 > & {
   /**
@@ -112,7 +112,7 @@ export type TDetailIconSelector_P = Omit<
    * @note All repeat values will be removed. All options
    * must be unique.
    */
-  icons: TSelectableIcon[] | Set<TSelectableIcon>
+  icons: TMetisIcon[] | Set<TMetisIcon>
 }
 
 /**
@@ -125,11 +125,5 @@ export type TDetailIconSelector_C = {
    * a click event.
    * @param icon The icon that was clicked.
    */
-  onIconClick: (icon: TSelectableIcon) => void
+  onIconClick: (icon: TMetisIcon) => void
 }
-
-/**
- * An icon that can be selected by the user — all {@link TMetisIcon} values
- * except `'_blank'`, which is a non-visual filler.
- */
-export type TSelectableIcon = Exclude<TMetisIcon, '_blank'>

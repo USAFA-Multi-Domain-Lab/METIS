@@ -282,6 +282,10 @@ export const missionSchema = new MissionSchema(
             required: true,
             maxlength: Mission.MAX_RESOURCE_NAME_LENGTH,
           },
+          icon: {
+            type: String,
+            required: true,
+          },
           order: { type: Number, required: true },
         },
       ],
@@ -438,7 +442,7 @@ export const missionSchema = new MissionSchema(
                           {
                             _id: { type: String, required: true },
                             resourceId: { type: String, required: true },
-                            amount: { type: Number, required: true },
+                            baseAmount: { type: Number, required: true },
                             hidden: { type: Boolean, required: true },
                           },
                         ],

@@ -17,6 +17,7 @@ import type { SessionClient } from '@client/sessions/SessionClient'
 import type { ClientTarget } from '@client/target-environments/ClientTarget'
 import type { ClientTargetEnvironment } from '@client/target-environments/ClientTargetEnvironment'
 import type { ClientUser } from '@client/users/ClientUser'
+import type { ActionResourceCost } from '@shared/missions/actions/ActionResourceCost'
 import type { MissionResource } from '@shared/missions/MissionResource'
 import type { TEffectType } from '@shared/missions/effects/Effect'
 import type { ResourcePool } from '@shared/missions/forces/ResourcePool'
@@ -72,6 +73,7 @@ export type TMetisClientComponents = {
   force: ClientMissionForce
   output: ClientOutput
   resourcePool: ResourcePool<TMetisClientComponents>
+  resourceCost: ActionResourceCost<TMetisClientComponents>
   node: ClientMissionNode
   action: ClientMissionAction
   execution: ClientActionExecution

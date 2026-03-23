@@ -22,7 +22,7 @@ export default function ResourceCostBadges({
     <>
       {action.resourceCosts.map((cost) => {
         // Don't render badges for zero cost resources.
-        if (cost.amount === 0) return null
+        if (cost.baseAmount === 0) return null
 
         // Find associated resource.
         let resource = action.mission.getResourceById(cost.resourceId)
@@ -42,8 +42,8 @@ export default function ResourceCostBadges({
         return (
           <PropertyBadge
             key={cost._id}
-            icon='coins'
-            value={StringToolbox.sign(cost.amount, true)} // Cost should be displayed as a negative value.
+            icon={cost.icon}
+            value={StringToolbox.sign(cost.baseAmount, true)} // Cost should be displayed as a negative value.
             description={`${StringToolbox.toTitleCase(resource.name)} Cost`}
             strikethrough={Boolean(resourceCostStrikethroughReason)}
             strikethroughReason={resourceCostStrikethroughReason}

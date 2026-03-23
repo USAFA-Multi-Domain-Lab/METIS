@@ -26,17 +26,37 @@ export function serializeJson<
  * @note Implement this interface to make your class
  * JSON serializable. See example for assistance.
  * @example
- * class MyClass implements TJsonSerializable<{ _id: string; name: string }> {
+ * class MyClass implements TJsonSerializable<{ _id: string; name?: string }, { includeName: boolean }> {
  *   public constructor(public _id: string, public name: string) {}
  *
  *   public get json() {
- *     return serializeJson(this, ['_id', 'name'])
+ *     return this.serialize()
+ *   }
+ *
+ *   public serialize(options: TSerializeOptions = {}) {
+ *     let { includeName = true } = options
+ *     let json = serializeJson(this, ['_id', 'name'])
+ *     if (!includeName) {
+ *       delete json.name
+ *     }
+ *     return json
  *   }
  * }
  */
-export type TJsonSerializable<TJson> = {
+export type TJsonSerializable<TJson, TSerializeOptions = {}> = {
   /**
    * The JSON representation type of this object.
+   * @note This will be what the {@link serialize} method returns
+   * if no options are provided.
    */
   get json(): TJson
+  /**
+   * Serializes this object based on the specified options.
+   * @param options The options to use for serialization.
+   * @return A JSON representation of this object based on the
+   * specified options.
+   * @note If no options are available, this method will simply
+   * return {@link json} unmodified.
+   */
+  serialize(options?: TSerializeOptions): TJson
 }

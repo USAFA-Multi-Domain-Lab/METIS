@@ -25,7 +25,7 @@ import { Mission } from '@shared/missions/Mission'
 import type { MissionComponent } from '@shared/missions/MissionComponent'
 import type {
   MissionResource,
-  TResourceJson,
+  TMissionResourceJson,
 } from '@shared/missions/MissionResource'
 import type {
   TMissionPrototypeJson,
@@ -273,7 +273,7 @@ export class ClientMission
     name: string,
     versionNumber: number,
     seed: string,
-    resources: TResourceJson[],
+    resources: TMissionResourceJson[],
     createdAt: Date | null,
     updatedAt: Date | null,
     launchedAt: Date | null,

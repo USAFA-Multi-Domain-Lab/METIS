@@ -286,10 +286,10 @@ export class ServerMissionNode extends MissionNode<TMetisServerComponents> {
 
       // RESOURCE COSTS
       for (const cost of resourceCosts) {
-        let nonNegativeInteger = NumberToolbox.isNonNegativeInteger(cost.amount)
+        let nonNegativeInteger = NumberToolbox.isNonNegativeInteger(cost.baseAmount)
         if (!nonNegativeInteger) {
           throw generateValidationError(
-            `Resource cost amount "${cost.amount}" is a negative integer for resource "${cost.resourceId}" in action "{ _id: ${action._id}, name: ${action.name} }".`,
+            `Resource cost amount "${cost.baseAmount}" is a negative integer for resource "${cost.resourceId}" in action "{ _id: ${action._id}, name: ${action.name} }".`,
           )
         }
       }

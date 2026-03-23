@@ -25,7 +25,7 @@ export default function ResourcePoolBadge({
     <div className='ResourceBadge'>
       <PropertyBadge
         key={pool._id}
-        icon='coins'
+        icon={pool.icon}
         value={value}
         description={pool.name}
       />

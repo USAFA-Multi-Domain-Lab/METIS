@@ -1,6 +1,7 @@
-import type { FileReference } from './files/FileReference'
+import type { ActionResourceCost } from './missions/actions/ActionResourceCost'
 import type { ActionExecution } from './missions/actions/ActionExecution'
 import type { ExecutionOutcome } from './missions/actions/ExecutionOutcome'
+import type { FileReference } from './files/FileReference'
 import type { MissionAction } from './missions/actions/MissionAction'
 import type { Effect, TEffectType } from './missions/effects/Effect'
 import type { MissionFile } from './missions/files/MissionFile'
@@ -181,6 +182,7 @@ export type TMetisBaseComponents = {
   force: MissionForce
   output: MissionOutput
   resourcePool: ResourcePool
+  resourceCost: ActionResourceCost
   node: MissionNode
   action: MissionAction
   execution: ActionExecution

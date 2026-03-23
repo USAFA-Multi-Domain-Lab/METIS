@@ -84,7 +84,7 @@ export class ServerMissionAction extends MissionAction<TMetisServerComponents> {
         for (let cost of this.resourceCosts) {
           let pool = this.force.getPoolByResourceId(cost.resourceId)
           if (pool) {
-            pool.applyCost(cost)
+            cost.applyTo(pool)
           } else {
             sessionLogger.error(
               'Failed to find pool for resource cost during action execution.',

@@ -13,7 +13,7 @@ import type { TMissionImportBuild } from '../MissionImport'
 //
 // Action level:
 //   resourceCost (number) + resourceCostHidden (boolean)
-//     → resourceCosts ([{ _id, resourceId, amount, hidden }])
+//     → resourceCosts ([{ _id, resourceId, baseAmount, hidden }])
 //
 // A single resourceId is generated per mission and referenced consistently
 // across all three levels.
@@ -24,7 +24,7 @@ const build: TMissionImportBuild = async (missionData) => {
 
   // Build the new top-level resources array from the old resourceLabel.
   missionData.resources = [
-    { _id: resourceId, name: missionData.resourceLabel, order: 0 },
+    { _id: resourceId, name: missionData.resourceLabel, icon: 'coins', order: 0 },
   ]
   delete missionData.resourceLabel
 
@@ -47,7 +47,7 @@ const build: TMissionImportBuild = async (missionData) => {
           {
             _id: StringToolbox.generateRandomId(),
             resourceId: resourceId,
-            amount: action.resourceCost,
+            baseAmount: action.resourceCost,
             hidden: action.resourceCostHidden,
           },
         ]

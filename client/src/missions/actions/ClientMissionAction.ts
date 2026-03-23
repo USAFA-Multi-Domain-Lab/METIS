@@ -1,8 +1,8 @@
 import type { TMissionOutlineItem } from '@client/components/pages/missions/structures/MissionOutline'
 import type { TMetisClientComponents } from '@client/index'
 import type { ClientTarget } from '@client/target-environments/ClientTarget'
+import { ActionResourceCost } from '@shared/missions/actions/ActionResourceCost'
 import type {
-  TActionResourceCost,
   TMissionActionJsonDirect,
   TMissionActionJsonIndirect,
 } from '@shared/missions/actions/MissionAction'
@@ -11,7 +11,7 @@ import type {
   TEffectExecutionTriggered,
   TEffectExecutionTriggeredJson,
 } from '@shared/missions/effects/Effect'
-import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import { JsonSerializableArray } from '@shared/toolbox/arrays/JsonSerializableArray'
 import { ClientEffect } from '../effects/ClientEffect'
 import type { ClientMissionNode } from '../nodes/ClientMissionNode'
 
@@ -230,22 +230,17 @@ export class ClientMissionAction
     // resources, the list of costs will end up in the same
     // order as the resources, which will be user friendly in
     // the UI.
-    let updatedCosts: TActionResourceCost[] = this.mission.resources.map(
-      (resource) => {
+    this.resourceCosts = new JsonSerializableArray(
+      ...this.mission.resources.map((resource) => {
         let existingCost = this.resourceCosts.find(
-          (cost) => cost.resourceId === resource._id,
+          ({ resourceId }) => resourceId === resource._id,
         )
         return (
-          existingCost ?? {
-            _id: StringToolbox.generateRandomId(),
-            resourceId: resource._id,
-            amount: 0,
-            hidden: false,
-          }
+          existingCost ??
+          ActionResourceCost.createNew<TMetisClientComponents>(this, resource)
         )
-      },
+      }),
     )
-    this._resourceCosts = updatedCosts
   }
 
   /**

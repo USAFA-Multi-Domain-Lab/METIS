@@ -6,18 +6,23 @@ import type { TJsonSerializable } from '../serialization/json'
  */
 export class JsonSerializableArray<T extends TJsonSerializable<T['json']>>
   extends Array<T>
-  implements TJsonSerializable<Array<T['json']>>
+  implements TJsonSerializable<Array<T['json']>, Parameters<T['serialize']>[0]>
 {
   /**
    * A serialized-JSON version of this array.
    */
   public get json(): Array<T['json']> {
-    return this.map((item: T) => item.json)
+    return this.serialize()
   }
 
   public constructor(...items: Array<T>) {
     super(...items)
     Object.setPrototypeOf(this, JsonSerializableArray.prototype)
+  }
+
+  // Implemented
+  public serialize(options?: Parameters<T['serialize']>[0]): Array<T['json']> {
+    return this.map((item: T) => item.serialize(options))
   }
 
   // Overridden

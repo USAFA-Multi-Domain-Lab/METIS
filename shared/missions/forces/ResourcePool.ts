@@ -4,8 +4,7 @@ import {
 } from '@shared/toolbox/serialization/json'
 import { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSerializableArray'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
-import type { TActionResourceCost } from '../actions/MissionAction'
-import { Mission, type TMission } from '../Mission'
+import { type TMission } from '../Mission'
 import {
   MissionComponent,
   type TMissionComponentIssue,
@@ -85,25 +84,16 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
   public remainingAmount: number
 
   /**
-   * Whether this pool is currently registered within
-   * {@link Mission.resources}.
+   * The icon derived from the {@link resource} tracked
+   * by this pool.
    */
-  public get registered(): boolean {
-    return this.mission.resources.some(
-      (resource) => resource._id === this.resourceId,
-    )
+  public get icon(): TMetisIcon {
+    return this.resource.icon
   }
 
   // Implemented
   public get json(): TResourcePoolJson {
-    return serializeJson(this, [
-      '_id',
-      'localKey',
-      'resourceId',
-      'initialAmount',
-      'allowNegative',
-      'remainingAmount',
-    ])
+    return this.serialize()
   }
 
   /**
@@ -133,19 +123,16 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
     this.remainingAmount = remainingAmount
   }
 
-  /**
-   * Applies the given resource cost to this pool by
-   * reducing the remaining amount by the cost's
-   * specified amount.
-   * @param cost The resource cost to apply to this pool.
-   * @throws Error if the cost's resource ID does not
-   * match this pool's resource ID.
-   */
-  public applyCost(cost: TActionResourceCost): void {
-    if (cost.resourceId !== this.resourceId) {
-      throw new Error('Resource ID mismatch.')
-    }
-    this.remainingAmount -= cost.amount
+  // Implemented
+  public serialize(): TResourcePoolJson {
+    return serializeJson(this, [
+      '_id',
+      'localKey',
+      'resourceId',
+      'initialAmount',
+      'allowNegative',
+      'remainingAmount',
+    ])
   }
 
   /**
@@ -198,9 +185,9 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
     T extends TMetisBaseComponents = TMetisBaseComponents,
   >(force: TForce<T>, localKey: string, name: string): ResourcePool<T> {
     let resource = MissionResource.createDetached<T>(
+      force.mission,
       StringToolbox.generateRandomId(),
       name,
-      force.mission,
     )
     return new ResourcePool<T>(
       resource,
@@ -264,6 +251,21 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
       data.allowNegative,
       data.remainingAmount ?? data.initialAmount,
     )
+  }
+
+  /**
+   * The default properties for a {@link ResourcePool} object.
+   */
+  public static get DEFAULT_PROPERTIES(): Omit<
+    TResourcePoolJson,
+    'resourceId'
+  > {
+    return {
+      _id: StringToolbox.generateRandomId(),
+      localKey: '1',
+      initialAmount: 0,
+      allowNegative: false,
+    }
   }
 }
 

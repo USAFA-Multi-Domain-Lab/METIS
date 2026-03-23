@@ -6,6 +6,7 @@ import { ClientMissionAction } from '@client/missions/actions/ClientMissionActio
 import { compute } from '@client/toolbox'
 import { useObjectFormSync, usePostInitEffect } from '@client/toolbox/hooks'
 import type { TActionType } from '@shared/missions/actions/MissionAction'
+import { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSerializableArray'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { Fragment, useState } from 'react'
 import { DetailLargeString } from '../../../../content/form/DetailLargeString'
@@ -235,18 +236,12 @@ export default function ActionEntry({
               <DetailNumber
                 fieldType='required'
                 label={`${label} Cost`}
-                value={cost.amount}
-                setValue={(arg) => {
-                  // todo: Review this.
-                  setResourceCosts((prev) => {
-                    let amount =
-                      typeof arg === 'function' ? arg(prev[index].amount) : arg
-                    return prev.map((existingCost, costIndex) =>
-                      costIndex === index
-                        ? { ...existingCost, amount }
-                        : existingCost,
-                    )
-                  })
+                value={cost.baseAmount}
+                setValue={(value) => {
+                  // todo: Move this into new subentry.
+                  cost.baseAmount =
+                    typeof value === 'function' ? value(cost.baseAmount) : value
+                  setResourceCosts(new JsonSerializableArray(...resourceCosts))
                 }}
                 minimum={ClientMissionAction.RESOURCE_COST_MIN}
                 integersOnly={true}
@@ -258,15 +253,10 @@ export default function ActionEntry({
                 tooltipDescription={`If enabled, the ${label} resource cost will be hidden from the executor.`}
                 value={cost.hidden}
                 setValue={(arg) => {
-                  setResourceCosts((prev) => {
-                    let hidden =
-                      typeof arg === 'function' ? arg(prev[index].hidden) : arg
-                    return prev.map((existingCost, costIndex) =>
-                      costIndex === index
-                        ? { ...existingCost, hidden }
-                        : existingCost,
-                    )
-                  })
+                  // todo: Move this into new subentry.
+                  cost.hidden =
+                    typeof arg === 'function' ? arg(cost.hidden) : arg
+                  setResourceCosts(new JsonSerializableArray(...resourceCosts))
                 }}
                 disabled={viewMode === 'preview'}
               />

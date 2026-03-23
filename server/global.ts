@@ -1,3 +1,4 @@
+import type { ActionResourceCost } from '@shared/missions/actions/ActionResourceCost'
 import type { TEffectType } from '@shared/missions/effects/Effect'
 import type { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import type { MissionResource } from '@shared/missions/MissionResource'
@@ -50,6 +51,7 @@ declare global {
     force: ServerMissionForce
     output: ServerOutput
     resourcePool: ResourcePool<TMetisServerComponents>
+    resourceCost: ActionResourceCost<TMetisServerComponents>
     node: ServerMissionNode
     action: ServerMissionAction
     execution: ServerActionExecution

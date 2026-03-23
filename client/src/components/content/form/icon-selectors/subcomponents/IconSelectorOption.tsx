@@ -1,7 +1,6 @@
 import { getIconPath } from '@client/toolbox/icons'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import { useDetailIconSelectorContext } from '../context'
-import type { TSelectableIcon } from '../DetailIconSelector'
 import { DetailIconSelector } from '../DetailIconSelector'
 
 /**
@@ -21,7 +20,7 @@ export default function IconSelectorOption({
    * @returns A string of CSS classes to apply to the icon's corresponding
    * option element.
    */
-  const getIconOptionClasses = (icon: TSelectableIcon): string => {
+  const getIconOptionClasses = (icon: TMetisIcon): string => {
     let classes = new ClassList('IconOption')
     if (icon === value) {
       classes.add('Selected')
@@ -35,7 +34,7 @@ export default function IconSelectorOption({
    * @returns The CSSProperties object containing the background
    * image for the icon.
    */
-  const getIconStyle = (icon: TSelectableIcon): React.CSSProperties => ({
+  const getIconStyle = (icon: TMetisIcon): React.CSSProperties => ({
     backgroundImage: `url(${getIconPath(icon)})`,
   })
 
@@ -61,5 +60,5 @@ export type TIconSelectorOption_P = {
   /**
    * The icon to be displayed in this option.
    */
-  icon: TSelectableIcon
+  icon: TMetisIcon
 }

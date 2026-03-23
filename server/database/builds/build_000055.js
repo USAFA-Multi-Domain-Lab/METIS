@@ -11,7 +11,7 @@
 //
 // Action level (nested in missions.forces[].nodes[].actions[]):
 //   resourceCost (Number) + resourceCostHidden (Boolean)
-//     → resourceCosts ([{ _id, resourceId, amount, hidden }])
+//     → resourceCosts ([{ _id, resourceId, baseAmount, hidden }])
 //       where resourceId references the same _id.
 
 const generateHash = require('uuid').v4
@@ -38,6 +38,7 @@ while (cursorMissions.hasNext()) {
     {
       _id: resourceId,
       name: mission.resourceLabel,
+      icon: 'coins',
       order: 0,
     },
   ]
@@ -63,7 +64,7 @@ while (cursorMissions.hasNext()) {
           {
             _id: generateHash(),
             resourceId: resourceId,
-            amount: action.resourceCost,
+            baseAmount: action.resourceCost,
             hidden: action.resourceCostHidden,
           },
         ]

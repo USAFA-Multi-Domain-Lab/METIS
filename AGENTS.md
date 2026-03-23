@@ -10,6 +10,7 @@ METIS is a **real-time cybersecurity training platform** designed for military a
 
 **Instructions Covering Specific Topics**
 
+- [MissionComponent guide](.github/instructions/MISSION-COMPONENT.instructions.md) — Use when creating or managing components of a mission, such as a mission, a node, force, resource, etc. Covers implementation of this abstract class and how it is used throughout the codebase.
 - [React class names guide](.github/instructions/CLASS-NAMES.instructions.md) — Use when constructing or conditionally applying CSS class names on React elements; covers the `ClassList` API, chaining, and naming conventions
 - [LocalContext guide](.github/instructions/LOCAL-CONTEXT.instructions.md) — Use when a component owns subcomponents that need access to its props, state, or computed values; covers the `LocalContext` pattern, provider setup, and the `T{Name}_P/C/S/E` type convention
 - [Tooltip guide](.github/instructions/TOOLTIP.instructions.md) — Use when displaying hover-triggered descriptive text on an interactive element; covers the `Tooltip` component API, placement rules, dynamic and conditional descriptions, and nesting conflicts

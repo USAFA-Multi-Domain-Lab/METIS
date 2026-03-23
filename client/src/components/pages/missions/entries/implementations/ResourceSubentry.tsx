@@ -1,5 +1,4 @@
 import { DetailString } from '@client/components/content/form/DetailString'
-import type { TSelectableIcon } from '@client/components/content/form/icon-selectors/DetailIconSelector'
 import { DetailIconSelector } from '@client/components/content/form/icon-selectors/DetailIconSelector'
 import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
@@ -8,7 +7,6 @@ import type { TMetisClientComponents } from '@client/index'
 import { ClientMission } from '@client/missions/ClientMission'
 import { useObjectFormSync } from '@client/toolbox/hooks'
 import type { MissionResource } from '@shared/missions/MissionResource'
-import { useState } from 'react'
 
 // ! Styling in Entry.scss.
 
@@ -24,10 +22,10 @@ export default function ResourceSubentry({
   /* -- STATE -- */
 
   const { onChange, viewMode } = useMissionPageContext()
-  const [icon, setIcon] = useState<TSelectableIcon>('coins')
   const {
     name: [name, setName],
-  } = useObjectFormSync(resource, ['name'], {
+    icon: [icon, setIcon],
+  } = useObjectFormSync(resource, ['name', 'icon'], {
     onChange: () => onChange(mission),
   })
 

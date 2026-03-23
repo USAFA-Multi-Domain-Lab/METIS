@@ -23,13 +23,7 @@ export class NodeAlert implements TJsonSerializable<TNodeAlertJson> {
 
   // Implemented
   public get json(): TNodeAlertJson {
-    return serializeJson(this, [
-      '_id',
-      'nodeId',
-      'message',
-      'severityLevel',
-      'acknowledged',
-    ])
+    return this.serialize()
   }
 
   private constructor(
@@ -57,6 +51,16 @@ export class NodeAlert implements TJsonSerializable<TNodeAlertJson> {
      */
     public acknowledged: boolean,
   ) {}
+
+  public serialize(): TNodeAlertJson {
+    return serializeJson(this, [
+      '_id',
+      'nodeId',
+      'message',
+      'severityLevel',
+      'acknowledged',
+    ])
+  }
 
   /**
   get json(): TNodeAlertJson {

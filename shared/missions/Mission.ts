@@ -26,7 +26,7 @@ import {
   MissionComponent,
   type TMissionComponentIssue,
 } from './MissionComponent'
-import { MissionResource, type TResourceJson } from './MissionResource'
+import { MissionResource, type TMissionResourceJson } from './MissionResource'
 import type { TNode } from './nodes/MissionNode'
 import type {
   TMissionPrototypeJson,
@@ -225,7 +225,7 @@ export abstract class Mission<
     createdBy: User | null,
     createdByUsername: string | null,
     structure: TAnyObject,
-    resourceData: TResourceJson[],
+    resourceData: TMissionResourceJson[],
     prototypeData: TMissionPrototypeJson[],
     forceData: TMissionForceJson[],
     fileData: TMissionFileJson[],
@@ -612,7 +612,7 @@ export abstract class Mission<
    * stores them in the {@link resources} array.
    * @param data The resource data to import.
    */
-  protected importResources(data: TResourceJson[]): void {
+  protected importResources(data: TMissionResourceJson[]): void {
     let resources = MissionResource.fromJson<T>(this, data)
     this._resources.push(...resources)
   }
@@ -987,9 +987,7 @@ export abstract class Mission<
       name: 'New Mission',
       versionNumber: 1,
       seed: StringToolbox.generateRandomId(),
-      resources: [
-        { _id: StringToolbox.generateRandomId(), name: 'Resources', order: 0 },
-      ],
+      resources: [MissionResource.DEFAULT_PROPERTIES],
       createdAt: null,
       updatedAt: null,
       launchedAt: null,
@@ -1288,7 +1286,7 @@ export type TMissionJson = TCreateJsonType<
   'name' | 'versionNumber' | 'seed',
   {
     _id?: string
-    resources: TResourceJson[]
+    resources: TMissionResourceJson[]
     createdAt: string | null
     updatedAt: string | null
     launchedAt: string | null
