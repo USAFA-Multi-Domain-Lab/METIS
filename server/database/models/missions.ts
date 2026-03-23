@@ -272,24 +272,6 @@ export const missionSchema = new MissionSchema(
       required: true,
       default: StringToolbox.generateRandomId,
     },
-    resources: {
-      required: true,
-      type: [
-        {
-          _id: { type: String, required: true },
-          name: {
-            type: String,
-            required: true,
-            maxlength: Mission.MAX_RESOURCE_NAME_LENGTH,
-          },
-          icon: {
-            type: String,
-            required: true,
-          },
-          order: { type: Number, required: true },
-        },
-      ],
-    },
     launchedAt: { type: Date, default: null },
     createdBy: {
       type: Schema.Types.ObjectId,
@@ -474,6 +456,24 @@ export const missionSchema = new MissionSchema(
               },
             ],
           },
+        },
+      ],
+    },
+    resources: {
+      required: true,
+      type: [
+        {
+          _id: { type: String, required: true },
+          name: {
+            type: String,
+            required: true,
+            maxlength: Mission.MAX_RESOURCE_NAME_LENGTH,
+          },
+          icon: {
+            type: String,
+            required: true,
+          },
+          order: { type: Number, required: true },
         },
       ],
     },

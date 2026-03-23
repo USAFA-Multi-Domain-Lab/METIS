@@ -18,17 +18,13 @@ export function DetailIconSelector(
 
   // Apply default props, then extract
   // needed values.
-  const defaultedProps = useDefaultProps(
-    // Convert icon to a set to guarantee unique values.
-    { ...props, icons: new Set(props.icons) },
-    {
-      fieldType: 'required',
-      uniqueLabelClassName: '',
-      uniqueFieldClassName: '',
-      disabled: false,
-      tooltipDescription: '',
-    },
-  )
+  const defaultedProps = useDefaultProps(props, {
+    fieldType: 'required',
+    uniqueLabelClassName: '',
+    uniqueFieldClassName: '',
+    disabled: false,
+    tooltipDescription: '',
+  })
   const {
     fieldType,
     label,
@@ -112,7 +108,7 @@ export type TDetailIconSelector_P = Omit<
    * @note All repeat values will be removed. All options
    * must be unique.
    */
-  icons: TMetisIcon[] | Set<TMetisIcon>
+  icons: Set<TMetisIcon>
 }
 
 /**

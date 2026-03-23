@@ -113,6 +113,7 @@ declare global {
     | 'zoom-in'
     | 'zoom-out'
     | 'resources/coins'
+    | 'resources/copy'
     | 'resources/flag'
     | 'resources/gear'
     | 'resources/key'
@@ -120,6 +121,7 @@ declare global {
     | 'resources/lightning'
     | 'resources/node'
     | 'resources/shield'
+    | 'resources/trophy'
     | 'resources/user'
     | 'resources/waves'
 }

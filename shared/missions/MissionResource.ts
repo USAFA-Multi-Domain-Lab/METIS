@@ -87,25 +87,85 @@ export class MissionResource<
   }
 
   /**
+   * The ordered list of icons available for resources, matching the
+   * order presented in the resource icon selector UI.
+   */
+  public static readonly ICONS: readonly TMetisIcon[] = [
+    'resources/coins',
+    'resources/trophy',
+    'resources/flag',
+    'resources/gear',
+    'resources/key',
+    'resources/lightning',
+    'resources/node',
+    'resources/shield',
+    'resources/waves',
+    'resources/launch',
+    'resources/user',
+    'resources/copy',
+  ]
+
+  /**
+   * The default display names for each resource icon, used when
+   * a new resource is created without an explicit name.
+   */
+  public static readonly DEFAULT_NAMES: Readonly<Partial<Record<TMetisIcon, string>>> = {
+    'resources/coins': 'Resources',
+    'resources/trophy': 'Points',
+    'resources/flag': 'Budget',
+    'resources/gear': 'Manpower',
+    'resources/key': 'Fuel',
+    'resources/lightning': 'Supplies',
+    'resources/node': 'Direct Support',
+    'resources/shield': 'Technology',
+    'resources/waves': 'Influence',
+    'resources/launch': 'Influence',
+    'resources/user': 'Public Support',
+    'resources/copy': 'Force Morale',
+  }
+
+  /**
+   * Returns the first icon in {@link ICONS} not already used by
+   * an existing resource in the mission. Falls back to the first
+   * icon if all are somehow in use.
+   */
+  private static getNextUnusedIcon<T extends TMetisBaseComponents>(
+    mission: TMission<T>,
+  ): TMetisIcon {
+    let usedIcons = new Set(mission.resources.map((resource) => resource.icon))
+    return (
+      MissionResource.ICONS.find((icon) => !usedIcons.has(icon)) ??
+      MissionResource.ICONS[0]
+    )
+  }
+
+  /**
    * @param mission The mission that owns this resource definition.
-   * @param name The display name for the resource, defaults to 'Resources'.
-   * @param icon The icon to display for the resource, defaults to 'coins'.
+   * @param name The display name for the resource. If omitted, defaults to
+   * the name in {@link DEFAULT_NAMES} for the resolved icon.
+   * @param icon The icon to display for the resource. If omitted, defaults to
+   * the next unused icon via {@link getNextUnusedIcon}.
    * @returns A new {@link MissionResource} object.
    */
   public static createNew<
     T extends TMetisBaseComponents = TMetisBaseComponents,
   >(
     mission: TMission<T>,
-    name: string = MissionResource.DEFAULT_PROPERTIES.name,
-    icon: TMetisIcon = MissionResource.DEFAULT_PROPERTIES.icon,
+    name?: string,
+    icon?: TMetisIcon,
   ): T['resource'] {
     let order =
       Math.max(...mission.resources.map((resource) => resource.order), 1) + 1
+    let resolvedIcon = icon ?? MissionResource.getNextUnusedIcon(mission)
+    let resolvedName =
+      name ??
+      MissionResource.DEFAULT_NAMES[resolvedIcon] ??
+      MissionResource.DEFAULT_PROPERTIES.name
     return new MissionResource<T>(
       mission,
       StringToolbox.generateRandomId(),
-      name,
-      icon,
+      resolvedName,
+      resolvedIcon,
       order,
     )
   }
@@ -185,7 +245,7 @@ export class MissionResource<
     return {
       _id: StringToolbox.generateRandomId(),
       name: 'Resources',
-      icon: 'coins',
+      icon: 'resources/coins',
       order: 1,
     }
   }

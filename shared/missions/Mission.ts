@@ -133,18 +133,6 @@ export abstract class Mission<
   public seed: string
 
   /**
-   * @see {@link Mission.resources}
-   */
-  protected _resources: JsonSerializableArray<T['resource']>
-  /**
-   * A collection of resource definitions which define the currencies
-   * used within the mission.
-   */
-  public get resources(): JsonSerializableArray<T['resource']> {
-    return new JsonSerializableArray(...this._resources)
-  }
-
-  /**
    * The date/time the mission was created.
    */
   public createdAt: Date | null
@@ -183,6 +171,18 @@ export abstract class Mission<
    * from their corresponding prototypes.
    */
   public forces: TForce<T>[]
+
+  /**
+   * @see {@link Mission.resources}
+   */
+  protected _resources: JsonSerializableArray<T['resource']>
+  /**
+   * A collection of resource definitions which define the currencies
+   * used within the mission.
+   */
+  public get resources(): JsonSerializableArray<T['resource']> {
+    return new JsonSerializableArray(...this._resources)
+  }
 
   /**
    * Files attached to the mission that will be used

@@ -53,7 +53,8 @@ export default function MissionEntry({
    * resource to the mission.
    */
   function onClickAdd(): void {
-    mission.addResource()
+    let newResource = mission.addResource()
+    onChange(newResource)
   }
 
   /**
@@ -65,6 +66,7 @@ export default function MissionEntry({
     resource: MissionResource<TMetisClientComponents>,
   ): void {
     resource.remove()
+    onChange(resource)
   }
 
   /* -- EFFECTS -- */

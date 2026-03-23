@@ -6,7 +6,7 @@ import { useMissionPageContext } from '@client/components/pages/missions/context
 import type { TMetisClientComponents } from '@client/index'
 import { ClientMission } from '@client/missions/ClientMission'
 import { useObjectFormSync } from '@client/toolbox/hooks'
-import type { MissionResource } from '@shared/missions/MissionResource'
+import { MissionResource } from '@shared/missions/MissionResource'
 
 // ! Styling in Entry.scss.
 
@@ -69,18 +69,7 @@ export default function ResourceSubentry({
         label='Icon'
         value={icon}
         setValue={setIcon}
-        icons={[
-          'resources/coins',
-          'resources/flag',
-          'resources/gear',
-          'resources/key',
-          'resources/lightning',
-          'resources/node',
-          'resources/shield',
-          'resources/waves',
-          'resources/launch',
-          'resources/user',
-        ]}
+        icons={new Set(MissionResource.ICONS)}
         disabled={viewMode === 'preview'}
       />
     </div>
