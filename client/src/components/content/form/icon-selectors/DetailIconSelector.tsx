@@ -100,7 +100,7 @@ export function DetailIconSelector(
  */
 export type TDetailIconSelector_P = Omit<
   TDetailRequired_P<TMetisIcon>,
-  'fieldType' | 'errorMessage' | 'errorType'
+  'fieldType' | 'errorMessage' | 'errorType' | 'errorDisplay'
 > & {
   /**
    * Field type for the detail.

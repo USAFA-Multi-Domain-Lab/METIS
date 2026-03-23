@@ -24,7 +24,12 @@ const build: TMissionImportBuild = async (missionData) => {
 
   // Build the new top-level resources array from the old resourceLabel.
   missionData.resources = [
-    { _id: resourceId, name: missionData.resourceLabel, icon: 'coins', order: 0 },
+    {
+      _id: resourceId,
+      name: missionData.resourceLabel,
+      icon: 'resources/coins',
+      order: 0,
+    },
   ]
   delete missionData.resourceLabel
 

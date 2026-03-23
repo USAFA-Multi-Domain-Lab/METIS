@@ -70,16 +70,16 @@ export default function ResourceSubentry({
         value={icon}
         setValue={setIcon}
         icons={[
-          'coins',
-          'flag',
-          'gear',
-          'key',
-          'lightning',
-          'node',
-          'shield',
-          'waves',
-          'launch',
-          'user',
+          'resources/coins',
+          'resources/flag',
+          'resources/gear',
+          'resources/key',
+          'resources/lightning',
+          'resources/node',
+          'resources/shield',
+          'resources/waves',
+          'resources/launch',
+          'resources/user',
         ]}
         disabled={viewMode === 'preview'}
       />

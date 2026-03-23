@@ -38,7 +38,7 @@ while (cursorMissions.hasNext()) {
     {
       _id: resourceId,
       name: mission.resourceLabel,
-      icon: 'coins',
+      icon: 'resources/coins',
       order: 0,
     },
   ]
