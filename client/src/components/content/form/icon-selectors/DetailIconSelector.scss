@@ -5,46 +5,52 @@
 .Detail.DetailIconSelector {
   .Field {
     display: flex;
-    flex-wrap: nowrap;
     flex-direction: row;
-    justify-content: stretch;
+    flex-wrap: wrap;
+    justify-content: flex-start;
     padding: 0;
 
-    .IconOption {
-      cursor: pointer;
+    .IconSelectorRow {
       display: flex;
-      justify-content: center;
+      flex-wrap: nowrap;
       flex-grow: 1;
-      padding: 1em 0 1em;
-
-      &:hover:not(.Selected) {
-        @include background-mask($opacity: 0.05);
-      }
-
-      &.Selected {
-        @include background-mask($opacity: 0.15);
-      }
+      flex-direction: row;
+      min-width: 13em;
 
       &:first-child {
-        // justify-content: start;
-        border-top-left-radius: 0.35em;
-        border-bottom-left-radius: 0.35em;
-        padding-left: 0.5em;
+        clip-path: inset(0 round 0.35em 0.35em 0 0);
       }
 
       &:last-child {
-        // justify-content: end;
-        border-top-right-radius: 0.35em;
-        border-bottom-right-radius: 0.35em;
-        padding-right: 0.5em;
+        clip-path: inset(0 round 0 0 0.35em 0.35em);
       }
 
-      .Icon {
-        width: 0.9em;
-        height: 0.9em;
-        background-size: contain;
-        background-repeat: no-repeat;
-        background-position: center;
+      &:first-child:last-child {
+        clip-path: inset(0 round 0.35em);
+      }
+
+      .IconOption {
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        flex-grow: 1;
+        padding: 1em 0 1em;
+
+        &:hover:not(.Selected) {
+          @include background-mask($opacity: 0.05);
+        }
+
+        &.Selected {
+          @include background-mask($opacity: 0.15);
+        }
+
+        .Icon {
+          width: 1em;
+          height: 1em;
+          background-size: contain;
+          background-repeat: no-repeat;
+          background-position: center;
+        }
       }
     }
   }

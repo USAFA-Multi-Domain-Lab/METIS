@@ -5,7 +5,7 @@ import DetailTitleRow from '../DetailTitleRow'
 import { useDetailClassNames } from '../useDetailClassNames'
 import { detailIconSelectorContext } from './context'
 import './DetailIconSelector.scss'
-import IconSelectorOption from './subcomponents/IconSelectorOption'
+import IconSelectorRow from './subcomponents/IconSelectorRow'
 
 /**
  * This will render a detail for a form, with a label and
@@ -80,8 +80,11 @@ export function DetailIconSelector(
           fieldType={fieldType}
         />
         <div className={fieldClasses.value}>
-          {Array.from(icons).map((icon) => (
-            <IconSelectorOption key={icon} icon={icon} />
+          {new Array(Math.ceil(icons.size / 6)).fill(0).map((_, index) => (
+            <IconSelectorRow
+              key={`icon-selector-row_${index + 1}`}
+              rowNumber={index + 1}
+            />
           ))}
         </div>
       </div>
