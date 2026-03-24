@@ -81,7 +81,7 @@ export class ServerMissionAction extends MissionAction<TMetisServerComponents> {
       // If the "Zero Resource Cost" cheat is not enabled,
       // deduct each resource cost from the corresponding pool.
       if (!zeroCost && !infiniteResources) {
-        for (let cost of this.resourceCosts) {
+        for (let cost of this.includedCosts) {
           let pool = this.force.getPoolByResourceId(cost.resourceId)
           if (pool) {
             cost.applyTo(pool)

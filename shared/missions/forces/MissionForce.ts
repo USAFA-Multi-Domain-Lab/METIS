@@ -57,6 +57,13 @@ export abstract class MissionForce<
   public resourcePools: JsonSerializableArray<T['resourcePool']>
 
   /**
+   * The subset of {@link resourcePools} that are not excluded from this force.
+   */
+  public get includedPools(): T['resourcePool'][] {
+    return this.resourcePools.filter((pool) => !pool.excluded)
+  }
+
+  /**
    * Whether or not to reveal all nodes in the force.
    */
   public revealAllNodes: boolean
@@ -204,27 +211,12 @@ export abstract class MissionForce<
       revealAllNodes: this.revealAllNodes,
       localKey: this.localKey,
       nodes: this.exportNodes(options),
-      resourcePools: this.resourcePools.map(
-        ({ _id, localKey, resourceId, initialAmount, allowNegative }) => ({
-          _id,
-          localKey,
-          resourceId,
-          initialAmount,
-          allowNegative,
-        }),
-      ),
+      resourcePools: this.resourcePools.serialize(options),
       filterOutputs: (memberId) => {
         json.outputs = this.filterOutputs(memberId).map((output) =>
           output.toJson(),
         )
       },
-    }
-
-    /**
-     * Includes the current {@link ResourcePool.remainingAmount} on each pool in the JSON.
-     */
-    const addResourcesRemaining = () => {
-      json.resourcePools = this.resourcePools.json
     }
 
     /**
@@ -245,11 +237,9 @@ export abstract class MissionForce<
     // the options provided.
     switch (sessionDataExposure.expose) {
       case 'all':
-        addResourcesRemaining()
         addOutputs()
         break
       case 'member-specific':
-        addResourcesRemaining()
         addOutputs(sessionDataExposure.memberId)
         break
       case 'none':

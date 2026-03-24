@@ -20,7 +20,7 @@ export default function ResourceCostBadges({
 }: TResourceCostBadges_P): TReactElement | null {
   return (
     <>
-      {action.resourceCosts.map((cost) => {
+      {action.includedCosts.map((cost) => {
         // Don't render badges for zero cost resources.
         if (cost.baseAmount === 0) return null
 

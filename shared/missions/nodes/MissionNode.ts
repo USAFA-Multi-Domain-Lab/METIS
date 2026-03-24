@@ -981,7 +981,10 @@ export type TMissionNodeJson = TMissionNodeJsonBase &
 /**
  * Options for MissionNode.toJSON method.
  */
-export type TNodeJsonOptions = Omit<TForceJsonOptions, 'forceExposure'>
+export type TNodeJsonOptions = Pick<
+  TForceJsonOptions,
+  'sessionDataExposure' | 'rootEffectsExposure'
+>
 
 /**
  * Possible states for the execution of a node.

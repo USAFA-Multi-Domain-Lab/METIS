@@ -4,13 +4,13 @@ import {
 } from '@shared/toolbox/serialization/json'
 import { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSerializableArray'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
-import { type TMission } from '../Mission'
+import { Mission, type TMission } from '../Mission'
 import {
   MissionComponent,
   type TMissionComponentIssue,
 } from '../MissionComponent'
 import { MissionResource } from '../MissionResource'
-import type { TForce } from './MissionForce'
+import type { TForce, TForceJsonOptions } from './MissionForce'
 
 /**
  * Represents a pool/bank of resources from which a force can withdraw to
@@ -19,7 +19,7 @@ import type { TForce } from './MissionForce'
  */
 export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
   extends MissionComponent<T, ResourcePool<T>>
-  implements TJsonSerializable<TResourcePoolJson>
+  implements TJsonSerializable<TResourcePoolJson, TPoolJsonOptions>
 {
   /**
    * The force that owns this resource pool.
@@ -77,6 +77,13 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
   public allowNegative: boolean
 
   /**
+   * Whether this pool is excluded from the force. An excluded pool
+   * is hidden from session participants and its associated costs
+   * are not applied or displayed.
+   */
+  public excluded: boolean
+
+  /**
    * The current amount of resources remaining in this pool.
    * Initialized from {@link TResourcePoolJson.remainingAmount} if present,
    * otherwise defaults to {@link initialAmount}.
@@ -103,6 +110,7 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
    * @param localKey The key used to identify this pool within the force.
    * @param initialAmount The starting amount of resources.
    * @param allowNegative Whether the pool can go below zero.
+   * @param excluded Whether this pool is excluded from the force.
    * @param remainingAmount The current amount of resources remaining.
    */
   private constructor(
@@ -112,6 +120,7 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
     localKey: string,
     initialAmount: number,
     allowNegative: boolean,
+    excluded: boolean,
     remainingAmount: number,
   ) {
     super(_id, '', false)
@@ -120,19 +129,31 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
     this.localKey = localKey
     this.initialAmount = initialAmount
     this.allowNegative = allowNegative
+    this.excluded = excluded
     this.remainingAmount = remainingAmount
   }
 
   // Implemented
-  public serialize(): TResourcePoolJson {
-    return serializeJson(this, [
+  public serialize(options: TPoolJsonOptions = {}): TResourcePoolJson {
+    let { sessionDataExposure = Mission.DEFAULT_SESSION_DATA_EXPOSURE } =
+      options
+
+    let json: TResourcePoolJson = serializeJson(this, [
       '_id',
       'localKey',
       'resourceId',
       'initialAmount',
       'allowNegative',
-      'remainingAmount',
+      'excluded',
     ])
+
+    // If session data is requested to be exposed,
+    // include remaining amount in the JSON.
+    if (sessionDataExposure.expose !== 'none') {
+      json.remainingAmount = this.remainingAmount
+    }
+
+    return json
   }
 
   /**
@@ -152,6 +173,7 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
    * @param resource The {@link MissionResource} this pool will track.
    * @param initialAmount The starting amount of resources.
    * @param allowNegative Whether the pool can go below zero.
+   * @param excluded Whether this pool is excluded from the force.
    * @returns A new {@link ResourcePool} instance.
    */
   public static createNew<
@@ -161,6 +183,7 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
     resource: T['resource'],
     initialAmount: number = 0,
     allowNegative: boolean = false,
+    excluded: boolean = false,
   ): ResourcePool<T> {
     return new ResourcePool<T>(
       resource,
@@ -169,6 +192,7 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
       force.generatePoolKey(),
       initialAmount,
       allowNegative,
+      excluded,
       initialAmount,
     )
   }
@@ -195,6 +219,7 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
       StringToolbox.generateRandomId(),
       localKey,
       0,
+      false,
       false,
       0,
     )
@@ -249,6 +274,7 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
       data.localKey ?? force.generatePoolKey(),
       data.initialAmount,
       data.allowNegative,
+      data.excluded,
       data.remainingAmount ?? data.initialAmount,
     )
   }
@@ -265,6 +291,7 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
       localKey: '1',
       initialAmount: 0,
       allowNegative: false,
+      excluded: false,
     }
   }
 }
@@ -276,29 +303,36 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
  */
 export type TResourcePoolJson = {
   /**
-   * The unique identifier for this resource pool entry.
+   * @see {@link ResourcePool._id}
    */
   _id: string
   /**
-   * A key for the pool, used to identify it within the force.
+   * @see {@link ResourcePool.localKey}
    */
   localKey: string
   /**
-   * The ID of the {@link MissionResource} being stored within this pool.
+   * @see {@link ResourcePool.resourceId}
    */
   resourceId: string
   /**
-   * The amount of resources available at the start of the session.
+   * @see {@link ResourcePool.initialAmount}
    */
   initialAmount: number
   /**
-   * Whether the pool can go below zero.
+   * @see {@link ResourcePool.allowNegative}
    */
   allowNegative: boolean
   /**
-   * The current amount of resources remaining.
-   * @note This is a session-only value and is never persisted to the database.
-   * @default initialAmount
+   * @see {@link ResourcePool.excluded}
+   */
+  excluded: boolean
+  /**
+   * @see {@link ResourcePool.remainingAmount}
    */
   remainingAmount?: number
 }
+
+/**
+ * Options for serializing {@link ResourcePool} to JSON.
+ */
+export type TPoolJsonOptions = Pick<TForceJsonOptions, 'sessionDataExposure'>

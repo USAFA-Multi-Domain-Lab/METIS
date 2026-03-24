@@ -226,7 +226,7 @@ export default function ActionEntry({
       <Divider />
       {
         // todo: Move this into its own component.
-        resourceCosts.map((cost, index) => {
+        action.includedCosts.map((cost, index) => {
           let resource = node.force.mission.resources.find(
             (resource) => resource._id === cost.resourceId,
           )

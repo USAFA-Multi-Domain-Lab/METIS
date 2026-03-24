@@ -332,6 +332,7 @@ export const missionSchema = new MissionSchema(
                 resourceId: { type: String, required: true },
                 initialAmount: { type: Number, required: true },
                 allowNegative: { type: Boolean, required: true },
+                excluded: { type: Boolean, required: true },
               },
             ],
           },

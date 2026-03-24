@@ -8,6 +8,10 @@ METIS is a **real-time cybersecurity training platform** designed for military a
 
 **Key Capabilities**: Mission planning and execution, real-time collaboration, external system integration through plugins, hierarchical effects management, session-based training environments
 
+**General Instructions for Agents**
+
+- **Working With Classes** Always order class members as follows: instance properties, constructor, instance methods, static properties, static methods. Group getters and setters with their private properties, such as `private _name`, `get name()`, and `set name(value)`, without line gaps. All other members should have a one line gap.
+
 **Instructions Covering Specific Topics**
 
 - [MissionComponent guide](.github/instructions/MISSION-COMPONENT.instructions.md) — Use when creating or managing components of a mission, such as a mission, a node, force, resource, etc. Covers implementation of this abstract class and how it is used throughout the codebase.

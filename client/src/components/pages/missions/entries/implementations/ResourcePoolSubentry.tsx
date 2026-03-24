@@ -21,7 +21,8 @@ export default function ResourcePoolSubentry({
   const {
     initialAmount: [initialAmount, setInitialAmount],
     allowNegative: [allowNegative, setAllowNegative],
-  } = useObjectFormSync(pool, ['initialAmount', 'allowNegative'], {
+    excluded: [excluded, setExcluded],
+  } = useObjectFormSync(pool, ['initialAmount', 'allowNegative', 'excluded'], {
     onChange: () => onChange(pool),
   })
 
@@ -43,6 +44,13 @@ export default function ResourcePoolSubentry({
         value={allowNegative}
         setValue={setAllowNegative}
         tooltipDescription={`If enabled, the ${pool.name} resource pool can go below zero.`}
+        disabled={viewMode === 'preview'}
+      />
+      <DetailToggle
+        label={'Exclude from Force'}
+        value={excluded}
+        setValue={setExcluded}
+        tooltipDescription={`If enabled, the ${pool.name} resource pool will be hidden during sessions and its associated costs will not be applied or displayed.`}
         disabled={viewMode === 'preview'}
       />
     </div>

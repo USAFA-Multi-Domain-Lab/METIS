@@ -193,7 +193,7 @@ export default function SessionPage(
    * the selected force.
    */
   const syncResources = () => {
-    setResourcePools([...(selectedForce?.resourcePools ?? [])])
+    setResourcePools(selectedForce?.includedPools ?? [])
   }
 
   /**

@@ -41,6 +41,7 @@ const build: TMissionImportBuild = async (missionData) => {
         resourceId: resourceId,
         initialAmount: force.initialResources,
         allowNegative: force.allowNegativeResources,
+        excluded: false,
       },
     ]
     delete force.initialResources

@@ -255,12 +255,23 @@ export abstract class MissionAction<
    * configuration or any cheats that may be applied.
    */
   public get areEnoughResources(): boolean {
-    return this.resourceCosts.every((cost) => {
+    return this.includedCosts.every((cost) => {
       let pool = this.force.getPoolByResourceId(cost.resourceId)
       if (!pool) return true
       return (
         cost.amount <= Math.max(pool.remainingAmount, 0) || pool.allowNegative
       )
+    })
+  }
+
+  /**
+   * The subset of {@link resourceCosts} whose associated pool is not excluded
+   * from this action's force.
+   */
+  public get includedCosts(): T['resourceCost'][] {
+    return this.resourceCosts.filter((cost) => {
+      let pool = this.force.getPoolByResourceId(cost.resourceId)
+      return !pool?.excluded
     })
   }
 
@@ -615,7 +626,7 @@ export abstract class MissionAction<
 /**
  * Options for serializing a {@link MissionAction} to JSON.
  */
-export type TActionJsonOptions = Omit<TNodeJsonOptions, 'rootEffectsExposure'>
+export type TActionJsonOptions = Pick<TNodeJsonOptions, 'sessionDataExposure'>
 
 /**
  * Extracts the action type from a registry of

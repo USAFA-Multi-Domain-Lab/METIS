@@ -513,6 +513,14 @@ export class ServerMission extends Mission<TMetisServerComponents> {
     let results: TMissionValidationResults = {}
     let resourceIds: string[] = []
 
+    // Confirm the resource count does not exceed the maximum.
+    if (missionJson.resources.length > Mission.MAX_RESOURCE_TYPES) {
+      results.error = generateValidationError(
+        `Cannot have more than ${Mission.MAX_RESOURCE_TYPES} resource types in a mission.`,
+      )
+      return results
+    }
+
     // Confirm each resource has a valid icon and cache
     // all the IDs for checks further down.
     for (const resource of missionJson.resources) {
