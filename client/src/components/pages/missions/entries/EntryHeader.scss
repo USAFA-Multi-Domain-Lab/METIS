@@ -1,10 +1,17 @@
 @use '@client/assets/styles/config.scss' as *;
 
-.TimelineControlPanel {
+.EntryHeader {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
   position: sticky;
   z-index: 1;
   top: 0;
   transition: opacity 175ms;
   padding: 0 0 1.5em;
   background-color: $color-primary;
+
+  .EntryHeading {
+    font-size: 1.1em;
+  }
 }

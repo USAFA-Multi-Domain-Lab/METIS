@@ -92,18 +92,54 @@ export default function MissionEntry({
         key={`${mission._id}_name`}
       />
       <Divider />
-      <EntryHeader heading='Resources' engine={addResourceEngine} />
-      {resources.map((resource) => (
-        <Fragment key={`${mission._id}_resource_${resource._id}`}>
-          <ResourceSubentry
-            resource={resource}
-            mission={mission}
-            onClickDelete={onClickDelete}
-          />
-          <Divider key={`${mission._id}_divider_${resource._id}`} />
-        </Fragment>
-      ))}
+      <div className='Resources SubentryGroup'>
+        <EntryHeader heading='Resources' engine={addResourceEngine} />
+        {resources.map((resource) => (
+          <Fragment key={`${mission._id}_resource_${resource._id}`}>
+            <ResourceSubentry
+              resource={resource}
+              mission={mission}
+              onClickDelete={onClickDelete}
+            />
+            <Divider key={`${mission._id}_divider_${resource._id}`} />
+          </Fragment>
+        ))}
+      </div>
       <EffectTimeline<'sessionTriggeredEffect'> host={mission} />
+      {/* todo: Remove this. */}
+      {/* <Panel>
+        <PanelView title='General'>
+          <DetailString
+            fieldType='required'
+            handleOnBlur='repopulateValue'
+            label='Name'
+            value={name}
+            setValue={setName}
+            defaultValue={ClientMission.DEFAULT_PROPERTIES.name}
+            maxLength={ClientMission.MAX_NAME_LENGTH}
+            disabled={viewMode === 'preview'}
+            key={`${mission._id}_name`}
+          />
+        </PanelView>
+        <PanelView title='Resources'>
+          <div className='Resources SubentryGroup'>
+            <EntryHeader heading='Resources' engine={addResourceEngine} />
+            {resources.map((resource) => (
+              <Fragment key={`${mission._id}_resource_${resource._id}`}>
+                <ResourceSubentry
+                  resource={resource}
+                  mission={mission}
+                  onClickDelete={onClickDelete}
+                />
+                <Divider key={`${mission._id}_divider_${resource._id}`} />
+              </Fragment>
+            ))}
+          </div>
+        </PanelView>
+        <PanelView title='Effects'>
+          <EffectTimeline<'sessionTriggeredEffect'> host={mission} />
+        </PanelView>
+      </Panel> */}
     </Entry>
   )
 }

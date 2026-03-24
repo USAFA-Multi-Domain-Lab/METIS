@@ -55,14 +55,8 @@
     }
   }
 
-  .EntryHeader {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: center;
-
-    .EntryHeading {
-      font-size: 1.1em;
-    }
+  .SubentryGroup {
+    @include form-container();
   }
 
   .ResourceSubentry {
@@ -77,6 +71,25 @@
 
     .DetailIconSelector {
       grid-column: span 2;
+    }
+  }
+
+  .Panel {
+    border: 0;
+
+    .PanelTabBar {
+      margin-bottom: 2em;
+
+      &,
+      .PanelTab:not(.Selected) {
+        border: 0;
+      }
+
+      .PanelTab.Selected {
+        border-top: none;
+        border-left: none;
+        border-right: none;
+      }
     }
   }
 

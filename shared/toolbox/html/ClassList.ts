@@ -262,3 +262,18 @@ export class ClassList {
     return cls.match(/^[a-zA-Z0-9_-]+$/) !== null
   }
 }
+
+/* -- TYPES -- */
+
+/**
+ * Extend or join with `&` with your component's prop
+ * interface in order to support the quick addition of
+ * classes to the root element of your component.
+ */
+export type TAdditionalClassesSupport = {
+  /**
+   * A class list to combine with the default classes of the root
+   * element of the component.
+   */
+  additionalClasses?: ClassList
+}

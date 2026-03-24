@@ -1,8 +1,13 @@
 import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
 import type { ButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/engines'
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
-
-// ! Styling in Entry.scss.
+import {
+  ClassList,
+  type TAdditionalClassesSupport,
+} from '@shared/toolbox/html/ClassList'
+import type { TRootElementRefSupport } from '@shared/toolbox/html/elements'
+import React from 'react'
+import './EntryHeader.scss'
 
 /**
  * A shared header panel for mission entry sections, displaying a heading
@@ -11,9 +16,13 @@ import { useButtonSvgEngine } from '@client/components/content/user-controls/but
 export default function EntryHeader({
   heading,
   engine = useButtonSvgEngine({ elements: [] }),
+  additionalClasses = new ClassList(),
+  elementRef = React.createRef<HTMLDivElement>(),
 }: TEntryHeader_P): TReactElement {
+  let classList = new ClassList('EntryHeader').import(additionalClasses)
+
   return (
-    <div className='EntryHeader'>
+    <div className={classList.value} ref={elementRef}>
       <div className='EntryHeading'>{heading}</div>
       <ButtonSvgPanel engine={engine} />
     </div>
@@ -35,4 +44,5 @@ type TEntryHeader_P = {
    * If none is provided, an empty button panel will be displayed.
    */
   engine?: ButtonSvgEngine
-}
+} & TAdditionalClassesSupport &
+  TRootElementRefSupport
