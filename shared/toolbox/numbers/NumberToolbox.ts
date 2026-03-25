@@ -40,4 +40,31 @@ export class NumberToolbox {
   public static isBetween(num: number, min: number, max: number): boolean {
     return num >= min && num <= max
   }
+
+  /**
+   * @param value The integer to format.
+   * @returns A compact string representation of the integer, e.g. `1173` → `"1.1K"`, `-3234372` → `"-3.2M"`.
+   */
+  public static formatCompact(value: number): string {
+    const sign = value < 0 ? '-' : ''
+    const absolute = Math.abs(value)
+
+    const thresholds = [
+      { divisor: 1_000_000_000, suffix: 'B' },
+      { divisor: 1_000_000, suffix: 'M' },
+      { divisor: 1_000, suffix: 'K' },
+    ]
+
+    for (const threshold of thresholds) {
+      if (absolute >= threshold.divisor) {
+        const divided = absolute / threshold.divisor
+        const decimals = divided >= 100 ? 0 : 1
+        const truncated = Math.floor(divided * 10 ** decimals) / 10 ** decimals
+        const displayDecimals = truncated % 1 === 0 ? 0 : decimals
+        return `${sign}${truncated.toFixed(displayDecimals)}${threshold.suffix}`
+      }
+    }
+
+    return `${sign}${absolute}`
+  }
 }

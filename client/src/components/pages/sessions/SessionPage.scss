@@ -32,63 +32,46 @@
     $content-row-1-height: 53px;
 
     display: grid;
-    grid-template-rows: $content-row-1-height auto;
+    grid-template-rows: auto 1fr;
     width: $content-width;
     height: $page-row-2-height;
     padding: $content-vertical-padding $content-horizontal-padding;
 
     .SessionTopBar {
       box-sizing: border-box;
-      display: grid;
-      grid-template-columns: 1fr auto auto;
+      display: flex;
       column-gap: 1em;
-      padding: 0.65em 0 0;
+      min-width: 44em;
+      padding: 0.65em 0 1em;
       font-size: 0.8em;
 
       .Title,
       .PropertyBadges,
       .StatusBar {
         margin-top: 0.6em;
-        height: 2.25em;
       }
 
       .Title {
+        cursor: help;
+        flex-grow: 1;
+        overflow: hidden;
+        min-width: 13em;
         line-height: 1.6em;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .Title .SessionName {
-        opacity: 0.7;
+        color: rgba($color-primary-light, 0.7);
       }
 
-      .Resources {
-        box-sizing: border-box;
-        align-items: center;
-        cursor: default;
-        margin-right: auto;
-        height: 40px;
-        padding: 10px 0 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+      .PropertyBadges {
+        min-width: 250px;
+      }
 
-        // todo: Does red alert still work?
-        &.RedAlert {
-          color: $color-failure;
-        }
-
-        .Count {
-          opacity: 0.7;
-
-          &.Infinite {
-            position: relative;
-            top: 0.05em;
-            font-size: 1.25rem;
-            line-height: 0;
-          }
-
-          &.Finite {
-          }
-        }
+      .StatusBar {
+        flex-grow: 0;
+        flex-shrink: 0;
       }
     }
 

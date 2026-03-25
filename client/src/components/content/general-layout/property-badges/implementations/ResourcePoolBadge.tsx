@@ -1,5 +1,6 @@
 import PropertyBadge from '@client/components/content/general-layout/property-badges/PropertyBadge'
 import type { ResourcePool } from '@shared/missions/forces/ResourcePool'
+import { NumberToolbox } from '@shared/toolbox/numbers/NumberToolbox'
 
 // ! No styles
 
@@ -14,7 +15,8 @@ export default function ResourcePoolBadge({
 }: TResourcePoolBadge_P): TReactElement | null {
   // Prepare display properties.
   let remaining = pool.remainingAmount ?? pool.initialAmount
-  let value = remaining.toString()
+  let value = NumberToolbox.formatCompact(remaining)
+  let description = `**${pool.name}:** *${remaining.toLocaleString('en-US')}*`
   // Update value to infinity symbol if resources
   // are configured to be infinite.
   if (infiniteResources) {
@@ -27,7 +29,7 @@ export default function ResourcePoolBadge({
         key={pool._id}
         icon={pool.icon}
         value={value}
-        description={pool.name}
+        description={description}
       />
     </div>
   )
