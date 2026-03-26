@@ -112,7 +112,7 @@ export class ActionResourceCost<
     if (pool.resourceId !== this.resourceId) {
       throw new Error('Resource ID mismatch.')
     }
-    pool.remainingAmount -= this.amount
+    pool.balance -= this.amount
   }
 
   /**

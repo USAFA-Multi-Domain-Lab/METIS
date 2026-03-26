@@ -330,7 +330,7 @@ export const missionSchema = new MissionSchema(
                   required: true,
                 },
                 resourceId: { type: String, required: true },
-                initialAmount: { type: Number, required: true },
+                initialBalance: { type: Number, required: true },
                 allowNegative: { type: Boolean, required: true },
                 excluded: { type: Boolean, required: true },
               },

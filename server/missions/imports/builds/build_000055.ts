@@ -9,7 +9,7 @@ import type { TMissionImportBuild } from '../MissionImport'
 //
 // Force level:
 //   initialResources (number) + allowNegativeResources (boolean)
-//     → resourcePools ([{ _id, resourceId, initialAmount, allowNegative }])
+//     → resourcePools ([{ _id, resourceId, initialBalance, allowNegative }])
 //
 // Action level:
 //   resourceCost (number) + resourceCostHidden (boolean)
@@ -39,7 +39,7 @@ const build: TMissionImportBuild = async (missionData) => {
         _id: StringToolbox.generateRandomId(),
         localKey: '1',
         resourceId: resourceId,
-        initialAmount: force.initialResources,
+        initialBalance: force.initialResources,
         allowNegative: force.allowNegativeResources,
         excluded: false,
       },

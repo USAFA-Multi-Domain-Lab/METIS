@@ -6,7 +6,7 @@
 //
 // Force level (nested in missions.forces[]):
 //   initialResources (Number) + allowNegativeResources (Boolean)
-//     → resourcePools ([{ _id, resourceId, initialAmount, allowNegative }])
+//     → resourcePools ([{ _id, resourceId, initialBalance, allowNegative }])
 //       where resourceId references the _id generated for the mission resource.
 //
 // Action level (nested in missions.forces[].nodes[].actions[]):
@@ -50,7 +50,7 @@ while (cursorMissions.hasNext()) {
         _id: generateHash(),
         localKey: '1',
         resourceId: resourceId,
-        initialAmount: force.initialResources,
+        initialBalance: force.initialResources,
         allowNegative: force.allowNegativeResources,
         excluded: false,
       },

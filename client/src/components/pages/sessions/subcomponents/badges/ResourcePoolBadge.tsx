@@ -18,7 +18,7 @@ export default function ResourcePoolBadge({
   useSessionPageContext() // Only use on the session page.
 
   // Prepare display properties.
-  let remaining = pool.remainingAmount ?? pool.initialAmount
+  let remaining = pool.balance ?? pool.initialBalance
   let value = compactFormattingEnabled
     ? NumberToolbox.formatCompact(remaining)
     : remaining.toLocaleString('en-US')

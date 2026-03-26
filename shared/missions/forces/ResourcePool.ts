@@ -69,7 +69,7 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
   /**
    * The amount of resources available at the start of a session.
    */
-  public initialAmount: number
+  public initialBalance: number
 
   /**
    * Whether the pool is permitted to go below zero.
@@ -84,11 +84,11 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
   public excluded: boolean
 
   /**
-   * The current amount of resources remaining in this pool.
-   * Initialized from {@link TResourcePoolJson.remainingAmount} if present,
-   * otherwise defaults to {@link initialAmount}.
+   * The current amount of resources stored in this pool.
+   * Initialized from {@link TResourcePoolJson.balance} if present,
+   * otherwise defaults to {@link initialBalance}.
    */
-  public remainingAmount: number
+  public balance: number
 
   /**
    * The icon derived from the {@link resource} tracked
@@ -108,29 +108,29 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
    * @param force The force that owns this resource pool.
    * @param _id The unique identifier for this resource pool entry.
    * @param localKey The key used to identify this pool within the force.
-   * @param initialAmount The starting amount of resources.
+   * @param initialBalance The starting amount of resources.
    * @param allowNegative Whether the pool can go below zero.
    * @param excluded Whether this pool is excluded from the force.
-   * @param remainingAmount The current amount of resources remaining.
+   * @param balance The current amount of resources remaining.
    */
   private constructor(
     resource: T['resource'],
     force: TForce<T>,
     _id: string,
     localKey: string,
-    initialAmount: number,
+    initialBalance: number,
     allowNegative: boolean,
     excluded: boolean,
-    remainingAmount: number,
+    balance: number,
   ) {
     super(_id, '', false)
     this.resource = resource
     this.force = force
     this.localKey = localKey
-    this.initialAmount = initialAmount
+    this.initialBalance = initialBalance
     this.allowNegative = allowNegative
     this.excluded = excluded
-    this.remainingAmount = remainingAmount
+    this.balance = balance
   }
 
   // Implemented
@@ -142,7 +142,7 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
       '_id',
       'localKey',
       'resourceId',
-      'initialAmount',
+      'initialBalance',
       'allowNegative',
       'excluded',
     ])
@@ -150,7 +150,7 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
     // If session data is requested to be exposed,
     // include remaining amount in the JSON.
     if (sessionDataExposure.expose !== 'none') {
-      json.remainingAmount = this.remainingAmount
+      json.balance = this.balance
     }
 
     return json
@@ -163,7 +163,7 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
    * @param operand The value to apply to the pool's remaining amount.
    */
   public onModify(operand: number): void {
-    this.remainingAmount += operand
+    this.balance += operand
     this.force.onModifyPool(this)
   }
 
@@ -171,7 +171,7 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
    * Creates a new {@link ResourcePool} with generated identifiers.
    * @param force The force that owns this resource pool.
    * @param resource The {@link MissionResource} this pool will track.
-   * @param initialAmount The starting amount of resources.
+   * @param initialBalance The starting amount of resources.
    * @param allowNegative Whether the pool can go below zero.
    * @param excluded Whether this pool is excluded from the force.
    * @returns A new {@link ResourcePool} instance.
@@ -181,19 +181,19 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
   >(
     force: TForce<T>,
     resource: T['resource'],
-    initialAmount: number = 0,
-    allowNegative: boolean = false,
-    excluded: boolean = false,
+    initialBalance: number = ResourcePool.DEFAULT_PROPERTIES.initialBalance,
+    allowNegative: boolean = ResourcePool.DEFAULT_PROPERTIES.allowNegative,
+    excluded: boolean = ResourcePool.DEFAULT_PROPERTIES.excluded,
   ): ResourcePool<T> {
     return new ResourcePool<T>(
       resource,
       force,
       StringToolbox.generateRandomId(),
       force.generatePoolKey(),
-      initialAmount,
+      initialBalance,
       allowNegative,
       excluded,
-      initialAmount,
+      initialBalance,
     )
   }
 
@@ -218,10 +218,10 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
       force,
       StringToolbox.generateRandomId(),
       localKey,
-      0,
-      false,
-      false,
-      0,
+      ResourcePool.DEFAULT_PROPERTIES.initialBalance,
+      ResourcePool.DEFAULT_PROPERTIES.allowNegative,
+      ResourcePool.DEFAULT_PROPERTIES.excluded,
+      ResourcePool.DEFAULT_PROPERTIES.initialBalance,
     )
   }
 
@@ -272,10 +272,10 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
       force,
       data._id,
       data.localKey ?? force.generatePoolKey(),
-      data.initialAmount,
+      data.initialBalance,
       data.allowNegative,
       data.excluded,
-      data.remainingAmount ?? data.initialAmount,
+      data.balance ?? data.initialBalance,
     )
   }
 
@@ -289,7 +289,7 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
     return {
       _id: StringToolbox.generateRandomId(),
       localKey: '1',
-      initialAmount: 0,
+      initialBalance: 0,
       allowNegative: false,
       excluded: false,
     }
@@ -315,9 +315,9 @@ export type TResourcePoolJson = {
    */
   resourceId: string
   /**
-   * @see {@link ResourcePool.initialAmount}
+   * @see {@link ResourcePool.initialBalance}
    */
-  initialAmount: number
+  initialBalance: number
   /**
    * @see {@link ResourcePool.allowNegative}
    */
@@ -327,9 +327,9 @@ export type TResourcePoolJson = {
    */
   excluded: boolean
   /**
-   * @see {@link ResourcePool.remainingAmount}
+   * @see {@link ResourcePool.balance}
    */
-  remainingAmount?: number
+  balance?: number
 }
 
 /**

@@ -1465,8 +1465,8 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     // Update the resource pools for the force.
     for (let updatedPool of resourcePools) {
       let pool = action.force.getPoolByResourceId(updatedPool.resourceId)
-      if (pool && updatedPool.remainingAmount !== undefined) {
-        pool.remainingAmount = updatedPool.remainingAmount
+      if (pool && updatedPool.balance !== undefined) {
+        pool.balance = updatedPool.balance
       }
     }
     action.force.emitEvent('modify-forces')

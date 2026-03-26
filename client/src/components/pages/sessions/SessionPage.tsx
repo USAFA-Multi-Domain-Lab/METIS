@@ -496,9 +496,7 @@ export default function SessionPage(
     // todo: RedAlert should be per resource pool, not the entire resources element.
     if (
       !session.config.infiniteResources &&
-      resourcePools.some(
-        (pool) => (pool.remainingAmount ?? pool.initialAmount) <= 0,
-      )
+      resourcePools.some((pool) => (pool.balance ?? pool.initialBalance) <= 0)
     ) {
       resourcesClassList.push('RedAlert')
     }

@@ -258,9 +258,7 @@ export abstract class MissionAction<
     return this.includedCosts.every((cost) => {
       let pool = this.force.getPoolByResourceId(cost.resourceId)
       if (!pool) return true
-      return (
-        cost.amount <= Math.max(pool.remainingAmount, 0) || pool.allowNegative
-      )
+      return cost.amount <= Math.max(pool.balance, 0) || pool.allowNegative
     })
   }
 

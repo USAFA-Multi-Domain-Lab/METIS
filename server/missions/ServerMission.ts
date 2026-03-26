@@ -227,7 +227,7 @@ export class ServerMission extends Mission<TMetisServerComponents> {
       let poolIds: string[] = []
       for (const instance of force.resourcePools) {
         const nonNegativeInteger = NumberToolbox.isNonNegativeInteger(
-          instance.initialAmount,
+          instance.initialBalance,
         )
         if (!nonNegativeInteger) {
           throw generateValidationError(

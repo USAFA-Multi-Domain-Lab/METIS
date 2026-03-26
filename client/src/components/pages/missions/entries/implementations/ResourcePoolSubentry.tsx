@@ -19,10 +19,10 @@ export default function ResourcePoolSubentry({
 
   const { onChange, viewMode } = useMissionPageContext()
   const {
-    initialAmount: [initialAmount, setInitialAmount],
+    initialBalance: [initialBalance, setInitialBalance],
     allowNegative: [allowNegative, setAllowNegative],
     excluded: [excluded, setExcluded],
-  } = useObjectFormSync(pool, ['initialAmount', 'allowNegative', 'excluded'], {
+  } = useObjectFormSync(pool, ['initialBalance', 'allowNegative', 'excluded'], {
     onChange: () => onChange(pool),
   })
 
@@ -34,8 +34,8 @@ export default function ResourcePoolSubentry({
       <DetailNumber
         fieldType='required'
         label={'Initial Amount'}
-        value={initialAmount}
-        setValue={setInitialAmount}
+        value={initialBalance}
+        setValue={setInitialBalance}
         integersOnly={true}
         disabled={viewMode === 'preview'}
       />
