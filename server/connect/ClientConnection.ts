@@ -464,7 +464,7 @@ export class ClientConnection {
 
 /* -- TYPES -- */
 
-type TClientHandler<TMethod extends TClientMethod> = (
+export type TClientHandler<TMethod extends TClientMethod> = (
   data: TClientEvents[TMethod],
 ) => void
 

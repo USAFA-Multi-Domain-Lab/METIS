@@ -1,10 +1,9 @@
 import Tooltip from '@client/components/content/communication/Tooltip'
-import PropertyBadges from '@client/components/content/general-layout/property-badges/PropertyBadges'
 import StatusBar from '@client/components/content/session/StatusBar'
 import { compute } from '@client/toolbox'
-import ResourcePoolBadge from '../../../content/general-layout/property-badges/implementations/ResourcePoolBadge'
 import SessionPage from '../SessionPage'
 import { useSessionPageContext } from '../context'
+import ResourcePoolBadgeRow from './badges/ResourcePoolBadgeRow'
 
 // ! Styles rendered in SessionPage.scss
 
@@ -13,8 +12,13 @@ import { useSessionPageContext } from '../context'
  * displays general details about the session.
  */
 export default function SessionTopBar({}: TSessionTopBar_P): TReactElement | null {
+  /* -- STATE -- */
+
   const { session, state } = useSessionPageContext()
   const [resourcePools] = state.resourcePools
+
+  /* -- COMPUTED -- */
+
   let titleTooltipDescription = compute<string>(() => {
     return (
       `###### Session:\n` +
@@ -25,23 +29,25 @@ export default function SessionTopBar({}: TSessionTopBar_P): TReactElement | nul
       `${session.mission.name}`
     )
   })
+  let rowCount = Math.ceil(resourcePools.length / 4)
+
+  /* -- RENDER -- */
 
   return (
     <div className='SessionTopBar'>
+      <StatusBar />
       <div className='Title'>
         Session: <span className='SessionName'>{session.name} </span>
         <Tooltip description={titleTooltipDescription} />
       </div>
-      <PropertyBadges>
-        {resourcePools.map((pool) => (
-          <ResourcePoolBadge
-            key={pool._id}
-            pool={pool}
-            infiniteResources={session.config.infiniteResources}
+      <div className='Resources'>
+        {new Array(rowCount).fill(0).map((_, index) => (
+          <ResourcePoolBadgeRow
+            key={`pool-badge-row_${index}`}
+            rowNumber={index + 1}
           />
         ))}
-      </PropertyBadges>
-      <StatusBar />
+      </div>
     </div>
   )
 }

@@ -1,3 +1,6 @@
+import type { TAdditionalClassesSupport } from '@shared/toolbox/html/ClassList'
+import { ClassList } from '@shared/toolbox/html/ClassList'
+import type { TRootElementRefSupport } from '@shared/toolbox/html/elements'
 import './PropertyBadges.scss'
 
 /**
@@ -12,9 +15,17 @@ import './PropertyBadges.scss'
  */
 export default function PropertyBadges({
   children,
+  elementRef,
+  additionalClasses = new ClassList(),
 }: TPropertyBadges_P): TReactElement | null {
+  let rootClasses = new ClassList('PropertyBadges').import(additionalClasses)
+
   /* -- RENDER -- */
-  return <div className='PropertyBadges'>{children}</div>
+  return (
+    <div className={rootClasses.value} ref={elementRef}>
+      {children}
+    </div>
+  )
 }
 
 /* -- TYPES -- */
@@ -30,4 +41,5 @@ export type TPropertyBadges_P = {
    * component instances.
    */
   children?: React.ReactNode
-}
+} & TRootElementRefSupport &
+  TAdditionalClassesSupport

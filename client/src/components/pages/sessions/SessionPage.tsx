@@ -3,6 +3,7 @@ import {
   useNavigationMiddleware,
 } from '@client/context/global'
 import { LocalContextProvider } from '@client/context/local'
+import type { TMetisClientComponents } from '@client/index'
 import type { ClientMissionFile } from '@client/missions/files/ClientMissionFile'
 import type { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
 import type { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
@@ -66,7 +67,7 @@ export default function SessionPage(
 
   const globalContext = useGlobalContext()
   const state: TSessionPage_S = {
-    resourcePools: useState<ResourcePool[]>([]),
+    resourcePools: useState<ResourcePool<TMetisClientComponents>[]>([]),
   }
   const [server] = globalContext.server
   const {
@@ -819,7 +820,7 @@ export type TSessionPage_S = {
    * Synchronized list of resource pools retrieved from the
    * session state and updates when relevant events occur.
    */
-  resourcePools: TReactState<ResourcePool[]>
+  resourcePools: TReactState<ResourcePool<TMetisClientComponents>[]>
 }
 
 /**

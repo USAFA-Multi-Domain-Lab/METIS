@@ -6,7 +6,6 @@ import {
   type TAdditionalClassesSupport,
 } from '@shared/toolbox/html/ClassList'
 import type { TRootElementRefSupport } from '@shared/toolbox/html/elements'
-import React from 'react'
 import './EntryHeader.scss'
 
 /**
@@ -17,7 +16,7 @@ export default function EntryHeader({
   heading,
   engine = useButtonSvgEngine({ elements: [] }),
   additionalClasses = new ClassList(),
-  elementRef = React.createRef<HTMLDivElement>(),
+  elementRef,
 }: TEntryHeader_P): TReactElement {
   let classList = new ClassList('EntryHeader').import(additionalClasses)
 

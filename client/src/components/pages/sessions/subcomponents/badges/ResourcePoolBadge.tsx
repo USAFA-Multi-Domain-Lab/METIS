@@ -1,6 +1,7 @@
 import PropertyBadge from '@client/components/content/general-layout/property-badges/PropertyBadge'
 import type { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import { NumberToolbox } from '@shared/toolbox/numbers/NumberToolbox'
+import { useSessionPageContext } from '../../context'
 
 // ! No styles
 
@@ -12,10 +13,15 @@ import { NumberToolbox } from '@shared/toolbox/numbers/NumberToolbox'
 export default function ResourcePoolBadge({
   pool,
   infiniteResources = false,
+  compactFormattingEnabled = false,
 }: TResourcePoolBadge_P): TReactElement | null {
+  useSessionPageContext() // Only use on the session page.
+
   // Prepare display properties.
   let remaining = pool.remainingAmount ?? pool.initialAmount
-  let value = NumberToolbox.formatCompact(remaining)
+  let value = compactFormattingEnabled
+    ? NumberToolbox.formatCompact(remaining)
+    : remaining.toLocaleString('en-US')
   let description = `**${pool.name}:** *${remaining.toLocaleString('en-US')}*`
   // Update value to infinity symbol if resources
   // are configured to be infinite.
@@ -24,7 +30,7 @@ export default function ResourcePoolBadge({
   }
 
   return (
-    <div className='ResourceBadge'>
+    <div className='ResourcePoolBadge'>
       <PropertyBadge
         key={pool._id}
         icon={pool.icon}
@@ -53,4 +59,10 @@ export type TResourcePoolBadge_P = {
    * @default false
    */
   infiniteResources?: boolean
+  /**
+   * Whether the badge should be rendered in a compact form,
+   * which uses a shorter number format for the remaining amount.
+   * @default false
+   */
+  compactFormattingEnabled?: boolean
 }

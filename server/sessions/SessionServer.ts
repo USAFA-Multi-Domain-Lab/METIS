@@ -116,6 +116,32 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    */
   private effectHistory: Promise<void>[]
 
+  /**
+   * This is a registry, not of active listeners, but the
+   * methods and corresponding handlers for all listeners
+   * that should be added and removed via the {@link addListeners}
+   * and {@link removeListeners} methods. This helps ensure
+   * there is no mismatch in adding and removing listeners,
+   * such as adding a listener and forgetting to remove it,
+   * or vice versa.
+   */
+  private get listenerInputRegistry() {
+    return [
+      ['request-start-session', this.onRequestStart],
+      ['request-end-session', this.onRequestEnd],
+      ['request-reset-session', this.onRequestReset],
+      ['request-config-update', this.onRequestConfigUpdate],
+      ['request-kick', this.onRequestKick],
+      ['request-ban', this.onRequestBan],
+      ['request-assign-force', this.onRequestAssignForce],
+      ['request-assign-role', this.onRequestAssignRole],
+      ['request-open-node', this.onRequestOpenNode],
+      ['request-execute-action', this.onRequestExecuteAction],
+      ['request-send-output', this.onRequestSendOutput],
+      ['request-acknowledge-node-alert', this.onRequestAcknowledgeNodeAlert],
+    ] as const
+  }
+
   public constructor(
     _id: string,
     name: string,
@@ -711,69 +737,24 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     })
   }
 
-  // todo: There should be a strict requirement with this method
-  // todo: for session-specific event listeners to be added.
   /**
    * Creates session-specific listeners for the given member.
    */
   private addListeners(member: ServerSessionMember): void {
-    let { connection } = member
-
-    connection.addEventListener('request-start-session', (data) =>
-      this.onRequestStart(member, data),
-    )
-    connection.addEventListener('request-end-session', (data) =>
-      this.onRequestEnd(member, data),
-    )
-    connection.addEventListener('request-reset-session', (data) =>
-      this.onRequestReset(member, data),
-    )
-    connection.addEventListener('request-config-update', (data) =>
-      this.onRequestConfigUpdate(member, data),
-    )
-    connection.addEventListener('request-kick', (data) =>
-      this.onRequestKick(member, data),
-    )
-    connection.addEventListener('request-ban', (data) =>
-      this.onRequestBan(member, data),
-    )
-    connection.addEventListener('request-assign-force', (data) =>
-      this.onRequestAssignForce(member, data),
-    )
-    connection.addEventListener('request-assign-role', (data) =>
-      this.onRequestAssignRole(member, data),
-    )
-    connection.addEventListener('request-open-node', (data) =>
-      this.onRequestOpenNode(member, data),
-    )
-    connection.addEventListener('request-execute-action', (data) =>
-      this.onRequestExecuteAction(member, data),
-    )
-    connection.addEventListener('request-send-output', (data) =>
-      this.onRequestSendOutput(member, data),
-    )
-    connection.addEventListener('request-acknowledge-node-alert', (data) =>
-      this.onRequestAcknowledgeNodeAlert(member, data),
-    )
+    this.listenerInputRegistry.forEach(([method, handler]) => {
+      member.connection.addEventListener(method, (event: any) =>
+        handler(member, event),
+      )
+    })
   }
 
   /**
    * Removes session-specific listeners for the given participant.
    */
   private removeListeners(member: ServerSessionMember): void {
-    member.connection.clearEventListeners([
-      'request-start-session',
-      'request-end-session',
-      'request-reset-session',
-      'request-config-update',
-      'request-kick',
-      'request-ban',
-      'request-assign-force',
-      'request-assign-role',
-      'request-open-node',
-      'request-execute-action',
-      'request-send-output',
-    ])
+    member.connection.clearEventListeners(
+      this.listenerInputRegistry.map(([method]) => method),
+    )
   }
 
   /**
@@ -923,7 +904,6 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     let fulfilledRequest = this.buildFullfilledRequest(member, event)
 
     if (this._state !== requiredState) {
-      console.log(this._state, requiredState)
       let error = new ServerEmittedError(
         ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
         { request: fulfilledRequest },

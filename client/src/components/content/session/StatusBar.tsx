@@ -119,12 +119,12 @@ export default function StatusBar({}: TStatusBar_P): TReactElement | null {
   // Render root element.
   return (
     <div className={statusBarClasses.join(' ')}>
-      <div className='Message'>
+      {/* <div className='Message'>
         {statusMessage}{' '}
         <span className={overflowCountClasses.join(' ')}>
           {`(${overflowStatusMessages.length})`}
         </span>
-      </div>
+      </div> */}
       <div className='Indicator'></div>
       <div className={overflowClasses.join(' ')}>
         <div className='OverflowContent'>

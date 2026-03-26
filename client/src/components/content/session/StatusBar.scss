@@ -14,12 +14,13 @@
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 0.5em;
+  padding-top: 0.3em;
 
   // Non-overflow messages only.
   & > .Message,
   .Indicator {
-    height: 20px;
-    line-height: 20px;
+    height: 1em;
+    line-height: 1em;
   }
 
   // Non-overflow messages only.
@@ -29,13 +30,13 @@
 
   .Indicator {
     box-sizing: border-box;
-    width: 20px;
+    width: 1em;
   }
 
   .Overflow {
     display: flex;
-    justify-content: flex-end;
-    justify-self: flex-end;
+    justify-content: flex-start;
+    justify-self: flex-start;
     grid-column: 1 / 3;
     position: absolute;
     z-index: $z-index-tooltips;
