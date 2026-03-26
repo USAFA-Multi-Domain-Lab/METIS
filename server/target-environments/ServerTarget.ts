@@ -79,8 +79,8 @@ export class ServerTarget extends Target<TMetisServerComponents> {
   public migrateEffectArgs(
     version: string,
     effectArgs: TAnyObject,
-  ): TAnyObject {
-    return this.migrationRegistry.migrate(version, effectArgs)
+  ): void {
+    this.migrationRegistry.migrate(version, effectArgs)
   }
 
   /**

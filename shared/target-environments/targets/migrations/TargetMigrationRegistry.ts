@@ -1,4 +1,3 @@
-import type { TAnyObject } from '../../../toolbox/objects/ObjectToolbox'
 import { TargetMigration } from './TargetMigration'
 
 /**
@@ -31,30 +30,26 @@ export class TargetMigrationRegistry {
    */
   public register(
     version: string,
-    script: (effectArgs: Record<any, any>) => Record<any, any>,
+    script: (effectArgs: Record<any, any>) => void,
   ): TargetMigrationRegistry {
     this.migrations[version] = new TargetMigration(version, script)
     return this
   }
 
   /**
-   * Migrates the given effect arguments to the
-   * given version.
+   * Migrates the given effect arguments to the given version
+   * by mutating them in place.
    * @param version The version to which the effect
    * arguments should be migrated.
-   * @param effectArgs The effect arguments to migrate.
-   * @returns The migrated effect arguments.
+   * @param effectArgs The effect arguments to migrate via mutation.
    */
-  public migrate(version: string, effectArgs: Record<any, any>): TAnyObject {
-    const migration = this.migrations[version]
+  public migrate(version: string, effectArgs: Record<any, any>): void {
+    const migration: TargetMigration | undefined = this.migrations[version]
 
-    // If no migration is found for the given version,
-    // return the effect arguments as is.
-    if (!migration) {
+    if (migration) {
+      migration.script(effectArgs)
+    } else {
       console.warn(`No migration found for version "${version}".`)
-      return effectArgs
     }
-
-    return migration.script(effectArgs)
   }
 }

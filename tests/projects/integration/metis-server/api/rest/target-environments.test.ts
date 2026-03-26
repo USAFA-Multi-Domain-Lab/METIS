@@ -110,7 +110,7 @@ describe('/api/v1/target-environments', () => {
     )
     expect(invalid.status).toBe(400)
 
-    let missing = await client.post(
+    let missingTarget = await client.post(
       '/api/v1/target-environments/migrate/effect-args',
       {
         targetId: 'missing-target',
@@ -119,7 +119,18 @@ describe('/api/v1/target-environments', () => {
         effectArgs: {},
       },
     )
-    expect(missing.status).toBe(404)
+    expect(missingTarget.status).toBe(404)
+
+    let missingEnvironment = await client.post(
+      '/api/v1/target-environments/migrate/effect-args',
+      {
+        targetId: 'delay',
+        environmentId: 'missing-environment',
+        effectEnvVersion: '0.2.1',
+        effectArgs: {},
+      },
+    )
+    expect(missingEnvironment.status).toBe(404)
   })
 
   afterAll(async () => {

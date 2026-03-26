@@ -16,11 +16,10 @@ export class TargetMigration {
     public readonly version: string,
     /**
      * The script used to migrate the effect args
-     * to the given version.
-     * @param effectArgs The non-migrated effect arguments.
-     * @returns The migrated effect arguments.
+     * to the given version by mutating them in place.
+     * @param effectArgs The effect arguments to migrate via mutation.
      */
-    public readonly script: (effectArgs: TAnyObject) => TAnyObject,
+    public readonly script: (effectArgs: TAnyObject) => void,
   ) {
     if (!VersionToolbox.isValidVersion(version)) {
       throw new Error(

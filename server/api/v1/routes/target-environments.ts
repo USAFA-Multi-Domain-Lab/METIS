@@ -22,6 +22,14 @@ export const routerMap: TMetisRouterMap = (
     getTargetEnvironments,
   )
 
+  // One may ask why this route has 'environments_read'
+  // permission instead of 'environments_write' since it
+  // is performing a migration. The reason is because no
+  // actual changes are made on the server via this route.
+  // Rather it takes already known information and transforms
+  // it based on a registered target-environment script. In this
+  // sense, whether the user can see target-environment data is
+  // really the only relevant concern here.
   router.post(
     '/migrate/effect-args',
     auth({ permissions: ['environments_read'] }),
