@@ -1,4 +1,4 @@
-import { DetailDropdown } from '@client/components/content/form/dropdown/DetailDropdown'
+import { DetailDropdown } from '@client/components/content/form/dropdowns/standard/DetailDropdown'
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
 import { useMissionPageContext } from '@client/components/pages/missions/context'
 import useActionItemButtonCallbacks from '@client/components/pages/missions/hooks/mission-components/actions'
@@ -6,8 +6,9 @@ import { ClientMissionAction } from '@client/missions/actions/ClientMissionActio
 import { compute } from '@client/toolbox'
 import { useObjectFormSync, usePostInitEffect } from '@client/toolbox/hooks'
 import type { TActionType } from '@shared/missions/actions/MissionAction'
+import { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSerializableArray'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { DetailLargeString } from '../../../../content/form/DetailLargeString'
 import { DetailNumber } from '../../../../content/form/DetailNumber'
 import { DetailString } from '../../../../content/form/DetailString'
@@ -38,8 +39,7 @@ export default function ActionEntry({
       'type',
       'successChanceHidden',
       'processTimeHidden',
-      'resourceCost',
-      'resourceCostHidden',
+      'resourceCosts',
       'opensNode',
       'opensNodeHidden',
     ],
@@ -54,8 +54,7 @@ export default function ActionEntry({
   const [successChanceHidden, hideSuccessChance] =
     actionState.successChanceHidden
   const [processTimeHidden, hideProcessTime] = actionState.processTimeHidden
-  const [resourceCost, setResourceCost] = actionState.resourceCost
-  const [resourceCostHidden, hideResourceCost] = actionState.resourceCostHidden
+  const [resourceCosts, setResourceCosts] = actionState.resourceCosts
   const [opensNode, setOpensNode] = actionState.opensNode
   const [opensNodeHidden, hideOpensNode] = actionState.opensNodeHidden
   const [hours, setHours] = useState<number>(action.processTimeHours)
@@ -225,25 +224,46 @@ export default function ActionEntry({
         key={`${action._id}_processTimeHidden`}
       />
       <Divider />
-      <DetailNumber
-        fieldType='required'
-        label='Resource Cost'
-        value={resourceCost}
-        setValue={setResourceCost}
-        minimum={ClientMissionAction.RESOURCE_COST_MIN}
-        integersOnly={true}
-        disabled={viewMode === 'preview'}
-        key={`${action._id}_resourceCost`}
-      />
-      <DetailToggle
-        fieldType='required'
-        label='Hide'
-        tooltipDescription='If enabled, the resource cost will be hidden from the executor.'
-        value={resourceCostHidden}
-        setValue={hideResourceCost}
-        disabled={viewMode === 'preview'}
-        key={`${action._id}_resourceCostHidden`}
-      />
+      {
+        // todo: Move this into its own component.
+        action.includedCosts.map((cost, index) => {
+          let resource = node.force.mission.resources.find(
+            (resource) => resource._id === cost.resourceId,
+          )
+          let label = resource?.name ?? 'Resources'
+          return (
+            <Fragment key={cost._id}>
+              <DetailNumber
+                fieldType='required'
+                label={`${label} Cost`}
+                value={cost.baseAmount}
+                setValue={(value) => {
+                  // todo: Move this into new subentry.
+                  cost.baseAmount =
+                    typeof value === 'function' ? value(cost.baseAmount) : value
+                  setResourceCosts(new JsonSerializableArray(...resourceCosts))
+                }}
+                minimum={ClientMissionAction.RESOURCE_COST_MIN}
+                integersOnly={true}
+                disabled={viewMode === 'preview'}
+              />
+              <DetailToggle
+                fieldType='required'
+                label='Hide'
+                tooltipDescription={`If enabled, the ${label} resource cost will be hidden from the executor.`}
+                value={cost.hidden}
+                setValue={(arg) => {
+                  // todo: Move this into new subentry.
+                  cost.hidden =
+                    typeof arg === 'function' ? arg(cost.hidden) : arg
+                  setResourceCosts(new JsonSerializableArray(...resourceCosts))
+                }}
+                disabled={viewMode === 'preview'}
+              />
+            </Fragment>
+          )
+        })
+      }
       <Divider />
       <DetailToggle
         fieldType='required'

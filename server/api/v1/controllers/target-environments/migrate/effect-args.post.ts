@@ -1,5 +1,4 @@
 import { ServerTargetEnvironment } from '@server/target-environments/ServerTargetEnvironment'
-import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
 import { ApiResponse } from '../../../library/ApiResponse'
 
 /**
@@ -12,7 +11,6 @@ export const migrateEffectArgs: TExpressHandler = async (request, response) => {
   // Extract the necessary data from the request.
   let body = request.body
   let { targetId, environmentId, effectEnvVersion, effectArgs } = body
-  let resultingArgs: TAnyObject = effectArgs
   let resultingVersion: string = effectEnvVersion
 
   // Get the target from the registry.
@@ -26,11 +24,11 @@ export const migrateEffectArgs: TExpressHandler = async (request, response) => {
     target.getPendingMigrationVersions(effectEnvVersion)
 
   for (let version of pendingMigrationVersions) {
-    resultingArgs = target.migrateEffectArgs(version, effectArgs)
+    target.migrateEffectArgs(version, effectArgs)
     resultingVersion = version
   }
 
-  return ApiResponse.sendJson(response, { resultingVersion, resultingArgs })
+  return ApiResponse.sendJson(response, { resultingVersion, resultingArgs: effectArgs })
 
   // try {
   //   // Retrieve the original mission.

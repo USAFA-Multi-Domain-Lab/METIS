@@ -79,3 +79,10 @@ export type TNonEmptyArray<T> = [T, ...T[]]
  * same type.
  */
 export type TInstanceOrArray<T> = T | T[]
+
+/**
+ * Omits the first element of the given tuple type `T`.
+ */
+export type TOmitFirst<T extends unknown[]> = T extends [unknown, ...infer Rest]
+  ? Rest
+  : never

@@ -103,17 +103,18 @@ export class ServerMissionNode extends MissionNode<TMetisServerComponents> {
 
   // Implemented
   public modifyResourceCost(
+    resourceId: string,
     resourceCostOperand: number,
     actionId?: string,
   ): void {
     if (!actionId) {
       this.actions.forEach((action) => {
-        action.modifyResourceCost(resourceCostOperand)
+        action.modifyResourceCost(resourceId, resourceCostOperand)
       })
     } else {
       const action = this.actions.get(actionId)
       if (!action) throw new Error(`Action "${actionId}" not found.`)
-      action.modifyResourceCost(resourceCostOperand)
+      action.modifyResourceCost(resourceId, resourceCostOperand)
     }
   }
 
@@ -257,7 +258,7 @@ export class ServerMissionNode extends MissionNode<TMetisServerComponents> {
     let actionKeys: TMissionActionJson['localKey'][] = []
 
     for (const action of actions) {
-      const { processTime, successChance, resourceCost } = action
+      const { processTime, successChance, resourceCosts } = action
 
       // PROCESS TIME
       let isValidNumber = ServerMissionAction.PROCESS_TIME_REGEX.test(
@@ -283,12 +284,14 @@ export class ServerMissionNode extends MissionNode<TMetisServerComponents> {
         )
       }
 
-      // RESOURCE COST
-      let nonNegativeInteger = NumberToolbox.isNonNegativeInteger(resourceCost)
-      if (!nonNegativeInteger) {
-        throw generateValidationError(
-          `Resource cost "${resourceCost}" is a negative integer for action "{ _id: ${action._id}, name: ${action.name} }".`,
-        )
+      // RESOURCE COSTS
+      for (const cost of resourceCosts) {
+        let nonNegativeInteger = NumberToolbox.isNonNegativeInteger(cost.baseAmount)
+        if (!nonNegativeInteger) {
+          throw generateValidationError(
+            `Resource cost amount "${cost.baseAmount}" is a negative integer for resource "${cost.resourceId}" in action "{ _id: ${action._id}, name: ${action.name} }".`,
+          )
+        }
       }
 
       // Check for duplicate local keys.

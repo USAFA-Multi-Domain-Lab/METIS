@@ -40,14 +40,27 @@ use(dbName)
 
 print('Migrating ...')
 
-// Query and update logic using db.collection here.
-db.missions.find({ someOldField: { $exists: true } }).forEach((doc) => {
+// Query all relevant documents.
+let cursorMissions = db.missions.find({})
+
+while (cursorMissions.hasNext()) {
+  let mission = cursorMissions.next()
+
   // Transform doc...
+  for (let force of mission.forces) {
+    // Mutate nested arrays in place using for...of loops.
+    for (let node of force.nodes) {
+      for (let action of node.actions) {
+        // Transform action fields here.
+      }
+    }
+  }
+
   db.missions.updateOne(
-    { _id: doc._id },
+    { _id: mission._id },
     { $set: { newField: value }, $unset: { someOldField: '' } },
   )
-})
+}
 
 print('Migration complete.')
 print('Updating schema build number...')
@@ -57,7 +70,30 @@ db.infos.updateOne({}, { $set: { schemaBuildNumber: NNNNNN } })
 
 - **Always** end the script by updating `schemaBuildNumber` to the current build number.
 - Prefer `$set` / `$unset` to avoid accidentally dropping unrelated fields.
-- Use `.forEach()` over cursor when transforming nested arrays (forces, nodes, actions).
+- Use `db.collection.find({})` to get a cursor, then iterate with `while (cursor.hasNext()) { let doc = cursor.next() }`. **Never use `.forEach()` or `.map()` on cursors or nested mongosh document arrays** — these are not true JavaScript arrays and do not support those methods reliably in the mongosh shell.
+
+### No Conditional Guards
+
+Do not add conditional checks that detect whether data has already been migrated (e.g. `$exists` filters on the new field, or `Array.isArray` guards before transforming). A database build only runs when the recorded `schemaBuildNumber` is behind the current `SCHEMA_BUILD_NUMBER`, which guarantees the data is still in the previous build's shape. If the data is somehow malformed, an error is the correct and expected outcome — it surfaces a real problem rather than silently masking it.
+
+### ID Generation
+
+Mission documents use two distinct ID formats depending on nesting level:
+
+- **Top-level `_id`** (the mission document itself) is a MongoDB `ObjectId` — never generate or overwrite these.
+- **All embedded document `_id`s** (forces, nodes, actions, effects, resource pools, resource costs, etc.) are UUIDs.
+
+When a migration must generate a new embedded document `_id`, use the `uuid` package's v4 function, following the convention established across the build scripts:
+
+```js
+const generateHash = require('uuid').v4
+
+// Later, when creating an embedded document:
+let embeddedDoc = {
+  _id: generateHash(),
+  // ...other fields
+}
+```
 
 ### Registering the Build Number
 
@@ -91,7 +127,7 @@ Import builds are **only needed for changes to the mission model** (i.e. any cha
 server/missions/imports/builds/build_NNNNNN.ts
 ```
 
-Import builds share the same numbering sequence as database builds. A given number represents the schema version a mission file must be transformed _to_ in order to be compatible. The build number in the file should match the database build number introduced at the same time.
+Import builds share the same numbering sequence as database builds. A given number represents the schema version a mission file must be transformed _to_ in order to be compatible. **The build number in the file should match the database build number introduced at the same time.**
 
 ### Writing an Import Build
 
@@ -105,22 +141,18 @@ const build: TMissionImportBuild = async (missionData) => {
   // Transform the raw JSON object in-place.
   // missionData is the parsed contents of a .metis file.
 
-  if (typeof missionData.oldField === 'string') {
-    missionData.newField = transformValue(missionData.oldField)
-    delete missionData.oldField
-  }
+  missionData.newField = transformValue(missionData.oldField)
+  delete missionData.oldField
 
-  for (const force of missionData.forces ?? []) {
-    for (const node of force.nodes ?? []) {
-      for (const action of node.actions ?? []) {
-        if (!Array.isArray(action.newArrayField)) {
-          action.newArrayField = [
-            {
-              /* derived from old data */
-            },
-          ]
-          delete action.oldField
-        }
+  for (const force of missionData.forces) {
+    for (const node of force.nodes) {
+      for (const action of node.actions) {
+        action.newArrayField = [
+          {
+            /* derived from old data */
+          },
+        ]
+        delete action.oldField
       }
     }
   }
@@ -129,8 +161,27 @@ const build: TMissionImportBuild = async (missionData) => {
 export default build
 ```
 
-- Guard all field accesses (`?? []`) — older files may be missing entire sections.
 - Mirror the exact same logic used in the corresponding database build script, since both transforms must produce the same end schema.
+
+### No Conditional Guards
+
+Do not add conditional checks that detect whether data has already been migrated (e.g. `Array.isArray` guards, `?? []` fallbacks, or `typeof` defensive checks). Import builds run sequentially in order against `.metis` file data, so a given build can always assume the data is in the shape produced by the previous build. If the data is malformed, an error is the correct and expected outcome.
+
+### ID Generation
+
+When an import build must generate a new embedded document `_id`, use `StringToolbox.generateRandomId()`, following the convention established across the import build scripts:
+
+```typescript
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+
+// Later, when creating an embedded document:
+let embeddedDoc = {
+  _id: StringToolbox.generateRandomId(),
+  // ...other fields
+}
+```
+
+Note: the top-level mission `_id` is never generated inside import builds — it is always carried over from the existing file.
 
 ### Registering an Import Build
 

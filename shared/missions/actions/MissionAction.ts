@@ -1,3 +1,4 @@
+import type { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSerializableArray'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type {
   TEffectExecutionTriggered,
@@ -11,11 +12,15 @@ import {
   type TMissionComponentIssue,
 } from '../MissionComponent'
 import type { TNode, TNodeJsonOptions } from '../nodes/MissionNode'
+import {
+  ActionResourceCost,
+  type TActionResourceCostJson,
+} from './ActionResourceCost'
 
 /* -- CONSTANTS -- */
 
 /**
- * Extracts all the properties of a `MissionAction` that are
+ * Extracts all the properties of a {@link MissionAction} that are
  * needed for the JSON representation of the action.
  */
 const JSON_PROPERTIES_RAW = {
@@ -28,8 +33,6 @@ const JSON_PROPERTIES_RAW = {
     'processTimeHidden',
     'successChance',
     'successChanceHidden',
-    'resourceCost',
-    'resourceCostHidden',
     'opensNode',
     'opensNodeHidden',
     'localKey',
@@ -40,6 +43,10 @@ const JSON_PROPERTIES_RAW = {
        * The effects that can be applied to the targets.
        */
       effects: [] as TEffectExecutionTriggeredJson[],
+      /**
+       * The resource costs of the action.
+       */
+      resourceCosts: [] as TActionResourceCostJson[],
     },
   ],
 } as const
@@ -158,31 +165,11 @@ export abstract class MissionAction<
   public successChanceHidden: boolean
 
   /**
-   * The amount of resources the action will be subtracted
-   * from that available to the executor of the action.
+   * Costs that will be applied to the associated resource pool
+   * when this action is executed. One resource cost should exist
+   * here for each pool defined in the force.
    */
-  protected _resourceCost: number
-  /**
-   * The amount of resources the action will be subtracted
-   * from that available to the executor of the action.
-   */
-  public get resourceCost(): number {
-    // Return the resource cost within the correct range.
-    // ***Note: This ensures the resource cost is never less than 0.
-    return Math.max(
-      this._resourceCost + this._resourceCostOperand,
-      MissionAction.RESOURCE_COST_MIN,
-    )
-  }
-  public set resourceCost(value: number) {
-    this._resourceCost = value
-  }
-
-  /**
-   * Hides the resource cost from students.
-   * @default false
-   */
-  public resourceCostHidden: boolean
+  public resourceCosts: JsonSerializableArray<T['resourceCost']>
 
   /**
    * Whether the successful completion of this action will
@@ -247,11 +234,6 @@ export abstract class MissionAction<
    * @note The operand can be positive or negative. It will either increase or decrease the success chance.
    */
   private _successChanceOperand: number
-  /**
-   * Used to modify the amount of resources the action costs to execute.
-   * @note The operand can be positive or negative. It will either increase or decrease the resource cost.
-   */
-  private _resourceCostOperand: number
 
   /**
    * The number of times the action has been
@@ -273,10 +255,22 @@ export abstract class MissionAction<
    * configuration or any cheats that may be applied.
    */
   public get areEnoughResources(): boolean {
-    return (
-      this.resourceCost <= Math.max(this.force.resourcesRemaining, 0) ||
-      this.force.allowNegativeResources
-    )
+    return this.includedCosts.every((cost) => {
+      let pool = this.force.getPoolByResourceId(cost.resourceId)
+      if (!pool) return true
+      return cost.amount <= Math.max(pool.balance, 0) || pool.allowNegative
+    })
+  }
+
+  /**
+   * The subset of {@link resourceCosts} whose associated pool is not excluded
+   * from this action's force.
+   */
+  public get includedCosts(): T['resourceCost'][] {
+    return this.resourceCosts.filter((cost) => {
+      let pool = this.force.getPoolByResourceId(cost.resourceId)
+      return !pool?.excluded
+    })
   }
 
   /**
@@ -333,11 +327,10 @@ export abstract class MissionAction<
     this.successChanceHidden =
       data.successChanceHidden ??
       MissionAction.DEFAULT_PROPERTIES.successChanceHidden
-    this._resourceCost =
-      data.resourceCost ?? MissionAction.DEFAULT_PROPERTIES.resourceCost
-    this.resourceCostHidden =
-      data.resourceCostHidden ??
-      MissionAction.DEFAULT_PROPERTIES.resourceCostHidden
+    this.resourceCosts = ActionResourceCost.fromJson(
+      this,
+      data.resourceCosts ?? MissionAction.DEFAULT_PROPERTIES.resourceCosts,
+    )
     this.opensNode =
       data.opensNode ?? MissionAction.DEFAULT_PROPERTIES.opensNode
     this.opensNodeHidden =
@@ -349,7 +342,6 @@ export abstract class MissionAction<
 
     this._processTimeOperand = 0
     this._successChanceOperand = 0
-    this._resourceCostOperand = 0
   }
 
   /**
@@ -386,8 +378,7 @@ export abstract class MissionAction<
       processTimeHidden: this.processTimeHidden,
       successChance: this._successChance,
       successChanceHidden: this.successChanceHidden,
-      resourceCost: this._resourceCost,
-      resourceCostHidden: this.resourceCostHidden,
+      resourceCosts: this.resourceCosts.serialize(options),
       opensNode: this.opensNode,
       opensNodeHidden: this.opensNodeHidden,
       localKey: this.localKey,
@@ -401,7 +392,6 @@ export abstract class MissionAction<
         // preventing the students from seeing them.
         if (json.processTimeHidden) json.processTime = -1
         if (json.successChanceHidden) json.successChance = -1
-        if (json.resourceCostHidden) json.resourceCost = -1
         if (json.opensNodeHidden) json.opensNode = false
         break
       case 'none':
@@ -432,13 +422,17 @@ export abstract class MissionAction<
   }
 
   /**
-   * Modifies the amount of resources the action costs to execute.
-   * @param resourceCostOperand The operand to modify the resource
-   * cost by.
+   * Modifies the resource cost for a specific pool.
+   * @param resourceId The ID of the {@link TResource} whose cost to modify.
+   * @param resourceCostOperand The operand to modify the resource cost by.
    */
-  public modifyResourceCost(resourceCostOperand: number): void {
-    this._resourceCost = this.resourceCost
-    this._resourceCostOperand = resourceCostOperand
+  public modifyResourceCost(
+    resourceId: string,
+    resourceCostOperand: number,
+  ): void {
+    this.getResourceCostByResourceId(resourceId)?.modifyAmount(
+      resourceCostOperand,
+    )
   }
 
   // Implemented
@@ -470,6 +464,19 @@ export abstract class MissionAction<
     // Return the new order number, which is the highest existing order
     // plus one.
     return highestOrder + 1
+  }
+
+  /**
+   * @param resourceId The ID of the resource. Nullable values are permitted
+   * for this parameter to allow for flexibility when ID may not be known.
+   * @returns The resource cost associated with the given resource ID,
+   * or undefined if not found.
+   */
+  public getResourceCostByResourceId(
+    resourceId: string | null | undefined,
+  ): T['resourceCost'] | undefined {
+    if (!resourceId) return undefined
+    return this.resourceCosts.find((cost) => cost.resourceId === resourceId)
   }
 
   /**
@@ -573,8 +580,7 @@ export abstract class MissionAction<
       processTimeHidden: false,
       successChance: 0.5,
       successChanceHidden: false,
-      resourceCost: 1,
-      resourceCostHidden: false,
+      resourceCosts: [],
       opensNode: true,
       opensNodeHidden: false,
       effects: [],
@@ -616,38 +622,38 @@ export abstract class MissionAction<
 /* -- TYPES -- */
 
 /**
- * Options for converting a `MissionAction` to JSON.
+ * Options for serializing a {@link MissionAction} to JSON.
  */
-export type TActionJsonOptions = TNodeJsonOptions
+export type TActionJsonOptions = Pick<TNodeJsonOptions, 'sessionDataExposure'>
 
 /**
  * Extracts the action type from a registry of
- * METIS components that extends `TMetisBaseComponents`.
+ * METIS components that extends {@link TMetisBaseComponents}.
  * @param T The type registry.
  * @returns The action type.
  */
 export type TAction<T extends TMetisBaseComponents> = T['action']
 
 /**
- * All of the property types of a `MissionAction` that are
+ * All of the property types of a {@link MissionAction} that are
  * converted directly for the JSON representation of the action.
  * @note The types for each property are the same as the types
- * used in the `MissionAction` class.
+ * used in the {@link MissionAction} class.
  */
 export type TMissionActionJsonDirect =
   (typeof JSON_PROPERTIES_RAW)['direct'][number]
 /**
- * All of the property types of a `MissionAction` that are
+ * All of the property types of a {@link MissionAction} that are
  * converted indirectly for the JSON representation of the action.
  * @note The types for each property have been converted to a
  * different type than the types used for those properties in the
- * `MissionAction` class.
+ * {@link MissionAction} class.
  */
 export type TMissionActionJsonIndirect =
   (typeof JSON_PROPERTIES_RAW)['indirect'][number]
 
 /**
- * Plain JSON representation of a `MissionAction` object.
+ * Plain JSON representation of a {@link MissionAction} object.
  */
 export type TMissionActionJson = TCreateJsonType<
   MissionAction,
@@ -656,7 +662,7 @@ export type TMissionActionJson = TCreateJsonType<
 >
 
 /**
- * The default properties for a `MissionAction` object.
+ * The default properties for a {@link MissionAction} object.
  * @inheritdoc TMissionActionJson
  */
 export type TMissionActionDefaultJson = Required<

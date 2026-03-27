@@ -37,7 +37,6 @@ export type TOutputContextData = {
  * being displayed to the user.
  */
 type TOutputTag =
-  | 'resource-label'
   | 'node-name'
   | 'action-name'
   | 'action-description'

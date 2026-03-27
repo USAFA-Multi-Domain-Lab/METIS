@@ -9,6 +9,7 @@ import type { TExecutionOutcomeJson } from '../missions/actions/ExecutionOutcome
 import type { TMissionFileJson } from '../missions/files/MissionFile'
 import type { TMissionForceSaveJson } from '../missions/forces/MissionForce'
 import type { TOutputJson } from '../missions/forces/MissionOutput'
+import type { TResourcePoolJson } from '../missions/forces/ResourcePool'
 import type { TMissionNodeJson } from '../missions/nodes/MissionNode'
 import type { TMissionPrototypeJson } from '../missions/nodes/MissionPrototype'
 import type { MemberRole } from '../sessions/members/MemberRole'
@@ -227,6 +228,10 @@ type TModifierData = [
      */
     key: 'node-action-resource-cost'
     /**
+     * The ID of the {@link MissionResource} being modified.
+     */
+    resourceId: string
+    /**
      * The operand used to modify the resource cost for all the node's actions.
      */
     resourceCostOperand: number
@@ -246,9 +251,9 @@ type TModifierData = [
      */
     key: 'force-resource-pool'
     /**
-     * The ID of the force to modify.
+     * The ID of the resource pool to modify.
      */
-    forceId: string
+    poolId: string
     /**
      * The operand used to modify the resource pool of the force.
      */
@@ -708,10 +713,10 @@ export type TResponseEvents = {
        */
       execution: TActionExecutionJson
       /**
-       * The resource remaining for the force after the
-       * action's execution cost was deducted.
+       * The resource pool instances of the force after the
+       * action's execution costs were deducted.
        */
-      resourcesRemaining: number
+      resourcePools: TResourcePoolJson[]
     },
     TClientEvents['request-execute-action']
   >

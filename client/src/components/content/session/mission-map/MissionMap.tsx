@@ -137,7 +137,7 @@ const MASTER_TAB: TTabBarTab = {
  * Context for the mission map, which will help distribute
  * mission map properties to its children.
  */
-const mapContext = new LocalContext<
+let mapContext = new LocalContext<
   TMissionMap_P,
   TMissionMap_C,
   TMissionMap_S,

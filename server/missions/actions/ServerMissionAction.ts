@@ -1,3 +1,4 @@
+import { sessionLogger } from '@server/logging'
 import type { ServerTarget } from '@server/target-environments/ServerTarget'
 import type { TTargetEnvExposedAction } from '@server/target-environments/context/TargetEnvContext'
 import type { TMissionActionJson } from '@shared/missions/actions/MissionAction'
@@ -78,9 +79,18 @@ export class ServerMissionAction extends MissionAction<TMetisServerComponents> {
       })
 
       // If the "Zero Resource Cost" cheat is not enabled,
-      // deduct the resource cost from the force's resources.
+      // deduct each resource cost from the corresponding pool.
       if (!zeroCost && !infiniteResources) {
-        this.force.resourcesRemaining -= this.resourceCost
+        for (let cost of this.includedCosts) {
+          let pool = this.force.getPoolByResourceId(cost.resourceId)
+          if (pool) {
+            cost.applyTo(pool)
+          } else {
+            sessionLogger.error(
+              'Failed to find pool for resource cost during action execution.',
+            )
+          }
+        }
       }
 
       // Set timeout for when the execution is completed.
@@ -137,8 +147,8 @@ export class ServerMissionAction extends MissionAction<TMetisServerComponents> {
       get processTime() {
         return self.processTime
       },
-      get resourceCost() {
-        return self.resourceCost
+      get resourceCosts() {
+        return self.resourceCosts
       },
       get executing() {
         return self.executing

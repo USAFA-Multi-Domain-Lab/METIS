@@ -359,7 +359,7 @@ export interface TTargetEnvExposedSessionConfig
 export type TTargetEnvExposedMission = Readonly<
   TCreateJsonType<
     Mission,
-    '_id' | 'name' | 'resourceLabel',
+    '_id' | 'name' | 'resources',
     {
       /**
        * @see {@link Mission.forces}
@@ -399,8 +399,7 @@ export type TTargetEnvExposedForce = Readonly<
     | 'localKey'
     | 'name'
     | 'color'
-    | 'initialResources'
-    | 'resourcesRemaining',
+    | 'resourcePools',
     {
       /**
        * @see {@link MissionForce.mission}
@@ -505,7 +504,7 @@ export type TTargetEnvExposedAction = Readonly<
     | 'successChance'
     | 'failureChance'
     | 'processTime'
-    | 'resourceCost'
+    | 'resourceCosts'
     | 'areEnoughResources'
     | 'executing'
     | 'executionCount'

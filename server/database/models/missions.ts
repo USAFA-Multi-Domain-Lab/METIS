@@ -272,12 +272,6 @@ export const missionSchema = new MissionSchema(
       required: true,
       default: StringToolbox.generateRandomId,
     },
-    resourceLabel: {
-      type: String,
-      required: true,
-      default: 'Resources',
-      maxlength: Mission.MAX_RESOURCE_LABEL_LENGTH,
-    },
     launchedAt: { type: Date, default: null },
     createdBy: {
       type: Schema.Types.ObjectId,
@@ -326,9 +320,21 @@ export const missionSchema = new MissionSchema(
             type: String,
             required: true,
           },
-          initialResources: {
-            type: Number,
+          resourcePools: {
             required: true,
+            type: [
+              {
+                _id: { type: String, required: true },
+                localKey: {
+                  type: String,
+                  required: true,
+                },
+                resourceId: { type: String, required: true },
+                initialBalance: { type: Number, required: true },
+                allowNegative: { type: Boolean, required: true },
+                excluded: { type: Boolean, required: true },
+              },
+            ],
           },
           revealAllNodes: {
             type: Boolean,
@@ -336,10 +342,6 @@ export const missionSchema = new MissionSchema(
           },
           localKey: {
             type: String,
-            required: true,
-          },
-          allowNegativeResources: {
-            type: Boolean,
             required: true,
           },
           nodes: {
@@ -417,13 +419,16 @@ export const missionSchema = new MissionSchema(
                         type: Boolean,
                         required: true,
                       },
-                      resourceCost: {
-                        type: Number,
+                      resourceCosts: {
                         required: true,
-                      },
-                      resourceCostHidden: {
-                        type: Boolean,
-                        required: true,
+                        type: [
+                          {
+                            _id: { type: String, required: true },
+                            resourceId: { type: String, required: true },
+                            baseAmount: { type: Number, required: true },
+                            hidden: { type: Boolean, required: true },
+                          },
+                        ],
                       },
                       opensNode: {
                         type: Boolean,
@@ -452,6 +457,24 @@ export const missionSchema = new MissionSchema(
               },
             ],
           },
+        },
+      ],
+    },
+    resources: {
+      required: true,
+      type: [
+        {
+          _id: { type: String, required: true },
+          name: {
+            type: String,
+            required: true,
+            maxlength: Mission.MAX_RESOURCE_NAME_LENGTH,
+          },
+          icon: {
+            type: String,
+            required: true,
+          },
+          order: { type: Number, required: true },
         },
       ],
     },

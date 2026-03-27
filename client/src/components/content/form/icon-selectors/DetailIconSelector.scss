@@ -1,0 +1,57 @@
+@use '@client/assets/styles/config.scss' as *;
+@use '@client/assets/styles/util.scss' as *;
+@use '../index.scss' as *;
+
+.Detail.DetailIconSelector {
+  .Field {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    padding: 0;
+
+    .IconSelectorRow {
+      display: flex;
+      flex-wrap: nowrap;
+      flex-grow: 1;
+      flex-direction: row;
+      min-width: 13em;
+
+      &:first-child {
+        clip-path: inset(0 round 0.35em 0.35em 0 0);
+      }
+
+      &:last-child {
+        clip-path: inset(0 round 0 0 0.35em 0.35em);
+      }
+
+      &:first-child:last-child {
+        clip-path: inset(0 round 0.35em);
+      }
+
+      .IconOption {
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        flex-grow: 1;
+        padding: 1em 0 1em;
+
+        &:hover:not(.Selected) {
+          @include background-mask($opacity: 0.05);
+        }
+
+        &.Selected {
+          @include background-mask($opacity: 0.15);
+        }
+
+        .Icon {
+          width: 1em;
+          height: 1em;
+          background-size: contain;
+          background-repeat: no-repeat;
+          background-position: center;
+        }
+      }
+    }
+  }
+}

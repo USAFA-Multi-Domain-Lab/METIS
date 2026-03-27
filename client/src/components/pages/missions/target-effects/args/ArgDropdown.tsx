@@ -6,7 +6,7 @@ import type {
   TDropdownArgOption,
 } from '@shared/target-environments/args/DropdownArg'
 import { useEffect, useState } from 'react'
-import { DetailDropdown } from '../../../../content/form/dropdown/DetailDropdown'
+import { DetailDropdown } from '../../../../content/form/dropdowns/standard/DetailDropdown'
 
 /**
  * Renders a dropdown for the argument whose type is `"dropdown"`.

@@ -6,7 +6,7 @@ import If from '@client/components/content/util/If'
 import { useMissionPageContext } from '@client/components/pages/missions/context'
 import useActionItemButtonCallbacks from '@client/components/pages/missions/hooks/mission-components/actions'
 import { useGlobalContext } from '@client/context/global'
-import { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
+import type { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
 import { ClientMission } from '@client/missions/ClientMission'
 import { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
 import { compute } from '@client/toolbox'
@@ -14,10 +14,10 @@ import { useObjectFormSync, usePostInitEffect } from '@client/toolbox/hooks'
 import type { TNonEmptyArray } from '@shared/toolbox/arrays/ArrayToolbox'
 import { useState } from 'react'
 import Prompt from '../../../../content/communication/Prompt'
-import { DetailColorSelector } from '../../../../content/form/DetailColorSelector'
 import { DetailLargeString } from '../../../../content/form/DetailLargeString'
 import { DetailString } from '../../../../content/form/DetailString'
 import { DetailToggle } from '../../../../content/form/DetailToggle'
+import { DetailColorSelector } from '../../../../content/form/dropdowns/colors/DetailColorSelector'
 import Entry from '../Entry'
 
 /**
@@ -223,11 +223,9 @@ export default function NodeEntry({
    */
   const createAction = () => {
     // Create a new action object.
-    let newAction = ClientMissionAction.create(node)
+    let newAction = node.createAction()
     // Update the action stored in the state.
     mission.select(newAction)
-    // Add the action to the node.
-    node.actions.set(newAction._id, newAction)
     // Allow the user to save the changes.
     onChange(newAction)
   }
@@ -243,8 +241,7 @@ export default function NodeEntry({
       // selected node does not have at least one
       // action then it will auto-generate one for
       // that node.
-      let newAction = ClientMissionAction.create(node)
-      node.actions.set(newAction._id, newAction)
+      node.createAction()
       notify(
         `Auto-generated an action for ${node.name} because it is an executable node with no actions to execute.`,
       )

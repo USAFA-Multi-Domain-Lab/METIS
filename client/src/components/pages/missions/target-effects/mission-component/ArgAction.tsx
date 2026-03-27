@@ -1,8 +1,8 @@
 import type {
   TOptionalHandleInvalidOption,
   TRequiredHandleInvalidOption,
-} from '@client/components/content/form/dropdown/DetailDropdown'
-import { DetailDropdown } from '@client/components/content/form/dropdown/DetailDropdown'
+} from '@client/components/content/form/dropdowns/standard/DetailDropdown'
+import { DetailDropdown } from '@client/components/content/form/dropdowns/standard/DetailDropdown'
 import type { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
 import type { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
 import type { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'

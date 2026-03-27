@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="40"
+   height="40"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="launch.svg"
+   inkscape:version="1.4 (e7c3feb1, 2024-10-09)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#000000"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="10.879068"
+     inkscape:cx="25.875379"
+     inkscape:cy="21.601116"
+     inkscape:window-width="1512"
+     inkscape:window-height="989"
+     inkscape:window-x="217"
+     inkscape:window-y="38"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg1" />
+  <!-- Created with Method Draw - http://github.com/duopixel/Method-Draw/ -->
+  <g
+     id="Layer_1"
+     transform="matrix(1.0227964,0,0,1.0227964,-0.45571773,-1.1922362)">
+    <title
+       id="title1">Layer 1</title>
+    <path
+       fill="none"
+       stroke="#ffffff"
+       stroke-width="1.70657"
+       stroke-dasharray="none"
+       opacity="NaN"
+       d="m 14.913494,33.163171 -0.0452,-19.63763 c 0.54256,-4.4496139 1.627691,-8.1872975 5.15437,-11.213041 3.195108,3.0059611 4.626881,6.6052073 5.109161,11.153714 v 19.756304 l -10.218329,-0.05935 z"
+       id="svg_1"
+       style="opacity:1;fill:#ffffff;fill-opacity:1" />
+    <path
+       fill="none"
+       stroke="#ffffff"
+       stroke-width="1.94469"
+       stroke-dasharray="none"
+       opacity="NaN"
+       d="m 26.837497,24.6688 c 4.079903,3.268905 6.860899,7.224272 7.793449,12.307419 -2.33138,-2.664151 -4.91254,-4.494741 -7.743507,-5.34465 z"
+       id="svg_4"
+       style="opacity:1;fill:#ffffff;fill-opacity:1" />
+    <path
+       fill="none"
+       stroke="#ffffff"
+       stroke-width="1.94469"
+       stroke-dasharray="none"
+       opacity="0"
+       d="m 13.162347,24.668699 c -4.0799036,3.268905 -6.8609001,7.224272 -7.7934501,12.307419 2.33138,-2.664151 4.9125411,-4.494741 7.7435081,-5.34465 z"
+       id="svg_4-2"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke-width:1.945;stroke-dasharray:none" />
+    <rect
+       fill="none"
+       stroke="#ffffff"
+       stroke-width="2.00501"
+       stroke-dasharray="none"
+       x="18.108349"
+       y="33.146469"
+       width="3.7833025"
+       height="5.8974047"
+       id="svg_5"
+       style="fill:#ffffff;fill-opacity:1;stroke-width:1.70437;stroke-dasharray:none" />
+  </g>
+</svg>

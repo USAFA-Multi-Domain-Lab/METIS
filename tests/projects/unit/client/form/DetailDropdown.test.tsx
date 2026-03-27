@@ -1,5 +1,5 @@
-import type { TDetailDropdown_P } from '@client/components/content/form/dropdown/DetailDropdown'
-import { DetailDropdown } from '@client/components/content/form/dropdown/DetailDropdown'
+import type { TDetailDropdown_P } from '@client/components/content/form/dropdowns/standard/DetailDropdown'
+import { DetailDropdown } from '@client/components/content/form/dropdowns/standard/DetailDropdown'
 import { describe, expect, jest, test } from '@jest/globals'
 import { fireEvent, render } from '@testing-library/react'
 

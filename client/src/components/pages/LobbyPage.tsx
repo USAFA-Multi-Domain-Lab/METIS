@@ -126,7 +126,7 @@ export default function LobbyPage({
    * Callback for the session configuration button.
    */
   const onClickSessionConfig = () => {
-    navigateTo('SessionConfigPage', { session })
+    navigateTo('SessionConfigPage', { session, cancelPage: 'LobbyPage' })
   }
 
   /* -- EFFECTS -- */

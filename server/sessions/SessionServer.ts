@@ -32,6 +32,7 @@ import type {
   TEffectType,
 } from '@shared/missions/effects/Effect'
 import type { TOutputContext } from '@shared/missions/forces/MissionOutput'
+import type { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import type {
   TMissionJson,
   TMissionJsonOptions,
@@ -114,6 +115,32 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * performing teardown operations.
    */
   private effectHistory: Promise<void>[]
+
+  /**
+   * This is a registry, not of active listeners, but the
+   * methods and corresponding handlers for all listeners
+   * that should be added and removed via the {@link addListeners}
+   * and {@link removeListeners} methods. This helps ensure
+   * there is no mismatch in adding and removing listeners,
+   * such as adding a listener and forgetting to remove it,
+   * or vice versa.
+   */
+  private get listenerInputRegistry() {
+    return [
+      ['request-start-session', this.onRequestStart],
+      ['request-end-session', this.onRequestEnd],
+      ['request-reset-session', this.onRequestReset],
+      ['request-config-update', this.onRequestConfigUpdate],
+      ['request-kick', this.onRequestKick],
+      ['request-ban', this.onRequestBan],
+      ['request-assign-force', this.onRequestAssignForce],
+      ['request-assign-role', this.onRequestAssignRole],
+      ['request-open-node', this.onRequestOpenNode],
+      ['request-execute-action', this.onRequestExecuteAction],
+      ['request-send-output', this.onRequestSendOutput],
+      ['request-acknowledge-node-alert', this.onRequestAcknowledgeNodeAlert],
+    ] as const
+  }
 
   public constructor(
     _id: string,
@@ -710,69 +737,24 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     })
   }
 
-  // todo: There should be a strict requirement with this method
-  // todo: for session-specific event listeners to be added.
   /**
    * Creates session-specific listeners for the given member.
    */
   private addListeners(member: ServerSessionMember): void {
-    let { connection } = member
-
-    connection.addEventListener('request-start-session', (data) =>
-      this.onRequestStart(member, data),
-    )
-    connection.addEventListener('request-end-session', (data) =>
-      this.onRequestEnd(member, data),
-    )
-    connection.addEventListener('request-reset-session', (data) =>
-      this.onRequestReset(member, data),
-    )
-    connection.addEventListener('request-config-update', (data) =>
-      this.onRequestConfigUpdate(member, data),
-    )
-    connection.addEventListener('request-kick', (data) =>
-      this.onRequestKick(member, data),
-    )
-    connection.addEventListener('request-ban', (data) =>
-      this.onRequestBan(member, data),
-    )
-    connection.addEventListener('request-assign-force', (data) =>
-      this.onRequestAssignForce(member, data),
-    )
-    connection.addEventListener('request-assign-role', (data) =>
-      this.onRequestAssignRole(member, data),
-    )
-    connection.addEventListener('request-open-node', (data) =>
-      this.onRequestOpenNode(member, data),
-    )
-    connection.addEventListener('request-execute-action', (data) =>
-      this.onRequestExecuteAction(member, data),
-    )
-    connection.addEventListener('request-send-output', (data) =>
-      this.onRequestSendOutput(member, data),
-    )
-    connection.addEventListener('request-acknowledge-node-alert', (data) =>
-      this.onRequestAcknowledgeNodeAlert(member, data),
-    )
+    this.listenerInputRegistry.forEach(([method, handler]) => {
+      member.connection.addEventListener(method, (event: any) =>
+        handler(member, event),
+      )
+    })
   }
 
   /**
    * Removes session-specific listeners for the given participant.
    */
   private removeListeners(member: ServerSessionMember): void {
-    member.connection.clearEventListeners([
-      'request-start-session',
-      'request-end-session',
-      'request-reset-session',
-      'request-config-update',
-      'request-kick',
-      'request-ban',
-      'request-assign-force',
-      'request-assign-role',
-      'request-open-node',
-      'request-execute-action',
-      'request-send-output',
-    ])
+    member.connection.clearEventListeners(
+      this.listenerInputRegistry.map(([method]) => method),
+    )
   }
 
   /**
@@ -922,7 +904,6 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     let fulfilledRequest = this.buildFullfilledRequest(member, event)
 
     if (this._state !== requiredState) {
-      console.log(this._state, requiredState)
       let error = new ServerEmittedError(
         ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
         { request: fulfilledRequest },
@@ -1854,7 +1835,9 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       method: 'action-execution-initiated',
       data: {
         execution: execution.toJson(),
-        resourcesRemaining: action!.force.resourcesRemaining,
+        resourcePools: action!.force.toJson({
+          sessionDataExposure: { expose: 'all' },
+        }).resourcePools,
       },
       request: {
         event: request.event,
@@ -2451,7 +2434,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     this.emitModifierEnacted(node.force, {
       key: 'node-new-alert',
       nodeId: node._id,
-      alert: alert.toJson(),
+      alert: alert.json,
     })
   }
 
@@ -2529,6 +2512,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * Modifies the resource cost of a specific action within a node or
    * all actions within a node.
    * @param data The data for the modification.
+   * @param data.resourceId The ID of the resource whose cost to modify.
    * @param data.operand The operand to modify the resource cost by.
    * @param data.node The node containing the action to modify.
    * @param data.action The action to modify.
@@ -2536,11 +2520,12 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * within the node will be modified.
    */
   public modifyResourceCost = (data: {
+    resourceId: string
     operand: number
     node: ServerMissionNode
     action?: ServerMissionAction
   }) => {
-    const { operand, node, action } = data
+    const { resourceId, operand, node, action } = data
 
     // Confirm the node exists.
     this.confirmComponentInMission(node)
@@ -2551,9 +2536,10 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
     // Modify the resource cost of the action or
     // all actions within the node.
-    node.modifyResourceCost(operand, action?._id)
+    node.modifyResourceCost(resourceId, operand, action?._id)
     this.emitModifierEnacted(node.force, {
       key: 'node-action-resource-cost',
+      resourceId,
       resourceCostOperand: operand,
       nodeId: node._id,
       actionId: action?._id,
@@ -2561,21 +2547,24 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   }
 
   /**
-   * Modifies resource pool by applying the given amount
-   * to the resource pool.
-   * @param force The force containing the resource pool.
+   * Modifies a resource pool by applying the given amount
+   * to the pool.
+   * @param pool The resource pool to modify.
    * @param operand The amount by which to modify the resource pool.
    * @note A negative value will subtract and a positive
    * value will add to the resource pool.
    */
-  public modifyResourcePool = (force: ServerMissionForce, operand: number) => {
-    // Confirm the force exists, modify the resource pool,
+  public modifyResourcePool = (
+    pool: ResourcePool<TMetisServerComponents>,
+    operand: number,
+  ) => {
+    // Confirm the pool exists in the mission, modify the resource pool,
     // then emit an event to the members.
-    this.confirmComponentInMission(force)
-    force.modifyResourcePool(operand)
-    this.emitModifierEnacted(force, {
+    this.confirmComponentInMission(pool)
+    pool.onModify(operand)
+    this.emitModifierEnacted(pool.force, {
       key: 'force-resource-pool',
-      forceId: force._id,
+      poolId: pool._id,
       operand,
     })
   }

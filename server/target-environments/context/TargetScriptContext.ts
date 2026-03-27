@@ -5,6 +5,7 @@ import type { ServerEffect } from '@server/missions/effects/ServerEffect'
 import type { ServerMissionFile } from '@server/missions/files/ServerMissionFile'
 import type { ServerMissionForce } from '@server/missions/forces/ServerMissionForce'
 import type { ServerMissionNode } from '@server/missions/nodes/ServerMissionNode'
+import type { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import type { TNodeAlertSeverityLevel } from '@shared/missions/nodes/NodeAlert'
 import type { TSessionState } from '@shared/sessions/MissionSession'
 import type {
@@ -122,7 +123,7 @@ export class TargetScriptContext<
   private determineTargetForce(
     forceKey: string | 'self' = 'self',
   ): ServerMissionForce {
-    const { mission, missionId } = this
+    let { mission, missionId } = this
 
     // If the force is set to 'self', return the current force.
     if (forceKey === 'self') {
@@ -158,7 +159,7 @@ export class TargetScriptContext<
     forceKey: string | 'self' = 'self',
     nodeKey: string | 'self' = 'self',
   ): ServerMissionNode {
-    const { mission, missionId } = this
+    let { mission, missionId } = this
 
     // Handle any keys that are set to 'self'.
     if (nodeKey === 'self') {
@@ -204,7 +205,7 @@ export class TargetScriptContext<
     nodeKey: string | 'self' = 'self',
     actionKey: string | 'self' | 'all' = 'all',
   ): ServerMissionAction | undefined {
-    const { mission, missionId } = this
+    let { mission, missionId } = this
 
     // If the action is set to 'all', return undefined.
     if (actionKey === 'all') return undefined
@@ -261,9 +262,9 @@ export class TargetScriptContext<
    * not be found.
    */
   private determineTargetFile(fileId: string): ServerMissionFile {
-    const { mission, missionId } = this
+    let { mission, missionId } = this
     // Find the specified file.
-    const result = mission.getFileById(fileId)
+    let result = mission.getFileById(fileId)
     if (!result) {
       throw new Error(
         `Could not find file with ID "${fileId}" in the mission with ID "${missionId}".`,
@@ -273,10 +274,46 @@ export class TargetScriptContext<
   }
 
   /**
+   * Determines the target pool.
+   * @param forceKey The local key of the force to which the pool belongs.
+   * @param poolKey The local key of the pool to manipulate.
+   * @returns The target pool.
+   * @throws If a pool was specified in the options, but it could
+   * not be found.
+   */
+  private determineTargetPool(
+    forceKey: string | 'self' = 'self',
+    poolKey: string | undefined,
+  ): ResourcePool<TMetisServerComponents> {
+    let { mission, missionId } = this
+
+    // Handle forceKey set to 'self'.
+    if (forceKey === 'self') {
+      if (!this.data.sourceForceKey) {
+        throw new Error(
+          `No default forceKey available for this context (type="${this.data.type}"). Please specify forceKey.`,
+        )
+      }
+      forceKey = this.data.sourceForceKey
+    }
+
+    // Find the specified pool.
+    let result = mission.getPoolByLocalKey(forceKey, poolKey)
+
+    if (!result) {
+      throw new Error(
+        `Could not find pool with these local keys { forceKey: "${forceKey}", poolKey: "${poolKey}" } in the mission with ID "${missionId}".`,
+      )
+    }
+
+    return result
+  }
+
+  /**
    * @see {@link TTargetScriptExposedContext.sendOutput}
    */
   private sendOutput = (message: string, to?: TOutputTo) => {
-    const { data } = this
+    let { data } = this
     let prefix = ''
     let outputContext: TOutputContext
 
@@ -314,7 +351,7 @@ export class TargetScriptContext<
    * @see {@link TTargetScriptExposedContext.blockNode}
    */
   private blockNode = ({ forceKey, nodeKey }: TManipulateNodeOptions = {}) => {
-    const targetNode = this.determineTargetNode(forceKey, nodeKey)
+    let targetNode = this.determineTargetNode(forceKey, nodeKey)
     this.session.updateNodeBlockStatus(targetNode, true)
   }
 
@@ -322,7 +359,7 @@ export class TargetScriptContext<
    * @see {@link TTargetScriptExposedContext.unblockNode}
    */
   private unblockNode = ({ forceKey, nodeKey }: TManipulateNodeOptions) => {
-    const targetNode = this.determineTargetNode(forceKey, nodeKey)
+    let targetNode = this.determineTargetNode(forceKey, nodeKey)
     this.session.updateNodeBlockStatus(targetNode, false)
   }
 
@@ -330,7 +367,7 @@ export class TargetScriptContext<
    * @see {@link TTargetScriptExposedContext.openNode}
    */
   private openNode = ({ forceKey, nodeKey }: TManipulateNodeOptions = {}) => {
-    const targetNode = this.determineTargetNode(forceKey, nodeKey)
+    let targetNode = this.determineTargetNode(forceKey, nodeKey)
     this.session.updateNodeOpenState(targetNode, true)
   }
 
@@ -338,7 +375,7 @@ export class TargetScriptContext<
    * @see {@link TTargetScriptExposedContext.closeNode}
    */
   private closeNode = ({ forceKey, nodeKey }: TManipulateNodeOptions = {}) => {
-    const targetNode = this.determineTargetNode(forceKey, nodeKey)
+    let targetNode = this.determineTargetNode(forceKey, nodeKey)
     this.session.updateNodeOpenState(targetNode, false)
   }
 
@@ -350,7 +387,7 @@ export class TargetScriptContext<
     severityLevel: TNodeAlertSeverityLevel,
     { forceKey, nodeKey }: TManipulateNodeOptions = {},
   ) => {
-    const targetNode = this.determineTargetNode(forceKey, nodeKey)
+    let targetNode = this.determineTargetNode(forceKey, nodeKey)
     this.session.addNodeAlert(targetNode, message, severityLevel)
   }
 
@@ -361,12 +398,8 @@ export class TargetScriptContext<
     operand: number,
     { forceKey, nodeKey, actionKey }: TManipulateActionOptions = {},
   ) => {
-    const targetAction = this.determineTargetAction(
-      forceKey,
-      nodeKey,
-      actionKey,
-    )
-    const targetNode = this.determineTargetNode(forceKey, nodeKey)
+    let targetAction = this.determineTargetAction(forceKey, nodeKey, actionKey)
+    let targetNode = this.determineTargetNode(forceKey, nodeKey)
 
     this.session.modifySuccessChance({
       operand,
@@ -382,12 +415,8 @@ export class TargetScriptContext<
     operand: number,
     { forceKey, nodeKey, actionKey }: TManipulateActionOptions = {},
   ) => {
-    const targetAction = this.determineTargetAction(
-      forceKey,
-      nodeKey,
-      actionKey,
-    )
-    const targetNode = this.determineTargetNode(forceKey, nodeKey)
+    let targetAction = this.determineTargetAction(forceKey, nodeKey, actionKey)
+    let targetNode = this.determineTargetNode(forceKey, nodeKey)
 
     this.session.modifyProcessTime({
       operand,
@@ -400,17 +429,15 @@ export class TargetScriptContext<
    * @see {@link TTargetScriptExposedContext.modifyResourceCost}
    */
   private modifyResourceCost = (
+    resourceId: string,
     operand: number,
     { forceKey, nodeKey, actionKey }: TManipulateActionOptions = {},
   ) => {
-    const targetAction = this.determineTargetAction(
-      forceKey,
-      nodeKey,
-      actionKey,
-    )
-    const targetNode = this.determineTargetNode(forceKey, nodeKey)
+    let targetAction = this.determineTargetAction(forceKey, nodeKey, actionKey)
+    let targetNode = this.determineTargetNode(forceKey, nodeKey)
 
     this.session.modifyResourceCost({
+      resourceId,
       operand,
       node: targetNode,
       action: targetAction,
@@ -422,18 +449,18 @@ export class TargetScriptContext<
    */
   private modifyResourcePool = (
     operand: number,
-    { forceKey }: TManipulateForceOptions = {},
+    { forceKey, poolKey }: TManipulatePoolOptions = {},
   ) => {
-    const targetForce = this.determineTargetForce(forceKey)
-    this.session.modifyResourcePool(targetForce, operand)
+    let targetPool = this.determineTargetPool(forceKey, poolKey)
+    this.session.modifyResourcePool(targetPool, operand)
   }
 
   /**
    * @see {@link TTargetScriptExposedContext.grantFileAccess}
    */
   private grantFileAccess = (fileId: string, forceKey: string) => {
-    const targetFile = this.determineTargetFile(fileId)
-    const targetForce = this.determineTargetForce(forceKey)
+    let targetFile = this.determineTargetFile(fileId)
+    let targetForce = this.determineTargetForce(forceKey)
     this.session.updateFileAccess(targetFile, targetForce, true)
   }
 
@@ -441,8 +468,8 @@ export class TargetScriptContext<
    * @see {@link TTargetScriptExposedContext.revokeFileAccess}
    */
   private revokeFileAccess = (fileId: string, forceKey: string) => {
-    const targetFile = this.determineTargetFile(fileId)
-    const targetForce = this.determineTargetForce(forceKey)
+    let targetFile = this.determineTargetFile(fileId)
+    let targetForce = this.determineTargetForce(forceKey)
     this.session.updateFileAccess(targetFile, targetForce, false)
   }
 
@@ -707,10 +734,10 @@ export interface TTargetScriptExposedContext<
    */
   modifyProcessTime: TargetScriptContext<TType>['modifyProcessTime']
   /**
-   * Modifies an action's resource cost.
+   * Modifies an action's resource cost for a specific resource.
+   * @param resourceId The ID of the resource whose cost to modify.
    * @param operand The number used to modify the resource cost.
    * @param options Additional options for modifying the resource cost.
-   * @note **If the result is less than 0, the resource cost will be set to 0.**
    * @note This will modify the resource cost for all actions within the node.
    * @note The operand can be positive or negative. It will either increase or decrease the resource cost.
    * @note By default, this will modify the resource cost for the node to which the current effect belongs,
@@ -718,8 +745,8 @@ export interface TTargetScriptExposedContext<
    */
   modifyResourceCost: TargetScriptContext<TType>['modifyResourceCost']
   /**
-   * Modifies resource pool by applying the given amount
-   * to the resource pool.
+   * Modifies a resource pool by applying the given amount to the pool for the given resource.
+   * @param resourceId The ID of the resource whose pool to modify.
    * @param operand The amount by which to modify the resource pool.
    * @param options Additional options for modifying the resource pool.
    * @note A negative value will subtract and a positive
@@ -753,6 +780,32 @@ type TCommonTargetScriptContext<TType extends TEffectType> = Omit<
 >
 
 /**
+ * Options for methods that manipulate a force.
+ */
+export type TManipulateForceOptions = {
+  /**
+   * The local key of the force to manipulate.
+   * @default this.forceKey // The force to which the current effect belongs.
+   */
+  forceKey?: string
+}
+
+/**
+ * Options for methods that manipulate a pool.
+ */
+export type TManipulatePoolOptions = {
+  /**
+   * The local key of the force to which the pool belongs.
+   * @default this.forceKey // The force to which the current effect belongs.
+   */
+  forceKey?: string
+  /**
+   * The local key of the pool to manipulate.
+   */
+  poolKey?: string
+}
+
+/**
  * Options for methods that manipulate a node.
  */
 export type TManipulateNodeOptions = {
@@ -763,17 +816,6 @@ export type TManipulateNodeOptions = {
   nodeKey?: string
   /**
    * The local key of the force to which the node belongs.
-   * @default this.forceKey // The force to which the current effect belongs.
-   */
-  forceKey?: string
-}
-
-/**
- * Options for methods that manipulate a force.
- */
-export type TManipulateForceOptions = {
-  /**
-   * The local key of the force to manipulate.
    * @default this.forceKey // The force to which the current effect belongs.
    */
   forceKey?: string
