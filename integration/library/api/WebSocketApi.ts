@@ -8,7 +8,7 @@ import { Api, apiOptionsSchema } from './Api'
  */
 export class WebSocketApi extends Api {
   /**
-   * The WebSocket URL where the connection can be established.
+   * Backing field for {@link url}.
    */
   private _url: string
   /**
@@ -19,7 +19,7 @@ export class WebSocketApi extends Api {
   }
 
   /**
-   * The WebSocket connection options.
+   * Backing field for {@link options}.
    */
   private _options: ClientOptions
   /**
@@ -30,7 +30,7 @@ export class WebSocketApi extends Api {
   }
 
   /**
-   * The active WebSocket connection.
+   * Backing field for {@link connection}.
    */
   private _connection: WebSocket | null = null
   /**
@@ -39,6 +39,13 @@ export class WebSocketApi extends Api {
   public get connection(): WebSocket | null {
     return this._connection
   }
+
+  /**
+   * The reject callback for a connect() promise that is currently in flight.
+   * Stored so that a subsequent connect() call can reject the prior promise
+   * rather than leaving it pending indefinitely.
+   */
+  private _pendingConnectReject: ((error: Error) => void) | null = null
 
   /**
    * The current connection state.
@@ -238,10 +245,9 @@ export class WebSocketApi extends Api {
       }
 
       // Fire and forget; events surface via listeners.
-      this.connect().catch(() => {
-        // If the reconnect attempt fails, try again after another backoff.
-        this.scheduleReconnect()
-      })
+      // The close handler fires after every failed attempt and calls
+      // scheduleReconnect() — no additional call is needed here.
+      this.connect().catch(() => {})
     }, delay)
   }
 
@@ -392,7 +398,7 @@ export class WebSocketApi extends Api {
       eventTypes = [eventTypes]
     }
 
-    for (const eventType of eventTypes) {
+    for (let eventType of eventTypes) {
       this.listeners.push([eventType, handler])
     }
   }
@@ -443,7 +449,7 @@ export class WebSocketApi extends Api {
     event: TWebSocketEvents[T],
   ): void {
     // Call all matching listeners
-    for (const [eventType, listener] of this.listeners) {
+    for (let [eventType, listener] of this.listeners) {
       if (event.method === eventType) {
         listener(event)
       }
@@ -460,7 +466,8 @@ export class WebSocketApi extends Api {
 
   /**
    * Establishes a WebSocket connection.
-   * @returns A promise that resolves when the connection is established.
+   * @resolves when the connection is established.
+   * @rejects If the connection attempt fails, times out, or is superseded by a subsequent connect() call.
    */
   public connect(): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -475,7 +482,38 @@ export class WebSocketApi extends Api {
         this._manualDisconnect = false
         this.clearReconnectTimer()
 
-        // Close existing connection if any.
+        // If a prior connect() is still in CONNECTING state, reject it
+        // immediately so its caller is not left waiting indefinitely, then
+        // reject this call too — the caller should wait and retry.
+        if (
+          this._connection &&
+          this._connection.readyState === WebSocket.CONNECTING
+        ) {
+          if (this._pendingConnectReject) {
+            this._pendingConnectReject(
+              new Error('Connection superseded by a new connect() call.'),
+            )
+            this._pendingConnectReject = null
+          }
+
+          try {
+            this._connection.terminate()
+          } catch {
+            // ignore
+          }
+
+          this._connection = null
+
+          reject(
+            new Error(
+              'connect() called while a connection attempt was already in progress.',
+            ),
+          )
+
+          return
+        }
+
+        // Close any non-CLOSED, non-CONNECTING connection.
         if (
           this._connection &&
           this._connection.readyState !== WebSocket.CLOSED
@@ -493,6 +531,7 @@ export class WebSocketApi extends Api {
         // Create new WebSocket connection with options.
         this._connection = new WebSocket(this._url, this._options)
         let connection = this._connection
+        this._pendingConnectReject = reject
 
         // Handle connection opened.
         connection.on('open', () => {
@@ -500,6 +539,7 @@ export class WebSocketApi extends Api {
             return
           }
 
+          this._pendingConnectReject = null
           this._hasConnectedOnce = true
           this._reconnectAttemptCount = 0
 
@@ -566,6 +606,7 @@ export class WebSocketApi extends Api {
           if (this._connection !== connection) {
             return
           }
+          this._pendingConnectReject = null
           this.emitEvent({ method: 'error', error })
           reject(error)
         })
@@ -587,12 +628,14 @@ export class WebSocketApi extends Api {
             method: 'connection-change',
             isConnected: false,
           })
+          this._pendingConnectReject = null
           this._connection = null
 
           // Attempt auto-reconnect for long-lived sessions.
           this.scheduleReconnect()
         })
       } catch (error) {
+        this._pendingConnectReject = null
         reject(error)
       }
     })
@@ -602,6 +645,7 @@ export class WebSocketApi extends Api {
    * Closes the WebSocket connection.
    * @param code The close code to send.
    * @param reason The reason for closing.
+   * @resolves when the connection has been fully closed.
    */
   public disconnect(code?: number, reason?: string): Promise<void> {
     return new Promise((resolve) => {
@@ -619,13 +663,6 @@ export class WebSocketApi extends Api {
       }
 
       let connection = this._connection
-
-      // Resolve on close (or immediately if already closed).
-      if (connection.readyState === WebSocket.CLOSED) {
-        this._connection = null
-        resolve()
-        return
-      }
 
       connection.once('close', () => {
         if (this._connection === connection) {
@@ -647,7 +684,8 @@ export class WebSocketApi extends Api {
   /**
    * Sends data through the WebSocket connection.
    * @param data The data to send.
-   * @returns A promise that resolves when the data is sent.
+   * @resolves when the data has been sent.
+   * @rejects If the WebSocket is not connected or the data cannot be serialized.
    */
   public send(data: any): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -675,7 +713,8 @@ export class WebSocketApi extends Api {
   /**
    * Sends a JSON message through the WebSocket connection.
    * @param message The message object to send.
-   * @returns A promise that resolves when the message is sent.
+   * @resolves when the message has been sent.
+   * @rejects If the WebSocket is not connected or the message cannot be serialized.
    */
   public async sendMessage(message: TAnyObject): Promise<void> {
     return await this.send(message)
