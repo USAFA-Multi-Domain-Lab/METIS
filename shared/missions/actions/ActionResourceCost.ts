@@ -88,7 +88,11 @@ export class ActionResourceCost<
   }
 
   public get amountFormatted(): string {
-    return (this.amount * -1).toLocaleString('en-US')
+    if (this.hidden) {
+      return '?'
+    } else {
+      return (this.amount * -1).toLocaleString('en-US')
+    }
   }
 
   /**

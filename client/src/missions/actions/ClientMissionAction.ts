@@ -80,8 +80,8 @@ export class ClientMissionAction
     let individualFormattedCosts = this.resourceCosts
       .filter(({ amount }) => amount > 0)
       .map(
-        ({ amount, resource }) =>
-          `${amount.toLocaleString('en-US')} ${resource.name}`,
+        ({ amount, hidden, resource }) =>
+          `${hidden ? '?' : amount.toLocaleString('en-US')} ${resource.name}`,
       )
 
     if (individualFormattedCosts.length === 0) {

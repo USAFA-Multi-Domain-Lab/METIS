@@ -33,7 +33,9 @@ export const copyMission: TExpressHandler = async (request, response) => {
       structure: originalMissionDoc.structure,
       forces: originalMissionDoc.forces,
       prototypes: originalMissionDoc.prototypes,
+      resources: originalMissionDoc.resources,
       files: originalMissionDoc.files,
+      effects: originalMissionDoc.effects,
       createdBy: currentUser._id,
       createdByUsername: currentUser.username,
     })
