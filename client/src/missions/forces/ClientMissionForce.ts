@@ -502,12 +502,12 @@ export class ClientMissionForce
   }
 
   /**
-   * Callback for when a mission's resource list change,
-   * allowing the force to confirm that the force's list
-   * of pools still corresponds with the available resources
-   * in the mission.
+   * Callback for when a mission's resource list updates
+   * or when a force is first created, allowing the force
+   * to confirm that the force's list  of pools still corresponds
+   * with the available resources in the mission.
    */
-  public onResourceListChange(): void {
+  public onResourceListUpdate(): void {
     // Map resources to pools, this will result in
     // pools that no longer have a corresponding resource
     // in the mission being filtered out indirectly. New

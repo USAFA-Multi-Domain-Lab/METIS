@@ -68,19 +68,14 @@
         flex-wrap: nowrap;
         gap: 0.75em;
 
-        .ResourcePoolBadgeRow {
+        .PropertyBadges {
           display: flex;
-          align-items: center;
+          flex-wrap: nowrap;
 
-          .PropertyBadges {
-            display: flex;
-            flex-wrap: nowrap;
-
-            .PropertyBadge {
-              .PropertyValue {
-                flex-grow: 1;
-                text-align: right;
-              }
+          .PropertyBadge {
+            .PropertyValue {
+              flex-grow: 1;
+              text-align: right;
             }
           }
         }
@@ -99,6 +94,7 @@
     }
 
     .PanelLayout {
+      min-height: 0;
     }
 
     .MissionMap {

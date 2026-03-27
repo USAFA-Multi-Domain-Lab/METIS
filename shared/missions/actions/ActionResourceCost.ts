@@ -87,6 +87,10 @@ export class ActionResourceCost<
     )
   }
 
+  public get amountFormatted(): string {
+    return (this.amount * -1).toLocaleString('en-US')
+  }
+
   /**
    * The icon to display for this cost, which is
    * derived from the associated resource.

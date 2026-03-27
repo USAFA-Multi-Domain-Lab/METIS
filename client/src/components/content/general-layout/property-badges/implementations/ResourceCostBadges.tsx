@@ -43,7 +43,7 @@ export default function ResourceCostBadges({
           <PropertyBadge
             key={cost._id}
             icon={cost.icon}
-            value={StringToolbox.sign(cost.baseAmount, true)} // Cost should be displayed as a negative value.
+            value={cost.amountFormatted}
             description={`${StringToolbox.toTitleCase(resource.name)} Cost`}
             strikethrough={Boolean(resourceCostStrikethroughReason)}
             strikethroughReason={resourceCostStrikethroughReason}

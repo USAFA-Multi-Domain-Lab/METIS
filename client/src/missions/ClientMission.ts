@@ -500,9 +500,12 @@ export class ClientMission
   }
 
   /**
-   * Creates a new force for the mission.
-   * @param data The JSON data for the force.
-   * @param options Options passed to the constructor.
+   * Creates a new force for the mission with default values,
+   * adding it to the current list of forces. This method
+   * will create a force based on other existing forces,
+   * attempting to use a different color and name from the
+   * existing forces. Corresponding resource pools will
+   * also be automatically generated.
    * @returns The newly created force.
    */
   public createForce(): ClientMissionForce {
@@ -541,6 +544,9 @@ export class ClientMission
 
     // Add the force to the mission.
     this.forces.push(force)
+
+    // Ensure the force has one pool for each resource.
+    force.onResourceListUpdate()
 
     // Handle structure change.
     this.handleStructureChange()
@@ -1234,10 +1240,10 @@ export class ClientMission
    */
   public onResourceListChange = (): void => {
     for (let force of this.forces) {
-      force.onResourceListChange()
+      force.onResourceListUpdate()
     }
     for (let action of this.allActions) {
-      action.onResourceListChange()
+      action.onResourceListUpdate()
     }
   }
 

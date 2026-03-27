@@ -73,6 +73,25 @@ export class ClientMissionAction
   }
 
   /**
+   * The formatted resource cost to display to a session
+   * member.
+   */
+  public get resourceCostFormatted(): string {
+    let individualFormattedCosts = this.resourceCosts
+      .filter(({ amount }) => amount > 0)
+      .map(
+        ({ amount, resource }) =>
+          `${amount.toLocaleString('en-US')} ${resource.name}`,
+      )
+
+    if (individualFormattedCosts.length === 0) {
+      return 'None'
+    } else {
+      return individualFormattedCosts.join(', ')
+    }
+  }
+
+  /**
    * The formatted opens node property to display to a
    * session member.
    */
@@ -192,7 +211,7 @@ export class ClientMissionAction
    * @param data The data to use for the action.
    * @returns A new action with the provided data.
    */
-  public static create(
+  public static fromJson(
     node: ClientMissionNode,
     data: Partial<TClientMissionActionJson> = ClientMissionAction.DEFAULT_PROPERTIES,
   ): ClientMissionAction {
@@ -216,12 +235,12 @@ export class ClientMissionAction
   }
 
   /**
-   * Callback for when a mission's resource list change,
-   * allowing the action to confirm that the action's list
-   * of resource costs still corresponds with the available
-   * resources in the mission.
+   * Callback for when a mission's resource list changes
+   * or when an action is first created, allowing the action
+   * to confirm that the action's list of resource costs still
+   * corresponds with the available resources in the mission.
    */
-  public onResourceListChange(): void {
+  public onResourceListUpdate(): void {
     // Map resources to costs, this will result in
     // costs that no longer have a corresponding resource
     // in the mission being filtered out indirectly. New

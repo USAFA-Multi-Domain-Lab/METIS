@@ -1,9 +1,10 @@
 import Tooltip from '@client/components/content/communication/Tooltip'
+import PropertyBadges from '@client/components/content/general-layout/property-badges/PropertyBadges'
 import StatusBar from '@client/components/content/session/StatusBar'
 import { compute } from '@client/toolbox'
 import SessionPage from '../SessionPage'
 import { useSessionPageContext } from '../context'
-import ResourcePoolBadgeRow from './badges/ResourcePoolBadgeRow'
+import ResourcePoolBadge from './badges/ResourcePoolBadge'
 
 // ! Styles rendered in SessionPage.scss
 
@@ -41,12 +42,16 @@ export default function SessionTopBar({}: TSessionTopBar_P): TReactElement | nul
         <Tooltip description={titleTooltipDescription} />
       </div>
       <div className='Resources'>
-        {new Array(rowCount).fill(0).map((_, index) => (
-          <ResourcePoolBadgeRow
-            key={`pool-badge-row_${index}`}
-            rowNumber={index + 1}
-          />
-        ))}
+        <PropertyBadges>
+          {resourcePools.map((pool) => (
+            <ResourcePoolBadge
+              key={`pool-badge_${pool._id}`}
+              pool={pool}
+              infiniteResources={session.config.infiniteResources}
+              compactFormattingEnabled
+            />
+          ))}
+        </PropertyBadges>
       </div>
     </div>
   )

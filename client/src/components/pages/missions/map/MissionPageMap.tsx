@@ -4,7 +4,6 @@ import type { TTabBarTab } from '@client/components/content/session/mission-map/
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
 import type { TSvgPanelElement_Input } from '@client/components/content/user-controls/buttons/panels/types'
 import { useGlobalContext } from '@client/context/global'
-import { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
 import { ClientMission } from '@client/missions/ClientMission'
 import type { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
 import { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
@@ -118,8 +117,7 @@ export default function MissionPageMap(): TReactElement {
       // one action to choose from. If the selected node doesn't
       // have at least one action then it will auto-generate one
       // for that node.
-      let newAction = ClientMissionAction.create(selection)
-      selection.actions.set(newAction._id, newAction)
+      let newAction = selection.createAction()
 
       notify(
         `Auto-generated an action for ${selection.name} because it is an executable node with no actions to execute.`,

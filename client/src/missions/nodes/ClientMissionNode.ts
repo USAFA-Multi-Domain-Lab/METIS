@@ -380,7 +380,7 @@ export class ClientMissionNode
   // Implemented
   protected importActions(data: TMissionActionJson[]): void {
     data.forEach((datum) => {
-      let action = ClientMissionAction.create(this, datum)
+      let action = ClientMissionAction.fromJson(this, datum)
       this.actions.set(action._id, action)
     })
   }
@@ -699,6 +699,19 @@ export class ClientMissionNode
     })
 
     return duplicatedNode
+  }
+
+  /**
+   * Creates a new action for the node with default values,
+   * adding it to the current list of actions. Corresponding
+   * resource costs will also be automatically generated.
+   * @returns The newly created action.
+   */
+  public createAction(): ClientMissionAction {
+    let newAction = ClientMissionAction.fromJson(this)
+    this.actions.set(newAction._id, newAction)
+    newAction.onResourceListUpdate()
+    return newAction
   }
 
   // Implemented

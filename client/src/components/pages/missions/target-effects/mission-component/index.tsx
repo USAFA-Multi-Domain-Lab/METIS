@@ -371,7 +371,7 @@ export default function ArgMissionComponent({
       // *** in the dropdown even though it no longer exists in the
       // *** mission.
       if (actionInArgs) {
-        return ClientMissionAction.create(nodeValue, {
+        return ClientMissionAction.fromJson(nodeValue, {
           localKey: actionInArgs.actionKey,
           name: actionInArgs.actionName,
         })
@@ -401,7 +401,7 @@ export default function ArgMissionComponent({
         // *** in the dropdown even though it no longer exists in the
         // *** mission.
         if (optionalNodeValue && actionInArgs) {
-          return ClientMissionAction.create(optionalNodeValue, {
+          return ClientMissionAction.fromJson(optionalNodeValue, {
             localKey: actionInArgs.actionKey,
             name: actionInArgs.actionName,
           })
