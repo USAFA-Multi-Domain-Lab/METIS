@@ -1,4 +1,6 @@
+import type { ServerMission } from '@server/missions/ServerMission'
 import { TargetMigration } from './TargetMigration'
+import type { TTargetEnvExposedMission } from './context/TargetEnvContext'
 
 /**
  * A registry of target migrations.
@@ -30,7 +32,10 @@ export class TargetMigrationRegistry {
    */
   public register(
     version: string,
-    script: (effectArgs: Record<any, any>) => void,
+    script: (
+      effectArgs: Record<any, any>,
+      mission: TTargetEnvExposedMission,
+    ) => void,
   ): TargetMigrationRegistry {
     this.migrations[version] = new TargetMigration(version, script)
     return this
@@ -43,11 +48,15 @@ export class TargetMigrationRegistry {
    * arguments should be migrated.
    * @param effectArgs The effect arguments to migrate via mutation.
    */
-  public migrate(version: string, effectArgs: Record<any, any>): void {
+  public migrate(
+    version: string,
+    effectArgs: Record<any, any>,
+    mission: ServerMission,
+  ): void {
     const migration: TargetMigration | undefined = this.migrations[version]
 
     if (migration) {
-      migration.script(effectArgs)
+      migration.script(effectArgs, mission.toTargetEnvContext())
     } else {
       console.warn(`No migration found for version "${version}".`)
     }

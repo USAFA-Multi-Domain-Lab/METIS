@@ -1,5 +1,6 @@
-import type { TAnyObject } from '../../../toolbox/objects/ObjectToolbox'
-import { VersionToolbox } from '../../../toolbox/strings/VersionToolbox'
+import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
+import { VersionToolbox } from '@shared/toolbox/strings/VersionToolbox'
+import type { TTargetEnvExposedMission } from './context/TargetEnvContext'
 
 /**
  * A migration which will update an effect to be
@@ -19,7 +20,10 @@ export class TargetMigration {
      * to the given version by mutating them in place.
      * @param effectArgs The effect arguments to migrate via mutation.
      */
-    public readonly script: (effectArgs: TAnyObject) => void,
+    public readonly script: (
+      effectArgs: TAnyObject,
+      mission: TTargetEnvExposedMission,
+    ) => void,
   ) {
     if (!VersionToolbox.isValidVersion(version)) {
       throw new Error(

@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals'
-import { TargetMigrationRegistry } from '@shared/target-environments/targets/migrations/TargetMigrationRegistry'
+import { TargetMigrationRegistry } from '@server/target-environments/TargetMigrationRegistry'
 
 describe('TargetMigrationRegistry', () => {
   describe('.versions', () => {

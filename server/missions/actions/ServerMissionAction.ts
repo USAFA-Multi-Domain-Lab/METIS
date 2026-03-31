@@ -147,9 +147,6 @@ export class ServerMissionAction extends MissionAction<TMetisServerComponents> {
       get processTime() {
         return self.processTime
       },
-      get resourceCosts() {
-        return self.resourceCosts
-      },
       get executing() {
         return self.executing
       },
@@ -172,6 +169,9 @@ export class ServerMissionAction extends MissionAction<TMetisServerComponents> {
       },
       get node() {
         return self.node.toTargetEnvContext()
+      },
+      get resourceCosts() {
+        return self.resourceCosts.map((cost) => cost.toTargetEnvContext())
       },
       get effects() {
         return self.effects.map((effect) => effect.toTargetEnvContext())

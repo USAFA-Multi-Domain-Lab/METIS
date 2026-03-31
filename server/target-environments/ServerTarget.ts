@@ -1,3 +1,4 @@
+import type { ServerMission } from '@server/missions/ServerMission'
 import type {
   TargetSchema,
   TTargetScript,
@@ -7,8 +8,8 @@ import { Arg } from '@shared/target-environments/args/Arg'
 import { Target } from '@shared/target-environments/targets/Target'
 import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
 import { VersionToolbox } from '@shared/toolbox/strings/VersionToolbox'
-import type { TargetMigrationRegistry } from '../../shared/target-environments/targets/migrations/TargetMigrationRegistry'
 import { ServerTargetEnvironment } from './ServerTargetEnvironment'
+import type { TargetMigrationRegistry } from './TargetMigrationRegistry'
 import type { TTargetEnvExposedTarget } from './context/TargetEnvContext'
 
 /**
@@ -79,8 +80,9 @@ export class ServerTarget extends Target<TMetisServerComponents> {
   public migrateEffectArgs(
     version: string,
     effectArgs: TAnyObject,
+    mission: ServerMission,
   ): void {
-    this.migrationRegistry.migrate(version, effectArgs)
+    this.migrationRegistry.migrate(version, effectArgs, mission)
   }
 
   /**

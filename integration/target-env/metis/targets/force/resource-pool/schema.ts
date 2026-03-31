@@ -1,5 +1,34 @@
+import { TargetMigrationRegistry } from '@metis/schema/TargetMigrationRegistry'
 import { NumberToolbox } from '@metis/toolbox/numbers/NumberToolbox'
 import type { TPoolMetadata } from '@shared/target-environments/types'
+
+let migrations = new TargetMigrationRegistry()
+
+// Migrates awards to be compatible with new multi-resource
+// system added in v2.4.0 of METIS.
+migrations.register('2.4.0', (effectArgs, mission) => {
+  // Find target pool.
+  let { forceKey, forceName } = effectArgs.forceMetadata as TForceMetadata
+  let force = mission.forces.find(({ localKey }) => localKey === forceKey)
+  let firstPool = force?.resourcePools.sort(
+    (poolA, poolB) => poolA.resource.order - poolB.resource.order,
+  )[0]
+  if (!firstPool) {
+    throw new Error(
+      `Migration failed. No resource pools found for force "${forceName}". A resource pool must be added to the force before this migration can be applied.`,
+    )
+  }
+
+  // Update args to include pool metadata instead
+  // of simple force metadata.
+  effectArgs.poolMetadata = {
+    forceKey,
+    forceName,
+    poolKey: firstPool.localKey,
+    poolName: firstPool.name,
+  } satisfies TPoolMetadata
+  delete effectArgs.forceMetadata
+})
 
 /**
  * A target available in the METIS target environment that enables a user
@@ -71,6 +100,7 @@ const ResourcePool = new TargetSchema({
       tooltipDescription: 'The amount to award to the resource pool.',
     },
   ],
+  migrations,
 })
 
 export default ResourcePool

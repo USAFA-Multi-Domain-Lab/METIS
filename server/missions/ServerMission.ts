@@ -135,7 +135,9 @@ export class ServerMission extends Mission<TMetisServerComponents> {
     return {
       _id: self._id,
       name: self.name,
-      resources: self.resources,
+      get resources() {
+        return self.resources.map((resource) => resource.toTargetEnvContext())
+      },
       get forces() {
         return self.forces.map((force) => force.toTargetEnvContext())
       },

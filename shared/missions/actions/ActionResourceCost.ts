@@ -32,6 +32,20 @@ export class ActionResourceCost<
     return this.action.mission
   }
 
+  /**
+   * The force associated with this cost.
+   */
+  public get force(): T['force'] {
+    return this.action.force
+  }
+
+  /**
+   * The node associate with this cost.
+   */
+  public get node(): T['node'] {
+    return this.action.node
+  }
+
   // Implemented
   public get path(): [...MissionComponent<any, any>[], this] {
     return [...this.action.path, this]
@@ -141,7 +155,7 @@ export class ActionResourceCost<
    * before any modifiers are applied.
    * @param hidden Whether this cost is hidden from session participants.
    */
-  private constructor(
+  protected constructor(
     action: TAction<T>,
     resource: T['resource'],
     _id: string,

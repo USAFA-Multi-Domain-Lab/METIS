@@ -5,10 +5,8 @@ import {
 import { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSerializableArray'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { TMission } from './Mission'
-import {
-  MissionComponent,
-  type TMissionComponentIssue,
-} from './MissionComponent'
+import type { TMissionComponentIssue } from './MissionComponent'
+import { MissionComponent } from './MissionComponent'
 
 /**
  * Represents a named resource defined at the mission level. Each resource
@@ -61,7 +59,7 @@ export class MissionResource<
    * @param icon The icon to display for this resource.
    * @param order The rendering order for this resource.
    */
-  private constructor(
+  protected constructor(
     mission: TMission<T>,
     _id: string,
     name: string,
@@ -109,7 +107,9 @@ export class MissionResource<
    * The default display names for each resource icon, used when
    * a new resource is created without an explicit name.
    */
-  public static readonly DEFAULT_NAMES: Readonly<Partial<Record<TMetisIcon, string>>> = {
+  public static readonly DEFAULT_NAMES: Readonly<
+    Partial<Record<TMetisIcon, string>>
+  > = {
     'resources/coins': 'Resources',
     'resources/trophy': 'Points',
     'resources/flag': 'Budget',
@@ -149,11 +149,7 @@ export class MissionResource<
    */
   public static createNew<
     T extends TMetisBaseComponents = TMetisBaseComponents,
-  >(
-    mission: TMission<T>,
-    name?: string,
-    icon?: TMetisIcon,
-  ): T['resource'] {
+  >(mission: TMission<T>, name?: string, icon?: TMetisIcon): T['resource'] {
     let order =
       Math.max(...mission.resources.map((resource) => resource.order), 1) + 1
     let resolvedIcon = icon ?? MissionResource.getNextUnusedIcon(mission)

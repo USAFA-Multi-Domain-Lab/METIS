@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals'
-import { TargetMigration } from '@shared/target-environments/targets/migrations/TargetMigration'
+import { TargetMigration } from '@server/target-environments/TargetMigration'
 
 describe('TargetMigration', () => {
   test('Throws for an invalid version string', () => {

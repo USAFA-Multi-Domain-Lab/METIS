@@ -1,9 +1,12 @@
 import { targetEnvLogger } from '@server/logging'
 import type { Mission } from '@shared/missions/Mission'
+import type { MissionResource } from '@shared/missions/MissionResource'
+import type { ActionResourceCost } from '@shared/missions/actions/ActionResourceCost'
 import type { MissionAction } from '@shared/missions/actions/MissionAction'
 import type { Effect } from '@shared/missions/effects/Effect'
 import type { MissionFile } from '@shared/missions/files/MissionFile'
 import type { MissionForce } from '@shared/missions/forces/MissionForce'
+import type { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import type { MissionNode } from '@shared/missions/nodes/MissionNode'
 import type {
   MissionSession,
@@ -338,13 +341,9 @@ export type TTargetEnvExposedSession = Readonly<
 /**
  * Data for a session config exposed to target-environment code.
  */
-export interface TTargetEnvExposedSessionConfig
-  extends Readonly<
-    Pick<
-      MissionSession['config'],
-      'name' | 'accessibility' | 'infiniteResources'
-    >
-  > {
+export interface TTargetEnvExposedSessionConfig extends Readonly<
+  Pick<MissionSession['config'], 'name' | 'accessibility' | 'infiniteResources'>
+> {
   /**
    * The configuration for this target environment.
    * @note If null, no configuration has been selected
@@ -359,8 +358,12 @@ export interface TTargetEnvExposedSessionConfig
 export type TTargetEnvExposedMission = Readonly<
   TCreateJsonType<
     Mission,
-    '_id' | 'name' | 'resources',
+    '_id' | 'name',
     {
+      /**
+       * @see {@link Mission.resources}
+       */
+      resources: TTargetEnvExposedResource[]
       /**
        * @see {@link Mission.forces}
        */
@@ -390,16 +393,28 @@ export type TTargetEnvExposedMission = Readonly<
 >
 
 /**
+ * Data for a resource exposed to target-environment code.
+ */
+export type TTargetEnvExposedResource = Readonly<
+  TCreateJsonType<
+    MissionResource,
+    '_id' | 'name' | 'icon' | 'order',
+    {
+      /**
+       * @see {@link MissionResource.mission}
+       */
+      mission: TTargetEnvExposedMission
+    }
+  >
+>
+
+/**
  * Data for a force exposed to target-environment code.
  */
 export type TTargetEnvExposedForce = Readonly<
   TCreateJsonType<
     MissionForce,
-    | '_id'
-    | 'localKey'
-    | 'name'
-    | 'color'
-    | 'resourcePools',
+    '_id' | 'localKey' | 'name' | 'color',
     {
       /**
        * @see {@link MissionForce.mission}
@@ -409,6 +424,43 @@ export type TTargetEnvExposedForce = Readonly<
        * @see {@link MissionForce.nodes}
        */
       nodes: TTargetEnvExposedNode[]
+      /**
+       * @see {@link MissionForce.resourcePools}
+       */
+      resourcePools: TTargetEnvExposedPool[]
+    }
+  >
+>
+
+/**
+ * Data for a resource pool exposed to target-environment code.
+ */
+export type TTargetEnvExposedPool = Readonly<
+  TCreateJsonType<
+    ResourcePool,
+    | '_id'
+    | 'localKey'
+    | 'name'
+    | 'initialBalance'
+    | 'allowNegative'
+    | 'excluded',
+    {
+      /**
+       * @see {@link ResourcePool.mission}
+       */
+      mission: TTargetEnvExposedMission
+      /**
+       * @see {@link ResourcePool.force}
+       */
+      force: TTargetEnvExposedForce
+      /**
+       * @see {@link ResourcePool.resource}
+       */
+      resource: TTargetEnvExposedResource
+      /**
+       * @see {@link ResourcePool.balance}
+       */
+      balance: number // Make balance required.
     }
   >
 >
@@ -504,7 +556,6 @@ export type TTargetEnvExposedAction = Readonly<
     | 'successChance'
     | 'failureChance'
     | 'processTime'
-    | 'resourceCosts'
     | 'areEnoughResources'
     | 'executing'
     | 'executionCount'
@@ -523,9 +574,45 @@ export type TTargetEnvExposedAction = Readonly<
        */
       node: TTargetEnvExposedNode
       /**
+       * @see {@link MissionAction.resourceCosts}
+       */
+      resourceCosts: TTargetEnvExposedCost[]
+      /**
        * @see {@link MissionAction.effects}
        */
       effects: TTargetEnvExposedEffect[]
+    }
+  >
+>
+
+/**
+ * Data for a resource cost exposed to target-environment code.
+ */
+export type TTargetEnvExposedCost = Readonly<
+  TCreateJsonType<
+    ActionResourceCost,
+    '_id' | 'name' | 'baseAmount' | 'hidden' | 'amount' | 'icon',
+    {
+      /**
+       * @see {@link ActionResourceCost.resource}
+       */
+      resource: TTargetEnvExposedResource
+      /**
+       * @see {@link ActionResourceCost.mission}
+       */
+      mission: TTargetEnvExposedMission
+      /**
+       * @see {@link ActionResourceCost.force}
+       */
+      force: TTargetEnvExposedForce
+      /**
+       * @see {@link ActionResourceCost.node}
+       */
+      node: TTargetEnvExposedNode
+      /**
+       * @see {@link ActionResourceCost.action}
+       */
+      action: TTargetEnvExposedAction
     }
   >
 >

@@ -117,6 +117,7 @@ export class ClientTargetEnvironment extends TargetEnvironment<TMetisClientCompo
           environmentId: effect.environmentId,
           effectEnvVersion: effect.targetEnvironmentVersion,
           effectArgs: effect.args,
+          missionId: effect.mission._id,
         },
       )
       return response.data

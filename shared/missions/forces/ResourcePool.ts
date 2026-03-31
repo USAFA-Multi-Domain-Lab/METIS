@@ -113,7 +113,7 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
    * @param excluded Whether this pool is excluded from the force.
    * @param balance The current amount of resources remaining.
    */
-  private constructor(
+  protected constructor(
     resource: T['resource'],
     force: TForce<T>,
     _id: string,

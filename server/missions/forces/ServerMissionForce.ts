@@ -59,9 +59,11 @@ export class ServerMissionForce extends MissionForce<TMetisServerComponents> {
       localKey: self.localKey,
       name: self.name,
       color: self.color,
-      resourcePools: self.resourcePools,
       get mission() {
         return self.mission.toTargetEnvContext()
+      },
+      get resourcePools() {
+        return self.resourcePools.map((pool) => pool.toTargetEnvContext())
       },
       get nodes() {
         return self.nodes.map((node) => node.toTargetEnvContext())

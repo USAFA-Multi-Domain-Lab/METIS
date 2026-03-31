@@ -39,6 +39,7 @@ export const routerMap: TMetisRouterMap = (
         environmentId: RequestBodyFilters.STRING,
         effectEnvVersion: RequestBodyFilters.VERSION,
         effectArgs: RequestBodyFilters.OBJECT,
+        missionId: RequestBodyFilters.STRING,
       },
     }),
     migrateEffectArgs,
