@@ -1,5 +1,8 @@
 import type { TTargetEnvExposedCost } from '@server/target-environments/context/TargetEnvContext'
+import type { TActionResourceCostJson } from '@shared/missions/actions/ActionResourceCost'
 import { ActionResourceCost } from '@shared/missions/actions/ActionResourceCost'
+import { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSerializableArray'
+import type { ServerMissionAction } from './ServerMissionAction'
 
 /**
  * Server representation of {@link ActionResourceCost}.
@@ -34,6 +37,43 @@ export class ServerActionCost extends ActionResourceCost<TMetisServerComponents>
         return self.action.toTargetEnvContext()
       },
     }
+  }
+
+  // Overridden
+  public static fromJson<T extends TMetisBaseComponents = TMetisBaseComponents>(
+    action: ServerMissionAction,
+    data: TActionResourceCostJson,
+  ): ServerActionCost
+  // Overridden
+  public static fromJson<T extends TMetisBaseComponents = TMetisBaseComponents>(
+    action: ServerMissionAction,
+    data: TActionResourceCostJson[],
+  ): JsonSerializableArray<ServerActionCost>
+  // Overridden
+  public static fromJson<T extends TMetisBaseComponents = TMetisBaseComponents>(
+    action: ServerMissionAction,
+    data: TActionResourceCostJson | TActionResourceCostJson[],
+  ): ServerActionCost | JsonSerializableArray<ServerActionCost> {
+    if (Array.isArray(data)) {
+      return new JsonSerializableArray(
+        ...data.map((datum) => ServerActionCost.fromJson(action, datum)),
+      )
+    }
+
+    let resource = action.mission.getResourceById(data.resourceId)
+    if (!resource) {
+      throw new Error(
+        `ResourcePool creation failed: No resource found with ID ${data.resourceId}`,
+      )
+    }
+
+    return new ServerActionCost(
+      action,
+      resource,
+      data._id,
+      data.baseAmount,
+      data.hidden,
+    )
   }
 }
 

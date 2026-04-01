@@ -6,10 +6,20 @@ let migrations = new TargetMigrationRegistry()
 
 // Migrates awards to be compatible with new multi-resource
 // system added in v2.4.0 of METIS.
-migrations.register('2.4.0', (effectArgs, mission) => {
-  // Find target pool.
-  let { forceKey, forceName } = effectArgs.forceMetadata as TForceMetadata
-  let force = mission.forces.find(({ localKey }) => localKey === forceKey)
+migrations.register('2.4.0', (effect) => {
+  let { forceKey, forceName } = effect.args.forceMetadata as TForceMetadata
+
+  // Find force
+  let force: typeof effect.sourceForce | undefined = effect.sourceForce // Default to source force.
+  if (forceKey !== 'self') {
+    effect.mission.forces.find(({ localKey }) => localKey === forceKey) // Perform search if not targeting source force.
+  }
+  if (!force) {
+    throw new Error(
+      `Migration failed. Force with key "${forceKey}" not found. A force with the key must be added to the mission before this migration can be applied.`,
+    )
+  }
+  // Find pool
   let firstPool = force?.resourcePools.sort(
     (poolA, poolB) => poolA.resource.order - poolB.resource.order,
   )[0]
@@ -21,13 +31,13 @@ migrations.register('2.4.0', (effectArgs, mission) => {
 
   // Update args to include pool metadata instead
   // of simple force metadata.
-  effectArgs.poolMetadata = {
+  effect.args.poolMetadata = {
     forceKey,
     forceName,
     poolKey: firstPool.localKey,
     poolName: firstPool.name,
   } satisfies TPoolMetadata
-  delete effectArgs.forceMetadata
+  delete effect.args.forceMetadata
 })
 
 /**

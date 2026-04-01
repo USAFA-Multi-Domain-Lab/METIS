@@ -1,15 +1,25 @@
-import type { ServerMission } from '@server/missions/ServerMission'
+import { VersionToolbox } from '@shared/toolbox/strings/VersionToolbox'
+import type {
+  TMigratableEffect,
+  TTargetMigrationScript,
+} from './TargetMigration'
 import { TargetMigration } from './TargetMigration'
-import type { TTargetEnvExposedMission } from './context/TargetEnvContext'
 
 /**
  * A registry of target migrations.
  */
 export class TargetMigrationRegistry {
   /**
-   * The migrations available for a target.
+   * Actual memory store for the migration registry data.
+   * @see {@link migrations} below.
    */
-  protected readonly migrations: Record<string, TargetMigration>
+  protected readonly _migrations: Record<string, TargetMigration>
+  /**
+   * The migrations available for a target, sorted in ascending version order.
+   */
+  protected get migrations(): Record<string, TargetMigration> {
+    return { ...this._migrations }
+  }
 
   /**
    * All registered versions with available migration
@@ -20,7 +30,7 @@ export class TargetMigrationRegistry {
   }
 
   public constructor() {
-    this.migrations = {}
+    this._migrations = {}
   }
 
   /**
@@ -32,33 +42,52 @@ export class TargetMigrationRegistry {
    */
   public register(
     version: string,
-    script: (
-      effectArgs: Record<any, any>,
-      mission: TTargetEnvExposedMission,
-    ) => void,
+    script: TTargetMigrationScript,
   ): TargetMigrationRegistry {
-    this.migrations[version] = new TargetMigration(version, script)
+    this._migrations[version] = new TargetMigration(version, script)
+    this.refreshMigrationOrder()
     return this
   }
 
   /**
-   * Migrates the given effect arguments to the given version
-   * by mutating them in place.
-   * @param version The version to which the effect
-   * arguments should be migrated.
-   * @param effectArgs The effect arguments to migrate via mutation.
+   * Called when changes are made to {@link _migrations} to ensure
+   * that the migrations are sorted in ascending version order.
    */
-  public migrate(
-    version: string,
-    effectArgs: Record<any, any>,
-    mission: ServerMission,
-  ): void {
-    const migration: TargetMigration | undefined = this.migrations[version]
-
-    if (migration) {
-      migration.script(effectArgs, mission.toTargetEnvContext())
-    } else {
-      console.warn(`No migration found for version "${version}".`)
+  private refreshMigrationOrder(): void {
+    const sorted = VersionToolbox.sortVersions(Object.keys(this._migrations))
+    for (const version of sorted) {
+      const migration = this._migrations[version]
+      delete this._migrations[version]
+      this._migrations[version] = migration
     }
+  }
+
+  /**
+   * Migrates the given effect to be compatible with the
+   * current target-environment version.
+   * @param effect The effect to migrate.
+   * @note Result from the migration will be accessible via
+   * the `result` property after migrations are realized.
+   */
+  public migrate(effect: TMigratableEffect): void {
+    let migrations = this.getPending(effect)
+
+    for (let migration of migrations) {
+      migration.script(effect)
+      effect.versionCursor = migration.version
+    }
+  }
+
+  /**
+   * @param effect The effect for which to determine pending migrations.
+   * @param desiredVersion The desired target environment version
+   * for the effect, once migrations are done.
+   * @returns All migrations which must be run in order to make the
+   * effect compatible with the desired version.
+   */
+  private getPending(effect: TMigratableEffect): TargetMigration[] {
+    return Array.from(Object.values(this._migrations)).filter(({ version }) =>
+      VersionToolbox.isLaterThan(version, effect.versionCursor),
+    )
   }
 }

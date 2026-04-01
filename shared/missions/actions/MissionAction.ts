@@ -12,10 +12,7 @@ import {
   type TMissionComponentIssue,
 } from '../MissionComponent'
 import type { TNode, TNodeJsonOptions } from '../nodes/MissionNode'
-import {
-  ActionResourceCost,
-  type TActionResourceCostJson,
-} from './ActionResourceCost'
+import { type TActionResourceCostJson } from './ActionResourceCost'
 
 /* -- CONSTANTS -- */
 
@@ -327,15 +324,14 @@ export abstract class MissionAction<
     this.successChanceHidden =
       data.successChanceHidden ??
       MissionAction.DEFAULT_PROPERTIES.successChanceHidden
-    this.resourceCosts = ActionResourceCost.fromJson(
-      this,
-      data.resourceCosts ?? MissionAction.DEFAULT_PROPERTIES.resourceCosts,
-    )
     this.opensNode =
       data.opensNode ?? MissionAction.DEFAULT_PROPERTIES.opensNode
     this.opensNodeHidden =
       data.opensNodeHidden ?? MissionAction.DEFAULT_PROPERTIES.opensNodeHidden
     this.localKey = data.localKey ?? node.generateActionKey()
+    this.resourceCosts = this.parseCosts(
+      data.resourceCosts ?? MissionAction.DEFAULT_PROPERTIES.resourceCosts,
+    )
     this.effects = this.parseEffects(
       data.effects ?? MissionAction.DEFAULT_PROPERTIES.effects,
     )
@@ -343,6 +339,16 @@ export abstract class MissionAction<
     this._processTimeOperand = 0
     this._successChanceOperand = 0
   }
+
+  /**
+   * Parses the effect data into Effect Objects.
+   * @param data The effect data to parse.
+   * @param options The options for parsing the effect data.
+   * @returns An array of Effect Objects.
+   */
+  protected abstract parseCosts(
+    data: TActionResourceCostJson[],
+  ): JsonSerializableArray<T['resourceCost']>
 
   /**
    * Parses the effect data into Effect Objects.

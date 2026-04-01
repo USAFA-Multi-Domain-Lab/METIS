@@ -65,6 +65,21 @@ export class VersionToolbox {
   public static isEarlierThan(versionA: string, versionB: string): boolean {
     return this.compareVersions(versionA, versionB) === 'earlier'
   }
+
+  /**
+   * Sorts an array of semantic version strings in ascending order.
+   * @param versions The array of semantic version strings to sort.
+   * @returns A new array sorted from earliest to latest.
+   * @throws If any version in the array is invalid.
+   */
+  public static sortVersions(versions: string[]): string[] {
+    return [...versions].sort((versionA, versionB) => {
+      const result = this.compareVersions(versionA, versionB)
+      if (result === 'later') return 1
+      if (result === 'earlier') return -1
+      return 0
+    })
+  }
 }
 
 /* -- TYPES -- */

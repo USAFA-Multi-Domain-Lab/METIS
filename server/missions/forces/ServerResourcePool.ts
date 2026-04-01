@@ -1,5 +1,9 @@
 import type { TTargetEnvExposedPool } from '@server/target-environments/context/TargetEnvContext'
+import type { TResourcePoolJson } from '@shared/missions/forces/ResourcePool'
 import { ResourcePool } from '@shared/missions/forces/ResourcePool'
+import { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSerializableArray'
+import type { ServerMission } from '../ServerMission'
+import type { ServerMissionForce } from './ServerMissionForce'
 
 /**
  * Server implementation of {@link ResourcePool}.
@@ -30,6 +34,50 @@ export class ServerResourcePool extends ResourcePool<TMetisServerComponents> {
         return self.force.toTargetEnvContext()
       },
     }
+  }
+
+  // Overridden
+  public static fromJson<T extends TMetisBaseComponents = TMetisBaseComponents>(
+    force: ServerMissionForce,
+    data: TResourcePoolJson,
+  ): ServerResourcePool
+  // Overridden
+  public static fromJson<T extends TMetisBaseComponents = TMetisBaseComponents>(
+    force: ServerMissionForce,
+    data: TResourcePoolJson[],
+  ): JsonSerializableArray<ServerResourcePool>
+  // Overridden
+  public static fromJson(
+    force: ServerMissionForce,
+    data: TResourcePoolJson | TResourcePoolJson[],
+  ): ServerResourcePool | JsonSerializableArray<ServerResourcePool> {
+    // Array check. If data is an array, call recursively
+    // on each item for joint deserialization.
+    if (Array.isArray(data)) {
+      return new JsonSerializableArray(
+        ...data.map((datum) => ServerResourcePool.fromJson(force, datum)),
+      )
+    }
+
+    // Find associated resource for the pool.
+    let mission: ServerMission = force.mission
+    let resource = mission.getResourceById(data.resourceId)
+    if (!resource) {
+      throw new Error(
+        `ResourcePool creation failed: No resource found with ID ${data.resourceId}`,
+      )
+    }
+
+    return new ServerResourcePool(
+      resource,
+      force,
+      data._id,
+      data.localKey ?? force.generatePoolKey(),
+      data.initialBalance,
+      data.allowNegative,
+      data.excluded,
+      data.balance ?? data.initialBalance,
+    )
   }
 }
 

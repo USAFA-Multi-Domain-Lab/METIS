@@ -5,11 +5,13 @@ import type {
   TMissionForceSaveJson,
 } from '@shared/missions/forces/MissionForce'
 import { MissionForce } from '@shared/missions/forces/MissionForce'
+import type { TResourcePoolJson } from '@shared/missions/forces/ResourcePool'
 import type { TMissionNodeJson } from '@shared/missions/nodes/MissionNode'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { ServerMissionNode } from '../nodes/ServerMissionNode'
 import type { ServerMission } from '../ServerMission'
 import { ServerOutput } from './ServerOutput'
+import { ServerResourcePool } from './ServerResourcePool'
 
 /**
  * Class for managing mission forces on the server.
@@ -30,7 +32,12 @@ export class ServerMissionForce extends MissionForce<TMetisServerComponents> {
   }
 
   // Implemented
-  public createNode(data: Partial<TMissionNodeJson>): ServerMissionNode {
+  protected createPool(data: TResourcePoolJson): ServerResourcePool {
+    return ServerResourcePool.fromJson(this, data)
+  }
+
+  // Implemented
+  protected createNode(data: Partial<TMissionNodeJson>): ServerMissionNode {
     return new ServerMissionNode(this, data)
   }
 

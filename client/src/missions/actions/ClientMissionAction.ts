@@ -1,6 +1,7 @@
 import type { TMissionOutlineItem } from '@client/components/pages/missions/structures/MissionOutline'
 import type { TMetisClientComponents } from '@client/index'
 import type { ClientTarget } from '@client/target-environments/ClientTarget'
+import type { TActionResourceCostJson } from '@shared/missions/actions/ActionResourceCost'
 import { ActionResourceCost } from '@shared/missions/actions/ActionResourceCost'
 import type {
   TMissionActionJsonDirect,
@@ -129,6 +130,13 @@ export class ClientMissionAction
     data: Partial<TClientMissionActionJson> = ClientMissionAction.DEFAULT_PROPERTIES,
   ) {
     super(node, data)
+  }
+
+  // Implemented
+  protected parseCosts(
+    data: TActionResourceCostJson[],
+  ): JsonSerializableArray<ActionResourceCost<TMetisClientComponents>> {
+    return ActionResourceCost.fromJson(this, data)
   }
 
   // Implemented

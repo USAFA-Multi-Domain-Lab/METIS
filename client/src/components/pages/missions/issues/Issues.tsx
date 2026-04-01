@@ -28,7 +28,8 @@ export default function Issues({
   const { state: panelState } = usePanelContext()
   const [mission] = state.mission
   const [issues] = state.issues
-  const [_, selectView] = panelState.selectedView
+  const [, setCheckForIssues] = state.checkForIssues
+  const [, selectView] = panelState.selectedView
   const [searchQuery, setSearchQuery] = useState<string>('')
   const warningButtonEngine = useButtonSvgEngine({
     elements: [
@@ -74,10 +75,11 @@ export default function Issues({
       let results = await ClientTargetEnvironment.$migrateEffectArgs(component)
 
       // Store the migrated data in the component.
-      component.targetEnvironmentVersion = results.resultingVersion
-      component.args = results.resultingArgs
+      component.targetEnvironmentVersion = results.version
+      component.args = results.data
 
       onChange(component)
+      setCheckForIssues(true)
     } else {
       mission.select(component)
 

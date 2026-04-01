@@ -6,6 +6,7 @@ import { EventManager } from '@shared/events/EventManager'
 import type { TMissionForceJson } from '@shared/missions/forces/MissionForce'
 import { MissionForce } from '@shared/missions/forces/MissionForce'
 import type { TOutputJson } from '@shared/missions/forces/MissionOutput'
+import type { TResourcePoolJson } from '@shared/missions/forces/ResourcePool'
 import { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import type { MissionComponent } from '@shared/missions/MissionComponent'
 import type { TMissionNodeJson } from '@shared/missions/nodes/MissionNode'
@@ -93,7 +94,14 @@ export class ClientMissionForce
   }
 
   // Implemented
-  public createNode(data: Partial<TMissionNodeJson>): ClientMissionNode {
+  protected createPool(
+    data: TResourcePoolJson,
+  ): ResourcePool<TMetisClientComponents> {
+    return ResourcePool.fromJson<TMetisClientComponents>(this, data)
+  }
+
+  // Implemented
+  protected createNode(data: Partial<TMissionNodeJson>): ClientMissionNode {
     return new ClientMissionNode(this, data)
   }
 

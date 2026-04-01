@@ -665,7 +665,7 @@ export abstract class Effect<
       order: this.order,
       name: this.name,
       description: this.description,
-      args: this.args,
+      args: structuredClone(this.args),
       localKey: this.localKey,
     }
   }
@@ -1429,4 +1429,19 @@ export interface TEffectHost<
    * the given trigger.
    */
   generateEffectOrder(trigger: T[TType]['trigger']): number
+}
+
+/**
+ * Resulting data produced by the migration of
+ * an {@link Effect}.
+ */
+export interface TEffectMigrationResult {
+  /**
+   * The version to which the effect was migrated.
+   */
+  version: string
+  /**
+   * The resulting data produced from the migration.
+   */
+  data: TAnyObject
 }

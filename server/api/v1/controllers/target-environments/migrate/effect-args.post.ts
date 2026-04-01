@@ -2,7 +2,6 @@ import { StatusError } from '@server/api/v1/library/StatusError'
 import { MissionModel } from '@server/database/models/missions'
 import { databaseLogger } from '@server/logging'
 import { ServerMission } from '@server/missions/ServerMission'
-import { ServerTargetEnvironment } from '@server/target-environments/ServerTargetEnvironment'
 import { ApiResponse } from '../../../library/ApiResponse'
 
 /**
@@ -14,17 +13,8 @@ import { ApiResponse } from '../../../library/ApiResponse'
 export const migrateEffectArgs: TExpressHandler = async (request, response) => {
   // Extract the necessary data from the request.
   let body = request.body
-  let { targetId, environmentId, effectEnvVersion, effectArgs, missionId } =
-    body
-  let resultingVersion: string = effectEnvVersion
+  let { effectId, missionId } = body
   let mission: ServerMission | null = null
-
-  // Get the target from the registry.
-  let target = ServerTargetEnvironment.REGISTRY.getTarget(
-    targetId,
-    environmentId,
-  )
-  if (!target) return ApiResponse.sendStatus(response, 404)
 
   // Attempt to find the associated mission.
   try {
@@ -35,22 +25,22 @@ export const migrateEffectArgs: TExpressHandler = async (request, response) => {
     mission = ServerMission.fromSaveJson(missionDoc.toJSON())
   } catch (error: any) {
     databaseLogger.error(
-      `Failed to retrieve mission with ID "${missionId}".\n`,
+      `Failed to retrieve effect/mission data with mission "${missionId}".\n`,
       error,
     )
     return ApiResponse.error(error, response)
   }
 
-  let pendingMigrationVersions =
-    target.getPendingMigrationVersions(effectEnvVersion)
+  // Get effect and target.
+  let effect = mission.allEffects.find(({ _id }) => _id === effectId)
+  if (!effect) return ApiResponse.sendStatus(response, 404)
+  let target = effect.target
+  if (!target) return ApiResponse.sendStatus(response, 404)
+  let migratableEffect = effect.toMigratable()
 
-  for (let version of pendingMigrationVersions) {
-    target.migrateEffectArgs(version, effectArgs, mission)
-    resultingVersion = version
-  }
+  target.migrateEffect(migratableEffect)
 
   return ApiResponse.sendJson(response, {
-    resultingVersion,
-    resultingArgs: effectArgs,
+    result: migratableEffect.result,
   })
 }

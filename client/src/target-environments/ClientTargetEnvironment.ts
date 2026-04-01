@@ -1,10 +1,10 @@
 import type { ClientEffect } from '@client/missions/effects/ClientEffect'
+import type { TEffectMigrationResult } from '@shared/missions/effects/Effect'
 import type { TTargetEnvJson } from '@shared/target-environments/TargetEnvironment'
 import { TargetEnvironment } from '@shared/target-environments/TargetEnvironment'
 import { TargetEnvRegistry } from '@shared/target-environments/TargetEnvRegistry'
 import type { TTargetJson } from '@shared/target-environments/targets/Target'
 import type { TTargetEnvConfig } from '@shared/target-environments/types'
-import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
 import axios from 'axios'
 import type { TMetisClientComponents } from '..'
 import { ClientTarget } from './ClientTarget'
@@ -108,39 +108,20 @@ export class ClientTargetEnvironment extends TargetEnvironment<TMetisClientCompo
 
   public static async $migrateEffectArgs(
     effect: ClientEffect,
-  ): Promise<TMigrateEffectArgsResults> {
+  ): Promise<TEffectMigrationResult> {
     try {
-      const response = await axios.post<TMigrateEffectArgsResults>(
+      const response = await axios.post<{ result: TEffectMigrationResult }>(
         `${ClientTargetEnvironment.API_ENDPOINT}/migrate/effect-args`,
         {
-          targetId: effect.targetId,
-          environmentId: effect.environmentId,
-          effectEnvVersion: effect.targetEnvironmentVersion,
-          effectArgs: effect.args,
+          effectId: effect._id,
           missionId: effect.mission._id,
         },
       )
-      return response.data
+      return response.data.result
     } catch (error: any) {
       console.error('Failed to migrate effect args.')
       console.error(error)
       throw error
     }
   }
-}
-
-/**
- * The results returned in the response of the
- * {@link ClientTargetEnvironment.$migrateEffectArgs} method.
- */
-export interface TMigrateEffectArgsResults {
-  /**
-   * The version the args with which the effect
-   * args are now compatible.
-   */
-  resultingVersion: string
-  /**
-   * The resulting effect args after migration.
-   */
-  resultingArgs: TAnyObject
 }

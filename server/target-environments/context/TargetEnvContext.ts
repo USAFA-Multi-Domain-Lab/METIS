@@ -631,7 +631,8 @@ export type TTargetEnvExposedEffect<TType extends TEffectType = TEffectType> =
       | 'description'
       | 'trigger'
       | 'args'
-      | 'order',
+      | 'order'
+      | 'args',
       {
         /**
          * @see {@link Effect.mission}
