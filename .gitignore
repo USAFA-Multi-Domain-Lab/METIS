@@ -45,6 +45,4 @@ environment-test.json
 /server/database/scripts/**/*.csv
 
 # GitHub Copilot (A.I. agent)
-.github/*
-!.github/instructions
 handoffs

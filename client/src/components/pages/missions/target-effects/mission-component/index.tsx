@@ -6,6 +6,7 @@ import { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
 import { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
 import { compute } from '@client/toolbox'
 import { usePostInitEffect } from '@client/toolbox/hooks'
+import { MissionResource } from '@shared/missions/MissionResource'
 import { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import { ActionArg } from '@shared/target-environments/args/mission-component/ActionArg'
 import { FileArg } from '@shared/target-environments/args/mission-component/FileArg'
@@ -16,12 +17,14 @@ import type {
 } from '@shared/target-environments/args/mission-component/MissionComponentArg'
 import { NodeArg } from '@shared/target-environments/args/mission-component/NodeArg'
 import { PoolArg } from '@shared/target-environments/args/mission-component/PoolArg'
+import { ResourceArg } from '@shared/target-environments/args/mission-component/ResourceArg'
 import type {
   TActionMetadata,
   TFileMetadata,
   TForceMetadata,
   TNodeMetadata,
   TPoolMetadata,
+  TResourceMetadata,
 } from '@shared/target-environments/types'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { useEffect, useState } from 'react'
@@ -30,9 +33,10 @@ import ArgFile from './ArgFile'
 import ArgForce from './ArgForce'
 import ArgNode from './ArgNode'
 import ArgPool from './ArgPool'
+import ArgResource from './ArgResource'
 
 /**
- * Renders dropdowns for the argument whose type is `"force"`, `"node"`, `"action"`, `"file"`, or `"pool"`.
+ * Renders dropdowns for the argument whose type is `"force"`, `"node"`, `"action"`, `"file"`, `"pool"`, or `"resource"`.
  */
 export default function ArgMissionComponent({
   effect,
@@ -61,6 +65,8 @@ export default function ArgMissionComponent({
   const fileName = FileArg.FILE_NAME
   const poolKey = PoolArg.POOL_KEY
   const poolName = PoolArg.POOL_NAME
+  const resourceId = ResourceArg.RESOURCE_ID
+  const resourceName = ResourceArg.RESOURCE_NAME
 
   /* -- STATE -- */
 
@@ -158,6 +164,23 @@ export default function ArgMissionComponent({
       )
     }
   })
+
+  const [defaultResource] = useState<MissionResource<TMetisClientComponents>>(
+    () => {
+      // Return the first resource in the mission. If
+      // there is no resource in the mission, then return
+      // a detached resource object.
+      if (mission.resources.length) {
+        return mission.resources[0]
+      } else {
+        return MissionResource.createDetached<TMetisClientComponents>(
+          mission,
+          StringToolbox.generateRandomId(),
+          'No resources available.',
+        )
+      }
+    },
+  )
 
   /* -- FORCE STATE VALUES -- */
 
@@ -465,6 +488,65 @@ export default function ArgMissionComponent({
             fileInArgs.fileId,
             fileInArgs.fileName,
             mission,
+          )
+        }
+      }
+      // Otherwise, return null.
+      return null
+    })
+
+  /* -- RESOURCE STATE VALUES -- */
+
+  const [resourceValue, setResourceValue] = useState<
+    MissionResource<TMetisClientComponents>
+  >(() => {
+    // If the argument is required and the argument's value
+    // is in the effect's arguments...
+    if (isRequired && existsInEffectArgs) {
+      // Search for the resource in the mission.
+      let resourceInMission = effect.getResourceFromArgs(_id)
+      // If the resource is found then return the resource.
+      if (resourceInMission) return resourceInMission
+      let resourceInArgs = effect.getResourceMetadataInArgs(_id)
+      // If the resource is not found, but the effect's arguments
+      // contains the resource's metadata then return a resource
+      // object using the metadata from the effect's arguments.
+      // *** Note: This will display the user's previous selection
+      // *** in the dropdown even though it no longer exists in the
+      // *** mission.
+      if (resourceInArgs) {
+        return MissionResource.createDetached<TMetisClientComponents>(
+          mission,
+          resourceInArgs.resourceId,
+          resourceInArgs.resourceName,
+        )
+      }
+    }
+
+    // Otherwise, return the default resource.
+    return defaultResource
+  })
+  const [optionalResourceValue, setOptionalResourceValue] =
+    useState<MissionResource<TMetisClientComponents> | null>(() => {
+      // If the argument is optional and the argument's value
+      // is in the effect's arguments...
+      if (isOptional && existsInEffectArgs) {
+        // Search for the resource in the mission.
+        let resourceInMission = effect.getResourceFromArgs(_id)
+        // If the resource is found then return the resource.
+        if (resourceInMission) return resourceInMission
+        let resourceInArgs = effect.getResourceMetadataInArgs(_id)
+        // If the resource is not found, but the effect's arguments
+        // contains the resource's metadata then return a resource
+        // object using the metadata from the effect's arguments.
+        // *** Note: This will display the user's previous selection
+        // *** in the dropdown even though it no longer exists in the
+        // *** mission.
+        if (resourceInArgs) {
+          return MissionResource.createDetached<TMetisClientComponents>(
+            mission,
+            resourceInArgs.resourceId,
+            resourceInArgs.resourceName,
           )
         }
       }
@@ -999,6 +1081,75 @@ export default function ArgMissionComponent({
     }
   })
 
+  /* -- resource -- */
+
+  /**
+   * Determines if the resource should be present in the effect's arguments
+   * and if the resource dropdown should be displayed.
+   */
+  const resourceIsActive: boolean = compute(() => type === 'resource')
+
+  /**
+   * Determines if the resource value should be inserted or updated in the
+   * effect's arguments.
+   */
+  const upsertResource: boolean = compute(() => {
+    if (!resourceIsActive) return false
+
+    // If the argument is required then add the resource value
+    // to the effect's arguments.
+    if (isRequired) return true
+
+    // If the argument is optional and a resource has been selected
+    // then upsert the resource to the effect's arguments.
+    if (isOptional && optionalResourceValue !== null) {
+      return true
+    }
+
+    // Otherwise, return false.
+    return false
+  })
+
+  /**
+   * Determines if the resource value should be removed from the
+   * effect's arguments.
+   */
+  const removeResource: boolean = compute(() => {
+    if (!resourceIsActive) return true
+
+    // If the argument is optional, a resource hasn't been selected,
+    // yet the argument exists in the effect's arguments then remove
+    // the resource value from the effect's arguments.
+    if (isOptional && optionalResourceValue === null && existsInEffectArgs) {
+      return true
+    }
+
+    // Otherwise, return false.
+    return false
+  })
+
+  /**
+   * The metadata for the resource argument.
+   * @note This is the metadata that is passed to the effect's arguments.
+   */
+  const resourceMetadata: TResourceMetadata = compute(() => {
+    if (!resourceIsActive) return {}
+
+    if (isOptional && upsertResource) {
+      // *** Note: The "optionalResourceValue" is validated within
+      // *** the "upsertResource" computed property.
+      return {
+        [resourceId]: optionalResourceValue!._id,
+        [resourceName]: optionalResourceValue!.name,
+      }
+    }
+
+    return {
+      [resourceId]: resourceValue._id,
+      [resourceName]: resourceValue.name,
+    }
+  })
+
   /* -- EFFECTS -- */
 
   // Determine if the argument needs to be initialized.
@@ -1023,6 +1174,8 @@ export default function ArgMissionComponent({
     optionalFileValue,
     poolValue,
     optionalPoolValue,
+    resourceValue,
+    optionalResourceValue,
   ])
 
   /* -- FUNCTIONS -- */
@@ -1147,6 +1300,28 @@ export default function ArgMissionComponent({
         // *** with the current value.
         setPoolValue(defaultPool)
       }
+
+      // If the resource value stored in the state is the
+      // same as the default resource value, then manually update the
+      // effect's arguments by adding this argument and its
+      // value.
+      if (resourceValue === defaultResource) {
+        // *** Note: An argument's value in the effect's
+        // *** arguments is automatically set if the value
+        // *** stored in this state changes. If the value
+        // *** in the state doesn't change then the value
+        // *** needs to be set manually.
+        upsert()
+      }
+      // Otherwise, set the resource value to the default resource value.
+      // *** Note: A default value is mandatory if the
+      // *** argument is required.
+      else {
+        // *** Note: When this value in the state changes,
+        // *** the effect's arguments automatically updates
+        // *** with the current value.
+        setResourceValue(defaultResource)
+      }
     }
   }
 
@@ -1162,6 +1337,7 @@ export default function ArgMissionComponent({
     if (upsertAction) data = actionMetadata
     if (upsertFile) data = fileMetadata
     if (upsertPool) data = poolMetadata
+    if (upsertResource) data = resourceMetadata
 
     // Update the effect's arguments with the new data.
     setEffectArgs((prev) => ({
@@ -1198,6 +1374,10 @@ export default function ArgMissionComponent({
         delete prev[_id][poolKey]
         delete prev[_id][poolName]
       }
+      if (removeResource) {
+        delete prev[_id][resourceId]
+        delete prev[_id][resourceName]
+      }
 
       // If the argument is empty, then remove the argument
       // from the effect's arguments.
@@ -1207,7 +1387,8 @@ export default function ArgMissionComponent({
         prev[_id][nodeKey] === undefined &&
         prev[_id][actionKey] === undefined &&
         prev[_id][fileId] === undefined &&
-        prev[_id][poolKey] === undefined
+        prev[_id][poolKey] === undefined &&
+        prev[_id][resourceId] === undefined
       ) {
         delete prev[_id]
       }
@@ -1217,12 +1398,6 @@ export default function ArgMissionComponent({
   }
 
   /* -- RENDER -- */
-
-  console.log('forceIsActive', forceIsActive)
-  console.log('poolIsActive', poolIsActive)
-  console.log('nodeIsActive', nodeIsActive)
-  console.log('actionIsActive', actionIsActive)
-  console.log('fileIsActive', fileIsActive)
 
   return (
     <>
@@ -1276,6 +1451,17 @@ export default function ArgMissionComponent({
         fileIsActive={fileIsActive}
         fileValue={[fileValue, setFileValue]}
         optionalFileValue={[optionalFileValue, setOptionalFileValue]}
+      />
+      <ArgResource
+        effect={effect}
+        arg={arg}
+        existsInEffectArgs={existsInEffectArgs}
+        resourceIsActive={resourceIsActive}
+        resourceValue={[resourceValue, setResourceValue]}
+        optionalResourceValue={[
+          optionalResourceValue,
+          setOptionalResourceValue,
+        ]}
       />
     </>
   )

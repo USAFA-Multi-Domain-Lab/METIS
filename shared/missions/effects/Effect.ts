@@ -7,6 +7,7 @@ import type {
   TForceMetadata,
   TNodeMetadata,
   TPoolMetadata,
+  TResourceMetadata,
 } from '../../target-environments/types'
 import type { TAnyObject } from '../../toolbox/objects/ObjectToolbox'
 import { StringToolbox } from '../../toolbox/strings/StringToolbox'
@@ -794,6 +795,13 @@ export abstract class Effect<
           const value = { file }
           dependencyMet = dependency.condition(value)
         }
+        // If the dependency is a resource dependency then check
+        // if the resource exists and if the condition is met.
+        else if (dependency.name === 'resource') {
+          const resource = this.getResourceFromArgs(dependency.dependentId)
+          const value = { resource }
+          dependencyMet = dependency.condition(value)
+        }
         // Otherwise, check if the condition is met.
         else {
           dependencyMet = dependency.condition(args[dependency.dependentId])
@@ -940,6 +948,29 @@ export abstract class Effect<
   }
 
   /**
+   * Gets the resource metadata stored in the effect's arguments.
+   * @param argId The ID of the argument from which to get the resource.
+   * @returns The resource metadata if found, otherwise undefined.
+   */
+  public getResourceMetadataInArgs = (
+    argId: string,
+  ): Required<TResourceMetadata> | undefined => {
+    const resourceInArgs: TResourceMetadata | undefined = this.args[argId]
+
+    // If the resource argument is not found, then return undefined.
+    if (!resourceInArgs) return undefined
+    // Otherwise, extract the metadata.
+    let resourceId = resourceInArgs.resourceId
+    let resourceName = resourceInArgs.resourceName
+
+    // If any metadata is missing, then return undefined.
+    if (!resourceId || !resourceName) return undefined
+
+    // Return the resource metadata.
+    return { resourceId, resourceName }
+  }
+
+  /**
    * Gets the pool metadata stored in the effect's arguments.
    * @param argId The ID of the argument to get the pool from.
    * @returns The pool metadata if found, otherwise undefined.
@@ -1072,6 +1103,20 @@ export abstract class Effect<
     if (!(action instanceof MissionAction)) return undefined
     // Otherwise, return the action.
     return action
+  }
+
+  /**
+   * Gets the resource stored in the effect's arguments.
+   * @param argId The ID of the argument from which to get the resource.
+   * @returns The resource if found, otherwise undefined.
+   */
+  public getResourceFromArgs = (argId: string): T['resource'] | undefined => {
+    // Get the resource argument.
+    const resourceInArgs: TResourceMetadata | undefined = this.args[argId]
+    // Extract the metadata.
+    const resourceId = resourceInArgs?.resourceId
+    // Get the resource from the mission.
+    return this.mission.getResourceById(resourceId)
   }
 
   /**

@@ -6,6 +6,7 @@ import type {
   TForceMetadata,
   TNodeMetadata,
   TPoolMetadata,
+  TResourceMetadata,
 } from '../../types'
 import { Arg } from '../Arg'
 
@@ -77,11 +78,13 @@ export type TMissionComponentArg = TBaseArg & {
    *    3. A dropdown box populated with the current list of actions (***populated based on the node selected***).
    * - type === `file`:
    *    1. A dropdown box populated with the current list of files.
+   * - type === `resource`:
+   *    1. A dropdown box populated with the current list of mission resources.
    * - type === `pool`:
    *    1. A dropdown box populated with the current list of forces.
    *    2. A dropdown box populated with the current list of resource pools (***populated based on the force selected***).
    */
-  type: 'force' | 'node' | 'action' | 'file' | 'pool'
+  type: 'force' | 'node' | 'action' | 'file' | 'resource' | 'pool'
   /**
    * Determines whether the argument is required or not.
    */
@@ -111,4 +114,5 @@ export type TMissionComponentMetadata =
   | TNodeMetadata
   | TActionMetadata
   | TFileMetadata
+  | TResourceMetadata
   | TPoolMetadata
