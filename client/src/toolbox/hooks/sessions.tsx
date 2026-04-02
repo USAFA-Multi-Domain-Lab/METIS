@@ -52,7 +52,7 @@ export function useSessionRedirects(
           if (session.config.accessibility === 'testing') {
             navigateTo(
               'SessionConfigPage',
-              { session },
+              { session, cancelPage: returnPage },
               { bypassMiddleware: true },
             )
           } else {
@@ -68,7 +68,7 @@ export function useSessionRedirects(
           if (!['LobbyPage', 'SessionConfigPage'].includes(currentPageKey)) {
             navigateTo(
               'SessionConfigPage',
-              { session },
+              { session, cancelPage: returnPage },
               { bypassMiddleware: true },
             )
           }

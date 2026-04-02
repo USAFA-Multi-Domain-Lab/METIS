@@ -539,12 +539,15 @@ export abstract class Effect<
 
     // Check action reference (required for action type)
     if (type === 'action') {
+      // Only validate if a specific actionKey is stored. If absent, the arg
+      // targets all actions in the node ("All Actions"), which is valid.
+      const actionInArgs = this.getActionMetadataInArgs(argId)
       const actionInMission = this.getActionFromArgs(argId)
-      if (!actionInMission) {
-        const actionInArgs = this.getActionMetadataInArgs(argId)
+
+      if (actionInArgs && !actionInMission) {
         return this.buildComponentNotFoundMessage(
           'action',
-          actionInArgs?.actionName,
+          actionInArgs.actionName,
         )
       }
     }

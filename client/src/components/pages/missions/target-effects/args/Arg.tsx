@@ -128,6 +128,7 @@ export default function Arg({
     case 'node':
     case 'action':
     case 'file':
+    case 'resource':
       return (
         <ArgMissionComponent
           effect={effect}

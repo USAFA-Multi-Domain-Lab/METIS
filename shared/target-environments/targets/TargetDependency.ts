@@ -2,8 +2,8 @@ import { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import { MissionAction } from '../../missions/actions/MissionAction'
 import { MissionFile } from '../../missions/files/MissionFile'
 import { MissionForce } from '../../missions/forces/MissionForce'
-import { MissionNode } from '../../missions/nodes/MissionNode'
 import { MissionResource } from '../../missions/MissionResource'
+import { MissionNode } from '../../missions/nodes/MissionNode'
 
 export const AVAILABLE_DEPENDENCIES_RAW = [
   {
@@ -338,7 +338,6 @@ export class TargetDependency implements TDependency {
     if (!Array.isArray(args)) args = [args]
     // Create the dependency.
     let dependency = new TargetDependency(name, dependentId, condition, args)
-    console.log(dependency, dependency.encode())
     // Return the encoded dependency.
     return dependency.encode()
   }

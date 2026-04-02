@@ -9,10 +9,16 @@ const ResourceCostMod = new TargetSchema({
   description: '',
   script: async (context) => {
     // Gather details.
-    const { actionMetadata, resourceCost } = context.effect.args
+    const { actionMetadata, resourceMetadata, resourceCost } =
+      context.effect.args
     const { forceKey, nodeKey, actionKey } = actionMetadata as TActionMetadata
+    const { resourceId } = resourceMetadata as Required<TResourceMetadata>
 
-    context.modifyResourceCost(resourceCost, { forceKey, nodeKey, actionKey })
+    context.modifyResourceCost(resourceId, resourceCost, {
+      forceKey,
+      nodeKey,
+      actionKey,
+    })
   },
   args: [
     {
@@ -23,15 +29,26 @@ const ResourceCostMod = new TargetSchema({
       groupingId: 'action',
     },
     {
+      type: 'resource',
+      _id: 'resourceMetadata',
+      name: 'Resource',
+      required: true,
+      groupingId: 'action',
+      dependencies: [TargetDependency.ACTION('actionMetadata')],
+    },
+    {
       type: 'number',
       _id: 'resourceCost',
       name: 'Resource Cost',
       required: true,
       groupingId: 'action',
-      dependencies: [TargetDependency.ACTION('actionMetadata')],
+      dependencies: [
+        TargetDependency.ACTION('actionMetadata'),
+        TargetDependency.RESOURCE('resourceMetadata'),
+      ],
       default: 0,
       tooltipDescription:
-        `This allows you to positively or negatively affect the resource cost for all actions within the node. A positive value increases the resource cost, while a negative value decreases the resource cost.\n` +
+        `This allows you to positively or negatively affect the resource cost for the selected action(s). A positive value increases the resource cost, while a negative value decreases the resource cost.\n` +
         `\t\n` +
         `For example, if the resource cost is 100 and you set the resource cost to +10, then the resource cost will be 110.\n` +
         `\t\n` +
