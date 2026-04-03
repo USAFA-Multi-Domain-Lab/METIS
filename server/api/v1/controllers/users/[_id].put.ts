@@ -14,7 +14,7 @@ import { preventSystemUserWrite } from '../../library/users'
  */
 export const updateUser: TExpressHandler = async (request, response) => {
   // Get userId from params and extract updates from the body.
-  const userId = request.params._id
+  const userId = request.params._id.toString()
   let userUpdates = request.body as Partial<TUserJson>
 
   // Prevent clients from overriding the _id.

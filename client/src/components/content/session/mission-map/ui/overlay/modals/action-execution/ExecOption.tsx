@@ -43,6 +43,8 @@ export default function ExecOption({ action, session, select }: TExecOption_P) {
 
   /* -- COMPUTED -- */
 
+  let unreadyToExecuteReasons = session.unreadyToExecuteReasons(action, cheats)
+
   /**
    * The class name for the option.
    */
@@ -52,8 +54,8 @@ export default function ExecOption({ action, session, select }: TExecOption_P) {
 
     // Disable the option if the action is
     // not ready to execute.
-    if (!session.readyToExecute(action, cheats)) {
-      classList.push('Disabled')
+    if (unreadyToExecuteReasons.length > 0) {
+      classList.push('NotReady')
     }
 
     // Return the class list as a string.
@@ -69,19 +71,39 @@ export default function ExecOption({ action, session, select }: TExecOption_P) {
     return result
   })
 
+  let tooltipDescription = compute<string>(() => {
+    if (!unreadyToExecuteReasons.length) {
+      return (
+        `${descriptionTooltipPortion}` +
+        `**Success Chance:** ${successChanceFormatted}\n` +
+        `**Time:** ${processTimeFormatted}\n` +
+        `**Cost:** ${resourceCostFormatted}\n` +
+        `**Opens Node:** ${opensNodeFormatted}\n` +
+        `**${StringToolbox.toTitleCase(action.type)}**`
+      )
+    } else {
+      return (
+        `${descriptionTooltipPortion}` +
+        `Action cannot be executed due to the following reasons:\n\t\n` +
+        unreadyToExecuteReasons.map((reason) => `*- ${reason}*`).join('\n') +
+        '\t\n'
+      )
+    }
+  })
+
+  /* -- FUNCTIONS -- */
+
+  const onClick = () => {
+    if (!unreadyToExecuteReasons.length) {
+      select()
+    }
+  }
+
   /* -- RENDER -- */
+
   return (
-    <div className={optionClassName} key={action._id} onClick={select}>
-      <Tooltip
-        description={
-          `${descriptionTooltipPortion}` +
-          `**Success Chance:** ${successChanceFormatted}\n` +
-          `**Time:** ${processTimeFormatted}\n` +
-          `**Cost:** ${resourceCostFormatted}\n` +
-          `**Opens Node:** ${opensNodeFormatted}\n` +
-          `**${StringToolbox.toTitleCase(action.type)}**`
-        }
-      />
+    <div className={optionClassName} key={action._id} onClick={onClick}>
+      <Tooltip description={tooltipDescription} />
       {action.name}
     </div>
   )

@@ -1,13 +1,12 @@
-import type { TMetisClientComponents } from '@client/index'
+import { ClientMissionResource } from '@client/missions/ClientMissionResource'
 import { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
 import type { ClientEffect } from '@client/missions/effects/ClientEffect'
 import { ClientMissionFile } from '@client/missions/files/ClientMissionFile'
 import { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
+import { ClientResourcePool } from '@client/missions/forces/ClientResourcePool'
 import { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
 import { compute } from '@client/toolbox'
 import { usePostInitEffect } from '@client/toolbox/hooks'
-import { MissionResource } from '@shared/missions/MissionResource'
-import { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import { ActionArg } from '@shared/target-environments/args/mission-component/ActionArg'
 import { FileArg } from '@shared/target-environments/args/mission-component/FileArg'
 import { ForceArg } from '@shared/target-environments/args/mission-component/ForceArg'
@@ -113,7 +112,7 @@ export default function ArgMissionComponent({
     }
   })
 
-  const [defaultPool] = useState<ResourcePool<TMetisClientComponents>>(() => {
+  const [defaultPool] = useState<ClientResourcePool>(() => {
     let firstPool = mission.forces[0]?.resourcePools[0]
 
     if (firstPool) {
@@ -165,22 +164,20 @@ export default function ArgMissionComponent({
     }
   })
 
-  const [defaultResource] = useState<MissionResource<TMetisClientComponents>>(
-    () => {
-      // Return the first resource in the mission. If
-      // there is no resource in the mission, then return
-      // a detached resource object.
-      if (mission.resources.length) {
-        return mission.resources[0]
-      } else {
-        return MissionResource.createDetached<TMetisClientComponents>(
-          mission,
-          StringToolbox.generateRandomId(),
-          'No resources available.',
-        )
-      }
-    },
-  )
+  const [defaultResource] = useState<ClientMissionResource>(() => {
+    // Return the first resource in the mission. If
+    // there is no resource in the mission, then return
+    // a detached resource object.
+    if (mission.resources.length) {
+      return mission.resources[0]
+    } else {
+      return ClientMissionResource.createDetached(
+        mission,
+        StringToolbox.generateRandomId(),
+        'No resources available.',
+      )
+    }
+  })
 
   /* -- FORCE STATE VALUES -- */
 
@@ -248,9 +245,7 @@ export default function ArgMissionComponent({
 
   /* -- POOL STATE VALUES -- */
 
-  const [poolValue, setPoolValue] = useState<
-    ResourcePool<TMetisClientComponents>
-  >(() => {
+  const [poolValue, setPoolValue] = useState<ClientResourcePool>(() => {
     // If the argument is required and the argument's value
     // is in the effect's arguments...
     if (isRequired && existsInEffectArgs) {
@@ -266,7 +261,7 @@ export default function ArgMissionComponent({
       // *** in the dropdown even though it no longer exists in the
       // *** mission.
       if (poolInArgs) {
-        return ResourcePool.createResourceDetachedFromKey<TMetisClientComponents>(
+        return ClientResourcePool.createResourceDetachedFromKey(
           forceValue,
           poolInArgs.poolKey,
           poolInArgs.poolName,
@@ -281,7 +276,7 @@ export default function ArgMissionComponent({
     }
   })
   const [optionalPoolValue, setOptionalPoolValue] =
-    useState<ResourcePool<TMetisClientComponents> | null>(() => {
+    useState<ClientResourcePool | null>(() => {
       // If the argument is optional and the argument's value
       // is in the effect's arguments...
       if (isOptional && existsInEffectArgs) {
@@ -297,7 +292,7 @@ export default function ArgMissionComponent({
         // *** in the dropdown even though it no longer exists in the
         // *** mission.
         if (optionalForceValue && poolInArgs) {
-          return ResourcePool.createResourceDetachedFromKey<TMetisClientComponents>(
+          return ClientResourcePool.createResourceDetachedFromKey(
             optionalForceValue,
             poolInArgs.poolKey,
             poolInArgs.poolName,
@@ -497,37 +492,37 @@ export default function ArgMissionComponent({
 
   /* -- RESOURCE STATE VALUES -- */
 
-  const [resourceValue, setResourceValue] = useState<
-    MissionResource<TMetisClientComponents>
-  >(() => {
-    // If the argument is required and the argument's value
-    // is in the effect's arguments...
-    if (isRequired && existsInEffectArgs) {
-      // Search for the resource in the mission.
-      let resourceInMission = effect.getResourceFromArgs(_id)
-      // If the resource is found then return the resource.
-      if (resourceInMission) return resourceInMission
-      let resourceInArgs = effect.getResourceMetadataInArgs(_id)
-      // If the resource is not found, but the effect's arguments
-      // contains the resource's metadata then return a resource
-      // object using the metadata from the effect's arguments.
-      // *** Note: This will display the user's previous selection
-      // *** in the dropdown even though it no longer exists in the
-      // *** mission.
-      if (resourceInArgs) {
-        return MissionResource.createDetached<TMetisClientComponents>(
-          mission,
-          resourceInArgs.resourceId,
-          resourceInArgs.resourceName,
-        )
+  const [resourceValue, setResourceValue] = useState<ClientMissionResource>(
+    () => {
+      // If the argument is required and the argument's value
+      // is in the effect's arguments...
+      if (isRequired && existsInEffectArgs) {
+        // Search for the resource in the mission.
+        let resourceInMission = effect.getResourceFromArgs(_id)
+        // If the resource is found then return the resource.
+        if (resourceInMission) return resourceInMission
+        let resourceInArgs = effect.getResourceMetadataInArgs(_id)
+        // If the resource is not found, but the effect's arguments
+        // contains the resource's metadata then return a resource
+        // object using the metadata from the effect's arguments.
+        // *** Note: This will display the user's previous selection
+        // *** in the dropdown even though it no longer exists in the
+        // *** mission.
+        if (resourceInArgs) {
+          return ClientMissionResource.createDetached(
+            mission,
+            resourceInArgs.resourceId,
+            resourceInArgs.resourceName,
+          )
+        }
       }
-    }
 
-    // Otherwise, return the default resource.
-    return defaultResource
-  })
+      // Otherwise, return the default resource.
+      return defaultResource
+    },
+  )
   const [optionalResourceValue, setOptionalResourceValue] =
-    useState<MissionResource<TMetisClientComponents> | null>(() => {
+    useState<ClientMissionResource | null>(() => {
       // If the argument is optional and the argument's value
       // is in the effect's arguments...
       if (isOptional && existsInEffectArgs) {
@@ -543,7 +538,7 @@ export default function ArgMissionComponent({
         // *** in the dropdown even though it no longer exists in the
         // *** mission.
         if (resourceInArgs) {
-          return MissionResource.createDetached<TMetisClientComponents>(
+          return ClientMissionResource.createDetached(
             mission,
             resourceInArgs.resourceId,
             resourceInArgs.resourceName,

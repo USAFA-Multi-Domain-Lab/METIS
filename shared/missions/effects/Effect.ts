@@ -166,8 +166,8 @@ export abstract class Effect<
           type: 'outdated',
           component: this,
           message:
-            `The effect, "${this.name}", has a target environment, "${environment.name}", with an incompatible version. ` +
-            `Incompatible versions can cause an effect to fail to be applied to its target during a session. ` +
+            `The effect, "${this.name}", is incompatible with the current version of the target environment, "${environment.name}". ` +
+            `This effect must be updated to be made compatible. ` +
             `Please click to resolve this.`,
         },
       ]

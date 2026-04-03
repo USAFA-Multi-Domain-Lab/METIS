@@ -7,7 +7,6 @@ import type { TMissionForceJson } from '@shared/missions/forces/MissionForce'
 import { MissionForce } from '@shared/missions/forces/MissionForce'
 import type { TOutputJson } from '@shared/missions/forces/MissionOutput'
 import type { TResourcePoolJson } from '@shared/missions/forces/ResourcePool'
-import { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import type { MissionComponent } from '@shared/missions/MissionComponent'
 import type { TMissionNodeJson } from '@shared/missions/nodes/MissionNode'
 import { Counter } from '@shared/toolbox/numbers/Counter'
@@ -18,6 +17,7 @@ import type { ClientMissionAction } from '../actions/ClientMissionAction'
 import type { ClientMission } from '../ClientMission'
 import { ClientMissionNode } from '../nodes/ClientMissionNode'
 import { ClientOutput } from './ClientOutput'
+import { ClientResourcePool } from './ClientResourcePool'
 
 /**
  * Class for managing mission prototypes on the client.
@@ -94,10 +94,8 @@ export class ClientMissionForce
   }
 
   // Implemented
-  protected createPool(
-    data: TResourcePoolJson,
-  ): ResourcePool<TMetisClientComponents> {
-    return ResourcePool.fromJson<TMetisClientComponents>(this, data)
+  protected createPool(data: TResourcePoolJson): ClientResourcePool {
+    return ClientResourcePool.fromJson(this, data)
   }
 
   // Implemented
@@ -524,13 +522,14 @@ export class ClientMissionForce
     // resources, the list of pools will end up in the same
     // order as the resources, which will be user friendly in
     // the UI.
-    let updatedPools: ResourcePool<TMetisClientComponents>[] =
-      this.mission.resources.map((resource) => {
+    let updatedPools: ClientResourcePool[] = this.mission.resources.map(
+      (resource) => {
         let existingPool = this.resourcePools.find(
           (pool) => pool.resourceId === resource._id,
         )
-        return existingPool ?? ResourcePool.createNew(this, resource)
-      })
+        return existingPool ?? ClientResourcePool.createNew(this, resource)
+      },
+    )
     this.resourcePools = new JsonSerializableArray(...updatedPools)
   }
 

@@ -391,6 +391,15 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     if (!action.node.executable) {
       return onError('Node is not executable.')
     }
+    // If the action is not ready to execute, callback
+    // with the reasons why.
+    let unreadyReasons = this.unreadyToExecuteReasons(action, cheats)
+    if (unreadyReasons.length) {
+      return onError(
+        `Action cannot be executed due to the following reasons:\n` +
+          unreadyReasons.map((reason) => `*- ${reason}*`).join('\n'),
+      )
+    }
 
     // Emit a request to execute the action.
     server.request(

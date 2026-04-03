@@ -2,9 +2,8 @@ import { DetailLocked } from '@client/components/content/form/DetailLocked'
 import { DetailNumber } from '@client/components/content/form/DetailNumber'
 import { DetailToggle } from '@client/components/content/form/DetailToggle'
 import { useMissionPageContext } from '@client/components/pages/missions/context'
-import type { TMetisClientComponents } from '@client/index'
+import type { ClientResourcePool } from '@client/missions/forces/ClientResourcePool'
 import { useObjectFormSync } from '@client/toolbox/hooks'
-import type { ResourcePool } from '@shared/missions/forces/ResourcePool'
 
 // ! Styling in Entry.scss.
 
@@ -66,5 +65,5 @@ type TResourcePoolSubentry_P = {
   /**
    * The resource pool to be edited.
    */
-  pool: ResourcePool<TMetisClientComponents>
+  pool: ClientResourcePool
 }

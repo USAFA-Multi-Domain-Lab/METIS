@@ -11,6 +11,7 @@ import {
   MissionComponent,
   type TMissionComponentIssue,
 } from '../MissionComponent'
+import type { MissionResource } from '../MissionResource'
 import type { TNode, TNodeJsonOptions } from '../nodes/MissionNode'
 import { type TActionResourceCostJson } from './ActionResourceCost'
 
@@ -257,6 +258,22 @@ export abstract class MissionAction<
       if (!pool) return true
       return cost.amount <= Math.max(pool.balance, 0) || pool.allowNegative
     })
+  }
+
+  /**
+   * The resources which this action lacks a sufficient
+   * amount in order to execute.
+   */
+  public get missingResources(): MissionResource[] {
+    return this.includedCosts
+      .filter((cost) => {
+        let pool = this.force.getPoolByResourceId(cost.resourceId)
+        return (
+          !pool ||
+          (cost.amount > Math.max(pool.balance, 0) && !pool.allowNegative)
+        )
+      })
+      .map(({ resource }) => resource)
   }
 
   /**

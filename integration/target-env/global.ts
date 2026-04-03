@@ -49,6 +49,7 @@ declare global {
   export type TBaseArgJson = TargetEnvTypes.TBaseArgJson
   export type TTargetArgJson = TargetEnvTypes.TTargetArgJson
   export type TForceMetadata = TargetEnvTypes.TForceMetadata
+  export type TPoolMetadata = TargetEnvTypes.TPoolMetadata
   export type TNodeMetadata = TargetEnvTypes.TNodeMetadata
   export type TActionMetadata = TargetEnvTypes.TActionMetadata
   export type TFileMetadata = TargetEnvTypes.TFileMetadata

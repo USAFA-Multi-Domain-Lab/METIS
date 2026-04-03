@@ -39,18 +39,28 @@ export class ServerActionCost extends ActionResourceCost<TMetisServerComponents>
     }
   }
 
-  // Overridden
-  public static fromJson<T extends TMetisBaseComponents = TMetisBaseComponents>(
+  /**
+   * Creates an {@link ServerActionCost} from JSON data.
+   * @param action The action that owns this resource cost.
+   * @param data The JSON data from which to create the cost.
+   * @returns The new {@link ServerActionCost} object created from the JSON.
+   */
+  public static fromJson(
     action: ServerMissionAction,
     data: TActionResourceCostJson,
   ): ServerActionCost
-  // Overridden
-  public static fromJson<T extends TMetisBaseComponents = TMetisBaseComponents>(
+  /**
+   * Creates an array of {@link ServerActionCost} objects from an array of JSON data.
+   * @param action The action that owns the resource costs.
+   * @param data The array of JSON data from which to create the costs.
+   * @returns An array of {@link ServerActionCost} objects.
+   */
+  public static fromJson(
     action: ServerMissionAction,
     data: TActionResourceCostJson[],
   ): JsonSerializableArray<ServerActionCost>
-  // Overridden
-  public static fromJson<T extends TMetisBaseComponents = TMetisBaseComponents>(
+  // Actual implementation.
+  public static fromJson(
     action: ServerMissionAction,
     data: TActionResourceCostJson | TActionResourceCostJson[],
   ): ServerActionCost | JsonSerializableArray<ServerActionCost> {

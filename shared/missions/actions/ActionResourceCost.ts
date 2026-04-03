@@ -1,4 +1,3 @@
-import { JsonSerializableArray } from '@shared/toolbox/arrays/JsonSerializableArray'
 import {
   serializeJson,
   type TJsonSerializable,
@@ -15,7 +14,7 @@ import type { TAction, TActionJsonOptions } from './MissionAction'
  * Represents the resource cost applied to a single resource pool when
  * a mission action is executed.
  */
-export class ActionResourceCost<
+export abstract class ActionResourceCost<
   T extends TMetisBaseComponents = TMetisBaseComponents,
 >
   extends MissionComponent<T, ActionResourceCost<T>>
@@ -186,78 +185,6 @@ export class ActionResourceCost<
       json.baseAmount = -1
     }
     return json
-  }
-
-  /**
-   * Creates a new {@link ActionResourceCost} with a generated identifier.
-   * @param action The action that owns this resource cost.
-   * @param resourceId The ID of the resource pool this cost targets.
-   * @param baseAmount The starting base amount of the cost.
-   * @param hidden Whether this cost is hidden from session participants.
-   * @returns A new {@link ActionResourceCost} instance.
-   */
-  public static createNew<
-    T extends TMetisBaseComponents = TMetisBaseComponents,
-  >(
-    action: TAction<T>,
-    resource: T['resource'],
-    baseAmount: number = 0,
-    hidden: boolean = false,
-  ): ActionResourceCost<T> {
-    return new ActionResourceCost<T>(
-      action,
-      resource,
-      StringToolbox.generateRandomId(),
-      baseAmount,
-      hidden,
-    )
-  }
-
-  /**
-   * Creates an {@link ActionResourceCost} from JSON data.
-   * @param action The action that owns this resource cost.
-   * @param data The JSON data from which to create the cost.
-   * @returns The new {@link ActionResourceCost} object created from the JSON.
-   */
-  public static fromJson<T extends TMetisBaseComponents = TMetisBaseComponents>(
-    action: TAction<T>,
-    data: TActionResourceCostJson,
-  ): ActionResourceCost<T>
-  /**
-   * Creates an array of {@link ActionResourceCost} objects from an array of JSON data.
-   * @param action The action that owns the resource costs.
-   * @param data The array of JSON data from which to create the costs.
-   * @returns An array of {@link ActionResourceCost} objects.
-   */
-  public static fromJson<T extends TMetisBaseComponents = TMetisBaseComponents>(
-    action: TAction<T>,
-    data: TActionResourceCostJson[],
-  ): JsonSerializableArray<ActionResourceCost<T>>
-  // Actual implementation.
-  public static fromJson<T extends TMetisBaseComponents = TMetisBaseComponents>(
-    action: TAction<T>,
-    data: TActionResourceCostJson | TActionResourceCostJson[],
-  ): ActionResourceCost<T> | JsonSerializableArray<ActionResourceCost<T>> {
-    if (Array.isArray(data)) {
-      return new JsonSerializableArray(
-        ...data.map((datum) => ActionResourceCost.fromJson<T>(action, datum)),
-      )
-    }
-
-    let resource = action.mission.getResourceById(data.resourceId)
-    if (!resource) {
-      throw new Error(
-        `ResourcePool creation failed: No resource found with ID ${data.resourceId}`,
-      )
-    }
-
-    return new ActionResourceCost<T>(
-      action,
-      resource,
-      data._id,
-      data.baseAmount,
-      data.hidden,
-    )
   }
 
   /**

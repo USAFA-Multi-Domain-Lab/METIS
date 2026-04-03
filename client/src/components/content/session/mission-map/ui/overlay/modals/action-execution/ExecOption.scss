@@ -19,9 +19,9 @@
     padding-bottom: 1em;
   }
 
-  &.Disabled {
-    pointer-events: none;
-    user-select: none;
+  &.NotReady {
+    color: $color-faded;
+    cursor: not-allowed;
   }
 
   &:hover {

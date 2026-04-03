@@ -21,6 +21,7 @@ import type { TMissionFileJson } from '../../shared/missions/files/MissionFile'
 import type { TMissionForceSaveJson } from '../../shared/missions/forces/MissionForce'
 import type { TMissionSaveJson } from '../../shared/missions/Mission'
 import { Mission } from '../../shared/missions/Mission'
+import type { TMissionResourceJson } from '../../shared/missions/MissionResource'
 import { MissionResource } from '../../shared/missions/MissionResource'
 import type {
   TMissionPrototypeJson,
@@ -33,6 +34,7 @@ import { ServerEffect } from './effects/ServerEffect'
 import { ServerMissionFile } from './files/ServerMissionFile'
 import { ServerMissionForce } from './forces/ServerMissionForce'
 import { ServerMissionPrototype } from './nodes/ServerMissionPrototype'
+import { ServerMissionResource } from './ServerMissionResource'
 
 const ObjectId = mongoose.Types.ObjectId
 
@@ -92,6 +94,12 @@ export class ServerMission extends Mission<TMetisServerComponents> {
 
     // Return the prototype.
     return prototype
+  }
+
+  // Implemented
+  protected importResources(data: TMissionResourceJson[]): void {
+    let resources = ServerMissionResource.fromJson(this, data)
+    this._resources.push(...resources)
   }
 
   // Implemented

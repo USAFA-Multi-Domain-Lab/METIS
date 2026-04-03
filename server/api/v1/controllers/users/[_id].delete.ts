@@ -12,7 +12,7 @@ import { preventSystemUserWrite } from '../../library/users'
  */
 export const deleteUser: TExpressHandler = async (request, response) => {
   // Extract the user ID from the request parameters.
-  let { _id: userId } = request.params
+  let userId = request.params._id.toString()
 
   try {
     // Disable system-user write operations.

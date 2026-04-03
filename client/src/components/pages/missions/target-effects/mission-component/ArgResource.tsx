@@ -1,8 +1,7 @@
 import { DetailDropdown } from '@client/components/content/form/dropdowns/standard/DetailDropdown'
-import type { TMetisClientComponents } from '@client/index'
+import type { ClientMissionResource } from '@client/missions/ClientMissionResource'
 import type { ClientEffect } from '@client/missions/effects/ClientEffect'
 import { compute } from '@client/toolbox'
-import type { MissionResource } from '@shared/missions/MissionResource'
 import type { TMissionComponentArg } from '@shared/target-environments/args/mission-component/MissionComponentArg'
 
 /**
@@ -21,9 +20,7 @@ export default function ArgResource({
   /**
    * The list of resources to display in the dropdown.
    */
-  const resources = compute<MissionResource<TMetisClientComponents>[]>(
-    () => mission.resources,
-  )
+  const resources = compute<ClientMissionResource[]>(() => mission.resources)
 
   /**
    * The warning message to display when the resource is no longer available in the mission.
@@ -67,7 +64,7 @@ export default function ArgResource({
 
   if (!required) {
     return (
-      <DetailDropdown<MissionResource<TMetisClientComponents>>
+      <DetailDropdown<ClientMissionResource>
         fieldType={'optional'}
         label={label}
         options={resources}
@@ -87,7 +84,7 @@ export default function ArgResource({
   }
 
   return (
-    <DetailDropdown<MissionResource<TMetisClientComponents>>
+    <DetailDropdown<ClientMissionResource>
       fieldType={'required'}
       label={label}
       options={resources}
@@ -131,9 +128,9 @@ type TArgResource_P = {
   /**
    * The resource value to display in the dropdown.
    */
-  resourceValue: TReactState<MissionResource<TMetisClientComponents>>
+  resourceValue: TReactState<ClientMissionResource>
   /**
    * The optional resource value to display in the dropdown.
    */
-  optionalResourceValue: TReactState<MissionResource<TMetisClientComponents> | null>
+  optionalResourceValue: TReactState<ClientMissionResource | null>
 }

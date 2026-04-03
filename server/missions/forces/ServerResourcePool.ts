@@ -2,7 +2,6 @@ import type { TTargetEnvExposedPool } from '@server/target-environments/context/
 import type { TResourcePoolJson } from '@shared/missions/forces/ResourcePool'
 import { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSerializableArray'
-import type { ServerMission } from '../ServerMission'
 import type { ServerMissionForce } from './ServerMissionForce'
 
 /**
@@ -36,17 +35,27 @@ export class ServerResourcePool extends ResourcePool<TMetisServerComponents> {
     }
   }
 
-  // Overridden
-  public static fromJson<T extends TMetisBaseComponents = TMetisBaseComponents>(
+  /**
+   * Creates a {@link ServerResourcePool} from JSON data.
+   * @param force The force that owns this resource pool.
+   * @param data The JSON data from which to create the pool.
+   * @returns The new {@link ServerResourcePool} object created from the JSON.
+   */
+  public static fromJson(
     force: ServerMissionForce,
     data: TResourcePoolJson,
   ): ServerResourcePool
-  // Overridden
-  public static fromJson<T extends TMetisBaseComponents = TMetisBaseComponents>(
+  /**
+   * Creates a {@link JsonSerializableArray} of {@link ServerResourcePool} objects from an array of JSON data.
+   * @param force The force that owns the resource pools.
+   * @param data The array of JSON data from which to create the pools.
+   * @returns A {@link JsonSerializableArray} of {@link ServerResourcePool} objects.
+   */
+  public static fromJson(
     force: ServerMissionForce,
     data: TResourcePoolJson[],
   ): JsonSerializableArray<ServerResourcePool>
-  // Overridden
+  // Actual implementation.
   public static fromJson(
     force: ServerMissionForce,
     data: TResourcePoolJson | TResourcePoolJson[],
@@ -60,7 +69,7 @@ export class ServerResourcePool extends ResourcePool<TMetisServerComponents> {
     }
 
     // Find associated resource for the pool.
-    let mission: ServerMission = force.mission
+    let mission = force.mission
     let resource = mission.getResourceById(data.resourceId)
     if (!resource) {
       throw new Error(

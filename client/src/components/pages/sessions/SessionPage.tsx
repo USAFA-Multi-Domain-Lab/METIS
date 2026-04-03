@@ -3,9 +3,9 @@ import {
   useNavigationMiddleware,
 } from '@client/context/global'
 import { LocalContextProvider } from '@client/context/local'
-import type { TMetisClientComponents } from '@client/index'
 import type { ClientMissionFile } from '@client/missions/files/ClientMissionFile'
 import type { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
+import type { ClientResourcePool } from '@client/missions/forces/ClientResourcePool'
 import type { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
 import type { SessionClient } from '@client/sessions/SessionClient'
 import { compute } from '@client/toolbox'
@@ -16,7 +16,6 @@ import {
   useRequireLogin,
 } from '@client/toolbox/hooks'
 import { useSessionRedirects } from '@client/toolbox/hooks/sessions'
-import type { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import type { NodeAlert } from '@shared/missions/nodes/NodeAlert'
 import { useEffect, useState } from 'react'
 import type { TPage_P } from '..'
@@ -67,7 +66,7 @@ export default function SessionPage(
 
   const globalContext = useGlobalContext()
   const state: TSessionPage_S = {
-    resourcePools: useState<ResourcePool<TMetisClientComponents>[]>([]),
+    resourcePools: useState<ClientResourcePool[]>([]),
   }
   const [server] = globalContext.server
   const {
@@ -818,7 +817,7 @@ export type TSessionPage_S = {
    * Synchronized list of resource pools retrieved from the
    * session state and updates when relevant events occur.
    */
-  resourcePools: TReactState<ResourcePool<TMetisClientComponents>[]>
+  resourcePools: TReactState<ClientResourcePool[]>
 }
 
 /**

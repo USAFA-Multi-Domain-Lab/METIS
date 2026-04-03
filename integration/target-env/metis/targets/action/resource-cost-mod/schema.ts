@@ -1,3 +1,26 @@
+import { TargetMigrationRegistry } from '@metis/schema/TargetMigrationRegistry'
+
+let migrations = new TargetMigrationRegistry()
+
+// Migrates effects to be compatible with the new 'resource' arg
+// added in v2.4.0 of METIS.
+migrations.register('2.4.0', (effect) => {
+  let firstResource = effect.mission.resources.sort(
+    (resourceA, resourceB) => resourceA.order - resourceB.order,
+  )[0]
+  if (!firstResource) {
+    throw new Error(
+      `Migration failed. No resources found in the mission. ` +
+        `A resource must be added to the mission before this migration can be applied.`,
+    )
+  }
+
+  effect.args.resourceMetadata = {
+    resourceId: firstResource._id,
+    resourceName: firstResource.name,
+  } satisfies TResourceMetadata
+})
+
 /**
  * A target available in the METIS target environment that enables a user
  * to manipulate the resource cost of a specific action within a node or
@@ -55,6 +78,7 @@ const ResourceCostMod = new TargetSchema({
         `*Note: If the result is less than 0, then the resource cost will be 0.*`,
     },
   ],
+  migrations,
 })
 
 export default ResourceCostMod
