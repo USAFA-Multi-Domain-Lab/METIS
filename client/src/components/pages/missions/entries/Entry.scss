@@ -65,7 +65,7 @@
     grid-template-columns: 1fr auto;
     column-gap: 1em;
 
-    &.NameUntouched {
+    &.UsingDefaultName {
       .FieldResourceName input {
         color: $color-accent-light;
         font-style: italic;

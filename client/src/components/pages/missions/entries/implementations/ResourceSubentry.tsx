@@ -4,12 +4,8 @@ import ButtonSvgPanel from '@client/components/content/user-controls/buttons/pan
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
 import { useMissionPageContext } from '@client/components/pages/missions/context'
 import { ClientMission } from '@client/missions/ClientMission'
-import type { ClientMissionResource } from '@client/missions/ClientMissionResource'
-import {
-  useEventListener,
-  useObjectFormSync,
-  usePostInitEffect,
-} from '@client/toolbox/hooks'
+import { ClientMissionResource } from '@client/missions/ClientMissionResource'
+import { useObjectFormSync, usePostInitEffect } from '@client/toolbox/hooks'
 import { MissionResource } from '@shared/missions/MissionResource'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import { useRef, useState } from 'react'
@@ -35,9 +31,9 @@ export default function ResourceSubentry({
   } = useObjectFormSync(resource, ['name', 'icon'], {
     onChange: () => onChange(mission),
   })
-  const [nameSilentlySet, setNameSilentlySet] = useState<boolean>(false)
-  const [nameWasTouched, setNameWasTouched] = useState(!newlyAdded)
-  const rootElementRef = useRef<HTMLDivElement>(null)
+  const [usingDefaultName, setUsingDefaultName] = useState<boolean>(
+    name === MissionResource.DEFAULT_NAMES[icon],
+  )
   const buttonEngine = useButtonSvgEngine({
     elements: [
       {
@@ -56,50 +52,43 @@ export default function ResourceSubentry({
   /* -- COMPUTED -- */
 
   let rootClasses = new ClassList('ResourceSubentry', 'Subentry').set(
-    'NameUntouched',
-    !nameWasTouched,
+    'UsingDefaultName',
+    usingDefaultName,
   )
 
   /* -- EFFECTS -- */
 
-  // Mark name as having been touched by the user
-  // when the mission is saved, since that is a
-  // strong signal that the user is satisfied with
-  // the name.
-  useEventListener(mission, 'save', () => setNameWasTouched(true))
-
-  usePostInitEffect(() => setNameWasTouched(!newlyAdded), [newlyAdded])
-
-  // If the name changes from user input (not from other hook),
-  // mark the name as having been touched by the user.
+  // This will update the resource's name when
+  // the icon changes, but only if the default
+  // name is currently in use for the previous
+  // icon. If this is the case, then the name
+  // will be updated to the new icon's default
+  // name.
+  let previousIcon = useRef<TMetisIcon>(icon)
   usePostInitEffect(() => {
-    if (!nameSilentlySet) {
-      setNameWasTouched(true)
-    } else {
-      setNameSilentlySet(false)
+    let currentName = name
+    let nextDefaultName = ClientMissionResource.DEFAULT_NAMES[icon]
+
+    if (
+      nextDefaultName &&
+      currentName === ClientMissionResource.DEFAULT_NAMES[previousIcon.current]
+    ) {
+      setName(nextDefaultName)
     }
-  }, [name])
 
-  // If the icon changes, update the name to the
-  // default name for the icon, if the user has never
-  // edited or saved the name before.
-  usePostInitEffect(() => {
-    let rootElement = rootElementRef.current
-    let nameInputElement = rootElement?.querySelector<HTMLInputElement>(
-      '.FieldResourceName input',
-    )
-    let correspondingName = MissionResource.DEFAULT_NAMES[icon]
-
-    if (!nameWasTouched && correspondingName && nameInputElement) {
-      setNameSilentlySet(true)
-      setName(correspondingName)
+    return () => {
+      previousIcon.current = icon
     }
   }, [icon])
+
+  usePostInitEffect(() => {
+    setUsingDefaultName(name === MissionResource.DEFAULT_NAMES[icon])
+  }, [name])
 
   /* -- RENDER -- */
 
   return (
-    <div className={rootClasses.value} ref={rootElementRef}>
+    <div className={rootClasses.value}>
       <DetailString
         fieldType='required'
         handleOnBlur='repopulateValue'
@@ -107,9 +96,9 @@ export default function ResourceSubentry({
         value={name}
         setValue={setName}
         defaultValue='Resources'
-        uniqueFieldClassName='FieldResourceName'
         maxLength={ClientMission.MAX_RESOURCE_NAME_LENGTH}
         disabled={viewMode === 'preview'}
+        uniqueFieldClassName='FieldResourceName'
       />
       <ButtonSvgPanel engine={buttonEngine} />
       <DetailIconSelector
