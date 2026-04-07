@@ -1314,6 +1314,8 @@ export class ClientMission
 
         // Resolve.
         resolve()
+
+        this.emitEvent('save')
       } catch (error: any) {
         console.error('Failed to save mission.')
         console.error(error)
@@ -1765,6 +1767,8 @@ type TDuplicateForceInfo = {
  * Triggered when a transformation is set for the mission.
  * @option 'autopan'
  * Triggered when nodes are opened and the mission map needs to auto-pan to them.
+ * @option 'save'
+ * - Triggered when the mission is saved to the server.
  * @option `set-node-exclusion`
  * - Triggered when a node's exclusion status is set.
  * @option `session-reset`
@@ -1794,6 +1798,7 @@ type TMissionEventMethods =
   | 'set-buttons'
   | 'set-transformation'
   | 'autopan'
+  | 'save'
   | 'set-node-exclusion'
   | 'session-reset'
   | 'file-access-granted'

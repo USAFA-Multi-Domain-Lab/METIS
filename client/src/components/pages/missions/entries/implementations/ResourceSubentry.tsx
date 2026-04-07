@@ -5,8 +5,14 @@ import { useButtonSvgEngine } from '@client/components/content/user-controls/but
 import { useMissionPageContext } from '@client/components/pages/missions/context'
 import { ClientMission } from '@client/missions/ClientMission'
 import type { ClientMissionResource } from '@client/missions/ClientMissionResource'
-import { useObjectFormSync } from '@client/toolbox/hooks'
+import {
+  useEventListener,
+  useObjectFormSync,
+  usePostInitEffect,
+} from '@client/toolbox/hooks'
 import { MissionResource } from '@shared/missions/MissionResource'
+import { ClassList } from '@shared/toolbox/html/ClassList'
+import { useRef, useState } from 'react'
 
 // ! Styling in Entry.scss.
 
@@ -17,6 +23,7 @@ import { MissionResource } from '@shared/missions/MissionResource'
 export default function ResourceSubentry({
   resource,
   mission,
+  newlyAdded = false,
   onClickDelete,
 }: TResourceSubentry_P): TReactElement {
   /* -- STATE -- */
@@ -28,13 +35,9 @@ export default function ResourceSubentry({
   } = useObjectFormSync(resource, ['name', 'icon'], {
     onChange: () => onChange(mission),
   })
-
-  /* -- COMPUTED -- */
-
-  /**
-   * Engine controlling resource manipulation options
-   * within the subentry.
-   */
+  const [nameSilentlySet, setNameSilentlySet] = useState<boolean>(false)
+  const [nameWasTouched, setNameWasTouched] = useState(!newlyAdded)
+  const rootElementRef = useRef<HTMLDivElement>(null)
   const buttonEngine = useButtonSvgEngine({
     elements: [
       {
@@ -50,10 +53,53 @@ export default function ResourceSubentry({
     dependencies: [mission.resources.length],
   })
 
+  /* -- COMPUTED -- */
+
+  let rootClasses = new ClassList('ResourceSubentry', 'Subentry').set(
+    'NameUntouched',
+    !nameWasTouched,
+  )
+
+  /* -- EFFECTS -- */
+
+  // Mark name as having been touched by the user
+  // when the mission is saved, since that is a
+  // strong signal that the user is satisfied with
+  // the name.
+  useEventListener(mission, 'save', () => setNameWasTouched(true))
+
+  usePostInitEffect(() => setNameWasTouched(!newlyAdded), [newlyAdded])
+
+  // If the name changes from user input (not from other hook),
+  // mark the name as having been touched by the user.
+  usePostInitEffect(() => {
+    if (!nameSilentlySet) {
+      setNameWasTouched(true)
+    } else {
+      setNameSilentlySet(false)
+    }
+  }, [name])
+
+  // If the icon changes, update the name to the
+  // default name for the icon, if the user has never
+  // edited or saved the name before.
+  usePostInitEffect(() => {
+    let rootElement = rootElementRef.current
+    let nameInputElement = rootElement?.querySelector<HTMLInputElement>(
+      '.FieldResourceName input',
+    )
+    let correspondingName = MissionResource.DEFAULT_NAMES[icon]
+
+    if (!nameWasTouched && correspondingName && nameInputElement) {
+      setNameSilentlySet(true)
+      setName(correspondingName)
+    }
+  }, [icon])
+
   /* -- RENDER -- */
 
   return (
-    <div className='ResourceSubentry Subentry'>
+    <div className={rootClasses.value} ref={rootElementRef}>
       <DetailString
         fieldType='required'
         handleOnBlur='repopulateValue'
@@ -61,6 +107,7 @@ export default function ResourceSubentry({
         value={name}
         setValue={setName}
         defaultValue='Resources'
+        uniqueFieldClassName='FieldResourceName'
         maxLength={ClientMission.MAX_RESOURCE_NAME_LENGTH}
         disabled={viewMode === 'preview'}
       />
@@ -90,6 +137,11 @@ type TResourceSubentry_P = {
    * The mission that owns the resource.
    */
   mission: ClientMission
+  /**
+   * Indicates if the resource was newly added, or
+   * if it pre-existed this component's lifecycle.
+   */
+  newlyAdded?: boolean
   /**
    * Called when the user requests to remove this resource.
    */

@@ -65,6 +65,13 @@
     grid-template-columns: 1fr auto;
     column-gap: 1em;
 
+    &.NameUntouched {
+      .FieldResourceName input {
+        color: $color-accent-light;
+        font-style: italic;
+      }
+    }
+
     .ButtonSvgPanel {
       grid-row: span 1;
     }
