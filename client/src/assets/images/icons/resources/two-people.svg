@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="24"
+   height="24"
+   viewBox="0 0 6.3499999 6.35"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.4 (e7c3feb1, 2024-10-09)"
+   sodipodi:docname="two-people.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#000000"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="px"
+     showgrid="false"
+     inkscape:zoom="18.629386"
+     inkscape:cx="8.3201883"
+     inkscape:cy="13.983284"
+     inkscape:window-width="1728"
+     inkscape:window-height="1084"
+     inkscape:window-x="0"
+     inkscape:window-y="33"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Capa 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-0.02644123)">
+    <g
+       id="g2-9-7-1"
+       inkscape:label="person-2"
+       transform="matrix(1.2664323,0,0,1.363788,2.9828127,-2.8718036)"
+       style="fill:#ffffff;stroke-width:0.760916">
+      <ellipse
+         style="fill:#ffffff;stroke-width:0.503313"
+         id="path1-6-7-4"
+         cx="1.528957"
+         cy="3.3861961"
+         rx="0.62676066"
+         ry="0.58201861" />
+      <path
+         style="fill:#ffffff;stroke-width:0.503313"
+         d="M 0.40011324,6.1022578 C 0.39551824,5.83448 0.40680124,5.5092124 0.43413104,5.319086 0.54623679,4.5391921 0.86562153,4.3610683 1.5293749,4.3620537 c 0.702771,-0.00103 1.1196772,0.2191764 1.1294228,1.7402036 z"
+         id="path2-6-5-6-9-1"
+         sodipodi:nodetypes="csccc" />
+    </g>
+    <g
+       id="g2-9-7-1-2"
+       inkscape:label="person-1"
+       transform="matrix(1.2664323,0,0,1.363788,-0.34670329,-2.8718036)"
+       style="fill:#ffffff;stroke-width:0.760916">
+      <ellipse
+         style="fill:#ffffff;stroke-width:0.503313"
+         id="path1-6-7-4-6"
+         cx="1.4036044"
+         cy="3.3861961"
+         rx="0.62676066"
+         ry="0.58201861" />
+      <path
+         style="fill:#ffffff;stroke-width:0.503313"
+         d="M 0.27476056,6.10223 C 0.27016563,5.8344524 0.28144868,5.5091847 0.30877836,5.3190583 0.42088411,4.5391644 0.74026882,4.3610407 1.4040222,4.3620261 2.1067932,4.3609979 2.5236994,4.5812025 2.533445,6.1022297 Z"
+         id="path2-6-5-6-9"
+         sodipodi:nodetypes="csccc" />
+    </g>
+  </g>
+</svg>

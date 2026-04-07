@@ -83,16 +83,16 @@ export abstract class MissionResource<
   public static readonly ICONS: readonly TMetisIcon[] = [
     'resources/coins',
     'resources/trophy',
-    'resources/flag',
-    'resources/gear',
-    'resources/key',
-    'resources/lightning',
-    'resources/node',
-    'resources/shield',
-    'resources/waves',
-    'resources/launch',
-    'resources/user',
-    'resources/copy',
+    'resources/dollar',
+    'resources/strong',
+    'resources/drops',
+    'resources/supplies',
+    'resources/handshake',
+    'resources/microchip',
+    'resources/raised-fist',
+    'resources/earth',
+    'resources/two-people',
+    'resources/star',
   ]
 
   /**
@@ -102,18 +102,18 @@ export abstract class MissionResource<
   public static readonly DEFAULT_NAMES: Readonly<
     Partial<Record<TMetisIcon, string>>
   > = {
-    'resources/coins': 'Resources',
-    'resources/trophy': 'Points',
-    'resources/flag': 'Budget',
-    'resources/gear': 'Manpower',
-    'resources/key': 'Fuel',
-    'resources/lightning': 'Supplies',
-    'resources/node': 'Direct Support',
-    'resources/shield': 'Technology',
-    'resources/waves': 'Influence',
-    'resources/launch': 'Influence',
-    'resources/user': 'Public Support',
-    'resources/copy': 'Force Morale',
+    'resources/coins': 'Resources', // Coins
+    'resources/trophy': 'Points', // Trophy
+    'resources/dollar': 'Budget', // Dollar Sign
+    'resources/strong': 'Manpower', // Arm Flex
+    'resources/drops': 'Fuel', // Drops (Other Ideas: Fuel Pump, Gas Canister, Fuel Gauge, Barrel of Oil)
+    'resources/supplies': 'Supplies', // Crate (Other Ideas: Crate with Parachute)
+    'resources/handshake': 'Direct Support', // Handshake
+    'resources/microchip': 'Technology', // Microchip (Other Ideas: Light Bulb, Gears, Atomic Symbol)
+    'resources/earth': 'Influence', // Globe (Other Ideas: Crown, Megaphone)
+    'resources/two-people': 'Public Support', // People
+    'resources/raised-fist': 'Force Morale', // Raised Fist (Other Ideas: Torch, Fire, Battery, Star, Heart, Heart on Fire, Smiley Face)
+    'resources/star': 'Reputation', // Star
   }
 
   /**

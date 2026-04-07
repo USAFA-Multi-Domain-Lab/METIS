@@ -34,7 +34,7 @@
         display: flex;
         justify-content: center;
         flex-grow: 1;
-        padding: 1em 0 1em;
+        padding: 0.75em 0;
 
         &:hover:not(.Selected) {
           @include background-mask($opacity: 0.05);
@@ -45,8 +45,8 @@
         }
 
         .Icon {
-          width: 1em;
-          height: 1em;
+          width: 1.1em;
+          height: 1.1em;
           background-size: contain;
           background-repeat: no-repeat;
           background-position: center;
