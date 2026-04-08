@@ -1,4 +1,3 @@
-import Prompt from '@client/components/content/communication/Prompt'
 import type { TFileReferenceList_P } from '@client/components/content/data/lists/implementations/FileReferenceList'
 import FileReferenceList from '@client/components/content/data/lists/implementations/FileReferenceList'
 import type { TMissionFileList_P } from '@client/components/content/data/lists/implementations/MissionFileList'
@@ -152,7 +151,9 @@ export default function MissionPage(
         permissions: ['sessions_write_native'],
         onClick: async () => {
           await enforceSavePrompt()
-          onPlayTestRequest(mission, 'MissionPage')
+          onPlayTestRequest(mission, 'MissionPage', {
+            bypassNavigationMiddleware: true,
+          })
         },
       },
       {
@@ -163,7 +164,9 @@ export default function MissionPage(
         permissions: ['sessions_write_native'],
         onClick: async () => {
           await enforceSavePrompt()
-          onLaunchRequest(mission, 'MissionPage')
+          onLaunchRequest(mission, 'MissionPage', {
+            bypassNavigationMiddleware: true,
+          })
         },
       },
       {
@@ -173,7 +176,7 @@ export default function MissionPage(
         description: 'Export mission to .metis file',
         permissions: ['missions_write'],
         onClick: async () => {
-          await enforceSavePrompt()
+          await enforceSavePrompt({ includeDiscardOption: false })
           onExportRequest(mission)
         },
       },
@@ -185,7 +188,7 @@ export default function MissionPage(
         permissions: ['missions_write'],
         onClick: async () => {
           await enforceSavePrompt()
-          await onCopyRequest(mission)
+          onCopyRequest(mission)
         },
       },
       {
@@ -195,7 +198,7 @@ export default function MissionPage(
         description: 'Delete mission',
         disabled: !props.missionId,
         permissions: ['missions_write'],
-        onClick: async () => await onDeleteRequest(mission),
+        onClick: () => onDeleteRequest(mission),
       },
       HomeButton(),
       ProfileButton({ middleware: async () => await enforceSavePrompt() }),
@@ -467,7 +470,8 @@ export default function MissionPage(
   /**
    * Saves the mission to the server with
    * any changes made.
-   * @returns A promise that resolves when the mission has been saved.
+   * @resolves A boolean which is true if the save
+   * was successful, and false otherwise.
    */
   const save = async () => {
     try {
@@ -483,11 +487,15 @@ export default function MissionPage(
         // the mission.
         setCheckForIssues(true)
         notify('Mission successfully saved.')
+        return true
+      } else {
+        throw new Error('No changes to save or insufficient permissions.')
       }
     } catch (error) {
       // Notify and revert upon error.
       notify('Mission failed to save.')
       setAreUnsavedChanges(true)
+      return false
     }
   }
 
@@ -512,14 +520,25 @@ export default function MissionPage(
    * }
    * ```
    */
-  const enforceSavePrompt = async (): Promise<void> => {
+  const enforceSavePrompt = async (
+    options: TSavePromptOptions = {},
+  ): Promise<void> => {
     return new Promise<void>(async (resolve, reject) => {
+      const { includeDiscardOption = true } = options
+
       // If there are unsaved changes, prompt the user.
       if (isAuthorized('missions_write') && areUnsavedChanges) {
-        const { choice } = await prompt(
-          'You have unsaved changes. What do you want to do with them?',
-          ['Cancel', 'Save', 'Discard'],
-        )
+        let options: Array<'Cancel' | 'Save' | 'Discard'> = ['Cancel', 'Save']
+        let message: string =
+          'You have unsaved changes which must be saved to proceed.'
+
+        if (includeDiscardOption) {
+          options.push('Discard')
+          message =
+            'You have unsaved changes. What do you want to do with them?'
+        }
+
+        const { choice } = await prompt(message, options)
 
         // If the user opted to save, then save
         // the mission.
@@ -619,18 +638,10 @@ export default function MissionPage(
     onDeleteRequest,
   } = useMissionItemButtonCallbacks({
     onSuccessfulCopy: async (resultingMission) => {
-      let { choice } = await prompt(
-        'Would you like to open the copied mission?',
-        Prompt.YesNoChoices,
-      )
-      if (choice === 'Yes') {
-        navigateTo('MissionPage', {
-          missionId: resultingMission._id,
-        })
-      }
+      navigateTo('HomePage', {}, { bypassMiddleware: true })
     },
     onSuccessfulDeletion: () => {
-      navigateTo('HomePage', {})
+      navigateTo('HomePage', {}, { bypassMiddleware: true })
     },
   })
 
@@ -834,4 +845,17 @@ export type TMissionPage_S = {
    * Arguments to pass to the effect modal when active.
    */
   effectModalArgs: TReactState<Pick<TCreateEffect_P, 'host' | 'trigger'>>
+}
+
+/**
+ * Options for `enforceSavePrompt` function in
+ * {@link MissionPage}.
+ */
+export interface TSavePromptOptions {
+  /**
+   * Whether to include the 'Discard' option in the prompt.
+   * If false, the user will only be able to 'Save' or 'Cancel',
+   * @default true
+   */
+  includeDiscardOption?: boolean
 }

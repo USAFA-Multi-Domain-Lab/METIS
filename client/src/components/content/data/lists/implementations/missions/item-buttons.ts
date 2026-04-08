@@ -38,7 +38,9 @@ export function useMissionItemButtonCallbacks(
         navigateTo('MissionPage', { missionId: mission._id })
       }
     },
-    onPlayTestRequest: async (mission, cancelPage) => {
+    onPlayTestRequest: async (mission, cancelPage, options = {}) => {
+      const { bypassNavigationMiddleware = false } = options
+
       // Prevent multiple simultaneous play-test launches
       if (isLaunchingPlayTest) {
         console.warn(
@@ -67,7 +69,11 @@ export function useMissionItemButtonCallbacks(
         if (!session) throw new Error('Failed to join test session.')
 
         // Navigate to session config page to let user configure before starting
-        navigateTo('SessionConfigPage', { session, cancelPage: cancelPage })
+        navigateTo(
+          'SessionConfigPage',
+          { session, cancelPage: cancelPage },
+          { bypassMiddleware: bypassNavigationMiddleware },
+        )
         finishLoading()
       } catch (error) {
         console.error('Failed to launch play-test session.')
@@ -80,11 +86,17 @@ export function useMissionItemButtonCallbacks(
         isLaunchingPlayTest = false
       }
     },
-    onLaunchRequest: (mission, returnPage) => {
-      navigateTo('LaunchPage', {
-        missionId: mission._id,
-        returnPage,
-      })
+    onLaunchRequest: (mission, returnPage, options = {}) => {
+      const { bypassNavigationMiddleware = false } = options
+
+      navigateTo(
+        'LaunchPage',
+        {
+          missionId: mission._id,
+          returnPage,
+        },
+        { bypassMiddleware: bypassNavigationMiddleware },
+      )
     },
     onExportRequest: (mission: ClientMission) => {
       window.open(
@@ -178,6 +190,7 @@ export type TMissionItemButtonCallbacks = {
   onPlayTestRequest: (
     mission: ClientMission,
     cancelPage: 'HomePage' | 'MissionPage',
+    options?: TLaunchRelatedOptions,
   ) => Promise<void>
   /**
    * Callback for when the user requests to launch a mission.
@@ -188,6 +201,7 @@ export type TMissionItemButtonCallbacks = {
   onLaunchRequest: (
     mission: ClientMission,
     returnPage: 'HomePage' | 'MissionPage',
+    options?: TLaunchRelatedOptions,
   ) => void
   /**
    * Callback for when the user requests to export a mission.
@@ -204,4 +218,17 @@ export type TMissionItemButtonCallbacks = {
    * @param mission The mission to delete.
    */
   onDeleteRequest: (mission: ClientMission) => Promise<void>
+}
+
+/**
+ * Additional options for launch-related callbacks
+ * such as {@link TMissionItemButtonCallbacks.onLaunchRequest}
+ * or {@link TMissionItemButtonCallbacks.onPlayTestRequest}.
+ */
+export type TLaunchRelatedOptions = {
+  /**
+   * If true, the navigation middleware will be bypassed when
+   * navigating to the launch page.
+   */
+  bypassNavigationMiddleware?: boolean
 }

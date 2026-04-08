@@ -1,8 +1,8 @@
 import { compute } from '@client/toolbox'
-import { useForcedUpdates, usePostInitEffect } from '@client/toolbox/hooks'
+import { useForcedUpdates } from '@client/toolbox/hooks'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
-import { useState } from 'react'
+import { useRef } from 'react'
 import { createButtonDefaults } from './elements/ButtonSvg'
 import { createDividerDefaults } from './elements/DividerSvg'
 import { createStepperDefaults } from './elements/StepperSvg'
@@ -525,16 +525,23 @@ export class ButtonSvgEngine {
   }: TButtonSvgEngine = {}): ButtonSvgEngine {
     return compute(() => {
       const forceUpdate = useForcedUpdates()
-      const [engine, setEngine] = useState(
+      const previousDependencies =
+        useRef<NonNullable<React.DependencyList>>(dependencies)
+      const engine = useRef<ButtonSvgEngine>(
         new ButtonSvgEngine(options, () => forceUpdate()),
       )
-      // Update the engine whenever the dependencies change.
-      usePostInitEffect(() => {
-        setEngine(new ButtonSvgEngine(options, () => forceUpdate()))
-      }, dependencies)
+
+      for (let index = 0; index < dependencies.length; index++) {
+        if (dependencies[index] !== previousDependencies.current[index]) {
+          engine.current = new ButtonSvgEngine(options, () => forceUpdate())
+          break
+        }
+      }
+      previousDependencies.current = dependencies
+
       // Add the buttons to the engine.
-      useButtonSvgs(engine, ...elements)
-      return engine
+      useButtonSvgs(engine.current, ...elements)
+      return engine.current
     })
   }
 }
