@@ -84,7 +84,7 @@ export abstract class MissionResource<
     'resources/coins',
     'resources/trophy',
     'resources/dollar',
-    'resources/strong',
+    'resources/hammer',
     'resources/drops',
     'resources/supplies',
     'resources/handshake',
@@ -102,18 +102,18 @@ export abstract class MissionResource<
   public static readonly DEFAULT_NAMES: Readonly<
     Partial<Record<TMetisIcon, string>>
   > = {
-    'resources/coins': 'Resources', // Coins
-    'resources/trophy': 'Points', // Trophy
-    'resources/dollar': 'Budget', // Dollar Sign
-    'resources/strong': 'Manpower', // Arm Flex
-    'resources/drops': 'Fuel', // Drops (Other Ideas: Fuel Pump, Gas Canister, Fuel Gauge, Barrel of Oil)
-    'resources/supplies': 'Supplies', // Crate (Other Ideas: Crate with Parachute)
-    'resources/handshake': 'Direct Support', // Handshake
-    'resources/microchip': 'Technology', // Microchip (Other Ideas: Light Bulb, Gears, Atomic Symbol)
-    'resources/earth': 'Influence', // Globe (Other Ideas: Crown, Megaphone)
-    'resources/two-people': 'Public Support', // People
-    'resources/raised-fist': 'Force Morale', // Raised Fist (Other Ideas: Torch, Fire, Battery, Star, Heart, Heart on Fire, Smiley Face)
-    'resources/star': 'Reputation', // Star
+    'resources/coins': 'Resources',
+    'resources/trophy': 'Points',
+    'resources/dollar': 'Budget',
+    'resources/hammer': 'Manpower',
+    'resources/drops': 'Fuel',
+    'resources/supplies': 'Supplies',
+    'resources/handshake': 'Direct Support',
+    'resources/microchip': 'Technology',
+    'resources/earth': 'Influence',
+    'resources/two-people': 'Public Support',
+    'resources/raised-fist': 'Force Morale',
+    'resources/star': 'Reputation',
   }
 
   /**
