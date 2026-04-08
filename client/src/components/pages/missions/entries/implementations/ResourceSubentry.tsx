@@ -37,6 +37,15 @@ export default function ResourceSubentry({
   const buttonEngine = useButtonSvgEngine({
     elements: [
       {
+        key: 'restore-to-default',
+        type: 'button',
+        icon: 'reset',
+        description: 'Restore name to the default for the selected icon',
+        disabled: usingDefaultName,
+        permissions: ['missions_write'],
+        onClick: () => onClickRestoreToDefault(),
+      },
+      {
         key: 'remove',
         type: 'button',
         icon: 'remove',
@@ -55,6 +64,15 @@ export default function ResourceSubentry({
     'UsingDefaultName',
     usingDefaultName,
   )
+
+  /* -- FUNCTIONS -- */
+
+  const onClickRestoreToDefault = () => {
+    let defaultName = ClientMissionResource.DEFAULT_NAMES[icon]
+    if (defaultName) {
+      setName(defaultName)
+    }
+  }
 
   /* -- EFFECTS -- */
 
@@ -84,6 +102,12 @@ export default function ResourceSubentry({
   usePostInitEffect(() => {
     setUsingDefaultName(name === MissionResource.DEFAULT_NAMES[icon])
   }, [name])
+
+  // Hide the "restore to default" button if the
+  // current name is already the default.
+  usePostInitEffect(() => {
+    buttonEngine.setDisabled('restore-to-default', usingDefaultName)
+  }, [usingDefaultName])
 
   /* -- RENDER -- */
 

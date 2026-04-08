@@ -63,7 +63,7 @@
     display: grid;
     align-content: center;
     grid-template-columns: 1fr auto;
-    column-gap: 1em;
+    column-gap: 0.5em;
 
     &.UsingDefaultName {
       .FieldResourceName input {
