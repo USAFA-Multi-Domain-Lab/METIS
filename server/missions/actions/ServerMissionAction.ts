@@ -2,15 +2,12 @@ import { sessionLogger } from '@server/logging'
 import type { ServerTarget } from '@server/target-environments/ServerTarget'
 import type { TTargetEnvExposedAction } from '@server/target-environments/context/TargetEnvContext'
 import type { TActionResourceCostJson } from '@shared/missions/actions/ActionResourceCost'
-import type { TMissionActionJson } from '@shared/missions/actions/MissionAction'
 import { MissionAction } from '@shared/missions/actions/MissionAction'
 import type {
   TEffectExecutionTriggered,
   TEffectExecutionTriggeredJson,
 } from '@shared/missions/effects/Effect'
 import type { JsonSerializableArray } from '@shared/toolbox/arrays/JsonSerializableArray'
-import type { PRNG } from 'seedrandom'
-import seedrandom from 'seedrandom'
 import { ServerEffect } from '../effects/ServerEffect'
 import type { ServerMissionNode } from '../nodes/ServerMissionNode'
 import { ServerActionCost } from './ServerActionCost'
@@ -22,23 +19,6 @@ import { ServerExecutionOutcome } from './ServerExecutionOutcome'
  * Class for managing mission actions on the server.
  */
 export class ServerMissionAction extends MissionAction<TMetisServerComponents> {
-  /**
-   * The RNG used to generate random numbers for the action.
-   */
-  protected rng: PRNG
-
-  /**
-   * @param node The node that the action belongs to.
-   * @param data The data to use to create the ServerMissionAction.
-   * @param options The options for creating the ServerMissionAction.
-   */
-  public constructor(node: ServerMissionNode, data: TMissionActionJson) {
-    super(node, data)
-
-    // Initialize the RNG for the action.
-    this.rng = seedrandom(`${this.mission.rng.double()}`)
-  }
-
   // Implemented
   protected parseCosts(
     data: TActionResourceCostJson[],
@@ -118,7 +98,7 @@ export class ServerMissionAction extends MissionAction<TMetisServerComponents> {
         if (guaranteedSuccess) {
           outcome = ServerExecutionOutcome.generateGuaranteedSuccess(execution)
         } else {
-          outcome = ServerExecutionOutcome.generateRandom(execution, this.rng)
+          outcome = ServerExecutionOutcome.generateRandom(execution)
         }
 
         // Process the outcome at the different levels.

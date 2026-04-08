@@ -76,7 +76,6 @@ describe('/api/v1/missions', () => {
     let payload: TMissionJson = {
       name: `${namePrefix}_created_${generateRandomId()}`,
       versionNumber: baseMission.versionNumber ?? 1,
-      seed: baseMission.seed ?? 'seed',
       resourceLabel: baseMission.resourceLabel ?? 'resource',
       structure: baseMission.structure ?? {},
       forces: baseMission.forces ?? [],

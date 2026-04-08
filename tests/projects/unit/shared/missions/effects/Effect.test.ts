@@ -1877,14 +1877,13 @@ class TestMission extends Mission {
       'mission-1',
       'Mission 1',
       1,
-      'seed-1',
-      'Resources',
       null,
       null,
       null,
       null,
       null,
       {},
+      [],
       [],
       [],
       [],
@@ -1905,6 +1904,8 @@ class TestMission extends Mission {
     this.prototypes.push(prototype)
     return prototype
   }
+
+  protected importResources(data: any[]): void {}
 
   protected importForces(_data: any[]): void {}
 

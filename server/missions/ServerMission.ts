@@ -9,8 +9,6 @@ import {
 } from '@shared/toolbox/objects/ObjectToolbox'
 import type { CallbackWithoutResultAndOptionalError } from 'mongoose'
 import mongoose from 'mongoose'
-import type { PRNG } from 'seedrandom'
-import seedrandom from 'seedrandom'
 import type {
   TEffectJson,
   TEffectSessionTriggered,
@@ -42,23 +40,6 @@ const ObjectId = mongoose.Types.ObjectId
  * Class for managing missions on the server.
  */
 export class ServerMission extends Mission<TMetisServerComponents> {
-  /**
-   * The RNG used to generate random numbers for the mission.
-   */
-  protected _rng: PRNG | undefined
-  /**
-   * The RNG used to generate random numbers for the mission.
-   */
-  public get rng(): PRNG {
-    // Initialize RNG if not done already. This
-    // cannot be done in the constructor due to
-    // this value being needed in the super call.
-    if (this._rng === undefined) {
-      this._rng = seedrandom(`${this.seed}`)
-    }
-    return this._rng
-  }
-
   // Implemented
   protected initializeRoot(): ServerMissionPrototype {
     return new ServerMissionPrototype(this, { _id: 'ROOT' })
@@ -192,7 +173,6 @@ export class ServerMission extends Mission<TMetisServerComponents> {
       json._id || StringToolbox.generateRandomId(),
       json.name,
       json.versionNumber,
-      json.seed,
       DateToolbox.fromNullableISOString(json.createdAt),
       DateToolbox.fromNullableISOString(json.updatedAt),
       DateToolbox.fromNullableISOString(json.launchedAt),

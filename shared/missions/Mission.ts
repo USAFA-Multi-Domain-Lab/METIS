@@ -127,11 +127,6 @@ export abstract class Mission<
   public versionNumber: number
 
   /**
-   * The seed for the mission. Pre-determines outcomes.
-   */
-  public seed: string
-
-  /**
    * The date/time the mission was created.
    */
   public createdAt: Date | null
@@ -217,7 +212,6 @@ export abstract class Mission<
     _id: string,
     name: string,
     versionNumber: number,
-    seed: string,
     createdAt: Date | null,
     updatedAt: Date | null,
     launchedAt: Date | null,
@@ -233,7 +227,6 @@ export abstract class Mission<
     super(_id, name, false)
 
     this.versionNumber = versionNumber
-    this.seed = seed
     this.createdAt = createdAt
     this.updatedAt = updatedAt
     this.launchedAt = launchedAt
@@ -280,7 +273,6 @@ export abstract class Mission<
     let json: TMissionJson = {
       name: this.name,
       versionNumber: this.versionNumber,
-      seed: this.seed,
       resources: this.resources.json,
       createdAt: DateToolbox.toNullableISOString(this.createdAt),
       updatedAt: DateToolbox.toNullableISOString(this.updatedAt),
@@ -946,7 +938,6 @@ export abstract class Mission<
       _id: StringToolbox.generateRandomId(),
       name: 'New Mission',
       versionNumber: 1,
-      seed: StringToolbox.generateRandomId(),
       resources: [MissionResource.DEFAULT_PROPERTIES],
       createdAt: null,
       updatedAt: null,
@@ -1243,7 +1234,7 @@ export type TMission<T extends TMetisBaseComponents> = T['mission']
  */
 export type TMissionJson = TCreateJsonType<
   Mission,
-  'name' | 'versionNumber' | 'seed',
+  'name' | 'versionNumber',
   {
     _id?: string
     resources: TMissionResourceJson[]

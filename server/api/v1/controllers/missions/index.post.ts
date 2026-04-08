@@ -14,7 +14,6 @@ export const createMission: TExpressHandler = async (request, response) => {
   let {
     name,
     versionNumber,
-    seed,
     resources,
     structure,
     forces,
@@ -29,7 +28,6 @@ export const createMission: TExpressHandler = async (request, response) => {
     let missionDoc = await MissionModel.create({
       name,
       versionNumber,
-      seed,
       resources,
       structure,
       forces,

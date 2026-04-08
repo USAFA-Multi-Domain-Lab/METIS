@@ -29,7 +29,6 @@ export const routerMap: TMetisRouterMap = async (
       body: {
         name: RequestBodyFilters.STRING,
         versionNumber: RequestBodyFilters.NUMBER,
-        seed: RequestBodyFilters.STRING,
         resources: RequestBodyFilters.ARRAY,
         structure: RequestBodyFilters.OBJECT,
         forces: RequestBodyFilters.ARRAY,
@@ -77,7 +76,6 @@ export const routerMap: TMetisRouterMap = async (
         body: {
           name: RequestBodyFilters.STRING,
           versionNumber: RequestBodyFilters.NUMBER,
-          seed: RequestBodyFilters.STRING,
           resources: RequestBodyFilters.ARRAY,
           structure: RequestBodyFilters.OBJECT,
           forces: RequestBodyFilters.ARRAY,

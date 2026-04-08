@@ -267,11 +267,6 @@ export const missionSchema = new MissionSchema(
       maxLength: Mission.MAX_NAME_LENGTH,
     },
     versionNumber: { type: Number, required: true },
-    seed: {
-      type: String,
-      required: true,
-      default: StringToolbox.generateRandomId,
-    },
     launchedAt: { type: Date, default: null },
     createdBy: {
       type: Schema.Types.ObjectId,
