@@ -398,7 +398,7 @@ export const missionSchema = new MissionSchema(
                         default: 'repeatable',
                         enum: ServerMissionAction.TYPES,
                       },
-                      processTime: {
+                      baseProcessTime: {
                         type: Number,
                         required: true,
                       },
@@ -406,7 +406,7 @@ export const missionSchema = new MissionSchema(
                         type: Boolean,
                         required: true,
                       },
-                      successChance: {
+                      baseSuccessChance: {
                         type: Number,
                         required: true,
                       },

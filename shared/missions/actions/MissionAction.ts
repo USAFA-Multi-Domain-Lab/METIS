@@ -45,6 +45,11 @@ const JSON_PROPERTIES_RAW = {
        * The resource costs of the action.
        */
       resourceCosts: [] as TActionResourceCostJson[],
+      /**
+       * The modifiers applied to this action over the course of a session
+       * which alter the requirements needed to execute.
+       */
+      modifiers: [] as TActionModifier[],
     },
   ],
 } as const
@@ -109,7 +114,7 @@ export abstract class MissionAction<
   /**
    * The amount of time it takes to execute the action.
    */
-  protected _processTime: number
+  private baseProcessTime: number
   /**
    * The amount of time it takes to execute the action.
    */
@@ -118,14 +123,14 @@ export abstract class MissionAction<
     // ***Note: This ensures the process time is never less than 0 or greater than 1 hour.
     return Math.min(
       Math.max(
-        this._processTime + this._processTimeOperand,
+        this.baseProcessTime + this._processTimeOperand,
         MissionAction.PROCESS_TIME_MIN,
       ),
       MissionAction.PROCESS_TIME_MAX,
     )
   }
   public set processTime(value: number) {
-    this._processTime = value
+    this.baseProcessTime = value
   }
 
   /**
@@ -227,11 +232,19 @@ export abstract class MissionAction<
    * @note The operand can be positive or negative. It will either increase or decrease the process time.
    */
   private _processTimeOperand: number
+
   /**
    * Used to modify the chance that the action will succeed.
    * @note The operand can be positive or negative. It will either increase or decrease the success chance.
    */
   private _successChanceOperand: number
+
+  /**
+   * A time-ordered record of every modifier applied to this action
+   * over the course of a session which alters the requirements needed
+   * to execute.
+   */
+  public modifiers: TActionModifier[]
 
   /**
    * The number of times the action has been
@@ -331,7 +344,7 @@ export abstract class MissionAction<
     this.description =
       data.description ?? MissionAction.DEFAULT_PROPERTIES.description
     this.type = data.type ?? MissionAction.DEFAULT_PROPERTIES.type
-    this._processTime =
+    this.baseProcessTime =
       data.processTime ?? MissionAction.DEFAULT_PROPERTIES.processTime
     this.processTimeHidden =
       data.processTimeHidden ??
@@ -353,6 +366,7 @@ export abstract class MissionAction<
       data.effects ?? MissionAction.DEFAULT_PROPERTIES.effects,
     )
 
+    this.modifiers = data.modifiers ?? []
     this._processTimeOperand = 0
     this._successChanceOperand = 0
   }
@@ -397,7 +411,7 @@ export abstract class MissionAction<
       name: this.name,
       description: this.description,
       type: this.type,
-      processTime: this._processTime,
+      processTime: this.baseProcessTime,
       processTimeHidden: this.processTimeHidden,
       successChance: this._successChance,
       successChanceHidden: this.successChanceHidden,
@@ -406,6 +420,7 @@ export abstract class MissionAction<
       opensNodeHidden: this.opensNodeHidden,
       localKey: this.localKey,
       effects: this.effects.map((effect) => effect.toExecutionTriggeredJson()),
+      modifiers: this.modifiers,
     }
 
     switch (sessionDataExposure.expose) {
@@ -430,7 +445,7 @@ export abstract class MissionAction<
    * @param processTimeOperand The operand to modify the process time by.
    */
   public modifyProcessTime(processTimeOperand: number): void {
-    this._processTime = this.processTime
+    this.baseProcessTime = this.processTime
     this._processTimeOperand = processTimeOperand
   }
 
@@ -607,6 +622,7 @@ export abstract class MissionAction<
       opensNode: true,
       opensNodeHidden: false,
       effects: [],
+      modifiers: [],
     }
   }
 
@@ -698,3 +714,36 @@ export type TMissionActionDefaultJson = Required<
  * @option 'single-use' - The action can only be executed once.
  */
 export type TActionType = 'repeatable' | 'single-use'
+
+/**
+ * The property of a {@link MissionAction} that a modifier targets.
+ */
+export type TActionModifierType =
+  | 'resource-cost'
+  | 'process-time'
+  | 'success-chance'
+
+/**
+ * A single modifier applied to a {@link MissionAction} during a session.
+ * Modifiers are stored in time-order and can be used to compute the
+ * effective value of an action property at any point in time.
+ */
+export type TActionModifier = {
+  /**
+   * The property of the action being modified.
+   */
+  type: TActionModifierType
+  /**
+   * The signed amount added to the property's base value by this modifier.
+   */
+  amount: number
+  /**
+   * The timestamp (ms since epoch) at which this modifier was applied.
+   */
+  appliedAt: number
+  /**
+   * The ID of the resource whose cost is being modified.
+   * Only populated when {@link type} is `'resource-cost'`; `null` otherwise.
+   */
+  resourceId: string | null
+}
