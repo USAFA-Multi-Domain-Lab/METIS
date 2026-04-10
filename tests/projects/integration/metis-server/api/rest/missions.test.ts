@@ -1,22 +1,32 @@
 import { afterAll, beforeAll, describe, expect, test } from '@jest/globals'
-import type { TMissionJson } from '@shared/missions/Mission'
+import type { TMissionExistingJson } from '@shared/missions/Mission'
 import type { TUserJson } from '@shared/users/User'
 import { Types } from 'mongoose'
-import type { TestHttpClient } from 'tests/middleware/TestHttpClient'
-import { TestSuiteSetup } from 'tests/middleware/TestSuiteSetup'
-import { TestSuiteTeardown } from 'tests/middleware/TestSuiteTeardown'
-import { TestToolbox } from 'tests/toolbox/TestToolbox'
+import { assertMissionMatchesExpectedData } from 'tests/helpers/projects/integration/rest-api/missions/assertions'
+import {
+  createMissionPayload,
+  type TMissionCreatePayload,
+} from 'tests/helpers/projects/integration/rest-api/missions/payload'
+import {
+  createMissionUpdatePayload,
+  exportMissionArchive,
+  fetchAllMissions,
+  fetchMission,
+  findImportedMission,
+  importMissionArchive,
+} from 'tests/helpers/projects/integration/rest-api/missions/requests'
+import type { TestHttpClient } from 'tests/helpers/TestHttpClient'
+import { TestSuiteSetup } from 'tests/helpers/TestSuiteSetup'
+import { TestSuiteTeardown } from 'tests/helpers/TestSuiteTeardown'
+import { TestToolbox } from 'tests/helpers/TestToolbox'
 
 describe('/api/v1/missions', () => {
-  // Extract commonly used utilities.
   const { generateRandomId, DEFAULT_PASSWORD: defaultPassword } = TestToolbox
   const { createTestContext, createTestUser } = TestSuiteSetup
   const { cleanupTestUsers, cleanupTestMissions } = TestSuiteTeardown
 
-  // Per-test variables.
   const namePrefix = 'test_missions'
   let password: string = defaultPassword
-  let missionIdsToCleanup: string[] = []
   let defaultMissionId: string
 
   beforeAll(async () => {
@@ -24,15 +34,14 @@ describe('/api/v1/missions', () => {
     let response = await client.get('/api/v1/missions/')
     expect(response.status).toBe(401)
 
-    // Fetch default mission ID with auth.
     let user = `${namePrefix}_bootstrap_${generateRandomId()}`
-    password = defaultPassword
     await createTestUser({
       username: user,
       password,
       accessId: 'instructor',
     })
     await client.post('/api/v1/logins/', { username: user, password })
+
     let authed = await client.get('/api/v1/missions/')
     expect(authed.status).toBe(200)
     expect(Array.isArray(authed.data)).toBe(true)
@@ -50,10 +59,12 @@ describe('/api/v1/missions', () => {
       password,
       accessId,
     })
+
     let response = await client.post('/api/v1/logins/', {
       username,
       password,
     })
+
     expect(response.status).toBe(200)
     return username
   }
@@ -63,33 +74,25 @@ describe('/api/v1/missions', () => {
     expect(response.status).toBe(200)
   }
 
-  async function fetchMissionDetail(client: TestHttpClient, missionId: string) {
-    let response = await client.get(`/api/v1/missions/${missionId}/`)
-    expect(response.status).toBe(200)
-    return response.data
-  }
-
-  async function createMissionViaApi(
+  async function createMission(
     client: TestHttpClient,
-    baseMission: TMissionJson,
-  ) {
-    let payload: TMissionJson = {
-      name: `${namePrefix}_created_${generateRandomId()}`,
-      versionNumber: baseMission.versionNumber ?? 1,
-      seed: baseMission.seed ?? 'seed',
-      resourceLabel: baseMission.resourceLabel ?? 'resource',
-      structure: baseMission.structure ?? {},
-      forces: baseMission.forces ?? [],
-      prototypes: baseMission.prototypes ?? [],
-      files: baseMission.files ?? [],
-      effects: baseMission.effects ?? [],
+    payload: TMissionCreatePayload = createMissionPayload(),
+  ): Promise<TMissionExistingJson> {
+    let response = await client.post<TMissionExistingJson>(
+      '/api/v1/missions/',
+      payload,
+    )
+    let mission = response.data
+
+    expect(response.status).toBe(200)
+    expect(mission.name).toBe(payload.name)
+    expect(mission._id).toBeDefined()
+
+    if (!mission._id) {
+      throw new Error('Mission ID is undefined')
     }
 
-    let response = await client.post<TMissionJson>('/api/v1/missions/', payload)
-    expect(response.status).toBe(200)
-    expect(response.data.name).toBe(payload.name)
-    missionIdsToCleanup.push(response.data._id)
-    return response.data
+    return mission
   }
 
   test('GET /api/v1/missions/ requires auth and allows instructor access', async () => {
@@ -102,10 +105,8 @@ describe('/api/v1/missions', () => {
     let forbidden = await client.get('/api/v1/missions/')
     expect(forbidden.status).toBe(403)
 
-    // Log out the student before logging in as instructor.
     await logout(client)
 
-    // Ensure instructor can read despite lacking write permissions.
     await loginWithAccess(client, 'instructor')
     let authed = await client.get('/api/v1/missions/')
     expect(authed.status).toBe(200)
@@ -143,45 +144,105 @@ describe('/api/v1/missions', () => {
     let forbidden = await client.post('/api/v1/missions/', {})
     expect(forbidden.status).toBe(403)
 
-    // Log out the student before logging in as instructor.
     await logout(client)
 
     let username = `${namePrefix}_instructor_${generateRandomId()}`
     await loginWithAccess(client, 'instructor', username)
     let instructorForbidden = await client.post('/api/v1/missions/', {})
     expect(instructorForbidden.status).toBe(403)
+
+    await logout(client)
+
+    await loginWithAccess(client, 'admin')
+    let invalidMission = await client.post('/api/v1/missions/', {})
+    expect(invalidMission.status).toBe(400)
   })
 
-  test('Creates mission, copies it, updates it, and deletes it', async () => {
+  test('POST /api/v1/missions/ saves mission data correctly', async () => {
     let { client } = await createTestContext()
     await loginWithAccess(client, 'admin')
 
-    let baseMission = await fetchMissionDetail(client, defaultMissionId)
-    let created = await createMissionViaApi(client, {
-      ...baseMission,
-      files: [],
-    })
+    let payload = createMissionPayload()
+    let created = await createMission(client, payload)
 
-    let copyName = `${namePrefix}_copy_${generateRandomId()}`
-    let copyResponse = await client.post('/api/v1/missions/copy/', {
-      copyName,
-      originalId: created._id,
-    })
-    expect(copyResponse.status).toBe(200)
-    expect(copyResponse.data.name).toBe(copyName)
-    missionIdsToCleanup.push(copyResponse.data._id)
+    assertMissionMatchesExpectedData(created, payload)
+  })
 
+  test('GET /api/v1/missions/:_id/ returns saved mission data', async () => {
+    let { client } = await createTestContext()
+    await loginWithAccess(client, 'admin')
+
+    let payload = createMissionPayload()
+    let { _id: missionId } = await createMission(client, payload)
+    let fetched = await fetchMission(client, missionId)
+
+    assertMissionMatchesExpectedData(fetched, payload)
+  })
+
+  test('PUT /api/v1/missions/ saves changes to deeply nested mission data correctly', async () => {
+    let { client } = await createTestContext()
+    await loginWithAccess(client, 'admin')
+
+    let created = await createMission(client)
+    let updatePayload = createMissionUpdatePayload(created)
     let updatedName = `${created.name}_updated`
-    let updateResponse = await client.put('/api/v1/missions/', {
-      _id: created._id,
-      name: updatedName,
-    })
+
+    updatePayload.name = updatedName
+    updatePayload.resources[0].name = 'Supplies'
+    updatePayload.forces[0].resourcePools[0].initialBalance = 245
+    updatePayload.forces[0].nodes[1].description = 'Updated node description'
+    updatePayload.forces[0].nodes[1].actions[0].resourceCosts[0].baseAmount = 22
+
+    let updateResponse = await client.put<TMissionExistingJson>(
+      '/api/v1/missions/',
+      updatePayload,
+    )
+
     expect(updateResponse.status).toBe(200)
     expect(updateResponse.data.name).toBe(updatedName)
+    assertMissionMatchesExpectedData(updateResponse.data, updatePayload)
 
+    let fetched = await fetchMission(client, created._id)
+    assertMissionMatchesExpectedData(fetched, updatePayload)
+  })
+
+  test('POST /api/v1/missions/copy/ preserves mission data for copy-safe fields', async () => {
+    let { client } = await createTestContext()
+    await loginWithAccess(client, 'admin')
+
+    let created = await createMission(client)
+    let copyName = `${namePrefix}_copy_${generateRandomId()}`
+    let copyResponse = await client.post<TMissionExistingJson>(
+      '/api/v1/missions/copy/',
+      {
+        copyName,
+        originalId: created._id,
+      },
+    )
+
+    expect(copyResponse.status).toBe(200)
+    expect(copyResponse.data._id).toBeDefined()
+    expect(copyResponse.data._id).not.toBe(created._id)
+    expect(copyResponse.data.name).toBe(copyName)
+
+    let expectedCopy = structuredClone(created)
+    expectedCopy.name = copyName
+    assertMissionMatchesExpectedData(copyResponse.data, expectedCopy, {
+      omitSeed: true,
+    })
+  })
+
+  test('DELETE /api/v1/missions/:_id removes a created mission', async () => {
+    let { client } = await createTestContext()
+    await loginWithAccess(client, 'admin')
+
+    let created = await createMission(client)
     let deleteResponse = await client.delete(`/api/v1/missions/${created._id}/`)
+
     expect(deleteResponse.status).toBe(200)
-    missionIdsToCleanup = missionIdsToCleanup.filter((id) => id !== created._id)
+
+    let missing = await client.get(`/api/v1/missions/${created._id}/`)
+    expect(missing.status).toBe(404)
   })
 
   test('POST /api/v1/missions/import/ requires missions write permission to access and returns 400 without files', async () => {
@@ -194,7 +255,6 @@ describe('/api/v1/missions', () => {
     let forbidden = await client.post('/api/v1/missions/import/', {})
     expect(forbidden.status).toBe(403)
 
-    // Log out the instructor before logging in as admin.
     await logout(client)
 
     await loginWithAccess(client, 'admin')
@@ -216,7 +276,6 @@ describe('/api/v1/missions', () => {
     )
     expect(forbidden.status).toBe(403)
 
-    // Log out the student before logging in as instructor.
     await logout(client)
 
     await loginWithAccess(client, 'instructor')
@@ -225,18 +284,10 @@ describe('/api/v1/missions', () => {
     )
     expect(instructorForbidden.status).toBe(403)
 
-    // Log out the instructor before logging in as admin.
     await logout(client)
 
     await loginWithAccess(client, 'admin')
-
-    // Create a valid mission based on the seeded mission, but remove files so
-    // export does not depend on file-store state.
-    let baseMission = await fetchMissionDetail(client, defaultMissionId)
-    let mission = await createMissionViaApi(client, {
-      ...baseMission,
-      files: [],
-    })
+    let mission = await createMission(client)
 
     let exportResp = await client.get(
       `/api/v1/missions/${mission._id}/export/file`,
@@ -254,6 +305,42 @@ describe('/api/v1/missions', () => {
     let missingId = new Types.ObjectId().toHexString()
     let missing = await client.get(`/api/v1/missions/${missingId}/export/file`)
     expect(missing.status).toBe(404)
+  })
+
+  test('Exporting and re-importing a mission keeps the saved data intact', async () => {
+    let { client } = await createTestContext()
+    await loginWithAccess(client, 'admin')
+
+    let payload = createMissionPayload()
+    let created = await createMission(client, payload)
+    let existingMissionIds = new Set(
+      (await fetchAllMissions(client)).map((mission) => mission._id),
+    )
+
+    let exportBuffer = await exportMissionArchive(client, created._id)
+    let importResponse = await importMissionArchive(
+      client,
+      exportBuffer,
+      `${namePrefix}_import_${generateRandomId()}.metis.zip`,
+    )
+
+    expect(importResponse.successfulImportCount).toBe(1)
+    expect(importResponse.failedImportCount).toBe(0)
+
+    let allMissions = await fetchAllMissions(client)
+    let importedMissionData = findImportedMission(
+      allMissions,
+      created.name,
+      existingMissionIds,
+    )
+
+    expect(importedMissionData).toBeDefined()
+    if (!importedMissionData) {
+      throw new Error('Expected imported mission data to exist.')
+    }
+
+    let importedMission = await fetchMission(client, importedMissionData._id)
+    assertMissionMatchesExpectedData(importedMission, payload)
   })
 
   afterAll(async () => {

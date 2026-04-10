@@ -1,6 +1,6 @@
 import { describe, expect, test } from '@jest/globals'
-import { TestSuiteSetup } from 'tests/middleware/TestSuiteSetup'
-import { TestToolbox } from 'tests/toolbox/TestToolbox'
+import { TestToolbox } from 'tests/helpers/TestToolbox'
+import { TestSuiteSetup } from 'tests/helpers/TestSuiteSetup'
 
 describe('Rate limiting', () => {
   const sleep = async (ms: number): Promise<void> => {

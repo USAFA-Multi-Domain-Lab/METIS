@@ -2,8 +2,8 @@ import { UserModel, hashPassword } from '@metis/server/database/models/users'
 import type { MetisServer } from '@metis/server/MetisServer'
 import type { TUserJson } from '@shared/users/User'
 import { User } from '@shared/users/User'
-import { TestToolbox } from 'tests/toolbox/TestToolbox'
-import { TestHttpClient } from './TestHttpClient'
+import { TestToolbox } from 'tests/helpers/TestToolbox'
+import { TestHttpClient } from '../helpers/TestHttpClient'
 import { TestMetisServer } from './TestMetisServer'
 
 /**

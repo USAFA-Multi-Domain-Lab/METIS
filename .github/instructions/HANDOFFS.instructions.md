@@ -96,25 +96,42 @@ Tests should be placed in `path-to-file/ComponentName.test.tsx`.
 
 ## Handoff Report Format
 
-Every handoff report must follow this structure. Unlike the code handoff, this document is issue-first and result-oriented. It should summarize what the reviewer actually found and completed, not what they were originally asked to do.
+Every handoff report must follow this structure. Unlike the code handoff, this document is issue-first and result-oriented. It should summarize what the reviewer actually found and completed while carrying out the original handoff, not expand the assigned scope of work.
 
 ````markdown
 # {Feature Name} Report
 
-This report captures review findings for the {feature-name} system using the same top-level structure as the original handoff. The goal is to give the original architect a feature-specific review artifact that is easy to compare against the implementation summary and easy to extend with future findings.
+This report captures review findings for the {feature-name} system using the same top-level structure as the original handoff. The goal is to give the original architect a feature-specific review artifact that is easy to compare against the implementation summary and easy to extend with future findings. Use it to record the results of the manual tests and automated tests requested by the handoff, along with any findings or advisory follow-up suggestions discovered during that work.
 
 ## Files to Review
 
 ### Review Summary
 
-The following findings are limited to code review and automated test review. Manual UI validation is intentionally left open for a separate reviewer pass.
+The following findings summarize the review, manual test execution, and automated test work completed for the assigned handoff scope.
 
 ### Findings
 
-- path/to/File.ts:123 — Severity. Finding description.
-- path/to/OtherFile.tsx:45 — Severity. Finding description.
+#### Severity Snapshot
+
+- Highest current severity: Medium
+- Critical: 0
+- High: 0
+- Medium: 1
+- Low: 2
+
+#### Medium
+
+- path/to/File.ts:123 — Medium. Finding description.
+
+#### Low
+
+- path/to/OtherFile.tsx:45 — Low. Finding description.
 
 ## Manual Tests
+
+### Execution Result
+
+Short summary of the current manual test pass. If no manual issues were found, say so plainly.
 
 {Copy the manual test checklist from the original handoff verbatim, preserving each item as an unchecked checkbox for the reviewing engineer to perform. If the original handoff explicitly stated that no manual testing was required, write a single sentence such as: "No manual testing was required for this handoff."}
 
@@ -123,24 +140,31 @@ The following findings are limited to code review and automated test review. Man
 
 ## Automatic Tests
 
-### Implemented Coverage
+### Summary
 
-- path/to/test-file.test.ts — Coverage summary.
-- path/to/other-test.test.tsx — Coverage summary.
+Reference the original handoff's requested automated test work at a high level, note which existing suites were inspected or executed during the report pass, and state whether any of the originally requested tests were actually written.
 
-### Execution Result
+### New Tests Written
 
-Short summary of the current focused run.
+- path/to/new-test-file.test.ts — New automated coverage written during this report pass.
+
+### Tests That Need To Be Repaired
+
+- path/to/existing-test.test.tsx — Existing test coverage that is stale, broken, or no longer aligned with the implementation changes introduced by the feature.
+
+### Additional Tests That Would Be Helpful
+
+- path/to/source-file.tsx — Advisory follow-up automated coverage that would improve regression protection.
+
+### Overall Results
+
+Short summary of the current focused runs relevant to the feature or system under review.
 
 ```text
 N files
 X tests passed
 Y tests failed
 ```
-
-### Open Coverage Gaps
-
-- Remaining uncovered test work or intentionally failing assertions.
 ````
 
 ---
@@ -166,14 +190,28 @@ The title should name the feature concisely followed by `— Code Handoff`.
 
 ### Handoff Reports
 
-- A handoff report is not a rewrite of the original handoff. It should report outcomes: findings, written tests, executed tests, and remaining gaps.
+- A handoff report is not a rewrite of the original handoff. It should report outcomes from the assigned review work: findings, written tests, executed tests, and remaining gaps.
 - The title should name the feature concisely followed by `Report`.
 - Keep the same top-level headings as the original handoff where practical: `Files to Review`, `Manual Tests`, and `Automatic Tests`. This makes side-by-side comparison easy.
+- Under `Review Summary`, include a short `Severity Snapshot` that makes the current urgency obvious at a glance. A simple count by severity plus the highest current severity is usually enough.
 - Findings should come first and should be ordered by severity, then by practical impact.
+- Group findings under severity-specific subheaders such as `Critical`, `High`, `Medium`, and `Low`. Omit empty groups if there are no findings at that severity.
 - Each finding should include the file path and line number when available.
-- If a requested test was written but currently fails because it exposes a real product mismatch, record it as implemented coverage and describe the failing status explicitly in the execution result or open gaps section.
+- When a handoff report references a workspace file path in findings or automated-test sections, render it as a Markdown link so the reader can navigate directly from the report.
+- The reviewer should perform the manual tests and automated test work requested by the original handoff, then record the results in the report. Do not expand the scope by fixing defects, changing implementation, or writing additional automated coverage unless the user explicitly asks for that extra work.
+- Keep the concerns separated: `Findings` should capture issues discovered while reviewing the files listed in the handoff, while automated-test status should be reported only inside the `Automatic Tests` section.
+- The `Manual Tests` section should preserve the original checklist verbatim and may include a short execution summary describing whether the manual pass was completed and whether any issues were found.
+- The `Automatic Tests` section should begin with a summary that references the original handoff's requested automated test work and identifies which relevant suites were executed during the report pass.
+- Do not duplicate the original handoff's required automated-test checklist inside the report unless the user explicitly asks for that mirrored format. The original handoff should remain the source of truth for the required new test backlog.
+- If no new tests were written during the report pass, state that explicitly under `New Tests Written` rather than implying the work was completed.
+- Existing tests that were broken or made stale by the feature changes belong under `Tests That Need To Be Repaired`, not under `Findings`.
+- If a requested test was written but currently fails because it exposes a real product mismatch, record it under `New Tests Written` and describe the failing status explicitly in `Overall Results`.
 - If the original handoff requested a test location that does not map cleanly to the repository's runnable Jest configuration, keep the intent but document the implemented equivalent path that actually runs in the current test setup.
 - Do not silently convert product defects into "coverage gaps" once the test exists. At that point it is a failing implementation against a covered requirement.
+- Prefer clear report language such as `Tests That Need To Be Repaired` for stale or broken existing suites and `Additional Tests That Would Be Helpful` for advisory follow-up coverage suggestions.
+- `Additional Tests That Would Be Helpful` should be reserved for extra advisory coverage ideas discovered during review, not for restating the original handoff's required tests.
+- Phrase new automated coverage or implementation fixes discovered during review as advisory follow-up work rather than assigning them to a specific developer. Prefer wording such as `would be useful`, `would be valuable`, or `should be updated` over imperative language like `write these tests now` unless the user explicitly asks for that stronger framing.
+- Manual testing and automated testing may overlap, but the report should still document them separately. The Manual Tests section records execution of the handoff's manual QA checklist, and the Automatic Tests section records the status of the original handoff's requested automated coverage, any broken pre-existing suites affected by the feature, any new tests written, and any additional advisory test suggestions.
 - The Manual Tests section of a handoff report must copy the manual test checklist from the original handoff verbatim, with each item preserved as an unchecked checkbox for the reviewing engineer to work through. Do not replace the list with placeholder prose or a "reserved" note.
 - If the original handoff explicitly stated that no manual testing was required (e.g. "Manual UI validation is intentionally skipped for this feature"), the report's Manual Tests section must reflect that directly with a single sentence such as "No manual testing was required for this handoff." Do not use the generic reserved-section boilerplate in that case.
 - The report should be updated as work progresses. It does not need to be written only once at the end.

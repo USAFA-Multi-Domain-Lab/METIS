@@ -1,6 +1,6 @@
 import type { MetisServer } from '@metis/server/MetisServer'
 import { io, type Socket } from 'socket.io-client'
-import { TestToolbox } from 'tests/toolbox/TestToolbox'
+import { TestToolbox } from 'tests/helpers/TestToolbox'
 
 /**
  * Socket.io client utilities for integration tests.
@@ -126,7 +126,10 @@ export abstract class TestSocketClient {
    * @param socket Connected socket instance.
    * @param payload JSON-serializable payload to send.
    */
-  public static sendJson(socket: Socket, payload: unknown): void {
+  public static sendJson<TPayload = unknown>(
+    socket: Socket,
+    payload: TPayload,
+  ): void {
     socket.send(JSON.stringify(payload))
   }
 
@@ -140,7 +143,7 @@ export abstract class TestSocketClient {
    */
   public static async waitForEvent<TEvent = any>(
     socket: Socket,
-    predicate: (event: any) => boolean,
+    predicate: (event: TEvent) => boolean,
     timeoutMs: number = 5000,
   ): Promise<TEvent> {
     return await new Promise<TEvent>((resolve, reject) => {
