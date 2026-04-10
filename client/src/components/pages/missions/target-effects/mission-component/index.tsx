@@ -1218,12 +1218,6 @@ export default function ArgMissionComponent({
 
   /* -- RENDER -- */
 
-  console.log('forceIsActive', forceIsActive)
-  console.log('poolIsActive', poolIsActive)
-  console.log('nodeIsActive', nodeIsActive)
-  console.log('actionIsActive', actionIsActive)
-  console.log('fileIsActive', fileIsActive)
-
   return (
     <>
       <ArgForce

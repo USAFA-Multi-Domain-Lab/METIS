@@ -323,7 +323,6 @@ export class TargetDependency implements TDependency {
     if (!Array.isArray(args)) args = [args]
     // Create the dependency.
     let dependency = new TargetDependency(name, dependentId, condition, args)
-    console.log(dependency, dependency.encode())
     // Return the encoded dependency.
     return dependency.encode()
   }

@@ -1,4 +1,4 @@
-import DetailMultiSelect from '@client/components/content/form/multiselect/DetailMultiSelect'
+import DetailMultiSelect from '@client/components/content/form/dropdowns/multiselect/DetailMultiSelect'
 import { describe, expect, jest, test } from '@jest/globals'
 import { fireEvent, render } from '@testing-library/react'
 

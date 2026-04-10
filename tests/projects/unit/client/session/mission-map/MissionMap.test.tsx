@@ -1,4 +1,4 @@
-import SessionPage from '@client/components/pages/SessionPage'
+import SessionPage from '@client/components/pages/sessions/SessionPage'
 import { NodeAlert } from '@shared/missions/nodes/NodeAlert'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import React from 'react'
@@ -309,6 +309,10 @@ jest.mock(
     useButtonSvgEngine: () => createMockButtonEngine(),
   }),
 )
+
+jest.mock('@client/toolbox/icons', () => ({
+  getIconPath: () => '',
+}))
 
 function createSessionPageHarness(alerts: NodeAlert[] = []) {
   let node = new FakeNode()

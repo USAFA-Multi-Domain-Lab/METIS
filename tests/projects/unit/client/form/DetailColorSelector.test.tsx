@@ -1,4 +1,4 @@
-import { DetailColorSelector } from '@client/components/content/form/DetailColorSelector'
+import { DetailColorSelector } from '@client/components/content/form/dropdowns/colors/DetailColorSelector'
 import { describe, expect, jest, test } from '@jest/globals'
 import { fireEvent, render } from '@testing-library/react'
 

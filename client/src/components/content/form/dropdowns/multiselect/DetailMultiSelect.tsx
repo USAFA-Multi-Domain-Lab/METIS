@@ -3,9 +3,9 @@ import { compute } from '@client/toolbox'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
-import type { TDetailBase_P } from '../'
-import DetailTitleRow from '../DetailTitleRow'
-import { useDetailClassNames } from '../useDetailClassNames'
+import type { TDetailBase_P } from '../../'
+import DetailTitleRow from '../../DetailTitleRow'
+import { useDetailClassNames } from '../../useDetailClassNames'
 import './DetailMultiSelect.scss'
 import MultiSelectOption from './subcomponents/MultiSelectOption'
 
@@ -98,8 +98,7 @@ export default function DetailMultiSelect<TOption>(
   /**
    * The class names for all options.
    */
-  const allOptionsClasses = new ClassList('AllOptions')
-    .set('Hidden', !expanded)
+  const allOptionsClasses = new ClassList('AllOptions').set('Hidden', !expanded)
 
   /**
    * The class name for the optional text.
