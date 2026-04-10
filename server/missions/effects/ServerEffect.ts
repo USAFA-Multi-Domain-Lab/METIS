@@ -1,6 +1,8 @@
 import type { TTargetEnvExposedEffect } from '@server/target-environments/context/TargetEnvContext'
 import type { ServerTarget } from '@server/target-environments/ServerTarget'
 import { ServerTargetEnvironment } from '@server/target-environments/ServerTargetEnvironment'
+import type { TMigratableEffect } from '@server/target-environments/TargetMigration'
+import { TargetMigration } from '@server/target-environments/TargetMigration'
 import type {
   TEffectContextExecution,
   TEffectContextSession,
@@ -47,7 +49,7 @@ export class ServerEffect<
    */
   public argsToTargetEnvContext(args: TAnyObject): TAnyObject {
     // Copy the arguments.
-    let argsCopy = { ...args }
+    let argsCopy = structuredClone(args)
 
     Object.entries(argsCopy).forEach(([key, value]) => {
       if (value[ForceArg.FORCE_NAME] !== undefined) {
@@ -101,6 +103,56 @@ export class ServerEffect<
         return self.argsToTargetEnvContext(self.args)
       },
     }
+  }
+
+  /**
+   * Generates an effect object which can be used
+   * to perform a migration between versions via
+   * a {@link TargetMigration}.
+   */
+  public toMigratable(): TMigratableEffect {
+    let self = this
+
+    let migratableEffect: TMigratableEffect = {
+      _id: self._id,
+      localKey: self.localKey,
+      name: self.name,
+      type: self.type,
+      trigger: self.trigger,
+      description: self.description,
+      order: self.order,
+      args: structuredClone(self.args),
+      versionCursor: this.targetEnvironmentVersion,
+      get mission() {
+        return self.mission.toTargetEnvContext()
+      },
+      get host() {
+        return self.host.toTargetEnvContext()
+      },
+      get sourceForce() {
+        return self.sourceForce ? self.sourceForce.toTargetEnvContext() : null
+      },
+      get sourceNode() {
+        return self.sourceNode ? self.sourceNode.toTargetEnvContext() : null
+      },
+      get sourceAction() {
+        return self.sourceAction ? self.sourceAction.toTargetEnvContext() : null
+      },
+      get target() {
+        return self.target ? self.target.toTargetEnvContext() : null
+      },
+      get environment() {
+        return self.environment ? self.environment.toTargetEnvContext() : null
+      },
+      get result() {
+        return {
+          version: this.versionCursor,
+          data: structuredClone(this.args),
+        }
+      },
+    }
+
+    return migratableEffect
   }
 
   /**

@@ -3,11 +3,10 @@ import type {
   TRequiredHandleInvalidOption,
 } from '@client/components/content/form/dropdowns/standard/DetailDropdown'
 import { DetailDropdown } from '@client/components/content/form/dropdowns/standard/DetailDropdown'
-import type { TMetisClientComponents } from '@client/index'
 import type { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
+import type { ClientResourcePool } from '@client/missions/forces/ClientResourcePool'
 import { compute } from '@client/toolbox'
 import { usePostInitEffect } from '@client/toolbox/hooks/lifecycles'
-import type { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import type { TMissionComponentArg } from '@shared/target-environments/args/mission-component/MissionComponentArg'
 import { useState } from 'react'
 
@@ -35,7 +34,7 @@ export default function ArgPool({
    * force's resource pools if the pool is not found in the selected force.**
    */
   const [handleInvalidRequiredPool, setInvalidRequiredPoolHandler] = useState<
-    TRequiredHandleInvalidOption<ResourcePool<TMetisClientComponents>>
+    TRequiredHandleInvalidOption<ClientResourcePool>
   >(() => {
     if (existsInEffectArgs) {
       return {
@@ -59,7 +58,7 @@ export default function ArgPool({
    * is not found in the selected force.**
    */
   const [handleInvalidOptionalPool, setInvalidOptionalPoolHandler] = useState<
-    TOptionalHandleInvalidOption<ResourcePool<TMetisClientComponents> | null>
+    TOptionalHandleInvalidOption<ClientResourcePool | null>
   >(() => {
     if (existsInEffectArgs) {
       return {
@@ -118,7 +117,7 @@ export default function ArgPool({
   /**
    * The list of pools to display in the dropdown.
    */
-  const pools = compute<ResourcePool<TMetisClientComponents>[]>(() => {
+  const pools = compute<ClientResourcePool[]>(() => {
     if (isOptional) {
       return optionalForceValue ? optionalForceValue.resourcePools : []
     }
@@ -177,7 +176,7 @@ export default function ArgPool({
 
   if (isOptional) {
     return (
-      <DetailDropdown<ResourcePool<TMetisClientComponents>>
+      <DetailDropdown<ClientResourcePool>
         fieldType={'optional'}
         label={label}
         options={pools}
@@ -194,7 +193,7 @@ export default function ArgPool({
   }
 
   return (
-    <DetailDropdown<ResourcePool<TMetisClientComponents>>
+    <DetailDropdown<ClientResourcePool>
       fieldType={'required'}
       label={label}
       options={pools}
@@ -247,9 +246,9 @@ type TArgPool_P = {
   /**
    * The pool value to display in the dropdown.
    */
-  poolValue: TReactState<ResourcePool<TMetisClientComponents>>
+  poolValue: TReactState<ClientResourcePool>
   /**
    * The optional pool value to display in the dropdown.
    */
-  optionalPoolValue: TReactState<ResourcePool<TMetisClientComponents> | null>
+  optionalPoolValue: TReactState<ClientResourcePool | null>
 }

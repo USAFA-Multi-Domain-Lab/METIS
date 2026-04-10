@@ -1,3 +1,4 @@
+import { migrations } from './migrations'
 import { NumberToolbox } from '@metis/toolbox/numbers/NumberToolbox'
 import type { TPoolMetadata } from '@shared/target-environments/types'
 
@@ -71,6 +72,7 @@ const ResourcePool = new TargetSchema({
       tooltipDescription: 'The amount to award to the resource pool.',
     },
   ],
+  migrations,
 })
 
 export default ResourcePool

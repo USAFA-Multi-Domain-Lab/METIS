@@ -4,8 +4,8 @@ import { ServerMissionAction } from '@server/missions/actions/ServerMissionActio
 import type { ServerEffect } from '@server/missions/effects/ServerEffect'
 import type { ServerMissionFile } from '@server/missions/files/ServerMissionFile'
 import type { ServerMissionForce } from '@server/missions/forces/ServerMissionForce'
+import type { ServerResourcePool } from '@server/missions/forces/ServerResourcePool'
 import type { ServerMissionNode } from '@server/missions/nodes/ServerMissionNode'
-import type { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import type { TNodeAlertSeverityLevel } from '@shared/missions/nodes/NodeAlert'
 import type { TSessionState } from '@shared/sessions/MissionSession'
 import type {
@@ -284,7 +284,7 @@ export class TargetScriptContext<
   private determineTargetPool(
     forceKey: string | 'self' = 'self',
     poolKey: string | undefined,
-  ): ResourcePool<TMetisServerComponents> {
+  ): ServerResourcePool {
     let { mission, missionId } = this
 
     // Handle forceKey set to 'self'.

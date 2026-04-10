@@ -3,14 +3,15 @@
 
 .PropertyBadge {
   display: flex;
+  align-items: center;
   column-gap: 0.3em;
   color: $color-accent-light;
   -webkit-user-select: none;
   user-select: none;
 
   .PropertyIcon {
-    width: 0.6em;
-    height: 0.6em;
+    width: 0.675em;
+    height: 0.675em;
     font-size: $button-svg-size;
     cursor: help;
   }
@@ -39,6 +40,7 @@
     .PropertyValue {
       text-decoration: line-through;
       color: $color-faded;
+      font-size: 1.1em;
     }
 
     .StrikethroughReason {

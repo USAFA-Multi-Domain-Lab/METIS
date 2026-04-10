@@ -2,11 +2,10 @@ import Divider from '@client/components/content/form/Divider'
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
 import { useMissionPageContext } from '@client/components/pages/missions/context'
 import EntryHeader from '@client/components/pages/missions/entries/EntryHeader'
-import type { TMetisClientComponents } from '@client/index'
 import { ClientMission } from '@client/missions/ClientMission'
+import type { ClientMissionResource } from '@client/missions/ClientMissionResource'
 import { useEventListener, useObjectFormSync } from '@client/toolbox/hooks'
 import { Mission } from '@shared/missions/Mission'
-import type { MissionResource } from '@shared/missions/MissionResource'
 import { Fragment, useState } from 'react'
 import { DetailString } from '../../../../content/form/DetailString'
 import { EffectTimeline } from '../../target-effects/timelines'
@@ -22,9 +21,9 @@ export default function MissionEntry({
   /* -- STATE -- */
 
   const { onChange, viewMode } = useMissionPageContext()
-  const [resources, setResources] = useState<
-    MissionResource<TMetisClientComponents>[]
-  >([...mission.resources])
+  const [resources, setResources] = useState<ClientMissionResource[]>([
+    ...mission.resources,
+  ])
   const {
     name: [name, setName],
   } = useObjectFormSync(mission, ['name'], {
@@ -62,9 +61,7 @@ export default function MissionEntry({
    * removing it from the mission.
    * @param resource The resource to remove.
    */
-  function onClickDelete(
-    resource: MissionResource<TMetisClientComponents>,
-  ): void {
+  function onClickDelete(resource: ClientMissionResource): void {
     resource.remove()
     onChange(resource)
   }

@@ -22,7 +22,7 @@ export default function ResourceCostBadges({
     <>
       {action.includedCosts.map((cost) => {
         // Don't render badges for zero cost resources.
-        if (cost.baseAmount === 0) return null
+        if (cost.amount === 0) return null
 
         // Find associated resource.
         let resource = action.mission.getResourceById(cost.resourceId)

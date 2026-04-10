@@ -24,7 +24,8 @@
     "test:unit": "jest --runInBand --config tests/jest.config.js --selectProjects unit:server unit:shared unit:client",
     "test:unit:server": "jest --runInBand --config tests/jest.config.js --selectProjects=unit:server",
     "test:unit:shared": "jest --runInBand --config tests/jest.config.js --selectProjects=unit:shared",
-    "test:unit:client": "jest --runInBand --config tests/jest.config.js --selectProjects=unit:client"
+    "test:unit:client": "jest --runInBand --config tests/jest.config.js --selectProjects=unit:client",
+    "test:unit:integration": "jest --runInBand --config tests/jest.config.js --selectProjects=unit:integration"
   },
   "dependencies": {
     "@tiptap/extension-code-block-lowlight": "^2.11.5",

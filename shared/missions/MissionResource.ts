@@ -2,13 +2,10 @@ import {
   serializeJson,
   type TJsonSerializable,
 } from '@shared/toolbox/serialization/json'
-import { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSerializableArray'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { TMission } from './Mission'
-import {
-  MissionComponent,
-  type TMissionComponentIssue,
-} from './MissionComponent'
+import type { TMissionComponentIssue } from './MissionComponent'
+import { MissionComponent } from './MissionComponent'
 
 /**
  * Represents a named resource defined at the mission level. Each resource
@@ -17,7 +14,7 @@ import {
  * actions deduct from one or more resources via their resource costs.
  * @implements {TJsonSerializable<TMissionResourceJson>}
  */
-export class MissionResource<
+export abstract class MissionResource<
   T extends TMetisBaseComponents = TMetisBaseComponents,
 >
   extends MissionComponent<T, MissionResource<T>>
@@ -61,7 +58,7 @@ export class MissionResource<
    * @param icon The icon to display for this resource.
    * @param order The rendering order for this resource.
    */
-  private constructor(
+  protected constructor(
     mission: TMission<T>,
     _id: string,
     name: string,
@@ -80,162 +77,43 @@ export class MissionResource<
   }
 
   /**
-   * Removes the resource from the mission via {@link Mission.removeResource}.
-   */
-  public remove() {
-    this.mission.removeResource(this._id)
-  }
-
-  /**
    * The ordered list of icons available for resources, matching the
    * order presented in the resource icon selector UI.
    */
   public static readonly ICONS: readonly TMetisIcon[] = [
     'resources/coins',
     'resources/trophy',
-    'resources/flag',
-    'resources/gear',
-    'resources/key',
-    'resources/lightning',
-    'resources/node',
-    'resources/shield',
-    'resources/waves',
-    'resources/launch',
-    'resources/user',
-    'resources/copy',
+    'resources/dollar',
+    'resources/strong',
+    'resources/drops',
+    'resources/supplies',
+    'resources/handshake',
+    'resources/microchip',
+    'resources/raised-fist',
+    'resources/earth',
+    'resources/two-people',
+    'resources/star',
   ]
 
   /**
    * The default display names for each resource icon, used when
    * a new resource is created without an explicit name.
    */
-  public static readonly DEFAULT_NAMES: Readonly<Partial<Record<TMetisIcon, string>>> = {
-    'resources/coins': 'Resources',
-    'resources/trophy': 'Points',
-    'resources/flag': 'Budget',
-    'resources/gear': 'Manpower',
-    'resources/key': 'Fuel',
-    'resources/lightning': 'Supplies',
-    'resources/node': 'Direct Support',
-    'resources/shield': 'Technology',
-    'resources/waves': 'Influence',
-    'resources/launch': 'Influence',
-    'resources/user': 'Public Support',
-    'resources/copy': 'Force Morale',
-  }
-
-  /**
-   * Returns the first icon in {@link ICONS} not already used by
-   * an existing resource in the mission. Falls back to the first
-   * icon if all are somehow in use.
-   */
-  private static getNextUnusedIcon<T extends TMetisBaseComponents>(
-    mission: TMission<T>,
-  ): TMetisIcon {
-    let usedIcons = new Set(mission.resources.map((resource) => resource.icon))
-    return (
-      MissionResource.ICONS.find((icon) => !usedIcons.has(icon)) ??
-      MissionResource.ICONS[0]
-    )
-  }
-
-  /**
-   * @param mission The mission that owns this resource definition.
-   * @param name The display name for the resource. If omitted, defaults to
-   * the name in {@link DEFAULT_NAMES} for the resolved icon.
-   * @param icon The icon to display for the resource. If omitted, defaults to
-   * the next unused icon via {@link getNextUnusedIcon}.
-   * @returns A new {@link MissionResource} object.
-   */
-  public static createNew<
-    T extends TMetisBaseComponents = TMetisBaseComponents,
-  >(
-    mission: TMission<T>,
-    name?: string,
-    icon?: TMetisIcon,
-  ): T['resource'] {
-    let order =
-      Math.max(...mission.resources.map((resource) => resource.order), 1) + 1
-    let resolvedIcon = icon ?? MissionResource.getNextUnusedIcon(mission)
-    let resolvedName =
-      name ??
-      MissionResource.DEFAULT_NAMES[resolvedIcon] ??
-      MissionResource.DEFAULT_PROPERTIES.name
-    return new MissionResource<T>(
-      mission,
-      StringToolbox.generateRandomId(),
-      resolvedName,
-      resolvedIcon,
-      order,
-    )
-  }
-
-  /**
-   * Creates a detached {@link ResourcePool} which is a reference
-   * to a resource that cannot be found and has likely been deleted.
-   * @param mission The mission that owns this resource.
-   * @param _id The unique identifier of the detached resource.
-   * @param name The display name of the detached resource.
-   * @param icon The icon to display for the detached resource, defaults to 'coins'.
-   * @returns A detached {@link MissionResource} instance.
-   */
-  public static createDetached<
-    T extends TMetisBaseComponents = TMetisBaseComponents,
-  >(
-    mission: TMission<T>,
-    _id: string,
-    name: string,
-    icon: TMetisIcon = MissionResource.DEFAULT_PROPERTIES.icon,
-  ): T['resource'] {
-    return new MissionResource<T>(mission, _id, name, icon, 0)
-  }
-
-  /**
-   * Creates a {@link MissionResource} from JSON data.
-   * @param mission The mission that owns this resource definition.
-   * @param data The JSON data from which to create the resource.
-   * @returns The new {@link MissionResource} object created from the JSON.
-   */
-  public static fromJson<T extends TMetisBaseComponents = TMetisBaseComponents>(
-    mission: TMission<T>,
-    data: TMissionResourceJson,
-  ): T['resource']
-  /**
-   * Creates a {@link JsonSerializableArray} of {@link MissionResource} objects from an array of JSON data.
-   * @param mission The mission that owns the resource definitions.
-   * @param data The array of JSON data from which to create the resources.
-   * @returns A {@link JsonSerializableArray} of {@link MissionResource} objects.
-   */
-  public static fromJson<T extends TMetisBaseComponents = TMetisBaseComponents>(
-    mission: TMission<T>,
-    data: TMissionResourceJson[],
-  ): JsonSerializableArray<T['resource']>
-  // Actual implementation.
-  public static fromJson<T extends TMetisBaseComponents = TMetisBaseComponents>(
-    mission: TMission<T>,
-    data: TMissionResourceJson | TMissionResourceJson[],
-  ): T['resource'] | JsonSerializableArray<T['resource']> {
-    if (Array.isArray(data)) {
-      return new JsonSerializableArray(
-        ...data.map(
-          (datum) =>
-            new MissionResource<T>(
-              mission,
-              datum._id,
-              datum.name,
-              datum.icon,
-              datum.order,
-            ),
-        ),
-      )
-    }
-    return new MissionResource<T>(
-      mission,
-      data._id,
-      data.name,
-      data.icon,
-      data.order,
-    )
+  public static readonly DEFAULT_NAMES: Readonly<
+    Partial<Record<TMetisIcon, string>>
+  > = {
+    'resources/coins': 'Resources', // Coins
+    'resources/trophy': 'Points', // Trophy
+    'resources/dollar': 'Budget', // Dollar Sign
+    'resources/strong': 'Manpower', // Arm Flex
+    'resources/drops': 'Fuel', // Drops (Other Ideas: Fuel Pump, Gas Canister, Fuel Gauge, Barrel of Oil)
+    'resources/supplies': 'Supplies', // Crate (Other Ideas: Crate with Parachute)
+    'resources/handshake': 'Direct Support', // Handshake
+    'resources/microchip': 'Technology', // Microchip (Other Ideas: Light Bulb, Gears, Atomic Symbol)
+    'resources/earth': 'Influence', // Globe (Other Ideas: Crown, Megaphone)
+    'resources/two-people': 'Public Support', // People
+    'resources/raised-fist': 'Force Morale', // Raised Fist (Other Ideas: Torch, Fire, Battery, Star, Heart, Heart on Fire, Smiley Face)
+    'resources/star': 'Reputation', // Star
   }
 
   /**

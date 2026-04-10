@@ -1,3 +1,4 @@
+import type { MissionResource } from '@shared/missions/MissionResource'
 import type {
   EnvScriptResults,
   TEnvScriptResultJson,
@@ -258,6 +259,16 @@ export abstract class MissionSession<
     return zeroCost || infiniteResources || enoughResources
   }
 
+  public getMissingResources(
+    action: TAction<T>,
+    cheats: Partial<TExecutionCheats> = {},
+  ): MissionResource[] {
+    let zeroCost = !!cheats.zeroCost
+    let infiniteResources = this.config.infiniteResources
+    if (zeroCost || infiniteResources) return []
+    else return action.missingResources
+  }
+
   /**
    * Determines whether the given action can currently be executed in the session.
    * @param action The action in question.
@@ -281,6 +292,54 @@ export abstract class MissionSession<
     // and there are enough resources for the action, given the session
     // and the cheats.
     return nodeReady && enoughResources && !executionLimitReached
+  }
+
+  /**
+   * Added context for {@link readyToExecute}, this returns the
+   * reasons why an action is not ready to be executed in the session, given the cheats.
+   * @param action The action in question.
+   * @param cheats The cheats which may change the action's readiness.
+   * @returns The reasons why the action is not ready to execute.
+   */
+  public unreadyToExecuteReasons(
+    action: TAction<T>,
+    cheats: Partial<TExecutionCheats> = {},
+  ): string[] {
+    let reasons: string[] = []
+    let nodeReady = action.node.readyToExecute
+    let missingResources = this.getMissingResources(action, cheats)
+    let missingResourcesNames = missingResources.map((resource) =>
+      resource.name.toLowerCase(),
+    )
+    let executionLimitReached = action.executionLimitReached
+
+    // Handle case when there are not enough resources.
+    // Build a message which specifies which resources
+    // are missing to execute the action.
+    if (missingResources.length === 1) {
+      reasons.push(`Not enough ${missingResourcesNames[0]} to execute.`)
+    } else if (missingResources.length === 2) {
+      reasons.push(
+        `Not enough ${missingResourcesNames[0]} or ${missingResourcesNames[1]} to execute.`,
+      )
+    } else if (missingResources.length > 2) {
+      let lastResourceName =
+        missingResourcesNames[missingResourcesNames.length - 1]
+      let otherResourcesNames = missingResourcesNames
+        .slice(0, missingResourcesNames.length - 1)
+        .join(', ')
+      reasons.push(
+        `Not enough ${otherResourcesNames}, or ${lastResourceName} to execute.`,
+      )
+    }
+    if (!nodeReady) {
+      reasons.push('Node is not ready to execute.')
+    }
+    if (executionLimitReached) {
+      reasons.push('Execution limit for this action has been reached.')
+    }
+
+    return reasons
   }
 
   /**

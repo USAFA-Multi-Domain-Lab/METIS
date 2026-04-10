@@ -5,11 +5,10 @@ import type {
 import type { TTargetArg } from '@shared/target-environments/args/Arg'
 import { Arg } from '@shared/target-environments/args/Arg'
 import { Target } from '@shared/target-environments/targets/Target'
-import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
-import { VersionToolbox } from '@shared/toolbox/strings/VersionToolbox'
-import type { TargetMigrationRegistry } from '../../shared/target-environments/targets/migrations/TargetMigrationRegistry'
-import { ServerTargetEnvironment } from './ServerTargetEnvironment'
 import type { TTargetEnvExposedTarget } from './context/TargetEnvContext'
+import { ServerTargetEnvironment } from './ServerTargetEnvironment'
+import type { TMigratableEffect } from './TargetMigration'
+import type { TargetMigrationRegistry } from './TargetMigrationRegistry'
 
 /**
  * A class for managing targets on the server.
@@ -61,26 +60,10 @@ export class ServerTarget extends Target<TMetisServerComponents> {
   }
 
   /**
-   * @param effectEnvVersion The current target environment version
-   * for the effect.
-   * @returns All versions for migrations which must be
-   * run in order to make the effect compatible with the
-   * latest migratable version of the target.
-   */
-  public getPendingMigrationVersions(effectEnvVersion: string): string[] {
-    return this.migrationRegistry.versions.filter((migrationVersion) =>
-      VersionToolbox.isLaterThan(migrationVersion, effectEnvVersion),
-    )
-  }
-
-  /**
    * @see {@link TargetMigrationRegistry.migrate}
    */
-  public migrateEffectArgs(
-    version: string,
-    effectArgs: TAnyObject,
-  ): void {
-    this.migrationRegistry.migrate(version, effectArgs)
+  public migrateEffect(effect: TMigratableEffect): void {
+    this.migrationRegistry.migrate(effect)
   }
 
   /**

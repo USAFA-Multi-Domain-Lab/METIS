@@ -21,6 +21,7 @@ import type { TMissionFileJson } from '../../shared/missions/files/MissionFile'
 import type { TMissionForceSaveJson } from '../../shared/missions/forces/MissionForce'
 import type { TMissionSaveJson } from '../../shared/missions/Mission'
 import { Mission } from '../../shared/missions/Mission'
+import type { TMissionResourceJson } from '../../shared/missions/MissionResource'
 import { MissionResource } from '../../shared/missions/MissionResource'
 import type {
   TMissionPrototypeJson,
@@ -33,6 +34,7 @@ import { ServerEffect } from './effects/ServerEffect'
 import { ServerMissionFile } from './files/ServerMissionFile'
 import { ServerMissionForce } from './forces/ServerMissionForce'
 import { ServerMissionPrototype } from './nodes/ServerMissionPrototype'
+import { ServerMissionResource } from './ServerMissionResource'
 
 const ObjectId = mongoose.Types.ObjectId
 
@@ -95,6 +97,12 @@ export class ServerMission extends Mission<TMetisServerComponents> {
   }
 
   // Implemented
+  protected importResources(data: TMissionResourceJson[]): void {
+    let resources = ServerMissionResource.fromJson(this, data)
+    this._resources.push(...resources)
+  }
+
+  // Implemented
   protected importForces(data: TMissionForceSaveJson[]): void {
     let forces = data.map((datum) => new ServerMissionForce(this, datum))
     this.forces.push(...forces)
@@ -135,7 +143,9 @@ export class ServerMission extends Mission<TMetisServerComponents> {
     return {
       _id: self._id,
       name: self.name,
-      resources: self.resources,
+      get resources() {
+        return self.resources.map((resource) => resource.toTargetEnvContext())
+      },
       get forces() {
         return self.forces.map((force) => force.toTargetEnvContext())
       },

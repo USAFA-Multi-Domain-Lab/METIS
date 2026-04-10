@@ -1,1 +1,1 @@
-export { TargetMigrationRegistry } from '../../../shared/target-environments/targets/migrations/TargetMigrationRegistry'
+export { TargetMigrationRegistry } from '../../../server/target-environments/TargetMigrationRegistry'

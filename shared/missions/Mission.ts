@@ -1,5 +1,4 @@
 import type { TSessionConfig } from '@shared/sessions/MissionSession'
-import type { TOmitFirst } from '@shared/toolbox/arrays/ArrayToolbox'
 import { DateToolbox } from '@shared/toolbox/dates/DateToolbox'
 import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
 import { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSerializableArray'
@@ -612,10 +611,7 @@ export abstract class Mission<
    * stores them in the {@link resources} array.
    * @param data The resource data to import.
    */
-  protected importResources(data: TMissionResourceJson[]): void {
-    let resources = MissionResource.fromJson<T>(this, data)
-    this._resources.push(...resources)
-  }
+  protected abstract importResources(data: TMissionResourceJson[]): void
 
   /**
    * Imports the force data into MissionForce objects and
@@ -642,42 +638,6 @@ export abstract class Mission<
     target: T['target'],
     trigger: TEffectSessionTriggered,
   ): T['sessionTriggeredEffect']
-
-  /**
-   * @param args The arguments to pass to the {@link MissionResource.createNew}
-   * method, excluding the first argument which is the mission, as it
-   * will be passed automatically.
-   */
-  public addResource(
-    ...args: TOmitFirst<Parameters<typeof MissionResource.createNew<T>>>
-  ): T['resource'] {
-    let resource = MissionResource.createNew<T>(this, ...args)
-
-    if (this.resources.length >= Mission.MAX_RESOURCE_TYPES) {
-      throw new Error(
-        `Cannot have more than ${Mission.MAX_RESOURCE_TYPES} resource types in a mission.`,
-      )
-    }
-    this._resources.push(resource)
-    return resource
-  }
-
-  /**
-   * Removes the given resource from the mission.
-   * @param resource The resource or the ID of the resource
-   * to remove.
-   */
-  public removeResource(resource: T['resource'] | string): void {
-    let resourceId = typeof resource === 'string' ? resource : resource._id
-    let index = this._resources.findIndex(({ _id }) => _id === resourceId)
-    if (index !== -1) {
-      this._resources.splice(index, 1)
-    } else {
-      console.warn(
-        'Attempted to remove a resource that does not exist in the mission.',
-      )
-    }
-  }
 
   /**
    * @param prototypeId The ID of the prototype to get.

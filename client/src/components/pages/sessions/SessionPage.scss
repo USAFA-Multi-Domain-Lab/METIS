@@ -81,10 +81,14 @@
         }
       }
 
-      @media (max-width: 48em) {
+      @media (max-width: 50em) {
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
+
+        .Title {
+          min-width: unset;
+        }
 
         .Resources {
           flex-basis: 100%;

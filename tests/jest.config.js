@@ -355,5 +355,54 @@ export default {
         ],
       },
     },
+    {
+      displayName: 'unit:integration',
+      rootDir: '.',
+      coverageDirectory: '<rootDir>/tests/coverage',
+      roots: ['<rootDir>/tests/projects/unit/integration'],
+      testEnvironment: 'node',
+      maxWorkers: 1,
+      collectCoverageFrom: [
+        '<rootDir>/integration/target-env/**/*.{ts,tsx,js,jsx}',
+        '!<rootDir>/tests/**',
+        '!**/*.d.ts',
+        '!**/node_modules/**',
+        '!**/dist/**',
+        '!**/build/**',
+        '!**/coverage/**',
+      ],
+      coveragePathIgnorePatterns: [
+        '<rootDir>/tests/',
+        '/node_modules/',
+        '/dist/',
+        '/build/',
+        '/coverage/',
+      ],
+      moduleNameMapper: {
+        '^@metis/server$': '<rootDir>/server/MetisServer.ts',
+        '^@metis/server/(.+)$': '<rootDir>/server/$1',
+        '^@metis/(.+)$': '<rootDir>/integration/library/$1',
+        '^@shared/(.+)$': '<rootDir>/shared/$1',
+        '^@server/(.+)$': '<rootDir>/server/$1',
+        '^@client/(.+)$': '<rootDir>/client/src/$1',
+        '^@integrations/schema/(.+)$':
+          '<rootDir>/integration/library/schema/$1',
+        '^@integration/(.+)$': '<rootDir>/integration/target-env/$1',
+        '^metis/server$': '<rootDir>/server/MetisServer.ts',
+        '^metis/server/(.+)$': '<rootDir>/server/$1',
+        '^metis$': '<rootDir>/shared/index.ts',
+        '^metis/(.+)$': '<rootDir>/shared/$1',
+        '^tests/(.+)$': '<rootDir>/tests/$1',
+      },
+      transform: {
+        '^.+\\.[tj]sx?$': [
+          'ts-jest',
+          {
+            tsconfig:
+              '<rootDir>/tests/projects/unit/integration/tsconfig.json',
+          },
+        ],
+      },
+    },
   ],
 }

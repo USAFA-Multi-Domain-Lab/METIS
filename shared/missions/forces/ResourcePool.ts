@@ -2,7 +2,6 @@ import {
   serializeJson,
   type TJsonSerializable,
 } from '@shared/toolbox/serialization/json'
-import { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSerializableArray'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { Mission, type TMission } from '../Mission'
 import {
@@ -17,7 +16,9 @@ import type { TForce, TForceJsonOptions } from './MissionForce'
  * perform various actions within a mission.
  * @implements {TJsonSerializable<TResourcePoolJson>}
  */
-export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
+export abstract class ResourcePool<
+  T extends TMetisBaseComponents = TMetisBaseComponents,
+>
   extends MissionComponent<T, ResourcePool<T>>
   implements TJsonSerializable<TResourcePoolJson, TPoolJsonOptions>
 {
@@ -113,7 +114,7 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
    * @param excluded Whether this pool is excluded from the force.
    * @param balance The current amount of resources remaining.
    */
-  private constructor(
+  protected constructor(
     resource: T['resource'],
     force: TForce<T>,
     _id: string,
@@ -165,118 +166,6 @@ export class ResourcePool<T extends TMetisBaseComponents = TMetisBaseComponents>
   public onModify(operand: number): void {
     this.balance += operand
     this.force.onModifyPool(this)
-  }
-
-  /**
-   * Creates a new {@link ResourcePool} with generated identifiers.
-   * @param force The force that owns this resource pool.
-   * @param resource The {@link MissionResource} this pool will track.
-   * @param initialBalance The starting amount of resources.
-   * @param allowNegative Whether the pool can go below zero.
-   * @param excluded Whether this pool is excluded from the force.
-   * @returns A new {@link ResourcePool} instance.
-   */
-  public static createNew<
-    T extends TMetisBaseComponents = TMetisBaseComponents,
-  >(
-    force: TForce<T>,
-    resource: T['resource'],
-    initialBalance: number = ResourcePool.DEFAULT_PROPERTIES.initialBalance,
-    allowNegative: boolean = ResourcePool.DEFAULT_PROPERTIES.allowNegative,
-    excluded: boolean = ResourcePool.DEFAULT_PROPERTIES.excluded,
-  ): ResourcePool<T> {
-    return new ResourcePool<T>(
-      resource,
-      force,
-      StringToolbox.generateRandomId(),
-      force.generatePoolKey(),
-      initialBalance,
-      allowNegative,
-      excluded,
-      initialBalance,
-    )
-  }
-
-  /**
-   * Creates a detached {@link ResourcePool} that represents a pool
-   * referenced in an effect but its associated resource cannot be found.
-   * @param force The force that owns this resource pool.
-   * @param localKey The local key of the detached pool.
-   * @param name The display name of the detached pool.
-   * @returns A detached {@link ResourcePool} instance.
-   */
-  public static createResourceDetachedFromKey<
-    T extends TMetisBaseComponents = TMetisBaseComponents,
-  >(force: TForce<T>, localKey: string, name: string): ResourcePool<T> {
-    let resource = MissionResource.createDetached<T>(
-      force.mission,
-      StringToolbox.generateRandomId(),
-      name,
-    )
-    return new ResourcePool<T>(
-      resource,
-      force,
-      StringToolbox.generateRandomId(),
-      localKey,
-      ResourcePool.DEFAULT_PROPERTIES.initialBalance,
-      ResourcePool.DEFAULT_PROPERTIES.allowNegative,
-      ResourcePool.DEFAULT_PROPERTIES.excluded,
-      ResourcePool.DEFAULT_PROPERTIES.initialBalance,
-    )
-  }
-
-  /**
-   * Creates a {@link ResourcePool} from JSON data.
-   * @param force The force that owns this resource pool.
-   * @param data The JSON data from which to create the pool.
-   * @returns The new {@link ResourcePool} object created from the JSON.
-   */
-  public static fromJson<T extends TMetisBaseComponents = TMetisBaseComponents>(
-    force: TForce<T>,
-    data: TResourcePoolJson,
-  ): T['resourcePool']
-  /**
-   * Creates a {@link JsonSerializableArray} of {@link ResourcePool} objects from an array of JSON data.
-   * @param force The force that owns the resource pools.
-   * @param data The array of JSON data from which to create the pools.
-   * @returns A {@link JsonSerializableArray} of {@link ResourcePool} objects.
-   */
-  public static fromJson<T extends TMetisBaseComponents = TMetisBaseComponents>(
-    force: TForce<T>,
-    data: TResourcePoolJson[],
-  ): JsonSerializableArray<T['resourcePool']>
-  // Actual implementation.
-  public static fromJson<T extends TMetisBaseComponents = TMetisBaseComponents>(
-    force: TForce<T>,
-    data: TResourcePoolJson | TResourcePoolJson[],
-  ): T['resourcePool'] | JsonSerializableArray<T['resourcePool']> {
-    // Array check. If data is an array, call recursively
-    // on each item for joint deserialization.
-    if (Array.isArray(data)) {
-      return new JsonSerializableArray(
-        ...data.map((datum) => ResourcePool.fromJson<T>(force, datum)),
-      )
-    }
-
-    // Find associated resource for the pool.
-    let mission: T['mission'] = force.mission
-    let resource = mission.getResourceById(data.resourceId)
-    if (!resource) {
-      throw new Error(
-        `ResourcePool creation failed: No resource found with ID ${data.resourceId}`,
-      )
-    }
-
-    return new ResourcePool<T>(
-      resource,
-      force,
-      data._id,
-      data.localKey ?? force.generatePoolKey(),
-      data.initialBalance,
-      data.allowNegative,
-      data.excluded,
-      data.balance ?? data.initialBalance,
-    )
   }
 
   /**

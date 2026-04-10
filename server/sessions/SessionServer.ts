@@ -6,6 +6,7 @@ import type { ServerEffect } from '@server/missions/effects/ServerEffect'
 import type { ServerMissionFile } from '@server/missions/files/ServerMissionFile'
 import type { ServerMissionForce } from '@server/missions/forces/ServerMissionForce'
 import { ServerOutput } from '@server/missions/forces/ServerOutput'
+import type { ServerResourcePool } from '@server/missions/forces/ServerResourcePool'
 import type { ServerMissionNode } from '@server/missions/nodes/ServerMissionNode'
 import { ServerMission } from '@server/missions/ServerMission'
 import { OutdatedContextError } from '@server/target-environments/context/OutdatedContextError'
@@ -32,7 +33,6 @@ import type {
   TEffectType,
 } from '@shared/missions/effects/Effect'
 import type { TOutputContext } from '@shared/missions/forces/MissionOutput'
-import type { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import type {
   TMissionJson,
   TMissionJsonOptions,
@@ -2554,10 +2554,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * @note A negative value will subtract and a positive
    * value will add to the resource pool.
    */
-  public modifyResourcePool = (
-    pool: ResourcePool<TMetisServerComponents>,
-    operand: number,
-  ) => {
+  public modifyResourcePool = (pool: ServerResourcePool, operand: number) => {
     // Confirm the pool exists in the mission, modify the resource pool,
     // then emit an event to the members.
     this.confirmComponentInMission(pool)

@@ -2,6 +2,7 @@ import { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import { MissionAction } from '../../missions/actions/MissionAction'
 import { MissionFile } from '../../missions/files/MissionFile'
 import { MissionForce } from '../../missions/forces/MissionForce'
+import { MissionResource } from '../../missions/MissionResource'
 import { MissionNode } from '../../missions/nodes/MissionNode'
 
 export const AVAILABLE_DEPENDENCIES_RAW = [
@@ -71,6 +72,11 @@ export const AVAILABLE_DEPENDENCIES_RAW = [
   {
     name: 'file',
     condition: (value: any) => value && value.file instanceof MissionFile,
+  } as const,
+  {
+    name: 'resource',
+    condition: (value: any) =>
+      value && value.resource instanceof MissionResource,
   } as const,
 ] as const
 
@@ -250,6 +256,15 @@ export class TargetDependency implements TDependency {
    */
   public static FILE = (dependentId: string) =>
     TargetDependency.SELECT('file', dependentId)
+
+  /**
+   * Checks if the argument's (*referenced by the argument's ID*) value is a resource object.
+   * @param dependentId The ID of the dependent argument.
+   * @returns A new dependency that checks if the argument's value is a resource object.
+   * @example TargetDependency.RESOURCE('dependentId')
+   */
+  public static RESOURCE = (dependentId: string) =>
+    TargetDependency.SELECT('resource', dependentId)
 
   /**
    * Encodes the dependency.

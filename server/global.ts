@@ -1,11 +1,9 @@
-import type { ActionResourceCost } from '@shared/missions/actions/ActionResourceCost'
 import type { TEffectType } from '@shared/missions/effects/Effect'
-import type { ResourcePool } from '@shared/missions/forces/ResourcePool'
-import type { MissionResource } from '@shared/missions/MissionResource'
 import type { RequestHandler } from 'express'
 import type { Request, Response } from 'express-serve-static-core'
 import type { Session as ExpressSession } from 'express-session'
 import type { ServerFileReference } from './files/ServerFileReference'
+import type { ServerActionCost } from './missions/actions/ServerActionCost'
 import type { ServerActionExecution } from './missions/actions/ServerActionExecution'
 import type { ServerExecutionOutcome } from './missions/actions/ServerExecutionOutcome'
 import type { ServerMissionAction } from './missions/actions/ServerMissionAction'
@@ -13,9 +11,11 @@ import type { ServerEffect } from './missions/effects/ServerEffect'
 import type { ServerMissionFile } from './missions/files/ServerMissionFile'
 import type { ServerMissionForce } from './missions/forces/ServerMissionForce'
 import type { ServerOutput } from './missions/forces/ServerOutput'
+import type { ServerResourcePool } from './missions/forces/ServerResourcePool'
 import type { ServerMissionNode } from './missions/nodes/ServerMissionNode'
 import type { ServerMissionPrototype } from './missions/nodes/ServerMissionPrototype'
 import type { ServerMission } from './missions/ServerMission'
+import type { ServerMissionResource } from './missions/ServerMissionResource'
 import type { ServerSessionMember } from './sessions/ServerSessionMember'
 import type { SessionServer } from './sessions/SessionServer'
 import type { ServerTarget } from './target-environments/ServerTarget'
@@ -45,13 +45,13 @@ declare global {
     target: ServerTarget
     fileReference: ServerFileReference
     mission: ServerMission
-    resource: MissionResource<TMetisServerComponents>
+    resource: ServerMissionResource
     prototype: ServerMissionPrototype
     missionFile: ServerMissionFile
     force: ServerMissionForce
     output: ServerOutput
-    resourcePool: ResourcePool<TMetisServerComponents>
-    resourceCost: ActionResourceCost<TMetisServerComponents>
+    resourcePool: ServerResourcePool
+    resourceCost: ServerActionCost
     node: ServerMissionNode
     action: ServerMissionAction
     execution: ServerActionExecution

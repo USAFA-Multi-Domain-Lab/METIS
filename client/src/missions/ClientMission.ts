@@ -31,7 +31,10 @@ import type {
   TMissionPrototypeJson,
   TMissionPrototypeOptions,
 } from '@shared/missions/nodes/MissionPrototype'
-import type { TNonEmptyArray } from '@shared/toolbox/arrays/ArrayToolbox'
+import type {
+  TNonEmptyArray,
+  TOmitFirst,
+} from '@shared/toolbox/arrays/ArrayToolbox'
 import { DateToolbox } from '@shared/toolbox/dates/DateToolbox'
 import { Counter } from '@shared/toolbox/numbers/Counter'
 import type { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
@@ -45,6 +48,7 @@ import type { AxiosProgressEvent, AxiosResponse } from 'axios'
 import axios from 'axios'
 import type { TMetisClientComponents } from '..'
 import { ClientMissionAction } from './actions/ClientMissionAction'
+import { ClientMissionResource } from './ClientMissionResource'
 import { ClientEffect } from './effects/ClientEffect'
 import { ClientMissionFile } from './files/ClientMissionFile'
 import { ClientMissionForce } from './forces/ClientMissionForce'
@@ -372,6 +376,12 @@ export class ClientMission
   }
 
   // Implemented
+  protected importResources(data: TMissionResourceJson[]): void {
+    let resources = ClientMissionResource.fromJson(this, data)
+    this._resources.push(...resources)
+  }
+
+  // Implemented
   protected importForces(data: TMissionForceSaveJson[]): void {
     let forces: ClientMissionForce[] = data.map(
       (datum) => new ClientMissionForce(this, datum),
@@ -404,23 +414,44 @@ export class ClientMission
     return effect
   }
 
-  // Overridden
+  /**
+   * @param args The arguments to pass to the {@link MissionResource.createNew}
+   * method, excluding the first argument which is the mission, as it
+   * will be passed automatically.
+   * @returns The newly created resource.
+   */
   public addResource(
-    ...args: Parameters<Mission['addResource']>
-  ): MissionResource<TMetisClientComponents> {
-    let resource = super.addResource(...args)
+    ...args: TOmitFirst<Parameters<typeof ClientMissionResource.createNew>>
+  ): ClientMissionResource {
+    let resource = ClientMissionResource.createNew(this, ...args)
+
+    if (this.resources.length >= Mission.MAX_RESOURCE_TYPES) {
+      throw new Error(
+        `Cannot have more than ${Mission.MAX_RESOURCE_TYPES} resource types in a mission.`,
+      )
+    }
+    this._resources.push(resource)
     this.emitEvent('resource-list-change')
     return resource
   }
 
-  // Overridden
-  public removeResource(
-    resource: string | MissionResource<TMetisClientComponents>,
-  ): void {
-    super.removeResource(resource)
-    this.emitEvent('resource-list-change')
+  /**
+   * Removes the given resource from the mission.
+   * @param resource The resource or the ID of the resource
+   * to remove.
+   */
+  public removeResource(resource: string | ClientMissionResource): void {
+    let resourceId = typeof resource === 'string' ? resource : resource._id
+    let index = this._resources.findIndex(({ _id }) => _id === resourceId)
+    if (index !== -1) {
+      this._resources.splice(index, 1)
+      this.emitEvent('resource-list-change')
+    } else {
+      console.warn(
+        'Attempted to remove a resource that does not exist in the mission.',
+      )
+    }
   }
-
   /**
    * Imports previously omitted force and structure data
    * into the mission on session start.

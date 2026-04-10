@@ -324,6 +324,14 @@ export abstract class MissionForce<
   protected abstract createNode(data: Partial<TMissionNodeJson>): TNode<T>
 
   /**
+   * This will create a new resource pool in the force with the given data and options.
+   * Any data or options not provided will be set to default values.
+   * @param data The data for the resource pool.
+   * @returns The new resource pool instance.
+   */
+  protected abstract createPool(data: TResourcePoolJson): T['resourcePool']
+
+  /**
    * Filter the outputs based on the conditions of the output and the current member.
    * @param memberId The ID of the member for which to filter the outputs.
    * @returns The filtered outputs.
@@ -384,7 +392,9 @@ export abstract class MissionForce<
    */
   protected importPools(data: TResourcePoolJson[]): void {
     try {
-      this.resourcePools.push(...ResourcePool.fromJson(this, data))
+      for (let datum of data) {
+        this.resourcePools.push(this.createPool(datum))
+      }
     } catch (error) {
       if (context === 'react') {
         console.error('Resource pool data passed is invalid.')

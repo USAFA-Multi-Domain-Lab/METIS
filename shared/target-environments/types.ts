@@ -64,6 +64,21 @@ export type TPoolMetadata = Partial<{
 }>
 
 /**
+ * The possible metadata schema for a resource target-argument
+ * that is present in an effect's arguments.
+ */
+export type TResourceMetadata = Partial<{
+  /**
+   * A resource's ID.
+   */
+  resourceId: string
+  /**
+   * A resource's name.
+   */
+  resourceName: string
+}>
+
+/**
  * The possible metadata schema for a file target-argument
  * that is present in an effect's arguments.
  */
@@ -73,7 +88,7 @@ export type TFileMetadata = Partial<{
    */
   fileId: string
   /**
-   * A force's name.
+   * A file's name.
    */
   fileName: string
 }>

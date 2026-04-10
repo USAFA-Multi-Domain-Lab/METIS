@@ -3,7 +3,7 @@ import { compute } from '@client/toolbox'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
-import type { TDetailBase_P } from '../../'
+import type { TDetailBase_P } from '../..'
 import DetailTitleRow from '../../DetailTitleRow'
 import { useDetailClassNames } from '../../useDetailClassNames'
 import './DetailMultiSelect.scss'
@@ -54,6 +54,7 @@ export default function DetailMultiSelect<TOption>(
     emptyText: props.emptyText ?? 'Select options',
     errorMessage: props.errorMessage ?? '',
     errorType: props.errorType ?? 'default',
+    errorDisplay: props.errorDisplay ?? 'on-blur',
     isExpanded: props.isExpanded ?? false,
   }
 

@@ -7,6 +7,7 @@ import type {
   TForceMetadata,
   TNodeMetadata,
   TPoolMetadata,
+  TResourceMetadata,
 } from '../../target-environments/types'
 import type { TAnyObject } from '../../toolbox/objects/ObjectToolbox'
 import { StringToolbox } from '../../toolbox/strings/StringToolbox'
@@ -165,8 +166,8 @@ export abstract class Effect<
           type: 'outdated',
           component: this,
           message:
-            `The effect, "${this.name}", has a target environment, "${environment.name}", with an incompatible version. ` +
-            `Incompatible versions can cause an effect to fail to be applied to its target during a session. ` +
+            `The effect, "${this.name}", is incompatible with the current version of the target environment, "${environment.name}". ` +
+            `This effect must be updated to be made compatible. ` +
             `Please click to resolve this.`,
         },
       ]
@@ -538,12 +539,15 @@ export abstract class Effect<
 
     // Check action reference (required for action type)
     if (type === 'action') {
+      // Only validate if a specific actionKey is stored. If absent, the arg
+      // targets all actions in the node ("All Actions"), which is valid.
+      const actionInArgs = this.getActionMetadataInArgs(argId)
       const actionInMission = this.getActionFromArgs(argId)
-      if (!actionInMission) {
-        const actionInArgs = this.getActionMetadataInArgs(argId)
+
+      if (actionInArgs && !actionInMission) {
         return this.buildComponentNotFoundMessage(
           'action',
-          actionInArgs?.actionName,
+          actionInArgs.actionName,
         )
       }
     }
@@ -665,7 +669,7 @@ export abstract class Effect<
       order: this.order,
       name: this.name,
       description: this.description,
-      args: this.args,
+      args: structuredClone(this.args),
       localKey: this.localKey,
     }
   }
@@ -792,6 +796,13 @@ export abstract class Effect<
         else if (dependency.name === 'file') {
           const file = this.getFileFromArgs(dependency.dependentId)
           const value = { file }
+          dependencyMet = dependency.condition(value)
+        }
+        // If the dependency is a resource dependency then check
+        // if the resource exists and if the condition is met.
+        else if (dependency.name === 'resource') {
+          const resource = this.getResourceFromArgs(dependency.dependentId)
+          const value = { resource }
           dependencyMet = dependency.condition(value)
         }
         // Otherwise, check if the condition is met.
@@ -940,6 +951,29 @@ export abstract class Effect<
   }
 
   /**
+   * Gets the resource metadata stored in the effect's arguments.
+   * @param argId The ID of the argument from which to get the resource.
+   * @returns The resource metadata if found, otherwise undefined.
+   */
+  public getResourceMetadataInArgs = (
+    argId: string,
+  ): Required<TResourceMetadata> | undefined => {
+    const resourceInArgs: TResourceMetadata | undefined = this.args[argId]
+
+    // If the resource argument is not found, then return undefined.
+    if (!resourceInArgs) return undefined
+    // Otherwise, extract the metadata.
+    let resourceId = resourceInArgs.resourceId
+    let resourceName = resourceInArgs.resourceName
+
+    // If any metadata is missing, then return undefined.
+    if (!resourceId || !resourceName) return undefined
+
+    // Return the resource metadata.
+    return { resourceId, resourceName }
+  }
+
+  /**
    * Gets the pool metadata stored in the effect's arguments.
    * @param argId The ID of the argument to get the pool from.
    * @returns The pool metadata if found, otherwise undefined.
@@ -1072,6 +1106,20 @@ export abstract class Effect<
     if (!(action instanceof MissionAction)) return undefined
     // Otherwise, return the action.
     return action
+  }
+
+  /**
+   * Gets the resource stored in the effect's arguments.
+   * @param argId The ID of the argument from which to get the resource.
+   * @returns The resource if found, otherwise undefined.
+   */
+  public getResourceFromArgs = (argId: string): T['resource'] | undefined => {
+    // Get the resource argument.
+    const resourceInArgs: TResourceMetadata | undefined = this.args[argId]
+    // Extract the metadata.
+    const resourceId = resourceInArgs?.resourceId
+    // Get the resource from the mission.
+    return this.mission.getResourceById(resourceId)
   }
 
   /**
@@ -1429,4 +1477,19 @@ export interface TEffectHost<
    * the given trigger.
    */
   generateEffectOrder(trigger: T[TType]['trigger']): number
+}
+
+/**
+ * Resulting data produced by the migration of
+ * an {@link Effect}.
+ */
+export interface TEffectMigrationResult {
+  /**
+   * The version to which the effect was migrated.
+   */
+  version: string
+  /**
+   * The resulting data produced from the migration.
+   */
+  data: TAnyObject
 }

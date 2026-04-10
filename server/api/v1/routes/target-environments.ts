@@ -35,10 +35,8 @@ export const routerMap: TMetisRouterMap = (
     auth({ permissions: ['environments_read'] }),
     defineRequests({
       body: {
-        targetId: RequestBodyFilters.STRING,
-        environmentId: RequestBodyFilters.STRING,
-        effectEnvVersion: RequestBodyFilters.VERSION,
-        effectArgs: RequestBodyFilters.OBJECT,
+        effectId: RequestBodyFilters.STRING,
+        missionId: RequestBodyFilters.STRING,
       },
     }),
     migrateEffectArgs,

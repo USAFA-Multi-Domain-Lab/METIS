@@ -1,7 +1,7 @@
 import type { TMissionOutlineItem } from '@client/components/pages/missions/structures/MissionOutline'
 import type { TMetisClientComponents } from '@client/index'
 import type { ClientTarget } from '@client/target-environments/ClientTarget'
-import { ActionResourceCost } from '@shared/missions/actions/ActionResourceCost'
+import type { TActionResourceCostJson } from '@shared/missions/actions/ActionResourceCost'
 import type {
   TMissionActionJsonDirect,
   TMissionActionJsonIndirect,
@@ -14,6 +14,7 @@ import type {
 import { JsonSerializableArray } from '@shared/toolbox/arrays/JsonSerializableArray'
 import { ClientEffect } from '../effects/ClientEffect'
 import type { ClientMissionNode } from '../nodes/ClientMissionNode'
+import { ClientActionCost } from './ClientActionCost'
 
 /**
  * Class representing a mission action on the client-side.
@@ -129,6 +130,13 @@ export class ClientMissionAction
     data: Partial<TClientMissionActionJson> = ClientMissionAction.DEFAULT_PROPERTIES,
   ) {
     super(node, data)
+  }
+
+  // Implemented
+  protected parseCosts(
+    data: TActionResourceCostJson[],
+  ): JsonSerializableArray<ClientActionCost> {
+    return ClientActionCost.fromJson(this, data)
   }
 
   // Implemented
@@ -254,10 +262,7 @@ export class ClientMissionAction
         let existingCost = this.resourceCosts.find(
           ({ resourceId }) => resourceId === resource._id,
         )
-        return (
-          existingCost ??
-          ActionResourceCost.createNew<TMetisClientComponents>(this, resource)
-        )
+        return existingCost ?? ClientActionCost.createNew(this, resource)
       }),
     )
   }

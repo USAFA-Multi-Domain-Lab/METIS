@@ -1,16 +1,19 @@
 import { sessionLogger } from '@server/logging'
 import type { ServerTarget } from '@server/target-environments/ServerTarget'
 import type { TTargetEnvExposedAction } from '@server/target-environments/context/TargetEnvContext'
+import type { TActionResourceCostJson } from '@shared/missions/actions/ActionResourceCost'
 import type { TMissionActionJson } from '@shared/missions/actions/MissionAction'
 import { MissionAction } from '@shared/missions/actions/MissionAction'
 import type {
   TEffectExecutionTriggered,
   TEffectExecutionTriggeredJson,
 } from '@shared/missions/effects/Effect'
+import type { JsonSerializableArray } from '@shared/toolbox/arrays/JsonSerializableArray'
 import type { PRNG } from 'seedrandom'
 import seedrandom from 'seedrandom'
 import { ServerEffect } from '../effects/ServerEffect'
 import type { ServerMissionNode } from '../nodes/ServerMissionNode'
+import { ServerActionCost } from './ServerActionCost'
 import type { TExecuteOptions } from './ServerActionExecution'
 import { ServerActionExecution } from './ServerActionExecution'
 import { ServerExecutionOutcome } from './ServerExecutionOutcome'
@@ -34,6 +37,13 @@ export class ServerMissionAction extends MissionAction<TMetisServerComponents> {
 
     // Initialize the RNG for the action.
     this.rng = seedrandom(`${this.mission.rng.double()}`)
+  }
+
+  // Implemented
+  protected parseCosts(
+    data: TActionResourceCostJson[],
+  ): JsonSerializableArray<ServerActionCost> {
+    return ServerActionCost.fromJson(this, data)
   }
 
   // Implemented
@@ -147,9 +157,6 @@ export class ServerMissionAction extends MissionAction<TMetisServerComponents> {
       get processTime() {
         return self.processTime
       },
-      get resourceCosts() {
-        return self.resourceCosts
-      },
       get executing() {
         return self.executing
       },
@@ -172,6 +179,9 @@ export class ServerMissionAction extends MissionAction<TMetisServerComponents> {
       },
       get node() {
         return self.node.toTargetEnvContext()
+      },
+      get resourceCosts() {
+        return self.resourceCosts.map((cost) => cost.toTargetEnvContext())
       },
       get effects() {
         return self.effects.map((effect) => effect.toTargetEnvContext())
