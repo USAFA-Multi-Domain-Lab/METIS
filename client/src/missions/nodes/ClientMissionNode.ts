@@ -10,7 +10,10 @@ import type { TRequestMethod } from '@shared/connect'
 import type { TListenerTargetEmittable } from '@shared/events/EventManager'
 import { EventManager } from '@shared/events/EventManager'
 import type { TActionExecutionJson } from '@shared/missions/actions/ActionExecution'
-import type { TMissionActionJson } from '@shared/missions/actions/MissionAction'
+import type {
+  TActionModifier,
+  TMissionActionJson,
+} from '@shared/missions/actions/MissionAction'
 import type { TMissionNodeJson } from '@shared/missions/nodes/MissionNode'
 import { MissionNode } from '@shared/missions/nodes/MissionNode'
 import type { TNodeAlertJson } from '@shared/missions/nodes/NodeAlert'
@@ -574,64 +577,20 @@ export class ClientMissionNode
     }
   }
 
-  // Implemented
-  public modifySuccessChance(
-    successChanceOperand: number,
-    actionId?: string,
-  ): void {
+  /**
+   * Callback for when a new modifier has been applied to this
+   * node.
+   * @param modifier The modifier that was applied to the node.
+   * @param actionId The ID of a specific action to apply the modifier to.
+   * If undefined, the modifier will be applied to all actions on the node.
+   */
+  public onModify(modifier: TActionModifier, actionId?: string): void {
     if (!actionId) {
-      this.actions.forEach((action) => {
-        action.modifySuccessChance(successChanceOperand)
-      })
+      this.actions.forEach((action) => action.onModify(modifier))
     } else {
       const action = this.actions.get(actionId)
-      if (!action) {
-        return console.error(`Action "${actionId}" not found.`)
-      }
-      action.modifySuccessChance(successChanceOperand)
-    }
-
-    // Emit event.
-    this.emitEvent('modify-actions')
-  }
-
-  // Implemented
-  public modifyProcessTime(
-    processTimeOperand: number,
-    actionId?: string,
-  ): void {
-    if (!actionId) {
-      this.actions.forEach((action) => {
-        action.modifyProcessTime(processTimeOperand)
-      })
-    } else {
-      const action = this.actions.get(actionId)
-      if (!action) {
-        return console.error(`Action "${actionId}" not found.`)
-      }
-      action.modifyProcessTime(processTimeOperand)
-    }
-
-    // Emit event.
-    this.emitEvent('modify-actions')
-  }
-
-  // Implemented
-  public modifyResourceCost(
-    resourceId: string,
-    resourceCostOperand: number,
-    actionId?: string,
-  ): void {
-    if (!actionId) {
-      this.actions.forEach((action) => {
-        action.modifyResourceCost(resourceId, resourceCostOperand)
-      })
-    } else {
-      const action = this.actions.get(actionId)
-      if (!action) {
-        return console.error(`Action "${actionId}" not found.`)
-      }
-      action.modifyResourceCost(resourceId, resourceCostOperand)
+      if (!action) return console.error(`Action "${actionId}" not found.`)
+      action.onModify(modifier)
     }
 
     // Emit event.

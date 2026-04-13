@@ -795,34 +795,6 @@ export abstract class MissionNode<
   }
 
   /**
-   * Modifies the chance of success for all the node's
-   * actions.
-   * @param successChanceOperand The operand to modify
-   * the success chance by.
-   */
-  public abstract modifySuccessChance(successChanceOperand: number): void
-
-  /**
-   * Modifies the processing time for all the node's
-   * actions.
-   * @param processTimeOperand The operand to modify
-   * the process time by.
-   */
-  public abstract modifyProcessTime(processTimeOperand: number): void
-
-  /**
-   * Modifies the resource cost for all the node's
-   * actions.
-   * @param resourceId The ID of the {@link TResource} whose cost to modify.
-   * @param resourceCostOperand The operand to modify
-   * the resource cost by.
-   */
-  public abstract modifyResourceCost(
-    resourceId: string,
-    resourceCostOperand: number,
-  ): void
-
-  /**
    * Processes an incoming execution that is being performed
    * on the node, appending it to the end of the execution list.
    * @param execution The execution object to process.

@@ -2,6 +2,7 @@ import { sessionLogger } from '@server/logging'
 import type { ServerTarget } from '@server/target-environments/ServerTarget'
 import type { TTargetEnvExposedAction } from '@server/target-environments/context/TargetEnvContext'
 import type { TActionResourceCostJson } from '@shared/missions/actions/ActionResourceCost'
+import type { TActionModifier } from '@shared/missions/actions/MissionAction'
 import { MissionAction } from '@shared/missions/actions/MissionAction'
 import type {
   TEffectExecutionTriggered,
@@ -167,6 +168,14 @@ export class ServerMissionAction extends MissionAction<TMetisServerComponents> {
         return self.effects.map((effect) => effect.toTargetEnvContext())
       },
     }
+  }
+
+  /**
+   * Applies a new modifier to the action by pushing it to
+   * the list of modifiers.
+   */
+  public applyModifier(modifier: TActionModifier): void {
+    this.modifiers.push(modifier)
   }
 
   /**

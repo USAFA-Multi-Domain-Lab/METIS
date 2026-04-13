@@ -194,6 +194,10 @@ type TModifierData = [
      */
     successChanceOperand: number
     /**
+     * The timestamp (ms since epoch) at which this modifier was applied.
+     */
+    appliedAt: number
+    /**
      * The ID of the node to modify.
      */
     nodeId: string
@@ -212,6 +216,10 @@ type TModifierData = [
      * The operand used to modify the process time for all the node's actions.
      */
     processTimeOperand: number
+    /**
+     * The timestamp (ms since epoch) at which this modifier was applied.
+     */
+    appliedAt: number
     /**
      * The ID of the node to modify.
      */
@@ -235,6 +243,10 @@ type TModifierData = [
      * The operand used to modify the resource cost for all the node's actions.
      */
     resourceCostOperand: number
+    /**
+     * The timestamp (ms since epoch) at which this modifier was applied.
+     */
+    appliedAt: number
     /**
      * The ID of the node to modify.
      */

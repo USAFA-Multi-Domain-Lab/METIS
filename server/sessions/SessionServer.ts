@@ -26,6 +26,7 @@ import type {
   TServerMethod,
 } from '@shared/connect'
 import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
+import type { TActionModifier } from '@shared/missions/actions/MissionAction'
 import type {
   TEffectExecutionTriggered,
   TEffectSessionTriggered,
@@ -2439,6 +2440,25 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   }
 
   /**
+   * Applies the modifier to the node, and emits the modifier-enacted event.
+   * @param node The node to apply the modifier to.
+   * @param modifier The modifier to apply.
+   * @param emitData The data to emit with the modifier-enacted event.
+   * @param action The action to confirm and target, if provided.
+   */
+  private modifyAction = (
+    node: ServerMissionNode,
+    modifier: TActionModifier,
+    emitData: TServerEvents['modifier-enacted']['data'],
+    action?: ServerMissionAction,
+  ): void => {
+    this.confirmComponentInMission(node)
+    if (action) this.confirmComponentInMission(action)
+    node.applyModifier(modifier, action?._id)
+    this.emitModifierEnacted(node.force, emitData)
+  }
+
+  /**
    * Modifies the success chance of a specific action within a node or
    * all actions within a node.
    * @param data The data for the modification.
@@ -2454,23 +2474,19 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     action?: ServerMissionAction
   }) => {
     const { operand, node, action } = data
-
-    // Confirm the node exists.
-    this.confirmComponentInMission(node)
-
-    // If the action is provided, confirm it exists
-    // and belongs to the node.
-    if (action) this.confirmComponentInMission(action)
-
-    // Modify the success chance of the action or
-    // all actions within the node.
-    node.modifySuccessChance(operand, action?._id)
-    this.emitModifierEnacted(node.force, {
-      key: 'node-action-success-chance',
-      successChanceOperand: operand,
-      nodeId: node._id,
-      actionId: action?._id,
-    })
+    const appliedAt = Date.now()
+    this.modifyAction(
+      node,
+      { type: 'success-chance', amount: operand, appliedAt, resourceId: null },
+      {
+        key: 'node-action-success-chance',
+        successChanceOperand: operand,
+        appliedAt,
+        nodeId: node._id,
+        actionId: action?._id,
+      },
+      action,
+    )
   }
 
   /**
@@ -2489,23 +2505,19 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     action?: ServerMissionAction
   }) => {
     const { operand, node, action } = data
-
-    // Confirm the node exists.
-    this.confirmComponentInMission(node)
-
-    // If the action is provided, confirm it exists
-    // and belongs to the node.
-    if (action) this.confirmComponentInMission(action)
-
-    // Modify the processing time of the action or
-    // all actions within the node.
-    node.modifyProcessTime(operand, action?._id)
-    this.emitModifierEnacted(node.force, {
-      key: 'node-action-process-time',
-      processTimeOperand: operand,
-      nodeId: node._id,
-      actionId: action?._id,
-    })
+    const appliedAt = Date.now()
+    this.modifyAction(
+      node,
+      { type: 'process-time', amount: operand, appliedAt, resourceId: null },
+      {
+        key: 'node-action-process-time',
+        processTimeOperand: operand,
+        appliedAt,
+        nodeId: node._id,
+        actionId: action?._id,
+      },
+      action,
+    )
   }
 
   /**
@@ -2526,24 +2538,20 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     action?: ServerMissionAction
   }) => {
     const { resourceId, operand, node, action } = data
-
-    // Confirm the node exists.
-    this.confirmComponentInMission(node)
-
-    // If the action is provided, confirm it exists
-    // and belongs to the node.
-    if (action) this.confirmComponentInMission(action)
-
-    // Modify the resource cost of the action or
-    // all actions within the node.
-    node.modifyResourceCost(resourceId, operand, action?._id)
-    this.emitModifierEnacted(node.force, {
-      key: 'node-action-resource-cost',
-      resourceId,
-      resourceCostOperand: operand,
-      nodeId: node._id,
-      actionId: action?._id,
-    })
+    const appliedAt = Date.now()
+    this.modifyAction(
+      node,
+      { type: 'resource-cost', amount: operand, appliedAt, resourceId },
+      {
+        key: 'node-action-resource-cost',
+        resourceId,
+        resourceCostOperand: operand,
+        appliedAt,
+        nodeId: node._id,
+        actionId: action?._id,
+      },
+      action,
+    )
   }
 
   /**

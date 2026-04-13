@@ -27,9 +27,9 @@ const JSON_PROPERTIES_RAW = {
     'name',
     'description',
     'type',
-    'processTime',
+    'baseProcessTime',
     'processTimeHidden',
-    'successChance',
+    'baseSuccessChance',
     'successChanceHidden',
     'opensNode',
     'opensNodeHidden',
@@ -45,11 +45,6 @@ const JSON_PROPERTIES_RAW = {
        * The resource costs of the action.
        */
       resourceCosts: [] as TActionResourceCostJson[],
-      /**
-       * The modifiers applied to this action over the course of a session
-       * which alter the requirements needed to execute.
-       */
-      modifiers: [] as TActionModifier[],
     },
   ],
 } as const
@@ -114,7 +109,18 @@ export abstract class MissionAction<
   /**
    * The amount of time it takes to execute the action.
    */
-  private baseProcessTime: number
+  public baseProcessTime: number
+
+  /**
+   * Computed operand applied to the process time, derived from all
+   * process-time modifiers on this action.
+   */
+  private get _processTimeOperand(): number {
+    return this.modifiers
+      .filter((modifier) => modifier.type === 'process-time')
+      .reduce((sum, modifier) => sum + modifier.amount, 0)
+  }
+
   /**
    * The amount of time it takes to execute the action.
    */
@@ -129,9 +135,6 @@ export abstract class MissionAction<
       MissionAction.PROCESS_TIME_MAX,
     )
   }
-  public set processTime(value: number) {
-    this.baseProcessTime = value
-  }
 
   /**
    * Hides the process time from students.
@@ -140,25 +143,42 @@ export abstract class MissionAction<
   public processTimeHidden: boolean
 
   /**
-   * The chance that the action will succeed.
+   * The chance that the action will succeed by default.
    */
-  protected _successChance: number
+  public baseSuccessChance: number
+
   /**
-   * The chance that the action will succeed.
+   * Computed operand applied to the success chance, derived from all
+   * success-chance modifiers on this action.
+   */
+  private get _successChanceOperand(): number {
+    return this.modifiers
+      .filter((modifier) => modifier.type === 'success-chance')
+      .reduce((sum, modifier) => sum + modifier.amount, 0)
+  }
+
+  /**
+   * The chance that the action will succeed after any
+   * modifiers are applied.
    */
   public get successChance(): number {
     // Return the success chance within the correct range.
     // ***Note: This ensures the success chance is never less than 0 or greater than 1.
     return Math.min(
       Math.max(
-        this._successChance + this._successChanceOperand,
+        this.baseSuccessChance + this._successChanceOperand,
         MissionAction.SUCCESS_CHANCE_MIN,
       ),
       MissionAction.SUCCESS_CHANCE_MAX,
     )
   }
-  public set successChance(value: number) {
-    this._successChance = value
+
+  /**
+   * The chance that the action will fail (1 - successChance) after
+   * any modifiers are applied.
+   */
+  public get failureChance(): number {
+    return 1 - this.successChance
   }
 
   /**
@@ -187,13 +207,6 @@ export abstract class MissionAction<
    * @default false
    */
   public opensNodeHidden: boolean
-
-  /**
-   * The chance that the action will fail (1 - successChance).
-   */
-  public get failureChance(): number {
-    return 1 - this.successChance
-  }
 
   /**
    * Whether or not this action is currently being executed
@@ -226,18 +239,6 @@ export abstract class MissionAction<
   public get forceId(): string {
     return this.force._id
   }
-
-  /**
-   * Used to modify the amount of time it takes to execute the action.
-   * @note The operand can be positive or negative. It will either increase or decrease the process time.
-   */
-  private _processTimeOperand: number
-
-  /**
-   * Used to modify the chance that the action will succeed.
-   * @note The operand can be positive or negative. It will either increase or decrease the success chance.
-   */
-  private _successChanceOperand: number
 
   /**
    * A time-ordered record of every modifier applied to this action
@@ -345,12 +346,13 @@ export abstract class MissionAction<
       data.description ?? MissionAction.DEFAULT_PROPERTIES.description
     this.type = data.type ?? MissionAction.DEFAULT_PROPERTIES.type
     this.baseProcessTime =
-      data.processTime ?? MissionAction.DEFAULT_PROPERTIES.processTime
+      data.baseProcessTime ?? MissionAction.DEFAULT_PROPERTIES.baseProcessTime
     this.processTimeHidden =
       data.processTimeHidden ??
       MissionAction.DEFAULT_PROPERTIES.processTimeHidden
-    this._successChance =
-      data.successChance ?? MissionAction.DEFAULT_PROPERTIES.successChance
+    this.baseSuccessChance =
+      data.baseSuccessChance ??
+      MissionAction.DEFAULT_PROPERTIES.baseSuccessChance
     this.successChanceHidden =
       data.successChanceHidden ??
       MissionAction.DEFAULT_PROPERTIES.successChanceHidden
@@ -367,8 +369,6 @@ export abstract class MissionAction<
     )
 
     this.modifiers = data.modifiers ?? []
-    this._processTimeOperand = 0
-    this._successChanceOperand = 0
   }
 
   /**
@@ -411,16 +411,15 @@ export abstract class MissionAction<
       name: this.name,
       description: this.description,
       type: this.type,
-      processTime: this.baseProcessTime,
+      baseProcessTime: this.baseProcessTime,
       processTimeHidden: this.processTimeHidden,
-      successChance: this._successChance,
+      baseSuccessChance: this.baseSuccessChance,
       successChanceHidden: this.successChanceHidden,
       resourceCosts: this.resourceCosts.serialize(options),
       opensNode: this.opensNode,
       opensNodeHidden: this.opensNodeHidden,
       localKey: this.localKey,
       effects: this.effects.map((effect) => effect.toExecutionTriggeredJson()),
-      modifiers: this.modifiers,
     }
 
     switch (sessionDataExposure.expose) {
@@ -428,9 +427,10 @@ export abstract class MissionAction<
       case 'member-specific':
         // Obfuscate any hidden properties within the exported JSON,
         // preventing the students from seeing them.
-        if (json.processTimeHidden) json.processTime = -1
-        if (json.successChanceHidden) json.successChance = -1
+        if (json.processTimeHidden) json.baseProcessTime = -1
+        if (json.successChanceHidden) json.baseSuccessChance = -1
         if (json.opensNodeHidden) json.opensNode = false
+        json.modifiers = [...this.modifiers]
         break
       case 'none':
       default:
@@ -438,39 +438,6 @@ export abstract class MissionAction<
     }
 
     return json
-  }
-
-  /**
-   * Modifies the amount of time it takes to execute the action.
-   * @param processTimeOperand The operand to modify the process time by.
-   */
-  public modifyProcessTime(processTimeOperand: number): void {
-    this.baseProcessTime = this.processTime
-    this._processTimeOperand = processTimeOperand
-  }
-
-  /**
-   * Modifies the chance that the action will succeed.
-   * @param successChanceOperand The operand to modify the success
-   * chance by.
-   */
-  public modifySuccessChance(successChanceOperand: number): void {
-    this._successChance = this.successChance
-    this._successChanceOperand = successChanceOperand
-  }
-
-  /**
-   * Modifies the resource cost for a specific pool.
-   * @param resourceId The ID of the {@link TResource} whose cost to modify.
-   * @param resourceCostOperand The operand to modify the resource cost by.
-   */
-  public modifyResourceCost(
-    resourceId: string,
-    resourceCostOperand: number,
-  ): void {
-    this.getResourceCostByResourceId(resourceId)?.modifyAmount(
-      resourceCostOperand,
-    )
   }
 
   // Implemented
@@ -614,9 +581,9 @@ export abstract class MissionAction<
       name: 'New Action',
       description: '',
       type: 'repeatable',
-      processTime: 5000,
+      baseProcessTime: 5000,
       processTimeHidden: false,
-      successChance: 0.5,
+      baseSuccessChance: 0.5,
       successChanceHidden: false,
       resourceCosts: [],
       opensNode: true,
@@ -692,13 +659,33 @@ export type TMissionActionJsonIndirect =
   (typeof JSON_PROPERTIES_RAW)['indirect'][number]
 
 /**
- * Plain JSON representation of a {@link MissionAction} object.
+ * Base properties included when serializing a {@link MissionAction}
+ * to JSON.
  */
-export type TMissionActionJson = TCreateJsonType<
+export type TMissionActionJsonBase = TCreateJsonType<
   MissionAction,
   TMissionActionJsonDirect,
   TMissionActionJsonIndirect
 >
+
+/**
+ * Session-specific properties included when serializing a
+ * {@link MissionAction} to JSON. Only relevant when
+ * `sessionDataExposure` is set to 'all' or 'member-specific'
+ * in the options of {@link MissionAction.toJson}.
+ */
+export type TMissionActionSessionJson = {
+  /**
+   * @see {@link modifiers}
+   */
+  modifiers: TActionModifier[]
+}
+
+/**
+ * Serialized JSON representation of a {@link MissionAction} object.
+ */
+export type TMissionActionJson = TMissionActionJsonBase &
+  Partial<TMissionActionSessionJson>
 
 /**
  * The default properties for a {@link MissionAction} object.

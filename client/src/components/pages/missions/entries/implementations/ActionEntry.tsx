@@ -48,8 +48,8 @@ export default function ActionEntry({
   const [name, setName] = actionState.name
   const [description, setDescription] = actionState.description
   const [type, setType] = actionState.type
-  const [successChance, setSuccessChance] = useState<number>(
-    parseFloat(`${(action.successChance * 100.0).toFixed(2)}`),
+  const [baseSuccessChance, setBaseSuccessChance] = useState<number>(
+    parseFloat(`${(action.baseSuccessChance * 100.0).toFixed(2)}`),
   )
   const [successChanceHidden, hideSuccessChance] =
     actionState.successChanceHidden
@@ -57,9 +57,9 @@ export default function ActionEntry({
   const [resourceCosts, setResourceCosts] = actionState.resourceCosts
   const [opensNode, setOpensNode] = actionState.opensNode
   const [opensNodeHidden, hideOpensNode] = actionState.opensNodeHidden
-  const [hours, setHours] = useState<number>(action.processTimeHours)
-  const [minutes, setMinutes] = useState<number>(action.processTimeMinutes)
-  const [seconds, setSeconds] = useState<number>(action.processTimeSeconds)
+  const [hours, setHours] = useState<number>(action.baseProcessTimeHours)
+  const [minutes, setMinutes] = useState<number>(action.baseProcessTimeMinutes)
+  const [seconds, setSeconds] = useState<number>(action.baseProcessTimeSeconds)
   const svgEngine = useButtonSvgEngine({
     elements: [
       {
@@ -93,19 +93,19 @@ export default function ActionEntry({
   // Sync the component state with the action.
   usePostInitEffect(() => {
     // Update the success chance.
-    action.successChance = successChance / 100
+    action.baseSuccessChance = baseSuccessChance / 100
 
     // Convert and update the process time.
-    const processTime = ClientMissionAction.convertProcessTime(
+    const baseProcessTime = ClientMissionAction.convertProcessTime(
       hours,
       minutes,
       seconds,
     )
-    action.processTime = processTime
+    action.baseProcessTime = baseProcessTime
 
     // Allow the user to save the changes.
     onChange(action)
-  }, [successChance, hours, minutes, seconds])
+  }, [baseSuccessChance, hours, minutes, seconds])
 
   /* -- RENDER -- */
 
@@ -156,8 +156,8 @@ export default function ActionEntry({
       <DetailNumber
         fieldType='required'
         label='Success Chance'
-        value={successChance}
-        setValue={setSuccessChance}
+        value={baseSuccessChance}
+        setValue={setBaseSuccessChance}
         // Convert to percentage.
         minimum={ClientMissionAction.SUCCESS_CHANCE_MIN * 100}
         // Convert to percentage.

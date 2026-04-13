@@ -25,6 +25,7 @@ import type {
   TExecutionCheats,
 } from '@shared/missions/actions/ActionExecution'
 import type { TExecutionOutcomeJson } from '@shared/missions/actions/ExecutionOutcome'
+import type { TActionModifier } from '@shared/missions/actions/MissionAction'
 import type { TMemberRoleId } from '@shared/sessions/members/MemberRole'
 import { MemberRole } from '@shared/sessions/members/MemberRole'
 import type { TSessionMemberJson } from '@shared/sessions/members/SessionMember'
@@ -1007,137 +1008,6 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   }
 
   /**
-   * Handles the blocking and unblocking of nodes.
-   * @param nodeId The ID of the node to be blocked or unblocked.
-   * @param blocked Whether or not the node is blocked.
-   */
-  private updateNodeBlockStatus = (nodeId: string, blocked: boolean): void => {
-    // Find the node, given the ID.
-    let node = this.mission.getNodeById(nodeId)
-    // Handle the blocking and unblocking of the node.
-    if (node) node.blocked = blocked
-  }
-
-  /**
-   * Modifies the success chance of a specific action within a node or
-   * all actions within a node.
-   * @param successChanceOperand The operand to modify the success chance by.
-   * @param nodeId The ID of the node.
-   * @param actionId The ID of the action.
-   * @note If the action is not provided, the success chance of all actions
-   * within the node will be modified.
-   */
-  private modifySuccessChance = (
-    successChanceOperand: number,
-    nodeId: string,
-    actionId?: string,
-  ): void => {
-    // Find the node, given the ID.
-    let node = this.mission.getNodeById(nodeId)
-    // Modify the success chance for all the node's actions.
-    node?.modifySuccessChance(successChanceOperand, actionId)
-  }
-
-  /**
-   * Modifies the process time of a specific action within a node or
-   * all actions within a node.
-   * @param processTimeOperand The operand to modify the process time by.
-   * @param nodeId The ID of the node.
-   * @param actionId The ID of the action.
-   * @note If the action is not provided, the process time of all actions
-   * within the node will be modified.
-   */
-  private modifyProcessTime = (
-    processTimeOperand: number,
-    nodeId: string,
-    actionId?: string,
-  ): void => {
-    // Find the node, given the ID.
-    let node = this.mission.getNodeById(nodeId)
-    // Modify the process time for all the node's actions.
-    node?.modifyProcessTime(processTimeOperand, actionId)
-  }
-
-  /**
-   * Modifies the resource cost of a specific action within a node or
-   * all actions within a node.
-   * @param resourceId The ID of the resource being modified.
-   * @param resourceCostOperand The operand to modify the resource cost by.
-   * @param nodeId The ID of the node.
-   * @param actionId The ID of the action.
-   * @note If the action is not provided, the resource cost of all actions
-   * within the node will be modified.
-   */
-  private modifyResourceCost = (
-    resourceId: string,
-    resourceCostOperand: number,
-    nodeId: string,
-    actionId?: string,
-  ): void => {
-    // Find the node, given the ID.
-    let node = this.mission.getNodeById(nodeId)
-    // Modify the resource cost for all the node's actions.
-    node?.modifyResourceCost(resourceId, resourceCostOperand, actionId)
-  }
-
-  /**
-   * Modifies the resource pool of a force.
-   * @param poolId The ID of the resource pool to be modified.
-   * @param operand The operand to modify the resource pool by.
-   */
-  private modifyResourcePool = (poolId: string, operand: number): void => {
-    // Find the pool, given the ID.
-    let pool = this.mission.getPoolById(poolId)
-    // Modify the resource pool for the force.
-    pool?.onModify(operand)
-  }
-
-  /**
-   * Handles the granting/revoking of access to a file.
-   * @param fileId The ID of the file in question.
-   * @param forceId The ID of the force with newly granted/revoked access.
-   * @param granted Whether or not the access is granted.
-   */
-  private updateFileAccess = (data: TFileAccessModifierData): void => {
-    let force = this.mission.getForceById(data.forceId)
-    let file = this.mission.getFileById(data.fileId)
-
-    // If the force is not found, abort.
-    if (!force) return
-
-    // Handle file-access change based on whether
-    // access is granted or revoked.
-    if (data.granted) {
-      // If the file is not found in the mission,
-      // add it to the mission.
-      if (!file) {
-        file = ClientMissionFile.fromJson(data.fileData, this.mission)
-        this.mission.files.push(file)
-      }
-      // Grant access for the force to the file.
-      file.grantAccess(force)
-    } else {
-      // If the following conditions are met, remove
-      // the file from the mission entirely:
-      // 1. The file currently is found in the mission.
-      // 2. The member is assigned to the force in question.
-      // 3. The member does not have complete visibility, which
-      //    would otherwise negate file-access restrictions.
-      if (
-        file &&
-        this.member.forceId === data.forceId &&
-        !this.member.isAuthorized('completeVisibility')
-      ) {
-        this.mission.files = this.mission.files.filter(
-          (f) => f._id !== file!._id,
-        )
-      }
-      // Revoke access for the force to the file.
-      if (file) file.revokeAccess(force)
-    }
-  }
-
-  /**
    * Handles clean-up when a session is quitted, ended,
    * or destroyed.
    */
@@ -1329,7 +1199,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     // Handle the data.
     switch (data.key) {
       case 'node-update-block-status':
-        this.updateNodeBlockStatus(data.nodeId, data.blocked)
+        this.onUpdateNodeBlockStatus(data.nodeId, data.blocked)
         break
       case 'node-update-open-state':
         this.onChangeNodeOpenState({
@@ -1344,37 +1214,141 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
         this.onNodeAlert(data)
         break
       case 'node-action-success-chance':
-        this.modifySuccessChance(
-          data.successChanceOperand,
-          data.nodeId,
-          data.actionId,
-        )
-        break
       case 'node-action-process-time':
-        this.modifyProcessTime(
-          data.processTimeOperand,
-          data.nodeId,
-          data.actionId,
-        )
-        break
       case 'node-action-resource-cost':
-        this.modifyResourceCost(
-          data.resourceId,
-          data.resourceCostOperand,
-          data.nodeId,
-          data.actionId,
-        )
+        this.onActionModifier(data)
         break
       case 'force-resource-pool':
-        this.modifyResourcePool(data.poolId, data.operand)
+        this.onModifyResourcePool(data.poolId, data.operand)
         break
       case 'file-update-access':
-        this.updateFileAccess(data)
+        this.onUpdateFileAccess(data)
         break
       default:
         return console.warn(
           `Error: Data format sent to modifier handler is not recognized. Data: ${data}`,
         )
+    }
+  }
+
+  /**
+   * Handles an action modifier event from the server, building a
+   * {@link TActionModifier} from the event data and forwarding it
+   * to the target node.
+   */
+  private onActionModifier = (
+    data: Extract<
+      TServerEvents['modifier-enacted']['data'],
+      {
+        key:
+          | 'node-action-success-chance'
+          | 'node-action-process-time'
+          | 'node-action-resource-cost'
+      }
+    >,
+  ): void => {
+    let modifier: TActionModifier
+
+    switch (data.key) {
+      case 'node-action-success-chance':
+        modifier = {
+          type: 'success-chance',
+          amount: data.successChanceOperand,
+          appliedAt: data.appliedAt,
+          resourceId: null,
+        }
+        break
+      case 'node-action-process-time':
+        modifier = {
+          type: 'process-time',
+          amount: data.processTimeOperand,
+          appliedAt: data.appliedAt,
+          resourceId: null,
+        }
+        break
+      case 'node-action-resource-cost':
+        modifier = {
+          type: 'resource-cost',
+          amount: data.resourceCostOperand,
+          appliedAt: data.appliedAt,
+          resourceId: data.resourceId,
+        }
+        break
+    }
+
+    const node = this.mission.getNodeById(data.nodeId)
+    node?.onModify(modifier, data.actionId)
+  }
+
+  /**
+   * Handles the blocking and unblocking of nodes.
+   * @param nodeId The ID of the node to be blocked or unblocked.
+   * @param blocked Whether or not the node is blocked.
+   */
+  private onUpdateNodeBlockStatus = (
+    nodeId: string,
+    blocked: boolean,
+  ): void => {
+    // Find the node, given the ID.
+    let node = this.mission.getNodeById(nodeId)
+    // Handle the blocking and unblocking of the node.
+    if (node) node.blocked = blocked
+  }
+
+  /**
+   * Modifies the resource pool of a force.
+   * @param poolId The ID of the resource pool to be modified.
+   * @param operand The operand to modify the resource pool by.
+   */
+  private onModifyResourcePool = (poolId: string, operand: number): void => {
+    // Find the pool, given the ID.
+    let pool = this.mission.getPoolById(poolId)
+    // Modify the resource pool for the force.
+    pool?.onModify(operand)
+  }
+
+  /**
+   * Handles the granting/revoking of access to a file.
+   * @param fileId The ID of the file in question.
+   * @param forceId The ID of the force with newly granted/revoked access.
+   * @param granted Whether or not the access is granted.
+   */
+  private onUpdateFileAccess = (data: TFileAccessModifierData): void => {
+    let force = this.mission.getForceById(data.forceId)
+    let file = this.mission.getFileById(data.fileId)
+
+    // If the force is not found, abort.
+    if (!force) return
+
+    // Handle file-access change based on whether
+    // access is granted or revoked.
+    if (data.granted) {
+      // If the file is not found in the mission,
+      // add it to the mission.
+      if (!file) {
+        file = ClientMissionFile.fromJson(data.fileData, this.mission)
+        this.mission.files.push(file)
+      }
+      // Grant access for the force to the file.
+      file.grantAccess(force)
+    } else {
+      // If the following conditions are met, remove
+      // the file from the mission entirely:
+      // 1. The file currently is found in the mission.
+      // 2. The member is assigned to the force in question.
+      // 3. The member does not have complete visibility, which
+      //    would otherwise negate file-access restrictions.
+      if (
+        file &&
+        this.member.forceId === data.forceId &&
+        !this.member.isAuthorized('completeVisibility')
+      ) {
+        this.mission.files = this.mission.files.filter(
+          (f) => f._id !== file!._id,
+        )
+      }
+      // Revoke access for the force to the file.
+      if (file) file.revokeAccess(force)
     }
   }
 

@@ -8,7 +8,11 @@ import {
   MissionComponent,
   type TMissionComponentIssue,
 } from '../MissionComponent'
-import type { TAction, TActionJsonOptions } from './MissionAction'
+import type {
+  TAction,
+  TActionJsonOptions,
+  TActionModifier,
+} from './MissionAction'
 
 /**
  * Represents the resource cost applied to a single resource pool when
@@ -84,10 +88,18 @@ export abstract class ActionResourceCost<
   public hidden: boolean
 
   /**
-   * The session operand applied to this cost's base amount.
-   * @note Can be positive or negative, increasing or decreasing the effective cost.
+   * Computed operand applied to the base amount, derived from all resource-cost
+   * modifiers on the parent action matching this resource ID.
    */
-  private _operand: number = 0
+  private get _operand(): number {
+    return this.action.modifiers
+      .filter(
+        (modifier) =>
+          modifier.type === 'resource-cost' &&
+          modifier.resourceId === this.resourceId,
+      )
+      .reduce((sum, modifier) => sum + modifier.amount, 0)
+  }
 
   /**
    * The effective amount after applying the session operand.
@@ -98,14 +110,6 @@ export abstract class ActionResourceCost<
       this.baseAmount + this._operand,
       ActionResourceCost.RESOURCE_COST_MIN,
     )
-  }
-
-  public get amountFormatted(): string {
-    if (this.hidden) {
-      return '?'
-    } else {
-      return (this.amount * -1).toLocaleString('en-US')
-    }
   }
 
   /**
@@ -134,16 +138,6 @@ export abstract class ActionResourceCost<
       throw new Error('Resource ID mismatch.')
     }
     pool.balance -= this.amount
-  }
-
-  /**
-   * Modifies this cost's effective amount by applying the given operand.
-   * @param operand The value to add to the current operand. Can be positive or negative.
-   * @note This will not change the value of {@link baseAmount} but it will affect the
-   * value returned by {@link amount}.
-   */
-  public modifyAmount(operand: number): void {
-    this._operand += operand
   }
 
   /**
@@ -185,6 +179,36 @@ export abstract class ActionResourceCost<
       json.baseAmount = -1
     }
     return json
+  }
+
+  /**
+   * @param effectiveTime The time at which to evaluate the effective costs.
+   * @returns Returns the effective resource cost for this resource at the
+   * specified time, computed from the base amount of this cost plus any
+   * resource-cost modifiers that were applied at or before this execution
+   * began.
+   */
+  public getEffectiveAmount(effectiveTime: number | Date): number {
+    // Normalize time to plain timestamp.
+    effectiveTime =
+      effectiveTime instanceof Date ? effectiveTime.getTime() : effectiveTime
+
+    const operand = this.action.modifiers
+      .filter(
+        (modifier: TActionModifier) =>
+          modifier.type === 'resource-cost' &&
+          modifier.resourceId === this.resourceId &&
+          modifier.appliedAt <= effectiveTime,
+      )
+      .reduce(
+        (sum: number, modifier: TActionModifier) => sum + modifier.amount,
+        0,
+      )
+
+    return Math.max(
+      this.baseAmount + operand,
+      ActionResourceCost.RESOURCE_COST_MIN,
+    )
   }
 
   /**

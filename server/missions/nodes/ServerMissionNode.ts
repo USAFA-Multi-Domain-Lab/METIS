@@ -1,7 +1,10 @@
 import { generateValidationError } from '@server/database/validation'
 import type { TTargetEnvExposedNode } from '@server/target-environments/context/TargetEnvContext'
 import type { TActionExecutionJson } from '@shared/missions/actions/ActionExecution'
-import type { TMissionActionJson } from '@shared/missions/actions/MissionAction'
+import type {
+  TActionModifier,
+  TMissionActionJson,
+} from '@shared/missions/actions/MissionAction'
 import type { TMissionNodeJson } from '@shared/missions/nodes/MissionNode'
 import { MissionNode } from '@shared/missions/nodes/MissionNode'
 import type { TNodeAlertSeverityLevel } from '@shared/missions/nodes/NodeAlert'
@@ -69,52 +72,19 @@ export class ServerMissionNode extends MissionNode<TMetisServerComponents> {
     }
   }
 
-  // Implemented
-  public modifySuccessChance(
-    successChanceOperand: number,
-    actionId?: string,
-  ): void {
+  /**
+   * Applies a modifier to the node's actions.
+   * @param modifier The modifier to apply.
+   * @param actionId The ID of the action to apply the modifier to. If
+   * not provided, the modifier is applied to all actions.
+   */
+  public applyModifier(modifier: TActionModifier, actionId?: string): void {
     if (!actionId) {
-      this.actions.forEach((action) => {
-        action.modifySuccessChance(successChanceOperand)
-      })
+      this.actions.forEach((action) => action.applyModifier(modifier))
     } else {
       const action = this.actions.get(actionId)
       if (!action) throw new Error(`Action "${actionId}" not found.`)
-      action.modifySuccessChance(successChanceOperand)
-    }
-  }
-
-  // Implemented
-  public modifyProcessTime(
-    processTimeOperand: number,
-    actionId?: string,
-  ): void {
-    if (!actionId) {
-      this.actions.forEach((action) => {
-        action.modifyProcessTime(processTimeOperand)
-      })
-    } else {
-      const action = this.actions.get(actionId)
-      if (!action) throw new Error(`Action "${actionId}" not found.`)
-      action.modifyProcessTime(processTimeOperand)
-    }
-  }
-
-  // Implemented
-  public modifyResourceCost(
-    resourceId: string,
-    resourceCostOperand: number,
-    actionId?: string,
-  ): void {
-    if (!actionId) {
-      this.actions.forEach((action) => {
-        action.modifyResourceCost(resourceId, resourceCostOperand)
-      })
-    } else {
-      const action = this.actions.get(actionId)
-      if (!action) throw new Error(`Action "${actionId}" not found.`)
-      action.modifyResourceCost(resourceId, resourceCostOperand)
+      action.applyModifier(modifier)
     }
   }
 
@@ -258,35 +228,37 @@ export class ServerMissionNode extends MissionNode<TMetisServerComponents> {
     let actionKeys: TMissionActionJson['localKey'][] = []
 
     for (const action of actions) {
-      const { processTime, successChance, resourceCosts } = action
+      const { baseProcessTime, baseSuccessChance, resourceCosts } = action
 
       // PROCESS TIME
       let isValidNumber = ServerMissionAction.PROCESS_TIME_REGEX.test(
-        processTime.toString(),
+        baseProcessTime.toString(),
       )
       if (!isValidNumber) {
         throw generateValidationError(
-          `Process time "${processTime}" is not a valid number for action "{ _id: ${action._id}, name: ${action.name} }".`,
+          `Process time "${baseProcessTime}" is not a valid number for action "{ _id: ${action._id}, name: ${action.name} }".`,
         )
       }
-      let lessThanMax = processTime <= ServerMissionAction.PROCESS_TIME_MAX
+      let lessThanMax = baseProcessTime <= ServerMissionAction.PROCESS_TIME_MAX
       if (!lessThanMax) {
         throw generateValidationError(
-          `Process time "${processTime}" exceeds the maximum process time "${ServerMissionAction.PROCESS_TIME_MAX}" for action "{ _id: ${action._id}, name: ${action.name} }".`,
+          `Process time "${baseProcessTime}" exceeds the maximum process time "${ServerMissionAction.PROCESS_TIME_MAX}" for action "{ _id: ${action._id}, name: ${action.name} }".`,
         )
       }
 
       // SUCCESS CHANCE
-      let betweenZeroAndOne = successChance >= 0 && successChance <= 1
+      let betweenZeroAndOne = baseSuccessChance >= 0 && baseSuccessChance <= 1
       if (!betweenZeroAndOne) {
         throw generateValidationError(
-          `Success chance "${successChance}" is not between 0 and 1 for action "{ _id: ${action._id}, name: ${action.name} }".`,
+          `Success chance "${baseSuccessChance}" is not between 0 and 1 for action "{ _id: ${action._id}, name: ${action.name} }".`,
         )
       }
 
       // RESOURCE COSTS
       for (const cost of resourceCosts) {
-        let nonNegativeInteger = NumberToolbox.isNonNegativeInteger(cost.baseAmount)
+        let nonNegativeInteger = NumberToolbox.isNonNegativeInteger(
+          cost.baseAmount,
+        )
         if (!nonNegativeInteger) {
           throw generateValidationError(
             `Resource cost amount "${cost.baseAmount}" is a negative integer for resource "${cost.resourceId}" in action "{ _id: ${action._id}, name: ${action.name} }".`,

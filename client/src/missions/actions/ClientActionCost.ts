@@ -11,6 +11,14 @@ import type { ClientMissionAction } from './ClientMissionAction'
  */
 export class ClientActionCost extends ActionResourceCost<TMetisClientComponents> {
   /**
+   * The formatted cost amount to display to a session
+   * member in a UI element.
+   */
+  public get amountFormatted(): string {
+    return ClientActionCost.formatAmount(this.amount, this.hidden)
+  }
+
+  /**
    * Creates an {@link ClientActionCost} from JSON data.
    * @param action The action that owns this resource cost.
    * @param data The JSON data from which to create the cost.
@@ -78,6 +86,22 @@ export class ClientActionCost extends ActionResourceCost<TMetisClientComponents>
       baseAmount,
       hidden,
     )
+  }
+
+  /**
+   * @param amount The amount value to format.
+   * @param amountHidden Whether the amount is actively hidden from view.
+   * @returns The formatted value.
+   */
+  public static formatAmount(
+    amount: number,
+    amountHidden: boolean = false,
+  ): string {
+    if (amountHidden) {
+      return '?'
+    } else {
+      return (amount * -1).toLocaleString('en-US')
+    }
   }
 }
 
