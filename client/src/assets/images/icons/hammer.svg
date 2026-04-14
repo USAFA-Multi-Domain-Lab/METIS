@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="24"
+   height="24"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="hammer.svg"
+   inkscape:version="1.4 (e7c3feb1, 2024-10-09)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#000000"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="16"
+     inkscape:cx="-6.0625"
+     inkscape:cy="-10.40625"
+     inkscape:window-width="2560"
+     inkscape:window-height="1318"
+     inkscape:window-x="0"
+     inkscape:window-y="282"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="Layer_1" />
+  <g
+     id="Layer_1"
+     transform="translate(2,-3.0660594)">
+    <title
+       id="title1">Layer 1</title>
+    <path
+       style="fill:#ffffff;stroke-width:0.999998"
+       d="M 6.202363,17.019843 -2,24.989188 v 2.076871 H 0.07687049 L 8.2792338,19.096715 Z"
+       id="path3"
+       sodipodi:nodetypes="cccccc" />
+    <path
+       style="fill:#ffffff;stroke-width:0.999998"
+       d="m 18.540162,5.4722056 -1.978314,0.5093876 2.327547,2.327547 0.607315,-1.8803857 z"
+       id="path3-0"
+       sodipodi:nodetypes="ccccc" />
+    <path
+       style="fill:#ffffff;stroke-width:0.999999"
+       d="M 3.2607812,10.148027 14.743486,21.741102 16.604959,21.5951 21.994881,16.211092 21.970478,14.331615 10.355636,3.0785454 8.5074255,3.1951837 3.2661695,8.3280834 Z"
+       id="path3-3-8"
+       sodipodi:nodetypes="ccccccccc" />
+  </g>
+</svg>
