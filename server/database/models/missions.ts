@@ -1,12 +1,11 @@
 import { ServerMissionAction } from '@server/missions/actions/ServerMissionAction'
-import { ServerEffect } from '@server/missions/effects/ServerEffect'
 import { ServerMissionForce } from '@server/missions/forces/ServerMissionForce'
 import { ServerMissionNode } from '@server/missions/nodes/ServerMissionNode'
 import { ServerMission } from '@server/missions/ServerMission'
+import { Effect } from '@shared/missions/effects/Effect'
 import { MissionFile } from '@shared/missions/files/MissionFile'
 import { Mission, type TMissionSaveJson } from '@shared/missions/Mission'
 import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
-import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import DOMPurify from 'isomorphic-dompurify'
 import type { ProjectionType, QueryOptions } from 'mongoose'
 import mongoose, { model, Schema } from 'mongoose'
@@ -249,7 +248,7 @@ const effectSubschema = {
   name: {
     type: String,
     required: true,
-    maxLength: ServerEffect.MAX_NAME_LENGTH,
+    maxLength: Effect.MAX_NAME_LENGTH,
   },
   trigger: { type: String, required: true },
   order: { type: Number, required: true, default: 0 },

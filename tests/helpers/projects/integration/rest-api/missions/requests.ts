@@ -122,7 +122,6 @@ export function createMissionUpdatePayload(
     _id: mission._id,
     name: mission.name,
     versionNumber: mission.versionNumber,
-    seed: mission.seed,
     resources: cloneJson(mission.resources),
     structure: cloneJson(mission.structure),
     forces: cloneJson(mission.forces),
