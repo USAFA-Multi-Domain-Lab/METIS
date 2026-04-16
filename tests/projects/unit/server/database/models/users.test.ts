@@ -95,6 +95,27 @@ describe('checkLoginLockout', () => {
       }),
     )
   })
+
+  test('Uses the provided userDoc instead of querying when options.userDoc is given and not locked', async () => {
+    let findByIdSpy = jest.spyOn(UserModel, 'findById')
+    let userDoc = { loginLockedUntil: null } as any
+
+    let result = await checkLoginLockout('user-id', { userDoc })
+
+    expect(findByIdSpy).not.toHaveBeenCalled()
+    expect(result).toEqual({ isLocked: false, unlockTime: null })
+  })
+
+  test('Uses the provided userDoc instead of querying when options.userDoc is given and locked', async () => {
+    let futureDate = new Date(Date.now() + 10 * 60 * 1000)
+    let findByIdSpy = jest.spyOn(UserModel, 'findById')
+    let userDoc = { loginLockedUntil: futureDate } as any
+
+    let result = await checkLoginLockout('user-id', { userDoc })
+
+    expect(findByIdSpy).not.toHaveBeenCalled()
+    expect(result).toEqual({ isLocked: true, unlockTime: futureDate })
+  })
 })
 
 /* -- recordFailedLoginAttempt -- */
@@ -130,6 +151,7 @@ describe('recordFailedLoginAttempt', () => {
     expect(findByIdAndUpdateSpy).toHaveBeenCalledWith(
       'user-id',
       expect.objectContaining({ failedLoginAttempts: 3 }),
+      expect.anything(),
     )
   })
 
@@ -187,6 +209,34 @@ describe('recordFailedLoginAttempt', () => {
     expect(findByIdAndUpdateSpy).toHaveBeenCalledWith(
       'user-id',
       expect.objectContaining({ failedLoginAttempts: 1 }),
+      expect.anything(),
+    )
+  })
+
+  test('Uses the provided userDoc instead of querying when options.userDoc is given', async () => {
+    let recentAttemptTime = new Date(Date.now() - 60 * 1000)
+    let findByIdSpy = jest.spyOn(UserModel, 'findById')
+    let findByIdAndUpdateSpy = jest
+      .spyOn(UserModel, 'findByIdAndUpdate')
+      .mockReturnValue(makeExecReturning(null) as any)
+    let userDoc = {
+      failedLoginAttempts: 1,
+      lastFailedLoginAt: recentAttemptTime,
+    } as any
+
+    await recordFailedLoginAttempt(
+      'user-id',
+      MAX_ATTEMPTS,
+      LOCKOUT_DURATION,
+      ATTEMPT_WINDOW,
+      { userDoc },
+    )
+
+    expect(findByIdSpy).not.toHaveBeenCalled()
+    expect(findByIdAndUpdateSpy).toHaveBeenCalledWith(
+      'user-id',
+      expect.objectContaining({ failedLoginAttempts: 2 }),
+      expect.anything(),
     )
   })
 })

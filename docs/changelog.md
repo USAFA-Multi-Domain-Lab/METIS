@@ -1,5 +1,17 @@
 # changelog
 
+# version-2.4.0 | 4-16-2026
+
+- The single-resource model was replaced with a multi-pool resource architecture, allowing missions to define multiple named resources with custom icons, per-force resource pools with exclusion support, and per-action multi-resource costs.
+- A node alert system was implemented with severity levels, enabling effects to attach warnings and notifications directly onto mission nodes during a session.
+- Execution output was reworked to display the details of an execution more compactly by representing each property with an icon.
+- Mission seeds have been removed. Action outcomes are now determined randomly at the time of execution.
+- Rebuilt the CLI in TypeScript with Windows support and target-environment installation capabilities.
+- Users are now locked out for a short period after too many failed login attempts.
+- Rate limiting system updated to better handle malicious requests while minimizing impact on legitimate users.
+- Refactored the target-migration system to include mission data in scripts.
+- Various bug fixes, optimizations, and design improvements throughout the application.
+
 # version-2.3.0 | 12-1-2025
 
 - Mission-level effects were implemented with setup/teardown triggers for session start and end, enabling mission-wide impacts beyond action execution.

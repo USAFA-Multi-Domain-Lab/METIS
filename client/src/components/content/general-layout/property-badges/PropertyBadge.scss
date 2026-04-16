@@ -25,18 +25,7 @@
     cursor: help;
   }
 
-  // todo: Figure out how to make this work here.
-  // &.Updated {
-  //   .PropertyValue {
-  //     transform: scale(1.1);
-  //     transition: color 250ms ease-in-out, transform 250ms ease-in-out;
-  //     color: $color-primary-light;
-  //   }
-  // }
-
   &.Strikethrough {
-    // width: 100%; // todo: This should be included in the action properties specifically, not here.
-
     .PropertyValue {
       text-decoration: line-through;
       color: $color-faded;

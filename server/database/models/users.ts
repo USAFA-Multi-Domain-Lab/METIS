@@ -1,7 +1,11 @@
 import { StatusError } from '@server/api/v1/library/StatusError'
 import { ServerUser } from '@server/users/ServerUser'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
-import type { TUserExistingJson, TUserJson } from '@shared/users/User'
+import type {
+  TUserExistingJson,
+  TUserJson,
+  TUserSaveJson,
+} from '@shared/users/User'
 import bcryptjs from 'bcryptjs'
 import type { Request } from 'express'
 import type { ProjectionType } from 'mongoose'
@@ -15,9 +19,12 @@ import {
 import { databaseLogger } from '../../logging'
 import { UserSchema } from './classes'
 import type {
+  TAuthenticateOptions,
+  TCheckLoginLockoutOptions,
   TLoginLockoutInfo,
   TPostUserQuery,
   TPreUserQuery,
+  TRecordFailedLoginAttemptOptions,
   TUser,
   TUserDoc,
   TUserModel,
@@ -58,12 +65,15 @@ export const hashPassword = async (password: string): Promise<string> => {
 /**
  * Checks if the user account is currently locked due to failed login attempts.
  * @param userId The ID of the user to check.
+ * @param options Optional parameters.
  * @returns Whether the account is locked and when it will unlock.
  */
 export const checkLoginLockout = async (
   userId: string,
+  options: TCheckLoginLockoutOptions = {},
 ): Promise<TLoginLockoutInfo> => {
-  let user = await UserModel.findById(
+  const { userDoc: providedUserDoc } = options
+  let user = providedUserDoc ?? await UserModel.findById(
     userId,
     {},
     { includeSensitive: true },
@@ -78,14 +88,10 @@ export const checkLoginLockout = async (
 
   if (!isLocked) {
     // Lock period expired, reset the lockout
-    await UserModel.findByIdAndUpdate(userId, {
-      loginLockedUntil: null,
-      failedLoginAttempts: 0,
-    }).exec()
-    return { isLocked: false, unlockTime: null }
+    await resetFailedLoginAttempts(userId)
   }
 
-  return { isLocked: true, unlockTime: user.loginLockedUntil }
+  return { isLocked, unlockTime: isLocked ? user.loginLockedUntil : null }
 }
 
 /**
@@ -94,19 +100,22 @@ export const checkLoginLockout = async (
  * @param maxAttempts Maximum allowed attempts before lockout.
  * @param lockoutDuration Duration of lockout in milliseconds.
  * @param attemptWindow Time window in milliseconds to track attempts.
+ * @param options Optional parameters.
  */
 export const recordFailedLoginAttempt = async (
   userId: string,
   maxAttempts: number,
   lockoutDuration: number,
   attemptWindow: number,
-): Promise<void> => {
-  let user = await UserModel.findById(
+  options: TRecordFailedLoginAttemptOptions = {},
+): Promise<TUserDoc | null> => {
+  const { userDoc: providedUserDoc } = options
+  let user = providedUserDoc ?? await UserModel.findById(
     userId,
     {},
     { includeSensitive: true },
   ).exec()
-  if (!user) return
+  if (!user) return null
 
   let now = new Date()
   let lastAttemptTime = user.lastFailedLoginAt
@@ -122,7 +131,7 @@ export const recordFailedLoginAttempt = async (
 
   currentAttempts++
 
-  let updateData: any = {
+  let updateData: Partial<TUserSaveJson> = {
     failedLoginAttempts: currentAttempts,
     lastFailedLoginAt: now,
   }
@@ -133,7 +142,7 @@ export const recordFailedLoginAttempt = async (
     updateData.failedLoginAttempts = 0 // Reset for next cycle
   }
 
-  await UserModel.findByIdAndUpdate(userId, updateData).exec()
+  return await UserModel.findByIdAndUpdate(userId, updateData, { new: true }).exec()
 }
 
 /**
@@ -171,16 +180,18 @@ const toJson = (doc: TUserDoc, ret: TUserJson, options: any): TUserJson => {
 /**
  * Authenticates a user based on the request.
  * @param request The request with the user data.
+ * @param options Optional parameters.
  * @resolves With the authenticated user.
  * @rejects When the user could not be authenticated.
  */
-const authenticate = async (request: Request): Promise<ServerUser> => {
+const authenticate = async (request: Request, options: TAuthenticateOptions = {}): Promise<ServerUser> => {
   return new Promise<ServerUser>(async (resolve, reject) => {
     try {
+      const { userDoc: providedUserDoc } = options
       // Extract user data from the request.
       let { username, password } = request.body
       // Find the user in the database.
-      let userDoc = await UserModel.findOne(
+      let userDoc = providedUserDoc ?? await UserModel.findOne(
         { username },
         {},
         { includeSensitive: true },

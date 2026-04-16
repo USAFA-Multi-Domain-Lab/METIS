@@ -30,10 +30,14 @@ export type TUserStaticMethods = {
   /**
    * Authenticates a user based on the request.
    * @param request The request with the user data.
+   * @param options Optional parameters.
    * @resolves When the user has been authenticated.
    * @rejects When the user could not be authenticated.
    */
-  authenticate: (request: Request) => Promise<ServerUser>
+  authenticate: (
+    request: Request,
+    options?: TAuthenticateOptions,
+  ) => Promise<ServerUser>
   /**
    * Finds a single document by its `_id` field. Then, if the
    * document is found, modifies the document with the given
@@ -108,3 +112,30 @@ export type TLoginLockoutInfo = {
    */
   unlockTime: Date | null
 }
+
+/**
+ * Shared options for functions that need to fetch a user
+ * document.
+ */
+export type TUserFetchOptimizationOptions = {
+  /**
+   * An already-fetched user document to use instead of
+   * querying the database.
+   */
+  userDoc?: TUserDoc
+}
+
+/**
+ * Options for the {@link checkLoginLockout} function.
+ */
+export interface TCheckLoginLockoutOptions extends TUserFetchOptimizationOptions {}
+
+/**
+ * Options for the {@link recordFailedLoginAttempt} function.
+ */
+export interface TRecordFailedLoginAttemptOptions extends TUserFetchOptimizationOptions {}
+
+/**
+ * Options for the {@link TUserStaticMethods.authenticate} static method.
+ */
+export interface TAuthenticateOptions extends TUserFetchOptimizationOptions {}

@@ -39,7 +39,6 @@ export abstract class TestMetisServer {
         console.warn(error)
       }
     }
-
     // Create METIS server
     this.server = new MetisServer()
 

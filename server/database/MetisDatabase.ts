@@ -3,7 +3,7 @@ import { MissionImport } from '@server/missions/imports/MissionImport'
 import { DateToolbox } from '@shared/toolbox/dates/DateToolbox'
 import type { TUserJson } from '@shared/users/User'
 import { User } from '@shared/users/User'
-import { exec, execFile } from 'child_process'
+import { execFile } from 'child_process'
 import type { ConnectOptions } from 'mongoose'
 import mongoose from 'mongoose'
 import { databaseLogger } from '../logging'
@@ -397,53 +397,113 @@ export class MetisDatabase {
         this.server
       let nextBuildNumber: number = currentBuildNumber + 1
       let buildPath: string = MetisDatabase.generateFilePath(nextBuildNumber)
-      let command: string = `mongosh --host ${mongoHost} --port ${mongoPort} --file ${buildPath}`
+      let buildPathAbsolute = MetisServer.resolvePath('..', buildPath)
+      let args: string[] = [
+        '--host',
+        mongoHost,
+        '--port',
+        String(mongoPort),
+        '--file',
+        buildPathAbsolute,
+      ]
 
       if (mongoUsername && mongoPassword) {
-        command += ` --username ${mongoUsername} --password ${mongoPassword} --authenticationDatabase ${mongoDB}`
+        args.push(
+          '--username',
+          mongoUsername,
+          '--password',
+          mongoPassword,
+          '--authenticationDatabase',
+          mongoDB,
+        )
       }
-
-      process.env.MONGO_DB = mongoDB
 
       databaseLogger.info(`Database is migrating to build ${nextBuildNumber}`)
       console.log(`Database is migrating to build ${nextBuildNumber}`)
 
-      exec(command, async (error, stdout, stderr) => {
-        let stdoutSplit: Array<string> = stdout.split(
-          `Loading file: ${buildPath}`,
-        )
-
-        if (stdoutSplit.length > 1) {
-          stdout = stdoutSplit[1]
-        }
-
-        databaseLogger.info(stdout)
-        console.log(stdout)
-
-        if (!error) {
-          databaseLogger.info(
-            `Database successfully migrated to build ${nextBuildNumber}`,
-          )
-          console.log(
-            `Database successfully migrated to build ${nextBuildNumber}`,
+      execFile(
+        'mongosh',
+        args,
+        { env: { ...process.env, MONGO_DB: mongoDB } },
+        async (error, stdout, stderr) => {
+          let stdoutSplit: Array<string> = stdout.split(
+            `Loading file: ${buildPathAbsolute}`,
           )
 
-          if (nextBuildNumber < targetBuildNumber) {
-            await this.buildSchema(nextBuildNumber, targetBuildNumber)
-            resolve()
-          } else {
-            resolve()
+          if (stdoutSplit.length > 1) {
+            stdout = stdoutSplit[1]
           }
-        } else {
-          databaseLogger.error(
-            `Database failed to migrate to ${nextBuildNumber}`,
-          )
-          databaseLogger.error(error)
-          console.log(`Database failed to migrate to ${nextBuildNumber}`)
-          reject(error)
-        }
-      })
+
+          databaseLogger.info(stdout)
+          console.log(stdout)
+
+          if (!error) {
+            try {
+              await this.confirmSchemaBuild(nextBuildNumber)
+
+              databaseLogger.info(
+                `Database successfully migrated to build ${nextBuildNumber}`,
+              )
+              console.log(
+                `Database successfully migrated to build ${nextBuildNumber}`,
+              )
+
+              if (nextBuildNumber < targetBuildNumber) {
+                await this.buildSchema(nextBuildNumber, targetBuildNumber)
+              }
+
+              resolve()
+            } catch (verificationError) {
+              databaseLogger.error(
+                `Database failed verification after migrating to build ${nextBuildNumber}`,
+              )
+              databaseLogger.error(verificationError)
+              reject(verificationError)
+            }
+          } else {
+            databaseLogger.error(
+              `Database failed to migrate to ${nextBuildNumber}`,
+            )
+            databaseLogger.error(error)
+            if (stderr) {
+              databaseLogger.error(stderr)
+            }
+            console.log(`Database failed to migrate to ${nextBuildNumber}`)
+            reject(error)
+          }
+        },
+      )
     })
+  }
+
+  /**
+   * Confirms that the database info document reflects the expected schema build.
+   * Retries briefly because the migration command runs in a separate client.
+   * @param expectedBuildNumber The build number that should be present after migration.
+   */
+  private async confirmSchemaBuild(expectedBuildNumber: number): Promise<void> {
+    let attemptsRemaining = 10
+
+    while (attemptsRemaining > 0) {
+      let info = await InfoModel.findOne().lean().exec()
+
+      if (info?.schemaBuildNumber === expectedBuildNumber) {
+        return
+      }
+
+      attemptsRemaining--
+
+      if (attemptsRemaining > 0) {
+        await new Promise((resolve) => setTimeout(resolve, 100))
+      }
+    }
+
+    let info = await InfoModel.findOne().lean().exec()
+    let actualBuildNumber = info?.schemaBuildNumber ?? 'missing'
+
+    throw new Error(
+      `Migration verification failed for database "${this.server.mongoDB}". Expected schemaBuildNumber ${expectedBuildNumber}, found ${actualBuildNumber}.`,
+    )
   }
 
   /**

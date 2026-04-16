@@ -3,12 +3,12 @@ import PropertyBadge from '@client/components/content/general-layout/property-ba
 import PropertyBadges from '@client/components/content/general-layout/property-badges/PropertyBadges'
 import RichText from '@client/components/content/general-layout/rich-text/RichText'
 import type { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
-import { compute } from '@client/toolbox'
 import type { TExecutionCheats } from '@shared/missions/actions/ActionExecution'
 import {
   MissionSession,
   type TSessionConfig,
 } from '@shared/sessions/MissionSession'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import './ActionProperties.scss'
 
@@ -23,19 +23,10 @@ export default function ActionProperties({
 }: TActionProperties_P): TReactElement | null {
   /* -- COMPUTED -- */
 
-  /**
-   * The class name for the description.
-   */
-  const descriptionClassName: string = compute(() => {
-    // Initialize the class list.
-    let classList: string[] = ['ActionDescription']
-
-    // Hide the description if it is empty.
-    if (!action.description) classList.push('Hidden')
-
-    // Return the class list as a string.
-    return classList.join(' ')
-  })
+  let descriptionClasses = new ClassList('ActionDescription').set(
+    'Hidden',
+    !action.description,
+  )
 
   /* -- RENDER -- */
 
@@ -44,7 +35,7 @@ export default function ActionProperties({
     <div className='ActionProperties'>
       <PropertyBadges>
         {showDescription && (
-          <div className={descriptionClassName}>
+          <div className={descriptionClasses.value}>
             <RichText
               options={{ content: action.description, editable: false }}
             />
@@ -85,7 +76,7 @@ export default function ActionProperties({
 /* -- TYPES -- */
 
 /**
- * Props for `ActionPropertyDisplay` component.
+ * Props for {@link ActionProperties} component.
  */
 export type TActionProperties_P = {
   /**
