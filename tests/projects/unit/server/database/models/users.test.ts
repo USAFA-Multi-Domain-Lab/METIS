@@ -100,7 +100,7 @@ describe('checkLoginLockout', () => {
     let findByIdSpy = jest.spyOn(UserModel, 'findById')
     let userDoc = { loginLockedUntil: null } as any
 
-    let result = await checkLoginLockout('user-id', { userDoc })
+    let result = await checkLoginLockout(userDoc)
 
     expect(findByIdSpy).not.toHaveBeenCalled()
     expect(result).toEqual({ isLocked: false, unlockTime: null })
@@ -111,7 +111,7 @@ describe('checkLoginLockout', () => {
     let findByIdSpy = jest.spyOn(UserModel, 'findById')
     let userDoc = { loginLockedUntil: futureDate } as any
 
-    let result = await checkLoginLockout('user-id', { userDoc })
+    let result = await checkLoginLockout(userDoc)
 
     expect(findByIdSpy).not.toHaveBeenCalled()
     expect(result).toEqual({ isLocked: true, unlockTime: futureDate })
@@ -213,23 +213,23 @@ describe('recordFailedLoginAttempt', () => {
     )
   })
 
-  test('Uses the provided userDoc instead of querying when options.userDoc is given', async () => {
+  test('Uses the provided userDoc instead of querying when a doc is passed directly', async () => {
     let recentAttemptTime = new Date(Date.now() - 60 * 1000)
     let findByIdSpy = jest.spyOn(UserModel, 'findById')
     let findByIdAndUpdateSpy = jest
       .spyOn(UserModel, 'findByIdAndUpdate')
       .mockReturnValue(makeExecReturning(null) as any)
     let userDoc = {
+      id: 'user-id',
       failedLoginAttempts: 1,
       lastFailedLoginAt: recentAttemptTime,
     } as any
 
     await recordFailedLoginAttempt(
-      'user-id',
+      userDoc,
       MAX_ATTEMPTS,
       LOCKOUT_DURATION,
       ATTEMPT_WINDOW,
-      { userDoc },
     )
 
     expect(findByIdSpy).not.toHaveBeenCalled()

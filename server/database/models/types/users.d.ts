@@ -114,28 +114,12 @@ export type TLoginLockoutInfo = {
 }
 
 /**
- * Shared options for functions that need to fetch a user
- * document.
+ * Options for the {@link TUserStaticMethods.authenticate} static method.
  */
-export type TUserFetchOptimizationOptions = {
+export interface TAuthenticateOptions {
   /**
    * An already-fetched user document to use instead of
    * querying the database.
    */
   userDoc?: TUserDoc
 }
-
-/**
- * Options for the {@link checkLoginLockout} function.
- */
-export interface TCheckLoginLockoutOptions extends TUserFetchOptimizationOptions {}
-
-/**
- * Options for the {@link recordFailedLoginAttempt} function.
- */
-export interface TRecordFailedLoginAttemptOptions extends TUserFetchOptimizationOptions {}
-
-/**
- * Options for the {@link TUserStaticMethods.authenticate} static method.
- */
-export interface TAuthenticateOptions extends TUserFetchOptimizationOptions {}

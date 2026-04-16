@@ -46,7 +46,6 @@ Creates a new mission with specified configuration and resources.
 {
   "name": "New Mission",
   "versionNumber": 1,
-  "seed": "uniqueSeedString",
   "resourceLabel": "Resources",
   "structure": {},
   "forces": [],
@@ -62,7 +61,6 @@ Creates a new mission with specified configuration and resources.
   "_id": "662270879c5ca781c218123c",
   "name": "New Mission",
   "versionNumber": 1,
-  "seed": "uniqueSeedString",
   "resourceLabel": "Resources",
   "structure": {},
   "forces": [],
@@ -100,7 +98,6 @@ Retrieves all missions with basic metadata.
     "_id": "662270879c5ca781c218123c",
     "name": "Mission Name",
     "versionNumber": 1,
-    "seed": "uniqueSeedString",
     "resourceLabel": "Resources",
     "createdAt": "2025-07-15T10:30:00.000Z",
     "updatedAt": "2025-07-15T10:30:00.000Z",
@@ -134,7 +131,6 @@ Retrieves a specific mission by ID with full details.
   "_id": "662270879c5ca781c218123c",
   "name": "Mission Name",
   "versionNumber": 1,
-  "seed": "uniqueSeedString",
   "resourceLabel": "Resources",
   "structure": {},
   "forces": [],
@@ -171,7 +167,6 @@ Updates an existing mission.
   "_id": "662270879c5ca781c218123c",
   "name": "Updated Mission",
   "versionNumber": 2,
-  "seed": "newSeedString",
   "resourceLabel": "Points",
   "structure": {},
   "forces": [],
@@ -292,7 +287,6 @@ Soft deletes a mission (sets deleted flag).
 | `_id`               | `objectId` | Unique identifier     |
 | `name`              | `string`   | Mission name          |
 | `versionNumber`     | `number`   | Version number        |
-| `seed`              | `string`   | Mission seed          |
 | `resourceLabel`     | `string`   | Resource display name |
 | `structure`         | `object`   | Mission structure     |
 | `forces`            | `array`    | Force configurations  |

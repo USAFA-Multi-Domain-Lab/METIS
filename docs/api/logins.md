@@ -46,7 +46,18 @@ Authenticates a user and creates a new login session.
       "firstName": "Student",
       "lastName": "User",
       "needsPasswordReset": false,
-      "accessId": "student"
+      "accessId": "student",
+      "preferences": {
+        "_id": "662270879c5ca781c21812ab",
+        "missionMap": {
+          "_id": "662270879c5ca781c21812ac",
+          "panOnIssueSelection": true
+        }
+      },
+      "createdAt": "2025-07-15T10:30:00.000Z",
+      "updatedAt": "2025-07-15T10:30:00.000Z",
+      "createdBy": "000000000000000000000001",
+      "createdByUsername": "admin"
     },
     "sessionId": null
   }
@@ -83,7 +94,18 @@ Retrieves information about the current login session.
       "firstName": "Student",
       "lastName": "User",
       "needsPasswordReset": false,
-      "accessId": "student"
+      "accessId": "student",
+      "preferences": {
+        "_id": "662270879c5ca781c21812ab",
+        "missionMap": {
+          "_id": "662270879c5ca781c21812ac",
+          "panOnIssueSelection": true
+        }
+      },
+      "createdAt": "2025-07-15T10:30:00.000Z",
+      "updatedAt": "2025-07-15T10:30:00.000Z",
+      "createdBy": "000000000000000000000001",
+      "createdByUsername": "admin"
     },
     "sessionId": null
   }

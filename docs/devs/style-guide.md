@@ -53,7 +53,7 @@ Functions and methods should include an unmarked description at the top describi
  * Generate an action outcome based on the factors passed.
  * @param action The action producing an outcome.
  * @param rng The random number generator used to determine success.
- * @returns The predetermined outcome of the action.
+ * @returns The randomly determined outcome of the action.
  */
 public static generateOutcome(
   action: ServerMissionAction,

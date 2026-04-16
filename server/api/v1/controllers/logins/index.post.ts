@@ -64,7 +64,7 @@ async function confirmUserExists(username: string): Promise<TUserDoc> {
  * @rejects When the user is locked out.
  */
 async function enforceLockoutPolicy(userDoc: TUserDoc) {
-  let { isLocked, unlockTime } = await checkLoginLockout(userDoc._id, { userDoc })
+  let { isLocked, unlockTime } = await checkLoginLockout(userDoc)
 
   if (isLocked) {
     let minutesRemaining = Math.ceil(
@@ -97,16 +97,15 @@ async function authenticate(
     // Authentication failed - record the attempt
     let metis: MetisServer = response.locals.metis
     let updatedUserDoc = await recordFailedLoginAttempt(
-      userDoc._id,
+      userDoc,
       metis.maxLoginAttempts,
       metis.loginLockoutDuration,
       metis.loginAttemptWindow,
-      { userDoc },
     )
 
     // Check if this failure caused a lockout
     let { isLocked: nowLocked, unlockTime: newUnlockTime } =
-      await checkLoginLockout(userDoc._id, { userDoc: updatedUserDoc ?? undefined })
+      await checkLoginLockout(updatedUserDoc ?? userDoc)
 
     if (nowLocked) {
       let minutesRemaining = Math.ceil(

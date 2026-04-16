@@ -20,11 +20,9 @@ import { databaseLogger } from '../../logging'
 import { UserSchema } from './classes'
 import type {
   TAuthenticateOptions,
-  TCheckLoginLockoutOptions,
   TLoginLockoutInfo,
   TPostUserQuery,
   TPreUserQuery,
-  TRecordFailedLoginAttemptOptions,
   TUser,
   TUserDoc,
   TUserModel,
@@ -64,62 +62,71 @@ export const hashPassword = async (password: string): Promise<string> => {
 
 /**
  * Checks if the user account is currently locked due to failed login attempts.
- * @param userId The ID of the user to check.
- * @param options Optional parameters.
+ * @param user The user to check. If this is a string, it will be treated as a
+ * user ID and a database fetch will be made to retrieve the user document.
  * @returns Whether the account is locked and when it will unlock.
  */
 export const checkLoginLockout = async (
-  userId: string,
-  options: TCheckLoginLockoutOptions = {},
+  user: string | TUserDoc,
 ): Promise<TLoginLockoutInfo> => {
-  const { userDoc: providedUserDoc } = options
-  let user = providedUserDoc ?? await UserModel.findById(
-    userId,
-    {},
-    { includeSensitive: true },
-  ).exec()
+  let userId: string
+  let userDoc: TUserDoc | null
+  if (typeof user === 'string') {
+    userId = user
+    userDoc = await UserModel.findById(
+      userId,
+      {},
+      { includeSensitive: true },
+    ).exec()
+  } else {
+    userId = user.id
+    userDoc = user
+  }
 
-  if (!user || !user.loginLockedUntil) {
+  if (!userDoc || !userDoc.loginLockedUntil) {
     return { isLocked: false, unlockTime: null }
   }
 
   let now = new Date()
-  let isLocked = user.loginLockedUntil > now
+  let isLocked = userDoc.loginLockedUntil > now
 
   if (!isLocked) {
     // Lock period expired, reset the lockout
     await resetFailedLoginAttempts(userId)
   }
 
-  return { isLocked, unlockTime: isLocked ? user.loginLockedUntil : null }
+  return { isLocked, unlockTime: isLocked ? userDoc.loginLockedUntil : null }
 }
 
 /**
  * Records a failed login attempt and locks the account if necessary.
- * @param userId The ID of the user.
+ * @param user The user to record the attempt for. If this is a string, it will
+ * be treated as a user ID and a database fetch will be made to retrieve the
+ * user document.
  * @param maxAttempts Maximum allowed attempts before lockout.
  * @param lockoutDuration Duration of lockout in milliseconds.
  * @param attemptWindow Time window in milliseconds to track attempts.
- * @param options Optional parameters.
  */
 export const recordFailedLoginAttempt = async (
-  userId: string,
+  user: string | TUserDoc,
   maxAttempts: number,
   lockoutDuration: number,
   attemptWindow: number,
-  options: TRecordFailedLoginAttemptOptions = {},
 ): Promise<TUserDoc | null> => {
-  const { userDoc: providedUserDoc } = options
-  let user = providedUserDoc ?? await UserModel.findById(
-    userId,
-    {},
-    { includeSensitive: true },
-  ).exec()
-  if (!user) return null
+  let userId: string
+  let userDoc: TUserDoc | null
+  if (typeof user === 'string') {
+    userId = user
+    userDoc = await UserModel.findById(userId, {}, { includeSensitive: true }).exec()
+  } else {
+    userId = user.id
+    userDoc = user
+  }
+  if (!userDoc) return null
 
   let now = new Date()
-  let lastAttemptTime = user.lastFailedLoginAt
-  let currentAttempts = user.failedLoginAttempts || 0
+  let lastAttemptTime = userDoc.lastFailedLoginAt
+  let currentAttempts = userDoc.failedLoginAttempts || 0
 
   // Reset attempt count if outside the tracking window
   if (
@@ -142,7 +149,10 @@ export const recordFailedLoginAttempt = async (
     updateData.failedLoginAttempts = 0 // Reset for next cycle
   }
 
-  return await UserModel.findByIdAndUpdate(userId, updateData, { new: true }).exec()
+  return await UserModel.findByIdAndUpdate(userId, updateData, {
+    new: true,
+    includeSensitive: true,
+  }).exec()
 }
 
 /**
@@ -184,18 +194,23 @@ const toJson = (doc: TUserDoc, ret: TUserJson, options: any): TUserJson => {
  * @resolves With the authenticated user.
  * @rejects When the user could not be authenticated.
  */
-const authenticate = async (request: Request, options: TAuthenticateOptions = {}): Promise<ServerUser> => {
+const authenticate = async (
+  request: Request,
+  options: TAuthenticateOptions = {},
+): Promise<ServerUser> => {
   return new Promise<ServerUser>(async (resolve, reject) => {
     try {
       const { userDoc: providedUserDoc } = options
       // Extract user data from the request.
       let { username, password } = request.body
       // Find the user in the database.
-      let userDoc = providedUserDoc ?? await UserModel.findOne(
-        { username },
-        {},
-        { includeSensitive: true },
-      ).exec()
+      let userDoc =
+        providedUserDoc ??
+        (await UserModel.findOne(
+          { username },
+          {},
+          { includeSensitive: true },
+        ).exec())
       // If the user does not exist, throw an error.
       if (!userDoc) {
         throw new StatusError('Incorrect username or password.', 401)

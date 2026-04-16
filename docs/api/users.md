@@ -11,6 +11,7 @@ METIS provides API endpoints for managing user accounts. The API supports role-b
   - [Get All Users](#get-all-users)
   - [Get User](#get-user)
   - [Update User](#update-user)
+  - [Update User Preferences](#update-user-preferences)
   - [Reset Password](#reset-password)
   - [Delete User](#delete-user)
 - [Data Types](#data-types)
@@ -57,6 +58,13 @@ Creates a new user account in the system.
   "lastName": "User",
   "needsPasswordReset": false,
   "accessId": "student",
+  "preferences": {
+    "_id": "662270879c5ca781c21812ab",
+    "missionMap": {
+      "_id": "662270879c5ca781c21812ac",
+      "panOnIssueSelection": true
+    }
+  },
   "createdAt": "2025-07-15T10:30:00.000Z",
   "updatedAt": "2025-07-15T10:30:00.000Z",
   "createdBy": "000000000000000000000001",
@@ -99,6 +107,13 @@ Retrieves all users based on the requesting user's permissions.
     "lastName": "User",
     "needsPasswordReset": false,
     "accessId": "student",
+    "preferences": {
+      "_id": "662270879c5ca781c21812ab",
+      "missionMap": {
+        "_id": "662270879c5ca781c21812ac",
+        "panOnIssueSelection": true
+      }
+    },
     "createdAt": "2025-07-15T10:30:00.000Z",
     "updatedAt": "2025-07-15T10:30:00.000Z",
     "createdBy": "000000000000000000000001",
@@ -135,6 +150,13 @@ Retrieves a specific user by ID.
   "lastName": "User",
   "needsPasswordReset": false,
   "accessId": "student",
+  "preferences": {
+    "_id": "662270879c5ca781c21812ab",
+    "missionMap": {
+      "_id": "662270879c5ca781c21812ac",
+      "panOnIssueSelection": true
+    }
+  },
   "createdAt": "2025-07-15T10:30:00.000Z",
   "updatedAt": "2025-07-15T10:30:00.000Z",
   "createdBy": "000000000000000000000001",
@@ -155,7 +177,7 @@ Retrieves a specific user by ID.
 Updates an existing user's information.
 
 **HTTP Method:** `PUT`  
-**Path:** `/api/v1/users/`
+**Path:** `/api/v1/users/:_id`
 
 **Required Permission(s)**: `users_write_students`
 
@@ -163,7 +185,6 @@ Updates an existing user's information.
 
 ```json
 {
-  "_id": "662270879c5ca781c218123c",
   "username": "student1",
   "accessId": "student",
   "expressPermissionIds": [],
@@ -180,6 +201,49 @@ Updates an existing user's information.
 - 400 Bad Request – Invalid request body/validation failed
 - 401 Unauthorized – Missing authentication
 - 403 Forbidden – Insufficient permissions
+- 404 Not Found – User not found
+- 500 Internal Server Error – Server error during update
+
+### Update User Preferences
+
+Updates the preferences of the currently logged-in user.
+
+**HTTP Method:** `PUT`  
+**Path:** `/api/v1/users/preferences/`
+
+**Authentication**: Required (no specific permissions)
+
+#### Request Body
+
+```json
+{
+  "preferences": {
+    "_id": "662270879c5ca781c21812ab",
+    "missionMap": {
+      "_id": "662270879c5ca781c21812ac",
+      "panOnIssueSelection": true
+    }
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "_id": "662270879c5ca781c21812ab",
+  "missionMap": {
+    "_id": "662270879c5ca781c21812ac",
+    "panOnIssueSelection": true
+  }
+}
+```
+
+**Status Codes**:
+
+- 200 OK – Preferences updated successfully
+- 400 Bad Request – Invalid preferences format
+- 401 Unauthorized – Missing authentication
 - 404 Not Found – User not found
 - 500 Internal Server Error – Server error during update
 
@@ -233,20 +297,21 @@ Soft deletes a user account (sets deleted flag).
 
 ### User Object
 
-| Field                  | Type       | Description            |
-| ---------------------- | ---------- | ---------------------- |
-| `_id`                  | `objectId` | Unique identifier      |
-| `username`             | `string`   | User's login name      |
-| `accessId`             | `string`   | Access level           |
-| `expressPermissionIds` | `array`    | Additional permissions |
-| `firstName`            | `string`   | First name             |
-| `lastName`             | `string`   | Last name              |
-| `needsPasswordReset`   | `boolean`  | Password reset flag    |
-| `password`             | `string`   | Password (hashed)      |
-| `createdAt`            | `string`   | Creation timestamp     |
-| `updatedAt`            | `string`   | Last update timestamp  |
-| `createdBy`            | `objectId` | Creator's ID           |
-| `createdByUsername`    | `string`   | Creator's username     |
+| Field                  | Type       | Description              |
+| ---------------------- | ---------- | ------------------------ |
+| `_id`                  | `objectId` | Unique identifier        |
+| `username`             | `string`   | User's login name        |
+| `accessId`             | `string`   | Access level             |
+| `expressPermissionIds` | `array`    | Additional permissions   |
+| `firstName`            | `string`   | First name               |
+| `lastName`             | `string`   | Last name                |
+| `needsPasswordReset`   | `boolean`  | Password reset flag      |
+| `preferences`          | `object`   | User display preferences |
+| `password`             | `string`   | Password (hashed)        |
+| `createdAt`            | `string`   | Creation timestamp       |
+| `updatedAt`            | `string`   | Last update timestamp    |
+| `createdBy`            | `objectId` | Creator's ID             |
+| `createdByUsername`    | `string`   | Creator's username       |
 
 ---
 
@@ -257,7 +322,6 @@ Soft deletes a user account (sets deleted flag).
 The METIS user authentication system uses Express sessions:
 
 - **Session Management**
-
   - Express sessions with secure HTTP-only cookies
   - MongoDB-backed session store
   - Single active session per user enforced
@@ -275,7 +339,6 @@ The METIS user authentication system uses Express sessions:
 METIS implements a robust role-based access control system:
 
 - **Role Hierarchy**
-
   - Administrator: Full system access
   - Instructor: Student management only
   - Student: Limited self-management capabilities
