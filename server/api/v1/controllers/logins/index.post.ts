@@ -19,8 +19,7 @@ import { StatusError } from '../../library/StatusError'
  * Username and password are evaluated for authentication.
  * Max password attempts are enforced with lockout.
  * @resolves With the login information in JSON format.
- * @rejects Due to any authentication, lockout, timeout,
- * conflicting-client, or server errors.
+ * @rejects Due to any authentication, lockout, conflicting-client, or server errors.
  */
 export const login: TExpressHandler = asyncHandler(
   async (request, response) => {
@@ -129,7 +128,7 @@ async function authenticate(
  * @param request The express request.
  * @param user The authenticated user.
  * @resolves With the realized login.
- * @rejects Due to login timeouts.
+ * @rejects If the account is already logged in on another device.
  */
 async function realizeLogin(
   request: TExpressRequest,
@@ -142,13 +141,6 @@ async function realizeLogin(
     throw new StatusError(
       'Account is already logged in on another device or browser.',
       409,
-    )
-  }
-
-  if (login.inTimeout) {
-    throw new StatusError(
-      `The account has timed out likely due to too many requests being made. Account timed out for ${login.timeoutMinutesRemaining} minute(s).`,
-      403,
     )
   }
 

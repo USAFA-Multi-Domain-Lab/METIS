@@ -27,6 +27,7 @@ services:
     ports:
       - '0.0.0.0:${PORT:-8083}:${PORT:-8083}' # The container port and the default host port should match the one defined in docker.defaults.env.
     volumes:
+      - ./integration/target-env:/opt/metis/integration/target-env
       - metis_data:/opt/metis/files/store
       - metis_backups:/opt/metis/database/backups
     depends_on:

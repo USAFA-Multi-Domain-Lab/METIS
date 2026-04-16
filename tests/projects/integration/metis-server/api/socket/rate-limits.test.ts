@@ -9,10 +9,10 @@ import {
 import type { MetisServer } from '@server/MetisServer'
 import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
 import type { Socket } from 'socket.io-client'
-import { TestSocketClient } from 'tests/middleware/TestSocketClient'
-import { TestSuiteSetup } from 'tests/middleware/TestSuiteSetup'
-import { TestSuiteTeardown } from 'tests/middleware/TestSuiteTeardown'
-import { TestToolbox } from 'tests/toolbox/TestToolbox'
+import { TestToolbox } from 'tests/helpers/TestToolbox'
+import { TestSocketClient } from 'tests/helpers/TestSocketClient'
+import { TestSuiteSetup } from 'tests/helpers/TestSuiteSetup'
+import { TestSuiteTeardown } from 'tests/helpers/TestSuiteTeardown'
 
 describe('Rate limiting', () => {
   const USERNAME_PREFIX = 'test_socket_rate_limit'

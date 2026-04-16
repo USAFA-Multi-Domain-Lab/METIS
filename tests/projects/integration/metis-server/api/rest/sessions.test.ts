@@ -10,11 +10,11 @@ import { ServerMissionFile } from '@server/missions/files/ServerMissionFile'
 import { SessionServer } from '@server/sessions/SessionServer'
 import type { TMissionFileJson } from '@shared/missions/files/MissionFile'
 import { Types } from 'mongoose'
-import type { TestHttpClient } from 'tests/middleware/TestHttpClient'
-import { TestSocketClient } from 'tests/middleware/TestSocketClient'
-import { TestSuiteSetup } from 'tests/middleware/TestSuiteSetup'
-import { TestSuiteTeardown } from 'tests/middleware/TestSuiteTeardown'
-import { TestToolbox } from 'tests/toolbox/TestToolbox'
+import type { TestHttpClient } from 'tests/helpers/TestHttpClient'
+import { TestToolbox } from 'tests/helpers/TestToolbox'
+import { TestSocketClient } from 'tests/helpers/TestSocketClient'
+import { TestSuiteSetup } from 'tests/helpers/TestSuiteSetup'
+import { TestSuiteTeardown } from 'tests/helpers/TestSuiteTeardown'
 
 describe('/api/v1/sessions', () => {
   // Extract commonly used utilities.

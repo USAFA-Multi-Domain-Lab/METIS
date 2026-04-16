@@ -3,10 +3,10 @@ import FormData from 'form-data'
 import fs from 'fs'
 import { Types } from 'mongoose'
 import path from 'path'
-import type { TestHttpClient } from 'tests/middleware/TestHttpClient'
-import { TestSuiteSetup } from 'tests/middleware/TestSuiteSetup'
-import { TestSuiteTeardown } from 'tests/middleware/TestSuiteTeardown'
-import { TestToolbox } from 'tests/toolbox/TestToolbox'
+import type { TestHttpClient } from 'tests/helpers/TestHttpClient'
+import { TestToolbox } from 'tests/helpers/TestToolbox'
+import { TestSuiteSetup } from 'tests/helpers/TestSuiteSetup'
+import { TestSuiteTeardown } from 'tests/helpers/TestSuiteTeardown'
 
 describe('/api/v1/files', () => {
   // Extract commonly used utilities.

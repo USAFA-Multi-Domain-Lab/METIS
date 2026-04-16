@@ -8,9 +8,9 @@ import {
   test,
 } from '@jest/globals'
 import { UserModel } from '@metis/server/database/models/users'
-import { TestSuiteSetup } from 'tests/middleware/TestSuiteSetup'
-import { TestSuiteTeardown } from 'tests/middleware/TestSuiteTeardown'
-import { TestToolbox } from 'tests/toolbox/TestToolbox'
+import { TestToolbox } from 'tests/helpers/TestToolbox'
+import { TestSuiteSetup } from 'tests/helpers/TestSuiteSetup'
+import { TestSuiteTeardown } from 'tests/helpers/TestSuiteTeardown'
 
 /**
  * Integration tests for /api/v1/logins/ covering login, status, and logout flows.

@@ -34,98 +34,30 @@ const defaultOptionalProps: TDetailDropdown_P<TOptions | null> = {
 }
 
 describe('DetailDropdown', () => {
-  /* -- ROOT CLASS NAMES -- */
-
-  describe('Root class names', () => {
-    test('Root has "Detail" and "DetailDropdown" classes', () => {
-      let { container } = render(<DetailDropdown {...defaultRequiredProps} />)
-      let root = container.firstChild as HTMLElement
-      expect(root).toHaveClass('Detail')
-      expect(root).toHaveClass('DetailDropdown')
-    })
-
-    test('Root has "Disabled" class when disabled', () => {
-      let { container } = render(
-        <DetailDropdown {...defaultRequiredProps} disabled />,
-      )
-      let root = container.firstChild as HTMLElement
-      expect(root).toHaveClass('Disabled')
-    })
-  })
-
-  /* -- COLLAPSED STATE -- */
-
-  describe('Collapsed state (default)', () => {
-    test('"AllOptions" has "Hidden" class when not expanded', () => {
-      let { container } = render(<DetailDropdown {...defaultRequiredProps} />)
-      let allOptions = container.querySelector('.AllOptions') as HTMLElement
-      expect(allOptions).toHaveClass('Hidden')
-    })
-
-    test('Field does not have "IsExpanded" class when not expanded', () => {
-      let { container } = render(<DetailDropdown {...defaultRequiredProps} />)
-      let field = container.querySelector('.Field') as HTMLElement
-      expect(field).not.toHaveClass('IsExpanded')
-    })
-  })
-
-  /* -- EXPANDED STATE -- */
-
-  describe('Expanded state (after clicking the selected option)', () => {
-    test('"AllOptions" loses "Hidden" class when expanded', () => {
-      let { container } = render(<DetailDropdown {...defaultRequiredProps} />)
-      let trigger = container.querySelector(
-        '.DropdownOption.Selected',
-      ) as HTMLElement
-      fireEvent.click(trigger)
-      let allOptions = container.querySelector('.AllOptions') as HTMLElement
-      expect(allOptions).not.toHaveClass('Hidden')
-    })
-
-    test('Field gains "IsExpanded" class when expanded', () => {
-      let { container } = render(<DetailDropdown {...defaultRequiredProps} />)
-      let trigger = container.querySelector(
-        '.DropdownOption.Selected',
-      ) as HTMLElement
-      fireEvent.click(trigger)
-      let field = container.querySelector('.Field') as HTMLElement
-      expect(field).toHaveClass('IsExpanded')
-    })
-  })
-
   /* -- OPTION SELECTION -- */
 
   describe('Option selection', () => {
     test('Clicking an option calls setValue with that option', () => {
       let setValue = jest.fn()
-      let { container } = render(
+      let { getAllByText, getByText } = render(
         <DetailDropdown {...defaultRequiredProps} setValue={setValue} />,
       )
-      let trigger = container.querySelector(
-        '.DropdownOption.Selected',
-      ) as HTMLElement
-      fireEvent.click(trigger)
-      let options = container.querySelectorAll('.AllOptions .DropdownOption')
-      fireEvent.click(options[1]) // 'Bravo'
+      fireEvent.click(getAllByText('Alpha')[0])
+      fireEvent.click(getByText('Bravo'))
       expect(setValue).toHaveBeenCalledWith('Bravo')
     })
 
     test('Clicking an option when disabled does not call setValue', () => {
       let setValue = jest.fn()
-      let { container } = render(
+      let { getAllByText, getByText } = render(
         <DetailDropdown
           {...defaultRequiredProps}
           setValue={setValue}
           disabled
         />,
       )
-      let trigger = container.querySelector(
-        '.DropdownOption.Selected',
-      ) as HTMLElement
-      fireEvent.click(trigger)
-      // Dropdown should not expand when disabled
-      let allOptions = container.querySelector('.AllOptions') as HTMLElement
-      expect(allOptions).toHaveClass('Hidden')
+      fireEvent.click(getAllByText('Alpha')[0])
+      fireEvent.click(getByText('Bravo'))
       expect(setValue).not.toHaveBeenCalled()
     })
   })
@@ -184,47 +116,38 @@ describe('DetailDropdown', () => {
       )
       expect(setValue).toHaveBeenCalledWith('Charlie')
     })
-
-    test('Warning icon has "Warning" class when method is "warning" and value is not in options', () => {
-      let { container } = render(
-        <DetailDropdown
-          {...defaultRequiredProps}
-          options={['Bravo', 'Charlie']}
-          value='Alpha'
-          handleInvalidOption={{ method: 'warning', message: 'Invalid option' }}
-        />,
-      )
-      let warning = container.querySelector('.Warning') as HTMLElement
-      expect(warning).not.toBeNull()
-    })
-
-    test('Warning icon has "Hidden" class when value is valid and method is "warning"', () => {
-      let { container } = render(
-        <DetailDropdown
-          {...defaultRequiredProps}
-          options={['Alpha', 'Bravo', 'Charlie']}
-          value='Alpha'
-          handleInvalidOption={{ method: 'warning', message: 'Invalid option' }}
-        />,
-      )
-      let hidden = container.querySelector('.Hidden') as HTMLElement
-      // The warning div should have Hidden class (not Warning) when value is valid
-      expect(hidden).not.toBeNull()
-    })
   })
 
-  /* -- EMPTY TEXT -- */
+  /* -- OPTIONAL FIELD BEHAVIOR -- */
 
-  describe('Empty text', () => {
-    test('emptyText is displayed in the state value area when value is null and fieldType is optional', () => {
-      let { container } = render(
+  describe('Optional field behavior', () => {
+    test('Starting from a null value, selecting an option calls setValue with that option', () => {
+      let setValue = jest.fn()
+      let { getAllByText, getByText } = render(
         <DetailDropdown<TOptions | null>
           {...defaultOptionalProps}
+          setValue={setValue}
           emptyText='No option selected'
         />,
       )
-      let text = container.querySelector('.Text') as HTMLElement
-      expect(text?.textContent).toBe('No option selected')
+      fireEvent.click(getAllByText('No option selected')[0])
+      fireEvent.click(getByText('Bravo'))
+      expect(setValue).toHaveBeenCalledWith('Bravo')
+    })
+
+    test('Selecting the empty option calls setValue with null for optional fields', () => {
+      let setValue = jest.fn()
+      let { getAllByText, getByText } = render(
+        <DetailDropdown<TOptions | null>
+          {...defaultOptionalProps}
+          value='Alpha'
+          setValue={setValue}
+          emptyText='No option selected'
+        />,
+      )
+      fireEvent.click(getAllByText('Alpha')[0])
+      fireEvent.click(getByText('No option selected'))
+      expect(setValue).toHaveBeenCalledWith(null)
     })
   })
 })

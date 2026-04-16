@@ -16,5 +16,10 @@
   "editor.formatOnSave": true,
   "typescript.preferences.preferTypeOnlyAutoImports": false,
   "typescript.tsdk": "node_modules/typescript/lib",
-  "eslint.workingDirectories": [{ "mode": "auto" }]
+  "eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
+  ],
+  "testing.automaticallyOpenTestResults": "neverOpen"
 }

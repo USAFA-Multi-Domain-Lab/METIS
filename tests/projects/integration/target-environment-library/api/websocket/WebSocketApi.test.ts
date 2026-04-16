@@ -212,11 +212,6 @@ describe('WebSocketApi', () => {
     ])
   })
 
-  // ! This test currently FAILS and exposes a known bug. !
-  // When connect() is called a second time while the first is still in
-  // CONNECTING state, the second call closes the first socket via the identity
-  // guard. The first promise's reject() is never invoked, leaving it pending
-  // indefinitely. See report findings for details.
   test('A second connect() call while the first is pending does not leave the first promise unresolved indefinitely', async () => {
     let { port } = await startHangingServer()
     // autoReconnect disabled to prevent background retries from muddying the result.

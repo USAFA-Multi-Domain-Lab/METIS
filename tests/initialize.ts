@@ -1,7 +1,9 @@
 import { afterAll, beforeAll, expect } from '@jest/globals'
+import { InfoModel } from '@server/database/models/info'
+import { MetisServer } from '@server/MetisServer'
 import fs from 'fs'
 import path from 'path'
-import { TestMetisServer } from './middleware/TestMetisServer'
+import { TestMetisServer } from './helpers/TestMetisServer'
 
 // Set test environment variable.
 const envType = 'test'
@@ -47,6 +49,9 @@ beforeAll(async () => {
     expectedMongoDbValues.push(envMongoDb)
   }
   expect(expectedMongoDbValues).toContain(server.mongoDB)
+
+  let info = await InfoModel.findOne().lean().exec()
+  expect(info?.schemaBuildNumber).toBe(MetisServer.SCHEMA_BUILD_NUMBER)
 })
 
 afterAll(async () => {

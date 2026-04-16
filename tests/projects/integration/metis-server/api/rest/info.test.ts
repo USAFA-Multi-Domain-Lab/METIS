@@ -1,7 +1,7 @@
 import { afterAll, describe, expect, test } from '@jest/globals'
-import { TestSuiteSetup } from 'tests/middleware/TestSuiteSetup'
-import { TestSuiteTeardown } from 'tests/middleware/TestSuiteTeardown'
-import { TestToolbox } from 'tests/toolbox/TestToolbox'
+import { TestToolbox } from 'tests/helpers/TestToolbox'
+import { TestSuiteSetup } from 'tests/helpers/TestSuiteSetup'
+import { TestSuiteTeardown } from 'tests/helpers/TestSuiteTeardown'
 import packageJson from '../../../../../../package.json'
 
 describe('/api/v1/info', () => {

@@ -99,7 +99,7 @@ describe('NodeAlert', () => {
       }),
     )
 
-    expect(alert.toJson()).toEqual({
+    expect(alert.json).toEqual({
       _id: 'alert-json',
       nodeId: 'node-json',
       message: 'Serialized message',
