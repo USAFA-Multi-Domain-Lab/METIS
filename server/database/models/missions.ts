@@ -104,8 +104,16 @@ const findByIdAndModify = (
       let { _id: missionId, ...rest } = updates ?? {}
       // Update every property besides the _id.
       Object.assign(missionDoc, { ...rest })
-      // Save the changes.
-      missionDoc = await missionDoc.save()
+      // Validate synchronously before calling save(). If Object.assign triggered
+      // any StrictModeErrors (e.g., session-only fields like `modifiers` reaching
+      // the DB layer), Mongoose will have silently dropped those sub-documents from
+      // their arrays rather than throwing. Calling validateSync() here surfaces those
+      // cast errors immediately, so save() is never called with corrupted data.
+      let syncError = missionDoc.validateSync()
+      if (syncError) throw syncError
+      // Save the changes. validateBeforeSave is disabled because validateSync()
+      // above already handles this — preventing validation from running twice.
+      missionDoc = await missionDoc.save({ validateBeforeSave: false })
 
       // Otherwise, resolve with the mission document.
       return resolve(missionDoc)

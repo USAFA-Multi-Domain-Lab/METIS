@@ -255,6 +255,89 @@ describe('/api/v1/missions', () => {
     expect(missing.status).toBe(404)
   })
 
+  test('PUT /api/v1/missions/ rejects session-only properties on action sub-documents and does not save', async () => {
+    let { client } = await createTestContext()
+    await loginWithAccess(client, 'admin')
+
+    let baseMission = await fetchMissionDetail(client, defaultMissionId)
+    let created = await createMissionViaApi(client, { ...baseMission, files: [] })
+    let mission = await fetchMissionDetail(client, created._id)
+
+    // Record the original action counts so we can assert nothing was corrupted.
+    let originalActionCounts: number[] = mission.forces.flatMap(
+      (force: any) => force.nodes.map((node: any) => node.actions.length),
+    )
+
+    // Inject `modifiers`, a session-only property, into the first action of the
+    // first node of the first force. This simulates the real-world bug where
+    // ClientMission.toJson() was called with session data exposed, causing
+    // Mongoose to drop the action sub-document on cast and then report a
+    // misleading "must have at least 1 action" validation error instead.
+    let taintedMission = JSON.parse(JSON.stringify(mission))
+    taintedMission.forces[0].nodes[0].actions[0].modifiers = []
+
+    let updateResponse = await client.put('/api/v1/missions/', taintedMission)
+    expect(updateResponse.status).toBe(400)
+
+    // Re-fetch and confirm the document was not modified — no data loss.
+    let refetched = await fetchMissionDetail(client, created._id)
+    let refetchedActionCounts: number[] = refetched.forces.flatMap(
+      (force: any) => force.nodes.map((node: any) => node.actions.length),
+    )
+    expect(refetchedActionCounts).toEqual(originalActionCounts)
+  })
+
+  test('PUT /api/v1/missions/ rejects arbitrary unknown properties on force sub-documents and does not save', async () => {
+    let { client } = await createTestContext()
+    await loginWithAccess(client, 'admin')
+
+    let baseMission = await fetchMissionDetail(client, defaultMissionId)
+    let created = await createMissionViaApi(client, { ...baseMission, files: [] })
+    let mission = await fetchMissionDetail(client, created._id)
+
+    let originalForceName: string = mission.forces[0].name
+
+    // Inject an arbitrary unknown property onto a force sub-document.
+    let taintedMission = JSON.parse(JSON.stringify(mission))
+    taintedMission.forces[0].bogusField = 'should not be accepted'
+
+    let updateResponse = await client.put('/api/v1/missions/', taintedMission)
+    expect(updateResponse.status).toBe(400)
+
+    // Re-fetch and confirm the document was not modified.
+    let refetched = await fetchMissionDetail(client, created._id)
+    expect(refetched.forces[0].name).toBe(originalForceName)
+    expect(refetched.forces[0].bogusField).toBeUndefined()
+  })
+
+  test('PUT /api/v1/missions/ succeeds and preserves all actions when update contains no session-only fields', async () => {
+    let { client } = await createTestContext()
+    await loginWithAccess(client, 'admin')
+
+    let baseMission = await fetchMissionDetail(client, defaultMissionId)
+    let created = await createMissionViaApi(client, { ...baseMission, files: [] })
+    let mission = await fetchMissionDetail(client, created._id)
+
+    let originalActionCounts: number[] = mission.forces.flatMap(
+      (force: any) => force.nodes.map((node: any) => node.actions.length),
+    )
+
+    // Update only the name — a clean, valid change with no session-only fields.
+    let updatedName = `${created.name}_clean_update`
+    let updateResponse = await client.put('/api/v1/missions/', {
+      ...mission,
+      name: updatedName,
+    })
+    expect(updateResponse.status).toBe(200)
+    expect(updateResponse.data.name).toBe(updatedName)
+
+    // Confirm all actions are intact — no sub-documents were dropped.
+    let updatedActionCounts: number[] = updateResponse.data.forces.flatMap(
+      (force: any) => force.nodes.map((node: any) => node.actions.length),
+    )
+    expect(updatedActionCounts).toEqual(originalActionCounts)
+  })
+
   afterAll(async () => {
     await cleanupTestMissions(namePrefix)
     await cleanupTestUsers(namePrefix)

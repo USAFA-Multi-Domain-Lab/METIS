@@ -74,6 +74,7 @@
 
     .ButtonSvgPanel {
       grid-row: span 1;
+      flex-wrap: nowrap;
     }
 
     .DetailIconSelector {
