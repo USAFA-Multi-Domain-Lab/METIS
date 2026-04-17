@@ -1,5 +1,5 @@
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
-import type { TMissionImportBuild } from '../MissionImport'
+import type { TMissionImportBuild } from '../ImportMigrationBuilder'
 
 // -- BUILD 49 --
 // This migration script is responsible for moving

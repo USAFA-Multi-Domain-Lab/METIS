@@ -1284,7 +1284,7 @@ export interface TMissionExistingJson extends TMissionJson {
  */
 export type TMissionShallowExistingJson = Omit<
   TMissionExistingJson,
-  'forces' | 'prototypes' | 'files' | 'structure'
+  'resources' | 'forces' | 'prototypes' | 'files' | 'structure'
 >
 
 /**

@@ -43,7 +43,7 @@ export const routerMap: TMetisRouterMap = async (
     '/import/',
     auth({ permissions: ['missions_write'] }),
     uploads.array('files', 12),
-    (request, response) => importMission(request, response, server.fileStore),
+    (request, response) => importMission(request, response, server),
   )
 
   /* -- READ -- */

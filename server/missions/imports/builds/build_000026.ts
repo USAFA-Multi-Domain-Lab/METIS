@@ -1,6 +1,6 @@
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import mongoose from 'mongoose'
-import type { TMissionImportBuild } from '../MissionImport'
+import type { TMissionImportBuild } from '../ImportMigrationBuilder'
 
 // -- BUILD 26 --
 // This migration script is responsible

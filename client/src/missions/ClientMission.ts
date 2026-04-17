@@ -1412,6 +1412,7 @@ export class ClientMission
   ): ClientMission {
     let existingJson: TMissionExistingJson = {
       ...json,
+      resources: [],
       forces: [],
       files: [],
       prototypes: [],

@@ -1,4 +1,4 @@
-import type { TMissionImportBuild } from '../MissionImport'
+import type { TMissionImportBuild } from '../ImportMigrationBuilder'
 
 // -- BUILD 57 --
 // Renames processTime → baseProcessTime and successChance → baseSuccessChance

@@ -1,4 +1,4 @@
-import type { TMissionImportBuild } from '../MissionImport'
+import type { TMissionImportBuild } from '../ImportMigrationBuilder'
 
 // -- BUILD 53 --
 // This migration script performs two updates:

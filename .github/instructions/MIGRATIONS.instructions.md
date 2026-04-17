@@ -132,7 +132,7 @@ Import builds share the same numbering sequence as database builds. A given numb
 ### Writing an Import Build
 
 ```typescript
-import type { TMissionImportBuild } from '../MissionImport'
+import type { TMissionImportBuild } from '../ImportMigrationBuilder'
 
 // -- BUILD NNNNNN --
 // Brief description of what this build transforms.

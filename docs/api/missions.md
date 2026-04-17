@@ -1,5 +1,3 @@
-todo: Add details concerning length requirements for array fields.
-
 # Missions API
 
 **Base URL:** `/api/v1/missions/`
@@ -19,6 +17,7 @@ METIS provides API endpoints for managing missions. All operations require appro
   - [Delete Mission](#delete-mission)
 - [Data Types](#data-types)
   - [Mission Object](#mission-object)
+  - [Mission Structure Requirements](#mission-structure-requirements)
 - [Notes](#notes)
 
 ## Endpoints
@@ -159,6 +158,8 @@ Creates a new mission with specified configuration and resources.
 
 Retrieves all missions with basic metadata.
 
+> For full mission details, get an individual mission by ID via the [get-mission endpoint](#get-mission). Forces, resources, prototypes, files, and the structure are intentionally omitted from this endpoint for performance reasons.
+
 **HTTP Method:** `GET`  
 **Path:** `/api/v1/missions/`
 
@@ -172,15 +173,6 @@ Retrieves all missions with basic metadata.
     "_id": "662270879c5ca781c218123c",
     "name": "Mission Name",
     "versionNumber": 1,
-    // todo: Are resources included in list view? Should they be?
-    "resources": [
-      {
-        "_id": "662270879c5ca781c218abc1",
-        "name": "Resources",
-        "icon": "resources/coins",
-        "order": 1
-      }
-    ],
     "createdAt": "2025-07-15T10:30:00.000Z",
     "updatedAt": "2025-07-15T10:30:00.000Z",
     "createdBy": "000000000000000000000001",
@@ -446,22 +438,32 @@ Soft deletes a mission (sets deleted flag).
 
 ### Mission Object
 
-| Field               | Type       | Description           |
-| ------------------- | ---------- | --------------------- |
-| `_id`               | `objectId` | Unique identifier     |
-| `name`              | `string`   | Mission name          |
-| `versionNumber`     | `number`   | Version number        |
-| `resources`         | `array`    | Resource definitions  |
-| `structure`         | `object`   | Mission structure     |
-| `forces`            | `array`    | Force configurations  |
-| `prototypes`        | `array`    | Prototype objects     |
-| `files`             | `array`    | Associated files      |
-| `createdAt`         | `string`   | Creation timestamp    |
-| `updatedAt`         | `string`   | Last update timestamp |
-| `createdBy`         | `objectId` | Creator's ID          |
-| `createdByUsername` | `string`   | Creator's username    |
+| Field               | Type       | List view | Description           |
+| ------------------- | ---------- | --------- | --------------------- |
+| `_id`               | `objectId` | ✓         | Unique identifier     |
+| `name`              | `string`   | ✓         | Mission name          |
+| `versionNumber`     | `number`   | ✓         | Version number        |
+| `resources`         | `array`    | —         | Resource definitions  |
+| `structure`         | `object`   | —         | Mission structure     |
+| `forces`            | `array`    | —         | Force configurations  |
+| `prototypes`        | `array`    | —         | Prototype objects     |
+| `files`             | `array`    | —         | Associated files      |
+| `createdAt`         | `string`   | ✓         | Creation timestamp    |
+| `updatedAt`         | `string`   | ✓         | Last update timestamp |
+| `createdBy`         | `objectId` | ✓         | Creator's ID          |
+| `createdByUsername` | `string`   | ✓         | Creator's username    |
+
+> **Note:** The **List view** column indicates fields returned by `GET /api/v1/missions/`. Fields marked — are omitted from the list response for performance and are only present in the full mission response (`GET /api/v1/missions/:_id`).
 
 ---
+
+### Mission Structure Requirements
+
+The `structure` field defines the hierarchical organization of the prototypes. Each prototype has
+a unique `structureKey` that corresponds to a key in the `structure` object. Every force must have
+a corresponding prototype defined in the `prototypes` array, and each prototype must have a `structureKey`
+that matches one key (no more, no less) in the `structure object. The mission also requires at least one
+force and at least one resource definition, minimum.
 
 ## Notes
 

@@ -22,6 +22,7 @@ import { MetisWsServer } from './connect/MetisWsServer'
 import { MetisDatabase } from './database/MetisDatabase'
 import { MetisFileStore } from './files/MetisFileStore'
 import { expressLogger, initializeLoggers } from './logging'
+import { ImportMigrationBuilder } from './missions/imports/ImportMigrationBuilder'
 import { ServerTarget } from './target-environments/ServerTarget'
 import { ServerTargetEnvironment } from './target-environments/ServerTargetEnvironment'
 import { TargetEnvSandboxing } from './target-environments/TargetEnvSandboxing'
@@ -76,13 +77,13 @@ export class MetisServer {
   /**
    * The file store instance.
    */
-  private _fileStore: MetisFileStore
+  public readonly fileStore: MetisFileStore
+
   /**
-   * The file store instance.
+   * Helps perform migrations for imported missions with
+   * outdated data.
    */
-  public get fileStore(): MetisFileStore {
-    return this._fileStore
-  }
+  public readonly importMigrationBuilder: ImportMigrationBuilder
 
   /**
    * The environment type in which METIS is running.
@@ -353,9 +354,10 @@ export class MetisServer {
     }
     this._wsServer = new MetisWsServer(this)
 
-    // Create database and file store objects.
+    // Create specialized helpers.
     this._database = new MetisDatabase(this)
-    this._fileStore = new MetisFileStore(this, { directory: this.fileStoreDir })
+    this.fileStore = new MetisFileStore(this, { directory: this.fileStoreDir })
+    this.importMigrationBuilder = new ImportMigrationBuilder()
 
     // Temporary session middleware until configured
     // with the database connection.
@@ -459,6 +461,9 @@ export class MetisServer {
           touchAfter: 24 * 3600, // lazy update after 24 hours
         }),
       )
+
+      // Initialize import migrations.
+      this.importMigrationBuilder.initialize()
 
       // Configure sessions.
       this._sessionMiddleware = session({

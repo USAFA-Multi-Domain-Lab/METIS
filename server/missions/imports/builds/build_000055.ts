@@ -1,5 +1,5 @@
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
-import type { TMissionImportBuild } from '../MissionImport'
+import type { TMissionImportBuild } from '../ImportMigrationBuilder'
 
 // -- BUILD 55 --
 // Replaces single-resource scalar fields with multi-pool arrays.
