@@ -59,11 +59,12 @@
   .Icon {
     mask-size: contain;
     mask-repeat: no-repeat;
-    mask-position: center;
+    mask-position: center 0.1em;
   }
 
   &.SeverityLevel_info {
     .Icon {
+      mask-position: center;
       mask-image: url('../../assets/images/icons/info.svg');
       background-color: $color-accent;
     }
