@@ -55,9 +55,7 @@ describe('MetisDatabase.ensureDefaultMissionsExists', () => {
         }) as any,
     )
 
-    let metisDatabase = new MetisDatabase({
-      fileStore: {},
-    } as any)
+    let metisDatabase = new MetisDatabase({} as any)
 
     await expect(
       (metisDatabase as any).ensureDefaultMissionsExists(),

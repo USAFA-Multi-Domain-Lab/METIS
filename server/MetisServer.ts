@@ -443,6 +443,11 @@ export class MetisServer {
         ServerTargetEnvironment.METIS_TARGET_ENV_ID,
       )
 
+      // Initialize import migrations before connecting to the database,
+      // since the connection triggers ensureDefaultMissionsExists which
+      // uses the migration builder immediately.
+      this.importMigrationBuilder.initialize()
+
       // Database setup.
       await database.connect()
 
@@ -461,9 +466,6 @@ export class MetisServer {
           touchAfter: 24 * 3600, // lazy update after 24 hours
         }),
       )
-
-      // Initialize import migrations.
-      this.importMigrationBuilder.initialize()
 
       // Configure sessions.
       this._sessionMiddleware = session({
