@@ -150,17 +150,12 @@ export default function UserResetPage(): TReactElement | null {
 
   // Add an event listener to listen for cmd+s/ctrl+s
   // key presses to save the changes.
-  useEventListener(
-    document,
-    'keydown',
-    (event: KeyboardEvent) => {
-      if (event.key === 's' && (event.ctrlKey || event.metaKey)) {
-        event.preventDefault()
-        save()
-      }
-    },
-    [saveDisabled],
-  )
+  useEventListener(document, 'keydown', (event: KeyboardEvent) => {
+    if (event.key === 's' && (event.ctrlKey || event.metaKey)) {
+      event.preventDefault()
+      save()
+    }
+  })
 
   /* -- FUNCTIONS -- */
 

@@ -599,7 +599,6 @@ export default function SessionPage(
       selectForce(() => mission.getForceById(selectedForce?._id) ?? null)
       notify('All progress has been reset by a manager.')
     },
-    [selectedForce],
   )
 
   // Add navigation middleware to properly
@@ -631,7 +630,6 @@ export default function SessionPage(
     server,
     ['action-execution-initiated', 'modifier-enacted'],
     () => syncResources(),
-    [selectedForce],
   )
 
   useEventListener(server, 'session-resetting', () => {
@@ -658,7 +656,6 @@ export default function SessionPage(
       setResetSetupFailed(session.setupFailed)
       setResetTeardownFailed(session.teardownFailed)
     },
-    [session],
   )
 
   // Update the list of local files when file access
@@ -678,7 +675,6 @@ export default function SessionPage(
     () => {
       refreshAlerts()
     },
-    [selectedForce],
   )
 
   // Update the resources remaining state whenever the

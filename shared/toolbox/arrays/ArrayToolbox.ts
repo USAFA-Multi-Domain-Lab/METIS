@@ -60,6 +60,31 @@ export class ArrayToolbox {
   public static toArray<T>(value: TInstanceOrArray<T>): T[] {
     return Array.isArray(value) ? value : [value]
   }
+
+  /**
+   * Receives a value which may be in one of the following forms:
+   * - A single value of type `T`.
+   * - An array of values of type `T`.
+   * - `null`
+   * - `undefined`
+   * and normalizes it to an array of values of type `T`, applying the following rules:
+   * - If the value is `null` or `undefined`, it is normalized to an empty array.
+   * - If the value is a single value of type `T`, it is normalized to an array containing that single value.
+   * - If the value is already an array of values of type `T`, it is returned as-is.
+   * @param value The value to normalize.
+   * @returns The normalized array of values.
+   */
+  public static normalize<T>(
+    value: TInstanceOrArray<T> | null | undefined,
+  ): T[] {
+    if (!value) {
+      return []
+    } else if (Array.isArray(value)) {
+      return value
+    } else {
+      return [value]
+    }
+  }
 }
 
 /* -- TYPES -- */

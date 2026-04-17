@@ -14,7 +14,6 @@ METIS provides API endpoints for managing files and their metadata. All endpoint
 
 ## Table of Contents
 
-- [Rate Limiting](#rate-limiting)
 - [Endpoints](#endpoints)
   - [Upload Files](#upload-files)
   - [Get All Files](#get-all-files)
@@ -24,14 +23,6 @@ METIS provides API endpoints for managing files and their metadata. All endpoint
 - [Data Types](#data-types)
   - [File Reference Object](#file-reference-object)
 - [Notes](#notes)
-
-## Rate Limiting
-
-Files API endpoints use METIS's standard rate limits. For large file operations:
-
-- Consider breaking uploads into smaller chunks
-- Each chunk counts as a separate request
-- Plan transfers to stay within rate limits
 
 ## Endpoints
 

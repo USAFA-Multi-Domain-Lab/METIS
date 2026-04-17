@@ -107,7 +107,7 @@ export default function MissionEntry({
         ))}
       </div>
       <EffectTimeline<'sessionTriggeredEffect'> host={mission} />
-      {/* todo: Remove this. */}
+      {/* todo: Fully implement or remove this. */}
       {/* <Panel>
         <PanelView title='General'>
           <DetailString

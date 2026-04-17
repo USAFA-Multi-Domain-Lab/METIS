@@ -317,8 +317,6 @@ export class MetisServer {
       ...options,
     }
 
-    console.log(completedOptions)
-
     // Parse the options and store them in the class.
     this._envType = completedOptions.envType
     this._port = completedOptions.port

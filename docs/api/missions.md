@@ -1,3 +1,5 @@
+todo: Add details concerning length requirements for array fields.
+
 # Missions API
 
 **Base URL:** `/api/v1/missions/`
@@ -6,7 +8,6 @@ METIS provides API endpoints for managing missions. All operations require appro
 
 ## Table of Contents
 
-- [Rate Limiting](#rate-limiting)
 - [Endpoints](#endpoints)
   - [Create Mission](#create-mission)
   - [Get All Missions](#get-all-missions)
@@ -19,15 +20,6 @@ METIS provides API endpoints for managing missions. All operations require appro
 - [Data Types](#data-types)
   - [Mission Object](#mission-object)
 - [Notes](#notes)
-
-## Rate Limiting
-
-All missions API endpoints are subject to METIS's standard rate limits:
-
-- HTTP endpoints: 100 requests/second per IP address
-- WebSocket events: 100 messages/second per user
-
-Note that resource-intensive operations like mission import/export and bulk operations count toward these limits.
 
 ## Endpoints
 
@@ -46,10 +38,51 @@ Creates a new mission with specified configuration and resources.
 {
   "name": "New Mission",
   "versionNumber": 1,
-  "resourceLabel": "Resources",
-  "structure": {},
-  "forces": [],
-  "prototypes": [],
+  "resources": [
+    {
+      "_id": "662270879c5ca781c218abc1",
+      "name": "Resources",
+      "icon": "resources/coins",
+      "order": 1
+    }
+  ],
+  "structure": {
+    "122360879c5db791d261dca3": {}
+  },
+  "forces": [
+    {
+      "_id": "662270879c5ca781c218fed1",
+      "name": "Blue Force",
+      "color": "#1a73e8",
+      "localKey": "1",
+      "introMessage": "",
+      "revealAllNodes": false,
+      "resourcePools": [],
+      "nodes": [
+        {
+          "_id": "662270879c5ca781c218fed2",
+          "localKey": "1",
+          "prototypeId": "662270879c5ca781c218def1",
+          "name": "Target Node",
+          "color": "#1a73e8",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "actions": [],
+          "exclude": false,
+          "initiallyBlocked": false
+        }
+      ]
+    }
+  ],
+  "prototypes": [
+    {
+      "_id": "662270879c5ca781c218def1",
+      "structureKey": "122360879c5db791d261dca3",
+      "depthPadding": 0
+    }
+  ],
   "files": []
 }
 ```
@@ -61,10 +94,51 @@ Creates a new mission with specified configuration and resources.
   "_id": "662270879c5ca781c218123c",
   "name": "New Mission",
   "versionNumber": 1,
-  "resourceLabel": "Resources",
-  "structure": {},
-  "forces": [],
-  "prototypes": [],
+  "resources": [
+    {
+      "_id": "662270879c5ca781c218abc1",
+      "name": "Resources",
+      "icon": "resources/coins",
+      "order": 1
+    }
+  ],
+  "structure": {
+    "122360879c5db791d261dca3": {}
+  },
+  "forces": [
+    {
+      "_id": "662270879c5ca781c218fed1",
+      "name": "Blue Force",
+      "color": "#1a73e8",
+      "localKey": "1",
+      "introMessage": "",
+      "revealAllNodes": false,
+      "resourcePools": [],
+      "nodes": [
+        {
+          "_id": "662270879c5ca781c218fed2",
+          "localKey": "1",
+          "prototypeId": "662270879c5ca781c218def1",
+          "name": "Target Node",
+          "color": "#1a73e8",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "actions": [],
+          "exclude": false,
+          "initiallyBlocked": false
+        }
+      ]
+    }
+  ],
+  "prototypes": [
+    {
+      "_id": "662270879c5ca781c218def1",
+      "structureKey": "122360879c5db791d261dca3",
+      "depthPadding": 0
+    }
+  ],
   "files": [],
   "createdAt": "2025-07-15T10:30:00.000Z",
   "updatedAt": "2025-07-15T10:30:00.000Z",
@@ -98,7 +172,15 @@ Retrieves all missions with basic metadata.
     "_id": "662270879c5ca781c218123c",
     "name": "Mission Name",
     "versionNumber": 1,
-    "resourceLabel": "Resources",
+    // todo: Are resources included in list view? Should they be?
+    "resources": [
+      {
+        "_id": "662270879c5ca781c218abc1",
+        "name": "Resources",
+        "icon": "resources/coins",
+        "order": 1
+      }
+    ],
     "createdAt": "2025-07-15T10:30:00.000Z",
     "updatedAt": "2025-07-15T10:30:00.000Z",
     "createdBy": "000000000000000000000001",
@@ -131,10 +213,51 @@ Retrieves a specific mission by ID with full details.
   "_id": "662270879c5ca781c218123c",
   "name": "Mission Name",
   "versionNumber": 1,
-  "resourceLabel": "Resources",
-  "structure": {},
-  "forces": [],
-  "prototypes": [],
+  "resources": [
+    {
+      "_id": "662270879c5ca781c218abc1",
+      "name": "Resources",
+      "icon": "resources/coins",
+      "order": 1
+    }
+  ],
+  "structure": {
+    "122360879c5db791d261dca3": {}
+  },
+  "forces": [
+    {
+      "_id": "662270879c5ca781c218fed1",
+      "name": "Blue Force",
+      "color": "#1a73e8",
+      "localKey": "1",
+      "introMessage": "",
+      "revealAllNodes": false,
+      "resourcePools": [],
+      "nodes": [
+        {
+          "_id": "662270879c5ca781c218fed2",
+          "localKey": "1",
+          "prototypeId": "662270879c5ca781c218def1",
+          "name": "Target Node",
+          "color": "#1a73e8",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "actions": [],
+          "exclude": false,
+          "initiallyBlocked": false
+        }
+      ]
+    }
+  ],
+  "prototypes": [
+    {
+      "_id": "662270879c5ca781c218def1",
+      "structureKey": "122360879c5db791d261dca3",
+      "depthPadding": 0
+    }
+  ],
   "files": [],
   "createdAt": "2025-07-15T10:30:00.000Z",
   "updatedAt": "2025-07-15T10:30:00.000Z",
@@ -167,10 +290,51 @@ Updates an existing mission.
   "_id": "662270879c5ca781c218123c",
   "name": "Updated Mission",
   "versionNumber": 2,
-  "resourceLabel": "Points",
-  "structure": {},
-  "forces": [],
-  "prototypes": [],
+  "resources": [
+    {
+      "_id": "662270879c5ca781c218abc1",
+      "name": "Points",
+      "icon": "resources/trophy",
+      "order": 1
+    }
+  ],
+  "structure": {
+    "122360879c5db791d261dca3": {}
+  },
+  "forces": [
+    {
+      "_id": "662270879c5ca781c218fed1",
+      "name": "Blue Force",
+      "color": "#1a73e8",
+      "localKey": "1",
+      "introMessage": "",
+      "revealAllNodes": false,
+      "resourcePools": [],
+      "nodes": [
+        {
+          "_id": "662270879c5ca781c218fed2",
+          "localKey": "1",
+          "prototypeId": "662270879c5ca781c218def1",
+          "name": "Target Node",
+          "color": "#1a73e8",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "actions": [],
+          "exclude": false,
+          "initiallyBlocked": false
+        }
+      ]
+    }
+  ],
+  "prototypes": [
+    {
+      "_id": "662270879c5ca781c218def1",
+      "structureKey": "122360879c5db791d261dca3",
+      "depthPadding": 0
+    }
+  ],
   "files": []
 }
 ```
@@ -287,7 +451,7 @@ Soft deletes a mission (sets deleted flag).
 | `_id`               | `objectId` | Unique identifier     |
 | `name`              | `string`   | Mission name          |
 | `versionNumber`     | `number`   | Version number        |
-| `resourceLabel`     | `string`   | Resource display name |
+| `resources`         | `array`    | Resource definitions  |
 | `structure`         | `object`   | Mission structure     |
 | `forces`            | `array`    | Force configurations  |
 | `prototypes`        | `array`    | Prototype objects     |

@@ -18,11 +18,6 @@ import ActionProperties from './ActionProperties'
 import ExecCheats from './ExecCheats'
 import ExecOption from './ExecOption'
 
-// todo: Ensure that if there is only one action, and
-// todo: that action is not ready to execute, that the
-// todo: execution modal will not render the execution
-// todo: properties.
-
 /**
  * Prompt for a session participant to select an action to execute on a node.
  * @throws If this component is used outside of a {@link MissionMap} context.

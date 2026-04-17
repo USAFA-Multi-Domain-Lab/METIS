@@ -440,7 +440,6 @@ export default function MissionPage(
         save()
       }
     },
-    [areUnsavedChanges],
   )
 
   // Add event listener to watch for when a new

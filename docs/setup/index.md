@@ -136,7 +136,7 @@ A command-line installer is available to set up METIS on Windows dedicated insta
 To begin, connect to a fresh Windows 11 install and run PowerShell as Administrator. Then, run this command to set up METIS:
 
 ```PowerShell
-iwr -Uri "https://raw.githubusercontent.com/USAFA-Multi-Domain-Lab/METIS-Deployment-Tools/windows-installer-dev/windows-installer.ps1?t=$(Get-Date -UFormat %s)" -OutFile "$env:TEMP\metis-installer.ps1"; & "$env:TEMP\metis-installer.ps1"; Remove-Item "$env:TEMP\metis-installer.ps1" -Force -ErrorAction SilentlyContinue
+iwr -Uri "https://raw.githubusercontent.com/USAFA-Multi-Domain-Lab/METIS-Deployment-Tools/windows-installer-dev/windows-installer.ps1?t=$(Get-Date -UFormat %s)" -OutFile "$env:TEMP\metis-installer.ps1"; Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force; & "$env:TEMP\metis-installer.ps1"; Remove-Item "$env:TEMP\metis-installer.ps1" -Force -ErrorAction SilentlyContinue
 ```
 
 Once complete, METIS will be set up as a service and will start automatically on boot. You can control the METIS server using the following commands:
@@ -166,7 +166,7 @@ From there you will be prompted to reset your password to something permanent an
 To remove METIS from your Windows machine, an uninstaller script is available which will remove METIS entirely from the system. You will be prompted to optionally remove MongoDB and NodeJS as well, or keep them for other purposes. To uninstall METIS, run PowerShell as Administrator and execute the following command:
 
 ```PowerShell
-iwr -Uri "https://raw.githubusercontent.com/USAFA-Multi-Domain-Lab/METIS-Deployment-Tools/windows-installer-dev/windows-uninstaller.ps1?t=$(Get-Date -UFormat %s)" -OutFile "$env:TEMP\metis-uninstaller.ps1"; & "$env:TEMP\metis-uninstaller.ps1"; Remove-Item "$env:TEMP\metis-uninstaller.ps1" -Force -ErrorAction SilentlyContinue
+iwr -Uri "https://raw.githubusercontent.com/USAFA-Multi-Domain-Lab/METIS-Deployment-Tools/windows-installer-dev/windows-uninstaller.ps1?t=$(Get-Date -UFormat %s)" -OutFile "$env:TEMP\metis-uninstaller.ps1"; Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force; & "$env:TEMP\metis-uninstaller.ps1"; Remove-Item "$env:TEMP\metis-uninstaller.ps1" -Force -ErrorAction SilentlyContinue
 ```
 
 ---

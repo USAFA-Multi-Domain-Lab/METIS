@@ -23,6 +23,7 @@ export default function ResourcePoolBadge({
     ? NumberToolbox.formatCompact(remaining)
     : remaining.toLocaleString('en-US')
   let description = `**${pool.name}:** *${remaining.toLocaleString('en-US')}*`
+  let icon = pool.icon
   // Update value to infinity symbol if resources
   // are configured to be infinite.
   if (infiniteResources) {
