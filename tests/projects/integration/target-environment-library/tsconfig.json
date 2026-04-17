@@ -1,0 +1,20 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": "../../../../",
+    "paths": {
+      "@metis/server/*": ["server/*"],
+      "@metis/client/*": ["client/src/*"],
+      "@shared/*": ["shared/*"],
+      "@server/*": ["server/*"],
+      "@client/*": ["client/src/*"],
+      "@integrations/*": ["integration/library/*"]
+    },
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",
+    "types": ["node"],
+    "isolatedModules": true
+  },
+  "include": ["../../../global.d.ts", "."]
+}

@@ -1,5 +1,7 @@
-import { ServerTargetEnvironment } from '@server/target-environments/ServerTargetEnvironment'
-import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
+import { StatusError } from '@server/api/v1/library/StatusError'
+import { MissionModel } from '@server/database/models/missions'
+import { databaseLogger } from '@server/logging'
+import { ServerMission } from '@server/missions/ServerMission'
 import { ApiResponse } from '../../../library/ApiResponse'
 
 /**
@@ -11,57 +13,34 @@ import { ApiResponse } from '../../../library/ApiResponse'
 export const migrateEffectArgs: TExpressHandler = async (request, response) => {
   // Extract the necessary data from the request.
   let body = request.body
-  let { targetId, environmentId, effectEnvVersion, effectArgs } = body
-  let resultingArgs: TAnyObject = effectArgs
-  let resultingVersion: string = effectEnvVersion
+  let { effectId, missionId } = body
+  let mission: ServerMission | null = null
 
-  // Get the target from the registry.
-  let target = ServerTargetEnvironment.REGISTRY.getTarget(
-    targetId,
-    environmentId,
-  )
-  if (!target) return ApiResponse.sendStatus(response, 404)
-
-  let pendingMigrationVersions =
-    target.getPendingMigrationVersions(effectEnvVersion)
-
-  for (let version of pendingMigrationVersions) {
-    resultingArgs = target.migrateEffectArgs(version, effectArgs)
-    resultingVersion = version
+  // Attempt to find the associated mission.
+  try {
+    let missionDoc = await MissionModel.findById(missionId).exec()
+    if (missionDoc === null) {
+      throw new StatusError(`Mission with ID "${missionId}" not found.`, 404)
+    }
+    mission = ServerMission.fromSaveJson(missionDoc.toJSON())
+  } catch (error: any) {
+    databaseLogger.error(
+      `Failed to retrieve effect/mission data with mission "${missionId}".\n`,
+      error,
+    )
+    return ApiResponse.error(error, response)
   }
 
-  return ApiResponse.sendJson(response, { resultingVersion, resultingArgs })
+  // Get effect and target.
+  let effect = mission.allEffects.find(({ _id }) => _id === effectId)
+  if (!effect) return ApiResponse.sendStatus(response, 404)
+  let target = effect.target
+  if (!target) return ApiResponse.sendStatus(response, 404)
+  let migratableEffect = effect.toMigratable()
 
-  // try {
-  //   // Retrieve the original mission.
-  //   let originalMissionDoc = await MissionModel.findById(originalId).exec()
-  //   // If the original mission is not found, throw an error.
-  //   if (originalMissionDoc === null) {
-  //     throw new StatusError(
-  //       `Original mission with ID "${originalId}" not found.`,
-  //       404,
-  //     )
-  //   }
-  //   // Create the copy of the mission.
-  //   let copiedMissionDoc = await MissionModel.create({
-  //     name: copyName,
-  //     versionNumber: originalMissionDoc.versionNumber,
-  //     structure: originalMissionDoc.structure,
-  //     forces: originalMissionDoc.forces,
-  //     prototypes: originalMissionDoc.prototypes,
-  //     files: originalMissionDoc.files,
-  //   })
-  //   // Extract the necessary data from the copy.
-  //   let { _id, name, versionNumber, seed } = copiedMissionDoc
-  //   // Return a successful API response.
-  //   return ApiResponse.sendJson(response, { _id, name, versionNumber, seed })
-  // } catch (error: any) {
-  //   // Log the error.
-  //   databaseLogger.error(
-  //     `Failed to copy mission { originalId: "${originalId}", copyName: "${copyName}" }.\n`,
-  //     error,
-  //   )
-  //   // Handle the error.
-  //   return ApiResponse.error(error, response)
-  // }
+  target.migrateEffect(migratableEffect)
+
+  return ApiResponse.sendJson(response, {
+    result: migratableEffect.result,
+  })
 }

@@ -1,12 +1,18 @@
 import { MetisComponent } from '@shared/MetisComponent'
 import type { TMission } from '../Mission'
 import type { TNode } from '../nodes/MissionNode'
+import { ActionResourceCost } from './ActionResourceCost'
 import type {
   TExecutionOutcomeJson,
   TOutcome,
   TOutcomeState,
 } from './ExecutionOutcome'
-import type { TAction } from './MissionAction'
+import {
+  type TAction,
+  type TActionModifier,
+  type TActionModifierType,
+  MissionAction,
+} from './MissionAction'
 
 /* -- CLASSES -- */
 
@@ -162,6 +168,37 @@ export abstract class ActionExecution<
   }
 
   /**
+   * The process time for this execution, computed from the action's
+   * base process time plus any process-time modifiers that were
+   * applied at or before this execution began.
+   */
+  public get effectiveProcessTime(): number {
+    return Math.min(
+      Math.max(
+        this.action.baseProcessTime + this.getEffectiveOperand('process-time'),
+        MissionAction.PROCESS_TIME_MIN,
+      ),
+      MissionAction.PROCESS_TIME_MAX,
+    )
+  }
+
+  /**
+   * The success chance for this execution, computed from the action's
+   * base success chance plus any success-chance modifiers that were
+   * applied at or before this execution began.
+   */
+  public get effectiveSuccessChance(): number {
+    return Math.min(
+      Math.max(
+        this.action.baseSuccessChance +
+          this.getEffectiveOperand('success-chance'),
+        MissionAction.SUCCESS_CHANCE_MIN,
+      ),
+      MissionAction.SUCCESS_CHANCE_MAX,
+    )
+  }
+
+  /**
    * @param _id The ID of the execution.
    * @param action The action to execute.
    * @param start The timestamp for when the action began executing.
@@ -195,6 +232,39 @@ export abstract class ActionExecution<
       end: this.end,
       outcome: this.outcome?.toJson() ?? null,
     }
+  }
+
+  /**
+   * @returns the sum of modifier amounts of the given type that were
+   * applied at or before this execution's start timestamp.
+   * @param type The modifier type to filter by.
+   */
+  private getEffectiveOperand(type: TActionModifierType): number {
+    return this.action.modifiers
+      .filter(
+        (modifier: TActionModifier) =>
+          modifier.type === type && modifier.appliedAt <= this.start,
+      )
+      .reduce(
+        (sum: number, modifier: TActionModifier) => sum + modifier.amount,
+        0,
+      )
+  }
+
+  /**
+   * @param resourceId The ID of the resource whose cost to compute.
+   * @returns Returns the effective resource cost for the given resource at the
+   * time this execution began, computed from the matching
+   * {@link ActionResourceCost}'s base amount plus any resource-cost
+   * modifiers that were applied at or before this execution began.
+   * @note `0` is returned if no matching cost can be found.
+   */
+  public getEffectiveResourceCost(resourceId: string): number {
+    const cost = this.action.resourceCosts.find(
+      (resourceCost) => resourceCost.resourceId === resourceId,
+    )
+    if (!cost) return 0
+    return cost.getEffectiveAmount(this.start)
   }
 
   /**

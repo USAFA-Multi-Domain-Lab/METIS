@@ -19,6 +19,8 @@ A command-line installer is available to set up METIS on Ubuntu 24.04 dedicated 
 - **METIS Web Server** - The core application service
 - **METIS CLI** - Command-line interface for managing METIS services (start/stop server)
 
+> **Note:** This installer has only been tested on fresh Ubuntu 24.04 installations. This is not to say that it won't work on other Debian-based distributions. Feel free to experiment at your own risk.
+
 To begin, run this command on a fresh Ubuntu 24.04 install to set up METIS:
 
 ```bash
@@ -122,8 +124,50 @@ You can now begin using METIS!
 
 ### **Windows Setup**
 
-For Windows installations, we will soon provide both command-line and GUI installer options to simplify the setup process. For now, we have this
-detailed manual installation guide that you may follow [here](windows.md).
+A command-line installer is available to set up METIS on Windows dedicated instances. This will install and configure the following software:
+
+- **Node.js v22** - The language on which METIS is built
+- **MongoDB v8** - The database service METIS used to store persistent data (missions, users, file metadata)
+- **METIS Web Server** - The core application service
+- **METIS CLI** - Command-line interface for managing METIS services (start/stop server)
+
+> **Note:** This installer has only been tested on fresh Windows 11 installations. This is not to say that it won't work on other Windows versions. Feel free to experiment at your own risk.
+
+To begin, connect to a fresh Windows 11 install and run PowerShell as Administrator. Then, run this command to set up METIS:
+
+```PowerShell
+iwr -Uri "https://raw.githubusercontent.com/USAFA-Multi-Domain-Lab/METIS-Deployment-Tools/master/windows-installer.ps1?t=$(Get-Date -UFormat %s)" -OutFile "$env:TEMP\metis-installer.ps1"; Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force; & "$env:TEMP\metis-installer.ps1"; Remove-Item "$env:TEMP\metis-installer.ps1" -Force -ErrorAction SilentlyContinue
+```
+
+Once complete, METIS will be set up as a service and will start automatically on boot. You can control the METIS server using the following commands:
+
+```bash
+metis start
+metis stop
+metis restart
+metis status
+```
+
+> MongoDB users are auto-generated during installation. With the correct permissions, you can retrieve the credentials for these users from `C:\ProgramData\METIS\.metis-credentials.txt`.
+
+The METIS web app should now be accessible on your host machine at your configured port (default is `http://localhost:8080`). You can now access the web app in the browser. To log in, a temporary user has been created with the following credentials:
+
+```
+Username: admin
+Password: temppass
+```
+
+From there you will be prompted to reset your password to something permanent and more secure. You can now begin using METIS!
+
+---
+
+### **Windows Uninstallation**
+
+To remove METIS from your Windows machine, an uninstaller script is available which will remove METIS entirely from the system. You will be prompted to optionally remove MongoDB and NodeJS as well, or keep them for other purposes. To uninstall METIS, run PowerShell as Administrator and execute the following command:
+
+```PowerShell
+iwr -Uri "https://raw.githubusercontent.com/USAFA-Multi-Domain-Lab/METIS-Deployment-Tools/master/windows-uninstaller.ps1?t=$(Get-Date -UFormat %s)" -OutFile "$env:TEMP\metis-uninstaller.ps1"; Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force; & "$env:TEMP\metis-uninstaller.ps1"; Remove-Item "$env:TEMP\metis-uninstaller.ps1" -Force -ErrorAction SilentlyContinue
+```
 
 ---
 

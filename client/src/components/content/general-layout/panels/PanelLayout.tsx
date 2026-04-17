@@ -26,7 +26,7 @@ const RESIZE_BAR_WIDTH: number = 10 /*px*/
 export default function ({
   children,
   initialSizes,
-  minSizes = [330, 330],
+  minSizes = [350, 350],
 }: TPanelLayout_P): TReactElement | null {
   /* -- STATE -- */
 
@@ -355,7 +355,7 @@ export interface TPanelLayout_P {
    *  <Panel>Panel 1</Panel>
    *  <Panel>Panel 2</Panel>
    * </PanelLayout>
-   * @default [330, 330]
+   * @default [350, 350]
    */
   minSizes?: [number, number]
 }

@@ -1,7 +1,9 @@
+import { ClientMissionResource } from '@client/missions/ClientMissionResource'
 import { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
 import type { ClientEffect } from '@client/missions/effects/ClientEffect'
 import { ClientMissionFile } from '@client/missions/files/ClientMissionFile'
 import { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
+import { ClientResourcePool } from '@client/missions/forces/ClientResourcePool'
 import { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
 import { compute } from '@client/toolbox'
 import { usePostInitEffect } from '@client/toolbox/hooks'
@@ -13,11 +15,15 @@ import type {
   TMissionComponentMetadata,
 } from '@shared/target-environments/args/mission-component/MissionComponentArg'
 import { NodeArg } from '@shared/target-environments/args/mission-component/NodeArg'
+import { PoolArg } from '@shared/target-environments/args/mission-component/PoolArg'
+import { ResourceArg } from '@shared/target-environments/args/mission-component/ResourceArg'
 import type {
   TActionMetadata,
   TFileMetadata,
   TForceMetadata,
   TNodeMetadata,
+  TPoolMetadata,
+  TResourceMetadata,
 } from '@shared/target-environments/types'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { useEffect, useState } from 'react'
@@ -25,9 +31,11 @@ import ArgAction from './ArgAction'
 import ArgFile from './ArgFile'
 import ArgForce from './ArgForce'
 import ArgNode from './ArgNode'
+import ArgPool from './ArgPool'
+import ArgResource from './ArgResource'
 
 /**
- * Renders dropdowns for the argument whose type is `"force"`, `"node"`, or `"action"`.
+ * Renders dropdowns for the argument whose type is `"force"`, `"node"`, `"action"`, `"file"`, `"pool"`, or `"resource"`.
  */
 export default function ArgMissionComponent({
   effect,
@@ -40,22 +48,28 @@ export default function ArgMissionComponent({
 }: TArgMissionComponent_P): TReactElement | null {
   /* -- CONSTANTS -- */
 
-  /**
-   * Determines if the argument is required.
-   */
   const isRequired: boolean = required
-  /**
-   * Determines if the argument is optional.
-   */
   const isOptional: boolean = !required
-  /**
-   * Determines if the argument is already present in the effect's arguments.
-   */
   const existsInEffectArgs: boolean = effectArgs[_id] !== undefined
+
+  // Metadata keys used in the effect.args for
+  // the mission component argument types.
+  const forceKey = ForceArg.FORCE_KEY
+  const forceName = ForceArg.FORCE_NAME
+  const nodeKey = NodeArg.NODE_KEY
+  const nodeName = NodeArg.NODE_NAME
+  const actionKey = ActionArg.ACTION_KEY
+  const actionName = ActionArg.ACTION_NAME
+  const fileId = FileArg.FILE_ID
+  const fileName = FileArg.FILE_NAME
+  const poolKey = PoolArg.POOL_KEY
+  const poolName = PoolArg.POOL_NAME
+  const resourceId = ResourceArg.RESOURCE_ID
+  const resourceName = ResourceArg.RESOURCE_NAME
 
   /* -- STATE -- */
 
-  /* -- action -- */
+  /* -- DEFAULT STATE VALUES -- */
 
   const [defaultAction] = useState<ClientMissionAction>(
     (): ClientMissionAction => {
@@ -77,69 +91,6 @@ export default function ArgMissionComponent({
       }
     },
   )
-  const [actionKey] = useState<string>(ActionArg.ACTION_KEY)
-  const [actionName] = useState<string>(ActionArg.ACTION_NAME)
-  const [actionValue, setActionValue] = useState<ClientMissionAction>(() => {
-    // If the argument is required and the argument's value
-    // is in the effect's arguments...
-    if (isRequired && existsInEffectArgs) {
-      // Search for the action in the mission.
-      let actionInMission = effect.getActionFromArgs(_id)
-      // If the action is found then return the action.
-      if (actionInMission) return actionInMission
-      let actionInArgs = effect.getActionMetadataInArgs(_id)
-      // If the action is not found, but the effect's arguments
-      // contains the action's metadata then return an action
-      // object using the metadata from the effect's arguments.
-      // *** Note: This will display the user's previous selection
-      // *** in the dropdown even though it no longer exists in the
-      // *** mission.
-      if (actionInArgs) {
-        return ClientMissionAction.create(nodeValue, {
-          localKey: actionInArgs.actionKey,
-          name: actionInArgs.actionName,
-        })
-      }
-      // Otherwise, return the default action.
-      return defaultAction
-    }
-    // Otherwise, return the default action.
-    else {
-      return defaultAction
-    }
-  })
-  const [optionalActionValue, setOptionalActionValue] =
-    useState<ClientMissionAction | null>(() => {
-      // If the argument is optional and the argument's value
-      // is in the effect's arguments...
-      if (isOptional && existsInEffectArgs) {
-        // Search for the action in the mission.
-        let actionInMission = effect.getActionFromArgs(_id)
-        // If the action is found then return the action.
-        if (actionInMission) return actionInMission
-        let actionInArgs = effect.getActionMetadataInArgs(_id)
-        // If the action is not found, but the effect's arguments
-        // contains the action's metadata then return an action
-        // object using the metadata from the effect's arguments.
-        // *** Note: This will display the user's previous selection
-        // *** in the dropdown even though it no longer exists in the
-        // *** mission.
-        if (optionalNodeValue && actionInArgs) {
-          return ClientMissionAction.create(optionalNodeValue, {
-            localKey: actionInArgs.actionKey,
-            name: actionInArgs.actionName,
-          })
-        }
-        // Otherwise, return null.
-        return null
-      }
-      // Otherwise, return null.
-      else {
-        return null
-      }
-    })
-
-  /* -- node -- */
 
   const [defaultNode] = useState<ClientMissionNode>(() => {
     // First, default to the node associated with
@@ -160,8 +111,204 @@ export default function ArgMissionComponent({
       )
     }
   })
-  const [nodeKey] = useState<string>(NodeArg.NODE_KEY)
-  const [nodeName] = useState<string>(NodeArg.NODE_NAME)
+
+  const [defaultPool] = useState<ClientResourcePool>(() => {
+    let firstPool = mission.forces[0]?.resourcePools[0]
+
+    if (firstPool) {
+      return firstPool
+    } else {
+      throw new Error(
+        'No valid pool found. A mission must have at least one pool.',
+      )
+    }
+  })
+  const [defaultForce] = useState<ClientMissionForce>(
+    (): ClientMissionForce => {
+      // First, default to the force associated with
+      // the effect itself, if possible. Then, as a backup,
+      // if the arg type is 'action' or 'node', use the
+      // force of the default node, if the default node
+      // exists. Then, use the first force available
+      // in the mission. If that's still not an option,
+      // throw an error because a mission should always
+      // have at least one force.
+      if (effect.sourceForce) {
+        return effect.sourceForce
+      } else if (type === 'action' || type === 'node') {
+        return defaultNode.force
+      } else if (type === 'pool') {
+        return defaultPool.force
+      } else if (mission.forces.length) {
+        return mission.forces[0]
+      } else {
+        throw new Error(
+          'No valid force found. A mission must have at least one force.',
+        )
+      }
+    },
+  )
+
+  const [defaultFile] = useState<ClientMissionFile>(() => {
+    // Return the first file in the mission. If
+    // there is no file in the mission, then return
+    // a detached file object.
+    if (mission.files.length) {
+      return mission.files[0]
+    } else {
+      return ClientMissionFile.createDetached(
+        StringToolbox.generateRandomId(),
+        'No files available.',
+        mission,
+      )
+    }
+  })
+
+  const [defaultResource] = useState<ClientMissionResource>(() => {
+    // Return the first resource in the mission. If
+    // there is no resource in the mission, then return
+    // a detached resource object.
+    if (mission.resources.length) {
+      return mission.resources[0]
+    } else {
+      return ClientMissionResource.createDetached(
+        mission,
+        StringToolbox.generateRandomId(),
+        'No resources available.',
+      )
+    }
+  })
+
+  /* -- FORCE STATE VALUES -- */
+
+  const [optionalForceValue, setOptionalForceValue] =
+    useState<ClientMissionForce | null>(() => {
+      // If the argument is optional and the argument's value
+      // is in the effect's arguments...
+      if (isOptional && existsInEffectArgs) {
+        // Search for the force in the mission.
+        let forceInMission = effect.getForceFromArgs(_id)
+        // If the force is found then return the force.
+        if (forceInMission) return forceInMission
+        let forceInArgs = effect.getForceMetadataInArgs(_id)
+        // If the force is not found, but the effect's arguments
+        // contains the force's metadata then return a force
+        // object using the metadata from the effect's arguments.
+        // *** Note: This will display the user's previous selection
+        // *** in the dropdown even though it no longer exists in the
+        // *** mission.
+        if (!forceInMission && forceInArgs) {
+          return new ClientMissionForce(mission, {
+            localKey: forceInArgs.forceKey,
+            name: forceInArgs.forceName,
+          })
+        }
+
+        // Otherwise, return null.
+        return null
+      }
+      // Otherwise, return null.
+      else {
+        return null
+      }
+    })
+  const [forceValue, setForceValue] = useState<ClientMissionForce>(() => {
+    // If the argument is required and the argument's value
+    // is in the effect's arguments...
+    if (isRequired && existsInEffectArgs) {
+      // Search for the force in the mission.
+      let forceInMission = effect.getForceFromArgs(_id)
+      // If the force is found then return the force.
+      if (forceInMission) return forceInMission
+      let forceInArgs = effect.getForceMetadataInArgs(_id)
+      // If the force is not found, but the effect's arguments
+      // contains the force's metadata then return a force
+      // object using the metadata from the effect's arguments.
+      // *** Note: This will display the user's previous selection
+      // *** in the dropdown even though it no longer exists in the
+      // *** mission.
+      if (forceInArgs) {
+        return new ClientMissionForce(mission, {
+          localKey: forceInArgs.forceKey,
+          name: forceInArgs.forceName,
+        })
+      }
+
+      // Otherwise, return the default force.
+      return defaultForce
+    }
+    // Otherwise, return the default force.
+    else {
+      return defaultForce
+    }
+  })
+
+  /* -- POOL STATE VALUES -- */
+
+  const [poolValue, setPoolValue] = useState<ClientResourcePool>(() => {
+    // If the argument is required and the argument's value
+    // is in the effect's arguments...
+    if (isRequired && existsInEffectArgs) {
+      // Search for the pool in the mission.
+      let poolInMission = effect.getPoolFromArgs(_id)
+      // If the pool is found then return the pool.
+      if (poolInMission) return poolInMission
+      let poolInArgs = effect.getPoolMetadataInArgs(_id)
+      // If the pool is not found, but the effect's arguments
+      // contains the pool's metadata then return a pool
+      // object using the metadata from the effect's arguments.
+      // *** Note: This will display the user's previous selection
+      // *** in the dropdown even though it no longer exists in the
+      // *** mission.
+      if (poolInArgs) {
+        return ClientResourcePool.createResourceDetachedFromKey(
+          forceValue,
+          poolInArgs.poolKey,
+          poolInArgs.poolName,
+        )
+      }
+      // Otherwise, return the default pool.
+      return defaultPool
+    }
+    // Otherwise, return the default pool.
+    else {
+      return defaultPool
+    }
+  })
+  const [optionalPoolValue, setOptionalPoolValue] =
+    useState<ClientResourcePool | null>(() => {
+      // If the argument is optional and the argument's value
+      // is in the effect's arguments...
+      if (isOptional && existsInEffectArgs) {
+        // Search for the pool in the mission.
+        let poolInMission = effect.getPoolFromArgs(_id)
+        // If the pool is found then return the pool.
+        if (poolInMission) return poolInMission
+        let poolInArgs = effect.getPoolMetadataInArgs(_id)
+        // If the pool is not found, but the effect's arguments
+        // contains the pool's metadata then return a pool
+        // object using the metadata from the effect's arguments.
+        // *** Note: This will display the user's previous selection
+        // *** in the dropdown even though it no longer exists in the
+        // *** mission.
+        if (optionalForceValue && poolInArgs) {
+          return ClientResourcePool.createResourceDetachedFromKey(
+            optionalForceValue,
+            poolInArgs.poolKey,
+            poolInArgs.poolName,
+          )
+        }
+        // Otherwise, return null.
+        return null
+      }
+      // Otherwise, return null.
+      else {
+        return null
+      }
+    })
+
+  /* -- NODE STATE VALUES -- */
+
   const [nodeValue, setNodeValue] = useState<ClientMissionNode>(() => {
     // If the argument is required and the argument's value
     // is in the effect's arguments...
@@ -224,86 +371,59 @@ export default function ArgMissionComponent({
       }
     })
 
-  /* -- force -- */
+  /* -- ACTION STATE VALUES -- */
 
-  const [defaultForce] = useState<ClientMissionForce>(
-    (): ClientMissionForce => {
-      // First, default to the force associated with
-      // the effect itself, if possible. Then, as a backup,
-      // if the arg type is 'action' or 'node', use the
-      // force of the default node, if the default node
-      // exists. Then, use the first force available
-      // in the mission. If that's still not an option,
-      // throw an error because a mission should always
-      // have at least one force.
-      if (effect.sourceForce) {
-        return effect.sourceForce
-      } else if (type === 'action' || type === 'node') {
-        return defaultNode.force
-      } else if (mission.forces.length) {
-        return mission.forces[0]
-      } else {
-        throw new Error(
-          'No valid force found. A mission must have at least one force.',
-        )
-      }
-    },
-  )
-  const [forceKey] = useState<string>(ForceArg.FORCE_KEY)
-  const [forceName] = useState<string>(ForceArg.FORCE_NAME)
-  const [forceValue, setForceValue] = useState<ClientMissionForce>(() => {
+  const [actionValue, setActionValue] = useState<ClientMissionAction>(() => {
     // If the argument is required and the argument's value
     // is in the effect's arguments...
     if (isRequired && existsInEffectArgs) {
-      // Search for the force in the mission.
-      let forceInMission = effect.getForceFromArgs(_id)
-      // If the force is found then return the force.
-      if (forceInMission) return forceInMission
-      let forceInArgs = effect.getForceMetadataInArgs(_id)
-      // If the force is not found, but the effect's arguments
-      // contains the force's metadata then return a force
+      // Search for the action in the mission.
+      let actionInMission = effect.getActionFromArgs(_id)
+      // If the action is found then return the action.
+      if (actionInMission) return actionInMission
+      let actionInArgs = effect.getActionMetadataInArgs(_id)
+      // If the action is not found, but the effect's arguments
+      // contains the action's metadata then return an action
       // object using the metadata from the effect's arguments.
       // *** Note: This will display the user's previous selection
       // *** in the dropdown even though it no longer exists in the
       // *** mission.
-      if (forceInArgs) {
-        return new ClientMissionForce(mission, {
-          localKey: forceInArgs.forceKey,
-          name: forceInArgs.forceName,
+      if (actionInArgs) {
+        return ClientMissionAction.fromJson(nodeValue, {
+          localKey: actionInArgs.actionKey,
+          name: actionInArgs.actionName,
         })
       }
-
-      // Otherwise, return the default force.
-      return defaultForce
+      // Otherwise, return the default action.
+      return defaultAction
     }
-    // Otherwise, return the default force.
+    // Otherwise, return the default action.
     else {
-      return defaultForce
+      return defaultAction
     }
   })
-  const [optionalForceValue, setOptionalForceValue] =
-    useState<ClientMissionForce | null>(() => {
+  const [optionalActionValue, setOptionalActionValue] =
+    useState<ClientMissionAction | null>(() => {
       // If the argument is optional and the argument's value
       // is in the effect's arguments...
       if (isOptional && existsInEffectArgs) {
-        // Search for the force in the mission.
-        let forceInMission = effect.getForceFromArgs(_id)
-        // If the force is found then return the force.
-        if (forceInMission) return forceInMission
-        let forceInArgs = effect.getForceMetadataInArgs(_id)
-        // If the force is not found, but the effect's arguments
-        // contains the force's metadata then return a force
+        // Search for the action in the mission.
+        let actionInMission = effect.getActionFromArgs(_id)
+        // If the action is found then return the action.
+        if (actionInMission) return actionInMission
+        let actionInArgs = effect.getActionMetadataInArgs(_id)
+        // If the action is not found, but the effect's arguments
+        // contains the action's metadata then return an action
         // object using the metadata from the effect's arguments.
         // *** Note: This will display the user's previous selection
         // *** in the dropdown even though it no longer exists in the
         // *** mission.
-        if (!forceInMission && forceInArgs) {
-          return new ClientMissionForce(mission, {
-            localKey: forceInArgs.forceKey,
-            name: forceInArgs.forceName,
+        if (optionalNodeValue && actionInArgs) {
+          return ClientMissionAction.fromJson(optionalNodeValue, {
+            localKey: actionInArgs.actionKey,
+            name: actionInArgs.actionName,
           })
         }
-
         // Otherwise, return null.
         return null
       }
@@ -312,24 +432,9 @@ export default function ArgMissionComponent({
         return null
       }
     })
-  /* -- file -- */
 
-  const [defaultFile] = useState<ClientMissionFile>(() => {
-    // Return the first file in the mission. If
-    // there is no file in the mission, then return
-    // a detached file object.
-    if (mission.files.length) {
-      return mission.files[0]
-    } else {
-      return ClientMissionFile.createDetached(
-        StringToolbox.generateRandomId(),
-        'No files available.',
-        mission,
-      )
-    }
-  })
-  const [fileId] = useState<string>(FileArg.FILE_ID)
-  const [fileName] = useState<string>(FileArg.FILE_NAME)
+  /* -- FILE STATE VALUES -- */
+
   const [fileValue, setFileValue] = useState<ClientMissionFile>(() => {
     // If the argument is required and the argument's value
     // is in the effect's arguments...
@@ -385,6 +490,65 @@ export default function ArgMissionComponent({
       return null
     })
 
+  /* -- RESOURCE STATE VALUES -- */
+
+  const [resourceValue, setResourceValue] = useState<ClientMissionResource>(
+    () => {
+      // If the argument is required and the argument's value
+      // is in the effect's arguments...
+      if (isRequired && existsInEffectArgs) {
+        // Search for the resource in the mission.
+        let resourceInMission = effect.getResourceFromArgs(_id)
+        // If the resource is found then return the resource.
+        if (resourceInMission) return resourceInMission
+        let resourceInArgs = effect.getResourceMetadataInArgs(_id)
+        // If the resource is not found, but the effect's arguments
+        // contains the resource's metadata then return a resource
+        // object using the metadata from the effect's arguments.
+        // *** Note: This will display the user's previous selection
+        // *** in the dropdown even though it no longer exists in the
+        // *** mission.
+        if (resourceInArgs) {
+          return ClientMissionResource.createDetached(
+            mission,
+            resourceInArgs.resourceId,
+            resourceInArgs.resourceName,
+          )
+        }
+      }
+
+      // Otherwise, return the default resource.
+      return defaultResource
+    },
+  )
+  const [optionalResourceValue, setOptionalResourceValue] =
+    useState<ClientMissionResource | null>(() => {
+      // If the argument is optional and the argument's value
+      // is in the effect's arguments...
+      if (isOptional && existsInEffectArgs) {
+        // Search for the resource in the mission.
+        let resourceInMission = effect.getResourceFromArgs(_id)
+        // If the resource is found then return the resource.
+        if (resourceInMission) return resourceInMission
+        let resourceInArgs = effect.getResourceMetadataInArgs(_id)
+        // If the resource is not found, but the effect's arguments
+        // contains the resource's metadata then return a resource
+        // object using the metadata from the effect's arguments.
+        // *** Note: This will display the user's previous selection
+        // *** in the dropdown even though it no longer exists in the
+        // *** mission.
+        if (resourceInArgs) {
+          return ClientMissionResource.createDetached(
+            mission,
+            resourceInArgs.resourceId,
+            resourceInArgs.resourceName,
+          )
+        }
+      }
+      // Otherwise, return null.
+      return null
+    })
+
   /* -- COMPUTED -- */
 
   /* -- force -- */
@@ -394,7 +558,11 @@ export default function ArgMissionComponent({
    * and if the force dropdown should be displayed.
    */
   const forceIsActive: boolean = compute(
-    () => type === 'force' || type === 'node' || type === 'action',
+    () =>
+      type === 'force' ||
+      type === 'node' ||
+      type === 'action' ||
+      type === 'pool',
   )
 
   /**
@@ -491,6 +659,90 @@ export default function ArgMissionComponent({
     return {
       [forceKey]: forceValue.localKey,
       [forceName]: forceValue.name,
+    }
+  })
+
+  /* -- pool -- */
+
+  /**
+   * Determines if the pool should be present in the effect's arguments
+   * and if the pool dropdown should be displayed.
+   */
+  const poolIsActive: boolean = compute(() => type === 'pool')
+
+  /**
+   * Determines if the pool value should be inserted or updated in the
+   * effect's arguments.
+   */
+  const upsertPool: boolean = compute(() => {
+    if (!poolIsActive) return false
+
+    // If the argument is required and the pool exists in the
+    // force's resource pools then upsert the pool to the effect's arguments.
+    if (isRequired && forceValue.resourcePools.includes(poolValue)) {
+      return true
+    }
+
+    // If the argument is optional, a force has been selected,
+    // a pool has been selected, and the pool exists in the
+    // force's resource pools then upsert the pool to the effect's arguments.
+    if (
+      isOptional &&
+      optionalForceValue !== null &&
+      optionalPoolValue !== null &&
+      optionalForceValue.resourcePools.includes(optionalPoolValue)
+    ) {
+      return true
+    }
+
+    // Otherwise, return false.
+    return false
+  })
+
+  /**
+   * Determines if the pool value should be removed from the
+   * effect's arguments.
+   */
+  const removePool: boolean = compute(() => {
+    if (!poolIsActive) return true
+
+    // If the argument is optional, a force has been selected,
+    // a pool hasn't been selected, yet the argument exists
+    // in the effect's arguments then remove the pool value
+    // from the effect's arguments.
+    if (
+      isOptional &&
+      existsInEffectArgs &&
+      (!optionalForceValue || !optionalPoolValue)
+    ) {
+      return true
+    }
+
+    // Otherwise, return false.
+    return false
+  })
+
+  /**
+   * The metadata for the pool argument.
+   * @note This is the metadata that is passed to the effect's arguments.
+   */
+  const poolMetadata: TPoolMetadata = compute(() => {
+    if (!poolIsActive) return {}
+
+    if (isOptional && upsertPool) {
+      // *** Note: The "optionalPoolValue" is validated within
+      // *** the "upsertPool" computed property.
+      return {
+        ...forceMetadata,
+        [poolKey]: optionalPoolValue!.localKey,
+        [poolName]: optionalPoolValue!.name,
+      }
+    }
+
+    return {
+      ...forceMetadata,
+      [poolKey]: poolValue.localKey,
+      [poolName]: poolValue.name,
     }
   })
 
@@ -824,6 +1076,75 @@ export default function ArgMissionComponent({
     }
   })
 
+  /* -- resource -- */
+
+  /**
+   * Determines if the resource should be present in the effect's arguments
+   * and if the resource dropdown should be displayed.
+   */
+  const resourceIsActive: boolean = compute(() => type === 'resource')
+
+  /**
+   * Determines if the resource value should be inserted or updated in the
+   * effect's arguments.
+   */
+  const upsertResource: boolean = compute(() => {
+    if (!resourceIsActive) return false
+
+    // If the argument is required then add the resource value
+    // to the effect's arguments.
+    if (isRequired) return true
+
+    // If the argument is optional and a resource has been selected
+    // then upsert the resource to the effect's arguments.
+    if (isOptional && optionalResourceValue !== null) {
+      return true
+    }
+
+    // Otherwise, return false.
+    return false
+  })
+
+  /**
+   * Determines if the resource value should be removed from the
+   * effect's arguments.
+   */
+  const removeResource: boolean = compute(() => {
+    if (!resourceIsActive) return true
+
+    // If the argument is optional, a resource hasn't been selected,
+    // yet the argument exists in the effect's arguments then remove
+    // the resource value from the effect's arguments.
+    if (isOptional && optionalResourceValue === null && existsInEffectArgs) {
+      return true
+    }
+
+    // Otherwise, return false.
+    return false
+  })
+
+  /**
+   * The metadata for the resource argument.
+   * @note This is the metadata that is passed to the effect's arguments.
+   */
+  const resourceMetadata: TResourceMetadata = compute(() => {
+    if (!resourceIsActive) return {}
+
+    if (isOptional && upsertResource) {
+      // *** Note: The "optionalResourceValue" is validated within
+      // *** the "upsertResource" computed property.
+      return {
+        [resourceId]: optionalResourceValue!._id,
+        [resourceName]: optionalResourceValue!.name,
+      }
+    }
+
+    return {
+      [resourceId]: resourceValue._id,
+      [resourceName]: resourceValue.name,
+    }
+  })
+
   /* -- EFFECTS -- */
 
   // Determine if the argument needs to be initialized.
@@ -846,6 +1167,10 @@ export default function ArgMissionComponent({
     optionalNodeValue,
     optionalActionValue,
     optionalFileValue,
+    poolValue,
+    optionalPoolValue,
+    resourceValue,
+    optionalResourceValue,
   ])
 
   /* -- FUNCTIONS -- */
@@ -948,6 +1273,50 @@ export default function ArgMissionComponent({
         // *** with the current value.
         setFileValue(defaultFile)
       }
+
+      // If the pool value stored in the state is the
+      // same as the default pool value, then manually update the
+      // effect's arguments by adding this argument and its
+      // value.
+      if (poolValue === defaultPool) {
+        // *** Note: An argument's value in the effect's
+        // *** arguments is automatically set if the value
+        // *** stored in this state changes. If the value
+        // *** in the state doesn't change then the value
+        // *** needs to be set manually.
+        upsert()
+      }
+      // Otherwise, set the pool value to the default pool value.
+      // *** Note: A default value is mandatory if the
+      // *** argument is required.
+      else {
+        // *** Note: When this value in the state changes,
+        // *** the effect's arguments automatically updates
+        // *** with the current value.
+        setPoolValue(defaultPool)
+      }
+
+      // If the resource value stored in the state is the
+      // same as the default resource value, then manually update the
+      // effect's arguments by adding this argument and its
+      // value.
+      if (resourceValue === defaultResource) {
+        // *** Note: An argument's value in the effect's
+        // *** arguments is automatically set if the value
+        // *** stored in this state changes. If the value
+        // *** in the state doesn't change then the value
+        // *** needs to be set manually.
+        upsert()
+      }
+      // Otherwise, set the resource value to the default resource value.
+      // *** Note: A default value is mandatory if the
+      // *** argument is required.
+      else {
+        // *** Note: When this value in the state changes,
+        // *** the effect's arguments automatically updates
+        // *** with the current value.
+        setResourceValue(defaultResource)
+      }
     }
   }
 
@@ -962,6 +1331,8 @@ export default function ArgMissionComponent({
     if (upsertNode) data = nodeMetadata
     if (upsertAction) data = actionMetadata
     if (upsertFile) data = fileMetadata
+    if (upsertPool) data = poolMetadata
+    if (upsertResource) data = resourceMetadata
 
     // Update the effect's arguments with the new data.
     setEffectArgs((prev) => ({
@@ -994,6 +1365,14 @@ export default function ArgMissionComponent({
         delete prev[_id][fileId]
         delete prev[_id][fileName]
       }
+      if (removePool) {
+        delete prev[_id][poolKey]
+        delete prev[_id][poolName]
+      }
+      if (removeResource) {
+        delete prev[_id][resourceId]
+        delete prev[_id][resourceName]
+      }
 
       // If the argument is empty, then remove the argument
       // from the effect's arguments.
@@ -1002,7 +1381,9 @@ export default function ArgMissionComponent({
         prev[_id][forceKey] === undefined &&
         prev[_id][nodeKey] === undefined &&
         prev[_id][actionKey] === undefined &&
-        prev[_id][fileId] === undefined
+        prev[_id][fileId] === undefined &&
+        prev[_id][poolKey] === undefined &&
+        prev[_id][resourceId] === undefined
       ) {
         delete prev[_id]
       }
@@ -1022,6 +1403,17 @@ export default function ArgMissionComponent({
         forceIsActive={forceIsActive}
         forceValue={[forceValue, setForceValue]}
         optionalForceValue={[optionalForceValue, setOptionalForceValue]}
+      />
+      <ArgPool
+        arg={arg}
+        existsInEffectArgs={existsInEffectArgs}
+        poolIsActive={poolIsActive}
+        isRequired={isRequired}
+        isOptional={isOptional}
+        forceValue={[forceValue, setForceValue]}
+        optionalForceValue={[optionalForceValue, setOptionalForceValue]}
+        poolValue={[poolValue, setPoolValue]}
+        optionalPoolValue={[optionalPoolValue, setOptionalPoolValue]}
       />
       <ArgNode
         arg={arg}
@@ -1054,6 +1446,17 @@ export default function ArgMissionComponent({
         fileIsActive={fileIsActive}
         fileValue={[fileValue, setFileValue]}
         optionalFileValue={[optionalFileValue, setOptionalFileValue]}
+      />
+      <ArgResource
+        effect={effect}
+        arg={arg}
+        existsInEffectArgs={existsInEffectArgs}
+        resourceIsActive={resourceIsActive}
+        resourceValue={[resourceValue, setResourceValue]}
+        optionalResourceValue={[
+          optionalResourceValue,
+          setOptionalResourceValue,
+        ]}
       />
     </>
   )

@@ -3,16 +3,12 @@
   "compilerOptions": {
     "baseUrl": "../",
     "paths": {
-      "metis/*": ["shared/*"],
-      "metis/server": ["server/index.ts"],
-      "metis/server/*": ["server/*"],
-      "metis/client": ["client/src/index.tsx"],
-      "metis/client/*": ["client/src/*"],
-      "@metis/*": ["integration/library/*"],
-      "@metis/schema/*": ["integration/library/schema/*"],
-      "@metis/config/*": ["integration/library/config/*"],
-      "@metis/toolbox/*": ["integration/library/toolbox/*"],
-      "@metis/api/*": ["integration/library/api/*"]
+      "@metis/server/*": ["server/*"],
+      "@metis/client/*": ["client/src/*"],
+      "@shared/*": ["shared/*"],
+      "@server/*": ["server/*"],
+      "@client/*": ["client/src/*"],
+      "@integrations/*": ["integration/library/*"]
     },
     "module": "NodeNext",
     "moduleResolution": "NodeNext",

@@ -259,21 +259,15 @@ export default function SessionConfigPage({
   })
 
   // Handle session setup failures.
-  useEventListener(
-    server,
-    'session-setup-update',
-    () => {
-      if (session.setupFailed) {
-        cancel()
-        handleError({
-          message:
-            'Play-test setup failed. Please contact system administrator.',
-          notifyMethod: 'bubble',
-        })
-      }
-    },
-    [server],
-  )
+  useEventListener(server, 'session-setup-update', () => {
+    if (session.setupFailed) {
+      cancel()
+      handleError({
+        message: 'Play-test setup failed. Please contact system administrator.',
+        notifyMethod: 'bubble',
+      })
+    }
+  })
 
   /* -- COMPUTED -- */
 

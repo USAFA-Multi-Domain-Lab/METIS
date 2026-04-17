@@ -14,6 +14,7 @@ import { ClientUser } from '@client/users/ClientUser'
 import type {
   TFileAccessModifierData,
   TGenericServerEvents,
+  TNodeNewAlertData,
   TNodeOpenStateData,
   TResponseEvents,
   TServerEvents,
@@ -24,6 +25,7 @@ import type {
   TExecutionCheats,
 } from '@shared/missions/actions/ActionExecution'
 import type { TExecutionOutcomeJson } from '@shared/missions/actions/ExecutionOutcome'
+import type { TActionModifier } from '@shared/missions/actions/MissionAction'
 import type { TMemberRoleId } from '@shared/sessions/members/MemberRole'
 import { MemberRole } from '@shared/sessions/members/MemberRole'
 import type { TSessionMemberJson } from '@shared/sessions/members/SessionMember'
@@ -182,6 +184,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       ['modifier-enacted', this.onModifierEnacted],
       ['send-output', this.onSendOutput],
       ['output-sent', this.onOutputSent],
+      ['node-alert-acknowledged', this.onNodeAlertAcknowledged],
       ['kicked', this.onKicked],
       ['banned', this.onBanned],
       ['dismissed', this.onDismissed],
@@ -388,6 +391,15 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     // an error.
     if (!action.node.executable) {
       return onError('Node is not executable.')
+    }
+    // If the action is not ready to execute, callback
+    // with the reasons why.
+    let unreadyReasons = this.unreadyToExecuteReasons(action, cheats)
+    if (unreadyReasons.length) {
+      return onError(
+        `Action cannot be executed due to the following reasons:\n` +
+          unreadyReasons.map((reason) => `*- ${reason}*`).join('\n'),
+      )
     }
 
     // Emit a request to execute the action.
@@ -894,10 +906,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    * @resolves When the role has been assigned.
    * @rejects If the role failed to be assigned.
    */
-  public async $assignRole(
-    memberId: string,
-    roleId: TMemberRoleId,
-  ): Promise<void> {
+  public $assignRole(memberId: string, roleId: TMemberRoleId): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       // Callback for errors.
       const onError = (message: string) => {
@@ -940,6 +949,47 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   }
 
   /**
+   * Sends a request to the server to mark a node alert
+   * as acknowledged.
+   * @param alertId The ID of the alert.
+   * @param nodeId The ID of the node to which the alert belongs.
+   * @resolves When the alert has been acknowledged.
+   * @rejects If the alert failed to be acknowledged.
+   */
+  public $acknowledgeNodeAlert(alertId: string, nodeId: string): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      // Callback for errors.
+      const onError = (message: string) => {
+        let error: Error = new Error(message)
+        console.error(message)
+        console.error(error)
+        reject(error)
+      }
+
+      // Emit a request to acknowledge the node alert.
+      this.server.request(
+        'request-acknowledge-node-alert',
+        { alertId, nodeId },
+        `Acknowledging node alert "${alertId}" on node "${nodeId}".`,
+        {
+          onResponse: (event) => {
+            switch (event.method) {
+              case 'node-alert-acknowledged':
+                return resolve()
+              case 'error':
+                return onError(event.message)
+              default:
+                return onError(
+                  `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
+                )
+            }
+          },
+        },
+      )
+    })
+  }
+
+  /**
    * Imports data provided to a member when the session
    * is started or reset.
    * @param event The event emitted by the server.
@@ -955,135 +1005,6 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     this.mission.importStartData(structure, forces, prototypes, files)
     // Remap actions.
     this.mapActions()
-  }
-
-  /**
-   * Handles the blocking and unblocking of nodes.
-   * @param nodeId The ID of the node to be blocked or unblocked.
-   * @param blocked Whether or not the node is blocked.
-   */
-  private updateNodeBlockStatus = (nodeId: string, blocked: boolean): void => {
-    // Find the node, given the ID.
-    let node = this.mission.getNodeById(nodeId)
-    // Handle the blocking and unblocking of the node.
-    if (node) node.blocked = blocked
-  }
-
-  /**
-   * Modifies the success chance of a specific action within a node or
-   * all actions within a node.
-   * @param successChanceOperand The operand to modify the success chance by.
-   * @param nodeId The ID of the node.
-   * @param actionId The ID of the action.
-   * @note If the action is not provided, the success chance of all actions
-   * within the node will be modified.
-   */
-  private modifySuccessChance = (
-    successChanceOperand: number,
-    nodeId: string,
-    actionId?: string,
-  ): void => {
-    // Find the node, given the ID.
-    let node = this.mission.getNodeById(nodeId)
-    // Modify the success chance for all the node's actions.
-    node?.modifySuccessChance(successChanceOperand, actionId)
-  }
-
-  /**
-   * Modifies the process time of a specific action within a node or
-   * all actions within a node.
-   * @param processTimeOperand The operand to modify the process time by.
-   * @param nodeId The ID of the node.
-   * @param actionId The ID of the action.
-   * @note If the action is not provided, the process time of all actions
-   * within the node will be modified.
-   */
-  private modifyProcessTime = (
-    processTimeOperand: number,
-    nodeId: string,
-    actionId?: string,
-  ): void => {
-    // Find the node, given the ID.
-    let node = this.mission.getNodeById(nodeId)
-    // Modify the process time for all the node's actions.
-    node?.modifyProcessTime(processTimeOperand, actionId)
-  }
-
-  /**
-   * Modifies the resource cost of a specific action within a node or
-   * all actions within a node.
-   * @param resourceCostOperand The operand to modify the resource cost by.
-   * @param nodeId The ID of the node.
-   * @param actionId The ID of the action.
-   * @note If the action is not provided, the resource cost of all actions
-   * within the node will be modified.
-   */
-  private modifyResourceCost = (
-    resourceCostOperand: number,
-    nodeId: string,
-    actionId?: string,
-  ): void => {
-    // Find the node, given the ID.
-    let node = this.mission.getNodeById(nodeId)
-    // Modify the resource cost for all the node's actions.
-    node?.modifyResourceCost(resourceCostOperand, actionId)
-  }
-
-  /**
-   * Modifies the resource pool of a force.
-   * @param forceId The ID of the force.
-   * @param operand The operand to modify the resource pool by.
-   */
-  private modifyResourcePool = (forceId: string, operand: number): void => {
-    // Find the force, given the ID.
-    let force = this.mission.getForceById(forceId)
-    // Modify the resource pool for the force.
-    force?.modifyResourcePool(operand)
-  }
-
-  /**
-   * Handles the granting/revoking of access to a file.
-   * @param fileId The ID of the file in question.
-   * @param forceId The ID of the force with newly granted/revoked access.
-   * @param granted Whether or not the access is granted.
-   */
-  private updateFileAccess = (data: TFileAccessModifierData): void => {
-    let force = this.mission.getForceById(data.forceId)
-    let file = this.mission.getFileById(data.fileId)
-
-    // If the force is not found, abort.
-    if (!force) return
-
-    // Handle file-access change based on whether
-    // access is granted or revoked.
-    if (data.granted) {
-      // If the file is not found in the mission,
-      // add it to the mission.
-      if (!file) {
-        file = ClientMissionFile.fromJson(data.fileData, this.mission)
-        this.mission.files.push(file)
-      }
-      // Grant access for the force to the file.
-      file.grantAccess(force)
-    } else {
-      // If the following conditions are met, remove
-      // the file from the mission entirely:
-      // 1. The file currently is found in the mission.
-      // 2. The member is assigned to the force in question.
-      // 3. The member does not have complete visibility, which
-      //    would otherwise negate file-access restrictions.
-      if (
-        file &&
-        this.member.forceId === data.forceId &&
-        !this.member.isAuthorized('completeVisibility')
-      ) {
-        this.mission.files = this.mission.files.filter(
-          (f) => f._id !== file!._id,
-        )
-      }
-      // Revoke access for the force to the file.
-      if (file) file.revokeAccess(force)
-    }
   }
 
   /**
@@ -1278,7 +1199,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     // Handle the data.
     switch (data.key) {
       case 'node-update-block-status':
-        this.updateNodeBlockStatus(data.nodeId, data.blocked)
+        this.onUpdateNodeBlockStatus(data.nodeId, data.blocked)
         break
       case 'node-update-open-state':
         this.onChangeNodeOpenState({
@@ -1289,37 +1210,145 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
           revealedDescendantPrototypes: data.revealedDescendantPrototypes,
         })
         break
+      case 'node-new-alert':
+        this.onNodeAlert(data)
+        break
       case 'node-action-success-chance':
-        this.modifySuccessChance(
-          data.successChanceOperand,
-          data.nodeId,
-          data.actionId,
-        )
-        break
       case 'node-action-process-time':
-        this.modifyProcessTime(
-          data.processTimeOperand,
-          data.nodeId,
-          data.actionId,
-        )
-        break
       case 'node-action-resource-cost':
-        this.modifyResourceCost(
-          data.resourceCostOperand,
-          data.nodeId,
-          data.actionId,
-        )
+        this.onActionModifier(data)
         break
       case 'force-resource-pool':
-        this.modifyResourcePool(data.forceId, data.operand)
+        this.onModifyResourcePool(data.poolId, data.operand)
         break
       case 'file-update-access':
-        this.updateFileAccess(data)
+        this.onUpdateFileAccess(data)
         break
       default:
         return console.warn(
           `Error: Data format sent to modifier handler is not recognized. Data: ${data}`,
         )
+    }
+  }
+
+  /**
+   * Handles an action modifier event from the server, building a
+   * {@link TActionModifier} from the event data and forwarding it
+   * to the target node.
+   */
+  private onActionModifier = (
+    data: Extract<
+      TServerEvents['modifier-enacted']['data'],
+      {
+        key:
+          | 'node-action-success-chance'
+          | 'node-action-process-time'
+          | 'node-action-resource-cost'
+      }
+    >,
+  ): void => {
+    let modifier: TActionModifier
+
+    switch (data.key) {
+      case 'node-action-success-chance':
+        modifier = {
+          type: 'success-chance',
+          amount: data.successChanceOperand,
+          appliedAt: data.appliedAt,
+          resourceId: null,
+        }
+        break
+      case 'node-action-process-time':
+        modifier = {
+          type: 'process-time',
+          amount: data.processTimeOperand,
+          appliedAt: data.appliedAt,
+          resourceId: null,
+        }
+        break
+      case 'node-action-resource-cost':
+        modifier = {
+          type: 'resource-cost',
+          amount: data.resourceCostOperand,
+          appliedAt: data.appliedAt,
+          resourceId: data.resourceId,
+        }
+        break
+    }
+
+    const node = this.mission.getNodeById(data.nodeId)
+    node?.onModify(modifier, data.actionId)
+  }
+
+  /**
+   * Handles the blocking and unblocking of nodes.
+   * @param nodeId The ID of the node to be blocked or unblocked.
+   * @param blocked Whether or not the node is blocked.
+   */
+  private onUpdateNodeBlockStatus = (
+    nodeId: string,
+    blocked: boolean,
+  ): void => {
+    // Find the node, given the ID.
+    let node = this.mission.getNodeById(nodeId)
+    // Handle the blocking and unblocking of the node.
+    if (node) node.blocked = blocked
+  }
+
+  /**
+   * Modifies the resource pool of a force.
+   * @param poolId The ID of the resource pool to be modified.
+   * @param operand The operand to modify the resource pool by.
+   */
+  private onModifyResourcePool = (poolId: string, operand: number): void => {
+    // Find the pool, given the ID.
+    let pool = this.mission.getPoolById(poolId)
+    // Modify the resource pool for the force.
+    pool?.onModify(operand)
+  }
+
+  /**
+   * Handles the granting/revoking of access to a file.
+   * @param fileId The ID of the file in question.
+   * @param forceId The ID of the force with newly granted/revoked access.
+   * @param granted Whether or not the access is granted.
+   */
+  private onUpdateFileAccess = (data: TFileAccessModifierData): void => {
+    let force = this.mission.getForceById(data.forceId)
+    let file = this.mission.getFileById(data.fileId)
+
+    // If the force is not found, abort.
+    if (!force) return
+
+    // Handle file-access change based on whether
+    // access is granted or revoked.
+    if (data.granted) {
+      // If the file is not found in the mission,
+      // add it to the mission.
+      if (!file) {
+        file = ClientMissionFile.fromJson(data.fileData, this.mission)
+        this.mission.files.push(file)
+      }
+      // Grant access for the force to the file.
+      file.grantAccess(force)
+    } else {
+      // If the following conditions are met, remove
+      // the file from the mission entirely:
+      // 1. The file currently is found in the mission.
+      // 2. The member is assigned to the force in question.
+      // 3. The member does not have complete visibility, which
+      //    would otherwise negate file-access restrictions.
+      if (
+        file &&
+        this.member.forceId === data.forceId &&
+        !this.member.isAuthorized('completeVisibility')
+      ) {
+        this.mission.files = this.mission.files.filter(
+          (f) => f._id !== file!._id,
+        )
+      }
+      // Revoke access for the force to the file.
+      if (file) file.revokeAccess(force)
     }
   }
 
@@ -1385,7 +1414,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     event: TServerEvents['action-execution-initiated'],
   ): void => {
     // Extract data.
-    const { resourcesRemaining } = event.data
+    const { resourcePools } = event.data
     // Type is defined here below because for some reason
     // there are type issues when I extract it using
     // the destructuring syntax above.
@@ -1416,9 +1445,14 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     // Handle execution on the node.
     node.onExecution(execution)
 
-    // Update the resources remaining for
-    // the force.
-    action.force.resourcesRemaining = resourcesRemaining
+    // Update the resource pools for the force.
+    for (let updatedPool of resourcePools) {
+      let pool = action.force.getPoolByResourceId(updatedPool.resourceId)
+      if (pool && updatedPool.balance !== undefined) {
+        pool.balance = updatedPool.balance
+      }
+    }
+    action.force.emitEvent('modify-forces')
 
     // Add execution to active executions.
     this._activeExecutions.push(execution)
@@ -1469,6 +1503,22 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   }
 
   /**
+   * Handles an event from the server indicating that a
+   * node alert has been acknowledged.
+   * @param data The event data containing the alert details.
+   */
+  private onNodeAlertAcknowledged = (
+    event: TServerEvents['node-alert-acknowledged'],
+  ): void => {
+    const { nodeId, alertId } = event.data
+    const node = this.mission.getNodeById(nodeId)
+    if (!node) {
+      return console.warn(`Node "${nodeId}" was not found.`)
+    }
+    node.onAlertAcknowledgement(alertId)
+  }
+
+  /**
    * Handles node open/close state change events from the server.
    * @param data The event data containing the node ID, new state, and revealed descendants.
    * @note This coordinates updates at both the prototype (template) and node (instance) levels.
@@ -1506,6 +1556,22 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
 
     // Rebuild the action map if new nodes were revealed during opening.
     if (revealedDescendants) this.mapActions()
+  }
+
+  /**
+   * Handles an event from the server indicating a new alert
+   * was created for a node.
+   * @param data The event data containing the alert details.
+   */
+  private onNodeAlert = (data: TNodeNewAlertData): void => {
+    const { nodeId, alert } = data
+    const node = this.mission.getNodeById(nodeId)
+    if (!node) {
+      return console.warn(
+        `Node "${nodeId}" was not found. This is likely due to an effect being applied to a node that has not yet been revealed to the user.`,
+      )
+    }
+    node.onAlert(alert)
   }
 
   /**

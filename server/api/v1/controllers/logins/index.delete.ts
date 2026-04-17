@@ -1,6 +1,4 @@
 import { ServerLogin } from '@server/logins/ServerLogin'
-import { ServerWebSession } from '@server/logins/ServerWebSession'
-import { SessionServer } from '@server/sessions/SessionServer'
 import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
 import { databaseLogger } from '../../../../logging'
 import { ApiResponse } from '../../library/ApiResponse'
@@ -15,9 +13,7 @@ import { StatusError } from '../../library/StatusError'
 export const logout: TExpressHandler = async (request, response) => {
   try {
     let forceful: boolean = request.headers.forceful === 'true'
-    // Grab the current login info from the session.
-    const { userId } = request.session
-    const login = ServerLogin.get(userId)
+    const login = ServerLogin.get(request)
 
     // If there is no login, throw an error.
     if (!login) {
@@ -33,18 +29,7 @@ export const logout: TExpressHandler = async (request, response) => {
       )
     }
 
-    // Destroy the login, session, and quit the METIS session.
-    if (login.metisSessionId) {
-      SessionServer.quit(login.metisSessionId, login.userId)
-    }
-
-    // Destroy the login
-    ServerLogin.destroy(login.userId)
-
-    // Destroy the session in the store
-    await ServerWebSession.destroy(login.webSessionId)
-
-    // Send response
+    login.destroy()
     return ApiResponse.sendStatus(response, 200)
   } catch (error: any) {
     databaseLogger.error('Failed to log out user.\n', error)

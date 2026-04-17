@@ -9,7 +9,7 @@ import LaunchPage from './LaunchPage'
 import LobbyPage from './LobbyPage'
 import MissionPage from './missions/MissionPage'
 import SessionConfigPage from './SessionConfigPage'
-import SessionPage from './SessionPage'
+import SessionPage from './sessions/SessionPage'
 import UserPage from './UserPage'
 import UserResetPage from './UserResetPage'
 

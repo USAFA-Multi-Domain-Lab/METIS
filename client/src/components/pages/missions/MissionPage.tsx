@@ -1,4 +1,3 @@
-import Prompt from '@client/components/content/communication/Prompt'
 import type { TFileReferenceList_P } from '@client/components/content/data/lists/implementations/FileReferenceList'
 import FileReferenceList from '@client/components/content/data/lists/implementations/FileReferenceList'
 import type { TMissionFileList_P } from '@client/components/content/data/lists/implementations/MissionFileList'
@@ -76,6 +75,13 @@ const STRUCTURE_DESCRIPTION =
   'Drag and drop the nodes below to reorder the structure of the mission. Nodes can be placed inside another node to nest nodes. Nodes can also be placed beside each other for more exact placement.'
 
 /**
+ * The description for the outline view in the
+ * secondary panel of the mission page.
+ */
+const OUTLINE_DESCRIPTION =
+  'A read-only overview of the full mission structure, including prototypes, forces, nodes, and actions.'
+
+/**
  * This will render page that allows the user to
  * edit a mission.
  */
@@ -145,7 +151,9 @@ export default function MissionPage(
         permissions: ['sessions_write_native'],
         onClick: async () => {
           await enforceSavePrompt()
-          onPlayTestRequest(mission, 'MissionPage')
+          onPlayTestRequest(mission, 'MissionPage', {
+            bypassNavigationMiddleware: true,
+          })
         },
       },
       {
@@ -156,7 +164,9 @@ export default function MissionPage(
         permissions: ['sessions_write_native'],
         onClick: async () => {
           await enforceSavePrompt()
-          onLaunchRequest(mission, 'MissionPage')
+          onLaunchRequest(mission, 'MissionPage', {
+            bypassNavigationMiddleware: true,
+          })
         },
       },
       {
@@ -166,7 +176,7 @@ export default function MissionPage(
         description: 'Export mission to .metis file',
         permissions: ['missions_write'],
         onClick: async () => {
-          await enforceSavePrompt()
+          await enforceSavePrompt({ includeDiscardOption: false })
           onExportRequest(mission)
         },
       },
@@ -178,7 +188,7 @@ export default function MissionPage(
         permissions: ['missions_write'],
         onClick: async () => {
           await enforceSavePrompt()
-          await onCopyRequest(mission)
+          onCopyRequest(mission)
         },
       },
       {
@@ -188,7 +198,7 @@ export default function MissionPage(
         description: 'Delete mission',
         disabled: !props.missionId,
         permissions: ['missions_write'],
-        onClick: async () => await onDeleteRequest(mission),
+        onClick: () => onDeleteRequest(mission),
       },
       HomeButton(),
       ProfileButton({ middleware: async () => await enforceSavePrompt() }),
@@ -209,7 +219,7 @@ export default function MissionPage(
    * Default size of the side panel.
    */
   const panel2DefaultSize: number = compute(() => {
-    let panel2DefaultSize: number = 330 /*px*/
+    let panel2DefaultSize: number = 350 /*px*/
     let currentAspectRatio: number = window.innerWidth / window.innerHeight
 
     // If the aspect ratio is greater than or equal to 16:9,
@@ -367,6 +377,9 @@ export default function MissionPage(
 
   // Handle selection changes.
   useEffect(() => {
+    // Trigger a check for issues, now
+    // that the user has made a new selection.
+    setCheckForIssues(true)
     // Cleanup when a new effect is created.
     setEffectModalActive(false)
     // Auto-switch to the files tab if a file
@@ -427,7 +440,6 @@ export default function MissionPage(
         save()
       }
     },
-    [areUnsavedChanges],
   )
 
   // Add event listener to watch for when a new
@@ -457,7 +469,8 @@ export default function MissionPage(
   /**
    * Saves the mission to the server with
    * any changes made.
-   * @returns A promise that resolves when the mission has been saved.
+   * @resolves A boolean which is true if the save
+   * was successful, and false otherwise.
    */
   const save = async () => {
     try {
@@ -468,12 +481,20 @@ export default function MissionPage(
         // Save the mission and notify
         // the user.
         await mission.saveToServer()
+        // Trigger a check for issues, now
+        // that the user has decided to save
+        // the mission.
+        setCheckForIssues(true)
         notify('Mission successfully saved.')
+        return true
+      } else {
+        throw new Error('No changes to save or insufficient permissions.')
       }
     } catch (error) {
       // Notify and revert upon error.
       notify('Mission failed to save.')
       setAreUnsavedChanges(true)
+      return false
     }
   }
 
@@ -498,14 +519,25 @@ export default function MissionPage(
    * }
    * ```
    */
-  const enforceSavePrompt = async (): Promise<void> => {
+  const enforceSavePrompt = async (
+    options: TSavePromptOptions = {},
+  ): Promise<void> => {
     return new Promise<void>(async (resolve, reject) => {
+      const { includeDiscardOption = true } = options
+
       // If there are unsaved changes, prompt the user.
       if (isAuthorized('missions_write') && areUnsavedChanges) {
-        const { choice } = await prompt(
-          'You have unsaved changes. What do you want to do with them?',
-          ['Cancel', 'Save', 'Discard'],
-        )
+        let options: Array<'Cancel' | 'Save' | 'Discard'> = ['Cancel', 'Save']
+        let message: string =
+          'You have unsaved changes which must be saved to proceed.'
+
+        if (includeDiscardOption) {
+          options.push('Discard')
+          message =
+            'You have unsaved changes. What do you want to do with them?'
+        }
+
+        const { choice } = await prompt(message, options)
 
         // If the user opted to save, then save
         // the mission.
@@ -593,9 +625,6 @@ export default function MissionPage(
     // ? Is this still necessary?
     ...components: TNonEmptyArray<MissionComponent<TMetisClientComponents>>
   ): void => {
-    // Trigger a check for issues, now
-    // that a component has changed.
-    setCheckForIssues(true)
     setAreUnsavedChanges(true)
     forceUpdate()
   }
@@ -608,18 +637,10 @@ export default function MissionPage(
     onDeleteRequest,
   } = useMissionItemButtonCallbacks({
     onSuccessfulCopy: async (resultingMission) => {
-      let { choice } = await prompt(
-        'Would you like to open the copied mission?',
-        Prompt.YesNoChoices,
-      )
-      if (choice === 'Yes') {
-        navigateTo('MissionPage', {
-          missionId: resultingMission._id,
-        })
-      }
+      navigateTo('HomePage', {}, { bypassMiddleware: true })
     },
     onSuccessfulDeletion: () => {
-      navigateTo('HomePage', {})
+      navigateTo('HomePage', {}, { bypassMiddleware: true })
     },
   })
 
@@ -722,6 +743,25 @@ export default function MissionPage(
                   <FileReferenceList {...inStoreListProps} />
                 </div>
               </PanelView>
+              {/* <PanelView title='Outline' description={OUTLINE_DESCRIPTION}>
+                <MissionOutline
+                  root={mission}
+                  filter={(item) => {
+                    let isPrototype = item instanceof ClientMissionPrototype
+                    let isEffect = item instanceof ClientEffect
+                    return !isPrototype && !isEffect
+                  }}
+                  isSelectable={(item) => {
+                    let isMission = item instanceof ClientMission
+                    return !isMission
+                  }}
+                  isIndirectlySelectable={(item, parent) => {
+                    let isNode = item instanceof ClientMissionNode
+                    let parentIsNode = parent instanceof ClientMissionNode
+                    return !isNode || !parentIsNode
+                  }}
+                />
+              </PanelView> */}
             </Panel>
             <Panel>
               <PanelView title={inspectorTabTitle}>
@@ -804,4 +844,17 @@ export type TMissionPage_S = {
    * Arguments to pass to the effect modal when active.
    */
   effectModalArgs: TReactState<Pick<TCreateEffect_P, 'host' | 'trigger'>>
+}
+
+/**
+ * Options for `enforceSavePrompt` function in
+ * {@link MissionPage}.
+ */
+export interface TSavePromptOptions {
+  /**
+   * Whether to include the 'Discard' option in the prompt.
+   * If false, the user will only be able to 'Save' or 'Cancel',
+   * @default true
+   */
+  includeDiscardOption?: boolean
 }

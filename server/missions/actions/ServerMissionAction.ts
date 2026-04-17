@@ -1,15 +1,17 @@
+import { sessionLogger } from '@server/logging'
 import type { ServerTarget } from '@server/target-environments/ServerTarget'
 import type { TTargetEnvExposedAction } from '@server/target-environments/context/TargetEnvContext'
-import type { TMissionActionJson } from '@shared/missions/actions/MissionAction'
+import type { TActionResourceCostJson } from '@shared/missions/actions/ActionResourceCost'
+import type { TActionModifier } from '@shared/missions/actions/MissionAction'
 import { MissionAction } from '@shared/missions/actions/MissionAction'
 import type {
   TEffectExecutionTriggered,
   TEffectExecutionTriggeredJson,
 } from '@shared/missions/effects/Effect'
-import type { PRNG } from 'seedrandom'
-import seedrandom from 'seedrandom'
+import type { JsonSerializableArray } from '@shared/toolbox/arrays/JsonSerializableArray'
 import { ServerEffect } from '../effects/ServerEffect'
 import type { ServerMissionNode } from '../nodes/ServerMissionNode'
+import { ServerActionCost } from './ServerActionCost'
 import type { TExecuteOptions } from './ServerActionExecution'
 import { ServerActionExecution } from './ServerActionExecution'
 import { ServerExecutionOutcome } from './ServerExecutionOutcome'
@@ -18,21 +20,11 @@ import { ServerExecutionOutcome } from './ServerExecutionOutcome'
  * Class for managing mission actions on the server.
  */
 export class ServerMissionAction extends MissionAction<TMetisServerComponents> {
-  /**
-   * The RNG used to generate random numbers for the action.
-   */
-  protected rng: PRNG
-
-  /**
-   * @param node The node that the action belongs to.
-   * @param data The data to use to create the ServerMissionAction.
-   * @param options The options for creating the ServerMissionAction.
-   */
-  public constructor(node: ServerMissionNode, data: TMissionActionJson) {
-    super(node, data)
-
-    // Initialize the RNG for the action.
-    this.rng = seedrandom(`${this.mission.rng.double()}`)
+  // Implemented
+  protected parseCosts(
+    data: TActionResourceCostJson[],
+  ): JsonSerializableArray<ServerActionCost> {
+    return ServerActionCost.fromJson(this, data)
   }
 
   // Implemented
@@ -78,9 +70,18 @@ export class ServerMissionAction extends MissionAction<TMetisServerComponents> {
       })
 
       // If the "Zero Resource Cost" cheat is not enabled,
-      // deduct the resource cost from the force's resources.
+      // deduct each resource cost from the corresponding pool.
       if (!zeroCost && !infiniteResources) {
-        this.force.resourcesRemaining -= this.resourceCost
+        for (let cost of this.includedCosts) {
+          let pool = this.force.getPoolByResourceId(cost.resourceId)
+          if (pool) {
+            cost.applyTo(pool)
+          } else {
+            sessionLogger.error(
+              'Failed to find pool for resource cost during action execution.',
+            )
+          }
+        }
       }
 
       // Set timeout for when the execution is completed.
@@ -98,7 +99,7 @@ export class ServerMissionAction extends MissionAction<TMetisServerComponents> {
         if (guaranteedSuccess) {
           outcome = ServerExecutionOutcome.generateGuaranteedSuccess(execution)
         } else {
-          outcome = ServerExecutionOutcome.generateRandom(execution, this.rng)
+          outcome = ServerExecutionOutcome.generateRandom(execution)
         }
 
         // Process the outcome at the different levels.
@@ -137,9 +138,6 @@ export class ServerMissionAction extends MissionAction<TMetisServerComponents> {
       get processTime() {
         return self.processTime
       },
-      get resourceCost() {
-        return self.resourceCost
-      },
       get executing() {
         return self.executing
       },
@@ -163,10 +161,21 @@ export class ServerMissionAction extends MissionAction<TMetisServerComponents> {
       get node() {
         return self.node.toTargetEnvContext()
       },
+      get resourceCosts() {
+        return self.resourceCosts.map((cost) => cost.toTargetEnvContext())
+      },
       get effects() {
         return self.effects.map((effect) => effect.toTargetEnvContext())
       },
     }
+  }
+
+  /**
+   * Applies a new modifier to the action by pushing it to
+   * the list of modifiers.
+   */
+  public applyModifier(modifier: TActionModifier): void {
+    this.modifiers.push(modifier)
   }
 
   /**

@@ -13,11 +13,7 @@
     }
   }
 
-  &.OutputMessage_execution-succeeded * {
-    // color: $color-success;
-  }
-
-  &.OutputMessage_execution-failed * {
-    // color: $color-failure;
+  .PropertyBadges {
+    margin-top: 1.25em;
   }
 }

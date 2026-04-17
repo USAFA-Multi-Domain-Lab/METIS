@@ -2,8 +2,9 @@ import { compute } from '@client/toolbox'
 import inputs from '@client/toolbox/inputs'
 import { useEffect, useState } from 'react'
 import type { TDetail_P } from '.'
-import Tooltip from '../communication/Tooltip'
 import './DetailNumber.scss'
+import DetailTitleRow from './DetailTitleRow'
+import { useDetailClassNames } from './useDetailClassNames'
 
 /**
  * This will render a detail for
@@ -23,6 +24,8 @@ export function DetailNumber({
   placeholder = 'Enter a number here...',
   uniqueLabelClassName = undefined,
   uniqueFieldClassName = undefined,
+  errorMessage = undefined,
+  errorType = 'default',
   disabled = false,
   tooltipDescription = '',
 }: TDetailNumber_P): TReactElement | null {
@@ -33,66 +36,19 @@ export function DetailNumber({
 
   /* -- COMPUTED -- */
   /**
-   * The class name for the detail.
+   * The boolean that determines if the
+   * error message should be displayed.
    */
-  const rootClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['Detail', 'DetailNumber']
-
-    // If disabled is true then add the
-    // disabled class name.
-    if (disabled) {
-      classList.push('Disabled')
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-  /**
-   * The class name for the label.
-   */
-  const labelClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['Label']
-
-    // If a unique class name is passed
-    // then add it to the list of class names.
-    if (uniqueLabelClassName) {
-      classList.push(uniqueLabelClassName)
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-  /**
-   * Class name for the input field.
-   */
-  const fieldClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['Field']
-
-    // If a unique class name is passed
-    // then add it to the list of class names.
-    if (uniqueFieldClassName) {
-      classList.push(uniqueFieldClassName)
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-  /**
-   * The class name for the optional text.
-   */
-  const optionalClassName: string = compute(() =>
-    fieldType === 'optional' ? 'Optional' : 'Hidden',
-  )
-  /**
-   * The class name for the info icon.
-   */
-  const infoClassName: string = compute(() =>
-    tooltipDescription ? 'DetailInfo' : 'Hidden',
-  )
-
+  const displayError: boolean = compute(() => errorMessage !== undefined)
+  const { rootClasses, labelClasses, fieldClasses, fieldErrorClasses } =
+    useDetailClassNames({
+      componentName: 'DetailNumber',
+      disabled,
+      displayError,
+      errorType,
+      uniqueLabelClassName,
+      uniqueFieldClassName,
+    })
   /* -- EFFECTS -- */
   // Set the input value to the state value.
   useEffect(() => {
@@ -110,19 +66,15 @@ export function DetailNumber({
 
   /* -- RENDER -- */
   return (
-    <div className={rootClassName}>
-      <div className='TitleRow'>
-        <div className='TitleColumnOne'>
-          <div className={labelClassName}>{label}</div>
-          <sup className={infoClassName}>
-            i
-            <Tooltip description={tooltipDescription} />
-          </sup>
-        </div>
-        <div className={`TitleColumnTwo ${optionalClassName}`}>optional</div>
-      </div>
+    <div className={rootClasses.value}>
+      <DetailTitleRow
+        label={label}
+        labelClassName={labelClasses.value}
+        tooltipDescription={tooltipDescription}
+        fieldType={fieldType}
+      />
       <input
-        className={fieldClassName}
+        className={fieldClasses.value}
         type='text'
         placeholder={placeholder}
         value={inputValue}
@@ -254,7 +206,8 @@ export function DetailNumber({
           }
         }}
       />
-      <div className='Unit'>{unit}</div>
+      {unit && <div className='Unit'>{unit}</div>}
+      <div className={fieldErrorClasses.value}>{errorMessage}</div>
     </div>
   )
 }

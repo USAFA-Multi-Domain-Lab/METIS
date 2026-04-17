@@ -1,0 +1,9 @@
+@use '@client/assets/styles/config.scss' as *;
+
+.PropertyBadges {
+  display: flex;
+  align-items: center;
+  flex-flow: row wrap;
+  gap: 0.75em;
+  font-size: 0.85em;
+}

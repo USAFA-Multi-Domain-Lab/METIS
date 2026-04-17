@@ -3,6 +3,7 @@ import type { RequestHandler } from 'express'
 import type { Request, Response } from 'express-serve-static-core'
 import type { Session as ExpressSession } from 'express-session'
 import type { ServerFileReference } from './files/ServerFileReference'
+import type { ServerActionCost } from './missions/actions/ServerActionCost'
 import type { ServerActionExecution } from './missions/actions/ServerActionExecution'
 import type { ServerExecutionOutcome } from './missions/actions/ServerExecutionOutcome'
 import type { ServerMissionAction } from './missions/actions/ServerMissionAction'
@@ -10,9 +11,11 @@ import type { ServerEffect } from './missions/effects/ServerEffect'
 import type { ServerMissionFile } from './missions/files/ServerMissionFile'
 import type { ServerMissionForce } from './missions/forces/ServerMissionForce'
 import type { ServerOutput } from './missions/forces/ServerOutput'
+import type { ServerResourcePool } from './missions/forces/ServerResourcePool'
 import type { ServerMissionNode } from './missions/nodes/ServerMissionNode'
 import type { ServerMissionPrototype } from './missions/nodes/ServerMissionPrototype'
 import type { ServerMission } from './missions/ServerMission'
+import type { ServerMissionResource } from './missions/ServerMissionResource'
 import type { ServerSessionMember } from './sessions/ServerSessionMember'
 import type { SessionServer } from './sessions/SessionServer'
 import type { ServerTarget } from './target-environments/ServerTarget'
@@ -42,10 +45,13 @@ declare global {
     target: ServerTarget
     fileReference: ServerFileReference
     mission: ServerMission
+    resource: ServerMissionResource
     prototype: ServerMissionPrototype
     missionFile: ServerMissionFile
     force: ServerMissionForce
     output: ServerOutput
+    resourcePool: ServerResourcePool
+    resourceCost: ServerActionCost
     node: ServerMissionNode
     action: ServerMissionAction
     execution: ServerActionExecution
@@ -118,6 +124,12 @@ declare global {
     fileStoreDir: string
 
     /**
+     * Whether database backups should be created automatically on startup and on a schedule.
+     * @default true
+     */
+    backupsEnabled: boolean
+
+    /**
      * The path to the SSL key file (if any).
      */
     sslKeyPath?: string
@@ -126,6 +138,24 @@ declare global {
      * The path to the SSL cert file (if any).
      */
     sslCertPath?: string
+
+    /**
+     * The maximum number of failed login attempts before lockout.
+     * @default 5
+     */
+    maxLoginAttempts: number
+
+    /**
+     * The duration of login lockout in seconds.
+     * @default 900
+     */
+    loginLockoutDuration: number
+
+    /**
+     * The time window in seconds to track failed attempts.
+     * @default 300
+     */
+    loginAttemptWindow: number
   }
 
   /**

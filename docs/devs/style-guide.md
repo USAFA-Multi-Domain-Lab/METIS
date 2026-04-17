@@ -1,5 +1,7 @@
 # METIS: Style Guide
 
+> **Note:** This is a developer-friendly reference copy of the style guide. The authoritative source enforced by AI agents is [.github/instructions/STYLE-GUIDE.instructions.md](../../.github/instructions/STYLE-GUIDE.instructions.md). If the two files ever conflict, the `.instructions.md` file takes precedence. Keep both files in sync when making changes.
+
 ## Table of Contents:
 
 - [**Docstrings**](#docstrings)
@@ -51,7 +53,7 @@ Functions and methods should include an unmarked description at the top describi
  * Generate an action outcome based on the factors passed.
  * @param action The action producing an outcome.
  * @param rng The random number generator used to determine success.
- * @returns The predetermined outcome of the action.
+ * @returns The randomly determined outcome of the action.
  */
 public static generateOutcome(
   action: ServerMissionAction,
@@ -285,18 +287,17 @@ export function useDefaultProps<
 
 ### Code References
 
-If a docstring includes a direct reference to another piece of code, this reference can be wrapped in ```` so that the reference is highlighted in VSCode. This is done to highlight the relationship of code throughout the application.
+When a docstring references a named symbol — such as a class, interface, component, or type — use `{@link SymbolName}` to create a clickable hyperlink in VSCode, enabling quick navigation from the docstring to the definition.
 
-```jsx
+```tsx
 /**
- * The instructor that is in charge of this course.
- * @note This will be a `User` object if the instructor has been loaded, or it
- * will be a string (user ID) if the instructor has not been loaded
+ * Describes an object that can be displayed as an item within the
+ * {@link MissionOutline} component.
+ * @note Implement this interface in classes that should be compatible
+ * with {@link MissionOutline}.
  */
-protected _instructor: User | string
+export interface TMissionOutlineItem {
 ```
-
-User is wrapped in ```` because the comment is reference the User class explicitly.
 
 ### Inherited Docs
 
@@ -333,9 +334,9 @@ When naming any piece of code, whether a variable, a class, or anything else, th
 
 For example, the Button component used to be called Action. However, this was changed because nodes contain actions that can be executed on a node. These are two very different things with the same term being used. If these concepts are used together, the code can quickly become difficult to understand. Therefore, the actions were renamed to buttons.
 
-Names given should also avoid non-conventional abbreviations. Terms that are commonly understood, such as “env”, “doc”, and “ref” are permitted. However, over-abbreviating can quickly make the code difficult to read.
+Names given should also avoid abbreviations and shortenings. The standard is simple: if it would not be acceptable in a professional email, it is not acceptable in code. There is no justification on modern hardware and screens for shortening words. Write them out fully.
 
-Names given should also not be overly long. Names should be limited to 3-4 words max, if possible. If a name is too long, and a suitable term cannot be given to shorten it, abbreviations are, in this case, encouraged, to shorten the variable, so long as the term used is easy to understand.
+Abbreviations that are standard in professional writing are permitted — for example, `ID`, `API`, `URL`, `HTTP`, `JSON`, and similar industry-standard acronyms that would appear unabbreviated in a professional context. Shortened words such as `req`, `res`, `env`, `conf`, `msg`, `cmd`, `ctx`, `ref`, `doc`, `err`, and similar contractions are not permitted.
 
 ### Files
 
@@ -479,7 +480,7 @@ Files should list classes, constants, functions, etc… first, with all types en
 
 ### Class Properties
 
-Related class properties are grouped together in a class for ease-of-access. No space is given between the related properties, while space is given between the groups themselves. This is done to make the groups stand out.
+A private backing field and its corresponding public getter and/or setter are grouped together — no blank line between them — because they collectively represent a single logical property. Blank lines separate each such group from the next. Properties that happen to serve the same interface, or that are thematically similar but are each independently meaningful, are **not** grouped; they each stand on their own with a blank line in between.
 
 ```jsx
 // ! Note the space between the ajax status properties and the ID property.

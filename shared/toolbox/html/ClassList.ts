@@ -41,14 +41,19 @@ export class ClassList {
    */
   public add(...classes: string[]): ClassList {
     // Validate the classes before adding them.
-    classes.forEach((cls) => {
+    let processedClasses = classes.filter((cls) => {
+      // Remove empty classes passed.
+      if (cls.trim() === '') {
+        return false
+      }
       if (!ClassList.isValidClass(cls)) {
         throw new Error(`Invalid class: ${cls}`)
       }
+      return true
     })
 
     // Add the classes.
-    for (let cls of classes) this._classes.add(cls)
+    for (let cls of processedClasses) this._classes.add(cls)
 
     return this
   }
@@ -128,9 +133,12 @@ export class ClassList {
 
   private switchMany<
     TLiteral extends keyof TMap,
-    TMap extends { [key: string]: string },
+    TMap extends { [key: string]: string | null },
   >(map: TMap, literal: TLiteral): ClassList {
     Object.keys(map).forEach((key: string) => {
+      // Skip null values.
+      if (map[key] === null) return
+      // Add matches, remove non-matches.
       if (key === literal) this.add(map[key])
       else this.remove(map[key])
     })
@@ -170,7 +178,9 @@ export class ClassList {
    * to a class name.
    * @param literal A string with a literal union type
    * which decides which class in the map to use, all
-   * other classes will be removed.
+   * other classes will be removed. Optionally, `null`
+   * can be used as a value in the map to indicate no
+   * class should be applied for that literal.
    * @returns Itself for chaining.
    * @example
    * ```ts
@@ -178,25 +188,39 @@ export class ClassList {
    *
    * // Use 'Class1', 'Class2' or 'Class3' based on the
    * // value of the string literal.
+   * let stringLiteral: 'use-class-1' | 'use-class-2' | 'use-class-3' = 'use-class-2'
    * classList.switch({
    *  'use-class-1': 'Class1',
    *  'use-class-2': 'Class2',
    *  'use-class-3': 'Class3',
-   * }, 'use-class-2')
+   * }, stringLiteral)
    * console.log(classList.value)
    * // Output: 'InitialClass Class2'
    *
+   * // Switch to 'Class1'.
+   * stringLiteral = 'use-class-1'
    * classList.switch({
    *  'use-class-1': 'Class1',
    *  'use-class-2': 'Class2',
    *  'use-class-3': 'Class3',
-   * }, 'use-class-1')
+   * }, stringLiteral)
    * console.log(classList.value)
    * // Output: 'InitialClass Class1'
+   *
+   * let optionalLiteral: 'use-class-1' | 'use-class-2' | 'use-class-3' | 'use-no-class' = 'use-no-class'
+   * classList.switch({
+   *  'use-class-1': 'Class1',
+   *  'use-class-2': 'Class2',
+   *  'use-class-3': 'Class3',
+   *  'use-no-class': null,
+   * }, optionalLiteral)
+   * console.log(classList.value)
+   * // Output: 'InitialClass'
+   * ```
    */
   public switch<
     TLiteral extends keyof TMap,
-    TMap extends { [key: string]: string },
+    TMap extends { [key: string]: string | null },
   >(map: TMap, literal: TLiteral): ClassList
 
   public switch(arg1: any, arg2: any, arg3?: any): ClassList {
@@ -237,4 +261,19 @@ export class ClassList {
   public static isValidClass(cls: string): boolean {
     return cls.match(/^[a-zA-Z0-9_-]+$/) !== null
   }
+}
+
+/* -- TYPES -- */
+
+/**
+ * Extend or join with `&` with your component's prop
+ * interface in order to support the quick addition of
+ * classes to the root element of your component.
+ */
+export type TAdditionalClassesSupport = {
+  /**
+   * A class list to combine with the default classes of the root
+   * element of the component.
+   */
+  additionalClasses?: ClassList
 }

@@ -1,6 +1,8 @@
 import type { TTargetEnvExposedEffect } from '@server/target-environments/context/TargetEnvContext'
 import type { ServerTarget } from '@server/target-environments/ServerTarget'
 import { ServerTargetEnvironment } from '@server/target-environments/ServerTargetEnvironment'
+import type { TMigratableEffect } from '@server/target-environments/TargetMigration'
+import { TargetMigration } from '@server/target-environments/TargetMigration'
 import type {
   TEffectContextExecution,
   TEffectContextSession,
@@ -47,7 +49,7 @@ export class ServerEffect<
    */
   public argsToTargetEnvContext(args: TAnyObject): TAnyObject {
     // Copy the arguments.
-    let argsCopy = { ...args }
+    let argsCopy = structuredClone(args)
 
     Object.entries(argsCopy).forEach(([key, value]) => {
       if (value[ForceArg.FORCE_NAME] !== undefined) {
@@ -104,41 +106,53 @@ export class ServerEffect<
   }
 
   /**
-   * Sanitizes the arguments for the effect.
-   * todo: This is not currently used. Reevaluate if this is needed in the future.
+   * Generates an effect object which can be used
+   * to perform a migration between versions via
+   * a {@link TargetMigration}.
    */
-  public sanitizeArgs(): void {
-    // If the target is not set, throw an error.
-    if (!this.target) {
-      throw new Error(
-        `The effect ({ _id: "${this._id}", name: "${this.name}" }) does not have a target. ` +
-          `This is likely because the target doesn't exist within any of the target environments stored in the registry.`,
-      )
-    }
-    // The sanitized arguments.
-    let sanitizedArgs = this.args
+  public toMigratable(): TMigratableEffect {
+    let self = this
 
-    // Loop through the target's arguments.
-    for (let arg of this.target.args) {
-      // Check if all the dependencies for the argument are met.
-      let allDependenciesMet: boolean = this.allDependenciesMet(
-        arg.dependencies,
-      )
-
-      // If any of the dependencies are not met and the argument is in the effect's arguments...
-      if (!allDependenciesMet && arg._id in this.args) {
-        // ...and the argument's type is a boolean or the argument is required, then remove the
-        // argument.
-        // *** Note: A boolean argument is always required because it's value
-        // *** is always defined.
-        if (arg.type === 'boolean' || arg.required) {
-          delete sanitizedArgs[arg._id]
+    let migratableEffect: TMigratableEffect = {
+      _id: self._id,
+      localKey: self.localKey,
+      name: self.name,
+      type: self.type,
+      trigger: self.trigger,
+      description: self.description,
+      order: self.order,
+      args: structuredClone(self.args),
+      versionCursor: this.targetEnvironmentVersion,
+      get mission() {
+        return self.mission.toTargetEnvContext()
+      },
+      get host() {
+        return self.host.toTargetEnvContext()
+      },
+      get sourceForce() {
+        return self.sourceForce ? self.sourceForce.toTargetEnvContext() : null
+      },
+      get sourceNode() {
+        return self.sourceNode ? self.sourceNode.toTargetEnvContext() : null
+      },
+      get sourceAction() {
+        return self.sourceAction ? self.sourceAction.toTargetEnvContext() : null
+      },
+      get target() {
+        return self.target ? self.target.toTargetEnvContext() : null
+      },
+      get environment() {
+        return self.environment ? self.environment.toTargetEnvContext() : null
+      },
+      get result() {
+        return {
+          version: this.versionCursor,
+          data: structuredClone(this.args),
         }
-      }
+      },
     }
 
-    // Set the sanitized arguments.
-    this.args = sanitizedArgs
+    return migratableEffect
   }
 
   /**

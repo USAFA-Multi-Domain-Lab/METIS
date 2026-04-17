@@ -38,6 +38,10 @@
     }
   }
 
+  .Subentry {
+    @include form-container();
+  }
+
   .List {
     $border: 0.2em solid $color-secondary !important;
 
@@ -48,6 +52,52 @@
 
     .ListItems .ListItem {
       border-top: unset;
+    }
+  }
+
+  .SubentryGroup {
+    @include form-container();
+  }
+
+  .ResourceSubentry {
+    display: grid;
+    align-content: center;
+    grid-template-columns: 1fr auto;
+    column-gap: 0.5em;
+
+    &.UsingDefaultName {
+      .FieldResourceName input {
+        color: $color-accent-light;
+        font-style: italic;
+      }
+    }
+
+    .ButtonSvgPanel {
+      grid-row: span 1;
+      flex-wrap: nowrap;
+    }
+
+    .DetailIconSelector {
+      grid-column: span 2;
+    }
+  }
+
+  .Panel {
+    border: 0;
+
+    .PanelTabBar {
+      margin-bottom: 2em;
+
+      &,
+      .PanelTab:not(.Selected) {
+        border: 0;
+      }
+
+      .PanelTab.Selected {
+        border-top: none;
+        border-left: none;
+        border-right: none;
+      }
     }
   }
 

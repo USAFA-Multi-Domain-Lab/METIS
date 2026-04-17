@@ -11,5 +11,10 @@
     "moduleResolution": "Bundler",
     "types": ["vite/client"]
   },
-  "include": ["src", "../shared", "vite.config.ts"]
+  "include": [
+    "src",
+    "../shared",
+    "vite.config.ts",
+    "../shared/missions/MissionResource.ts"
+  ]
 }

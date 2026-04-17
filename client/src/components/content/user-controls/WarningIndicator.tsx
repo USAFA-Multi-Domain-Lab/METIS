@@ -8,11 +8,12 @@ import './WarningIndicator.scss'
 export default function WarningIndicator({
   active = false,
   description = '',
+  onClick = () => {},
 }: TWarningIndicator_P): TReactElement {
   if (!active) return <></>
 
   return (
-    <div className='WarningIndicator'>
+    <div className='WarningIndicator' onClick={onClick}>
       <div className='WarningIcon'></div>
       <Tooltip description={description} />
     </div>
@@ -35,4 +36,9 @@ export type TWarningIndicator_P = {
    * @default ''
    */
   description?: string
+  /**
+   * Callback for when the indicator is clicked.
+   * @default () => {}
+   */
+  onClick?: () => void
 }

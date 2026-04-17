@@ -1,27 +1,32 @@
 import type { TLine_P } from '@client/components/content/session/mission-map/objects/Line'
+import type { TMissionOutlineItem } from '@client/components/pages/missions/structures/MissionOutline'
 import type { TMetisClientComponents } from '@client/index'
 import type { TListenerTargetEmittable } from '@shared/events/EventManager'
 import { EventManager } from '@shared/events/EventManager'
 import type { TMissionForceJson } from '@shared/missions/forces/MissionForce'
 import { MissionForce } from '@shared/missions/forces/MissionForce'
 import type { TOutputJson } from '@shared/missions/forces/MissionOutput'
+import type { TResourcePoolJson } from '@shared/missions/forces/ResourcePool'
 import type { MissionComponent } from '@shared/missions/MissionComponent'
 import type { TMissionNodeJson } from '@shared/missions/nodes/MissionNode'
 import { Counter } from '@shared/toolbox/numbers/Counter'
-import { NumberToolbox } from '@shared/toolbox/numbers/NumberToolbox'
 import type { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
 import type { TWithKey } from '@shared/toolbox/objects/ObjectToolbox'
+import { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSerializableArray'
 import type { ClientMissionAction } from '../actions/ClientMissionAction'
 import type { ClientMission } from '../ClientMission'
 import { ClientMissionNode } from '../nodes/ClientMissionNode'
 import { ClientOutput } from './ClientOutput'
+import { ClientResourcePool } from './ClientResourcePool'
 
 /**
  * Class for managing mission prototypes on the client.
  */
 export class ClientMissionForce
   extends MissionForce<TMetisClientComponents>
-  implements TListenerTargetEmittable<TForceEventMethods, TForceEventArgs>
+  implements
+    TListenerTargetEmittable<TForceEventMethods, TForceEventArgs>,
+    TMissionOutlineItem
 {
   /**
    * The lines used to connect nodes on the mission map.
@@ -48,6 +53,22 @@ export class ClientMissionForce
    */
   private eventManager: EventManager<TForceEventMethods, TForceEventArgs>
 
+  // Implemented
+  public readonly outlineIcon: TMetisIcon = 'shield'
+
+  // Implemented
+  public expandedInOutline: boolean = false
+
+  // Implemented
+  public get outlineChildren(): TMissionOutlineItem[] {
+    return this.root.outlineChildren
+  }
+
+  // Implemented
+  public get outlineParent(): TMissionOutlineItem | null {
+    return this.mission as ClientMission
+  }
+
   /**
    * @param mission The mission to which the force belongs.
    * @param data The force data from which to create the force. Any ommitted
@@ -73,7 +94,12 @@ export class ClientMissionForce
   }
 
   // Implemented
-  public createNode(data: Partial<TMissionNodeJson>): ClientMissionNode {
+  protected createPool(data: TResourcePoolJson): ClientResourcePool {
+    return ClientResourcePool.fromJson(this, data)
+  }
+
+  // Implemented
+  protected createNode(data: Partial<TMissionNodeJson>): ClientMissionNode {
     return new ClientMissionNode(this, data)
   }
 
@@ -476,17 +502,35 @@ export class ClientMissionForce
     return this.outputs
   }
 
-  // Implemented
-  public modifyResourcePool(operand: number): void {
-    if (!NumberToolbox.isNonNegative(operand)) {
-      throw new Error('The operand must be a positive number.')
-    }
-
-    // Modify the resource pool by the operand.
-    this.resourcesRemaining += operand
-
-    // Emit event.
+  // Overridden
+  public onModifyPool(): void {
     this.emitEvent('modify-forces')
+  }
+
+  /**
+   * Callback for when a mission's resource list updates
+   * or when a force is first created, allowing the force
+   * to confirm that the force's list  of pools still corresponds
+   * with the available resources in the mission.
+   */
+  public onResourceListUpdate(): void {
+    // Map resources to pools, this will result in
+    // pools that no longer have a corresponding resource
+    // in the mission being filtered out indirectly. New
+    // pools are returned in the map for any resource that
+    // doesn't have a corresponding pool. Because map is over
+    // resources, the list of pools will end up in the same
+    // order as the resources, which will be user friendly in
+    // the UI.
+    let updatedPools: ClientResourcePool[] = this.mission.resources.map(
+      (resource) => {
+        let existingPool = this.resourcePools.find(
+          (pool) => pool.resourceId === resource._id,
+        )
+        return existingPool ?? ClientResourcePool.createNew(this, resource)
+      },
+    )
+    this.resourcePools = new JsonSerializableArray(...updatedPools)
   }
 
   /**

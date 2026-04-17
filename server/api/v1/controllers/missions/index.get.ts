@@ -14,7 +14,7 @@ export const getMissions: TExpressHandler = async (request, response) => {
     // Retrieve all missions.
     let missions = await MissionModel.find(
       {},
-      { structure: 0, forces: 0, prototypes: 0, files: 0 },
+      { structure: 0, resources: 0, forces: 0, prototypes: 0, files: 0 },
     ).exec()
     // If no missions are found, throw an error.
     if (missions === null) {

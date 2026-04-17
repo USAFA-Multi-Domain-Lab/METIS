@@ -1,13 +1,14 @@
 import Prompt from '@client/components/content/communication/Prompt'
-import { DetailColorSelector } from '@client/components/content/form/DetailColorSelector'
 import { DetailLargeString } from '@client/components/content/form/DetailLargeString'
-import { DetailNumber } from '@client/components/content/form/DetailNumber'
 import { DetailString } from '@client/components/content/form/DetailString'
 import { DetailToggle } from '@client/components/content/form/DetailToggle'
+import Divider from '@client/components/content/form/Divider'
+import { DetailColorSelector } from '@client/components/content/form/dropdowns/colors/DetailColorSelector'
 import type { TButtonText_P } from '@client/components/content/user-controls/buttons/ButtonText'
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
 import { useMissionPageContext } from '@client/components/pages/missions/context'
 import Entry from '@client/components/pages/missions/entries/Entry'
+import ResourcePoolSubentry from '@client/components/pages/missions/entries/implementations/ResourcePoolSubentry'
 import useForceItemButtonCallbacks from '@client/components/pages/missions/hooks/mission-components/forces'
 import { useGlobalContext } from '@client/context/global'
 import { ClientMission } from '@client/missions/ClientMission'
@@ -17,7 +18,8 @@ import { compute } from '@client/toolbox'
 import { usePostInitEffect } from '@client/toolbox/hooks'
 import { Mission } from '@shared/missions/Mission'
 import type { TNonEmptyArray } from '@shared/toolbox/arrays/ArrayToolbox'
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
+import EntryHeader from '../EntryHeader'
 
 /**
  * This will render the basic editable details of a mission force.
@@ -34,12 +36,6 @@ export default function ForceEntry({
   const [introMessage, setIntroMessage] = useState<string>(force.introMessage)
   const [name, setName] = useState<string>(force.name)
   const [color, setColor] = useState<string>(force.color)
-  const [initialResources, setInitialResources] = useState<number>(
-    force.initialResources,
-  )
-  const [allowNegativeResources, setAllowNegativeResources] = useState<boolean>(
-    force.allowNegativeResources,
-  )
   const [revealAllNodes, setRevealAllNodes] = useState<
     ClientMissionForce['revealAllNodes']
   >(force.revealAllNodes)
@@ -65,7 +61,6 @@ export default function ForceEntry({
       },
     ],
   })
-
   /* -- COMPUTED -- */
 
   /**
@@ -111,24 +106,12 @@ export default function ForceEntry({
   /* -- EFFECTS -- */
 
   usePostInitEffect(() => {
-    // Update the force properties.
     force.introMessage = introMessage
     force.name = name
     force.color = color
-    force.initialResources = initialResources
-    force.allowNegativeResources = allowNegativeResources
     force.revealAllNodes = revealAllNodes
-
-    // Allow the user to save the changes.
     onChange(force)
-  }, [
-    introMessage,
-    name,
-    color,
-    initialResources,
-    allowNegativeResources,
-    revealAllNodes,
-  ])
+  }, [introMessage, name, color, revealAllNodes])
 
   /* -- RENDER -- */
 
@@ -144,23 +127,6 @@ export default function ForceEntry({
         maxLength={ClientMissionForce.MAX_NAME_LENGTH}
         disabled={viewMode === 'preview'}
         key={`${force._id}_name`}
-      />
-      <DetailNumber
-        fieldType='required'
-        label='Initial Resources'
-        value={initialResources}
-        setValue={setInitialResources}
-        integersOnly={true}
-        disabled={viewMode === 'preview'}
-        key={`${force._id}_initialResources`}
-      />
-      <DetailToggle
-        label='Negative Resource Pool'
-        value={allowNegativeResources}
-        setValue={setAllowNegativeResources}
-        tooltipDescription="If enabled, the force's resource pool can go below zero."
-        disabled={viewMode === 'preview'}
-        key={`${force._id}_allowNegativeResources`}
       />
       <DetailToggle
         label='Reveal All Nodes'
@@ -191,6 +157,14 @@ export default function ForceEntry({
         disabled={viewMode === 'preview'}
         key={`${force._id}_introMessage`}
       />
+      <Divider />
+      <EntryHeader heading='Resource Pools' />
+      {force.resourcePools.map((pool) => (
+        <Fragment key={`${force._id}_pool_${pool._id}`}>
+          <ResourcePoolSubentry pool={pool} />
+          <Divider />
+        </Fragment>
+      ))}
     </Entry>
   )
 }

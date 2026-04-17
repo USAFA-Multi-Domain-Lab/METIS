@@ -2,6 +2,7 @@ import { FileReferenceModel } from '@server/database/models/file-references'
 import { MissionModel } from '@server/database/models/missions'
 import type { TMulterFile } from '@server/files'
 import type { MetisFileStore } from '@server/files/MetisFileStore'
+import type { MetisServer } from '@server/MetisServer'
 import { ServerFileToolbox } from '@server/toolbox/files/ServerFileToolbox'
 import type { TMissionFileJson } from '@shared/missions/files/MissionFile'
 import { NumberToolbox } from '@shared/toolbox/numbers/NumberToolbox'
@@ -10,43 +11,7 @@ import type { TCreatedByInfo } from '@shared/users/User'
 import fs from 'fs'
 import path from 'path'
 import { databaseLogger, expressLogger } from '../../logging'
-
-import build_000005 from './builds/build_000005'
-import build_000009 from './builds/build_000009'
-import build_000010 from './builds/build_000010'
-import build_000011 from './builds/build_000011'
-import build_000012 from './builds/build_000012'
-import build_000013 from './builds/build_000013'
-import build_000017 from './builds/build_000017'
-import build_000018 from './builds/build_000018'
-import build_000020 from './builds/build_000020'
-import build_000023 from './builds/build_000023'
-import build_000024 from './builds/build_000024'
-import build_000025 from './builds/build_000025'
-import build_000026 from './builds/build_000026'
-import build_000027 from './builds/build_000027'
-import build_000028 from './builds/build_000028'
-import build_000029 from './builds/build_000029'
-import build_000032 from './builds/build_000032'
-import build_000033 from './builds/build_000033'
-import build_000034 from './builds/build_000034'
-import build_000035 from './builds/build_000035'
-import build_000036 from './builds/build_000036'
-import build_000037 from './builds/build_000037'
-import build_000038 from './builds/build_000038'
-import build_000039 from './builds/build_000039'
-import build_000040 from './builds/build_000040'
-import build_000041 from './builds/build_000041'
-import build_000042 from './builds/build_000042'
-import build_000044 from './builds/build_000044'
-import build_000045 from './builds/build_000045'
-import build_000046 from './builds/build_000046'
-import build_000047 from './builds/build_000047'
-import build_000049 from './builds/build_000049'
-import build_000050 from './builds/build_000050'
-import build_000051 from './builds/build_000051'
-import build_000052 from './builds/build_000052'
-import build_000053 from './builds/build_000053'
+import type { ImportMigrationBuilder } from './ImportMigrationBuilder'
 
 /**
  * This class is responsible for executing the import of .metis and .cesar files.
@@ -58,11 +23,23 @@ export class MissionImport {
    */
   private files: TFileImportData[]
 
+  private server: MetisServer
+
   /**
    * The file store where any supporting files
    * will be stored.
    */
-  private fileStore: MetisFileStore
+  private get fileStore(): MetisFileStore {
+    return this.server.fileStore
+  }
+
+  /**
+   * Helps perform migrations for imports with outdated
+   * data.
+   */
+  private get importMigrationBuilder(): ImportMigrationBuilder {
+    return this.server.importMigrationBuilder
+  }
 
   /**
    * Keeps track of the number of files that have been processed.
@@ -95,18 +72,18 @@ export class MissionImport {
 
   /**
    * @param files An array of files to import.
-   * @param fileStore The file store where any supporting files
-   * will be stored.
+   * @param server The MetisServer instance, used to access the file store
+   * and the import migration builder.
    * @param createdBy Data identifying who is importing the missions.
    */
   public constructor(
     files: TFileImportData | TFileImportData[],
-    fileStore: MetisFileStore,
+    server: MetisServer,
     createdBy: TCreatedByInfo,
   ) {
     if (!Array.isArray(files)) files = [files]
     this.files = files
-    this.fileStore = fileStore
+    this.server = server
     this.createdBy = createdBy
   }
 
@@ -260,66 +237,6 @@ export class MissionImport {
   }
 
   /**
-   * Proccesses the given build number with the given build function.
-   * @param missionData The mission data to process.
-   * @param targetBuildNumber The target build number. If the mission data's
-   * schema build number is less than this number, the build function will be
-   * executed.
-   * @param build The build function to execute, if the data is outdated.
-   */
-  private processBuild(
-    missionData: any,
-    targetBuildNumber: number,
-    build: TMissionImportBuild,
-  ): void {
-    let { schemaBuildNumber } = missionData
-    if (schemaBuildNumber < targetBuildNumber) build(missionData)
-  }
-
-  /**
-   * Migrates the mission data if it is outdated.
-   * @param missionData The mission data to migrate.
-   */
-  private migrateIfOutdated = (missionData: any): void => {
-    this.processBuild(missionData, 5, /*****/ build_000005)
-    this.processBuild(missionData, 9, /*****/ build_000009)
-    this.processBuild(missionData, 10, /****/ build_000010)
-    this.processBuild(missionData, 11, /****/ build_000011)
-    this.processBuild(missionData, 12, /****/ build_000012)
-    this.processBuild(missionData, 13, /****/ build_000013)
-    this.processBuild(missionData, 17, /****/ build_000017)
-    this.processBuild(missionData, 18, /****/ build_000018)
-    this.processBuild(missionData, 20, /****/ build_000020)
-    this.processBuild(missionData, 23, /****/ build_000023)
-    this.processBuild(missionData, 24, /****/ build_000024)
-    this.processBuild(missionData, 25, /****/ build_000025)
-    this.processBuild(missionData, 26, /****/ build_000026)
-    this.processBuild(missionData, 27, /****/ build_000027)
-    this.processBuild(missionData, 28, /****/ build_000028)
-    this.processBuild(missionData, 29, /****/ build_000029)
-    this.processBuild(missionData, 32, /****/ build_000032)
-    this.processBuild(missionData, 33, /****/ build_000033)
-    this.processBuild(missionData, 34, /****/ build_000034)
-    this.processBuild(missionData, 35, /****/ build_000035)
-    this.processBuild(missionData, 36, /****/ build_000036)
-    this.processBuild(missionData, 37, /****/ build_000037)
-    this.processBuild(missionData, 38, /****/ build_000038)
-    this.processBuild(missionData, 39, /****/ build_000039)
-    this.processBuild(missionData, 40, /****/ build_000040)
-    this.processBuild(missionData, 41, /****/ build_000041)
-    this.processBuild(missionData, 42, /****/ build_000042)
-    this.processBuild(missionData, 44, /****/ build_000044)
-    this.processBuild(missionData, 45, /****/ build_000045)
-    this.processBuild(missionData, 46, /****/ build_000046)
-    this.processBuild(missionData, 47, /****/ build_000047)
-    this.processBuild(missionData, 49, /****/ build_000049)
-    this.processBuild(missionData, 50, /****/ build_000050)
-    this.processBuild(missionData, 51, /****/ build_000051)
-    this.processBuild(missionData, 52, /****/ build_000052)
-    this.processBuild(missionData, 53, /****/ build_000053)
-  }
-
-  /**
    * Imports the files needed for the mission.
    * @param importDir The directory where the import has been
    * unzipped.
@@ -443,7 +360,7 @@ export class MissionImport {
         // Validates the contents of the file.
         this.validateFileContents(file, dataAsJson)
         // Migrates if necessary.
-        this.migrateIfOutdated(dataAsJson)
+        this.importMigrationBuilder.migrateIfOutdated(dataAsJson)
       } catch (error: any) {
         this.handleMissionImportError(file, error)
         return
@@ -516,11 +433,14 @@ export class MissionImport {
    * Creates a new `MissionImport` object from an array
    * of MulterFile objects.
    * @param multerFiles An array of MulterFile objects to import.
+   * @param server The MetisServer instance, used to access the file store
+   * and the import migration builder.
+   * @param createdBy Data identifying who is importing the missions.
    * @returns A new `MissionImport` object.
    */
   public static fromMulterFiles = (
     multerFiles: TMulterFile[],
-    fileStore: MetisFileStore,
+    server: MetisServer,
     createdBy: TCreatedByInfo,
   ): MissionImport => {
     let files = multerFiles.map((file) => ({
@@ -528,7 +448,7 @@ export class MissionImport {
       originalName: file.originalname,
       path: file.path,
     }))
-    return new MissionImport(files, fileStore, createdBy)
+    return new MissionImport(files, server, createdBy)
   }
 }
 
@@ -578,9 +498,3 @@ export type TFileImportResults = {
     errorMessage: string
   }>
 }
-
-/**
- * A build function that migrates mission import data
- * for a specific schema build number.
- */
-export type TMissionImportBuild = (missionData: any) => void

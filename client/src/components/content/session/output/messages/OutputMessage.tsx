@@ -1,13 +1,14 @@
 import RichText from '@client/components/content/general-layout/rich-text/RichText'
-import { compute } from '@client/toolbox'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import { useOutputContext } from '../Output'
+import ExecutionMessageDynamicContent from './ExecutionMessageDynamicContent'
 import './OutputMessage.scss'
 import { useOutputRenderer } from './renderers'
 
 /**
  * The actual message displayed in an output.
  */
-export default function () {
+export default function OutputMessage() {
   /* -- STATE -- */
 
   const { output } = useOutputContext()
@@ -15,22 +16,22 @@ export default function () {
 
   /* -- COMPUTED -- */
 
-  /**
-   * The class name for the root element.
-   */
-  const rootClassName = compute(() => {
-    let classList = ['OutputMessage', `OutputMessage_${output.type}`]
-    return classList.join(' ')
-  })
+  let rootClasses = new ClassList(
+    'OutputMessage',
+    `OutputMessage_${output.type}`,
+  )
 
   /* -- RENDER -- */
 
   return (
-    <span className={rootClassName}>
+    <span className={rootClasses.value}>
       <RichText
         key={key}
         options={{ content: renderedMessage, editable: false }}
       />
+      {output.type === 'execution-initiation' && output.sourceAction && (
+        <ExecutionMessageDynamicContent />
+      )}
     </span>
   )
 }

@@ -1,3 +1,4 @@
+import type { TMissionComponentArg } from '@shared/target-environments/args/mission-component/MissionComponentArg'
 import type { TTargetArg } from '../../target-environments/args/Arg'
 import type { TargetDependency } from '../../target-environments/targets/TargetDependency'
 import type {
@@ -5,11 +6,14 @@ import type {
   TFileMetadata,
   TForceMetadata,
   TNodeMetadata,
+  TPoolMetadata,
+  TResourceMetadata,
 } from '../../target-environments/types'
 import type { TAnyObject } from '../../toolbox/objects/ObjectToolbox'
 import { StringToolbox } from '../../toolbox/strings/StringToolbox'
 import { VersionToolbox } from '../../toolbox/strings/VersionToolbox'
 import { MissionAction } from '../actions/MissionAction'
+import type { ResourcePool } from '../forces/ResourcePool'
 import {
   MissionComponent,
   type TMissionComponentIssue,
@@ -162,139 +166,26 @@ export abstract class Effect<
           type: 'outdated',
           component: this,
           message:
-            `The effect, "${this.name}", has a target environment, "${environment.name}", with an incompatible version. ` +
-            `Incompatible versions can cause an effect to fail to be applied to its target during a session. ` +
+            `The effect, "${this.name}", is incompatible with the current version of the target environment, "${environment.name}". ` +
+            `This effect must be updated to be made compatible. ` +
             `Please click to resolve this.`,
         },
       ]
     }
 
     // Check the effect's arguments against the target's arguments.
-    // Check each argument.
-    for (let argId in this.args) {
-      // Find the argument in the target.
-      let arg = target.args.find((arg) => arg._id === argId)
-      // If the argument cannot be found, then the effect has issues.
-      if (!arg) {
-        return constructIssues(
-          `The effect, "${this.name}", has an argument, "${argId}", that couldn't be found within the target, "${target.name}." ` +
-            `Please delete the effect and create a new one.`,
-        )
-      }
-      // Otherwise, check the argument's value.
-      else {
-        // Check if the argument is required and has a value.
-        // * Note: Boolean arguments are always required because
-        // * they always have a value (true or false). Therefore,
-        // * they don't contain the required property.
-        if (
-          arg.type !== 'boolean' &&
-          arg.required &&
-          this.args[argId] === undefined &&
-          this.allDependenciesMet(arg.dependencies)
-        ) {
-          return constructIssues(
-            `The argument, "${arg.name}", within the effect, "${this.name}", is required, yet has no value. ` +
-              `Please enter a value, or delete the effect and create a new one.`,
-          )
-        }
-        // Check if the argument is a boolean and has a value.
-        if (
-          arg.type === 'boolean' &&
-          this.args[argId] === undefined &&
-          this.allDependenciesMet(arg.dependencies)
-        ) {
-          return constructIssues(
-            `The argument, "${arg.name}", within the effect, "${this.name}", is required, yet has no value. ` +
-              `Please update the value by clicking the toggle switch, or delete the effect and create a new one.`,
-          )
-        }
-        // Check if the argument is a dropdown and the selected option is valid.
-        if (
-          arg.type === 'dropdown' &&
-          !arg.options.find((option) => option.value === this.args[argId])
-        ) {
-          return constructIssues(
-            `The effect, "${this.name}", has an invalid option selected. ` +
-              `Please select a valid option, or delete the effect and create a new one.`,
-          )
-        }
-
-        // Check if the argument is a mission component and has a value.
-        const isMissionComponentReference =
-          arg.type === 'force' || arg.type === 'node' || arg.type === 'action'
-
-        if (isMissionComponentReference && arg.required) {
-          // Get the force, node, and action from the mission via the
-          // data stored in the effect's arguments.
-          const forceInMission = this.getForceFromArgs(argId)
-          const nodeInMission = this.getNodeFromArgs(argId)
-          const actionInMission = this.getActionFromArgs(argId)
-          // Get the force, node, and action data from the effect's arguments.
-          const forceInArgs = this.getForceMetadataInArgs(argId)
-          const nodeInArgs = this.getNodeMetadataInArgs(argId)
-          const actionInArgs = this.getActionMetadataInArgs(argId)
-          // Check if the force is required to be in the arguments.
-          const forceIsRequired = !forceInMission
-          // Check if the node is required to be in the arguments.
-          const nodeIsRequired =
-            (arg.type === 'node' || arg.type === 'action') && !nodeInMission
-          // Check if the action is required to be in the arguments.
-          const actionIsRequired =
-            arg.type === 'action' &&
-            !(actionInMission instanceof MissionAction) &&
-            actionInMission !== undefined
-
-          // If the force cannot be found, then the effect has issues.
-          if (forceIsRequired) {
-            return constructIssues(
-              forceInArgs
-                ? `The effect, "${this.name}", is targeting a force, "${forceInArgs.forceName}", which cannot be found.`
-                : `The effect, "${this.name}", targets a force which cannot be found.`,
-            )
-          }
-          // If the node cannot be found, then the effect has issues.
-          if (nodeIsRequired) {
-            return constructIssues(
-              nodeInArgs
-                ? `The effect, "${this.name}", targets a node, "${nodeInArgs.nodeName}", which cannot be found.`
-                : `The effect, "${this.name}", targets a node which cannot be found.`,
-            )
-          }
-          // If the action cannot be found, then the effect has issues.
-          if (actionIsRequired) {
-            return constructIssues(
-              actionInArgs
-                ? `The effect, "${this.name}", targets an action, "${actionInArgs?.actionName}", which cannot be found.`
-                : `The effect, "${this.name}", targets an action which cannot be found.`,
-            )
-          }
-        }
-
-        // If the argument exists within the effect even thought not all of its dependencies are met, then
-        // effect has issues.
-        if (
-          !this.allDependenciesMet(arg.dependencies) &&
-          this.args[argId] !== undefined
-        ) {
-          return constructIssues(
-            `The effect, "${this.name}", has an argument, "${arg.name}", that doesn't belong. ` +
-              `Please delete the effect and create a new one.`,
-          )
-        }
-      }
-    }
+    let argIssues = this.checkEffectArgs(target)
+    if (argIssues.length) return constructIssues(...argIssues)
 
     // Check to see if there are any missing arguments.
     let missingArg = this.checkForMissingArg()
-    // Ensure all of the required arguments are present in the effect.
     if (missingArg) {
       return constructIssues(
-        `The required argument ({ _id: "${missingArg._id}", name: "${missingArg.name}" }) within the effect ({ _id: "${this._id}", name: "${this.name}" }) is missing.`,
+        `The required argument "${missingArg.name}" within the effect "${this.name}" is missing.`,
       )
     }
 
-    if (this.environmentId === 'infer-for-build_000038') {
+    if (this.environmentId === Effect.LEGACY_INFER_ENV_ID) {
       return constructIssues(
         `The effect, "${this.name}" has a reference to a target, but not to a target environment.`,
       )
@@ -365,7 +256,6 @@ export abstract class Effect<
   }
 
   /**
-   * @param action The action that will trigger the effect.
    * @param data Additional information for the effect.
    */
   protected constructor(
@@ -406,6 +296,333 @@ export abstract class Effect<
     targetId: string,
     environmentId: string,
   ): T['target'] | null
+
+  /**
+   * Checks the effect's arguments against the target's arguments.
+   * @param target The target to check the effect's arguments against.
+   * @returns Any issues found with the effect's arguments.
+   */
+  private checkEffectArgs(target: T['target']): string[] {
+    let issues: string[] = []
+
+    // Utility function to quickly process different
+    // issue checkers efficiently.
+    const pushIfNotNull = (issue: string | null) => {
+      if (issue) {
+        issues.push(issue)
+      }
+    }
+
+    for (let argId in this.args) {
+      let targetArg = target.getArgById(argId)
+      let effectArgValue = this.args[argId]
+
+      if (!targetArg) {
+        issues.push(
+          `The effect, "${this.name}", has an argument, "${argId}", that couldn't be found within the target, "${target.name}." ` +
+            `Please delete the effect and create a new one.`,
+        )
+        continue
+      }
+
+      let dependenciesMet = this.allDependenciesMet(targetArg.dependencies)
+
+      pushIfNotNull(
+        this.checkDependencyAlignment(
+          targetArg,
+          effectArgValue,
+          dependenciesMet,
+        ),
+      )
+      pushIfNotNull(
+        this.checkRequiredArgs(targetArg, effectArgValue, dependenciesMet),
+      )
+      pushIfNotNull(
+        this.checkValueMatchesType(targetArg, effectArgValue, dependenciesMet),
+      )
+      pushIfNotNull(this.checkValidDropdownOption(targetArg, effectArgValue))
+      pushIfNotNull(this.checkMissionComponentArg(targetArg, effectArgValue))
+      pushIfNotNull(
+        this.checkStringArgAgainstPattern(targetArg, effectArgValue),
+      )
+    }
+
+    return issues
+  }
+
+  /**
+   * Checks if an argument is required and, if so, is missing a value.
+   * @param targetArg The target argument to check.
+   * @param effectArgValue The value of the argument in the effect.
+   * @returns An issue message if the argument is required and
+   * missing a value.
+   * @note Utility method of {@link checkEffectArgs}.
+   */
+  private checkRequiredArgs(
+    targetArg: TTargetArg,
+    effectArgValue: unknown,
+    dependenciesMet: boolean,
+  ): string | null {
+    // * Note: Boolean arguments are always required because
+    // * they always have a value (true or false). Therefore,
+    // * they don't contain the required property.
+    let isBoolean = targetArg.type === 'boolean'
+    let required = targetArg.type === 'boolean' || targetArg.required
+    let valueMissing = effectArgValue === undefined
+    let renterValueText: string = 'Please enter a value'
+
+    if (isBoolean) {
+      renterValueText = 'Please update the value by clicking the toggle switch'
+    }
+
+    if (required && valueMissing && dependenciesMet) {
+      return (
+        `The argument, "${targetArg.name}", within the effect, "${this.name}", is required, yet has no value. ` +
+        `${renterValueText}, or delete the effect and create a new one.`
+      )
+    }
+
+    return null
+  }
+
+  /**
+   * Checks if an argument's value matches the type specified
+   * in the target argument.
+   * @param targetArg The target argument to check.
+   * @param effectArgValue The value of the argument in the effect.
+   * @returns An issue message if the argument's value does not
+   * match the type specified in the target argument.
+   */
+  private checkValueMatchesType(
+    targetArg: TTargetArg,
+    effectArgValue: unknown,
+    dependenciesMet: boolean,
+  ): string | null {
+    if (!dependenciesMet || effectArgValue === undefined) {
+      return null
+    }
+
+    let typesToCheck = ['boolean', 'number', 'string']
+    let expectedType = targetArg.type
+    let actualType = typeof effectArgValue
+
+    // Consolidate similar types for checking.
+    if (expectedType === 'large-string') {
+      expectedType = 'string'
+    }
+
+    let shouldCheckType = typesToCheck.includes(expectedType)
+
+    // If we should check the type, but it isn't a match,
+    // return an issue.
+    if (shouldCheckType && actualType !== expectedType) {
+      return (
+        `The argument, "${targetArg.name}", within the effect, "${this.name}", is expected to be of type, "${expectedType}", ` +
+        `but received a value of type, "${actualType}". Please update the value, or delete the effect and create a new one (ERR 30382).`
+      )
+    } else {
+      return null
+    }
+  }
+
+  /**
+   * Checks if an arguments dependencies align with the current
+   * value in the effect. Specifically, if the dependencies are not met,
+   * the argument should not have a current value.
+   * @param targetArg The target argument to check.
+   * @param effectArgValue The value of the argument in the effect.
+   * @returns An issue message if the argument's dependencies do not align
+   * with the effect's argument value.
+   * @note Utility method of {@link checkEffectArgs}.
+   */
+  private checkDependencyAlignment(
+    targetArg: TTargetArg,
+    effectArgValue: unknown,
+    dependenciesMet: boolean,
+  ): string | null {
+    if (!dependenciesMet && effectArgValue !== undefined) {
+      return (
+        `The effect, "${this.name}", has an argument, "${targetArg.name}", that doesn't belong. ` +
+        `Please delete the effect and create a new one.`
+      )
+    }
+
+    return null
+  }
+
+  /**
+   * Checks if a dropdown argument is valid. Specifically,
+   * that the provided value is one of the available options
+   * in the dropdown.
+   * @param targetArg The target argument to check.
+   * @param effectArgValue The value of the argument in the effect.
+   * @returns An issue message if the dropdown option is invalid.
+   * @note Utility method of {@link checkEffectArgs}.
+   */
+  private checkValidDropdownOption(
+    targetArg: TTargetArg,
+    effectArgValue: unknown,
+  ): string | null {
+    if (
+      targetArg.type === 'dropdown' &&
+      !targetArg.options.find((option) => option.value === effectArgValue)
+    ) {
+      return (
+        `The effect, "${this.name}", has an invalid option selected. ` +
+        `Please select a valid option, or delete the effect and create a new one.`
+      )
+    }
+
+    return null
+  }
+
+  /**
+   * Checks if a mission-component argument is valid. Specifically,
+   * it verifies the existence of referenced mission components.
+   * @param targetArg The target argument to check.
+   * @param effectArgValue The value of the argument in the effect.
+   * @returns An issue message if the mission component reference
+   * is invalid.
+   * @note Utility method of {@link checkEffectArgs}.
+   */
+  private checkMissionComponentArg(
+    targetArg: TTargetArg,
+    effectArgValue: unknown,
+  ): string | null {
+    let { _id: argId, type } = targetArg
+
+    const isMissionComponentRef =
+      type === 'action' ||
+      type === 'pool' ||
+      type === 'node' ||
+      type === 'force' ||
+      type === 'file'
+
+    if (!isMissionComponentRef || effectArgValue === undefined) {
+      return null
+    }
+
+    // Check force reference (required for force, pool, node, and action types)
+    if (
+      type === 'force' ||
+      type === 'pool' ||
+      type === 'node' ||
+      type === 'action'
+    ) {
+      const forceInMission = this.getForceFromArgs(argId)
+      if (!forceInMission) {
+        const forceInArgs = this.getForceMetadataInArgs(argId)
+        return this.buildComponentNotFoundMessage(
+          'force',
+          forceInArgs?.forceName,
+        )
+      }
+    }
+
+    // Check pool reference (required for pool type)
+    if (type === 'pool') {
+      let poolInMission = this.getPoolFromArgs(argId)
+      if (!poolInMission) {
+        let poolInArgs = this.getPoolMetadataInArgs(argId)
+        return this.buildComponentNotFoundMessage('pool', poolInArgs?.poolName)
+      }
+    }
+
+    // Check node reference (required for node and action types)
+    if (type === 'node' || type === 'action') {
+      const nodeInMission = this.getNodeFromArgs(argId)
+      if (!nodeInMission) {
+        const nodeInArgs = this.getNodeMetadataInArgs(argId)
+        return this.buildComponentNotFoundMessage('node', nodeInArgs?.nodeName)
+      }
+    }
+
+    // Check action reference (required for action type)
+    if (type === 'action') {
+      // Only validate if a specific actionKey is stored. If absent, the arg
+      // targets all actions in the node ("All Actions"), which is valid.
+      const actionInArgs = this.getActionMetadataInArgs(argId)
+      const actionInMission = this.getActionFromArgs(argId)
+
+      if (actionInArgs && !actionInMission) {
+        return this.buildComponentNotFoundMessage(
+          'action',
+          actionInArgs.actionName,
+        )
+      }
+    }
+
+    // Check file reference (required for file type)
+    if (type === 'file') {
+      const fileInMission = this.getFileFromArgs(argId)
+      if (!fileInMission) {
+        const fileInArgs = this.getFileMetadataInArgs(argId)
+        return this.buildComponentNotFoundMessage('file', fileInArgs?.fileName)
+      }
+    }
+
+    return null
+  }
+
+  /**
+   * Checks if a string argument's value matches the required pattern specified
+   * in the target argument.
+   * @param targetArg The target argument to check.
+   * @param effectArgValue The value of the argument in the effect.
+   * @returns An issue message if the string argument's value does not match
+   * the required pattern.
+   * @note Utility method of {@link checkEffectArgs}.
+   */
+  private checkStringArgAgainstPattern(
+    targetArg: TTargetArg,
+    effectArgValue: unknown,
+  ): string | null {
+    if (targetArg.type !== 'string' || typeof effectArgValue !== 'string') {
+      return null
+    }
+
+    if (!targetArg.required && effectArgValue === undefined) {
+      return null
+    }
+
+    const pattern = targetArg.pattern
+    if (pattern instanceof RegExp && !pattern.test(effectArgValue)) {
+      return (
+        `The argument, "${targetArg.name}", within the effect, "${this.name}", does not match the required format. ` +
+        `Please update the value, or delete the effect and create a new one.`
+      )
+    }
+
+    return null
+  }
+
+  /**
+   * Builds a standardized error message for a missing mission component.
+   * @param componentType The type of component that cannot be found.
+   * @param componentName The name of the component, if available.
+   * @returns The error message.
+   */
+  private buildComponentNotFoundMessage(
+    componentType: TMissionComponentArg['type'],
+    componentName?: string,
+  ): string {
+    let verb = 'targets'
+    if (componentType === 'force') {
+      verb = 'is targeting'
+    }
+
+    let article = 'a'
+    if (componentType === 'action') {
+      article = 'an'
+    }
+
+    const actionGuidance = `Please select a valid ${componentType} or delete the effect and create a new one.`
+
+    if (componentName) {
+      return `The effect, "${this.name}", ${verb} ${article} ${componentType}, "${componentName}", which cannot be found. ${actionGuidance}`
+    }
+    return `The effect, "${this.name}", ${verb} ${article} ${componentType} which cannot be found. ${actionGuidance}`
+  }
 
   /**
    * Checks if there are any required target-arguments missing in the effect.
@@ -452,7 +669,7 @@ export abstract class Effect<
       order: this.order,
       name: this.name,
       description: this.description,
-      args: this.args,
+      args: structuredClone(this.args),
       localKey: this.localKey,
     }
   }
@@ -551,6 +768,14 @@ export abstract class Effect<
         }
         // If the dependency is a node dependency then check
         // if the node exists and if the condition is met.
+        else if (dependency.name === 'pool') {
+          const force = this.getForceFromArgs(dependency.dependentId)
+          const pool = this.getPoolFromArgs(dependency.dependentId)
+          const value = { force, pool }
+          dependencyMet = dependency.condition(value)
+        }
+        // If the dependency is a node dependency then check
+        // if the node exists and if the condition is met.
         else if (dependency.name === 'node') {
           const force = this.getForceFromArgs(dependency.dependentId)
           const node = this.getNodeFromArgs(dependency.dependentId)
@@ -571,6 +796,13 @@ export abstract class Effect<
         else if (dependency.name === 'file') {
           const file = this.getFileFromArgs(dependency.dependentId)
           const value = { file }
+          dependencyMet = dependency.condition(value)
+        }
+        // If the dependency is a resource dependency then check
+        // if the resource exists and if the condition is met.
+        else if (dependency.name === 'resource') {
+          const resource = this.getResourceFromArgs(dependency.dependentId)
+          const value = { resource }
           dependencyMet = dependency.condition(value)
         }
         // Otherwise, check if the condition is met.
@@ -719,6 +951,61 @@ export abstract class Effect<
   }
 
   /**
+   * Gets the resource metadata stored in the effect's arguments.
+   * @param argId The ID of the argument from which to get the resource.
+   * @returns The resource metadata if found, otherwise undefined.
+   */
+  public getResourceMetadataInArgs = (
+    argId: string,
+  ): Required<TResourceMetadata> | undefined => {
+    const resourceInArgs: TResourceMetadata | undefined = this.args[argId]
+
+    // If the resource argument is not found, then return undefined.
+    if (!resourceInArgs) return undefined
+    // Otherwise, extract the metadata.
+    let resourceId = resourceInArgs.resourceId
+    let resourceName = resourceInArgs.resourceName
+
+    // If any metadata is missing, then return undefined.
+    if (!resourceId || !resourceName) return undefined
+
+    // Return the resource metadata.
+    return { resourceId, resourceName }
+  }
+
+  /**
+   * Gets the pool metadata stored in the effect's arguments.
+   * @param argId The ID of the argument to get the pool from.
+   * @returns The pool metadata if found, otherwise undefined.
+   */
+  public getPoolMetadataInArgs = (
+    argId: string,
+  ): Required<TPoolMetadata> | undefined => {
+    const poolInArgs: TPoolMetadata | undefined = this.args[argId]
+
+    // If the pool argument is not found, then return undefined.
+    if (!poolInArgs) return undefined
+    // Otherwise, extract the metadata.
+    let forceKey = poolInArgs.forceKey
+    let forceName = poolInArgs.forceName
+    let poolKey = poolInArgs.poolKey
+    let poolName = poolInArgs.poolName
+
+    // If any metadata is missing, then return undefined.
+    if (!forceKey || !forceName || !poolKey || !poolName) return undefined
+
+    // Handle force keys that are set to 'self'.
+    if (forceKey === 'self') {
+      if (!this.sourceForce) return undefined
+      forceKey = this.sourceForce.localKey
+      forceName = this.sourceForce.name
+    }
+
+    // Return the pool metadata.
+    return { forceKey, forceName, poolKey, poolName }
+  }
+
+  /**
    * Gets the file metadata that's stored in the effect's arguments.
    * @param argId The ID of the argument from which to get the file.
    * @returns The file metadata if found, otherwise undefined.
@@ -822,6 +1109,39 @@ export abstract class Effect<
   }
 
   /**
+   * Gets the resource stored in the effect's arguments.
+   * @param argId The ID of the argument from which to get the resource.
+   * @returns The resource if found, otherwise undefined.
+   */
+  public getResourceFromArgs = (argId: string): T['resource'] | undefined => {
+    // Get the resource argument.
+    const resourceInArgs: TResourceMetadata | undefined = this.args[argId]
+    // Extract the metadata.
+    const resourceId = resourceInArgs?.resourceId
+    // Get the resource from the mission.
+    return this.mission.getResourceById(resourceId)
+  }
+
+  /**
+   * Gets the pool stored in the effect's arguments.
+   * @param argId The ID of the argument from which to get the pool.
+   * @returns The pool if found, otherwise undefined.
+   */
+  public getPoolFromArgs = (argId: string): ResourcePool<T> | undefined => {
+    const poolInArgs: TPoolMetadata | undefined = this.args[argId]
+    let forceKey = poolInArgs?.forceKey
+    let poolKey = poolInArgs?.poolKey
+    // Handle force keys that are set to 'self'.
+    if (forceKey === 'self') {
+      if (!this.sourceForce) return undefined
+      forceKey = this.sourceForce.localKey
+    }
+    return this.mission.getPoolByLocalKey(forceKey, poolKey) as
+      | ResourcePool<T>
+      | undefined
+  }
+
+  /**
    * Gets the file stored in the effect's arguments.
    * @param argId The ID of the argument from which to
    * get the file.
@@ -847,6 +1167,12 @@ export abstract class Effect<
    * alone.
    */
   public static readonly ENVIRONMENT_ID_INFER: string = 'INFER'
+
+  /**
+   * Legacy environment ID used in build_000038 that
+   * indicates missing target environment reference.
+   */
+  public static readonly LEGACY_INFER_ENV_ID: string = 'infer-for-build_000038'
 
   /**
    * Default properties set when creating a new
@@ -1070,8 +1396,10 @@ export type TEffectJson = TCreateJsonType<
  * Plain JSON representation of an `Effect` object
  * that is triggered by a session-lifecycle event.
  */
-export interface TEffectExecutionTriggeredJson
-  extends Omit<TEffectJson, 'trigger'> {
+export interface TEffectExecutionTriggeredJson extends Omit<
+  TEffectJson,
+  'trigger'
+> {
   trigger: TEffectExecutionTriggered
 }
 
@@ -1079,8 +1407,10 @@ export interface TEffectExecutionTriggeredJson
  * Plain JSON representation of an `Effect` object
  * that is triggered by an action-execution-lifecycle event.
  */
-export interface TEffectSessionTriggeredJson
-  extends Omit<TEffectJson, 'trigger'> {
+export interface TEffectSessionTriggeredJson extends Omit<
+  TEffectJson,
+  'trigger'
+> {
   trigger: TEffectSessionTriggered
 }
 
@@ -1088,17 +1418,18 @@ export interface TEffectSessionTriggeredJson
  * The default properties for an `Effect` object.
  * @inheritdoc TEffectJson
  */
-export interface TEffectDefaultJson<TTrigger extends TEffectTrigger>
-  extends Required<
-    Omit<
-      TEffectJson,
-      | 'trigger'
-      | 'localKey'
-      | 'targetId'
-      | 'environmentId'
-      | 'targetEnvironmentVersion'
-    >
-  > {
+export interface TEffectDefaultJson<
+  TTrigger extends TEffectTrigger,
+> extends Required<
+  Omit<
+    TEffectJson,
+    | 'trigger'
+    | 'localKey'
+    | 'targetId'
+    | 'environmentId'
+    | 'targetEnvironmentVersion'
+  >
+> {
   trigger: TTrigger
 }
 
@@ -1146,4 +1477,19 @@ export interface TEffectHost<
    * the given trigger.
    */
   generateEffectOrder(trigger: T[TType]['trigger']): number
+}
+
+/**
+ * Resulting data produced by the migration of
+ * an {@link Effect}.
+ */
+export interface TEffectMigrationResult {
+  /**
+   * The version to which the effect was migrated.
+   */
+  version: string
+  /**
+   * The resulting data produced from the migration.
+   */
+  data: TAnyObject
 }

@@ -1,4 +1,4 @@
-import { DetailDropdown } from '@client/components/content/form/dropdown'
+import { DetailDropdown } from '@client/components/content/form/dropdowns/standard/DetailDropdown'
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
 import { useMissionPageContext } from '@client/components/pages/missions/context'
 import useActionItemButtonCallbacks from '@client/components/pages/missions/hooks/mission-components/actions'
@@ -7,7 +7,7 @@ import { compute } from '@client/toolbox'
 import { useObjectFormSync, usePostInitEffect } from '@client/toolbox/hooks'
 import type { TActionType } from '@shared/missions/actions/MissionAction'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { DetailLargeString } from '../../../../content/form/DetailLargeString'
 import { DetailNumber } from '../../../../content/form/DetailNumber'
 import { DetailString } from '../../../../content/form/DetailString'
@@ -15,6 +15,7 @@ import { DetailToggle } from '../../../../content/form/DetailToggle'
 import Divider from '../../../../content/form/Divider'
 import { EffectTimeline } from '../../target-effects/timelines/'
 import Entry from '../Entry'
+import ActionCostSubentry from './ActionCostSubentry'
 
 /**
  * This will render the entry fields for an action.
@@ -38,8 +39,7 @@ export default function ActionEntry({
       'type',
       'successChanceHidden',
       'processTimeHidden',
-      'resourceCost',
-      'resourceCostHidden',
+      'resourceCosts',
       'opensNode',
       'opensNodeHidden',
     ],
@@ -48,19 +48,18 @@ export default function ActionEntry({
   const [name, setName] = actionState.name
   const [description, setDescription] = actionState.description
   const [type, setType] = actionState.type
-  const [successChance, setSuccessChance] = useState<number>(
-    parseFloat(`${(action.successChance * 100.0).toFixed(2)}`),
+  const [baseSuccessChance, setBaseSuccessChance] = useState<number>(
+    parseFloat(`${(action.baseSuccessChance * 100.0).toFixed(2)}`),
   )
   const [successChanceHidden, hideSuccessChance] =
     actionState.successChanceHidden
   const [processTimeHidden, hideProcessTime] = actionState.processTimeHidden
-  const [resourceCost, setResourceCost] = actionState.resourceCost
-  const [resourceCostHidden, hideResourceCost] = actionState.resourceCostHidden
+  const [resourceCosts, setResourceCosts] = actionState.resourceCosts
   const [opensNode, setOpensNode] = actionState.opensNode
   const [opensNodeHidden, hideOpensNode] = actionState.opensNodeHidden
-  const [hours, setHours] = useState<number>(action.processTimeHours)
-  const [minutes, setMinutes] = useState<number>(action.processTimeMinutes)
-  const [seconds, setSeconds] = useState<number>(action.processTimeSeconds)
+  const [hours, setHours] = useState<number>(action.baseProcessTimeHours)
+  const [minutes, setMinutes] = useState<number>(action.baseProcessTimeMinutes)
+  const [seconds, setSeconds] = useState<number>(action.baseProcessTimeSeconds)
   const svgEngine = useButtonSvgEngine({
     elements: [
       {
@@ -94,19 +93,19 @@ export default function ActionEntry({
   // Sync the component state with the action.
   usePostInitEffect(() => {
     // Update the success chance.
-    action.successChance = successChance / 100
+    action.baseSuccessChance = baseSuccessChance / 100
 
     // Convert and update the process time.
-    const processTime = ClientMissionAction.convertProcessTime(
+    const baseProcessTime = ClientMissionAction.convertProcessTime(
       hours,
       minutes,
       seconds,
     )
-    action.processTime = processTime
+    action.baseProcessTime = baseProcessTime
 
     // Allow the user to save the changes.
     onChange(action)
-  }, [successChance, hours, minutes, seconds])
+  }, [baseSuccessChance, hours, minutes, seconds])
 
   /* -- RENDER -- */
 
@@ -157,8 +156,8 @@ export default function ActionEntry({
       <DetailNumber
         fieldType='required'
         label='Success Chance'
-        value={successChance}
-        setValue={setSuccessChance}
+        value={baseSuccessChance}
+        setValue={setBaseSuccessChance}
         // Convert to percentage.
         minimum={ClientMissionAction.SUCCESS_CHANCE_MIN * 100}
         // Convert to percentage.
@@ -225,25 +224,12 @@ export default function ActionEntry({
         key={`${action._id}_processTimeHidden`}
       />
       <Divider />
-      <DetailNumber
-        fieldType='required'
-        label='Resource Cost'
-        value={resourceCost}
-        setValue={setResourceCost}
-        minimum={ClientMissionAction.RESOURCE_COST_MIN}
-        integersOnly={true}
-        disabled={viewMode === 'preview'}
-        key={`${action._id}_resourceCost`}
-      />
-      <DetailToggle
-        fieldType='required'
-        label='Hide'
-        tooltipDescription='If enabled, the resource cost will be hidden from the executor.'
-        value={resourceCostHidden}
-        setValue={hideResourceCost}
-        disabled={viewMode === 'preview'}
-        key={`${action._id}_resourceCostHidden`}
-      />
+      {action.includedCosts.map((cost) => (
+        <Fragment key={cost._id}>
+          <ActionCostSubentry cost={cost} />
+          <Divider />
+        </Fragment>
+      ))}
       <Divider />
       <DetailToggle
         fieldType='required'

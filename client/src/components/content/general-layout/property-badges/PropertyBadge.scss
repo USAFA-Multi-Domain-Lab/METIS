@@ -1,0 +1,44 @@
+@use '@client/assets/styles/config.scss' as *;
+@use '@client/assets/styles/util.scss' as *;
+
+.PropertyBadge {
+  display: flex;
+  align-items: center;
+  column-gap: 0.3em;
+  color: $color-accent-light;
+  -webkit-user-select: none;
+  user-select: none;
+
+  .PropertyIcon {
+    width: 0.675em;
+    height: 0.675em;
+    font-size: $button-svg-size;
+    cursor: help;
+  }
+
+  .PropertyValue {
+    transform: scale(1);
+    transition:
+      color 250ms ease-in-out,
+      transform 250ms ease-in-out;
+    color: $color-accent-light;
+    cursor: help;
+  }
+
+  &.Strikethrough {
+    .PropertyValue {
+      text-decoration: line-through;
+      color: $color-faded;
+      font-size: 1.1em;
+    }
+
+    .StrikethroughReason {
+      margin-left: 0.5em;
+      color: $color-faded;
+      font-size: 0.8em;
+      font-style: italic;
+      font-weight: bold;
+      line-height: 1.8em;
+    }
+  }
+}

@@ -65,10 +65,6 @@ export default function ButtonMenuController({
       })
       onActivate()
     },
-    // todo: Using these as dependencies causes the
-    // todo: event listener to constantly refresh.
-    // todo: This should be fixed.
-    [engine, showButtonMenu, listen],
   )
 
   /* -- RENDER -- */

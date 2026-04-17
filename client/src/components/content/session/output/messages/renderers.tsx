@@ -11,7 +11,7 @@ import { useOutputContext } from '../Output'
  * @param parent The parent object containing the value.
  * @param valueKey The key where the value is located within the parent object.
  * @param defaultValue The value to use if the value or its parent is null,
- * undefined, or an empty string.
+ * undefined, or an empty string. By default, this is 'N/A'.
  * @returns The defaulted value.
  */
 function defaultTo<T extends Object>(
@@ -38,9 +38,6 @@ function defaultTo<T extends Object>(
  * their respective values.
  */
 const tagRenderers: TSingleTypeMapped<TOutputTag, TOutputTagRenderer> = {
-  'resource-label': ({ mission }) => {
-    return mission.resourceLabel
-  },
   'node-name': ({ sourceNode }) => {
     return defaultTo(sourceNode, 'name')
   },
@@ -48,11 +45,7 @@ const tagRenderers: TSingleTypeMapped<TOutputTag, TOutputTagRenderer> = {
     return defaultTo(sourceAction, 'name')
   },
   'action-description': ({ sourceAction }) => {
-    return defaultTo(
-      sourceAction,
-      'description',
-      '<i>No description provided.</i>',
-    )
+    return defaultTo(sourceAction, 'description', '')
   },
   'success-chance': ({ sourceAction }) => {
     return defaultTo(sourceAction, 'successChanceFormatted')
@@ -123,7 +116,9 @@ export function useOutputRenderer(): TOutputRendererResults {
       // events based on whether the tag is present
       // in the message HTML.
       if (tag === 'time-remaining') {
-        setListenerTarget(elms.length ? sourceExecution?.mission ?? null : null)
+        setListenerTarget(
+          elms.length ? (sourceExecution?.mission ?? null) : null,
+        )
       }
     })
 
@@ -170,7 +165,6 @@ export function useOutputRenderer(): TOutputRendererResults {
         setListenerTarget(null)
       }
     },
-    [output, output.message],
   )
 
   return { key, renderedMessage }

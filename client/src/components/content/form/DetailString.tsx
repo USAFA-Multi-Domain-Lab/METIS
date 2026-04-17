@@ -1,8 +1,12 @@
 import { compute } from '@client/toolbox'
-import { useState } from 'react'
+import { ClassList } from '@shared/toolbox/html/ClassList'
+import React, { useState } from 'react'
 import type { TDetailWithInput_P } from '.'
-import Tooltip from '../communication/Tooltip'
 import './DetailString.scss'
+import DetailTitleRow from './DetailTitleRow'
+import { useDetailClassNames } from './useDetailClassNames'
+
+const DEFAULT_ERROR_MESSAGE: string = 'At least one character is required here.'
 
 /**
  * This will render a detail for
@@ -17,7 +21,9 @@ export function DetailString({
   setValue: setState,
   // Optional Properties
   defaultValue = undefined,
-  errorMessage = 'At least one character is required here.',
+  errorMessage = DEFAULT_ERROR_MESSAGE,
+  errorType = 'default',
+  errorDisplay = 'on-blur',
   disabled = false,
   uniqueLabelClassName = undefined,
   uniqueFieldClassName = undefined,
@@ -25,6 +31,7 @@ export function DetailString({
   placeholder = 'Enter text here...',
   tooltipDescription = '',
   maxLength = undefined,
+  highlightAllOnFocus = false,
 }: TDetailString_P): TReactElement {
   /* -- STATE -- */
   const [leftField, setLeftField] = useState<boolean>(false)
@@ -41,27 +48,30 @@ export function DetailString({
   const displayError: boolean = compute(() => {
     let display: boolean = false
 
-    // If the user has left the field and the
-    // field is required and the error message
-    // should be delivered, then display the error.
+    // Whether the user has satisfied the interaction requirement.
+    // In 'immediate' mode this is always true; in 'on-blur' mode
+    // the user must have left the field at least once.
+    let interactionSatisfied: boolean =
+      errorDisplay === 'immediate' || leftField
+
+    // Show a non-default error message (covers both 'default' and 'warning'
+    // errorType) once the interaction requirement is satisfied.
     if (
-      leftField &&
-      fieldType === 'required' &&
+      interactionSatisfied &&
       handleOnBlur === 'deliverError' &&
-      errorMessage !== 'At least one character is required here.'
+      errorMessage !== DEFAULT_ERROR_MESSAGE
     ) {
       display = true
     }
 
-    // If the user has left the field and the
-    // field is required and the error message
-    // should be delivered and the field is empty,
-    // then display the default error message.
+    // Lets the user know that the field cannot be left
+    // empty if the field is required and they have left
+    // the field without entering any information.
     if (
-      leftField &&
+      interactionSatisfied &&
       fieldType === 'required' &&
       handleOnBlur === 'deliverError' &&
-      errorMessage === 'At least one character is required here.' &&
+      errorMessage === DEFAULT_ERROR_MESSAGE &&
       stateValue === ''
     ) {
       display = true
@@ -70,106 +80,22 @@ export function DetailString({
     // Return the boolean.
     return display
   })
+  const { rootClasses, labelClasses, fieldClasses, fieldErrorClasses } =
+    useDetailClassNames({
+      componentName: 'DetailString',
+      disabled,
+      displayError,
+      errorType,
+      uniqueLabelClassName,
+      uniqueFieldClassName,
+    })
+  fieldClasses.set('Password', inputType === 'password')
   /**
-   * The class name for the detail.
-   */
-  const rootClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['Detail', 'DetailString']
-
-    // If disabled is true then add the
-    // disabled class name.
-    if (disabled) {
-      classList.push('Disabled')
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-  /**
-   * Class name for the error message field.
-   */
-  const fieldErrorClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['FieldErrorMessage']
-
-    // Hide the error message if the
-    // displayError is false.
-    if (!displayError) {
-      classList.push('Hidden')
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-  /**
-   * Class name for the label.
-   */
-  const labelClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['Label']
-
-    // If a unique class name is passed
-    // then add it to the list of class names.
-    if (uniqueLabelClassName) {
-      classList.push(uniqueLabelClassName)
-    }
-
-    // If displayError is true then
-    // add the error class name.
-    if (displayError) {
-      classList.push('Error')
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-  /**
-   * Class name for the input field.
-   */
-  const fieldClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['Field']
-
-    // If a unique class name is passed
-    // then add it to the list of class names.
-    if (uniqueFieldClassName) {
-      classList.push(uniqueFieldClassName)
-    }
-
-    // If the input type is password then
-    // add the password class name.
-    if (inputType === 'password') {
-      classList.push('Password')
-    }
-
-    // If displayError is true then
-    // add the error class name.
-    if (displayError) {
-      classList.push('Error')
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-
-  /**
-   * Class name for the toggle password display container.
+   * Class names for the toggle password display container.
    * @note Appears as a button with the text "show" or "hide".
    */
-  const togglePasswordButtonClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['TogglePasswordButton']
-
-    // If the input type is not "password" then
-    // add the hidden class name.
-    if (inputType !== 'password') {
-      classList.push('Hidden')
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
+  const togglePasswordButtonClasses = new ClassList('TogglePasswordButton')
+    .set('Hidden', inputType !== 'password')
   /**
    * The placeholder text being displayed.
    */
@@ -182,19 +108,6 @@ export function DetailString({
 
     return placeholderText
   })
-  /**
-   * The class name for the optional text.
-   */
-  const optionalClassName: string = compute(() =>
-    fieldType === 'optional' ? 'Optional' : 'Hidden',
-  )
-  /**
-   * The class name for the info icon.
-   */
-  const infoClassName: string = compute(() =>
-    tooltipDescription ? 'DetailInfo' : 'Hidden',
-  )
-
   /* -- FUNCTIONS -- */
 
   /**
@@ -213,18 +126,14 @@ export function DetailString({
   /* -- RENDER -- */
 
   return (
-    <div className={rootClassName}>
-      <div className='TitleRow'>
-        <div className='TitleColumnOne'>
-          <div className={labelClassName}>{label}</div>
-          <sup className={infoClassName}>
-            i
-            <Tooltip description={tooltipDescription} />
-          </sup>
-        </div>
-        <div className={`TitleColumnTwo ${optionalClassName}`}>optional</div>
-      </div>
-      <div className={fieldClassName}>
+    <div className={rootClasses.value}>
+      <DetailTitleRow
+        label={label}
+        labelClassName={labelClasses.value}
+        tooltipDescription={tooltipDescription}
+        fieldType={fieldType}
+      />
+      <div className={fieldClasses.value}>
         <input
           className={'Input'}
           type={currentInputType}
@@ -232,6 +141,11 @@ export function DetailString({
           placeholder={placeholderDisplayed}
           maxLength={maxLength}
           disabled={disabled}
+          onFocus={(event: React.FocusEvent<HTMLInputElement>) => {
+            if (highlightAllOnFocus) {
+              event.target.select()
+            }
+          }}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
             let target: HTMLInputElement = event.target as HTMLInputElement
             let value: string = target.value
@@ -265,7 +179,7 @@ export function DetailString({
           }}
         />
         <input
-          className={togglePasswordButtonClassName}
+          className={togglePasswordButtonClasses.value}
           onClick={togglePasswordDisplay}
           type='button'
           value={displayPasswordText}
@@ -277,7 +191,7 @@ export function DetailString({
           {stateValue.length}/{maxLength}
         </div>
       ) : null}
-      <div className={fieldErrorClassName}>{errorMessage}</div>
+      <div className={fieldErrorClasses.value}>{errorMessage}</div>
     </div>
   )
 }
@@ -302,4 +216,9 @@ type TDetailString_P = TDetailWithInput_P<string> & {
    * The maximum number of characters that can be entered.
    */
   maxLength?: number
+  /**
+   * Determines if the field highlights all of the text when the user focuses on the field.
+   * @default false
+   */
+  highlightAllOnFocus?: boolean
 }

@@ -1,12 +1,12 @@
-import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
+import EntryHeader from '@client/components/pages/missions/entries/EntryHeader'
 import { compute } from '@client/toolbox'
 import { useRequireLogin } from '@client/toolbox/hooks'
 import { CallToolbox } from '@shared/toolbox/calls/CallToolbox'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import { useEffect } from 'react'
 import useEffectItemButtonCallbacks from '../../../hooks/mission-components/effects'
 import { useTimelineContext } from '../context'
-import './TimelineControlPanel.scss'
 
 /**
  * Provides controls to the {@link EffectTimeline}
@@ -88,10 +88,12 @@ export default function TimelineControlPanel({}: TTimelineControlPanel_P): TReac
   /* -- RENDER -- */
 
   return (
-    <div className={'TimelineControlPanel'} ref={elements.controlPanel}>
-      <div className='TimelineHeading'>Effects</div>
-      <ButtonSvgPanel engine={engine} />
-    </div>
+    <EntryHeader
+      heading='Effects'
+      engine={engine}
+      additionalClasses={new ClassList('TimelineControlPanel')}
+      elementRef={elements.controlPanel}
+    />
   )
 }
 

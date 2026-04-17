@@ -3,15 +3,21 @@ import type {
   TMapCompatibleNodeEvent,
   TNodeButton,
 } from '@client/components/content/session/mission-map/objects/nodes'
+import type { TMissionOutlineItem } from '@client/components/pages/missions/structures/MissionOutline'
 import type { TMetisClientComponents } from '@client/index'
 import type { ClientSessionMember } from '@client/sessions/ClientSessionMember'
 import type { TRequestMethod } from '@shared/connect'
 import type { TListenerTargetEmittable } from '@shared/events/EventManager'
 import { EventManager } from '@shared/events/EventManager'
 import type { TActionExecutionJson } from '@shared/missions/actions/ActionExecution'
-import type { TMissionActionJson } from '@shared/missions/actions/MissionAction'
+import type {
+  TActionModifier,
+  TMissionActionJson,
+} from '@shared/missions/actions/MissionAction'
 import type { TMissionNodeJson } from '@shared/missions/nodes/MissionNode'
 import { MissionNode } from '@shared/missions/nodes/MissionNode'
+import type { TNodeAlertJson } from '@shared/missions/nodes/NodeAlert'
+import { NodeAlert } from '@shared/missions/nodes/NodeAlert'
 import memoizeOne from 'memoize-one'
 import { ClientActionExecution } from '../actions/ClientActionExecution'
 import { ClientMissionAction } from '../actions/ClientMissionAction'
@@ -22,7 +28,10 @@ import type { ClientMissionForce } from '../forces/ClientMissionForce'
  */
 export class ClientMissionNode
   extends MissionNode<TMetisClientComponents>
-  implements TListenerTargetEmittable<TNodeEventMethod>, TMapCompatibleNode
+  implements
+    TListenerTargetEmittable<TNodeEventMethod>,
+    TMapCompatibleNode,
+    TMissionOutlineItem
 {
   // Overridden
   public get name(): string {
@@ -47,6 +56,7 @@ export class ClientMissionNode
     return this._executable
   }
   public set executable(value: boolean) {
+    if (this._executable === value) return
     this._executable = value
     this.emitEvent('new-icon')
   }
@@ -56,6 +66,7 @@ export class ClientMissionNode
     return this._device
   }
   public set device(value: boolean) {
+    if (this._device === value) return
     this._device = value
     this.emitEvent('new-icon')
   }
@@ -292,7 +303,9 @@ export class ClientMissionNode
 
   // Implemented
   public get icon(): TMetisIcon {
-    if (this.executable) {
+    if (this.hasPendingAlerts) {
+      return '_blank' // Blank because warning icon is rendered via a mask-image rule instead.
+    } else if (this.executable) {
       if (this.device) return 'device'
       else return 'lightning'
     } else {
@@ -328,6 +341,26 @@ export class ClientMissionNode
    */
   private eventManager: EventManager<TNodeEventMethod>
 
+  // Implemented
+  public readonly outlineIcon: TMetisIcon = 'node'
+
+  // Implemented
+  public expandedInOutline: boolean = false
+
+  // Implemented
+  public get outlineChildren(): TMissionOutlineItem[] {
+    return [...this.children, ...this.actions.values()]
+  }
+
+  // Implemented
+  public get outlineParent(): TMissionOutlineItem | null {
+    let parent = this.parent
+    if (parent === null || parent === this.force.root) {
+      return this.force
+    }
+    return parent
+  }
+
   /**
    * @param force The force of which the node is a part.
    * @param data The node data from which to create the node.
@@ -350,7 +383,7 @@ export class ClientMissionNode
   // Implemented
   protected importActions(data: TMissionActionJson[]): void {
     data.forEach((datum) => {
-      let action = ClientMissionAction.create(this, datum)
+      let action = ClientMissionAction.fromJson(this, datum)
       this.actions.set(action._id, action)
     })
   }
@@ -490,63 +523,74 @@ export class ClientMissionNode
     this.emitEvent('output-sent')
   }
 
-  // Implemented
-  public modifySuccessChance(
-    successChanceOperand: number,
-    actionId?: string,
-  ): void {
-    if (!actionId) {
-      this.actions.forEach((action) => {
-        action.modifySuccessChance(successChanceOperand)
-      })
-    } else {
-      const action = this.actions.get(actionId)
-      if (!action) {
-        return console.error(`Action "${actionId}" not found.`)
-      }
-      action.modifySuccessChance(successChanceOperand)
-    }
+  /**
+   * Handles a new alert for this node.
+   * @param alertJson The JSON-serialized alert data.
+   */
+  public onAlert(alertJson: TNodeAlertJson): void {
+    let newIcon = !this.hasPendingAlerts
+    let alert = NodeAlert.fromJson(alertJson)
+    this._alerts.push(alert)
+    this.emitEvent('new-alert')
 
-    // Emit event.
-    this.emitEvent('modify-actions')
+    if (newIcon) {
+      this.emitEvent('new-icon')
+    }
   }
 
-  // Implemented
-  public modifyProcessTime(
-    processTimeOperand: number,
-    actionId?: string,
-  ): void {
-    if (!actionId) {
-      this.actions.forEach((action) => {
-        action.modifyProcessTime(processTimeOperand)
-      })
-    } else {
-      const action = this.actions.get(actionId)
-      if (!action) {
-        return console.error(`Action "${actionId}" not found.`)
-      }
-      action.modifyProcessTime(processTimeOperand)
+  /**
+   * Handles the acknowledgement of an alert on the node.
+   * This will be called when the server notifies members
+   * of a force that another member of a force acknowledged
+   * an alert on a node, essentially synchronizing the state of
+   * the alert across all members of the force.
+   * @param alertId The ID of the alert that was acknowledged.
+   */
+  public onAlertAcknowledgement(alertId: string): void {
+    let alert = this.getAlert(alertId)
+    if (!alert) {
+      console.warn(
+        `Attempted to acknowledge non-existent alert with ID "${alertId}" on node with ID "${this._id}".`,
+      )
+      return
     }
-
-    // Emit event.
-    this.emitEvent('modify-actions')
+    if (!alert.acknowledged) {
+      alert.acknowledged = true
+      this.emitEvent('alert-updated')
+    }
+    if (!this.hasPendingAlerts) {
+      this.emitEvent('new-icon') // Icon changes once there are no more pending alerts.
+    }
   }
 
-  // Implemented
-  public modifyResourceCost(
-    resourceCostOperand: number,
-    actionId?: string,
-  ): void {
+  public onAlertAcknowledgementError(alertId: string): void {
+    let alert = this.getAlert(alertId)
+    if (!alert) {
+      console.warn(
+        `Attempted to revert acknowledgement of non-existent alert with ID "${alertId}" on node with ID "${this._id}".`,
+      )
+      return
+    }
+    if (alert.acknowledged) {
+      alert.acknowledged = false
+      this.emitEvent('alert-updated')
+    }
+  }
+
+  /**
+   * Callback for when a new modifier has been applied to this
+   * node.
+   * @param modifier The modifier that was applied to the node.
+   * @param actionId The ID of a specific action to apply the modifier to.
+   * If undefined, the modifier will be applied to all actions on the node.
+   */
+  public onModify(modifier: TActionModifier, actionId?: string): void {
     if (!actionId) {
-      this.actions.forEach((action) => {
-        action.modifyResourceCost(resourceCostOperand)
-      })
+      this.actions.forEach((action) => action.onModify(modifier))
     } else {
       const action = this.actions.get(actionId)
-      if (!action) {
-        return console.error(`Action "${actionId}" not found.`)
-      }
-      action.modifyResourceCost(resourceCostOperand)
+      if (!action) return console.error(`Action "${actionId}" not found.`)
+      action.onModify(modifier)
     }
 
     // Emit event.
@@ -616,12 +660,24 @@ export class ClientMissionNode
     return duplicatedNode
   }
 
+  /**
+   * Creates a new action for the node with default values,
+   * adding it to the current list of actions. Corresponding
+   * resource costs will also be automatically generated.
+   * @returns The newly created action.
+   */
+  public createAction(): ClientMissionAction {
+    let newAction = ClientMissionAction.fromJson(this)
+    this.actions.set(newAction._id, newAction)
+    newAction.onResourceListUpdate()
+    return newAction
+  }
+
   // Implemented
   public requestCenterOnMap(): void {
     this.emitEvent('center-on-map')
     this.mission.emitEvent('center-node-on-map', this)
   }
-
   /* -- static -- */
 
   /**

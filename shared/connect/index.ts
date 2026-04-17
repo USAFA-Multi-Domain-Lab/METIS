@@ -1,3 +1,4 @@
+import type { TNodeAlertJson } from '@shared/missions/nodes/NodeAlert'
 import type { TEnvScriptResultJson } from '@shared/target-environments/EnvScriptResults'
 import type { MetisComponent } from '../MetisComponent'
 import type {
@@ -8,6 +9,7 @@ import type { TExecutionOutcomeJson } from '../missions/actions/ExecutionOutcome
 import type { TMissionFileJson } from '../missions/files/MissionFile'
 import type { TMissionForceSaveJson } from '../missions/forces/MissionForce'
 import type { TOutputJson } from '../missions/forces/MissionOutput'
+import type { TResourcePoolJson } from '../missions/forces/ResourcePool'
 import type { TMissionNodeJson } from '../missions/nodes/MissionNode'
 import type { TMissionPrototypeJson } from '../missions/nodes/MissionPrototype'
 import type { MemberRole } from '../sessions/members/MemberRole'
@@ -34,8 +36,10 @@ export interface TConnectEvent<TMethod extends string, TData extends {} = {}> {
 /**
  * Represents an event emitted by the client that expects a response by the server.
  */
-export interface TRequestEvent<TMethod extends string, TData extends {} = {}>
-  extends TConnectEvent<TMethod, TData> {
+export interface TRequestEvent<
+  TMethod extends string,
+  TData extends {} = {},
+> extends TConnectEvent<TMethod, TData> {
   requestId: string
 }
 
@@ -135,6 +139,7 @@ export type TServerEvent = TServerEvents[TServerMethod]
 type TModifierDataKey =
   | 'node-update-block-status'
   | 'node-update-open-state'
+  | 'node-new-alert'
   | 'node-action-success-chance'
   | 'node-action-process-time'
   | 'node-action-resource-cost'
@@ -169,11 +174,29 @@ type TModifierData = [
     /**
      * @see {@link TModifierDataKey}
      */
+    key: 'node-new-alert'
+    /**
+     * The ID of the node to which the alert was added.
+     */
+    nodeId: string
+    /**
+     * The new alert that was added to the node.
+     */
+    alert: TNodeAlertJson
+  },
+  {
+    /**
+     * @see {@link TModifierDataKey}
+     */
     key: 'node-action-success-chance'
     /**
      * The operand used to modify the chance of succes for all the node's actions.
      */
     successChanceOperand: number
+    /**
+     * The timestamp (ms since epoch) at which this modifier was applied.
+     */
+    appliedAt: number
     /**
      * The ID of the node to modify.
      */
@@ -194,6 +217,10 @@ type TModifierData = [
      */
     processTimeOperand: number
     /**
+     * The timestamp (ms since epoch) at which this modifier was applied.
+     */
+    appliedAt: number
+    /**
      * The ID of the node to modify.
      */
     nodeId: string
@@ -209,9 +236,17 @@ type TModifierData = [
      */
     key: 'node-action-resource-cost'
     /**
+     * The ID of the {@link MissionResource} being modified.
+     */
+    resourceId: string
+    /**
      * The operand used to modify the resource cost for all the node's actions.
      */
     resourceCostOperand: number
+    /**
+     * The timestamp (ms since epoch) at which this modifier was applied.
+     */
+    appliedAt: number
     /**
      * The ID of the node to modify.
      */
@@ -228,9 +263,9 @@ type TModifierData = [
      */
     key: 'force-resource-pool'
     /**
-     * The ID of the force to modify.
+     * The ID of the resource pool to modify.
      */
-    forceId: string
+    poolId: string
     /**
      * The operand used to modify the resource pool of the force.
      */
@@ -285,6 +320,14 @@ type TModifierData = [
 export type TFileAccessModifierData = Extract<
   TModifierData[number],
   { key: 'file-update-access' }
+>
+
+/**
+ * Modifier data for a new alert that was added to a node.
+ */
+export type TNodeNewAlertData = Extract<
+  TModifierData[number],
+  { key: 'node-new-alert' }
 >
 
 /**
@@ -682,10 +725,10 @@ export type TResponseEvents = {
        */
       execution: TActionExecutionJson
       /**
-       * The resource remaining for the force after the
-       * action's execution cost was deducted.
+       * The resource pool instances of the force after the
+       * action's execution costs were deducted.
        */
-      resourcesRemaining: number
+      resourcePools: TResourcePoolJson[]
     },
     TClientEvents['request-execute-action']
   >
@@ -709,6 +752,23 @@ export type TResponseEvents = {
     'output-sent',
     TOutputDatum,
     TClientEvents['request-send-output']
+  >
+  /**
+   * Occurs when a node alert has been acknowledged successfully on the server.
+   */
+  'node-alert-acknowledged': TResponseEvent<
+    'node-alert-acknowledged',
+    {
+      /**
+       * The ID of the node alert that was acknowledged.
+       */
+      alertId: string
+      /**
+       * The ID of the node to which the alert belongs.
+       */
+      nodeId: string
+    },
+    TClientEvents['request-acknowledge-node-alert']
   >
   /**
    * Occurs to send the requested, currently-joined session to the client.
@@ -905,6 +965,24 @@ export type TRequestEvents = {
    * Occurs when the client requests to send a pre-execution message to the output panel.
    */
   'request-send-output': TRequestEvent<'request-send-output', TOutputDatum>
+  /**
+   * Occurs when the client requests to mark a node alert as acknowledged,
+   * which will dismiss it from view.
+   */
+  'request-acknowledge-node-alert': TRequestEvent<
+    'request-acknowledge-node-alert',
+    {
+      /**
+       * The ID of the node alert to acknowledge.
+       */
+      alertId: string
+      /**
+       * The node to which the alert is tied (Helps speed up
+       * lookup).
+       */
+      nodeId: string
+    }
+  >
   /**
    * Occurs when the client requests to fetch the currently joined session.
    */

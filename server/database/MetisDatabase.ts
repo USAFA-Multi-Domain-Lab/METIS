@@ -3,7 +3,7 @@ import { MissionImport } from '@server/missions/imports/MissionImport'
 import { DateToolbox } from '@shared/toolbox/dates/DateToolbox'
 import type { TUserJson } from '@shared/users/User'
 import { User } from '@shared/users/User'
-import { exec } from 'child_process'
+import { execFile } from 'child_process'
 import type { ConnectOptions } from 'mongoose'
 import mongoose from 'mongoose'
 import { databaseLogger } from '../logging'
@@ -87,8 +87,14 @@ export class MetisDatabase {
       mongooseConnection.once('open', async () => {
         try {
           databaseLogger.info('Connected to database.')
-          // Create backup of database before use.
-          await this.createBackup()
+          if (server.backupsEnabled) {
+            // Create backup of database before use.
+            await this.createBackup()
+          } else {
+            databaseLogger.info(
+              'Database backups disabled via the DB_BACKUPS_ENABLED environment variable.',
+            )
+          }
           // Ensure the info-collection exists.
           await this.ensureDefaultInfoExists()
           // Ensure that the schema build is correct.
@@ -98,16 +104,20 @@ export class MetisDatabase {
           await this.ensureDefaultUsersExists()
           await this.ensureDefaultMissionsExists()
 
-          try {
-            // Schedule a backup every 24 hours
-            // while server is running.
-            this.backupIntervalId = setInterval(
-              () => this.createBackup(),
-              1000 * 60 * 60 * 24,
-            )
-          } catch (error) {
-            databaseLogger.error('Failed to perform scheduled database backup:')
-            databaseLogger.error(error)
+          if (server.backupsEnabled) {
+            try {
+              // Schedule a backup every 24 hours
+              // while server is running.
+              this.backupIntervalId = setInterval(
+                () => this.createBackup(),
+                1000 * 60 * 60 * 24,
+              )
+            } catch (error) {
+              databaseLogger.error(
+                'Failed to perform scheduled database backup:',
+              )
+              databaseLogger.error(error)
+            }
           }
           // Resolve.
           resolve()
@@ -135,13 +145,20 @@ export class MetisDatabase {
       const { mongoHost, mongoPort, mongoDB, mongoUsername, mongoPassword } =
         server
 
-      let command: string = `mongodump --host ${mongoHost} --port ${mongoPort} --db ${mongoDB} --out server/database/backups/${DateToolbox.fileName}`
+      const args: string[] = []
+
+      args.push('--host', mongoHost)
+      args.push('--port', String(mongoPort))
+      args.push('--db', mongoDB)
+      args.push('--out', `server/database/backups/${DateToolbox.fileName}`)
 
       if (mongoUsername !== undefined && mongoPassword !== undefined) {
-        command += ` --username ${mongoUsername} --password ${mongoPassword} --authenticationDatabase ${mongoDB}`
+        args.push('--username', mongoUsername)
+        args.push('--password', mongoPassword)
+        args.push('--authenticationDatabase', mongoDB)
       }
 
-      exec(command, (error, stdout, stderr) => {
+      execFile('mongodump', args, (error, stdout, stderr) => {
         if (!error) {
           let stdoutSplit: Array<string> = stdout.split(
             `Loading file: server/database/backup.js`,
@@ -152,7 +169,6 @@ export class MetisDatabase {
           }
 
           databaseLogger.info(stdout)
-
           resolve()
         } else {
           databaseLogger.error('Failed to create database backup:')
@@ -280,7 +296,11 @@ export class MetisDatabase {
               originalName: 'default.metis',
               path: 'server/database/seeding/default.metis',
             },
-            this.server.fileStore,
+            this.server,
+            {
+              username: User.SYSTEM_USERNAME,
+              _id: User.SYSTEM_ID,
+            },
           )
           await missionImport.execute()
 
@@ -289,19 +309,19 @@ export class MetisDatabase {
             throw new Error(`Failed to create default mission(s).`)
           }
 
-          let missionDoc = await MissionModel.findOne({
-            name: 'METIS > ASCOT 7 DEMO',
-          }).exec()
+          missionDocs = await MissionModel.find().exec()
 
-          if (!missionDoc) {
+          if (missionDocs.length === 0) {
             throw new Error(
-              `Failed to find the default mission in the database.`,
+              'Failed to find the default mission(s) in the database after import.',
             )
           }
 
-          databaseLogger.info(
-            `Default mission created: { _id: ${missionDoc._id}, name: ${missionDoc.name} }`,
-          )
+          for (let missionDoc of missionDocs) {
+            databaseLogger.info(
+              `Default mission created: { _id: ${missionDoc._id}, name: ${missionDoc.name} }`,
+            )
+          }
         }
 
         resolve()
@@ -377,52 +397,73 @@ export class MetisDatabase {
         this.server
       let nextBuildNumber: number = currentBuildNumber + 1
       let buildPath: string = MetisDatabase.generateFilePath(nextBuildNumber)
-      let command: string = `mongosh --host ${mongoHost} --port ${mongoPort} --file ${buildPath}`
+      let buildPathAbsolute = MetisServer.resolvePath('..', buildPath)
+      let args: string[] = [
+        '--host',
+        mongoHost,
+        '--port',
+        String(mongoPort),
+        '--file',
+        buildPathAbsolute,
+      ]
 
       if (mongoUsername && mongoPassword) {
-        command += ` --username ${mongoUsername} --password ${mongoPassword} --authenticationDatabase ${mongoDB}`
+        args.push(
+          '--username',
+          mongoUsername,
+          '--password',
+          mongoPassword,
+          '--authenticationDatabase',
+          mongoDB,
+        )
       }
-
-      process.env.MONGO_DB = mongoDB
 
       databaseLogger.info(`Database is migrating to build ${nextBuildNumber}`)
       console.log(`Database is migrating to build ${nextBuildNumber}`)
 
-      exec(command, async (error, stdout, stderr) => {
-        let stdoutSplit: Array<string> = stdout.split(
-          `Loading file: ${buildPath}`,
-        )
-
-        if (stdoutSplit.length > 1) {
-          stdout = stdoutSplit[1]
-        }
-
-        databaseLogger.info(stdout)
-        console.log(stdout)
-
-        if (!error) {
-          databaseLogger.info(
-            `Database successfully migrated to build ${nextBuildNumber}`,
-          )
-          console.log(
-            `Database successfully migrated to build ${nextBuildNumber}`,
+      execFile(
+        'mongosh',
+        args,
+        { env: { ...process.env, MONGO_DB: mongoDB } },
+        async (error, stdout, stderr) => {
+          let stdoutSplit: Array<string> = stdout.split(
+            `Loading file: ${buildPathAbsolute}`,
           )
 
-          if (nextBuildNumber < targetBuildNumber) {
-            await this.buildSchema(nextBuildNumber, targetBuildNumber)
-            resolve()
-          } else {
-            resolve()
+          if (stdoutSplit.length > 1) {
+            stdout = stdoutSplit[1]
           }
-        } else {
-          databaseLogger.error(
-            `Database failed to migrate to ${nextBuildNumber}`,
-          )
-          databaseLogger.error(error)
-          console.log(`Database failed to migrate to ${nextBuildNumber}`)
-          reject(error)
-        }
-      })
+
+          databaseLogger.info(stdout)
+          console.log(stdout)
+
+          if (!error) {
+            databaseLogger.info(
+              `Database successfully migrated to build ${nextBuildNumber}`,
+            )
+            console.log(
+              `Database successfully migrated to build ${nextBuildNumber}`,
+            )
+
+            if (nextBuildNumber < targetBuildNumber) {
+              await this.buildSchema(nextBuildNumber, targetBuildNumber)
+              resolve()
+            } else {
+              resolve()
+            }
+          } else {
+            databaseLogger.error(
+              `Database failed to migrate to ${nextBuildNumber}`,
+            )
+            databaseLogger.error(error)
+            if (stderr) {
+              databaseLogger.error(stderr)
+            }
+            console.log(`Database failed to migrate to ${nextBuildNumber}`)
+            reject(error)
+          }
+        },
+      )
     })
   }
 

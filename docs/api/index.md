@@ -38,7 +38,7 @@ Complete REST API reference for integrating with METIS programmatically. All MET
 
 - **[API Overview](overview.md)** - Authentication, rate limiting, and response codes
 - **Base URL:** `/api/v1/` for all endpoints
-- **Default Rate Limits:** 20 requests/second per IP for HTTP, 10 messages/second per user for WebSocket
+- **Default Rate Limits:** 100 requests/second per IP for HTTP, 100 messages/second per user for WebSocket
 
 ### Integration Patterns
 

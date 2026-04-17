@@ -29,8 +29,7 @@ export const routerMap: TMetisRouterMap = async (
       body: {
         name: RequestBodyFilters.STRING,
         versionNumber: RequestBodyFilters.NUMBER,
-        seed: RequestBodyFilters.STRING,
-        resourceLabel: RequestBodyFilters.STRING,
+        resources: RequestBodyFilters.ARRAY,
         structure: RequestBodyFilters.OBJECT,
         forces: RequestBodyFilters.ARRAY,
         prototypes: RequestBodyFilters.ARRAY,
@@ -44,7 +43,7 @@ export const routerMap: TMetisRouterMap = async (
     '/import/',
     auth({ permissions: ['missions_write'] }),
     uploads.array('files', 12),
-    (request, response) => importMission(request, response, server.fileStore),
+    (request, response) => importMission(request, response, server),
   )
 
   /* -- READ -- */
@@ -77,8 +76,7 @@ export const routerMap: TMetisRouterMap = async (
         body: {
           name: RequestBodyFilters.STRING,
           versionNumber: RequestBodyFilters.NUMBER,
-          seed: RequestBodyFilters.STRING,
-          resourceLabel: RequestBodyFilters.STRING,
+          resources: RequestBodyFilters.ARRAY,
           structure: RequestBodyFilters.OBJECT,
           forces: RequestBodyFilters.ARRAY,
           prototypes: RequestBodyFilters.ARRAY,

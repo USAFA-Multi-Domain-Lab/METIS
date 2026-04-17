@@ -5,7 +5,7 @@ const metis = new TargetEnvSchema({
   name: 'METIS (Internal Effects)',
   description:
     'A target-environment which allows effects to be produced within METIS itself, without interfacing with external software.',
-  version: '0.2.1',
+  version: METIS_VERSION,
 })
 
 export default metis

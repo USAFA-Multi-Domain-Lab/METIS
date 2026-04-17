@@ -11,26 +11,10 @@ const BlockStatus = new TargetSchema({
     const { nodeMetadata, blockStatus } = context.effect.args
     const { forceKey, nodeKey } = nodeMetadata as TNodeMetadata
 
-    // Set the error message.
-    const errorMessage =
-      `Bad request. The arguments sent with the effect are invalid. Please check the arguments within the effect.\n` +
-      `Effect ID: "${context.effect._id}"\n` +
-      `Effect Name: "${context.effect.name}"`
-
-    // Check if the arguments are valid.
-    if (
-      typeof forceKey !== 'string' ||
-      typeof nodeKey !== 'string' ||
-      typeof blockStatus !== 'string'
-    ) {
-      throw new Error(errorMessage)
-    }
-
     // Update the block status of the node.
     if (blockStatus === 'block') {
       context.blockNode({ forceKey, nodeKey })
-    }
-    if (blockStatus === 'unblock') {
+    } else if (blockStatus === 'unblock') {
       context.unblockNode({ forceKey, nodeKey })
     }
   },

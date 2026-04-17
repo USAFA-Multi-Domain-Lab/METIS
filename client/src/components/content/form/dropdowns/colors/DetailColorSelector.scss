@@ -1,0 +1,63 @@
+@use '@client/assets/styles/config.scss' as *;
+@use '../../index.scss' as *;
+
+.Detail.DetailColorSelector {
+  .Field {
+    &.IsExpanded {
+      .Dropdown {
+        .Indicator {
+          transform: scale(1, -0.8);
+        }
+      }
+    }
+
+    .Dropdown {
+      display: grid;
+      align-items: center;
+      grid-template-columns: auto auto;
+      column-gap: 0.5em;
+      cursor: pointer;
+      user-select: none;
+
+      .Text {
+        color: $detail-field-text-color;
+        font-size: 0.92em;
+      }
+
+      .Indicator {
+        transform: scale(1, 0.8);
+        font-size: 1.25rem;
+        text-align: end;
+      }
+    }
+
+    .AllColors {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(1.5rem, 1fr));
+      max-width: 16rem;
+      margin: 1.25em 0 0.5em;
+
+      .Color {
+        width: 75%;
+        height: 72%;
+        aspect-ratio: 1 / 1;
+        margin: 3px;
+        padding: 0;
+
+        &.Selected {
+          &::after {
+            content: '';
+            display: block;
+            position: relative;
+            top: calc(100% + 0.5em);
+            border-bottom: 2px solid $color-primary-light;
+          }
+        }
+      }
+    }
+
+    .ButtonContainer {
+      margin: 1.25em 0 0;
+    }
+  }
+}

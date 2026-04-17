@@ -20,6 +20,9 @@ import type { ClientUser } from '@client/users/ClientUser'
 import type { TEffectType } from '@shared/missions/effects/Effect'
 import ReactDOM from 'react-dom/client'
 import './index.scss'
+import type { ClientMissionResource } from './missions/ClientMissionResource'
+import type { ClientActionCost } from './missions/actions/ClientActionCost'
+import type { ClientResourcePool } from './missions/forces/ClientResourcePool'
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 
@@ -64,10 +67,13 @@ export type TMetisClientComponents = {
   target: ClientTarget
   fileReference: ClientFileReference
   mission: ClientMission
+  resource: ClientMissionResource
   prototype: ClientMissionPrototype
   missionFile: ClientMissionFile
   force: ClientMissionForce
   output: ClientOutput
+  resourcePool: ClientResourcePool
+  resourceCost: ClientActionCost
   node: ClientMissionNode
   action: ClientMissionAction
   execution: ClientActionExecution

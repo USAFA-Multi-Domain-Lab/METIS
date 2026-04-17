@@ -1,4 +1,4 @@
-import { DetailDropdown } from '@client/components/content/form/dropdown/'
+import { DetailDropdown } from '@client/components/content/form/dropdowns/standard/DetailDropdown'
 import type { ClientEffect } from '@client/missions/effects/ClientEffect'
 import type { ClientMissionFile } from '@client/missions/files/ClientMissionFile'
 import { compute } from '@client/toolbox'
@@ -20,12 +20,12 @@ export default function ArgFile({
   /**
    * The list of files to display in the dropdown.
    */
-  const files: ClientMissionFile[] = compute(() => mission.files)
+  const files = compute<ClientMissionFile[]>(() => mission.files)
 
   /**
    * The warning message to display when the file is no longer available in the mission.
    */
-  const warningMessage: string = compute(() => {
+  const warningMessage = compute<string>(() => {
     if (existsInEffectArgs) {
       const fileName = required ? fileValue.name : optionalFileValue?.name
       return (
@@ -40,7 +40,7 @@ export default function ArgFile({
   /**
    * The tooltip description to display for a file argument.
    */
-  const fileTooltip: string = compute(() => {
+  const fileTooltip = compute<string>(() => {
     if (type === 'file' && tooltipDescription) {
       return tooltipDescription
     }
@@ -51,31 +51,18 @@ export default function ArgFile({
   /**
    * The label to display for the file dropdown.
    */
-  const label: string = compute(() => (type === 'file' ? name : 'File'))
+  const label = compute<string>(() => (type === 'file' ? name : 'File'))
+
+  /**
+   * Determines if the file dropdown should be hidden or not.
+   */
+  const hidden = compute<boolean>(() => !fileIsActive)
 
   /* -- RENDER -- */
 
-  if (!fileIsActive) return null
+  if (hidden) return null
 
-  if (required) {
-    return (
-      <DetailDropdown<ClientMissionFile>
-        fieldType={'required'}
-        label={label}
-        options={files}
-        value={fileValue}
-        setValue={setFileValue}
-        tooltipDescription={fileTooltip}
-        isExpanded={false}
-        getKey={({ _id }) => _id}
-        render={({ name }) => name}
-        handleInvalidOption={{
-          method: 'warning',
-          message: warningMessage,
-        }}
-      />
-    )
-  } else {
+  if (!required) {
     return (
       <DetailDropdown<ClientMissionFile>
         fieldType={'optional'}
@@ -95,6 +82,24 @@ export default function ArgFile({
       />
     )
   }
+
+  return (
+    <DetailDropdown<ClientMissionFile>
+      fieldType={'required'}
+      label={label}
+      options={files}
+      value={fileValue}
+      setValue={setFileValue}
+      tooltipDescription={fileTooltip}
+      isExpanded={false}
+      getKey={({ _id }) => _id}
+      render={({ name }) => name}
+      handleInvalidOption={{
+        method: 'warning',
+        message: warningMessage,
+      }}
+    />
+  )
 }
 
 /* ---------------------------- TYPES FOR FILE ARG ---------------------------- */

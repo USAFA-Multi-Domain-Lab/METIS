@@ -13,7 +13,7 @@ import { StatusError } from '../../library/StatusError'
  */
 export const getUsers: TExpressHandler = async (request, response) => {
   // Get the user that is logged in.
-  let login: ServerLogin | undefined = ServerLogin.get(request.session.userId)
+  let login: ServerLogin | undefined = ServerLogin.get(request)
   if (!login) throw new StatusError('User is not logged in.', 401)
   let { user: currentUser } = login
   // Determine what type of users the current user can access from

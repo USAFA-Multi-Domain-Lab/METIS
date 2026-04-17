@@ -88,6 +88,32 @@ export class StringToolbox {
   }
 
   /**
+   * Converts a string to camelCase.
+   * @param input The input string.
+   * @returns The camelCase string.
+   * @example
+   * StringToolbox.toCamelCase('hello world') // helloWorld
+   * StringToolbox.toCamelCase('Hello World') // helloWorld
+   * StringToolbox.toCamelCase('hello_world') // helloWorld
+   * StringToolbox.toCamelCase('hello-world') // helloWorld
+   */
+  public static toCamelCase(input: string): string {
+    const words = input
+      .replace(/[_-]/g, ' ') // snake_case / kebab-case → space
+      .replace(/\s+/g, ' ') // collapse spaces
+      .trim()
+      .toLowerCase()
+      .split(' ')
+
+    return words
+      .map((word, index) => {
+        if (index === 0) return word
+        return word.charAt(0).toUpperCase() + word.slice(1)
+      })
+      .join('')
+  }
+
+  /**
    * Joins multiple path segments into a single path.
    * @param segments The path segments to join.
    * @returns The joined path.
@@ -112,5 +138,21 @@ export class StringToolbox {
       })
       .filter(Boolean) // Remove empty segments
       .join('/')
+  }
+
+  /**
+   * Takes in a value as a number and returns a formatted
+   * string with a plus sign if the number is positive, and
+   * a minus sign if the number is negative.
+   * @param value The number to format.
+   * @param invert If true, inverts the sign of the number (i.e.
+   * positive becomes negative and vice versa) before formatting.
+   * This is by default false.
+   * @returns The formatted string.
+   */
+  public static sign(value: number, invert: boolean = false): string {
+    if (invert) value = -value
+    if (value > 0) return `+${value}`
+    else return `${value}`
   }
 }

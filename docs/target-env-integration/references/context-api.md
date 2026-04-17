@@ -33,8 +33,8 @@ script: async (context) => {
   const username = context.user.username
   const sessionId = context.session._id
   const configData = context.config.targetEnvConfig?.data
-  const effectType = context.type  // 'sessionTriggeredEffect' | 'executionTriggeredEffect'
-  const triggeredBy = context.triggeredBy  // User who executed (execution-triggered only)
+  const effectType = context.type // 'sessionTriggeredEffect' | 'executionTriggeredEffect'
+  const triggeredBy = context.triggeredBy // User who executed (execution-triggered only)
 
   // Call methods
   context.sendOutput('Operation starting...')
@@ -50,13 +50,13 @@ The context object exposes three main property categories and multiple method ca
 ```ts
 interface TTargetScriptExposedContext<TType extends TEffectType> {
   // Core Properties
-  readonly type: TType  // 'sessionTriggeredEffect' | 'executionTriggeredEffect'
+  readonly type: TType // 'sessionTriggeredEffect' | 'executionTriggeredEffect'
   readonly effect: TTargetEnvExposedEffect
   readonly mission: TTargetEnvExposedMission
   readonly user: TTargetEnvExposedUser
   readonly session: TTargetEnvExposedSession
   readonly config: TTargetEnvExposedConfig
-  readonly triggeredBy: TTargetEnvExposedMember | null  // null for session-triggered
+  readonly triggeredBy: TTargetEnvExposedMember | null // null for session-triggered
   readonly localStore: TTargetEnvStore
   readonly globalStore: TTargetEnvStore
 
@@ -83,11 +83,13 @@ METIS supports two types of effects, each with different trigger conditions and 
 ### Session-Triggered Effects
 
 Execute during session lifecycle events:
+
 - **session-setup** - When session starts (before mission starts)
 - **session-start** - When mission begins
 - **session-teardown** - When session ends
 
 **Key Characteristics:**
+
 - `context.type` = `'sessionTriggeredEffect'`
 - `context.triggeredBy` = `null` (no specific user triggered it)
 - No `'self'` defaults - must specify `forceKey`, `nodeKey`, `actionKey` explicitly
@@ -96,11 +98,13 @@ Execute during session lifecycle events:
 ### Execution-Triggered Effects
 
 Execute during action execution lifecycle:
+
 - **execution-initiation** - When action execution begins
 - **execution-success** - When action execution succeeds
 - **execution-failure** - When action execution fails
 
 **Key Characteristics:**
+
 - `context.type` = `'executionTriggeredEffect'`
 - `context.triggeredBy` = User who executed the action
 - `'self'` defaults available (current force/node/action)
@@ -118,7 +122,7 @@ script: async (context) => {
     // Execution-triggered: can use 'self' defaults
     const executor = context.triggeredBy
     context.sendOutput(`${executor.username} executed this action`)
-    context.blockNode()  // Blocks current node
+    context.blockNode() // Blocks current node
   }
 }
 ```
@@ -169,7 +173,7 @@ script: async (ctx) => {
     // Execution-triggered effect
     const { username, role } = ctx.triggeredBy
     ctx.sendOutput(`Action executed by ${username} (${role})`)
-    
+
     // Audit logging
     console.log(`User ${ctx.triggeredBy._id} executed effect ${ctx.effect._id}`)
   } else {
@@ -191,7 +195,13 @@ interface TTargetEnvExposedSession {
   readonly instanceId: string
 }
 
-type TSessionState = 'unstarted' | 'starting' | 'started' | 'ending' | 'ended' | 'resetting'
+type TSessionState =
+  | 'unstarted'
+  | 'starting'
+  | 'started'
+  | 'ending'
+  | 'ended'
+  | 'resetting'
 ```
 
 **Usage Examples:**
@@ -201,9 +211,9 @@ script: async (ctx) => {
   const sessionId = ctx.session._id
   const sessionName = ctx.session.name
   const sessionState = ctx.session.state
-  
+
   ctx.sendOutput(`Session: ${sessionName} (State: ${sessionState})`)
-  
+
   // Store session-specific data
   ctx.globalStore.use('sessionMetadata', {
     id: sessionId,
@@ -221,7 +231,7 @@ interface TTargetEnvExposedConfig {
   readonly targetEnvConfig?: {
     readonly _id: string
     readonly name: string
-    readonly data: object  // Your configuration data from configs.json
+    readonly data: object // Your configuration data from configs.json
   }
 }
 ```
@@ -236,18 +246,18 @@ script: async (ctx) => {
   if (!ctx.config.targetEnvConfig) {
     throw new Error('No configuration selected for this session.')
   }
-  
+
   // Access configuration metadata
   const configId = ctx.config.targetEnvConfig._id
   const configName = ctx.config.targetEnvConfig.name
-  
+
   // Access configuration data
   const { host, port, apiKey } = ctx.config.targetEnvConfig.data
-  
+
   // Use with API clients
   const api = RestApi.fromConfig(ctx.config.targetEnvConfig.data)
   const response = await api.get('/endpoint')
-  
+
   ctx.sendOutput(`Using config: ${configName}`)
 }
 ```
@@ -450,6 +460,7 @@ sleep(ms: number): Promise<void>
 - `ms` (number) - Milliseconds to sleep
 
 **Important:**
+
 - **Always use `context.sleep()` instead of `setTimeout()`** - setTimeout is disabled in target scripts
 - Automatically aborts if session resets, preventing stale callbacks
 - Safe for session lifecycle - won't leave dangling timers
@@ -459,18 +470,18 @@ sleep(ms: number): Promise<void>
 ```ts
 script: async (ctx) => {
   ctx.sendOutput('Starting operation...')
-  
+
   // Wait 5 seconds
   await ctx.sleep(5000)
-  
+
   ctx.sendOutput('Operation complete after delay')
-  
+
   // Use in loops for periodic operations
   for (let i = 0; i < 10; i++) {
     ctx.sendOutput(`Progress: ${i * 10}%`)
-    await ctx.sleep(1000)  // Wait 1 second between updates
+    await ctx.sleep(1000) // Wait 1 second between updates
   }
-  
+
   // Conditional delays
   if (operationRequiresWarmup) {
     ctx.sendOutput('Warming up system...')
@@ -844,11 +855,12 @@ script: async (ctx) => {
 Modifies the resource cost of actions.
 
 ```ts
-modifyResourceCost(operand: number, options?: TManipulateActionOptions): void
+modifyResourceCost(resourceId: string, operand: number, options?: TManipulateActionOptions): void
 ```
 
 **Parameters:**
 
+- `resourceId` (string) - ID of the resource whose cost to modify
 - `operand` (number) - Resource amount to add/subtract
 - `options` (optional) - Action targeting configuration
 
@@ -861,13 +873,14 @@ modifyResourceCost(operand: number, options?: TManipulateActionOptions): void
 
 ```ts
 script: async (ctx) => {
-  const { targetAction } = ctx.effect.args // Assuming action metadata argument
+  const { targetAction, resourceMetadata } = ctx.effect.args // Assuming action and resource metadata arguments
+  const { resourceId } = resourceMetadata
 
   // Reduce resource cost for current actions by 10
-  ctx.modifyResourceCost(-10)
+  ctx.modifyResourceCost(resourceId, -10)
 
   // Increase cost for specific action using extracted metadata
-  ctx.modifyResourceCost(25, {
+  ctx.modifyResourceCost(resourceId, 25, {
     forceKey: targetAction.forceKey,
     nodeKey: targetAction.nodeKey,
     actionKey: targetAction.actionKey,
@@ -875,13 +888,13 @@ script: async (ctx) => {
 
   // Make actions cheaper in a node using node metadata
   const { targetNode } = ctx.effect.args
-  ctx.modifyResourceCost(-5, {
+  ctx.modifyResourceCost(resourceId, -5, {
     forceKey: targetNode.forceKey,
     nodeKey: targetNode.nodeKey,
   })
 
   // Hardcoded keys when you know exact targets
-  ctx.modifyResourceCost(15, {
+  ctx.modifyResourceCost(resourceId, 15, {
     forceKey: 'blue-team',
     nodeKey: 'intrusion-detection',
     actionKey: 'deep-scan',
@@ -902,31 +915,34 @@ modifyResourcePool(operand: number, options?: TManipulateForceOptions): void
 **Parameters:**
 
 - `operand` (number) - Resources to add (positive) or subtract (negative)
-- `options` (optional) - Force targeting configuration
+- `options` (optional) - Force and pool targeting configuration
 
 **Examples:**
 
 ```ts
 script: async (ctx) => {
-  const { targetForce } = ctx.effect.args // Assuming force metadata argument
+  const { targetForce, poolMetadata } = ctx.effect.args // Assuming force and pool metadata arguments
+  const { forceKey, poolKey } = poolMetadata
 
-  // Add 50 resources to current force
-  ctx.modifyResourcePool(50)
+  // Add 50 resources to a specific pool on the current force
+  ctx.modifyResourcePool(50, { poolKey })
 
-  // Subtract resources from specific force using extracted metadata
+  // Subtract resources from a specific force and pool
   ctx.modifyResourcePool(-25, {
     forceKey: targetForce.forceKey,
+    poolKey,
   })
 
-  // Hardcoded keys when you know the exact force
+  // Hardcoded keys when you know the exact force and pool
   ctx.modifyResourcePool(-30, {
     forceKey: 'red-team',
+    poolKey: 'intel-pool',
   })
 }
 
   // Penalty for failed operation
   if (operationFailed) {
-    ctx.modifyResourcePool(-100)
+    ctx.modifyResourcePool(-100, { poolKey })
     ctx.sendOutput('Operation failed - resource penalty applied')
   }
 }
@@ -1086,6 +1102,7 @@ interface TTargetEnvExposedEffect {
 ```ts
 interface TManipulateForceOptions {
   forceKey?: string
+  poolKey?: string
 }
 
 interface TManipulateNodeOptions {

@@ -1,12 +1,11 @@
 import { ServerMissionAction } from '@server/missions/actions/ServerMissionAction'
-import { ServerEffect } from '@server/missions/effects/ServerEffect'
 import { ServerMissionForce } from '@server/missions/forces/ServerMissionForce'
 import { ServerMissionNode } from '@server/missions/nodes/ServerMissionNode'
 import { ServerMission } from '@server/missions/ServerMission'
+import { Effect } from '@shared/missions/effects/Effect'
 import { MissionFile } from '@shared/missions/files/MissionFile'
 import { Mission, type TMissionSaveJson } from '@shared/missions/Mission'
 import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
-import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import DOMPurify from 'isomorphic-dompurify'
 import type { ProjectionType, QueryOptions } from 'mongoose'
 import mongoose, { model, Schema } from 'mongoose'
@@ -104,9 +103,21 @@ const findByIdAndModify = (
       let { _id: missionId, ...rest } = updates ?? {}
       // Update every property besides the _id.
       Object.assign(missionDoc, { ...rest })
-      // Save the changes.
+      // todo: Confirm if this works or should be removed.
+      // todo: The concern here is that Mongoose will drop
+      // todo: objects with unknown fields and important data
+      // todo: may get wiped.
+      // Validate synchronously before calling save(). If Object.assign triggered
+      // any StrictModeErrors (e.g., session-only fields like `modifiers` reaching
+      // the DB layer), Mongoose will have silently dropped those sub-documents from
+      // their arrays rather than throwing. Calling validateSync() here surfaces those
+      // cast errors immediately, so save() is never called with corrupted data.
+      // let syncError = missionDoc.validateSync()
+      // if (syncError) throw syncError
+      // // Save the changes. validateBeforeSave is disabled because validateSync()
+      // // above already handles this — preventing validation from running twice.
+      // missionDoc = await missionDoc.save({ validateBeforeSave: false })
       missionDoc = await missionDoc.save()
-
       // Otherwise, resolve with the mission document.
       return resolve(missionDoc)
     } catch (error: any) {
@@ -241,7 +252,7 @@ const effectSubschema = {
   name: {
     type: String,
     required: true,
-    maxLength: ServerEffect.MAX_NAME_LENGTH,
+    maxLength: Effect.MAX_NAME_LENGTH,
   },
   trigger: { type: String, required: true },
   order: { type: Number, required: true, default: 0 },
@@ -267,17 +278,6 @@ export const missionSchema = new MissionSchema(
       maxLength: Mission.MAX_NAME_LENGTH,
     },
     versionNumber: { type: Number, required: true },
-    seed: {
-      type: String,
-      required: true,
-      default: StringToolbox.generateRandomId,
-    },
-    resourceLabel: {
-      type: String,
-      required: true,
-      default: 'Resources',
-      maxlength: Mission.MAX_RESOURCE_LABEL_LENGTH,
-    },
     launchedAt: { type: Date, default: null },
     createdBy: {
       type: Schema.Types.ObjectId,
@@ -326,9 +326,21 @@ export const missionSchema = new MissionSchema(
             type: String,
             required: true,
           },
-          initialResources: {
-            type: Number,
+          resourcePools: {
             required: true,
+            type: [
+              {
+                _id: { type: String, required: true },
+                localKey: {
+                  type: String,
+                  required: true,
+                },
+                resourceId: { type: String, required: true },
+                initialBalance: { type: Number, required: true },
+                allowNegative: { type: Boolean, required: true },
+                excluded: { type: Boolean, required: true },
+              },
+            ],
           },
           revealAllNodes: {
             type: Boolean,
@@ -336,10 +348,6 @@ export const missionSchema = new MissionSchema(
           },
           localKey: {
             type: String,
-            required: true,
-          },
-          allowNegativeResources: {
-            type: Boolean,
             required: true,
           },
           nodes: {
@@ -401,7 +409,7 @@ export const missionSchema = new MissionSchema(
                         default: 'repeatable',
                         enum: ServerMissionAction.TYPES,
                       },
-                      processTime: {
+                      baseProcessTime: {
                         type: Number,
                         required: true,
                       },
@@ -409,7 +417,7 @@ export const missionSchema = new MissionSchema(
                         type: Boolean,
                         required: true,
                       },
-                      successChance: {
+                      baseSuccessChance: {
                         type: Number,
                         required: true,
                       },
@@ -417,13 +425,16 @@ export const missionSchema = new MissionSchema(
                         type: Boolean,
                         required: true,
                       },
-                      resourceCost: {
-                        type: Number,
+                      resourceCosts: {
                         required: true,
-                      },
-                      resourceCostHidden: {
-                        type: Boolean,
-                        required: true,
+                        type: [
+                          {
+                            _id: { type: String, required: true },
+                            resourceId: { type: String, required: true },
+                            baseAmount: { type: Number, required: true },
+                            hidden: { type: Boolean, required: true },
+                          },
+                        ],
                       },
                       opensNode: {
                         type: Boolean,
@@ -452,6 +463,24 @@ export const missionSchema = new MissionSchema(
               },
             ],
           },
+        },
+      ],
+    },
+    resources: {
+      required: true,
+      type: [
+        {
+          _id: { type: String, required: true },
+          name: {
+            type: String,
+            required: true,
+            maxlength: Mission.MAX_RESOURCE_NAME_LENGTH,
+          },
+          icon: {
+            type: String,
+            required: true,
+          },
+          order: { type: Number, required: true },
         },
       ],
     },
@@ -509,6 +538,25 @@ export const missionSchema = new MissionSchema(
 )
 
 /* -- SCHEMA MIDDLEWARE -- */
+
+// todo: Confirm if this works or should be removed.
+// todo: The concern here is that Mongoose will drop
+// todo: objects with unknown fields and important data
+// todo: may get wiped.
+// // Called before document validation. Surfaces CastErrors that Mongoose
+// // records during construction when unknown fields on sub-documents cause
+// // them to be silently dropped from their arrays. These errors are cleared
+// // when Mongoose's validate() step runs, so they must be caught here first.
+// // This hook only fires when validateBeforeSave is true (the create() path);
+// // findByIdAndModify uses validateBeforeSave: false and is covered separately.
+// missionSchema.pre<TMissionDoc>('validate', function (next) {
+//   const errors = this.errors
+//   if (errors) {
+//     const keys = Object.keys(errors)
+//     if (keys.length > 0) return next((errors as unknown as Record<string, Error>)[keys[0]])
+//   }
+//   return next()
+// })
 
 // Called before a save is made to the database.
 missionSchema.pre<TMissionDoc>('save', function (next) {

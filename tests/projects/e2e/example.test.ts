@@ -1,6 +1,6 @@
 import { describe, expect, test } from '@jest/globals'
-import ServerFileToolbox from 'metis/server/toolbox/files'
-import ClassList from 'metis/toolbox/html/class-lists'
+import { ServerFileToolbox } from '@metis/server/toolbox/files/ServerFileToolbox'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 
 describe('ClassList class.', () => {
   test('ClassList with args "class1" and "class2" will yield a value of "class1 class2"', () => {

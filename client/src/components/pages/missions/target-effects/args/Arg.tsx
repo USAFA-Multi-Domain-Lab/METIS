@@ -1,6 +1,8 @@
 import type { ClientEffect } from '@client/missions/effects/ClientEffect'
 import { compute } from '@client/toolbox'
 import type { TTargetArg } from '@shared/target-environments/args/Arg'
+import { ClassList } from '@shared/toolbox/html/ClassList'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { useEffect, useState } from 'react'
 import ArgMissionComponent from '../mission-component'
 import './Arg.scss'
@@ -10,7 +12,7 @@ import ArgLargeString from './ArgLargeString'
 import ArgNumber from './ArgNumber'
 import ArgString from './ArgString'
 
-export default function ({
+export default function Arg({
   effect,
   arg,
   effectArgs,
@@ -24,9 +26,20 @@ export default function ({
   /**
    * Determines if all the argument's dependencies have been met.
    */
-  const allDependenciesMet: boolean = compute(() =>
+  const allDependenciesMet = compute<boolean>(() =>
     effect.allDependenciesMet(arg.dependencies, effectArgs),
   )
+
+  /**
+   * The class name for the argument component.
+   */
+  const className = compute<string>(() => {
+    const classList = new ClassList('Arg').add(
+      StringToolbox.toCamelCase(arg.type),
+    )
+
+    return classList.value
+  })
 
   /* -- EFFECTS -- */
 
@@ -56,7 +69,7 @@ export default function ({
   switch (arg.type) {
     case 'dropdown':
       return (
-        <div className={`Arg Dropdown`}>
+        <div className={className}>
           <ArgDropdown
             effect={effect}
             arg={arg}
@@ -68,7 +81,7 @@ export default function ({
       )
     case 'number':
       return (
-        <div className={`Arg Number`}>
+        <div className={className}>
           <ArgNumber
             arg={arg}
             initialize={initializeArg}
@@ -79,7 +92,7 @@ export default function ({
       )
     case 'string':
       return (
-        <div className={`Arg String`}>
+        <div className={className}>
           <ArgString
             arg={arg}
             initialize={initializeArg}
@@ -90,7 +103,7 @@ export default function ({
       )
     case 'large-string':
       return (
-        <div className={`Arg LargeString`}>
+        <div className={className}>
           <ArgLargeString
             arg={arg}
             initialize={initializeArg}
@@ -101,7 +114,7 @@ export default function ({
       )
     case 'boolean':
       return (
-        <div className={`Arg Boolean`}>
+        <div className={className}>
           <ArgBoolean
             arg={arg}
             initialize={initializeArg}
@@ -111,9 +124,11 @@ export default function ({
         </div>
       )
     case 'force':
+    case 'pool':
     case 'node':
     case 'action':
     case 'file':
+    case 'resource':
       return (
         <ArgMissionComponent
           effect={effect}

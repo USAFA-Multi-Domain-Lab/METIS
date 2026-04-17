@@ -4,7 +4,6 @@ import type {
 } from '@shared/missions/actions/ExecutionOutcome'
 import { ExecutionOutcome } from '@shared/missions/actions/ExecutionOutcome'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
-import type { PRNG } from 'seedrandom'
 import type { ServerActionExecution } from './ServerActionExecution'
 
 /**
@@ -34,7 +33,7 @@ export class ServerExecutionOutcome extends ExecutionOutcome<TMetisServerCompone
         // Apply the existing state.
         state = options.data.state
         break
-      case 'rng':
+      case 'random':
         // Determine the state of the outcome.
         let successful =
           options.successStrength > execution.action.failureChance
@@ -67,21 +66,19 @@ export class ServerExecutionOutcome extends ExecutionOutcome<TMetisServerCompone
   }
 
   /**
-   * Generate an execution outcome based on the rng passed.
+   * Generate an execution outcome based on random chance.
    * @param execution The execution producing an outcome.
-   * @param rng The random number generator used to determine success.
-   * @returns The predetermined outcome of the execution.
+   * @returns The outcome of the execution.
    */
   public static generateRandom(
     execution: ServerActionExecution,
-    rng: PRNG,
   ): ServerExecutionOutcome {
     return new ServerExecutionOutcome(
       StringToolbox.generateRandomId(),
       execution,
       {
-        method: 'rng',
-        successStrength: rng.double(),
+        method: 'random',
+        successStrength: Math.random(),
       },
     )
   }
@@ -98,7 +95,7 @@ export class ServerExecutionOutcome extends ExecutionOutcome<TMetisServerCompone
       StringToolbox.generateRandomId(),
       execution,
       {
-        method: 'rng',
+        method: 'random',
         successStrength: 2,
       },
     )
@@ -143,7 +140,7 @@ export type TServerOutcomeOptions =
       /**
        * The method for generating the outcome.
        */
-      method: 'rng'
+      method: 'random'
       /*
        * The strength of the action in succeeding. This is a number between 0 and 1. If the
        * number is greater than the action's chance of failure, the action is successful.

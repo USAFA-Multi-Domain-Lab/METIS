@@ -9,8 +9,6 @@ import {
 } from '@shared/toolbox/objects/ObjectToolbox'
 import type { CallbackWithoutResultAndOptionalError } from 'mongoose'
 import mongoose from 'mongoose'
-import type { PRNG } from 'seedrandom'
-import seedrandom from 'seedrandom'
 import type {
   TEffectJson,
   TEffectSessionTriggered,
@@ -21,6 +19,8 @@ import type { TMissionFileJson } from '../../shared/missions/files/MissionFile'
 import type { TMissionForceSaveJson } from '../../shared/missions/forces/MissionForce'
 import type { TMissionSaveJson } from '../../shared/missions/Mission'
 import { Mission } from '../../shared/missions/Mission'
+import type { TMissionResourceJson } from '../../shared/missions/MissionResource'
+import { MissionResource } from '../../shared/missions/MissionResource'
 import type {
   TMissionPrototypeJson,
   TMissionPrototypeOptions,
@@ -32,6 +32,7 @@ import { ServerEffect } from './effects/ServerEffect'
 import { ServerMissionFile } from './files/ServerMissionFile'
 import { ServerMissionForce } from './forces/ServerMissionForce'
 import { ServerMissionPrototype } from './nodes/ServerMissionPrototype'
+import { ServerMissionResource } from './ServerMissionResource'
 
 const ObjectId = mongoose.Types.ObjectId
 
@@ -39,23 +40,6 @@ const ObjectId = mongoose.Types.ObjectId
  * Class for managing missions on the server.
  */
 export class ServerMission extends Mission<TMetisServerComponents> {
-  /**
-   * The RNG used to generate random numbers for the mission.
-   */
-  protected _rng: PRNG | undefined
-  /**
-   * The RNG used to generate random numbers for the mission.
-   */
-  public get rng(): PRNG {
-    // Initialize RNG if not done already. This
-    // cannot be done in the constructor due to
-    // this value being needed in the super call.
-    if (this._rng === undefined) {
-      this._rng = seedrandom(`${this.seed}`)
-    }
-    return this._rng
-  }
-
   // Implemented
   protected initializeRoot(): ServerMissionPrototype {
     return new ServerMissionPrototype(this, { _id: 'ROOT' })
@@ -91,6 +75,12 @@ export class ServerMission extends Mission<TMetisServerComponents> {
 
     // Return the prototype.
     return prototype
+  }
+
+  // Implemented
+  protected importResources(data: TMissionResourceJson[]): void {
+    let resources = ServerMissionResource.fromJson(this, data)
+    this._resources.push(...resources)
   }
 
   // Implemented
@@ -134,7 +124,9 @@ export class ServerMission extends Mission<TMetisServerComponents> {
     return {
       _id: self._id,
       name: self.name,
-      resourceLabel: self.resourceLabel,
+      get resources() {
+        return self.resources.map((resource) => resource.toTargetEnvContext())
+      },
       get forces() {
         return self.forces.map((force) => force.toTargetEnvContext())
       },
@@ -181,14 +173,13 @@ export class ServerMission extends Mission<TMetisServerComponents> {
       json._id || StringToolbox.generateRandomId(),
       json.name,
       json.versionNumber,
-      json.seed,
-      json.resourceLabel,
       DateToolbox.fromNullableISOString(json.createdAt),
       DateToolbox.fromNullableISOString(json.updatedAt),
       DateToolbox.fromNullableISOString(json.launchedAt),
       createdBy,
       json.createdByUsername,
       json.structure,
+      json.resources,
       json.prototypes,
       json.forces,
       json.files,
@@ -200,6 +191,20 @@ export class ServerMission extends Mission<TMetisServerComponents> {
   }
 
   /**
+   * Logs all issues found in a mission to the
+   * database logger.
+   * @param missionJson The JSON of the mission
+   * in question.
+   */
+  private static logIssues = (missionJson: TMissionSaveJson): void => {
+    let mission = ServerMission.fromSaveJson(missionJson)
+
+    for (let issue of mission.issues) {
+      databaseLogger.warn(issue.message)
+    }
+  }
+
+  /**
    * Validates the forces of the mission.
    * @param forces The forces to validate.
    * @returns True if the forces are valid, false otherwise.
@@ -208,14 +213,23 @@ export class ServerMission extends Mission<TMetisServerComponents> {
     let forceKeys: TMissionForceSaveJson['localKey'][] = []
 
     for (const force of forces) {
-      // Check for valid initial resources.
-      const nonNegativeInteger = NumberToolbox.isNonNegativeInteger(
-        force.initialResources,
-      )
-      if (!nonNegativeInteger) {
-        throw generateValidationError(
-          `The initial resources must be a positive integer for the force "{ _id: ${force._id}, name: ${force.name} }".`,
+      // Check for valid resource pool instances.
+      let poolIds: string[] = []
+      for (const instance of force.resourcePools) {
+        const nonNegativeInteger = NumberToolbox.isNonNegativeInteger(
+          instance.initialBalance,
         )
+        if (!nonNegativeInteger) {
+          throw generateValidationError(
+            `The initial amount must be a non-negative integer for pool "${instance.resourceId}" in force "{ _id: ${force._id}, name: ${force.name} }".`,
+          )
+        }
+        if (poolIds.includes(instance.resourceId)) {
+          throw generateValidationError(
+            `Duplicate resource ID "${instance.resourceId}" found in force "{ _id: ${force._id}, name: ${force.name} }".`,
+          )
+        }
+        poolIds.push(instance.resourceId)
       }
 
       // Check for valid color.
@@ -386,20 +400,6 @@ export class ServerMission extends Mission<TMetisServerComponents> {
   }
 
   /**
-   * Logs all issues found in a mission to the
-   * database logger.
-   * @param missionJson The JSON of the mission
-   * in question.
-   */
-  private static logIssues = (missionJson: TMissionSaveJson): void => {
-    let mission = ServerMission.fromSaveJson(missionJson)
-
-    for (let issue of mission.issues) {
-      databaseLogger.warn(issue.message)
-    }
-  }
-
-  /**
    * This will ensure the mission has between one and eight forces and that each prototype
    * in the mission has a corresponding node within each force.
    * @param missionJson The mission JSON to validate.
@@ -492,6 +492,81 @@ export class ServerMission extends Mission<TMetisServerComponents> {
   }
 
   /**
+   * Validates resource data in a mission before it is saved
+   * to the database.
+   * @param missionJson The mission data being saved.
+   * @returns An object containing errors, if found.
+   */
+  public static validateResources(
+    missionJson: TMissionSaveJson,
+  ): TMissionValidationResults {
+    let results: TMissionValidationResults = {}
+    let resourceIds: string[] = []
+
+    // Confirm the resource count does not exceed the maximum.
+    if (missionJson.resources.length > Mission.MAX_RESOURCE_TYPES) {
+      results.error = generateValidationError(
+        `Cannot have more than ${Mission.MAX_RESOURCE_TYPES} resource types in a mission.`,
+      )
+      return results
+    }
+
+    // Confirm each resource has a valid icon and cache
+    // all the IDs for checks further down.
+    for (const resource of missionJson.resources) {
+      if (!MissionResource.ICONS.includes(resource.icon)) {
+        results.error = generateValidationError(
+          `The icon "${resource.icon}" is not a valid resource icon for resource "{ _id: ${resource._id}, name: ${resource.name} }". Valid resource icons are: ${MissionResource.ICONS.join(', ')}.`,
+        )
+        return results
+      }
+      resourceIds.push(resource._id)
+    }
+
+    for (let force of missionJson.forces) {
+      // Confirm pools correspond with the resource list and
+      // that the pools are in the same order as the resources.
+      if (force.resourcePools.length !== resourceIds.length) {
+        results.error = generateValidationError(
+          `Force "{ _id: ${force._id}, name: ${force.name} }" has a different number of resource pools than the total number of resources in the mission. Each force must have exactly one resource pool for each resource defined in the mission.`,
+        )
+        return results
+      }
+      for (let index = 0; index < resourceIds.length; index++) {
+        if (force.resourcePools[index].resourceId !== resourceIds[index]) {
+          results.error = generateValidationError(
+            `Force "{ _id: ${force._id}, name: ${force.name} }" has a mismatched resource pool for resource "{ _id: ${resourceIds[index]} }". Each force must have exactly one resource pool for each resource defined in the mission, and the pools must match the order of the resources.`,
+          )
+          return results
+        }
+      }
+
+      for (let node of force.nodes) {
+        for (let action of node.actions) {
+          // Confirm costs correspond with the resource list and
+          // that the costs are in the same order as the resources.
+          if (action.resourceCosts.length !== resourceIds.length) {
+            results.error = generateValidationError(
+              `Action "{ _id: ${action._id}, name: ${action.name} }" has a different number of resource costs than the total number of resources in the mission. Each action must have exactly one resource cost for each resource defined in the mission.`,
+            )
+            return results
+          }
+          for (let index = 0; index < resourceIds.length; index++) {
+            if (action.resourceCosts[index].resourceId !== resourceIds[index]) {
+              results.error = generateValidationError(
+                `Action "{ _id: ${action._id}, name: ${action.name} }" has a mismatched resource cost for resource "{ _id: ${resourceIds[index]} }". Each action must have exactly one resource cost for each resource defined in the mission, and the costs must match the order of the resources.`,
+              )
+              return results
+            }
+          }
+        }
+      }
+    }
+
+    return results
+  }
+
+  /**
    * Validates the alias of a file in a mission.
    * @param files The value to validate.
    * @param forces The forces in the mission, used to compare
@@ -575,6 +650,9 @@ export class ServerMission extends Mission<TMetisServerComponents> {
     if (results.error) return next(results.error)
     // Check for structure keys.
     if (results.structureKeys) structureKeys = results.structureKeys
+
+    results = this.validateResources(missionJson)
+    if (results.error) return next(results.error)
 
     // Validate the mission forces.
     results = this.validateMissionForces(missionJson, structureKeys)

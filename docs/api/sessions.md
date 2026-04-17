@@ -6,7 +6,6 @@ METIS provides API endpoints for managing mission sessions. All operations requi
 
 ## Table of Contents
 
-- [Rate Limiting](#rate-limiting)
 - [Endpoints](#endpoints)
   - [Launch Session](#launch-session)
   - [Get All Sessions](#get-all-sessions)
@@ -19,15 +18,6 @@ METIS provides API endpoints for managing mission sessions. All operations requi
   - [Session States](#session-states)
   - [Required Permissions](#required-permissions)
   - [Session Access Levels](#session-access-levels)
-
-## Rate Limiting
-
-Sessions API endpoints follow METIS's standard rate limits:
-
-- HTTP API endpoints: 20 requests/second per IP address
-- WebSocket events: 10 messages/second per user
-
-Sessions make extensive use of WebSocket connections for real-time updates. Each WebSocket message (including session state changes, chat messages, and actions) counts toward the WebSocket rate limit.
 
 ## Endpoints
 

@@ -2,6 +2,8 @@ import { compute } from '@client/toolbox'
 import type { TDetailBase_P } from '.'
 import Tooltip from '../communication/Tooltip'
 import './DetailLocked.scss'
+import DetailTitleRow from './DetailTitleRow'
+import { useDetailClassNames } from './useDetailClassNames'
 
 /**
  * This will render a detail for a form,
@@ -10,105 +12,46 @@ import './DetailLocked.scss'
  */
 export function DetailLocked({
   label,
-  stateValue,
+  value,
   // Optional Properties
   disabled = false,
   uniqueLabelClassName = undefined,
   uniqueFieldClassName = undefined,
   errorMessage = undefined,
+  errorType = 'default',
   tooltipDescription = '',
 }: TDetailLocked_P): TReactElement | null {
   /* -- COMPUTED -- */
-
   /**
-   * The class name for the detail.
+   * The boolean that determines if the
+   * error message should be displayed.
    */
-  const rootClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['Detail', 'DetailLocked']
+  const displayError: boolean = compute(() => errorMessage !== undefined)
 
-    // If disabled is true then add the
-    // disabled class name.
-    if (disabled) {
-      classList.push('Disabled')
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-  /**
-   * The class name for the label.
-   */
-  const labelClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['Label']
-
-    // If a unique class name is passed
-    // then add it to the list of class names.
-    if (uniqueLabelClassName) {
-      classList.push(uniqueLabelClassName)
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-  /**
-   * The class name for the input field.
-   */
-  const fieldClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['Field']
-
-    // If a unique class name is passed
-    // then add it to the list of class names.
-    if (uniqueFieldClassName) {
-      classList.push(uniqueFieldClassName)
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-  /**
-   * Class name for the error message field.
-   */
-  const fieldErrorClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['FieldErrorMessage']
-
-    // Hide the error message if the
-    // error message is not passed.
-    if (errorMessage === undefined) {
-      classList.push('Hidden')
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-  /**
-   * The class name for the info icon.
-   */
-  const infoClassName: string = compute(() =>
-    tooltipDescription ? 'DetailInfo' : 'Hidden',
-  )
-
+  const { rootClasses, labelClasses, fieldClasses, fieldErrorClasses } =
+    useDetailClassNames({
+      componentName: 'DetailLocked',
+      disabled,
+      displayError,
+      errorType,
+      uniqueLabelClassName,
+      uniqueFieldClassName,
+    })
   return (
-    <div className={rootClassName}>
-      <div className='TitleRow'>
-        <div className='TitleColumnOne'>
-          <div className={labelClassName}>{label}</div>
-          <sup className={infoClassName}>
-            i
-            <Tooltip description={tooltipDescription} />
-          </sup>
-        </div>
-      </div>
-      <div className={fieldClassName}>
-        <span className='Text'>{stateValue}</span>
+    <div className={rootClasses.value}>
+      <DetailTitleRow
+        label={label}
+        labelClassName={labelClasses.value}
+        tooltipDescription={tooltipDescription}
+        fieldType='required'
+      />
+      <div className={fieldClasses.value}>
+        <span className='Text'>{value}</span>
         <span className='Lock'>
           <Tooltip description='This is locked and cannot be changed.' />
         </span>
       </div>
-      <div className={fieldErrorClassName}>{errorMessage}</div>
+      <div className={fieldErrorClasses.value}>{errorMessage}</div>
     </div>
   )
 }
@@ -122,5 +65,5 @@ export type TDetailLocked_P = TDetailBase_P & {
   /**
    * The value displayed in the detail.
    */
-  stateValue: string
+  value: string
 }

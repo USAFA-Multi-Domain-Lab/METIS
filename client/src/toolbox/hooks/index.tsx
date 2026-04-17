@@ -2,7 +2,8 @@ import { useGlobalContext } from '@client/context/global'
 import type { ClientUser } from '@client/users/ClientUser'
 import type { TListenerTarget } from '@shared/events/EventManager'
 import type { TLogin } from '@shared/logins'
-import React, { useCallback, useEffect, useRef } from 'react'
+import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
+import React, { useEffect, useRef } from 'react'
 import type {
   TDefaultProps,
   TRequireLoginReturn,
@@ -86,44 +87,47 @@ export function useEventListener<
   target: TListenerTarget<TEventMethod, TCallbackArgs> | null | undefined,
   methods: TEventMethod | TEventMethod[],
   callback: (...args: TCallbackArgs) => any,
-  dependencies: React.DependencyList = [],
 ): void {
   /**
-   * Cached callback function.
+   * Ref to the latest callback. Updated every render
+   * so the stable listener always invokes the current closure.
    */
-  const listener = useCallback(
-    (...args: TCallbackArgs) => {
-      callback(...args)
-    },
-    [target, ...dependencies],
-  )
+  const callbackRef = useRef(callback)
+  callbackRef.current = callback
+
+  /**
+   * Normalize methods to an array for stable
+   * dependency comparison.
+   */
+  const methodsNormalized = ArrayToolbox.normalize(methods)
 
   /* -- effect -- */
 
   // Register the event listener, reregistering
-  // if the callback ever changes.
+  // only if the target or methods change.
   useEffect(() => {
     // If no target is provided, do nothing.
     if (!target) return
 
-    // Convert methods to an array, if
-    // not already..
-    methods = Array.isArray(methods) ? methods : [methods]
+    // Stable listener that delegates to the
+    // latest callback ref.
+    const listener = (...args: TCallbackArgs) => {
+      callbackRef.current(...args)
+    }
 
     // Add listener to the new target.
-    for (let method of methods) target?.addEventListener(method, listener)
+    for (const method of methodsNormalized) {
+      target.addEventListener(method, listener)
+    }
 
     // Return clean up function for
     // removing the listener when done.
     return () => {
-      // Convert methods to an array, if
-      // not already..
-      methods = Array.isArray(methods) ? methods : [methods]
-
-      // Remove listener from the target.
-      for (let method of methods) target?.removeEventListener(method, listener)
+      for (const method of methodsNormalized) {
+        target.removeEventListener(method, listener)
+      }
     }
-  }, [listener])
+  }, [target, ...methodsNormalized])
 }
 
 /**

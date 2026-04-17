@@ -62,6 +62,13 @@ export class ClientConnection {
   }
 
   /**
+   * The socket ID for the web socket connection.
+   */
+  public get socketId(): string {
+    return this.socket.id
+  }
+
+  /**
    * Storage for all listeners, in the order they get added.
    */
   protected listeners: [TClientMethod, TClientHandler<any>][] = []
@@ -372,6 +379,10 @@ export class ClientConnection {
     }
 
     try {
+      // Consume a rate limit point on every message attempt,
+      // regardless of whether the data is valid.
+      await this.limiter.consume(this.userId)
+
       // Parse the data from a string into a
       // JSON object.
       let rawEventData = JSON.parse(data)
@@ -386,9 +397,6 @@ export class ClientConnection {
 
       // Validate/sanitize the data.
       event = zodSchema.parse(looseEventData)
-
-      // Update the rate limiter.
-      await this.limiter.consume(this.userId)
     } catch (error) {
       let request: TRequestOfResponse | undefined
 
@@ -407,6 +415,7 @@ export class ClientConnection {
             request,
           }),
         )
+
         return
       }
 
@@ -455,7 +464,7 @@ export class ClientConnection {
 
 /* -- TYPES -- */
 
-type TClientHandler<TMethod extends TClientMethod> = (
+export type TClientHandler<TMethod extends TClientMethod> = (
   data: TClientEvents[TMethod],
 ) => void
 

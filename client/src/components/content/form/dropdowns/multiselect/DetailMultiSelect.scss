@@ -1,0 +1,165 @@
+@use '@client/assets/styles/config.scss' as *;
+@use '../../index.scss' as *;
+
+.Detail.DetailMultiSelect {
+  .Field {
+    padding: 0;
+
+    &.IsExpanded {
+      .SelectedContainer .ExpandIndicator .Indicator {
+        transform: scale(1, -0.75);
+      }
+    }
+
+    .SelectedContainer {
+      cursor: pointer;
+      -webkit-user-select: none;
+      user-select: none;
+      display: grid;
+      align-items: center;
+      grid-template-columns: 1fr auto;
+      padding: $detail-field-padding;
+      min-height: 2.5em;
+
+      .SelectedValues {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5em;
+        align-items: center;
+        margin-right: 1em;
+
+        .SelectedPill {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5em;
+          background-color: rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 0.25em;
+          padding: 0.25em 0.5em;
+          font-size: 0.9em;
+
+          .PillText {
+            color: $detail-field-text-color;
+          }
+
+          .RemoveButton {
+            background: none;
+            border: none;
+            color: $detail-field-text-color;
+            cursor: pointer;
+            padding: 0;
+            margin: 0;
+            font-size: 1.1em;
+            line-height: 1;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+
+            &:hover {
+              opacity: 1;
+            }
+
+            &:disabled {
+              cursor: not-allowed;
+              opacity: 0.3;
+            }
+          }
+        }
+
+        .EmptyText {
+          color: rgba($detail-field-text-color, 0.6);
+        }
+      }
+
+      .ExpandIndicator {
+        .Indicator {
+          display: block;
+          transform: scale(1, 0.75);
+          font-size: 1.1rem;
+          color: $detail-field-text-color;
+          transition: transform 0.2s ease;
+        }
+      }
+    }
+
+    .AllOptions {
+      .MultiSelectOption {
+        cursor: pointer;
+        -webkit-user-select: none;
+        user-select: none;
+        padding: 0.375em $detail-field-horizontal-padding;
+
+        &:last-child {
+          margin: 0 0 0.6em;
+        }
+
+        .OptionContent {
+          display: flex;
+          align-items: center;
+          gap: 0.75em;
+
+          .OptionCheckbox {
+            cursor: pointer;
+            margin: 0;
+            flex-shrink: 0;
+          }
+
+          .OptionText {
+            color: $detail-field-text-color;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+          }
+        }
+
+        &.Selected {
+          background-color: rgba(255, 255, 255, 0.05);
+        }
+      }
+    }
+  }
+
+  &.Disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+
+    .SelectedContainer {
+      cursor: not-allowed;
+    }
+
+    .MultiSelectOption {
+      cursor: not-allowed;
+    }
+  }
+
+  // Variant: Checkbox only - hide remove buttons on pills
+  &.CheckboxOnly {
+    .SelectedPill {
+      .RemoveButton {
+        display: none;
+      }
+    }
+  }
+
+  // Variant: Pills only - hide checkboxes and selection highlighting
+  &.PillsOnly {
+    .AllOptions {
+      .MultiSelectOption {
+        .OptionContent {
+          gap: 0;
+
+          .OptionCheckbox {
+            display: none;
+          }
+
+          .OptionText {
+            margin-left: 0;
+          }
+        }
+
+        &.Selected {
+          background-color: transparent;
+        }
+      }
+    }
+  }
+}

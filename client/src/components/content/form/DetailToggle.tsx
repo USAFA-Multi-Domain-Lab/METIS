@@ -1,9 +1,10 @@
 import { compute } from '@client/toolbox'
 import type { TDetailRequired_P } from '.'
-import Tooltip from '../communication/Tooltip'
 import type { TToggleLockState } from '../user-controls/Toggle'
 import Toggle from '../user-controls/Toggle'
+import DetailTitleRow from './DetailTitleRow'
 import './DetailToggle.scss'
+import { useDetailClassNames } from './useDetailClassNames'
 
 /**
  * This will render a detail for a form,
@@ -11,6 +12,7 @@ import './DetailToggle.scss'
  * for turning a feature on or off.
  */
 export function DetailToggle({
+  fieldType = 'required',
   label,
   value: stateValue,
   setValue: setState,
@@ -21,105 +23,46 @@ export function DetailToggle({
   uniqueLabelClassName = undefined,
   uniqueFieldClassName = undefined,
   errorMessage = undefined,
+  errorType = 'default',
   disabled = false,
 }: TDetailToggle_P): TReactElement | null {
   /* -- COMPUTED -- */
   /**
-   * The class name for the detail.
+   * The boolean that determines if the
+   * error message should be displayed.
    */
-  const rootClassName: string = compute(() => {
-    let classList: string[] = ['Detail', 'DetailToggle']
-
-    if (uniqueClassName) classList.push(uniqueClassName)
-    if (disabled) classList.push('Disabled')
-
-    return classList.join(' ')
-  })
-  /**
-   * The class name for the label.
-   */
-  const labelClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['Label']
-
-    // If a unique class name is passed
-    // then add it to the list of class names.
-    if (uniqueLabelClassName) {
-      classList.push(uniqueLabelClassName)
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-  /**
-   * The class name for the input field.
-   */
-  const fieldClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['Field']
-
-    // If a unique class name is passed
-    // then add it to the list of class names.
-    if (uniqueFieldClassName) {
-      classList.push(uniqueFieldClassName)
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-  /**
-   * Class name for the error message field.
-   */
-  const fieldErrorClassName: string = compute(() => {
-    // Default class names
-    let classList: string[] = ['FieldErrorMessage']
-
-    // Hide the error message if the
-    // error message is not passed.
-    if (errorMessage === undefined) {
-      classList.push('Hidden')
-    }
-
-    // Return the list of class names as one string.
-    return classList.join(' ')
-  })
-  /**
-   * The class name for the info icon.
-   */
-  const infoClassName: string = compute(() =>
-    tooltipDescription ? 'DetailInfo' : 'Hidden',
-  )
-
+  const displayError: boolean = compute(() => errorMessage !== undefined)
+  const { rootClasses, labelClasses, fieldClasses, fieldErrorClasses } =
+    useDetailClassNames({
+      componentName: 'DetailToggle',
+      disabled,
+      displayError,
+      errorType,
+      uniqueClassName,
+      uniqueLabelClassName,
+      uniqueFieldClassName,
+    })
   /* -- RENDER -- */
   return (
-    <div className={rootClassName}>
-      <div className='TitleRow'>
-        <div className='TitleColumnOne'>
-          <div className={labelClassName}>{label}</div>
-          <sup className={infoClassName}>
-            i
-            <Tooltip description={tooltipDescription} />
-          </sup>
-        </div>
-        <div className='TitleColumnTwo'>
-          <div className={fieldClassName}>
+    <div className={rootClasses.value}>
+      <DetailTitleRow
+        label={label}
+        labelClassName={labelClasses.value}
+        tooltipDescription={tooltipDescription}
+        fieldType='required'
+        rightContent={
+          <div className={fieldClasses.value}>
             <Toggle
               stateValue={stateValue}
               setState={!disabled ? setState : () => {}}
               lockState={lockState}
             />
           </div>
-        </div>
-      </div>
-      <div className={fieldErrorClassName}>{errorMessage}</div>
+        }
+      />
+      <div className={fieldErrorClasses.value}>{errorMessage}</div>
     </div>
   )
-}
-
-// Set default props for the DetailToggle
-// component.
-DetailToggle.defaultProps = {
-  fieldType: 'required',
 }
 
 /* ---------------------------- TYPES FOR DETAIL TOGGLE ---------------------------- */
@@ -127,7 +70,12 @@ DetailToggle.defaultProps = {
 /**
  * The properties for the Detail Toggle component..
  */
-export type TDetailToggle_P = TDetailRequired_P<boolean> & {
+export type TDetailToggle_P = Omit<TDetailRequired_P<boolean>, 'fieldType'> & {
+  /**
+   * Field type for the detail.
+   * @default 'required'
+   */
+  fieldType?: 'required'
   /**
    * The toggle lock state of the toggle.
    * @default 'unlocked'

@@ -1,4 +1,5 @@
 import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
+import { JsonSerializableArray } from '@shared/toolbox/arrays/JsonSerializableArray'
 import { MapToolbox } from '@shared/toolbox/maps/MapToolbox'
 import { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
 import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
@@ -15,6 +16,8 @@ import { type TMission, Mission } from '../Mission'
 import type { TMissionComponentIssue } from '../MissionComponent'
 import { MissionComponent } from '../MissionComponent'
 import { type TPrototype, MissionPrototype } from './MissionPrototype'
+import type { TNodeAlertJson } from './NodeAlert'
+import { NodeAlert } from './NodeAlert'
 
 /**
  * This represents an individual node in a mission.
@@ -266,12 +269,58 @@ export abstract class MissionNode<
   }
 
   /**
+   * @see {@link alerts}
+   */
+  protected _alerts: JsonSerializableArray<NodeAlert>
+  /**
+   * Messages attached to this node to alert an operator
+   * of information with varying levels of severity.
+   */
+  public get alerts(): JsonSerializableArray<NodeAlert> {
+    return new JsonSerializableArray<NodeAlert>(...this._alerts)
+  }
+
+  /**
+   * All alerts on the node that have not yet been acknowledged.
+   */
+  public get pendingAlerts(): NodeAlert[] {
+    return this.alerts.filter((alert) => !alert.acknowledged)
+  }
+
+  /**
+   * Whether there are an alerts not yet acknowledged
+   * by a member of the force hosting this node.
+   */
+  public get hasPendingAlerts(): boolean {
+    return this.pendingAlerts.length > 0
+  }
+
+  /**
+   * The next pending alert on the node,
+   * or `null` if there are no pending alerts.
+   */
+  public get nextPendingAlert(): NodeAlert | null {
+    // Sort first by severity level, that way the
+    // most severe pending alert is prioritized.
+    return (
+      this.alerts
+        .sort((a, b) => {
+          return (
+            NodeAlert.SEVERITY_LEVELS.indexOf(b.severityLevel) -
+            NodeAlert.SEVERITY_LEVELS.indexOf(a.severityLevel)
+          )
+        })
+        .find((alert) => !alert.acknowledged) ?? null
+    )
+  }
+
+  /**
    * The parent of this node in the tree structure.
    */
   public get parent(): TNode<T> | null {
     let parentPrototype = this.prototype.parent
     return parentPrototype
-      ? this.force.getNodeFromPrototype(parentPrototype._id) ?? null
+      ? (this.force.getNodeFromPrototype(parentPrototype._id) ?? null)
       : null
   }
 
@@ -615,6 +664,9 @@ export abstract class MissionNode<
       data.initiallyBlocked ?? MissionNode.DEFAULT_PROPERTIES.initiallyBlocked
     this._blocked = data.blocked ?? this.initiallyBlocked
     this.position = new Vector2D(0, 0)
+    this._alerts = NodeAlert.fromJson(
+      data.alerts ?? MissionNode.DEFAULT_PROPERTIES.alerts,
+    )
 
     // Attempt to get prototype from mission.
     let prototype = this.mission.getPrototype(data.prototypeId)
@@ -687,6 +739,7 @@ export abstract class MissionNode<
           opened: this.opened,
           executions: executionJson,
           blocked: this._blocked,
+          alerts: this.alerts.json,
         }
 
         // Join session-specific JSON with base JSON.
@@ -713,6 +766,15 @@ export abstract class MissionNode<
   }
 
   /**
+   * @param _id The ID of the alert to retrieve.
+   * @returns The alert with the given ID, or `undefined`
+   * if no alert with the given ID is found.
+   */
+  public getAlert(_id: string): NodeAlert | undefined {
+    return this.alerts.find((alert) => alert._id === _id)
+  }
+
+  /**
    * Generates a new key for an action.
    * @returns The new key for an action.
    */
@@ -731,30 +793,6 @@ export abstract class MissionNode<
     newKey++
     return String(newKey)
   }
-
-  /**
-   * Modifies the chance of success for all the node's
-   * actions.
-   * @param successChanceOperand The operand to modify
-   * the success chance by.
-   */
-  public abstract modifySuccessChance(successChanceOperand: number): void
-
-  /**
-   * Modifies the processing time for all the node's
-   * actions.
-   * @param processTimeOperand The operand to modify
-   * the process time by.
-   */
-  public abstract modifyProcessTime(processTimeOperand: number): void
-
-  /**
-   * Modifies the resource cost for all the node's
-   * actions.
-   * @param resourceCostOperand The operand to modify
-   * the resource cost by.
-   */
-  public abstract modifyResourceCost(resourceCostOperand: number): void
 
   /**
    * Processes an incoming execution that is being performed
@@ -814,6 +852,7 @@ export abstract class MissionNode<
       executions: [],
       exclude: false,
       initiallyBlocked: false,
+      alerts: [],
     }
   }
 }
@@ -892,6 +931,7 @@ export interface TMissionNodeSessionJson {
   opened: boolean
   executions: TActionExecutionJson[]
   blocked: boolean
+  alerts: TNodeAlertJson[]
 }
 
 /**
@@ -913,7 +953,10 @@ export type TMissionNodeJson = TMissionNodeJsonBase &
 /**
  * Options for MissionNode.toJSON method.
  */
-export type TNodeJsonOptions = Omit<TForceJsonOptions, 'forceExposure'>
+export type TNodeJsonOptions = Pick<
+  TForceJsonOptions,
+  'sessionDataExposure' | 'rootEffectsExposure'
+>
 
 /**
  * Possible states for the execution of a node.

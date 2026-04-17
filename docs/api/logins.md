@@ -46,7 +46,18 @@ Authenticates a user and creates a new login session.
       "firstName": "Student",
       "lastName": "User",
       "needsPasswordReset": false,
-      "accessId": "student"
+      "accessId": "student",
+      "preferences": {
+        "_id": "662270879c5ca781c21812ab",
+        "missionMap": {
+          "_id": "662270879c5ca781c21812ac",
+          "panOnIssueSelection": true
+        }
+      },
+      "createdAt": "2025-07-15T10:30:00.000Z",
+      "updatedAt": "2025-07-15T10:30:00.000Z",
+      "createdBy": "000000000000000000000001",
+      "createdByUsername": "admin"
     },
     "sessionId": null
   }
@@ -83,7 +94,18 @@ Retrieves information about the current login session.
       "firstName": "Student",
       "lastName": "User",
       "needsPasswordReset": false,
-      "accessId": "student"
+      "accessId": "student",
+      "preferences": {
+        "_id": "662270879c5ca781c21812ab",
+        "missionMap": {
+          "_id": "662270879c5ca781c21812ac",
+          "panOnIssueSelection": true
+        }
+      },
+      "createdAt": "2025-07-15T10:30:00.000Z",
+      "updatedAt": "2025-07-15T10:30:00.000Z",
+      "createdBy": "000000000000000000000001",
+      "createdByUsername": "admin"
     },
     "sessionId": null
   }
@@ -120,7 +142,44 @@ Destroys the current login session and associated data.
 
 ## Notes
 
-- Only one active session is allowed per user
-- Sessions use secure HTTP-only cookies
-- Rate limiting may temporarily restrict access on multiple failed attempts
-- System accounts cannot log in through the API
+### Authentication System
+
+The METIS user authentication system uses Express sessions:
+
+- **Session Management**
+  - Express sessions with secure HTTP-only cookies
+  - MongoDB-backed session store
+  - Single active session per user enforced
+  - Session conflicts handled via forceful logout
+  - Automatic timeout on session expiration
+  - Automatic timeout for failed login attempts
+
+- **Request Validation**
+  - WebSocket connection validation for real-time operations
+  - Session membership verification for protected routes
+  - Default rate limits apply (100/sec HTTP, 100/sec WebSocket)
+  - Request origin validation
+
+### Access Control
+
+METIS implements a robust role-based access control system:
+
+- **Role Hierarchy**
+  - Administrator: Full system access
+  - Instructor: Student management only
+  - Student: Limited self-management capabilities
+
+- **Access Restrictions**
+  - System user (ID: 000000000000000000000000) is protected from modifications
+  - Admin user (ID: 000000000000000000000001) cannot be deleted
+  - Users cannot modify their own access level
+  - Permission escalation is prevented
+  - Cross-user password resets are blocked
+
+### Security Features
+
+- Secure password handling with bcrypt hashing
+- Password reset workflow
+- Failed login attempt tracking
+- Session security with auto-logout
+- Complete audit trail of changes

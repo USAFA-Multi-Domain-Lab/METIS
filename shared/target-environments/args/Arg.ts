@@ -67,6 +67,8 @@ export class Arg {
         case 'node':
         case 'action':
         case 'file':
+        case 'pool':
+        case 'resource':
           return MissionComponentArg.toJson(arg)
       }
     })
@@ -94,6 +96,8 @@ export class Arg {
         case 'node':
         case 'action':
         case 'file':
+        case 'pool':
+        case 'resource':
           return MissionComponentArg.fromJson(arg)
       }
     })

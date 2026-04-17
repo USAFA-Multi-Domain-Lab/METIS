@@ -9,7 +9,7 @@ import { ApiResponse } from '../../library/ApiResponse'
 export const getLogin: TExpressHandler = (request, response) => {
   // Retrieve the login information with the user
   // ID stored in the request.
-  let login: ServerLogin | undefined = ServerLogin.get(request.session.userId)
+  let login = ServerLogin.get(request)
 
   // If the login information was not found, return
   // an empty object.

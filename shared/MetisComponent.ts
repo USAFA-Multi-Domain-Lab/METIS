@@ -1,12 +1,15 @@
 import type { FileReference } from './files/FileReference'
 import type { ActionExecution } from './missions/actions/ActionExecution'
+import type { ActionResourceCost } from './missions/actions/ActionResourceCost'
 import type { ExecutionOutcome } from './missions/actions/ExecutionOutcome'
 import type { MissionAction } from './missions/actions/MissionAction'
 import type { Effect, TEffectType } from './missions/effects/Effect'
 import type { MissionFile } from './missions/files/MissionFile'
 import type { MissionForce } from './missions/forces/MissionForce'
 import type { MissionOutput } from './missions/forces/MissionOutput'
+import type { ResourcePool } from './missions/forces/ResourcePool'
 import type { Mission } from './missions/Mission'
+import type { MissionResource } from './missions/MissionResource'
 import type { MissionNode } from './missions/nodes/MissionNode'
 import type { MissionPrototype } from './missions/nodes/MissionPrototype'
 import type { SessionMember } from './sessions/members/SessionMember'
@@ -173,10 +176,13 @@ export type TMetisBaseComponents = {
   target: Target
   fileReference: FileReference
   mission: Mission
+  resource: MissionResource
   prototype: MissionPrototype
   missionFile: MissionFile
   force: MissionForce
   output: MissionOutput
+  resourcePool: ResourcePool
+  resourceCost: ActionResourceCost
   node: MissionNode
   action: MissionAction
   execution: ActionExecution

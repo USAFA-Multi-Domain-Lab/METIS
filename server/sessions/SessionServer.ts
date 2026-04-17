@@ -6,6 +6,7 @@ import type { ServerEffect } from '@server/missions/effects/ServerEffect'
 import type { ServerMissionFile } from '@server/missions/files/ServerMissionFile'
 import type { ServerMissionForce } from '@server/missions/forces/ServerMissionForce'
 import { ServerOutput } from '@server/missions/forces/ServerOutput'
+import type { ServerResourcePool } from '@server/missions/forces/ServerResourcePool'
 import type { ServerMissionNode } from '@server/missions/nodes/ServerMissionNode'
 import { ServerMission } from '@server/missions/ServerMission'
 import { OutdatedContextError } from '@server/target-environments/context/OutdatedContextError'
@@ -19,11 +20,13 @@ import type { ServerTargetEnvironment } from '@server/target-environments/Server
 import type { ServerUser } from '@server/users/ServerUser'
 import type {
   TClientEvents,
+  TRequestEvents,
   TRequestOfResponse,
   TServerEvents,
   TServerMethod,
 } from '@shared/connect'
 import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
+import type { TActionModifier } from '@shared/missions/actions/MissionAction'
 import type {
   TEffectExecutionTriggered,
   TEffectSessionTriggered,
@@ -36,6 +39,7 @@ import type {
   TMissionJsonOptions,
 } from '@shared/missions/Mission'
 import type { MissionComponent } from '@shared/missions/MissionComponent'
+import { type TNodeAlertSeverityLevel } from '@shared/missions/nodes/NodeAlert'
 import type { TMemberRoleId } from '@shared/sessions/members/MemberRole'
 import { MemberRole } from '@shared/sessions/members/MemberRole'
 import type { TSessionMemberJson } from '@shared/sessions/members/SessionMember'
@@ -53,6 +57,7 @@ import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { User } from '@shared/users/User'
 import { targetEnvLogger } from '../logging'
 import { ServerSessionMember } from './ServerSessionMember'
+import { TargetEnvStore } from './TargetEnvStore'
 
 /**
  * Server instance for sessions. Handles server-side logic for a session with participating clients. Communicates with clients to conduct the session.
@@ -112,6 +117,32 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * performing teardown operations.
    */
   private effectHistory: Promise<void>[]
+
+  /**
+   * This is a registry, not of active listeners, but the
+   * methods and corresponding handlers for all listeners
+   * that should be added and removed via the {@link addListeners}
+   * and {@link removeListeners} methods. This helps ensure
+   * there is no mismatch in adding and removing listeners,
+   * such as adding a listener and forgetting to remove it,
+   * or vice versa.
+   */
+  private get listenerInputRegistry() {
+    return [
+      ['request-start-session', this.onRequestStart],
+      ['request-end-session', this.onRequestEnd],
+      ['request-reset-session', this.onRequestReset],
+      ['request-config-update', this.onRequestConfigUpdate],
+      ['request-kick', this.onRequestKick],
+      ['request-ban', this.onRequestBan],
+      ['request-assign-force', this.onRequestAssignForce],
+      ['request-assign-role', this.onRequestAssignRole],
+      ['request-open-node', this.onRequestOpenNode],
+      ['request-execute-action', this.onRequestExecuteAction],
+      ['request-send-output', this.onRequestSendOutput],
+      ['request-acknowledge-node-alert', this.onRequestAcknowledgeNodeAlert],
+    ] as const
+  }
 
   public constructor(
     _id: string,
@@ -411,6 +442,8 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     this.unregister()
     // Mark as destroyed.
     this._destroyed = true
+    // Clean up all cached target environment stores for this session.
+    TargetEnvStore.cleanUp(this._id)
     // Grab all members.
     let members: ServerSessionMember[] = this.members
     // Clear all members.
@@ -708,66 +741,24 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     })
   }
 
-  // todo: There should be a strict requirement with this method
-  // todo: for session-specific event listeners to be added.
   /**
    * Creates session-specific listeners for the given member.
    */
   private addListeners(member: ServerSessionMember): void {
-    let { connection } = member
-
-    connection.addEventListener('request-start-session', (data) =>
-      this.onRequestStart(member, data),
-    )
-    connection.addEventListener('request-end-session', (data) =>
-      this.onRequestEnd(member, data),
-    )
-    connection.addEventListener('request-reset-session', (data) =>
-      this.onRequestReset(member, data),
-    )
-    connection.addEventListener('request-config-update', (data) =>
-      this.onRequestConfigUpdate(member, data),
-    )
-    connection.addEventListener('request-kick', (data) =>
-      this.onRequestKick(member, data),
-    )
-    connection.addEventListener('request-ban', (data) =>
-      this.onRequestBan(member, data),
-    )
-    connection.addEventListener('request-assign-force', (data) =>
-      this.onRequestAssignForce(member, data),
-    )
-    connection.addEventListener('request-assign-role', (data) =>
-      this.onRequestAssignRole(member, data),
-    )
-    connection.addEventListener('request-open-node', (data) =>
-      this.onRequestOpenNode(member, data),
-    )
-    connection.addEventListener('request-execute-action', (data) =>
-      this.onRequestExecuteAction(member, data),
-    )
-    connection.addEventListener('request-send-output', (data) =>
-      this.onRequestSendOutput(member, data),
-    )
+    this.listenerInputRegistry.forEach(([method, handler]) => {
+      member.connection.addEventListener(method, (event: any) =>
+        handler(member, event),
+      )
+    })
   }
 
   /**
    * Removes session-specific listeners for the given participant.
    */
   private removeListeners(member: ServerSessionMember): void {
-    member.connection.clearEventListeners([
-      'request-start-session',
-      'request-end-session',
-      'request-reset-session',
-      'request-config-update',
-      'request-kick',
-      'request-ban',
-      'request-assign-force',
-      'request-assign-role',
-      'request-open-node',
-      'request-execute-action',
-      'request-send-output',
-    ])
+    member.connection.clearEventListeners(
+      this.listenerInputRegistry.map(([method]) => method),
+    )
   }
 
   /**
@@ -896,6 +887,33 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
           request,
         })
       }
+    }
+  }
+
+  private buildFullfilledRequest<TMethod extends keyof TRequestEvents>(
+    member: ServerSessionMember,
+    event: TClientEvents[TMethod],
+  ): TRequestOfResponse {
+    return member.connection.buildResponseReqData(event, {
+      fulfilled: true,
+    })
+  }
+
+  private requireSessionState = (
+    member: ServerSessionMember,
+    event: TClientEvents[keyof TRequestEvents],
+    requiredState: TSessionState,
+  ): void => {
+    // Build request for response data.
+    let fulfilledRequest = this.buildFullfilledRequest(member, event)
+
+    if (this._state !== requiredState) {
+      let error = new ServerEmittedError(
+        ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
+        { request: fulfilledRequest },
+      )
+      member.emitError(error)
+      throw error
     }
   }
 
@@ -1544,6 +1562,21 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
         }),
       )
     }
+    // If the member doesn't belong to the node's force and doesn't
+    // have complete visibility, then emit an error.
+    if (
+      !member.isAuthorized('completeVisibility') &&
+      member.forceId !== node.forceId
+    ) {
+      return connection.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
+          {
+            request: connection.buildResponseReqData(event),
+          },
+        ),
+      )
+    }
     // If the node is executable, then emit
     // an error.
     if (!node.openable) {
@@ -1647,6 +1680,21 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
         }),
       )
     }
+    // If the member doesn't belong to the action's force and doesn't
+    // have complete visibility, then emit an error.
+    if (
+      !member.isAuthorized('completeVisibility') &&
+      member.forceId !== action.force._id
+    ) {
+      return connection.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
+          {
+            request,
+          },
+        ),
+      )
+    }
     // If the action is not executable, then
     // emit an error.
     if (!action.node.executable) {
@@ -1711,6 +1759,67 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   }
 
   /**
+   * Called when a member requests to acknowledge a node alert.
+   * @param member The member acknowledging the node alert.
+   * @param event The event emitted by the member.
+   */
+  private onRequestAcknowledgeNodeAlert = (
+    member: ServerSessionMember,
+    event: TClientEvents['request-acknowledge-node-alert'],
+  ): void => {
+    try {
+      this.requireSessionState(member, event, 'started')
+
+      let { nodeId, alertId } = event.data
+      let node = this.mission.getNodeById(nodeId)
+      let alert = node?.getAlert(alertId)
+      let request = this.buildFullfilledRequest(member, event)
+
+      if (!node || !alert) {
+        return member.emitError(
+          new ServerEmittedError(ServerEmittedError.CODE_NODE_ALERT_NOT_FOUND, {
+            request,
+          }),
+        )
+      }
+
+      // Ensure the member belongs to the node's force or has complete
+      // visibility before allowing the acknowledgement.
+      if (
+        !member.isAuthorized('completeVisibility') &&
+        member.forceId !== node.forceId
+      ) {
+        return member.emitError(
+          new ServerEmittedError(
+            ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
+            { request },
+          ),
+        )
+      }
+
+      alert.acknowledged = true
+
+      // Communicate with all members of the force
+      // that the alert has now been acknowledged.
+      for (let { connection } of this.getMembersForForce(node.forceId)) {
+        connection.emit('node-alert-acknowledged', {
+          method: 'node-alert-acknowledged',
+          data: event.data,
+          request,
+        })
+      }
+    } catch (error) {
+      // Emit an error if the action could not be executed.
+      member.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR, {
+          request: member.connection.buildResponseReqData(event),
+          message: 'Failed to acknowledge node alert.',
+        }),
+      )
+    }
+  }
+
+  /**
    * Sub-handler of `onRequestExecuteAction` which processes the
    * initiation of an action execution.
    * @param member The member provided to `onRequestExecuteAction`.
@@ -1730,7 +1839,9 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       method: 'action-execution-initiated',
       data: {
         execution: execution.toJson(),
-        resourcesRemaining: action!.force.resourcesRemaining,
+        resourcePools: action!.force.toJson({
+          sessionDataExposure: { expose: 'all' },
+        }).resourcePools,
       },
       request: {
         event: request.event,
@@ -1749,31 +1860,6 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     let message = /*html*/ `
               <p>Executing <i><action-name></action-name></i> on <i><node-name></node-name></i>.</p>
               <i><action-description></action-description></i>
-              <p></p>
-              <p class="DetailDisplay">
-                <span class="Label">Success Chance</span>
-                <span class="Value">
-                  <success-chance></success-chance>
-                </span>
-              </p>
-              <p class="DetailDisplay">
-                <span class="Label">Time</span>
-                <span class="Value">
-                  <time-remaining></time-remaining> (<process-time></process-time>)
-                </span>
-              </p>
-              <p class="DetailDisplay">
-                <span class="Label">Cost</span>
-                <span class="Value">
-                  <resource-cost></resource-cost>
-                </span>
-              </p>
-              <p class="DetailDisplay">
-                <span class="Label">Opens Node</span>
-                <span class="Value">
-                  <opens-node></opens-node>
-                </span>
-              </p>
             `
 
     // Send the output JSON to the force.
@@ -1899,6 +1985,22 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
             new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_FOUND, {
               request,
             }),
+          )
+        }
+
+        // If the member doesn't belong to the node's force and doesn't
+        // have complete visibility, then emit an error.
+        if (
+          !member.isAuthorized('completeVisibility') &&
+          member.forceId !== node.forceId
+        ) {
+          return member.emitError(
+            new ServerEmittedError(
+              ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
+              {
+                request,
+              },
+            ),
           )
         }
 
@@ -2315,6 +2417,51 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   }
 
   /**
+   * Adds an alert to the given node with the specified severity level.
+   * @param node The node to which the alert will be added.
+   * @param message The message to display when the alert is opened.
+   * @param severityLevel The severity level of the alert, indicating
+   * the importance/urgency of the alert.
+   * @note By default, this will add the alert to the node to which the current
+   * effect belongs, unless configured otherwise.
+   */
+  public addNodeAlert = (
+    node: ServerMissionNode,
+    message: string,
+    severityLevel: TNodeAlertSeverityLevel,
+  ) => {
+    // Confirm the node exists.
+    this.confirmComponentInMission(node)
+
+    // Add the alert to the node.
+    let alert = node.alert(message, severityLevel)
+    this.emitModifierEnacted(node.force, {
+      key: 'node-new-alert',
+      nodeId: node._id,
+      alert: alert.json,
+    })
+  }
+
+  /**
+   * Applies the modifier to the node, and emits the modifier-enacted event.
+   * @param node The node to apply the modifier to.
+   * @param modifier The modifier to apply.
+   * @param emitData The data to emit with the modifier-enacted event.
+   * @param action The action to confirm and target, if provided.
+   */
+  private modifyAction = (
+    node: ServerMissionNode,
+    modifier: TActionModifier,
+    emitData: TServerEvents['modifier-enacted']['data'],
+    action?: ServerMissionAction,
+  ): void => {
+    this.confirmComponentInMission(node)
+    if (action) this.confirmComponentInMission(action)
+    node.applyModifier(modifier, action?._id)
+    this.emitModifierEnacted(node.force, emitData)
+  }
+
+  /**
    * Modifies the success chance of a specific action within a node or
    * all actions within a node.
    * @param data The data for the modification.
@@ -2330,23 +2477,19 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     action?: ServerMissionAction
   }) => {
     const { operand, node, action } = data
-
-    // Confirm the node exists.
-    this.confirmComponentInMission(node)
-
-    // If the action is provided, confirm it exists
-    // and belongs to the node.
-    if (action) this.confirmComponentInMission(action)
-
-    // Modify the success chance of the action or
-    // all actions within the node.
-    node.modifySuccessChance(operand, action?._id)
-    this.emitModifierEnacted(node.force, {
-      key: 'node-action-success-chance',
-      successChanceOperand: operand,
-      nodeId: node._id,
-      actionId: action?._id,
-    })
+    const appliedAt = Date.now()
+    this.modifyAction(
+      node,
+      { type: 'success-chance', amount: operand, appliedAt, resourceId: null },
+      {
+        key: 'node-action-success-chance',
+        successChanceOperand: operand,
+        appliedAt,
+        nodeId: node._id,
+        actionId: action?._id,
+      },
+      action,
+    )
   }
 
   /**
@@ -2365,29 +2508,26 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     action?: ServerMissionAction
   }) => {
     const { operand, node, action } = data
-
-    // Confirm the node exists.
-    this.confirmComponentInMission(node)
-
-    // If the action is provided, confirm it exists
-    // and belongs to the node.
-    if (action) this.confirmComponentInMission(action)
-
-    // Modify the processing time of the action or
-    // all actions within the node.
-    node.modifyProcessTime(operand, action?._id)
-    this.emitModifierEnacted(node.force, {
-      key: 'node-action-process-time',
-      processTimeOperand: operand,
-      nodeId: node._id,
-      actionId: action?._id,
-    })
+    const appliedAt = Date.now()
+    this.modifyAction(
+      node,
+      { type: 'process-time', amount: operand, appliedAt, resourceId: null },
+      {
+        key: 'node-action-process-time',
+        processTimeOperand: operand,
+        appliedAt,
+        nodeId: node._id,
+        actionId: action?._id,
+      },
+      action,
+    )
   }
 
   /**
    * Modifies the resource cost of a specific action within a node or
    * all actions within a node.
    * @param data The data for the modification.
+   * @param data.resourceId The ID of the resource whose cost to modify.
    * @param data.operand The operand to modify the resource cost by.
    * @param data.node The node containing the action to modify.
    * @param data.action The action to modify.
@@ -2395,46 +2535,44 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * within the node will be modified.
    */
   public modifyResourceCost = (data: {
+    resourceId: string
     operand: number
     node: ServerMissionNode
     action?: ServerMissionAction
   }) => {
-    const { operand, node, action } = data
-
-    // Confirm the node exists.
-    this.confirmComponentInMission(node)
-
-    // If the action is provided, confirm it exists
-    // and belongs to the node.
-    if (action) this.confirmComponentInMission(action)
-
-    // Modify the resource cost of the action or
-    // all actions within the node.
-    node.modifyResourceCost(operand, action?._id)
-    this.emitModifierEnacted(node.force, {
-      key: 'node-action-resource-cost',
-      resourceCostOperand: operand,
-      nodeId: node._id,
-      actionId: action?._id,
-    })
+    const { resourceId, operand, node, action } = data
+    const appliedAt = Date.now()
+    this.modifyAction(
+      node,
+      { type: 'resource-cost', amount: operand, appliedAt, resourceId },
+      {
+        key: 'node-action-resource-cost',
+        resourceId,
+        resourceCostOperand: operand,
+        appliedAt,
+        nodeId: node._id,
+        actionId: action?._id,
+      },
+      action,
+    )
   }
 
   /**
-   * Modifies resource pool by applying the given amount
-   * to the resource pool.
-   * @param force The force containing the resource pool.
+   * Modifies a resource pool by applying the given amount
+   * to the pool.
+   * @param pool The resource pool to modify.
    * @param operand The amount by which to modify the resource pool.
    * @note A negative value will subtract and a positive
    * value will add to the resource pool.
    */
-  public modifyResourcePool = (force: ServerMissionForce, operand: number) => {
-    // Confirm the force exists, modify the resource pool,
+  public modifyResourcePool = (pool: ServerResourcePool, operand: number) => {
+    // Confirm the pool exists in the mission, modify the resource pool,
     // then emit an event to the members.
-    this.confirmComponentInMission(force)
-    force.modifyResourcePool(operand)
-    this.emitModifierEnacted(force, {
+    this.confirmComponentInMission(pool)
+    pool.onModify(operand)
+    this.emitModifierEnacted(pool.force, {
       key: 'force-resource-pool',
-      forceId: force._id,
+      poolId: pool._id,
       operand,
     })
   }

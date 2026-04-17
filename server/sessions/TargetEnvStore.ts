@@ -96,7 +96,6 @@ export class TargetEnvStore {
     this.registry.delete(key)
   }
 
-  // todo: This should be called during session tear down, at some point.
   /**
    * Cleans up all stores associated with a given session.
    * @param sessionId The session identifier.

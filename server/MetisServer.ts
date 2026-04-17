@@ -1,3 +1,4 @@
+import { BooleanToolbox } from '@shared/toolbox/booleans/BooleanToolbox'
 import MongoStore from 'connect-mongo'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
@@ -6,6 +7,7 @@ import type { Express, RequestHandler } from 'express'
 import express from 'express'
 import type { RateLimitRequestHandler } from 'express-rate-limit'
 import rateLimit from 'express-rate-limit'
+import type { Store } from 'express-session'
 import session from 'express-session'
 import fs from 'fs'
 import type mongoose from 'mongoose'
@@ -20,7 +22,7 @@ import { MetisWsServer } from './connect/MetisWsServer'
 import { MetisDatabase } from './database/MetisDatabase'
 import { MetisFileStore } from './files/MetisFileStore'
 import { expressLogger, initializeLoggers } from './logging'
-import { ServerWebSession } from './logins/ServerWebSession'
+import { ImportMigrationBuilder } from './missions/imports/ImportMigrationBuilder'
 import { ServerTarget } from './target-environments/ServerTarget'
 import { ServerTargetEnvironment } from './target-environments/ServerTargetEnvironment'
 import { TargetEnvSandboxing } from './target-environments/TargetEnvSandboxing'
@@ -75,13 +77,13 @@ export class MetisServer {
   /**
    * The file store instance.
    */
-  private _fileStore: MetisFileStore
+  public readonly fileStore: MetisFileStore
+
   /**
-   * The file store instance.
+   * Helps perform migrations for imported missions with
+   * outdated data.
    */
-  public get fileStore(): MetisFileStore {
-    return this._fileStore
-  }
+  public readonly importMigrationBuilder: ImportMigrationBuilder
 
   /**
    * The environment type in which METIS is running.
@@ -216,6 +218,17 @@ export class MetisServer {
   }
 
   /**
+   * Whether database backups should be created automatically on startup and on a schedule.
+   */
+  private _backupsEnabled: boolean
+  /**
+   * Whether database backups should be created automatically on startup and on a schedule.
+   */
+  public get backupsEnabled(): boolean {
+    return this._backupsEnabled
+  }
+
+  /**
    * The path to the SSL key file (if any).
    */
   private _sslKeyPath: string | undefined
@@ -235,6 +248,39 @@ export class MetisServer {
    */
   public get sslCertPath(): string | undefined {
     return this._sslCertPath
+  }
+
+  /**
+   * The maximum number of failed login attempts before lockout.
+   */
+  private _maxLoginAttempts: number
+  /**
+   * The maximum number of failed login attempts before lockout.
+   */
+  public get maxLoginAttempts(): number {
+    return this._maxLoginAttempts
+  }
+
+  /**
+   * The duration of login lockout in milliseconds.
+   */
+  private _loginLockoutDuration: number
+  /**
+   * The duration of login lockout in milliseconds.
+   */
+  public get loginLockoutDuration(): number {
+    return this._loginLockoutDuration
+  }
+
+  /**
+   * The time window in milliseconds to track failed attempts.
+   */
+  private _loginAttemptWindow: number
+  /**
+   * The time window in milliseconds to track failed attempts.
+   */
+  public get loginAttemptWindow(): number {
+    return this._loginAttemptWindow
   }
 
   /**
@@ -285,8 +331,12 @@ export class MetisServer {
     this._wsRateLimit = completedOptions.wsRateLimit
     this._wsRateLimitDuration = completedOptions.wsRateLimitDuration
     this._fileStoreDir = completedOptions.fileStoreDir
+    this._backupsEnabled = completedOptions.backupsEnabled
     this._sslKeyPath = completedOptions.sslKeyPath
     this._sslCertPath = completedOptions.sslCertPath
+    this._maxLoginAttempts = completedOptions.maxLoginAttempts
+    this._loginLockoutDuration = completedOptions.loginLockoutDuration * 1000 // ms
+    this._loginAttemptWindow = completedOptions.loginAttemptWindow * 1000 // ms
 
     // Create third-party server objects.
     this._expressApp = express()
@@ -304,9 +354,10 @@ export class MetisServer {
     }
     this._wsServer = new MetisWsServer(this)
 
-    // Create database and file store objects.
+    // Create specialized helpers.
     this._database = new MetisDatabase(this)
-    this._fileStore = new MetisFileStore(this, { directory: this.fileStoreDir })
+    this.fileStore = new MetisFileStore(this, { directory: this.fileStoreDir })
+    this.importMigrationBuilder = new ImportMigrationBuilder()
 
     // Temporary session middleware until configured
     // with the database connection.
@@ -316,6 +367,12 @@ export class MetisServer {
     this.limiter = rateLimit({
       windowMs: this.httpRateLimitDuration,
       limit: this.httpRateLimit,
+      handler: (request, response) => {
+        expressLogger.error(
+          `Rate limit exceeded for session ID ${request.sessionID} from IP ${request.ip}`,
+        )
+        response.sendStatus(429)
+      },
     })
   }
 
@@ -386,6 +443,11 @@ export class MetisServer {
         ServerTargetEnvironment.METIS_TARGET_ENV_ID,
       )
 
+      // Initialize import migrations before connecting to the database,
+      // since the connection triggers ensureDefaultMissionsExists which
+      // uses the migration builder immediately.
+      this.importMigrationBuilder.initialize()
+
       // Database setup.
       await database.connect()
 
@@ -398,7 +460,7 @@ export class MetisServer {
 
       // Create the store that will be used for
       // all (express) web sessions.
-      ServerWebSession.createSessionStore(
+      MetisServer.createSessionStore(
         MongoStore.create({
           client: mongooseConnection.getClient(),
           touchAfter: 24 * 3600, // lazy update after 24 hours
@@ -411,7 +473,7 @@ export class MetisServer {
         secret: '3c8V3DoMuJxjoife0asdfasdf023asd9isfd',
         resave: false,
         saveUninitialized: false,
-        store: ServerWebSession.store,
+        store: MetisServer.sessionStore,
       })
 
       // sets up pug as the view engine
@@ -434,6 +496,12 @@ export class MetisServer {
       // links the file path to css and resource files
       // Serve built client (Vite outputs to dist)
       expressApp.use(express.static(MetisServer.resolvePath('../client/dist')))
+
+      // Make the MetisServer instance accessible in request handlers.
+      expressApp.use((request, response, next) => {
+        response.locals.metis = this
+        next()
+      })
 
       // This will do clean up when the application
       // terminates.
@@ -459,16 +527,46 @@ export class MetisServer {
       })
 
       // last line of defense error handling (generic server error)
-      expressApp.use((error: any, request: any, response: any, next: any) => {
-        if (!error.status) {
-          error.status = 500
-        }
-        expressLogger.error(error)
+      expressApp.use(
+        (
+          error: any,
+          request: TExpressRequest,
+          response: TExpressResponse,
+          next: any,
+        ) => {
+          expressLogger.error(
+            `Error encountered during request to ${request.path}:`,
+            error,
+          )
 
-        response.status(500)
-        response.locals.error = error
-        return response.render('error/v-server-error')
-      })
+          // Default the status to 500, if not set.
+          if (!error.status) {
+            error.status = 500
+          }
+          // All 500 errors should have a generic message
+          // to avoid leaking server details.
+          if (error.status === 500) {
+            error.message =
+              'Something went wrong on our end. Please try again later.'
+          }
+
+          // For API routes, send JSON response.
+          if (request.path.startsWith('/api/')) {
+            return response.status(error.status).json({
+              error: {
+                status: error.status,
+                message: error.message,
+              },
+            })
+          }
+          // For web routes, render error page.
+          else {
+            response.status(error.status)
+            response.locals.error = error
+            return response.render('error/v-server-error')
+          }
+        },
+      )
 
       // Handle lower level errors.
       process.on('uncaughtException', (err: any) => {
@@ -498,11 +596,30 @@ export class MetisServer {
    * Maps the added routers to the server.
    */
   private mapRouters(): void {
-    const register = (router: MetisRouter) =>
+    const register = (router: MetisRouter) => {
       this.expressApp.use(router.path, router.expressRouter)
+    }
 
-    for (let router of this.routers)
+    for (let router of this.routers) {
       router.map(router.expressRouter, this, () => register(router))
+    }
+  }
+
+  /**
+   * Reference to the Express session store instance.
+   * Set once during server initialization.
+   */
+  private static _sessionStore: Store | null = null
+  /**
+   * Gets the Express session store instance.
+   */
+  public static get sessionStore(): Store {
+    if (!this._sessionStore) {
+      throw new Error(
+        'The express session store has not been initialized. Call MetisServer.createSessionStore() first.',
+      )
+    }
+    return this._sessionStore
   }
 
   /**
@@ -523,7 +640,7 @@ export class MetisServer {
   /**
    * The current build number for the database.
    */
-  public static readonly SCHEMA_BUILD_NUMBER: number = 53
+  public static readonly SCHEMA_BUILD_NUMBER: number = 57
 
   /**
    * The root directory for the METIS server.
@@ -543,6 +660,15 @@ export class MetisServer {
    */
   public static resolvePath(...paths: string[]): string {
     return path.resolve(MetisServer.APP_DIR, ...paths)
+  }
+
+  /**
+   * Creates the session store for the {@link MetisServer}.
+   * @param store The Express session store instance.
+   * @note This should only be called once on server startup.
+   */
+  public static createSessionStore(store: Store): void {
+    this._sessionStore = store
   }
 
   /**
@@ -586,6 +712,10 @@ export class MetisServer {
       'WS_RATE_LIMIT',
       'WS_RATE_LIMIT_DURATION',
       'FILE_STORE_DIR',
+      'DB_BACKUPS_ENABLED',
+      'MAX_LOGIN_ATTEMPTS',
+      'LOGIN_LOCKOUT_DURATION',
+      'LOGIN_ATTEMPT_WINDOW',
     ] as const
 
     requiredKeys.forEach((key) => {
@@ -610,8 +740,12 @@ export class MetisServer {
         wsRateLimit: parseInt(process.env.WS_RATE_LIMIT!),
         wsRateLimitDuration: parseInt(process.env.WS_RATE_LIMIT_DURATION!),
         fileStoreDir: process.env.FILE_STORE_DIR!,
+        backupsEnabled: BooleanToolbox.parse(process.env.DB_BACKUPS_ENABLED!),
         sslKeyPath: process.env.SSL_KEY_PATH,
         sslCertPath: process.env.SSL_CERT_PATH,
+        maxLoginAttempts: parseInt(process.env.MAX_LOGIN_ATTEMPTS!),
+        loginLockoutDuration: parseInt(process.env.LOGIN_LOCKOUT_DURATION!),
+        loginAttemptWindow: parseInt(process.env.LOGIN_ATTEMPT_WINDOW!),
       }
     } catch (error) {
       console.error('Failed to load environment variables.')

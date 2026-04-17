@@ -137,7 +137,6 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
         save()
       }
     },
-    [areUnsavedChanges],
   )
 
   /* -- COMPUTED -- */

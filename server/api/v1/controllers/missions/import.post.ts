@@ -1,4 +1,4 @@
-import type { MetisFileStore } from '@server/files/MetisFileStore'
+import type { MetisServer } from '@server/MetisServer'
 import { MissionImport } from '@server/missions/imports/MissionImport'
 import type { ServerUser } from '@server/users/ServerUser'
 import type { Request, Response } from 'express-serve-static-core'
@@ -14,7 +14,7 @@ import { StatusError } from '../../library/StatusError'
 export const importMission = async (
   request: Request,
   response: Response,
-  fileStore: MetisFileStore,
+  server: MetisServer,
 ) => {
   const currentUser: ServerUser = response.locals.user
 
@@ -30,7 +30,7 @@ export const importMission = async (
   }
 
   // Create a new mission-import instance.
-  let missionImport = MissionImport.fromMulterFiles(request.files, fileStore, {
+  let missionImport = MissionImport.fromMulterFiles(request.files, server, {
     _id: currentUser._id,
     username: currentUser.username,
   })

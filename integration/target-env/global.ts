@@ -2,9 +2,15 @@ import { TargetDependency as TargetDependency_source } from '@metis/schema/Targe
 import { TargetEnvSchema as TargetEnvSchema_source } from '@metis/schema/TargetEnvSchema'
 import { TargetSchema as TargetSchema_source } from '@metis/schema/TargetSchema'
 import type * as TargetEnvTypes from '@metis/schema/types'
+import { MetisServer } from '@server/MetisServer'
 import type * as MetisComponentTypes from '../../shared/MetisComponent'
 
 // Assignment of global values:
+Object.defineProperty(globalThis, 'METIS_VERSION', {
+  value: MetisServer.PROJECT_VERSION,
+  writable: false,
+  configurable: false,
+})
 Object.defineProperty(globalThis, 'TargetEnvSchema', {
   value: TargetEnvSchema_source,
   writable: false,
@@ -26,6 +32,8 @@ Object.defineProperty(globalThis, 'TargetDependency', {
 declare global {
   // Declare globally accessible values:
 
+  export const METIS_VERSION: string
+
   const TargetEnvSchema: typeof TargetEnvSchema_source
   export type TargetEnvSchema = TargetEnvSchema_source
 
@@ -39,10 +47,13 @@ declare global {
 
   export type TBaseArg = TargetEnvTypes.TBaseArg
   export type TBaseArgJson = TargetEnvTypes.TBaseArgJson
+  export type TTargetArgJson = TargetEnvTypes.TTargetArgJson
   export type TForceMetadata = TargetEnvTypes.TForceMetadata
+  export type TPoolMetadata = TargetEnvTypes.TPoolMetadata
   export type TNodeMetadata = TargetEnvTypes.TNodeMetadata
   export type TActionMetadata = TargetEnvTypes.TActionMetadata
   export type TFileMetadata = TargetEnvTypes.TFileMetadata
+  export type TResourceMetadata = TargetEnvTypes.TResourceMetadata
   export type TTargetScriptContext = TargetEnvTypes.TTargetScriptExposedContext
   export type TTargetSchemaOptions = TargetEnvTypes.TTargetSchemaOptions
   export type TTargetScript = TargetEnvTypes.TTargetScript

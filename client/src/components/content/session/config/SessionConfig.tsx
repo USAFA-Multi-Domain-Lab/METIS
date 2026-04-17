@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react'
 import { DetailLocked } from '../../form/DetailLocked'
 import { DetailString } from '../../form/DetailString'
 import { DetailToggle } from '../../form/DetailToggle'
-import { DetailDropdown } from '../../form/dropdown'
+import { DetailDropdown } from '../../form/dropdowns/standard/DetailDropdown'
 import { ButtonText } from '../../user-controls/buttons/ButtonText'
 import If from '../../util/If'
 import './SessionConfig.scss'
@@ -55,7 +55,7 @@ export default function SessionConfig({
    */
   const accessibilityJsx = compute<TReactElement>(() => {
     if (accessibility === 'testing') {
-      return <DetailLocked label='Accessibility' stateValue='Testing' />
+      return <DetailLocked label='Accessibility' value='Testing' />
     } else {
       return (
         <DetailDropdown<TSessionConfig['accessibility']>
@@ -95,9 +95,9 @@ export default function SessionConfig({
       <Panel>
         <PanelView title='Session'>
           <div className='PanelContent'>
-            <DetailLocked label='Mission Name' stateValue={mission.name} />
+            <DetailLocked label='Mission Name' value={mission.name} />
             <If condition={sessionId !== null}>
-              <DetailLocked label='Session ID' stateValue={sessionId!} />
+              <DetailLocked label='Session ID' value={sessionId!} />
             </If>
             <DetailString
               label='Session Name'

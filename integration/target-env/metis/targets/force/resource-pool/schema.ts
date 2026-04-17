@@ -1,4 +1,6 @@
+import { migrations } from './migrations'
 import { NumberToolbox } from '@metis/toolbox/numbers/NumberToolbox'
+import type { TPoolMetadata } from '@shared/target-environments/types'
 
 /**
  * A target available in the METIS target environment that enables a user
@@ -11,8 +13,8 @@ const ResourcePool = new TargetSchema({
   script: async (context) => {
     // Extract the effect and its arguments from the context.
     const { effect } = context
-    const { operation, amount, forceMetadata } = effect.args
-    const { forceKey } = forceMetadata as TForceMetadata
+    const { operation, amount, poolMetadata } = effect.args
+    const { forceKey, poolKey } = poolMetadata as TPoolMetadata
 
     // Set the error message.
     const errorMessage =
@@ -29,7 +31,7 @@ const ResourcePool = new TargetSchema({
     // Execute the operation on the resource pool.
     switch (operation) {
       case 'award':
-        context.modifyResourcePool(amount, { forceKey })
+        context.modifyResourcePool(amount, { forceKey, poolKey })
         break
       default:
         throw new Error(
@@ -39,9 +41,9 @@ const ResourcePool = new TargetSchema({
   },
   args: [
     {
-      type: 'force',
-      _id: 'forceMetadata',
-      name: 'Force',
+      type: 'pool',
+      _id: 'poolMetadata',
+      name: 'Resource Pool',
       required: true,
     },
     {
@@ -57,7 +59,7 @@ const ResourcePool = new TargetSchema({
           value: 'award',
         },
       ],
-      dependencies: [TargetDependency.FORCE('forceMetadata')],
+      dependencies: [TargetDependency.POOL('poolMetadata')],
     },
     {
       type: 'number',
@@ -70,6 +72,7 @@ const ResourcePool = new TargetSchema({
       tooltipDescription: 'The amount to award to the resource pool.',
     },
   ],
+  migrations,
 })
 
 export default ResourcePool

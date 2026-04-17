@@ -1,3 +1,4 @@
+import type { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSerializableArray'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type {
   TEffectExecutionTriggered,
@@ -10,12 +11,14 @@ import {
   MissionComponent,
   type TMissionComponentIssue,
 } from '../MissionComponent'
+import type { MissionResource } from '../MissionResource'
 import type { TNode, TNodeJsonOptions } from '../nodes/MissionNode'
+import { type TActionResourceCostJson } from './ActionResourceCost'
 
 /* -- CONSTANTS -- */
 
 /**
- * Extracts all the properties of a `MissionAction` that are
+ * Extracts all the properties of a {@link MissionAction} that are
  * needed for the JSON representation of the action.
  */
 const JSON_PROPERTIES_RAW = {
@@ -24,12 +27,10 @@ const JSON_PROPERTIES_RAW = {
     'name',
     'description',
     'type',
-    'processTime',
+    'baseProcessTime',
     'processTimeHidden',
-    'successChance',
+    'baseSuccessChance',
     'successChanceHidden',
-    'resourceCost',
-    'resourceCostHidden',
     'opensNode',
     'opensNodeHidden',
     'localKey',
@@ -40,6 +41,10 @@ const JSON_PROPERTIES_RAW = {
        * The effects that can be applied to the targets.
        */
       effects: [] as TEffectExecutionTriggeredJson[],
+      /**
+       * The resource costs of the action.
+       */
+      resourceCosts: [] as TActionResourceCostJson[],
     },
   ],
 } as const
@@ -50,8 +55,8 @@ const JSON_PROPERTIES_RAW = {
  * An action that can be executed on a mission node, causing a certain effect.
  */
 export abstract class MissionAction<
-    T extends TMetisBaseComponents = TMetisBaseComponents,
-  >
+  T extends TMetisBaseComponents = TMetisBaseComponents,
+>
   extends MissionComponent<T, MissionAction<T>>
   implements TEffectHost<T, 'executionTriggeredEffect'>
 {
@@ -104,7 +109,18 @@ export abstract class MissionAction<
   /**
    * The amount of time it takes to execute the action.
    */
-  protected _processTime: number
+  public baseProcessTime: number
+
+  /**
+   * Computed operand applied to the process time, derived from all
+   * process-time modifiers on this action.
+   */
+  private get _processTimeOperand(): number {
+    return this.modifiers
+      .filter((modifier) => modifier.type === 'process-time')
+      .reduce((sum, modifier) => sum + modifier.amount, 0)
+  }
+
   /**
    * The amount of time it takes to execute the action.
    */
@@ -113,14 +129,11 @@ export abstract class MissionAction<
     // ***Note: This ensures the process time is never less than 0 or greater than 1 hour.
     return Math.min(
       Math.max(
-        this._processTime + this._processTimeOperand,
+        this.baseProcessTime + this._processTimeOperand,
         MissionAction.PROCESS_TIME_MIN,
       ),
       MissionAction.PROCESS_TIME_MAX,
     )
-  }
-  public set processTime(value: number) {
-    this._processTime = value
   }
 
   /**
@@ -130,25 +143,42 @@ export abstract class MissionAction<
   public processTimeHidden: boolean
 
   /**
-   * The chance that the action will succeed.
+   * The chance that the action will succeed by default.
    */
-  protected _successChance: number
+  public baseSuccessChance: number
+
   /**
-   * The chance that the action will succeed.
+   * Computed operand applied to the success chance, derived from all
+   * success-chance modifiers on this action.
+   */
+  private get _successChanceOperand(): number {
+    return this.modifiers
+      .filter((modifier) => modifier.type === 'success-chance')
+      .reduce((sum, modifier) => sum + modifier.amount, 0)
+  }
+
+  /**
+   * The chance that the action will succeed after any
+   * modifiers are applied.
    */
   public get successChance(): number {
     // Return the success chance within the correct range.
     // ***Note: This ensures the success chance is never less than 0 or greater than 1.
     return Math.min(
       Math.max(
-        this._successChance + this._successChanceOperand,
+        this.baseSuccessChance + this._successChanceOperand,
         MissionAction.SUCCESS_CHANCE_MIN,
       ),
       MissionAction.SUCCESS_CHANCE_MAX,
     )
   }
-  public set successChance(value: number) {
-    this._successChance = value
+
+  /**
+   * The chance that the action will fail (1 - successChance) after
+   * any modifiers are applied.
+   */
+  public get failureChance(): number {
+    return 1 - this.successChance
   }
 
   /**
@@ -158,31 +188,11 @@ export abstract class MissionAction<
   public successChanceHidden: boolean
 
   /**
-   * The amount of resources the action will be subtracted
-   * from that available to the executor of the action.
+   * Costs that will be applied to the associated resource pool
+   * when this action is executed. One resource cost should exist
+   * here for each pool defined in the force.
    */
-  protected _resourceCost: number
-  /**
-   * The amount of resources the action will be subtracted
-   * from that available to the executor of the action.
-   */
-  public get resourceCost(): number {
-    // Return the resource cost within the correct range.
-    // ***Note: This ensures the resource cost is never less than 0.
-    return Math.max(
-      this._resourceCost + this._resourceCostOperand,
-      MissionAction.RESOURCE_COST_MIN,
-    )
-  }
-  public set resourceCost(value: number) {
-    this._resourceCost = value
-  }
-
-  /**
-   * Hides the resource cost from students.
-   * @default false
-   */
-  public resourceCostHidden: boolean
+  public resourceCosts: JsonSerializableArray<T['resourceCost']>
 
   /**
    * Whether the successful completion of this action will
@@ -197,13 +207,6 @@ export abstract class MissionAction<
    * @default false
    */
   public opensNodeHidden: boolean
-
-  /**
-   * The chance that the action will fail (1 - successChance).
-   */
-  public get failureChance(): number {
-    return 1 - this.successChance
-  }
 
   /**
    * Whether or not this action is currently being executed
@@ -238,20 +241,11 @@ export abstract class MissionAction<
   }
 
   /**
-   * Used to modify the amount of time it takes to execute the action.
-   * @note The operand can be positive or negative. It will either increase or decrease the process time.
+   * A time-ordered record of every modifier applied to this action
+   * over the course of a session which alters the requirements needed
+   * to execute.
    */
-  private _processTimeOperand: number
-  /**
-   * Used to modify the chance that the action will succeed.
-   * @note The operand can be positive or negative. It will either increase or decrease the success chance.
-   */
-  private _successChanceOperand: number
-  /**
-   * Used to modify the amount of resources the action costs to execute.
-   * @note The operand can be positive or negative. It will either increase or decrease the resource cost.
-   */
-  private _resourceCostOperand: number
+  public modifiers: TActionModifier[]
 
   /**
    * The number of times the action has been
@@ -273,10 +267,38 @@ export abstract class MissionAction<
    * configuration or any cheats that may be applied.
    */
   public get areEnoughResources(): boolean {
-    return (
-      this.resourceCost <= Math.max(this.force.resourcesRemaining, 0) ||
-      this.force.allowNegativeResources
-    )
+    return this.includedCosts.every((cost) => {
+      let pool = this.force.getPoolByResourceId(cost.resourceId)
+      if (!pool) return true
+      return cost.amount <= Math.max(pool.balance, 0) || pool.allowNegative
+    })
+  }
+
+  /**
+   * The resources which this action lacks a sufficient
+   * amount in order to execute.
+   */
+  public get missingResources(): MissionResource[] {
+    return this.includedCosts
+      .filter((cost) => {
+        let pool = this.force.getPoolByResourceId(cost.resourceId)
+        return (
+          !pool ||
+          (cost.amount > Math.max(pool.balance, 0) && !pool.allowNegative)
+        )
+      })
+      .map(({ resource }) => resource)
+  }
+
+  /**
+   * The subset of {@link resourceCosts} whose associated pool is not excluded
+   * from this action's force.
+   */
+  public get includedCosts(): T['resourceCost'][] {
+    return this.resourceCosts.filter((cost) => {
+      let pool = this.force.getPoolByResourceId(cost.resourceId)
+      return !pool?.excluded
+    })
   }
 
   /**
@@ -323,34 +345,41 @@ export abstract class MissionAction<
     this.description =
       data.description ?? MissionAction.DEFAULT_PROPERTIES.description
     this.type = data.type ?? MissionAction.DEFAULT_PROPERTIES.type
-    this._processTime =
-      data.processTime ?? MissionAction.DEFAULT_PROPERTIES.processTime
+    this.baseProcessTime =
+      data.baseProcessTime ?? MissionAction.DEFAULT_PROPERTIES.baseProcessTime
     this.processTimeHidden =
       data.processTimeHidden ??
       MissionAction.DEFAULT_PROPERTIES.processTimeHidden
-    this._successChance =
-      data.successChance ?? MissionAction.DEFAULT_PROPERTIES.successChance
+    this.baseSuccessChance =
+      data.baseSuccessChance ??
+      MissionAction.DEFAULT_PROPERTIES.baseSuccessChance
     this.successChanceHidden =
       data.successChanceHidden ??
       MissionAction.DEFAULT_PROPERTIES.successChanceHidden
-    this._resourceCost =
-      data.resourceCost ?? MissionAction.DEFAULT_PROPERTIES.resourceCost
-    this.resourceCostHidden =
-      data.resourceCostHidden ??
-      MissionAction.DEFAULT_PROPERTIES.resourceCostHidden
     this.opensNode =
       data.opensNode ?? MissionAction.DEFAULT_PROPERTIES.opensNode
     this.opensNodeHidden =
       data.opensNodeHidden ?? MissionAction.DEFAULT_PROPERTIES.opensNodeHidden
     this.localKey = data.localKey ?? node.generateActionKey()
+    this.resourceCosts = this.parseCosts(
+      data.resourceCosts ?? MissionAction.DEFAULT_PROPERTIES.resourceCosts,
+    )
     this.effects = this.parseEffects(
       data.effects ?? MissionAction.DEFAULT_PROPERTIES.effects,
     )
 
-    this._processTimeOperand = 0
-    this._successChanceOperand = 0
-    this._resourceCostOperand = 0
+    this.modifiers = data.modifiers ?? []
   }
+
+  /**
+   * Parses the effect data into Effect Objects.
+   * @param data The effect data to parse.
+   * @param options The options for parsing the effect data.
+   * @returns An array of Effect Objects.
+   */
+  protected abstract parseCosts(
+    data: TActionResourceCostJson[],
+  ): JsonSerializableArray<T['resourceCost']>
 
   /**
    * Parses the effect data into Effect Objects.
@@ -382,12 +411,11 @@ export abstract class MissionAction<
       name: this.name,
       description: this.description,
       type: this.type,
-      processTime: this._processTime,
+      baseProcessTime: this.baseProcessTime,
       processTimeHidden: this.processTimeHidden,
-      successChance: this._successChance,
+      baseSuccessChance: this.baseSuccessChance,
       successChanceHidden: this.successChanceHidden,
-      resourceCost: this._resourceCost,
-      resourceCostHidden: this.resourceCostHidden,
+      resourceCosts: this.resourceCosts.serialize(options),
       opensNode: this.opensNode,
       opensNodeHidden: this.opensNodeHidden,
       localKey: this.localKey,
@@ -399,10 +427,10 @@ export abstract class MissionAction<
       case 'member-specific':
         // Obfuscate any hidden properties within the exported JSON,
         // preventing the students from seeing them.
-        if (json.processTimeHidden) json.processTime = -1
-        if (json.successChanceHidden) json.successChance = -1
-        if (json.resourceCostHidden) json.resourceCost = -1
+        if (json.processTimeHidden) json.baseProcessTime = -1
+        if (json.successChanceHidden) json.baseSuccessChance = -1
         if (json.opensNodeHidden) json.opensNode = false
+        json.modifiers = [...this.modifiers]
         break
       case 'none':
       default:
@@ -410,35 +438,6 @@ export abstract class MissionAction<
     }
 
     return json
-  }
-
-  /**
-   * Modifies the amount of time it takes to execute the action.
-   * @param processTimeOperand The operand to modify the process time by.
-   */
-  public modifyProcessTime(processTimeOperand: number): void {
-    this._processTime = this.processTime
-    this._processTimeOperand = processTimeOperand
-  }
-
-  /**
-   * Modifies the chance that the action will succeed.
-   * @param successChanceOperand The operand to modify the success
-   * chance by.
-   */
-  public modifySuccessChance(successChanceOperand: number): void {
-    this._successChance = this.successChance
-    this._successChanceOperand = successChanceOperand
-  }
-
-  /**
-   * Modifies the amount of resources the action costs to execute.
-   * @param resourceCostOperand The operand to modify the resource
-   * cost by.
-   */
-  public modifyResourceCost(resourceCostOperand: number): void {
-    this._resourceCost = this.resourceCost
-    this._resourceCostOperand = resourceCostOperand
   }
 
   // Implemented
@@ -470,6 +469,19 @@ export abstract class MissionAction<
     // Return the new order number, which is the highest existing order
     // plus one.
     return highestOrder + 1
+  }
+
+  /**
+   * @param resourceId The ID of the resource. Nullable values are permitted
+   * for this parameter to allow for flexibility when ID may not be known.
+   * @returns The resource cost associated with the given resource ID,
+   * or undefined if not found.
+   */
+  public getResourceCostByResourceId(
+    resourceId: string | null | undefined,
+  ): T['resourceCost'] | undefined {
+    if (!resourceId) return undefined
+    return this.resourceCosts.find((cost) => cost.resourceId === resourceId)
   }
 
   /**
@@ -569,15 +581,15 @@ export abstract class MissionAction<
       name: 'New Action',
       description: '',
       type: 'repeatable',
-      processTime: 5000,
+      baseProcessTime: 5000,
       processTimeHidden: false,
-      successChance: 0.5,
+      baseSuccessChance: 0.5,
       successChanceHidden: false,
-      resourceCost: 1,
-      resourceCostHidden: false,
+      resourceCosts: [],
       opensNode: true,
       opensNodeHidden: false,
       effects: [],
+      modifiers: [],
     }
   }
 
@@ -616,47 +628,67 @@ export abstract class MissionAction<
 /* -- TYPES -- */
 
 /**
- * Options for converting a `MissionAction` to JSON.
+ * Options for serializing a {@link MissionAction} to JSON.
  */
-export type TActionJsonOptions = TNodeJsonOptions
+export type TActionJsonOptions = Pick<TNodeJsonOptions, 'sessionDataExposure'>
 
 /**
  * Extracts the action type from a registry of
- * METIS components that extends `TMetisBaseComponents`.
+ * METIS components that extends {@link TMetisBaseComponents}.
  * @param T The type registry.
  * @returns The action type.
  */
 export type TAction<T extends TMetisBaseComponents> = T['action']
 
 /**
- * All of the property types of a `MissionAction` that are
+ * All of the property types of a {@link MissionAction} that are
  * converted directly for the JSON representation of the action.
  * @note The types for each property are the same as the types
- * used in the `MissionAction` class.
+ * used in the {@link MissionAction} class.
  */
 export type TMissionActionJsonDirect =
   (typeof JSON_PROPERTIES_RAW)['direct'][number]
 /**
- * All of the property types of a `MissionAction` that are
+ * All of the property types of a {@link MissionAction} that are
  * converted indirectly for the JSON representation of the action.
  * @note The types for each property have been converted to a
  * different type than the types used for those properties in the
- * `MissionAction` class.
+ * {@link MissionAction} class.
  */
 export type TMissionActionJsonIndirect =
   (typeof JSON_PROPERTIES_RAW)['indirect'][number]
 
 /**
- * Plain JSON representation of a `MissionAction` object.
+ * Base properties included when serializing a {@link MissionAction}
+ * to JSON.
  */
-export type TMissionActionJson = TCreateJsonType<
+export type TMissionActionJsonBase = TCreateJsonType<
   MissionAction,
   TMissionActionJsonDirect,
   TMissionActionJsonIndirect
 >
 
 /**
- * The default properties for a `MissionAction` object.
+ * Session-specific properties included when serializing a
+ * {@link MissionAction} to JSON. Only relevant when
+ * `sessionDataExposure` is set to 'all' or 'member-specific'
+ * in the options of {@link MissionAction.toJson}.
+ */
+export type TMissionActionSessionJson = {
+  /**
+   * @see {@link modifiers}
+   */
+  modifiers: TActionModifier[]
+}
+
+/**
+ * Serialized JSON representation of a {@link MissionAction} object.
+ */
+export type TMissionActionJson = TMissionActionJsonBase &
+  Partial<TMissionActionSessionJson>
+
+/**
+ * The default properties for a {@link MissionAction} object.
  * @inheritdoc TMissionActionJson
  */
 export type TMissionActionDefaultJson = Required<
@@ -669,3 +701,36 @@ export type TMissionActionDefaultJson = Required<
  * @option 'single-use' - The action can only be executed once.
  */
 export type TActionType = 'repeatable' | 'single-use'
+
+/**
+ * The property of a {@link MissionAction} that a modifier targets.
+ */
+export type TActionModifierType =
+  | 'resource-cost'
+  | 'process-time'
+  | 'success-chance'
+
+/**
+ * A single modifier applied to a {@link MissionAction} during a session.
+ * Modifiers are stored in time-order and can be used to compute the
+ * effective value of an action property at any point in time.
+ */
+export type TActionModifier = {
+  /**
+   * The property of the action being modified.
+   */
+  type: TActionModifierType
+  /**
+   * The signed amount added to the property's base value by this modifier.
+   */
+  amount: number
+  /**
+   * The timestamp (ms since epoch) at which this modifier was applied.
+   */
+  appliedAt: number
+  /**
+   * The ID of the resource whose cost is being modified.
+   * Only populated when {@link type} is `'resource-cost'`; `null` otherwise.
+   */
+  resourceId: string | null
+}

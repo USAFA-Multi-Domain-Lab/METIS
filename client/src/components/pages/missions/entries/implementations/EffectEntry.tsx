@@ -1,3 +1,4 @@
+import { DetailDropdown } from '@client/components/content/form/dropdowns/standard/DetailDropdown'
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
 import { useMissionPageContext } from '@client/components/pages/missions/context'
 import useEffectItemButtonCallbacks from '@client/components/pages/missions/hooks/mission-components/effects'
@@ -12,7 +13,6 @@ import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { DetailLargeString } from '../../../../content/form/DetailLargeString'
 import { DetailLocked } from '../../../../content/form/DetailLocked'
 import { DetailString } from '../../../../content/form/DetailString'
-import DetailDropdown from '../../../../content/form/dropdown/DetailDropdown'
 import ArgEntry from '../../target-effects/args/ArgEntry'
 import Entry from '../Entry'
 
@@ -24,7 +24,6 @@ export default function EffectEntry<TType extends TEffectType>({
   effect: { target, environment },
 }: TEffectEntry_P<TType>): TReactElement | null {
   /* -- STATE -- */
-
   const { onChange, viewMode } = useMissionPageContext()
   const { onDuplicateRequest, onDeleteRequest } = useEffectItemButtonCallbacks(
     effect.host,
@@ -100,12 +99,12 @@ export default function EffectEntry<TType extends TEffectType>({
       />
       <DetailLocked
         label='Target Environment'
-        stateValue={environment?.name ?? 'No target environment selected.'}
+        value={environment?.name ?? 'No target environment selected.'}
         disabled={viewMode === 'preview'}
       />
       <DetailLocked
         label='Target'
-        stateValue={target?.name ?? 'No target selected.'}
+        value={target?.name ?? 'No target selected.'}
         disabled={viewMode === 'preview'}
       />
       <ArgEntry

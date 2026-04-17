@@ -2,12 +2,39 @@ import type { TMetisClientComponents } from '@client/index'
 import { ActionExecution } from '@shared/missions/actions/ActionExecution'
 import type { TExecutionOutcomeJson } from '@shared/missions/actions/ExecutionOutcome'
 import { ClientExecutionOutcome } from './ClientExecutionOutcome'
-import type { ClientMissionAction } from './ClientMissionAction'
+import { ClientMissionAction } from './ClientMissionAction'
 
 /**
  * The execution of an action on the client.
  */
 export class ClientActionExecution extends ActionExecution<TMetisClientComponents> {
+  /**
+   * The formatted success chance to display to a session
+   * member. This uses the effective success chance at the
+   * time of execution, not the current success chance of
+   * the action.
+   * @see {@link effectiveSuccessChance}
+   */
+  public get successChanceFormatted(): string {
+    return ClientMissionAction.formatSuccessChance(
+      this.effectiveSuccessChance,
+      this.action.successChanceHidden,
+    )
+  }
+  /**
+   * The formatted process time to display to a session
+   * member. This uses the effective process time at the
+   * time of execution, not the current process time of
+   * the action.
+   * @see {@link effectiveProcessTime}
+   */
+  public get processTimeFormatted(): string {
+    return ClientMissionAction.formatProcessTime(
+      this.effectiveProcessTime,
+      this.action.processTimeHidden,
+    )
+  }
+
   /**
    * Time remaining for the action to complete, formatted
    * for display.

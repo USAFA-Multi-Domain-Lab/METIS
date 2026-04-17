@@ -1,3 +1,8 @@
+const icons = import.meta.glob('../assets/images/icons/**/*.svg', {
+  eager: true,
+  import: 'default',
+}) as Record<string, string>
+
 export function getIconPath(icon: TMetisIcon): string {
-  return new URL(`../assets/images/icons/${icon}.svg`, import.meta.url).href
+  return icons[`../assets/images/icons/${icon}.svg`]
 }

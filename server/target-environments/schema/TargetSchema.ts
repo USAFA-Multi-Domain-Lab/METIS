@@ -1,7 +1,7 @@
 import type { TTargetArgJson } from '@shared/target-environments/args/Arg'
-import { TargetMigrationRegistry } from '@shared/target-environments/targets/migrations/TargetMigrationRegistry'
 import type { TTargetJson } from '@shared/target-environments/targets/Target'
 import type { TTargetScriptExposedContext } from '../context/TargetScriptContext'
+import { TargetMigrationRegistry } from '../TargetMigrationRegistry'
 
 /**
  * Defines a target.
@@ -110,8 +110,10 @@ export type TTargetScript = (
 /**
  * Defines the target data.
  */
-export interface TTargetSchemaOptions
-  extends Omit<TTargetJson, 'targetEnvId' | 'migrationVersions'> {
+export interface TTargetSchemaOptions extends Omit<
+  TTargetJson,
+  'targetEnvId' | 'migrationVersions'
+> {
   /**
    * The script which will enact the effect on the target.
    */

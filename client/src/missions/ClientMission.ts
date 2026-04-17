@@ -1,6 +1,7 @@
 import type { TLine_P } from '@client/components/content/session/mission-map/objects/Line'
 import type { TMapCompatibleNode } from '@client/components/content/session/mission-map/objects/nodes'
 import type { TPrototypeSlot_P } from '@client/components/content/session/mission-map/objects/PrototypeSlot'
+import type { TMissionOutlineItem } from '@client/components/pages/missions/structures/MissionOutline'
 import type { ClientTarget } from '@client/target-environments/ClientTarget'
 import { ClientUser } from '@client/users/ClientUser'
 import type { TListenerTargetEmittable } from '@shared/events/EventManager'
@@ -23,10 +24,17 @@ import type {
 import { Mission } from '@shared/missions/Mission'
 import type { MissionComponent } from '@shared/missions/MissionComponent'
 import type {
+  MissionResource,
+  TMissionResourceJson,
+} from '@shared/missions/MissionResource'
+import type {
   TMissionPrototypeJson,
   TMissionPrototypeOptions,
 } from '@shared/missions/nodes/MissionPrototype'
-import type { TNonEmptyArray } from '@shared/toolbox/arrays/ArrayToolbox'
+import type {
+  TNonEmptyArray,
+  TOmitFirst,
+} from '@shared/toolbox/arrays/ArrayToolbox'
 import { DateToolbox } from '@shared/toolbox/dates/DateToolbox'
 import { Counter } from '@shared/toolbox/numbers/Counter'
 import type { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
@@ -40,6 +48,7 @@ import type { AxiosProgressEvent, AxiosResponse } from 'axios'
 import axios from 'axios'
 import type { TMetisClientComponents } from '..'
 import { ClientMissionAction } from './actions/ClientMissionAction'
+import { ClientMissionResource } from './ClientMissionResource'
 import { ClientEffect } from './effects/ClientEffect'
 import { ClientMissionFile } from './files/ClientMissionFile'
 import { ClientMissionForce } from './forces/ClientMissionForce'
@@ -56,7 +65,9 @@ import { PrototypeTranslation } from './transformations/PrototypeTranslation'
  */
 export class ClientMission
   extends Mission<TMetisClientComponents>
-  implements TListenerTargetEmittable<TMissionEventMethods, TMissionEventArgs>
+  implements
+    TListenerTargetEmittable<TMissionEventMethods, TMissionEventArgs>,
+    TMissionOutlineItem
 {
   /**
    * Whether the resource exists on the server.
@@ -245,12 +256,27 @@ export class ClientMission
    */
   private eventManager: EventManager<TMissionEventMethods, TMissionEventArgs>
 
+  // Implemented
+  public readonly outlineIcon: TMetisIcon = 'flag'
+
+  // Implemented
+  public expandedInOutline: boolean = false
+
+  // Implemented
+  public get outlineChildren(): TMissionOutlineItem[] {
+    return [...this.root.outlineChildren, ...this.forces, ...this.effects]
+  }
+
+  // Implemented
+  public get outlineParent(): TMissionOutlineItem | null {
+    return null
+  }
+
   protected constructor(
     _id: string,
     name: string,
     versionNumber: number,
-    seed: string,
-    resourceLabel: string,
+    resources: TMissionResourceJson[],
     createdAt: Date | null,
     updatedAt: Date | null,
     launchedAt: Date | null,
@@ -267,14 +293,13 @@ export class ClientMission
       _id,
       name,
       versionNumber,
-      seed,
-      resourceLabel,
       createdAt,
       updatedAt,
       launchedAt,
       createdBy,
       createdByUsername,
       structure,
+      resources,
       prototypeData,
       forceData,
       fileData,
@@ -299,6 +324,9 @@ export class ClientMission
     this.addEventListener = this.eventManager.addEventListener
     this.removeEventListener = this.eventManager.removeEventListener
     this.emitEvent = this.eventManager.emitEvent
+
+    // Add initial event handlers.
+    this.addEventListener('resource-list-change', this.onResourceListChange)
 
     // If there is no existing prototypes,
     // create one.
@@ -346,6 +374,12 @@ export class ClientMission
   }
 
   // Implemented
+  protected importResources(data: TMissionResourceJson[]): void {
+    let resources = ClientMissionResource.fromJson(this, data)
+    this._resources.push(...resources)
+  }
+
+  // Implemented
   protected importForces(data: TMissionForceSaveJson[]): void {
     let forces: ClientMissionForce[] = data.map(
       (datum) => new ClientMissionForce(this, datum),
@@ -378,6 +412,44 @@ export class ClientMission
     return effect
   }
 
+  /**
+   * @param args The arguments to pass to the {@link MissionResource.createNew}
+   * method, excluding the first argument which is the mission, as it
+   * will be passed automatically.
+   * @returns The newly created resource.
+   */
+  public addResource(
+    ...args: TOmitFirst<Parameters<typeof ClientMissionResource.createNew>>
+  ): ClientMissionResource {
+    let resource = ClientMissionResource.createNew(this, ...args)
+
+    if (this.resources.length >= Mission.MAX_RESOURCE_TYPES) {
+      throw new Error(
+        `Cannot have more than ${Mission.MAX_RESOURCE_TYPES} resource types in a mission.`,
+      )
+    }
+    this._resources.push(resource)
+    this.emitEvent('resource-list-change')
+    return resource
+  }
+
+  /**
+   * Removes the given resource from the mission.
+   * @param resource The resource or the ID of the resource
+   * to remove.
+   */
+  public removeResource(resource: string | ClientMissionResource): void {
+    let resourceId = typeof resource === 'string' ? resource : resource._id
+    let index = this._resources.findIndex(({ _id }) => _id === resourceId)
+    if (index !== -1) {
+      this._resources.splice(index, 1)
+      this.emitEvent('resource-list-change')
+    } else {
+      console.warn(
+        'Attempted to remove a resource that does not exist in the mission.',
+      )
+    }
+  }
   /**
    * Imports previously omitted force and structure data
    * into the mission on session start.
@@ -457,9 +529,12 @@ export class ClientMission
   }
 
   /**
-   * Creates a new force for the mission.
-   * @param data The JSON data for the force.
-   * @param options Options passed to the constructor.
+   * Creates a new force for the mission with default values,
+   * adding it to the current list of forces. This method
+   * will create a force based on other existing forces,
+   * attempting to use a different color and name from the
+   * existing forces. Corresponding resource pools will
+   * also be automatically generated.
    * @returns The newly created force.
    */
   public createForce(): ClientMissionForce {
@@ -498,6 +573,9 @@ export class ClientMission
 
     // Add the force to the mission.
     this.forces.push(force)
+
+    // Ensure the force has one pool for each resource.
+    force.onResourceListUpdate()
 
     // Handle structure change.
     this.handleStructureChange()
@@ -1186,6 +1264,19 @@ export class ClientMission
   }
 
   /**
+   * Handles whenever the list of resources in the mission
+   * changes, as a result of a 'resource-list-change' event.
+   */
+  public onResourceListChange = (): void => {
+    for (let force of this.forces) {
+      force.onResourceListUpdate()
+    }
+    for (let action of this.allActions) {
+      action.onResourceListUpdate()
+    }
+  }
+
+  /**
    * Sends all changes made to the server to be saved.
    * @resolves The mission was saved successfully.
    * @rejects The error that occurred during the save.
@@ -1221,6 +1312,8 @@ export class ClientMission
 
         // Resolve.
         resolve()
+
+        this.emitEvent('save')
       } catch (error: any) {
         console.error('Failed to save mission.')
         console.error(error)
@@ -1238,8 +1331,7 @@ export class ClientMission
       ClientMission.DEFAULT_PROPERTIES._id,
       ClientMission.DEFAULT_PROPERTIES.name,
       ClientMission.DEFAULT_PROPERTIES.versionNumber,
-      ClientMission.DEFAULT_PROPERTIES.seed,
-      ClientMission.DEFAULT_PROPERTIES.resourceLabel,
+      ClientMission.DEFAULT_PROPERTIES.resources,
       ClientMission.DEFAULT_PROPERTIES.createdAt,
       ClientMission.DEFAULT_PROPERTIES.updatedAt,
       ClientMission.DEFAULT_PROPERTIES.launchedAt,
@@ -1288,8 +1380,7 @@ export class ClientMission
       json._id || StringToolbox.generateRandomId(),
       json.name,
       json.versionNumber,
-      json.seed,
-      json.resourceLabel,
+      json.resources,
       DateToolbox.fromNullableISOString(json.createdAt),
       DateToolbox.fromNullableISOString(json.updatedAt),
       DateToolbox.fromNullableISOString(json.launchedAt),
@@ -1321,6 +1412,7 @@ export class ClientMission
   ): ClientMission {
     let existingJson: TMissionExistingJson = {
       ...json,
+      resources: [],
       forces: [],
       files: [],
       prototypes: [],
@@ -1672,6 +1764,8 @@ type TDuplicateForceInfo = {
  * Triggered when a transformation is set for the mission.
  * @option 'autopan'
  * Triggered when nodes are opened and the mission map needs to auto-pan to them.
+ * @option 'save'
+ * - Triggered when the mission is saved to the server.
  * @option `set-node-exclusion`
  * - Triggered when a node's exclusion status is set.
  * @option `session-reset`
@@ -1689,6 +1783,9 @@ type TDuplicateForceInfo = {
  * @option `execution-tick`
  * - Triggered when a mission-execution update occurs, intending
  * to update visuals for the mission-execution progress in the GUI.
+ * @option `resource-list-change`
+ * - Triggered when a resource is added or removed, resulting in a change
+ * to the forms of currency available in the mission.
  */
 type TMissionEventMethods =
   | 'activity'
@@ -1698,12 +1795,14 @@ type TMissionEventMethods =
   | 'set-buttons'
   | 'set-transformation'
   | 'autopan'
+  | 'save'
   | 'set-node-exclusion'
   | 'session-reset'
   | 'file-access-granted'
   | 'file-access-revoked'
   | 'center-node-on-map'
   | 'execution-tick'
+  | 'resource-list-change'
 
 /**
  * The argument(s) used in the event handler for the mission's event manager.
