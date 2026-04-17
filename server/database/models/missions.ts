@@ -112,7 +112,6 @@ const findByIdAndModify = (
       if (syncError) throw syncError
       // Save the changes. validateBeforeSave is disabled because validateSync()
       // above already handles this — preventing validation from running twice.
-      // todo: Confirm this behavior works elsewhere.
       missionDoc = await missionDoc.save({ validateBeforeSave: false })
       // Otherwise, resolve with the mission document.
       return resolve(missionDoc)
