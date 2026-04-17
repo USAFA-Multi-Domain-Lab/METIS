@@ -468,36 +468,6 @@ export class MetisDatabase {
   }
 
   /**
-   * Confirms that the database info document reflects the expected schema build.
-   * Retries briefly because the migration command runs in a separate client.
-   * @param expectedBuildNumber The build number that should be present after migration.
-   */
-  private async confirmSchemaBuild(expectedBuildNumber: number): Promise<void> {
-    let attemptsRemaining = 10
-
-    while (attemptsRemaining > 0) {
-      let info = await InfoModel.findOne().lean().exec()
-
-      if (info?.schemaBuildNumber === expectedBuildNumber) {
-        return
-      }
-
-      attemptsRemaining--
-
-      if (attemptsRemaining > 0) {
-        await new Promise((resolve) => setTimeout(resolve, 100))
-      }
-    }
-
-    let info = await InfoModel.findOne().lean().exec()
-    let actualBuildNumber = info?.schemaBuildNumber ?? 'missing'
-
-    throw new Error(
-      `Migration verification failed for database "${this.server.mongoDB}". Expected schemaBuildNumber ${expectedBuildNumber}, found ${actualBuildNumber}.`,
-    )
-  }
-
-  /**
    * Closes out database connection and stops any
    * DB-related daemons.
    */
