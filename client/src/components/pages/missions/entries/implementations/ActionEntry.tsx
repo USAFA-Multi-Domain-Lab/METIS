@@ -6,7 +6,6 @@ import { ClientMissionAction } from '@client/missions/actions/ClientMissionActio
 import { compute } from '@client/toolbox'
 import { useObjectFormSync, usePostInitEffect } from '@client/toolbox/hooks'
 import type { TActionType } from '@shared/missions/actions/MissionAction'
-import { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSerializableArray'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { Fragment, useState } from 'react'
 import { DetailLargeString } from '../../../../content/form/DetailLargeString'
@@ -16,6 +15,7 @@ import { DetailToggle } from '../../../../content/form/DetailToggle'
 import Divider from '../../../../content/form/Divider'
 import { EffectTimeline } from '../../target-effects/timelines/'
 import Entry from '../Entry'
+import ActionCostSubentry from './ActionCostSubentry'
 
 /**
  * This will render the entry fields for an action.
@@ -224,46 +224,12 @@ export default function ActionEntry({
         key={`${action._id}_processTimeHidden`}
       />
       <Divider />
-      {
-        // todo: Move this into its own component.
-        action.includedCosts.map((cost, index) => {
-          let resource = node.force.mission.resources.find(
-            (resource) => resource._id === cost.resourceId,
-          )
-          let label = resource?.name ?? 'Resources'
-          return (
-            <Fragment key={cost._id}>
-              <DetailNumber
-                fieldType='required'
-                label={`${label} Cost`}
-                value={cost.baseAmount}
-                setValue={(value) => {
-                  // todo: Move this into new subentry.
-                  cost.baseAmount =
-                    typeof value === 'function' ? value(cost.baseAmount) : value
-                  setResourceCosts(new JsonSerializableArray(...resourceCosts))
-                }}
-                minimum={ClientMissionAction.RESOURCE_COST_MIN}
-                integersOnly={true}
-                disabled={viewMode === 'preview'}
-              />
-              <DetailToggle
-                fieldType='required'
-                label='Hide'
-                tooltipDescription={`If enabled, the ${label} resource cost will be hidden from the executor.`}
-                value={cost.hidden}
-                setValue={(arg) => {
-                  // todo: Move this into new subentry.
-                  cost.hidden =
-                    typeof arg === 'function' ? arg(cost.hidden) : arg
-                  setResourceCosts(new JsonSerializableArray(...resourceCosts))
-                }}
-                disabled={viewMode === 'preview'}
-              />
-            </Fragment>
-          )
-        })
-      }
+      {action.includedCosts.map((cost) => (
+        <Fragment key={cost._id}>
+          <ActionCostSubentry cost={cost} />
+          <Divider />
+        </Fragment>
+      ))}
       <Divider />
       <DetailToggle
         fieldType='required'

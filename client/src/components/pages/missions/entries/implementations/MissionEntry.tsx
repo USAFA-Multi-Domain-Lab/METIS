@@ -29,7 +29,6 @@ export default function MissionEntry({
   } = useObjectFormSync(mission, ['name'], {
     onChange: () => onChange(mission),
   })
-  const [newlyAdded, setNewlyAdded] = useState<string[]>([])
 
   const addResourceEngine = useButtonSvgEngine({
     elements: [
@@ -54,7 +53,6 @@ export default function MissionEntry({
    */
   function onClickAdd(): void {
     let newResource = mission.addResource()
-    setNewlyAdded((prev) => [...prev, newResource._id])
     onChange(newResource)
   }
 
@@ -65,7 +63,6 @@ export default function MissionEntry({
    */
   function onClickDelete(resource: ClientMissionResource): void {
     resource.remove()
-    setNewlyAdded((prev) => prev.filter((id) => id !== resource._id))
     onChange(resource)
   }
 
@@ -99,7 +96,6 @@ export default function MissionEntry({
             <ResourceSubentry
               resource={resource}
               mission={mission}
-              newlyAdded={newlyAdded.includes(resource._id)}
               onClickDelete={onClickDelete}
             />
             <Divider key={`${mission._id}_divider_${resource._id}`} />

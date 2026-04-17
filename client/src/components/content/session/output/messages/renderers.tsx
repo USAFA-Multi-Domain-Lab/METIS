@@ -165,7 +165,6 @@ export function useOutputRenderer(): TOutputRendererResults {
         setListenerTarget(null)
       }
     },
-    [output, output.message],
   )
 
   return { key, renderedMessage }

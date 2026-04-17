@@ -19,7 +19,6 @@ import { useRef, useState } from 'react'
 export default function ResourceSubentry({
   resource,
   mission,
-  newlyAdded = false,
   onClickDelete,
 }: TResourceSubentry_P): TReactElement {
   /* -- STATE -- */
@@ -29,7 +28,7 @@ export default function ResourceSubentry({
     name: [name, setName],
     icon: [icon, setIcon],
   } = useObjectFormSync(resource, ['name', 'icon'], {
-    onChange: () => onChange(mission),
+    onChange: () => onChange(resource),
   })
   const [usingDefaultName, setUsingDefaultName] = useState<boolean>(
     name === MissionResource.DEFAULT_NAMES[icon],
@@ -150,11 +149,6 @@ type TResourceSubentry_P = {
    * The mission that owns the resource.
    */
   mission: ClientMission
-  /**
-   * Indicates if the resource was newly added, or
-   * if it pre-existed this component's lifecycle.
-   */
-  newlyAdded?: boolean
   /**
    * Called when the user requests to remove this resource.
    */

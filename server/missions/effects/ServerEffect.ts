@@ -156,44 +156,6 @@ export class ServerEffect<
   }
 
   /**
-   * Sanitizes the arguments for the effect.
-   * todo: This is not currently used. Reevaluate if this is needed in the future.
-   */
-  public sanitizeArgs(): void {
-    // If the target is not set, throw an error.
-    if (!this.target) {
-      throw new Error(
-        `The effect ({ _id: "${this._id}", name: "${this.name}" }) does not have a target. ` +
-          `This is likely because the target doesn't exist within any of the target environments stored in the registry.`,
-      )
-    }
-    // The sanitized arguments.
-    let sanitizedArgs = this.args
-
-    // Loop through the target's arguments.
-    for (let arg of this.target.args) {
-      // Check if all the dependencies for the argument are met.
-      let allDependenciesMet: boolean = this.allDependenciesMet(
-        arg.dependencies,
-      )
-
-      // If any of the dependencies are not met and the argument is in the effect's arguments...
-      if (!allDependenciesMet && arg._id in this.args) {
-        // ...and the argument's type is a boolean or the argument is required, then remove the
-        // argument.
-        // *** Note: A boolean argument is always required because it's value
-        // *** is always defined.
-        if (arg.type === 'boolean' || arg.required) {
-          delete sanitizedArgs[arg._id]
-        }
-      }
-    }
-
-    // Set the sanitized arguments.
-    this.args = sanitizedArgs
-  }
-
-  /**
    * @param target The target for the new effect.
    * @param mission The mission that will host the effect.
    * @returns A new effect with the provided target for

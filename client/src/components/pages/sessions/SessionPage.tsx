@@ -489,16 +489,6 @@ export default function SessionPage(
     // If there is no force selected, hide
     // the resources.
     if (!selectedForce) resourcesClassList.push('Hidden')
-    // If resources are not infinite, and the mission
-    // has no resources left, add the red alert
-    // class to the resources.
-    // todo: RedAlert should be per resource pool, not the entire resources element.
-    if (
-      !session.config.infiniteResources &&
-      resourcePools.some((pool) => (pool.balance ?? pool.initialBalance) <= 0)
-    ) {
-      resourcesClassList.push('RedAlert')
-    }
 
     // Return the class list as a joined string.
     return resourcesClassList.join(' ')
@@ -592,14 +582,10 @@ export default function SessionPage(
   // On session reset, reselect the force in
   // the mission, since a new force object
   // will be created.
-  useEventListener(
-    server,
-    'session-reset',
-    () => {
-      selectForce(() => mission.getForceById(selectedForce?._id) ?? null)
-      notify('All progress has been reset by a manager.')
-    },
-  )
+  useEventListener(server, 'session-reset', () => {
+    selectForce(() => mission.getForceById(selectedForce?._id) ?? null)
+    notify('All progress has been reset by a manager.')
+  })
 
   // Add navigation middleware to properly
   // quit the session before the user navigates

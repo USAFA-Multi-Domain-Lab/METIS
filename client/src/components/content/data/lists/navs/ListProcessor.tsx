@@ -295,7 +295,6 @@ export default function ListProcessor(): TReactElement | null {
         activateSearch(false)
       }
     },
-    [elements.nav, searchField],
   )
 
   /* -- RENDER -- */

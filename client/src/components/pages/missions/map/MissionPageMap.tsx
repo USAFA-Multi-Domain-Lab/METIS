@@ -282,7 +282,6 @@ export default function MissionPageMap(): TReactElement {
       // Update the selection state.
       setSelection(mission.selection)
     },
-    [selection],
   )
 
   /* -- RENDER -- */

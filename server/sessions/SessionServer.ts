@@ -57,6 +57,7 @@ import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { User } from '@shared/users/User'
 import { targetEnvLogger } from '../logging'
 import { ServerSessionMember } from './ServerSessionMember'
+import { TargetEnvStore } from './TargetEnvStore'
 
 /**
  * Server instance for sessions. Handles server-side logic for a session with participating clients. Communicates with clients to conduct the session.
@@ -441,6 +442,8 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     this.unregister()
     // Mark as destroyed.
     this._destroyed = true
+    // Clean up all cached target environment stores for this session.
+    TargetEnvStore.cleanUp(this._id)
     // Grab all members.
     let members: ServerSessionMember[] = this.members
     // Clear all members.

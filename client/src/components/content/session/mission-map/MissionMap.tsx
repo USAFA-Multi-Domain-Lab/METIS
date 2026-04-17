@@ -573,7 +573,6 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
       // Set force.
       selectForce(force)
     },
-    [selectedForce, tabs],
   )
 
   // Whenever a request is made to center a

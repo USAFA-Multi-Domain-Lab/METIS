@@ -299,7 +299,6 @@ export default function (props: {}): TReactElement | null {
         },
       )
     },
-    [server],
   )
 
   /* -- COMPUTED -- */
