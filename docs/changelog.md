@@ -1,6 +1,6 @@
 # changelog
 
-# version-2.4.0 | 4-16-2026
+# version-2.4.0 | 4-17-2026
 
 - The single-resource model was replaced with a multi-pool resource architecture, allowing missions to define multiple named resources with custom icons, per-force resource pools with exclusion support, and per-action multi-resource costs.
 - A node alert system was implemented with severity levels, enabling effects to attach warnings and notifications directly onto mission nodes during a session.

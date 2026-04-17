@@ -1,5 +1,7 @@
 import { describe, expect, test } from '@jest/globals'
+import type { TMigratableEffect } from '@server/target-environments/TargetMigration'
 import { TargetMigration } from '@server/target-environments/TargetMigration'
+import { buildMigratableEffect } from 'tests/helpers/projects/unit/migrations/target-migration.helpers'
 
 describe('TargetMigration', () => {
   test('Throws for an invalid version string', () => {
@@ -21,12 +23,13 @@ describe('TargetMigration', () => {
 
   test('Stores the script passed to the constructor and is callable', () => {
     let args = { hostname: 'old' }
-    let script = (effectArgs: Record<any, any>) => {
-      effectArgs.hostname = 'new'
+    let effect = buildMigratableEffect('0.1.0', args)
+    let script = (effect: TMigratableEffect) => {
+      effect.args.hostname = 'new'
     }
 
     let migration = new TargetMigration('1.0.0', script)
-    migration.script(args)
+    migration.script(effect)
 
     expect(args.hostname).toBe('new')
   })

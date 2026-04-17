@@ -1,20 +1,6 @@
 import { describe, expect, test } from '@jest/globals'
-import type { TMigratableEffect } from '@server/target-environments/TargetMigration'
 import { TargetMigrationRegistry } from '@server/target-environments/TargetMigrationRegistry'
-
-function buildMigratableEffect(
-  version: string,
-  args: Record<string, any>,
-): TMigratableEffect {
-  const effect: TMigratableEffect = {
-    args,
-    versionCursor: version,
-    get result() {
-      return { version: this.versionCursor, data: this.args }
-    },
-  } as TMigratableEffect
-  return effect
-}
+import { buildMigratableEffect } from 'tests/helpers/projects/unit/migrations/target-migration.helpers'
 
 describe('TargetMigrationRegistry', () => {
   describe('.versions', () => {

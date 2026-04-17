@@ -103,16 +103,21 @@ const findByIdAndModify = (
       let { _id: missionId, ...rest } = updates ?? {}
       // Update every property besides the _id.
       Object.assign(missionDoc, { ...rest })
+      // todo: Confirm if this works or should be removed.
+      // todo: The concern here is that Mongoose will drop
+      // todo: objects with unknown fields and important data
+      // todo: may get wiped.
       // Validate synchronously before calling save(). If Object.assign triggered
       // any StrictModeErrors (e.g., session-only fields like `modifiers` reaching
       // the DB layer), Mongoose will have silently dropped those sub-documents from
       // their arrays rather than throwing. Calling validateSync() here surfaces those
       // cast errors immediately, so save() is never called with corrupted data.
-      let syncError = missionDoc.validateSync()
-      if (syncError) throw syncError
-      // Save the changes. validateBeforeSave is disabled because validateSync()
-      // above already handles this — preventing validation from running twice.
-      missionDoc = await missionDoc.save({ validateBeforeSave: false })
+      // let syncError = missionDoc.validateSync()
+      // if (syncError) throw syncError
+      // // Save the changes. validateBeforeSave is disabled because validateSync()
+      // // above already handles this — preventing validation from running twice.
+      // missionDoc = await missionDoc.save({ validateBeforeSave: false })
+      missionDoc = await missionDoc.save()
       // Otherwise, resolve with the mission document.
       return resolve(missionDoc)
     } catch (error: any) {
@@ -533,6 +538,25 @@ export const missionSchema = new MissionSchema(
 )
 
 /* -- SCHEMA MIDDLEWARE -- */
+
+// todo: Confirm if this works or should be removed.
+// todo: The concern here is that Mongoose will drop
+// todo: objects with unknown fields and important data
+// todo: may get wiped.
+// // Called before document validation. Surfaces CastErrors that Mongoose
+// // records during construction when unknown fields on sub-documents cause
+// // them to be silently dropped from their arrays. These errors are cleared
+// // when Mongoose's validate() step runs, so they must be caught here first.
+// // This hook only fires when validateBeforeSave is true (the create() path);
+// // findByIdAndModify uses validateBeforeSave: false and is covered separately.
+// missionSchema.pre<TMissionDoc>('validate', function (next) {
+//   const errors = this.errors
+//   if (errors) {
+//     const keys = Object.keys(errors)
+//     if (keys.length > 0) return next((errors as unknown as Record<string, Error>)[keys[0]])
+//   }
+//   return next()
+// })
 
 // Called before a save is made to the database.
 missionSchema.pre<TMissionDoc>('save', function (next) {
