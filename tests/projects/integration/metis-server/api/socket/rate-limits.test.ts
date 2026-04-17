@@ -1,18 +1,10 @@
-import {
-  afterAll,
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  test,
-} from '@jest/globals'
+import { afterEach, beforeEach, describe, expect, test } from '@jest/globals'
 import type { MetisServer } from '@server/MetisServer'
 import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
 import type { Socket } from 'socket.io-client'
-import { TestToolbox } from 'tests/helpers/TestToolbox'
 import { TestSocketClient } from 'tests/helpers/TestSocketClient'
 import { TestSuiteSetup } from 'tests/helpers/TestSuiteSetup'
-import { TestSuiteTeardown } from 'tests/helpers/TestSuiteTeardown'
+import { TestToolbox } from 'tests/helpers/TestToolbox'
 
 describe('Rate limiting', () => {
   const USERNAME_PREFIX = 'test_socket_rate_limit'
@@ -105,8 +97,4 @@ describe('Rate limiting', () => {
 
     expect(rateLimitEvent.code).toBe(ServerEmittedError.CODE_MESSAGE_RATE_LIMIT)
   }, 20000)
-
-  afterAll(async () => {
-    await TestSuiteTeardown.cleanupTestUsers(USERNAME_PREFIX)
-  })
 })

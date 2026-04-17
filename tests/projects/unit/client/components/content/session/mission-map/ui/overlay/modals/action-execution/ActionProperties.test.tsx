@@ -62,21 +62,45 @@ function createMockAction(
   overrides: Partial<{
     successChanceFormatted: string
     processTimeFormatted: string
-    resourceCost: number
+    includedCosts: Array<{
+      _id: string
+      amount: number
+      hidden: boolean
+      icon: string
+      resourceId: string
+      getEffectiveAmount: (effectiveTime: number | Date) => number
+    }>
     opensNode: boolean
     type: string
     description: string
-    mission: { resourceLabel: string }
+    name: string
+    mission: {
+      resourceLabel: string
+      getResourceById: (resourceId: string) => { name: string } | null
+    }
   }> = {},
 ): ClientMissionAction {
   return {
     successChanceFormatted: '75%',
     processTimeFormatted: '30s',
-    resourceCost: 100,
+    includedCosts: [
+      {
+        _id: 'cost-1',
+        amount: 100,
+        hidden: false,
+        icon: 'coins',
+        resourceId: 'resource-1',
+        getEffectiveAmount: () => 100,
+      },
+    ],
     opensNode: true,
     type: 'standard',
+    name: 'Test Action',
     description: 'Test action description',
-    mission: { resourceLabel: 'Points' },
+    mission: {
+      resourceLabel: 'Points',
+      getResourceById: () => ({ name: 'Points' }),
+    },
     ...overrides,
   } as unknown as ClientMissionAction
 }

@@ -26,18 +26,22 @@ export abstract class TestMetisServer {
    * @rejects if the server fails to start.
    */
   private static async create(): Promise<MetisServer> {
-    if (process.env.METIS_ENV_TYPE === 'test') {
-      let storeDir = path.resolve(
-        process.cwd(),
-        process.env.FILE_STORE_DIR ?? './server/files/store-test',
+    if (process.env.METIS_ENV_TYPE !== TestMetisServer.METIS_ENV_TYPE) {
+      throw new Error(
+        `METIS_ENV_TYPE must be set to "${TestMetisServer.METIS_ENV_TYPE}" for TestMetisServer.`,
       )
-      try {
-        fs.rmSync(storeDir, { recursive: true, force: true })
-        fs.mkdirSync(storeDir, { recursive: true })
-      } catch (error) {
-        console.warn('Failed to reset test file store directory.')
-        console.warn(error)
-      }
+    }
+
+    let storeDir = path.resolve(
+      process.cwd(),
+      process.env.FILE_STORE_DIR ?? './server/files/store-test',
+    )
+    try {
+      fs.rmSync(storeDir, { recursive: true, force: true })
+      fs.mkdirSync(storeDir, { recursive: true })
+    } catch (error) {
+      console.warn('Failed to reset test file store directory.')
+      console.warn(error)
     }
 
     // Create METIS server
@@ -104,4 +108,9 @@ export abstract class TestMetisServer {
   public static isRunning(): boolean {
     return Boolean(this.server)
   }
+
+  /**
+   * The environment type for the METIS server instance used in tests.
+   */
+  public static readonly METIS_ENV_TYPE = 'test'
 }

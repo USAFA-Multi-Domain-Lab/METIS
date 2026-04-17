@@ -10,10 +10,9 @@ import type { MetisServer } from '@server/MetisServer'
 import { SessionServer } from '@server/sessions/SessionServer'
 import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
 import type { Socket } from 'socket.io-client'
-import { TestToolbox } from 'tests/helpers/TestToolbox'
 import { TestSocketClient } from 'tests/helpers/TestSocketClient'
 import { TestSuiteSetup } from 'tests/helpers/TestSuiteSetup'
-import { TestSuiteTeardown } from 'tests/helpers/TestSuiteTeardown'
+import { TestToolbox } from 'tests/helpers/TestToolbox'
 
 describe('Node alert socket networking', () => {
   const SUITE_PREFIX = 'test_socket_node_alert'
@@ -341,7 +340,5 @@ describe('Node alert socket networking', () => {
     for (let sessionId of sessionIdsToCleanup) {
       SessionServer.destroy(sessionId)
     }
-    await TestSuiteTeardown.cleanupTestUsers(SUITE_PREFIX)
-    await TestSuiteTeardown.cleanupTestMissions(SUITE_PREFIX)
   })
 })

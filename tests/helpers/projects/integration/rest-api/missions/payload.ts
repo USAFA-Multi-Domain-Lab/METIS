@@ -66,18 +66,17 @@ export function createMissionPayload(
   return {
     name,
     versionNumber: 1,
-    seed: TestToolbox.generateRandomId(),
     resources: [
       {
         _id: fixtureIds.fuelResourceId,
         name: 'Fuel',
-        icon: 'resources/gear',
+        icon: 'resources/drops',
         order: FUEL_RESOURCE_POOL_DEFAULT_PROPERTIES.ORDER,
       },
       {
         _id: fixtureIds.intelResourceId,
         name: 'Intel',
-        icon: 'resources/key',
+        icon: 'resources/microchip',
         order: INTEL_RESOURCE_POOL_DEFAULT_PROPERTIES.ORDER,
       },
     ],
@@ -241,11 +240,14 @@ function createAction(
   localKey: string,
 ): TMissionActionJson {
   return {
-    ...MissionAction.DEFAULT_PROPERTIES,
     _id: TestToolbox.generateRandomId(),
     name: `Action ${localKey}`,
     description: `Action description ${localKey}`,
-    successChance: 0.75,
+    type: MissionAction.DEFAULT_PROPERTIES.type,
+    baseProcessTime: MissionAction.DEFAULT_PROPERTIES.baseProcessTime,
+    processTimeHidden: MissionAction.DEFAULT_PROPERTIES.processTimeHidden,
+    baseSuccessChance: 0.75,
+    successChanceHidden: MissionAction.DEFAULT_PROPERTIES.successChanceHidden,
     resourceCosts: [
       {
         _id: TestToolbox.generateRandomId(),
@@ -260,6 +262,8 @@ function createAction(
         hidden: true,
       },
     ],
+    opensNode: MissionAction.DEFAULT_PROPERTIES.opensNode,
+    opensNodeHidden: MissionAction.DEFAULT_PROPERTIES.opensNodeHidden,
     localKey,
     effects: [createActionEffect('1', 'execution-success')],
   }

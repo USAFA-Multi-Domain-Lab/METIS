@@ -19,6 +19,39 @@ import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
 
 let ACTIVE_REGISTRY: TargetEnvRegistry
 
+function createExecutionContext(
+  mission: TestMission,
+  options: {
+    sourceAction: TTestSourceAction | null
+    sourceForce?: TTestSourceForce | null
+    sourceNode?: TTestSourceNode | null
+    host?: TTestSourceAction | TestMission
+  },
+): Effect['context'] {
+  let sourceAction = options.sourceAction
+  let sourceForce = options.sourceForce ?? sourceAction?.force ?? null
+  let sourceNode = options.sourceNode ?? sourceAction?.node ?? null
+  let host = options.host ?? sourceAction ?? mission
+
+  return {
+    type: 'executionTriggeredEffect',
+    trigger: 'execution-success',
+    sourceAction,
+    get sourceNode() {
+      return sourceNode
+    },
+    get sourceForce() {
+      return sourceForce
+    },
+    get sourceMission() {
+      return mission
+    },
+    get host() {
+      return host
+    },
+  } as unknown as Effect['context']
+}
+
 describe('Effect.additionalIssues', () => {
   beforeEach(() => {
     ACTIVE_REGISTRY = new TargetEnvRegistry()
@@ -79,7 +112,9 @@ describe('Effect.additionalIssues', () => {
 
     expect(effect.issues).toHaveLength(1)
     expect(effect.issues[0].type).toBe('outdated')
-    expect(effect.issues[0].message).toContain('with an incompatible version')
+    expect(effect.issues[0].message).toContain(
+      'is incompatible with the current version of the target environment',
+    )
   })
 
   test("returns a general issue when the effect has an argument the target doesn't recognize", () => {
@@ -520,23 +555,7 @@ describe('Effect.additionalIssues', () => {
       node: sourceNode,
     }
 
-    let context: Effect['context'] = {
-      type: 'executionTriggeredEffect',
-      trigger: 'execution-success',
-      sourceAction,
-      get sourceNode() {
-        return sourceNode
-      },
-      get sourceForce() {
-        return sourceForce
-      },
-      get sourceMission() {
-        return mission
-      },
-      get host() {
-        return sourceAction
-      },
-    }
+    let context = createExecutionContext(mission, { sourceAction })
 
     let effect = new TestEffect(
       mission,
@@ -655,23 +674,7 @@ describe('Effect.additionalIssues', () => {
       node: sourceNode,
     }
 
-    let context: Effect['context'] = {
-      type: 'executionTriggeredEffect',
-      trigger: 'execution-success',
-      sourceAction,
-      get sourceNode() {
-        return sourceNode
-      },
-      get sourceForce() {
-        return sourceForce
-      },
-      get sourceMission() {
-        return mission
-      },
-      get host() {
-        return sourceAction
-      },
-    }
+    let context = createExecutionContext(mission, { sourceAction })
 
     let effect = new TestEffect(
       mission,
@@ -734,23 +737,10 @@ describe('Effect.additionalIssues', () => {
       node: null,
     }
 
-    let context: Effect['context'] = {
-      type: 'executionTriggeredEffect',
-      trigger: 'execution-success',
+    let context = createExecutionContext(mission, {
       sourceAction,
-      get sourceNode() {
-        return null
-      },
-      get sourceForce() {
-        return sourceForce
-      },
-      get sourceMission() {
-        return mission
-      },
-      get host() {
-        return sourceAction
-      },
-    }
+      sourceNode: null,
+    })
 
     let effect = new TestEffect(
       mission,
@@ -878,23 +868,7 @@ describe('Effect.additionalIssues', () => {
       node: sourceNode,
     }
 
-    let context: Effect['context'] = {
-      type: 'executionTriggeredEffect',
-      trigger: 'execution-success',
-      sourceAction,
-      get sourceNode() {
-        return sourceNode
-      },
-      get sourceForce() {
-        return sourceForce
-      },
-      get sourceMission() {
-        return mission
-      },
-      get host() {
-        return sourceAction
-      },
-    }
+    let context = createExecutionContext(mission, { sourceAction })
 
     let effect = new TestEffect(
       mission,
@@ -957,23 +931,12 @@ describe('Effect.additionalIssues', () => {
       },
     })
 
-    let context: Effect['context'] = {
-      type: 'executionTriggeredEffect',
-      trigger: 'execution-success',
+    let context = createExecutionContext(mission, {
       sourceAction: null,
-      get sourceNode() {
-        return null
-      },
-      get sourceForce() {
-        return null
-      },
-      get sourceMission() {
-        return mission
-      },
-      get host() {
-        return mission
-      },
-    }
+      sourceForce: null,
+      sourceNode: null,
+      host: mission,
+    })
 
     let effect = new TestEffect(
       mission,
@@ -1841,13 +1804,15 @@ class TestEffect extends Effect {
     if (!ACTIVE_REGISTRY) return null
 
     if (environmentId === Effect.LEGACY_INFER_ENV_ID) {
-      return ACTIVE_REGISTRY.inferTarget(targetId) ?? null
+      return (
+        (ACTIVE_REGISTRY.inferTarget(targetId) as TestTarget | null) ?? null
+      )
     }
 
     let environment = ACTIVE_REGISTRY.get(environmentId)
     if (!environment) return null
 
-    return environment.getTarget(targetId) ?? null
+    return (environment.getTarget(targetId) as TestTarget | null) ?? null
   }
 }
 
@@ -1940,4 +1905,21 @@ class TestMission extends Mission {
     if (!_fileId) return undefined
     return this.filesById[String(_fileId)]
   }
+}
+
+type TTestSourceForce = {
+  localKey: string
+  name: string
+}
+
+type TTestSourceNode = {
+  localKey: string
+  name: string
+}
+
+type TTestSourceAction = {
+  localKey: string
+  name: string
+  force: TTestSourceForce | null
+  node: TTestSourceNode | null
 }

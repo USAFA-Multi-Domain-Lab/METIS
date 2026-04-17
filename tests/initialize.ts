@@ -6,8 +6,7 @@ import path from 'path'
 import { TestMetisServer } from './helpers/TestMetisServer'
 
 // Set test environment variable.
-const envType = 'test'
-process.env.METIS_ENV_TYPE = envType
+process.env.METIS_ENV_TYPE = TestMetisServer.METIS_ENV_TYPE
 
 // Expose for tests that call the helper directly while preserving class context.
 const useMetisServer = () => TestMetisServer.use()
@@ -19,7 +18,7 @@ let serverPromise:
   | undefined
 
 beforeAll(async () => {
-  expect(process.env.METIS_ENV_TYPE).toBe(envType)
+  expect(process.env.METIS_ENV_TYPE).toBe(TestMetisServer.METIS_ENV_TYPE)
 
   // Ensure the test file store starts clean for each Jest run.
   if (!process.env.FILE_STORE_DIR) {
@@ -43,12 +42,7 @@ beforeAll(async () => {
   expect(TestMetisServer.isRunning()).toBe(true)
 
   // Verify server is using test database.
-  let expectedMongoDbValues = ['metis-test']
-  let envMongoDb = process.env.MONGO_DB
-  if (envMongoDb) {
-    expectedMongoDbValues.push(envMongoDb)
-  }
-  expect(expectedMongoDbValues).toContain(server.mongoDB)
+  expect(process.env.MONGO_DB).toBe(server.mongoDB)
 
   let info = await InfoModel.findOne().lean().exec()
   expect(info?.schemaBuildNumber).toBe(MetisServer.SCHEMA_BUILD_NUMBER)

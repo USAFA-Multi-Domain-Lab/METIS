@@ -1,14 +1,12 @@
-import { afterAll, describe, expect, test } from '@jest/globals'
-import { TestToolbox } from 'tests/helpers/TestToolbox'
+import { describe, expect, test } from '@jest/globals'
 import { TestSuiteSetup } from 'tests/helpers/TestSuiteSetup'
-import { TestSuiteTeardown } from 'tests/helpers/TestSuiteTeardown'
+import { TestToolbox } from 'tests/helpers/TestToolbox'
 import packageJson from '../../../../../../package.json'
 
 describe('/api/v1/info', () => {
   // Extract commonly used utilities.
   const { generateRandomId, DEFAULT_PASSWORD: defaultPassword } = TestToolbox
   const { createTestContext, createTestUser } = TestSuiteSetup
-  const { cleanupTestUsers } = TestSuiteTeardown
 
   // Per-test variables.
   const usernamePrefix = 'test_info'
@@ -78,9 +76,5 @@ describe('/api/v1/info', () => {
     expect(response.status).toBe(200)
     expect(typeof response.data).toBe('string')
     expect(response.data.length).toBeGreaterThan(0)
-  })
-
-  afterAll(async () => {
-    await cleanupTestUsers(usernamePrefix)
   })
 })

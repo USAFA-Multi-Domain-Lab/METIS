@@ -11,23 +11,20 @@ import { SessionServer } from '@server/sessions/SessionServer'
 import type { TMissionFileJson } from '@shared/missions/files/MissionFile'
 import { Types } from 'mongoose'
 import type { TestHttpClient } from 'tests/helpers/TestHttpClient'
-import { TestToolbox } from 'tests/helpers/TestToolbox'
 import { TestSocketClient } from 'tests/helpers/TestSocketClient'
 import { TestSuiteSetup } from 'tests/helpers/TestSuiteSetup'
-import { TestSuiteTeardown } from 'tests/helpers/TestSuiteTeardown'
+import { TestToolbox } from 'tests/helpers/TestToolbox'
 
 describe('/api/v1/sessions', () => {
   // Extract commonly used utilities.
   const { generateRandomId, DEFAULT_PASSWORD: defaultPassword } = TestToolbox
   const { createTestContext, createTestUser } = TestSuiteSetup
-  const { cleanupTestMissions, cleanupTestUsers } = TestSuiteTeardown
 
   // Per-test variables.
   const suitePrefix = 'test_sessions'
   let username: string
   let password: string = defaultPassword
   let sessionIdsToCleanup: string[] = []
-  let missionIdsToCleanup: string[] = []
   let suiteMissionId: string
 
   beforeEach(() => {
@@ -63,7 +60,6 @@ describe('/api/v1/sessions', () => {
     expect(copyResponse.status).toBe(200)
     expect(copyResponse.data?._id).toBeDefined()
     suiteMissionId = copyResponse.data._id
-    missionIdsToCleanup.push(suiteMissionId)
   })
 
   async function loginUser(
@@ -359,19 +355,6 @@ describe('/api/v1/sessions', () => {
 
       let sessions = await client.get('/api/v1/sessions/')
       expect(sessions.data.length).toBe(0)
-    }
-
-    // Cleanup test users.
-    await cleanupTestUsers(suitePrefix)
-
-    // Cleanup test missions.
-    if (missionIdsToCleanup.length > 0) {
-      let { client } = await createTestContext()
-      let username = `${suitePrefix}_mission_cleanup_${generateRandomId()}`
-      let password = defaultPassword
-      await createTestUser({ username, password, accessId: 'admin' })
-      await loginUser(client, { username, password })
-      await cleanupTestMissions(suitePrefix)
     }
   })
 })

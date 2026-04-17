@@ -4,15 +4,13 @@ import fs from 'fs'
 import { Types } from 'mongoose'
 import path from 'path'
 import type { TestHttpClient } from 'tests/helpers/TestHttpClient'
-import { TestToolbox } from 'tests/helpers/TestToolbox'
 import { TestSuiteSetup } from 'tests/helpers/TestSuiteSetup'
-import { TestSuiteTeardown } from 'tests/helpers/TestSuiteTeardown'
+import { TestToolbox } from 'tests/helpers/TestToolbox'
 
 describe('/api/v1/files', () => {
   // Extract commonly used utilities.
   const { generateRandomId, DEFAULT_PASSWORD: defaultPassword } = TestToolbox
   const { createTestContext, createTestUser } = TestSuiteSetup
-  const { cleanupTestUsers, cleanupTestFiles } = TestSuiteTeardown
 
   // Per-test variables.
   const namePrefix = 'test_files'
@@ -158,9 +156,6 @@ describe('/api/v1/files', () => {
   })
 
   afterAll(async () => {
-    await cleanupTestFiles(namePrefix)
-    await cleanupTestUsers(namePrefix)
-
     // Remove any lingering uploaded files.
     let storeDir = path.join('server', 'files', 'store')
     if (fs.existsSync(storeDir)) {

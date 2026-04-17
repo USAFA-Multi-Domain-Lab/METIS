@@ -403,46 +403,48 @@ export class MetisDatabase {
         command += ` --username ${mongoUsername} --password ${mongoPassword} --authenticationDatabase ${mongoDB}`
       }
 
-      process.env.MONGO_DB = mongoDB
-
       databaseLogger.info(`Database is migrating to build ${nextBuildNumber}`)
       console.log(`Database is migrating to build ${nextBuildNumber}`)
 
-      exec(command, async (error, stdout, stderr) => {
-        let stdoutSplit: Array<string> = stdout.split(
-          `Loading file: ${buildPath}`,
-        )
-
-        if (stdoutSplit.length > 1) {
-          stdout = stdoutSplit[1]
-        }
-
-        databaseLogger.info(stdout)
-        console.log(stdout)
-
-        if (!error) {
-          databaseLogger.info(
-            `Database successfully migrated to build ${nextBuildNumber}`,
-          )
-          console.log(
-            `Database successfully migrated to build ${nextBuildNumber}`,
+      exec(
+        command,
+        { env: { ...process.env, MONGO_DB: mongoDB } },
+        async (error, stdout, stderr) => {
+          let stdoutSplit: Array<string> = stdout.split(
+            `Loading file: ${buildPath}`,
           )
 
-          if (nextBuildNumber < targetBuildNumber) {
-            await this.buildSchema(nextBuildNumber, targetBuildNumber)
-            resolve()
-          } else {
-            resolve()
+          if (stdoutSplit.length > 1) {
+            stdout = stdoutSplit[1]
           }
-        } else {
-          databaseLogger.error(
-            `Database failed to migrate to ${nextBuildNumber}`,
-          )
-          databaseLogger.error(error)
-          console.log(`Database failed to migrate to ${nextBuildNumber}`)
-          reject(error)
-        }
-      })
+
+          databaseLogger.info(stdout)
+          console.log(stdout)
+
+          if (!error) {
+            databaseLogger.info(
+              `Database successfully migrated to build ${nextBuildNumber}`,
+            )
+            console.log(
+              `Database successfully migrated to build ${nextBuildNumber}`,
+            )
+
+            if (nextBuildNumber < targetBuildNumber) {
+              await this.buildSchema(nextBuildNumber, targetBuildNumber)
+              resolve()
+            } else {
+              resolve()
+            }
+          } else {
+            databaseLogger.error(
+              `Database failed to migrate to ${nextBuildNumber}`,
+            )
+            databaseLogger.error(error)
+            console.log(`Database failed to migrate to ${nextBuildNumber}`)
+            reject(error)
+          }
+        },
+      )
     })
   }
 
