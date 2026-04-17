@@ -1,7 +1,14 @@
+import { fileURLToPath } from 'node:url'
+
+const globalTeardown = fileURLToPath(
+  new URL('./global-teardown.cjs', import.meta.url),
+)
+
 /** @type {import("jest").Config} **/
 export default {
   verbose: true,
   silent: true,
+  globalTeardown,
   projects: [
     {
       displayName: 'e2e',
@@ -398,8 +405,7 @@ export default {
         '^.+\\.[tj]sx?$': [
           'ts-jest',
           {
-            tsconfig:
-              '<rootDir>/tests/projects/unit/integration/tsconfig.json',
+            tsconfig: '<rootDir>/tests/projects/unit/integration/tsconfig.json',
           },
         ],
       },

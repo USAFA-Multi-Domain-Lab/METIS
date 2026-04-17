@@ -1,14 +1,12 @@
-import { afterAll, beforeEach, describe, expect, test } from '@jest/globals'
+import { beforeEach, describe, expect, test } from '@jest/globals'
 import { Types } from 'mongoose'
 import type { TestHttpClient } from 'tests/helpers/TestHttpClient'
-import { TestToolbox } from 'tests/helpers/TestToolbox'
 import { TestSuiteSetup } from 'tests/helpers/TestSuiteSetup'
-import { TestSuiteTeardown } from 'tests/helpers/TestSuiteTeardown'
+import { TestToolbox } from 'tests/helpers/TestToolbox'
 
 describe('/api/v1/users', () => {
   const { generateRandomId, DEFAULT_PASSWORD: defaultPassword } = TestToolbox
   const { createTestContext, createTestUser } = TestSuiteSetup
-  const { cleanupTestUsers } = TestSuiteTeardown
 
   const usernamePrefix = 'test_users'
   let username: string
@@ -195,9 +193,5 @@ describe('/api/v1/users', () => {
     let response = await client.get(`/api/v1/users/${new Types.ObjectId()}/`)
 
     expect(response.status).toBe(404)
-  })
-
-  afterAll(async () => {
-    await cleanupTestUsers(usernamePrefix)
   })
 })

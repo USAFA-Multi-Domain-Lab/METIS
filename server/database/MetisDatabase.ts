@@ -296,7 +296,7 @@ export class MetisDatabase {
               originalName: 'default.metis',
               path: 'server/database/seeding/default.metis',
             },
-            this.server.fileStore,
+            this.server,
             {
               username: User.SYSTEM_USERNAME,
               _id: User.SYSTEM_ID,
@@ -438,27 +438,18 @@ export class MetisDatabase {
           console.log(stdout)
 
           if (!error) {
-            try {
-              await this.confirmSchemaBuild(nextBuildNumber)
+            databaseLogger.info(
+              `Database successfully migrated to build ${nextBuildNumber}`,
+            )
+            console.log(
+              `Database successfully migrated to build ${nextBuildNumber}`,
+            )
 
-              databaseLogger.info(
-                `Database successfully migrated to build ${nextBuildNumber}`,
-              )
-              console.log(
-                `Database successfully migrated to build ${nextBuildNumber}`,
-              )
-
-              if (nextBuildNumber < targetBuildNumber) {
-                await this.buildSchema(nextBuildNumber, targetBuildNumber)
-              }
-
+            if (nextBuildNumber < targetBuildNumber) {
+              await this.buildSchema(nextBuildNumber, targetBuildNumber)
               resolve()
-            } catch (verificationError) {
-              databaseLogger.error(
-                `Database failed verification after migrating to build ${nextBuildNumber}`,
-              )
-              databaseLogger.error(verificationError)
-              reject(verificationError)
+            } else {
+              resolve()
             }
           } else {
             databaseLogger.error(

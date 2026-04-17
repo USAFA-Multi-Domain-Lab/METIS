@@ -1,16 +1,8 @@
 import type { jest } from '@jest/globals'
-import {
-  afterAll,
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  test,
-} from '@jest/globals'
+import { afterEach, beforeEach, describe, expect, test } from '@jest/globals'
 import { UserModel } from '@metis/server/database/models/users'
-import { TestToolbox } from 'tests/helpers/TestToolbox'
 import { TestSuiteSetup } from 'tests/helpers/TestSuiteSetup'
-import { TestSuiteTeardown } from 'tests/helpers/TestSuiteTeardown'
+import { TestToolbox } from 'tests/helpers/TestToolbox'
 
 /**
  * Integration tests for /api/v1/logins/ covering login, status, and logout flows.
@@ -19,7 +11,6 @@ describe('/api/v1/logins', () => {
   // Extract commonly used utilities.
   const { generateRandomId, DEFAULT_PASSWORD: defaultPassword } = TestToolbox
   const { createTestContext, createTestUser } = TestSuiteSetup
-  const { cleanupTestUsers } = TestSuiteTeardown
 
   // Per-test variables.
   let username: string
@@ -500,9 +491,5 @@ describe('/api/v1/logins', () => {
     expect(userDoc?.failedLoginAttempts).toBe(0)
     expect(userDoc?.loginLockedUntil).toBeNull()
     expect(userDoc?.lastFailedLoginAt).toBeNull()
-  })
-
-  afterAll(async () => {
-    await cleanupTestUsers(usernamePrefix)
   })
 })

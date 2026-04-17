@@ -544,7 +544,11 @@ export abstract class Effect<
       const actionInArgs = this.getActionMetadataInArgs(argId)
       const actionInMission = this.getActionFromArgs(argId)
 
-      if (actionInArgs && !actionInMission) {
+      if (!actionInMission) {
+        if (!actionInArgs) {
+          return this.buildComponentNotFoundMessage('action')
+        }
+
         return this.buildComponentNotFoundMessage(
           'action',
           actionInArgs.actionName,

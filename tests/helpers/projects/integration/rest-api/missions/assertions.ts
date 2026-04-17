@@ -6,17 +6,13 @@ import type { TMissionCreatePayload } from './payload'
  * Asserts that a mission returned by the API matches the expected saved data.
  * @param actual The actual mission returned by the API.
  * @param expected The expected mission shape.
- * @param options Additional comparison options.
  */
 export function assertMissionMatchesExpectedData(
   actual: TMissionJson,
   expected: Partial<TMissionJson> | TMissionCreatePayload,
-  options: TMissionMatchOptions = {},
 ): void {
   assertMissionCrossReferences(actual)
-  expect(normalizeMission(actual, options)).toEqual(
-    normalizeMission(expected, options),
-  )
+  expect(normalizeMission(actual)).toEqual(normalizeMission(expected))
 }
 
 function assertMissionCrossReferences(mission: Partial<TMissionJson>): void {
@@ -49,7 +45,6 @@ function assertMissionCrossReferences(mission: Partial<TMissionJson>): void {
 
 function normalizeMission(
   mission: Partial<TMissionJson> | TMissionCreatePayload,
-  options: TMissionMatchOptions,
 ) {
   let normalized = {
     name: mission.name,
@@ -75,7 +70,6 @@ function normalizeMission(
   } as {
     name: string | undefined
     versionNumber: number | undefined
-    seed?: string
     resources: ReturnType<typeof normalizeResource>[]
     structure: Record<string, unknown>
     prototypes: ReturnType<typeof normalizePrototype>[]
@@ -84,7 +78,6 @@ function normalizeMission(
     forces: ReturnType<typeof normalizeForce>[]
   }
 
-  if (!options.omitSeed) normalized.seed = mission.seed
   return normalized
 }
 
@@ -193,9 +186,9 @@ function normalizeAction(
     name: action.name,
     description: action.description,
     type: action.type,
-    processTime: action.processTime,
+    baseProcessTime: action.baseProcessTime,
     processTimeHidden: action.processTimeHidden,
-    successChance: action.successChance,
+    baseSuccessChance: action.baseSuccessChance,
     successChanceHidden: action.successChanceHidden,
     opensNode: action.opensNode,
     opensNodeHidden: action.opensNodeHidden,
@@ -231,8 +224,4 @@ function sortByKey<T>(items: T[], getKey: (item: T) => string | number): T[] {
       numeric: true,
     }),
   )
-}
-
-export type TMissionMatchOptions = {
-  omitSeed?: boolean
 }

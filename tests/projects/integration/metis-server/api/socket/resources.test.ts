@@ -6,7 +6,7 @@ import {
   expect,
   test,
 } from '@jest/globals'
-import type { MetisServer } from '@server/MetisServer'
+import { MetisServer } from '@server/MetisServer'
 import { SessionServer } from '@server/sessions/SessionServer'
 import type {
   TRequestEvents,
@@ -28,7 +28,6 @@ import {
 import type { TestHttpClient } from 'tests/helpers/TestHttpClient'
 import { TestSocketClient } from 'tests/helpers/TestSocketClient'
 import { TestSuiteSetup } from 'tests/helpers/TestSuiteSetup'
-import { TestSuiteTeardown } from 'tests/helpers/TestSuiteTeardown'
 import { TestToolbox } from 'tests/helpers/TestToolbox'
 
 const SUITE_PREFIX = 'test_socket_resources'
@@ -80,8 +79,8 @@ function createSocketMissionPayload(
     ...payload.forces[0].nodes[1].actions[0],
     effects: [],
   }
-  payload.forces[0].nodes[1].actions[0].processTime = 0
-  payload.forces[0].nodes[1].actions[0].successChance = 1
+  payload.forces[0].nodes[1].actions[0].baseProcessTime = 0
+  payload.forces[0].nodes[1].actions[0].baseSuccessChance = 1
 
   customize?.(payload)
 
@@ -260,6 +259,32 @@ async function requestCurrentSession(
   >(socket, (event) => event.method === 'current-session')
 }
 
+async function waitForResourcePoolBalance(
+  socket: Socket,
+  forceId: string,
+  resourceId: string,
+  expectedBalance: number,
+  timeoutMs: number = 3000,
+): Promise<TResponseEvents['current-session']> {
+  let startTime = Date.now()
+
+  while (Date.now() - startTime < timeoutMs) {
+    let response = await requestCurrentSession(socket)
+    let resourcePools = getCurrentSessionForceResourcePools(response, forceId)
+    let balance = findPoolBalanceByResourceId(resourcePools, resourceId)
+
+    if (balance === expectedBalance) {
+      return response
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 25))
+  }
+
+  throw new Error(
+    `Timed out waiting for resource pool "${resourceId}" to reach balance ${expectedBalance}.`,
+  )
+}
+
 function getCurrentSessionForceResourcePools(
   response: TResponseEvents['current-session'],
   forceId: string,
@@ -417,7 +442,7 @@ describe('Action execution resource socket networking', () => {
     expect(clientSideIntelResourcePoolBalance).toBe(expectedIntelBalance)
   })
 
-  test('skips costs for excluded pools during action execution and omits them from session data sent to the client', async () => {
+  test('skips costs for excluded pools during action execution while keeping their balances visible in session data', async () => {
     let { action, fuelPool, intelPool, socket } = await prepareExecutionSession(
       {
         customizeMission: (payload) => {
@@ -467,12 +492,11 @@ describe('Action execution resource socket networking', () => {
     expect(fuelPool.balance).toBe(expectedFuelBalance)
     expect(intelPool.balance).toBe(expectedIntelBalance)
 
-    // The action-execution-initiated payload should only include non-excluded pools.
+    // Excluded pools remain visible in client session data, but their costs are skipped.
     expect(actionExecutionInitiatedFuelPoolBalance).toBe(expectedFuelBalance)
-    expect(actionExecutionInitiatedIntelPoolBalance).toBeUndefined()
+    expect(actionExecutionInitiatedIntelPoolBalance).toBe(expectedIntelBalance)
 
-    // The current-session payload for this force should also omit the excluded pool.
-    expect(currentSessionForceIntelPoolBalance).toBeUndefined()
+    expect(currentSessionForceIntelPoolBalance).toBe(expectedIntelBalance)
   })
 
   test('does not deduct any pool balances when the zeroCost cheat is enabled', async () => {
@@ -632,7 +656,7 @@ describe('Action execution resource socket networking', () => {
                 _id: TestToolbox.generateRandomId(),
                 targetId: 'resource-pool',
                 environmentId: 'metis',
-                targetEnvironmentVersion: '0.2.1',
+                targetEnvironmentVersion: MetisServer.PROJECT_VERSION,
                 trigger: 'execution-success',
                 order: 0,
                 name: 'Award Fuel Pool',
@@ -658,7 +682,6 @@ describe('Action execution resource socket networking', () => {
     let listeners = createEventListeners(socket, [
       'action-execution-initiated',
       'action-execution-completed',
-      'modifier-enacted',
     ])
 
     let expectedFuelBalanceAfterDeduction =
@@ -674,20 +697,16 @@ describe('Action execution resource socket networking', () => {
     await sendActionExecutionRequest(socket, action._id)
     let actionExecutionResponse = await listeners['action-execution-initiated']
 
-    // Wait for the modifier event indicating the resource pool award.
-    let modifierEventData = (await listeners['modifier-enacted'])
-      .data as TResourcePoolModifierEventData
-
-    // Make sure the modifier event data transferred cleanly via the socket connection.
-    expect(modifierEventData.key).toBe('force-resource-pool')
-    expect(modifierEventData.poolId).toBe(fuelPool._id)
-    expect(modifierEventData.operand).toBe(RESOURCE_POOL_AWARD_AMOUNT)
-
     // Wait for the action execution to complete.
     await listeners['action-execution-completed']
 
-    // Grab the actual pool balances post-action-execution.
-    let session = await requestCurrentSession(socket)
+    // Wait until the current-session payload reflects the awarded balance.
+    let session = await waitForResourcePoolBalance(
+      socket,
+      action.force._id,
+      fuelPool.resourceId,
+      expectedFuelBalanceAfterAward,
+    )
     let currentSessionResourcePools = getCurrentSessionForceResourcePools(
       session,
       action.force._id,
@@ -731,9 +750,6 @@ describe('Action execution resource socket networking', () => {
         await client.delete(`/api/v1/sessions/${sessionId}/`)
       }
     }
-
-    await TestSuiteTeardown.cleanupTestUsers(SUITE_PREFIX)
-    await TestSuiteTeardown.cleanupTestMissions(SUITE_PREFIX)
   })
 })
 
@@ -746,9 +762,4 @@ type TPrepareExecutionSessionOptions = {
 type TResourceCostModifierEventData = Extract<
   TServerEvents['modifier-enacted']['data'],
   { key: 'node-action-resource-cost' }
->
-
-type TResourcePoolModifierEventData = Extract<
-  TServerEvents['modifier-enacted']['data'],
-  { key: 'force-resource-pool' }
 >

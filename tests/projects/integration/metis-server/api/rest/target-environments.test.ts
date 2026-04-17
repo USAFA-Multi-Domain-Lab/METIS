@@ -1,15 +1,17 @@
-import { afterAll, beforeEach, describe, expect, test } from '@jest/globals'
+import { beforeEach, describe, expect, test } from '@jest/globals'
+import type { TMissionExistingJson } from '@shared/missions/Mission'
+import { Types } from 'mongoose'
+import { createMissionPayload } from 'tests/helpers/projects/integration/rest-api/missions/payload'
 import type { TestHttpClient } from 'tests/helpers/TestHttpClient'
-import { TestToolbox } from 'tests/helpers/TestToolbox'
 import { TestSuiteSetup } from 'tests/helpers/TestSuiteSetup'
-import { TestSuiteTeardown } from 'tests/helpers/TestSuiteTeardown'
+import { TestToolbox } from 'tests/helpers/TestToolbox'
 
 describe('/api/v1/target-environments', () => {
   const { generateRandomId, DEFAULT_PASSWORD: defaultPassword } = TestToolbox
   const { createTestContext, createTestUser } = TestSuiteSetup
-  const { cleanupTestUsers } = TestSuiteTeardown
 
   const usernamePrefix = 'test_target_envs'
+  const missionNamePrefix = 'test_target_envs_mission'
   let username: string
   let password: string = defaultPassword
 
@@ -26,6 +28,22 @@ describe('/api/v1/target-environments', () => {
   ): Promise<void> {
     let response = await client.post('/api/v1/logins/', creds)
     expect(response.status).toBe(200)
+  }
+
+  async function createMission(
+    client: TestHttpClient,
+  ): Promise<TMissionExistingJson> {
+    let payload = createMissionPayload(
+      `${missionNamePrefix}_${generateRandomId()}`,
+    )
+    let response = await client.post<TMissionExistingJson>(
+      '/api/v1/missions/',
+      payload,
+    )
+
+    expect(response.status).toBe(200)
+
+    return response.data
   }
 
   test('Requires auth to list target environments', async () => {
@@ -63,27 +81,25 @@ describe('/api/v1/target-environments', () => {
     let { client } = await createTestContext()
     await createTestUser({ username, password, accessId: 'admin' })
     await loginUser(client, { username, password })
+    let mission = await createMission(client)
+    let effect = mission.effects[0]
 
     let migrateResponse = await client.post(
       '/api/v1/target-environments/migrate/effect-args',
       {
-        targetId: 'delay',
-        environmentId: 'metis',
-        effectEnvVersion: '0.2.1',
-        effectArgs: {
-          delayTimeHours: 0,
-          delayTimeMinutes: 0,
-          delayTimeSeconds: 0,
-        },
+        effectId: effect._id,
+        missionId: mission._id,
       },
     )
 
     expect(migrateResponse.status).toBe(200)
-    expect(migrateResponse.data.resultingVersion).toBe('0.2.1')
-    expect(migrateResponse.data.resultingArgs).toMatchObject({
+    expect(migrateResponse.data.result.version).toBe(
+      effect.targetEnvironmentVersion,
+    )
+    expect(migrateResponse.data.result.data).toMatchObject({
       delayTimeHours: 0,
       delayTimeMinutes: 0,
-      delayTimeSeconds: 0,
+      delayTimeSeconds: 1,
     })
   })
 
@@ -98,14 +114,13 @@ describe('/api/v1/target-environments', () => {
 
     await createTestUser({ username, password, accessId: 'admin' })
     await loginUser(client, { username, password })
+    let mission = await createMission(client)
 
     let invalid = await client.post(
       '/api/v1/target-environments/migrate/effect-args',
       {
-        targetId: 'delay',
-        environmentId: 'metis',
-        effectEnvVersion: 'not-a-version',
-        effectArgs: {},
+        effectId: 123,
+        missionId: mission._id,
       },
     )
     expect(invalid.status).toBe(400)
@@ -113,10 +128,8 @@ describe('/api/v1/target-environments', () => {
     let missingTarget = await client.post(
       '/api/v1/target-environments/migrate/effect-args',
       {
-        targetId: 'missing-target',
-        environmentId: 'metis',
-        effectEnvVersion: '0.2.1',
-        effectArgs: {},
+        effectId: mission.effects[0]._id,
+        missionId: new Types.ObjectId().toHexString(),
       },
     )
     expect(missingTarget.status).toBe(404)
@@ -124,16 +137,10 @@ describe('/api/v1/target-environments', () => {
     let missingEnvironment = await client.post(
       '/api/v1/target-environments/migrate/effect-args',
       {
-        targetId: 'delay',
-        environmentId: 'missing-environment',
-        effectEnvVersion: '0.2.1',
-        effectArgs: {},
+        effectId: 'missing-effect',
+        missionId: mission._id,
       },
     )
     expect(missingEnvironment.status).toBe(404)
-  })
-
-  afterAll(async () => {
-    await cleanupTestUsers(usernamePrefix)
   })
 })

@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from '@jest/globals'
+import { beforeAll, describe, expect, test } from '@jest/globals'
 import type { TMissionExistingJson } from '@shared/missions/Mission'
 import type { TUserJson } from '@shared/users/User'
 import { Types } from 'mongoose'
@@ -17,13 +17,11 @@ import {
 } from 'tests/helpers/projects/integration/rest-api/missions/requests'
 import type { TestHttpClient } from 'tests/helpers/TestHttpClient'
 import { TestSuiteSetup } from 'tests/helpers/TestSuiteSetup'
-import { TestSuiteTeardown } from 'tests/helpers/TestSuiteTeardown'
 import { TestToolbox } from 'tests/helpers/TestToolbox'
 
 describe('/api/v1/missions', () => {
   const { generateRandomId, DEFAULT_PASSWORD: defaultPassword } = TestToolbox
   const { createTestContext, createTestUser } = TestSuiteSetup
-  const { cleanupTestUsers, cleanupTestMissions } = TestSuiteTeardown
 
   const namePrefix = 'test_missions'
   let password: string = defaultPassword
@@ -227,9 +225,7 @@ describe('/api/v1/missions', () => {
 
     let expectedCopy = structuredClone(created)
     expectedCopy.name = copyName
-    assertMissionMatchesExpectedData(copyResponse.data, expectedCopy, {
-      omitSeed: true,
-    })
+    assertMissionMatchesExpectedData(copyResponse.data, expectedCopy)
   })
 
   test('DELETE /api/v1/missions/:_id removes a created mission', async () => {
@@ -341,10 +337,5 @@ describe('/api/v1/missions', () => {
 
     let importedMission = await fetchMission(client, importedMissionData._id)
     assertMissionMatchesExpectedData(importedMission, payload)
-  })
-
-  afterAll(async () => {
-    await cleanupTestMissions(namePrefix)
-    await cleanupTestUsers(namePrefix)
   })
 })
