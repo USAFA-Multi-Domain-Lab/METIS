@@ -1,5 +1,9 @@
 # changelog
 
+# version-2.4.1 | 4-22-2026
+
+- An issue was resolved where the initial resource pool in "Friendly Force" was absent when a new mission was created.
+
 # version-2.4.0 | 4-17-2026
 
 - The single-resource model was replaced with a multi-pool resource architecture, allowing missions to define multiple named resources with custom icons, per-force resource pools with exclusion support, and per-action multi-resource costs.

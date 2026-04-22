@@ -339,6 +339,9 @@ export class ClientMission
 
     // Initialize structure.
     this.handleStructureChange()
+    // Ensure corresponding resource pools
+    // and costs are created with the mission.
+    this.onResourceListChange()
   }
 
   // Implemented
