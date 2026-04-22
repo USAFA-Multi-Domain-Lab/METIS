@@ -10,6 +10,11 @@ import type {
   TMissionComponentArgJson,
 } from './mission-component/MissionComponentArg'
 import { MissionComponentArg } from './mission-component/MissionComponentArg'
+import {
+  MissionComponentArg2,
+  type TMissionComponentArg2,
+  type TMissionComponentArgJson2,
+} from './mission-component/MissionComponentArg2'
 import type { TNumberArg, TNumberArgJson } from './NumberArg'
 import { NumberArg } from './NumberArg'
 import type { TStringArg, TStringArgJson } from './StringArg'
@@ -70,6 +75,8 @@ export class Arg {
         case 'pool':
         case 'resource':
           return MissionComponentArg.toJson(arg)
+        case 'mission-component':
+          return MissionComponentArg2.toJson(arg)
       }
     })
   }
@@ -99,6 +106,8 @@ export class Arg {
         case 'pool':
         case 'resource':
           return MissionComponentArg.fromJson(arg)
+        case 'mission-component':
+          return MissionComponentArg2.fromJson(arg)
       }
     })
   }
@@ -116,6 +125,7 @@ export type TTargetArg =
   | TDropdownArg
   | TBooleanArg
   | TMissionComponentArg
+  | TMissionComponentArg2
 
 /**
  * The arguments used for the target-effect interface and the target-effect API.
@@ -127,3 +137,4 @@ export type TTargetArgJson =
   | TDropdownArgJson
   | TBooleanArgJson
   | TMissionComponentArgJson
+  | TMissionComponentArgJson2

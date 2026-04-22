@@ -7,7 +7,7 @@ import type { TDetailBase_P } from '../..'
 import DetailTitleRow from '../../DetailTitleRow'
 import { useDetailClassNames } from '../../useDetailClassNames'
 import './DetailMultiSelect.scss'
-import MultiSelectOption from './subcomponents/MultiSelectOption'
+import MultiSelectOptions from './subcomponents/MultiSelectOptions'
 
 /**
  * Local context for the {@link DetailMultiSelect} component.
@@ -45,6 +45,7 @@ export default function DetailMultiSelect<TOption>(
   // Assign default values to props.
   const defaultedProps: Required<TDetailMultiSelect_P<TOption>> = {
     ...props,
+    renderOptions: props.renderOptions ?? MultiSelectOptions,
     uniqueClassName: props.uniqueClassName ?? '',
     uniqueLabelClassName: props.uniqueLabelClassName ?? '',
     uniqueFieldClassName: props.uniqueFieldClassName ?? '',
@@ -66,6 +67,7 @@ export default function DetailMultiSelect<TOption>(
     setValue,
     render,
     getKey,
+    renderOptions,
     uniqueClassName,
     uniqueLabelClassName,
     uniqueFieldClassName,
@@ -135,28 +137,6 @@ export default function DetailMultiSelect<TOption>(
   }
 
   /**
-   * Toggles an option's selection state.
-   * @param option The option to toggle.
-   */
-  const onToggleOption = (option: TOption) => {
-    if (disabled) return
-
-    let currentValues = Array.isArray(value) ? [...value] : []
-    let optionKey = getKey(option)
-    let existingIndex = currentValues.findIndex((v) => getKey(v) === optionKey)
-
-    if (existingIndex >= 0) {
-      // Remove the option
-      currentValues.splice(existingIndex, 1)
-    } else {
-      // Add the option
-      currentValues.push(option)
-    }
-
-    setValue(currentValues as any)
-  }
-
-  /**
    * Removes a selected option.
    * @param option The option to remove.
    */
@@ -168,17 +148,6 @@ export default function DetailMultiSelect<TOption>(
     let filteredValues = currentValues.filter((v) => getKey(v) !== optionKey)
 
     setValue(filteredValues as any)
-  }
-
-  /**
-   * Checks if an option is currently selected.
-   * @param option The option to check.
-   * @returns Whether the option is selected.
-   */
-  const isOptionSelected = (option: TOption): boolean => {
-    if (!Array.isArray(value)) return false
-    let optionKey = getKey(option)
-    return value.some((v) => getKey(v) === optionKey)
   }
 
   /* -- PRE-RENDER PROCESSING -- */
@@ -206,37 +175,6 @@ export default function DetailMultiSelect<TOption>(
             ✕
           </button>
         </div>
-      )
-    })
-  })
-
-  const optionsJsx: TReactElement[] = compute(() => {
-    // Filter out selected options for pills-only variant
-    let availableOptions = options
-
-    return availableOptions.map((option) => {
-      let key = getKey(option)
-      let displayText = render(option)
-      let selected = isOptionSelected(option)
-
-      return (
-        <MultiSelectOption key={key} selected={selected}>
-          <div
-            className='OptionContent'
-            onClick={(e) => {
-              e.stopPropagation()
-              onToggleOption(option)
-            }}
-          >
-            <input
-              type='checkbox'
-              checked={selected}
-              onChange={() => {}}
-              className='OptionCheckbox'
-            />
-            <span className='OptionText'>{displayText}</span>
-          </div>
-        </MultiSelectOption>
       )
     })
   })
@@ -271,7 +209,7 @@ export default function DetailMultiSelect<TOption>(
               <span className='Indicator'>▼</span>
             </div>
           </div>
-          <div className={allOptionsClasses.value}>{optionsJsx}</div>
+          <div className={allOptionsClasses.value}>{renderOptions()}</div>
         </div>
       </div>
     </LocalContextProvider>
@@ -323,6 +261,11 @@ export type TDetailMultiSelect_P<TOption> = TDetailMultiSelectBase_P & {
    * The function to render the display name for the option.
    */
   render: (option: TOption) => ReactNode
+  /**
+   * Provides custom rendering for how the available options are
+   * displayed when the multiselect is expanded.
+   */
+  renderOptions?: () => ReactNode
   /**
    * Gets the key for the given option.
    * @param option The option for which to get the key.

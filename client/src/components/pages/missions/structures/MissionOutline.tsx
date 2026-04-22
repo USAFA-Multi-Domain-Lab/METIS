@@ -1,7 +1,7 @@
 import { useGlobalContext } from '@client/context/global'
 import { LocalContext, LocalContextProvider } from '@client/context/local'
 import { useDefaultProps } from '@client/toolbox/hooks'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import './MissionOutline.scss'
 import MissionOutlineItem from './MissionOutlineItem'
 import MissionOutlineSelectionCount from './MissionOutlineSelectionCount'
@@ -38,16 +38,13 @@ export default function MissionOutline(
     isIndirectlySelectable: () => true,
     onSelectionChange: () => {},
   })
+  const [value, setValue] = defaultedProps.selectionState
   const { isSelectable: originalIsSelectable } = defaultedProps
 
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
   const { forceUpdate } = globalContext.actions
-  const state: TMissionOutline_S = {
-    selectedItems: useState<Set<TMissionOutlineItem>>(new Set()),
-  }
-  const [selectedItems, setSelectedItems] = state.selectedItems
 
   /* -- FUNCTIONS -- */
 
@@ -68,7 +65,7 @@ export default function MissionOutline(
    * @param item The item to toggle selection for.
    */
   const toggleSelection = (item: TMissionOutlineItem): void => {
-    let currentItems = selectedItems
+    let currentItems = value
     let updatedItems = new Set(currentItems)
 
     if (updatedItems.has(item)) {
@@ -77,8 +74,7 @@ export default function MissionOutline(
       updatedItems.add(item)
     }
 
-    setSelectedItems(updatedItems)
-    defaultedProps.onSelectionChange([...updatedItems])
+    setValue([...updatedItems])
   }
 
   /**
@@ -93,7 +89,7 @@ export default function MissionOutline(
   defaultedProps.isSelectable = (item: TMissionOutlineItem): boolean => {
     let parent = item.outlineParent
     while (parent !== null) {
-      if (selectedItems.has(parent)) return false
+      if (value.includes(parent)) return false
       parent = parent.outlineParent
     }
     return originalIsSelectable(item)
@@ -105,14 +101,14 @@ export default function MissionOutline(
   // become selected — keeping a descendant alongside a selected ancestor
   // would be redundant and inconsistent with the indirect-group model.
   useEffect(() => {
-    let updatedItems = new Set(selectedItems)
+    let updatedItems = [...value]
     let changed = false
 
-    for (let item of selectedItems) {
+    for (let item of value) {
       let parent = item.outlineParent
       while (parent !== null) {
-        if (updatedItems.has(parent)) {
-          updatedItems.delete(item)
+        if (updatedItems.includes(parent)) {
+          updatedItems = updatedItems.filter((i) => i !== item)
           changed = true
           break
         }
@@ -121,10 +117,9 @@ export default function MissionOutline(
     }
 
     if (changed) {
-      setSelectedItems(updatedItems)
-      defaultedProps.onSelectionChange([...updatedItems])
+      setValue(updatedItems)
     }
-  }, [selectedItems])
+  }, [value])
 
   /* -- COMPUTED -- */
 
@@ -141,7 +136,7 @@ export default function MissionOutline(
       context={missionOutlineContext}
       defaultedProps={defaultedProps}
       computed={computed}
-      state={state}
+      state={{}}
       elements={elements}
     >
       <div className='MissionOutline SidePanel'>
@@ -166,6 +161,12 @@ export interface TMissionOutline_P {
    * The root item from which to render the outline tree.
    */
   root: TMissionOutlineItem
+  /**
+   * A React state tuple containing a value, which is the current
+   * selection state of items in the outline, and a setter function
+   * to update the value statefully.
+   */
+  selectionState: TReactState<TMissionOutlineItem[]>
   /**
    * An optional predicate called for each child item before it is rendered.
    * Return `false` to exclude an item (and its entire subtree) from the outline.
@@ -193,12 +194,6 @@ export interface TMissionOutline_P {
     item: TMissionOutlineItem,
     parent: TMissionOutlineItem,
   ) => boolean
-  /**
-   * Called after each selection change with the full array of currently
-   * selected items.
-   * @default () => {}
-   */
-  onSelectionChange?: (selected: TMissionOutlineItem[]) => void
 }
 
 /**
@@ -221,12 +216,7 @@ export type TMissionOutline_C = {
 /**
  * Consolidated state for {@link MissionOutline}.
  */
-export type TMissionOutline_S = {
-  /**
-   * The set of currently selected items.
-   */
-  selectedItems: TReactState<Set<TMissionOutlineItem>>
-}
+export type TMissionOutline_S = {}
 
 /**
  * Element refs shared across the {@link MissionOutline} tree.

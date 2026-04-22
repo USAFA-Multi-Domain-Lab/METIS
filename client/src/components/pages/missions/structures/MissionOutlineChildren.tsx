@@ -10,8 +10,7 @@ import MissionOutlineSelectionGroup from './MissionOutlineSelectionGroup'
 export default function MissionOutlineChildren({
   parent,
 }: TMissionOutlineChildren_P): TReactElement | null {
-  const { filter, isIndirectlySelectable, state } = useMissionOutlineContext()
-  const [selectedItems] = state.selectedItems
+  const { filter, isIndirectlySelectable } = useMissionOutlineContext()
 
   let children = parent.outlineChildren.filter(filter)
   let isExpanded = parent.expandedInOutline

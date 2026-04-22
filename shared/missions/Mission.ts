@@ -167,7 +167,7 @@ export abstract class Mission<
   public forces: TForce<T>[]
 
   /**
-   * @see {@link Mission.resources}
+   * @see {@link resources}
    */
   protected _resources: JsonSerializableArray<T['resource']>
   /**

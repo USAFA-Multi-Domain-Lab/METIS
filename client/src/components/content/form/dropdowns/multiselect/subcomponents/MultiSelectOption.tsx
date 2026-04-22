@@ -1,6 +1,7 @@
 import { compute } from '@client/toolbox'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import type { ReactNode } from 'react'
+import { useMultiSelectContext } from '../DetailMultiSelect'
 
 /**
  * Subcomponent of {@link DetailMultiSelect} which represents
@@ -11,6 +12,9 @@ export default function MultiSelectOption({
   selected = false,
   onClick,
 }: TMultiSelectOption_P): TReactElement {
+  // Only use in DetailMultiSelect component.
+  useMultiSelectContext()
+
   /**
    * The classes used for the root element
    * of the multiselect option.

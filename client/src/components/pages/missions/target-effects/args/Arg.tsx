@@ -5,6 +5,7 @@ import { ClassList } from '@shared/toolbox/html/ClassList'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { useEffect, useState } from 'react'
 import ArgMissionComponent from '../mission-component'
+import ArgMissionComponent2 from '../mission-component/ArgMissionComponent'
 import './Arg.scss'
 import ArgBoolean from './ArgBoolean'
 import ArgDropdown from './ArgDropdown'
@@ -131,6 +132,16 @@ export default function Arg({
     case 'resource':
       return (
         <ArgMissionComponent
+          effect={effect}
+          arg={arg}
+          initialize={initializeArg}
+          effectArgs={effectArgs}
+          setEffectArgs={setEffectArgs}
+        />
+      )
+    case 'mission-component':
+      return (
+        <ArgMissionComponent2
           effect={effect}
           arg={arg}
           initialize={initializeArg}

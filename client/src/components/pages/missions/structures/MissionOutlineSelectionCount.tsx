@@ -7,10 +7,10 @@ import { useMissionOutlineContext } from './MissionOutline'
  * @note Must be used within a {@link MissionOutline} component.
  */
 export default function MissionOutlineSelectionCount(): TReactElement | null {
-  const { state } = useMissionOutlineContext()
-  const [selectedItems] = state.selectedItems
+  const { selectionState } = useMissionOutlineContext()
+  const [value] = selectionState
 
-  let count = selectedItems.size
+  let count = value.length
 
   if (count === 0) return null
 

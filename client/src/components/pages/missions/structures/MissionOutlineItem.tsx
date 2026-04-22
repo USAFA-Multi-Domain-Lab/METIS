@@ -15,15 +15,15 @@ import MissionOutlineChildren from './MissionOutlineChildren'
 export default function MissionOutlineItem({
   item,
 }: TMissionOutlineItem_P): TReactElement | null {
-  const { filter, isSelectable, toggleItem, toggleSelection, state } =
+  const { filter, isSelectable, toggleItem, toggleSelection, selectionState } =
     useMissionOutlineContext()
-  const [selectedItems] = state.selectedItems
+  const [value] = selectionState
 
   let children = item.outlineChildren.filter(filter)
   let hasChildren = children.length > 0
   let expanded = item.expandedInOutline
   let selectable = isSelectable(item)
-  let selected = selectedItems.has(item)
+  let selected = value.includes(item)
   let tooltipDescription = compute<string>(() => {
     if (!selectable) return ''
     return selected ? 'Deselect item' : 'Select item'

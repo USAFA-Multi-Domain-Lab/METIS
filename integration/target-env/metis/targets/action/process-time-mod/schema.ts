@@ -35,6 +35,14 @@ const ProcessTimeMod = new TargetSchema({
   },
   args: [
     {
+      type: 'mission-component',
+      _id: 'targetComponent',
+      name: 'Targets',
+      required: true,
+      multiSelect: true,
+      validComponentTypes: ['node', 'action'],
+    },
+    {
       type: 'action',
       _id: actionArgId,
       name: 'Action',
