@@ -8,6 +8,7 @@ The target-effect system is METIS's framework for creating reusable, configurabl
 
 ## Quick Start
 
+- **[Install an Existing Target Environment](guides/installing-existing-target-environments.md)** - Use the METIS CLI to install public or private target environment repositories
 - **[Quickstart Guide](quickstart.md)** - Create your first target environment in 10 minutes
 - **[Overview](overview.md)** - Understand the core concepts first
 - **[Architecture](architecture.md)** - See how everything fits together
@@ -47,6 +48,7 @@ The target-effect system is METIS's framework for creating reusable, configurabl
 
 ### Implementation Guides
 
+- **[Installing Existing Target Environments](guides/installing-existing-target-environments.md)** - Install public and private target environment repositories with the METIS CLI
 - **[Creating Target Environments](guides/creating-target-environments.md)** - Project setup and structure
 - **[Defining Targets](guides/defining-targets.md)** - Creating operations and business logic
 - **[Session Lifecycle & Instance Protection](guides/session-lifecycle.md)** - Session resets and context validation
