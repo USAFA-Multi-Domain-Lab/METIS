@@ -223,6 +223,9 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
         buttonEngine.setDisabled('zoom-out', cameraZoom.x >= MAX_CAMERA_ZOOM)
         buttonEngine.setDisabled('zoom-in', cameraZoom.x <= MIN_CAMERA_ZOOM)
         setNodeContentVisible(cameraZoom.x <= MAX_NODE_CONTENT_ZOOM)
+        if (elements.scene.current) {
+          elements.scene.current.style.fontSize = `${1 / cameraZoom.x}px`
+        }
       },
     }),
   )
@@ -407,12 +410,6 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
     // Translate the camera position by the difference
     // in mouse position.
     cameraPosition.translateBy(difference)
-
-    // Pre-transform the scene to make the zoom
-    // feel snappier.
-    if (!elements.scene.current) return
-    elements.scene.current.style.transform = `translate(${-cameraPosition.x}em, ${-cameraPosition.y}em)`
-    elements.scene.current.style.fontSize = `${1 / cameraZoom.x}px`
   }
 
   /**
@@ -554,26 +551,22 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
 
   // Listener for selection events within a mission. This
   // will update the selected force in the state.
-  useEventListener(
-    mission,
-    'selection',
-    () => {
-      // Get force.
-      let force = ClientMission.getForceFromSelection(mission.selection)
+  useEventListener(mission, 'selection', () => {
+    // Get force.
+    let force = ClientMission.getForceFromSelection(mission.selection)
 
-      // Ensure selected tab index corresponds with
-      // the selection in the mission.
-      let forceId = force?._id ?? MASTER_TAB._id
-      tabsComputed.forEach((tab, index) => {
-        if (tab._id === forceId && index !== tabIndex) {
-          setTabIndex(index)
-        }
-      })
+    // Ensure selected tab index corresponds with
+    // the selection in the mission.
+    let forceId = force?._id ?? MASTER_TAB._id
+    tabsComputed.forEach((tab, index) => {
+      if (tab._id === forceId && index !== tabIndex) {
+        setTabIndex(index)
+      }
+    })
 
-      // Set force.
-      selectForce(force)
-    },
-  )
+    // Set force.
+    selectForce(force)
+  })
 
   // Whenever a request is made to center a
   // node on the map, ensure that it will be

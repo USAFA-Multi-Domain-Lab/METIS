@@ -1,5 +1,10 @@
 # changelog
 
+# version-2.4.2 | 4-27-2026
+
+- Support has been added for installing target environments hosted in private repositories by passing an access token to the `metis install` command.
+- An issue was resolved where the mission map would not properly update when the zoom buttons were clicked.
+
 # version-2.4.1 | 4-22-2026
 
 - An issue was resolved where the initial resource pool in "Friendly Force" was absent when a new mission was created.
