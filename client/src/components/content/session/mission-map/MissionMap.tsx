@@ -672,16 +672,26 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
    * Updates the mission selection when the tab index changes.
    */
   useEffect(() => {
-    // Get force from the tab ID.
-    let force = mission.getForceById(selectedTab._id)
+    let selectedForceInMap = mission.getForceById(selectedTab._id)
+    let selectedForceInMission = ClientMission.getForceFromSelection(
+      mission.selection,
+    )
 
-    // If a force is found, select it in the mission.
-    if (force) {
-      mission.select(force)
-    }
-    // Else deselect all, showing the master tab.
-    else {
+    // If no force is selected in the map, make
+    // sure nothing is selected in the mission.
+    if (!selectedForceInMap) {
       mission.deselect()
+    }
+    // Otherwise, if there is no force selected in
+    // the mission currently, or if the currently
+    // selected force in the mission differs from
+    // the force selected in the map, update the
+    // selection in the mission.
+    else if (
+      !selectedForceInMission ||
+      selectedForceInMission._id !== selectedForceInMap._id
+    ) {
+      mission.select(selectedForceInMap)
     }
   }, [tabIndex])
 
