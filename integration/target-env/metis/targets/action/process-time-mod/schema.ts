@@ -36,11 +36,19 @@ const ProcessTimeMod = new TargetSchema({
   args: [
     {
       type: 'mission-component',
-      _id: 'targetComponent',
-      name: 'Targets',
+      _id: 'modifierScope',
+      name: 'Modifier Scope',
       required: true,
       multiSelect: true,
-      validComponentTypes: ['node', 'action'],
+      validComponentTypes: ['mission', 'force', 'node', 'action'],
+      tooltipDescription:
+        'Select a group of components within the mission ' +
+        'to which this modifier will be applied.\n' +
+        '\t\n' +
+        '*Selecting an action will apply the modifier to that action. ' +
+        'Selecting a mission, force, or node, will apply the modifier ' +
+        'to all actions within the selected item. ' +
+        'Select multiple components to modify a broad range of actions.*',
     },
     {
       type: 'action',

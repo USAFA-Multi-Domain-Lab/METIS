@@ -1,12 +1,16 @@
 import DetailMultiSelect from '@client/components/content/form/dropdowns/multiselect/DetailMultiSelect'
 import { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
+import { ClientMission } from '@client/missions/ClientMission'
 import type { ClientEffect } from '@client/missions/effects/ClientEffect'
 import { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
 import { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
 import type { TMissionComponentArg2 } from '@shared/target-environments/args/mission-component/MissionComponentArg2'
 import { useEffect, useState } from 'react'
 import type { TMissionOutlineItem } from '../../structures/MissionOutline'
-import MissionOutline from '../../structures/MissionOutline'
+import MissionOutline, {
+  computeOutlineIconStyling,
+} from '../../structures/MissionOutline'
+import './ArgMissionComponent.scss'
 
 /**
  * Renders dropdowns for the argument whose type is `"force"`, `"node"`, `"action"`, `"file"`, `"pool"`, or `"resource"`.
@@ -15,7 +19,7 @@ export default function ArgMissionComponent2({
   effect,
   effect: { mission, sourceForce, sourceNode, sourceAction },
   arg,
-  arg: { _id, type, required },
+  arg: { _id, type, required, tooltipDescription },
   initialize,
   effectArgs,
   setEffectArgs,
@@ -35,10 +39,21 @@ export default function ArgMissionComponent2({
     <div className='ArgMissionComponent'>
       <DetailMultiSelect<TMissionOutlineItem>
         label={arg.name}
+        tooltipDescription={tooltipDescription}
         value={value}
         setValue={setValue}
         getKey={({ _id }) => _id}
-        render={({ name }) => name}
+        render={(item) => {
+          return (
+            <div className='ComponentItemContent'>
+              <div
+                className='Icon'
+                style={computeOutlineIconStyling(item)}
+              ></div>
+              <div className='Name'>{item.name}</div>
+            </div>
+          )
+        }}
         options={[]}
         renderOptions={() => (
           <MissionOutline
@@ -46,6 +61,8 @@ export default function ArgMissionComponent2({
             selectionState={[value, setValue]}
             isSelectable={(item) => {
               return (
+                item instanceof ClientMission ||
+                item instanceof ClientMissionForce ||
                 item instanceof ClientMissionNode ||
                 item instanceof ClientMissionAction
               )
@@ -58,10 +75,9 @@ export default function ArgMissionComponent2({
               )
             }}
             isIndirectlySelectable={(item, parent) => {
-              return (
-                item instanceof ClientMissionNode ||
-                parent instanceof ClientMissionNode
-              )
+              let isNode = item instanceof ClientMissionNode
+              let parentIsNode = parent instanceof ClientMissionNode
+              return !isNode || !parentIsNode
             }}
           />
         )}

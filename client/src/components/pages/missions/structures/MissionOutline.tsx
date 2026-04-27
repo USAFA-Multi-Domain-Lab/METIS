@@ -1,6 +1,8 @@
 import { useGlobalContext } from '@client/context/global'
 import { LocalContext, LocalContextProvider } from '@client/context/local'
+import { compute } from '@client/toolbox'
 import { useDefaultProps } from '@client/toolbox/hooks'
+import { getIconPath } from '@client/toolbox/icons'
 import { useEffect } from 'react'
 import './MissionOutline.scss'
 import MissionOutlineItem from './MissionOutlineItem'
@@ -25,6 +27,8 @@ const missionOutlineContext = new LocalContext<
  */
 export const useMissionOutlineContext = missionOutlineContext.getHook()
 
+/* -- COMPONENT -- */
+
 /**
  * Renders a read-only, collapsible outline tree driven entirely
  * by the {@link TMissionOutlineItem} interface.
@@ -39,7 +43,8 @@ export default function MissionOutline(
     onSelectionChange: () => {},
   })
   const [value, setValue] = defaultedProps.selectionState
-  const { isSelectable: originalIsSelectable } = defaultedProps
+  const { isSelectable: originalIsSelectable, isIndirectlySelectable } =
+    defaultedProps
 
   /* -- STATE -- */
 
@@ -79,17 +84,23 @@ export default function MissionOutline(
 
   /**
    * Determines whether an item is directly selectable. Returns `false` if any
-   * ancestor in the outline tree is currently selected — the item is
-   * considered part of that ancestor's indirect group and cannot be selected
-   * independently. Delegates to `isSelectable` from props when no selected
-   * ancestor is found.
+   * ancestor in the outline tree is currently selected AND the item is
+   * indirectly selectable under that ancestor — meaning it is part of that
+   * ancestor's indirect group and cannot be selected independently. Items
+   * that are not indirectly selectable under a selected ancestor remain
+   * directly selectable. Delegates to `isSelectable` from props when no
+   * blocking ancestor is found.
    * @param item The item to evaluate.
    * @returns Whether the item is directly selectable.
    */
   defaultedProps.isSelectable = (item: TMissionOutlineItem): boolean => {
+    let child = item
     let parent = item.outlineParent
     while (parent !== null) {
-      if (value.includes(parent)) return false
+      if (value.includes(parent) && isIndirectlySelectable(child, parent)) {
+        return false
+      }
+      child = parent
       parent = parent.outlineParent
     }
     return originalIsSelectable(item)
@@ -97,27 +108,33 @@ export default function MissionOutline(
 
   /* -- EFFECTS -- */
 
-  // When the selection changes, remove any items whose ancestors have since
-  // become selected — keeping a descendant alongside a selected ancestor
-  // would be redundant and inconsistent with the indirect-group model.
+  // When the selection changes, remove any items that are indirectly
+  // selectable under a now-selected ancestor — keeping a descendant that is
+  // NOT indirectly selectable alongside a selected ancestor is valid, since
+  // those items are independently selectable by design.
   useEffect(() => {
-    let updatedItems = [...value]
+    let newValue = [...value]
     let changed = false
 
     for (let item of value) {
+      let child = item
       let parent = item.outlineParent
       while (parent !== null) {
-        if (updatedItems.includes(parent)) {
-          updatedItems = updatedItems.filter((i) => i !== item)
+        if (
+          newValue.includes(parent) &&
+          isIndirectlySelectable(child, parent)
+        ) {
+          newValue = newValue.filter((i) => i !== item)
           changed = true
           break
         }
+        child = parent
         parent = parent.outlineParent
       }
     }
 
     if (changed) {
-      setValue(updatedItems)
+      setValue(newValue)
     }
   }, [value])
 
@@ -149,6 +166,27 @@ export default function MissionOutline(
       </div>
     </LocalContextProvider>
   )
+}
+
+/* -- UTILITY FUNCTIONS -- */
+
+/**
+ * @param item Any outline item.
+ * @returns The CSS styling needed to render this item's
+ * icon in an HTML element.
+ * @note This only applies a background image, other
+ * styling will be necessary to render it the way you
+ * would like.
+ */
+export function computeOutlineIconStyling(
+  item: TMissionOutlineItem,
+): React.CSSProperties {
+  return {
+    backgroundImage: compute<string>(() => {
+      let url = getIconPath(item.outlineIcon)
+      return url ? `url(${url})` : 'none'
+    }),
+  }
 }
 
 /* -- TYPES -- */

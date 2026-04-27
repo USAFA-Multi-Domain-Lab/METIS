@@ -1,9 +1,11 @@
 import Tooltip from '@client/components/content/communication/Tooltip'
 import { compute } from '@client/toolbox'
-import { getIconPath } from '@client/toolbox/icons'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import type { TMissionOutlineItem } from './MissionOutline'
-import { useMissionOutlineContext } from './MissionOutline'
+import {
+  computeOutlineIconStyling,
+  useMissionOutlineContext,
+} from './MissionOutline'
 import MissionOutlineChildren from './MissionOutlineChildren'
 
 /**
@@ -39,14 +41,6 @@ export default function MissionOutlineItem({
     !expanded,
   )
 
-  // Compute dynamic inline styles.
-  let iconStyle = {
-    backgroundImage: compute<string>(() => {
-      let url = getIconPath(item.outlineIcon)
-      return url ? `url(${url})` : 'none'
-    }),
-  }
-
   return (
     <div className={itemClasses.value}>
       <div className='OutlineItemContent'>
@@ -62,7 +56,7 @@ export default function MissionOutlineItem({
             if (selectable) toggleSelection(item)
           }}
         >
-          <div className='Icon' style={iconStyle}></div>
+          <div className='Icon' style={computeOutlineIconStyling(item)}></div>
           <div className='Name'>{item.name}</div>
           <Tooltip description={tooltipDescription} />
         </div>

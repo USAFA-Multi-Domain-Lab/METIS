@@ -162,12 +162,15 @@ export default function DetailMultiSelect<TOption>(
       let displayText = render(selectedOption)
 
       return (
-        <div key={key} className='SelectedPill'>
+        <div
+          key={key}
+          className='SelectedPill'
+          onClick={(event) => event.stopPropagation()}
+        >
           <span className='PillText'>{displayText}</span>
           <button
             className='RemoveButton'
-            onClick={(e) => {
-              e.stopPropagation()
+            onClick={() => {
               onRemoveOption(selectedOption)
             }}
             disabled={disabled}
