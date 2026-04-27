@@ -21,6 +21,7 @@ import { NodeAlert } from '@shared/missions/nodes/NodeAlert'
 import memoizeOne from 'memoize-one'
 import { ClientActionExecution } from '../actions/ClientActionExecution'
 import { ClientMissionAction } from '../actions/ClientMissionAction'
+import { ClientEffect } from '../effects/ClientEffect'
 import type { ClientMissionForce } from '../forces/ClientMissionForce'
 
 /**
@@ -324,6 +325,8 @@ export class ClientMissionNode
       return this.mission.selection === this
     } else if ('node' in selection) {
       return selection.node === this
+    } else if (selection instanceof ClientEffect && selection.sourceNode) {
+      return selection.sourceNode === this
     } else {
       return false
     }
