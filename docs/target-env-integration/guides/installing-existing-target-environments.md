@@ -6,14 +6,10 @@ Use the METIS CLI to install target environments that already exist in GitHub re
 
 - [When to Use This Guide](#when-to-use-this-guide)
 - [Install a Public Target Environment](#install-a-public-target-environment)
-  - [Recognized Authors](#recognized-authors)
-  - [Custom Repository Owners](#custom-repository-owners)
 - [Install a Private Target Environment](#install-a-private-target-environment)
   - [Create a GitHub Token](#create-a-github-token)
-  - [Recommended Scope](#recommended-scope)
   - [Install Commands](#install-commands)
 - [After Installation](#after-installation)
-- [Security Notes](#security-notes)
 - [Related Documentation](#related-documentation)
 
 ## When to Use This Guide
@@ -24,17 +20,11 @@ If you are creating a new target environment yourself, start with the [Creating 
 
 ## Install a Public Target Environment
 
-If the repository is publicly accessible, you can install it without a GitHub token.
-
-### Recognized Authors
-
-If the repository owner is already one of the METIS-recognized authors, install the target environment with:
+If the repository owner is already one of the METIS-recognized authors and the repository is publicly accessible, install the target environment with:
 
 ```bash
 metis install <target-env-id>
 ```
-
-### Custom Repository Owners
 
 If the repository owner is not in the CLI's recognized author list, specify the owner explicitly:
 
@@ -56,14 +46,10 @@ Create a personal access token (classic) in GitHub before running the install co
 4. Select `Personal access tokens` and then `Tokens (classic)`.
 5. Choose `Generate new token (classic)`.
 6. Give the token a descriptive name and set an expiration that matches your organization's policy.
-7. Grant the token the required repository access.
+7. Grant the token the required repository access. Unless your organization has specific policies, the `repo` scope is typically a good option.
 8. **Copy the token and store it somewhere secure before leaving the page.**
 
-### Recommended Scope
-
-For a classic token, enable the `repo` scope so GitHub will allow access to private repositories and their release assets.
-
-> **Note:** If your GitHub organization has additional token restrictions, follow your organization's policy and grant only the minimum access required for the target environment repository.
+> **Note:** This token grants access to the repositories you specified, so treat it like a password. Do not share it or commit it to source control.
 
 ### Install Commands
 
@@ -87,18 +73,9 @@ metis install <target-env-id> --author <github-owner> --token <your-token-here>
 
 ## After Installation
 
-After the CLI finishes downloading the target environment, METIS will discover it from the `/integration/target-env/` directory.
+Many target environments also require a `configs.json` file after installation. Check the target environment's README or other target-environment documentation, the [configs.json reference](../references/configs-json.md), and/or the [environment configuration](../references/environment-configuration.md) reference for the expected configuration requirements.
 
-If the METIS server is already running when the install completes, restart it so the new target environment is discovered and loaded.
-
-Many target environments also require a `configs.json` file after installation. Check the target environment's README or other target-environment documentation, the [configs.json Reference](../references/configs-json.md), and/or the [Environment Configuration](../references/environment-configuration.md) reference for the expected connection settings.
-
-## Security Recommendations
-
-- Treat the token like a password.
-- Do not commit the token to source control or paste it into shared documentation.
-- Be aware that passing a token on the command line may leave it in your shell history.
-- Prefer short-lived tokens and rotate them according to your organization's policy.
+METIS will discover installed target environments from the `/integration/target-env/` directory. Restart the METIS server with `metis restart`, if it is running, to load the new target environment.
 
 ## Related Documentation
 
