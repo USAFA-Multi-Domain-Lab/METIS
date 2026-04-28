@@ -1,5 +1,10 @@
 # changelog
 
+# version-2.4.3 | 4-28-2026
+
+- Various UI-related bugs have been fixed in the mission builder.
+- Documentation has been updated to provide instructions for installing target environments via the `metis install` command.
+
 # version-2.4.2 | 4-27-2026
 
 - Support has been added for installing target environments hosted in private repositories by passing an access token to the `metis install` command.

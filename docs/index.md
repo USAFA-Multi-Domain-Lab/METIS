@@ -56,6 +56,7 @@
 | I want to...                    | Go here                                                           |
 | ------------------------------- | ----------------------------------------------------------------- |
 | **Install METIS**               | [Setup Guide](setup/index.md)                                     |
+| **Install a target environment**| [Install Existing Target Environments](target-env-integration/guides/installing-existing-target-environments.md) |
 | **Create missions via API**     | [Missions API](api/missions.md)                                   |
 | **Build custom integrations**   | [Target Environment Integration](target-env-integration/index.md) |
 | **Understand the architecture** | [Architecture Overview](devs/architecture.md)                     |
