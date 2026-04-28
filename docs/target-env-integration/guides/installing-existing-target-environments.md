@@ -67,7 +67,7 @@ metis install <target-env-id> --author <github-owner> --token <your-token-here>
 
 ## After Installation
 
-Many target environments also require a `configs.json` file after installation. Check the target environment's README or other target-environment documentation, the [configs.json Reference](../references/configs-json.md), and/or the [Environment Configuration](../references/environment-configuration.md) reference for the expected configuration requirements.
+Many target environments also require a `configs.json` file after installation. Check the target environment's README or other target-environment documentation, the [configs.json reference](../references/configs-json.md), and/or the [environment configuration](../references/environment-configuration.md) reference for the expected configuration requirements.
 
 METIS will discover installed target environments from the `/integration/target-env/` directory. Restart the METIS server with `metis restart`, if it is running, to load the new target environment.
 
