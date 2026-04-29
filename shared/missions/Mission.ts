@@ -7,7 +7,11 @@ import type { TCreatedByJson, User } from '@shared/users/User'
 import { context } from '../context'
 import type { MetisComponent } from '../MetisComponent'
 import type { TExecution } from './actions/ActionExecution'
-import type { TAction, TMissionActionJson } from './actions/MissionAction'
+import {
+  MissionAction,
+  type TAction,
+  type TMissionActionJson,
+} from './actions/MissionAction'
 import {
   Effect,
   type TEffectHost,
@@ -731,8 +735,9 @@ export abstract class Mission<
    */
   public getActionById(
     actionId: MetisComponent['_id'] | null | undefined,
-  ): TAction<T> | TMissionActionJson | undefined {
-    return Mission.getActionById(this, actionId)
+  ): TAction<T> | undefined {
+    let action = Mission.getActionById(this, actionId)
+    return action instanceof MissionAction ? action : undefined
   }
 
   /**
@@ -746,8 +751,9 @@ export abstract class Mission<
     forceKey: TForce<T>['localKey'] | null | undefined,
     nodeKey: TNode<T>['localKey'] | null | undefined,
     actionKey: TAction<T>['localKey'] | null | undefined,
-  ): TAction<T> | TMissionActionJson | undefined {
-    return Mission.getActionByLocalKey(this, forceKey, nodeKey, actionKey)
+  ): TAction<T> | undefined {
+    let action = Mission.getActionByLocalKey(this, forceKey, nodeKey, actionKey)
+    return action instanceof MissionAction ? action : undefined
   }
 
   /**

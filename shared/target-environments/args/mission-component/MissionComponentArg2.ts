@@ -90,8 +90,6 @@ export type TMissionComponentType =
   | 'force'
   | 'node'
   | 'action'
-  | 'effect'
-  | 'file'
   | 'any'
 
 /**
