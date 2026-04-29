@@ -228,10 +228,7 @@ function deserialize(
   serialized: TMissionComponentSerializedSelection[],
   mission: ClientMission,
 ): TMissionOutlineItem[] {
-  return serialized.flatMap<
-    TMissionOutlineItem,
-    TMissionComponentSerializedSelection
-  >((item: TMissionComponentSerializedSelection) => {
+  return serialized.flatMap((item): TMissionOutlineItem[] => {
     const { type, keys } = item
 
     if (type === 'mission') {
